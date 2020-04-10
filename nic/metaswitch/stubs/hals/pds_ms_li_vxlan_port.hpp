@@ -23,8 +23,6 @@ extern "C"
 
 namespace pds_ms {
 
-#define PDS_MS_UECMP_INVALID_INDEX 0
-
 class li_vxlan_port {
 public:    
    NBB_BYTE handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_tnl_add_upd);

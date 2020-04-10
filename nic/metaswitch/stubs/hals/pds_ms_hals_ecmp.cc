@@ -87,7 +87,7 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
             // Direct Pathset
             ATG_NHPI_NEIGHBOR_PROPERTIES& prop =
                 next_hop->next_hop_properties.direct_next_hop_properties.neighbor;
-            ips_info_.nexthops.emplace_back(prop.neighbor_l3_if_index, 
+            ips_info_.nexthops.emplace_back(prop.neighbor_l3_if_index,
                                             prop.neighbor_id.mac_address);
             if (ms_ifindex_to_pds_type(prop.neighbor_l3_if_index) == IF_TYPE_L3) {
                 ips_info_.pds_nhgroup_type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
@@ -133,7 +133,7 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
     } else {
         if (ips_info_.num_added_nh == 0) {
             // The only removal allowed is when the number of nexthops in the Group
-            // gets cut by half due to a link failure. 
+            // gets cut by half due to a link failure.
             // In this case the remaining set of nexthops need to repeated twice
             PDS_TRACE_DEBUG("MS ECMP %ld Update with removal %d - setting repeat to 2",
                             ips_info_.pathset_id, ips_info_.num_deleted_nh);
@@ -141,7 +141,7 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
         } else {
             // NH Group Update to add NH entries assumes recovery from the
             // optimized NH removal case above where the actual number of
-            // NH entries in the group was never reduced in the datapath. 
+            // NH entries in the group was never reduced in the datapath.
             // Reclaim the removed NH entries in the NH Group.
             PDS_TRACE_DEBUG("MS ECMP %ld Update with addition %d - setting repeat to 1",
                             ips_info_.pathset_id, ips_info_.num_added_nh);
@@ -160,7 +160,7 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
                 throw Error(std::string("Underlay ECMP with unknown dest interface ")
                             .append(std::to_string (nh.ms_ifindex)));
             }
-            nhgroup_spec.nexthops[i].l3_if = 
+            nhgroup_spec.nexthops[i].l3_if =
                 phy_if_obj->phy_port_properties().l3_if_spec.key;
 
             memcpy(nhgroup_spec.nexthops[i].underlay_mac, nh.mac_addr.m_mac,
@@ -322,7 +322,7 @@ static void send_ips_response_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips,
     auto& ecmp_store = hals::Fte::get().get_nhpi_join()->get_ecmp_store();
     auto it = ecmp_store.find(key);
     if (it == ecmp_store.end()) {
-        auto send_response = 
+        auto send_response =
             hals::Ecmp::set_ips_rc(&add_upd_ecmp_ips->ips_hdr,
                                    (pds_status)?ATG_OK:ATG_UNSUCCESSFUL);
         SDK_ASSERT(send_response);
@@ -346,14 +346,20 @@ static void send_ips_response_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips,
     NBB_DESTROY_THREAD_CONTEXT
 }
 
-static tep_obj_t* indirect_ps_2_tep_obj_(state_t* state, 
-                                         ms_ps_id_t indirect_pathset,
-                                         uint32_t ll_direct_pathset) {
+// Update the indirect PS to direct PS mapping
+// Return TEP using this indirect PS if any
+static tep_obj_t* indirect_ps_lookup_and_update_ (state_t* state,
+                                                  ms_ps_id_t indirect_pathset,
+                                                  uint32_t ll_direct_pathset) {
     auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
     if (indirect_ps_obj == nullptr) {
+        if (ll_direct_pathset == PDS_MS_ECMP_INVALID_INDEX) {
+            PDS_TRACE_DEBUG("Ignore blackhole pathset %d", indirect_pathset);
+            return nullptr;
+        }
         PDS_TRACE_DEBUG("Set new indirect pathset %d -> direct pathset %d",
                         indirect_pathset, ll_direct_pathset);
-        std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr 
+        std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr
             (new indirect_ps_obj_t(ll_direct_pathset));
         state->indirect_ps_store().add_upd(indirect_pathset,
                                            std::move(indirect_ps_obj_uptr));
@@ -378,16 +384,16 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
         // Check if this is an Indirect Pathset that is referenced by
         // existing VXLAN Tunnels (TEPs)
         auto state_ctxt = pds_ms::state_t::thread_context();
-        auto tep_obj = indirect_ps_2_tep_obj_(state_ctxt.state(),
-                                              ips_info_.pathset_id,
-                                              ips_info_.ll_dp_corr_id);
+        auto tep_obj = indirect_ps_lookup_and_update_(state_ctxt.state(),
+                                                      ips_info_.pathset_id,
+                                                      ips_info_.ll_dp_corr_id);
         if (tep_obj == nullptr) {
             // This Pathset does not have any reference yet
             // Nothing to do
             return rc;
         }
         // This is an indirect pathset that is referenced by Tunnels
-        if (ips_info_.ll_dp_corr_id == 0) {
+        if (ips_info_.ll_dp_corr_id == PDS_MS_ECMP_INVALID_INDEX) {
             // The indirect pathset has lost its underlying direct pathset.
             // It is soon either going to be deleted or updated with a
             // new direct nexthop.
@@ -400,7 +406,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
             PDS_TRACE_DEBUG("MS Indirect Pathset %d TEP %s black-holed",
                             ips_info_.pathset_id,
                             ipaddr2str(&tep_obj->properties().tep_ip));
-            tep_obj->properties().hal_uecmp_idx = PDS_MS_UECMP_INVALID_INDEX;
+            tep_obj->properties().hal_uecmp_idx = PDS_MS_ECMP_INVALID_INDEX;
             return rc;
         }
 
@@ -439,21 +445,21 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
         if ((ips_info_.num_added_nh == num_nexthops) &&
             (ips_info_.num_deleted_nh == 0)) {
             op_create_ = true;
-            PDS_TRACE_DEBUG ("MS Underlay ECMP %ld: Create IPS Num nexthops %ld", 
+            PDS_TRACE_DEBUG ("MS Underlay ECMP %ld: Create IPS Num nexthops %ld",
                              ips_info_.pathset_id, num_nexthops);
         } else {
             if (ips_info_.num_added_nh == 0) {
                 // NH Group Update with NH removal
                 // Optimization to quickly update ECMP Group in-place in case of
                 // link failure without waiting for BGP keep-alive timeout.
-                auto prev_num_nexthops = (num_nexthops + ips_info_.num_deleted_nh); 
+                auto prev_num_nexthops = (num_nexthops + ips_info_.num_deleted_nh);
 
-                // Only removal of exactly half the nexthops is supported for an 
+                // Only removal of exactly half the nexthops is supported for an
                 // NH Group update. Since we cannot change the actual number of
                 // NH entries for the NH group in the datapath simulate removal
                 // repeat the active NH entry in the place of the inactive NH entry.
                 if ((num_nexthops*2) != prev_num_nexthops) {
-                    // Ignore this optimized update - 
+                    // Ignore this optimized update -
                     // MS will anyway program a separate NH Group that does not have
                     // the deleted nexthops when the routing protocol converges and
                     // then re-program each TEP with the new ECMP group
@@ -469,7 +475,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                 // Adding new Nexthops to an existing NH Group is not supported.
                 // But the corner case of recovery from the link failure
                 // optimization above before BGP timeout needs to be handled
-                // to avoid permanently excluding the recovered link from the 
+                // to avoid permanently excluding the recovered link from the
                 // NH Group since we tweaked the NH Group in datapath
                 // without BGP's knowledge.
                 // TODO - assuming that since the total number of NH entries
@@ -506,12 +512,12 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
             } else {
                 // TODO: Handle Overlay ECMP Update if needed after checking with MS
                 PDS_TRACE_ERR ("MS Overlay ECMP %ld: Update IPS Num nexthops %ld"
-                               " NOT SUPPORTED", 
+                               " NOT SUPPORTED",
                                ips_info_.pathset_id, ips_info_.nexthops.size());
                 return rc;
             }
         }
-        pds_bctxt_guard = make_batch_pds_spec_(state_ctxt); 
+        pds_bctxt_guard = make_batch_pds_spec_(state_ctxt);
         // If we have batched multiple IPS earlier flush it now
         // Cannot defer Nexthop updates
         state_ctxt.state()->flush_outstanding_pds_batch();
@@ -520,7 +526,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
 
     auto l_overlay = (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_OVERLAY_ECMP);
     auto pathset_id = ips_info_.pathset_id;
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [add_upd_ecmp_ips, pathset_id, l_overlay] (bool pds_status,
                                                    bool ips_mock) -> void {
             //-----------------------------------------------------------------
@@ -548,7 +554,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                                dp_corr, pds_status);
         };
 
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie unique_ptr
     rc = ATG_ASYNC_COMPLETION;
     auto cookie = cookie_uptr_.release();
@@ -559,7 +565,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                     .append(std::to_string(ips_info_.pathset_id))
                     .append(" err=").append(std::to_string(ret)));
     }
-    PDS_TRACE_DEBUG ("MS ECMP %ld: Add/Upd PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("MS ECMP %ld: Add/Upd PDS Batch commit successful",
                      ips_info_.pathset_id);
 
     if (PDS_MOCK_MODE()) {
@@ -576,7 +582,7 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
 
     // MS Stub Integration APIs do not support Async callback for deletes.
     // However since we should not block the MS NBase main thread
-    // the HAL processing is always asynchronous even for deletes. 
+    // the HAL processing is always asynchronous even for deletes.
     // Assuming that Deletes never fail.
 
     NBB_CORR_GET_VALUE (ips_info_.pathset_id, ms_pathset_id);
@@ -607,13 +613,13 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
         }
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
-        pds_bctxt_guard = make_batch_pds_spec_ (state_ctxt); 
+        pds_bctxt_guard = make_batch_pds_spec_ (state_ctxt);
 
     } // End of state thread_context
       // Do Not access/modify global state after this
 
     auto pathset_id = ips_info_.pathset_id;
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [pathset_id] (bool pds_status, bool ips_mock) -> void {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -623,7 +629,7 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
 
         };
 
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
@@ -637,7 +643,7 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
         auto state_ctxt = pds_ms::state_t::thread_context();
         state_ctxt.state()->pathset_store().erase(ips_info_.pathset_id);
     }
-    PDS_TRACE_DEBUG ("MS ECMP %ld: Delete PDS Batch commit successful", 
+    PDS_TRACE_DEBUG ("MS ECMP %ld: Delete PDS Batch commit successful",
                      ips_info_.pathset_id);
 }
 

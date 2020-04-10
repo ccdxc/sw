@@ -162,6 +162,15 @@ NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_i
         return rc;
     }
 
+    if (ips_info_.ecmp_id == PDS_MS_ECMP_INVALID_INDEX) {
+        // Can happen when the L2F UpdateRoutersMAC from EVPN is delayed 
+        // because of which PSM cannot fetch ARP MAC from NAR stub 
+        // and the ROPI route update comes with black-holed pathset 
+        PDS_TRACE_DEBUG("Ignore prefix route %s with black-holed pathset %d",
+                        ippfx2str(&ips_info_.pfx), ips_info_.pathset_id);
+        return rc;
+    }
+
     PDS_TRACE_DEBUG("Route Add IPS VRF %d Prefix %s Type %d Pathset %d ECMP DP Corr %d",
                      ips_info_.vrf_id, ippfx2str(&ips_info_.pfx),
                      add_upd_route_ips->route_properties.type,

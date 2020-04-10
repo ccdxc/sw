@@ -15,6 +15,9 @@ using ms_vrf_id_t = uint32_t;
 using ms_ifindex_t = NBB_ULONG;
 using ms_bd_id_t = NBB_ULONG;
 using ms_hw_tbl_id_t = uint32_t; // Used as DP correlator in MS
+
+#define PDS_MS_ECMP_INVALID_INDEX 0
+
 }
 
 #endif

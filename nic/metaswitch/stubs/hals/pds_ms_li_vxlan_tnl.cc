@@ -233,7 +233,7 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_(state_t::context_t&
     return bctxt_guard_;
 }
 
-static uint32_t map_indirect_ps_2_tep_ip_(state_t* state, ms_ps_id_t indirect_pathset,
+static ms_ps_id_t map_indirect_ps_2_tep_ip_(state_t* state, ms_ps_id_t indirect_pathset,
                                          const ip_addr_t& tep_ip) {
     auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
     if (indirect_ps_obj == nullptr) {
@@ -243,28 +243,31 @@ static uint32_t map_indirect_ps_2_tep_ip_(state_t* state, ms_ps_id_t indirect_pa
             (new indirect_ps_obj_t(tep_ip));
         state->indirect_ps_store().add_upd(indirect_pathset,
                                            std::move(indirect_ps_obj_uptr));
-        return 0;
+        return PDS_MS_ECMP_INVALID_INDEX;
     }
+
     if (!ip_addr_is_zero(&(indirect_ps_obj->tep_ip))) {
         // Assert there is only 1 TEP referring to each indirect Pathset
         if (!ip_addr_is_equal (&(indirect_ps_obj->tep_ip), &tep_ip)) {
-            PDS_TRACE_ERR("Attempt to associate TEP %s to MS Underlay Pathset %d"
-                          " that is already associated to TEP %s",
+            PDS_TRACE_ERR("Attempt to stitch TEP %s to MS indirect pathset %d"
+                          " that is already stitched to TEP %s",
                           ipaddr2str(&tep_ip), indirect_pathset,
                           ipaddr2str(&(indirect_ps_obj->tep_ip)));
             SDK_ASSERT(0);
         }
         return indirect_ps_obj->ll_direct_pathset;
     }
-    PDS_TRACE_DEBUG("Map indirect underlay pathset %d to TEP %s",
-                    indirect_pathset, ipaddr2str(&tep_ip));
+    PDS_TRACE_DEBUG("Stitch TEP %s to indirect pathset %d direct pathset %d",
+                    ipaddr2str(&tep_ip), indirect_pathset,
+                    indirect_ps_obj->ll_direct_pathset);
     indirect_ps_obj->tep_ip = tep_ip;
     return indirect_ps_obj->ll_direct_pathset;
 }
 
 static void unmap_indirect_ps_2_tep_ip_(state_t* state,
                                         ms_ps_id_t indirect_pathset) {
-    PDS_TRACE_DEBUG("Unmap indirect underlay pathset %d", indirect_pathset);
+    PDS_TRACE_DEBUG("Unstitch from indirect pathset %d",
+                    indirect_pathset);
     auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
     if (indirect_ps_obj == nullptr) {
         return;
@@ -291,10 +294,16 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
                                   ips_info_.uecmp_ps, ips_info_.tep_ip);
 
     if (store_info_.ll_direct_pathset != ips_info_.hal_uecmp_idx) {
-        PDS_TRACE_DEBUG("detected parallel update to TEP %s (ecmp: %d) and "
+        PDS_TRACE_DEBUG("Detected parallel update to TEP %s (ecmp: %d) and "
                         "indirect pathset %d (ecmp: %d). prefer indirect pathset",
                         ips_info_.tep_ip_str.c_str(), ips_info_.hal_uecmp_idx,
                         ips_info_.uecmp_ps, store_info_.ll_direct_pathset);
+    if (store_info_.ll_direct_pathset == PDS_MS_ECMP_INVALID_INDEX) {
+        PDS_TRACE_DEBUG("Ignore VXLAN Tunnel %s update pointing to"
+                        " blackholed pathset %d",
+                        ips_info_.tep_ip_str.c_str(),ips_info_.uecmp_ps);
+        return rc;
+    }
     }
 
     if (store_info_.tep_obj != nullptr) {

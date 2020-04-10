@@ -6,6 +6,7 @@
 #include <thread>
 #include "nic/metaswitch/stubs/hals/pds_ms_li_vxlan_port.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
@@ -64,7 +65,7 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
 
     spec.ip_addr = ips_info_.src_ip;
     auto& tep_prop = store_info_.tep_obj->properties();
-    if (tep_prop.hal_uecmp_idx == PDS_MS_UECMP_INVALID_INDEX) {
+    if (tep_prop.hal_uecmp_idx == PDS_MS_ECMP_INVALID_INDEX) {
         // Metaswitch PSM deletes underlay Nexthops independent of EVPN.
         // So its possible that when a L3 VXLAN Port is being added the
         // underlying VXLAN tunnel has lost its underlay nexthop.
