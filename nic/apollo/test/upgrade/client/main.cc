@@ -21,19 +21,20 @@ static std::unique_ptr<pds::UpgSvc::Stub>  g_upg_svc_stub_;
 static sdk_ret_t
 send_upg_grpc (void)
 {
-    ClientContext       context;
-    pds::UpgRequest     req;
-    pds::UpgResponse    rsp;
-    Status              ret_status;
-    pds::UpgSpec        *spec = req.mutable_request();
+    ClientContext           context;
+    pds::UpgradeRequest     req;
+    pds::UpgradeResponse    rsp;
+    Status                  ret_status;
+    pds::UpgradeSpec        *spec = req.mutable_request();
 
-    spec->set_reqtype(pds::UpgReqType::UPG_REQ_START);
-    spec->set_mode(pds::UpgMode::UPG_MODE_GRACEFUL);
+    spec->set_requesttype(pds::UpgradeRequestType::UPGRADE_REQUEST_START);
+    spec->set_mode(pds::UpgradeMode::UPGRADE_MODE_GRACEFUL);
 
-    ret_status = g_upg_svc_stub_->UpgradeRequest(&context, req, &rsp);
+    ret_status = g_upg_svc_stub_->UpgRequest(&context, req, &rsp);
     printf("Upgrade response, grpc status ok %u, upgmgr rsp %u, upgmgr rspmsg %s\n",
            ret_status.ok(), rsp.status(), rsp.mutable_statusmsg()->c_str());
-    if (!ret_status.ok() || rsp.status() != pds::UpgStatus::UPG_STATUS_OK) {
+    if (!ret_status.ok() ||
+        rsp.status() != pds::UpgradeStatus::UPGRADE_STATUS_OK) {
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;

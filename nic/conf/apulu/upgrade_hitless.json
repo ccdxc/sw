@@ -1,6 +1,6 @@
 {
     "svc": {
-        "names": [ "sysmgr", "pds-agent"],
+        "names": [ "sysmgr", "pdsagent"],
         "event_sequence": "parallel",
         "rsp_timeout": "1000ms",
         "domain": "A",
@@ -29,7 +29,7 @@
             "//": "prepare for B bringup",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "sysmgr", "pds-agent" ],
+                "names": [ "sysmgr", "pdsagent" ],
                 "domain": "A"
             },
             "events": [
@@ -57,7 +57,7 @@
             "//": "backed up data from A will be restored here",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "sysmgr", "pds-agent" ],
+                "names": [ "sysmgr", "pdsagent" ],
                 "domain": "A"
             },
             "events": [
@@ -110,7 +110,7 @@
 
         "switchover": {
             "svc": {
-                "names": [ "pds-agent", "sysmgr" ],
+                "names": [ "pdsagent", "sysmgr" ],
                 "event_sequence": "serial",
                 "rsp_timeout": "2000ms",
                 "domain": "B"
@@ -125,7 +125,7 @@
 
         "rollback": {
             "svc": {
-                "names": [ "pds-agent", "sysmgr" ],
+                "names": [ "pdsagent", "sysmgr" ],
                 "event_sequence": "serial",
                 "rsp_timeout": "2000ms",
                 "domain": "B"
@@ -141,7 +141,7 @@
         "repeal": {
             "//": "todo: needs discussion here on sysmgr A/B",
              "svc": {
-                "names": [ "sysmgr", "pds-agent" ],
+                "names": [ "sysmgr", "pdsagent" ],
                 "event_sequence": "serial",
                 "rsp_timeout": "2000ms",
                 "domain": "A"
@@ -158,7 +158,7 @@
             "//": "todo: failure or failure-non-recovarable status to netagent",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "pds-agent", "sysmgr" ],
+                "names": [ "pdsagent", "sysmgr" ],
                 "domain": "A"
             },
             "events": [

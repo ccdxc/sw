@@ -54,7 +54,7 @@ dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id, upg_svc svc)
     UPG_TRACE_VERBOSE("Sending event %s to svc %s ipc_id %u",
                       stage_name.c_str(), svc.name().c_str(), svc.ipc_id());
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
-    svc.dispatch_event(dom, id);
+    svc.dispatch_event(dom, id, fsm_states.init_params()->upg_mode);
 }
 
 static void
@@ -78,7 +78,7 @@ send_discovery_event (ipc_svc_dom_id_t dom, upg_stage_t id)
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
     UPG_TRACE_VERBOSE("Sending discovery event %s", stage_name.c_str());
 
-    upg_send_broadcast_request(dom, id);
+    upg_send_broadcast_request(dom, id, fsm_states.init_params()->upg_mode);
 }
 
 static void
@@ -646,8 +646,8 @@ init_fsm (fsm_init_params_t *params)
     upg_ipc_init(upg_event_handler);
 
     SDK_ASSERT (fsm_states.is_discovery() == true);
-    send_discovery_event(IPC_SVC_DOM_ID_A, fsm_states.current_stage());
     fsm_states.set_init_params(params);
+    send_discovery_event(IPC_SVC_DOM_ID_A, fsm_states.current_stage());
     return SDK_RET_OK;
 }
 

@@ -19,12 +19,15 @@ namespace upg {
 static upg_async_response_cb_t response_cb;
 
 void
-upg_send_request (ipc_svc_dom_id_t dom_id, upg_stage_t stage, uint32_t svc_id)
+upg_send_request (ipc_svc_dom_id_t dom_id, upg_stage_t stage,
+                  uint32_t svc_id, upg_mode_t mode)
 {
     upg_event_msg_t msg;
     upg_ev_id_t ev_id = upg_stage2event(stage);
 
+    memset(&msg, 0, sizeof(msg));
     msg.stage = stage;
+    msg.mode  = mode;
 
     UPG_TRACE_INFO("Request notification stage %s, event %s, svcid %u",
                    upg_stage2str(msg.stage), upg_event2str(ev_id), svc_id);
@@ -32,12 +35,15 @@ upg_send_request (ipc_svc_dom_id_t dom_id, upg_stage_t stage, uint32_t svc_id)
 }
 
 void
-upg_send_broadcast_request (ipc_svc_dom_id_t dom_id, upg_stage_t stage)
+upg_send_broadcast_request (ipc_svc_dom_id_t dom_id, upg_stage_t stage,
+                            upg_mode_t mode)
 {
     upg_event_msg_t msg;
     upg_ev_id_t ev_id = upg_stage2event(stage);
 
+    memset(&msg, 0, sizeof(msg));
     msg.stage = stage;
+    msg.mode  = mode;
 
     UPG_TRACE_INFO("Broadcasting notification for stage %s, event %s",
                    upg_stage2str(msg.stage), upg_event2str(ev_id));

@@ -46,8 +46,8 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     string device_cfg_file;
     sdk::event_thread::event_thread *curr_thread;
     devicemgr_cfg_t cfg;
-    bool init_pci = sdk::platform::upgrade_mode_none(
-        api::g_upg_state->upg_init_mode());
+    upg_mode_t upg_init_mode = api::g_upg_state->upg_init_mode();
+    bool init_pci = sdk::platform::upgrade_mode_none(upg_init_mode);
 
     // get pds state
     state = (pds_state *)sdk::lib::thread::current_thread()->data();
@@ -85,8 +85,11 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
 
     g_devmgr = new DeviceManager(&cfg);
     SDK_ASSERT(g_devmgr);
-    g_devmgr->LoadProfile(device_cfg_file, init_pci);
-
+    if (upg_init_mode == upg_mode_t::UPGRADE_MODE_NONE) {
+        g_devmgr->LoadProfile(device_cfg_file, init_pci);
+    } else {
+        // upgrade init does the state loading
+    }
     sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_, NULL);
     sdk::ipc::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_, NULL);
     sdk::ipc::subscribe(EVENT_ID_PDS_HAL_UP, hal_up_event_handler_, NULL);
@@ -95,7 +98,7 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
 
     // register for upgrade events
     nicmgr_upg_graceful_init();
-
+ 
     PDS_TRACE_INFO("Listening to events ...");
 }
 

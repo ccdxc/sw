@@ -1,6 +1,6 @@
 {
     "svc": {
-        "names": [ "sysmgr", "pds-agent"],
+        "names": [ "sysmgr", "pdsagent"],
         "event_sequence": "parallel",
         "rsp_timeout": "1000ms",
         "domain": "A",
@@ -28,7 +28,7 @@
             "//": "prepare for B bringup",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "sysmgr", "pds-agent" ]
+                "names": [ "sysmgr", "pdsagent" ]
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "backup" },
@@ -51,7 +51,7 @@
             "//": "shuting it down the services",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "sysmgr", "pds-agent" ]
+                "names": [ "sysmgr", "pdsagent" ]
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },
@@ -110,7 +110,7 @@
 
         "repeal": {
             "svc": {
-                "names": [ "sysmgr", "pds-agent" ],
+                "names": [ "sysmgr", "pdsagent" ],
                 "event_sequence": "serial",
                 "rsp_timeout": "2000ms"
             },
@@ -140,7 +140,7 @@
             "//": "todo: failure or failure-non-recovarable status to netagent",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "pds-agent", "sysmgr" ]
+                "names": [ "pdsagent", "sysmgr" ]
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "exit" },

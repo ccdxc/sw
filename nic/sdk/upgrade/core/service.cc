@@ -23,8 +23,9 @@ upg_svc::operator=(const upg_svc& obj) {
 };
 
 void
-upg_svc::dispatch_event(ipc_svc_dom_id_t dom, upg_stage_t event) const {
-    upg_send_request(dom, event, ipc_id_);
+upg_svc::dispatch_event(ipc_svc_dom_id_t dom, upg_stage_t event,
+                        upg_mode_t upg_mode) const {
+    upg_send_request(dom, event, ipc_id_, upg_mode);
 };
 
 }    // namespace upg

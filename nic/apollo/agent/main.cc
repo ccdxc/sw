@@ -6,6 +6,7 @@
 #include <getopt.h>
 #include <limits.h>
 #include <string>
+#include "nic/apollo/include/globals.hpp"
 #include "nic/apollo/agent/svc/batch.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
 #include "nic/apollo/agent/svc/vpc.hpp"
@@ -46,7 +47,6 @@ using grpc::ServerContext;
 using grpc::Status;
 
 std::string g_grpc_server_addr;
-#define GRPC_API_PORT    50054
 namespace hooks {
 hooks_func_t hooks_func = NULL;
 }     // namespace hooks
@@ -83,7 +83,7 @@ svc_reg (void)
     // do gRPC initialization
     grpc_init();
     g_grpc_server_addr =
-        std::string("0.0.0.0:") + std::to_string(GRPC_API_PORT);
+        std::string("0.0.0.0:") + std::to_string(PDS_GRPC_PORT_API);
     server_builder = new ServerBuilder();
     server_builder->SetMaxReceiveMessageSize(INT_MAX);
     server_builder->SetMaxSendMessageSize(INT_MAX);

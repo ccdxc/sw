@@ -97,11 +97,17 @@ upg_graceful_ev_send (sdk::upg::upg_ev_params_t *params)
     case UPG_EV_START:
         ret = SDK_RET_OK;
         break;
+    case UPG_EV_BACKUP:
+        INVOKE_EV_THREAD_HDLR(ev, backup_hdlr, UPG_MSG_ID_BACKUP);
+        break;
     case UPG_EV_PREPARE:
         INVOKE_EV_THREAD_HDLR(ev, linkdown_hdlr, UPG_MSG_ID_LINK_DOWN);
         // have additional events to send when the first operation completes
         // on all threads
         api::g_upg_state->set_ev_more(true);
+        break;
+    case UPG_EV_PREP_SWITCHOVER:
+        INVOKE_EV_THREAD_HDLR(ev, prep_switchover_hdlr, UPG_MSG_ID_PREP_SWITCHOVER);
         break;
     case UPG_EV_SWITCHOVER:
         INVOKE_EV_THREAD_HDLR(ev, switchover_hdlr, UPG_MSG_ID_SWITCHOVER);
@@ -112,8 +118,8 @@ upg_graceful_ev_send (sdk::upg::upg_ev_params_t *params)
     case UPG_EV_READY:
         ret = SDK_RET_OK;
         break;
-    case UPG_EV_EXIT:
-        INVOKE_EV_THREAD_HDLR(ev, exit_hdlr, UPG_MSG_ID_EXIT);
+    case UPG_EV_FINISH:
+        INVOKE_EV_THREAD_HDLR(ev, finish_hdlr, UPG_MSG_ID_FINISH);
         break;
     default:
         //  should provide default handler. otherwise we may miss

@@ -104,6 +104,12 @@ upg_ev_hostdev_reset (upg_ev_params_t *params)
 }
 
 static sdk_ret_t
+upg_ev_prep_switchover (upg_ev_params_t *params)
+{
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
 upg_ev_switchover (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
@@ -116,7 +122,7 @@ upg_ev_repeal (upg_ev_params_t *params)
 }
 
 static sdk_ret_t
-upg_ev_exit (upg_ev_params_t *params)
+upg_ev_finish (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
 }
@@ -136,9 +142,10 @@ upg_graceful_init (pds_init_params_t *params)
     ev_hdlr.backup_hdlr = upg_ev_backup;
     ev_hdlr.ready_hdlr = upg_ev_ready;
     ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
+    ev_hdlr.prep_switchover_hdlr = upg_ev_prep_switchover;
     ev_hdlr.switchover_hdlr = upg_ev_switchover;
     ev_hdlr.repeal_hdlr = upg_ev_repeal;
-    ev_hdlr.exit_hdlr = upg_ev_exit;
+    ev_hdlr.finish_hdlr = upg_ev_finish;
 
     // register for upgrade events
     upg_ev_thread_hdlr_register(ev_hdlr);

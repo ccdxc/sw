@@ -133,6 +133,10 @@ upg_link_down_handler (void *cookie)
         NIC_LOG_ERR("UPG_EVENT_QUIESCE event Failed! Cannot continue upgrade FSM");
         return SDK_RET_ERR;
     }
+#ifndef __aarch64__
+    // TODO : check whether this can be fixed
+    return SDK_RET_OK;
+#endif
 
     NIC_FUNC_DEBUG("Starting timer thread to check whether all devices are quiesced or not ...");
 
@@ -174,6 +178,10 @@ upg_host_down_handler (void *cookie)
         NIC_LOG_ERR("UPG_EVENT_DEVICE_RESET event Failed! Cannot continue upgrade FSM");
         return SDK_RET_ERR;
     }
+#ifndef __aarch64__
+    // TODO : check whether this can be fixed
+    return SDK_RET_OK;
+#endif
 
     NIC_FUNC_DEBUG("Starting timer thread to check whether all devices are in reset or not ...");
     ExpectedState = DEVICES_RESET_STATE;

@@ -14,25 +14,6 @@
 
 namespace api {
 
-static inline upg_mode_t
-get_upg_init_mode(void)
-{
-    const char *m = getenv("UPGRADE_MODE");
-    upg_mode_t mode;
-
-    if (!m) {
-       return upg_mode_t::UPGRADE_MODE_NONE;
-    }
-    mode = (upg_mode_t)atoi(m);
-    if (mode == upg_mode_t::UPGRADE_MODE_NONE ||
-        mode == upg_mode_t::UPGRADE_MODE_GRACEFUL ||
-        mode == upg_mode_t::UPGRADE_MODE_HITLESS) {
-        return mode;
-    } else {
-        SDK_ASSERT(0);
-    }
-}
-
 sdk_ret_t
 upg_init (pds_init_params_t *params)
 {
@@ -40,7 +21,7 @@ upg_init (pds_init_params_t *params)
     bool shm_create;
     upg_mode_t mode;
 
-    mode = get_upg_init_mode();
+    mode = sdk::upg::upg_init_mode();
 
     PDS_TRACE_DEBUG("Setting bootup upgrade mode to %s",
                     mode == upg_mode_t::UPGRADE_MODE_NONE ? "NONE" :

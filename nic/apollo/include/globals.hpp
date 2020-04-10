@@ -18,6 +18,8 @@ namespace {
 
 /// grpc port for upgrade manager
 #define PDS_GRPC_PORT_UPGMGR  51512
+/// grpc port for pds agent
+#define PDS_GRPC_PORT_API     50054
 
 /// thread ids
 /// [PDS_THREAD_ID_MIN - PDS_THREAD_ID_MAX] are for PDS HAL threads

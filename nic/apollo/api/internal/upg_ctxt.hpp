@@ -24,7 +24,9 @@
 namespace api {
 
 /// \brief upgrade objs meta data. saved in the front of persistent storage.
-/// the signature of this structure needs to be preserved for hitless upgrade
+// ...WARNING.. this structure should be preserved across upgrades upgrades.
+// so don't change the order. contains the information about the object and
+// gives the offset where the objects are stored and also the number of objects
 typedef struct upg_obj_stash_meta_s {
     uint32_t        obj_id;       ///< upgrade obj id
     uint32_t        obj_count;    ///< number of objects saved for this object

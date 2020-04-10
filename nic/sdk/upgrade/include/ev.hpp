@@ -16,6 +16,7 @@
 #ifndef __UPGRADE_EV_HPP__
 #define __UPGRADE_EV_HPP__
 
+#include "string.h"
 #include "include/sdk/globals.hpp"
 #include "upgrade/include/upgrade.hpp"
 
@@ -66,6 +67,29 @@ upg_stage2event (upg_stage_t stage)
         SDK_ASSERT(0);
     }
     return (upg_ev_id_t)EV_ID_UPGMGR(stage);
+}
+
+// environment variable setup by the process loader during bringup
+// if it not set, regular boot is assumed
+static inline upg_mode_t
+upg_init_mode(void)
+{
+    const char *m = getenv("UPG_INIT_MODE");
+    upg_mode_t mode;
+
+    if (!m) {
+       return upg_mode_t::UPGRADE_MODE_NONE;
+    }
+    if (strncmp(m, "graceful", strlen("graceful")) == 0) {
+        mode = upg_mode_t::UPGRADE_MODE_GRACEFUL;
+    } else if (strncmp(m, "hitless", strlen("hitless")) == 0) {
+        mode = upg_mode_t::UPGRADE_MODE_HITLESS;
+    } else if (strncmp(m, "none", strlen("none")) == 0) {
+        mode = upg_mode_t::UPGRADE_MODE_NONE;
+    } else {
+        SDK_ASSERT(0);
+    }
+    return mode;
 }
 
 /// \brief upgrade event msg

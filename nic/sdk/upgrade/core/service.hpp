@@ -65,7 +65,7 @@ public:
     void set_ipc_id(const uint32_t id) { ipc_id_= id; };
     upg_svc& operator=(const upg_svc &obj);
     void dispatch_event(ipc_svc_dom_id_t dom,
-                        upg_stage_t event) const;
+                        upg_stage_t event, upg_mode_t upg_mode) const;
 private:
     std::string name_;
     uint32_t ipc_id_;

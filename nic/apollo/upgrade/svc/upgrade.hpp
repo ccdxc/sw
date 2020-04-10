@@ -14,10 +14,10 @@ using grpc::Status;
 using grpc::ServerContext;
 
 using pds::UpgSvc;
-using pds::UpgRequest;
-using pds::UpgSpec;
-using pds::UpgResponse;
-using pds::UpgStatus;
+using pds::UpgradeRequest;
+using pds::UpgradeSpec;
+using pds::UpgradeResponse;
+using pds::UpgradeStatus;
 
 /// \brief upgrade event request
 /// ipc from grpc main thread to request processing thread
@@ -37,8 +37,8 @@ typedef struct upg_ev_req_msg_s {
 
 class UpgSvcImpl final : public UpgSvc::Service {
 public:
-    Status UpgradeRequest(ServerContext *context, const pds::UpgRequest *req,
-                          pds::UpgResponse *rsp) override;
+    Status UpgRequest(ServerContext *context, const pds::UpgradeRequest *req,
+                      pds::UpgradeResponse *rsp) override;
 };
 
 #endif    // __UPGRADE_SVC_UPGRADE_HPP__

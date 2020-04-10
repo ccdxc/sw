@@ -15,71 +15,54 @@ package pds;
 import "gogo.proto";
 
 service UpgSvc {
-  rpc UpgradeRequest (UpgRequest) returns (UpgResponse) {}
+  rpc UpgRequest (UpgradeRequest) returns (UpgradeResponse) {}
 }
 
 // upgrade request type
-enum UpgReqType {
+enum UpgradeRequestType {
   // invalid request
-  UPG_REQ_NONE         = 0;
+  UPGRADE_REQUEST_NONE         = 0;
   // start an upgrade
-  UPG_REQ_START        = 1;
+  UPGRADE_REQUEST_START        = 1;
   // compat check before an upgrade start
-  UPG_REQ_COMPAT_CHECK = 2;
+  UPGRADE_REQUEST_COMPAT_CHECK = 2;
 }
 
 // upgrade mode
-enum UpgMode {
+enum UpgradeMode {
   // invalid mode
-  UPG_MODE_NONE           = 0;
+  UPGRADE_MODE_NONE     = 0;
   // graceful upgrade
-  UPG_MODE_GRACEFUL       = 1;
+  UPGRADE_MODE_GRACEFUL = 1;
   // hitless upgrade
-  UPG_MODE_HITLESS        = 2;
-}
-
-// upgrade operation table actions
-enum UpgOperStateAction {
-  // invalid action
-  UPG_OPER_STATE_ACTION_NONE     = 0;
-  // copy the operational tables to new memory with translation
-  // memory should be reserved for duplicating the entries
-  UPG_OPER_STATE_ACTION_COPY     = 1;
-  // flush all the existing operational tables
-  UPG_OPER_STATE_ACTION_FLUSH    = 2;
-  // preserve the operational entries as it is
-  UPG_OPER_STATE_ACTION_PRESERVE = 3;
-  // replace the existing operational tables.
-  // when there is no additional memory, build the new table in
-  // linux memory and DMA in the end.
-  UPG_OPER_STATE_ACTION_REPLACE  = 4;
+  UPGRADE_MODE_HITLESS  = 2;
 }
 
 // upgrade specification
-message UpgSpec {
-  UpgReqType         ReqType         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  UpgMode            Mode            = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  string             PkgName         = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  UpgOperStateAction OperStateAction = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+message UpgradeSpec {
+  UpgradeRequestType RequestType = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  UpgradeMode        Mode        = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // new package name with full path
+  string             PackageName = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
 }
 
 // upgrade return status
-enum UpgStatus {
+enum UpgradeStatus {
   // upgrade successful
-  UPG_STATUS_OK          = 0;
+  UPGRADE_STATUS_OK          = 0;
   // upgrade failed
-  UPG_STATUS_FAIL        = 1;
+  UPGRADE_STATUS_FAIL        = 1;
   // upgrade invalid args
-  UPG_STATUS_INVALID_ARG = 2;
+  UPGRADE_STATUS_INVALID_ARG = 2;
 }
 
 // ugprade request
-message UpgRequest {
-  UpgSpec Request = 1;
+message UpgradeRequest {
+  UpgradeSpec Request = 1;
 }
 
 // upgrade response
-message UpgResponse {
-  UpgStatus Status    = 1;
-  string    StatusMsg = 2;
+message UpgradeResponse {
+  UpgradeStatus Status    = 1;
+  string        StatusMsg = 2;
 }

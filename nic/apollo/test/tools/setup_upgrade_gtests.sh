@@ -1,23 +1,39 @@
 #! /bin/bash
 
-set -e
-
-CUR_DIR=$( readlink -f $( dirname $0 ) )
-source $CUR_DIR/../../../tools/setup_env_mock.sh $PIPELINE
+set -ex
 
 export OPERD_REGIONS=$CONFIG_PATH/operd-regions.json
 OPERD_REGION='upgradelog'
 USER=$(stat -c '%U' ${PDSPKG_TOPDIR}/apollo/test/tools/setup_upgrade_gtests.sh)
 
-function setup {
+function upg_operd_init() {
     rm -f $CONFIG_PATH/operd-regions.json
     ln -s $CONFIG_PATH/$PIPELINE/operd-regions.json $CONFIG_PATH/operd-regions.json
-    rm -f ${PDSPKG_TOPDIR}/*log* ${PDSPKG_TOPDIR}/core*
+}
+
+function upg_pipeline_init() {
     rm -f ${CONFIG_PATH}/pipeline.json
     ln -s ${CONFIG_PATH}/${PIPELINE}/pipeline.json ${CONFIG_PATH}/pipeline.json
 }
 
-function finish {
+
+function upg_remove_logs() {
+    rm -f ${PDSPKG_TOPDIR}/*log* ${PDSPKG_TOPDIR}/core*
+}
+
+function upg_init() {
+    upg_operd_init
+    upg_pipeline_init
+    upg_remove_logs
+}
+
+function upg_setup() {
+    mkdir -p $CONFIG_PATH/gen/
+    rm -rf $CONFIG_PATH/gen/upgrade*.json
+    cp $1 $CONFIG_PATH/gen/upgrade_graceful.json
+}
+
+function upg_finish() {
     echo "===== Collecting logs for $1 ====="
     for f in "/tmp/upgrade_*.log"; do
         if [ -e "$f" ];then
@@ -76,4 +92,21 @@ function is_modified() {
         echo "file $1 not modified"
         return 0
     fi
+}
+
+function upg_wait_for_pdsagent() {
+    NICMGR_FILE="$PDSPKG_TOPDIR/nicmgr.log"
+    counter=600
+    while [ $counter -gt 0 ]
+    do
+        if [ -f "$NICMGR_FILE" ]; then
+            if grep -q "cpu_mnic0: Skipping MNIC device" $NICMGR_FILE; then
+                echo "pds-agent is up"
+                break
+            fi
+        fi
+        echo "Waiting for pds-agent to be up, count - $counter"
+        sleep 1
+        counter=$(( $counter - 1 ))
+    done
 }

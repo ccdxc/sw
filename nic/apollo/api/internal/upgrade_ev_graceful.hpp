@@ -47,6 +47,9 @@ typedef struct upg_ev_graceful_s {
     /// also pipeline pause if required
     upg_ev_hdlr_t quiesce_hdlr;
 
+    /// prepare for switching to B
+    upg_ev_hdlr_t prep_switchover_hdlr;
+
     /// switching to B
     upg_ev_hdlr_t switchover_hdlr;
 
@@ -64,7 +67,7 @@ typedef struct upg_ev_graceful_s {
 
     /// completed the upgrade (on A / B)
     /// threads should shutdown by receiving this event
-    upg_ev_hdlr_t exit_hdlr;
+    upg_ev_hdlr_t finish_hdlr;
 
 } upg_ev_graceful_t;
 

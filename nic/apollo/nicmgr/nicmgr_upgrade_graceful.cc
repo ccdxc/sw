@@ -7,6 +7,7 @@
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/internal/upgrade_ev.hpp"
+#include "nic/apollo/api/upgrade_state.hpp"
 #include "platform/src/lib/nicmgr/include/upgrade.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/device.hpp"
@@ -18,77 +19,53 @@ extern DeviceManager *g_devmgr;
 
 namespace nicmgr {
 
+using api::upg_obj_stash_meta_t;
+
 // ...WARNING.. these ids should be preserved across releases.
 // so don't modify it. only append.
 typedef enum backup_obj_id_s {
     NICMGR_BKUP_OBJ_INVALID         = 0,
-    NICMGR_BKUP_OBJ_DEVINFO_ID,
-    NICMGR_BKUP_OBJ_UPLINKINFO_ID
+    NICMGR_BKUP_OBJ_DEVINFO_ID      = 1,
+    NICMGR_BKUP_OBJ_UPLINKINFO_ID   = 2,
 } backup_obj_id_t;
 
-// ...WARNING.. this structure should be preserved across upgrades
-// upgrades. so don't change the order
-// mem_hdr contains the information about the object and gives the offset
-// where the objects are stored and also the number of objects
-typedef struct backup_mem_hdr_s {
-    backup_obj_id_t id;           //< objects id
-    uint32_t        obj_count;    //< number of objects saved for this id
-    uint32_t        mem_offset;   //< pointer to the first object
-    uint32_t        pad;          //< for future use
-} __PACK__ backup_mem_hdr_t;
-
-class nicmgr_upg_backup_ctxt {
-public:
-    sdk_ret_t backup_objs(void);
-    sdk_ret_t restore_objs(void);
-    size_t backup_obj_mem_offset(void) { return obj_mem_offset_; }
-    size_t backup_obj_mem_size(void) { return obj_mem_size_; }
-    char *backup_obj_mem(void) { return mem_; }
-    void set_backup_obj_mem_offset(size_t offset) { obj_mem_offset_ = offset; }
-private:
-    size_t obj_mem_offset_;
-    size_t obj_mem_size_;
-    char *mem_;
-};
-
-static nicmgr_upg_backup_ctxt backup_ctxt;
-
-#define NICMGR_BKUP_PBUF(pbuf_info, ret, str) {                         \
+#define NICMGR_BKUP_OBJS(pbuf_info, obj_name) {                         \
     uint32_t pbuf_byte_size = pbuf_info.ByteSizeLong();                 \
-    uint32_t offset = this->backup_obj_mem_offset();                    \
-    uint32_t size = this->backup_obj_mem_size();                        \
-    char *mem = this->backup_obj_mem();                                 \
+    uint32_t offset = ctx->obj_offset();                                \
+    uint32_t size = ctx->obj_size();                                    \
+    char *mem = ctx->mem();                                             \
                                                                         \
     if ((offset + pbuf_byte_size + 4) > size) {                         \
-        NIC_LOG_ERR("Failed to serialize {}", str);                     \
+        PDS_TRACE_ERR("Failed to serialize %s", obj_name);              \
         ret = SDK_RET_OOM;                                              \
     }                                                                   \
     *(uint32_t *)&mem[offset] = pbuf_byte_size;                         \
     if (pbuf_info.SerializeToArray(&mem[offset + 4],                    \
                                   pbuf_byte_size) == false) {           \
-        NIC_LOG_ERR("Failed to serialize {}", str);                     \
+        PDS_TRACE_ERR("Failed to serialize %s", obj_name);              \
         ret = SDK_RET_OOM;                                              \
     }                                                                   \
     offset += (pbuf_byte_size + 4);                                     \
-    this->set_backup_obj_mem_offset(offset);                            \
+    ctx->set_obj_offset(offset);                                        \
+    ret = SDK_RET_OK;                                                   \
 }
 
-#define NICMGR_RESTORE_PBUF(pbuf_info, cb, oid, ret, str) {             \
+#define NICMGR_RESTORE_OBJS(pbuf_info, cb, oid, obj_name) {             \
     uint32_t pbuf_byte_size;                                            \
-    char *mem = this->backup_obj_mem();                                 \
-    backup_mem_hdr_t *hdr = (backup_mem_hdr_t *)mem_;                   \
+    char *mem = ctx->mem();                                             \
+    upg_obj_stash_meta_t *meta = (upg_obj_stash_meta_t *)mem;           \
     uint32_t offset;                                                    \
                                                                         \
-    offset = hdr[oid].mem_offset;                                       \
-    if (hdr[oid].obj_count) {                                           \
-        SDK_ASSERT(hdr[oid].id == oid);                                 \
+    offset = meta[oid].offset;                                          \
+    if (meta[oid].obj_count) {                                          \
+        SDK_ASSERT(meta[oid].obj_id == oid);                            \
     }                                                                   \
-    for (uint32_t i = 0; i < hdr[oid].obj_count; i++) {                 \
+    for (uint32_t i = 0; i < meta[oid].obj_count; i++) {                \
         pbuf_byte_size =  *(uint32_t *)&mem[offset];                    \
                                                                         \
         if (pbuf_info.ParseFromArray(&mem[offset + 4],                  \
                                      pbuf_byte_size) == false) {        \
-            NIC_LOG_ERR("Failed to de-serialize {}", str);              \
+            PDS_TRACE_ERR("Failed to de-serialize %s", obj_name);       \
             ret = SDK_RET_OOM;                                          \
         }                                                               \
         cb(&pbuf_info);                                                 \
@@ -112,7 +89,7 @@ nicmgr_upg_process_response (sdk_ret_t status, void *cookie)
     upg_ev_params_t *params = (upg_ev_params_t *)info->msg_in->data();
     upg_ev_params_t resp;
 
-    NIC_LOG_DEBUG("Upgrade nicmgr IPC response type {}, status {}",
+    PDS_TRACE_DEBUG("Upgrade nicmgr IPC response type %s, status %u",
                   upg_msgid2str(params->id), status);
 
     if (status == SDK_RET_IN_PROGRESS) {
@@ -136,7 +113,7 @@ nicmgr_upg_backup_uplink_info (uplink_t *up, pds::Port *proto_obj)
     spec->set_portnumber(up->port);
     spec->set_type(up->is_oob ? pds::PortType::PORT_TYPE_ETH_MGMT :
                    pds::PortType::PORT_TYPE_ETH);
-    NIC_LOG_DEBUG("Saving uplink id {} port {}", up->id, up->port);
+    PDS_TRACE_DEBUG("Saving uplink id %u port %u", up->id, up->port);
 }
 
 void
@@ -193,7 +170,7 @@ nicmgr_upg_backup_eth_device_info (struct EthDevInfo *eth_dev_info,
     spec->mutable_pciespec()->set_port(eth_dev_info->eth_spec->pcie_port);
     spec->mutable_pciespec()->set_totalvfs(eth_dev_info->eth_spec->pcie_total_vfs);
 
-    NIC_LOG_DEBUG("Saving eth dev {}", eth_dev_info->eth_spec->name);
+    PDS_TRACE_DEBUG("Saving eth dev %s", eth_dev_info->eth_spec->name.c_str());
     return;
 }
 
@@ -252,7 +229,7 @@ nicmgr_upg_restore_eth_device_info (pds::nicmgr::EthDevice *proto_obj)
     eth_dev_info->eth_res = eth_res;
     eth_dev_info->eth_spec = eth_spec;
 
-    NIC_LOG_DEBUG("Restore eth dev {}", spec->name());
+    PDS_TRACE_DEBUG("Restore eth dev %s", eth_spec->name.c_str());
     g_devmgr->RestoreDevice(ETH, eth_dev_info);
 }
 
@@ -262,76 +239,80 @@ nicmgr_upg_restore_uplink_info (pds::Port *proto_obj)
     pds::PortSpec *spec = proto_obj->mutable_spec();
     bool is_oob = spec->type() ==  pds::PortType::PORT_TYPE_ETH_MGMT ? 1 : 0;
 
-    NIC_LOG_DEBUG("Restore uplink id {} port {}",
+    PDS_TRACE_DEBUG("Restore uplink id %u, port %u",
                   atoi(spec->id().c_str()), spec->portnumber());
     g_devmgr->CreateUplink(atoi(spec->id().c_str()), spec->portnumber(), is_oob);
 }
 
-sdk_ret_t
-nicmgr_upg_backup_ctxt::backup_objs(void) {
+static sdk_ret_t
+backup_objs (void)
+{
     std::vector <struct EthDevInfo*> dev_info;
     std::map<uint32_t, uplink_t*> up_links;
     pds::nicmgr::EthDevice proto_dev;
     pds::Port proto_port;
-    backup_mem_hdr_t *hdr = (backup_mem_hdr_t *)this->backup_obj_mem();
+    api::upg_ctxt *ctx = api::g_upg_state->nicmgr_upg_ctx();
+    upg_obj_stash_meta_t *meta = (upg_obj_stash_meta_t *)ctx->mem();
     sdk_ret_t ret;
 
     dev_info = g_devmgr->GetEthDevStateInfo();
-    NIC_LOG_DEBUG("Saving {} objects of EthDevInfo", dev_info.size());
+    PDS_TRACE_DEBUG("Saving %u objects of EthDevInfo", dev_info.size());
 
-    hdr[NICMGR_BKUP_OBJ_DEVINFO_ID].id = NICMGR_BKUP_OBJ_DEVINFO_ID;
-    hdr[NICMGR_BKUP_OBJ_DEVINFO_ID].obj_count = dev_info.size();
-    hdr[NICMGR_BKUP_OBJ_DEVINFO_ID].mem_offset = this->backup_obj_mem_offset();
+    meta[NICMGR_BKUP_OBJ_DEVINFO_ID].obj_id = NICMGR_BKUP_OBJ_DEVINFO_ID;
+    meta[NICMGR_BKUP_OBJ_DEVINFO_ID].obj_count = dev_info.size();
+    meta[NICMGR_BKUP_OBJ_DEVINFO_ID].offset = ctx->obj_offset();
 
     //for each element in dev_info convert it to protobuf and then setobject to shm
     for (uint32_t eth_dev_idx = 0; eth_dev_idx < dev_info.size(); eth_dev_idx++) {
         nicmgr_upg_backup_eth_device_info(dev_info[eth_dev_idx], &proto_dev);
-        NICMGR_BKUP_PBUF(proto_dev, ret, "ethdev");
+        NICMGR_BKUP_OBJS(proto_dev, "ethdev");
         if (ret != SDK_RET_OK) {
-            NIC_LOG_ERR("EthDevInfo save failed");
+            PDS_TRACE_ERR("EthDevInfo save failed");
             return ret;
         }
     }
 
     up_links = g_devmgr->GetUplinks();
-    NIC_FUNC_DEBUG("Saving {} objects of uplinkinfo", up_links.size());
+    PDS_TRACE_DEBUG("Saving %u objects of uplinkinfo", up_links.size());
 
-    hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].id = NICMGR_BKUP_OBJ_UPLINKINFO_ID;
-    hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].obj_count = up_links.size();
-    hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].mem_offset = this->backup_obj_mem_offset();
+    meta[NICMGR_BKUP_OBJ_UPLINKINFO_ID].obj_id = NICMGR_BKUP_OBJ_UPLINKINFO_ID;
+    meta[NICMGR_BKUP_OBJ_UPLINKINFO_ID].obj_count = up_links.size();
+    meta[NICMGR_BKUP_OBJ_UPLINKINFO_ID].offset = ctx->obj_offset();
 
     for (auto it = up_links.begin(); it != up_links.end(); it++) {
         uplink_t *uplink = it->second;
         nicmgr_upg_backup_uplink_info(uplink, &proto_port);
-        NICMGR_BKUP_PBUF(proto_port, ret, "uplink");
+        NICMGR_BKUP_OBJS(proto_port, "uplink");
         if (ret != SDK_RET_OK) {
-            NIC_LOG_ERR("Uplink save failed");
+            PDS_TRACE_ERR("Uplink save failed");
             return ret;
         }
     }
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-nicmgr_upg_backup_ctxt::restore_objs(void) {
+static sdk_ret_t
+restore_objs (void)
+{
     sdk_ret_t ret = SDK_RET_OK;
     pds::nicmgr::EthDevice proto_dev;
     pds::Port proto_port;
+    api::upg_ctxt *ctx = api::g_upg_state->nicmgr_upg_ctx();
 
-    NIC_FUNC_DEBUG("Retrieving saved objects");
+    PDS_TRACE_DEBUG("Retrieving saved objects");
 
-    NICMGR_RESTORE_PBUF(proto_dev, nicmgr_upg_restore_eth_device_info,
-                        NICMGR_BKUP_OBJ_DEVINFO_ID, ret, "ethdev");
+    NICMGR_RESTORE_OBJS(proto_dev, nicmgr_upg_restore_eth_device_info,
+                        NICMGR_BKUP_OBJ_DEVINFO_ID, "ethdev");
 
     if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("Eth device restore failed");
+        PDS_TRACE_ERR("Eth device restore failed");
         return ret;
     }
 
-    NICMGR_RESTORE_PBUF(proto_port, nicmgr_upg_restore_uplink_info,
-                        NICMGR_BKUP_OBJ_UPLINKINFO_ID, ret, "uplink");
+    NICMGR_RESTORE_OBJS(proto_port, nicmgr_upg_restore_uplink_info,
+                        NICMGR_BKUP_OBJ_UPLINKINFO_ID, "uplink");
     if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("Uplink restore failed");
+        PDS_TRACE_ERR("Uplink restore failed");
         return ret;
     }
     return SDK_RET_OK;
@@ -363,11 +344,12 @@ static void
 nicmgr_upg_ev_backup_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
     upg_ev_info_s *info = new upg_ev_info_t();
+    sdk_ret_t ret;
 
     PDS_TRACE_DEBUG("Upgrade nicmgr IPC request backup");
     info->msg_in = msg;
-    // TODO
-    return nicmgr_upg_process_response(SDK_RET_OK, info);
+    ret = backup_objs();
+    return nicmgr_upg_process_response(ret, info);
 }
 
 static void
@@ -409,6 +391,9 @@ nicmgr_upg_ev_repeal_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 sdk_ret_t
 nicmgr_upg_graceful_init (void)
 {
+    upg_mode_t upg_init_mode = api::g_upg_state->upg_init_mode();
+    sdk_ret_t ret;
+
     sdk::ipc::reg_request_handler(UPG_MSG_ID_COMPAT_CHECK,
                                   nicmgr_upg_ev_compat_check_hdlr, NULL);
     sdk::ipc::reg_request_handler(UPG_MSG_ID_BACKUP,
@@ -423,6 +408,14 @@ nicmgr_upg_graceful_init (void)
     // register the async handlers to nicmgr library
     nicmgr::upg::upg_ev_init(nicmgr_device_reset_status_cb,
                              nicmgr_upg_process_response);
+
+    // load the states
+    if (upg_init_mode == upg_mode_t::UPGRADE_MODE_GRACEFUL) {
+        ret = restore_objs();
+        if (ret != SDK_RET_OK) {
+            // api::g_upg_state->set_upg_init_error();
+        }
+    }
     return SDK_RET_OK;
 }
 
@@ -471,6 +464,17 @@ upg_ev_start (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_backup (upg_ev_params_t *params)
 {
+    sdk_ret_t ret;
+    bool create = true;
+
+    // get and initialize a segment from shread memory for write
+    ret = g_upg_state->nicmgr_upg_ctx()->init(PDS_UPGRADE_NICMGR_OBJ_STORE_NAME,
+                                              PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE,
+                                              create);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
     return nicmgr_send_ipc(params);
 }
 
@@ -488,6 +492,12 @@ upg_ev_quiesce (upg_ev_params_t *params)
 
 static sdk_ret_t
 upg_ev_ready (upg_ev_params_t *params)
+{
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+upg_ev_prep_switchover (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
 }
@@ -511,7 +521,7 @@ upg_ev_hostdev_reset (upg_ev_params_t *params)
 }
 
 static sdk_ret_t
-upg_ev_exit (upg_ev_params_t *params)
+upg_ev_finish (upg_ev_params_t *params)
 {
     return SDK_RET_OK;
 }
@@ -531,12 +541,14 @@ nicmgr_upg_graceful_init (void)
     ev_hdlr.hostdev_reset_hdlr = upg_ev_hostdev_reset;
     ev_hdlr.ready_hdlr = upg_ev_ready;
     ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
+    ev_hdlr.prep_switchover_hdlr = upg_ev_prep_switchover;
     ev_hdlr.switchover_hdlr = upg_ev_switchover;
     ev_hdlr.repeal_hdlr = upg_ev_repeal;
-    ev_hdlr.exit_hdlr = upg_ev_exit;
+    ev_hdlr.finish_hdlr = upg_ev_finish;
 
     // register for upgrade events
     api::upg_ev_thread_hdlr_register(ev_hdlr);
+
 
     return SDK_RET_OK;
 }

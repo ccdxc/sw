@@ -17,19 +17,20 @@
 namespace api {
 
 /// \brief upgrade event message ids to threads
-#define UPG_EV_MSG_ID_ENTRIES(E)                                            \
-    E(UPG_MSG_ID_NONE,            SDK_IPC_MSG_ID_MAX + 1,  "invalid")       \
-    E(UPG_MSG_ID_COMPAT_CHECK,    SDK_IPC_MSG_ID_MAX + 2,  "compatcheck")   \
-    E(UPG_MSG_ID_START,           SDK_IPC_MSG_ID_MAX + 3,  "start")         \
-    E(UPG_MSG_ID_BACKUP,          SDK_IPC_MSG_ID_MAX + 4,  "backup")        \
-    E(UPG_MSG_ID_LINK_DOWN,       SDK_IPC_MSG_ID_MAX + 5,  "linkdown")      \
-    E(UPG_MSG_ID_HOSTDEV_RESET,   SDK_IPC_MSG_ID_MAX + 6,  "hostdevreset")  \
-    E(UPG_MSG_ID_QUIESCE,         SDK_IPC_MSG_ID_MAX + 7,  "quiesce")       \
-    E(UPG_MSG_ID_SWITCHOVER,      SDK_IPC_MSG_ID_MAX + 8,  "switchover")    \
-    E(UPG_MSG_ID_READY,           SDK_IPC_MSG_ID_MAX + 9,  "ready")         \
-    E(UPG_MSG_ID_REPEAL,          SDK_IPC_MSG_ID_MAX + 10, "repeal")        \
-    E(UPG_MSG_ID_EXIT,            SDK_IPC_MSG_ID_MAX + 11, "exit")          \
-    E(UPG_MSG_ID_MAX,             SDK_IPC_MSG_ID_MAX + 12, "max-invalid")
+#define UPG_EV_MSG_ID_ENTRIES(E)                                              \
+    E(UPG_MSG_ID_NONE,            SDK_IPC_MSG_ID_MAX + 1,  "invalid")         \
+    E(UPG_MSG_ID_COMPAT_CHECK,    SDK_IPC_MSG_ID_MAX + 2,  "compatcheck")     \
+    E(UPG_MSG_ID_START,           SDK_IPC_MSG_ID_MAX + 3,  "start")           \
+    E(UPG_MSG_ID_BACKUP,          SDK_IPC_MSG_ID_MAX + 4,  "backup")          \
+    E(UPG_MSG_ID_LINK_DOWN,       SDK_IPC_MSG_ID_MAX + 5,  "linkdown")        \
+    E(UPG_MSG_ID_HOSTDEV_RESET,   SDK_IPC_MSG_ID_MAX + 6,  "hostdevreset")    \
+    E(UPG_MSG_ID_QUIESCE,         SDK_IPC_MSG_ID_MAX + 7,  "quiesce")         \
+    E(UPG_MSG_ID_PREP_SWITCHOVER, SDK_IPC_MSG_ID_MAX + 8,  "prep_switchover") \
+    E(UPG_MSG_ID_SWITCHOVER,      SDK_IPC_MSG_ID_MAX + 9,  "switchover")      \
+    E(UPG_MSG_ID_READY,           SDK_IPC_MSG_ID_MAX + 10, "ready")           \
+    E(UPG_MSG_ID_REPEAL,          SDK_IPC_MSG_ID_MAX + 11, "repeal")          \
+    E(UPG_MSG_ID_FINISH,          SDK_IPC_MSG_ID_MAX + 12, "finish")          \
+    E(UPG_MSG_ID_MAX,             SDK_IPC_MSG_ID_MAX + 13, "max-invalid")
 
 SDK_DEFINE_ENUM(upg_ev_msg_id_t, UPG_EV_MSG_ID_ENTRIES)
 SDK_DEFINE_ENUM_TO_STR(upg_ev_msg_id_t, UPG_EV_MSG_ID_ENTRIES)
@@ -69,10 +70,11 @@ using api::upg_ev_msg_id_t::UPG_MSG_ID_BACKUP;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_LINK_DOWN;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_HOSTDEV_RESET;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_QUIESCE;
+using api::upg_ev_msg_id_t::UPG_MSG_ID_PREP_SWITCHOVER;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_SWITCHOVER;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_READY;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_REPEAL;
-using api::upg_ev_msg_id_t::UPG_MSG_ID_EXIT;
+using api::upg_ev_msg_id_t::UPG_MSG_ID_FINISH;
 using api::upg_ev_msg_id_t::UPG_MSG_ID_MAX;
 
 #endif   // __API_UPGRADE_EV_HPP__
