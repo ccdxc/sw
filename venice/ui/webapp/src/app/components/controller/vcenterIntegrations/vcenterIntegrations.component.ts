@@ -39,7 +39,7 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
       top: '9px',
       left: '8px'
     },
-    svgIcon: 'host'
+    svgIcon: 'vcenter'
   };
 
   headerIcon: Icon = {

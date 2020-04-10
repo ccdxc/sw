@@ -137,6 +137,9 @@ export class ControllerService {
     this.matIconRegistry.addSvgIcon('naples', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/naples/ico-dsc-white.svg'));
     this.matIconRegistry.addSvgIcon('dscprofiles', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/cluster/profiles/dsc-profile.svg'));
 
+    // Controller
+    this.matIconRegistry.addSvgIcon('vcenter', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/controller/ico-vcenter-blk.svg'));
+
     // Misc
     this.matIconRegistry.addSvgIcon('un-pin', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/dashboard/ico-unpinned.svg'));
     this.matIconRegistry.addSvgIcon('auth-pol', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/admin/ico-auth-pol.svg'));

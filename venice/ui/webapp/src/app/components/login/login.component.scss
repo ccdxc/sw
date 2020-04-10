@@ -175,6 +175,19 @@
 
 .login-form {
   padding: 50px 100px 25px 100px;
+
+  .logo-container {
+    width: 400px;
+    height: 100px;
+    margin-bottom: 5%;
+    overflow: hidden;
+  }
+
+  img {
+    width: 100%;
+    height: auto;
+    margin-top: -20%;
+  }
 }
 
 .login-doc-link {
