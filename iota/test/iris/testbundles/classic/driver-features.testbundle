@@ -58,7 +58,7 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 4
+            iperfthreads     : 2
             #capture_pcap : true
     -   name    : UplinkIntf_RX_QUEUE_SIZE
         testcase: testcases.drivers.features
@@ -74,7 +74,7 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 4
+            iperfthreads     : 2
             #capture_pcap : true
     -   name    : UplinkIntf_TX_CHECKSUM
         testcase: testcases.drivers.features
@@ -104,7 +104,7 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 4
+            iperfthreads     : 2
             #capture_pcap : true
     -   name    : UplinkIntf_TSO
         testcase: testcases.drivers.features
@@ -124,7 +124,7 @@ testcases:
         args    :
             timeout : 7200
             type: remote_only
-            iperfthreads     : 4
+            iperfthreads     : 2
             #capture_pcap : true
     -   name    : UplinkIntf_PKT_FILTER
         testcase: testcases.drivers.features
@@ -141,7 +141,7 @@ testcases:
         args    :
             timeout : 14400
             type: remote_only
-            iperfthreads     : 4
+            iperfthreads     : 2
             #capture_pcap : true
     -   name    : UplinkIntf_RSS
         testcase: testcases.drivers.features
@@ -157,7 +157,7 @@ testcases:
         args    :
             timeout : 43200
             type: remote_only
-            iperfthreads     : 4
+            iperfthreads     : 2
             #capture_pcap : true
 
     -   name    : Load_Defaults
