@@ -63,6 +63,48 @@ func (fwp *firewallTestGroup) teardownTest() {
 	}, 30, 1).Should(BeTrue(), "Failed to Propagate the FirewallProfile update")
 }
 
+// teardown container tests
+func (fwp *firewallTestGroup) dscTeardownTest() {
+	for _, nicContainer := range ts.tu.NaplesNodes {
+		By(fmt.Sprintf("Teardown Unpausing NIC container %s", nicContainer))
+		ts.tu.LocalCommandOutput(fmt.Sprintf("docker unpause %s", nicContainer))
+	}
+	fwp.teardownTest()
+}
+
+// test to check for proper propagation status for unreachable dscs
+func (fwp *firewallTestGroup) testFirewallPendingPropagation() {
+	updateFwp := security.FirewallProfile{
+		ObjectMeta: api.ObjectMeta{
+			Name:   "default",
+			Tenant: "default",
+		},
+	}
+	updateFwp.Defaults("")
+	numNaples := int32(len(ts.tu.NaplesNodes))
+	for _, nicContainer := range ts.tu.NaplesNodes {
+		By(fmt.Sprintf("Pausing NIC container %s", nicContainer))
+		ts.tu.LocalCommandOutput(fmt.Sprintf("docker pause %s", nicContainer))
+	}
+	By(fmt.Sprintf("Updating the firewallprofile with new values : %v", updateFwp))
+	_, err := fwp.suite.restSvc.SecurityV1().FirewallProfile().Update(fwp.suite.loggedInCtx, &updateFwp)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	time.Sleep(5 * time.Second)
+
+	By(fmt.Sprintf("Verify the propagation is pending to unreachable DSCs total: %d", numNaples))
+	Eventually(func() bool {
+		fwpStat, err := fwp.suite.restSvc.SecurityV1().FirewallProfile().Get(fwp.suite.loggedInCtx, &updateFwp.ObjectMeta)
+		By(fmt.Sprintf("%s: FirewallProfile paused Status : %v", time.Now().String(), fwpStat.Status))
+		Expect(err).ShouldNot(HaveOccurred())
+		if fwpStat.Status.PropagationStatus.Pending == numNaples {
+			return true
+		}
+		return false
+	}, 120, 1).Should(BeTrue(), "Unreachable DSC Propagation of FirewallProfile failed")
+	By(fmt.Sprintf("Verify the propagation is successful to the pending DSCs"))
+}
+
 // test to check for default firewallprofile in the system
 func (fwp *firewallTestGroup) testFirewallDefaultCheck() {
 	defaultFwp := security.FirewallProfile{
@@ -297,5 +339,15 @@ var _ = Describe("firewall", func() {
 
 		// test cleanup
 		AfterEach(firewallTg.teardownTest)
+	})
+	Context("Firewall Profile propagation tests", func() {
+		// setup
+		BeforeEach(firewallTg.setupTest)
+
+		// test cases
+		It("FirewallProfile pending dsc should report proper propagation", firewallTg.testFirewallPendingPropagation)
+
+		// test cleanup
+		AfterEach(firewallTg.dscTeardownTest)
 	})
 })
