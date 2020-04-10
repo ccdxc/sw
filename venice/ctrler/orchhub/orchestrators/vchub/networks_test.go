@@ -522,6 +522,7 @@ func TestNetworks(t *testing.T) {
 				vchub.probe = mockProbe
 
 				mockProbe.EXPECT().StopWatchForDC("DC1", "DC1").AnyTimes()
+				mockProbe.EXPECT().RemovePenDVS("DC1", CreateDVSName("DC1"), 5).AnyTimes()
 
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)

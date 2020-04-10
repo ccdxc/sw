@@ -59,10 +59,11 @@ func (sm *Statemgr) OnOrchestratorUpdate(w *ctkit.Orchestrator, nw *orchestratio
 // OnOrchestratorDelete deletes a orchestrator
 func (sm *Statemgr) OnOrchestratorDelete(w *ctkit.Orchestrator) error {
 	sm.instanceManagerCh <- &kvstore.WatchEvent{Object: &w.Orchestrator, Type: kvstore.Deleted}
-	return sm.RemoveProbeChannel(w.Orchestrator.Name)
+	err := sm.RemoveProbeChannel(w.Orchestrator.Name)
+	return err
 }
 
-// OrchestratorStateFromObj conerts from memdb object to orchestration state
+// OrchestratorStateFromObj converts from memdb object to orchestration state
 func OrchestratorStateFromObj(obj runtime.Object) (*OrchestratorState, error) {
 	switch obj.(type) {
 	case *ctkit.Orchestrator:

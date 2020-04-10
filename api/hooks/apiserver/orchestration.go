@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
@@ -52,7 +53,7 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 	}
 
 	o.logger.DebugLog("retrieved %d items", len(orchs.Items))
-	if len(orchs.Items) >= maxOrchSupported {
+	if oper == apiintf.CreateOper && len(orchs.Items) >= maxOrchSupported {
 		return nil, true, fmt.Errorf("Unable to support more than %v orchestrators", maxOrchSupported)
 	}
 
@@ -67,8 +68,14 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 		return i, true, fmt.Errorf("%s is not a valid URI", orch.Spec.URI)
 	}
 
+	var foundOrch *orchestration.Orchestrator
 	for _, otherOrch := range orchs.Items {
-		if otherOrch.Spec.URI == orch.Spec.URI && otherOrch.Name != orch.Name {
+		if otherOrch.Name == orch.Name {
+			foundOrch = otherOrch
+			continue
+		}
+
+		if otherOrch.Spec.URI == orch.Spec.URI {
 			return i, true, fmt.Errorf("URI is already used by Orchestrator %s", otherOrch.Name)
 		}
 	}
@@ -112,9 +119,51 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 		return i, true, fmt.Errorf("Unsupported auth type [%v] passed in orchestrator %v", orch.Spec.Credentials.AuthType, orch.Name)
 	}
 
+	isManageAll := false
 	if len(orch.Spec.ManageNamespaces) > 0 {
-		for i := range orch.Spec.ManageNamespaces {
-			orch.Spec.ManageNamespaces[i] = strings.TrimSpace(orch.Spec.ManageNamespaces[i])
+		for ii := range orch.Spec.ManageNamespaces {
+			orch.Spec.ManageNamespaces[ii] = strings.TrimSpace(orch.Spec.ManageNamespaces[ii])
+
+			if orch.Spec.ManageNamespaces[ii] == utils.ManageAllDcs {
+				isManageAll = true
+				break
+			}
+		}
+	}
+
+	if isManageAll && len(orch.Spec.ManageNamespaces) > 1 {
+		return i, true, fmt.Errorf("If [%v] is passed, then no other namespace should be passed in the Manage Namespace list", utils.ManageAllDcs)
+	}
+
+	// All DCs will be included in managedAll, we don't have to check for Namespaces in use right now
+	if !isManageAll && oper == apiintf.UpdateOper {
+		if foundOrch == nil {
+			return i, true, fmt.Errorf("orchestrator %v not found in the orchestrator list", orch.Name)
+		}
+
+		_, deleted, _ := utils.DiffNamespace(foundOrch.Spec.ManageNamespaces, orch.Spec.ManageNamespaces)
+		if len(deleted) > 0 {
+			// Fetch networks
+			// Listing within any hook has potential to return stale information as there is no lock for collections.
+			// For cases when the managed namespace is no longer used by network, but the network list returned
+			// still has references to the removed namespace, we will disallow update.
+			// This can be fixed by a retry of the Orchestrator Update operation.
+			var networks network.NetworkList
+			listKey := strings.TrimSuffix(networks.MakeKey(string(apiclient.GroupNetwork)), "/")
+			err = kv.List(ctx, listKey, &networks)
+			if err != nil {
+				return i, true, fmt.Errorf("Error retrieving networks: %s", err)
+			}
+
+			for _, delNs := range deleted {
+				for _, network := range networks.Items {
+					for _, o := range network.Spec.Orchestrators {
+						if delNs == o.Namespace {
+							return i, true, fmt.Errorf("Managed Namespace [%v] still in use by network [%v]", delNs, network.Name)
+						}
+					}
+				}
+			}
 		}
 	}
 

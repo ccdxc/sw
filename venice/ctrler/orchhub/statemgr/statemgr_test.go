@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -318,10 +319,13 @@ func TestHostCreateList(t *testing.T) {
 	go im.watchOrchestratorConfig()
 	defer im.watchCancel()
 
-	err = createHost(sm, "default", "prod-beef", nil)
+	prodMap := make(map[string]string)
+	prodMap[utils.NamespaceKey] = "prod"
+
+	err = createHost(sm, "default", "prod-beef", prodMap)
 	Assert(t, (err == nil), "Host could not be created")
 
-	err = createHost(sm, "default", "prod-bebe", nil)
+	err = createHost(sm, "default", "prod-bebe", prodMap)
 	Assert(t, (err == nil), "Host could not be created")
 
 	labels := map[string]string{"color": "green"}
@@ -339,8 +343,6 @@ func TestHostCreateList(t *testing.T) {
 	meta := api.ObjectMeta{
 		Name:      "prod-bebe",
 		Namespace: "default",
-		//Host  is cluster object no need for tenant
-		//Tenant:    "default",
 	}
 
 	nobj, err := sm.Controller().Host().Find(&meta)
@@ -355,6 +357,15 @@ func TestHostCreateList(t *testing.T) {
 
 	err = sm.Controller().Host().Delete(&nobj.Host)
 	Assert(t, err == nil, "deletion was not successful")
+
+	nw, err = sm.ctrler.Host().List(context.Background(), &opts)
+	Assert(t, len(nw) == 1, "expected 1, got %v Hosts", len(nw))
+
+	nw, err = sm.ctrler.Host().List(context.Background(), &api.ListWatchOptions{})
+	Assert(t, len(nw) == 2, "expected 2, got %v Hosts", len(nw))
+
+	err = sm.DeleteHostByNamespace("prod")
+	Assert(t, err == nil, "did not delete the Host")
 
 	nw, err = sm.ctrler.Host().List(context.Background(), &opts)
 	Assert(t, len(nw) == 1, "expected 1, got %v Hosts", len(nw))

@@ -1315,10 +1315,6 @@ func TestUpdateUrl(t *testing.T) {
 	AssertOk(t, err, "Failed to get available port")
 	newURL := listener.ListenURL.String()
 
-	err = listener.GetAvailablePort()
-	AssertOk(t, err, "Failed to get available port")
-	badURL := listener.ListenURL.String()
-
 	config := log.GetDefaultConfig("vchub_testUpdateUrl")
 	config.LogToStdout = true
 	config.Filter = log.AllowAllFilter
@@ -1384,7 +1380,7 @@ func TestUpdateUrl(t *testing.T) {
 	}, "Orch status never updated to success", "100ms", "5s")
 
 	// Update with bad URL, expect to see connection failure
-	orchConfig.Spec.URI = badURL
+	orchConfig.Spec.URI = "bad-url"
 	vchub.UpdateConfig(orchConfig)
 	AssertEventually(t, func() (bool, interface{}) {
 		o, err := vchub.StateMgr.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
@@ -1755,4 +1751,187 @@ func TestManageNoNamespaces(t *testing.T) {
 		}
 		return true, nil
 	}, "found unexpected DC")
+}
+
+func TestOrchRemoveManagedDC(t *testing.T) {
+	dcCount := 4
+	dcs := []*sim.Datacenter{}
+	dcNames := []string{}
+
+	err := testutils.ValidateParams(defaultTestParams)
+	if err != nil {
+		t.Fatalf("Failed at validating test parameters")
+	}
+
+	config := log.GetDefaultConfig("vchub_test")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	logger.Infof("Place holder")
+	u := &url.URL{
+		Scheme: "https",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+
+	for i := 0; i < dcCount; i++ {
+		dcNames = append(dcNames, fmt.Sprintf("%s-%d", defaultTestParams.TestDCName, i))
+		dc, err := s.AddDC(dcNames[i])
+		AssertOk(t, err, "failed dc create")
+
+		dcs = append(dcs, dc)
+	}
+
+	for i := 0; i < dcCount; i++ {
+		_, ok := dcs[i].GetDVS(CreateDVSName(dcNames[i]))
+		Assert(t, !ok, "No Pensando DVS should be found")
+	}
+
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		s.Destroy()
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	// ADD DC-0
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{dcNames[0]}
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+	AssertOk(t, err, "failed to create orch config")
+
+	vchub := LaunchVCHub(sm, orchConfig, logger, WithTagSyncDelay(2*time.Second))
+
+	// Give time for VCHub to come up
+	time.Sleep(2 * time.Second)
+
+	defer func() {
+		vchub.Destroy(false)
+		defer s.Destroy()
+	}()
+
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcNames[0])
+		if dc == nil {
+			return false, fmt.Errorf("Did not find DC %v", dcNames[0])
+		}
+
+		_, ok := dcs[0].GetDVS(CreateDVSName(dcNames[0]))
+		if !ok {
+			return false, fmt.Errorf("Pensando DVS not found in DC %v", dcNames[0])
+		}
+
+		return true, nil
+	}, "Did not find DC")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		for i := 1; i < dcCount; i++ {
+			dc := vchub.GetDC(dcNames[i])
+			if dc != nil {
+				return false, fmt.Errorf("Found unexpected DC %v", dcNames[i])
+			}
+		}
+		return true, nil
+	}, "found unexpected DC")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		for i := 1; i < dcCount; i++ {
+			_, ok := dcs[i].GetDVS(CreateDVSName(dcNames[i]))
+			if ok {
+				return false, fmt.Errorf("unexpected pensando DVS found in DC %s", dcNames[i])
+			}
+		}
+
+		return true, nil
+	}, "Unexpected Pensando DVS found in DC")
+
+	// REMOVE all DCs
+	orchConfig.Spec.ManageNamespaces = []string{}
+	vchub.UpdateConfig(orchConfig)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		for i := 0; i < dcCount; i++ {
+			dc := vchub.GetDC(dcNames[i])
+			if dc == nil {
+				return true, nil
+			}
+
+			dvs := dc.GetDVS(CreateDVSName(dcNames[i]))
+			if dvs != nil {
+				return false, fmt.Errorf("unexpected pensando DVS found in DC %s", dcNames[i])
+			}
+		}
+
+		if len(vchub.DcID2NameMap) > 0 || len(vchub.DcMap) > 0 {
+			return false, fmt.Errorf("VCHub in-memory state not cleared")
+		}
+
+		return true, nil
+	}, "Unexpected Pensando DVS found in DC")
+
+	// Add DC-1
+	orchConfig.Spec.ManageNamespaces = []string{dcNames[1]}
+	vchub.UpdateConfig(orchConfig)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		dc := vchub.GetDC(dcNames[1])
+		if dc == nil {
+			return false, fmt.Errorf("Did not find DC %v", dcNames[1])
+		}
+
+		if len(vchub.DcID2NameMap) != 1 || len(vchub.DcMap) != 1 {
+			return false, fmt.Errorf("VCHub in-memory state not cleared")
+		}
+		return true, nil
+	}, "Did not find DC")
+
+	dc := vchub.GetDC(dcNames[0])
+	Assert(t, dc == nil, fmt.Sprintf("Found unexpected DC %v", dcNames[0]))
+
+	// ADD ALL DCs
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	vchub.UpdateConfig(orchConfig)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		for i := 0; i < dcCount; i++ {
+			dc := vchub.GetDC(dcNames[i])
+			if dc == nil {
+				return false, fmt.Errorf("Did not find DC %v", dcNames[i])
+			}
+
+			_, ok := dcs[i].GetDVS(CreateDVSName(dcNames[i]))
+			if !ok {
+				return false, fmt.Errorf("Pensando DVS not found in DC %s", dcNames[i])
+			}
+
+			if len(vchub.DcID2NameMap) != dcCount || len(vchub.DcMap) != dcCount {
+				return false, fmt.Errorf("VCHub in-memory state not cleared")
+			}
+		}
+		return true, nil
+	}, "Did not find DC")
+
+	// REMOVE ALL DCs
+	orchConfig.Spec.ManageNamespaces = []string{}
+	vchub.UpdateConfig(orchConfig)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		for i := 1; i < dcCount; i++ {
+			dc := vchub.GetDC(dcNames[i])
+			if dc != nil {
+				return false, fmt.Errorf("DC %v should not have been found", dcNames[i])
+			}
+
+			if len(vchub.DcID2NameMap) > 0 || len(vchub.DcMap) > 0 {
+				return false, fmt.Errorf("VCHub in-memory state not cleared")
+			}
+		}
+		return true, nil
+	}, "Did not find DC")
 }

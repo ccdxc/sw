@@ -227,7 +227,7 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 		}
 	}
 
-	if v.OrchConfig != nil {
+	if len(v.OrchConfig.Name) > 0 {
 		utils.AddOrchNameLabel(workloadObj.Labels, v.OrchConfig.GetName())
 		if workloadObj.Spec.HostName != "" {
 			dcName := v.getDCNameForHost(workloadObj.Spec.HostName)

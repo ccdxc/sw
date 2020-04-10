@@ -77,3 +77,31 @@ func GetOrchNamespaceFromObj(labels map[string]string) (string, bool) {
 	ns, ok := labels[NamespaceKey]
 	return ns, ok
 }
+
+// DiffNamespace returns lists of diff between two string list
+func DiffNamespace(oldList []string, newList []string) (added []string, deleted []string, nochange []string) {
+	deletedNamespaces := oldList
+	addedNamespaces := []string{}
+	nochangeNamespaces := []string{}
+
+	for _, newNamespace := range newList {
+		found := false
+		for i, oldNamespace := range deletedNamespaces {
+			if newNamespace == oldNamespace {
+				found = true
+				nochangeNamespaces = append(nochangeNamespaces, newNamespace)
+				// if an element is found in new and old, then it is not deleted, so remove from the
+				// deleted list
+				deletedNamespaces[i] = deletedNamespaces[len(deletedNamespaces)-1]
+				deletedNamespaces = deletedNamespaces[:len(deletedNamespaces)-1]
+				break
+			}
+		}
+
+		if !found {
+			addedNamespaces = append(addedNamespaces, newNamespace)
+		}
+	}
+
+	return addedNamespaces, deletedNamespaces, nochangeNamespaces
+}

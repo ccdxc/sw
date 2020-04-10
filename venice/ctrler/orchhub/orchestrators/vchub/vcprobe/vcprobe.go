@@ -84,6 +84,7 @@ type ProbeInf interface {
 	StartWatchers()
 	ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine
 	ListDC() []mo.Datacenter
+	GetDCMap() map[string]mo.Datacenter
 	ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch
 	ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup
 	ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
@@ -509,6 +510,18 @@ func (v *VCProbe) ListDC() []mo.Datacenter {
 	var dcs []mo.Datacenter
 	v.ListObj(defs.Datacenter, []string{"name"}, &dcs, nil)
 	return dcs
+}
+
+// GetDCMap returns a DC Name to DC map
+func (v *VCProbe) GetDCMap() map[string]mo.Datacenter {
+	dcMap := make(map[string]mo.Datacenter)
+
+	dcList := v.ListDC()
+	for _, dc := range dcList {
+		dcMap[dc.Name] = dc
+	}
+
+	return dcMap
 }
 
 // ListDVS returns a list of DVS objects

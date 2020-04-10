@@ -273,6 +273,18 @@ func (mr *MockProbeInfMockRecorder) ListDC() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDC", reflect.TypeOf((*MockProbeInf)(nil).ListDC))
 }
 
+// GetDCMap mocks base method
+func (m *MockProbeInf) GetDCMap() map[string]mo.Datacenter {
+	ret := m.ctrl.Call(m, "GetDCMap")
+	ret0, _ := ret[0].(map[string]mo.Datacenter)
+	return ret0
+}
+
+// GetDCMap indicates an expected call of GetDCMap
+func (mr *MockProbeInfMockRecorder) GetDCMap() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDCMap", reflect.TypeOf((*MockProbeInf)(nil).GetDCMap))
+}
+
 // ListDVS mocks base method
 func (m *MockProbeInf) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch {
 	ret := m.ctrl.Call(m, "ListDVS", dcRef)

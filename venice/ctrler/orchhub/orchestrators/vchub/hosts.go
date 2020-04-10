@@ -200,7 +200,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	if hostObj.Labels == nil {
 		hostObj.Labels = make(map[string]string)
 	}
-	if existingHost == nil && v.OrchConfig != nil {
+	if existingHost == nil {
 		utils.AddOrchNameLabel(hostObj.Labels, v.OrchConfig.Name)
 		if hostObj.Labels == nil {
 			hostObj.Labels = make(map[string]string)
@@ -339,10 +339,9 @@ func (v *VCHub) deleteHostFromDc(obj *cluster.Host, penDC *PenDC) {
 }
 
 // DeleteHosts deletes all host objects from API server for this VCHub instance
-func (v *VCHub) DeleteHosts() {
+func (v *VCHub) DeleteHosts(opts *api.ListWatchOptions) {
 	// List hosts
-	opts := api.ListWatchOptions{}
-	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
+	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, opts)
 	if err != nil {
 		v.Log.Errorf("Failed to get host list. Err : %v", err)
 	}

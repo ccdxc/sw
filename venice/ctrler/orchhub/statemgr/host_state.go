@@ -1,12 +1,15 @@
 package statemgr
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -68,4 +71,30 @@ func HostStateFromObj(obj runtime.Object) (*HostState, error) {
 	default:
 		return nil, fmt.Errorf("Wrong type")
 	}
+}
+
+// ListHostByNamespace list all hosts which have the namespace label
+func (sm *Statemgr) ListHostByNamespace(namespace string) ([]*ctkit.Host, error) {
+	opts := api.ListWatchOptions{}
+	opts.LabelSelector = fmt.Sprintf("%v=%v", utils.NamespaceKey, namespace)
+	return sm.ctrler.Host().List(context.Background(), &opts)
+}
+
+// DeleteHostByNamespace deletes hosts by namespace
+func (sm *Statemgr) DeleteHostByNamespace(namespace string) error {
+	hosts, err := sm.ListHostByNamespace(namespace)
+	if err != nil {
+		return err
+	}
+
+	for _, host := range hosts {
+		hostState, err := HostStateFromObj(host)
+		if err != nil {
+			log.Errorf("Failed to get host. Err : %v", err)
+		}
+
+		hostState.stateMgr.ctrler.Host().Delete(&host.Host)
+	}
+
+	return nil
 }

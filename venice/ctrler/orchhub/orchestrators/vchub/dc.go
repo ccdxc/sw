@@ -58,6 +58,7 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 			v.DcID2NameMap = map[string]string{}
 		}
 		v.DcID2NameMap[dcID] = dcName
+
 		err := v.probe.TagObjAsManaged(dcRef)
 		if err != nil {
 			v.Log.Errorf("Failed to tag DC as managed, %s", err)
@@ -79,6 +80,7 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 
 // RemovePenDC removes all DC state on remove DC event from vCenter
 func (v *VCHub) RemovePenDC(dcName string) {
+	v.Log.Infof("Stopping management of DC %v", dcName)
 	v.DcMapLock.Lock()
 	defer v.DcMapLock.Unlock()
 
@@ -91,27 +93,33 @@ func (v *VCHub) RemovePenDC(dcName string) {
 	// Stop watcher for this DC
 	v.probe.StopWatchForDC(dcName, existingDC.dcRef.Value)
 
+	existingDC.Lock()
+	dvsName := CreateDVSName(dcName)
+	err := v.probe.RemovePenDVS(dcName, dvsName, 5)
+	if err != nil {
+		v.Log.Errorf("failed to delete DVS %v from DC %v. Err : %v", dvsName, dcName, err)
+	}
+	existingDC.Unlock()
+
 	// Delete any Workloads or hosts associated with this DC
 	// There may be stale hosts or workloads if we were disconnected
 	opts := api.ListWatchOptions{}
+	opts.LabelSelector = fmt.Sprintf("%v=%v", utils.NamespaceKey, dcName)
+
 	workloads, err := v.StateMgr.Controller().Workload().List(v.Ctx, &opts)
 	if err != nil {
-		v.Log.Errorf("Failed to get network list. Err : %v", err)
+		v.Log.Errorf("Failed to get workload list for DC %v. Err : %v", dcName, err)
 	}
 	for _, workload := range workloads {
-		if utils.IsObjForOrch(workload.Labels, v.VcID, existingDC.Name) {
-			v.deleteWorkload(&workload.Workload)
-		}
+		v.deleteWorkload(&workload.Workload)
 	}
 
 	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
 	if err != nil {
-		v.Log.Errorf("Failed to get network list. Err : %v", err)
+		v.Log.Errorf("Failed to get host list for DC %v. Err : %v", dcName, err)
 	}
 	for _, host := range hosts {
-		if utils.IsObjForOrch(host.Labels, v.VcID, existingDC.Name) {
-			v.deleteHostFromDc(&host.Host, existingDC)
-		}
+		v.deleteHostFromDc(&host.Host, existingDC)
 	}
 
 	// Delete entries in map
@@ -123,7 +131,6 @@ func (v *VCHub) RemovePenDC(dcName string) {
 	v.State.DcMapLock.Unlock()
 
 	v.State.DvsMapLock.Lock()
-	dvsName := CreateDVSName(existingDC.Name)
 	if _, ok := v.State.DvsIDMap[dvsName]; ok {
 		delete(v.State.DvsIDMap, dvsName)
 	}

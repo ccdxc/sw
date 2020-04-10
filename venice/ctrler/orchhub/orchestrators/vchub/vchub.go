@@ -1,6 +1,7 @@
 package vchub
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
@@ -20,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 const (
@@ -41,6 +44,7 @@ type VCHub struct {
 	// TODO: don't use DC display name as key, use ID instead
 	DcMap        map[string]*PenDC
 	DcID2NameMap map[string]string
+	DcName2IDMap map[string]string
 	// Will be taken with write lock by sync
 	syncLock     sync.RWMutex
 	syncDone     bool
@@ -123,17 +127,18 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 		Ctx:          ctx,
 		Log:          logger.WithContext("submodule", fmt.Sprintf("VCHub-%s(%s)", config.GetName(), orchID)),
 		StateMgr:     stateMgr,
-		OrchConfig:   config,
 		Wg:           &sync.WaitGroup{},
 		DcIDMap:      map[string]types.ManagedObjectReference{}, // Obj name to ID
 		DvsIDMap:     map[string]types.ManagedObjectReference{}, // Obj name to ID
 		ForceDCNames: forceDCMap,
+		OrchConfig:   ref.DeepCopy(config).(*orchestration.Orchestrator),
 	}
 
 	v.State = &state
 	v.cancel = cancel
 	v.DcMap = map[string]*PenDC{}
 	v.DcID2NameMap = map[string]string{}
+	v.DcName2IDMap = map[string]string{}
 	v.vcReadCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	v.vcEventCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	v.tagSyncDelay = defaultTagSyncDelay
@@ -220,17 +225,55 @@ func (v *VCHub) Destroy(delete bool) {
 		v.Wg.Wait()
 		v.probe.ClearState()
 
-		v.DeleteHosts()
+		opts := api.ListWatchOptions{}
+		v.DeleteHosts(&opts)
 	}
 	v.Log.Infof("VCHub Destroyed")
 }
 
+// isCredentialChanged returns true if the new config credentials are different from the existing one
+func (v *VCHub) isCredentialChanged(config *orchestration.Orchestrator) bool {
+	if v.OrchConfig.Spec.URI != config.Spec.URI {
+		return true
+	}
+
+	if v.OrchConfig.Spec.Credentials.AuthType != config.Spec.Credentials.AuthType {
+		return true
+	}
+
+	switch v.OrchConfig.Spec.Credentials.AuthType {
+	case monitoring.ExportAuthType_AUTHTYPE_USERNAMEPASSWORD.String():
+		return (v.OrchConfig.Spec.Credentials.UserName != config.Spec.Credentials.UserName) || (v.OrchConfig.Spec.Credentials.Password != config.Spec.Credentials.Password)
+	case monitoring.ExportAuthType_AUTHTYPE_TOKEN.String():
+		return v.OrchConfig.Spec.Credentials.BearerToken != config.Spec.Credentials.BearerToken
+	case monitoring.ExportAuthType_AUTHTYPE_CERTS.String():
+		return bytes.Compare(v.OrchConfig.Spec.Credentials.KeyData, config.Spec.Credentials.KeyData) != 0
+	case monitoring.ExportAuthType_AUTHTYPE_NONE.String():
+		return false
+	}
+
+	return false
+}
+
 // UpdateConfig handles if the Orchestrator config has changed
 func (v *VCHub) UpdateConfig(config *orchestration.Orchestrator) {
-	// Restart vchub
-	v.Log.Infof("VCHub config updated, restarting...")
-	v.Destroy(false)
-	v.setupVCHub(v.StateMgr, v.OrchConfig, v.Log, v.opts...)
+	v.Log.Infof("VCHub config updated. : Orch : %v", config)
+	v.reconcileNamespaces(config)
+
+	if v.isCredentialChanged(config) {
+		v.Log.Infof("Credentials were updated. Restarting VCHub")
+		v.Destroy(false)
+		v.setupVCHub(v.StateMgr, config, v.Log, v.opts...)
+	} else {
+		// If setupVCHub is not called, we have to update the forceDCMaps and config
+		forceDCMap := map[string]bool{}
+		for _, dc := range config.Spec.ManageNamespaces {
+			forceDCMap[dc] = true
+		}
+
+		v.ForceDCNames = forceDCMap
+		v.OrchConfig = ref.DeepCopy(config).(*orchestration.Orchestrator)
+	}
 }
 
 // deleteAllDVS cleans up all the PensandoDVS present in the DCs within the VC deployment
@@ -283,6 +326,72 @@ func (v *VCHub) ListPensandoHosts(dcRef *types.ManagedObjectReference) []mo.Host
 		penHosts = append(penHosts, host)
 	}
 	return penHosts
+}
+
+func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
+	v.Log.Infof("Reconciling namespaces for orchestrator [%v]", config.Name)
+	managedNamespaces := v.getManagedNamespaceList()
+	newManagedNamespaces := []string{}
+
+	if len(config.Spec.ManageNamespaces) == 1 && config.Spec.ManageNamespaces[0] == utils.ManageAllDcs {
+		for k := range v.probe.GetDCMap() {
+			newManagedNamespaces = append(newManagedNamespaces, k)
+		}
+	} else {
+		newManagedNamespaces = config.Spec.ManageNamespaces
+	}
+
+	addedNs, deletedNs, nochangeNs := utils.DiffNamespace(managedNamespaces, newManagedNamespaces)
+	if len(addedNs) == 0 && len(deletedNs) == 0 {
+		v.Log.Info("No namespaces to reconcile")
+		return nil
+	}
+
+	if len(nochangeNs) == 0 && len(addedNs) == 0 {
+		v.Log.Infof("All namespaces associated with the orchestrator object have been deleted")
+	}
+
+	// Cleanup DCs no longer managed by OrchHub
+	for _, ns := range deletedNs {
+		v.Log.Infof("Cleaning up DC : %v", ns)
+		v.RemovePenDC(ns)
+	}
+
+	if len(addedNs) > 0 {
+		dcMap := v.probe.GetDCMap()
+		for _, ns := range addedNs {
+			dc, ok := dcMap[ns]
+			if !ok {
+				v.Log.Errorf("DC %v not found in VCenter DC List.", ns)
+				continue
+			}
+
+			v.Log.Infof("Initializing DC : %v", dc.Name)
+			_, err := v.NewPenDC(dc.Name, dc.Self.Value)
+			if err == nil {
+				v.probe.StartWatchForDC(dc.Name, dc.Self.Value)
+			}
+			v.checkNetworks(dc.Name)
+		}
+	}
+
+	return nil
+}
+
+func (v *VCHub) getManagedNamespaceList() []string {
+	nsList := []string{}
+
+	if ok := v.ForceDCNames[utils.ManageAllDcs]; ok {
+		for k := range v.probe.GetDCMap() {
+			nsList = append(nsList, k)
+		}
+	} else {
+		for k := range v.ForceDCNames {
+			nsList = append(nsList, k)
+		}
+	}
+
+	return nsList
 }
 
 // Check if the given DC(namespace) is managed by this vchub

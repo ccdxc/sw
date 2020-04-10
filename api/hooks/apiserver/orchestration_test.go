@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/api/generated/workload"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -227,7 +228,7 @@ func TestOrchCheckHook(t *testing.T) {
 
 func TestOrchestratorPreCommit(t *testing.T) {
 	hooks := &orchHooks{
-		logger: log.SetConfig(log.GetDefaultConfig("Orch-Hooks-Preommit-Test")),
+		logger: log.SetConfig(log.GetDefaultConfig("Orch-Hooks-Precommit-Test")),
 	}
 
 	_, result, err := hooks.validateOrchestrator(context.TODO(), nil, nil, "", apiintf.UpdateOper, false, nil)
@@ -445,4 +446,124 @@ func TestOrchestratorPreCommit(t *testing.T) {
 			Assert(t, err != nil && (err.Error() == tc.err.Error()), fmt.Sprintf("hook did not return expected error. Testcase: %d, have: \"%v\", want: \"%v\"", i, err, tc.err))
 		}
 	}
+}
+
+func TestOrchManagedNamespaceUpdate(t *testing.T) {
+	logConfig := &log.Config{
+		Module:      "Orchestrator-hooks",
+		Format:      log.LogFmt,
+		Filter:      log.AllowAllFilter,
+		Debug:       false,
+		CtxSelector: log.ContextAll,
+		LogToStdout: true,
+		LogToFile:   false,
+	}
+
+	// Initialize logger config
+	l := log.SetConfig(logConfig)
+	hooks := &orchHooks{
+		logger: l,
+	}
+
+	schema := runtime.GetDefaultScheme()
+	config := store.Config{Type: store.KVStoreTypeMemkv, Servers: []string{""}, Codec: runtime.NewJSONCodec(schema)}
+	kv, err := store.New(config)
+	AssertOk(t, err, "Error instantiating KVStore")
+
+	uri := "vc:8989"
+
+	nw := &network.Network{
+		ObjectMeta: api.ObjectMeta{
+			Name:   "nw-orch-test",
+			Tenant: "default",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "network",
+		},
+		Spec: network.NetworkSpec{
+			Type: network.NetworkType_Bridged.String(),
+			Orchestrators: []*network.OrchestratorInfo{
+				&network.OrchestratorInfo{
+					Name:      "o1",
+					Namespace: "used-namespace1",
+				},
+				&network.OrchestratorInfo{
+					Name:      "o1",
+					Namespace: "used-namespace2",
+				},
+			},
+		},
+	}
+
+	ctx := context.TODO()
+	// Create orch
+	o1 := &orchestration.Orchestrator{
+		ObjectMeta: api.ObjectMeta{
+			Name:            "orchdc",
+			ResourceVersion: "1",
+			Tenant:          "default",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "Orchestrator",
+			APIVersion: "v1",
+		},
+		Spec: orchestration.OrchestratorSpec{
+			URI: uri,
+			Credentials: &monitoring.ExternalCred{
+				AuthType: "username-password",
+				UserName: "user",
+				Password: "pass",
+			},
+			ManageNamespaces: []string{"used-namespace1", "used-namespace2", "unused-namespace1"},
+		},
+	}
+
+	key := o1.MakeKey(string(apiclient.GroupOrchestration))
+	err = kv.Create(ctx, key, o1)
+	defer kv.Delete(ctx, key, nil)
+	AssertOk(t, err, "kv operation failed")
+
+	// Create network
+	err = kv.Create(ctx, nw.MakeKey(string(apiclient.GroupNetwork)), nw)
+	AssertOk(t, err, "kv operation failed")
+
+	// Add namespace
+	o1.Spec.ManageNamespaces = []string{"used-namespace1", "used-namespace2", "unused-namespace1", "another-unused-namespace"}
+	_, _, err = hooks.validateOrchestrator(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *o1)
+	AssertOk(t, err, "namespace addition should have succeeded")
+
+	// Remove a user namespace
+	o1.Spec.ManageNamespaces = []string{"used-namespace2", "unused-namespace1"}
+	_, _, err = hooks.validateOrchestrator(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *o1)
+	Assert(t, err != nil, "managed namespace removal should have failed")
+
+	// Remove unused namespace
+	o1.Spec.ManageNamespaces = []string{"used-namespace1", "used-namespace2"}
+	_, _, err = hooks.validateOrchestrator(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *o1)
+	AssertOk(t, err, "manage namespace removal should have succeeded")
+
+	// Update with "all_namespace"
+	o1.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	_, _, err = hooks.validateOrchestrator(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *o1)
+	AssertOk(t, err, "manage namespace update should have succeeded")
+
+	// Update with "all_namespace"
+	o1.Spec.ManageNamespaces = []string{utils.ManageAllDcs, "random-dc"}
+	_, _, err = hooks.validateOrchestrator(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *o1)
+	Assert(t, err != nil, "manage namespace update should have succeeded")
+
+	// Update with empty list
+	o1.Spec.ManageNamespaces = []string{}
+	_, _, err = hooks.validateOrchestrator(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *o1)
+	Assert(t, err != nil, "manage namespace update should have succeeded")
+
+	// Delete the network correponding to used-namespace1
+	err = kv.Delete(ctx, nw.MakeKey(string(apiclient.GroupNetwork)), nw)
+	AssertOk(t, err, "kv operation failed")
+
+	// Update with empty list
+	o1.Spec.ManageNamespaces = []string{}
+	_, _, err = hooks.validateOrchestrator(ctx, kv, kv.NewTxn(), key, apiintf.UpdateOper, false, *o1)
+	AssertOk(t, err, "manage namespace update should have succeeded")
+
 }
