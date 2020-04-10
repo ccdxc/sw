@@ -331,12 +331,22 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 const (
-	bgpNLRI = `   %s NextHop %v AS Path [ %v ]
-      RouteSource %s Originator ID %v FlapStatsFlapcnt %v
-      FlapStatsSupprsd %v IsActive %v Stale %v
-      FlapStartTime %v ReasonNotBest %v EcmpRoute %v
-      PeerAddr %v
-      ExtComm %v
+	bgpNLRI = `-----------------------------------
+        %s 
+	NextHop            : %v 
+	AS Path            : %v
+	RouteSource        : %s 
+	Originator ID      : %v 
+	FlapStatsFlapcnt   : %v
+	FlapStatsSupprsd   : %v 
+	IsActive           : %v 
+	Stale              : %v
+	FlapStartTime      : %v
+	ReasonNotBest      : %v 
+	EcmpRoute          : %v
+	PeerAddr           : %v
+	ExtComm            : %v
+-----------------------------------
 `
 )
 
