@@ -34,7 +34,7 @@ else
 endif
 endif
 	if [ ${ARCH} == "x86_64" ] && [ ${ASIC} == "capri" ]; then cd $(NICDIR)/build/${ARCH}/${PIPELINE}/capri; pwd; \
-		for d in */; do echo "link $$d"; cd ..; ln -s capri/$$d $${d::-1}; cd - >& /dev/null; done; fi; \
+		for d in */; do echo "link $$d"; cd ..; ln -snf capri/$$d $${d::-1}; cd - >& /dev/null; done; fi; \
 	cd $(NICDIR)/..
 
 package-clean-debug-arm:
