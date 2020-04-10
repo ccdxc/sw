@@ -26,7 +26,7 @@ docker/customer-shell: docker/build-athena-customer-shell-image
 else
 docker/customer-shell:
 	echo "pipeline unsupported"
-endif 
+endif
 
 docker/background-shell: docker/build-shell-image
 	docker run -dit --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v /vol/builds:/vol/builds -v $(SW_DIR):/sw  -w /sw/nic pensando/nic su -l $(CUR_USER)
@@ -38,7 +38,7 @@ docker/build-shell-image: docker/install_box
 docker/build-customer-shell-image: docker/install_box
 	echo "custom install_box"
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
-	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/apollo/tools/$(PIPELINE)/customer-docker/box.rb
+	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/apollo/tools/$(PIPELINE)/sanity/customer-docker/box.rb
 
 docker/build-athena-customer-shell-image: docker/install_box
 	echo "custom install_box"

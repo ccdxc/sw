@@ -11,6 +11,7 @@
 #ifdef AGENT_MODE
 #include "nic/apollo/agent/test/client/app.hpp"
 #endif
+#include "base.hpp"
 
 namespace test {
 namespace api {
