@@ -371,6 +371,50 @@ func TestAuthPolicy(t *testing.T) {
 		},
 	})
 	Assert(t, err != nil, "cannot mis-configure auth policy")
+	// test validation of auth policy
+	tests := []struct {
+		name   string
+		policy *auth.AuthenticationPolicy
+		errStr string
+	}{
+		{
+			name: "missing secret",
+			policy: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{Domains: []*auth.LdapDomain{
+							{
+								Servers:      []*auth.LdapServer{{Url: getADConfig().URL}},
+								BaseDN:       getADConfig().BaseDN,
+								BindDN:       getADConfig().BindDN,
+								BindPassword: getADConfig().BindPassword,
+								AttributeMapping: &auth.LdapAttributeMapping{
+									User:             getADConfig().UserAttribute,
+									UserObjectClass:  getADConfig().UserObjectClassAttribute,
+									Group:            getADConfig().GroupAttribute,
+									GroupObjectClass: getADConfig().GroupObjectClassAttribute,
+								},
+							},
+						},
+						},
+						Radius:             &auth.Radius{Domains: []*auth.RadiusDomain{{Servers: []*auth.RadiusServer{{Url: getACSConfig().URL}}}}},
+						Local:              &auth.Local{},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errStr: "Secret failed validation: Value must have length of at least 1",
+		},
+	}
+	for _, test := range tests {
+		_, err := restcl.AuthV1().AuthenticationPolicy().Update(ctx, test.policy)
+		Assert(t, strings.Contains(err.Error(), test.errStr), fmt.Sprintf("[%s] test failed, error string [%v] not contained in [%v]", test.name, test.errStr, err))
+	}
 }
 
 func TestUserStatus(t *testing.T) {

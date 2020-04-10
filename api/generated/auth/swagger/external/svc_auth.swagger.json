@@ -7714,6 +7714,7 @@
     "authRadiusServer": {
       "type": "object",
       "required": [
+        "secret",
         "auth-method"
       ],
       "properties": {
@@ -7723,7 +7724,8 @@
         },
         "secret": {
           "type": "string",
-          "description": "Secret is the shared secret between API Gw and RADIUS server."
+          "minLength": 1,
+          "description": "Secret is the shared secret between API Gw and RADIUS server. Length of string should be at least 1."
         },
         "auth-method": {
           "type": "string",
