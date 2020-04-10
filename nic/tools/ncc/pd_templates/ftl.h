@@ -116,8 +116,9 @@
  * be lost.
  */
 
-#ifndef __FTL_H__
-#define __FTL_H__
+//:: header_define = '__FTL_' + pddict['p4program'].upper() + '_H__'
+#ifndef ${header_define}
+#define ${header_define}
 
 #include "include/sdk/base_table_entry.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
@@ -1253,4 +1254,4 @@ public:
 //:: f.write(ftl_table_using_str)
 //:: f.write('#endif   // __FTL_SDK_TABLE_HPP__')
 //:: f.close()
-#endif    // __FTL_H__
+#endif    // ${header_define}

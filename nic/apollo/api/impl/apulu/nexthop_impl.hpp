@@ -206,9 +206,9 @@ static inline sdk_ret_t
 populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
                             nexthop_info_entry_t *nh_data)
 {
-    if_entry *intf, *eth_if;
     lif_impl *lif;
     pds_encap_t encap;
+    if_entry *intf, *eth_if;
 
     memset(nh_data, 0, nh_data->entry_size());
     intf = if_db()->find(&spec->l3_if);

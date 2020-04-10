@@ -51,6 +51,7 @@ action rxdma_mapping_info(entry_valid, tag_idx, more_hashes, hash1, hint1,
 
 @pragma stage 2
 @pragma hbm_table
+@pragma capi_bitfields_struct
 table rxdma_mapping {
     reads {
         p4_to_rxdma.iptype      : exact;

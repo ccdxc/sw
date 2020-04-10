@@ -22,6 +22,7 @@ action local_mapping_tag_info(classid0, classid1, classid2, classid3, classid4) 
 @pragma stage 7
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table local_mapping_tag {
     reads {
         p4_to_rxdma.local_tag_idx   : exact;
@@ -56,6 +57,7 @@ action mapping_tag_info(classid0, classid1, classid2, classid3, classid4) {
 @pragma stage 7
 @pragma hbm_table
 @pragma index_table
+@pragma capi_bitfields_struct
 table mapping_tag {
     reads {
         lpm_metadata.mapping_tag_idx    : exact;

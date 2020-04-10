@@ -29,6 +29,7 @@
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4/include/ftl.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_ftl.h"
 
 using sdk::table::sdk_table_api_params_t;
 
@@ -89,17 +90,25 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     ip_addr_t public_ip;
     subnet_entry *subnet;
     device_entry *device;
+    uint32_t num_class_id;
     pds_obj_key_t vpc_key;
     p4pd_error_t p4pd_ret;
-    nat_rewrite_entry_t nat_data;
     mapping_swkey_t mapping_key;
+    nat_rewrite_entry_t nat_data;
     bool public_ip_valid = false;
     sdk_table_api_params_t tparams;
     mapping_appdata_t mapping_data;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
     local_mapping_swkey_t local_mapping_key;
+    mapping_tag_info_entry_t mapping_tag_data;
     local_mapping_appdata_t local_mapping_data;
+    rxdma_mapping_appdata_t rxdma_mapping_data;
+    uint32_t class_id[PDS_MAX_TAGS_PER_MAPPING];
     local_mapping_appdata_t pub_ip_local_mapping_data;
+    uint32_t rxdma_mapping_tag_idx = PDS_IMPL_RSVD_TAG_HW_ID;
     sdk::table::handle_t mapping_hdl = sdk::table::handle_t::null();
+    sdk::table::handle_t rxdma_mapping_hdl = sdk::table::handle_t::null();
+    sdk::table::handle_t rxdma_mapping_public_ip_hdl = sdk::table::handle_t::null();
     sdk::table::handle_t local_mapping_overlay_ip_hdl = sdk::table::handle_t::null();
     sdk::table::handle_t local_mapping_public_ip_hdl = sdk::table::handle_t::null();
 
@@ -162,6 +171,56 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
                                PDS_IMPL_RSVD_NAT_HW_ID) ? true : false;
     }
 
+    // it is possible that this overlay mapping has tags configured, read them
+    num_class_id = 0;
+    if (key->type == PDS_MAPPING_TYPE_L3) {
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &key->ip_addr);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                       NULL, &rxdma_mapping_data,
+                                       0, sdk::table::handle_t::null());
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->get(&tparams);
+        if (ret == SDK_RET_OK) {
+            rxdma_mapping_hdl = tparams.handle;
+            rxdma_mapping_tag_idx = rxdma_mapping_data.tag_idx;
+            if (rxdma_mapping_tag_idx != PDS_IMPL_RSVD_TAG_HW_ID) {
+                ret = mapping_tag_data.read(rxdma_mapping_tag_idx);
+                if (unlikely(ret != SDK_RET_OK)) {
+                    PDS_TRACE_ERR("Failed to read MAPPING_TAG table "
+                                  "at idx %u", rxdma_mapping_tag_idx);
+                    return NULL;
+                }
+                // retrieve the class id values
+                if (mapping_tag_data.classid0 !=
+                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                    class_id[0] = mapping_tag_data.classid0;
+                    num_class_id++;
+                }
+                if (mapping_tag_data.classid1 !=
+                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                    class_id[1] = mapping_tag_data.classid1;
+                    num_class_id++;
+                }
+                if (mapping_tag_data.classid1 !=
+                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                    class_id[2] = mapping_tag_data.classid3;
+                    num_class_id++;
+                }
+                if (mapping_tag_data.classid1 !=
+                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                    class_id[3] = mapping_tag_data.classid3;
+                    num_class_id++;
+                }
+                if (mapping_tag_data.classid1 !=
+                        PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
+                    class_id[4] = mapping_tag_data.classid4;
+                    num_class_id++;
+                }
+            }
+        }
+    }
+
     // if public mapping exists, NAT table provides the public IP
     if (public_ip_valid) {
         memset(&nat_data, 0, nat_data.entry_size());
@@ -185,6 +244,25 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
             return NULL;
         }
         local_mapping_public_ip_hdl = tparams.handle;
+
+        // read the rxdma MAPPING table entry of public IP if this mapping
+        // has tags configured
+        if (num_class_id) {
+            PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
+                                               ((vpc_impl *)vpc->impl())->hw_id(),
+                                               &public_ip);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                           NULL, &rxdma_mapping_data,
+                                           0, sdk::table::handle_t::null());
+            ret = mapping_impl_db()->rxdma_mapping_tbl()->get(&tparams);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to read rxdma MAPPING table entry for "
+                              "public IP %s", ipaddr2str(&public_ip));
+                return NULL;
+            }
+            rxdma_mapping_public_ip_hdl = tparams.handle;
+            // NOTE: we already read the class ids earlier
+        }
     }
 
     // all required tables are read, allocate impl object and build it
@@ -212,10 +290,17 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
         mapping->set_public_ip(&public_ip);
         impl->to_public_ip_nat_idx_ = local_mapping_data.xlate_id;
         impl->to_overlay_ip_nat_idx_ = pub_ip_local_mapping_data.xlate_id;
+        impl->rxdma_mapping_public_ip_hdl_ = rxdma_mapping_public_ip_hdl;
     }
     impl->mapping_hdl_ = mapping_hdl;
     impl->local_mapping_overlay_ip_hdl_ = local_mapping_overlay_ip_hdl;
     impl->local_mapping_public_ip_hdl_ = local_mapping_public_ip_hdl;
+    impl->rxdma_local_mapping_tag_idx_ = local_mapping_data.tag_idx;
+    impl->rxdma_mapping_tag_idx_ = rxdma_mapping_tag_idx;
+    impl->rxdma_mapping_hdl_ = rxdma_mapping_hdl;
+    impl->num_class_id_ = num_class_id;
+    mapping->set_num_tags(num_class_id);
+    memcpy(impl->class_id_, class_id, sizeof(class_id));
 
     return impl;
 }
@@ -302,8 +387,8 @@ mapping_impl::reserve_public_ip_rxdma_mapping_resources_(mapping_entry *mapping,
     rxdma_mapping_swkey_t rxdma_mapping_key;
 
     // reserve an entry in rxdma MAPING table for public IP
-    PDS_IMPL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
-                                  &spec->public_ip);
+    PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
+                                       &spec->public_ip);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
                                    NULL, NULL, 0,
                                    sdk::table::handle_t::null());
@@ -423,9 +508,9 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
 
         // allocate an entry in the rxdma MAPPING table for the overlay IP to
         // point to rxdma_mapping_tag_idx_ in rxdma MAPPING_TAG table
-        PDS_IMPL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
-                                      ((vpc_impl *)vpc->impl())->hw_id(),
-                                      &spec->skey.ip_addr);
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &spec->skey.ip_addr);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
                                        NULL, NULL, 0,
                                        sdk::table::handle_t::null());
@@ -528,9 +613,9 @@ mapping_impl::reserve_remote_mapping_resources_(mapping_entry *mapping,
 
         // allocate an entry in the rxdma MAPPING table for the overlay IP to
         // point to rxdma_mapping_tag_idx_ in rxdma MAPPING_TAG table
-        PDS_IMPL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
-                                      ((vpc_impl *)vpc->impl())->hw_id(),
-                                      &spec->skey.ip_addr);
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &spec->skey.ip_addr);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
                                        NULL, NULL, 0,
                                        sdk::table::handle_t::null());
@@ -911,6 +996,10 @@ mapping_impl::fill_public_ip_mapping_key_data_(
                   mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
                   sdk::table::handle_t mapping_hdl,
                   sdk_table_api_params_t *mapping_tbl_params,
+                  rxdma_mapping_swkey_t *rxdma_mapping_key,
+                  rxdma_mapping_appdata_t *rxdma_mapping_data,
+                  sdk::table::handle_t rxdma_mapping_public_ip_hdl,
+                  sdk_table_api_params_t *rxdma_mapping_tbl_params,
                   pds_mapping_spec_t *spec) {
 
     // fill LOCAL_MAPPING table entry key, data for public IP
@@ -918,6 +1007,7 @@ mapping_impl::fill_public_ip_mapping_key_data_(
                                          &spec->public_ip);
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(local_mapping_data,
         vnic_impl_obj->hw_id(), to_overlay_ip_nat_idx_,
+        rxdma_local_mapping_tag_idx_,
         (vnic->binding_checks_en() &&
          (spec->public_ip.af == IP_AF_IPV4)) ? true : false,
         vnic_impl_obj->binding_hw_id(),
@@ -943,6 +1033,19 @@ mapping_impl::fill_public_ip_mapping_key_data_(
                                    NULL, mapping_data,
                                    MAPPING_MAPPING_INFO_ID,
                                    mapping_hdl);
+
+    // fill rxdma MAPPING table entry key, data and table params for public IP
+    if (spec->num_tags) {
+        memset(rxdma_mapping_data, 0, sizeof(*rxdma_mapping_data));
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(rxdma_mapping_key, vpc->hw_id(),
+                                           &spec->public_ip);
+        rxdma_mapping_data->tag_idx = rxdma_mapping_tag_idx_;
+        PDS_IMPL_FILL_TABLE_API_PARAMS(rxdma_mapping_tbl_params,
+                                       rxdma_mapping_key,
+                                       NULL, rxdma_mapping_data,
+                                       RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
+                                       rxdma_mapping_public_ip_hdl);
+    }
     return;
 }
 
@@ -955,21 +1058,28 @@ mapping_impl::add_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
     local_mapping_swkey_t local_mapping_key;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
     sdk_table_api_params_t mapping_tbl_params;
     local_mapping_appdata_t local_mapping_data;
+    rxdma_mapping_appdata_t rxdma_mapping_data;
     sdk_table_api_params_t local_mapping_tbl_params;
+    sdk_table_api_params_t rxdma_mapping_tbl_params;
 
     // program the NAT table first
     ret = add_nat_entries_(mapping, spec);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
     fill_public_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
-                                      &local_mapping_key, &local_mapping_data,
-                                      local_mapping_public_ip_hdl_,
-                                      &local_mapping_tbl_params,
-                                      &mapping_key, &mapping_data,
-                                      mapping_public_ip_hdl_,
-                                      &mapping_tbl_params, spec);
+                                     &local_mapping_key, &local_mapping_data,
+                                     local_mapping_public_ip_hdl_,
+                                     &local_mapping_tbl_params,
+                                     &mapping_key, &mapping_data,
+                                     mapping_public_ip_hdl_,
+                                     &mapping_tbl_params,
+                                     &rxdma_mapping_key, &rxdma_mapping_data,
+                                     rxdma_mapping_public_ip_hdl_,
+                                     &rxdma_mapping_tbl_params,
+                                     spec);
 
     // add entry to LOCAL_MAPPING table for public IP
     ret = mapping_impl_db()->local_mapping_tbl()->insert(&local_mapping_tbl_params);
@@ -978,6 +1088,12 @@ mapping_impl::add_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
     // add entry to MAPPING table for public IP
     ret = mapping_impl_db()->mapping_tbl()->insert(&mapping_tbl_params);
     SDK_ASSERT(ret == SDK_RET_OK);
+
+    // add entry to rxdma MAPPING table for overlay IP
+    if (spec->num_tags) {
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->insert(&rxdma_mapping_tbl_params);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
     return SDK_RET_OK;
 }
 
@@ -992,12 +1108,17 @@ mapping_impl::fill_local_overlay_ip_mapping_key_data_(
                   mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
                   sdk::table::handle_t mapping_hdl,
                   sdk_table_api_params_t *mapping_tbl_params,
+                  rxdma_mapping_swkey_t *rxdma_mapping_key,
+                  rxdma_mapping_appdata_t *rxdma_mapping_data,
+                  sdk::table::handle_t rxdma_mapping_hdl,
+                  sdk_table_api_params_t *rxdma_mapping_tbl_params,
                   pds_mapping_spec_t *spec) {
     // fill LOCAL_MAPPING table entry key, data and table params for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(local_mapping_key, vpc->hw_id(),
                                          &spec->skey.ip_addr);
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(local_mapping_data,
         vnic_impl_obj->hw_id(), to_public_ip_nat_idx_,
+        rxdma_local_mapping_tag_idx_,
         (vnic->binding_checks_en() && (spec->skey.ip_addr.af == IP_AF_IPV4)) ?
              true : false, vnic_impl_obj->binding_hw_id(),
         PDS_IMPL_RSVD_IP_MAC_BINDING_HW_ID, vnic->tagged(),
@@ -1021,6 +1142,19 @@ mapping_impl::fill_local_overlay_ip_mapping_key_data_(
     PDS_IMPL_FILL_TABLE_API_PARAMS(mapping_tbl_params, mapping_key,
                                    NULL, mapping_data,
                                    MAPPING_MAPPING_INFO_ID, mapping_hdl);
+
+    // fill rxdma MAPPING table entry key, data and table params for overlay IP
+    if (spec->num_tags) {
+        memset(rxdma_mapping_data, 0, sizeof(*rxdma_mapping_data));
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(rxdma_mapping_key, vpc->hw_id(),
+                                           &spec->skey.ip_addr);
+        rxdma_mapping_data->tag_idx = rxdma_mapping_tag_idx_;
+        PDS_IMPL_FILL_TABLE_API_PARAMS(rxdma_mapping_tbl_params,
+                                       rxdma_mapping_key,
+                                       NULL, rxdma_mapping_data,
+                                       RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
+                                       rxdma_mapping_hdl);
+    }
     return;
 }
 
@@ -1033,10 +1167,13 @@ mapping_impl::add_overlay_ip_mapping_entries_(vpc_impl *vpc,
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
     local_mapping_swkey_t local_mapping_key;
     sdk_table_api_params_t mapping_tbl_params;
     local_mapping_appdata_t local_mapping_data;
+    rxdma_mapping_appdata_t rxdma_mapping_data;
     sdk_table_api_params_t local_mapping_tbl_params;
+    sdk_table_api_params_t rxdma_mapping_tbl_params;
 
     // fill key & data for overlay IP MAPPING and LOCAL_MAPPING table entries
     fill_local_overlay_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
@@ -1046,6 +1183,10 @@ mapping_impl::add_overlay_ip_mapping_entries_(vpc_impl *vpc,
                                             &local_mapping_tbl_params,
                                             &mapping_key, &mapping_data,
                                             mapping_hdl_, &mapping_tbl_params,
+                                            &rxdma_mapping_key,
+                                            &rxdma_mapping_data,
+                                            rxdma_mapping_hdl_,
+                                            &rxdma_mapping_tbl_params,
                                             spec);
 
     // add entry to LOCAL_MAPPING table for overlay IP
@@ -1055,7 +1196,65 @@ mapping_impl::add_overlay_ip_mapping_entries_(vpc_impl *vpc,
     // add entry to MAPPING table for overlay IP
     ret = mapping_impl_db()->mapping_tbl()->insert(&mapping_tbl_params);
     SDK_ASSERT(ret == SDK_RET_OK);
+
+    // add entry to rxdma MAPPING table for overlay IP
+    if (spec->num_tags) {
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->insert(&rxdma_mapping_tbl_params);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
     return ret;
+}
+
+static inline sdk_ret_t
+local_mapping_tag_fill_class_id_ (local_mapping_tag_info_entry_t *tag_entry,
+                                  uint32_t idx, uint32_t class_id) {
+    switch (idx) {
+    case 0:
+        tag_entry->classid0 = class_id;
+        break;
+    case 1:
+        tag_entry->classid1 = class_id;
+        break;
+    case 2:
+        tag_entry->classid2 = class_id;
+        break;
+    case 3:
+        tag_entry->classid3 = class_id;
+        break;
+    case 4:
+        tag_entry->classid4 = class_id;
+        break;
+    default:
+        PDS_TRACE_ERR("Invalid class id index %u for mapping", idx);
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+mapping_tag_fill_class_id_ (mapping_tag_info_entry_t *tag_entry,
+                            uint32_t idx, uint32_t class_id) {
+    switch (idx) {
+    case 0:
+        tag_entry->classid0 = class_id;
+        break;
+    case 1:
+        tag_entry->classid1 = class_id;
+        break;
+    case 2:
+        tag_entry->classid2 = class_id;
+        break;
+    case 3:
+        tag_entry->classid3 = class_id;
+        break;
+    case 4:
+        tag_entry->classid4 = class_id;
+        break;
+    default:
+        PDS_TRACE_ERR("Invalid class id index %u for mapping", idx);
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -1069,11 +1268,28 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
     mapping_appdata_t mapping_data;
     sdk_table_api_params_t tparams;
     local_mapping_swkey_t local_mapping_key;
+    mapping_tag_info_entry_t mapping_tag_data;
     local_mapping_appdata_t local_mapping_data;
+    local_mapping_tag_info_entry_t local_mapping_tag_data;
 
     // get the vnic corresponding to this local mapping
     vnic = vnic_find(&spec->vnic);
     vnic_impl_obj = (vnic_impl *)vnic->impl();
+
+    // program rxdma LOCAL_MAPPING_TAG and MAPPING_TAG tables
+    if (spec->num_tags) {
+        memset(&local_mapping_tag_data, 0, local_mapping_tag_data.entry_size());
+        memset(&mapping_tag_data, 0, mapping_tag_data.entry_size());
+        for (uint32_t i = 0; i < spec->num_tags; i++) {
+            local_mapping_tag_fill_class_id_(&local_mapping_tag_data, i,
+                                             class_id_[i]);
+            mapping_tag_fill_class_id_(&mapping_tag_data, i, class_id_[i]);
+        }
+        ret = local_mapping_tag_data.write(rxdma_local_mapping_tag_idx_);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        ret = mapping_tag_data.write(rxdma_mapping_tag_idx_);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    }
 
     // program public IP related entries in the datapath first
     if (spec->public_ip_valid) {
@@ -1095,6 +1311,10 @@ mapping_impl::fill_remote_mapping_key_data_(
                   mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
                   sdk::table::handle_t mapping_hdl,
                   sdk_table_api_params_t *mapping_table_params,
+                  rxdma_mapping_swkey_t *rxdma_mapping_key,
+                  rxdma_mapping_appdata_t *rxdma_mapping_data,
+                  sdk::table::handle_t rxdma_mapping_hdl,
+                  sdk_table_api_params_t *rxdma_mapping_tbl_params,
                   pds_mapping_spec_t *spec) {
     tep_entry *tep;
     tep_impl *tep_impl_obj;
@@ -1142,6 +1362,20 @@ mapping_impl::fill_remote_mapping_key_data_(
     PDS_IMPL_FILL_TABLE_API_PARAMS(mapping_table_params, mapping_key,
                                    NULL, mapping_data,
                                    MAPPING_MAPPING_INFO_ID, mapping_hdl);
+
+    // fill rxdma MAPPING table entry key, data and table params for overlay IP
+    if (spec->num_tags) {
+        memset(rxdma_mapping_data, 0, sizeof(*rxdma_mapping_data));
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(rxdma_mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &spec->skey.ip_addr);
+        rxdma_mapping_data->tag_idx = rxdma_mapping_tag_idx_;
+        PDS_IMPL_FILL_TABLE_API_PARAMS(rxdma_mapping_tbl_params,
+                                       rxdma_mapping_key,
+                                       NULL, rxdma_mapping_data,
+                                       RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
+                                       rxdma_mapping_hdl);
+    }
     return SDK_RET_OK;
 }
 
@@ -1152,17 +1386,33 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
-    sdk_table_api_params_t tparams;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
+    sdk_table_api_params_t mapping_tbl_params;
+    rxdma_mapping_appdata_t rxdma_mapping_data;
+    sdk_table_api_params_t rxdma_mapping_tbl_params;
 
     // fill key & data for MAPPING table entry for overlay IP or MAC
     ret = fill_remote_mapping_key_data_(vpc, (subnet_impl *)subnet->impl(),
                                         &mapping_key, &mapping_data,
-                                        mapping_hdl_, &tparams, spec);
+                                        mapping_hdl_, &mapping_tbl_params,
+                                        &rxdma_mapping_key,
+                                        &rxdma_mapping_data,
+                                        rxdma_mapping_hdl_,
+                                        &rxdma_mapping_tbl_params,
+                                        spec);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
 
     // add entry to MAPPING table for overlay IP or MAC
-    return mapping_impl_db()->mapping_tbl()->insert(&tparams);
+    ret = mapping_impl_db()->mapping_tbl()->insert(&mapping_tbl_params);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // add entry to rxdma MAPPING table for overlay IP
+    if (spec->num_tags) {
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->insert(&rxdma_mapping_tbl_params);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -1358,7 +1608,11 @@ mapping_impl::upd_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
                                       &local_mapping_tbl_params,
                                       &mapping_key, &mapping_data,
                                       sdk::table::handle_t::null(),
-                                      &mapping_tbl_params, spec);
+                                      &mapping_tbl_params,
+                                      // TODO: updates for tags
+                                      NULL, NULL,
+                                      sdk::table::handle_t::null(), NULL,
+                                      spec);
 
     // update LOCAL_MAPPING table entry of public IP
     ret = mapping_impl_db()->local_mapping_tbl()->update(&local_mapping_tbl_params);
@@ -1407,7 +1661,11 @@ mapping_impl::upd_overlay_ip_mapping_entries_(vpc_impl *vpc,
                                             &local_mapping_tbl_params,
                                             &mapping_key, &mapping_data,
                                             sdk::table::handle_t::null(),
-                                            &mapping_tbl_params, spec);
+                                            &mapping_tbl_params,
+                                            // TODO: updates for tags
+                                            NULL, NULL,
+                                            sdk::table::handle_t::null(), NULL,
+                                            spec);
 
 
     // update entry corresponding to overlay IP in LOCAL_MAPPING table
@@ -1528,8 +1786,11 @@ mapping_impl::upd_remote_mapping_entries_(vpc_entry *vpc,
     // fill key & data for MAPPING table entry for overlay IP or MAC
     ret = fill_remote_mapping_key_data_(vpc, (subnet_impl *)subnet->impl(),
                                         &mapping_key, &mapping_data,
-                                        sdk::table::handle_t::null(),
-                                        &tparams, spec);
+                                        sdk::table::handle_t::null(), &tparams,
+                                        // TODO: updates for tags
+                                        NULL, NULL,
+                                        sdk::table::handle_t::null(), NULL,
+                                        spec);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
     // update entry to MAPPING table for overlay IP or MAC
@@ -1538,7 +1799,7 @@ mapping_impl::upd_remote_mapping_entries_(vpc_entry *vpc,
     mapping_hdl_ = tparams.handle;
 
     // now that cloned object took over the remote IP/MAC mapping resources
-    // we need the original object to relinquish the ownership
+    // in MAPPING table we need the original object to relinquish the ownership
     orig_mapping_impl->mapping_hdl_ = sdk::table::handle_t::null();
     return SDK_RET_OK;
 }

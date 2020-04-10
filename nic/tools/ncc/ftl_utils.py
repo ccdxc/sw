@@ -49,7 +49,7 @@ def is_field_hash(field_name):
 
 def is_table_ftl_gen(table, pddict):
     # generate for all tables for apulu
-    if pddict['pipeline'] == 'apulu':
+    if pddict['pipeline'] == 'apulu' and not pddict['p4plus']:
         return True
 
     # generate only for tables with @pragma capi_bitfields_struct

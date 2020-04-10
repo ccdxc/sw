@@ -110,6 +110,7 @@ namespace impl {
 }
 
 #define PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(data, vnic_hw_id, xlate_idx,  \
+                                               rxdma_tag_idx,                \
                                                binding_checks_en,            \
                                                binding_idx1, binding_idx2,   \
                                                allow_tagged, mapping_type)   \
@@ -117,6 +118,7 @@ namespace impl {
     memset(data, 0, sizeof(*(data)));                                        \
     (data)->vnic_id = (vnic_hw_id);                                          \
     (data)->xlate_id = (xlate_idx);                                          \
+    (data)->tag_idx = (rxdma_tag_idx);                                       \
     (data)->binding_check_enabled = (binding_checks_en);                     \
     (data)->binding_id1 = (binding_idx1);                                    \
     (data)->binding_id2 = (binding_idx1);                                    \
@@ -147,7 +149,7 @@ namespace impl {
     sdk::lib::memrev((key)->p4e_i2e_mapping_lkp_addr, (mac), ETH_ADDR_LEN);  \
 }
 
-#define PDS_IMPL_RXDMA_IP_MAPPING_KEY(key, vpc_hw_id, ip)                    \
+#define PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(key, vpc_hw_id, ip)               \
 {                                                                            \
     memset((key), 0, sizeof(*(key)));                                        \
     (key)->p4_to_rxdma_vpc_id = (vpc_hw_id);                                 \

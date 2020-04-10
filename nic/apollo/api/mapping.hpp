@@ -343,10 +343,16 @@ public:
     pds_mapping_key_t& skey(void) { return skey_; }
 
     /**
-     * @brief set object is local or remote
+     * @brief mark if mapping is local or remote
      * @param[in] local    true if it is local false otherwise
      */
     void set_local(bool local) { is_local_ = local; }
+
+    /**
+     * @brief set the number of tags this mapping has
+     * @param[in] num_tags    number of tags
+     */
+    void set_num_tags(uint32_t num_tags) { num_tags_ = num_tags; }
 
     /**
      * @brief    return whether public IP of this mapping is valid or not
@@ -390,14 +396,15 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_obj_key_t key_;       /**< key of this mapping */
-    pds_mapping_key_t skey_;  /**< 2nd-ary key for this mapping */
-    bool public_ip_valid_;    /**< true if public IP is valid */
-    ip_addr_t public_ip_;     /**< public IP, if its valid */
-    bool is_local_;           /**< is it local or remote object */
-    ht_ctxt_t ht_ctxt_;       /**< hash table context for primary key db */
-    ht_ctxt_t skey_ht_ctxt_;  /**< hash table context for 2nd-ary key db */
-    impl_base *impl_;         /**< impl object instance */
+    pds_obj_key_t key_;       ///< key of this mapping
+    pds_mapping_key_t skey_;  ///< 2nd-ary key for this mapping
+    bool public_ip_valid_;    ///< true if public IP is valid
+    ip_addr_t public_ip_;     ///< public IP, if its valid
+    bool is_local_;           ///< is it local or remote object
+    uint32_t num_tags_;       ///< number of tags configured
+    ht_ctxt_t ht_ctxt_;       ///< hash table context for primary key db
+    ht_ctxt_t skey_ht_ctxt_;  ///< hash table context for 2nd-ary key db
+    impl_base *impl_;         ///< impl object instance
 
     /**< mapping_state is friend of mapping_entry */
     friend class mapping_state;
