@@ -1,0 +1,530 @@
+{
+  "FileName": "metrics.cc",
+  "Package": "api",
+  "Prefix": "nicmgr",
+  "Pipeline": "apulu",
+  "Messages": [
+    {
+      "Name": "LifMetrics",
+      "Description": "Key index - LIF IfIndex",
+      "DisplayName": "Lif Packet Statistics",
+      "Tags": [
+        "Level4"
+      ],
+      "Scope": "PerLIF",
+      "Fields": [
+        {
+          "Name": "Octets Rx unicast",
+          "DisplayName": "Octets Rx unicast",
+          "Description": "Octets Rx unicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx unicast",
+          "DisplayName": "Frames Rx unicast",
+          "Description": "Frames Rx unicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Rx multicast",
+          "DisplayName": "Octets Rx multicast",
+          "Description": "Octets Rx multicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx multicast",
+          "DisplayName": "Frames Rx multicast",
+          "Description": "Frames Rx multicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Rx broadcast",
+          "DisplayName": "Octets Rx broadcast",
+          "Description": "Octets Rx broadcast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx broadcast",
+          "DisplayName": "Frames Rx broadcast",
+          "Description": "Frames Rx broadcast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Rx unicast drop",
+          "DisplayName": "Octets Rx unicast drop",
+          "Description": "Octets Rx unicast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx unicast drop",
+          "DisplayName": "Frames Rx unicast drop",
+          "Description": "Frames Rx unicast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Rx multicast drop",
+          "DisplayName": "Octets Rx multicast drop",
+          "Description": "Octets Rx multicast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx multicast drop",
+          "DisplayName": "Frames Rx multicast drop",
+          "Description": "Frames Rx multicast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Rx broadcast drop",
+          "DisplayName": "Octets Rx broadcast drop",
+          "Description": "Octets Rx broadcast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx broadcast drop",
+          "DisplayName": "Frames Rx broadcast drop",
+          "Description": "Frames Rx broadcast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx DMA error",
+          "DisplayName": "Rx DMA error",
+          "Description": "Rx DMA error",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Tx unicast",
+          "DisplayName": "Octets Tx unicast",
+          "Description": "Octets Tx unicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx unicast",
+          "DisplayName": "Frames Tx unicast",
+          "Description": "Frames Tx unicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Tx multicast",
+          "DisplayName": "Octets Tx multicast",
+          "Description": "Octets Tx multicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx multicast",
+          "DisplayName": "Frames Tx multicast",
+          "Description": "Frames Tx multicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Tx broadcast",
+          "DisplayName": "Octets Tx broadcast",
+          "Description": "Octets Tx broadcast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx broadcast",
+          "DisplayName": "Frames Tx broadcast",
+          "Description": "Frames Tx broadcast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Tx unicast drop",
+          "DisplayName": "Octets Tx unicast drop",
+          "Description": "Octets Tx unicast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx unicast drop",
+          "DisplayName": "Frames Tx unicast drop",
+          "Description": "Frames Tx unicast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Tx multicast drop",
+          "DisplayName": "Octets Tx multicast drop",
+          "Description": "Octets Tx multicast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx multicast drop",
+          "DisplayName": "Frames Tx multicast drop",
+          "Description": "Frames Tx multicast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Tx broadcast drop",
+          "DisplayName": "Octets Tx broadcast drop",
+          "Description": "Octets Tx broadcast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx broadcast drop",
+          "DisplayName": "Frames Tx broadcast drop",
+          "Description": "Frames Tx broadcast drop",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx DMA error",
+          "DisplayName": "Tx DMA error",
+          "Description": "Tx DMA error",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx queue disable drops",
+          "DisplayName": "Frames Rx queue disable drops",
+          "Description": "Frames Rx queue disable drops",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx queue empty drops",
+          "DisplayName": "Frames Rx queue empty drops",
+          "Description": "Frames Rx queue empty drops",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx queue scheduling errors",
+          "DisplayName": "Rx queue scheduling errors",
+          "Description": "Rx queue scheduling errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx descriptor fetch errors",
+          "DisplayName": "Rx descriptor fetch errors",
+          "Description": "Rx descriptor fetch errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx descriptor data fetch errors",
+          "DisplayName": "Rx descriptor data fetch errors",
+          "Description": "Rx descriptor data fetch errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx queue disabled drops",
+          "DisplayName": "Frames Tx queue disabled drops",
+          "Description": "Frames Tx queue disabled drops",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx queue scheduling errors",
+          "DisplayName": "Tx queue scheduling errors",
+          "Description": "Tx queue scheduling errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx descriptor fetch errors",
+          "DisplayName": "Tx descriptor fetch errors",
+          "Description": "Tx descriptor fetch errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx descriptor data fetch errors",
+          "DisplayName": "Tx descriptor data fetch errors",
+          "Description": "Tx descriptor data fetch errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Tx RDMA unicast",
+          "DisplayName": "Octets Tx RDMA unicast",
+          "Description": "Octets Tx RDMA unicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx RDMA unicast",
+          "DisplayName": "Frames Tx RDMA unicast",
+          "Description": "Frames Tx RDMA unicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Tx RDMA multicast",
+          "DisplayName": "Octets Tx RDMA multicast",
+          "Description": "Octets Tx RDMA multicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx RDMA multicast",
+          "DisplayName": "Frames Tx RDMA multicast",
+          "Description": "Frames Tx RDMA multicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Tx RDMA CNP",
+          "DisplayName": "Frames Tx RDMA CNP",
+          "Description": "Frames Tx RDMA CNP",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Rx RDMA unicast",
+          "DisplayName": "Octets Rx RDMA unicast",
+          "Description": "Octets Rx RDMA unicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx RDMA unicast",
+          "DisplayName": "Frames Rx RDMA unicast",
+          "Description": "Frames Rx RDMA unicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Octets Rx RDMA multicast",
+          "DisplayName": "Octets Rx RDMA multicast",
+          "Description": "Octets Rx RDMA multicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx RDMA multicast",
+          "DisplayName": "Frames Rx RDMA multicast",
+          "Description": "Frames Rx RDMA multicast",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx RDMA CNP",
+          "DisplayName": "Frames Rx RDMA CNP",
+          "Description": "Frames Rx RDMA CNP",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx RDMA ECN",
+          "DisplayName": "Frames Rx RDMA ECN",
+          "Description": "Frames Rx RDMA ECN",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx RDMA request sequence errors",
+          "DisplayName": "Frames Rx RDMA request sequence errors",
+          "Description": "Frames Rx RDMA request sequence errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA request RNR retry errors",
+          "DisplayName": "Rx RDMA request RNR retry errors",
+          "Description": "Rx RDMA request RNR retry errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA request remote access errors",
+          "DisplayName": "Rx RDMA request remote access errors",
+          "Description": "Rx RDMA request remote access errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA request remote invalid request errors",
+          "DisplayName": "Rx RDMA request remote invalid request errors",
+          "Description": "Rx RDMA request remote invalid request errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA request remote operation errors",
+          "DisplayName": "Rx RDMA request remote operation errors",
+          "Description": "Rx RDMA request remote operation errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA request implied NACK sequence errors",
+          "DisplayName": "Rx RDMA request implied NACK sequence errors",
+          "Description": "Rx RDMA request implied NACK sequence errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA request CQE errors",
+          "DisplayName": "Rx RDMA request CQE errors",
+          "Description": "Rx RDMA request CQE errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA request CQE flush errors",
+          "DisplayName": "Rx RDMA request CQE flush errors",
+          "Description": "Rx RDMA request CQE flush errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA request duplicate responses",
+          "DisplayName": "Rx RDMA request duplicate responses",
+          "Description": "Rx RDMA request duplicate responses",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Frames Rx RDMA request invalid",
+          "DisplayName": "Frames Rx RDMA request invalid",
+          "Description": "Frames Rx RDMA request invalid",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx RDMA request local access errors",
+          "DisplayName": "Tx RDMA request local access errors",
+          "Description": "Tx RDMA request local access errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx RDMA request local operation errors",
+          "DisplayName": "Tx RDMA request local operation errors",
+          "Description": "Tx RDMA request local operation errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx RDMA request memory management errors",
+          "DisplayName": "Tx RDMA request memory management errors",
+          "Description": "Tx RDMA request memory management errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA response duplicate request errors",
+          "DisplayName": "Rx RDMA response duplicate request errors",
+          "Description": "Rx RDMA response duplicate request errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA response out of buffer errors",
+          "DisplayName": "Rx RDMA response out of buffer errors",
+          "Description": "Rx RDMA response out of buffer errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA response out of sequence errors",
+          "DisplayName": "Rx RDMA response out of sequence errors",
+          "Description": "Rx RDMA response out of sequence errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA response CQE errors",
+          "DisplayName": "Rx RDMA response CQE errors",
+          "Description": "Rx RDMA response CQE errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA response CQE flush errors",
+          "DisplayName": "Rx RDMA response CQE flush errors",
+          "Description": "Rx RDMA response CQE flush errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA response local length errors",
+          "DisplayName": "Rx RDMA response local length errors",
+          "Description": "Rx RDMA response local length errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA response invalid request errors",
+          "DisplayName": "Rx RDMA response invalid request errors",
+          "Description": "Rx RDMA response invalid request errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA response local QP operation errors",
+          "DisplayName": "Rx RDMA response local QP operation errors",
+          "Description": "Rx RDMA response local QP operation errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Rx RDMA response out of atomic resources errors",
+          "DisplayName": "Rx RDMA response out of atomic resources errors",
+          "Description": "Rx RDMA response out of atomic resources errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx RDMA response packet sequence errors",
+          "DisplayName": "Tx RDMA response packet sequence errors",
+          "Description": "Tx RDMA response packet sequence errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx RDMA response remote invalid request errors",
+          "DisplayName": "Tx RDMA response remote invalid request errors",
+          "Description": "Tx RDMA response remote invalid request errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx RDMA response remote access errors",
+          "DisplayName": "Tx RDMA response remote access errors",
+          "Description": "Tx RDMA response remote access errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx RDMA response remote operation errors",
+          "DisplayName": "Tx RDMA response remote operation errors",
+          "Description": "Tx RDMA response remote operation errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Tx RDMA response RNR retry errors",
+          "DisplayName": "Tx RDMA response RNR retry errors",
+          "Description": "Tx RDMA response RNR retry errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ]
+    }
+  ]
+}
