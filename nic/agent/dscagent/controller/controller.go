@@ -562,6 +562,7 @@ func (c *API) Stop() error {
 
 	c.cancelWatcher()
 
+	c.closeConnections()
 	// Wait for nimbus client to drain all active watchers
 	c.Wait()
 
@@ -569,7 +570,6 @@ func (c *API) Stop() error {
 	c.cancelWatcher = nil
 	c.nimbusClient = nil
 
-	c.closeConnections()
 	return nil
 }
 

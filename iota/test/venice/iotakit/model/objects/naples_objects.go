@@ -216,8 +216,18 @@ func (npc *NaplesCollection) Decommission() error {
 	for _, naples := range npc.Nodes {
 		for _, inst := range naples.Instances {
 			dsc := inst.Dsc
+			curDsc, err := npc.Client.GetSmartNIC(dsc.Status.PrimaryMAC)
+			if err != nil {
+				log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
+				return err
+			}
+
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+
 			log.Infof("Decommissioning naples %v", dsc.Status.PrimaryMAC)
-			err := npc.Client.DecommissionSmartNIC(dsc)
+			err = npc.Client.DecommissionSmartNIC(dsc)
 			if err != nil {
 				log.Infof("Error decommissioning smart nic %v", err.Error())
 				return err
@@ -228,7 +238,16 @@ func (npc *NaplesCollection) Decommission() error {
 	for _, naples := range npc.FakeNodes {
 		for _, inst := range naples.Instances {
 			dsc := inst.Dsc
-			err := npc.Client.DecommissionSmartNIC(dsc)
+			curDsc, err := npc.Client.GetSmartNIC(dsc.Status.PrimaryMAC)
+			if err != nil {
+				log.Errorf("Error reading smartnic for profile uppate %v", err.Error())
+				return err
+			}
+
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+			err = npc.Client.DecommissionSmartNIC(dsc)
 			if err != nil {
 				log.Infof("Error decommissioning smart nic %v", err.Error())
 				return err
