@@ -218,13 +218,15 @@ update_bgp_route_map_table (NBB_ULONG correlator)
                 return true;
                 });
 
-    PDS_TRACE_DEBUG ("ORF: bgpRouteMapTable ext-comm:: %s (len=%d)\n",
-                      str.c_str(), str.length());
-
-    // set length appropriately
-    if (!str.empty()) {
-        len = str.length()-1;
+    if (str.empty()) {
+        // By default send deny all routes in the ORF to RR
+        // by setting an invalid RT in the route-map
+        str="0000000000000000,";
     }
+    len = str.length()-1;
+
+    PDS_TRACE_DEBUG ("ORF: bgpRouteMapTable ext-comm:: %s (len=%d)\n",
+                      str.c_str(), len);
 
     spec.set_rmindex (PDS_MS_BGP_RM_ENT_INDEX);
     spec.set_index (PDS_MS_BGP_ROUTE_MAP_DEF_INDEX);
@@ -568,6 +570,7 @@ bgp_peer_afi_safi_pre_set(BGPPeerAfSpec &req, NBB_LONG row_status,
 
     ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
     ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
+    bool route_map_init = false;
     // check if the peer is valid or not.
     {
         auto mgmt_ctxt = mgmt_state_t::thread_context();
@@ -577,8 +580,21 @@ bgp_peer_afi_safi_pre_set(BGPPeerAfSpec &req, NBB_LONG row_status,
                          append("local addr: ").append(ipaddr2str(&local_ipaddr)).
                          append(" peer addr: ").append(ipaddr2str(&peer_ipaddr)));
         }
+        if (!mgmt_ctxt.state()->rr_mode() &&
+            req.afi() == AMB_BGP_AFI_L2VPN && req.safi() == AMB_BGP_EVPN) {
+            // Is this the first EVPN peering session configured on Naples ?
+            route_map_init = !mgmt_ctxt.state()->route_map_created();
+            mgmt_ctxt.state()->set_route_map_created();
+        }
     }
 
+    if (route_map_init) {
+        // EVPN peering sessions on Naples are assigned an import policy
+        // pointing to a routemap entry that will be sent as ORF to the RR
+        // If this is the first EVPN peer then initialize the
+        // route map table entry that is shared by all EVPN peers
+        update_bgp_route_map_table (correlator);
+    }
     // Address Family enable/disable should be set internally as per
     // create-update/delete operation. these rows cannot be destroyed
     // in metaswitch, so when user deletes an AF for a peer, we internally
@@ -589,7 +605,6 @@ bgp_peer_afi_safi_pre_set(BGPPeerAfSpec &req, NBB_LONG row_status,
                       ipaddr2str(&local_ipaddr), ipaddr2str(&peer_ipaddr),
                       req.afi(), req.safi(),
                       (row_status == AMB_ROW_DESTROY)?"disabled":"enabled");
-
 }
 
 NBB_VOID

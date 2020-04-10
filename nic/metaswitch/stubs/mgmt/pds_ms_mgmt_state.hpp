@@ -190,6 +190,8 @@ public:
     void set_vni(pds_vnid_id_t vni, mgmt_obj_type_e obj_type,
                  ms_idx_t id, const pds_obj_key_t& uuid);
     void reset_vni(pds_vnid_id_t vni);
+    void set_route_map_created() {route_map_created_ = true;}
+    bool route_map_created() {return route_map_created_;}
 
 private:
     static mgmt_state_t* g_state_;
@@ -214,6 +216,7 @@ private:
     bool overlay_routing_en_ = false;
         
     std::unordered_map<pds_vnid_id_t, mgmt_obj_t> vni_store_; 
+    bool route_map_created_ = false;
 
 private:
     mgmt_state_t(void);
