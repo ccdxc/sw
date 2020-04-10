@@ -20,6 +20,7 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
@@ -50,24 +51,25 @@ var (
 
 // tInfo represents test info.
 type tInfo struct {
-	logger            log.Logger
-	mockResolver      *mockresolver.ResolverClient // resolver
-	esClient          elastic.ESClient             // elastic client to verify the results
-	elasticsearchAddr string                       // elastic address
-	elasticsearchName string                       // name of the elasticsearch server name; used to stop the server
-	elasticsearchDir  string                       // name of the directory where Elastic credentials and logs are stored
-	apiServer         apiserver.Server             // venice API server
-	apiServerAddr     string                       // API server address
-	evtsMgr           *evtsmgr.EventsManager       // events manager to write events to elastic
-	evtProxyServices  *testutils.EvtProxyServices  // events proxy to receive and distribute events
-	storeConfig       *events.StoreConfig          // events store config
-	dedupInterval     time.Duration                // events dedup interval
-	batchInterval     time.Duration                // events batch interval
-	signer            certs.CSRSigner              // function to sign CSRs for TLS
-	trustRoots        []*x509.Certificate          // trust roots to verify TLS certs
-	apiClient         apiclient.Services
-	recorders         *recorders
-	testName          string
+	logger                 log.Logger
+	mockResolver           *mockresolver.ResolverClient // resolver
+	esClient               elastic.ESClient             // elastic client to verify the results
+	elasticsearchAddr      string                       // elastic address
+	elasticsearchName      string                       // name of the elasticsearch server name; used to stop the server
+	elasticsearchDir       string                       // name of the directory where Elastic credentials and logs are stored
+	apiServer              apiserver.Server             // venice API server
+	apiServerAddr          string                       // API server address
+	evtsMgr                *evtsmgr.EventsManager       // events manager to write events to elastic
+	evtProxyServices       *testutils.EvtProxyServices  // events proxy to receive and distribute events
+	storeConfig            *events.StoreConfig          // events store config
+	dedupInterval          time.Duration                // events dedup interval
+	batchInterval          time.Duration                // events batch interval
+	mockCitadelQueryServer *query.Server                // citadel query server with mock broker
+	signer                 certs.CSRSigner              // function to sign CSRs for TLS
+	trustRoots             []*x509.Certificate          // trust roots to verify TLS certs
+	apiClient              apiclient.Services
+	recorders              *recorders
+	testName               string
 }
 
 // list of recorders belonging to the test
@@ -136,6 +138,15 @@ func (t *tInfo) setup(tst *testing.T) error {
 		return err
 	}
 
+	// start mock citadel query server
+	mockCitadelQueryServer, mockCitadelQueryServerURL, err := testutils.StartMockCitadelQueryServer(tst)
+	if err != nil {
+		t.logger.Errorf("failed to start mock citadel query server, err: %v", err)
+		return err
+	}
+	t.mockCitadelQueryServer = mockCitadelQueryServer
+	t.updateResolver(globals.Citadel, mockCitadelQueryServerURL)
+
 	// start events manager
 	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(testURL, t.mockResolver, t.logger, t.esClient, nil)
 	if err != nil {
@@ -173,6 +184,11 @@ func (t *tInfo) teardown() {
 	}
 
 	testutils.StopElasticsearch(t.elasticsearchName, t.elasticsearchDir)
+
+	if t.mockCitadelQueryServer != nil {
+		t.mockCitadelQueryServer.Stop()
+		t.mockCitadelQueryServer = nil
+	}
 
 	if t.evtsMgr != nil {
 		t.evtsMgr.Stop()

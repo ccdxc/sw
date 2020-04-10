@@ -76,7 +76,7 @@ func NewStatsAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, resolver
 		logger:         logger}
 
 	ae.wg.Add(1)
-	ae.createAPIClients()
+	go ae.createAPIClients()
 	return ae
 }
 
@@ -90,11 +90,16 @@ func (a *StatsAlertEngine) ProcessQueryResponse(policyMeta *api.ObjectMeta, qRes
 
 	policyID := fmt.Sprintf("%s/%s", policyMeta.GetName(), policyMeta.GetUUID())
 
-	// get API client to process this query/metric response
+	// wait until API client is available
 	apCl := a.getAPIClient()
-	if apCl == nil {
-		a.logger.Errorf("{%s} no API client available to process stats alert policy: %v", policyID, policyMeta.GetName())
-		return fmt.Errorf("no API client available to process stats alert policy")
+	for apCl == nil {
+		a.logger.Errorf("{%s} no API client available to process stats alert policy: %v, retrying..", policyID, policyMeta.GetName())
+		if a.ctx.Err() != nil {
+			a.logger.Error("context cancelled, returning from processing query response")
+			return fmt.Errorf("no API client available to process stats alert policy")
+		}
+		time.Sleep(time.Second)
+		apCl = a.getAPIClient()
 	}
 
 	val, err := a.memDb.FindObject("StatsAlertPolicy", policyMeta)

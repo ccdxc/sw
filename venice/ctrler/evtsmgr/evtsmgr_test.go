@@ -9,12 +9,15 @@ import (
 	"time"
 
 	gogoproto "github.com/gogo/protobuf/types"
+	"github.com/golang/mock/gomock"
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/citadel/broker/mock"
+	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -55,7 +58,7 @@ func addMockService(mr *mockresolver.ResolverClient, serviceName, serviceURL str
 }
 
 // setup helper function creates mock elastic server and resolver
-func setup(t *testing.T) (*mockes.ElasticServer, *mockresolver.ResolverClient, apiserver.Server, log.Logger, error) {
+func setup(t *testing.T) (*mockes.ElasticServer, *mockresolver.ResolverClient, apiserver.Server, *query.Server, log.Logger, error) {
 	tLogger := logger.WithContext("t_name", t.Name())
 	// create elastic mock server
 	ms := mockes.NewElasticServer(tLogger.WithContext("submodule", "elasticsearch-mock-server"))
@@ -67,22 +70,34 @@ func setup(t *testing.T) (*mockes.ElasticServer, *mockresolver.ResolverClient, a
 	// create API server
 	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), tLogger)
 	if err != nil {
-		return nil, nil, nil, tLogger, err
+		return nil, nil, nil, nil, tLogger, err
+	}
+
+	// create citadel query service; to avoid circular dependency issue, venice_services.go:StartMockCitadelQueryServer
+	// is not being used in unit-tests
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockBroker := mock.NewMockInf(mockCtrl)
+	mockCitadelQueryServer, err := query.NewQueryService(testServerURL, mockBroker)
+	if err != nil {
+		return nil, nil, nil, nil, tLogger, err
 	}
 
 	// update mock resolver
-	addMockService(mr, globals.ElasticSearch, ms.GetElasticURL()) // add mock elastic service to mock resolver
-	addMockService(mr, globals.APIServer, apiServerURL)           // add API server to mock resolver
+	addMockService(mr, globals.ElasticSearch, ms.GetElasticURL())              // add mock elastic service to mock resolver
+	addMockService(mr, globals.APIServer, apiServerURL)                        // add API server to mock resolver
+	addMockService(mr, globals.Citadel, mockCitadelQueryServer.GetListenURL()) // add API server to mock resolver
 
-	return ms, mr, apiServer, tLogger, nil
+	return ms, mr, apiServer, mockCitadelQueryServer, tLogger, nil
 }
 
 // TestEventsManager tests the creation of the new events manager
 func TestEventsManager(t *testing.T) {
-	mockElasticsearchServer, mockResolver, apiServer, tLogger, err := setup(t)
+	mockElasticsearchServer, mockResolver, apiServer, mockCitadelQueryServer, tLogger, err := setup(t)
 	AssertOk(t, err, "failed to setup test, err: %v", err)
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
+	defer mockCitadelQueryServer.Stop()
 
 	ec, err := elastic.NewClient("", mockResolver, tLogger.WithContext("submodule", "elastic"))
 	AssertOk(t, err, "failed to create elastic client")
@@ -100,10 +115,11 @@ func TestEventsManagerInstantiation(t *testing.T) {
 	maxRetries = 2
 	retryDelay = 20 * time.Millisecond
 
-	mockElasticsearchServer, mockResolver, apiServer, tLogger, err := setup(t)
+	mockElasticsearchServer, mockResolver, apiServer, mockCitadelQueryServer, tLogger, err := setup(t)
 	AssertOk(t, err, "failed to setup test, err: %v", err)
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
+	defer mockCitadelQueryServer.Stop()
 
 	// no server name
 	_, err = NewEventsManager("", "listen-url", mockResolver, tLogger)
@@ -125,13 +141,6 @@ func TestEventsManagerInstantiation(t *testing.T) {
 	_, err = NewEventsManager("server-name", "listen-url", mockResolver, tLogger)
 	Assert(t, err != nil, "expected failure, EventsManager init succeeded")
 
-	// with stats alert mgr
-	ec, err := elastic.NewClient("", mockResolver, tLogger.WithContext("submodule", "elastic"))
-	AssertOk(t, err, "failed to create elastic client")
-	_, err = NewEventsManager("server-name", testServerURL, mockResolver, tLogger,
-		WithElasticClient(ec), WithSkipStatsAlertMgr(true))
-	AssertOk(t, err, "failed to create events mgr")
-
 	// update the elasticsearch entry with dummy elastic URL to make client creation fail
 	addMockService(mockResolver, globals.ElasticSearch, "dummy-url")
 
@@ -145,10 +154,11 @@ func TestEventsManagerInstantiation(t *testing.T) {
 
 // TestEventsElasticTemplate tests events template creation in elasticsearch
 func TestEventsElasticTemplate(t *testing.T) {
-	mockElasticsearchServer, mockResolver, apiServer, tLogger, err := setup(t)
+	mockElasticsearchServer, mockResolver, apiServer, mockCitadelQueryServer, tLogger, err := setup(t)
 	AssertOk(t, err, "failed to setup test, err: %v", err)
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
+	defer mockCitadelQueryServer.Stop()
 
 	var esClient elastic.ESClient
 
@@ -179,10 +189,11 @@ func TestEventsElasticTemplate(t *testing.T) {
 
 // TestGCAlerts tests GCAlerts()
 func TestGCAlerts(t *testing.T) {
-	mockElasticsearchServer, mockResolver, apiServer, tLogger, err := setup(t)
+	mockElasticsearchServer, mockResolver, apiServer, mockCitadelQueryServer, tLogger, err := setup(t)
 	AssertOk(t, err, "failed to setup test, err: %v", err)
 	defer mockElasticsearchServer.Stop()
 	defer apiServer.Stop()
+	defer mockCitadelQueryServer.Stop()
 
 	ec, err := elastic.NewClient("", mockResolver, tLogger.WithContext("submodule", "elastic"))
 	AssertOk(t, err, "failed to create elastic client")

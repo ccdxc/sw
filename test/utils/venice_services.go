@@ -7,13 +7,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"testing"
 	"time"
+
+	"github.com/golang/mock/gomock"
 
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/auth"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/citadel/broker/mock"
+	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
@@ -143,6 +148,19 @@ func GetAuthorizationHeader(apiGwAddr string, creds *auth.PasswordCredential) (s
 	}
 
 	return authzHeader, nil
+}
+
+// StartMockCitadelQueryServer starts a mock citadel query server
+func StartMockCitadelQueryServer(t *testing.T) (*query.Server, string, error) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockBroker := mock.NewMockInf(mockCtrl)
+	mockCitadelQueryServer, err := query.NewQueryService("localhost:0", mockBroker)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return mockCitadelQueryServer, mockCitadelQueryServer.GetListenURL(), nil
 }
 
 // StartAPIGateway helper function to start API gateway.

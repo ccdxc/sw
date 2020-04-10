@@ -181,15 +181,17 @@ func (c *ConfigWatcher) processEvents(parentCtx context.Context) error {
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// watch stats policy
-	watcher, err = c.apiClient.MonitoringV1().StatsAlertPolicy().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}})
-	if err != nil {
-		c.logger.Errorf("failed to watch stats alert policy, err: %v", err)
-		return err
+	if !globals.IsFeatureDisabled(globals.StatsBasedAlerts) {
+		watcher, err = c.apiClient.MonitoringV1().StatsAlertPolicy().Watch(ctx, &api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}})
+		if err != nil {
+			c.logger.Errorf("failed to watch stats alert policy, err: %v", err)
+			return err
+		}
+		watchList[len(selCases)] = "statsAlertPolicy"
+		selCases = append(selCases, reflect.SelectCase{
+			Dir:  reflect.SelectRecv,
+			Chan: reflect.ValueOf(watcher.EventChan())})
 	}
-	watchList[len(selCases)] = "statsAlertPolicy"
-	selCases = append(selCases, reflect.SelectCase{
-		Dir:  reflect.SelectRecv,
-		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// ctx done
 	watchList[len(selCases)] = "ctx-canceled"
@@ -214,31 +216,36 @@ func (c *ConfigWatcher) processEvents(parentCtx context.Context) error {
 			return fmt.Errorf("unknown object received")
 		}
 
+		var err error
 		c.logger.Infof("received watch event %#v", event)
 		switch obj := event.Object.(type) {
 		case *monitoring.AlertPolicy:
-			if err := c.processAlertPolicy(event.Type, obj); err != nil {
+			if err = c.processAlertPolicy(event.Type, obj); err != nil {
 				c.logger.Errorf("[alertPolicy] failed to add/update/delete memDb, err: %v", err)
 			}
 		case *monitoring.Alert:
-			if err := c.processAlert(event.Type, obj); err != nil {
+			if err = c.processAlert(event.Type, obj); err != nil {
 				c.logger.Errorf("[alert] failed to add/update/delete memDb, err: %v", err)
 			}
 		case *monitoring.AlertDestination:
-			if err := c.processAlertDestination(event.Type, obj); err != nil {
+			if err = c.processAlertDestination(event.Type, obj); err != nil {
 				c.logger.Errorf("[alertDestination] failed to add/update/delete memDb, err: %v", err)
 			}
 		case *monitoring.EventPolicy:
-			if err := c.processEventPolicy(event.Type, obj); err != nil {
+			if err = c.processEventPolicy(event.Type, obj); err != nil {
 				c.logger.Errorf("[eventPolicy] failed to add/update/delete memDb, err: %v", err)
 			}
 		case *monitoring.StatsAlertPolicy:
-			if err := c.processStatsAlertPolicy(event.Type, obj); err != nil {
+			if err = c.processStatsAlertPolicy(event.Type, obj); err != nil {
 				c.logger.Errorf("[statsAlertPolicy] failed to add/update/delete memDb, err: %v", err)
 			}
 		default:
 			c.logger.Errorf("invalid watch event type received from {%s}, %+v", watchList[id], event)
 			return fmt.Errorf("invalid watch event type")
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 }

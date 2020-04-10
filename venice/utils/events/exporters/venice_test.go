@@ -10,12 +10,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	es "github.com/olivere/elastic"
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/citadel/broker/mock"
+	"github.com/pensando/sw/venice/citadel/query"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
@@ -65,7 +68,7 @@ func addMockService(mr *mockresolver.ResolverClient, serviceName, serviceURL str
 }
 
 // veniceExporterSetup creates events manager service, venice exporter and elastic client
-func veniceExporterSetup(t *testing.T) (*mockes.ElasticServer, apiserver.Server, *evtsmgr.EventsManager,
+func veniceExporterSetup(t *testing.T) (*mockes.ElasticServer, apiserver.Server, *query.Server, *evtsmgr.EventsManager,
 	events.Exporter, elastic.ESClient, log.Logger) {
 	logger := vLogger.WithContext("t_name", t.Name())
 	// create elastic mock server
@@ -76,9 +79,16 @@ func veniceExporterSetup(t *testing.T) (*mockes.ElasticServer, apiserver.Server,
 	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger.WithContext("submodule", globals.APIServer))
 	AssertOk(t, err, "failed to start API server")
 
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockBroker := mock.NewMockInf(mockCtrl)
+	mockCitadelQueryServer, err := query.NewQueryService(testServerURL, mockBroker)
+	AssertOk(t, err, "failed to create mock citadel query service")
+
 	// update resolver
 	addMockService(mr, globals.ElasticSearch, ms.GetElasticURL())
 	addMockService(mr, globals.APIServer, apiServerURL)
+	addMockService(mr, globals.Citadel, mockCitadelQueryServer.GetListenURL())
 
 	// create elastic client; this is used to confirm the events have reached elasticsearch through events manager
 	elasticClient, err := elastic.NewClient(ms.GetElasticURL(), nil, logger.WithContext("submodule", "elastic-client"))
@@ -92,14 +102,15 @@ func veniceExporterSetup(t *testing.T) (*mockes.ElasticServer, apiserver.Server,
 	veniceExporter, err := NewVeniceExporter("venice-exporter", veniceBufferLen, evtsMgr.RPCServer.GetListenURL(), nil, logger.WithContext("submodule", "venice-exporter"))
 	AssertOk(t, err, "failed to create venice events exporter")
 
-	return ms, apiServer, evtsMgr, veniceExporter, elasticClient, logger
+	return ms, apiServer, mockCitadelQueryServer, evtsMgr, veniceExporter, elasticClient, logger
 }
 
 // TestVeniceEventsExporter tests venice exporter
 func TestVeniceEventsExporter(t *testing.T) {
-	mockElasticServer, apiServer, evtsMgrServer, veniceExporter, elasticClient, _ := veniceExporterSetup(t)
+	mockElasticServer, apiServer, mockCitadelQueryServer, evtsMgrServer, veniceExporter, elasticClient, _ := veniceExporterSetup(t)
 	defer apiServer.Stop()
 	defer mockElasticServer.Stop()
+	defer mockCitadelQueryServer.Stop()
 	defer evtsMgrServer.RPCServer.Stop()
 
 	// create mock events channel; in the real case, it will come from the dispatcher
@@ -198,9 +209,10 @@ func TestVeniceEventsExporter(t *testing.T) {
 
 // Te stVeniceExporterWithEvtsMgrRestart tests the venice exporter with events manager restart
 func TestVeniceExporterWithEvtsMgrRestart(t *testing.T) {
-	mockElasticServer, apiServer, evtsMgrServer, veniceExporter, elasticClient, logger := veniceExporterSetup(t)
+	mockElasticServer, apiServer, mockCitadelQueryServer, evtsMgrServer, veniceExporter, elasticClient, logger := veniceExporterSetup(t)
 	defer apiServer.Stop()
 	defer mockElasticServer.Stop()
+	defer mockCitadelQueryServer.Stop()
 	defer evtsMgrServer.RPCServer.Stop()
 
 	// create mock events channel; in the real case, it will come from the dispatcher

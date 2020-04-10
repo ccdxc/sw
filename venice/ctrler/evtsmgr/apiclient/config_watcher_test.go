@@ -68,8 +68,8 @@ func TestConfigWatcher(t *testing.T) {
 	Assert(t, cfgWatcher.APIClient() != nil, "config watcher did not create API client yet")
 }
 
-// TestAlertPolicyCache tests the mem DB CRUD on alert policy objects
-func TestAlertPolicyCache(t *testing.T) {
+// TestAlertPolicyOnMemdb tests the mem DB CRUD on alert policy objects
+func TestAlertPolicyOnMemdb(t *testing.T) {
 	cfgWatcher := &ConfigWatcher{logger: log.SetConfig(log.GetDefaultConfig(t.Name())), memDb: memdb.NewMemDb()}
 
 	pol := &monitoring.AlertPolicy{

@@ -115,18 +115,19 @@ func setup(t *testing.T) (*memdb.MemDb, *mockresolver.ResolverClient, apiserver.
 		return nil, nil, nil, nil, nil, tLogger, err
 	}
 
-	// create citadel query service
+	// create citadel query service; to avoid circular dependency issue, venice_services.go:StartMockCitadelQueryServer
+	// is not being used in unit-tests
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockBroker := mock.NewMockInf(mockCtrl)
-	srv, err := query.NewQueryService(testServerURL, mockBroker)
+	mockCitadelQueryServer, err := query.NewQueryService(testServerURL, mockBroker)
 	if err != nil {
 		return nil, nil, nil, nil, nil, tLogger, err
 	}
 
 	// update mock resolver
-	addMockService(mr, globals.APIServer, apiServerURL)     // add API server to mock resolver
-	addMockService(mr, globals.Citadel, srv.GetListenURL()) // add citadel to mock resolver
+	addMockService(mr, globals.APIServer, apiServerURL)                        // add API server to mock resolver
+	addMockService(mr, globals.Citadel, mockCitadelQueryServer.GetListenURL()) // add citadel to mock resolver
 
 	// create stats alert policy
 	statsAlertPolicy := policygen.CreateStatsAlertPolicyObj(globals.DefaultTenant, "infra", CreateAlphabetString(5),
@@ -139,7 +140,7 @@ func setup(t *testing.T) (*memdb.MemDb, *mockresolver.ResolverClient, apiserver.
 			},
 		}}, []string{})
 
-	return mDb, mr, apiServer, srv, statsAlertPolicy, tLogger, nil
+	return mDb, mr, apiServer, mockCitadelQueryServer, statsAlertPolicy, tLogger, nil
 }
 
 // adds the given service to mock resolver

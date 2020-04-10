@@ -168,10 +168,11 @@ func TestAPIWatchEvents(t *testing.T) {
 				return
 			default:
 				key := CreateAlphabetString(5)
-				apCh <- &kvstore.WatchEvent{Type: kvstore.Created, Key: key,
-					Object: &monitoring.AlertPolicy{TypeMeta: api.TypeMeta{Kind: "AlertPolicy"},
-						ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%s", key), Tenant: fmt.Sprintf("test-ten%s", key)}},
-				}
+				aObj := &monitoring.AlertPolicy{TypeMeta: api.TypeMeta{Kind: "AlertPolicy"},
+					ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%s", key), Tenant: fmt.Sprintf("test-ten%s", key)}}
+				apCh <- &kvstore.WatchEvent{Type: kvstore.Created, Key: key, Object: aObj}
+				apCh <- &kvstore.WatchEvent{Type: kvstore.Updated, Key: key, Object: aObj}
+				apCh <- &kvstore.WatchEvent{Type: kvstore.Deleted, Key: key, Object: aObj}
 			}
 			time.Sleep(50 * time.Millisecond)
 		}
@@ -196,23 +197,26 @@ func TestAPIWatchEvents(t *testing.T) {
 	go func() { // send some watch events for alert
 		tick := time.NewTimer(1 * time.Second)
 		for {
+			key := CreateAlphabetString(5)
+			apObj := &monitoring.AlertPolicy{TypeMeta: api.TypeMeta{Kind: "Alert"},
+				ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%s", key), Tenant: fmt.Sprintf("test-ten%s", key)}}
+
 			select {
 			case <-tick.C:
-				aCh <- &kvstore.WatchEvent{Type: "INVALID EVENT"}
+				aCh <- &kvstore.WatchEvent{Type: "INVALID EVENT", Key: key, Object: apObj}
 				return
 			default:
-				key := CreateAlphabetString(5)
-				aCh <- &kvstore.WatchEvent{Type: kvstore.Created, Key: key,
-					Object: &monitoring.AlertPolicy{TypeMeta: api.TypeMeta{Kind: "Alert"},
-						ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%s", key), Tenant: fmt.Sprintf("test-ten%s", key)}},
-				}
+				aCh <- &kvstore.WatchEvent{Type: kvstore.Created, Key: key, Object: apObj}
+				aCh <- &kvstore.WatchEvent{Type: kvstore.Updated, Key: key, Object: apObj}
+				aCh <- &kvstore.WatchEvent{Type: kvstore.Deleted, Key: key, Object: apObj}
 			}
 			time.Sleep(50 * time.Millisecond)
 		}
 	}()
 
 	err = evtsMgr.processEvents(parentCtx)
-	Assert(t, err != nil && strings.Contains(err.Error(), "invalid watch event type"), "missed invalid watch event") // this should fail on the final invalid event
+	Assert(t, err != nil && strings.Contains(err.Error(), "invalid alert policy watch event"),
+		"missed invalid alert policy watch event") // this should fail on the final invalid event
 
 	// fail on invalid alert destination WATCH event
 	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert, alert policy, event policy and stats alert policy
@@ -230,23 +234,26 @@ func TestAPIWatchEvents(t *testing.T) {
 	go func() { // send some watch events for alert
 		tick := time.NewTimer(1 * time.Second)
 		for {
+			key := CreateAlphabetString(5)
+			adObj := &monitoring.AlertDestination{TypeMeta: api.TypeMeta{Kind: "AlertDestination"},
+				ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%s", key), Tenant: fmt.Sprintf("test-ten%s", key)}}
+
 			select {
 			case <-tick.C:
-				adCh <- &kvstore.WatchEvent{Type: "INVALID EVENT"}
+				adCh <- &kvstore.WatchEvent{Type: "INVALID EVENT", Key: key, Object: adObj}
 				return
 			default:
-				key := CreateAlphabetString(5)
-				adCh <- &kvstore.WatchEvent{Type: kvstore.Created, Key: key,
-					Object: &monitoring.AlertDestination{TypeMeta: api.TypeMeta{Kind: "AlertDestination"},
-						ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%s", key), Tenant: fmt.Sprintf("test-ten%s", key)}},
-				}
+				adCh <- &kvstore.WatchEvent{Type: kvstore.Created, Key: key, Object: adObj}
+				adCh <- &kvstore.WatchEvent{Type: kvstore.Updated, Key: key, Object: adObj}
+				adCh <- &kvstore.WatchEvent{Type: kvstore.Deleted, Key: key, Object: adObj}
 			}
 			time.Sleep(50 * time.Millisecond)
 		}
 	}()
 
 	err = evtsMgr.processEvents(parentCtx)
-	Assert(t, err != nil && strings.Contains(err.Error(), "invalid watch event type"), "missed invalid watch event") // this should fail on the final invalid event
+	Assert(t, err != nil && strings.Contains(err.Error(), "invalid alert destination watch event"),
+		"missed invalid alert destination watch event") // this should fail on the final invalid event
 
 	// fail on invalid event policy WATCH event
 	mWatcher = mockkvs.NewMockWatcher(ctrl) // shared watch chan between alert, alert policy, alert destination and stats alert policy
@@ -264,21 +271,23 @@ func TestAPIWatchEvents(t *testing.T) {
 	go func() { // send some watch events for alert
 		tick := time.NewTimer(1 * time.Second)
 		for {
+			key := CreateAlphabetString(5)
+			epObj := &monitoring.EventPolicy{TypeMeta: api.TypeMeta{Kind: "EventPolicy"},
+				ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%s", key), Tenant: fmt.Sprintf("test-ten%s", key)}}
 			select {
 			case <-tick.C:
-				epCh <- &kvstore.WatchEvent{Type: "INVALID EVENT"}
+				epCh <- &kvstore.WatchEvent{Type: "INVALID EVENT", Key: key, Object: epObj}
 				return
 			default:
-				key := CreateAlphabetString(5)
-				epCh <- &kvstore.WatchEvent{Type: kvstore.Created, Key: key,
-					Object: &monitoring.EventPolicy{TypeMeta: api.TypeMeta{Kind: "EventPolicy"},
-						ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%s", key), Tenant: fmt.Sprintf("test-ten%s", key)}},
-				}
+				epCh <- &kvstore.WatchEvent{Type: kvstore.Created, Key: key, Object: epObj}
+				epCh <- &kvstore.WatchEvent{Type: kvstore.Updated, Key: key, Object: epObj}
+				epCh <- &kvstore.WatchEvent{Type: kvstore.Deleted, Key: key, Object: epObj}
 			}
 			time.Sleep(50 * time.Millisecond)
 		}
 	}()
 
 	err = evtsMgr.processEvents(parentCtx)
-	Assert(t, err != nil && strings.Contains(err.Error(), "invalid watch event type"), "missed invalid watch event") // this should fail on the final invalid event
+	Assert(t, err != nil && strings.Contains(err.Error(), "invalid event policy watch event"),
+		"missed event policy watch event") // this should fail on the final invalid event
 }

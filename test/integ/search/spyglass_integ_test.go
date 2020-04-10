@@ -36,6 +36,7 @@ import (
 	"github.com/pensando/sw/venice/apigw"
 	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/citadel/query"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
@@ -91,27 +92,28 @@ const (
 )
 
 type testInfo struct {
-	l                 log.Logger
-	apiServer         apiserver.Server
-	apiServerAddr     string
-	apiClient         apiclient.Services
-	apiGw             apigw.APIGateway
-	apiGwAddr         string
-	elasticURL        string
-	elasticServerName string
-	elasticDir        string
-	fdr               finder.Interface
-	fdrAddr           string
-	idr               indexer.Interface
-	authzHeader       string
-	mockResolver      *mockresolver.ResolverClient
-	evtsMgr           *evtsmgr.EventsManager
-	evtProxyServices  *testutils.EvtProxyServices
-	evtsStoreConfig   *events.StoreConfig
-	pcache            pcache.Interface
-	esClient          elastic.ESClient    // elastic client
-	signer            certs.CSRSigner     // function to sign CSRs for TLS
-	trustRoots        []*x509.Certificate // trust roots to verify TLS certs
+	l                      log.Logger
+	apiServer              apiserver.Server
+	apiServerAddr          string
+	apiClient              apiclient.Services
+	apiGw                  apigw.APIGateway
+	apiGwAddr              string
+	elasticURL             string
+	elasticServerName      string
+	elasticDir             string
+	fdr                    finder.Interface
+	fdrAddr                string
+	idr                    indexer.Interface
+	authzHeader            string
+	mockResolver           *mockresolver.ResolverClient
+	mockCitadelQueryServer *query.Server // citadel query server with mock broker
+	evtsMgr                *evtsmgr.EventsManager
+	evtProxyServices       *testutils.EvtProxyServices
+	evtsStoreConfig        *events.StoreConfig
+	pcache                 pcache.Interface
+	esClient               elastic.ESClient    // elastic client
+	signer                 certs.CSRSigner     // function to sign CSRs for TLS
+	trustRoots             []*x509.Certificate // trust roots to verify TLS certs
 }
 
 var tInfo testInfo
@@ -188,6 +190,15 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	}
 	tInfo.idr = idr.(indexer.Interface)
 
+	// start mock citadel query server
+	mockCitadelQueryServer, mockCitadelQueryServerURL, err := testutils.StartMockCitadelQueryServer(t)
+	if err != nil {
+		log.Errorf("failed to start mock citadel query server, err: %v", err)
+		return err
+	}
+	tInfo.mockCitadelQueryServer = mockCitadelQueryServer
+	tInfo.updateResolver(globals.Citadel, mockCitadelQueryServerURL)
+
 	// start evtsmgr
 	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(":0", tInfo.mockResolver, tInfo.l, tInfo.esClient, nil)
 	if err != nil {
@@ -242,6 +253,9 @@ func (tInfo *testInfo) teardown() {
 
 	// stop apiGW
 	tInfo.apiGw.Stop()
+
+	// stop mock citadel query server
+	tInfo.mockCitadelQueryServer.Stop()
 
 	// stop evtsmgr
 	tInfo.evtsMgr.Stop()
