@@ -3904,11 +3904,6 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 	case SIOCSIFMTU:
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCSIFMTU (Set Interface MTU)\n");
-		if (lif->ionic->is_mgmt_nic) {
-			if_printf(ifp, "MTU change not allowed\n");
-			error = EINVAL;
-			break;
-		}
 		IONIC_LIF_LOCK(lif);
 		error = ionic_change_mtu(ifp, ifr->ifr_mtu);
 		if (error)

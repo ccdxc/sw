@@ -187,6 +187,7 @@ class EthLif
     map<uint64_t, uint64_t> mac_addrs;
     map<uint64_t, uint16_t> vlans;
     map<uint64_t, tuple<uint64_t, uint16_t>> mac_vlans;
+    uint32_t mtu;
     // Tasks
     ev_timer stats_timer = {0};
 

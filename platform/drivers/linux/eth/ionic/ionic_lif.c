@@ -1491,11 +1491,6 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 		return -EINVAL;
 	}
 
-	if (ionic_is_mnic(lif->ionic)) {
-		netdev_err(netdev, "MTU change not allowed on mnic device\n");
-		return -EOPNOTSUPP;
-	}
-
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;

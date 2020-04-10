@@ -1321,7 +1321,7 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     if (spec->uplink_port_num == 0) {
         port_config->speed = IONIC_SPEED_1G;
-        port_config->mtu = 1500;
+        port_config->mtu = MTU_DEFAULT + ETH_FCS;
         port_config->state = IONIC_PORT_ADMIN_STATE_UP;
         return (IONIC_RC_SUCCESS);
     }
@@ -1333,6 +1333,9 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_ERR("{}: failed to get port config", spec->name);
         return (IONIC_RC_ERROR);
     }
+
+    // The port mtu would incude the FCS.
+    port_config->mtu -= ETH_FCS;
 
     return (IONIC_RC_SUCCESS);
 }
@@ -1351,6 +1354,9 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     DEVAPI_CHECK
+
+    // The host mtu would not incude the FCS.
+    port_config->mtu += ETH_FCS;
 
     ret = dev_api->port_set_config(spec->uplink_port_num, (port_config_t *)cfg);
     if (ret != SDK_RET_OK) {
@@ -1437,7 +1443,8 @@ Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         cfg.speed = cmd->speed;
         break;
     case IONIC_PORT_ATTR_MTU:
-        cfg.mtu = cmd->mtu;
+        // The host mtu would not incude the FCS.
+        cfg.mtu = cmd->mtu + ETH_FCS;
         break;
     case IONIC_PORT_ATTR_AUTONEG:
         cfg.an_enable = cmd->an_enable;
@@ -1524,7 +1531,8 @@ Eth::_CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data)
         comp->speed = cfg.speed;
         break;
     case IONIC_PORT_ATTR_MTU:
-        comp->mtu = cfg.mtu;
+        // The port mtu would incude the FCS.
+        comp->mtu = cfg.mtu - ETH_FCS;
         break;
     case IONIC_PORT_ATTR_AUTONEG:
         comp->an_enable = cfg.an_enable;
@@ -1835,8 +1843,14 @@ Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
     ident->eth.version = 1;
     dev_api->lif_get_max_filters(&ident->eth.max_ucast_filters, &ident->eth.max_mcast_filters);
     ident->eth.rss_ind_tbl_sz = RSS_IND_TBL_SIZE;
-    ident->eth.min_frame_size = 64;
-    ident->eth.max_frame_size = 9216;
+
+    if (spec->eth_type == ETH_HOST_MGMT || spec->eth_type == ETH_MNIC_INTERNAL_MGMT) {
+        ident->eth.min_frame_size = MTU_DEFAULT;
+        ident->eth.max_frame_size = MTU_DEFAULT;
+    } else {
+        ident->eth.min_frame_size = MTU_MIN;
+        ident->eth.max_frame_size = MTU_MAX;
+    }
 
     ident->eth.config.features = 0;
     ident->eth.config.queue_count[IONIC_QTYPE_ADMINQ] = 1; // spec->adminq_count;

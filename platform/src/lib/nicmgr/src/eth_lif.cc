@@ -234,6 +234,8 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
 
     NIC_LOG_INFO("{}: lif_status_addr {:#x}", hal_lif_info_.name, lif_status_addr);
 
+    mtu = MTU_DEFAULT;
+
     // NotifyQ
     notify_enabled = 0;
     notify_ring_head = 0;
@@ -439,6 +441,8 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         PAL_barrier();
         sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
+
+    mtu = MTU_DEFAULT;
 
     // Initialize NotifyQ
     notify_enabled = 0;
@@ -1940,6 +1944,7 @@ EthLif::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
     case IONIC_LIF_ATTR_NAME:
         break;
     case IONIC_LIF_ATTR_MTU:
+        comp->mtu = mtu;
         break;
     case IONIC_LIF_ATTR_MAC:
         mac_addr =
@@ -2039,6 +2044,24 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
         dev_api->lif_upd_name(hal_lif_info_.lif_id, name);
         break;
     case IONIC_LIF_ATTR_MTU:
+        if (cmd->mtu != mtu) {
+            if (spec->eth_type == ETH_HOST_MGMT || spec->eth_type == ETH_MNIC_INTERNAL_MGMT) {
+                NIC_LOG_ERR("{}: Change MTU not permitted on host/internal management interfaces");
+                return (IONIC_RC_EINVAL);
+            }
+            if (cmd->mtu > MTU_MAX) {
+                NIC_LOG_ERR("{}: Requested MTU {} greater than max {}",
+                            hal_lif_info_.name, cmd->mtu, MTU_MAX);
+                return (IONIC_RC_EINVAL);
+            }
+            if (cmd->mtu < MTU_MIN) {
+                NIC_LOG_ERR("{}: Requested MTU {} less than min {}",
+                            hal_lif_info_.name, cmd->mtu, MTU_MIN);
+                return (IONIC_RC_EINVAL);
+            }
+            // This is saved for _CmdGetAttr, but has no other effect.
+            mtu = cmd->mtu;
+        }
         break;
     case IONIC_LIF_ATTR_MAC:
         break;

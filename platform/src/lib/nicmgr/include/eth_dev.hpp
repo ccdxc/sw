@@ -39,6 +39,17 @@ namespace pt = boost::property_tree;
 #define PORT_MAC_STATS_REPORT_SIZE (1024)
 #define PORT_PB_STATS_REPORT_SIZE  (1024)
 
+/* We can transmit frames that are MTU+FCS, but only receive frames that are
+ * MTU, including the fcs.  We will the OS about the smaller value without FCS,
+ * and account for the additional FCS when programming the port.
+ *
+ * The MTU constants below do not include the FCS.
+ */
+#define ETH_FCS 4
+#define MTU_DEFAULT 1500
+#define MTU_MIN 64
+#define MTU_MAX (9216 - ETH_FCS)
+
 /**
  * ETH Device type
  */
