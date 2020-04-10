@@ -220,6 +220,29 @@ private:
                                            vpc_impl *vpc, vnic_entry *vnic,
                                            pds_mapping_spec_t *spec);
 
+    /// \brief     allocate all classids corresponding to the tags
+    ///            configured on this mapping
+    ///            in the rxdma to support tag derivation
+    /// \param[in] vpc     VPC entry of this mapping
+    /// \param[in] local   true if the mapping is local
+    /// \param[in] mapping mapping object being processed
+    /// \param[in] spec    IP mapping configuration details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t allocate_tag_classes_(vpc_entry *vpc, bool local,
+                                    mapping_entry *mapping,
+                                    pds_mapping_spec_t *spec);
+
+    /// \brief     reserve all resources needed for a mapping
+    ///            in the rxdma to support tag derivation
+    /// \param[in] vpc     VPC entry of this mapping
+    /// \param[in] local   true if the mapping is local
+    /// \param[in] mapping mapping object being processed
+    /// \param[in] spec    IP mapping configuration details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reserve_rxdma_mapping_tag_resources_(vpc_entry *vpc, bool local,
+                                                   mapping_entry *mapping,
+                                                   pds_mapping_spec_t *spec);
+
     /// \brief     reserve necessary resources for local mapping
     /// \param[in] mapping mapping object being processed
     /// \param[in] vpc     VPC of this mapping
@@ -232,6 +255,7 @@ private:
                                                pds_mapping_spec_t *spec);
 
     /// \brief     reserve necessary entries in remote mapping table
+    ///            during the creation of remote mapping
     /// \param[in] mapping mapping object being processed
     /// \param[in] vpc     VPC of this mapping
     /// \param[in] subnet  subnet of this mapping
@@ -455,7 +479,8 @@ private:
                                           subnet_entry *subnet,
                                           mapping_entry *new_mapping,
                                           mapping_entry *orig_mapping,
-                                          pds_mapping_spec_t *spec);
+                                          pds_mapping_spec_t *spec,
+                                          api_obj_ctxt_t *obj_ctxt);
 
     /// \brief     program and activate mapping related tables during create
     ///            by enabling stage0 tables corresponding to the new epoch

@@ -430,6 +430,73 @@ mapping_impl::reserve_public_ip_resources_(mapping_entry *mapping,
 }
 
 sdk_ret_t
+mapping_impl::allocate_tag_classes_(vpc_entry *vpc, bool local,
+                                    mapping_entry *mapping,
+                                    pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+
+    // allocate class id for each tag
+    for (uint32_t i = 0; i < spec->num_tags; i++) {
+        ret = vpc_impl_db()->alloc_class_id(spec->tags[i],
+                                            local, &class_id_[i]);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to allocate class id for tag %u of "
+                          "remote local mapping %s %s, err %u",
+                          spec->tags[i], mapping->key().str(),
+                          mapping->key2str().c_str(), ret);
+            return ret;
+        }
+        num_class_id_++;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mapping_impl::reserve_rxdma_mapping_tag_resources_(vpc_entry *vpc, bool local,
+                                                   mapping_entry *mapping,
+                                                   pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+    sdk_table_api_params_t tparams;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
+
+    if (spec->num_tags == 0) {
+        return SDK_RET_OK;
+    }
+
+    // allocate class id for each tag configured for this mapping
+    ret = allocate_tag_classes_(vpc, local, mapping, spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
+
+    // allocate an index in the rxdma MAPPING_TAG table
+    ret = mapping_impl_db()->mapping_tag_idxr()->alloc(&rxdma_mapping_tag_idx_);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to reserve entry in MAPPING_TAG table, "
+                      "err %u", ret);
+        return ret;
+    }
+
+    // allocate an entry in the rxdma MAPPING table for the overlay IP to
+    // point to rxdma_mapping_tag_idx_ in rxdma MAPPING_TAG table
+    PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
+                                       &spec->skey.ip_addr);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                   NULL, NULL, 0,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->rxdma_mapping_tbl()->reserve(&tparams);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to reserve entry in rxdma MAPPING table "
+                      "for mapping %s, err %u",
+                      mapping->key2str().c_str(), ret);
+        return ret;
+    }
+    rxdma_mapping_hdl_ = tparams.handle;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
                                                vpc_entry *vpc,
                                                vnic_entry *vnic,
@@ -475,19 +542,10 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
 
     // if tags are configured on this mapping, allocate all needed resources
     if (spec->num_tags) {
-        for (uint32_t i = 0; i < spec->num_tags; i++) {
-            // allocate class id for each tag configured for this mapping
-            ret = vpc_impl_db()->alloc_class_id(spec->tags[i],
-                                                true, &class_id_[i]);
-            if (unlikely(ret != SDK_RET_OK)) {
-                PDS_TRACE_ERR("Failed to allocate class id for tag %u of "
-                              "local mapping %s %s, vnic %s, err %u",
-                              spec->tags[i], mapping->key().str(),
-                              mapping->key2str().c_str(),
-                              vnic->key().str(), ret);
-                return ret;
-            }
-            num_class_id_++;
+        // allocate class id for each tag configured for this mapping
+        ret = allocate_tag_classes_(vpc, true, mapping, spec);
+        if (unlikely(ret != SDK_RET_OK)) {
+            return ret;
         }
 
         // allocate an index in the rxdma LOCAL_MAPPING_TAG table
@@ -560,10 +618,9 @@ mapping_impl::reserve_remote_mapping_resources_(mapping_entry *mapping,
                                                 vpc_entry *vpc,
                                                 subnet_entry *subnet,
                                                 pds_mapping_spec_t *spec) {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams;
-    rxdma_mapping_swkey_t rxdma_mapping_key;
 
     // reserve an entry in MAPPING table
     if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
@@ -588,48 +645,11 @@ mapping_impl::reserve_remote_mapping_resources_(mapping_entry *mapping,
     }
     mapping_hdl_ = tparams.handle;
 
-    if ((spec->skey.type == PDS_MAPPING_TYPE_L3) && spec->num_tags) {
-        // allocate class id for each tag configured for this mapping
-        for (uint32_t i = 0; i < spec->num_tags; i++) {
-            ret = vpc_impl_db()->alloc_class_id(spec->tags[i],
-                                                true, &class_id_[i]);
-            if (unlikely(ret != SDK_RET_OK)) {
-                PDS_TRACE_ERR("Failed to allocate class id for tag %u of "
-                              "remote local mapping %s %s, err %u",
-                              spec->tags[i], mapping->key().str(),
-                              mapping->key2str().c_str(), ret);
-                return ret;
-            }
-            num_class_id_++;
-        }
-
-        // allocate an index in the rxdma MAPPING_TAG table
-        ret = mapping_impl_db()->mapping_tag_idxr()->alloc(&rxdma_mapping_tag_idx_);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to reserve entry in MAPPING_TAG table, "
-                          "err %u", ret);
-            return ret;
-        }
-
-        // allocate an entry in the rxdma MAPPING table for the overlay IP to
-        // point to rxdma_mapping_tag_idx_ in rxdma MAPPING_TAG table
-        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
-                                           ((vpc_impl *)vpc->impl())->hw_id(),
-                                           &spec->skey.ip_addr);
-        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
-                                       NULL, NULL, 0,
-                                       sdk::table::handle_t::null());
-        ret = mapping_impl_db()->rxdma_mapping_tbl()->reserve(&tparams);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to reserve entry in rxdma MAPPING table "
-                          "for mapping %s, err %u",
-                          mapping->key2str().c_str(), ret);
-            return ret;
-        }
-        rxdma_mapping_hdl_ = tparams.handle;
+    // if tags are configured on this mapping, allocate all needed resources
+    if (spec->num_tags) {
+        ret = reserve_rxdma_mapping_tag_resources_(vpc, false, mapping, spec);
     }
-
-    return SDK_RET_OK;
+    return ret;
 }
 
 sdk_ret_t
@@ -645,11 +665,11 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
 
     spec = &obj_ctxt->api_params->mapping_spec;
     switch (obj_ctxt->api_op) {
-    // record the fact that resource reservation was attempted
-    // NOTE: even if we partially acquire resources and fail eventually,
-    //       this will ensure that proper release of resources will happen
-    api_obj->set_rsvd_rsc();
     case API_OP_CREATE:
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         if (spec->is_local) {
             PDS_TRACE_DEBUG("Reserving resources for mapping %s, local %u, "
                             "subnet %s, vnic %s, pub_ip_valid %u, pub_ip %s",
@@ -740,8 +760,23 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                 return ret;
             }
         } else {
-            // update of remote mapping, remote mapping udpate will use already
-            // allocate resources, so no need to allocate any new resources
+            // except for tags, if any, remote mapping uses existing resources
+            if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD) {
+                // allocate all the resources needed to support tags
+                ret = reserve_rxdma_mapping_tag_resources_(vpc, false,
+                                                           new_mapping, spec);
+                if (unlikely(ret != SDK_RET_OK)) {
+                    return ret;
+                }
+            } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) {
+                // probably some new tags and/or some same old tags and/or
+                // some tags got removed, allocate class ids needed in all cases
+                ret = allocate_tag_classes_(vpc, false, new_mapping, spec);
+                if (unlikely(ret != SDK_RET_OK)) {
+                    return ret;
+                }
+            }
+            // NOTE: for other two cases, no need to allocate any new resources
         }
         break;
 
@@ -780,7 +815,7 @@ mapping_impl::nuke_resources(api_base *api_obj) {
 
     // release any class ids allocated for this mapping
     for (uint32_t i = 0; i < num_class_id_; i++) {
-        ret = vpc_impl_db()->free_class_id(class_id_[i], false);
+        ret = vpc_impl_db()->free_class_id(class_id_[i], mapping->is_local());
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to free classid %u allocated to remote "
                           "mapping %s, err %u",
@@ -1280,7 +1315,8 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
     if (spec->num_tags) {
         memset(&local_mapping_tag_data, 0, local_mapping_tag_data.entry_size());
         memset(&mapping_tag_data, 0, mapping_tag_data.entry_size());
-        for (uint32_t i = 0; i < spec->num_tags; i++) {
+        // while programming always program all class-ids including invalid ones
+        for (uint32_t i = 0; i < PDS_MAX_TAGS_PER_MAPPING; i++) {
             local_mapping_tag_fill_class_id_(&local_mapping_tag_data, i,
                                              class_id_[i]);
             mapping_tag_fill_class_id_(&mapping_tag_data, i, class_id_[i]);
@@ -1364,18 +1400,16 @@ mapping_impl::fill_remote_mapping_key_data_(
                                    MAPPING_MAPPING_INFO_ID, mapping_hdl);
 
     // fill rxdma MAPPING table entry key, data and table params for overlay IP
-    if (spec->num_tags) {
-        memset(rxdma_mapping_data, 0, sizeof(*rxdma_mapping_data));
-        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(rxdma_mapping_key,
-                                           ((vpc_impl *)vpc->impl())->hw_id(),
-                                           &spec->skey.ip_addr);
-        rxdma_mapping_data->tag_idx = rxdma_mapping_tag_idx_;
-        PDS_IMPL_FILL_TABLE_API_PARAMS(rxdma_mapping_tbl_params,
-                                       rxdma_mapping_key,
-                                       NULL, rxdma_mapping_data,
-                                       RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
-                                       rxdma_mapping_hdl);
-    }
+    PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(rxdma_mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
+                                       &spec->skey.ip_addr);
+    memset(rxdma_mapping_data, 0, sizeof(*rxdma_mapping_data));
+    rxdma_mapping_data->tag_idx = rxdma_mapping_tag_idx_;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(rxdma_mapping_tbl_params,
+                                   rxdma_mapping_key,
+                                   NULL, rxdma_mapping_data,
+                                   RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
+                                   rxdma_mapping_hdl);
     return SDK_RET_OK;
 }
 
@@ -1387,9 +1421,21 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
     rxdma_mapping_swkey_t rxdma_mapping_key;
+    mapping_tag_info_entry_t mapping_tag_data;
     sdk_table_api_params_t mapping_tbl_params;
     rxdma_mapping_appdata_t rxdma_mapping_data;
     sdk_table_api_params_t rxdma_mapping_tbl_params;
+
+    // program txdma MAPPING_TAG table
+    if (rxdma_mapping_tag_idx_ != PDS_IMPL_RSVD_TAG_HW_ID) {
+        memset(&mapping_tag_data, 0, mapping_tag_data.entry_size());
+        // while programming always program all class-ids including invalid ones
+        for (uint32_t i = 0; i < PDS_MAX_TAGS_PER_MAPPING; i++) {
+            mapping_tag_fill_class_id_(&mapping_tag_data, i, class_id_[i]);
+        }
+        ret = mapping_tag_data.write(rxdma_mapping_tag_idx_);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    }
 
     // fill key & data for MAPPING table entry for overlay IP or MAC
     ret = fill_remote_mapping_key_data_(vpc, (subnet_impl *)subnet->impl(),
@@ -1776,34 +1822,93 @@ mapping_impl::upd_remote_mapping_entries_(vpc_entry *vpc,
                                           subnet_entry *subnet,
                                           mapping_entry *new_mapping,
                                           mapping_entry *orig_mapping,
-                                          pds_mapping_spec_t *spec) {
+                                          pds_mapping_spec_t *spec,
+                                          api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
-    sdk_table_api_params_t tparams;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
+    mapping_tag_info_entry_t mapping_tag_data;
+    rxdma_mapping_appdata_t rxdma_mapping_data;
+    sdk_table_api_params_t mapping_table_params;
+    rxdma_mapping_appdata_t *rxdma_mapping_data_p;
+    sdk_table_api_params_t rxdma_mapping_tbl_params;
     mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
+
+
+    if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD) {
+        // program txdma MAPPING_TAG table first
+        memset(&mapping_tag_data, 0, mapping_tag_data.entry_size());
+        // while programming always program all class-ids including invalid ones
+        for (uint32_t i = 0; i < PDS_MAX_TAGS_PER_MAPPING; i++) {
+            mapping_tag_fill_class_id_(&mapping_tag_data, i, class_id_[i]);
+        }
+        ret = mapping_tag_data.write(rxdma_mapping_tag_idx_);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_DEL) {
+        // update the MAPPING_TAG table entry with invalid tags
+        // NOTE:
+        // 1. in this case class_id_[] is filled with reserved invalid tags
+        // 2. when the original object is deleted all tag related resources
+        //    associated with it will be freed, so we don't need to xfer
+        //    resource ownership to the cloned object
+    } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) {
+        // take ownership of resources of needed resource(s) before
+        // programming MAPPING_TAG table
+        rxdma_mapping_tag_idx_ =  orig_mapping_impl->rxdma_mapping_tag_idx_;
+        // program txdma MAPPING_TAG table
+        memset(&mapping_tag_data, 0, mapping_tag_data.entry_size());
+        // while programming always program all class-ids including invalid ones
+        for (uint32_t i = 0; i < PDS_MAX_TAGS_PER_MAPPING; i++) {
+            mapping_tag_fill_class_id_(&mapping_tag_data, i, class_id_[i]);
+        }
+        ret = mapping_tag_data.write(rxdma_mapping_tag_idx_);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    }
 
     // fill key & data for MAPPING table entry for overlay IP or MAC
     ret = fill_remote_mapping_key_data_(vpc, (subnet_impl *)subnet->impl(),
                                         &mapping_key, &mapping_data,
-                                        sdk::table::handle_t::null(), &tparams,
-                                        // TODO: updates for tags
-                                        NULL, NULL,
-                                        sdk::table::handle_t::null(), NULL,
+                                        sdk::table::handle_t::null(),
+                                        &mapping_table_params,
+                                        &rxdma_mapping_key,
+                                        &rxdma_mapping_data,
+                                        rxdma_mapping_hdl_,
+                                        &rxdma_mapping_tbl_params,
                                         spec);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
+    // take care of updating tag tables
+    if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD) {
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->insert(&rxdma_mapping_tbl_params);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_DEL) {
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->update(&rxdma_mapping_tbl_params);
+        // NOTE: do not take ownership of the resources/handles as they will be
+        //       freed when original object is deleted eventually at the end of this
+        //       batch
+        SDK_ASSERT(ret == SDK_RET_OK);
+    } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) {
+        // update rxdma MAPPING table to point to the updated MAPPING_TAG table
+        // entry
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->update(&rxdma_mapping_tbl_params);
+        SDK_ASSERT(ret == SDK_RET_OK);
+        rxdma_mapping_hdl_ = rxdma_mapping_tbl_params.handle;
+        orig_mapping_impl->rxdma_mapping_hdl_ = sdk::table::handle_t::null();
+        orig_mapping_impl->rxdma_mapping_tag_idx_ = PDS_IMPL_RSVD_TAG_HW_ID;
+    }
+
     // update entry to MAPPING table for overlay IP or MAC
-    ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
+    ret = mapping_impl_db()->mapping_tbl()->update(&mapping_table_params);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
-    mapping_hdl_ = tparams.handle;
+    mapping_hdl_ = mapping_table_params.handle;
 
     // now that cloned object took over the remote IP/MAC mapping resources
     // in MAPPING table we need the original object to relinquish the ownership
     orig_mapping_impl->mapping_hdl_ = sdk::table::handle_t::null();
+
     return SDK_RET_OK;
 }
-
 
 // NOTE:
 // there is no nee to touch the kvstore or dhcp bindings that are strored
@@ -1834,8 +1939,8 @@ mapping_impl::activate_update_(pds_epoch_t epoch, mapping_entry *new_mapping,
         ret = upd_local_mapping_entries_(vpc, subnet, new_mapping, orig_mapping,
                                          obj_ctxt, spec);
     } else {
-        ret = upd_remote_mapping_entries_(vpc, subnet,
-                                          new_mapping, orig_mapping, spec);
+        ret = upd_remote_mapping_entries_(vpc, subnet, new_mapping,
+                                          orig_mapping, spec, obj_ctxt);
     }
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to update mapping %s, %s, err %u",

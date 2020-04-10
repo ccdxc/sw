@@ -170,8 +170,13 @@ mapping_entry::init_config(api_ctxt_t *api_ctxt) {
             // local L2 mapping will come down in the form of vnics, not as
             // local mappings
             PDS_TRACE_ERR("local mapppings can't be non-L3");
-            return SDK_RET_INVALID_OP;
+            return SDK_RET_INVALID_ARG;
         }
+    }
+    if ((spec->skey.type == PDS_MAPPING_TYPE_L2) && spec->num_tags) {
+        PDS_TRACE_ERR("tags are not supported on L2 mappings, "
+                      "configured %u tags", spec->num_tags);
+        return SDK_RET_INVALID_ARG;
     }
     memcpy(&key_, &spec->key, sizeof(key_));
     memcpy(&skey_, &spec->skey, sizeof(skey_));
@@ -198,10 +203,24 @@ mapping_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
                       key_.str());
         return SDK_RET_INVALID_ARG;
     }
+    // check for any changes in the public IP configuration
     if (is_local_ &&
         ((public_ip_valid_ != spec->public_ip_valid) ||
          (memcmp(&public_ip_, &spec->public_ip, sizeof(ip_addr_t))))) {
         obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_PUBLIC_IP;
+    }
+    // check for any changes in the tag configuration
+    if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
+        if ((num_tags_ == 0) && (spec->num_tags != 0)) {
+            // tags didn't exist before but added now
+            obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_TAGS_ADD;
+        } else if (num_tags_ && (spec->num_tags == 0)) {
+            // tags were there before but now cleared
+            obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_TAGS_DEL;
+        } else if (num_tags_ && spec->num_tags) {
+            // tag content can be compared later for optimization
+            obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_TAGS_UPD;
+        }
     }
     PDS_TRACE_DEBUG("mapping %s upd bmap 0x%lx", key_.str(),
                     obj_ctxt->upd_bmap);
