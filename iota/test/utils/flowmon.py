@@ -86,5 +86,8 @@ class Ipfix(Packet):
         PacketListField("records", [], IpfixRecord)
     ]
 
-bind_layers(UDP, Ipfix, dport=4739)
+bind_layers(UDP, Ipfix, dport=4000)
+bind_layers(UDP, Ipfix, dport=4001)
+bind_layers(UDP, Ipfix, dport=4002)
+bind_layers(UDP, Ipfix, dport=4003)
 

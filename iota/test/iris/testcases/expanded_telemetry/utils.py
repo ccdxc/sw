@@ -47,6 +47,9 @@ ICMP_EXPORT_ENABLE_EXPECTED           = 2
 IPFIX_TEMPLATE_SET_ID = 0x0002
 IPFIX_HEADER_LEN = 16
 
+ERSPAN_COLLECTOR_MAX_IN_ESX = 2
+FLOWMON_COLLECTOR_MAX       = 4
+
 #
 # Add a Command in the context of a Workload
 #
@@ -222,9 +225,10 @@ def establishCollectorSecondaryIPs(tc):
     if tc.iterators.ccount <= len(tc.collector):
         return api.types.status.SUCCESS
 
-    sec_ip_count = tc.iterators.ccount - len(tc.collector)
+    collector_count = len(tc.collector)
+    sec_ip_count = tc.iterators.ccount - collector_count
     if tc.classic_mode == True:
-        sec_ip_list = sec_ip_api.ConfigWorkloadSecondaryIp(tc.collector[c], 
+        sec_ip_list = sec_ip_api.ConfigWorkloadSecondaryIp(tc.collector[0], 
                       True, sec_ip_count)
         if len(sec_ip_list) == 0:
             return api.types.status.FAILURE
@@ -239,17 +243,18 @@ def establishCollectorSecondaryIPs(tc):
         i = 0
         c = 0
         while i < sec_ip_count:
-            sec_ip_list = sec_ip_api.ConfigWorkloadSecondaryIp(tc.collector[c],
-                                                               True, 1)
-            if len(sec_ip_list) == 0:
-                return api.types.status.FAILURE
+            #sec_ip_list = sec_ip_api.ConfigWorkloadSecondaryIp(tc.collector[c],
+            #                                                   True, 1)
+            #if len(sec_ip_list) == 0:
+            #    return api.types.status.FAILURE
             tc.sec_ip_count += 1
 
             tc.collector.append(tc.collector[c])
-            tc.collector_ip_address.append(sec_ip_list[0])
+            #tc.collector_ip_address.append(sec_ip_list[0])
+            tc.collector_ip_address.append(tc.collector[c].ip_address)
             i += 1
             c += 1
-            if c == len(tc.collector):
+            if c == collector_count:
                 c = 0
 
     c = 0
@@ -277,15 +282,137 @@ def deEstablishCollectorSecondaryIPs(tc):
     if tc.classic_mode == True:
         sec_ip_api.ConfigWorkloadSecondaryIp(tc.collector[0], False,
                                              tc.sec_ip_count)
-    else:
-        i = 0
-        c = 0
-        while c < tc.sec_ip_count:
-            sec_ip_api.ConfigWorkloadSecondaryIp(tc.collector[c], False, 1)
-            i += 1
-            c += 1
-            if c == len(tc.collector):
-                c = 0
+    #else:
+    #    i = 0
+    #    c = 0
+    #    while c < tc.sec_ip_count:
+    #        sec_ip_api.ConfigWorkloadSecondaryIp(tc.collector[c], False, 1)
+    #        i += 1
+    #        c += 1
+    #        if c == len(tc.collector):
+    #            c = 0
+
+#
+# Generate feature specific Collector list
+#
+def generateFeatureCollectorList(tc):
+    tc.lif_collector = []
+    tc.flow_collector = []
+    tc.flowmon_collector = []
+
+    tc.lif_collector_idx = []
+    tc.flow_collector_idx = []
+    tc.flowmon_collector_idx = []
+
+    tc.collection = 'unified'
+    collector_count = len(tc.collector)
+    if tc.feature == 'lif-erspan':
+        for c in range(0, len(tc.collector)):
+            if tc.classic_mode == True or\
+               len(tc.lif_collector) < ERSPAN_COLLECTOR_MAX_IN_ESX:
+                tc.lif_collector.append(tc.collector[c])
+                tc.lif_collector_idx.append(c)
+    elif tc.feature == 'flow-erspan':
+        for c in range(0, len(tc.collector)):
+            if tc.classic_mode == True or\
+               len(tc.flow_collector) < ERSPAN_COLLECTOR_MAX_IN_ESX:
+                tc.flow_collector.append(tc.collector[c])
+                tc.flow_collector_idx.append(c)
+    elif tc.feature == 'flowmon':
+        for c in range(0, len(tc.collector)):
+            if len(tc.flowmon_collector) < FLOWMON_COLLECTOR_MAX:
+                tc.flowmon_collector.append(tc.collector[c])
+                tc.flowmon_collector_idx.append(c)
+    elif tc.feature == 'flow-erspan-flowmon':
+        for c in range(0, len(tc.collector)):
+            if tc.iterators.collection == 'unified' or collector_count < 2:
+                if tc.classic_mode == True or\
+                   len(tc.flow_collector) < ERSPAN_COLLECTOR_MAX_IN_ESX:
+                    tc.flow_collector.append(tc.collector[c])
+                    tc.flow_collector_idx.append(c)
+                if len(tc.flowmon_collector) < FLOWMON_COLLECTOR_MAX:
+                    tc.flowmon_collector.append(tc.collector[c])
+                    tc.flowmon_collector_idx.append(c)
+            elif ((c % 2) == 0):
+                tc.collection = 'distinct'
+                if tc.classic_mode == True or c == 0:
+                    tc.flow_collector.append(tc.collector[c])
+                    tc.flow_collector_idx.append(c)
+            else:
+                tc.collection = 'distinct'
+                if len(tc.flowmon_collector) < FLOWMON_COLLECTOR_MAX:
+                    tc.flowmon_collector.append(tc.collector[c])
+                    tc.flowmon_collector_idx.append(c)
+    elif tc.feature == 'lif-erspan-flowmon':
+        for c in range(0, len(tc.collector)):
+            if tc.iterators.collection == 'unified' or collector_count < 2:
+                if tc.classic_mode == True or\
+                   len(tc.lif_collector) < ERSPAN_COLLECTOR_MAX_IN_ESX:
+                    tc.lif_collector.append(tc.collector[c])
+                    tc.lif_collector_idx.append(c)
+                if len(tc.flowmon_collector) < FLOWMON_COLLECTOR_MAX:
+                    tc.flowmon_collector.append(tc.collector[c])
+                    tc.flowmon_collector_idx.append(c)
+            elif ((c % 2) == 0):
+                tc.collection = 'distinct'
+                if tc.classic_mode == True or c == 0:
+                    tc.lif_collector.append(tc.collector[c])
+                    tc.lif_collector_idx.append(c)
+            else:
+                tc.collection = 'distinct'
+                if len(tc.flowmon_collector) < FLOWMON_COLLECTOR_MAX:
+                    tc.flowmon_collector.append(tc.collector[c])
+                    tc.flowmon_collector_idx.append(c)
+    elif tc.feature == 'lif-flow-erspan':
+        for c in range(0, len(tc.collector)):
+            if tc.iterators.collection == 'unified' or collector_count < 2:
+                if tc.classic_mode == True or\
+                   len(tc.lif_collector) < ERSPAN_COLLECTOR_MAX_IN_ESX:
+                    tc.lif_collector.append(tc.collector[c])
+                    tc.lif_collector_idx.append(c)
+                if tc.classic_mode == True or\
+                   len(tc.flow_collector) < ERSPAN_COLLECTOR_MAX_IN_ESX:
+                    tc.flow_collector.append(tc.collector[c])
+                    tc.flow_collector_idx.append(c)
+            elif ((c % 2) == 0):
+                tc.collection = 'distinct'
+                if tc.classic_mode == True or c == 0:
+                    tc.lif_collector.append(tc.collector[c])
+                    tc.lif_collector_idx.append(c)
+            else:
+                tc.collection = 'distinct'
+                if tc.classic_mode == True or c == 1:
+                    tc.flow_collector.append(tc.collector[c])
+                    tc.flow_collector_idx.append(c)
+    elif tc.feature == 'lif-flow-erspan-flowmon':
+        for c in range(0, len(tc.collector)):
+            if tc.iterators.collection == 'unified' or collector_count < 3:
+                if tc.classic_mode == True or\
+                   len(tc.lif_collector) < ERSPAN_COLLECTOR_MAX_IN_ESX:
+                    tc.lif_collector.append(tc.collector[c])
+                    tc.lif_collector_idx.append(c)
+                if tc.classic_mode == True or\
+                   len(tc.flow_collector) < ERSPAN_COLLECTOR_MAX_IN_ESX:
+                    tc.flow_collector.append(tc.collector[c])
+                    tc.flow_collector_idx.append(c)
+                if len(tc.flowmon_collector) < FLOWMON_COLLECTOR_MAX:
+                    tc.flowmon_collector.append(tc.collector[c])
+                    tc.flowmon_collector_idx.append(c)
+            elif ((c % 3) == 0):
+                tc.collection = 'distinct'
+                if tc.classic_mode == True or c == 0:
+                    tc.lif_collector.append(tc.collector[c])
+                    tc.lif_collector_idx.append(c)
+            elif ((c % 3) == 1):
+                tc.collection = 'distinct'
+                if tc.classic_mode == True or c == 1:
+                    tc.flow_collector.append(tc.collector[c])
+                    tc.flow_collector_idx.append(c)
+            else:
+                tc.collection = 'distinct'
+                if len(tc.flowmon_collector) < FLOWMON_COLLECTOR_MAX:
+                    tc.flowmon_collector.append(tc.collector[c])
+                    tc.flowmon_collector_idx.append(c)
 
 #
 # Identify Collector Workload in Classic mode that is tied to Bond0 subnet
@@ -364,13 +491,14 @@ def establishCollectorWorkloadInClassicMode(tc, template_collector_ip):
 # Superimpose template-collector-config with Workload-IP-attributes
 #
 def generateLifCollectorConfig(tc, colObjects):
-    for c in range(0, len(tc.collector_ip_address)):
+    for c in range(0, len(tc.lif_collector)):
+        idx = tc.lif_collector_idx[c]
         if c != 0:
             tmp = copy.deepcopy(colObjects[0])
             colObjects.append(tmp)
         colObjects[c].meta.name = "lif-collector-{}".format(c)
         colObjects[c].spec.packet_size = tc.iterators.pktsize
-        colObjects[c].spec.destination = tc.collector_ip_address[c]
+        colObjects[c].spec.destination = tc.collector_ip_address[idx]
 
     return api.types.status.SUCCESS
 
@@ -463,6 +591,44 @@ def generateLifInterfaceConfig(tc, ifObjects, colObjects):
     return api.types.status.SUCCESS
 
 #
+# Superimpose template-if-config with Netagent-objects' IfNames
+#
+def generateLifInterfaceConfigUsingMirrorConfig(tc, ifObjects, mirrorObjects):
+    result = getIfNames(tc, ifObjects)
+    if result != api.types.status.SUCCESS:
+        return result
+
+    i = 0
+    for obj in ifObjects:
+        obj.meta.name = tc.if_name[i]
+        if tc.iterators.direction == 'ingress':
+            obj.spec.TxCollectors.pop()
+        elif tc.iterators.direction == 'egress':
+            obj.spec.RxCollectors.pop()
+
+        for c in range(0, len(mirrorObjects[0].spec.collectors)):
+            if tc.iterators.direction == 'ingress' or\
+               tc.iterators.direction == 'both':
+                if c != 0:
+                    tmp = copy.deepcopy(obj.spec.RxCollectors[0])
+                    obj.spec.RxCollectors.append(tmp)
+                obj.spec.RxCollectors[c] = "{}--{}"\
+                .format(mirrorObjects[0].meta.name, 
+                mirrorObjects[0].spec.collectors[c].export_config.destination)
+
+            if tc.iterators.direction == 'egress' or\
+               tc.iterators.direction == 'both':
+                if c != 0:
+                    tmp = copy.deepcopy(obj.spec.TxCollectors[0])
+                    obj.spec.TxCollectors.append(tmp)
+                obj.spec.TxCollectors[c] = "{}--{}"\
+                .format(mirrorObjects[0].meta.name, 
+                mirrorObjects[0].spec.collectors[c].export_config.destination)
+        i += 1
+
+    return api.types.status.SUCCESS
+
+#
 # Superimpose template-if-config with Mirror-references removal
 #
 def deGenerateLifInterfaceConfig(tc, ifObjects, colObjects):
@@ -474,6 +640,20 @@ def deGenerateLifInterfaceConfig(tc, ifObjects, colObjects):
         if tc.iterators.direction == 'egress' or\
            tc.iterators.direction == 'both':
             for c in range(0, len(colObjects)):
+                obj.spec.TxCollectors.pop()
+
+#
+# Superimpose template-if-config with Mirror-references removal
+#
+def deGenerateLifInterfaceConfigUsingMirrorConfig(tc, ifObjects, mirrorObjects):
+    for obj in ifObjects:
+        if tc.iterators.direction == 'ingress' or\
+           tc.iterators.direction == 'both':
+            for c in range(0, len(mirrorObjects[0].spec.collectors)):
+                obj.spec.RxCollectors.pop()
+        if tc.iterators.direction == 'egress' or\
+           tc.iterators.direction == 'both':
+            for c in range(0, len(mirrorObjects[0].spec.collectors)):
                 obj.spec.TxCollectors.pop()
 
 #
@@ -503,12 +683,13 @@ def generateMirrorConfig(tc, policy_json, newObjects):
                                             tc.naples_peer.ip_address
 
         obj.spec.packet_size = tc.iterators.pktsize
-        for c in range(0, len(tc.collector_ip_address)):
+        for c in range(0, len(tc.flow_collector)):
+            idx = tc.flow_collector_idx[c]
             if c != 0:
                 tmp = copy.deepcopy(obj.spec.collectors[0])
                 obj.spec.collectors.append(tmp)
             obj.spec.collectors[c].export_config.destination = \
-                                   tc.collector_ip_address[c]
+                                   tc.collector_ip_address[idx]
 
     verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
     api.Logger.info("VERIFY JSON FILE {}".format(verif_json))
@@ -537,6 +718,8 @@ def generateMirrorConfig(tc, policy_json, newObjects):
 # Superimpose template-Flowmon-config with Workload-IP-attributes
 #
 def generateFlowMonConfig(tc, policy_json, newObjects):
+    tc.export_port = []
+
     for obj in newObjects:
         for i in range(0, len(obj.spec.match_rules)):
             if (i % 2) == 0:
@@ -560,11 +743,14 @@ def generateFlowMonConfig(tc, policy_json, newObjects):
                                             tc.naples_peer.ip_address
 
         obj.spec.interval = tc.iterators.interval
-        for c in range(0, len(tc.collector_ip_address)):
+        for c in range(0, len(tc.flowmon_collector)):
+            idx = tc.flowmon_collector_idx[c]
+            tc.export_port.append("400{}".format(c))
             if c != 0:
                 tmp = copy.deepcopy(obj.spec.exports[0])
                 obj.spec.exports.append(tmp)
-            obj.spec.exports[c].destination = tc.collector_ip_address[c]
+            obj.spec.exports[c].destination = tc.collector_ip_address[idx]
+            obj.spec.exports[c].proto_port.port = tc.export_port[c]
 
     verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
     api.Logger.info("VERIFY JSON FILE {}".format(verif_json))
@@ -687,7 +873,7 @@ def triggerTrafficInHostPinModeOrFreeBSD(tc):
     #
     # TCP
     if tc.protocol == 'tcp' or tc.protocol == 'all':
-        if tc.classic_mode == False and tc.args.type == 'regression':
+        if tc.classic_mode == False and tc.args.type != 'precheckin':
     #       cmd = "nc -l {}".format(int(tc.dest_port))
     #       add_command(req, tc.naples_peer, cmd, False)
     #       cmd = "nc {} {} -p {} "\
@@ -757,6 +943,9 @@ def showSessionAndP4TablesForDebug(tc):
     #       grep "export_en=1"'.format(tc.flow_hash_table_id)
     #add_naples_command(req, tc.naples, cmd)
 
+    #cmd = "/nic/bin/halctl show session --yaml"
+    #add_naples_command(req, tc.naples, cmd)
+
     cmd = "/nic/bin/halctl show session --yaml | grep mirrorsession: |\
            grep -v 0"
     add_naples_command(req, tc.naples, cmd)
@@ -811,6 +1000,10 @@ def showP4TablesForValidation(tc):
            grep MIRROR_ERSPAN_MIRROR_ID".format(tc.mirror_table_id)
     add_naples_command(req, tc.naples, cmd)
 
+    cmd = "/nic/bin/halctl show table dump --table-id {} | \
+           grep ip_da".format(tc.tunnel_rewrite_table_id)
+    add_naples_command(req, tc.naples, cmd)
+
     resp_cleanup = api.Trigger(req)
 
     return resp_cleanup
@@ -820,14 +1013,16 @@ def showP4TablesForValidation(tc):
 # being validated
 #
 def validate_ip_proto(tc, ip_proto):
-    if tc.protocol == 'tcp' and ip_proto == IP_PROTO_TCP:
-        return api.types.status.SUCCESS
-    elif tc.protocol == 'udp':
-        if (ip_proto == IP_PROTO_UDP) or\
-           (tc.iterators.proto == 'mixed' and ip_proto == IP_PROTO_ICMP):
+    if ip_proto == IP_PROTO_TCP:
+        if tc.protocol == 'tcp' or tc.protocol == 'all':
             return api.types.status.SUCCESS
-    elif tc.protocol == 'icmp' and ip_proto == IP_PROTO_ICMP:
-        return api.types.status.SUCCESS
+    elif ip_proto == IP_PROTO_UDP:
+        if tc.protocol == 'udp' or tc.protocol == 'all':
+            return api.types.status.SUCCESS
+    elif ip_proto == IP_PROTO_ICMP:
+        if tc.protocol == 'icmp' or tc.protocol == 'all' or\
+           tc.iterators.proto == 'mixed':
+            return api.types.status.SUCCESS
 
     api.Logger.error("ERROR: IP-Prococol {} {}".format(tc.protocol, ip_proto))
     return api.types.status.FAILURE
@@ -900,10 +1095,11 @@ def validate_ip_tuple(tc, sip, dip, sport, dport, tag_etype, vlan_tag,
 #
 # Validate ERSPAN packets reception
 #
-def validateErspanPackets(tc):
+def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
 
     result = api.types.status.SUCCESS
-    for c in range(0, len(tc.collector_ip_address)):
+    for c in range(0, len(lif_flow_collector)):
+        idx = lif_flow_collector_idx[c]
         tc.collector_tcp_pkts[c] = 0
         tc.collector_udp_pkts[c] = 0
         tc.collector_icmp_pkts[c] = 0
@@ -913,12 +1109,22 @@ def validateErspanPackets(tc):
         # print command
         cmd = tc.resp_tcpdump_erspan.commands[c]
         api.PrintCommandResults(cmd)
+        pkts_rcvd = 0
+        for line in cmd.stderr.split('\n'):
+            if 'packets received by filter' in line:
+                for s in line.split():
+                    pkts_rcvd = int(s, 10)
+                    break
+                break
 
         # Read pcap file
-        pcap_file_name = ('mirror-%d.pcap'%c)
+        if tc.feature == 'lif-erspan':
+            pcap_file_name = ('lif-mirror-%d.pcap'%c)
+        elif tc.feature == 'flow-erspan':
+            pcap_file_name = ('flow-mirror-%d.pcap'%c)
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        api.CopyFromWorkload(tc.collector[c].node_name, 
-            tc.collector[c].workload_name, [pcap_file_name], dir_path)
+        api.CopyFromWorkload(lif_flow_collector[c].node_name, 
+            lif_flow_collector[c].workload_name, [pcap_file_name], dir_path)
 
         mirrorscapy = dir_path + '/' + pcap_file_name
         api.Logger.info("File Name: %s" % (mirrorscapy))
@@ -933,12 +1139,20 @@ def validateErspanPackets(tc):
         pkt_count = 0
         seq_num_error = False
         for pkt in pkts:
+            #
+            # Occasionally, pkts are appended to pcap file, the following
+            # check prevents processing of stale pkts
+            #
+            if pkts_rcvd != 0 and pkt_count == pkts_rcvd:
+                break
+            pkt_count += 1
+
             if pkt.haslayer(IP):
                 # Collector-IP validation
                 collector = pkt[IP].dst
-                if collector != tc.collector_ip_address[c]:
+                if collector != tc.collector_ip_address[idx]:
                     api.Logger.error("ERROR: Collector-ip {} {}"\
-                               .format(collector, tc.collector_ip_address[c]))
+                               .format(collector, tc.collector_ip_address[idx]))
                     tc.result[c] = api.types.status.FAILURE
                     break
 
@@ -952,7 +1166,6 @@ def validateErspanPackets(tc):
 
             # GRE-Sequence-number validation (errors are ignored in
             # in classic-mode until code-fix is in)
-            pkt_count += 1
             if pkt.haslayer(GRE):
                 if pkt[GRE].seqnum_present == 1:
                     curr_seq_num = pkt[GRE].seqence_number
@@ -1021,20 +1234,20 @@ def validateErspanPackets(tc):
         # Validate Number-of-ERSPAN-pkts received by the Collector
         #
         # Perform TCP-pkt checks (only for hostpin mode, for now)
-        # Ignore TCP-packet-count checks for now
         #
         pkt_count_error = False
-        if tc.classic_mode == False and tc.args.type == 'regression':
+        if tc.classic_mode == False and tc.args.type != 'precheckin':
             if tc.protocol == 'tcp' or tc.protocol == 'all':
                 if tc.collector_tcp_pkts[c] < tc.tcp_erspan_pkts_expected or\
                    tc.collector_tcp_pkts[c] > (tc.tcp_erspan_pkts_expected+1):
                     api.Logger.error(\
                     "ERROR TCP: [IGNORE] {} {} ERSPAN packets to {}"\
-                    .format(tc.collector_tcp_pkts[c], 
+                    .format(tc.collector_tcp_pkts[c],
                             tc.tcp_erspan_pkts_expected,
-                            tc.collector_ip_address[c]))
+                            tc.collector_ip_address[idx]))
                     pkt_count_error = True
-                    #tc.result[c] = api.types.status.FAILURE
+                    if tc.args.type == 'regression':
+                        tc.result[c] = api.types.status.FAILURE
 
         #
         # Perform UDP-pkt checks
@@ -1044,11 +1257,12 @@ def validateErspanPackets(tc):
             if tc.collector_udp_pkts[c] != tc.udp_erspan_pkts_expected:
                 api.Logger.error(\
                 "ERROR UDP: [IGNORE] {} {} ERSPAN packets to {}"\
-                .format(tc.collector_udp_pkts[c], 
+                .format(tc.collector_udp_pkts[c],
                         tc.udp_erspan_pkts_expected,
-                        tc.collector_ip_address[c]))
+                        tc.collector_ip_address[idx]))
                 pkt_count_error = True
-                #tc.result[c] = api.types.status.FAILURE
+                if tc.args.type == 'regression':
+                    tc.result[c] = api.types.status.FAILURE
 
         #
         # Perform ICMP-pkt checks
@@ -1058,11 +1272,12 @@ def validateErspanPackets(tc):
             if tc.collector_icmp_pkts[c] != tc.icmp_erspan_pkts_expected:
                 api.Logger.error(\
                 "ERROR ICMP: [IGNORE] {} {} ERSPAN packets to {}"\
-                .format(tc.collector_icmp_pkts[c], 
+                .format(tc.collector_icmp_pkts[c],
                         tc.icmp_erspan_pkts_expected,
-                        tc.collector_ip_address[c]))
+                        tc.collector_ip_address[idx]))
                 pkt_count_error = True
-                #tc.result[c] = api.types.status.FAILURE
+                if tc.args.type == 'regression':
+                    tc.result[c] = api.types.status.FAILURE
 
         # For failed cases, print pkts for debug
         if tc.result[c] == api.types.status.FAILURE or\
@@ -1072,19 +1287,20 @@ def validateErspanPackets(tc):
             for pkt in pkts:
                 pkt.show()
 
-    for c in range(0, len(tc.collector_ip_address)):
+    for c in range(0, len(lif_flow_collector)):
+        idx = lif_flow_collector_idx[c]
         if tc.result[c] == api.types.status.FAILURE:
             api.Logger.error("ERROR: {} {} {} {} {} {} {} ERSPAN packets to {}"\
             .format(tc.collector_tcp_pkts[c], tc.collector_udp_pkts[c],
                     tc.collector_icmp_pkts[c], tc.collector_other_pkts[c],
                     tc.tcp_erspan_pkts_expected, tc.udp_erspan_pkts_expected,
-                    tc.icmp_erspan_pkts_expected, tc.collector_ip_address[c]))
+                    tc.icmp_erspan_pkts_expected, tc.collector_ip_address[idx]))
             result = api.types.status.FAILURE
         else:
             api.Logger.info("Number of ERSPAN packets {} {} {} {} to {}"\
             .format(tc.collector_tcp_pkts[c], tc.collector_udp_pkts[c],
                     tc.collector_icmp_pkts[c],
-                    tc.collector_other_pkts[c], tc.collector_ip_address[c]))
+                    tc.collector_other_pkts[c], tc.collector_ip_address[idx]))
 
     return result
 
@@ -1093,7 +1309,8 @@ def validateErspanPackets(tc):
 #
 def validateIpFixPackets(tc):
     result = api.types.status.SUCCESS
-    for c in range(0, len(tc.collector)):
+    for c in range(0, len(tc.flowmon_collector)):
+        idx = tc.flowmon_collector_idx[c]
         tc.collector_ipfix_records[c] = 0
         tc.collector_ipfix_pkts[c] = 0
         tc.collector_ipfix_template_pkts[c] = 0
@@ -1102,12 +1319,19 @@ def validateIpFixPackets(tc):
         # print command
         cmd = tc.resp_tcpdump_flowmon.commands[c]
         api.PrintCommandResults(cmd)
+        pkts_rcvd = 0
+        for line in cmd.stderr.split('\n'):
+            if 'packets received by filter' in line:
+                for s in line.split():
+                    pkts_rcvd = int(s, 10)
+                    break
+                break
 
         # Read pcap file
         pcap_file_name = ('flowmon-%d.pcap'%c)
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        api.CopyFromWorkload(tc.collector[c].node_name,
-            tc.collector[c].workload_name, [pcap_file_name], dir_path)
+        api.CopyFromWorkload(tc.flowmon_collector[c].node_name,
+            tc.flowmon_collector[c].workload_name, [pcap_file_name], dir_path)
 
         flowmonscapy = dir_path + '/' + pcap_file_name
         api.Logger.info("File Name: %s" % (flowmonscapy))
@@ -1119,14 +1343,23 @@ def validateIpFixPackets(tc):
             return api.types.status.FAILURE
 
         # Parse pkts in pcap file
+        pkt_count = 0
         seq_num_error = False
         for pkt in pkts:
+            #
+            # Occasionally, pkts are appended to pcap file, the following
+            # check prevents processing of stale pkts
+            #
+            if pkts_rcvd != 0 and pkt_count == pkts_rcvd:
+                break
+            pkt_count += 1
+
             if pkt.haslayer(IP):
                 # Collector-IP validation
                 collector = pkt[IP].dst
-                if collector != tc.collector_ip_address[c]:
+                if collector != tc.collector_ip_address[idx]:
                     api.Logger.error("ERROR: Collector-ip {} {}"\
-                               .format(collector, tc.collector_ip_address[c]))
+                               .format(collector, tc.collector_ip_address[idx]))
                     tc.result[c] = api.types.status.FAILURE
                     break
 
@@ -1134,7 +1367,7 @@ def validateIpFixPackets(tc):
             if pkt.haslayer(Ipfix):
                 set_id = pkt[Ipfix].records[0].set_id
                 if set_id == IPFIX_TEMPLATE_SET_ID:
-                    tc.collector_ipfix_template_pkts[match_idx] += 1
+                    tc.collector_ipfix_template_pkts[c] += 1
                     continue
 
                 # IPFIX-Sequence-number validation (errors are ignored in
@@ -1148,8 +1381,8 @@ def validateIpFixPackets(tc):
                     "ERROR: [IGNORE] IPFIX Seq-num seen: {} expected: {}"\
                     .format(curr_seq_num, tc.collector_seq_num[c]+1))
                     seq_num_error = True
-                    if tc.classic_mode == False:
-                        tc.result[c] = api.types.status.FAILURE
+                    #if tc.classic_mode == False:
+                    tc.result[c] = api.types.status.FAILURE
                 tc.collector_seq_num[c] = curr_seq_num
 
                 # Validate IPFIX-records
@@ -1183,7 +1416,8 @@ def validateIpFixPackets(tc):
                     i += 2
 
         # For failed cases, print pkts for debug
-        if tc.result[c] == api.types.status.FAILURE or seq_num_error == True:
+        if tc.result[c] == api.types.status.FAILURE or seq_num_error == True\
+           or tc.collector_ipfix_pkts[c] == 0:
             if tc.result[c] == api.types.status.FAILURE:
                 result = api.types.status.FAILURE
             for pkt in pkts:
@@ -1193,27 +1427,46 @@ def validateIpFixPackets(tc):
     # Validate Number-of-IPFIX-pkts received by the 
     # Collector(s)
     #
-    for c in range(0, len(tc.collector_ip_address)):
+    for c in range(0, len(tc.flowmon_collector)):
+        idx = tc.flowmon_collector_idx[c]
         if tc.collector_ipfix_pkts[c] == 0:
             result = api.types.status.FAILURE
 
             api.Logger.error("ERROR: Number of IPFIX Template packets {} to {}"\
             .format(tc.collector_ipfix_template_pkts[c],
-                    tc.collector_ip_address[c]))
+                    tc.collector_ip_address[idx]))
             api.Logger.error("ERROR: Number of IPFIX packets {} to {}"\
-            .format(tc.collector_ipfix_pkts[c], tc.collector_ip_address[c]))
+            .format(tc.collector_ipfix_pkts[c], tc.collector_ip_address[idx]))
             api.Logger.error("ERROR: Number of IPFIX records {} to {}"\
-            .format(tc.collector_ipfix_records[c], tc.collector_ip_address[c]))
+            .format(tc.collector_ipfix_records[c],tc.collector_ip_address[idx]))
         else:
             api.Logger.info("Number of IPFIX Template packets {} to {}"\
             .format(tc.collector_ipfix_template_pkts[c],
-                    tc.collector_ip_address[c]))
+                    tc.collector_ip_address[idx]))
             api.Logger.info("Number of IPFIX packets {} to {}"\
-            .format(tc.collector_ipfix_pkts[c], tc.collector_ip_address[c]))
+            .format(tc.collector_ipfix_pkts[c], tc.collector_ip_address[idx]))
             api.Logger.info("Number of IPFIX records {} to {}"\
-            .format(tc.collector_ipfix_records[c], tc.collector_ip_address[c]))
+            .format(tc.collector_ipfix_records[c],tc.collector_ip_address[idx]))
 
     return result
+
+def dumpP4TableForDebug(tc, table_id):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "/nic/bin/halctl show table dump --table-id {}".format(table_id)
+    add_naples_command(req, tc.naples, cmd)
+
+    resp = api.Trigger(req)
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+
+def dumpSessionTableForDebug(tc):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "/nic/bin/halctl show session --yaml"
+    add_naples_command(req, tc.naples, cmd)
+
+    resp = api.Trigger(req)
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
 
 #
 # Validate Config-cleanup
@@ -1223,20 +1476,42 @@ def validateConfigCleanup(tc):
     for cmd in tc.resp_cleanup.commands:
         api.PrintCommandResults(cmd)
         if cmd.stdout != '':
+            #
+            # Ignore halctl cores in non-regression runs
+            #
+            if tc.args.type != 'regression':
+                halctl_core = False
+                for line in cmd.stdout.split('\n'):
+                    if 'Segmentation' in line:
+                        halctl_core = True
+                        break
+                if halctl_core == True:
+                    continue
+
             if 'table-id {}'.format(tc.lif_table_id) in cmd.command:
                 api.Logger.error("ERROR: lif-config Not Removed")
+                dumpP4TableForDebug(tc, tc.lif_table_id)
                 result = api.types.status.FAILURE
             elif 'table-id {}'.format(tc.omap_table_id) in cmd.command:
                 api.Logger.error("ERROR: omap-config Not Removed")
+                dumpP4TableForDebug(tc, tc.omap_table_id)
                 result = api.types.status.FAILURE
             elif 'table-id {}'.format(tc.mirror_table_id) in cmd.command:
                 api.Logger.error("ERROR: Mirror-config Not Removed")
+                dumpP4TableForDebug(tc, tc.mirror_table_id)
+                result = api.types.status.FAILURE
+            elif 'table-id {}'\
+                 .format(tc.tunnel_rewrite_table_id) in cmd.command:
+                api.Logger.error("ERROR: Tunnel-config Not Removed")
+                dumpP4TableForDebug(tc, tc.tunnel_rewrite_table_id)
                 result = api.types.status.FAILURE
             elif 'mirrorsession:' in cmd.command:
                 api.Logger.error("ERROR: Flow-Erspan-config Not Removed")
+                dumpSessionTableForDebug(tc)
                 result = api.types.status.FAILURE
             elif 'flowexportenablebitmap' in cmd.command:
                 api.Logger.error("ERROR: Flow-Export-config Not Removed")
+                dumpSessionTableForDebug(tc)
                 result = api.types.status.FAILURE
 
     return result
@@ -1356,6 +1631,24 @@ def debugWorkLoadTraces(tc):
     c = 0
     for wl in tc.collector:
         api.Logger.info("COLLECTOR WORKLOADS/VLAN {} {}"\
+                        .format(wl.uplink_vlan, tc.collector_ip_address[c]))
+        c += 1
+
+    c = 0
+    for wl in tc.lif_collector:
+        api.Logger.info("LIF COLLECTOR WORKLOADS/VLAN {} {}"\
+                        .format(wl.uplink_vlan, tc.collector_ip_address[c]))
+        c += 1
+
+    c = 0
+    for wl in tc.flow_collector:
+        api.Logger.info("FLOW COLLECTOR WORKLOADS/VLAN {} {}"\
+                        .format(wl.uplink_vlan, tc.collector_ip_address[c]))
+        c += 1
+
+    c = 0
+    for wl in tc.flowmon_collector:
+        api.Logger.info("FLOWMON COLLECTOR WORKLOADS/VLAN {} {}"\
                         .format(wl.uplink_vlan, tc.collector_ip_address[c]))
         c += 1
 

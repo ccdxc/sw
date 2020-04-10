@@ -21,6 +21,7 @@ mirrorpolicy_template = {
         "mod-time"          : "1970-01-01T00:00:00Z"
     },
     "spec": {
+        "packet-size": 128,
         "collectors": [
           {
              "type": "erspan",

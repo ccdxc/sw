@@ -49,6 +49,24 @@ def Setup(tc):
         tc.error = True
         return result
 
+    #
+    # Ignore non-applicable test-options in Sanity mode
+    # - [peer = local] is not supported until ps_2263 is fixed
+    # - [collector = local] is not supported until ps_2790 is fixed
+    # - Multi-collector testing is not enabled in freebsd
+    #   environment until tcpdump capture on secondary-IP is resolved
+    # - Multi-collector testing is limited to 2 in esx
+    #   environment until secondary-IP works in esx mode
+    #
+    if (tc.args.ps_2263 != 'fixed' and tc.iterators.peer == 'local') or\
+       (tc.args.ps_2790 != 'fixed' and tc.iterators.collector == 'local') or\
+       (api.GetNodeOs(tc.naples.node_name) == 'freebsd' and\
+        tc.iterators.ccount > 1) or\
+       (api.GetNodeOs(tc.naples.node_name) == 'esx' and\
+        tc.iterators.ccount > 2):
+        tc.ignore = True
+        return api.types.status.SUCCESS
+
     if api.IsBareMetalWorkloadType(tc.naples.node_name):
         tc.classic_mode = True
 
@@ -87,29 +105,9 @@ def Setup(tc):
         return result
 
     #
-    # Ignore non-applicable test-options in Sanity mode
-    # - [vlan = native] is not supported until P4 issue on
-    #   reciepient Naples-node is fixed for ERSPAN on
-    #   untagged pkts
-    # - [collector = local] is not supported until code has
-    #   support to enable the same
-    # - Multi-collector testing is not enabled in freebsd
-    #   environment until tcpdump capture on secondary-IP is resolved
-    # - Multi-collector testing is restricted to 2 in esx
-    #   environment until tcpdump capture on secondary-IP is resolved
+    # Generate feature specific Collector list
     #
-    if tc.iterators.collector == 'local' or\
-       (api.GetNodeOs(tc.naples.node_name) == 'freebsd' and\
-        tc.iterators.ccount > 1) or\
-       (api.GetNodeOs(tc.naples.node_name) == 'esx' and\
-        tc.iterators.ccount > 2):
-        tc.ignore = True
-        return api.types.status.SUCCESS
-
-    for c in range(0, len(tc.collector)):
-        if tc.collector[c].IsNaples() and tc.iterators.vlan == 'native':
-            tc.ignore = True
-            return api.types.status.SUCCESS
+    eutils.generateFeatureCollectorList(tc)
 
     eutils.debugWorkLoadTraces(tc)
 
@@ -168,8 +166,8 @@ def Trigger(tc):
         # Set up Collector in the remote node
         #
         if newObjects[0].kind == 'Collector':
-            tc.collector_objects = newObjects
-            agent_api.RemoveConfigObjects(tc.collector_objects)
+            tc.lif_collector_objects = newObjects
+            agent_api.RemoveConfigObjects(tc.lif_collector_objects)
         elif newObjects[0].kind == 'Interface':
             tc.interface_objects = newObjects
             agent_api.RemoveConfigObjects(tc.interface_objects)
@@ -179,7 +177,7 @@ def Trigger(tc):
         # Push Collector object
         #
         if i == 0:
-            colObjects = tc.collector_objects
+            colObjects = tc.lif_collector_objects
             ret = eutils.generateLifCollectorConfig(tc, colObjects)
             if ret != api.types.status.SUCCESS:
                 api.Logger.error("Unable to identify Collector Workload")
@@ -194,23 +192,12 @@ def Trigger(tc):
             continue
 
         #
-        # Give a little time for Mirror-config to take effect
-        #
-        time.sleep(2)
-
-
-        #
-        # Establish Forwarding set up between Naples-peer and Collectors
-        #
-        eutils.establishForwardingSetup(tc)
-
-        #
         # Update Interface objects
         #
         ifObjects = tc.interface_objects
         ret = eutils.generateLifInterfaceConfig(tc, ifObjects, colObjects)
         if ret != api.types.status.SUCCESS:
-            agent_api.DeleteConfigObjects(tc.collector_objects,
+            agent_api.DeleteConfigObjects(tc.lif_collector_objects,
                                          [tc.naples.node_name])
             api.Logger.error("Unable to identify Uplink/LIF Interfaces")
             tc.error = True
@@ -218,27 +205,36 @@ def Trigger(tc):
 
         ret = agent_api.UpdateConfigObjects(ifObjects, [tc.naples.node_name])
         if ret != api.types.status.SUCCESS:
-            agent_api.DeleteConfigObjects(tc.collector_objects,
+            agent_api.DeleteConfigObjects(tc.lif_collector_objects,
                                          [tc.naples.node_name])
             api.Logger.error("Unable to update interface objects")
             tc.error = True
             return api.types.status.FAILURE
 
+        #
+        # Establish Forwarding set up between Naples-peer and Collectors
+        #
+        eutils.establishForwardingSetup(tc)
+
         req_tcpdump_erspan = api.Trigger_CreateExecuteCommandsRequest(\
                              serial = True)
-        for c in range(0, len(tc.collector)):
+        for c in range(0, len(tc.lif_collector)):
             #
             # Set up TCPDUMP's on the collector
             #
-            if tc.collector[c].IsNaples():
-                cmd = "tcpdump -c 1000 -XX -vv -nni %s ip proto gre and dst %s\
-                       --immediate-mode -U -w mirror-%d.pcap"%\
-                      (tc.collector[c].interface, tc.collector_ip_address[c], c)
+            idx = tc.lif_collector_idx[c]
+            if tc.lif_collector[c].IsNaples():
+                cmd = "tcpdump -c 1000 -XX -vv -nni {} ip proto gre and dst {}\
+                       --immediate-mode -U -w lif-mirror-{}.pcap"\
+                      .format(tc.lif_collector[c].interface, 
+                              tc.collector_ip_address[idx], c)
             else:
-                cmd = "tcpdump -p -c 1000 -XX -vv -nni %s ip proto gre\
-                       and dst %s --immediate-mode -U -w mirror-%d.pcap" %\
-                      (tc.collector[c].interface, tc.collector_ip_address[c], c)
-            eutils.add_command(req_tcpdump_erspan, tc.collector[c], cmd, True)
+                cmd = "tcpdump -p -c 1000 -XX -vv -nni {} ip proto gre\
+                       and dst {} --immediate-mode -U -w lif-mirror-{}.pcap"\
+                      .format(tc.lif_collector[c].interface, 
+                              tc.collector_ip_address[idx], c)
+            eutils.add_command(req_tcpdump_erspan, tc.lif_collector[c], cmd, 
+                               True)
 
         resp_tcpdump_erspan = api.Trigger(req_tcpdump_erspan)
         for cmd in resp_tcpdump_erspan.commands:
@@ -266,13 +262,6 @@ def Trigger(tc):
         eutils.showSessionAndP4TablesForDebug(tc)
 
         #
-        # Introduce a delay to make sure that TCPDUMP background
-        # process is terminated only after all applicable packets are captured
-        #
-        if tc.classic_mode == True:
-            time.sleep(2)
-
-        #
         # Terminate TCPDUMP background process
         #
         term_resp_tcpdump_erspan = api.Trigger_TerminateAllCommands(\
@@ -282,11 +271,11 @@ def Trigger(tc):
 
         # Delete the objects
         eutils.deGenerateLifInterfaceConfig(tc, tc.interface_objects, 
-                                            tc.collector_objects)
+                                            tc.lif_collector_objects)
         agent_api.UpdateConfigObjects(tc.interface_objects, 
                                      [tc.naples.node_name])
 
-        agent_api.DeleteConfigObjects(tc.collector_objects, 
+        agent_api.DeleteConfigObjects(tc.lif_collector_objects, 
                                      [tc.naples.node_name])
 
         #
@@ -324,7 +313,8 @@ def Verify(tc):
         tc.udp_erspan_pkts_expected  <<= 1
         tc.icmp_erspan_pkts_expected <<= 1
 
-    res_1 = eutils.validateErspanPackets(tc)
+    res_1 = eutils.validateErspanPackets(tc, tc.lif_collector, 
+                                         tc.lif_collector_idx)
 
     #
     # Validate Config-cleanup

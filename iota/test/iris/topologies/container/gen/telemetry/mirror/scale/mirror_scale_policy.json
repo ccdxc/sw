@@ -7,10 +7,11 @@
                 "tenant": "default", 
                 "creation-time": "1970-01-01T00:00:00Z", 
                 "namespace": "default", 
-                "name": "mirror-scale-0",
+                "name": "mirror-scale-0", 
                 "mod-time": "1970-01-01T00:00:00Z"
             }, 
             "spec": {
+                "packet-size": 128, 
                 "match-rules": [
                     {
                         "source": {
@@ -516,7 +517,7 @@
                             ]
                         }
                     }
-                ],
+                ], 
                 "collectors": [
                     {
                         "type": "erspan", 
@@ -534,10 +535,11 @@
                 "tenant": "default", 
                 "creation-time": "1970-01-01T00:00:00Z", 
                 "namespace": "default", 
-                "name": "mirror-scale-1",
+                "name": "mirror-scale-1", 
                 "mod-time": "1970-01-01T00:00:00Z"
             }, 
             "spec": {
+                "packet-size": 128, 
                 "match-rules": [
                     {
                         "source": {
@@ -1067,10 +1069,11 @@
                 "tenant": "default", 
                 "creation-time": "1970-01-01T00:00:00Z", 
                 "namespace": "default", 
-                "name": "mirror-scale-2",
+                "name": "mirror-scale-2", 
                 "mod-time": "1970-01-01T00:00:00Z"
             }, 
             "spec": {
+                "packet-size": 128, 
                 "match-rules": [
                     {
                         "source": {
@@ -1606,10 +1609,11 @@
                 "tenant": "default", 
                 "creation-time": "1970-01-01T00:00:00Z", 
                 "namespace": "default", 
-                "name": "mirror-scale-3",
+                "name": "mirror-scale-3", 
                 "mod-time": "1970-01-01T00:00:00Z"
             }, 
             "spec": {
+                "packet-size": 128, 
                 "match-rules": [
                     {
                         "source": {
@@ -2079,10 +2083,11 @@
                 "tenant": "default", 
                 "creation-time": "1970-01-01T00:00:00Z", 
                 "namespace": "default", 
-                "name": "mirror-scale-4",
+                "name": "mirror-scale-4", 
                 "mod-time": "1970-01-01T00:00:00Z"
             }, 
             "spec": {
+                "packet-size": 128, 
                 "match-rules": [
                     {
                         "source": {
@@ -2558,10 +2563,11 @@
                 "tenant": "default", 
                 "creation-time": "1970-01-01T00:00:00Z", 
                 "namespace": "default", 
-                "name": "mirror-scale-5",
+                "name": "mirror-scale-5", 
                 "mod-time": "1970-01-01T00:00:00Z"
             }, 
             "spec": {
+                "packet-size": 128, 
                 "match-rules": [
                     {
                         "source": {
@@ -3043,10 +3049,11 @@
                 "tenant": "default", 
                 "creation-time": "1970-01-01T00:00:00Z", 
                 "namespace": "default", 
-                "name": "mirror-scale-6",
+                "name": "mirror-scale-6", 
                 "mod-time": "1970-01-01T00:00:00Z"
             }, 
             "spec": {
+                "packet-size": 128, 
                 "match-rules": [
                     {
                         "source": {
@@ -3462,10 +3469,11 @@
                 "tenant": "default", 
                 "creation-time": "1970-01-01T00:00:00Z", 
                 "namespace": "default", 
-                "name": "mirror-scale-7",
+                "name": "mirror-scale-7", 
                 "mod-time": "1970-01-01T00:00:00Z"
             }, 
             "spec": {
+                "packet-size": 128, 
                 "match-rules": [
                     {
                         "source": {

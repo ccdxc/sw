@@ -11,6 +11,7 @@
                 "tenant": "default"
             }, 
             "spec": {
+                "packet-size": 128,
                 "match-rules": [
                     {
                         "source": {
