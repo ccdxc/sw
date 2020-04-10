@@ -1136,7 +1136,15 @@
                 {{end}}
               {{end}}
               {{if not $fieldProcessed}}
+                {{if (eq .GetTypeName ".types.IPAddress")}}
+            out.set_allocated_{{.GetName | ToLower}}(new types::IPAddress(in.key().{{.GetName | ToLower}}()));
+                {{else}}
+                  {{ if HasPrefix .GetTypeName ".pds_ms."}}
+            out.set_{{.GetName | ToLower}}((pds_ms::{{TrimPrefix .GetTypeName ".pds_ms."}})in.key().{{.GetName | ToLower}}());
+                  {{else}}
             out.set_{{.GetName | ToLower}}(in.key().{{.GetName | ToLower}}());
+                  {{end}}
+                {{end}}
               {{end}}
             {{end}}
         }

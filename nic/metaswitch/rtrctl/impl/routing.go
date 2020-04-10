@@ -158,3 +158,84 @@ func staticTableShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
+var osTableShowCmd = &cobra.Command{
+	Use:   "os",
+	Short: "show os information",
+	Long:  "show os information",
+	Args:  cobra.NoArgs,
+}
+
+var osRouteTableShowCmd = &cobra.Command{
+	Use:   "route-table",
+	Short: "show os routing route-table information",
+	Long:  "show os routing route-table information",
+	Args:  cobra.NoArgs,
+	RunE:  osRouteTableShowCmdHandler,
+}
+
+const (
+	osRouteTableGlobalStr = `-----------------------------------
+OS Route Table
+-----------------------------------
+RouteTableId               : %v
+DestAddr                   : %v
+DestPrefixLen              : %v
+NHAddr                     : %v
+IfIndex                    : %v
+Type                       : %v
+Proto                      : %v
+Age                        : %v
+Metric1                    : %v
+Connected                  : %v
+AdminDistance              : %v
+-----------------------------------
+`
+)
+
+func osRouteTableShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := types.NewCPRouteSvcClient(c)
+
+	req := &types.CPActiveRouteGetRequest{}
+	respMsg, err := client.CPActiveRouteGet(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("Getting route table failed (%s)", err)
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	cpars := []*utils.ShadowCPActiveRoute{}
+	for _, i := range respMsg.Response {
+		cpar := utils.NewCPActiveRoute(i)
+		if doJSON {
+			cpars = append(cpars, cpar)
+		} else {
+			fmt.Printf(osRouteTableGlobalStr,
+				cpar.Status.RouteTableId,
+				cpar.Status.DestAddr,
+				cpar.Status.DestPrefixLen,
+				cpar.Status.NHAddr,
+				cpar.Status.IfIndex,
+				cpar.Status.Type,
+				cpar.Status.Proto,
+				cpar.Status.Age,
+				cpar.Status.Metric1,
+				cpar.Status.Connected,
+				cpar.Status.AdminDistance)
+		}
+	}
+	if doJSON {
+		b, _ := json.MarshalIndent(cpars, "", "  ")
+		fmt.Println(string(b))
+	}
+	return nil
+}

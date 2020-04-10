@@ -17,6 +17,7 @@ service CPRouteSvc
   rpc CPStaticRouteDelete (CPStaticRouteDeleteRequest) returns (CPStaticRouteDeleteResponse) {}
   rpc CPStaticRouteGet (CPStaticRouteGetRequest) returns (CPStaticRouteGetResponse) {}
   rpc CPRouteGet (CPRouteGetRequest) returns (CPRouteGetResponse) {}
+  rpc CPActiveRouteGet (CPActiveRouteGetRequest) returns (CPActiveRouteGetResponse) {}
 }
 
 // route type
@@ -203,4 +204,77 @@ message CPStaticRouteGetRequest {
 message CPStaticRouteGetResponse {
   types.ApiStatus        ApiStatus = 1;
   repeated CPStaticRoute Response  = 2;
+}
+
+// control plane active route table
+message CPActiveRouteStatus {
+  option (venice.pdsaSetGlobOpts) = {
+    OidLen: "AMB_QCR_ROUTE_OID_LEN",
+    Mib:    "rtmRouteTable"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_QCR_ROUTE_OID_LEN",
+    Mib:    "rtmRouteTable"
+  };
+
+  // route table id this route belongs to
+  uint32          RouteTableId  = 1 [(venice.pdsaFields) = {Field:"fte_index", SetKeyOidIndex: "AMB_QCR_ROUTE_FTE_INDEX_INDEX", GetKeyOidIndex: "AMB_QCR_ROUTE_FTE_INDEX_INDEX"}];
+  // destination address
+  types.IPAddress DestAddr      = 2 [(venice.pdsaFields) = {Field:"dest", AddrTypeFieldName: "dest_addr_type", AddrLenFieldName:"dest_addr_len", SetKeyOidAddrIndex: "AMB_QCR_ROUTE_DEST_INDEX", SetKeyOidAddrTypeIndex: "AMB_QCR_ROUTE_DEST_TYPE_INDEX", GetKeyOidAddrIndex: "AMB_QCR_ROUTE_DEST_INDEX", GetKeyOidAddrTypeIndex: "AMB_QCR_ROUTE_DEST_TYPE_INDEX"}];
+  // destination address prefix
+  uint32          DestPrefixLen = 3 [(venice.pdsaFields) = {Field:"dest_len", SetKeyOidIndex: "AMB_QCR_ROUTE_DEST_LEN_INDEX", GetKeyOidIndex: "AMB_QCR_ROUTE_DEST_LEN_INDEX"}];
+  // next-hop address
+  types.IPAddress NHAddr        = 4 [(venice.pdsaFields) = {Field:"next_hop", SetKeyOidAddrIndex: "AMB_QCR_ROUTE_NEXT_HOP_INDEX", SetKeyOidAddrTypeIndex: "AMB_QCR_ROUTE_NEXT_HOP_TYPE_IX", GetKeyOidAddrIndex: "AMB_QCR_ROUTE_NEXT_HOP_INDEX", GetKeyOidAddrTypeIndex: "AMB_QCR_ROUTE_NEXT_HOP_TYPE_IX"}];
+  // interface index, if the next-hop is an interface
+  uint32          IfIndex       = 5 [(venice.pdsaFields) = {Field:"if_index", SetKeyOidIndex: "AMB_QCR_ROUTE_IF_INDEX_INDEX", GetKeyOidIndex: "AMB_QCR_ROUTE_IF_INDEX_INDEX"}];
+  // type of route
+  RouteType       Type          = 6 [(venice.pdsaFields) = {Field:"type"}];
+  // protocol via which the route is learned
+  RouteProtocol   Proto         = 7 [(venice.pdsaFields) = {Field:"proto", SetKeyOidIndex: "AMB_QCR_ROUTE_PROTO_INDEX", GetKeyOidIndex: "AMB_QCR_ROUTE_PROTO_INDEX"}];
+  // The number of seconds since this route was last updated or otherwise determined to be correct.
+  int32           Age           = 8 [(venice.pdsaFields) = {Field:"age"}];
+  // The primary routing metric for this route
+  int32           Metric1       = 9 [(venice.pdsaFields) = {Field:"metric1"}];
+  // Indicates whether the route destination is directly connected
+  bool            Connected     = 10 [(venice.pdsaFields) = {Field:"connected"}];
+  // Administrative distance for this route
+  int32           AdminDistance = 11 [(venice.pdsaFields) = {Field:"admin_distance"}];
+}
+
+message CPActiveRouteKey {
+  // route table id this route belongs to
+  uint32          RouteTableId  = 1;
+  // destination address
+  types.IPAddress DestAddr      = 2;
+  // destination address prefix
+  uint32          DestPrefixLen = 3;
+  // next-hop address
+  types.IPAddress NHAddr        = 4;
+  // interface index, if the next-hop is an interface
+  uint32          IfIndex       = 5;
+  // protocol via which the route is learned
+  RouteProtocol   Proto         = 6;
+}
+
+message CPActiveRouteKeyHandle {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_QCR_ROUTE_OID_LEN",
+    Mib:    "rtmRouteTable"
+    SpecMsg: "CPActiveRouteStatus"
+  };
+  CPActiveRouteKey Key = 1;
+}
+
+// control plane route table get request
+message CPActiveRouteGetRequest {
+  repeated CPActiveRouteKeyHandle Request = 1;
+}
+
+message CPActiveRoute {
+  CPActiveRouteStatus Status = 1;
+}
+
+message CPActiveRouteGetResponse {
+  types.ApiStatus  ApiStatus = 1;
+  repeated CPActiveRoute Response  = 2;
 }

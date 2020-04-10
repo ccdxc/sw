@@ -1193,3 +1193,48 @@ func NewCPStaticRoute(in *pds.CPStaticRoute) *ShadowCPStaticRoute {
 		Spec: newCPStaticRouteSpec(in.Spec),
 	}
 }
+
+// ShadowCPActiveRouteStatus shadows the CPActiveRouteStatus for CLI purposes
+type ShadowCPActiveRouteStatus struct {
+	RouteTableId  uint32
+	DestAddr      string
+	DestPrefixLen uint32
+	NHAddr        string
+	IfIndex       uint32
+	Type          string
+	Proto         string
+	Age           int32
+	Metric1       int32
+	Connected     bool
+	AdminDistance int32
+	*pds.CPActiveRouteStatus
+}
+
+func newCPActiveRouteStatus(in *pds.CPActiveRouteStatus) ShadowCPActiveRouteStatus {
+	return ShadowCPActiveRouteStatus{
+		RouteTableId:        in.RouteTableId,
+		DestAddr:            PdsIPToString(in.DestAddr),
+		DestPrefixLen:       in.DestPrefixLen,
+		NHAddr:              PdsIPToString(in.NHAddr),
+		IfIndex:             in.IfIndex,
+		Type:                strings.TrimPrefix(in.Type.String(), "ROUTE_TYPE_"),
+		Proto:               strings.TrimPrefix(in.Proto.String(), "ROUTE_PROTO_"),
+		Age:                 in.Age,
+		Metric1:             in.Metric1,
+		Connected:           in.Connected,
+		AdminDistance:       in.AdminDistance,
+		CPActiveRouteStatus: in,
+	}
+}
+
+// ShadowCPActiveRoute shadows the CPActiveRoute for CLI purposes
+type ShadowCPActiveRoute struct {
+	Status ShadowCPActiveRouteStatus
+}
+
+// NewCPActiveRoute creates a shadow of CPActiveRoute
+func NewCPActiveRoute(in *pds.CPActiveRoute) *ShadowCPActiveRoute {
+	return &ShadowCPActiveRoute{
+		Status: newCPActiveRouteStatus(in.Status),
+	}
+}

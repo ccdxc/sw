@@ -477,7 +477,8 @@ static void create_vpc_proto_grpc () {
     proto_spec->set_type(pds::VPC_TYPE_TENANT);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
-    proto_encap->mutable_value()->set_vnid(g_test_conf_.vni[0]);
+    proto_encap->mutable_value()->set_vnid(200);
+
 
     printf ("Pushing VPC proto...\n");
     ret_status = g_vpc_stub_->VPCCreate(&context, request, &response);

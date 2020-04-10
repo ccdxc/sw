@@ -197,6 +197,12 @@
 		CPStaticRouteDeleteResponse
 		CPStaticRouteGetRequest
 		CPStaticRouteGetResponse
+		CPActiveRouteStatus
+		CPActiveRouteKey
+		CPActiveRouteKeyHandle
+		CPActiveRouteGetRequest
+		CPActiveRoute
+		CPActiveRouteGetResponse
 		BGPSpec
 		BGPStatus
 		BGP

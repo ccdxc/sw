@@ -17,6 +17,7 @@ service CPRouteSvc
   rpc CPStaticRouteDelete (CPStaticRouteDeleteRequest) returns (CPStaticRouteDeleteResponse) {}
   rpc CPStaticRouteGet (CPStaticRouteGetRequest) returns (CPStaticRouteGetResponse) {}
   rpc CPRouteGet (CPRouteGetRequest) returns (CPRouteGetResponse) {}
+  rpc CPActiveRouteGet (CPActiveRouteGetRequest) returns (CPActiveRouteGetResponse) {}
 }
 
 // route type
@@ -165,3 +166,63 @@ message CPStaticRouteGetResponse {
   types.ApiStatus        ApiStatus = 1;
   repeated CPStaticRoute Response  = 2;
 }
+
+// control plane active route table
+message CPActiveRouteStatus {
+  // route table id this route belongs to
+  uint32          RouteTableId  = 1;
+  // destination address
+  types.IPAddress DestAddr      = 2;
+  // destination address prefix
+  uint32          DestPrefixLen = 3;
+  // next-hop address
+  types.IPAddress NHAddr        = 4;
+  // interface index, if the next-hop is an interface
+  uint32          IfIndex       = 5;
+  // type of route
+  RouteType       Type          = 6;
+  // protocol via which the route is learned
+  RouteProtocol   Proto         = 7;
+  // The number of seconds since this route was last updated or otherwise determined to be correct.
+  int32           Age           = 8;
+  // The primary routing metric for this route
+  int32           Metric1       = 9;
+  // Indicates whether the route destination is directly connected
+  bool            Connected     = 10;
+  // Administrative distance for this route
+  int32           AdminDistance = 11;
+}
+
+message CPActiveRouteKey {
+  // route table id this route belongs to
+  uint32          RouteTableId  = 1;
+  // destination address
+  types.IPAddress DestAddr      = 2;
+  // destination address prefix
+  uint32          DestPrefixLen = 3;
+  // next-hop address
+  types.IPAddress NHAddr        = 4;
+  // interface index, if the next-hop is an interface
+  uint32          IfIndex       = 5;
+  // protocol via which the route is learned
+  RouteProtocol   Proto         = 6;
+}
+
+message CPActiveRouteKeyHandle {
+  CPActiveRouteKey Key = 1;
+}
+
+// control plane route table get request
+message CPActiveRouteGetRequest {
+  repeated CPActiveRouteKeyHandle Request = 1;
+}
+
+message CPActiveRoute {
+  CPActiveRouteStatus Status = 1;
+}
+
+message CPActiveRouteGetResponse {
+  types.ApiStatus  ApiStatus               = 1;
+  repeated         CPActiveRoute Response  = 2;
+}
+
