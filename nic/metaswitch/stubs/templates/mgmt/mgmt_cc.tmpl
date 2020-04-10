@@ -1167,7 +1167,7 @@
     {{$mib    := $param.Mib}}
     /*===== Helper to convert external {{$msgName}} to internal =====*/
     NBB_VOID pds_ms_ext_to_int_{{$msgName | ToLower}}({{$extPkgName}}::{{$msgName}} in, {{$pkgName}}::{{$msgName}}& out) {
-        PDS_TRACE_DEBUG ("convert {{$extPkgName}}::{{$msgName}} to {{$pkgName}}::{{$msgName}}");
+        PDS_TRACE_VERBOSE ("convert {{$extPkgName}}::{{$msgName}} to {{$pkgName}}::{{$msgName}}");
       {{$fields := .Fields}}
       {{range $fields}}
         {{$fieldProcessed := false}}
@@ -1212,7 +1212,7 @@
       {{$mib    := $param.Mib}}
     /*===== Helper to convert external {{$msgName}} to internal =====*/
     NBB_VOID pds_ms_ext_to_int_{{$msgName | ToLower}}({{$extPkgName}}::{{$msgName}}& in, {{$pkgName}}::{{$msgName}}& out) {
-        PDS_TRACE_DEBUG ("convert {{$extPkgName}}::{{$msgName}} to {{$pkgName}}::{{$msgName}}");
+        PDS_TRACE_VERBOSE ("convert {{$extPkgName}}::{{$msgName}} to {{$pkgName}}::{{$msgName}}");
       {{$fields := .Fields}}
       {{range $fields}}
         {{$fieldProcessed := false}}
@@ -1264,7 +1264,7 @@
     {{$mib    := $param.Mib}}
     /*===== Helper to convert external {{$msgName}} to internal =====*/
     NBB_VOID pds_ms_int_to_ext_{{$msgName | ToLower}}(const {{$pkgName}}::{{$msgName}}& in, {{$extPkgName}}::{{$msgName}}& out) {
-        PDS_TRACE_DEBUG ("convert {{$pkgName}}::{{$msgName}} to {{$extPkgName}}::{{$msgName}}");
+        PDS_TRACE_VERBOSE ("convert {{$pkgName}}::{{$msgName}} to {{$extPkgName}}::{{$msgName}}");
       {{$fields := .Fields}}
       {{range $fields}}
         {{$fieldProcessed := false}}
@@ -1309,7 +1309,7 @@
       {{$mib    := $param.Mib}}
     /*===== Helper to convert external {{$msgName}} to internal =====*/
     NBB_VOID pds_ms_int_to_ext_{{$msgName | ToLower}}(const {{$pkgName}}::{{$msgName}}& in, {{$extPkgName}}::{{$msgName}}& out) {
-        PDS_TRACE_DEBUG ("convert {{$pkgName}}::{{$msgName}} to {{$extPkgName}}::{{$msgName}}");
+        PDS_TRACE_VERBOSE ("convert {{$pkgName}}::{{$msgName}} to {{$extPkgName}}::{{$msgName}}");
       {{$fields := .Fields}}
       {{range $fields}}
         {{$fieldProcessed := false}}
@@ -1358,7 +1358,7 @@
   {{if and (HasSuffix .GetName "GetResponse") (HasPrefix $fileName "internal_")}}
     /*===== Helper to convert GetResponse to external =====*/
     NBB_VOID pds_ms_convert_{{$msgName | ToLower}}_ext_response({{$pkgName}}::{{$msgName}}& in, {{$extPkgName}}::{{$msgName}} *out) {
-        PDS_TRACE_DEBUG ("GetResponse conversion: {{$pkgName}}::{{$msgName}} to {{$extPkgName}}::{{$msgName}}");
+        PDS_TRACE_VERBOSE ("GetResponse conversion: {{$pkgName}}::{{$msgName}} to {{$extPkgName}}::{{$msgName}}");
     {{$respFields := .Fields}}
     {{range $respFields}}
     {{$respField := .}}
