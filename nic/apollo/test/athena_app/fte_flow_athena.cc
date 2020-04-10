@@ -153,7 +153,7 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
     struct ipv4_hdr *ip40;
     struct tcp_hdr *tcp0;
     struct udp_hdr *udp0;
-    struct mpls_hdr *mpls0;
+    struct mpls_hdr *mpls_dst;
     uint16_t ip0_offset = 0;
     uint16_t vlan_id = 0;
     uint32_t mpls_label = 0;
@@ -196,29 +196,28 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
         ip0_offset += (sizeof(struct ipv4_hdr)); 
         ip0_offset += (sizeof(struct udp_hdr));
 
-        mpls0 = (struct mpls_hdr *)(udp0 + 1);
+        mpls_dst = (struct mpls_hdr *)(udp0 + 1); /* 1st label */
         ip0_offset += (sizeof(struct mpls_hdr));
 
-        if (mpls0->bs == 0) {
-            struct mpls_hdr *mpls1;
-
-            mpls1 = (struct mpls_hdr *) (mpls0 + 1);
+        if (mpls_dst->bs == 0) { 
+            mpls_dst = (struct mpls_hdr *) (mpls_dst + 1);  /* 2nd label */
             ip0_offset += (sizeof(struct mpls_hdr));
 
-            if (mpls1->bs == 0) {
-                struct mpls_hdr *mpls2;
+            if (mpls_dst->bs == 0) {
+                struct mpls_hdr *mpls3;
 
-                mpls2 = (struct mpls_hdr *) (mpls1 + 1);
+                mpls3 = (struct mpls_hdr *) (mpls_dst + 1);  /* 3rd label */
                 ip0_offset += (sizeof(struct mpls_hdr));
 
-                if (mpls2->bs == 0) {
+                if (mpls3->bs == 0) {
                     PDS_TRACE_DEBUG("Unsupported: MPLS lables > 3.");
                     return SDK_RET_INVALID_OP;
                 }
             }
-            mpls_label = ((rte_be_to_cpu_16(mpls1->tag_msb) << 4) | mpls1->tag_lsb);
-            *vnic_id = g_mpls_label_to_vnic[mpls_label];
         }
+        mpls_label = ((rte_be_to_cpu_16(mpls_dst->tag_msb) << 4) |
+                            mpls_dst->tag_lsb);
+        *vnic_id = g_mpls_label_to_vnic[mpls_label];
         *dir = SWITCH_TO_HOST;
         *ip_off = ip0_offset;
     } else {
@@ -229,7 +228,7 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
 
     if (*vnic_id == 0) {
         PDS_TRACE_DEBUG("vnic_id lookup failed.\n");
-        return SDK_RET_ERR;
+        return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     ip40 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip0_offset);
