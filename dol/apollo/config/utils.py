@@ -100,6 +100,7 @@ class PdsUuid:
             node_uuid = node_uuid.to_bytes(PDS_UUID_SYSTEM_MAC_LEN, PDS_NODE_UUID_BYTE_ORDER)
 
         if isinstance(value, int):
+            assert (value > 0), "ID value must be greater than zero"
             self.Id = value
             self.Type = objtype
             self.Uuid = PdsUuid.GetUUIDfromId(self.Id, self.Type, node_uuid)
@@ -110,8 +111,7 @@ class PdsUuid:
             self.Uuid = bytes(value)
             self.Id = PdsUuid.GetIdfromUUID(self.Uuid)
         else:
-            logger.error(f"{type(value)} is NOT supported for PdsUuid class")
-            assert(0)
+            assert 0, f"{type(value)} is NOT supported for PdsUuid class"
         self.UuidStr = PdsUuid.GetUuidString(self.Uuid)
 
 
@@ -149,10 +149,10 @@ class PdsUuid:
 
     @staticmethod
     def GetUUIDfromId(id, objtype=None, node_uuid=None):
-        if not node_uuid:
-            node_uuid = PDS_UUID_SYSTEM_MAC
         # uuid is of 16 bytes
         uuid = bytearray(PDS_UUID_LEN)
+        if id == 0:
+            return bytes(uuid)
         # first 4 bytes ==> id
         uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END] = id.to_bytes(PDS_UUID_ID_LEN, PDS_UUID_BYTE_ORDER)
         # next 2 bytes ==> object type (except HAL created objects like lifs & ports)
@@ -162,6 +162,8 @@ class PdsUuid:
         # next 2 bytes ==> magic byte (0x4242)
         uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END] = PDS_UUID_MAGIC_BYTE
         # next 6 bytes ==> system mac (0x022222111111)
+        if not node_uuid:
+            node_uuid = PDS_UUID_SYSTEM_MAC
         uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:] = node_uuid
         return bytes(uuid)
 
@@ -197,9 +199,8 @@ def Sleep(timeout=1):
     return
 
 def GetYamlSpecAttr(spec, attr='id', convert2uuid=True):
-    if not convert2uuid:
-        return spec[attr]
-    return PdsUuid(spec[attr]).GetUuid()
+    val = spec[attr]
+    return PdsUuid(val).GetUuid() if convert2uuid else val
 
 def ValidateRpcIPAddr(srcaddr, dstaddr):
     if srcaddr.version == IP_VERSION_6:
@@ -211,6 +212,22 @@ def ValidateRpcIPAddr(srcaddr, dstaddr):
         if dstaddr.Af != types_pb2.IP_AF_INET:
             return False
         if dstaddr.V4Addr != int(srcaddr):
+            return False
+    return True
+
+def ValidateRpcIPPrefix(srcpfx, dstpfx):
+    if dstpfx.Len != srcpfx.prefixlen:
+        return False
+    dstPfxAddr = dstpfx.Addr
+    if srcpfx.version == IP_VERSION_6:
+        if dstPfxAddr.Af != types_pb2.IP_AF_INET6:
+            return False
+        if dstPfxAddr.V6Addr != srcpfx.network_address.packed:
+            return False
+    else:
+        if dstPfxAddr.Af != types_pb2.IP_AF_INET:
+            return False
+        if dstPfxAddr.V4Addr != int(srcpfx.network_address):
             return False
     return True
 

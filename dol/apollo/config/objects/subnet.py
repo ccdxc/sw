@@ -139,7 +139,7 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("- VRMac:%s" % (self.VirtualRouterMACAddr))
         logger.info(f"- DHCPPolicy: {self.DHCPPolicyIds}")
         logger.info("- DHCP Policy:%s" %(self.IPAMname))
-        logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
+        logger.info(f"- RouteTableIds V4:{self.V4RouteTableId}|V6:{self.V6RouteTableId}")
         logger.info("- NaclIDs IngV4:%s|IngV6:%s|EgV4:%s|EgV6:%s" %\
                     (self.IngV4SecurityPolicyIds, self.IngV6SecurityPolicyIds, self.EgV4SecurityPolicyIds, self.EgV6SecurityPolicyIds))
         hostif = self.HostIf

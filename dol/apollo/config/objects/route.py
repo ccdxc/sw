@@ -32,6 +32,7 @@ class RouteObject():
             tunnelid=0, nat_type=None, service_nat_prefix=None, dnat_ip=None):
         super().__init__()
         self.Id = next(ResmgrClient[node].RouteIdAllocator)
+        self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.ROUTE)
         self.ipaddr = ipaddr
         self.Priority = priority
         self.NextHopType = nh_type
@@ -61,8 +62,8 @@ class RouteObject():
                 self.SNatAction = topo.NatActionTypes.NAPT_SERVICE
 
     def __repr__(self):
-        return "RouteID:%d|ip:%s|priority:%d|type:%s"\
-                %(self.Id, self.ipaddr, self.Priority, self.NextHopType)
+        return "RouteID: %s |ip:%s|priority:%d|type:%s"\
+                % (self.UUID, self.ipaddr, self.Priority, self.NextHopType)
 
     def Show(self):
         logger.info("  - Route object:", self)
@@ -77,6 +78,22 @@ class RouteObject():
             nh = "nhg %d" % (self.NexthopGroupId)
         logger.info("     NH info: %s" % (nh))
         logger.info("     SNAT action %s" % (self.SNatAction.name))
+
+    def ValidateSpec(self, spec):
+        if spec.Id != self.UUID.GetUuid():
+            return False
+        if not utils.ValidateRpcIPPrefix(self.ipaddr, spec.Prefix):
+            return False
+        if spec.NatAction.SrcNatAction != self.SNatAction:
+            return False
+        return True
+
+    def ValidateYamlSpec(self, spec):
+        if utils.GetYamlSpecAttr(spec) != self.UUID.GetUuid():
+            return False
+        if spec['nataction']['srcnataction'] != self.SNatAction:
+            return False
+        return True
 
 class RouteTableObject(base.ConfigObjectBase):
     def __init__(self, node, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
@@ -194,6 +211,7 @@ class RouteTableObject(base.ConfigObjectBase):
         spec.PriorityEn = (self.PriorityType != None)
         for route in self.routes.values():
             rtspec = spec.Routes.add()
+            rtspec.Id = route.UUID.GetUuid()
             rtspec.NatAction.SrcNatAction = route.SNatAction
             if route.DstNatIp:
                 rtspec.NatAction.DstNatIP.Af = types_pb2.IP_AF_INET
@@ -204,6 +222,7 @@ class RouteTableObject(base.ConfigObjectBase):
                 self.PopulateNh(rtspec, route)
             else:
                 #TODO move to per route populate nh eventually
+                # @sai, once we move, we can add validations per route
                 self.PopulateNh(rtspec, self)
         return
 
@@ -235,6 +254,45 @@ class RouteTableObject(base.ConfigObjectBase):
             return False
         if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
+        if spec.PriorityEn != (self.PriorityType != None):
+            return False
+        if not utils.IsPipelineApulu():
+            # routes are not stored in other pipelines, so return
+            return True
+        # validate routes
+        specRoutes = spec.Routes
+        if len(self.routes.values()) != len(specRoutes):
+            return False
+        for specRoute in specRoutes:
+            key = utils.PdsUuid.GetIdfromUUID(specRoute.Id)
+            route = self.routes.get(key, None)
+            if not route:
+                return False
+            if not route.ValidateSpec(specRoute):
+                return False
+        return True
+
+    def ValidateYamlSpec(self, spec):
+        if utils.GetYamlSpecAttr(spec) != self.GetKey():
+            return False
+        if spec['af'] != utils.GetRpcIPAddrFamily(self.AddrFamily):
+            return False
+        if spec['priorityen'] != (self.PriorityType != None):
+            return False
+        if not utils.IsPipelineApulu():
+            # routes are not stored in other pipelines, so return
+            return True
+        # validate routes
+        specRoutes = spec['routes']
+        if len(self.routes.values()) != len(specRoutes):
+            return False
+        for specRoute in specRoutes:
+            key = utils.PdsUuid.GetIdfromUUID(specRoute['id'])
+            route = self.routes.get(key, None)
+            if not route:
+                return False
+            if not route.ValidateYamlSpec(specRoute):
+                return False
         return True
 
     def GetDependees(self, node):
@@ -387,12 +445,14 @@ class RouteObjectClient(base.ConfigClientBase):
         return
 
     def PdsctlRead(self, node):
-        # pdsctl show not supported for route table
+        if utils.IsDol():
+            return super().PdsctlRead(node)
+        # TODO: Fix IOTA stdout buffer size for route scale before enabling
         return True
 
-    # TODO: need to disable reading of route objects temporarily
-    #       until persisting of these objects is mainlined into ToT
-    def ReadObjects(self, node):
+    def IsReadSupported(self):
+        if utils.IsNetAgentMode():
+            return False
         return True
 
     def GetRouteTableObject(self, node, routetableid):
@@ -455,7 +515,6 @@ class RouteObjectClient(base.ConfigClientBase):
     def GenerateObjects(self, node, parent, vpc_spec_obj, vpcpeerid):
         if not self.__supported:
             return
-
 
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)

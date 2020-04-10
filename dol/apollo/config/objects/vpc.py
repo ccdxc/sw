@@ -184,6 +184,7 @@ class VpcObject(base.ConfigObjectBase):
         logger.info("- Prefix:%s" % self.IPPrefix)
         logger.info("- Vnid:%s|VRMac:%s" %\
                     (self.Vnid, self.VirtualRouterMACAddr))
+        logger.info(f"- RouteTableIds V4:{self.V4RouteTableId}|V6:{self.V6RouteTableId}")
         self.Status.Show()
         return
 

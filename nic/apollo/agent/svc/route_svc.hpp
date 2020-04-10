@@ -151,6 +151,7 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
 
     for (uint32_t i = 0; i < api_spec->route_info->num_routes; i++) {
         pds::RouteInfo *route = proto_spec->add_routes();
+        route->set_id(api_spec->route_info->routes[i].key.id, PDS_MAX_KEY_LEN);
         ippfx_api_spec_to_proto_spec(route->mutable_prefix(),
                                      &api_spec->route_info->routes[i].prefix);
         if (api_spec->route_info->priority_en) {

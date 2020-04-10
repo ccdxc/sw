@@ -55,6 +55,7 @@ from infra.common.logging import logger
 
 # Connection timeout - 3mins
 MAX_CONNECT_TIMEOUT = 180
+MAX_MSG_LEN = 1024 * 1024 * 10
 # RPC Timeout - 20mins
 MAX_GRPC_WAIT = 1200
 MAX_BATCH_SIZE = 64
@@ -321,7 +322,13 @@ class ApolloAgentClient:
     def __create_channel(self):
         endpoint = "%s:%s" % (self.agentip, self.agentport)
         logger.info(f"Agent info %s" % endpoint)
-        channel = grpc.insecure_channel(endpoint)
+        channel = grpc.insecure_channel(
+                endpoint,
+                options=[
+                        ('grpc.max_receive_message_length', MAX_MSG_LEN),
+                        ('grpc.max_send_message_length', MAX_MSG_LEN),
+                ]
+        )
         self.__channel = grpc.intercept_channel(channel, *ApolloAgentClient.rpcinterceptors)
 
     def __connect(self):
