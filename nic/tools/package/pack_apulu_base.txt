@@ -114,6 +114,7 @@ nic/build/$ARCH/$PIPELINE/lib/libalerts_operd_dec.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenmetrics.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libalerts_operd_con.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liboperd_alerts.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liboperd_alert_defs.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libupgrade_core.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libupgrade_ev.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsnicmgr_upgrade.so             /nic/lib/
