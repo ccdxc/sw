@@ -52,9 +52,9 @@ def Verify(tc):
     res = traffic_utils.verifyIPerf(tc.cmd_cookies, tc.resp, min_bw=1)
     if res != api.types.status.SUCCESS:
         return res
-    if tc.args.type != 'igw_napt_only':
+    if tc.args.type != 'igw_napt_only' and tc.args.type != 'igw_nat_only':
         return flow_utils.verifyFlows(tc.iterators.ipaf, tc.workload_pairs)
-    else:
+    elif tc.args.type == 'igw_napt_only':
         if tc.iterators.protocol == 'udp':
             num_tcp_flows = 1
             num_udp_flows = tc.num_streams

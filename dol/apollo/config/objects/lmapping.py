@@ -35,13 +35,18 @@ class LocalMappingObject(base.ConfigObjectBase):
         self.GID('LocalMapping%d'%self.MappingId)
         self.UUID = utils.PdsUuid(self.MappingId, self.ObjType)
         self.VNIC = parent
-        self.PublicIPAddr = None
+        public_ip = getattr(spec, 'publicip', None)
+        if public_ip:
+            self.PublicIPAddr = ipaddress.IPv4Address(public_ip)
+        else:
+            self.PublicIPAddr = None
+
         self.SourceGuard = parent.SourceGuard
         self.HasDefaultRoute = False
         if ipversion == utils.IP_VERSION_6:
             self.AddrFamily = 'IPV6'
             self.IPAddr = parent.SUBNET.AllocIPv6Address();
-            if self.__is_public:
+            if not self.PublicIPAddr and self.__is_public:
                 self.PublicIPAddr = next(ResmgrClient[node].PublicIpv6AddressAllocator)
             if parent.SUBNET.V6RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute
@@ -54,7 +59,7 @@ class LocalMappingObject(base.ConfigObjectBase):
             else:
                 self.IPAddr = parent.SUBNET.AllocIPv4Address()
                 logger.info("LocalMapping Object generated IP address:%s" %(str(self.IPAddr)))
-            if self.__is_public:
+            if not self.PublicIPAddr and self.__is_public:
                 self.PublicIPAddr = next(ResmgrClient[node].PublicIpAddressAllocator)
             if parent.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute

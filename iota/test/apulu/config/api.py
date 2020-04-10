@@ -15,6 +15,7 @@ WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1
 WORKLOAD_PAIR_TYPE_REMOTE_ONLY   = 2
 WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY = 3
 WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY = 4
+WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY = 5
 
 WORKLOAD_PAIR_SCOPE_INTRA_SUBNET = 1
 WORKLOAD_PAIR_SCOPE_INTER_SUBNET = 2
@@ -83,14 +84,22 @@ def __vnics_in_same_vpc(vnic1, vnic2):
         return True
     return False
 
-def __vnics_are_local_to_igw_pair(vnic1, vnic2):
+def __vnics_are_dynamic_napt_pair(vnic1, vnic2):
     if vnic1.Node == vnic2.Node:
         return False
-    if vnic1.LocalVnic == True and vnic2.VnicType == "igw":
+    if not vnic1.HasPublicIp and vnic1.LocalVnic == True and vnic2.VnicType == "igw":
         return True
     return False
 
-def __vnics_are_local_to_igw_service_pair(vnic1, vnic2):
+def __vnics_are_static_nat_pair(vnic1, vnic2):
+    if vnic1.Node == vnic2.Node:
+        return False
+    if vnic1.HasPublicIp and vnic1.LocalVnic == True and vnic2.VnicType == "igw_nat":
+        return True
+    return False
+
+
+def __vnics_are_dynamic_service_napt_pair(vnic1, vnic2):
     if vnic1.Node == vnic2.Node:
         return False
     if vnic1.LocalVnic == True and vnic2.VnicType == "igw_service":
@@ -127,10 +136,14 @@ def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY and\
                     ((vnic1.Node == vnic2.Node) or vnic1.IsIgwVnic() or vnic2.IsIgwVnic()):
                 continue
-            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY and not __vnics_are_local_to_igw_pair(vnic1, vnic2):
+            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY and not __vnics_are_dynamic_napt_pair(vnic1, vnic2):
+                continue
+            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY and not __vnics_are_static_nat_pair(vnic1, vnic2):
                 continue
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY:
-                if not __vnics_are_local_to_igw_service_pair(vnic1, vnic2):
+                if not __vnics_are_dynamic_service_napt_pair(vnic1, vnic2):
+                    continue
+                if not vnic1.ServiceIPs:
                     continue
                 if vnic1 in service_vnics_done:
                     continue

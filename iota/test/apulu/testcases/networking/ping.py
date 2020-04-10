@@ -15,6 +15,10 @@ def Setup(tc):
     elif tc.args.type == 'remote_only':
         tc.workload_pairs = config_api.GetPingableWorkloadPairs(
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
+    elif tc.args.type == 'igw_nat_only':
+        tc.workload_pairs = config_api.GetWorkloadPairs(
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY,
+            wl_pair_scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET)
     elif tc.args.type == 'igw_napt_only':
         napt_type = getattr(tc.args, "napt_type", None)
         if napt_type and napt_type == 'service':
@@ -48,9 +52,9 @@ def Verify(tc):
     
     if  traffic_utils.verifyPing(tc.cmd_cookies, tc.resp) != api.types.status.SUCCESS:
         return api.types.status.FAILURE
-    if tc.args.type != 'igw_napt_only':
+    if tc.args.type != 'igw_napt_only' and tc.args.type != 'igw_nat_only':
         return flow_utils.verifyFlows(tc.iterators.ipaf, tc.workload_pairs)
-    else:
+    elif tc.args.type == 'igw_napt_only':
         post_stats = nat_pb.NatPbStats()
         for pb in tc.nat_port_blocks:
             if pb.ProtoName == "icmp":

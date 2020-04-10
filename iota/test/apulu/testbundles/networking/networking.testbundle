@@ -84,3 +84,12 @@ testcases:
             pktsize   : [ 512 ]
             protocol  : [ udp ]
 
+    -   name    : Ping_IGW_NAT_Workloads
+        testcase: testcases.networking.ping
+        stress  : True
+        args    :
+            type: igw_nat_only
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            pktsize : [ 64 ]

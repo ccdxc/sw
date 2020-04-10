@@ -128,6 +128,8 @@ class VnicObject(base.ConfigObjectBase):
             logger.info("- Egr V6 Policies:", self.EgV6SecurityPolicyIds)
         if self.VnicType:
             logger.info("- VnicType:", self.VnicType)
+        if self.RemoteRoutes:
+            logger.info("- Remote Routes:", self.RemoteRoutes)
         if self.ServiceIPs:
             logger.info("- Service IPs:", self.ServiceIPs)
         self.Status.Show()
@@ -247,7 +249,7 @@ class VnicObject(base.ConfigObjectBase):
         return self.dot1Qenabled
 
     def IsIgwVnic(self):
-        return self.VnicType =="igw" or self.VnicType == "igw_service"
+        return self.VnicType =="igw" or self.VnicType == "igw_service" or self.VnicType == "igw_nat"
 
     def GetDependees(self, node):
         """

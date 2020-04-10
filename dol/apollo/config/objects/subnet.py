@@ -108,7 +108,7 @@ class SubnetObject(base.ConfigObjectBase):
             Resmgr.CreateIPv6AddrPoolForSubnet(self.SubnetId, self.IPPrefix[0])
         Resmgr.CreateIPv4AddrPoolForSubnet(self.SubnetId, self.IPPrefix[1])
 
-        self.__set_vrouter_attributes()
+        self.__set_vrouter_attributes(spec)
         self.__fill_default_rules_in_policy(node)
         self.DeriveOperInfo()
         self.Mutable = utils.IsUpdateSupported()
@@ -177,11 +177,14 @@ class SubnetObject(base.ConfigObjectBase):
     def GetVRMacAddr(self):
         return self.VirtualRouterMACAddr.get()
 
-    def __set_vrouter_attributes(self):
+    def __set_vrouter_attributes(self, spec):
         # 1st IP address of the subnet becomes the vrouter.
         if self.IpV6Valid:
             self.VirtualRouterIPAddr[0] = Resmgr.GetSubnetVRIPv6(self.SubnetId)
-        self.VirtualRouterIPAddr[1] = Resmgr.GetSubnetVRIPv4(self.SubnetId)
+        if (hasattr(spec, 'v4routerip')):
+            self.VirtualRouterIPAddr[1] = ipaddress.IPv4Address(spec.v4routerip)
+        else:
+            self.VirtualRouterIPAddr[1] = Resmgr.GetSubnetVRIPv4(self.SubnetId)
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
         return
 
