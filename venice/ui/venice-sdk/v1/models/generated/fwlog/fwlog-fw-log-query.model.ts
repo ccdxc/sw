@@ -30,19 +30,19 @@ export interface IFwlogFwLogQuery {
 export class FwlogFwLogQuery extends BaseModel implements IFwlogFwLogQuery {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
-    /** OR of sources IPs to be matched. Should be a valid v4 or v6 IP address. */
+    /** OR of sources IPs to be matched. Only one source IP is allowed. Should be a valid v4 or v6 IP address. */
     'source-ips': Array<string> = null;
-    /** OR of dest IPs to be matched. Should be a valid v4 or v6 IP address. */
+    /** OR of destination IPs to be matched. Only one destination IP is allowed. Should be a valid v4 or v6 IP address. */
     'destination-ips': Array<string> = null;
-    /** OR of source ports to be matched NP. Value should be between 0 and 65535. */
+    /** OR of source ports to be matched. Only one port can be specified and if present, source IP must also be specified. Value should be between 0 and 65535. */
     'source-ports': Array<number> = null;
-    /** OR of dest ports to be matched NP. Value should be between 0 and 65535. */
+    /** OR of destination ports to be matched. Only one port can be specified and if present, destination IP must also be specified. Value should be between 0 and 65535. */
     'destination-ports': Array<number> = null;
-    /** OR of protocols to be matched. */
+    /** OR of protocols to be matched. Only one protocol can be specified and can only be specified if either source IP or destination IP is present. */
     'protocols': Array<string> = null;
-    /** OR of actions to be matched NP. */
+    /** OR of actions to be matched. Only one action can be specified and can only be specified if either source IP or destination IP is present. */
     'actions': Array<FwlogFwLogQuery_actions> = null;
-    /** OR of reporter names to be matched. */
+    /** OR of reporter names to be matched. Only one reporter ID can be specified. */
     'reporter-ids': Array<string> = null;
     /** StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z. */
     'start-time': Date = null;
@@ -56,41 +56,41 @@ export class FwlogFwLogQuery extends BaseModel implements IFwlogFwLogQuery {
     'tenants': Array<string> = null;
     public static propInfo: { [prop in keyof IFwlogFwLogQuery]: PropInfoItem } = {
         'source-ips': {
-            description:  `OR of sources IPs to be matched. Should be a valid v4 or v6 IP address.`,
+            description:  `OR of sources IPs to be matched. Only one source IP is allowed. Should be a valid v4 or v6 IP address.`,
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'Array<string>'
         },
         'destination-ips': {
-            description:  `OR of dest IPs to be matched. Should be a valid v4 or v6 IP address.`,
+            description:  `OR of destination IPs to be matched. Only one destination IP is allowed. Should be a valid v4 or v6 IP address.`,
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'Array<string>'
         },
         'source-ports': {
-            description:  `OR of source ports to be matched NP. Value should be between 0 and 65535.`,
+            description:  `OR of source ports to be matched. Only one port can be specified and if present, source IP must also be specified. Value should be between 0 and 65535.`,
             required: true,
             type: 'Array<number>'
         },
         'destination-ports': {
-            description:  `OR of dest ports to be matched NP. Value should be between 0 and 65535.`,
+            description:  `OR of destination ports to be matched. Only one port can be specified and if present, destination IP must also be specified. Value should be between 0 and 65535.`,
             required: true,
             type: 'Array<number>'
         },
         'protocols': {
-            description:  `OR of protocols to be matched.`,
+            description:  `OR of protocols to be matched. Only one protocol can be specified and can only be specified if either source IP or destination IP is present.`,
             required: false,
             type: 'Array<string>'
         },
         'actions': {
             enum: FwlogFwLogQuery_actions_uihint,
             default: 'allow',
-            description:  `OR of actions to be matched NP.`,
+            description:  `OR of actions to be matched. Only one action can be specified and can only be specified if either source IP or destination IP is present.`,
             required: true,
             type: 'Array<string>'
         },
         'reporter-ids': {
-            description:  `OR of reporter names to be matched.`,
+            description:  `OR of reporter names to be matched. Only one reporter ID can be specified.`,
             required: false,
             type: 'Array<string>'
         },

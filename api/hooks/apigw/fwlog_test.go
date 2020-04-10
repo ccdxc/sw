@@ -62,6 +62,40 @@ func TestFwLogOperationsHook(t *testing.T) {
 			err: false,
 		},
 		{
+			name: "non default tenant user",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    "testtenant",
+					Name:      "testUser",
+					Namespace: globals.DefaultNamespace,
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in: &fwlog.FwLogQuery{
+				DestIPs:    []string{"192.168.10.1"},
+				MaxResults: 50,
+				Tenants:    []string{globals.DefaultTenant},
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResource("testtenant",
+					"", auth.Permission_FwLog.String(),
+					globals.DefaultNamespace, ""),
+					auth.Permission_Read.String()),
+			},
+			out: &fwlog.FwLogQuery{
+				DestIPs:    []string{"192.168.10.1"},
+				MaxResults: 50,
+				Tenants:    []string{"testtenant"},
+			},
+			err: false,
+		},
+		{
 			name: "no user in context",
 			user: nil,
 			in: &fwlog.FwLogQuery{

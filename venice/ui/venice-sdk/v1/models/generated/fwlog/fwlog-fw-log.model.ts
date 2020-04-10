@@ -33,6 +33,7 @@ export interface IFwlogFwLog {
     'icmp-type'?: number;
     'icmp-code'?: number;
     'icmp-id'?: number;
+    'alg'?: string;
     '_ui'?: any;
 }
 
@@ -79,6 +80,8 @@ export class FwlogFwLog extends BaseModel implements IFwlogFwLog {
     'icmp-code': number = null;
     /** Icmp ID. */
     'icmp-id': number = null;
+    /** Appliction Layer Gateway. */
+    'alg': string = null;
     public static propInfo: { [prop in keyof IFwlogFwLog]: PropInfoItem } = {
         'kind': {
             required: false,
@@ -185,6 +188,11 @@ export class FwlogFwLog extends BaseModel implements IFwlogFwLog {
             description:  `Icmp ID.`,
             required: false,
             type: 'number'
+        },
+        'alg': {
+            description:  `Appliction Layer Gateway.`,
+            required: false,
+            type: 'string'
         },
     }
 
@@ -368,6 +376,13 @@ export class FwlogFwLog extends BaseModel implements IFwlogFwLog {
         } else {
             this['icmp-id'] = null
         }
+        if (values && values['alg'] != null) {
+            this['alg'] = values['alg'];
+        } else if (fillDefaults && FwlogFwLog.hasDefaultValue('alg')) {
+            this['alg'] = FwlogFwLog.propInfo['alg'].default;
+        } else {
+            this['alg'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -396,6 +411,7 @@ export class FwlogFwLog extends BaseModel implements IFwlogFwLog {
                 'icmp-type': CustomFormControl(new FormControl(this['icmp-type']), FwlogFwLog.propInfo['icmp-type']),
                 'icmp-code': CustomFormControl(new FormControl(this['icmp-code']), FwlogFwLog.propInfo['icmp-code']),
                 'icmp-id': CustomFormControl(new FormControl(this['icmp-id']), FwlogFwLog.propInfo['icmp-id']),
+                'alg': CustomFormControl(new FormControl(this['alg']), FwlogFwLog.propInfo['alg']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
@@ -433,6 +449,7 @@ export class FwlogFwLog extends BaseModel implements IFwlogFwLog {
             this._formGroup.controls['icmp-type'].setValue(this['icmp-type']);
             this._formGroup.controls['icmp-code'].setValue(this['icmp-code']);
             this._formGroup.controls['icmp-id'].setValue(this['icmp-id']);
+            this._formGroup.controls['alg'].setValue(this['alg']);
         }
     }
 }

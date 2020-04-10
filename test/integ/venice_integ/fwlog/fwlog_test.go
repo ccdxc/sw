@@ -22,27 +22,29 @@ import (
 )
 
 const (
-	ipPrefix = "192.168.10"
-	srcPort  = 10000
-	destPort = 10001
-	ruleID   = 1
-	sessID   = 2
+	ipPrefix   = "192.168.10"
+	srcPort    = 10000
+	destPort   = 10001
+	ruleID     = "1"
+	sessID     = "2"
+	reporterID = "dsc-1"
 )
 
 func TestFwLogQuery(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startSpyglass()
+	defer ti.TeardownElastic()
+	AssertOk(t, createFwLogsElasticIndex(&ti), "fwlog index creation failed")
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIServer()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startAPIGateway()
+	defer ti.APIServer.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -50,15 +52,15 @@ func TestFwLogQuery(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
-	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.apiGwAddr, adminCred)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
+	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 
 	createFwLogs(t, &ti, 254)
-	fwlogURL := fmt.Sprintf("https://%s/fwlog/v1/query", ti.apiGwAddr)
+	fwlogURL := fmt.Sprintf("https://%s/fwlog/v1/query", ti.APIGwAddr)
 	tests := []struct {
 		name         string
 		query        *fwlog.FwLogQuery
@@ -97,6 +99,16 @@ func TestFwLogQuery(t *testing.T) {
 			err: nil,
 		},
 		{
+			name: "query by multiple destination IPs",
+			query: &fwlog.FwLogQuery{
+				DestIPs:    []string{fmt.Sprintf("%s.%d", ipPrefix, 0), fmt.Sprintf("%s.%d", ipPrefix, 1)},
+				MaxResults: 50,
+				Tenants:    []string{globals.DefaultTenant},
+			},
+			expectedHits: 0,
+			err:          fmt.Errorf("POST request failed with http status code (400) for fwlog query (%s)", fwlogURL),
+		},
+		{
 			name: "query by source ip",
 			query: &fwlog.FwLogQuery{
 				SourceIPs:  []string{fmt.Sprintf("%s.%d", ipPrefix, 0)},
@@ -125,6 +137,16 @@ func TestFwLogQuery(t *testing.T) {
 				},
 			},
 			err: nil,
+		},
+		{
+			name: "query by multiple source IPs",
+			query: &fwlog.FwLogQuery{
+				SourceIPs:  []string{fmt.Sprintf("%s.%d", ipPrefix, 0), fmt.Sprintf("%s.%d", ipPrefix, 1)},
+				MaxResults: 50,
+				Tenants:    []string{globals.DefaultTenant},
+			},
+			expectedHits: 0,
+			err:          fmt.Errorf("POST request failed with http status code (400) for fwlog query (%s)", fwlogURL),
 		},
 		{
 			name: "query by only destination port",
@@ -326,12 +348,32 @@ func TestFwLogQuery(t *testing.T) {
 			expectedHits: 50,
 			err:          nil,
 		},
+		{
+			name: "query by reporter ID",
+			query: &fwlog.FwLogQuery{
+				ReporterIDs: []string{reporterID},
+				MaxResults:  50,
+				Tenants:     []string{globals.DefaultTenant},
+			},
+			expectedHits: 50,
+			err:          nil,
+		},
+		{
+			name: "query by multiple reporter IDs",
+			query: &fwlog.FwLogQuery{
+				ReporterIDs: []string{reporterID, "dsc-2"},
+				MaxResults:  50,
+				Tenants:     []string{globals.DefaultTenant},
+			},
+			expectedHits: 0,
+			err:          fmt.Errorf("POST request failed with http status code (400) for fwlog query (%s)", fwlogURL),
+		},
 	}
 	for _, test := range tests {
 		var err error
 		resp := fwlog.FwLogList{}
 		AssertEventually(t, func() (bool, interface{}) {
-			err = FwLogQuery(superAdminCtx, ti.apiGwAddr, test.query, &resp)
+			err = FwLogQuery(superAdminCtx, ti.APIGwAddr, test.query, &resp)
 			if err != nil {
 				if reflect.DeepEqual(test.err, err) {
 					return true, nil
@@ -356,7 +398,7 @@ func TestFwLogQuery(t *testing.T) {
 
 }
 
-func createFwLogs(t *testing.T, ti *tInfo, count int) {
+func createFwLogs(t *testing.T, ti *TestInfo, count int) {
 	var fwlogs []*elastic.BulkRequest
 	for i := 0; i < count; i++ {
 		creationTime, _ := types.TimestampProto(time.Now())
@@ -384,6 +426,7 @@ func createFwLogs(t *testing.T, ti *tInfo, count int) {
 			RuleID:     ruleID,
 			SessionID:  sessID,
 			FlowAction: "create",
+			ReporterID: reporterID,
 		}
 
 		// prepare the index request
@@ -397,7 +440,7 @@ func createFwLogs(t *testing.T, ti *tInfo, count int) {
 
 		fwlogs = append(fwlogs, request)
 	}
-	_, err := ti.esClient.Bulk(context.TODO(), fwlogs)
+	_, err := ti.ESClient.Bulk(context.TODO(), fwlogs)
 	AssertOk(t, err, "error creating fw logs in elastic")
 }
 

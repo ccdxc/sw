@@ -40,9 +40,9 @@ var typesMapFwlog = map[string]*api.Struct{
 
 			"Direction": api.Field{Name: "Direction", CLITag: api.CLIInfo{ID: "direction", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "direction", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"RuleID": api.Field{Name: "RuleID", CLITag: api.CLIInfo{ID: "rule-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rule-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT64"},
+			"RuleID": api.Field{Name: "RuleID", CLITag: api.CLIInfo{ID: "rule-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rule-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"SessionID": api.Field{Name: "SessionID", CLITag: api.CLIInfo{ID: "session-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "session-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT64"},
+			"SessionID": api.Field{Name: "SessionID", CLITag: api.CLIInfo{ID: "session-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "session-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"AppID": api.Field{Name: "AppID", CLITag: api.CLIInfo{ID: "app-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "app-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
@@ -57,6 +57,8 @@ var typesMapFwlog = map[string]*api.Struct{
 			"IcmpCode": api.Field{Name: "IcmpCode", CLITag: api.CLIInfo{ID: "icmp-code", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp-code", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"IcmpID": api.Field{Name: "IcmpID", CLITag: api.CLIInfo{ID: "icmp-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"ALG": api.Field{Name: "ALG", CLITag: api.CLIInfo{ID: "alg", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "alg", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Kind": api.Field{Name: "Kind", CLITag: api.CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 

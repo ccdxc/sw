@@ -41,10 +41,10 @@ import (
 )
 
 func TestAuditManager(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
+	defer ti.TeardownElastic()
 
 	ts, _ := types.TimestampProto(time.Now())
 	ts1 := api.Timestamp{Timestamp: *ts}
@@ -134,7 +134,7 @@ func TestAuditManager(t *testing.T) {
 			query:  nil,
 		},
 	}
-	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.elasticSearchAddr, ti.rslvr, ti.logger, elasticauditor.WithElasticClient(ti.esClient)))
+	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.ElasticSearchAddr, ti.Rslvr, ti.Logger, elasticauditor.WithElasticClient(ti.ESClient)))
 	err = auditor.Run()
 	AssertOk(t, err, "error starting elastic auditor")
 	defer auditor.Shutdown()
@@ -144,7 +144,7 @@ func TestAuditManager(t *testing.T) {
 		Assert(t, test.err == (err != nil), fmt.Sprintf("[%v] test failed, err: %v", test.name, err))
 		if !test.err && test.query != nil {
 			AssertEventually(t, func() (bool, interface{}) {
-				resp, err := ti.esClient.Search(context.Background(),
+				resp, err := ti.ESClient.Search(context.Background(),
 					elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), test.query, nil, 0, 10000, "", true)
 				if err != nil {
 					return false, err
@@ -160,15 +160,15 @@ func TestAuditManager(t *testing.T) {
 }
 
 func TestElasticServerDown(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.elasticSearchAddr, ti.rslvr, ti.logger, elasticauditor.WithElasticClient(ti.esClient)))
+	defer ti.TeardownElastic()
+	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.ElasticSearchAddr, ti.Rslvr, ti.Logger, elasticauditor.WithElasticClient(ti.ESClient)))
 	err = auditor.Run()
 	AssertOk(t, err, "error starting elastic auditor")
 	// shutdown elastic server and test ProcessEvents
-	testutils.StopElasticsearch(ti.elasticSearchName, ti.elasticSearchDir)
+	testutils.StopElasticsearch(ti.ElasticSearchName, ti.ElasticSearchDir)
 	event := &auditapi.AuditEvent{
 		TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
 		ObjectMeta: api.ObjectMeta{Name: "auditevent1", UUID: uuid.NewV4().String(), Tenant: "default"},
@@ -191,19 +191,19 @@ func TestElasticServerDown(t *testing.T) {
 }
 
 func TestAuditLogs(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startSpyglass()
+	defer ti.TeardownElastic()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIServer()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startAPIGateway()
+	defer ti.APIServer.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -211,14 +211,14 @@ func TestAuditLogs(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
 
 	const reqID = "abc-123"
 	superAdminCtx := loginctx.NewContextWithExtRequestIDHeader(context.TODO(), reqID)
-	superAdminCtx, err = NewLoggedInContext(superAdminCtx, ti.apiGwAddr, adminCred)
+	superAdminCtx, err = NewLoggedInContext(superAdminCtx, ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	// test audit log for successful login
 	loginEventObj := &auditapi.AuditEvent{}
@@ -227,7 +227,7 @@ func TestAuditLogs(t *testing.T) {
 			es.NewTermQuery("action.keyword", svc.LoginAction),
 			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Success.String()),
 			es.NewTermQuery("external-id.keyword", reqID))
-		resp, err := ti.esClient.Search(context.Background(),
+		resp, err := ti.ESClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)
 		if err != nil {
 			return false, err.Error()
@@ -248,7 +248,7 @@ func TestAuditLogs(t *testing.T) {
 	}, "expected audit log for user login", "100ms")
 	AssertEventually(t, func() (bool, interface{}) {
 		resp := &auditapi.AuditEvent{}
-		err := getEvent(superAdminCtx, ti.apiGwAddr, loginEventObj.SelfLink, resp)
+		err := getEvent(superAdminCtx, ti.APIGwAddr, loginEventObj.SelfLink, resp)
 		if err != nil {
 			return false, err.Error()
 		}
@@ -263,18 +263,18 @@ func TestAuditLogs(t *testing.T) {
 		Spec: cluster.TenantSpec{},
 	}
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := ti.restcl.ClusterV1().Tenant().Create(superAdminCtx, tenant)
+		_, err := ti.Restcl.ClusterV1().Tenant().Create(superAdminCtx, tenant)
 		if err != nil {
 			return false, err.Error()
 		}
 		return true, nil
 	}, fmt.Sprintf("error creating tenant [%s]", testTenant), "100ms")
-	defer DeleteTenant(ti.apicl, testTenant)
+	defer DeleteTenant(ti.Apicl, testTenant)
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(cluster.KindTenant)),
 			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.CreateOper))),
 			es.NewTermQuery("external-id.keyword", reqID))
-		resp, err := ti.esClient.Search(context.Background(),
+		resp, err := ti.ESClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)
 		if err != nil {
 			return false, err.Error()
@@ -286,14 +286,14 @@ func TestAuditLogs(t *testing.T) {
 		return true, nil
 	}, fmt.Sprintf("expected two audit logs for [%s] tenant creation", testTenant), "100ms")
 	// test audit log for pre-call hook failure
-	_, err = ti.restcl.AuthV1().Role().Delete(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRole, Tenant: globals.DefaultTenant})
+	_, err = ti.Restcl.AuthV1().Role().Delete(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRole, Tenant: globals.DefaultTenant})
 	Assert(t, err != nil, "admin role shouldn't be deleted")
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(auth.KindRole)),
 			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.DeleteOper))),
 			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Failure.String()),
 			es.NewTermQuery("stage.keyword", auditapi.Stage_RequestProcessing.String()))
-		resp, err := ti.esClient.Search(context.Background(),
+		resp, err := ti.ESClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)
 		if err != nil {
 			return false, err.Error()
@@ -305,24 +305,24 @@ func TestAuditLogs(t *testing.T) {
 		return true, nil
 	}, fmt.Sprintf("expected one audit log for [%s] admin role deletion failure", testTenant), "100ms")
 	// test audit log for authorization failure
-	MustCreateTestUser(ti.apicl, testUser, testPassword, testTenant)
-	defer MustDeleteUser(ti.apicl, testUser, testTenant)
-	MustUpdateRoleBinding(ti.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testUser}, nil)
-	defer MustUpdateRoleBinding(ti.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, nil, nil)
-	unauthzCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, &auth.PasswordCredential{
+	MustCreateTestUser(ti.Apicl, testUser, testPassword, testTenant)
+	defer MustDeleteUser(ti.Apicl, testUser, testTenant)
+	MustUpdateRoleBinding(ti.Apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testUser}, nil)
+	defer MustUpdateRoleBinding(ti.Apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, nil, nil)
+	unauthzCtx, err := NewLoggedInContext(context.Background(), ti.APIGwAddr, &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
 		Tenant:   testTenant,
 	})
 	AssertOk(t, err, "error creating logged in context for user in testtenant")
-	_, err = ti.restcl.ClusterV1().Tenant().Create(unauthzCtx, tenant)
+	_, err = ti.Restcl.ClusterV1().Tenant().Create(unauthzCtx, tenant)
 	Assert(t, err != nil, "user should be unauthorized to create tenant")
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(cluster.KindTenant)),
 			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.CreateOper))),
 			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Failure.String()),
 			es.NewTermQuery("stage.keyword", auditapi.Stage_RequestAuthorization.String()))
-		resp, err := ti.esClient.Search(context.Background(),
+		resp, err := ti.ESClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, testTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)
 		if err != nil {
 			return false, err.Error()
@@ -334,16 +334,16 @@ func TestAuditLogs(t *testing.T) {
 		return true, nil
 	}, fmt.Sprintf("expected one audit log for [%s] tenant creation authorization failure", testTenant), "100ms")
 	// test authorization check in spyglass controller when audit event is fetched given UUID
-	Assert(t, getEvent(unauthzCtx, ti.apiGwAddr, loginEventObj.SelfLink, &auditapi.AuditEvent{}) != nil, "testtenant user should not be able to get event in default tenant")
+	Assert(t, getEvent(unauthzCtx, ti.APIGwAddr, loginEventObj.SelfLink, &auditapi.AuditEvent{}) != nil, "testtenant user should not be able to get event in default tenant")
 	// test audit log for call failure
-	_, err = ti.restcl.ClusterV1().Tenant().Create(superAdminCtx, tenant)
+	_, err = ti.Restcl.ClusterV1().Tenant().Create(superAdminCtx, tenant)
 	Assert(t, err != nil, "call to create duplicate tenant should fail")
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(cluster.KindTenant)),
 			es.NewTermQuery("action.keyword", strings.Title(string(apiintf.CreateOper))),
 			es.NewTermQuery("outcome.keyword", auditapi.Outcome_Failure.String()),
 			es.NewTermQuery("stage.keyword", auditapi.Stage_RequestProcessing.String()))
-		resp, err := ti.esClient.Search(context.Background(),
+		resp, err := ti.ESClient.Search(context.Background(),
 			elastic.GetIndex(globals.AuditLogs, globals.DefaultTenant), elastic.GetDocType(globals.AuditLogs), query, nil, 0, 10000, "", true)
 		if err != nil {
 			return false, err.Error()
@@ -357,19 +357,19 @@ func TestAuditLogs(t *testing.T) {
 }
 
 func TestAuditAuthz(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startSpyglass()
+	defer ti.TeardownElastic()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIServer()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startAPIGateway()
+	defer ti.APIServer.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -377,33 +377,33 @@ func TestAuditAuthz(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
 
-	_, err = NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+	_, err = NewLoggedInContext(context.Background(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating super admin logged in context")
-	MustCreateTenant(ti.apicl, testTenant)
-	defer MustDeleteTenant(ti.apicl, testTenant)
-	MustCreateTestUser(ti.apicl, testUser, testPassword, testTenant)
-	defer MustDeleteUser(ti.apicl, testUser, testTenant)
-	MustCreateRole(ti.apicl, "NoAuditingPerms", testTenant,
+	MustCreateTenant(ti.Apicl, testTenant)
+	defer MustDeleteTenant(ti.Apicl, testTenant)
+	MustCreateTestUser(ti.Apicl, testUser, testPassword, testTenant)
+	defer MustDeleteUser(ti.Apicl, testUser, testTenant)
+	MustCreateRole(ti.Apicl, "NoAuditingPerms", testTenant,
 		login.NewPermission(testTenant, string(apiclient.GroupAuth), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 		login.NewPermission(testTenant, string(apiclient.GroupSecurity), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 		login.NewPermission(testTenant, string(apiclient.GroupStaging), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 		login.NewPermission(testTenant, string(apiclient.GroupNetwork), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 		login.NewPermission(testTenant, string(apiclient.GroupWorkload), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 	)
-	defer MustDeleteRole(ti.apicl, "NoAuditingPerms", testTenant)
-	MustCreateRoleBinding(ti.apicl, "NoAuditingPermsRB", testTenant, "NoAuditingPerms", []string{testUser}, nil)
-	defer MustDeleteRoleBinding(ti.apicl, "NoAuditingPermsRB", testTenant)
+	defer MustDeleteRole(ti.Apicl, "NoAuditingPerms", testTenant)
+	MustCreateRoleBinding(ti.Apicl, "NoAuditingPermsRB", testTenant, "NoAuditingPerms", []string{testUser}, nil)
+	defer MustDeleteRoleBinding(ti.Apicl, "NoAuditingPermsRB", testTenant)
 	userCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
 		Tenant:   testTenant,
 	}
-	userCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, userCred)
+	userCtx, err := NewLoggedInContext(context.Background(), ti.APIGwAddr, userCred)
 	AssertOk(t, err, "error creating testtenant user logged in context")
 	// query by category and kind
 	query := &search.SearchRequest{
@@ -417,21 +417,21 @@ func TestAuditAuthz(t *testing.T) {
 	}
 	resp := search.SearchResponse{}
 	AssertEventually(t, func() (bool, interface{}) {
-		if err := Search(userCtx, ti.apiGwAddr, query, &resp); err != nil {
+		if err := Search(userCtx, ti.APIGwAddr, query, &resp); err != nil {
 			return false, err
 		}
 		return true, nil
 	}, "error performing audit log search")
 	Assert(t, resp.ActualHits == 0, fmt.Sprintf("user with no auditing permissions was able to retrieve audit logs: %#v", resp))
-	MustCreateRole(ti.apicl, "AuditingPerms", testTenant,
+	MustCreateRole(ti.Apicl, "AuditingPerms", testTenant,
 		login.NewPermission(testTenant, "", auth.Permission_AuditEvent.String(), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()),
 	)
-	defer MustDeleteRole(ti.apicl, "AuditingPerms", testTenant)
-	MustCreateRoleBinding(ti.apicl, "AuditingPermsRB", testTenant, "AuditingPerms", []string{testUser}, nil)
-	defer MustDeleteRoleBinding(ti.apicl, "AuditingPermsRB", testTenant)
+	defer MustDeleteRole(ti.Apicl, "AuditingPerms", testTenant)
+	MustCreateRoleBinding(ti.Apicl, "AuditingPermsRB", testTenant, "AuditingPerms", []string{testUser}, nil)
+	defer MustDeleteRoleBinding(ti.Apicl, "AuditingPermsRB", testTenant)
 	resp = search.SearchResponse{}
 	AssertEventually(t, func() (bool, interface{}) {
-		if err := Search(userCtx, ti.apiGwAddr, query, &resp); err != nil {
+		if err := Search(userCtx, ti.APIGwAddr, query, &resp); err != nil {
 			return false, err
 		}
 		if resp.ActualHits == 0 {
@@ -446,19 +446,19 @@ func TestAuditAuthz(t *testing.T) {
 }
 
 func TestSecretsInAuditLogs(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startSpyglass()
+	defer ti.TeardownElastic()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIServer()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startAPIGateway()
+	defer ti.APIServer.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -466,23 +466,23 @@ func TestSecretsInAuditLogs(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
 
-	superAdminCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+	superAdminCtx, err := NewLoggedInContext(context.Background(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	tuser := &auth.User{}
 	tuser.Defaults("all")
 	tuser.Name = "testuser2"
 	tuser.Spec.Password = testPassword
 	tuser.Spec.Email = "testuser2@pensando.io"
-	_, err = ti.restcl.AuthV1().User().Create(superAdminCtx, tuser)
+	_, err = ti.Restcl.AuthV1().User().Create(superAdminCtx, tuser)
 	AssertOk(t, err, "error creating test user")
-	defer MustDeleteUser(ti.apicl, "testuser2", globals.DefaultTenant)
+	defer MustDeleteUser(ti.Apicl, "testuser2", globals.DefaultTenant)
 	// test auth policy
-	apolicy, err := ti.apicl.AuthV1().AuthenticationPolicy().Get(superAdminCtx, &api.ObjectMeta{})
+	apolicy, err := ti.Apicl.AuthV1().AuthenticationPolicy().Get(superAdminCtx, &api.ObjectMeta{})
 	AssertOk(t, err, "unable to fetch auth policy")
 	apolicy.Spec.Authenticators.Ldap = &auth.Ldap{
 		Domains: []*auth.LdapDomain{
@@ -492,7 +492,7 @@ func TestSecretsInAuditLogs(t *testing.T) {
 			},
 		},
 	}
-	_, err = ti.restcl.AuthV1().AuthenticationPolicy().Update(superAdminCtx, apolicy)
+	_, err = ti.Restcl.AuthV1().AuthenticationPolicy().Update(superAdminCtx, apolicy)
 	AssertOk(t, err, "unable to update auth policy")
 	// test reset password
 	passwdResetReq := &auth.PasswordResetRequest{}
@@ -500,7 +500,7 @@ func TestSecretsInAuditLogs(t *testing.T) {
 	passwdResetReq.ObjectMeta.Name = "testuser2"
 	passwdResetReq.ObjectMeta.Tenant = globals.DefaultTenant
 	passwdResetReq.Kind = string(auth.KindUser)
-	tuser, err = ti.restcl.AuthV1().User().PasswordReset(superAdminCtx, passwdResetReq)
+	tuser, err = ti.Restcl.AuthV1().User().PasswordReset(superAdminCtx, passwdResetReq)
 	AssertOk(t, err, "unable to reset testuser2 password")
 	// search for audit events
 	stages := []string{auditapi.Stage_RequestAuthorization.String(), auditapi.Stage_RequestProcessing.String()}
@@ -544,7 +544,7 @@ func TestSecretsInAuditLogs(t *testing.T) {
 		}
 		resp := testutils.AuditSearchResponse{}
 		AssertEventually(t, func() (bool, interface{}) {
-			err := Search(superAdminCtx, ti.apiGwAddr, query, &resp)
+			err := Search(superAdminCtx, ti.APIGwAddr, query, &resp)
 			if err != nil {
 				return false, err
 			}
@@ -601,7 +601,7 @@ func TestSecretsInAuditLogs(t *testing.T) {
 		}
 		resp = testutils.AuditSearchResponse{}
 		AssertEventually(t, func() (bool, interface{}) {
-			err := Search(superAdminCtx, ti.apiGwAddr, query, &resp)
+			err := Search(superAdminCtx, ti.APIGwAddr, query, &resp)
 			if err != nil {
 				return false, err
 			}
@@ -664,7 +664,7 @@ func TestSecretsInAuditLogs(t *testing.T) {
 		}
 		resp = testutils.AuditSearchResponse{}
 		AssertEventually(t, func() (bool, interface{}) {
-			err := Search(superAdminCtx, ti.apiGwAddr, query, &resp)
+			err := Search(superAdminCtx, ti.APIGwAddr, query, &resp)
 			if err != nil {
 				return false, err
 			}
@@ -687,18 +687,18 @@ func TestSecretsInAuditLogs(t *testing.T) {
 }
 
 func TestAuditingWithElasticNotAvailable(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	err = ti.startSpyglass()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIServer()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startAPIGateway()
+	defer ti.APIServer.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -706,22 +706,22 @@ func TestAuditingWithElasticNotAvailable(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
 
 	// stop elastic
-	testutils.StopElasticsearch(ti.elasticSearchName, ti.elasticSearchDir)
+	testutils.StopElasticsearch(ti.ElasticSearchName, ti.ElasticSearchDir)
 	// login should work if elastic is down
-	ctx, err := login.NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+	ctx, err := login.NewLoggedInContext(context.Background(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "super admin should be able to log in when elastic is down")
 	// get operations should work
-	policy, err := ti.restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
+	policy, err := ti.Restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
 	AssertOk(t, err, "unable to fetch auth policy")
 	// update operations should fail
 	nctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	_, err = ti.restcl.AuthV1().AuthenticationPolicy().Update(nctx, policy)
+	_, err = ti.Restcl.AuthV1().AuthenticationPolicy().Update(nctx, policy)
 	defer cancel()
 	Assert(t, err != nil, "update of auth policy should fail")
 	// should be able to create techsupport request
@@ -733,66 +733,66 @@ func TestAuditingWithElasticNotAvailable(t *testing.T) {
 			Names: []string{"host1-dsc1"},
 		},
 	}
-	tsr, err = ti.restcl.MonitoringV1().TechSupportRequest().Create(ctx, tsr)
+	tsr, err = ti.Restcl.MonitoringV1().TechSupportRequest().Create(ctx, tsr)
 	AssertOk(t, err, "unable to create techsupport request")
-	_, err = ti.restcl.MonitoringV1().TechSupportRequest().Delete(ctx, &tsr.ObjectMeta)
+	_, err = ti.Restcl.MonitoringV1().TechSupportRequest().Delete(ctx, &tsr.ObjectMeta)
 	AssertOk(t, err, "unable to delete techsupport request")
 }
 
 func TestAPIServerNotAvailable(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	err = ti.startSpyglass()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIServer()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startAPIGateway()
+	defer ti.APIServer.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 	userCred := &auth.PasswordCredential{
 		Username: testUser,
 		Password: testPassword,
 		Tenant:   globals.DefaultTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, userCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, userCred, ti.Logger); err != nil {
 		t.Fatalf("auth setup failed")
 	}
-	_, err = NewLoggedInContext(context.TODO(), ti.apiGwAddr, userCred)
+	_, err = NewLoggedInContext(context.TODO(), ti.APIGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context")
-	ti.apiServer.Stop()
+	ti.APIServer.Stop()
 	AssertEventually(t, func() (bool, interface{}) {
-		_, _, err := login.UserLogin(context.TODO(), ti.apiGwAddr, userCred)
+		_, _, err := login.UserLogin(context.TODO(), ti.APIGwAddr, userCred)
 		if err != nil && strings.Contains(err.Error(), "503") {
 			return true, nil
 		}
 		return false, err
 	}, "unexpected error when API server is unreachable")
-	err = ti.startAPIServer()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	CleanupAuth(ti.apiServerAddr, true, false, userCred, ti.logger)
+	CleanupAuth(ti.APIServerAddr, true, false, userCred, ti.Logger)
 }
 
 func TestSyslogAuditor(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startSyslogServers()
+	defer ti.TeardownElastic()
+	err = ti.StartSyslogServers()
 	AssertOk(t, err, "failed to start syslog server")
-	defer ti.stopSyslogServers()
-	err = ti.startSpyglass()
+	defer ti.StopSyslogServers()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIServer()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startAPIGateway()
+	defer ti.APIServer.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -800,12 +800,12 @@ func TestSyslogAuditor(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setup failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
 
-	superAdminCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+	superAdminCtx, err := NewLoggedInContext(context.Background(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	bsdPolicy := &monitoring.AuditPolicy{
 		TypeMeta: api.TypeMeta{
@@ -823,8 +823,8 @@ func TestSyslogAuditor(t *testing.T) {
 				Targets: []*monitoring.ExportConfig{
 
 					{
-						Destination: ti.syslogBSDInfo.ip,
-						Transport:   fmt.Sprintf("%s/%s", "UDP", ti.syslogBSDInfo.port),
+						Destination: ti.SyslogBSDInfo.IP,
+						Transport:   fmt.Sprintf("%s/%s", "UDP", ti.SyslogBSDInfo.Port),
 					},
 				},
 				SyslogConfig: &monitoring.SyslogExportConfig{
@@ -835,27 +835,27 @@ func TestSyslogAuditor(t *testing.T) {
 		},
 	}
 	AssertEventually(t, func() (bool, interface{}) {
-		policy, err := ti.restcl.MonitoringV1().AuditPolicy().Create(superAdminCtx, bsdPolicy)
+		policy, err := ti.Restcl.MonitoringV1().AuditPolicy().Create(superAdminCtx, bsdPolicy)
 		if err != nil {
 			return false, err
 		}
 		return true, policy
 	}, "failed to create BSD syslog audit policy")
-	defer ti.apicl.MonitoringV1().AuditPolicy().Delete(superAdminCtx, &bsdPolicy.ObjectMeta)
+	defer ti.Apicl.MonitoringV1().AuditPolicy().Delete(superAdminCtx, &bsdPolicy.ObjectMeta)
 	rfcPolicy := &monitoring.AuditPolicy{}
 	bsdPolicy.Clone(rfcPolicy)
 	rfcPolicy.Name = "audit-policy-2"
 	rfcPolicy.Spec.Syslog.Format = monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String()
-	_, err = ti.restcl.MonitoringV1().AuditPolicy().Create(superAdminCtx, rfcPolicy)
+	_, err = ti.Restcl.MonitoringV1().AuditPolicy().Create(superAdminCtx, rfcPolicy)
 	Assert(t, err != nil, "no error in creating duplicate audit policy")
 	// create syslog
 	AssertEventually(t, func() (bool, interface{}) {
-		superAdminCtx, err = NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+		superAdminCtx, err = NewLoggedInContext(context.Background(), ti.APIGwAddr, adminCred)
 		if err != nil {
 			return false, err
 		}
 		select {
-		case logparts := <-ti.syslogBSDInfo.ch:
+		case logparts := <-ti.SyslogBSDInfo.Ch:
 			val, ok := logparts["content"]
 			if !ok {
 				return false, fmt.Errorf("no message field: %+v", logparts)
@@ -871,10 +871,10 @@ func TestSyslogAuditor(t *testing.T) {
 	}, "failed to receive any BSD syslog audit message for user login", "1s", "10s")
 	// update audit policy to point to rfc5424 syslog server
 	bsdPolicy.Spec.Syslog.Format = monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String()
-	bsdPolicy.Spec.Syslog.Targets[0].Destination = ti.syslogRFC5424Info.ip
-	bsdPolicy.Spec.Syslog.Targets[0].Transport = fmt.Sprintf("%s/%s", "UDP", ti.syslogRFC5424Info.port)
+	bsdPolicy.Spec.Syslog.Targets[0].Destination = ti.SyslogRFC5424Info.IP
+	bsdPolicy.Spec.Syslog.Targets[0].Transport = fmt.Sprintf("%s/%s", "UDP", ti.SyslogRFC5424Info.Port)
 	AssertEventually(t, func() (bool, interface{}) {
-		policy, err := ti.restcl.MonitoringV1().AuditPolicy().Update(superAdminCtx, bsdPolicy)
+		policy, err := ti.Restcl.MonitoringV1().AuditPolicy().Update(superAdminCtx, bsdPolicy)
 		if err != nil {
 			return false, err
 		}
@@ -882,12 +882,12 @@ func TestSyslogAuditor(t *testing.T) {
 	}, "failed to update syslog audit policy")
 	// create rfc5424 syslog
 	AssertEventually(t, func() (bool, interface{}) {
-		superAdminCtx, err = NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
+		superAdminCtx, err = NewLoggedInContext(context.Background(), ti.APIGwAddr, adminCred)
 		if err != nil {
 			return false, err
 		}
 		select {
-		case logparts := <-ti.syslogRFC5424Info.ch:
+		case logparts := <-ti.SyslogRFC5424Info.Ch:
 			val, ok := logparts["structured_data"]
 			if !ok {
 				return false, fmt.Errorf("no message field: %+v", logparts)
@@ -924,13 +924,13 @@ func BenchmarkProcessEvents70kRules(b *testing.B) {
 }
 
 func benchmarkProcessEvents(nRules int, b *testing.B) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: b.Name()}
+	err := ti.SetupElastic()
 	if err != nil {
 		panic(fmt.Sprintf("setupElastic failed with error: %v", err))
 	}
-	defer ti.teardownElastic()
-	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.elasticSearchAddr, ti.rslvr, ti.logger, elasticauditor.WithElasticClient(ti.esClient)))
+	defer ti.TeardownElastic()
+	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.ElasticSearchAddr, ti.Rslvr, ti.Logger, elasticauditor.WithElasticClient(ti.ESClient)))
 	err = auditor.Run()
 	if err != nil {
 		panic(fmt.Sprintf("error starting elastic auditor: %v", err))

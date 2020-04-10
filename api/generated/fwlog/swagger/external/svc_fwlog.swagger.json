@@ -31,7 +31,7 @@
         "parameters": [
           {
             "name": "source-ips",
-            "description": "OR of sources IPs to be matched. Should be a valid v4 or v6 IP address.",
+            "description": "OR of sources IPs to be matched. Only one source IP is allowed. Should be a valid v4 or v6 IP address.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -41,7 +41,7 @@
           },
           {
             "name": "destination-ips",
-            "description": "OR of dest IPs to be matched. Should be a valid v4 or v6 IP address.",
+            "description": "OR of destination IPs to be matched. Only one destination IP is allowed. Should be a valid v4 or v6 IP address.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -51,7 +51,7 @@
           },
           {
             "name": "source-ports",
-            "description": "OR of source ports to be matched NP. Value should be between 0 and 65535.",
+            "description": "OR of source ports to be matched. Only one port can be specified and if present, source IP must also be specified. Value should be between 0 and 65535.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -62,7 +62,7 @@
           },
           {
             "name": "destination-ports",
-            "description": "OR of dest ports to be matched NP. Value should be between 0 and 65535.",
+            "description": "OR of destination ports to be matched. Only one port can be specified and if present, destination IP must also be specified. Value should be between 0 and 65535.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -73,7 +73,7 @@
           },
           {
             "name": "protocols",
-            "description": "OR of protocols to be matched.",
+            "description": "OR of protocols to be matched. Only one protocol can be specified and can only be specified if either source IP or destination IP is present.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -83,7 +83,7 @@
           },
           {
             "name": "actions",
-            "description": "OR of actions to be matched NP.",
+            "description": "OR of actions to be matched. Only one action can be specified and can only be specified if either source IP or destination IP is present.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -93,7 +93,7 @@
           },
           {
             "name": "reporter-ids",
-            "description": "OR of reporter names to be matched.",
+            "description": "OR of reporter names to be matched. Only one reporter ID can be specified.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -580,12 +580,10 @@
         },
         "rule-id": {
           "type": "string",
-          "format": "uint64",
           "description": "Rule ID."
         },
         "session-id": {
           "type": "string",
-          "format": "uint64",
           "description": "Session ID."
         },
         "app-id": {
@@ -618,6 +616,10 @@
           "type": "integer",
           "format": "int64",
           "description": "icmp ID."
+        },
+        "alg": {
+          "type": "string",
+          "description": "Appliction Layer Gateway."
         }
       }
     },
@@ -660,7 +662,7 @@
             "type": "string"
           },
           "example": "10.1.1.1, ff02::5 ",
-          "description": "OR of sources IPs to be matched. Should be a valid v4 or v6 IP address."
+          "description": "OR of sources IPs to be matched. Only one source IP is allowed. Should be a valid v4 or v6 IP address."
         },
         "destination-ips": {
           "type": "array",
@@ -668,7 +670,7 @@
             "type": "string"
           },
           "example": "10.1.1.1, ff02::5 ",
-          "description": "OR of dest IPs to be matched. Should be a valid v4 or v6 IP address."
+          "description": "OR of destination IPs to be matched. Only one destination IP is allowed. Should be a valid v4 or v6 IP address."
         },
         "source-ports": {
           "type": "array",
@@ -677,7 +679,7 @@
             "format": "int64"
           },
           "maximum": 65535,
-          "description": "OR of source ports to be matched NP. Value should be between 0 and 65535."
+          "description": "OR of source ports to be matched. Only one port can be specified and if present, source IP must also be specified. Value should be between 0 and 65535."
         },
         "destination-ports": {
           "type": "array",
@@ -686,14 +688,14 @@
             "format": "int64"
           },
           "maximum": 65535,
-          "description": "OR of dest ports to be matched NP. Value should be between 0 and 65535."
+          "description": "OR of destination ports to be matched. Only one port can be specified and if present, destination IP must also be specified. Value should be between 0 and 65535."
         },
         "protocols": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "OR of protocols to be matched."
+          "description": "OR of protocols to be matched. Only one protocol can be specified and can only be specified if either source IP or destination IP is present."
         },
         "actions": {
           "type": "array",
@@ -713,14 +715,14 @@
             "implicit_deny": "Implicit-deny",
             "reject": "Reject"
           },
-          "description": "OR of actions to be matched NP."
+          "description": "OR of actions to be matched. Only one action can be specified and can only be specified if either source IP or destination IP is present."
         },
         "reporter-ids": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "OR of reporter names to be matched."
+          "description": "OR of reporter names to be matched. Only one reporter ID can be specified."
         },
         "start-time": {
           "type": "string",
@@ -776,7 +778,7 @@
             "type": "string"
           },
           "example": "10.1.1.1, ff02::5 ",
-          "description": "OR of sources IPs to be matched. Should be a valid v4 or v6 IP address."
+          "description": "OR of sources IPs to be matched. Only one source IP is allowed. Should be a valid v4 or v6 IP address."
         },
         "destination-ips": {
           "type": "array",
@@ -784,7 +786,7 @@
             "type": "string"
           },
           "example": "10.1.1.1, ff02::5 ",
-          "description": "OR of dest IPs to be matched. Should be a valid v4 or v6 IP address."
+          "description": "OR of destination IPs to be matched. Only one destination IP is allowed. Should be a valid v4 or v6 IP address."
         },
         "source-ports": {
           "type": "array",
@@ -793,7 +795,7 @@
             "format": "int64"
           },
           "maximum": 65535,
-          "description": "OR of source ports to be matched NP. Value should be between 0 and 65535."
+          "description": "OR of source ports to be matched. Only one port can be specified and if present, source IP must also be specified. Value should be between 0 and 65535."
         },
         "destination-ports": {
           "type": "array",
@@ -802,14 +804,14 @@
             "format": "int64"
           },
           "maximum": 65535,
-          "description": "OR of dest ports to be matched NP. Value should be between 0 and 65535."
+          "description": "OR of destination ports to be matched. Only one port can be specified and if present, destination IP must also be specified. Value should be between 0 and 65535."
         },
         "protocols": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "OR of protocols to be matched."
+          "description": "OR of protocols to be matched. Only one protocol can be specified and can only be specified if either source IP or destination IP is present."
         },
         "actions": {
           "type": "array",
@@ -829,14 +831,14 @@
             "implicit_deny": "Implicit-deny",
             "reject": "Reject"
           },
-          "description": "OR of actions to be matched NP."
+          "description": "OR of actions to be matched. Only one action can be specified and can only be specified if either source IP or destination IP is present."
         },
         "reporter-ids": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "OR of reporter names to be matched."
+          "description": "OR of reporter names to be matched. Only one reporter ID can be specified."
         },
         "start-time": {
           "type": "string",

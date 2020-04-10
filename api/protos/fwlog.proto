@@ -53,9 +53,9 @@ message FwLog {
     // Flow Direction
     string Direction    = 11 [(gogoproto.jsontag) = "direction,omitempty", (venice.check)="StrEnum(FwLogDirections)"];
     // Rule ID
-    uint64 RuleID       = 12 [(gogoproto.jsontag) = "rule-id,omitempty"];
+    string RuleID       = 12 [(gogoproto.jsontag) = "rule-id,omitempty"];
     // Session ID
-    uint64 SessionID    = 13 [(gogoproto.jsontag) = "session-id,omitempty"];
+    string SessionID    = 13 [(gogoproto.jsontag) = "session-id,omitempty"];
     // Application ID
     string AppID        = 14 [(gogoproto.jsontag) = "app-id,omitempty"];
     //policy name
@@ -70,6 +70,8 @@ message FwLog {
     uint32 IcmpCode     = 19 [(gogoproto.jsontag) = "icmp-code,omitempty"];
     // icmp ID
     uint32 IcmpID       = 20 [(gogoproto.jsontag) = "icmp-id,omitempty"];
+    // Appliction Layer Gateway
+    string ALG          = 21 [(gogoproto.jsontag) = "alg,omitempty"];
 }
 
 // list of fw logs
@@ -87,19 +89,19 @@ enum SortOrder {
 // FwLogQuery allows selecting logs by all attributes
 // All fields are ANDed together
 message FwLogQuery {
-    // OR of sources IPs to be matched
+    // OR of sources IPs to be matched. Only one source IP is allowed
     repeated string SourceIPs   = 1 [(gogoproto.jsontag) = "source-ips,omitempty", (venice.check)="IPAddr()"];
-    // OR of dest IPs to be matched
+    // OR of destination IPs to be matched. Only one destination IP is allowed
     repeated string DestIPs     = 2 [(gogoproto.jsontag) = "destination-ips,omitempty", (venice.check)="IPAddr()"];
-    // OR of source ports to be matched NP
+    // OR of source ports to be matched. Only one port can be specified and if present, source IP must also be specified
     repeated uint32 SourcePorts = 3 [(gogoproto.jsontag) = "source-ports,omitempty", (venice.check)="IntRange(0, 65535)"];
-    // OR of dest ports to be matched NP
+    // OR of destination ports to be matched. Only one port can be specified and if present, destination IP must also be specified
     repeated uint32 DestPorts   = 4 [(gogoproto.jsontag) = "destination-ports,omitempty", (venice.check)="IntRange(0, 65535)"];
-    // OR of protocols to be matched
+    // OR of protocols to be matched. Only one protocol can be specified and can only be specified if either source IP or destination IP is present
     repeated string Protocols   = 5 [(gogoproto.jsontag) = "protocols,omitempty"];
-    // OR of actions to be matched NP
+    // OR of actions to be matched. Only one action can be specified and can only be specified if either source IP or destination IP is present
     repeated string Actions     = 6 [(gogoproto.jsontag) = "actions,omitempty", (venice.check)="StrEnum(FwLogActions)"];
-    // OR of reporter names to be matched
+    // OR of reporter names to be matched. Only one reporter ID can be specified
     repeated string ReporterIDs = 7 [(gogoproto.jsontag) = "reporter-ids,omitempty"];
     // StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z
     api.Timestamp StartTime     = 8 [(gogoproto.jsontag) = "start-time,omitempty"];

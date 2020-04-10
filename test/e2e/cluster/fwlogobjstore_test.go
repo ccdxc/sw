@@ -423,16 +423,12 @@ func compareAndVerifyLogLineInCsvAndElastic(csvLine []string, elasticMap map[str
 	Expect(csvLine[8] == elasticMap["action"].(string)).Should(BeTrue())
 	Expect(csvLine[9] == elasticMap["direction"].(string)).Should(BeTrue())
 
-	ruleID, err := strconv.ParseUint(csvLine[10], 10, 64)
-	Expect(err).NotTo(HaveOccurred())
 	if _, ok := elasticMap["rule-id"]; ok {
-		Expect(float64(ruleID) == elasticMap["rule-id"].(float64)).Should(BeTrue())
+		Expect(csvLine[10] == elasticMap["rule-id"]).Should(BeTrue())
 	}
 
-	sessionID, err := strconv.ParseUint(csvLine[11], 10, 64)
-	Expect(err).NotTo(HaveOccurred())
 	if _, ok := elasticMap["session-id"]; ok {
-		Expect(float64(sessionID) == elasticMap["session-id"].(float64)).Should(BeTrue())
+		Expect(csvLine[11] == elasticMap["session-id"]).Should(BeTrue())
 	}
 
 	Expect(csvLine[12] == elasticMap["flow-action"].(string)).Should(BeTrue())

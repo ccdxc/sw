@@ -41,18 +41,18 @@ type testData struct {
 }
 
 func TestAuditLogArchive(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startAPIServer()
+	defer ti.TeardownElastic()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startSpyglass()
+	defer ti.APIServer.Stop()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	err = ti.startAPIGateway()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	pastTime1 := time.Now().Add(-6 * time.Second)
 	pastTime2 := pastTime1.Add(3 * time.Second)
@@ -67,11 +67,11 @@ func TestAuditLogArchive(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
-	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.apiGwAddr, adminCred)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
+	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	Assert(t, createAuditLogs(t, ti, 50) > 0, "unable to create audit logs")
 	currts, _ := types.TimestampProto(time.Now())
@@ -216,12 +216,12 @@ func TestAuditLogArchive(t *testing.T) {
 		}, "error verifying archive requests", "3s", "30s")
 	}
 	// stop spyglass
-	ti.fdr.Stop()
+	ti.Fdr.Stop()
 	// create archive requests
 	createArchiveRequests(superAdminCtx, t, ti, tests[0:1])
 	// start spyglass
-	ti.startSpyglass()
-	defer ti.fdr.Stop()
+	ti.StartSpyglass()
+	defer ti.Fdr.Stop()
 	AssertEventually(t, func() (bool, interface{}) {
 		err = verifyArchiveRequests(superAdminCtx, t, ti, tests[0:1])
 		if err != nil {
@@ -233,19 +233,19 @@ func TestAuditLogArchive(t *testing.T) {
 }
 
 func TestDuplicateArchiveRequests(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startAPIServer()
+	defer ti.TeardownElastic()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startSpyglass()
+	defer ti.APIServer.Stop()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIGateway()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -253,11 +253,11 @@ func TestDuplicateArchiveRequests(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
-	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.apiGwAddr, adminCred)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
+	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	var waitgrp sync.WaitGroup
 	numReqs := 20
@@ -276,7 +276,7 @@ func TestDuplicateArchiveRequests(t *testing.T) {
 					Query: &monitoring.ArchiveQuery{},
 				},
 			}
-			MustCreateArchiveRequest(superAdminCtx, ti.restcl, req)
+			MustCreateArchiveRequest(superAdminCtx, ti.Restcl, req)
 		}(i)
 	}
 	waitgrp.Wait()
@@ -299,7 +299,7 @@ func TestDuplicateArchiveRequests(t *testing.T) {
 			}
 			fetchedReq := &monitoring.ArchiveRequest{}
 			if !CheckEventually(func() (bool, interface{}) {
-				fetchedReq, err = ti.restcl.MonitoringV1().ArchiveRequest().Get(superAdminCtx, &req.ObjectMeta)
+				fetchedReq, err = ti.Restcl.MonitoringV1().ArchiveRequest().Get(superAdminCtx, &req.ObjectMeta)
 				if err != nil {
 					return false, err
 				}
@@ -349,24 +349,24 @@ func TestDuplicateArchiveRequests(t *testing.T) {
 				Query: &monitoring.ArchiveQuery{},
 			},
 		}
-		MustDeleteArchiveRequest(superAdminCtx, ti.restcl, &req.ObjectMeta)
+		MustDeleteArchiveRequest(superAdminCtx, ti.Restcl, &req.ObjectMeta)
 	}
 }
 
 func TestCancelArchiveRequests(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startAPIServer()
+	defer ti.TeardownElastic()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startSpyglass()
+	defer ti.APIServer.Stop()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIGateway()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -374,11 +374,11 @@ func TestCancelArchiveRequests(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
-	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.apiGwAddr, adminCred)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
+	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	createAuditLogs(t, ti, 100)
 	fetchedReq := &monitoring.ArchiveRequest{}
@@ -394,18 +394,18 @@ func TestCancelArchiveRequests(t *testing.T) {
 				Query: &monitoring.ArchiveQuery{},
 			},
 		}
-		MustCreateArchiveRequest(superAdminCtx, ti.restcl, req)
-		defer MustDeleteArchiveRequest(superAdminCtx, ti.restcl, &req.ObjectMeta)
+		MustCreateArchiveRequest(superAdminCtx, ti.Restcl, req)
+		defer MustDeleteArchiveRequest(superAdminCtx, ti.Restcl, &req.ObjectMeta)
 		cancelReq := &monitoring.CancelArchiveRequest{
 			TypeMeta:   api.TypeMeta{Kind: string(monitoring.KindArchiveRequest)},
 			ObjectMeta: req.ObjectMeta,
 		}
-		_, err := ti.restcl.MonitoringV1().ArchiveRequest().Cancel(superAdminCtx, cancelReq)
+		_, err := ti.Restcl.MonitoringV1().ArchiveRequest().Cancel(superAdminCtx, cancelReq)
 		if err != nil {
 			return false, err
 		}
 		if !CheckEventually(func() (bool, interface{}) {
-			fetchedReq, err = ti.restcl.MonitoringV1().ArchiveRequest().Get(superAdminCtx, &req.ObjectMeta)
+			fetchedReq, err = ti.Restcl.MonitoringV1().ArchiveRequest().Get(superAdminCtx, &req.ObjectMeta)
 			if err != nil {
 				return false, err
 			}
@@ -423,19 +423,19 @@ func TestCancelArchiveRequests(t *testing.T) {
 }
 
 func TestAuthzInArchiveRequests(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startAPIServer()
+	defer ti.TeardownElastic()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startSpyglass()
+	defer ti.APIServer.Stop()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIGateway()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -443,13 +443,13 @@ func TestAuthzInArchiveRequests(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
-	MustCreateTestUser(ti.apicl, "tuser1", testPassword, globals.DefaultTenant)
-	defer MustDeleteUser(ti.apicl, "tuser1", globals.DefaultTenant)
-	archUserCtx, err := NewLoggedInContext(context.TODO(), ti.apiGwAddr, &auth.PasswordCredential{Username: "tuser1", Password: testPassword, Tenant: globals.DefaultTenant})
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
+	MustCreateTestUser(ti.Apicl, "tuser1", testPassword, globals.DefaultTenant)
+	defer MustDeleteUser(ti.Apicl, "tuser1", globals.DefaultTenant)
+	archUserCtx, err := NewLoggedInContext(context.TODO(), ti.APIGwAddr, &auth.PasswordCredential{Username: "tuser1", Password: testPassword, Tenant: globals.DefaultTenant})
 	AssertOk(t, err, "error creating logged in context for archive user")
 	req := &monitoring.ArchiveRequest{
 		ObjectMeta: api.ObjectMeta{
@@ -464,36 +464,36 @@ func TestAuthzInArchiveRequests(t *testing.T) {
 			},
 		},
 	}
-	_, err = ti.restcl.MonitoringV1().ArchiveRequest().Create(archUserCtx, req)
+	_, err = ti.Restcl.MonitoringV1().ArchiveRequest().Create(archUserCtx, req)
 	Assert(t, err != nil, "expected authorization error in creating archive request")
 	t.Logf("error in creating archive request by tuser1: %v", err)
-	MustCreateRole(ti.apicl, "ArchivingPerms", globals.DefaultTenant,
+	MustCreateRole(ti.Apicl, "ArchivingPerms", globals.DefaultTenant,
 		login.NewPermission(globals.DefaultTenant, string(apiclient.GroupMonitoring), "", authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String()),
 		login.NewPermission(globals.DefaultTenant, "", auth.Permission_AuditEvent.String(), authz.ResourceNamespaceAll, "", auth.Permission_Read.String()),
 		login.NewPermission(globals.DefaultTenant, string(apiclient.GroupObjstore), string(objstore.KindObject), objstore.Buckets_auditevents.String(), "", auth.Permission_Create.String()),
 	)
-	defer MustDeleteRole(ti.apicl, "ArchivingPerms", globals.DefaultTenant)
-	MustCreateRoleBinding(ti.apicl, "ArchivingPermsRB", globals.DefaultTenant, "ArchivingPerms", []string{"tuser1"}, nil)
-	defer MustDeleteRoleBinding(ti.apicl, "ArchivingPermsRB", globals.DefaultTenant)
-	_, err = CreateArchiveRequest(archUserCtx, ti.restcl, req)
+	defer MustDeleteRole(ti.Apicl, "ArchivingPerms", globals.DefaultTenant)
+	MustCreateRoleBinding(ti.Apicl, "ArchivingPermsRB", globals.DefaultTenant, "ArchivingPerms", []string{"tuser1"}, nil)
+	defer MustDeleteRoleBinding(ti.Apicl, "ArchivingPermsRB", globals.DefaultTenant)
+	_, err = CreateArchiveRequest(archUserCtx, ti.Restcl, req)
 	AssertOk(t, err, "unexpected error in creating archive request")
-	MustDeleteArchiveRequest(context.TODO(), ti.apicl, &req.ObjectMeta)
+	MustDeleteArchiveRequest(context.TODO(), ti.Apicl, &req.ObjectMeta)
 }
 
 func TestTenantScopedQueries(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startAPIServer()
+	defer ti.TeardownElastic()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startSpyglass()
+	defer ti.APIServer.Stop()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIGateway()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -501,19 +501,19 @@ func TestTenantScopedQueries(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
 
 	// create testtenant and admin user
-	MustCreateTenant(ti.apicl, testTenant)
-	defer MustDeleteTenant(ti.apicl, testTenant)
-	MustCreateTestUser(ti.apicl, testUser, testPassword, testTenant)
-	defer MustDeleteUser(ti.apicl, testUser, testTenant)
-	MustUpdateRoleBinding(ti.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testUser}, nil)
-	defer MustUpdateRoleBinding(ti.apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, nil, nil)
-	ctx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, &auth.PasswordCredential{Username: testUser, Password: testPassword, Tenant: testTenant})
+	MustCreateTenant(ti.Apicl, testTenant)
+	defer MustDeleteTenant(ti.Apicl, testTenant)
+	MustCreateTestUser(ti.Apicl, testUser, testPassword, testTenant)
+	defer MustDeleteUser(ti.Apicl, testUser, testTenant)
+	MustUpdateRoleBinding(ti.Apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, []string{testUser}, nil)
+	defer MustUpdateRoleBinding(ti.Apicl, globals.AdminRoleBinding, testTenant, globals.AdminRole, nil, nil)
+	ctx, err := NewLoggedInContext(context.Background(), ti.APIGwAddr, &auth.PasswordCredential{Username: testUser, Password: testPassword, Tenant: testTenant})
 	AssertOk(t, err, "error creating logged in context for testtenant admin user")
 	var evts string
 	AssertEventually(t, func() (bool, interface{}) {
@@ -528,11 +528,11 @@ func TestTenantScopedQueries(t *testing.T) {
 				Query: &monitoring.ArchiveQuery{},
 			},
 		}
-		MustCreateArchiveRequest(ctx, ti.restcl, req)
-		defer MustDeleteArchiveRequest(context.TODO(), ti.apicl, &req.ObjectMeta)
+		MustCreateArchiveRequest(ctx, ti.Restcl, req)
+		defer MustDeleteArchiveRequest(context.TODO(), ti.Apicl, &req.ObjectMeta)
 		if !CheckEventually(func() (bool, interface{}) {
 			var fetchedReq *monitoring.ArchiveRequest
-			fetchedReq, err = ti.restcl.MonitoringV1().ArchiveRequest().Get(ctx, &req.ObjectMeta)
+			fetchedReq, err = ti.Restcl.MonitoringV1().ArchiveRequest().Get(ctx, &req.ObjectMeta)
 			if err != nil {
 				return false, err
 			}
@@ -550,14 +550,14 @@ func TestTenantScopedQueries(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		stats, err := ti.objstorecl.StatObject(objname)
+		stats, err := ti.Objstorecl.StatObject(objname)
 		if err != nil {
 			return false, err
 		}
 		if stats.Size == 0 {
 			return false, fmt.Errorf("object size is 0")
 		}
-		r, err := ti.objstorecl.GetObject(ctx, objname)
+		r, err := ti.Objstorecl.GetObject(ctx, objname)
 		if err != nil {
 			return false, err
 		}
@@ -575,7 +575,7 @@ func TestTenantScopedQueries(t *testing.T) {
 		return true, nil
 	}, fmt.Sprintf("testtenant admin archive doesn't contain expected audit events: %v", evts), "2s", "90s")
 	// search across tenants
-	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.apiGwAddr, adminCred)
+	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	AssertEventually(t, func() (bool, interface{}) {
 		req := &monitoring.ArchiveRequest{
@@ -591,11 +591,11 @@ func TestTenantScopedQueries(t *testing.T) {
 				},
 			},
 		}
-		MustCreateArchiveRequest(superAdminCtx, ti.restcl, req)
-		defer MustDeleteArchiveRequest(context.TODO(), ti.apicl, &req.ObjectMeta)
+		MustCreateArchiveRequest(superAdminCtx, ti.Restcl, req)
+		defer MustDeleteArchiveRequest(context.TODO(), ti.Apicl, &req.ObjectMeta)
 		if !CheckEventually(func() (bool, interface{}) {
 			var fetchedReq *monitoring.ArchiveRequest
-			fetchedReq, err = ti.restcl.MonitoringV1().ArchiveRequest().Get(superAdminCtx, &req.ObjectMeta)
+			fetchedReq, err = ti.Restcl.MonitoringV1().ArchiveRequest().Get(superAdminCtx, &req.ObjectMeta)
 			if err != nil {
 				return false, err
 			}
@@ -612,14 +612,14 @@ func TestTenantScopedQueries(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		stats, err := ti.objstorecl.StatObject(objname)
+		stats, err := ti.Objstorecl.StatObject(objname)
 		if err != nil {
 			return false, err
 		}
 		if stats.Size == 0 {
 			return false, fmt.Errorf("object size is 0")
 		}
-		r, err := ti.objstorecl.GetObject(superAdminCtx, objname)
+		r, err := ti.Objstorecl.GetObject(superAdminCtx, objname)
 		if err != nil {
 			return false, err
 		}
@@ -639,19 +639,19 @@ func TestTenantScopedQueries(t *testing.T) {
 }
 
 func TestArchivalDuringUpgrade(t *testing.T) {
-	ti := tInfo{}
-	err := ti.setupElastic()
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
 	AssertOk(t, err, "setupElastic failed")
-	defer ti.teardownElastic()
-	err = ti.startAPIServer()
+	defer ti.TeardownElastic()
+	err = ti.StartAPIServer()
 	AssertOk(t, err, "failed to start API server")
-	defer ti.apiServer.Stop()
-	err = ti.startSpyglass()
+	defer ti.APIServer.Stop()
+	err = ti.StartSpyglass()
 	AssertOk(t, err, "failed to start spyglass")
-	defer ti.fdr.Stop()
-	err = ti.startAPIGateway()
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIGateway()
 	AssertOk(t, err, "failed to start API Gateway")
-	defer ti.apiGw.Stop()
+	defer ti.APIGw.Stop()
 
 	adminCred := &auth.PasswordCredential{
 		Username: testUser,
@@ -659,25 +659,25 @@ func TestArchivalDuringUpgrade(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
-	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
 
 	verObj := &cluster.Version{}
 	verObj.Defaults("all")
 	verObj.Name = "VersionSingleton"
 	verObj.Status.RolloutBuildVersion = "1.5"
 	AssertEventually(t, func() (bool, interface{}) {
-		fVerObj, err := ti.apicl.ClusterV1().Version().Create(context.TODO(), verObj)
+		fVerObj, err := ti.Apicl.ClusterV1().Version().Create(context.TODO(), verObj)
 		if err != nil {
 			return false, err
 		}
 		verObj = fVerObj
 		return true, verObj
 	}, "failed to create version object")
-	defer ti.apicl.ClusterV1().Version().Delete(context.TODO(), &verObj.ObjectMeta)
-	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.apiGwAddr, adminCred)
+	defer ti.Apicl.ClusterV1().Version().Delete(context.TODO(), &verObj.ObjectMeta)
+	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.APIGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	req := &monitoring.ArchiveRequest{
 		TypeMeta: api.TypeMeta{Kind: string(monitoring.KindArchiveRequest)},
@@ -690,24 +690,24 @@ func TestArchivalDuringUpgrade(t *testing.T) {
 			Query: &monitoring.ArchiveQuery{},
 		},
 	}
-	_, err = ti.restcl.MonitoringV1().ArchiveRequest().Create(superAdminCtx, req)
+	_, err = ti.Restcl.MonitoringV1().ArchiveRequest().Create(superAdminCtx, req)
 	Assert(t, err != nil, "expected error in creating archive request")
 	Assert(t, strings.Contains(err.Error(), "rollout in progress"), fmt.Sprintf("unexpected error: %v", err))
 }
 
-func createArchiveRequests(ctx context.Context, t *testing.T, ti tInfo, tData []testData) {
+func createArchiveRequests(ctx context.Context, t *testing.T, ti TestInfo, tData []testData) {
 	for _, test := range tData {
-		_, err := CreateArchiveRequest(ctx, ti.restcl, test.req)
+		_, err := CreateArchiveRequest(ctx, ti.Restcl, test.req)
 		AssertOk(t, err, "test [%s] failed, error creating archive request", test.name)
 	}
 }
 
-func verifyArchiveRequests(ctx context.Context, t *testing.T, ti tInfo, tData []testData) error {
+func verifyArchiveRequests(ctx context.Context, t *testing.T, ti TestInfo, tData []testData) error {
 	for _, test := range tData {
 		req := test.req
 		var err error
 		if !CheckEventually(func() (bool, interface{}) {
-			req, err = ti.restcl.MonitoringV1().ArchiveRequest().Get(ctx, &req.ObjectMeta)
+			req, err = ti.Restcl.MonitoringV1().ArchiveRequest().Get(ctx, &req.ObjectMeta)
 			if err != nil {
 				return false, err
 			}
@@ -722,7 +722,7 @@ func verifyArchiveRequests(ctx context.Context, t *testing.T, ti tInfo, tData []
 				return false, err
 			}
 			var stats *objstore2.ObjectStats
-			stats, err = ti.objstorecl.StatObject(objname)
+			stats, err = ti.Objstorecl.StatObject(objname)
 			if err != nil {
 				return false, err
 			}
@@ -731,7 +731,7 @@ func verifyArchiveRequests(ctx context.Context, t *testing.T, ti tInfo, tData []
 				return false, err
 			}
 			var r io.ReadCloser
-			r, err = ti.objstorecl.GetObject(ctx, objname)
+			r, err = ti.Objstorecl.GetObject(ctx, objname)
 			if err != nil {
 				return false, err
 			}
@@ -757,15 +757,15 @@ func verifyArchiveRequests(ctx context.Context, t *testing.T, ti tInfo, tData []
 	return nil
 }
 
-func deleteArchiveRequests(ctx context.Context, t *testing.T, ti tInfo, tData []testData) {
+func deleteArchiveRequests(ctx context.Context, t *testing.T, ti TestInfo, tData []testData) {
 	for _, test := range tData {
-		_, err := DeleteArchiveRequest(ctx, ti.restcl, &test.req.ObjectMeta)
+		_, err := DeleteArchiveRequest(ctx, ti.Restcl, &test.req.ObjectMeta)
 		AssertOk(t, err, "test [%s] failed, error deleting archive request", test.name)
 	}
 }
 
-func createAuditLogs(t *testing.T, ti tInfo, count int) int {
-	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.elasticSearchAddr, ti.rslvr, ti.logger, elasticauditor.WithElasticClient(ti.esClient)))
+func createAuditLogs(t *testing.T, ti TestInfo, count int) int {
+	auditor := auditmgr.WithAuditors(elasticauditor.NewSynchAuditor(ti.ElasticSearchAddr, ti.Rslvr, ti.Logger, elasticauditor.WithElasticClient(ti.ESClient)))
 	err := auditor.Run()
 	AssertOk(t, err, "error starting elastic auditor")
 	var success int

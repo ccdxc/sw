@@ -197,18 +197,6 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
 		}
 
-		ruleID, err := strconv.ParseUint(line[10], 10, 64)
-		if err != nil {
-			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
-			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
-		}
-
-		sessionID, err := strconv.ParseUint(line[11], 10, 64)
-		if err != nil {
-			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
-			return nil, fmt.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
-		}
-
 		icmpType, err := strconv.ParseUint(line[13], 10, 64)
 		if err != nil {
 			idr.logger.Errorf("Writer %d, object %s, error in conversion err %s", id, key, err.Error())
@@ -248,8 +236,8 @@ func (idr *Indexer) parseFwLogsCsvV1(id int, key string, data [][]string, uuid s
 			Protocol:   line[7],
 			Action:     line[8],
 			Direction:  line[9],
-			RuleID:     ruleID,
-			SessionID:  sessionID,
+			RuleID:     line[10],
+			SessionID:  line[11],
 			ReporterID: meta["Nodeid"],
 			FlowAction: line[12],
 			IcmpType:   uint32(icmpType),

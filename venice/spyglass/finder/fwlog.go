@@ -137,6 +137,14 @@ func fwlogQuery(r *fwlog.FwLogQuery) es.Query {
 		sQuery.MinimumNumberShouldMatch(1)
 		query = query.Must(sQuery)
 	}
+	if len(r.ReporterIDs) > 0 {
+		sQuery := es.NewBoolQuery().QueryName("ReporterIDQuery")
+		for _, reporterID := range r.ReporterIDs {
+			sQuery = sQuery.Should(es.NewMatchPhraseQuery("reporter-id", reporterID))
+		}
+		sQuery.MinimumNumberShouldMatch(1)
+		query = query.Must(sQuery)
+	}
 	// set time window
 	if r.StartTime != nil {
 		startTime, err := r.StartTime.Time()
@@ -164,6 +172,9 @@ func validateFwLogQuery(r *fwlog.FwLogQuery) []error {
 	}
 	if len(r.DestIPs) > 0 && len(r.DestIPs) != 1 {
 		errs = append(errs, errors.New("only one destination IP can be specified"))
+	}
+	if len(r.ReporterIDs) > 0 && len(r.ReporterIDs) != 1 {
+		errs = append(errs, errors.New("only one reporter ID can be specified"))
 	}
 	// validate source ports
 	switch len(r.SourcePorts) {
