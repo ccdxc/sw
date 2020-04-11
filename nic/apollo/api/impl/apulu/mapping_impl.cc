@@ -1361,16 +1361,18 @@ mapping_impl::fill_remote_mapping_key_data_(
                                    MAPPING_MAPPING_INFO_ID, mapping_hdl);
 
     // fill rxdma MAPPING table entry key, data and table params for overlay IP
-    PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(rxdma_mapping_key,
-                                       ((vpc_impl *)vpc->impl())->hw_id(),
-                                       &spec->skey.ip_addr);
-    memset(rxdma_mapping_data, 0, sizeof(*rxdma_mapping_data));
-    rxdma_mapping_data->tag_idx = rxdma_mapping_tag_idx_;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(rxdma_mapping_tbl_params,
-                                   rxdma_mapping_key,
-                                   NULL, rxdma_mapping_data,
-                                   RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
-                                   rxdma_mapping_hdl);
+    if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(rxdma_mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
+                                           &spec->skey.ip_addr);
+        memset(rxdma_mapping_data, 0, sizeof(*rxdma_mapping_data));
+        rxdma_mapping_data->tag_idx = rxdma_mapping_tag_idx_;
+        PDS_IMPL_FILL_TABLE_API_PARAMS(rxdma_mapping_tbl_params,
+                                       rxdma_mapping_key,
+                                       NULL, rxdma_mapping_data,
+                                       RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
+                                       rxdma_mapping_hdl);
+    }
     return SDK_RET_OK;
 }
 
