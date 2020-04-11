@@ -153,6 +153,7 @@ int read_voltages(system_voltage_t *voltage)
     }
     return -EINVAL;
 }
+
 } // namespace sensor
 } // namespace platform
 } // namespace sdk

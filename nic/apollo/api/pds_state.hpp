@@ -144,6 +144,14 @@ public:
     void *port_metrics_handle(void) const { return port_metrics_hndl_; }
     void *mgmt_port_metrics_handle(void) const { return mgmt_port_metrics_hndl_; }
     void *hostif_metrics_handle(void) const { return hostif_metrics_hndl_; }
+    void *memory_metrics_handle(void) const { return memory_metrics_hndl_; }
+    void *power_metrics_handle(void) const { return power_metrics_hndl_; }
+    void *asic_temperature_metrics_handle(void) const {
+        return asic_temperature_metrics_hndl_;
+    }
+    void *port_temperature_metrics_handle(void) const {
+        return port_temperature_metrics_hndl_;
+    }
     bool vpp_ipc_mock(void) const { return vpp_ipc_mock_; }
     void set_control_cores_mask(uint64_t control_cores_mask) {
         control_cores_mask_ = control_cores_mask;
@@ -276,6 +284,10 @@ private:
     void                    *port_metrics_hndl_;
     void                    *mgmt_port_metrics_hndl_;
     void                    *hostif_metrics_hndl_;
+    void                    *memory_metrics_hndl_;
+    void                    *power_metrics_hndl_;
+    void                    *asic_temperature_metrics_hndl_;
+    void                    *port_temperature_metrics_hndl_;
 };
 extern pds_state g_pds_state;
 

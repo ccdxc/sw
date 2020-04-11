@@ -31,9 +31,23 @@ namespace sensor {
 #define MAX_PORTS 2
 #define DIE_TEMP_STANDARD_DEVIATION 22500
 
+typedef enum asic_temp_metrics_type_e {
+    ASIC_TEMP_METRICS_TYPE_LOCAL,
+    ASIC_TEMP_METRICS_TYPE_DIE,
+    ASIC_TEMP_METRICS_TYPE_HBM,
+    ASIC_TEMP_METRICS_TYPE_MAX,
+} asic_temp_metrics_type_t;
+
+typedef enum port_temp_metrics_type_e {
+    PORT_TEMP_METRICS_TYPE_PORT,
+    PORT_TEMP_METRICS_TYPE_WARN,
+    PORT_TEMP_METRICS_TYPE_ALARM,
+    PORT_TEMP_METRICS_TYPE_MAX,
+} port_temp_metrics_type_t;
+
 typedef struct system_temperature {
-    int dietemp;
     int localtemp;
+    int dietemp;
     int hbmtemp;
     int hbmwarningtemp;
     int hbmcriticaltemp;
@@ -63,5 +77,10 @@ int read_powers(system_power_t *power);
 } // namespace sensor
 } // namespace platform
 } // namespace sdk
+
+using sdk::platform::sensor::asic_temp_metrics_type_t;
+using sdk::platform::sensor::port_temp_metrics_type_t;
+using sdk::platform::sensor::system_temperature_t;
+using sdk::platform::sensor::system_power_t;
 
 #endif /* __SENSOR_HPP__ */

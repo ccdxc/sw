@@ -132,6 +132,12 @@ pds_state::init(string pipeline, string cfg_file) {
     port_metrics_hndl_ = sdk::metrics::create(&port_schema);
     mgmt_port_metrics_hndl_ = sdk::metrics::create(&mgmt_port_schema);
     hostif_metrics_hndl_ = sdk::metrics::create(&hostif_schema);
+    memory_metrics_hndl_ = sdk::metrics::create(&memory_schema);
+    power_metrics_hndl_ = sdk::metrics::create(&power_schema);
+    asic_temperature_metrics_hndl_ = sdk::metrics::create(
+                                         &asic_temperature_schema);
+    port_temperature_metrics_hndl_ = sdk::metrics::create(
+                                         &port_temperature_schema);
     return SDK_RET_OK;
 }
 

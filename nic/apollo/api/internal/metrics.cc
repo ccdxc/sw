@@ -288,4 +288,48 @@ sdk::metrics::schema_t hostif_schema = {
     }
 };
 
+sdk::metrics::schema_t memory_schema = {
+    .name = "MemoryMetrics",
+    .type = sdk::metrics::SW,
+    .counters = {
+        "Totalmemory",
+        "Availablememory",
+        "Freememory",
+        NULL
+    }
+};
+
+sdk::metrics::schema_t power_schema = {
+    .name = "PowerMetrics",
+    .type = sdk::metrics::SW,
+    .counters = {
+        "Pin",
+        "Pout1",
+        "Pout2",
+        NULL
+    }
+};
+
+sdk::metrics::schema_t asic_temperature_schema = {
+    .name = "AsicTemperatureMetrics",
+    .type = sdk::metrics::SW,
+    .counters = {
+        "LocalTemperature",
+        "DieTemperature",
+        "HbmTemperature",
+        NULL
+    }
+};
+
+sdk::metrics::schema_t port_temperature_schema = {
+    .name = "PortTemperatureMetrics",
+    .type = sdk::metrics::SW,
+    .counters = {
+        "Temperature",
+        "WarningTemperature",
+        "AlarmTemperature",
+        NULL
+    }
+};
+
 }    // namespace api

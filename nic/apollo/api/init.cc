@@ -33,6 +33,7 @@
 #include "nic/apollo/api/internal/metrics.hpp"
 #include "platform/sysmon/sysmon.hpp"
 #include "nic/sdk/platform/asicerror/interrupts.hpp"
+#include "nic/apollo/api/internal/monitor.hpp"
 
 const pds_obj_key_t k_pds_obj_key_invalid = { 0 };
 
@@ -135,51 +136,6 @@ sig_handler (int sig, siginfo_t *info, void *ptr)
     PDS_TRACE_DEBUG("Caught signal %d", sig);
 }
 
-static void
-power_event_cb (sdk::platform::sensor::system_power_t *power)
-{
-    PDS_HMON_TRACE_VERBOSE("Power of pin is %.4fW, pout1 is %.4fW, "
-                           "pout2 is %.4fW", power->pin/1000000,
-                           power->pout1/1000000, power->pout2/1000000);
-}
-
-static void
-temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature,
-               sysmond_hbm_threshold_event_t hbm_event)
-{
-    PDS_HMON_TRACE_VERBOSE("Die temperature is %.4fC, local temperature is "
-                           "%.4fC, HBM temperature is %.4fC",
-                           temperature->dietemp/1000,
-                           temperature->localtemp/1000, temperature->hbmtemp);
-}
-
-static void
-intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
-{
-    switch (field->severity) {
-    case INTR_SEV_TYPE_HW_RMA:
-    case INTR_SEV_TYPE_FATAL:
-    case INTR_SEV_TYPE_ERR:
-        if (field->count == 1) {
-            // log to onetime interrupt error
-            PDS_INTR_TRACE_ERR("name: %s_%s, count: %u, severity: %s, desc: %s",
-                reg->name, field->name, field->count,
-                get_severity_str(field->severity).c_str(), field->desc);
-        }
-        // log in hmon error
-        PDS_HMON_TRACE_ERR("name: %s_%s, count: %u, severity: %s, desc: %s",
-            reg->name, field->name, field->count,
-            get_severity_str(field->severity).c_str(), field->desc);
-        break;
-    case INTR_SEV_TYPE_INFO:
-    default:
-        break;
-    }
-
-    // post processing of interrupts
-    impl_base::asic_impl()->process_interrupts(reg, field);
-}
-
 /**
  * @brief    initialize and start system monitoring
  */
@@ -191,13 +147,13 @@ sysmon_init (void)
 
     memset(&sysmon_cfg, 0, sizeof(sysmon_cfg_t));
     sysmon_cfg.power_event_cb = power_event_cb;
-    sysmon_cfg.temp_event_cb = temp_event_cb;
+    sysmon_cfg.temp_event_cb = temperature_event_cb;
     sysmon_cfg.catalog = api::g_pds_state.catalogue();
 
     // init the sysmon lib
     sysmon_init(&sysmon_cfg);
 
-    intr_cfg.intr_event_cb = intr_event_cb;
+    intr_cfg.intr_event_cb = interrupt_event_cb;
     // init the interrupts lib
     intr_init(&intr_cfg);
 
