@@ -232,8 +232,8 @@ private:
                                     mapping_entry *mapping,
                                     pds_mapping_spec_t *spec);
 
-    /// \brief     reserve all resources needed for a mapping
-    ///            in the rxdma to support tag derivation
+    /// \brief     reserve all resources needed for a mapping in the rxdma to
+    ///            support tag derivation
     /// \param[in] vpc     VPC entry of this mapping
     /// \param[in] local   true if the mapping is local
     /// \param[in] mapping mapping object being processed

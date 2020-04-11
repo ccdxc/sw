@@ -62,10 +62,12 @@ typedef struct pds_mapping_info_s {
 namespace api {
 
 // attribute update bits for mapping object
-#define PDS_MAPPING_UPD_PUBLIC_IP            0x1
-#define PDS_MAPPING_UPD_TAGS_ADD             0x2
-#define PDS_MAPPING_UPD_TAGS_DEL             0x4
-#define PDS_MAPPING_UPD_TAGS_UPD             0x8
+#define PDS_MAPPING_UPD_PUBLIC_IP_ADD        0x1
+#define PDS_MAPPING_UPD_PUBLIC_IP_DEL        0x2
+#define PDS_MAPPING_UPD_PUBLIC_IP_UPD        0x4
+#define PDS_MAPPING_UPD_TAGS_ADD             0x8
+#define PDS_MAPPING_UPD_TAGS_DEL             0x10
+#define PDS_MAPPING_UPD_TAGS_UPD             0x20
 
 /**
  * @defgroup PDS_MAPPING_ENTRY - mapping functionality

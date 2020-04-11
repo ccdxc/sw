@@ -469,6 +469,16 @@ mapping_impl::reserve_rxdma_mapping_tag_resources_(vpc_entry *vpc, bool local,
         return ret;
     }
 
+    if (local) {
+        // allocate an index in the rxdma LOCAL_MAPPING_TAG table
+        ret = mapping_impl_db()->local_mapping_tag_idxr()->alloc(&rxdma_local_mapping_tag_idx_);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING_TAG table, "
+                          "err %u", ret);
+            return ret;
+        }
+    }
+
     // allocate an index in the rxdma MAPPING_TAG table
     ret = mapping_impl_db()->mapping_tag_idxr()->alloc(&rxdma_mapping_tag_idx_);
     if (unlikely(ret != SDK_RET_OK)) {
@@ -540,46 +550,10 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     PDS_TRACE_DEBUG("Rsvd LOCAL_MAPPING handle 0x%lx, MAPPING handle 0x%lx",
                     local_mapping_overlay_ip_hdl_, mapping_hdl_);
 
-    // if tags are configured on this mapping, allocate all needed resources
-    if (spec->num_tags) {
-        // allocate class id for each tag configured for this mapping
-        ret = allocate_tag_classes_(vpc, true, mapping, spec);
-        if (unlikely(ret != SDK_RET_OK)) {
-            return ret;
-        }
-
-        // allocate an index in the rxdma LOCAL_MAPPING_TAG table
-        ret = mapping_impl_db()->local_mapping_tag_idxr()->alloc(&rxdma_local_mapping_tag_idx_);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING_TAG table, "
-                          "err %u", ret);
-            return ret;
-        }
-
-        // allocate an index in the rxdma MAPPING_TAG table
-        ret = mapping_impl_db()->mapping_tag_idxr()->alloc(&rxdma_mapping_tag_idx_);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to reserve entry in MAPPING_TAG table, "
-                          "err %u", ret);
-            return ret;
-        }
-
-        // allocate an entry in the rxdma MAPPING table for the overlay IP to
-        // point to rxdma_mapping_tag_idx_ in rxdma MAPPING_TAG table
-        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key,
-                                           ((vpc_impl *)vpc->impl())->hw_id(),
-                                           &spec->skey.ip_addr);
-        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
-                                       NULL, NULL, 0,
-                                       sdk::table::handle_t::null());
-        ret = mapping_impl_db()->rxdma_mapping_tbl()->reserve(&tparams);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to reserve entry in rxdma MAPPING table "
-                          "for mapping %s, vnic %s, err %u",
-                          mapping->key2str().c_str(), vnic->key().str(), ret);
-            return ret;
-        }
-        rxdma_mapping_hdl_ = tparams.handle;
+    // reserve rxdma resources (for tag support), if any
+    ret = reserve_rxdma_mapping_tag_resources_(vpc, true, mapping, spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
     }
 
 #if 0
@@ -727,37 +701,23 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                               new_mapping->key2str().c_str());
                 return SDK_RET_INVALID_ARG;
             }
-            if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP) {
-                if (spec->public_ip_valid) {
-                    // we need to acquire new resources for public IP in mapping
-                    // tables and also in NAT table. There are two cases here:
-                    // case 1 - current object has public IP which is being
-                    //          updated, in this case we can reuse NAT table
-                    //          resources, so we only have to allocate mapping
-                    //          table resources.
-                    // case 2 - current object has no public IP, so allocate
-                    //          all resources needed for public IP
-                    if (curr_mapping->is_public_ip_valid()) {
-                        // case 1 - reserve only mapping table resources for
-                        //          the updated public IP
-                        ret = reserve_public_ip_mapping_resources_(new_mapping,
-                                  (vpc_impl *)vpc->impl(), vnic, spec);
-                    } else {
-                        // case 2 - reserve all resources needed for the new
-                        //          public IP for this mapping
-                        ret = reserve_public_ip_resources_(new_mapping,
-                                  (vpc_impl *)vpc->impl(), vnic, spec);
-                    }
-                } else {
-                    // we don't need to reserve resource(s) for public IP
-                    local_mapping_public_ip_hdl_ =
-                        sdk::table::handle_t::null();
-                    mapping_public_ip_hdl_ = sdk::table::handle_t::null();
-                    to_public_ip_nat_idx_ = to_overlay_ip_nat_idx_ =
-                        PDS_IMPL_RSVD_NAT_HW_ID;
-                    ret = SDK_RET_OK;
+            // reserve resources, if needed, for public IP updates
+            if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_ADD) {
+                // reserve all resources needed for the new public IP of
+                // this mapping
+                ret = reserve_public_ip_resources_(new_mapping,
+                          (vpc_impl *)vpc->impl(), vnic, spec);
+                if (unlikely(ret != SDK_RET_OK)) {
+                    return ret;
                 }
-                return ret;
+            } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_UPD) {
+                // reserve only mapping table resources for the updated/new
+                // public IP
+                ret = reserve_public_ip_mapping_resources_(new_mapping,
+                          (vpc_impl *)vpc->impl(), vnic, spec);
+                if (unlikely(ret != SDK_RET_OK)) {
+                    return ret;
+                }
             }
         } else {
             // except for tags, if any, remote mapping uses existing resources
@@ -776,7 +736,8 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                     return ret;
                 }
             }
-            // NOTE: for other two cases, no need to allocate any new resources
+            // NOTE: for other two tag update cases, no need to allocate any
+            //       new resources
         }
         break;
 
@@ -1752,45 +1713,38 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
     // program public IP related entries in the datapath first, if there is a
     // change in the public IP for this mapping (either public IP has changed or
     // public IP is being assigned for the 1st time)
-    if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP) {
-        if (spec->public_ip_valid) {
-            if (orig_mapping->is_public_ip_valid()) {
-                // in this case, mapping had a public IP previously configured
-                // but that IP is being updated now
-                //
-                // before updating the NAT table /1st transfer the ownership of
-                // the NAT table resources from original object to the cloned
-                // object, after that this operation is same as
-                // add_public_ip_entries_() because this is new/updated public
-                // IP of the mapping we need to insert into mapping table(s) and
-                // also since NAT table is index table, update and add are
-                // handled the same way
-                to_public_ip_nat_idx_ = orig_impl->to_public_ip_nat_idx_;
-                to_overlay_ip_nat_idx_ =  orig_impl->to_overlay_ip_nat_idx_;
-                ret = add_public_ip_entries_((vpc_impl *)vpc->impl(), subnet,
-                                             vnic, vnic_impl_obj,
-                                             new_mapping, spec);
-                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
-                orig_impl->to_public_ip_nat_idx_ =
-                    orig_impl->to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
-                upd_public_ip_mappings = false;
-            } else {
-                // previously we didn't have the public IP and now it is being
-                // configured
-                ret = add_public_ip_entries_((vpc_impl *)vpc->impl(),
-                                             subnet, vnic, vnic_impl_obj,
-                                             new_mapping, spec);
-                upd_public_ip_mappings = false;
-                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
-            }
-        } else {
-            // this is the case where previously public IP was configured
-            // and the mapping is being updated without the public IP now .. we
-            // don't have to do anything here because old version of the object
-            // when nuked, will remove the public IP mapping entries and NAT
-            // entries previously installed and free all the resources
-            upd_public_ip_mappings = false;
-        }
+    if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_ADD) {
+        // previously we didn't have the public IP and now it is being
+        // configured
+        ret = add_public_ip_entries_((vpc_impl *)vpc->impl(),
+                                     subnet, vnic, vnic_impl_obj,
+                                     new_mapping, spec);
+        upd_public_ip_mappings = false;
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+    } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_DEL) {
+        // this is the case where previously public IP was configured
+        // and the mapping is being updated without the public IP now .. we
+        // don't have to do anything here because old version of the object
+        // when nuked, will remove the public IP mapping entries and NAT
+        // entries previously installed and free all the resources
+        upd_public_ip_mappings = false;
+    } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_UPD) {
+        // before updating the NAT table, 1st transfer the ownership of
+        // the NAT table resources from original object to the cloned
+        // object, after that this operation is same as
+        // add_public_ip_entries_() because this is new/updated public
+        // IP of the mapping we need to insert into mapping table(s) and
+        // also since NAT table is index table, update and add are
+        // handled the same way
+        to_public_ip_nat_idx_ = orig_impl->to_public_ip_nat_idx_;
+        to_overlay_ip_nat_idx_ =  orig_impl->to_overlay_ip_nat_idx_;
+        ret = add_public_ip_entries_((vpc_impl *)vpc->impl(), subnet,
+                                     vnic, vnic_impl_obj,
+                                     new_mapping, spec);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        orig_impl->to_public_ip_nat_idx_ =
+            orig_impl->to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
+        upd_public_ip_mappings = false;
     }
 
     if (spec->public_ip_valid && upd_public_ip_mappings) {

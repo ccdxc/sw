@@ -197,18 +197,30 @@ sdk_ret_t
 mapping_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_mapping_spec_t *spec = &obj_ctxt->api_params->mapping_spec;
 
+    // L2R, R2L updates not supported
     if (is_local_ != spec->is_local) {
         PDS_TRACE_ERR("R2L/L2R mapping moves are not supported via update, "
                       "mapping %s must be deleted and re-added",
-                      key_.str());
+                      key2str().c_str());
         return SDK_RET_INVALID_ARG;
     }
+
     // check for any changes in the public IP configuration
-    if (is_local_ &&
-        ((public_ip_valid_ != spec->public_ip_valid) ||
-         (memcmp(&public_ip_, &spec->public_ip, sizeof(ip_addr_t))))) {
-        obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_PUBLIC_IP;
+    if (is_local_) {
+        if ((public_ip_valid_ == false) && spec->public_ip_valid) {
+            // public IP wasn't there but configured now
+            obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_PUBLIC_IP_ADD;
+        } else if (public_ip_valid_ && (spec->public_ip_valid == false)) {
+            // public IP was present, but now removed
+            obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_PUBLIC_IP_DEL;
+        } else if (public_ip_valid_ && spec->public_ip_valid &&
+                   (memcmp(&public_ip_, &spec->public_ip,
+                           sizeof(public_ip_)))) {
+            obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_PUBLIC_IP_UPD;
+        }
+        // no change in public IP information
     }
+
     // check for any changes in the tag configuration
     if (spec->skey.type == PDS_MAPPING_TYPE_L3) {
         if ((num_tags_ == 0) && (spec->num_tags != 0)) {
@@ -222,7 +234,7 @@ mapping_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
             obj_ctxt->upd_bmap |= PDS_MAPPING_UPD_TAGS_UPD;
         }
     }
-    PDS_TRACE_DEBUG("mapping %s upd bmap 0x%lx", key_.str(),
+    PDS_TRACE_DEBUG("mapping %s update bmap 0x%lx", key2str().c_str(),
                     obj_ctxt->upd_bmap);
     return SDK_RET_OK;
 }

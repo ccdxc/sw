@@ -11,6 +11,8 @@
 #define MEMHASH_PERF_DBG_ENABLE
 #endif
 
+//#define MEMHASH_TRACES_ENABLE
+
 #ifdef MEMHASH_TRACES_ENABLE
 #define MEMHASH_TRACE_VERBOSE(_msg, _args...) SDK_TRACE_VERBOSE(_msg, ##_args)
 #define MEMHASH_TRACE_DEBUG(_msg, _args...) SDK_TRACE_VERBOSE(_msg, ##_args)
