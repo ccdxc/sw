@@ -946,6 +946,162 @@ TEST_F(vnic_test, DISABLED_vnic_update_policy5) {
     vnic_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
+/// \brief update hostif
+TEST_F(vnic_test, DISABLED_vnic_update_hostif) {
+    if (!apulu()) return;
+
+    vnic_feeder feeder;
+    pds_vnic_spec_t spec = {0};
+
+    // init
+    feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), 1, k_feeder_mac,
+                PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP,
+                true, true, 0, 0, 5, 0);
+    vnic_create(feeder);
+
+    // trigger
+    spec.host_if = int2pdsobjkey(pdsobjkey2int(feeder.spec.host_if) + 1);
+    vnic_update(feeder, &spec, VNIC_ATTR_HOST_IF);
+
+    // validate
+    vnic_read(feeder, SDK_RET_OK);
+
+    // cleanup
+    vnic_delete(feeder);
+    vnic_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update tx policer
+TEST_F(vnic_test, vnic_update_tx_policer) {
+    if (!apulu()) return;
+
+    vnic_feeder feeder;
+    pds_vnic_spec_t spec = {0};
+
+    // init
+    feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), 1, k_feeder_mac,
+                PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP,
+                true, true, 0, 0, 5, 0);
+    vnic_create(feeder);
+
+    // trigger
+    spec.tx_policer = int2pdsobjkey(pdsobjkey2int(feeder.spec.tx_policer) + 1);
+    vnic_update(feeder, &spec, VNIC_ATTR_TX_POLICER);
+
+    // validate
+    vnic_read(feeder, SDK_RET_OK);
+
+    // cleanup
+    vnic_delete(feeder);
+    vnic_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update rx policer
+TEST_F(vnic_test, vnic_update_rx_policer) {
+    if (!apulu()) return;
+
+    vnic_feeder feeder;
+    pds_vnic_spec_t spec = {0};
+
+    // init
+    feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), 1, k_feeder_mac,
+                PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP,
+                true, true, 0, 0, 5, 0);
+    vnic_create(feeder);
+
+    // trigger
+    spec.rx_policer = int2pdsobjkey(pdsobjkey2int(feeder.spec.rx_policer) + 1);
+    vnic_update(feeder, &spec, VNIC_ATTR_RX_POLICER);
+
+    // validate
+    vnic_read(feeder, SDK_RET_OK);
+
+    // cleanup
+    vnic_delete(feeder);
+    vnic_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update primary flag
+TEST_F(vnic_test, DISABLED_vnic_update_primary) {
+    if (!apulu()) return;
+
+    vnic_feeder feeder;
+    pds_vnic_spec_t spec = {0};
+    pds_vnic_spec_t old_spec = {0};
+
+    // init
+    feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), 1, k_feeder_mac,
+                PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP,
+                true, true, 0, 0, 5, 0);
+    vnic_create(feeder);
+
+    memcpy(&old_spec, &feeder.spec, sizeof(pds_vnic_spec_t));
+
+    // trigger
+    spec.primary = true;
+    // update should fail as subnet id is immutable attribute
+    vnic_update(feeder, &spec, VNIC_ATTR_PRIMARY, SDK_RET_ERR);
+
+    // validate
+    // as the update fails, rollback the feeder to original values
+    memcpy(&feeder.spec, &old_spec, sizeof(pds_vnic_spec_t));
+    vnic_read(feeder, SDK_RET_OK);
+
+    // cleanup
+    vnic_delete(feeder);
+    vnic_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update max sessions
+TEST_F(vnic_test, vnic_update_max_sessions) {
+    if (!apulu()) return;
+
+    vnic_feeder feeder;
+    pds_vnic_spec_t spec = {0};
+
+    // init
+    feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), 1, k_feeder_mac,
+                PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP,
+                true, true, 0, 0, 5, 0);
+    vnic_create(feeder);
+
+    // trigger
+    spec.max_sessions++;
+    vnic_update(feeder, &spec, VNIC_ATTR_MAX_SESSIONS);
+
+    // validate
+    vnic_read(feeder, SDK_RET_OK);
+
+    // cleanup
+    vnic_delete(feeder);
+    vnic_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update flow learn enable
+TEST_F(vnic_test, vnic_update_flow_learn) {
+    if (!apulu()) return;
+
+    vnic_feeder feeder;
+    pds_vnic_spec_t spec = {0};
+
+    // init
+    feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), 1, k_feeder_mac,
+                PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP,
+                true, true, 0, 0, 5, 0);
+    vnic_create(feeder);
+
+    // trigger
+    spec.flow_learn_en = true;
+    vnic_update(feeder, &spec, VNIC_ATTR_FLOW_LEARN_EN);
+
+    // validate
+    vnic_read(feeder, SDK_RET_OK);
+
+    // cleanup
+    vnic_delete(feeder);
+    vnic_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
 /// @}
 
 }    // namespace api
