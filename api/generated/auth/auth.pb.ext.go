@@ -2796,18 +2796,6 @@ func init() {
 		return nil
 	})
 
-	validatorMapAuth["RadiusServer"]["all"] = append(validatorMapAuth["RadiusServer"]["all"], func(path string, i interface{}) error {
-		m := i.(*RadiusServer)
-		args := make([]string, 0)
-		args = append(args, "1")
-		args = append(args, "-1")
-
-		if err := validators.StrLen(m.Secret, args); err != nil {
-			return fmt.Errorf("%v failed validation: %s", path+"."+"Secret", err.Error())
-		}
-		return nil
-	})
-
 	validatorMapAuth["RadiusServerStatus"] = make(map[string][]func(string, interface{}) error)
 	validatorMapAuth["RadiusServerStatus"]["all"] = append(validatorMapAuth["RadiusServerStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*RadiusServerStatus)

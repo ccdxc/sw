@@ -605,6 +605,81 @@ func TestValidateBindPassword(t *testing.T) {
 	}
 }
 
+func TestValidateRadiusSecret(t *testing.T) {
+	tests := []struct {
+		name string
+		in   interface{}
+		err  error
+	}{
+		{
+			name: "secret longer than 1024 bytes",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Radius:             &auth.Radius{Domains: []*auth.RadiusDomain{{NasID: "venice", Servers: []*auth.RadiusServer{{Url: "10.2.61.10:1812", Secret: CreateAlphabetString(2048)}}}}},
+						Local:              &auth.Local{},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			err: errors.New("radius secret cannot be longer than 1024 bytes"),
+		},
+		{
+			name: "missing secret",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Radius:             &auth.Radius{Domains: []*auth.RadiusDomain{{NasID: "venice", Servers: []*auth.RadiusServer{{Url: "10.2.61.10:1812", Secret: ""}}}}},
+						Local:              &auth.Local{},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			err: errors.New("radius secret cannot be empty"),
+		},
+		{
+			name: "no authenticator configs",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "MissingAuthenticatorsAuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "invalid input object",
+			in: struct {
+				Test string
+			}{"testing"},
+			err: errInvalidInputType,
+		},
+	}
+	r := authHooks{}
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	r.logger = log.GetNewLogger(logConfig)
+	for _, test := range tests {
+		_, _, err := r.validateRadiusSecret(context.Background(), nil, nil, "", apiintf.CreateOper, false, test.in)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, got error [%v], expected [%v]", test.name, err, test.err))
+	}
+}
+
 func TestGenerateSecret(t *testing.T) {
 	tests := []struct {
 		name string

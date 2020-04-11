@@ -11,7 +11,7 @@ import { AuthRadiusServer_auth_method,  } from './enums';
 
 export interface IAuthRadiusServer {
     'url'?: string;
-    'secret': string;
+    'secret'?: string;
     'auth-method': AuthRadiusServer_auth_method;
     'trusted-certs'?: string;
     '_ui'?: any;
@@ -23,7 +23,7 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
     '_ui': any = {};
     /** <IP address>:<Port> of the RADIUS server. */
     'url': string = null;
-    /** Secret is the shared secret between API Gw and RADIUS server. Length of string should be at least 1. */
+    /** Secret is the shared secret between API Gw and RADIUS server. */
     'secret': string = null;
     /** AuthMethod is authentication method to use with the RADIUS server. */
     'auth-method': AuthRadiusServer_auth_method = null;
@@ -36,8 +36,8 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
             type: 'string'
         },
         'secret': {
-            description:  `Secret is the shared secret between API Gw and RADIUS server. Length of string should be at least 1.`,
-            required: true,
+            description:  `Secret is the shared secret between API Gw and RADIUS server.`,
+            required: false,
             type: 'string'
         },
         'auth-method': {
@@ -124,7 +124,7 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'url': CustomFormControl(new FormControl(this['url']), AuthRadiusServer.propInfo['url']),
-                'secret': CustomFormControl(new FormControl(this['secret'], [required, minLengthValidator(1), ]), AuthRadiusServer.propInfo['secret']),
+                'secret': CustomFormControl(new FormControl(this['secret']), AuthRadiusServer.propInfo['secret']),
                 'auth-method': CustomFormControl(new FormControl(this['auth-method'], [required, enumValidator(AuthRadiusServer_auth_method), ]), AuthRadiusServer.propInfo['auth-method']),
                 'trusted-certs': CustomFormControl(new FormControl(this['trusted-certs']), AuthRadiusServer.propInfo['trusted-certs']),
             });

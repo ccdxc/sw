@@ -378,7 +378,7 @@ func TestAuthPolicy(t *testing.T) {
 		errStr string
 	}{
 		{
-			name: "missing secret",
+			name: "secret longer than 1024 bytes",
 			policy: &auth.AuthenticationPolicy{
 				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
 				ObjectMeta: api.ObjectMeta{
@@ -401,19 +401,21 @@ func TestAuthPolicy(t *testing.T) {
 							},
 						},
 						},
-						Radius:             &auth.Radius{Domains: []*auth.RadiusDomain{{Servers: []*auth.RadiusServer{{Url: getACSConfig().URL}}}}},
+						Radius:             &auth.Radius{Domains: []*auth.RadiusDomain{{NasID: getACSConfig().NasID, Servers: []*auth.RadiusServer{{Url: getACSConfig().URL, Secret: CreateAlphabetString(2048)}}}}},
 						Local:              &auth.Local{},
-						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 					},
 					TokenExpiry: "24h",
 				},
 			},
-			errStr: "Secret failed validation: Value must have length of at least 1",
+			errStr: "radius secret cannot be longer than 1024 bytes",
 		},
 	}
 	for _, test := range tests {
 		_, err := restcl.AuthV1().AuthenticationPolicy().Update(ctx, test.policy)
-		Assert(t, strings.Contains(err.Error(), test.errStr), fmt.Sprintf("[%s] test failed, error string [%v] not contained in [%v]", test.name, test.errStr, err))
+		if err != nil {
+			Assert(t, strings.Contains(err.Error(), test.errStr), fmt.Sprintf("[%s] test failed, error string [%v] not contained in [%v]", test.name, test.errStr, err))
+		}
 	}
 }
 

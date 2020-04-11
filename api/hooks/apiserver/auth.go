@@ -327,6 +327,33 @@ func (s *authHooks) validateBindPassword(ctx context.Context, kv kvstore.Interfa
 	return i, true, nil
 }
 
+// validateRadiusSecret is a pre-commit hook that checks if radius secret is non-empty when creating authentication policy with RADIUS configuration
+func (s *authHooks) validateRadiusSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(auth.AuthenticationPolicy)
+	if !ok {
+		return i, true, errInvalidInputType
+	}
+	authenticatorOrder := r.Spec.Authenticators.GetAuthenticatorOrder()
+	for _, authenticatorType := range authenticatorOrder {
+		switch authenticatorType {
+		case auth.Authenticators_RADIUS.String():
+			config := r.Spec.Authenticators.GetRadius()
+			if config != nil && len(config.Domains) == 1 {
+				for _, srv := range config.Domains[0].Servers {
+					if srv.Secret == "" {
+						return i, true, errors.New("radius secret cannot be empty")
+					}
+					if len(srv.Secret) > 1024 {
+						return i, true, errors.New("radius secret cannot be longer than 1024 bytes")
+					}
+				}
+			}
+		default:
+		}
+	}
+	return i, true, nil
+}
+
 // generateSecret is a pre-commit hook to generate secret when authentication policy is created
 func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("method", "generateSecret", "msg", "AuthHook called to generate JWT secret")
@@ -718,7 +745,7 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("User", apiintf.CreateOper).WithPreCommitHook(r.hashPassword).WithPreCommitHook(r.generateUserPref)
 	svc.GetCrudService("User", apiintf.UpdateOper).WithPreCommitHook(r.hashPassword)
 	svc.GetCrudService("User", apiintf.DeleteOper).WithPreCommitHook(r.deleteUserPref)
-	svc.GetCrudService("AuthenticationPolicy", apiintf.CreateOper).WithPreCommitHook(r.generateSecret).WithPreCommitHook(r.validateBindPassword).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
+	svc.GetCrudService("AuthenticationPolicy", apiintf.CreateOper).WithPreCommitHook(r.generateSecret).WithPreCommitHook(r.validateBindPassword).WithPreCommitHook(r.validateRadiusSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("AuthenticationPolicy", apiintf.UpdateOper).WithPreCommitHook(r.populateSecretsInAuthPolicy)
 	svc.GetCrudService("Role", apiintf.CreateOper).WithPreCommitHook(r.adminRoleCheck).WithPreCommitHook(r.permissionTenantCheck).GetRequestType().WithValidate(r.validateRolePerms)
 	svc.GetCrudService("Role", apiintf.UpdateOper).WithPreCommitHook(r.adminRoleCheck).WithPreCommitHook(r.permissionTenantCheck)

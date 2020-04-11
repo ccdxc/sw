@@ -196,7 +196,7 @@ message RadiusServer {
     // <IP address>:<Port> of the RADIUS server
     string Url          = 1 [(gogoproto.jsontag) = "url,omitempty"];
     // Secret is the shared secret between API Gw and RADIUS server
-    string Secret       = 2 [(venice.check) = "StrLen(1, -1)", (venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "secret,omitempty"];
+    string Secret       = 2 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "secret,omitempty"];
     // AuthMethod is authentication method to use with the RADIUS server
     string AuthMethod   = 3 [(venice.check) = "StrEnum(Radius.AuthMethod)", (gogoproto.jsontag) = "auth-method,omitempty"];
     // TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates. It is
