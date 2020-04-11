@@ -230,7 +230,8 @@ dhcp_policy_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 
 sdk_ret_t
 dhcp_policy_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
-    return SDK_RET_INVALID_OP;
+    // TODO: implement this function
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_DHCP_IMPL

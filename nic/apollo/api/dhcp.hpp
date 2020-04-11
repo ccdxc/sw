@@ -234,26 +234,31 @@ private:
     /// DHCP policy type
     pds_dhcp_policy_type_t type_;
 
-    /// DHCP server IP
-    ip_addr_t server_ip_;
+    /// DHCP proxy configuration
+    union {
+        struct {
+            /// DHCP server IP
+            ip_addr_t server_ip_;
 
-    /// MTU specified to clients
-    uint32_t mtu_;
+            /// MTU specified to clients
+            uint32_t mtu_;
 
-    /// gateway IP 
-    ip_addr_t gateway_ip_;
+            /// gateway IP
+            ip_addr_t gateway_ip_;
 
-    /// DNS server IP
-    ip_addr_t dns_server_ip_;
+            /// DNS server IP
+            ip_addr_t dns_server_ip_;
 
-    /// NTP server IP
-    ip_addr_t ntp_server_ip_;
+            /// NTP server IP
+            ip_addr_t ntp_server_ip_;
 
-    /// domain_name
-    char domain_name_[PDS_MAX_DOMAIN_NAME_LEN + 1];
+            /// domain_name
+            char domain_name_[PDS_MAX_DOMAIN_NAME_LEN + 1];
 
-    /// DHCP lease timeout
-    uint32_t lease_timeout_;
+            /// DHCP lease timeout
+            uint32_t lease_timeout_;
+        };
+    };
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;

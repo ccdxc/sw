@@ -226,12 +226,19 @@ dhcp_policy::fill_spec_(pds_dhcp_policy_spec_t *spec) {
         dhcp_proxy_spec->ntp_server_ip = ntp_server_ip_;
         memcpy(dhcp_proxy_spec->domain_name, domain_name_, sizeof(domain_name_));
         dhcp_proxy_spec->lease_timeout = lease_timeout_;
+    } else if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
+        // TODO: Communicate with vpp to the relay config.
     }
 }
 
 sdk_ret_t
 dhcp_policy::read(pds_dhcp_policy_info_t *info) {
-    return SDK_RET_INVALID_OP;
+    fill_spec_(&info->spec);
+    if (impl_) {
+        return impl_->read_hw(this, (impl::obj_key_t *)(&info->spec.key),
+                              (impl::obj_info_t *)info);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
