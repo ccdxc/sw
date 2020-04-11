@@ -220,7 +220,7 @@ logger_init (void)
 {
     std::string logfile, err_logfile;
 
-    logfile = log_file(std::getenv("LOG_DIR"), "./pds-agent.log");
+    logfile = log_file(std::getenv("LOG_DIR"), "/pds-agent.log");
     err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl.log");
 
     if (logfile.empty() || err_logfile.empty()) {
@@ -231,7 +231,7 @@ logger_init (void)
     core::trace_init("agent", 0x1, true, err_logfile.c_str(), logfile.c_str(),
                      TRACE_FILE_SIZE, TRACE_NUM_FILES, utils::trace_debug);
 
-    logfile = log_file(std::getenv("LOG_DIR"), "./hmon.log");
+    logfile = log_file(std::getenv("LOG_DIR"), "/hmon.log");
     err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"),
                            "/hmon_err.log");
 
@@ -240,7 +240,7 @@ logger_init (void)
                           logfile.c_str(), TRACE_FILE_SIZE_HMON,
                           TRACE_NUM_FILES_HMON, utils::trace_info);
 
-    logfile = log_file(std::getenv("LOG_DIR"), "./asicerrord_onetime.log");
+    logfile = log_file(std::getenv("LOG_DIR"), "/asicerrord_onetime.log");
     err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"),
                            "/asicerrord_onetime_err.log");
 

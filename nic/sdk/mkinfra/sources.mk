@@ -32,7 +32,7 @@ $${${1}_BLD_OUT_DIR}/${2}/%.p4o: ${2}/%${3} $${${1}_DEPS}
 	${NAT}${AT}echo ${${1}_NAME_P4C} $$(call CANPATH,$$<) "=>" $$(call CANPATH,$$@_build.log)
 	${AT}$(strip ${${1}_CMD_P4C} ${${1}_P4C_OPTS} $$<) > $$(call CANPATH,$$@_build.log)
 	${AT}mkdir -p $${${1}_BIN_DIR}
-	${AT}${CMD_P4C_ASM} ${CMD_CAPAS} ${BLD_P4GEN_DIR}/p4/asm $${${1}_BIN_DIR}
+	${AT}${CMD_P4C_ASM} ${CMD_CAPAS} ${BLD_P4GEN_DIR}/${MODULE_PROGNAME}/asm $${${1}_BIN_DIR}
 	${AT}touch $$@
 endef
 

@@ -22,10 +22,14 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
       }
     }
 
+    @hbm_table
     @name(".mpls_label_to_vnic")
+    @capi_bitfields_struct
     table  mpls_label_to_vnic{
         key = {
-	  hdr.mpls_dst.label : exact;
+	  //	  hdr.mpls_dst.label : exact;
+	  metadata.cntrl.mpls_label_b20_b4 : table_index;
+	  metadata.cntrl.mpls_label_b3_b0 : table_index;
         }
         actions  = {
           mpls_label_to_vnic_a ;
@@ -55,6 +59,8 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
       }
     }
 
+    @hbm_table
+    @capi_bitfields_struct
     @name(".vlan_to_vnic")
     table vlan_to_vnic {
         key = {

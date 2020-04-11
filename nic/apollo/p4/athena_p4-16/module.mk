@@ -7,9 +7,10 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/athena.p4
 MODULE_PIPELINE = athena
 MODULE__P4VER   = P4_16
 MODULE_P4C      = P4_16
+MODULE_PROGNAME = athena
 MODULE_P4C_OPTS = --out-dir ${BLD_P4GEN_DIR} \
                   --emit-api --log-level debug --use-deparse-graph \
-                  --cfg-dir ${BLD_PGMBIN_DIR}/athena_p4 --prog-name athena
+                  --cfg-dir ${BLD_PGMBIN_DIR}/athena_p4 --prog-name ${MODULE_PROGNAME}
 MODULE_NCC_OPTS = --pipeline=athena --asm-out --gen-dir ${BLD_P4GEN_DIR} \
                   --cfg-dir ${BLD_PGMBIN_DIR}/athena_p4 \
                   --i2e-user --fe-flags="-I${TOPDIR} -I${SDKDIR}"

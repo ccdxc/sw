@@ -154,7 +154,8 @@
 //::            ftl_store_field_full(key_fields_dict,key_fields_list,field['name'],field['width'])
 //::          #endfor
 //::          for field in pddict['tables'][table]['ftl_asm_ki_fields']['Splitted']:
-//::            ftl_store_field_splitted(key_fields_dict,key_fields_list,field['name'],field['split_field_name'],field['width'],field['sbit'],field['ebit'])
+//::            name = field['split_field_name'] + "_sbit" + str(field['sbit']) + "_ebit" + str(field['ebit'])
+//::            ftl_store_field_splitted(key_fields_dict,key_fields_list,name,field['split_field_name'],field['width'],field['sbit'],field['ebit'])
 //::          #endfor
 //::        #endif
 //::
@@ -298,7 +299,14 @@
 //::                        total_adatabits_beforekey = 0
 //::                        fill_adata = max_adata_bits_before_key
 //::                        for actionfld in actionflddict:
-//::                            actionfldname  = actionfld['asm_name']
+//::                            actionfldname = actionfld['asm_name']
+//::                            fld_p4_name    = actionfld['p4_name']
+//::                            start = actionfld['field_start']
+//::                            end   = start+actionfld['len']-1
+//::                            # TODO remove once ncc uses split dict like sorrento
+//::                            if fld_p4_name != actionfld['asm_name']:
+//::                                actionfldname  = fld_p4_name + "_sbit" + str(start) + "_ebit" + str(end)
+//::                            #endif
 //::                            actionfldwidth = actionfld['len']
 //::                            dvec_start = actionfld['dvec_start']
 //::                            fle_start = 511-dvec_start
@@ -484,6 +492,13 @@
 //::                        actionfldname  = actionfld['asm_name']
 //::                        actionfldwidth = actionfld['len']
 //::                        dvec_start = actionfld['dvec_start']
+//::                        fld_p4_name    = actionfld['p4_name']
+//::                        start = actionfld['field_start']
+//::                        end   = start+actionfld['len']-1
+//::                        # TODO remove once ncc uses split dict like sorrento
+//::                        if fld_p4_name != actionfld['asm_name']:
+//::                            actionfldname  = fld_p4_name + "_sbit" + str(start) + "_ebit" + str(end)
+//::                        #endif
 //::                        fle_start = 511-dvec_start
 //::                        little_str = ''
 //::                        if actionname in pddict['tables'][table]['le_action_params'].keys():
@@ -1163,8 +1178,8 @@ public:
     void get_${split_field_name}(uint8_t *${split_field_name}) {
 //::                            for field_get_str in field_get_str_list:
         ${field_get_str}
-        return;
 //::                            #endfor
+        return;
 //::                        else:
     ${field_type_str} get_${split_field_name}(void) {
         ${field_type_str} ${split_field_name} = 0x0;

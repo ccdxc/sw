@@ -77,7 +77,7 @@ logger_init (void)
 {
     std::string logfile, err_logfile;
 
-    logfile = log_file(std::getenv("LOG_DIR"), "./pds-athena-agent.log");
+    logfile = log_file(std::getenv("LOG_DIR"), "/pds-athena-agent.log");
     err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl.log");
 
     if (logfile.empty() || err_logfile.empty()) {

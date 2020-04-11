@@ -33,7 +33,7 @@ control conntrack_state_update(inout cap_phv_intr_global_h intr_global,
    
 
     
-
+    @capi_bitfields_struct
     @name(".conntrack") table conntrack {
         key = {
             metadata.cntrl.conntrack_index  : exact;

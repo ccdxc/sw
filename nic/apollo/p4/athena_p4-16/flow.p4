@@ -12,10 +12,10 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
     @appdatafields ("idx", "idx_type")
     @hwfields_access_api  
     @name(".flow_hash")
-    action flow_hash(bit<1>      entry_valid, 
-                            bit<22>     idx,
+    action flow_hash(
+		           bit<22>     idx,
                             bit<1>     idx_type,
-		            bit<8>     pad,
+			   //    bit<8>     pad,
 		            bit<11>    hash1,
 		            bit<19>    hint1,
 		            bit<11>    hash2,
@@ -27,8 +27,10 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
 		            bit<11>    hash5,
 		            bit<19>    hint5,
                             bit<1>      more_hashes,
-                            bit<19>     more_hints) {
+			   bit<19>     more_hints,
+			   bit<1>      entry_valid ) {
        bit<32>  hardware_hash = __hash_value();
+       hdr.p4i_to_p4e_header.flow_hash = hardware_hash;
 
         if (entry_valid == FALSE) {
 	    hdr.ingress_recirc_header.flow_done = TRUE;
@@ -88,8 +90,9 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
         
     }
 
-    
-    @name(".flow_ohash") table flow_ohash {
+    @hbm_table    
+    @name(".flow_ohash") 
+    table flow_ohash {
         key = {
             hdr.ingress_recirc_header.flow_ohash : exact;
         }
@@ -126,7 +129,7 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
 
 
 
-
+/*
     @appdatafields ("idx", "idx_type")
     @hwfields_access_api  
     @name(".ipv4_flow_hash")
@@ -143,6 +146,7 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
                             bit<1>      more_hashes,
                             bit<20>     more_hints) {
        bit<32>  hardware_hash = __hash_value();
+       hdr.p4i_to_p4e_header.flow_hash = hardware_hash;
 
         if (entry_valid == FALSE) {
 	    hdr.ingress_recirc_header.flow_done = TRUE;
@@ -219,7 +223,7 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
     }
 
 
-
+*/
 
     apply {
       if (!hdr.ingress_recirc_header.isValid()) {
@@ -231,14 +235,14 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
       if (metadata.cntrl.flow_ohash_lkp == TRUE) {
 	 flow_ohash.apply();
        } 
-
+/*
     // Dummy v4 table for generating FTL structs/apis
     // Never launched as the predicate never been set
     if (metadata.cntrl.launch_v4 == TRUE) {
       ipv4_flow.apply();
       ipv4_flow_ohash.apply();
     }
-
+*/
     }
 
 }

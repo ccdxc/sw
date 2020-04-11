@@ -60,9 +60,8 @@ def is_table_ftl_gen(table, pddict):
 
 # hbm based table
 def is_table_hbm_table(table, pddict):
-    for annotation_dict in pddict['tables'][table]['annotations']:
-        if 'hbm_table' in annotation_dict:
-            return True
+    if pddict['tables'][table]['location'] == 'HBM':
+       return True
     return False
 
 # index based table
@@ -339,7 +338,7 @@ class Field:
                     sbit = split_field.sbit()
                     ebit = split_field.ebit()
                     # if total width > 64, then argument is uint8_t array
-                    if (ebit - sbit + 1) <= 8:
+                    if (ebit - sbit + 1) < 8:
                         mask = 0
                         for i in range(ebit-sbit+1):
                             mask |= (1 << i)
@@ -374,7 +373,9 @@ class Field:
                     shift = split_field_width - (ebit + 1)
                     field_str_list.append(set_field_template_1.substitute(field_name=field_name, field_arg=field_arg, shift=shift, mask_str=str(hex(mask))))
         else:
-            if field_width > get_field_bit_unit():
+            # clear/copy methods can set the fields individually and hence handle_split=False.
+            # if the split field width > 64, then use memcpy/memset when handle_split=False
+            if field_width > get_field_bit_unit() or (self.is_field_split() and get_split_field_width(self.split_name()) > get_field_bit_unit()):
                 validate_field_width_arr(field_name, field_width)
                 arr_len = get_bit_arr_length(field_width)
                 if field_arg != '0':
@@ -405,7 +406,7 @@ class Field:
                     sbit = split_field.sbit()
                     ebit = split_field.ebit()
                     # if total width > 64, then argument is uint8_t array
-                    if (ebit - sbit + 1) <= 8:
+                    if (ebit - sbit + 1) < 8:
                         mask = 0
                         for i in range(ebit-sbit+1):
                             mask |= (1 << i)
@@ -488,7 +489,7 @@ def ftl_hash_field_cnt_reset():
 def ftl_field_print_str(field_obj):
     field_name = field_obj.name()
     field_width = field_obj.width()
-    if field_width > get_field_bit_unit():
+    if field_width > get_field_bit_unit() or (field_obj.is_field_split() and get_split_field_width(field_obj.split_name()) > get_field_bit_unit()):
         args_list = []
         validate_field_width_arr(field_name, field_width)
         arr_len = get_bit_arr_length(field_width)
@@ -574,7 +575,7 @@ def ftl_process_field(field_obj):
     little_str = field_obj.little_str()
     field_bit_arr_unit = get_field_bit_arr_unit()
     field_str_list = []
-    if field_width > get_field_bit_unit():
+    if field_width > get_field_bit_unit() or (field_obj.is_field_split() and get_split_field_width(field_obj.split_name()) > get_field_bit_unit()):
         # if the width is not aligned to array unit, align it to previous
         # boundary and generate new field with the remaining bits
         if field_width % field_bit_arr_unit != 0:

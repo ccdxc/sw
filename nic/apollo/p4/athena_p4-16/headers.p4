@@ -14,7 +14,8 @@ header p4i_to_p4e_header_h {
     bit<1>  index_type;
     bit<1>  pad0;
     bit<16> packet_len;
-    bit<32> hash;
+    bit<16> dnat_epoch;
+    bit<32> flow_hash;
     bit<1>  flow_miss;
     bit<1>  direction;
     bit<1>  update_checksum;
@@ -63,12 +64,23 @@ header ipv4_h {
     bit<32>    dstAddr;
 }
 
+
+header mpls_h {
+    bit<16> label_b20_b4;
+    bit<4> label_b3_b0;
+    bit<3>  exp;
+    bit<1>  bos;
+    bit<8>  ttl;
+}
+
+/*
 header mpls_h {
     bit<20> label;
     bit<3>  exp;
     bit<1>  bos;
     bit<8>  ttl;
 }
+*/
 
 header ipv6_h {
     bit<4>    version;
@@ -81,10 +93,22 @@ header ipv6_h {
     bit<128>  dstAddr;
 }
 
+/*
 header icmp_h {
     bit<8>    icmp_type;
     bit<8>    icmp_code;
     bit<16>   hdrChecksum;
+}
+*/
+
+header icmp_h {
+    bit<16>    icmp_typeCode;
+    bit<16>   hdrChecksum;
+}
+
+header icmp_echo_h {
+    bit<16>   identifier;
+    bit<16>   seqNum;
 }
 
 header tcp_h {
@@ -270,11 +294,16 @@ header_union ip_2_uh {
 }
 
 header_union l4_uh {
+  @name(".udp_2")
     udp_h   udp;
     @name(".tcp")    
     tcp_h   tcp;
-    @name(".icmp")    
-    icmp_h  icmp;
+    //    @name(".icmp")    
+    // icmp_h  icmp;
+    @name(".icmpv4")    
+    icmp_h  icmpv4;
+    @name(".icmpv6")    
+    icmp_h  icmpv6;
 }
 
 // egress only
@@ -374,7 +403,7 @@ struct headers {
     encap_uh encapl4_0;
     ip_1_uh  ip_0;
     l4_uh  l4_0;
-   
+    
     vxlan_h vxlan_0;
     gre_h gre_0;
     mpls_h mpls_label1_0;
@@ -390,6 +419,7 @@ struct headers {
     l4_uh  l4_u;
     @name(".udp_1")
     udp_h  udp;
+    icmp_echo_h icmp_echo;
     encap_uh encapl4_1;
 
 
@@ -437,7 +467,8 @@ struct headers {
     vlan_h ctag_2;
     ip_2_uh ip_2;
     l4_uh l4_2;
-    icmp_h icmp_2;
+//    icmp_h icmpv4_2;
+//    icmp_h icmpv6_2;
 
 
 

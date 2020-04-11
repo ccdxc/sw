@@ -13,14 +13,14 @@ targets:
     - build-custom-athena-image
     - build-athena-customer-arm
 
-  #athena/athena16_compile:
-  #  commands: ["/bin/true"]
-  #  owners: ["email:skittur@pensando.io"]
-  #  area:
-  #  sub-area:
-  #  feature:
-  #  build-dependencies:
-  #  - build-athena16-x86
+  athena/athena16_compile:
+    commands: ["/bin/true"]
+    owners: ["email:skittur@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-athena16-x86
 
   athena/gtests_sim:
     commands: ["make", "PIPELINE=athena", "jobd/athena/gtests_sim"]

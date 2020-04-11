@@ -101,6 +101,9 @@ control nacl_lookup(inout cap_phv_intr_global_h capri_intrinsic,
 
     @name(".nacl_permit")
       action nacl_permit() {
+      //      if(!__table_hit()) {
+      //	DROP_PACKET_INGRESS(P4I_DROP_NACL);
+      // }
     }
 
     
@@ -135,8 +138,8 @@ control nacl_lookup(inout cap_phv_intr_global_h capri_intrinsic,
 	  nacl_drop;
         }
         size = NACL_TABLE_SIZE;
-        default_action = nacl_permit;
-        stage = 5;
+        default_action = nacl_drop;
+        stage = 3;
     }
 
 

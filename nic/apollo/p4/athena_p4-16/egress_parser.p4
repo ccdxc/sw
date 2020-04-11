@@ -137,7 +137,7 @@ parser AthenaEgressParser(packet_in packet,
     transition select(hdr.ip_1.ipv4.protocol) {
       IP_PROTO_ICMP       : parse_icmp_v4_1;
       IP_PROTO_TCP        : parse_tcp_1;
-      IP_PROTO_UDP        : parse_ipv4_udp_1;
+      IP_PROTO_UDP        : parse_udp_1;
       //      IP_PROTO_GRE        : parse_gre_1;
       //      IP_PROTO_IPV4       : parse_ipv4_in_ip_1;
       // IP_PROTO_IPV6       : parse_ipv6_in_ip_1;
@@ -168,7 +168,7 @@ parser AthenaEgressParser(packet_in packet,
     transition select(hdr.ip_1.ipv6.nextHdr) {
       IP_PROTO_ICMPV6 : parse_icmp_v6_1;
       IP_PROTO_TCP    : parse_tcp_1;
-      IP_PROTO_UDP    : parse_ipv6_udp_1;
+      IP_PROTO_UDP    : parse_udp_1;
       IP_PROTO_GRE    : parse_gre_1;
       IP_PROTO_IPV4   : parse_ipv4_in_ip_1;
       IP_PROTO_IPV6   : parse_ipv6_in_ip_1;
@@ -179,7 +179,8 @@ parser AthenaEgressParser(packet_in packet,
   
   state parse_icmp_v4_1 {
     icmp_1_hdr_offset = packet.state_byte_offset();
-    packet.extract(hdr.l4_u.icmp);
+    packet.extract(hdr.l4_u.icmpv4);
+    metadata.l4.icmp_valid = TRUE;
     
     
     transition accept;
@@ -188,7 +189,8 @@ parser AthenaEgressParser(packet_in packet,
   
   state parse_icmp_v6_1 {
     icmp_1_hdr_offset = packet.state_byte_offset();
-    packet.extract(hdr.l4_u.icmp);
+    packet.extract(hdr.l4_u.icmpv6);
+    metadata.l4.icmp_valid = TRUE;
 
     
     transition accept;
@@ -360,68 +362,22 @@ parser AthenaEgressParser(packet_in packet,
         transition accept;
     }
 
-  
-  state parse_ipv4_udp_1 {
-    bit<16>  dst_port = (packet.lookahead<bit<32>>())[15:0];
+    state parse_udp_1 {
+      packet.extract(hdr.udp);
+      l4_1_hdr_offset = packet.state_byte_offset();
+      
 
-
-    transition select(dst_port) {
-      //      UDP_PORT_VXLAN      : parse_udp_no_csum_1;
-      UDP_PORT_GENV       : parse_udp_no_csum_1;
-      UDP_PORT_MPLS       : parse_udp_no_csum_1;
-      default             : parse_ipv4_udp_csum_1;      
+      metadata.l4.l4_sport_1 = hdr.udp.srcPort;
+      metadata.l4.l4_dport_1 = hdr.udp.dstPort;
+      
+      transition select(hdr.udp.dstPort) {
+	//    UDP_PORT_VXLAN      : parse_vxlan_1;
+        UDP_PORT_GENV       : parse_geneve_1;
+        UDP_PORT_MPLS       : parse_udp_mpls_1;
+        default             : accept;
+      }
+      
     }
-  }
-
-   state parse_ipv6_udp_1 {
-    bit<16>  dst_port = (packet.lookahead<bit<32>>())[15:0];
-
-
-    transition select(dst_port) {
-      //      UDP_PORT_VXLAN      : parse_udp_no_csum_1;
-      UDP_PORT_GENV       : parse_udp_no_csum_1;
-      UDP_PORT_MPLS       : parse_udp_no_csum_1;
-      default             : parse_ipv6_udp_csum_1;      
-    }
-  }
- 
-  state parse_ipv4_udp_csum_1 {
-    packet.extract(hdr.udp);
-    l4_1_hdr_offset = packet.state_byte_offset();
-
-
-    metadata.l4.l4_sport_1 = hdr.udp.srcPort;
-    metadata.l4.l4_dport_1 = hdr.udp.dstPort;
-    
-    transition accept;
-    
-  }
-
-  state parse_ipv6_udp_csum_1 {
-    packet.extract(hdr.udp);
-    l4_1_hdr_offset = packet.state_byte_offset();
-
-    metadata.l4.l4_sport_1 = hdr.udp.srcPort;
-    metadata.l4.l4_dport_1 = hdr.udp.dstPort;
-    
-    transition accept;
-  }
-  
-   state parse_udp_no_csum_1 {
-    packet.extract(hdr.udp);
-    l4_1_hdr_offset = packet.state_byte_offset();
-    
-    // Pseudo header fields
-    metadata.l4.l4_sport_1 = hdr.udp.srcPort;
-    metadata.l4.l4_dport_1 = hdr.udp.dstPort;
-    
-    transition select(hdr.udp.dstPort) {
-      //    UDP_PORT_VXLAN      : parse_vxlan_1;
-    UDP_PORT_GENV       : parse_geneve_1;
-    UDP_PORT_MPLS       : parse_udp_mpls_1;
-      default             : accept;
-    }
-  }
  
   state parse_geneve_1 {
     //     metadata.tunnel.tunnel_type_1 = INGRESS_TUNNEL_TYPE_GENEVE;
@@ -663,92 +619,101 @@ control AthenaEgressDeparser(packet_out packet,
         packet.emit(hdr.p4_to_p4plus_classic_nic_ip);
 	
         // Packet to uplink - "Push" header - layer 0	
-        packet.emit(hdr.ethernet_0);
-        packet.emit(hdr.ctag_0);
-        packet.emit(hdr.ip_0.ipv4);
-        packet.emit(hdr.ip_0.ipv6);
-        packet.emit(hdr.gre_0);
-        packet.emit(hdr.l4_0.udp);
-        packet.emit(hdr.mpls_label1_0);
-        packet.emit(hdr.mpls_label2_0);
-        packet.emit(hdr.mpls_label3_0);
+	packet.emit(hdr.ethernet_0);
+	packet.emit(hdr.ctag_0);
 
+
+	packet.emit(hdr.ip_0.ipv4);
+	packet.emit(hdr.ip_0.ipv6);
+	packet.emit(hdr.gre_0);
+	packet.emit(hdr.l4_0.udp);
+	packet.emit(hdr.mpls_label1_0);
+	packet.emit(hdr.mpls_label2_0);
+	packet.emit(hdr.mpls_label3_0);
 	
-        ipv4HdrCsumDepEg_0.update_len(hdr.ip_0.ipv4, metadata.csum.ip_hdr_len_0);
-        hdr.ip_0.ipv4.hdrChecksum = ipv4HdrCsumDepEg_0.get();
+	ipv4HdrCsumDepEg_0.update_len(hdr.ip_0.ipv4, metadata.csum.ip_hdr_len_0);
+	hdr.ip_0.ipv4.hdrChecksum = ipv4HdrCsumDepEg_0.get();
 
+	packet.emit(hdr.ethernet_1);
+	packet.emit(hdr.ctag_1);
+	packet.emit(hdr.ip_1.ipv4);
+	packet.emit(hdr.ip_1.ipv6);
 	
-        packet.emit(hdr.ethernet_1);
-        packet.emit(hdr.ctag_1);
-        packet.emit(hdr.ip_1.ipv4);
-        packet.emit(hdr.ip_1.ipv6);
-
 	ipv4HdrCsumDepEg_1.update_len(hdr.ip_1.ipv4, metadata.csum.ip_hdr_len_1);
-        hdr.ip_1.ipv4.hdrChecksum = ipv4HdrCsumDepEg_1.get();
-
- 
+	hdr.ip_1.ipv4.hdrChecksum = ipv4HdrCsumDepEg_1.get();
+	
 	packet.emit(hdr.gre_1);
-
 	
-	/*	
-	if(hdr.l4_1.icmp.isValid()) {
-	  packet.emit(hdr.l4_1.icmp);
-	  icmpCsumDepEg_1.update_len(hdr.l4_1.icmp, metadata.cntrl.icmp_len_1);
-	  hdr.l4_1.icmp.hdrChecksum = icmpCsumDep_1.get();
-	} else if(hdr.l4_1.tcp.isValid()) {
-	  packet.emit(hdr.l4_1.tcp);
-	  packet.emit(hdr.tcp_options_blob);
-	  tcpCsumDep_1.update_pseudo_header_fields(hdr.ip_1.ipv4, {hdr.ip_1.ipv4.srcAddr,
-		hdr.ip_1.ipv4.dstAddr, hdr.ip_1.ipv4.protocol, metadata.cntrl.tcp_len_1});
-	  tcpCsumDep_1.update_pseudo_header_fields(hdr.ip_1.ipv6, {hdr.ip_1.ipv6.srcAddr,
-		hdr.ip_1.ipv6.dstAddr, hdr.ip_1.ipv6.nextHdr, metadata.cntrl.tcp_len_1});
-	  tcpCsumDep_1.update_len(hdr.l4_1.tcp, metadata.cntrl.tcp_len_1);
-	  hdr.l4_1.tcp.checksum = tcpCsumDep_1.get();
-	  
-	} else if(hdr.l4_1.udp.isValid()) {
-	  packet.emit(hdr.l4_1.udp);
-	  udpCsumDep_1.update_pseudo_header_fields(hdr.ip_1.ipv4, {hdr.ip_1.ipv4.srcAddr,
-		hdr.ip_1.ipv4.dstAddr, hdr.ip_1.ipv4.protocol, metadata.cntrl.udp_len_1});
-	  udpCsumDep_1.update_pseudo_header_fields(hdr.ip_1.ipv6, {hdr.ip_1.ipv6.srcAddr,
-		hdr.ip_1.ipv6.dstAddr, hdr.ip_1.ipv6.nextHdr, metadata.cntrl.udp_len_1});
-	  udpCsumDep_1.update_len(hdr.l4_1.udp, metadata.cntrl.udp_len_1);
-	  hdr.l4_1.udp.checksum = udpCsumDep_1.get();
-	  
-	}
-	*/
+	packet.emit(hdr.udp);
+	packet.emit(hdr.mpls_src);
+	packet.emit(hdr.mpls_dst);
+	packet.emit(hdr.mpls_label3_1);
 	
-        packet.emit(hdr.udp);
-        packet.emit(hdr.mpls_src);
-        packet.emit(hdr.mpls_dst);
-        packet.emit(hdr.mpls_label3_1);
-
-        packet.emit(hdr.ethernet_2);
-        packet.emit(hdr.ctag_2);
-        packet.emit(hdr.ip_2.ipv4);
-        packet.emit(hdr.ip_2.ipv6);
-	packet.emit(hdr.l4_u.icmp);
-	icmpCsumDepEg_1.update_len(hdr.l4_u.icmp, metadata.csum.icmp_len_1);
-	hdr.l4_u.icmp.hdrChecksum = icmpCsumDepEg_1.get();
-	packet.emit(hdr.l4_u.tcp);
-	packet.emit(hdr.tcp_options_blob);
-	tcpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_1.ipv4, {hdr.ip_1.ipv4.srcAddr,
-	      hdr.ip_1.ipv4.dstAddr, metadata.csum.tcp_len_1});
-	tcpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_1.ipv6, {hdr.ip_1.ipv6.srcAddr,
-	      hdr.ip_1.ipv6.dstAddr, metadata.csum.tcp_len_1});
-	tcpCsumDepEg_1.update_len(hdr.l4_u.tcp, metadata.csum.tcp_len_1);
-        tcpCsumDepEg_1.update_pseudo_hdr_constant(IP_PROTO_TCP);
-
-	hdr.l4_u.tcp.checksum = tcpCsumDepEg_1.get();
-
-	packet.emit(hdr.l4_u.udp);
+       
+	
+	packet.emit(hdr.ethernet_2);
+	packet.emit(hdr.ctag_2);
+	packet.emit(hdr.ip_2.ipv4);
+	packet.emit(hdr.ip_2.ipv6);
+	
+	
+	
+	ipv4HdrCsumDepEg_2.update_len(hdr.ip_2.ipv4, metadata.csum.ip_hdr_len_2);
+	hdr.ip_2.ipv4.hdrChecksum = ipv4HdrCsumDepEg_2.get();
+     	
+   
 	udpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_1.ipv4, {hdr.ip_1.ipv4.srcAddr,
 	      hdr.ip_1.ipv4.dstAddr, metadata.csum.udp_len_1});
 	udpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_1.ipv6, {hdr.ip_1.ipv6.srcAddr,
 	      hdr.ip_1.ipv6.dstAddr, metadata.csum.udp_len_1});
-	udpCsumDepEg_1.update_len(hdr.l4_u.udp, metadata.csum.udp_len_1);
+	//	udpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_2.ipv4, {hdr.ip_2.ipv4.srcAddr,
+	//      hdr.ip_2.ipv4.dstAddr, metadata.csum.udp_len_1});
+	// udpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_2.ipv6, {hdr.ip_2.ipv6.srcAddr,
+	//      hdr.ip_2.ipv6.dstAddr, metadata.csum.udp_len_1});
+	udpCsumDepEg_1.update_len(hdr.udp, metadata.csum.udp_len_1);
 	udpCsumDepEg_1.update_pseudo_hdr_constant(IP_PROTO_UDP);
-	hdr.l4_u.udp.checksum = udpCsumDepEg_1.get();
-  	
-     
+	hdr.udp.checksum = udpCsumDepEg_1.get();	
+
+        if(hdr.l4_u.icmpv4.isValid()) {
+	  packet.emit(hdr.l4_u.icmpv4);
+	  icmpv4CsumDepEg_1.update_len(hdr.l4_u.icmpv4, metadata.csum.icmp_len_1);
+	  hdr.l4_u.icmpv4.hdrChecksum = icmpv4CsumDepEg_1.get();
+	} else if (hdr.l4_u.icmpv6.isValid()) {
+	  packet.emit(hdr.l4_u.icmpv6);
+	  
+	  icmpv6CsumDepEg_1.update_len(hdr.l4_u.icmpv6, metadata.csum.icmp_len_1);
+	  icmpv6CsumDepEg_1.update_pseudo_header_fields(hdr.ip_1.ipv6, {hdr.ip_1.ipv6.srcAddr,
+		hdr.ip_1.ipv6.dstAddr, metadata.csum.icmp_len_1});
+	  icmpv6CsumDepEg_1.update_pseudo_header_fields(hdr.ip_2.ipv6, {hdr.ip_2.ipv6.srcAddr,
+		hdr.ip_2.ipv6.dstAddr, metadata.csum.icmp_len_1});
+	  icmpv6CsumDepEg_1.update_pseudo_hdr_constant(IP_PROTO_ICMPV6);
+	  hdr.l4_u.icmpv6.hdrChecksum = icmpv6CsumDepEg_1.get();
+	} else if (hdr.l4_u.tcp.isValid()) {
+	  packet.emit(hdr.l4_u.tcp);
+	  packet.emit(hdr.tcp_options_blob);
+	
+	  tcpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_1.ipv4, {hdr.ip_1.ipv4.srcAddr,
+		hdr.ip_1.ipv4.dstAddr, metadata.csum.tcp_len_1});
+	  tcpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_1.ipv6, {hdr.ip_1.ipv6.srcAddr,
+		hdr.ip_1.ipv6.dstAddr, metadata.csum.tcp_len_1});
+	  tcpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_2.ipv4, {hdr.ip_2.ipv4.srcAddr,
+	  	hdr.ip_2.ipv4.dstAddr, metadata.csum.tcp_len_1});
+	  tcpCsumDepEg_1.update_pseudo_header_fields(hdr.ip_2.ipv6, {hdr.ip_2.ipv6.srcAddr,
+	  	hdr.ip_2.ipv6.dstAddr, metadata.csum.tcp_len_1});
+	  tcpCsumDepEg_1.update_len(hdr.l4_u.tcp, metadata.csum.tcp_len_1);
+	  tcpCsumDepEg_1.update_pseudo_hdr_constant(IP_PROTO_TCP);
+	  hdr.l4_u.tcp.checksum = tcpCsumDepEg_1.get();
+	} else if (hdr.l4_u.udp.isValid()) {
+	  packet.emit(hdr.l4_u.udp);
+	  udpCsumDepEg_2.update_pseudo_header_fields(hdr.ip_2.ipv4, {hdr.ip_2.ipv4.srcAddr,
+		hdr.ip_2.ipv4.dstAddr, metadata.csum.udp_len_2});
+	  udpCsumDepEg_2.update_pseudo_header_fields(hdr.ip_2.ipv6, {hdr.ip_2.ipv6.srcAddr,
+		hdr.ip_2.ipv6.dstAddr, metadata.csum.udp_len_2});
+	  udpCsumDepEg_2.update_len(hdr.l4_u.udp, metadata.csum.udp_len_2);
+	  udpCsumDepEg_2.update_pseudo_hdr_constant(IP_PROTO_UDP);
+	  hdr.l4_u.udp.checksum = udpCsumDepEg_2.get();	
+	  
+	}
+	
    }
 }

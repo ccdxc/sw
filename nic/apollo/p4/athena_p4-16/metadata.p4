@@ -13,6 +13,7 @@ struct capri_deparser_len_t {
 
 struct key_metadata_t {
 	bit<2> ktype;
+	bit<7> ktype7;
 	bit<9> vnic_id;
 	bit<128> src;
 	bit<128> dst;
@@ -41,6 +42,7 @@ struct control_metadata_t {
 	bit<1> flow_ohash_lkp;
 	bit<1> dnat_ohash_lkp;
 	bit<1> direction;
+	bit<1> from_arm;
 	bit<1> parse_tcp_option_error;
 	bit<1> flow_miss;
 	bit<1> session_index_valid;
@@ -110,6 +112,11 @@ struct control_metadata_t {
 	bit<3> redir_qtype;
 	bit<24> redir_qid;
 	bit<4> redir_app_id;
+
+        /*  Stats - TMP */
+        bit <1> stats_id;
+        bit <4> p4e_stats_flag;
+
     }
 
 
@@ -225,6 +232,7 @@ struct l4_metadata_t {
      bit<16>   l4_dport_1;
      bit<16>   l4_sport_2;
      bit<16>   l4_dport_2;
+     bit<1>   icmp_valid;	       
 }
 
 struct csum_metadata_t {
@@ -241,6 +249,10 @@ struct csum_metadata_t {
      bit<16>     icmp_len_0; 
      bit<16>     icmp_len_1; 
      bit<16>     icmp_len_2; 
+     bit<16>     icmp_len; 
+     bit<16>     udp_len; 
+     bit<16>     tcp_len; 
+
 }
 
 struct metadata_t {

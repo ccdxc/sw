@@ -12,11 +12,13 @@
 #define SET_BIT_VALUE(m, x, v) \
     m[x:x] = v;
 
-
-#include "poseidon16_table_size.h"
+//#include "poseidon16_table_size.h"
 #include "common/capri.h"
-#include "common/defines.h"
-#include "poseidon16_defines.h"
+//#include "common/defines.h"
+#include "athena_defines.h"
+#include "athena_16_defines.h"
+#include "athena_table_sizes.h"
+//#include "poseidon16_defines.h"
 #include "externs.p4"
 #include "metadata.p4"
 #include "headers.p4"
@@ -37,7 +39,7 @@
 //#include "flow_timestamp.p4"
 //#include "egress_flow_info.p4"
 //#include "egress_stats_fixup.p4"
-//#include "stats.p4"
+#include "stats.p4"
 //#include "histogram.p4"
 //#include "output_mapping.p4"
 #include "checksum.p4"
@@ -58,6 +60,7 @@ control AthenaIngressPipeline(inout cap_phv_intr_global_h intr_global,
       offloads.apply(intr_global, intr_p4, hdr, metadata);
       flow_lookup.apply(intr_global, intr_p4, hdr, metadata);
       ingress_inter_pipe.apply(intr_global, intr_p4, hdr, metadata);
+      p4i_statistics.apply(intr_global, intr_p4, hdr, metadata);
     }
 }
 
@@ -74,6 +77,7 @@ control AthenaEgressPipeline(inout cap_phv_intr_global_h intr_global,
       update_checksums.apply(intr_global, intr_p4, hdr, metadata);
       egress_inter_pipe.apply(intr_global, intr_p4, hdr, metadata);
       conntrack_state_update.apply(intr_global, intr_p4, hdr, metadata);
+      p4e_statistics.apply(intr_global, intr_p4, hdr, metadata);
     }
 }
 IngressPipelineP4(AthenaIngressParser(), AthenaIngressPipeline(),

@@ -37,6 +37,11 @@ parser AthenaIngressParser(packet_in packet,
   }
 
   state parse_txdma_to_ingress {
+    metadata.cntrl.from_arm = TRUE;
+    transition parse_txdma_to_ingress_split;
+  }
+  
+  state parse_txdma_to_ingress_split {
     packet.extract(hdr.capri_txdma_intrinsic);
     packet.extract(hdr.p4plus_to_p4);
     packet.extract(hdr.p4plus_to_p4_vlan);    
@@ -80,8 +85,8 @@ state parse_txdma_gso {
   */
   state parse_uplink {
     transition select(intr_global.tm_iport) {
-        TM_PORT_UPLINK_0 : parse_packet_from_host;
-        TM_PORT_UPLINK_1 : parse_packet_from_switch;
+        UPLINK_HOST : parse_packet_from_host;
+        UPLINK_SWITCH : parse_packet_from_switch;
         default : parse_packet;
     }    
   }
@@ -184,6 +189,7 @@ state parse_txdma_gso {
     ip_1_header_len = ((bit<16>) hdr.ip_1.ipv4.ihl << 2);
     ip_1_total_len  = hdr.ip_1.ipv4.totalLen;
     l4_1_len        = ip_1_total_len - ip_1_header_len;
+
     
     tcpCsum_1.update_pseudo_header_offset(hdr.ip_1.ipv4, l3_1_hdr_offset);
     udpCsum_1.update_pseudo_header_offset(hdr.ip_1.ipv4, l3_1_hdr_offset);
@@ -194,14 +200,20 @@ state parse_txdma_gso {
 					{hdr.ip_1.ipv4.srcAddr, hdr.ip_1.ipv4.dstAddr, l4_1_len});
     
     udpCsum_1.update_pseudo_hdr_constant(IP_PROTO_UDP);
-    
+    /*
+    icmpv4Csum_1.update_pseudo_header_offset(hdr.ip_1.ipv4, l3_1_hdr_offset);
+    icmpv4Csum_1.update_pseudo_header_fields(hdr.ip_1.ipv4,
+					     {hdr.ip_1.ipv4.srcAddr, hdr.ip_1.ipv4.dstAddr, l4_1_len});
+    icmpv4Csum_1.update_pseudo_hdr_constant(IP_PROTO_ICMP);
+    */
+
     ipv4HdrCsum_1.update_len(l3_1_hdr_offset, ip_1_header_len);
     ipv4HdrCsum_1.validate(hdr.ip_1.ipv4.hdrChecksum);
     
     transition select(hdr.ip_1.ipv4.protocol) {
       IP_PROTO_ICMP       : parse_icmp_v4_1;
       IP_PROTO_TCP        : parse_tcp_1;
-      IP_PROTO_UDP        : parse_ipv4_udp_1;
+      IP_PROTO_UDP        : parse_udp_1;
       //      IP_PROTO_GRE        : parse_gre_1;
       //      IP_PROTO_IPV4       : parse_ipv4_in_ip_1;
       // IP_PROTO_IPV6       : parse_ipv6_in_ip_1;
@@ -225,7 +237,8 @@ state parse_txdma_gso {
     packet.extract(hdr.ip_1.ipv6);
     
     l4_1_len        =  hdr.ip_1.ipv6.payloadLen;
-    
+  
+  
     tcpCsum_1.update_pseudo_header_offset(hdr.ip_1.ipv6, l3_1_hdr_offset);
     udpCsum_1.update_pseudo_header_offset(hdr.ip_1.ipv6, l3_1_hdr_offset);
     tcpCsum_1.update_pseudo_header_fields(hdr.ip_1.ipv6,
@@ -236,19 +249,18 @@ state parse_txdma_gso {
     tcpCsum_1.update_pseudo_hdr_constant(IP_PROTO_TCP);
     udpCsum_1.update_pseudo_hdr_constant(IP_PROTO_UDP);
 
-    /*
-       icmpv6Csum_1.update_pseudo_header_offset(hdr.ip_1.ipv6, l3_1_hdr_offset);
-       icmpv6Csum_1.update_pseudo_header_fields(hdr.ip_1.ipv6,
-    					{hdr.ip_1.ipv6.srcAddr, hdr.ip_1.ipv6.dstAddr, l4_1_len});
+    
+    icmpv6Csum_1.update_pseudo_header_offset(hdr.ip_1.ipv6, l3_1_hdr_offset);
+    icmpv6Csum_1.update_pseudo_header_fields(hdr.ip_1.ipv6,
+					     {hdr.ip_1.ipv6.srcAddr, hdr.ip_1.ipv6.dstAddr, l4_1_len});
     icmpv6Csum_1.update_pseudo_hdr_constant(IP_PROTO_ICMPV6);
-    */
-
+    
     //   metadata.cntrl.ipv6_ulp_1 = hdr.ip_1.ipv6.nextHdr;
     
     transition select(hdr.ip_1.ipv6.nextHdr) {
       IP_PROTO_ICMPV6 : parse_icmp_v6_1;
       IP_PROTO_TCP    : parse_tcp_1;
-      IP_PROTO_UDP    : parse_ipv6_udp_1;
+      IP_PROTO_UDP    : parse_udp_1;
       IP_PROTO_GRE    : parse_gre_1;
       IP_PROTO_IPV4   : parse_ipv4_in_ip_1;
       IP_PROTO_IPV6   : parse_ipv6_in_ip_1;
@@ -259,18 +271,30 @@ state parse_txdma_gso {
   
   state parse_icmp_v4_1 {
     icmp_1_hdr_offset = packet.state_byte_offset();
-    packet.extract(hdr.l4_u.icmp);
+    packet.extract(hdr.l4_u.icmpv4);
+    metadata.l4.l4_dport_1 = hdr.l4_u.icmpv4.icmp_typeCode;
+    metadata.l4.icmp_valid = TRUE;
+    
     
     icmpv4Csum_1.update_len(icmp_1_hdr_offset, l4_1_len);
-    icmpv4Csum_1.validate(hdr.l4_u.icmp.hdrChecksum);
+    icmpv4Csum_1.validate(hdr.l4_u.icmpv4.hdrChecksum);
     
-    transition accept;
+    transition select(hdr.l4_u.icmpv4.icmp_typeCode) {
+        ICMP_ECHO_REQ_TYPE_CODE : parse_icmp_echo_1;
+        ICMP_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_1;
+        default : accept;
+       
+    }
   }
 
   
+
   state parse_icmp_v6_1 {
     icmp_1_hdr_offset = packet.state_byte_offset();
-    packet.extract(hdr.l4_u.icmp);
+    packet.extract(hdr.l4_u.icmpv6);
+    metadata.l4.l4_dport_1 = hdr.l4_u.icmpv6.icmp_typeCode;
+    metadata.l4.icmp_valid = TRUE;
+
 
     //    icmpv6Csum_1.update_pseudo_header_offset(hdr.ip_1.ipv6, l3_1_hdr_offset);
     //icmpv6Csum_1.update_pseudo_header_fields(hdr.ip_1.ipv6,
@@ -278,9 +302,21 @@ state parse_txdma_gso {
     // icmpv6Csum_1.update_pseudo_hdr_constant(IP_PROTO_ICMPV6);
 
     icmpv6Csum_1.update_len(icmp_1_hdr_offset, l4_1_len);
-    icmpv6Csum_1.validate(hdr.l4_u.icmp.hdrChecksum);
+    icmpv6Csum_1.validate(hdr.l4_u.icmpv6.hdrChecksum);
     
+    transition select(hdr.l4_u.icmpv6.icmp_typeCode) {
+        ICMP6_ECHO_REQ_TYPE_CODE : parse_icmp_echo_1;
+        ICMP6_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_1;
+        default : accept;
+       
+    }
+  }
+
+  state parse_icmp_echo_1 {
+    packet.extract(hdr.icmp_echo);
+    metadata.l4.l4_sport_1 = hdr.icmp_echo.identifier; 
     transition accept;
+   
   }
   
   state parse_tcp_1 {
@@ -453,84 +489,31 @@ state parse_txdma_gso {
         transition accept;
     }
 
-  
-  state parse_ipv4_udp_1 {
-    bit<16>  dst_port = (packet.lookahead<bit<32>>())[15:0];
-
-
-    transition select(dst_port) {
-      //      UDP_PORT_VXLAN      : parse_udp_no_csum_1;
-      UDP_PORT_GENV       : parse_udp_no_csum_1;
-      UDP_PORT_MPLS       : parse_udp_no_csum_1;
-      default             : parse_ipv4_udp_csum_1;      
-    }
-  }
-
-   state parse_ipv6_udp_1 {
-    bit<16>  dst_port = (packet.lookahead<bit<32>>())[15:0];
-
-
-    transition select(dst_port) {
-      //      UDP_PORT_VXLAN      : parse_udp_no_csum_1;
-      UDP_PORT_GENV       : parse_udp_no_csum_1;
-      UDP_PORT_MPLS       : parse_udp_no_csum_1;
-      default             : parse_ipv6_udp_csum_1;      
-    }
-  }
  
-  state parse_ipv4_udp_csum_1 {
+  state parse_udp_1 {
     packet.extract(hdr.udp);
     l4_1_hdr_offset = packet.state_byte_offset();
 
-    udpCsum_1.update_pseudo_header_offset(hdr.ip_1.ipv4, l3_1_hdr_offset);
-    udpCsum_1.update_pseudo_header_fields(hdr.ip_1.ipv4,
-					{hdr.ip_1.ipv4.srcAddr, hdr.ip_1.ipv4.dstAddr, hdr.ip_1.ipv4.protocol, l4_1_len});
+    //   udpCsum_1.update_pseudo_header_offset(hdr.ip_1.ipv4, l3_1_hdr_offset);
+    // udpCsum_1.update_pseudo_header_fields(hdr.ip_1.ipv4,
+    //					{hdr.ip_1.ipv4.srcAddr, hdr.ip_1.ipv4.dstAddr, hdr.ip_1.ipv4.protocol, l4_1_len});
    
     // Pseudo header fields
     udpCsum_1.update_len(l4_1_hdr_offset, l4_1_len); // l4_len should be OHI since capri target requires it
     udpCsum_1.validate(hdr.udp.checksum);
 
-    metadata.l4.l4_sport_1 = hdr.udp.srcPort;
-    metadata.l4.l4_dport_1 = hdr.udp.dstPort;
-    
-    transition accept;
-    
-  }
-
-  state parse_ipv6_udp_csum_1 {
-    packet.extract(hdr.udp);
-    l4_1_hdr_offset = packet.state_byte_offset();
-
-    udpCsum_1.update_pseudo_header_offset(hdr.ip_1.ipv6, l3_1_hdr_offset);
-    udpCsum_1.update_pseudo_header_fields(hdr.ip_1.ipv6,
-					{hdr.ip_1.ipv6.srcAddr, hdr.ip_1.ipv6.dstAddr, hdr.ip_1.ipv6.nextHdr, l4_1_len});
-   
-    // Pseudo header fields
-    udpCsum_1.update_len(l4_1_hdr_offset, l4_1_len); // l4_len should be OHI since capri target requires it
-    udpCsum_1.validate(hdr.udp.checksum);
-
-    metadata.l4.l4_sport_1 = hdr.udp.srcPort;
-    metadata.l4.l4_dport_1 = hdr.udp.dstPort;
-    
-    transition accept;
-  }
-  
-   state parse_udp_no_csum_1 {
-    packet.extract(hdr.udp);
-    l4_1_hdr_offset = packet.state_byte_offset();
-    
-    // Pseudo header fields
     metadata.l4.l4_sport_1 = hdr.udp.srcPort;
     metadata.l4.l4_dport_1 = hdr.udp.dstPort;
     
     transition select(hdr.udp.dstPort) {
       //    UDP_PORT_VXLAN      : parse_vxlan_1;
-    UDP_PORT_GENV       : parse_geneve_1;
-    UDP_PORT_MPLS       : parse_udp_mpls_1;
+      UDP_PORT_GENV       : parse_geneve_1;
+      UDP_PORT_MPLS       : parse_udp_mpls_1;
       default             : accept;
     }
+    
   }
- 
+
   state parse_geneve_1 {
     //    metadata.tunnel.tunnel_type_1 = INGRESS_TUNNEL_TYPE_GENEVE;
      //TODO
@@ -616,6 +599,10 @@ state parse_txdma_gso {
   state parse_mpls_dst {
     //    bit<1> bos = (packet.lookahead<bit<32>>())[8:8];
     packet.extract(hdr.mpls_dst);
+    metadata.cntrl.mpls_label_b20_b4 = hdr.mpls_dst.label_b20_b4;
+    metadata.cntrl.mpls_label_b3_b0 = (bit<8>)hdr.mpls_dst.label_b3_b0;
+    //    metadata.cntrl.mpls_label_b20_b4 = hdr.mpls_dst.label_b20_b4;
+    //    metadata.cntrl.mpls_label_b3_b0 = (bit<8>)hdr.mpls_dst.label_b3_b0;
     //    metadata.cntrl.mpls_vnic_label = (bit<32>)hdr.mpls_label2_1.label;
     transition select(hdr.mpls_dst.bos) {
         0                   : parse_mpls3_1;
@@ -752,6 +739,12 @@ state parse_txdma_gso {
     
     tcpCsum_2.update_pseudo_hdr_constant(IP_PROTO_TCP);
     udpCsum_2.update_pseudo_hdr_constant(IP_PROTO_UDP);
+
+    icmpv6Csum_2.update_pseudo_header_offset(hdr.ip_2.ipv6, l3_2_hdr_offset);
+    icmpv6Csum_2.update_pseudo_header_fields(hdr.ip_2.ipv6,
+					     {hdr.ip_2.ipv6.srcAddr, hdr.ip_2.ipv6.dstAddr, l4_2_len});
+    icmpv6Csum_2.update_pseudo_hdr_constant(IP_PROTO_ICMPV6); //
+
     //   metadata.cntrl.ipv6_ulp_2 = hdr.ip_2.ipv6.nextHdr;
     
     transition select(hdr.ip_2.ipv6.nextHdr) {
@@ -762,31 +755,52 @@ state parse_txdma_gso {
       }
     
    }
-
+  
     
  state parse_icmp_v4_2 {
     icmp_2_hdr_offset = packet.state_byte_offset();
-    packet.extract(hdr.l4_u.icmp);
-    
+    packet.extract(hdr.l4_u.icmpv4);
+    metadata.l4.l4_dport_2 = hdr.l4_u.icmpv4.icmp_typeCode;
+    metadata.l4.icmp_valid = TRUE;
+   
+
     icmpv4Csum_2.update_len(icmp_2_hdr_offset, l4_2_len);
-    icmpv4Csum_2.validate(hdr.l4_u.icmp.hdrChecksum);
+    icmpv4Csum_2.validate(hdr.l4_u.icmpv4.hdrChecksum);
     
-    transition accept;
+    transition select(hdr.l4_u.icmpv4.icmp_typeCode) {
+        ICMP_ECHO_REQ_TYPE_CODE : parse_icmp_echo_2;
+        ICMP_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_2;
+        default : accept;
+       
+    }
   }
 
   
   state parse_icmp_v6_2 {
-    icmp_1_hdr_offset = packet.state_byte_offset();
-    packet.extract(hdr.l4_u.icmp);
-    
+    icmp_2_hdr_offset = packet.state_byte_offset();
+    packet.extract(hdr.l4_u.icmpv6);
+    metadata.l4.l4_dport_2 = hdr.l4_u.icmpv6.icmp_typeCode;
+    metadata.l4.icmp_valid = TRUE;
+
     icmpv6Csum_2.update_len(icmp_2_hdr_offset, l4_2_len);
-    icmpv6Csum_2.validate(hdr.l4_u.icmp.hdrChecksum);
+    icmpv6Csum_2.validate(hdr.l4_u.icmpv6.hdrChecksum);
     
-    transition accept;
+    transition select(hdr.l4_u.icmpv6.icmp_typeCode) {
+        ICMP6_ECHO_REQ_TYPE_CODE : parse_icmp_echo_2;
+        ICMP6_ECHO_REPLY_TYPE_CODE : parse_icmp_echo_2;
+        default : accept;
+       
+    }
+
   }
   
  
-  
+  state parse_icmp_echo_2 {
+    packet.extract(hdr.icmp_echo);
+    metadata.l4.l4_sport_2 = hdr.icmp_echo.identifier; 
+    transition accept;
+  }
+
   state parse_tcp_2 {
     l4_2_hdr_offset = packet.state_byte_offset();
     packet.extract(hdr.l4_u.tcp);
@@ -877,7 +891,9 @@ control AthenaIngressDeparser(packet_out packet,
         packet.emit(hdr.ctag_2);
         packet.emit(hdr.ip_2.ipv4);
         packet.emit(hdr.ip_2.ipv6);
-	packet.emit(hdr.l4_u.icmp);
+	packet.emit(hdr.l4_u.icmpv4);
+	packet.emit(hdr.l4_u.icmpv6);
+	packet.emit(hdr.icmp_echo);
         packet.emit(hdr.l4_u.tcp);
         packet.emit(hdr.l4_u.udp);
 	packet.emit(hdr.tcp_options_blob);	

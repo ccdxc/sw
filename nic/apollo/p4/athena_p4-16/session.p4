@@ -1,13 +1,23 @@
 /******************************************************************************/
-/* Rx pipeline                                                                */
+/* Tx pipeline                                                                */
 /******************************************************************************/
+#define PKT_IPV4_HDRLEN_0            ((bit<16>) hdr.ip_0.ipv4.ihl << 2)
+#define PKT_IPV4_HDRLEN_1            ((bit<16>) hdr.ip_1.ipv4.ihl << 2)
+#define PKT_IPV4_TOTAL_LEN_0         hdr.ip_0.ipv4.totalLen
+#define PKT_IPV4_TOTAL_LEN_1         hdr.ip_1.ipv4.totalLen
+#define PKT_IPV4_HDRLEN_2            ((bit<16>) hdr.ip_2.ipv4.ihl << 2)
+#define PKT_IPV4_TOTAL_LEN_2         hdr.ip_2.ipv4.totalLen
+#define PKT_IPV6_PAYLOAD_LEN_0       hdr.ip_0.ipv6.payloadLen
+#define PKT_IPV6_PAYLOAD_LEN_1       hdr.ip_1.ipv6.payloadLen
+#define PKT_IPV6_PAYLOAD_LEN_2       hdr.ip_2.ipv6.payloadLen
+
 control session_info_lookup(inout cap_phv_intr_global_h intr_global,
              inout cap_phv_intr_p4_h capri_p4_intrinsic,
              inout headers hdr,
              inout metadata_t metadata) {
 
     @name(".session_info")
-    action session_info_a(@__ref bit<1>  valid_flag,
+    action session_info_a(
 				        bit<1>  skip_flow_log,
 				        bit<22> conntrack_id,
 				 @__ref bit<18> timestamp,
@@ -41,11 +51,13 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 				        bit<8>     s2h_slow_path_tcp_flags_match,
 				 bit<22> s2h_session_rewrite_id,
 				 bit<3> s2h_egress_action,
-				 bit<10> s2h_allowed_flow_state_bitmap
+					bit<10> s2h_allowed_flow_state_bitmap,
+					@__ref bit<1>  valid_flag
 
 						       ) {
       if(valid_flag == TRUE) {
 	metadata.cntrl.skip_flow_log = skip_flow_log;
+	timestamp = intr_global.timestamp[47:30];
 	if(conntrack_id != 0) {
 	    metadata.cntrl.conntrack_index = conntrack_id;
 	    metadata.cntrl.conntrack_index_valid = TRUE;
@@ -54,7 +66,9 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	if(metadata.cntrl.direction == TX_FROM_HOST) {
 	  if(metadata.cntrl.l2_vnic == FALSE) {
 	    if(h2s_session_rewrite_id != 0) {
-	      metadata.cntrl.session_rewrite_id = h2s_session_rewrite_id;
+	      metadata.cntrl.session_rewrite_id_valid = TRUE;      
+	      metadata.cntrl.session_rewrite_id = h2s_session_rewrite_id;      
+					     
 	    } else {
 	      metadata.cntrl.flow_miss = TRUE;
 	    }
@@ -107,12 +121,17 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	  metadata.cntrl.egress_action = h2s_egress_action;
 	  metadata.cntrl.allowed_flow_state_bitmap = h2s_allowed_flow_state_bitmap;
 
+	  metadata.cntrl.redir_type = PACKET_ACTION_REDIR_UPLINK;
+	  metadata.cntrl.redir_oport = UPLINK_SWITCH;
+    
 	}
 
 	if(metadata.cntrl.direction == RX_FROM_SWITCH) {
 	  if(metadata.cntrl.l2_vnic == FALSE) {
 	    if(s2h_session_rewrite_id != 0) {
+	      metadata.cntrl.session_rewrite_id_valid = TRUE;  				     
 	      metadata.cntrl.session_rewrite_id = s2h_session_rewrite_id;
+					     
 	    } else {
 	      metadata.cntrl.flow_miss = TRUE;
 	    }
@@ -165,16 +184,20 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	  metadata.cntrl.egress_action = s2h_egress_action;
 	  metadata.cntrl.allowed_flow_state_bitmap = s2h_allowed_flow_state_bitmap;
 
+	  metadata.cntrl.redir_type = PACKET_ACTION_REDIR_UPLINK;
+	  metadata.cntrl.redir_oport = UPLINK_HOST;
 
 	}
 
-	timestamp = timestamp;
+	//	timestamp = timestamp;
 	valid_flag = valid_flag;
       } else {
 	metadata.cntrl.flow_miss = TRUE;
       }	
     }
 
+      @hbm_table
+    @capi_bitfields_struct
       @name(".session_info")
 	table session_info {
         key = {
@@ -190,17 +213,17 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
     }
 
 
-#define SESSION_REWRITE_COMMON_FIELDS       bit<1> valid_flag,		\
-                                            bit<1> strip_outer_encap_flag, \
+#define SESSION_REWRITE_COMMON_FIELDS       bit<1> strip_outer_encap_flag, \
                                             bit<1> strip_l2_header_flag, \
-                                            bit<1> strip_vlan_tag_flag
+	                                    bit<1> strip_vlan_tag_flag,	\
+                                            bit<1> valid_flag		
 
-#define SESSION_REWRITE_COMMON_FIELDS_ARGS   valid_flag,		\
-                                              strip_outer_encap_flag, \
+   
+#define SESSION_REWRITE_COMMON_FIELDS_ARGS    strip_outer_encap_flag, \
                                               strip_l2_header_flag, \
-                                              strip_vlan_tag_flag
-
-
+                                              strip_vlan_tag_flag, \
+                                              valid_flag
+ 
 
    @name(".session_rewrite_common") 
      action session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS) {
@@ -209,9 +232,11 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
        
        if (strip_l2_header_flag == TRUE) {
 	 hdr.ethernet_1.setInvalid();
+	 hdr.p4i_to_p4e_header.packet_len = hdr.p4i_to_p4e_header.packet_len - 14;
        }
        if (strip_vlan_tag_flag == TRUE) {
 	 hdr.ctag_1.setInvalid();
+	 hdr.p4i_to_p4e_header.packet_len = hdr.p4i_to_p4e_header.packet_len - 4;
        }
        
        if (metadata.cntrl.direction == RX_FROM_SWITCH) {
@@ -220,7 +245,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	   hdr.udp.setInvalid();
 	   hdr.mpls_src.setInvalid();
 	   hdr.mpls_dst.setInvalid();
-	      hdr.mpls_label3_1.setInvalid();
+	   hdr.mpls_label3_1.setInvalid();
 	      
 	 }
        }
@@ -256,6 +281,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
      if(metadata.cntrl.direction == RX_FROM_SWITCH) {
        hdr.ip_2.ipv4.srcAddr = ipv4_addr_snat;
      } 
+     metadata.cntrl.update_checksum = TRUE;
     
    }
 
@@ -271,6 +297,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
      if(metadata.cntrl.direction == RX_FROM_SWITCH) {
        hdr.ip_2.ipv4.dstAddr = ipv4_addr_dnat;
      } 
+     metadata.cntrl.update_checksum = TRUE;
     
    }
 
@@ -309,12 +336,13 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
     if (l4_port_dpat != 0) {
       hdr.l4_u.tcp.dstPort = l4_port_dpat;
     }    
+     metadata.cntrl.update_checksum = TRUE;
 
    }
 
    @name(".session_rewrite_ipv6_snat") 
-   action session_rewrite_ipv6_snat(SESSION_REWRITE_COMMON_FIELDS,
-				    bit<128> ipv6_addr_snat) {
+     action session_rewrite_ipv6_snat(bit<128> ipv6_addr_snat,
+				      SESSION_REWRITE_COMMON_FIELDS) {
      session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS_ARGS);
 
      if(metadata.cntrl.direction == TX_FROM_HOST) {
@@ -324,12 +352,13 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
      if(metadata.cntrl.direction == RX_FROM_SWITCH) {
        hdr.ip_2.ipv6.srcAddr = ipv6_addr_snat;
      } 
+     metadata.cntrl.update_checksum = TRUE;
     
    }
 
    @name(".session_rewrite_ipv6_dnat") 
-   action session_rewrite_ipv6_dnat(SESSION_REWRITE_COMMON_FIELDS,
-				    bit<128> ipv6_addr_dnat) {
+     action session_rewrite_ipv6_dnat(bit<128> ipv6_addr_dnat,
+				      SESSION_REWRITE_COMMON_FIELDS) {
      session_rewrite_common(SESSION_REWRITE_COMMON_FIELDS_ARGS);
 
      if(metadata.cntrl.direction == TX_FROM_HOST) {
@@ -339,12 +368,14 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
      if(metadata.cntrl.direction == RX_FROM_SWITCH) {
        hdr.ip_2.ipv6.dstAddr = ipv6_addr_dnat;
      } 
+     metadata.cntrl.update_checksum = TRUE;
     
    }
 
 
-
-    @name(".session_rewrite")
+      @hbm_table
+    @capi_bitfields_struct
+   @name(".session_rewrite")
       table table_session_rewrite {
         key = {
            metadata.cntrl.session_rewrite_id  : exact;
@@ -359,7 +390,8 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	  
         }
         size  = SESSION_TABLE_SIZE;
-        stage = 5;
+	default_action = session_rewrite;
+        stage = 4;
         placement = HBM;
     }
 
@@ -384,10 +416,15 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
        hdr.ethernet_0.setValid();
        hdr.ethernet_0.dstAddr     = dmac;
        hdr.ethernet_0.srcAddr     = smac;
+       if(hdr.ethernet_0.etherType != ETHERTYPE_IPV6) { 
+	 hdr.ethernet_0.etherType   = ETHERTYPE_IPV4;
+       }
 
        if (add_vlan_tag_flag == TRUE) {
 	 hdr.ctag_0.setValid();
 	 hdr.ctag_0.vid   = vlan;
+	 hdr.ctag_0.etherType   = hdr.ethernet_0.etherType;
+         hdr.ethernet_0.etherType   = ETHERTYPE_VLAN;
        }
        metadata.scratch.packet_len = hdr.p4i_to_p4e_header.packet_len;
      } else {
@@ -397,6 +434,13 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 
    @name(".session_rewrite_encap_l2") 
      action session_rewrite_encap_l2(SESSION_REWRITE_ENCAP_COMMON_FIELDS) {
+     if(hdr.ip_2.ipv4.isValid()) {
+       hdr.ethernet_0.etherType = ETHERTYPE_IPV4;
+     }
+     if(hdr.ip_2.ipv6.isValid()) {
+       hdr.ethernet_0.etherType = ETHERTYPE_IPV6;
+     }
+     
       session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS_ARGS);
    }
 
@@ -413,22 +457,73 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 ) {
       session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS_ARGS);
 	 hdr.ip_0.ipv4.setValid();
-	 //	 hdr.ip_0.ipv4.ttl = ip_ttl;
+	 hdr.ip_0.ipv4.version = 4;
+	 hdr.ip_0.ipv4.ihl = 5;
+	 //	 hdr.ip_0.diffserv = 0;
+
+	 /* Correct way */
+	 hdr.ip_0.ipv4.totalLen = hdr.p4i_to_p4e_header.packet_len + 18; //20 IP + 8 UDP + 4 MPLS0 - 14 L1ETH
+	 if(hdr.ctag_1.isValid()) {
+	   hdr.ip_0.ipv4.totalLen = hdr.ip_0.ipv4.totalLen - 4;
+	 }
+	 
+
+	 /* To make test pass because of test bug */
+	 //	 hdr.ip_0.ipv4.totalLen = hdr.p4i_to_p4e_header.packet_len + 28;
+	 metadata.csum.ip_hdr_len_0        = PKT_IPV4_HDRLEN_0;
+       	ipv4HdrCsumDepEg_0.enable_update();
+
+	 hdr.ip_0.ipv4.ttl = 64;
+	 hdr.ip_0.ipv4.protocol = IP_PROTO_UDP;
 	 hdr.ip_0.ipv4.srcAddr = ipv4_sa;
 	 hdr.ip_0.ipv4.dstAddr = ipv4_da;
 
 	 hdr.l4_0.udp.setValid();
 	 hdr.l4_0.udp.srcPort = udp_sport;
-	 hdr.l4_0.udp.dstPort = udp_dport;
-	 hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.hash[15:0];
-	 hdr.mpls_label1_0.setValid();
-	 hdr.mpls_label2_0.setValid();
-	 hdr.mpls_label3_0.setValid();
-	 hdr.mpls_label1_0.label = mpls_label1;
-	 hdr.mpls_label2_0.label = mpls_label2;
-	 hdr.mpls_label3_0.label = mpls_label3;
-	 //	 hdr.ip_0.ipv4.totalLen = hdr.p4i_to_p4e_header.packet_len + 20 + 8 + 8;
+	 hdr.l4_0.udp.dstPort = 0x19EB;
+	 hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
+
+	 /* Correct way */
+	 hdr.l4_0.udp.len = hdr.p4i_to_p4e_header.packet_len - 2; // 8 UDP + 4 MPLS0 -14 L1ETH
+	 if(hdr.ctag_1.isValid()) {
+	   hdr.l4_0.udp.len = hdr.l4_0.udp.len -4;
 	 
+         }
+	 
+	 /* To make test pass because of test bug */
+	 //hdr.l4_0.udp.len = hdr.p4i_to_p4e_header.packet_len + 4;
+
+	 hdr.mpls_label1_0.setValid();
+	 //hdr.mpls_label1_0.label = mpls_label1;
+	 hdr.mpls_label1_0.label_b20_b4 = mpls_label1[19:4];
+	 hdr.mpls_label1_0.label_b3_b0 = mpls_label1[3:0];
+	 hdr.mpls_label1_0.ttl = 64;
+	 if(mpls_label2 == 0) {
+	   hdr.mpls_label1_0.bos = 1;	   
+	 } else {
+	   hdr.mpls_label2_0.setValid();
+	   //  hdr.mpls_label2_0.label = mpls_label2;
+	   hdr.mpls_label2_0.label_b20_b4 = mpls_label2[19:4];
+	   hdr.mpls_label2_0.label_b3_b0 = mpls_label2[3:0];
+
+	   hdr.mpls_label2_0.ttl = 64;
+	   hdr.ip_0.ipv4.totalLen = hdr.ip_0.ipv4.totalLen + 4;
+	   hdr.l4_0.udp.len = hdr.l4_0.udp.len + 4;
+	 }
+	 if(mpls_label3 == 0) {
+	   hdr.mpls_label2_0.bos = 1;	   
+	 } else {
+	   hdr.mpls_label3_0.setValid();
+	   //hdr.mpls_label3_0.label = mpls_label3;
+	   hdr.mpls_label3_0.label_b20_b4 = mpls_label3[19:4];
+	   hdr.mpls_label3_0.label_b3_b0 = mpls_label3[3:0];
+
+	   hdr.mpls_label3_0.ttl = 64;
+	   hdr.ip_0.ipv4.totalLen = hdr.ip_0.ipv4.totalLen + 4;
+	   hdr.l4_0.udp.len = hdr.l4_0.udp.len + 4;
+	   hdr.mpls_label3_0.bos = 1;	   
+
+	 }	 
    }
 
    @name(".session_rewrite_encap_geneve") 
@@ -458,7 +553,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	 hdr.l4_0.udp.setValid();
 	 hdr.l4_0.udp.srcPort = udp_sport;
 	 hdr.l4_0.udp.dstPort = udp_dport;
-	 hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.hash[15:0];
+	 hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
 
 	 metadata.scratch.vni = vni;
 	 metadata.scratch.source_slot_id = source_slot_id;
@@ -474,6 +569,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	 
    }
 
+      @hbm_table
     @capi_bitfields_struct
     @name(".session_rewrite_encap")
       table table_session_encap {
@@ -487,7 +583,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
         }
 	default_action = session_rewrite_encap_l2;
         size  = SESSION_TABLE_SIZE;
-        stage = 5;
+        stage = 4;
         placement = HBM;
     }
 

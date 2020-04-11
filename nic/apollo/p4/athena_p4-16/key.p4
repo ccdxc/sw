@@ -10,21 +10,52 @@ control key_init(inout cap_phv_intr_global_h intr_global,
     }
 
     @name(".native_ipv4_packet") action native_ipv4_packet() {
-        metadata.key.ktype =  KEY_TYPE_IPV4;
-	metadata.key.src = (bit<128>)hdr.ip_1.ipv4.srcAddr;
-	metadata.key.dst = (bit<128>)hdr.ip_1.ipv4.dstAddr;
+        metadata.key.ktype =  P4_KEY_TYPE_IPV4;
+        metadata.key.ktype7 =  (bit<7>)P4_KEY_TYPE_IPV4;
+	if(metadata.cntrl.direction == TX_FROM_HOST) {
+	  metadata.key.src = (bit<128>)hdr.ip_1.ipv4.srcAddr;
+	  metadata.key.dst = (bit<128>)hdr.ip_1.ipv4.dstAddr;
+	  metadata.key.sport = metadata.l4.l4_sport_1;
+	  metadata.key.dport = metadata.l4.l4_dport_1;
+	} 
+	if(metadata.cntrl.direction == RX_FROM_SWITCH) {
+	  metadata.key.dst = (bit<128>)hdr.ip_1.ipv4.srcAddr;
+	  metadata.key.src = (bit<128>)hdr.ip_1.ipv4.dstAddr;
+	  //	  if(hdr.l4_u.icmpv4.isValid() || hdr.l4_u.icmpv6.isValid()) {
+	  if(metadata.l4.icmp_valid == TRUE) {
+	    metadata.key.sport = metadata.l4.l4_sport_1;
+	    metadata.key.dport = metadata.l4.l4_dport_1;
+	  } else {
+	    metadata.key.dport = metadata.l4.l4_sport_1;
+	    metadata.key.sport = metadata.l4.l4_dport_1;
+	  }
+	} 
 	metadata.key.proto = hdr.ip_1.ipv4.protocol;
-	metadata.key.sport = metadata.l4.l4_sport_1;
-	metadata.key.dport = metadata.l4.l4_dport_1;
     }
 
    @name(".native_ipv6_packet") action native_ipv6_packet() {
-        metadata.key.ktype =  KEY_TYPE_IPV6;
-	metadata.key.src = hdr.ip_1.ipv6.srcAddr;
-	metadata.key.dst = hdr.ip_1.ipv6.dstAddr;
+        metadata.key.ktype =  P4_KEY_TYPE_IPV6;
+        metadata.key.ktype7 =  (bit<7>)P4_KEY_TYPE_IPV6;
+	if(metadata.cntrl.direction == TX_FROM_HOST) {	
+	  metadata.key.src = hdr.ip_1.ipv6.srcAddr;
+	  metadata.key.dst = hdr.ip_1.ipv6.dstAddr;
+	  metadata.key.sport = metadata.l4.l4_sport_1;
+	  metadata.key.dport = metadata.l4.l4_dport_1;
+	}
+	if(metadata.cntrl.direction == RX_FROM_SWITCH) {	
+	  metadata.key.dst = hdr.ip_1.ipv6.srcAddr;
+	  metadata.key.src = hdr.ip_1.ipv6.dstAddr;	  
+	  //	  if(hdr.l4_u.icmpv4.isValid() || hdr.l4_u.icmpv6.isValid()) {
+	  if(metadata.l4.icmp_valid == TRUE) {
+	    metadata.key.sport = metadata.l4.l4_sport_1;
+	    metadata.key.dport = metadata.l4.l4_dport_1;
+	  } else {
+	    metadata.key.dport = metadata.l4.l4_sport_1;
+	    metadata.key.sport = metadata.l4.l4_dport_1;
+	  }
+	}
 	metadata.key.proto = hdr.ip_1.ipv6.nextHdr;
-	metadata.key.sport = metadata.l4.l4_sport_1;
-	metadata.key.dport = metadata.l4.l4_dport_1;
+
     }
 
    @name(".native_nonip_packet") action native_nonip_packet() {
@@ -32,22 +63,52 @@ control key_init(inout cap_phv_intr_global_h intr_global,
     }
 
     @name(".tunneled_ipv4_packet") action tunneled_ipv4_packet() {
-        metadata.key.ktype =  KEY_TYPE_IPV4;
-	metadata.key.src = (bit<128>)hdr.ip_2.ipv4.dstAddr;
-	metadata.key.dst = (bit<128>)hdr.ip_2.ipv4.srcAddr;
+        metadata.key.ktype =  P4_KEY_TYPE_IPV4;
+        metadata.key.ktype7 =  (bit<7>)P4_KEY_TYPE_IPV4;
+	if(metadata.cntrl.direction == TX_FROM_HOST) {	
+	  metadata.key.src = (bit<128>)hdr.ip_2.ipv4.srcAddr;
+	  metadata.key.dst = (bit<128>)hdr.ip_2.ipv4.dstAddr;
+	  metadata.key.sport = metadata.l4.l4_sport_2;
+	  metadata.key.dport = metadata.l4.l4_dport_2; 
+	}
+	if(metadata.cntrl.direction == RX_FROM_SWITCH) {	
+	  metadata.key.src = (bit<128>)hdr.ip_2.ipv4.dstAddr;
+	  metadata.key.dst = (bit<128>)hdr.ip_2.ipv4.srcAddr;
+	  //	  if(hdr.l4_u.icmpv4.isValid() || hdr.l4_u.icmpv6.isValid()) {
+	  if(metadata.l4.icmp_valid == TRUE) {
+	    metadata.key.sport = metadata.l4.l4_sport_2;
+	    metadata.key.dport = metadata.l4.l4_dport_2;
+	  } else {
+	    metadata.key.sport = metadata.l4.l4_dport_2;
+	    metadata.key.dport = metadata.l4.l4_sport_2;
+	  }
+	}
 	metadata.key.proto = hdr.ip_2.ipv4.protocol;
-	metadata.key.sport = metadata.l4.l4_dport_2;
-	metadata.key.dport = metadata.l4.l4_sport_2;
-	
+
     }
 
     @name(".tunneled_ipv6_packet") action tunneled_ipv6_packet() {
-        metadata.key.ktype =  KEY_TYPE_IPV6;
-	metadata.key.src = hdr.ip_2.ipv6.dstAddr;
-	metadata.key.dst = hdr.ip_2.ipv6.srcAddr;
+        metadata.key.ktype =  P4_KEY_TYPE_IPV6;
+        metadata.key.ktype7 =  (bit<7>)P4_KEY_TYPE_IPV6;
+	if(metadata.cntrl.direction == TX_FROM_HOST) {	
+	  metadata.key.src = hdr.ip_2.ipv6.srcAddr;
+	  metadata.key.dst = hdr.ip_2.ipv6.dstAddr;
+	  metadata.key.sport = metadata.l4.l4_sport_2;
+	  metadata.key.dport = metadata.l4.l4_dport_2;	
+	}
+	if(metadata.cntrl.direction == RX_FROM_SWITCH) {	
+	  metadata.key.src = hdr.ip_2.ipv6.dstAddr;
+	  metadata.key.dst = hdr.ip_2.ipv6.srcAddr;
+	  //	  if(hdr.l4_u.icmpv4.isValid() || hdr.l4_u.icmpv6.isValid()) {
+	  if(metadata.l4.icmp_valid == TRUE) {
+	    metadata.key.sport = metadata.l4.l4_sport_2;
+	    metadata.key.dport = metadata.l4.l4_dport_2;
+	  } else {
+	    metadata.key.sport = metadata.l4.l4_dport_2;
+	    metadata.key.dport = metadata.l4.l4_sport_2;
+	  }	
+	}
 	metadata.key.proto = hdr.ip_2.ipv6.nextHdr;
-	metadata.key.sport = metadata.l4.l4_dport_2;
-	metadata.key.dport = metadata.l4.l4_sport_2;	
     }
 
    @name(".tunneled_nonip_packet") action tunneled_nonip_packet() {
@@ -97,8 +158,8 @@ control key_init(inout cap_phv_intr_global_h intr_global,
   action ingress_recirc_header_info() {
     if (hdr.ingress_recirc_header.isValid()) {
 
-        metadata.cntrl.flow_ohash_lkp = ~hdr.ingress_recirc_header.flow_done;
-        metadata.cntrl.dnat_ohash_lkp = ~hdr.ingress_recirc_header.dnat_done;
+      metadata.cntrl.flow_ohash_lkp = TRUE;
+      metadata.cntrl.dnat_ohash_lkp = TRUE;
     }
   }
 
@@ -112,12 +173,9 @@ control key_init(inout cap_phv_intr_global_h intr_global,
         intr_global.tm_iq = intr_global.tm_oq;
     }
     if (metadata.cntrl.skip_flow_lkp == TRUE) {
+      hdr.ingress_recirc_header.flow_done = TRUE;
       metadata.cntrl.flow_miss = TRUE;
     }
-    //   if (!hdr.ingress_recirc_header.isValid() &&
-    //	(metadata.cntrl.direction == RX_FROM_SWITCH) ) {
-    //   metadata.cntrl.dnat_enable = 1;
-    // }
       
   }
 

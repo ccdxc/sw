@@ -52,6 +52,8 @@ control egress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
 			    inout metadata_t metadata) {
 
   @name(".p4i_to_p4e_state") action p4i_to_p4e_state_a() {
+    metadata.cntrl.direction = hdr.p4i_to_p4e_header.direction;
+    metadata.cntrl.flow_miss = hdr.p4i_to_p4e_header.flow_miss;
      if(hdr.p4i_to_p4e_header.isValid()) {
        if(hdr.p4i_to_p4e_header.flow_miss == FALSE) {
 	 if(hdr.p4i_to_p4e_header.index_type == FLOW_CACHE_INDEX_TYPE_SESSION_INFO) {
@@ -90,7 +92,7 @@ control egress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
 	hdr.capri_rxdma_intrinsic.setValid();
 	hdr.capri_rxdma_intrinsic.qid = metadata.cntrl.redir_qid;
 	hdr.capri_rxdma_intrinsic.qtype = metadata.cntrl.redir_qtype;
-	hdr.capri_rxdma_intrinsic.rx_splitter_offset = CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ +
+	hdr.capri_rxdma_intrinsic.rx_splitter_offset = CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
 	  CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_CLASSIC_NIC_HDR_SZ;
 	
 	hdr.p4_to_p4plus_classic_nic.setValid();

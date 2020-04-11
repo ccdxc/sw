@@ -1,17 +1,16 @@
-#ifndef _POSEIDON16_DEFINES_H_
-#define _POSEIDON16_DEFINES_H_
+#ifndef _ATHENA_DEFINES_H_
+#define _ATHENA_DEFINES_H_
 
+//#include "nic/p4/common/defines.h"
 #include "common/defines.h"
 
 /*****************************************************************************/
 /* Key types                                                                 */
 /*****************************************************************************/
-#define KEY_TYPE_NONE                   0
-#define KEY_TYPE_IPV4                   1
-#define KEY_TYPE_IPV6                   2
-#define KEY_TYPE_MAC                    3
-
-#define POS_OVERFLOW_HASH_BIT                      0x80000000
+#define P4_KEY_TYPE_NONE                    0
+#define P4_KEY_TYPE_IPV4                    1
+#define P4_KEY_TYPE_IPV6                    2
+#define P4_KEY_TYPE_MAC                     3
 
 /*****************************************************************************/
 /* Flow-cache index types                                                    */
@@ -24,6 +23,13 @@
 /*****************************************************************************/
 #define TX_FROM_HOST                    0
 #define RX_FROM_SWITCH                  1
+
+/*****************************************************************************/
+/* Packet direction :egress                                                  */
+/*****************************************************************************/
+#define UPLINK_HOST                             TM_PORT_UPLINK_1
+#define UPLINK_SWITCH                           TM_PORT_UPLINK_0
+
 
 /*****************************************************************************/
 /* User L3 rewrite types                                                     */
@@ -50,21 +56,6 @@
 #define P4E_PACKET_OVERLAY_IPV6                 2
 
 /*****************************************************************************/
-/* NACL redirect types                                                       */
-/*****************************************************************************/
-#define NACL_REDIR_RXDMA                        0
-#define NACL_REDIR_UPLINK                       1
-
-/*****************************************************************************/
-
-/* P4E packet types                                                          */
-/*****************************************************************************/
-#define P4E_PACKET_NORMAL                       0
-#define P4E_PACKET_OVERLAY_IPV4                 1
-#define P4E_PACKET_OVERLAY_IPV6                 2
-
-
-/*****************************************************************************/
 /* Packet redirect types                                                     */
 /*****************************************************************************/
 #define PACKET_ACTION_REDIR_RXDMA               0
@@ -83,7 +74,6 @@
 #define P4I_DROP_RVPATH_SRC_IP_MISMATCH 7
 #define P4I_DROP_RVPATH_VPC_MISMATCH    8
 #define P4I_DROP_NACL                   9
-#define P4I_DROP_POLICER                10
 #define P4I_DROP_REASON_MIN             P4I_DROP_SRC_MAC_ZERO
 #define P4I_DROP_REASON_MAX             P4I_DROP_NACL
 
@@ -91,12 +81,11 @@
 #define P4E_DROP_REASON_MIN             P4E_DROP_INVALID_NEXTHOP
 #define P4E_DROP_REASON_MAX             P4E_DROP_INVALID_NEXTHOP
 
-
 /*****************************************************************************/
 /* VNIC Type                                                                 */
 /*****************************************************************************/
-#define VNIC_TYPE_L3                            0
-#define VNIC_TYPE_L2                            1
+#define P4_VNIC_TYPE_L3                         0
+#define P4_VNIC_TYPE_L2                         1
 
 
 /*****************************************************************************/
@@ -121,5 +110,20 @@
 #define CONNTRACK_FLOW_STATE_TIME_WAIT          8
 #define CONNTRACK_FLOW_STATE_RST_CLOSE          9
 #define CONNTRACK_FLOW_STATE_REMOVED            10
+#define CONNTRACK_FLOW_STATE_RSVD0              11
+#define CONNTRACK_FLOW_STATE_RSVD1              12
+#define CONNTRACK_FLOW_STATE_RSVD2              13
+#define CONNTRACK_FLOW_STATE_RSVD3              14
+#define CONNTRACK_FLOW_STATE_RSVD4              15
 
-#endif /* _POSEIDON16_DEFINES_H_ */
+
+/*****************************************************************************/
+/* Stats flags for P4E                                                       */
+/*****************************************************************************/
+#define P4E_STATS_FLAG_TX_TO_HOST               0x01
+#define P4E_STATS_FLAG_TX_TO_SWITCH             0x02
+#define P4E_STATS_FLAG_TX_TO_ARM                0x04
+
+
+
+#endif /* _ATHENA_DEFINES_H_ */

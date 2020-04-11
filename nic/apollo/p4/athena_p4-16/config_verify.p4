@@ -24,6 +24,7 @@ control config_verify(inout cap_phv_intr_global_h intr_global,
 
 
 
+    @capi_bitfields_struct
     @name(".config1") table config1 {
         key = {
             metadata.cntrl.epoch1_id        : exact;
@@ -34,9 +35,10 @@ control config_verify(inout cap_phv_intr_global_h intr_global,
         size = SESSION_TABLE_SIZE;
         placement = HBM;
         default_action = config1_epoch_verify;
-        stage = 4;
+        stage = 2;
     }
 
+    @capi_bitfields_struct
     @name(".config2") table config2 {
         key = {
             metadata.cntrl.epoch2_id        : exact;
@@ -47,7 +49,7 @@ control config_verify(inout cap_phv_intr_global_h intr_global,
         size = SESSION_TABLE_SIZE;
         placement = HBM;
         default_action = config2_epoch_verify;
-        stage = 4;
+        stage = 2;
     }
     
 
