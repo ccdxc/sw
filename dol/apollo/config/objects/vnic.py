@@ -80,19 +80,16 @@ class VnicObject(base.ConfigObjectBase):
         self.QinQenabled = False
         self.DeriveOperInfo(node)
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
-        self.LocalVnic = getattr(spec, 'localvnic', False)
         self.VnicType = getattr(spec, 'vnictype', None)
         self.HasPublicIp = getattr(spec, 'public', False)
-        remote_routes = getattr(spec, 'remoteroutes', None)
-        if remote_routes:
-            self.RemoteRoutes = remote_routes.replace('\\', '/').split(',')
-        else:
-            self.RemoteRoutes = None
-        service_ips = getattr(spec, 'serviceips', None)
-        if service_ips:
-            self.ServiceIPs = service_ips.replace('\\', '/').split(',')
-        else:
-            self.ServiceIPs = None
+        remote_routes = getattr(spec, 'remoteroutes', [])
+        self.RemoteRoutes = []
+        for remote_route in remote_routes:
+            self.RemoteRoutes.append(remote_route.replace('\\', '/'))
+        service_ips = getattr(spec, 'serviceips', [])
+        self.ServiceIPs = []
+        for service_ip in service_ips:
+            self.ServiceIPs.append(service_ip.replace('\\', '/'))
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
@@ -249,7 +246,7 @@ class VnicObject(base.ConfigObjectBase):
         return self.dot1Qenabled
 
     def IsIgwVnic(self):
-        return self.VnicType =="igw" or self.VnicType == "igw_service" or self.VnicType == "igw_nat"
+        return self.VnicType =="igw" or self.VnicType == "igw_service"
 
     def GetDependees(self, node):
         """

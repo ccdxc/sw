@@ -65,7 +65,7 @@ def GetVnicRoutes():
         vnics = vnic.client.Objects(node)
         for vnic_inst in vnics:
             vnic_addresses = lmapping.client.GetVnicAddresses(vnic_inst)
-            if vnic_inst.RemoteRoutes:
+            if len(vnic_inst.RemoteRoutes) != 0:
                 route = VnicRoute(vnic_inst, vnic_addresses)
                 vnic_routes.append(route)
     return vnic_routes
@@ -87,14 +87,14 @@ def __vnics_in_same_vpc(vnic1, vnic2):
 def __vnics_are_dynamic_napt_pair(vnic1, vnic2):
     if vnic1.Node == vnic2.Node:
         return False
-    if not vnic1.HasPublicIp and vnic1.LocalVnic == True and vnic2.VnicType == "igw":
+    if not vnic1.HasPublicIp and vnic1.VnicType == "local" and vnic2.VnicType == "igw":
         return True
     return False
 
 def __vnics_are_static_nat_pair(vnic1, vnic2):
     if vnic1.Node == vnic2.Node:
         return False
-    if vnic1.HasPublicIp and vnic1.LocalVnic == True and vnic2.VnicType == "igw_nat":
+    if vnic1.HasPublicIp and vnic1.VnicType == "local" and vnic2.VnicType == "igw":
         return True
     return False
 
@@ -102,7 +102,7 @@ def __vnics_are_static_nat_pair(vnic1, vnic2):
 def __vnics_are_dynamic_service_napt_pair(vnic1, vnic2):
     if vnic1.Node == vnic2.Node:
         return False
-    if vnic1.LocalVnic == True and vnic2.VnicType == "igw_service":
+    if vnic1.VnicType == "local" and vnic2.VnicType == "igw_service":
         return True
     return False
 
@@ -143,7 +143,7 @@ def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY:
                 if not __vnics_are_dynamic_service_napt_pair(vnic1, vnic2):
                     continue
-                if not vnic1.ServiceIPs:
+                if len(vnic1.ServiceIPs) == 0:
                     continue
                 if vnic1 in service_vnics_done:
                     continue
