@@ -1,20 +1,29 @@
 #!/usr/bin/perl
 
 use strict;
-use lib "$ENV{'SEMIFORE_HOME'}/lib";
+use lib "lib/$ENV{'ASIC'}";
 use csrPerlAPI;
 
-die "usage: $0 capri_path BUILD VER out_dir\n" if @ARGV != 4;
+die "usage: $0 capri_path BUILD VER out_dir\n" if @ARGV != 5;
 my $root = $ARGV[0];
 my $build = $ARGV[1] + 0;
 my $ver = $ARGV[2] + 0;
 my $outdir = $ARGV[3];
+my $asic = $ARGV[4];
+
+my $asic_info = {
+    'capri' => { 'prefix' => 'cap_', 'version' => 'ms_sta_ver' },
+    'elba'  => { 'prefix' => 'elb_', 'version' => 'ms_soc_sta_ver' }
+};
+
+my $pref = $asic_info->{$asic}->{prefix};
+my $version_reg = $asic_info->{$asic}->{version};
 
 #
-# Parse the cap_top_csr_defines.h and create a map of
+# Parse the ${pref}top_csr_defines.h and create a map of
 #   address -> [ block, subblock, instance, pmfile ]
 #
-my $path = "$root/model/cap_top/cap_top_csr_defines.h";
+my $path = "$root/model/${pref}top/${pref}top_csr_defines.h";
 open(DEFS, $path) || die("$path: $!\n");
 my @defs = <DEFS>;
 close(DEFS);
@@ -31,7 +40,7 @@ for $_ (@defs) {
     ($lsbk = $sbk) =~ tr/[A-Z]/[a-z]/;
     my $pm = "$root/verif/common/csr_gen/" . $lsbk . ".pm";
     if (!-f $pm) {
-        $pm = "$root/verif/common/csr_gen/cap_" . $lsbk . ".pm";
+        $pm = "$root/verif/common/csr_gen/${pref}" . $lsbk . ".pm";
         if (!-f $pm) {
             $pm = '';
         }
@@ -181,10 +190,12 @@ printf "Field Array Size: %u\n", length($field_array);
 # };
 #
 my $reg_array = '';
+my $ridx = 0;
 for my $name (sort(keys(%name_to_addr))) {
     my $addr = $name_to_addr{$name};
     my $r = $addr_to_reg{$addr};
     $addr |= 0x1 if $r->{secure};
+    $r->{ridx} = $ridx++;
     $reg_array .= pack("L4S2", $addr,
             $r->{nrows},
             $regname_table->{offsmap}->{$name},
@@ -200,6 +211,7 @@ printf "Register Array Size: %u\n", length($reg_array);
 #   uint32_t magic;
 #   uint16_t build;
 #   uint16_t ver;
+#   uint32_t ver_reg_idx;
 #   uint32_t reg_arr_offs;
 #   uint32_t reg_arr_size;
 #   uint32_t field_arr_offs;
@@ -210,15 +222,16 @@ printf "Register Array Size: %u\n", length($reg_array);
 #   uint32_t fieldname_tab_size;
 # };
 #
-my $magic = 0xcaf1e0db;
+my $magic = 0xcaf1e1db;
 open(OUT, ">" . $outdir . "capviewdb.bin") || die("capviewdb.bin: $!\n");
-seek(OUT, 40, 0);
+seek(OUT, 44, 0);
 my $reg_arr_offs = tell(OUT); print OUT $reg_array;
 my $field_arr_offs = tell(OUT); print OUT $field_array;
 my $regname_tab_offs = tell(OUT); print OUT $regname_table->{strtab};
 my $fieldname_tab_offs = tell(OUT); print OUT $fieldname_table->{strtab};
 seek(OUT, 0, 0);
 print OUT pack("LS2", $magic, $build, $ver);
+print OUT pack("L",  $addr_to_reg{$name_to_addr{$version_reg}}->{ridx});
 print OUT pack("L2", $reg_arr_offs, length($reg_array));
 print OUT pack("L2", $field_arr_offs, length($field_array));
 print OUT pack("L2", $regname_tab_offs, length($regname_table->{strtab}));
@@ -228,7 +241,7 @@ close(OUT);
 sub varName {
     my ($b, $sb, $in, $r) = @_;
     my $name = $r->getHierarchicalName();
-    $name =~ s/cap_//;
+    $name =~ s/${pref}//;
     $name =~ s/_csr_/_/;
     $name =~ s/_csr_/_/;
     $name =~ s/^${sb}_//;

@@ -2,19 +2,14 @@
 # Copyright (c) 2018, Pensando Systems Inc.
 #
 
-include ${MKINFRA}/config_${ARCH}.mk
-
-# find csrPerlAPI.pm in $SEMIFORE_HOME/lib
-export SEMIFORE_HOME = .
-
 ASICROOT        := ${SDKDIR}/third-party/asic
-PMFILES         := $(wildcard ${ASICROOT}/capri/verif/common/csr_gen/*.pm)
+PMFILES         := $(wildcard ${ASICROOT}/${ASIC}/verif/common/csr_gen/*.pm)
 MODULE_BIN_DIR  := ${BLD_OUT_DIR}/capviewdb_submake/
 
 all: printvars ${MODULE_BIN_DIR}/capviewdb.bin
 
-${MODULE_BIN_DIR}/capviewdb.bin:
-	perl -I${ASICROOT}/capri/verif/common/csr_gen ./builddb.pl ${ASICROOT}/capri 0 0 ${MODULE_BIN_DIR}
+${MODULE_BIN_DIR}/capviewdb.bin: ${PMFILES} builddb.pl
+	perl -I${ASICROOT}/$(ASIC)/verif/common/csr_gen ./builddb.pl ${ASICROOT}/${ASIC} 0 0 ${MODULE_BIN_DIR} "${ASIC}"
 
 .PHONY: printvars
 printvars:

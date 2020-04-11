@@ -18,6 +18,9 @@
 // mmaped data
 const char *mem;
 
+// Globals
+int CVDBReg::ver_reg_idx;
+
 // Registers
 const cvdb_reg *CVDBReg::reg_tab;
 const cvdb_reg **CVDBReg::reg_addrtab;
@@ -63,11 +66,16 @@ CVDBReg::loadfile(const char *path)
         fprintf(stderr, "%s: bad magic\n", path);
         return -1;
     }
+    ver_reg_idx = hdr->ver_reg_idx;
 
     // Registers
     nregs = hdr->sect[SECT_REG_TAB].size / sizeof (cvdb_reg);
     reg_tab = (cvdb_reg *)(mem + hdr->sect[SECT_REG_TAB].offs);
     reg_strtab = mem + hdr->sect[SECT_REG_STRTAB].offs;
+    if (ver_reg_idx >= nregs) {
+        fprintf(stderr, "%s: invalid version register index\n", path);
+        return -1;
+    }
 
     // Fields
     field_tab = mem + hdr->sect[SECT_FIELD_TAB].offs;
@@ -104,6 +112,12 @@ CVDBReg::get_byidx(int idx)
         throw std::out_of_range("invalid register index");
     }
     return CVDBReg(&reg_tab[idx]);
+}
+
+CVDBReg
+CVDBReg::get_version(void)
+{
+    return CVDBReg(&reg_tab[ver_reg_idx]);
 }
 
 static int

@@ -53,6 +53,7 @@ public:
     }
 
     static int nregs;
+    static CVDBReg get_version(void);
     static CVDBReg get_byaddr(uint32_t addr);
     static CVDBReg get_byidx(int idx);
     static CVDBReg get_byname(const char *name);
@@ -74,6 +75,7 @@ public:
 private:
     const cvdb_reg *reg;
 
+    static int ver_reg_idx;
     static const struct cvdb_reg *reg_tab;
     static const char *reg_strtab;
     static const cvdb_reg **reg_addrtab;

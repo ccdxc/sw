@@ -14,9 +14,10 @@ struct cvdb_hdr {
     uint32_t magic;
     uint16_t build;
     uint16_t ver;
+    uint32_t ver_reg_idx;
     struct cvdb_sect sect[4];
 };
-#define CVDB_MAGIC      0xcaf1e0db
+#define CVDB_MAGIC      0xcaf1e1db
 
 enum {
     SECT_REG_TAB, SECT_FIELD_TAB, SECT_REG_STRTAB, SECT_FIELD_STRTAB

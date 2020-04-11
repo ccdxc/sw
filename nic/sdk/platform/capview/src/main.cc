@@ -96,19 +96,14 @@ emit_db(void)
 static void
 check_chip_version(const char *path)
 {
-    CVDBReg reg = CVDBReg::get_byname("ms_sta_ver");
-    if (reg == CVDBReg::end()) {
-        printf("WARNING: %s does not provide a ms_sta_ver register\n", path);
-                
-        return;
-    }
+    CVDBReg reg = CVDBReg::get_version();
     uint32_t rval, chip_bld, chip_ver;
     dev_read(&rval, reg.addr(), 1);
     CVDBField cbfld = reg.field_byname("chip_build");
     CVDBField cvfld = reg.field_byname("chip_version");
     if (cbfld == CVDBField::end() || cvfld == CVDBField::end()) {
-        printf("WARNING: %s missing chip_build or "
-                "chip_version in ms_sta_ver\n", path);
+        printf("WARNING: %s: missing chip_build or "
+                "chip_version in %s\n", path, reg.name());
         return;
     }
     chip_bld = (rval >> cbfld.lo()) & ((1 << (cbfld.hi() - cbfld.lo())) - 1);
