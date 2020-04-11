@@ -1590,6 +1590,28 @@ pd_qos_class_init_tc_to_iq_map (pd_func_args_t *pd_func_args)
     return ret;
 }
 
+// walk through all the user-defined classes and get
+// the iq and oq to TC mapping
+void
+pd_qos_class_get_iq_oq_to_tc_mapping(uint32_t *iq_to_tc, uint32_t *oq_to_tc)
+{
+    qos_class_t *qos_class = NULL;
+    qos_group_t qos_group;
+
+    for (qos_group = QOS_GROUP_USER_DEFINED_1; 
+         qos_group <= QOS_GROUP_USER_DEFINED_6; 
+         qos_group = qos_group_get_next_user_defined(qos_group)) {
+
+        qos_class = find_qos_class_by_group(qos_group);
+
+        if(!qos_class)
+            continue;
+    
+        iq_to_tc[qos_class->pd->uplink.iq] = qos_group;
+        oq_to_tc[qos_class->pd->dest_oq] = qos_group;
+    }
+}
+
 // walk through all the user-defined no-drop classes and form 
 // the bitmap of all the pfc-cos values
 uint32_t
@@ -2415,6 +2437,12 @@ void
 qos_class_queue_stats_to_proto_stats (qos::QosClassQueueStats *q_stats,
                                       sdk::platform::capri::capri_queue_stats_t *qos_queue_stats)
 {
+    uint32_t iq_to_tc[CAPRI_TM_MAX_IQS] = {0};
+    uint32_t oq_to_tc[CAPRI_TM_MAX_OQS] = {0};
+
+     // Get the iq and oq to Qos Group (TC) mapping
+    pd_qos_class_get_iq_oq_to_tc_mapping(iq_to_tc, oq_to_tc);
+
     for (unsigned i = 0; i < CAPRI_TM_MAX_IQS; i++) {
         if (qos_queue_stats->iq_stats[i].iq.valid) {
             auto input_stats = q_stats->add_input_queue_stats();
@@ -2428,6 +2456,7 @@ qos_class_queue_stats_to_proto_stats (qos::QosClassQueueStats *q_stats,
             input_stats->set_buffer_occupancy(iq_stats->buffer_occupancy);
             input_stats->set_peak_occupancy(iq_stats->peak_occupancy);
             input_stats->set_port_monitor(iq_stats->port_monitor);
+            input_stats->set_qos_group_idx(iq_to_tc[i]); // Set the Qos Group (TC) index for this iq
         }
         if (qos_queue_stats->oq_stats[i].oq.valid) {
             auto output_stats = q_stats->add_output_queue_stats();
@@ -2435,6 +2464,7 @@ qos_class_queue_stats_to_proto_stats (qos::QosClassQueueStats *q_stats,
             output_stats->set_output_queue_idx(qos_queue_stats->oq_stats[i].oq.queue);
             output_stats->set_queue_depth(oq_stats->queue_depth);
             output_stats->set_port_monitor(oq_stats->port_monitor);
+            output_stats->set_qos_group_idx(oq_to_tc[i]); // Set the Qos Group (TC) index for this oq
         }
     }
 }

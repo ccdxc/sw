@@ -174,14 +174,22 @@ hal_update_pb_stats (SystemResponse *rsp)
         }
 
         auto qstats = port_stats->qos_queue_stats();
-        for (index = 0; index < IONIC_PORT_QOS_MAX_QUEUES; index++) {
+
+        // For any queue that is not assigned to a TC, the qos_group_idx will be 0.
+        // If we update the stats in queue order 0...7, TC0's stats will be overwritten with the unmapped queue stats.
+        // Fixing this by reversing the loop to update stats in the queue order 7...0 so that TC0 stats are updated at the end.
+        for (index = IONIC_PORT_QOS_MAX_QUEUES-1; index >= 0; index--) {
             auto iqstats = qstats.input_queue_stats(index);
             auto oqstats = qstats.output_queue_stats(index);
+
             // iqstats fill
-            pb_stats.input_queue_buffer_occupancy[index] = iqstats.buffer_occupancy();
-            pb_stats.input_queue_port_monitor[index] = iqstats.port_monitor();
+            uint64_t input_tc = iqstats.qos_group_idx(); // Get the Qos Group (TC) index for this iq
+            pb_stats.input_queue_buffer_occupancy[input_tc] = iqstats.buffer_occupancy();
+            pb_stats.input_queue_port_monitor[input_tc] = iqstats.port_monitor();
+            
             // oqstats fill
-            pb_stats.output_queue_port_monitor[index] = oqstats.port_monitor();
+            uint64_t output_tc = oqstats.qos_group_idx(); // Get the Qos Group (TC) index for this oq
+            pb_stats.output_queue_port_monitor[output_tc] = oqstats.port_monitor();
         }
 
         // ptr offset (not byte len)

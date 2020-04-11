@@ -208,12 +208,14 @@ message QosClassInputQueueStats {
   uint32                       buffer_occupancy = 3;    // Instantaneous buffer occupancy in bytes
   uint32                       peak_occupancy   = 4;    // Peak buffer occupancy in bytes
   uint64                       port_monitor     = 5;    // port monitor counter
+  uint64                       qos_group_idx    = 6;    // QoS Group (TC) which this iq belongs to
 }
 
 message QosClassOutputQueueStats {
   uint32 output_queue_idx = 1;
   uint32 queue_depth      = 2;    // Instantaneous output queue depth in pkts
   uint64 port_monitor     = 3;    // port monitor counter
+  uint64 qos_group_idx    = 6;    // QoS Group (TC) which this oq belongs to
 }
 
 message QosClassQueueStats {
