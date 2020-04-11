@@ -1,9 +1,9 @@
 """
-   Copyright 2019 Pensando Systems Inc. All rights reserved
+Copyright 2019 Pensando Systems Inc. All rights reserved
 
     @package pds upgrade code generator module
-    This module consumes pds upgrade json and generates c++
-    code for the pds upgrade state machine.
+    This module consumes pds upgrade json and generates
+    intermediate json for pds upgrade state machine.
 """
 import argparse
 import inspect
@@ -20,7 +20,7 @@ msg = {
     4: "Null stage passed !",
     5: "At least one Null object passed !",
     6: "IOError (Code: {0}) - Failed to write !",
-    7: "Successfully generated pds upgrade state machine.",
+    7: "Successfully generated pds upgrade state machine",
     8: "IOError (Code: {0}) - Failed to load Json !",
     9: "Successfully loaded json",
     10: "Event sequence({0}) not found!",
@@ -30,7 +30,15 @@ msg = {
     14: "Arguments can't be Null",
     15: "Failed to create destination directory {0} !",
     16: "Failed to generate required intermediate json !",
-    17: "Successfully generated required intermediate json."
+    17: "Successfully generated required intermediate json",
+    18: "Invalid Json, '{0}' is not a valid svc name",
+    19: "Invalid Json, '{0}' is not a valid event sequence",
+    20: "Invalid Json, '{0}' is not a valid domain name",
+    21: "Invalid Json, '{0}' is not a valid discovery value",
+    22: "Invalid Json, '{0}' is not a valid discovery stage",
+    23: "Invalid Json, '{0}' is not a valid entry stage",
+    24: "Invalid Json, '{0}' is not a valid event rsp",
+    25: "Invalid Json, '{0}' is not a valid stage"
 }
 
 
@@ -109,7 +117,6 @@ class Log(RuntimeError):
                                       self.__severity__,
                                       self.__log__))
         self.__print_call_stack__()
-        print("Exiting ... !")
         sys.exit(1)
 
 
@@ -141,6 +148,19 @@ class GenerateStateMachine(object):
         self.__load_evt_seq_name_to_id__()
         self.__load_fmt__()
 
+        self.valid_svc_list = []
+        self.valid_event_sequence = ["serial", "parallel"]
+        self.valid_domain_name = ["A", "B"]
+        self.valid_discovery_value = ["yes", "no"]
+        self.valid_discovery_stage = ["compatcheck", "ready"]
+        self.valid_entry_stage = ["compatcheck"]
+        self.valid_event_rsp = ["svc_rsp_ok", "svc_rsp_fail",
+                                "svc_rsp_crit", "svc_no_rsp"]
+        self.valid_stage = ["compatcheck", "start", "prepare", "backup",
+                            "repeal", "rollback", "sync", "prepare_switchover",
+                            "switchover", "ready", "respawn", "finish",
+                            "finish", "exit"]
+
     def to_strings(self, key):
         """!@brief  Return the string value of a given json key
             @param key An input key of the upgrade json file.
@@ -169,6 +189,8 @@ class GenerateStateMachine(object):
             default="parallel",
             key_path=self.default_event_seq_fmt)
 
+        self.__validate_object__(event_sequence, self.valid_event_sequence, 19)
+
         event_sequence = self.event_sequence.format(
             self.__to_evt_seq_id__(event_sequence)) + os.linesep
         return event_sequence
@@ -178,6 +200,8 @@ class GenerateStateMachine(object):
         entry_stage = self.__get_data_by_key_walk__(
             default="compatcheck",
             key_path=self.default_entry_stage_fmt)
+
+        self.__validate_object__(entry_stage, self.valid_entry_stage, 23)
 
         entry_stage = self.entry_stage.format(
             self.__to_stage_id__(entry_stage)) + os.linesep
@@ -376,12 +400,19 @@ class GenerateStateMachine(object):
 
     def __get_stages__(self):
         stages = list(self.__get_data_by_key_walk__("stages").keys())
+
         stages.remove("entry_stage")
+        for stage in stages:
+            self.__validate_object__(stage, self.valid_stage, 25)
         stages.remove("exit")
+
         return stages
 
     def __get_svc_rsp__(self):
-        return self.svs_rsp_name_to_id.keys()
+        objects = self.svs_rsp_name_to_id.keys()
+        for obj in objects:
+            self.__validate_object__(obj, self.valid_event_rsp, 24)
+        return objects
 
     def __get_data_by_key_walk__(self, key_path=None,
                                  default=None, check_values=False,
@@ -446,9 +477,11 @@ class GenerateStateMachine(object):
         svc_keys_to_walk = "svc.names"
         svc_counts = self.__get_data_by_key_walk__(svc_keys_to_walk)
         for svc in range(len(svc_counts)):
+
             svc_name = self.__get_data_by_key_walk__("{0}.{1}".
                                                      format(svc_keys_to_walk,
                                                             svc))
+            self.valid_svc_list.append(svc_name)
             svc_name = self.__wrap_quote__(svc_name)
 
             obj = "{0}{1}{2}".format('\t' * 2, svc_name, ',\n')
@@ -520,13 +553,20 @@ class GenerateStateMachine(object):
                 default=default_discovery,
                 key_path=discovery_keys_to_walk)
 
+            cur_stage = current_stage
+            self.__validate_object__(cur_stage, self.valid_stage, 25)
             current_stage = self.__wrap_quote__(current_stage)
 
             rsp_timeout = self.__wrap_quote__(rsp_timeout)
             rsp_timeout = self.rsp_timeout.format(rsp_timeout)
 
+            self.__validate_object__(event_sequence, self.valid_event_sequence,
+                                     19)
             event_sequence = self.__wrap_quote__(event_sequence)
             event_sequence = self.event_sequence.format(event_sequence)
+
+            for obj in svc_list:
+                self.__validate_object__(obj, self.valid_svc_list, 18)
 
             svc_sequence = self.__wrap_quote__(":".join(svc_list))
             svc_sequence = self.svc_sequence.format(svc_sequence)
@@ -537,8 +577,14 @@ class GenerateStateMachine(object):
             post_hooks = self.__wrap_quote__(":".join(post_hooks))
             post_hooks = self.pre_hook.format(post_hooks)
 
+            self.__validate_object__(domain, self.valid_domain_name, 20)
             domain = self.__wrap_quote__(domain)
             domain = self.domain.format(domain)
+
+            self.__validate_object__(discovery, self.valid_discovery_value, 21)
+            if discovery == "yes":
+                self.__validate_object__(cur_stage, self.valid_discovery_stage,
+                                         22)
 
             discovery = self.__wrap_quote__(discovery)
             discovery = self.discovery.format(discovery)
@@ -602,6 +648,21 @@ class GenerateStateMachine(object):
         date = "{0}{1}{2}".format('"', data, '"')
         return date
 
+    def __validator__(caller):
+        def __validate__(self, data, container, err_code):
+            if data is None or data not in container:
+                frame_info = inspect.getframeinfo(inspect.currentframe())
+                file = str(frame_info.filename) + str(frame_info.lineno)
+                Log(file, "ERROR", message(err_code).format(data),
+                    call_stack=False)
+                return False
+            return caller(self, data, container, err_code)
+        return __validate__
+
+    @__validator__
+    def __validate_object__(self, obj, valid_container, err_code):
+        return True
+
 
 def crete_dest_dir(output_json):
     try:
@@ -618,7 +679,7 @@ def crete_dest_dir(output_json):
     except:
         frame = inspect.getframeinfo(inspect.currentframe())
         filename = str(frame.filename) + str(frame.lineno)
-        Log(filename, "ERROR", message(15).format(output_json), call_stack=True)
+        Log(filename, "ERROR", message(15).format(output_json), call_stack=False)
 
 
 def main(input_json, output_json):
@@ -637,12 +698,12 @@ def main(input_json, output_json):
     except:
         frame_info = inspect.getframeinfo(inspect.currentframe())
         file = str(frame_info.filename) + str(frame_info.lineno)
-        Log(file, "ERROR", message(16), call_stack=True)
+        Log(file, "ERROR", message(16), call_stack=False)
 
     else:
         frame = inspect.getframeinfo(inspect.currentframe())
         filename = str(frame.filename) + str(frame.lineno)
-        Log(filename, "INFO", message(17), call_stack=True)
+        Log(filename, "INFO", message(17), call_stack=False)
         sys.exit(0)
 
 
@@ -680,4 +741,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     main(args.input_file_name, args.output_file_name)
     sys.exit(0)
-
