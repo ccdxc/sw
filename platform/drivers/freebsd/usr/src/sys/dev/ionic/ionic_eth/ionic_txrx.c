@@ -3221,6 +3221,7 @@ ionic_qos_pcp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	struct ifnet *ifp = lif->netdev;
 	uint8_t pcp_to_tc[IONIC_QOS_PCP_MAX];
 	int i, error, max_pcps = IONIC_QOS_PCP_MAX;
+	uint8_t curr_tc = 0, new_tc = 0;
 
 	IONIC_LIF_LOCK(lif);
 	error = SYSCTL_OUT(req, ionic->qos.pcp_to_tc, max_pcps);
@@ -3232,9 +3233,26 @@ ionic_qos_pcp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 		goto err_out;
 
 	for (i = 0; i < max_pcps; i++) {
+		/* Range check all of the new values */
 		if (pcp_to_tc[i] >= ionic->qos.max_tcs ) {
 			if_printf(ifp, "Out of range value: %d\n", pcp_to_tc[i]);
 			error = ERANGE;
+			goto err_out;
+		}
+
+		/*
+		 * If a PCP is already assigned to a TC and
+		 * the new config is trying to assign it to another TC,
+		 * reject the config.
+		 */
+		curr_tc = ionic->qos.pcp_to_tc[i];
+		new_tc = pcp_to_tc[i];
+		if (curr_tc != 0 &&
+		    new_tc != 0 && // No check needed if the pcp is already unassigned or being unassigned
+		    curr_tc != new_tc) {
+			if_printf(ifp, "Failed to assign pcp %d to TC %d. It is already assigned to TC %d\n",
+					i, new_tc, curr_tc);
+			error = EINVAL;
 			goto err_out;
 		}
 	}
@@ -3296,6 +3314,7 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	uint8_t dscp_to_tc[IONIC_DSCP_BLOCK_SIZE];
 	int i, error;
 	int start = oidp->oid_arg2;
+	uint8_t curr_tc = 0, new_tc = 0;
 
 	IONIC_LIF_LOCK(lif);
 	error = SYSCTL_OUT(req, ionic->qos.dscp_to_tc + start, IONIC_DSCP_BLOCK_SIZE);
@@ -3306,11 +3325,27 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error)
 		goto err_out;
 
-	/* Range check all of the new values */
 	for (i = 0; i < IONIC_DSCP_BLOCK_SIZE; i++) {
+		/* Range check all of the new values */
 		if (dscp_to_tc[i] >= ionic->qos.max_tcs ) {
 			if_printf(ifp, "Out of range value: %d\n", dscp_to_tc[i]);
 			error = ERANGE;
+			goto err_out;
+		}
+
+		/*
+		 * If a DSCP is already assigned to a TC and
+		 * the new config is trying to assign it to another TC,
+		 * reject the config.
+		 */
+		curr_tc = ionic->qos.dscp_to_tc[i + start];
+		new_tc = dscp_to_tc[i];
+		if (curr_tc != 0 &&
+		    new_tc != 0 && // No check needed if the dscp is already unassigned or being unassigned
+		    curr_tc != new_tc) {
+			if_printf(ifp, "Failed to assign DSCP %d to TC %d. It is already assigned to TC %d\n",
+					i + start, new_tc, curr_tc);
+			error = EINVAL;
 			goto err_out;
 		}
 	}
