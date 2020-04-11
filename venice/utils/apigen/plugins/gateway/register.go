@@ -2195,13 +2195,14 @@ func getStorageTransformersManifest(file *descriptor.File) (*storageTransformers
 					msgname, _ = getNestedMsgName(msg)
 				}
 				if msgmap[*fld.TypeName] == true {
+					glog.Infof("transform in msgmap is true [%v]", *fld.TypeName)
 					if _, ok := ret.Map[*msg.Name]; !ok {
 						ret.Map[msgname] = storageTransformerMsg{
 							Fields:          make(map[string]storageTransformerFields),
 							HasTransformers: true,
 						}
 					}
-					if _, ok := ret.Map[*fld.Name]; !ok {
+					if _, ok := ret.Map[*fld.TypeName]; !ok {
 						repeated := false
 						pointer := true
 						if *fld.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
@@ -2221,6 +2222,8 @@ func getStorageTransformersManifest(file *descriptor.File) (*storageTransformers
 						} else {
 							ret.Map[msgname].Fields[*fld.Name] = storageTransformerFields{Transformers: make([]storageTransformerField, 0), Repeated: repeated, Pointer: pointer}
 						}
+					} else {
+						glog.Infof("already found in ret.Map[%v]", *fld.Name)
 					}
 				}
 			}

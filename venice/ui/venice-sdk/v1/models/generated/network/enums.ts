@@ -18,6 +18,11 @@ export enum ApiListWatchOptions_sort_order {
     'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
+export enum NetworkBGPAuthStatus_status {
+    'disabled' = "disabled",
+    'enabled' = "enabled",
+}
+
 export enum NetworkBGPNeighbor_enable_address_families {
     'ipv4-unicast' = "ipv4-unicast",
     'l2vpn-evpn' = "l2vpn-evpn",
@@ -189,6 +194,7 @@ export class AllEnums {
     }
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
+    NetworkBGPAuthStatus_status = NetworkBGPAuthStatus_status;
     NetworkBGPNeighbor_enable_address_families = NetworkBGPNeighbor_enable_address_families;
     NetworkIPAMPolicySpec_type = NetworkIPAMPolicySpec_type;
     NetworkNetworkInterfaceSpec_admin_status = NetworkNetworkInterfaceSpec_admin_status;

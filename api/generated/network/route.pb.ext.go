@@ -29,6 +29,26 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
+// BGPAuthStatus_AuthStatus_normal is a map of normalized values for the enum
+var BGPAuthStatus_AuthStatus_normal = map[string]string{
+	"disabled": "disabled",
+	"enabled":  "enabled",
+}
+
+var BGPAuthStatus_AuthStatus_vname = map[int32]string{
+	0: "disabled",
+	1: "enabled",
+}
+
+var BGPAuthStatus_AuthStatus_vvalue = map[string]int32{
+	"disabled": 0,
+	"enabled":  1,
+}
+
+func (x BGPAuthStatus_AuthStatus) String() string {
+	return BGPAuthStatus_AuthStatus_vname[int32(x)]
+}
+
 // RouteDistinguisher_RDType_normal is a map of normalized values for the enum
 var RouteDistinguisher_RDType_normal = map[string]string{
 	"type0": "type0",
@@ -96,6 +116,33 @@ func (m *RoutingConfig) MakeKey(prefix string) string {
 func (m *RoutingConfig) MakeURI(cat, ver, prefix string) string {
 	in := m
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/routing-config/", in.Name)
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *BGPAuthStatus) Clone(into interface{}) (interface{}, error) {
+	var out *BGPAuthStatus
+	var ok bool
+	if into == nil {
+		out = &BGPAuthStatus{}
+	} else {
+		out, ok = into.(*BGPAuthStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*BGPAuthStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BGPAuthStatus) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Status = "disabled"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -376,6 +423,7 @@ func (m *RoutingConfig) Defaults(ver string) bool {
 		m.Tenant, m.Namespace = "", ""
 	}
 	ret = m.Spec.Defaults(ver) || ret
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -422,10 +470,45 @@ func (m *RoutingConfigStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *RoutingConfigStatus) Defaults(ver string) bool {
-	return false
+	var ret bool
+	for k := range m.AuthConfigStatus {
+		if m.AuthConfigStatus[k] != nil {
+			i := m.AuthConfigStatus[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
 }
 
 // Validators and Requirements
+
+func (m *BGPAuthStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *BGPAuthStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapRoute["BGPAuthStatus"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapRoute["BGPAuthStatus"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *BGPAuthStatus) Normalize() {
+
+	m.Status = BGPAuthStatus_AuthStatus_normal[strings.ToLower(m.Status)]
+
+}
 
 func (m *BGPConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
@@ -853,6 +936,18 @@ func (m *RoutingConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec
 			ret = append(ret, errs...)
 		}
 	}
+
+	if !ignoreStatus {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
@@ -861,6 +956,8 @@ func (m *RoutingConfig) Normalize() {
 	m.ObjectMeta.Normalize()
 
 	m.Spec.Normalize()
+
+	m.Status.Normalize()
 
 }
 
@@ -900,10 +997,27 @@ func (m *RoutingConfigStatus) References(tenant string, path string, resp map[st
 
 func (m *RoutingConfigStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	for k, v := range m.AuthConfigStatus {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sAuthConfigStatus[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
 func (m *RoutingConfigStatus) Normalize() {
+
+	for k, v := range m.AuthConfigStatus {
+		if v != nil {
+			v.Normalize()
+			m.AuthConfigStatus[k] = v
+		}
+	}
 
 }
 
@@ -981,10 +1095,23 @@ func (st *storageRoutingConfigTransformer) TransformToStorage(ctx context.Contex
 }
 
 func (m *RoutingConfigSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.BGPConfig == nil {
+		return nil
+	}
+	if err := m.BGPConfig.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (m *RoutingConfigSpec) EraseSecrets() {
+
+	if m.BGPConfig == nil {
+		return
+	}
+	m.BGPConfig.EraseSecrets()
+
 	return
 }
 
@@ -996,6 +1123,20 @@ func init() {
 	)
 
 	validatorMapRoute = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapRoute["BGPAuthStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapRoute["BGPAuthStatus"]["all"] = append(validatorMapRoute["BGPAuthStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*BGPAuthStatus)
+
+		if _, ok := BGPAuthStatus_AuthStatus_vvalue[m.Status]; !ok {
+			vals := []string{}
+			for k1, _ := range BGPAuthStatus_AuthStatus_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Status", vals)
+		}
+		return nil
+	})
 
 	validatorMapRoute["BGPConfig"] = make(map[string][]func(string, interface{}) error)
 	validatorMapRoute["BGPConfig"]["all"] = append(validatorMapRoute["BGPConfig"]["all"], func(path string, i interface{}) error {

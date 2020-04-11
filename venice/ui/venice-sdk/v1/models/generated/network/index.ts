@@ -34,6 +34,7 @@ export * from './network-auto-msg-service-watch-helper.model';
 export * from './network-auto-msg-service-watch-helper-watch-event.model';
 export * from './network-auto-msg-virtual-router-watch-helper.model';
 export * from './network-auto-msg-virtual-router-watch-helper-watch-event.model';
+export * from './network-bgp-auth-status.model';
 export * from './network-bgp-config.model';
 export * from './network-bgp-neighbor.model';
 export * from './network-dhcp-relay-policy.model';

@@ -35,6 +35,7 @@
 		NetworkInterfaceUplinkStatus
 		PauseSpec
 		TransceiverStatus
+		BGPAuthStatus
 		BGPConfig
 		BGPNeighbor
 		EVPNConfig

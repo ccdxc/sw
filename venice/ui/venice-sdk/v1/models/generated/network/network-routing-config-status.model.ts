@@ -7,8 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
+import { NetworkBGPAuthStatus, INetworkBGPAuthStatus } from './network-bgp-auth-status.model';
 
 export interface INetworkRoutingConfigStatus {
+    'auth-config-status'?: Array<INetworkBGPAuthStatus>;
     '_ui'?: any;
 }
 
@@ -16,7 +18,14 @@ export interface INetworkRoutingConfigStatus {
 export class NetworkRoutingConfigStatus extends BaseModel implements INetworkRoutingConfigStatus {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
+    /** Authentication config status. */
+    'auth-config-status': Array<NetworkBGPAuthStatus> = null;
     public static propInfo: { [prop in keyof INetworkRoutingConfigStatus]: PropInfoItem } = {
+        'auth-config-status': {
+            description:  `Authentication config status.`,
+            required: false,
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -41,6 +50,7 @@ export class NetworkRoutingConfigStatus extends BaseModel implements INetworkRou
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['auth-config-status'] = new Array<NetworkBGPAuthStatus>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -53,6 +63,11 @@ export class NetworkRoutingConfigStatus extends BaseModel implements INetworkRou
         if (values && values['_ui']) {
             this['_ui'] = values['_ui']
         }
+        if (values) {
+            this.fillModelArray<NetworkBGPAuthStatus>(this, 'auth-config-status', values['auth-config-status'], NetworkBGPAuthStatus);
+        } else {
+            this['auth-config-status'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -60,6 +75,14 @@ export class NetworkRoutingConfigStatus extends BaseModel implements INetworkRou
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
+                'auth-config-status': new FormArray([]),
+            });
+            // generate FormArray control elements
+            this.fillFormArray<NetworkBGPAuthStatus>('auth-config-status', this['auth-config-status'], NetworkBGPAuthStatus);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('auth-config-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('auth-config-status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -71,6 +94,7 @@ export class NetworkRoutingConfigStatus extends BaseModel implements INetworkRou
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
+            this.fillModelArray<NetworkBGPAuthStatus>(this, 'auth-config-status', this['auth-config-status'], NetworkBGPAuthStatus);
         }
     }
 }

@@ -17,6 +17,40 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
+func encodeHTTPBGPAuthStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPBGPAuthStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req BGPAuthStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqBGPAuthStatus encodes GRPC request
+func EncodeGrpcReqBGPAuthStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BGPAuthStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqBGPAuthStatus decodes GRPC request
+func DecodeGrpcReqBGPAuthStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BGPAuthStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespBGPAuthStatus encodes GRC response
+func EncodeGrpcRespBGPAuthStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespBGPAuthStatus decodes GRPC response
+func DecodeGrpcRespBGPAuthStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPBGPConfig(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

@@ -4790,3 +4790,122 @@ func TestFromMinusOneWatch(t *testing.T) {
 			fmt.Sprintf("counts are %v / %v]", atomic.LoadUint32(&grpcWatchCount), atomic.LoadUint32(&restWtchCount))
 	}, "failed to get watch events", "100ms", "3s")
 }
+
+func TestRoutingSecrets(t *testing.T) {
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+
+	ctx := context.Background()
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	// gRPC client
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	fts := []cluster.Feature{
+		{FeatureKey: featureflags.OverlayRouting, License: ""},
+	}
+	featureflags.Update(fts)
+	rtCfg := network.RoutingConfig{
+		ObjectMeta: api.ObjectMeta{
+			Name: "secretsTest-1",
+		},
+		Spec: network.RoutingConfigSpec{
+			BGPConfig: &network.BGPConfig{
+				RouterId:          "1.1.1.1",
+				ASNumber:          6500,
+				KeepaliveInterval: 30,
+				Holdtime:          90,
+				Neighbors: []*network.BGPNeighbor{
+					{
+						IPAddress:             "10.1.1.1",
+						RemoteAS:              62000,
+						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
+						MultiHop:              6,
+					},
+					{
+						IPAddress:             "10.1.1.2",
+						RemoteAS:              63000,
+						MultiHop:              6,
+						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
+						Password:              "testPassword",
+					},
+					{
+						DSCAutoConfig:         true,
+						RemoteAS:              6500,
+						MultiHop:              6,
+						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
+						Password:              "testPassword2",
+					},
+				},
+			},
+		},
+	}
+
+	validateStatus := func(in *network.RoutingConfig) error {
+		exp := []*network.BGPAuthStatus{
+			{
+				IPAddress: "10.1.1.1",
+				RemoteAS:  62000,
+				Status:    network.BGPAuthStatus_Disabled.String(),
+			},
+			{
+				IPAddress: "10.1.1.2",
+				RemoteAS:  63000,
+				Status:    network.BGPAuthStatus_Enabled.String(),
+			},
+			{
+				RemoteAS: 6500,
+				Status:   network.BGPAuthStatus_Enabled.String(),
+			},
+		}
+		if !reflect.DeepEqual(exp, in.Status.AuthConfigStatus) {
+			return fmt.Errorf("Status does not match [%v]", in.Status.AuthConfigStatus)
+		}
+		return nil
+	}
+	ret, err := restcl.NetworkV1().RoutingConfig().Create(ctx, &rtCfg)
+	AssertOk(t, err, "failed to create routing config (%s)", err)
+
+	for _, n := range ret.Spec.BGPConfig.Neighbors {
+		if n.Password != "" {
+			t.Errorf("return has non-empty password [%v]", n)
+		}
+	}
+
+	ret, err = restcl.NetworkV1().RoutingConfig().Get(ctx, &rtCfg.ObjectMeta)
+	AssertOk(t, err, "failed to create routing config (%s)", err)
+
+	for _, n := range ret.Spec.BGPConfig.Neighbors {
+		if n.Password != "" {
+			t.Errorf("return has non-empty password [%v]", n)
+		}
+	}
+	AssertOk(t, validateStatus(ret), "Failed status validation [%v]", err)
+
+	rl, err := restcl.NetworkV1().RoutingConfig().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to create routing config (%s)", err)
+
+	for _, r := range rl {
+		for _, n := range r.Spec.BGPConfig.Neighbors {
+			if n.Password != "" {
+				t.Errorf("return has non-empty password [%v]", n)
+			}
+		}
+		AssertOk(t, validateStatus(r), "Failed status validation [%v]", err)
+	}
+
+	ret, err = apicl.NetworkV1().RoutingConfig().Get(ctx, &rtCfg.ObjectMeta)
+	AssertOk(t, err, "gRPC get routing config failed {%s)", err)
+	Assert(t, reflect.DeepEqual(ret.Spec, rtCfg.Spec), "grpc get did not match [%v]/[%v]", rtCfg.Spec, ret.Spec)
+}

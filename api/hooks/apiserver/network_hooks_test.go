@@ -807,3 +807,100 @@ func makeWorkloadObj(name, host string, infs []workload.WorkloadIntfSpec) *workl
 	}
 	return workload
 }
+
+func TestRoutingConfigResponseWriter(t *testing.T) {
+	kvs := &mocks.FakeKvStore{}
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	nh := &networkHooks{
+		logger: l,
+	}
+
+	existingrtcfg := network.RoutingConfig{
+		Spec: network.RoutingConfigSpec{
+			BGPConfig: &network.BGPConfig{
+				ASNumber: 1000,
+				Neighbors: []*network.BGPNeighbor{
+					{
+						IPAddress:             "10.1.1.1",
+						RemoteAS:              62000,
+						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
+						MultiHop:              6,
+					},
+					{
+						IPAddress:             "10.1.1.2",
+						RemoteAS:              63000,
+						MultiHop:              6,
+						EnableAddressFamilies: []string{network.BGPAddressFamily_L2vpnEvpn.String()},
+						Password:              "testPassword",
+					},
+				},
+			},
+		},
+	}
+
+	kvs.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		r := into.(*network.RoutingConfig)
+		*r = existingrtcfg
+		return nil
+	}
+
+	kvs.Listfn = func(ctx context.Context, key string, into runtime.Object) error {
+		to := into.(*network.RoutingConfigList)
+		to.Items = []*network.RoutingConfig{&existingrtcfg}
+		return nil
+	}
+
+	validateStatus := func(i interface{}) error {
+		switch i.(type) {
+		case network.RoutingConfig:
+			in := i.(network.RoutingConfig)
+			if in.Status.AuthConfigStatus[0].Status != network.BGPAuthStatus_Disabled.String() || in.Status.AuthConfigStatus[1].Status != network.BGPAuthStatus_Enabled.String() {
+				return fmt.Errorf("did not match [%v]", in.Status.AuthConfigStatus)
+			}
+		case *network.RoutingConfig:
+			in := i.(*network.RoutingConfig)
+			if in.Status.AuthConfigStatus[0].Status != network.BGPAuthStatus_Disabled.String() || in.Status.AuthConfigStatus[1].Status != network.BGPAuthStatus_Enabled.String() {
+				return fmt.Errorf("did not match [%v]", in.Status.AuthConfigStatus)
+			}
+		}
+		in := i.(network.RoutingConfig)
+		if in.Status.AuthConfigStatus[0].Status != network.BGPAuthStatus_Disabled.String() || in.Status.AuthConfigStatus[1].Status != network.BGPAuthStatus_Enabled.String() {
+			return fmt.Errorf("did not match [%v]", in.Status.AuthConfigStatus)
+		}
+		return nil
+	}
+
+	validateList := func(i interface{}) error {
+		in := i.(network.RoutingConfigList)
+		for _, r := range in.Items {
+			err := validateStatus(*r)
+			if r != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	existingrtList := network.RoutingConfigList{
+		Items: []*network.RoutingConfig{&existingrtcfg},
+	}
+
+	ret, err := nh.updateAuthStatus(ctx, kvs, "network", network.RoutingConfig{}, network.RoutingConfig{}, network.RoutingConfig{}, apiintf.CreateOper)
+	AssertOk(t, err, "responseWriter returned error (%s)", err)
+	AssertOk(t, validateStatus(ret), "create oper response failed (%s)", err)
+
+	ret, err = nh.updateAuthStatus(ctx, kvs, "network", network.RoutingConfig{}, network.RoutingConfig{}, network.RoutingConfig{}, apiintf.UpdateOper)
+	AssertOk(t, err, "responseWriter returned error (%s)", err)
+	AssertOk(t, validateStatus(ret), "create oper response failed (%s)", err)
+
+	ret, err = nh.updateAuthStatus(ctx, kvs, "network", network.RoutingConfig{}, network.RoutingConfig{}, network.RoutingConfig{}, apiintf.GetOper)
+	AssertOk(t, err, "responseWriter returned error (%s)", err)
+	AssertOk(t, validateStatus(ret), "create oper response failed (%s)", err)
+
+	ret, err = nh.updateAuthStatus(ctx, kvs, "network", existingrtList, nil, existingrtList, apiintf.ListOper)
+	AssertOk(t, err, "responseWriter returned error (%s)", err)
+	AssertOk(t, validateList(ret), "create oper response failed (%s)", err)
+}

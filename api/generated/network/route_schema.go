@@ -15,6 +15,16 @@ import (
 
 var typesMapRoute = map[string]*api.Struct{
 
+	"network.BGPAuthStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(BGPAuthStatus{}) },
+		Fields: map[string]api.Field{
+			"IPAddress": api.Field{Name: "IPAddress", CLITag: api.CLIInfo{ID: "ip-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"RemoteAS": api.Field{Name: "RemoteAS", CLITag: api.CLIInfo{ID: "remote-as", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "remote-as", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
 	"network.BGPConfig": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(BGPConfig{}) },
 		Fields: map[string]api.Field{
@@ -207,6 +217,7 @@ var typesMapRoute = map[string]*api.Struct{
 			"router-id":               api.CLIInfo{Path: "Spec.BGPConfig.RouterId", Skip: false, Insert: "", Help: ""},
 			"self-link":               api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"shutdown":                api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].Shutdown", Skip: false, Insert: "", Help: ""},
+			"status":                  api.CLIInfo{Path: "Status.AuthConfigStatus[].Status", Skip: false, Insert: "", Help: ""},
 			"tenant":                  api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"uuid":                    api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
@@ -219,7 +230,9 @@ var typesMapRoute = map[string]*api.Struct{
 	},
 	"network.RoutingConfigStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RoutingConfigStatus{}) },
-		Fields: map[string]api.Field{},
+		Fields: map[string]api.Field{
+			"AuthConfigStatus": api.Field{Name: "AuthConfigStatus", CLITag: api.CLIInfo{ID: "auth-config-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "auth-config-status", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "network.BGPAuthStatus"},
+		},
 	},
 }
 

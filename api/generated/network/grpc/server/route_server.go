@@ -48,6 +48,7 @@ func (s *snetworkRouteBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 	l.Infof("registering message for snetworkRouteBackend")
 	s.Messages = map[string]apiserver.Message{
 
+		"network.BGPAuthStatus":      apisrvpkg.NewMessage("network.BGPAuthStatus"),
 		"network.BGPConfig":          apisrvpkg.NewMessage("network.BGPConfig"),
 		"network.BGPNeighbor":        apisrvpkg.NewMessage("network.BGPNeighbor"),
 		"network.EVPNConfig":         apisrvpkg.NewMessage("network.EVPNConfig"),

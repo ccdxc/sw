@@ -515,6 +515,79 @@ func (h *networkHooks) checkNetworkInterfaceMutable(ctx context.Context, kv kvst
 	return i, true, nil
 }
 
+func (h *networkHooks) updateAuthStatus(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+	switch oper {
+	case apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper, apiintf.GetOper:
+		var inRtCfg network.RoutingConfig
+		if oper == apiintf.DeleteOper {
+			inRtCfg = old.(network.RoutingConfig)
+		} else {
+			ino, ok := in.(network.RoutingConfig)
+			if !ok {
+				return resp, fmt.Errorf("invalid type")
+			}
+			err := kvs.Get(ctx, ino.MakeKey(prefix), &inRtCfg)
+			if err != nil {
+				return resp, err
+			}
+		}
+		outRtCfg, ok := resp.(network.RoutingConfig)
+		if ok {
+			if inRtCfg.Spec.BGPConfig != nil {
+				outRtCfg.Status.AuthConfigStatus = nil
+				for _, n := range inRtCfg.Spec.BGPConfig.Neighbors {
+					stat := &network.BGPAuthStatus{
+						IPAddress: n.IPAddress,
+						RemoteAS:  n.RemoteAS,
+					}
+					if n.Password != "" {
+						stat.Status = network.BGPAuthStatus_Enabled.String()
+					} else {
+						stat.Status = network.BGPAuthStatus_Disabled.String()
+					}
+					outRtCfg.Status.AuthConfigStatus = append(outRtCfg.Status.AuthConfigStatus, stat)
+				}
+			}
+			return outRtCfg, nil
+		}
+	case apiintf.ListOper:
+		inMap := make(map[string]*network.RoutingConfig)
+		outRtCfg, ok := resp.(network.RoutingConfigList)
+		if ok {
+			for _, r := range outRtCfg.Items {
+				inRtCfg := new(network.RoutingConfig)
+				err := kvs.Get(ctx, r.MakeKey(prefix), inRtCfg)
+				if err != nil {
+					return resp, err
+				}
+				inMap[r.Name] = inRtCfg
+			}
+		}
+
+		if ok {
+			for _, r := range outRtCfg.Items {
+				r.Status.AuthConfigStatus = nil
+				if r1, ok := inMap[r.Name]; ok {
+					for _, n := range r1.Spec.BGPConfig.Neighbors {
+						stat := &network.BGPAuthStatus{
+							IPAddress: n.IPAddress,
+							RemoteAS:  n.RemoteAS,
+						}
+						if n.Password != "" {
+							stat.Status = network.BGPAuthStatus_Enabled.String()
+						} else {
+							stat.Status = network.BGPAuthStatus_Disabled.String()
+						}
+						r.Status.AuthConfigStatus = append(r.Status.AuthConfigStatus, stat)
+					}
+				}
+			}
+		}
+		return outRtCfg, nil
+	}
+	return resp, nil
+}
+
 func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	hooks := networkHooks{}
 	hooks.svc = svc
@@ -532,8 +605,10 @@ func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("VirtualRouter", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateVirtualrouterConfig)
 	svc.GetCrudService("VirtualRouter", apiintf.UpdateOper).WithPreCommitHook(hooks.checkVirtualRouterMutableUpdate)
 	svc.GetCrudService("VirtualRouter", apiintf.DeleteOper).WithPreCommitHook(hooks.deleteDefaultVRFRouteTable)
-	svc.GetCrudService("RoutingConfig", apiintf.CreateOper).WithPreCommitHook(hooks.routingConfigPreCommit)
-	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).WithPreCommitHook(hooks.routingConfigPreCommit)
+	svc.GetCrudService("RoutingConfig", apiintf.CreateOper).WithPreCommitHook(hooks.routingConfigPreCommit).WithResponseWriter(hooks.updateAuthStatus)
+	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).WithPreCommitHook(hooks.routingConfigPreCommit).WithResponseWriter(hooks.updateAuthStatus)
+	svc.GetCrudService("RoutingConfig", apiintf.GetOper).WithResponseWriter(hooks.updateAuthStatus)
+	svc.GetCrudService("RoutingConfig", apiintf.ListOper).WithResponseWriter(hooks.updateAuthStatus)
 	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateRoutingConfig)
 }
 

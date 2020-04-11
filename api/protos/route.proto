@@ -144,8 +144,22 @@ message RoutingConfigSpec {
     BGPConfig BGPConfig = 1 [(gogoproto.jsontag) = "bgp-config,omitempty"];
 }
 
+message BGPAuthStatus {
+    enum AuthStatus {
+        Disabled    = 0;
+        Enabled     = 1;
+    }
+    // Neighbor IP Address.
+    string IPAddress    = 1 [(gogoproto.jsontag) = "ip-address,omitempty"];
+    // ASN the neighbor belongs to.
+    uint32 RemoteAS     = 2 [(gogoproto.jsontag) = "remote-as,omitempty"];
+    // Authentication status.
+    string Status       = 3 [(gogoproto.jsontag) = "status,omitempty", (venice.check) = "StrEnum(BGPAuthStatus.AuthStatus)"];
+}
+
 message RoutingConfigStatus {
-    // Empty
+    // Authentication config status
+    repeated BGPAuthStatus AuthConfigStatus = 1 [(gogoproto.jsontag) = "auth-config-status,omitempty"];
 }
 
 message RoutingConfig {

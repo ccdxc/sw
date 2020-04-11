@@ -8058,6 +8058,32 @@
         }
       }
     },
+    "networkBGPAuthStatus": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "ip-address": {
+          "type": "string",
+          "description": "Neighbor IP Address."
+        },
+        "remote-as": {
+          "type": "integer",
+          "format": "int64",
+          "description": "ASN the neighbor belongs to."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "disabled",
+            "enabled"
+          ],
+          "default": "disabled",
+          "description": "Authentication status."
+        }
+      }
+    },
     "networkBGPConfig": {
       "type": "object",
       "required": [
@@ -8976,7 +9002,16 @@
       }
     },
     "networkRoutingConfigStatus": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "auth-config-status": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkBGPAuthStatus"
+          },
+          "description": "Authentication config status."
+        }
+      }
     },
     "networkService": {
       "type": "object",
