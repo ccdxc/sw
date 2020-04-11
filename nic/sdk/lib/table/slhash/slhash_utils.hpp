@@ -4,11 +4,6 @@
 #ifndef __SLHASH_UTILS_HPP__
 #define __SLHASH_UTILS_HPP__
 
-#define SLHASH_TRACES_ENABLED 0
-#ifndef PERF_DBG
-#define SLHASH_TRACES_ENABLED 0
-#endif
-
 #ifdef SLHASH_TRACES_ENABLED
 #define SLHASH_TRACE_VERBOSE(_msg, _args...) SDK_TRACE_DEBUG(_msg, ##_args)
 #define SLHASH_TRACE_DEBUG(_msg, _args...) SDK_TRACE_DEBUG(_msg, ##_args)
