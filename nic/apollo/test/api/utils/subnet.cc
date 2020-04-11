@@ -101,19 +101,43 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
         return false;
     }
 
-    if (spec->ing_v4_policy[0] != this->spec.ing_v4_policy[0]) {
+    if (spec->num_ing_v4_policy == this->spec.num_ing_v4_policy) {
+        for (uint32_t i = 0; i < spec->num_ing_v4_policy; i++) {
+            if (spec->ing_v4_policy[i] != this->spec.ing_v4_policy[i]) {
+                return false;
+            }
+        }
+    } else {
         return false;
     }
 
-    if (spec->ing_v6_policy[0] != this->spec.ing_v6_policy[0]) {
+    if (spec->num_ing_v6_policy == this->spec.num_ing_v6_policy) {
+        for (uint32_t i = 0; i < spec->num_ing_v6_policy; i++) {
+            if (spec->ing_v6_policy[i] != this->spec.ing_v6_policy[i]) {
+                return false;
+            }
+        }
+    } else {
         return false;
     }
 
-    if (spec->egr_v4_policy[0] != this->spec.egr_v4_policy[0]) {
+    if (spec->num_egr_v4_policy == this->spec.num_egr_v4_policy) {
+        for (uint32_t i = 0; i < spec->num_egr_v4_policy; i++) {
+            if (spec->egr_v4_policy[i] != this->spec.egr_v4_policy[i]) {
+                return false;
+            }
+        }
+    } else {
         return false;
     }
 
-    if (spec->egr_v6_policy[0] != this->spec.egr_v6_policy[0]) {
+    if (spec->num_egr_v6_policy == this->spec.num_egr_v6_policy) {
+        for (uint32_t i = 0; i < spec->num_egr_v6_policy; i++) {
+            if (spec->egr_v6_policy[i] != this->spec.egr_v6_policy[i]) {
+                return false;
+            }
+        }
+    } else {
         return false;
     }
 

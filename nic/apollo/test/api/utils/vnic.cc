@@ -102,10 +102,14 @@ vnic_spec_policy_fill (pds_vnic_spec_t *spec, uint8_t num_policies,
     spec->num_egr_v4_policy = num_policies;
     spec->num_egr_v6_policy = num_policies;
     for (uint8_t i = 0; i < num_policies; i++) {
-        spec->ing_v4_policy[i] = int2pdsobjkey(policy_start + i + 1);
-        spec->ing_v6_policy[i] = int2pdsobjkey(policy_start + i + 6);
-        spec->egr_v4_policy[i] = int2pdsobjkey(policy_start + i + 11);
-        spec->egr_v6_policy[i] = int2pdsobjkey(policy_start + i + 16);
+        spec->ing_v4_policy[i] =
+            int2pdsobjkey(TEST_POLICY_ID_BASE + policy_start + i + 1);
+        spec->ing_v6_policy[i] =
+            int2pdsobjkey(TEST_POLICY_ID_BASE + policy_start + i + 6);
+        spec->egr_v4_policy[i] =
+            int2pdsobjkey(TEST_POLICY_ID_BASE + policy_start + i + 11);
+        spec->egr_v6_policy[i] =
+            int2pdsobjkey(TEST_POLICY_ID_BASE + policy_start + i + 16);
     }
 }
 

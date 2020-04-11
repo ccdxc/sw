@@ -16,12 +16,12 @@ fi
 
 run_gtest device
 run_gtest vpc
-#run_gtest subnet
+run_gtest subnet
 run_gtest route_table LOG="/dev/null"
 run_gtest route
 run_gtest nh
 run_gtest nh_group
-#run_gtest vnic
+run_gtest vnic
 run_gtest tep
 run_gtest if
 run_gtest mapping

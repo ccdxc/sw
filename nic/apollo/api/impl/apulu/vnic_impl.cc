@@ -423,6 +423,7 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     for (uint32_t j = 0; j < vnic->num_ing_v4_policy(); j++) {
         policy_key = vnic->ing_v4_policy(j);
         sec_policy = policy_find(&policy_key);
+        PDS_TRACE_ERR("Looking for policy %s", policy_key.str());
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 vnic ing policy root addr 0x%llx", addr);
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
@@ -439,8 +440,8 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
                       "at %u", (hw_id_ * 2));
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     } else {
-        PDS_TRACE_DEBUG("Programmed v4 Rx entry in VNIC_INFO_RXDMA table "
-                        "at %u", (hw_id_ * 2));
+        PDS_TRACE_VERBOSE("Programmed v4 Rx entry in VNIC_INFO_RXDMA table "
+                          "at %u", (hw_id_ * 2));
     }
 
     // program IPv6 ingress entry
@@ -496,8 +497,8 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
                       "at %u", (hw_id_ * 2) + 1);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     } else {
-        PDS_TRACE_DEBUG("Programmed v6 Rx entry in VNIC_INFO_RXDMA table "
-                        "at %u", (hw_id_ * 2) + 1);
+        PDS_TRACE_VERBOSE("Programmed v6 Rx entry in VNIC_INFO_RXDMA table "
+                          "at %u", (hw_id_ * 2) + 1);
     }
 
     // program IPv4 egress entry
@@ -537,8 +538,8 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
                       (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2));
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     } else {
-        PDS_TRACE_DEBUG("Programmed v4 Tx entry in VNIC_INFO_RXDMA table "
-                        "at %u", (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2));
+        PDS_TRACE_VERBOSE("Programmed v4 Tx entry in VNIC_INFO_RXDMA table "
+                          "at %u", (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2));
     }
 
     // program IPv6 egress entry
@@ -578,8 +579,9 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
                       (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2) + 1);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     } else {
-        PDS_TRACE_DEBUG("Programmed v6 Tx entry in VNIC_INFO_RXDMA table "
-                        "at %u", (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2) + 1);
+        PDS_TRACE_VERBOSE("Programmed v6 Tx entry in VNIC_INFO_RXDMA table "
+                          "at %u",
+                          (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2) + 1);
     }
     return SDK_RET_OK;
 }

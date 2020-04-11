@@ -769,7 +769,7 @@ TEST_F(vnic_test, DISABLED_vnic_update_switch_vnic) {
 
 /// \brief update policy - attach one policy P1 to vnic V1 and then update
 ///        V1 by adding P2 to V1 (so V1 ends up with P1 and P2)
-TEST_F(vnic_test, DISABLED_vnic_update_policy1) {
+TEST_F(vnic_test, vnic_update_policy1) {
     if (!apulu()) return;
 
     pds_vnic_spec_t spec = {0};
@@ -802,7 +802,7 @@ TEST_F(vnic_test, DISABLED_vnic_update_policy1) {
 
 /// \brief update policy - attach policy P1 to vnic V1 and then update V1
 ///        with no policy
-TEST_F(vnic_test, DISABLED_vnic_update_policy2) {
+TEST_F(vnic_test, vnic_update_policy2) {
     if (!apulu()) return;
 
     pds_vnic_spec_t spec = {0};
@@ -835,7 +835,7 @@ TEST_F(vnic_test, DISABLED_vnic_update_policy2) {
 
 /// \brief update policy - attach policy P1, P2 to vnic V1 and update V1
 ///        with P1 only (disassociating P2) and then with no policies
-TEST_F(vnic_test, DISABLED_vnic_update_policy3) {
+TEST_F(vnic_test, vnic_update_policy3) {
     if (!apulu()) return;
 
     pds_vnic_spec_t spec = {0};
@@ -880,7 +880,7 @@ TEST_F(vnic_test, DISABLED_vnic_update_policy3) {
 
 /// \brief update policy - Attach policy P1, P2 to vnic V1 and update V1
 ///        with P3, P4
-TEST_F(vnic_test, DISABLED_vnic_update_policy4) {
+TEST_F(vnic_test, vnic_update_policy4) {
     if (!apulu()) return;
 
     pds_vnic_spec_t spec = {0};
