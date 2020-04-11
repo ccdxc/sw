@@ -1,4 +1,3 @@
-//
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
@@ -66,12 +65,6 @@ upg_ev_repeal (upg_ev_params_t *params)
     return SDK_RET_OK;
 }
 
-static sdk_ret_t
-upg_ev_exit (upg_ev_params_t *params)
-{
-    return SDK_RET_OK;
-}
-
 sdk_ret_t
 nicmgr_upg_hitless_init (void)
 {
@@ -87,7 +80,6 @@ nicmgr_upg_hitless_init (void)
     ev_hdlr.quiesce_hdlr = upg_ev_quiesce;
     ev_hdlr.switchover_hdlr = upg_ev_switchover;
     ev_hdlr.repeal_hdlr = upg_ev_repeal;
-    ev_hdlr.exit_hdlr = upg_ev_exit;
 
     // register for upgrade events
     api::upg_ev_thread_hdlr_register(ev_hdlr);

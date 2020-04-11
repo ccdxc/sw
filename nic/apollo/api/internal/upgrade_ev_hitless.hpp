@@ -64,10 +64,6 @@ typedef struct upg_ev_hitless_s {
     ///   quiesce state.
     upg_ev_hdlr_t repeal_hdlr;
 
-    /// completed the upgrade (on A / B)
-    /// threads should shutdown by receiving this event
-    upg_ev_hdlr_t exit_hdlr;
-
 } upg_ev_hitless_t;
 
 /// register the thread to the main upgrade event handler

@@ -43,7 +43,6 @@ namespace upg {
     E(UPG_EV_ROLLBACK,        EV_ID_UPGMGR(UPG_STAGE_ROLLBACK),        "")  \
     E(UPG_EV_REPEAL,          EV_ID_UPGMGR(UPG_STAGE_REPEAL),          "")  \
     E(UPG_EV_FINISH,          EV_ID_UPGMGR(UPG_STAGE_FINISH),          "")  \
-    E(UPG_EV_EXIT,            EV_ID_UPGMGR(UPG_STAGE_EXIT),            "")  \
     E(UPG_EV_MAX,             (SDK_IPC_EVENT_ID_UPGMGR_MAX),           "")
 
 SDK_DEFINE_ENUM(upg_ev_id_t, UPG_EV_ENTRIES)
@@ -158,10 +157,6 @@ typedef struct upg_ev_s {
     /// processs can do final cleanup
     upg_ev_hdlr_t finish_hdlr;
 
-    /// completed the upgrade (on A / B)
-    /// processs should shutdown by receiving this event
-    upg_ev_hdlr_t exit_hdlr;
-
 } upg_ev_t;
 
 void upg_ev_hdlr_register(upg_ev_t &ev);
@@ -182,7 +177,6 @@ using sdk::upg::upg_ev_id_t::UPG_EV_READY;
 using sdk::upg::upg_ev_id_t::UPG_EV_ROLLBACK;
 using sdk::upg::upg_ev_id_t::UPG_EV_REPEAL;
 using sdk::upg::upg_ev_id_t::UPG_EV_FINISH;
-using sdk::upg::upg_ev_id_t::UPG_EV_EXIT;
 using sdk::upg::upg_ev_id_t::UPG_EV_MAX;
 
 /// @}

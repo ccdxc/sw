@@ -47,7 +47,6 @@ upg_event2hdlr (upg_ev_id_t ev_id)
     case UPG_EV_ROLLBACK        : return upg_ev.rollback_hdlr;
     case UPG_EV_REPEAL          : return upg_ev.repeal_hdlr;
     case UPG_EV_FINISH          : return upg_ev.finish_hdlr;
-    case UPG_EV_EXIT            : return upg_ev.exit_hdlr;
     default:
         SDK_TRACE_DEBUG("Upgrade unknown event %s", upg_event2str(ev_id));
         SDK_ASSERT(0);
@@ -147,7 +146,7 @@ upg_ev_hdlr_register(upg_ev_t &ev)
     // and prev version of services
     for(uint32_t ev_id = UPG_EV_COMPAT_CHECK; ev_id <= UPG_EV_MAX; ev_id++) {
         sdk::ipc::reg_request_handler(ev_id, upg_ev_handler, NULL);
-        upg_ev_bitmap |= (1 << ev_id); 
+        upg_ev_bitmap |= (1 << ev_id);
     }
 }
 

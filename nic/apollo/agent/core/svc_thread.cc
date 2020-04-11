@@ -104,7 +104,6 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
     ev->ready_hdlr = pds_upgrade;
     ev->repeal_hdlr = pds_upgrade;
     ev->finish_hdlr = pds_upgrade;
-    ev->exit_hdlr = pds_upgrade;
 }
 
 
