@@ -271,8 +271,10 @@ pd_mirror_session_create (pd_func_args_t *pd_func_args)
     case MIRROR_DEST_ERSPAN: {
         action_data.action_id = MIRROR_ERSPAN_MIRROR_ID;
         auto erspan_type = args->session->mirror_destination_u.er_span_dest.type;
+        auto vlan_strip_en = args->session->mirror_destination_u.er_span_dest.vlan_strip_en;
         action_data.action_u.mirror_erspan_mirror.truncate_len = args->session->truncate_len;
         action_data.action_u.mirror_erspan_mirror.erspan_type = erspan_type;
+        action_data.action_u.mirror_erspan_mirror.vlan_strip_en = vlan_strip_en;
         action_data.action_u.mirror_erspan_mirror.span_tm_oq = qos_get_span_tm_oq();
         // If erspan type I, then gre_seq is not valid field.
         if (likely(is_platform_type_hw()) &&

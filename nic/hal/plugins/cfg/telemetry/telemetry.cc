@@ -399,7 +399,6 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         break;
     }
     case MirrorSessionSpec::kErspanSpec: {
-        HAL_TRACE_DEBUG("ERSpan IF is true");
         auto erspan = spec.erspan_spec();
         session->mirror_destination_u.er_span_dest.vrf_id =
             spec.vrf_key_handle().vrf_id();
@@ -450,6 +449,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         }
         SDK_ASSERT(erspan_type == ERSPAN_TYPE_II || erspan_type == ERSPAN_TYPE_III);
         session->mirror_destination_u.er_span_dest.type = erspan_type;
+        session->mirror_destination_u.er_span_dest.vlan_strip_en = erspan.vlan_strip_en();
         session->dest_if = dest_if;
         args.tunnel_if = ift;
         args.dst_if = dest_if;
@@ -538,6 +538,7 @@ mirror_session_fill_rsp (void *entry, void *ctxt)
             HAL_TRACE_ERR("Found unsupported erspan type {} in Mirror Session ID {} ",
                           erspan.type, session->sw_id);
         }
+        response->mutable_spec()->mutable_erspan_spec()->set_vlan_strip_en(erspan.vlan_strip_en);
         response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
             set_v4_addr(erspan.ip_sa.addr.v4_addr);
         response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\

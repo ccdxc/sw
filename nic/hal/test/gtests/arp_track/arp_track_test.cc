@@ -47,7 +47,8 @@ protected:
 
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
-    hal_base_test::SetUpTestCase();
+    // hal_base_test::SetUpTestCase();
+      hal_base_test::SetUpTestCaseGrpc();
   }
 };
 
@@ -95,7 +96,7 @@ TEST_F (arp_track_test, mirror_order1) {
     g_hal_state->set_inb_bond_active_uplink(HAL_HANDLE_INVALID);
 
     // Create Mirror session
-    ASSERT_EQ(create_mirror(sid1, vrf_id_hp1, src_ip, ips[0]), HAL_RET_OK);
+    ASSERT_EQ(create_mirror(sid1, vrf_id_hp1, src_ip, ips[0], true), HAL_RET_OK);
     ASSERT_EQ(create_mirror(sid2, vrf_id_hp1, src_ip, ips[1]), HAL_RET_OK);
 
     g_hal_state->set_inb_bond_active_uplink(up_if->hal_handle); 
@@ -122,6 +123,9 @@ TEST_F (arp_track_test, mirror_order1) {
 
     // Create Tunnel If
     ASSERT_EQ(create_tunnel(tnnl_if_id1, vrf_id_hp1, src_ip, ips[0]), HAL_RET_OK);
+
+    // For halctl cli
+    // sleep(1000);
 }
 
 TEST_F (arp_track_test, mirror_order2) {

@@ -404,7 +404,8 @@ delete_mcast (uint32_t l2seg_id, uint64_t mac)
 }
 
 hal_ret_t
-create_mirror (uint32_t session_id, uint32_t vrf_id, uint32_t sip, uint32_t dip) 
+create_mirror (uint32_t session_id, uint32_t vrf_id, uint32_t sip, uint32_t dip,
+               bool vlan_strip_en) 
 {
     hal_ret_t ret;
     MirrorSessionSpec spec;
@@ -416,6 +417,7 @@ create_mirror (uint32_t session_id, uint32_t vrf_id, uint32_t sip, uint32_t dip)
     spec.mutable_erspan_spec()->mutable_src_ip()->set_v4_addr(sip);
     spec.mutable_erspan_spec()->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
     spec.mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(dip);
+    spec.mutable_erspan_spec()->set_vlan_strip_en(vlan_strip_en);
     spec.mutable_erspan_spec()->set_span_id(session_id);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
