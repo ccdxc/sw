@@ -28,53 +28,53 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 
-def __checkDebugStatsDefault(host, intf):
+def __checkDebugStatsDefault(wl):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    api.Logger.info("Check default setting: %s" % intf)
-    api.Trigger_AddHostCommand(req, host, "ethtool --show-priv-flags %s" % intf)
-    api.Trigger_AddHostCommand(req, host, "ethtool -S %s" % intf)
+    api.Logger.info("Check default setting: %s" % wl.interface)
+    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ethtool --show-priv-flags %s" % wl.interface)
+    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ethtool -S %s" % wl.interface)
     resp = api.Trigger(req)
 
     cmd = resp.commands[0]
     #api.PrintCommandResults(cmd)
 
     if cmd.exit_code != 0:
-        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, intf))
+        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, wl.interface))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
     if "sw-dbg-stats: off" not in cmd.stdout:
-        api.Logger.error("sw-dbg-stats on by default interface %s" % intf)
+        api.Logger.error("sw-dbg-stats on by default interface %s" % wl.interface)
         return api.types.status.FAILURE
 
     cmd = resp.commands[1]
     #api.PrintCommandResults(cmd)
 
     if cmd.exit_code != 0:
-        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, intf))
+        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, wl.interface))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
     if "napi_work_done" in cmd.stdout:
-        api.Logger.error("extended dbg stats seen in default mode on interface %s" % intf)
+        api.Logger.error("extended dbg stats seen in default mode on interface %s" % wl.interface)
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 
 
-def __checkDebugStatsOn(host, intf):
+def __checkDebugStatsOn(wl):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    api.Logger.info("Check enable setting: %s" % intf)
-    api.Trigger_AddHostCommand(req, host, "ethtool --set-priv-flags %s sw-dbg-stats on" % intf)
-    api.Trigger_AddHostCommand(req, host, "ethtool --show-priv-flags %s" % intf)
-    api.Trigger_AddHostCommand(req, host, "ethtool -S %s" % intf)
+    api.Logger.info("Check enable setting: %s" % wl.interface)
+    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ethtool --set-priv-flags %s sw-dbg-stats on" % wl.interface)
+    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ethtool --show-priv-flags %s" % wl.interface)
+    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ethtool -S %s" % wl.interface)
     resp = api.Trigger(req)
 
     cmd = resp.commands[0]
     #api.PrintCommandResults(cmd)
 
     if cmd.exit_code != 0:
-        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, intf))
+        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, wl.interface))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
 
@@ -82,41 +82,41 @@ def __checkDebugStatsOn(host, intf):
     #api.PrintCommandResults(cmd)
 
     if cmd.exit_code != 0:
-        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, intf))
+        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, wl.interface))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
     if "sw-dbg-stats: on" not in cmd.stdout:
-        api.Logger.error("sw-dbg-stats not enabled in interface %s" % intf)
+        api.Logger.error("sw-dbg-stats not enabled in interface %s" % wl.interface)
         return api.types.status.FAILURE
 
     cmd = resp.commands[2]
     #api.PrintCommandResults(cmd)
 
     if cmd.exit_code != 0:
-        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, intf))
+        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, wl.interface))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
     if "napi_work_done" not in cmd.stdout:
-        api.Logger.error("extended dbg stats missing in enabled mode on interface %s" % intf)
+        api.Logger.error("extended dbg stats missing in enabled mode on interface %s" % wl.interface)
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 
 
-def __checkDebugStatsOff(host, intf):
+def __checkDebugStatsOff(wl):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    api.Logger.info("Check disable setting: %s" % intf)
-    api.Trigger_AddHostCommand(req, host, "ethtool --set-priv-flags %s sw-dbg-stats off" % intf)
-    api.Trigger_AddHostCommand(req, host, "ethtool --show-priv-flags %s" % intf)
-    api.Trigger_AddHostCommand(req, host, "ethtool -S %s" % intf)
+    api.Logger.info("Check disable setting: %s" % wl.interface)
+    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ethtool --set-priv-flags %s sw-dbg-stats off" % wl.interface)
+    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ethtool --show-priv-flags %s" % wl.interface)
+    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ethtool -S %s" % wl.interface)
     resp = api.Trigger(req)
 
     cmd = resp.commands[0]
     #api.PrintCommandResults(cmd)
 
     if cmd.exit_code != 0:
-        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, intf))
+        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, wl.interface))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
 
@@ -124,22 +124,22 @@ def __checkDebugStatsOff(host, intf):
     #api.PrintCommandResults(cmd)
 
     if cmd.exit_code != 0:
-        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, intf))
+        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, wl.interface))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
     if "sw-dbg-stats: off" not in cmd.stdout:
-        api.Logger.error("sw-dbg-stats not disabled in interface %s" % intf)
+        api.Logger.error("sw-dbg-stats not disabled in interface %s" % wl.interface)
         return api.types.status.FAILURE
 
     cmd = resp.commands[2]
     #api.PrintCommandResults(cmd)
 
     if cmd.exit_code != 0:
-        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, intf))
+        api.Logger.error("Bad exit code %d on interface %s" % (cmd.exit_code, wl.interface))
         api.Logger.info(cmd.stderr)
         return api.types.status.FAILURE
     if "napi_work_done" in cmd.stdout:
-        api.Logger.error("extended dbg stats appears in disabled mode on interface %s" % intf)
+        api.Logger.error("extended dbg stats appears in disabled mode on interface %s" % wl.interface)
         return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
@@ -149,19 +149,19 @@ def Trigger(tc):
     if tc.os != 'linux':
         return api.types.status.SUCCESS
 
-    hosts = api.GetNaplesHostnames()
-    intfs = api.GetNaplesHostInterfaces(tc.nodes[0])
+    workloads = api.GetWorkloads()
 
     ret = api.types.status.SUCCESS
-    for i in intfs:
-        ret = __checkDebugStatsDefault(hosts[0], i)
+
+    for wl in workloads:
+        ret = __checkDebugStatsDefault(wl)
         if ret == api.types.status.SUCCESS:
-            ret = __checkDebugStatsOn(hosts[0], i)
+            ret = __checkDebugStatsOn(wl)
         if ret == api.types.status.SUCCESS:
-            ret = __checkDebugStatsOff(hosts[0], i)
+            ret = __checkDebugStatsOff(wl)
 
         if ret != api.types.status.SUCCESS:
-            api.Logger.error("Failed for interface %s" % i)
+            api.Logger.error("Failed for interface %s" % wl.interface)
             break
 
     return ret

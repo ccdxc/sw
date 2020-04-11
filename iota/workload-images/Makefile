@@ -3,7 +3,7 @@
 #################################################
 
 REGISTRY = registry.test.pensando.io:5000
-IOTA_CENTOS_TAG = pensando/iota/centos:1.1
+IOTA_CENTOS_TAG = pensando/iota/centos:1.2
 
 IOTA_CENTOS_IMAGE = ${REGISTRY}/${IOTA_CENTOS_TAG}
 

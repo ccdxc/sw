@@ -4,7 +4,7 @@ import yaml
 import iota.harness.api as api
 import iota.test.apulu.config.api as config_api
 import iota.test.apulu.utils.pdsctl as pdsctl
-import iota.test.utils.naples_host as naples_host
+import iota.test.utils.naples_workload as naples_workload
 import iota.test.utils.traffic as traffic_utils
 
 def SetRandom_Offload():
@@ -64,8 +64,8 @@ def Trigger(tc):
             continue
         if wl.IsNaples():
             # Save original flag values for rollback
-            tx_status = naples_host.Get_TxVlanOffload_Status(wl.node_name, wl.interface)
-            rx_status = naples_host.Get_RxVlanOffload_Status(wl.node_name, wl.interface)
+            tx_status = naples_workload.Get_TxVlanOffload_Status(wl)
+            rx_status = naples_workload.Get_RxVlanOffload_Status(wl)
             if api.IsApiResponseOk(rx_status):
                 if api.GetNodeOs(wl.node_name) == 'linux':
                     rx_enable = (rx_status.commands[0].stdout).split(':')[1]
@@ -108,14 +108,14 @@ def Trigger(tc):
                     tx_enable = 'off' if tx_enable == 'on' else 'on'
             else:
                 tx_enable = 'on' if tc.args.tx else 'off'
-            toggle_tx_resp = naples_host.Toggle_TxVlanOffload(wl.node_name, wl.interface, tx_enable)
+            toggle_tx_resp = naples_workload.Toggle_TxVlanOffload(wl, tx_enable)
 
             if type(tc.args.rx) == int:
                 if wl.workload_name in tc.rx_random:
                     rx_enable = 'off' if rx_enable == 'on' else 'on'
             else:
                 rx_enable = 'on' if tc.args.rx else 'off'
-            toggle_rx_resp = naples_host.Toggle_RxVlanOffload(wl.node_name, wl.interface, rx_enable)
+            toggle_rx_resp = naples_workload.Toggle_RxVlanOffload(wl, rx_enable)
 
             if not api.IsApiResponseOk(toggle_tx_resp):
                 result = api.types.status.FAILURE
@@ -144,8 +144,8 @@ def Trigger(tc):
             #    break
 
             # Store status for verification
-            rx_status = naples_host.Get_RxVlanOffload_Status(wl.node_name, wl.interface)
-            tx_status = naples_host.Get_TxVlanOffload_Status(wl.node_name, wl.interface)
+            rx_status = naples_workload.Get_RxVlanOffload_Status(wl)
+            tx_status = naples_workload.Get_TxVlanOffload_Status(wl)
 
             tc.cmd_status[wl.workload_name] = (tx_status, rx_status)
 
@@ -216,11 +216,11 @@ def Teardown(tc):
     for wl in api.GetWorkloads():
         if wl.workload_name in tc.orig_hwtag_flags:
             api.Logger.info("Rolling back: wl_name: %s, tx_enable: %s" % (wl.interface,  tc.orig_hwtag_flags[wl.workload_name][0]))
-            tx_resp = naples_host.Toggle_TxVlanOffload(wl.node_name, wl.interface, tc.orig_hwtag_flags[wl.workload_name][0])
+            tx_resp = naples_workload.Toggle_TxVlanOffload(wl, tc.orig_hwtag_flags[wl.workload_name][0])
             if not api.IsApiResponseOk(tx_resp):
                 result = api.types.status.FAILURE
             api.Logger.info("Rolling back: wl_name: %s, rx_enable: %s" % (wl.interface,  tc.orig_hwtag_flags[wl.workload_name][1]))
-            rx_resp = naples_host.Toggle_RxVlanOffload(wl.node_name, wl.interface, tc.orig_hwtag_flags[wl.workload_name][1])
+            rx_resp = naples_workload.Toggle_RxVlanOffload(wl, tc.orig_hwtag_flags[wl.workload_name][1])
             if not api.IsApiResponseOk(rx_resp):
                 result = api.types.status.FAILURE
 

@@ -5,6 +5,7 @@ import iota.test.utils.naples_host as host
 def Setup(tc):
     tc.nodes = api.GetNaplesHostnames()
     tc.os = api.GetNodeOs(tc.nodes[0])
+    tc.workloads = api.GetWorkloads()
 
     #validate OS values. If unknown, return failure.
     if (tc.os != 'linux') and (tc.os != 'freebsd'):
@@ -17,20 +18,19 @@ def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
 
     # set interrupt coalescing value
-    for node in tc.nodes:
-        interfaces = api.GetNaplesHostInterfaces(node)
-        for interface in interfaces:
-            api.Logger.info("Set Interrupt Coalescing on %s:%s to %d" % \
-                                                      (node, interface, \
-                                                       tc.iterators.coales_interval))
-            if tc.os == 'linux':
-                api.Trigger_AddHostCommand(req, node, "ethtool -C %s rx-usecs %d" % \
-                                                    (interface, \
-                                                     tc.iterators.coales_interval))
-            elif tc.os == 'freebsd':
-                api.Trigger_AddHostCommand(req, node, "sysctl dev.%s.intr_coal=%d" % \
-                                                    (host.GetNaplesSysctl(interface), \
-                                                     tc.iterators.coales_interval))
+    for wl in tc.workloads:
+        api.Logger.info("Set Interrupt Coalescing on %s:%s to %d" % \
+                                                  (wl.node_name, wl.interface, \
+                                                   tc.iterators.coales_interval))
+        if tc.os == 'linux':
+            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, \
+                                   "ethtool -C %s rx-usecs %d" % \
+                                   (wl.interface, tc.iterators.coales_interval))
+        elif tc.os == 'freebsd':
+            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, \
+                                   "sysctl dev.%s.intr_coal=%d" % \
+                                   (host.GetNaplesSysctl(wl.interface), \
+                                   tc.iterators.coales_interval))
 
     tc.resp = api.Trigger(req)
 
@@ -52,7 +52,7 @@ def Trigger(tc):
             if tc.os == 'linux':
                 if cmd.stderr.find("out of range") == -1:
                     api.Logger.error("ionic did not error when coales value set (%d) > than supported  %d)" \
-                                        % tc.iterators.coales_interval, tc.args.max_coales_interval)
+                                        % (tc.iterators.coales_interval, tc.args.max_coales_interval))
                     api.Logger.info(cmd.stderr)
                     return api.types.status.FAILURE
             elif tc.os == 'freebsd':
@@ -74,15 +74,15 @@ def Verify(tc):
         return api.types.status.FAILURE
 
     # get the current coalescing value from FW/Driver
-    for n in tc.nodes:
-        intfs = api.GetNaplesHostInterfaces(n)
-        api.Logger.info("Retrieve coalescing value from interfaces")
-        for i in intfs:
-            if tc.os == 'linux':
-                api.Trigger_AddHostCommand(req, n, "ethtool -c %s" % i)
-            elif tc.os == 'freebsd':
-                api.Trigger_AddHostCommand(req, n, "sysctl dev.%s.curr_coal_us" % \
-                                                    (host.GetNaplesSysctl(i)))
+    api.Logger.info("Retrieve coalescing value from interfaces")
+    for wl in tc.workloads:
+        if tc.os == 'linux':
+            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, \
+                                   "ethtool -c %s" % wl.interface)
+        elif tc.os == 'freebsd':
+            api.Trigger_AddHostCommand(req, wl.node_name, wl.workload_name, \
+                                       "sysctl dev.%s.curr_coal_us" % \
+                                        (host.GetNaplesSysctl(wl.interface)))
 
     tc.resp = api.Trigger(req)
 

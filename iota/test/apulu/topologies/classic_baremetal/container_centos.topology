@@ -16,7 +16,7 @@ nodes:
             concurrent : 25
         linux:
             type    : WORKLOAD_TYPE_CONTAINER
-            image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.1"
+            image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.2"
 
 
     - node: node2
@@ -32,4 +32,4 @@ nodes:
             concurrent : 25
         linux:
             type    : WORKLOAD_TYPE_CONTAINER
-            image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.1"
+            image   : "registry.test.pensando.io:5000/pensando/iota/centos:1.2"

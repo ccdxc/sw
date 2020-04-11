@@ -2,8 +2,8 @@
 import iota.harness.api as api
 import iota.test.apulu.config.api as config_api
 import iota.test.utils.debug as debug_utils
-import iota.test.utils.host as host_utils
 import iota.test.utils.naples_host as naples_host
+import iota.test.utils.naples_workload as naples_workload
 import iota.test.utils.traffic as traffic_utils
 import random
 import time
@@ -24,13 +24,13 @@ def verifyMTUchange(tc):
     if api.IsDryrun():
         return result
     for w in workloads:
-        configured_mtu = host_utils.getInterfaceMTU(w.node_name, w.interface)
+        configured_mtu = naples_workload.getInterfaceMTU(w)
         if node_name != w.node_name:
             api.Logger.verbose("MTU filter : verifyMTUchange skipping peer node ", w.node_name, w.interface, configured_mtu, expected_mtu)
             continue
         if configured_mtu != expected_mtu:
             api.Logger.critical("MTU filter : verifyMTUchange failed for ", w.interface, configured_mtu, expected_mtu)
-            host_utils.debug_dump_interface_info(w.node_name, w.interface)
+            naples_workload.debug_dump_interface_info(w)
             result = api.types.status.FAILURE
     return result
 
@@ -44,11 +44,11 @@ def changeWorkloadIntfMTU(new_mtu, node_name=None):
             if node_name != w.node_name:
                 api.Logger.debug("MTU filter : changeWorkloadIntfMTU skipping peer node ", w.node_name, w.interface, new_mtu)
                 continue
-        cmd = host_utils.setInterfaceMTU(w.node_name, w.interface, new_mtu)
+        cmd = naples_workload.setInterfaceMTU(w, new_mtu)
         if cmd.exit_code != 0:
             api.Logger.critical("MTU filter : changeWorkloadIntfMTU failed for ", w.node_name, w.interface, new_mtu)
             api.PrintCommandResults(cmd)
-            host_utils.debug_dump_interface_info(w.node_name, w.interface)
+            naples_workload.debug_dump_interface_info(w)
             result = api.types.status.FAILURE
     return result
 
@@ -97,11 +97,11 @@ def initPeerNode(naples_node, new_mtu=__MAX_MTU):
         if naples_node == w.node_name:
             api.Logger.debug("MTU filter : initPeerNode skipping naples node ", w.node_name, w.interface, new_mtu)
             continue
-        cmd = host_utils.setInterfaceMTU(w.node_name, w.interface, new_mtu)
+        cmd = naples_workload.setInterfaceMTU(w, new_mtu)
         if cmd.exit_code != 0:
             api.Logger.critical("MTU filter : initPeerNode failed for ", w.node_name, w.interface, new_mtu)
             api.PrintCommandResults(cmd)
-            host_utils.debug_dump_interface_info(w.node_name, w.interface)
+            naples_workload.debug_dump_interface_info(w)
             result = api.types.status.FAILURE
 
     #TODO: Determine how much time to sleep

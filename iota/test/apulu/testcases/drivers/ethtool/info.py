@@ -14,24 +14,13 @@ def Setup(tc):
 
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True) 
-    
-    for n in tc.nodes:
-        intfs = api.GetNaplesHostInterfaces(n)
-        for i in intfs:
-            api.Logger.info("Get Info of the Interface: %s" % i)
-            if tc.os == 'linux':
-                api.Trigger_AddHostCommand(req, n, "ethtool -i %s" % i)
-            elif tc.os == 'freebsd':
-                # FreeBSD doesn't have a command
-                # TODO: In verification we will need to do dmesg to extract same info
-                api.types.status.SUCCESS
-            else:
-                return api.types.status.FAILURE
-
+ 
+    workloads = api.GetWorkloads()
+    for wl in workloads:
+        api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ethtool -i %s" % wl.interface)
     tc.resp = api.Trigger(req)
     
     return api.types.status.SUCCESS
-
 
 def Verify(tc):
     if tc.resp is None:

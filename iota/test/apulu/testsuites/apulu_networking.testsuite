@@ -13,7 +13,7 @@ images:
     naples: nic/naples_fw.tar
 
 setup:
-    topology: test/apulu/topologies/classic_baremetal/classic_baremetal.topology
+    topology: test/apulu/topologies/classic_baremetal/container_centos.topology
     config  :
         #- step : utils.naples_workloads
         - step : verif.config.verify_oob
