@@ -4,9 +4,13 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
 import iota.test.iris.testcases.qos.qos_utils as qos
 import time
+import iota.test.utils.naples_host as host
 
 def Setup(tc):
     tc.iota_path = api.GetTestsuiteAttr("driver_path")
+    tc.nodes = api.GetNaplesHostnames()
+    tc.os = api.GetNodeOs(tc.nodes[0])
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -100,6 +104,28 @@ def Trigger(tc):
                                     cmd)
         tc.cmd_cookies.append("show drops cmd for node {} ip_address {}".format(tc.w2.node_name, tc.w2.ip_address))
 
+    if tc.os == host.OS_TYPE_BSD:
+        cmd = 'sysctl dev.ionic.0.qos'
+        if tc.w1.IsNaples():
+            api.Logger.info("Running show drops command {} on node_name {}"\
+                            .format(cmd, tc.w1.node_name))
+
+            api.Trigger_AddCommand(req,
+                                   tc.w1.node_name,
+                                   tc.w1.workload_name,
+                                   cmd)
+            tc.cmd_cookies.append("QoS sysctl get".format(tc.w1.node_name, tc.w1.ip_address))
+
+        elif tc.w2.IsNaples():
+            api.Logger.info("Running show drops command {} on node_name {}"\
+                            .format(cmd, tc.w2.node_name))
+
+            api.Trigger_AddCommand(req,
+                                   tc.w2.node_name,
+                                   tc.w2.workload_name,
+                                   cmd)
+            tc.cmd_cookies.append("QoS sysctl get".format(tc.w1.node_name, tc.w1.ip_address))
+
     tc.resp = api.Trigger(req)
 
     return api.types.status.SUCCESS
@@ -135,7 +161,9 @@ def Verify(tc):
             node_name = cookie_attrs[5]
             dev = api.GetTestsuiteAttr(ip_address+"_device")[-1]
             curr_drops = qos.QosGetDropsForDevFromOutput(cmd.stdout, dev)
-            qos.QosSetDropsForDev(curr_drops, dev, node_name)
+            qos.QosSetDropsForDev(cmd.stdout, dev, node_name)
+        if "QoS sysctl get" in tc.cmd_cookies[cookie_idx]:
+            qos.QosSetTestsuiteAttrs(cmd.stdout)
 
         cookie_idx += 1
 

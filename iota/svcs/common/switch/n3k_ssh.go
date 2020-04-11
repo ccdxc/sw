@@ -22,8 +22,9 @@ var (
 	configRegex        = regexp.MustCompile(`\(config\)\# `)
 	configIfRegex      = regexp.MustCompile(`\(config-if\)\# `)
 	configVlanCfgRegex = regexp.MustCompile(`\(config-vlan-config\)\# `)
-	configPmapQos      = regexp.MustCompile(`\(config-pmap-nqos\)\# `)
-	configClassQos     = regexp.MustCompile(`\(config-pmap-nqos-c\)\# `)
+	configCmapNwQos    = regexp.MustCompile(`\(config-cmap-nqos\)\# `)
+	configPmapNwQos    = regexp.MustCompile(`\(config-pmap-nqos\)\# `)
+	configNwQosClass   = regexp.MustCompile(`\(config-pmap-nqos-c\)\# `)
 	configDscpCmap     = regexp.MustCompile(`\(config-cmap-qos\)\# `)
 	configDscpQos      = regexp.MustCompile(`\(config-pmap-qos\)\# `)
 	configDscpClass    = regexp.MustCompile(`\(config-pmap-c-qos\)\# `)
@@ -150,12 +151,34 @@ func configureQos(n3k *connectCtx, qosCfg *QosConfig, timeout time.Duration) (st
 		return buf.String(), err
 	}
 
+	if len(qosCfg.Classes) != 0 {
+		for _, qosClass := range qosCfg.Classes {
+			nwQosClassCmd := fmt.Sprintf("class-map type network-qos %v\n", qosClass.Name)
+
+			if err = exp.Send(nwQosClassCmd); err != nil {
+				return buf.String(), err
+			}
+			_, _, err = exp.Expect(configCmapNwQos, timeout)
+			if err != nil {
+				return buf.String(), err
+			}
+
+			pfcCmd := fmt.Sprintf("match qos-group %v\n", qosClass.PfsCos)
+			if err = exp.Send(pfcCmd); err != nil {
+				return buf.String(), err
+			}
+
+			exp.Send("exit\n") //exit configCmapNwQos
+			time.Sleep(exitTimeout)
+		}
+	}
+
 	nwQos := fmt.Sprintf("policy-map type network-qos %v\n", qosCfg.Name)
 	//Set spanning tree mode to mst to support more vlans
 	if err = exp.Send(nwQos); err != nil {
 		return buf.String(), err
 	}
-	_, _, err = exp.Expect(configPmapQos, timeout)
+	_, _, err = exp.Expect(configPmapNwQos, timeout)
 	if err != nil {
 		return buf.String(), err
 	}
@@ -171,7 +194,7 @@ func configureQos(n3k *connectCtx, qosCfg *QosConfig, timeout time.Duration) (st
 			if err = exp.Send(qosCmd); err != nil {
 				return buf.String(), err
 			}
-			_, _, err = exp.Expect(configClassQos, timeout)
+			_, _, err = exp.Expect(configNwQosClass, timeout)
 			if err != nil {
 				return buf.String(), err
 			}
@@ -191,7 +214,7 @@ func configureQos(n3k *connectCtx, qosCfg *QosConfig, timeout time.Duration) (st
 				}
 			}
 
-			exp.Send("exit\n") //exit configClassQos
+			exp.Send("exit\n") //exit configNwQosClass 
 			time.Sleep(exitTimeout)
 		}
 	}

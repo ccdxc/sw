@@ -29,9 +29,9 @@ testcases:
             type: remote_only
 
     #=======================================
-    # Config Tests
+    # PCP Tests 
     #=======================================
-    -   name    : QoS_Switch_Config
+    -   name    : QoS_Switch_Config_Pfc_Pcp
         testcase: testcases.qos.qos_switch_config
         args    :
             type: remote_only
@@ -39,35 +39,78 @@ testcases:
             pause_enable: True
             pause_type: 1
 
-    -   name    : Qos_Fc_Config
-        testcase: testcases.qos.qos_fc_config
-        iterators :
-            type      : nested
-            fc_type   : [2]
+    -   name    : QoS_Class_Type_Pcp
+        testcase: testcases.qos.qos_classification
         args    :
             type: remote_only
+            class_type: 1
 
-    -   name    : Qos_Pfc_Config
+    -   name    : Qos_Pfc_Config_Pcp
         testcase: testcases.qos.qos_pfc_config
         iterators :
             type         : nested
             tclass       : [1]
             enable       : [1]
             mtu          : [9000]
-            pcp          : [2]
-            pfc_cos      : [2]
+            pcp          : [1]
+            pfc_cos      : [1]
             no_drop      : [1]
             fc_config    : [1]
             fc_type      : [2]
             traffic_type : [1]
         args    :
             type: remote_only
+            class_type: 1
 
-    -   name    : Qos_Traffic_Pfc_TC2
+    -   name    : Qos_Traffic_Pfc_TC3_Pcp
         testcase: testcases.qos.qos_traffic_test
         args    :
             type: remote_only
-            rdma_pcps : [2]
+            class_type: 1
+            num_rdma_cps: 1
+            rdma_cps : [1]
+
+    #============================================
+    # Disable TCs before changing the class type
+    #============================================
+    -   name    : Qos_Teardown_Pcp
+        testcase: testcases.qos.qos_teardown
+        args    :
+            type: remote_only
+
+    #=======================================
+    # DSCP Tests
+    #=======================================
+    -   name    : QoS_Class_Type_Dscp
+        testcase: testcases.qos.qos_classification
+        args    :
+            type: remote_only
+            class_type: 2
+
+    -   name    : Qos_Pfc_Config_Dscp
+        testcase: testcases.qos.qos_pfc_config
+        iterators :
+            type         : nested
+            tclass       : [1]
+            enable       : [1]
+            mtu          : [9000]
+            pfc_cos      : [1]
+            no_drop      : [1]
+            fc_config    : [1]
+            fc_type      : [2]
+            traffic_type : [1]
+        args    :
+            type: remote_only
+            class_type: 2
+            dscps     : [8]
+
+    -   name    : Qos_Traffic_Pfc_TC3_Dscp
+        testcase: testcases.qos.qos_traffic_test
+        args    :
+            type: remote_only
+            class_type: 2
+            num_rdma_cps: 1
+            rdma_cps : [8]
 
     #=======================================
     # Teardown
@@ -82,11 +125,6 @@ testcases:
 
     -   name    : Qos_Teardown
         testcase: testcases.qos.qos_teardown
-        iterators :
-            type      : nested
-            tclass    : [1]
-            fc_config : [1]
-            fc_type   : [1]
         args    :
             type: remote_only
 

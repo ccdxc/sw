@@ -29,17 +29,9 @@ testcases:
             type: remote_only
 
     #=======================================
-    # Config Tests
+    # Config Tests - PCP
     #=======================================
-    -   name    : QoS_Switch_Config
-        testcase: testcases.qos.qos_switch_config
-        args    :
-            type: remote_only
-            intf_qos: True
-            pause_enable: True
-            pause_type: 1
-
-    -   name    : Qos_Fc_Config
+    -   name    : Qos_Fc_Config_To_Pfc_Pcp
         testcase: testcases.qos.qos_fc_config
         iterators :
             type      : nested
@@ -47,33 +39,49 @@ testcases:
         args    :
             type: remote_only
 
-    -   name    : Qos_Pfc_Config_TC1
+    -   name    : QoS_Class_Type_Pcp
+        testcase: testcases.qos.qos_classification
+        args    :
+            type: remote_only
+            class_type: 1
+
+    -   name    : Qos_Pfc_Config_TC1_Pcp
         testcase: testcases.qos.qos_pfc_config
         iterators :
             type      : nested
             tclass    : [1]
             enable    : [1]
             #wt       : [50]
-            pcp       : [1]
-            pfc_cos   : [1]
+            pcp       : [0]
+            pfc_cos   : [0]
             no_drop   : [1]
         args    :
             type: remote_only
+            class_type: 1
 
-    -   name    : Qos_Pfc_Config_TC3
+    -   name    : Qos_Pfc_Config_TC2_Pcp
         testcase: testcases.qos.qos_pfc_config
         iterators :
             type      : nested
             tclass    : [2]
             enable    : [1]
             #wt       : [50]
-            pcp       : [3]
-            pfc_cos   : [3]
+            pcp       : [4]
+            pfc_cos   : [4]
             no_drop   : [0]
         args    :
             type: remote_only
+            class_type: 1
 
-    -   name    : Qos_Fc_Config_To_Link_Level
+    -   name    : QoS_Switch_Config_Link_Level_Pcp
+        testcase: testcases.qos.qos_switch_config
+        args    :
+            type: remote_only
+            intf_qos: False
+            pause_enable: True
+            pause_type: 0
+
+    -   name    : Qos_Fc_Config_To_Link_Level_Pcp
         testcase: testcases.qos.qos_fc_config
         iterators :
             type      : nested
@@ -81,29 +89,41 @@ testcases:
         args    :
             type: remote_only
 
-    -   name    : Qos_Pfc_Config_TC2
+    -   name    : Qos_Pfc_Config_TC3_Pcp
         testcase: testcases.qos.qos_pfc_config
         iterators :
             type      : nested
-            tclass    : [2]
+        iterators :
+            type      : nested
+            tclass    : [3]
             enable    : [1]
             #wt       : [50]
-            pcp       : [2]
-            pfc_cos   : [2]
+            pcp       : [3]
+            pfc_cos   : [3]
             no_drop   : [1]
         args    :
             type: remote_only
+            class_type: 1
 
-    -   name    : Qos_Traffic_Test_Link_Level_TC1_TC3
+    -   name    : Qos_Traffic_Test_Link_Level_TC1_TC2_Pcp
         testcase: testcases.qos.qos_traffic_test
-        iterators :
-            type        : nested
         args    :
             type: remote_only
-            rdma_pcps  : [1]
-            iperf_pcps : [3]
+            class_type: 1
+            num_rdma_cps: 1
+            rdma_cps : [1]
+            num_iperf_cps: 1
+            iperf_cps : [2]
 
-    -   name    : Qos_Fc_Config_to_Pfc
+    -   name    : QoS_Switch_Config_Pfc_Pcp
+        testcase: testcases.qos.qos_switch_config
+        args    :
+            type: remote_only
+            intf_qos: False
+            pause_enable: True
+            pause_type: 1
+
+    -   name    : Qos_Fc_Config_to_Pfc_Pcp
         testcase: testcases.qos.qos_fc_config
         iterators :
             type      : nested
@@ -111,22 +131,143 @@ testcases:
         args    :
             type: remote_only
 
-    -   name    : Qos_Traffic_Test_Pfc_TC1_TC3
+    -   name    : Qos_Traffic_Test_Pfc_TC1_TC2_Pcp
         testcase: testcases.qos.qos_traffic_test
-        iterators :
-            type        : nested
         args    :
             type: remote_only
-            rdma_pcps  : [1]
-            iperf_pcps : [3]
+            class_type: 1
+            num_rdma_cps: 1
+            rdma_cps : [1]
+            num_iperf_cps: 1
+            iperf_cps : [2]
 
-    -   name    : Qos_Traffic_Test_Pfc_TC0_TC2
+    -   name    : Qos_Traffic_Test_Pfc_TC0_TC3_Pcp
         testcase: testcases.qos.qos_traffic_test
+        args    :
+            type: remote_only
+            class_type: 1
+            num_rdma_cps: 2
+            rdma_cps : [0, 3]
+
+    -   name    : Qos_Teardown_Pcp
+        testcase: testcases.qos.qos_teardown
+        args    :
+            type: remote_only
+
+    #=======================================
+    # Config Tests - DSCP
+    #=======================================
+    -   name    : QoS_Class_Type_Dscp
+        testcase: testcases.qos.qos_classification
+        args    :
+            type: remote_only
+            class_type: 2
+
+    -   name    : Qos_Fc_Config_Dscp
+        testcase: testcases.qos.qos_fc_config
         iterators :
             type      : nested
+            fc_type   : [2]
         args    :
             type: remote_only
-            rdma_pcps : [0, 2]
+
+    -   name    : Qos_Pfc_Config_TC1_Dscp
+        testcase: testcases.qos.qos_pfc_config
+        iterators :
+            type      : nested
+            tclass    : [1]
+            enable    : [1]
+            #wt       : [50]
+            pfc_cos   : [1]
+            no_drop   : [1]
+        args    :
+            type: remote_only
+            class_type: 2
+            dscps     : [8]
+
+    -   name    : Qos_Pfc_Config_TC2_Dscp
+        testcase: testcases.qos.qos_pfc_config
+        iterators :
+            type      : nested
+            tclass    : [2]
+            enable    : [1]
+            #wt       : [50]
+            pfc_cos   : [2]
+            no_drop   : [1]
+        args    :
+            type: remote_only
+            class_type: 2
+            dscps     : [16]
+
+    -   name    : QoS_Switch_Config_Link_Level_Dscp
+        testcase: testcases.qos.qos_switch_config
+        args    :
+            type: remote_only
+            intf_qos: False
+            pause_enable: True
+            pause_type: 0
+
+    -   name    : Qos_Fc_Config_To_Link_Level_Dscp
+        testcase: testcases.qos.qos_fc_config
+        iterators :
+            type      : nested
+            fc_type   : [1]
+        args    :
+            type: remote_only
+
+    -   name    : Qos_Pfc_Config_TC3_Dscp
+        testcase: testcases.qos.qos_pfc_config
+        iterators :
+            type      : nested
+        iterators :
+            type      : nested
+            tclass    : [3]
+            enable    : [1]
+            #wt       : [50]
+            no_drop   : [0]
+        args    :
+            type: remote_only
+            class_type: 2
+            dscps     : [0]
+            ethernet  : True
+
+    -   name    : Qos_Traffic_Test_Link_Level_TC1_TC3_Dscp
+        testcase: testcases.qos.qos_traffic_test
+        args    :
+            type: remote_only
+            class_type: 2
+        iterators :
+            type        : nested
+            num_rdma_cps: 1
+            rdma_cps : [8]
+            num_iperf_cps: 1
+            iperf_cps : [0]
+
+    -   name    : QoS_Switch_Config_Pfc_Dscp
+        testcase: testcases.qos.qos_switch_config
+        args    :
+            type: remote_only
+            intf_qos: False
+            pause_enable: True
+            pause_type: 1
+
+    -   name    : Qos_Fc_Config_to_Pfc_Dscp
+        testcase: testcases.qos.qos_fc_config
+        iterators :
+            type      : nested
+            fc_type   : [2]
+        args    :
+            type: remote_only
+
+    -   name    : Qos_Traffic_Test_Pfc_TC1_TC3_Dscp
+        testcase: testcases.qos.qos_traffic_test
+        args    :
+            type: remote_only
+            class_type: 2
+            num_rdma_cps: 1
+            rdma_cps : [8]
+            num_iperf_cps: 1
+            iperf_cps : [0]
 
     #=======================================
     # Teardown
@@ -141,11 +282,6 @@ testcases:
 
     -   name    : Qos_Teardown
         testcase: testcases.qos.qos_teardown
-        iterators :
-            type      : nested
-            tclass    : [1]
-            fc_config : [1]
-            fc_type   : [1]
         args    :
             type: remote_only
 

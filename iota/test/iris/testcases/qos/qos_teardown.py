@@ -58,46 +58,8 @@ def Trigger(tc):
         api.Logger.info("Not FreeBSD - unsupported configuration")
         return api.types.status.DISABLED
 
-    tc.cmd_descr = "FC Config"
-    if w1.IsNaples():
-        tc.cmd_descr += " on Server: {}({})".format(w1.workload_name, w1.ip_address)
-    if w2.IsNaples():
-        tc.cmd_descr += " on Client: {}({})".format(w2.workload_name, w2.ip_address)
-
-    if hasattr(tc.iterators, 'tclass'):
-        tclass = tc.iterators.tclass
-        if (tclass < 1) or (tclass > 6):
-            api.logger.error("invalid tclass passed: {}".format(tclass))
-            return api.types.status.FAILURE
-    else:
-        api.Logger.error("mandatory attribute tclass not passed")
-        return api.types.status.FAILURE
-
-    if hasattr(tc.iterators, 'fc_config'):
-        fc_config = tc.iterators.fc_config
-        if (fc_config != 0) and (fc_config != 1):
-            api.logger.error("invalid fc_config value passed: {}".format(fc_config))
-            return api.types.status.FAILURE
-
-        if(fc_config == 1):
-            if hasattr(tc.iterators, 'fc_type'):
-                fc_type = tc.iterators.fc_type
-                if((fc_type != 0) and (fc_type != 1) and (fc_type != 2)):
-                    api.logger.error("invalid fc_type value passed: {}".format(fc_type))
-                    return api.types.status.FAILURE
-
-                #trigger FC config
-                qos.TriggerFcConfigTest(req, tc, w1, w2, fc_type)
-            else:
-                api.Logger.error("mandatory attribute fc_type not passed when fc_config is set")
-                return api.types.status.FAILURE
-
-
-    # trigger PFC Config - QOS Class deletion
-    if w1.IsNaples():
-        qos.TriggerPfcConfigTest(req, tc, w1, tclass)
-    if w2.IsNaples():
-        qos.TriggerPfcConfigTest(req, tc, w2, tclass)
+    qos.TriggerQoSTeardown(req, tc, w1)
+    qos.TriggerQoSTeardown(req, tc, w2)
 
     #==============================================================
     # trigger the request
@@ -121,7 +83,7 @@ def Verify(tc):
     result = api.types.status.SUCCESS
 
     cookie_idx = 0
-    api.Logger.info("Results for {}".format(tc.cmd_descr))
+    api.Logger.info("Results for Teardown")
 
     for cmd in tc.resp.commands:
         api.Logger.info("{}".format(tc.cmd_cookies[cookie_idx]))

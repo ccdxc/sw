@@ -80,7 +80,52 @@ def Trigger(tc):
     ws = tc.w[tc.server_idx]
     wc = tc.w[tc.client_idx]
 
-    qos.TriggerTrafficTest(req, tc, ws, wc)
+    if hasattr(tc.args, 'class_type'):
+        tc.class_type = int(getattr(tc.args, 'class_type'))
+        if tc.class_type != 1 and tc.class_type != 2:
+            api.Logger.error("invalid class_type passed: {}".format(tc.class_type))
+            return api.types.status.FAILURE
+    else:
+        api.Logger.error("mandatory argument class_type not passed")
+        return api.types.status.FAILURE
+
+
+    num_rdma_cps = getattr(tc.args, 'num_rdma_cps', 0)
+    rdma_cps = getattr(tc.args, 'rdma_cps', None)
+
+    if num_rdma_cps != 0 and rdma_cps == None:
+        api.Logger.error("num_rdma_cps is non zero but no rdma cps passed")
+        return api.types.status.FAILURE
+
+    num_iperf_cps = getattr(tc.args, 'num_iperf_cps', 0)
+    iperf_cps = getattr(tc.args, 'iperf_cps', None)
+
+    if num_iperf_cps != 0 and iperf_cps == None:
+        api.Logger.error("num_iperf_cps is non zero but no iperf cps passed")
+        return api.types.status.FAILURE
+    
+    # Run iperf tests first. All in background.
+    for i_iperf in range(num_iperf_cps):
+        iperf_cp = iperf_cps[i_iperf]
+        qos.TriggerTrafficTest(req, tc, ws, wc, 2, iperf_cp, True)
+
+    # Run the RDMA tests. All in background except the last one.
+    for i_rdma in range(num_rdma_cps-1):
+        rdma_cp = rdma_cps[i_rdma]
+        qos.TriggerTrafficTest(req, tc, ws, wc, 1, rdma_cp, True)
+
+    # Run the last RDMA test in the foreground
+    if num_rdma_cps != 0:
+        rdma_cp = rdma_cps[num_rdma_cps-1]
+        qos.TriggerTrafficTest(req, tc, ws, wc, 1, rdma_cp, False)
+
+    # Sleep for a while for all the tests to complete
+    cmd = 'sleep 5'
+    api.Trigger_AddCommand(req,
+                           ws.node_name,
+                           ws.workload_name,
+                           cmd)
+    tc.cmd_cookies.append(cmd)
 
     #==============================================================
     # trigger the request
@@ -101,6 +146,7 @@ def Verify(tc):
         return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS
+    expect_drops = api.GetTestsuiteAttr('qos_expect_drops')
 
     cookie_idx = 0
 
@@ -171,14 +217,21 @@ def Verify(tc):
             # FRAMES RX PRI 3          194074
             # FRAMES TX PRI 3          0
 
-            pcp = tc.cmd_cookies[cookie_idx].split()[-1]
+            pcp_or_dscp = tc.cmd_cookies[cookie_idx].split()[-1]
             rx_pause_counter = 'FRAMES RX PAUSE'
             tx_pause_counter = 'FRAMES TX PAUSE'
             rx_pfc_counter = 'FRAMES RX PRIPAUSE'
             tx_pfc_counter = 'FRAMES TX PRIPAUSE'
 
-            rx_pfc_class_counter = 'FRAMES RX PRI ' + str(pcp)
-            tx_pfc_class_counter = 'FRAMES TX PRI ' + str(pcp)
+            if tc.class_type == 1:
+                tclass = qos.QosGetTcForPcp(pcp_or_dscp)
+            else:
+                tclass = qos.QosGetTcForDscp(pcp_or_dscp)
+
+            cos = qos.QosGetCosForTc(tclass)
+
+            rx_pfc_class_counter = 'FRAMES RX PRI ' + str(cos)
+            tx_pfc_class_counter = 'FRAMES TX PRI ' + str(cos)
 
             lines = cmd.stdout.split('\n')
             for line in lines:
@@ -200,16 +253,16 @@ def Verify(tc):
                     line_attrs = line.split()
                     rx_pri = int(line_attrs[len(line_attrs)-1])
                     if rx_pri == 0:
-                        api.Logger.info("No Pri {} PFC frames received".format(pcp))
+                        api.Logger.info("No Pri {} PFC frames received".format(cos))
                     else:
-                        api.Logger.info("Pri {} PFC Frames received: {}".format(pcp, rx_pri))
+                        api.Logger.info("Pri {} PFC Frames received: {}".format(cos, rx_pri))
                 elif tx_pfc_class_counter in line:
                     line_attrs = line.split()
                     tx_pri = int(line_attrs[len(line_attrs)-1])
                     if tx_pri == 0:
-                        api.Logger.info("No Pri {} PFC frames transmitted".format(pcp))
+                        api.Logger.info("No Pri {} PFC frames transmitted".format(cos))
                     else:
-                        api.Logger.info("Pri {} PFC Frames transmitted: {}".format(pcp, tx_pri))
+                        api.Logger.info("Pri {} PFC Frames transmitted: {}".format(cos, tx_pri))
                 elif rx_pause_counter in line:
                     line_attrs = line.split()
                     rx_pause = int(line_attrs[len(line_attrs)-1])
@@ -235,11 +288,12 @@ def Verify(tc):
             curr_drops = qos.QosGetDropsForDevFromOutput(cmd.stdout, dev)
             prev_drops = qos.QosGetDropsForDevFromTestSuite(dev, node_name)
             
-            qos.QosSetDropsForDev(curr_drops, dev, node_name)
+            qos.QosSetDropsForDev(cmd.stdout, dev, node_name)
             
             if int(curr_drops) > int(prev_drops):
-                api.Logger.error("Additional {} drops found on {}".format(curr_drops-prev_drops, node_name))
-                return api.types.status.FAILURE
+                api.Logger.error("Additional {} drops found on {}".format(int(curr_drops)-int(prev_drops), node_name))
+                if expect_drops == False: # Fail the test only if drops are not expected
+                    return api.types.status.FAILURE
  
         cookie_idx += 1
 

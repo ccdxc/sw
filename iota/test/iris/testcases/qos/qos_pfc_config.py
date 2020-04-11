@@ -24,11 +24,14 @@ def Setup(tc):
     tc.enable = 0
     tc.no_drop = 0
     tc.wt = 0
+    tc.class_type = 0
     tc.pcp = 0
+    tc.dscps = []
     tc.pfc_cos = 0
 
     tc.wt_configured = False
     tc.pcp_configured = False
+    tc.dscps_configured = False
     tc.pfc_cos_configured = False
 
     tc.server_idx = 0
@@ -107,7 +110,7 @@ def Trigger(tc):
     if hasattr(tc.iterators, 'tclass'):
         tclass = tc.iterators.tclass
         if (tclass < 1) or (tclass > 6):
-            api.logger.error("invalid tclass passed: {}".format(tclass))
+            api.Logger.error("invalid tclass passed: {}".format(tclass))
             return api.types.status.FAILURE
     else:
         api.Logger.error("mandatory attribute tclass not passed")
@@ -116,7 +119,7 @@ def Trigger(tc):
     if hasattr(tc.iterators, 'enable'):
         tc.enable = tc.iterators.enable
         if (tc.enable != 0) and (tc.enable != 1):
-            api.logger.error("invalid enable value passed: {}".format(tc.enable))
+            api.Logger.error("invalid enable value passed: {}".format(tc.enable))
             return api.types.status.FAILURE
     else:
         api.Logger.error("mandatory attribute enable not passed")
@@ -125,7 +128,7 @@ def Trigger(tc):
     if hasattr(tc.iterators, 'no_drop'):
         tc.no_drop = tc.iterators.no_drop
         if (tc.no_drop != 0) and (tc.no_drop != 1):
-            api.logger.error("invalid no_drop value passed: {}".format(tc.no_drop))
+            api.Logger.error("invalid no_drop value passed: {}".format(tc.no_drop))
             return api.types.status.FAILURE
     else:
         api.Logger.error("mandatory attribute no_drop not passed")
@@ -134,28 +137,51 @@ def Trigger(tc):
     if hasattr(tc.iterators, 'wt'):
         tc.wt = tc.iterators.wt
         if tc.wt < 0 or tc.wt > 100:
-            api.logger.error("invalid weight passed: {}".format(tc.wt))
+            api.Logger.error("invalid weight passed: {}".format(tc.wt))
             return api.types.status.FAILURE
         tc.wt_configured = True
 
+    if hasattr(tc.args, 'class_type'):
+        tc.class_type = int(getattr(tc.args, 'class_type'))
+        if tc.class_type != 1 and tc.class_type != 2:
+            api.Logger.error("invalid class_type passed: {}".format(tc.class_type))
+            return api.types.status.FAILURE
+    else:
+        api.Logger.error("mandatory argument class_type not passed")
+        return api.types.status.FAILURE
+
     if hasattr(tc.iterators, 'pcp'):
+        if int(tc.class_type) != 1:
+            api.Logger.error("pcp is passed but class_type is dscp")
+            return api.types.status.FAILURE
         tc.pcp = tc.iterators.pcp
         if tc.pcp < 0 or tc.pcp > 7:
-            api.logger.error("invalid pcp passed: {}".format(tc.pcp))
+            api.Logger.error("invalid pcp passed: {}".format(tc.pcp))
             return api.types.status.FAILURE
         tc.pcp_configured = True
+
+    if hasattr(tc.args, 'dscps'):
+        if tc.class_type != 2:
+            api.Logger.error("dscp is passed but class_type is pcp")
+            return api.types.status.FAILURE
+        tc.dscps = getattr(tc.args, 'dscps')
+        for dscp in tc.dscps:
+            if dscp < 0 or dscp > 63:
+                api.Logger.error("invalid dscp passed: {}".format(dscp))
+                return api.types.status.FAILURE
+        tc.dscps_configured = True
 
     if hasattr(tc.iterators, 'pfc_cos'):
         tc.pfc_cos = tc.iterators.pfc_cos
         if tc.pfc_cos < 0 or tc.pfc_cos > 7:
-            api.logger.error("invalid pfc_cos passed: {}".format(tc.pfc_cos))
+            api.Logger.error("invalid pfc_cos passed: {}".format(tc.pfc_cos))
             return api.types.status.FAILURE
         tc.pfc_cos_configured = True
 
     if hasattr(tc.iterators, 'traffic_test_type'):
         if ((tc.iterators.traffic_type != 0) and\
             (tc.iterators.traffic_type != 1) and (tc.iterators.traffic_type != 2)):
-            api.logger.error("invalid traffic_type value passed: {}"\
+            api.Logger.error("invalid traffic_type value passed: {}"\
                              .format(tc.iterators.traffic_type))
             return api.types.status.FAILURE
         tc.traffic_type = tc.iterators.traffic_type
@@ -163,13 +189,13 @@ def Trigger(tc):
     if hasattr(tc.iterators, 'fc_config'):
         fc_config = tc.iterators.fc_config
         if (fc_config != 0) and (fc_config != 1):
-            api.logger.error("invalid fc_config value passed: {}".format(fc_config))
+            api.Logger.error("invalid fc_config value passed: {}".format(fc_config))
             return api.types.status.FAILURE
         if(fc_config == 1):
             if hasattr(tc.iterators, 'fc_type'):
                 fc_type = tc.iterators.fc_type
                 if((fc_type != 0) and (fc_type != 1) and (fc_type != 2)):
-                    api.logger.error("invalid fc_type value passed: {}".format(fc_type))
+                    api.Logger.error("invalid fc_type value passed: {}".format(fc_type))
                     return api.types.status.FAILURE
 
                 #trigger FC config
@@ -178,9 +204,9 @@ def Trigger(tc):
                 api.Logger.error("mandatory attribute fc_type not passed when fc_config is set")
                 return api.types.status.FAILURE
 
-    if tc.pcp_configured == True and tc.pfc_cos_configured == True:
-        if tc.pcp != tc.pfc_cos: #Ignore the testcase if pcp and pfc_cos are different
-            return api.types.status.IGNORED 
+    #if tc.pcp_configured == True and tc.pfc_cos_configured == True:
+    #    if tc.pcp != tc.pfc_cos: #Ignore the testcase if pcp and pfc_cos are different
+    #        return api.types.status.IGNORED 
         
     # Trigger PFC Config - QOS Class creation
     if w1.IsNaples():
@@ -188,6 +214,11 @@ def Trigger(tc):
     if w2.IsNaples():
         qos.TriggerPfcConfigTest(req, tc, w2, tclass)
 
+    # Get ethernet attribute to set the tc_ethernet
+    ethernet = getattr(tc.args, 'ethernet', False)
+    if ethernet:
+        qos.QosAddTcEthernetConfig(req, tc, w1, tclass)
+        qos.QosAddTcEthernetConfig(req, tc, w2, tclass)
 
     #==============================================================
     # trigger the request
@@ -250,17 +281,7 @@ def Verify(tc):
 
         # QOS verification cmd
         elif "qos show cmd" in tc.cmd_cookies[cookie_idx]:
-            lines = cmd.stdout.split('\n')
-            attrs = ["pcp_to_tc", "tc_pfc_cos", "tc_no_drop", "tc_enable"]
-
-            for line in lines:
-                for attr in attrs:
-                    if attr in line:
-                        line_attrs = line.split(": ")
-                        if attr == "pcp_to_tc": #pcp_to_tc output has 8 tcs while others have only 7
-                            api.SetTestsuiteAttr(attr, line_attrs[1].replace(" ", ","))
-                        else:
-                            api.SetTestsuiteAttr(attr, line_attrs[1].replace(" ", ",")+",0")
+            qos.QosSetTestsuiteAttrs(cmd.stdout)
 
         cookie_idx += 1
 

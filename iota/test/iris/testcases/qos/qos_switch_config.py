@@ -26,6 +26,8 @@ def Setup(tc):
 def Trigger(tc):
 
     result = api.types.status.SUCCESS
+    expect_drops = False
+
     #Enable Service Policy on the interfaces
     if getattr(tc.args, 'intf_qos', False) == True:
         result = api.EnableQosPorts(tc.nodes, "pmap-iota")
@@ -42,7 +44,7 @@ def Trigger(tc):
     api.Logger.info("pause_enable {}, pause_type {}".format(pause_enable, pause_type))
     if pause_type == 0: #LLFC
         if pause_enable:
-            result = api.EnablePausePorts(tc.nodes)
+            result = api.EnablePausePorts(tc.nodes) 
             if result != api.types.status.SUCCESS:
                 api.Logger.error("Port pause type LLFC configure failed. Ignoring.")
         else:
@@ -59,6 +61,13 @@ def Trigger(tc):
             if result != api.types.status.SUCCESS:
                 api.Logger.error("Port pause type PFC unconfigure failed. Ignoring.")
 
+    # Configuring pause on the switch failed. Expect drops.
+    #if result != api.types.status.SUCCESS:
+    #    expect_drops = True
+
+    # Ignoring drops for till the infra return issue is fixed
+    expect_drops = True
+    api.SetTestsuiteAttr('qos_expect_drops', expect_drops)
     #==============================================================
     # trigger the commands
     #==============================================================
