@@ -294,3 +294,81 @@ func routingIntfAddrShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
+var routeTableShowCmd = &cobra.Command{
+	Use:   "route-table",
+	Short: "show routing route-table information",
+	Long:  "show routing route-table information",
+	Args:  cobra.NoArgs,
+	RunE:  routeTableShowCmdHandler,
+}
+
+const (
+	routeTableGlobalStr = `-----------------------------------
+Route Table
+-----------------------------------
+RouteTableId               : %v
+DestAddr                   : %v
+DestPrefixLen              : %v
+NHAddr                     : %v
+IfIndex                    : %v
+Type                       : %v
+Proto                      : %v
+Age                        : %v
+Metric1                    : %v
+FibRoute                   : %v
+Connected                  : %v
+LooseNextHop               : %v
+AdminDistance              : %v
+-----------------------------------
+`
+)
+
+func routeTableShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := types.NewCPRouteSvcClient(c)
+
+	req := &types.CPRouteGetRequest{}
+	respMsg, err := client.CPRouteGet(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("Getting route table failed (%s)", err)
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	cprs := []*utils.ShadowCPRoute{}
+	for _, i := range respMsg.Response {
+		cpr := utils.NewCPRoute(i)
+		if doJSON {
+			cprs = append(cprs, cpr)
+		} else {
+			fmt.Printf(routeTableGlobalStr,
+				cpr.Status.RouteTableId,
+				cpr.Status.DestAddr,
+				cpr.Status.DestPrefixLen,
+				cpr.Status.NHAddr,
+				cpr.Status.IfIndex,
+				cpr.Status.Type,
+				cpr.Status.Proto,
+				cpr.Status.Age,
+				cpr.Status.Metric1,
+				cpr.Status.FibRoute,
+				cpr.Status.Connected,
+				cpr.Status.LooseNextHop,
+				cpr.Status.AdminDistance)
+		}
+	}
+	if doJSON {
+		b, _ := json.MarshalIndent(cprs, "", "  ")
+		fmt.Println(string(b))
+	}
+	return nil
+}

@@ -53,6 +53,18 @@ message CPRouteStatus {
   RouteType       Type          = 6;
   // protocol via which the route is learned
   RouteProtocol   Proto         = 7;
+  // The number of seconds since this route was last updated or otherwise determined to be correct.
+  int32           Age           = 8;
+  // The primary routing metric for this route
+  int32           Metric1       = 9;
+  // Is this route programmed either to a forwarding table, or to a partner that queries route information
+  bool            FibRoute      = 10;
+  // Indicates whether the route destination is directly connected
+  bool            Connected     = 11;
+  // whether DC-RTM considers that the next-hop address for this route is a loose next hop.
+  bool            LooseNextHop  = 12;
+  // Administrative distance for this route
+  int32           AdminDistance = 13;
 }
 
 message CPRouteKey {

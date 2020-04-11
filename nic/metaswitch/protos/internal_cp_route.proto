@@ -62,6 +62,18 @@ message CPRouteStatus {
   RouteType       Type          = 6 [(venice.pdsaFields) = {Field:"type"}];
   // protocol via which the route is learned
   RouteProtocol   Proto         = 7 [(venice.pdsaFields) = {Field:"proto", SetKeyOidIndex: "AMB_QCR_RIB_PROTO_INDEX", GetKeyOidIndex: "AMB_QCR_RIB_PROTO_INDEX"}];
+  // The number of seconds since this route was last updated or otherwise determined to be correct.
+  int32           Age           = 8 [(venice.pdsaFields) = {Field:"age"}];
+  // The primary routing metric for this route
+  int32           Metric1       = 9 [(venice.pdsaFields) = {Field:"metric1"}];
+  // Is this route programmed either to a forwarding table, or to a partner that queries route information
+  bool            FibRoute      = 10 [(venice.pdsaFields) = {Field:"fib_route"}];
+  // Indicates whether the route destination is directly connected
+  bool            Connected     = 11 [(venice.pdsaFields) = {Field:"connected"}];
+  // whether DC-RTM considers that the next-hop address for this route is a loose next hop.
+  bool            LooseNextHop  = 12 [(venice.pdsaFields) = {Field:"loose_next_hop"}];
+  // Administrative distance for this route
+  int32           AdminDistance = 13 [(venice.pdsaFields) = {Field:"admin_distance"}];
 }
 
 message CPRouteKey {

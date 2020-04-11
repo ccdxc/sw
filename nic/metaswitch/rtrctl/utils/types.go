@@ -1255,3 +1255,52 @@ func NewLimIfAddrTableGetResponse(status *pds.LimIfAddrTableStatus) *ShadowLimIf
 		OperStatus: strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
 	}
 }
+
+// ShadowCPRouteStatus shadows the CPRouteStatus for CLI purposes
+type ShadowCPRouteStatus struct {
+	RouteTableId  uint32
+	DestAddr      string
+	DestPrefixLen uint32
+	NHAddr        string
+	IfIndex       uint32
+	Type          string
+	Proto         string
+	Age           int32
+	Metric1       int32
+	FibRoute      bool
+	Connected     bool
+	LooseNextHop  bool
+	AdminDistance int32
+	*pds.CPRouteStatus
+}
+
+func newCPRouteStatus(in *pds.CPRouteStatus) ShadowCPRouteStatus {
+	return ShadowCPRouteStatus{
+		RouteTableId:  in.RouteTableId,
+		DestAddr:      PdsIPToString(in.DestAddr),
+		DestPrefixLen: in.DestPrefixLen,
+		NHAddr:        PdsIPToString(in.NHAddr),
+		IfIndex:       in.IfIndex,
+		Type:          strings.TrimPrefix(in.Type.String(), "ROUTE_TYPE_"),
+		Proto:         strings.TrimPrefix(in.Proto.String(), "ROUTE_PROTO_"),
+		Age:           in.Age,
+		Metric1:       in.Metric1,
+		FibRoute:      in.FibRoute,
+		Connected:     in.Connected,
+		LooseNextHop:  in.LooseNextHop,
+		AdminDistance: in.AdminDistance,
+		CPRouteStatus: in,
+	}
+}
+
+// ShadowCPRoute shadows the CPRoute for CLI purposes
+type ShadowCPRoute struct {
+	Status ShadowCPRouteStatus
+}
+
+// NewCPRoute creates a shadow of CPRoute
+func NewCPRoute(in *pds.CPRoute) *ShadowCPRoute {
+	return &ShadowCPRoute{
+		Status: newCPRouteStatus(in.Status),
+	}
+}
