@@ -165,7 +165,7 @@ func (w *nodemetrics) periodicUpdate(ctx context.Context) {
 						s, found := w.diskPEvtStatus[p.Mountpoint]
 						if !found || !s {
 							recorder.Event(eventtypes.DISK_THRESHOLD_EXCEEDED,
-								fmt.Sprintf("Disk partition %s threshold exceeded %v%%, current usage: %v%%", p.Mountpoint, globals.DiskHighThreshold, partitionUsedPercent), nil)
+								fmt.Sprintf("%s, partition %s%s %v%%", globals.DiskPHighThresholdMessagePrefix, p.Mountpoint, globals.DiskPHighThresholdMessageSuffix, partitionUsedPercent), nil)
 							w.diskPEvtStatus[p.Mountpoint] = true
 						}
 					} else {
