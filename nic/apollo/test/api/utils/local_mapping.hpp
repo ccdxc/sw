@@ -30,16 +30,7 @@ enum lmap_attrs {
 class local_mapping_feeder : public feeder {
 public:
     // spec fields
-    pds_obj_key_t key;
-    pds_mapping_type_t map_type;
-    pds_obj_key_t vpc;
-    pds_obj_key_t subnet;
-    pds_encap_t fabric_encap;
-    uint64_t vnic_mac_u64;
-    ip_prefix_t vnic_ip_pfx;
-    pds_obj_key_t vnic;
-    bool public_ip_valid;
-    ip_prefix_t public_ip_pfx;
+    pds_local_mapping_spec_t spec;
 
     // feeder cfg and state
     uint32_t num_vnics;
@@ -49,23 +40,7 @@ public:
     // constructor
     local_mapping_feeder() { };
 
-    local_mapping_feeder(const local_mapping_feeder& feeder) {
-        this->map_type = feeder.map_type;
-        this->vpc = feeder.vpc;
-        this->subnet = feeder.subnet;
-        this->fabric_encap = feeder.fabric_encap;
-        this->vnic_mac_u64 = feeder.vnic_mac_u64;
-        this->vnic_ip_pfx = feeder.vnic_ip_pfx;
-        this->vnic = feeder.vnic;
-        this->public_ip_valid = feeder.public_ip_valid;
-        this->public_ip_pfx = feeder.public_ip_pfx;
-        this->num_vnics = feeder.num_vnics;
-        this->num_ip_per_vnic = feeder.num_ip_per_vnic;
-        this->curr_vnic_ip_cnt = feeder.curr_vnic_ip_cnt;
-        key_build(&this->key);
-
-        this->num_obj = feeder.num_obj;
-    }
+    local_mapping_feeder(const local_mapping_feeder& feeder);
 
     // initialize feeder with base set of values
     void init(pds_obj_key_t vpc = int2pdsobjkey(1),
@@ -102,14 +77,14 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const local_mapping_feeder& obj) {
     os << "local mapping feeder =>"
-        << " vpc: " << obj.vpc.str()
-        << " subnet: " << obj.subnet.str()
-        << " vnic_ip: " << ipaddr2str(&obj.vnic_ip_pfx.addr)
-        << " vnic: " << obj.vnic.str()
-        << " vnic_mac: " << mac2str(obj.vnic_mac_u64)
-        << " encap_type: " << pds_encap2str(&obj.fabric_encap)
-        << " public_ip_valid: " << obj.public_ip_valid
-        << " public_ip: " << ipaddr2str(&obj.public_ip_pfx.addr);
+        << " vpc: " << obj.spec.skey.vpc.str()
+        << " subnet: " << obj.spec.subnet.str()
+        << " vnic_ip: " << ipaddr2str(&obj.spec.skey.ip_addr)
+        << " vnic: " << obj.spec.vnic.str()
+        << " vnic_mac: " << macaddr2str(obj.spec.vnic_mac)
+        << " encap_type: " << pds_encap2str(&obj.spec.fabric_encap)
+        << " public_ip_valid: " << obj.spec.public_ip_valid
+        << " public_ip: " << ipaddr2str(&obj.spec.public_ip);
     return os;
 }
 

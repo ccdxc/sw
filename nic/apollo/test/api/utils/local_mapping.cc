@@ -25,30 +25,41 @@ local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
                            std::string pub_ip_cidr_str, uint32_t num_vnics,
                            uint32_t num_ip_per_vnic,
                            pds_mapping_type_t map_type) {
+    ip_prefix_t vnic_ip_pfx;
+    ip_prefix_t public_ip_pfx;
 
-    this->map_type = map_type;
-    this->vpc = vpc;
-    this->subnet = subnet;
-    test::extract_ip_pfx(vnic_ip_cidr_str.c_str(), &this->vnic_ip_pfx);
-    key_build(&this->key);
-    this->vnic = vnic;
-    this->vnic_mac_u64 = vnic_mac;
+    test::extract_ip_pfx(vnic_ip_cidr_str.c_str(), &vnic_ip_pfx);
+    test::extract_ip_pfx(pub_ip_cidr_str.c_str(), &public_ip_pfx);
 
-    this->fabric_encap.type = encap_type;
+    memset(&spec, 0, sizeof(pds_local_mapping_spec_t));
+    spec.skey.type = map_type;
+    if (map_type == PDS_MAPPING_TYPE_L3) {
+        spec.skey.vpc = vpc;
+        spec.skey.ip_addr = vnic_ip_pfx.addr;
+    } else {
+        spec.skey.subnet = subnet;
+        MAC_UINT64_TO_ADDR(spec.skey.mac_addr, vnic_mac);
+    }
+    spec.vnic = vnic;
+    spec.subnet = subnet;
+    MAC_UINT64_TO_ADDR(spec.vnic_mac, vnic_mac);
+    spec.public_ip_valid = public_ip_valid;
+    if (public_ip_valid)
+        spec.public_ip = public_ip_pfx.addr;
+
+
+    this->spec.fabric_encap.type = encap_type;
     switch(encap_type) {
     case PDS_ENCAP_TYPE_MPLSoUDP:
-        this->fabric_encap.val.mpls_tag = encap_val;
+        this->spec.fabric_encap.val.mpls_tag = encap_val;
         break;
     case PDS_ENCAP_TYPE_VXLAN:
-        this->fabric_encap.val.vnid = encap_val;
+        this->spec.fabric_encap.val.vnid = encap_val;
         break;
     default:
-        this->fabric_encap.val.value = encap_val;
+        this->spec.fabric_encap.val.value = encap_val;
     }
-
-    this->public_ip_valid = public_ip_valid;
-    if (public_ip_valid)
-        extract_ip_pfx(pub_ip_cidr_str.c_str(), &this->public_ip_pfx);
+    key_build(&spec.key);
 
     this->num_vnics = num_vnics;
     this->num_ip_per_vnic = num_ip_per_vnic;
@@ -56,17 +67,34 @@ local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
     this->num_obj = num_vnics * num_ip_per_vnic;
 }
 
+local_mapping_feeder::local_mapping_feeder(const local_mapping_feeder& feeder) {
+    memcpy(&this->spec, &feeder.spec, sizeof(pds_local_mapping_spec_t));
+    num_obj = feeder.num_obj;
+    num_vnics = feeder.num_vnics;
+    num_ip_per_vnic = feeder.num_ip_per_vnic;
+    curr_vnic_ip_cnt = feeder.curr_vnic_ip_cnt;
+}
+
 void
 local_mapping_feeder::iter_next(int width) {
-    increment_ip_addr(&vnic_ip_pfx.addr, width);
-    key_build(&this->key);
-    if (public_ip_valid)
-        increment_ip_addr(&public_ip_pfx.addr, width);
+    uint64_t mac;
+    if (spec.skey.type == PDS_MAPPING_TYPE_L3) {
+        increment_ip_addr(&spec.skey.ip_addr, width);
+    }
+    key_build(&this->spec.key);
+    if (spec.public_ip_valid)
+        increment_ip_addr(&spec.public_ip, width);
+
+    mac = MAC_TO_UINT64(spec.skey.mac_addr);
+    mac += width;
+    MAC_UINT64_TO_ADDR(spec.vnic_mac, mac);
 
     curr_vnic_ip_cnt++;
     if (curr_vnic_ip_cnt == num_ip_per_vnic) {
-        vnic = int2pdsobjkey(pdsobjkey2int(vnic) + width);
-        vnic_mac_u64 += width;
+        spec.vnic = int2pdsobjkey(pdsobjkey2int(spec.vnic) + width);
+        if (spec.skey.type != PDS_MAPPING_TYPE_L3) {
+            MAC_UINT64_TO_ADDR(spec.skey.mac_addr, mac);
+        }
         curr_vnic_ip_cnt = 0;
     }
     cur_iter_pos++;
@@ -77,45 +105,31 @@ local_mapping_feeder::key_build(pds_obj_key_t *key) const {
     // TODO: encoding here won't work for IPv6
     //       how about storing base uuid and increment ?
     uint32_t vpc_id, subnet_id;
+    uint64_t mac;
 
     memset(key, 0, sizeof(*key));
-    memcpy(&key->id[0], &map_type, sizeof(uint8_t));
-    if (map_type == PDS_MAPPING_TYPE_L3) {
-        vpc_id = objid_from_uuid(vpc);
+    memcpy(&key->id[0], &spec.skey.type, sizeof(uint8_t));
+    if (spec.skey.type == PDS_MAPPING_TYPE_L3) {
+        vpc_id = objid_from_uuid(spec.skey.vpc);
         sprintf(&key->id[1], "%08x", vpc_id);
-        memcpy(&key->id[5], &vnic_ip_pfx.addr.addr.v4_addr,
+        memcpy(&key->id[5], &spec.skey.ip_addr.addr.v4_addr,
                sizeof(ipv4_addr_t));
     } else {
-        subnet_id = objid_from_uuid(subnet);
+        subnet_id = objid_from_uuid(spec.subnet);
         memcpy(&key->id[1], &subnet_id, sizeof(uint32_t));
-        MAC_UINT64_TO_ADDR(&key->id[5], vnic_mac_u64);
+        mac = MAC_TO_UINT64(spec.skey.mac_addr);
+        MAC_UINT64_TO_ADDR(&key->id[5], mac);
     }
 }
 
 void
 local_mapping_feeder::spec_build(pds_local_mapping_spec_t *spec) const {
-    memset(spec, 0, sizeof(*spec));
-    key_build(&spec->key);
-    spec->skey.type = map_type;
-    if (map_type == PDS_MAPPING_TYPE_L3) {
-        spec->skey.vpc = vpc;
-        spec->skey.ip_addr = vnic_ip_pfx.addr;
-    } else {
-        spec->skey.subnet = subnet;
-        MAC_UINT64_TO_ADDR(spec->skey.mac_addr, vnic_mac_u64);
-    }
-    spec->vnic = vnic;
-    spec->subnet = subnet;
-    spec->fabric_encap = fabric_encap;
-    MAC_UINT64_TO_ADDR(spec->vnic_mac, vnic_mac_u64);
-    spec->public_ip_valid = public_ip_valid;
-    if (public_ip_valid)
-        spec->public_ip = public_ip_pfx.addr;
+    memcpy(spec, &this->spec, sizeof(pds_local_mapping_spec_t));
 }
 
 bool
 local_mapping_feeder::key_compare(const pds_obj_key_t *key) const {
-    if (this->key != *key)
+    if (this->spec.key != *key)
         return false;
     return true;
 }
@@ -123,31 +137,32 @@ local_mapping_feeder::key_compare(const pds_obj_key_t *key) const {
 bool
 local_mapping_feeder::spec_compare(const pds_local_mapping_spec_t *spec) const {
 
-    if (map_type != spec->skey.type)
+    if (this->spec.skey.type != spec->skey.type)
         return false;
 
-    if (map_type == PDS_MAPPING_TYPE_L3)
-        return ((vpc == spec->skey.vpc) &&
-                IPADDR_EQ(&vnic_ip_pfx.addr, &spec->skey.ip_addr));
+    if (this->spec.skey.type == PDS_MAPPING_TYPE_L3)
+        return ((this->spec.skey.vpc == spec->skey.vpc) &&
+                IPADDR_EQ(&this->spec.skey.ip_addr, &spec->skey.ip_addr));
 
     // L2 key type
-    return ((subnet == spec->skey.subnet) &&
-            (vnic_mac_u64 == MAC_TO_UINT64(spec->skey.mac_addr)));
+    return ((this->spec.skey.subnet == spec->skey.subnet) &&
+            (MAC_TO_UINT64(this->spec.skey.mac_addr) ==
+            MAC_TO_UINT64(spec->skey.mac_addr)));
 
     // skipping comparing vnic.id and subnet.id as the hw id's returned
     // through read are not the same as id's assigned.
 
-    if (!test::pdsencap_isequal(&this->fabric_encap, &spec->fabric_encap))
+    if (!test::pdsencap_isequal(&this->spec.fabric_encap, &spec->fabric_encap))
         return false;
 
-    if (this->public_ip_valid != spec->public_ip_valid)
+    if (this->spec.public_ip_valid != spec->public_ip_valid)
         return false;
 
-    if ((this->public_ip_valid) &&
-        (!IPADDR_EQ(&this->public_ip_pfx.addr, &spec->public_ip)))
+    if ((this->spec.public_ip_valid) &&
+        (!IPADDR_EQ(&this->spec.public_ip, &spec->public_ip)))
             return false;
 
-    if (this->vnic_mac_u64 != MAC_TO_UINT64(spec->vnic_mac))
+    if (MAC_TO_UINT64(this->spec.vnic_mac) != MAC_TO_UINT64(spec->vnic_mac))
         return false;
 
     return true;
@@ -165,16 +180,19 @@ local_mapping_feeder::update_spec(uint32_t width) {
     // TODO: if key if L2 there is no non-key spec field to update.
     //       Revisit when L2 support is added.
 
-    if (map_type == PDS_MAPPING_TYPE_L3)
-        vnic_mac_u64 += width;
-
-    if (public_ip_valid)
-        increment_ip_addr(&public_ip_pfx.addr, 1);
+    uint64_t mac;
+    if (spec.skey.type == PDS_MAPPING_TYPE_L3) {
+        mac = MAC_TO_UINT64(this->spec.vnic_mac);
+        mac = mac + width;
+        MAC_UINT64_TO_ADDR(this->spec.vnic_mac, mac);
+    }
+    if (spec.public_ip_valid)
+        increment_ip_addr(&spec.public_ip, 1);
 
     // updating this filed is causing some failures, will put it comment now
     //uint16_t vnic_id = (pdsobjkey2int(vnic) + 1)%k_max_vnic;
     //vnic =  int2pdsobjkey(vnic_id ? vnic_id : 1);
-    this->fabric_encap.val.value++;
+    this->spec.fabric_encap.val.value++;
 }
 
 //----------------------------------------------------------------------------
