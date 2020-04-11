@@ -681,7 +681,7 @@ TEST_F(vnic_test, vnic_update_rx_mirror_sessioon) {
     vnic_create(feeder);
 
     // trigger
-    spec.tx_mirror_session_bmap = 1;
+    spec.rx_mirror_session_bmap = 1;
     vnic_update(feeder, &spec, VNIC_ATTR_RX_MIRROR);
 
     // validate

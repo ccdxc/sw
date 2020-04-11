@@ -210,16 +210,7 @@ bool
 vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
     mac_addr_t mac = {0};
 
-    if (!test::pdsencap_isequal(&this->spec.vnic_encap, &spec->vnic_encap))
-        return false;
-
     if (apollo()) {
-        if (!test::pdsencap_isequal(&this->spec.fabric_encap, &spec->fabric_encap))
-            return false;
-
-        if (this->spec.binding_checks_en != spec->binding_checks_en)
-            return false;
-
         if (this->spec.tx_mirror_session_bmap != spec->tx_mirror_session_bmap)
             return false;
 
@@ -227,8 +218,57 @@ vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
             return false;
     }
 
+    if (!test::pdsencap_isequal(&this->spec.vnic_encap, &spec->vnic_encap))
+        return false;
+
+    if (!test::pdsencap_isequal(&this->spec.fabric_encap, &spec->fabric_encap))
+        return false;
+
+    if (this->spec.binding_checks_en != spec->binding_checks_en)
+        return false;
+
     if (memcmp(&this->spec.mac_addr, &spec->mac_addr, sizeof(mac)))
         return false;
+
+    if (spec->num_ing_v4_policy == this->spec.num_ing_v4_policy) {
+        for (uint32_t i = 0; i < spec->num_ing_v4_policy; i++) {
+            if (spec->ing_v4_policy[i] != this->spec.ing_v4_policy[i]) {
+                return false;
+            }
+        }
+    } else {
+        return false;
+    }
+
+    if (spec->num_ing_v6_policy == this->spec.num_ing_v6_policy) {
+        for (uint32_t i = 0; i < spec->num_ing_v6_policy; i++) {
+            if (spec->ing_v6_policy[i] != this->spec.ing_v6_policy[i]) {
+                return false;
+            }
+        }
+    } else {
+        return false;
+    }
+
+    if (spec->num_egr_v4_policy == this->spec.num_egr_v4_policy) {
+        for (uint32_t i = 0; i < spec->num_egr_v4_policy; i++) {
+            if (spec->egr_v4_policy[i] != this->spec.egr_v4_policy[i]) {
+                return false;
+            }
+        }
+    } else {
+        return false;
+    }
+
+    if (spec->num_egr_v6_policy == this->spec.num_egr_v6_policy) {
+        for (uint32_t i = 0; i < spec->num_egr_v6_policy; i++) {
+            if (spec->egr_v6_policy[i] != this->spec.egr_v6_policy[i]) {
+                return false;
+            }
+        }
+    } else {
+        return false;
+    }
 
     return true;
 }

@@ -300,6 +300,7 @@ vnic_entry::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
     subnet_entry *subnet;
+    uint8_t i;
 
     subnet = subnet_db()->find(&subnet_);
     if (subnet == NULL) {
@@ -315,6 +316,22 @@ vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
     spec->switch_vnic = switch_vnic_;
     spec->binding_checks_en = binding_checks_en_;
     spec->host_if = host_if_;
+    spec->num_ing_v4_policy = num_ing_v4_policy_;
+    for (i = 0; i < num_ing_v4_policy_; i++) {
+        spec->ing_v4_policy[i] = ing_v4_policy_[i];
+    }
+    spec->num_ing_v6_policy = num_ing_v6_policy_;
+    for (i = 0; i < num_ing_v6_policy_; i++) {
+        spec->ing_v6_policy[i] = ing_v6_policy_[i];
+    }
+    spec->num_egr_v4_policy = num_egr_v4_policy_;
+    for (i = 0; i < num_egr_v4_policy_; i++) {
+        spec->egr_v4_policy[i] = egr_v4_policy_[i];
+    }
+    spec->num_egr_v6_policy = num_egr_v6_policy_;
+    for (i = 0; i < num_egr_v6_policy_; i++) {
+        spec->egr_v6_policy[i] = egr_v6_policy_[i];
+    }
     return SDK_RET_OK;
 }
 
