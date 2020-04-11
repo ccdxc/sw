@@ -7,7 +7,7 @@ then
 fi
 
 export ASIC="${ASIC:-capri}"
-export PDSPKG_TOPDIR=${NICDIR}
+export PDSPKG_TOPDIR='/sw/nic/'
 export PIPELINE=$1
 export BUILD_DIR=${PDSPKG_TOPDIR}/build/x86_64/${PIPELINE}/${ASIC}
 export CONFIG_PATH=$PDSPKG_TOPDIR/conf/
