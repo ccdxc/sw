@@ -1238,3 +1238,20 @@ func NewCPActiveRoute(in *pds.CPActiveRoute) *ShadowCPActiveRoute {
 		Status: newCPActiveRouteStatus(in.Status),
 	}
 }
+
+// ShadowLimIfAddrTableStatus shadows the LimIfAddrTableStatus for CLI purposes
+type ShadowLimIfAddrTableStatus struct {
+	*pds.LimIfAddrTableStatus
+	IfIndex    uint32
+	IPAddr     string
+	OperStatus string
+}
+
+// NewLimIfAddrTableGetResponse creates a new shadow of the LimIfAddrTableStatus
+func NewLimIfAddrTableGetResponse(status *pds.LimIfAddrTableStatus) *ShadowLimIfAddrTableStatus {
+	return &ShadowLimIfAddrTableStatus{
+		IfIndex:    status.IfIndex,
+		IPAddr:     PdsIPToString(status.IPAddr),
+		OperStatus: strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
+	}
+}

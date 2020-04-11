@@ -239,3 +239,58 @@ func osRouteTableShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
+var intfAddrShowCmd = &cobra.Command{
+	Use:   "address",
+	Short: "show interface address information",
+	Long:  "show interface address information",
+	Args:  cobra.NoArgs,
+	RunE:  routingIntfAddrShowCmdHandler,
+}
+
+const (
+	rtgIntfAddrGlobalStr = `-----------------------------------
+Routing Interface Address
+-----------------------------------
+IfId                   : %v
+IP Addr                : %v
+Oper Status            : %v
+-----------------------------------
+`
+)
+
+func routingIntfAddrShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := types.NewLimSvcClient(c)
+
+	req := &types.LimIfAddrTableGetRequest{}
+	respMsg, err := client.LimIfAddrTableGet(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("Getting routing interface address failed (%s)", err)
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	intfs := []*utils.ShadowLimIfAddrTableStatus{}
+	for _, i := range respMsg.Response {
+		intf := utils.NewLimIfAddrTableGetResponse(i.Status)
+		if doJSON {
+			intfs = append(intfs, intf)
+		} else {
+			fmt.Printf(rtgIntfAddrGlobalStr, intf.IfIndex, intf.IPAddr, intf.OperStatus)
+		}
+	}
+	if doJSON {
+		b, _ := json.MarshalIndent(intfs, "", "  ")
+		fmt.Println(string(b))
+	}
+	return nil
+}
