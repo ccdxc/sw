@@ -138,6 +138,8 @@ def Trigger(tc):
     # Wait for iperf server to start.
     time.sleep(10)
     tc.cli_resp = api.Trigger(cli_req)
+    # Wait for iperf clients to finish.
+    time.sleep(2*duration)
 
     srv_resp1 = api.Trigger_TerminateAllCommands(srv_resp)
 
