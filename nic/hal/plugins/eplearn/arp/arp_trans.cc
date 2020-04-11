@@ -293,9 +293,9 @@ bool arp_trans_t::arp_fsm_t::process_rarp_request(fsm_state_ctx ctx,
     // - rarp rcvd after ep update recevied by proto (vmotion_state)
     // - rarp rcvd first, so ep points to non_local
     //   add check for src_intf being eNIC (DMA)
-    if (((endpoint_is_remote(ep_entry)) &&
-         (fte_ctx->cpu_rxhdr()->lkp_dir == hal::FLOW_DIR_FROM_DMA))) {
-
+    if ((endpoint_is_remote(ep_entry)) &&
+        (fte_ctx->cpu_rxhdr()->lkp_dir == hal::FLOW_DIR_FROM_DMA) &&
+        (g_hal_state->get_vmotion())) {
         // TODO: add a debug counter and increment it to keep track of rarp pkts
         // drop the original rarp packet
         // will be re-created from EP and sent after sync complete 

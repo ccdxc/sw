@@ -2324,10 +2324,12 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
                         ep_l2_key_to_str(ep));
     }
 
-    ret = g_hal_state->get_vmotion()->vmotion_handle_ep_del(ep);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete ep in vMotion context. err : {}", ret);
-        return ret;
+    if (g_hal_state->get_vmotion()) {
+        ret = g_hal_state->get_vmotion()->vmotion_handle_ep_del(ep);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete ep in vMotion context. err : {}", ret);
+            return ret;
+        }
     }
 
     hal_if = find_if_by_handle(ep->if_handle);

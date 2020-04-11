@@ -11,6 +11,7 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/include/sdk/lock.hpp"
+#include "nic/hal/vmotion/vmotion_tls.hpp"
 #include "nic/hal/vmotion/vmotion_src_host.hpp"
 #include "nic/hal/vmotion/vmotion_dst_host.hpp"
 #include "ev.h"
@@ -110,12 +111,12 @@ public:
     const ip_addr_t&                 get_old_homing_host_ip(void) { return old_homing_host_ip_; }
     uint64_t                         get_last_sync_time(void) { return last_sync_time_; }
     mac_addr_t*                      get_ep_mac(void) { return &mac_; }
-    int                              get_socket_fd(void) { return sock_fd_; }
     sdk::event_thread::io_t*         get_event_io(void) { return &evt_io_; }
     sdk::event_thread::event_thread* get_event_thread(void) { return evt_thread_; }
     uint32_t*                        get_flags(void) { return &flags_;}
     uint32_t                         get_thread_id(void) { return thread_id_; }
     MigrationState                   get_migration_state(void) { return migration_state_; }
+    SSL*                             get_ssl(void) { return tls_connection_->get_ssl(); }
 
     // Set methods
     void                set_socket_fd(int fd) { sock_fd_ = fd; }
@@ -125,6 +126,7 @@ public:
     void                set_thread_id(uint32_t thr_id) { thread_id_ = thr_id; }
     void                set_migration_state(MigrationState state) { migration_state_ = state; }
     void                set_expiry_timer(void *tmr) { expiry_timer_ = tmr; }
+    void                set_tls_connection(TLSConnection *conn) { tls_connection_ = conn; }
 
     // Methods
     hal_ret_t           spawn_dst_host_thread(void);
@@ -151,6 +153,7 @@ private:
     ep_vmotion_type_t                vmotion_type_;
     void                            *expiry_timer_;
     MigrationState                   migration_state_;
+    TLSConnection                   *tls_connection_; 
 };
 
 class vmotion {
@@ -177,6 +180,7 @@ public:
     void          populate_vmotion_dump(internal::VmotionDebugResponse *rsp);
     void          incr_stats(uint32_t vmotion_stats_t::* const p_field) { (stats_.*p_field)++; }
     void          incr_migration_state_stats(MigrationState state); 
+    TLSContext*   get_tls_context(void) { return tls_context_; }
 
     // FSM Related methods
     static vmotion_src_host_fsm_def* src_host_fsm_def_;
@@ -205,6 +209,7 @@ private:
     vmotion_t                  vmotion_;
     std::vector<vmotion_ep *>  vmn_eps_;
     vmotion_stats_t            stats_; 
+    TLSContext                *tls_context_; 
 };
 
 // data passed to the destination/source host thread.
@@ -215,6 +220,7 @@ typedef struct vmotion_thread_ctx_s {
     uint32_t                         tid;
     sdk::event_thread::io_t          io;
     void                            *expiry_timer;
+    TLSConnection                   *tls_connection;
 } vmotion_thread_ctx_t;
 
 

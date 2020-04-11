@@ -24,7 +24,7 @@ using namespace vmotion_msg;
 using vmotion_msg::VmotionMessage;
 
 hal_ret_t
-vmotion_send_msg (VmotionMessage& msg, int sd)
+vmotion_send_msg (VmotionMessage& msg, SSL *ssl)
 {
     hal_ret_t ret = HAL_RET_OK;
     int       byte_count;
@@ -37,10 +37,9 @@ vmotion_send_msg (VmotionMessage& msg, int sd)
     msg.SerializeToCodedStream(coded_output);
 
     proto_msg_dump(msg);
-
-    if ((byte_count = send(sd, (void *)pkt, msg_len, 0)) == -1) {
+    if ((byte_count = SSL_write(ssl, (void *)pkt, msg_len)) <= 0) {
         HAL_TRACE_ERR("vmotion unable to send. hdr_len: {}, data_len: {}, msg_len: {} Err: {}",
-                VMOTION_MSG_HDR_LEN, msg.ByteSize(), msg_len, errno);
+                       VMOTION_MSG_HDR_LEN, msg.ByteSize(), msg_len, SSL_get_error(ssl, byte_count));
         ret = HAL_RET_ERR;
         goto end;
     }
@@ -53,17 +52,15 @@ end:
 }
 
 hal_ret_t
-vmotion_recv_msg (VmotionMessage& msg, int sd)
+vmotion_recv_msg (VmotionMessage& msg, SSL *ssl)
 {
     int       byte_count;
-    uint32_t  data_len, msg_len;
+    uint32_t  data_len, msg_len = 0, rl = 0, len, rd;
     char      *buff = (char *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION_BUFFER, VMOTION_MSG_HDR_LEN);
     char      *buff_msg = NULL;
 
-    if ((byte_count = recv(sd, buff, VMOTION_MSG_HDR_LEN, MSG_PEEK)) == -1) {
-        HAL_TRACE_ERR("vmotion msg recv error error: {}", errno);
-    } else if (byte_count == 0) {
-        HAL_TRACE_ERR("client closed connection");
+    if ((byte_count = SSL_peek(ssl, buff, VMOTION_MSG_HDR_LEN)) <= 0) {
+        HAL_TRACE_ERR("vmotion msg recv error error: {}", SSL_get_error(ssl, byte_count));
         HAL_FREE(HAL_MEM_ALLOC_VMOTION_BUFFER, buff);
         return HAL_RET_CONN_CLOSED;
     }
@@ -72,20 +69,25 @@ vmotion_recv_msg (VmotionMessage& msg, int sd)
     CodedInputStream coded_input(&ais);
     coded_input.ReadVarint32(&data_len);
 
-    msg_len = data_len + VMOTION_MSG_HDR_LEN;
+    len = msg_len = data_len + VMOTION_MSG_HDR_LEN;
 
     buff_msg = (char *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION_BUFFER, msg_len);
 
-    if ((byte_count = recv(sd, buff_msg, msg_len, MSG_WAITALL)) == -1) {
-        HAL_TRACE_ERR("vmotion msg recv error error: {}", errno);
-    } else if (byte_count == 0) {
-        HAL_TRACE_ERR("client closed connection");
+    // There is no MSG_WAITALL support in SSL_read, loop till complete message is received
+    while (len && ((rd = SSL_read(ssl, buff_msg + rl, len)) > 0)) {
+        len -= rd;
+        rl += rd;
+    }
+
+    // Not everything is read properly
+    if (len) {
+        HAL_TRACE_ERR("vmotion msg recv error Exp: {} Actual: {}", msg_len, (msg_len - len));
         HAL_FREE(HAL_MEM_ALLOC_VMOTION_BUFFER, buff);
         HAL_FREE(HAL_MEM_ALLOC_VMOTION_BUFFER, buff_msg);
         return HAL_RET_CONN_CLOSED;
     }
 
-    HAL_TRACE_DEBUG("vmotion msg recv. msg_len: {} rcvd: {}", msg_len, byte_count);
+    HAL_TRACE_DEBUG("vmotion msg recv. msg_len: {}", msg_len);
 
     uint32_t tmp_data_len;
     ArrayInputStream ais_msg(buff_msg, msg_len);

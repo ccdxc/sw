@@ -156,7 +156,7 @@ vmotion_src_host_fsm_def::proc_sync_begin(fsm_state_ctx ctx, fsm_event_data data
         }
         if (sess_count) {
             msg_rsp.set_type(VMOTION_MSG_TYPE_SYNC);
-            if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+            if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
                 HAL_TRACE_ERR("vmotion unable to send sync message");
                 ret = HAL_RET_ERR;
                 goto end;
@@ -182,7 +182,7 @@ vmotion_src_host_fsm_def::proc_evt_sync_done(fsm_state_ctx ctx, fsm_event_data d
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_SYNC_END);
 
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion unable to send sync end message");
         return false;
     }
@@ -230,7 +230,7 @@ vmotion_src_host_fsm_def::proc_term_sync_req(fsm_state_ctx ctx, fsm_event_data d
         }
         if (sess_count) {
             msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC);
-            if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+            if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
                 HAL_TRACE_ERR("vmotion unable to send sync message");
                 ret = false;
                 goto end;
@@ -256,7 +256,7 @@ vmotion_src_host_fsm_def::proc_term_sync_done(fsm_state_ctx ctx, fsm_event_data 
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_END);
 
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion unable to send term sync message");
         return false;
     }
@@ -273,7 +273,7 @@ vmotion_src_host_fsm_def::proc_term_synced_ack(fsm_state_ctx ctx, fsm_event_data
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_EP_MOVED);
 
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion unable to send term sync end message");
         return false;
     }
@@ -339,6 +339,7 @@ src_host_proc_init_msg(vmotion *vmn, VmotionMessage msg, vmotion_thread_ctx_t *t
     vmn_ep->set_socket_fd(thread_ctx->fd);
     vmn_ep->set_event_thread(thread_ctx->th);
     vmn_ep->set_thread_id(thread_ctx->tid);
+    vmn_ep->set_tls_connection(thread_ctx->tls_connection);
 
     vmn_ep->process_event(EVT_SYNC_BEGIN, NULL);
     return vmn_ep;
@@ -353,7 +354,7 @@ src_host_thread_rcv_sock_msg (sdk::event_thread::io_t *io, int sock_fd, int even
     VmotionMessage        msg;
     hal_ret_t             ret;
 
-    ret = vmotion_recv_msg(msg, thread_ctx->fd);
+    ret = vmotion_recv_msg(msg, thread_ctx->tls_connection->get_ssl());
 
     HAL_TRACE_DEBUG("source host thread recvd sock msg: {} Ret: {}",
                     VmotionMessageType_Name(msg.type()), ret);
@@ -433,6 +434,10 @@ src_host_thread_exit (void *ctxt)
         vmn_ep->get_vmotion()->delete_vmotion_ep(vmn_ep);
     }
 
+    if (thread_ctx->tls_connection) {
+        TLSConnection::destroy(thread_ctx->tls_connection);
+    }
+
     close(thread_ctx->fd);
 
     if (thread_ctx->expiry_timer) {
@@ -503,12 +508,21 @@ vmotion::spawn_src_host_thread(int sock_fd)
     thread_ctx->fd = accept(sock_fd, (struct sockaddr *)&host_addr, &host_len);
     if (thread_ctx->fd < 0) {
         HAL_TRACE_ERR("accept fail in source host");
+        hal::delay_delete_to_slab(HAL_SLAB_VMOTION_THREAD_CTX, thread_ctx);
+        return HAL_RET_ERR;
+    }
+
+    thread_ctx->tls_connection = get_tls_context()->init_ssl_connection(thread_ctx->fd, TRUE);
+    if (!thread_ctx->tls_connection) {
+        HAL_TRACE_ERR("vMotion SSL Connection init failed");
+        hal::delay_delete_to_slab(HAL_SLAB_VMOTION_THREAD_CTX, thread_ctx);
         return HAL_RET_ERR;
     }
 
     ret = alloc_thread_id(&tid);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion thread id allocation fail in source host");
+        hal::delay_delete_to_slab(HAL_SLAB_VMOTION_THREAD_CTX, thread_ctx);
         return ret;
     }
 

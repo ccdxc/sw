@@ -10,8 +10,8 @@ namespace hal {
 
 using vmotion_msg::VmotionMessage;
 
-hal_ret_t vmotion_send_msg(VmotionMessage& msg, int sd);
-hal_ret_t vmotion_recv_msg(VmotionMessage& msg, int sd);
+hal_ret_t vmotion_send_msg(VmotionMessage& msg, SSL *ssl);
+hal_ret_t vmotion_recv_msg(VmotionMessage& msg, SSL *ssl);
 
 } // namespace hal
 

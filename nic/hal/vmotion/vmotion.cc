@@ -38,7 +38,9 @@ vmotion::factory(uint32_t max_threads, uint32_t port)
     }
 
     vmn = new (mem) vmotion();
-    vmn->init(max_threads, port);
+    if (vmn->init(max_threads, port) != HAL_RET_OK) {
+        return NULL;
+    }
 
     return vmn;
 }
@@ -48,6 +50,13 @@ vmotion::init(uint32_t max_threads, uint32_t vmotion_port)
 {
     vmotion_.max_threads     = max_threads;
     vmotion_.port            = vmotion_port;
+
+    // Init TLS Context
+    tls_context_ = TLSContext::factory();
+    if (tls_context_ == NULL) {
+        HAL_TRACE_ERR("vMotion TLS Init failed");
+        return HAL_RET_ERR;
+    }
 
     vmotion_.threads_idxr    = rte_indexer::factory(max_threads, false, false);
     SDK_ASSERT(vmotion_.threads_idxr != NULL);

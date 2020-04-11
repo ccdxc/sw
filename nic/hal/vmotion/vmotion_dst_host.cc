@@ -152,7 +152,7 @@ vmotion_dst_host_fsm_def::process_start_sync(fsm_state_ctx ctx, fsm_event_data d
     msg_rsp.set_type(VMOTION_MSG_TYPE_INIT);
     msg_rsp.mutable_init()->set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
 
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion: unable to send sync req message");
         return false;
     }
@@ -176,7 +176,7 @@ vmotion_dst_host_fsm_def::process_rarp_req(fsm_state_ctx ctx, fsm_event_data dat
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_REQ);
 
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion: unable to send sync req message");
         return false;
     }
@@ -195,7 +195,7 @@ vmotion_dst_host_fsm_def::process_ep_move_done(fsm_state_ctx ctx, fsm_event_data
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_REQ);
 
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion: unable to send sync req message");
         return false;
     }
@@ -323,7 +323,7 @@ vmotion_dst_host_fsm_def::process_term_sync_end(fsm_state_ctx ctx, fsm_event_dat
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_ACK);
 
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion: unable to send sync req message");
         return false;
     }
@@ -394,7 +394,7 @@ vmotion_dst_host_fsm_def::process_ep_moved(fsm_state_ctx ctx, fsm_event_data dat
 
     // Send EP MOVED ACK message to source host
     msg_rsp.set_type(VMOTION_MSG_TYPE_EP_MOVED_ACK);
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+    if (vmotion_send_msg(msg_rsp, vmn_ep->get_ssl()) != HAL_RET_OK) {
         HAL_TRACE_ERR("vmotion: unable to send ep moved ack message");
         return false;
     }
@@ -418,7 +418,7 @@ dst_host_thread_rcv_sock_msg(sdk::event_thread::io_t *io, int sock_fd, int event
     uint32_t           event;
     hal_ret_t          ret;
 
-    ret = vmotion_recv_msg(msg, sock_fd);
+    ret = vmotion_recv_msg(msg, vmn_ep->get_ssl());
 
     if (ret == HAL_RET_CONN_CLOSED) {
         vmn_ep->set_migration_state(MigrationState::FAILED);
@@ -561,6 +561,12 @@ vmotion_ep::dst_host_init()
         goto end;
     }
 
+    tls_connection_ = get_vmotion()->get_tls_context()->init_ssl_connection(sock_fd_, FALSE);
+    if (!tls_connection_) {
+        ret = HAL_RET_ERR;
+        goto end;
+    }
+
     process_event(EVT_START_SYNC, NULL);
 
     evt_io_.ctx = this;
@@ -587,6 +593,10 @@ vmotion_ep::dst_host_exit(void)
 
     if (expiry_timer_) {
         sdk::lib::timer_delete(expiry_timer_);
+    }
+
+    if (tls_connection_) {
+        TLSConnection::destroy(tls_connection_);
     }
 
     close(sock_fd_);

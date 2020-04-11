@@ -172,6 +172,10 @@ process_vmotion_rarp(fte::ctx_t *ctx) {
     hal_ret_t ret = HAL_RET_OK;
     uint16_t opcode;
 
+    if (!g_hal_state->get_vmotion()) {
+        return true;
+    }
+
     if (ether_pkt == nullptr) {
         /* Skipping as not packet to process */
         HAL_TRACE_ERR("ARP: ether_pkt -> NULL");
