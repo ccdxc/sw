@@ -158,12 +158,12 @@ if (!([string]::IsNullOrWhiteSpace($VerStr))) {
     $VerStrSP = $VerStrL.Split(".")[2]
     $VerStrBuild = $VerStrL.Split(".")[3]
     $VerStrExt = $VerStrR1
-	if ([string]::IsNullOrWhiteSpace($VerStrR2)) {
-		$VerStrExt += "."+$VerStrR2
-		if ([string]::IsNullOrWhiteSpace($VerStrR3)) {
-			$VerStrExt += "."+$VerStrR3
-		}
-	}
+    if ([string]::IsNullOrWhiteSpace($VerStrR2)) {
+        $VerStrExt += "."+$VerStrR2
+        if ([string]::IsNullOrWhiteSpace($VerStrR3)) {
+            $VerStrExt += "."+$VerStrR3
+        }
+    }
 
     if ($VerStrMaj -match '^\d+$' ) {
         $VerMaj = $VerStrMaj -as [int]
@@ -178,7 +178,7 @@ if (!([string]::IsNullOrWhiteSpace($VerStr))) {
         $VerBuild = $VerStrBuild -as [int]
     }
     if (!([string]::IsNullOrWhiteSpace($VerStrExt))) {
-        $VerExt += $VerStrExt
+        $VerExt = $VerStrExt
     }
 }
 
@@ -292,8 +292,8 @@ else {
 }
 
 if ($CollectArtifacts) {
-	# Remove any previous artifacts from the destination folder or 
-	# create the destination folder if it didn't exist.
+    # Remove any previous artifacts from the destination folder or 
+    # create the destination folder if it didn't exist.
     $NewArtifactsFolder = $ArtifactsPath + "\Artifacts"
     if (Test-Path -Path $NewArtifactsFolder -PathType Container) {
         $AllArtifacts = $NewArtifactsFolder+"\*"
@@ -302,7 +302,7 @@ if ($CollectArtifacts) {
     else {
         New-Item -Path $ArtifactsPath -ItemType Directory -Name "Artifacts"
     }
-	# Read artifacts list file and copy any item listed to the destination folder.
+    # Read artifacts list file and copy any item listed to the destination folder.
     Get-Content $PathToArtifactsListFile | Foreach-Object {
         $Line = $_
         $Line.Trim()
@@ -315,8 +315,8 @@ if ($CollectArtifacts) {
             }
         }
     }
-	# Remove any previous artifacts from the destination zip folder or 
-	# create the destination zip folder if it didn't exist.
+    # Remove any previous artifacts from the destination zip folder or 
+    # create the destination zip folder if it didn't exist.
     $ArtifactsZipFolder = $ArtifactsPath + "\ArtifactsZipped"
     if (Test-Path -Path $ArtifactsZipFolder -PathType Container) {
         $AllArtifacts = $ArtifactsZipFolder+"\*"
@@ -325,7 +325,7 @@ if ($CollectArtifacts) {
     else {
         New-Item -Path $ArtifactsPath -ItemType Directory -Name "ArtifactsZipped"
     }
-	# Zip artifacts
+    # Zip artifacts
     $ZipFilePath = $ArtifactsZipFolder + "\Artifacts.zip"
     Add-Type -AssemblyName "system.io.compression.filesystem"
     [io.compression.zipfile]::CreateFromDirectory($NewArtifactsFolder, $ZipFilePath)

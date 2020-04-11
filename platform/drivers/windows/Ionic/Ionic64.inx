@@ -31,17 +31,44 @@ ExcludeFromSelect = *
 ; Manufacturer section
 ; -----------------------------------
 [Manufacturer]
-%ManufacturerName% = Pensando,NTamd64
+%ManufacturerName% = Pensando,NT$ARCH$
 
 ; -----------------------------------
 ; Models section 
 ; -----------------------------------
-[Pensando.NTamd64]
-%ManufacturerName%  = IonicMini,    PCI\VEN_1DD8&DEV_1002
-%ManufacturerName%  = IonicMini,    PCI\VEN_1DD8&DEV_1004
-%ManufacturerName%  = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003
+[Pensando.NT$ARCH$]
+%DeviceDesc-2p.40/100%  = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40001DD8
+%DeviceDesc-2p.40/100%  = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40011DD8
+%DeviceDesc-2p.10/25%   = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40021DD8
+%DeviceDesc-2p.10/25%   = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40051DD8
+%DeviceDesc-2p.10/25%   = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40071DD8
+%DeviceDesc-2p.10/25%   = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40081DD8
+%DeviceDesc-2p.40/100%  = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_40091DD8
+%DeviceDesc-2p.40/100%  = IonicMini,    PCI\VEN_1DD8&DEV_1002&SUBSYS_400a1DD8
+%DeviceDescGeneric%     = IonicMini,    PCI\VEN_1DD8&DEV_1002
 
-[IonicMini.ntamd64]
+%DeviceDesc-2p.40/100%  = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40001DD8
+%DeviceDesc-2p.40/100%  = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40011DD8
+%DeviceDesc-2p.10/25%   = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40021DD8
+%DeviceDesc-2p.10/25%   = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40051DD8
+%DeviceDesc-2p.10/25%   = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40071DD8
+%DeviceDesc-2p.10/25%   = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40081DD8
+%DeviceDesc-2p.40/100%  = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_40091DD8
+%DeviceDesc-2p.40/100%  = IonicMini,    PCI\VEN_1DD8&DEV_1004&SUBSYS_400a1DD8
+%DeviceDescGeneric%     = IonicMini,    PCI\VEN_1DD8&DEV_1004
+
+%DeviceDesc-2p.40/100%  = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40001DD8
+%DeviceDesc-2p.40/100%  = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40011DD8
+%DeviceDesc-2p.10/25%   = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40021DD8
+%DeviceDesc-2p.10/25%   = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40051DD8
+%DeviceDesc-2p.10/25%   = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40071DD8
+%DeviceDesc-2p.10/25%   = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40081DD8
+%DeviceDesc-2p.40/100%  = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_40091DD8
+%DeviceDesc-2p.40/100%  = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003&SUBSYS_400a1DD8
+%DeviceDescGeneric%     = IonicMiniVF,  PCI\VEN_1DD8&DEV_1003
+
+
+[IonicMini.nt$ARCH$]
 Characteristics     = 0x84 ; NCF_HAS_UI | NCF_PHYSICAL
 BusType             = 5    ; PCI
 Port1FunctionNumber = 1
@@ -57,7 +84,7 @@ AddReg              = IonicMini.VMQ.reg
 AddReg              = IonicMini.SRIOV.reg
 AddReg              = IonicMini.RSS.Common.reg
 
-[IonicMiniVF.ntamd64]
+[IonicMiniVF.nt$ARCH$]
 Characteristics     = 0x84 ; NCF_HAS_UI | NCF_PHYSICAL
 BusType             = 5    ; PCI
 Port1FunctionNumber = 1
@@ -72,18 +99,18 @@ AddReg              = IonicMini.Powermgmt.Common.reg
 AddReg              = IonicMini.VMQ.reg
 AddReg              = IonicMini.RSS.Common.reg
 
-[IonicMini.ntamd64.Services]
+[IonicMini.nt$ARCH$.Services]
 AddService         = Ionic, 2, IonicMini.Service, IonicMini.Common.EventLog
 
-[IonicMiniVF.ntamd64.Services]
+[IonicMiniVF.nt$ARCH$.Services]
 AddService         = Ionic, 2, IonicMiniVF.Service, IonicMini.Common.EventLog
 
-[IonicMini.ntamd64.HW]
+[IonicMini.nt$ARCH$.HW]
 AddReg             = Ionic.msi.Common.reg
 Include            = pci.inf
 Needs              = PciSriovSupported.HW
 
-[IonicMiniVF.ntamd64.HW]
+[IonicMiniVF.nt$ARCH$.HW]
 AddReg             = Ionic.msi.Common.reg
 ;Include            = pci.inf
 ;Needs              = PciSriovSupported.HW
@@ -94,7 +121,7 @@ ServiceType        = 1 ;%SERVICE_KERNEL_DRIVER%
 StartType          = 3 ;%SERVICE_DEMAND_START%
 ErrorControl       = 1 ;%SERVICE_ERROR_NORMAL%
 ServiceBinary      = %12%\Ionic64.sys
-LoadOrderGroup            = NDIS
+LoadOrderGroup     = NDIS
 
 [IonicMiniVF.Service]
 DisplayName        = %IonicMiniVF.Service.DispName%
@@ -345,11 +372,13 @@ HKR, Ndi\Params\*RSS\Enum,                       "1",                    0, %Ena
 [Strings]
 ProviderString               = "Pensando Systems"
 ManufacturerName             = "Pensando Systems"
-IonicMini.DeviceDesc         = "Pensando Ethernet Adapter (NDIS 6.60)"
-IonicMini.Service.DispName   = "Pensando Miniport (NDIS 6.60)"
-IonicMiniVF.DeviceDesc       = "Pensando Ethernet Adapter (NDIS 6.60) Virtual Function"
-IonicMiniVF.Service.DispName = "Pensando Miniport (NDIS 6.60) Virtual Function"
-DiskId1                      = "Pensando Miniport Device Installation Disk #1"
+DeviceDesc-2p.40/100         = "Pensando DSC 2p 40/100G Services Adapter"
+DeviceDesc-2p.10/25          = "Pensando DSC 2p 10/25G Services" Adapter
+DeviceDescGeneric            = "Pensando DSC Services Adapter"
+IonicMini.Service.DispName   = "Pensando Ionic NDIS Miniport Driver"
+IonicMiniVF.Service.DispName = "Pensando Ionic NDIS Miniport Driver - Virtual Function"
+DiskId1                      = "Pensando Ionic NDIS Miniport Driver Installation Disk #1"
+
 NetworkAddress               = "Network Address"
 Enable_PME                   = "Enable PME"
 Enabled                      = "Enabled"

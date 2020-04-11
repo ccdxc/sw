@@ -1,29 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:difxapp="http://schemas.microsoft.com/wix/DifxAppExtension">
-  <Product Id="b4d5c79e-967b-446a-94a3-5fb6add40028" Name="Ionic NDIS miniport" Language="1033" Version="$(env.IONIC_VERSION_MAJOR).$(env.IONIC_VERSION_MINOR).$(env.IONIC_VERSION_SP).$(env.IONIC_VERSION_BUILD)" Manufacturer="Pensando Systems" UpgradeCode="a13e47d8-4da5-4249-8a4d-d060deaeb27f">
-    <Package Id="*" Keywords="Installer" Comments="Copyright (c) Pensando Systems All rights reserved." Description="Ionic NDIS miniport Installer" InstallerVersion="200" Languages="1033" Compressed="yes" InstallScope="perMachine" />
+  <Product Id="b4d5c79e-967b-446a-94a3-5fb6add40028" Name="Pensando Ionic Driver" Language="1033" Version="$(env.IONIC_VERSION_MAJOR).$(env.IONIC_VERSION_MINOR).$(env.IONIC_VERSION_SP).$(env.IONIC_VERSION_BUILD)" Manufacturer="Pensando Systems" UpgradeCode="a13e47d8-4da5-4249-8a4d-d060deaeb27f">
+    <Package Id="*" Keywords="Installer" Comments="Copyright (c) Pensando Systems All rights reserved." Description="Pensando Ionic NDIS miniport driver" InstallerVersion="200" Languages="1033" Compressed="yes" InstallScope="perMachine" />
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of Ionic NDIS miniport is already installed." />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Pensando Ionic Driver is already installed." />
     <Media Id="1" Cabinet="PensandoIonicMiniport.cab" EmbedCab="yes" />
-        <Feature Id="Complete" Title="IonicDrvSetup" Description="Ionic NDIS Miniport Installation Package" Display="expand" Level="1" ConfigurableDirectory="INSTALLDIR" AllowAdvertise="no" Absent="disallow">
-          <Feature Id="MainDrivers" Title="Ionic driver" Description="Ionic NDIS miniport driver" Level="1" Absent="disallow" AllowAdvertise="no">
+        <Feature Id="Complete" Title="Ionic Driver Complete Package" Description="Pensando Ionic Driver and Tools Installation Package" Display="expand" Level="1" ConfigurableDirectory="INSTALLDIR" AllowAdvertise="no" Absent="disallow">
+          <Feature Id="MainDrivers" Title="Ionic Driver" Description="Ionic NDIS miniport driver" Level="1" Absent="disallow" AllowAdvertise="no">
             <ComponentRef Id="IonicDriverPackage" />
           </Feature>
-          <Feature Id="CommandLineTools" Title="Command line Tools" Description="Command line tools" Level="1" AllowAdvertise="no">
+          <Feature Id="CommandLineTools" Title="Ionic Driver Tools" Description="Ionic Driver Tools: IonicConfig.exe, Penctl.exe" Level="1" AllowAdvertise="no">
             <ComponentRef Id="IonicConfig" />
+            <ComponentRef Id="Penctl" />
             <ComponentRef Id="PensandooToolsCmd" />
             <ComponentRef Id="ProgramMenuDir" />
+            <ComponentRef Id="PerfCountersManifest" />
           </Feature>
        </Feature>
   </Product>
 
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
-      <!--
-      <Directory Id="ProgramFilesFolder">
-        <Directory Id="INSTALLFOLDER" Name="IonicInstaller" />
-      </Directory>
-      -->
             <Directory Id="ProgramFiles64Folder">
                 <Directory Id="Pensando" Name="Pensando Systems">
                     <Directory Id="INSTALLDIR" Name="Pensando Driver Tools">
@@ -35,14 +32,18 @@
                           <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
                         </Component>
                         <Component Id="IonicConfig">
-                            <File Id="IonicConfigEXE" Name="$(var.Config Tool.TargetFileName)" Source="$(var.Config Tool.TargetPath)" KeyPath="yes" />
-                          <!--Source="BuildFiles\IonicConfig.exe"-->
+                          <File Id="IonicConfigEXE" Name="$(var.Config Tool.TargetFileName)" Source="$(var.Config Tool.TargetPath)" KeyPath="yes" />
+                        </Component>
+                        <Component Id="Penctl">
+                          <File Id="PenctlEXE" Source="BuildFiles\Penctl.exe" KeyPath="yes" />
+                        </Component>
+                        <Component Id="PerfCountersManifest">
+                          <File Id="PerfCountersManFile" Name="perf_counters.man" Source="$(var.Ionic.ProjectDir)" KeyPath="yes" />
                         </Component>
                       <Directory Id="Ionic64" Name="Ionic64">
                             <Component Id="IonicDriverPackage" Guid="B0F10226-F3CD-4C3B-814E-BBB95B763360">
                                 <difxapp:Driver AddRemovePrograms="no" DeleteFiles="yes" ForceInstall="yes" Legacy="no" PlugAndPlayPrompt="no" Sequence="0" />
                                 <File Id="Ionic64InfFile" Source="$(var.SolutionDir)\$(var.Ionic.Platform)\$(var.Ionic.Configuration)\Ionic\Ionic64.inf" KeyPath="yes" />
-                                <!-- <File Id="Ionic64VfInfFile" Source="BuildFiles\Ionic64_vf.inf" KeyPath="no" /> -->
                                 <File Id="Ionic64CatFile" Source="$(var.SolutionDir)\$(var.Ionic.Platform)\$(var.Ionic.Configuration)\Ionic\Ionic64.cat" KeyPath="no" />
                                 <File Id="Ionic64SysFile" Source="$(var.SolutionDir)\$(var.Ionic.Platform)\$(var.Ionic.Configuration)\Ionic\Ionic64.sys" KeyPath="no" />
                             </Component>
@@ -63,7 +64,8 @@
             <Directory Id="DesktopFolder" />
     
     </Directory>
-    
+        <WixVariable Id="WixUIDialogBmp" Value="BuildFiles\platform-banner-logo.jpg" />
+        <WixVariable Id="WixUIBannerBmp" Value="BuildFiles\top-banner-logo.jpg" />
         <WixVariable Id="WixUILicenseRtf" Value="BuildFiles\License.rtf" />
     
         <UI Id='Mondo'>
@@ -79,8 +81,14 @@
       <Condition Message="Windows Server 20016 64 bit">VersionNT64 &gt;= 603</Condition>
         <Icon Id="Cmd.ico" SourceFile="BuildFiles\Cmd.ico" />
   
+      <CustomAction Id="RegisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;lodctr /M:perf_counters.man&quot;" Return="check" />
+      <CustomAction Id="UnregisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;unlodctr /M:perf_counters.man&quot;" Return="check" />
+
+      <InstallExecuteSequence>
+        <Custom Action="RegisterPerfCounters" After="InstallFiles">NOT Installed</Custom>
+        <Custom Action="UnregisterPerfCounters" Before="RemoveFiles">(REMOVE~="ALL") AND (NOT UPGRADINGPRODUCTCODE)</Custom>
+      </InstallExecuteSequence>
   </Fragment>
-  
 <!--
   <Fragment>
     <ComponentGroup Id="ProductComponents" Directory="INSTALLDIR">
