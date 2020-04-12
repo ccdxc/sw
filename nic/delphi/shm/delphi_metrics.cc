@@ -144,7 +144,7 @@ error Gauge::Set(double val) {
 
 // GetDelphiShm returns a delphi shared memory object
 delphi::shm::DelphiShmPtr DelphiMetrics::GetDelphiShm() {
-    static delphi::shm::DelphiShmPtr client_shm = make_shared<delphi::shm::DelphiShm>();
+    thread_local delphi::shm::DelphiShmPtr client_shm = make_shared<delphi::shm::DelphiShm>();
     if (!client_shm->IsMapped()) {
         error err = client_shm->MemMap(DELPHI_SHM_NAME, DELPHI_SHM_SIZE, true);
         if (err.IsNotOK()) {
