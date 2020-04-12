@@ -37,7 +37,7 @@ uplink:
         origin  : implicitly-created
 dhcprelay:
     - vpcid    : 100
-      serverip : '100.1.1.1'
+      serverip : '20.20.8.1'
       agentip  : '1.1.1.1'
 
 vpc:

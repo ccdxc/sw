@@ -17,6 +17,9 @@ def __get_route_add_cmd(route, gw):
     api.Logger.info(route_cmd)
     return route_cmd
 
+def AddRoutes():
+    __add_routes()
+
 def __add_routes():
 
     vnic_routes = config_api.GetVnicRoutes()
