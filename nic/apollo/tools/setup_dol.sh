@@ -5,8 +5,8 @@ START_VPP=0
 NO_STOP=0
 START_DHCP_SERVER=0
 
-# set file size limit to 30GB so that model logs will not exceed that.
-ulimit -f $((30*1024*1024))
+# set file size limit to 50GB so that model logs will not exceed that.
+ulimit -f $((50*1024*1024))
 
 CMDARGS=""
 argc=$#
