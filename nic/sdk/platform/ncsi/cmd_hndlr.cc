@@ -438,17 +438,37 @@ int CmdHndler::ConfigVlanFilter(uint8_t filter_idx, uint16_t vlan,
     ssize_t ret;
     VlanFilterMsg vlan_msg;
 
+    //Delete the previously configured vlan if its present
+    if (vlan_filter_list[port][filter_idx]) {
+        vlan_msg.filter_id = filter_idx;
+        vlan_msg.port = port;
+        vlan_msg.vlan_id = vlan_filter_list[port][filter_idx];
+        vlan_msg.enable = false;
+
+        ret = this->ipc->PostMsg(vlan_msg);
+
+        if (ret) {
+            SDK_TRACE_ERR("Vlan delete for filter_idx: %d , vlan_id: %d failed"
+                    "with error code: %d", filter_idx,
+                    vlan_filter_list[port][filter_idx], ret);
+            return ret;
+        }
+    }
+
     vlan_msg.filter_id = filter_idx;
     vlan_msg.port = port;
     vlan_msg.vlan_id = vlan;
     vlan_msg.enable = enable;
 
-    NcsiDb[vlan_msg.port]->UpdateNcsiParam(vlan_msg);
-
     ret = this->ipc->PostMsg(vlan_msg);
 
-    if (!ret)
+    if (!ret) {
         vlan_filter_list[port][filter_idx] = vlan;
+        NcsiDb[vlan_msg.port]->UpdateNcsiParam(vlan_msg);
+    }
+    else
+        SDK_TRACE_ERR("Vlan update(%s) failed with error code: %d",
+                enable ? "Create" : "Remove", ret);
 
     return ret;
 }
@@ -459,19 +479,40 @@ int CmdHndler::ConfigMacFilter(uint8_t filter_idx, const uint8_t* mac_addr,
     ssize_t ret;
     MacFilterMsg mac_filter_msg;
 
+    //Delete the previously configured vlan if its present
+    if (mac_addr_list[port][filter_idx]) {
+        mac_filter_msg.filter_id = filter_idx;
+        mac_filter_msg.port = port;
+        mac_filter_msg.addr_type = type;
+        memcpy(mac_filter_msg.mac_addr, &mac_addr_list[port][filter_idx],
+                sizeof(mac_filter_msg.mac_addr));
+        mac_filter_msg.enable = false;
+
+        ret = this->ipc->PostMsg(mac_filter_msg);
+
+        if (ret) {
+            SDK_TRACE_ERR("MAC delete for filter_idx: %d failed"
+                    "with error code: %d", filter_idx, ret);
+            return ret;
+        }
+    }
+
     mac_filter_msg.filter_id = filter_idx;
     mac_filter_msg.port = port;
     memcpy(mac_filter_msg.mac_addr, mac_addr, sizeof(mac_filter_msg.mac_addr));
     mac_filter_msg.addr_type = type;
     mac_filter_msg.enable = enable;
 
-    NcsiDb[mac_filter_msg.port]->UpdateNcsiParam(mac_filter_msg);
-
     ret = this->ipc->PostMsg(mac_filter_msg);
 
-    if (!ret)
+    if (!ret) {
         memcpy(&mac_addr_list[port][filter_idx], mac_addr,
                 sizeof(mac_filter_msg.mac_addr));
+        NcsiDb[mac_filter_msg.port]->UpdateNcsiParam(mac_filter_msg);
+    }
+    else
+        SDK_TRACE_ERR("MAC update(%s) failed with error code: %d",
+                enable ? "Create" : "Remove", ret);
 
     return ret;
 }
@@ -566,7 +607,6 @@ void CmdHndler::ClearInitState(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     ssize_t ret;
     NcsiStateErr sm_ret;
     struct NcsiRspPkt resp;
-    struct ResetChanMsg reset_ch_msg;
     CmdHndler *hndlr = (CmdHndler *)obj;
     const struct NcsiFixedCmdPkt *cmd = (NcsiFixedCmdPkt *)cmd_pkt;
 
@@ -575,23 +615,6 @@ void CmdHndler::ClearInitState(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
 
     NCSI_CMD_BEGIN_BANNER();
     SDK_TRACE_INFO("ncsi_channel: 0x%x", cmd->cmd.NcsiHdr.channel);
-
-    // reset the channel
-    reset_ch_msg.reset = true;
-    reset_ch_msg.port = cmd->cmd.NcsiHdr.channel;
-    reset_ch_msg.filter_id = cmd->cmd.NcsiHdr.channel;
-
-    NcsiDb[reset_ch_msg.port]->UpdateNcsiParam(reset_ch_msg);
-
-    ret = hndlr->ipc->PostMsg(reset_ch_msg);
-    if (ret) {
-        SDK_TRACE_ERR("Failed to reset channel");
-    }
-
-    // zero out the local database of filters
-    memset(mac_addr_list, 0, sizeof(mac_addr_list));
-    memset(vlan_filter_list, 0, sizeof(vlan_filter_list));
-    memset(vlan_mode_list, 0, sizeof(vlan_mode_list));
 
     sm_ret = StateM[cmd->cmd.NcsiHdr.channel]->UpdateState(CMD_CLEAR_INIT_STATE);
 

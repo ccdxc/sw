@@ -173,8 +173,8 @@ int grpc_ipc::PostMsg(struct VlanFilterMsg& vlan_filter)
     VlanFilterRequestMsg req_msg;
     VlanFilterResponseMsg rsp_msg;
 
-    SDK_TRACE_INFO("vlan create on ncsi channel: 0x%x, vlan_id: 0x%x", 
-            vlan_filter.port, vlan_filter.vlan_id);
+    SDK_TRACE_INFO("vlan %s on ncsi channel: 0x%x, vlan_id: 0x%x", 
+            vlan_filter.enable ? "create" : "remove", vlan_filter.port, vlan_filter.vlan_id);
     req = req_msg.add_request();
 
     req->set_id(vlan_filter.filter_id);
@@ -274,8 +274,8 @@ int grpc_ipc::PostMsg(struct MacFilterMsg& mac_filter)
     memcpy(&mac_addr, mac_filter.mac_addr, sizeof(mac_filter.mac_addr));
     memrev((uint8_t* )&mac_addr, 6);
 
-    SDK_TRACE_INFO("mac filter create on ncsi channel: 0x%x, mac_addr: 0x%llx", 
-            mac_filter.port, mac_addr);
+    SDK_TRACE_INFO("mac filter %s on ncsi channel: 0x%x, mac_addr: 0x%llx", 
+            mac_filter.enable ? "create" : "remove", mac_filter.port, mac_addr);
     req = req_msg.add_request();
 
     req->set_id(mac_filter.filter_id);
