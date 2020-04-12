@@ -112,11 +112,11 @@
         <div @fastSlideInOut *ngIf="hovered" class="workload-column-values">
           Micro-seg vlan: {{rowData.spec.interfaces[index]['micro-seg-vlan']}}
           <ng-container
-                        *ngIf="rowData.spec.interfaces[index]['external-vlan'] !== 0 || !rowData.spec.interfaces[index]['network']">
+                        *ngIf="!isWorkloadSystemGenerated(rowData)">
             External vlan: {{rowData.spec.interfaces[index]['external-vlan']}}
           </ng-container>
           <ng-container
-                        *ngIf="rowData.spec.interfaces[index]['external-vlan'] === 0 && rowData.spec.interfaces[index]['network']">
+                        *ngIf="isWorkloadSystemGenerated(rowData)">
             Network: {{rowData.spec.interfaces[index]['network']}}
           </ng-container>
         </div>
