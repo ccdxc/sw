@@ -1,0 +1,58 @@
+{
+    "_comment_" : "this captures the scale for IBM FCS release. the order of the objects listed here should be maintained",
+    "objects" : [
+        {
+            "kind" : "device",
+            "gw-ip-addr": "1.0.0.1",
+            "ip-addr" : "1.0.0.2",
+            "mac-addr" : "0x000201000001",
+            "dual-stack": "true",
+            "encap": "vxlan",
+            "host-mode": "true"
+        },
+        {
+            "kind" : "tep",
+            "count" : "1700",
+            "prefix": "1.0.0.0/8"
+        },
+        {
+            "_comment_" : "routes per routing table, middle 2 octets are used to create routes",
+            "kind" : "route-table",
+            "count" : "100",
+            "prefix-start" : "4.0.0.0/8",
+            "v6-prefix-start" : "2021::/96"
+        },
+        {
+            "_comment_" : "security policy count per vpc per subnet, parameters here are per subnet per direction",
+            "kind" : "security-policy",
+            "count" : "10",
+            "v4-count" : "10",
+            "v6-count" : "10",
+            "stateful" : "false"
+        },
+        {
+            "_comment_" : "All VPCs have same prefix",
+            "kind" : "vpc",
+            "count" : "1",
+            "prefix" : "2.0.0.0/8",
+            "v6-prefix" : "2019::/96",
+            "subnets" : "6"
+        },
+        {
+            "_comment_" : "per vpc, per subnet vnic scale",
+            "kind" : "vnic",
+            "count" : "4",
+            "ing-policies": "3",
+            "eg-policies": "2",
+            "tagged": "false"
+        },
+        {
+            "kind" : "mappings",
+            "remotes" : "850",
+            "locals" : "4",
+            "l2" : "false",
+            "nat-prefix" : "3.0.0.0/8",
+            "v6-nat-prefix": "2020::/96"
+        }
+    ]
+}

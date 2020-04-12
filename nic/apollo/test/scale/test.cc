@@ -53,6 +53,9 @@ create_dhcp_policies (uint32_t num_dhcp_policies, ip_addr_t *ipaddr)
     uint32_t server_ip = 0x14000001;
     sdk_ret_t rv;
 
+    if (!num_dhcp_policies) {
+        return SDK_RET_OK;
+    }
     for (uint32_t i = 1; i <= num_dhcp_policies; i ++) {
         policy_spec.key = test::int2pdsobjkey(i);
         policy_spec.type = PDS_DHCP_POLICY_TYPE_RELAY;
@@ -333,7 +336,7 @@ delete_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                                         "delete v4 remote mapping failed, vpc %u, ret %u",
                                         i, rv);
 
-                if (apulu()) {
+                if (apulu() && g_test_params.l2_mappings) {
                     // l2 mapping
                     memset(&key, 0, sizeof(pds_mapping_key_t));
                     key.type = PDS_MAPPING_TYPE_L2;
@@ -597,7 +600,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                                         "create v4 remote mapping failed, vpc %u, ret %u",
                                         i, rv);
 
-                if (apulu()) {
+                if (apulu() && g_test_params.l2_mappings) {
                     // l2 mapping
                     pds_remote_l2_mapping = pds_remote_mapping;
                     pds_remote_l2_mapping.key = test::uuid_from_objid(mapping_key++);
@@ -668,12 +671,14 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 
 sdk_ret_t
 create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
-              uint32_t num_vnics, uint16_t vlan_start,
-              uint32_t num_meter)
+              uint32_t num_vnics, uint32_t num_policies,
+              uint32_t num_ing_policies, uint32_t num_eg_policies,
+              uint16_t vlan_start, uint32_t num_meter)
 {
     sdk_ret_t rv = SDK_RET_OK;
     pds_vnic_spec_t pds_vnic;
     uint16_t vnic_key = 1;
+    uint32_t policy_id = 1;
     static uint16_t v4_meter_id = 1;
     static uint16_t v6_meter_id = num_meter+1;
     static uint32_t lif_id = HOST_LIF_ID_MIN;
@@ -746,6 +751,16 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                         lif_id = HOST_LIF_ID_MIN;
                     }
                 }
+                pds_vnic.num_ing_v4_policy = num_ing_policies;
+                for (uint32_t l = 0; l < num_ing_policies; l++) {
+                    pds_vnic.ing_v4_policy[l] = test::int2pdsobjkey(policy_id + l);
+                }
+                pds_vnic.num_egr_v4_policy = num_eg_policies;
+                for (uint32_t l = 0; l < num_eg_policies; l++) {
+                    pds_vnic.egr_v4_policy[l] = test::int2pdsobjkey(policy_id +
+                                                                   (num_vpcs * num_subnets * num_policies) +
+                                                                   l);
+                }
                 rv = create_vnic(&pds_vnic);
                 SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                         "create vnic failed, vpc %u, ret %u",
@@ -786,8 +801,8 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
 // leaving LSB 14 bits for VNIC IPs
 sdk_ret_t
 create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
-                uint32_t num_subnets, ipv4_prefix_t *vpc_pfx,
-                ip_prefix_t *v6_vpc_pfx)
+                uint32_t num_subnets, uint32_t num_policies,
+                ipv4_prefix_t *vpc_pfx, ip_prefix_t *v6_vpc_pfx)
 {
     sdk_ret_t rv;
     pds_subnet_spec_t pds_subnet;
@@ -819,14 +834,14 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.egr_v4_policy[0] = test::int2pdsobjkey(policy_id);
         pds_subnet.egr_v4_policy[1] = test::int2pdsobjkey(policy_id);
         pds_subnet.num_ing_v4_policy = 2;
-        pds_subnet.ing_v4_policy[0] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs));
-        pds_subnet.ing_v4_policy[1] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs));
+        pds_subnet.ing_v4_policy[0] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs * num_policies));
+        pds_subnet.ing_v4_policy[1] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs * num_policies));
         pds_subnet.num_egr_v6_policy = 2;
-        pds_subnet.egr_v6_policy[0] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs) * 2);
-        pds_subnet.egr_v6_policy[1] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs) * 2);
+        pds_subnet.egr_v6_policy[0] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs * num_policies) * 2);
+        pds_subnet.egr_v6_policy[1] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs * num_policies) * 2);
         pds_subnet.num_ing_v6_policy = 2;
-        pds_subnet.ing_v6_policy[0] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs) * 3);
-        pds_subnet.ing_v6_policy[1] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs) * 3);
+        pds_subnet.ing_v6_policy[0] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs * num_policies) * 3);
+        pds_subnet.ing_v6_policy[1] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs * num_policies) * 3);
         if (apulu()) {
             pds_subnet.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
             pds_subnet.fabric_encap.val.vnid =
@@ -847,9 +862,9 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
 }
 
 sdk_ret_t
-create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
-             ip_prefix_t *ipv6_prefix, ip_prefix_t *nat46_pfx,
-             uint32_t num_subnets)
+create_vpcs (uint32_t num_vpcs, uint32_t num_policies,
+             ip_prefix_t *ipv4_prefix, ip_prefix_t *ipv6_prefix,
+             ip_prefix_t *nat46_pfx, uint32_t num_subnets)
 {
     sdk_ret_t rv;
     pds_vpc_spec_t pds_vpc;
@@ -870,8 +885,8 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
         rv = create_vpc(&pds_vpc);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                 "create vpc %u failed, rv %u", i, rv);
-        rv = create_subnets(i, num_vpcs, num_subnets, &pds_vpc.v4_prefix,
-                            &pds_vpc.v6_prefix);
+        rv = create_subnets(i, num_vpcs, num_subnets, num_policies,
+                            &pds_vpc.v4_prefix, &pds_vpc.v6_prefix);
         if (rv != SDK_RET_OK) {
             return rv;
         }
@@ -918,6 +933,10 @@ create_nat_port_blocks (uint32_t num_vpcs, ip_prefix_t *napt_prefix)
     ip_addr_t hi_addr;
     ipvx_range_t ip_range;
     pds_nat_port_block_spec_t pds_napt;
+
+    if (ip_prefix_is_zero(napt_prefix)) {
+        return SDK_RET_OK;
+    }
 
     ip_prefix_ip_low(napt_prefix, &lo_addr);
     ip_prefix_ip_high(napt_prefix, &hi_addr);
@@ -1271,6 +1290,9 @@ create_policers (uint32_t num_policers)
     uint32_t pps_burst = 400;
     uint32_t bps_burst = 3200;
 
+    if (!num_policers) {
+        return SDK_RET_OK;
+    }
     for (uint32_t i = 1; i <= num_policers; i ++) {
         memset(&pds_policer, 0, sizeof(pds_policer_spec_t));
         pds_policer.key = test::int2pdsobjkey(i);
@@ -1471,7 +1493,7 @@ create_device_cfg (ip_addr_t *ipaddr, uint64_t macaddr, ip_addr_t *gwip)
 
 #define TESTAPP_POLICY_PRIORITY_STEP 4
 sdk_ret_t
-create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
+create_security_policy (uint32_t num_vpcs, uint32_t num_subnets, uint32_t num_policies,
                         uint32_t num_rules, uint32_t ip_af, bool ingress)
 {
     sdk_ret_t            rv;
@@ -1498,155 +1520,157 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     }
     num_pfx = (uint32_t)ceilf((float)num_rules/(float)num_sub_rules);
     for (uint32_t i = 1; i <= num_vpcs; i++) {
-        for (uint32_t j = 1, idx = 0; j <= num_subnets; idx = 0, j++) {
-            memset(policy.rule_info->rules, 0, num_rules * sizeof(rule_t));
-            policy.key = test::int2pdsobjkey(policy_id++);
-            done = false;
-            priority = 0;
-            priority_step = TESTAPP_POLICY_PRIORITY_STEP;
-            for (uint32_t k = 0; k < num_pfx; k++) {
-                uint16_t dport_base = 1024;
-                for (uint32_t l = 0; l < num_sub_rules; l++) {
-                    rule = &policy.rule_info->rules[idx];
-                    if (priority_step == TESTAPP_POLICY_PRIORITY_STEP) {
-                        priority = idx + (priority_step - 1);
-                    }
-                    priority = (priority > 1022) ? (1022) : priority;
-                    rule->priority = priority;
-                    priority--;
-                    priority_step--;
-                    if (priority_step == 0) {
-                        priority_step = TESTAPP_POLICY_PRIORITY_STEP;
-                    }
-                    rule->action_data.fw_action.action =
-                        SECURITY_RULE_ACTION_ALLOW;
-                    rule->stateful = g_test_params.stateful;
-                    rule->match.l3_match.proto_match_type = MATCH_SPECIFIC;
-                    rule->match.l3_match.ip_proto = 17;    // UDP
-                    rule->match.l4_match.sport_range.port_lo = 100;
-                    rule->match.l4_match.sport_range.port_hi = 10000;
-                    if (idx < (num_rules - 3)) {
-                        if (policy.rule_info->af == IP_AF_IPV4) {
-                            if (ingress) {
-                                rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
-                                rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
-                                rule->match.l3_match.src_ip_pfx.addr.af =
-                                    policy.rule_info->af;
-                                rule->match.l3_match.src_ip_pfx =
-                                    g_test_params.vpc_pfx;
-                                rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr =
-                                        rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr |
-                                        ((j - 1) << 14) | ((k + 2) << 4);
-                                rule->match.l3_match.src_ip_pfx.len = 28;
-                            } else {
-                                rule->match.l3_match.src_match_type = IP_MATCH_NONE;
-                                rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
-                                rule->match.l3_match.dst_ip_pfx.addr.af =
-                                    policy.rule_info->af;
-                                rule->match.l3_match.dst_ip_pfx =
-                                    g_test_params.vpc_pfx;
-                                rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr =
-                                        rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr |
-                                        ((j - 1) << 14) | ((k + 2) << 4);
-                                rule->match.l3_match.dst_ip_pfx.len = 28;
-                            }
-                        } else {
-                            if (ingress) {
-                                rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
-                                rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
-                                rule->match.l3_match.src_ip_pfx.addr.af =
-                                    policy.rule_info->af;
-                                rule->match.l3_match.src_ip_pfx =
-                                    g_test_params.v6_vpc_pfx;
-                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] =
-                                        rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] |
-                                        htonl(((j - 1) << 14) | ((k + 2) << 4));
-                                rule->match.l3_match.src_ip_pfx.len = 124;
-                            } else {
-                                rule->match.l3_match.src_match_type = IP_MATCH_NONE;
-                                rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
-                                rule->match.l3_match.dst_ip_pfx.addr.af =
-                                    policy.rule_info->af;
-                                rule->match.l3_match.dst_ip_pfx = g_test_params.v6_vpc_pfx;
-                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[3] =
-                                        rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[3] |
-                                        htonl(((j - 1) << 14) | ((k + 2) << 4));
-                                rule->match.l3_match.dst_ip_pfx.len = 124;
-                            }
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            for (uint32_t m = 1, idx = 0; m <= num_policies; idx = 0, m++) {
+                memset(policy.rule_info->rules, 0, num_rules * sizeof(rule_t));
+                policy.key = test::int2pdsobjkey(policy_id++);
+                done = false;
+                priority = 0;
+                priority_step = TESTAPP_POLICY_PRIORITY_STEP;
+                for (uint32_t k = 0; k < num_pfx; k++) {
+                    uint16_t dport_base = 1024;
+                    for (uint32_t l = 0; l < num_sub_rules; l++) {
+                        rule = &policy.rule_info->rules[idx];
+                        if (priority_step == TESTAPP_POLICY_PRIORITY_STEP) {
+                            priority = idx + (priority_step - 1);
                         }
-                        rule->match.l4_match.dport_range.port_lo = dport_base;
-                        rule->match.l4_match.dport_range.port_hi =
-                            dport_base + step - 1;
-                        dport_base += step;
-                        idx++;
-                    } else if (idx < (num_rules - 2)) {
-                        // catch-all policy within the vpc for UDP traffic
-                        rule->match.l4_match.dport_range.port_lo = 100;
-                        rule->match.l4_match.dport_range.port_hi = 20000;
-                        idx++;
-                    } else if (idx < (num_rules - 1)) {
-                        // catch-all policy within the vpc for TCP traffic
+                        priority = (priority > 1022) ? (1022) : priority;
+                        rule->priority = priority;
+                        priority--;
+                        priority_step--;
+                        if (priority_step == 0) {
+                            priority_step = TESTAPP_POLICY_PRIORITY_STEP;
+                        }
+                        rule->action_data.fw_action.action =
+                            SECURITY_RULE_ACTION_ALLOW;
+                        rule->stateful = g_test_params.stateful;
                         rule->match.l3_match.proto_match_type = MATCH_SPECIFIC;
-                        rule->match.l3_match.ip_proto = 6;
-                        rule->match.l4_match.dport_range.port_lo = 0;
-                        rule->match.l4_match.dport_range.port_hi = 65535;
-                        idx++;
-                    } else {
-                        // catch-all policy for LPM routes + UDP
-                        if (policy.rule_info->af == IP_AF_IPV4) {
-                            if (ingress) {
-                                rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
-                                rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
-                                rule->match.l3_match.src_ip_pfx.addr.af =
-                                    policy.rule_info->af;
-                                rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr = (0xC << 28);
-                                rule->match.l3_match.src_ip_pfx.len = 8;
+                        rule->match.l3_match.ip_proto = 17;    // UDP
+                        rule->match.l4_match.sport_range.port_lo = 100;
+                        rule->match.l4_match.sport_range.port_hi = 10000;
+                        if (idx < (num_rules - 3)) {
+                            if (policy.rule_info->af == IP_AF_IPV4) {
+                                if (ingress) {
+                                    rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                                    rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
+                                    rule->match.l3_match.src_ip_pfx.addr.af =
+                                        policy.rule_info->af;
+                                    rule->match.l3_match.src_ip_pfx =
+                                        g_test_params.vpc_pfx;
+                                    rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr =
+                                            rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr |
+                                            ((j - 1) << 14) | ((k + 2) << 4);
+                                    rule->match.l3_match.src_ip_pfx.len = 28;
+                                } else {
+                                    rule->match.l3_match.src_match_type = IP_MATCH_NONE;
+                                    rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
+                                    rule->match.l3_match.dst_ip_pfx.addr.af =
+                                        policy.rule_info->af;
+                                    rule->match.l3_match.dst_ip_pfx =
+                                        g_test_params.vpc_pfx;
+                                    rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr =
+                                            rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr |
+                                            ((j - 1) << 14) | ((k + 2) << 4);
+                                    rule->match.l3_match.dst_ip_pfx.len = 28;
+                                }
                             } else {
-                                rule->match.l3_match.src_match_type = IP_MATCH_NONE;
-                                rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
-                                rule->match.l3_match.dst_ip_pfx.addr.af =
-                                    policy.rule_info->af;
-                                rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr = (0xC << 28);
-                                rule->match.l3_match.dst_ip_pfx.len = 8;
+                                if (ingress) {
+                                    rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                                    rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
+                                    rule->match.l3_match.src_ip_pfx.addr.af =
+                                        policy.rule_info->af;
+                                    rule->match.l3_match.src_ip_pfx =
+                                        g_test_params.v6_vpc_pfx;
+                                    rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] =
+                                            rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] |
+                                            htonl(((j - 1) << 14) | ((k + 2) << 4));
+                                    rule->match.l3_match.src_ip_pfx.len = 124;
+                                } else {
+                                    rule->match.l3_match.src_match_type = IP_MATCH_NONE;
+                                    rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
+                                    rule->match.l3_match.dst_ip_pfx.addr.af =
+                                        policy.rule_info->af;
+                                    rule->match.l3_match.dst_ip_pfx = g_test_params.v6_vpc_pfx;
+                                    rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[3] =
+                                            rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[3] |
+                                            htonl(((j - 1) << 14) | ((k + 2) << 4));
+                                    rule->match.l3_match.dst_ip_pfx.len = 124;
+                                }
                             }
+                            rule->match.l4_match.dport_range.port_lo = dport_base;
+                            rule->match.l4_match.dport_range.port_hi =
+                                dport_base + step - 1;
+                            dport_base += step;
+                            idx++;
+                        } else if (idx < (num_rules - 2)) {
+                            // catch-all policy within the vpc for UDP traffic
+                            rule->match.l4_match.dport_range.port_lo = 100;
+                            rule->match.l4_match.dport_range.port_hi = 20000;
+                            idx++;
+                        } else if (idx < (num_rules - 1)) {
+                            // catch-all policy within the vpc for TCP traffic
+                            rule->match.l3_match.proto_match_type = MATCH_SPECIFIC;
+                            rule->match.l3_match.ip_proto = 6;
+                            rule->match.l4_match.dport_range.port_lo = 0;
+                            rule->match.l4_match.dport_range.port_hi = 65535;
+                            idx++;
                         } else {
-                            if (ingress) {
-                                rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
-                                rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
-                                rule->match.l3_match.src_ip_pfx.addr.af =
-                                    policy.rule_info->af;
-                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
-                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[1] = htonl(0x00000000);
-                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[2] = htonl(0xF1D0D1D0);
-                                rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] = htonl(0x00000000);
-                                rule->match.l3_match.src_ip_pfx.len = 96;
+                            // catch-all policy for LPM routes + UDP
+                            if (policy.rule_info->af == IP_AF_IPV4) {
+                                if (ingress) {
+                                    rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                                    rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
+                                    rule->match.l3_match.src_ip_pfx.addr.af =
+                                        policy.rule_info->af;
+                                    rule->match.l3_match.src_ip_pfx.addr.addr.v4_addr = (0xC << 28);
+                                    rule->match.l3_match.src_ip_pfx.len = 8;
+                                } else {
+                                    rule->match.l3_match.src_match_type = IP_MATCH_NONE;
+                                    rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
+                                    rule->match.l3_match.dst_ip_pfx.addr.af =
+                                        policy.rule_info->af;
+                                    rule->match.l3_match.dst_ip_pfx.addr.addr.v4_addr = (0xC << 28);
+                                    rule->match.l3_match.dst_ip_pfx.len = 8;
+                                }
                             } else {
-                                rule->match.l3_match.src_match_type = IP_MATCH_NONE;
-                                rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
-                                rule->match.l3_match.dst_ip_pfx.addr.af =
-                                    policy.rule_info->af;
-                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
-                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[1] = htonl(0x00000000);
-                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[2] = htonl(0xF1D0D1D0);
-                                rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[3] = htonl(0x00000000);
-                                rule->match.l3_match.dst_ip_pfx.len = 96;
+                                if (ingress) {
+                                    rule->match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                                    rule->match.l3_match.dst_match_type = IP_MATCH_NONE;
+                                    rule->match.l3_match.src_ip_pfx.addr.af =
+                                        policy.rule_info->af;
+                                    rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
+                                    rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[1] = htonl(0x00000000);
+                                    rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[2] = htonl(0xF1D0D1D0);
+                                    rule->match.l3_match.src_ip_pfx.addr.addr.v6_addr.addr32[3] = htonl(0x00000000);
+                                    rule->match.l3_match.src_ip_pfx.len = 96;
+                                } else {
+                                    rule->match.l3_match.src_match_type = IP_MATCH_NONE;
+                                    rule->match.l3_match.dst_match_type = IP_MATCH_PREFIX;
+                                    rule->match.l3_match.dst_ip_pfx.addr.af =
+                                        policy.rule_info->af;
+                                    rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
+                                    rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[1] = htonl(0x00000000);
+                                    rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[2] = htonl(0xF1D0D1D0);
+                                    rule->match.l3_match.dst_ip_pfx.addr.addr.v6_addr.addr32[3] = htonl(0x00000000);
+                                    rule->match.l3_match.dst_ip_pfx.len = 96;
+                                }
                             }
+                            rule->match.l4_match.dport_range.port_lo = 1000;
+                            rule->match.l4_match.dport_range.port_hi = 20000;
+                            done = true;
+                            break;
                         }
-                        rule->match.l4_match.dport_range.port_lo = 1000;
-                        rule->match.l4_match.dport_range.port_hi = 20000;
-                        done = true;
+                    }
+                    if (done) {
                         break;
                     }
                 }
-                if (done) {
-                    break;
+                rv = create_policy(&policy);
+                if (rv != SDK_RET_OK) {
+                    printf("Failed to create security policy, vpc %u, subnet %u, "
+                           "err %u\n", i, j, rv);
+                    return rv;
                 }
-            }
-            rv = create_policy(&policy);
-            if (rv != SDK_RET_OK) {
-                printf("Failed to create security policy, vpc %u, subnet %u, "
-                       "err %u\n", i, j, rv);
-                return rv;
             }
         }
     }
@@ -1794,11 +1818,16 @@ sdk_ret_t
 create_objects (void)
 {
     sdk_ret_t ret;
+    timespec_t   start_ts, end_ts;
+    uint64_t     start_ns, end_ns;
 
     ret = parse_test_cfg(g_input_cfg_file, &g_test_params);
     if (ret != SDK_RET_OK) {
         exit(1);
     }
+
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);
+    sdk::timestamp_to_nsecs(&start_ts, &start_ns);
 
     ret = create_objects_init(&g_test_params);
     if (ret != SDK_RET_OK) {
@@ -1918,6 +1947,7 @@ create_objects (void)
     // create egress IPv4 security policies
     ret = create_security_policy(g_test_params.num_vpcs,
                                  g_test_params.num_subnets,
+                                 g_test_params.num_policies,
                                  g_test_params.num_ipv4_rules,
                                  IP_AF_IPV4, false);
     if (ret != SDK_RET_OK) {
@@ -1926,6 +1956,7 @@ create_objects (void)
     // create ingress IPv4 security policies
     ret = create_security_policy(g_test_params.num_vpcs,
                                  g_test_params.num_subnets,
+                                 g_test_params.num_policies,
                                  g_test_params.num_ipv4_rules,
                                  IP_AF_IPV4, true);
     if (ret != SDK_RET_OK) {
@@ -1936,6 +1967,7 @@ create_objects (void)
         // create egress IPv6 security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,
+                                     g_test_params.num_policies,
                                      g_test_params.num_ipv6_rules,
                                      IP_AF_IPV6, false);
         if (ret != SDK_RET_OK) {
@@ -1944,6 +1976,7 @@ create_objects (void)
         // create ingress IPv6 security policies
         ret = create_security_policy(g_test_params.num_vpcs,
                                      g_test_params.num_subnets,
+                                     g_test_params.num_policies,
                                      g_test_params.num_ipv6_rules,
                                      IP_AF_IPV6, true);
         if (ret != SDK_RET_OK) {
@@ -1952,9 +1985,9 @@ create_objects (void)
     }
 
     // create vpcs, NAT port block and subnets
-    ret = create_vpcs(g_test_params.num_vpcs, &g_test_params.vpc_pfx,
-                      &g_test_params.v6_vpc_pfx, &g_test_params.nat46_vpc_pfx,
-                      g_test_params.num_subnets);
+    ret = create_vpcs(g_test_params.num_vpcs, g_test_params.num_policies,
+                      &g_test_params.vpc_pfx, &g_test_params.v6_vpc_pfx,
+                      &g_test_params.nat46_vpc_pfx, g_test_params.num_subnets);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -1989,8 +2022,10 @@ create_objects (void)
 
     // create vnics
     ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
-                       g_test_params.num_vnics, g_test_params.vlan_start,
-                       g_test_params.num_meter);
+                       g_test_params.num_vnics, g_test_params.num_policies,
+                       g_test_params.num_ing_policies_per_vnic,
+                       g_test_params.num_eg_policies_per_vnic,
+                       g_test_params.vlan_start, g_test_params.num_meter);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -2017,7 +2052,7 @@ create_objects (void)
     }
 
     // create service mappings
-    if (apulu() || artemis()) {
+    if (artemis()) {
         ret = create_svc_mappings(g_test_params.num_vpcs,
                                   g_test_params.num_subnets,
                                   g_test_params.num_vnics,
@@ -2062,5 +2097,11 @@ create_objects (void)
         // make sure all flows are deleted
         SDK_ASSERT(flow_counter == 0);
     }
+
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
+    sdk::timestamp_to_nsecs(&end_ts, &end_ns);
+    float time = (float(end_ns - start_ns)) /1000000000;
+    std::cout << "Time to create objects: " << time << " secs" << std::endl;
+
     return ret;
 }

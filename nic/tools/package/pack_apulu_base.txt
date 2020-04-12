@@ -279,6 +279,7 @@ nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/apollo_scale_test                   /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/ftl_test                            /nic/bin/
 nic/apollo/test/scale/$PIPELINE/scale_cfg.json                    /nic/conf/
+nic/apollo/test/scale/$PIPELINE/ibm_fcs_scale.json                /nic/conf/
 nic/apollo/test/scale/$PIPELINE/scale_cfg_bitw.json               /nic/conf/
 nic/apollo/test/scale/$PIPELINE/scale_cfg_1vpc.json               /nic/conf/
 nic/apollo/test/scale/$PIPELINE/scale_cfg_l2l.json                /nic/conf/

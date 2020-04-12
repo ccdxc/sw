@@ -83,6 +83,7 @@ typedef struct test_params_s {
     };
     // policy config
     struct {
+        uint32_t num_policies;
         uint32_t num_ipv4_rules;
         uint32_t num_ipv6_rules;
         bool stateful;
@@ -98,6 +99,8 @@ typedef struct test_params_s {
     // vnic config
     struct {
         uint32_t num_vnics;
+        uint32_t num_ing_policies_per_vnic;
+        uint32_t num_eg_policies_per_vnic;
         uint32_t vlan_start;
         bool tag_vnics;
     };
@@ -109,6 +112,7 @@ typedef struct test_params_s {
         ip_prefix_t v6_provider_pfx;
         uint32_t num_ip_per_vnic;
         uint32_t num_remote_mappings;
+        bool l2_mappings;
     };
     // napt config
     struct {
@@ -307,6 +311,7 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                 pfxstr = obj.second.get<std::string>("v6-prefix-start");
                 assert(str2ipv6pfx((char *)pfxstr.c_str(), &test_params->v6_route_pfx) == 0);
             } else if (kind == "security-policy") {
+                test_params->num_policies = std::stol(obj.second.get<std::string>("count", "1"));
                 test_params->num_ipv4_rules = std::stol(obj.second.get<std::string>("v4-count"));
                 if (test_params->num_ipv4_rules < 4) {
                     printf("Number of IPv4 rules in the policy table must be >= 4\n");
@@ -339,6 +344,18 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
             } else if (kind == "vnic") {
                 string tag;
                 test_params->num_vnics = std::stol(obj.second.get<std::string>("count"));
+                test_params->num_ing_policies_per_vnic =
+                    std::stol(obj.second.get<std::string>("ing-policies", "1"));
+                if (test_params->num_ing_policies_per_vnic > 5) {
+                    printf("Number of ingress policies per vnic must be <= 5. Set to 5\n");
+                    test_params->num_ing_policies_per_vnic = 5;
+                }
+                test_params->num_eg_policies_per_vnic =
+                    std::stol(obj.second.get<std::string>("eg-policies", "1"));
+                if (test_params->num_eg_policies_per_vnic > 5) {
+                    printf("Number of egress policies per vnic must be <= 5. Set to 5\n");
+                    test_params->num_eg_policies_per_vnic = 5;
+                }
                 tag = obj.second.get<std::string>("tagged", "");
                 if (tag.empty() || !tag.compare("true")) {
                     test_params->tag_vnics = true;
@@ -363,6 +380,10 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                 pfxstr = obj.second.get<std::string>("provider-prefix", "");
                 if (!pfxstr.empty()) {
                     assert(str2ipv4pfx((char *)pfxstr.c_str(), &test_params->provider_pfx) == 0);
+                }
+                test_params->l2_mappings = true;
+                if (!obj.second.get<std::string>("l2", "true").compare("false")) {
+                    test_params->l2_mappings = false;
                 }
                 pfxstr = obj.second.get<std::string>("v6-provider-prefix", "");
                 if (!pfxstr.empty()) {
