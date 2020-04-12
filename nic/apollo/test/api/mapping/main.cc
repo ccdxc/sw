@@ -122,7 +122,7 @@ protected:
 
 /// helper functions to create feeders
 static void create_local_mapping_feeders(local_mapping_feeder feeders[],
-                                         int num_feeders)
+                                         int num_feeders, int nvnics, int nips)
 {
     int i;
 
@@ -130,8 +130,8 @@ static void create_local_mapping_feeders(local_mapping_feeder feeders[],
         return;
 
 #ifndef SCALE_DOWN_FOR_DEBUG
-     int num_vnics = k_max_vnic/num_feeders;
-    int num_ips = PDS_MAX_VNIC_IP;
+     int num_vnics = nvnics/num_feeders;
+    int num_ips = nips;
 #else
     // debug
     int num_vnics = 2;
@@ -190,13 +190,12 @@ static void create_remote_mapping_feeders(remote_mapping_feeder feeders[],
 /// @{
 
 // --------------------------- LOCAL MAPPINGS -----------------------
-
 /// \brief Local mappings WF_1
 /// \ref WF_1
 TEST_F(mapping_test, local_mapping_workflow_1) {
     local_mapping_feeder feeders[1];
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     workflow_1<local_mapping_feeder>(feeders[0]);
 }
 
@@ -205,7 +204,7 @@ TEST_F(mapping_test, local_mapping_workflow_1) {
 TEST_F(mapping_test, local_mapping_workflow_2) {
     local_mapping_feeder feeders[1];
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     workflow_2<local_mapping_feeder>(feeders[0]);
 }
 
@@ -214,7 +213,7 @@ TEST_F(mapping_test, local_mapping_workflow_2) {
 TEST_F(mapping_test, local_mapping_workflow_3) {
     local_mapping_feeder feeders[3];
 
-    create_local_mapping_feeders(feeders, 3);
+    create_local_mapping_feeders(feeders, 3, k_max_vnic, PDS_MAX_VNIC_IP);
     workflow_3<local_mapping_feeder>(feeders[0], feeders[1], feeders[2]);
 }
 
@@ -223,7 +222,7 @@ TEST_F(mapping_test, local_mapping_workflow_3) {
 TEST_F(mapping_test, local_mapping_workflow_4) {
     local_mapping_feeder feeders[1];
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     workflow_4<local_mapping_feeder>(feeders[0]);
 }
 
@@ -232,7 +231,7 @@ TEST_F(mapping_test, local_mapping_workflow_4) {
 TEST_F(mapping_test, local_mapping_workflow_5) {
     local_mapping_feeder feeders[3];
 
-    create_local_mapping_feeders(feeders, 3);
+    create_local_mapping_feeders(feeders, 3, k_max_vnic, PDS_MAX_VNIC_IP);
     workflow_5<local_mapping_feeder>(feeders[0], feeders[1], feeders[2]);
 }
 
@@ -241,7 +240,7 @@ TEST_F(mapping_test, local_mapping_workflow_5) {
 TEST_F(mapping_test, local_mapping_workflow_6) {
     local_mapping_feeder feeders[1], feeder1A, feeder1B;
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
     feeder1B = feeders[0];
@@ -255,7 +254,7 @@ TEST_F(mapping_test, local_mapping_workflow_6) {
 TEST_F(mapping_test, local_mapping_workflow_7) {
     local_mapping_feeder feeders[1], feeder1A, feeder1B;
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
     feeder1B = feeders[0];
@@ -269,7 +268,7 @@ TEST_F(mapping_test, local_mapping_workflow_7) {
 TEST_F(mapping_test, local_mapping_workflow_8) {
     local_mapping_feeder feeders[1], feeder1A, feeder1B;
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
     feeder1B = feeders[0];
@@ -283,7 +282,7 @@ TEST_F(mapping_test, local_mapping_workflow_8) {
 TEST_F(mapping_test, local_mapping_workflow_9) {
     local_mapping_feeder feeders[1], feeder1A;
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
 
@@ -295,7 +294,7 @@ TEST_F(mapping_test, local_mapping_workflow_9) {
 TEST_F(mapping_test, DISABLED_local_mapping_workflow_10) {
     local_mapping_feeder feeders[4], feeder2A, feeder3A;
 
-    create_local_mapping_feeders(feeders, 4);
+    create_local_mapping_feeders(feeders, 4, k_max_vnic, PDS_MAX_VNIC_IP);
     feeder2A = feeders[1];
     feeder2A.update_spec(1);
     feeder3A = feeders[2];
@@ -310,7 +309,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_10) {
 TEST_F(mapping_test, local_mapping_workflow_neg_1) {
     local_mapping_feeder feeders[1];
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     workflow_neg_1<local_mapping_feeder>(feeders[0]);
 }
 
@@ -319,7 +318,7 @@ TEST_F(mapping_test, local_mapping_workflow_neg_1) {
 TEST_F(mapping_test, local_mapping_workflow_neg_3) {
     local_mapping_feeder feeders[1];
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     workflow_neg_3<local_mapping_feeder>(feeders[0]);
 }
 
@@ -328,7 +327,7 @@ TEST_F(mapping_test, local_mapping_workflow_neg_3) {
 TEST_F(mapping_test, local_mapping_workflow_neg_4) {
     local_mapping_feeder feeders[2];
 
-    create_local_mapping_feeders(feeders, 2);
+    create_local_mapping_feeders(feeders, 2, k_max_vnic, PDS_MAX_VNIC_IP);
     workflow_neg_4<local_mapping_feeder>(feeders[0], feeders[1]);
 }
 
@@ -337,7 +336,7 @@ TEST_F(mapping_test, local_mapping_workflow_neg_4) {
 TEST_F(mapping_test, local_mapping_workflow_neg_5) {
     local_mapping_feeder feeders[1], feeder1A;
 
-    create_local_mapping_feeders(feeders, 1);
+    create_local_mapping_feeders(feeders, 1, k_max_vnic, PDS_MAX_VNIC_IP);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
 
@@ -349,7 +348,7 @@ TEST_F(mapping_test, local_mapping_workflow_neg_5) {
 TEST_F(mapping_test, local_mapping_workflow_neg_7) {
     local_mapping_feeder feeders[2], feeder1A;
 
-    create_local_mapping_feeders(feeders, 2);
+    create_local_mapping_feeders(feeders, 2, k_max_vnic, PDS_MAX_VNIC_IP);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
 
@@ -361,8 +360,218 @@ TEST_F(mapping_test, local_mapping_workflow_neg_7) {
 TEST_F(mapping_test, local_mapping_workflow_neg_8) {
     local_mapping_feeder feeders[2];
 
-    create_local_mapping_feeders(feeders, 2);
+    create_local_mapping_feeders(feeders, 2, k_max_vnic, PDS_MAX_VNIC_IP);
     workflow_neg_8<local_mapping_feeder>(feeders[0], feeders[1]);
+}
+
+//---------------------------------------------------------------------
+// Non templatized test cases
+//---------------------------------------------------------------------
+/// \brief update mapping vnic
+TEST_F(mapping_test, mapping_update_vnic) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.vnic = int2pdsobjkey(2);
+    lmap_update(feeders[0], &spec, LMAP_ATTR_VNIC);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping subnet
+TEST_F(mapping_test, DISABLED_mapping_update_subnet) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.subnet = int2pdsobjkey(2);
+    lmap_update(feeders[0], &spec, LMAP_ATTR_SUBNET);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping fabric encap type
+TEST_F(mapping_test, mapping_update_fab_encap_type) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.fabric_encap = feeders[0].spec.fabric_encap;
+    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+        spec.fabric_encap.val.vnid = 1;
+    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+        spec.fabric_encap.val.mpls_tag = 1;
+    }
+    lmap_update(feeders[0], &spec, LMAP_ATTR_FAB_ENCAP);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping fabric encap val
+TEST_F(mapping_test, mapping_update_fab_encap_val) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.fabric_encap = feeders[0].spec.fabric_encap;
+    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        spec.fabric_encap.val.mpls_tag++;
+    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        spec.fabric_encap.val.vnid++;
+    }
+    lmap_update(feeders[0], &spec, LMAP_ATTR_FAB_ENCAP);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping mapping M1 public IP P1 to no public IP.
+TEST_F(mapping_test, DISABLED_mapping_update_publicip1) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.public_ip_valid = false;
+    lmap_update(feeders[0], &spec, LMAP_ATTR_PUBLIC_IP);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping mapping M1 public IP P1 to P2.
+TEST_F(mapping_test, DISABLED_mapping_update_publicip2) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.public_ip = feeders[0].spec.public_ip;
+    spec.public_ip_valid = feeders[0].spec.public_ip_valid;
+    increment_ip_addr(&spec.public_ip, 1);
+    lmap_update(feeders[0], &spec, LMAP_ATTR_PUBLIC_IP);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping mapping M1 no public IP  to valid public ip.
+TEST_F(mapping_test, DISABLED_mapping_update_publicip3) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+     ip_prefix_t public_ip_pfx;
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1);
+    feeders[0].spec.public_ip_valid = false;
+    lmap_create(feeders[0]);
+
+    // trigger
+    test::extract_ip_pfx("12.0.0.1", &public_ip_pfx);
+    spec.public_ip = public_ip_pfx.addr;
+    spec.public_ip_valid = true;
+    lmap_update(feeders[0], &spec, LMAP_ATTR_PUBLIC_IP);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping mapping M1 public IP P1 to P2 and vnic V1 to V2.
+TEST_F(mapping_test, mapping_update_publicip4) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+    uint64_t chg_bmap;
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.public_ip = feeders[0].spec.public_ip;
+    spec.public_ip_valid = feeders[0].spec.public_ip_valid;
+    increment_ip_addr(&spec.public_ip, 1);
+    spec.vnic = int2pdsobjkey(2);
+    chg_bmap = (LMAP_ATTR_PUBLIC_IP | LMAP_ATTR_VNIC);
+    lmap_update(feeders[0], &spec, chg_bmap);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
 
 // --------------------------- END LOCAL MAPPINGS --------------------

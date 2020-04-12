@@ -221,18 +221,29 @@ lmap_attr_update (local_mapping_feeder& feeder, pds_local_mapping_spec_t *spec,
                   uint64_t chg_bmap)
 {
     if (bit_isset(chg_bmap, LMAP_ATTR_VNIC)) {
+       feeder.spec.vnic = spec->vnic;
     }
     if (bit_isset(chg_bmap, LMAP_ATTR_SUBNET)) {
+        feeder.spec.subnet = spec->subnet;
     }
     if (bit_isset(chg_bmap, LMAP_ATTR_FAB_ENCAP)) {
+        feeder.spec.fabric_encap = spec->fabric_encap;
     }
     if (bit_isset(chg_bmap, LMAP_ATTR_VNIC_MAC)) {
+        memcpy(&feeder.spec.vnic_mac, &spec->vnic_mac, sizeof(spec->vnic_mac));
     }
     if (bit_isset(chg_bmap, LMAP_ATTR_PUBLIC_IP)) {
+        feeder.spec.public_ip = spec->public_ip;
+        feeder.spec.public_ip_valid = spec->public_ip_valid;
     }
     if (bit_isset(chg_bmap, LMAP_ATTR_PROVIDER_IP)) {
+        feeder.spec.provider_ip = spec->provider_ip;
+        feeder.spec.provider_ip_valid = spec->provider_ip_valid;
     }
     if (bit_isset(chg_bmap, LMAP_ATTR_TAGS)) {
+        feeder.spec.num_tags = spec->num_tags;
+        memcpy(&feeder.spec.tags, spec->tags,
+               sizeof(spec->tags[0]) * spec->num_tags);
     }
 }
 
