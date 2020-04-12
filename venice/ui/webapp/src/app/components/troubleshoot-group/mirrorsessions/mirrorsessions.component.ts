@@ -48,12 +48,12 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
   };
 
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'Name', sortable: true, width: '125px', notReorderable: true },
+    { field: 'meta.name', header: 'Name', sortable: true, width: '175px', notReorderable: true },
     { field: 'meta.mod-time', header: 'Update Time', sortable: true, width: '180px', notReorderable: true },
     { field: 'meta.creation-time', header: 'Creation Time', sortable: true, width: '180px', notReorderable: true },
     { field: 'spec.packet-size', header: 'Packet Size', sortable: false, width: '100px', },
     // { field: 'spec.packet-filters', header: 'Packet Filters', sortable: false, width: 10 },
-    { field: 'spec.collectors', header: 'collectors', sortable: false, width: 10 },
+    { field: 'spec.collectors', header: 'Collectors', sortable: false, width: '240px' },
     { field: 'spec.interfaces.selectors', header: 'Upperlink Interface Selectors', sortable: false, width: 20 },
     { field: 'spec.match-rules', header: 'Match Rules', sortable: false, width: 30 },
     // { field: 'status.oper-state', header: 'OP Status', sortable: true, width: '175px' }
@@ -198,7 +198,13 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
   }
 
   displayColumn_collectors(value: MonitoringMirrorCollector[]): string {
-    const list: string[] = value.map(item => item.type + ': ' + item['export-config'].destination);
+    const list: string[] = value.map(item => {
+      let str = 'Destination: ' + item['export-config'].destination;
+      if (item['export-config'].gateway) {
+        str += ' Gateway: ' + item['export-config'].gateway;
+      }
+      return str;
+    });
     return this.displayListInColumn(list);
   }
 
