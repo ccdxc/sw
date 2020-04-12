@@ -25,26 +25,39 @@ remote_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
                             uint32_t num_teps, uint32_t num_vnic_per_tep,
                             pds_mapping_type_t map_type) {
 
-    this->map_type = map_type;
-    this->vpc = vpc;
-    this->subnet = subnet;
-    extract_ip_pfx(vnic_ip_cidr_str.c_str(), &this->vnic_ip_pfx);
-    key_build(&this->key);
-    this->vnic_mac_u64 = vnic_mac;
+    ip_prefix_t vnic_ip_pfx;
 
-    this->fabric_encap.type = encap_type;
-    switch(encap_type) {
-        case PDS_ENCAP_TYPE_MPLSoUDP:
-            this->fabric_encap.val.mpls_tag = encap_val;
-            break;
-        case PDS_ENCAP_TYPE_VXLAN:
-            this->fabric_encap.val.vnid = encap_val;
-            break;
-        default:
-            this->fabric_encap.val.value = encap_val;
+    test::extract_ip_pfx(vnic_ip_cidr_str.c_str(), &vnic_ip_pfx);
+
+    memset(&spec, 0, sizeof(spec));
+    spec.skey.type = map_type;
+    if (map_type == PDS_MAPPING_TYPE_L3) {
+        spec.skey.vpc = vpc;
+        spec.skey.ip_addr = vnic_ip_pfx.addr;
+    } else {
+        spec.skey.subnet = subnet;
+        MAC_UINT64_TO_ADDR(spec.skey.mac_addr, vnic_mac);
     }
-    this->nh_type = nh_type;
-    this->nh_id = nh_id;
+    spec.subnet = subnet;
+    MAC_UINT64_TO_ADDR(spec.vnic_mac, vnic_mac);
+    spec.nh_type = nh_type;
+    if (nh_type == PDS_NH_TYPE_OVERLAY)
+        spec.tep = int2pdsobjkey(nh_id);
+    else
+        spec.nh_group = int2pdsobjkey(nh_id);
+    this->spec.fabric_encap.type = encap_type;
+    switch(encap_type) {
+    case PDS_ENCAP_TYPE_MPLSoUDP:
+        this->spec.fabric_encap.val.mpls_tag = encap_val;
+        break;
+    case PDS_ENCAP_TYPE_VXLAN:
+        this->spec.fabric_encap.val.vnid = encap_val;
+        break;
+    default:
+        this->spec.fabric_encap.val.value = encap_val;
+    }
+    key_build(&spec.key);
+
 
     this->num_teps = num_teps;
     this->num_vnic_per_tep = num_vnic_per_tep;
@@ -52,16 +65,32 @@ remote_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
     this->num_obj = num_teps * num_vnic_per_tep;
 }
 
+remote_mapping_feeder::remote_mapping_feeder(const remote_mapping_feeder& feeder) {
+    memcpy(&this->spec, &feeder.spec, sizeof(pds_remote_mapping_spec_t));
+    num_obj = feeder.num_obj;
+    num_vnic_per_tep = feeder.num_vnic_per_tep;
+    num_teps = feeder.num_teps;
+    curr_tep_vnic_cnt = feeder.curr_tep_vnic_cnt;
+}
+
 void
 remote_mapping_feeder::iter_next(int width) {
-    vnic_mac_u64 += width;
-    test::increment_ip_addr(&vnic_ip_pfx.addr, width);
-    key_build(&this->key);
+    uint64_t mac;
+
+    mac = MAC_TO_UINT64(spec.vnic_mac);
+    mac += width;
+    MAC_UINT64_TO_ADDR(spec.vnic_mac, mac);
+    if (spec.skey.type == PDS_MAPPING_TYPE_L3) {
+        test::increment_ip_addr(&spec.skey.ip_addr, width);
+    } else {
+        MAC_UINT64_TO_ADDR(spec.skey.mac_addr, mac)
+    }
+    key_build(&spec.key);
     //increment_encap(&fabric_encap, width);
     curr_tep_vnic_cnt++;
 
     if (curr_tep_vnic_cnt == num_vnic_per_tep) {
-        nh_id += width;
+        spec.tep = int2pdsobjkey(pdsobjkey2int(spec.tep) + width);;
         curr_tep_vnic_cnt = 0;
     }
     cur_iter_pos++;
@@ -72,73 +101,59 @@ remote_mapping_feeder::key_build(pds_obj_key_t *key) const {
     // TODO: encoding here won't work for IPv6
     //       how about storing base uuid and increment ?
     uint32_t vpc_id, subnet_id;
+    uint64_t mac;
 
     memset(key, 0, sizeof(*key));
-    memcpy(&key->id[0], &map_type, sizeof(uint8_t));
-    if (map_type == PDS_MAPPING_TYPE_L3) {
-        vpc_id = objid_from_uuid(vpc);
+    memcpy(&key->id[0], &spec.skey.type, sizeof(uint8_t));
+    if (spec.skey.type == PDS_MAPPING_TYPE_L3) {
+        vpc_id = objid_from_uuid(spec.skey.vpc);
         sprintf(&key->id[1], "%08x", vpc_id);
-        memcpy(&key->id[5], &vnic_ip_pfx.addr.addr.v4_addr,
+        memcpy(&key->id[5], &spec.skey.ip_addr.addr.v4_addr,
                sizeof(ipv4_addr_t));
     } else {
-        subnet_id = objid_from_uuid(subnet);
+        subnet_id = objid_from_uuid(spec.subnet);
         memcpy(&key->id[1], &subnet_id, sizeof(uint32_t));
-        MAC_UINT64_TO_ADDR(&key->id[5], vnic_mac_u64);
+        mac = MAC_TO_UINT64(spec.skey.mac_addr);
+        MAC_UINT64_TO_ADDR(&key->id[5], mac);
     }
 }
 
 void
 remote_mapping_feeder::spec_build(pds_remote_mapping_spec_t *spec) const {
-    memset(spec, 0, sizeof(*spec));
-    key_build(&spec->key);
-    spec->skey.type = map_type;
-    if (map_type == PDS_MAPPING_TYPE_L3) {
-        spec->skey.vpc = vpc;
-        spec->skey.ip_addr = vnic_ip_pfx.addr;
-    } else {
-        spec->skey.subnet = subnet;
-        MAC_UINT64_TO_ADDR(spec->skey.mac_addr, vnic_mac_u64);
-    }
-    spec->subnet = subnet;
-    spec->fabric_encap = fabric_encap;
-    MAC_UINT64_TO_ADDR(spec->vnic_mac, vnic_mac_u64);
-    spec->nh_type = nh_type;
-    if (nh_type == PDS_NH_TYPE_OVERLAY)
-        spec->tep = int2pdsobjkey(nh_id);
-    else
-        spec->nh_group = int2pdsobjkey(nh_id);
+    memcpy(spec, &this->spec, sizeof(pds_remote_mapping_spec_t));
 }
 
 bool
 remote_mapping_feeder::key_compare(const pds_obj_key_t *key) const {
-    if (this->key != *key)
+    if (this->spec.key != *key)
         return false;
     return true;
 }
 
 bool
 remote_mapping_feeder::spec_compare(const pds_remote_mapping_spec_t *spec) const {
-    if (map_type != spec->skey.type)
+    if (this->spec.skey.type != spec->skey.type)
         return false;
 
-    if (map_type == PDS_MAPPING_TYPE_L3)
-        return ((vpc == spec->skey.vpc) &&
-                IPADDR_EQ(&vnic_ip_pfx.addr, &spec->skey.ip_addr));
+    if (this->spec.skey.type == PDS_MAPPING_TYPE_L3)
+        return ((this->spec.skey.vpc == spec->skey.vpc) &&
+                IPADDR_EQ(&this->spec.skey.ip_addr, &spec->skey.ip_addr));
 
     // L2 key type
-    return ((subnet == spec->skey.subnet) &&
-            (vnic_mac_u64 == MAC_TO_UINT64(spec->skey.mac_addr)));
+    return ((this->spec.skey.subnet == spec->skey.subnet) &&
+            (MAC_TO_UINT64(this->spec.skey.mac_addr) ==
+             MAC_TO_UINT64(spec->skey.mac_addr)));
 
     // skipping comparing subnet id and tep/nh_group hw id since the
     // hw id's retured via read are different from those configured.
 
-    if (!test::pdsencap_isequal(&this->fabric_encap, &spec->fabric_encap))
+    if (!test::pdsencap_isequal(&this->spec.fabric_encap, &spec->fabric_encap))
         return false;
 
-    if (this->nh_type != spec->nh_type)
+    if (this->spec.nh_type != spec->nh_type)
         return false;
 
-    if (this->vnic_mac_u64 != MAC_TO_UINT64(spec->vnic_mac))
+    if (MAC_TO_UINT64(this->spec.vnic_mac) != MAC_TO_UINT64(spec->vnic_mac))
         return false;
 
     return true;
@@ -154,9 +169,11 @@ remote_mapping_feeder::status_compare(
 void
 remote_mapping_feeder::update_spec(uint32_t width) {
     // next hop/TEP id is a good candidate to create update feeder
+    uint64_t nh_id = pdsobjkey2int(spec.tep);
     nh_id += width;
     if (nh_id > PDS_MAX_TEP)
         nh_id -= PDS_MAX_TEP;
+    spec.tep = int2pdsobjkey(nh_id);
 }
 
 //----------------------------------------------------------------------------

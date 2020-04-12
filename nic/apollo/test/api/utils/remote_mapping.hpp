@@ -30,15 +30,7 @@ enum rmap_attrs {
 class remote_mapping_feeder : public feeder {
 public:
     // spec fields
-    pds_obj_key_t key;
-    pds_mapping_type_t map_type;
-    pds_obj_key_t vpc;
-    pds_obj_key_t subnet;
-    pds_encap_t fabric_encap;
-    uint64_t vnic_mac_u64;
-    ip_prefix_t vnic_ip_pfx;
-    pds_nh_type_t nh_type;
-    uint32_t nh_id;         //tep id or nexthop grpup id
+    pds_remote_mapping_spec_t spec;
 
     // feeder cfg and state
     uint32_t num_teps;
@@ -48,25 +40,7 @@ public:
     // constructor
     remote_mapping_feeder() { };
 
-    remote_mapping_feeder(const remote_mapping_feeder& feeder) {
-        this->map_type = feeder.map_type;
-        this->vpc = feeder.vpc;
-        this->subnet = feeder.subnet;
-        this->fabric_encap = feeder.fabric_encap;
-        this->nh_type = feeder.nh_type;
-        this->nh_id = nh_id;
-        this->vnic_mac_u64 = feeder.vnic_mac_u64;
-        this->vnic_ip_pfx = feeder.vnic_ip_pfx;
-        this->nh_type = feeder.nh_type;
-        this->nh_id = feeder.nh_id;
-        key_build(&this->key);
-
-        this->num_teps = feeder.num_teps;
-        this->num_vnic_per_tep = feeder.num_vnic_per_tep;
-        this->curr_tep_vnic_cnt = feeder.curr_tep_vnic_cnt;
-
-        this->num_obj = feeder.num_obj;
-    }
+    remote_mapping_feeder(const remote_mapping_feeder& feeder);
 
     // initialize feeder with base set of values
     void init(pds_obj_key_t vpc = int2pdsobjkey(1),
@@ -102,13 +76,13 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const remote_mapping_feeder& obj) {
     os << "remote mapping feeder =>"
-        << " vpc: " << obj.vpc.str()
-        << " subnet: " << obj.subnet.str()
-        << " vnic_ip: " << ipaddr2str(&obj.vnic_ip_pfx.addr)
-        << " vnic_mac: " << mac2str(obj.vnic_mac_u64)
-        << " fabric encap: " << pds_encap2str(&obj.fabric_encap)
-        << " nexthop type" << obj.nh_type
-        << " nexthop/tep:" << obj.nh_id;
+        << " vpc: " << obj.spec.skey.vpc.str()
+        << " subnet: " << obj.spec.subnet.str()
+        << " vnic_ip: " << ipaddr2str(&obj.spec.skey.ip_addr)
+        << " vnic_mac: " << macaddr2str(obj.spec.vnic_mac)
+        << " fabric encap: " << pds_encap2str(&obj.spec.fabric_encap)
+        << " nexthop type" << obj.spec.nh_type
+        << " nexthop/tep:" << obj.spec.tep.str();
     return os;
 }
 
