@@ -223,12 +223,12 @@ private:
     /// \brief     allocate all classids corresponding to the tags
     ///            configured on this mapping
     ///            in the rxdma to support tag derivation
-    /// \param[in] vpc     VPC entry of this mapping
+    /// \param[in] vpc     VPC impl instance for this mapping
     /// \param[in] local   true if the mapping is local
     /// \param[in] mapping mapping object being processed
     /// \param[in] spec    IP mapping configuration details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t allocate_tag_classes_(vpc_entry *vpc, bool local,
+    sdk_ret_t allocate_tag_classes_(vpc_impl *vpc, bool local,
                                     mapping_entry *mapping,
                                     pds_mapping_spec_t *spec);
 

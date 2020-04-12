@@ -15,12 +15,6 @@
 
 using sdk::table::sdk_table_factory_params_t;
 
-// max of 1k classes are suppored for both remote and local mapping
-// class id 1023 (PDS_IMPL_RSVD_MAPPING_CLASS_ID) is reserved to indicate
-// that class id is not configured, so 0 to (PDS_IMPL_RSVD_MAPPING_CLASS_ID-1)
-// class id values are valid
-#define PDS_MAX_CLASS_ID_PER_VPC    1024
-
 namespace api {
 namespace impl {
 
@@ -29,27 +23,13 @@ namespace impl {
 /// @{
 
 vpc_impl_state::vpc_impl_state(pds_state *state) {
-    sdk_table_factory_params_t    tparams;
-    p4pd_table_properties_t       tinfo;
+    p4pd_table_properties_t tinfo;
+    sdk_table_factory_params_t tparams;
 
     p4pd_global_table_properties_get(P4TBL_ID_VPC, &tinfo);
     // create indexer for vpc hw id allocation and reserve 0th entry
     vpc_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
     SDK_ASSERT(vpc_idxr_ != NULL);
-
-    // create classid indexer for local mappings
-    local_mapping_classs_id_idxr_ =
-        rte_indexer::factory(PDS_MAX_CLASS_ID_PER_VPC, false, false);
-    SDK_ASSERT(local_mapping_classs_id_idxr_ != NULL);
-    // set the reserved classid aside
-    local_mapping_classs_id_idxr_->alloc(PDS_IMPL_RSVD_MAPPING_CLASS_ID);
-
-    // create classid indexer for remote mappings
-    remote_mapping_class_id_idxr_ =
-        rte_indexer::factory(PDS_MAX_CLASS_ID_PER_VPC, false, false);
-    SDK_ASSERT(remote_mapping_class_id_idxr_ != NULL);
-    // set the reserved classid aside
-    remote_mapping_class_id_idxr_->alloc(PDS_IMPL_RSVD_MAPPING_CLASS_ID);
 
     // instantiate P4 tables for bookkeeping
     bzero(&tparams, sizeof(tparams));
@@ -67,8 +47,6 @@ vpc_impl_state::vpc_impl_state(pds_state *state) {
 
 vpc_impl_state::~vpc_impl_state() {
     rte_indexer::destroy(vpc_idxr_);
-    rte_indexer::destroy(local_mapping_classs_id_idxr_);
-    rte_indexer::destroy(remote_mapping_class_id_idxr_);
     slhash::destroy(vni_tbl_);
     ht::destroy(impl_ht_);
 }
@@ -135,119 +113,6 @@ vpc_impl_state::remove(uint16_t hw_id) {
     if (!vpc) {
         PDS_TRACE_ERR("Failed to find vpc impl for hw id %u", hw_id);
         return SDK_RET_ENTRY_NOT_FOUND;
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-vpc_impl_state::alloc_class_id(uint32_t tag, bool local, uint32_t *class_id) {
-    sdk_ret_t ret;
-    rte_indexer *class_idxr;
-    tag2class_map_t::iterator it;
-    tag2class_map_t *tag2class_map;
-    class2tag_map_t *class2tag_map;
-
-    if (local) {
-        tag2class_map = &local_tag2class_map_;
-        class2tag_map = &local_class2tag_map_;
-        class_idxr = local_mapping_classs_id_idxr_;
-    } else {
-        tag2class_map = &remote_tag2class_map_;
-        class2tag_map = &remote_class2tag_map_;
-        class_idxr = remote_mapping_class_id_idxr_;
-    }
-
-    if (tag2class_map->find(tag) != tag2class_map->end()) {
-        // tag to class id mapping exists
-        (*tag2class_map)[tag].refcount++;
-        *class_id = (*tag2class_map)[tag].class_id;
-    } else {
-        // try to allocate new class id
-        ret = class_idxr->alloc(class_id);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to allocate class id for tag %u, err %u",
-                          tag, ret);
-            return ret;
-        }
-        // add tag -> class id mapping
-        (*tag2class_map)[tag].class_id = *class_id;
-        (*tag2class_map)[tag].refcount = 1;
-        // add class id -> tag mapping
-        (*class2tag_map)[*class_id] = tag;
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-vpc_impl_state::free_class_id(uint32_t class_id, bool local) {
-    uint32_t tag;
-    sdk_ret_t ret;
-    rte_indexer *class_idxr;
-    tag2class_map_t::iterator it;
-    tag2class_map_t *tag2class_map;
-    class2tag_map_t *class2tag_map;
-
-    if (local) {
-        tag2class_map = &local_tag2class_map_;
-        class2tag_map = &local_class2tag_map_;
-        class_idxr = local_mapping_classs_id_idxr_;
-    } else {
-        tag2class_map = &remote_tag2class_map_;
-        class2tag_map = &remote_class2tag_map_;
-        class_idxr = remote_mapping_class_id_idxr_;
-    }
-
-    if (class2tag_map->find(class_id) != class2tag_map->end()) {
-        tag = (*class2tag_map)[class_id];
-        if (unlikely(tag2class_map->find(tag) == tag2class_map->end())) {
-            PDS_TRACE_ERR("tag2class lookup failed tag %u, class id %u",
-                          tag, class_id);
-            // go ahead and release the classid and class2tag map entry
-            class2tag_map->erase(class_id);
-            class_idxr->free(class_id);
-        } else {
-            (*tag2class_map)[tag].refcount--;
-            if ((*tag2class_map)[tag].refcount == 0) {
-                class2tag_map->erase(class_id);
-                tag2class_map->erase(tag);
-                class_idxr->free(class_id);
-            }
-        }
-    } else {
-        // handle it gracefully
-        PDS_TRACE_ERR("class id %u not in use", class_id);
-    }
-
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-vpc_impl_state::release_class_id(uint32_t tag, bool local) {
-    sdk_ret_t ret;
-    rte_indexer *class_idxr;
-    tag2class_map_t::iterator it;
-    tag2class_map_t *tag2class_map;
-
-    if (local) {
-        tag2class_map = &local_tag2class_map_;
-        class_idxr = local_mapping_classs_id_idxr_;
-    } else {
-        tag2class_map = &remote_tag2class_map_;
-        class_idxr = remote_mapping_class_id_idxr_;
-    }
-
-    if (tag2class_map->find(tag) != tag2class_map->end()) {
-        // tag to class id mapping exists
-        (*tag2class_map)[tag].refcount--;
-        if ((*tag2class_map)[tag].refcount == 0) {
-            // free back the class id
-            class_idxr->free((*tag2class_map)[tag].class_id);
-            // cleanup the tag to class id map entry
-            tag2class_map->erase(tag);
-        }
-    } else {
-        // handle it gracefully
-        PDS_TRACE_ERR("Tag %u has not class id allocated", tag);
     }
     return SDK_RET_OK;
 }

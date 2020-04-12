@@ -85,27 +85,6 @@ typedef struct route_entry_s {
 static route_entry_t g_route_db[PDS_MAX_UNDERLAY_ROUTES];
 static uint32_t g_route_api_epoch_ = PDS_UNDERLAY_ROUTE_API_EPOCH_START;
 
-#if 0
-sdk_ret_t
-pds_underlay_route_create (_In_ pds_route_spec_t *spec)
-{
-    if (g_num_routes >= PDS_MAX_UNDERLAY_ROUTES) {
-        PDS_TRACE_ERR("Failed to create route %s, underlay route table is full",
-                      spec->key.str());
-        return SDK_RET_NO_RESOURCE;
-    }
-    if (route_table_db()->find(&spec->route_table) == NULL) {
-        PDS_TRACE_ERR("Failed to create route %s, route table %s not found",
-                      spec->key.str(), spec->route_table.str());
-        return SDK_RET_INVALID_ARG;
-    }
-    g_route_db[g_num_routes].valid = TRUE;
-    g_num_routes++;
-
-    return SDK_RET_OK;
-}
-#endif
-
 static bool
 tep_upd_walk_cb_ (void *obj, void *ctxt) {
     sdk_ret_t ret;

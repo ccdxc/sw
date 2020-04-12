@@ -52,7 +52,7 @@ function stop_process () {
     #dump backtrace of agent process to file, useful for debugging if process hangs
     pstack `pgrep pdsagent` &> $PDSPKG_TOPDIR/pdsagent_bt.log
     pkill agent
-    if [ $START_DHCP_SERVER == 1]; then
+    if [ $START_DHCP_SERVER == 1 ]; then
         pkill dhcpd
     fi
 }

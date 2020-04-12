@@ -11,6 +11,7 @@
 #ifndef __VPC_IMPL_HPP__
 #define __VPC_IMPL_HPP__
 
+#include <unordered_map>
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -27,6 +28,38 @@ namespace impl {
 /// \defgroup PDS_VPC_IMPL - vpc datapath functionality
 /// \ingroup PDS_VPC
 /// @{
+
+///< per VPC tag -> class id info map element
+typedef struct vpc_tag_class_info_s {
+    uint32_t class_id;   ///< class id allocated for this tag
+    uint32_t refcount;   ///< how many times this tag is re-used
+                         ///< across mappings
+} vpc_tag_class_info_t;
+///< per VPC tag -> class id info map
+typedef std::unordered_map<uint32_t, vpc_tag_class_info_t> tag2class_map_t;
+///< per VPC class id -> tag map element
+typedef std::unordered_map<uint32_t, uint32_t> class2tag_map_t;
+///< per VPC tag, class info state along with indexers
+typedef struct vpc_impl_tag_state_s {
+    ///< local mapping class id indexer for LOCAL_MAPPING_TAG table
+    rte_indexer *local_mapping_classs_id_idxr_;
+    ///< remote mapping tag indexer for MAPPING_TAG table
+    rte_indexer *remote_mapping_class_id_idxr_;
+    ///< tag to class id mapper for local mappings
+    tag2class_map_t local_tag2class_map_;
+    ///< class id to tag mapper for local mappings
+    class2tag_map_t local_class2tag_map_;
+    ///< tag to class id mapper for remote mappings
+    tag2class_map_t remote_tag2class_map_;
+    ///< class id to tag mapper for remote mappings
+    class2tag_map_t remote_class2tag_map_;
+
+    ///< constructor
+    vpc_impl_tag_state_s() {
+        local_mapping_classs_id_idxr_ = nullptr;
+        remote_mapping_class_id_idxr_ = nullptr;
+    }
+} vpc_impl_tag_state_t;
 
 /// \brief  VPC implementation
 class vpc_impl : public impl_base {
@@ -164,6 +197,36 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief      API to allocate class id given user configured tag
+    /// \param[in]   tag     user give tag (for the mapping)
+    /// \param[in]   local   if true, tag is that of local mapping, else for
+    ///                      remote mapping
+    /// \param[out]  class_id class_id corresponding to the tag, if allocation
+    ///              was succesful
+    /// \remark if the tag is seen 1st time, new class id allocated for it
+    ///         if tag is already seen, refcount is incremented and
+    ///         corresponding class_id is returned
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t alloc_class_id(uint32_t tag, bool local, uint32_t *class_id);
+
+    /// \brief      API to release class id that was previously allocated
+    /// \param[in]   class_id user give tag (for the mapping)
+    /// \param[in]   local    if true, tag is that of local mapping, else for
+    ///                       remote mapping
+    /// \remark if the refcount corresponding to the class goes down to 0,
+    ///         class_id is freed back to the pool
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t release_class_id(uint32_t class_id, bool local);
+
+    /// \brief      API to release a tag, if its not in use
+    /// \param[in]   tag     user given tag (for the mapping)
+    /// \param[in]   local   if true, tag is that of local mapping, else for
+    ///                      remote mapping
+    /// \remark if the refcount corresponding to the tag goes down to 0,
+    ///         corresponding class_id is freed back to the pool
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t release_tag(uint32_t tag, bool local);
+
     /// \brief     return vpc's h/w id
     /// \return    h/w id assigned to the vpc
     uint16_t hw_id(void) const { return hw_id_; }
@@ -185,12 +248,14 @@ public:
 
     /// \brief      accessor API for hash table context
     ht_ctxt_t *ht_ctxt(void) { return &ht_ctxt_; }
+
 private:
     /// \brief  constructor
     vpc_impl() {
         hw_id_  = 0xFFFF;
         bd_hw_id_ = 0xFFFF;
         vni_hdl_ = handle_t::null();
+        tag_state_ = nullptr;
         ht_ctxt_.reset();
     }
 
@@ -200,6 +265,7 @@ private:
         bd_hw_id_ = 0xFFFF;
         vni_hdl_ = handle_t::null();
         key_ = spec->key;
+        tag_state_ = nullptr;
         ht_ctxt_.reset();
     }
 
@@ -232,9 +298,14 @@ private:
     sdk_ret_t activate_delete_(pds_epoch_t epoch, vpc_entry *vpc);
 
 private:
+    ///< h/w id allocated for this VPC
     uint16_t    hw_id_;
+    ///< BD h/w id allocated for this VPC
     uint16_t    bd_hw_id_;
+    ///< handle into the vni table for this VPC
     handle_t    vni_hdl_;
+    ///< state needed for tag/class maintenance for all mappings in this VPC
+    vpc_impl_tag_state_t *tag_state_;
     /// PI specific info
     struct {
         pds_obj_key_t key_;

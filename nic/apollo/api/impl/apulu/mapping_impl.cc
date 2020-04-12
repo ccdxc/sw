@@ -42,7 +42,7 @@ namespace impl {
 
 mapping_impl *
 mapping_impl::factory(pds_mapping_spec_t *spec) {
-    mapping_impl    *impl;
+    mapping_impl *impl;
 
     impl = mapping_impl_db()->alloc();
     if (unlikely(impl == NULL)) {
@@ -430,15 +430,14 @@ mapping_impl::reserve_public_ip_resources_(mapping_entry *mapping,
 }
 
 sdk_ret_t
-mapping_impl::allocate_tag_classes_(vpc_entry *vpc, bool local,
+mapping_impl::allocate_tag_classes_(vpc_impl *vpc, bool local,
                                     mapping_entry *mapping,
                                     pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
 
     // allocate class id for each tag
     for (uint32_t i = 0; i < spec->num_tags; i++) {
-        ret = vpc_impl_db()->alloc_class_id(spec->tags[i],
-                                            local, &class_id_[i]);
+        ret = vpc->alloc_class_id(spec->tags[i], local, &class_id_[i]);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to allocate class id for tag %u of "
                           "remote local mapping %s %s, err %u",
@@ -464,7 +463,7 @@ mapping_impl::reserve_rxdma_mapping_tag_resources_(vpc_entry *vpc, bool local,
     }
 
     // allocate class id for each tag configured for this mapping
-    ret = allocate_tag_classes_(vpc, local, mapping, spec);
+    ret = allocate_tag_classes_((vpc_impl *)vpc->impl(), local, mapping, spec);
     if (unlikely(ret != SDK_RET_OK)) {
         return ret;
     }
@@ -731,7 +730,8 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
             } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) {
                 // probably some new tags and/or some same old tags and/or
                 // some tags got removed, allocate class ids needed in all cases
-                ret = allocate_tag_classes_(vpc, false, new_mapping, spec);
+                ret = allocate_tag_classes_((vpc_impl *)vpc->impl(), false,
+                                            new_mapping, spec);
                 if (unlikely(ret != SDK_RET_OK)) {
                     return ret;
                 }
@@ -750,6 +750,7 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
 sdk_ret_t
 mapping_impl::nuke_resources(api_base *api_obj) {
     sdk_ret_t ret;
+    vpc_impl *vpc;
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams;
     local_mapping_swkey_t local_mapping_key;
@@ -775,13 +776,16 @@ mapping_impl::nuke_resources(api_base *api_obj) {
     }
 
     // release any class ids allocated for this mapping
-    for (uint32_t i = 0; i < num_class_id_; i++) {
-        ret = vpc_impl_db()->free_class_id(class_id_[i], mapping->is_local());
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to free classid %u allocated to remote "
-                          "mapping %s, err %u",
-                          api_obj->key2str().c_str(), ret);
-            // continue freeing the resources
+    if (num_class_id_ && (mapping->skey().type == PDS_MAPPING_TYPE_L3)) {
+        vpc = vpc_impl_db()->find(vpc_hw_id_);
+        for (uint32_t i = 0; i < num_class_id_; i++) {
+            ret = vpc->release_class_id(class_id_[i], mapping->is_local());
+            if (unlikely(ret != SDK_RET_OK)) {
+                PDS_TRACE_ERR("Failed to free classid %u allocated to remote "
+                              "mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+                // continue freeing the resources
+            }
         }
     }
 
@@ -857,7 +861,9 @@ mapping_impl::nuke_resources(api_base *api_obj) {
 sdk_ret_t
 mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
     sdk_ret_t ret;
+    vpc_impl *vpc;
     sdk_table_api_params_t tparams = { 0 };
+    mapping_entry *mapping = (mapping_entry *)api_obj;
 
     if (local_mapping_overlay_ip_hdl_.valid()) {
         tparams.handle = local_mapping_overlay_ip_hdl_;
@@ -901,13 +907,16 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
         mapping_impl_db()->rxdma_mapping_tbl()->release(&tparams);
     }
     // release any class ids allocated for this mapping
-    for (uint32_t i = 0; i < num_class_id_; i++) {
-        ret = vpc_impl_db()->free_class_id(class_id_[i], true);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to free classid %u allocated to local "
-                          "mapping %s, err %u",
-                          api_obj->key2str().c_str(), ret);
-            // continue freeing the resources
+    if (num_class_id_ && (mapping->skey().type == PDS_MAPPING_TYPE_L3)) {
+        vpc = (vpc_impl *)vpc_find(&mapping->skey().vpc)->impl();
+        for (uint32_t i = 0; i < num_class_id_; i++) {
+            ret = vpc->release_class_id(class_id_[i], true);
+            if (unlikely(ret != SDK_RET_OK)) {
+                PDS_TRACE_ERR("Failed to free classid %u allocated to local "
+                              "mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+                // continue freeing the resources
+            }
         }
     }
     return SDK_RET_OK;
@@ -916,7 +925,9 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
 sdk_ret_t
 mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
     sdk_ret_t ret;
+    vpc_impl *vpc;
     sdk_table_api_params_t tparams = { 0 };
+    mapping_entry *mapping = (mapping_entry *)api_obj;
 
     if (mapping_hdl_.valid()) {
         tparams.handle = mapping_hdl_;
@@ -931,13 +942,16 @@ mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
     }
 
     // release any class ids allocated for this mapping
-    for (uint32_t i = 0; i < num_class_id_; i++) {
-        ret = vpc_impl_db()->free_class_id(class_id_[i], false);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to free classid %u allocated to remote "
-                          "mapping %s, err %u",
-                          api_obj->key2str().c_str(), ret);
-            // continue freeing the resources
+    if (num_class_id_ && (mapping->skey().type == PDS_MAPPING_TYPE_L3)) {
+        vpc = (vpc_impl *)vpc_find(&mapping->skey().vpc)->impl();
+        for (uint32_t i = 0; i < num_class_id_; i++) {
+            ret = vpc->release_class_id(class_id_[i], false);
+            if (unlikely(ret != SDK_RET_OK)) {
+                PDS_TRACE_ERR("Failed to free classid %u allocated to remote "
+                              "mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
+                // continue freeing the resources
+            }
         }
     }
     return SDK_RET_OK;

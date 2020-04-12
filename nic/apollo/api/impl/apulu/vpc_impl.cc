@@ -29,6 +29,12 @@ namespace impl {
 /// \ingroup PDS_VPC
 /// \@{
 
+// max of 1k classes are suppored for both remote and local mapping
+// class id 1023 (PDS_IMPL_RSVD_MAPPING_CLASS_ID) is reserved to indicate
+// that class id is not configured, so 0 to (PDS_IMPL_RSVD_MAPPING_CLASS_ID-1)
+// class id values are valid
+#define PDS_MAX_CLASS_ID_PER_VPC    1024
+
 vpc_impl *
 vpc_impl::factory(pds_vpc_spec_t *spec) {
     vpc_impl *impl;
@@ -42,13 +48,64 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
     }
     impl = vpc_impl_db()->alloc();
     new (impl) vpc_impl(spec);
+
+    impl->tag_state_ =
+        (vpc_impl_tag_state_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_VPC_IMPL_TAG_STATE,
+                                           sizeof(vpc_impl_tag_state_t));
+    if (impl->tag_state_ == NULL) {
+        goto error;
+    }
+
+    // create classid indexer for local mappings
+    impl->tag_state_->local_mapping_classs_id_idxr_ =
+        rte_indexer::factory(PDS_MAX_CLASS_ID_PER_VPC, false, false);
+    if (impl->tag_state_->local_mapping_classs_id_idxr_ == NULL) {
+        goto error;
+    }
+    // set the reserved classid aside
+    impl->tag_state_->local_mapping_classs_id_idxr_->alloc(PDS_IMPL_RSVD_MAPPING_CLASS_ID);
+
+    // create classid indexer for remote mappings
+    impl->tag_state_->remote_mapping_class_id_idxr_ =
+        rte_indexer::factory(PDS_MAX_CLASS_ID_PER_VPC, false, false);
+    if (impl->tag_state_->remote_mapping_class_id_idxr_ == NULL) {
+        goto error;
+    }
+    // set the reserved classid aside
+    impl->tag_state_->remote_mapping_class_id_idxr_->alloc(PDS_IMPL_RSVD_MAPPING_CLASS_ID);
     return impl;
+
+error:
+
+    if (impl) {
+        if (impl->tag_state_) {
+            if (impl->tag_state_->local_mapping_classs_id_idxr_) {
+                rte_indexer::destroy(impl->tag_state_->local_mapping_classs_id_idxr_);
+            }
+            if (impl->tag_state_->remote_mapping_class_id_idxr_) {
+                rte_indexer::destroy(impl->tag_state_->remote_mapping_class_id_idxr_);
+            }
+            SDK_FREE(PDS_MEM_ALLOC_ID_VPC_IMPL_TAG_STATE, impl->tag_state_);
+        }
+        impl->~vpc_impl();
+        vpc_impl_db()->free(impl);
+    }
+    return NULL;
 }
 
 void
 vpc_impl::destroy(vpc_impl *impl) {
+    if (impl->tag_state_) {
+        if (impl->tag_state_->local_mapping_classs_id_idxr_) {
+            rte_indexer::destroy(impl->tag_state_->local_mapping_classs_id_idxr_);
+        }
+        if (impl->tag_state_->remote_mapping_class_id_idxr_) {
+            rte_indexer::destroy(impl->tag_state_->remote_mapping_class_id_idxr_);
+        }
+        SDK_FREE(PDS_MEM_ALLOC_ID_VPC_IMPL_TAG_STATE, impl->tag_state_);
+    }
     impl->~vpc_impl();
-     vpc_impl_db()->free(impl);
+    vpc_impl_db()->free(impl);
 }
 
 impl_base *
@@ -60,6 +117,8 @@ vpc_impl::clone(void) {
     new (cloned_impl) vpc_impl();
     // deep copy is not needed as we don't store pointers
     *cloned_impl = *this;
+    // vpc tag state will be xferred to cloned vpc later on
+    cloned_impl->tag_state_ = nullptr;
     return cloned_impl;
 }
 
@@ -341,6 +400,7 @@ sdk_ret_t
 vpc_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
                       api_op_t api_op, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
+    vpc_impl *orig_impl;
     pds_vpc_spec_t *spec;
 
     switch (api_op) {
@@ -356,6 +416,11 @@ vpc_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
 
     case API_OP_UPDATE:
         ret = activate_update_(epoch, (vpc_entry *)api_obj, obj_ctxt);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        // transfer the ownership of tag state to the clone object
+        orig_impl = (vpc_impl *)((vpc_entry *)orig_obj)->impl();
+        tag_state_ = orig_impl->tag_state_;
+        orig_impl->tag_state_ = nullptr;
         break;
 
     default:
@@ -400,6 +465,123 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     }
     status->hw_id = hw_id_;
     status->bd_hw_id = vni_data.vni_info.bd_id;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_impl::alloc_class_id(uint32_t tag, bool local, uint32_t *class_id) {
+    sdk_ret_t ret;
+    rte_indexer *class_idxr;
+    tag2class_map_t::iterator it;
+    tag2class_map_t *tag2class_map;
+    class2tag_map_t *class2tag_map;
+
+    if (local) {
+        tag2class_map = &tag_state_->local_tag2class_map_;
+        class2tag_map = &tag_state_->local_class2tag_map_;
+        class_idxr = tag_state_->local_mapping_classs_id_idxr_;
+    } else {
+        tag2class_map = &tag_state_->remote_tag2class_map_;
+        class2tag_map = &tag_state_->remote_class2tag_map_;
+        class_idxr = tag_state_->remote_mapping_class_id_idxr_;
+    }
+
+    if (tag2class_map->find(tag) != tag2class_map->end()) {
+        // tag to class id mapping exists
+        (*tag2class_map)[tag].refcount++;
+        *class_id = (*tag2class_map)[tag].class_id;
+    } else {
+        // try to allocate new class id
+        ret = class_idxr->alloc(class_id);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to allocate class id for tag %u, err %u",
+                          tag, ret);
+            return ret;
+        }
+        // add tag -> class id mapping
+        (*tag2class_map)[tag].class_id = *class_id;
+        (*tag2class_map)[tag].refcount = 1;
+        // add class id -> tag mapping
+        (*class2tag_map)[*class_id] = tag;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_impl::release_class_id(uint32_t class_id, bool local) {
+    uint32_t tag;
+    sdk_ret_t ret;
+    rte_indexer *class_idxr;
+    tag2class_map_t::iterator it;
+    tag2class_map_t *tag2class_map;
+    class2tag_map_t *class2tag_map;
+
+    if (local) {
+        tag2class_map = &tag_state_->local_tag2class_map_;
+        class2tag_map = &tag_state_->local_class2tag_map_;
+        class_idxr = tag_state_->local_mapping_classs_id_idxr_;
+    } else {
+        tag2class_map = &tag_state_->remote_tag2class_map_;
+        class2tag_map = &tag_state_->remote_class2tag_map_;
+        class_idxr = tag_state_->remote_mapping_class_id_idxr_;
+    }
+
+    if (class2tag_map->find(class_id) != class2tag_map->end()) {
+        tag = (*class2tag_map)[class_id];
+        if (unlikely(tag2class_map->find(tag) == tag2class_map->end())) {
+            PDS_TRACE_ERR("tag2class lookup failed tag %u, class id %u",
+                          tag, class_id);
+            // go ahead and release the classid and class2tag map entry
+            class2tag_map->erase(class_id);
+            class_idxr->free(class_id);
+        } else {
+            (*tag2class_map)[tag].refcount--;
+            if ((*tag2class_map)[tag].refcount == 0) {
+                class2tag_map->erase(class_id);
+                tag2class_map->erase(tag);
+                class_idxr->free(class_id);
+            }
+        }
+    } else {
+        // handle it gracefully
+        PDS_TRACE_ERR("class id %u not in use", class_id);
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_impl::release_tag(uint32_t tag, bool local) {
+    sdk_ret_t ret;
+    uint32_t class_id;
+    rte_indexer *class_idxr;
+    tag2class_map_t *tag2class_map;
+    class2tag_map_t *class2tag_map;
+
+    if (local) {
+        tag2class_map = &tag_state_->local_tag2class_map_;
+        class2tag_map = &tag_state_->local_class2tag_map_;
+        class_idxr = tag_state_->local_mapping_classs_id_idxr_;
+    } else {
+        tag2class_map = &tag_state_->remote_tag2class_map_;
+        class2tag_map = &tag_state_->remote_class2tag_map_;
+        class_idxr = tag_state_->remote_mapping_class_id_idxr_;
+    }
+
+    if (tag2class_map->find(tag) != tag2class_map->end()) {
+        (*tag2class_map)[tag].refcount--;
+        if ((*tag2class_map)[tag].refcount == 0) {
+            // cleanup the tag <-> class id mappings
+            class_id = (*tag2class_map)[tag].class_id;
+            tag2class_map->erase(tag);
+            class2tag_map->erase(class_id);
+            // free back the class id
+            class_idxr->free(class_id);
+        }
+    } else {
+        // handle it gracefully
+        PDS_TRACE_ERR("Tag %u has no class id allocated", tag);
+    }
     return SDK_RET_OK;
 }
 
