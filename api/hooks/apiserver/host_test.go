@@ -10,7 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -32,6 +32,31 @@ func makeHostObj(hostName, macAddr, nicName string) *cluster.Host {
 				{
 					MACAddress: macAddr,
 					ID:         nicName,
+				},
+			},
+		},
+	}
+}
+
+func makeHostObjDualDSC(hostName, macAddrA, nicNameA, macAddrB, nicNameB string) *cluster.Host {
+	return &cluster.Host{
+		ObjectMeta: api.ObjectMeta{
+			Name:            hostName,
+			ResourceVersion: "1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "Host",
+			APIVersion: "v1",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				{
+					MACAddress: macAddrA,
+					ID:         nicNameA,
+				},
+				{
+					MACAddress: macAddrB,
+					ID:         nicNameB,
 				},
 			},
 		},
@@ -225,18 +250,35 @@ func TestHostObjectPreCommitHooks(t *testing.T) {
 	otherMAC := "00:01:02:03:04:FF"
 	baseName := "hello"
 	otherName := "goodbye"
+	BaseMACDualDSC := "A4-92-A9-27-95-5F"
+	BaseNameDualDSC := "IHaveTwoDSCs"
+	OtherMACDualDSC := "4D-6F-38-D6-D1-75"
+	OtherNameDualDSC := "IAlsoHaveTwoDSCs"
 
 	testCases := []testCase{
-		{apiintf.CreateOper, makeHostObj("testHostMAC", baseMAC, ""), nil},                                                                           // First object with MAC, no conflicts
-		{apiintf.CreateOper, makeHostObj("testHostName", "", baseName), nil},                                                                         // First object with Name, no conflicts
-		{apiintf.CreateOper, makeHostObj("testHostMAC2", baseMAC, ""), hooks.errHostDSCIDConflicts("testHostMAC2", []string{"testHostMAC"})},         // MAC conflict on create
-		{apiintf.CreateOper, makeHostObj("testHostName2", "", baseName), hooks.errHostDSCIDConflicts("testHostName2", []string{"testHostName"})},     // Name conflict on create
+		{apiintf.CreateOper, makeHostObj("testHostMAC", baseMAC, ""), nil},                                                                       // First object with MAC, no conflicts
+		{apiintf.CreateOper, makeHostObj("testHostName", "", baseName), nil},                                                                     // First object with Name, no conflicts
+		{apiintf.CreateOper, makeHostObj("testHostMAC2", baseMAC, ""), hooks.errHostDSCIDConflicts("testHostMAC2", []string{"testHostMAC"})},     // MAC conflict on create
+		{apiintf.CreateOper, makeHostObj("testHostName2", "", baseName), hooks.errHostDSCIDConflicts("testHostName2", []string{"testHostName"})}, // Name conflict on create
+
 		{apiintf.CreateOper, makeHostObj("testHostUpdates", "", otherName), nil},                                                                     // Base object for updates
 		{apiintf.UpdateOper, makeHostObj("testHostUpdates", baseMAC, ""), hooks.errHostDSCIDConflicts("testHostUpdates", []string{"testHostMAC"})},   // MAC conflict on update
 		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", baseName), hooks.errHostDSCIDConflicts("testHostUpdates", []string{"testHostName"})}, // Name conflict on update
-		{apiintf.UpdateOper, makeHostObj("testHostUpdates", otherMAC, ""), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},              // Attempt to modify Spec.DSCs after creation
-		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", ""), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},                    // Attempt to modify Spec.DSCs after creation
-		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", "newname"), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},             // Attempt to modify Spec.DSCs after creation
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", otherMAC, ""), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},              // Attempt to modify existed DSC
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", ""), hooks.errInvalidHostSmartNICs()},                                                // Invalid new host obj
+		{apiintf.UpdateOper, makeHostObj("testHostUpdates", "", "newname"), hooks.errHostFieldImmutable("testHostUpdates", "Spec.DSCs")},             // Attempt to modify existed DSC
+
+		{apiintf.CreateOper, makeHostObj("testHostDualDSCUpdates", BaseMACDualDSC, ""), nil},                                                                                                  // Base object for updates
+		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", "", "", "", ""), hooks.errInvalidHostSmartNICs()},                                                                   // Invalid new host obj
+		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", baseMAC, "", "", ""), hooks.errHostDSCIDConflicts("testHostDualDSCUpdates", []string{"testHostMAC"})},               // MAC conflict on update
+		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", "", baseName, "", ""), hooks.errHostDSCIDConflicts("testHostDualDSCUpdates", []string{"testHostName"})},             // Name conflict on update
+		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", BaseMACDualDSC, "", baseMAC, ""), hooks.errHostDSCIDConflicts("testHostDualDSCUpdates", []string{"testHostMAC"})},   // MAC conflict on update
+		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", BaseMACDualDSC, "", "", baseName), hooks.errHostDSCIDConflicts("testHostDualDSCUpdates", []string{"testHostName"})}, // Name conflict on update
+		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", "", BaseNameDualDSC, BaseMACDualDSC, ""), nil},                                                                      // update order doesn't matter
+		{apiintf.UpdateOper, makeHostObjDualDSC("testHostDualDSCUpdates", BaseMACDualDSC, "", "", BaseNameDualDSC), nil},                                                                      // update order doesn't matter
+
+		{apiintf.CreateOper, makeHostObjDualDSC("testHostDualDSCUpdates2", OtherMACDualDSC, "", "", OtherNameDualDSC), nil}, // Base object for updates
+		{apiintf.UpdateOper, makeHostObj("testHostDualDSCUpdates2", "", "NewName"), hooks.errHostDSCNumDecreased()},         // eliminate dsc via update oper is not allowed
 	}
 
 	ctx := context.TODO()

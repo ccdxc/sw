@@ -5,12 +5,11 @@ package impl
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	apiutils "github.com/pensando/sw/api/utils"
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -51,7 +50,17 @@ func (cl *clusterHooks) errHostDSCIDConflicts(hostName string, conflicts []strin
 
 // errHostFieldImmutable returns error when user is trying to modify an immutable field
 func (cl *clusterHooks) errHostFieldImmutable(hostName string, fieldName string) error {
-	return fmt.Errorf("Error: field %s for Host object %s cannot be modified after creation", fieldName, hostName)
+	return fmt.Errorf("Error: pre-existed DSC in field %s for Host object %s cannot be modified after creation", fieldName, hostName)
+}
+
+// errHostInvalidSmartNICs returns error when user is trying to update host obj to an invalid one
+func (cl *clusterHooks) errInvalidHostSmartNICs() error {
+	return fmt.Errorf("Error invalid host obj in update oper")
+}
+
+// errHostDSCNumDecreased returns error when user is trying to decrease the num of DSC via update oper
+func (cl *clusterHooks) errHostDSCNumDecreased() error {
+	return fmt.Errorf("Error deleting dsc by update oper")
 }
 
 func (cl *clusterHooks) getHostSmartNICConflicts(ctx context.Context, host *cluster.Host, kvs kvstore.Interface) ([]string, error) {
@@ -132,11 +141,32 @@ func (cl *clusterHooks) hostPreCommitHook(ctx context.Context, kvs kvstore.Inter
 			cl.logger.Errorf("Error getting Host with key [%s] in API server hostPreCommitHook pre-commit hook: %v", key, err)
 			return i, false, fmt.Errorf("Error getting object: %v", err)
 		}
-		// We don't need to worry about order of SmartNIC IDs because right now each Host object can have only 1 SmartNIC ID
-		if !reflect.DeepEqual(host.Spec.DSCs, curHost.Spec.DSCs) {
-			cl.logger.Errorf("Error: attempt to modify Spec.DSCs. Old: %+v, New: %+v", curHost, host)
-			return i, false, cl.errHostFieldImmutable(curHost.Name, "Spec.DSCs")
+
+		// Validate number of dsc in new host obj
+		errList := cl.validateHostSmartNICs(&host)
+		if errList != nil {
+			cl.logger.Errorf("Error validating host obj: %+v", errList)
+			return i, false, cl.errInvalidHostSmartNICs()
 		}
+		if len(host.Spec.DSCs) < len(curHost.Spec.DSCs) {
+			cl.logger.Errorf("Error deleting dsc by update oper")
+			return i, false, cl.errHostDSCNumDecreased()
+		}
+
+		// Preiously existed dsc cannot be eliminated
+		// DSC order not sensitive
+		dscMap := map[cluster.DistributedServiceCardID]bool{}
+		for _, dsc := range host.Spec.DSCs {
+			dscMap[dsc] = true
+		}
+		for _, dsc := range curHost.Spec.DSCs {
+			_, ok := dscMap[dsc]
+			if !ok {
+				cl.logger.Errorf("Error: attempt to modify pre-existed dsc: %+v.", dsc)
+				return i, false, cl.errHostFieldImmutable(curHost.Name, "Spec.DSCs")
+			}
+		}
+
 	}
 
 	return i, true, nil
