@@ -280,6 +280,11 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
     req.set_eviid(ms_bd_id);
     auto state_ctxt = state_t::thread_context();
     auto subnet_obj = state_ctxt.state()->subnet_store().get(req.eviid());
+    if (subnet_obj == nullptr) {
+        PDS_TRACE_ERR("Subnet store get failed for eviid %d", req.eviid());
+        throw Error (std::string("Subnet store get failed"),
+                     SDK_RET_ENTRY_NOT_FOUND);
+    }
     if (subnet_obj->rt_store.find ((unsigned char *)req.rt().c_str())) {
         if ((row_status == AMB_ROW_DESTROY) ||
             (op_update && req.rttype() == EVPN_RT_EXPORT)) {
