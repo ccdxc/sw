@@ -200,7 +200,7 @@ func (sm *Statemgr) OnHostDelete(host *ctkit.Host) error {
 				}
 			}
 
-			if len(snic.DistributedServiceCard.ObjectMeta.Labels) > 0 {
+			if snic != nil && len(snic.DistributedServiceCard.ObjectMeta.Labels) > 0 {
 				delete(snic.DistributedServiceCard.Labels, orchutils.OrchNameKey)
 				err := snic.stateMgr.ctrler.DistributedServiceCard().Update(&snic.DistributedServiceCard.DistributedServiceCard)
 				if err != nil {

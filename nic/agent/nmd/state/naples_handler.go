@@ -885,7 +885,12 @@ func (n *NMD) SendNICUpdates() error {
 
 		// NIC update timer callback
 		case <-time.After(n.nicUpdInterval):
-			nicObj := n.nic
+			nicObj, _ := n.GetSmartNIC()
+
+			if nicObj == nil {
+				log.Infof("NIC is deleted, skip sending updates.")
+				continue
+			}
 
 			// Skip until NIC is admitted
 			if nicObj.Status.AdmissionPhase != cmd.DistributedServiceCardStatus_ADMITTED.String() {
