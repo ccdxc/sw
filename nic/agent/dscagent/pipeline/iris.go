@@ -2117,15 +2117,22 @@ func (i *IrisAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 func (i *IrisAPI) startDynamicWatch(kinds []string) {
 	log.Infof("Starting Dynamic Watches for kinds: %v", kinds)
 	startWatcher := func() {
+		start := func() bool {
+			if i.ControllerAPI == nil {
+				return false
+			}
+			log.Infof("AggWatchers Start for kinds %s", kinds)
+			i.ControllerAPI.Start(kinds)
+			return true
+		}
+		if start() {
+			return
+		}
 		ticker := time.NewTicker(time.Second * 30)
 		for {
 			select {
 			case <-ticker.C:
-				if i.ControllerAPI == nil {
-					log.Info("Waiting for controller registration")
-				} else {
-					log.Infof("AggWatchers Start for kinds %s", kinds)
-					i.ControllerAPI.Start(kinds)
+				if start() {
 					return
 				}
 			}
