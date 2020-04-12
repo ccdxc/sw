@@ -427,3 +427,125 @@ func bgpNlriShowCmdHandler(cmd *cobra.Command, _afisafi string, args []string) e
 
 	return nil
 }
+
+var bgpPrefixShowCmd = &cobra.Command{
+	Use:   "prefix",
+	Short: "show bgp prefix information",
+	Long:  "show bgp prefix information",
+	Args:  cobra.NoArgs,
+}
+
+var bgpPfxCountersShowCmd = &cobra.Command{
+	Use:   "counters",
+	Short: "show bgp counters information",
+	Long:  "show bgp counters information",
+	Args:  cobra.NoArgs,
+	RunE:  bgpPfxCountersShowCmdHandler,
+}
+
+const (
+	bgpPfxCntrs = `-----------------------------------
+  EntIndex                : %v
+  PeerIndex               : %v
+  Afi                     : %v
+  Safi                    : %v
+  InPrfxes                : %v
+  InPrfxesAccepted        : %v
+  InPrfxesRejected        : %v
+  OutPrfxes               : %v
+  OutPrfxesAdvertised     : %v
+  UserData                : %v
+  InPrfxesFlapped         : %v
+  InPrfxesFlapSuppressed  : %v
+  InPrfxesFlapHistory     : %v
+  InPrfxesActive          : %v
+  InPrfxesDeniedByPol     : %v
+  NumLocRibRoutes         : %v
+  NumLocRibBestRoutes     : %v
+  InPrfxesDeniedMartian   : %v
+  InPrfxesDeniedAsLoop    : %v
+  InPrfxesDeniedNextHop   : %v
+  InPrfxesDeniedAsLength  : %v
+  InPrfxesDeniedCommunity : %v
+  InPrfxesDeniedLocalOrig : %v
+  InTotalPrfxes           : %v
+  OutTotalPrfxes          : %v
+  PeerState               : %v
+  OutPrfxesDenied         : %v
+  OutPrfxesImpWdr         : %v
+  OutPrfxesExpWdr         : %v
+  InPrfxesImpWdr          : %v
+  InPrfxesExpWdr          : %v
+  CurPrfxesDeniedByPol    : %v
+-----------------------------------
+`
+)
+
+func bgpPfxCountersShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := types.NewBGPSvcClient(c)
+
+	req := &types.BGPPrfxCntrsGetRequest{}
+	respMsg, err := client.BGPPrfxCntrsGet(context.Background(), req)
+	if err != nil {
+		return errors.New("Getting prefix counters failed")
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	var pfxCntrs []*utils.ShadowBGPPrfxCntrsStatus
+	for _, p := range respMsg.Response {
+		pfxCntr := utils.NewBGPPrfxCntrsStatus(p.Status)
+		pfxCntrs = append(pfxCntrs, pfxCntr)
+		if !doJSON {
+			fmt.Printf(bgpPfxCntrs,
+				pfxCntr.EntIndex,
+				pfxCntr.PeerIndex,
+				pfxCntr.Afi,
+				pfxCntr.Safi,
+				pfxCntr.InPrfxes,
+				pfxCntr.InPrfxesAccepted,
+				pfxCntr.InPrfxesRejected,
+				pfxCntr.OutPrfxes,
+				pfxCntr.OutPrfxesAdvertised,
+				pfxCntr.UserData,
+				pfxCntr.InPrfxesFlapped,
+				pfxCntr.InPrfxesFlapSuppressed,
+				pfxCntr.InPrfxesFlapHistory,
+				pfxCntr.InPrfxesActive,
+				pfxCntr.InPrfxesDeniedByPol,
+				pfxCntr.NumLocRibRoutes,
+				pfxCntr.NumLocRibBestRoutes,
+				pfxCntr.InPrfxesDeniedMartian,
+				pfxCntr.InPrfxesDeniedAsLoop,
+				pfxCntr.InPrfxesDeniedNextHop,
+				pfxCntr.InPrfxesDeniedAsLength,
+				pfxCntr.InPrfxesDeniedCommunity,
+				pfxCntr.InPrfxesDeniedLocalOrig,
+				pfxCntr.InTotalPrfxes,
+				pfxCntr.OutTotalPrfxes,
+				pfxCntr.PeerState,
+				pfxCntr.OutPrfxesDenied,
+				pfxCntr.OutPrfxesImpWdr,
+				pfxCntr.OutPrfxesExpWdr,
+				pfxCntr.InPrfxesImpWdr,
+				pfxCntr.InPrfxesExpWdr,
+				pfxCntr.CurPrfxesDeniedByPol)
+		}
+	}
+
+	if doJSON {
+		b, _ := json.MarshalIndent(pfxCntrs, "", "  ")
+		fmt.Println(string(b))
+		return nil
+	}
+
+	return nil
+}

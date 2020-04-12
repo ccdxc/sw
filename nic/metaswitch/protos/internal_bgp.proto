@@ -42,6 +42,7 @@ service BGPSvc {
   rpc BGPPeerAfGet (BGPPeerAfGetRequest) returns (BGPPeerAfGetResponse) {}
   rpc BGPClearRoute (BGPClearRouteRequest) returns (BGPClearRouteResponse) {}
   rpc BGPNLRIPrefixGet (BGPNLRIPrefixGetRequest) returns (BGPNLRIPrefixGetResponse) {}
+  rpc BGPPrfxCntrsGet (BGPPrfxCntrsGetRequest) returns (BGPPrfxCntrsGetResponse) {}
 }
 
 // BGP address family identifier
@@ -657,4 +658,115 @@ message BGPNLRIPrefixKeyHandle {
 // BGP NLRI prefix get request
 message BGPNLRIPrefixGetRequest {
   repeated BGPNLRIPrefixKeyHandle Request = 1;
+}
+
+// BGP PrfxCntrs table
+message BGPPrfxCntrsStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_BGP_PCT_OID_LEN",
+    Mib:    "bgpPrfxCntrsTable"
+  };
+
+  // Identifies a RIB Manager entity
+  uint32      EntIndex                 = 1 [(venice.pdsaFields) = {Field: "rm_ent_index", GetKeyOidIndex: "AMB_BGP_PCT_RM_ENT_INDEX_INDEX"}];
+  // The peer index
+  uint32      PeerIndex                = 2 [(venice.pdsaFields) = {Field: "peer_index", GetKeyOidIndex: "AMB_BGP_PCT_PEER_INDEX_INDEX"}];
+  // BGP address family
+  BGPAfi      Afi                      = 3 [(venice.pdsaFields) = {Field: "afi", GetKeyOidIndex: "AMB_BGP_PCT_AFI_INDEX"}];
+  // BGP sub-address family
+  BGPSafi     Safi                     = 4 [(venice.pdsaFields) = {Field: "safi", GetKeyOidIndex: "AMB_BGP_PCT_SAFI_INDEX"}];
+  // The number of prefixes received from a peer and are stored in the Adj-RIB-In for that peer.
+  uint32      InPrfxes                 = 5 [(venice.pdsaFields) = {Field: "in_prfxes"}];
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and are eligible to become active in the Loc-Rib
+  uint32      InPrfxesAccepted         = 6 [(venice.pdsaFields) = {Field: "in_prfxes_accepted"}];
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and are NOT eligible to become active in the Loc-Rib
+  uint32      InPrfxesRejected         = 7 [(venice.pdsaFields) = {Field: "in_prfxes_rejected"}];
+  // The number of prefixes for a peer that are installed in that peer's Adj-RIB-Out.
+  uint32      OutPrfxes                = 8 [(venice.pdsaFields) = {Field: "out_prfxes"}];
+  // The number of advertised prefixes currently associated with the peer
+  uint32      OutPrfxesAdvertised      = 9 [(venice.pdsaFields) = {Field: "out_prfxes_advertised"}];
+  // User data for this BGP prefix counters entry
+  string      UserData                 = 10 [(venice.pdsaFields) = {Field: "user_data"}];
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and for which RIB Manager is tracking a route flap damping penalty.
+  uint32      InPrfxesFlapped          = 11 [(venice.pdsaFields) = {Field: "in_prfxes_flapped"}];
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and that are suppressed as a result of route flapping.
+  uint32      InPrfxesFlapSuppressed   = 12 [(venice.pdsaFields) = {Field: "in_prfxes_flap_suppress"}];
+  // The number of prefixes for a peer that are not currently in the Adj-RIB-In, but which have an associated route flap damping penalty
+  uint32      InPrfxesFlapHistory      = 13 [(venice.pdsaFields) = {Field: "in_prfxes_flap_history"}];
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and are marked as 'active' in the Loc-Rib.
+  uint32      InPrfxesActive           = 14 [(venice.pdsaFields) = {Field: "in_prfxes_active"}];
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, because of local filter policy
+  uint32      InPrfxesDeniedByPol      = 15 [(venice.pdsaFields) = {Field: "in_prfxes_denied_by_pol"}];
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and included in the Loc-RIB
+  uint32      NumLocRibRoutes          = 16 [(venice.pdsaFields) = {Field: "num_loc_rib_routes"}];
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and included in the Loc-RIB as 'best' routes
+  uint32      NumLocRibBestRoutes      = 17 [(venice.pdsaFields) = {Field: "num_loc_rib_best_routes"}];
+  // The number of times a received Martian prefix has been denied and therefore not installed in the Adj-RIB-In
+  uint32      InPrfxesDeniedMartian    = 18 [(venice.pdsaFields) = {Field: "in_prfxes_denied_martian"}];
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, due to loops as determined by the AS Path
+  uint32      InPrfxesDeniedAsLoop     = 19 [(venice.pdsaFields) = {Field: "in_prfxes_denied_as_loop"}];
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, because the next hop is invalid
+  uint32      InPrfxesDeniedNextHop    = 20 [(venice.pdsaFields) = {Field: "in_prfxes_denied_next_hop"}];
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, because the AS Path length is too long
+  uint32      InPrfxesDeniedAsLength   = 21 [(venice.pdsaFields) = {Field: "in_prfxes_denied_as_length"}];
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, due to well-known community checks
+  uint32      InPrfxesDeniedCommunity  = 22 [(venice.pdsaFields) = {Field: "in_prfxes_denied_community"}];
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, because it is locally originated
+  uint32       InPrfxesDeniedLocalOrig = 23 [(venice.pdsaFields) = {Field: "in_prfxes_denied_local_orig"}];
+  // The total number of prefixes learned from all sessions with this peer
+  uint32       InTotalPrfxes           = 24 [(venice.pdsaFields) = {Field: "in_total_prfxes"}];
+  // The total number of prefixes sent on all sessions with this peer
+  uint32       OutTotalPrfxes          = 25 [(venice.pdsaFields) = {Field: "out_total_prfxes"}];
+  // The BGP peer's FSM state
+  BGPPeerState PeerState               = 26 [(venice.pdsaFields) = {Field: "state"}];
+  // This is the number of prefixes in the Loc-RIB that have have failed export policy checks and so have not been installed in the Adj-RIB-Out
+  uint32       OutPrfxesDenied         = 27 [(venice.pdsaFields) = {Field: "out_prfxes_denied"}];
+  // The total number of routes for which an implicit withdraw has been sent to this peer
+  uint32       OutPrfxesImpWdr         = 28 [(venice.pdsaFields) = {Field: "out_prfxes_imp_wdrw"}];
+  // The total number of routes for which an explicit withdraw has been sent to this peer
+  uint32       OutPrfxesExpWdr         = 29 [(venice.pdsaFields) = {Field: "out_prfxes_exp_wdrw"}];
+  // The total number of routes that have been implicitly withdrawn by this peer
+  uint32       InPrfxesImpWdr          = 30 [(venice.pdsaFields) = {Field: "in_prfxes_imp_wdrw"}];
+  // The total number of routes that have been explicitly withdrawn by this peer
+  uint32       InPrfxesExpWdr          = 31 [(venice.pdsaFields) = {Field: "in_prfxes_exp_wdrw"}];
+  // The number of stored prefixes from the peer that have failed import policy checks and so have not been installed in the Adj-RIB-In
+  uint32       CurPrfxesDeniedByPol    = 32 [(venice.pdsaFields) = {Field: "cur_prfxes_denied_by_pol"}];
+}
+
+// BGP PrfxCntrs key object
+message BGPPrfxCntrsKey {
+  // Identifies a RIB Manager entity
+  uint32  EntIndex  = 1;
+  // The peer index
+  uint32  PeerIndex = 2;
+  // BGP address family
+  BGPAfi  Afi       = 3;
+  // BGP sub-address family
+  BGPSafi Safi      = 4;
+}
+
+//BGP PrfxCntrs object
+message BGPPrfxCntrs {
+  BGPPrfxCntrsStatus Status = 1;
+}
+
+// BGP PrfxCntrs get response
+message BGPPrfxCntrsGetResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated BGPPrfxCntrs Response  = 2;
+}
+
+// BGP PrfxCntrs key handle
+message BGPPrfxCntrsKeyHandle {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_BGP_PCT_OID_LEN",
+    Mib:     "bgpPrfxCntrsTable"
+    SpecMsg: "BGPPrfxCntrsStatus"
+  };
+  BGPPrfxCntrsKey Key = 1;
+}
+
+// BGP PrfxCntrs get request
+message BGPPrfxCntrsGetRequest {
+  repeated BGPPrfxCntrsKeyHandle Request = 1;
 }

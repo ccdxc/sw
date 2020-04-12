@@ -41,6 +41,7 @@ service BGPSvc {
   rpc BGPPeerAfGet (BGPPeerAfGetRequest) returns (BGPPeerAfGetResponse) {}
   rpc BGPClearRoute (BGPClearRouteRequest) returns (BGPClearRouteResponse) {}
   rpc BGPNLRIPrefixGet (BGPNLRIPrefixGetRequest) returns (BGPNLRIPrefixGetResponse) {}
+  rpc BGPPrfxCntrsGet (BGPPrfxCntrsGetRequest) returns (BGPPrfxCntrsGetResponse) {}
 }
 
 // BGP address family identifier
@@ -590,4 +591,105 @@ message BGPNLRIPrefixKeyHandle {
 // BGP NLRI prefix get request
 message BGPNLRIPrefixGetRequest {
   repeated BGPNLRIPrefixKeyHandle Request = 1;
+}
+
+// BGP PrfxCntrs table
+message BGPPrfxCntrsStatus {
+  // Identifies a RIB Manager entity
+  uint32      EntIndex                 = 1;
+  // The peer index
+  uint32      PeerIndex                = 2;
+  // BGP address family
+  BGPAfi      Afi                      = 3;
+  // BGP sub-address family
+  BGPSafi     Safi                     = 4;
+  // The number of prefixes received from a peer and are stored in the Adj-RIB-In for that peer.
+  uint32      InPrfxes                 = 5;
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and are eligible to become active in the Loc-Rib
+  uint32      InPrfxesAccepted         = 6;
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and are NOT eligible to become active in the Loc-Rib
+  uint32      InPrfxesRejected         = 7;
+  // The number of prefixes for a peer that are installed in that peer's Adj-RIB-Out.
+  uint32      OutPrfxes                = 8;
+  // The number of advertised prefixes currently associated with the peer
+  uint32      OutPrfxesAdvertised      = 9;
+  // User data for this BGP prefix counters entry
+  string     UserData                  = 10;
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and for which RIB Manager is tracking a route flap damping penalty.
+  uint32      InPrfxesFlapped          = 11;
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and that are suppressed as a result of route flapping.
+  uint32      InPrfxesFlapSuppressed   = 12;
+  // The number of prefixes for a peer that are not currently in the Adj-RIB-In, but which have an associated route flap damping penalty
+  uint32      InPrfxesFlapHistory      = 13;
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and are marked as 'active' in the Loc-Rib.
+  uint32      InPrfxesActive           = 14;
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, because of local filter policy
+  uint32      InPrfxesDeniedByPol      = 15;
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and included in the Loc-RIB
+  uint32      NumLocRibRoutes          = 16;
+  // The number of prefixes for a peer that are installed in the Adj-RIB-In and included in the Loc-RIB as 'best' routes
+  uint32      NumLocRibBestRoutes      = 17;
+  // The number of times a received Martian prefix has been denied and therefore not installed in the Adj-RIB-In
+  uint32      InPrfxesDeniedMartian    = 18;
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, due to loops as determined by the AS Path
+  uint32      InPrfxesDeniedAsLoop     = 19;
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, because the next hop is invalid
+  uint32      InPrfxesDeniedNextHop    = 20;
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, because the AS Path length is too long
+  uint32      InPrfxesDeniedAsLength   = 21;
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, due to well-known community checks
+  uint32      InPrfxesDeniedCommunity  = 22;
+  // The number of times a received prefix has been denied, and therefore not installed in the Adj-RIB-In, because it is locally originated
+  uint32       InPrfxesDeniedLocalOrig = 23;
+  // The total number of prefixes learned from all sessions with this peer
+  uint32       InTotalPrfxes           = 24;
+  // The total number of prefixes sent on all sessions with this peer
+  uint32       OutTotalPrfxes          = 25;
+  // The BGP peer's FSM state
+  BGPPeerState PeerState               = 26;
+  // This is the number of prefixes in the Loc-RIB that have have failed export policy checks and so have not been installed in the Adj-RIB-Out
+  uint32       OutPrfxesDenied         = 27;
+  // The total number of routes for which an implicit withdraw has been sent to this peer
+  uint32       OutPrfxesImpWdr         = 28;
+  // The total number of routes for which an explicit withdraw has been sent to this peer
+  uint32       OutPrfxesExpWdr         = 29;
+  // The total number of routes that have been implicitly withdrawn by this peer
+  uint32       InPrfxesImpWdr          = 30;
+  // The total number of routes that have been explicitly withdrawn by this peer
+  uint32       InPrfxesExpWdr          = 31;
+  // The number of stored prefixes from the peer that have failed import policy checks and so have not been installed in the Adj-RIB-In
+  uint32       CurPrfxesDeniedByPol    = 32;
+}
+
+// BGP PrfxCntrs key object
+message BGPPrfxCntrsKey {
+  // Identifies a RIB Manager entity
+  uint32  EntIndex  = 1;
+  // The peer index
+  uint32  PeerIndex = 2;
+  // BGP address family
+  BGPAfi  Afi       = 3;
+  // BGP sub-address family
+  BGPSafi Safi      = 4;
+}
+
+//BGP PrfxCntrs object
+message BGPPrfxCntrs {
+  BGPPrfxCntrsStatus Status = 1;
+}
+
+// BGP PrfxCntrs get response
+message BGPPrfxCntrsGetResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated BGPPrfxCntrs Response  = 2;
+}
+
+// BGP PrfxCntrs key handle
+message BGPPrfxCntrsKeyHandle {
+  BGPPrfxCntrsKey Key = 1;
+}
+
+// BGP PrfxCntrs get request
+message BGPPrfxCntrsGetRequest {
+  repeated BGPPrfxCntrsKeyHandle Request = 1;
 }

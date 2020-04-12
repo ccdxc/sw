@@ -255,6 +255,12 @@
 		BGPNLRIPrefixGetResponse
 		BGPNLRIPrefixKeyHandle
 		BGPNLRIPrefixGetRequest
+		BGPPrfxCntrsStatus
+		BGPPrfxCntrsKey
+		BGPPrfxCntrs
+		BGPPrfxCntrsGetResponse
+		BGPPrfxCntrsKeyHandle
+		BGPPrfxCntrsGetRequest
 		EvpnEviSpec
 		EvpnEviStatus
 		EvpnEvi

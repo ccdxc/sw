@@ -1304,3 +1304,78 @@ func NewCPRoute(in *pds.CPRoute) *ShadowCPRoute {
 		Status: newCPRouteStatus(in.Status),
 	}
 }
+
+// ShadowBGPPrfxCntrsStatus is a shadow of the BGPRouteMapStatus
+type ShadowBGPPrfxCntrsStatus struct {
+	EntIndex                uint32
+	PeerIndex               uint32
+	Afi                     string
+	Safi                    string
+	InPrfxes                uint32
+	InPrfxesAccepted        uint32
+	InPrfxesRejected        uint32
+	OutPrfxes               uint32
+	OutPrfxesAdvertised     uint32
+	UserData                string
+	InPrfxesFlapped         uint32
+	InPrfxesFlapSuppressed  uint32
+	InPrfxesFlapHistory     uint32
+	InPrfxesActive          uint32
+	InPrfxesDeniedByPol     uint32
+	NumLocRibRoutes         uint32
+	NumLocRibBestRoutes     uint32
+	InPrfxesDeniedMartian   uint32
+	InPrfxesDeniedAsLoop    uint32
+	InPrfxesDeniedNextHop   uint32
+	InPrfxesDeniedAsLength  uint32
+	InPrfxesDeniedCommunity uint32
+	InPrfxesDeniedLocalOrig uint32
+	InTotalPrfxes           uint32
+	OutTotalPrfxes          uint32
+	PeerState               string
+	OutPrfxesDenied         uint32
+	OutPrfxesImpWdr         uint32
+	OutPrfxesExpWdr         uint32
+	InPrfxesImpWdr          uint32
+	InPrfxesExpWdr          uint32
+	CurPrfxesDeniedByPol    uint32
+	*pds.BGPPrfxCntrsStatus
+}
+
+func NewBGPPrfxCntrsStatus(in *pds.BGPPrfxCntrsStatus) *ShadowBGPPrfxCntrsStatus {
+	return &ShadowBGPPrfxCntrsStatus{
+		EntIndex:                in.EntIndex,
+		PeerIndex:               in.PeerIndex,
+		Afi:                     strings.TrimPrefix(in.Afi.String(), "BGP_AFI_"),
+		Safi:                    strings.TrimPrefix(in.Safi.String(), "BGP_SAFI_"),
+		InPrfxes:                in.InPrfxes,
+		InPrfxesAccepted:        in.InPrfxesAccepted,
+		InPrfxesRejected:        in.InPrfxesRejected,
+		OutPrfxes:               in.OutPrfxes,
+		OutPrfxesAdvertised:     in.OutPrfxesAdvertised,
+		UserData:                dumpBytes([]byte(in.UserData)),
+		InPrfxesFlapped:         in.InPrfxesFlapped,
+		InPrfxesFlapSuppressed:  in.InPrfxesFlapSuppressed,
+		InPrfxesFlapHistory:     in.InPrfxesFlapHistory,
+		InPrfxesActive:          in.InPrfxesActive,
+		InPrfxesDeniedByPol:     in.InPrfxesDeniedByPol,
+		NumLocRibRoutes:         in.NumLocRibRoutes,
+		NumLocRibBestRoutes:     in.NumLocRibBestRoutes,
+		InPrfxesDeniedMartian:   in.InPrfxesDeniedMartian,
+		InPrfxesDeniedAsLoop:    in.InPrfxesDeniedAsLoop,
+		InPrfxesDeniedNextHop:   in.InPrfxesDeniedNextHop,
+		InPrfxesDeniedAsLength:  in.InPrfxesDeniedAsLength,
+		InPrfxesDeniedCommunity: in.InPrfxesDeniedCommunity,
+		InPrfxesDeniedLocalOrig: in.InPrfxesDeniedLocalOrig,
+		InTotalPrfxes:           in.InTotalPrfxes,
+		OutTotalPrfxes:          in.OutTotalPrfxes,
+		PeerState:               strings.TrimPrefix(in.PeerState.String(), "BGP_PEER_STATE_"),
+		OutPrfxesDenied:         in.OutPrfxesDenied,
+		OutPrfxesImpWdr:         in.OutPrfxesImpWdr,
+		OutPrfxesExpWdr:         in.OutPrfxesExpWdr,
+		InPrfxesImpWdr:          in.InPrfxesImpWdr,
+		InPrfxesExpWdr:          in.InPrfxesExpWdr,
+		CurPrfxesDeniedByPol:    in.CurPrfxesDeniedByPol,
+		BGPPrfxCntrsStatus:      in,
+	}
+}
