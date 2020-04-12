@@ -2459,6 +2459,7 @@ func (naples *naplesControlSimNode) init(in *iota.Node) (resp *iota.Node, err er
 		NaplesControlSimConfig: &iota.NaplesControlSimConfig{
 			VeniceIps:   in.GetNaplesControlSimConfig().VeniceIps,
 			ControlIp:   ip,
+			NodeUuid:    macAddress,
 			ControlIntf: "eth1"}}
 
 	return &iota.Node{NodeStatus: apiSuccess,

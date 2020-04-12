@@ -26,6 +26,9 @@ bin/tools/fuz: ${SRCS}
 bin/esx-setup: ${SRCS}
 	go build -ldflags="-s -w" -o $(IOTA_BIN_DIR)/iota_esx_setup github.com/pensando/sw/iota/scripts/esx
 
+bin/build-util: ${SRCS}
+	go build -ldflags="-s -w" -o $(IOTA_BIN_DIR)/build_util github.com/pensando/sw/iota/scripts/utils
+
 iota-proto:
 	make  -C $(TOPDIR)/protos
 
@@ -62,7 +65,7 @@ iota-test-bins:
 	go test -c github.com/pensando/sw/iota/test/venice/testsuites/equinix -o bin/equinix.test
 
 
-iota: iota-proto bin/penctl bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/tools/fuz bin/iota-cmd iota-test iota-test-bins asset-tools
+iota: iota-proto bin/penctl bin/server/iota_server bin/agent/iota_agent bin/agent/iota_agent.freebsd bin/esx-setup bin/build-util bin/tools/fuz bin/iota-cmd iota-test iota-test-bins asset-tools
 
 iota-scale-build: iota heimdall
 

@@ -916,8 +916,13 @@ venice-upgrade-image:
 	printf "\n+++++++++++++++++ complete venice-upgrade-image $$(date) +++++++++++++++++\n"
 
 ci-venice-apulu-image:
-	ls -al nic/pegasus.tgz
-	$(MAKE) venice-image APULU_PIPELINE=1
+	if [ -z ${PULL_VENICE_LATEST} ]; then \
+		ls -al nic/pegasus.tgz;\
+		$(MAKE) venice-image APULU_PIPELINE=1; \
+	else \
+		iota/bin/build_util --target-branch ${PULL_TARGET_BRANCH} --src-file ${SRC_VENICE_ARTIFACT} --dst-file ${DST_VENICE_ARTIFACT};\
+	fi
+
 ci-venice-image:
 	$(MAKE) venice-image
 ci-venice-upgrade-image:

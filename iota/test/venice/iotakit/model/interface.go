@@ -113,6 +113,7 @@ type ClusterActionIntf interface {
 	FlapDataSwitchPortsPeriodically(ctx context.Context, ports *objects.SwitchPortCollection,
 		downTime time.Duration, flapInterval time.Duration, flapCount int) error
 
+	AddNetworks(spec common.NetworkSpec) error
 	RemoveNetworks(switchName string) error
 }
 

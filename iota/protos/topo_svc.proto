@@ -81,6 +81,9 @@ service TopologyApi {
     // WorkloadMoveMsg moves workloads
     rpc MoveWorkloads(WorkloadMoveMsg) returns  (WorkloadMoveMsg) {};
 
+    //Add  Netowrks
+    rpc AddNetworks(NetworksMsg) returns  (NetworksMsg) {};
+
     //Remove  Netowrks
     rpc RemoveNetworks(NetworksMsg) returns  (NetworksMsg) {};
 }
@@ -316,6 +319,9 @@ message NaplesControlSimConfig {
 
     // control IP of the sim
     string control_ip             = 3;
+
+    //node uuid
+    string node_uuid              = 4;
 }
 
 message NaplesConfig {
@@ -651,13 +657,26 @@ message WorkloadMoveMsg {
     string orchestrator_node              = 3;
 }
 
+enum NetworkType {
+    NETWORK_TYPE_DEFAULT      = 0;
+
+    //Vmotion network
+    NETWORK_TYPE_VMK_VMOTION  = 1;
+}
+
 message Network {
-    
+    NetworkType          Type      = 1;
     //Network name
-    string    name      = 1;
+    string               name      = 2;
 
-    uint32    vlan      = 2;
+    uint32               vlan      = 3;
 
+    //nodes that network has to be on
+    repeated string      nodes     = 4; 
+
+    string               cluster   =  5;
+
+    bool                 dhcp      =  6;
 }
 
 

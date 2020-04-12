@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/venice/utils/log"
 	libstrconv "github.com/pensando/sw/venice/utils/strconv"
@@ -283,6 +284,41 @@ func (sm *VcenterSysModel) GetFwLogObjectCount(tenantName string, bucketName str
 // GetExclusiveServices node on the fly
 func (sm *VcenterSysModel) GetExclusiveServices() ([]string, error) {
 	return []string{"pen-orchhub"}, nil
+}
+
+//AddNetworks adds networks
+func (sm *VcenterSysModel) AddNetworks(spec common.NetworkSpec) error {
+
+	topoClient := iota.NewTopologyApiClient(sm.Tb.Client().Client)
+
+	orch, err := sm.GetOrchestrator()
+	if err != nil {
+		return err
+	}
+
+	addNetworkMsg := &iota.NetworksMsg{
+		Switch:           spec.Switch,
+		OrchestratorNode: orch.Name,
+		Network: []*iota.Network{&iota.Network{
+			Cluster: sm.Tb.GetCluster(),
+			Name:    spec.Name,
+			Nodes:   spec.Nodes,
+		}},
+	}
+
+	switch spec.NwType {
+	case common.VmotionNetworkType:
+		addNetworkMsg.Network[0].Type = iota.NetworkType_NETWORK_TYPE_VMK_VMOTION
+	}
+
+	removeResp, err := topoClient.AddNetworks(context.Background(), addNetworkMsg)
+	if err != nil {
+		return fmt.Errorf("Failed to add networks Err: %v", err)
+	} else if removeResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to add networks API Status: %+v | Err: %v", removeResp.ApiResponse, err)
+	}
+
+	return nil
 }
 
 //RemoveNetworks remove networks from switch

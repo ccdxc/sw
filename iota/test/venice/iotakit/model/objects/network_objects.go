@@ -47,6 +47,10 @@ func (n *NetworkCollection) AddSubnet(nw *Network) {
 	n.subnets = append(n.subnets, nw)
 }
 
+func (n *NetworkCollection) GetTenant() string {
+	return n.subnets[0].VeniceNetwork.Tenant
+}
+
 // Any returns any one of the subnets in random
 func (snc *NetworkCollection) Any(num int) *NetworkCollection {
 	if snc.HasError() || len(snc.subnets) <= num {
@@ -137,7 +141,7 @@ func (nwc *NetworkCollection) SetEgressSecurityPolicy(policies *NetworkSecurityP
 		nw.VeniceNetwork.Spec.EgressSecurityPolicy = []string{}
 		if policies != nil {
 			for _, pol := range policies.Policies {
-				nw.VeniceNetwork.Spec.EgressSecurityPolicy = append(nw.VeniceNetwork.Spec.IngressSecurityPolicy, pol.VenicePolicy.Name)
+				nw.VeniceNetwork.Spec.EgressSecurityPolicy = append(nw.VeniceNetwork.Spec.EgressSecurityPolicy, pol.VenicePolicy.Name)
 			}
 		}
 		err := nwc.Client.UpdateNetwork(nw.VeniceNetwork)

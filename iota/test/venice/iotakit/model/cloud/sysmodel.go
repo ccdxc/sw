@@ -244,6 +244,58 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 
 }
 
+//attachSimInterfacesToNetworks
+func (sm *SysModel) attachSimInterfacesToNetworks() error {
+
+	hosts, err := sm.ListFakeHosts()
+	if err != nil {
+		return err
+	}
+
+	log.Infof("Number of fake hosts %v", len(hosts))
+	// List tenant
+	tenants, err := sm.ObjClient().ListTenant()
+	if err != nil {
+		log.Errorf("err: %s", err)
+		return err
+	}
+
+	nws := []*network.Network{}
+	for _, ten := range tenants {
+		if ten.Name == globals.DefaultTenant {
+			continue
+		}
+
+		nws, err = sm.ListNetwork(ten.Name)
+		if err != nil {
+			log.Error("Error finding networks")
+			return err
+		}
+		//Pick the first tenant
+		break
+	}
+
+	for _, h := range hosts {
+		filter := fmt.Sprintf("spec.type=host-pf,status.dsc=%v", h.Naples.Instances[0].Dsc.Status.PrimaryMAC)
+		hostNwIntfs, err := sm.ObjClient().ListNetowrkInterfacesByFilter(filter)
+		if err != nil {
+			return err
+		}
+
+		for index, nwIntf := range hostNwIntfs {
+			nwIntf.Spec.AttachNetwork = nws[index].Name
+			nwIntf.Spec.AttachTenant = nws[index].Tenant
+			err := sm.ObjClient().UpdateNetworkInterface(nwIntf)
+			if err != nil {
+				log.Errorf("Error attaching network to interface")
+				return err
+			}
+		}
+
+	}
+	return nil
+}
+
 //BringupWorkloads bring up.Workloads on host
 func (sm *SysModel) BringupWorkloads() error {
 
@@ -337,6 +389,11 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 			log.Errorf("Error creating switch: %#v. Err: %v", sw, err)
 			return err
 		}
+	}
+
+	err = sm.attachSimInterfacesToNetworks()
+	if err != nil {
+		return err
 	}
 	//Setup any default objects
 	return sm.SetupWorkloads(scale)

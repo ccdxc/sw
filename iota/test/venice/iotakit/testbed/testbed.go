@@ -245,6 +245,7 @@ type TestBed struct {
 	DataSwitches         []*iota.DataSwitch         // data switches associated to this testbed
 	naplesDataMap        map[string]naplesData      //naples name data map
 	dcName               string
+	clusterName          string
 	warmdJsonFile        string // warmd json file
 
 	// cached message responses from iota server
@@ -735,6 +736,11 @@ func (tb *TestBed) GetLoopBackIP(nodeName string, index int) string {
 	return ""
 }
 
+//ID get ID of the testbed
+func (tb *TestBed) ID() string {
+	return tb.Params.ID
+}
+
 //GetSecondaryIP get secondary IP
 func (tb *TestBed) GetSecondaryIP(nodeName string) string {
 	for _, node := range tb.Nodes {
@@ -793,6 +799,10 @@ func (tb *TestBed) GetDC() string {
 	return tb.dcName
 }
 
+func (tb *TestBed) GetCluster() string {
+	return tb.clusterName
+}
+
 func (tb *TestBed) setupVcenterNode(node *TestNode) error {
 
 	uid := os.Getenv("USER")
@@ -821,6 +831,7 @@ func (tb *TestBed) setupVcenterNode(node *TestNode) error {
 		node.VcenterConfig.DistributedSwitch = "#Pen-DVS-" + node.VcenterConfig.DcName
 		tb.switchName = node.VcenterConfig.DistributedSwitch
 		tb.dcName = node.VcenterConfig.DcName
+		tb.clusterName = node.VcenterConfig.ClusterName
 		node.VcenterConfig.EsxConfigs = []*iota.VmwareESXConfig{}
 		for _, mn := range node.topoNode.MangedNodes {
 			for _, tbn := range tb.Nodes {

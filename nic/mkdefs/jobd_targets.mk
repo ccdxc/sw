@@ -347,7 +347,7 @@ jobd/dol/e2e/l7: ${JOBD_PREREQS}
 .PHONY: jobd/e2e/naples-sim-image
 jobd/e2e/naples-sim-image: ${JOBD_PREREQS}
 	cd ${NICDIR}/.. && ${MAKE} -C nic/upgrade_manager/export/upggosdk
-	go build -ldflags="-s -w" -o ${NICDIR}/build/x86_64/${PIPELINE}/${ASIC}/penctl  github.com/pensando/sw/penctl
+	go build -ldflags="-s -w" -o ${NICDIR}/build/x86_64/${PIPELINE}/penctl  github.com/pensando/sw/penctl
 	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline ${PIPELINE}${FLAVOR} --target sim --no-strip
 	${NICDIR}/tools/release.sh ${PIPELINE}${FLAVOR}
 
@@ -429,6 +429,7 @@ jobd/nicmgr/gtest_classic: ${JOBD_PREREQS}
 .PHONY: jobd/firmware
 jobd/firmware:
 	${MAKE} PLATFORM=hw ARCH=aarch64 firmware && make PLATFORM=hw ARCH=aarch64 package-drivers
+	cd .. && make -C iota
 
 .PHONY: jobd/venice-image
 jobd/venice-image:

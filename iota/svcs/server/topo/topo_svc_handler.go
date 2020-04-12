@@ -1424,6 +1424,27 @@ func (ts *TopologyService) DownloadAssets(ctx context.Context, req *iota.Downloa
 	return req, nil
 }
 
+// AddNetworks add networks
+func (ts *TopologyService) AddNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | AddNetworks Received Request Msg: %v", req)
+
+	if req.Switch == "" {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+		// TODO return fully formed resp here
+		return req, nil
+	}
+
+	node, ok := ts.ProvisionedNodes[req.OrchestratorNode]
+	if !ok {
+		errMsg := fmt.Sprintf("Node %s  not provisioned", req.OrchestratorNode)
+		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
+			ErrorMsg: errMsg}
+		return req, nil
+	}
+
+	return node.AddNetworks(ctx, req)
+}
+
 // RemoveNetworks remove networks
 func (ts *TopologyService) RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | RemoveNetworks Received Request Msg: %v", req)

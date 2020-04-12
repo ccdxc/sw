@@ -567,25 +567,56 @@ func (h *Host) RemoveKernelNic(cluster, host string, vnicName string) error {
 }
 
 // AddKernelNic adds the specified kernel nic
-func (h *VHost) AddKernelNic(cluster, host string, portGroupName string, enableVmotion bool) error {
+func (h *VHost) AddKernelNic(nwspec KernelNetworkSpec) error {
+
 	ns, err := h.hostNetworkSystem()
 	if err != nil {
 		return err
 	}
 
-	spec := types.HostVirtualNicSpec{
-		Ip: &types.HostIpConfig{Dhcp: true},
-		//Portgroup:           portGroupName,
-		//Mtu:                 1500,
-		//TsoEnabled:          types.NewBool(true),
-		//NetStackInstanceKey: "defaultTcpipStack",
+	net, err := h.Finder().Network(h.Ctx(), nwspec.Portgroup)
+	if err != nil {
+		return errors.Wrap(err, "Failed Find Network")
 	}
+
+	nwRef, err := net.EthernetCardBackingInfo(h.Ctx())
+	if err != nil {
+		return errors.Wrap(err, "Failed Find Network devices")
+	}
+
+	portGroupName := nwspec.Portgroup
+	spec := types.HostVirtualNicSpec{}
+	switch nw := nwRef.(type) {
+	case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
+
+		fmt.Printf("NW %v key %v\n", nw, nw.Port.PortKey)
+
+		spec = types.HostVirtualNicSpec{
+			Ip: &types.HostIpConfig{Dhcp: true},
+			DistributedVirtualPort: &types.DistributedVirtualSwitchPortConnection{
+				PortgroupKey: nw.Port.PortgroupKey,
+				SwitchUuid:   nw.Port.SwitchUuid,
+			},
+		}
+		portGroupName = ""
+	default:
+		spec = types.HostVirtualNicSpec{
+			Ip: &types.HostIpConfig{Dhcp: true},
+		}
+	}
+
+	if nwspec.IPAddress != "" {
+		spec.Ip.IpAddress = nwspec.IPAddress
+		spec.Ip.SubnetMask = nwspec.Subnet
+		spec.Ip.Dhcp = false
+	}
+
 	name, err := ns.AddVirtualNic(h.Ctx(), portGroupName, spec)
 	if err != nil {
 		return err
 	}
 
-	if enableVmotion {
+	if nwspec.EnableVmotion {
 		vnicMgr, err := h.hs.ConfigManager().VirtualNicManager(h.Ctx())
 		if err != nil {
 			return errors.Wrap(err, "Unble to get vnic manager")
@@ -597,7 +628,7 @@ func (h *VHost) AddKernelNic(cluster, host string, portGroupName string, enableV
 		}
 	}
 
-	return err
+	return nil
 }
 
 // RemoveKernelNic removes the specified kernel nic

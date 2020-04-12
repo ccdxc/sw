@@ -13,6 +13,7 @@ import (
 
 	"github.com/pensando/sw/api/generated/cluster"
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	utils "github.com/pensando/sw/iota/test/venice/iotakit/model/utils"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
@@ -1242,6 +1243,11 @@ func (sm *SysModel) AddNaplesNodes(names []string) error {
 // GetExclusiveServices node on the fly
 func (sm *SysModel) GetExclusiveServices() ([]string, error) {
 	return []string{}, nil
+}
+
+//AddNetworks adds networks
+func (sm *SysModel) AddNetworks(common.NetworkSpec) error {
+	return nil
 }
 
 //RemoveNetworks remove networks from switch

@@ -75,6 +75,7 @@ var _ = Describe("firewall whitelist tests", func() {
 			workloadPairs := ts.model.WorkloadPairs().OnNetwork(selNetwork.Subnets()[0]).Any(1)
 
 			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/8000", "PERMIT")
+			spc.SetTenant(selNetwork.GetTenant())
 			Expect(spc.Commit()).Should(Succeed())
 
 			//Now attach ingress and egress

@@ -36,6 +36,13 @@ type Cluster struct {
 	hosts map[string]*VHost
 }
 
+type KernelNetworkSpec struct {
+	Portgroup     string
+	IPAddress     string
+	Subnet        string
+	EnableVmotion bool
+}
+
 // NewVcenter returns a new *Vcenter instance
 func NewVcenter(ctx context.Context, name, username, password, license string) (*Vcenter, error) {
 	if name == "" || username == "" || password == "" {
@@ -582,7 +589,7 @@ func (dc *DataCenter) AddVswitch(cluster, host string, vspec VswitchSpec) error 
 }
 
 //AddKernelNic add a vswitch to host
-func (dc *DataCenter) AddKernelNic(cluster, host string, pgName string, enableVmotion bool) error {
+func (dc *DataCenter) AddKernelNic(cluster, host string, nwSpec KernelNetworkSpec) error {
 
 	dc.getClientWithRLock()
 	defer dc.releaseClientRLock()
@@ -595,7 +602,7 @@ func (dc *DataCenter) AddKernelNic(cluster, host string, pgName string, enableVm
 		return errors.Wrap(err, "Error finding host")
 	}
 
-	return vhost.AddKernelNic(cluster, host, pgName, enableVmotion)
+	return vhost.AddKernelNic(nwSpec)
 }
 
 //RemoveKernelNic add a vswitch to host

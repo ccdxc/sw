@@ -373,6 +373,17 @@ func (sm *SysModel) ListRealHosts() ([]*objects.Host, error) {
 	return hosts, nil
 }
 
+// ListFakeHosts gets all real hosts from venice cluster
+func (sm *SysModel) ListFakeHosts() ([]*objects.Host, error) {
+
+	hosts := []*objects.Host{}
+	for _, h := range sm.FakeHosts {
+		hosts = append(hosts, h)
+	}
+
+	return hosts, nil
+}
+
 // ListWorkloadsOnHost gets Workloads on host
 func (sm *SysModel) ListWorkloadsOnHost(h *cluster.Host) (objs []*workload.Workload, err error) {
 	objs, err = sm.ListWorkload()

@@ -119,6 +119,15 @@ func (ts *StubTopologyService) GetWorkloads(ctx context.Context, req *iota.Workl
 }
 
 // GetWorkloads gets current list of workloads
+func (ts *StubTopologyService) AddNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | RemoveNetworks Received Request Msg: %v", req)
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	// TODO return fully formed resp here
+	return req, nil
+}
+
+// GetWorkloads gets current list of workloads
 func (ts *StubTopologyService) RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | RemoveNetworks Received Request Msg: %v", req)
 
@@ -171,23 +180,23 @@ func (ts *StubTopologyService) DoSwitchOperation(ctx context.Context, req *iota.
 }
 
 func (ts *StubTopologyService) SaveNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
-    log.Infof("TOPO SVC | DEBUG | SaveNodes. Received Request Msg: %v", req)
+	log.Infof("TOPO SVC | DEBUG | SaveNodes. Received Request Msg: %v", req)
 
-    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-    return req, nil
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 func (ts *StubTopologyService) RestoreNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
-    log.Infof("TOPO SVC | DEBUG | RestoreNodes. Received Request Msg: %v", req)
+	log.Infof("TOPO SVC | DEBUG | RestoreNodes. Received Request Msg: %v", req)
 
-    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-    return req, nil
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }
 
 // DownloadAssets pulls assets
 func (ts *StubTopologyService) DownloadAssets(ctx context.Context, req *iota.DownloadAssetsMsg) (*iota.DownloadAssetsMsg, error) {
-    log.Infof("TOPO SVC | DEBUG | DownloadAssets. Received Request Msg: %v", req)
+	log.Infof("TOPO SVC | DEBUG | DownloadAssets. Received Request Msg: %v", req)
 
-    req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-    return req, nil
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
 }

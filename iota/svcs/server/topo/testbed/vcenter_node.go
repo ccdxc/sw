@@ -3,6 +3,7 @@ package testbed
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -138,7 +139,11 @@ func (n *VcenterNode) initVcenter() error {
 			log.Errorf("Error creating vmotion pg %v", err.Error())
 		}
 
-		err = dc.AddKernelNic(n.ClusterName, node.GetNodeInfo().IPAddress, constants.IotaVmotionPortgroup, true)
+		nwSpec := vmware.KernelNetworkSpec{
+			EnableVmotion: true,
+			Portgroup:     constants.IotaVmotionPortgroup,
+		}
+		err = dc.AddKernelNic(n.ClusterName, node.GetNodeInfo().IPAddress, nwSpec)
 
 		if err != nil {
 			//Ignore as it may be created already.
@@ -373,6 +378,42 @@ func (n *VcenterNode) AssocaiateIndependentNode(node TestNodeInterface) error {
 	}
 
 	return nil
+}
+
+//AddNetworks add network
+func (n *VcenterNode) AddNetworks(ctx context.Context, networkMsg *iota.NetworksMsg) (*iota.NetworksMsg, error) {
+
+	networkMsg.ApiResponse = &iota.IotaAPIResponse{
+		ApiStatus: iota.APIResponseType_API_STATUS_OK,
+	}
+
+	managedNodes := n.GetManagedNodes()
+	for _, nw := range networkMsg.Network {
+		if nw.Type == iota.NetworkType_NETWORK_TYPE_VMK_VMOTION {
+
+			for _, host := range nw.Nodes {
+				for _, mn := range managedNodes {
+					if mn.GetNodeInfo().Name == host {
+						nwSpec := vmware.KernelNetworkSpec{
+							EnableVmotion: true,
+							Portgroup:     nw.Name,
+						}
+						if !nw.Dhcp {
+							nwSpec.IPAddress = "169.254.0." + strings.Split(mn.GetNodeInfo().IPAddress, ".")[3]
+							nwSpec.Subnet = "169.254.255.0"
+						}
+						err := n.dc.AddKernelNic(nw.Cluster, mn.GetNodeInfo().IPAddress, nwSpec)
+						if err != nil {
+							networkMsg.ApiResponse.ErrorMsg = errors.Wrap(err, "Error adding vmotion pg").Error()
+							networkMsg.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+							return networkMsg, nil
+						}
+					}
+				}
+			}
+		}
+	}
+	return networkMsg, nil
 }
 
 //RemoveNetworks not supported for other nodes

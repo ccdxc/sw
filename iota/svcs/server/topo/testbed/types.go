@@ -150,6 +150,7 @@ type TestNodeInterface interface {
 	AssocaiateIndependentNode(node TestNodeInterface) error
 
 	CheckHealth(ctx context.Context, heatth *iota.NodeHealth) (*iota.NodeHealth, error)
+	AddNetworks(ctx context.Context, networkMsg *iota.NetworksMsg) (*iota.NetworksMsg, error)
 	NodeConnector() interface{}
 	SetConnector(interface{})
 
@@ -166,7 +167,7 @@ type TestNodeInterface interface {
 	MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveMsg) (*iota.WorkloadMoveMsg, error)
 
 	RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error)
-	SaveNode(cfg *ssh.ClientConfig) error 
+	SaveNode(cfg *ssh.ClientConfig) error
 	AgentDBGobFiles() []string
 	SavedDBGobFiles() []string
 }

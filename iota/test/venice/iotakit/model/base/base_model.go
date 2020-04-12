@@ -646,6 +646,38 @@ func (sm *SysModel) AssociateHosts() error {
 					}
 				}
 			}
+
+			ctrlSim := n.GetIotaNode().GetNaplesControlSimConfig()
+			if ctrlSim != nil {
+				nodeMac := strings.Replace(ctrlSim.GetNodeUuid(), ":", "", -1)
+				nodeMac = strings.Replace(nodeMac, ".", "", -1)
+				for _, obj := range objs {
+					objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
+					if objMac == nodeMac {
+						log.Infof("Associating host %v(ip:%v) with %v(%v on %v)\n", obj.GetName(),
+							n.GetIotaNode().GetIpAddress(), simName, ctrlSim.ControlIp, n.GetIotaNode().Name)
+						bs := bitset.New(uint(4096))
+						bs.Set(0).Set(1).Set(4095)
+
+						// add it to database
+						h := objects.NewHost(obj, n.GetIotaNode(), n)
+						sm.FakeHosts[obj.GetName()] = h
+						dsc, err = sm.GetSmartNIC(dsc.Name)
+						if err != nil {
+							log.Infof("Error reading smart nic object %v", err)
+							return err
+						}
+						//Add BM type to support upgrade
+						dsc.Labels = make(map[string]string)
+						dsc.Labels["type"] = "sim"
+						if err := sm.UpdateSmartNIC(dsc); err != nil {
+							log.Infof("Error updating smart nic object %v", err)
+							return err
+						}
+					}
+				}
+			}
+
 		}
 	}
 

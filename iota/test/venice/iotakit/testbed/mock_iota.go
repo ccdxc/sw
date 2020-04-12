@@ -113,6 +113,12 @@ func (ms *mockIotaServer) MoveWorkloads(ctx context.Context, req *iota.WorkloadM
 	return req, nil
 }
 
+func (ms *mockIotaServer) AddNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
+	log.Debugf("AddNetworks(): Received Request Msg: %v", req)
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
 func (ms *mockIotaServer) RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
 	log.Debugf("RemoveNetworks(): Received Request Msg: %v", req)
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
@@ -134,7 +140,7 @@ func (ms *mockIotaServer) SaveNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	return nil, nil
 }
 
-// RestoreNodes is to initNode after external/unknown reboot event 
+// RestoreNodes is to initNode after external/unknown reboot event
 func (ms *mockIotaServer) RestoreNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	return nil, nil
 }

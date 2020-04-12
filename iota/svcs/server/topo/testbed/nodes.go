@@ -713,6 +713,17 @@ func (n *TestNode) SetNodeMsg(msg *iota.Node) {
 	n.RespNode = msg
 }
 
+//AddNetworks add network
+func (n *TestNode) AddNetworks(ctx context.Context, networkMsg *iota.NetworksMsg) (*iota.NetworksMsg, error) {
+
+	networkMsg.ApiResponse = &iota.IotaAPIResponse{
+		ApiStatus: iota.APIResponseType_API_SERVER_ERROR,
+		ErrorMsg:  "Node does not support add network",
+	}
+
+	return networkMsg, nil
+}
+
 //GetNodeMsg gets node msg
 func (n *TestNode) GetNodeMsg(name string) *iota.Node {
 	log.Infof("Node response set for %v", n.RespNode.Name)

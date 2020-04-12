@@ -288,6 +288,19 @@ func (spc *NetworkSecurityPolicyCollection) AddRule(fromIP, toIP, port, action s
 	return spc
 }
 
+// SetTenant set tenant
+func (spc *NetworkSecurityPolicyCollection) SetTenant(tenant string) error {
+	if spc.HasError() {
+		return spc.err
+	}
+
+	for _, pol := range spc.Policies {
+		pol.VenicePolicy.Tenant = tenant
+	}
+
+	return nil
+}
+
 // Commit writes the policy to venice
 func (spc *NetworkSecurityPolicyCollection) Commit() error {
 	if spc.HasError() {

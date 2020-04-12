@@ -16,5 +16,23 @@ const (
 	BaseNetModel = 3
 )
 
+//NetworkType networkTypes
+type NetworkType int
+
+const (
+	//DefaultNetworkType
+	DefaultNetworkType NetworkType = 0
+	//VmotionNetworkType vmotion
+	VmotionNetworkType NetworkType = 0
+)
+
+//NetworkSpec to ceate
+type NetworkSpec struct {
+	Name   string
+	Switch string
+	Nodes  []string
+	NwType NetworkType
+}
+
 //MockVeniceURL mock venice url
 const MockVeniceURL = "localhost:9443"

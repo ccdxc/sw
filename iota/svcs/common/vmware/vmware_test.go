@@ -166,24 +166,26 @@ func Test_vcenter_find_host(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "Connected to venter")
 	TestUtils.Assert(t, vc != nil, "Vencter context set")
 
-	dc, err := vc.SetupDataCenter("ganesh-iota-dc")
+	dc, err := vc.SetupDataCenter("pbhide-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly setup dc")
-	dc, ok := vc.datacenters["ganesh-iota-dc"]
-	TestUtils.Assert(t, ok, "ganesh setup dc")
+	dc, ok := vc.datacenters["pbhide-iota-dc"]
+	TestUtils.Assert(t, ok, "pbhide setup dc")
 
-	c, ok := dc.clusters["ganesh-iota-cluster"]
+	c, ok := dc.clusters["pbhide-iota-cluster"]
 	TestUtils.Assert(t, ok, "successfuly setup cluster")
 	TestUtils.Assert(t, len(c.hosts) == 2, "successfuly setup cluster")
 
-	dvs, err := dc.findDvs("Pen-DVS-ganesh-iota-dc")
+	dvs, err := dc.findDvs("#Pen-DVS-pbhide-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly found dvs")
 	TestUtils.Assert(t, dvs != nil, "dvs nil")
 
-	vm, err2 := dc.NewVM("node1-ep3")
-	TestUtils.Assert(t, err2 == nil, "VM FOUND")
-	TestUtils.Assert(t, vm != nil, "VM FOND")
+	//vm, err2 := dc.NewVM("node1-ep3")
+	//TestUtils.Assert(t, err2 == nil, "VM FOUND")
+	//TestUtils.Assert(t, vm != nil, "VM FOND")
 
-	dc.SetVlanOverride("Pen-DVS-ganesh-iota-dc", "node1-ep3", 1234, 1239)
+	err = dc.EnableKernelNetwork("pbhide-iota-cluster", "10.8.101.31", "#Pen-PG-Network-Vlan-2", true)
+	fmt.Printf("ERror %v", err)
+	TestUtils.Assert(t, err == nil, "Added")
 
 	TestUtils.Assert(t, false, "Ds not created")
 
