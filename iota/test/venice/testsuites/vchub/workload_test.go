@@ -141,11 +141,11 @@ var _ = Describe("Vc hub workload tests", func() {
 			Expect(err == nil)
 
 			Eventually(func() error {
-				return ts.model.VerifyWorkloadStatus(srcWorkloads)
+				return ts.model.VerifyWorkloadMigrationStatus(srcWorkloads)
 			}).Should(Succeed())
 
 			Eventually(func() error {
-				return ts.model.VerifyWorkloadStatus(dstWorkloads)
+				return ts.model.VerifyWorkloadMigrationStatus(dstWorkloads)
 			}).Should(Succeed())
 
 			Expect(terr == nil)
@@ -209,13 +209,15 @@ var _ = Describe("Vc hub workload tests", func() {
 			Expect(len(wlp2.Pairs) == 2)
 
 			moveWl := lp.First
+			log.Infof("Move WL %+v", moveWl)
 			rp := wlp2.Pairs[1]
-			var dstHost *objects.Host
+			var dstHost, srcHost *objects.Host
 			if rp.First.NodeName() != moveWl.NodeName() {
 				dstHost = rp.First.Host()
 			} else {
 				dstHost = rp.Second.Host()
 			}
+			srcHost = moveWl.Host()
 
 			log.Infof("Start Traffic between a local and remote pair")
 			mvWlc := objects.NewWorkloadCollection(workloads.Client, workloads.Testbed)
@@ -231,22 +233,35 @@ var _ = Describe("Vc hub workload tests", func() {
 			log.Infof("Migrate workload %s", moveWl.Name())
 			err = ts.model.MoveWorkloads(mvWlc, dstHosts)
 			Expect(err == nil)
+			err = <-tErr
+			Expect(err == nil)
 
-			Expect(tErr == nil)
+			Eventually(func() error {
+				return ts.model.VerifyWorkloadMigrationStatus(mvWlc)
+			}).Should(Succeed())
+
+			dstHosts = objects.NewHostCollection(workloads.Client, workloads.Testbed)
+			dstHosts.Hosts = append(dstHosts.Hosts, srcHost)
 
 			log.Infof("Start Traffic between all local and remote pair")
 			// check traffic between all local and remote workloads
-			Eventually(func() error {
-				return ts.model.TCPSession(wlp, 8000)
-			}).ShouldNot(HaveOccurred())
+			go runTraffic(wlp, tErr)
+			time.Sleep(5 * time.Second)
+			log.Infof("Migrate workload back %s", moveWl.Name())
+			err = ts.model.MoveWorkloads(mvWlc, dstHosts)
+			Expect(err == nil)
+
+			err = <-tErr
+			Expect(err == nil)
 
 			// verify workload status is good, Put all check w.r.t to venice here.
 			Eventually(func() error {
 				return ts.model.VerifyWorkloadStatus(workloads)
 			}).Should(Succeed())
 
+			Eventually(func() error {
+				return ts.model.VerifyWorkloadMigrationStatus(mvWlc)
+			}).Should(Succeed())
 		})
-
 	})
-
 })

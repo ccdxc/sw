@@ -154,12 +154,50 @@ func (sm *VcenterSysModel) SetupWorkloads(scale bool) error {
 	log.Infof("Skipping setup of workloads on vcenter model")
 	return nil
 }
+func (sm *VcenterSysModel) setupInsertionMode() error {
+
+	cfgClient := sm.ConfigClient()
+	dscProfile := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "insertion.enforced",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "INSERTION",
+			FlowPolicyMode: "ENFORCED",
+		},
+	}
+	cfgClient.CreateDscProfile(&dscProfile)
+	dscObject, err := cfgClient.ListSmartNIC()
+
+	if err != nil {
+		return err
+	}
+
+	for _, dsc := range dscObject {
+		dsc.Spec.DSCProfile = "insertion.enforced"
+		cfgClient.UpdateSmartNIC(dsc)
+	}
+
+	return nil
+}
 
 // SetupDefaultConfig sets up a default config for the system
 func (sm *VcenterSysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
 	sm.Scale = scale
 	sm.ScaleData = scaleData
 	err := sm.InitConfig(scale, scaleData)
+	if err != nil {
+		return err
+	}
+	err = sm.setupInsertionMode()
+	if err != nil {
+		return err
+	}
+
+	err = sm.InitConfig(scale, scaleData)
 	if err != nil {
 		return err
 	}
@@ -180,6 +218,10 @@ L:
 			log.Errorf("Error associating hosts: %s", err)
 			time.Sleep(2 * time.Second)
 		}
+	}
+	//objects.NewOrchestrator(
+	if err := sm.SetupDefaultCommon(ctx, scale, scaleData); err != nil {
+		return err
 	}
 
 	//objects.NewOrchestrator(

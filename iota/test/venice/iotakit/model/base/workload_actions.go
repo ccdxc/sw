@@ -571,6 +571,12 @@ func (sm *SysModel) VerifyWorkloadStatus(wc *objects.WorkloadCollection) error {
 	return nil
 }
 
+// VerifyWorkloadMigrationStatus verifies workload migration status in venice
+func (sm *SysModel) VerifyWorkloadMigrationStatus(wc *objects.WorkloadCollection) error {
+	// only implemented in vcenter sys model
+	return nil
+}
+
 func (sm *SysModel) startFTPServer(wpc *objects.WorkloadPairCollection) error {
 
 	srvWorkloads := make(map[string]*objects.Workload)

@@ -213,6 +213,7 @@ type WorkloadActionIntf interface {
 	UDPSessionFails(wpc *objects.WorkloadPairCollection, port int) error
 	WorkloadsSayHelloToDataPath() error
 	VerifyWorkloadStatus(wc *objects.WorkloadCollection) error
+	VerifyWorkloadMigrationStatus(wc *objects.WorkloadCollection) error
 
 	FTPGet(wpc *objects.WorkloadPairCollection) error
 	FTPGetFails(wpc *objects.WorkloadPairCollection) error

@@ -277,6 +277,12 @@ func (h *networkHooks) checkNetworkCreateConfig(ctx context.Context, kv kvstore.
 		return i, true, fmt.Errorf("Error retrieving networks: %s", err)
 	}
 	for _, exNw := range networks.Items {
+		if exNw.Name == in.Name {
+			// self-check: it is possible (e.g. in multi-threaded env) that obj with same name
+			// got committed to DB when this hook is called.. ignore that object.
+			// Commit for this obj will fail later as expected
+			continue
+		}
 		if exNw.Spec.VlanID == in.Spec.VlanID {
 			return i, true, fmt.Errorf("Network vlanID must be unique, already used by %s", exNw.Name)
 		}

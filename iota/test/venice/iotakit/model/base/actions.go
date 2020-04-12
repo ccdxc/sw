@@ -273,8 +273,9 @@ func (sm *SysModel) VerifyPolicyStatus(spc *objects.NetworkSecurityPolicyCollect
 			log.Warnf("Propagation generation id did not match: Meta: %+v, PropagationStatus: %+v", pstat.ObjectMeta, pstat.Status.PropagationStatus)
 			return fmt.Errorf("Propagation generation id did not match")
 		}
-		if (pstat.Status.PropagationStatus.Updated != (int32(len(sm.NaplesNodes)) + int32(len(sm.FakeNaples)))) || (pstat.Status.PropagationStatus.Pending != 0) {
-			log.Warnf("Propagation status incorrect: Meta: %+v, PropagationStatus: %+v", pstat.ObjectMeta, pstat.Status.PropagationStatus)
+		totalNaples := int32(len(sm.NaplesNodes)) + int32(len(sm.FakeNaples))
+		if (pstat.Status.PropagationStatus.Updated != totalNaples) || (pstat.Status.PropagationStatus.Pending != 0) {
+			log.Warnf("Propagation status incorrect: Expected updates: %+v, PropagationStatus: %+v", totalNaples, pstat.Status.PropagationStatus)
 			return fmt.Errorf("Propagation status was incorrect")
 		}
 	}

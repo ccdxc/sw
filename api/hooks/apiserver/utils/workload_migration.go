@@ -65,6 +65,10 @@ func ProcessStartMigration(l log.Logger, oldObj, inObj *workload.Workload) (*wor
 			return oldObj, errors.New("Interface MAC addr cannot change during migration")
 		}
 	}
+	// TODO: set correct timeout.. when vcneter is loaded, it seems to take more than 8min for vmotion
+	if _, err := time.ParseDuration(oldObj.Spec.MigrationTimeout); err != nil {
+		oldObj.Spec.MigrationTimeout = "15m"
+	}
 	// copy Spec to Status
 	if oldObj.Status.MigrationStatus == nil {
 		oldObj.Status.MigrationStatus = &workload.WorkloadMigrationStatus{}

@@ -69,6 +69,7 @@ var Topologies = map[string]*Topology{
 	"3VMVenice_5SimScale1000Naples":       &topo3VMVenice5NaplesSim1000Scale,
 	"3VMVenice_5SimScale1000CloudNaples":  &topo3VMVenice5NaplesSim1000CloudScale,
 	"3Venice_2Naples_Vcenter":             &topo3Venice2NaplesVcenter,
+	"1Venice_2Naples_Vcenter":             &topo1Venice2NaplesVcenter,
 	"3Venice_1Naples_Vcenter":             &topo3Venice1Naples1ThirdPartyVcenter,
 	"3Venice_1Naples_ThirdParty":          &topo3Venice1Naples1ThirdParty,
 	"3Venice_1Naples_Cloud":               &topo3Venice1NaplesCloud,
@@ -1408,6 +1409,42 @@ var topo3Venice2NaplesVcenter = Topology{
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_VENICE,
 			HostOS:      "linux",
+		},
+	},
+}
+
+var topo1Venice2NaplesVcenter = Topology{
+	NaplesImage:   "../nic/naples_fw.tar",
+	VeniceImage:   "../bin/venice.tgz",
+	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
+	WorkloadImage: "build-1007",
+	NumVlans:      10, // FIXME: what should this be??
+	Model:         VcenterModel,
+
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_DVS,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_DVS,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+		},
+		{
+			NodeName:    "vcenter",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_VCENTER,
+			Personality: iota.PersonalityType_PERSONALITY_VCENTER_NODE,
+			HostOS:      "vcenter",
+			MangedNodes: []string{"naples1", "naples2"},
 		},
 	},
 }

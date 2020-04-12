@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/venice/utils/log"
 	libstrconv "github.com/pensando/sw/venice/utils/strconv"
@@ -162,6 +163,63 @@ func (sm *VcenterSysModel) VerifyWorkloadStatus(wc *objects.WorkloadCollection) 
 		//TODO, add more stuff for endpoint status.
 	}
 
+	return nil
+}
+
+// GetVeniceWorkloadByDisplayName gets venices workload using display name
+func (sm *VcenterSysModel) GetVeniceWorkloadByDisplayName(name string) (*workload.Workload, error) {
+	wll, err := sm.ObjClient().ListWorkload()
+	if err != nil {
+		log.Errorf("Could not get workload list from Venice. Err: %v", err)
+		return nil, err
+	}
+	for _, w := range wll {
+		if w.Labels == nil {
+			continue
+		}
+		if dispName, ok := w.Labels["io.pensando.vcenter.display-name"]; ok {
+			if dispName == name {
+				return w, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
+// VerifyWorkloadMigrationStatus verifies workload migration status in venice
+func (sm *VcenterSysModel) VerifyWorkloadMigrationStatus(wc *objects.WorkloadCollection) error {
+	if wc.HasError() {
+		return wc.Error()
+	}
+
+	// log.Infof("TODO: Workload verfiication Skipping all workload verifcations ")
+	// return nil
+	for _, wr := range wc.Workloads {
+		wsts, err := sm.GetWorkload(&wr.VeniceWorkload.ObjectMeta)
+		if err != nil {
+			log.Errorf("Could not get workload %v. Err: %v", wr.VeniceWorkload.Name, err)
+			return err
+		}
+		log.Debugf("Got workload status: %+v", wsts)
+		vwl, err := sm.GetVeniceWorkloadByDisplayName(wr.VeniceWorkload.Name)
+		if err != nil {
+			log.Errorf("Could not get workload from Venice %+v", wr.VeniceWorkload.ObjectMeta)
+			return err
+		}
+		// check the migration status
+		if vwl.Status.MigrationStatus == nil {
+			log.Infof("Got workload : %+v", vwl)
+			return fmt.Errorf("Workload %v did not migrate", wr.VeniceWorkload.Name)
+		}
+		if vwl.Status.MigrationStatus.Stage != workload.WorkloadMigrationStatus_MIGRATION_DONE.String() {
+			log.Infof("Got workload : %+v", vwl)
+			return fmt.Errorf("Workload %v migration.stage is not correct", wr.VeniceWorkload.Name)
+		}
+		if vwl.Status.MigrationStatus.Status != workload.WorkloadMigrationStatus_DONE.String() {
+			log.Infof("Got workload : %+v", vwl)
+			return fmt.Errorf("Workload %v migration.status is not correct", wr.VeniceWorkload.Name)
+		}
+	}
 	return nil
 }
 

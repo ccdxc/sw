@@ -177,7 +177,7 @@ jobs:
   iota/test/venice:
     labels: ["precommit", "2xhourly"]
   iota/test/venice/vcenter:
-    labels: ["precommit"]
+    labels: ["precommit", "daily"]
   iota/test/standalone/precheckin/esx:
     labels: ["precommit"]
   iota/test/standalone/precheckin/linux:
@@ -586,16 +586,25 @@ dependencies:
     - reference: test/ci_targets/e2e
     - reference: test/ci_targets/e2erollout
     - reference: test/ci_targets/cloud-e2e
+      exclude_dirs: ["ctrler/orchhub"]
     - reference: iota/test/venice
       exclude_dirs: ["ui"]
-  venice/orch:
+  venice/ctrler/orchhub:
+    - reference: iota/test/venice/vcenter
+  venice/ctrler/npm:
+    - reference: iota/test/venice/vcenter
+  iota/test/venice/testsuites/vchub:
+    - reference: iota/test/venice/vcenter
+  iota/test/venice/iotakit/model/vcenter:
     - reference: iota/test/venice/vcenter
   test:
     - reference: api
     - reference: test/ci_targets/e2e
     - reference: test/ci_targets/e2erollout
     - reference: test/ci_targets/cloud-e2e
+      exclude_dirs: ["integ/migrationinteg"]
     - reference: platform
+      exclude_dirs: ["integ/migrationinteg"]
   vendor:
     - reference: api
     - reference: venice
