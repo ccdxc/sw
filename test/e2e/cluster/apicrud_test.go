@@ -414,15 +414,25 @@ func testAPICRUDOps() func() {
 			Expect(expTEvents[k].Type).To(Equal(rcvTEvents[k].Type), fmt.Sprintf("[%d] [%v]want[%+v], got [%v][%+v]\n %s", k, expTEvents[k].Key, eSpec, rcvTEvents[k].Key, rSpec, retStr))
 			Expect(reflect.DeepEqual(eSpec, rSpec)).To(Equal(true), fmt.Sprintf("[%d] [%v]want[%+v], got [[%v]%+v]\n %s", k, expTEvents[k].Key, eSpec, rcvTEvents[k].Key, rSpec, retStr))
 		}
-		for k := range expNEvents {
-			eSpec := expNEvents[k].Object.(*network.Network).Spec
-			rSpec := rcvNEvents[k].Object.(*network.Network).Spec
+		for k, ev := range expNEvents {
+			eSpec := ev.Object.(*network.Network).Spec
 			retStr := fmt.Sprintf("Got %v Network events expecing %v events\n", len(rcvNEvents), len(expNEvents))
-			for i, ev := range rcvNEvents {
-				retStr += fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
+			for i, rv := range rcvNEvents {
+				retStr += fmt.Sprintf("[%d]: %v, [%s]\n", i, rv.Type, rv.Object.(*network.Network).GetName())
 			}
-			Expect(expNEvents[k].Type).To(Equal(rcvNEvents[k].Type), fmt.Sprintf("[%d] [%v]want[%+v], [%v]got [%+v]\n %s", k, expNEvents[k].Key, eSpec, rcvNEvents[k].Key, rSpec, retStr))
-			Expect(reflect.DeepEqual(eSpec, rSpec)).To(Equal(true), fmt.Sprintf("[%d] [%v]want[%+v], [%v]got [%+v]\n %s", k, expNEvents[k].Key, eSpec, rcvNEvents[k].Key, rSpec, retStr))
+			found := false
+			for i, rv := range rcvNEvents {
+				if rv.Type == ev.Type {
+					rSpec := rv.Object.(*network.Network).Spec
+					if ev.Object.(*network.Network).GetName() == rv.Object.(*network.Network).GetName() {
+						found = true
+						Expect(ev.Type).To(Equal(rv.Type), fmt.Sprintf("iType mismatch: [%d][%d] [%v]want[%+v], [%v]got [%+v]\n %s", k, i, ev.Key, eSpec, rv.Key, rSpec, retStr))
+						Expect(reflect.DeepEqual(eSpec, rSpec)).To(Equal(true), fmt.Sprintf("Obj mismatch: [%d][%d] [%v]want[%+v], [%v]got [%+v]\n %s", k, i, ev.Key, eSpec, rv.Key, rSpec, retStr))
+						break
+					}
+				}
+			}
+			Expect(found).To(Equal(true), fmt.Sprintf("[%d] [%v]want[%+v],got \n%s", k, ev.Key, eSpec, retStr))
 		}
 		cancel()
 	}
