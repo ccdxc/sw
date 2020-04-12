@@ -438,7 +438,7 @@ func (c *API) sendTechSupportUpdate(tsClient tsproto.TechSupportApiClient, req *
 	}
 
 	updParams := &tsproto.UpdateTechSupportResultParameters{
-		NodeName: c.InfraAPI.GetDscName(),
+		NodeName: c.InfraAPI.GetConfig().DSCID,
 		NodeKind: "DistributedServiceCard",
 		Request:  update,
 	}
@@ -459,7 +459,8 @@ func (c *API) WatchTechSupport() {
 		return
 	}
 
-	techSupportClient, err := rpckit.NewRPCClient(c.InfraAPI.GetDscName(), globals.Tsm, rpckit.WithBalancer(balancer.New(c.ResolverClient)))
+	dscID := c.InfraAPI.GetConfig().DSCID
+	techSupportClient, err := rpckit.NewRPCClient(dscID, globals.Tsm, rpckit.WithBalancer(balancer.New(c.ResolverClient)))
 	if err != nil || techSupportClient == nil {
 		log.Error(errors.Wrapf(types.ErrTechSupportClientInit, "Controller API: %s", err))
 		return
@@ -468,7 +469,7 @@ func (c *API) WatchTechSupport() {
 	techSupportAPIHandler := tsproto.NewTechSupportApiClient(techSupportClient.ClientConn)
 
 	stream, err := techSupportAPIHandler.WatchTechSupportRequests(c.WatchCtx, &tsproto.WatchTechSupportRequestsParameters{
-		NodeName: c.InfraAPI.GetDscName(),
+		NodeName: dscID,
 		NodeKind: "DistributedServiceCard",
 	})
 
@@ -476,6 +477,8 @@ func (c *API) WatchTechSupport() {
 		log.Error(errors.Wrapf(types.ErrTechSupportWatch, "Controller API: %s", err))
 		return
 	}
+
+	log.Infof("Controller API: Started Techsupport watch for %s", dscID)
 
 	for {
 		evt, err := stream.Recv()
