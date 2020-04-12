@@ -38,6 +38,17 @@ testcases:
             ipaf    : [ ipv4 ]
             pktsize : [ 64 ]
 
+    -   name    : Ping_IGW_PUBLIC_NAPT_SERVICE_Workloads
+        testcase: testcases.networking.ping
+        stress  : True
+        args    :
+            type: igw_napt_only
+            napt_type: public_service
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            pktsize : [ 64 ]
+
     -   name    : Iperf_IGW_NAPT_TCP
         testcase: testcases.networking.iperf
         args    :
@@ -84,6 +95,31 @@ testcases:
             pktsize   : [ 512 ]
             protocol  : [ udp ]
 
+    -   name    : Iperf_IGW_PUBLIC_NAPT_SERVICE_TCP
+        testcase: testcases.networking.iperf
+        args    :
+            type : igw_napt_only
+            napt_type: public_service
+            num_streams : 10
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ]
+            pktsize   : [ 512 ]
+            protocol  : [ tcp ]
+
+    -   name    : Iperf_IGW_PUBLIC_NAPT_SERVICE_UDP
+        testcase: testcases.networking.iperf
+        args    :
+            type : igw_napt_only
+            napt_type: public_service
+            num_streams : 10
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ]
+            pktsize   : [ 512 ]
+            protocol  : [ udp ]
+
+
     -   name    : Ping_IGW_NAT_Workloads
         testcase: testcases.networking.ping
         stress  : True
@@ -93,3 +129,26 @@ testcases:
             type    : nested
             ipaf    : [ ipv4 ]
             pktsize : [ 64 ]
+
+    -   name    : Iperf_IGW_NAT_UDP
+        testcase: testcases.networking.iperf
+        args    :
+            type : igw_nat_only
+            num_streams : 10
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ]
+            pktsize   : [ 512 ]
+            protocol  : [ udp ]
+
+    -   name    : Iperf_IGW_NAT_TCP
+        testcase: testcases.networking.iperf
+        args    :
+            type : igw_nat_only
+            num_streams : 10
+        iterators :
+            type      : nested
+            ipaf      : [ ipv4 ]
+            pktsize   : [ 1024 ]
+            protocol  : [ tcp ]
+

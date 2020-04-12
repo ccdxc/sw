@@ -17,10 +17,16 @@ def Setup(tc):
     elif tc.args.type == 'remote_only':
         tc.workload_pairs = config_api.GetPingableWorkloadPairs(
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
+    elif tc.args.type == 'igw_nat_only':
+        tc.workload_pairs = config_api.GetWorkloadPairs(
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY,
+            wl_pair_scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET)
     elif tc.args.type == 'igw_napt_only':
         napt_type = getattr(tc.args, "napt_type", None)
         if napt_type and napt_type == 'service':
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY
+        elif napt_type and napt_type == 'public_service':
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY
         else:
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY
         tc.workload_pairs = config_api.GetWorkloadPairs(
@@ -45,7 +51,7 @@ def Trigger(tc):
     for pair in tc.workload_pairs:
         api.Logger.info("iperf between %s and %s" % (pair[0].ip_address, pair[1].ip_address))
     tc.cmd_cookies, tc.resp = traffic_utils.iperfWorkloads(tc.workload_pairs, tc.iterators.ipaf, \
-            tc.iterators.protocol, tc.iterators.pktsize, num_of_streams=tc.num_streams)
+            tc.iterators.protocol, tc.iterators.pktsize, num_of_streams=tc.num_streams, sleep_time=10)
     return api.types.status.SUCCESS
 
 def Verify(tc):

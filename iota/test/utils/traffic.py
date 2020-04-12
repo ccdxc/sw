@@ -124,7 +124,7 @@ def verifyPing(cmd_cookies, response, exit_code=0):
     return result
 
 def iperfWorkloads(workload_pairs, af="ipv4", proto="tcp", packet_size=64,
-        bandwidth="100G", time=1, num_of_streams=None):
+        bandwidth="100G", time=1, num_of_streams=None, sleep_time=30):
     serverCmds = []
     clientCmds = []
     cmdDesc = []
@@ -165,7 +165,7 @@ def iperfWorkloads(workload_pairs, af="ipv4", proto="tcp", packet_size=64,
 
     server_resp = api.Trigger(serverReq)
     #Sleep for some time as bg may not have been started.
-    __sleep(30)
+    __sleep(sleep_time)
     client_resp = api.Trigger(clientReq)
     __sleep(3)
     api.Trigger_TerminateAllCommands(server_resp)

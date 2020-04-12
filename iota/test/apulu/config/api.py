@@ -15,7 +15,8 @@ WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1
 WORKLOAD_PAIR_TYPE_REMOTE_ONLY   = 2
 WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY = 3
 WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY = 4
-WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY = 5
+WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY = 5
+WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY = 6
 
 WORKLOAD_PAIR_SCOPE_INTRA_SUBNET = 1
 WORKLOAD_PAIR_SCOPE_INTER_SUBNET = 2
@@ -99,8 +100,10 @@ def __vnics_are_static_nat_pair(vnic1, vnic2):
     return False
 
 
-def __vnics_are_dynamic_service_napt_pair(vnic1, vnic2):
+def __vnics_are_dynamic_service_napt_pair(vnic1, vnic2, from_public):
     if vnic1.Node == vnic2.Node:
+        return False
+    if (from_public and not vnic1.HasPublicIp) or (not from_public and vnic1.HasPublicIp):
         return False
     if vnic1.VnicType == "local" and vnic2.VnicType == "igw_service":
         return True
@@ -140,8 +143,10 @@ def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA
                 continue
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY and not __vnics_are_static_nat_pair(vnic1, vnic2):
                 continue
-            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY:
-                if not __vnics_are_dynamic_service_napt_pair(vnic1, vnic2):
+            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY or \
+                        wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY:
+                from_public = wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY
+                if not __vnics_are_dynamic_service_napt_pair(vnic1, vnic2, from_public):
                     continue
                 if len(vnic1.ServiceIPs) == 0:
                     continue

@@ -118,6 +118,8 @@ typedef CLIB_PACKED (union nat_src_key_s {
     struct {
         ip4_address_t pvt_ip;
         uint16_t pvt_port;
+        uint8_t nat_proto;
+        uint8_t service;
     };
     u64 as_u64;
 }) nat_src_key_t;
@@ -138,6 +140,14 @@ typedef CLIB_PACKED (union nat_src_key_s {
     (ref_count) = (((data) >> 32) & REF_COUNT_MASK); \
     (ref_count)--; \
     (data) = (((uword)ref_count) << 32) | ((data) & IPV4_MASK);
+
+typedef CLIB_PACKED (union nat_pvt_ip_key_s {
+    struct {
+        ip4_address_t pvt_ip;
+        uint8_t service;
+    };
+    u64 as_u64;
+}) nat_pvt_ip_key_t;
 
 // public ip --> port block
 typedef CLIB_PACKED (union nat_pub_key_s {
@@ -462,7 +472,8 @@ always_inline void
 nat_flow_get_and_add_src_endpoint_mapping(nat_vpc_config_t *vpc,
                                           ip4_address_t pvt_ip, u16 pvt_port,
                                           ip4_address_t *public_ip,
-                                          u16 *public_port)
+                                          u16 *public_port, nat_proto_t nat_proto,
+                                          nat_addr_type_t nat_addr_type)
 {
     nat_src_key_t key = { 0 };
     uword *data;
@@ -473,6 +484,8 @@ nat_flow_get_and_add_src_endpoint_mapping(nat_vpc_config_t *vpc,
 
     key.pvt_ip = pvt_ip;
     key.pvt_port = pvt_port;
+    key.nat_proto = nat_proto;
+    key.service = (nat_addr_type == NAT_ADDR_TYPE_INFRA);
 
     data = hash_get(vpc->nat_src_ht, key.as_u64);
     if (data) {
@@ -483,13 +496,17 @@ nat_flow_get_and_add_src_endpoint_mapping(nat_vpc_config_t *vpc,
 always_inline void
 nat_flow_set_src_endpoint_mapping(nat_vpc_config_t *vpc,
                                   ip4_address_t pvt_ip, u16 pvt_port,
-                                  ip4_address_t public_ip, u16 public_port)
+                                  ip4_address_t public_ip, u16 public_port,
+                                  nat_proto_t nat_proto,
+                                  nat_addr_type_t nat_addr_type)
 {
     nat_src_key_t key = { 0 };
     uword data;
 
     key.pvt_ip = pvt_ip;
     key.pvt_port = pvt_port;
+    key.nat_proto = nat_proto;
+    key.service = (nat_addr_type == NAT_ADDR_TYPE_INFRA);
 
     NAT_EP_SET_PUBLIC_IP_PORT(data, public_ip, public_port, 1);
     hash_set(vpc->nat_src_ht, key.as_u64, data);
@@ -497,7 +514,9 @@ nat_flow_set_src_endpoint_mapping(nat_vpc_config_t *vpc,
 
 always_inline void
 nat_flow_get_and_del_src_endpoint_mapping(nat_vpc_config_t *vpc,
-                                          ip4_address_t pvt_ip, u16 pvt_port)
+                                          ip4_address_t pvt_ip, u16 pvt_port,
+                                          nat_proto_t nat_proto,
+                                          nat_addr_type_t nat_addr_type)
 {
     nat_src_key_t key = { 0 };
     uword *data;
@@ -505,6 +524,8 @@ nat_flow_get_and_del_src_endpoint_mapping(nat_vpc_config_t *vpc,
 
     key.pvt_ip = pvt_ip;
     key.pvt_port = pvt_port;
+    key.nat_proto = nat_proto;
+    key.service = (nat_addr_type == NAT_ADDR_TYPE_INFRA);
 
     data = hash_get(vpc->nat_src_ht, key.as_u64);
     if (data) {
@@ -519,13 +540,17 @@ nat_flow_get_and_del_src_endpoint_mapping(nat_vpc_config_t *vpc,
 always_inline void
 nat_flow_add_ip_mapping(nat_vpc_config_t *vpc,
                         ip4_address_t pvt_ip,
-                        ip4_address_t public_ip)
+                        ip4_address_t public_ip,
+                        nat_addr_type_t nat_addr_type)
 {
+    nat_pvt_ip_key_t key = { 0 };
     uword *data;
 
-    data = hash_get(vpc->nat_pvt_ip_ht, pvt_ip.as_u32);
+    key.pvt_ip = pvt_ip;
+    key.service = (nat_addr_type == NAT_ADDR_TYPE_INFRA);
+    data = hash_get(vpc->nat_pvt_ip_ht, key.as_u64);
     if (!data) {
-        hash_set(vpc->nat_pvt_ip_ht, pvt_ip.as_u32,
+        hash_set(vpc->nat_pvt_ip_ht, key.as_u64,
                  NAT_PVT_IP_HT_DATA(public_ip.as_u32, 1));
     } else {
         NAT_PVT_IP_HT_INC_REF_COUNT(*data);
@@ -534,16 +559,20 @@ nat_flow_add_ip_mapping(nat_vpc_config_t *vpc,
 
 always_inline void
 nat_flow_del_ip_mapping(nat_vpc_config_t *vpc,
-                        ip4_address_t pvt_ip)
+                        ip4_address_t pvt_ip,
+                        nat_addr_type_t nat_addr_type)
 {
+    nat_pvt_ip_key_t key = { 0 };
     uword *data;
     u16 ref_count;
 
-    data = hash_get(vpc->nat_pvt_ip_ht, pvt_ip.as_u32);
+    key.pvt_ip = pvt_ip;
+    key.service = (nat_addr_type == NAT_ADDR_TYPE_INFRA);
+    data = hash_get(vpc->nat_pvt_ip_ht, key.as_u64);
     if (data) {
         NAT_PVT_IP_HT_DEC_REF_COUNT(*data, ref_count);
         if (ref_count == 0) {
-            hash_unset(vpc->nat_pvt_ip_ht, pvt_ip.as_u32);
+            hash_unset(vpc->nat_pvt_ip_ht, key.as_u64);
         }
     }
 }
@@ -599,10 +628,11 @@ nat_flow_alloc_for_pb(nat_vpc_config_t *vpc, nat_port_block_t *pb,
                        NAT_FLOW_HT_MAKE_VAL(rx_hw_index, nat_addr_type, nat_proto));
 
     // Add to the src endpoint hash table
-    nat_flow_set_src_endpoint_mapping(vpc, pvt_ip, pvt_port, sip, sport);
+    nat_flow_set_src_endpoint_mapping(vpc, pvt_ip, pvt_port, sip, sport,
+                                      nat_proto, nat_addr_type);
 
     // Add the pvt_ip to the pvt_ip hash table
-    nat_flow_add_ip_mapping(vpc, pvt_ip, sip);
+    nat_flow_add_ip_mapping(vpc, pvt_ip, sip, nat_addr_type);
 
     return NAT_ERR_OK;
 }
@@ -656,10 +686,11 @@ nat_flow_alloc_for_pb_icmp(nat_vpc_config_t *vpc, nat_port_block_t *pb,
                        NAT_FLOW_HT_MAKE_VAL(pb->icmp_rx_hw_index, nat_addr_type, nat_proto));
 
     // Add to the src endpoint hash table
-    nat_flow_set_src_endpoint_mapping(vpc, pvt_ip, pvt_port, sip, sport);
+    nat_flow_set_src_endpoint_mapping(vpc, pvt_ip, pvt_port, sip, sport,
+                                      nat_proto, nat_addr_type);
 
     // Add the pvt_ip to the pvt_ip hash table
-    nat_flow_add_ip_mapping(vpc, pvt_ip, sip);
+    nat_flow_add_ip_mapping(vpc, pvt_ip, sip, nat_addr_type);
 
     return NAT_ERR_OK;
 }
@@ -768,11 +799,14 @@ nat_get_pool_for_pvt_ip(nat_vpc_config_t *vpc, nat_port_block_t *nat_pb,
                         ip4_address_t pvt_ip, nat_addr_type_t nat_addr_type,
                         nat_proto_t nat_proto)
 {
+    nat_pvt_ip_key_t key = { 0 };
     uword *data;
     ip4_address_t public_ip;
     nat_port_block_t *pb = NULL;
 
-    data = hash_get(vpc->nat_pvt_ip_ht, pvt_ip.as_u32);
+    key.pvt_ip = pvt_ip;
+    key.service = (nat_addr_type == NAT_ADDR_TYPE_INFRA);
+    data = hash_get(vpc->nat_pvt_ip_ht, key.as_u64);
     if (data) {
         public_ip.as_u32 = NAT_PVT_IP_HT_PUBLIC_IP(*data);
         pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto,
@@ -839,7 +873,7 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
 
     // if we have already allocated <pvt_ip, pvt_port>, try to use it
     nat_flow_get_and_add_src_endpoint_mapping(vpc, pvt_ip, pvt_port, sip,
-                                              sport);
+                                              sport, nat_proto, nat_addr_type);
     if (*sport == 0) {
         // endpoint not found
         // Check if pvt_ip has been used
@@ -992,10 +1026,11 @@ nat_flow_dealloc(u32 vpc_id, ip4_address_t dip, u16 dport, u8 protocol,
 
     pds_snat_tbl_read_ip4(hw_index, &pvt_ip.as_u32, &pvt_port);
 
-    nat_flow_get_and_del_src_endpoint_mapping(vpc, pvt_ip, pvt_port);
+    nat_flow_get_and_del_src_endpoint_mapping(vpc, pvt_ip, pvt_port, nat_proto,
+                                              nat_addr_type);
 
     hash_unset_mem_free(&vpc->nat_flow_ht, &key);
-    hash_unset(vpc->nat_pvt_ip_ht, pvt_ip.as_u32);
+    nat_flow_del_ip_mapping(vpc, pvt_ip, nat_addr_type);
 
     pb = nat_get_port_block_from_pub_ip(vpc, nat_addr_type, nat_proto, sip);
     if (pb) {
@@ -1214,7 +1249,7 @@ nat_cli_show_flow_cb(void *ctxt, u32 vpc_id, nat_flow_key_t *key, u64 val)
     dport = clib_host_to_net_u16(key->dport);
     pvt_ip.as_u32 = clib_host_to_net_u32(pvt_ip.as_u32);
     pvt_port = clib_host_to_net_u16(pvt_port);
-    vlib_cli_output(vm, "%-10U%-10U%-10U%-10U%-10U%-10d%-10d%-10U%-10U\n",
+    vlib_cli_output(vm, "%-14U%-14U%-10U%-10U%-10U%-10d%-10d%-10U%-10U\n",
                     format_ip4_address, &sip,
                     format_ip4_address, &dip,
                     format_tcp_udp_port, sport,
@@ -1252,7 +1287,7 @@ nat_cli_show_flow(vlib_main_t *vm,
                   unformat_input_t *input,
                   vlib_cli_command_t *cmd)
 {
-    vlib_cli_output(vm, "%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
+    vlib_cli_output(vm, "%-14s%-14s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
                     "SIP", "DIP", "SPORT", "DPORT", "PROTO", "HW INDEX", "ADDR TYPE", "PVT IP", "PVT PORT");
     (void)nat_flow_iterate((void *)vm, &nat_cli_show_flow_cb);
 

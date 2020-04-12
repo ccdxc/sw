@@ -27,7 +27,10 @@ uplink:
         status  : UP
 
 security_profile:
-    - id        : 1
+    id        : 1
+    tcpidletimeout : 1000
+    udpidletimeout : 1000
+    icmpidletimeout : 1000
 
 vpc:
     - id         : 100
@@ -178,6 +181,8 @@ vpc:
               public  : true
               tagged  : false         # true or false (default true)
               vnictype : "local"
+              serviceips :
+                    - '64.0.0.80'
               remoteroutes :
                     - '64.0.0.0\24'
       nexthop:

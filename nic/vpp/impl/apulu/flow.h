@@ -550,27 +550,14 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
             }
             if (hdr->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
                 /* only from host supported for now */
-                /* Try static NAT first */
-                if (hdr->mapping_xlate_id != 0) {
-                    u32 ip;
-                    u16 port;
-                    xlate_id = hdr->mapping_xlate_id;
-                    pds_snat_tbl_read_ip4(xlate_id, &ip, &port);
-                    vnet_buffer2(p)->pds_nat_data.xlate_idx = xlate_id;
-                    vnet_buffer2(p)->pds_nat_data.xlate_addr = ip;
-                    if (dev->overlay_routing_en) {
-                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT;
-                    } else {
-                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAT;
-                    }
-                } else {
-                    /* nat44 */
+                /*
+                 * Try service NAPT first
+                 */
+                if (hdr->snat_type == ROUTE_RESULT_SNAT_TYPE_NAPT_SVC) {
                     if (flags & VPP_CPU_FLAGS_IPV4_1_VALID) {
-                        vnet_buffer(p)->pds_flow_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
-                        if (hdr->snat_type == ROUTE_RESULT_SNAT_TYPE_NAPT_SVC) {
-                            vnet_buffer(p)->pds_flow_data.flags |=
-                                    VPP_CPU_FLAGS_NAPT_SVC_VALID;
-                        }
+                        vnet_buffer(p)->pds_flow_data.flags |=
+                                VPP_CPU_FLAGS_NAPT_VALID |
+                                VPP_CPU_FLAGS_NAPT_SVC_VALID;
                         *next = FLOW_CLASSIFY_NEXT_IP4_NAT;
                         counter[FLOW_CLASSIFY_COUNTER_IP4_NAT] += 1;
                     } else {
@@ -593,7 +580,36 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
                         pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT;
                     }
                 }
-
+                /* Try static NAT */
+                else if (hdr->mapping_xlate_id != 0) {
+                    u32 ip;
+                    u16 port;
+                    xlate_id = hdr->mapping_xlate_id;
+                    pds_snat_tbl_read_ip4(xlate_id, &ip, &port);
+                    vnet_buffer2(p)->pds_nat_data.xlate_idx = xlate_id;
+                    vnet_buffer2(p)->pds_nat_data.xlate_addr = ip;
+                    if (dev->overlay_routing_en) {
+                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT;
+                    } else {
+                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAT;
+                    }
+                } else {
+                    /* nat44 */
+                    if (flags & VPP_CPU_FLAGS_IPV4_1_VALID) {
+                        vnet_buffer(p)->pds_flow_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
+                        *next = FLOW_CLASSIFY_NEXT_IP4_NAT;
+                        counter[FLOW_CLASSIFY_COUNTER_IP4_NAT] += 1;
+                    } else {
+                        *next = FLOW_CLASSIFY_NEXT_DROP;
+                        counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+                        return;
+                    }
+                    if (dev->overlay_routing_en) {
+                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT;
+                    } else {
+                        pkt_type = PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT;
+                    }
+                }
             }
         }
     } else {

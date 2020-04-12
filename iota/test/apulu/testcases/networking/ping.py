@@ -23,6 +23,8 @@ def Setup(tc):
         napt_type = getattr(tc.args, "napt_type", None)
         if napt_type and napt_type == 'service':
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY
+        elif napt_type and napt_type == 'public_service':
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY
         else:
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY
         tc.workload_pairs = config_api.GetWorkloadPairs(

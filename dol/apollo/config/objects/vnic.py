@@ -118,17 +118,18 @@ class VnicObject(base.ConfigObjectBase):
         logger.info(f"- IngressPolicer:{self.RxPolicer}")
         logger.info(f"- EgressPolicer:{self.TxPolicer}")
         if self.__attachpolicy:
-            logger.info("- NumSecurityPolicies:", self.__numpolicy)
-            logger.info("- Ing V4 Policies:", self.IngV4SecurityPolicyIds)
-            logger.info("- Ing V6 Policies:", self.IngV6SecurityPolicyIds)
-            logger.info("- Egr V4 Policies:", self.EgV4SecurityPolicyIds)
-            logger.info("- Egr V6 Policies:", self.EgV6SecurityPolicyIds)
+            logger.info(f"- NumSecurityPolicies:{self.__numpolicy}")
+            logger.info(f"- Ing V4 Policies:{self.IngV4SecurityPolicyIds}")
+            logger.info(f"- Ing V6 Policies:{self.IngV6SecurityPolicyIds}")
+            logger.info(f"- Egr V4 Policies:{self.EgV4SecurityPolicyIds}")
+            logger.info(f"- Egr V6 Policies:{self.EgV6SecurityPolicyIds}")
+        logger.info(f"- HasPublicIp:{self.HasPublicIp}")
         if self.VnicType:
-            logger.info("- VnicType:", self.VnicType)
+            logger.info(f"- VnicType:{self.VnicType}")
         if self.RemoteRoutes:
-            logger.info("- Remote Routes:", self.RemoteRoutes)
+            logger.info(f"- Remote Routes:{self.RemoteRoutes}")
         if self.ServiceIPs:
-            logger.info("- Service IPs:", self.ServiceIPs)
+            logger.info(f"- Service IPs:{self.ServiceIPs}")
         self.Status.Show()
         return
 

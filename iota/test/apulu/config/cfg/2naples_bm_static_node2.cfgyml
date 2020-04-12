@@ -27,7 +27,10 @@ uplink:
         status  : UP
 
 security_profile:
-    - id        : 1
+    id        : 1
+    tcpidletimeout : 1000
+    udpidletimeout : 1000
+    icmpidletimeout : 1000
 
 vpc:
     - id         : 100
