@@ -259,12 +259,12 @@ def increase_timeout():
         return api.types.status.FAILURE
 
     for object in store_profile_objects:
-        #object.spec.timeouts.session-idle = "240s"
-        object.spec.timeouts.tcp = "90s"
-        object.spec.timeouts.udp = "200s"
+        object.spec.timeouts.session_idle = "240s"
+        object.spec.timeouts.tcp = "300s"
+        object.spec.timeouts.udp = "300s"
         object.spec.timeouts.icmp = "120s"
         object.spec.timeouts.tcp_half_close = "120s"
-        object.spec.timeouts.tcp_close = "60s"
+        object.spec.timeouts.tcp_close = "120s"
         object.spec.timeouts.tcp_connection_setup = "60s"
         object.spec.timeouts.tcp_drop = "180s"
         object.spec.timeouts.udp_drop = "60s"

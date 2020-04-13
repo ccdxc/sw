@@ -17,7 +17,7 @@ testcases:
         args    :
             vm_type      : dsc_to_dsc
             type         : both
-            num_sessions : 2
-            num_moves    : 2
+            num_sessions : 1
+            num_moves    : 1
             #timeout : 60
 
