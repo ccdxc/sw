@@ -1175,7 +1175,7 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                         "ERROR: [IGNORE] GRE Seq-num seen: {} expected: {}"\
                         .format(curr_seq_num, tc.collector_seq_num[c]+1))
                         seq_num_error = True
-                        if tc.classic_mode == False:
+                        if tc.args.type == 'regression':
                             tc.result[c] = api.types.status.FAILURE
                     tc.collector_seq_num[c] = curr_seq_num
 
