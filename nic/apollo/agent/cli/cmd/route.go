@@ -124,6 +124,12 @@ func printRoute(rt *pds.RouteTable) {
 				"ID",
 				uuid.FromBytesOrNil(route.GetNexthopId()).String())
 			first = false
+		case *pds.RouteInfo_NexthopGroupId:
+			fmt.Printf("%-20s%-12s%-40s\n",
+				utils.IPPrefixToStr(route.GetPrefix()),
+				"ECMP",
+				uuid.FromBytesOrNil(route.GetNexthopGroupId()).String())
+			first = false
 		case *pds.RouteInfo_VPCId:
 			fmt.Printf("%-20s%-12s%-40s\n",
 				utils.IPPrefixToStr(route.GetPrefix()),
@@ -136,7 +142,17 @@ func printRoute(rt *pds.RouteTable) {
 				"TEP",
 				uuid.FromBytesOrNil(route.GetTunnelId()).String())
 			first = false
+		case *pds.RouteInfo_VnicId:
+			fmt.Printf("%-20s%-12s%-40s\n",
+				utils.IPPrefixToStr(route.GetPrefix()),
+				"VNIC",
+				uuid.FromBytesOrNil(route.GetVnicId()).String())
+			first = false
 		default:
+			fmt.Printf("%-20s%-12s%-40s\n",
+				utils.IPPrefixToStr(route.GetPrefix()),
+				"-", "-")
+			first = false
 		}
 	}
 }

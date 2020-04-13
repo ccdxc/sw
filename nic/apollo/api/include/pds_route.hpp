@@ -45,7 +45,7 @@ typedef struct pds_route_s {
         /// PDS_NH_TYPE_OVERLAY specific data
         pds_obj_key_t           tep;      ///< nexthop TEP
         /// PDS_NH_TYPE_OVERLAY_ECMP specific data
-        pds_obj_key_t nh_group; ///< ECMP group
+        pds_obj_key_t           nh_group; ///< ECMP group
         /// PDS_NH_TYPE_PEER_VPC specific data
         pds_obj_key_t           vpc;      ///< peer vpc id
         /// one of the possible nexthop types
