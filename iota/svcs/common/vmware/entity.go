@@ -103,7 +103,7 @@ type EntityIntf interface {
 	AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
 	ReconfigureVMNetwork(vm *VM, currNW string, switchName string, newNW string, maxReconfigs int, relaxSecurity bool) error
 	AddPvlanPairsToDvs(name string, pairs []DvsPvlanPair) error
-	AddKernelNic(cluster, host string, pgName string, enableVmotion bool) error
+	AddKernelNic(cluster, host string, nwSpec KernelNetworkSpec) error
 	RemoveKernelNic(cluster, host string, pgName string) error
 }
 
