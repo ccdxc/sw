@@ -142,7 +142,9 @@ vpc:
           nhid       : 1
 
       subnet:
-        - count            : 6
+        - id               : 1
+          count            : 1
+          v4prefix         : '10.1.0.0\24'
           v4prefixlen      : 24
           fabricencap      : vxlan
           evpnevi:
@@ -158,13 +160,150 @@ vpc:
 
           vnic:
             - count     : 1             # 1 untagged VNIC
-              vmac      : macstep/00ae.cd00.0811/0000.0000.0100
+              vmac      : macaddr/00ae.cd00.0911
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : '2.0.0.0\16'
+              remoteroutes : 
+                    - '10.0.0.0\8'
               ipcount      : 1
+
+        - id               : 2
+          count            : 1
+          v4prefix         : '10.2.0.0\24'
+          v4prefixlen      : 24
+          fabricencap      : vxlan
+          evpnevi:
+            - rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
+
+          vnic:
+            - count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.0a11
+              srcguard  : false         # true or false (default false)
+              public    : false
+              tagged    : false         # true or false (default true)
+              origin    : discovered
+              remoteroutes : 
+                    - '10.0.0.0\8'
+              ipcount      : 1
+
+        - id               : 3
+          count            : 1
+          v4prefix         : '10.3.0.0\24'
+          v4prefixlen      : 24
+          fabricencap      : vxlan
+          evpnevi:
+            - rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
+
+          vnic:
+            - count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.0b11
+              srcguard  : false         # true or false (default false)
+              public    : false
+              tagged    : false         # true or false (default true)
+              origin    : discovered
+              remoteroutes : 
+                    - '10.0.0.0\8'
+              ipcount      : 1
+
+        - id               : 4
+          count            : 1
+          v4prefix         : '10.4.0.0\24'
+          v4prefixlen      : 24
+          fabricencap      : vxlan
+          evpnevi:
+            - rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
+
+          vnic:
+            - count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.0c11
+              srcguard  : false         # true or false (default false)
+              public    : false
+              tagged    : false         # true or false (default true)
+              origin    : discovered
+              remoteroutes : 
+                    - '10.0.0.0\8'
+              ipcount      : 1
+
+        - id               : 5
+          count            : 1
+          v4prefix         : '10.5.0.0\24'
+          v4prefixlen      : 24
+          fabricencap      : vxlan
+          evpnevi:
+            - rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
+
+          vnic:
+            - count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.0d11
+              srcguard  : false         # true or false (default false)
+              public    : false
+              tagged    : false         # true or false (default true)
+              origin    : discovered
+              remoteroutes : 
+                    - '10.0.0.0\8'
+              ipcount      : 1
+
+        - id               : 6
+          count            : 1
+          v4prefix         : '10.6.0.0\24'
+          v4prefixlen      : 24
+          fabricencap      : vxlan
+          evpnevi:
+            - rttype : import_export
+              autort : manual
+              autord : auto
+              encap  : vxlan
+          evpnevirt:
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:64
+            - rttype : import_export
+              rt     : 00:02:00:01:10:00:00:65
+
+          vnic:
+            - count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.0e11
+              srcguard  : false         # true or false (default false)
+              public    : false
+              tagged    : false         # true or false (default true)
+              origin    : discovered
+              remoteroutes : 
+                    - '10.0.0.0\8'
+              ipcount      : 1
+
 
       nexthop:
         - id         : 3
