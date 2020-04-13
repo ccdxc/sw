@@ -316,7 +316,7 @@ func (npc *NaplesCollection) IsAdmitted() (bool, error) {
 			dsc := inst.Dsc
 			log.Infof("Admitting naples %v", dsc.Status.PrimaryMAC)
 			snic, err := npc.Client.GetSmartNICByName(dsc.Name)
-			if err != nil || !snic.Spec.Admit {
+			if err != nil || !snic.Spec.Admit || snic.Status.AdmissionPhase != "admitted" {
 				log.Infof("Snic not admitted  %v", snic)
 				msg := fmt.Sprintf("Snic not admitted %v %v %v", snic, dsc.Name, err)
 				log.Infof(msg)
