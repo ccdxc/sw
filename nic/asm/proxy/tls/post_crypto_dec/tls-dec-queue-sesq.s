@@ -61,7 +61,7 @@ tls_sesq_produce:
     add.!c1     r7, k.to_s7_other_fid, r0
 
     add         r1, r0, k.tls_global_phv_sesq_pi
-    mincr       r1, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    mincr       r1, ASIC_SESQ_RING_SLOTS_SHIFT, 1
     CAPRI_DMA_CMD_RING_DOORBELL_SET_PI(dma_cmd_sesq_dbell_dma_cmd, LIF_TCP, 0, r7, TCP_SCHED_RING_SESQ,
                                 r1, db_data_data)
                               

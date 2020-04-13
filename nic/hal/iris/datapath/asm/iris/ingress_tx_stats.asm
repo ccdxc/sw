@@ -1,7 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "INGRESS_ingress_tx_stats_k.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 
 struct ingress_tx_stats_k_  k;
@@ -44,7 +44,7 @@ ingress_tx_stats:
     tbladd.f    d.{ingress_tx_stats_d.pad1}.dx, 0
     addi        r6, r0, 0x1000001
     or          r7, k.capri_p4_intrinsic_packet_len, r6, 32
-    addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     add         r5, r5, LIF_STATS_TX_UCAST_DROP_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or          r7, r7, r5[31:27], 58
@@ -54,7 +54,7 @@ ingress_tx_stats:
     tbladd.f    d.{ingress_tx_stats_d.pad1}.dx, 0
     addi        r6, r0, 0x1000001
     or          r7, k.capri_p4_intrinsic_packet_len, r6, 32
-    addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     add         r5, r5, LIF_STATS_TX_MCAST_DROP_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or          r7, r7, r5[31:27], 58
@@ -64,7 +64,7 @@ ingress_tx_stats:
     tbladd.f    d.{ingress_tx_stats_d.pad1}.dx, 0
     addi        r6, r0, 0x1000001
     or          r7, k.capri_p4_intrinsic_packet_len, r6, 32
-    addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     add         r5, r5, LIF_STATS_TX_BCAST_DROP_BYTES_OFFSET
     add         r6, r6, r5[26:0]
     or          r7, r7, r5[31:27], 58

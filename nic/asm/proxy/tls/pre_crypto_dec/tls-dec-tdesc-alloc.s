@@ -33,7 +33,7 @@ tls_dec_tdesc_alloc_process:
 	                p.to_s6_odesc, d.odesc[31:0]
         phvwri      p.to_s7_tnmdpr_alloc, 1
         
-        add         r2, d.odesc, CAPRI_NMDPR_PAGE_OFFSET
+        add         r2, d.odesc, ASIC_NMDPR_PAGE_OFFSET
 	    phvwrpair   p.to_s5_opage, r2,  \
 	                p.to_s6_opage, r2
 

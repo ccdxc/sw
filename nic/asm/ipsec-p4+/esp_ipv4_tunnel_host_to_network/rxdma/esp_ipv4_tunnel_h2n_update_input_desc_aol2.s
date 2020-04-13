@@ -18,7 +18,7 @@ dma_cmd_to_move_input_pkt_to_mem:
     add r1, r1, k.ipsec_to_stage3_iv_size
     add r6, k.ipsec_global_in_desc_addr, IPSEC_PAGE_OFFSET
     add r1, r1, r6 
-    blti  r1, CAPRI_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_in_page 
+    blti  r1, ASIC_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_in_page 
     nop
     phvwr p.dma_cmd_pkt2mem_dma_cmd_addr, r1 
     phvwr p.dma_cmd_pkt2mem_dma_cmd_size, k.ipsec_to_stage3_packet_len[13:0]
@@ -37,11 +37,11 @@ dma_cmd_to_move_input_pkt_to_mem:
     CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(dma_cmd_pad_mem_dma_cmd, r2, pad_bytes_pad_bytes_0_7, k.ipsec_to_stage3_pad_size) 
     phvwri p.dma_cmd_pad_mem_dma_cmd_cache, 1
     add r2, r2, k.ipsec_to_stage3_pad_size
-    blti  r2, CAPRI_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_tail_bytes
+    blti  r2, ASIC_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_tail_bytes
     nop
     phvwr p.tail_2_bytes_dma_cmd_addr, r2
 
-    blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_in_page
+    blti  r2, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_in_page
     nop
     phvwr.e p.dma_cmd_iv_salt_dma_cmd_addr, r6 
     nop

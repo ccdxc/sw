@@ -34,7 +34,7 @@ proxyr_s6_desc_free:
     
     APP_REDIR_IMM64_LOAD(r_table_base, RNMDR_TABLE_BASE)
     add         r_table_idx, r0, d.{pindex}.wx
-    mincr       r_table_idx, CAPRI_RNMDR_RING_SHIFT, r0
+    mincr       r_table_idx, ASIC_RNMDR_RING_SHIFT, r0
     add         r_table_base, r_table_base, r_table_idx, \
                 RNMDR_TABLE_ENTRY_SIZE_SHFT
     memwr.d     r_table_base, k.{to_s6_desc_sbit0_ebit31...\
@@ -43,8 +43,8 @@ proxyr_s6_desc_free:
     /*
      * Update CI
      */
-    addi        r_table_base, r0, CAPRI_SEM_RNMDR_ALLOC_CI_RAW_ADDR
-    mincr       r_table_idx, CAPRI_RNMDR_RING_SHIFT, 1
+    addi        r_table_base, r0, ASIC_SEM_RNMDR_ALLOC_CI_RAW_ADDR
+    mincr       r_table_idx, ASIC_RNMDR_RING_SHIFT, 1
     memwr.w     r_table_base, r_table_idx.wx
     wrfence
 

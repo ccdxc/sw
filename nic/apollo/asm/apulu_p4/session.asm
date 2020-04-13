@@ -76,7 +76,7 @@ session_stats:
     add.c1          r5, r5, 16
     addi            r1, r0, 0x1000001
     or              r7, r7, r1, 32
-    addi            r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi            r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     bbeq            d.session_info_d.drop, TRUE, session_info_drop
     or              r7, r7, r5[32:27], 58
     add.e           r6, r6, r5[26:0]

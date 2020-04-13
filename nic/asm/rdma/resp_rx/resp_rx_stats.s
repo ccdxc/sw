@@ -114,7 +114,7 @@ handle_lif_stats:
 
 #ifndef GFT
 
-    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi            r1, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
     add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
 
@@ -140,7 +140,7 @@ handle_error_lif_stats:
 #ifndef GFT
     bbeq            K_LIF_ERROR_ID_VLD, 0, error_done
 
-    addi            r1, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START //BD Slot
+    addi            r1, r0, ASIC_MEM_SEM_ATOMIC_ADD_START //BD Slot
     addi            r2, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
     add             r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
 

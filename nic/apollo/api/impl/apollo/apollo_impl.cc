@@ -16,7 +16,7 @@
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 // TODO: clean this up
-#include "nic/sdk/platform/capri/capri_common.hpp"
+#include "nic/sdk/asic/cmn/asic_common.hpp"
 #include "nic/sdk/platform/ring/ring.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/apollo/apollo_impl.hpp"

@@ -838,15 +838,15 @@ _inner_label0:;                                                                 
     add         r_db_addr, r_db_addr, _lif, TIMER_ADDR_LIF_SHFT;                \
 
 #define SCANNER_DB_ADDR_FAST_TIMER(_lif)                                        \
-    SCANNER_DB_ADDR_TIMER(CAPRI_MEM_FAST_TIMER_START, _lif)                     \
+    SCANNER_DB_ADDR_TIMER(ASIC_MEM_FAST_TIMER_START, _lif)                     \
 
 #define SCANNER_DB_ADDR_SLOW_TIMER(_lif)                                        \
-    SCANNER_DB_ADDR_TIMER(CAPRI_MEM_SLOW_TIMER_START, _lif)                     \
+    SCANNER_DB_ADDR_TIMER(ASIC_MEM_SLOW_TIMER_START, _lif)                     \
 
 #define SCANNER_DB_ADDR_FAST_OR_SLOW_TIMER(_use_slow_timer, _lif)               \
     seq         c1, _use_slow_timer, 1;                                         \
-    addi.c1     r_db_addr, r0, CAPRI_MEM_SLOW_TIMER_START;                      \
-    addi.!c1    r_db_addr, r0, CAPRI_MEM_FAST_TIMER_START;                      \
+    addi.c1     r_db_addr, r0, ASIC_MEM_SLOW_TIMER_START;                      \
+    addi.!c1    r_db_addr, r0, ASIC_MEM_FAST_TIMER_START;                      \
     add         r_db_addr, r_db_addr, _lif, TIMER_ADDR_LIF_SHFT;                \
     
 #define SCANNER_DB_DATA_TIMER(_qtype, _qid, _delta_time)                        \

@@ -53,13 +53,13 @@
  */
 #define SESSION_INFO_BYTES                      64     // in bytes
 #define SESSION_INFO_BYTES_SHFT                 6      // log2(SESSION_INFO_BYTES)
- 
+
 /*
  * Conntrack Info (P4 conntrack_info_t)
  */
 #define CONNTRACK_INFO_BYTES                    4      // in bytes
 #define CONNTRACK_INFO_BYTES_SHFT               2      // log2(CONNTRACK_INFO_BYTES)
- 
+
 /*
  * Control Block activate 16-bit indicator
  */
@@ -157,7 +157,7 @@
 #define SCANNER_EXPIRY_MAP_ENTRIES_TOTAL_BITS   (SCANNER_EXPIRY_NUM_MAP_ENTRIES_MAX * \
                                                  SCANNER_EXPIRY_MAP_ENTRY_BITS)
 #define SCANNER_EXPIRY_MAP_ENTRIES_TOTAL_BITS_SHFT 8 // log2(SCANNER_EXPIRY_MAP_ENTRIES_TOTAL_BITS)
- 
+
 /*
  * Two types of LIF timer:
  * - Fast: Capri configured resolution is 1us per delta tick
@@ -174,7 +174,7 @@
  * scanner reschedule time upon detecting software poller queue full.
  */
 
-#define SCANNER_POLLER_QFULL_REPOST_TIMER       CAPRI_MEM_FAST_TIMER_START
+#define SCANNER_POLLER_QFULL_REPOST_TIMER       ASIC_MEM_FAST_TIMER_START
 #define SCANNER_POLLER_QFULL_REPOST_TICKS       100  // 100 x 1.2us
 
 /*
@@ -183,9 +183,9 @@
  * is in units of second, it should be fine to start rescanning in
  * 0.5 sec or less.
  */
-#define SCANNER_RANGE_EMPTY_RESCHED_TIMER       CAPRI_MEM_SLOW_TIMER_START
+#define SCANNER_RANGE_EMPTY_RESCHED_TIMER       ASIC_MEM_SLOW_TIMER_START
 #define SCANNER_RANGE_EMPTY_RESCHED_TICKS       200  // 200 x 1.2ms
- 
+
 /*
  * Timestamp is in clock ticks with clock speed of 833Mhz (Capri), or
  * (833 * 1M) ticks per second, i.e., 1.2ns per tick.
@@ -207,7 +207,7 @@
  * MPU timestamp rescheduling interval and undervalue, i.e., number of ticks
  * a SW read would have been behind.
  */
-#define MPU_TIMESTAMP_RESCHED_TIMER             CAPRI_MEM_SLOW_TIMER_START
+#define MPU_TIMESTAMP_RESCHED_TIMER             ASIC_MEM_SLOW_TIMER_START
 #define MPU_TIMESTAMP_RESCHED_TICKS             30   // 30 x 1.2ms
 #define MPU_TIMESTAMP_RESCHED_MS                36
 
@@ -215,7 +215,7 @@
  * 36 / 10.1 rounded up
  */
 #define MPU_TIMESTAMP_UNDERVALUE_TICKS          ((MPU_TIMESTAMP_RESCHED_MS / 10) + 1)
- 
+
 #ifdef __cplusplus
 
 namespace ftl_dev_if {

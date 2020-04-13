@@ -19,7 +19,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
 
     // Outer-IP  
     add r1, k.ipsec_to_stage4_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET+ETH_FIXED_HDR_SIZE
-    blti r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_cb
+    blti r1, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_cb
     nop 
     phvwr  p.ip_hdr_dma_cmd_addr, r1 
     seq c1, k.ipsec_to_stage4_is_v6, 1
@@ -31,14 +31,14 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwri.c3 p.p4plus2p4_hdr_flags, 0x2a 
     //ESP Header with IV
     add r4, r0, k.t0_s2s_in_page_addr
-    blti r4, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_in_page
+    blti r4, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_in_page
     nop 
     phvwr p.esp_iv_hdr_dma_cmd_addr, k.t0_s2s_in_page_addr 
     addi r2, r0, IPSEC_DEFAULT_IV_SIZE+ESP_FIXED_HDR_SIZE 
     phvwr p.esp_iv_hdr_dma_cmd_size, r2
     // Payload
     add r4, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE 
-    blti r4, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_out_page
+    blti r4, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_out_page
     nop 
     phvwr p.enc_pay_load_dma_cmd_addr, r4 
     add r3, k.txdma2_global_payload_size, k.txdma2_global_pad_size
@@ -46,7 +46,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     phvwr p.enc_pay_load_dma_cmd_size, r3
     //ICV
     add r1, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE+2 
-    blti r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_out_page
+    blti r1, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_out_page
     nop 
     add r1, r1, k.txdma2_global_pad_size
     add r1, r1, k.t0_s2s_tailroom_offset

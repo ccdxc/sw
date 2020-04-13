@@ -110,7 +110,7 @@ tcp_rx_ooq_tx2rx_pkt:
     // OOO pkt feedback
     add.c1          r1, r0, k.app_header_app_data1[87:32]
     phvwr           p.to_s6_descr, r1
-    add             r1, r1, CAPRI_NMDPR_PAGE_OFFSET
+    add             r1, r1, ASIC_NMDPR_PAGE_OFFSET
     phvwr           p.to_s6_page, r1
 
 tcp_rx_stage0_end:

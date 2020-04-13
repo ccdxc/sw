@@ -5,7 +5,7 @@
 #ifndef _VIRTIO_DPATH_H
 #define _VIRTIO_DPATH_H
 
-#include "nic/sdk/platform/capri/capri_common.hpp"
+#include "nic/sdk/asic/cmn/asic_common.hpp"
 
 #define HOSTMEM_PAGE_SIZE  (1 << 12)  //4096 Bytes
 #define MAX_LIFS           2048

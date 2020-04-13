@@ -51,8 +51,8 @@ free_pages:
     addi           r3, r3, loword(RNMDPR_BIG_TABLE_BASE)
     add            r3, r3, r2, RNMDPR_BIG_TABLE_ENTRY_SIZE_SHFT
 
-    // r4 = distance of rx-nmdpr_pi from end of ring 
-    sub            r4, CAPRI_RNMDPR_BIG_RING_SIZE, r2
+    // r4 = distance of rx-nmdpr_pi from end of ring
+    sub            r4, ASIC_RNMDPR_BIG_RING_SIZE, r2
     slt            c1, r4, NUM_PAGES_TO_FREE
     b.c1           dma_rxnmdpr_two_dma_commands
 
@@ -78,16 +78,16 @@ dma_rxnmdpr_two_dma_commands:
     add.!c2         r5, r5, 1, RNMDPR_BIG_TABLE_ENTRY_SIZE_SHFT
 
     DMA_CMD_BASE_GET(DMA_CMD_BASE, free_pages_src_dma1)
-    DMA_HBM_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, r6, r5) 
+    DMA_HBM_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, r6, r5)
     DMA_CMD_BASE_GET(DMA_CMD_BASE, free_pages_dst_dma1)
     DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, r6, r3)
-    
+
     // r5 = Updated src-addr for remaining pages to DMA
     add             r5, r5, r6
     // r4 is remaining entries
     sub             r4, NUM_PAGES_TO_FREE, r4
     add             r6, r0, r4, RNMDPR_BIG_TABLE_ENTRY_SIZE_SHFT
-    
+
     // r3 = start address in rnmdpr
     addui           r3, r0, hiword(RNMDPR_BIG_TABLE_BASE)
     addi            r3, r3, loword(RNMDPR_BIG_TABLE_BASE)
@@ -99,7 +99,7 @@ dma_rxnmdpr_two_dma_commands:
 
 
 dma_rxnmdpr_pindex:
-    // write updated pindex into the nmdpr-resource cb 
+    // write updated pindex into the nmdpr-resource cb
     phvwr           p.rx_nmdpr_pindex_index, RX_NMDPR_RING_PROXY_PI
     mfspr           r1, spr_tbladdr
     add             r1, r1, RX_NMDPR_RING_PI_OFFSET
@@ -113,7 +113,7 @@ dma_rxnmdpr_pindex:
 
 load_resourcecb:
     // load resourcecb
-    addui           r6, r0, hiword(nvme_resourcecb_addr) 
+    addui           r6, r0, hiword(nvme_resourcecb_addr)
     addi            r6, r6, loword(nvme_resourcecb_addr)
 
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_EN,

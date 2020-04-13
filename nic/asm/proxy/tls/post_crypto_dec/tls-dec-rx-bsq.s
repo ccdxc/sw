@@ -36,8 +36,8 @@ tls_dec_rx_bsq_process:
 	nop
 
     add             r3, r0, d.recq_ci
-    tblmincri.f     d.recq_ci, CAPRI_BSQ_RING_SLOTS_SHIFT, 1
-    sll             r3, r3, CAPRI_BSQ_RING_SLOT_SIZE_SHFT
+    tblmincri.f     d.recq_ci, ASIC_BSQ_RING_SLOTS_SHIFT, 1
+    sll             r3, r3, ASIC_BSQ_RING_SLOT_SIZE_SHFT
     add             r3, r3, d.{recq_base}.wx
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tls_dec_read_recq, r3, TABLE_SIZE_512_BITS)
 

@@ -15,7 +15,7 @@ struct phv_ p;
 esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     // Ethernet Hdr
     add r2, r0, k.ipsec_to_stage4_in_page 
-    blti  r2, CAPRI_HBM_BASE, esp_v4_tunnel_n2h_txdma2_build_decap_packet_illegal_dma_in_page
+    blti  r2, ASIC_HBM_BASE, esp_v4_tunnel_n2h_txdma2_build_decap_packet_illegal_dma_in_page
     nop
     phvwr  p.eth_hdr_dma_cmd_addr, k.ipsec_to_stage4_in_page
     // take only MAC addresses, etype will come from next DMA command based on v4 or v6
@@ -25,7 +25,7 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     phvwri p.{vrf_vlan_hdr_dma_cmd_phv_end_addr...vrf_vlan_hdr_dma_cmd_type}, ((IPSEC_TXDMA2_VRF_VLAN_HEADER_END << 17) | (IPSEC_TXDMA2_VRF_VLAN_HEADER_START << 7) | CAPRI_DMA_COMMAND_PHV_TO_PKT)
     // Decrypted payload 
     add r4, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE
-    blti  r4, CAPRI_HBM_BASE, esp_v4_tunnel_n2h_txdma2_build_decap_packet_illegal_dma_out_page
+    blti  r4, ASIC_HBM_BASE, esp_v4_tunnel_n2h_txdma2_build_decap_packet_illegal_dma_out_page
     nop
     phvwr p.dec_pay_load_dma_cmd_addr, r4 
     //payload-size includes pad - subtract pad_size now

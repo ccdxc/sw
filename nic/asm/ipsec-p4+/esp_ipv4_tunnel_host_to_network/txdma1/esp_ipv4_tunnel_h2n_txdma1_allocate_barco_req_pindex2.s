@@ -19,14 +19,14 @@ esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2:
     //nop
 
     add r4, d.pi, 1
-    andi r4, r4, CAPRI_BARCO_RING_SLOTS_MASK
+    andi r4, r4, ASIC_BARCO_RING_SLOTS_MASK
     seq c1, r4, d.ci 
     bcf [c1], esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_fail
     nop
     sll r2, d.pi, BRQ_RING_ENTRY_SIZE_SHIFT 
     addui r2, r2, hiword(BRQ_BASE)
     addi r2, r2, loword(BRQ_BASE)
-    blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2_illegal 
+    blti  r2, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_allocate_barco_req_pindex2_illegal 
     nop
     phvwr p.ipsec_to_stage4_barco_req_addr, r2
     phvwr p.barco_dbell_pi, r4.wx

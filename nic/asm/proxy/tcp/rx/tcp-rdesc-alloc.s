@@ -20,8 +20,8 @@ tcp_rx_rdesc_alloc_start:
     CAPRI_CLEAR_TABLE1_VALID
 
     CAPRI_OPERAND_DEBUG(d.desc)
-    add             r2, d.desc, CAPRI_NMDPR_PAGE_OFFSET
-    blti            r2, CAPRI_HBM_BASE, tcp_rx_rdesc_alloc_fatal_error
+    add             r2, d.desc, ASIC_NMDPR_PAGE_OFFSET
+    blti            r2, ASIC_HBM_BASE, tcp_rx_rdesc_alloc_fatal_error
     phvwr           p.to_s6_descr, d.desc
     phvwr.e         p.to_s6_page, r2
     nop

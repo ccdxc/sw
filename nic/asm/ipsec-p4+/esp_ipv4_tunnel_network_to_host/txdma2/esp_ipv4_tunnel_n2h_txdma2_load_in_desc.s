@@ -12,8 +12,8 @@ struct phv_ p;
         .align
 esp_ipv4_tunnel_n2h_txdma2_load_in_desc:
     seq c1, d.ci[CAPRI_BARCO_GCM_DECRYPT_BUG_REQ_STRIDE_SHIFT-1:0], 0
-    tblmincri.c1.f d.ci, CAPRI_BARCO_RING_SLOTS_SHIFT, 2
-    tblmincri.!c1.f d.ci, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
+    tblmincri.c1.f d.ci, ASIC_BARCO_RING_SLOTS_SHIFT, 2
+    tblmincri.!c1.f d.ci, ASIC_BARCO_RING_SLOTS_SHIFT, 1
 
      // Intrinsic
     phvwri p.{intrinsic_app_hdr_dma_cmd_phv_end_addr...intrinsic_app_hdr_dma_cmd_type}, ((CAPRI_PHV_END_OFFSET(p4_intr_global_tm_instance_type) << 17) | (CAPRI_PHV_START_OFFSET(p4_intr_global_tm_iport) << 7) | CAPRI_DMA_COMMAND_PHV_TO_PKT)

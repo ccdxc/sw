@@ -38,7 +38,7 @@ proxyr_s5_cleanup_discard:
     seq         c1,  r_elem_addr, r0
     beq         r_elem_addr, r0, _ppage_cleanup_launch
     phvwr       p.to_s6_desc, r_elem_addr   // delay slot
-    addi        r_free_inf_addr, r0, CAPRI_SEM_RNMDR_FREE_INF_ADDR
+    addi        r_free_inf_addr, r0, ASIC_SEM_RNMDR_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           proxyr_s6_desc_free,
                           r_free_inf_addr,
@@ -53,7 +53,7 @@ _ppage_cleanup_launch:
     seq.c1      c1,  r_elem_addr, r0    // accumulate flag
     beq         r_elem_addr, r0, _mpage_cleanup_launch
     phvwr       p.to_s6_ppage, r_elem_addr  // delay slot
-    addi        r_free_inf_addr, r0, CAPRI_SEM_RNMPR_FREE_INF_ADDR
+    addi        r_free_inf_addr, r0, ASIC_SEM_RNMPR_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS,
                           proxyr_s6_ppage_free,
                           r_free_inf_addr,
@@ -68,7 +68,7 @@ _mpage_cleanup_launch:
     seq.c1      c1,  r_elem_addr, r0    // accumulate flag
     beq         r_elem_addr, r0, _packet_discard
     phvwr       p.to_s6_mpage, r_elem_addr  // delay slot
-    addi        r_free_inf_addr, r0, CAPRI_SEM_RNMPR_SMALL_FREE_INF_ADDR
+    addi        r_free_inf_addr, r0, ASIC_SEM_RNMPR_SMALL_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_DIS,
                           proxyr_s6_mpage_free,
                           r_free_inf_addr,

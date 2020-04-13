@@ -14,7 +14,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/hal.hpp"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/tls_common.h"
 #include "nic/include/app_redir_shared.h"
@@ -153,9 +153,9 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
                 data.u.tcp_rx_d.parsed_state &= ~TCP_PARSED_STATE_HANDLE_IN_CPU;
         }
         if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
-            data.u.tcp_rx_d.consumer_ring_shift = CAPRI_SESQ_RING_SLOTS_SHIFT;
+            data.u.tcp_rx_d.consumer_ring_shift = ASIC_SESQ_RING_SLOTS_SHIFT;
         } else {
-            data.u.tcp_rx_d.consumer_ring_shift = CAPRI_SERQ_RING_SLOTS_SHIFT;
+            data.u.tcp_rx_d.consumer_ring_shift = ASIC_SERQ_RING_SLOTS_SHIFT;
         }
 
         HAL_TRACE_DEBUG("TCPCB rcv_nxt: {:#x}", data.u.tcp_rx_d.rcv_nxt);
@@ -295,9 +295,9 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_fc_d.cpu_id = tcpcb_pd->tcpcb->cpu_id;
         data.u.tcp_fc_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_wup);
         if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
-            num_slots = CAPRI_SESQ_RING_SLOTS;
+            num_slots = ASIC_SESQ_RING_SLOTS;
         } else {
-            num_slots = CAPRI_SERQ_RING_SLOTS;
+            num_slots = ASIC_SERQ_RING_SLOTS;
         }
         data.u.tcp_fc_d.consumer_ring_slots = htons(num_slots - 1);
         data.u.tcp_fc_d.consumer_ring_slots_mask = htons(num_slots - 1);
@@ -365,12 +365,12 @@ p4pd_add_or_del_tcpcb_rx_dma(pd_tcpcb_t* tcpcb_pd, bool del)
                 rx_dma_d.serq_base = htonll(sesq_base);
             }
             rx_dma_d.consumer_qid = htons(tcpcb_pd->tcpcb->other_qid);
-            rx_dma_d.nde_shift = CAPRI_SESQ_ENTRY_SIZE_SHIFT;
-            rx_dma_d.nde_offset = CAPRI_SESQ_DESC_OFFSET;
-            rx_dma_d.nde_len = CAPRI_SESQ_ENTRY_SIZE;
+            rx_dma_d.nde_shift = ASIC_SESQ_ENTRY_SIZE_SHIFT;
+            rx_dma_d.nde_offset = ASIC_SESQ_DESC_OFFSET;
+            rx_dma_d.nde_len = ASIC_SESQ_ENTRY_SIZE;
             rx_dma_d.consumer_lif = htons(SERVICE_LIF_TCP_PROXY);
             rx_dma_d.consumer_ring = TCP_SCHED_RING_SESQ;
-            rx_dma_d.consumer_num_slots_mask = htons(CAPRI_SESQ_RING_SLOTS_MASK);
+            rx_dma_d.consumer_num_slots_mask = htons(ASIC_SESQ_RING_SLOTS_MASK);
         } else {
             // Get Serq address
             rx_dma_d.app_type_cfg = TCP_APP_TYPE_TLS;
@@ -386,12 +386,12 @@ p4pd_add_or_del_tcpcb_rx_dma(pd_tcpcb_t* tcpcb_pd, bool del)
                 rx_dma_d.serq_base = htonll(serq_base);
             }
             rx_dma_d.consumer_qid = htons(tcpcb_pd->tcpcb->cb_id);
-            rx_dma_d.nde_shift = CAPRI_SERQ_ENTRY_SIZE_SHIFT;
-            rx_dma_d.nde_offset = CAPRI_SERQ_DESC_OFFSET;
-            rx_dma_d.nde_len = CAPRI_SERQ_ENTRY_SIZE;
+            rx_dma_d.nde_shift = ASIC_SERQ_ENTRY_SIZE_SHIFT;
+            rx_dma_d.nde_offset = ASIC_SERQ_DESC_OFFSET;
+            rx_dma_d.nde_len = ASIC_SERQ_ENTRY_SIZE;
             rx_dma_d.consumer_lif = htons(SERVICE_LIF_TLS_PROXY);
             rx_dma_d.consumer_ring = TLS_SCHED_RING_SERQ;
-            rx_dma_d.consumer_num_slots_mask = htons(CAPRI_SERQ_RING_SLOTS_MASK);
+            rx_dma_d.consumer_num_slots_mask = htons(ASIC_SERQ_RING_SLOTS_MASK);
         }
     }
 
@@ -1195,12 +1195,12 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         // get gc address
         if (tcpcb_pd->tcpcb->proxy_type == types::PROXY_TYPE_TCP) {
             gc_base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_GC,
-                    CAPRI_HBM_GC_RNMDR_QTYPE,
-                    CAPRI_RNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
+                    ASIC_HBM_GC_RNMDR_QTYPE,
+                    ASIC_RNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
         } else {
             gc_base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_GC,
-                    CAPRI_HBM_GC_TNMDR_QTYPE,
-                    CAPRI_TNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
+                    ASIC_HBM_GC_TNMDR_QTYPE,
+                    ASIC_TNMDR_GC_TCP_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
         }
         HAL_TRACE_DEBUG("gc_base: {:#x}", gc_base);
         data.gc_base = htonll(gc_base);

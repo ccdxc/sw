@@ -28,9 +28,12 @@ namespace pd {
 #define CPU_ASQ_QID                     0
 #define CPU_SCHED_RING_ASQ              0
 
-
 #define DB_ADDR_BASE                   0x800000
+#ifdef ELBA
+#define DB_ADDR_BASE_HOST              0x840000 /* TBD-ELBA-REBASE: verify */
+#else
 #define DB_ADDR_BASE_HOST              0x8400000
+#endif
 #define DB_UPD_SHFT                    17
 #define DB_LIF_SHFT                    6
 #define DB_TYPE_SHFT                   3
@@ -146,7 +149,7 @@ typedef struct cpupkt_global_info_s {
     uint32_t       cpu_tx_page_full_err;
     uint32_t       cpu_tx_descr_pindex;
     uint32_t       cpu_tx_descr_cindex;
-    uint32_t       cpu_tx_descr_full_err;  
+    uint32_t       cpu_tx_descr_full_err;
     uint32_t       cpu_rx_dpr_cindex;
     uint32_t       cpu_rx_dpr_sem_cindex;
     uint32_t       cpu_rx_dpr_descr_free_err;

@@ -28,19 +28,19 @@ tls_enc_pre_crypto_process:
        do not accept the TCP segment from SERQ
     */
     add         r1, d.u.read_tls_stg0_d.recq_pi, 0
-    mincr       r1, CAPRI_BSQ_RING_SLOTS_SHIFT, 1
+    mincr       r1, ASIC_BSQ_RING_SLOTS_SHIFT, 1
     seq         c1, r1, d.u.read_tls_stg0_d.recq_ci /* Ring Full */
     bcf         [c1], tls_enc_pre_crypto_process_defer
     nop
 
     /* Relay the address to setup the DMA command */
-    add         r1, d.{u.read_tls_stg0_d.recq_base}.wx, d.u.read_tls_stg0_d.recq_pi, CAPRI_BSQ_RING_SLOT_SIZE_SHFT
+    add         r1, d.{u.read_tls_stg0_d.recq_base}.wx, d.u.read_tls_stg0_d.recq_pi, ASIC_BSQ_RING_SLOT_SIZE_SHFT
 
-    tblmincri       d.u.read_tls_stg0_d.recq_pi, CAPRI_BSQ_RING_SLOTS_SHIFT ,1
+    tblmincri       d.u.read_tls_stg0_d.recq_pi, ASIC_BSQ_RING_SLOTS_SHIFT ,1
 
     sll         r6, d.{u.read_tls_stg0_d.ci_0}.hx, NIC_SERQ_ENTRY_SIZE_SHIFT
 
-    tblmincri.f   d.{u.read_tls_stg0_d.ci_0}.hx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    tblmincri.f   d.{u.read_tls_stg0_d.ci_0}.hx, ASIC_SERQ_RING_SLOTS_SHIFT, 1
 
     /* Setting up DMA command due to accessibility to recq_[base, pi] information */
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_bsq_slot_dma_cmd, r1, bsq_slot_desc, bsq_slot_desc)

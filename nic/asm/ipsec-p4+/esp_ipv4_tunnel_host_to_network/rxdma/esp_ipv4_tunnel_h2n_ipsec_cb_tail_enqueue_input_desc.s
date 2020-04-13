@@ -23,7 +23,7 @@ esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc:
     and r3, k.ipsec_global_ipsec_cb_pindex, IPSEC_CB_RING_INDEX_MASK 
     sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
     add r3, r3, r2
-    blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc_illegal_cb_ring_dma 
+    blti  r3, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc_illegal_cb_ring_dma 
     nop
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
     phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_type}, ((IPSEC_H2N_CB_RING_IN_DESC_END << 18) | (IPSEC_H2N_CB_RING_IN_DESC_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)

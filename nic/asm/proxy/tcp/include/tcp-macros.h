@@ -42,9 +42,9 @@
     add    _dest_r, _dest_r, _tcp_actl_q_base
 
 #define CPU_TCP_ACTL_Q_SEM_INF_ADDR(_k_cpu_id, _dest_r) \
-    addi   _dest_r, r0, CAPRI_SEM_TCP_ACTL_Q_0_ADDR;                \
+    addi   _dest_r, r0, ASIC_SEM_TCP_ACTL_Q_0_ADDR;                \
     add    _dest_r, _dest_r, _k_cpu_id, TCP_ACTL_Q_SEM_ENTRY_SHIFT; \
-    addi   _dest_r, _dest_r, CAPRI_SEM_INF_OFFSET;
+    addi   _dest_r, _dest_r, ASIC_SEM_INF_OFFSET;
 
 #define TCP_ACTL_Q_ENQUEUE(_dest_r, \
                        _ring_elem, \

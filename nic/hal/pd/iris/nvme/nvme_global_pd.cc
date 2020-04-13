@@ -62,7 +62,7 @@ setup_txhwxtscb (uint64_t data_addr)
     //Setup Tx HW/Barco XTS CB
     nvme_txhwxtscb_t data = { 0 };
 
-    data.log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
+    data.log_sz = log2(ASIC_BARCO_XTS_RING_SLOTS);
     data.xts_ring_base_addr =
         asicpd_get_mem_addr(ASIC_HBM_REG_BARCO_RING_XTS0);
     data.ci = 0;
@@ -112,7 +112,7 @@ setup_rxhwxtscb (uint64_t data_addr)
     //Setup Rx HW/Barco XTS CB
     nvme_rxhwxtscb_t data = { 0 };
 
-    data.log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
+    data.log_sz = log2(ASIC_BARCO_XTS_RING_SLOTS);
     data.xts_ring_base_addr =
         asicpd_get_mem_addr(ASIC_HBM_REG_BARCO_RING_XTS1);
     data.ci = 0;

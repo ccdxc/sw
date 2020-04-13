@@ -33,7 +33,7 @@ proxyr_s3_mpage_sem_pindex_post_update:
      * launch an mpage fetch now anyway (at pindex 0)
      */    
     add         r_pi, r0, d.{pindex}.wx
-    mincr       r_pi, CAPRI_RNMPR_SMALL_RING_SHIFT, r0
+    mincr       r_pi, ASIC_RNMPR_SMALL_RING_SHIFT, r0
     sne         c1, d.pindex_full, r0
     add.c1      r_pi, r0, r0
     phvwri.c1   p.common_phv_do_cleanup_discard, TRUE

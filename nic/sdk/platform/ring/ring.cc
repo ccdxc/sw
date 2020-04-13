@@ -3,7 +3,7 @@
 #include <arpa/inet.h>
 #include "lib/pal/pal.hpp"
 #include "include/sdk/base.hpp"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "asic/rw/asicrw.hpp"
 #include "ring.hpp"
 #include <boost/multiprecision/detail/integer_ops.hpp>
@@ -81,14 +81,14 @@ ring::init(ring_meta_t *meta, mpartition *mpartition) {
 
     sem_addr_ = 0;
     if (meta_.alloc_semaphore_addr &&
-            CAPRI_SEM_RAW_IS_PI_CI(meta_.alloc_semaphore_addr)) {
+            ASIC_SEM_RAW_IS_PI_CI(meta_.alloc_semaphore_addr)) {
         uint32_t val32;
 
         // Set CI = ring size
         SDK_TRACE_DEBUG("Setting ring semaphore ci to %d", meta_.num_slots);
         val32 = meta_.num_slots;
         asic_reg_write(meta_.alloc_semaphore_addr +
-                CAPRI_SEM_INC_NOT_FULL_CI_OFFSET, &val32);
+                ASIC_SEM_INC_NOT_FULL_CI_OFFSET, &val32);
 
         // Set PI to 0
         val32 = 0;

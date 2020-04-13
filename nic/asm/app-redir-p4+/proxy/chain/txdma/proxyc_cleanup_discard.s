@@ -29,7 +29,7 @@ proxyc_s4_cleanup_discard:
     /*
      * Launch desc semaphore free pindex free acquisition
      */
-    addi        r_free_inf_addr, r0, CAPRI_SEM_RNMDR_FREE_INF_ADDR
+    addi        r_free_inf_addr, r0, ASIC_SEM_RNMDR_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           proxyc_s5_desc_free,
                           r_free_inf_addr,
@@ -59,8 +59,8 @@ _page0_sem_free_idx_launch:
      * cmov can't handle large immediate so use 2 adds
      */
     sne         c1, k.t1_s2s_aol_A0_small, r0
-    addi.c1     r_free_inf_addr, r0, CAPRI_SEM_RNMPR_SMALL_FREE_INF_ADDR
-    addi.!c1    r_free_inf_addr, r0, CAPRI_SEM_RNMPR_FREE_INF_ADDR
+    addi.c1     r_free_inf_addr, r0, ASIC_SEM_RNMPR_SMALL_FREE_INF_ADDR
+    addi.!c1    r_free_inf_addr, r0, ASIC_SEM_RNMPR_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_DIS,
                             proxyc_s5_page0_free,
                             r_free_inf_addr,

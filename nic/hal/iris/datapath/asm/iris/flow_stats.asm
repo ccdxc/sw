@@ -2,7 +2,7 @@
 #include "INGRESS_p.h"
 #include "INGRESS_flow_stats_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nw.h"
 
 struct flow_stats_k_ k;

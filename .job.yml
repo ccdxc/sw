@@ -68,7 +68,7 @@ builds:
       - /sw/naples_fw_all_apulu.tgz
       - /sw/naples-protos-apulu.tgz
   build-custom-athena-image:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic make PIPELINE=athena && make PIPELINE=athena ARCH=aarch64 PLATFORM=hw && make PIPELINE=athena ARCH=aarch64 PLATFORM=hw CUSTOM_BUILDROOT=1 firmware && pwd && ./apollo/tools/dev-docker/build_dev_docker.sh 0 all athena 1"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=athena && make PIPELINE=athena ARCH=aarch64 PLATFORM=hw && make PIPELINE=athena ARCH=aarch64 PLATFORM=hw CUSTOM_BUILDROOT=1 firmware && pwd && ./apollo/tools/dev-docker/build_dev_docker.sh 0 all athena 1"]
     owners: ["email:murali@pensando.io"]
     artifacts:
       - /sw/customimage.tar.gz
@@ -509,7 +509,7 @@ dependencies:
   platform/drivers/esxi:
     - reference: iota/test/standalone/precheckin/esx
   platform/drivers/windows:
-    - reference: iota/test/standalone/precheckin/windows    
+    - reference: iota/test/standalone/precheckin/windows
   platform/drivers/freebsd:
     - reference: iota/test/standalone/precheckin/freebsd-rdma
   platform/drivers/linux:

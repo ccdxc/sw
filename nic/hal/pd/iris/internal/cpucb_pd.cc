@@ -70,11 +70,15 @@ p4pd_add_or_del_cpu_rx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
         HAL_TRACE_DEBUG("programming action-id: {:#x}", pc_offset);
         data.action_id = pc_offset;
 
-        data.u.cpu_rxdma_initial_action_d.debug_dol = (uint8_t)cpucb_pd->cpucb->debug_dol;
-        HAL_TRACE_DEBUG("CPUCB: debug_dol: {:#x}", data.u.cpu_rxdma_initial_action_d.debug_dol);
+        data.u.cpu_rxdma_initial_action_d.debug_dol =
+            (uint8_t)cpucb_pd->cpucb->debug_dol;
+        HAL_TRACE_DEBUG("CPUCB: debug_dol: {:#x}",
+                        data.u.cpu_rxdma_initial_action_d.debug_dol);
 
-        data.u.cpu_rxdma_initial_action_d.flags = cpucb_pd->cpucb->cfg_flags;
-        HAL_TRACE_DEBUG("CPUCB: flags: {:#x}", data.u.cpu_rxdma_initial_action_d.flags);
+        data.u.cpu_rxdma_initial_action_d.flags =
+            cpucb_pd->cpucb->cfg_flags;
+        HAL_TRACE_DEBUG("CPUCB: flags: {:#x}",
+                        data.u.cpu_rxdma_initial_action_d.flags);
     }
     HAL_TRACE_DEBUG("Programming stage0 at hw-id: {:#x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -122,7 +126,7 @@ p4pd_get_cpu_rx_stage0_entry(pd_cpucb_t* cpucb_pd)
     cpucb_pd->cpucb->rx_queue1_pkts = data.u.cpu_rxdma_initial_action_d.rx_queue1_pkts;
     cpucb_pd->cpucb->rx_queue2_pkts = data.u.cpu_rxdma_initial_action_d.rx_queue2_pkts;
     HAL_TRACE_DEBUG("rx_pkts {:#x}, rx_pkts ntohll: {:#x}", cpucb_pd->cpucb->total_rx_pkts, data.u.cpu_rxdma_initial_action_d.rx_processed);
-    HAL_TRACE_DEBUG("rx_sem_full_drops {:#x}, rx_sema_full_drops ntohll: {:#x}", cpucb_pd->cpucb->rx_sem_full_drops, 
+    HAL_TRACE_DEBUG("rx_sem_full_drops {:#x}, rx_sema_full_drops ntohll: {:#x}", cpucb_pd->cpucb->rx_sem_full_drops,
                                                                               data.u.cpu_rxdma_initial_action_d.rx_sema_full_drop);
 
     return HAL_RET_OK;
@@ -187,7 +191,8 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
 
         // get asq address
         wring_hw_id_t   asq_base;
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASQ, cpucb_pd->cpucb->cb_id, &asq_base);
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASQ,
+                                     cpucb_pd->cpucb->cb_id, &asq_base);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to receive asq base, ret: {}", ret);
         } else {
@@ -197,7 +202,8 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
 
         // get ascq address
         wring_hw_id_t   ascq_base;
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASCQ, cpucb_pd->cpucb->cb_id, &ascq_base);
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_ASCQ,
+                                     cpucb_pd->cpucb->cb_id, &ascq_base);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to receive ascq base, ret: {}", ret);
         } else {
@@ -206,8 +212,10 @@ p4pd_add_or_del_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd, bool del)
         }
 
         // get ascq sem address
-        HAL_TRACE_DEBUG("ascq sem: {:#x}", CAPRI_SEM_ASCQ_INF_ADDR(cpucb_pd->cpucb->cb_id));
-        data.u.cpu_tx_initial_action_d.ascq_sem_inf_addr = CAPRI_SEM_ASCQ_INF_ADDR(cpucb_pd->cpucb->cb_id);
+        HAL_TRACE_DEBUG("ascq sem: {:#x}",
+                        ASIC_SEM_ASCQ_INF_ADDR(cpucb_pd->cpucb->cb_id));
+        data.u.cpu_tx_initial_action_d.ascq_sem_inf_addr =
+            ASIC_SEM_ASCQ_INF_ADDR(cpucb_pd->cpucb->cb_id);
     }
 
     HAL_TRACE_DEBUG("Programming tx stage0 at hw-id: {:#x}", hwid);
@@ -232,9 +240,12 @@ p4pd_get_cpu_tx_stage0_entry(pd_cpucb_t* cpucb_pd)
         HAL_TRACE_ERR("Failed to get rx: stage0 entry for CPU CB");
         return HAL_RET_HW_FAIL;
     }
-    cpucb_pd->cpucb->total_tx_pkts = ntohll(data.u.cpu_tx_initial_action_d.asq_total_pkts);
-    cpucb_pd->cpucb->tx_sem_full_drops =  data.u.cpu_tx_initial_action_d.ascq_sem_full_drops;
-    cpucb_pd->cpucb->ascq_free_requests = data.u.cpu_tx_initial_action_d.ascq_free_requests;
+    cpucb_pd->cpucb->total_tx_pkts =
+        ntohll(data.u.cpu_tx_initial_action_d.asq_total_pkts);
+    cpucb_pd->cpucb->tx_sem_full_drops =
+        data.u.cpu_tx_initial_action_d.ascq_sem_full_drops;
+    cpucb_pd->cpucb->ascq_free_requests =
+        data.u.cpu_tx_initial_action_d.ascq_free_requests;
 
     return HAL_RET_OK;
 }

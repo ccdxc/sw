@@ -29,7 +29,7 @@ tcp_rx_read_rnmdr_start:
     b.c1            tcp_read_rnmdr_fatal_error
 
     add             r4, r0, d.{rnmdr_pidx}.wx
-    andi            r4, r4, ((1 << CAPRI_RNMDPR_BIG_RING_SHIFT) - 1)
+    andi            r4, r4, ((1 << ASIC_RNMDPR_BIG_RING_SHIFT) - 1)
 
 table_read_RNMDR_DESC:
     addui           r3, r0, hiword(RNMDPR_BIG_TABLE_BASE)

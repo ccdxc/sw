@@ -28,7 +28,7 @@ esp_ipv4_tunnel_h2n_update_input_desc_aol:
 
 
     add r3, r7, IPSEC_SALT_HEADROOM
-    blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_update_input_desc_aol_illegal_dma_in_page
+    blti  r3, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_update_input_desc_aol_illegal_dma_in_page
     nop
     phvwr p.dma_cmd_iv_dma_cmd_addr, r3
     seq c1, k.ipsec_to_stage3_iv_size, 16

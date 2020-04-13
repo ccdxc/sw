@@ -2,6 +2,12 @@
 #ifndef __ASIC_COMMON_HPP__
 #define __ASIC_COMMON_HPP__
 
+#ifdef ELBA
+#include "platform/elba/elba_common.hpp"
+#else
+#include "platform/capri/capri_common.hpp"
+#endif
+
 #ifdef __cplusplus
 namespace sdk  {
 namespace asic {
@@ -364,7 +370,7 @@ namespace asic {
 
 // ARQ Semaphores
 #define ASIC_SEM_ARQ_ADDR(_queue_id)                                  \
-                            (ASIC_SEM_ARQ_0_ADDR + 8 * _queue_id)  
+                            (ASIC_SEM_ARQ_0_ADDR + 8 * _queue_id)
 #define ASIC_SEM_ARQ_RAW_ADDR(_queue_id)                              \
                             (ASIC_SEM_ARQ_ADDR(_queue_id) + ASIC_SEM_RAW_OFFSET)
 #define ASIC_SEM_ARQ_CI_RAW_ADDR(_queue_id)                           \
@@ -384,7 +390,7 @@ namespace asic {
 
 // ASCQ Semaphores
 #define ASIC_SEM_ASCQ_ADDR(_queue_id)                                  \
-                            (ASIC_SEM_ASCQ_0_ADDR + 8 * _queue_id)  
+                            (ASIC_SEM_ASCQ_0_ADDR + 8 * _queue_id)
 #define ASIC_SEM_ASCQ_RAW_ADDR(_queue_id)                              \
                             (ASIC_SEM_ASCQ_ADDR(_queue_id) + ASIC_SEM_RAW_OFFSET)
 #define ASIC_SEM_ASCQ_CI_RAW_ADDR(_queue_id)                           \
@@ -425,7 +431,11 @@ namespace asic {
 #define ASIC_TNMDR_GC_IPSEC_RING_PRODUCER      2
 
 // Timers
-#define ASIC_MEM_TIMER_START           0x20000000
+#ifdef ELBA
+#define ASIC_MEM_TIMER_START            ELBA_MEM_TIMER_START
+#else
+#define ASIC_MEM_TIMER_START            CAPRI_MEM_TIMER_START
+#endif
 #define ASIC_MEM_FAST_TIMER_START      (ASIC_MEM_TIMER_START + 0x4000)
 #define ASIC_MEM_SLOW_TIMER_START      (ASIC_MEM_TIMER_START + 0x10000)
 
@@ -509,7 +519,7 @@ namespace asic {
 
 
 #ifdef __cplusplus
-}    // namespace asic 
+}    // namespace asic
 }    // namespace sdk
 #endif
 #endif    // __ASIC_COMMON_HPP__

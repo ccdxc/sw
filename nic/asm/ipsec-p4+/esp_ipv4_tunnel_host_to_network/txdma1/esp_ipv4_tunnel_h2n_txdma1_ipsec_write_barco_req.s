@@ -23,7 +23,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
 
     sll r3, k.ipsec_to_stage4_barco_pindex, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr 
-    blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_ring 
+    blti  r3, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_ring 
     nop
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
@@ -34,7 +34,7 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
     CAPRI_RING_DOORBELL_DATA(0, d.ipsec_cb_index, 1, r1)
     phvwr p.barco_req_doorbell_data, r3.dx
     add r2, r0, k.ipsec_to_stage4_barco_req_addr
-    blti r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_req
+    blti r2, ASIC_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_req
     nop
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd_incr_pindex_dma_cmd, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX, barco_dbell_pi, barco_dbell_pi)

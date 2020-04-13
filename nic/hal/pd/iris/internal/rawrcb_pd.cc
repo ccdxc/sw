@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/hal/pd/iris/internal/rawrcb_pd.hpp"
 #include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
@@ -13,7 +13,7 @@
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
 /*
- * Number of CAPRI_QSTATE_HEADER_COMMON bytes that should stay constant,
+ * Number of ASIC_QSTATE_HEADER_COMMON bytes that should stay constant,
  * i.e., not overwritten, during a CB update. Ideally this should come
  * from an offsetof(common_p4plus_stage0_app_header_table_d) but that is not
  * available due to bit fields usage in common_p4plus_stage0_app_header_table_d.
@@ -155,7 +155,7 @@ p4pd_add_or_del_rawr_rx_stage0_entry(pd_rawrcb_t* rawrcb_pd,
 
             data.u.rawr_rx_start_d.chain_rxq_base = arq_base;
             data.u.rawr_rx_start_d.chain_rxq_ring_indices_addr =
-                   CAPRI_SEM_ARQ_INF_ADDR(rawrcb->chain_rxq_ring_index_select);
+                   ASIC_SEM_ARQ_INF_ADDR(rawrcb->chain_rxq_ring_index_select);
             data.u.rawr_rx_start_d.chain_rxq_ring_size_shift  = ring_size_shift;
             data.u.rawr_rx_start_d.chain_rxq_entry_size_shift = entry_size_shift;
 
@@ -259,7 +259,7 @@ p4pd_add_or_del_rawr_rx_stage1_entry(pd_rawrcb_t* rawrcb_pd,
             }
             data.u.cb_extra_read_d.ascq_base = ascq_base;
             data.u.cb_extra_read_d.ascq_sem_inf_addr =
-                                   CAPRI_SEM_ASCQ_INF_ADDR(rawrcb->cpu_id);
+                                   ASIC_SEM_ASCQ_INF_ADDR(rawrcb->cpu_id);
         }
     }
 

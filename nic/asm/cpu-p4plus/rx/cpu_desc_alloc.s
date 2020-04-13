@@ -14,7 +14,7 @@ cpu_rx_desc_alloc_start:
     add         r3, r0, d.u.desc_alloc_d.desc 
     phvwr       p.t0_s2s_descr, d.u.desc_alloc_d.desc
 
-    add         r2, d.u.desc_alloc_d.desc, CAPRI_CPU_RX_DPR_PAGE_OFFSET
+    add         r2, d.u.desc_alloc_d.desc, ASIC_CPU_RX_DPR_PAGE_OFFSET
     phvwr       p.t0_s2s_page, r2
     nop.e
     nop

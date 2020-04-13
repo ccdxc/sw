@@ -18,7 +18,7 @@ gc_tx_inc_rnmdr_free_pair_pi:
     /*
      * Read page FP.PI, to get index to write the freed descr address to
      */
-    and             r2, d.rnmdpr_fp_pi, CAPRI_RNMDPR_BIG_RING_MASK
+    and             r2, d.rnmdpr_fp_pi, ASIC_RNMDPR_BIG_RING_MASK
     tbladd.f        d.rnmdpr_fp_pi, k.common_phv_num_entries_freed
 
 dma_cmd_rnmdr:
@@ -31,9 +31,9 @@ dma_cmd_rnmdr:
     addui           r3, r0, hiword(RNMDPR_BIG_TABLE_BASE)
     addi            r3, r3, loword(RNMDPR_BIG_TABLE_BASE)
     add             r3, r3, r2, RNMDPR_BIG_TABLE_ENTRY_SIZE_SHFT
-   
-    // r4 = distance of rnmdpr_pi from end of ring 
-    sub             r4, CAPRI_RNMDPR_BIG_RING_SIZE, r2
+
+    // r4 = distance of rnmdpr_pi from end of ring
+    sub             r4, ASIC_RNMDPR_BIG_RING_SIZE, r2
     slt             c1, r4, k.common_phv_num_entries_freed
     b.c1            dma_rnmdr_two_dma_commands
 
@@ -46,9 +46,9 @@ dma_rnmdr_alloc_pair_ci:
     /*
      * Set AP.CI = FP.PI
      */
-    add             r2, d.rnmdpr_fp_pi, CAPRI_RNMDPR_BIG_RING_SIZE
+    add             r2, d.rnmdpr_fp_pi, ASIC_RNMDPR_BIG_RING_SIZE
     phvwr           p.ci_1_index, r2.wx
-    addi            r3, r0, CAPRI_SEM_RNMDPR_BIG_ALLOC_CI_RAW_ADDR
+    addi            r3, r0, ASIC_SEM_RNMDPR_BIG_ALLOC_CI_RAW_ADDR
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ci_1_dma_dma_cmd, r3, ci_1_index, ci_1_index)
     CAPRI_DMA_CMD_STOP_FENCE(ci_1_dma_dma_cmd)
     phvwri.e        p.app_header_table0_valid, 0;
@@ -90,7 +90,7 @@ gc_tx_inc_tnmdr_free_pair_pi:
     /*
      * Read page FP.PI, to get index to write the freed descr address to
      */
-    and             r2, d.tnmdpr_fp_pi, ((1 << CAPRI_TNMDPR_BIG_RING_SHIFT) - 1)
+    and             r2, d.tnmdpr_fp_pi, ((1 << ASIC_TNMDPR_BIG_RING_SHIFT) - 1)
     tbladd.f        d.tnmdpr_fp_pi, k.common_phv_num_entries_freed
 
 dma_cmd_tnmdr:
@@ -104,8 +104,8 @@ dma_cmd_tnmdr:
     addi            r3, r3, loword(TNMDPR_BIG_TABLE_BASE)
     add             r3, r3, r2, TNMDPR_BIG_TABLE_ENTRY_SIZE_SHFT
 
-    // r4 = distance of rnmdpr_pi from end of ring 
-    sub             r4, CAPRI_TNMDPR_BIG_RING_SIZE, r2
+    // r4 = distance of rnmdpr_pi from end of ring
+    sub             r4, ASIC_TNMDPR_BIG_RING_SIZE, r2
     slt             c1, r4, k.common_phv_num_entries_freed
     b.c1            dma_tnmdr_two_dma_commands
 
@@ -118,9 +118,9 @@ dma_tnmdr_alloc_pair_ci:
     /*
      * Set AP.CI = FP.PI
      */
-    add             r2, d.tnmdpr_fp_pi, CAPRI_TNMDPR_BIG_RING_SIZE
+    add             r2, d.tnmdpr_fp_pi, ASIC_TNMDPR_BIG_RING_SIZE
     phvwr           p.ci_1_index, r2.wx
-    addi            r3, r0, CAPRI_SEM_TNMDPR_BIG_ALLOC_CI_RAW_ADDR
+    addi            r3, r0, ASIC_SEM_TNMDPR_BIG_ALLOC_CI_RAW_ADDR
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ci_1_dma_dma_cmd, r3, ci_1_index, ci_1_index)
     CAPRI_DMA_CMD_STOP_FENCE(ci_1_dma_dma_cmd)
     phvwri.e        p.app_header_table0_valid, 0;

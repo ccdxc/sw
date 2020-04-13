@@ -36,7 +36,7 @@ tls_enc_tdesc_alloc_process:
     phvwri      p.to_s6_tnmdpr_alloc, 1
 
     /* Derive page address from the descriptor address */
-    add         r2, d.odesc, CAPRI_NMDPR_PAGE_OFFSET
+    add         r2, d.odesc, ASIC_NMDPR_PAGE_OFFSET
     phvwr	    p.to_s5_opage, r2
 
         /*

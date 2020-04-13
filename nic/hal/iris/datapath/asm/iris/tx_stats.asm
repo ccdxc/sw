@@ -2,7 +2,7 @@
 #include "EGRESS_p.h"
 #include "EGRESS_tx_stats_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 
 struct tx_stats_k_ k;
 struct phv_        p;
@@ -15,7 +15,7 @@ tx_stats:
     or          r7, r7, r6, 32
 
     add         r1, r0, k.flow_lkp_metadata_pkt_type
-    addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     .brbegin
     br          r1[1:0]
     add         r5, r5, k.{capri_intrinsic_lif}, LIF_STATS_SIZE_SHIFT

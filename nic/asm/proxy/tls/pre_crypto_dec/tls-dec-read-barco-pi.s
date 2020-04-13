@@ -29,7 +29,7 @@ table_read_BARCO_PI:
     bcf             [c1 | c2], tls_dec_read_barco_pi_process_skip_alloc
 
     add             r1, d.{pi}.hx, 0
-    mincr           r1, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
+    mincr           r1, ASIC_BARCO_RING_SLOTS_SHIFT, 1
     seq             c1, r1, d.{ci}.hx
     b.c1            tls_dec_barco_full
 

@@ -1,7 +1,7 @@
 #ifndef __CAPRI_H
 #define __CAPRI_H
 
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 
 #define CAPRI_NUM_STAGES    8
 #define CAPRI_STAGE_FIRST   0
@@ -45,7 +45,7 @@ struct capri_intrinsic_s0_k_t {
 };
 
 struct capri_intrinsic_qstate_t {
-    pc: 8;  
+    pc: 8;
     rsvd: 8;
     cosB: 4;
     cosA: 4;
@@ -72,7 +72,7 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_SIZEOF_U64_BITS 64
 
 #define CAPRI_FLIT_SIZE         64 // Bytes
-#define CAPRI_FLIT_SIZE_BITS    (CAPRI_FLIT_SIZE * BITS_PER_BYTE)     
+#define CAPRI_FLIT_SIZE_BITS    (CAPRI_FLIT_SIZE * BITS_PER_BYTE)
 
 
 #define STAGE_0     0
@@ -103,20 +103,20 @@ struct capri_intrinsic_ring_t {
 #define CAPRI_TABLE_LOCK_DIS   0
 
 #define CAPRI_SET_TABLE_FIELD_LOCAL(_base_r, _struct_name, _field_name, _src) \
-    tblwrp.l  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
+    tblwrp.l  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src;
 
 #define CAPRI_SET_TABLE_FIELD_LOCAL_C(_base_r, _struct_name, _field_name, _src, _c_flag) \
-    tblwrp._c_flag.l  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
+    tblwrp._c_flag.l  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src;
 
 #define CAPRI_SET_FIELD(_base_r, _struct_name, _field_name, _src) \
-    phvwrp  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
+    phvwrp  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src;
 
 #define CAPRI_SET_2_FIELDS(_base_r, _struct_name, _first_field_name, _second_field_name, _src) \
     phvwrp  _base_r, offsetof(_struct_name, _first_field_name), \
             sizeof(_struct_name._first_field_name) + sizeof(_struct_name._second_field_name), _src;
 
 #define CAPRI_SET_FIELD_IMM(_base_r, _struct_name, _field_name, _immdata) \
-    phvwrpi  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _immdata; 
+    phvwrpi  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _immdata;
 
 #define CAPRI_TABLE_GET_FIELD(_dst_r, _base_r, _struct_name, _field_name) \
     tblrdp  _dst_r, _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name);
@@ -126,7 +126,7 @@ struct capri_intrinsic_ring_t {
 
 //set field conditionally
 #define CAPRI_SET_FIELD_C(_base_r, _struct_name, _field_name, _src, _c_flag) \
-    phvwrp._c_flag  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src; 
+    phvwrp._c_flag  _base_r, offsetof(_struct_name, _field_name), sizeof(_struct_name._field_name), _src;
 
 #define CAPRI_SIZEOF_RANGE(_s, _f1, _fn) \
     (offsetof(_s, _f1) + sizeof(_s._f1) - offsetof(_s, _fn))
@@ -162,7 +162,7 @@ struct capri_intrinsic_ring_t {
     phvwr   p.CAT4(common., _pp, _, _pf), _src
 
 #define CAPRI_SET_FIELD2_C(_pp, _pf, _src, _c_flag) \
-    phvwr._c_flag   p.CAT4(common., _pp, _, _pf), _src 
+    phvwr._c_flag   p.CAT4(common., _pp, _, _pf), _src
 
 #define CAPRI_SET_FIELD_RANGE2(_pp, _pf1, _pfn, _src_range) \
     phvwr   CAPRI_PHV_RANGE(_pp, _pf1, _pfn), _src_range
@@ -256,7 +256,7 @@ struct capri_intrinsic_ring_t {
     phvwrpi  _base_r, offsetof(INTRINSIC_RAW_K_T, table_read_size), 4, (_lock_en << 3)|(_table_read_size);\
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
 
-     
+
 #define CAPRI_SET_TABLE_0_VALID(_vld) \
     phvwri   p.common.app_header_table0_valid, _vld;
 #define CAPRI_SET_TABLE_1_VALID(_vld) \
@@ -265,7 +265,7 @@ struct capri_intrinsic_ring_t {
     phvwri   p.common.app_header_table2_valid, _vld;
 #define CAPRI_SET_TABLE_3_VALID(_vld) \
     phvwri   p.common.app_header_table3_valid, _vld;
-    
+
 #define CAPRI_SET_TABLE_0_1_VALID(_vld0, _vld1) \
     phvwri   p.{common.app_header_table0_valid...common.app_header_table1_valid}, ((_vld0 << 1) | (_vld1));
 
@@ -283,7 +283,7 @@ struct capri_intrinsic_ring_t {
 
 #define CAPRI_SET_TABLE_2_VALID_CE(_c, _vld) \
     phvwri._c.e  p.common.app_header_table3_valid, _vld;
-    
+
 #define CAPRI_SET_ALL_TABLES_VALID(_vld) \
     CAPRI_SET_TABLE_0_VALID(_vld); \
     CAPRI_SET_TABLE_1_VALID(_vld); \
@@ -328,7 +328,7 @@ _table_i_valid:;
     .brend; \
 _table_i_valid_c:;
 
-   
+
 #define CAPRI_GET_TABLE_I_K_AND_ARG(_phv_name, _tbl_id_r, _k_base_r, _arg_base_r) \
     .brbegin; \
     br      _tbl_id_r[1:0]; \
@@ -359,7 +359,7 @@ _table_i_valid_c:;
         CAPRI_SET_TABLE_3_VALID(1);  \
     .brend; \
 _next:;
-    
+
 #define CAPRI_GET_TABLE_I2_K_AND_ARG(_phv_name, _tbl_id_r, _k_base_r, _arg_base_r) \
     .brbegin; \
     br      _tbl_id_r[1:0]; \
@@ -390,7 +390,7 @@ _next:;
         CAPRI_SET_TABLE_3_VALID(1);  \
     .brend; \
 _next2:;
-     
+
 #define CAPRI_GET_TABLE_0_K_NO_VALID(_phv_name, _k_base_r) \
     add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr);
 
@@ -402,22 +402,22 @@ _next2:;
 
 #define CAPRI_GET_TABLE_3_K_NO_VALID(_phv_name, _k_base_r) \
     add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr);
-   
+
 #define CAPRI_GET_TABLE_0_K(_phv_name, _k_base_r) \
     CAPRI_GET_TABLE_0_K_NO_VALID(_phv_name, _k_base_r) \
-    CAPRI_SET_TABLE_0_VALID(1); 
+    CAPRI_SET_TABLE_0_VALID(1);
 
 #define CAPRI_GET_TABLE_1_K(_phv_name, _k_base_r) \
     CAPRI_GET_TABLE_1_K_NO_VALID(_phv_name, _k_base_r) \
-    CAPRI_SET_TABLE_1_VALID(1); 
+    CAPRI_SET_TABLE_1_VALID(1);
 
 #define CAPRI_GET_TABLE_2_K(_phv_name, _k_base_r) \
     CAPRI_GET_TABLE_2_K_NO_VALID(_phv_name, _k_base_r) \
-    CAPRI_SET_TABLE_2_VALID(1); 
+    CAPRI_SET_TABLE_2_VALID(1);
 
 #define CAPRI_GET_TABLE_3_K(_phv_name, _k_base_r) \
     CAPRI_GET_TABLE_3_K_NO_VALID(_phv_name, _k_base_r) \
-    CAPRI_SET_TABLE_3_VALID(1); 
+    CAPRI_SET_TABLE_3_VALID(1);
 
 #define CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(_phv_name, _k_base_r, _cf) \
     cmov    _k_base_r, _cf, offsetof(struct _phv_name, common.common_te0_phv_table_addr), offsetof(struct _phv_name, common.common_te1_phv_table_addr);
@@ -630,7 +630,7 @@ struct capri_dma_cmd_mem2pkt_t {
 #define PHV2PKT_PHV_END_OFFSET            offsetof(DMA_CMD_PHV2PKT_T, phv_end)
 #define PHV2PKT_CMDTYPE_OFFSET            offsetof(DMA_CMD_PHV2PKT_T, cmdtype)
 #define PHV2PKT_CMDSIZE_OFFSET            offsetof(DMA_CMD_PHV2PKT_T, cmd_size)
-//TX - write to packet      
+//TX - write to packet
 struct capri_dma_cmd_phv2pkt_t {
     rsvd: 41;
     phv_end3: 10;
@@ -672,7 +672,7 @@ struct capri_dma_cmd_phv2mem_t {
     cmdtype: 3;
 };
 
-//RX       
+//RX
 #define DMA_CMD_PKT2MEM_T                struct capri_dma_cmd_pkt2mem_t
 #define PKT2MEM_HOST_ADDR_OFFSET         offsetof(DMA_CMD_PKT2MEM_T, host_addr)
 #define PKT2MEM_CMDTYPE_OFFSET           offsetof(DMA_CMD_PKT2MEM_T, cmdtype)
@@ -782,7 +782,7 @@ addi._cf _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 
 //TODO: This macro seems fine if the sizeof(__struct) is 64B (512b).
 //      Need to see if it holds good for any generic struct size.
-//      This macro is needed because structures used by asm are defined in 
+//      This macro is needed because structures used by asm are defined in
 //      big-endian format for the easier access to asm routines. But when
 //      doing DMA or memwr to any of these struct fields, it need to be
 //      converted to little-endian accordingly ?
@@ -951,7 +951,11 @@ addi._cf _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 #define DMA_SET_WR_FENCE_FENCE(_cmd_t, _base_r) \
     phvwrp     _base_r, offsetof(_cmd_t, wr_fence_fence), sizeof(_cmd_t.wr_fence_fence), 1
 
+#ifdef ELBA
+#define DB_ADDR_BASE           0x10800000
+#else
 #define DB_ADDR_BASE           0x8800000
+#endif
 
 #define DB_RING_UPD_SHIFT      2
 #define DB_UPD_SHIFT          17
@@ -963,7 +967,7 @@ addi._cf _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 #define DB_NO_SCHED_WR        0x0
 #define DB_SCHED_WR_EVAL_RING 0x1
 #define DB_SCHED_WR_0         0x2
-#define DB_SCHED_WR_1         0x3 
+#define DB_SCHED_WR_1         0x3
 
 #define DB_NO_UPDATE          0x0
 #define DB_SET_CINDEX         0x1
@@ -1030,10 +1034,10 @@ addi._cf _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 
 // Timers
 #define CAPRI_FAST_TIMER_ADDR(_lif) \
-        (CAPRI_MEM_FAST_TIMER_START + (_lif << 3))
+        (ASIC_MEM_FAST_TIMER_START + (_lif << 3))
 
 #define CAPRI_SLOW_TIMER_ADDR(_lif) \
-        (CAPRI_MEM_SLOW_TIMER_START + (_lif << 3))
+        (ASIC_MEM_SLOW_TIMER_START + (_lif << 3))
 
 #define TIMER_ADDR_LIF_SHFT         3
 #define TIMER_QID_SHFT              3
@@ -1050,7 +1054,7 @@ addi._cf _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
         or              __data, __data, _delta_time, TIMER_DELTA_TIME_SHFT;
 
 #define CAPRI_START_SLOW_TIMER(__addr, __data, _lif, _qtype, _qid, _ring, _delta_time) \
-        CAPRI_SETUP_TIMER_ADDR(__addr, CAPRI_MEM_SLOW_TIMER_START, _lif); \
+        CAPRI_SETUP_TIMER_ADDR(__addr, ASIC_MEM_SLOW_TIMER_START, _lif); \
         CAPRI_SETUP_TIMER_DATA(__data, _qtype, _qid, _ring, _delta_time); \
         memwr.dx        __addr, __data;
 

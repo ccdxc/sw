@@ -30,7 +30,7 @@ tls_enc_alloc_tnmdr_process:
         b.c1        tls_enc_tnmdpr_empty
 
         add         r4, r0, d.{tnmdr_pidx}.wx
-        andi        r4, r4, ((1 << CAPRI_TNMDPR_BIG_RING_SHIFT) - 1)
+        andi        r4, r4, ((1 << ASIC_TNMDPR_BIG_RING_SHIFT) - 1)
 
 	    phvwr		p.s3_t1_s2s_tnmdr_pidx, r4
 

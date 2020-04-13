@@ -132,7 +132,7 @@ tcp_retx_calc_num_pkts_freed_done:
 tcp_retx_cleanup_asesq:
     // increment retx_ci before writing
     add             r2, k.to_s3_sesq_retx_ci, 0
-    mincr           r2, CAPRI_ASESQ_RING_SLOTS_SHIFT, r5
+    mincr           r2, ASIC_ASESQ_RING_SLOTS_SHIFT, r5
     // write new asesq retx ci value into TCP CB
     add             r1, r1, 2
     memwr.h         r1, r2
@@ -143,7 +143,7 @@ tcp_retx_cleanup_asesq:
 tcp_retx_cleanup_sesq:
     // increment retx_ci before writing
     add             r2, k.to_s3_sesq_retx_ci, 0
-    mincr           r2, CAPRI_SESQ_RING_SLOTS_SHIFT, r5
+    mincr           r2, ASIC_SESQ_RING_SLOTS_SHIFT, r5
     // write new sesq retx ci value into TCP CB
     memwr.h         r1, r2
     // remove barrier
@@ -261,7 +261,7 @@ tcp_retx_rst_handling:
 tcp_retx_rst_cleanup_asesq:
     // increment retx_ci before writing
     add             r2, k.to_s3_sesq_retx_ci, 0
-    mincr           r2, CAPRI_ASESQ_RING_SLOTS_SHIFT, 1
+    mincr           r2, ASIC_ASESQ_RING_SLOTS_SHIFT, 1
     // write new asesq retx ci value into TCP CB
     add             r1, r1, 2
     memwr.h         r1, r2
@@ -272,7 +272,7 @@ tcp_retx_rst_cleanup_asesq:
 tcp_retx_rst_cleanup_sesq:
     // increment retx_ci before writing
     add             r2, k.to_s3_sesq_retx_ci, 0
-    mincr           r2, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    mincr           r2, ASIC_SESQ_RING_SLOTS_SHIFT, 1
     // write new sesq retx ci value into TCP CB
     memwr.h         r1, r2
     // remove barrier

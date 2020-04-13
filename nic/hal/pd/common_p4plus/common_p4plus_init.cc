@@ -8,7 +8,7 @@
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 #include "platform/capri/capri_pxb_pcie.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/hal/pd/iris/nvme/nvme_pd.hpp"
 #include "nic/sdk/platform/capri/capri_barco_rings.hpp"
 
@@ -110,7 +110,8 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     i++;
 
     symbols[i].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].val = asicpd_get_mem_addr(ASIC_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
+    symbols[i].val = asicpd_get_mem_addr(ASIC_HBM_REG_IPSEC_GLOBAL_DROP_STATS) +
+        IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = IPSEC_ENC_NMDR_PI;
@@ -315,7 +316,8 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 
     symbols[i].name = RNMDR_TLS_GC_TABLE_BASE;
     symbols[i].val = asicpd_get_mem_addr(ASIC_HBM_REG_NMDR_RX_GC) +
-        CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE * CAPRI_HBM_RNMDR_ENTRY_SIZE * CAPRI_RNMDR_GC_TLS_RING_PRODUCER;
+        ASIC_HBM_GC_PER_PRODUCER_RING_SIZE * ASIC_HBM_RNMDR_ENTRY_SIZE *
+        ASIC_RNMDR_GC_TLS_RING_PRODUCER;
     i++;
 
     symbols[i].name = LIF_STATS_BASE;

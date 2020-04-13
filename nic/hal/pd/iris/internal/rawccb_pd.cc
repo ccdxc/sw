@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/hal/pd/iris/internal/rawccb_pd.hpp"
 #include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
@@ -233,7 +233,7 @@ p4pd_add_or_del_rawc_tx_stage1_entry(pd_rawccb_t* rawccb_pd,
             }
             data.u.cb_extra_read_d.ascq_base = ascq_base;
             data.u.cb_extra_read_d.ascq_sem_inf_addr =
-                                   CAPRI_SEM_ASCQ_INF_ADDR(rawccb->cpu_id);
+                                   ASIC_SEM_ASCQ_INF_ADDR(rawccb->cpu_id);
         }
     }
 

@@ -1,7 +1,7 @@
 #ifndef __CAPRI_H
 #define __CAPRI_H
 
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/sdk/platform/capri/capri_barco.h"
 
 #define CAPRI_NUM_STAGES    8
@@ -1206,10 +1206,10 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
 
 // Timers
 #define CAPRI_FAST_TIMER_ADDR(_lif) \
-        (CAPRI_MEM_FAST_TIMER_START + (_lif << 3))
+        (ASIC_MEM_FAST_TIMER_START + (_lif << 3))
 
 #define CAPRI_SLOW_TIMER_ADDR(_lif) \
-        (CAPRI_MEM_SLOW_TIMER_START + (_lif << 3))
+        (ASIC_MEM_SLOW_TIMER_START + (_lif << 3))
 
 #define TIMER_ADDR_LIF_SHFT         3
 #define TIMER_QID_SHFT              3
@@ -1226,12 +1226,12 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
         or              __data, __data, _delta_time, TIMER_DELTA_TIME_SHFT;
 
 #define CAPRI_START_SLOW_TIMER(__addr, __data, _lif, _qtype, _qid, _ring, _delta_time) \
-        CAPRI_SETUP_TIMER_ADDR(__addr, CAPRI_MEM_SLOW_TIMER_START, _lif); \
+        CAPRI_SETUP_TIMER_ADDR(__addr, ASIC_MEM_SLOW_TIMER_START, _lif); \
         CAPRI_SETUP_TIMER_DATA(__data, _qtype, _qid, _ring, _delta_time); \
         memwr.dx        __addr, __data;
 
 #define CAPRI_START_FAST_TIMER(__addr, __data, _lif, _qtype, _qid, _ring, _delta_time) \
-        CAPRI_SETUP_TIMER_ADDR(__addr, CAPRI_MEM_FAST_TIMER_START, _lif); \
+        CAPRI_SETUP_TIMER_ADDR(__addr, ASIC_MEM_FAST_TIMER_START, _lif); \
         CAPRI_SETUP_TIMER_DATA(__data, _qtype, _qid, _ring, _delta_time); \
         memwr.dx        __addr, __data;
 

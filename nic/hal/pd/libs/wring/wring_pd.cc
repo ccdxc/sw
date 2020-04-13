@@ -7,7 +7,7 @@
 #include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
 #include "asic/cmn/asic_common.hpp"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/sdk/platform/capri/capri_barco.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/sdk/lib/pal/pal.hpp"
@@ -36,58 +36,58 @@ wring_pd_meta_init() {
      */
 
     g_meta[types::WRING_TYPE_SERQ] =
-        (pd_wring_meta_t) {false, ASIC_HBM_REG_SERQ, CAPRI_SERQ_RING_SLOTS, SERQ_WRING_SLOT_SIZE,
+        (pd_wring_meta_t) {false, ASIC_HBM_REG_SERQ, ASIC_SERQ_RING_SLOTS, SERQ_WRING_SLOT_SIZE,
                             "", 0, 0, serq_slot_parser, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_NMDR_TX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_NMDR_TX, CAPRI_TNMDR_IPSEC_RING_SIZE,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_NMDR_TX, ASIC_TNMDR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_IPSEC_DESC_TX, 128,
                            ASIC_SEM_IPSEC_TNMDR_ALLOC_RAW_ADDR,
                            NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_NMDR_RX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_NMDR_RX, CAPRI_RNMDR_IPSEC_RING_SIZE,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_NMDR_RX, ASIC_RNMDR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_IPSEC_DESC_RX, 128,
                            ASIC_SEM_IPSEC_RNMDR_ALLOC_RAW_ADDR,
                            NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_BIG_NMDR_TX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_BIG_NMDR_TX, CAPRI_TNMDR_IPSEC_RING_SIZE,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_BIG_NMDR_TX, ASIC_TNMDR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_IPSEC_BIG_DESC_TX, 128,
-                           CAPRI_SEM_IPSEC_BIG_TNMDR_ALLOC_RAW_ADDR,
+                           ASIC_SEM_IPSEC_BIG_TNMDR_ALLOC_RAW_ADDR,
                            NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_BIG_NMDR_RX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_BIG_NMDR_RX, CAPRI_RNMDR_IPSEC_RING_SIZE,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_BIG_NMDR_RX, ASIC_RNMDR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_IPSEC_BIG_DESC_RX, 128,
-                           CAPRI_SEM_IPSEC_BIG_RNMDR_ALLOC_RAW_ADDR,
+                           ASIC_SEM_IPSEC_BIG_RNMDR_ALLOC_RAW_ADDR,
                            NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_NMPR_TX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_NMPR_TX, CAPRI_TNMPR_IPSEC_RING_SIZE,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_NMPR_TX, ASIC_TNMPR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_ENC_PAGE_BIG_TX, 9600,
-                           CAPRI_SEM_IPSEC_TNMPR_ALLOC_RAW_ADDR,
+                           ASIC_SEM_IPSEC_TNMPR_ALLOC_RAW_ADDR,
                            NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_NMPR_RX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_NMPR_RX, CAPRI_RNMPR_IPSEC_RING_SIZE,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_NMPR_RX, ASIC_RNMPR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_ENC_PAGE_BIG_RX, 9600,
-                           CAPRI_SEM_IPSEC_RNMPR_ALLOC_RAW_ADDR,
+                           ASIC_SEM_IPSEC_RNMPR_ALLOC_RAW_ADDR,
                            NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_BIG_NMPR_TX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_BIG_NMPR_TX, CAPRI_TNMPR_IPSEC_RING_SIZE,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_BIG_NMPR_TX, ASIC_TNMPR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_DEC_PAGE_BIG_TX, 9600,
-                           CAPRI_SEM_IPSEC_BIG_TNMPR_ALLOC_RAW_ADDR,
+                           ASIC_SEM_IPSEC_BIG_TNMPR_ALLOC_RAW_ADDR,
                            NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_IPSEC_BIG_NMPR_RX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_BIG_NMPR_RX, CAPRI_RNMPR_IPSEC_RING_SIZE,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_IPSEC_BIG_NMPR_RX, ASIC_RNMPR_IPSEC_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_DEC_PAGE_BIG_RX, 9600,
-                           CAPRI_SEM_IPSEC_BIG_RNMPR_ALLOC_RAW_ADDR,
+                           ASIC_SEM_IPSEC_BIG_RNMPR_ALLOC_RAW_ADDR,
                            NULL, NULL, false, 1, 0};
     g_meta[types::WRING_TYPE_BSQ] =
-        (pd_wring_meta_t) {false, ASIC_HBM_REG_BSQ, CAPRI_BSQ_RING_SLOTS, CAPRI_BSQ_RING_SLOT_SIZE,
+        (pd_wring_meta_t) {false, ASIC_HBM_REG_BSQ, ASIC_BSQ_RING_SLOTS, ASIC_BSQ_RING_SLOT_SIZE,
                             "", 0, 0, NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_BRQ] =
@@ -96,16 +96,16 @@ wring_pd_meta_init() {
 
     // SESQ and ASESQ use the same region in HBM
     g_meta[types::WRING_TYPE_ASESQ] =
-        (pd_wring_meta_t) {false, ASIC_HBM_REG_SESQ, CAPRI_SESQ_RING_SLOTS,
+        (pd_wring_meta_t) {false, ASIC_HBM_REG_SESQ, ASIC_SESQ_RING_SLOTS,
             DEFAULT_WRING_SLOT_SIZE, "", 0, 0, NULL, NULL, false,
             2, // ring_types_in_region (SESQ + ASESQ)
-			   0, 1};
+               0, 1};
 
     g_meta[types::WRING_TYPE_SESQ] =
-        (pd_wring_meta_t) {false, ASIC_HBM_REG_SESQ, CAPRI_SESQ_RING_SLOTS,
+        (pd_wring_meta_t) {false, ASIC_HBM_REG_SESQ, ASIC_SESQ_RING_SLOTS,
             DEFAULT_WRING_SLOT_SIZE, "", 0, 0, NULL, NULL, false,
             2, // ring_types_in_region (SESQ + ASESQ)
-            (CAPRI_ASESQ_RING_SLOTS * DEFAULT_WRING_SLOT_SIZE)}; // ring_type_offset
+            (ASIC_ASESQ_RING_SLOTS * DEFAULT_WRING_SLOT_SIZE)}; // ring_type_offset
 
 
     g_meta[types::WRING_TYPE_IPSECCBQ] =
@@ -117,15 +117,15 @@ wring_pd_meta_init() {
     g_meta[types::WRING_TYPE_ARQRX] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_ARQRX, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                             "", 0, 0, armq_slot_parser, arqrx_get_hw_meta,
-			   false, 1, 0, 1};
+               false, 1, 0, 1};
 
     g_meta[types::WRING_TYPE_ASQ] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_ASQ, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-			   "", 0, 0, NULL, NULL, false, 1, 0, 1};
+               "", 0, 0, NULL, NULL, false, 1, 0, 1};
 
     g_meta[types::WRING_TYPE_ASCQ] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_ASCQ, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-			   "", 0, 0, armq_slot_parser, NULL, false, 1, 0, 1};
+               "", 0, 0, armq_slot_parser, NULL, false, 1, 0, 1};
 
     g_meta[types::WRING_TYPE_APP_REDIR_RAWC] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_APP_REDIR_RAWC, 128, DEFAULT_WRING_SLOT_SIZE, "", 0, 0,
@@ -141,71 +141,71 @@ wring_pd_meta_init() {
 
     g_meta[types::WRING_TYPE_NMDR_TX_GC] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_NMDR_TX_GC,
-                           CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
+                           ASIC_HBM_GC_PER_PRODUCER_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_NMDR_RX_GC] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_NMDR_RX_GC,
-                           CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
+                           ASIC_HBM_GC_PER_PRODUCER_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_CPU_TX_DR] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_CPU_TX_DR,
-                           CAPRI_HBM_CPU_TX_DR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                           ASIC_HBM_CPU_TX_DR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                            ASIC_HBM_REG_CPU_TX_DESCR, 128, 0, NULL, NULL, false, 1, 0, 1};
 
     g_meta[types::WRING_TYPE_CPU_TX_PR] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_CPU_TX_PR,
-                           CAPRI_HBM_CPU_TX_PR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-                           ASIC_HBM_REG_CPU_TX_PAGE, CAPRI_CPU_TX_PR_OBJ_TOTAL_SIZE, 0, NULL, NULL, false, 1, 0, 1};
+                           ASIC_HBM_CPU_TX_PR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                           ASIC_HBM_REG_CPU_TX_PAGE, ASIC_CPU_TX_PR_OBJ_TOTAL_SIZE, 0, NULL, NULL, false, 1, 0, 1};
 
     g_meta[types::WRING_TYPE_CPU_RX_DPR] =
         (pd_wring_meta_t) {true, ASIC_HBM_REG_CPU_RX_DPR,
-                           CAPRI_CPU_RX_DPR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-                           ASIC_HBM_REG_CPU_RX_DESC_PAGE, CAPRI_CPU_RX_DPR_OBJ_TOTAL_SIZE,
-			   CAPRI_SEM_CPU_RX_DPR_ALLOC_RAW_ADDR, NULL, NULL, false, 0, 0, 1};
+                           ASIC_CPU_RX_DPR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                           ASIC_HBM_REG_CPU_RX_DESC_PAGE, ASIC_CPU_RX_DPR_OBJ_TOTAL_SIZE,
+               ASIC_SEM_CPU_RX_DPR_ALLOC_RAW_ADDR, NULL, NULL, false, 0, 0, 1};
 
     /* Descriptor-Page Combined Allocator rings */
     g_meta[types::WRING_TYPE_NMDPR_SMALL_TX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_NMDPR_SMALL_TX, CAPRI_TNMDPR_SMALL_RING_SIZE,
-                           DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_NMDPR_OBJS_SMALL_TX, CAPRI_NMDPR_SMALL_OBJ_TOTAL_SIZE,
-                           CAPRI_SEM_TNMDPR_SMALL_ALLOC_RAW_ADDR,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_NMDPR_SMALL_TX, ASIC_TNMDPR_SMALL_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_NMDPR_OBJS_SMALL_TX, ASIC_NMDPR_SMALL_OBJ_TOTAL_SIZE,
+                           ASIC_SEM_TNMDPR_SMALL_ALLOC_RAW_ADDR,
                            NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_NMDPR_SMALL_RX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_NMDPR_SMALL_RX, CAPRI_RNMDPR_SMALL_RING_SIZE,
-                           DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_NMDPR_OBJS_SMALL_RX, CAPRI_NMDPR_SMALL_OBJ_TOTAL_SIZE,
-                           CAPRI_SEM_RNMDPR_SMALL_ALLOC_RAW_ADDR,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_NMDPR_SMALL_RX, ASIC_RNMDPR_SMALL_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_NMDPR_OBJS_SMALL_RX, ASIC_NMDPR_SMALL_OBJ_TOTAL_SIZE,
+                           ASIC_SEM_RNMDPR_SMALL_ALLOC_RAW_ADDR,
                            NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_NMDPR_BIG_TX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_NMDPR_BIG_TX, CAPRI_TNMDPR_BIG_RING_SIZE,
-                           DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_NMDPR_OBJS_BIG_TX, CAPRI_NMDPR_BIG_OBJ_TOTAL_SIZE,
-                           CAPRI_SEM_TNMDPR_BIG_ALLOC_RAW_ADDR,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_NMDPR_BIG_TX, ASIC_TNMDPR_BIG_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_NMDPR_OBJS_BIG_TX, ASIC_NMDPR_BIG_OBJ_TOTAL_SIZE,
+                           ASIC_SEM_TNMDPR_BIG_ALLOC_RAW_ADDR,
                            NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_NMDPR_BIG_RX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_NMDPR_BIG_RX, CAPRI_RNMDPR_BIG_RING_SIZE,
-                           DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_NMDPR_OBJS_BIG_RX, CAPRI_NMDPR_BIG_OBJ_TOTAL_SIZE,
-                           CAPRI_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_NMDPR_BIG_RX, ASIC_RNMDPR_BIG_RING_SIZE,
+                           DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_NMDPR_OBJS_BIG_RX, ASIC_NMDPR_BIG_OBJ_TOTAL_SIZE,
+                           ASIC_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR,
                            NULL, NULL, false};
     g_meta[types::WRING_TYPE_NMDPR_BIG_RX].set_hw_meta_fn = p4pd_wring_set_rnmdpr_meta;
 
     g_meta[types::WRING_TYPE_TCP_OOO_RX] =
-        (pd_wring_meta_t) {true, ASIC_HBM_REG_TCP_OOO_QBASE_RING, CAPRI_TCP_ALLOC_OOQ_RING_SIZE,
+        (pd_wring_meta_t) {true, ASIC_HBM_REG_TCP_OOO_QBASE_RING, ASIC_TCP_ALLOC_OOQ_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, ASIC_HBM_REG_TCP_OOO_QUEUE,
                            TCP_OOO_QUEUE_ALLOC_SIZE,
-                           CAPRI_SEM_TCP_OOQ_ALLOC_RAW_ADDR, NULL, NULL, false};
+                           ASIC_SEM_TCP_OOQ_ALLOC_RAW_ADDR, NULL, NULL, false};
 
     g_meta[types::WRING_TYPE_TCP_OOO_RX2TX] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_TCP_OOO_RX2TX_QUEUE,
-                            CAPRI_OOO_RX2TX_RING_SLOTS, DEFAULT_WRING_SLOT_SIZE,
+                            ASIC_OOO_RX2TX_RING_SLOTS, DEFAULT_WRING_SLOT_SIZE,
                             "", 0, 0, NULL, NULL, false, 1, 0};
 
     g_meta[types::WRING_TYPE_TCP_ACTL_Q] =
         (pd_wring_meta_t) {false, ASIC_HBM_REG_TCP_ACTL_Q, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                             "", 0, 0, armq_slot_parser, tcp_actl_q_get_hw_meta,
-			   false, 1, 0, 1};
+               false, 1, 0, 1};
 
 
     return HAL_RET_OK;
@@ -351,9 +351,9 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
     if (meta->obj_size) {
         wring_obj_base = asicpd_get_mem_addr(meta->obj_hbm_reg_name);
         if (wring_obj_base == INVALID_MEM_ADDRESS) {
-	        HAL_TRACE_ERR("Could not find base addr for {} region",
+            HAL_TRACE_ERR("Could not find base addr for {} region",
                           meta->obj_hbm_reg_name);
-	        return HAL_RET_ERR;
+            return HAL_RET_ERR;
         }
 
         obj_reg_size = meta->num_slots * meta->obj_size;
@@ -410,14 +410,14 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
         }
     }
     if (meta->alloc_semaphore_addr &&
-                    CAPRI_SEM_RAW_IS_PI_CI(meta->alloc_semaphore_addr)) {
+                    ASIC_SEM_RAW_IS_PI_CI(meta->alloc_semaphore_addr)) {
         // Set CI = ring size
         uint32_t val32 = meta->num_slots;
         HAL_TRACE_DEBUG("writing {} to semaphore {:#x}",
                         val32, meta->alloc_semaphore_addr +
-                        CAPRI_SEM_INC_NOT_FULL_CI_OFFSET);
+                        ASIC_SEM_INC_NOT_FULL_CI_OFFSET);
         sdk::asic::asic_reg_write(meta->alloc_semaphore_addr +
-                                  CAPRI_SEM_INC_NOT_FULL_CI_OFFSET, &val32);
+                                  ASIC_SEM_INC_NOT_FULL_CI_OFFSET, &val32);
         // Set PI to 0
         val32 = 0;
         sdk::asic::asic_reg_write(meta->alloc_semaphore_addr, &val32);
@@ -440,16 +440,16 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
      */
     if (!meta->per_flow_ring && (wring_id > MAX_WRING_IDS)) {
         HAL_TRACE_ERR("Invalid wrind_id {}, failed to mmap ring memory for Q:{}",
-		      wring_id, type);
+              wring_id, type);
         return(HAL_RET_ERR);
     }
 
     wring_pd_set_meta_virt_base_addr(meta, wring_id, (uint8_t *)sdk::lib::pal_mem_map(wring_base,
-								       meta->num_slots *
-								       meta->slot_size_in_bytes));
+                                       meta->num_slots *
+                                       meta->slot_size_in_bytes));
      if (!wring_pd_get_meta_virt_base_addr(meta, wring_id)) {
-	 HAL_TRACE_ERR("Failed to mmap the Ring(T:{}, Q:{})", type, wring_id);
-	 return HAL_RET_NO_RESOURCE;
+     HAL_TRACE_ERR("Failed to mmap the Ring(T:{}, Q:{})", type, wring_id);
+     return HAL_RET_NO_RESOURCE;
      }
      else {
          HAL_TRACE_DEBUG("mmap the WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
@@ -462,18 +462,18 @@ wring_pd_table_init (types::WRingType type, uint32_t wring_id)
       * If the object ring is present, lets memory-map the object memory region too.
       */
      if (meta->obj_size) {
-	 wring_pd_set_meta_virt_obj_base_addr(meta, wring_id, (uint8_t *)sdk::lib::pal_mem_map(wring_obj_base,
-									       obj_reg_size));
-	 if (!wring_pd_get_meta_virt_obj_base_addr(meta, wring_id)) {
+     wring_pd_set_meta_virt_obj_base_addr(meta, wring_id, (uint8_t *)sdk::lib::pal_mem_map(wring_obj_base,
+                                           obj_reg_size));
+     if (!wring_pd_get_meta_virt_obj_base_addr(meta, wring_id)) {
          HAL_TRACE_ERR("Failed to mmap the OBJ Ring(T:{}, Q:{})", type, wring_id);
-	     return HAL_RET_NO_RESOURCE;
-	 }
-	 else {
-	     HAL_TRACE_DEBUG("mmap the OBJ WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
-			     type, wring_id, (uint64_t)wring_obj_base,
-			     (uint64_t)wring_pd_get_meta_virt_obj_base_addr(meta, wring_id),
-			     (obj_reg_size/1024));
-	 }
+         return HAL_RET_NO_RESOURCE;
+     }
+     else {
+         HAL_TRACE_DEBUG("mmap the OBJ WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
+                 type, wring_id, (uint64_t)wring_obj_base,
+                 (uint64_t)wring_pd_get_meta_virt_obj_base_addr(meta, wring_id),
+                 (obj_reg_size/1024));
+     }
     }
 
     return HAL_RET_OK;
@@ -635,8 +635,8 @@ armq_slot_parser(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot)
 hal_ret_t
 tcp_actl_q_get_hw_meta(pd_wring_t* wring_pd)
 {
-    uint32_t			value = 0;
-    wring_hw_id_t addr = CAPRI_SEM_TCP_ACTL_Q_RAW_ADDR(wring_pd->wring->wring_id);
+    uint32_t            value = 0;
+    wring_hw_id_t addr = ASIC_SEM_TCP_ACTL_Q_RAW_ADDR(wring_pd->wring->wring_id);
     if(addr <= 0) {
         HAL_TRACE_ERR("Failed to get semaphore register addr for id: {}",
                     wring_pd->wring->wring_id);
@@ -645,14 +645,14 @@ tcp_actl_q_get_hw_meta(pd_wring_t* wring_pd)
 
     if (sdk::asic::asic_reg_read(addr, &value) != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to read pindex value");
-		return HAL_RET_HW_FAIL;
+        return HAL_RET_HW_FAIL;
     }
 
     wring_pd->wring->pi = value;
     addr += 4;
     if (sdk::asic::asic_reg_read(addr, &value) != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to read cindex value");
-		return HAL_RET_HW_FAIL;
+        return HAL_RET_HW_FAIL;
     }
 
     wring_pd->wring->ci = value;
@@ -668,8 +668,8 @@ tcp_actl_q_get_hw_meta(pd_wring_t* wring_pd)
 hal_ret_t
 arqrx_get_hw_meta(pd_wring_t* wring_pd)
 {
-	uint32_t			value = 0;
-    wring_hw_id_t addr = CAPRI_SEM_ARQ_RAW_ADDR(wring_pd->wring->wring_id);
+    uint32_t            value = 0;
+    wring_hw_id_t addr = ASIC_SEM_ARQ_RAW_ADDR(wring_pd->wring->wring_id);
     if(addr <= 0) {
         HAL_TRACE_ERR("Failed to get semaphore register addr for id: {}",
                     wring_pd->wring->wring_id);
@@ -678,14 +678,14 @@ arqrx_get_hw_meta(pd_wring_t* wring_pd)
 
     if (sdk::asic::asic_reg_read(addr, &value) != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to read pindex value");
-		return HAL_RET_HW_FAIL;
+        return HAL_RET_HW_FAIL;
     }
 
     wring_pd->wring->pi = value;
     addr += 4;
     if (sdk::asic::asic_reg_read(addr, &value) != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to read cindex value");
-		return HAL_RET_HW_FAIL;
+        return HAL_RET_HW_FAIL;
     }
 
     wring_pd->wring->ci = value;
@@ -695,7 +695,7 @@ arqrx_get_hw_meta(pd_wring_t* wring_pd)
                     addr,
                     wring_pd->wring->pi,
                     wring_pd->wring->ci);
-	return HAL_RET_OK;
+    return HAL_RET_OK;
 }
 
 static
@@ -722,7 +722,7 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
     wring->phys_base_addr = wring_base;
 
     if(meta->get_hw_meta_fn) {
-    	return meta->get_hw_meta_fn(wring_pd);
+        return meta->get_hw_meta_fn(wring_pd);
     }
 
     if(sem_addr == 0) {
@@ -760,7 +760,7 @@ p4pd_wring_set_meta(pd_wring_t* wring_pd)
     uint64_t            sem_addr = meta->alloc_semaphore_addr;
 
     if(meta->set_hw_meta_fn) {
-    	return meta->set_hw_meta_fn(wring_pd);
+        return meta->set_hw_meta_fn(wring_pd);
     }
 
     HAL_TRACE_DEBUG("Writing pi {} to addr: {:#x}",
@@ -807,8 +807,8 @@ p4pd_wring_set_rnmdpr_meta(pd_wring_t* wring_pd)
     }
 
     addr = asicpd_get_mem_addr(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) +
-            CAPRI_GC_GLOBAL_RNMDPR_FP_PI;
-    ci = wring->ci - CAPRI_RNMDPR_BIG_RING_SIZE;
+        CAPRI_GC_GLOBAL_RNMDPR_FP_PI;
+    ci = wring->ci - ASIC_RNMDPR_BIG_RING_SIZE;
     HAL_TRACE_DEBUG("Writing ci {} to addr: {:#x}", wring->ci, addr);
     sdk::asic::asic_mem_write(addr, (uint8_t *)&ci, sizeof(uint32_t));
 

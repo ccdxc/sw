@@ -15,7 +15,7 @@ struct s1_t1_ooq_tcp_tx_free_ooq_d d;
     .align
     .param          TCP_OOQ_TABLE_BASE
 tcp_ooq_free_queue:
-    and             r1, d.ooq_free_pi, CAPRI_TCP_ALLOC_OOQ_RING_MASK
+    and             r1, d.ooq_free_pi, ASIC_TCP_ALLOC_OOQ_RING_MASK
     tbladd.f        d.ooq_free_pi, 1
     CAPRI_CLEAR_TABLE_VALID(1)
 
@@ -31,9 +31,9 @@ tcp_ooq_free_queue:
     /*
      * Write semaphore CI value
      */
-    add             r2, d.ooq_free_pi, CAPRI_TCP_ALLOC_OOQ_RING_SIZE
+    add             r2, d.ooq_free_pi, ASIC_TCP_ALLOC_OOQ_RING_SIZE
     phvwr           p.ooq_free_pi_index, r2.wx
-    addi            r3, r0, CAPRI_SEM_TCP_OOQ_ALLOC_CI_RAW_ADDR
+    addi            r3, r0, ASIC_SEM_TCP_OOQ_ALLOC_CI_RAW_ADDR
     CAPRI_DMA_CMD_PHV2MEM_SETUP(ooq_alloc_ci_dma_cmd, r3, ooq_free_pi_index, ooq_free_pi_index)
 
     nop.e

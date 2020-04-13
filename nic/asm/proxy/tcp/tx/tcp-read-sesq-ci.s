@@ -28,7 +28,7 @@ tcp_tx_sesq_read_ci_stage1_start:
     add.c1          r3, d.{pad...descr_addr}.dx, NIC_DESC_ENTRY_0_OFFSET
     add.!c1         r3, r0, d.descr_addr
 
-    blti            r3, CAPRI_HBM_BASE, tcp_tx_read_sesq_ci_fatal_error
+    blti            r3, ASIC_HBM_BASE, tcp_tx_read_sesq_ci_fatal_error
 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                     tcp_tx_read_descr_start, r3, TABLE_SIZE_512_BITS)

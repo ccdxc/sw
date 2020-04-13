@@ -5,7 +5,7 @@
 #define __CPU_MACROS_H__
 
 #include "capri-macros.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 
 #define CPU_PIDX_SIZE                       16
 #define CPU_PIDX_SHIFT                      4
@@ -50,9 +50,9 @@
     add    _dest_r, _dest_r, _arqrx_base
 
 #define CPU_ARQ_SEM_INF_ADDR(_k_cpu_id, _dest_r) \
-    addi   _dest_r, r0, CAPRI_SEM_ARQ_0_ADDR;                \
+    addi   _dest_r, r0, ASIC_SEM_ARQ_0_ADDR;                \
     add    _dest_r, _dest_r, _k_cpu_id, ARQ_SEM_ENTRY_SHIFT; \
-    addi   _dest_r, _dest_r, CAPRI_SEM_INF_OFFSET;
+    addi   _dest_r, _dest_r, ASIC_SEM_INF_OFFSET;
 
 #define CPU_RX_ENQUEUE(_dest_r, \
                        _descr_addr, \

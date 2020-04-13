@@ -1,7 +1,7 @@
 #ifndef __CAPRI_MACROS_H__
 #define __CAPRI_MACROS_H__
 
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/sdk/platform/capri/capri_barco.h"
 
 #define DMA_CMD_WR_FENCE 1
@@ -93,7 +93,7 @@
 
 #define CAPRI_CLEAR_TABLE_VALID_COND(_num, _cond) \
         phvwri._cond p.app_header_table##_num##_valid, 0;
-        
+
 #define CAPRI_CLEAR_TABLE0_VALID \
         CAPRI_CLEAR_TABLE_VALID(0)
 
@@ -147,7 +147,7 @@
         subi            r1, r1, 0x80000000; \
         srl             r2, r1, 27; \
         andi            r1, r1, ((1 << 27) - 1); \
-        addi            r1, r1, CAPRI_MEM_SEM_ATOMIC_ADD_START; \
+        addi            r1, r1, ASIC_MEM_SEM_ATOMIC_ADD_START; \
         add             r2, _sz, r2, 2; \
         sll             r2, r2, 56; \
 
@@ -164,7 +164,7 @@
         subi.##_cx      r1, r1, 0x80000000; \
         srl.##_cx       r2, r1, 27; \
         andi.##_cx      r1, r1, ((1 << 27) - 1); \
-        addi.##_cx      r1, r1, CAPRI_MEM_SEM_ATOMIC_ADD_START; \
+        addi.##_cx      r1, r1, ASIC_MEM_SEM_ATOMIC_ADD_START; \
         add.##_cx       r2, 0, r2, 2; \
         sll.##_cx       r2, r2, 56; \
         or.##_cx        r2, r2, _val; \
@@ -205,7 +205,7 @@
         or              r2, r2, _val5, 40; \
         or              r2, r2, _val6, 48; \
         memwr.dx        r1, r2
-        
+
 #define CAPRI_COUNTER16_INC(_counter16, _atomic_counter_offset, _val)                                             \
         slt             c1, d.##_counter16, 0xFFFF;                                                               \
         CAPRI_ATOMIC_STATS_INCR1_COND(!c1, k.tls_global_phv_qstate_addr, _atomic_counter_offset, d.##_counter16); \
@@ -214,9 +214,13 @@
         tbladd           d.##_counter16, _val;
 
 
-
+#ifdef ELBA
+#define DB_ADDR_BASE                   0x10800000
+#define DB_ADDR_BASE_HOST              0x10400000
+#else
 #define DB_ADDR_BASE                   0x8800000
 #define DB_ADDR_BASE_HOST              0x8400000
+#endif
 #define DB_UPD_SHFT                    17
 #define DB_LIF_SHFT                    6
 #define DB_TYPE_SHFT                   3
@@ -224,18 +228,18 @@
 
 #define LIF_WIDTH                      11
 #define QTYPE_WIDTH                    3
-#define QID_WIDTH                      24        
+#define QID_WIDTH                      24
 
 /*
  * NOTE: SERVICE_LIF_START and all the service LIF id values defined below mush match
  * the service lif IDs defined in nic/hal/src/internal/proxy.hpp.
  */
-#define LIF_CPU                        33 
+#define LIF_CPU                        33
 #define SERVICE_LIF_START              34
 
 #define LIF_APOLLO                     (SERVICE_LIF_START)
 #define LIF_TCP                        (SERVICE_LIF_START + 1)
-#define LIF_TLS                        (SERVICE_LIF_START + 2) 
+#define LIF_TLS                        (SERVICE_LIF_START + 2)
 #define LIF_IPSEC_ESP                  (SERVICE_LIF_START + 3)
 #define LIF_IPSEC_AH                   (SERVICE_LIF_START + 4)
 #define LIF_IPFIX                      (SERVICE_LIF_START + 5)
@@ -316,7 +320,7 @@
 #define DMA_CMD_TYPE_MEM2MEM_TYPE_SRC 0
 #define DMA_CMD_TYPE_MEM2MEM_TYPE_DST 1
 
-#define TM_OPORT_DMA       9 
+#define TM_OPORT_DMA       9
 #define TM_OPORT_P4EGRESS  10
 #define TM_OPORT_P4INGRESS 11
 
@@ -482,16 +486,16 @@
 
 #define TLS_PROXY_GLOBAL_STATS          tls_proxy_global_stats
 
-#define RNMDR_GC_PRODUCER_TCP           CAPRI_RNMDR_GC_TCP_RING_PRODUCER
-#define RNMDR_GC_PRODUCER_ARM           CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER
-#define RNMDR_GC_PER_PRODUCER_SHIFT     CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT
-#define RNMDR_GC_PER_PRODUCER_MASK      CAPRI_HBM_GC_PER_PRODUCER_RING_MASK
-#define RNMDR_GC_PER_PRODUCER_SIZE      CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE
+#define RNMDR_GC_PRODUCER_TCP           ASIC_RNMDR_GC_TCP_RING_PRODUCER
+#define RNMDR_GC_PRODUCER_ARM           ASIC_RNMDR_GC_CPU_ARM_RING_PRODUCER
+#define RNMDR_GC_PER_PRODUCER_SHIFT     ASIC_HBM_GC_PER_PRODUCER_RING_SHIFT
+#define RNMDR_GC_PER_PRODUCER_MASK      ASIC_HBM_GC_PER_PRODUCER_RING_MASK
+#define RNMDR_GC_PER_PRODUCER_SIZE      ASIC_HBM_GC_PER_PRODUCER_RING_SIZE
 
-#define TNMDR_GC_PRODUCER_TCP           CAPRI_TNMDR_GC_TCP_RING_PRODUCER
-#define TNMDR_GC_PER_PRODUCER_SHIFT     CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT
-#define TNMDR_GC_PER_PRODUCER_MASK      CAPRI_HBM_GC_PER_PRODUCER_RING_MASK
-#define TNMDR_GC_PER_PRODUCER_SIZE      CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE
+#define TNMDR_GC_PRODUCER_TCP           ASIC_TNMDR_GC_TCP_RING_PRODUCER
+#define TNMDR_GC_PER_PRODUCER_SHIFT     ASIC_HBM_GC_PER_PRODUCER_RING_SHIFT
+#define TNMDR_GC_PER_PRODUCER_MASK      ASIC_HBM_GC_PER_PRODUCER_RING_MASK
+#define TNMDR_GC_PER_PRODUCER_SIZE      ASIC_HBM_GC_PER_PRODUCER_RING_SIZE
 
 /* Semaphores */
 #define SERQ_PRODUCER_IDX              0xba00ba00
@@ -500,58 +504,58 @@
 #define SESQ_PRODUCER_IDX              0xba00ba10
 #define SESQ_CONSUMER_IDX              0xba00ba18
 
-#define RNMPR_ALLOC_IDX                CAPRI_SEM_RNMPR_ALLOC_INF_ADDR
+#define RNMPR_ALLOC_IDX                ASIC_SEM_RNMPR_ALLOC_INF_ADDR
 #define RNMPR_FREE_IDX                 CAPRI_SEM_RNMPR_FREE_INC_ADDR
 
-#define RNMDR_ALLOC_IDX                CAPRI_SEM_RNMDR_ALLOC_INF_ADDR
+#define RNMDR_ALLOC_IDX                ASIC_SEM_RNMDR_ALLOC_INF_ADDR
 #define RNMDR_FREE_IDX                 CAPRI_SEM_RNMDR_FREE_INC_ADDR
 
-#define RNMDPR_ALLOC_IDX               CAPRI_SEM_RNMDPR_BIG_ALLOC_INF_ADDR 
-#define RNMDPR_FREE_IDX                CAPRI_SEM_RNMDPR_BIG_FREE_INC_ADDR 
+#define RNMDPR_ALLOC_IDX               ASIC_SEM_RNMDPR_BIG_ALLOC_INF_ADDR
+#define RNMDPR_FREE_IDX                CAPRI_SEM_RNMDPR_BIG_FREE_INC_ADDR
 
-#define RNMDPR_SMALL_ALLOC_IDX         CAPRI_SEM_RNMDPR_SMALL_ALLOC_INF_ADDR 
-#define RNMDPR_SMALL_FREE_IDX          CAPRI_SEM_RNMDPR_SMALL_FREE_INC_ADDR 
+#define RNMDPR_SMALL_ALLOC_IDX         ASIC_SEM_RNMDPR_SMALL_ALLOC_INF_ADDR
+#define RNMDPR_SMALL_FREE_IDX          CAPRI_SEM_RNMDPR_SMALL_FREE_INC_ADDR
 
-#define TNMPR_ALLOC_IDX                CAPRI_SEM_TNMPR_ALLOC_INF_ADDR
+#define TNMPR_ALLOC_IDX                ASIC_SEM_TNMPR_ALLOC_INF_ADDR
 #define TNMPR_FREE_IDX                 CAPRI_SEM_TNMPR_FREE_INC_ADDR
 
-#define TNMDPR_ALLOC_IDX               CAPRI_SEM_TNMDPR_BIG_ALLOC_INF_ADDR 
-#define TNMDPR_FREE_IDX                CAPRI_SEM_TNMDPR_BIG_FREE_INC_ADDR 
+#define TNMDPR_ALLOC_IDX               ASIC_SEM_TNMDPR_BIG_ALLOC_INF_ADDR
+#define TNMDPR_FREE_IDX                CAPRI_SEM_TNMDPR_BIG_FREE_INC_ADDR
 
-#define TNMDR_ALLOC_IDX                CAPRI_SEM_TNMDPR_BIG_ALLOC_INF_ADDR
+#define TNMDR_ALLOC_IDX                ASIC_SEM_TNMDPR_BIG_ALLOC_INF_ADDR
 #define TNMDR_FREE_IDX                 CAPRI_SEM_TNMDPR_BIG_FREE_INC_ADDR
 
-#define IPSEC_RNMPR_ALLOC_IDX          CAPRI_SEM_IPSEC_RNMPR_ALLOC_INF_ADDR
+#define IPSEC_RNMPR_ALLOC_IDX          ASIC_SEM_IPSEC_RNMPR_ALLOC_INF_ADDR
 #define IPSEC_RNMPR_FREE_IDX           CAPRI_SEM_IPSEC_RNMPR_FREE_INC_ADDR
 
-#define IPSEC_BIG_RNMPR_ALLOC_IDX      CAPRI_SEM_IPSEC_BIG_RNMPR_ALLOC_INF_ADDR
+#define IPSEC_BIG_RNMPR_ALLOC_IDX      ASIC_SEM_IPSEC_BIG_RNMPR_ALLOC_INF_ADDR
 #define IPSEC_BIG_RNMPR_FREE_IDX       CAPRI_SEM_IPSEC_BIG_RNMPR_FREE_INC_ADDR
 
-#define IPSEC_RNMDR_ALLOC_IDX          CAPRI_SEM_IPSEC_RNMDR_ALLOC_INF_ADDR
+#define IPSEC_RNMDR_ALLOC_IDX          ASIC_SEM_IPSEC_RNMDR_ALLOC_INF_ADDR
 #define IPSEC_RNMDR_FREE_IDX           CAPRI_SEM_IPSEC_RNMDR_FREE_INC_ADDR
 
-#define IPSEC_BIG_RNMDR_ALLOC_IDX      CAPRI_SEM_IPSEC_BIG_RNMDR_ALLOC_INF_ADDR
+#define IPSEC_BIG_RNMDR_ALLOC_IDX      ASIC_SEM_IPSEC_BIG_RNMDR_ALLOC_INF_ADDR
 #define IPSEC_BIG_RNMDR_FREE_IDX       CAPRI_SEM_IPSEC_BIG_RNMDR_FREE_INC_ADDR
 
-#define IPSEC_TNMPR_ALLOC_IDX          CAPRI_SEM_IPSEC_TNMPR_ALLOC_INF_ADDR
+#define IPSEC_TNMPR_ALLOC_IDX          ASIC_SEM_IPSEC_TNMPR_ALLOC_INF_ADDR
 #define IPSEC_TNMPR_FREE_IDX           CAPRI_SEM_IPSEC_TNMPR_FREE_INC_ADDR
 
-#define IPSEC_BIG_TNMPR_ALLOC_IDX      CAPRI_SEM_IPSEC_BIG_TNMPR_ALLOC_INF_ADDR
+#define IPSEC_BIG_TNMPR_ALLOC_IDX      ASIC_SEM_IPSEC_BIG_TNMPR_ALLOC_INF_ADDR
 #define IPSEC_BIG_TNMPR_FREE_IDX       CAPRI_SEM_IPSEC_BIG_TNMPR_FREE_INC_ADDR
 
-#define IPSEC_TNMDR_ALLOC_IDX          CAPRI_SEM_IPSEC_TNMDR_ALLOC_INF_ADDR
+#define IPSEC_TNMDR_ALLOC_IDX          ASIC_SEM_IPSEC_TNMDR_ALLOC_INF_ADDR
 #define IPSEC_TNMDR_FREE_IDX           CAPRI_SEM_IPSEC_TNMDR_FREE_INC_ADDR
 
-#define IPSEC_BIG_TNMDR_ALLOC_IDX      CAPRI_SEM_IPSEC_BIG_TNMDR_ALLOC_INF_ADDR
+#define IPSEC_BIG_TNMDR_ALLOC_IDX      ASIC_SEM_IPSEC_BIG_TNMDR_ALLOC_INF_ADDR
 #define IPSEC_BIG_TNMDR_FREE_IDX       CAPRI_SEM_IPSEC_BIG_TNMDR_FREE_INC_ADDR
 
 #define TCP_RNMDR_GC_IDX               CAPRI_SEM_TCP_RNMDR_GC_IDX_INC_ADDR
 #define TCP_TNMDR_GC_IDX               CAPRI_SEM_TCP_TNMDR_GC_IDX_INC_ADDR
 
-#define TCP_OOQ_ALLOC_IDX              CAPRI_SEM_TCP_OOQ_ALLOC_INF_ADDR 
+#define TCP_OOQ_ALLOC_IDX              ASIC_SEM_TCP_OOQ_ALLOC_INF_ADDR
 
-#define CPU_RX_DPR_ALLOC_IDX           CAPRI_SEM_CPU_RX_DPR_ALLOC_INF_ADDR 
-#define CPU_RX_DPR_FREE_IDX            CAPRI_SEM_CPU_RX_DPR_FREE_INC_ADDR 
+#define CPU_RX_DPR_ALLOC_IDX           ASIC_SEM_CPU_RX_DPR_ALLOC_INF_ADDR
+#define CPU_RX_DPR_FREE_IDX            CAPRI_SEM_CPU_RX_DPR_FREE_INC_ADDR
 
 #define ARQ_PRODUCER_IDX               0xba00ba60
 #define ARQ_CONSUMER_IDX               0xba00ba68
@@ -854,10 +858,10 @@
 
 // Timers
 #define CAPRI_FAST_TIMER_ADDR(_lif) \
-        (CAPRI_MEM_FAST_TIMER_START + (_lif << 3))
+        (ASIC_MEM_FAST_TIMER_START + (_lif << 3))
 
 #define CAPRI_SLOW_TIMER_ADDR(_lif) \
-        (CAPRI_MEM_SLOW_TIMER_START + (_lif << 3))
+        (ASIC_MEM_SLOW_TIMER_START + (_lif << 3))
 
 #define TIMER_QID_SHFT              3
 #define TIMER_RING_SHFT             27

@@ -16,7 +16,7 @@ struct cpu_rx_read_cpu_desc_d d;
 cpu_rx_read_desc_pindex_start:
     CAPRI_CLEAR_TABLE1_VALID
     add     r4, r0, d.{u.read_cpu_desc_d.desc_pindex}.wx
-    andi    r4, r4, ((1 << CAPRI_CPU_RX_DPR_RING_SHIFT) - 1)
+    andi    r4, r4, ((1 << ASIC_CPU_RX_DPR_RING_SHIFT) - 1)
     phvwr   p.s2_t1_s2s_desc_pindex, r4 
     seq     c1, d.u.read_cpu_desc_d.desc_pindex_full, 1
     //bcf     [c1], cpu_rx_semaphore_full_error

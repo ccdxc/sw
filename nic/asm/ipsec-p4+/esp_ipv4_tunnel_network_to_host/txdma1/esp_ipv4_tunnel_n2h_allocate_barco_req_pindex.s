@@ -18,29 +18,29 @@ esp_ipv4_tunnel_n2h_allocate_barco_req_pindex:
     //nop
 
     add r4, d.pi, 1
-    andi r4, r4, CAPRI_BARCO_RING_SLOTS_MASK
+    andi r4, r4, ASIC_BARCO_RING_SLOTS_MASK
     seq c1, r4, d.ci
     bcf [c1], esp_ipv4_tunnel_n2h_txdma1_allocate_barco_req_fail
     nop
 
     /* Check for the Barco Decrypt bug workaround slot on the ring */
     seq c1, d.pi[CAPRI_BARCO_GCM_DECRYPT_BUG_REQ_STRIDE_SHIFT-1:0], 0
-    tblmincri.c1 d.pi, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
+    tblmincri.c1 d.pi, ASIC_BARCO_RING_SLOTS_SHIFT, 1
     nop
 
     add r4, d.pi, 1
-    andi r4, r4, CAPRI_BARCO_RING_SLOTS_MASK
+    andi r4, r4, ASIC_BARCO_RING_SLOTS_MASK
     seq c1, r4, d.ci
     bcf [c1], esp_ipv4_tunnel_n2h_txdma1_allocate_barco_req_fail
     nop
 
-    and r2, d.pi, CAPRI_BARCO_RING_SLOTS_MASK 
+    and r2, d.pi, ASIC_BARCO_RING_SLOTS_MASK 
     sll r2, r2, BRQ_RING_ENTRY_SIZE_SHIFT
     addui r2, r2, hiword(BRQ_GCM1_BASE)
     addi r2, r2, loword(BRQ_GCM1_BASE)
     phvwr p.ipsec_to_stage3_barco_req_addr, r2
     add r1, d.pi, 1
-    and r1, r1, CAPRI_BARCO_RING_SLOTS_MASK 
+    and r1, r1, ASIC_BARCO_RING_SLOTS_MASK 
     tblwr.f d.pi, r1
     phvwr.e p.barco_dbell_pi, r1.wx
     nop 

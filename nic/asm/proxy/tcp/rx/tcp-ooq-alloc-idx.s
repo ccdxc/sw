@@ -27,7 +27,7 @@ tcp_ooq_alloc_idx_start:
     b.c1            tcp_ooq_alloc_fatal_error
 
     add             r4, r0, d.{ooo_qbase_pindex}.wx
-    andi            r4, r4, CAPRI_TCP_ALLOC_OOQ_RING_MASK
+    andi            r4, r4, ASIC_TCP_ALLOC_OOQ_RING_MASK
 
 table_read_OOQ_DESC:
     addui           r3, r0, hiword(TCP_OOQ_TABLE_BASE)

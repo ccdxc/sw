@@ -89,7 +89,7 @@ tcp_tx_launch_sesq:
     // store current ci in r6
     add             r6, r0, d.{ci_0}.hx
 
-    tblmincri.f     d.{ci_0}.hx, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    tblmincri.f     d.{ci_0}.hx, ASIC_SESQ_RING_SLOTS_SHIFT, 1
     phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
     phvwr           p.to_s4_sesq_tx_ci, r6
 
@@ -156,9 +156,9 @@ tcp_tx_launch_asesq:
 #endif
 
     // asesq_base = sesq_base - number of sesq slots
-    sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
+    sub             r3, d.{sesq_base}.wx, ASIC_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
 
-    and             r1, d.{ci_4}.hx, (CAPRI_ASESQ_RING_SLOTS - 1)
+    and             r1, d.{ci_4}.hx, (ASIC_ASESQ_RING_SLOTS - 1)
     add             r3, r3, r1, NIC_SESQ_ENTRY_SIZE_SHIFT
     tbladd.f        d.{ci_4}.hx, 1
     phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
@@ -296,7 +296,7 @@ pending_rx2tx_clean_asesq:
      * Launch asesq entry read with asesq RETX CI as index
      */
     // asesq_base = sesq_base - number of sesq slots
-    sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
+    sub             r3, d.{sesq_base}.wx, ASIC_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
     add             r3, r3, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
 
     // pkts to free = 1, don't batch asesq free
@@ -324,13 +324,13 @@ pending_rx2tx_clean_sesq:
     seq             c1, d.sesq_tx_ci, TCP_TX_INVALID_SESQ_TX_CI
     sub.c1          r1, d.{ci_0}.hx, d.sesq_retx_ci
     sub.!c1         r1, d.sesq_tx_ci, d.sesq_retx_ci
-    sub             r2, CAPRI_SESQ_RING_SLOTS, d.sesq_retx_ci
-    slt             c1, r2, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
+    sub             r2, ASIC_SESQ_RING_SLOTS, d.sesq_retx_ci
+    slt             c1, r2, r1[ASIC_SESQ_RING_SLOTS_SHIFT-1:0]
     add.c1          r1, r0, r2
     // free 8 at the most
-    slt             c1, 8, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
+    slt             c1, 8, r1[ASIC_SESQ_RING_SLOTS_SHIFT-1:0]
     add.c1          r1, r0, 8
-    phvwr           p.t0_s2s_clean_retx_num_retx_pkts, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
+    phvwr           p.t0_s2s_clean_retx_num_retx_pkts, r1[ASIC_SESQ_RING_SLOTS_SHIFT-1:0]
 
     /*
      * Launch sesq entry read with RETX CI as index
@@ -531,7 +531,7 @@ tcp_tx_retx_timer_expired_launch_asesq:
      * Launch asesq entry ready with RETX CI as index
      */
     // asesq_base = sesq_base - number of sesq slots
-    sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
+    sub             r3, d.{sesq_base}.wx, ASIC_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
     add             r3, r3, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_ci_stage1_start,
                      r3, TABLE_SIZE_64_BITS)

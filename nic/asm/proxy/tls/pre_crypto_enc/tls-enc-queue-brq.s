@@ -127,8 +127,8 @@ dma_cmd_brq_doorbell:
 
     /* Barco DMA Channel PI in r7 */
     //addi        r7, r7, 1
-    //and         r7, r7, CAPRI_BARCO_RING_SLOTS_MASK
-    mincr       r7, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
+    //and         r7, r7, ASIC_BARCO_RING_SLOTS_MASK
+    mincr       r7, ASIC_BARCO_RING_SLOTS_SHIFT, 1
     phvwr       p.barco_dbell_pi, r7.wx
 
 

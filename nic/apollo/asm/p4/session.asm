@@ -2,7 +2,7 @@
 #include "INGRESS_p.h"
 #include "apollo.h"
 #include "INGRESS_session_k.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 
 struct session_k_    k;
 struct session_d    d;
@@ -24,7 +24,7 @@ session_info:
     add             r7, r0, k.capri_p4_intrinsic_packet_len
     addi            r1, r0, 0x1000001
     or              r7, r7, r1, 32
-    addi            r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi            r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     bbeq            d.session_info_d.drop, TRUE, session_info_drop
     or              r7, r7, r5[32:27], 58
     add.e           r6, r6, r5[26:0]

@@ -32,7 +32,7 @@ tls_mac_pre_crypto_process:
     sll         r3, r3, NIC_SERQ_ENTRY_SIZE_SHIFT
 
     /* Increment CI in stage 0 */
-    tblmincri   d.{u.read_tls_stg0_d.ci_0}.hx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    tblmincri   d.{u.read_tls_stg0_d.ci_0}.hx, ASIC_SERQ_RING_SLOTS_SHIFT, 1
 	
     seq         c4, d.{u.read_tls_stg0_d.ci_0}.hx, d.{u.read_tls_stg0_d.pi_0}.hx
     phvwri.c4   p.tls_global_phv_pending_rx_serq, 1

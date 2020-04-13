@@ -30,7 +30,7 @@ tls_enc_post_crypto_process:
         defer processing of the post-Barco scheduler event
     */
     add         r1, r0, d.u.read_tls_stg0_d.sw_sesq_pi
-    mincr       r1, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    mincr       r1, ASIC_SESQ_RING_SLOTS_SHIFT, 1
     seq         c1, r1, d.u.read_tls_stg0_d.sw_sesq_ci /* SESQ Ring Full */
     bcf         [c1], tls_enc_post_crypto_process_defer
     nop
@@ -42,7 +42,7 @@ tls_enc_post_crypto_process:
 
     /* Allocate the SESQ PI for this segment to TCP-TX */
     phvwr       p.tls_global_phv_sesq_pi, d.u.read_tls_stg0_d.sw_sesq_pi
-    tblmincri   d.u.read_tls_stg0_d.sw_sesq_pi, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
+    tblmincri   d.u.read_tls_stg0_d.sw_sesq_pi, ASIC_SESQ_RING_SLOTS_SHIFT, 1
 
     /* Increment CI in stage 0 */
     tbladd.f    d.{u.read_tls_stg0_d.ci_1}.hx, 1

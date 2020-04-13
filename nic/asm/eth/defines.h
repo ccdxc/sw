@@ -1,6 +1,6 @@
 
 #define __ASSEMBLY__
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/p4/common/defines.h"
 #include "nic/asm/common-p4+/include/capri-macros.h"
 #include "cap_top_csr_defines.h"

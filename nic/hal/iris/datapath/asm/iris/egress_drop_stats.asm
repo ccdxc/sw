@@ -1,7 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "EGRESS_egress_drop_stats_k.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nw.h"
 
 struct egress_drop_stats_k_ k;
@@ -27,7 +27,7 @@ egress_drop_stats:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 egress_drop_stats_error:
     phvwr       p.capri_intrinsic_drop, TRUE
-    addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     add         r5, r5, k.capri_intrinsic_error_bits, 3
     add         r6, r6, r5[26:0]
     or.e        r7,  1, r5[31:27], 58

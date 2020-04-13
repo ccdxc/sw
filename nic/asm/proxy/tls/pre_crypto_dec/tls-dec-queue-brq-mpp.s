@@ -111,7 +111,7 @@ dma_cmd_output_list_addr:
 dma_cmd_brq_doorbell:
 
     /* Barco DMA Channel PI in r7 */
-    mincr       r7, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
+    mincr       r7, ASIC_BARCO_RING_SLOTS_SHIFT, 1
     phvwr       p.barco_dbell_pi, r7.wx
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd_dbell_dma_cmd, CAPRI_BARCO_MP_MPNS_REG_MPP1_PRODUCER_IDX,

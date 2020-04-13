@@ -122,7 +122,7 @@ tcp_ooo_qbase_cb_load_in_order:
      */
     add             r6, d.ooo_rx2tx_qbase_pi, 1
     sub             r6, d.ooo_rx2tx_ci, r6
-    add             r6, r0, r6[CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT-1:0]
+    add             r6, r0, r6[ASIC_OOO_RX2TX_RING_SLOTS_SHIFT-1:0]
     sle             c1, r2, r6
     b.!c1           tcp_ooo_qbase_rx2tx_full        // ERROR
 
@@ -139,7 +139,7 @@ tcp_ooo_qbase_cb_load_in_order:
  
     CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(rx2tx_ooq_ready_dma_cmd, r5, ooq_rx2tx_queue_entry1_entry, r4)
 
-    tblmincr       d.ooo_rx2tx_qbase_pi, CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT, r2
+    tblmincr       d.ooo_rx2tx_qbase_pi, ASIC_OOO_RX2TX_RING_SLOTS_SHIFT, r2
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_FENCE(rx2tx_ooq_doorbell_dma_cmd, LIF_TCP,
                         TCP_OOO_RX2TX_QTYPE, k.common_phv_fid,
                         TCP_OOO_RX2TX_RING0, d.ooo_rx2tx_qbase_pi,

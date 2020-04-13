@@ -5,7 +5,7 @@
 #include "lib/ht/ht.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/include/tcp_common.h"
-#include "nic/sdk/platform/capri/capri_common.hpp"
+#include "nic/sdk/asic/cmn/asic_common.hpp"
 
 using sdk::lib::ht_ctxt_t;
 using namespace sdk::platform::capri;
@@ -111,13 +111,14 @@ p4pd_update_sesq_ci_addr(uint32_t qid, uint64_t ci_addr);
 static inline
 uint64_t tcpcb_sesq_db_addr (uint32_t qid)
 {
-    return _CAPRI_SETUP_DB_ADDR(DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_EVAL, SERVICE_LIF_TCP_PROXY, 0 /*QTYPE*/);
+    return _ASIC_SETUP_DB_ADDR(DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_EVAL,
+                                SERVICE_LIF_TCP_PROXY, 0 /*QTYPE*/);
 }
 
 static inline
 uint64_t tcpcb_sesq_db_data (uint32_t qid)
 {
-    return _CAPRI_SETUP_DB_DATA(qid, 0 /*ring_id*/, 0 /*pindex*/);
+    return _ASIC_SETUP_DB_DATA(qid, 0 /*ring_id*/, 0 /*pindex*/);
 }
 
 

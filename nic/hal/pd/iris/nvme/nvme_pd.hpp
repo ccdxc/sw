@@ -5,7 +5,7 @@
 #ifndef _NVME_PD_H
 #define _NVME_PD_H
 
-#include "nic/sdk/platform/capri/capri_common.hpp"
+#include "nic/sdk/asic/cmn/asic_common.hpp"
 #include "p4pd_nvme_api.h"
 
 
@@ -101,13 +101,13 @@ typedef enum nvme_dpath_ds_type_s {
     NVME_TYPE_RX_XTS_IV_ARRAY,
     NVME_TYPE_MAX
 } nvme_dpath_ds_type_t;
-     
+
 typedef struct nvme_hbm_alloc_info_s {
     int type;
     int num_entries;
     int size;
 } nvme_hbm_alloc_info_t;
-    
+
 static nvme_hbm_alloc_info_t nvme_hbm_alloc_table[] = {
     {NVME_TYPE_NSCB, 512, sizeof(nvme_nscb_t)},
     {NVME_TYPE_CMD_CONTEXT, 512, sizeof(nvme_cmd_context_t)},
@@ -124,11 +124,11 @@ static nvme_hbm_alloc_info_t nvme_hbm_alloc_table[] = {
     {NVME_TYPE_TX_SESS_DGSTQ, 512, NVME_TX_SESS_DGSTQ_DEPTH * NVME_TX_SESS_DGSTQ_ENTRY_SIZE},
     {NVME_TYPE_RX_SESS_XTSQ, 512, NVME_RX_SESS_XTSQ_DEPTH * NVME_RX_SESS_XTSQ_ENTRY_SIZE},
     {NVME_TYPE_RX_SESS_DGSTQ, 512, NVME_RX_SESS_DGSTQ_DEPTH * NVME_RX_SESS_DGSTQ_ENTRY_SIZE},
-    //XXX: Dividing the resources by 16 for now. 
-    {NVME_TYPE_TX_XTS_AOL_ARRAY, CAPRI_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_aol_t)},
-    {NVME_TYPE_TX_XTS_IV_ARRAY, CAPRI_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_iv_t)},
-    {NVME_TYPE_RX_XTS_AOL_ARRAY, CAPRI_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_aol_t)},
-    {NVME_TYPE_RX_XTS_IV_ARRAY, CAPRI_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_iv_t)},
+    //XXX: Dividing the resources by 16 for now.
+    {NVME_TYPE_TX_XTS_AOL_ARRAY, ASIC_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_aol_t)},
+    {NVME_TYPE_TX_XTS_IV_ARRAY, ASIC_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_iv_t)},
+    {NVME_TYPE_RX_XTS_AOL_ARRAY, ASIC_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_aol_t)},
+    {NVME_TYPE_RX_XTS_IV_ARRAY, ASIC_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_iv_t)},
 };
 
 static inline int nvme_hbm_offset(int type) {
@@ -155,7 +155,7 @@ static inline int nvme_hbm_resource_total_mem(int type) {
     assert(type < NVME_TYPE_MAX);
     return (nvme_hbm_resource_size(type) * nvme_hbm_resource_max(type));
 }
-    
+
 static inline uint8_t *
 memrev (uint8_t *block, size_t elnum)
 {
@@ -169,19 +169,19 @@ memrev (uint8_t *block, size_t elnum)
      return block;
 }
 
-static inline hal_ret_t 
-get_program_offset (char *progname, char *labelname, uint64_t *offset) 
-{ 
-    int ret = sdk::p4::p4_program_label_to_offset("p4plus", 
-                                            progname, 
-                                            labelname, 
-                                            offset); 
-    if(ret != 0) { 
-        return HAL_RET_HW_FAIL; 
-    } 
-    *offset >>= MPU_PC_ADDR_SHIFT; 
-    return HAL_RET_OK; 
-} 
+static inline hal_ret_t
+get_program_offset (char *progname, char *labelname, uint64_t *offset)
+{
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
+                                            progname,
+                                            labelname,
+                                            offset);
+    if(ret != 0) {
+        return HAL_RET_HW_FAIL;
+    }
+    *offset >>= MPU_PC_ADDR_SHIFT;
+    return HAL_RET_OK;
+}
 
 /*
  ** TODO: Need to remove this hardcoded values. They will go away

@@ -24,7 +24,7 @@ struct s4_t1_tcp_tx_read_nmdr_gc_pi_d d;
 
 tcp_tx_read_nmdr_gc_idx_start:
     add             r1, d.sw_pi, k.t1_s2s_num_pkts_freed
-    and             r1, r1, CAPRI_HBM_GC_PER_PRODUCER_RING_MASK
+    and             r1, r1, ASIC_HBM_GC_PER_PRODUCER_RING_MASK
     seq             c1, r1, d.sw_ci
     b.c1            fatal_error
     /*
@@ -32,7 +32,7 @@ tcp_tx_read_nmdr_gc_idx_start:
      */
     add             r2, d.sw_pi, r0
     add             r1, r0, k.t1_s2s_num_pkts_freed
-    tblmincr.f      d.sw_pi, CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT, r1
+    tblmincr.f      d.sw_pi, ASIC_HBM_GC_PER_PRODUCER_RING_SHIFT, r1
     CAPRI_CLEAR_TABLE_VALID(1)
 
     phvwri          p.p4_txdma_intr_dma_cmd_ptr, CAPRI_PHV_START_OFFSET(ringentry_dma_dma_cmd_type) / 16
@@ -76,10 +76,10 @@ dma_free_rnmdr_one_dma_command:
     CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(ringentry_dma_dma_cmd, r1, ring_entry1_descr_addr, r6)
 
 dma_free_rnmdr_doorbell:
-    mincr	    r2, CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT, k.t1_s2s_num_pkts_freed
+    mincr	    r2, ASIC_HBM_GC_PER_PRODUCER_RING_SHIFT, k.t1_s2s_num_pkts_freed
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(doorbell_dma_dma_cmd, LIF_GC,
-                    CAPRI_HBM_GC_RNMDR_QTYPE,
-                    CAPRI_RNMDR_GC_TCP_RING_PRODUCER, 0,
+                    ASIC_HBM_GC_RNMDR_QTYPE,
+                    ASIC_RNMDR_GC_TCP_RING_PRODUCER, 0,
                     r2, db_data_pid, db_data_index)
     CAPRI_DMA_CMD_STOP_FENCE(doorbell_dma_dma_cmd)
     nop.e
@@ -140,10 +140,10 @@ dma_free_tnmdr_one_dma_command:
     CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(ringentry_dma_dma_cmd, r1, ring_entry1_descr_addr, r6)
 
 dma_free_tnmdr_doorbell:
-    mincr	    r2, CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT, k.t1_s2s_num_pkts_freed
+    mincr	    r2, ASIC_HBM_GC_PER_PRODUCER_RING_SHIFT, k.t1_s2s_num_pkts_freed
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(doorbell_dma_dma_cmd, LIF_GC,
-                    CAPRI_HBM_GC_TNMDR_QTYPE,
-                    CAPRI_TNMDR_GC_TCP_RING_PRODUCER, 0,
+                    ASIC_HBM_GC_TNMDR_QTYPE,
+                    ASIC_TNMDR_GC_TCP_RING_PRODUCER, 0,
                     r2, db_data_pid, db_data_index)
     CAPRI_DMA_CMD_STOP_FENCE(doorbell_dma_dma_cmd)
     nop.e

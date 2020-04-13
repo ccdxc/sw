@@ -1,7 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 
 struct copp_action_k k;
 struct copp_action_d d;
@@ -27,7 +27,7 @@ copp_permitted_stats_overflow:
   or          r7, r7, r5[31:27], 58
 
   add         r5, r5, k.copp_metadata_policer_index, 5
-  addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+  addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
   memwr.dx.e  r6, r7
@@ -50,7 +50,7 @@ copp_denied_stats_overflow:
 
   add         r5, r5, k.copp_metadata_policer_index, 5
   add         r5, r5, 16
-  addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+  addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
   memwr.dx.e  r6, r7

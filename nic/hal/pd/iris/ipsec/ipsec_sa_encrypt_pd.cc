@@ -5,7 +5,7 @@
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 #include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
-#include "nic/sdk/platform/capri/capri_common.hpp"
+#include "nic/sdk/asic/cmn/asic_common.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
@@ -630,13 +630,13 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
-    
+
     hwid = asicpd_get_mem_addr(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_IPSEC_ENC_NMDR_ALLOC_PI;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
-    HAL_TRACE_DEBUG("Enc RNMDPR PI {}", counter); 
+    HAL_TRACE_DEBUG("Enc RNMDPR PI {}", counter);
     stats.enc_rnmdpr_pi_counters = counter;
 
     hwid = asicpd_get_mem_addr(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_IPSEC_ENC_NMDR_ALLOC_CI;
@@ -652,7 +652,7 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
-    HAL_TRACE_DEBUG("Dec RNMDPR PI {}", counter); 
+    HAL_TRACE_DEBUG("Dec RNMDPR PI {}", counter);
     stats.dec_rnmdpr_pi_counters = counter;
 
     hwid = asicpd_get_mem_addr(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_IPSEC_DEC_NMDR_ALLOC_CI;
@@ -678,7 +678,7 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     }
     HAL_TRACE_DEBUG("Barco Decrypt Full Errors {}", htonl(counter));
     stats.gcm1_full_counters = ntohl(counter);
-    
+
     hwid = asicpd_get_mem_addr(ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM0_PI_HBM_TABLE_OFFSET;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&barco_counter, sizeof(barco_counter))) {
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
@@ -708,7 +708,7 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     stats.dec_global_barco_ci = ntohs(barco_counter);
 
     memcpy(args->stats_cb, &stats, sizeof(ipsec_global_stats_cb_t));
-    
+
     ret = HAL_RET_OK;
     return ret;
 }

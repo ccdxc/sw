@@ -2,7 +2,7 @@
 #include "EGRESS_p.h"
 #include "EGRESS_rx_policer_action_k.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 
 struct rx_policer_action_k_ k;
 struct rx_policer_action_d  d;
@@ -28,7 +28,7 @@ rx_policer_permitted_stats_overflow:
   or          r7, r7, r5[31:27], 58
 
   add         r5, r5, k.capri_intrinsic_lif, 5
-  addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+  addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
   memwr.dx.e  r6, r7
@@ -51,7 +51,7 @@ rx_policer_denied_stats_overflow:
 
   add         r5, r5, k.capri_intrinsic_lif, 5
   add         r5, r5, 16
-  addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+  addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
   add         r6, r6, r5[26:0]
 
   memwr.dx.e  r6, r7

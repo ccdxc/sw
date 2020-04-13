@@ -77,7 +77,7 @@ tcp_ooq_load_qstate_process_next_pkt_descr:
 
     // we are done with current queue, ring doorbell if pi == ci
     tblwr           d.ooq_work_in_progress, 0
-    tblmincri.f     d.{ci_0}.hx, CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT, 1
+    tblmincri.f     d.{ci_0}.hx, ASIC_OOO_RX2TX_RING_SLOTS_SHIFT, 1
 
     // Inform producer of CI
     add             r1, r0, d.ooo_rx2tx_producer_ci_addr

@@ -76,7 +76,7 @@ tcp_rx_process_start:
     seq.!c6         c6, k.common_phv_ooq_tx2rx_pkt, 1
     seq             c7, k.to_s1_rcv_wnd_adv, 0
 /* set ts_recent always...this as/is needs fix -- TBD*/
-    phvwr        p.rx2tx_extra_rcv_tsval, k.s1_s2s_rcv_tsval 
+    phvwr        p.rx2tx_extra_rcv_tsval, k.s1_s2s_rcv_tsval
     tblwr.c1        d.u.tcp_rx_d.ts_recent, k.s1_s2s_rcv_tsval
     bcf             [c1 | c2 | c3 | c4 | c5 | c6 | c7], tcp_rx_slow_path
 
@@ -89,7 +89,7 @@ tcp_store_ts_recent:
      *
      */
     seq             c1, k.to_s1_rcv_wup, d.u.tcp_rx_d.rcv_nxt
-    
+
     //tblwr.c1        d.u.tcp_rx_d.ts_recent, k.s1_s2s_rcv_tsval
 
     /*
@@ -143,7 +143,7 @@ tcp_schedule_del_ack:
     CAPRI_RING_DOORBELL_DATA(0, k.common_phv_fid,
                         TCP_SCHED_RING_DEL_ACK, d.u.tcp_rx_d.del_ack_pi)
     memwr.dx        r4, r3
-    
+
     seq             c1, d.u.tcp_rx_d.dont_send_ack_L, 0
     b               tcp_ack_snd_check_end
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_DEL_ACK, \
@@ -188,10 +188,10 @@ table_launch_RNMDR_ALLOC_IDX:
                         RNMDPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
 
     seq             c1, d.u.tcp_rx_d.num_pkts, 0
-    b.!c1           tcp_rx_end 
+    b.!c1           tcp_rx_end
     tblmincri       d.u.tcp_rx_d.num_pkts, 4, 1
     CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_fc,
-                 CAPRI_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR, TABLE_SIZE_64_BITS)
+                 ASIC_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR, TABLE_SIZE_64_BITS)
 
 tcp_rx_end:
     nop.e
@@ -266,12 +266,12 @@ tcp_rx_ooo_skip_dup_ack:
     // if (seqnum == rcv_nxt - 1 && payload_len == 0) {it is a keep alive, add stats}
     add             r1, k.s1_s2s_seq, 1
     sne             c4, d.u.tcp_rx_d.rcv_nxt, r1
-    bcf             [c4 | c2], tcp_rx_check_win_probe 
+    bcf             [c4 | c2], tcp_rx_check_win_probe
     addui           r2, r0, hiword(TCP_PROXY_STATS)
     addi            r2, r2, loword(TCP_PROXY_STATS)
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RCVD_KEEP_ALIVE, 1)
 
-tcp_rx_check_win_probe: 
+tcp_rx_check_win_probe:
     seq             c4, k.to_s1_rcv_wnd_adv, 0
     // c4: adv_win == 0
     // c1: seqnum != rcv_nxt

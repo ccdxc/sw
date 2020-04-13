@@ -21,7 +21,7 @@ esp_v4_tunnel_n2h_write_barco_req:
     tblwr.f d.barco_full_count, 0
 	
     add r2, r0, k.ipsec_to_stage3_barco_req_addr
-    blti  r2, CAPRI_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_req
+    blti  r2, ASIC_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_req
     nop
     phvwr p.brq_req_write_dma_cmd_addr, k.ipsec_to_stage3_barco_req_addr 
     seq c1, k.ipsec_to_stage3_new_key, 1
@@ -33,7 +33,7 @@ esp_v4_tunnel_n2h_post_to_barco_ring:
     sll r3, r3, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr
   
-    blti  r3, CAPRI_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_cb
+    blti  r3, ASIC_HBM_BASE,  esp_v4_tunnel_n2h_write_barco_req_illegal_dma_barco_cb
     nop
     phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
     add r2, r0, k.txdma1_global_ipsec_cb_addr

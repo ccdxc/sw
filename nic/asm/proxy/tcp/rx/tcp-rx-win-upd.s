@@ -29,7 +29,7 @@ tcp_rx_win_upd_process_start:
     // Read rnmdr unconditionally here. Need more accurate calculation of
     // the window when we send out window updates.
     CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_fc,
-                 CAPRI_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR, TABLE_SIZE_64_BITS)
+                 ASIC_SEM_RNMDPR_BIG_ALLOC_RAW_ADDR, TABLE_SIZE_64_BITS)
     seq             c1, k.common_phv_ooq_tx2rx_win_upd, 1
     phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
     phvwr.c1        p.rx2tx_extra_dup_rcv_nxt, d.u.tcp_rx_d.rcv_nxt

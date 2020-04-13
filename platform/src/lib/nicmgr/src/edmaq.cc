@@ -10,8 +10,7 @@
 #include "cap_wa_c_hdr.h"
 
 #include "nic/sdk/asic/pd/pd.hpp"
-#include "nic/sdk/platform/capri/capri_common.hpp"
-
+#include "nic/sdk/asic/cmn/asic_common.hpp"
 
 EdmaQ::EdmaQ(
     const char *name,
@@ -197,7 +196,7 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
         return false;
 
     /* MS only supports reading/writing 64B per DMA transaction */
-    if (from <= CAPRI_HBM_BASE || to <= CAPRI_HBM_BASE) {
+    if (from <= ASIC_HBM_BASE || to <= ASIC_HBM_BASE) {
         chunk_sz = (chunk_sz < 64) ? chunk_sz : 64;
     }
 

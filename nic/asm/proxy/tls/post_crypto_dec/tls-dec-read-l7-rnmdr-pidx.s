@@ -23,7 +23,7 @@ tls_dec_post_read_l7_rnmdr_pidx:
 
     // TODO : check for semaphore full
     add         r4, r0, d.{u.tls_read_l7_rnmdr_pidx_d.rnmdr_pidx}.wx
-    andi        r4, r4, ((1 << CAPRI_RNMDPR_SMALL_RING_SHIFT) - 1)
+    andi        r4, r4, ((1 << ASIC_RNMDPR_SMALL_RING_SHIFT) - 1)
 
 table_read_RNMDR_DESC:
     addui       r3, r0, hiword(RNMDPR_BIG_TABLE_BASE)

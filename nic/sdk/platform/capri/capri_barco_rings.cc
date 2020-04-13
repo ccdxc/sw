@@ -3,7 +3,7 @@
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "platform/capri/capri_barco_res.hpp"
 #include "platform/capri/capri_barco_crypto.hpp"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "asic/rw/asicrw.hpp"
 #include "asic/cmn/asic_hbm.hpp"
@@ -73,7 +73,7 @@ capri_barco_ring_t  barco_rings[] = {
         ASIC_HBM_REG_BARCO_RING_GCM0,
         0,
         BARCO_CRYPTO_DESC_ALIGN_BYTES,
-        CAPRI_BARCO_RING_SLOTS,
+        ASIC_BARCO_RING_SLOTS,
         BARCO_CRYPTO_DESC_SZ,
         0,
         0,
@@ -94,7 +94,7 @@ capri_barco_ring_t  barco_rings[] = {
         ASIC_HBM_REG_BARCO_RING_GCM1,
         0,
         BARCO_CRYPTO_DESC_ALIGN_BYTES,
-        CAPRI_BARCO_RING_SLOTS,
+        ASIC_BARCO_RING_SLOTS,
         BARCO_CRYPTO_DESC_SZ,
         0,
         0,
@@ -115,7 +115,7 @@ capri_barco_ring_t  barco_rings[] = {
         ASIC_HBM_REG_BARCO_RING_XTS0,
         0,
         32,
-        CAPRI_BARCO_XTS_RING_SLOTS,
+        ASIC_BARCO_XTS_RING_SLOTS,
         BARCO_CRYPTO_DESC_SZ,
         0,
         0,
@@ -136,7 +136,7 @@ capri_barco_ring_t  barco_rings[] = {
         ASIC_HBM_REG_BARCO_RING_XTS1,
         0,
         32,
-        CAPRI_BARCO_XTS_RING_SLOTS,
+        ASIC_BARCO_XTS_RING_SLOTS,
         BARCO_CRYPTO_DESC_SZ,
         0,
         0,
@@ -539,7 +539,7 @@ capri_barco_xts0_key_array_init (void)
     sdk_ret_t ret = SDK_RET_OK;
     uint64_t key_array_base;
     uint32_t key_array_key_count;
-    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    char key_desc_array[] = ASIC_BARCO_KEY_DESC;
     uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
@@ -635,7 +635,7 @@ capri_barco_xts1_key_array_init (void)
     sdk_ret_t ret = SDK_RET_OK;
     uint64_t key_array_base;
     uint32_t key_array_key_count;
-    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    char key_desc_array[] = ASIC_BARCO_KEY_DESC;
     uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
@@ -730,7 +730,7 @@ capri_barco_mpp0_key_array_init (void)
     sdk_ret_t ret = SDK_RET_OK;
     uint64_t key_array_base;
     uint32_t key_array_key_count;
-    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    char key_desc_array[] = ASIC_BARCO_KEY_DESC;
     uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
@@ -924,7 +924,7 @@ capri_barco_mpp1_key_array_init (void)
     sdk_ret_t ret = SDK_RET_OK;
     uint64_t key_array_base;
     uint32_t key_array_key_count;
-    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    char key_desc_array[] = ASIC_BARCO_KEY_DESC;
     uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
@@ -1025,7 +1025,7 @@ capri_barco_mpp2_key_array_init (void)
     sdk_ret_t ret = SDK_RET_OK;
     uint64_t key_array_base;
     uint32_t key_array_key_count;
-    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    char key_desc_array[] = ASIC_BARCO_KEY_DESC;
     uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
@@ -1126,7 +1126,7 @@ capri_barco_mpp3_key_array_init(void)
     sdk_ret_t ret = SDK_RET_OK;
     uint64_t key_array_base;
     uint32_t key_array_key_count;
-    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    char key_desc_array[] = ASIC_BARCO_KEY_DESC;
     uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
@@ -1227,7 +1227,7 @@ capri_barco_gcm0_key_array_init (void)
     sdk_ret_t ret = SDK_RET_OK;
     uint64_t key_array_base;
     uint32_t key_array_key_count;
-    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    char key_desc_array[] = ASIC_BARCO_KEY_DESC;
     uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM
@@ -1417,7 +1417,7 @@ capri_barco_gcm1_key_array_init (void)
     sdk_ret_t ret = SDK_RET_OK;
     uint64_t key_array_base;
     uint32_t key_array_key_count;
-    char key_desc_array[] = CAPRI_BARCO_KEY_DESC;
+    char key_desc_array[] = ASIC_BARCO_KEY_DESC;
     uint32_t region_sz = 0;
 
     // Currently sharing the same key descriptor array as GCM

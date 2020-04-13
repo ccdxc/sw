@@ -33,12 +33,12 @@ gc_tx_rnmdr_s0_start:
 
     /*
      * r5 = Address to read from descriptor GC ring
-     * 
+     *
      * r4 = doorbell address
      * r3 = doorbell data
      */
 
-    // sw_ci is used for queue full check - set this to 
+    // sw_ci is used for queue full check - set this to
     // the current value
     tblwr           d.sw_ci, d.{ci_0}.hx
 
@@ -68,7 +68,7 @@ gc_tx_rnmdr_s0_start:
     seq             c1, d.{ci_0}.hx, d.{pi_0}.hx
     b.!c1           gc_tx_launch_rnmdr_and_end
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, \
-                        DB_SCHED_UPD_EVAL, CAPRI_HBM_GC_RNMDR_QTYPE, LIF_GC)
+                        DB_SCHED_UPD_EVAL, ASIC_HBM_GC_RNMDR_QTYPE, LIF_GC)
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA_QID(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
@@ -92,12 +92,12 @@ gc_tx_tnmdr_s0_start:
 
     /*
      * r5 = Address to read from descriptor GC ring
-     * 
+     *
      * r4 = doorbell address
      * r3 = doorbell data
      */
 
-    // sw_ci is used for queue full check - set this to 
+    // sw_ci is used for queue full check - set this to
     // the current value
     tblwr           d.sw_ci, d.{ci_0}.hx
 
@@ -127,7 +127,7 @@ gc_tx_tnmdr_s0_start:
     seq             c1, d.{ci_0}.hx, d.{pi_0}.hx
     b.!c1           gc_tx_launch_tnmdr_and_end
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, \
-                        DB_SCHED_UPD_EVAL, CAPRI_HBM_GC_TNMDR_QTYPE, LIF_GC)
+                        DB_SCHED_UPD_EVAL, ASIC_HBM_GC_TNMDR_QTYPE, LIF_GC)
     /* data will be in r3 */
     CAPRI_RING_DOORBELL_DATA_QID(k.p4_txdma_intr_qid)
     memwr.dx        r4, r3
@@ -139,4 +139,4 @@ gc_tx_launch_tnmdr_and_end:
 gc_tx_abort:
     nop.e
     phvwr           p.p4_intr_global_drop, 1
-    
+

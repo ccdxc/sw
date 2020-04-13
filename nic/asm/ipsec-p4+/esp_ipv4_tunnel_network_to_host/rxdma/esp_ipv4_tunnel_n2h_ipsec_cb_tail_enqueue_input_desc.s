@@ -16,19 +16,19 @@ esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc:
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
  
     add r2, r0, k.t0_s2s_in_desc_addr
-    blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_in_desc
+    blti  r2, ASIC_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_in_desc
     nop
     phvwr p.dma_cmd_phv2mem_ipsec_int_dma_cmd_addr, k.t0_s2s_in_desc_addr
     add r1, k.t0_s2s_in_desc_addr, IPSEC_SCRATCH_OFFSET 
     phvwr p.dma_cmd_in_desc_aol_dma_cmd_addr, r1
     add r1, k.ipsec_to_stage4_out_desc_addr, IPSEC_SCRATCH_OFFSET 
-    blti  r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_out_desc
+    blti  r1, ASIC_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_out_desc
     nop
     phvwr p.dma_cmd_out_desc_aol_dma_cmd_addr, r1 
     and r3, k.ipsec_global_cb_pindex, IPSEC_CB_RING_INDEX_MASK
     sll r3, r3, IPSEC_CB_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.cb_ring_base_addr 
-    blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_cb_ring
+    blti  r3, ASIC_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_cb_ring
     nop
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
     phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_type}, ((IPSEC_CB_RING_IN_DESC_END << 18) | (IPSEC_CB_RING_IN_DESC_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
@@ -87,7 +87,7 @@ esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_dummy_desc:
     add r3, r3, r2 
     phvwr p.dma_cmd_post_cb_ring_dma_cmd_addr, r3
     phvwri p.{dma_cmd_post_cb_ring_dma_cmd_phv_end_addr...dma_cmd_post_cb_ring_dma_cmd_type}, ((IPSEC_CB_RING_IN_DESC_END << 18) | (IPSEC_CB_RING_IN_DESC_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
-    blti  r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_cb_ring
+    blti  r2, ASIC_HBM_BASE, esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc_illegal_dma_cb_ring
     nop
     add r7, k.ipsec_global_cb_pindex, 1
     andi r7, r7, IPSEC_CB_RING_INDEX_MASK 

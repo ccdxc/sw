@@ -27,11 +27,11 @@ struct tx_table_s7_t2_d     d;
 tls_dec_gc_setup:
     CAPRI_CLEAR_TABLE_VALID(3)
     add             r1, d.u.tls_gc_setup_d.sw_pi, 1
-    and             r1, r1, CAPRI_HBM_GC_PER_PRODUCER_RING_MASK
+    and             r1, r1, ASIC_HBM_GC_PER_PRODUCER_RING_MASK
     seq             c1, r1, d.u.tls_gc_setup_d.sw_ci
     b.c1            fatal_error
     add             r2, d.u.tls_gc_setup_d.sw_pi, r0
-    tblmincri.f     d.u.tls_gc_setup_d.sw_pi, CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT, 1
+    tblmincri.f     d.u.tls_gc_setup_d.sw_pi, ASIC_HBM_GC_PER_PRODUCER_RING_SHIFT, 1
 
     phvwr           p.gc_ring_entry_descr_addr , k.s2s_t2_idesc
 
@@ -39,10 +39,10 @@ tls_dec_gc_setup:
     addi            r1, r1, loword(RNMDR_TLS_GC_TABLE_BASE)
     add             r1, r1, r2, RNMDR_TABLE_ENTRY_SIZE_SHFT
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_gc_slot_dma_cmd, r1, gc_ring_entry_descr_addr, gc_ring_entry_descr_addr)
-    mincr          r2, CAPRI_HBM_GC_PER_PRODUCER_RING_SHIFT, 1
+    mincr          r2, ASIC_HBM_GC_PER_PRODUCER_RING_SHIFT, 1
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(dma_cmd_gc_dbell_dma_cmd, LIF_GC,
-                    CAPRI_HBM_GC_RNMDR_QTYPE,
-                    CAPRI_RNMDR_GC_TLS_RING_PRODUCER, 0,
+                    ASIC_HBM_GC_RNMDR_QTYPE,
+                    ASIC_RNMDR_GC_TLS_RING_PRODUCER, 0,
                     r2, gc_db_data_pid, gc_db_data_index)
     CAPRI_DMA_CMD_FENCE(dma_cmd_gc_dbell_dma_cmd)
     nop.e

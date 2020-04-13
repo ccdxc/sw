@@ -7,7 +7,7 @@
  * Table names
  *****************************************************************************/
 #include "../common-p4+/common_txdma_dummy.p4"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 
 #define tx_table_s0_t0 s0_t0_ooq_tcp_tx
 #define tx_table_s0_t1 s0_t1_ooq_tc_tx

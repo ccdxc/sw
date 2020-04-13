@@ -27,7 +27,7 @@ eth_rx_stats_atomic:
     nop
 #endif
 
-    addi            _r_base, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi            _r_base, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     addi            _r_lif_offset, r0, lif_stats_base[30:0] // substract 0x80000000 because hw adds it
     add             _r_lif_offset, _r_lif_offset, k.eth_rx_global_lif, LIF_STATS_SIZE_SHIFT
 

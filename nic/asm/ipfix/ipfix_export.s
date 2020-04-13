@@ -56,7 +56,7 @@ ipfix_export_packet:
 
 ipfix_export_dma_packet:
     // update exporter stats
-    addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     add         r6, r6, r5[26:0]
     addi        r1, r0, 0x1000001
     or          r7, d.{u.ipfix_export_packet_d.next_record_offset}.hx, r1, 32

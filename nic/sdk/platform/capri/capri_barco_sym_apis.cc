@@ -9,7 +9,7 @@
 #include "platform/capri/capri_barco_sym_apis.hpp"
 #include "platform/capri/capri_barco_asym_apis.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "platform/capri/capri_barco.h"
 #include "platform/capri/capri_hbm_rw.hpp"
 
@@ -1696,10 +1696,10 @@ capri_barco_setup_dummy_gcm1_req (uint32_t key_idx)
     sym_req_descr.status_addr           = status_addr;
     sym_req_descr.doorbell_addr         = db_addr;
 
-    assert((CAPRI_BARCO_RING_SLOTS & (CAPRI_BARCO_RING_SLOTS-1)) == 0);
+    assert((ASIC_BARCO_RING_SLOTS & (ASIC_BARCO_RING_SLOTS-1)) == 0);
 
     gcm1_ring_base = sdk::asic::asic_get_mem_addr(ASIC_HBM_REG_BARCO_RING_GCM1);
-    for (idx = 0; idx < CAPRI_BARCO_RING_SLOTS; idx+=8) {
+    for (idx = 0; idx < ASIC_BARCO_RING_SLOTS; idx+=8) {
         gcm1_slot_addr = gcm1_ring_base + (idx <<
                                            CAPRI_BARCO_SYM_REQ_DESC_SZ_SHIFT);
 

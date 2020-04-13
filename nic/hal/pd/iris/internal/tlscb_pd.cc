@@ -10,7 +10,7 @@
 #include "nic/hal/hal.hpp"
 #include "gen/p4gen/tls_txdma_pre_crypto_enc/include/tls_txdma_pre_crypto_enc_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/include/tcp_common.h"
 #include "nic/include/app_redir_shared.h"
 
@@ -297,8 +297,10 @@ p4pd_add_or_del_tls_tx_s0_t0_read_tls_stg0_entry(pd_tlscb_t* tlscb_pd, bool del)
 
         uint64_t                gc_base;
         // get gc address
-        gc_base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_GC, CAPRI_HBM_GC_RNMDR_QTYPE,
-                    CAPRI_RNMDR_GC_TLS_RING_PRODUCER) + TCP_GC_CB_SW_PI_OFFSET;
+        gc_base = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_GC,
+                                                     ASIC_HBM_GC_RNMDR_QTYPE,
+                                                     ASIC_RNMDR_GC_TLS_RING_PRODUCER) +
+            TCP_GC_CB_SW_PI_OFFSET;
         HAL_TRACE_DEBUG("gc_base: {:#x}", gc_base);
         data.u.read_tls_stg0_d.gc_base = htonl(gc_base);
     }

@@ -49,7 +49,7 @@ proxyr_s2_desc_post_read:
     /*
      * Fetch/update memory page pindex for storing meta headers
      */
-    addi        r_alloc_inf_addr, r0, CAPRI_SEM_RNMPR_SMALL_ALLOC_INF_ADDR // delay slot
+    addi        r_alloc_inf_addr, r0, ASIC_SEM_RNMPR_SMALL_ALLOC_INF_ADDR // delay slot
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS,
                           proxyr_s3_mpage_sem_pindex_post_update,
                           r_alloc_inf_addr,

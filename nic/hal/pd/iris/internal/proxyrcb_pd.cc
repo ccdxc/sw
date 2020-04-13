@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "nic/hal/pd/iris/internal/proxyrcb_pd.hpp"
 #include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
@@ -13,7 +13,7 @@
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
 /*
- * Number of CAPRI_QSTATE_HEADER_COMMON bytes that should stay constant,
+ * Number of ASIC_QSTATE_HEADER_COMMON bytes that should stay constant,
  * i.e., not overwritten, during a CB update. Ideally this should come
  * from an offsetof(proxyr_tx_start_d) but that is not
  * available due to bit fields usage in proxyr_tx_start_d.
@@ -173,7 +173,7 @@ p4pd_add_or_del_proxyr_tx_stage0_entry(pd_proxyrcb_t* proxyrcb_pd,
                         proxyrcb->chain_rxq_ring_index_select, arq_base);
         data.u.start_d.chain_rxq_base = arq_base;
         data.u.start_d.chain_rxq_ring_indices_addr =
-               CAPRI_SEM_ARQ_INF_ADDR(proxyrcb->chain_rxq_ring_index_select);
+               ASIC_SEM_ARQ_INF_ADDR(proxyrcb->chain_rxq_ring_index_select);
         data.u.start_d.chain_rxq_ring_size_shift = ring_size_shift;
         data.u.start_d.chain_rxq_entry_size_shift = entry_size_shift;
         HAL_TRACE_DEBUG("PROXYRCB chain_rxq_ring_indices_addr: {:#x} "

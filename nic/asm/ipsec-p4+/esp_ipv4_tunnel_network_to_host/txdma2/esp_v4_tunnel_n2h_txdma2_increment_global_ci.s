@@ -11,7 +11,7 @@ struct phv_ p;
 esp_v4_tunnel_n2h_txdma2_increment_global_ci:
     /* Check for the Barco Decrypt bug workaround slot on the ring */
     seq c1, d.ci[CAPRI_BARCO_GCM_DECRYPT_BUG_REQ_STRIDE_SHIFT-1:0], 0
-    tblmincri.c1.f d.ci, CAPRI_BARCO_RING_SLOTS_SHIFT, 2
-    tblmincri.!c1.f d.ci, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
+    tblmincri.c1.f d.ci, ASIC_BARCO_RING_SLOTS_SHIFT, 2
+    tblmincri.!c1.f d.ci, ASIC_BARCO_RING_SLOTS_SHIFT, 1
     nop.e
     nop

@@ -39,8 +39,8 @@ _page2_free_applic_check:
                            t1_s2s_aol_A2_sbit48_ebit51}
     nop.c1.e
     sne         c1, k.t1_s2s_aol_A2_small, r0               // delay slot
-    addi.c1     r_scratch, r0, CAPRI_SEM_RNMPR_SMALL_FREE_INF_ADDR
-    addi.!c1    r_scratch, r0, CAPRI_SEM_RNMPR_FREE_INF_ADDR
+    addi.c1     r_scratch, r0, ASIC_SEM_RNMPR_SMALL_FREE_INF_ADDR
+    addi.!c1    r_scratch, r0, ASIC_SEM_RNMPR_FREE_INF_ADDR
     CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_DIS,
                             proxyc_s7_page2_free,
                             r_scratch,

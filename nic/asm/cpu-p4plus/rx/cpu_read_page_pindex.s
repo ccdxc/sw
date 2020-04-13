@@ -16,7 +16,7 @@ cpu_rx_read_page_pindex_start:
     CAPRI_CLEAR_TABLE2_VALID
     
     add     r4, r0, d.{u.read_cpu_page_d.page_pindex}.wx
-    andi    r4, r4, ((1 << CAPRI_RNMPR_RING_SHIFT) - 1)
+    andi    r4, r4, ((1 << ASIC_RNMPR_RING_SHIFT) - 1)
     phvwr   p.s2_t2_s2s_page_pindex, r4
 
 table_read_page_alloc:

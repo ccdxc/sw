@@ -115,7 +115,7 @@ ipfix_create_ipv6_record:
 
 ipfix_update_record_stats:
     // update record stats
-    addi        r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    addi        r6, r0, ASIC_MEM_SEM_ATOMIC_ADD_START
     add         r6, r6, r5[26:0]
     or          r7,  1, r5[31:27], 58
     memwr.dx    r6, r7

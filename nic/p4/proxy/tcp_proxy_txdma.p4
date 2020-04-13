@@ -3,7 +3,7 @@
 /*****************************************************************************/
 
 #include "../common-p4+/common_txdma_dummy.p4"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 
 /******************************************************************************
  * Table names
@@ -289,7 +289,7 @@ header_type to_stage_2_phv_t {
 
 header_type to_stage_3_phv_t {
     fields {
-        sesq_retx_ci            : CAPRI_SESQ_RING_SLOTS_SHIFT;
+        sesq_retx_ci            : ASIC_SESQ_RING_SLOTS_SHIFT;
         clean_retx_pi           : 16;
         window_not_restricted   : 1;
     }
@@ -817,7 +817,7 @@ action xmit(XMIT_SHARED_PARAMS) {
     // from to_stage 4
     modify_field(to_s4_scratch.snd_cwnd, to_s4.snd_cwnd);
     modify_field(to_s4_scratch.rto, to_s4.rto);
-    modify_field(to_s4_scratch.rtt_seq_req, to_s4.rtt_seq_req);  
+    modify_field(to_s4_scratch.rtt_seq_req, to_s4.rtt_seq_req);
     modify_field(to_s4_scratch.sesq_tx_ci, to_s4.sesq_tx_ci);
     modify_field(to_s4_scratch.rcv_mss_shft, to_s4.rcv_mss_shft);
     modify_field(to_s4_scratch.quick, to_s4.quick);

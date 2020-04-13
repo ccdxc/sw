@@ -33,7 +33,7 @@ proxyc_s5_desc_free:
     add         r_table_idx, r0, d.{pindex}.wx    // delay slot
 
     APP_REDIR_IMM64_LOAD(r_table_base, RNMDR_TABLE_BASE)
-    mincr       r_table_idx, CAPRI_RNMDR_RING_SHIFT, r0
+    mincr       r_table_idx, ASIC_RNMDR_RING_SHIFT, r0
     add         r_table_base, r_table_base, r_table_idx, \
                 RNMDR_TABLE_ENTRY_SIZE_SHFT
     memwr.d     r_table_base, k.t0_s2s_desc
@@ -41,8 +41,8 @@ proxyc_s5_desc_free:
     /*
      * Update CI
      */
-    addi        r_table_base, r0, CAPRI_SEM_RNMDR_ALLOC_CI_RAW_ADDR
-    mincr       r_table_idx, CAPRI_RNMDR_RING_SHIFT, 1
+    addi        r_table_base, r0, ASIC_SEM_RNMDR_ALLOC_CI_RAW_ADDR
+    mincr       r_table_idx, ASIC_RNMDR_RING_SHIFT, 1
     memwr.w     r_table_base, r_table_idx.wx
     wrfence.e
     nop

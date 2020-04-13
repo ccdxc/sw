@@ -20,11 +20,11 @@ hal_ret_t
 p4pd_get_gc_tx_stage0_prog_offset(int qtype, uint64_t* offset)
 {
     char progname[] = "txdma_stage0.bin";
-    const char *labelname[CAPRI_HBM_GC_NUM_QTYPE] = {
+    const char *labelname[ASIC_HBM_GC_NUM_QTYPE] = {
         "gc_tx_rnmdr_stage0",
         "gc_tx_tnmdr_stage0"
     };
-    HAL_ABORT(qtype < CAPRI_HBM_GC_NUM_QTYPE);
+    HAL_ABORT(qtype < ASIC_HBM_GC_NUM_QTYPE);
 
     int ret = sdk::p4::p4_program_label_to_offset("p4plus",
                                             progname,
@@ -116,7 +116,7 @@ p4pd_init_rnmdr_gc_cbs(void)
      * TCP producer to RNMDR
      */
     ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_RX_GC,
-            CAPRI_HBM_GC_RNMDR_QTYPE, CAPRI_RNMDR_GC_TCP_RING_PRODUCER);
+            ASIC_HBM_GC_RNMDR_QTYPE, ASIC_RNMDR_GC_TCP_RING_PRODUCER);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -125,7 +125,7 @@ p4pd_init_rnmdr_gc_cbs(void)
      * TLS producer to RNMDR
      */
     ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_RX_GC,
-            CAPRI_HBM_GC_RNMDR_QTYPE, CAPRI_RNMDR_GC_TLS_RING_PRODUCER);
+            ASIC_HBM_GC_RNMDR_QTYPE, ASIC_RNMDR_GC_TLS_RING_PRODUCER);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -134,7 +134,7 @@ p4pd_init_rnmdr_gc_cbs(void)
      * IPSEC producer to RNMDR
      */
     ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_RX_GC,
-            CAPRI_HBM_GC_RNMDR_QTYPE, CAPRI_RNMDR_GC_IPSEC_RING_PRODUCER);
+            ASIC_HBM_GC_RNMDR_QTYPE, ASIC_RNMDR_GC_IPSEC_RING_PRODUCER);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -143,7 +143,7 @@ p4pd_init_rnmdr_gc_cbs(void)
      * CPU producer to RNMDR
      */
     ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_RX_GC,
-            CAPRI_HBM_GC_RNMDR_QTYPE, CAPRI_RNMDR_GC_CPU_ARM_RING_PRODUCER);
+            ASIC_HBM_GC_RNMDR_QTYPE, ASIC_RNMDR_GC_CPU_ARM_RING_PRODUCER);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -160,7 +160,7 @@ p4pd_init_tnmdr_gc_cbs(void)
      * TCP producer to TNMDR
      */
     ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_TX_GC,
-            CAPRI_HBM_GC_TNMDR_QTYPE, CAPRI_TNMDR_GC_TCP_RING_PRODUCER);
+            ASIC_HBM_GC_TNMDR_QTYPE, ASIC_TNMDR_GC_TCP_RING_PRODUCER);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -169,7 +169,7 @@ p4pd_init_tnmdr_gc_cbs(void)
      * TLS producer to TNMDR
      */
     ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_TX_GC,
-            CAPRI_HBM_GC_TNMDR_QTYPE, CAPRI_TNMDR_GC_TLS_RING_PRODUCER);
+            ASIC_HBM_GC_TNMDR_QTYPE, ASIC_TNMDR_GC_TLS_RING_PRODUCER);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -178,7 +178,7 @@ p4pd_init_tnmdr_gc_cbs(void)
      * IPSEC producer to TNMDR
      */
     ret = p4pd_init_gc_cb(types::WRING_TYPE_NMDR_TX_GC,
-            CAPRI_HBM_GC_TNMDR_QTYPE, CAPRI_TNMDR_GC_IPSEC_RING_PRODUCER);
+            ASIC_HBM_GC_TNMDR_QTYPE, ASIC_TNMDR_GC_IPSEC_RING_PRODUCER);
     if (ret != HAL_RET_OK) {
         return ret;
     }

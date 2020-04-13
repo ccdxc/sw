@@ -3,7 +3,7 @@
 #include "nic/hal/pd/iris/tcp_proxy/tcp_rings.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "platform/capri/capri_common.hpp"
+#include "asic/cmn/asic_common.hpp"
 
 namespace hal {
 namespace pd {
@@ -26,7 +26,7 @@ static inline bool is_cpu_zero_copy_enabled (void)
 
     if (!platform_check_done) {
         is_hw = (is_platform_type_haps() || is_platform_type_hw());
-	    platform_check_done = true;
+        platform_check_done = true;
     }
     return(is_hw && cpu_do_zero_copy);
 }
@@ -47,7 +47,7 @@ tcp_ring_upd_sem_idx(tcp_ring_info_t *ring_info, bool init_pindex)
 
     switch(ring_info->type) {
         case types::WRING_TYPE_TCP_ACTL_Q:
-            ci_sem_addr = CAPRI_SEM_TCP_ACTL_Q_CI_RAW_ADDR(ring_info->queue_id);
+            ci_sem_addr = ASIC_SEM_TCP_ACTL_Q_CI_RAW_ADDR(ring_info->queue_id);
             break;
         default:
             HAL_ABORT_TRACE(0,
@@ -62,14 +62,14 @@ tcp_ring_upd_sem_idx(tcp_ring_info_t *ring_info, bool init_pindex)
      */
     if (!(sem_batch++ % TCP_RING_SEM_CI_BATCH_SIZE)) {
         HAL_TRACE_DEBUG("updating CI: type: {}, addr {:#x}, ci: {}",
-			ring_info->type, ci_sem_addr,
-			ring_info->pc_idx);
+            ring_info->type, ci_sem_addr,
+            ring_info->pc_idx);
 
-	    if (asic_reg_write(ci_sem_addr, &ring_info->pc_idx, 1,
-		      ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
-	        HAL_TRACE_ERR("Failed to program CI semaphore");
-	        return HAL_RET_HW_FAIL;
-	    }
+        if (asic_reg_write(ci_sem_addr, &ring_info->pc_idx, 1,
+              ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
+            HAL_TRACE_ERR("Failed to program CI semaphore");
+            return HAL_RET_HW_FAIL;
+        }
     }
 
     /*
@@ -198,14 +198,14 @@ pd_tcp_rings_register(pd_func_args_t *pd_func_args)
     if (is_cpu_zero_copy_enabled()) {
 
         ring_info->virt_ring_base = wring_meta->virt_base_addr[queue_id];
-	    if (!ring_info->virt_ring_base) {
+        if (!ring_info->virt_ring_base) {
             HAL_TRACE_ERR("No virtual ring base addr. TCP wring type {} queue {}", type, queue_id);
-	        return HAL_RET_NO_RESOURCE;
-	    } else {
+            return HAL_RET_NO_RESOURCE;
+        } else {
             HAL_TRACE_DEBUG("mmap the TCP ring T:{}. Q:{} phy{:#x} virt {:#x}",
-			    type, queue_id, (uint64_t)ring_info->ring_base,
-			    (uint64_t)ring_info->virt_ring_base);
-	    }
+                type, queue_id, (uint64_t)ring_info->ring_base,
+                (uint64_t)ring_info->virt_ring_base);
+        }
     }
 
     ring_info->pc_idx = wring_meta->num_slots;
@@ -319,7 +319,7 @@ pd_tcp_rings_poll(pd_func_args_t *pd_func_args)
     if (msg_cnt) {
         tcp_ring_upd_sem_idx(ring, false);
     } else {
-	    return(HAL_RET_RETRY);
+        return(HAL_RET_RETRY);
     }
 
     HAL_TRACE_DEBUG("Process batch: total-msgs {} rx-pkts {}",
@@ -329,11 +329,11 @@ pd_tcp_rings_poll(pd_func_args_t *pd_func_args)
         hal_ret_t ret;
         batch->msg_info[npkt].msg_type = TCP_ACTL_MSG_TYPE_PKT;
        /*
-	    * Lets get the packet header/data from the descriptor we've received.
-	    */
+        * Lets get the packet header/data from the descriptor we've received.
+        */
         ret = cpupkt_descr_to_headers(rxq_descr_virt_ptrs[npkt], &(batch->msg_info[npkt].u.pkt.cpu_rxhdr),
-				      &(batch->msg_info[npkt].u.pkt.pkt), &(batch->msg_info[npkt].u.pkt.pkt_len),
-				      &(batch->msg_info[npkt].u.pkt.copied_pkt), 0);
+                      &(batch->msg_info[npkt].u.pkt.pkt), &(batch->msg_info[npkt].u.pkt.pkt_len),
+                      &(batch->msg_info[npkt].u.pkt.copied_pkt), 0);
         if(ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to convert descr to headers");
             break;

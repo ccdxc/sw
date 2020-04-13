@@ -29,7 +29,7 @@ table_read_BARCO_PI:
     
 
     add             r1, d.{pi}.hx, 0
-    mincr           r1, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
+    mincr           r1, ASIC_BARCO_RING_SLOTS_SHIFT, 1
     seq             c1, r1, d.{ci}.hx
     b.c1            tls_enc_barco_full
 
@@ -38,7 +38,7 @@ table_read_BARCO_PI:
      * TODO: Add all barco ring PI's in this HBM global table to be shared across programs.
      */
     phvwr           p.to_s5_sw_barco_pi, d.{pi}.hx
-    tblmincri.!c4.f d.{pi}.hx, CAPRI_BARCO_RING_SLOTS_SHIFT, 1
+    tblmincri.!c4.f d.{pi}.hx, ASIC_BARCO_RING_SLOTS_SHIFT, 1
     tblwr.f         d.{pi}, r1.hx
 
 tls_enc_read_barco_pi_process_skip_alloc:
