@@ -8,9 +8,15 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/test/api/utils/device.hpp"
+#include "nic/apollo/test/api/utils/if.hpp"
+#include "nic/apollo/test/api/utils/nexthop.hpp"
+#include "nic/apollo/test/api/utils/nexthop_group.hpp"
 #include "nic/apollo/test/api/utils/subnet.hpp"
 #include "nic/apollo/test/api/utils/vpc.hpp"
 #include "nic/apollo/test/api/utils/policy.hpp"
+#include "nic/apollo/test/api/utils/route.hpp"
+#include "nic/apollo/test/api/utils/tep.hpp"
 #include "nic/apollo/test/api/utils/vnic.hpp"
 #include "nic/apollo/test/api/utils/workflow.hpp"
 
@@ -35,14 +41,30 @@ protected:
             pds_test_base::SetUpTestCase(g_tc_params);
 
         pds_batch_ctxt_t bctxt = batch_start();
-        sample_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
+        sample1_vpc_setup(bctxt, PDS_VPC_TYPE_TENANT);
         sample_policy_setup(bctxt);
+        if (apulu()) {
+            sample_device_setup(bctxt);
+            sample_if_setup(bctxt);
+            sample_nexthop_setup(bctxt);
+            sample_nexthop_group_setup(bctxt);
+        }
+        sample_tep_setup(bctxt);
+        sample_route_table_setup(bctxt);
         batch_commit(bctxt);
     }
     static void TearDownTestCase() {
         pds_batch_ctxt_t bctxt = batch_start();
         sample_policy_teardown(bctxt);
-        sample_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
+        if (apulu()) {
+            sample_nexthop_teardown(bctxt);
+            sample_if_teardown(bctxt);
+            sample_nexthop_group_teardown(bctxt);
+            sample_device_teardown(bctxt);
+        }
+        sample_tep_teardown(bctxt);
+        sample_route_table_teardown(bctxt);
+        sample1_vpc_teardown(bctxt, PDS_VPC_TYPE_TENANT);
         batch_commit(bctxt);
         if (!agent_mode())
             pds_test_base::TearDownTestCase();
@@ -329,13 +351,12 @@ TEST_F(subnet, subnet_workflow_neg_8) {
     workflow_neg_8<subnet_feeder>(feeder1, feeder2);
 }
 
-
 //---------------------------------------------------------------------
 // Non templatized test cases
 //---------------------------------------------------------------------
 
-/// \brief update vpc
-TEST_F(subnet, DISABLED_subnet_update_vpc) {
+/// \brief update vpc in subnet should be rejected
+TEST_F(subnet, subnet_update_vpc) {
     if (!apulu()) return;
 
     subnet_feeder feeder;
@@ -348,7 +369,192 @@ TEST_F(subnet, DISABLED_subnet_update_vpc) {
 
     // trigger
     spec.vpc = int2pdsobjkey(2);
-    subnet_update(feeder, &spec, SUBNET_ATTR_VPC);
+    subnet_update(feeder, &spec, SUBNET_ATTR_VPC, SDK_RET_ERR);
+
+    // validate
+    feeder.init(key, k_vpc_key, "10.0.0.0/16", "00:02:01:00:00:01");
+    subnet_read(feeder);
+
+    // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Update of vr ip inside subnet should be rejected
+TEST_F(subnet, subnet_update_vr_ip) {
+    if (!apulu()) return;
+
+    subnet_feeder feeder;
+    pds_subnet_spec_t spec = {0};
+    pds_obj_key_t key = int2pdsobjkey(1);
+
+    // init
+    feeder.init(key, k_vpc_key, "10.0.0.0/16", "00:02:01:00:00:01");
+    subnet_create(feeder);
+
+    // trigger
+    spec.v4_vr_ip = feeder.spec.v4_vr_ip + 1;
+    subnet_update(feeder, &spec, SUBNET_ATTR_V4_VRIP, SDK_RET_ERR);
+
+    // validate
+    subnet_read(feeder);
+
+    // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Update of vr mac inside subnet
+TEST_F(subnet, subnet_update_vr_mac) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+    uint64_t mac;
+
+    // init
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    // trigger
+    mac = MAC_TO_UINT64(feeder.spec.vr_mac);
+    mac++;
+    MAC_UINT64_TO_ADDR(spec.vr_mac, mac);
+    subnet_update(feeder, &spec, SUBNET_ATTR_VR_MAC);
+
+    // validate
+    subnet_read(feeder);
+
+    // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Update of routetable in the subnet
+TEST_F(subnet, subnet_update_route_table) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+    uint64_t mac;
+
+    // init
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    // trigger
+    subnet_spec_route_table_fill(&spec,
+                                 pdsobjkey2int(feeder.spec.v4_route_table) + 1);
+    subnet_update(feeder, &spec, SUBNET_ATTR_V4_RTTBL);
+
+    // validate
+    subnet_read(feeder);
+
+    // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Update of hostif in the subnet
+TEST_F(subnet, DISABLED_subnet_update_hostif) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+    uint64_t mac;
+
+    // init
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    // trigger
+    spec.host_if = int2pdsobjkey(pdsobjkey2int(feeder.spec.host_if) + 1);
+    subnet_update(feeder, &spec, SUBNET_ATTR_HOST_IF);
+
+    // validate
+    subnet_read(feeder);
+
+    // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Update of dhcp policy in the subnet
+TEST_F(subnet, subnet_update_dhcp_policy) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+    uint64_t mac;
+
+    // init
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    // trigger
+    spec.num_dhcp_policy = 1;
+    spec.dhcp_policy[0] =
+        int2pdsobjkey(pdsobjkey2int(feeder.spec.dhcp_policy[0]) + 1);
+    subnet_update(feeder, &spec, SUBNET_ATTR_DHCP_POL);
+
+    // validate
+    subnet_read(feeder);
+
+    // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Update of tos in the subnet
+TEST_F(subnet, subnet_update_tos) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+    uint64_t mac;
+
+    // init
+    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    // trigger
+    spec.tos = feeder.spec.tos + 1;
+    subnet_update(feeder, &spec, SUBNET_ATTR_TOS);
 
     // validate
     subnet_read(feeder);
@@ -371,7 +577,6 @@ TEST_F(subnet, subnet_update_policy1) {
     uint8_t num_policies = 1;
     uint8_t start_pol_index = 0;
 
-    sample_vnic_setup(bctxt);
     feeder.init(key1, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", num_policies, start_pol_index);
 
@@ -380,11 +585,10 @@ TEST_F(subnet, subnet_update_policy1) {
 
     num_policies = 2;
     start_pol_index = 0;
-    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_spec_policy_fill(&spec, num_policies, start_pol_index);
     subnet_update(feeder, &spec, SUBNET_ATTR_POL);
     subnet_read(feeder);
 
-    sample_vnic_teardown(bctxt);
     subnet_delete(feeder);
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
@@ -409,7 +613,7 @@ TEST_F(subnet, subnet_update_policy2) {
 
     num_policies = 0;
     start_pol_index = 0;
-    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_spec_policy_fill(&spec, num_policies, start_pol_index);
     subnet_update(feeder, &spec, SUBNET_ATTR_POL);
     subnet_read(feeder, SDK_RET_OK);
 
@@ -435,20 +639,20 @@ TEST_F(subnet, subnet_update_policy3) {
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 
-    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_spec_policy_fill(&spec, num_policies, start_pol_index);
     subnet_update(feeder, &spec, SUBNET_ATTR_POL);
     subnet_read(feeder);
 
     num_policies = 1;
     start_pol_index = 0;
-    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_spec_policy_fill(&spec, num_policies, start_pol_index);
     subnet_update(feeder, &spec, SUBNET_ATTR_POL);
     subnet_read(feeder);
 
     memset(&spec, 0, sizeof(spec));
     num_policies = 0;
     start_pol_index = 0;
-    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_spec_policy_fill(&spec, num_policies, start_pol_index);
     subnet_update(feeder, &spec, SUBNET_ATTR_POL);
     subnet_read(feeder);
 
@@ -476,7 +680,7 @@ TEST_F(subnet, subnet_update_policy4) {
 
     num_policies = 2;
     start_pol_index = 2;
-    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_spec_policy_fill(&spec, num_policies, start_pol_index);
     subnet_update(feeder, &spec, SUBNET_ATTR_POL);
     subnet_read(feeder);
 
@@ -504,40 +708,10 @@ TEST_F(subnet, subnet_update_policy5) {
 
     num_policies = 2;
     start_pol_index = 1;
-    spec_policy_fill(&spec, num_policies, start_pol_index);
+    subnet_spec_policy_fill(&spec, num_policies, start_pol_index);
     subnet_update(feeder, &spec, SUBNET_ATTR_POL);
     subnet_read(feeder);
 
-    subnet_delete(feeder);
-    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
-}
-
-/// \brief update VR MAC
-TEST_F(subnet, subnet_update_vrmac) {
-    if (!apulu()) return;
-
-    sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
-    pds_subnet_spec_t spec = {0};
-    subnet_feeder feeder;
-    pds_batch_ctxt_t bctxt = batch_start();
-    uint8_t num_policies = 2;
-    uint8_t start_pol_index = 0;
-    uint64_t mac;
-
-    sample_vnic_setup(bctxt);
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
-    subnet_create(feeder);
-    subnet_read(feeder, SDK_RET_OK);
-
-    mac = MAC_TO_UINT64(feeder.spec.vr_mac);
-    mac++;
-    MAC_UINT64_TO_ADDR(spec.vr_mac, mac);
-    subnet_update(feeder, &spec, SUBNET_ATTR_VR_MAC);
-    subnet_read(feeder);
-
-    sample_vnic_teardown(bctxt);
     subnet_delete(feeder);
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }

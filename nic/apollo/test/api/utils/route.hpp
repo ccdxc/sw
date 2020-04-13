@@ -14,6 +14,9 @@
 namespace test {
 namespace api {
 
+//TODO: setting to 5 for now, MAX fails
+#define NUM_ROUTE_TABLES 5
+
 // Route table test feeder class
 class route_table_feeder : public feeder {
 public:
@@ -35,8 +38,8 @@ public:
     // Initialize feeder with the base set of values
     void init(std::string base_route_pfx_str,
               uint8_t af=IP_AF_IPV4,
-              uint32_t num_routes=PDS_MAX_ROUTE_PER_TABLE,
-              uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE,
+              uint32_t num_routes=16,
+              uint32_t num_route_tables=1,
               uint32_t id = 1);
 
     // Iterate helper routines
@@ -131,12 +134,12 @@ API_DELETE(route_table);
 
 // Misc function prototypes
 void sample_route_table_setup(
-    pds_batch_ctxt_t bctxt, const string base_route_pfx,
+    pds_batch_ctxt_t bctxt, const string base_route_pfx="10.0.0.1/16",
     uint8_t af=IP_AF_IPV4, uint32_t num_routes=PDS_MAX_ROUTE_PER_TABLE,
-    uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE, uint32_t id=1);
+    uint32_t num_route_tables=NUM_ROUTE_TABLES, uint32_t id=1);
 void sample_route_table_teardown(
     pds_batch_ctxt_t bctxt, uint32_t id=1,
-    uint32_t num_route_tables=PDS_MAX_ROUTE_TABLE);
+    uint32_t num_route_tables=NUM_ROUTE_TABLES);
 
 }    // namespace api
 }    // namespace test

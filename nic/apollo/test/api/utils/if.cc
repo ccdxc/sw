@@ -106,5 +106,9 @@ void sample_if_teardown(pds_batch_ctxt_t bctxt) {
     many_delete(bctxt, k_if_feeder);
 }
 
+void sample_if_read(pds_batch_ctxt_t bctxt) {
+    k_if_feeder.init(k_l3_if_key);
+    many_read(k_if_feeder);
+}
 }    // namespace api
 }    // namespace test

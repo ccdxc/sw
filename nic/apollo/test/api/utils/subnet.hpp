@@ -136,8 +136,10 @@ void sample_subnet_setup(pds_batch_ctxt_t bctxt);
 void sample_subnet_teardown(pds_batch_ctxt_t bctxt);
 void sample1_subnet_setup(pds_batch_ctxt_t bctxt);
 void sample1_subnet_teardown(pds_batch_ctxt_t bctxt);
-void spec_policy_fill(pds_subnet_spec_t *spec, uint8_t num_policies,
-                      uint8_t start_policy_index);
+void subnet_spec_policy_fill(pds_subnet_spec_t *spec, uint8_t num_policies,
+                             uint8_t start_policy_index);
+void subnet_spec_route_table_fill(pds_subnet_spec_t *spec,
+                                  uint16_t start_index);
 
 }    // namespace api
 }    // namespace test

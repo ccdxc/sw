@@ -50,6 +50,7 @@ subnet_feeder::init(pds_obj_key_t key, pds_obj_key_t vpc_key,
     }
     spec.fabric_encap.val.vnid = pdsobjkey2int(key) + 512;
     spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+    //spec.host_if = int2pdsobjkey(1);
 
     num_obj = num_subnet;
 }
@@ -305,8 +306,8 @@ void sample1_subnet_teardown(pds_batch_ctxt_t bctxt) {
 }
 
 void
-spec_policy_fill (pds_subnet_spec_t *spec, uint8_t num_policies,
-                  uint8_t start_policy_index)
+subnet_spec_policy_fill (pds_subnet_spec_t *spec, uint8_t num_policies,
+                         uint8_t start_policy_index)
 {
     uint8_t policy_start = TEST_POLICY_ID_BASE + start_policy_index;
 
@@ -320,6 +321,13 @@ spec_policy_fill (pds_subnet_spec_t *spec, uint8_t num_policies,
         spec->egr_v4_policy[i] = int2pdsobjkey(policy_start + i + 11);
         spec->egr_v6_policy[i] = int2pdsobjkey(policy_start + i + 16);
     }
+}
+
+void
+subnet_spec_route_table_fill (pds_subnet_spec_t *spec, uint16_t index)
+{
+    spec->v4_route_table = int2pdsobjkey(index);
+    spec->v6_route_table = int2pdsobjkey(index + 1024);
 }
 
 }    // namespace api
