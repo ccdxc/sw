@@ -1400,3 +1400,33 @@ func NewBGPRouteMapStatus(in *pds.BGPRouteMapStatus) *ShadowBGPRouteMapStatus {
 		BGPRouteMapStatus: in,
 	}
 }
+
+// ShadowEvpnBdStatus shadows the EvpnBdStatus for CLI purposes
+type ShadowEvpnBdStatus struct {
+	EntityIndex uint32
+	EviIndex    uint32
+	OperStatus  string
+	OperReason  string
+	*pds.EvpnBdStatus
+}
+
+func NewEvpnBdStatus(in *pds.EvpnBdStatus) ShadowEvpnBdStatus {
+	return ShadowEvpnBdStatus{
+		EntityIndex:  in.EntityIndex,
+		EviIndex:     in.EviIndex,
+		OperStatus:   strings.TrimPrefix(in.OperStatus.String(), "EVPN_OPER_STATUS_"),
+		OperReason:   strings.TrimPrefix(in.OperReason.String(), "EVPN_"),
+		EvpnBdStatus: in,
+	}
+}
+
+// ShadowEvpnBd shadows the EvpnBd for CLI purposes
+type ShadowEvpnBd struct {
+	Status ShadowEvpnBdStatus
+}
+
+func NewEvpnBd(in *pds.EvpnBd) *ShadowEvpnBd {
+	return &ShadowEvpnBd{
+		Status: NewEvpnBdStatus(in.Status),
+	}
+}

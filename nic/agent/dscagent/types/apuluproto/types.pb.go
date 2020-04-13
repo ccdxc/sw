@@ -317,6 +317,12 @@
 		EvpnMacIpGetRequest
 		EvpnMacIp
 		EvpnMacIpGetResponse
+		EvpnBdStatus
+		EvpnBdKey
+		EvpnBdKeyHandle
+		EvpnBdGetRequest
+		EvpnBd
+		EvpnBdGetResponse
 */
 package pds
 

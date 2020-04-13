@@ -30,6 +30,7 @@ service EvpnSvc
   rpc EvpnIpVrfRtDelete (EvpnIpVrfRtDeleteRequest) returns (EvpnIpVrfRtDeleteResponse) {}
   rpc EvpnIpVrfRtGet (EvpnIpVrfRtGetRequest) returns (EvpnIpVrfRtGetResponse) {}
   rpc EvpnMacIpGet  (EvpnMacIpGetRequest) returns (EvpnMacIpGetResponse) {}
+  rpc EvpnBdGet (EvpnBdGetRequest) returns (EvpnBdGetResponse) {}
 }
 
 // EVPN RD/RT config types - manual or auto-generated
@@ -404,4 +405,69 @@ message EvpnMacIp {
 message EvpnMacIpGetResponse {
   types.ApiStatus    ApiStatus = 1;
   repeated EvpnMacIp Response  = 2;
+}
+
+enum EvpnOperReason {
+  EVPN_OPER_REASON_INVALID    = 0;
+  EVPN_OPER_REASON_NONE       = 1;
+  EVPN_ENTITY_NOT_UP          = 2;
+  EVPN_ADMIN_CONFIG           = 3;
+  EVPN_RESOURCE_FAILURE       = 4;
+  EVPN_NO_IF_INFO             = 5;
+  EVPN_EVI_NOT_UP             = 6;
+  EVPN_BD_NOT_UP              = 7;
+  EVPN_NO_ROUTE_DISTINGUISHER = 8;
+  EVPN_ROUTE_DIST_CLASH       = 9;
+  EVPN_NO_ESI                 = 10;
+  EVPN_BAD_VNI                = 11;
+  EVPN_VNI_CLASH              = 12;
+  EVPN_VLAN_SUB_IF_EVI_CLASH  = 13;
+  EVPN_NO_BGP_ID              = 14;
+  EVPN_RT_TYPE_CLASH          = 15;
+  EVPN_NO_RT                  = 16;
+  EVPN_IP_VRF_NOT_UP          = 17;
+  EVPN_NO_SYSTEM_MAC          = 18;
+  EVPN_RT_CLASH               = 19;
+  EVPN_NO_MCAST_GROUP         = 20;
+  EVPN_NO_SOURCE_IP           = 21;
+  EVPN_BAD_TNNL_DEST_TYPE     = 22;
+  EVPN_NO_ROUTERS_MAC         = 23;
+}
+
+message EvpnBdStatus {
+  // Identifies a DC-EVPN entity
+  uint32         EntityIndex  = 1;
+  // Index identifying the EVPN instance
+  uint32         EviIndex     = 2;
+  // Operational status of the bridge domain
+  EvpnOperStatus OperStatus   = 3;
+  // The reason for the bridge domain to be in its current oper status
+  EvpnOperReason OperReason   = 4;
+}
+
+// EVPN BD Table Key
+message EvpnBdKey {
+  uint32 EntityIndex = 1;
+  uint32 EviIndex    = 2;
+}
+
+// EVPN BD Table key handle for get and delete
+message EvpnBdKeyHandle {
+  EvpnBdKey Key = 1;
+}
+
+// EVPN MAC IP get request
+message EvpnBdGetRequest {
+  repeated EvpnBdKeyHandle Request = 1;
+}
+
+// EVPN BD
+message EvpnBd {
+  EvpnBdStatus Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EVPN BD get response
+message EvpnBdGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated EvpnBd Response  = 2;
 }

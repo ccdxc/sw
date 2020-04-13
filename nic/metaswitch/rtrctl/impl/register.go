@@ -51,6 +51,7 @@ func RegisterNodes(params *CLIParams, base *cobra.Command) {
 
 	evpnShowCmd.AddCommand(evpnBdShowCmd)
 	evpnBdShowCmd.AddCommand(evpnBdMacIPShowCmd)
+	evpnBdShowCmd.AddCommand(evpnBdStatusShowCmd)
 
 	//routing commands
 	base.AddCommand(routingShowCmd)
