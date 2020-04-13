@@ -12,6 +12,7 @@
 #include "platform/capri/capri_quiesce.hpp"
 #include "platform/capri/capri_pxb_pcie.hpp"
 #include "platform/capri/csrint/csr_init.hpp"
+#include "platform/capri/capri_cfg.hpp"
 #include "asic/asic.hpp"
 #include "asic/pd/pd.hpp"
 #include "asic/cmn/asic_state.hpp"
@@ -39,13 +40,14 @@ namespace pd {
 
 extern bool g_mock_mode_;
 
-void
+sdk_ret_t
 asic_program_hbm_table_base_addr (int tableid, int stage_tableid,
                                   char *tablename, int stage,
-                                  int pipe, bool hw_init)
+                                  int pipe)
 {
     capri_program_hbm_table_base_addr(tableid, stage_tableid, tablename,
-                                      stage, pipe, hw_init);
+                                      stage, pipe);
+    return SDK_RET_OK;
 }
 
 void
@@ -679,7 +681,7 @@ asicpd_get_p4plus_table_mpu_pc (int table_id)
 }
 
 void
-asicpd_program_p4plus_table_mpu_pc (int tableid, int stage_tbl_id, int stage)
+asicpd_program_p4plus_tbl_mpu_pc (int tableid, int stage_tbl_id, int stage)
 {
     capri_program_p4plus_table_mpu_pc(tableid, stage_tbl_id, stage);
 }
@@ -744,11 +746,10 @@ asicpd_local_db32_addr_get (void)
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization
 //------------------------------------------------------------------------------
-sdk_ret_t
-asicpd_init (asic_cfg_t *cfg)
+static sdk_ret_t
+capri_cfg_init (asic_cfg_t *cfg, asic_cfg_t& capri_cfg)
 {
     sdk_ret_t     ret;
-    asic_cfg_t    capri_cfg;
 
     SDK_ASSERT(cfg != NULL);
 
@@ -787,9 +788,47 @@ asicpd_init (asic_cfg_t *cfg)
 
     capri_cfg.completion_func = cfg->completion_func;
     capri_cfg.device_profile = cfg->device_profile;
+    return SDK_RET_OK;
+}
 
+sdk_ret_t
+asicpd_init (asic_cfg_t *cfg)
+{
+    asic_cfg_t capri_cfg;
+
+    capri_cfg_init(cfg, capri_cfg);
     //@@TODO - check and update redundant initializations within asic_state_init() and capri_init().
     return capri_init(&capri_cfg);
+}
+
+sdk_ret_t
+asicpd_soft_init (asic_cfg_t *cfg)
+{
+    asic_cfg_t capri_cfg;
+
+    capri_cfg_init(cfg, capri_cfg);
+    return capri_soft_init(&capri_cfg);
+}
+
+sdk_ret_t
+asicpd_upgrade_init (asic_cfg_t *cfg)
+{
+#if 0
+    asic_cfg_t capri_cfg;
+
+    capri_cfg_init(cfg, capri_cfg);
+
+    if (sdk::platform::upgrade_mode_graceful(cfg->upg_init_mode)) {
+        return capri_graceful_init(&capri_cfg);
+    } else if (sdk::platform::upgrade_mode_hitless(cfg->upg_init_mode)) {
+        return capri_hitless_init(&capri_cfg);
+    } else {
+        SDK_TRACE_ERR("Invalid upgrade mode");
+        SDK_ASSERT(0);
+    }
+#else
+    return SDK_RET_OK;
+#endif
 }
 
 sdk_ret_t

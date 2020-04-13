@@ -98,6 +98,7 @@ typedef struct asic_cfg_s {
     bool                        p4plus_cache;
     bool                        llc_cache;
     sdk::lib::device_profile_t  *device_profile;
+    sdk::platform::upg_mode_t   upg_init_mode;
 } asic_cfg_t;
 
 // TODO: please move this to sdk/lib/p4 later !!

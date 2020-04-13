@@ -240,9 +240,17 @@ public:
     /// \return SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t pipeline_init(void) override;
 
-    /// \brief  pipeline init routine during upgrade
+    /// \brief  init routine to initialize the pipeline for read access
     /// \return SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t upgrade_init(void) override;
+    virtual sdk_ret_t pipeline_soft_init(void) override;
+
+    /// \brief  pipeline init routine during graceful upgrade
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t pipeline_upgrade_graceful_init(void) override;
+
+    /// \brief  pipeline init routine during hitless upgrade
+    /// \return SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t pipeline_upgrade_hitless_init(void) override;
 
     /// \brief  routine to backup the states during the pipeline upgrade
     /// \return SDK_RET_OK on success, failure status code on error

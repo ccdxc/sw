@@ -402,19 +402,6 @@ capri_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "capri_tbl_rw_init failure, err : %d", ret);
 
-    // soft/upgrade, need to initialize only asm and tm.
-    if (!sdk::asic::asic_is_hard_init()) {
-        ret = sdk::asic::asic_asm_init(cfg);
-        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "Capri ASM init failure, err : %d", ret);
-        // initialize the profiles for capri register accesses by other modules (link manager).
-        ret = capri_tm_init(cfg->catalog,
-                        &cfg->device_profile->qos_profile);
-        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "Capri TM Slave init failure, err : %d", ret);
-        goto end;
-    }
-
     ret = sdk::asic::asic_hbm_regions_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Asic HBM region init failure, err : %d", ret);
@@ -467,7 +454,6 @@ capri_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                              "Capri scheduler init failure, err : %d", ret);
 
-end:
     if (cfg->completion_func) {
         cfg->completion_func(sdk::SDK_STATUS_ASIC_INIT_DONE);
     }

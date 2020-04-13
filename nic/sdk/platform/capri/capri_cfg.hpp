@@ -18,6 +18,8 @@ sdk_ret_t capri_verify_config(char *config_dir);
 sdk_ret_t capri_upgrade_config(asic_cfg_t *cfg);
 
 sdk_ret_t capri_init(asic_cfg_t *cfg);
+sdk_ret_t capri_soft_init(asic_cfg_t *cfg);
+sdk_ret_t capri_upgrade_init(asic_cfg_t *cfg);
 uint64_t capri_local_dbaddr(void);
 uint64_t capri_local_db32_addr(void);
 uint64_t capri_host_dbaddr(void);

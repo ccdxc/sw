@@ -225,66 +225,22 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
 
 void
 capri_program_hbm_table_base_addr (int tableid, int stage_tableid,
-                                   char *tablename, int stage, int pipe,
-                                   bool hw_init)
+                                   char *tablename, int stage, int pipe)
 {
-    mem_addr_t va, start_offset;
-    uint64_t size;
-    mpartition_region_t *reg;
-    uint32_t cache = P4_TBL_CACHE_NONE;
+    mem_addr_t start_offset;
+    sdk_ret_t ret;
 
-    if (strcmp(tablename, MEM_REGION_RSS_INDIR_TABLE_NAME) == 0) {
-        // TODO: Work with Neel to clean capri_toeplitz_init
+    ret = sdk::asic::pd::asicpd_set_hbm_table_base_addr(tableid, stage_tableid,
+                                                        tablename,
+                                                        stage, pipe);
+    if (ret != SDK_RET_OK) {
         return;
     }
-
-    assert(stage_tableid < 16);
-    reg = sdk::asic::asic_get_mem_region(tablename);
-    if (reg == NULL) {
-        return;
-    }
-
     start_offset = sdk::asic::asic_get_mem_addr(tablename);
-    size = sdk::asic::asic_get_mem_size_kb(tablename) << 10;
-
-    if (is_region_cache_pipe_p4_ig(reg)) {
-        cache |= P4_TBL_CACHE_INGRESS;
-    }
-    if (is_region_cache_pipe_p4_eg(reg)) {
-        cache |= P4_TBL_CACHE_EGRESS;
-    }
-    if (is_region_cache_pipe_p4plus_txdma(reg)) {
-        cache |= P4_TBL_CACHE_TXDMA;
-    }
-    if (is_region_cache_pipe_p4plus_rxdma(reg)) {
-        cache |= P4_TBL_CACHE_RXDMA;
-    }
-    if (is_region_cache_pipe_p4plus_all(reg)) {
-        cache |= P4_TBL_CACHE_TXDMA_RXDMA;
-    }
 
     SDK_TRACE_DEBUG("HBM Tbl Name %s, TblID %u, Stage %d, StageTblID %u, "
                     "Addr 0x%lx",
                     tablename, tableid, stage, stage_tableid, start_offset);
-    // save the info in the table for future use
-    if (tableid >= 0) {
-        va = (mem_addr_t)sdk::lib::pal_mem_map(start_offset, size);
-        SDK_TRACE_DEBUG(
-            " PA 0x%llx, VA 0x%lx, SZ %llu", start_offset, va, size);
-        SDK_TRACE_DEBUG(
-            " Cache 0x%x(%s%s%s%s%s)", cache,
-            cache & P4_TBL_CACHE_INGRESS ? "Ingress/" : "",
-            cache & P4_TBL_CACHE_EGRESS ? "Egress/" : "",
-            cache & P4_TBL_CACHE_TXDMA ? "Txdma/" : "",
-            cache & P4_TBL_CACHE_RXDMA ? "Rxdma" : "",
-            cache ? "" : "None");
-        p4pd_global_hbm_table_address_set(tableid, start_offset, va, (p4pd_table_cache_t)cache);
-    }
-
-    // TODO remove slave check once VPP's invocation is fixed
-    if ((hw_init == false) || (!sdk::asic::asic_is_hard_init())) {
-        return;
-    }
 
     /* Program table base address into capri TE */
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
@@ -934,6 +890,25 @@ capri_table_csr_cache_inval_init (void)
 }
 
 sdk_ret_t
+capri_table_rw_soft_init (asic_cfg_t *capri_cfg)
+{
+    int ret;
+    /* Initialize the CSR cache invalidate memories */
+    capri_table_csr_cache_inval_init();
+
+    ret = capri_p4_shadow_init();
+    if (ret != CAPRI_OK) {
+        return SDK_RET_ERR;
+    }
+
+    ret = capri_p4plus_shadow_init();
+    if (ret != CAPRI_OK) {
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 capri_table_rw_init (asic_cfg_t *capri_cfg)
 {
     int ret;
@@ -954,11 +929,6 @@ capri_table_rw_init (asic_cfg_t *capri_cfg)
     ret = capri_p4plus_shadow_init();
     if (ret != CAPRI_OK) {
         return SDK_RET_ERR;
-    }
-
-    // Initailize the below for HARD initialization only
-    if (!sdk::asic::asic_is_hard_init()) {
-        return SDK_RET_OK;
     }
 
     /* Initialize stage id registers for p4p */

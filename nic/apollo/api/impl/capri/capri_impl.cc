@@ -87,16 +87,22 @@ capri_impl::asic_init (asic_cfg_t *asic_cfg)
 
     pal_ret = sdk::lib::pal_init(asic_cfg->platform);
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
-    ret = sdk::asic::pd::asicpd_init(asic_cfg);
+    if (sdk::asic::asic_is_hard_init()) {
+        if (sdk::platform::upgrade_mode_none(asic_cfg->upg_init_mode)) {
+            ret = sdk::asic::pd::asicpd_init(asic_cfg);
+            // set the reserved min for uplink ports
+            sdk::platform::capri::capri_tm_set_reserved_min(200);
+        } else {
+            ret = sdk::asic::pd::asicpd_upgrade_init(asic_cfg);
+        }
+    } else {
+        ret = sdk::asic::pd::asicpd_soft_init(asic_cfg);
+    }
     SDK_ASSERT(ret == SDK_RET_OK);
 
     /**< stash the config, in case we need it at later point in time */
     asic_cfg_ = *asic_cfg;
 
-    // set the reserved min for uplink ports
-    if (sdk::asic::asic_is_hard_init()) {
-        sdk::platform::capri::capri_tm_set_reserved_min(200);
-    }
     return SDK_RET_OK;
 }
 

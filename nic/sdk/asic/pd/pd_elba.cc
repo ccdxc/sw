@@ -31,13 +31,14 @@ namespace pd {
 
 extern bool g_mock_mode_;
 
-void
+sdk_ret_t
 asic_program_hbm_table_base_addr (int tableid, int stage_tableid,
                                   char *tablename, int stage,
-                                  int pipe, bool hw_init)
+                                  int pipe)
 {
     elba_program_hbm_table_base_addr(tableid, stage_tableid, tablename,
-                                     stage, pipe, hw_init);
+                                     stage, pipe);
+    return SDK_RET_OK;
 }
 
 void
@@ -691,7 +692,7 @@ asicpd_get_p4plus_table_mpu_pc (int table_id)
 }
 
 void
-asicpd_program_p4plus_table_mpu_pc (int tableid, int stage_tbl_id, int stage)
+asicpd_program_p4plus_tbl_mpu_pc (int tableid, int stage_tbl_id, int stage)
 {
     elba_program_p4plus_table_mpu_pc(tableid, stage_tbl_id, stage);
 }

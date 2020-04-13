@@ -99,10 +99,16 @@ typedef struct hw_fifo_stats_s {
 
 sdk_ret_t asicpd_program_table_constant(uint32_t tableid, uint64_t const_value);
 sdk_ret_t asicpd_p4plus_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
+sdk_ret_t asicpd_program_p4plus_table_mpu_base_pc();
 sdk_ret_t asicpd_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 sdk_ret_t asicpd_program_table_mpu_pc(void);
 sdk_ret_t asicpd_deparser_init(void);
-sdk_ret_t asicpd_program_hbm_table_base_addr(bool hw_init = true);
+sdk_ret_t asicpd_program_hbm_table_base_addr(void);
+// all tables
+sdk_ret_t asicpd_set_hbm_table_base_addr(void);
+// specific table
+sdk_ret_t asicpd_set_hbm_table_base_addr (int tableid, int stage_tableid,
+                                          char *tablename, int stage, int pipe);
 uint8_t asicpd_get_action_pc(uint32_t tableid, uint8_t actionid);
 uint8_t asicpd_get_action_id(uint32_t tableid, uint8_t actionpc);
 int asicpd_table_entry_write(uint32_t tableid, uint32_t index,
@@ -233,6 +239,7 @@ mpartition_region_t *asicpd_get_hbm_region_by_address(uint64_t addr);
 uint64_t asicpd_get_p4plus_table_mpu_pc(int tableid);
 void asicpd_program_p4plus_table_mpu_pc(int tableid, int stage_tbl_id,
                                         int stage);
+void asicpd_program_p4plus_tbl_mpu_pc(int tableid, int stage_tbl_id, int stage);
 void asicpd_program_tbl_mpu_pc(int tableid, bool gress, int stage,
                                int stage_tableid, uint64_t table_asm_err_offset,
                                uint64_t table_asm_base);
@@ -246,6 +253,8 @@ void asicpd_set_action_txdma_asm_base(int tableid, int actionid,
 void asicpd_set_table_rxdma_asm_base(int tableid, uint64_t asm_base);
 void asicpd_set_table_txdma_asm_base(int tableid, uint64_t asm_base);
 sdk_ret_t asicpd_init(asic_cfg_t *cfg);
+sdk_ret_t asicpd_soft_init(asic_cfg_t *cfg);
+sdk_ret_t asicpd_upgrade_init(asic_cfg_t *cfg);
 void asicpd_cleanup(void);
 sdk_ret_t asicpd_pgm_init(void);
 sdk_ret_t asicpd_p4plus_table_rw_init(void);

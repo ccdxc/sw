@@ -56,7 +56,17 @@ impl_base::init(pds_init_params_t *params, asic_cfg_t *asic_cfg) {
     asic_impl_->asic_init(asic_cfg);
 
     // followed by pipeline initialization
-    pipeline_impl_->pipeline_init();
+    if (sdk::asic::asic_is_hard_init()) {
+        if (sdk::platform::upgrade_mode_none(asic_cfg->upg_init_mode)) {
+            pipeline_impl_->pipeline_init();
+        } else if (sdk::platform::upgrade_mode_graceful(asic_cfg->upg_init_mode)) {
+            pipeline_impl_->pipeline_upgrade_graceful_init();
+        } else if (sdk::platform::upgrade_mode_hitless(asic_cfg->upg_init_mode)) {
+            pipeline_impl_->pipeline_upgrade_hitless_init();
+        }
+    } else {
+        pipeline_impl_->pipeline_soft_init();
+    }
     // dump the MPU program related details
     pipeline_impl_->program_info_dump(asic_cfg->cfg_path);
 

@@ -137,6 +137,10 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t pipeline_init(void) { return sdk::SDK_RET_ERR; }
 
+    /// \brief init routine to initialize the pipeline for read access
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t pipeline_soft_init(void) { return sdk::SDK_RET_ERR; }
+
     /// \brief helper to dump the MPU program info
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_info_dump(std::string path) {
@@ -144,9 +148,17 @@ public:
         return SDK_RET_OK;
     }
 
-    /// \brief Routine to initialize the pipeline configs during upgrade
+    /// \brief Routine to initialize the pipeline configs during graceful upgrade
     /// \return #SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t upgrade_init(void) { return sdk::SDK_RET_ERR; }
+    virtual sdk_ret_t pipeline_upgrade_graceful_init(void) {
+        return sdk::SDK_RET_ERR;
+    }
+
+    /// \brief Routine to initialize the pipeline configs during hitless upgrade
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t pipeline_upgrade_hitless_init(void) {
+        return sdk::SDK_RET_ERR;
+    }
 
     /// \brief routine to backup the pipeline configs during upgrade
     /// \return #SDK_RET_OK on success, failure status code on error

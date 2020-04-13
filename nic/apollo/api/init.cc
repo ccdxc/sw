@@ -29,6 +29,7 @@
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
+#include "nic/apollo/api/upgrade_state.hpp"
 #include "nic/apollo/api/upgrade.hpp"
 #include "nic/apollo/api/internal/metrics.hpp"
 #include "platform/sysmon/sysmon.hpp"
@@ -161,6 +162,106 @@ sysmon_init (void)
     core::schedule_timers(&api::g_pds_state);
 }
 
+static void
+system_mac_init (void)
+{
+    std::string       mac_str;
+    mac_addr_t        mac_addr;
+
+    if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
+        sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+        mac_str_to_addr((char *)mac_str.c_str(), mac_addr);
+        api::g_pds_state.set_system_mac(mac_addr);
+    } else {
+        // for non h/w platforms, set system MAC to default
+        MAC_UINT64_TO_ADDR(mac_addr, PENSANDO_NIC_MAC);
+        api::g_pds_state.set_system_mac(mac_addr);
+        PDS_TRACE_ERR("system mac 0x%06lx", MAC_TO_UINT64(api::g_pds_state.system_mac()));
+    }
+}
+
+static std::string
+catalog_init (pds_init_params_t *params)
+{
+    std::string       mem_str;
+    uint64_t          datapath_mem;
+
+    // instantiate the catalog
+    api::g_pds_state.set_catalog(catalog::factory(
+        api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW ?
+            api::g_pds_state.cfg_path() :
+            api::g_pds_state.cfg_path() + params->pipeline,
+        "", api::g_pds_state.platform_type()));
+    mem_str = api::g_pds_state.catalogue()->memory_capacity_str();
+    PDS_TRACE_DEBUG("Memory capacity of the system %s", mem_str.c_str());
+
+    // On Vomero, Uboot gives Linux 6G on boot up, so only 2G is left for Datapath.
+    // Load 4G HBM profile on systems with 2G data path memory
+    if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
+        datapath_mem = pal_mem_get_phys_totalsize();
+        PDS_TRACE_DEBUG("Datapath Memory:  %llu(0x%llx) Bytes", datapath_mem, datapath_mem);
+        if (datapath_mem == 0x80000000) { //2G
+            mem_str = "4g";
+            PDS_TRACE_DEBUG("Loading 4G HBM profile");
+        }
+    }
+    return mem_str;
+}
+
+static sdk_ret_t
+mpartition_init (pds_init_params_t *params, std::string mem_str)
+{
+    std::string       mem_json;
+
+    // parse hbm memory region configuration file
+    if (params->memory_profile == PDS_MEMORY_PROFILE_DEFAULT) {
+        mem_json = "hbm_mem.json";
+    } else {
+        PDS_TRACE_ERR("Unknown profile %u, aborting ...",
+                      params->memory_profile);
+        return SDK_RET_INVALID_ARG;
+    }
+    api::g_pds_state.set_mempartition_cfg(mem_json);
+    mem_json = api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
+                   mem_str + "/" + mem_json;
+
+    // check if the memory carving configuration file exists
+    if (access(mem_json.c_str(), R_OK) < 0) {
+        PDS_TRACE_ERR("memory config file %s doesn't exist or not accessible\n",
+                      mem_json.c_str());
+        return SDK_RET_INVALID_ARG;
+    }
+    api::g_pds_state.set_mempartition(
+        sdk::platform::utils::mpartition::factory(mem_json.c_str()));
+    // below file is used during upgrade
+    api::g_pds_state.mempartition()->dump_regions_info(
+        api::g_pds_state.cfg_path().c_str());
+
+    PDS_TRACE_DEBUG("Initializing PDS with memory json %s", mem_json.c_str());
+    return SDK_RET_OK;
+}
+
+static void
+spawn_threads (void)
+{
+    // spawn pciemgr thread
+    core::spawn_pciemgr_thread(&api::g_pds_state);
+
+    PDS_TRACE_INFO("Waiting for pciemgr server to come up ...");
+    // TODO: we need to do better here !! losing 2 seconds
+    sleep(2);
+
+    // spawn api thread
+    core::spawn_api_thread(&api::g_pds_state);
+
+    // spawn nicmgr thread
+    core::spawn_nicmgr_thread(&api::g_pds_state);
+
+    // spawn periodic thread, have to be before linkmgr init
+    core::spawn_periodic_thread(&api::g_pds_state);
+
+}
+
 }    // namespace api
 
 std::string
@@ -207,11 +308,7 @@ pds_init (pds_init_params_t *params)
 {
     sdk_ret_t         ret;
     asic_cfg_t        asic_cfg;
-    std::string       mem_json;
-    std::string       mac_str;
-    mac_addr_t        mac_addr;
     std::string       mem_str;
-    uint64_t          datapath_mem;
 
     sdk::lib::device_profile_t device_profile = { 0 };
     device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
@@ -226,132 +323,79 @@ pds_init (pds_init_params_t *params)
                    SDK_RET_OK);
     api::g_pds_state.set_event_cb(params->event_cb);
 
-    if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
-        sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
-        mac_str_to_addr((char *)mac_str.c_str(), mac_addr);
-        api::g_pds_state.set_system_mac(mac_addr);
-    } else {
-        // for non h/w platforms, set system MAC to default
-        MAC_UINT64_TO_ADDR(mac_addr, PENSANDO_NIC_MAC);
-        api::g_pds_state.set_system_mac(mac_addr);
-        PDS_TRACE_ERR("system mac 0x%06lx", MAC_TO_UINT64(api::g_pds_state.system_mac()));
-    }
-
-    // instantiate the catalog
-    api::g_pds_state.set_catalog(catalog::factory(
-        api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW ?
-            api::g_pds_state.cfg_path() :
-            api::g_pds_state.cfg_path() + params->pipeline,
-        "", api::g_pds_state.platform_type()));
-    mem_str = api::g_pds_state.catalogue()->memory_capacity_str();
-    PDS_TRACE_DEBUG("Memory capacity of the system %s", mem_str.c_str());
-
-    // On Vomero, Uboot gives Linux 6G on boot up, so only 2G is left for Datapath.
-    // Load 4G HBM profile on systems with 2G data path memory
-    if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
-        datapath_mem = pal_mem_get_phys_totalsize();
-        PDS_TRACE_DEBUG("Datapath Memory:  %llu(0x%llx) Bytes", datapath_mem, datapath_mem);
-        if (datapath_mem == 0x80000000) { //2G
-            mem_str = "4g";
-            PDS_TRACE_DEBUG("Loading 4G HBM profile");
-        }
-    }
+    api::system_mac_init();
+    mem_str = api::catalog_init(params);
 
     // parse pipeline specific configuration
     ret = core::parse_pipeline_config(params->pipeline, &api::g_pds_state);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // parse hbm memory region configuration file
-    if (params->memory_profile == PDS_MEMORY_PROFILE_DEFAULT) {
-        mem_json = "hbm_mem.json";
-    } else {
-        PDS_TRACE_ERR("Unknown profile %u, aborting ...",
-                      params->memory_profile);
-        return SDK_RET_INVALID_ARG;
-    }
-    api::g_pds_state.set_mempartition_cfg(mem_json);
-    mem_json = api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
-                   mem_str + "/" + mem_json;
-
-    api::g_pds_state.set_device_profile(params->device_profile);
-    api::g_pds_state.set_memory_profile(params->memory_profile);
-    PDS_TRACE_INFO("Initializing PDS with %s, device profile %u, memory profile %u",
-                   mem_json.c_str(), params->device_profile, params->memory_profile);
-
-    api::g_pds_state.set_memory_profile_string(pds_memory_profile_to_string(params->memory_profile));
-    api::g_pds_state.set_device_profile_string(pds_device_profile_to_string(params->device_profile));
-
-    // check if the memory carving configuration file exists
-    if (access(mem_json.c_str(), R_OK) < 0) {
-        PDS_TRACE_ERR("memory config file %s doesn't exist or not accessible\n",
-                      mem_json.c_str());
-        return ret;
-    }
-    api::g_pds_state.set_mempartition(
-        sdk::platform::utils::mpartition::factory(mem_json.c_str()));
-    // below file is used during upgrade
-    api::g_pds_state.mempartition()->dump_regions_info(
-        api::g_pds_state.cfg_path().c_str());
-
-    // upgrade initialize
-    ret = api::upg_init(params);
+    ret = api::mpartition_init(params, mem_str);
     if (ret != SDK_RET_OK) {
         return SDK_RET_ERR;
     }
 
+    api::g_pds_state.set_device_profile(params->device_profile);
+    api::g_pds_state.set_memory_profile(params->memory_profile);
+    PDS_TRACE_INFO("Initializing PDS with device profile %u, memory profile %u",
+                   params->device_profile, params->memory_profile);
+
+    api::g_pds_state.set_memory_profile_string(pds_memory_profile_to_string(params->memory_profile));
+    api::g_pds_state.set_device_profile_string(pds_device_profile_to_string(params->device_profile));
+
     // setup all asic specific config params
     api::asic_global_config_init(params, &asic_cfg);
     asic_cfg.device_profile = &device_profile;
-    SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
     // skip the threads, ports and monitoring if it is soft initialization
-    if (sdk::asic::asic_is_soft_init()) {
-        return SDK_RET_OK;
+    if (sdk::asic::asic_is_hard_init()) {
+        // upgrade init
+        ret = api::upg_init(params);
+        if (ret != SDK_RET_OK) {
+            return SDK_RET_ERR;
+        }
+        // set upgrade mode in asic config
+        asic_cfg.upg_init_mode = api::g_upg_state->upg_init_mode();
+
+        // impl init
+        SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
+
+        // spawn threads
+        api::spawn_threads();
+
+        // linkmgr init
+        api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
+
+        // create ports
+        SDK_ASSERT(api::create_ports() == SDK_RET_OK);
+
+        // create uplink interfaces
+        while (!api::is_api_thread_ready()) {
+            pthread_yield();
+        }
+        SDK_ASSERT(api::create_uplinks() == SDK_RET_OK);
+
+        // initialize all the signal handlers
+        core::sig_init(SIGUSR1, api::sig_handler);
+
+        // initialize and start system monitoring
+        api::sysmon_init();
+
+        // don't interfere with nicmgr
+        while (!core::is_nicmgr_ready()) {
+            pthread_yield();
+        }
+
+        // spin learn thread
+        core::spawn_learn_thread(&api::g_pds_state);
+
+        // raise HAL_UP event
+        sdk::ipc::broadcast(EVENT_ID_PDS_HAL_UP, NULL, 0);
+    } else {
+        // impl init
+        SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
     }
-
-    // spawn pciemgr thread
-    core::spawn_pciemgr_thread(&api::g_pds_state);
-
-    PDS_TRACE_INFO("Waiting for pciemgr server to come up ...");
-    // TODO: we need to do better here !! losing 2 seconds
-    sleep(2);
-
-    // spawn api thread
-    core::spawn_api_thread(&api::g_pds_state);
-
-    // spawn nicmgr thread
-    core::spawn_nicmgr_thread(&api::g_pds_state);
-
-    // spawn periodic thread, have to be before linkmgr init
-    core::spawn_periodic_thread(&api::g_pds_state);
-
-    // create ports
-    api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
-    SDK_ASSERT(api::create_ports() == SDK_RET_OK);
-
-    // create uplink interfaces
-    while (!api::is_api_thread_ready()) {
-        pthread_yield();
-    }
-    SDK_ASSERT(api::create_uplinks() == SDK_RET_OK);
-
-    // initialize all the signal handlers
-    core::sig_init(SIGUSR1, api::sig_handler);
-
-    // initialize and start system monitoring
-    api::sysmon_init();
-
-    // don't interfere with nicmgr
-    while (!core::is_nicmgr_ready()) {
-         pthread_yield();
-    }
-
-    // spin learn thread
-    core::spawn_learn_thread(&api::g_pds_state);
-
-    // raise HAL_UP event
-    sdk::ipc::broadcast(EVENT_ID_PDS_HAL_UP, NULL, 0);
-
     return SDK_RET_OK;
 }
 

@@ -2,6 +2,7 @@
 
 #include "asic/pd/pd.hpp"
 #include "asic/asic.hpp"
+#include "lib/pal/pal.hpp"
 #include "asic/cmn/asic_hbm.hpp"
 #include "asic/pd/pd_internal.hpp"
 #include "lib/utils/time_profile.hpp"
@@ -18,6 +19,9 @@ namespace pd {
 bool g_mock_mode_;
 static uint64_t table_asm_base[P4TBL_ID_MAX];
 static uint64_t table_asm_err_offset[P4TBL_ID_MAX];
+typedef sdk_ret_t (*hbm_table_base_addr_cfg_cb_t)(int tableid, int stage_tableid,
+                                                  char *tablename, int stage,
+                                                  int pipe);
 
 static uint64_t
 get_table_asm_base_addr (uint32_t tableid)
@@ -70,7 +74,6 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
     uint64_t action_txdma_asm_base;
     uint64_t table_rxdma_asm_base;
     uint64_t table_txdma_asm_base;
-    p4pd_table_properties_t tbl_info;
 
     for (uint32_t i = p4pd_rxdma_tableid_min_get();
          i < p4pd_rxdma_tableid_max_get(); i++) {
@@ -122,25 +125,27 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
             asicpd_set_action_txdma_asm_base(i, j, action_txdma_asm_base);
         }
     }
+    return SDK_RET_OK;
+}
 
-    // config only if it is  hard init
-    if (sdk::asic::asic_is_hard_init()) {
-        // P4+ MPU PC initialize
-        for (uint32_t i = p4pd_rxdma_tableid_min_get();
-             i < p4pd_rxdma_tableid_max_get(); i++) {
-            p4pd_global_table_properties_get(i, &tbl_info);
+sdk_ret_t
+asicpd_program_p4plus_table_mpu_base_pc (void)
+{
+    p4pd_table_properties_t tbl_info;
 
-            asicpd_program_p4plus_table_mpu_pc(i, tbl_info.stage_tableid,
-                                               tbl_info.stage);
-        }
+    // P4+ MPU PC initialize
+    for (uint32_t i = p4pd_rxdma_tableid_min_get();
+         i < p4pd_rxdma_tableid_max_get(); i++) {
+        p4pd_global_table_properties_get(i, &tbl_info);
+        asicpd_program_p4plus_tbl_mpu_pc(i, tbl_info.stage_tableid,
+                                         tbl_info.stage);
+    }
 
-        for (uint32_t i = p4pd_txdma_tableid_min_get();
-             i < p4pd_txdma_tableid_max_get(); i++) {
-            p4pd_global_table_properties_get(i, &tbl_info);
-
-            asicpd_program_p4plus_table_mpu_pc(i, tbl_info.stage_tableid,
-                                               tbl_info.stage);
-        }
+    for (uint32_t i = p4pd_txdma_tableid_min_get();
+         i < p4pd_txdma_tableid_max_get(); i++) {
+        p4pd_global_table_properties_get(i, &tbl_info);
+        asicpd_program_p4plus_tbl_mpu_pc(i, tbl_info.stage_tableid,
+                                         tbl_info.stage);
     }
     return SDK_RET_OK;
 }
@@ -222,8 +227,70 @@ asicpd_program_table_mpu_pc (void)
     return SDK_RET_OK;
 }
 
+
 sdk_ret_t
-asicpd_program_hbm_table_base_addr (bool hw_init)
+asicpd_set_hbm_table_base_addr (int tableid, int stage_tableid,
+                                char *tablename, int stage, int pipe)
+{
+    mem_addr_t va, start_offset;
+    uint64_t size;
+    mpartition_region_t *reg;
+    uint32_t cache = P4_TBL_CACHE_NONE;
+
+    if (strcmp(tablename, ASIC_HBM_REG_RSS_INDIR_TABLE) == 0) {
+        // TODO: As this table is pipeline dependent, refering the name
+        // here is not suitable
+        return SDK_RET_ERR;
+    }
+
+    assert(stage_tableid < 16);
+    reg = sdk::asic::asic_get_mem_region(tablename);
+    if (reg == NULL) {
+        return SDK_RET_ERR;
+    }
+
+    start_offset = sdk::asic::asic_get_mem_addr(tablename);
+    size = sdk::asic::asic_get_mem_size_kb(tablename) << 10;
+
+    if (is_region_cache_pipe_p4_ig(reg)) {
+        cache |= P4_TBL_CACHE_INGRESS;
+    }
+    if (is_region_cache_pipe_p4_eg(reg)) {
+        cache |= P4_TBL_CACHE_EGRESS;
+    }
+    if (is_region_cache_pipe_p4plus_txdma(reg)) {
+        cache |= P4_TBL_CACHE_TXDMA;
+    }
+    if (is_region_cache_pipe_p4plus_rxdma(reg)) {
+        cache |= P4_TBL_CACHE_RXDMA;
+    }
+    if (is_region_cache_pipe_p4plus_all(reg)) {
+        cache |= P4_TBL_CACHE_TXDMA_RXDMA;
+    }
+
+    SDK_TRACE_DEBUG("HBM Tbl Name %s, TblID %u, Stage %d, StageTblID %u, "
+                    "Addr 0x%lx",
+                    tablename, tableid, stage, stage_tableid, start_offset);
+    // save the info in the table for future use
+    if (tableid >= 0) {
+        va = (mem_addr_t)sdk::lib::pal_mem_map(start_offset, size);
+        SDK_TRACE_DEBUG(
+            " PA 0x%llx, VA 0x%lx, SZ %llu", start_offset, va, size);
+        SDK_TRACE_DEBUG(
+            " Cache 0x%x(%s%s%s%s%s)", cache,
+            cache & P4_TBL_CACHE_INGRESS ? "Ingress/" : "",
+            cache & P4_TBL_CACHE_EGRESS ? "Egress/" : "",
+            cache & P4_TBL_CACHE_TXDMA ? "Txdma/" : "",
+            cache & P4_TBL_CACHE_RXDMA ? "Rxdma" : "",
+            cache ? "" : "None");
+        p4pd_global_hbm_table_address_set(tableid, start_offset, va,
+                                          (p4pd_table_cache_t)cache);
+    }
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+hbm_table_base_addr_config_walk (hbm_table_base_addr_cfg_cb_t config_cb)
 {
     p4pd_table_properties_t       tbl_ctx;
     p4pd_pipeline_t               pipe;
@@ -239,15 +306,13 @@ asicpd_program_hbm_table_base_addr (bool hw_init)
             pipe = P4_PIPELINE_EGRESS;
         }
 
-        asic_program_hbm_table_base_addr(i, tbl_ctx.stage_tableid,
-                                         tbl_ctx.tablename, tbl_ctx.stage,
-                                         pipe, hw_init);
+        config_cb(i, tbl_ctx.stage_tableid, tbl_ctx.tablename, tbl_ctx.stage,
+                  pipe);
 
         if (tbl_ctx.table_thread_count > 1) {
             for (int j = 1; j < tbl_ctx.table_thread_count; j++) {
-                asic_program_hbm_table_base_addr(-1, tbl_ctx.thread_table_id[j],
-                                                 tbl_ctx.tablename,
-                                                 tbl_ctx.stage, pipe, hw_init);
+                config_cb(-1, tbl_ctx.thread_table_id[j], tbl_ctx.tablename,
+                          tbl_ctx.stage, pipe);
             }
         }
     }
@@ -258,9 +323,9 @@ asicpd_program_hbm_table_base_addr (bool hw_init)
         if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
             continue;
         }
-        asic_program_hbm_table_base_addr(i, tbl_ctx.stage_tableid,
+        config_cb(i, tbl_ctx.stage_tableid,
                                          tbl_ctx.tablename, tbl_ctx.stage,
-                                         P4_PIPELINE_RXDMA, hw_init);
+                                         P4_PIPELINE_RXDMA);
     }
 
     for (uint32_t i = p4pd_txdma_tableid_min_get();
@@ -269,13 +334,25 @@ asicpd_program_hbm_table_base_addr (bool hw_init)
         if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
             continue;
         }
-        asic_program_hbm_table_base_addr(i, tbl_ctx.stage_tableid,
-                                         tbl_ctx.tablename, tbl_ctx.stage,
-                                         P4_PIPELINE_TXDMA, hw_init);
+        config_cb(i, tbl_ctx.stage_tableid, tbl_ctx.tablename, tbl_ctx.stage,
+                  P4_PIPELINE_TXDMA);
     }
 
     return SDK_RET_OK;
 }
+
+sdk_ret_t
+asicpd_program_hbm_table_base_addr (void)
+{
+    return hbm_table_base_addr_config_walk(asic_program_hbm_table_base_addr);
+}
+
+sdk_ret_t
+asicpd_set_hbm_table_base_addr (void)
+{
+    return hbm_table_base_addr_config_walk(asicpd_set_hbm_table_base_addr);
+}
+
 
 // called by upgrade in pre-init stage.
 // prepares the property values based on the configuration.

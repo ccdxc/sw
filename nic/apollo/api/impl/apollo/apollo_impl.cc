@@ -513,6 +513,8 @@ apollo_impl::pipeline_init(void) {
 
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
+    ret = sdk::asic::pd::asicpd_program_p4plus_table_mpu_base_pc();
+    SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_toeplitz_init("apollo_rxdma",
                              P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR, 0);
     SDK_ASSERT(ret == SDK_RET_OK);

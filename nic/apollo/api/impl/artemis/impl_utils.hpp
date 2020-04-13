@@ -58,7 +58,11 @@ pipeline_p4_hbm_init (p4pd_cfg_t *p4pd_cfg, bool hw_init = true)
     p4pd_ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
     SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
 
-    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr(hw_init);
+    if (hwinit) {
+        ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
+    else {
+        ret = sdk::asic::pd::asicpd_set_hbm_table_base_addr();
+    }
     return ret;
 }
 

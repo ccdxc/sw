@@ -586,6 +586,8 @@ apulu_impl::pipeline_init(void) {
 
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
+    ret = sdk::asic::pd::asicpd_program_p4plus_table_mpu_base_pc();
+    SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_toeplitz_init("apulu_rxdma",
                                               P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR,
                                               0);
@@ -645,9 +647,22 @@ apulu_impl::p4plus_table_upgrade_init_(void) {
     return SDK_RET_OK;
 }
 
-// called on B during A to B ISSU upgrade
 sdk_ret_t
-apulu_impl::upgrade_init(void) {
+apulu_impl::pipeline_soft_init(void) {
+    sdk_ret_t  ret;
+    p4pd_cfg_t p4pd_cfg;
+    std::string cfg_path = api::g_pds_state.cfg_path();
+
+    p4pd_cfg.cfg_path = cfg_path.c_str();
+    ret = pipeline_p4_hbm_init(&p4pd_cfg, false);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    return SDK_RET_OK;
+}
+
+// called on B during A to B upgrade
+sdk_ret_t
+apulu_impl::pipeline_upgrade_hitless_init(void) {
     sdk_ret_t  ret;
     p4pd_cfg_t p4pd_cfg;
     std::string cfg_path = api::g_pds_state.cfg_path();
@@ -690,6 +705,11 @@ apulu_impl::upgrade_init(void) {
     SDK_ASSERT(ret == SDK_RET_OK);
 
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+apulu_impl::pipeline_upgrade_graceful_init(void) {
+    return pipeline_init();
 }
 
 // this re-writes the common registers in the pipeline during A to B upgrade.

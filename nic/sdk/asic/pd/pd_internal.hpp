@@ -7,9 +7,9 @@ namespace sdk {
 namespace asic {
 namespace pd {
 
-void asic_program_hbm_table_base_addr(int tableid, int stage_tableid,
-                                      char *tablename, int stage,
-                                      int pipe, bool hw_init);
+sdk_ret_t asic_program_hbm_table_base_addr(int tableid, int stage_tableid,
+                                           char *tablename, int stage,
+                                           int pipe);
 
 }    // namespace pd
 }    // namespace asic

@@ -4598,6 +4598,53 @@ capri_tm_update_perf_run_config (void)
 }
 
 sdk_ret_t
+capri_tm_soft_init (sdk::lib::catalog* catalog,
+                    sdk::lib::qos_profile_t *qos_profile)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    capri_tm_cfg_profile_t tm_cfg_profile_;
+    capri_tm_cfg_profile_t *tm_cfg_profile = &tm_cfg_profile_;
+
+    capri_tm_asic_profile_t asic_profile;
+
+    populate_asic_profile(&asic_profile);
+
+    pthread_mutex_init(&tm_mutex, NULL);
+
+    ret = capri_tm_init_qos_profile(tm_cfg_profile, catalog,
+                                    qos_profile);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Error initing qos profile. ret: %d",
+                      ret);
+        return ret;
+    }
+
+    SDK_TRACE_DEBUG("cfg-profile sw_init_en %u sw_cfg_write_en %u "
+                    "num_active_uplink_ports %u hbm_fifo_size %u hbm_fifo_base 0x%x",
+                    tm_cfg_profile->sw_init_enabled,
+                    tm_cfg_profile->sw_cfg_write_enabled,
+                    tm_cfg_profile->num_active_uplink_ports,
+                    tm_cfg_profile->hbm_fifo_size,
+                    tm_cfg_profile->hbm_fifo_base);
+    for (unsigned port_type = 0; port_type < NUM_TM_PORT_TYPES; port_type++) {
+        if (tm_cfg_profile->num_qs[port_type] >
+            capri_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type)) {
+            SDK_TRACE_ERR("Error cfg-profile port_type %u num_qs %u "
+                          "supported %u",
+                          (tm_port_type_e)port_type, tm_cfg_profile->num_qs[port_type],
+                          capri_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type));
+            return sdk::SDK_RET_INVALID_ARG;
+        }
+        SDK_TRACE_DEBUG("cfg-profile port_type %u num_qs %u jumbo_mtu %u ",
+                        (tm_port_type_e)port_type, tm_cfg_profile->num_qs[port_type],
+                        tm_cfg_profile->jumbo_mtu[port_type]);
+    }
+
+    set_tm_ctx(tm_cfg_profile, &asic_profile);
+    return ret;
+}
+
+sdk_ret_t
 capri_tm_init (sdk::lib::catalog* catalog,
                sdk::lib::qos_profile_t *qos_profile)
 {
@@ -4641,11 +4688,6 @@ capri_tm_init (sdk::lib::catalog* catalog,
     }
 
     set_tm_ctx(tm_cfg_profile, &asic_profile);
-
-    // Below initialization happens only once after reset
-    if (!sdk::asic::asic_is_hard_init()) {
-        return ret;
-    }
 
     ret = capri_tm_global_init();
     if (ret != sdk::SDK_RET_OK) {

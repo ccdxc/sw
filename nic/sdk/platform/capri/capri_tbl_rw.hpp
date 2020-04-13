@@ -27,6 +27,7 @@ namespace capri {
 #define CAPRI_FAIL (-1)
 
 sdk_ret_t capri_table_rw_init(asic_cfg_t *capri_cfg);
+sdk_ret_t capri_table_rw_soft_init(asic_cfg_t *capri_cfg);
 sdk_ret_t capri_p4plus_table_rw_init(void);
 void capri_mpu_icache_invalidate(void);
 
@@ -124,8 +125,7 @@ int capri_p4plus_table_init(platform_type_t platform_type,
 void capri_deparser_init(int tm_port_ingress, int tm_port_egress);
 
 void capri_program_hbm_table_base_addr(int tableid, int stage_tableid,
-                                       char *tablename, int stage, int pipe,
-                                       bool hw_init);
+                                       char *tablename, int stage, int pipe);
 
 void capri_p4plus_recirc_init();
 

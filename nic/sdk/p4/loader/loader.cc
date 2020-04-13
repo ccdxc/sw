@@ -153,7 +153,7 @@ p4_load_mpu_programs (const char *handle,
                       char *pathname, uint64_t hbm_base_addr,
                       p4_param_info_t *prog_param_info,
                       int num_prog_params, mpu_pgm_sort_t sort_func,
-                      bool is_slave)
+                      bool write_to_mem)
 {
     int i, j;
     p4_loader_ctx_t *ctx;
@@ -364,7 +364,7 @@ p4_load_mpu_programs (const char *handle,
                            //program_info[i].copy.complete);
        }
 
-       if (!is_slave) {
+       if (write_to_mem) {
            /* Write program to HBM */
            rv = sdk::asic::asic_mem_write(program_info[i].base_addr,
                                           (uint8_t *) program_info[i].copy.text.data(),

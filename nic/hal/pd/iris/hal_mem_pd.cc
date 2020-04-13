@@ -1289,6 +1289,7 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     hal_cfg = ph2_args->hal_cfg;
 
     SDK_ASSERT(sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg) == SDK_RET_OK);
+    SDK_ASSERT(sdk::asic::pd::asicpd_program_p4plus_table_mpu_base_pc() == SDK_RET_OK);
     SDK_ASSERT(asicpd_stats_region_init(g_stats_region_arr,
                                         g_stats_region_arrlen) == HAL_RET_OK);
     SDK_ASSERT(hal_pd_lif_stats_region_init() == HAL_RET_OK);

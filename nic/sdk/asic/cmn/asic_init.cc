@@ -15,7 +15,7 @@ namespace asic {
 static asic_init_type_t asic_init_type = ASIC_INIT_TYPE_HARD;
 static asic_state_t asic_state = ASIC_STATE_RUNNING;
 
-__attribute__((constructor)) void asic_slave_init_ (void)
+__attribute__((constructor)) void asic_init_type_ (void)
 {
     char *value;
 
@@ -84,7 +84,7 @@ asic_pgm_init (asic_cfg_t *cfg)
 }
 
 sdk_ret_t
-asic_asm_init (asic_cfg_t *cfg)
+asic_asm_init (asic_cfg_t *cfg, bool write_to_mem)
 {
     int             iret = 0;
     uint64_t        base_addr;
@@ -117,7 +117,7 @@ asic_asm_init (asic_cfg_t *cfg)
            symbols,
            num_symbols,
            cfg->asm_cfg[i].sort_func,
-           sdk::asic::asic_is_soft_init());
+           write_to_mem);
 
        if(symbols)
            SDK_FREE(SDK_MEM_ALLOC_PD, symbols);
@@ -140,11 +140,12 @@ sdk_ret_t
 asic_hbm_regions_init (asic_cfg_t *cfg)
 {
     sdk_ret_t           ret = SDK_RET_OK;
+    bool                asm_write_to_mem = true;
 
     // reset all the HBM regions that are marked for reset
     asic_reset_hbm_regions(cfg);
 
-    ret = asic_asm_init(cfg);
+    ret = asic_asm_init(cfg, asm_write_to_mem);
     if (ret != SDK_RET_OK) {
         return ret;
     }
