@@ -1067,6 +1067,9 @@ func TestEventsAlertEngine(t *testing.T) {
 					for _, alert := range alerts {
 						// expecting a hit count of 2 since we duplicated all the events after the batch interval
 						if alert.Status.Message == test.expMessage && alert.Status.TotalHits == 2 {
+							if alert.ModTime == alert.CreationTime {
+								return false, fmt.Sprintf("mod-time of the alert did not get updated: %v", alert.GetObjectMeta())
+							}
 							return true, nil
 						}
 					}
