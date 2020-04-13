@@ -63,7 +63,7 @@ testbundles:
         - linktest/linktest.testbundle
         #- classic/driver-features-int_mgmt-sanity.testbundle
         - linktest/linktest.testbundle
-        - classic/driver-features-oob-1g-sanity.testbundle
+        #- classic/driver-features-oob-1g-sanity.testbundle
         - linktest/linktest.testbundle
         - tso/tso.testbundle
         - drivercsum/drivercsum.testbundle
