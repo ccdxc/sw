@@ -273,6 +273,20 @@ private:
     sdk_ret_t add_nat_entries_(mapping_entry *mapping,
                                pds_mapping_spec_t *spec);
 
+    /// \brief add rxdma MAPPING table entry for (local/remote) overlay IP
+    /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] spec    mapping configurtion
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t add_overlay_ip_rxdma_mapping_entry_(vpc_impl *vpc,
+                                                  pds_mapping_spec_t *spec);
+
+    /// \brief add rxdma MAPPING table entry for public IP
+    /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] spec    mapping configurtion
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t add_public_ip_rxdma_mapping_entry_(vpc_impl *vpc,
+                                                 pds_mapping_spec_t *spec);
+
     /// \brief     fill key and data information for local mappping's public IP
     ///            P4 table entries
     /// \param[in] vpc  VPC impl instance corresponding to this mapping
@@ -376,6 +390,11 @@ private:
                                               vnic_impl *vnic_impl_obj,
                                               pds_mapping_spec_t *spec);
 
+    /// \brief     program MAPPING_TAG and LOCAL_MAPPING_TAG tables for
+    ///            local mapping
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t program_local_mapping_tag_entries_(void);
+
     /// \brief     add necessary entries for local mappings
     /// \param[in] vpc  VPC of this mapping
     /// \param[in] subnet subnet of this mapping
@@ -467,6 +486,10 @@ private:
                                          mapping_entry *orig_mapping,
                                          api_obj_ctxt_t *obj_ctxt,
                                          pds_mapping_spec_t *spec);
+
+    /// \brief     program MAPPING_TAG table entry for the remote mapping
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t program_remote_mapping_tag_tables_(void);
 
     /// \brief     update necessary entries for remote mappings
     /// \param[in] vpc  VPC of this mapping
