@@ -43,6 +43,7 @@ public:
 
     bool PollRequest(struct nicmgr_req_desc *req);
     bool PostResponse(struct nicmgr_resp_desc *resp);
+    void Flush(void);
     static void Poll(void *obj);
 
 private:
@@ -62,6 +63,7 @@ private:
     // AdminRequestQ
     bool AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB);
     bool AdminRequestQReset();
+    void ProcessRequest(struct nicmgr_req_desc *req);
     uint16_t req_head;
     uint16_t req_tail;
     uint64_t req_ring_base;

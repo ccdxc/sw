@@ -366,41 +366,60 @@ AdminQ::PostResponse(struct nicmgr_resp_desc *resp_desc)
 }
 
 void
-AdminQ::Poll(void *obj)
+AdminQ::ProcessRequest(struct nicmgr_req_desc *req_desc)
 {
-    timespec_t start_ts, end_ts, ts_diff;
-    AdminQ *adminq = (AdminQ *)obj;
-
-    struct nicmgr_req_desc req_desc = {0};
+    AdminQ *adminq = (AdminQ *)this;
     uint8_t req_data[4096] = {0};
     struct nicmgr_resp_desc resp_desc = {0};
     uint8_t resp_data[4096] = {0};
+    timespec_t start_ts, end_ts, ts_diff;
+
+    resp_desc.lif = req_desc->lif;
+    resp_desc.qtype = req_desc->qtype;
+    resp_desc.qid = req_desc->qid;
+    resp_desc.adminq_qstate_addr = req_desc->adminq_qstate_addr;
+
+    NIC_HEADER_TRACE("AdminCmd");
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);
+
+    if (adminq->handler) {
+        adminq->handler(adminq->handler_obj, &req_desc->cmd, &req_data, &resp_desc.comp,
+                        &resp_data);
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);
+    ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
+    NIC_LOG_DEBUG("AdminCmd Time taken: {}s.{}ns", ts_diff.tv_sec, ts_diff.tv_nsec);
+    if (ts_diff.tv_sec >= ADMINQ_TIMEOUT) {
+        NIC_LOG_WARN("AdminCmd took more than {} secs", ADMINQ_TIMEOUT);
+    }
+    NIC_HEADER_TRACE("AdminCmd End");
+
+    if (adminq->response_enabled) {
+        adminq->PostResponse(&resp_desc);
+    }
+}
+
+void
+AdminQ::Flush()
+{
+    AdminQ *adminq = (AdminQ *)this;
+    struct nicmgr_req_desc req_desc = {0};
+
+    NIC_HEADER_TRACE("Starting AdminCmd Flush");
+    while (adminq->PollRequest(&req_desc)) {
+        adminq->ProcessRequest(&req_desc);
+    }
+    NIC_HEADER_TRACE("Ending AdminCmd Flush");
+}
+
+void
+AdminQ::Poll(void *obj)
+{
+    AdminQ *adminq = (AdminQ *)obj;
+    struct nicmgr_req_desc req_desc = {0};
 
     if (adminq->PollRequest(&req_desc)) {
-
-        resp_desc.lif = req_desc.lif;
-        resp_desc.qtype = req_desc.qtype;
-        resp_desc.qid = req_desc.qid;
-        resp_desc.adminq_qstate_addr = req_desc.adminq_qstate_addr;
-
-        NIC_HEADER_TRACE("AdminCmd");
-        clock_gettime(CLOCK_MONOTONIC, &start_ts);
-
-        if (adminq->handler) {
-            adminq->handler(adminq->handler_obj, &req_desc.cmd, &req_data, &resp_desc.comp,
-                            &resp_data);
-        }
-
-        clock_gettime(CLOCK_MONOTONIC, &end_ts);
-        ts_diff = sdk::timestamp_diff(&end_ts, &start_ts);
-        NIC_LOG_DEBUG("AdminCmd Time taken: {}s.{}ns", ts_diff.tv_sec, ts_diff.tv_nsec);
-        if (ts_diff.tv_sec >= ADMINQ_TIMEOUT) {
-            NIC_LOG_WARN("Devcmd took more than 2 secs");
-        }
-        NIC_HEADER_TRACE("AdminCmd End");
-
-        if (adminq->response_enabled) {
-            adminq->PostResponse(&resp_desc);
-        }
+        adminq->ProcessRequest(&req_desc);
     }
 }

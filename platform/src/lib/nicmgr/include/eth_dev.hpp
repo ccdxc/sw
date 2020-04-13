@@ -152,6 +152,7 @@ class Eth : public Device
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
     void QuiesceEventHandler(bool quiesce);
+    void UpdateQStatus (bool enable);
     void HalEventHandler(bool status);
     void DelphiMountEventHandler(bool mounted);
     status_code_t Reset();

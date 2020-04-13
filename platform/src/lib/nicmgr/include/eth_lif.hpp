@@ -131,6 +131,8 @@ class EthLif
 
     void SetHalClient(devapi *dev_api);
 
+    void UpdateQStatus(bool enable);
+
     bool IsLifQuiesced();
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
@@ -226,6 +228,9 @@ class EthLif
     status_code_t RxQInit(void *req, void *req_data, void *resp, void *resp_data);
 
     status_code_t _CmdQControl(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t AdminQControl(uint32_t qid, bool enable);
+    status_code_t EdmaQControl(uint32_t qid, bool enable);
+    status_code_t NotifyQControl(uint32_t qid, bool enable);
 
     status_code_t _CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);

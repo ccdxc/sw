@@ -767,19 +767,19 @@ Eth::CreateLocalDevice()
 
     // sdk::lib::thread::control_cores_mask_set(0xD);
     if (spec->eth_type == ETH_MNIC_OOB_MGMT) {
-        mnet_thread = sdk::lib::thread::factory(spec->name.c_str(), 
+        mnet_thread = sdk::lib::thread::factory(spec->name.c_str(),
                                                 NICMGRD_THREAD_ID_MNET,
-                                                sdk::lib::THREAD_ROLE_CONTROL, 0xD, 
+                                                sdk::lib::THREAD_ROLE_CONTROL, 0xD,
                                                 create_mnet,
                                                 sched_get_priority_max(SCHED_FIFO),
                                                 SCHED_FIFO,
                                                 false); // yield
     } else {
-        mnet_thread = sdk::lib::thread::factory(spec->name.c_str(), 
+        mnet_thread = sdk::lib::thread::factory(spec->name.c_str(),
                                                 NICMGRD_THREAD_ID_MNET,
-                                                sdk::lib::THREAD_ROLE_CONTROL, 
+                                                sdk::lib::THREAD_ROLE_CONTROL,
                                                 0xD, create_mnet,
-                                                sched_get_priority_max(SCHED_OTHER), 
+                                                sched_get_priority_max(SCHED_OTHER),
                                                 SCHED_OTHER,
                                                 false); // yield
     }
@@ -1605,8 +1605,8 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
                 cfg->ip_dscp[i] = info->class_ip_dscp[i];
         }
 
-        if ( (info->group == IONIC_QOS_CLASS_DEFAULT) && 
-             ((info->class_dot1q_pcp == 0) || 
+        if ( (info->group == IONIC_QOS_CLASS_DEFAULT) &&
+             ((info->class_dot1q_pcp == 0) ||
               (info->class_type == sdk::platform::QOS_CLASS_TYPE_NONE)) ) {
             NIC_LOG_DEBUG("Returning do1q_pcp as match-all value (0xFF) for class-default");
             /*cfg->dot1q_pcp = info->class_dot1q_pcp;*/
@@ -1634,7 +1634,7 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
             cfg->flags |= IONIC_QOS_CONFIG_F_RW_IP_DSCP;
             cfg->rw_ip_dscp = info->rewrite_ip_dscp;
         }
-        NIC_LOG_DEBUG("pause_type: {} no_drop {} flags: {} dot1q_pcp {} class_type {}", 
+        NIC_LOG_DEBUG("pause_type: {} no_drop {} flags: {} dot1q_pcp {} class_type {}",
                       info->pause_type, info->no_drop, cfg->flags, cfg->dot1q_pcp, info->class_type);
     };
 
@@ -1716,8 +1716,8 @@ Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     NIC_LOG_DEBUG("group: {} mtu: {} class_type: {} pcp: {} pause_type: {} "
-                  "pfc_cos: {} no_drop {} flags: {}", 
-                  info.group, info.mtu, info.class_type, info.class_dot1q_pcp, 
+                  "pfc_cos: {} no_drop {} flags: {}",
+                  info.group, info.mtu, info.class_type, info.class_dot1q_pcp,
                   info.pause_type, info.pause_dot1q_pcp, info.no_drop, cfg->flags);
 
     rs = dev_api->qos_class_create(&info);
@@ -1794,8 +1794,8 @@ Eth::_CmdQosUpdate(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     NIC_LOG_DEBUG("group: {} mtu: {} class_type: {} pcp: {} pause_type: {} "
-                  "pfc_cos: {} no_drop {} flags: {}", 
-                  info.group, info.mtu, info.class_type, info.class_dot1q_pcp, 
+                  "pfc_cos: {} no_drop {} flags: {}",
+                  info.group, info.mtu, info.class_type, info.class_dot1q_pcp,
                   info.pause_type, info.pause_dot1q_pcp, info.no_drop, cfg->flags);
 
     rs = dev_api->qos_class_create(&info);
@@ -2208,6 +2208,16 @@ Eth::XcvrEventHandler(port_status_t *evd)
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
         eth_lif->XcvrEventHandler(evd);
+    }
+}
+
+void
+Eth::UpdateQStatus(bool enable)
+{
+    NIC_LOG_DEBUG("Eth Device QControl Handler");
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        EthLif *eth_lif = it->second;
+        eth_lif->UpdateQStatus(enable);
     }
 }
 

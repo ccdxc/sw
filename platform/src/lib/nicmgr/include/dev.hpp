@@ -61,6 +61,8 @@ enum UpgradeState {
 
 enum UpgradeEvent {
     UPG_EVENT_QUIESCE,
+    UPG_EVENT_DISABLEQ,
+    UPG_EVENT_ENABLEQ,
     UPG_EVENT_DEVICE_RESET
 };
 

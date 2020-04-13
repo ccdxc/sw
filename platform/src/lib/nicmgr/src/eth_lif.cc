@@ -2095,8 +2095,123 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 }
 
 status_code_t
+EthLif::AdminQControl(uint32_t qid, bool enable)
+{
+    int64_t addr;
+    struct admin_cfg_qstate admin_cfg = {0};
+
+    NIC_FUNC_DEBUG("{}: qid: {} enable: {}" , hal_lif_info_.name, qid, enable);
+
+    if (qid >= spec->adminq_count) {
+        NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, qid);
+        return (IONIC_RC_EQID);
+    }
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id,
+                                        ETH_HW_QTYPE_ADMIN, qid);
+    if (addr < 0) {
+        NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
+                    hal_lif_info_.name, qid);
+        return (IONIC_RC_ERROR);
+    }
+
+    READ_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg,
+             sizeof(admin_cfg), 0);
+    if (enable)
+        admin_cfg.enable = 0x1;
+    else if (!enable)
+        admin_cfg.enable = 0x0;
+
+    WRITE_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg,
+              sizeof(admin_cfg), 0);
+    PAL_barrier();
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(admin_qstate_t),
+                                                  P4PLUS_CACHE_INVALIDATE_TXDMA);
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+EthLif::EdmaQControl(uint32_t qid, bool enable)
+{
+    status_code_t st = IONIC_RC_SUCCESS;
+    int64_t addr, off;
+    union {
+        eth_qstate_cfg_t eth;
+        eth_eq_qstate_cfg_t eq;
+    } cfg = {0};
+
+    if (qid >= spec->eq_count) {
+        NIC_LOG_ERR("{}: Bad EQ qid {}", hal_lif_info_.name, qid);
+        return (IONIC_RC_EQID);
+    }
+
+    off = offsetof(eth_eq_qstate_t, cfg);
+
+    addr = res->rx_eq_base + qid * sizeof(eth_eq_qstate_t);
+    READ_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
+    if (!cfg.eth.enable && enable) {
+        cfg.eq.eq_enable = 0x1;
+    } else if (cfg.eth.enable && !enable) {
+        cfg.eq.eq_enable = 0x0;
+    }
+    WRITE_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
+    PAL_barrier();
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
+
+    addr = res->tx_eq_base + qid * sizeof(eth_eq_qstate_t);
+    READ_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
+    if (!cfg.eth.enable && enable) {
+        cfg.eq.eq_enable = 0x1;
+    } else if (cfg.eth.enable && !enable) {
+        cfg.eq.eq_enable = 0x0;
+    }
+    WRITE_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
+    PAL_barrier();
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+
+    return st;
+}
+
+status_code_t
+EthLif::NotifyQControl(uint32_t qid, bool enable)
+{
+    status_code_t st = IONIC_RC_SUCCESS;
+    int64_t addr;
+    struct notify_cfg_qstate notify_cfg = {0};
+
+    if (qid >= 1) {
+        NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, qid);
+        return (IONIC_RC_EQID);
+    }
+
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id,
+                                        ETH_NOTIFYQ_QTYPE, qid);
+    if (addr < 0) {
+        NIC_LOG_ERR("{}: Failed to get qstate address for NOTIFYQ qid {}",
+                    hal_lif_info_.name, qid);
+        return (IONIC_RC_ERROR);
+    }
+
+    READ_MEM(addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&notify_cfg,
+             sizeof(notify_cfg), 0);
+    if (enable) {
+        notify_cfg.enable = 0x1;
+    } else if (!enable) {
+        notify_cfg.enable = 0x0;
+    }
+    WRITE_MEM(addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&notify_cfg,
+              sizeof(notify_cfg), 0);
+    PAL_barrier();
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(notify_qstate_t),
+                                                  P4PLUS_CACHE_INVALIDATE_TXDMA);
+
+    return st;
+}
+
+status_code_t
 EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
 {
+    status_code_t st = IONIC_RC_SUCCESS;
     int64_t addr, off;
     struct ionic_q_control_cmd *cmd = (struct ionic_q_control_cmd *)req;
     // q_enable_comp *comp = (q_enable_comp *)resp;
@@ -2104,8 +2219,6 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         eth_qstate_cfg_t eth;
         eth_eq_qstate_cfg_t eq;
     } cfg = {0};
-    struct admin_cfg_qstate admin_cfg = {0};
-    struct notify_cfg_qstate notify_cfg = {0};
     asic_db_addr_t db_addr = { 0 };
 
     NIC_LOG_DEBUG("{}: {}: type {} index {} oper {}", hal_lif_info_.name,
@@ -2184,82 +2297,13 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         }
         break;
     case IONIC_QTYPE_EQ:
-        if (cmd->index >= spec->eq_count) {
-            NIC_LOG_ERR("{}: Bad EQ qid {}", hal_lif_info_.name, cmd->index);
-            return (IONIC_RC_EQID);
-        }
-
-        off = offsetof(eth_eq_qstate_t, cfg);
-
-        addr = res->rx_eq_base + cmd->index * sizeof(eth_eq_qstate_t);
-        READ_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
-        if (!cfg.eth.enable && cmd->oper == IONIC_Q_ENABLE) {
-            cfg.eq.eq_enable = 0x1;
-            active_q_ref_cnt++;
-        } else if (cfg.eth.enable && cmd->oper == IONIC_Q_DISABLE) {
-            cfg.eq.eq_enable = 0x0;
-            active_q_ref_cnt--;
-        }
-        WRITE_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
-        PAL_barrier();
-        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
-
-        addr = res->tx_eq_base + cmd->index * sizeof(eth_eq_qstate_t);
-        READ_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
-        if (!cfg.eth.enable && cmd->oper == IONIC_Q_ENABLE) {
-            cfg.eq.eq_enable = 0x1;
-            active_q_ref_cnt++;
-        } else if (cfg.eth.enable && cmd->oper == IONIC_Q_DISABLE) {
-            cfg.eq.eq_enable = 0x0;
-            active_q_ref_cnt--;
-        }
-        WRITE_MEM(addr + off, (uint8_t *)&cfg.eq, sizeof(cfg.eq), 0);
-        PAL_barrier();
-        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(eth_eq_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        st = EdmaQControl(cmd->index, cmd->oper);
         break;
     case IONIC_QTYPE_ADMINQ:
-        if (cmd->index >= spec->adminq_count) {
-            NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
-            return (IONIC_RC_EQID);
-        }
-        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_ADMIN, cmd->index);
-        if (addr < 0) {
-            NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}", hal_lif_info_.name,
-                        cmd->index);
-            return (IONIC_RC_ERROR);
-        }
-        READ_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg, sizeof(admin_cfg),
-                 0);
-        if (cmd->oper == IONIC_Q_ENABLE)
-            admin_cfg.enable = 0x1;
-        else if (cmd->oper == IONIC_Q_DISABLE)
-            admin_cfg.enable = 0x0;
-        WRITE_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg, sizeof(admin_cfg),
-                  0);
-        PAL_barrier();
-        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        st = AdminQControl(cmd->index, cmd->oper);
         break;
     case IONIC_QTYPE_NOTIFYQ:
-        if (cmd->index >= 1) {
-            NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
-            return (IONIC_RC_EQID);
-        }
-        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_NOTIFYQ_QTYPE, cmd->index);
-        if (addr < 0) {
-            NIC_LOG_ERR("{}: Failed to get qstate address for NOTIFYQ qid {}", hal_lif_info_.name,
-                        cmd->index);
-            return (IONIC_RC_ERROR);
-        }
-        READ_MEM(addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&notify_cfg, sizeof(notify_cfg),
-                 0);
-        if (cmd->oper == IONIC_Q_ENABLE)
-            notify_cfg.enable = 0x1;
-        else if (cmd->oper == IONIC_Q_DISABLE)
-            notify_cfg.enable = 0x0;
-        WRITE_MEM(addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&notify_cfg,
-                  sizeof(notify_cfg), 0);
-        PAL_barrier();
-        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, sizeof(notify_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        st = NotifyQControl(cmd->index, cmd->oper);
         break;
     default:
         NIC_LOG_ERR("{}: invalid qtype {}", hal_lif_info_.name, cmd->type);
@@ -2267,7 +2311,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         break;
     }
 
-    return (IONIC_RC_SUCCESS);
+    return st;
 }
 
 status_code_t
@@ -2812,6 +2856,48 @@ EthLif::DelphiMountEventHandler(bool mounted)
     if (!mounted) {
         return;
     }
+}
+
+void
+EthLif::UpdateQStatus(bool enable)
+{
+    status_code_t st;
+
+    // queue control for adminq
+    for (uint32_t i = 0; i < spec->adminq_count; i++) {
+        st = AdminQControl(i, enable);
+        if (st != IONIC_RC_SUCCESS) {
+            NIC_LOG_ERR("{}: Admin Queue control failed ctrl: {} adminq cnt: {}, qid: {}",
+                hal_lif_info_.name, enable, spec->adminq_count, i);
+        }
+        if (!enable) {
+            adminq->Flush();
+        }
+    }
+
+    // queue control for EDMAQ
+    for (uint32_t i = 0; i < spec->eq_count; i++) {
+        st = EdmaQControl(i, enable);
+        if (st != IONIC_RC_SUCCESS) {
+            NIC_LOG_ERR("{}: Edma Queue control failed ctrl: {} eq cnt : {}, qid: {}",
+                hal_lif_info_.name, enable, spec->eq_count, i);
+        }
+
+        if(!enable) {
+            edmaq->Flush();
+        }
+    }
+
+    // queue control for notifyQ
+    if (notify_enabled == 1) {
+        st = NotifyQControl(0, enable);
+        if (st != IONIC_RC_SUCCESS) {
+            NIC_LOG_ERR("{}: notify Queue control failed ctrl: {}",
+                hal_lif_info_.name, enable);
+        }
+    }
+
+    return;
 }
 
 void

@@ -977,6 +977,8 @@ upgrade_event_to_str(UpgradeEvent event)
 {
     switch (event) {
         CASE(UPG_EVENT_QUIESCE);
+        CASE(UPG_EVENT_ENABLEQ);
+        CASE(UPG_EVENT_DISABLEQ);
         CASE(UPG_EVENT_DEVICE_RESET);
         default: return "invalid";
     }
@@ -994,6 +996,24 @@ DeviceManager::HandleUpgradeEvent(UpgradeEvent event)
                 if (dev->GetType() == ETH) {
                     Eth *eth_dev = (Eth *) dev;
                     eth_dev->QuiesceEventHandler(true);
+                }
+            }
+            break;
+        case UPG_EVENT_DISABLEQ:
+            for (auto it = devices.begin(); it != devices.end(); it++) {
+                Device *dev = it->second;
+                if (dev->GetType() == ETH) {
+                    Eth *eth_dev = (Eth *) dev;
+                    eth_dev->UpdateQStatus(false);
+                }
+            }
+            break;
+        case UPG_EVENT_ENABLEQ:
+            for (auto it = devices.begin(); it != devices.end(); it++) {
+                Device *dev = it->second;
+                if (dev->GetType() == ETH) {
+                    Eth *eth_dev = (Eth *) dev;
+                    eth_dev->UpdateQStatus(true);
                 }
             }
             break;
