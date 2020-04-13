@@ -119,7 +119,6 @@ header_type scratch_metadata_t {
     fields {
         flag                : 1;
         hint_valid          : 1;
-        epoch               : 8;
         local_mapping_hash  : 15;
         local_mapping_hint  : 14;
         mapping_hash        : 10;

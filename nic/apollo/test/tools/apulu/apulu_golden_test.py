@@ -52,7 +52,8 @@ class P4ToARM(Packet):
             BitField("drop", 0, 1),
             BitField("defunct_flow", 0, 1),
             BitField("local_mapping_ip_type", 0, 2),
-            BitField("pad", 0, 5)]
+            BitField("pad", 0, 5),
+            ByteField("epoch", 0)]
 
 def dump_pkt(pkt, sname):
     print('uint8_t %s[] = {' % sname)
@@ -252,7 +253,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.1.1', src='11.11.1.12') / \
         TCP(sport=0x1234, dport=0x5678) / payload
-opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', \
+opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', epoch=0x56, \
         ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0xcb82801f), \
         l2_1_offset=0x1f, l3_1_offset=0x31, l4_2_offset=0x45, flow_hit=1, \
         payload_offset=0x59, lif=ntohs(0x1), session_id=ntohl(0x55e51), \

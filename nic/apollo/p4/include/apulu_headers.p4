@@ -84,6 +84,8 @@ header_type apulu_p4_to_arm_header_t {
         defunct_flow            : 1;
         local_mapping_ip_type   : 2;
         pad                     : 5;
+
+        epoch                   : 8;
     }
 }
 

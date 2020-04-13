@@ -195,10 +195,10 @@ table vni_otcam {
 }
 
 action vnic_info(epoch, meter_enabled, rx_mirror_session, tx_mirror_session) {
-    modify_field(scratch_metadata.epoch, epoch);
+    modify_field(p4i_to_arm.epoch, epoch);
     if ((control_metadata.flow_done == TRUE) and
         (control_metadata.flow_miss == FALSE) and
-        (control_metadata.flow_epoch != scratch_metadata.epoch)) {
+        (control_metadata.flow_epoch != epoch)) {
         modify_field(control_metadata.flow_done, FALSE);
         modify_field(ingress_recirc.defunct_flow, TRUE);
         // return;
