@@ -375,7 +375,7 @@ func (c *API) WatchAlertPolicies() error {
 	// create the events dispatcher with default values
 	c.evtsDispatcher, err = dispatcher.NewDispatcher(nodeName, 0, 0, storeConfig, defObjRef, defLogger)
 	if err != nil {
-		log.Fatalf("Controller API: evt dispatcher create failed, err %v", err)
+		log.Errorf("Controller API: evt dispatcher create failed, err %v", err)
 		return err
 	}
 
@@ -383,19 +383,19 @@ func (c *API) WatchAlertPolicies() error {
 	exporterChLen := 1000
 	veniceExporter, err := exporters.NewVeniceExporter("venice", exporterChLen, "", c.ResolverClient, defLogger)
 	if err != nil {
-		log.Fatalf("Controller API: venice exporter create failed, err %v", err)
+		log.Errorf("Controller API: venice exporter create failed, err %v", err)
 		return err
 	}
 	eventsChan, offsetTracker, err := c.evtsDispatcher.RegisterExporter(veniceExporter)
 	if err != nil {
-		log.Fatalf("Controller API: venice exporter register failed, err %v", err)
+		log.Errorf("Controller API: venice exporter register failed, err %v", err)
 		return err
 	}
 	veniceExporter.Start(eventsChan, offsetTracker)
 
 	c.policyMgr, err = policy.NewManager(nodeName, c.evtsDispatcher, defLogger)
 	if err != nil {
-		log.Fatalf("Controller API: venice exporter create policy manager failed, err %v", err)
+		log.Errorf("Controller API: venice exporter create policy manager failed, err %v", err)
 		return err
 	}
 	c.startPolicyWatcher()
