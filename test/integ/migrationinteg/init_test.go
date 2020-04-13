@@ -14,7 +14,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	fakehal "github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
 	"github.com/pensando/sw/nic/agent/dscagent"
 	agenttypes "github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/delphi/gosdk"
@@ -73,7 +72,6 @@ type migrationTestSuite struct {
 	resolverSrv    *rpckit.RPCServer
 	resolverClient resolver.Interface
 	hub            gosdk.Hub
-	fakehal        *fakehal.Hal
 	agent          *Dpagent
 }
 

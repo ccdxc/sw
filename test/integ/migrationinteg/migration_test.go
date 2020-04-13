@@ -3,8 +3,6 @@ package migrationinteg
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
 	"time"
 
 	. "gopkg.in/check.v1"
@@ -12,13 +10,9 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/workload"
-	fakehal "github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
-	"github.com/pensando/sw/nic/delphi/gosdk"
 	"github.com/pensando/sw/venice/ctrler/npm"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/ref"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -80,46 +74,6 @@ func (it *migrationTestSuite) setupDefaultTopo(seed int, c *C) ([]*cluster.Host,
 	}, fmt.Sprintf("failed to create %v workloads", hostCount*workloadPerHost), "1s", "5s")
 
 	return hosts, hostWorkloadMap, nil
-}
-
-func (it *migrationTestSuite) setupDestinationHost(hostName, dscMac, dscIP string, c *C) *cluster.Host {
-	h, err := it.createHost(hostName, dscMac, dscIP)
-	AssertOk(c, err, "error creating host")
-
-	log.Infof("Created Destination host : %v", h)
-	it.hub = gosdk.NewFakeHub()
-	it.hub.Start()
-
-	var halLis netutils.TestListenAddr
-	halLis.GetAvailablePort()
-	it.fakehal = fakehal.NewFakeHalServer(halLis.ListenURL.String())
-	if err := os.Setenv("HAL_GRPC_PORT", strings.Split(halLis.ListenURL.String(), ":")[1]); err != nil {
-		log.Errorf("Test Setup Failed. Err: %v", err)
-		os.Exit(1)
-	}
-
-	os.Remove(globals.NetAgentDBPath)
-
-	it.agent, err = createAgent(it.logger, it.resolverSrv.GetListenURL(), dscMac)
-	c.Assert(err, IsNil)
-
-	AssertEventually(c, func() (bool, interface{}) {
-		return it.agent.dscAgent.InfraAPI.GetConfig().IsConnectedToVenice, nil
-	}, "default agent is not connected to NPM", "1s", "10s")
-
-	time.Sleep(2 * time.Second)
-	log.Infof("Destination agent successfully created.")
-
-	return h
-}
-
-func (it *migrationTestSuite) deleteDestinationHost() {
-	it.hub.Stop()
-	it.agent.dscAgent.Stop()
-	it.fakehal.Stop()
-	time.Sleep(time.Millisecond * 100)
-	os.Remove(globals.NetAgentDBPath)
-	log.Infof("Successfully stopped destination host")
 }
 
 func (it *migrationTestSuite) TestMigrationTimeout(c *C) {
@@ -415,7 +369,8 @@ func (it *migrationTestSuite) TestMigrationStartMultipleHosts(c *C) {
 	hosts, hostWorkloadMap, err := it.setupDefaultTopo(7, c)
 	AssertOk(c, err, "failed to setup default topology")
 
-	destinationHost := it.setupDestinationHost("Destination-Host", "00ae.cd01.1000", "10.20.30.199/16", c)
+	destinationHost, err := it.createHost("Destination-Host", "00ae.cd01.1000", "10.20.30.199/16")
+	AssertOk(c, err, "error creating host")
 
 	for _, h := range hosts {
 		for _, w := range hostWorkloadMap[h.Name] {
@@ -434,8 +389,6 @@ func (it *migrationTestSuite) TestMigrationStartMultipleHosts(c *C) {
 			AssertOk(c, err, "workload migration did not move to started status")
 		}
 	}
-
-	it.deleteDestinationHost()
 }
 
 func (it *migrationTestSuite) TestMigrationAbortAfterTimeout(c *C) {
