@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import iota.test.utils.naples_host as host
 import iota.test.iris.utils.address as address_utils
 import yaml
 
@@ -27,7 +28,7 @@ def Getl2seg_vlan_mapping(naples_node):
     perl2segOutput = cmd.stdout.split("---")
 
     for l2seg in perl2segOutput:
-        l2segObj = yaml.load(l2seg)
+        l2segObj = yaml.load(l2seg, Loader=yaml.Loader)
         if l2segObj is not None:
             l2seg_id = l2segObj['spec']['keyorhandle']['keyorhandle']['segmentid'] 
             vlan_id = l2segObj['spec']['wireencap']['encapvalue']
@@ -46,7 +47,7 @@ def GetIfId_lif_mapping(naples_node):
     perifOutput = cmd.stdout.split("---")
 
     for intf in perifOutput:
-        intfObj = yaml.load(intf)
+        intfObj = yaml.load(intf, Loader=yaml.Loader)
         if intfObj is not None:
             if_id = intfObj['spec']['keyorhandle']['keyorhandle']['interfaceid']
             try:
@@ -67,8 +68,12 @@ def GetLifId_intfName_mapping(naples_node):
 
     perLifOutput = cmd.stdout.split("---")
 
+    os = api.GetNodeOs(naples_node)
+    if os == host.OS_TYPE_WINDOWS:
+        mapping = host.GetWindowsPortMapping(naples_node)
+
     for lif in perLifOutput:
-        lifObj = yaml.load(lif)
+        lifObj = yaml.load(lif, Loader=yaml.Loader)
         if lifObj is not None:
             lifid = lifObj['spec']['keyorhandle']['keyorhandle']['lifid'] 
             intfName = lifObj['spec']['name']
@@ -76,6 +81,16 @@ def GetLifId_intfName_mapping(naples_node):
             # eg., inb_mnic0/lif67
             # so until that is fixed, temp hack to strip the "/lif<lif_id>" suffix
             intfName = intfName.split("/")[0]
+            if os == host.OS_TYPE_WINDOWS and intfName[:4] =="Pen~":
+                found = False
+                for intf in mapping.values():
+                    if intfName[4:] == intf["ifDesc"][4 - len(intfName):]:
+                        intfName = intf["LinuxName"]
+                        found = True
+                        break
+                if not found:
+                    api.Logger.error("not able to find windows adapter name", intfName)
+                    return lifId_intfName_dict
             lifId_intfName_dict.update({lifid: intfName})
 
     return lifId_intfName_dict
@@ -89,8 +104,13 @@ def GetIntfName2LifId_mapping(naples_node):
     cmd = resp.commands[0]
 
     perLifOutput = cmd.stdout.split("---")
+
+    os = api.GetNodeOs(naples_node)
+    if os == host.OS_TYPE_WINDOWS:
+        mapping = host.GetWindowsPortMapping(naples_node)
+
     for lif in perLifOutput:
-        lifObj = yaml.load(lif)
+        lifObj = yaml.load(lif, Loader=yaml.Loader)
         if lifObj is not None:
             lifid = lifObj['spec']['keyorhandle']['keyorhandle']['lifid']
             intfName = lifObj['spec']['name']
@@ -98,6 +118,16 @@ def GetIntfName2LifId_mapping(naples_node):
             # eg., inb_mnic0/lif67
             # so until that is fixed, temp hack to strip the "/lif<lif_id>" suffix
             intfName = intfName.split("/")[0]
+            if os == host.OS_TYPE_WINDOWS and intfName[:4] =="Pen~":
+                found = False
+                for intf in mapping.values():
+                    if intfName[4:] == intf["ifDesc"][4 - len(intfName):]:
+                        intfName = intf["LinuxName"]
+                        found = True
+                        break
+                if not found:
+                    api.Logger.error("not able to find windows adapter name", intfName)
+                    return intfName2lifId_dict
             intfName2lifId_dict.update({intfName: lifid})
 
     return intfName2lifId_dict

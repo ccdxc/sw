@@ -578,8 +578,20 @@ func (app *bareMetalWorkload) SendArpProbe(ip string, intf string, vlan int) err
 		intf = vlanIntf(intf, vlan)
 	}
 
-	return RunArpCmd(app, ip, intf)
+	var arpCmd []string
+	if app.osType != "windows" {
+		arpCmd = append(arpCmd, "arping", "-c", "5", "-U", ip, "-I", intf)
+	} else {
+		arpCmd = append(arpCmd, "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "\"arp-ping -s "+ip+" "+ip+"\"")
+	}
 
+	cmdResp, _, _ := app.RunCommand(arpCmd, "", 0, 0, false, false)
+	if cmdResp.ExitCode != 0 {
+		log.Errorf("Could not send arprobe for  %s (%s) : %s", ip, intf, cmdResp.Stdout)
+	} else {
+		log.Infof("Successfully ran arp command with ip %v intf %v", ip, intf)
+	}
+	return nil
 }
 
 func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {

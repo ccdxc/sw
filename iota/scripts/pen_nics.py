@@ -160,7 +160,7 @@ def __print_mnic_ip_freebsd(mac_hint, intf_type):
 def __get_devices_windows(mac_hint):
 
     devs = []
-    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapter -InterfaceDescription "Pensando*" | select Name, ifIndex, MacAddress'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapter -InterfaceDescription "Pensando*" | Select-Object Name, ifIndex, MacAddress, ifDesc | Convertto-Json'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
         ifInfo, errs = proc.communicate(timeout=30)
     except subprocess.TimeoutExpired:
@@ -169,37 +169,24 @@ def __get_devices_windows(mac_hint):
         print("execute powershell.exe timeout", file=sys.stderr)
         return devs
 
-    lines = ifInfo.decode('utf-8').splitlines()
-
-    intfs = {}
-    intf = {}
-    for line in lines:
-        line = line.strip()
-        if len(line) == 0:
-            continue
-        if line.find("Name") >= 0:
-            ifIndexIndex = line.find("ifIndex")
-            macIndex = line.find("MacAddress")
-            continue
-        if line.find("----") >= 0:
-            continue
-        name = line[:ifIndexIndex].strip()
-        ifIndex = line[ifIndexIndex:macIndex].strip()
-        macAddress = line[macIndex:].strip()
-        macAddress = macAddress.replace('-', ':')
-        intf["Name"] = name
-        intf["ifIndex"] = ifIndex
-        intf["macAddress"] = macAddress
-        intfs[name] = intf
-        intf = {}
+    try:
+        intfs = json.loads(ifInfo.decode('utf-8'))
+    except:
+        print("failed to decode json", file=sys.stderr)
+        return devs
 
     if len(intfs) == 0:
         # no Naples detected, return error
         print("not able to detect Naples", file=sys.stderr)
         return devs
 
+    intfMap = dict()
+    for intf in intfs:
+        intf["MacAddress"] = intf["MacAddress"].replace('-', ':')
+        intfMap[intf["Name"]] = intf
+ 
     # powershell path: /mnt/c/Windows/System32/WindowsPowerShell/v1.0/
-    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapterHardwareInfo -InterfaceDescription "Pensando*" | select Name, Bus'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(['/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', 'Get-NetAdapterHardwareInfo -InterfaceDescription "Pensando*" | Select-Object Name, Bus | Convertto-Json'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     try:
         busInfo, errs = proc.communicate(timeout=30)
     except subprocess.TimeoutExpired:
@@ -208,26 +195,20 @@ def __get_devices_windows(mac_hint):
         print("execute powershell.exe timeout", file=sys.stderr)
         return devs
 
-    lines = busInfo.decode('utf-8').splitlines()
-    if len(lines) == 0:
+    try:
+        busInfs = json.loads(busInfo.decode('utf-8'))
+    except:
+        print("failed to decode json", file=sys.stderr)
+        return devs
+
+    if len(busInfs) == 0:
         # no Naples detected, return error
         print("not able to detect Naples", file=sys.stderr)
         return devs
 
-    for line in lines:
-        line = line.strip()
-        if len(line) == 0:
-            continue
-        if line.find("Name") >= 0:
-            index = line.find("Bus")
-            continue
-        if line.find("----") >= 0:
-            continue
-        name = line[:index].strip()
-        if intfs.get(name) is None:
-            print("cannot find this adaptor %s", name)
-            continue
-        intfs[name]["Bus"] = line[index:]
+    for item in busInfs:
+        intf = intfMap[item["Name"]]
+        intf["Bus"] = item["Bus"]
 
     def populateChildren(children):
         for child in children:
@@ -235,22 +216,22 @@ def __get_devices_windows(mac_hint):
                 mac = child.get("serial")
                 if mac is None:
                     continue
-                for intf in intfs.values():
-                    if intf["macAddress"].lower() == mac:
+                for intf in intfMap.values():
+                    if intf["MacAddress"].lower() == mac:
                         intf["LinuxName"] = child.get("logicalname")
                         break
             if child.get("children") is not None:
                 populateChildren(child.get("children"))
 
     output = __get_nics_output_linux().decode('utf-8')
-    entries=json.loads(output)
+    entries = json.loads(output)
     children = entries["children"]
     populateChildren(children)
 
     devs = []
     output = {}
-    for intf in intfs.values():
-        if MacInRange(intf["macAddress"], mac_hint):
+    for intf in intfMap.values():
+        if MacInRange(intf["MacAddress"], mac_hint):
             devs.append((intf["LinuxName"], int(intf["Bus"])))
         output[intf["LinuxName"]] = intf
 

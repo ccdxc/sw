@@ -113,19 +113,6 @@ def GetNaplesInbandBondInterfaces(node):
     return intfs
 
 
-def GetWindowsPortMapping(node):
-    os = api.GetNodeOs(node)
-    if os != "windows":
-        return []
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddHostCommand(req, node, "cat /pensando/iota/name-mapping.json")
-    resp = api.Trigger(req)
-    if resp.commands[0].exit_code != 0:
-        return []
-    entries = json.loads(resp.commands[0].stdout)
-    return entries
-
-
 def GetIPAddress(node, interface):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     os = api.GetNodeOs(node)
@@ -264,7 +251,7 @@ class NodeInterface:
         self._ib_100g_intfs          = GetNaplesInbandInterfaces(node)
         self._ib_bond_intfs          = GetNaplesInbandBondInterfaces(node)
         if api.GetNodeOs(node) == "windows":
-            self._port_mapping       = GetWindowsPortMapping(node)
+            self._port_mapping       = naples_host.GetWindowsPortMapping(node)
         else:
             self._port_mapping       = None
 

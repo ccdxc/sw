@@ -64,7 +64,7 @@ def GetLifMCFramesTxRxStats(naples_node, lif_id):
     mcframesok = [0, 0]
     if not result:
         api.Logger.critical("unknown response from Naples")
-        return bcframesok
+        return mcframesok
     cmd = resp.commands[0]
 
     perLifOutput = cmd.stdout.split("---")

@@ -1,4 +1,5 @@
 import iota.harness.api as api
+import json
 import yaml
 
 OS_TYPE_LINUX = "linux"
@@ -165,8 +166,17 @@ def GetHostInternalMgmtInterfaces(node):
         #For now hardcoding.
         return ["eth1"]
     elif api.GetNodeOs(node) == OS_TYPE_WINDOWS:
-        # TODO
-        return ["eth2"]
+        entries = GetWindowsPortMapping(node)
+        if len(entries) == 0:
+            return []
+        maxbus = 0
+        name = ""
+        for k, v in entries.items():
+            if int(v["Bus"]) > maxbus:
+                maxbus = int(v["Bus"])
+                name = k
+
+        return [name]
     else:
         cmd = "pciconf -l | grep chip=0x10041dd8 | cut -d'@' -f1 | sed \"s/ion/ionic/g\""
         api.Trigger_AddHostCommand(req, node, cmd)
@@ -446,3 +456,17 @@ def checkForIonicError(node):
             return status
 
     return checkNaplesForError(node)
+
+
+def GetWindowsPortMapping(node):
+    os = api.GetNodeOs(node)
+    if os != OS_TYPE_WINDOWS:
+        return []
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, "cat /pensando/iota/name-mapping.json")
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        return []
+    entries = json.loads(resp.commands[0].stdout)
+    return entries
+

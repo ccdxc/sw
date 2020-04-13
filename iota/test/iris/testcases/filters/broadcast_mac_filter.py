@@ -116,8 +116,10 @@ def triggerArping(w1, w2, tc):
         statsCount[ethIntf] = txrxbcframes
 
     #do arping
-
-    cmd_cookie = "%sarping -W 0.01 -c %d %s" %(tc.ArpingPrefix, arping_count, w1.ip_address)
+    if api.GetNodeOs(tc.naples_node) == "windows":
+        cmd_cookie = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"arp-ping -n %d %s\"" %(arping_count, w1.ip_address)
+    else:
+        cmd_cookie = "%sarping -W 0.01 -c %d %s" %(tc.ArpingPrefix, arping_count, w1.ip_address)
     api.Trigger_AddHostCommand(tc.req, w2.node_name, cmd_cookie)
     tc.cmd_cookies.append(cmd_cookie)
 
@@ -195,25 +197,26 @@ def Trigger(tc):
         debug_utils.collect_showtech(result)
         return result
 
-    #first, find the right arp (we rely on -W option)
-    tc.req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    if api.GetNodeOs(tc.naples_node) != "windows":
+        #first, find the right arp (we rely on -W option)
+        tc.req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
  
-    ArpingPrefix = "/usr/local/sbin/"
+        ArpingPrefix = "/usr/local/sbin/"
 
-    api.Trigger_AddHostCommand(tc.req, tc.naples_node, "ls %sarping" % ArpingPrefix)
-    resp = api.Trigger(tc.req)
+        api.Trigger_AddHostCommand(tc.req, tc.naples_node, "ls %sarping" % ArpingPrefix)
+        resp = api.Trigger(tc.req)
 
-    for cmd in resp.commands:
-        api.Logger.info("ls %sarping output stdout: %s, stderr: %s" % (ArpingPrefix, cmd.stdout,cmd.stderr))
-        if cmd.stderr.find("No such file or directory")!=-1:
-            ArpingPrefix = ""
-            api.Logger.info("Using the default arping")
-        else:
-            api.Logger.info("Using  %sarping" % ArpingPrefix)
+        for cmd in resp.commands:
+            api.Logger.info("ls %sarping output stdout: %s, stderr: %s" % (ArpingPrefix, cmd.stdout,cmd.stderr))
+            if cmd.stderr.find("No such file or directory")!=-1:
+                ArpingPrefix = ""
+                api.Logger.info("Using the default arping")
+            else:
+                api.Logger.info("Using  %sarping" % ArpingPrefix)
 
-    api.Logger.info("Using the following: %s arping" % ArpingPrefix)
+        api.Logger.info("Using the following: %s arping" % ArpingPrefix)
 
-    tc.ArpingPrefix = ArpingPrefix
+        tc.ArpingPrefix = ArpingPrefix
     
     #Trigger arping and get interface BC stats pre & post trigger
     triggerBCtraffic(tc)

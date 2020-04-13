@@ -62,7 +62,11 @@ def debug_dump_HostRoutingTable(node):
 
 def debug_dump_HostArpTable(node):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    cmd = "arp -a"
+    os = api.GetNodeOs(node)
+    if os == "windows":
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetNeighbor -State Reachable, Stale, Permanent\""
+    else:
+        cmd = "arp -a"
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
     return debug_dump_display_info(resp)
@@ -92,7 +96,7 @@ def GetVlanID(node, interface):
         cmd = "ifconfig " + interface + " | grep vlan: | cut -d: -f2 | awk '{print $1}'"
     elif os == "windows":
         # TODO
-        return "0"
+        return 0
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
     vlan_id = resp.commands[0].stdout.strip("\n")
@@ -143,7 +147,7 @@ def SetMACAddress(node, interface, mac_addr):
     elif os == "windows":
         intf = workload.GetNodeInterface(node)
         name = intf.WindowsIntName(interface)
-        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapter -Name '%s' -MacAddress '%s' -Confirm:$false\"" % (name, mac_addr)
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapter -Name '%s' -MacAddress '%s' -Confirm:\$false\"" % (name, mac_addr)
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
     return resp.commands[0]

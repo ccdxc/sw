@@ -64,7 +64,7 @@ testbundles:
         #- classic/ethtool.testbundle
         #- networking/connectivity.testbundle
         - linktest/linktest.testbundle
-        #- filters/filters.testbundle
+        - filters/filters.testbundle
         - mtu/mtu.testbundle
         #- networking/lif_telemetry.testbundle
         #- subifs/subifs.testbundle

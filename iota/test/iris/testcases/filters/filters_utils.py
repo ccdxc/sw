@@ -13,7 +13,7 @@ def getInterfaceVlanID(node, intf, on_naples=False):
         vlan = naples_utils.GetVlanID(node, intf)
     else:
         vlan = host_utils.GetVlanID(node, intf)
-    if vlan is 0:
+    if vlan == 0:
         vlan = 8192
     return vlan
 
@@ -44,6 +44,7 @@ def getNaplesIntfMacAddrDict(naples_node):
 def changeIntfMacAddr(node, intf_mac_dict, on_naples=False, isRollback=False):
     result = api.types.status.SUCCESS
     mac_offset = 80
+
     for intf, mac_addr in intf_mac_dict.items():
         if isRollback:
             mac_addr_str = mac_addr

@@ -1,7 +1,6 @@
 #! /usr/bin/python3
+import time
 import iota.harness.api as api
-import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-from iota.harness.infra.exceptions import *
 import iota.test.iris.testcases.networking.utils as utils
 import iota.test.iris.testcases.telemetry.utils as bond_utils
 
