@@ -122,6 +122,17 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
             str2mac(rewrite_host.get<std::string>("dmac").c_str(),
                     policy->rewrite_host.ep_dmac);
 
+            boost::optional<pt::ptree&> nat_opt = vnic.second.get_child_optional("nat");
+            if (nat_opt) {
+                 policy->nat_enabled = 1;
+                 str2ipv4addr(nat_opt.get().get<std::string>("local_ip").c_str(),
+                         &policy->nat_info.local_ip);
+                 str2ipv4addr(nat_opt.get().get<std::string>("nat_ip").c_str(),
+                         &policy->nat_info.nat_ip);
+            } else {
+                policy->nat_enabled = 0;
+            }
+                
             g_vnic_id_list[g_num_policies++] = vnic_id;
         }
 

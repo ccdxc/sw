@@ -42,6 +42,11 @@ typedef struct rewrite_host_info_s {
     uint8_t ep_dmac[ETH_ADDR_LEN];
 } rewrite_host_info_t;
 
+typedef struct nat_info_s {
+    uint32_t local_ip;
+    uint32_t nat_ip;
+} nat_info_t;
+
 typedef struct v4_flows_info_s {
     uint16_t vnic_lo;
     uint16_t vnic_hi;
@@ -62,10 +67,12 @@ typedef struct flow_cache_policy_info_s {
     uint32_t src_slot_id;
     bool skip_flow_log;
     uint32_t epoch;
+    bool nat_enabled;
     session_info_t to_host;
     session_info_t to_switch;
     rewrite_underlay_info_t rewrite_underlay;
     rewrite_host_info_t rewrite_host;
+    nat_info_t nat_info;
 } flow_cache_policy_info_t;
 
 void parse_flow_cache_policy_cfg(const char *cfg_file);

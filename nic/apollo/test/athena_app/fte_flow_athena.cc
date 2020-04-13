@@ -231,6 +231,8 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
+    key->vnic_id = *vnic_id;
+
     ip40 = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip0_offset);
     if ((ip40->version_ihl >> 4) == 4) {
         uint32_t src_ip, dst_ip;
@@ -251,6 +253,9 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
             memcpy(key->ip_daddr, &dst_ip, IPV4_ADDR_LEN);
         }
         else {
+            if (g_flow_cache_policy[*vnic_id].nat_enabled) {
+                dst_ip = g_flow_cache_policy[*vnic_id].nat_info.local_ip;
+            }
             memcpy(key->ip_saddr, &dst_ip, IPV4_ADDR_LEN);
             memcpy(key->ip_daddr, &src_ip, IPV4_ADDR_LEN);
         }
@@ -322,6 +327,13 @@ fte_flow_h2s_rewrite_mplsoudp (struct rte_mbuf *m, uint16_t ip_offset, uint16_t 
     uint16_t ip_tot_len, udp_len;
     rewrite_underlay_info_t *rewrite_underlay;
 
+    // SNAT
+    if (g_flow_cache_policy[vnic_id].nat_enabled) {
+        ip4h = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip_offset);
+        ip4h->src_addr = rte_cpu_to_be_32(
+                            g_flow_cache_policy[vnic_id].nat_info.nat_ip);
+    }
+
     rewrite_underlay = &(g_flow_cache_policy[vnic_id].rewrite_underlay);
     total_encap_len = (sizeof(h2s_l2vlan_encap_hdr) +
                         sizeof(h2s_ip_encap_hdr) + 
@@ -378,6 +390,13 @@ fte_flow_s2h_rewrite (struct rte_mbuf *m, uint16_t ip_offset, uint16_t vnic_id)
     struct vlan_hdr *vlanh;
     struct ipv4_hdr *ipv4h;
     rewrite_host_info_t *rewrite_host;
+
+    // DNAT
+    if (g_flow_cache_policy[vnic_id].nat_enabled) {
+        ipv4h = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip_offset);
+        ipv4h->dst_addr = rte_cpu_to_be_32(
+                            g_flow_cache_policy[vnic_id].nat_info.local_ip);
+    }
 
     rewrite_host = &(g_flow_cache_policy[vnic_id].rewrite_host);
 
@@ -616,7 +635,6 @@ fte_flow_prog (struct rte_mbuf *m)
     uint16_t vnic_id = 0;
 
     memset(&flow_spec, 0, sizeof(pds_flow_spec_t));
-    flow_spec.key.vnic_id = g_h2s_vnic_id;
     ret = fte_flow_extract_prog_args(m, &flow_spec, &flow_dir,
                                      &ip_offset, &vnic_id);
     if (ret != SDK_RET_OK) {
@@ -831,6 +849,66 @@ fte_s2h_nat_v4_session_rewrite (uint32_t session_rewrite_id,
 }
 
 static sdk_ret_t 
+fte_setup_dnat_flow (flow_cache_policy_info_t *policy)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    rewrite_underlay_info_t *rewrite_underlay;
+    rewrite_host_info_t *rewrite_host;
+    nat_info_t *nat_info;
+
+    /* DNAT mapping */
+    nat_info = &(policy->nat_info);
+    ret = fte_create_dnat_map_ipv4(policy->vnic_id, nat_info->nat_ip,
+                                   nat_info->local_ip, 0);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_create_dnat_map_ipv4 failed. \n");
+        return ret;
+    }
+
+    rewrite_underlay = &(policy->rewrite_underlay);
+    rewrite_underlay->rewrite_id = g_session_rewrite_index++;
+    if (rewrite_underlay->encap_type == ENCAP_MPLSOUDP) {
+        ret = fte_h2s_nat_v4_session_rewrite_mplsoudp(
+                        rewrite_underlay->rewrite_id,
+                        (mac_addr_t *)rewrite_underlay->substrate_dmac,
+                        (mac_addr_t *)rewrite_underlay->substrate_smac,
+                        rewrite_underlay->substrate_vlan,
+                        rewrite_underlay->substrate_sip,
+                        rewrite_underlay->substrate_dip,
+                        rewrite_underlay->mpls_label1,
+                        rewrite_underlay->mpls_label2,
+                        REWRITE_NAT_TYPE_IPV4_SNAT,
+                        (ipv4_addr_t)nat_info->nat_ip);
+                            
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_DEBUG("fte_h2s_nat_v4_session_rewrite_mplsoudp "
+                            "failed.\n");
+            return ret;
+        }
+    } else {
+        PDS_TRACE_DEBUG("Unsupported encap_type:%u \n",
+                        rewrite_underlay->encap_type);
+        return SDK_RET_INVALID_OP;
+    }
+
+    rewrite_host = &(policy->rewrite_host);
+    rewrite_host->rewrite_id = g_session_rewrite_index++;
+    ret = fte_s2h_nat_v4_session_rewrite(
+                    rewrite_host->rewrite_id,
+                    (mac_addr_t *)rewrite_host->ep_dmac,
+                    (mac_addr_t *)rewrite_host->ep_smac,
+                    policy->vlan_id,
+                    REWRITE_NAT_TYPE_IPV4_DNAT,
+                    (ipv4_addr_t)nat_info->local_ip);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_s2h_nat_v4_session_rewrite failed.\n");
+        return ret;
+    }
+
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t 
 fte_setup_v4_flows_json (void)
 {
     sdk_ret_t ret;
@@ -928,6 +1006,15 @@ fte_setup_flow (void)
         if (ret != SDK_RET_OK) {
             PDS_TRACE_DEBUG("fte_mpls_label_to_vnic_map failed.\n");
             return ret;
+        }
+
+        if (policy->nat_enabled) {
+            ret = fte_setup_dnat_flow(policy);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_DEBUG("fte_setup_dnat_flow failed.\n");
+                return ret;
+           }
+           continue;
         }
 
         rewrite_underlay = &(policy->rewrite_underlay);
