@@ -44,6 +44,26 @@ all:
 		)
 
 	# goimports generated go files
+	@sed -i.bak_ -e '/RxUnicastBytes/i  \
+		"TxTotalBytes",\
+	        "RxTotalBytes", ' ${GOPATH}/src/github.com/pensando/sw/metrics/genfields/metrics_map.go
+	@rm -f ${GOPATH}/src/github.com/pensando/sw/metrics/genfields/*.bak_
+	@sed -i.bak_ -e '/RxUnicastBytes/i  \
+          "Name": "TxTotalBytes",\
+          "DisplayName": "Tx Total Bytes",\
+          "Description": "Tx Total Bytes",\
+          "Units": "Count",\
+          "BaseType": "Counter"\
+        },\
+        {\
+          "Name": "RxTotalBytes",\
+          "DisplayName": "Rx Total Bytes",\
+          "Description": "Rx Total Bytes",\
+          "Units": "Count",\
+          "BaseType": "Counter"\
+        },\
+        {' ${GOPATH}/src/github.com/pensando/sw/metrics/generated/nicmgr/metrics_metrics.json
+	@rm -f ${GOPATH}/src/github.com/pensando/sw/metrics/generated/nicmgr/*.bak_
 	@goimports -local "github.com/pensando/sw" -w ${GOPATH}/src/github.com/pensando/sw/metrics/genfields/*.go
 	
 clean:

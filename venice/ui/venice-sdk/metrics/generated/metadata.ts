@@ -4057,6 +4057,28 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "displayName": "Lif Packet Statistics",
   "fields": [
     {
+      "name": "TxTotalBytes",
+      "displayName": "Tx Total Bytes",
+      "description": "Tx Total Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxTotalBytes",
+      "displayName": "Rx Total Bytes",
+      "description": "Rx Total Bytes",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
       "name": "RxUnicastBytes",
       "displayName": "Rx Unicast Bytes",
       "description": "Rx Unicast Bytes",

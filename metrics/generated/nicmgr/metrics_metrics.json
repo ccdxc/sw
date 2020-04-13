@@ -9,6 +9,20 @@
       "DisplayName": "Lif Packet Statistics",
       "Fields": [
         {
+          "Name": "TxTotalBytes",
+          "DisplayName": "Tx Total Bytes",
+          "Description": "Tx Total Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxTotalBytes",
+          "DisplayName": "Rx Total Bytes",
+          "Description": "Rx Total Bytes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
           "Name": "RxUnicastBytes",
           "DisplayName": "Rx Unicast Bytes",
           "Description": "Rx Unicast Bytes",

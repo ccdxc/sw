@@ -18,6 +18,8 @@ import (
 	_ "github.com/pensando/sw/nic/utils/ntranslate/metrics"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/tsdb"
+
+	"github.com/pensando/sw/venice/utils/tsdb/metrics"
 )
 
 // AddLifMetricsAPIRoutes adds routes for LifMetrics
@@ -88,6 +90,23 @@ func (s *RestServer) getLifMetricsPoints() ([]*tsdb.Point, error) {
 		}
 		tags := s.getTagsFromMeta(objMeta)
 		fields := structs.Map(m)
+
+		newFields := map[string][]string{
+			"RxTotalBytes": []string{"RxUnicastBytes", "RxMulticastBytes", "RxBroadcastBytes"},
+			"TxTotalBytes": []string{"TxUnicastBytes", "TxMulticastBytes", "TxBroadcastBytes"},
+		}
+		for nf, agg := range newFields {
+			var s metrics.Counter
+			for _, e := range agg {
+				if v, ok := fields[e].(metrics.Counter); ok {
+					s = s + v
+				} else {
+					log.Errorf("invalid type for %v, %T", e, fields[e])
+				}
+
+			}
+			fields[nf] = s
+		}
 
 		if len(fields) > 0 {
 			delete(fields, "ObjectMeta")

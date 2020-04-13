@@ -227,7 +227,9 @@ func generateContinuousQueryMap(suffix string, rpSpec ContinuousQueryRetentionSp
 							last("TxQueueDisabledDrops") AS "TxQueueDisabledDrops",
 							last("TxQueueSched") AS "TxQueueSched",
 							last("TxUnicastBytes") AS "TxUnicastBytes", 
-							last("TxUnicastPackets") AS "TxUnicastPackets" 
+							last("TxUnicastPackets") AS "TxUnicastPackets",
+							last("RxTotalBytes") AS "RxTotalBytes",
+							last("TxTotalBytes") AS "TxTotalBytes"
 					INTO "default"."` + rpSpec.Name + `"."LifMetrics_` + suffix + `"
 					FROM "LifMetrics"
 					GROUP BY time(` + rpSpec.GroupBy + `), "name", "reporterID", "tenant"

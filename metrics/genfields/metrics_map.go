@@ -6,6 +6,8 @@ func init() {
 	globalMetricsMap["metrics"] = make(map[string][]string)
 
 	kindToFieldNameMap["LifMetrics"] = []string{
+		"TxTotalBytes",
+		"RxTotalBytes",
 		"RxUnicastBytes",
 		"RxUnicastPackets",
 		"RxMulticastBytes",

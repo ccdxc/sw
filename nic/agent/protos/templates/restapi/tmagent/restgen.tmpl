@@ -13,6 +13,9 @@ import (
 	"github.com/pensando/sw/venice/utils/ntranslate"
         "github.com/pensando/sw/venice/utils/tsdb"
 	_ "github.com/pensando/sw/nic/utils/ntranslate/{{$pkgName}}"
+{{if (strEq .GetName "metrics.proto")}}
+        "github.com/pensando/sw/venice/utils/tsdb/metrics"
+{{end}}
 )
 
  {{$msgs := .Messages}}
@@ -101,6 +104,24 @@ import (
 			}
 			tags := s.getTagsFromMeta(objMeta)
 			fields := structs.Map(m)
+			{{if (strEq .GetName "LifMetrics")}}
+			newFields := map[string][]string{
+			   "RxTotalBytes": []string{"RxUnicastBytes", "RxMulticastBytes", "RxBroadcastBytes"},
+			   "TxTotalBytes": []string{"TxUnicastBytes", "TxMulticastBytes", "TxBroadcastBytes"},
+			}
+			for nf, agg := range newFields {
+			     var s metrics.Counter
+			     for _, e := range agg {
+			        if v, ok := fields[e].(metrics.Counter); ok {
+			           s = s + v
+			        } else {
+			            log.Errorf("invalid type for %v, %T", e, fields[e])
+			        }
+
+			     }
+			     fields[nf] = s
+			}
+			{{end}}
 
 			if len(fields) > 0 {
 			    delete(fields, "ObjectMeta")
