@@ -72,7 +72,9 @@ memrd(int argc, char *argv[], int memcat)
             port = strtoul(optarg, NULL, 0);
             break;
         case 'r':
-            reqid = strtoul(optarg, NULL, 0);
+            if ((reqid = bdf_from_str(optarg)) < 0) {
+                reqid = strtoul(optarg, NULL, 0);
+            }
             break;
         default:
             goto usage;
@@ -158,7 +160,9 @@ rawtlp_memwr(int argc, char *argv[])
             port = strtoul(optarg, NULL, 0);
             break;
         case 'r':
-            reqid = strtoul(optarg, NULL, 0);
+            if ((reqid = bdf_from_str(optarg)) < 0) {
+                reqid = strtoul(optarg, NULL, 0);
+            }
             break;
         case 's':
             size = strtoul(optarg, NULL, 0);
