@@ -700,6 +700,37 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                               new_mapping->key2str().c_str());
                 return SDK_RET_INVALID_ARG;
             }
+            // if tags are added on this mapping, reserve all needed resources
+            if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD) {
+                // allocate all the resources needed to support tags
+                ret = reserve_rxdma_mapping_tag_resources_(vpc, true,
+                                                           new_mapping, spec);
+                if (unlikely(ret != SDK_RET_OK)) {
+                    return ret;
+                }
+                if (spec->public_ip_valid &&
+                    !(obj_ctxt->upd_bmap &
+                      (PDS_MAPPING_UPD_PUBLIC_IP_ADD |
+                       PDS_MAPPING_UPD_PUBLIC_IP_DEL |
+                       PDS_MAPPING_UPD_PUBLIC_IP_UPD))) {
+                    // public IP is configured and not getting updated, we need
+                    // to allocate an entry for this in rxdma MAPPING table for
+                    // this public IP
+                    ret = reserve_public_ip_rxdma_mapping_resources_(
+                              new_mapping, (vpc_impl *)vpc->impl(), vnic, spec);
+                    if (unlikely(ret != SDK_RET_OK)) {
+                        return ret;
+                    }
+                }
+            } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) {
+                // probably some new tags and/or some same old tags and/or
+                // some tags got removed, allocate class ids needed in all cases
+                ret = allocate_tag_classes_((vpc_impl *)vpc->impl(), false,
+                                            new_mapping, spec);
+                if (unlikely(ret != SDK_RET_OK)) {
+                    return ret;
+                }
+            }
             // reserve resources, if needed, for public IP updates
             if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_ADD) {
                 // reserve all resources needed for the new public IP of
@@ -716,6 +747,15 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                           (vpc_impl *)vpc->impl(), vnic, spec);
                 if (unlikely(ret != SDK_RET_OK)) {
                     return ret;
+                }
+                // if tags are configured on this mapping, reserve an entry
+                // in the rxdma MAPPING table
+                if (spec->num_tags) {
+                    ret = reserve_public_ip_rxdma_mapping_resources_(
+                              new_mapping, (vpc_impl *)vpc->impl(), vnic, spec);
+                    if (unlikely(ret != SDK_RET_OK)) {
+                        return ret;
+                    }
                 }
             }
         } else {
