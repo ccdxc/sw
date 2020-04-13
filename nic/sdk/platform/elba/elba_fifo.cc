@@ -52,7 +52,7 @@ elba_init_hw_profile (hw_fifo_prof_t *prof)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_init_hw_fifo (int fifo_num, uint64_t addr, int n, hw_fifo_prof_t *prof)
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
@@ -88,7 +88,7 @@ elba_init_hw_fifo (int fifo_num, uint64_t addr, int n, hw_fifo_prof_t *prof)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_get_hw_fifo_info (int fifo_num, hw_fifo_stats_t *stats)
 {
     elb_top_csr_t & elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
@@ -107,7 +107,7 @@ elba_get_hw_fifo_info (int fifo_num, hw_fifo_stats_t *stats)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_set_hw_fifo_info (int fifo_num, hw_fifo_stats_t *stats)
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);

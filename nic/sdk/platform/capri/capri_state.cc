@@ -69,9 +69,9 @@ capri_state_pd_init (asic_cfg_t *cfg)
     if (g_capri_state_pd) {
         return SDK_RET_OK;
     }
-    sdk::platform::capri::csr_init();
+    csr_init();
 
-    g_capri_state_pd = sdk::platform::capri::capri_state_pd::factory(cfg);
+    g_capri_state_pd = capri_state_pd::factory(cfg);
     SDK_ASSERT_TRACE_RETURN((g_capri_state_pd != NULL), SDK_RET_INVALID_ARG,
                             "Failed to instantiate Capri PD");
     return SDK_RET_OK;

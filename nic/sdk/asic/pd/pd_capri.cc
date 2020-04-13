@@ -513,7 +513,7 @@ asicpd_p4plus_invalidate_cache (mpartition_region_t *reg,
 }
 
 uint32_t
-asic_pd_clock_freq_get(void)
+asicpd_clock_freq_get(void)
 {
     return capri_freq_get();
 }

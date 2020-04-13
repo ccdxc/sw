@@ -425,7 +425,7 @@ elba_set_hbm_bw_window (uint32_t val)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_hbm_bw (uint32_t samples, uint32_t u_sleep, bool ms_pcie,
              asic_hbm_bw_t *hbm_bw_arr)
 {
@@ -556,13 +556,13 @@ elba_nx_set_llc_counters (uint32_t *data)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_nx_get_llc_counters (uint32_t *rd_data)
 {
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_nx_setup_llc_counters (uint32_t mask)
 {
     //

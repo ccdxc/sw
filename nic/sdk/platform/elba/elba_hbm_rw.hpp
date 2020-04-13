@@ -54,10 +54,10 @@ typedef struct elba_small_page_s {
         char            data[ETH_FRAME_SIZE];
 } elba_small_page_t;
 
-extern "C" sdk_ret_t elba_hbm_bw(uint32_t samples, uint32_t u_sleep,
-                       bool ms_pcie, asic_hbm_bw_t *hbm_bw_arr);
-extern "C" sdk_ret_t elba_nx_get_llc_counters(uint32_t *rd_data);
-extern "C" sdk_ret_t elba_nx_setup_llc_counters(uint32_t mask);
+sdk_ret_t elba_hbm_bw(uint32_t samples, uint32_t u_sleep,
+                      bool ms_pcie, asic_hbm_bw_t *hbm_bw_arr);
+sdk_ret_t elba_nx_get_llc_counters(uint32_t *rd_data);
+sdk_ret_t elba_nx_setup_llc_counters(uint32_t mask);
 sdk_ret_t elba_hbm_cache_init(asic_cfg_t *cfg);
 sdk_ret_t elba_hbm_cache_regions_init(void);
 mpartition_region_t* get_hbm_region_by_address(uint64_t addr);

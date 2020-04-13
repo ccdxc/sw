@@ -64,7 +64,7 @@ typedef struct elba_txs_policer_lif_params_s {
 
 sdk_ret_t elba_txs_scheduler_init(uint32_t admin_cos, asic_cfg_t *elba_cfg);
 
-extern "C" void elba_txs_timer_init_hsh_depth(uint32_t key_lines);
+void elba_txs_timer_init_hsh_depth(uint32_t key_lines);
 
 // elba_txs_scheduler_lif_params_update
 // API to program txs scheduler table with lif,queue,cos mappings.
@@ -107,9 +107,9 @@ typedef struct elba_txs_scheduler_stats_s {
     elba_txs_scheduler_cos_stats_t cos_stats[NUM_MAX_COSES];
 } elba_txs_scheduler_stats_t;
 
-extern "C" sdk_ret_t elba_txs_scheduler_stats_get(elba_txs_scheduler_stats_t *scheduler_stats);
+sdk_ret_t elba_txs_scheduler_stats_get(elba_txs_scheduler_stats_t *scheduler_stats);
 
-extern "C" uint32_t elba_get_coreclk_freq(platform_type_t platform_type);
+uint32_t elba_get_coreclk_freq(platform_type_t platform_type);
 
 }    // namespace elba
 }    // namespace platform

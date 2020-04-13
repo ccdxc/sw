@@ -340,13 +340,12 @@ pd_egress_drop_stats_clear (pd_func_args_t *pd_func_args)
 }
 
 inline mem_addr_t
-hbm_get_addr_for_stat_index (p4pd_table_id table_id,
-                             uint8_t idx)
+hbm_get_addr_for_stat_index (p4pd_table_id table_id, uint8_t idx)
 {
     mem_addr_t  stats_base_addr;
     p4pd_table_properties_t  tbl_ctx;
 
-    stats_base_addr =  asicpd_get_mem_addr(ASIC_HBM_REG_P4_ATOMIC_STATS);
+    stats_base_addr = asicpd_get_mem_addr(ASIC_HBM_REG_P4_ATOMIC_STATS);
     SDK_ASSERT(stats_base_addr != INVALID_MEM_ADDRESS);
     stats_base_addr &= ~((uint64_t)0x80000000);
 
@@ -709,7 +708,7 @@ pd_clock_detail_get (pd_func_args_t *pd_func_args)
     pd_func_args_t                      conv_func_args;
 
     // Read hw time
-    sdk::asic::pd::asicpd_tm_get_clock_tick(&hw_ns);
+    asicpd_tm_get_clock_tick(&hw_ns);
     HAL_TRACE_DEBUG("Hardware tick:{}", hw_ns);
     args->hw_clock = HW_CLOCK_TICK_TO_NS(hw_ns);
     args->sw_delta = g_hal_state_pd->clock_delta();
@@ -734,7 +733,7 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
     timespec_t            sw_ts;
 
     // Read hw time
-    sdk::asic::pd::asicpd_tm_get_clock_tick(&hw_tick);
+    asicpd_tm_get_clock_tick(&hw_tick);
     hw_ns = HW_CLOCK_TICK_TO_NS(hw_tick);
 
     // get current time
@@ -820,7 +819,7 @@ pd_clock_delta_comp (pd_func_args_t *pd_func_args)
     }
 
     // Get the clock frequence
-    g_clock_freq = sdk::asic::pd::asic_pd_clock_freq_get();
+    g_clock_freq = asicpd_clock_freq_get();
 
     // Get the base memory address of P4 clock table
     start_addr = asicpd_get_mem_addr(ASIC_HBM_REG_CLOCK_GETTIMEOFDAY);
@@ -1022,8 +1021,7 @@ pd_span_threshold_update (pd_func_args_t *pd_func_args)
     pd_span_threshold_update_args_t *args =
         pd_func_args->pd_span_threshold_update;
 
-    if (sdk::asic::pd::asicpd_tm_set_span_threshold(args->span_threshold) !=
-        SDK_RET_OK) {
+    if (asicpd_tm_set_span_threshold(args->span_threshold) != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to set span queue threshold");
         return HAL_RET_ERR;
     }

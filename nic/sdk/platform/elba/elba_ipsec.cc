@@ -19,8 +19,8 @@ namespace sdk {
 namespace platform {
 namespace elba {
 
-extern "C"
-bool elba_ipsec_inline_capable (void)
+bool
+elba_ipsec_inline_capable (void)
 {
     return TRUE;
 }
@@ -288,7 +288,7 @@ elba_ipsec_inline_decrypt_ipsec_info_table_update (pd_ipseccb_decrypt_t *ipseccb
 }
 
 //ELBA ASIC PD APIs
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_ipsec_encrypt_create (pd_ipseccb_encrypt_t *ipseccb_pd)
 {
     sdk_ret_t  sdk_ret = SDK_RET_OK;
@@ -317,7 +317,7 @@ elba_ipsec_encrypt_create (pd_ipseccb_encrypt_t *ipseccb_pd)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_ipsec_encrypt_update (pd_ipseccb_encrypt_t *ipseccb_pd)
 {
     sdk_ret_t  sdk_ret = SDK_RET_OK;
@@ -342,19 +342,19 @@ elba_ipsec_encrypt_update (pd_ipseccb_encrypt_t *ipseccb_pd)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_ipsec_encrypt_delete (pd_ipseccb_encrypt_t *ipseccb_pd)
 {
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_ipsec_encrypt_get (pd_ipseccb_encrypt_t *ipseccb_pd)
 {
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_ipsec_decrypt_create (pd_ipseccb_decrypt_t *ipseccb_pd)
 {
     sdk_ret_t  sdk_ret = SDK_RET_OK;
@@ -382,7 +382,7 @@ elba_ipsec_decrypt_create (pd_ipseccb_decrypt_t *ipseccb_pd)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_ipsec_decrypt_update (pd_ipseccb_decrypt_t *ipseccb_pd)
 {
     sdk_ret_t  sdk_ret = SDK_RET_OK;
@@ -408,13 +408,13 @@ elba_ipsec_decrypt_update (pd_ipseccb_decrypt_t *ipseccb_pd)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_ipsec_decrypt_delete (pd_ipseccb_decrypt_t *ipseccb_pd)
 {
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_ipsec_decrypt_get (pd_ipseccb_decrypt_t *ipseccb_pd)
 {
     return SDK_RET_OK;

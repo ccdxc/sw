@@ -251,7 +251,7 @@ sdk_ret_t elba_tm_port_program_uplink_byte_count(void);
  * @param  tick[in]: Pointer to store the returned hardware clock.
  * @return sdk_ret_t: Status of the operation
  */
-extern "C" sdk_ret_t elba_tm_get_clock_tick(uint64_t *tick);
+sdk_ret_t elba_tm_get_clock_tick(uint64_t *tick);
 
 /** elba_tm_enable_disable_uplink_port
  * API to enable/disable an uplink port. Need to be called for link up/down
@@ -301,9 +301,8 @@ sdk_ret_t elba_tm_get_oq_stats(tm_port_t port, tm_q_t oq,
 
 sdk_ret_t elba_tm_periodic_stats_update(void);
 
-extern "C" sdk_ret_t elba_tm_debug_stats_get(tm_port_t port,
-                                             tm_debug_stats_t *debug_stats,
-                                             bool reset);
+sdk_ret_t elba_tm_debug_stats_get(tm_port_t port,
+                                  tm_debug_stats_t *debug_stats, bool reset);
 
 uint32_t elba_tm_get_num_iqs_for_port(tm_port_t port);
 uint32_t elba_tm_get_num_oqs_for_port(tm_port_t port);

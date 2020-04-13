@@ -170,7 +170,7 @@ typedef enum elba_tbl_rw_logging_levels_ {
     ELB_TBL_RW_LOG_LEVEL_ERROR,
 } elba_tbl_rw_logging_levels;
 
-extern "C" void
+void
 elba_program_table_mpu_pc (int tableid, bool ingress, int stage,
                            int stage_tableid,
                            uint64_t elba_table_asm_err_offset,
@@ -199,7 +199,7 @@ elba_program_table_mpu_pc (int tableid, bool ingress, int stage,
     }
 }
 
-extern "C" void
+void
 elba_program_hbm_table_base_addr (int stage_tableid, char *tablename,
                                   int stage, int pipe)
 {
@@ -267,7 +267,7 @@ elba_program_p4plus_table_mpu_pc_args (int tbl_id, elb_te_csr_t *te_csr,
 #define ELBA_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
 #define ELBA_P4PLUS_TXDMA_EXT_PROG	"txdma_stage0_ext.bin"
 
-extern "C" void
+void
 elba_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
                                        int stage)
 {
@@ -318,7 +318,7 @@ elba_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
 // Size of the entire LIF indirection table
 #define ETH_RSS_INDIR_TBL_SZ                (MAX_LIFS * ETH_RSS_LIF_INDIR_TBL_SZ)
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_toeplitz_init (const char *handle, int stage, int stage_tableid)
 {
     int tbl_id;
@@ -383,7 +383,7 @@ elba_toeplitz_init (const char *handle, int stage, int stage_tableid)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_p4plus_table_init (platform_type_t platform_type,
                         int stage_apphdr, int stage_tableid_apphdr,
                         int stage_apphdr_ext, int stage_tableid_apphdr_ext,
@@ -537,7 +537,7 @@ elba_p4plus_table_init (platform_type_t platform_type,
     return SDK_RET_OK;
 }
 
-extern "C" void
+void
 elba_p4plus_recirc_init (void)
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
@@ -627,7 +627,7 @@ p4plus_invalidate_cache_aligned (uint64_t addr, uint32_t size_in_bytes,
     return true;
 }
 
-extern "C" bool
+bool
 p4plus_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
                          p4plus_cache_action_t action)
 {
@@ -645,14 +645,14 @@ p4plus_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
     return ret;
 }
 
-extern "C" void
+void
 p4_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
                      p4pd_table_cache_t cache)
 {
     //@@TODO - implement for elba
 }
 
-extern "C" void
+void
 elba_deparser_init(int tm_port_ingress, int tm_port_egress)
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
@@ -830,7 +830,7 @@ elba_p4plus_table_rw_init (void)
     return (SDK_RET_OK);
 }
 
-extern "C" uint8_t
+uint8_t
 elba_get_action_pc (uint32_t tableid, uint8_t actionid)
 {
     if ((tableid >= p4pd_tableid_min_get()) &&
@@ -849,7 +849,7 @@ elba_get_action_pc (uint32_t tableid, uint8_t actionid)
     }
 }
 
-extern "C" uint8_t
+uint8_t
 elba_get_action_id (uint32_t tableid, uint8_t actionpc)
 {
     if ((tableid >= p4pd_tableid_min_get()) &&
@@ -934,7 +934,7 @@ elba_global_pics_get (uint32_t tableid)
     return ((elb_pics_csr_t*)nullptr);
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_table_entry_write (uint32_t tableid, uint32_t index, uint8_t  *hwentry,
                         uint8_t  *hwentry_mask, uint16_t hwentry_bit_len,
                         p4_table_mem_layout_t &tbl_info, int gress,
@@ -1069,7 +1069,7 @@ elba_table_entry_write (uint32_t tableid, uint32_t index, uint8_t  *hwentry,
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_table_entry_read (uint32_t tableid, uint32_t index, uint8_t  *hwentry,
                        uint16_t *hwentry_bit_len,
                         p4_table_mem_layout_t &tbl_info, int gress,
@@ -1138,7 +1138,7 @@ elba_table_entry_read (uint32_t tableid, uint32_t index, uint8_t  *hwentry,
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_table_hw_entry_read (uint32_t tableid, uint32_t index,
                           uint8_t  *hwentry, uint16_t *hwentry_bit_len,
                           p4_table_mem_layout_t &tbl_info, int gress,
@@ -1259,7 +1259,7 @@ elba_tcam_entry_details_get (uint32_t index, int *tcam_row,
                           / ELBA_TCAM_WORDS_PER_BLOCK) * ELBA_TCAM_ROWS;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_tcam_table_entry_write (uint32_t tableid, uint32_t index,
                              uint8_t  *trit_x, uint8_t  *trit_y,
                              uint16_t hwentry_bit_len,
@@ -1377,7 +1377,7 @@ elba_tcam_table_entry_write (uint32_t tableid, uint32_t index,
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_tcam_table_entry_read (uint32_t tableid, uint32_t index,
                             uint8_t  *trit_x, uint8_t  *trit_y,
                             uint16_t *hwentry_bit_len,
@@ -1440,7 +1440,7 @@ elba_tcam_table_entry_read (uint32_t tableid, uint32_t index,
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_tcam_table_hw_entry_read (uint32_t tableid, uint32_t index,
                                uint8_t  *trit_x, uint8_t  *trit_y,
                                uint16_t *hwentry_bit_len,
@@ -1520,7 +1520,7 @@ elba_tcam_table_hw_entry_read (uint32_t tableid, uint32_t index,
     return (SDK_RET_OK);
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_hbm_table_entry_write (uint32_t tableid, uint32_t index, uint8_t *hwentry,
                             uint16_t entry_size,
                             p4_table_mem_layout_t &tbl_info)
@@ -1535,7 +1535,7 @@ elba_hbm_table_entry_write (uint32_t tableid, uint32_t index, uint8_t *hwentry,
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_hbm_table_entry_cache_invalidate (bool ingress, uint64_t entry_addr,
                                        p4_table_mem_layout_t &tbl_info)
 {
@@ -1556,7 +1556,7 @@ elba_hbm_table_entry_cache_invalidate (bool ingress, uint64_t entry_addr,
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_hbm_table_entry_read (uint32_t tableid, uint32_t index, uint8_t *hwentry,
                             uint16_t *entry_size,
                             p4_table_mem_layout_t &tbl_info)
@@ -1572,7 +1572,7 @@ elba_hbm_table_entry_read (uint32_t tableid, uint32_t index, uint8_t *hwentry,
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_table_constant_write (uint64_t val, uint32_t stage,
                            uint32_t stage_tableid, bool ingress)
 {
@@ -1591,7 +1591,7 @@ elba_table_constant_write (uint64_t val, uint32_t stage,
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_table_constant_read (uint64_t *val, uint32_t stage,
                           int stage_tableid, bool ingress)
 {
@@ -1611,14 +1611,14 @@ elba_table_constant_read (uint64_t *val, uint32_t stage,
     return SDK_RET_OK;
 }
 
-extern "C" void
+void
 elba_set_action_asm_base (int tableid, int actionid, uint64_t asm_base)
 {
     elba_action_asm_base[tableid][actionid] = asm_base;
     return;
 }
 
-extern "C" void
+void
 elba_set_action_rxdma_asm_base (int tableid, int actionid, uint64_t asm_base)
 {
     uint32_t lcl_tableid = tableid - p4pd_rxdma_tableid_min_get();
@@ -1626,7 +1626,7 @@ elba_set_action_rxdma_asm_base (int tableid, int actionid, uint64_t asm_base)
     return;
 }
 
-extern "C" void
+void
 elba_set_action_txdma_asm_base (int tableid, int actionid, uint64_t asm_base)
 {
     uint32_t lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
@@ -1634,7 +1634,7 @@ elba_set_action_txdma_asm_base (int tableid, int actionid, uint64_t asm_base)
     return;
 }
 
-extern "C" void
+void
 elba_set_table_rxdma_asm_base (int tableid, uint64_t asm_base)
 {
     uint32_t lcl_tableid = tableid - p4pd_rxdma_tableid_min_get();
@@ -1642,7 +1642,7 @@ elba_set_table_rxdma_asm_base (int tableid, uint64_t asm_base)
     return;
 }
 
-extern "C" void
+void
 elba_set_table_txdma_asm_base (int tableid, uint64_t asm_base)
 {
     uint32_t lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
@@ -1733,7 +1733,7 @@ elba_te_enable_capri_mode(void)
     return SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_pf_tcam_write (uint8_t entry_idx, pf_tcam_key_fld_pos_t fields,
                     pf_tcam_key_t* tcam_key, pf_tcam_rslt_t* rslt_entry)
 {

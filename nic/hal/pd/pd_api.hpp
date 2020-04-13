@@ -49,8 +49,6 @@
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "platform/utils/lif_manager_base.hpp"
 
-using sdk::platform::capri::tm_port_t;
-
 namespace hal {
 namespace pd {
 

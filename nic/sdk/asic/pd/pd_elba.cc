@@ -515,7 +515,7 @@ asicpd_p4plus_invalidate_cache (mpartition_region_t *reg, uint64_t q_addr,
 }
 
 uint32_t
-asic_pd_clock_freq_get (void)
+asicpd_clock_freq_get (void)
 {
     return elba_freq_get();
 }

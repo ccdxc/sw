@@ -5,8 +5,9 @@
 
 #include <math.h>
 #include "system.h"
-#include <platform/capri/capri_tm_rw.hpp>
 #include <asic/pd/pd.hpp>
+
+using namespace sdk::asic::pd;
 
 #define TIME_NSECS_PER_SEC  1000000000ULL
 
@@ -19,10 +20,10 @@ pds_system_get_ticks (uint64_t sec)
 
     if (!g_clock_adjustment) {
         // freq in MHz
-        freq = sdk::asic::pd::asic_pd_clock_freq_get();
-        g_clock_adjustment =
-                 ((double)(((double)1)/(freq * 1000000)));
+        freq = asicpd_clock_freq_get();
+        g_clock_adjustment = ((double)(((double)1)/(freq * 1000000)));
     }
+
     return ((uint64_t) (((double)sec)/g_clock_adjustment));
 }
 
@@ -38,7 +39,7 @@ pds_system_get_current_tick (void)
     uint64_t tick;
     sdk_ret_t ret;
 
-    ret = sdk::platform::capri::capri_tm_get_clock_tick(&tick);
+    ret = asicpd_tm_get_clock_tick(&tick);
     SDK_ASSERT(ret == sdk::SDK_RET_OK);
     return tick;
 }

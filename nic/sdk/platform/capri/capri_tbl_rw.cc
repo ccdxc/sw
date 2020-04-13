@@ -34,7 +34,6 @@
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pict_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h"
 
-
 extern pen_csr_base *get_csr_base_from_path(string);
 
 namespace sdk {
@@ -341,8 +340,7 @@ capri_program_p4plus_table_mpu_pc (int tableid, int stage_tbl_id, int stage)
 }
 
 int
-capri_p4plus_table_init (p4plus_prog_t *prog,
-                         platform_type_t platform_type)
+capri_p4plus_table_init (p4plus_prog_t *prog, platform_type_t platform_type)
 {
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_te_csr_t *te_csr = NULL;
@@ -953,7 +951,7 @@ capri_p4plus_table_rw_init (void)
     // in HAL init sequence, p4pd_init() is already called..
     // !!!!!!
     capri_p4plus_shadow_init();
-    sdk::platform::capri::csr_init();
+    csr_init();
 
      return (SDK_RET_OK);
 }

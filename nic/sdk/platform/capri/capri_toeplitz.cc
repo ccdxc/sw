@@ -31,7 +31,7 @@ void
 capri_rss_table_config (uint32_t stage, uint32_t stage_tableid,
                         uint64_t tbl_base, uint64_t pc)
 {
-    cap_top_csr_t & cap0 = sdk::platform::capri::g_capri_state_pd->cap_top();
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_te_csr_t *te_csr;
     int tbl_id = stage_tableid;
 
@@ -69,7 +69,7 @@ capri_rss_table_config_ex (uint32_t stage, uint32_t stage_tableid,
 {
     int tbl_id;
     uint64_t pc, tbl_base, rss_indir_tbl_size, rss_indir_tbl_total_size;
-    cap_top_csr_t & cap0 = sdk::platform::capri::g_capri_state_pd->cap_top();
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_te_csr_t *te_csr = NULL;
 
     rss_indir_tbl_size = (ETH_RSS_LIF_INDIR_TBL_LEN * rss_indir_tbl_entry_size);

@@ -18,13 +18,13 @@ namespace sdk {
 namespace platform {
 namespace elba {
 
-extern "C" uint32_t
+uint32_t
 elba_get_coreclk_freq (platform_type_t platform_type)
 {
    return CORECLK_FREQ_ASIC_10;
 }
 
-extern "C" void
+void
 elba_txs_timer_init_hsh_depth (uint32_t key_lines)
 {
     uint64_t timer_key_hbm_base_addr;
@@ -307,7 +307,7 @@ elba_txs_scheduler_tx_dealloc (uint32_t alloc_offset, uint32_t alloc_units)
     return ret;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_txs_scheduler_stats_get (elba_txs_scheduler_stats_t *scheduler_stats)
 {
     return SDK_RET_OK;

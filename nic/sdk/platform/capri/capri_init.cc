@@ -394,7 +394,7 @@ capri_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((cfg != NULL), SDK_RET_INVALID_ARG, "Invalid cfg");
     SDK_TRACE_DEBUG("Initializing Capri");
 
-    ret = sdk::platform::capri::capri_state_pd_init(cfg);
+    ret = capri_state_pd_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "capri_state_pd_init failure, err : %d", ret);
 

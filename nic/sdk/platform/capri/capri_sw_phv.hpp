@@ -27,7 +27,7 @@ namespace capri {
 
 //@return int: Status of the operation
 
-sdk_ret_t capri_sw_phv_init();
+sdk_ret_t capri_sw_phv_init(void);
 
 // capri_sw_phv_inject
 // API to inject a software PHV into the pipeline

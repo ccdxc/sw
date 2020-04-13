@@ -74,7 +74,7 @@ initialize_pds(void)
 
     /* do capri_state_pd_init needed by sdk capri
      * csr init is done inside capri_state_pd_init */
-    sdk::platform::capri::capri_state_pd_init(&asic_cfg);
+    asicpd_state_pd_init(&asic_cfg);
 
     /* do apollo specific initialization */
     p4pd_ret = p4pd_init(&p4pd_cfg);
@@ -144,26 +144,26 @@ static sdk_ret_t insert_flow(meta_t* meta, T* info) {
 
         FTLITE_TRACE_DEBUG("Allocated hint = %d", eindex);
     }
-    
+
     // Validate LEAF bucket
     auto &bucket = ltable.bucket(eindex);
     ret = bucket.validate(&info->lentry);
     FTLITE_CHECK_AND_RETURN(ret);
-        
+
     // Set the 'valid' bit in the main table bucket
     bucket.valid = 1;
-    
+
     // Programming start
     info->lentry.entry_valid = 1;
     ret = ltable.write(meta->ipv6, &info->lentry, eindex);
     FTLITE_CHECK_AND_RETURN(ret);
-    
+
     if (meta->pslot) {
         info->pentry.set_hint_hash(meta->pslot, eindex, meta->hash.msb);
         ret = ptable.write(meta->ipv6, &info->pentry, meta->pindex);
         FTLITE_CHECK_AND_RETURN(ret);
     }
-                                         
+
     return SDK_RET_OK;
 }
 
@@ -227,13 +227,13 @@ __label__ done;
 
     auto ret = insert_session(ips);
     FTLITE_RET_CHECK(ret, "session");
-    
+
     ret = insert_flow_af(&ips->imeta, &ips->iflow);
     FTLITE_RET_CHECK(ret, "iflow");
 
     ret = insert_flow_af(&ips->rmeta, &ips->rflow);
     FTLITE_RET_CHECK(ret, "rflow");
-    
+
     FTLITE_API_END(ret);
 done:
     return ret;

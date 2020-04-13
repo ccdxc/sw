@@ -382,7 +382,7 @@ tm_is_high_perf_q (tm_q_t q)
 
 //:: from collections import OrderedDict
 //:: import math
-//:: TM_PORTS = 4 
+//:: TM_PORTS = 4
 //:: QS = 32
 //:: L1_NODES = 16
 //:: L2_NODES = 4
@@ -510,8 +510,8 @@ tm_is_high_perf_q (tm_q_t q)
 //::        fields += regs[inst_name]
 //::    #endif
 //::    for field in fields:
-//::        s += var_name + ''' <<"''' 
-//::        s += inst_name + '''.''' + field 
+//::        s += var_name + ''' <<"'''
+//::        s += inst_name + '''.''' + field
 //::        s += ''': 0x" << '''
 //::        s += inst_name + '''.''' + field + '''() << endl;\n'''
 //::    #endfor
@@ -693,7 +693,7 @@ elba_tm_uplink_iq_params_update (tm_port_t             port,
                     cpp_helper.set_slc(xon_val, xon_threshold,
                                         hbm_context * 20, ((hbm_context + 1) * 20) - 1);
 
-                    // TODO:write the user provided threshold values 
+                    // TODO:write the user provided threshold values
                     //pf_csr.cfg_hbm_threshold.xoff(xoff_val);
                     //pf_csr.cfg_hbm_threshold.xon(xon_val);
                     // Write all the registers
@@ -822,9 +822,9 @@ elba_tm_uplink_input_dscp_map_update (tm_port_t port,
         default:
             return sdk::SDK_RET_INVALID_ARG;
     }
-    #endif 
+    #endif
     SDK_TRACE_DEBUG("%s", data.str().c_str());
-    
+
     return sdk::SDK_RET_OK;
 }
 
@@ -1123,8 +1123,8 @@ elba_tm_get_hbm_occupancy (tm_hbm_fifo_type_e fifo_type, uint32_t context)
 }
 
 static void
-elba_tm_get_buffer_occupancy (tm_port_t port, tm_q_t iq, 
-                               uint32_t *cell_occupancy, 
+elba_tm_get_buffer_occupancy (tm_port_t port, tm_q_t iq,
+                               uint32_t *cell_occupancy,
                                uint32_t *peak_occupancy)
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
@@ -1340,7 +1340,7 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
         high_perf_reserved_chunks = reserved_chunks * 2;
 
         chunks_needed = (reserved_chunks + headroom_chunks) * (num_qs - num_high_perf_qs);
-        chunks_needed = chunks_needed + 
+        chunks_needed = chunks_needed +
             (high_perf_reserved_chunks + headroom_chunks) * num_high_perf_qs;
 
         if (pbc_cell_chunks[island] < chunks_needed) {
@@ -1761,7 +1761,7 @@ elba_tm_program_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
     uint64_t xon_threshold;
 
     uint32_t fifo_type;
-    
+
     tm_port_type_e port_type;
 
     // On active uplink ports and the DMA port, setup the HBM queues
@@ -1814,13 +1814,13 @@ elba_tm_program_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
             if (fifo_type == TM_HBM_FIFO_TYPE_UPLINK) {
                 // xoff_threshold is in units of 512 bytes
                 // program it to drop when 1000*64 bytes worth of bytes still free
-                xoff_threshold = 
-                    (hbm_chunks_to_bytes(payload_size) - 
+                xoff_threshold =
+                    (hbm_chunks_to_bytes(payload_size) -
                      ELBA_TM_DEFAULT_XOFF_THRESHOLD_BYTES) >> 9;
 
                 // xon_threshold is in units of 512 bytes
                 // program it to drop when 2000*64 bytes worth of bytes still free
-                xon_threshold = 
+                xon_threshold =
                     (hbm_chunks_to_bytes(payload_size) -
                      ELBA_TM_DEFAULT_XON_THRESHOLD_BYTES) >> 9;
             } else {
@@ -1835,7 +1835,7 @@ elba_tm_program_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
             payload_size = 0;
             payload_occupancy = 0;
             xoff_threshold = 0;
-            xon_threshold = 0; 
+            xon_threshold = 0;
             control_offset = 0;
             control_size = 0;
         }
@@ -1874,10 +1874,10 @@ elba_tm_program_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
 
         if (fifo_type == TM_HBM_FIFO_TYPE_UPLINK) {
             // 20 bits per context
-            cpp_helper.set_slc(eth_xoff_val, xoff_threshold, 
+            cpp_helper.set_slc(eth_xoff_val, xoff_threshold,
                                context * 20, ((context + 1) * 20) - 1);
             // 20 bits per context
-            cpp_helper.set_slc(eth_xon_val, xon_threshold, 
+            cpp_helper.set_slc(eth_xon_val, xon_threshold,
                                context * 20, ((context + 1) * 20) - 1);
         }
     }
@@ -1956,7 +1956,7 @@ elba_tm_program_hbm_buffers (elba_tm_buf_cfg_t *buf_cfg)
         pf_csr.cfg_hbm_${reg_name}_ctrl.write();
     }
 //:: #endfor
-    
+
     pf_csr.cfg_hbm_threshold.read();
     pf_csr.cfg_hbm_threshold.xoff(eth_xoff_val);
     pf_csr.cfg_hbm_threshold.xon(eth_xon_val);
@@ -2347,7 +2347,7 @@ elba_tm_port_program_uplink_byte_count (void)
 //::    if pinfo["has_hbm"]:
     // ${pinfo["enum"]}
     if (elba_tm_port_is_uplink_port(${pinfo["enum"]})) {
- 
+
     pbc_csr.port_${p}.cfg_oq.read();
     pbc_csr.port_${p}.cfg_oq.num_hdr_bytes(
             ELBA_GLOBAL_INTRINSIC_HDR_SZ + ELBA_P4_INTRINSIC_HDR_SZ);
@@ -2838,8 +2838,8 @@ elba_tm_repl_table_token_size_set (uint32_t size_in_bits)
     return sdk::SDK_RET_OK;
 }
 
-// Get hw clock 
-extern "C" sdk_ret_t
+// Get hw clock
+sdk_ret_t
 elba_tm_get_clock_tick (uint64_t *tick)
 {
     elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
@@ -3052,9 +3052,9 @@ elba_tm_get_oq_stats (tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
     return sdk::SDK_RET_OK;
 }
 
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_tm_debug_stats_get (tm_port_t port, tm_debug_stats_t *debug_stats,
-			 bool reset)
+                        bool reset)
 {
     return sdk::SDK_RET_OK;
 }

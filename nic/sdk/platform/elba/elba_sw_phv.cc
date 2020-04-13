@@ -138,7 +138,7 @@ elba_ppa_swphv_init ()
 }
 
 // elba_sw_phv_init initializes Software PHV modules
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_sw_phv_init (void)
 {
     sdk_ret_t ret = SDK_RET_OK;
@@ -332,7 +332,7 @@ elba_ppa_sw_phv_inject (uint8_t pidx, uint8_t prof_num, uint8_t start_idx,
 }
 
 // elba_sw_phv_inject injects a software PHV into a pipeline
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_sw_phv_inject (asic_swphv_type_t type, uint8_t prof_num,
                     uint8_t start_idx, uint8_t num_flits, void *data)
 {
@@ -455,7 +455,7 @@ elba_ppa_sw_phv_state (uint8_t pidx, uint8_t prof_num,
 }
 
 // elba_sw_phv_get gets the current state of the PHV
-extern "C" sdk_ret_t
+sdk_ret_t
 elba_sw_phv_get (asic_swphv_type_t type, uint8_t prof_num,
                  asic_sw_phv_state_t *state)
 {
