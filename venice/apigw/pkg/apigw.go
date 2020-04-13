@@ -760,7 +760,10 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 			return nil, apierr
 		}
 	}
-
+	postCallOps, ok := OperationsFromContext(nctx)
+	if ok {
+		operations = postCallOps
+	}
 	a.copyToOutgoingContext(nctx, ctx)
 	hdr.Record("apigw.CallTime", time.Since(callTime))
 	auditTime = time.Now()
@@ -1088,6 +1091,10 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			p.apiGw.HTTPOtherErrorHandler(w, r, "Operation failed to complete", int(codes.Aborted))
 			return
 		}
+	}
+	postCallOps, ok := OperationsFromContext(nctx)
+	if ok {
+		operations = postCallOps
 	}
 	if err := p.apiGw.audit(nctx, auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
 		p.apiGw.HTTPOtherErrorHandler(w, r, "Auditing failed", int(codes.Aborted))

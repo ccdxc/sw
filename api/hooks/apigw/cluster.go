@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -11,6 +12,7 @@ import (
 	"github.com/pensando/sw/venice/apigw"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/log"
@@ -103,6 +105,37 @@ func (a *clusterHooks) userContext(ctx context.Context, in interface{}) (context
 	return nctx, in, false, nil
 }
 
+func (a *clusterHooks) snapshotPostCallHook(ctx context.Context, out interface{}) (retCtx context.Context, retOut interface{}, err error) {
+	obj, ok := out.(*cluster.ConfigurationSnapshot)
+	if !ok {
+		return ctx, out, errors.New("invalid input type")
+	}
+	if obj.Status.LastSnapshot == nil || obj.Status.LastSnapshot.URI == "" {
+		a.logger.InfoLog("method", "snapshotPostCallHook", "msg", fmt.Sprintf("no snapshot information in ConfigurationSnapshot: %#v", *obj))
+		return ctx, out, nil
+	}
+	nctx := ctx
+	a.logger.DebugLog("method", "snapshotPostCallHook", "msg", fmt.Sprintf("ConfigurationSnapshot status: %#v", *obj.Status.LastSnapshot))
+	s := strings.Split(obj.Status.LastSnapshot.URI, "/")
+	filename := s[len(s)-1]
+	a.logger.DebugLog("method", "snapshotPostCallHook", "msg", fmt.Sprintf("filename [%s] extracted from URI: %s", filename, obj.Status.LastSnapshot.URI))
+	var nOps []authz.Operation
+	operations, _ := apigwpkg.OperationsFromContext(ctx)
+	for _, op := range operations {
+		if op.GetResource().GetKind() == string(cluster.KindConfigurationSnapshot) {
+			resource := op.GetResource()
+			nOp := authz.NewAuditOperation(authz.NewResource(resource.GetTenant(), resource.GetGroup(), resource.GetKind(), resource.GetNamespace(), filename),
+				op.GetAction(), op.GetAuditAction())
+			nOps = append(nOps, nOp)
+		} else {
+			nOps = append(nOps, op)
+		}
+	}
+	nctx = apigwpkg.NewContextWithOperations(ctx, nOps...)
+	obj.Name = filename
+	return nctx, out, nil
+}
+
 func (a *clusterHooks) registerClusterHooks(svc apigw.APIGatewayService) error {
 	prof, err := svc.GetCrudServiceProfile("Tenant", apiintf.CreateOper)
 	if err != nil {
@@ -130,6 +163,7 @@ func (a *clusterHooks) registerClusterHooks(svc apigw.APIGatewayService) error {
 		panic("unknown service specified")
 	}
 	prof.SetAuditLevel(audit.Level_Response.String())
+	prof.AddPostCallHook(a.snapshotPostCallHook)
 
 	return a.registerSetAuthBootstrapFlagHook(svc)
 }

@@ -41,6 +41,10 @@ func TestClusterHooksRegistration(t *testing.T) {
 	AssertOk(t, err, "error getting service profile for Host delete")
 	Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre call hooks [%d] for Host delete profile", len(prof.PreCallHooks())))
 
+	prof, err = svc.GetServiceProfile("Save")
+	AssertOk(t, err, "error getting service profile for snapshot save")
+	Assert(t, len(prof.PostCallHooks()) == 1, fmt.Sprintf("unexpected number of post call hooks [%d] for Snapshot Save profile", len(prof.PostCallHooks())))
+
 	// test error
 	svc = mocks.NewFakeAPIGwService(l, true)
 	err = r.registerClusterHooks(svc)
@@ -271,5 +275,207 @@ func TestHostsUserContextHook(t *testing.T) {
 			Assert(t, reflect.DeepEqual(test.out, out),
 				fmt.Sprintf("[%s] test failed, expected returned object [%v], got [%v]", test.name, test.out, out))
 		}
+	}
+}
+
+func TestSnapshotPostCallHook(t *testing.T) {
+	tests := []struct {
+		name               string
+		in                 interface{}
+		operations         []authz.Operation
+		expectedOperations []authz.Operation
+		out                interface{}
+		err                bool
+	}{
+		{
+			name: "empty URI",
+			in: &cluster.ConfigurationSnapshot{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindConfigurationSnapshot)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    "testTenant",
+					Name:      "snapshot-req-1",
+					Namespace: globals.DefaultNamespace,
+				},
+				Status: cluster.ConfigurationSnapshotStatus{
+					LastSnapshot: &cluster.ConfigurationSnapshotStatus_ConfigSaveStatus{},
+				},
+			},
+			operations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource("testTenant",
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, "snapshot-req-1"),
+					auth.Permission_Create.String(), "Save"),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource("testTenant",
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, "snapshot-req-1"),
+					auth.Permission_Create.String(), "Save"),
+			},
+			out: &cluster.ConfigurationSnapshot{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindConfigurationSnapshot)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    "testTenant",
+					Name:      "snapshot-req-1",
+					Namespace: globals.DefaultNamespace,
+				},
+				Status: cluster.ConfigurationSnapshotStatus{
+					LastSnapshot: &cluster.ConfigurationSnapshotStatus_ConfigSaveStatus{},
+				},
+			},
+			err: false,
+		},
+		{
+			name: "invalid object",
+			in:   &struct{ name string }{name: "invalid object type"},
+			operations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource("testTenant",
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, "snapshot-req-1"),
+					auth.Permission_Create.String(), "Save"),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource("testTenant",
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, "snapshot-req-1"),
+					auth.Permission_Create.String(), "Save"),
+			},
+			out: &struct{ name string }{name: "invalid object type"},
+			err: true,
+		},
+		{
+			name: "nil status",
+			in: &cluster.ConfigurationSnapshot{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindConfigurationSnapshot)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    "testTenant",
+					Name:      "snapshot-req-1",
+					Namespace: globals.DefaultNamespace,
+				},
+				Status: cluster.ConfigurationSnapshotStatus{},
+			},
+			operations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource("testTenant",
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, "snapshot-req-1"),
+					auth.Permission_Create.String(), "Save"),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource("testTenant",
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, "snapshot-req-1"),
+					auth.Permission_Create.String(), "Save"),
+			},
+			out: &cluster.ConfigurationSnapshot{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindConfigurationSnapshot)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    "testTenant",
+					Name:      "snapshot-req-1",
+					Namespace: globals.DefaultNamespace,
+				},
+				Status: cluster.ConfigurationSnapshotStatus{},
+			},
+			err: false,
+		},
+		{
+			name: "empty name in snapshot request",
+			in: &cluster.ConfigurationSnapshot{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindConfigurationSnapshot)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				},
+				Status: cluster.ConfigurationSnapshotStatus{
+					LastSnapshot: &cluster.ConfigurationSnapshotStatus_ConfigSaveStatus{
+						DestType: "objectstore",
+						URI:      "/objstore/v1/downloads/snapshots/snapshot-Tue_Apr__7_18-26-48_UTC_2020",
+					},
+				},
+			},
+			operations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, ""),
+					auth.Permission_Create.String(), "Save"),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, "snapshot-Tue_Apr__7_18-26-48_UTC_2020"),
+					auth.Permission_Create.String(), "Save"),
+			},
+			out: &cluster.ConfigurationSnapshot{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindConfigurationSnapshot)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    globals.DefaultTenant,
+					Name:      "snapshot-Tue_Apr__7_18-26-48_UTC_2020",
+					Namespace: globals.DefaultNamespace,
+				},
+				Status: cluster.ConfigurationSnapshotStatus{
+					LastSnapshot: &cluster.ConfigurationSnapshotStatus_ConfigSaveStatus{
+						DestType: "objectstore",
+						URI:      "/objstore/v1/downloads/snapshots/snapshot-Tue_Apr__7_18-26-48_UTC_2020",
+					},
+				},
+			},
+			err: false,
+		},
+		{
+			name: "name in snapshot request",
+			in: &cluster.ConfigurationSnapshot{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindConfigurationSnapshot)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Name:      "snap-req-1",
+				},
+				Status: cluster.ConfigurationSnapshotStatus{
+					LastSnapshot: &cluster.ConfigurationSnapshotStatus_ConfigSaveStatus{
+						DestType: "objectstore",
+						URI:      "/objstore/v1/downloads/snapshots/snap-req-1",
+					},
+				},
+			},
+			operations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, "snap-req-1"),
+					auth.Permission_Create.String(), "Save"),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewAuditOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupCluster), string(cluster.KindConfigurationSnapshot),
+					globals.DefaultNamespace, "snap-req-1"),
+					auth.Permission_Create.String(), "Save"),
+			},
+			out: &cluster.ConfigurationSnapshot{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindConfigurationSnapshot)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    globals.DefaultTenant,
+					Name:      "snap-req-1",
+					Namespace: globals.DefaultNamespace,
+				},
+				Status: cluster.ConfigurationSnapshotStatus{
+					LastSnapshot: &cluster.ConfigurationSnapshotStatus_ConfigSaveStatus{
+						DestType: "objectstore",
+						URI:      "/objstore/v1/downloads/snapshots/snap-req-1",
+					},
+				},
+			},
+			err: false,
+		},
+	}
+	r := &clusterHooks{}
+	logConfig := log.GetDefaultConfig("TestAPIGwClusterHooks")
+	r.logger = log.GetNewLogger(logConfig)
+	for _, test := range tests {
+		nctx := apigwpkg.NewContextWithOperations(context.TODO(), test.operations...)
+		nctx, out, err := r.snapshotPostCallHook(nctx, test.in)
+		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
+		operations, _ := apigwpkg.OperationsFromContext(nctx)
+		Assert(t, AreOperationsEqual(test.expectedOperations, operations),
+			fmt.Sprintf("unexpected operations, [%s] test failed, expected: %s, got: %s", test.name, authz.PrintOperations(test.expectedOperations), authz.PrintOperations(operations)))
+		Assert(t, reflect.DeepEqual(test.out, out),
+			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))
 	}
 }

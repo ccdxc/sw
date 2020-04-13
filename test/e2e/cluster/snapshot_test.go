@@ -8,20 +8,22 @@ import (
 	"reflect"
 	"strings"
 
-	apierrors "github.com/pensando/sw/api/errors"
-	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
-
-	"github.com/pensando/sw/api/generated/security"
-
-	"github.com/pensando/sw/api/generated/network"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
+	apierrors "github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/audit"
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/search"
+	"github.com/pensando/sw/api/generated/security"
+	testutils "github.com/pensando/sw/test/utils"
+	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 	"github.com/pensando/sw/venice/globals"
 )
 
@@ -190,6 +192,61 @@ var _ = Describe("Config SnapShot and restore", func() {
 				By(fmt.Sprintf("+++status %+v", resp.Status.LastSnapshot))
 
 				name := resp.Status.LastSnapshot.URI[strings.LastIndex(resp.Status.LastSnapshot.URI, "/")+1:]
+				// check audit log for snapshot save
+				query := &search.SearchRequest{
+					Query: &search.SearchQuery{
+						Kinds: []string{auth.Permission_AuditEvent.String()},
+						Fields: &fields.Selector{
+							Requirements: []*fields.Requirement{
+								{
+									Key:      "action",
+									Operator: "equals",
+									Values:   []string{strings.Title("Save")},
+								},
+								{
+									Key:      "outcome",
+									Operator: "equals",
+									Values:   []string{audit.Outcome_Success.String()},
+								},
+								{
+									Key:      "resource.kind",
+									Operator: "equals",
+									Values:   []string{string(cluster.KindConfigurationSnapshot)},
+								},
+								{
+									Key:      "resource.name",
+									Operator: "equals",
+									Values:   []string{name},
+								},
+							},
+						},
+					},
+					From:       0,
+					MaxResults: 50,
+					Aggregate:  true,
+				}
+				Eventually(func() error {
+					resp := testutils.AuditSearchResponse{}
+					err := ts.tu.Search(ts.loggedInCtx, query, &resp)
+					if err != nil {
+						return err
+					}
+					if resp.ActualHits == 0 {
+						return fmt.Errorf("no audit logs for [%s|%s] successful snapshot save", globals.DefaultTenant, ts.tu.User)
+					}
+					events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+					for _, event := range events {
+						if (event.Object.Action == "Save") &&
+							(event.Object.Outcome == audit.Outcome_Success.String()) &&
+							(event.Object.User.Name == ts.tu.User) &&
+							(event.Object.User.Tenant == globals.DefaultTenant) &&
+							(event.Object.Resource.Name == name) {
+							return nil
+						}
+					}
+					return fmt.Errorf("no audit logs for [%s|%s] successful snapshot save", globals.DefaultTenant, ts.tu.User)
+				}, 30, 1).Should(BeNil())
+
 				wrbuf, len, err := downloadSnapshot(lctx, name)
 				Expect(err).To(BeNil())
 
