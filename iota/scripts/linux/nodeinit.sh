@@ -28,10 +28,7 @@ fw_version=""
 
 # find all the ionic interfaces and the mgmt interfaces
 function init_host() {
-    if [[ -f /etc/docker/daemon.json ]] ;
-    then
-        [ -s /etc/docker/daemon.json ] || (echo "{\"insecure-registries\" : [\"registry.test.pensando.io:5000\"]}" >> /etc/docker/daemon.json && systemctl restart docker)
-    fi
+    (rm -rf /etc/docker/daemon.json && echo "{\"insecure-registries\" : [\"registry.test.pensando.io:5000\"]}" >> /etc/docker/daemon.json && systemctl restart docker)
     cnt=`lsmod | grep ionic | wc -l`
     if [[ $cnt -eq 0 ]] ; 
     then

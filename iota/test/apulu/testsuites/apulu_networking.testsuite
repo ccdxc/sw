@@ -43,8 +43,8 @@ testbundles:
         # Relative paths from iota/test/apulu/testbundles/
         - networking/networking.testbundle
         - h2vrip.testbundle
-        #- policy/policy.testbundle
         - classic/ethtool.testbundle
+        #- policy/policy.testbundle
         - api_crud/api_crud.testbundle
         - mtu/mtu.testbundle
         - vlanoffload/vlanoffload.testbundle
