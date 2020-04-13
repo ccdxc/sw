@@ -549,3 +549,59 @@ func bgpPfxCountersShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
+
+var bgpRouteMapShowCmd = &cobra.Command{
+	Use:   "route-map",
+	Short: "show bgp route-map information",
+	Long:  "show bgp route-map information",
+	Args:  cobra.NoArgs,
+	RunE:  bgpRouteMapShowCmdHandler,
+}
+
+const (
+	bgpRouteMap = `-----------------------------------
+  EntIndex           : %v
+  Index              : %v
+  Number             : %v
+  Hitcnt             : %v
+  OrfAssoc           : %v
+-----------------------------------
+`
+)
+
+func bgpRouteMapShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := types.NewBGPSvcClient(c)
+
+	req := &types.BGPRouteMapGetRequest{}
+	respMsg, err := client.BGPRouteMapGet(context.Background(), req)
+	if err != nil {
+		return errors.New("Getting RouteMap failed")
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	var rtmaps []*utils.ShadowBGPRouteMapStatus
+	for _, p := range respMsg.Response {
+		rtmap := utils.NewBGPRouteMapStatus(p.Status)
+		rtmaps = append(rtmaps, rtmap)
+		if !doJSON {
+			fmt.Printf(bgpRouteMap, rtmap.EntIndex, rtmap.Index, rtmap.Number, rtmap.Hitcnt, rtmap.OrfAssoc)
+		}
+	}
+
+	if doJSON {
+		b, _ := json.MarshalIndent(rtmaps, "", "  ")
+		fmt.Println(string(b))
+		return nil
+	}
+
+	return nil
+}

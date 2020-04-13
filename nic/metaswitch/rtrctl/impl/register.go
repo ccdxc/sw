@@ -21,6 +21,7 @@ func RegisterNodes(params *CLIParams, base *cobra.Command) {
 	bgpShowCmd.PersistentFlags().Bool("detail", false, "detailed output")
 	bgpShowCmd.AddCommand(peerShowCmd)
 	bgpShowCmd.AddCommand(peerAfShowCmd)
+	bgpShowCmd.AddCommand(bgpRouteMapShowCmd)
 
 	bgpShowCmd.AddCommand(bgpPrefixShowCmd)
 	bgpPrefixShowCmd.AddCommand(bgpPfxCountersShowCmd)

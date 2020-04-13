@@ -261,6 +261,12 @@
 		BGPPrfxCntrsGetResponse
 		BGPPrfxCntrsKeyHandle
 		BGPPrfxCntrsGetRequest
+		BGPRouteMapStatus
+		BGPRouteMapKey
+		BGPRouteMap
+		BGPRouteMapGetResponse
+		BGPRouteMapKeyHandle
+		BGPRouteMapGetRequest
 		EvpnEviSpec
 		EvpnEviStatus
 		EvpnEvi

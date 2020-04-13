@@ -43,6 +43,7 @@ service BGPSvc {
   rpc BGPClearRoute (BGPClearRouteRequest) returns (BGPClearRouteResponse) {}
   rpc BGPNLRIPrefixGet (BGPNLRIPrefixGetRequest) returns (BGPNLRIPrefixGetResponse) {}
   rpc BGPPrfxCntrsGet (BGPPrfxCntrsGetRequest) returns (BGPPrfxCntrsGetResponse) {}
+  rpc BGPRouteMapGet (BGPRouteMapGetRequest) returns (BGPRouteMapGetResponse) {}
 }
 
 // BGP address family identifier
@@ -769,4 +770,68 @@ message BGPPrfxCntrsKeyHandle {
 // BGP PrfxCntrs get request
 message BGPPrfxCntrsGetRequest {
   repeated BGPPrfxCntrsKeyHandle Request = 1;
+}
+
+
+
+enum BGPOrfAssoc {
+  BGP_ORF_ASSOC_NONE   = 0;
+  BGP_ORF_ASSOC_LOCAL  = 1;
+  BGP_ORF_ASSOC_REMOTE = 2;
+}
+
+// BGP routemap table
+message BGPRouteMapStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_BGP_MAP_OID_LEN",
+    Mib:    "bgpRouteMapTable"
+  };
+
+  // Identifies a RIB Manager entity
+  uint32      EntIndex = 1 [(venice.pdsaFields) = {Field: "rm_index", GetKeyOidIndex: "AMB_BGP_MAP_RM_INDEX_INDEX"}];
+  // The index of this bgpRouteMapEntry
+  uint32      Index    = 2 [(venice.pdsaFields) = {Field: "index", GetKeyOidIndex: "AMB_BGP_MAP_INDEX_INDEX"}];
+  // The index of this bgpRouteMapEntry.  This is a number used to reference more than one filter per route map index.
+  uint32      Number   = 3 [(venice.pdsaFields) = {Field: "number", GetKeyOidIndex: "AMB_BGP_MAP_NUMBER_INDEX"}];
+
+  // The number of times this row has been matched on
+  int32       Hitcnt   = 4 [(venice.pdsaFields) = {Field: "hitcnt"}];
+  // The type of association (if any) this route map has with the ORF protocol.
+  BGPOrfAssoc OrfAssoc = 5 [(venice.pdsaFields) = {Field: "orf_assoc"}];
+}
+
+// BGP routemap key object
+message BGPRouteMapKey {
+  // Identifies a RIB Manager entity
+  uint32 EntIndex = 1;
+  // The index of this bgpRouteMapEntry
+  uint32 Index    = 2;
+  // The index of this bgpRouteMapEntry.  This is a number used to reference more than one filter per route map index.
+  uint32 Number   = 3;
+}
+
+//BGP routemap object
+message BGPRouteMap {
+  BGPRouteMapStatus Status = 1;
+}
+
+// BGP routemap get response
+message BGPRouteMapGetResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated BGPRouteMap Response  = 2;
+}
+
+// BGP routemap key handle
+message BGPRouteMapKeyHandle {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_BGP_MAP_OID_LEN",
+    Mib:     "bgpRouteMapTable"
+    SpecMsg: "BGPRouteMapStatus"
+  };
+  BGPRouteMapKey Key = 1;
+}
+
+// BGP routemap get request
+message BGPRouteMapGetRequest {
+  repeated BGPRouteMapKeyHandle Request = 1;
 }

@@ -1379,3 +1379,24 @@ func NewBGPPrfxCntrsStatus(in *pds.BGPPrfxCntrsStatus) *ShadowBGPPrfxCntrsStatus
 		BGPPrfxCntrsStatus:      in,
 	}
 }
+
+// ShadowBGPRouteMapStatus is a shadow of the BGPRouteMapStatus
+type ShadowBGPRouteMapStatus struct {
+	EntIndex uint32
+	Index    uint32
+	Number   uint32
+	Hitcnt   int32
+	OrfAssoc string
+	*pds.BGPRouteMapStatus
+}
+
+func NewBGPRouteMapStatus(in *pds.BGPRouteMapStatus) *ShadowBGPRouteMapStatus {
+	return &ShadowBGPRouteMapStatus{
+		EntIndex:          in.EntIndex,
+		Index:             in.Index,
+		Number:            in.Number,
+		Hitcnt:            in.Hitcnt,
+		OrfAssoc:          strings.TrimPrefix(in.OrfAssoc.String(), "BGP_ORF_ASSOC_"),
+		BGPRouteMapStatus: in,
+	}
+}
