@@ -198,7 +198,7 @@ subnet_attr_update (subnet_feeder& feeder, pds_subnet_spec_t *spec,
     if (bit_isset(chg_bmap, SUBNET_ATTR_V6_VRIP)) {
         feeder.spec.v6_vr_ip = spec->v6_vr_ip;
     }
-    if (bit_isset(chg_bmap, SUBNET_ATTR_VRMAC)) {
+    if (bit_isset(chg_bmap, SUBNET_ATTR_VR_MAC)) {
         memcpy(&feeder.spec.vr_mac, &spec->vr_mac, sizeof(spec->vr_mac));
     }
     if (bit_isset(chg_bmap, SUBNET_ATTR_V4_RTTBL)) {

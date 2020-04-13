@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/vpc.hpp"
 
 namespace test {
@@ -85,6 +86,87 @@ bool
 vpc_feeder::status_compare(const pds_vpc_status_t *status1,
                            const pds_vpc_status_t *status2) const {
     return true;
+}
+
+//----------------------------------------------------------------------------
+// VPC CRUD helper routines
+//----------------------------------------------------------------------------
+
+void
+vpc_create (vpc_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_create<vpc_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+void
+vpc_read (vpc_feeder& feeder, sdk_ret_t exp_result)
+{
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_read<vpc_feeder>(feeder, exp_result)));
+}
+
+static void
+vpc_attr_update (vpc_feeder& feeder, pds_vpc_spec_t *spec,
+                    uint64_t chg_bmap)
+{
+    if (bit_isset(chg_bmap, VPC_ATTR_TYPE)) {
+        feeder.spec.type = spec->type;
+    }
+    if (bit_isset(chg_bmap, VPC_ATTR_V4_PREFIX)) {
+        feeder.spec.v4_prefix = spec->v4_prefix;
+    }
+    if (bit_isset(chg_bmap, VPC_ATTR_V6_PREFIX)) {
+        feeder.spec.v6_prefix = spec->v6_prefix;
+    }
+    if (bit_isset(chg_bmap, VPC_ATTR_VR_MAC)) {
+        memcpy(&feeder.spec.vr_mac, &spec->vr_mac, sizeof(spec->vr_mac));
+    }
+    if (bit_isset(chg_bmap, VPC_ATTR_FAB_ENCAP)) {
+        feeder.spec.fabric_encap = spec->fabric_encap;
+    }
+    if (bit_isset(chg_bmap, VPC_ATTR_V4_RTTBL)) {
+        feeder.spec.v4_route_table = spec->v4_route_table;
+    }
+    if (bit_isset(chg_bmap, VPC_ATTR_V6_RTTBL)) {
+        feeder.spec.v6_route_table = spec->v6_route_table;
+    }
+    if (bit_isset(chg_bmap, VPC_ATTR_NAT46_PREFIX)) {
+        feeder.spec.nat46_prefix = spec->nat46_prefix;
+    }
+    if (bit_isset(chg_bmap, VPC_ATTR_TOS)) {
+        feeder.spec.tos = spec->tos;
+    }
+}
+
+void
+vpc_update (vpc_feeder& feeder, pds_vpc_spec_t *spec,
+               uint64_t chg_bmap, sdk_ret_t exp_result)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    vpc_attr_update(feeder, spec, chg_bmap);
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<vpc_feeder>(bctxt, feeder)));
+
+    // if expected result is err, batch commit should fail
+    if (exp_result == SDK_RET_ERR)
+        batch_commit_fail(bctxt);
+    else
+        batch_commit(bctxt);
+}
+
+void
+vpc_delete (vpc_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_delete<vpc_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
 }
 
 //----------------------------------------------------------------------------

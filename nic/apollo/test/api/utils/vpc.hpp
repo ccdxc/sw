@@ -16,6 +16,18 @@ namespace api {
 // Export variables
 extern pds_obj_key_t k_vpc_key;
 
+enum vpc_attrs {
+    VPC_ATTR_TYPE         =  bit(0),
+    VPC_ATTR_V4_PREFIX    =  bit(1),
+    VPC_ATTR_V6_PREFIX    =  bit(2),
+    VPC_ATTR_VR_MAC       =  bit(5),
+    VPC_ATTR_FAB_ENCAP    =  bit(6),
+    VPC_ATTR_V4_RTTBL     =  bit(7),
+    VPC_ATTR_V6_RTTBL     =  bit(8),
+    VPC_ATTR_NAT46_PREFIX =  bit(9),
+    VPC_ATTR_TOS          =  bit(10),
+};
+
 // VPC test feeder class
 class vpc_feeder : public feeder {
 public:

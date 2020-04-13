@@ -21,7 +21,7 @@ enum subnet_attrs {
     SUBNET_ATTR_V6_PREFIX  =  bit(2),
     SUBNET_ATTR_V4_VRIP    =  bit(3),
     SUBNET_ATTR_V6_VRIP    =  bit(4),
-    SUBNET_ATTR_VRMAC      =  bit(5),
+    SUBNET_ATTR_VR_MAC     =  bit(5),
     SUBNET_ATTR_V4_RTTBL   =  bit(6),
     SUBNET_ATTR_V6_RTTBL   =  bit(7),
     SUBNET_ATTR_V4_INGPOL  =  bit(8),

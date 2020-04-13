@@ -534,7 +534,7 @@ TEST_F(subnet, subnet_update_vrmac) {
     mac = MAC_TO_UINT64(feeder.spec.vr_mac);
     mac++;
     MAC_UINT64_TO_ADDR(spec.vr_mac, mac);
-    subnet_update(feeder, &spec, SUBNET_ATTR_VRMAC);
+    subnet_update(feeder, &spec, SUBNET_ATTR_VR_MAC);
     subnet_read(feeder);
 
     sample_vnic_teardown(bctxt);
