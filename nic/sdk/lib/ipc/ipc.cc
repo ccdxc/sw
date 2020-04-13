@@ -437,7 +437,18 @@ ipc_service_async::client_receive(uint32_t sender) {
 
 bool
 ipc_service::should_serialize_(void) {
-    return (this->serializing_enabled_ && this->message_in_flight_);
+    if (!this->serializing_enabled_) {
+        return false;
+    }
+
+    // We should serialize if there is a message in flight, or
+    // there are messages waiting to be delivered
+    if ((this->message_in_flight_) ||
+        (!this->hold_queue_.empty())) {
+        return true;
+    }
+
+    return false;
 }
 
 void
