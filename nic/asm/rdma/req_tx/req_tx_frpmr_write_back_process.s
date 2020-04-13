@@ -56,8 +56,8 @@ skip_dma_pt:
     // TODO: Update needs_credits flag in cb1_byte. All other flags can be reset to zero.
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_SET_FRPMR_IN_PROGRESS)
     SQCB0_ADDR_GET(r2)
-    add            r3, r2, FIELD_OFFSET(sqcb0_t, state_flags)
-    phvwr          p.sqcb0_state_flags, d.state_flags
+    add            r3, r2, FIELD_OFFSET(sqcb0_t, config_state_flags)
+    phvwr          p.sqcb0_state_flags, d.config_state_flags
     phvwrmi        p.sqcb0_state_flags, (1 << SQCB0_FRPMR_IN_PROGRESS_BIT_OFFSET), \
                    (1 << SQCB0_FRPMR_IN_PROGRESS_BIT_OFFSET)
     DMA_HBM_PHV2MEM_SETUP(DMA_CMD_BASE, sqcb0_state_flags, sqcb0_state_flags, r3)

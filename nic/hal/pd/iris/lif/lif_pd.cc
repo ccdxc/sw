@@ -1320,6 +1320,20 @@ pd_lif_stats_get (pd_func_args_t *pd_func_args)
     return ret;
 }
 
+hal_ret_t
+pd_lif_sched_get (pd_func_args_t *pd_func_args)
+{
+    pd_lif_sched_get_args_t *args = pd_func_args->pd_lif_sched_get;
+    lif_t *lif = args->lif;
+
+    pd_lif_t  *lif_pd = (pd_lif_t *)lif->pd_lif;
+
+    args->tx_sched_table_offset = lif_pd->tx_sched_table_offset;
+    args->tx_sched_num_entries = lif_pd->tx_sched_num_table_entries;
+
+    return HAL_RET_OK;
+}
+
 //-----------------------------------------------------------------------------
 // Control TX Scheduler for Lif
 //-----------------------------------------------------------------------------

@@ -63,6 +63,11 @@ devapi_lif::factory(lif_info_t *info, devapi_iris *dapi)
     }
     NIC_LOG_DEBUG("After hal create ...");
 
+    // Update scheduler data to lif_info.    
+    info->tx_sched_table_offset = lif->info_.tx_sched_table_offset;
+    info->tx_sched_num_table_entries = lif->info_.tx_sched_num_table_entries;
+    info->tx_sched_num_coses = lif->info_.tx_sched_num_coses;
+
 #if 0
     if (lif->is_intmgmtmnic()) {
         NIC_LOG_DEBUG("lif-{}:Setting Internal management lif",
@@ -1195,6 +1200,7 @@ devapi_lif::lif_halcreate(void)
     LifResponse          rsp;
     LifRequestMsg        req_msg;
     LifResponseMsg       rsp_msg;
+    intf::LifTxSchedulerData   sched_rsp;
     LifQStateMapEntry    *lif_qstate_map_ent;
     lif_info_t           *lif_info = get_lifinfo();
 
@@ -1247,6 +1253,11 @@ devapi_lif::lif_halcreate(void)
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             NIC_LOG_DEBUG("Created lif id: {}", get_id());
+            // Update Tx scheduler info
+            sched_rsp = rsp.tx_sched_data();
+            lif_info->tx_sched_table_offset = sched_rsp.sched_table_offset();
+            lif_info->tx_sched_num_table_entries = sched_rsp.sched_num_entries();
+            lif_info->tx_sched_num_coses = sched_rsp.num_coses();
         } else {
             NIC_LOG_ERR("Failed to create devapi_lif for hw_lif_id: {}. err: {}",
                         get_id(), rsp.api_status());

@@ -273,8 +273,10 @@ bt_in_progress:
         bbeq        d.ring_empty_sched_eval_done, 1, exit
         nop         //BD Slot
 
-        // ring doorbell to re-evaluate scheduler
+        // DO NOT ring doorbell to re-evaluate scheduler on HW because of scheduler bug.
+#if !(defined (HAPS) || defined (HW))
         DOORBELL_NO_UPDATE(CAPRI_TXDMA_INTRINSIC_LIF, CAPRI_TXDMA_INTRINSIC_QTYPE, CAPRI_TXDMA_INTRINSIC_QID, r2, r3)
+#endif
         tblwr       d.ring_empty_sched_eval_done, 1
 
         phvwr.e     p.common.p4_intr_global_drop, 1

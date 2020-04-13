@@ -214,6 +214,12 @@ message LifRdmaData {
   uint64 barmap_base_addr = 5; // Barmap Base Addr
 }
 
+message LifTxSchedulerData {
+  uint32 sched_table_offset = 1; 
+  uint32 sched_num_entries = 2;
+  uint32 num_coses = 3;
+}
+
 // LifResponse response to one LifSpec
 message LifResponse {
   types.ApiStatus     api_status      = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
@@ -221,6 +227,7 @@ message LifResponse {
   repeated LifQState  qstate          = 3;    // Qstate Address info
   bool                rdma_data_valid = 4; // RDMA data valid only this bit is set
   LifRdmaData         rdma_data       = 5;    // RDMA data - valid only when rdma is enabled
+  LifTxSchedulerData  tx_sched_data   = 6;   // Tx Scheduler data 
 }
 
 // LifResponseMsg is response to LifRequestMsg

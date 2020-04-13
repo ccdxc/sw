@@ -56,7 +56,7 @@
 #define SQCB_CURR_WQE_PTR_OFFSET     FIELD_OFFSET(sqcb0_t, curr_wqe_ptr)
 #define SQCB_CURRENT_SGE_OFFSET      FIELD_OFFSET(sqcb0_t, current_sge_offset)
 
-#define SQCB0_FRPMR_IN_PROGRESS_BIT_OFFSET   4
+#define SQCB0_FRPMR_IN_PROGRESS_BIT_OFFSET   2
 #define SQCB0_FLUSH_RQ_BIT_OFFSET            3
 #define SQCB0_SERVICE_BIT_OFFSET             4
 struct sqcb0_t {
@@ -132,7 +132,7 @@ struct sqcb0_t {
             priv_oper_enable      : 1;  // RO
             in_progress           : 1;  // WO S5, RO S0
             bktrack_in_progress   : 1;  // RW S5, RW S0
-            frpmr_in_progress     : 1;  // RW S0
+            rsvd6                 : 1;  // RW S0
             color                 : 1;  // WO S5, R0 S0
             fence                 : 1;  // WO S5, RO S0
             li_fence              : 1;  // WO S5, RO S0
@@ -140,13 +140,18 @@ struct sqcb0_t {
         };
     };
 
-    spec_enable                   : 1;
-    skip_pt                       : 1;
-    bktrack_marker_in_progress    : 1;
-    // 0 - congestion_mgmt_disabled; 1 - DCQCN; 2 - ROME; 3 - RSVD
-    congestion_mgmt_type          : 2;  // RO
-    rsvd2                         : 3;
-
+    union {
+        config_state_flags      : 8;
+        struct {
+            spec_enable                   : 1;
+            skip_pt                       : 1;
+            bktrack_marker_in_progress    : 1;
+            // 0 - congestion_mgmt_disabled; 1 - DCQCN; 2 - ROME; 3 - RSVD
+            congestion_mgmt_type          : 2;  // RO
+            frpmr_in_progress             : 1;  // RW S0
+            rsvd2                         : 2;
+        };
+    };
 };
 
 struct sqcb1_t {

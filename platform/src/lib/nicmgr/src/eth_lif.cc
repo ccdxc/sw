@@ -308,7 +308,10 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
 
     // Init stats timer
     ev_timer_init(&stats_timer, &EthLif::StatsUpdate, 0.0, 0.1);
+    ev_timer_init(&sched_eval_timer, &EthLif::SchedBulkEvalHandler, 0.0, 0.02);
+
     stats_timer.data = this;
+    sched_eval_timer.data = this;
 }
 
 void
@@ -482,6 +485,24 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         ev_timer_start(EV_A_ & stats_timer);
     }
 
+    // Workaround for Capri Scheduler bug.
+    // 1. Run a timer per lif in nicmgr for 20 ms.
+    // 2. Read scheduler-table and issue Eval for all sched set RQs as part of timer callback.
+    // Currently this is done only for RDMA RQs.
+    if (spec->enable_rdma) {
+        // Store HBM scheduler-table start addr of RQs of this LIF. 
+        // This will be used in SchedBulkEvalHandler for reading scheduler table and issue Bulk Eval
+        // for all current active queues in datapath.
+        // RQ qtype is 4. So find number of queues for qtypes 0-3 from eth lif spec to calculate base addr.
+        // Also each row in scheduler table covers 8K queues (1KB), 1 bit per queue.
+        hal_lif_info_.tx_sched_bulk_eval_start_addr = pd->mp_->start_addr(MEM_REGION_TX_SCHEDULER_NAME) +
+                                                      (hal_lif_info_.tx_sched_table_offset * 1024) + 
+                                                      ((spec->rxq_count + spec->txq_count + spec->adminq_count + 
+                                                        spec->rdma_aq_count + spec->rdma_sq_count) / 8);
+        // Start BulkEval timer for 20ms. 
+        ev_timer_start(EV_A_ & sched_eval_timer);
+    }
+
     // Init the status block
     memset(lif_status, 0, sizeof(*lif_status));
 
@@ -642,6 +663,10 @@ EthLif::Reset()
     if (host_lif_stats_addr != 0) {
         host_lif_stats_addr = 0;
         ev_timer_stop(EV_A_ & stats_timer);
+    }
+
+    if (spec->enable_rdma) {
+        ev_timer_stop(EV_A_ & sched_eval_timer);
     }
 
     state = LIF_STATE_RESET;
@@ -3102,6 +3127,44 @@ EthLif::StatsUpdate(EV_P_ ev_timer *w, int events)
                                 eth->lif_stats_addr, eth->host_lif_stats_addr,
                                 sizeof(struct ionic_lif_stats), &ctx);
     }
+}
+
+
+void
+EthLif::SchedBulkEvalHandler(EV_P_ ev_timer *w, int events)
+{
+    EthLif *eth = (EthLif *)w->data;
+    uint64_t iter = 0;
+    uint8_t  cos = 0;
+    asic_db_addr_t db_addr =  { 0 };
+
+    // HBM scheduler table base-addr for RQ
+    uint64_t addr = eth->hal_lif_info_.tx_sched_bulk_eval_start_addr;
+    char     sched_map[1024] = {0};
+    uint32_t num_entries_per_cos = (eth->hal_lif_info_.tx_sched_num_table_entries / 
+                                        eth->hal_lif_info_.tx_sched_num_coses);
+
+    // Scheduler table is indexed by (lif,cos).
+    // Read scheduler table for all RQs for each cos lif participates in.
+    // Issue eval doorbell for all set queues.
+    for (cos = 0; cos < eth->hal_lif_info_.tx_sched_num_coses; cos ++) {
+        sdk::asic::asic_mem_read(addr, (uint8_t *)sched_map, ((eth->spec->rdma_rq_count) / 8));
+        for (iter = 0; iter < eth->spec->rdma_rq_count; iter++) {
+            if ((sched_map[iter / 8]) & (1 << (iter % 8))) {
+                //Ring doorbell to eval RQ
+//                NIC_LOG_DEBUG("Eval db lif: {} qid: {} ",eth->hal_lif_info_.lif_id, iter);
+                db_addr.lif_id = eth->hal_lif_info_.lif_id;
+                db_addr.q_type =  4 /*RDMA_QTYPE_RQ*/;
+                db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_EVAL,
+                                                    ASIC_DB_UPD_INDEX_UPDATE_NONE,
+                                                    false);
+                PAL_barrier();
+                sdk::asic::pd::asic_ring_db(&db_addr, (iter << 24));
+            }
+        }
+        addr += (num_entries_per_cos * 1024);
+    }
+    return;
 }
 
 int

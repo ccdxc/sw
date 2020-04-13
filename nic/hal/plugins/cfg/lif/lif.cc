@@ -23,6 +23,7 @@
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/eth.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
+#include "lib/utils/utils.hpp"
 
 using hal::pd::pd_if_create_args_t;
 using hal::pd::pd_if_lif_update_args_t;
@@ -1106,6 +1107,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     pd::pd_func_args_t          pd_func_args = {0};
     lif_hal_info_t             proto_hal_info = {0};
     pd::pd_qos_class_get_qos_class_id_args_t q_args;
+    pd::pd_lif_sched_get_args_t hwlifid_args;
     void                      *lifupd_timer = NULL;
 
     proto_msg_dump(spec);
@@ -1305,6 +1307,22 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->mutable_rdma_data()->set_barmap_base_addr(rdma_lif_barmap_base_addr(hw_lif_id));
     }
 #endif
+
+
+    memset(&hwlifid_args, 0, sizeof(pd::pd_lif_sched_get_args_t));
+
+    hwlifid_args.lif = lif;
+    pd_func_args.pd_lif_sched_get = &hwlifid_args;
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_SCHED_DATA, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("pi-lif:{}:failed to fetch sched data of lif {}, err : {}",
+                        __FUNCTION__, lif->lif_id, ret);
+    }
+    rsp->mutable_tx_sched_data()->set_sched_table_offset(hwlifid_args.tx_sched_table_offset);
+    rsp->mutable_tx_sched_data()->set_sched_num_entries(hwlifid_args.tx_sched_num_entries);
+    rsp->mutable_tx_sched_data()->set_num_coses(sdk::lib::count_bits_set(lif->qos_info.cos_bmp));
+
 
     // Add to map of lif name and PI ID
     g_hal_state->lif_name_id_map_insert(lif->name, lif->lif_id);

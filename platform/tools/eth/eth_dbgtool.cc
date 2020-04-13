@@ -326,6 +326,7 @@ rdma_qstate_one(queue_info_t *qinfo, uint8_t qtype, uint32_t qid)
         PRINT_FLD16(sqcb0, skip_pt, "%0x");
         PRINT_FLD32(sqcb0, bktrack_marker_in_progress, "%0x");
         PRINT_FLD24(sqcb0, congestion_mgmt_type, "%0x");
+        PRINT_FLD32(sqcb0, frpmr_in_progress, "%0x");
         PRINT_FLD16(sqcb0, rsvd2, "%0x\n");
 
         sqcb1 = (sqcb1_t *)memrev(&qstate.sq.sqcb1, sizeof *sqcb1);

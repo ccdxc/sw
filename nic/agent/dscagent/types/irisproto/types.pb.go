@@ -151,6 +151,7 @@
 		LifStatus
 		LifQState
 		LifRdmaData
+		LifTxSchedulerData
 		LifResponse
 		LifResponseMsg
 		QStateGetReq

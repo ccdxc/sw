@@ -458,6 +458,13 @@ typedef struct pd_lif_get_args_s {
     uint32_t hw_lif_id;  // o/p
 } __PACK__ pd_lif_get_args_t;
 
+typedef struct pd_lif_sched_get_args_s { 
+    lif_t *lif;          // i/p
+    uint32_t tx_sched_table_offset;  // o/p
+    uint32_t tx_sched_num_entries; // o/p
+    uint16_t cos_bmp; // o/p
+} __PACK__ pd_lif_sched_get_args_t;
+
 typedef struct pd_lif_sched_control_args_s {
     bool en;
     lif_t *lif;
@@ -3362,7 +3369,9 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT,       348, "PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT")  \
     ENTRY(PD_FUNC_ID_IF_INP_MAC_VLAN_PGM,        349, "PD_FUNC_ID_IF_INP_MAC_VLAN_PGM") \
     ENTRY(PD_FUNC_ID_IF_INP_PROP_PGM,            350, "PD_FUNC_ID_IF_INP_PROP_PGM") \
-    ENTRY(PD_FUNC_ID_MAX,                        351, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_LIF_SCHED_DATA,            351, "PD_FUNC_ID_LIF_SCHED_DATA")  \
+    ENTRY(PD_FUNC_ID_MAX,                        352, "pd_func_id_max")
+
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3430,6 +3439,8 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_lif_get);
         PD_UNION_ARGS_FIELD(pd_lif_stats_get);
         PD_UNION_ARGS_FIELD(pd_lif_sched_control);
+        PD_UNION_ARGS_FIELD(pd_lif_sched_get);
+
 
         // if calls
         PD_UNION_ARGS_FIELD(pd_if_create);
@@ -3876,6 +3887,8 @@ PD_FUNCP_TYPEDEF(pd_lif_make_clone);
 PD_FUNCP_TYPEDEF(pd_lif_get);
 PD_FUNCP_TYPEDEF(pd_lif_stats_get);
 PD_FUNCP_TYPEDEF(pd_lif_sched_control);
+PD_FUNCP_TYPEDEF(pd_lif_sched_get);
+
 
 // if calls
 PD_FUNCP_TYPEDEF(pd_if_create);

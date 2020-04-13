@@ -192,6 +192,7 @@ class EthLif
     uint32_t mtu;
     // Tasks
     ev_timer stats_timer = {0};
+    ev_timer sched_eval_timer = {0};
 
     // ref_cnt for queues for this lif
     uint32_t active_q_ref_cnt;
@@ -242,6 +243,7 @@ class EthLif
 
     // Callbacks
     static void StatsUpdate(EV_P_ ev_timer *w, int events);
+    static void SchedBulkEvalHandler(EV_P_ ev_timer *w, int events);
 
     // Helper methods
     void FreeUpMacFilters();

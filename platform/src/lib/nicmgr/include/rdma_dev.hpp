@@ -38,6 +38,31 @@
 // TODO: congestion_mgmt_type is a LIF config, need to integrate with driver change. Now we are not allocating ROME_CB in hw
 #define AT_ENTRY_SIZE_BYTES             (AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES)
 
+/*
+ *  *  Local doorbell address formation
+ *   */     
+#define TXS_DB_ADDR_BASE_LOCAL             0x8800000
+#define TXS_LIF_DBADDR_UPD                 0x1  //Eval
+#define TXS_DB_UPD_SHFT                     17
+#define TXS_DB_LIF_SHFT                     6
+#define TXS_DB_TYPE_SHFT                    3
+#define TXS_LIF_LOCAL_DBADDR_SET(lif, qtype)          \
+    (((uint64_t)(lif) << TXS_DB_LIF_SHFT) |                \
+    ((uint64_t)(qtype) << TXS_DB_TYPE_SHFT) |              \
+    ((uint64_t)(TXS_LIF_DBADDR_UPD) << TXS_DB_UPD_SHFT) | \
+    TXS_DB_ADDR_BASE_LOCAL)
+
+/*
+ *  *  Local doorbell data formation
+ *   */
+#define TXS_DB_DATA_QID_SHIFT               24
+#define TXS_DB_DATA_RING_SHIFT              16
+#define TXS_DB_DATA_PINDEX_SHIFT            0
+#define TXS_LIF_LOCAL_DBDATA_SET(qid, ring, pindex) \
+    (((uint64_t)(qid) << TXS_DB_DATA_QID_SHIFT) |  \
+     ((uint64_t)(ring) << TXS_DB_DATA_RING_SHIFT) |  \
+     ((uint64_t)(pindex) << TXS_DB_DATA_PINDEX_SHIFT))
+
 typedef struct qpcb_ring_s {
     uint16_t  c_index;
     uint16_t  p_index;
@@ -515,7 +540,8 @@ typedef struct aqcb_s {
 
 typedef struct sqcb0_s {
 
-    uint8_t  rsvd2: 3;
+    uint8_t  rsvd2: 2;
+    uint8_t  frpmr_in_progress    : 1;
     // 0 - congestion_mgmt_disabled; 1 - DCQCN; 2 - ROME; 3 - RSVD
     uint8_t  congestion_mgmt_type          : 2;
     uint8_t  bktrack_marker_in_progress    : 1;

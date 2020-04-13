@@ -326,7 +326,7 @@ class RdmaSQCB0state(Packet):
         BitField("priv_oper_enable", 0, 1),
         BitField("in_progress", 0, 1),
         BitField("sqcb0_bktrack_in_progress", 0, 1),
-        BitField("frpmr_in_progress", 0, 1),
+        BitField("rsvd6", 0, 1),
         BitField("color", 0, 1),
         BitField("fence", 0, 1),
         BitField("li_fence", 0, 1),
@@ -336,7 +336,8 @@ class RdmaSQCB0state(Packet):
         BitField("skip_pt", 0, 1),
         BitField("bktrack_marker_in_progress", 0, 1),
         BitField("congestion_mgmt_type",0, 2),
-        BitField("sqcb0_rsvd2", 0, 3),
+        BitField("frpmr_in_progress", 0, 1),
+        BitField("sqcb0_rsvd2", 0, 2),
     ]
         
 class RdmaSQCB1state(Packet):

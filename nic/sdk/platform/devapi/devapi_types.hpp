@@ -117,6 +117,8 @@ typedef struct lif_info_s {
     uint32_t max_mac_vlan_filters;
     uint32_t tx_sched_table_offset;
     uint32_t tx_sched_num_table_entries;
+    uint64_t tx_sched_bulk_eval_start_addr;
+    uint8_t tx_sched_num_coses;
     bool pushed_to_hal;  // TODO: Remove from here
     lif_queue_info_t queue_info[NUM_QUEUE_TYPES];
     uint64_t qstate_addr[NUM_QUEUE_TYPES];

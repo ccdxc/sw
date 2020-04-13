@@ -364,6 +364,7 @@ It has these top-level messages:
 	LifStatus
 	LifQState
 	LifRdmaData
+	LifTxSchedulerData
 	LifResponse
 	LifResponseMsg
 	QStateGetReq
