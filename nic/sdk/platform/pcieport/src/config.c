@@ -388,8 +388,9 @@ pcieport_config_host(pcieport_t *p)
     if (!pal_is_asic()) {
         /* reduce clock frequency for fpga */
         pcieport_set_clock_freq(p, 8);
+    } if (p->clock_freq) {
+        pcieport_set_clock_freq(p, p->clock_freq / 1000000);
     }
-
     pcieport_set_ltssm_en(p, 1);  /* ready for ltssm */
     pal_reg_trace("================ pcieport_hostconfig %d end\n", p->port);
     pal_reg_trace_control(otrace);

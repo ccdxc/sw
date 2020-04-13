@@ -560,8 +560,11 @@ catalog::populate_pcie(ptree &pt)
         s = pciept.get<std::string>("subdeviceid", "");
         catalog_db_.pcie_subdeviceid = strtoul(s.c_str(), NULL, 16);
 
-        s = pciept.get<std::string>("long_lived", "");
-        catalog_db_.pcie_long_lived = strtoul(s.c_str(), NULL, 16);
+        s = pciept.get<std::string>("long_lived", "0");
+        catalog_db_.pcie_long_lived = strtoul(s.c_str(), NULL, 0);
+
+        s = pciept.get<std::string>("clock_freq", "0");
+        catalog_db_.pcie_clock_freq = strtoul(s.c_str(), NULL, 0);
 
         for (ptree::value_type &v : pciept.get_child("portspecs")) {
             if (nportspecs < MAX_PCIE_PORTSPECS) {

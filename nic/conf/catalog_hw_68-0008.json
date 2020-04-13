@@ -39,6 +39,7 @@
 
     "pcie" : {
 	"subdeviceid"   : "4005",
+	"clock_freq"    : "416666666",
 	"portspecs"	:
 	[
 	    { "host":"0", "port":"0", "gen":"3", "width":"8" }

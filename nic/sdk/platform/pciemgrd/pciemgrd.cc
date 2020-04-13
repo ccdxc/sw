@@ -746,6 +746,7 @@ portmap_init_from_catalog(pciemgrenv_t *pme)
     pme->params.subvendorid = catalog->pcie_subvendorid();
     pme->params.subdeviceid = catalog->pcie_subdeviceid();
     pme->params.long_lived = catalog->pcie_long_lived();
+    pme->params.clock_freq = catalog->pcie_clock_freq();
 
     int nportspecs = catalog->pcie_nportspecs();
     for (int i = 0; i < nportspecs; i++) {

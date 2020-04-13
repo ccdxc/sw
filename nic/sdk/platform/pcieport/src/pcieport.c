@@ -237,6 +237,7 @@ pcieport_hostconfig(const int port, const pciemgr_params_t *params)
     p->compliance = params->compliance;
     p->sris = params->sris;
     p->crs = params->strict_crs;
+    p->clock_freq = params->clock_freq;
 
     /*
      * Provide default params for these if unspecified.
@@ -383,6 +384,7 @@ pcieport_showport(const int port)
     P("txfc_pdata", "%d", p->txfc_pdata);
     P("txfc_nphdr", "%d", p->txfc_nphdr);
     P("txfc_npdata", "%d", p->txfc_npdata);
+    P("clock_freq", "%u", p->clock_freq);
     P("state", "%s", pcieport_stname(p->state));
     P("event", "%s", pcieport_evname(p->event));
     P("fault_reason", "%s", p->fault_reason);

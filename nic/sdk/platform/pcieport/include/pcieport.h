@@ -77,6 +77,7 @@ union pcieport_u {
         int txfc_pdata;                 /* tx fc credits    posted data */
         int txfc_nphdr;                 /* tx fc credits nonposted hdr */
         int txfc_npdata;                /* tx fc credits nonposted data */
+        u_int32_t clock_freq;           /* core clock frequency */
     };
     u_int8_t _pad[2048];
 };
