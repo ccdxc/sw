@@ -25,7 +25,7 @@ else
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
 		--pipeline $(PIPELINE)$(FLAVOR) $(PKG_ARGS) $(STRIP)
 	cd $(NICDIR) && $(NICDIR)/sdk/platform/mputrace/captrace.py gen_syms \
-		--pipeline $(PIPELINE)
+		--pipeline $(PIPELINE) --asic $(ASIC)
 endif
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
