@@ -202,16 +202,30 @@ rmap_attr_update (remote_mapping_feeder& feeder,
                   pds_remote_mapping_spec_t *spec, uint64_t chg_bmap)
 {
     if (bit_isset(chg_bmap, RMAP_ATTR_SUBNET)) {
+        feeder.spec.subnet = spec->subnet;
     }
     if (bit_isset(chg_bmap, RMAP_ATTR_FAB_ENCAP)) {
+        feeder.spec.fabric_encap = spec->fabric_encap;
     }
     if (bit_isset(chg_bmap, RMAP_ATTR_NH_TYPE)) {
+        feeder.spec.nh_type = spec->nh_type;
+        if (spec->nh_type == PDS_NH_TYPE_OVERLAY) {
+            feeder.spec.tep = spec->tep;
+        } else {
+            feeder.spec.nh_group = spec->nh_group;
+        }
     }
     if (bit_isset(chg_bmap, RMAP_ATTR_VNIC_MAC)) {
+        memcpy(&feeder.spec.vnic_mac, &spec->vnic_mac, sizeof(spec->vnic_mac));
     }
     if (bit_isset(chg_bmap, RMAP_ATTR_TAGS)) {
+        feeder.spec.num_tags = spec->num_tags;
+        memcpy(&feeder.spec.tags, spec->tags,
+               sizeof(spec->tags[0]) * spec->num_tags);
     }
     if (bit_isset(chg_bmap, RMAP_ATTR_PROVIDER_IP)) {
+        feeder.spec.provider_ip = spec->provider_ip;
+        feeder.spec.provider_ip_valid = spec->provider_ip_valid;
     }
 }
 

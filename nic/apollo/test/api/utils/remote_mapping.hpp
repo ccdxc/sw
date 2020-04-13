@@ -100,7 +100,7 @@ API_DELETE(remote_mapping);
 void rmap_create(remote_mapping_feeder& feeder);
 void rmap_read(remote_mapping_feeder& feeder,
                sdk_ret_t exp_result = SDK_RET_OK);
-void ramp_update(remote_mapping_feeder& feeder, pds_remote_mapping_spec_t *spec,
+void rmap_update(remote_mapping_feeder& feeder, pds_remote_mapping_spec_t *spec,
                  uint64_t chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
 void rmap_delete(remote_mapping_feeder& feeder);
 

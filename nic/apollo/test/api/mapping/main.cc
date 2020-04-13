@@ -48,7 +48,7 @@ protected:
     static void SetUpTestCase() {
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
-        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
         if (apulu()) {
             g_encap_type = PDS_ENCAP_TYPE_VXLAN;
             g_encap_val = pdsobjkey2int(k_subnet_key) + 512;
@@ -151,7 +151,7 @@ static void create_local_mapping_feeders(local_mapping_feeder feeders[],
 }
 
 static void create_remote_mapping_feeders(remote_mapping_feeder feeders[],
-                                         int num_feeders)
+                                         int num_feeders, int nteps, int nvnics)
 {
     int i;
 
@@ -159,8 +159,8 @@ static void create_remote_mapping_feeders(remote_mapping_feeder feeders[],
         return;
 
 #ifndef SCALE_DOWN_FOR_DEBUG
-    int num_teps = PDS_MAX_TEP/num_feeders;
-    int num_vnics = k_max_vnic;
+    int num_teps = nteps/num_feeders;
+    int num_vnics = nvnics;
 #else
     int num_teps = 2;
     int num_vnics = 2;
@@ -368,7 +368,7 @@ TEST_F(mapping_test, local_mapping_workflow_neg_8) {
 // Non templatized test cases
 //---------------------------------------------------------------------
 /// \brief update mapping vnic
-TEST_F(mapping_test, mapping_update_vnic) {
+TEST_F(mapping_test, local_mapping_update_vnic) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -391,7 +391,7 @@ TEST_F(mapping_test, mapping_update_vnic) {
 }
 
 /// \brief update mapping subnet
-TEST_F(mapping_test, DISABLED_mapping_update_subnet) {
+TEST_F(mapping_test, DISABLED_local_mapping_update_subnet) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -414,7 +414,7 @@ TEST_F(mapping_test, DISABLED_mapping_update_subnet) {
 }
 
 /// \brief update mapping fabric encap type
-TEST_F(mapping_test, mapping_update_fab_encap_type) {
+TEST_F(mapping_test, local_mapping_update_fab_encap_type) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -444,7 +444,7 @@ TEST_F(mapping_test, mapping_update_fab_encap_type) {
 }
 
 /// \brief update mapping fabric encap val
-TEST_F(mapping_test, mapping_update_fab_encap_val) {
+TEST_F(mapping_test, local_mapping_update_fab_encap_val) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -472,7 +472,7 @@ TEST_F(mapping_test, mapping_update_fab_encap_val) {
 }
 
 /// \brief update mapping mapping M1 public IP P1 to no public IP.
-TEST_F(mapping_test, DISABLED_mapping_update_publicip1) {
+TEST_F(mapping_test, DISABLED_local_mapping_update_publicip1) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -495,7 +495,7 @@ TEST_F(mapping_test, DISABLED_mapping_update_publicip1) {
 }
 
 /// \brief update mapping mapping M1 public IP P1 to P2.
-TEST_F(mapping_test, DISABLED_mapping_update_publicip2) {
+TEST_F(mapping_test, DISABLED_local_mapping_update_publicip2) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -520,7 +520,7 @@ TEST_F(mapping_test, DISABLED_mapping_update_publicip2) {
 }
 
 /// \brief update mapping mapping M1 no public IP  to valid public ip.
-TEST_F(mapping_test, DISABLED_mapping_update_publicip3) {
+TEST_F(mapping_test, DISABLED_local_mapping_update_publicip3) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -547,7 +547,7 @@ TEST_F(mapping_test, DISABLED_mapping_update_publicip3) {
 }
 
 /// \brief update mapping mapping M1 public IP P1 to P2 and vnic V1 to V2.
-TEST_F(mapping_test, mapping_update_publicip4) {
+TEST_F(mapping_test, local_mapping_update_publicip4) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -574,6 +574,33 @@ TEST_F(mapping_test, mapping_update_publicip4) {
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
 
+/// \brief update mapping vnic_mac.
+TEST_F(mapping_test, local_mapping_update_vnic_mac) {
+    if (!apulu()) return;
+
+    uint64_t mac;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1);
+    lmap_create(feeders[0]);
+
+    // trigger
+    mac = MAC_TO_UINT64(feeders[0].spec.vnic_mac);
+    mac++;
+    MAC_UINT64_TO_ADDR(spec.vnic_mac, mac);
+    lmap_update(feeders[0], &spec, LMAP_ATTR_VNIC_MAC);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
 // --------------------------- END LOCAL MAPPINGS --------------------
 
 // --------------------------- REMOTE MAPPINGS -----------------------
@@ -583,7 +610,7 @@ TEST_F(mapping_test, mapping_update_publicip4) {
 TEST_F(mapping_test, remote_mapping_workflow_1) {
     remote_mapping_feeder feeders[1];
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     workflow_1<remote_mapping_feeder>(feeders[0]);
 }
 
@@ -592,7 +619,7 @@ TEST_F(mapping_test, remote_mapping_workflow_1) {
 TEST_F(mapping_test, remote_mapping_workflow_2) {
     remote_mapping_feeder feeders[1];
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     workflow_2<remote_mapping_feeder>(feeders[0]);
 }
 
@@ -601,7 +628,7 @@ TEST_F(mapping_test, remote_mapping_workflow_2) {
 TEST_F(mapping_test, remote_mapping_workflow_3) {
     remote_mapping_feeder feeders[3];
 
-    create_remote_mapping_feeders(feeders, 3);
+    create_remote_mapping_feeders(feeders, 3, PDS_MAX_TEP, k_max_vnic);
     workflow_3<remote_mapping_feeder>(feeders[0], feeders[1], feeders[2]);
 }
 
@@ -610,7 +637,7 @@ TEST_F(mapping_test, remote_mapping_workflow_3) {
 TEST_F(mapping_test, remote_mapping_workflow_4) {
     remote_mapping_feeder feeders[1];
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     workflow_4<remote_mapping_feeder>(feeders[0]);
 }
 
@@ -619,7 +646,7 @@ TEST_F(mapping_test, remote_mapping_workflow_4) {
 TEST_F(mapping_test, remote_mapping_workflow_5) {
     remote_mapping_feeder feeders[3];
 
-    create_remote_mapping_feeders(feeders, 3);
+    create_remote_mapping_feeders(feeders, 3, PDS_MAX_TEP, k_max_vnic);
     workflow_5<remote_mapping_feeder>(feeders[0], feeders[1], feeders[2]);
 }
 
@@ -628,7 +655,7 @@ TEST_F(mapping_test, remote_mapping_workflow_5) {
 TEST_F(mapping_test, remote_mapping_workflow_6) {
     remote_mapping_feeder feeders[1], feeder1A, feeder1B;
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
     feeder1B = feeders[0];
@@ -642,7 +669,7 @@ TEST_F(mapping_test, remote_mapping_workflow_6) {
 TEST_F(mapping_test, remote_mapping_workflow_7) {
     remote_mapping_feeder feeders[1], feeder1A, feeder1B;
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
     feeder1B = feeders[0];
@@ -656,7 +683,7 @@ TEST_F(mapping_test, remote_mapping_workflow_7) {
 TEST_F(mapping_test, DISABLED_remote_mapping_workflow_8) {
     remote_mapping_feeder feeders[1], feeder1A, feeder1B;
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
     feeder1B = feeders[0];
@@ -670,7 +697,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_8) {
 TEST_F(mapping_test, remote_mapping_workflow_9) {
     remote_mapping_feeder feeders[1], feeder1A;
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
 
@@ -682,7 +709,7 @@ TEST_F(mapping_test, remote_mapping_workflow_9) {
 TEST_F(mapping_test, DISABLED_remote_mapping_workflow_10) {
     remote_mapping_feeder feeders[4], feeder2A, feeder3A;
 
-    create_remote_mapping_feeders(feeders, 4);
+    create_remote_mapping_feeders(feeders, 4, PDS_MAX_TEP, k_max_vnic);
     feeder2A = feeders[1];
     feeder2A.update_spec(1);
     feeder3A = feeders[2];
@@ -697,7 +724,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_10) {
 TEST_F(mapping_test, remote_mapping_workflow_neg_1) {
     remote_mapping_feeder feeders[1];
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     workflow_neg_1<remote_mapping_feeder>(feeders[0]);
 }
 
@@ -706,7 +733,7 @@ TEST_F(mapping_test, remote_mapping_workflow_neg_1) {
 TEST_F(mapping_test, remote_mapping_workflow_neg_3) {
     remote_mapping_feeder feeders[1];
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     workflow_neg_3<remote_mapping_feeder>(feeders[0]);
 }
 
@@ -715,7 +742,7 @@ TEST_F(mapping_test, remote_mapping_workflow_neg_3) {
 TEST_F(mapping_test, remote_mapping_workflow_neg_4) {
     remote_mapping_feeder feeders[2];
 
-    create_remote_mapping_feeders(feeders, 2);
+    create_remote_mapping_feeders(feeders, 2, PDS_MAX_TEP, k_max_vnic);
     workflow_neg_4<remote_mapping_feeder>(feeders[0], feeders[1]);
 }
 
@@ -724,7 +751,7 @@ TEST_F(mapping_test, remote_mapping_workflow_neg_4) {
 TEST_F(mapping_test, remote_mapping_workflow_neg_5) {
     remote_mapping_feeder feeders[1], feeder1A;
 
-    create_remote_mapping_feeders(feeders, 1);
+    create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
 
@@ -736,7 +763,7 @@ TEST_F(mapping_test, remote_mapping_workflow_neg_5) {
 TEST_F(mapping_test, remote_mapping_workflow_neg_7) {
     remote_mapping_feeder feeders[2], feeder1A;
 
-    create_remote_mapping_feeders(feeders, 2);
+    create_remote_mapping_feeders(feeders, 2, PDS_MAX_TEP, k_max_vnic);
     feeder1A = feeders[0];
     feeder1A.update_spec(1);
 
@@ -748,8 +775,220 @@ TEST_F(mapping_test, remote_mapping_workflow_neg_7) {
 TEST_F(mapping_test, remote_mapping_workflow_neg_8) {
     remote_mapping_feeder feeders[2];
 
-    create_remote_mapping_feeders(feeders, 2);
+    create_remote_mapping_feeders(feeders, 2, PDS_MAX_TEP, k_max_vnic);
     workflow_neg_8<remote_mapping_feeder>(feeders[0], feeders[1]);
+}
+//---------------------------------------------------------------------
+// Non templatized test cases
+//---------------------------------------------------------------------
+/// \brief update mapping subnet
+TEST_F(mapping_test, DISABLED_remote_mapping_update_subnet) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1);
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.subnet = int2pdsobjkey(2);
+    rmap_update(feeders[0], &spec, RMAP_ATTR_SUBNET);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping fabric encap type
+TEST_F(mapping_test, remote_mapping_update_fab_encap_type) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1);
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.fabric_encap = feeders[0].spec.fabric_encap;
+    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+        spec.fabric_encap.val.vnid = 1;
+    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+        spec.fabric_encap.val.mpls_tag = 1;
+    }
+    rmap_update(feeders[0], &spec, RMAP_ATTR_FAB_ENCAP);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping fabric encap val
+TEST_F(mapping_test, remote_mapping_update_fab_encap_val) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1);
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.fabric_encap = feeders[0].spec.fabric_encap;
+    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        spec.fabric_encap.val.mpls_tag++;
+    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        spec.fabric_encap.val.vnid++;
+    }
+    rmap_update(feeders[0], &spec, RMAP_ATTR_FAB_ENCAP);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping M1 public Tunnel T1 to T2.
+TEST_F(mapping_test, remote_mapping_update_nhtype1) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1);
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.tep = feeders[0].spec.tep;
+    spec.tep = int2pdsobjkey(pdsobjkey2int(spec.tep) + 1);
+    spec.nh_type = PDS_NH_TYPE_OVERLAY;
+    rmap_update(feeders[0], &spec, RMAP_ATTR_NH_TYPE);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping M1 Tunnel T1 to NH group N1.
+TEST_F(mapping_test, DISABLED_remote_mapping_update_nhtype2) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1);
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.tep = feeders[0].spec.tep;
+    spec.nh_group = int2pdsobjkey(pdsobjkey2int(spec.tep) + 1);
+    spec.nh_type = PDS_NH_TYPE_UNDERLAY;
+    rmap_update(feeders[0], &spec, RMAP_ATTR_NH_TYPE);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping M1 NH group N1 to N2.
+TEST_F(mapping_test, DISABLED_remote_mapping_update_nhtype3) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1);
+    feeders[0].spec.nh_type = PDS_NH_TYPE_UNDERLAY;
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.nh_group = feeders[0].spec.nh_group;
+    spec.nh_group = int2pdsobjkey(pdsobjkey2int(spec.nh_group) + 1);
+    spec.nh_type = PDS_NH_TYPE_UNDERLAY;
+    rmap_update(feeders[0], &spec, RMAP_ATTR_NH_TYPE);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping M1 NH group N1 to tep T1.
+TEST_F(mapping_test, DISABLED_remote_mapping_update_nhtype4) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1);
+    feeders[0].spec.nh_type = PDS_NH_TYPE_UNDERLAY;
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.nh_group = feeders[0].spec.nh_group;
+    spec.tep = int2pdsobjkey(pdsobjkey2int(spec.nh_group) + 1);
+    spec.nh_type = PDS_NH_TYPE_OVERLAY;
+    rmap_update(feeders[0], &spec, RMAP_ATTR_NH_TYPE);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping vnic_mac.
+TEST_F(mapping_test, remote_mapping_update_vnic_mac) {
+    if (!apulu()) return;
+
+    uint64_t mac;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1);
+    rmap_create(feeders[0]);
+
+    // trigger
+    mac = MAC_TO_UINT64(feeders[0].spec.vnic_mac);
+    mac++;
+    MAC_UINT64_TO_ADDR(spec.vnic_mac, mac);
+    rmap_update(feeders[0], &spec, RMAP_ATTR_VNIC_MAC);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// --------------------------- END REMOTE MAPPINGS --------------------
