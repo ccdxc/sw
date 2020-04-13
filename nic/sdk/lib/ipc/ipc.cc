@@ -369,9 +369,19 @@ ipc_service_async::new_client_(uint32_t recipient) {
         // messages only from the FD POLL thread
         this->ipc_client_eventfds_[recipient] =
             eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+        
         assert(this->ipc_client_eventfds_[recipient] != -1);
+        SDK_TRACE_DEBUG("0x%x registering eventfd (%u) for client (%u)",
+                        pthread_self(), this->ipc_client_eventfds_[recipient],
+                        recipient);
+
+        this->fd_watch_ms_cb_(this->ipc_client_eventfds_[recipient],
+                              sdk::ipc::client_receive_ms,
+                              &this->client_rx_cb_ctx_[recipient]);
+        
         this->fd_watch_ms_cb_(client->fd(), sdk::ipc::client_receive_ms,
                               &this->client_rx_cb_ctx_[recipient]);
+
     } else {
         this->ipc_client_eventfds_[recipient] = -1;
         this->fd_watch_cb_(client->fd(), sdk::ipc::client_receive,
@@ -403,6 +413,9 @@ ipc_service_async::request(uint32_t recipient, uint32_t msg_code,
         // POLL FD thread to check
         uint64_t buffer = 1;
         write(this->ipc_client_eventfds_[recipient], &buffer, sizeof(buffer));
+
+        SDK_TRACE_DEBUG("0x%x: asking for client check for %u", pthread_self(),
+                        recipient);
     } else {
         this->client_receive(recipient);
     }
@@ -416,12 +429,19 @@ ipc_service_async::client_receive(uint32_t sender) {
         std::dynamic_pointer_cast<zmq_ipc_client_async>(
             this->get_client_(sender));
 
-    SDK_TRACE_DEBUG("0x%x: client receive check", pthread_self());
+    SDK_TRACE_DEBUG("0x%x: client receive check for %u", pthread_self(),
+        sender);
     
     if (this->ipc_client_eventfds_[sender] != -1) {
         // Read the eventfd to clear the flag
         uint64_t buffer;
-        read(this->ipc_client_eventfds_[sender], &buffer, sizeof(buffer));
+        int rc;
+
+        do {
+            rc = read(this->ipc_client_eventfds_[sender], &buffer,
+                      sizeof(buffer));
+        } while (rc != -1);
+        
     }
 
     while (true) {
@@ -526,9 +546,12 @@ ipc_service::server_receive(void) {
 void
 ipc_service::eventfd_receive(void) {
     uint64_t buffer;
+    int rc;
 
     // Clear the eventfd flag
-    read(this->eventfd_, &buffer, sizeof(buffer));
+    do {
+        rc = read(this->eventfd_, &buffer, sizeof(buffer));
+    } while (rc != -1);
     
     if (!this->hold_queue_.empty()) {
         ipc_msg_ptr msg = this->hold_queue_.front();

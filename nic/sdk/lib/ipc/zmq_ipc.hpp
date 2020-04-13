@@ -7,7 +7,7 @@
 
 #include <memory>
 #include <vector>
-
+#include <mutex>
 #include <stddef.h>
 #include <stdint.h>
 #include <zmq.h>
@@ -78,8 +78,11 @@ public:
                   const void *cookie, uint32_t tag, bool send_pointer);
     void recv_msg(zmq_ipc_user_msg_ptr msg);
 protected:
+    void zlock(void);
+    void zunlock(void);
     uint32_t id_;
     void     *zsocket_;
+    std::mutex zlock_;
 private:
     uint32_t next_serial_;
 };
