@@ -93,7 +93,7 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printSubnetHeader() {
-	hdrLine := strings.Repeat("-", 146)
+	hdrLine := strings.Repeat("-", 149)
 	fmt.Printf("\n")
 	fmt.Printf("RtTblID - Route Table IDs (IPv4/IPv6)           HostIf    - Host interface subnet is deployed on\n")
 	fmt.Printf("IngSGID - Ingress Security Group ID (IPv4/IPv6) EgSGID  - Egress Security Group ID (IPv4/IPv6)\n")
@@ -103,8 +103,8 @@ func printSubnetHeader() {
 		"ID", "VpcID", "HostIf",
 		"IPv4Prefix", "VR IPv4", "VR MAC")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-20s%-40s%-40s%-40s%-3s\n",
-		"", "RtTblID", "IngSGID", "EgSGID", "ToS")
+	fmt.Printf("%-10s%-40s%-40s%-40s%-16s%-3s\n",
+		"", "RtTblID", "IngSGID", "EgSGID", "Encap", "ToS")
 	fmt.Println(hdrLine)
 }
 
@@ -140,26 +140,28 @@ func printSubnet(subnet *pds.Subnet) {
 				egressStr = "-"
 			}
 			if i == 0 {
-				fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s\n%-20s%-40s%-40s%-40s%-3d\n",
+				fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s\n%-10s%-40s%-40s%-40s%-16s%-3d\n",
 					uuid.FromBytesOrNil(spec.GetId()).String(),
 					uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
 					utils.IPv4PrefixToStr(spec.GetV4Prefix()),
 					utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
 					utils.MactoStr(spec.GetVirtualRouterMac()), "",
 					uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
-					ingressStr, egressStr, spec.GetToS())
+					ingressStr, egressStr,
+					utils.EncapToString(spec.GetFabricEncap()), spec.GetToS())
 			} else {
-				fmt.Printf("%-60s%-40s%-40s\n", "", ingressStr, egressStr)
+				fmt.Printf("%-50s%-40s%-40s\n", "", ingressStr, egressStr)
 			}
 		}
 	} else {
-		fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s\n%-20s%-40s%-40s%-40s%-3d\n",
+		fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s\n%-10s%-40s%-40s%-40s%-16s%-3d\n",
 			uuid.FromBytesOrNil(spec.GetId()).String(),
 			uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
 			utils.IPv4PrefixToStr(spec.GetV4Prefix()),
 			utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
 			utils.MactoStr(spec.GetVirtualRouterMac()), "",
 			uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
-			ingressStr, egressStr, spec.GetToS())
+			ingressStr, egressStr,
+			utils.EncapToString(spec.GetFabricEncap()), spec.GetToS())
 	}
 }
