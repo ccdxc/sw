@@ -116,7 +116,7 @@ type CfgObjects struct {
 	Workloads  []*workload.Workload              // workloads
 	SgPolicies []*security.NetworkSecurityPolicy // simulated security policies
 	Apps       []*security.App                   // simulated apps
-
+	Ipams      []*network.IPAMPolicy
 }
 
 //ConfigParams contoller

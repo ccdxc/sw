@@ -739,6 +739,18 @@ func (sm *SysModel) modifyConfig() error {
 		workload.Spec.Interfaces[0].Network = ""
 	}
 
+	// Workloads DHCP server for all testbeds is configured with 20.20.<testbed-id>.1
+	server := "20.20.0.1"
+	id, iderr := strconv.ParseInt(sm.Tb.ID(), 10, 64)
+	if iderr == nil {
+		server = fmt.Sprintf("20.20.%v.1",id)
+	}
+
+	for _, ipam := range cfgObjects.Ipams {
+		ipam.Spec.DHCPRelay.Servers[0].IPAddress = server
+		log.Infof("IPAM %v's DHCPServer: %v\n", ipam.Name, ipam.Spec.DHCPRelay.Servers[0].IPAddress)
+	}
+
 	return nil
 }
 

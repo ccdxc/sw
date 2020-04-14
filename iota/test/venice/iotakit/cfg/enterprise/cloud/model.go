@@ -495,6 +495,7 @@ func (cl *CloudCfg) PushConfig() error {
 func (gs *CloudCfg) GetCfgObjects() base.CfgObjects {
 
 	objects := base.CfgObjects{}
+	objects.Ipams = gs.Cfg.ConfigItems.IPAMPs
 
 	return objects
 }

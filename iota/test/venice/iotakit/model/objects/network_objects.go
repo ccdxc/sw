@@ -151,3 +151,18 @@ func (nwc *NetworkCollection) SetEgressSecurityPolicy(policies *NetworkSecurityP
 	}
 	return nil
 }
+
+// SetIPAM sets IPAM on the networks
+func (nwc *NetworkCollection) SetIPAMOnNetwork(network *Network, ipam string) error {
+
+	for _, nw := range nwc.subnets {
+		if nw.Name == network.Name {
+			nw.VeniceNetwork.Spec.IPAMPolicy = ipam
+			err := nwc.Client.UpdateNetwork(nw.VeniceNetwork)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

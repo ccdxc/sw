@@ -217,9 +217,9 @@ var scaleCfgenParams = &Cfgen{
 				Name: "vpc{{iter}}",
 			},
 			Spec: network.VirtualRouterSpec{
-				Type:             "tenant",
-				RouterMACAddress: "{{mac}}",
-				VxLanVNI:         998,
+				Type:              "tenant",
+				RouterMACAddress:  "{{mac}}",
+				VxLanVNI:          998,
 				DefaultIPAMPolicy: "vpc1DHCP0",
 				RouteImportExport: &network.RDSpec{
 					AddressFamily: "l2vpn-evpn",
@@ -261,7 +261,7 @@ var scaleCfgenParams = &Cfgen{
 					Servers: []*network.DHCPServer{
 						&network.DHCPServer{
 							VirtualRouter: "",
-							IPAddress:     "20.20.6.1",
+							IPAddress:     "20.20.{testbed}.1",
 						},
 					},
 				},

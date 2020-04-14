@@ -106,3 +106,16 @@ func NewVPCCollection(client objClient.ObjClient, testbed *testbed.TestBed) *Vpc
 		CollectionCommon: CollectionCommon{Client: client, Testbed: testbed},
 	}
 }
+
+// SetIPAM sets IPAM on the VPC
+func (vpcc *VpcObjCollection) SetIPAM(ipam string) error {
+
+	for _, vpc := range vpcc.Objs {
+		vpc.Obj.Spec.DefaultIPAMPolicy = ipam
+		err := vpcc.Client.UpdateVPC(vpc.Obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

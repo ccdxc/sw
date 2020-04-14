@@ -1,12 +1,14 @@
 package equinix_test
 
 import (
+	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pensando/sw/api/generated/network"
 	iota "github.com/pensando/sw/iota/protos/gogen"
-	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
-	"github.com/pensando/sw/iota/test/venice/iotakit/model/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
+	"github.com/pensando/sw/venice/utils/log"
 
 	uuid "github.com/satori/go.uuid"
 	yaml "gopkg.in/yaml.v2"
@@ -29,141 +31,132 @@ type Subnet struct {
 	} `yaml:"stats"`
 }
 
+var tenant string = "customer0"
+var defaultIpam string
+var serverip string = "20.20.3.1"
+var customIpam string = "dhcp_relay_1"
+var vpcc *objects.VpcObjCollection
+var vpcName string
+
 var _ = Describe("IPAM Tests", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
+
+		// get IPAM policy params of default tenant VRF
+		vpcc, err := getDefaultTenantVPCCollection()
+		Expect(err).Should(Succeed())
+		vpcName = vpcc.Objs[0].Obj.Name
+		defaultIpam = vpcc.Objs[0].Obj.Spec.DefaultIPAMPolicy
+		ip, err := objects.GetIPAMPolicy(ts.model.ConfigClient(), defaultIpam, tenant)
+		Expect(err).Should(Succeed())
+		serverip = ip.PolicyObj.Spec.DHCPRelay.Servers[0].IPAddress
+
+		// create a Custom IPAM policy
+		createIPAMPolicy(customIpam, "", serverip)
+
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
+
+		// get back to default policy on VPC
+		Expect(vpcc.SetIPAM(defaultIpam)).Should(Succeed())
+
+		// delete Custom IPAM policy
+		deleteIPAMPolicy(customIpam)
+
 	})
 
 	Context("IPAM Tests", func() {
 
-		policy1 := "dchp-relay-11"
-		policy2 := "dchp-relay-21"
-		policyTenant := "customer0"
-		policyVrf := ""
-		var ipc *objects.IPAMPolicyCollection
-		var vpcc *objects.VpcObjCollection
-		var nwc *objects.NetworkCollection
-		var p1_uuid string
-
-		It("Create IPAM Policies", func() {
-
-			Skip("Disabling test for sanity")
-			// Add IPAM policy
-			ipc = ts.model.NewIPAMPolicy(policy1, policyTenant, policyVrf, "50.1.1.1")
-			Expect(ipc.Commit()).Should(Succeed())
-
-			// validate policy
-			ValidateIPAMPolicy(ipc.Client, policy1, policyTenant, policyVrf, "50.1.1.1")
-
-			// get policy and save uuid for future validations
-			ip, err := objects.GetIPAMPolicy(ipc.Client, policy1, policyTenant)
-			Expect(err).ShouldNot(HaveOccurred())
-			p1_uuid = ip.PolicyObj.GetUUID()
-		})
-
-		vpcName := "testVPC_IPAM"
 		It("Default IPAM Policy on VPC", func() {
-			// Create VPC
-			Skip("Disabling test for sanity")
-			vpcc = ts.model.NewVPC(policyTenant, vpcName, "0009.0102.0202", 256, policy1)
-			Expect(vpcc.Commit()).Should(Succeed())
 
-			// Get VPC and validate IPAM
-			veniceVpc, err := ts.model.GetVPC(vpcName, policyTenant)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(veniceVpc.Obj.Spec.DefaultIPAMPolicy == policy1).Should(BeTrue())
-		})
-
-		nwName := "testNetwork0_IPAM"
-		var nw_uuid string
-		It("Default IPAM policy on Subnet", func() {
 			Skip("Disabling test for sanity")
-			// Create Subnet
-			nw := &base.NetworkParams{
-				nwName,
-				"20.1.2.0/24",
-				"20.1.2.1",
-				uint32(0x91000 | 0x100),
-				vpcName,
-				policyTenant,
+			// apply customIpam to VPC- this verifies update IPAM on VPC case also
+			//Expect(vpcc.SetIPAM(customIpam)).Should(Succeed())
+
+			// get network from vpc
+			nwc, err := getNetworkCollectionFromVPC(vpcName)
+			Expect(err).Should(Succeed())
+			selNetwork := nwc.Any(1)
+
+			// verify ipam on subnet
+			verifyIPAMonSubnet(selNetwork.Subnets()[0].Name, defaultIpam)
+
+			if ts.tb.HasNaplesHW() {
+				// get workload pair and validate datapath
+				wpc := ts.model.WorkloadPairs().OnNetwork(selNetwork.Subnets()[0]).Any(1)
+				verifyIPAMDataPath(wpc)
 			}
-			nwc = ts.model.NewNetwork(nw)
-			Expect(nwc.Commit()).Should(Succeed())
-
-			// get network
-			veniceNw, err := ts.model.GetNetwork(policyTenant, nwName)
-			Expect(err).ShouldNot(HaveOccurred())
-			nw_uuid = veniceNw.VeniceNetwork.GetUUID()
-
-			// reboot is taking long time before returning any pdsctl output on SIM
-			time.Sleep(60 * time.Second)
-
-			// verify ipam on subnet
-			VerifyIPAMonSubnet(nw_uuid, p1_uuid)
 		})
 
-		var p2_uuid string
-		It("Override IPAM policy on Subnet", func() {
+		It("Override/Remove IPAM policy on Subnet", func() {
+
 			Skip("Disabling test for sanity")
-			// get network
-			veniceNw, err := ts.model.GetNetwork(policyTenant, nwName)
-			Expect(err).ShouldNot(HaveOccurred())
+			// get network from vpc
+			nwc, err := getNetworkCollectionFromVPC(vpcName)
+			Expect(err).Should(Succeed())
 
-			// create new IPAM policy and update network
-			ipc = ts.model.NewIPAMPolicy(policy2, policyTenant, policyVrf, "60.1.1.1")
-			Expect(ipc.Commit()).Should(Succeed())
+			// override customIpam on the subnet
+			selNetwork := nwc.Any(1)
+			Expect(selNetwork.SetIPAMOnNetwork(selNetwork.Subnets()[0], customIpam)).Should(Succeed())
+			
+			// verify ipam on subnet
+			verifyIPAMonSubnet(selNetwork.Subnets()[0].Name, customIpam)
 
-			// validate policy
-			ValidateIPAMPolicy(ipc.Client, policy2, policyTenant, policyVrf, "60.1.1.1")
+			if ts.tb.HasNaplesHW() {
+				// get workload pair and validate datapath
+				wpc := ts.model.WorkloadPairs().OnNetwork(selNetwork.Subnets()[0]).Any(1)
+				verifyIPAMDataPath(wpc)
+			}
 
-			// get policy and save uuid
-			ip, err := objects.GetIPAMPolicy(ipc.Client, policy2, policyTenant)
-			Expect(err).ShouldNot(HaveOccurred())
-			p2_uuid = ip.PolicyObj.GetUUID()
-
-			// oveeride policy on subnet
-			veniceNw.VeniceNetwork.Spec.IPAMPolicy = policy2
-			nwc_upd := objects.NewNetworkCollection(ipc.Client, ipc.Testbed)
-			nwc_upd.AddSubnet(veniceNw)
-			Expect(nwc_upd.Commit()).Should(Succeed())
+			// remove ipam on subnet - it should point to default IPAM policy on VPC
+			Expect(selNetwork.SetIPAMOnNetwork(selNetwork.Subnets()[0], "")).Should(Succeed())
 
 			// verify ipam on subnet
-			VerifyIPAMonSubnet(nw_uuid, p2_uuid)
+			verifyIPAMonSubnet(selNetwork.Subnets()[0].Name, defaultIpam)
+
+			if ts.tb.HasNaplesHW() {
+				// get workload pair and validate datapath
+				wpc := ts.model.WorkloadPairs().OnNetwork(selNetwork.Subnets()[0]).Any(1)
+				verifyIPAMDataPath(wpc)
+			}	
 		})
 
 		It("Multiple IPAM per naples", func() {
+
 			Skip("Disabling test for sanity")
-			// Add another network with default IPAM. first network has overriden policy.
-			// this makes 2 networks with 2 IPAM policies
-			// Create Subnet
-			nwName2 := "testNetwork1_IPAM"
-			nw := &base.NetworkParams{
-				nwName2,
-				"20.2.2.0/24",
-				"20.2.2.1",
-				uint32(0x92000 | 0x100),
-				vpcName,
-				policyTenant,
+			// get networks from vpc
+			nwc, err := getNetworkCollectionFromVPC(vpcName)
+			Expect(err).Should(Succeed())
+
+			if len(nwc.Subnets()) < 2 {
+				Skip("Not enough subnets to verify multiple IPAMs per naples")
 			}
-			nwc2 := ts.model.NewNetwork(nw)
-			Expect(nwc2.Commit()).Should(Succeed())
 
-			// get network
-			veniceNw, err := ts.model.GetNetwork(policyTenant, nwName2)
-			Expect(err).ShouldNot(HaveOccurred())
-			nw2_uuid := veniceNw.VeniceNetwork.GetUUID()
+			selNetwork := nwc.Any(2)
+			// override customIpam on one of the subnets
+			Expect(selNetwork.SetIPAMOnNetwork(selNetwork.Subnets()[0], customIpam)).Should(Succeed())
+			
+			// verify ipam on subnets
+			verifyIPAMonSubnet(selNetwork.Subnets()[0].Name, customIpam)
+			verifyIPAMonSubnet(selNetwork.Subnets()[1].Name, defaultIpam)
 
-			// verify ipam on subnet
-			VerifyIPAMonSubnet(nw2_uuid, p1_uuid)
+			if ts.tb.HasNaplesHW() {	
+				// get workload pair and validate datapath - customIpam
+				wpc := ts.model.WorkloadPairs().OnNetwork(selNetwork.Subnets()[0]).Any(1)
+				verifyIPAMDataPath(wpc)
 
-			// delete Subnet
-			Expect(nwc2.Delete()).Should(Succeed())
+				// get workload pair and validate datapath - defaultIpam
+				wpc = ts.model.WorkloadPairs().OnNetwork(selNetwork.Subnets()[1]).Any(1)
+				verifyIPAMDataPath(wpc)
+			}
+
+			// remove ipam on subnet - it should point to default IPAM policy on VPC
+			Expect(selNetwork.SetIPAMOnNetwork(selNetwork.Subnets()[0], "")).Should(Succeed())
+
 		})
 
 		/*
@@ -183,83 +176,163 @@ var _ = Describe("IPAM Tests", func() {
 			})
 		*/
 
-		It("Remove IPAM policy on Subnet", func() {
+		It("Change Servers in IPAM Policy", func() {
+
 			Skip("Disabling test for sanity")
-			// get network
-			veniceNw, err := ts.model.GetNetwork(policyTenant, nwName)
-			Expect(err).ShouldNot(HaveOccurred())
-			veniceNw.VeniceNetwork.Spec.IPAMPolicy = ""
-			nwc_upd := objects.NewNetworkCollection(ipc.Client, ipc.Testbed)
-			nwc_upd.AddSubnet(veniceNw)
-			Expect(nwc_upd.Commit()).Should(Succeed())
+			// create a test-policy with random dhcp server
+			createIPAMPolicy("test-policy", "", "51.1.1.1")
+
+			// apply "test-policy" Ipam to tenant VPC
+			Expect(vpcc.SetIPAM("test-policy")).Should(Succeed())
+			
+			// get network from vpc
+			nwc, err := getNetworkCollectionFromVPC(vpcName)
+			Expect(err).Should(Succeed())
+			selNetwork := nwc.Any(1)
 
 			// verify ipam on subnet
-			VerifyIPAMonSubnet(nw_uuid, p1_uuid)
+			verifyIPAMonSubnet(selNetwork.Subnets()[0].Name, "test-policy")
+			var wpc *objects.WorkloadPairCollection
+			if ts.tb.HasNaplesHW() {
+				// get workload pair and validate datapath
+				wpc = ts.model.WorkloadPairs().OnNetwork(selNetwork.Subnets()[0]).Any(1)
+				verifyIPAMDataPathFail(wpc)
+			}
+
+			// update test-policy
+			createIPAMPolicy("test-policy", "", serverip)
+			if ts.tb.HasNaplesHW() {
+				// get workload pair and validate datapath
+				verifyIPAMDataPath(wpc)
+			}
+
+			// get back to default policy on VPC
+			Expect(vpcc.SetIPAM(defaultIpam)).Should(Succeed())
+
+			// delete test-policy
+			deleteIPAMPolicy("test-policy")
 		})
 
-		It("Change Servers in IPAM Policy", func() {
-			Skip("Disabling test for sanity")
-			// Get IPAM policy and validate
-			ipc = ts.model.NewIPAMPolicy(policy1, policyTenant, policyVrf, "51.1.1.1")
-			Expect(ipc.Commit()).Should(Succeed())
+		It("Remove IPAM policy on VPC", func() {
 
-			// Get IPAM policy and validate the server
-			ValidateIPAMPolicy(ipc.Client, policy1, policyTenant, policyVrf, "51.1.1.1")
+			Skip("Disabling test for sanity - IPAM policy is still retained on subnet even after deleting from VPC")
+			// remove IPAM policy on tenant vpc
+			Expect(vpcc.SetIPAM("")).Should(Succeed())
+
+			// get network from vpc
+			nwc, err := getNetworkCollectionFromVPC(vpcName)
+			Expect(err).Should(Succeed())
+			selNetwork := nwc.Any(1)
+
+			// verify ipam on subnet
+			verifyNoIPAMonSubnet(selNetwork.Subnets()[0].Name)
+
+			// ping should fail as there no ipam policy configured to get DHCP ip for host
+			var wpc *objects.WorkloadPairCollection
+			if ts.tb.HasNaplesHW() {
+				wpc = ts.model.WorkloadPairs().OnNetwork(selNetwork.Subnets()[0]).Any(1)
+				verifyIPAMDataPathFail(wpc)
+			}
+
+			// get back to default policy on VPC
+			Expect(vpcc.SetIPAM(defaultIpam)).Should(Succeed())
+			if ts.tb.HasNaplesHW() {
+				verifyIPAMDataPath(wpc)
+			}
 		})
-		/*
-			// this test case is failing
-			It("Change IPAM policy for VPC", func() {
-				// change from policy1 to policy2 on VPC
 
-				// get VPC
-				veniceVpc, err := ts.model.GetVPC(vpcName, policyTenant)
-				Expect(err).ShouldNot(HaveOccurred())
-
-				// update default IPAM policy
-				veniceVpc.Obj.Spec.DefaultIPAMPolicy = policy2
-				vpcc_upd := objects.NewVPCCollection(ipc.Client, ipc.Testbed)
-				vpcc_upd.Objs = append(vpcc_upd.Objs, veniceVpc)
-				Expect(vpcc_upd.Commit()).Should(Succeed())
-				veniceVpc, err = ts.model.GetVPC(vpcName, policyTenant)
-				Expect(err).ShouldNot(HaveOccurred())
-				Expect(veniceVpc.Obj.Spec.DefaultIPAMPolicy == policy2).Should(BeTrue())
-
-				// verify ipam on subnet
-				VerifyIPAMonSubnet(nw_uuid, p2_uuid)
-			})
-		*/
-
-		It("Delete IPAM Policies", func() {
-			Skip("Disabling test for sanity")
-			// Delete Subnet
-			Expect(nwc.Delete()).Should(Succeed())
-
-			// Delete VPC
-			Expect(vpcc.Delete()).Should(Succeed())
-
-			//Delete IPAM Policies
-			ipc_upd := objects.NewIPAMPolicyCollection(ipc.Client, ipc.Testbed)
-			ip, err := objects.GetIPAMPolicy(ipc.Client, policy1, policyTenant)
-			Expect(err).ShouldNot(HaveOccurred())
-			ipc_upd.PolicyObjs = append(ipc_upd.PolicyObjs, ip)
-			ip, err = objects.GetIPAMPolicy(ipc.Client, policy2, policyTenant)
-			Expect(err).ShouldNot(HaveOccurred())
-			ipc_upd.PolicyObjs = append(ipc_upd.PolicyObjs, ip)
-			Expect(ipc.Delete()).Should(Succeed())
-		})
 	})
 })
 
-func VerifyIPAMonSubnet(subnet string, ipam string) error {
+func createIPAMPolicy(ipam string, vpc string, serverip string) {
+	ipc := ts.model.NewIPAMPolicy(ipam, tenant, vpc, serverip)
+	Expect(ipc.Commit()).Should(Succeed())
+	// validate policy
+	validateIPAMPolicy(ipam, vpc, serverip)
+}
+
+func deleteIPAMPolicy(ipam string) {
+	ipc := objects.NewIPAMPolicyCollection(ts.model.ConfigClient(), ts.model.Testbed())
+	ip, err := objects.GetIPAMPolicy(ts.model.ConfigClient(), ipam, tenant)
+	Expect(err).ShouldNot(HaveOccurred())
+	ipc.PolicyObjs = append(ipc.PolicyObjs, ip)
+	Expect(ipc.Delete()).Should(Succeed())
+}
+
+func getDefaultTenantVPCCollection() (*objects.VpcObjCollection, error) {
+	vpcs, err := ts.model.ConfigClient().ListVPC(tenant)
+	Expect(err).Should(Succeed())
+
+	if len(vpcs) == 0 {
+		return nil, fmt.Errorf("No VPCs on tenant %s", tenant)
+	}
+	 vpcc = objects.NewVPCCollection(ts.model.ConfigClient(), ts.model.Testbed())
+
+	for _, vrf := range vpcs {
+		if vrf.Spec.Type == "tenant" {
+			vpcc.Objs = append(vpcc.Objs,  &objects.Vpc{Obj: vrf})
+			return vpcc, nil 
+		}
+	}
+
+	return nil, fmt.Errorf("No tenant VPC on %s", tenant)
+}
+
+func getNetworkCollectionFromVPC(vpc string) (*objects.NetworkCollection, error) {
+	nws, err := ts.model.ConfigClient().ListNetwork(tenant)
+	Expect(err).Should(Succeed())
+
+	if len(nws) == 0 {
+		return nil, fmt.Errorf("No Networks on tenant %s", tenant)
+	}
+
+	var nws_vpc []*network.Network
+	match := false
+	count := 0
+	hostworkloads := 8
+	if ts.tb.HasNaplesHW() {
+		hostworkloads = len(ts.model.Workloads().Workloads) / len(ts.model.Hosts().Hosts)
+	}
+	for _, nw := range nws {
+		if nw.Spec.VirtualRouter == vpc {
+			match = true
+			nws_vpc = append(nws_vpc, nw)
+			count++
+			if count == hostworkloads {
+				// stop with number of workloads for now.
+				break
+			}
+		}
+	}
+
+	if match == false {
+		return nil, fmt.Errorf("No Networks on VPC %s", vpc)
+	}
+
+	nwc := objects.NewNetworkCollectionFromNetworks(ts.model.ConfigClient(), nws_vpc)
+	return nwc, nil
+}
+
+func verifyIPAMonSubnet(subnet string, ipam string) error {
 
 	var data Subnet
 
-	// Wait for Naples to finish configuring
+	// get network
+	veniceNw, err := ts.model.GetNetwork(tenant, subnet)
+	Expect(err).ShouldNot(HaveOccurred())
+	nw_uuid := veniceNw.VeniceNetwork.GetUUID()
+
+	// get ipam
+	veniceIpam, err := objects.GetIPAMPolicy(ts.model.ConfigClient(), ipam, tenant)
+	Expect(err).ShouldNot(HaveOccurred())
+	ipam_uuid := veniceIpam.PolicyObj.GetUUID()
+
+	// wait for Naples to finish configuring
 	time.Sleep(5 * time.Second)
 
 	// fetch network from pdsctl. network should have updated IPAM Policy
 	ts.model.ForEachFakeNaples(func(nc *objects.NaplesCollection) error {
-		cmd := "/naples/nic/bin/pdsctl show subnet --id " + subnet + " --yaml"
+		cmd := "/naples/nic/bin/pdsctl show subnet --id " + nw_uuid + " --yaml"
 		cmdOut, err := ts.model.RunFakeNaplesBackgroundCommand(nc, cmd)
 		Expect(err).ShouldNot(HaveOccurred())
 		cmdResp, _ := cmdOut.([]*iota.Command)
@@ -267,27 +340,70 @@ func VerifyIPAMonSubnet(subnet string, ipam string) error {
 			err = yaml.Unmarshal([]byte(cmdLine.Stdout), &data)
 			Expect(err).ShouldNot(HaveOccurred())
 			uid, _ := uuid.FromBytes(data.Spec.DHCPPolicyId[0])
-			Expect(ipam == uid.String()).Should(BeTrue())
+			log.Infof("IPAM_UUID: %v && NW's DHCP Policy ID: %v\n", ipam_uuid, uid.String())
+			Expect(ipam_uuid == uid.String()).Should(BeTrue())
 		}
 		return nil
 	})
 	ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
-		cmd := "/nic/bin/pdsctl show subnet --id " + subnet + " --yaml"
+		cmd := "/nic/bin/pdsctl show subnet --id " + nw_uuid + " --yaml"
 		cmdOut, err := ts.model.RunNaplesCommand(nc, cmd)
+		Expect(err).ShouldNot(HaveOccurred())
 		for _, cmdLine := range cmdOut {
-			Expect(err).ShouldNot(HaveOccurred())
 			err = yaml.Unmarshal([]byte(cmdLine), &data)
 			Expect(err).ShouldNot(HaveOccurred())
 			uid, _ := uuid.FromBytes(data.Spec.DHCPPolicyId[0])
-			Expect(ipam == uid.String()).Should(BeTrue())
+			log.Infof("IPAM_UUID: %v && NW's DHCP Policy ID: %v\n", ipam_uuid, uid.String())
+			Expect(ipam_uuid == uid.String()).Should(BeTrue())
 		}
 		return nil
 	})
 	return nil
 }
 
-func ValidateIPAMPolicy(client objClient.ObjClient, name string, tenant string, vrf string, ip string) {
-	obj, err := objects.GetIPAMPolicy(client, name, tenant)
+func verifyNoIPAMonSubnet(subnet string) error {
+
+	var data Subnet
+
+	// get network
+	veniceNw, err := ts.model.GetNetwork(tenant, subnet)
+	Expect(err).ShouldNot(HaveOccurred())
+	nw_uuid := veniceNw.VeniceNetwork.GetUUID()
+
+	// wait for Naples to finish configuring
+	time.Sleep(5 * time.Second)
+
+	// fetch network from pdsctl. network should have updated IPAM Policy
+	ts.model.ForEachFakeNaples(func(nc *objects.NaplesCollection) error {
+		cmd := "/naples/nic/bin/pdsctl show subnet --id " + nw_uuid + " --yaml"
+		cmdOut, err := ts.model.RunFakeNaplesBackgroundCommand(nc, cmd)
+		Expect(err).ShouldNot(HaveOccurred())
+		cmdResp, _ := cmdOut.([]*iota.Command)
+		for _, cmdLine := range cmdResp {
+			err = yaml.Unmarshal([]byte(cmdLine.Stdout), &data)
+			Expect(err).ShouldNot(HaveOccurred())
+			//uid, _ := uuid.FromBytes(data.Spec.DHCPPolicyId[0])
+			//Expect(uid.String() == ).Should(BeTrue())
+		}
+		return nil
+	})
+	ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+		cmd := "/nic/bin/pdsctl show subnet --id " + nw_uuid + " --yaml"
+		cmdOut, err := ts.model.RunNaplesCommand(nc, cmd)
+		Expect(err).ShouldNot(HaveOccurred())
+		for _, cmdLine := range cmdOut {
+			err = yaml.Unmarshal([]byte(cmdLine), &data)
+			Expect(err).ShouldNot(HaveOccurred())
+			//uid, _ := uuid.FromBytes(data.Spec.DHCPPolicyId[0])
+			//Expect(ipam_uuid == uid.String()).Should(BeTrue())
+		}
+		return nil
+	})
+	return nil
+}
+
+func validateIPAMPolicy(name string, vrf string, ip string) {
+	obj, err := objects.GetIPAMPolicy(ts.model.ConfigClient(), name, tenant)
 	// for now, validate by getting from venice by name
 	// can add netagent validation if reqd
 	Expect(err).ShouldNot(HaveOccurred())
@@ -300,4 +416,28 @@ func ValidateIPAMPolicy(client objClient.ObjClient, name string, tenant string, 
 		}
 	}
 	Expect(match == true).Should(BeTrue())
+}
+
+func verifyIPAMDataPath(wpc *objects.WorkloadPairCollection) {
+	Expect(len(wpc.Pairs) != 0).Should(BeTrue())
+	
+	// Get dynamic IP for workloadPair
+	err := wpc.WorkloadPairGetDynamicIps(ts.model.Testbed())
+	Expect(err).Should(Succeed())
+
+	Eventually(func() error {
+		return ts.model.PingPairs(wpc)
+	}).Should(Succeed())
+}
+
+func verifyIPAMDataPathFail(wpc *objects.WorkloadPairCollection) {
+	Expect(len(wpc.Pairs) != 0).Should(BeTrue())
+
+	// Get dynamic IP for workloadPair
+	err := wpc.WorkloadPairGetDynamicIps(ts.model.Testbed())
+	Expect(err).Should(Succeed())
+
+	Eventually(func() error {
+		return ts.model.PingFails(wpc)
+	}).Should(Succeed())
 }

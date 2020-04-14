@@ -596,3 +596,52 @@ func (wc *WorkloadCollection) RemotePairsWithinNetwork() *WorkloadPairCollection
 
 	return collection
 }
+
+func (wpc *WorkloadPairCollection) WorkloadPairGetDynamicIps(tb *testbed.TestBed) error {
+	cmds := []*iota.Command{}
+	for _, pair := range wpc.Pairs {
+		log.Infof("Workload pair %v-%v getting IPs dynamically.", pair.First.GetInterface(), pair.Second.GetInterface())
+		cmdF := iota.Command{
+			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
+			Command:    fmt.Sprintf("dhclient -r %s && dhclient %s", pair.First.GetInterface(), pair.First.GetInterface()),
+			EntityName: pair.First.Name(),
+			NodeName:   pair.First.NodeName(),
+		}
+		cmds = append(cmds, &cmdF)
+
+		cmdS := iota.Command{
+			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
+			Command:    fmt.Sprintf("dhclient -r %s && dhclient %s", pair.Second.GetInterface(), pair.Second.GetInterface()),
+			EntityName: pair.Second.Name(),
+			NodeName:   pair.Second.NodeName(),
+		}
+		cmds = append(cmds, &cmdS)
+	}
+
+	trmode := iota.TriggerMode_TRIGGER_PARALLEL
+	if !tb.HasNaplesSim() {
+		trmode = iota.TriggerMode_TRIGGER_NODE_PARALLEL
+	}
+
+	trigMsg := &iota.TriggerMsg{
+		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
+		TriggerMode: trmode,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Commands:    cmds,
+	}
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(tb.Client().Client)
+	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to trigger dhclient on workloadpair. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
+	}
+
+	for _, cmdResp := range triggerResp.Commands {
+		if cmdResp.ExitCode != 0 {
+			return fmt.Errorf("Getting IP failed for workload pair. Resp: %#v", cmdResp)
+		}
+	}
+
+	return nil
+}
