@@ -372,3 +372,61 @@ func routeTableShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
+var vrfStatusShowCmd = &cobra.Command{
+	Use:   "vrf",
+	Short: "show vrf information",
+	Long:  "show vrf information",
+	Args:  cobra.NoArgs,
+	RunE:  routingVrfStatusShowCmdHandler,
+}
+
+const (
+	rtgVrfStatusGlobalStr = `-----------------------------------
+Routing Vrf Status
+-----------------------------------
+EntityIndex            : %v
+VrfName                : %v
+Description            : %v
+OperStatus             : %v
+OperReason             : %v
+NumInterfaces          : %v
+-----------------------------------
+`
+)
+
+func routingVrfStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := types.NewLimSvcClient(c)
+
+	req := &types.LimVrfGetRequest{}
+	respMsg, err := client.LimVrfGet(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("Getting routing vrf status failed (%s)", err)
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	vrfs := []*utils.ShadowLimVrfStatus{}
+	for _, i := range respMsg.Response {
+		vrf := utils.NewLimVrfGetResp(i.Status)
+		if doJSON {
+			vrfs = append(vrfs, vrf)
+		} else {
+			fmt.Printf(rtgVrfStatusGlobalStr, vrf.EntityIndex, vrf.VrfName, vrf.Description, vrf.OperStatus, vrf.OperReason, vrf.NumInterfaces)
+		}
+	}
+	if doJSON {
+		b, _ := json.MarshalIndent(vrfs, "", "  ")
+		fmt.Println(string(b))
+	}
+	return nil
+}

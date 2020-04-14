@@ -1462,3 +1462,28 @@ func NewEvpnBdIf(in *pds.EvpnBdIf) *ShadowEvpnBdIf {
 		Status: NewEvpnBdIfStatus(in.Status),
 	}
 }
+
+// ShadowLimVrfStatus shadows the LimVrfStatus for CLI purposes
+type ShadowLimVrfStatus struct {
+	*pds.LimVrfStatus
+	EntityIndex   uint32
+	VrfName       string
+	Desc          string
+	Description   string
+	OperStatus    string
+	OperReason    string
+	NumInterfaces uint32
+}
+
+// NewLimVrfGetResp creates a new shadow of the LimVrfStatus
+func NewLimVrfGetResp(status *pds.LimVrfStatus) *ShadowLimVrfStatus {
+	return &ShadowLimVrfStatus{
+		LimVrfStatus:  status,
+		EntityIndex:   status.EntityIndex,
+		VrfName:       status.VrfName,
+		Description:   status.Desc,
+		OperReason:    strings.TrimPrefix(status.OperReason.String(), "OPR_RSN_"),
+		OperStatus:    strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
+		NumInterfaces: status.NumInterfaces,
+	}
+}

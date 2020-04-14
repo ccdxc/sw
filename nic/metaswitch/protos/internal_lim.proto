@@ -17,6 +17,7 @@ import "types.proto";
 service LimSvc {
   rpc LimIfStatusGet (LimIfStatusGetRequest) returns (LimIfStatusGetResponse) {}
   rpc LimIfAddrTableGet (LimIfAddrTableGetRequest) returns (LimIfAddrTableGetResponse) {}
+  rpc LimVrfGet (LimVrfGetRequest) returns (LimVrfGetResponse) {}
 }
 
 enum LimIfOperStatus {
@@ -53,7 +54,7 @@ enum LimIfLoopbackMode {
   MAC_LOOPBACK = 1;
 }
 
-enum LimIfOperReason {
+enum LimOperReason {
   OPR_RSN_EMPTY = 0;
   OPR_RSN_NONE = 1;
   OPR_RSN_ENT_NOT_UP = 2;
@@ -104,7 +105,7 @@ message LimIfStatus {
   // Wrapping count of the number of link flaps detected.
   uint32            FlapCount    = 10 [(venice.pdsaFields) = {Field: "flap_count"}];
   // The reason for the interface to be in its current oper status.
-  LimIfOperReason   OperReason   = 11 [(venice.pdsaFields) = {Field: "oper_reason"}];
+  LimOperReason     OperReason   = 11 [(venice.pdsaFields) = {Field: "oper_reason"}];
 }
 
 message LimIfStatusKey {
@@ -136,7 +137,7 @@ message LimIfStatusGetRequest {
   repeated LimIfStatusKeyHandle Request = 1;
 }
 
-enum LimIfAddrOperStatus {
+enum LimOperStatus {
   OPER_STATUS_NONE        = 0;
   OPER_STATUS_UP          = 1;
   OPER_STATUS_DOWN        = 2;
@@ -160,7 +161,7 @@ message LimIfAddrTableStatus {
   // The IP address to be assigned.
   types.IPAddress     IPAddr       = 3 [(venice.pdsaFields) = {Field:"ipaddress", GetKeyOidAddrIndex: "AMB_LIM_L3_ADDR_IPADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_LIM_L3_ADDR_IPDDR_TYP_INDEX", AddrTypeFieldName: "ipaddr_type", AddrLenFieldName: "ipaddress_len"}];
   // Operational status of the address.
-  LimIfAddrOperStatus OperStatus   = 4 [(venice.pdsaFields) = {Field:"oper_status"}];
+  LimOperStatus       OperStatus   = 4 [(venice.pdsaFields) = {Field:"oper_status"}];
 }
 
 message LimIfAddrTableKey {
@@ -191,4 +192,57 @@ message LimIfAddrTableKeyHandle {
 // Lim Interface status get request
 message LimIfAddrTableGetRequest {
   repeated LimIfAddrTableKeyHandle Request = 1;
+}
+
+// LIM Vrf table
+message LimVrfStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_LIM_VRF_OID_LEN",
+    Mib:    "limVrfTable"
+  };
+
+  // Identifies a DC-LIM entity
+  uint32        EntityIndex   = 1 [(venice.pdsaFields) = {Field:"entity_index", GetKeyOidIndex: "AMB_LIM_VRF_ENT_IX_INDEX"}];
+  // The VRF name
+  string        VrfName       = 2 [(venice.pdsaFields) = {Field:"vrf_name", GetKeyOidIndex: "AMB_LIM_VRF_NAME_INDEX", GetKeyOidLenIndex: "AMB_LIM_VRF_NAME_LEN_INDEX"}];
+  // A description of the VRF
+  string        Desc          = 3 [(venice.pdsaFields) = {Field: "vrf_desc"}];
+  // Operational status of the VRF
+  LimOperStatus OperStatus    = 4 [(venice.pdsaFields) = {Field: "oper_status"}];
+  // The number of interfaces enslaved to this VRF
+  uint32        NumInterfaces = 5 [(venice.pdsaFields) = {Field: "num_interfaces"}];
+  // The reason for the VRF to be in its current oper status
+  LimOperReason OperReason    = 6 [(venice.pdsaFields) = {Field: "oper_reason"}];
+}
+
+// LIM vrf key object
+message LimVrfStatusKey {
+  uint32 EntityIndex  = 1;
+  string VrfName      = 2;
+}
+
+//LIM vrf object
+message LimVrf {
+  LimVrfStatus Status = 1;
+}
+
+// LIM vrf get response
+message LimVrfGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated LimVrf Response  = 2;
+}
+
+// Lim vrf key handle
+message LimVrfKeyHandle {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_LIM_VRF_OID_LEN",
+    Mib:     "limVrfTable"
+    SpecMsg: "LimVrfStatus"
+  };
+  LimVrfStatusKey Key = 1;
+}
+
+// Lim vrf get request
+message LimVrfGetRequest {
+  repeated LimVrfKeyHandle Request = 1;
 }
