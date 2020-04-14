@@ -72,14 +72,23 @@ targets:
   #  - build-athena-x86
   #  - build-athena-arm
 
-  athena_app/standalone_compile:
-    commands: ["sh", "-c", "cd /sw/ && tar -zxvf athena.tar.gz  && cd pensando_v1.0/athena_app && make ARCH=aarch64"]
+  athena_app/standalone_arm_compile:
+    commands: ["sh", "-c", "cd /sw/ && tar -zxvf athena-arm.tar.gz  && cd pensando_v1.0/athena_app && make ARCH=aarch64"]
     owners: ["email:murali@pensando.io"]
     area:
     sub-area:
     feature:
     build-dependencies:
     - build-athena-customer-arm
+
+  athena_app/standalone_x86_compile:
+    commands: ["sh", "-c", "cd /sw/ && tar -zxvf athena-x86.tar.gz  && cd pensando_v1.0/athena_app && make"]
+    owners: ["email:murali@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-athena-customer-x86
 
 cache:
   name: "sw"

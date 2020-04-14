@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
-from os import system, mkdir, chdir, environ
-from  shutil import copytree, ignore_patterns, make_archive
+from os import system, mkdir, chdir, path, makedirs, getcwd, environ
+from  shutil import copytree, ignore_patterns, make_archive, copyfile
 import argparse
+from getDepHeaders import Parser
 
 asic = environ.get('ASIC', 'capri')
 
@@ -60,23 +61,24 @@ def copy_gen (dest, arch="aarch64"):
         TODO: Handle Exceptions
     """
     if arch == "all" :
-        copytree("build/x86_64/athena/{0}/lib".format(asic),
+
+        copytree("nic/build/x86_64/athena/{0}/lib".format(asic),
              "{0}/nic/build/x86_64/athena/{1}/lib".format(dest, asic))
 
-        copytree("build/x86_64/athena/{0}/gen/p4gen/p4/include".format(asic),
-              "{0}/nic/build/x86_64/athena/{1}/gen/p4gen/p4/include".format(dest, asic))
+        #copytree("build/x86_64/athena/{0}/gen/p4gen/p4/include".format(asic),
+        #      "{0}/nic/build/x86_64/athena/{1}/gen/p4gen/p4/include".format(dest, asic))
 
-        copytree("build/aarch64/athena/{0}/lib".format(asic),
+        copytree("nic/build/aarch64/athena/{0}/lib".format(asic),
              "{0}/nic/build/aarch64/athena/{1}/lib".format(dest, asic))
 
-        copytree("build/aarch64/athena/{0}/gen/p4gen/p4/include".format(asic),
-              "{0}/nic/build/aarch64/athena/{1}/gen/p4gen/p4/include".format(dest, asic))
+        #copytree("build/aarch64/athena/{0}/gen/p4gen/p4/include".format(asic),
+        #      "{0}/nic/build/aarch64/athena/{1}/gen/p4gen/p4/include".format(dest, asic))
     else :
-        copytree("build/{0}/athena/{1}/lib".format(arch, asic),
+        copytree("nic/build/{0}/athena/{1}/lib".format(arch, asic),
              "{0}/nic/build/{1}/athena/{2}/lib".format(dest, arch, asic))
 
-        copytree("build/{0}/athena/{1}/gen/p4gen/p4/include".format(arch, asic),
-              "{0}/nic/build/{1}/athena/{2}/gen/p4gen/p4/include".format(dest, arch, asic))
+        #copytree("build/{0}/athena/{1}/gen/p4gen/p4/include".format(arch, asic),
+        #      "{0}/nic/build/{1}/athena/{2}/gen/p4gen/p4/include".format(dest, arch, asic))
 
 
 def copy_test_app (dest="nic"):
@@ -84,11 +86,12 @@ def copy_test_app (dest="nic"):
         Copy athena_app code except for module.mk 
         and blg_pkg_athena files.
     """
-    copytree("apollo/test/athena_app", 
+    copytree("nic/apollo/test/athena_app", 
              "{0}/athena_app".format(dest),
-             ignore=ignore_patterns("*.mk", "bld_pkg_athena", "*.sh"))
+             ignore=ignore_patterns("*.mk", "bld_pkg_athena", "*.sh", "*.py*"))
 
-def copy_includes (dest):
+def copy_includes (dest, arch):
+    """
     copytree("hal/third-party/spdlog/include", 
              "{0}/nic/hal/third-party/spdlog/include".format(dest))
     copytree("sdk/dpdk/build/include", 
@@ -139,6 +142,7 @@ def copy_includes (dest):
              ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
     copytree("sdk/platform/ring","{0}/nic/sdk/platform/ring".format(dest), 
              ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
+            
     copytree("sdk/platform/fru","{0}/nic/sdk/platform/fru".format(dest), 
              ignore=ignore_patterns("*.cc", "*.mk", "Makefile"))
     copytree("sdk/platform/devapi","{0}/nic/sdk/platform/devapi".format(dest), 
@@ -153,28 +157,70 @@ def copy_includes (dest):
         "{0}/nic/sdk/third-party/googletest-release-1.8.0/googletest/include/".format(dest))
     copytree("sdk/third-party/boost/include/", 
         "{0}/nic/sdk/third-party/boost/include/".format(dest))
+    """
+    parser = Parser(rwd="/usr/src/github.com/pensando/sw", arch=arch) 
+    hfiles = parser.process("nic/apollo/test/athena_app")
+    for src in hfiles:
+        dirIdx = src.rfind("/")
+        print "file is {0}, dirIdx is {1}".format(src, dirIdx)
+        dstDir = "{0}/{1}".format(dest, src[:dirIdx])
+        if not path.exists(dstDir):
+            makedirs(dstDir)
+        copyfile(src, "{0}/{1}".format(dest, src))
+    """
+       This script does not resolve .h/.hpp files which are #defined.
+       ex:
+       #  define BOOST_USER_CONFIG <boost/config/user.hpp>
+       #  include BOOST_USER_CONFIG
+       until this support comes in copy these files statically.
+    """
+    static_dirs = ["nic/sdk/third-party/boost/include/boost/mpl/aux_/preprocessed/gcc",
+                   "nic/sdk/third-party/boost/include/boost/mpl/vector"]
+    for d in static_dirs :
+        copytree(d, "{0}/{1}".format(dest, d))
+
+    static_files = ["nic/sdk/third-party/boost/include/boost/config/user.hpp",
+                    "nic/sdk/third-party/boost/include/boost/mpl/aux_/config/typeof.hpp",
+                    "nic/sdk/third-party/boost/include/boost/mpl/front_fwd.hpp",
+                    "nic/sdk/third-party/boost/include/boost/mpl/pop_front_fwd.hpp",
+                    "nic/sdk/third-party/boost/include/boost/mpl/pop_back_fwd.hpp",
+                    "nic/sdk/third-party/boost/include/boost/mpl/back_fwd.hpp",
+                    "nic/sdk/third-party/boost/include/boost/mpl/plus.hpp",
+                    "nic/sdk/third-party/boost/include/boost/mpl/aux_/arithmetic_op.hpp",
+                    "nic/sdk/third-party/boost/include/boost/mpl/aux_/largest_int.hpp",
+                    "nic/sdk/third-party/boost/include/boost/mpl/minus.hpp"]
+    for fp in static_files:
+        idx = fp.rfind("/")
+        src_dir = "{0}/{1}".format(dest, fp[:idx])
+        if not path.exists(src_dir):
+            makedirs(src_dir)
+        copyfile(fp, "{0}/{1}".format(dest, fp))
+    """   
     copytree("third-party/gflags/include/gflags", 
              "{0}/nic/third-party/gflags/include/gflags".format(dest))
     copytree("sdk/third-party/zmq/include", 
              "{0}/nic/sdk/third-party/zmq/include".format(dest))
-
+    """
 if __name__ == '__main__':
 
     args = parse_input()
-    chdir("/usr/src/github.com/pensando/sw/nic")
+    chdir("/usr/src/github.com/pensando/sw")
     dst_folder = "_".join([args.dest,args.version])
     mkdir(dst_folder)
+    chdir("/usr/src/github.com/pensando/sw/nic")
     build(args.arch)
+    chdir("/usr/src/github.com/pensando/sw")
     copy_gen(dst_folder, args.arch)
-    copy_includes(dst_folder)
+    copy_includes(dst_folder, args.arch)
     copy_test_app(dst_folder)
     modifyMakeFile(dst_folder)
 
-    src = "/usr/src/github.com/pensando/sw/nic/{0}".format(dst_folder)
-    dest = "/sw/{0}.tar.gz".format(args.output)
+    src = "/usr/src/github.com/pensando/sw/{0}".format(dst_folder)
+    dest = "/sw/{0}".format(args.output)
     print "Starting to archive {0} folder to {1}.tar.gz". format(src, dest)
     #make_archive(dest, "gztar", "{0}".format(dst_folder))
     system("tar -zvcf  /sw/{0}.tar.gz pensando_v1.0".format(args.output))
     print "Clean up the {0} folder".format(dst_folder)
     system("rm -rf {0}".format(dst_folder))
+    chdir("/usr/src/github.com/pensando/sw/nic")
     build(args.arch, True)
