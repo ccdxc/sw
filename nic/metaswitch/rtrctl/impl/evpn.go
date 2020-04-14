@@ -453,3 +453,59 @@ func evpnBdStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
+var evpnBdIntfShowCmd = &cobra.Command{
+	Use:   "interface",
+	Short: "show EVPN BD Interface information",
+	Long:  "show EVPN BD Interface information",
+	Args:  cobra.NoArgs,
+	RunE:  evpnBdIntfShowCmdHandler,
+}
+
+const (
+	evpnBdIfDetStr = `EVPN BD details
+------------------------------------
+EntityIndex    : %v
+EviIndex       : %v
+IfIndex        : %v
+OperStatus     : %v
+OperReason     : %v
+------------------------------------
+`
+)
+
+func evpnBdIntfShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := pegasusClient.NewEvpnSvcClient(c)
+
+	req := &pegasusClient.EvpnBdIfGetRequest{}
+	respMsg, err := client.EvpnBdIfGet(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("Getting evpn status failed (%s)", err)
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	var bds []*utils.ShadowEvpnBdIf
+	for _, p := range respMsg.Response {
+		bd := utils.NewEvpnBdIf(p)
+		if doJSON {
+			bds = append(bds, bd)
+		} else {
+			fmt.Printf(evpnBdIfDetStr, bd.Status.EntityIndex, bd.Status.EviIndex, bd.Status.IfId, bd.Status.OperStatus, bd.Status.OperReason)
+		}
+	}
+	if doJSON {
+		b, _ := json.MarshalIndent(bds, "", "  ")
+		fmt.Println(string(b))
+	}
+	return nil
+}

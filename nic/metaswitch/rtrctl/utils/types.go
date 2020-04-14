@@ -1430,3 +1430,35 @@ func NewEvpnBd(in *pds.EvpnBd) *ShadowEvpnBd {
 		Status: NewEvpnBdStatus(in.Status),
 	}
 }
+
+// ShadowEvpnBdIfStatus shadows the EvpnBdIfStatus for CLI purposes
+type ShadowEvpnBdIfStatus struct {
+	EntityIndex uint32
+	EviIndex    uint32
+	OperStatus  string
+	OperReason  string
+	IfId        uint32
+	*pds.EvpnBdIfStatus
+}
+
+func NewEvpnBdIfStatus(in *pds.EvpnBdIfStatus) ShadowEvpnBdIfStatus {
+	return ShadowEvpnBdIfStatus{
+		EntityIndex:    in.EntityIndex,
+		EviIndex:       in.EviIndex,
+		IfId:           in.IfId,
+		OperStatus:     strings.TrimPrefix(in.OperStatus.String(), "EVPN_OPER_STATUS_"),
+		OperReason:     strings.TrimPrefix(in.OperReason.String(), "EVPN_"),
+		EvpnBdIfStatus: in,
+	}
+}
+
+// ShadowEvpnBdIf shadows the EvpnBdIf for CLI purposes
+type ShadowEvpnBdIf struct {
+	Status ShadowEvpnBdIfStatus
+}
+
+func NewEvpnBdIf(in *pds.EvpnBdIf) *ShadowEvpnBdIf {
+	return &ShadowEvpnBdIf{
+		Status: NewEvpnBdIfStatus(in.Status),
+	}
+}

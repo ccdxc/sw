@@ -31,6 +31,7 @@ service EvpnSvc
   rpc EvpnIpVrfRtGet (EvpnIpVrfRtGetRequest) returns (EvpnIpVrfRtGetResponse) {}
   rpc EvpnMacIpGet  (EvpnMacIpGetRequest) returns (EvpnMacIpGetResponse) {}
   rpc EvpnBdGet (EvpnBdGetRequest) returns (EvpnBdGetResponse) {}
+  rpc EvpnBdIfGet (EvpnBdIfGetRequest) returns (EvpnBdIfGetResponse) {}
 }
 
 // EVPN RD/RT config types - manual or auto-generated
@@ -470,4 +471,45 @@ message EvpnBd {
 message EvpnBdGetResponse {
   types.ApiStatus ApiStatus = 1;
   repeated EvpnBd Response  = 2;
+}
+
+message EvpnBdIfStatus {
+  // Identifies a DC-EVPN entity
+  uint32         EntityIndex  = 1;
+  // Index identifying the EVPN instance
+  uint32         EviIndex     = 2;
+  // Interface index
+  uint32         IfId         = 3;
+  // Operational status of the bridge domain
+  EvpnOperStatus OperStatus   = 4;
+  // The reason for the bridge domain to be in its current oper status
+  EvpnOperReason OperReason   = 5;
+}
+
+// EVPN BD Table Key
+message EvpnBdIfKey {
+  uint32 EntityIndex = 1;
+  uint32 EviIndex    = 2;
+  uint32 IfId        = 3;
+}
+
+// EVPN BD Table key handle for get and delete
+message EvpnBdIfKeyHandle {
+  EvpnBdIfKey Key = 1;
+}
+
+// EVPN MAC IP get request
+message EvpnBdIfGetRequest {
+  repeated EvpnBdIfKeyHandle Request = 1;
+}
+
+// EVPN BD
+message EvpnBdIf {
+  EvpnBdIfStatus Status = 1 [(gogoproto.jsontag) = "status,omitempty"];
+}
+
+// EVPN BD get response
+message EvpnBdIfGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated EvpnBdIf Response  = 2;
 }

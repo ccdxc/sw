@@ -323,6 +323,12 @@
 		EvpnBdGetRequest
 		EvpnBd
 		EvpnBdGetResponse
+		EvpnBdIfStatus
+		EvpnBdIfKey
+		EvpnBdIfKeyHandle
+		EvpnBdIfGetRequest
+		EvpnBdIf
+		EvpnBdIfGetResponse
 */
 package pds
 
