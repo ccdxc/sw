@@ -328,7 +328,15 @@ func (sm *Statemgr) OnEndpointUpdate(epinfo *ctkit.Endpoint, nep *workload.Endpo
 	log.Infof("Got EP update. %v", nep)
 	epinfo.ObjectMeta = nep.ObjectMeta
 
-	sm.mbus.UpdateObjectWithReferences(epinfo.MakeKey("cluster"), convertEndpoint(&epinfo.Endpoint), references(epinfo))
+	if epinfo.Endpoint.Status.Network != nep.Status.Network {
+		log.Infof("Network updated for EP %v from %v to %v", nep.Name, epinfo.Endpoint.Status.Network, nep.Status.Network)
+		sm.mbus.DeleteObjectWithReferences(epinfo.MakeKey("cluster"), convertEndpoint(&epinfo.Endpoint), references(epinfo))
+		epinfo.Endpoint.Spec = nep.Spec
+		epinfo.Endpoint.Status = nep.Status
+		sm.mbus.AddObjectWithReferences(epinfo.MakeKey("cluster"), convertEndpoint(&epinfo.Endpoint), references(epinfo))
+	} else {
+		sm.mbus.UpdateObjectWithReferences(epinfo.MakeKey("cluster"), convertEndpoint(&epinfo.Endpoint), references(epinfo))
+	}
 
 	if nep.Status.Migration == nil || nep.Status.Migration.Status == workload.EndpointMigrationStatus_DONE.String() {
 		return nil

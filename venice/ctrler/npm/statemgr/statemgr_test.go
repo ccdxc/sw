@@ -9774,6 +9774,32 @@ func TestWatcherWithFlowExportCreateDelete(t *testing.T) {
 
 }
 
+func TestEndpointUpdate(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create a network
+	err = createNetwork(t, stateMgr, "default", "network-1000", "10.1.1.0/24", "10.1.1.254", 1000)
+	AssertOk(t, err, "Error creating the network")
+
+	// create a network
+	err = createNetwork(t, stateMgr, "default", "network-2000", "20.1.1.0/24", "20.1.1.254", 2000)
+	AssertOk(t, err, "Error creating the network")
+
+	ep, err := createEndpoint(stateMgr, "default", "test-ep-aaaa.bbbb.cccc", "network-1000")
+	AssertOk(t, err, "Error while creating EP")
+	Assert(t, ep != nil, "EP was nil")
+
+	// Create call gets translated to Update call by ctkit, if the object already exists
+	ep, err = createEndpoint(stateMgr, "default", "test-ep-aaaa.bbbb.cccc", "network-2000")
+	AssertOk(t, err, "Error while updating EP")
+	Assert(t, ep != nil, "EP was nil")
+}
+
 func TestMain(m *testing.M) {
 	// init tsdb client
 	tsdbOpts := &tsdb.Opts{
