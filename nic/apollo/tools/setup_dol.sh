@@ -81,7 +81,7 @@ function start_dhcp_server() {
 }
 
 function start_model () {
-    $PDSPKG_TOPDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
+    $PDSPKG_TOPDIR/apollo/test/tools/$PIPELINE/start-model.sh &
 }
 
 function start_process () {

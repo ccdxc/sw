@@ -15,7 +15,7 @@ cleanup () {
 cleanup
 
 $NICDIR/apollo/tools/apollo/start-agent-sim.sh > agent.log 2>&1 &
-$NICDIR/apollo/test/tools/apollo/start-apollo-model.sh &
+$NICDIR/apollo/test/tools/apollo/start-model.sh &
 
 echo 'Sleeping for 1.5 minutes till agent start listening'
 sleep 90
