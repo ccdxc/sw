@@ -60,7 +60,7 @@ pipeline_p4_hbm_init (p4pd_cfg_t *p4pd_cfg, bool hw_init = true)
 
     if (hw_init) {
         ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
-    else {
+    } else {
         ret = sdk::asic::pd::asicpd_set_hbm_table_base_addr();
     }
     return ret;
