@@ -94,7 +94,7 @@ alerts_generator::raise_alert_(void) {
     cout << "Raising alert " << get_alert_name(alert_type)
          << " with msg " <<  alert_msg << endl;
 #endif
-    recorder_->alert((operd_alerts_t)get_alert_type_(), alert_msg.c_str());
+    recorder_->alert(alert_type, alert_msg.c_str());
     return;
 }
 

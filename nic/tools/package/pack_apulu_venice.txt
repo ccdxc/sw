@@ -32,3 +32,4 @@ nic/build/$ARCH/$PIPELINE/lib/libdpdksim.so                       /nic/lib/
 /lib64/libedit.so*                                                /nic/lib/
 nic/apollo/tools/$PIPELINE/start-nmd-sim.sh                       /nic/tools/
 nic/build/x86_64/$PIPELINE/penctl                                 /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/alerts_gen                          /nic/bin/
