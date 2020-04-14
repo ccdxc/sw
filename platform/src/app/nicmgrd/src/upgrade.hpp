@@ -40,6 +40,7 @@ public:
     static void upg_ipc_handler_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt);
     sdk_ret_t upg_shm_alloc(const char *name, uint32_t size, bool create);
     void upg_restore_states(void);
+    void upgrade_state_save(void);
 private:
     void upg_ipc_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt);
     shmmgr     *shm_mmgr_;

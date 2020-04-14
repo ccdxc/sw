@@ -173,6 +173,147 @@ file_exist (const char *fname)
     return false;
 }
 
+void
+SaveUplinkInfo(uplink_t *up, UplinkInfo *proto_obj)
+{
+    proto_obj->set_key(up->id);
+    proto_obj->set_id(up->id);
+    proto_obj->set_port(up->port);
+    proto_obj->set_is_oob(up->is_oob);
+    NIC_LOG_DEBUG("Saving uplink id {} port {}", proto_obj->id(), proto_obj->port());
+}
+
+void
+SaveEthDevInfo(struct EthDevInfo *eth_dev_info, EthDeviceInfo *proto_obj)
+{
+    //device name is the key
+    proto_obj->set_key(eth_dev_info->eth_spec->name);
+
+    //save eth_dev resources
+    proto_obj->mutable_eth_dev_res()->set_lif_base(eth_dev_info->eth_res->lif_base);
+    proto_obj->mutable_eth_dev_res()->set_intr_base(eth_dev_info->eth_res->intr_base);
+    proto_obj->mutable_eth_dev_res()->set_regs_mem_addr(eth_dev_info->eth_res->regs_mem_addr);
+    proto_obj->mutable_eth_dev_res()->set_port_info_addr(eth_dev_info->eth_res->port_info_addr);
+    proto_obj->mutable_eth_dev_res()->set_cmb_mem_addr(eth_dev_info->eth_res->cmb_mem_addr);
+    proto_obj->mutable_eth_dev_res()->set_cmb_mem_size(eth_dev_info->eth_res->cmb_mem_size);
+    proto_obj->mutable_eth_dev_res()->set_rom_mem_addr(eth_dev_info->eth_res->rom_mem_addr);
+    proto_obj->mutable_eth_dev_res()->set_rom_mem_size(eth_dev_info->eth_res->rom_mem_size);
+
+    //save eth_dev specs
+    proto_obj->mutable_eth_dev_spec()->set_dev_uuid(eth_dev_info->eth_spec->dev_uuid);
+    proto_obj->mutable_eth_dev_spec()->set_eth_type(eth_dev_info->eth_spec->eth_type);
+    proto_obj->mutable_eth_dev_spec()->set_name(eth_dev_info->eth_spec->name);
+    proto_obj->mutable_eth_dev_spec()->set_oprom(eth_dev_info->eth_spec->oprom);
+    proto_obj->mutable_eth_dev_spec()->set_pcie_port(eth_dev_info->eth_spec->pcie_port);
+    proto_obj->mutable_eth_dev_spec()->set_pcie_total_vfs(eth_dev_info->eth_spec->pcie_total_vfs);
+    proto_obj->mutable_eth_dev_spec()->set_host_dev(eth_dev_info->eth_spec->host_dev);
+    proto_obj->mutable_eth_dev_spec()->set_uplink_port_num(eth_dev_info->eth_spec->uplink_port_num);
+    proto_obj->mutable_eth_dev_spec()->set_qos_group(eth_dev_info->eth_spec->qos_group);
+    proto_obj->mutable_eth_dev_spec()->set_lif_count(eth_dev_info->eth_spec->lif_count);
+    proto_obj->mutable_eth_dev_spec()->set_rxq_count(eth_dev_info->eth_spec->rxq_count);
+    proto_obj->mutable_eth_dev_spec()->set_txq_count(eth_dev_info->eth_spec->txq_count);
+    proto_obj->mutable_eth_dev_spec()->set_eq_count(eth_dev_info->eth_spec->eq_count);
+    proto_obj->mutable_eth_dev_spec()->set_adminq_count(eth_dev_info->eth_spec->adminq_count);
+    proto_obj->mutable_eth_dev_spec()->set_intr_count(eth_dev_info->eth_spec->intr_count);
+    proto_obj->mutable_eth_dev_spec()->set_mac_addr(eth_dev_info->eth_spec->mac_addr);
+    proto_obj->mutable_eth_dev_spec()->set_enable_rdma(eth_dev_info->eth_spec->enable_rdma);
+    proto_obj->mutable_eth_dev_spec()->set_pte_count(eth_dev_info->eth_spec->pte_count);
+    proto_obj->mutable_eth_dev_spec()->set_key_count(eth_dev_info->eth_spec->key_count);
+    proto_obj->mutable_eth_dev_spec()->set_ah_count(eth_dev_info->eth_spec->ah_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_sq_count(eth_dev_info->eth_spec->rdma_sq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_rq_count(eth_dev_info->eth_spec->rdma_rq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_cq_count(eth_dev_info->eth_spec->rdma_eq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_eq_count(eth_dev_info->eth_spec->rdma_eq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_aq_count(eth_dev_info->eth_spec->rdma_aq_count);
+    proto_obj->mutable_eth_dev_spec()->set_rdma_pid_count(eth_dev_info->eth_spec->rdma_pid_count);
+    proto_obj->mutable_eth_dev_spec()->set_barmap_size(eth_dev_info->eth_spec->barmap_size);
+
+    NIC_LOG_DEBUG("Saving eth dev {}", eth_dev_info->eth_spec->name);
+    return;
+}
+
+static void
+upgrade_state_save_delphi (void)
+{
+    nicmgr_delphic_msg_t ethdev_msg;
+    nicmgr_delphic_msg_t uplink_msg;
+
+
+    ethdev_msg.msg_id = NICMGR_DELPHIC_MSG_SET_UPG_ETHDEVINFO;
+
+    NIC_LOG_DEBUG("SaveState sending IPC to save ethdevinfo Delphi");
+    // sending async upgrade status event to hal from nicmgr
+    sdk::ipc::request(hal::HAL_THREAD_ID_DELPHI_CLIENT,
+                          event_id_t::EVENT_ID_NICMGR_DELPHIC,
+                          &ethdev_msg, sizeof(ethdev_msg), NULL);
+
+
+    uplink_msg.msg_id = NICMGR_DELPHIC_MSG_SET_UPG_UPLINKINFO;
+
+    NIC_LOG_DEBUG("SaveState sending IPC to save uplinkinfo Delphi");
+    // sending async upgrade status event to hal from nicmgr
+    sdk::ipc::request(hal::HAL_THREAD_ID_DELPHI_CLIENT,
+                          event_id_t::EVENT_ID_NICMGR_DELPHIC,
+                          &uplink_msg, sizeof(uplink_msg), NULL);
+}
+
+// returns void, as save state fails only in case of out of memory.
+void
+nicmgr_upg_hndlr::upgrade_state_save(void) {
+    backup_mem_hdr_t *hdr = (backup_mem_hdr_t *)mem_;
+    sdk_ret_t ret = SDK_RET_OK;
+    UplinkInfo uplinkinfo;
+    EthDeviceInfo devinfo;
+    std::vector <struct EthDevInfo*> dev_info;
+    std::map<uint32_t, uplink_t*> up_links;
+    struct stat st = { 0 };
+    std::string dst = std::string(NICMGR_BKUP_DIR) + std::string(NICMGR_BKUP_SHM_NAME);
+    std::string src = std::string("/dev/shm/") + std::string(NICMGR_BKUP_SHM_NAME);
+
+    dev_info = devmgr->GetEthDevStateInfo();
+    NIC_FUNC_DEBUG("Saving {} objects of EthDevInfo to shm", dev_info.size());
+
+    hdr[NICMGR_BKUP_OBJ_DEVINFO_ID].id = NICMGR_BKUP_OBJ_DEVINFO_ID;
+    hdr[NICMGR_BKUP_OBJ_DEVINFO_ID].obj_count = dev_info.size();
+    hdr[NICMGR_BKUP_OBJ_DEVINFO_ID].mem_offset = obj_mem_offset_;
+
+    //for each element in dev_info convert it to protobuf and then setobject to shm
+    for (uint32_t eth_dev_idx = 0; eth_dev_idx < dev_info.size(); eth_dev_idx++) {
+        SaveEthDevInfo(dev_info[eth_dev_idx], &devinfo);
+        NICMGR_BKUP_PBUF(devinfo, ret, "ethdev");
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
+
+    up_links = devmgr->GetUplinks();
+    NIC_FUNC_DEBUG("Saving {} objects of UplinkInfo to shm", up_links.size());
+
+    hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].id = NICMGR_BKUP_OBJ_UPLINKINFO_ID;
+    hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].obj_count = up_links.size();
+    hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].mem_offset = obj_mem_offset_;
+
+    for (auto it = up_links.begin(); it != up_links.end(); it++) {
+        uplink_t *up = it->second;
+        SaveUplinkInfo(up, &uplinkinfo);
+        NICMGR_BKUP_PBUF(uplinkinfo, ret, "uplink");
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
+
+    // check if the bkup dir exists
+    if (stat(NICMGR_BKUP_DIR, &st) == -1) {
+        // doesn't exist, try to create
+        if (mkdir(NICMGR_BKUP_DIR, 0755) < 0) {
+            NIC_LOG_ERR("Backup directory %s/ doesn't exist, failed to create one\n",
+                          NICMGR_BKUP_DIR);
+        }
+    }
+
+    if ((copyfile(src.c_str(), dst.c_str())) == -1) {
+        NIC_LOG_ERR("Saving state file failed, src {} to dst {}", src, dst);
+    } else {
+        NIC_LOG_DEBUG("Saving state file completed, src {} to dst {}", src, dst);
+    }
+}
+
 
 // Constructor method
 nicmgr_upg_hndlr::nicmgr_upg_hndlr()
@@ -307,6 +448,8 @@ nicmgr_upg_hndlr::FailedHandler(UpgCtx& upgCtx)
     writefile(nicmgr_rollback_state_file, "in progress", 11);
     resp.resp = INPROGRESS;
 
+    upg_handler->upgrade_state_save();
+
     // we will run through all the state machine for nicmgr upgrade if somehow upgrade failed
     NIC_FUNC_DEBUG("Sending LinkDown event to eth drivers");
     if (devmgr->HandleUpgradeEvent(UPG_EVENT_QUIESCE)) {
@@ -331,65 +474,6 @@ void
 nicmgr_upg_hndlr::AbortHandler(UpgCtx& upgCtx)
 {
     NIC_LOG_INFO("Upgrade: Abort");
-}
-
-void
-SaveUplinkInfo(uplink_t *up, UplinkInfo *proto_obj)
-{
-    proto_obj->set_key(up->id);
-    proto_obj->set_id(up->id);
-    proto_obj->set_port(up->port);
-    proto_obj->set_is_oob(up->is_oob);
-    NIC_LOG_DEBUG("Saving uplink id {} port {}", proto_obj->id(), proto_obj->port());
-}
-
-void
-SaveEthDevInfo(struct EthDevInfo *eth_dev_info, EthDeviceInfo *proto_obj)
-{
-    //device name is the key
-    proto_obj->set_key(eth_dev_info->eth_spec->name);
-
-    //save eth_dev resources
-    proto_obj->mutable_eth_dev_res()->set_lif_base(eth_dev_info->eth_res->lif_base);
-    proto_obj->mutable_eth_dev_res()->set_intr_base(eth_dev_info->eth_res->intr_base);
-    proto_obj->mutable_eth_dev_res()->set_regs_mem_addr(eth_dev_info->eth_res->regs_mem_addr);
-    proto_obj->mutable_eth_dev_res()->set_port_info_addr(eth_dev_info->eth_res->port_info_addr);
-    proto_obj->mutable_eth_dev_res()->set_cmb_mem_addr(eth_dev_info->eth_res->cmb_mem_addr);
-    proto_obj->mutable_eth_dev_res()->set_cmb_mem_size(eth_dev_info->eth_res->cmb_mem_size);
-    proto_obj->mutable_eth_dev_res()->set_rom_mem_addr(eth_dev_info->eth_res->rom_mem_addr);
-    proto_obj->mutable_eth_dev_res()->set_rom_mem_size(eth_dev_info->eth_res->rom_mem_size);
-
-    //save eth_dev specs
-    proto_obj->mutable_eth_dev_spec()->set_dev_uuid(eth_dev_info->eth_spec->dev_uuid);
-    proto_obj->mutable_eth_dev_spec()->set_eth_type(eth_dev_info->eth_spec->eth_type);
-    proto_obj->mutable_eth_dev_spec()->set_name(eth_dev_info->eth_spec->name);
-    proto_obj->mutable_eth_dev_spec()->set_oprom(eth_dev_info->eth_spec->oprom);
-    proto_obj->mutable_eth_dev_spec()->set_pcie_port(eth_dev_info->eth_spec->pcie_port);
-    proto_obj->mutable_eth_dev_spec()->set_pcie_total_vfs(eth_dev_info->eth_spec->pcie_total_vfs);
-    proto_obj->mutable_eth_dev_spec()->set_host_dev(eth_dev_info->eth_spec->host_dev);
-    proto_obj->mutable_eth_dev_spec()->set_uplink_port_num(eth_dev_info->eth_spec->uplink_port_num);
-    proto_obj->mutable_eth_dev_spec()->set_qos_group(eth_dev_info->eth_spec->qos_group);
-    proto_obj->mutable_eth_dev_spec()->set_lif_count(eth_dev_info->eth_spec->lif_count);
-    proto_obj->mutable_eth_dev_spec()->set_rxq_count(eth_dev_info->eth_spec->rxq_count);
-    proto_obj->mutable_eth_dev_spec()->set_txq_count(eth_dev_info->eth_spec->txq_count);
-    proto_obj->mutable_eth_dev_spec()->set_eq_count(eth_dev_info->eth_spec->eq_count);
-    proto_obj->mutable_eth_dev_spec()->set_adminq_count(eth_dev_info->eth_spec->adminq_count);
-    proto_obj->mutable_eth_dev_spec()->set_intr_count(eth_dev_info->eth_spec->intr_count);
-    proto_obj->mutable_eth_dev_spec()->set_mac_addr(eth_dev_info->eth_spec->mac_addr);
-    proto_obj->mutable_eth_dev_spec()->set_enable_rdma(eth_dev_info->eth_spec->enable_rdma);
-    proto_obj->mutable_eth_dev_spec()->set_pte_count(eth_dev_info->eth_spec->pte_count);
-    proto_obj->mutable_eth_dev_spec()->set_key_count(eth_dev_info->eth_spec->key_count);
-    proto_obj->mutable_eth_dev_spec()->set_ah_count(eth_dev_info->eth_spec->ah_count);
-    proto_obj->mutable_eth_dev_spec()->set_rdma_sq_count(eth_dev_info->eth_spec->rdma_sq_count);
-    proto_obj->mutable_eth_dev_spec()->set_rdma_rq_count(eth_dev_info->eth_spec->rdma_rq_count);
-    proto_obj->mutable_eth_dev_spec()->set_rdma_cq_count(eth_dev_info->eth_spec->rdma_eq_count);
-    proto_obj->mutable_eth_dev_spec()->set_rdma_eq_count(eth_dev_info->eth_spec->rdma_eq_count);
-    proto_obj->mutable_eth_dev_spec()->set_rdma_aq_count(eth_dev_info->eth_spec->rdma_aq_count);
-    proto_obj->mutable_eth_dev_spec()->set_rdma_pid_count(eth_dev_info->eth_spec->rdma_pid_count);
-    proto_obj->mutable_eth_dev_spec()->set_barmap_size(eth_dev_info->eth_spec->barmap_size);
-
-    NIC_LOG_DEBUG("Saving eth dev {}", eth_dev_info->eth_spec->name);
-    return;
 }
 
 static void
@@ -475,89 +559,17 @@ nicmgr_upg_hndlr::upg_restore_states(void)
 HdlrResp
 nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx, upg_msg_t *msg) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-    backup_mem_hdr_t *hdr = (backup_mem_hdr_t *)mem_;
-    sdk_ret_t ret = SDK_RET_OK;
-    UplinkInfo uplinkinfo;
-    EthDeviceInfo devinfo;
-    std::vector <struct EthDevInfo*> dev_info;
-    std::map<uint32_t, uplink_t*> up_links;
-    struct stat st = { 0 };
-    std::string dst = std::string(NICMGR_BKUP_DIR) + std::string(NICMGR_BKUP_SHM_NAME);
-    std::string src = std::string("/dev/shm/") + std::string(NICMGR_BKUP_SHM_NAME);
-
     NIC_LOG_INFO("Upgrade: SaveState");
 
     if (msg->save_state_delphi == 1) {
-        nicmgr_delphic_msg_t ethdev_msg;
-        ethdev_msg.msg_id = NICMGR_DELPHIC_MSG_SET_UPG_ETHDEVINFO;
-
-        NIC_LOG_DEBUG("SaveState sending IPC to save ethdevinfo Delphi");
-        // sending async upgrade status event to hal from nicmgr
-        sdk::ipc::request(hal::HAL_THREAD_ID_DELPHI_CLIENT,
-                              event_id_t::EVENT_ID_NICMGR_DELPHIC,
-                              &ethdev_msg, sizeof(ethdev_msg), NULL);
-
-
-        nicmgr_delphic_msg_t uplink_msg;
-        uplink_msg.msg_id = NICMGR_DELPHIC_MSG_SET_UPG_UPLINKINFO;
-
-        NIC_LOG_DEBUG("SaveState sending IPC to save uplinkinfo Delphi");
-        // sending async upgrade status event to hal from nicmgr
-        sdk::ipc::request(hal::HAL_THREAD_ID_DELPHI_CLIENT,
-                              event_id_t::EVENT_ID_NICMGR_DELPHIC,
-                              &uplink_msg, sizeof(uplink_msg), NULL);
-        goto end;
-    }
-
-    dev_info = devmgr->GetEthDevStateInfo();
-    NIC_FUNC_DEBUG("Saving {} objects of EthDevInfo to shm", dev_info.size());
-
-    hdr[NICMGR_BKUP_OBJ_DEVINFO_ID].id = NICMGR_BKUP_OBJ_DEVINFO_ID;
-    hdr[NICMGR_BKUP_OBJ_DEVINFO_ID].obj_count = dev_info.size();
-    hdr[NICMGR_BKUP_OBJ_DEVINFO_ID].mem_offset = obj_mem_offset_;
-
-    //for each element in dev_info convert it to protobuf and then setobject to shm
-    for (uint32_t eth_dev_idx = 0; eth_dev_idx < dev_info.size(); eth_dev_idx++) {
-        SaveEthDevInfo(dev_info[eth_dev_idx], &devinfo);
-        NICMGR_BKUP_PBUF(devinfo, ret, "ethdev");
-        SDK_ASSERT(ret == SDK_RET_OK);
-    }
-
-    up_links = devmgr->GetUplinks();
-    NIC_FUNC_DEBUG("Saving {} objects of UplinkInfo to shm", up_links.size());
-
-    hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].id = NICMGR_BKUP_OBJ_UPLINKINFO_ID;
-    hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].obj_count = up_links.size();
-    hdr[NICMGR_BKUP_OBJ_UPLINKINFO_ID].mem_offset = obj_mem_offset_;
-
-    for (auto it = up_links.begin(); it != up_links.end(); it++) {
-        uplink_t *up = it->second;
-        SaveUplinkInfo(up, &uplinkinfo);
-        NICMGR_BKUP_PBUF(uplinkinfo, ret, "uplink");
-        SDK_ASSERT(ret == SDK_RET_OK);
-    }
-
-    // check if the bkup dir exists
-    if (stat(NICMGR_BKUP_DIR, &st) == -1) {
-        // doesn't exist, try to create
-        if (mkdir(NICMGR_BKUP_DIR, 0755) < 0) {
-            NIC_LOG_ERR("Backup directory %s/ doesn't exist, failed to create one\n",
-                          NICMGR_BKUP_DIR);
-            resp.resp = FAIL;
-            goto end;
-        }
-    }
-
-    if ((copyfile(src.c_str(), dst.c_str())) == -1) {
-        NIC_LOG_ERR("Saving state file failed, src {} to dst {}", src, dst);
-        resp.resp = FAIL;
+        upgrade_state_save_delphi();
     } else {
-        NIC_LOG_DEBUG("Saving state file completed, src {} to dst {}", src, dst);
+        upg_handler->upgrade_state_save();
     }
 
-end:
     return resp;
 }
+
 
 HdlrResp
 nicmgr_upg_hndlr::PostLinkUpHandler(UpgCtx& upgCtx) {
@@ -862,6 +874,11 @@ nicmgr_upg_init (void)
         } else {
             upg_handler->upg_restore_states();
         }
+    }
+
+    if (devmgr->GetUpgradeMode() == FW_MODE_ROLLBACK) {
+        upg_handler->upg_restore_states();
+        unlink(nicmgr_rollback_state_file);
     }
 }
 

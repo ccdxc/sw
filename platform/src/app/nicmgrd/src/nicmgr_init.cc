@@ -115,7 +115,7 @@ micro_seg_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     hal::core::micro_seg_info_t *info = (hal::core::micro_seg_info_t *)msg->data();
     hal::core::micro_seg_info_t rsp;
 
-    NIC_LOG_DEBUG("----------- Micro seg update: micro_seg_en: {} ------------", 
+    NIC_LOG_DEBUG("----------- Micro seg update: micro_seg_en: {} ------------",
                   info->status);
     devmgr->SystemSpecEventHandler(info->status);
 
@@ -216,14 +216,11 @@ dev_init:
 
     if (upg_mode == FW_MODE_NORMAL_BOOT) {
         devmgr->LoadProfile(profile, true);
-    } else if (upg_mode == FW_MODE_ROLLBACK) {
-        devmgr->LoadProfile(profile, false);
-        unlink(nicmgr_rollback_state_file);
     } else {
         // Restore States will be done
         unlink(nicmgr_upgrade_state_file);
     }
-    
+
     EV_A = thread->ev_loop();
     ev_check_init(&log_check, &log_flush_cb);
     ev_check_start(EV_A_ & log_check);
@@ -237,7 +234,7 @@ dev_init:
     if (devapi_iris::is_hal_up()) {
         hal_up_event_handler(NULL, NULL);
     }
-    
+
     NIC_LOG_INFO("Listening to events");
 }
 

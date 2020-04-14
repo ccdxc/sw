@@ -17,7 +17,7 @@ testcases:
         testcase    : testcases.naples_upgrade.disruptive_upgrade
         iterators :
             type : simple
-            option : ["compatcheckfail", "linkdownfail", "hostdownfail", "posthostdownfail", "savestatefail"]
+            option : ["linkdownfail", "hostdownfail", "posthostdownfail"]
         args      :
             sleep : 300
 
@@ -44,7 +44,8 @@ testcases:
         testcase    : testcases.naples_upgrade.disruptive_upgrade
         iterators :
             type : simple
-            option : ["postrestartpause", "hostuppause", "linkuppause", "postlinkuppause"]
+#            option : ["postlinkuppause", "postrestartpause", "linkuppause", "hostuppause"]
+            option : ["postrestartpause", "linkuppause", "hostuppause"]
         args      :
             sleep : 450
 

@@ -99,7 +99,7 @@ testbundles:
         - networking/telemetry_regression.testbundle
         - networking/cps_regression.testbundle
         - firewall/conntrack_regression.testbundle
-        #- naples_upgrade/naples_upgrade_hostpin_long.testbundle
+        - naples_upgrade/naples_upgrade_hostpin_long.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
