@@ -75,6 +75,21 @@ func (hc *HostCollection) Any(number int) *HostCollection {
 	return ret
 }
 
+//Names  return names of nodes.
+func (hc *HostCollection) Names() []string {
+
+	var names []string
+	for _, host := range hc.Hosts {
+		names = append(names, host.Name())
+	}
+
+	for _, host := range hc.FakeHosts {
+		names = append(names, host.Name())
+	}
+
+	return names
+}
+
 func NewHostCollection(client objClient.ObjClient, testbed *testbed.TestBed) *HostCollection {
 	return &HostCollection{
 		CollectionCommon: CollectionCommon{Client: client,

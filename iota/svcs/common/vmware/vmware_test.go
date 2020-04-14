@@ -166,24 +166,35 @@ func Test_vcenter_find_host(t *testing.T) {
 	TestUtils.Assert(t, err == nil, "Connected to venter")
 	TestUtils.Assert(t, vc != nil, "Vencter context set")
 
-	dc, err := vc.SetupDataCenter("pbhide-iota-dc")
+	dc, err := vc.SetupDataCenter("ptprabu-iota-dc")
 	TestUtils.Assert(t, err == nil, "successfuly setup dc")
-	dc, ok := vc.datacenters["pbhide-iota-dc"]
-	TestUtils.Assert(t, ok, "pbhide setup dc")
+	dc, ok := vc.datacenters["ptprabu-iota-dc"]
+	TestUtils.Assert(t, ok, "ptprabu setup dc")
 
-	c, ok := dc.clusters["pbhide-iota-cluster"]
+	c, ok := dc.clusters["ptprabu-iota-cluster"]
 	TestUtils.Assert(t, ok, "successfuly setup cluster")
 	TestUtils.Assert(t, len(c.hosts) == 2, "successfuly setup cluster")
 
-	dvs, err := dc.findDvs("#Pen-DVS-pbhide-iota-dc")
-	TestUtils.Assert(t, err == nil, "successfuly found dvs")
-	TestUtils.Assert(t, dvs != nil, "dvs nil")
+	//dvs, err := dc.findDvs("#Pen-DVS-ptprabu-iota-dc")
+	//TestUtils.Assert(t, err == nil, "successfuly found dvs")
+	//TestUtils.Assert(t, dvs != nil, "dvs nil")
 
 	//vm, err2 := dc.NewVM("node1-ep3")
 	//TestUtils.Assert(t, err2 == nil, "VM FOUND")
 	//TestUtils.Assert(t, vm != nil, "VM FOND")
 
-	err = dc.EnableKernelNetwork("pbhide-iota-cluster", "10.8.101.31", "#Pen-PG-Network-Vlan-2", true)
+	pgName := "iota-vmotion-pg2"
+	vNWs := []NWSpec{
+		{Name: pgName},
+	}
+	vspec := VswitchSpec{Name: "vswitch0"}
+
+	err = dc.AddNetworks("ptprabu-iota-cluster", "tb68-host1.pensando.io", vNWs, vspec)
+	TestUtils.Assert(t, err == nil, "Added")
+
+	err = dc.AddKernelNic("ptprabu-iota-cluster", "tb68-host1.pensando.io", KernelNetworkSpec{
+		Portgroup:     pgName,
+		EnableVmotion: true})
 	fmt.Printf("ERror %v", err)
 	TestUtils.Assert(t, err == nil, "Added")
 

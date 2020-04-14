@@ -574,9 +574,34 @@ func (h *VHost) AddKernelNic(nwspec KernelNetworkSpec) error {
 		return err
 	}
 
-	net, err := h.Finder().Network(h.Ctx(), nwspec.Portgroup)
-	if err != nil {
-		return errors.Wrap(err, "Failed Find Network")
+	var net object.NetworkReference
+	found := false
+
+L:
+	for i := 0; i < 20; i++ {
+
+		netList, err := h.Finder().NetworkList(h.Ctx(), "*")
+		if err != nil {
+			return errors.Wrap(err, "Failed list Networks")
+		}
+		for _, nw := range netList {
+			splitStr := strings.Split(nw.GetInventoryPath(), "/")
+			fmt.Printf("Found network %v\n", nw.GetInventoryPath())
+			name := splitStr[len(splitStr)-1]
+			if name == nwspec.Portgroup {
+				net, err = h.Finder().Network(h.Ctx(), name)
+				if err != nil {
+					return errors.Wrap(err, "Network not found")
+				}
+				found = true
+				break L
+			}
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	if !found {
+		return fmt.Errorf("Network %v not found", nwspec.Portgroup)
 	}
 
 	nwRef, err := net.EthernetCardBackingInfo(h.Ctx())
