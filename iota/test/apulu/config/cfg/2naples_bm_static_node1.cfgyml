@@ -149,6 +149,7 @@ vpc:
                     - '64.0.0.80'
               remoteroutes :
                     - '64.0.0.0\24'
+                    - '3.1.0.0\24'
           rmap:                       # Remote IP mappings per subnet
             - id       : 2
               count    : 1
@@ -185,6 +186,7 @@ vpc:
                     - '64.0.0.80'
               remoteroutes :
                     - '64.0.0.0\24'
+                    - '2.1.0.0\24'
       nexthop:
         - id         : 3
           type       : overlay

@@ -15,19 +15,7 @@ def __clearErrorCounters():
 
     return res
 
-def __parseErrCount(node, tups, indexPosList, sent_probes):
-    ret = api.types.status.SUCCESS
-    recvd_probes = 0
-    for c in indexPosList:
-        recvd_probes += int(tups[c - 1])
-
-    if sent_probes > recvd_probes:
-            api.Logger.error(f"received {recvd_probes} and expected {sent_probes}")
-            return api.types.status.FAILURE
-
-    return ret
-
-def __parseErrReasons(node, tups, indexPosList, wl_scope):
+def __parseErrReasons(node, tups, indexPosList, wl_scope, sent_probes):
     ret = api.types.status.SUCCESS
     node_reasons = dict()
     node_reasons['pds-arp-proxy'] = ['Reply', 'success']
@@ -35,15 +23,24 @@ def __parseErrReasons(node, tups, indexPosList, wl_scope):
         node_reasons['pds-arp-proxy'] = ['Subnet', 'check', 'failed']
     node_reasons['ip4-icmp-input'] = ['echo', 'replies', 'sent']
     node_reasons['pds-flow-classify'] = ['Unknown', 'VR', 'IPv4']
+    received_probes = 0
+    match = False
 
     for c in indexPosList:
         index = c + 1
         for val in node_reasons[node]:
             if val != tups[index]:
-                ret = api.types.status.FAILURE
+                match = False
                 break
+            else:
+                match = True
             index += 1
+        if match:
+            received_probes += int(tups[c - 1])
 
+    if int(received_probes) != int(sent_probes):
+        api.Logger.error(f"received: {received_probes} and expected {sent_probes}")
+        return api.types.status.FAILURE
     return ret
 
 def __verifyErrorsCmd(resp, proto, sent_probes, wl_scope):
@@ -63,10 +60,7 @@ def __verifyErrorsCmd(resp, proto, sent_probes, wl_scope):
 
     tups = resp.split()
     indexPosList = [ index for index, value in enumerate(tups) if value == node ]
-    ret = __parseErrCount(node, tups, indexPosList, sent_probes)
-    if ret != api.types.status.SUCCESS:
-        return ret
-    return __parseErrReasons(node, tups, indexPosList, wl_scope)
+    return __parseErrReasons(node, tups, indexPosList, wl_scope, sent_probes)
 
 def __verifyVPPCtlErrors(proto='icmp', wl_scope= config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET,
         sent_probes=None):

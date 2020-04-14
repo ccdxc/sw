@@ -2,8 +2,8 @@
 import iota.harness.api as api
 import iota.test.utils.traffic as traffic_utils
 import iota.test.apulu.config.api as config_api
-import apollo.config.objects.subnet as subnet
 import apollo.config.objects.vnic as vnic
+import apollo.config.objects.subnet as subnet
 
 def TriggerConnectivityTestAll(proto="icmp", af="ipv4", pktsize=128, sec_ip_test_type="all"):
     wl_pairs = []
@@ -126,8 +126,8 @@ def ConnectivityVRIPTest(proto='icmp', af='ipv4', pktsize=64,
             wl = config_api.FindWorkloadByVnic(vnic1)
             assert(wl)
             dest_ip = vnic1.SUBNET.GetIPv4VRIP()
-            cmd = traffic_utils.PingCmdBuilder(wl, dest_ip, proto, af, pktsize, args)
-            api.Logger.info(" VR_IP cmd %s " % (cmd))
+            cmd = traffic_utils.PingCmdBuilder(wl, dest_ip, proto, af, pktsize, args, probe_count)
+            api.Logger.info(f" VR_IP on {wl.node_name}: {cmd}")
             api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, cmd)
             cmd_cookies.append(cmd)
             cur_cnt = sent_probes.get(wl.node_name, 0)
@@ -142,8 +142,8 @@ def ConnectivityVRIPTest(proto='icmp', af='ipv4', pktsize=64,
                 if scope == config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET and (vnic1.SUBNET.GID() == subnet1.GID()):
                     continue
                 dest_ip = subnet1.GetIPv4VRIP()
-                cmd = traffic_utils.PingCmdBuilder(wl, dest_ip, proto, af, pktsize, args)
-                api.Logger.info(" VRIP cmd %s " % (cmd))
+                cmd = traffic_utils.PingCmdBuilder(wl, dest_ip, proto, af, pktsize, args, probe_count)
+                api.Logger.info(f" VRIP on {wl.node_name}: {cmd} ")
                 api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, cmd)
                 cmd_cookies.append(cmd)
                 cur_cnt = sent_probes.get(wl.node_name, 0)

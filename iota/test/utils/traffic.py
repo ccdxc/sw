@@ -221,7 +221,7 @@ def GetHping3Cmd(protocol, src_wl, destination_ip, destination_port):
     return cmd
 
 def PingCmdBuilder(src_wl, dest_ip, proto='icmp', af='ipv4',
-        pktsize=64, args=None):
+        pktsize=64, args=None, count=3):
 
     cmd = None
     dest_addr = " %s" %(dest_ip)
@@ -229,11 +229,11 @@ def PingCmdBuilder(src_wl, dest_ip, proto='icmp', af='ipv4',
         if not __is_ipv4(af):
             assert(0)
         if args == 'DAD':
-            arp_base_cmd = __get_arp_base_cmd(src_wl, False, True)
+            arp_base_cmd = __get_arp_base_cmd(src_wl, False, True, count)
         elif args == 'update':
-            arp_base_cmd = __get_arp_base_cmd(src_wl, True)
+            arp_base_cmd = __get_arp_base_cmd(src_wl, True, False, count)
         else:
-            arp_base_cmd = __get_arp_base_cmd(src_wl)
+            arp_base_cmd = __get_arp_base_cmd(src_wl, False, False, count)
 
         addr = __get_workload_address(src_wl, "ipv4")
         if args == 'update':
@@ -248,8 +248,7 @@ def PingCmdBuilder(src_wl, dest_ip, proto='icmp', af='ipv4',
 
     return cmd
 
-def __get_arp_base_cmd(workload, update_neighbor=False, send_dad=False,
-        count=3, deadline=3):
+def __get_arp_base_cmd(workload, update_neighbor, send_dad, count):
     arp_cmd = __ARP_CMD
 
     if update_neighbor is True:
@@ -258,12 +257,11 @@ def __get_arp_base_cmd(workload, update_neighbor=False, send_dad=False,
     if send_dad is True:
         arp_cmd += " -D "
 
-    arp_cmd += " -c %d -w %d -I %s" %(count, deadline, workload.interface)
+    arp_cmd += " -c %d -I %s" %(count, workload.interface)
 
     return arp_cmd
 
-def ARPingWorkloads(workload_pairs, update_neighbor=False, send_dad=False,
-        count=3, deadline=3):
+def ARPingWorkloads(workload_pairs, update_neighbor=False, send_dad=False, count=3):
     cmd_cookies = []
 
     if not api.IsSimulation():
@@ -275,7 +273,7 @@ def ARPingWorkloads(workload_pairs, update_neighbor=False, send_dad=False,
         w1 = pair[0]
         w2 = pair[1]
 
-        arp_base_cmd = __get_arp_base_cmd(w1, update_neighbor, send_dad, count, deadline)
+        arp_base_cmd = __get_arp_base_cmd(w1, update_neighbor, send_dad, count)
         addr = __get_workload_address(w1, "ipv4")
         if update_neighbor is True:
             dest_addr = " %s" %(addr)

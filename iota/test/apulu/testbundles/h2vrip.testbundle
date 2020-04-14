@@ -7,7 +7,7 @@ meta:
 testcases:
     -   name    : VRIP_ARP_Connectivity
         testcase: testcases.vrip.vrip
-        ignore  : True
+        ignore  : False
         iterators :
             type    : nested
             proto   : [ arp ]
@@ -15,7 +15,7 @@ testcases:
 
     -   name    : VRIP_Connectivity
         testcase: testcases.vrip.vrip
-        ignore  : True
+        ignore  : False
         iterators :
             type    : nested
             proto   : [ icmp, tcp, udp ]
