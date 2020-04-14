@@ -55,6 +55,8 @@ pds_ret_t session_aging_expiry_fn(uint32_t expiry_id,
 bool session_4combined_expiry_count_check(bool poll_needed = false);
 bool session_4combined_result_check(void);
 
+const aging_tolerance_t& session_tolerance_get(void);
+
 }    // namespace athena_app
 }    // namespace test
 

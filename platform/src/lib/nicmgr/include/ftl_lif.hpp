@@ -316,6 +316,8 @@ public:
                uint32_t upd);
     void write32(uint32_t data);
 
+    friend class ftl_lif_queues_ctl_t;
+
 private:
     FtlLif&                 lif;
     asic_db_addr_t          db_addr;
@@ -371,7 +373,7 @@ private:
     std::vector<mem_access_t> qstate_access;
     std::vector<mem_access_t> wring_access;
     db_access_t             db_pndx_inc;
-    db_access_t             db_shed_clr;
+    db_access_t             db_sched_clr;
     uint64_t                wrings_base_addr;
     uint32_t                wring_single_sz;
     uint32_t                slot_data_sz;

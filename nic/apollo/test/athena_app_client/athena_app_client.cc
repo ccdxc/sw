@@ -10,11 +10,13 @@
 // 
 #include "athena_app_client.hpp"
 
-DEFINE_string(server_type, athena_app_sock_type_dflt(),
+DEFINE_string(server_type, athena_app_client_sock_type(),
               "server type such as 'tcp' or 'ipc'");
-DEFINE_string(server_addr, athena_app_sock_dir_dflt(),
+DEFINE_string(server_addr,
+              athena_app_client_sock_dir(athena_app_client_sock_type()),
               "server address");
-DEFINE_string(server_port, athena_app_sock_name_dflt(),
+DEFINE_string(server_port,
+              athena_app_client_sock_name(athena_app_client_sock_type()),
               "server port");
 DEFINE_int32(rx_timeout, 600,
              "Socket receive timeout in seconds");

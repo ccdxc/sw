@@ -15,7 +15,7 @@
 #include "nic/sdk/lib/p4/p4_utils.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
-#include "nic/apollo/api/include/athena/pds_flow_session.h"
+#include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 #include "nic/apollo/p4/include/athena_defines.h"
 #include "nic/apollo/p4/include/athena_table_sizes.h"
 #include "ftl_wrapper.h"

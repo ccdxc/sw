@@ -541,6 +541,14 @@ aging_metrics_t::show(bool latest) const
                       curr.pollers.total_num_qfulls);
         break;
 
+    case ftl_dev_if::FTL_QTYPE_MPU_TIMESTAMP:
+
+        TEST_LOG_INFO("\nMPU timestamp metrics:"
+                      "\n----------------------\n");
+        TEST_LOG_INFO("total_num_updates       : %" PRIu64 "\n", 
+                      curr.mpu_timestamp.total_num_updates);
+        break;
+
     default:
         break;
     }
@@ -563,6 +571,10 @@ aging_metrics_t::refresh(ftl_dev_if::lif_attr_metrics_t& m) const
 
     case ftl_dev_if::FTL_QTYPE_POLLER:
         ret = ftl_pollers_client::pollers_metrics_get(&m);
+        break;
+
+    case ftl_dev_if::FTL_QTYPE_MPU_TIMESTAMP:
+        ret = ftl_pollers_client::timestamp_metrics_get(&m);
         break;
 
     default:
@@ -593,8 +605,16 @@ aging_tmo_cfg_t::reset(void)
     }
 }
 
+void
+aging_tmo_cfg_t::session_tmo_set(uint32_t tmo_val)
+{
+    tmo_rec.session_tmo = tmo_val; 
+    max_tmo = std::max(max_tmo, tmo_val);
+    tmo_set(); 
+}
+
 /*
- * Return configured inactivity timeout for a given flowtype and flowstate
+ * Set configured inactivity timeout for a given flowtype and flowstate
  */
 void
 aging_tmo_cfg_t::conntrack_tmo_set(pds_flow_type_t flowtype,
@@ -668,6 +688,7 @@ aging_tmo_cfg_t::conntrack_tmo_set(pds_flow_type_t flowtype,
 
     failures.counters.set += errors;
     if (!errors) {
+        max_tmo = std::max(max_tmo, tmo_val);
         tmo_set();
     }
 }

@@ -12,8 +12,8 @@ conntrack_aging_test
 #On SIM platform, inactivity timeout values have no effects as P4+ simply ages out any valid flows it encounters.
 #The following inactivity configs are merely to test invoke the API.
 
-conntrack_aging_normal_tmo_set {udp unestablished 200} {tcp SYNACK_SENT 20} {TCP fin_sent 25}
-conntrack_aging_accel_tmo_set {udp unestablished 1} {tcp SYNACK_SENT 2} {TCP fin_sent 2}
+conntrack_aging_normal_tmo_set {tcp established 300} {udp unestablished 200} {tcp SYNACK_SENT 20} {TCP fin_sent 25}
+conntrack_aging_accel_tmo_set {tcp established 100} {udp unestablished 1} {tcp SYNACK_SENT 2} {TCP fin_sent 2}
 conntrack_aging_accel_control True
 conntrack_aging_accel_control false
 

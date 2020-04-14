@@ -55,6 +55,8 @@ pds_ret_t conntrack_aging_expiry_fn(uint32_t expiry_id,
 bool conntrack_4combined_expiry_count_check(bool poll_needed = false);
 bool conntrack_4combined_result_check(void);
 
+const aging_tolerance_t& ct_tolerance_get(void);
+
 }    // namespace athena_app
 }    // namespace test
 

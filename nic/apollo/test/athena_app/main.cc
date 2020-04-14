@@ -609,7 +609,7 @@ main (int argc, char **argv)
     recv_packet();
 #endif /* __x86_64__ */
 
-    if (server_init() == PDS_RET_OK) {
+    if (hw() && (server_init() == PDS_RET_OK)) {
         server_poll();
     } else {
         program_sleep();

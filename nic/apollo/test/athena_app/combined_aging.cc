@@ -36,8 +36,9 @@ combined_aging_test(test_vparam_ref_t vparam)
     bool    conntrack_res;
     bool    sesion_res;
 
-
-    ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
+    ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(
+                                ct_tolerance_get().curr_max_tmo() +
+                                APP_TIME_LIMIT_EXEC_GRACE));
     ts.time_limit_exec(combined_aging_expiry_count_check, nullptr, 0);
 
     /*

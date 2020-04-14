@@ -1628,7 +1628,7 @@ ftl_lif_queues_ctl_t::ftl_lif_queues_ctl_t(FtlLif& lif,
     lif(lif),
     qtype_(qtype),
     db_pndx_inc(lif),
-    db_shed_clr(lif),
+    db_sched_clr(lif),
     wrings_base_addr(0),
     wring_single_sz(0),
     slot_data_sz(0),
@@ -1797,16 +1797,20 @@ ftl_lif_queues_ctl_t::init(const mpu_timestamp_init_cmd_t *cmd)
     }
 
     /*
-     * Init doorbell accesses
+     * Init doorbell accesses; only need to do once per ftl_lif_queues_ctl_t
      */
-    db_pndx_inc.reset(qtype(),
-                      ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
-                                            ASIC_DB_UPD_INDEX_INCR_PINDEX,
-                                            false));
-    db_shed_clr.reset(qtype(),
-                      ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
-                                            ASIC_DB_UPD_INDEX_UPDATE_NONE,
-                                            false));
+    if (!db_pndx_inc.db_access.pa()) {
+        db_pndx_inc.reset(qtype(),
+                          ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                                                ASIC_DB_UPD_INDEX_INCR_PINDEX,
+                                                false));
+    }
+    if (!db_sched_clr.db_access.pa()) {
+        db_sched_clr.reset(qtype(),
+                           ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
+                                                 ASIC_DB_UPD_INDEX_UPDATE_NONE,
+                                                 false));
+    }
     qs_access.reset(qstate_addr, sizeof(qstate));
     status = pgm_pc_offset_get("mpu_timestamp_stage0", &pc_offset);
     if (status != FTL_RC_SUCCESS) {
@@ -1978,7 +1982,7 @@ ftl_lif_queues_ctl_t::sched_stop_single(uint32_t qid)
          * Doorbell update clear
          */
         db_data = FTL_LIF_DBDATA32_SET(qid, 0);
-        db_shed_clr.write32(db_data);
+        db_sched_clr.write32(db_data);
         break;
 
     default:
@@ -2254,16 +2258,21 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
     }
 
     /*
-     * Init doorbell accesses
+     * Init doorbell accesses; only need to do once per ftl_lif_queues_ctl_t
      */
-    db_pndx_inc.reset(qtype(),
-                      ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
-                                            ASIC_DB_UPD_INDEX_INCR_PINDEX,
-                                            false));
-    db_shed_clr.reset(qtype(),
-                      ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
-                                            ASIC_DB_UPD_INDEX_UPDATE_NONE,
-                                            false));
+    if (!db_pndx_inc.db_access.pa()) {
+        db_pndx_inc.reset(qtype(),
+                          ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                                                ASIC_DB_UPD_INDEX_INCR_PINDEX,
+                                                false));
+    }
+    if (!db_sched_clr.db_access.pa()) {
+        db_sched_clr.reset(qtype(),
+                           ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
+                                                 ASIC_DB_UPD_INDEX_UPDATE_NONE,
+                                                 false));
+    }
+
     /*
      * Scanner queues init/start/stop are carried out from only one
      * single thread at a time. However, because PAL lib is not

@@ -39,6 +39,7 @@ nic/build/$ARCH/$PIPELINE/lib/liblist.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libevent_thread.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkeventmgr.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenipc.so                        /nic/lib/
+nic/third-party/gflags/$ARCH/lib/libgflags.so                     /nic/lib/libgflags.so.2.2
 nic/build/$ARCH/$PIPELINE/lib/libzmq.so                           /nic/lib/libzmq.so.3
 nic/build/$ARCH/$PIPELINE/lib/libslab.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libshmmgr.so                        /nic/lib/
@@ -233,6 +234,7 @@ nic/apollo/tools/start-nmd.sh                                     /nic/tools/
 nic/apollo/tools/store_agent_log.sh                               /nic/tools/
 nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/athena_app                          /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/athena_client                       /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/pcieutil                            /nic/bin/
 
 # Drivers

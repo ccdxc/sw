@@ -246,11 +246,15 @@ class aging_tmo_cfg_t
 {
 public:
     aging_tmo_cfg_t(bool is_accel_tmo) :
-        is_accel_tmo(is_accel_tmo) {}
+        is_accel_tmo(is_accel_tmo),
+        max_tmo(SCANNER_SESSION_TMO_DFLT)
+    {
+    }
 
     void reset(void);
-    void session_tmo_set(uint32_t tmo) { tmo_rec.session_tmo = tmo; tmo_set(); }
-    uint32_t session_tmo_get(void) { return tmo_rec.session_tmo; }
+    void session_tmo_set(uint32_t tmo_val);
+    uint32_t session_tmo_get(void) const { return tmo_rec.session_tmo; }
+    uint32_t max_tmo_get(void) const { return max_tmo; }
 
     void conntrack_tmo_set(pds_flow_type_t flowtype,
                            pds_flow_state_t flowstate,
@@ -266,6 +270,7 @@ private:
     pds_flow_age_timeouts_t     tmo_rec;
     tmo_cfg_fail_count_t        failures;
     bool                        is_accel_tmo;
+    uint32_t                    max_tmo;    // largest timeout overall
 };
 
 /*
@@ -345,6 +350,7 @@ public:
     uint32_t create_id_map_size(void);
     void create_id_map_empty_check(void);
 
+    uint32_t curr_max_tmo(void) const { return curr_tmo->max_tmo_get(); }
     void expiry_count_inc(void) { expiry_count_++; }
     uint32_t create_count(void) { return create_count_; }
     uint32_t expiry_count(void) { return expiry_count_; }
@@ -439,9 +445,9 @@ private:
 
 #define APP_TIME_LIMIT_EXEC_SECS(s)         ((uint64_t)(s) * USEC_PER_SEC)
 #ifdef __x86_64__
-#define APP_TIME_LIMIT_EXEC_DFLT            300 /* seconds */
+#define APP_TIME_LIMIT_EXEC_GRACE           300 /* seconds over max tmo */
 #else
-#define APP_TIME_LIMIT_EXEC_DFLT            180 /* seconds */
+#define APP_TIME_LIMIT_EXEC_GRACE           60 /* seconds over max_tmo */
 #endif
 
 #define APP_TIME_LIMIT_USLEEP_DFLT          10000 /* 10ms */

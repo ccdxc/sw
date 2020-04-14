@@ -107,41 +107,72 @@ server_msg_size_check(zmq_msg_t *rx_msg,
 }
 
 static inline const char *
-athena_app_sock_type_dflt(void)
+athena_app_server_sock_tcp(void)
 {
-    return std::getenv("ATHENA_APP_ZMQ_TYPE_IPC") ? "ipc" : "tcp";
+    return "tcp";
 }
 
 static inline const char *
-athena_app_sock_dir_dflt(void)
+athena_app_server_sock_ipc(void)
 {
-    if (std::string(athena_app_sock_type_dflt()) == "ipc") {
+    return "ipc";
+}
+
+static inline const char *
+athena_app_server_sock_dir(const std::string& sock_type)
+{
+    if (sock_type == "ipc") {
 #ifdef __x86_64__
         return "/sw/nic";
 #else
-        return "/nic";
+        return "/nic/etc";
 #endif
     }
 
-#ifdef __x86_64__
-
-    // Client will try to connect to the address below
-    // which is a tun address.
-    return "1.0.0.2";
-#else
-
     // Server will listen on any addresses
     return "*";
+}
+
+static inline const char *
+athena_app_server_sock_name(const std::string& sock_type)
+{
+    if (sock_type == "ipc") {
+        return "athena_app_sock";
+    }
+    return "52376";
+}
+
+static inline const char *
+athena_app_client_sock_type(void)
+{
+#ifdef __x86_64__
+    return "tcp";
+#else
+    return "ipc";
 #endif
 }
 
 static inline const char *
-athena_app_sock_name_dflt(void)
+athena_app_client_sock_dir(const std::string& sock_type)
 {
-    if (std::string(athena_app_sock_type_dflt()) == "ipc") {
-        return "athena_app_sock";
+    // When client runs on x86, we really can't tell whether it is
+    // in SIM or running on an actual server host. For now, we don't
+    // anticipate any use for server/client in SIM mode so we
+    // can just assume real HW.
+    
+    if (sock_type == "ipc") {
+        return "/nic/etc";
     }
-    return "52376";
+
+    // TCP client will try to connect to the address below
+    // which is a tun address.
+    return "1.0.0.2";
+}
+
+static inline const char *
+athena_app_client_sock_name(const std::string& sock_type)
+{
+    return athena_app_server_sock_name(sock_type);
 }
 
 static inline std::string

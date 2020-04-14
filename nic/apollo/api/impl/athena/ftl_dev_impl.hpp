@@ -42,6 +42,7 @@
 namespace ftl_dev_impl {
 
 pds_ret_t init(void);
+void fini(void);
 pds_ret_t pollers_qcount_get(uint32_t *ret_qcount);
 pds_ret_t scanners_start(void);
 pds_ret_t scanners_stop(bool quiesce_check);
@@ -62,6 +63,7 @@ pds_ret_t force_conntrack_expired_ts_set(bool force_expired_ts);
 pds_ret_t session_scanners_metrics_get(lif_attr_metrics_t *metrics);
 pds_ret_t conntrack_scanners_metrics_get(lif_attr_metrics_t *metrics);
 pds_ret_t pollers_metrics_get(lif_attr_metrics_t *metrics);
+pds_ret_t timestamp_metrics_get(lif_attr_metrics_t *metrics);
 pds_ret_t session_table_depth_get(uint32_t *ret_table_depth);
 pds_ret_t conntrack_table_depth_get(uint32_t *ret_table_depth);
 uint64_t  mpu_timestamp(void);

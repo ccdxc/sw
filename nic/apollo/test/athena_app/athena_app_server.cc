@@ -92,27 +92,49 @@ server_req_rsp(void *server_sock,
 int
 server_init(void)
 {
-    std::string server_sock_str;
+    std::string sock_type;
+    std::string sock_str;
     int         no_linger = 0;
     int         ret;
 
-    server_sock_str = athena_app_zmqsockstr(athena_app_sock_type_dflt(),
-                                            athena_app_sock_dir_dflt(),
-                                            athena_app_sock_name_dflt());
-    TEST_LOG_INFO("App server ZMQ Socket String: %s\n",
-                  server_sock_str.c_str());
     /*
-     * Unlike regular sockets, one ZMQ socket can serve multiple
-     * client connections simultaneously. Once a socket is bound,
-     * it automatically starts accepting connections.
+     * Unlike regular sockets, one ZMQ socket can bind to multiple transports
+     * and serve multiple client connections simultaneously. Once a socket is
+     * bound, it automatically starts accepting connections.
      * Note: ZMQ_REP is reply mode
      */
     server_ctx = zmq_ctx_new();
     server_sock = zmq_socket(server_ctx, ZMQ_REP);
-    ret = zmq_bind(server_sock, server_sock_str.c_str());
+
+    /*
+     * Bind to TCP to serve clients on server host.
+     */
+    sock_type = athena_app_server_sock_tcp();
+    sock_str = athena_app_zmqsockstr(sock_type,
+                                     athena_app_server_sock_dir(sock_type),
+                                     athena_app_server_sock_name(sock_type));
+    TEST_LOG_INFO("App server binding to ZMQ Socket: %s\n",
+                  sock_str.c_str());
+    ret = zmq_bind(server_sock, sock_str.c_str());
     if (ret) {
-        TEST_LOG_ERR("failed app server bind: %s\n",
-                     zmq_strerror(zmq_errno()));
+        TEST_LOG_ERR("failed app server bind to %s: %s\n",
+                     sock_str.c_str(), zmq_strerror(zmq_errno()));
+        return ret;
+    }
+
+    /*
+     * Bind to IPC to serve clients running on Naples itself.
+     */
+    sock_type = athena_app_server_sock_ipc();
+    sock_str = athena_app_zmqsockstr(sock_type,
+                                     athena_app_server_sock_dir(sock_type),
+                                     athena_app_server_sock_name(sock_type));
+    TEST_LOG_INFO("App server binding to ZMQ Socket: %s\n",
+                  sock_str.c_str());
+    ret = zmq_bind(server_sock, sock_str.c_str());
+    if (ret) {
+        TEST_LOG_ERR("failed app server bind to %s: %s\n",
+                     sock_str.c_str(), zmq_strerror(zmq_errno()));
         return ret;
     }
     zmq_setsockopt(server_sock, ZMQ_LINGER, &no_linger, sizeof(no_linger));

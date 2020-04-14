@@ -32,8 +32,14 @@ static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
 /*
  * Global tolerance for use across multiple linked tests
  */
-static aging_tolerance_t    glb_tolerance;
+static aging_tolerance_t    ct_tolerance;
 static aging_metrics_t      conntrack_metrics(ftl_dev_if::FTL_QTYPE_SCANNER_CONNTRACK);
+
+const aging_tolerance_t&
+ct_tolerance_get(void)
+{
+    return ct_tolerance;
+}
 
 static uint32_t
 conntrack_table_depth(void)
@@ -81,7 +87,7 @@ bool
 conntrack_aging_tolerance_secs_set(test_vparam_ref_t vparam)
 {
     uint32_t secs = vparam.expected_num();
-    glb_tolerance.tolerance_secs_set(secs);
+    ct_tolerance.tolerance_secs_set(secs);
     return true;
 }
 
@@ -95,7 +101,7 @@ conntrack_populate_simple(test_vparam_ref_t vparam)
     conntrack_metrics.baseline();
     conntrack_spec_init(&spec);
 
-    glb_tolerance.reset(vparam.size());
+    ct_tolerance.reset(vparam.size());
     for (uint32_t i = 0; i < vparam.size(); i++) {
 
         /*
@@ -113,11 +119,11 @@ conntrack_populate_simple(test_vparam_ref_t vparam)
         if (!CONNTRACK_CREATE_RET_VALIDATE(ret)) {
             break;
         }
-        glb_tolerance.create_id_map_insert(spec.key.conntrack_id);
+        ct_tolerance.create_id_map_insert(spec.key.conntrack_id);
     }
 
     TEST_LOG_INFO("Conntrack entries created: %d\n",
-                  glb_tolerance.create_id_map_size());
+                  ct_tolerance.create_id_map_size());
     return CONNTRACK_CREATE_RET_VALIDATE(ret) && tuple_eval.zero_failures();
 }
 
@@ -171,7 +177,7 @@ conntrack_populate_random(test_vparam_ref_t vparam)
         break;
     }
 
-    glb_tolerance.reset(count);
+    ct_tolerance.reset(count);
     if (tuple_eval.zero_failures() && CONNTRACK_RET_VALIDATE(ret)) {
         TEST_LOG_INFO("start_idx: %u count: %u\n", start_idx, count);
         for (uint32_t i = 0; i < count; i++) {
@@ -195,13 +201,13 @@ conntrack_populate_random(test_vparam_ref_t vparam)
                 break;
             }
             if (spec.data.flow_state != REMOVED) {
-                glb_tolerance.create_id_map_insert(spec.key.conntrack_id);
+                ct_tolerance.create_id_map_insert(spec.key.conntrack_id);
             }
         }
     }
 
     TEST_LOG_INFO("Conntrack entries created: %u\n",
-                  glb_tolerance.create_id_map_size());
+                  ct_tolerance.create_id_map_size());
     return CONNTRACK_CREATE_RET_VALIDATE(ret) && tuple_eval.zero_failures();
 }
 
@@ -223,7 +229,7 @@ conntrack_populate_full(test_vparam_ref_t vparam)
     spec.data.flow_state = tuple_eval.flowstate(1);
     depth = tuple_eval.num(2);
 
-    glb_tolerance.reset(depth);
+    ct_tolerance.reset(depth);
     if (tuple_eval.zero_failures()) {
         conntrack_spec_init(&spec);
         depth = std::min(depth, conntrack_table_depth());
@@ -236,12 +242,12 @@ conntrack_populate_full(test_vparam_ref_t vparam)
             if (!CONNTRACK_CREATE_RET_VALIDATE(ret)) {
                 break;
             }
-            glb_tolerance.create_id_map_insert(spec.key.conntrack_id);
+            ct_tolerance.create_id_map_insert(spec.key.conntrack_id);
         }
     }
 
     TEST_LOG_INFO("Conntrack entries created: %u\n",
-                  glb_tolerance.create_id_map_size());
+                  ct_tolerance.create_id_map_size());
     return CONNTRACK_CREATE_RET_VALIDATE(ret) && tuple_eval.zero_failures();
 }
 
@@ -256,9 +262,9 @@ conntrack_aging_expiry_fn(uint32_t expiry_id,
 
     case EXPIRY_TYPE_CONNTRACK:
         if (aging_expiry_dflt_fn) {
-            glb_tolerance.expiry_count_inc();
-            glb_tolerance.conntrack_tmo_tolerance_check(expiry_id);
-            glb_tolerance.create_id_map_find_erase(expiry_id);
+            ct_tolerance.expiry_count_inc();
+            ct_tolerance.conntrack_tmo_tolerance_check(expiry_id);
+            ct_tolerance.create_id_map_find_erase(expiry_id);
             ret = (*aging_expiry_dflt_fn)(expiry_id, expiry_type, user_ctx);
         }
         break;
@@ -354,28 +360,28 @@ static bool
 conntrack_aging_expiry_count_check(void *user_ctx)
 {
     conntrack_aging_pollers_poll(user_ctx);
-    return glb_tolerance.expiry_count() >= glb_tolerance.create_count();
+    return ct_tolerance.expiry_count() >= ct_tolerance.create_count();
 }
 
 bool
 conntrack_4combined_expiry_count_check(bool poll_needed)
 {
     if (poll_needed) {
-        conntrack_aging_pollers_poll((void *)&glb_tolerance);
+        conntrack_aging_pollers_poll((void *)&ct_tolerance);
     }
-    return glb_tolerance.expiry_count() >= glb_tolerance.create_count();
+    return ct_tolerance.expiry_count() >= ct_tolerance.create_count();
 }
 
 bool
 conntrack_4combined_result_check(void)
 {
     TEST_LOG_INFO("Conntrack entries aged out: %u, over_age_min: %u, "
-                  "over_age_max: %u\n", glb_tolerance.expiry_count(),
-                  glb_tolerance.over_age_min(), glb_tolerance.over_age_max());
-    glb_tolerance.create_id_map_empty_check();
-    conntrack_metrics.expiry_count_check(glb_tolerance.expiry_count());
+                  "over_age_max: %u\n", ct_tolerance.expiry_count(),
+                  ct_tolerance.over_age_min(), ct_tolerance.over_age_max());
+    ct_tolerance.create_id_map_empty_check();
+    conntrack_metrics.expiry_count_check(ct_tolerance.expiry_count());
     return conntrack_4combined_expiry_count_check() &&
-           glb_tolerance.zero_failures();
+           ct_tolerance.zero_failures();
 }
 
 bool
@@ -383,7 +389,8 @@ conntrack_aging_test(test_vparam_ref_t vparam)
 {
     test_timestamp_t    ts;
 
-    ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(APP_TIME_LIMIT_EXEC_DFLT));
+    ts.time_expiry_set(APP_TIME_LIMIT_EXEC_SECS(ct_tolerance.curr_max_tmo() +
+                                                APP_TIME_LIMIT_EXEC_GRACE));
     ts.time_limit_exec(conntrack_aging_expiry_count_check, nullptr, 0);
     return conntrack_4combined_result_check();
 }
@@ -397,7 +404,7 @@ conntrack_aging_normal_tmo_set(test_vparam_ref_t vparam)
     uint32_t            tmo_val;
     pds_ret_t           ret = PDS_RET_OK;
 
-    glb_tolerance.reset();
+    ct_tolerance.reset();
 
     /*
      * Here we expect tuples of the form {flowtype flowstate tmo_val}
@@ -414,10 +421,10 @@ conntrack_aging_normal_tmo_set(test_vparam_ref_t vparam)
         if (!tuple_eval.zero_failures()) {
             break;
         }
-        glb_tolerance.normal_tmo.conntrack_tmo_set(flowtype, flowstate, tmo_val);
+        ct_tolerance.normal_tmo.conntrack_tmo_set(flowtype, flowstate, tmo_val);
     }
     return CONNTRACK_RET_VALIDATE(ret) && tuple_eval.zero_failures() &&
-           glb_tolerance.zero_failures();
+           ct_tolerance.zero_failures();
 }
 
 bool
@@ -429,7 +436,7 @@ conntrack_aging_accel_tmo_set(test_vparam_ref_t vparam)
     uint32_t            tmo_val;
     pds_ret_t           ret = PDS_RET_OK;
 
-    glb_tolerance.reset();
+    ct_tolerance.reset();
 
     /*
      * Here we expect tuples of the form {flowtype flowstate tmo_val}
@@ -446,18 +453,18 @@ conntrack_aging_accel_tmo_set(test_vparam_ref_t vparam)
         if (!tuple_eval.zero_failures()) {
             break;
         }
-        glb_tolerance.accel_tmo.conntrack_tmo_set(flowtype, flowstate, tmo_val);
+        ct_tolerance.accel_tmo.conntrack_tmo_set(flowtype, flowstate, tmo_val);
     }
     return CONNTRACK_RET_VALIDATE(ret) && tuple_eval.zero_failures() &&
-           glb_tolerance.zero_failures();
+           ct_tolerance.zero_failures();
 }
 
 bool
 conntrack_aging_accel_control(test_vparam_ref_t vparam)
 {
-    glb_tolerance.reset();
-    glb_tolerance.age_accel_control(vparam.expected_bool());
-    return glb_tolerance.zero_failures();
+    ct_tolerance.reset();
+    ct_tolerance.age_accel_control(vparam.expected_bool());
+    return ct_tolerance.zero_failures();
 }
 
 bool

@@ -151,6 +151,18 @@ init(void)
     return ret;
 }
 
+void
+fini(void)
+{
+    if (lif_init_done()) {
+        scanners_stop(true);
+        if (mpu_timestamp_ctl()) {
+            mpu_timestamp_ctl()->stop(true);
+        }
+        pollers_flush();
+    }
+}
+
 pds_ret_t
 scanners_start(void)
 {
@@ -324,6 +336,12 @@ pollers_metrics_get(lif_attr_metrics_t *metrics)
 }
 
 pds_ret_t
+timestamp_metrics_get(lif_attr_metrics_t *metrics)
+{
+    return metrics_get(FTL_QTYPE_MPU_TIMESTAMP, metrics);
+}
+
+pds_ret_t
 session_table_depth_get(uint32_t *ret_table_depth)
 {
     *ret_table_depth = session_scanners() ? 
@@ -446,12 +464,18 @@ lif_init(void)
                 if (mpu_timestamp_ctl() && (ret == PDS_RET_OK)) {
                     ret = mpu_timestamp_ctl()->start(&devcmd_qinit);
                 }
+#if 0
+                /*
+                 * Keep disabled for now until flow cache (hash) deletion
+                 * is implemented for aging.
+                 */
                 if (session_scanners() && (ret == PDS_RET_OK)) {
                     ret = session_scanners()->start(&devcmd_qinit);
                 }
                 if (conntrack_scanners() && (ret == PDS_RET_OK)) {
                     ret = conntrack_scanners()->start(&devcmd_qinit);
                 }
+#endif
             }
             devcmd_qinit.owner_pre_unlock();
         }

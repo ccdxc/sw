@@ -20,6 +20,12 @@ pds_flow_age_init(void)
     return (pds_ret_t)ftl_pollers_client::init();
 }
 
+void
+pds_flow_age_fini(void)
+{
+    ftl_pollers_client::fini();
+}
+
 pds_ret_t
 pds_flow_age_hw_scanners_start(void)
 {

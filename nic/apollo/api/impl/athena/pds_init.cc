@@ -13,6 +13,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/api/include/athena/pds_flow_age.h"
 #include "nic/sdk/asic/asic.hpp"
 
 using namespace sdk;
@@ -74,6 +75,10 @@ pds_global_init (pds_cinit_params_t *params)
         PDS_TRACE_ERR("DNAT map init failed with ret %u\n", ret);
         return (pds_ret_t)ret;
     }
+    ret = (sdk_ret_t)pds_flow_age_init();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Flow aging init failed with ret %u\n", ret);
+    }
     return (pds_ret_t)ret;
 }
 
@@ -88,6 +93,7 @@ pds_thread_init (uint32_t core_id)
 void
 pds_global_teardown ()
 {
+    pds_flow_age_fini();
     pds_dnat_map_delete();
     pds_flow_cache_delete();
     pds_teardown();

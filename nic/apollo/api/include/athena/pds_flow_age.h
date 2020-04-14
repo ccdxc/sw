@@ -47,14 +47,20 @@ typedef pds_ret_t (*pds_flow_expiry_fn_t)(uint32_t expiry_id,
                                           void *user_ctx);
 
 /// \brief     Initialize flow aging module
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    This function implements one-time initialization of the flow aging
 /// \remark    module. Calling the same function multiple times will have no
 /// \remark    adverse effects and simply be treated as no-op.
 pds_ret_t pds_flow_age_init(void);
 
+/// \brief     Finalize flow aging module
+/// \return    #PDS_RET_OK on success, failure status code on error
+/// \remark    This function stops and quiesces all hardware scanners. Pollers
+/// \remark    queues are also flushed.
+void pds_flow_age_fini(void);
+
 /// \brief     Start all instances of HW scanner
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    Once PDS has created hardware scanners, the initialization process would
 /// \remark    eventually and automatically activate these scanners so there is no need
 /// \remark    for the user to invoke this API. However, if the user chose
@@ -64,26 +70,26 @@ pds_ret_t pds_flow_age_hw_scanners_start(void);
 
 /// \brief     Stop all instances of HW scanner
 /// \param[in] flag to request wait until all scanners have reached quiesce state
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    This function disables the scheduling of all hardware scanners and returns
 /// \remark    them to the idle state.
 pds_ret_t pds_flow_age_hw_scanners_stop(bool quiesce_check);
 
 /// \brief     Flush all software poller queues
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    This function discards all pending "poller slot data" in all poller queues
 /// \remark    and returns the queues to the empty state.
 pds_ret_t pds_flow_age_sw_pollers_flush(void);
 
 /// \brief     Return the number of poller queues configured
 /// \param[out] ret_qcount: location to hold the returned queue count
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    This function returns the number of poller queues.
 pds_ret_t pds_flow_age_sw_pollers_qcount(uint32_t *ret_qcount);
 
 /// \brief     Return the default PDS expiry handler
 /// \param[out] ret_fn_dflt: location to hold the returned handler address
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    This function returns the address of the default PDS
 /// \remark    function that handles flow expiry.
 pds_ret_t pds_flow_age_sw_pollers_expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt);
@@ -94,7 +100,7 @@ pds_ret_t pds_flow_age_sw_pollers_expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_df
 /// \param[in] expiry_fn: the user may also supply a function to handle expired
 ///            entries. If NULL, PDS software will provide a representative
 ///            handler to delete the entry (NULL is the default).
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    This function provides an indication to PDS software whether
 /// \remark    the user will take responsibility for issuing calls to 
 /// \remark    pds_flow_age_sw_pollers_poll() in its own threads, or leave
@@ -108,7 +114,7 @@ pds_ret_t pds_flow_age_sw_pollers_poll_control(bool user_will_poll,
 /// \brief     Submit a poll request (a burst dequeue) on a poller queue
 /// \param[in] poller_id: poller queue ID
 /// \param[in] user_ctx: pointer to user context, if any
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    This function should only be called if the user intended to take
 /// \remark    responsibility for doing all polling in its own threads. The 
 /// \remark    function will submit a burst dequeue on a poller queue
@@ -122,7 +128,7 @@ pds_ret_t pds_flow_age_sw_pollers_poll(uint32_t poller_id,
 
 /// \brief     Set normal inactivity timeout values for different types of flow
 /// \param[in] normal timeouts specification
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    Normal inactivity timeouts are assigned default values at initialization time and can
 /// \remark    be changed at any time using this function (i.e., it is not necessary to
 /// \remark    stop and restart the hardware scanners when modifying normal timeouts).
@@ -130,14 +136,14 @@ pds_ret_t pds_flow_age_normal_timeouts_set(const pds_flow_age_timeouts_t *norm_a
 
 /// \brief     Return the currently configured set of normal timeout values
 /// \param[out] location to hold the returned normal timeouts specification
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    This function retrieves and returns the currently configured set
 /// \remark    of normal timeout values.
 pds_ret_t pds_flow_age_normal_timeouts_get(pds_flow_age_timeouts_t *norm_age_timeouts);
 
 /// \brief     Set accelerated inactivity timeout values for different types of flow
 /// \param[in] accelerated timeouts specification
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    Similarly, accelerated inactivity timeouts are assigned default values at initialization
 /// \remark    time and can be changed at any time using this function (i.e., it is not necessary to
 /// \remark    stop and restart the hardware scanners when modifying accelerated timeouts).
@@ -145,14 +151,14 @@ pds_ret_t pds_flow_age_accel_timeouts_set(const pds_flow_age_timeouts_t *accel_a
 
 /// \brief     Return the currently configured set of accelerated timeout values
 /// \param[out] location to hold the returned accelerated timeouts specification
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    This function retrieves and returns the currently configured set
 /// \remark    of accelerated timeout values.
 pds_ret_t pds_flow_age_accel_timeouts_get(pds_flow_age_timeouts_t *accel_age_timeouts);
 
 /// \brief     Select or deselect accelerated aging
 /// \param[in] True to select, false to deselect
-/// \return    #SDK_RET_OK on success, failure status code on error
+/// \return    #PDS_RET_OK on success, failure status code on error
 /// \remark    When selected, scanners will use the accelerated timeouts template for detecting
 /// \remark    inactive flows. When deselected, scanners will use the normal timeouts template.
 /// \remark    The default is false (deselect).

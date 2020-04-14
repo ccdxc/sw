@@ -207,21 +207,28 @@ pr_mem_unmap(void *va)
 {
     pal_data_t *pd = pal_get_data();
     pal_mmap_region_t *pr = pr_findva(va, 4);
-    pr->mapped = 0;
-    munmap(pr->va, pr->sz);    
 
-    if (pr->next) {
-        pr->next->prev = pr->prev;
+    /*
+     * Multiple VAs could have been anchored by the same pr
+     * and the pr might already have been freed.
+     */
+    if (pr) {
+        pr->mapped = 0;
+        munmap(pr->va, pr->sz);    
+
+        if (pr->next) {
+            pr->next->prev = pr->prev;
+        }
+
+        if (pr->prev) {
+            pr->prev->next = pr->next;
+        }
+
+        if (pd->regions == pr) {
+            pd->regions = pr->next;
+        }
+
+        free(pr);
     }
-
-    if (pr->prev) {
-        pr->prev->next = pr->next;
-    }
-
-    if (pd->regions == pr) {
-        pd->regions = pr->next;
-    }
-
-    free(pr);
 }
 

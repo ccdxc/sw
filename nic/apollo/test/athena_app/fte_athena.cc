@@ -323,10 +323,6 @@ _init_pollers_client (void)
     uint32_t per_lcore_qcount;
     uint32_t qid;
 
-    if (pds_flow_age_init() != PDS_RET_OK) {
-        rte_exit(EXIT_FAILURE, "failed pds_flow_age_init");
-    }
-
     lcore_count = std::min(rte_lcore_count(), (uint32_t)FTE_MAX_CORES);
     if (lcore_count && (fte_call_master_type == SKIP_MASTER)) {
         lcore_count--;

@@ -10,7 +10,7 @@
 
 #include "ftl_dev_impl.hpp"
 #include "ftl_pollers_client.hpp"
-#include "nic/apollo/api/include/athena/pds_flow_session.h"
+#include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 #include "nic/apollo/api/include/athena/pds_conntrack.h"
 
 #include <rte_spinlock.h>
@@ -155,6 +155,12 @@ init(void)
     return ret;
 }
 
+void
+fini(void)
+{
+    ftl_dev_impl::fini();
+}
+
 uint32_t
 qcount_get(void)
 {
@@ -205,6 +211,12 @@ pds_ret_t
 pollers_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics)
 {
     return ftl_dev_impl::pollers_metrics_get(metrics);
+}
+
+pds_ret_t
+timestamp_metrics_get(ftl_dev_if::lif_attr_metrics_t *metrics)
+{
+    return ftl_dev_impl::timestamp_metrics_get(metrics);
 }
 
 uint32_t
