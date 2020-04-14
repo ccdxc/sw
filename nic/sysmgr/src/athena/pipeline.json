@@ -8,13 +8,5 @@
         "cpu-max-percentage": 75,
         "timeout": 0.0,
         "cpu-affinity": "0x1"
-    },
-    {
-        "name": "dhcpd",
-        "command": "/nic/tools/start-dhcpd.sh start",
-        "dependencies": [],
-        "flags": ["save_stdout_on_crash"],
-        "timeout": 0.0,
-        "cpu-affinity": "0x1"
     }
 ]
