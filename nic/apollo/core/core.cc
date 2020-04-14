@@ -186,6 +186,28 @@ spawn_periodic_thread (pds_state *state)
 }
 
 sdk_ret_t
+spawn_pciemgr_thread (pds_state *state)
+{
+    sdk::lib::thread    *new_thread;
+
+    if (state->platform_type() != platform_type_t::PLATFORM_TYPE_RTL) {
+        // spawn pciemgr thread
+        new_thread =
+            thread_create("pciemgr", PDS_THREAD_ID_PCIEMGR,
+                sdk::lib::THREAD_ROLE_CONTROL,
+                0x0,    // use all control cores
+                pdspciemgr::pciemgrapi::pciemgr_thread_start,
+                sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                NULL);
+        SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                                "pciemgr thread create failure");
+        new_thread->start(new_thread);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 spawn_nicmgr_thread (pds_state *state)
 {
     sdk::event_thread::event_thread *new_thread;

@@ -244,6 +244,13 @@ mpartition_init (pds_init_params_t *params, std::string mem_str)
 static void
 spawn_threads (void)
 {
+    // spawn pciemgr thread
+    core::spawn_pciemgr_thread(&api::g_pds_state);
+
+    PDS_TRACE_INFO("Waiting for pciemgr server to come up ...");
+    // TODO: we need to do better here !! losing 2 seconds
+    sleep(2);
+
     // spawn api thread
     core::spawn_api_thread(&api::g_pds_state);
 

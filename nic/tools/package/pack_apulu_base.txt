@@ -295,7 +295,6 @@ nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_with
 nic/build/$ARCH/$PIPELINE/lib/libflowtestagenthooks.so            /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/testapp                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                       /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/pciemgrd                            /nic/bin/
 
 # dhcp server
 nic/tools/dhcp-server/S80dhcp-server                              /nic/tools/start-dhcpd.sh
