@@ -1,35 +1,22 @@
 #!/bin/bash
+set -x
 
- exists()
+exists()
 {
   command -v "$1" >/dev/null 2>&1
 }
 
- if exists yum; then
-  yum install -y \
-    libtool \
-    automake \
-    autoconf \
-    cmake \
-    gcc \
-    libnl-devel \
-    libnl3-devel \
-    libudev-devel \
-    make \
-    pkgconfig \
-    valgrind-devel \
-    iperf3 \
-    vim \
-    sshpass \
-    sysfsutils \
-    net-tools \
-    tcpdump \
-    psmisc \
-    hping3
+if exists yum; then
+	installer=yum
+elif exists apt-get; then
+	installer=apt-get
+elif exists zypper; then
+	installer=zypper
+else
+	echo "DIDNT FIND THE INSTALLER"
+fi
 
- else
-   apt-get install -y \
-    build-essential \
+ $installer install -y \
     libtool \
     automake \
     autoconf \
@@ -43,4 +30,9 @@
     valgrind \
     psmisc \
     hping3
-fi
+
+ if [ "$installer" = "apt-get" ]; then
+	 $installer install -y build-essential
+ elif [ "$installer" = "zypper" ]; then
+	 $installer install -y kernel-devel
+ fi

@@ -65,7 +65,7 @@ def __print_intfs_esx(mac_hint, intf_type):
 def __get_nics_output_linux():
     out = subprocess.Popen(['lshw', '-json'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, _ = out.communicate()
-    return output
+    return output.decode('utf-8')
 
 
 
