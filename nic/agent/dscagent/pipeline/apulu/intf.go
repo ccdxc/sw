@@ -127,6 +127,11 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 			s, err := infraAPI.Read("Network", nw.GetKey())
 			if err != nil {
 				log.Errorf("Network: %s not found during update | Err: %s", nw.GetKey(), err)
+				if uid == nil {
+					// in case of subnet being detached from host-pf, if subnet lookup fails, it is harmless
+					// because the subnet must have been already cleared up, don't return an error
+					return nil
+				}
 				return errors.Wrapf(types.ErrObjNotFound, "Network: %s not found during update | Err: %s", nw.GetKey(), err)
 			}
 			err = nw.Unmarshal(s)

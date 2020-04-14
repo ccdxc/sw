@@ -226,7 +226,7 @@ func (wdb *dscWatcherDB) addDSCWatcherInfoWatchOptions(kind string, options api.
 		// if watchoptions haven't changed, just return
 		if info.filterGroup != nil {
 			if getWatchOptionsStr(info.watchOptions) == getWatchOptionsStr(options) {
-				return nil, info.filterGroup.filters, nil
+				return info.filterGroup.filters, info.filterGroup.filters, nil
 			}
 
 			// watch options got updated, save the old filter group and then update

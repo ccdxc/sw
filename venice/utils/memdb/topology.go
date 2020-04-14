@@ -62,6 +62,7 @@ type topoMgr struct {
 	topoTriggerMap map[string]map[string]topoFunc
 	topology       map[string]topoInterface
 	refCounts      refCntInterface
+	tenantRefCnt   map[string]int
 }
 
 type topoRefs struct {
@@ -481,6 +482,7 @@ func (tn *topoNode) addNode(obj Object) {
 
 			// trigger an update to watchoptions of the effected kinds
 			dsc := nwIf.Status.DSC
+			tn.tm.tenantRefCnt[dsc+tenant]++
 			tn.updateRefCounts(k1, dsc, tenant, obj.GetObjectMeta().Namespace, true)
 			opts := tn.evalWatchOptions(dsc, kind, key, tenant, obj.GetObjectMeta().Namespace, updateVrf|updateIPAM|updateSgPolicy)
 			log.Infof("New watchoptions after topo update: %v", opts)
@@ -549,11 +551,14 @@ func (tn *topoNode) deleteNode(obj Object, evalOpts bool) {
 			dsc := nwIf.Status.DSC
 			// decrement the refcnt
 			tn.updateRefCounts(k1, dsc, tenant, obj.GetObjectMeta().Namespace, false)
-			if evalOpts {
+			tn.tm.tenantRefCnt[dsc+tenant]--
+			if tn.tm.tenantRefCnt[dsc+tenant] == 0 {
 				// trigger an update to watchoptions of the effected kinds
 				opts := tn.evalWatchOptions(dsc, kind, key, tenant, obj.GetObjectMeta().Namespace, updateVrf|updateIPAM|updateSgPolicy)
 				log.Infof("New watchoptions after topo update: %v", opts)
-				for _, kind := range order {
+				l := len(order)
+				for a := l; a > 0; a-- {
+					kind = order[a-1]
 					if opt, ok := opts[kind]; ok {
 						oldFilters, newFilters, err := tn.md.addDscWatchOptions(dsc, kind, opt)
 						if err == nil {
@@ -620,18 +625,12 @@ func (tn *topoNode) updateNode(old, new Object) {
 		oldTenant := oldObj.Spec.VrfName
 		oldNw := oldObj.Spec.Network
 
-		evalOpts := true
-
-		if newTenant != "" && newNw != "" {
-			evalOpts = false
-		}
-
 		if oldTenant != "" && oldNw != "" {
 			// remove the oldObj references
-			tn.deleteNode(old, evalOpts)
+			tn.deleteNode(old, true)
 		}
 
-		if evalOpts == false {
+		if newTenant != "" && newNw != "" {
 			tn.addNode(new)
 		}
 	case "Network":
@@ -937,6 +936,7 @@ func newTopoMgr(md *Memdb) topoMgrInterface {
 		topoKinds:      []string{"Interface", "Network", "Vrf", "IPAMPolicy", "NetworkSecurityPolicy"},
 		topoTriggerMap: make(map[string]map[string]topoFunc),
 		topology:       make(map[string]topoInterface),
+		tenantRefCnt:   make(map[string]int),
 	}
 	mgr.refCounts = newTopoRefCnt()
 
