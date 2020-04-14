@@ -358,6 +358,7 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	log.Infof("IPConfig during DHCP: %v", ipCfg)
 	d.nmd.SetIPConfig(ipCfg)
 	d.nmd.SetMgmtInterface(mgmtLink.Attrs().Name)
+	d.nmd.SetNetworkMode(mgmtLink.Attrs().Name)
 
 	// Set the interface IPs
 	// Note: This is a temporary code. This config needs to handled by the netagent

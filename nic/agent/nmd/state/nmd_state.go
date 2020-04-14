@@ -1563,6 +1563,17 @@ func (n *NMD) SetMgmtInterface(intf string) {
 	n.config.Status.ManagementInterface = intf
 }
 
+// SetNetworkMode sets the network mode based on the mgmt intf name
+func (n *NMD) SetNetworkMode(intf string) {
+	n.Lock()
+	defer n.Unlock()
+	nwMode := mgmtIntftoNwMode(intf)
+	// TODO: Fix hack. Do not change network mode for Cloud pipeline for now.
+	if n.Pipeline == nil || n.Pipeline.GetPipelineType() != globals.NaplesPipelineApollo {
+		n.config.Spec.NetworkMode = nwMode
+	}
+}
+
 // GetVeniceIPs returns the venice co-ordinates
 func (n *NMD) GetVeniceIPs() []string {
 	return n.config.Status.Controllers
@@ -1595,6 +1606,19 @@ func runCmd(cmdStr string) error {
 	}
 
 	return err
+}
+
+func mgmtIntftoNwMode(mgmtIntf string) (nwMode string) {
+	switch mgmtIntf {
+	case "bond0":
+		nwMode = nmd.NetworkMode_INBAND.String()
+		return
+	case "oob_mnic0":
+		nwMode = nmd.NetworkMode_OOB.String()
+		return
+	default:
+		return
+	}
 }
 
 func parseMgmtIfMAC(mgmtNetwork string) (mgmtIfMAC uint64) {

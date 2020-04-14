@@ -61,6 +61,7 @@ type NmdAPI interface {
 	SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig)
 	PersistState(updateDelphi bool) error
 	SetMgmtInterface(intf string)
+	SetNetworkMode(intf string)
 	SetDSCID(name string)
 }
 

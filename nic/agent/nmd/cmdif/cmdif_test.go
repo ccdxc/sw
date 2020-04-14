@@ -57,6 +57,10 @@ func (ag *mockAgent) SetMgmtInterface(intf string) {
 
 }
 
+func (ag *mockAgent) SetNetworkMode(intf string) {
+
+}
+
 func (ag *mockAgent) RegisterCMD(cmd nmdapi.CmdAPI) error {
 	return nil
 }
