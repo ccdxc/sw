@@ -797,8 +797,13 @@ asicpd_init (asic_cfg_t *cfg)
     asic_cfg_t capri_cfg;
 
     capri_cfg_init(cfg, capri_cfg);
-    //@@TODO - check and update redundant initializations within asic_state_init() and capri_init().
-    return capri_init(&capri_cfg);
+    if (sdk::asic::asic_is_hard_init()) {
+        //@@TODO - check and update redundant initializations within
+        // asic_state_init() and capri_init().
+        return capri_init(&capri_cfg);
+    } else {
+        return capri_soft_init(&capri_cfg);
+    }
 }
 
 sdk_ret_t
