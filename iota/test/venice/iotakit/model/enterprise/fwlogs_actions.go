@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/fwlog"
@@ -70,14 +71,19 @@ func (sm *SysModel) GetFwLogObjectCount(
 // entry from the list.
 func (sm *SysModel) getLatestObjectName(tenantName, bucketName, objectKeyPrefix string) (string, error) {
 	temp := []string{}
-
+	timeFormat := "2006-01-02T15:04:05Z"
+	startTs := time.Now().UTC().Add(-5 * time.Minute).Format(timeFormat)
+	endTs := time.Now().UTC().Add(5 * time.Minute).Format(timeFormat)
+	fs := "start-time=" + startTs + ",end-time=" + endTs + ",dsc-id=" + objectKeyPrefix
 	opts := api.ListWatchOptions{
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    tenantName,
 			Namespace: bucketName,
 		},
+		FieldSelector: fs,
 	}
 
+	fmt.Println("Field Selector", fs)
 	ctx, err := sm.VeniceLoggedInCtx(context.Background())
 	if err != nil {
 		return "", err

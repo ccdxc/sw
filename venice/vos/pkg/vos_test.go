@@ -2,7 +2,9 @@ package vospkg
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"strings"
 	"testing"
 
 	minioclient "github.com/minio/minio-go"
@@ -17,20 +19,21 @@ import (
 type mockBackend struct {
 	bucketExists, makeBucket, removeBucket, putBucket int
 	putObject, removeObject, listObject, statObject   int
-
-	retErr       error
-	bExists      bool
-	putSize      int64
-	putErr       error
-	objInfo      minioclient.ObjectInfo
-	listObjFn    func() <-chan minioclient.ObjectInfo
-	listenObjFn  func() <-chan minioclient.NotificationInfo
-	makeBucketFn func(bucketName string, location string) error
-	delBucketFn  func(bucketname string) error
-	delObjFn     func(b, n string) error
-	statFunc     func(bucketName, objectName string, opts minioclient.StatObjectOptions) (minioclient.ObjectInfo, error)
-	bExistsFunc  func(in string) (bool, error)
-	fObj         *fakeStoreObj
+	fwlogObjects                                      map[string]*fakeStoreObj
+	retErr                                            error
+	bExists                                           bool
+	putSize                                           int64
+	putErr                                            error
+	objInfo                                           minioclient.ObjectInfo
+	listObjFn                                         func() <-chan minioclient.ObjectInfo
+	listFwLogObjFn                                    func(prefix string) <-chan minioclient.ObjectInfo
+	listenObjFn                                       func() <-chan minioclient.NotificationInfo
+	makeBucketFn                                      func(bucketName string, location string) error
+	delBucketFn                                       func(bucketname string) error
+	delObjFn                                          func(b, n string) error
+	statFunc                                          func(bucketName, objectName string, opts minioclient.StatObjectOptions) (minioclient.ObjectInfo, error)
+	bExistsFunc                                       func(in string) (bool, error)
+	fObj                                              *fakeStoreObj
 }
 
 func (f *mockBackend) BucketExists(bucketName string) (bool, error) {
@@ -56,6 +59,12 @@ func (f *mockBackend) RemoveBucket(bucketName string) error {
 }
 
 func (f *mockBackend) PutObject(bucketName, objectName string, reader io.Reader, objectSize int64, opts minioclient.PutObjectOptions) (n int64, err error) {
+	if strings.Contains(bucketName, fwlogsBucketName) {
+		if f.fwlogObjects == nil {
+			f.fwlogObjects = map[string]*fakeStoreObj{}
+		}
+		f.fwlogObjects[objectName] = &fakeStoreObj{objReader: reader}
+	}
 	f.putObject++
 	return f.putSize, f.putErr
 }
@@ -65,6 +74,9 @@ func (f *mockBackend) RemoveObject(bucketName, objectName string) error {
 }
 func (f *mockBackend) ListObjectsV2(bucketName, objectPrefix string, recursive bool, doneCh <-chan struct{}) <-chan minioclient.ObjectInfo {
 	f.listObject++
+	if strings.Contains(bucketName, fwlogsBucketName) {
+		return f.listFwLogObjFn(objectPrefix)
+	}
 	return f.listObjFn()
 }
 func (f *mockBackend) StatObject(bucketName, objectName string, opts minioclient.StatObjectOptions) (minioclient.ObjectInfo, error) {
@@ -85,14 +97,21 @@ func (f *mockBackend) ListenBucketNotification(bucketName, prefix, suffix string
 }
 
 func (f *mockBackend) GetStoreObject(ctx context.Context, bucketName, objectName string, opts minioclient.GetObjectOptions) (vos.StoreObject, error) {
+	if strings.Contains(bucketName, fwlogsBucketName) {
+		obj, ok := f.fwlogObjects[objectName]
+		if ok {
+			return obj, nil
+		}
+		return nil, fmt.Errorf("object not found")
+	}
 	return f.fObj, f.retErr
 }
 
 type fakeStoreObj struct {
 	closeErr, statErr error
 	statObjInfo       minioclient.ObjectInfo
-
-	readFn func([]byte) (int, error)
+	objReader         io.Reader
+	readFn            func([]byte) (int, error)
 }
 
 // Close is a mock implementation
@@ -111,6 +130,11 @@ func (f *fakeStoreObj) Read(b []byte) (n int, err error) {
 	if f.readFn != nil {
 		return f.readFn(b)
 	}
+
+	if f.objReader != nil {
+		return f.objReader.Read(b)
+	}
+
 	return 0, nil
 }
 

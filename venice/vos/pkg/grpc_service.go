@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/minio/minio-go"
 	"github.com/pkg/errors"
@@ -13,8 +14,11 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/fields"
+	"github.com/pensando/sw/api/generated/fwlog"
 	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -23,6 +27,11 @@ import (
 	"github.com/pensando/sw/venice/vos"
 	vosinternalprotos "github.com/pensando/sw/venice/vos/protos"
 )
+
+// We dont support pagination over listing fwlogs objects as of now.
+// Setting a max of 10000 for now. Its more then enough for returning
+// 5 days worth of objects for a DSC.
+const fwLogsMaxResults = 10000
 
 func newGrpcServer(instance *instance, client vos.BackendClient) (*grpcBackend, error) {
 	log.InfoLog("msg", "creating new gRPC backend", "port", globals.VosGRPcPort)
@@ -272,11 +281,42 @@ func (g *grpcBackend) AutoListObject(ctx context.Context, in *api.ListWatchOptio
 	if g.client == nil {
 		return nil, errors.New("not initialized")
 	}
-
 	if in == nil {
 		return nil, errors.New("ListWatchOptions is nil")
 	}
 
+	fSelector := in.GetFieldSelector()
+	var startTs, endTs time.Time
+	var dscID string
+	if !utils.IsEmpty(fSelector) {
+		fldSelectors, err := fields.Parse(fSelector)
+		if err != nil {
+			log.Errorf("failed to parse the field selector, %v, err: %+v", fSelector, err)
+			return nil, apierrors.ToGrpcError(err, []string{"failed to parse the field selector"}, int32(codes.InvalidArgument), "", nil)
+		}
+		for _, req := range fldSelectors.GetRequirements() {
+			key := req.GetKey()
+			values := req.GetValues()
+			switch key {
+			case "start-time":
+				startTs, err = time.Parse(time.RFC3339Nano, values[0])
+				if err != nil {
+					return nil, apierrors.ToGrpcError(err, []string{"failed to parse the startTs"}, int32(codes.InvalidArgument), "", nil)
+				}
+			case "end-time":
+				endTs, err = time.Parse(time.RFC3339Nano, values[0])
+				if err != nil {
+					return nil, apierrors.ToGrpcError(err, []string{"failed to parse the endTs"}, int32(codes.InvalidArgument), "", nil)
+				}
+			case "dsc-id":
+				dscID = values[0]
+			}
+		}
+	}
+
+	if in.Namespace != fwlogsBucketName && (!startTs.IsZero() || !endTs.IsZero() || dscID != "") {
+		return nil, apierrors.ToGrpcError("fieldselectors are only supported for fwlogs namespace", []string{""}, int32(codes.InvalidArgument), "", nil)
+	}
 	t := objstore.Object{}
 	t.Namespace = in.Namespace
 	if str, err := g.validateNamespace(&t); err != nil {
@@ -298,28 +338,38 @@ func (g *grpcBackend) AutoListObject(ctx context.Context, in *api.ListWatchOptio
 		}
 		return nil, apierrors.ToGrpcError("failed to complete PreOp checks", strs, int32(codes.FailedPrecondition), "", nil)
 	}
-	doneCh := make(chan struct{})
-	objCh := g.client.ListObjectsV2(bucket, "", true, doneCh)
-	for mobj := range objCh {
-		// List does not seem to be returing with UserMeta populated. Workaround by doing a stat.
-		stat, err := g.client.StatObject(bucket, mobj.Key, minio.StatObjectOptions{})
+	if in.Namespace == fwlogsBucketName {
+		var err error
+		ret, err = listFwLogObjects(g.client, bucket, startTs, endTs, dscID, fwLogsMaxResults)
 		if err != nil {
-			log.Errorf("failed to get stat for object [%v.%v](%s)", bucket, mobj.Key, err)
-			continue
+			return nil, apierrors.ToGrpcError(err, []string{}, int32(codes.InvalidArgument), "", nil)
 		}
-		lobj := &objstore.Object{
-			TypeMeta:   api.TypeMeta{Kind: "Object"},
-			ObjectMeta: api.ObjectMeta{Name: mobj.Key},
-			Spec:       objstore.ObjectSpec{ContentType: stat.ContentType},
-			Status: objstore.ObjectStatus{
-				Size_:  stat.Size,
-				Digest: stat.ETag,
-			},
+	} else {
+		doneCh := make(chan struct{})
+		objCh := g.client.ListObjectsV2(bucket, "", true, doneCh)
+		for mobj := range objCh {
+			// List does not seem to be returing with UserMeta populated. Workaround by doing a stat.
+			stat, err := g.client.StatObject(bucket, mobj.Key, minio.StatObjectOptions{})
+			if err != nil {
+				log.Errorf("failed to get stat for object [%v.%v](%s)", bucket, mobj.Key, err)
+				continue
+			}
+			lobj := &objstore.Object{
+				TypeMeta:   api.TypeMeta{Kind: "Object"},
+				ObjectMeta: api.ObjectMeta{Name: mobj.Key},
+				Spec: objstore.ObjectSpec{
+					ContentType: stat.ContentType,
+				},
+				Status: objstore.ObjectStatus{
+					Size_:  stat.Size,
+					Digest: stat.ETag,
+				},
+			}
+			updateObjectMeta(&stat, &lobj.ObjectMeta)
+			ret.Items = append(ret.Items, lobj)
 		}
-		updateObjectMeta(&stat, &lobj.ObjectMeta)
-		ret.Items = append(ret.Items, lobj)
+		close(doneCh)
 	}
-	close(doneCh)
 	errs = g.instance.RunPlugins(ctx, in.Namespace, vos.PostOp, vos.List, nil, g.client)
 	if errs != nil {
 		var strs []string
@@ -594,4 +644,23 @@ func (g *grpcBackend) WatchDiskThresholdUpdates(opts *api.ListWatchOptions,
 
 	err := g.instance.Watch(stream.Context(), diskUpdateWatchPath, peer, handleFn, nil)
 	return err
+}
+
+func (g *grpcBackend) DownloadFwLogs(ctx context.Context, obj *objstore.Object) (*fwlog.FwLogList, error) {
+	log.Infof("got call to DownloadFwLogs [%+v]", obj.Name)
+
+	bucket := obj.Tenant + "." + obj.Namespace
+	// convert 1st 5 "_" to "/"
+	name := strings.Replace(obj.Name, "_", "/", 5)
+
+	if len(name) == 0 || len(obj.Tenant) == 0 || len(obj.Namespace) == 0 {
+		return nil, errors.New("prefix or tenant or namespace passed is empty")
+	}
+
+	objReader, err := g.client.GetStoreObject(ctx, bucket, name, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, apierrors.ToGrpcError("client error", []string{err.Error()}, int32(codes.Internal), "", nil)
+	}
+	dscID := strings.Split(name, "/")[0]
+	return parseFwLogCSV(dscID, objReader)
 }

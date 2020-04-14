@@ -52,6 +52,9 @@ func TestStoreImpl(t *testing.T) {
 	fb.listObjFn = func() <-chan minioclient.ObjectInfo {
 		return objCh
 	}
+	fb.listFwLogObjFn = func(prefix string) <-chan minioclient.ObjectInfo {
+		return objCh
+	}
 	httphdr := http.Header{}
 	objs := []minioclient.ObjectInfo{
 		{
