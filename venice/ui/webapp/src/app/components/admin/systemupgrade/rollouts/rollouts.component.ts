@@ -38,7 +38,8 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   exportMap: CustomExportMap = {};
   disableTableWhenRowExpanded: boolean = true;
   selectedRollOut: RolloutRollout;
-  rolloutImages: IObjstoreObjectList ;
+  rolloutImages: IObjstoreObjectList;
+  shouldEnableCreate: boolean = false;
 
   rolloutsEventUtility: HttpEventUtility<RolloutRollout>;
   bodyicon: any = {
@@ -140,6 +141,10 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
         this.rolloutImages = response.body as IObjstoreObjectList;
         if (this.rolloutImages.items && this.rolloutImages.items.length > 0) {
           this.rolloutImages.items = Utility.sortDate(this.rolloutImages.items, ['meta', 'mod-time'], -1);
+          this.shouldEnableCreate = true;
+          this.buildToolbarData();
+        } else {
+          this.controllerService.invokeInfoToaster('No images available', 'please upload image');
         }
       },
       (error) => {
@@ -171,7 +176,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
           cssClass: 'global-button-primary rollouts-button',
           text: 'CREATE ROLLOUT',
           // We show 'create button' in 'pending tab' and 'past tab'
-          computeClass: () =>  this.shouldEnableButtons ? '' : 'global-button-disabled',
+          computeClass: () =>  this.shouldEnableCreate ? '' : 'global-button-disabled',
           callback: () => {
             // Switching to PENDING Tab for creation if on some other Tab
             this.currentIndex = this.tabIndex;

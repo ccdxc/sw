@@ -964,7 +964,7 @@
                                     "resource": {
                                         "tenant": "default",
                                         "group": "monitoring",
-                                        "kind": "TroubleshootingSession",
+                                        "kind": "troubleshootSession",
                                         "namespace": "default"
                                     },
                                     "action": "all-actions"
@@ -6938,6 +6938,895 @@
                         ]
                     }
                 }
+            }
+        },
+        "mirrorsession": {
+            "POST": {
+                "category": "troubleshoot",
+                "kind": "mirrorsession",
+                "method": "POST",
+                "request": {
+                    "kind": null,
+                    "api-version": null,
+                    "meta": {
+                        "name": "test",
+                        "tenant": null,
+                        "namespace": null,
+                        "generation-id": null,
+                        "resource-version": null,
+                        "uuid": null,
+                        "labels": null,
+                        "self-link": null
+                    },
+                    "spec": {
+                        "packet-size": null,
+                        "collectors": [
+                            {
+                                "type": "erspan",
+                                "export-config": {
+                                    "destination": "1.1.1.1",
+                                    "gateway": "2.2.2.2"
+                                }
+                            }
+                        ],
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "packet-filters": [
+                            "all-packets"
+                        ],
+                        "interfaces": null
+                    }
+                },
+                "response": {
+                    "kind": "MirrorSession",
+                    "api-version": "v1",
+                    "meta": {
+                        "name": "test",
+                        "tenant": "default",
+                        "namespace": "default",
+                        "generation-id": "1",
+                        "resource-version": "210853083",
+                        "uuid": "ee549f06-ba6f-48ad-8b8e-17c8083ed428",
+                        "creation-time": "2020-04-13T03:13:18.941158129Z",
+                        "mod-time": "2020-04-13T03:13:18.941163594Z",
+                        "self-link": "/configs/monitoring/v1/tenant/default/MirrorSession/test"
+                    },
+                    "spec": {
+                        "start-condition": {},
+                        "collectors": [
+                            {
+                                "type": "erspan",
+                                "export-config": {
+                                    "destination": "1.1.1.1",
+                                    "gateway": "2.2.2.2"
+                                }
+                            }
+                        ],
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "packet-filters": [
+                            "all-packets"
+                        ]
+                    },
+                    "status": {
+                        "schedule-state": "",
+                        "started-at": ""
+                    }
+                },
+                "url": "/configs/monitoring/v1/tenant/default/MirrorSession"
+            },
+            "PUT": {
+                "category": "troubleshoot",
+                "kind": "mirrorsession",
+                "method": "PUT",
+                "request": {
+                    "kind": "MirrorSession",
+                    "api-version": "v1",
+                    "meta": {
+                        "tenant": "default",
+                        "namespace": "default",
+                        "generation-id": "1",
+                        "resource-version": "442006",
+                        "uuid": "e2e5d766-13f9-44d2-9421-b2a40a663967",
+                        "labels": null,
+                        "self-link": "/configs/monitoring/v1/tenant/default/MirrorSession/hihi",
+                        "name": "hihi"
+                    },
+                    "spec": {
+                        "packet-size": null,
+                        "collectors": [
+                            {
+                                "type": "erspan",
+                                "export-config": {
+                                    "destination": "1.1.1.1",
+                                    "gateway": "2.2.2.2"
+                                }
+                            }
+                        ],
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            },
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "3.3.3.3"
+                                    ],
+                                    "mac-addresses": [
+                                        "3333.3333.3333"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "packet-filters": [
+                            "all-packets"
+                        ],
+                        "interfaces": null
+                    },
+                    "status": {
+                        "schedule-state": "active",
+                        "started-at": "2020-04-13T06:17:32.641927549Z"
+                    }
+                },
+                "response": {
+                    "kind": "MirrorSession",
+                    "api-version": "v1",
+                    "meta": {
+                        "name": "hihi",
+                        "tenant": "default",
+                        "namespace": "default",
+                        "generation-id": "2",
+                        "resource-version": "442060",
+                        "uuid": "e2e5d766-13f9-44d2-9421-b2a40a663967",
+                        "creation-time": "2020-04-13T06:17:32.627941307Z",
+                        "mod-time": "2020-04-13T06:18:01.303061416Z",
+                        "self-link": "/configs/monitoring/v1/tenant/default/MirrorSession/hihi"
+                    },
+                    "spec": {
+                        "start-condition": {},
+                        "collectors": [
+                            {
+                                "type": "erspan",
+                                "export-config": {
+                                    "destination": "1.1.1.1",
+                                    "gateway": "2.2.2.2"
+                                }
+                            }
+                        ],
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            },
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "3.3.3.3"
+                                    ],
+                                    "mac-addresses": [
+                                        "3333.3333.3333"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "packet-filters": [
+                            "all-packets"
+                        ]
+                    },
+                    "status": {
+                        "schedule-state": "active",
+                        "started-at": "2020-04-13T06:17:32.641927549Z"
+                    }
+                },
+                "url": "/configs/monitoring/v1/tenant/default/MirrorSession/hihi"
+            },
+            "DELETE": {
+                "category": "troubleshoot",
+                "kind": "mirrorsession",
+                "method": "DELETE",
+                "request": null,
+                "response": {
+                    "kind": "MirrorSession",
+                    "api-version": "v1",
+                    "meta": {
+                        "name": "test",
+                        "tenant": "default",
+                        "namespace": "default",
+                        "generation-id": "3",
+                        "resource-version": "441787",
+                        "uuid": "e18945e0-6c3a-417a-8d12-3bc43425e381",
+                        "creation-time": "2020-04-13T06:12:58.205535822Z",
+                        "mod-time": "2020-04-13T06:15:43.717440094Z",
+                        "self-link": "/configs/monitoring/v1/tenant/default/MirrorSession/test"
+                    },
+                    "spec": {
+                        "start-condition": {},
+                        "collectors": [
+                            {
+                                "type": "erspan",
+                                "export-config": {
+                                    "destination": "1.1.1.1",
+                                    "gateway": "2.2.2.2"
+                                }
+                            }
+                        ],
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            },
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "3.3.3.3"
+                                    ],
+                                    "mac-addresses": [
+                                        "3333.3333.3333"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "packet-filters": [
+                            "all-packets"
+                        ]
+                    },
+                    "status": {
+                        "schedule-state": "active",
+                        "started-at": "2020-04-13T06:15:43.715573047Z"
+                    }
+                },
+                "url": "/configs/monitoring/v1/tenant/default/MirrorSession/test"
+            },
+            "GET": {
+                "category": "troubleshoot",
+                "kind": "mirrorsession",
+                "method": "GET",
+                "request": null,
+                "response": {
+                    "category": "troubleshoot",
+                    "kind": "mirrorsession",
+                    "method": "GET",
+                    "meta": {
+                        "name": "hihi",
+                        "tenant": "default",
+                        "namespace": "default",
+                        "generation-id": "2",
+                        "resource-version": "442062",
+                        "uuid": "e2e5d766-13f9-44d2-9421-b2a40a663967",
+                        "creation-time": "2020-04-13T06:17:32.627941307Z",
+                        "mod-time": "2020-04-13T06:18:01.317947953Z",
+                        "self-link": "/configs/monitoring/v1/tenant/default/MirrorSession/hihi"
+                    },
+                    "spec": {
+                        "start-condition": {},
+                        "collectors": [
+                            {
+                                "type": "erspan",
+                                "export-config": {
+                                    "destination": "1.1.1.1",
+                                    "gateway": "2.2.2.2"
+                                }
+                            }
+                        ],
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            },
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "3.3.3.3"
+                                    ],
+                                    "mac-addresses": [
+                                        "3333.3333.3333"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "packet-filters": [
+                            "all-packets"
+                        ]
+                    },
+                    "status": {
+                        "schedule-state": "active",
+                        "started-at": "2020-04-13T06:18:01.317076289Z"
+                    }
+                },
+                "url": "/configs/monitoring/v1/tenant/default/flowExportPolicy"
+            }
+        },
+        "flowexportpolicy": {
+            "POST": {
+                "category": "troubleshoot",
+                "kind": "flowexportpolicy",
+                "method": "POST",
+                "request": {
+                    "kind": null,
+                    "api-version": null,
+                    "meta": {
+                        "name": "test",
+                        "tenant": null,
+                        "namespace": null,
+                        "generation-id": null,
+                        "resource-version": null,
+                        "uuid": null,
+                        "labels": null,
+                        "self-link": null
+                    },
+                    "spec": {
+                        "vrf-name": null,
+                        "interval": "10s",
+                        "template-interval": "5m",
+                        "format": "ipfix",
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "exports": [
+                            {
+                                "destination": "1.1.1.1",
+                                "gateway": null,
+                                "transport": "udp/80"
+                            }
+                        ]
+                    }
+                },
+                "response": {
+                    "kind": "FlowExportPolicy",
+                    "api-version": "v1",
+                    "meta": {
+                        "name": "test",
+                        "tenant": "default",
+                        "namespace": "default",
+                        "generation-id": "1",
+                        "resource-version": "442897",
+                        "uuid": "484ea200-e5a2-46d7-8a93-73566760baf0",
+                        "creation-time": "2020-04-13T06:24:37.702227604Z",
+                        "mod-time": "2020-04-13T06:24:37.702230414Z",
+                        "self-link": "/configs/monitoring/v1/tenant/default/flowExportPolicy/test"
+                    },
+                    "spec": {
+                        "interval": "10s",
+                        "template-interval": "5m",
+                        "format": "ipfix",
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "exports": [
+                            {
+                                "destination": "1.1.1.1",
+                                "transport": "udp/80"
+                            }
+                        ]
+                    },
+                    "status": {}
+                },
+                "url": "/configs/monitoring/v1/tenant/default/flowExportPolicy"
+            },
+            "PUT": {
+                "category": "troubleshoot",
+                "kind": "flowexportpolicy",
+                "method": "PUT",
+                "request": {
+                    "kind": "FlowExportPolicy",
+                    "api-version": "v1",
+                    "meta": {
+                        "tenant": "default",
+                        "namespace": "default",
+                        "generation-id": "1",
+                        "resource-version": "442897",
+                        "uuid": "484ea200-e5a2-46d7-8a93-73566760baf0",
+                        "labels": null,
+                        "self-link": "/configs/monitoring/v1/tenant/default/flowExportPolicy/test",
+                        "name": "test"
+                    },
+                    "spec": {
+                        "vrf-name": null,
+                        "interval": "10s",
+                        "template-interval": "5m",
+                        "format": "ipfix",
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            },
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "3.3.3.3"
+                                    ],
+                                    "mac-addresses": [
+                                        "3333.3333.3333"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "exports": [
+                            {
+                                "destination": "1.1.1.1",
+                                "gateway": null,
+                                "transport": "udp/80"
+                            }
+                        ]
+                    }
+                },
+                "response": {
+                    "kind": "FlowExportPolicy",
+                    "api-version": "v1",
+                    "meta": {
+                        "name": "test",
+                        "tenant": "default",
+                        "namespace": "default",
+                        "generation-id": "2",
+                        "resource-version": "444635",
+                        "uuid": "484ea200-e5a2-46d7-8a93-73566760baf0",
+                        "creation-time": "2020-04-13T06:24:37.702227604Z",
+                        "mod-time": "2020-04-13T06:38:44.676270853Z",
+                        "self-link": "/configs/monitoring/v1/tenant/default/flowExportPolicy/test"
+                    },
+                    "spec": {
+                        "interval": "10s",
+                        "template-interval": "5m",
+                        "format": "ipfix",
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            },
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "3.3.3.3"
+                                    ],
+                                    "mac-addresses": [
+                                        "3333.3333.3333"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "exports": [
+                            {
+                                "destination": "1.1.1.1",
+                                "transport": "udp/80"
+                            }
+                        ]
+                    },
+                    "status": {}
+                },
+                "url": "/configs/monitoring/v1/tenant/default/flowExportPolicy/test"
+            },
+            "DELETE": {
+                "category": "troubleshoot",
+                "kind": "flowexportpolicy",
+                "method": "DELETE",
+                "request": null,
+                "response": {
+                    "kind": "FlowExportPolicy",
+                    "api-version": "v1",
+                    "meta": {
+                        "name": "test",
+                        "tenant": "default",
+                        "namespace": "default",
+                        "generation-id": "2",
+                        "resource-version": "444635",
+                        "uuid": "484ea200-e5a2-46d7-8a93-73566760baf0",
+                        "creation-time": "2020-04-13T06:24:37.702227604Z",
+                        "mod-time": "2020-04-13T06:38:44.676270853Z",
+                        "self-link": "/configs/monitoring/v1/tenant/default/flowExportPolicy/test"
+                    },
+                    "spec": {
+                        "interval": "10s",
+                        "template-interval": "5m",
+                        "format": "ipfix",
+                        "match-rules": [
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "1.1.1.1"
+                                    ],
+                                    "mac-addresses": [
+                                        "1111.1111.1111"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            },
+                            {
+                                "source": {
+                                    "ip-addresses": [
+                                        "2.2.2.2"
+                                    ],
+                                    "mac-addresses": [
+                                        "2222.2222.2222"
+                                    ]
+                                },
+                                "destination": {
+                                    "ip-addresses": [
+                                        "3.3.3.3"
+                                    ],
+                                    "mac-addresses": [
+                                        "3333.3333.3333"
+                                    ]
+                                },
+                                "app-protocol-selectors": {
+                                    "proto-ports": [
+                                        "tcp/80"
+                                    ]
+                                }
+                            }
+                        ],
+                        "exports": [
+                            {
+                                "destination": "1.1.1.1",
+                                "transport": "udp/80"
+                            }
+                        ]
+                    },
+                    "status": {}
+                },
+                "url": "/configs/monitoring/v1/tenant/default/flowExportPolicy/test"
+            },
+            "GET": {
+                "category": "troubleshoot",
+                "kind": "flowexportpolicy",
+                "method": "GET",
+                "request": null,
+                "response": {
+                    "kind": "FlowExportPolicyList",
+                    "api-version": "v1",
+                    "list-meta": {
+                        "total-count": 1
+                    },
+                    "items": [
+                        {
+                            "kind": "FlowExportPolicy",
+                            "api-version": "v1",
+                            "meta": {
+                                "name": "hihi",
+                                "tenant": "default",
+                                "namespace": "default",
+                                "generation-id": "1",
+                                "resource-version": "446781",
+                                "uuid": "f67c85b9-303e-4f4e-bb48-3a59a582fef1",
+                                "creation-time": "2020-04-13T06:56:06.231190884Z",
+                                "mod-time": "2020-04-13T06:56:06.23119366Z",
+                                "self-link": "/configs/monitoring/v1/tenant/default/flowExportPolicy/hihi"
+                            },
+                            "spec": {
+                                "interval": "10s",
+                                "template-interval": "5m",
+                                "format": "ipfix",
+                                "match-rules": [
+                                    {
+                                        "source": {
+                                            "ip-addresses": [
+                                                "1.1.1.1"
+                                            ],
+                                            "mac-addresses": [
+                                                "1111.1111.1111"
+                                            ]
+                                        },
+                                        "destination": {
+                                            "ip-addresses": [
+                                                "2.2.2.2"
+                                            ],
+                                            "mac-addresses": [
+                                                "2222.2222.2222"
+                                            ]
+                                        },
+                                        "app-protocol-selectors": {
+                                            "proto-ports": [
+                                                "tcp/80"
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "exports": [
+                                    {
+                                        "destination": "1.1.1.1",
+                                        "transport": "udp/1234"
+                                    }
+                                ]
+                            },
+                            "status": {}
+                        }
+                    ]
+                },
+                "url": "/configs/monitoring/v1/tenant/default/flowExportPolicy"
             }
         }
     }
