@@ -162,6 +162,7 @@ type NaplesActionIntf interface {
 	StartFWLogGenOnNaples(naples *objects.NaplesCollection, rate, count string) error
 	StopFWLogGenOnNaples(naples *objects.NaplesCollection) error
 	PortFlap(npc *objects.NaplesCollection) error
+	VerifyFwlogErrors() error
 }
 
 //VeniceNodeActionIntf All actions related to venice

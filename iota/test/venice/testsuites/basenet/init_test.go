@@ -23,6 +23,7 @@ var scaleFlag = flag.Bool("scale", false, "enable scale configuration")
 var scaleDataFlag = flag.Bool("scale-data", false, "enable datapath scale")
 var stressFlag = flag.Uint64("stress", 1, "Stress, how many times to run")
 var runRandomTrigger = flag.Bool("rand-trigger", false, "run random trigger between tests")
+var runFwLogs = flag.Bool("fwlogs", false, "run fwlogs during tests")
 
 // TestSuite : techsupport test suite
 type TestSuite struct {

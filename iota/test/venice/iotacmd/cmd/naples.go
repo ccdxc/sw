@@ -168,6 +168,11 @@ func stopEvents(rate, count string) error {
 	return nil
 }
 
+func verifyEvents() error {
+	//setupModel.VerifyGenEvents(setupModel.Naples())
+	return nil
+}
+
 func generateFWLogs(rate, count string) error {
 
 	setupModel.StopFWLogGenOnNaples(setupModel.Naples())
@@ -181,4 +186,11 @@ func stopFWLogs(rate, count string) error {
 	setupModel.StopFWLogGenOnNaples(setupModel.Naples())
 	return nil
 
+}
+
+func verifyFWLogs() error {
+	setupModel.VerifyFwlogErrors()
+	//need to get tenant name, bucket name, and fail on zero flag from cmdline
+	//setupModel.VerifyFwlogFromAllNaples(tenantName, bucketName, failOnZero)
+	return nil
 }

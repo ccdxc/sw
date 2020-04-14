@@ -369,6 +369,13 @@ func (stRecipe *stressRecipe) execute() error {
 		}
 		return nil
 	}
+	verifyNoise := func(it int, n noise) error {
+		fmt.Printf("Verifying noise : %v\n", n.Name())
+		if !dryRun {
+			return n.Verify()
+		}
+		return nil
+	}
 
 Loop:
 	for index, tg := range stRecipe.Triggers {
@@ -413,6 +420,7 @@ Loop:
 				if err != nil {
 					sdata.failCount++
 					if suite.stopOnError {
+						//since error, don't call verifyNoise here
 						for _, n := range noises {
 							if err := stopNoise(it, n); err != nil {
 								return err
@@ -432,6 +440,12 @@ Loop:
 					skipInstall = true
 					rebootOnly = false
 					skipSetup = true
+				}
+			}
+			//verify noise.
+			for _, n := range noises {
+				if err := verifyNoise(it, n); err != nil {
+					return err
 				}
 			}
 			//Clean up some data after each triggera

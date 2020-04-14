@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -19,6 +20,7 @@ import (
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	searchutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // GetFwLogObjectCount gets the object count for firewall logs under the bucket with the given name
@@ -298,4 +300,23 @@ func (sm *SysModel) findFwlogForWorkloadPairsFromElastic(
 
 	return fmt.Errorf("log not found in Elastic for srcIP %s, destIP %s, protocol %s, port %d, fwAction %s",
 		srcIP, destIP, protocol, port, fwaction)
+}
+
+func (sm *SysModel) VerifyFwlogFromAllNaples(tenantName string, bucketName string, failOnZero bool) error {
+	var failedCount = 0
+	for _, sim := range sm.FakeNaples {
+		mac := sim.Instances[0].Dsc.Status.PrimaryMAC
+		cnt, err := sm.GetFwLogObjectCount(tenantName, bucketName, mac)
+		if err != nil {
+			return err
+		}
+		if cnt == 0 {
+			if failOnZero {
+				return errors.New(fmt.Sprintf("zero fwlogs for sim %s", mac))
+			}
+			failedCount += 1
+		}
+	}
+	log.Infof("%d sims had zero fwlogs", failedCount)
+	return nil
 }

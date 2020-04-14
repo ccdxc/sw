@@ -36,8 +36,20 @@ var _ = Describe("Basnet Sanity", func() {
 		Expect(dscFlowawareProfile.Commit()).Should(Succeed())
 		dscEnforcedProfile = objects.NewDscProfileEnforced(ts.model.ConfigClient(), "dscEnforced")
 		Expect(dscEnforcedProfile.Commit()).Should(Succeed())
+		if *runFwLogs {
+			log.Infof("user requested to start fwlogs")
+			err := ts.model.StopFWLogGenOnNaples(ts.model.Naples())
+			Expect(err).Should(Succeed())
+			err = ts.model.StartFWLogGenOnNaples(ts.model.Naples(), "5", "50000")
+			Expect(err).Should(Succeed())
+		}
 	})
 	AfterEach(func() {
+		if *runFwLogs {
+			ts.model.VerifyFwlogErrors()
+			err := ts.model.StopFWLogGenOnNaples(ts.model.Naples())
+			Expect(err).Should(Succeed())
+		}
 		//Delete if insertion profile exists
 		ts.model.CleanupAllConfig()
 		dscInsertionProfile.Delete()

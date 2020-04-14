@@ -5,18 +5,18 @@ import (
 )
 
 const (
-	hostReboot         = "HostReboot"
-	veniceReboot       = "VeniceReboot"
-	venicePartition    = "VenicePartition"
-    veniceShutdownLeader = "VeniceShutdownLeader"
-    veniceShutdownNpmNode = "VeniceShutdownNpmNode"
-    veniceShutdownApiServerNode = "VeniceShutdownApiServerNode"
-    veniceOnlySnapshotRestore = "VeniceOnlySnapshotRestore"
-    techSupport = "TechSupport"
-	flapDataPorts      = "FlapDataPorts"
-	naplesRemoveAdd    = "NaplesRemoveAdd"
-	naplesMgmtLinkFlap = "NaplesMgmtLinkFlap"
-	naplesUpgrade      = "NaplesUpgrade"
+	hostReboot                  = "HostReboot"
+	veniceReboot                = "VeniceReboot"
+	venicePartition             = "VenicePartition"
+	veniceShutdownLeader        = "VeniceShutdownLeader"
+	veniceShutdownNpmNode       = "VeniceShutdownNpmNode"
+	veniceShutdownApiServerNode = "VeniceShutdownApiServerNode"
+	veniceOnlySnapshotRestore   = "VeniceOnlySnapshotRestore"
+	techSupport                 = "TechSupport"
+	flapDataPorts               = "FlapDataPorts"
+	naplesRemoveAdd             = "NaplesRemoveAdd"
+	naplesMgmtLinkFlap          = "NaplesMgmtLinkFlap"
+	naplesUpgrade               = "NaplesUpgrade"
 
 	genEvents       = "GenEvents"
 	genFWLogs       = "GenFWLogs"
@@ -42,11 +42,11 @@ type veniceRebootTrigger struct {
 }
 
 type techSupportTrigger struct {
-  triggerBase
+	triggerBase
 }
 
 type veniceOnlySnapshotRestoreTrigger struct {
-    triggerBase
+	triggerBase
 }
 
 type veniceShutdownLeaderTrigger struct {
@@ -166,23 +166,23 @@ func (h *naplesUpgradeTrigger) Run() error {
 }
 
 func (h *techSupportTrigger) Run() error {
-        percent, err := h.triggerBase.getPercent()
-        if err != nil {
-                return err
-        }
-        return doTechSupport(percent)
+	percent, err := h.triggerBase.getPercent()
+	if err != nil {
+		return err
+	}
+	return doTechSupport(percent)
 }
 
 func (h *veniceOnlySnapshotRestoreTrigger) Run() error {
-        return doVeniceOnlySnapshotRestore()
+	return doVeniceOnlySnapshotRestore()
 }
 
 func newTechSupportTrigger(name string, percent string) trigger {
-    return &techSupportTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
+	return &techSupportTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
 }
 
 func newVeniceOnlySnapshotRestoreTrigger(name string, percent string) trigger {
-    return &veniceOnlySnapshotRestoreTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
+	return &veniceOnlySnapshotRestoreTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
 }
 
 func newHostRebootTrigger(name string, percent string) trigger {
@@ -226,18 +226,18 @@ func newNaplesUpgradeTrigger(name string, percent string) trigger {
 }
 
 var triggers = map[string]func(string, string) trigger{
-	hostReboot:         newHostRebootTrigger,
-	veniceReboot:       newVeniceRebootTrigger,
-	flapDataPorts:      newflapDataPortsTrigger,
-	naplesRemoveAdd:    newNaplesRemoveAddTrigger,
-	naplesMgmtLinkFlap: newNaplesMgmtLinkFlapTrigger,
-	naplesUpgrade:      newNaplesUpgradeTrigger,
-	venicePartition:    newVenicePartitionTrigger,
-    veniceShutdownLeader: newVeniceShutdownLeaderTrigger,
-    veniceShutdownNpmNode: newVeniceShutdownNpmNodeTrigger,
-    veniceShutdownApiServerNode: newVeniceShutdownApiServerNodeTrigger,
-    veniceOnlySnapshotRestore: newVeniceOnlySnapshotRestoreTrigger,
-    techSupport: newTechSupportTrigger,
+	hostReboot:                  newHostRebootTrigger,
+	veniceReboot:                newVeniceRebootTrigger,
+	flapDataPorts:               newflapDataPortsTrigger,
+	naplesRemoveAdd:             newNaplesRemoveAddTrigger,
+	naplesMgmtLinkFlap:          newNaplesMgmtLinkFlapTrigger,
+	naplesUpgrade:               newNaplesUpgradeTrigger,
+	venicePartition:             newVenicePartitionTrigger,
+	veniceShutdownLeader:        newVeniceShutdownLeaderTrigger,
+	veniceShutdownNpmNode:       newVeniceShutdownNpmNodeTrigger,
+	veniceShutdownApiServerNode: newVeniceShutdownApiServerNodeTrigger,
+	veniceOnlySnapshotRestore:   newVeniceOnlySnapshotRestoreTrigger,
+	techSupport:                 newTechSupportTrigger,
 }
 
 func newTrigger(name string, percent string) trigger {
@@ -259,6 +259,7 @@ type noise interface {
 	Name() string
 	Run() error
 	Stop() error
+	Verify() error
 }
 
 type genEventsNoise struct {
@@ -285,6 +286,10 @@ func (n *genFWLogsNoise) Stop() error {
 	return stopFWLogs(n.Rate, n.Count)
 }
 
+func (n *genFWLogsNoise) Verify() error {
+	return verifyFWLogs()
+}
+
 func newGenFWLogsNoise(name string, rate string, count string) noise {
 	return &genFWLogsNoise{noiseBase: noiseBase{Name: name, Rate: rate, Count: count}}
 }
@@ -295,6 +300,10 @@ func (n *genEventsNoise) Run() error {
 
 func (n *genEventsNoise) Stop() error {
 	return stopEvents(n.Rate, n.Count)
+}
+
+func (n *genEventsNoise) Verify() error {
+	return verifyEvents()
 }
 
 func newGenEventsNoise(name string, rate string, count string) noise {
@@ -316,6 +325,10 @@ func (n *flapPortsNoise) Run() error {
 }
 
 func (n *flapPortsNoise) Stop() error {
+	return nil
+}
+
+func (n *flapPortsNoise) Verify() error {
 	return nil
 }
 
