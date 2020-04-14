@@ -7,15 +7,30 @@
 #define __TEST_API_UTILS_DEVICE_HPP__
 
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/api_base.hpp"
 #include "nic/apollo/test/api/utils/feeder.hpp"
 
 namespace test {
 namespace api {
 
+enum device_attrs {
+    DEVICE_ATTR_DEVICE_IP           =  bit(0),
+    DEVICE_ATTR_DEVICE_MAC          =  bit(1),
+    DEVICE_ATTR_GATEWAY_IP          =  bit(2),
+    DEVICE_ATTR_BRIDGING_EN         =  bit(3),
+    DEVICE_ATTR_LEARNING_EN         =  bit(4),
+    DEVICE_ATTR_LEARN_AGE_TIME_OUT  =  bit(5),
+    DEVICE_ATTR_OVERLAY_ROUTING_EN  =  bit(6),
+    DEVICE_ATTR_DEVICE_PROFILE      =  bit(7),
+    DEVICE_ATTR_MEMORY_PROFILE      =  bit(8),
+    DEVICE_ATTR_DEV_OPER_MODE       =  bit(9),
+};
+
 // Device test feeder class
 class device_feeder : public feeder {
 public:
+    pds_device_spec_t spec;
     // TODO: use spec_t instead of free form strings
     std::string device_ip_str;    // Device IP
     std::string mac_addr_str;     // Device MAC Address
@@ -81,6 +96,13 @@ API_DELETE_SINGLETON(device);
 
 // Export variables
 extern std::string k_device_ip;
+
+// Device crud helper prototypes
+void device_create(device_feeder& feeder);
+void device_read(device_feeder& feeder, sdk_ret_t exp_result = SDK_RET_OK);
+void device_update(device_feeder& feeder, pds_device_spec_t *spec,
+                   uint64_t chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
+void device_delete(device_feeder& feeder);
 
 // Function prototypes
 void sample_device_setup(pds_batch_ctxt_t bctxt);

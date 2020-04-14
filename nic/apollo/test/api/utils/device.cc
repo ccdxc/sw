@@ -88,6 +88,91 @@ device_feeder::status_compare(const pds_device_status_t *status1,
 }
 
 //----------------------------------------------------------------------------
+// DEVICE CRUD helper routines
+//----------------------------------------------------------------------------
+
+void
+device_create (device_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_create<device_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+void
+device_read (device_feeder& feeder, sdk_ret_t exp_result)
+{
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_read<device_feeder>(feeder, exp_result)));
+}
+
+static void
+device_attr_update (device_feeder& feeder, pds_device_spec_t *spec,
+                    uint64_t chg_bmap)
+{
+    if (bit_isset(chg_bmap, DEVICE_ATTR_DEVICE_IP)) {
+        feeder.spec.device_ip_addr = spec->device_ip_addr;
+    }
+    if (bit_isset(chg_bmap, DEVICE_ATTR_DEVICE_MAC)) {
+        memcpy(&feeder.spec.device_mac_addr, &spec->device_mac_addr,
+               sizeof(spec->device_mac_addr));
+    }
+    if (bit_isset(chg_bmap, DEVICE_ATTR_GATEWAY_IP)) {
+        feeder.spec.gateway_ip_addr = spec->gateway_ip_addr;
+    }
+    if (bit_isset(chg_bmap, DEVICE_ATTR_BRIDGING_EN)) {
+        feeder.spec.bridging_en = spec->bridging_en;
+    }
+    if (bit_isset(chg_bmap, DEVICE_ATTR_LEARNING_EN)) {
+        feeder.spec.learning_en = spec->learning_en;
+    }
+    if (bit_isset(chg_bmap, DEVICE_ATTR_LEARN_AGE_TIME_OUT)) {
+        feeder.spec.learn_age_timeout = spec->learn_age_timeout;
+    }
+    if (bit_isset(chg_bmap, DEVICE_ATTR_OVERLAY_ROUTING_EN)) {
+        feeder.spec.overlay_routing_en = spec->overlay_routing_en;
+    }
+    if (bit_isset(chg_bmap, DEVICE_ATTR_DEVICE_PROFILE)) {
+        feeder.spec.device_profile = spec->device_profile;
+    }
+    if (bit_isset(chg_bmap, DEVICE_ATTR_MEMORY_PROFILE)) {
+        feeder.spec.memory_profile = spec->memory_profile;
+    }
+    if (bit_isset(chg_bmap, DEVICE_ATTR_DEV_OPER_MODE)) {
+        feeder.spec.dev_oper_mode = spec->dev_oper_mode;
+    }
+}
+
+void
+device_update (device_feeder& feeder, pds_device_spec_t *spec,
+               uint64_t chg_bmap, sdk_ret_t exp_result)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    device_attr_update(feeder, spec, chg_bmap);
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<device_feeder>(bctxt, feeder)));
+
+    // if expected result is err, batch commit should fail
+    if (exp_result == SDK_RET_ERR)
+        batch_commit_fail(bctxt);
+    else
+        batch_commit(bctxt);
+}
+
+void
+device_delete (device_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_delete<device_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+//----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------
 
