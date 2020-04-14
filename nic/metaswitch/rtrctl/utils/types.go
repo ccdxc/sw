@@ -1487,3 +1487,34 @@ func NewLimVrfGetResp(status *pds.LimVrfStatus) *ShadowLimVrfStatus {
 		NumInterfaces: status.NumInterfaces,
 	}
 }
+
+// ShadowCPRouteRedistStatus shadows the CPRouteRedistStatus for CLI purposes
+type ShadowCPRouteRedistStatus struct {
+	FteIndex       uint32
+	EntryId        uint32
+	RuleUsageCount uint32
+	AddrFilter     string
+	*pds.CPRouteRedistStatus
+}
+
+func newCPRouteRedistStatus(in *pds.CPRouteRedistStatus) ShadowCPRouteRedistStatus {
+	return ShadowCPRouteRedistStatus{
+		FteIndex:            in.FteIndex,
+		EntryId:             in.EntryId,
+		RuleUsageCount:      in.RuleUsageCount,
+		AddrFilter:          PdsIPToString(in.AddrFilter),
+		CPRouteRedistStatus: in,
+	}
+}
+
+// ShadowCPRouteRedist shadows the CPRouteRedist for CLI purposes
+type ShadowCPRouteRedist struct {
+	Status ShadowCPRouteRedistStatus
+}
+
+// NewCPRouteRedist creates a shadow of CPRouteRedist
+func NewCPRouteRedist(in *pds.CPRouteRedist) *ShadowCPRouteRedist {
+	return &ShadowCPRouteRedist{
+		Status: newCPRouteRedistStatus(in.Status),
+	}
+}

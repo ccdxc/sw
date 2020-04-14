@@ -18,6 +18,7 @@ service CPRouteSvc
   rpc CPStaticRouteGet (CPStaticRouteGetRequest) returns (CPStaticRouteGetResponse) {}
   rpc CPRouteGet (CPRouteGetRequest) returns (CPRouteGetResponse) {}
   rpc CPActiveRouteGet (CPActiveRouteGetRequest) returns (CPActiveRouteGetResponse) {}
+  rpc CPRouteRedistGet (CPRouteRedistGetRequest) returns (CPRouteRedistGetResponse) {}
 }
 
 // route type
@@ -238,3 +239,40 @@ message CPActiveRouteGetResponse {
   repeated         CPActiveRoute Response  = 2;
 }
 
+// control plane route table
+message CPRouteRedistStatus {
+  // The HAF entity index identifying the instance of DC-RTM
+  uint32          FteIndex       = 1;
+  // The index of this DC-RTM redistribution table entry
+  uint32          EntryId        = 2;
+
+  // type of route
+  uint32          RuleUsageCount = 3;
+  // Destination IP address filter
+  types.IPAddress AddrFilter     = 4;
+}
+
+message CPRouteRedistKey {
+  // The HAF entity index identifying the instance of DC-RTM
+  uint32 FteIndex = 1;
+  // The index of this DC-RTM redistribution table entry
+  uint32 EntryId  = 2;
+}
+
+message CPRouteRedistKeyHandle {
+  CPRouteRedistKey Key = 1;
+}
+
+// control plane route table get request
+message CPRouteRedistGetRequest {
+  repeated CPRouteRedistKeyHandle Request = 1;
+}
+
+message CPRouteRedist {
+  CPRouteRedistStatus Status = 1;
+}
+
+message CPRouteRedistGetResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated CPRouteRedist Response  = 2;
+}

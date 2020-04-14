@@ -215,6 +215,12 @@
 		CPActiveRouteGetRequest
 		CPActiveRoute
 		CPActiveRouteGetResponse
+		CPRouteRedistStatus
+		CPRouteRedistKey
+		CPRouteRedistKeyHandle
+		CPRouteRedistGetRequest
+		CPRouteRedist
+		CPRouteRedistGetResponse
 		BGPSpec
 		BGPStatus
 		BGP

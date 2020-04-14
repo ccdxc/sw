@@ -430,3 +430,63 @@ func routingVrfStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	return nil
 }
+
+var redistTableShowCmd = &cobra.Command{
+	Use:   "redist",
+	Short: "show routing redistribution information",
+	Long:  "show routing redistribution information",
+	Args:  cobra.NoArgs,
+	RunE:  redistTableShowCmdHandler,
+}
+
+const (
+	redistTableGlobalStr = `-----------------------------------
+Redistribution Table
+-----------------------------------
+FteIndex                   : %v
+EntryId                    : %v
+RuleUsageCount             : %v
+AddrFilter                 : %v
+-----------------------------------
+`
+)
+
+func redistTableShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := types.NewCPRouteSvcClient(c)
+
+	req := &types.CPRouteRedistGetRequest{}
+	respMsg, err := client.CPRouteRedistGet(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("Getting static table failed (%s)", err)
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	cprrs := []*utils.ShadowCPRouteRedist{}
+	for _, i := range respMsg.Response {
+		cprr := utils.NewCPRouteRedist(i)
+		if doJSON {
+			cprrs = append(cprrs, cprr)
+		} else {
+			fmt.Printf(redistTableGlobalStr,
+				cprr.Status.FteIndex,
+				cprr.Status.EntryId,
+				cprr.Status.RuleUsageCount,
+				cprr.Status.AddrFilter)
+		}
+	}
+	if doJSON {
+		b, _ := json.MarshalIndent(cprrs, "", "  ")
+		fmt.Println(string(b))
+	}
+	return nil
+}

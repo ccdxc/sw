@@ -18,6 +18,7 @@ service CPRouteSvc
   rpc CPStaticRouteGet (CPStaticRouteGetRequest) returns (CPStaticRouteGetResponse) {}
   rpc CPRouteGet (CPRouteGetRequest) returns (CPRouteGetResponse) {}
   rpc CPActiveRouteGet (CPActiveRouteGetRequest) returns (CPActiveRouteGetResponse) {}
+  rpc CPRouteRedistGet (CPRouteRedistGetRequest) returns (CPRouteRedistGetResponse) {}
 }
 
 // route type
@@ -289,4 +290,52 @@ message CPActiveRoute {
 message CPActiveRouteGetResponse {
   types.ApiStatus  ApiStatus = 1;
   repeated CPActiveRoute Response  = 2;
+}
+
+// control plane route table
+message CPRouteRedistStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_QCR_RDS_OID_LEN",
+    Mib:    "rtmRedistTable"
+  };
+
+  // The HAF entity index identifying the instance of DC-RTM
+  uint32          FteIndex       = 1 [(venice.pdsaFields) = {Field:"fte_index", GetKeyOidIndex: "AMB_QCR_RDS_FTE_INDEX_INDEX"}];
+  // The index of this DC-RTM redistribution table entry
+  uint32          EntryId        = 2 [(venice.pdsaFields) = {Field:"entry_id", GetKeyOidIndex: "AMB_QCR_RDS_ENTRY_ID_INDEX"}];
+
+  // type of route
+  uint32          RuleUsageCount = 3 [(venice.pdsaFields) = {Field:"usage_count"}];
+  // Destination IP address filter
+  types.IPAddress AddrFilter     = 4 [(venice.pdsaFields) = {Field:"addr_filter", AddrTypeFieldName: "addr_filter_type", AddrLenFieldName:"addr_filter_length"}];
+}
+
+message CPRouteRedistKey {
+  // The HAF entity index identifying the instance of DC-RTM
+  uint32 FteIndex = 1;
+  // The index of this DC-RTM redistribution table entry
+  uint32 EntryId  = 2;
+}
+
+message CPRouteRedistKeyHandle {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_QCR_RIB_OID_LEN",
+    Mib:    "rtmRedistTable"
+    SpecMsg: "CPRouteRedistStatus"
+  };
+  CPRouteRedistKey Key = 1;
+}
+
+// control plane route table get request
+message CPRouteRedistGetRequest {
+  repeated CPRouteRedistKeyHandle Request = 1;
+}
+
+message CPRouteRedist {
+  CPRouteRedistStatus Status = 1;
+}
+
+message CPRouteRedistGetResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated CPRouteRedist Response  = 2;
 }
