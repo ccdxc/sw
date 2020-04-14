@@ -175,7 +175,7 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 			c.ResolverClient.UpdateServers(obj.Controllers)
 		}
 
-		tsdb.Update(types.Netagent+c.InfraAPI.GetDscName(), c.ResolverClient)
+		tsdb.Update(c.InfraAPI.GetDscName(), c.ResolverClient)
 
 		c.factory = rpckit.NewClientFactory(c.InfraAPI.GetDscName())
 		c.Unlock()
