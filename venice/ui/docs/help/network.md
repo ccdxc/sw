@@ -32,3 +32,15 @@ The network overview comprise of four columns including
             include:orchestrators omitHeader:true>
 
 Note: Name of the object must be unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.
+
+### Example
+
+1.  *Name - Network-vlan-3905*  
+*VLAN - 3905*  
+*vCenter Name - SanJose-vCenter.acme.com*  
+*DataCenter Name - SJ-BizCriticalApp-DC, SJ-Empl-VDI-DC*
+
+2. *Name - Network-vlan-2000*  
+*VLAN - 2000*  
+*vCenter Name - NY-NJ-vCenter.acme.com*  
+*DataCenter Name - ALL*

@@ -37,3 +37,20 @@ vCenter Integration Overview displays the following five columns for all the reg
             include:connection-status omitHeader:true>
 <load-table group:orchestration obj:OrchestrationOrchestratorStatus
             include:last-connected omitHeader:true>
+
+### Example Using Username and Password
+
+*Name: SanJose-vCenter.acme.com*
+
+*URI: 10.10.10.200*  
+
+*"Managed Individual Datacenters" Radio button Selected*  
+
+*Datacenter names: SJ-BizCriticalApp-DC SJ-Empl-VDI-DC*  
+
+*Credentials : "Username-Password" Radio button Selected*  
+
+*User Name: administrator@acme.com*  
+
+*Password:*  \*\*\*\*\*\*\*\*\*\*\*\*\*  
+*Confirm Password:*  \*\*\*\*\*\*\*\*\*\*\*\*\* 

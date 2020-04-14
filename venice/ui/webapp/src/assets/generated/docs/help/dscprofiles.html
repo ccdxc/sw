@@ -1,6 +1,6 @@
 <h1 id="dscprofiles">DSC Profiles</h1>
 <p>The "DSC Profile" refers to various modes and policies that can be applied to the DSC.</p>
-<p>XXX Pls note this will change shortly as we are still in discussion on what to call these modes.</p>
+<p>Add DSC profile takes in two arguments, a unique DSC profile name and a mode.</p>
 <table>
 <thead>
 <tr>
@@ -19,6 +19,31 @@
 </tr>
 </tbody>
 </table>
+<p>fwd-mode can be -</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transparent</td>
+<td>Classic NIC; doesn’t intercept any inter-VM traffic</td>
+</tr>
+<tr>
+<td>Insertion</td>
+<td>Start Intercepting traffic between two VMs on the same host</td>
+</tr>
+</tbody>
+</table>
+<p>Following combination of forwarding mode and policy mode are supported -</p>
+<ul>
+<li>fwd-mode Transparent: policy-mode BaseNet</li>
+<li>fwd-mode Transparent: policy-mode FlowAware</li>
+<li>fwd-mode Insertion: policy-mode Enforced</li>
+</ul>
 <p>Click on "Create DSC Profile" to complete the operation.</p>
 <p>DSC Profiles Overview displays all the current DSC profiles configured. There are 9 available columns that can be shown and are selectable.</p>
 <table>
@@ -68,3 +93,6 @@
 </tbody>
 </table>
 <p>Top right side is the gear icon which allows to export the table view of the DSC Profiles into a CSV file or a JSON file.</p>
+<h3 id="example">Example</h3>
+<p><em>DSC Profile name - Firewall-profile</em></p>
+<p><em>Mode - FWD-mode Insertion: Policy-mode Enforced</em></p>
