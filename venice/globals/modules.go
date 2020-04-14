@@ -38,4 +38,5 @@ const (
 	CitadelQuery          = "pen-citadel-query"
 	Perseus               = "pen-perseus"
 	Pegasus               = "pen-pegasus"
+	AlertMgr              = "pen-alertmgr"
 )
