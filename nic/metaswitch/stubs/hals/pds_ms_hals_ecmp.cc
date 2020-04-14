@@ -187,7 +187,7 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
         auto vxp_if_obj = state_ctxt.state()->if_store().get(nh.ms_ifindex);
         SDK_ASSERT(vxp_if_obj != nullptr);
         auto& vxp_prop = vxp_if_obj->vxlan_port_properties();
-        auto tep_obj = state_ctxt.state()->tep_store()
+        auto tep_sync_obj = state_ctxt.state()->tep_sync_store()
                                 .get(vxp_if_obj->vxlan_port_properties().tep_ip);
         auto& dmaci = vxp_if_obj->vxlan_port_properties().dmaci;
         if (memcmp(dmaci, nh.mac_addr.m_mac, ETH_ADDR_LEN) != 0) {
@@ -204,17 +204,17 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
             }
             MAC_ADDR_COPY(dmaci, nh.mac_addr.m_mac);
             li_vxlan_port vxp;
-            vxp.add_pds_tep_spec(store_info_.bctxt, vxp_if_obj, tep_obj,
+            vxp.add_pds_tep_spec(store_info_.bctxt, vxp_if_obj, tep_sync_obj,
                                  false /* Op Update */);
             PDS_TRACE_DEBUG("Setting DMAC for Type5 TEP %s VNI %d L3 VXLAN Port"
                             " 0x%x to %s",
                             ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
                             vxp_prop.ifindex, macaddr2str(nh.mac_addr.m_mac));
         }
-        nhgroup_spec.nexthops[i].tep = msidx2pdsobjkey(tep_obj->properties().hal_tep_idx);
+        nhgroup_spec.nexthops[i].tep = vxp_prop.hal_tep_idx;
         PDS_TRACE_DEBUG("Add Type5 TEP %s VNI %d Idx 0x%x UUID %s to Overlay NHGroup %s",
                         ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
-                        tep_obj->properties().hal_tep_idx,
+                        vxp_prop.hal_tep_idx.str(),
                         nhgroup_spec.nexthops[i].tep.str(),
                         nhgroup_spec.key.str());
         ++i;
@@ -348,14 +348,15 @@ static void send_ips_response_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips,
 
 // Update the indirect PS to direct PS mapping
 // Return TEP using this indirect PS if any
-static tep_obj_t* indirect_ps_lookup_and_update_ (state_t* state,
+static ip_addr_t indirect_ps_lookup_and_update_ (state_t* state,
                                                   ms_ps_id_t indirect_pathset,
                                                   uint32_t ll_direct_pathset) {
+    ip_addr_t zero_ip = {0};
     auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
     if (indirect_ps_obj == nullptr) {
         if (ll_direct_pathset == PDS_MS_ECMP_INVALID_INDEX) {
             PDS_TRACE_DEBUG("Ignore blackhole pathset %d", indirect_pathset);
-            return nullptr;
+            return zero_ip;
         }
         PDS_TRACE_DEBUG("Set new indirect pathset %d -> direct pathset %d",
                         indirect_pathset, ll_direct_pathset);
@@ -363,17 +364,14 @@ static tep_obj_t* indirect_ps_lookup_and_update_ (state_t* state,
             (new indirect_ps_obj_t(ll_direct_pathset));
         state->indirect_ps_store().add_upd(indirect_pathset,
                                            std::move(indirect_ps_obj_uptr));
-        return nullptr;
+        return zero_ip;
     }
     if (indirect_ps_obj->ll_direct_pathset != ll_direct_pathset) {
         PDS_TRACE_DEBUG("Set indirect pathset %d -> direct pathset %d",
                         indirect_pathset, ll_direct_pathset);
         indirect_ps_obj->ll_direct_pathset = ll_direct_pathset;
     }
-    if (ip_addr_is_zero(&(indirect_ps_obj->tep_ip))) {
-        return nullptr;
-    }
-    return state->tep_store().get(indirect_ps_obj->tep_ip);
+    return indirect_ps_obj->tep_ip;
 }
 
 NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
@@ -384,12 +382,26 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
         // Check if this is an Indirect Pathset that is referenced by
         // existing VXLAN Tunnels (TEPs)
         auto state_ctxt = pds_ms::state_t::thread_context();
-        auto tep_obj = indirect_ps_lookup_and_update_(state_ctxt.state(),
+        auto tep_ip = indirect_ps_lookup_and_update_(state_ctxt.state(),
                                                       ips_info_.pathset_id,
                                                       ips_info_.ll_dp_corr_id);
+        if (ip_addr_is_zero(&tep_ip)) {
+            return rc;
+        }
+        PDS_TRACE_DEBUG("Found TEP %s stitched to Indirect Pathset %d",
+                        ipaddr2str(&tep_ip), ips_info_.pathset_id);
+        auto tep_obj = state_ctxt.state()->tep_store().get(tep_ip);
         if (tep_obj == nullptr) {
             // This Pathset does not have any reference yet
             // Nothing to do
+            auto tep_sync_obj = state_ctxt.state()->tep_sync_store().get(tep_ip);
+            if (tep_sync_obj != nullptr) {
+                // Update the synchrnous store so that any L3 VXLAN port created
+                // at this point does not end up using stale pathset
+                PDS_TRACE_DEBUG("TEP sync obj %s -> DP Corr %d while TEP async response is pending",
+                                ipaddr2str(&tep_ip), ips_info_.ll_dp_corr_id);
+                tep_sync_obj->properties().hal_uecmp_idx = ips_info_.ll_dp_corr_id;
+            }
             return rc;
         }
         // This is an indirect pathset that is referenced by Tunnels
@@ -407,6 +419,10 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                             ips_info_.pathset_id,
                             ipaddr2str(&tep_obj->properties().tep_ip));
             tep_obj->properties().hal_uecmp_idx = PDS_MS_ECMP_INVALID_INDEX;
+            auto tep_sync_obj = state_ctxt.state()->tep_sync_store().get(tep_ip);
+            if (tep_sync_obj != nullptr) {
+                tep_sync_obj->properties().hal_uecmp_idx = PDS_MS_ECMP_INVALID_INDEX;
+            }
             return rc;
         }
 

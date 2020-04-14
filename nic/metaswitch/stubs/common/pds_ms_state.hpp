@@ -10,6 +10,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_indirect_ps_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_tep_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_tep_sync_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_subnet_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_bd_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_if_store.hpp"
@@ -44,6 +45,7 @@ enum slab_id_e {
     PDS_MS_ECMP_IDX_GUARD_SLAB_ID,
     PDS_MS_COOKIE_SLAB_ID,
     PDS_MS_INDIRECT_PS_SLAB_ID,
+    PDS_MS_TEP_SYNC_SLAB_ID,
     PDS_MS_MAX_SLAB_ID
 };
 
@@ -110,6 +112,7 @@ public:
     subnet_store_t& subnet_store(void) {return subnet_store_;}
     route_table_store_t& route_table_store(void) {return route_table_store_;}
     pathset_store_t& pathset_store(void) {return pathset_store_;}
+    tep_sync_store_t& tep_sync_store(void) {return tep_sync_store_;}
 
     uint32_t get_slab_in_use(slab_id_e slab_id) {
         return slabs_[slab_id]->num_in_use();
@@ -161,6 +164,7 @@ private:
     subnet_store_t subnet_store_;
     route_table_store_t route_table_store_;
     pathset_store_t pathset_store_;
+    tep_sync_store_t tep_sync_store_;
 
     // Index generator for PDS HAL Overlay ECMP table
     sdk::lib::rte_indexer  *ecmp_idx_gen_;

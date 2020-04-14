@@ -300,4 +300,9 @@ static inline bool mgmt_state_locked(bool set, bool lock=false) {
 }
 
 } // End namespace
+
+static inline bool operator==(const ip_addr_t& a,
+                              const ip_addr_t& b) {
+    return (IPADDR_EQ(&a, &b));
+}
 #endif

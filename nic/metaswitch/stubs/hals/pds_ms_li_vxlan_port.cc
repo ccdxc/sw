@@ -46,8 +46,8 @@ void li_vxlan_port::fetch_store_info_(pds_ms::state_t* state) {
         }
         ips_info_.tep_ip = store_info_.vxp_if_obj->vxlan_port_properties().tep_ip;
     }
-    store_info_.tep_obj = state->tep_store().get(ips_info_.tep_ip);
-    if (unlikely(store_info_.tep_obj == nullptr)) {
+    store_info_.tep_sync_obj = state->tep_sync_store().get(ips_info_.tep_ip);
+    if (unlikely(store_info_.tep_sync_obj == nullptr)) {
         throw Error(std::string("Unknown VXLAN Tunnel ")
                     .append(ipaddr2str(&ips_info_.tep_ip)));
     }
@@ -64,7 +64,7 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
     MAC_ADDR_COPY(spec.mac, vxp_prop.dmaci);
 
     spec.ip_addr = ips_info_.src_ip;
-    auto& tep_prop = store_info_.tep_obj->properties();
+    auto& tep_prop = store_info_.tep_sync_obj->properties();
     if (tep_prop.hal_uecmp_idx == PDS_MS_ECMP_INVALID_INDEX) {
         // Metaswitch PSM deletes underlay Nexthops independent of EVPN.
         // So its possible that when a L3 VXLAN Port is being added the
@@ -89,10 +89,10 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
 
 void li_vxlan_port::add_pds_tep_spec(pds_batch_ctxt_t bctxt,
                                      if_obj_t* vxp_if_obj,
-                                     tep_obj_t* tep_obj,
+                                     tep_sync_obj_t* tep_sync_obj,
                                      bool op_create) {
     store_info_.vxp_if_obj = vxp_if_obj;
-    store_info_.tep_obj = tep_obj;
+    store_info_.tep_sync_obj = tep_sync_obj;
     auto vxp_prop = vxp_if_obj->vxlan_port_properties();
 
     sdk_ret_t ret = SDK_RET_OK;
@@ -185,6 +185,7 @@ pds_batch_ctxt_guard_t li_vxlan_port::make_batch_pds_spec_() {
 NBB_BYTE li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_upd_ips) {
 
     NBB_BYTE rc = ATG_OK;
+    cookie_t* cookie = nullptr;
 
     parse_ips_info_(vxlan_port_add_upd_ips);
     if (!vxlan_port_add_upd_ips->port_properties.l3_capable) {
@@ -226,9 +227,6 @@ NBB_BYTE li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_po
         // Cannot add a VXLAN Port create to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
-    } // End of state thread_context
-      // Do Not access/modify global state after this
-
     auto l_tep_ip = ips_info_.tep_ip;
     auto l_vni = ips_info_.vni;
     cookie_uptr_->send_ips_reply =
@@ -241,8 +239,10 @@ NBB_BYTE li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_po
             if (!pds_status) {
                 // Delete the L3 VXLAN port from the TEP back reference list
                 auto state_ctxt = state_t::thread_context();
-                auto tep_obj = state_ctxt.state()->tep_store().get(l_tep_ip);
-                tep_obj->del_l3_vxlan_port(vxlan_port_add_upd_ips->id.if_index);
+                auto tep_sync_obj = state_ctxt.state()->tep_sync_store().get(l_tep_ip);
+                if (tep_sync_obj != nullptr) {
+                    tep_sync_obj->del_l3_vxlan_port(vxlan_port_add_upd_ips->id.if_index);
+                }
             }
             NBB_CREATE_THREAD_CONTEXT
             NBS_ENTER_SHARED_CONTEXT(li_proc_id);
@@ -283,10 +283,13 @@ NBB_BYTE li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_po
             NBB_DESTROY_THREAD_CONTEXT
         };
 
+    // Hold State lock until batch ciommit end so that the pathset we refer
+    // to does not get deleted in parallel
+
     // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     rc = ATG_ASYNC_COMPLETION;
-    auto cookie = cookie_uptr_.release();
+    cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
@@ -298,12 +301,13 @@ NBB_BYTE li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_po
     PDS_TRACE_DEBUG ("Type5 TEP %s VNI %d Add/Upd PDS Batch commit successful",
                      ipaddr2str(&ips_info_.tep_ip), ips_info_.vni);
 
-    // Add the L3 VXLAN port from the TEP back reference list
-    { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pds_ms::state_t::thread_context();
-        auto tep_obj = state_ctxt.state()->tep_store().get(ips_info_.tep_ip);
-        tep_obj->add_l3_vxlan_port(ips_info_.if_index);
-    }
+        auto tep_sync_obj = state_ctxt.state()->tep_sync_store().get(ips_info_.tep_ip);
+        if (tep_sync_obj != nullptr) {
+            tep_sync_obj->add_l3_vxlan_port(ips_info_.if_index);
+        }
+
+    } // End of state thread_context
+      // Do Not access/modify global state after this
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
@@ -344,7 +348,7 @@ void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {
         pds_bctxt_guard = make_batch_pds_spec_();
 
         // Delete the L3 VXLAN port from the TEP back reference list
-        store_info_.tep_obj->del_l3_vxlan_port(ips_info_.if_index);
+        store_info_.tep_sync_obj->del_l3_vxlan_port(ips_info_.if_index);
 
         // If we have batched multiple IPS earlier flush it now
         // VXLAN Tunnel deletion cannot be appended to an existing batch

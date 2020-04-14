@@ -28,6 +28,7 @@ state_t::state_t(void)
     route_table_slab_init (slabs_, PDS_MS_RTTABLE_SLAB_ID);
     pathset_slab_init (slabs_, PDS_MS_PATHSET_SLAB_ID);
     ecmp_idx_guard_slab_init (slabs_, PDS_MS_ECMP_IDX_GUARD_SLAB_ID);
+    tep_sync_slab_init(slabs_, PDS_MS_TEP_SYNC_SLAB_ID);
 
     slabs_[PDS_MS_COOKIE_SLAB_ID].
         reset(sdk::lib::slab::factory("PDS-MS-COOKIE",

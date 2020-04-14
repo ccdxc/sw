@@ -195,20 +195,28 @@ pds_batch_ctxt_guard_t li_vxlan_tnl::make_batch_pds_spec_(state_t::context_t&
             }
 
             // For TEP uecmp update need to update all L3 VXLAN Ports
-            auto l_tep_obj = store_info_.tep_obj;
-            store_info_.tep_obj->walk_l3_vxlan_ports(
-                [&state_ctxt, l_tep_obj, bctxt] (ms_ifindex_t vxp_ifindex) -> bool {
-                    auto vxp_if_obj = state_ctxt.state()->if_store().get(vxp_ifindex);
-                    SDK_ASSERT(vxp_if_obj != nullptr);
-                    auto& vxp_prop = vxp_if_obj->vxlan_port_properties();
-                    PDS_TRACE_DEBUG("TEP %s Updating Underlay ECMP Index for MS"
-                                    " L3 VXLAN Port %d",
-                                    ipaddr2str(&vxp_prop.tep_ip), vxp_ifindex);
-                    li_vxlan_port vxp;
-                    vxp.add_pds_tep_spec(bctxt, vxp_if_obj, l_tep_obj,
-                                         false /* Op Update */);
-                    return false; // continue loop
-                });
+            auto l_tep_sync_obj = state_ctxt.state()->
+                tep_sync_store().get(ips_info_.tep_ip);
+
+            if (l_tep_sync_obj != nullptr) {
+                l_tep_sync_obj->walk_l3_vxlan_ports(
+                    [&state_ctxt, l_tep_sync_obj, bctxt] (ms_ifindex_t vxp_ifindex) -> bool {
+                        auto vxp_if_obj = state_ctxt.state()->if_store().get(vxp_ifindex);
+                        if (vxp_if_obj == nullptr) {
+                            PDS_TRACE_ERR("Cannot find L3 VXLAN Port 0x%x while updating TEP",
+                                          vxp_ifindex);
+                            return false; // continue loop
+                        }
+                        auto& vxp_prop = vxp_if_obj->vxlan_port_properties();
+                        PDS_TRACE_DEBUG("TEP %s Updating Underlay ECMP Index for MS"
+                                        " L3 VXLAN Port 0x%x",
+                                        ipaddr2str(&vxp_prop.tep_ip), vxp_ifindex);
+                        li_vxlan_port vxp;
+                        vxp.add_pds_tep_spec(bctxt, vxp_if_obj, l_tep_sync_obj,
+                                             false /* Op Update */);
+                        return false; // continue loop
+                    });
+            }
         }
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS TEP Create or Update failed for TEP ")
@@ -239,7 +247,7 @@ static ms_ps_id_t map_indirect_ps_2_tep_ip_(state_t* state, ms_ps_id_t indirect_
     if (indirect_ps_obj == nullptr) {
         PDS_TRACE_DEBUG("Map new indirect underlay pathset %d to TEP %s",
                         indirect_pathset, ipaddr2str(&tep_ip));
-        std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr 
+        std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr
             (new indirect_ps_obj_t(tep_ip));
         state->indirect_ps_store().add_upd(indirect_pathset,
                                            std::move(indirect_ps_obj_uptr));
@@ -280,6 +288,7 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
 
     NBB_BYTE rc = ATG_OK;
     pds_batch_ctxt_guard_t pds_bctxt_guard;
+    cookie_t* cookie = nullptr;
 
     { // Enter thread-safe context to access/modify global state
     auto state_ctxt = pds_ms::state_t::thread_context();
@@ -298,12 +307,30 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
                         "indirect pathset %d (ecmp: %d). prefer indirect pathset",
                         ips_info_.tep_ip_str.c_str(), ips_info_.hal_uecmp_idx,
                         ips_info_.uecmp_ps, store_info_.ll_direct_pathset);
-    if (store_info_.ll_direct_pathset == PDS_MS_ECMP_INVALID_INDEX) {
-        PDS_TRACE_DEBUG("Ignore VXLAN Tunnel %s update pointing to"
-                        " blackholed pathset %d",
-                        ips_info_.tep_ip_str.c_str(),ips_info_.uecmp_ps);
-        return rc;
+        if (store_info_.ll_direct_pathset == PDS_MS_ECMP_INVALID_INDEX) {
+            PDS_TRACE_DEBUG("Ignore VXLAN Tunnel %s update pointing to"
+                            " blackholed pathset %d",
+                            ips_info_.tep_ip_str.c_str(),ips_info_.uecmp_ps);
+            return rc;
+        }
     }
+
+    auto tep_sync_obj = state_ctxt.state()->tep_sync_store().get(ips_info_.tep_ip);
+    if (tep_sync_obj == nullptr) {
+        PDS_TRACE_DEBUG ("Create TEP sync obj %s with DP Corr %d",
+                         ips_info_.tep_ip_str.c_str(),
+                         store_info_.ll_direct_pathset);
+
+         tep_sync_obj = new tep_sync_obj_t (ips_info_.tep_ip,
+                                            store_info_.ll_direct_pathset);
+         state_ctxt.state()->tep_sync_store().add_upd(ips_info_.tep_ip, tep_sync_obj);
+    } else {
+        PDS_TRACE_DEBUG ("Update TEP sync obj %s underlay DP Corr %d",
+                         ips_info_.tep_ip_str.c_str(),
+                         store_info_.ll_direct_pathset);
+
+        tep_sync_obj->properties().hal_uecmp_idx =
+            store_info_.ll_direct_pathset;
     }
 
     if (store_info_.tep_obj != nullptr) {
@@ -336,14 +363,11 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
     // If we have batched multiple IPS earlier flush it now
     // Cannot add a Tunnel create to an existing batch
     state_ctxt.state()->flush_outstanding_pds_batch();
-
-    } // End of state thread_context
-      // Do Not access/modify global state after this
-
     // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     rc = ATG_ASYNC_COMPLETION;
-    auto cookie = cookie_uptr_.release();
+    cookie = cookie_uptr_.release();
+
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
@@ -353,6 +377,10 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
     }
     PDS_TRACE_DEBUG ("TEP %s: Add/Upd PDS Batch commit successful",
                      ips_info_.tep_ip_str.c_str());
+
+    } // End of state thread_context
+      // Do Not access/modify global state after this
+
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
@@ -467,9 +495,6 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
         unmap_indirect_ps_2_tep_ip_(state_ctxt.state(),
             store_info_.tep_obj->properties().uecmp_ps);
 
-    } // End of state thread_context
-      // Do Not access/modify global state after this
-
     cookie_uptr_->send_ips_reply =
         [tep_ip] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
@@ -493,12 +518,13 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
     PDS_TRACE_DEBUG ("TEP %s: Delete PDS Batch commit successful",
                      ipaddr2str(&tep_ip));
 
-    { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pds_ms::state_t::thread_context();
         // Deletes are synchronous - Delete the store entry immediately
         state_ctxt.state()->tep_store().erase(tep_ip);
         state_ctxt.state()->if_store().erase(ips_info_.if_index);
-    }
+        state_ctxt.state()->tep_sync_store().erase(ips_info_.tep_ip);
+    } // End of state thread_context
+      // Do Not access/modify global state after this
+
 }
 
 } // End namespace

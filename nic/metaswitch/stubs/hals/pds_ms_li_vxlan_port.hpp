@@ -28,7 +28,7 @@ public:
    NBB_BYTE handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_tnl_add_upd);
    void handle_delete(ms_ifindex_t vxlan_port_ifindex);
    void add_pds_tep_spec(pds_batch_ctxt_t bctxt, if_obj_t* vxp_if_obj,
-                         tep_obj_t* tep_obj, bool op_create);
+                         tep_sync_obj_t* tep_obj, bool op_create);
 
 private:
     struct ips_info_t {
@@ -39,7 +39,7 @@ private:
     };
 
     struct store_info_t {
-        tep_obj_t*   tep_obj;
+        tep_sync_obj_t*   tep_sync_obj;
         if_obj_t*    vxp_if_obj;
     };
 
