@@ -64,20 +64,20 @@ uint32_t mpls2_label = 0x6789a;
 // Flow dump vars
 pds_flow_key_t dump_flow_key;
 
-static void
-fte_flow_dump (void)
-{
-    pds_flow_info_t flow_info;
-
-    if (pds_flow_cache_entry_read(&dump_flow_key, &flow_info) != PDS_RET_OK) {
-        PDS_TRACE_DEBUG("pds_flow_cache_entry_read failed.\n");
-        return;
-    }
-
-    // TODO: Dump the values
-    PDS_TRACE_DEBUG("pds_flow_cache_entry_read success.\n");
-    return;
-}
+#static void
+#fte_flow_dump (void)
+#{
+#    pds_flow_info_t flow_info;
+#
+#    if (pds_flow_cache_entry_read(&dump_flow_key, &flow_info) != PDS_RET_OK) {
+#        PDS_TRACE_DEBUG("pds_flow_cache_entry_read failed.\n");
+#        return;
+#    }
+#
+#    // TODO: Dump the values
+#    PDS_TRACE_DEBUG("pds_flow_cache_entry_read success.\n");
+#    return;
+#}
 
 static sdk_ret_t
 fte_flow_extract_prog_args_x1 (struct rte_mbuf *m, pds_flow_spec_t *spec)
@@ -245,7 +245,6 @@ fte_flow_prog (struct rte_mbuf *m)
         return;
     }
 
-    fte_flow_dump();
     return;    
 }
 
