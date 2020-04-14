@@ -530,7 +530,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                                  pds_get_flow_log_en(p0));
         ftlv4_cache_advance_count(1);
 
-        // TODO : Handle rx from uplink, service mapping
+        // TODO : Handle service mapping
         if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
             // NAPT - both port and ip are changed
             r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
@@ -539,7 +539,11 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             }
         } else if (vnet_buffer2(p0)->pds_nat_data.xlate_idx) {
             // static NAT
-            r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
+            if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_RX_PKT_VALID) {
+                r_src_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
+            } else {
+                r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
+            }
         }
         if (vnet_buffer2(p0)->pds_nat_data.xlate_idx2) {
             // twice NAT

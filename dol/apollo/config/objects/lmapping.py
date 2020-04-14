@@ -293,6 +293,17 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         lmap.Node = target_node
         self.Objs[target_node].update({lmap.MappingId: lmap})
 
+    def GetVnicPublicAddresses(self, vnic):
+        ipv4_addresses = []
+        v4pfxlen = str(vnic.SUBNET.IPPrefix[1].prefixlen)
+        for mapping in self.Objects(vnic.Node):
+            if mapping.IsV6() or (mapping.VNIC.GID() != vnic.GID()):
+                continue
+            if not mapping.PublicIP:
+                continue
+            ipv4_addresses.append(mapping.PublicIP)
+        return ipv4_addresses
+
 client = LocalMappingObjectClient()
 
 def GetMatchingObjects(selectors, node):

@@ -13,10 +13,7 @@ import iota.harness.api as api
 
 WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1
 WORKLOAD_PAIR_TYPE_REMOTE_ONLY   = 2
-WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY = 3
-WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY = 4
-WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY = 5
-WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY = 6
+WORKLOAD_PAIR_TYPE_IGW_ONLY      = 3
 
 WORKLOAD_PAIR_SCOPE_INTRA_SUBNET = 1
 WORKLOAD_PAIR_SCOPE_INTER_SUBNET = 2
@@ -107,11 +104,15 @@ def __vnics_are_dynamic_napt_pair(vnic1, vnic2):
         return True
     return False
 
-def __vnics_are_static_nat_pair(vnic1, vnic2):
+def __vnics_are_static_nat_pair(vnic1, vnic2, direction="tx"):
     if vnic1.Node == vnic2.Node:
         return False
-    if vnic1.HasPublicIp and vnic1.VnicType == "local" and vnic2.VnicType == "igw":
-        return True
+    if direction == "tx":
+        if vnic1.HasPublicIp and vnic1.VnicType == "local" and vnic2.VnicType == "igw":
+            return True
+    else:
+        if vnic2.HasPublicIp and vnic2.VnicType == "local" and vnic1.VnicType == "igw":
+            return True
     return False
 
 
@@ -132,7 +133,8 @@ def __findWorkloadByVnic(vnic_inst):
             return wload
     return None
 
-def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA_SUBNET):
+def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA_SUBNET, \
+                         nat_type=None, local_vnic_has_public_ip=None, direction="tx"):
     wl_pairs = []
     naplesHosts = api.GetNaplesHostnames()
     service_vnics_done = []
@@ -154,28 +156,39 @@ def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY and\
                     ((vnic1.Node == vnic2.Node) or vnic1.IsIgwVnic() or vnic2.IsIgwVnic()):
                 continue
-            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY and not __vnics_are_dynamic_napt_pair(vnic1, vnic2):
-                continue
-            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY and not __vnics_are_static_nat_pair(vnic1, vnic2):
-                continue
-            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY or \
-                        wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY:
-                from_public = wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY
-                if not __vnics_are_dynamic_service_napt_pair(vnic1, vnic2, from_public):
+            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_ONLY:
+                if not nat_type:
                     continue
-                if len(vnic1.ServiceIPs) == 0:
+                if nat_type == "napt":
+                    if not __vnics_are_dynamic_napt_pair(vnic1, vnic2):
+                        continue
+                elif nat_type == "static":
+                    if not __vnics_are_static_nat_pair(vnic1, vnic2, direction):
+                        continue
+                    if direction == "rx":
+                        w1 = __findWorkloadByVnic(vnic1)
+                        # We need to ping w2 using its public ip, so change its ip address
+                        w2 = copy.copy(__findWorkloadByVnic(vnic2))
+                        w2.ip_address = lmapping.client.GetVnicPublicAddresses(vnic2)[0]
+                        assert(w1 and w2)
+                        wl_pairs.append((w1, w2))
+                        continue
+                if nat_type == "napt_service":
+                    if not __vnics_are_dynamic_service_napt_pair(vnic1, vnic2, local_vnic_has_public_ip):
+                        continue
+                    if len(vnic1.ServiceIPs) == 0:
+                        continue
+                    if vnic1 in service_vnics_done:
+                        continue
+                    w1 = __findWorkloadByVnic(vnic1)
+                    for service_ip in vnic1.ServiceIPs:
+                        # We need to ping w2 using its service ip, so change its ip address
+                        w2 = copy.copy(__findWorkloadByVnic(vnic2))
+                        w2.ip_address = service_ip
+                        assert(w1 and w2)
+                        wl_pairs.append((w1, w2))
+                    service_vnics_done.append(vnic1)
                     continue
-                if vnic1 in service_vnics_done:
-                    continue
-                w1 = __findWorkloadByVnic(vnic1)
-                for service_ip in vnic1.ServiceIPs:
-                    # We need to ping w2 using its service ip, so change its ip address
-                    w2 = copy.copy(__findWorkloadByVnic(vnic2))
-                    w2.ip_address = service_ip
-                    assert(w1 and w2)
-                    wl_pairs.append((w1, w2))
-                service_vnics_done.append(vnic1)
-                continue
 
             w1 = __findWorkloadByVnic(vnic1)
             w2 = __findWorkloadByVnic(vnic2)
@@ -187,8 +200,10 @@ def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA
 def GetPingableWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_REMOTE_ONLY):
     return __getWorkloadPairsBy(wl_pair_type=wl_pair_type)
 
-def GetWorkloadPairs(wl_pair_type, wl_pair_scope):
-    return __getWorkloadPairsBy(wl_pair_type, wl_pair_scope)
+def GetWorkloadPairs(wl_pair_type, wl_pair_scope,
+                     nat_type=None, local_vnic_has_public_ip=None, direction="tx"):
+    return __getWorkloadPairsBy(wl_pair_type, wl_pair_scope, nat_type, \
+                                local_vnic_has_public_ip, direction)
 
 def __getObjects(objtype):
     objs = list()

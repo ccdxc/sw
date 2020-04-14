@@ -77,7 +77,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx_rflow;
     } else if (vnet_buffer2(b0)->pds_nat_data.xlate_idx) {
-        // TODO: service mapping, flow miss from uplink
+        // TODO: service mapping
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
@@ -117,7 +117,7 @@ skip_prog0:
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx_rflow;
     } else if (vnet_buffer2(b1)->pds_nat_data.xlate_idx) {
-        // TODO: service mapping, flow miss from uplink
+        // TODO: service mapping
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
@@ -171,7 +171,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         actiondata.action_u.session_session_info.rx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx_rflow;
     } else if (vnet_buffer2(b)->pds_nat_data.xlate_idx) {
-        // TODO: service mapping, flow miss from uplink
+        // TODO: service mapping
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
@@ -633,18 +633,23 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
                 }
                 if (hdr->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
                     /* Only static nat should be valid here */
-                    /* TODO : From network pkt */
-                    *next = FLOW_CLASSIFY_NEXT_DROP;
-                    counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-                    // Enable once we handle Dnat cases
-#if 0
-                    if (dev->overlay_routing_en) {
-                        pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT;
+                    if (hdr->mapping_xlate_id != 0) {
+                        u32 ip;
+                        u16 port;
+                        xlate_id = hdr->mapping_xlate_id - 1;
+                        pds_snat_tbl_read_ip4(xlate_id + 1, &ip, &port);
+                        vnet_buffer2(p)->pds_nat_data.xlate_idx = xlate_id;
+                        vnet_buffer2(p)->pds_nat_data.xlate_addr = ip;
+                        if (dev->overlay_routing_en) {
+                            pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT;
+                        } else {
+                            pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT;
+                        }
                     } else {
-                        pkt_type = PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT;
+                        *next = FLOW_CLASSIFY_NEXT_DROP;
+                        counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+                        return;
                     }
-#endif
-                    return;
                 }
             }
         } else {

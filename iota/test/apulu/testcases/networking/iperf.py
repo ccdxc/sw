@@ -17,29 +17,24 @@ def Setup(tc):
     elif tc.args.type == 'remote_only':
         tc.workload_pairs = config_api.GetPingableWorkloadPairs(
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
-    elif tc.args.type == 'igw_nat_only':
+    elif tc.args.type == 'igw_only':
+        local_vnic_has_public_ip = getattr(tc.args, "public_vnic", False)
+        direction = getattr(tc.args, "direction", "tx")
         tc.workload_pairs = config_api.GetWorkloadPairs(
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY,
-            wl_pair_scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET)
-    elif tc.args.type == 'igw_napt_only':
-        napt_type = getattr(tc.args, "napt_type", None)
-        if napt_type and napt_type == 'service':
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY
-        elif napt_type and napt_type == 'public_service':
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY
-        else:
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY
-        tc.workload_pairs = config_api.GetWorkloadPairs(
-            wl_pair_type = wl_pair_type,
-            wl_pair_scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET)
-        tc.nat_port_blocks = config_api.GetAllNatPortBlocks()
-        tc.nat_pre_stats = {}
-        tc.nat_pre_stats['icmp'] = nat_pb.NatPbStats()
-        tc.nat_pre_stats['udp'] = nat_pb.NatPbStats()
-        tc.nat_pre_stats['tcp'] = nat_pb.NatPbStats()
-        for pb in tc.nat_port_blocks:
-            stats = pb.GetStats()
-            tc.nat_pre_stats[pb.ProtoName].Add(stats)
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_ONLY,
+            wl_pair_scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET,
+            nat_type=tc.args.nat_type, local_vnic_has_public_ip=local_vnic_has_public_ip,
+            direction=direction)
+
+        if tc.args.nat_type == 'napt' or tc.args.nat_type == 'napt_service':
+            tc.nat_port_blocks = config_api.GetAllNatPortBlocks()
+            tc.nat_pre_stats = {}
+            tc.nat_pre_stats['icmp'] = nat_pb.NatPbStats()
+            tc.nat_pre_stats['udp'] = nat_pb.NatPbStats()
+            tc.nat_pre_stats['tcp'] = nat_pb.NatPbStats()
+            for pb in tc.nat_port_blocks:
+                stats = pb.GetStats()
+                tc.nat_pre_stats[pb.ProtoName].Add(stats)
 
     if len(tc.workload_pairs) == 0:
         api.Logger.error("Skipping Testcase due to no workload pairs.")
@@ -58,9 +53,9 @@ def Verify(tc):
     res = traffic_utils.verifyIPerf(tc.cmd_cookies, tc.resp, min_bw=1)
     if res != api.types.status.SUCCESS:
         return res
-    if tc.args.type != 'igw_napt_only' and tc.args.type != 'igw_nat_only':
+    if tc.args.type != 'igw_only':
         return flow_utils.verifyFlows(tc.iterators.ipaf, tc.workload_pairs)
-    elif tc.args.type == 'igw_napt_only':
+    elif tc.args.nat_type == 'napt' or tc.args.nat_type == 'napt_service':
         if tc.iterators.protocol == 'udp':
             num_tcp_flows = 1
             num_udp_flows = tc.num_streams
@@ -99,6 +94,6 @@ def Teardown(tc):
     # some issue running iperf in iota, previous test iperf flows still visible
     # inspite of clear flows and yields wrong NAT stats. Cannot reproduce when
     # running manually. For now don't clear flows after NAPT tests
-    if tc.args.type != 'igw_napt_only':
+    if tc.args.type != 'igw_only':
         return flow_utils.clearFlowTable(tc.workload_pairs)
     return api.types.status.SUCCESS

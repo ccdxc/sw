@@ -15,28 +15,23 @@ def Setup(tc):
     elif tc.args.type == 'remote_only':
         tc.workload_pairs = config_api.GetPingableWorkloadPairs(
             wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
-    elif tc.args.type == 'igw_nat_only':
+    elif tc.args.type == 'igw_only':
+        local_vnic_has_public_ip = getattr(tc.args, "public_vnic", False)
+        direction = getattr(tc.args, "direction", "tx")
         tc.workload_pairs = config_api.GetWorkloadPairs(
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAT_ONLY,
-            wl_pair_scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET)
-    elif tc.args.type == 'igw_napt_only':
-        napt_type = getattr(tc.args, "napt_type", None)
-        if napt_type and napt_type == 'service':
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_SERVICE_ONLY
-        elif napt_type and napt_type == 'public_service':
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_PUBLIC_NAPT_SERVICE_ONLY
-        else:
-            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_NAPT_ONLY
-        tc.workload_pairs = config_api.GetWorkloadPairs(
-            wl_pair_type = wl_pair_type,
-            wl_pair_scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET)
-        tc.nat_port_blocks = config_api.GetAllNatPortBlocks()
-        tc.nat_pre_stats = {}
-        tc.nat_pre_stats = nat_pb.NatPbStats()
-        for pb in tc.nat_port_blocks:
-            stats = pb.GetStats()
-            if pb.ProtoName == 'icmp':
-                tc.nat_pre_stats.Add(stats)
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_IGW_ONLY,
+            wl_pair_scope = config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET,
+            nat_type=tc.args.nat_type, local_vnic_has_public_ip=local_vnic_has_public_ip,
+            direction=direction)
+
+        if tc.args.nat_type == 'napt' or tc.args.nat_type == 'napt_service':
+            tc.nat_port_blocks = config_api.GetAllNatPortBlocks()
+            tc.nat_pre_stats = {}
+            tc.nat_pre_stats = nat_pb.NatPbStats()
+            for pb in tc.nat_port_blocks:
+                stats = pb.GetStats()
+                if pb.ProtoName == 'icmp':
+                    tc.nat_pre_stats.Add(stats)
 
     if len(tc.workload_pairs) == 0:
         api.Logger.error("Skipping Testcase due to no workload pairs.")
@@ -54,9 +49,9 @@ def Verify(tc):
     
     if  traffic_utils.verifyPing(tc.cmd_cookies, tc.resp) != api.types.status.SUCCESS:
         return api.types.status.FAILURE
-    if tc.args.type != 'igw_napt_only' and tc.args.type != 'igw_nat_only':
+    if tc.args.type != 'igw_only':
         return flow_utils.verifyFlows(tc.iterators.ipaf, tc.workload_pairs)
-    elif tc.args.type == 'igw_napt_only':
+    elif tc.args.nat_type == 'napt' or tc.args.nat_type == 'napt_service':
         post_stats = nat_pb.NatPbStats()
         for pb in tc.nat_port_blocks:
             if pb.ProtoName == "icmp":
