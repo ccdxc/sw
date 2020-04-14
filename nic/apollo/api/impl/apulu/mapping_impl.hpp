@@ -280,12 +280,27 @@ private:
     sdk_ret_t add_overlay_ip_rxdma_mapping_entry_(vpc_impl *vpc,
                                                   pds_mapping_spec_t *spec);
 
+    /// \brief deactivate rxdma MAPPING table entry for (local/remote)
+    ///        overlay IP
+    /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] mapping   mapping instance
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t deactivate_overlay_ip_rxdma_mapping_entry_(vpc_impl *vpc,
+                  mapping_entry *mapping);
+
     /// \brief add rxdma MAPPING table entry for public IP
     /// \param[in] vpc  VPC impl instance corresponding to this mapping
     /// \param[in] spec    mapping configurtion
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_public_ip_rxdma_mapping_entry_(vpc_impl *vpc,
                                                  pds_mapping_spec_t *spec);
+
+    /// \brief deactivate rxdma MAPPING table entry for public IP
+    /// \param[in] vpc  VPC impl instance corresponding to this mapping
+    /// \param[in] mapping   mapping instance
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t deactivate_public_ip_rxdma_mapping_entry_(vpc_impl *vpc,
+                                                        mapping_entry *mapping);
 
     /// \brief     fill key and data information for local mappping's public IP
     ///            P4 table entries

@@ -1057,6 +1057,27 @@ mapping_impl::add_overlay_ip_rxdma_mapping_entry_(vpc_impl *vpc,
 }
 
 sdk_ret_t
+mapping_impl::deactivate_overlay_ip_rxdma_mapping_entry_(vpc_impl *vpc,
+                  mapping_entry *mapping) {
+    sdk_ret_t ret;
+    sdk_table_api_params_t tparams;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
+    rxdma_mapping_appdata_t rxdma_mapping_data;
+
+    memset(&rxdma_mapping_data, 0, sizeof(rxdma_mapping_data));
+    PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
+                                       &mapping->skey().ip_addr);
+    rxdma_mapping_data.tag_idx = PDS_IMPL_RSVD_TAG_HW_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                   NULL, &rxdma_mapping_data,
+                                   RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->rxdma_mapping_tbl()->update(&tparams);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 mapping_impl::add_public_ip_rxdma_mapping_entry_(vpc_impl *vpc,
                                                  pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
@@ -1068,6 +1089,27 @@ mapping_impl::add_public_ip_rxdma_mapping_entry_(vpc_impl *vpc,
     PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
                                        &spec->public_ip);
     rxdma_mapping_data.tag_idx = rxdma_mapping_tag_idx_;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                   NULL, &rxdma_mapping_data,
+                                   RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
+                                   rxdma_mapping_public_ip_hdl_);
+    ret = mapping_impl_db()->rxdma_mapping_tbl()->insert(&tparams);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mapping_impl::deactivate_public_ip_rxdma_mapping_entry_(vpc_impl *vpc,
+                  mapping_entry *mapping) {
+    sdk_ret_t ret;
+    sdk_table_api_params_t tparams;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
+    rxdma_mapping_appdata_t rxdma_mapping_data;
+
+    memset(&rxdma_mapping_data, 0, sizeof(rxdma_mapping_data));
+    PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
+                                       &mapping->public_ip());
+    rxdma_mapping_data.tag_idx = PDS_IMPL_RSVD_TAG_HW_ID;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
                                    NULL, &rxdma_mapping_data,
                                    RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
@@ -1716,7 +1758,7 @@ mapping_impl::upd_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
     // TODO: may be we don't need this because the caller is already doing it
     // and we have to do it !!!
     // take over the public IP to overlay IP
-    to_overlay_ip_nat_idx_ =  orig_mapping_impl->to_overlay_ip_nat_idx_;
+    to_overlay_ip_nat_idx_ = orig_mapping_impl->to_overlay_ip_nat_idx_;
     orig_mapping_impl->to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
 
     // fill key & data of MAPPING and LOCAL_MAPPING table entries corresponding
@@ -1832,6 +1874,11 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
                                                   spec);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_DEL) {
+        // deactivate the previous rxdma MAPPING table entry corresponding to
+        // overlay IP
+        ret = deactivate_overlay_ip_rxdma_mapping_entry_(
+                  (vpc_impl *)vpc->impl(), orig_mapping);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) {
     }
 
@@ -1852,6 +1899,9 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
         // don't have to do anything here because old version of the object
         // when nuked, will remove the public IP mapping entries and NAT
         // entries previously installed and free all the resources
+        ret = deactivate_public_ip_rxdma_mapping_entry_((vpc_impl *)vpc->impl(),
+                                                        orig_mapping);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         upd_public_ip_mappings = false;
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_UPD) {
         // before updating the NAT table, 1st transfer the ownership of
@@ -1876,6 +1926,12 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
             // but tags are added, program rxdma MAPPING entry for public IP
             ret = add_public_ip_rxdma_mapping_entry_((vpc_impl *)vpc->impl(),
                                                      spec);
+            SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        } else if ((obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_DEL) &&
+                   spec->public_ip_valid) {
+            // de-activate rxdma MAPPING table entry for public IP
+            ret = deactivate_public_ip_rxdma_mapping_entry_(
+                      (vpc_impl *)vpc->impl(), orig_mapping);
             SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         }
     }
