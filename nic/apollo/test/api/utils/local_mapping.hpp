@@ -54,7 +54,8 @@ public:
               std::string pub_ip_str = "0.0.0.0/0",
               uint32_t num_vnics = k_max_vnic,
               uint32_t num_ip_per_vnic = PDS_MAX_VNIC_IP,
-              pds_mapping_type_t map_type = PDS_MAPPING_TYPE_L3);
+              pds_mapping_type_t map_type = PDS_MAPPING_TYPE_L3,
+              int num_tags = 1);
 
     // iterate helper
     void iter_next(int width = 1);

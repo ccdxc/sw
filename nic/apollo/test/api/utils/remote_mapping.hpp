@@ -53,7 +53,8 @@ public:
               uint32_t nh_id = 1,
               uint32_t num_teps = PDS_MAX_TEP,
               uint32_t num_vnic_per_tep = PDS_MAX_TEP_VNIC,
-              pds_mapping_type_t map_type = PDS_MAPPING_TYPE_L3);
+              pds_mapping_type_t map_type = PDS_MAPPING_TYPE_L3,
+              int num_tags = 1);
 
     // iterate helper
     void iter_next(int width = 1);

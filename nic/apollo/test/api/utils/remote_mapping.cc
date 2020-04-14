@@ -23,7 +23,8 @@ remote_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
                             pds_encap_type_t encap_type, uint32_t encap_val,
                             pds_nh_type_t nh_type, uint32_t nh_id,
                             uint32_t num_teps, uint32_t num_vnic_per_tep,
-                            pds_mapping_type_t map_type) {
+                            pds_mapping_type_t map_type,
+                            int num_tags) {
 
     ip_prefix_t vnic_ip_pfx;
 
@@ -45,6 +46,15 @@ remote_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
         spec.tep = int2pdsobjkey(nh_id);
     else
         spec.nh_group = int2pdsobjkey(nh_id);
+
+    // enable after tag support
+#if 0
+    spec.num_tags = num_tags;
+    for (int i=0; i<num_tags; i++) {
+        spec.tags[i] = ++i;
+    }
+#endif
+
     this->spec.fabric_encap.type = encap_type;
     switch(encap_type) {
     case PDS_ENCAP_TYPE_MPLSoUDP:

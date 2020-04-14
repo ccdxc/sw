@@ -24,7 +24,8 @@ local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
                            pds_obj_key_t vnic, bool public_ip_valid,
                            std::string pub_ip_cidr_str, uint32_t num_vnics,
                            uint32_t num_ip_per_vnic,
-                           pds_mapping_type_t map_type) {
+                           pds_mapping_type_t map_type,
+                           int num_tags) {
     ip_prefix_t vnic_ip_pfx;
     ip_prefix_t public_ip_pfx;
 
@@ -47,6 +48,13 @@ local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
     if (public_ip_valid)
         spec.public_ip = public_ip_pfx.addr;
 
+    // enable after tag support
+#if 0
+    spec.num_tags = num_tags;
+    for (int i=0; i<num_tags; i++) {
+        spec.tags[i] = ++i;
+    }
+#endif
 
     this->spec.fabric_encap.type = encap_type;
     switch(encap_type) {
