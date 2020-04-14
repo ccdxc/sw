@@ -1,0 +1,17 @@
+meta:
+    name    : ep_move
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : Local_To_Remote_Mac
+        testcase: testcases.ep_move.local_to_remote_mac
+        ignore  : True
+        stress  : True
+        iterators :
+            type     : nested
+            subnet_mov   : [ inter-subnet-local , inter-subnet-remote, intra-subnet ]
+            mac_mov      : [ same , new ]
+            ip_mov       : [ subset , new, all ]
+

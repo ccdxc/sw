@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import sys
+
 import iota.harness.api as api
 import iota.harness.infra.resmgr as resmgr
 
@@ -13,13 +14,14 @@ __max_tcp_ports = 1
 portUdpAllocator = resmgr.TestbedPortAllocator(205)
 portTcpAllocator = resmgr.TestbedPortAllocator(4500)
 
-def __add_secondary_ip_to_workloads():
+def __add_secondary_ip_to_workloads(workloads=[]):
     if not api.IsSimulation():
         req = api.Trigger_CreateAllParallelCommandsRequest()
     else:
         req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
 
-    for wl in api.GetWorkloads():
+    workloads = workloads if workloads else api.GetWorkloads()
+    for wl in workloads:
         for sec_ip_addr in wl.sec_ip_addresses:
             api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
                                    "ifconfig %s add %s" % (wl.interface, sec_ip_addr))
@@ -77,12 +79,19 @@ def __add_workloads(redirect_port):
         if resp is None:
             sys.exit(1)
 
-def __delete_classic_workloads(target_node = None):
+        for ep in config_api.GetEndpoints():
+            workload_name = ep.name + ep.node_name
+            for wl in api.GetWorkloads():
+                if wl.workload_name == workload_name:
+                    wl.vnic = ep.vnic
+
+def __delete_classic_workloads(target_node = None, workloads = None):
 
     req = topo_svc.WorkloadMsg()
     req.workload_op = topo_svc.DELETE
 
-    for wl in api.GetWorkloads():
+    workloads = workloads if workloads else api.GetWorkloads()
+    for wl in workloads:
         if target_node and target_node != wl.node_name:
             api.Logger.debug("Skipping delete workload for node %s" % wl.node_name)
             continue
@@ -96,12 +105,13 @@ def __delete_classic_workloads(target_node = None):
         if resp is None:
             sys.exit(1)
 
-def __readd_classic_workloads(target_node = None):
+def __readd_classic_workloads(target_node = None, workloads = []):
 
     req = topo_svc.WorkloadMsg()
     req.workload_op = topo_svc.ADD
 
-    for wl in api.GetWorkloads():
+    workloads = workloads if workloads else api.GetWorkloads()
+    for wl in workloads:
         if target_node and target_node != wl.node_name:
             api.Logger.debug("Skipping add classic workload for node %s" % wl.node_name)
             continue
@@ -109,6 +119,7 @@ def __readd_classic_workloads(target_node = None):
         wl_msg = req.workloads.add()
         wl_msg.ip_prefix = wl.ip_prefix
         wl_msg.ipv6_prefix = wl.ipv6_prefix
+        wl_msg.sec_ip_prefix.extend(wl.sec_ip_prefixes)
         wl_msg.mac_address = wl.mac_address
         wl_msg.encap_vlan = wl.encap_vlan
         wl_msg.uplink_vlan = wl.uplink_vlan
@@ -116,8 +127,9 @@ def __readd_classic_workloads(target_node = None):
         wl_msg.node_name = wl.node_name
         wl_msg.pinned_port = wl.pinned_port
         wl_msg.interface_type = wl.interface_type
-        wl_msg.interface = wl.parent_interface
-        wl_msg.parent_interface = wl.parent_interface
+        interface = wl.interface
+        if interface != None: wl_msg.interface = interface
+        wl_msg.parent_interface = wl_msg.interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
         wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
@@ -130,6 +142,13 @@ def __readd_classic_workloads(target_node = None):
 def ReAddWorkloads(node):
     __delete_classic_workloads(node)
     __readd_classic_workloads(node)
+
+def DeleteWorkload(wl):
+    __delete_classic_workloads(workloads=[wl])
+
+def ReAddWorkload(wl):
+    __readd_classic_workloads(workloads=[wl])
+    __add_secondary_ip_to_workloads([wl])
 
 def Main(args):
     api.Logger.info("Adding Workloads")

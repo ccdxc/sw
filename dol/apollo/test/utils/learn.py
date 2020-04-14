@@ -11,16 +11,6 @@ import apollo.config.utils as utils
 EP_STATE_CREATED = 2
 EP_STATE_PROBING = 3
 
-def Int2IPAddrStr(ip_int):
-    return str(ipaddress.ip_address(ip_int))
-
-def Int2MacStr(mac_int):
-    mac_hex = "{:012x}".format(mac_int)
-    return ':'.join(format(s, '02x') for s in bytes.fromhex(mac_hex))
-
-def List2UuidStr(uuid_list):
-    return str(uuid.UUID(bytes=bytes(uuid_list)))
-
 # String representation of constructed UUIDs has certain portions in big
 # endian format. This messes up with how pdsctl dsplays and expects UUID
 # strings. Do the massaging to make UUID strings uniform
@@ -30,9 +20,9 @@ def PdsUuidToUuidStr(pdsuuid):
 class EpMacRuntimeInfo(object):
     def __init__(self, yaml_str):
         data = yaml.load(yaml_str, Loader=yaml.Loader)
-        self.MacStr = Int2MacStr(data['key']['macaddr'])
-        self.SubnetUuidStr = List2UuidStr(data['key']['subnetid'])
-        self.VnicUuidStr = List2UuidStr(data['vnicid'])
+        self.MacStr = utils.Int2MacStr(data['key']['macaddr'])
+        self.SubnetUuidStr = utils.List2UuidStr(data['key']['subnetid'])
+        self.VnicUuidStr = utils.List2UuidStr(data['vnicid'])
         self.State = data['state']
         self.Ttl = data['ttl']
 
@@ -59,10 +49,10 @@ class EpMac:
 class EpIpRuntimeInfo(object):
     def __init__(self, yaml_str):
         data = yaml.load(yaml_str, Loader=yaml.Loader)
-        self.IpStr = Int2IPAddrStr(data['key']['ipaddr']['v4orv6']['v4addr'])
-        self.VpcUuidStr = List2UuidStr(data['key']['vpcid'])
-        self.MacStr = Int2MacStr(data['macinfo']['macaddr'])
-        self.SubnetUuidStr = List2UuidStr(data['macinfo']['subnetid'])
+        self.IpStr = utils.Int2IPAddrStr(data['key']['ipaddr']['v4orv6']['v4addr'])
+        self.VpcUuidStr = utils.List2UuidStr(data['key']['vpcid'])
+        self.MacStr = utils.Int2MacStr(data['macinfo']['macaddr'])
+        self.SubnetUuidStr = utils.List2UuidStr(data['macinfo']['subnetid'])
         self.State = data['state']
         self.Ttl = data['ttl']
 

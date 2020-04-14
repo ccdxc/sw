@@ -197,6 +197,8 @@ class Node(object):
         # here. This is used in certain testbeds where specific routes via OOB are required.
         def SetNicStaticRoutes(self, routes):
            self.__nic_static_routes = routes
+           if GlobalOptions.dryrun:
+               return
            if self.__nic_static_routes:
               for rt in self.__nic_static_routes:
                   print("Configuring static route %s via %s " % (rt.Route, rt.Nexthop))
@@ -206,6 +208,9 @@ class Node(object):
               print("No static routes to configure on naples")
 
         def read_from_console(self):
+            if GlobalOptions.dryrun:
+                return
+
             if self.__nic_console_ip != "" and self.__nic_console_port != "":
                 try:
                     ip_read = False

@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import ctypes
 import sys
+import uuid
 import ipaddress
 import random
 import socket
@@ -166,6 +167,16 @@ class PdsUuid:
             node_uuid = PDS_UUID_SYSTEM_MAC
         uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:] = node_uuid
         return bytes(uuid)
+
+def Int2IPAddrStr(ip_int):
+    return str(ipaddress.ip_address(ip_int))
+
+def Int2MacStr(mac_int):
+    mac_hex = "{:012x}".format(mac_int)
+    return ':'.join(format(s, '02x') for s in bytes.fromhex(mac_hex))
+
+def List2UuidStr(uuid_list):
+    return str(uuid.UUID(bytes=bytes(uuid_list)))
 
 def GetRandomObject(objList):
     return random.choice(objList)
@@ -935,6 +946,15 @@ class rrobiniter:
 
 def IsDol():
     return defs.TEST_TYPE == "DOL"
+
+def RunPdsctlShowCmd(node, cmd, args=None, yaml=True):
+    if IsDol():
+        import apollo.test.utils.pdsctl as pdsctl
+        ret, yaml_op = pdsctl.ExecutePdsctlShowCommand(cmd, args, yaml)
+    else:
+        import iota.test.apulu.utils.pdsctl as pdsctl
+        ret, yaml_op = pdsctl.ExecutePdsctlShowCommand(node, cmd, args, yaml)
+    return ret, yaml_op
 
 def GetNodeLoopbackPrefix(node):
     loopback_ip = EzAccessStoreClient[node].GetLoopbackIp()

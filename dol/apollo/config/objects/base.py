@@ -71,6 +71,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
             grpcmsg.BatchCtxt.BatchCookie = cookie
         return
 
+    def GetObjectType(self):
+        return self.ObjType
+
     def IsV4(self):
         af = getattr(self, 'AddrFamily', None)
         if af == 'IPV4':
@@ -86,6 +89,10 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def AddChild(self, child):
         child.Parent = self
         self.Children.append(child)
+
+    def DeleteChild(self, child):
+        child.Parent = None
+        self.Children.remove(child)
 
     def GetDependees(self, node):
         # returns the list of dependees
@@ -167,6 +174,24 @@ class ConfigObjectBase(base.ConfigObjectBase):
 
     def Delete(self, spec=None):
         utils.DeleteObject(self)
+        return True
+
+    def Destroy(self):
+        if self.IsHwHabitant():
+            logger.error(f"Object {self} still exist in HW can not destroy it")
+            return False
+
+        logger.info(f"Destroying object {self} in {self.Node}")
+        self.Show()
+
+        # remove the link from parent
+        if self.Parent:
+            self.Parent.DeleteChild(self)
+
+        # destroy all children
+        for obj in self.Children:
+            logger.info(f"Destroying object {self} children in {self.Node}")
+            obj.Destroy()
         return True
 
     def UpdateNotify(self, dObj):
@@ -572,3 +597,10 @@ class ConfigClientBase(base.ConfigClientBase):
             logger.info(f"{oper} {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
             return False
         return True
+
+    def RemoveObjFromCache(self, obj):
+        for key,val in self.Objs[obj.Node].items():
+            if val == obj:
+                del self.Objs[obj.Node][key]
+                return True
+        return False

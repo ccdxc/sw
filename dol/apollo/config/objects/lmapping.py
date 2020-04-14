@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+from collections import defaultdict
 
 from infra.common.logging import logger
 
@@ -147,11 +148,19 @@ class LocalMappingObject(base.ConfigObjectBase):
         grpcmsg.Id.append(svc_uuid.GetUuid())
         return grpcmsg
 
+    def Destroy(self):
+        super().Destroy()
+        client.RemoveObjFromCache(self)
+        return True
 
 class LocalMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.LMAPPING, Resmgr.MAX_LMAPPING)
+        self.__epip_objs = defaultdict(dict)
         return
+
+    def GetLocalMapObjByEpIpKey(self, node, ip, vpcid):
+        return self.__epip_objs[node].get((ip, vpcid), None)
 
     def IsReadSupported(self):
         if utils.IsPipelineApulu():
@@ -159,8 +168,53 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         # TODO: reads are failing for apollo & artemis
         return False
 
-    def PdsctlRead(self, node):
-        # pdsctl show not supported for local mapping
+    def VerifyLearntIpEntries(self, node, ret, cli_op):
+        if utils.IsDryRun(): return True
+        if not ret:
+            logger.error("pdsctl show learn ip cmd failed")
+            return False
+        # split output per object
+        ip_entries = cli_op.split("---")
+        for ip in ip_entries:
+            yamlOp = utils.LoadYaml(ip)
+            if not yamlOp:
+                continue
+            ip = yamlOp['key']['ipaddr']['v4orv6']['v4addr']
+            ip_str = utils.Int2IPAddrStr(ip)
+            vpc_uuid = utils.GetYamlSpecAttr(yamlOp['key'], 'vpcid')
+            vpc_uuid_str = utils.List2UuidStr(vpc_uuid)
+            subnet_uuid = utils.GetYamlSpecAttr(yamlOp['macinfo'], 'subnetid')
+            mac_str = utils.Int2MacStr(yamlOp['macinfo']['macaddr'])
+
+            # verifying if the info learnt is expected from config
+            lmap_obj = self.GetLocalMapObjByEpIpKey(node, ip_str, vpc_uuid)
+            if lmap_obj == None:
+                logger.error(f"lmap not found in client object store for key {vpc_uuid_str}, {ip_str}")
+                return False
+
+            # verifying if the EP is from local mapping.
+            args = " | grep " + vpc_uuid_str + " | grep " + ip_str + " | grep " + mac_str
+            ret, op = utils.RunPdsctlShowCmd(node, "mapping internal local", args, False)
+            if not ret:
+                logger.error(f"show mapping internal local failed for VPC id {vpc_uuid_str}, IP {ip_str}")
+                return False
+
+            cmdop = op.split('\n')
+            if not len(cmdop):
+                logger.error("No (%s) entries found in lmap show VPC id %s, IP %s "%(
+                             len(cmdop), vpc_uuid_str, ip_str))
+                return False
+
+            logger.info("Found (%s) LMAP entry for learn IP:%s, VPC:%s MAC:%s, Subnet:%s "%(
+                    len(cmdop), ip_str, vpc_uuid_str, mac_str, utils.List2UuidStr(subnet_uuid)))
+        return True
+
+    def ValidateLearnIPInfo(self, node):
+        logger.info(f"Reading LMAP & learn ip objects from {node} ")
+        ret, cli_op = utils.RunPdsctlShowCmd(node, "learn ip", None)
+        if not self.VerifyLearntIpEntries(node, ret, cli_op):
+            logger.error(f"learn ip object validation failed {ret} for {node} {cli_op}")
+            return False
         return True
 
     def GenerateObjects(self, node, parent, vnic_spec_obj):
@@ -180,6 +234,8 @@ class LocalMappingObjectClient(base.ConfigClientBase):
             if isV6Stack:
                 obj = LocalMappingObject(node, parent, lmap_spec, utils.IP_VERSION_6, v6c)
                 self.Objs[node].update({obj.MappingId: obj})
+                self.__epip_objs[node].update({(obj.IP, obj.VNIC.SUBNET.VPC.UUID.GetUuid()): obj})
+
                 c = c + 1
                 if c < lmap_count and hasLocalMap:
                     lmap_spec = vnic_spec_obj.lmap[c]
@@ -188,6 +244,8 @@ class LocalMappingObjectClient(base.ConfigClientBase):
             if c < lmap_count and isV4Stack:
                 obj = LocalMappingObject(node, parent, lmap_spec, utils.IP_VERSION_4, v4c)
                 self.Objs[node].update({obj.MappingId: obj})
+                self.__epip_objs[node].update({(obj.IP, obj.VNIC.SUBNET.VPC.UUID.GetUuid()): obj})
+
                 c = c + 1
                 if c < lmap_count and hasLocalMap:
                     lmap_spec = vnic_spec_obj.lmap[c]
@@ -228,6 +286,12 @@ class LocalMappingObjectClient(base.ConfigClientBase):
                 continue
             ipv4_addresses.append(mapping.IP + "/" + v4pfxlen)
         return ipv4_addresses
+
+    def ChangeNode(self, lmap, target_node):
+        logger.info(f"Changing node for {lmap}  {lmap.Node} => {target_node}")
+        del self.Objs[lmap.Node][lmap.MappingId]
+        lmap.Node = target_node
+        self.Objs[target_node].update({lmap.MappingId: lmap})
 
 client = LocalMappingObjectClient()
 

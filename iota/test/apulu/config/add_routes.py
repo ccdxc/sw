@@ -17,12 +17,12 @@ def __get_route_add_cmd(route, gw):
     api.Logger.info(route_cmd)
     return route_cmd
 
-def AddRoutes():
-    __add_routes()
+def AddRoutes(vnic_obj=None):
+    __add_routes(vnic_obj)
 
-def __add_routes():
+def __add_routes(vnic_obj=None):
 
-    vnic_routes = config_api.GetVnicRoutes()
+    vnic_routes = config_api.GetVnicRoutes(vnic_obj)
     if not vnic_routes:
         api.Logger.info("No vnic routes to add")
         return api.types.status.SUCCESS

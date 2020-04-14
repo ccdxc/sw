@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+from collections import defaultdict
 from infra.common.logging import logger
 import infra.common.objects as objects
 from apollo.config.store import client as EzAccessStoreClient
@@ -14,11 +15,14 @@ import apollo.config.objects.mirror as mirror
 from apollo.config.objects.meter  import client as MeterClient
 from apollo.config.objects.policy import client as PolicyClient
 from apollo.config.objects.policer import client as PolicerClient
+from apollo.config.objects.rmapping import client as rmapClient
+
 import apollo.config.utils as utils
 import apollo.config.topo as topo
 
 import vnic_pb2 as vnic_pb2
 import types_pb2 as types_pb2
+import learn_pb2 as learn_pb2
 
 class VnicStatus(base.StatusObjectBase):
     def __init__(self):
@@ -47,7 +51,8 @@ class VnicObject(base.ConfigObjectBase):
                 self.MACAddr = spec.vmac
         else:
             self.MACAddr =  ResmgrClient[node].VnicMacAllocator.get()
-        if utils.IsDol():
+        self.dot1Qenabled = getattr(spec, 'tagged', True)
+        if self.dot1Qenabled or utils.IsDol():
             self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
         else:
             self.VlanId = 0
@@ -76,7 +81,6 @@ class VnicObject(base.ConfigObjectBase):
         self.__attachpolicy = getattr(spec, 'policy', False) and utils.IsVnicPolicySupported()
         # get num of policies [0-5] in rrob order if needed
         self.__numpolicy = ResmgrClient[node].NumVnicPolicyAllocator.rrnext() if self.__attachpolicy else 0
-        self.dot1Qenabled = getattr(spec, 'tagged', True)
         self.QinQenabled = False
         self.DeriveOperInfo(node)
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
@@ -90,6 +94,7 @@ class VnicObject(base.ConfigObjectBase):
         self.ServiceIPs = []
         for service_ip in service_ips:
             self.ServiceIPs.append(service_ip.replace('\\', '/'))
+        self.Movable = getattr(spec, 'movable', False)
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
@@ -105,8 +110,8 @@ class VnicObject(base.ConfigObjectBase):
     def Show(self):
         logger.info("VNIC object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- Vlan: %s %d|Mpls:%d|Vxlan:%d|MAC:%s|SourceGuard:%s"\
-             % (self.dot1Qenabled, self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard)))
+        logger.info("- Vlan: %s %d|Mpls:%d|Vxlan:%d|MAC:%s|SourceGuard:%s|Movable:%s"\
+        % (self.dot1Qenabled, self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard), self.Movable))
         logger.info("- RxMirror:", self.RxMirror)
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
@@ -395,10 +400,14 @@ class VnicObject(base.ConfigObjectBase):
 class VnicObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.VNIC, Resmgr.MAX_VNIC)
+        self.__l2mapping_objs = defaultdict(dict)
         return
 
     def GetVnicObject(self, node, vnicid):
         return self.GetObjectByKey(node, vnicid)
+
+    def GetVnicByL2MappingKey(self, node, mac, subnet, vlan):
+        return self.__l2mapping_objs[node].get((mac, subnet, vlan), None)
 
     def GetKeyfromSpec(self, spec, yaml=False):
         if yaml:
@@ -412,6 +421,62 @@ class VnicObjectClient(base.ConfigClientBase):
         for vnic in self.Objects(node):
             vnic.Generate_vnic_security_policies()
         return
+
+    def ValidateLearntMacEntries(self, node, ret, cli_op):
+        if utils.IsDryRun(): return True
+        if not ret:
+            logger.error("pdsctl show learn mac cmd failed")
+            return False
+        # split output per object
+        mac_entries = cli_op.split("---")
+        for mac in mac_entries:
+            yamlOp = utils.LoadYaml(mac)
+            if not yamlOp:
+                continue
+            mac_key = yamlOp['key']['macaddr']
+            subnet_uuid = utils.GetYamlSpecAttr(yamlOp['key'], 'subnetid')
+            vnic_uuid_str = utils.List2UuidStr(utils.GetYamlSpecAttr(yamlOp, 'vnicid'))
+
+            # verifying if the info learnt is expected from config
+            vnic_obj = self.GetVnicByL2MappingKey(node, mac_key, subnet_uuid, 0)
+            if vnic_obj == None:
+                logger.error(f"vnic not found in client object store for key {mac_key} {subnet_uuid}{0}")
+                return False
+
+            # verifying if VNIC has been programmed correctly by Learn
+            args = "--id " + vnic_uuid_str
+            ret, op = utils.RunPdsctlShowCmd(node, "vnic", args, True)
+            if not ret:
+                logger.error(f"show vnic failed for vnic id {vnic_uuid_str}")
+                return False
+            cmdop = op.split("---")
+            logger.info("Num entries returned for vnic show id %s is %s"%(vnic_uuid_str, len(cmdop)))
+            for vnic_entry in cmdop:
+                yamlOp = utils.LoadYaml(vnic_entry)
+                if not yamlOp:
+                    continue
+                vnic_spec = yamlOp['spec']
+                hostif = vnic_spec['hostif']
+                if utils.PdsUuid(hostif).GetUuid() != vnic_obj.SUBNET.HostIfUuid.GetUuid():
+                    logger.error(f"host interface did not match for {vnic_uuid_str}")
+                    return False
+                if vnic_spec['macaddress'] != vnic_obj.MACAddr.getnum():
+                    logger.error(f"mac address did not match for {vnic_uuid_str}")
+                    return False
+
+                logger.info("Found VNIC %s entry for learn MAC MAC:%s, Subnet:%s, VNIC:%s "%(
+                        utils.List2UuidStr(utils.GetYamlSpecAttr(vnic_spec, 'id')),
+                        utils.Int2MacStr(vnic_obj.MACAddr.getnum()),
+                        utils.List2UuidStr(vnic_obj.SUBNET.UUID.GetUuid()), vnic_uuid_str))
+        return True
+
+    def ValidateLearnMACInfo(self, node):
+        logger.info(f"Reading VNIC & learn mac objects from {node} ")
+        ret, cli_op = utils.RunPdsctlShowCmd(node, "learn mac", None)
+        if not self.ValidateLearntMacEntries(node, ret, cli_op):
+            logger.error(f"learn mac object validation failed {ret} for {node} {cli_op}")
+            return False
+        return True
 
     def GenerateObjects(self, node, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'vnic', None) == None:
@@ -429,12 +494,52 @@ class VnicObjectClient(base.ConfigClientBase):
                 txmirror = __get_mirrors(vnic_spec_obj, 'txmirror')
                 obj = VnicObject(node, parent, vnic_spec_obj, rxmirror, txmirror)
                 self.Objs[node].update({obj.VnicId: obj})
+                self.__l2mapping_objs[node].update({(obj.MACAddr.getnum(), obj.SUBNET.UUID.GetUuid(),  obj.VlanId): obj})
         return
 
     def CreateObjects(self, node):
         super().CreateObjects(node)
         # Create Local Mapping Objects
         lmapping.client.CreateObjects(node)
+        return
+
+    def ChangeSubnet(self, vnic, new_subnet):
+        logger.info(f"Changing subnet for {vnic} {vnic.SUBNET} => {new_subnet}")
+        # Handle child/parent relationship
+        old_subnet = vnic.SUBNET
+        old_subnet.DeleteChild(vnic)
+        new_subnet.AddChild(vnic)
+        vnic.SUBNET = new_subnet
+
+        # Handle node change scenario
+        if old_subnet.Node != new_subnet.Node:
+            # Delete VNIC from old node
+            del self.Objs[vnic.Node][vnic.VnicId]
+            vnic.Node = new_subnet.Node
+            self.Objs[new_subnet.Node].update({vnic.VnicId: vnic})
+
+            # Move children to new Node
+            for lmap in vnic.Children:
+                # Operate only on lmapping objects
+                if lmap.GetObjectType() != api.ObjectTypes.LMAPPING:
+                    continue
+
+                # Move lmap entry to new Node
+                lmapping.client.ChangeNode(lmap, new_subnet.Node)
+
+                # Destroy rmap entry in new subnet
+                rmap = new_subnet.GetRemoteMappingObjectByIp(lmap.IP)
+                assert(rmap)
+                rmap.Delete()
+                rmap.Destroy()
+
+                # Add rmap entry in old subnet
+                mac = "macaddr/%s"%vnic.MACAddr.get()
+                rmap_spec = {}
+                rmap_spec['rmacaddr'] = objects.TemplateFieldObject(mac)
+                rmap_spec['ripaddr'] = lmap.IP
+                ipversion = utils.IP_VERSION_6 if lmap.AddrFamily == 'IPV6' else utils.IP_VERSION_4
+                rmapClient.GenerateObj(old_subnet.Node, old_subnet, rmap_spec, ipversion)
         return
 
 client = VnicObjectClient()

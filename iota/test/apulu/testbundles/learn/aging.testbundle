@@ -1,0 +1,24 @@
+meta:
+    name    : aging
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : Learn_Probing
+        testcase: testcases.learn.probing
+        
+    -   name    : Learn_AgeOut
+        testcase: testcases.learn.ageout
+
+    -   name    : Workload_Connectivity
+        testcase: testcases.networking.connectivity
+        stress  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            proto   : [ icmp ]
+            pktsize : [ 64 ]
+            workload_type : [ local, remote ]
+            workload_scope : [ intra-subnet, inter-subnet ]
+

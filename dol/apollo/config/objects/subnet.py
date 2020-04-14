@@ -460,6 +460,21 @@ class SubnetObject(base.ConfigObjectBase):
         self.CommitUpdate()
         return
 
+    def GetRemoteMappingObjectByIp(self, IP):
+        for rmap in self.Children:
+            if rmap.GetObjectType() != api.ObjectTypes.RMAPPING:
+                continue
+            if rmap.IP == IP:
+                return rmap
+        return None
+
+    def GetV4PrefixLen(self):
+        return self.IPPrefix[1]._prefixlen
+
+    def GetV6PrefixLen(self):
+        return self.IPPrefix[0]._prefixlen
+
+
 class SubnetObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.SUBNET, Resmgr.MAX_SUBNET)

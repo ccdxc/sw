@@ -20,6 +20,7 @@ device:
     macaddress  : macaddr/0000.aaaa.aaa1
     encap       : vxlan
     origin      : implicitly-created
+    learningagetimeout : 50
 
 uplink:
     - entry:
@@ -162,7 +163,9 @@ vpc:
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : '2.0.0.0\16,3.0.0.0\16'
+              remoteroutes :
+                - '2.0.0.0\16'
+                - '3.0.0.0\16'
               ipcount      : 3
 
         - count            : 1
@@ -186,8 +189,11 @@ vpc:
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : '2.0.0.0\16,3.0.0.0\16'
+              remoteroutes :
+                - '2.0.0.0\16'
+                - '3.0.0.0\16'
               ipcount      : 3
+              movable   : true          # Mark this VNIC L2R move ready
 
       nexthop:
         - id         : 3

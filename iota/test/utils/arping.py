@@ -4,6 +4,25 @@ import pdb
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 
+def SendGratArp(wl):
+    if not api.IsSimulation():
+        req = api.Trigger_CreateAllParallelCommandsRequest()
+    else:
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+
+    api.Logger.debug(f"ArPing from {wl.node_name} {wl.workload_name} {wl.interface} {wl.ip_address}")
+    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
+                           f"arping -c  5 -U {wl.ip_address} -I {wl.interface}")
+    # send  with secondary IPs too
+    for sec_ip_addr in wl.sec_ip_addresses:
+        api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
+                               f"arping -c  5 -U {sec_ip_addr} -I {wl.interface}")
+        api.Logger.debug("ArPing from {wl.node_name} {wl.workload_name} {wl.interface} {sec_ip_addr}")
+
+    resp = api.Trigger(req)
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+
 def ArPing(tc):
     if type == 'local_only':
         api.Logger.info("local_only test")

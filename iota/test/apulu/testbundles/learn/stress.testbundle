@@ -1,0 +1,13 @@
+meta:
+    name    : learn_stress
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : Learn_Stress
+        testcase: testcases.learn.stress
+        ignore  : True
+        args:
+            num_iterations: 5
+            interval : 3

@@ -5,6 +5,20 @@ import iota.test.apulu.config.api as config_api
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.vnic as vnic
 
+def TriggerConnectivityTestAll(proto="icmp", af="ipv4", pktsize=128, sec_ip_test_type="all"):
+    wl_pairs = []
+    for wl_type in [config_api.WORKLOAD_PAIR_TYPE_LOCAL_ONLY, \
+                    config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY]:
+        for wl_scope in [config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET, \
+                         config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET] :
+
+            if wl_type == config_api.WORKLOAD_PAIR_TYPE_LOCAL_ONLY and \
+               wl_scope == config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET:
+                continue
+            wl_pairs += config_api.GetWorkloadPairs(wl_type, wl_scope)
+
+    return TriggerConnectivityTest(wl_pairs, proto, af, pktsize, sec_ip_test_type)
+
 def TriggerConnectivityTest(workload_pairs, proto, af, pktsize, sec_ip_test_type='none'):
     cmd_cookies = []
     resp = None

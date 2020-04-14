@@ -109,6 +109,9 @@ class Resmgr(base.ConfigObjectBase):
     SubnetVRIPv4 = dict()
     SubnetVRIPv6 = dict()
 
+    LocalMappingIdAllocator = iter(irange(1,128*1024))
+    RemoteMappingIdAllocator = iter(irange(1,16*1024*1024))
+
     def __init__(self, node):
         super().__init__()
         self.Node = node
@@ -117,9 +120,7 @@ class Resmgr(base.ConfigObjectBase):
         self.TunnelIdAllocator = iter(irange(2,4096))
         self.VpcIdAllocator = iter(irange(1,1024))
         self.SubnetIdAllocator = iter(irange(1,1024))
-        self.RemoteMappingIdAllocator = iter(irange(1,16*1024*1024))
         self.FlowIdAllocator = iter(irange(1,1*1024*1024))
-        self.LocalMappingIdAllocator = iter(irange(1,128*1024))
         self.VnicVlanIdAllocator = iter(irange(1,1024))
         self.VnicMplsSlotIdAllocator = iter(irange(10000,11024))
         self.VnicIdAllocator = iter(irange(1,1024))

@@ -78,12 +78,8 @@ def pingWorkloads(workload_pairs, af="ipv4", packet_size=64, count=3, interval=0
 
         ping_base_cmd = __get_ping_base_cmd(w1, af, packet_size, count, interval, do_pmtu_disc)
         if sec_ip_test_type == 'all':
-            src_list = list()
-            dst_list = list()
-            src_list.append(__get_workload_address(w1, af))
-            src_list.extend(w1.sec_ip_addresses)
-            dst_list.append(__get_workload_address(w2, af))
-            dst_list.extend(w2.sec_ip_addresses)
+            src_list = [__get_workload_address(w1, af)] + w1.sec_ip_addresses
+            dst_list = [__get_workload_address(w2, af)] + w2.sec_ip_addresses
             for src_ip in src_list:
                 for dst_ip in dst_list:
                     ping_cmd = __add_source_ip_to_ping_cmd(ping_base_cmd, src_ip)

@@ -34,7 +34,6 @@ def __generate_rmappings_from_lmappings():
                 continue
             lmappings = lmapClient.Objects(srcNode)
             for lmap in lmappings:
-                #if lmap.VNIC.IgwVnic:
                 if lmap.VNIC.IsIgwVnic():
                     api.Logger.debug("Skipping Remote mapping generation since lmapping %s is part of a IgwVnic" %lmap.GID())
                     continue

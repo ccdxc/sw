@@ -31,6 +31,7 @@ class Endpoint:
         self.node_name = vnic_inst.Node
         self.has_public_ip = vnic_inst.HasPublicIp
         self.interface = GetObjClient('interface').GetHostInterfaceName(vnic_inst.Node, vnic_inst.SUBNET.HostIfIdx)
+        self.vnic = vnic_inst
 
 class VnicRoute:
     def __init__(self, vnic_inst, ip_addresses):
@@ -59,11 +60,17 @@ def GetEndpoints():
 
     return eps
 
-def GetVnicRoutes():
-    naplesHosts = api.GetNaplesHostnames()
+def GetVnicRoutes(vnic_obj=None):
+    if vnic_obj:
+        naplesHosts = [ vnic_obj.Node ]
+    else:
+        naplesHosts = api.GetNaplesHostnames()
     vnic_routes = []
     for node in naplesHosts:
-        vnics = vnic.client.Objects(node)
+        if vnic_obj:
+            vnics = [ vnic_obj ]
+        else:
+            vnics = vnic.client.Objects(node)
         for vnic_inst in vnics:
             vnic_addresses = lmapping.client.GetVnicAddresses(vnic_inst)
             if len(vnic_inst.RemoteRoutes) != 0:
@@ -71,6 +78,14 @@ def GetVnicRoutes():
                 vnic_routes.append(route)
     return vnic_routes
 
+
+def GetMovableWorkload(node_name=None):
+    wloads = []
+    for node in api.GetNaplesHostnames():
+        if node_name and node != node_name:
+            continue
+        wloads += [__findWorkloadByVnic(vnic) for vnic in vnic.client.Objects(node) if vnic.Movable]
+    return wloads
 
 def GetObjClient(objname):
     return ObjClient[objname]
@@ -215,7 +230,7 @@ def ProcessObjectsByOperation(oper, select_objs):
             res = api.types.status.FAILURE
     return res
 
-def __findVnicObjectByWorkload(wl):
+def FindVnicObjectByWorkload(wl):
     vnics = vnic.client.Objects(wl.node_name)
     for vnic_ in vnics:
         if vnic_.MACAddr.get() == wl.mac_address:
@@ -246,8 +261,8 @@ def IsAnyConfigDeleted(workload_pair):
     w1 = workload_pair[0]
     w2 = workload_pair[1]
 
-    vnic1 = __findVnicObjectByWorkload(w1)
-    vnic2 = __findVnicObjectByWorkload(w2)
+    vnic1 = FindVnicObjectByWorkload(w1)
+    vnic2 = FindVnicObjectByWorkload(w2)
     vnics = [ vnic1, vnic2 ]
     for vnic_ in vnics:
         w1 = __findWorkloadByVnic(vnic_)
@@ -317,7 +332,7 @@ def GetUnderlayWorkloadPairs():
         return workloads
 
 def GetVpcNatPortBlocks(wl, addr_type):
-    vnic = __findVnicObjectByWorkload(wl)
+    vnic = FindVnicObjectByWorkload(wl)
     vpc_key = vnic.SUBNET.VPC.GetKey()
     if addr_type == "public":
         return nat_pb.client.GetVpcNatPortBlocks(utils.NAT_ADDR_TYPE_PUBLIC, vpc_key)

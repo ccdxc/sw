@@ -42,10 +42,11 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
-        - networking/underlay.testbundle
+        #- networking/underlay.testbundle
         - networking/h2h.testbundle
-        #- learn/aging.testbundle
-        #- learn/ep-move.testbundle
+        - learn/aging.testbundle
+        - learn/ep_move.testbundle
+        - learn/stress.testbundle
 
     regression:
         # Relative paths from iota/test/apulu/testbundles/

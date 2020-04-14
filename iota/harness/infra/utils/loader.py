@@ -14,6 +14,10 @@ def Import(modname, packages = []):
             module = importlib.import_module(imp_path)
         except ModuleNotFoundError:
             continue
+        except Exception as e:
+            Logger.error(e)
+            continue
+
         if module:
             return module
     Logger.error("Failed to import module: %s in packages: " % modname, packages)

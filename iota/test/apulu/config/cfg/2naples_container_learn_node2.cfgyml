@@ -20,6 +20,7 @@ device:
     macaddress  : macaddr/0000.bbbb.bbb1
     encap       : vxlan
     origin      : implicitly-created
+    learningagetimeout : 50
 
 uplink:
     - entry:
@@ -163,7 +164,9 @@ vpc:
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : '2.0.0.0\16,3.0.0.0\16'
+              remoteroutes :
+                - '2.0.0.0\16'
+                - '3.0.0.0\16'
               ipcount      : 3
 
         - count            : 1

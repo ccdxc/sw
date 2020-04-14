@@ -165,6 +165,11 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.Create()
         return
 
+    def Destroy(self):
+        super().Destroy()
+        client.RemoveObjFromCache(self)
+        return True
+
 class RemoteMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.RMAPPING, Resmgr.MAX_RMAPPING)
