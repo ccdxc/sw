@@ -413,6 +413,10 @@ func (h *networkHooks) validateNetworkIntfConfig(i interface{}, ver string, ignS
 		ret = append(ret, fmt.Errorf("attach-tenant and attach-network can only be specified for HOST_PFs"))
 	}
 
+	if in.Spec.AdminStatus == network.IFStatus_DOWN.String() {
+		ret = append(ret, fmt.Errorf("Interface Down operation is not supported"))
+	}
+
 	if in.Spec.AttachNetwork != "" && in.Spec.AttachTenant == "" {
 		ret = append(ret, fmt.Errorf("attach-network needs attach-tenant to be specified"))
 	}

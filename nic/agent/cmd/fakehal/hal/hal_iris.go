@@ -307,6 +307,12 @@ func (h Hal) EventListen(stream irisproto.Event_EventListenServer) error {
 		log.Errorf("Streaming Lif Err: %v", err)
 		return err
 	}
+
+	for true {
+		//Sleep for ever as we are not planning to send any more
+		time.Sleep(120 * time.Second)
+	}
+
 	return nil
 }
 

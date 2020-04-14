@@ -145,7 +145,9 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 			fmt.Sprintf("DSC for host [%v] not admitted.", hsts.Host.Name),
 			nil)
 
-		return nil
+		//DSC may not be processed yet because of parallel processing from APIServer
+		//Fix this once AggWatch is implemented
+		return kvstore.NewKeyNotFoundError(ws.Workload.Spec.HostName, 0)
 	}
 
 	orchNameValue, isHostOrchhubManaged := host.Host.Labels[orchutils.OrchNameKey]
@@ -426,7 +428,6 @@ func (ws *WorkloadState) createEndpoints() error {
 					if err != nil {
 						log.Errorf("Error creating network, ignoring  Err: %v", err)
 						netName = ns.Network.Network.Name
-						//		return err
 					}
 				}
 			} else {
@@ -447,7 +448,7 @@ func (ws *WorkloadState) createEndpoints() error {
 			if host.Host.Spec.DSCs[jj].ID != "" {
 				snic, err := ws.stateMgr.FindDistributedServiceCardByHname(host.Host.Spec.DSCs[jj].ID)
 				if err != nil {
-					log.Warnf("Error finding smart nic for name %v", host.Host.Spec.DSCs[jj].ID)
+					log.Warnf("Error finding smart nic for name %v for workload %v", host.Host.Spec.DSCs[jj].ID, ws.Workload.Name)
 					return nil
 				}
 				nodeUUID = snic.DistributedServiceCard.Name
@@ -455,7 +456,7 @@ func (ws *WorkloadState) createEndpoints() error {
 				snicMac := host.Host.Spec.DSCs[jj].MACAddress
 				snic, err := ws.stateMgr.FindDistributedServiceCardByMacAddr(snicMac)
 				if err != nil {
-					log.Warnf("Error finding smart nic for mac add %v", snicMac)
+					log.Warnf("Error finding smart nic for mac add %v  for workload %v", snicMac, ws.Workload.Name)
 					return nil
 				}
 				nodeUUID = snic.DistributedServiceCard.Name

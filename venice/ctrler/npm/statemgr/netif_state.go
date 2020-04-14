@@ -112,6 +112,13 @@ func (sm *Statemgr) GetInterfaceWatchOptions() *api.ListWatchOptions {
 
 // OnInterfaceCreateReq gets called when agent sends create request
 func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Interface) error {
+
+	//Make sure we don't create inteface if DSC ID is not set
+	//This is useful for upgrade from lower to higher release.
+	if agentNetif.Status.DSCID == "" {
+		log.Infof("Ignore interface create for %v DSC ID not set ", agentNetif.Name)
+		return nil
+	}
 	// convert agent's netif struct to the api object
 	netif := convertNetifObj(nodeID, agentNetif)
 

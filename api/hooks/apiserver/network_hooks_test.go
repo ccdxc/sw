@@ -239,6 +239,18 @@ func TestValidateHooks(t *testing.T) {
 	errs = nh.validateNetworkIntfConfig(nwif, "v1", false, false)
 	Assert(t, len(errs) == 0, "expecting to succeed [%v]", errs)
 
+	nwif = network.NetworkInterface{
+		Spec: network.NetworkInterfaceSpec{
+			Type:          network.IFType_HOST_PF.String(),
+			AttachTenant:  "tenant",
+			AttachNetwork: "network1",
+			AdminStatus:   "down",
+		},
+	}
+	errs = nh.validateNetworkIntfConfig(nwif, "v1", false, false)
+	Assert(t, len(errs) != 0, "expecting to fail")
+	nwif.Spec.AdminStatus = "up"
+
 	nwif.Spec.AttachNetwork = ""
 	errs = nh.validateNetworkIntfConfig(nwif, "v1", false, false)
 	Assert(t, len(errs) != 0, "expecting to fail")

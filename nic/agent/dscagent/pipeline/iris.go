@@ -2087,7 +2087,9 @@ func (i *IrisAPI) createPortsAndUplinks(uid string) error {
 
 			port := resp.GetPortEvent()
 
-			err = i.createUplinkInterface(uid, port.Spec, port.Status)
+			if port != nil {
+				err = i.createUplinkInterface(uid, port.Spec, port.Status)
+			}
 
 		}
 
