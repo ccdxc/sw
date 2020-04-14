@@ -26,3 +26,15 @@ testcases:
             pktsize : [ 1024 ]
             workload_type : [ remote, local ]
             workload_scope : [ intra-subnet, inter-subnet ]
+
+#    -   name    : DHCP_Workload_Connectivity
+#        testcase: testcases.networking.dhcp_connectivity
+#        stress  : True
+#        iterators :
+#            type    : nested
+#            ipaf    : [ ipv4 ]
+#            proto   : [ icmp ]
+#            pktsize : [ 64 ]
+#            workload_type : [ local ]
+#            workload_scope : [ intra-subnet, inter-subnet ]
+#            ipconfig : [ dhcp ]

@@ -5,47 +5,62 @@ import iota.test.apulu.utils.flow as flow_utils
 import iota.test.apulu.utils.connectivity as conn_utils
 import iota.test.apulu.config.add_routes as add_routes
 
-def __get_latest_workload_address(wl):
+workloads = {}
+
+def verify_dhcp_ips():
     if not api.IsSimulation():
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     else:
         req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, "ifconfig " + wl.interface)
+    for workload in workloads.keys():
+        cmd = 'ifconfig ' + workload.interface
+        api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
     resp = api.Trigger(req)
-    ifconfig_regexp = "inet (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-    x = re.findall(ifconfig_regexp, resp.commands[0].stdout)
-    if len(x) > 0:
-        api.Logger.info("Read management IP %s %s %s %s" % (wl.node_name, wl.workload_name, wl.interface, x[0]))
-        return x[0]
-    return "0.0.0.0"
 
+    for workload, cmd in zip(workloads.keys(), resp.commands):
+        if workload.ip_address not in cmd.stdout:
+            api.Logger.error( "DHCP didn't fetch expected address, expected: %s", workload.ipaddress)
+            api.PrintCommandResults(cmd)
+            return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
+ 
 def acquire_dhcp_ips(workload_pairs):
+    global workloads
+
     for pair in workload_pairs:
-        w1 = pair[0]
-        w2 = pair[1]
+        workloads[ pair[0] ] = True
+        workloads[ pair[1] ] = True
 
-        api.Logger.error("acquire_dhcp_ips")
-        # Remove the IP addresses if already acquired
-        if not api.IsSimulation():
-            req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-        else:
-            req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-        dhcp1_cmd = 'dhclient -r ' + w1.interface
-        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, dhcp1_cmd)
-        dhcp2_cmd = 'dhclient -r ' + w2.interface
-        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, dhcp2_cmd)
+    if not api.IsSimulation():
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    else:
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
 
-        dhcp1_cmd = 'ifconfig ' + w1.interface + ' 0.0.0.0'
-        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, dhcp1_cmd)
-        dhcp2_cmd = 'ifconfig ' + w2.interface + ' 0.0.0.0'
-        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, dhcp2_cmd)
+    for workload in workloads.keys():
+        api.Logger.info("DHCP: %s %s %s" % (workload.node_name, workload.workload_name,
+                                            workload.interface))
+        cmd = 'dhclient -r ' + workload.interface
+        api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
+        cmd = 'ifconfig ' + workload.interface + ' 0.0.0.0'
+        api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
+        cmd = 'ifconfig ' + workload.interface
+        api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
+        cmd = 'dhclient ' + workload.interface
+        api.Trigger_AddCommand(req, workload.node_name, workload.workload_name, cmd)
 
-        # Get the IP addresses
-        dhcp1_cmd = 'dhclient ' + w1.interface
-        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, dhcp1_cmd)
-        dhcp2_cmd = 'dhclient ' + w2.interface
-        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name, dhcp2_cmd)
-        resp = api.Trigger(req)
+    resp = api.Trigger(req)
+
+    for cmd in resp.commands:
+        if cmd.exit_code != 0:
+            api.Logger.info("Couldn't reacquire IP addresses over DHCP")
+            api.PrintCommandResults(cmd)
+            return
+
+        if 'ifconfig' in cmd.command and '0.0.0.0' not in cmd.command and 'inet' in cmd.stdout:
+            api.Logger.info("Couldn't clear static IP address")
+            api.PrintCommandResults(cmd)
+            return
 
     add_routes.AddRoutes()
     return
@@ -85,7 +100,8 @@ def Verify(tc):
     if tc.iterators.workload_type == "igw":
         return flow_utils.verifyFlows(tc.iterators.ipaf, tc.workload_pairs)
 
-    return api.types.status.SUCCESS
+    return verify_dhcp_ips()
+
 
 def Teardown(tc):
     return flow_utils.clearFlowTable(tc.workload_pairs)
