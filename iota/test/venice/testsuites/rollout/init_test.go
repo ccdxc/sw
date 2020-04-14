@@ -21,6 +21,7 @@ var topoName = flag.String("topo", "3Venice_3NaplesSim", "topology name")
 var debugFlag = flag.Bool("debug", false, "set log level to debug")
 var scaleFlag = flag.Bool("scale", false, "enable scale configuration")
 var scaleDataFlag = flag.Bool("scale-data", false, "enable datapath scale")
+var simOnlyFlag = flag.Bool("sim-only", false, "skips running traffic")
 
 // TestSuite : rollout test suite
 type TestSuite struct {
