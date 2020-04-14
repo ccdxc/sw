@@ -17,10 +17,11 @@ namespace rfc {
 
 /**< policy is list of rules */
 typedef struct policy_s {
-    uint8_t          af;             /**< address family */
-    uint32_t         max_rules;      /**< max size of policy table */
-    uint32_t         num_rules;      /**< number of rules */
-    rule_t           *rules;         /**< rule list */
+    uint8_t            af;             /**< address family */
+    uint32_t           max_rules;      /**< max size of policy table */
+    rule_action_data_t default_action; ///< default action for this policy
+    uint32_t           num_rules;      /**< number of rules */
+    rule_t             *rules;         /**< rule list */
 } policy_t;
 
 /**

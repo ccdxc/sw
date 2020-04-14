@@ -476,6 +476,8 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
     if (unlikely(ret != SDK_RET_OK)) {
         return ret;
     }
+    api_spec->rule_info->default_action.fw_action.action =
+            pds_proto_action_to_rule_action(proto_spec.defaultfwaction());
     api_spec->rule_info->num_rules = num_rules;
     for (uint32_t i = 0; i < num_rules; i++) {
         ret = pds_policy_rule_proto_to_api_spec_common(&api_spec->rule_info->rules[i],

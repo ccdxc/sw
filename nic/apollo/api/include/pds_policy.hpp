@@ -112,9 +112,10 @@ typedef struct rule_s {
 
 /// \brief rule info contains all rule specific information
 typedef struct rule_info_s {
-    uint8_t     af;           ///< address family
-    uint32_t    num_rules;    ///< number of rules in the list
-    rule_t      rules[0];     ///< list or rules
+    uint8_t            af;             ///< address family
+    rule_action_data_t default_action; ///< default action for this policy
+    uint32_t           num_rules;      ///< number of rules in the list
+    rule_t             rules[0];       ///< list or rules
 } rule_info_t;
 #define POLICY_RULE_INFO_SIZE(count)        \
             (sizeof(rule_info_t) + (count) * sizeof(rule_t))
