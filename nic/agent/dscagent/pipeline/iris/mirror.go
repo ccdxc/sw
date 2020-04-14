@@ -194,31 +194,46 @@ func convertTelemetryRuleMatches(rules []netproto.MatchRule) []*halapi.RuleMatch
 		if r.Dst != nil {
 			dstAddress = convertIPAddress(r.Dst.Addresses...)
 			if r.Dst.ProtoPorts != nil && len(r.Dst.ProtoPorts) > 0 {
-				// Repeated proto ports for Flow Matches is not supported. So accept the first proto port
-				pp := r.Dst.ProtoPorts[0]
-				protocol = convertProtocol(pp.Protocol)
-				if protocol == int32(halapi.IPProtocol_IPPROTO_ICMP) {
-					appMatch = &halapi.RuleMatch_AppMatch{
-						App: &halapi.RuleMatch_AppMatch_IcmpInfo{
-							IcmpInfo: &halapi.RuleMatch_ICMPAppInfo{
-								IcmpCode: 0, // TODO Support valid code/type parsing once the App is integrated with mirror
-								IcmpType: 0,
+				for _, pp := range r.Dst.ProtoPorts {
+					protocol = convertProtocol(pp.Protocol)
+					if protocol == int32(halapi.IPProtocol_IPPROTO_ICMP) {
+						appMatch = &halapi.RuleMatch_AppMatch{
+							App: &halapi.RuleMatch_AppMatch_IcmpInfo{
+								IcmpInfo: &halapi.RuleMatch_ICMPAppInfo{
+									IcmpCode: 0, // TODO Support valid code/type parsing once the App is integrated with mirror
+									IcmpType: 0,
+								},
 							},
-						},
+						}
+					} else {
+						appMatch = convertPort(pp.Port)
 					}
-				} else {
-					appMatch = convertPort(pp.Port)
+					m := &halapi.RuleMatch{
+						SrcAddress: srcAddress,
+						DstAddress: dstAddress,
+						Protocol:   protocol,
+						AppMatch:   appMatch,
+					}
+					ruleMatches = append(ruleMatches, m)
 				}
+			} else {
+				m := &halapi.RuleMatch{
+					SrcAddress: srcAddress,
+					DstAddress: dstAddress,
+					Protocol:   protocol,
+					AppMatch:   appMatch,
+				}
+				ruleMatches = append(ruleMatches, m)
 			}
+		} else {
+			m := &halapi.RuleMatch{
+				SrcAddress: srcAddress,
+				DstAddress: dstAddress,
+				Protocol:   protocol,
+				AppMatch:   appMatch,
+			}
+			ruleMatches = append(ruleMatches, m)
 		}
-
-		m := &halapi.RuleMatch{
-			SrcAddress: srcAddress,
-			DstAddress: dstAddress,
-			Protocol:   protocol,
-			AppMatch:   appMatch,
-		}
-		ruleMatches = append(ruleMatches, m)
 	}
 
 	return ruleMatches

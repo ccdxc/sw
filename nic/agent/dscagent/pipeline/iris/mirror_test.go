@@ -116,6 +116,13 @@ func TestHandleMirrorSession(t *testing.T) {
 								Protocol: "tcp",
 								Port:     "120",
 							},
+							{
+								Protocol: "udp",
+								Port:     "10001-10020",
+							},
+							{
+								Protocol: "icmp",
+							},
 						},
 					},
 				},
