@@ -2,13 +2,12 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
 
-#ifndef __VPP_IMPL_UTILS_H__
-#define __VPP_IMPL_UTILS_H__
-
 #include <vlib/vlib.h>
 #include <vnet/vnet.h>
+#include <vnet/interface_funcs.h>
+#include "intf.h"
 
-__clib_unused static u32
+u32
 pds_infra_get_sw_ifindex_by_name (u8 *intf)
 {
     uword *p;
@@ -28,4 +27,25 @@ pds_infra_get_sw_ifindex_by_name (u8 *intf)
     return sw_if_index;
 }
 
-#endif    // __VPP_IMPL_UTILS_H__
+
+static walk_rc_t
+set_intf_admin_state (vnet_main_t *vnm, u32 hw_if_index, void *args)
+{
+    u8                  admin_up = *(u8 *)args;
+    vnet_hw_interface_t *hi;
+
+    hi = vnet_get_hw_interface(vnm, hw_if_index);
+    if (admin_up) {
+        vnet_sw_interface_admin_up(vnm, hi->sw_if_index);
+    } else {
+        vnet_sw_interface_admin_down(vnm, hi->sw_if_index);
+    }
+    return WALK_CONTINUE;
+}
+
+void
+pds_infra_set_all_intfs_status (u8 admin_up)
+{
+    vnet_hw_interface_walk(vnet_get_main(), set_intf_admin_state, &admin_up);
+}
+

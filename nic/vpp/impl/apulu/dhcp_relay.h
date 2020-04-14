@@ -7,7 +7,7 @@
 
 #include <nic/apollo/api/impl/apulu/nacl_data.h>
 #include <nic/apollo/p4/include/apulu_defines.h>
-#include <nic/vpp/impl/utils.h>
+#include <nic/vpp/infra/api/intf.h>
 #include <api.h>
 #include <impl_db.h>
 

@@ -6,7 +6,7 @@ MODULE_PIPELINE  = apollo artemis apulu
 MODULE_PREREQS   = vpp_pkg.export
 MODULE_SRCS     = $(wildcard ${MODULE_DIR}/*.c)                             \
                   $(wildcard ${MODULE_DIR}/*.cc)
-MODULE_SOLIBS    = pdsproto pdsvpp_cfg
+MODULE_SOLIBS    = pdsproto pdsvpp_cfg pdsvpp_upgrade 
 MODULE_LDLIBS    = ${SDK_THIRD_PARTY_VPP_LIBS} ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
 MODULE_INCS      = ${VPP_PLUGINS_INCS} ${BLD_PROTOGEN_DIR}
 MODULE_DEFS      = ${VPP_DEFINES_${ARCH}}

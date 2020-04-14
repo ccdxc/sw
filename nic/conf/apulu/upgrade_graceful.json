@@ -1,6 +1,6 @@
 {
     "svc": {
-        "names": [ "sysmgr", "pdsagent"],
+        "names": [ "sysmgr", "pdsagent", "vpp" ],
         "event_sequence": "parallel",
         "rsp_timeout": "1000ms",
         "domain": "A",
@@ -51,7 +51,7 @@
             "//": "shuting it down the services",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "sysmgr", "pdsagent" ]
+                "names": [ "sysmgr", "pdsagent", "vpp" ]
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },

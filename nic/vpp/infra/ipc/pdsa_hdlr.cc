@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <nic/sdk/lib/ipc/ipc.hpp>
 #include <nic/vpp/infra/cfg/pdsa_db.hpp>
+#include <nic/vpp/infra/upgrade/upgrade_hdlr.hpp>
 #include "pdsa_vpp_hdlr.h"
 #include "pdsa_hdlr.hpp"
 
@@ -256,6 +257,9 @@ pds_ipc_init (void)
 {
     sdk::ipc::ipc_init_async(PDS_IPC_ID_VPP, pds_vpp_fd_watch_cb,
                              (const void *)pds_vpp_fd_watch_cb);
+
+    // register with the upgrade manager for upgrade IPC messages.
+    vpp_upg_init();
 
     // register "NONE" messages with INVALID handler
     sdk::ipc::reg_request_handler(PDS_MSG_TYPE_NONE, pds_ipc_invalid_type_cb,
