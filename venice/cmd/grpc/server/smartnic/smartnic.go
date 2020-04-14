@@ -506,11 +506,14 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 				nicObj.Status.AdmissionPhaseReason = ""
 				// Profile is owned by Venice. Make sure we don't override.
 				profile := nicObj.Spec.DSCProfile
+				// RoutingConfig is owned by venice
+				rtCfg := nicObj.Spec.RoutingConfig
 				// If the NIC is admitted, override all spec parameters with the new supplied values,
 				// except those that are owned by Venice.
 				nicObj.Spec = naplesNIC.Spec
 				nicObj.Spec.Admit = true
 				nicObj.Spec.DSCProfile = profile
+				nicObj.Spec.RoutingConfig = rtCfg
 			} else {
 				nicObj.Status.AdmissionPhase = cluster.DistributedServiceCardStatus_PENDING.String()
 				nicObj.Status.AdmissionPhaseReason = "SmartNIC waiting for manual admission"
