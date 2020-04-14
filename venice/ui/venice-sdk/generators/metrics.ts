@@ -4,6 +4,7 @@ import * as utils from './utils';
 import { customMetrics } from '../custom-metrics'
 import * as _ from 'lodash';
 import * as rmdir from 'rimraf';
+import { NetworkNetworkInterfaceSpec_type } from "../v1/models/generated/network/enums"
 
 export function generateMetricMetadata(inputBaseFolder, outputFolder) {
   if (fs.existsSync(outputFolder)){
@@ -41,6 +42,18 @@ export function generateMetricMetadata(inputBaseFolder, outputFolder) {
     string: 'string',
   }
 
+  const scopeObjMapping = {
+    PerLIF: "NetworkInterface",
+    PerMgmtPort: "NetworkInterface",
+    PerEthPort: "NetworkInterface",
+  }
+
+  const networkInfMapping = {
+    PerLIF: NetworkNetworkInterfaceSpec_type["host-pf"],
+    PerMgmtPort: NetworkNetworkInterfaceSpec_type["uplink-mgmt"],
+    PerEthPort: NetworkNetworkInterfaceSpec_type["uplink-eth"],
+  }
+
   const files = walk(inputBaseFolder, x => x.endsWith('.json'));
   const messages = [];
   files.forEach( (f) => {
@@ -49,7 +62,17 @@ export function generateMetricMetadata(inputBaseFolder, outputFolder) {
       m = _.transform(m, function (result, val, key) {
         result[_.camelCase(key)] = val;
       });
-      m.objectKind = "DistributedServiceCard"
+      // Object kind
+      if (scopeObjMapping[m.scope] != null) {
+        m.objectKind = scopeObjMapping[m.scope]
+      } else {
+        m.objectKind = "DistributedServiceCard"
+      }
+
+      if (m.objectKind == "NetworkInterface") {
+        m.interfaceType = networkInfMapping[m.scope]
+      }
+
       if (m.fields == null) {
         return;
       }

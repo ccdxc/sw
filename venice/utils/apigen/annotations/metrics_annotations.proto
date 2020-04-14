@@ -23,12 +23,13 @@ enum MetricScope {
     PerNode             = 1; // On a system with multiple Naples like Turin, this is still 1 counter
     PerASIC             = 2; // per each Naples
     PerFTE              = 3; // per each FTE in naples
-    PerPort             = 4; // per each  mac instance (front-panel port). In case of breakout, for each broken-out port
-    PerLIF              = 5; // per LIF
-    PerLIFPerQ          = 6; // per each Q of LIF
-    PerRingPerSubRing   = 7; // incase of DMA, per each subring of a ring
-    PerFwRule           = 8; // Per Firewall Rule
-    PerPciePort         = 9; // Per PCIe port
+    PerMgmtPort         = 4; // per each mac instance (front-panel port). In case of breakout, for each broken-out uplink-mgmt port
+    PerEthPort          = 5; // per each  mac instance (front-panel port). In case of breakout, for each broken-out uplink-eth port
+    PerLIF              = 6; // per LIF
+    PerLIFPerQ          = 7; // per each Q of LIF
+    PerRingPerSubRing   = 8; // incase of DMA, per each subring of a ring
+    PerFwRule           = 9; // Per Firewall Rule
+    PerPciePort         = 10; // Per PCIe port
 }
 
 enum MetricTags {

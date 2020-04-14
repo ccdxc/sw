@@ -18,6 +18,8 @@ export interface MetricMeasurement {
   description: string,
   displayName: string,
   objectKind?: string,
+  // Type of interface, if objectKind is networkInterface
+  interfaceType?: string,
   scope?: string,
   fields: MetricField[],
   tags?: string[],

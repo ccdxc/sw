@@ -18,6 +18,8 @@ export interface MetricMeasurement {
   description: string,
   displayName: string,
   objectKind?: string,
+  // Type of interface, if objectKind is networkInterface
+  interfaceType?: string,
   scope?: string,
   fields: MetricField[],
   tags?: string[],
@@ -3230,8 +3232,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "tags": [
     "Level4"
   ],
-  "scope": "PerPort",
-  "objectKind": "DistributedServiceCard"
+  "scope": "PerEthPort",
+  "objectKind": "NetworkInterface",
+  "interfaceType": "uplink-eth"
 },
   MgmtMacMetrics: {
   "name": "MgmtMacMetrics",
@@ -3605,8 +3608,9 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "tags": [
     "Level4"
   ],
-  "scope": "PerPort",
-  "objectKind": "DistributedServiceCard"
+  "scope": "PerMgmtPort",
+  "objectKind": "NetworkInterface",
+  "interfaceType": "uplink-mgmt"
 },
   AccelHwRingMetrics: {
   "name": "AccelHwRingMetrics",
@@ -3767,7 +3771,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     }
   ],
   "scope": "PerLIF",
-  "objectKind": "DistributedServiceCard"
+  "objectKind": "NetworkInterface",
+  "interfaceType": "host-pf"
 },
   AccelSeqQueueInfoMetrics: {
   "name": "AccelSeqQueueInfoMetrics",
@@ -4358,7 +4363,8 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
     "Level4"
   ],
   "scope": "PerLIF",
-  "objectKind": "DistributedServiceCard"
+  "objectKind": "NetworkInterface",
+  "interfaceType": "host-pf"
 },
   NMDMetrics: {
   "name": "NMDMetrics",

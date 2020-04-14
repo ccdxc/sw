@@ -635,7 +635,7 @@
       "Tags": [
         "Level4"
       ],
-      "Scope": "PerPort"
+      "Scope": "PerEthPort"
     },
     {
       "Name": "MgmtMacMetrics",
@@ -870,7 +870,7 @@
       "Tags": [
         "Level4"
       ],
-      "Scope": "PerPort"
+      "Scope": "PerMgmtPort"
     }
   ]
 }

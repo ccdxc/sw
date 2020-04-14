@@ -13,7 +13,7 @@ message MacMetrics {
     option (venice.metricInfo) = {
         DisplayName: "Port Packet Statistics",
         Description: "Key index - PORT ID",
-        Scope: PerPort,
+        Scope: PerEthPort,
         Tags: [ Level4 ]
     };
     fixed32             Key                     = 1;    // Port id
@@ -112,7 +112,7 @@ message MgmtMacMetrics {
     option (venice.metricInfo) = {
         DisplayName: "Mgmt Port Packet Statistics",
         Description: "Key index - PORT ID",
-        Scope: PerPort,
+        Scope: PerMgmtPort,
         Tags: [ Level4 ]
     };
     fixed32             Key                     = 1;    // Port id

@@ -6,6 +6,7 @@ var utils = require("./utils");
 var custom_metrics_1 = require("../custom-metrics");
 var _ = require("lodash");
 var rmdir = require("rimraf");
+var enums_1 = require("../v1/models/generated/network/enums");
 function generateMetricMetadata(inputBaseFolder, outputFolder) {
     if (fs.existsSync(outputFolder)) {
         // Delete all contents
@@ -39,6 +40,16 @@ function generateMetricMetadata(inputBaseFolder, outputFolder) {
         MilliWatts: 'number',
         string: 'string',
     };
+    var scopeObjMapping = {
+        PerLIF: "NetworkInterface",
+        PerMgmtPort: "NetworkInterface",
+        PerEthPort: "NetworkInterface",
+    };
+    var networkInfMapping = {
+        PerLIF: enums_1.NetworkNetworkInterfaceSpec_type["host-pf"],
+        PerMgmtPort: enums_1.NetworkNetworkInterfaceSpec_type["uplink-mgmt"],
+        PerEthPort: enums_1.NetworkNetworkInterfaceSpec_type["uplink-eth"],
+    };
     var files = utils_1.walk(inputBaseFolder, function (x) { return x.endsWith('.json'); });
     var messages = [];
     files.forEach(function (f) {
@@ -47,7 +58,16 @@ function generateMetricMetadata(inputBaseFolder, outputFolder) {
             m = _.transform(m, function (result, val, key) {
                 result[_.camelCase(key)] = val;
             });
-            m.objectKind = "DistributedServiceCard";
+            // Object kind
+            if (scopeObjMapping[m.scope] != null) {
+                m.objectKind = scopeObjMapping[m.scope];
+            }
+            else {
+                m.objectKind = "DistributedServiceCard";
+            }
+            if (m.objectKind == "NetworkInterface") {
+                m.interfaceType = networkInfMapping[m.scope];
+            }
             if (m.fields == null) {
                 return;
             }
