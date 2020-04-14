@@ -620,6 +620,81 @@ TEST_F(mapping_test, local_mapping_update_vnic_mac) {
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
 
+/// \brief update mapping M1 with no tags to Tag T1.
+TEST_F(mapping_test, DISABLED_local_mapping_update_tag1) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1, 0);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.num_tags = 2;
+    for (int i = 0; i<spec.num_tags; i++) {
+        spec.tags[i] = i+1;
+    }
+    lmap_update(feeders[0], &spec, LMAP_ATTR_TAGS);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping M1 with tags set T1 to T2.
+TEST_F(mapping_test, DISABLED_local_mapping_update_tag2) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1, 2);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.num_tags = 2;
+    for (int i = 0; i<spec.num_tags; i++) {
+        spec.tags[i] = feeders[0].spec.tags[i] + feeders[0].spec.num_tags;
+    }
+    lmap_update(feeders[0], &spec, LMAP_ATTR_TAGS);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping M1 with tags set T1 to no tags.
+TEST_F(mapping_test, DISABLED_local_mapping_update_tag3) {
+    if (!apulu()) return;
+
+    pds_local_mapping_spec_t spec = {0};
+    local_mapping_feeder feeders[1];
+
+    // init
+    create_local_mapping_feeders(feeders, 1, 1, 1, 2);
+    lmap_create(feeders[0]);
+
+    // trigger
+    spec.num_tags = 0;
+    lmap_update(feeders[0], &spec, LMAP_ATTR_TAGS);
+
+    // validate
+    lmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    lmap_delete(feeders[0]);
+    lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
 // --------------------------- END LOCAL MAPPINGS --------------------
 
 // --------------------------- REMOTE MAPPINGS -----------------------
@@ -1017,6 +1092,81 @@ TEST_F(mapping_test, remote_mapping_update_vnic_mac) {
     mac++;
     MAC_UINT64_TO_ADDR(spec.vnic_mac, mac);
     rmap_update(feeders[0], &spec, RMAP_ATTR_VNIC_MAC);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping M1 with no tags to Tag T1.
+TEST_F(mapping_test, DISABLED_remote_mapping_update_tag1) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1, 0);
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.num_tags = 2;
+    for (int i = 0; i<spec.num_tags; i++) {
+        spec.tags[i] = i+1;
+    }
+    rmap_update(feeders[0], &spec, RMAP_ATTR_TAGS);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping M1 with tags set T1 to T2.
+TEST_F(mapping_test, DISABLED_remote_mapping_update_tag2) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1, 2);
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.num_tags = 2;
+    for (int i = 0; i<spec.num_tags; i++) {
+        spec.tags[i] = feeders[0].spec.tags[i] + feeders[0].spec.num_tags;
+    }
+    rmap_update(feeders[0], &spec, RMAP_ATTR_TAGS);
+
+    // validate
+    rmap_read(feeders[0], SDK_RET_OK);
+
+    // cleanup
+    rmap_delete(feeders[0]);
+    rmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update mapping M1 with tags set T1 to no tags.
+TEST_F(mapping_test, DISABLED_remote_mapping_update_tag3) {
+    if (!apulu()) return;
+
+    pds_remote_mapping_spec_t spec = {0};
+    remote_mapping_feeder feeders[1];
+
+    // init
+    create_remote_mapping_feeders(feeders, 1, 1, 1, 2);
+    rmap_create(feeders[0]);
+
+    // trigger
+    spec.num_tags = 0;
+    rmap_update(feeders[0], &spec, RMAP_ATTR_TAGS);
 
     // validate
     rmap_read(feeders[0], SDK_RET_OK);

@@ -51,7 +51,7 @@ remote_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
 #if 0
     spec.num_tags = num_tags;
     for (int i=0; i<num_tags; i++) {
-        spec.tags[i] = ++i;
+        spec.tags[i] = i+1;
     }
 #endif
 
