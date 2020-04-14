@@ -790,7 +790,6 @@ func TestLdapChecks(t *testing.T) {
 }
 
 func TestRadiusLogin(t *testing.T) {
-	t.Skip("Disabling test temporarily to fix secret validation")
 	config := getFreeRadiusConfig()
 	localUserCred := &auth.PasswordCredential{
 		Username: testUser,
