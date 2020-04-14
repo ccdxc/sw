@@ -660,7 +660,6 @@ fte_flow_prog (struct rte_mbuf *m)
     }
 
     g_session_index++;
-    fte_flow_dump();
     return SDK_RET_OK;    
 }
 
