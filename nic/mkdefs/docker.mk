@@ -33,7 +33,7 @@ docker/background-shell: docker/build-shell-image
 
 docker/build-shell-image: docker/install_box
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
-	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
+	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME HOST_HOSTNAME HOST_WORKSPACE" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) HOST_HOSTNAME=$$(hostname) HOST_WORKSPACE=$$(git rev-parse --show-toplevel) box -t pensando/nic nic/box.rb
 
 docker/build-customer-shell-image: docker/install_box
 	echo "custom install_box"

@@ -31,6 +31,11 @@ end
 
 env GOPATH: "/usr"
 
+# A scratch pad file for exporting some host/worspace perticulars into container, to be used for
+# recording them into build packageing.
+run "echo 'HOST_HOSTNAME=#{getenv("HOST_HOSTNAME")}' >> /usr/build_host_meta_data"
+run "echo 'HOST_WORKSPACE=#{getenv("HOST_WORKSPACE")}' >> /usr/build_host_meta_data"
+
 inside "/etc" do
   run "rm localtime"
   run "ln -s /usr/share/zoneinfo/US/Pacific localtime"

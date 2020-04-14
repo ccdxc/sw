@@ -155,13 +155,30 @@ std::string get_filename(char *path, char *name, pid_t pid)
     return std::string(filename);
 }
 
+// Returns root name of the core file, to help coin bundle name.
+std::string get_core_file_rootname(std::string filename)
+{
+    std::string rootname;
+
+    rootname = filename;
+    
+    rootname.erase(0, rootname.rfind("core_"));
+    rootname.erase(rootname.rfind(".gz"), std::string::npos);
+
+    return (rootname);
+}
+
 int main(int argc, char *argv[])
 {
     int c;
     char *path = NULL;
     char *exec_name = NULL;
     std::string dest_filename;
+    std::string core_file_rootname;
+    char cmd[PATH_MAX];
     pid_t pid = 0;
+    bool bundle_fail;
+    int rc;
     
     static struct option long_options[] =
     {         
@@ -238,10 +255,40 @@ int main(int argc, char *argv[])
         if (n <= 0) 
         {
             gzclose(out);
-            return 0;
+            break;
         }
         gzwrite(out, buffer, n);
     }
-    
+
+    //Create bundle file with core and meta data files.
+    bundle_fail = false;
+    core_file_rootname = get_core_file_rootname(dest_filename);
+    INFO("Creating bundle file {}.tar", core_file_rootname);
+
+    snprintf(cmd, PATH_MAX, "tar -C %s -cf %s/%s.tar %s.gz /nic/etc/VERSION.json > /dev/null 2>&1",
+             path, path, core_file_rootname.c_str(), core_file_rootname.c_str());
+    INFO("Core tar bundling cmd:{}", cmd);
+    rc = system(cmd);
+    if ((rc == -1) || !(WIFEXITED(rc))) {
+        INFO("Core tar bundle creation failed. rc: {}", rc);
+        bundle_fail = true;
+    } else {
+        if (WEXITSTATUS(rc)) {
+            INFO("Core tar bundle creation failed. rc:{}. Error: {}",
+                 rc, strerror(WEXITSTATUS(rc)));
+            bundle_fail = true;
+        }
+    }
+
+    if (!bundle_fail) {
+        //Remove the base core file.
+        snprintf(cmd, PATH_MAX, "rm -f %s > /dev/null 2>&1", dest_filename.c_str());
+    } else {
+        //Bundle may have gotten created with partial member list. Remove incomplete one.
+        INFO(" Keeping core file, removing partial bundle.");
+        snprintf(cmd, PATH_MAX, "rm -f %s/%s.tar > /dev/null 2>&1",
+                 path, core_file_rootname.c_str());
+    }
+    rc = system(cmd);
     return 0;
 }

@@ -1,5 +1,7 @@
 #!/bin/python3
 
+import os
+import re
 import subprocess
 import json
 import argparse
@@ -32,11 +34,44 @@ nic_version    = subprocess.run(['git', 'describe', '--tags', '--dirty', '--alwa
 nic_build_time = subprocess.run(['date'], stdout=subprocess.PIPE).stdout.decode('utf-8').strip('\n')
 nic_sha        = subprocess.run(['git', 'log', '-1', '--pretty=format:\'%H\''], stdout=subprocess.PIPE).stdout.decode('utf-8').strip('\n')
 
+# Parse build meta data file, that is construction when docker build contiainer got started.
+def parse_build_meta():
+    data = dict();
+
+    data['host_name'] = ""
+    data['host_ws'] = ""
+
+    build_meta_file="/usr/build_host_meta_data"
+    if os.path.isfile(build_meta_file):
+       file = open(build_meta_file, "r")
+       lines = file.readlines()
+
+       for line in lines:
+           line = line.strip()
+           if re.match("HOST_HOSTNAME=", line):
+               host_name_fields = re.split("=", line)
+               data['host_name'] = host_name_fields[1]
+           elif re.match("HOST_WORKSPACE=", line):
+               host_workspace_fields = re.split("=", line)
+               data['host_ws'] = host_workspace_fields[1]
+    else:
+       print ("File '%s' not found. "
+              " Build host meta data will be missed in VERSION.json file. Continuing..." % (build_meta_file))
+
+    return(data)
+
+
+meta_data = parse_build_meta()
+
 version_dict["sw"]               = {}
 version_dict["sw"]["pipeline"]   = args.pipeline
 version_dict["sw"]["version"]    = nic_version
 version_dict["sw"]["tag"]        = nic_version
 version_dict["sw"]["sha"]        = nic_sha
+if (meta_data['host_name'] != ""):
+    version_dict["sw"]["build_host"]      = meta_data['host_name']
+if (meta_data['host_ws'] != ""):
+    version_dict["sw"]["host_workspace"]  = meta_data['host_ws']
 version_dict["sw"]["build_time"] = nic_build_time
 
 #########################
