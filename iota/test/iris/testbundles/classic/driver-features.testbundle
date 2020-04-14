@@ -94,6 +94,7 @@ testcases:
     -   name    : UplinkIntf_RX_CHECKSUM
         testcase: testcases.drivers.features
         disable : False
+        ignore  : True
         iterators :
             type               : nested
             rx_check_sum       : [ 'off', 'on']
