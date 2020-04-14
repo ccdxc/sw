@@ -36,6 +36,16 @@ using sdk::table::sdk_table_api_params_t;
 namespace api {
 namespace impl {
 
+#define IS_PUBLIC_IP_UPDATED(upd_bmap)                     \
+    ((upd_bmap) & (PDS_MAPPING_UPD_PUBLIC_IP_ADD |         \
+                   PDS_MAPPING_UPD_PUBLIC_IP_DEL |         \
+                   PDS_MAPPING_UPD_PUBLIC_IP_UPD))
+
+#define IS_TAGS_CFG_UPDATED(upd_bmap)                      \
+    ((upd_bmap) & (PDS_MAPPING_UPD_TAGS_ADD |              \
+                   PDS_MAPPING_UPD_TAGS_DEL |              \
+                   PDS_MAPPING_UPD_TAGS_UPD))
+
 /// \defgroup PDS_MAPPING_IMPL - mapping entry datapath implementation
 /// \ingroup PDS_MAPPING
 /// @{
@@ -709,10 +719,7 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                     return ret;
                 }
                 if (spec->public_ip_valid &&
-                    !(obj_ctxt->upd_bmap &
-                      (PDS_MAPPING_UPD_PUBLIC_IP_ADD |
-                       PDS_MAPPING_UPD_PUBLIC_IP_DEL |
-                       PDS_MAPPING_UPD_PUBLIC_IP_UPD))) {
+                    !IS_PUBLIC_IP_UPDATED(obj_ctxt->upd_bmap)) {
                     // public IP is configured and not getting updated, we need
                     // to allocate an entry for this in rxdma MAPPING table for
                     // this public IP
@@ -1114,7 +1121,7 @@ mapping_impl::deactivate_public_ip_rxdma_mapping_entry_(vpc_impl *vpc,
                                    NULL, &rxdma_mapping_data,
                                    RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
                                    rxdma_mapping_public_ip_hdl_);
-    ret = mapping_impl_db()->rxdma_mapping_tbl()->insert(&tparams);
+    ret = mapping_impl_db()->rxdma_mapping_tbl()->update(&tparams);
     SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }
@@ -1755,11 +1762,13 @@ mapping_impl::upd_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
     sdk_table_api_params_t local_mapping_tbl_params;
     mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
 
+#if 0
     // TODO: may be we don't need this because the caller is already doing it
     // and we have to do it !!!
     // take over the public IP to overlay IP
     to_overlay_ip_nat_idx_ = orig_mapping_impl->to_overlay_ip_nat_idx_;
     orig_mapping_impl->to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
+#endif
 
     // fill key & data of MAPPING and LOCAL_MAPPING table entries corresponding
     // to public IP
@@ -1775,21 +1784,22 @@ mapping_impl::upd_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
                                       sdk::table::handle_t::null(), NULL,
                                       spec);
 
-    // update LOCAL_MAPPING table entry of public IP
+    // update LOCAL_MAPPING table entry of public IP and take over the resource
     ret = mapping_impl_db()->local_mapping_tbl()->update(&local_mapping_tbl_params);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     local_mapping_public_ip_hdl_ = local_mapping_tbl_params.handle;
+    orig_mapping_impl->local_mapping_public_ip_hdl_ =
+        sdk::table::handle_t::null();
 
-    // update MAPPING table entry of public IP
+    // update MAPPING table entry of public IP and take over the resources
     ret = mapping_impl_db()->mapping_tbl()->update(&mapping_tbl_params);
     SDK_ASSERT(ret == SDK_RET_OK);
     mapping_public_ip_hdl_ = mapping_tbl_params.handle;
-
-    // now that cloned object took over the public IP mapping resources,
-    // we need the original object to relinquish the ownership
-    orig_mapping_impl->local_mapping_public_ip_hdl_ =
-        sdk::table::handle_t::null();
     orig_mapping_impl->mapping_public_ip_hdl_ = sdk::table::handle_t::null();
+
+    // reliquish the ownership of NAT table entries from the original object
+    orig_mapping_impl->to_public_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
+    orig_mapping_impl->to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
     return SDK_RET_OK;
 }
 
@@ -1810,13 +1820,6 @@ mapping_impl::upd_overlay_ip_mapping_entries_(vpc_impl *vpc,
     sdk_table_api_params_t local_mapping_tbl_params;
     mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
 
-#if 0
-    // TDDO: this doesn't make sense with update is just public IP add
-    // take over the overlay IP to public IP
-    to_public_ip_nat_idx_ = orig_mapping_impl->to_public_ip_nat_idx_;
-    orig_mapping_impl->to_public_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
-#endif
-
     // fill key & data for ovrlay IP MAPPING and LOCAL_MAPPING table entries
     fill_local_overlay_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
                                             &local_mapping_key,
@@ -1832,31 +1835,31 @@ mapping_impl::upd_overlay_ip_mapping_entries_(vpc_impl *vpc,
                                             spec);
 
 
-    // update entry corresponding to overlay IP in LOCAL_MAPPING table
+    // update entry corresponding to overlay IP in LOCAL_MAPPING table and take
+    // over the resource
     ret = mapping_impl_db()->local_mapping_tbl()->update(&local_mapping_tbl_params);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     local_mapping_overlay_ip_hdl_ = local_mapping_tbl_params.handle;
+    orig_mapping_impl->local_mapping_overlay_ip_hdl_ =
+        sdk::table::handle_t::null();
 
-    // update entry corresponding to overlay IP in MAPPING table
+    // update entry corresponding to overlay IP in MAPPING table and take over
+    // the resource
     ret = mapping_impl_db()->mapping_tbl()->update(&mapping_tbl_params);
     SDK_ASSERT(ret == SDK_RET_OK);
     mapping_hdl_ = mapping_tbl_params.handle;
-
-    // now that cloned object took over the overlay IP mapping resources,
-    // we need the original object to relinquish the ownership
-    orig_mapping_impl->local_mapping_overlay_ip_hdl_ =
-        sdk::table::handle_t::null();
     orig_mapping_impl->mapping_hdl_ = sdk::table::handle_t::null();
+
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
-                                         subnet_entry *subnet,
-                                         mapping_entry *new_mapping,
-                                         mapping_entry *orig_mapping,
-                                         api_obj_ctxt_t *obj_ctxt,
-                                         pds_mapping_spec_t *spec) {
+mapping_impl::activate_local_mapping_update_(vpc_entry *vpc,
+                                             subnet_entry *subnet,
+                                             mapping_entry *new_mapping,
+                                             mapping_entry *orig_mapping,
+                                             api_obj_ctxt_t *obj_ctxt,
+                                             pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     vnic_entry *vnic;
     vnic_impl *vnic_impl_obj;
@@ -1868,8 +1871,10 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
     vnic_impl_obj = (vnic_impl *)vnic->impl();
 
     if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD) {
+        // program MAPPING_TAG and LOCAL_MAPPING_TAG table entries with classes
         ret = program_local_mapping_tag_entries_();
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        // add overlay IP entry in rxdma MAPPING table
         ret = add_overlay_ip_rxdma_mapping_entry_((vpc_impl *)vpc->impl(),
                                                   spec);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
@@ -1880,6 +1885,29 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
                   (vpc_impl *)vpc->impl(), orig_mapping);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) {
+        // xfer MAPPING_TAG and LOCAL_MAPPING_TAG resources from original object
+        rxdma_local_mapping_tag_idx_ = orig_impl->rxdma_local_mapping_tag_idx_;
+        rxdma_mapping_tag_idx_ = orig_impl->rxdma_mapping_tag_idx_;
+        rxdma_mapping_hdl_ = orig_impl->rxdma_mapping_hdl_;
+        // update MAPPING_TAG and LOCAL_MAPPING_TAG table entries with new set
+        // of classes
+        ret = program_local_mapping_tag_entries_();
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        orig_impl->rxdma_local_mapping_tag_idx_ = PDS_IMPL_RSVD_TAG_HW_ID;
+        orig_impl->rxdma_mapping_tag_idx_ = PDS_IMPL_RSVD_TAG_HW_ID;
+        orig_impl->rxdma_mapping_hdl_ = sdk::table::handle_t::null();
+    } else {
+        // we need to xfer the tag resources to cloned object, as tags could
+        // have been present and remain unchanged in this update
+        rxdma_local_mapping_tag_idx_ = orig_impl->rxdma_local_mapping_tag_idx_;
+        rxdma_mapping_tag_idx_ = orig_impl->rxdma_mapping_tag_idx_;
+        rxdma_mapping_hdl_ = orig_impl->rxdma_mapping_hdl_;
+
+        // make sure these resources are not freed when original object is
+        // destroyed
+        orig_impl->rxdma_local_mapping_tag_idx_ = PDS_IMPL_RSVD_TAG_HW_ID;
+        orig_impl->rxdma_mapping_tag_idx_ = PDS_IMPL_RSVD_TAG_HW_ID;
+        orig_impl->rxdma_mapping_hdl_ = sdk::table::handle_t::null();
     }
 
     // program public IP related entries in the datapath first, if there is a
@@ -1933,17 +1961,43 @@ mapping_impl::upd_local_mapping_entries_(vpc_entry *vpc,
             ret = deactivate_public_ip_rxdma_mapping_entry_(
                       (vpc_impl *)vpc->impl(), orig_mapping);
             SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        } else if ((obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) &&
+                   spec->public_ip_valid) {
+            // take over rxdma MAPPING table resources, no need to reprogram
+            // rxdma MAPPING table entry for public IP
+            rxdma_mapping_public_ip_hdl_ =
+                orig_impl->rxdma_mapping_public_ip_hdl_;
+            orig_impl->rxdma_mapping_public_ip_hdl_ =
+                sdk::table::handle_t::null();
+        } else if (spec->public_ip_valid && spec->num_tags &&
+                   !IS_TAGS_CFG_UPDATED(obj_ctxt->upd_bmap)) {
+            // public exists but didn't change, tags also not changed, just
+            // xfer the relevant resources to cloned object now
+            rxdma_mapping_public_ip_hdl_ =
+                orig_impl->rxdma_mapping_public_ip_hdl_;
+            orig_impl->rxdma_mapping_public_ip_hdl_ =
+                sdk::table::handle_t::null();
         }
+        // xfer NAT table resources from previous object, in case it has public
+        // IP and that is carried over with no change
+        // NOTE: this xfer of resources has to happen before updating
+        //       LOCAL_MAPPING table entries down below
+        to_overlay_ip_nat_idx_ = orig_impl->to_overlay_ip_nat_idx_;
+        to_public_ip_nat_idx_ = orig_impl->to_public_ip_nat_idx_;
     }
 
+#if 0
     if (spec->public_ip_valid && upd_public_ip_mappings) {
         // only reason why we will update public IP mapping entries at this
         // point is because there is no public IP information change but other
         // attrs might have changed, so own the xfer the public IP related
         // resources
+        // NOTE: this xfer of resources has to happen before updating
+        //       LOCAL_MAPPING table entries down below
         to_overlay_ip_nat_idx_ = orig_impl->to_overlay_ip_nat_idx_;
         to_public_ip_nat_idx_ = orig_impl->to_public_ip_nat_idx_;
     }
+#endif
     // and then update the overlay IP mapping specific entries
     // NOTE: overlay IP mapping entries are always updated (as forwarding info
     // or some other attributes could have changed as well)
@@ -1979,12 +2033,12 @@ mapping_impl::program_remote_mapping_tag_tables_(void) {
 }
 
 sdk_ret_t
-mapping_impl::upd_remote_mapping_entries_(vpc_entry *vpc,
-                                          subnet_entry *subnet,
-                                          mapping_entry *new_mapping,
-                                          mapping_entry *orig_mapping,
-                                          pds_mapping_spec_t *spec,
-                                          api_obj_ctxt_t *obj_ctxt) {
+mapping_impl::activate_remote_mapping_update_(vpc_entry *vpc,
+                                              subnet_entry *subnet,
+                                              mapping_entry *new_mapping,
+                                              mapping_entry *orig_mapping,
+                                              pds_mapping_spec_t *spec,
+                                              api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     mapping_appdata_t mapping_data;
@@ -2085,11 +2139,11 @@ mapping_impl::activate_update_(pds_epoch_t epoch, mapping_entry *new_mapping,
                     spec->fabric_encap.val.value, spec->vnic.str());
 
     if (spec->is_local) {
-        ret = upd_local_mapping_entries_(vpc, subnet, new_mapping, orig_mapping,
-                                         obj_ctxt, spec);
+        ret = activate_local_mapping_update_(vpc, subnet, new_mapping,
+                                             orig_mapping, obj_ctxt, spec);
     } else {
-        ret = upd_remote_mapping_entries_(vpc, subnet, new_mapping,
-                                          orig_mapping, spec, obj_ctxt);
+        ret = activate_remote_mapping_update_(vpc, subnet, new_mapping,
+                                              orig_mapping, spec, obj_ctxt);
     }
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to update mapping %s, %s, err %u",

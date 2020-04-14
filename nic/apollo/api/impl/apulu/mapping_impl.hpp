@@ -495,12 +495,12 @@ private:
     /// \param[in] orig_mapping original/current mapping object
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t upd_local_mapping_entries_(vpc_entry *vpc,
-                                         subnet_entry *subnet,
-                                         mapping_entry *new_mapping,
-                                         mapping_entry *orig_mapping,
-                                         api_obj_ctxt_t *obj_ctxt,
-                                         pds_mapping_spec_t *spec);
+    sdk_ret_t activate_local_mapping_update_(vpc_entry *vpc,
+                                             subnet_entry *subnet,
+                                             mapping_entry *new_mapping,
+                                             mapping_entry *orig_mapping,
+                                             api_obj_ctxt_t *obj_ctxt,
+                                             pds_mapping_spec_t *spec);
 
     /// \brief     program MAPPING_TAG table entry for the remote mapping
     /// \return    SDK_RET_OK on success, failure status code on error
@@ -513,12 +513,12 @@ private:
     /// \param[in] orig_mapping original/current mapping object
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t upd_remote_mapping_entries_(vpc_entry *vpc,
-                                          subnet_entry *subnet,
-                                          mapping_entry *new_mapping,
-                                          mapping_entry *orig_mapping,
-                                          pds_mapping_spec_t *spec,
-                                          api_obj_ctxt_t *obj_ctxt);
+    sdk_ret_t activate_remote_mapping_update_(vpc_entry *vpc,
+                                              subnet_entry *subnet,
+                                              mapping_entry *new_mapping,
+                                              mapping_entry *orig_mapping,
+                                              pds_mapping_spec_t *spec,
+                                              api_obj_ctxt_t *obj_ctxt);
 
     /// \brief     program and activate mapping related tables during create
     ///            by enabling stage0 tables corresponding to the new epoch
