@@ -1762,14 +1762,6 @@ mapping_impl::upd_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
     sdk_table_api_params_t local_mapping_tbl_params;
     mapping_impl *orig_mapping_impl = (mapping_impl *)orig_mapping->impl();
 
-#if 0
-    // TODO: may be we don't need this because the caller is already doing it
-    // and we have to do it !!!
-    // take over the public IP to overlay IP
-    to_overlay_ip_nat_idx_ = orig_mapping_impl->to_overlay_ip_nat_idx_;
-    orig_mapping_impl->to_overlay_ip_nat_idx_ = PDS_IMPL_RSVD_NAT_HW_ID;
-#endif
-
     // fill key & data of MAPPING and LOCAL_MAPPING table entries corresponding
     // to public IP
     fill_public_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
@@ -1854,35 +1846,25 @@ mapping_impl::upd_overlay_ip_mapping_entries_(vpc_impl *vpc,
 }
 
 sdk_ret_t
-mapping_impl::activate_local_mapping_update_(vpc_entry *vpc,
-                                             subnet_entry *subnet,
-                                             mapping_entry *new_mapping,
-                                             mapping_entry *orig_mapping,
-                                             api_obj_ctxt_t *obj_ctxt,
-                                             pds_mapping_spec_t *spec) {
+mapping_impl::handle_tag_update_(vpc_impl *vpc,
+                                 mapping_entry *new_mapping,
+                                 mapping_entry *orig_mapping,
+                                 api_obj_ctxt_t *obj_ctxt,
+                                 pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
-    vnic_entry *vnic;
-    vnic_impl *vnic_impl_obj;
-    bool upd_public_ip_mappings = true;
     mapping_impl *orig_impl = (mapping_impl *)orig_mapping->impl();
-
-    // get the vnic corresponding to this local mapping
-    vnic = vnic_find(&spec->vnic);
-    vnic_impl_obj = (vnic_impl *)vnic->impl();
 
     if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD) {
         // program MAPPING_TAG and LOCAL_MAPPING_TAG table entries with classes
         ret = program_local_mapping_tag_entries_();
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         // add overlay IP entry in rxdma MAPPING table
-        ret = add_overlay_ip_rxdma_mapping_entry_((vpc_impl *)vpc->impl(),
-                                                  spec);
+        ret = add_overlay_ip_rxdma_mapping_entry_(vpc, spec);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_DEL) {
         // deactivate the previous rxdma MAPPING table entry corresponding to
         // overlay IP
-        ret = deactivate_overlay_ip_rxdma_mapping_entry_(
-                  (vpc_impl *)vpc->impl(), orig_mapping);
+        ret = deactivate_overlay_ip_rxdma_mapping_entry_(vpc, orig_mapping);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) {
         // xfer MAPPING_TAG and LOCAL_MAPPING_TAG resources from original object
@@ -1909,26 +1891,34 @@ mapping_impl::activate_local_mapping_update_(vpc_entry *vpc,
         orig_impl->rxdma_mapping_tag_idx_ = PDS_IMPL_RSVD_TAG_HW_ID;
         orig_impl->rxdma_mapping_hdl_ = sdk::table::handle_t::null();
     }
+    return SDK_RET_OK;
+}
 
-    // program public IP related entries in the datapath first, if there is a
-    // change in the public IP for this mapping (either public IP has changed or
-    // public IP is being assigned for the 1st time)
+sdk_ret_t
+mapping_impl::handle_public_ip_update_(vpc_impl *vpc, subnet_entry *subnet,
+                                       vnic_entry *vnic,
+                                       vnic_impl *vnic_impl_obj,
+                                       mapping_entry *new_mapping,
+                                       mapping_entry *orig_mapping,
+                                       api_obj_ctxt_t *obj_ctxt,
+                                       pds_mapping_spec_t *spec,
+                                       bool& upd_public_ip_mappings) {
+    sdk_ret_t ret;
+    mapping_impl *orig_impl = (mapping_impl *)orig_mapping->impl();
+
     if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_ADD) {
-        // previously we didn't have the public IP and now it is being
-        // configured
-        ret = add_public_ip_entries_((vpc_impl *)vpc->impl(),
-                                     subnet, vnic, vnic_impl_obj,
+        // public IP is being added
+        ret = add_public_ip_entries_(vpc, subnet, vnic, vnic_impl_obj,
                                      new_mapping, spec);
         upd_public_ip_mappings = false;
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_DEL) {
-        // this is the case where previously public IP was configured
-        // and the mapping is being updated without the public IP now .. we
-        // don't have to do anything here because old version of the object
-        // when nuked, will remove the public IP mapping entries and NAT
-        // entries previously installed and free all the resources
-        ret = deactivate_public_ip_rxdma_mapping_entry_((vpc_impl *)vpc->impl(),
-                                                        orig_mapping);
+        // previously public IP was configured and the mapping is
+        // updated without the public IP now .. we don't have to do anything
+        // here because old version of the object, when nuked, will remove
+        // the public IP mapping entries and NAT entries previously installed
+        // and free all the resources
+        ret = deactivate_public_ip_rxdma_mapping_entry_(vpc, orig_mapping);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         upd_public_ip_mappings = false;
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_UPD) {
@@ -1941,8 +1931,7 @@ mapping_impl::activate_local_mapping_update_(vpc_entry *vpc,
         // handled the same way
         to_public_ip_nat_idx_ = orig_impl->to_public_ip_nat_idx_;
         to_overlay_ip_nat_idx_ =  orig_impl->to_overlay_ip_nat_idx_;
-        ret = add_public_ip_entries_((vpc_impl *)vpc->impl(), subnet,
-                                     vnic, vnic_impl_obj,
+        ret = add_public_ip_entries_(vpc, subnet, vnic, vnic_impl_obj,
                                      new_mapping, spec);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         orig_impl->to_public_ip_nat_idx_ =
@@ -1952,14 +1941,12 @@ mapping_impl::activate_local_mapping_update_(vpc_entry *vpc,
         // no change in public IP information
         if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD) {
             // but tags are added, program rxdma MAPPING entry for public IP
-            ret = add_public_ip_rxdma_mapping_entry_((vpc_impl *)vpc->impl(),
-                                                     spec);
+            ret = add_public_ip_rxdma_mapping_entry_(vpc, spec);
             SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         } else if ((obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_DEL) &&
                    spec->public_ip_valid) {
             // de-activate rxdma MAPPING table entry for public IP
-            ret = deactivate_public_ip_rxdma_mapping_entry_(
-                      (vpc_impl *)vpc->impl(), orig_mapping);
+            ret = deactivate_public_ip_rxdma_mapping_entry_(vpc, orig_mapping);
             SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         } else if ((obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) &&
                    spec->public_ip_valid) {
@@ -1985,31 +1972,49 @@ mapping_impl::activate_local_mapping_update_(vpc_entry *vpc,
         to_overlay_ip_nat_idx_ = orig_impl->to_overlay_ip_nat_idx_;
         to_public_ip_nat_idx_ = orig_impl->to_public_ip_nat_idx_;
     }
+    return SDK_RET_OK;
+}
 
-#if 0
-    if (spec->public_ip_valid && upd_public_ip_mappings) {
-        // only reason why we will update public IP mapping entries at this
-        // point is because there is no public IP information change but other
-        // attrs might have changed, so own the xfer the public IP related
-        // resources
-        // NOTE: this xfer of resources has to happen before updating
-        //       LOCAL_MAPPING table entries down below
-        to_overlay_ip_nat_idx_ = orig_impl->to_overlay_ip_nat_idx_;
-        to_public_ip_nat_idx_ = orig_impl->to_public_ip_nat_idx_;
-    }
-#endif
+sdk_ret_t
+mapping_impl::activate_local_mapping_update_(vpc_entry *vpc,
+                                             subnet_entry *subnet,
+                                             mapping_entry *new_mapping,
+                                             mapping_entry *orig_mapping,
+                                             api_obj_ctxt_t *obj_ctxt,
+                                             pds_mapping_spec_t *spec) {
+    sdk_ret_t ret;
+    vnic_entry *vnic;
+    vnic_impl *vnic_impl_obj;
+    bool upd_public_ip_mappings = true;
+    vpc_impl *vpc_impl_obj = (vpc_impl *)vpc->impl();
+    mapping_impl *orig_impl = (mapping_impl *)orig_mapping->impl();
+
+    // get the vnic corresponding to this local mapping
+    vnic = vnic_find(&spec->vnic);
+    vnic_impl_obj = (vnic_impl *)vnic->impl();
+
+    // handle tag updates, if any
+    ret = handle_tag_update_(vpc_impl_obj, new_mapping, orig_mapping,
+                             obj_ctxt, spec);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+
+    // handle public IP updates, if any
+    ret = handle_public_ip_update_(vpc_impl_obj, subnet, vnic, vnic_impl_obj,
+                                   new_mapping, orig_mapping, obj_ctxt, spec,
+                                   upd_public_ip_mappings);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+
     // and then update the overlay IP mapping specific entries
     // NOTE: overlay IP mapping entries are always updated (as forwarding info
     // or some other attributes could have changed as well)
-    ret = upd_overlay_ip_mapping_entries_((vpc_impl *)vpc->impl(), subnet,
+    ret = upd_overlay_ip_mapping_entries_(vpc_impl_obj, subnet,
                                           vnic, vnic_impl_obj,
                                           new_mapping, orig_mapping, spec);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     if (spec->public_ip_valid && upd_public_ip_mappings) {
         // public IP attribute itself hasn't been updated but we still have to
         // update rest of the information (e.g., forwarding related)
-        ret = upd_public_ip_entries_((vpc_impl *)vpc->impl(), subnet,
-                                     vnic, vnic_impl_obj,
+        ret = upd_public_ip_entries_(vpc_impl_obj, subnet, vnic, vnic_impl_obj,
                                      new_mapping, orig_mapping, spec);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     }
@@ -2114,7 +2119,7 @@ mapping_impl::activate_remote_mapping_update_(vpc_entry *vpc,
 }
 
 // NOTE:
-// there is no nee to touch the kvstore or dhcp bindings that are strored
+// there is no need to touch the kvstore or dhcp bindings that are strored
 // because primary key to secondary key mapping doesn't change,
 // TODO: we need to address case where vnic's MAC changes, should we fix
 //       all DHCP bindings as well for the local IP mappings behind that vnic ?

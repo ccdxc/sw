@@ -471,7 +471,7 @@ private:
                                      pds_mapping_spec_t *spec);
 
     /// \brief     update necessary entries overlay IP for local mappings
-    /// \param[in] vpc  VPC of this mapping
+    /// \param[in] vpc  VPC impl instance of this mapping
     /// \param[in] subnet subnet of this mapping
     /// \param[in] vnic vnic this mapping is associated with
     /// \param[n]  vnic_impl_obj vnic impl instance of vnic corresponding to
@@ -488,11 +488,50 @@ private:
                                               mapping_entry *orig_mapping,
                                               pds_mapping_spec_t *spec);
 
+    /// \brief     handle tag(s) update of local mapping
+    /// \param[in] vpc  VPC impl instance of this mapping
+    /// \param[in] new_mapping cloned mapping object being processed
+    /// \param[in] orig_mapping original/current mapping object
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \param[in] spec IP mapping details
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t handle_tag_update_(vpc_impl *vpc,
+                                 mapping_entry *new_mapping,
+                                 mapping_entry *orig_mapping,
+                                 api_obj_ctxt_t *obj_ctxt,
+                                 pds_mapping_spec_t *spec);
+
+    /// \brief    handle public IP attribute updates of local mapping
+    /// \param[in] vpc  VPC impl instance of this mapping
+    /// \param[in] subnet subnet of this mapping
+    /// \param[in] vnic vnic this mapping is associated with
+    /// \param[n]  vnic_impl_obj vnic impl instance of vnic corresponding to
+    ///                          mapping
+    /// \param[in] new_mapping cloned mapping object being processed
+    /// \param[in] orig_mapping original/current mapping object
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \param[in] spec IP mapping details
+    /// \param[in,out] upd_pub_ip_mappings if upd_pub_ip_mappings is set to
+    ///                false by this method, it means all public IP mapping
+    ///                related updates are taken care of and no need to update
+    ///                the entries further. this out parameter indicates whether
+    ///                to update those entries or not in the caller
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t handle_public_ip_update_(vpc_impl *vpc, subnet_entry *subnet,
+                                       vnic_entry *vnic,
+                                       vnic_impl *vnic_impl_obj,
+                                       mapping_entry *new_mapping,
+                                       mapping_entry *orig_mapping,
+                                       api_obj_ctxt_t *obj_ctxt,
+                                       pds_mapping_spec_t *spec,
+                                       bool& upd_pub_ip_mappings);
+
     /// \brief     update necessary entries for local mappings
     /// \param[in] vpc  VPC of this mapping
     /// \param[in] subnet subnet of this mapping
     /// \param[in] new_mapping cloned mapping object being processed
     /// \param[in] orig_mapping original/current mapping object
+    /// \param[in] obj_ctxt    transient state associated with this API
     /// \param[in] spec IP mapping details
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_local_mapping_update_(vpc_entry *vpc,
@@ -512,6 +551,7 @@ private:
     /// \param[in] new_mapping cloned mapping object being processed
     /// \param[in] orig_mapping original/current mapping object
     /// \param[in] spec IP mapping details
+    /// \param[in] obj_ctxt    transient state associated with this API
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_remote_mapping_update_(vpc_entry *vpc,
                                               subnet_entry *subnet,
