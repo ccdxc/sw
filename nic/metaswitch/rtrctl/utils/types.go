@@ -1518,3 +1518,26 @@ func NewCPRouteRedist(in *pds.CPRouteRedist) *ShadowCPRouteRedist {
 		Status: newCPRouteRedistStatus(in.Status),
 	}
 }
+
+// ShadowLimSwIfStatus shadows the LimSwIfStatus for CLI purposes
+type ShadowLimSwIfStatus struct {
+	*pds.LimSwIfStatus
+	EntityIndex int32
+	Type        string
+	Index       uint32
+	OperStatus  string
+	Name        string
+	IfIndex     int32
+}
+
+// NewLimSwIfGetResponse creates a new shadow of the LimSwIfStatus
+func NewLimSwIfGetResponse(status *pds.LimSwIfStatus) *ShadowLimSwIfStatus {
+	return &ShadowLimSwIfStatus{
+		EntityIndex: status.EntityIndex,
+		Type:        strings.TrimPrefix(status.Type.String(), "LIM_SOFTWIF_"),
+		Index:       status.Index,
+		Name:        status.Name,
+		IfIndex:     status.IfIndex,
+		OperStatus:  strings.TrimPrefix(status.OperStatus.String(), "OPER_STATUS_"),
+	}
+}

@@ -18,6 +18,7 @@ service LimSvc {
   rpc LimIfStatusGet (LimIfStatusGetRequest) returns (LimIfStatusGetResponse) {}
   rpc LimIfAddrTableGet (LimIfAddrTableGetRequest) returns (LimIfAddrTableGetResponse) {}
   rpc LimVrfGet (LimVrfGetRequest) returns (LimVrfGetResponse) {}
+  rpc LimSwIfGet (LimSwIfGetRequest) returns (LimSwIfGetResponse) {}
 }
 
 enum LimIfOperStatus {
@@ -245,4 +246,64 @@ message LimVrfKeyHandle {
 // Lim vrf get request
 message LimVrfGetRequest {
   repeated LimVrfKeyHandle Request = 1;
+}
+
+enum LimSoftwareType {
+  LIM_SOFTWIF_NONE     = 0;
+  LIM_SOFTWIF_LOOPBACK = 1;
+  LIM_SOFTWIF_DUMMY    = 2;
+  LIM_SOFTWIF_NULL     = 3;
+}
+
+ // LimSwIfStatus table
+message LimSwIfStatus {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_LIM_SOFTWIF_OID_LEN",
+    Mib:    "limSoftwareInterfaceTable"
+  };
+  // Identifies a DC-LIM entity
+  int32               EntityIndex  = 1 [(venice.pdsaFields) = {Field:"entity_index", GetKeyOidIndex: "AMB_LIM_SOFTWIF_ENT_IX_INDEX"}];
+  // The type of software interface being configured
+  LimSoftwareType     Type         = 2 [(venice.pdsaFields) = {Field:"type", GetKeyOidIndex: "AMB_LIM_SOFTWIF_IF_TYPE"}];
+  // The IP address to be assigned.
+  uint32              Index        = 3 [(venice.pdsaFields) = {Field:"index", GetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}];
+  // Operational status of the interface
+  LimOperStatus       OperStatus   = 4 [(venice.pdsaFields) = {Field:"oper_status"}];
+  // The assigned name of the software interface
+  string              Name         = 5 [(venice.pdsaFields) = {Field:"name"}];
+  // The assigned control plane interface index
+  int32               IfIndex      = 6 [(venice.pdsaFields) = {Field:"if_index"}];
+}
+
+message LimSwIfKey {
+  // Identifies a DC-LIM entity
+  int32           EntityIndex  = 1;
+  // The type of software interface being configured
+  LimSoftwareType Type         = 2;
+  // The IP address to be assigned.
+  uint32          Index        = 3;
+}
+
+message LimSwIf {
+  LimSwIfStatus Status = 1;
+}
+
+message LimSwIfGetResponse {
+  types.ApiStatus         ApiStatus = 1;
+  repeated LimSwIf Response  = 2;
+}
+
+// Lim Interface key handle
+message LimSwIfKeyHandle {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen:  "AMB_LIM_SOFTWIF_OID_LEN",
+    Mib:     "limSoftwareInterfaceTable"
+    SpecMsg: "LimSwIfStatus"
+  };
+  LimSwIfKey Key = 1;
+}
+
+// Lim Interface status get request
+message LimSwIfGetRequest {
+  repeated LimSwIfKeyHandle Request = 1;
 }

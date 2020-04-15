@@ -25,9 +25,10 @@ var routingShowCmd = &cobra.Command{
 
 var interfaceShowCmd = &cobra.Command{
 	Use:   "interface",
-	Short: "show interface information",
-	Long:  "show interface information",
+	Short: "show software interface information",
+	Long:  "show software interface information",
 	Args:  cobra.NoArgs,
+	RunE:  routingSwIntfShowCmdHandler,
 }
 
 var intfStatusShowCmd = &cobra.Command{
@@ -486,6 +487,56 @@ func redistTableShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	if doJSON {
 		b, _ := json.MarshalIndent(cprrs, "", "  ")
+		fmt.Println(string(b))
+	}
+	return nil
+}
+
+const (
+	rtgSwIntfGlobalStr = `-----------------------------------
+Routing Software Interface
+-----------------------------------
+EntityIndex            : %v
+Type                   : %v
+Index                  : %v
+OperStatus             : %v
+Name                   : %v
+IfIndex                : %v
+-----------------------------------
+`
+)
+
+func routingSwIntfShowCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := types.NewLimSvcClient(c)
+
+	req := &types.LimSwIfGetRequest{}
+	respMsg, err := client.LimSwIfGet(context.Background(), req)
+	if err != nil {
+		return fmt.Errorf("Getting routing software interface failed (%s)", err)
+	}
+
+	if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+		return errors.New("Operation failed with error")
+	}
+
+	doJSON := cmd.Flag("json").Value.String() == "true"
+
+	intfs := []*utils.ShadowLimSwIfStatus{}
+	for _, i := range respMsg.Response {
+		intf := utils.NewLimSwIfGetResponse(i.Status)
+		if doJSON {
+			intfs = append(intfs, intf)
+		} else {
+			fmt.Printf(rtgSwIntfGlobalStr, intf.EntityIndex, intf.Type, intf.Index, intf.OperStatus, intf.Name, intf.IfIndex)
+		}
+	}
+	if doJSON {
+		b, _ := json.MarshalIndent(intfs, "", "  ")
 		fmt.Println(string(b))
 	}
 	return nil
