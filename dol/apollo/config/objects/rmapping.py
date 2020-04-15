@@ -166,8 +166,10 @@ class RemoteMappingObject(base.ConfigObjectBase):
         return
 
     def Destroy(self):
-        super().Destroy()
-        client.RemoveObjFromCache(self)
+        if not super().Destroy():
+            return False
+        if not client.RemoveObjFromCache(self):
+            return False
         return True
 
 class RemoteMappingObjectClient(base.ConfigClientBase):

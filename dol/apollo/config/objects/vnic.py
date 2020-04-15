@@ -503,6 +503,11 @@ class VnicObjectClient(base.ConfigClientBase):
         lmapping.client.CreateObjects(node)
         return
 
+    def ChangeMacAddr(self, vnic, mac_addr):
+        del self.__l2mapping_objs[vnic.Node][(vnic.MACAddr.getnum(), vnic.SUBNET.UUID.GetUuid(), vnic.VlanId)]
+        self.MACAddr = mac_addr
+        self.__l2mapping_objs[vnic.Node].update({(vnic.MACAddr.getnum(), vnic.SUBNET.UUID.GetUuid(),  vnic.VlanId): vnic})
+
     def ChangeSubnet(self, vnic, new_subnet):
         logger.info(f"Changing subnet for {vnic} {vnic.SUBNET} => {new_subnet}")
         # Handle child/parent relationship
@@ -515,8 +520,10 @@ class VnicObjectClient(base.ConfigClientBase):
         if old_subnet.Node != new_subnet.Node:
             # Delete VNIC from old node
             del self.Objs[vnic.Node][vnic.VnicId]
+            del self.__l2mapping_objs[vnic.Node][(vnic.MACAddr.getnum(), vnic.SUBNET.UUID.GetUuid(), vnic.VlanId)]
             vnic.Node = new_subnet.Node
-            self.Objs[new_subnet.Node].update({vnic.VnicId: vnic})
+            self.Objs[vnic.Node].update({vnic.VnicId: vnic})
+            self.__l2mapping_objs[vnic.Node].update({(vnic.MACAddr.getnum(), vnic.SUBNET.UUID.GetUuid(),  vnic.VlanId): vnic})
 
             # Move children to new Node
             for lmap in vnic.Children:

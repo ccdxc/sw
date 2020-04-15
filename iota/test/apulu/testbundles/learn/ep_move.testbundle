@@ -5,6 +5,10 @@ meta:
     nics    : [ pensando ]
 
 testcases:
+    -   name    : Local_To_Remote_Ip
+        testcase: testcases.ep_move.local_to_remote_ip
+        stress  : True
+
     -   name    : Local_To_Remote_Mac
         testcase: testcases.ep_move.local_to_remote_mac
         ignore  : True

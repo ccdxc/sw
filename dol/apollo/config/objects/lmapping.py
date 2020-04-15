@@ -149,8 +149,10 @@ class LocalMappingObject(base.ConfigObjectBase):
         return grpcmsg
 
     def Destroy(self):
-        super().Destroy()
-        client.RemoveObjFromCache(self)
+        if not super().Destroy():
+            return True
+        if not client.RemoveObjFromCache(self):
+            return False
         return True
 
 class LocalMappingObjectClient(base.ConfigClientBase):
@@ -290,8 +292,15 @@ class LocalMappingObjectClient(base.ConfigClientBase):
     def ChangeNode(self, lmap, target_node):
         logger.info(f"Changing node for {lmap}  {lmap.Node} => {target_node}")
         del self.Objs[lmap.Node][lmap.MappingId]
+        del self.__epip_objs[lmap.Node][(lmap.IP, lmap.VNIC.SUBNET.VPC.UUID.GetUuid())]
         lmap.Node = target_node
         self.Objs[target_node].update({lmap.MappingId: lmap})
+        self.__epip_objs[target_node].update({(lmap.IP, lmap.VNIC.SUBNET.VPC.UUID.GetUuid()): lmap})
+
+    def RemoveObjFromCache(self, lmap):
+        logger.info(f"Deleting {lmap} from EP IP object cache")
+        del self.__epip_objs[lmap.Node][(lmap.IP, lmap.VNIC.SUBNET.VPC.UUID.GetUuid())]
+        return super().RemoveObjFromCache(lmap)
 
     def GetVnicPublicAddresses(self, vnic):
         ipv4_addresses = []

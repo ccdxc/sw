@@ -191,7 +191,8 @@ class ConfigObjectBase(base.ConfigObjectBase):
         # destroy all children
         for obj in self.Children:
             logger.info(f"Destroying object {self} children in {self.Node}")
-            obj.Destroy()
+            if not obj.Destroy():
+                return False
         return True
 
     def UpdateNotify(self, dObj):
