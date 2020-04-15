@@ -210,18 +210,20 @@ vpc_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
                       "on vpc %s", type_, spec->type, key2str().c_str());
         return SDK_RET_INVALID_ARG;
     }
-    if ((fabric_encap_.type != spec->fabric_encap.type) ||
-        (fabric_encap_.val.value != spec->fabric_encap.val.value)) {
-        PDS_TRACE_ERR("Attempt to modify immutable attr \"fabric encap\" "
-                      "from %u to %u on vpc %s", pds_encap2str(&fabric_encap_),
-                      pds_encap2str(&spec->fabric_encap), key2str().c_str());
+    if (fabric_encap_.type != spec->fabric_encap.type) {
+        PDS_TRACE_ERR("Attempt to modify fabric encap type from %u to %u "
+                      "on vpc %s", fabric_encap_.type, spec->fabric_encap.type,
+                      key2str().c_str());
         return SDK_RET_INVALID_ARG;
+    }
+    if (fabric_encap_.val.value != spec->fabric_encap.val.value) {
+        obj_ctxt->upd_bmap |= PDS_VPC_UPD_FABRIC_ENCAP;
     }
     if ((v4_route_table_ != spec->v4_route_table) ||
         (v6_route_table_ != spec->v6_route_table)) {
         obj_ctxt->upd_bmap |= PDS_VPC_UPD_ROUTE_TABLE;
     }
-    // may be either tos or vrmac has changed
+    // may be either tos, vrmac and/or other attrs changed
     return SDK_RET_OK;
 }
 

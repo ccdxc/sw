@@ -261,16 +261,17 @@ private:
 
     /// \brief  constructor with spec
     vpc_impl(pds_vpc_spec_t *spec) {
-        hw_id_ = 0xFFFF;
-        bd_hw_id_ = 0xFFFF;
-        vni_hdl_ = handle_t::null();
+        vpc_impl();
         key_ = spec->key;
-        tag_state_ = nullptr;
-        ht_ctxt_.reset();
     }
 
     /// \brief  destructor
     ~vpc_impl() {}
+
+    /// \brief    given a VxLAN vnid, reserve an entry in the VNI table
+    /// \param[in] vnid    VxLAN vnid
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reserve_vni_entry_(uint32_t vnid);
 
     /// \brief      program vpc related tables during vpc create by enabling
     ///             stage0 tables corresponding to the new epoch
@@ -284,11 +285,12 @@ private:
     /// \brief      program vpc related tables during vpc update by enabling
     ///             stage0 tables corresponding to the new epoch
     /// \param[in]  epoch epoch being activated
-    /// \param[in]  vpc    vpc obj being programmed
+    /// \param[in]  new_vpc     cloned vpc object
+    /// \param[in]  orig_vpc    original vpc object
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
-                               api_obj_ctxt_t *obj_ctxt);
+    sdk_ret_t activate_update_(pds_epoch_t epoch, vpc_entry *new_vpc,
+                               vpc_entry *orig_vpc, api_obj_ctxt_t *obj_ctxt);
 
     /// \brief      program vpc related tables during vpc delete by disabling
     ///             stage0 tables corresponding to the new epoch

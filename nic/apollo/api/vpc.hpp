@@ -23,6 +23,7 @@ class vpc_state;
 
 // attribute update bits for vpc object
 #define PDS_VPC_UPD_ROUTE_TABLE         0x1
+#define PDS_VPC_UPD_FABRIC_ENCAP        0x2
 
 /// \defgroup PDS_VPC_ENTRY - VPC entry functionality
 /// \ingroup PDS_VPC
