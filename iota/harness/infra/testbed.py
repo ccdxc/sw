@@ -35,7 +35,7 @@ def setUpSwitchQos(switch_ctx):
     switch_ctx.flow_control_send = True
     switch_ctx.mtu = 9216
     switch_ctx.qos.name = "p-nq-iota"
-    
+
     #Configure the system network-qos policy
     qosClass = switch_ctx.qos.qos_classes.add()
     qosClass.name = "c-8q-nq2"
@@ -78,7 +78,7 @@ def updateMultiNicInfo():
         elif len(nicInfo[0]['Nics'][0]['Ports']) == 0:
             Logger.debug('no ports found for multi nic 0 in testbed topology file {0}'.format(GlobalOptions.testbed_json))
         else:
-            ip = nicInfo[0]['Nics'][0]['Ports'][0].get('IP',None) 
+            ip = nicInfo[0]['Nics'][0]['Ports'][0].get('IP',None)
             if not ip:
                 Logger.debug('no ip found for multi nic 0 / port 0 in testbed topology file {0}'.format(GlobalOptions.testbed_json))
             else:
@@ -127,6 +127,15 @@ class _Testbed:
     def GetCurrentTestsuite(self):
         return self.curr_ts
 
+    def GetDHCPRelayInfo(self):
+        dhcprelay = getattr(self.__tbspec, 'DHCPRelay', None)
+        if dhcprelay:
+            for obj in dhcprelay:
+                attrb = copy.copy(vars(obj))
+                for key, val in attrb.items():
+                    setattr(obj, key.lower(), val)
+        return dhcprelay
+
     def GetProvisionUsername(self):
         return self.__tbspec.Provision.Username
 
@@ -150,7 +159,7 @@ class _Testbed:
         else:
             return GlobalOptions.uid + "-iota-dc"
 
-    def GetVCenterDVSName(self): 
+    def GetVCenterDVSName(self):
         if self.IsUsingProdVCenter() and hasattr(self.__tbspec.Provision.Vars, 'Datastore'):
             return "iota-Pen-DVS-" + self.__tbspec.Provision.Vars.Datastore
         else:
@@ -211,7 +220,7 @@ class _Testbed:
         except:
             print('failed parsing testbed json')
             Logger.debug("failed parsing testbed json. error was: {0}".format(traceback.format_exc()))
-            Logger.debug("failed on node instance: {0}".format(instance.__dict__)) 
+            Logger.debug("failed on node instance: {0}".format(instance.__dict__))
             sys.exit(types.status.OFFLINE_TESTBED)
 
     def __get_full_path(self, path):
@@ -270,7 +279,7 @@ class _Testbed:
                 license.username = self.__tbspec.Provision.Vars.VcenterUsername
                 license.password =  self.__tbspec.Provision.Vars.VcenterPassword
                 license.key = self.__tbspec.Provision.Vars.VcenterLicense
-                license.type = topo_pb2.License.Type.Name(topo_pb2.License.LICENSE_VCENTER) 
+                license.type = topo_pb2.License.Type.Name(topo_pb2.License.LICENSE_VCENTER)
 
 
 
@@ -382,7 +391,7 @@ class _Testbed:
         proc_hdls = []
         logfiles = []
         logfile  = ''
-        naples_host_only = kwargs.get('naples_host_only', False) 
+        naples_host_only = kwargs.get('naples_host_only', False)
         firmware_reimage_only = kwargs.get('firmware_reimage_only', False)
         driver_reimage_only = kwargs.get('driver_reimage_only', False)
 
@@ -419,7 +428,7 @@ class _Testbed:
                     if mem_size is not None:
                         cmd.extend(["--naples-mem-size", mem_size])
 
-                if firmware_reimage_only: 
+                if firmware_reimage_only:
                     cmd.extend(["--naples-only-setup"])
                 elif driver_reimage_only:
                     cmd.extend(["--only-init"])
@@ -443,11 +452,11 @@ class _Testbed:
                     pass
                     # cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
                 if GlobalOptions.skip_driver_install:
-                    cmd.extend(["--skip-driver-install"]) 
-                if GlobalOptions.use_gold_firmware: 
-                    cmd.extend(["--use-gold-firmware"]) 
-                if GlobalOptions.fast_upgrade: 
-                    cmd.extend(["--fast-upgrade"]) 
+                    cmd.extend(["--skip-driver-install"])
+                if GlobalOptions.use_gold_firmware:
+                    cmd.extend(["--use-gold-firmware"])
+                if GlobalOptions.fast_upgrade:
+                    cmd.extend(["--fast-upgrade"])
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--image-manifest", manifest_file])
 
@@ -462,22 +471,22 @@ class _Testbed:
                 else:
                     logfile = "%s/%s-firmware-upgrade.log" % (GlobalOptions.logdir, instance.Name)
                     Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
-                if GlobalOptions.netagent: 
-                    cmd.extend(["--auto-discover-on-install"]) 
+                if GlobalOptions.netagent:
+                    cmd.extend(["--auto-discover-on-install"])
             else:
                 if GlobalOptions.skip_firmware_upgrade or instance.Type == "vm" or naples_host_only:
-                    continue 
+                    continue
                 cmd.extend([ "%s/iota/scripts/reboot_node.py" % GlobalOptions.topdir ])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
                 if hasattr(instance, "NodeCimcUsername"):
                     cmd.extend(["--cimc-username", instance.NodeCimcUsername])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
-                if instance.NodeOs == "esx": 
-                    cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername]) 
-                    cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword]) 
-                else: 
-                    cmd.extend(["--host-username", self.__tbspec.Provision.Username]) 
+                if instance.NodeOs == "esx":
+                    cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername])
+                    cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword])
+                else:
+                    cmd.extend(["--host-username", self.__tbspec.Provision.Username])
                     cmd.extend(["--host-password", self.__tbspec.Provision.Password])
 
                 logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
@@ -509,7 +518,7 @@ class _Testbed:
                     Logger.debug('Firmware upgrade finished at time: {0}'.format(time.asctime()))
         except KeyboardInterrupt:
             result=2
-            err="SIGINT detected. terminating boot_naples_v2 scripts" 
+            err="SIGINT detected. terminating boot_naples_v2 scripts"
             Logger.debug(err)
             for proc in proc_hdls:
                 Logger.debug("sending SIGKILL to pid {0}".format(proc.pid))
@@ -594,7 +603,7 @@ class _Testbed:
         if reimage_driver:
             # driver image to be changed
             new_img_manifest["Drivers"] = None
-            dr_img_manifest_file = os.path.join(GlobalOptions.topdir, 
+            dr_img_manifest_file = os.path.join(GlobalOptions.topdir,
                                                 "images", reimg_req.DriverVersion + ".json")
             with open(dr_img_manifest_file, "r") as fh:
                 dr_img_manifest = json.loads(fh.read())
@@ -603,7 +612,7 @@ class _Testbed:
         if reimage_firmware:
             # Firmware image to be changed
             new_img_manifest["Firmwares"] = None
-            fw_img_manifest_file = os.path.join(GlobalOptions.topdir, 
+            fw_img_manifest_file = os.path.join(GlobalOptions.topdir,
                                                 "images", reimg_req.FirmwareVersion + ".json")
             with open(fw_img_manifest_file, "r") as fh:
                 fw_img_manifest = json.loads(fh.read())
@@ -623,9 +632,9 @@ class _Testbed:
             # Call API to reimage testbed : restrict for naples nodes only
             GlobalOptions.only_reboot = False
             GlobalOptions.skip_firmware_upgrade = False
-            self.__recover_testbed(manifest_file, 
-                                   driver_reimage_only=reimage_driver and not reimage_firmware, 
-                                   firmware_reimage_only=reimage_firmware and not reimage_driver, 
+            self.__recover_testbed(manifest_file,
+                                   driver_reimage_only=reimage_driver and not reimage_firmware,
+                                   firmware_reimage_only=reimage_firmware and not reimage_driver,
                                    naples_host_only=True)
         return types.status.SUCCESS
 
@@ -699,7 +708,7 @@ class _Testbed:
                     switch_ctx.password = nw.SwitchPassword
                     switch_ctx.ip = nw.SwitchIP
                     switch_ctx.ports.append(nw.Name)
-      
+
         vlans = self.GetVlanRange()
         for ip, switch in switch_ips.items():
              unsetMsg.vlan_config.unset = True
@@ -752,7 +761,7 @@ class _Testbed:
                     switch_ctx.ip = nw.SwitchIP
                     switch_ctx.ports.append(nw.Name)
                     setUpSwitchQos(switch_ctx)
-      
+
         vlans = self.GetVlanRange()
         for ip, switch in switch_ips.items():
              setMsg.vlan_config.unset = False

@@ -35,10 +35,6 @@ uplink:
         mode    : switch
         status  : UP
         origin  : implicitly-created
-dhcprelay:
-    - vpcid    : 100
-      serverip : '20.20.8.1'
-      agentip  : '1.1.1.1'
 
 vpc:
     - id         : 100
@@ -165,7 +161,7 @@ vpc:
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : 
+              remoteroutes :
                     - '10.0.0.0\8'
               ipcount      : 1
 
@@ -192,7 +188,7 @@ vpc:
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : 
+              remoteroutes :
                     - '10.0.0.0\8'
               ipcount      : 1
 
@@ -219,7 +215,7 @@ vpc:
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : 
+              remoteroutes :
                     - '10.0.0.0\8'
               ipcount      : 1
 
@@ -246,7 +242,7 @@ vpc:
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : 
+              remoteroutes :
                     - '10.0.0.0\8'
               ipcount      : 1
 
@@ -273,7 +269,7 @@ vpc:
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : 
+              remoteroutes :
                     - '10.0.0.0\8'
               ipcount      : 1
 
@@ -300,7 +296,7 @@ vpc:
               public    : false
               tagged    : false         # true or false (default true)
               origin    : discovered
-              remoteroutes : 
+              remoteroutes :
                     - '10.0.0.0\8'
               ipcount      : 1
 

@@ -74,10 +74,11 @@ def __update_nexthops_from_uplink_info():
         api.Logger.info(f"Updated {num} NH Objects in {targetNode}")
     return
 
-
 def Main(args):
     defs.DOL_PATH = "/iota/"
     defs.TEST_TYPE = "IOTA"
+    dhcprelayspec = api.GetDHCPRelayInfo()
+    EzAccessStore.SetDHCPRelayInfo(dhcprelayspec)
     for node, cfgyml in vars(args.spec).items():
         api.Logger.info(f"Generating Configuration for Spec {cfgyml}")
         cfgspec = parser.ParseFile('test/apulu/config/cfg/', '%s'%cfgyml)

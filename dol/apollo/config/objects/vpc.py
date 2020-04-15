@@ -113,6 +113,10 @@ class VpcObject(base.ConfigObjectBase):
             # Nothing to be done for underlay vpc
             return
 
+        # Generate DHCP configuration
+        if self.IsUnderlayVPC():
+            DHCPRelayClient.GenerateObjects(node, self.VPCId, spec)
+
         # Generate NextHop configuration
         NhClient.GenerateObjects(node, self, spec)
 

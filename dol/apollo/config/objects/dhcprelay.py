@@ -1,11 +1,11 @@
 #! /usr/bin/python3
-import pdb
 import ipaddress
 import json
 
 from infra.common.logging import logger
 
 from apollo.config.store import client as EzAccessStoreClient
+from apollo.config.store import EzAccessStore
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
 
@@ -151,20 +151,22 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
             return True
         return False
 
-    def GenerateObjects(self, node, dhcpspec):
-        def __add_dhcp_relay_config(dhcpspec):
-            vpcid = dhcpspec.vpcid
-            serverip = ipaddress.ip_address(dhcpspec.serverip)
-            agentip = ipaddress.ip_address(dhcpspec.agentip)
+    def GenerateObjects(self, node, vpcid, topospec=None):
+        def __add_dhcp_relay_config(node, dhcpobj):
+            serverip = ipaddress.ip_address(dhcpobj.serverip)
+            agentip = ipaddress.ip_address(dhcpobj.agentip)
             obj = DhcpRelayObject(node, vpcid, serverip, agentip)
             self.Objs[node].update({obj.Id: obj})
 
-        dhcprelaySpec = getattr(dhcpspec, 'dhcprelay', None)
+        dhcprelaySpec = EzAccessStore.GetDHCPRelayInfo()
         if not dhcprelaySpec:
-            return
+            if topospec:
+                dhcprelaySpec = getattr(topospec, 'dhcprelay', None)
+            if not dhcprelaySpec:
+                return
 
-        for dhcp_relay_spec_obj in dhcprelaySpec:
-            __add_dhcp_relay_config(dhcp_relay_spec_obj)
+        for dhcpobj in dhcprelaySpec:
+            __add_dhcp_relay_config(node, dhcpobj)
         EzAccessStoreClient[node].SetDhcpRelayObjects(self.Objects(node))
         ResmgrClient[node].CreateDHCPRelayAllocator()
         return

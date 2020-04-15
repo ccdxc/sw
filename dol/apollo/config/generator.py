@@ -110,10 +110,6 @@ def __generate(node, topospec):
     # Generate Policer config
     PolicerClient.GenerateObjects(node, topospec)
 
-    # Generate DHCP configuration
-    # TODO: move it under underlay_vpc
-    DHCPRelayClient.GenerateObjects(node, topospec)
-
     # Generate security policy configuration
     SecurityProfileClient.GenerateObjects(node, topospec)
 
@@ -142,7 +138,7 @@ def __create(node):
 
     if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
         # Cannot extend batch across controlplane hijacked objects
-        # when Overlay routing is enabled 
+        # when Overlay routing is enabled
         # Commit the Batch
         BatchClient.Commit(node)
         # Start a new Batch

@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 from infra.common.objects   import ObjectDatabase as ObjectDatabase
-from infra.common.logging   import logger as logger
 from infra.config.store     import ConfigStore as ConfigStore
 import infra.common.defs as defs
 
@@ -12,6 +11,7 @@ class EzAccessStore:
     specs = ConfigStore.specs
     dutNode = 1
     configClientDict = dict()
+    dhcprelayConfig = None
 
 # Class members
     def __init__(self, node):
@@ -192,6 +192,14 @@ class EzAccessStore:
         for nhg in self.nexthopgroups.GetAllInList():
             if nhg.IsOverlay() and nhg.DualEcmp: nhgs.append(nhg)
         return nhgs
+
+    @staticmethod
+    def SetDHCPRelayInfo(configobj):
+        EzAccessStore.dhcprelayConfig = configobj
+
+    @staticmethod
+    def GetDHCPRelayInfo():
+        return EzAccessStore.dhcprelayConfig
 
     def GetDhcpRelayObjects(self):
         return self.dhcprelayObjs.GetAllInList()

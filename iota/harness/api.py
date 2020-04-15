@@ -286,7 +286,7 @@ def GetPrimaryIntNicMgmtIp():
 
 def GetPrimaryIntNicMgmtIpNext():
     ip=store.GetPrimaryIntNicMgmtIp()
-    nxt = str((int(re.search('\.([\d]+)$',ip).group(1))+1)%255)  
+    nxt = str((int(re.search('\.([\d]+)$',ip).group(1))+1)%255)
     ip=re.sub('\.([\d]+)$','.'+nxt,ip)
     return ip
 
@@ -417,6 +417,9 @@ def Testbed_GetVlanCount():
 def Testbed_GetVlanBase():
     return store.GetTestbed().GetVlanBase()
 
+def GetDHCPRelayInfo():
+    return store.GetTestbed().GetDHCPRelayInfo()
+
 def Abort():
     return store.GetTestbed().GetCurrentTestsuite().Abort()
 
@@ -432,7 +435,7 @@ def ShutDataPorts(nodes, num_ports_per_node = 1, start_port = 1):
 def UnShutDataPorts(nodes, num_ports_per_node = 1, start_port = 1):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().UnShutDataPorts(nodes,
         num_ports_per_node, start_port)
-   
+
 def DisablePfcPorts(node_names):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().DisablePfcPorts(node_names)
 
@@ -753,7 +756,7 @@ def TriggerMove(req):
     result = types.status.SUCCESS
     for idx in range(len(resp.workload_moves)):
         move_resp = resp.workload_moves[idx]
-        if move_resp.api_response.api_status == types_pb2.API_STATUS_OK: 
+        if move_resp.api_response.api_status == types_pb2.API_STATUS_OK:
             for wl in store_wloads:
                 if wl.workload_name == move_resp.workload_name:
                     Logger.info("Workload move success %s %s -> %s" % (wl.workload_name, wl.node_name, move_resp.dst_node_name))
@@ -1054,7 +1057,7 @@ def ReInstallImage(fw_version=None, dr_version=None):
     """
     # FIXME: Eventually, this will invoke gl_topo_svc_stub.InstallImage
     # for now, piggy-backing on existing py-harness impl
-    req = { 
+    req = {
             'InstallFirmware' : fw_version != None,
             'FirmwareVersion' : fw_version,
             'InstallDriver'   : dr_version != None,
