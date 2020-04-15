@@ -220,7 +220,12 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     return this.clusterService.DeleteDistributedServiceCard(object.meta.name);
   }
   generateDeleteConfirmMsg(object: ClusterDistributedServiceCard): string {
-    return 'Are you sure you want to delete DSC ' + object.meta.name;
+    let confirmMsg = 'Are you sure you want to delete DSC ';
+    if (object.spec['mgmt-mode'] === ClusterDistributedServiceCardSpec_mgmt_mode.host &&
+        object.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted) {
+      confirmMsg = 'DSC decommissioning is not completed, are you sure you want to delete DSC ';
+    }
+    return confirmMsg + object.meta.name + '?';
   }
   generateDeleteSuccessMsg(object: ClusterDistributedServiceCard): string {
     return 'Deleted DSC ' + object.meta.name;
@@ -1268,4 +1273,3 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.handleForkJoin(observables, summary, objectType);
   }
 }
-
