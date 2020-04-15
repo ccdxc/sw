@@ -8,7 +8,9 @@ import (
 	"sort"
 	"time"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
 	baseModel "github.com/pensando/sw/iota/test/venice/iotakit/model/base"
@@ -23,6 +25,7 @@ import (
 // SysModel represents a objects.of the system under test
 type SysModel struct {
 	baseModel.SysModel
+	sgpolicies map[string]*objects.NetworkSecurityPolicy // security policies
 }
 
 //Init init the testbed
@@ -44,6 +47,7 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSe
 	//Setup license for overlay routing
 	sm.Licenses = []string{"OverlayRouting"}
 
+	sm.sgpolicies = make(map[string]*objects.NetworkSecurityPolicy)
 	sm.CfgModel = enterprise.NewCfgModel(cfgType)
 	if sm.CfgModel == nil {
 		return errors.New("could not initialize config objects")
@@ -399,9 +403,43 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 	return sm.SetupWorkloads(scale)
 }
 
+// NetworkSecurityPolicy finds an SG policy by name
+func (sm *SysModel) NetworkSecurityPolicy(name string) *objects.NetworkSecurityPolicyCollection {
+	pol, ok := sm.sgpolicies[name]
+	if !ok {
+		pol := objects.NewNetworkSecurityPolicyCollection(nil, sm.ObjClient(), sm.Tb)
+		pol.SetError(fmt.Errorf("Policy %v not found", name))
+		log.Infof("Error %v", pol.Error())
+		return pol
+	}
+
+	policyCollection := objects.NewNetworkSecurityPolicyCollection(pol, sm.ObjClient(), sm.Tb)
+	policyCollection.Policies = []*objects.NetworkSecurityPolicy{pol}
+	return policyCollection
+}
+
 //DefaultNetworkSecurityPolicy no default policies
 func (sm *SysModel) DefaultNetworkSecurityPolicy() *objects.NetworkSecurityPolicyCollection {
 	return nil
+}
+
+// NewNetworkSecurityPolicy nodes on the fly
+func (sm *SysModel) NewNetworkSecurityPolicy(name string) *objects.NetworkSecurityPolicyCollection {
+	policy := &objects.NetworkSecurityPolicy{
+		VenicePolicy: &security.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      name,
+			},
+			Spec: security.NetworkSecurityPolicySpec{
+				AttachTenant: true,
+			},
+		},
+	}
+	sm.sgpolicies[name] = policy
+	return objects.NewNetworkSecurityPolicyCollection(policy, sm.ObjClient(), sm.Tb)
 }
 
 // FindFwlogForWorkloadPairsFromObjStore find fwlog pairs
