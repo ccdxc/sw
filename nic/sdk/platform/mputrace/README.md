@@ -278,10 +278,6 @@ Following is a sample config.json file for reference -
     1 Copy the following files into the container
         - the dump file from 'captrace dump' command
         - /nic/conf/gen/mpu_prog_info.json file from the naples device
-    2 Generate captrace.syms symbol file in container (from /sw/nic dir).
-        - sdk/platform/mputrace/captrace.py gen_syms --pipeline=<pipeline>
-            - <pipeline> can be iris or apollo or artemis or gft
-        - this will generate captrace.syms in nic/
     2 Run captrace.py script on the binary with mpu_prog_info.conf and
       captrace.syms files
         To decode the trace dump file
@@ -290,6 +286,13 @@ Following is a sample config.json file for reference -
             sdk/platform/mputrace/captrace.py decode captrace.bin --fltr phv_timestamp_capture=0x1c07a80c --load=mpu_prog_info.json --sym=captrace.syms > pkt1c07.log
         To dump info about the packet
             grep -e pipeline -e stage -e PROGRAM -e BRANCH -e table_hit pkt1c07.log
+
+For some reason, if you can't find captrace.syms in your workspace you can generate it by doing:
+
+        - cd /sw/nic/
+        - sdk/platform/mputrace/captrace.py gen_syms --pipeline=<pipeline>
+            - <pipeline> can be iris or apollo or artemis or gft
+        - this will generate captrace.syms in nic/
 
 5. captrace_collect.py
     captrace_collect.py is a simple tool that automates the above steps to collect and decode.

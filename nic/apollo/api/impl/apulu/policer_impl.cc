@@ -33,7 +33,7 @@ program_vnic_policer_rx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
 {
     p4pd_table_properties_t tbl_props = { 0 };
 
-    p4pd_table_properties_get(P4TBL_ID_VNIC_POLICER_RX, &tbl_props);
+    p4pd_global_table_properties_get(P4TBL_ID_VNIC_POLICER_RX, &tbl_props);
     PROGRAM_POLICER_TABLE_ENTRY(policer, vnic_policer_rx,
                                 P4TBL_ID_VNIC_POLICER_RX,
                                 VNIC_POLICER_RX_VNIC_POLICER_RX_ID, idx, upd,
@@ -45,7 +45,7 @@ program_vnic_policer_tx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
 {
     p4pd_table_properties_t tbl_props = { 0 };
 
-    p4pd_table_properties_get(P4TBL_ID_VNIC_POLICER_TX, &tbl_props);
+    p4pd_global_table_properties_get(P4TBL_ID_VNIC_POLICER_TX, &tbl_props);
     PROGRAM_POLICER_TABLE_ENTRY(policer, vnic_policer_tx,
                                 P4TBL_ID_VNIC_POLICER_TX,
                                 VNIC_POLICER_TX_VNIC_POLICER_TX_ID, idx, upd,
@@ -304,7 +304,7 @@ policer_impl::fill_spec_(pds_policer_spec_t *spec) {
         POLICER_READ_HW_ENTRY(rx_data.vnic_policer_rx_info.rate, rate);
         POLICER_READ_HW_ENTRY(rx_data.vnic_policer_rx_info.burst, burst);
 
-        p4pd_table_properties_get(P4TBL_ID_VNIC_POLICER_RX, &tbl_props);
+        p4pd_global_table_properties_get(P4TBL_ID_VNIC_POLICER_RX, &tbl_props);
         if (rx_data.vnic_policer_rx_info.pkt_rate) {
             spec->type = sdk::POLICER_TYPE_PPS;
             sdk::policer_token_to_rate(rate, burst,
@@ -326,7 +326,7 @@ policer_impl::fill_spec_(pds_policer_spec_t *spec) {
         POLICER_READ_HW_ENTRY(tx_data.vnic_policer_tx_info.rate, rate);
         POLICER_READ_HW_ENTRY(tx_data.vnic_policer_tx_info.burst, burst);
 
-        p4pd_table_properties_get(P4TBL_ID_VNIC_POLICER_TX, &tbl_props);
+        p4pd_global_table_properties_get(P4TBL_ID_VNIC_POLICER_TX, &tbl_props);
         if (tx_data.vnic_policer_tx_info.pkt_rate) {
             spec->type = sdk::POLICER_TYPE_PPS;
             sdk::policer_token_to_rate(rate, burst,

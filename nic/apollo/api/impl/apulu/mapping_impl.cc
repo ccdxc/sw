@@ -1346,58 +1346,6 @@ mapping_impl::add_overlay_ip_mapping_entries_(vpc_impl *vpc,
     return ret;
 }
 
-static inline sdk_ret_t
-local_mapping_tag_fill_class_id_ (local_mapping_tag_info_entry_t *tag_entry,
-                                  uint32_t idx, uint32_t class_id) {
-    switch (idx) {
-    case 0:
-        tag_entry->classid0 = class_id;
-        break;
-    case 1:
-        tag_entry->classid1 = class_id;
-        break;
-    case 2:
-        tag_entry->classid2 = class_id;
-        break;
-    case 3:
-        tag_entry->classid3 = class_id;
-        break;
-    case 4:
-        tag_entry->classid4 = class_id;
-        break;
-    default:
-        PDS_TRACE_ERR("Invalid class id index %u for mapping", idx);
-        return SDK_RET_INVALID_ARG;
-    }
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-mapping_tag_fill_class_id_ (mapping_tag_info_entry_t *tag_entry,
-                            uint32_t idx, uint32_t class_id) {
-    switch (idx) {
-    case 0:
-        tag_entry->classid0 = class_id;
-        break;
-    case 1:
-        tag_entry->classid1 = class_id;
-        break;
-    case 2:
-        tag_entry->classid2 = class_id;
-        break;
-    case 3:
-        tag_entry->classid3 = class_id;
-        break;
-    case 4:
-        tag_entry->classid4 = class_id;
-        break;
-    default:
-        PDS_TRACE_ERR("Invalid class id index %u for mapping", idx);
-        return SDK_RET_INVALID_ARG;
-    }
-    return SDK_RET_OK;
-}
-
 sdk_ret_t
 mapping_impl::program_local_mapping_tag_entries_(void) {
     sdk_ret_t ret;

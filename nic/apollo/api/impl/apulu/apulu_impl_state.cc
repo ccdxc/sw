@@ -67,12 +67,12 @@ apulu_impl_state::apulu_impl_state(pds_state *state) {
     // NAT table bookkeeping (reserve 0th entry for no xlation)
     // NOTE: 1st half of the table is used for config and 2nd half by VPP
     //       for dynamic bindings
-    p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
+    p4pd_global_table_properties_get(P4TBL_ID_NAT, &tinfo);
     nat_idxr_ = rte_indexer::factory(tinfo.tabledepth >> 1, true, true);
     SDK_ASSERT(nat_idxr_ != NULL);
 
     // DNAT table bookkeeping
-    p4pd_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_DNAT, &tinfo);
+    p4pd_global_table_properties_get(P4_P4PLUS_TXDMA_TBL_ID_DNAT, &tinfo);
     dnat_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(dnat_idxr_ != NULL);
 }

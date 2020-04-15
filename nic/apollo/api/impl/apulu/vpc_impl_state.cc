@@ -79,7 +79,7 @@ vpc_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     p4pd_table_properties_t tinfo;
 
     memset(&stats, 0, sizeof(pds_table_stats_t));
-    p4pd_table_properties_get(P4TBL_ID_VNI_OTCAM, &tinfo);
+    p4pd_global_table_properties_get(P4TBL_ID_VNI_OTCAM, &tinfo);
     stats.table_name = tinfo.tablename;
     vni_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);

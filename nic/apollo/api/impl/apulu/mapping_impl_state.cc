@@ -42,9 +42,12 @@ const int k_dhcp_ctl_port = 7911;
 /// \@{
 
 mapping_impl_state::mapping_impl_state(pds_state *state) {
-    p4pd_table_properties_t       tinfo;
-    sdk_table_factory_params_t    tparams;
-    dhcpctl_status                dhcpctl = 0;
+    sdk_ret_t ret;
+    dhcpctl_status dhcpctl = 0;
+    p4pd_table_properties_t tinfo;
+    sdk_table_factory_params_t tparams;
+    mapping_tag_info_entry_t mapping_tag_data;
+    local_mapping_tag_info_entry_t local_mapping_tag_data;
 
     // instantiate P4 tables for bookkeeping
     bzero(&tparams, sizeof(tparams));
@@ -72,18 +75,37 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     SDK_ASSERT(rxdma_mapping_tbl_ != NULL);
 
     // instantiate indexer for rxdma LOCAL_MAPPING_TAG table
-    p4pd_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_LOCAL_MAPPING_TAG, &tinfo);
+    p4pd_global_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_LOCAL_MAPPING_TAG,
+                                     &tinfo);
     local_mapping_tag_idxr_ = rte_indexer::factory(tinfo.tabledepth,
                                                    false, true);
     SDK_ASSERT(local_mapping_tag_idxr_ != NULL);
 
     // instantiate indexer for rxdma MAPPING_TAG table
-    p4pd_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_MAPPING_TAG, &tinfo);
+    p4pd_global_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_MAPPING_TAG,
+                                     &tinfo);
     mapping_tag_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
     SDK_ASSERT(mapping_tag_idxr_ != NULL);
+#if 0
+
+    // program reserved entry of LOCAL_MAPPING_TAG & MAPPING_TAG with reserved
+    // class id
+    memset(&local_mapping_tag_data, 0, local_mapping_tag_data.entry_size());
+    memset(&mapping_tag_data, 0, mapping_tag_data.entry_size());
+    for (uint32_t i = 0; i < PDS_MAX_TAGS_PER_MAPPING; i++) {
+        local_mapping_tag_fill_class_id_(&local_mapping_tag_data, i,
+                                         PDS_IMPL_RSVD_MAPPING_CLASS_ID);
+        mapping_tag_fill_class_id_(&mapping_tag_data, i,
+                                   PDS_IMPL_RSVD_MAPPING_CLASS_ID);
+    }
+    ret = local_mapping_tag_data.write(PDS_IMPL_RSVD_TAG_HW_ID);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    ret = mapping_tag_data.write(PDS_IMPL_RSVD_TAG_HW_ID);
+    SDK_ASSERT(ret == SDK_RET_OK);
+#endif
 
     // instantiate indexer for binding table
-    p4pd_table_properties_get(P4TBL_ID_IP_MAC_BINDING, &tinfo);
+    p4pd_global_table_properties_get(P4TBL_ID_IP_MAC_BINDING, &tinfo);
     ip_mac_binding_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(ip_mac_binding_idxr_ != NULL);
 
@@ -140,19 +162,20 @@ mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     p4pd_table_properties_t tinfo;
 
     memset(&stats, 0, sizeof(pds_table_stats_t));
-    p4pd_table_properties_get(P4TBL_ID_LOCAL_MAPPING, &tinfo);
+    p4pd_global_table_properties_get(P4TBL_ID_LOCAL_MAPPING, &tinfo);
     stats.table_name = tinfo.tablename;
     local_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
 
     memset(&stats, 0, sizeof(pds_table_stats_t));
-    p4pd_table_properties_get(P4TBL_ID_MAPPING, &tinfo);
+    p4pd_global_table_properties_get(P4TBL_ID_MAPPING, &tinfo);
     stats.table_name = tinfo.tablename;
     mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
 
     memset(&stats, 0, sizeof(pds_table_stats_t));
-    p4pd_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_RXDMA_MAPPING, &tinfo);
+    p4pd_global_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_RXDMA_MAPPING,
+                                     &tinfo);
     stats.table_name = tinfo.tablename;
     rxdma_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);

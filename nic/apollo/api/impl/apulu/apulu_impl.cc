@@ -62,7 +62,7 @@ apulu_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
     for (uint32_t tableid = p4pd_tableid_min_get();
          tableid < p4pd_tableid_max_get(); tableid++) {
         p4pd_table_properties_t tbl_ctx;
-        if (p4pd_table_properties_get(tableid, &tbl_ctx) != P4PD_FAIL) {
+        if (p4pd_global_table_properties_get(tableid, &tbl_ctx) != P4PD_FAIL) {
             sort_compare.add_table(std::string(tbl_ctx.tablename), tbl_ctx);
         }
     }

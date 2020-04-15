@@ -25,6 +25,7 @@
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_ftl.h"
 
 using sdk::table::handle_t;
 using sdk::table::sdk_table_api_params_t;
@@ -670,6 +671,58 @@ private:
     // class id(s) of this mapping
     uint32_t    class_id_[PDS_MAX_TAGS_PER_MAPPING];
 };
+
+static inline sdk_ret_t
+local_mapping_tag_fill_class_id_ (local_mapping_tag_info_entry_t *tag_entry,
+                                  uint32_t idx, uint32_t class_id) {
+    switch (idx) {
+    case 0:
+        tag_entry->classid0 = class_id;
+        break;
+    case 1:
+        tag_entry->classid1 = class_id;
+        break;
+    case 2:
+        tag_entry->classid2 = class_id;
+        break;
+    case 3:
+        tag_entry->classid3 = class_id;
+        break;
+    case 4:
+        tag_entry->classid4 = class_id;
+        break;
+    default:
+        PDS_TRACE_ERR("Invalid class id index %u for mapping", idx);
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+mapping_tag_fill_class_id_ (mapping_tag_info_entry_t *tag_entry,
+                            uint32_t idx, uint32_t class_id) {
+    switch (idx) {
+    case 0:
+        tag_entry->classid0 = class_id;
+        break;
+    case 1:
+        tag_entry->classid1 = class_id;
+        break;
+    case 2:
+        tag_entry->classid2 = class_id;
+        break;
+    case 3:
+        tag_entry->classid3 = class_id;
+        break;
+    case 4:
+        tag_entry->classid4 = class_id;
+        break;
+    default:
+        PDS_TRACE_ERR("Invalid class id index %u for mapping", idx);
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
 
 /// \@}
 

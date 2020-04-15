@@ -507,7 +507,7 @@ program_copp_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
     // skip policer programming in non-h/w platforms as the token refresh logic
     // is not activated in those platforms
     if (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
-        p4pd_table_properties_get(P4TBL_ID_COPP, &tbl_props);
+        p4pd_global_table_properties_get(P4TBL_ID_COPP, &tbl_props);
         PROGRAM_POLICER_TABLE_ENTRY(policer, copp, P4TBL_ID_COPP,
                                     COPP_COPP_ID, idx, upd,
                                     tbl_props.token_refresh_rate);
