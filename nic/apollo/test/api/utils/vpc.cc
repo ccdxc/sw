@@ -110,8 +110,7 @@ vpc_read (vpc_feeder& feeder, sdk_ret_t exp_result)
 }
 
 static void
-vpc_attr_update (vpc_feeder& feeder, pds_vpc_spec_t *spec,
-                    uint64_t chg_bmap)
+vpc_attr_update (vpc_feeder& feeder, pds_vpc_spec_t *spec, uint64_t chg_bmap)
 {
     if (bit_isset(chg_bmap, VPC_ATTR_TYPE)) {
         feeder.spec.type = spec->type;

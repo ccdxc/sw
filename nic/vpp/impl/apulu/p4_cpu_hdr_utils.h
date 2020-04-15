@@ -41,6 +41,13 @@
 #define VPP_P4_TO_ARM_HDR_SZ               APULU_P4_TO_ARM_HDR_SZ
 
 always_inline bool
+pds_is_rx_pkt (vlib_buffer_t *p0)
+{
+    return (vnet_buffer(p0)->pds_flow_data.flags &
+            VPP_CPU_FLAGS_RX_PKT_VALID) ? true : false;
+}
+
+always_inline bool
 pds_is_rflow (vlib_buffer_t *p0)
 {
     return (vnet_buffer(p0)->pds_flow_data.flags &

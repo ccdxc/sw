@@ -1,6 +1,16 @@
 ---
 version: 2.0
 targets:
+  apulu/all-cloud-pipeline-builds:
+    commands: ["echo", "cloud builds"]
+    owners: ["email:kalyanbade@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apollo-x86
+    - build-artemis-x86
+
   apulu/gtest_1:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest_1"]
     owners: ["email:jcruz@pensando.io"]

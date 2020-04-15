@@ -343,6 +343,18 @@ str2ipv4pfx (char *str, ip_prefix_t *ip_pfx)
 }
 
 static inline int
+str2ipv4pfx (char *str, ipv4_prefix_t *ip_pfx)
+{
+    ip_prefix_t pfx;
+
+    if (str2ipv4pfx(str, &pfx) != 0)
+        return -1;
+    ip_pfx->len = pfx.len;
+    ip_pfx->v4_addr = pfx.addr.addr.v4_addr;
+    return 0;
+}
+
+static inline int
 str2ipv6pfx (char *str, ip_prefix_t *ip_pfx)
 {
     char              *slash;

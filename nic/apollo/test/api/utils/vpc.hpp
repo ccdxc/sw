@@ -102,6 +102,13 @@ API_READ(vpc);
 API_UPDATE(vpc);
 API_DELETE(vpc);
 
+// VPC crud helper prototypes
+void vpc_create(vpc_feeder& feeder);
+void vpc_read(vpc_feeder& feeder, sdk_ret_t exp_result = SDK_RET_OK);
+void vpc_update(vpc_feeder& feeder, pds_vpc_spec_t *spec,
+                uint64_t chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
+void vpc_delete(vpc_feeder& feeder);
+
 // Misc function prototypes
 void sample_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type);
 void sample_vpc_setup_validate(pds_vpc_type_t type);

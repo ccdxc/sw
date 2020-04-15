@@ -539,7 +539,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             }
         } else if (vnet_buffer2(p0)->pds_nat_data.xlate_idx) {
             // static NAT
-            if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_RX_PKT_VALID) {
+            if (pds_is_rx_pkt(p0)) {
                 r_src_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
             } else {
                 r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;

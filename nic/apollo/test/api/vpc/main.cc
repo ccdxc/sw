@@ -317,6 +317,45 @@ TEST_F(vpc, vpc_workflow_neg_8) {
     workflow_neg_8<vpc_feeder>(feeder1, feeder2);
 }
 
+//---------------------------------------------------------------------
+// Non templatized test cases
+//---------------------------------------------------------------------
+
+/// \brief update type
+TEST_F(vpc, vpc_update_type) {
+    if (!apulu()) return;
+
+    vpc_feeder feeder;
+    pds_vpc_spec_t spec;
+    pds_obj_key_t key = int2pdsobjkey(1);
+
+    feeder.init(key, PDS_VPC_TYPE_UNDERLAY, "10.0.0.0/16", "00:02:01:00:00:01");
+    vpc_create(feeder);
+    spec.type = PDS_VPC_TYPE_TENANT;  // change vpc type
+    vpc_update(feeder, &spec, VPC_ATTR_TYPE, SDK_RET_ERR);
+    feeder.init(key, PDS_VPC_TYPE_UNDERLAY, "10.0.0.0/16", "00:02:01:00:00:01");
+    vpc_read(feeder);
+    vpc_delete(feeder);
+    vpc_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update v4 prefix
+TEST_F(vpc, vpc_update_v4_prefix) {
+    if (!apulu()) return;
+
+    vpc_feeder feeder;
+    pds_vpc_spec_t spec;
+    pds_obj_key_t key = int2pdsobjkey(1);
+
+    feeder.init(key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", "00:02:01:00:00:01");
+    vpc_create(feeder);
+    str2ipv4pfx((char *)"20.0.0.0/16", &spec.v4_prefix);
+    vpc_update(feeder, &spec, VPC_ATTR_V4_PREFIX);
+    vpc_read(feeder);
+    vpc_delete(feeder);
+    vpc_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
 /// @}
 
 }    // namespace api

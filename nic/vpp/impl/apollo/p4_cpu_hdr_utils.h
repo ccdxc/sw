@@ -28,6 +28,12 @@
 #define VPP_P4_TO_ARM_HDR_SZ               APOLLO_P4_TO_ARM_HDR_SZ
 
 always_inline bool
+pds_is_rx_pkt (vlib_buffer_t *p0)
+{
+    return false;
+}
+
+always_inline bool
 pds_is_rflow (vlib_buffer_t *p0)
 {
     return false;
