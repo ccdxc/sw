@@ -122,6 +122,7 @@ func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Int
 	// convert agent's netif struct to the api object
 	netif := convertNetifObj(nodeID, agentNetif)
 
+	agentNetif.Status.DSC = nodeID
 	// store it in local DB
 	sm.mbus.AddObject(agentNetif)
 

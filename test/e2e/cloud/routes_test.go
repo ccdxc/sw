@@ -710,7 +710,7 @@ var _ = Describe("Cloud E2E", func() {
 							VirtualRouter: v.Name,
 							IPv4Subnet:    fmt.Sprintf("10.%d.%d.1/24", i, j),
 							IPv4Gateway:   fmt.Sprintf("10.%d.%d.1", i, j),
-							VxlanVNI:      uint32(10000*i + j + 1),
+							VxlanVNI:      uint32(10000*i + j + k),
 							RouteImportExport: &network.RDSpec{
 								AddressFamily: network.BGPAddressFamily_L2vpnEvpn.String(),
 								ExportRTs: []*network.RouteDistinguisher{

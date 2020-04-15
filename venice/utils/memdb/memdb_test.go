@@ -4738,3 +4738,562 @@ func TestMemdbCtrlWatchTopo(t *testing.T) {
 		}
 	}
 }
+
+func TestMemdbCtrlWatchVrfUpdate(t *testing.T) {
+	// create a new memdb
+	md := NewMemdb()
+
+	kinds := []string{"SecurityProfile", "IPAMPolicy", "RouteTable", "Vrf", "NetworkSecurityPolicy", "Network", "RoutingConfig"}
+	// set watch flags
+	wFlags := map[string]uint{}
+	for _, kind := range kinds {
+		wFlags[kind] = ControllerWatchFilter
+	}
+
+	md.SetWatchFilterFlags(wFlags)
+
+	watchers := []Watcher{}
+	for i := 0; i < 3; i++ {
+		w := Watcher{}
+		w.Channel = make(chan Event, WatchLen)
+		w.Name = fmt.Sprintf("00:00:00:00:00:0%d", i+1)
+		watchers = append(watchers, w)
+	}
+
+	for _, k := range kinds {
+		for _, w := range watchers {
+			md.WatchObjects(k, &w)
+		}
+	}
+
+	ipam := []*netproto.IPAMPolicy{
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "ipam-def",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "ipam-test1",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "ipam-def1",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+	}
+
+	for _, x := range ipam {
+		err := md.AddObject(x)
+		AssertOk(t, err, "ipam add failed")
+	}
+
+	vrf := &netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "tenant1",
+			Name:      "vrf-test",
+			Namespace: "default",
+		},
+
+		Spec: netproto.VrfSpec{
+			IPAMPolicy: "ipam-def",
+		},
+	}
+
+	vrf1 := &netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "tenant1",
+			Name:      "vrf-test",
+			Namespace: "default",
+		},
+
+		Spec: netproto.VrfSpec{
+			IPAMPolicy: "ipam-def1",
+		},
+	}
+
+	err := md.AddObject(vrf)
+	AssertOk(t, err, "vrf add failed")
+
+	nw := []*netproto.Network{
+		&netproto.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "network-test1",
+				Namespace: "default",
+			},
+			Spec: netproto.NetworkSpec{
+				VrfName: "vrf-test",
+			},
+		},
+		&netproto.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "network-test2",
+				Namespace: "default",
+			},
+			Spec: netproto.NetworkSpec{
+				VrfName: "vrf-test",
+			},
+		},
+		&netproto.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "network-test3",
+				Namespace: "default",
+			},
+			Spec: netproto.NetworkSpec{
+				VrfName:    "vrf-test",
+				IPAMPolicy: "ipam-test1",
+			},
+		},
+	}
+
+	for _, n := range nw {
+		err = md.AddObject(n)
+		AssertOk(t, err, "nw add failed")
+	}
+
+	nwIf := []*netproto.Interface{
+		&netproto.Interface{
+			TypeMeta: api.TypeMeta{Kind: "Interface"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant",
+				Name:      "netif-test1",
+				Namespace: "default",
+			},
+			Spec: netproto.InterfaceSpec{
+				VrfName: "tenant1",
+				Network: "network-test1",
+			},
+			Status: netproto.InterfaceStatus{
+				DSC: "00:00:00:00:00:01",
+			},
+		},
+		&netproto.Interface{
+			TypeMeta: api.TypeMeta{Kind: "Interface"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant",
+				Name:      "netif-test2",
+				Namespace: "default",
+			},
+			Spec: netproto.InterfaceSpec{
+				VrfName: "tenant1",
+				Network: "network-test2",
+			},
+			Status: netproto.InterfaceStatus{
+				DSC: "00:00:00:00:00:02",
+			},
+		},
+		&netproto.Interface{
+			TypeMeta: api.TypeMeta{Kind: "Interface"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant",
+				Name:      "netif-test3",
+				Namespace: "default",
+			},
+			Spec: netproto.InterfaceSpec{
+				VrfName: "tenant1",
+				Network: "network-test3",
+			},
+			Status: netproto.InterfaceStatus{
+				DSC: "00:00:00:00:00:03",
+			},
+		},
+	}
+
+	for _, i := range nwIf {
+		err = md.AddObject(i)
+		AssertOk(t, err, "nwIf add failed")
+	}
+
+	for _, w := range watchers {
+		cnt := 0
+		for true {
+			_, err = waitForWatch(t, w.Channel)
+			Assert(t, (err == nil), "Received invalid object", err)
+			cnt++
+			if cnt == 5 {
+				break
+			}
+		}
+	}
+
+	fmt.Println(md.topoHandler.dump())
+
+	for _, ww := range watchers {
+		if dscDB, ok := md.dscWatcherInfo[ww.Name]; ok {
+			fmt.Println(dscDB.dump())
+		}
+	}
+	err = md.UpdateObject(vrf1)
+	AssertOk(t, err, "vrf update failed")
+
+	fmt.Println(md.topoHandler.dump())
+	for _, ww := range watchers {
+		if dscDB, ok := md.dscWatcherInfo[ww.Name]; ok {
+			fmt.Println(dscDB.dump())
+		}
+	}
+	for _, w := range watchers {
+		cnt := 0
+		for true {
+			_, err = waitForWatch(t, w.Channel)
+			Assert(t, (err == nil), "Received invalid object", err)
+			cnt++
+			if w.Name == "00:00:00:00:00:03" && cnt == 1 {
+				break
+			}
+			if cnt == 2 {
+				break
+			}
+		}
+	}
+}
+
+func TestMemdbCtrlWatchNwUpdate(t *testing.T) {
+	// create a new memdb
+	md := NewMemdb()
+
+	kinds := []string{"SecurityProfile", "IPAMPolicy", "RouteTable", "Vrf", "NetworkSecurityPolicy", "Network", "RoutingConfig"}
+	// set watch flags
+	wFlags := map[string]uint{}
+	for _, kind := range kinds {
+		wFlags[kind] = ControllerWatchFilter
+	}
+
+	md.SetWatchFilterFlags(wFlags)
+
+	watchers := []Watcher{}
+	for i := 0; i < 3; i++ {
+		w := Watcher{}
+		w.Channel = make(chan Event, WatchLen)
+		w.Name = fmt.Sprintf("00:00:00:00:00:0%d", i+1)
+		watchers = append(watchers, w)
+	}
+
+	for _, k := range kinds {
+		for _, w := range watchers {
+			md.WatchObjects(k, &w)
+		}
+	}
+
+	ipam := []*netproto.IPAMPolicy{
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "ipam-def",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "ipam-test1",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+		&netproto.IPAMPolicy{
+			TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "ipam-def1",
+				Namespace: "default",
+			},
+			Spec: netproto.IPAMPolicySpec{
+				DHCPRelay: &netproto.DHCPRelayPolicy{},
+			},
+			Status: netproto.IPAMPolicyStatus{},
+		},
+	}
+
+	for _, x := range ipam {
+		err := md.AddObject(x)
+		AssertOk(t, err, "ipam add failed")
+	}
+
+	vrf := &netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "tenant1",
+			Name:      "vrf-test",
+			Namespace: "default",
+		},
+
+		Spec: netproto.VrfSpec{
+			IPAMPolicy: "ipam-def",
+		},
+	}
+
+	err := md.AddObject(vrf)
+	AssertOk(t, err, "vrf add failed")
+
+	nw := []*netproto.Network{
+		&netproto.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "network-test1",
+				Namespace: "default",
+			},
+			Spec: netproto.NetworkSpec{
+				VrfName:    "vrf-test",
+				IPAMPolicy: "ipam-test1",
+			},
+		},
+		&netproto.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "network-test2",
+				Namespace: "default",
+			},
+			Spec: netproto.NetworkSpec{
+				VrfName:    "vrf-test",
+				IPAMPolicy: "ipam-test1",
+			},
+		},
+		&netproto.Network{
+			TypeMeta: api.TypeMeta{Kind: "Network"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "network-test3",
+				Namespace: "default",
+			},
+			Spec: netproto.NetworkSpec{
+				VrfName:    "vrf-test",
+				IPAMPolicy: "ipam-test1",
+			},
+		},
+	}
+
+	for _, n := range nw {
+		err = md.AddObject(n)
+		AssertOk(t, err, "nw add failed")
+	}
+
+	sgpolicy := []*netproto.NetworkSecurityPolicy{
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "sgpolicy-test1",
+				Namespace: "default",
+			},
+		},
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "sgpolicy-test2",
+				Namespace: "default",
+			},
+		},
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "sgpolicy-test3",
+				Namespace: "default",
+			},
+		},
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "sgpolicy-test4",
+				Namespace: "default",
+			},
+		},
+		&netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant1",
+				Name:      "sgpolicy-test5",
+				Namespace: "default",
+			},
+		},
+	}
+
+	for _, sg := range sgpolicy {
+		err = md.AddObject(sg)
+		AssertOk(t, err, "sgpolicy add failed")
+	}
+
+	nwIf := []*netproto.Interface{
+		&netproto.Interface{
+			TypeMeta: api.TypeMeta{Kind: "Interface"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant",
+				Name:      "netif-test1",
+				Namespace: "default",
+			},
+			Spec: netproto.InterfaceSpec{
+				VrfName: "tenant1",
+				Network: "network-test1",
+			},
+			Status: netproto.InterfaceStatus{
+				DSC: "00:00:00:00:00:01",
+			},
+		},
+		&netproto.Interface{
+			TypeMeta: api.TypeMeta{Kind: "Interface"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant",
+				Name:      "netif-test2",
+				Namespace: "default",
+			},
+			Spec: netproto.InterfaceSpec{
+				VrfName: "tenant1",
+				Network: "network-test2",
+			},
+			Status: netproto.InterfaceStatus{
+				DSC: "00:00:00:00:00:02",
+			},
+		},
+		&netproto.Interface{
+			TypeMeta: api.TypeMeta{Kind: "Interface"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "tenant",
+				Name:      "netif-test3",
+				Namespace: "default",
+			},
+			Spec: netproto.InterfaceSpec{
+				VrfName: "tenant1",
+				Network: "network-test3",
+			},
+			Status: netproto.InterfaceStatus{
+				DSC: "00:00:00:00:00:03",
+			},
+		},
+	}
+
+	for _, i := range nwIf {
+		err = md.AddObject(i)
+		AssertOk(t, err, "nwIf add failed")
+	}
+
+	for _, w := range watchers {
+		cnt := 0
+		for true {
+			_, err = waitForWatch(t, w.Channel)
+			Assert(t, (err == nil), "Received invalid object", err)
+			cnt++
+			if cnt == 5 {
+				break
+			}
+		}
+	}
+
+	for _, ww := range watchers {
+		if dscDB, ok := md.dscWatcherInfo[ww.Name]; ok {
+			fmt.Println(dscDB.dump())
+		}
+	}
+
+	nw1 := &netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "tenant1",
+			Name:      "network-test1",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			VrfName:               "vrf-test",
+			IPAMPolicy:            "ipam-test1",
+			IngV4SecurityPolicies: []string{"sgpolicy-test1"},
+			EgV4SecurityPolicies:  []string{"sgpolicy-test2"},
+		},
+	}
+
+	err = md.UpdateObject(nw1)
+	AssertOk(t, err, "nw update failed")
+
+	fmt.Println(md.topoHandler.dump())
+	for _, ww := range watchers {
+		if dscDB, ok := md.dscWatcherInfo[ww.Name]; ok {
+			fmt.Println(dscDB.dump())
+		}
+	}
+
+	cnt := 0
+	for true {
+		_, err = waitForWatch(t, watchers[0].Channel)
+		Assert(t, (err == nil), "Received invalid object", err)
+		cnt++
+		if cnt == 2 {
+			break
+		}
+	}
+
+	nw2 := &netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "tenant1",
+			Name:      "network-test1",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			VrfName:               "vrf-test",
+			IngV4SecurityPolicies: []string{"sgpolicy-test1"},
+			EgV4SecurityPolicies:  []string{"sgpolicy-test3", "sgpolicy-test4"},
+		},
+	}
+
+	err = md.UpdateObject(nw2)
+	AssertOk(t, err, "nw update failed")
+
+	fmt.Println(md.topoHandler.dump())
+	for _, ww := range watchers {
+		if dscDB, ok := md.dscWatcherInfo[ww.Name]; ok {
+			fmt.Println(dscDB.dump())
+		}
+	}
+
+	cnt = 0
+	for true {
+		_, err = waitForWatch(t, watchers[0].Channel)
+		Assert(t, (err == nil), "Received invalid object", err)
+		cnt++
+		if cnt == 3 {
+			break
+		}
+	}
+}
