@@ -6076,8 +6076,6 @@ if_cpu_lif_interface_create (void)
         goto end;
     }
 
-    hal::hal_cfg_db_close();
-
     // Create cpu lif
     ret = program_cpu_lif();
     if (ret != HAL_RET_OK) {
@@ -6091,8 +6089,6 @@ if_cpu_lif_interface_create (void)
         HAL_TRACE_ERR("Unable to create cpu if. err: {}", ret);
         goto end;
     }
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
 
     cpu_if_done = true;
 end:

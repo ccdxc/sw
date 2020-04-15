@@ -22,6 +22,7 @@
 #include "gen/proto/delphi.pb.h"
 #include "gen/proto/ftestats/ftestats.delphi.hpp"
 #include "nic/hal/pd/hal_pd.hpp"
+#include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 
 #define FTE_EXPORT_STATS_SIZE     7
 #define FTE_LIFQ_METRICS_OFFSET   32
@@ -385,14 +386,23 @@ void inst_t::ctx_mem_init()
 //------------------------------------------------------------------------------
 void inst_t::start(sdk::lib::thread *curr_thread)
 {
+    hal_ret_t  ret;
+
     hal::hal_cfg_t *hal_cfg = (hal::hal_cfg_t *)curr_thread->data();
     SDK_ASSERT(hal_cfg);
 
     HAL_TRACE_INFO("Starting FTE instance");
     HAL_TRACE_FLUSH();
-    if (hal::is_platform_type_hw() && !getenv("DISABLE_FWLOG")) {
-        logger_ = ipc_logger::factory();
-        SDK_ASSERT(logger_);
+    if (hal::is_platform_type_hw()) {
+
+        // Create CPU IF and program CPU LIF
+        ret = hal::if_cpu_lif_interface_create();
+        SDK_ASSERT(ret == HAL_RET_OK);
+
+        if (!getenv("DISABLE_FWLOG")) {
+            logger_ = ipc_logger::factory();
+            SDK_ASSERT(logger_);
+        }
     }
 
     /*
