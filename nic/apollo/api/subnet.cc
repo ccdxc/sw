@@ -325,17 +325,22 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
 
 sdk_ret_t
 subnet_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
+    uint64_t vnic_upd_bmap = 0;
     subnet_upd_ctxt_t upd_ctxt = { 0 };
 
     // if either policy or route table is updated, we need to fix
     // vnic programming in the datapath
     if ((obj_ctxt->upd_bmap & PDS_SUBNET_UPD_POLICY) ||
         (obj_ctxt->upd_bmap & PDS_SUBNET_UPD_ROUTE_TABLE)) {
+        if (obj_ctxt->upd_bmap & PDS_SUBNET_UPD_POLICY) {
+            vnic_upd_bmap |= PDS_VNIC_UPD_POLICY;
+        }
+        if (obj_ctxt->upd_bmap & PDS_SUBNET_UPD_ROUTE_TABLE) {
+            vnic_upd_bmap |= PDS_VNIC_UPD_ROUTE_TABLE;
+        }
         upd_ctxt.subnet = this;
         upd_ctxt.obj_ctxt = obj_ctxt;
-        upd_ctxt.upd_bmap =
-            obj_ctxt->upd_bmap & (PDS_VNIC_UPD_POLICY |
-                                  PDS_VNIC_UPD_ROUTE_TABLE);
+        upd_ctxt.upd_bmap = vnic_upd_bmap;
         return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
     }
     // in all other cases, it is sufficient to contain the update

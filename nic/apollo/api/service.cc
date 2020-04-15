@@ -62,7 +62,7 @@ svc_mapping::clone(api_ctxt_t *api_ctxt) {
     cloned_mapping = svc_mapping_db()->alloc();
     if (cloned_mapping) {
         new (cloned_mapping) svc_mapping();
-        if (cloned_mapping->init_config(api_ctxt) != NULL) {
+        if (cloned_mapping->init_config(api_ctxt) != SDK_RET_OK) {
             goto error;
         }
         cloned_mapping->impl_ = impl_->clone();

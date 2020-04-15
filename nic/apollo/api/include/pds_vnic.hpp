@@ -77,7 +77,7 @@ typedef struct pds_vnic_spec_s {
     /// if metering is true, when traffic from a vnic hits a route with
     /// metering enabled, such traffic is accounted (bytes & packets)
     /// against the vnic
-    bool     meter;
+    bool     meter_en;
 } __PACK__ pds_vnic_spec_t;
 
 /// \brief VNIC status

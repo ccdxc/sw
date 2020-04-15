@@ -71,7 +71,7 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     proto_spec->set_primary(api_spec->primary);
     proto_spec->set_maxsessions(api_spec->max_sessions);
     proto_spec->set_flowlearnen(api_spec->flow_learn_en);
-    proto_spec->set_meteren(api_spec->meter);
+    proto_spec->set_meteren(api_spec->meter_en);
 }
 
 // populate proto buf status from vnic API status
@@ -199,8 +199,8 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     api_spec->primary = proto_spec.primary();
     api_spec->max_sessions = proto_spec.maxsessions();
     api_spec->flow_learn_en = proto_spec.flowlearnen();
-    api_spec->meter = proto_spec.meteren();
+    api_spec->meter_en = proto_spec.meteren();
     return SDK_RET_OK;
 }
 
-#endif    //__AGENT_SVC_VNIC_SVC_HPP__ 
+#endif    //__AGENT_SVC_VNIC_SVC_HPP__

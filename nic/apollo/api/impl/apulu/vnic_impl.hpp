@@ -33,6 +33,9 @@ namespace impl {
 /// \ingroup PDS_VNIC
 /// @{
 
+// initial epoch value when vnic is created
+#define PDS_IMPL_VNIC_EPOCH_START          0x0
+
 /// \brief VNIC implementation
 class vnic_impl : public impl_base {
 public:
@@ -167,6 +170,10 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief     return vnic's current epoch
+    /// \return    epoch of the vnic
+    uint8_t epoch(void) const { return epoch_; }
+
     /// \brief     return vnic's h/w id
     /// \return    h/w id assigned to the vnic
     uint16_t hw_id(void) const { return hw_id_; }
@@ -192,9 +199,11 @@ public:
 
     /// \brief      accessor API for hash table context
     ht_ctxt_t *ht_ctxt(void) { return &ht_ctxt_; }
+
 private:
     /// \brief constructor
     vnic_impl() {
+        epoch_ = PDS_IMPL_VNIC_EPOCH_START;
         hw_id_ = 0xFFFF;
         nh_idx_ = 0xFFFF;
         local_mapping_hdl_ = handle_t::null();
@@ -305,6 +314,7 @@ private:
 
 private:
     // P4 datapath specific state
+    uint8_t epoch_;                    ///< datapath epoch of the vnic
     uint16_t hw_id_;                   ///< hardware id
     uint16_t nh_idx_;                  ///< nexthop table index for this vnic
     ///< handle for LOCAL_MAPPING and MAPPING table entries (note that handles

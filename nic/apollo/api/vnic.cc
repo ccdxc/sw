@@ -30,6 +30,7 @@ vnic_entry::vnic_entry() {
     switch_vnic_ = false;
     binding_checks_en_ = false;
     host_if_ = k_pds_obj_key_invalid;
+    meter_en_ = false;
     ht_ctxt_.reset();
     impl_ = NULL;
 }
@@ -177,6 +178,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
             return SDK_RET_INVALID_ARG;
         }
     }
+    meter_en_ = spec->meter_en;
     return SDK_RET_OK;
 }
 
@@ -266,6 +268,9 @@ vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
         (tx_policer_ != spec->tx_policer)) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_POLICER;
     }
+    if (meter_en_ != spec->meter_en) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_METER_EN;
+    }
     PDS_TRACE_DEBUG("vnic %s upd bmap 0x%lx", key_.str(), obj_ctxt->upd_bmap);
     return SDK_RET_OK;
 }
@@ -286,7 +291,8 @@ vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 sdk_ret_t
 vnic_entry::reprogram_config(api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Reprogramming vnic %s, subnet %s, fabric encap %s, ",
-                    key_.str(), subnet_.str() , pds_encap2str(&fabric_encap_));
+                    "upd bmap 0x%lx", key_.str(), subnet_.str(),
+                    pds_encap2str(&fabric_encap_), obj_ctxt->upd_bmap);
     return impl_->reprogram_hw(this, obj_ctxt);
 }
 

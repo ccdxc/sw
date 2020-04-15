@@ -37,6 +37,9 @@
 #define ing_vnic_info                 action_u.vnic_vnic_info
 #define nexthop_info                  action_u.nexthop_nexthop_info
 
+// compute next vnic epoch given current epoch
+#define PDS_IMPL_VNIC_EPOCH_NEXT(epoch)    ((++(epoch)) & 0xFF)
+
 namespace api {
 namespace impl {
 
@@ -665,7 +668,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
     // program vnic table entry in the ingress pipeline
     vnic_data.action_id = VNIC_VNIC_INFO_ID;
-    vnic_data.ing_vnic_info.meter_enabled = spec->meter;
+    vnic_data.ing_vnic_info.epoch = epoch_;
+    vnic_data.ing_vnic_info.meter_enabled = spec->meter_en;
     vnic_data.ing_vnic_info.rx_mirror_session = spec->rx_mirror_session_bmap;
     vnic_data.ing_vnic_info.tx_mirror_session = spec->tx_mirror_session_bmap;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC, hw_id_,
@@ -729,6 +733,8 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     pds_obj_key_t lif_key;
     pds_obj_key_t vpc_key;
     pds_vnic_spec_t *spec;
+    p4pd_error_t p4pd_ret;
+    vnic_actiondata_t vnic_data;
     nexthop_info_entry_t nh_data;
     vnic_entry *vnic = (vnic_entry *)curr_obj;
 
@@ -775,7 +781,28 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         subnet = subnet_find(&spec->subnet);
         vpc_key = subnet->vpc();
         vpc = vpc_find(&vpc_key);
-        return program_vnic_info_((vnic_entry *)curr_obj, vpc, subnet);
+        ret = program_vnic_info_((vnic_entry *)curr_obj, vpc, subnet);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to update rxdma VNIC_INFO table for "
+                          "vnic %s, err %u", spec->key.str(), ret);
+            return ret;
+        }
+    }
+
+    // if mirror sessions or metering enable/disable config changed, update
+    // ingress VNIC table entry
+    if (obj_ctxt->upd_bmap & PDS_VNIC_UPD_METER_EN) {
+        // do read-modify-update of the VNIC table entry
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC, hw_id_,
+                                          NULL, NULL, &vnic_data);
+        vnic_data.ing_vnic_info.meter_enabled = spec->meter_en;
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC, hw_id_,
+                                           NULL, NULL, &vnic_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program vnic %s ingress VNIC table "
+                          "entry at %u", spec->key.str(), hw_id_);
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
     }
     return SDK_RET_OK;
 }
@@ -1013,7 +1040,7 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
 sdk_ret_t
 vnic_impl::activate_update_(pds_epoch_t epoch, vnic_entry *vnic,
                             vnic_entry *orig_vnic, api_obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
     vpc_entry *vpc;
     subnet_entry *subnet;
     pds_vnic_spec_t *spec;
@@ -1060,6 +1087,8 @@ vnic_impl::activate_update_(pds_epoch_t epoch, vnic_entry *vnic,
     // delete old impl and insert cloned impl into ht
     vnic_impl_db()->remove(hw_id_);
     vnic_impl_db()->insert(hw_id_, this);
+    return SDK_RET_OK;
+
 end:
 
     return ret;
@@ -1096,28 +1125,44 @@ vnic_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
 
 sdk_ret_t
 vnic_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t ret;
     vpc_entry *vpc;
     vnic_entry *vnic;
     subnet_entry *subnet;
+    p4pd_error_t p4pd_ret;
     pds_obj_key_t vpc_key;
     pds_obj_key_t subnet_key;
+    vnic_actiondata_t vnic_data;
 
     // the only programming that we need to do when vnic is in the dependent
-    // list is to update the vnic info table in rxdma
-#if 0
-    if ((octxt->upd_bmap & PDS_VNIC_UPD_POLICY) ||
-        (octxt->upd_bmap & PDS_VNIC_UPD_ROUTE_TABLE)) {
-#endif
+    // list is to update the vnic info table in rxdma for policy and route
+    // table updates
+    if (obj_ctxt->upd_bmap & (PDS_VNIC_UPD_POLICY | PDS_VNIC_UPD_ROUTE_TABLE)) {
         vnic = (vnic_entry *)api_obj;
         subnet_key = vnic->subnet();
         subnet = subnet_find(&subnet_key);
         vpc_key = subnet->vpc();
         vpc = vpc_find(&vpc_key);
-        return program_vnic_info_((vnic_entry *)api_obj, vpc, subnet);
-#if 0
+        ret = program_vnic_info_((vnic_entry *)api_obj, vpc, subnet);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+
+        // update the epoch
+        // do read-modify-update of the VNIC table entry
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC, hw_id_,
+                                          NULL, NULL, &vnic_data);
+        vnic_data.ing_vnic_info.epoch = PDS_IMPL_VNIC_EPOCH_NEXT(epoch_);
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC, hw_id_,
+                                           NULL, NULL, &vnic_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program vnic %s ingress VNIC table "
+                          "entry at %u", vnic->key2str().c_str(), hw_id_);
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
+        return SDK_RET_OK;
     }
-#endif
-    //return SDK_RET_OK;
+    // not expecting any other recursive updates at this point
+    SDK_ASSERT(FALSE);
+    return SDK_RET_OK;
 }
 
 void

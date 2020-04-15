@@ -189,7 +189,7 @@ meter_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
 
     upd_ctxt.meter = this;
     upd_ctxt.obj_ctxt = obj_ctxt;
-    upd_ctxt.upd_bmap = PDS_VNIC_UPD_METER;
+    upd_ctxt.upd_bmap = PDS_VNIC_UPD_METER_POLICY;
     return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
 }
 
