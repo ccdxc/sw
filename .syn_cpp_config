@@ -1,0 +1,10 @@
+-I .
+-I ./nic
+-I ./nic/sdk
+-I ./nic/sdk/third-party/libev/include
+-I ./nic/build/x86_64/iris/capri
+-I ./nic/build/aarch64/iris/capri
+-I ./nic/hal/third-party/spdlog/include
+-D__FNAME__
+-std=c++11
+

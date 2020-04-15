@@ -28,6 +28,7 @@
 #include "nic/sdk/include/sdk/if.hpp"
 #include "gen/proto/types.pb.h"
 #include "nic/hal/src/internal/cpulif.hpp"
+#include "nic/sdk/lib/utils/port_utils.hpp"
 
 #define TNNL_ENC_TYPE intf::IfTunnelEncapType
 
@@ -5584,6 +5585,79 @@ port_event_cb (port_event_info_t *port_event_info)
                              ctxt,
                              (sdk::lib::twheel_cb_t)port_event_timer_cb,
                              false);
+}
+
+static hal_ret_t 
+port_trigger_admin_state (port_args_t *port_args,
+                          port_admin_state_t admin_state)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    port_args->admin_state = admin_state;
+    port_args->auto_neg_enable = port_args->auto_neg_cfg;
+    port_args->num_lanes = port_args->num_lanes_cfg;
+    port_args->fec_type = port_args->user_fec_type;
+
+    hal_cfg_db_open(CFG_OP_WRITE);
+
+    // update the port params
+    ret = linkmgr::port_update(port_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("port_update failed for {}", 
+                      port_args->port_num);
+    }
+
+    hal_cfg_db_close();
+
+    return ret;
+}
+
+hal_ret_t
+port_update_type_admin_state (port_type_t port_type, 
+                              port_admin_state_t admin_state)
+{
+    uint32_t fp_port;
+    uint32_t ifindex;
+    uint32_t logical_port;
+    hal_ret_t ret = HAL_RET_OK;
+    port_args_t port_args = { 0 };
+    sdk::lib::catalog *catalog = g_hal_state->catalog();
+    uint32_t num_fp_ports = catalog->num_fp_ports();
+    uint64_t stats_data[MAX_MAC_STATS];
+
+    memset(stats_data, 0, sizeof(uint64_t) * MAX_MAC_STATS);
+
+    for (fp_port = 1; fp_port <= num_fp_ports; ++fp_port) {
+        sdk::linkmgr::port_args_init(&port_args);
+
+        ifindex = ETH_IFINDEX(
+                catalog->slot(), fp_port, ETH_IF_DEFAULT_CHILD_PORT);
+        logical_port = port_args.port_num =
+            sdk::lib::catalog::ifindex_to_logical_port(ifindex);
+
+        port_args.port_num = logical_port;
+        port_args.stats_data = stats_data;
+
+        ret = linkmgr::port_get(&port_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("port_get failed for {}", logical_port);
+            continue;
+        }
+        if (port_args.port_type != port_type) {
+            continue;
+        }
+
+        HAL_TRACE_DEBUG("Port: {}. Update admin state: {}",
+                        eth_ifindex_to_str(ifindex), 
+                        sdk::lib::port_admin_state_enum_to_uint(admin_state));
+        ret = port_trigger_admin_state(&port_args, admin_state);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to update admin state for port: {}, err: {}",
+                          eth_ifindex_to_str(ifindex), ret);
+        }
+    }
+
+    return ret;
 }
 
 // update admin state of all ports

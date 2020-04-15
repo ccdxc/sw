@@ -376,6 +376,12 @@ def switch_profile(fwd_mode="TRANSPARENT", policy_mode="BASENET", push=True,
     if push or push_base_profile:
         if len(objects):
             ret = PushConfigObjects(objects)
+            if ret == api.types.status.SUCCESS:
+                if fwd_mode == "INSERTION" and policy_mode == "ENFORCED":
+                    api.Logger.info("Waiting for %d sec for HAL "
+                                    "to flap uplinks " % (sleep_time))
+                    time.sleep(sleep_time)
+
         else:
             api.Logger.error("Empty Profile object")
             ret = api.types.status.FAILURE

@@ -450,6 +450,8 @@ hal_ret_t hal_if_inb_bond_active_changed(bool took_lock);
 if_t *find_tnnlif_by_dst_ip(IfTunnelEncapType encap_type, ip_addr_t *ip);
 if_t * if_pick_uplink_oper_up(void);
 hal_ret_t hal_if_repin_inb_enics(void);
+hal_ret_t port_update_type_admin_state(port_type_t port_type, 
+                                       port_admin_state_t admin_state);
 
 
 }    // namespace hal

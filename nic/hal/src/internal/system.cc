@@ -21,6 +21,8 @@
 
 namespace hal {
 
+#define HAL_MICRO_SEG_ENF_FLAP_TIME (60 * 1000)
+
 void
 api_stats_fill_entry (ApiStatsEntry *entry, ApiCounter type)
 {
@@ -856,6 +858,12 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             fte::fte_set_quiesce(0 /* FTE ID */, false);
 
             hal::g_hal_state->set_policy_mode(spec->policy_mode());
+
+            // Flap ports
+            ret = system_sched_to_flap_ports();
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to sched for ports flap. err {}", ret);
+            }
         }
     }
     
@@ -922,6 +930,12 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
 
             // 10. Mark Quiesce off in FTE
             fte::fte_set_quiesce(0 /* FTE ID */, false);
+
+            // Flap ports
+            ret = system_sched_to_flap_ports();
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to sched for ports flap. err {}", ret);
+            }
         }
     }
 
@@ -963,6 +977,12 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
 
             // 10. Mark Quiesce off in FTE
             fte::fte_set_quiesce(0 /* FTE ID */, false);
+
+            // Flap ports
+            ret = system_sched_to_flap_ports();
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to sched for ports flap. err {}", ret);
+            }
         }
     } 
 
@@ -971,9 +991,36 @@ end:
     return ret;
 }
 
-/*
- * Handle system policy & forward mode get
- */
+//----------------------------------------------------------------------------
+// Schedule to flap ports
+//----------------------------------------------------------------------------
+hal_ret_t
+system_sched_to_flap_ports (void)
+{
+    auto flap_cb = [](void *timer, uint32_t timer_id, void *ctxt) {
+        hal_ret_t ret = HAL_RET_OK;
+
+        HAL_TRACE_DEBUG("Flapping ports for VMs to trigger RARPs.");
+
+        ret = port_update_type_admin_state(port_type_t::PORT_TYPE_ETH,
+                            port_admin_state_t::PORT_ADMIN_STATE_DOWN);
+
+        ret = port_update_type_admin_state(port_type_t::PORT_TYPE_ETH,
+                            port_admin_state_t::PORT_ADMIN_STATE_UP);
+
+    };
+
+    HAL_TRACE_DEBUG("Scheduling timer to flap ports");
+    sdk::lib::timer_schedule(HAL_TIMER_ID_MICRO_SEG_ENF_FLAP,
+                             HAL_MICRO_SEG_ENF_FLAP_TIME,
+                             NULL, flap_cb, false);
+
+    return HAL_RET_OK;
+}
+
+//----------------------------------------------------------------------------
+// Handle system policy & forward mode get
+//----------------------------------------------------------------------------
 hal_ret_t 
 system_get_fwd_policy_mode(SysSpecGetResponse *rsp) {
    rsp->mutable_spec()->set_fwd_mode(hal::g_hal_state->fwd_mode());
