@@ -69,6 +69,8 @@ var (
 	errDuplicateSeveritiesInThreshold = errors.New("duplicate severities found in the threshold values")
 	// errInvalidThresholdValues is returned when threshold raise-values are invalid or not in order
 	errInvalidThresholdValues = errors.New("invalid threshold raise-value or the values are not in order")
+	// errInvalidAlertPolicyID is returned when incorrect alert policy id is found on the alert object
+	errInvalidAlertPolicyID = errors.New("invalid alert policy ID")
 )
 
 var (
@@ -194,9 +196,15 @@ func (a *alertHooks) updateStatus(ctx context.Context, kv kvstore.Interface, txn
 		}
 		userSelfLink := (&auth.User{ObjectMeta: *userMeta}).MakeURI("configs", "v1", "auth")
 
-		temp := strings.Split(alert.Status.Reason.GetPolicyID(), "/")
-		if len(temp) != 2 {
+		curAlertObj := &monitoring.Alert{}
+		aKey := (&monitoring.Alert{ObjectMeta: *alert.GetObjectMeta()}).MakeKey("monitoring")
+		if err := kv.Get(ctx, aKey, curAlertObj); err != nil {
+			a.logger.Errorf("failed to get alert object, err: %v", err)
 			return nil, false, errInvalidInputType
+		}
+		temp := strings.Split(curAlertObj.Status.Reason.GetPolicyID(), "/")
+		if len(temp) != 2 {
+			return nil, false, errInvalidAlertPolicyID
 		}
 		policyName, policyUUID := temp[0], temp[1]
 
@@ -208,7 +216,6 @@ func (a *alertHooks) updateStatus(ctx context.Context, kv kvstore.Interface, txn
 		}
 
 		// update alert
-		curAlertObj := &monitoring.Alert{}
 		alertUpdFn := a.getAlertUpdFunc(&flags)
 		reqs := []apiintf.ConstUpdateItem{
 			{Key: key, Func: alertUpdFn, Into: curAlertObj},
