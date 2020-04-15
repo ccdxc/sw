@@ -7,10 +7,12 @@ LOGMAXSZ=1048576
 log_init()
 {
     mkdir -p $LOGDIR
-    sz=`stat -c "%s" $LOGFILE`
-    if [ $sz -gt $LOGMAXSZ ]; then
-        [ -f ${LOGFILE}.1 ] && mv ${LOGFILE}.1 ${LOGFILE}.2
-        mv $LOGFILE ${LOGFILE}.1
+    if [ -f "$LOGFILE" ]; then
+	sz=`stat -c "%s" $LOGFILE`
+	if [ "$sz" -gt "$LOGMAXSZ" ]; then
+            [ -f ${LOGFILE}.1 ] && mv ${LOGFILE}.1 ${LOGFILE}.2
+            mv $LOGFILE ${LOGFILE}.1
+	fi
     fi
     exec >>$LOGFILE 2>&1
 }
