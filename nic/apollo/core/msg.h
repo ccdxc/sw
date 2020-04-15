@@ -45,8 +45,6 @@ typedef enum pds_msg_id_s {
     PDS_CFG_MSG_ID_SUBNET,
     /// NAT port block configuration
     PDS_CFG_MSG_ID_NAT_PORT_BLOCK,
-    /// NAT port block configuration get all
-    PDS_CFG_MSG_ID_NAT_PORT_BLOCK_GET_ALL,
     /// DHCP (suppresion) policy configuration
     PDS_CFG_MSG_ID_DHCP_POLICY,
     /// security profile configuration
@@ -55,6 +53,8 @@ typedef enum pds_msg_id_s {
     // TODO: should we punt event/alerts to shm directly
     PDS_CMD_MSG_ID_NONE,
     PDS_CMD_MSG_FLOW_CLEAR,
+    /// NAT port block configuration get
+    PDS_CMD_MSG_ID_NAT_PORT_BLOCK_GET,
     PDS_MSG_ID_MAX,
 } pds_msg_id_t;
 

@@ -15,6 +15,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_stooge.hpp"
 #include "nic/apollo/api/include/pds_nat.hpp"
+#include "nic/sdk/lib/ipc/ipc.hpp"
 
 namespace api {
 
@@ -82,7 +83,13 @@ public:
     /// \brief          read config
     /// \param[out]     info pointer to the info object
     /// \return         SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_nat_port_block_info_t *info);
+    static sdk_ret_t read(pds_nat_port_block_info_t *info);
+
+    /// \brief          read all config
+    /// \param[in]      cb      callback function
+    /// \param[in]      ctxt    opaque context passed to cb
+    /// \return         SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t read_all(nat_port_block_read_cb_t cb, void *ctxt);
 
     /// \brief          add given NAT port block to the database
     /// \return         SDK_RET_OK on success, failure status code on error

@@ -131,11 +131,16 @@ typedef struct pds_flow_clear_cmd_msg_s {
     pds_flow_key_t key;
 } pds_flow_clear_cmd_msg_t;
 
+typedef struct pds_nat_port_block_cmd_msg_s {
+    pds_obj_key_t key;
+} pds_nat_port_block_cmd_msg_t;
+
 /// command message sent or received
 typedef struct pds_cmd_msg_s {
     /// msg contents
     union {
         pds_flow_clear_cmd_msg_t flow_clear;
+        pds_nat_port_block_cmd_msg_t nat_port_block;
     };
 } pds_cmd_msg_t;
 

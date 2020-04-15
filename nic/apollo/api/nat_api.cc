@@ -69,8 +69,6 @@ sdk_ret_t
 pds_nat_port_block_read (_In_ pds_obj_key_t *key,
                          _Out_ pds_nat_port_block_info_t *info)
 {
-    pds_msg_t request;
-
     if (key == NULL || info == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }
@@ -78,66 +76,13 @@ pds_nat_port_block_read (_In_ pds_obj_key_t *key,
     memset(info, 0, sizeof(pds_nat_port_block_info_t));
     info->spec.key = *key;
 
-    memset(&request, 0, sizeof(request));
-
-    request.id = PDS_CFG_MSG_ID_NAT_PORT_BLOCK;
-    request.cfg_msg.op = API_OP_NONE;
-    request.cfg_msg.obj_id = OBJ_ID_NAT_PORT_BLOCK;
-    request.cfg_msg.nat_port_block.key = info->spec.key;
-
-    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
-                      sizeof(pds_msg_t), nat_port_block_read_cb, info);
-    if (info->spec.nat_ip_range.ip_lo.v4_addr == 0) {
-        return SDK_RET_ENTRY_NOT_FOUND;
-    }
-
-    return SDK_RET_OK;
-}
-
-typedef struct pds_nat_pb_read_all_cb_params_s {
-    nat_port_block_read_cb_t cb;
-    void *ctxt;
-} pds_nat_pb_read_all_cb_params_t;
-
-void
-pds_nat_pb_from_ipc_response (sdk::ipc::ipc_msg_ptr msg, const void *cookie)
-{
-    pds_nat_port_block_cmd_ctxt_t *reply = (pds_nat_port_block_cmd_ctxt_t *)msg->data();
-    pds_nat_pb_read_all_cb_params_t *params = (pds_nat_pb_read_all_cb_params_t *)cookie;
-    uint16_t num_pb = reply->num_entries;
-    pds_nat_port_block_cfg_msg_t *pb;
-    pds_nat_port_block_info_t info;
-
-    for (uint16_t i = 0; i < num_pb; i ++) {
-        pb = &reply->cfg[i];
-        info.spec = pb->spec;
-        info.status = pb->status;
-        info.stats = pb->stats;
-        params->cb(&info, params->ctxt);
-    }
+    return nat_port_block::read(info);
 }
 
 sdk_ret_t
 pds_nat_port_block_read_all (nat_port_block_read_cb_t cb, void *ctxt)
 {
-    pds_msg_t request;
-    pds_nat_pb_read_all_cb_params_t params;
-
-    memset(&request, 0, sizeof(request));
-
-    request.id = PDS_CFG_MSG_ID_NAT_PORT_BLOCK_GET_ALL;
-    request.cfg_msg.op = API_OP_NONE;
-    request.cfg_msg.obj_id = OBJ_ID_NAT_PORT_BLOCK;
-
-    params.cb = cb;
-    params.ctxt = ctxt;
-
-    if (api::g_pds_state.vpp_ipc_mock() == false) {
-        sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
-                          sizeof(pds_msg_t), pds_nat_pb_from_ipc_response, &params);
-    }
-
-    return SDK_RET_OK;
+    return nat_port_block::read_all(cb, ctxt);
 }
 
 sdk_ret_t

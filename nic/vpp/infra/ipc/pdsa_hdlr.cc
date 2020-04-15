@@ -164,7 +164,7 @@ static void
 cb_ipc_respond (sdk::ipc::ipc_msg_ptr ipc_msg, pds_msg_id_t id,
                 pds_cmd_ctxt_t *ctxt, sdk::sdk_ret_t ret) {
     switch (id) {
-    case PDS_CFG_MSG_ID_NAT_PORT_BLOCK_GET_ALL:
+    case PDS_CMD_MSG_ID_NAT_PORT_BLOCK_GET:
         {
             auto resp = ctxt->nat_ctxt;
             sdk::ipc::respond(ipc_msg, (const void *)resp,

@@ -192,65 +192,81 @@ pds_nat_cfg_get(pds_cfg_msg_t *cfg_msg) {
     return SDK_RET_OK;
 }
 
-bool
-pds_nat_iterate_cb(pds_nat_iterate_params_t *params)
+static void
+nat_pb_obj_get(pds_cfg_msg_t *cfg_msg, void *ctxt)
 {
-    pds_cmd_ctxt_t *ctxt = (pds_cmd_ctxt_t *)params->ctxt;
-    pds_nat_port_block_export_t *pb = params->pb;
-    pds_nat_port_block_cfg_msg_t *msg = &ctxt->nat_ctxt->cfg[ctxt->curr_count];
-    pds_nat_port_block_spec_t *spec = &msg->spec;
-    pds_nat_port_block_stats_t *stats = &msg->stats;
+    pds_cmd_ctxt_t *cmd_ctxt = (pds_cmd_ctxt_t *)ctxt;
+    pds_nat_port_block_cfg_msg_t *msg = &cmd_ctxt->nat_ctxt->cfg[cmd_ctxt->curr_count];
+    vpp_config_batch config_batch = vpp_config_batch::get();
 
-    if (ctxt->curr_count >= ctxt->nat_ctxt->num_entries) {
-        return true;
+    if (cmd_ctxt->curr_count >= cmd_ctxt->nat_ctxt->num_entries) {
+        return;
     }
 
-    memcpy(&spec->key.id, pb->id, PDS_MAX_KEY_LEN);
-    if (pb->address_type == NAT_ADDR_TYPE_INFRA) {
-        spec->address_type = ADDR_TYPE_SERVICE;
-    } else if (pb->address_type == NAT_ADDR_TYPE_INTERNET) {
-        spec->address_type = ADDR_TYPE_PUBLIC;
+    if ((msg->spec.key != k_pds_obj_key_invalid) &&
+        (msg->spec.key != cfg_msg->nat_port_block.spec.key)) {
+        return;
     }
-    spec->ip_proto = pb->protocol;
-    spec->nat_ip_range.af = IP_AF_IPV4;
-    spec->nat_ip_range.ip_lo.v4_addr = pb->addr;
-    spec->nat_ip_range.ip_hi.v4_addr = pb->addr;
-    spec->nat_port_range.port_lo = pb->start_port;
-    spec->nat_port_range.port_hi = pb->end_port;
 
-    stats->in_use_count = pb->in_use_cnt;
-    stats->session_count = pb->session_cnt;
-    ctxt->curr_count ++;
-    return false;
+    config_batch.read(*cfg_msg);
+    msg->spec = cfg_msg->nat_port_block.spec;
+    msg->stats = cfg_msg->nat_port_block.stats;
+
+    cmd_ctxt->curr_count ++;
 }
 
 static sdk::sdk_ret_t
-pdsa_nat_cfg_get_all(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
+pdsa_nat_cfg_get(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
 {
-    pds_nat_port_block_export_t pb;
-    pds_nat_iterate_params_t params;
+    vpp_config_data &config = vpp_config_data::get();
+    pds_cfg_msg_t cfg_msg;
 
-    params.itercb = pds_nat_iterate_cb;
-    params.pb = &pb;
-    params.ctxt = ctxt;
-    memset(pb.id, 0, sizeof(pb.id));
+    // get nat objs
+    cfg_msg.obj_id = OBJ_ID_NAT_PORT_BLOCK;
+    config.walk(cfg_msg, &nat_pb_obj_get, ctxt);
 
-    nat_pb_iterate(&params);
     return sdk::SDK_RET_OK;
+}
+
+static void
+nat_pb_obj_count_get (pds_cfg_msg_t *msg, void *ctxt)
+{
+    uint16_t *count = (uint16_t *)ctxt;
+    (*count)++;
 }
 
 static sdk::sdk_ret_t
 pdsa_nat_cfg_ctxt_init(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
 {
-    uint16_t num_port_blocks = nat_pb_count();
-    ctxt->nat_ctxt = (pds_nat_port_block_cmd_ctxt_t *)
-                     calloc(1, sizeof(uint16_t) +
-                            (num_port_blocks *
-                            sizeof(pds_nat_port_block_cfg_msg_t)));
-    if (ctxt->nat_ctxt == NULL) {
-        return sdk::SDK_RET_OOM;
+
+    if (msg->nat_port_block.key == k_pds_obj_key_invalid) {
+        // get all
+        uint16_t num_port_blocks = 0;
+        vpp_config_data &config = vpp_config_data::get();
+        pds_cfg_msg_t cfg_msg;
+
+        // get number of nat objs
+        cfg_msg.obj_id = OBJ_ID_NAT_PORT_BLOCK;
+        config.walk(cfg_msg, &nat_pb_obj_count_get, &num_port_blocks);
+        // alloc memory for nat objs
+        ctxt->nat_ctxt = (pds_nat_port_block_cmd_ctxt_t *)
+                         calloc(1, sizeof(uint16_t) +
+                                (num_port_blocks *
+                                sizeof(pds_nat_port_block_cfg_msg_t)));
+        if (ctxt->nat_ctxt == NULL) {
+            return sdk::SDK_RET_OOM;
+        }
+        ctxt->nat_ctxt->num_entries = num_port_blocks;
+    } else {
+        ctxt->nat_ctxt = (pds_nat_port_block_cmd_ctxt_t *)
+                         calloc(1, sizeof(uint16_t) +
+                                sizeof(pds_nat_port_block_cfg_msg_t));
+        if (ctxt->nat_ctxt == NULL) {
+            return sdk::SDK_RET_OOM;
+        }
+        ctxt->nat_ctxt->num_entries = 1;
+        ctxt->nat_ctxt->cfg[0].spec.key = msg->nat_port_block.key;
     }
-    ctxt->nat_ctxt->num_entries = num_port_blocks;
     return sdk::SDK_RET_OK;
 }
 
@@ -275,8 +291,8 @@ pds_nat_cfg_init(void) {
                                pds_nat_cfg_del,
                                pds_nat_cfg_act,
                                pds_nat_cfg_get);
-    pds_ipc_register_cmd_callbacks(PDS_CFG_MSG_ID_NAT_PORT_BLOCK_GET_ALL,
-                                   pdsa_nat_cfg_get_all,
+    pds_ipc_register_cmd_callbacks(PDS_CMD_MSG_ID_NAT_PORT_BLOCK_GET,
+                                   pdsa_nat_cfg_get,
                                    pdsa_nat_cfg_ctxt_init,
                                    pdsa_nat_cfg_ctxt_destroy);
 }
