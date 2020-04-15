@@ -875,14 +875,24 @@ ionic_qos_set_default_dscp(struct ionic_lif *lif, int tc, union ionic_qos_config
 	struct ionic_identity *ident = &ionic->ident;
 	union ionic_qos_config *search_qos;
 	int i, j;
-	int def_dscp = -1;
-	int tc_dscp = tc * (IONIC_QOS_DSCP_MAX/IONIC_QOS_TC_MAX);
-	bool tc_dscp_available = true;
+	int tc_dscp[IONIC_DSCP_BLOCK_SIZE] = {0};
 	uint64_t bitmap = 0;
+	int used_count = 0;
  
  	/*
-	 * By default, map the dscp to respective TC (TC <-> dscp one-to-one mapped);
-	 * if the dscp is already mapped to some other TC, pick the first available dscp
+	 * By default, map the dscp range to respective TC; 
+	 * 	default DSCP range is TC*8 - TC*8+8
+	 */
+	for (i = (tc * IONIC_DSCP_BLOCK_SIZE), j = 0; 
+		i < ((tc * IONIC_DSCP_BLOCK_SIZE) + IONIC_DSCP_BLOCK_SIZE); 
+		i ++, j ++) {
+		tc_dscp[j] = i;
+	}
+
+	qos->ndscp = 0;
+
+	/*
+	 * Get the bitmap of all the DSCPs mapped to all the TCs.
  	 */
 	for (i = 1; i < ionic->qos.max_tcs; i++) {
 		if (i == tc)
@@ -900,27 +910,56 @@ ionic_qos_set_default_dscp(struct ionic_lif *lif, int tc, union ionic_qos_config
 			bitmap |= BIT(search_qos->ip_dscp[j]);
  	}
  
-	if ((bitmap & BIT(tc_dscp)) != 0) {
-		tc_dscp_available = false;
-		def_dscp = -1;
-	} 
+	/*
+	 * if any of the dscp is already mapped to some other TC, unmap it.
+	 * if all the DSCPs are already mapped to other TCs, pick the first avlbl dscp
+	 */
 
-	if (!tc_dscp_available) {
-		/* TC dscp not available; pick the first free dscp */
-		for (i = tc_dscp; i < IONIC_QOS_DSCP_MAX; i++) {
+	for (i = 0; i < IONIC_DSCP_BLOCK_SIZE; i ++) {
+		if ((bitmap & BIT(tc_dscp[i])) != 0) {
+			/* dscp is already mapped to some other TC, unmap it. */
+			tc_dscp[i] = -1;
+			used_count ++;
+		}
+	}
+
+	if (used_count == IONIC_DSCP_BLOCK_SIZE) {
+		/* 
+		 * all the DSCPs are already mapped to other TCs, 
+		 * pick the first avlbl dscp 
+		 */
+
+		/* look at the higher range, first */
+		for (i = ((tc * IONIC_DSCP_BLOCK_SIZE) + IONIC_DSCP_BLOCK_SIZE); 
+			i < IONIC_QOS_DSCP_MAX; i ++) {
 			if ((bitmap & BIT(i)) == 0) {
-				def_dscp = i;
+				qos->ip_dscp[0] = i;
+				qos->ndscp = 1;
 				break;
 			}
 		}
-	} else {
-		def_dscp = tc_dscp;
-	}
+		if (qos->ndscp == 0) {
+			/* no DSCPs avlbl in higher range - look at lower range */
+			for (i = ((tc * IONIC_DSCP_BLOCK_SIZE)-1); i >= 0; i --) {
+				if ((bitmap & BIT(i)) == 0) {
+					qos->ip_dscp[0] = i;
+					qos->ndscp = 1;
+					break;
+				}
+			}
+		}
 
-	qos->ndscp = 0;
-	if (def_dscp != -1) {
-		qos->ndscp = 1;
-		qos->ip_dscp[0] = (uint8_t)def_dscp;
+		if (qos->ndscp == 0) {
+			/* no free DSCPs available */
+		}
+	} else {
+		for (i = 0, j = 0; i < IONIC_DSCP_BLOCK_SIZE; i ++) {
+			if (tc_dscp[i] != -1) {
+				qos->ip_dscp[j] = (uint8_t) tc_dscp[i];
+				qos->ndscp ++;
+				j++;
+			}
+		}
 	}
 }
 
@@ -1159,6 +1198,12 @@ ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable)
 		else if (lif->ionic->qos.class_type == IONIC_QOS_CLASS_TYPE_DSCP) {
 			qos->dot1q_pcp = 0;
 			ionic_qos_set_default_dscp(lif, tc, qos);
+			if(qos->ndscp == 0) {
+				IONIC_NETDEV_ERROR(ifp,
+					"Failed to find a free DSCP to map "
+					"to TC: %d", tc);
+				return (EINVAL);
+			}
 			qos->class_type = IONIC_QOS_CLASS_TYPE_DSCP;
 		}
 		else {
@@ -1300,6 +1345,12 @@ ionic_qos_class_type_update(struct ionic_lif *lif,
 		else if (qos->class_type == IONIC_QOS_CLASS_TYPE_DSCP) {
 			qos->dot1q_pcp = 0;
 			ionic_qos_set_default_dscp(lif, tc, qos);
+			if(qos->ndscp == 0) {
+				IONIC_NETDEV_ERROR(ifp,
+					"Failed to find a free DSCP to map "
+					"to TC: %d", tc);
+				return (EINVAL);
+			}
 		}
 		else {
 			IONIC_NETDEV_ERROR(ifp,
