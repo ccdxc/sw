@@ -10,7 +10,7 @@ endif
 export ASIC ?= capri
 
 # Lists excluded patterns to "go list"
-EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|bulkedit|vendor|bazel|e2etests|iota|buildroot|gometrics|netagent|dscagent|tsagent|tpagent|agent/tpa|nic/metaswitch/rtrctl/utils|nic/metaswitch/clientutils"
+EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|bulkedit|vendor|bazel|e2etests|iota|buildroot|gometrics|netagent|dscagent|tsagent|tpagent|agent/tpa|nic/metaswitch/rtrctl/utils|nic/metaswitch/clientutils|alertmgr"
 
 # these are run as part of integ test
 INTEG_TEST_PATTERNS := "sw.test.integ|api.integration|citadel.test.integ"

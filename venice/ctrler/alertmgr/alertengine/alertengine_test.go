@@ -74,15 +74,14 @@ func (m *mockMonitoringV1) Alert() monitoring.MonitoringV1AlertInterface {
 func (m *mockMonitoringV1) AlertPolicy() monitoring.MonitoringV1AlertPolicyInterface {
 	return nil
 }
+func (m *mockMonitoringV1) StatsAlertPolicy() monitoring.MonitoringV1StatsAlertPolicyInterface {
+	return nil
+}
 func (m *mockMonitoringV1) AlertDestination() monitoring.MonitoringV1AlertDestinationInterface {
 	return nil
 }
 func (m *mockMonitoringV1) MirrorSession() monitoring.MonitoringV1MirrorSessionInterface {
 	return nil
-}
-
-func (m *mockMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	return nil, nil
 }
 func (m *mockMonitoringV1) TroubleshootingSession() monitoring.MonitoringV1TroubleshootingSessionInterface {
 	return nil
@@ -90,9 +89,14 @@ func (m *mockMonitoringV1) TroubleshootingSession() monitoring.MonitoringV1Troub
 func (m *mockMonitoringV1) TechSupportRequest() monitoring.MonitoringV1TechSupportRequestInterface {
 	return nil
 }
-
 func (m *mockMonitoringV1) ArchiveRequest() monitoring.MonitoringV1ArchiveRequestInterface {
 	return nil
+}
+func (m *mockMonitoringV1) AuditPolicy() monitoring.MonitoringV1AuditPolicyInterface {
+	return nil
+}
+func (m *mockMonitoringV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	return nil, nil
 }
 
 func setup(t *testing.T) {
