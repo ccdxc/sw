@@ -397,6 +397,7 @@ TEST_F(subnet, subnet_update_vr_ip) {
     subnet_update(feeder, &spec, SUBNET_ATTR_V4_VRIP, SDK_RET_ERR);
 
     // validate
+    feeder.init(key, k_vpc_key, "10.0.0.0/16", "00:02:01:00:00:01");
     subnet_read(feeder);
 
     // cleanup
@@ -409,7 +410,7 @@ TEST_F(subnet, subnet_update_vr_mac) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
@@ -418,7 +419,7 @@ TEST_F(subnet, subnet_update_vr_mac) {
     uint64_t mac;
 
     // init
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", num_policies, start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
@@ -442,7 +443,7 @@ TEST_F(subnet, subnet_update_route_table) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
@@ -451,7 +452,7 @@ TEST_F(subnet, subnet_update_route_table) {
     uint64_t mac;
 
     // init
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", num_policies, start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
@@ -474,7 +475,7 @@ TEST_F(subnet, DISABLED_subnet_update_hostif) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
@@ -483,7 +484,7 @@ TEST_F(subnet, DISABLED_subnet_update_hostif) {
     uint64_t mac;
 
     // init
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", num_policies, start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
@@ -505,7 +506,7 @@ TEST_F(subnet, subnet_update_dhcp_policy) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
@@ -514,7 +515,7 @@ TEST_F(subnet, subnet_update_dhcp_policy) {
     uint64_t mac;
 
     // init
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", num_policies, start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
@@ -538,7 +539,7 @@ TEST_F(subnet, subnet_update_tos) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
@@ -547,7 +548,7 @@ TEST_F(subnet, subnet_update_tos) {
     uint64_t mac;
 
     // init
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", num_policies, start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
@@ -564,20 +565,98 @@ TEST_F(subnet, subnet_update_tos) {
     subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
+/// \brief Update fabric encap type
+TEST_F(subnet, subnet_update_fab_encap_type) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+    uint64_t mac;
+
+    // init
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    // trigger
+    spec.fabric_encap = feeder.spec.fabric_encap;
+    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+        spec.fabric_encap.val.vnid = 1;
+    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+        spec.fabric_encap.val.mpls_tag = 1;
+    }
+    subnet_update(feeder, &spec, SUBNET_ATTR_FAB_ENCAP, SDK_RET_ERR);
+
+    // validate
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_read(feeder);
+
+    // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Update fabric encap val
+TEST_F(subnet, subnet_update_fab_encap_val) {
+    if (!apulu()) return;
+
+    sdk_ret_t ret;
+    pds_obj_key_t key = int2pdsobjkey(10);
+    pds_subnet_spec_t spec = {0};
+    subnet_feeder feeder;
+    pds_batch_ctxt_t bctxt = batch_start();
+    uint8_t num_policies = 2;
+    uint8_t start_pol_index = 0;
+    uint64_t mac;
+
+    // init
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_create(feeder);
+    subnet_read(feeder, SDK_RET_OK);
+
+    // trigger
+    spec.fabric_encap = feeder.spec.fabric_encap;
+    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        spec.fabric_encap.val.mpls_tag++;
+    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        spec.fabric_encap.val.vnid++;
+    }
+    subnet_update(feeder, &spec, SUBNET_ATTR_FAB_ENCAP, SDK_RET_ERR);
+
+    // validate
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
+                "00:02:01:00:00:01", num_policies, start_pol_index);
+    subnet_read(feeder);
+
+    // cleanup
+    subnet_delete(feeder);
+    subnet_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
 /// \brief update policy - attach one policy P1 to subnet S1 and then update
 ///        S1 by adding P2 to S1 (so S1 ends up with P1 and P2)
 TEST_F(subnet, subnet_update_policy1) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
     uint8_t num_policies = 1;
     uint8_t start_pol_index = 0;
 
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", num_policies, start_pol_index);
 
     subnet_create(feeder);
@@ -599,14 +678,14 @@ TEST_F(subnet, subnet_update_policy2) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
     uint8_t num_policies = 1;
     uint8_t start_pol_index = 0;
 
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", 1, 1);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
@@ -627,14 +706,14 @@ TEST_F(subnet, subnet_update_policy3) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
     uint8_t num_policies = 2;
     uint8_t start_pol_index = 0;
 
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", 1, 1);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
@@ -666,14 +745,14 @@ TEST_F(subnet, subnet_update_policy4) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
     uint8_t num_policies = 2;
     uint8_t start_pol_index = 0;
 
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", num_policies, start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
@@ -694,14 +773,14 @@ TEST_F(subnet, subnet_update_policy5) {
     if (!apulu()) return;
 
     sdk_ret_t ret;
-    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key = int2pdsobjkey(10);
     pds_subnet_spec_t spec = {0};
     subnet_feeder feeder;
     pds_batch_ctxt_t bctxt = batch_start();
     uint8_t num_policies = 2;
     uint8_t start_pol_index = 0;
 
-    feeder.init(key1, k_vpc_key, "10.0.0.0/16",
+    feeder.init(key, k_vpc_key, "10.0.0.0/16",
                 "00:02:01:00:00:01", num_policies, start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);

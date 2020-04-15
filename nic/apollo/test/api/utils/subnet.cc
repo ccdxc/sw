@@ -146,6 +146,14 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
         return false;
     }
 
+    if (spec->v4_vr_ip != this->spec.v4_vr_ip) {
+        return false;
+    }
+
+    if (memcmp(&spec->v6_vr_ip, &this->spec.v6_vr_ip, sizeof(ip_addr_t))) {
+        return false;
+    }
+
     if (memcmp(&spec->fabric_encap, &this->spec.fabric_encap,
                sizeof(pds_encap_t))) {
         return false;
