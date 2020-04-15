@@ -12,6 +12,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_tbl_idx.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/apollo/learn/learn_api.hpp"
 #include <li_fte.hpp>
 #include <li_lipi_slave_join.hpp>
 #include <li_port.hpp>
@@ -275,7 +276,7 @@ NBB_BYTE li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) 
         // safe to release the cookie_uptr_ unique_ptr
         rc = ATG_ASYNC_COMPLETION;
         cookie = cookie_uptr_.release();
-        auto ret = pds_batch_commit(pds_bctxt_guard.release());
+        auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
         if (unlikely (ret != SDK_RET_OK)) {
             delete cookie;
             throw Error(std::string("Batch commit failed for Add-Update MS VRF ")
@@ -330,7 +331,7 @@ sdk_ret_t li_vrf_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
         // Ensure that state lock is released to avoid blocking NBASE thread
     } // End of state thread_context. Do Not access/modify global state
 
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         PDS_TRACE_ERR ("MS VRF %d: Add/Upd PDS Direct Update Batch commit"
                        "failed %d", ips_info_.vrf_id, ret);
@@ -404,7 +405,7 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for delete MS VRF ")
@@ -448,7 +449,7 @@ sdk_ret_t li_vrf_t::underlay_create_pds_synch(pds_vpc_spec_t& vpc_spec) {
     store_info_.route_tbl_obj = new_route_tbl_obj.get();
 
     auto pds_bctxt_guard = make_batch_pds_spec_(false /* sync */);
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         throw Error(std::string("Underlay VPC Create Batch commit failed")
                     .append(" err=").append(std::to_string(ret)));
@@ -500,7 +501,7 @@ li_vrf_underlay_vpc_delete_pds_synch (pds_obj_key_t& vpc_key)
         return ret;
     }
 
-    ret = pds_batch_commit(bctxt);
+    ret = learn::api_batch_commit(bctxt);
     if (unlikely (ret != SDK_RET_OK)) {
         PDS_TRACE_ERR ("Underlay VPC PDS Direct VPC Delete Batch commit failed for %s err=%d",
                       vpc_key.str(), ret);

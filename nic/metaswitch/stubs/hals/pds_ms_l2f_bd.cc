@@ -14,6 +14,7 @@
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/learn/learn_api.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/apollo/learn/learn_api.hpp"
 #include <thread>
 
 extern NBB_ULONG l2f_proc_id;
@@ -283,7 +284,7 @@ NBB_BYTE l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         // safe to release the cookie_uptr_ unique_ptr
         rc = ATG_ASYNC_COMPLETION;
         cookie = cookie_uptr_.release();
-        auto ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
+        auto ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
         if (unlikely (ret != SDK_RET_OK)) {
             delete cookie;
             throw Error(std::string("Batch commit failed for Add-Update MS BD ")
@@ -388,7 +389,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     if (pds_bctxt_guard.remote_mac_batch) {
-        auto ret = pds_batch_commit(pds_bctxt_guard.remote_mac_batch.release());
+        auto ret = learn::api_batch_commit(pds_bctxt_guard.remote_mac_batch.release());
         if (unlikely (ret != SDK_RET_OK)) {
             delete cookie;
             throw Error(std::string("Batch commit failed for deleting remote MACs"
@@ -469,7 +470,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for MS BD ")
@@ -533,7 +534,7 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for BD ")
@@ -579,7 +580,7 @@ sdk_ret_t l2f_bd_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
         // Ensure that state lock is released to avoid blocking NBASE thread
     } // End of state thread_context. Do Not access/modify global state
 
-    auto ret = pds_batch_commit(pds_bctxt_guard.subnet_batch.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.subnet_batch.release());
     if (unlikely (ret != SDK_RET_OK)) {
         PDS_TRACE_ERR ("MS BD %d: Add/Upd PDS Direct Update Batch commit"
                        "failed %d", ips_info_.bd_id, ret);

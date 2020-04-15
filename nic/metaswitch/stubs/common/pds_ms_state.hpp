@@ -24,6 +24,7 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/apollo/learn/learn_api.hpp"
 #include <mutex>
 #include <memory>
 #include <unordered_set>
@@ -100,7 +101,7 @@ public:
     }
     void flush_outstanding_pds_batch() {
         if (bg_.get() != 0) {
-            pds_batch_commit(bg_.release());
+            learn::api_batch_commit(bg_.release());
         }
     }
 public:

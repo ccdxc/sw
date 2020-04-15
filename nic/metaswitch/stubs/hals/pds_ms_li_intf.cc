@@ -13,6 +13,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/apollo/api/utils.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/apollo/learn/learn_api.hpp"
 #include <li_fte.hpp>
 #include <li_lipi_slave_join.hpp>
 #include <li_port.hpp>
@@ -291,7 +292,7 @@ NBB_BYTE li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ip
     // safe to release the cookie_uptr_ unique_ptr
     rc = ATG_ASYNC_COMPLETION;
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for Add-Update Port MS If ")
@@ -350,7 +351,7 @@ sdk_ret_t li_intf_t::update_pds_ipaddr(NBB_ULONG ms_ifindex) {
         // Ensure that state lock is released to avoid blocking NBASE thread
     } // End of state thread_context. Do Not access/modify global state
 
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         PDS_TRACE_ERR ("MS IfIndex 0x%x: Add/Upd IP address Batch commit"
                        "failed %d", ips_info_.ifindex, ret);

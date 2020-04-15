@@ -10,6 +10,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/apollo/learn/learn_api.hpp"
 #include <li_fte.hpp>
 #include <li_lipi_slave_join.hpp>
 #include <li_vxlan.hpp>
@@ -368,7 +369,7 @@ NBB_BYTE li_vxlan_tnl::handle_add_upd_() {
     rc = ATG_ASYNC_COMPLETION;
     cookie = cookie_uptr_.release();
 
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for Add-Update TEP ")
@@ -508,7 +509,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
     // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for delete TEP ")

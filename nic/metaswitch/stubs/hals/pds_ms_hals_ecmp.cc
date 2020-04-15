@@ -12,6 +12,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/apollo/learn/learn_api.hpp"
 #include <hals_c_includes.hpp>
 #include <hals_nhpi_slave_join.hpp>
 #include <hals_ecmp.hpp>
@@ -574,7 +575,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
     // safe to release the cookie unique_ptr
     rc = ATG_ASYNC_COMPLETION;
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for Add-Update Nexthop ")
@@ -648,7 +649,7 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
     // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
+    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
     if (unlikely (ret != SDK_RET_OK)) {
         delete cookie;
         throw Error(std::string("Batch commit failed for delete MS ECMP ")

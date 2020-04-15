@@ -31,10 +31,17 @@ process_async_result (sdk::ipc::ipc_msg_ptr msg, const void *ctx)
     api::api_batch_destroy((pds_batch_ctxt_t)api_msg);
 }
 
+static void
+process_sync_result (sdk::ipc::ipc_msg_ptr msg, const void *ret)
+{
+    *(sdk_ret_t *)ret = *(sdk_ret_t *)msg->data();
+}
+
 sdk_ret_t
 api_batch_commit (pds_batch_ctxt_t bctxt)
 {
     api::api_msg_t *api_msg = (api::api_msg_t *)bctxt;
+    sdk_ret_t ret;
 
     // if learning is disabled, directly commit to API thread
     if (!learning_enabled()) {
@@ -43,17 +50,41 @@ api_batch_commit (pds_batch_ctxt_t bctxt)
     }
 
     if (likely(api_msg->batch.apis.size() > 0)) {
-        //TODO: sync batch support
-        if (!api_msg->batch.async) {
-            return SDK_RET_INVALID_OP;
+        if (api_msg->batch.async) {
+            sdk::ipc::request(core::PDS_THREAD_ID_LEARN, LEARN_MSG_ID_API,
+                              api_msg, sizeof(*api_msg), process_async_result,
+                              api_msg);
+            return SDK_RET_OK;
+        } else {
+            sdk::ipc::request(core::PDS_THREAD_ID_LEARN, LEARN_MSG_ID_API,
+                              api_msg, sizeof(*api_msg), process_sync_result,
+                              &ret);
+            api::api_batch_destroy(bctxt);
+            return ret;
         }
-        sdk::ipc::request(core::PDS_THREAD_ID_LEARN, LEARN_MSG_ID_API,
-                          api_msg, sizeof(*api_msg), process_async_result,
-                          api_msg);
     } else {
         pds_batch_destroy(bctxt);
     }
     return SDK_RET_OK;
+}
+
+static inline bool
+passthrough_api_batch (api::api_msg_t *api_msg)
+{
+    api_ctxt_t *api_ctxt = *(api_msg->batch.apis.begin());
+
+    SDK_ASSERT(api_ctxt);
+    return (api_ctxt->obj_id != OBJ_ID_MAPPING);
+}
+
+static sdk_ret_t
+process_passthrough_api_batch (api::api_msg_t *api_msg)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+
+    sdk::ipc::request(core::PDS_THREAD_ID_API, api::API_MSG_ID_BATCH, api_msg,
+                      sizeof(*api_msg), process_sync_result, &ret);
+    return ret;
 }
 
 static sdk_ret_t
@@ -119,6 +150,12 @@ process_api_batch (api::api_msg_t *api_msg)
     pds_batch_params_t batch_params {learn_db()->epoch_next(), false, nullptr,
                                      nullptr};
 
+    // if this is not a mapping API batch, relay it directly to API thread
+    if (passthrough_api_batch(api_msg)) {
+        PDS_TRACE_DEBUG("Rcvd passthrough API batch");
+        return process_passthrough_api_batch(api_msg);
+    }
+
     memset(&lbctxt.counters, 0, sizeof(lbctxt.counters));
     // create a new sync batch
     bctxt = pds_batch_start(&batch_params);
@@ -153,6 +190,12 @@ process_api_batch (api::api_msg_t *api_msg)
     sdk_ret_t ret;
     learn_batch_ctxt_t lbctxt;
     auto apis = &api_msg->batch.apis;
+
+    // if this is not a mapping API batch, relay it directly to API thread
+    if (passthrough_api_batch(api_msg)) {
+        PDS_TRACE_DEBUG("Rcvd passthrough API batch");
+        return process_passthrough_api_batch(api_msg);
+    }
 
     // process each API in the batch individually
     for (auto it = apis->begin(); it != apis->end(); ++it) {
