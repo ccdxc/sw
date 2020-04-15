@@ -18,6 +18,9 @@ namespace pd {
 //TODO: Move this to HAL slabs.
 pd_qos_dscp_cos_map_t dscp_cos_txdma_iq_map;
 
+uint32_t g_qos_iq_to_tc[CAPRI_TM_MAX_IQS];
+uint32_t g_qos_oq_to_tc[CAPRI_TM_MAX_OQS];
+
 typedef struct pd_qos_q_alloc_params_s {
     uint32_t         cnt_uplink_iq;
     uint32_t         cnt_txdma_iq;
@@ -2251,6 +2254,15 @@ pd_qos_class_create (pd_func_args_t *pd_func_args)
         goto end;
     }
 
+    HAL_TRACE_DEBUG("created pd state for qos_class: {}, iq {}, oq {}",
+                    args->qos_class->key, pd_qos_class->uplink.iq, pd_qos_class->dest_oq);
+
+    // Update the iq and oq to TC mapping for user-defined classes
+    if (qos_group_is_user_defined(args->qos_class->key.qos_group)) {
+        g_qos_iq_to_tc[pd_qos_class->uplink.iq] = args->qos_class->key.qos_group;
+        g_qos_oq_to_tc[pd_qos_class->dest_oq] = args->qos_class->key.qos_group;
+    }
+
 end:
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error in programming hw for Qos-class: {}: ret: {}",
@@ -2355,13 +2367,17 @@ pd_qos_class_delete (pd_func_args_t *pd_func_args)
     hal_ret_t      ret;
     pd_qos_class_delete_args_t *args = pd_func_args->pd_qos_class_delete;
     pd_qos_class_t *qos_class_pd;
+    uint8_t iq, oq;
 
     SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN((args->qos_class != NULL), HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN((args->qos_class->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("deleting pd state for qos_class {}",
-                    args->qos_class->key);
     qos_class_pd = (pd_qos_class_t *)args->qos_class->pd;
+
+    iq = qos_class_pd->uplink.iq;
+    oq = qos_class_pd->dest_oq;
+    HAL_TRACE_DEBUG("deleting pd state for qos_class {}, iq {}, oq {}",
+                    args->qos_class->key, qos_class_pd->uplink.iq, qos_class_pd->dest_oq);
 
     // TODO: deprogram hw
     qos_class_pd_deprogram_hw(qos_class_pd);
@@ -2371,8 +2387,16 @@ pd_qos_class_delete (pd_func_args_t *pd_func_args)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("failed pd qos_class cleanup Qos-class {}, ret {}",
                       args->qos_class->key, ret);
+        goto err;
     }
 
+    // Update the iq and oq to TC mapping
+    if (qos_group_is_user_defined(args->qos_class->key.qos_group)) {
+        g_qos_iq_to_tc[iq] = 0;
+        g_qos_oq_to_tc[oq] = 0;
+    }
+
+err:
     return ret;
 }
 
@@ -2437,11 +2461,8 @@ void
 qos_class_queue_stats_to_proto_stats (qos::QosClassQueueStats *q_stats,
                                       sdk::platform::capri::capri_queue_stats_t *qos_queue_stats)
 {
-    uint32_t iq_to_tc[CAPRI_TM_MAX_IQS] = {0};
-    uint32_t oq_to_tc[CAPRI_TM_MAX_OQS] = {0};
-
-     // Get the iq and oq to Qos Group (TC) mapping
-    pd_qos_class_get_iq_oq_to_tc_mapping(iq_to_tc, oq_to_tc);
+    /* Removing this call to avoid crashes due to ht lookup.
+     * Instead, get the iq and oq map from the global tables. */
 
     for (unsigned i = 0; i < CAPRI_TM_MAX_IQS; i++) {
         if (qos_queue_stats->iq_stats[i].iq.valid) {
@@ -2456,7 +2477,7 @@ qos_class_queue_stats_to_proto_stats (qos::QosClassQueueStats *q_stats,
             input_stats->set_buffer_occupancy(iq_stats->buffer_occupancy);
             input_stats->set_peak_occupancy(iq_stats->peak_occupancy);
             input_stats->set_port_monitor(iq_stats->port_monitor);
-            input_stats->set_qos_group_idx(iq_to_tc[i]); // Set the Qos Group (TC) index for this iq
+            input_stats->set_qos_group_idx(g_qos_iq_to_tc[i]); // Set the Qos Group (TC) index for this iq
         }
         if (qos_queue_stats->oq_stats[i].oq.valid) {
             auto output_stats = q_stats->add_output_queue_stats();
@@ -2464,7 +2485,7 @@ qos_class_queue_stats_to_proto_stats (qos::QosClassQueueStats *q_stats,
             output_stats->set_output_queue_idx(qos_queue_stats->oq_stats[i].oq.queue);
             output_stats->set_queue_depth(oq_stats->queue_depth);
             output_stats->set_port_monitor(oq_stats->port_monitor);
-            output_stats->set_qos_group_idx(oq_to_tc[i]); // Set the Qos Group (TC) index for this oq
+            output_stats->set_qos_group_idx(g_qos_oq_to_tc[i]); // Set the Qos Group (TC) index for this oq
         }
     }
 }
