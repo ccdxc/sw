@@ -11,31 +11,33 @@
       </app-workloadwidget>
     </div>
   </div>
-  <app-tableviewedit fxLayout="column" class="workload-widget" [creatingMode]="creatingMode"
-                     style="height: 100%;"
-                     [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols"
-                     [runDoCheck]="true" [virtualRowHeight]="95"
-                     [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate"
-                     [bodyTemplate]="bodyTemplate"
-                     [actionTemplate]="actionTemplate" [createTemplate]="createTemplate"
-                     [expandTemplate]="expandTemplate"
-                     [enableCheckbox]="true" [tableLoading]="tableLoading"
-                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
-  </app-tableviewedit>
+  <app-pentable #workloadTable
+                [actionTemplate]="actionTemplate"
+                [bodyTemplate]="bodyTemplate"
+                [captionTemplate]="captionTemplate"
+                [columns]="cols"
+                [createTemplate]="createTemplate"
+                [data]="dataObjects"
+                [enableCheckbox]="true"
+                [expandTemplate]="expandTemplate"
+                [exportFilename]="exportFilename"
+                [loading]="tableLoading"
+                [rowHeight]="95">
+  </app-pentable>
 </app-pagebody>
 
 <ng-template #captionTemplate let-count="count">
-  <div fxFlex fxLayout="column">
-    <div fxLayout="row" style="border-bottom: 1px solid #d9d9d9;">
+  <div class="workload-table-caption">
+    <div style="border-bottom: 1px solid #d9d9d9;">
       <app-tableheader title="Workloads" [total]="count" [icon]="tableIcon"
                        [enableColumnSelect]="true" fxFlex="auto"
-                       fxLayout="row" [tableMenuItems]="tableMenuItems" [cols]="cols"
-                       (columnSelectChange)="onColumnSelectChange($event)">
+                       fxLayout="row" [cols]="cols"
+                       (columnSelectChange)="onColumnSelectChange($event)"
+                       [tableMenuItems]="workloadTable.tableMenuItems">
         <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
       </app-tableheader>
     </div>
-
-    <div fxLayout="row">
+    <div>
       <app-advanced-search #advancedSearchComponent [formArray]="fieldFormArray"
                            [cols]="advSearchCols"
                            (cancelEmitter)="onCancelSearch($event)"
@@ -52,7 +54,7 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newworkload [objectData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"
+  <app-newworkload [objectData]="rowData" [isInline]="true" (formClose)="editFormClose(rowData)"
                    [hostOptions]="hostOptions"
                    fxFlex="none">
   </app-newworkload>
@@ -155,8 +157,13 @@
 
 <ng-template #actionButtonsTemplate>
   <div fxFlex="none" fxLayoutAlign="start center" *roleGuard="'workloadworkload_update'">
-    <mat-icon class="naples-add-label-button" *ngIf="hasSelectedRows()"
-              [matTooltip]="'Add labels to selected workloads'" (click)="editLabels()">label
+    <mat-icon [ngClass]="{
+                'global-multi-records-label-button': true,
+                'multi-delete-icon-disabled': !hasSelectedRows()
+              }"
+              (click)="editLabels()"
+              [matTooltip]="hasSelectedRows() ? 'Edit labels of selected workloads' : 'Select workloads to edit labels'">
+      label
     </mat-icon>
     <app-labeleditor [metadata]="labelEditorMetaData" [inLabelEditMode]="inLabelEditMode"
                      (saveEmitter)="handleEditSave($event)"
@@ -164,11 +171,13 @@
                      [objects]="getSelectedDataObjects()" [nameKey]="'meta.name'">
     </app-labeleditor>
     <mat-icon [ngClass]="{
-              'global-multi-records-delete-icon': true,
-              'multi-delete-icon-disabled': disableMultiDelIcons() }"
-              *ngIf="hasSelectedRows()" (click)="onDeleteSelectedWorkloads($event)"
-              [matTooltip]="disableMultiDelIcons() ? 'At least one workload can not be deleted' : 'Delete selected workloads'">
-      delete</mat-icon>
+                'global-multi-records-delete-icon': true,
+                'multi-delete-icon-disabled': disableMultiDelIcons() || !hasSelectedRows()
+              }"
+              (click)="onDeleteSelectedWorkloads($event)"
+              [matTooltip]="!hasSelectedRows() ? 'Select workloads to delete' : disableMultiDelIcons() ? 'At least one workload can not be deleted' : 'Delete selected workloads'">
+      delete
+    </mat-icon>
   </div>
 
 

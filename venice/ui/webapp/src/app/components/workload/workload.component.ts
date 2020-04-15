@@ -28,6 +28,9 @@ import { CustomExportMap, TableCol } from '../shared/tableviewedit';
 import { TableUtility } from '../shared/tableviewedit/tableutility';
 import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.component';
 import { debounceTime } from 'rxjs/operators';
+import { PentableComponent } from '../shared/pentable/pentable.component';
+import { BaseComponent } from '../base/base.component';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -51,14 +54,14 @@ import { debounceTime } from 'rxjs/operators';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, WorkloadWorkload> implements OnInit, OnDestroy {
+export class WorkloadComponent extends BaseComponent implements OnInit {
 
   public static WORKLOAD_FIELD_DSCS: string = 'dscs';
   public static WORKLOAD_FIELD_SECURITYGROUPS: string = 'linkedsecuritygroups';
   // Feature Flags
   hideWorkloadWidgets: boolean = !this.uiconfigsService.isFeatureEnabled('workloadWidgets');
 
-  @ViewChild('workloadTable') workloadTable: Table;
+  @ViewChild('workloadTable') workloadTable: PentableComponent;
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
   maxSearchRecords: number = 8000;
 
@@ -102,7 +105,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Workload Name', class: 'workload-column-name', sortable: true, width: 15 },
-    { field: 'spec.host-name', header: 'Host name', class: 'workload-column-host-name', sortable: true, width: 15 },
+    { field: 'spec.host-name', header: 'Host Name', class: 'workload-column-host-name', sortable: true, width: 15 },
     { field: 'meta.labels', header: 'Labels', class: 'workload-column-labels', sortable: false, width: 15 },
     { field: 'spec.interfaces', header: 'Interfaces', class: 'workload-column-interfaces', sortable: false },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'workload-column-date', sortable: true, width: '180px' },
@@ -177,13 +180,18 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     private securityService: SecurityService,
     protected searchService: SearchService
   ) {
-    super(_controllerService, cdr, uiconfigsService);
+    super(_controllerService, uiconfigsService);
   }
 
   /**
    * Fetch data.
    */
-  postNgInit() {
+  ngOnInit() {
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
+      'component': this.getClassName(), 'state':
+        Eventtypes.COMPONENT_INIT
+    });
+    this.setDefaultToolbar();
     this.buildAdvSearchCols();
     this.tableLoading = true;
     this.getHosts(); // prepare hostOptions needed by newworkload component.
@@ -201,7 +209,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
           return { label: x.meta.name, value: x.meta.name };
         });
       },
-      this.controllerService.webSocketErrorHandler('Failed to get Hosts info')
+      this._controllerService.webSocketErrorHandler('Failed to get Hosts info')
     );
     this.subscriptions.push(subscription);
   }
@@ -213,7 +221,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
       response => {
         this.naplesEventUtility.processEvents(response);
       },
-      this.controllerService.webSocketErrorHandler('Failed to get Naples')
+      this._controllerService.webSocketErrorHandler('Failed to get Naples')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
@@ -225,7 +233,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
       response => {
         this.securitygroupsEventUtility.processEvents(response);
       },
-      this.controllerService.webSocketErrorHandler('Failed to get Security Groups info')
+      this._controllerService.webSocketErrorHandler('Failed to get Security Groups info')
     );
     this.subscriptions.push(subscription);
   }
@@ -236,8 +244,8 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
         text: 'ADD WORKLOAD',
-        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-        callback: () => { this.createNewObject(); }
+        callback: () => { this.workloadTable.createNewObject(); },
+        computeClass: () => !this.workloadTable.showRowExpand ? '' : 'global-button-disabled'
       }];
     }
     this._controllerService.setToolbarData({
@@ -442,7 +450,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
       },
       (error) => {
         this.tableLoading = false;
-        this.controllerService.invokeRESTErrorToaster('Failed to get workloads', error);
+        this._controllerService.invokeRESTErrorToaster('Failed to get workloads', error);
       }
     );
     this.subscriptions.push(subscription);
@@ -517,7 +525,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
   editLabels() {
     this.labelEditorMetaData = {
-      title: 'Editing worload objects',
+      title: 'Edit workload labels',
       keysEditable: true,
       valuesEditable: true,
       propsDeletable: true,
@@ -543,7 +551,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
       const partialSuccessSummary = 'Partially update';
       const msg = 'Marked selected ' + updatedWorkloads.length + '  updated.';
       const self = this;
-      this.invokeAPIonMultipleRecords(observables, allSuccessSummary, partialSuccessSummary, msg,
+      this.workloadTable.invokeAPIonMultipleRecords(observables, allSuccessSummary, partialSuccessSummary, msg,
         () => {
           self.handleEditCancel(null);
         }, // onSuccess callback
@@ -572,7 +580,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
   // advance search APIs
   onCancelSearch($event) {
-    this.controllerService.invokeInfoToaster('Information', 'Cleared search criteria, Table refreshed.');
+    this._controllerService.invokeInfoToaster('Information', 'Cleared search criteria, Table refreshed.');
     this.dataObjects = this.dataObjectsBackUp;
   }
 
@@ -581,8 +589,8 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
    * @param field
    * @param order
    */
-  onSearchWorkloads(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
-    const searchResults = this.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.advancedSearchComponent);
+  onSearchWorkloads(field = this.workloadTable.sortField, order = this.workloadTable.sortOrder) {
+    const searchResults = this.workloadTable.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.advancedSearchComponent);
     if (searchResults && searchResults.length > 0) {
       this.dataObjects = [];
       this.dataObjects = searchResults;
@@ -711,4 +719,45 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     }
   }
 
+  creationFormClose() {
+    this.workloadTable.creationFormClose();
+  }
+
+  editFormClose(rowData) {
+    if (this.workloadTable.showRowExpand) {
+      this.workloadTable.toggleRow(rowData);
+    }
+  }
+
+  expandRowRequest(event, rowData) {
+    if (!this.workloadTable.showRowExpand) {
+      this.workloadTable.toggleRow(rowData, event);
+    }
+  }
+
+  getSelectedDataObjects() {
+    return this.workloadTable.getSelectedDataObjects();
+  }
+
+  hasSelectedRows(): boolean {
+    return this.workloadTable.getSelectedDataObjects().length > 0;
+  }
+
+  onColumnSelectChange(event) {
+    this.workloadTable.onColumnSelectChange(event);
+  }
+
+  onDeleteRecord(event, object) {
+    this.workloadTable.onDeleteRecord(
+      event,
+      object,
+      this.generateDeleteConfirmMsg(object),
+      this.generateDeleteSuccessMsg(object),
+      this.deleteRecord.bind(this)
+    );
+  }
+
+  onDeleteSelectedRows(event) {
+    this.workloadTable.onDeleteSelectedRows(event, this.deleteRecord.bind(this));
+  }
 }

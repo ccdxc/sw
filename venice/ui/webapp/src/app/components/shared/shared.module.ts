@@ -27,6 +27,7 @@ import { BasecardComponent } from './basecard/basecard.component';
 import { LinegraphComponent } from './linegraph/linegraph.component';
 import { FlipComponent } from './flip/flip.component';
 import { ErrorTooltipDirective } from './directives/errorTooltip.directive';
+import { PentableComponent } from './pentable/pentable.component';
 import { TablevieweditHTMLComponent } from './tableviewedit/tableviewedit.component';
 import { RoleGuardDirective } from './directives/roleGuard.directive';
 import { LabeleditorComponent } from './labeleditor/labeleditor.component';
@@ -82,6 +83,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     LinegraphComponent,
     FlipComponent,
     ErrorTooltipDirective,
+    PentableComponent,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
     FeatureGuardDirective,
@@ -124,6 +126,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     LinegraphComponent,
     FlipComponent,
     ErrorTooltipDirective,
+    PentableComponent,
     TablevieweditHTMLComponent,
     RoleGuardDirective,
     FeatureGuardDirective,

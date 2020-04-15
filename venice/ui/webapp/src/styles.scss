@@ -58,6 +58,10 @@
     color: #6ba0e5;
   }
 
+  .global-multi-records-label-button {
+    cursor: pointer;
+  }
+
   .global-multi-records-delete-icon {
     cursor: pointer;
     color: #676763;
@@ -331,6 +335,10 @@
         }
       }
     }
+  }
+
+  .pentable-widget {
+    @extend %primeng-table;
   }
 
   .global-primeng-table {

@@ -1,0 +1,110 @@
+<div class="pentable-widget">
+  <div [@slideInOut] *ngIf="creatingMode" fxLayout="column">
+    <ng-container *ngTemplateOutlet="createTemplate"></ng-container>
+    <div class="pentable-form-border"></div>
+  </div>
+  <p-table #primengTable
+           [alwaysShowPaginator]="false"
+           [columns]="selectedColumns"
+           [dataKey]="dataKey"
+           [first]="first"
+           [loading]="loading"
+           (onRowSelect)="rowSelected($event)"
+           (onRowUnselect)="rowUnselected($event)"
+           [paginator]="true"
+           [reorderableColumns]="true"
+           [resizableColumns]="resizableColumns && !isDisabled()"
+           [responsive]="true"
+           [rows]="numRows"
+           [rowsPerPageOptions]="[10, 25, 50, 100]"
+           [(selection)]="selectedDataObjects"
+           [sortField]="sortField"
+           [sortOrder]="sortOrder"
+           [totalRecords]="data.length"
+           [value]="data">
+    <ng-template pTemplate="caption" *ngIf="captionTemplate != null">
+      <ng-container *ngTemplateOutlet="captionTemplate; context: {count: data.length}">
+      </ng-container>
+      <ng-container *ngTemplateOutlet="disabledMask;">
+      </ng-container>
+    </ng-template>
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th *ngIf="enableCheckbox" class="pentable-checkbox">
+          <div class="pentable-th-box">
+            <p-tableHeaderCheckbox matTooltip="Select/Deselect All Records In Current Page">
+            </p-tableHeaderCheckbox>
+          </div>
+        </th>
+        <th *ngFor="let col of selectedColumns; let last = last"
+            [class]="col.class ? col.class : ''"
+            pReorderableColumn
+            [pReorderableColumnDisabled]="col.notReorderable"
+            pResizableColumn
+            [pSortableColumn]="col.sortable ? col.field : ''"
+            [style.width]="getCellWidth(col.width)"
+            (mousedown)="onThMouseDown($event)">
+          <div class="pentable-th-box">
+            <app-sorticon class="pentable-sorticon" [field]="col.field"
+                          [isSortable]="col.sortable && !isDisabled()">
+              {{col.header}}
+            </app-sorticon>
+          </div>
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+      <tr (mouseleave)="resetHover(rowData)" (mouseover)="rowHover(rowData)"
+          [pSelectableRow]="rowData">
+        <td *ngIf="enableCheckbox" class="pentable-checkbox" [style.height]="rowHeight + 'px'">
+          <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
+          <ng-container *ngTemplateOutlet="disabledMask; context: {$implicit: rowData}">
+          </ng-container>
+        </td>
+        <td *ngFor="let col of selectedColumns; let last = last"
+            [class]="'ui-resizable-column ' + (col.class ? col.class : '')">
+          <ng-container
+                        *ngTemplateOutlet="bodyTemplate; context: {col: col, hovered: hoveredRowID === getRowID(rowData), $implicit: rowData, rowIndex: rowIndex}">
+          </ng-container>
+          <div *ngIf="last && actionTemplate != null && !isDisabled()"
+               class="pentable-action-overlay">
+            <ng-container
+                          *ngTemplateOutlet="actionTemplate; context: {$implicit: rowData}">
+            </ng-container>
+          </div>
+          <ng-container *ngTemplateOutlet="disabledMask; context: {$implicit: rowData}">
+          </ng-container>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="rowexpansion" let-rowData>
+      <tr #expandRow>
+        <td [attr.colspan]="enableCheckbox ? selectedColumns.length + 1 : selectedColumns.length">
+          <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event, rowData)"
+               *ngIf="showRowExpand" class="pentable-rowexpand">
+            <ng-container
+                          *ngTemplateOutlet="expandTemplate; context: {$implicit: rowData, columns: selectedColumns}">
+            </ng-container>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="paginatorright" let-state>
+      <div class="pentable-paginator-right">
+        Showing
+        <span class="pentable-paginator-value">{{state.first + 1}}</span>
+        to
+        <span class="pentable-paginator-value">{{state.first + state.rows}}</span>
+        of
+        <span class="pentable-paginator-value">{{data.length}}</span>
+        records
+      </div>
+    </ng-template>
+  </p-table>
+</div>
+
+<ng-template #disabledMask>
+  <div *ngIf="isDisabled()" class="pentable-disabled"
+       (click)="handleDisabledEvents($event)" (mouseover)="handleDisabledEvents($event)">
+  </div>
+</ng-template>

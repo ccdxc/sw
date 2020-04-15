@@ -130,6 +130,11 @@
   outline: none !important;
 }
 
+.mat-drawer-content.mat-sidenav-content {
+  background-image: url("/assets/images/misc/content-bg.png");
+  background-size: 100% 100%;
+}
+
 .app-shell-router-outter-div {
   // Subtracting the top toolbar from the div height
   height: calc(100% - 65px);

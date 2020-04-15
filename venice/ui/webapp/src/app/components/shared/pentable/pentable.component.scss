@@ -1,0 +1,161 @@
+@import 'src/global-mixins';
+
+app-pentable,
+.pentable-widget {
+  height: 100%;
+}
+
+.pentable-form-border {
+  background: #6ba0e5;
+  height: 3px;
+}
+
+.pentable-widget .tableheader-enableColumnSelect-div label.ui-multiselect-label.ui-corner-all {
+  margin-bottom: 0;
+}
+
+.pentable-widget .ui-table-scrollable-header {
+  background-image: none;
+}
+
+.pensando-ui .pentable-widget .ui-table .ui-table-thead>tr>th {
+  border: 0;
+  padding: 0;
+
+  .pentable-th-box {
+    background-color: #e7e7e3 !important;
+    padding: .25em .5em;
+
+    .pentable-sorticon {
+      width: 100%;
+    }
+  }
+
+  &:hover .pentable-th-box,
+  &.ui-state-highlight .pentable-th-box,
+  .pentable-th-box:hover {
+    background-color: #cfcfcb !important;
+  }
+
+  &:not(:last-child) {
+    border-right: 1px solid rgba(255, 255, 255, 0);
+  }
+}
+
+.pensando-ui .ui-column-resizer-helper.ui-state-highlight {
+  background-color: #6ba0e5;
+}
+
+.pentable-widget .ui-table .ui-table-thead>tr>th,
+.pentable-widget .ui-paginator-bottom {
+  background: #e7e7e3;
+}
+
+.pensando-ui .pentable-widget .ui-table .ui-table-tbody>tr {
+  display: table-row;
+  width: 100%;
+
+  &.ui-state-highlight {
+    background-color: rgb(234, 241, 249) !important;
+  }
+
+  &:hover {
+    display: table-row;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  a {
+    color: #6ba0e5;
+  }
+
+  .pentable-action-overlay {
+    position: absolute;
+    right: 0;
+    top: 5px;
+  }
+}
+
+.pentable-checkbox {
+  width: 31px;
+
+  .ui-chkbox {
+    margin-right: 0;
+  }
+}
+
+.pentable-disabled {
+  background-color: rgba(102, 102, 102, 0.15);
+  cursor: not-allowed;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+.pentable-rowexpand>* {
+  width: 100%;
+}
+
+.pentable-widget .ui-paginator-bottom {
+  &.ui-widget-header {
+    border-color: #e7e7e3;
+    padding: 0;
+  }
+
+  .ui-paginator-element {
+    border-color: #e7e7e3;
+    border-radius: 0;
+    height: 100%;
+
+    &.ui-state-active {
+      border: 0;
+    }
+  }
+}
+
+.pentable-widget .ui-paginator {
+  p-dropdown {
+    left: 15px;
+    position: absolute;
+  }
+
+  .ui-dropdown {
+    height: 24px;
+    margin-left: 0;
+
+    .ui-dropdown-label {
+      padding-bottom: 1px;
+      padding-top: 2px;
+    }
+  }
+
+  .ui-paginator-element {
+    height: 24px;
+    min-width: 36px;
+    padding-left: 8px;
+    padding-right: 8px;
+    width: unset;
+  }
+
+  .ui-paginator-right-content {
+    @include primary-font(14px);
+    bottom: 1px;
+    position: absolute;
+    right: 15px;
+
+    .pentable-paginator-value {
+      color: #353532;
+      font-weight: 500;
+      padding: 0 2px;
+    }
+  }
+}
+
+.ui-paginator-element-disabled {
+  pointer-events: none;
+  cursor: not-allowed;
+}

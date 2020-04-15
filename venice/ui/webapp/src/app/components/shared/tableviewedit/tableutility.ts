@@ -476,18 +476,18 @@ export class TableUtility {
           }
         } else {
           //  When seaching meta.labels, recordValue looks like "{"env":"21","tag":"1"}"
-          const lalbelsKeys = Object.keys(recordValue);
-          for (let l = 0; lalbelsKeys && l < lalbelsKeys.length; l++) {
+          const labelKeys = Object.keys(recordValue || {});
+          for (let l = 0; labelKeys && l < labelKeys.length; l++) {
             const searchInputs = searchValues[j].split(':');  // searchInputs can be env:21, or just "21"
             if (searchInputs.length === 2) {
               const searchKey = searchInputs[0];
               const searchVal = searchInputs[1];
-              if (activateFunc && activateFunc(lalbelsKeys[l], searchKey) && activateFunc(recordValue[lalbelsKeys[l]], searchVal)) {
+              if (activateFunc && activateFunc(labelKeys[l], searchKey) && activateFunc(recordValue[labelKeys[l]], searchVal)) {
                 outputs.push(data[i]);
               }
             } else {
               const searchVal = searchInputs[0];
-              if (activateFunc && activateFunc(recordValue[lalbelsKeys[l]], searchVal)) {
+              if (activateFunc && activateFunc(recordValue[labelKeys[l]], searchVal)) {
                 outputs.push(data[i]);
               }
             }

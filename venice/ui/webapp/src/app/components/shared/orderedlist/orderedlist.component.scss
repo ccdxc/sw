@@ -44,8 +44,9 @@
 
 .orderedlist-drag-handle {
   color: #c1c1c1;
+  cursor: move;
+  cursor: grab;
   font-size: 24px;
-  height: 100%;
 }
 
 .orderedlist-preview {
