@@ -39,7 +39,7 @@ class CollectLogNode:
         return self.name
 
 def __collect_onenode(node):
-    SSHCMD = "sshpass -p {0} scp -r -o StrictHostKeyChecking=no {1}@".format(node.password,node.username)
+    SSHCMD = "sshpass -p {0} scp -r -o ConnectTimeout=300 -o StrictHostKeyChecking=no {1}@".format(node.password,node.username)
     msg="Collecting Logs for Node: %s (%s)" % (node.Name(), node.ip)
     print(msg)
     Logger.debug(msg)
@@ -49,7 +49,7 @@ def __collect_onenode(node):
     localdir = "%s/logs/%s/nodes/%s/" % (GlobalOptions.logdir, tsName, node.Name())
     subprocess.call("mkdir -p %s" % localdir,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     for logdir in logdirs:
-        permCmd = "sshpass -p vm ssh vm@" + node.ip + " sudo chown -R vm:vm " + logdir
+        permCmd = "sshpass -p vm ssh -o ConnectTimeout=300 vm@" + node.ip + " sudo chown -R vm:vm " + logdir
         Logger.debug(permCmd)
         try:
             proc=subprocess.Popen(permCmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -86,6 +86,7 @@ def buildNodesFromTestbedFile(testbed):
     except:
         msg="failed to build nodes from testbed file. error was:"
         msg+=traceback.format_exc()
+        print(msg)
         Logger.debug(msg)
     return nodes
 
@@ -107,6 +108,7 @@ def CollectLogs():
         Logger.debug(msg)
         msg = 'topo not setup yet, gathering node info from testbed json file'
         Logger.debug(msg)
+        print(msg)
         nodes=buildNodesFromTestbedFile(GlobalOptions.testbed_json)
     pool = ThreadPool(len(nodes))
     results = pool.map(__collect_onenode, nodes)
