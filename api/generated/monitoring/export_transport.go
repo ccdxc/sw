@@ -119,6 +119,40 @@ func DecodeGrpcRespExternalCred(ctx context.Context, response interface{}) (inte
 	return response, nil
 }
 
+func encodeHTTPPSMExportTarget(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPSMExportTarget(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PSMExportTarget
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPSMExportTarget encodes GRPC request
+func EncodeGrpcReqPSMExportTarget(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PSMExportTarget)
+	return req, nil
+}
+
+// DecodeGrpcReqPSMExportTarget decodes GRPC request
+func DecodeGrpcReqPSMExportTarget(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PSMExportTarget)
+	return req, nil
+}
+
+// EncodeGrpcRespPSMExportTarget encodes GRC response
+func EncodeGrpcRespPSMExportTarget(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPSMExportTarget decodes GRPC response
+func DecodeGrpcRespPSMExportTarget(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPPrivacyConfig(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

@@ -229,3 +229,9 @@ message SNMPTrapServer {
   PrivacyConfig PrivacyConfig = 6 [(gogoproto.nullable) = true,
                                    (gogoproto.jsontag) = "privacy-config, omitempty"];
 }
+
+// PSMExportTarget represents PSM used as a log export target.
+message PSMExportTarget {
+  // Enable is for enabling the log export. Its default value is false.
+  bool Enable                 = 1 [(gogoproto.jsontag) = "enable, omitempty"];
+}

@@ -57,6 +57,7 @@
 		AuthConfig
 		ExportConfig
 		ExternalCred
+		PSMExportTarget
 		PrivacyConfig
 		SNMPTrapServer
 		SyslogExportConfig

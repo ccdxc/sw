@@ -68,6 +68,10 @@ message FwlogPolicySpec {
     // default facility is set to "local4", can be overridden with FacilityOverride
     // fwlog severity is set to "Informational"
     SyslogExportConfig Config       = 5 [(gogoproto.jsontag) = "config,omitempty"];
+
+    // PSMExportTarget represents PSM used as a log export target
+    // It does not honor Format, Filter fields
+    PSMExportTarget PSMTarget       = 6 [(gogoproto.jsontag) = "psm-target,omitempty"];
 }
 
 message FwlogPolicy {
@@ -80,7 +84,6 @@ message FwlogPolicy {
     // Status contains the current state of the policy.
     FwlogPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
-
 
 //========================================================================================
 //  flow export policy

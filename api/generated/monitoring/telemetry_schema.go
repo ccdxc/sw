@@ -152,6 +152,8 @@ var typesMapTelemetry = map[string]*api.Struct{
 			"Filter": api.Field{Name: "Filter", CLITag: api.CLIInfo{ID: "filter", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "filter", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Config": api.Field{Name: "Config", CLITag: api.CLIInfo{ID: "config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.SyslogExportConfig"},
+
+			"PSMTarget": api.Field{Name: "PSMTarget", CLITag: api.CLIInfo{ID: "psm-target", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "psm-target", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.PSMExportTarget"},
 		},
 	},
 	"monitoring.FwlogPolicyStatus": &api.Struct{

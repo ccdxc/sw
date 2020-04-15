@@ -5484,6 +5484,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "psm-target.enable",
+            "description": "Enable is for enabling the log export. Its default value is false.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -12294,6 +12302,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "psm-target.enable",
+            "description": "Enable is for enabling the log export. Its default value is false.",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -18280,6 +18296,10 @@
         "config": {
           "$ref": "#/definitions/monitoringSyslogExportConfig",
           "description": "configuration to use for syslog format default facility is set to \"local4\", can be overridden with FacilityOverride fwlog severity is set to \"Informational\"."
+        },
+        "psm-target": {
+          "$ref": "#/definitions/monitoringPSMExportTarget",
+          "description": "PSMExportTarget represents PSM used as a log export target It does not honor Format, Filter fields."
         }
       },
       "description": "Venice collects fwlog irrespective of the export config."
@@ -18617,6 +18637,17 @@
         }
       },
       "description": "MirrorStartConditions - Conditions to start mirroring."
+    },
+    "monitoringPSMExportTarget": {
+      "type": "object",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Enable is for enabling the log export. Its default value is false."
+        }
+      },
+      "description": "PSMExportTarget represents PSM used as a log export target."
     },
     "monitoringPrivacyConfig": {
       "type": "object",

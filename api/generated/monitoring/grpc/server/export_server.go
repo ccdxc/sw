@@ -40,6 +40,7 @@ func (s *smonitoringExportBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"monitoring.AuthConfig":         apisrvpkg.NewMessage("monitoring.AuthConfig"),
 		"monitoring.ExportConfig":       apisrvpkg.NewMessage("monitoring.ExportConfig"),
 		"monitoring.ExternalCred":       apisrvpkg.NewMessage("monitoring.ExternalCred"),
+		"monitoring.PSMExportTarget":    apisrvpkg.NewMessage("monitoring.PSMExportTarget"),
 		"monitoring.PrivacyConfig":      apisrvpkg.NewMessage("monitoring.PrivacyConfig"),
 		"monitoring.SNMPTrapServer":     apisrvpkg.NewMessage("monitoring.SNMPTrapServer"),
 		"monitoring.SyslogExportConfig": apisrvpkg.NewMessage("monitoring.SyslogExportConfig"),

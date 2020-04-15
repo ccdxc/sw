@@ -53,6 +53,12 @@ var typesMapExport = map[string]*api.Struct{
 			"CaData": api.Field{Name: "CaData", CLITag: api.CLIInfo{ID: "ca-data", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ca-data", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BYTES"},
 		},
 	},
+	"monitoring.PSMExportTarget": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PSMExportTarget{}) },
+		Fields: map[string]api.Field{
+			"Enable": api.Field{Name: "Enable", CLITag: api.CLIInfo{ID: "enable", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enable", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+		},
+	},
 	"monitoring.PrivacyConfig": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PrivacyConfig{}) },
 		Fields: map[string]api.Field{

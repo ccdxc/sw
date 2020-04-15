@@ -11,6 +11,7 @@ import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-ex
 import { MonitoringFwlogPolicySpec_format,  MonitoringFwlogPolicySpec_format_uihint  } from './enums';
 import { MonitoringFwlogPolicySpec_filter,  MonitoringFwlogPolicySpec_filter_uihint  } from './enums';
 import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './monitoring-syslog-export-config.model';
+import { MonitoringPSMExportTarget, IMonitoringPSMExportTarget } from './monitoring-psm-export-target.model';
 
 export interface IMonitoringFwlogPolicySpec {
     'vrf-name'?: string;
@@ -18,6 +19,7 @@ export interface IMonitoringFwlogPolicySpec {
     'format': MonitoringFwlogPolicySpec_format;
     'filter': Array<MonitoringFwlogPolicySpec_filter>;
     'config'?: IMonitoringSyslogExportConfig;
+    'psm-target'?: IMonitoringPSMExportTarget;
     '_ui'?: any;
 }
 
@@ -35,6 +37,8 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
     'filter': Array<MonitoringFwlogPolicySpec_filter> = null;
     /** Configuration to use for syslog format default facility is set to "local4", can be overridden with FacilityOverride fwlog severity is set to "Informational". */
     'config': MonitoringSyslogExportConfig = null;
+    /** PSMExportTarget represents PSM used as a log export target It does not honor Format, Filter fields. */
+    'psm-target': MonitoringPSMExportTarget = null;
     public static propInfo: { [prop in keyof IMonitoringFwlogPolicySpec]: PropInfoItem } = {
         'vrf-name': {
             description:  `VrfName specifies the name of the VRF that the current Firewall Log Policy belongs to.`,
@@ -65,6 +69,11 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
             required: false,
             type: 'object'
         },
+        'psm-target': {
+            description:  `PSMExportTarget represents PSM used as a log export target It does not honor Format, Filter fields.`,
+            required: false,
+            type: 'object'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -92,6 +101,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         this['targets'] = new Array<MonitoringExportConfig>();
         this['filter'] = new Array<MonitoringFwlogPolicySpec_filter>();
         this['config'] = new MonitoringSyslogExportConfig();
+        this['psm-target'] = new MonitoringPSMExportTarget();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -135,6 +145,11 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         } else {
             this['config'].setValues(null, fillDefaults);
         }
+        if (values) {
+            this['psm-target'].setValues(values['psm-target'], fillDefaults);
+        } else {
+            this['psm-target'].setValues(null, fillDefaults);
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -147,6 +162,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
                 'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFwlogPolicySpec_format), ]), MonitoringFwlogPolicySpec.propInfo['format']),
                 'filter': CustomFormControl(new FormControl(this['filter']), MonitoringFwlogPolicySpec.propInfo['filter']),
                 'config': CustomFormGroup(this['config'].$formGroup, MonitoringFwlogPolicySpec.propInfo['config'].required),
+                'psm-target': CustomFormGroup(this['psm-target'].$formGroup, MonitoringFwlogPolicySpec.propInfo['psm-target'].required),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringExportConfig>('targets', this['targets'], MonitoringExportConfig);
@@ -158,6 +174,11 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('config') as FormGroup).controls).forEach(field => {
                 const control = this._formGroup.get('config').get(field);
+                control.updateValueAndValidity();
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('psm-target') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('psm-target').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -175,6 +196,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
             this._formGroup.controls['format'].setValue(this['format']);
             this._formGroup.controls['filter'].setValue(this['filter']);
             this['config'].setFormGroupValuesToBeModelValues();
+            this['psm-target'].setFormGroupValuesToBeModelValues();
         }
     }
 }

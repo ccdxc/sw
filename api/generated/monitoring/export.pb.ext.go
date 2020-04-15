@@ -269,6 +269,27 @@ func (m *ExternalCred) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *PSMExportTarget) Clone(into interface{}) (interface{}, error) {
+	var out *PSMExportTarget
+	var ok bool
+	if into == nil {
+		out = &PSMExportTarget{}
+	} else {
+		out, ok = into.(*PSMExportTarget)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*PSMExportTarget))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PSMExportTarget) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *PrivacyConfig) Clone(into interface{}) (interface{}, error) {
 	var out *PrivacyConfig
 	var ok bool
@@ -454,6 +475,19 @@ func (m *ExternalCred) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 func (m *ExternalCred) Normalize() {
 
 	m.AuthType = ExportAuthType_normal[strings.ToLower(m.AuthType)]
+
+}
+
+func (m *PSMExportTarget) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *PSMExportTarget) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *PSMExportTarget) Normalize() {
 
 }
 
