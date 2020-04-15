@@ -95,11 +95,17 @@ def GetVlanID(node, interface):
     elif os == "freebsd":
         cmd = "ifconfig " + interface + " | grep vlan: | cut -d: -f2 | awk '{print $1}'"
     elif os == "windows":
-        # TODO
+        intf = workload.GetNodeInterface(node)
+        name = intf.WindowsIntName(interface)
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetAdapterAdvancedProperty -Name '%s' -RegistryKeyword 'VlanId' | Select-Object RegistryValue | Convertto-json\"" % name
         return 0
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
-    vlan_id = resp.commands[0].stdout.strip("\n")
+    if os != "windows":
+        vlan_id = resp.commands[0].stdout.strip("\n")
+    else:
+        val = json.loads(resp.commands[0].stdout.strip("\n"))
+        vlan_id = val["RegistryValue"]
     if not vlan_id:
         vlan_id="0"
     return int(vlan_id)
@@ -163,7 +169,7 @@ def setInterfaceMTU(node, interface, mtu):
         intf = workload.GetNodeInterface(node)
         name = intf.WindowsIntName(interface)
         # windows mtu includes 14B ethernet header and checksum
-        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetAdapterAdvancedProperty '%s' -DisplayName 'Jumbo*' | Set-NetAdapterAdvancedProperty -RegistryValue '%s'\"" % (name, str(mtu+14))
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -RegistryKeyword *JumboPacket -RegistryValue '%s'\"" % (name, str(mtu+14))
         api.Trigger_AddHostCommand(req, node, "sleep 10", timeout=300)
     else:
         assert(0)

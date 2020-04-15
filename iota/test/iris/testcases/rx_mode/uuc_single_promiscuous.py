@@ -146,7 +146,7 @@ def Trigger(tc):
             api.Logger.error("Something went wrong with GetHALShowOutput")
             result = api.types.status.FAILURE
             break
-        lif_obj_docs = yaml.load_all(show_lif_resp.commands[0].stdout)
+        lif_obj_docs = yaml.load_all(show_lif_resp.commands[0].stdout, Loader=yaml.Loader)
 
         for lif_obj in lif_obj_docs:
             if lif_obj == None:

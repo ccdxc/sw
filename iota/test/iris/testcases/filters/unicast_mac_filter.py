@@ -56,16 +56,21 @@ def verifyEndPoints(tc):
 def changeMacAddrTrigger(tc, isRollback=False):
     result = api.types.status.SUCCESS
     node = tc.naples_node
-    #Change MAC of workload interfaces
-    result1 = filters_utils.changeIntfMacAddr(node, tc.wload_intf_mac_dict, False, isRollback)
-    #Change MAC of other host interfaces
-    result2 = filters_utils.changeIntfMacAddr(node, tc.host_intf_mac_dict, False, isRollback)
-    #Change MAC of naples interfaces
-    #TODO changing MAC address of mnic results in IOTA failure in FreeBSD. commenting this out until its RCA
-    if api.GetNodeOs(node) == "linux":
+
+    # change host MAC as last one to avoid ssh failure
+    # reset host MAC first
+    if isRollback:
+        result1 = filters_utils.changeIntfMacAddr(node, tc.host_intf_mac_dict, False, isRollback)
+        result2 = filters_utils.changeIntfMacAddr(node, tc.wload_intf_mac_dict, False, isRollback)
         result3 = filters_utils.changeIntfMacAddr(node, tc.naples_intf_mac_dict, True, isRollback)
     else:
-        result3 = api.types.status.SUCCESS
+        #Change MAC of workload interfaces
+        result1 = filters_utils.changeIntfMacAddr(node, tc.wload_intf_mac_dict, False, isRollback)
+        #Change MAC of naples interfaces
+        result2 = filters_utils.changeIntfMacAddr(node, tc.naples_intf_mac_dict, True, isRollback)
+        #Change MAC of other host interfaces
+        result3 = filters_utils.changeIntfMacAddr(node, tc.host_intf_mac_dict, False, isRollback)
+
     if any([result1, result2, result3]) is True:
         api.Logger.error("UC MAC filter : Trigger -> changeMacAddrTrigger failed ", result1, result2, result3, isRollback)
         result = api.types.status.FAILURE

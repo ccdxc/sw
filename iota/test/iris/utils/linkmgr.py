@@ -20,7 +20,7 @@ def GetLinkStatusChangeCount (naples_host):
     successfulYamlParsing = 0
     for portInfo in perPortOutput:
         try:
-            testobj = yaml.load(portInfo)#parse the YAML
+            testobj = yaml.load(portInfo, Loader=yaml.Loader)#parse the YAML
             if bool(testobj):#last split is always empty - skip it. Otherwise process it
                  portId=testobj['spec']['keyorhandle']['keyorhandle']['portid']
                  linkDownPerPort=testobj['stats']['numlinkdown']

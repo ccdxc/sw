@@ -214,6 +214,9 @@ def getAllIntfPktFilter(naples_node):
     cmd = resp.commands[0]
 
     perLifOutput = cmd.stdout.split("---")
+    os = api.GetNodeOs(naples_node)
+    if os == naples_host_utils.OS_TYPE_WINDOWS:
+        mapping = naples_host_utils.GetWindowsPortMapping(naples_node)
 
     for lif in perLifOutput:
         lifObj = yaml.load(lif, Loader=yaml.FullLoader)
@@ -223,6 +226,15 @@ def getAllIntfPktFilter(naples_node):
             # eg., inb_mnic0/lif67
             # so until that is fixed, temp hack to strip the "/lif<lif_id>" suffix
             intfName = intfName.split("/")[0]
+            if os == naples_host_utils.OS_TYPE_WINDOWS and intfName[:4] =="Pen~":
+                found = False
+                for intf in mapping.values():
+                    if intfName[4:] == intf["ifDesc"][4 - len(intfName):]:
+                        intfName = intf["LinuxName"]
+                        found = True
+                        break
+                if not found:
+                    api.Logger.error("not able to find windows adapter name", intfName)
             bc = lifObj['spec']['packetfilter']['receivebroadcast']
             mc = lifObj['spec']['packetfilter']['receiveallmulticast']
             pr = lifObj['spec']['packetfilter']['receivepromiscuous']

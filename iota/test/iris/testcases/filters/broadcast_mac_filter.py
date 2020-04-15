@@ -90,7 +90,7 @@ def triggerArping(w1, w2, tc):
         ethIntf = w2.parent_interface
     else:
         ethIntf = w1.parent_interface
-    if (w1.encap_vlan is 0):
+    if (w1.encap_vlan == 0):
         #In case of untagged workload, interface being untagged,
         #all untagged interfaces will receive BC traffic. so increment for all
         for intf in statsCount.keys():
