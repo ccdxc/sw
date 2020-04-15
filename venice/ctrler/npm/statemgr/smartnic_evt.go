@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/events/generated/eventtypes"
 	orchutils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb/objReceiver"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -156,6 +157,9 @@ func (sm *Statemgr) dscCreate(smartNic *ctkit.DistributedServiceCard) (*Distribu
 				log.Infof("Added the dsc: %s to profile: %s", smartNic.Name, profName)
 			}
 			profileState.DSCProfile.Unlock()
+		} else {
+			//Retry as this might be timing
+			return nil, kvstore.NewKeyNotFoundError(profName, 0)
 		}
 	}
 
@@ -232,7 +236,7 @@ func (sm *Statemgr) OnDistributedServiceCardUpdate(smartNic *ctkit.DistributedSe
 	defer sm.ProcessDSCEvent(UpdateEvent, &smartNic.DistributedServiceCard)
 	sns, err := sm.updateDSC(smartNic, nsnic)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	sm.updateDSCRelatedObjects(sns, nsnic, true)
@@ -275,6 +279,9 @@ func (sm *Statemgr) updateDSC(smartNic *ctkit.DistributedServiceCard, nsnic *clu
 				}
 
 				profileState.DSCProfile.Unlock()
+			} else {
+				//Retry as this might be timing
+				return nil, kvstore.NewKeyNotFoundError(newProfile, 0)
 			}
 		}
 
