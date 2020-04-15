@@ -84,6 +84,9 @@ def Setup(tc):
     if getattr(tc.args, 'capture_pcap', False):
         if common.start_pcap_capture(tc) != api.types.status.SUCCESS:
             return api.types.status.FAILURE
+    if getattr(tc.args, 'capture_single_pcap', False):
+        if common.start_single_pcap_capture(tc) != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -152,6 +155,12 @@ def Verify(tc):
         ret = common.stop_pcap_capture(tc)
         if ret != api.types.status.SUCCESS:
             api.Logger.info("pcap caputre failed")
+            return ret
+
+    if getattr(tc.args, 'capture_single_pcap', False):
+        ret = common.stop_single_pcap_capture(tc)
+        if ret != api.types.status.SUCCESS:
+            api.Logger.info("single pcap caputre failed")
             return ret
 
     if tc.cli_resp is None:

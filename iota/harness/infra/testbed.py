@@ -87,7 +87,6 @@ def updateMultiNicInfo():
                 Logger.info(msg)
                 store.SetPrimaryIntNicMgmtIp(ip)
     except:
-        Logger.debug('failed to determine internal mnic ip. error was: {0}'.format(traceback.format_exc()))
         Logger.info('setting nic int mgmt ip to default of 169.254.0.1')
         store.SetPrimaryIntNicMgmtIp('169.254.0.1')
 

@@ -106,6 +106,7 @@ testcases:
             timeout : 7200
             type: remote_only
             iperfthreads     : 2
+            capture_single_pcap: True
             #capture_pcap : true
     -   name    : UplinkIntf_TSO
         testcase: testcases.drivers.features

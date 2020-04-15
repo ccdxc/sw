@@ -249,3 +249,32 @@ def stop_pcap_capture(tc):
                 return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
+
+def start_single_pcap_capture(tc):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    nodes = api.GetWorkloadNodeHostnames()
+    tc.pcap_cmds = []
+    intf = api.GetRemoteWorkloadPairs()[0].interface
+    tc.pcap_filename = pcap_file_name(intf)
+    cmd = cmd_builder.tcpdump_cmd(intf, tc.pcap_filename)
+    api.Trigger_AddHostCommand(req, n, cmd, background = True)
+    resp = api.Trigger(req)
+    for cmd in resp.commands:
+        if cmd.handle == None or len(cmd.handle) == 0:
+            api.Logger.error("Error starting pcap : %s " % cmd.command)
+            api.Logger.error("Std Output : %s "% cmd.stdout)
+            api.Logger.error("Std Err :  %s "% cmd.stdout)
+            return api.types.status.FAILURE
+        api.Logger.info("Success running cmd : %s" % cmd.command)
+    tc.pcap_trigger = resp
+    return api.types.status.SUCCESS
+
+def stop_single_pcap_capture(tc):
+    api.Trigger_TerminateAllCommands(tc.pcap_trigger)
+    nodes = api.GetWorkloadNodeHostnames()
+    tc_dir = tc.GetLogsDir()
+    resp = api.CopyFromHost(n, [tc.pcap_filename], tc_dir)
+    if resp == None or resp.api_response.api_status != types_pb2.API_STATUS_OK:
+        api.Logger.error("Failed to copy from  to Node: %s" % n)
+        return api.types.status.FAILURE
+    return api.types.status.SUCCESS
