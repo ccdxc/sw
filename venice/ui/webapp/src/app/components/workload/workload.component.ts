@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray } from '@angular/forms';
 import { MatDialog } from '@angular/material';
 import { Animations } from '@app/animations';
@@ -13,21 +13,18 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
-import { FieldsRequirement, SearchSearchRequest, SearchSearchResponse, SearchTextRequirement, SearchSearchRequest_mode, ISearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { FieldsRequirement, SearchSearchRequest, ISearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { IApiStatus, IWorkloadWorkload, WorkloadWorkload, WorkloadWorkloadList } from '@sdk/v1/models/generated/workload';
+import { IApiStatus, IWorkloadWorkload, WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import * as _ from 'lodash';
 import { SelectItem } from 'primeng/primeng';
-import { Table } from 'primeng/table';
 import { Observable, Subscription } from 'rxjs';
 import { SearchUtil } from '../search/SearchUtil';
-import { AdvancedSearchComponent, LocalSearchRequest } from '../shared/advanced-search/advanced-search.component';
+import { AdvancedSearchComponent } from '../shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '../shared/labeleditor';
 import { CustomExportMap, TableCol } from '../shared/tableviewedit';
 import { TableUtility } from '../shared/tableviewedit/tableutility';
-import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.component';
-import { debounceTime } from 'rxjs/operators';
 import { PentableComponent } from '../shared/pentable/pentable.component';
 import { BaseComponent } from '../base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
@@ -128,14 +125,31 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
   dataObjects: ReadonlyArray<WorkloadWorkload> = [];
   dataObjectsBackUp: ReadonlyArray<WorkloadWorkload> = null;
   exportFilename: string = 'PSM-workloads';
-  exportMap: CustomExportMap = {};
+  exportMap: CustomExportMap = {
+    'spec.interfaces': (opts): string => {
+      const outputs = [];
+      const rowData = opts.data;
+      const keys = this.getKeys(rowData.spec.interfaces);
+      for (let index = 0; index < keys.length; index++) {
+        if (rowData.spec.interfaces[index]['ip-addresses'] &&
+          rowData.spec.interfaces[index]['ip-addresses'].length > 0) {
+          outputs.push(rowData.spec.interfaces[index]['mac-address'] + '-' + rowData.spec.interfaces[index]['ip-addresses'].join(', '));
+        } else if (!rowData.spec.interfaces[index]['ip-addresses'] || rowData.spec.interfaces[index]['ip-addresses'].length === 0) {
+          outputs.push(rowData.spec.interfaces[index]['mac-address']);
+        }
+      }
+      return outputs.join(' ');
+    },
+    'meta.labels': (opts): string => {
+      return this.formatLabels(opts.data.meta.labels);
+    }
+  };
 
   naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   workloadDSCHostTupleMap: { [key: string]: WorkloadDSCHostSecurityTuple } = {};
   labelEditorMetaData: LabelEditorMetadataModel;
   inLabelEditMode: boolean = false;
-
 
   hostsEventUtility: HttpEventUtility<ClusterHost>;
   hostObjects: ReadonlyArray<ClusterHost>;
