@@ -55,6 +55,8 @@ var typesMapMirror = map[string]*api.Struct{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{ID: "export-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "monitoring.MirrorExportConfig"},
+
+			"StripVlanHdr": api.Field{Name: "StripVlanHdr", CLITag: api.CLIInfo{ID: "strip-vlan-hdr", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "strip-vlan-hdr", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"monitoring.MirrorExportConfig": &api.Struct{
@@ -120,6 +122,7 @@ var typesMapMirror = map[string]*api.Struct{
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"schedule-state":   api.CLIInfo{Path: "Status.ScheduleState", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"strip-vlan-hdr":   api.CLIInfo{Path: "Spec.Collectors[].StripVlanHdr", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"type":             api.CLIInfo{Path: "Spec.Collectors[].Type", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},

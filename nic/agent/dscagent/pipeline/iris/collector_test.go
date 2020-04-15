@@ -104,6 +104,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 				Collectors: []netproto.MirrorCollector{
 					{
 						ExportCfg: netproto.MirrorExportConfig{Destination: "192.168.100.101"},
+						Type:      "ERSPAN_Type_3",
 					},
 				},
 			},
@@ -121,6 +122,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 				Collectors: []netproto.MirrorCollector{
 					{
 						ExportCfg: netproto.MirrorExportConfig{Destination: "192.168.100.101"},
+						Type:      "ERSPAN_Type_3",
 					},
 				},
 			},
@@ -138,6 +140,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 				Collectors: []netproto.MirrorCollector{
 					{
 						ExportCfg: netproto.MirrorExportConfig{Destination: "192.168.100.103"},
+						Type:      "ERSPAN_Type_3",
 					},
 				},
 			},

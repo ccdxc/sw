@@ -43,8 +43,9 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *netproto.MirrorSes
 			export = *c.ExportCfg
 		}
 		tc := netproto.MirrorCollector{
-			//Type:      c.Type,
-			ExportCfg: netproto.MirrorExportConfig{Destination: export.Destination},
+			Type:         c.Type,
+			StripVlanHdr: c.StripVlanHdr,
+			ExportCfg:    netproto.MirrorExportConfig{Destination: export.Destination},
 		}
 		tSpec.Collectors = append(tSpec.Collectors, tc)
 	}

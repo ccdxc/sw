@@ -526,6 +526,13 @@
           "minLength": 1,
           "maxLength": 2048,
           "description": "Length of string should be between 1 and 2048."
+        },
+        "type": {
+          "type": "string"
+        },
+        "strip-vlan-hdr": {
+          "type": "boolean",
+          "format": "boolean"
         }
       },
       "description": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)."

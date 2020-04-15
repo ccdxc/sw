@@ -489,6 +489,15 @@
         },
         "pcap-dir-name": {
           "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of Collector."
+        },
+        "strip-vlan-hdr": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "remove vlan header."
         }
       },
       "description": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)."

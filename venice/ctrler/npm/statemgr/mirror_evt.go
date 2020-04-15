@@ -111,6 +111,8 @@ func buildDSCMirrorSession(mss *MirrorSessionState) *netproto.MirrorSession {
 			ExportCfg: netproto.MirrorExportConfig{Destination: export.Destination,
 				Gateway: export.Gateway,
 			},
+			Type:         c.Type,
+			StripVlanHdr: c.StripVlanHdr,
 		}
 		tSpec.Collectors = append(tSpec.Collectors, tc)
 	}

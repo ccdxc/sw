@@ -79,15 +79,18 @@ func (x Direction) String() string {
 
 // PacketCollectorType_normal is a map of normalized values for the enum
 var PacketCollectorType_normal = map[string]string{
-	"erspan": "erspan",
+	"erspan_type_2": "erspan_type_2",
+	"erspan_type_3": "erspan_type_3",
 }
 
 var PacketCollectorType_vname = map[int32]string{
-	0: "erspan",
+	0: "erspan_type_3",
+	1: "erspan_type_2",
 }
 
 var PacketCollectorType_vvalue = map[string]int32{
-	"erspan": 0,
+	"erspan_type_3": 0,
+	"erspan_type_2": 1,
 }
 
 func (x PacketCollectorType) String() string {
@@ -263,7 +266,7 @@ func (m *MirrorCollector) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
-		m.Type = "erspan"
+		m.Type = "erspan_type_3"
 	}
 	return ret
 }

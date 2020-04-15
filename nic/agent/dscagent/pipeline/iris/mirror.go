@@ -45,7 +45,7 @@ func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 		// Create the unique key for collector dest IP
 		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
 		// Create collector
-		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c.ExportCfg.Gateway, mirror.Spec.PacketSize)
+		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c, mirror.Spec.PacketSize)
 		if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 			return errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
@@ -128,7 +128,7 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 			return errors.Wrapf(types.ErrDeleteReceivedForNonExistentCollector, "MirrorSession: %s | collectorKey: %s", mirror.GetKey(), destKey)
 		}
 		// Try to delete collector if ref count is 0
-		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c.ExportCfg.Gateway, mirror.Spec.PacketSize)
+		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c, mirror.Spec.PacketSize)
 		if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorDelete, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 		}
@@ -247,7 +247,7 @@ func convertMirrorSessionKeyHandle(mirrorID uint64) *halapi.MirrorSessionKeyHand
 	}
 }
 
-func buildCollector(name, vrfName, dstIP, gw string, packetSize uint32) netproto.Collector {
+func buildCollector(name, vrfName, dstIP string, mc netproto.MirrorCollector, packetSize uint32) netproto.Collector {
 	return netproto.Collector{
 		TypeMeta: api.TypeMeta{Kind: "Collector"},
 		ObjectMeta: api.ObjectMeta{
@@ -256,10 +256,12 @@ func buildCollector(name, vrfName, dstIP, gw string, packetSize uint32) netproto
 			Name:      name,
 		},
 		Spec: netproto.CollectorSpec{
-			VrfName:     vrfName,
-			Destination: dstIP,
-			PacketSize:  packetSize,
-			Gateway:     gw,
+			VrfName:      vrfName,
+			Destination:  dstIP,
+			PacketSize:   packetSize,
+			Gateway:      mc.ExportCfg.Gateway,
+			Type:         mc.Type,
+			StripVlanHdr: mc.StripVlanHdr,
 		},
 	}
 }

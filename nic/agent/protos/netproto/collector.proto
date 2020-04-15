@@ -38,10 +38,12 @@ message Collector {
 
 // Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
 message CollectorSpec {
-    string VrfName     = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
-    string Destination = 2 [(gogoproto.jsontag) = "destination,omitempty", (venice.check) = "StrLen(1,2048)"];
-    uint32 PacketSize  = 3 [(gogoproto.jsontag) = "packet-size,omitempty"];
-    string Gateway     = 4 [(gogoproto.jsontag) = "gateway,omitempty", (venice.check) = "StrLen(1,2048)"];
+    string VrfName      = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+    string Destination  = 2 [(gogoproto.jsontag) = "destination,omitempty", (venice.check) = "StrLen(1,2048)"];
+    uint32 PacketSize   = 3 [(gogoproto.jsontag) = "packet-size,omitempty"];
+    string Gateway      = 4 [(gogoproto.jsontag) = "gateway,omitempty", (venice.check) = "StrLen(1,2048)"];
+    string Type         = 5 [(gogoproto.jsontag) = "type,omitempty"];
+    bool   StripVlanHdr = 6 [(gogoproto.jsontag) = "strip-vlan-hdr,omitempty" ];
 }
 
 // CollectorStatus captures the sg policy status

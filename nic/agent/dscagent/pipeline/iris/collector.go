@@ -175,8 +175,10 @@ func convertMirrorSession(col netproto.Collector, destIP string, vrfID uint64) *
 				Snaplen:      col.Spec.PacketSize,
 				Destination: &halapi.MirrorSessionSpec_ErspanSpec{ // TODO Fix Destination when more than one collector per MirrorSession is supported
 					ErspanSpec: &halapi.ERSpanSpec{
-						DestIp: utils.ConvertIPAddresses(destIP)[0],
-						SpanId: uint32(col.Status.Collector),
+						DestIp:      utils.ConvertIPAddresses(destIP)[0],
+						SpanId:      uint32(col.Status.Collector),
+						Type:        halapi.ERSpanType(halapi.ERSpanType_value[strings.ToUpper(col.Spec.Type)]),
+						VlanStripEn: col.Spec.StripVlanHdr,
 					},
 				},
 			},

@@ -38,7 +38,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
-					Type: monitoring.PacketCollectorType_ERSPAN.String(),
+					Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
 					ExportCfg: &monitoring.MirrorExportConfig{
 						Destination: "111.1.1.1",
 					},
@@ -87,7 +87,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			},
 			Collectors: []monitoring.MirrorCollector{
 				{
-					Type: monitoring.PacketCollectorType_ERSPAN.String(),
+					Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
 					ExportCfg: &monitoring.MirrorExportConfig{
 						Destination: "111.1.1.1",
 					},

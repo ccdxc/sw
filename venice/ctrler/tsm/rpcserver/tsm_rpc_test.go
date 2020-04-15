@@ -101,7 +101,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 					Type: "VENICE",
 				},
 				{
-					Type: "ERSPAN",
+					Type: "ERSPAN_TYPE_3",
 					ExportCfg: &monitoring.MirrorExportConfig{
 						Destination: "111.1.1.1",
 					},

@@ -54,7 +54,7 @@
                         "export-config": {
                             "destination": "10.255.0.2"
                         }, 
-                        "type": "erspan"
+                        "type": "erspan_type_3"
                     }
                 ]
             }

@@ -116,7 +116,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 						PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 						Collectors: []monitoring.MirrorCollector{
 							{
-								Type: "ERSPAN",
+								Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
 								ExportCfg: &monitoring.MirrorExportConfig{
 									Destination: "192.168.1.10",
 								},
@@ -147,7 +147,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 					ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
 					ms.Spec.Collectors = []monitoring.MirrorCollector{
 						{
-							Type: "ERSPAN",
+							Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
 							ExportCfg: &monitoring.MirrorExportConfig{
 								Destination: fmt.Sprintf("192.168.1.%d", i+1),
 							},
@@ -269,7 +269,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 					ms.Name = fmt.Sprintf("new-mirror-%d", i+1)
 					ms.Spec.Collectors = []monitoring.MirrorCollector{
 						{
-							Type: "ERSPAN",
+							Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
 							ExportCfg: &monitoring.MirrorExportConfig{
 								Destination: fmt.Sprintf("192.168.1.%d", i+1),
 							},

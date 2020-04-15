@@ -13,6 +13,7 @@ import { MonitoringMirrorExportConfig, IMonitoringMirrorExportConfig } from './m
 export interface IMonitoringMirrorCollector {
     'type': MonitoringMirrorCollector_type;
     'export-config'?: IMonitoringMirrorExportConfig;
+    'strip-vlan-hdr'?: boolean;
     '_ui'?: any;
 }
 
@@ -24,10 +25,12 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     'type': MonitoringMirrorCollector_type = null;
     /** When collector type is Venice, collector export information is not required. */
     'export-config': MonitoringMirrorExportConfig = null;
+    /** Remove vlan from mirror packet. */
+    'strip-vlan-hdr': boolean = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorCollector]: PropInfoItem } = {
         'type': {
             enum: MonitoringMirrorCollector_type_uihint,
-            default: 'erspan',
+            default: 'erspan_type_3',
             description:  `Type of Collector.`,
             required: true,
             type: 'string'
@@ -36,6 +39,11 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
             description:  `When collector type is Venice, collector export information is not required.`,
             required: false,
             type: 'object'
+        },
+        'strip-vlan-hdr': {
+            description:  `Remove vlan from mirror packet.`,
+            required: false,
+            type: 'boolean'
         },
     }
 
@@ -86,6 +94,13 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
         } else {
             this['export-config'].setValues(null, fillDefaults);
         }
+        if (values && values['strip-vlan-hdr'] != null) {
+            this['strip-vlan-hdr'] = values['strip-vlan-hdr'];
+        } else if (fillDefaults && MonitoringMirrorCollector.hasDefaultValue('strip-vlan-hdr')) {
+            this['strip-vlan-hdr'] = MonitoringMirrorCollector.propInfo['strip-vlan-hdr'].default;
+        } else {
+            this['strip-vlan-hdr'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -95,6 +110,7 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
             this._formGroup = new FormGroup({
                 'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(MonitoringMirrorCollector_type), ]), MonitoringMirrorCollector.propInfo['type']),
                 'export-config': CustomFormGroup(this['export-config'].$formGroup, MonitoringMirrorCollector.propInfo['export-config'].required),
+                'strip-vlan-hdr': CustomFormControl(new FormControl(this['strip-vlan-hdr']), MonitoringMirrorCollector.propInfo['strip-vlan-hdr']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('export-config') as FormGroup).controls).forEach(field => {
@@ -113,6 +129,7 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
         if (this._formGroup) {
             this._formGroup.controls['type'].setValue(this['type']);
             this['export-config'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['strip-vlan-hdr'].setValue(this['strip-vlan-hdr']);
         }
     }
 }

@@ -24,7 +24,7 @@ mirrorpolicy_template = {
         "packet-size": 128,
         "collectors": [
           {
-             "type": "erspan",
+             "type": "erspan_type_3",
              "export-config": {
               "destination": "192.168.100.101"
             }

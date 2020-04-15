@@ -126,13 +126,13 @@
                         "export-config": {
                             "destination": "192.168.100.101"
                         }, 
-                        "type": "erspan"
+                        "type": "erspan_type_3"
                     },
                     {
                         "export-config": {
                             "destination": "192.168.100.103"
                         }, 
-                        "type": "erspan"
+                        "type": "erspan_type_3"
                     }
                 ]
             }

@@ -128,7 +128,8 @@ export enum MonitoringMeasurementCriteria_function {
 }
 
 export enum MonitoringMirrorCollector_type {
-    'erspan' = "erspan",
+    'erspan_type_3' = "erspan_type_3",
+    'erspan_type_2' = "erspan_type_2",
 }
 
 export enum MonitoringMirrorSessionSpec_packet_filters {
@@ -302,7 +303,8 @@ export enum MonitoringMatchedRequirement_operator_uihint {
 }
 
 export enum MonitoringMirrorCollector_type_uihint {
-    'erspan' = "ERSPAN",
+    'erspan_type_2' = "ERSPAN Type 2",
+    'erspan_type_3' = "ERSPAN Type 3",
 }
 
 export enum MonitoringMirrorSessionSpec_packet_filters_uihint {

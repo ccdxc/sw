@@ -18809,17 +18809,24 @@
         "type": {
           "type": "string",
           "enum": [
-            "erspan"
+            "erspan_type_3",
+            "erspan_type_2"
           ],
-          "default": "erspan",
+          "default": "erspan_type_3",
           "x-ui-hints": {
-            "erspan": "ERSPAN"
+            "erspan_type_2": "ERSPAN Type 2",
+            "erspan_type_3": "ERSPAN Type 3"
           },
           "description": "Type of Collector."
         },
         "export-config": {
           "$ref": "#/definitions/monitoringMirrorExportConfig",
           "description": "When collector type is Venice, collector export information is not required."
+        },
+        "strip-vlan-hdr": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "remove vlan from mirror packet."
         }
       },
       "description": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)."

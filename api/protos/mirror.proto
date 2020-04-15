@@ -39,10 +39,10 @@ message MirrorSessionSpec {
         // ui-hint: Firewall Policy Drops
         FIREWALL_POLICY_DROP    = 3 [(venice.enumValueStr) = "firewall-policy-drop"];
     }
-    repeated string PacketFilters        = 5 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
+    repeated string PacketFilters          = 5 [(gogoproto.jsontag) = "packet-filters,omitempty", (venice.check) = "StrEnum(MirrorSessionSpec.MirrorPacketFilter)"];
 
     // If specified, will pick up interface matching the selector
-    InterfaceMirror Interfaces            = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "interfaces,omitempty"];
+    InterfaceMirror Interfaces             = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "interfaces,omitempty"];
 }
 
 enum Direction {
@@ -68,8 +68,10 @@ message MirrorStartConditions {
 }
 
 enum PacketCollectorType {
-    // ui-hint: ERSPAN
-    ERSPAN     = 0;    // external packet capture using ERSPAN format
+    // ui-hint: ERSPAN Type 3
+    ERSPAN_TYPE_3     = 0;    // external packet capture using ERSPAN type 3 format
+    // ui-hint: ERSPAN Type 2
+    ERSPAN_TYPE_2     = 1;    // external packet capture using ERSPAN type 2 format
 }
 
 message MirrorExportConfig {
@@ -83,10 +85,12 @@ message MirrorExportConfig {
 // Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
 message MirrorCollector {
     // Type of Collector
-    string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.default)="erspan", (venice.check) = "StrEnum(PacketCollectorType)"];
+    string              Type          = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.default)="erspan_type_3", (venice.check) = "StrEnum(PacketCollectorType)"];
 
     // When collector type is Venice, collector export information is not required
-    MirrorExportConfig    ExportCfg   =2 [(gogoproto.nullable)=true, (gogoproto.jsontag) = "export-config,omitempty"];
+    MirrorExportConfig    ExportCfg   = 2 [(gogoproto.nullable)=true, (gogoproto.jsontag) = "export-config,omitempty"];
+   // remove vlan from mirror packet
+    bool               StripVlanHdr   = 3 [(gogoproto.jsontag) = "strip-vlan-hdr,omitempty" ];
 }
 
 // Traffic Selection Rules

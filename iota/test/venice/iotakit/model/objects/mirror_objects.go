@@ -53,7 +53,7 @@ func (msc *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transpo
 		return &MirrorSessionCollection{err: wc.err}
 	}
 	collector := monitoring.MirrorCollector{
-		Type: monitoring.PacketCollectorType_ERSPAN.String(),
+		Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
 		ExportCfg: &monitoring.MirrorExportConfig{
 			Destination: strings.Split(wc.Workloads[wlnum].iotaWorkload.IpPrefix, "/")[0],
 		},
@@ -72,7 +72,7 @@ func (msc *MirrorSessionCollection) AddVeniceCollector(vnc *VeniceNodeCollection
 		return msc
 	}
 	collector := monitoring.MirrorCollector{
-		Type: monitoring.PacketCollectorType_ERSPAN.String(),
+		Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
 		ExportCfg: &monitoring.MirrorExportConfig{
 			Destination: strings.Split(vnc.Nodes[0].iotaNode.IpAddress, "/")[0],
 		},

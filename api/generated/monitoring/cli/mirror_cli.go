@@ -78,6 +78,13 @@ var CreateMirrorSessionFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "strip-vlan-hdr",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "type",
 		Type:   "StringSlice",
 		Help:   "",

@@ -40,7 +40,7 @@ func (it *integTestSuite) TestNpmMirrorPolicy(c *C) {
 			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
 			Collectors: []monitoring.MirrorCollector{
 				{
-					Type: "erspan",
+					Type: monitoring.PacketCollectorType_ERSPAN_TYPE_3.String(),
 					ExportCfg: &monitoring.MirrorExportConfig{
 						Destination: "100.1.1.1",
 					},

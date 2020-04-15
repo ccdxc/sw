@@ -55,8 +55,8 @@ message MirrorSessionSpec {
     // Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions
     repeated MatchRule   MatchRules         = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,inline"];
 
-    uint32                  PacketSize      = 4 [(gogoproto.jsontag) = "packet-size,omitempty"];
-    MirrorDir               MirrorDirection = 5 [(gogoproto.jsontag) = "mirror-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
+    uint32          PacketSize              = 4 [(gogoproto.jsontag) = "packet-size,omitempty"];
+    MirrorDir       MirrorDirection         = 5 [(gogoproto.jsontag) = "mirror-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
 }
 
 
@@ -94,4 +94,8 @@ message MirrorCollector {
     // Collector export information for ERSPAN. Not required for VENICE collector
     MirrorExportConfig  ExportCfg   = 1 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
     string              PcapDirName = 2 [(gogoproto.jsontag) = "pcap-dir-name"];
+    // Type of Collector
+    string          Type            = 3 [(gogoproto.jsontag) = "type,omitempty"];
+   // remove vlan header
+    bool            StripVlanHdr    = 4 [(gogoproto.jsontag) = "strip-vlan-hdr,omitempty" ];
 }

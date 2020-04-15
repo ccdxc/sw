@@ -21,6 +21,10 @@ var typesMapMirror = map[string]*api.Struct{
 			"ExportCfg": api.Field{Name: "ExportCfg", CLITag: api.CLIInfo{ID: "export-config", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "export-config", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.MirrorExportConfig"},
 
 			"PcapDirName": api.Field{Name: "PcapDirName", CLITag: api.CLIInfo{ID: "pcap-dir-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pcap-dir-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"StripVlanHdr": api.Field{Name: "StripVlanHdr", CLITag: api.CLIInfo{ID: "strip-vlan-hdr", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "strip-vlan-hdr", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
 		},
 	},
 	"netproto.MirrorExportConfig": &api.Struct{
@@ -82,7 +86,9 @@ var typesMapMirror = map[string]*api.Struct{
 			"pcap-dir-name":    api.CLIInfo{Path: "Spec.Collectors[].PcapDirName", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"strip-vlan-hdr":   api.CLIInfo{Path: "Spec.Collectors[].StripVlanHdr", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"type":             api.CLIInfo{Path: "Spec.Collectors[].Type", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"vrf-name":         api.CLIInfo{Path: "Spec.VrfName", Skip: false, Insert: "", Help: ""},
 		},
