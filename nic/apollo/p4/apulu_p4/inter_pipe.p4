@@ -113,6 +113,7 @@ action ingress_recirc() {
     remove_header(capri_txdma_intrinsic);
     remove_header(p4plus_to_p4);
     remove_header(p4plus_to_p4_vlan);
+    modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
 }
 
@@ -232,6 +233,7 @@ action egress_to_rxdma() {
 action egress_recirc() {
     add_header(egress_recirc);
     modify_field(egress_recirc.p4_to_arm_valid, p4e_to_arm.valid);
+    modify_field(capri_intrinsic.tm_span_session, 0);
     modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
 }
 

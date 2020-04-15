@@ -108,6 +108,7 @@ egress_to_rxdma_ipv4:
                         CLASSIC_NIC_PKT_TYPE_IPV4
 
 egress_recirc:
+    phvwr           p.capri_intrinsic_tm_span_session, r0
     phvwr           p.egress_recirc_p4_to_arm_valid, k.p4e_to_arm_valid
     phvwr.e         p.egress_recirc_valid, TRUE
     phvwr.f         p.capri_intrinsic_tm_oport, TM_PORT_EGRESS

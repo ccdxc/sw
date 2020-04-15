@@ -25,6 +25,9 @@ p4e_device_info_unicast:
     phvwr           p.p4e_to_p4plus_classic_nic_l2_pkt_type, PACKET_TYPE_UNICAST
 
 p4e_device_info_common:
+    phvwr           p.{control_metadata_tcp_option_ws_valid, \
+                        control_metadata_tcp_option_mss_valid}, \
+                        k.{tcp_option_ws_valid,tcp_option_mss_valid}
     seq             c1, k.egress_recirc_valid, TRUE
     xor             r1, k.egress_recirc_mapping_done, 0x1
     phvwr.c1        p.control_metadata_mapping_ohash_lkp, r1

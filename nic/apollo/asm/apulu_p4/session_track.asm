@@ -383,6 +383,7 @@ tcp_responder_transition:
                         FLOW_STATE_ESTABLISHED
     bcf             [c1 & c2], tcp_responder_update
     smeqb           c1, k.tcp_flags, TCP_FLAG_RST, TCP_FLAG_RST
+    b.!c1           tcp_responder_4
     sle             c1, FLOW_STATE_ESTABLISHED, \
                         d.session_track_info_d.rflow_tcp_state
     sne             c1, d.session_track_info_d.rflow_tcp_state, FLOW_STATE_RESET

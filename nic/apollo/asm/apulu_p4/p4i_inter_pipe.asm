@@ -104,6 +104,7 @@ ingress_to_rxdma:
                          APULU_P4I_TO_RXDMA_HDR_SZ)
 
 ingress_recirc:
+    phvwr           p.capri_intrinsic_tm_span_session, r0
     /*
     phvwr           p.ingress_recirc_valid, TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
