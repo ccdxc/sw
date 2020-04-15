@@ -90,7 +90,7 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     uint32_t            total_size;
     uint64_t            base_addr;
     uint64_t            size;
-    uint32_t            max_cqs, max_sqs, max_rqs;
+    uint32_t            max_cqs, max_eqs, max_sqs, max_rqs;
     // TODO: num dcqcn profiles param from json
     uint32_t            num_dcqcn_profiles = 8;
     uint64_t            cq_base_addr; //address in HBM memory
@@ -109,6 +109,7 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     max_cqs  = qstate->type[Q_TYPE_RDMA_CQ].num_queues;
     max_sqs  = qstate->type[Q_TYPE_RDMA_SQ].num_queues;
     max_rqs  = qstate->type[Q_TYPE_RDMA_RQ].num_queues;
+    max_eqs  = qstate->type[Q_TYPE_RDMA_EQ].num_queues;
 
     memset(&sram_lif_entry, 0, sizeof(sram_lif_entry_t));
 
@@ -233,9 +234,11 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
     sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;
 
+    sram_lif_entry.log_num_eq_entries = log2(max_eqs);
+
     NIC_FUNC_DEBUG("lif-{}: pt_base_addr_page_id: {}, log_num_pt: {}, "
                    "log_num_kt: {}, log_num_dcqcn: {}, "
-                   "ah_base_addr_page_id: {}, log_num_ah {}, rdma_en_qtype_mask: {} "
+                   "ah_base_addr_page_id: {}, log_num_ah: {}, log_num_eq: {}, rdma_en_qtype_mask: {} "
                    "sq_qtype: {} rq_qtype: {} aq_qtype: {}, "
                    "prefetch_pool_base_addr : {:#x} log_prefetch_buf_size: {} "
                    "prefetch_cb_base_addr: {:#x}",
@@ -246,6 +249,7 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
                     sram_lif_entry.log_num_dcqcn_profiles,
                     sram_lif_entry.ah_base_addr_page_id,
                     sram_lif_entry.log_num_ah_entries,
+                    sram_lif_entry.log_num_eq_entries,
                     sram_lif_entry.rdma_en_qtype_mask,
                     sram_lif_entry.sq_qtype,
                     sram_lif_entry.rq_qtype,
@@ -306,7 +310,8 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
                             sram_lif_entry.rq_qtype,
                             sram_lif_entry.aq_qtype,
                             sram_lif_entry.barmap_base_addr,
-                            sram_lif_entry.barmap_size);
+                            sram_lif_entry.barmap_size,
+                            sram_lif_entry.log_num_eq_entries);
 
     NIC_FUNC_DEBUG("lif-{}: rdma_params_table init successful", lif);
     return ret;
@@ -416,7 +421,8 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add_(
                                                              uint8_t rq_qtype,
                                                              uint8_t aq_qtype,
                                                              uint64_t barmap_base_addr,
-                                                             uint32_t barmap_size)
+                                                             uint32_t barmap_size,
+                                                             uint8_t log_num_eq_entries)
 {
     p4pd_error_t                  pd_err;
     tx_stage0_lif_params_table_actiondata_t data = { 0 };
@@ -442,8 +448,8 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add_(
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.aq_qtype = aq_qtype;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_base_addr = barmap_base_addr;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_size = barmap_size;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_eq_entries = log_num_eq_entries;
 
-    /* TODO: Do we need memrev */
     pd_err = p4pd_global_entry_write(
         P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_STAGE0_LIF_PARAMS_TABLE,
         idx, NULL, NULL, &data);

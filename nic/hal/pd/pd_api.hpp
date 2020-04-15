@@ -2732,6 +2732,7 @@ typedef struct pd_txdma_table_entry_add_args_s {
     uint8_t aq_qtype;
     uint32_t barmap_base_addr;
     uint32_t barmap_size;
+    uint8_t log_num_eq_entries;
 } __PACK__ pd_txdma_table_entry_add_args_t;
 
 // lif

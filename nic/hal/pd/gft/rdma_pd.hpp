@@ -46,7 +46,8 @@ extern hal_ret_t p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (ui
                                                       uint8_t rq_qtype,
                                                       uint8_t aq_qtype,
                                                       uint32_t barmap_base_addr,
-                                                      uint8_t barmap_size);
+                                                      uint8_t barmap_size,
+                                                      uint8_t log_num_eq_entries);
 extern hal_ret_t p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(
        uint32_t idx, tx_stage0_lif_params_table_actiondata_t *data);
 

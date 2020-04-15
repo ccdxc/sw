@@ -1123,6 +1123,7 @@ action tx_stage0_lif_rdma_params(rdma_en_qtype_mask,
                                  aq_qtype,
                                  barmap_base_addr,
                                  barmap_size,
+                                 log_num_eq_entries,
                                  reserved) {
     if (p4_txdma_intr.qid > 0) {
         modify_field(scratch_rdma.reserved, reserved);
@@ -1151,6 +1152,7 @@ action tx_stage0_lif_rdma_params(rdma_en_qtype_mask,
         modify_field(scratch_rdma.aq_qtype, aq_qtype);
         modify_field(scratch_rdma.barmap_base_addr, barmap_base_addr);
         modify_field(scratch_rdma.barmap_size, barmap_size);
+        modify_field(scratch_rdma.log_num_eq_entries, log_num_eq_entries);
         modify_field(scratch_rdma.reserved, reserved);
     }
 }

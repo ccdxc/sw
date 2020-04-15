@@ -113,7 +113,7 @@ def setHostOS():
         elif ("FreeBSD" in out):
             HOST_OS = 'FreeBSD'
         else:
-            print "ERROR: Failed to login to " + HOST + " as " + USER + ". Please setup passwordless login and try again." 
+            print "ERROR: Failed to login to " + HOST + " as " + USER + ". Please setup passwordless login and try again."
             exit()
     else:
         if sys.platform.startswith('freebsd'):
@@ -161,7 +161,6 @@ class RdmaAQCB0state(Packet):
         XLongField("cqcb_addr", 0),
         BitField("pad", 0, 128),
     ]
-
 
 class RdmaAQCB1state(Packet):
     name = "RdmaAQCB1state"
@@ -339,11 +338,11 @@ class RdmaSQCB0state(Packet):
         BitField("frpmr_in_progress", 0, 1),
         BitField("sqcb0_rsvd2", 0, 2),
     ]
-        
+
 class RdmaSQCB1state(Packet):
     name = "RdmaSQCB1state"
     fields_desc = [
-        # SQCB1 
+        # SQCB1
         ByteField("pc_offset", 0),
         X3BytesField("cq_id", 0),
         ByteField("sqcb1_p_index4", 0),
@@ -451,13 +450,11 @@ class RdmaSQCB2state(Packet):
         ShortField("mss", 0),
     ]
 
-
 class RdmaSQCB3state(Packet):
     name = "RdmaSQCB3state"
     fields_desc = [
         BitField("sqcb3", 0, 512),
     ]
-
 
 class RdmaReqTxStats(Packet):
     name = "RdmaReqTxStats"
@@ -907,7 +904,7 @@ class RdmaDcqcnCB(Packet):
         IntField("cur_byte_counter",0),
         BitField("byte_counter_exp_cnt",0, 16),
         BitField("timer_exp_cnt", 0, 16),
-        BitField("num_alpha_exp_cnt", 0, 16), 
+        BitField("num_alpha_exp_cnt", 0, 16),
         ByteField("num_cnp_rcvd", 0),
         ByteField("num_cnp_processed", 0),
         BitField("max_rate_reached", 0, 1),
@@ -1058,11 +1055,11 @@ class RdmaAQWqeMR(Packet):
 class RdmaAQWqeCQ(Packet):
     name = "RdmaAQWqeCQ"
     fields_desc = [
-        LEIntField("eq_id", 0),            
-        ByteField("depth_log2", 0),       
-        ByteField("stride_log2", 0),      
+        LEIntField("eq_id", 0),
+        ByteField("depth_log2", 0),
+        ByteField("stride_log2", 0),
         ByteField("dir_size_log2_rsvd", 0),
-        ByteField("page_size_log2", 0),   
+        ByteField("page_size_log2", 0),
         XBitField("rsvd", 0, 256),
         LEIntField("tbl_index", 0),
         LEIntField("map_count", 0),
@@ -1072,54 +1069,54 @@ class RdmaAQWqeCQ(Packet):
 class RdmaAQWqeCQP(Packet):
     name = "RdmaAQWqeCQP"
     fields_desc = [
-        LEIntField("pd_id", 0),               
-        XIntField("priv_flags", 0),          
-        LEIntField("sq_cq_id", 0),            
-        ByteField("sq_depth_log2", 0),       
-        ByteField("sq_stride_log2", 0),      
+        LEIntField("pd_id", 0),
+        XIntField("priv_flags", 0),
+        LEIntField("sq_cq_id", 0),
+        ByteField("sq_depth_log2", 0),
+        ByteField("sq_stride_log2", 0),
         ByteField("sq_dir_size_log2_rsvd", 0),
-        ByteField("sq_page_size_log2", 0),   
+        ByteField("sq_page_size_log2", 0),
         LEIntField("sq_tbl_index_xrcd_id", 0),
-        LEIntField("sq_map_count", 0),        
-        XLELongField("sq_dma_addr", 0),         
-        LEIntField("rq_cq_id", 0),            
-        ByteField("rq_depth_log2", 0),       
-        ByteField("rq_stride_log2", 0),      
+        LEIntField("sq_map_count", 0),
+        XLELongField("sq_dma_addr", 0),
+        LEIntField("rq_cq_id", 0),
+        ByteField("rq_depth_log2", 0),
+        ByteField("rq_stride_log2", 0),
         ByteField("rq_dir_size_log2_rsvd", 0),
-        ByteField("rq_page_size_log2", 0),   
-        LEIntField("rq_tbl_index_srq_id", 0), 
-        LEIntField("rq_map_count", 0),        
-        XLELongField("rq_dma_addr", 0),         
+        ByteField("rq_page_size_log2", 0),
+        LEIntField("rq_tbl_index_srq_id", 0),
+        LEIntField("rq_map_count", 0),
+        XLELongField("rq_dma_addr", 0),
     ]
 
 class RdmaAQWqeMQP(Packet):
     name = "RdmaAQWqeMQP"
     fields_desc = [
-        XIntField("attr_mask", 0),      
-        XIntField("access_flags", 0),   
-        LEIntField("rq_psn", 0),         
-        LEIntField("sq_psn", 0),         
-        LEIntField("qkey_dest_qpn", 0),  
+        XIntField("attr_mask", 0),
+        XIntField("access_flags", 0),
+        LEIntField("rq_psn", 0),
+        LEIntField("sq_psn", 0),
+        LEIntField("qkey_dest_qpn", 0),
         LEIntField("rate_limit_kbps", 0),
-        ByteField("pmtu", 0),           
-        ByteField("retry", 0),          
-        ByteField("rnr_timer", 0),      
-        ByteField("retry_timeout", 0),  
-        ByteField("rsq_depth", 0),      
-        ByteField("rrq_depth", 0),      
-        LEShortField("pkey_id", 0),        
-        LEIntField("ah_id_len", 0),      
-        XBitField("rsvd", 0, 32),        
-        LEIntField("rrq_index", 0),      
-        LEIntField("rsq_index", 0),      
-        XLELongField("dma_addr", 0),       
+        ByteField("pmtu", 0),
+        ByteField("retry", 0),
+        ByteField("rnr_timer", 0),
+        ByteField("retry_timeout", 0),
+        ByteField("rsq_depth", 0),
+        ByteField("rrq_depth", 0),
+        LEShortField("pkey_id", 0),
+        LEIntField("ah_id_len", 0),
+        XBitField("rsvd", 0, 32),
+        LEIntField("rrq_index", 0),
+        LEIntField("rsq_index", 0),
+        XLELongField("dma_addr", 0),
     ]
 
 class RdmaAQWqeQuery(Packet):
     name = "RdmaAQWqeQuery"
     fields_desc = [
-        XBitField("rsvd", 0, 384),        
-        XLELongField("dma_addr", 0),       
+        XBitField("rsvd", 0, 384),
+        XLELongField("dma_addr", 0),
     ]
 
 class RdmaAQWqeModDcqcn(Packet):
@@ -1301,7 +1298,8 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes, aqid = 1):
 
     #print cmd_str
     if os.system(cmd_str):
-        return '\0'*num_bytes
+        print("ERROR: Firmware command failed")
+        exit()
 
     #time.sleep(1)
 
@@ -1755,7 +1753,7 @@ if args.host is not None and \
             cb_str = getCbData(tn, addr, offset)
             RdmaReqRxStats(cb_str).show()
 
-        elif args.rsq is not None: 
+        elif args.rsq is not None:
             qid = int(args.rsq) + i
             printQpHeader(qid)
             addr = int(rq_base_addr, 16)
@@ -1803,7 +1801,7 @@ if args.host is not None and \
                 else:
                     RdmaRsqAtomicstate(cb_str).show()
 
-        elif args.rrq is not None: 
+        elif args.rrq is not None:
             qid = int(args.rrq) + i
             printQpHeader(qid)
             addr = int(sq_base_addr, 16)

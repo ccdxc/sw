@@ -302,7 +302,7 @@ header_type tx_rdma_scratch_metadata_t {
         //CQCB address is 1K aligned, so store only 24 bits
         cqcb_base_addr_hi: 24;
         sqcb_base_addr_hi: 24;
-        rqcb_base_addr_hi: 24;        
+        rqcb_base_addr_hi: 24;
         log_num_cq_entries: 5;
         log_num_sq_entries: 5;
         log_num_rq_entries: 5;
@@ -320,7 +320,9 @@ header_type tx_rdma_scratch_metadata_t {
         //barmap size in 8MB units
         //need 8 bits to present 2GB per LIF
         barmap_size: 8;
-        reserved: 37;
+
+        log_num_eq_entries: 4;
+        reserved: 33;
     }
 }
 
@@ -354,7 +356,7 @@ header_type rx_rdma_scratch_metadata_t {
         //CQCB address is 1K aligned, so store only 24 bits
         cqcb_base_addr_hi: 24;
         sqcb_base_addr_hi: 24;
-        rqcb_base_addr_hi: 24;        
+        rqcb_base_addr_hi: 24;
         log_num_cq_entries: 5;
         log_num_sq_entries: 5;
         log_num_rq_entries: 5;

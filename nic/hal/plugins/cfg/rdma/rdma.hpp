@@ -132,16 +132,9 @@ typedef struct sram_lif_entry_s {
     uint32_t aq_qtype: 3;
     uint32_t barmap_base_addr: 10;
     uint32_t barmap_size: 8;
-} PACKED sram_lif_entry_t;
 
-typedef struct lif_init_attr_s {
-    uint32_t max_qps;
-    //uint32_t max_srqs;
-    uint32_t max_cqs;
-    uint32_t max_eqs;
-    uint32_t max_pt_entries;
-    uint32_t max_keys;
-} lif_init_attr_t;
+    uint32_t log_num_eq_entries:4;
+} PACKED sram_lif_entry_t;
 
 typedef struct qpcb_ring_s {
     uint16_t  c_index;

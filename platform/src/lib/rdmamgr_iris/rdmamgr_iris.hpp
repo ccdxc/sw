@@ -48,7 +48,8 @@ private:
                                                       uint8_t rq_qtype,
                                                       uint8_t aq_qtype,
                                                       uint64_t barmap_base_addr,
-                                                      uint32_t barmap_size);
+                                                      uint32_t barmap_size,
+                                                      uint8_t log_num_eq_entries);
     sdk_ret_t p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add_(
                                                       uint32_t idx,
                                                       uint8_t rdma_en_qtype_mask,

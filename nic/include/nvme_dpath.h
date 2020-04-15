@@ -17,13 +17,6 @@
 #define HBM_PAGE_ALIGN(x) (((x) + (HBM_PAGE_SIZE - 1)) & \
                            ~(uint64_t)(HBM_PAGE_SIZE - 1))
 
-typedef struct lif_init_attr_s {
-    uint32_t max_sq;
-    uint32_t max_cq;
-    uint32_t max_ns;
-    uint32_t max_sess;
-} lif_init_attr_t;
-
 /*====================  TYPES.H ===================*/
 
 #define BYTES_TO_BITS(__B) ((__B)*8)

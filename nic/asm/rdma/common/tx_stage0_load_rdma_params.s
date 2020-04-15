@@ -6,7 +6,7 @@
 #include "resp_tx_args.h"
 #include "aq_tx_args.h"
 #include "resp_tx_args.h"
-    
+
 struct tx_stage0_lif_params_table_k k;
 struct tx_stage0_lif_params_table_d d;
 struct phv_ p;
@@ -16,8 +16,9 @@ struct phv_ p;
 #define AQ_TX_TO_S1_T struct aq_tx_to_stage_wqe_info_t
 #define AQ_TX_TO_S2_T struct aq_tx_to_stage_wqe2_info_t
 #define AQ_TX_TO_S3_T struct aq_tx_to_stage_sqcb_info_t
+#define AQ_TX_S2S_T struct aq_tx_aqcb_to_wqe_t
 #define RESP_TX_T2_S2S_T struct resp_tx_rqcb_to_precheckout_info_t
-   
+
 %%
 
 tx_stage0_load_rdma_params:
@@ -81,9 +82,15 @@ aq:
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, log_num_cq_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_cq_entries)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, log_num_kt_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_kt_entries)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, log_num_dcqcn_profiles, d.u.tx_stage0_lif_rdma_params_d.log_num_dcqcn_profiles)
-    CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, ah_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.ah_base_addr_page_id)    
+    CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, ah_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.ah_base_addr_page_id)
     CAPRI_SET_FIELD_RANGE(r2, AQ_TX_TO_S1_T, barmap_base, barmap_size, d.{u.tx_stage0_lif_rdma_params_d.barmap_base_addr...u.tx_stage0_lif_rdma_params_d.barmap_size})
-    
+
+    add         r2, r0, offsetof(struct phv_, common_t0_s2s_s2s_data)
+    CAPRI_SET_FIELD(r2, AQ_TX_S2S_T, log_num_ah_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_ah_entries)
+    CAPRI_SET_FIELD(r2, AQ_TX_S2S_T, log_num_eq_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_eq_entries)
+    CAPRI_SET_FIELD(r2, AQ_TX_S2S_T, log_num_sq_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_sq_entries)
+    CAPRI_SET_FIELD(r2, AQ_TX_S2S_T, log_num_rq_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_rq_entries)
+
     add         r2, r0, offsetof(struct phv_, to_stage_2_to_stage_data)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S2_T, ah_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.ah_base_addr_page_id)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S2_T, sqcb_base_addr_hi, d.u.tx_stage0_lif_rdma_params_d.sqcb_base_addr_hi)

@@ -111,7 +111,7 @@ header_type aq_tx_to_stage_wqe_info_t {
         log_num_cq_entries               :    4;
         log_num_kt_entries               :    5;
         log_num_dcqcn_profiles           :    5;
-        ah_base_addr_page_id             :   22;        
+        ah_base_addr_page_id             :   22;
         barmap_base                      :   10;
         barmap_size                      :    8;
         pad                              :    2;
@@ -217,14 +217,20 @@ header_type aq_tx_aqcb_to_rqcb_t {
 }
 
 // TODO: migrate to phv global later.
-// phv global has only 25 bits for cb_addr. if we change it to 28bits, 
-// lot of macros cannot be reused in aq asm code and need to be redefined 
+// phv global has only 25 bits for cb_addr. if we change it to 34bits,
+// lot of macros cannot be reused in aq asm code and need to be redefined
 // specific to aq. hence for now cb_addr is being populated in s2s.
+// Populate log_num_*_entries here since to_s1 is full.
 header_type aq_tx_aqcb_to_wqe_t {
     fields {
         cb_addr             :  34;
+        rsvd                :   6;
         map_count_completed :  32;
-        pad                 :  94;
+        log_num_ah_entries  :   4;
+        log_num_eq_entries  :   4;
+        log_num_sq_entries  :   4;
+        log_num_rq_entries  :   4;
+        pad                 :  72;
     }
 }
 
@@ -353,10 +359,14 @@ action aq_tx_aqwqe_process () {
     modify_field(to_s1_info_scr.barmap_base, to_s1_info.barmap_base);
     modify_field(to_s1_info_scr.barmap_size, to_s1_info.barmap_size);
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
-    
+
     // stage to stage
     modify_field(t0_s2s_aqcb_to_wqe_info_scr.cb_addr, t0_s2s_aqcb_to_wqe_info.cb_addr);
     modify_field(t0_s2s_aqcb_to_wqe_info_scr.map_count_completed, t0_s2s_aqcb_to_wqe_info.map_count_completed);
+    modify_field(t0_s2s_aqcb_to_wqe_info_scr.log_num_ah_entries, t0_s2s_aqcb_to_wqe_info.log_num_ah_entries);
+    modify_field(t0_s2s_aqcb_to_wqe_info_scr.log_num_eq_entries, t0_s2s_aqcb_to_wqe_info.log_num_eq_entries);
+    modify_field(t0_s2s_aqcb_to_wqe_info_scr.log_num_sq_entries, t0_s2s_aqcb_to_wqe_info.log_num_sq_entries);
+    modify_field(t0_s2s_aqcb_to_wqe_info_scr.log_num_rq_entries, t0_s2s_aqcb_to_wqe_info.log_num_rq_entries);
 }
 
 action aq_tx_modify_qp_2_process () {

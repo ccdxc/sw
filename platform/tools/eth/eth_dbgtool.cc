@@ -880,13 +880,13 @@ rdma_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 
     if (qid >= qinfo[qtype].length) {
         printf("Invalid qid %u for lif %u qtype %u (%s)\n",
-	       qid, lif, qtype, qnames[qtype]);
+               qid, lif, qtype, qnames[qtype]);
         return;
     }
 
     /* Print the state of a single queue */
     printf("RDMA queue state for lif %u qtype %u (%s) qid %u:\n",
-	   lif, qtype, qnames[qtype], qid);
+           lif, qtype, qnames[qtype], qid);
     rdma_qstate_one(qinfo, qtype, qid);
 }
 

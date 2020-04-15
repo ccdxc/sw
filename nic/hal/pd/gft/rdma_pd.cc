@@ -125,7 +125,8 @@ pd_txdma_table_entry_add(pd_func_args_t *pd_func_args) {
                                                                        args->rq_qtype,
                                                                        args->aq_qtype,
                                                                        args->barmap_base_addr,
-                                                                       args->barmap_size);
+                                                                       args->barmap_size,
+                                                                       args->log_num_eq_entries);
 
 }
 hal_ret_t
@@ -144,7 +145,8 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
                                                       uint8_t rq_qtype,
                                                       uint8_t aq_qtype,
                                                       uint32_t barmap_base_addr,
-                                                      uint8_t barmap_size)
+                                                      uint8_t barmap_size,
+                                                      uint8_t log_num_eq_entries)
 {
     hal_ret_t                    ret;
     sdk_ret_t                    sdk_ret;
@@ -172,6 +174,7 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.aq_qtype = aq_qtype;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_base_addr = barmap_base_addr;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.barmap_size = barmap_size;
+    data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.log_num_eq_entries = log_num_eq_entries;
 
     sdk_ret = dm->insert_withid(&data, idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);

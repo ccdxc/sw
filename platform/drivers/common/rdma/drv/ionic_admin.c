@@ -495,7 +495,8 @@ int ionic_admin_wait(struct ionic_ibdev *dev, struct ionic_admin_wr *wr,
 		/* No error if admin already killed during teardown */
 		rc = (flags & IONIC_ADMIN_F_TEARDOWN) ? 0 : -ENODEV;
 	} else if (ionic_v1_cqe_error(&wr->cqe)) {
-		ibdev_warn(&dev->ibdev, "error %u\n",
+		ibdev_warn(&dev->ibdev, "opcode %u error %u\n",
+			   wr->wqe.op,
 			   be32_to_cpu(wr->cqe.status_length));
 		rc = -EINVAL;
 	}

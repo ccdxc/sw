@@ -33,4 +33,15 @@ struct aq_tx_to_stage_fb_info_t {
     pad                     :  112;
 };
 
+struct aq_tx_aqcb_to_wqe_t {
+    cb_addr                 :  34;
+    rsvd                    :   6;
+    map_count_completed     :  32;
+    log_num_ah_entries      :   4;
+    log_num_eq_entries      :   4;
+    log_num_sq_entries      :   4;
+    log_num_rq_entries      :   4;
+    pad                     :  72;
+};
+
 #endif //__AQ_TX_ARGS_H
