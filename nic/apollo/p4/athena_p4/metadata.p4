@@ -114,6 +114,8 @@ header_type scratch_metadata_t {
         ipv4_src            : 32;
         flow_hash           : 11;
         flow_hint           : 19;
+        dnat_hash           : 18;
+        dnat_hint           : 12;
         class_id            : 8;
         addr                : 32;
         local_vnic_tag      : 10;

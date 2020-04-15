@@ -17,46 +17,46 @@ action dnat(pad1, pad2, addr_type, addr, epoch,
 
 
         // if hardware register indicates miss, compare hashes with r1
-        // (scratch_metadata.flow_hash) and setup lookup in overflow table
-        modify_field(scratch_metadata.flow_hash,
-                     scratch_metadata.flow_hash);
+        // (scratch_metadata.dnat_hash) and setup lookup in overflow table
+        modify_field(scratch_metadata.dnat_hash,
+                     scratch_metadata.dnat_hash);
         modify_field(scratch_metadata.hint_valid, FALSE);
         if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.flow_hash == hash1)) {
-            modify_field(scratch_metadata.flow_hint, hint1);
+            (scratch_metadata.dnat_hash == hash1)) {
+            modify_field(scratch_metadata.dnat_hint, hint1);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
         if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.flow_hash == hash2)) {
-            modify_field(scratch_metadata.flow_hint, hint2);
+            (scratch_metadata.dnat_hash == hash2)) {
+            modify_field(scratch_metadata.dnat_hint, hint2);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
         if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.flow_hash == hash3)) {
-            modify_field(scratch_metadata.flow_hint, hint3);
+            (scratch_metadata.dnat_hash == hash3)) {
+            modify_field(scratch_metadata.dnat_hint, hint3);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
         if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.flow_hash == hash4)) {
-            modify_field(scratch_metadata.flow_hint, hint4);
+            (scratch_metadata.dnat_hash == hash4)) {
+            modify_field(scratch_metadata.dnat_hint, hint4);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
         if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.flow_hash == hash5)) {
-            modify_field(scratch_metadata.flow_hint, hint5);
+            (scratch_metadata.dnat_hash == hash5)) {
+            modify_field(scratch_metadata.dnat_hint, hint5);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
 
         modify_field(scratch_metadata.flag, more_hashes);
         if ((scratch_metadata.hint_valid == FALSE) and
             (scratch_metadata.flag == TRUE)) {
-            modify_field(scratch_metadata.flow_hint, more_hints);
+            modify_field(scratch_metadata.dnat_hint, more_hints);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
 
         if (scratch_metadata.hint_valid == TRUE) {
             modify_field(control_metadata.dnat_ohash_lkp, TRUE);
-            modify_field(ingress_recirc_header.dnat_ohash, scratch_metadata.flow_hint);
+            modify_field(ingress_recirc_header.dnat_ohash, scratch_metadata.dnat_hint);
         } else {
             modify_field(ingress_recirc_header.dnat_done, TRUE);
         }
@@ -67,11 +67,11 @@ action dnat(pad1, pad2, addr_type, addr, epoch,
     modify_field(scratch_metadata.pad32, pad1);
     modify_field(scratch_metadata.pad3, pad2);
     modify_field(scratch_metadata.flag, entry_valid);
-    modify_field(scratch_metadata.flow_hash, hash1);
-    modify_field(scratch_metadata.flow_hash, hash2);
-    modify_field(scratch_metadata.flow_hash, hash3);
-    modify_field(scratch_metadata.flow_hash, hash4);
-    modify_field(scratch_metadata.flow_hash, hash5);
+    modify_field(scratch_metadata.dnat_hash, hash1);
+    modify_field(scratch_metadata.dnat_hash, hash2);
+    modify_field(scratch_metadata.dnat_hash, hash3);
+    modify_field(scratch_metadata.dnat_hash, hash4);
+    modify_field(scratch_metadata.dnat_hash, hash5);
 }
 
 @pragma stage 1
