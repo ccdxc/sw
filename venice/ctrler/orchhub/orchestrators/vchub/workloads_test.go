@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -43,11 +44,11 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -131,11 +132,11 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -248,7 +249,7 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -286,7 +287,7 @@ func TestWorkloads(t *testing.T) {
 				addPGState(t, vchub, dcName, CreatePGName("PG4"), "PG4", "PG4")
 
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -517,7 +518,7 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -546,7 +547,7 @@ func TestWorkloads(t *testing.T) {
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
 				addPGState(t, vchub, dcName, CreatePGName("PG2"), "PG2", "PG2")
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -726,7 +727,7 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -757,7 +758,7 @@ func TestWorkloads(t *testing.T) {
 				addPGState(t, vchub, dcName, CreatePGName("PG2"), "PG2", "PG2")
 
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -904,7 +905,7 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -933,7 +934,7 @@ func TestWorkloads(t *testing.T) {
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
 				addPGState(t, vchub, dcName, CreatePGName("PG2"), "PG2", "PG2")
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -1059,7 +1060,7 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
@@ -1088,7 +1089,7 @@ func TestWorkloads(t *testing.T) {
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
 				addPGState(t, vchub, dcName, CreatePGName("PG2"), "PG2", "PG2")
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -1167,11 +1168,11 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-40"),
 					Tenant:    globals.DefaultTenant,
@@ -1274,11 +1275,11 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -1375,11 +1376,11 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -1432,11 +1433,11 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
@@ -1535,11 +1536,11 @@ func TestWorkloads(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name:      v.createVMWorkloadName(dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,

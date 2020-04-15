@@ -3,7 +3,6 @@ package vchub
 import (
 	"context"
 	"encoding/json"
-	"net/url"
 	"testing"
 	"time"
 
@@ -29,12 +28,7 @@ func TestDebug(t *testing.T) {
 	config.Filter = log.AllowAllFilter
 	logger := log.SetConfig(config)
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")

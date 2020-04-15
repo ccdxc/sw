@@ -83,8 +83,6 @@ func (t *tagsProbe) StartWatch() {
 
 func (t *tagsProbe) SetupBaseTags() bool {
 	t.Log.Info("Setting up tags....")
-	t.writeLock.Lock()
-	defer t.writeLock.Unlock()
 
 	var tagCategory *tags.Category
 	var err error
@@ -103,6 +101,8 @@ func (t *tagsProbe) SetupBaseTags() bool {
 	}
 	// Create category
 	completed := retryUntilSuccessful(func() bool {
+		t.writeLock.Lock()
+		defer t.writeLock.Unlock()
 		ctx := t.ClientCtx
 		if ctx == nil {
 			return false
@@ -132,6 +132,10 @@ func (t *tagsProbe) SetupBaseTags() bool {
 			return true
 		}
 		t.Log.Errorf("Failed to create default category: %s", err)
+		if t.IsREST401(err) {
+			t.Log.Errorf("CHECK TAG SESSION", err)
+			t.CheckTagSession = true
+		}
 		return false
 	})
 	if !completed {
@@ -141,6 +145,8 @@ func (t *tagsProbe) SetupBaseTags() bool {
 	// Get tags for category
 	var tagObjs []tags.Tag
 	completed = retryUntilSuccessful(func() bool {
+		t.writeLock.Lock()
+		defer t.writeLock.Unlock()
 		t.Log.Info("Getting tags in category....")
 		tc := t.GetTagClientWithRLock()
 		defer t.ReleaseClientsRLock()
@@ -151,19 +157,29 @@ func (t *tagsProbe) SetupBaseTags() bool {
 			return true
 		}
 		t.Log.Errorf("Failed to get tags for category %s: %s", tagCategory.ID, err)
+		if t.IsREST401(err) {
+			t.CheckTagSession = true
+		}
 		return false
 	})
 
 	if !completed {
 		return false
 	}
+	tagInfo := map[string]string{}
 	for _, tag := range tagObjs {
-		t.writeTagInfo[tag.Name] = tag.ID
-		t.writeTagInfo[tag.ID] = tag.Name
+		tagInfo[tag.Name] = tag.ID
+		tagInfo[tag.ID] = tag.Name
 	}
+	// merge category tags
+	tagInfo[defs.VCTagCategory] = tagCategory.ID
+	tagInfo[tagCategory.ID] = defs.VCTagCategory
+	t.writeTagInfo = tagInfo
 
 	// Create VCTagManaged
 	completed = retryUntilSuccessful(func() bool {
+		t.writeLock.Lock()
+		defer t.writeLock.Unlock()
 		t.Log.Info("Creating tag managed....")
 		tc := t.GetTagClientWithRLock()
 		defer t.ReleaseClientsRLock()
@@ -184,6 +200,9 @@ func (t *tagsProbe) SetupBaseTags() bool {
 			return true
 		}
 		t.Log.Errorf("Failed to create VCTagManaged for category: %s", err)
+		if t.IsREST401(err) {
+			t.CheckTagSession = true
+		}
 		return false
 	})
 	if !completed {
@@ -502,6 +521,9 @@ func (t *tagsProbe) fetchTags() {
 			t.ReleaseClientsRLock()
 			if err != nil {
 				t.Log.Errorf("Failed to get attached tags: %s", err)
+				if t.IsREST401(err) {
+					t.CheckTagSession = true
+				}
 				// Might be hitting rate limiting at scale
 				select {
 				case <-ctx.Done():
@@ -671,7 +693,9 @@ func (t *tagsProbe) retry(fn func() (interface{}, error), operName string, delay
 		i++
 		if i < count {
 			t.Log.Errorf("tag %s failed: %s, retrying...", operName, err)
-			t.CheckSession = true
+			if t.IsREST401(err) {
+				t.CheckTagSession = true
+			}
 		}
 		select {
 		case <-ctx.Done():

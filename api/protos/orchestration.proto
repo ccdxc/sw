@@ -59,19 +59,22 @@ message OrchestratorSpec {
 // OrchestratorStatus contains the current state of connection with the orchestrator.
 message OrchestratorStatus {
     enum ConnectionStatus {
-	// ui-hint: Unknown
+	    // ui-hint: Unknown
         Unknown = 0 [(venice.enumValueStr) = "unknown"]; // Unknown status, initial state.
 
-	// ui-hint: Success
+	    // ui-hint: Success
         Success = 1 [(venice.enumValueStr) = "success"]; // Connection succeeded
 
-	// ui-hint: Failure
+	    // ui-hint: Failure
         Failure = 2 [(venice.enumValueStr) = "failure"]; // Connection failed
+
+	    // ui-hint: Degraded
+        Degraded = 3 [(venice.enumValueStr) = "degraded"]; // Connection partially operational
     }
 
-    string Status = 1 [(gogoproto.jsontag) = "connection-status", (venice.check) = "StrEnum(OrchestratorStatus.ConnectionStatus)"];
-    api.Timestamp LastConnected   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-connected,omitempty"];
-    api.Timestamp LastSync        = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-sync,omitempty"];
-    string SessionID              = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "session-id,omitempty"];
-    int32 OrchID                  = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "orch-id,omitempty"];
+    string Status                      = 1 [(gogoproto.jsontag) = "connection-status", (venice.check) = "StrEnum(OrchestratorStatus.ConnectionStatus)"];
+    api.Timestamp LastTransitionTime   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-transition-time,omitempty"];
+    string Message                     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "message,omitempty"];
+    int32 OrchID                       = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "orch-id,omitempty"];
+    repeated string DiscoveredNamespaces = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "discovered-namespaces,omitempty"];
 }

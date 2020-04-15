@@ -37,13 +37,6 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-var (
-	// create mock events recorder
-	eventRecorder = mockevtsrecorder.NewRecorder("vchub_test",
-		log.GetNewLogger(log.GetDefaultConfig("vchub_test")))
-	_ = recorder.Override(eventRecorder)
-)
-
 var defaultTestParams = &testutils.TestParams{
 	// TestHostName: "barun-vc.pensando.io",
 	// TestUser:     "administrator@pensando.io",
@@ -74,19 +67,24 @@ func TestVCWrite(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	config := log.GetDefaultConfig("vchub_test")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_test_vc_write")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	var vchub *VCHub
+	var s *sim.VcSim
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	_, err = s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
@@ -96,7 +94,6 @@ func TestVCWrite(t *testing.T) {
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
-		s.Destroy()
 		t.Fatalf("Failed to create state manager. Err : %v", err)
 		return
 	}
@@ -126,15 +123,12 @@ func TestVCWrite(t *testing.T) {
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 	AssertOk(t, err, "failed to create orch config")
 
-	vchub := LaunchVCHub(sm, orchConfig, logger, WithTagSyncDelay(2*time.Second))
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithTagSyncDelay(2*time.Second))
 
-	// Give time for VCHub to come up
-	time.Sleep(2 * time.Second)
-
-	defer func() {
-		vchub.Destroy(false)
-		defer s.Destroy()
-	}()
+	// Wait for it to come up
+	AssertEventually(t, func() (bool, interface{}) {
+		return vchub.IsSyncDone(), nil
+	}, "VCHub sync never finished")
 
 	orchInfo1 := []*network.OrchestratorInfo{
 		{
@@ -301,21 +295,25 @@ func TestVCHub(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	config := log.GetDefaultConfig("vchub_test")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_test")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	var vchub *VCHub
+	var s *sim.VcSim
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 	_, err = s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 
@@ -330,7 +328,7 @@ func TestVCHub(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		dc := vchub.GetDC(defaultTestParams.TestDCName)
@@ -353,6 +351,7 @@ func TestVCHub(t *testing.T) {
 	time.Sleep(3 * time.Second)
 
 	vchub.Destroy(false)
+	vchub = nil
 }
 
 func TestVCHubDestroy1(t *testing.T) {
@@ -362,28 +361,39 @@ func TestVCHubDestroy1(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	config := log.GetDefaultConfig("vchub_test")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_test_destory")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	var vchub *VCHub
+	var s *sim.VcSim
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 
-	probe := createProbe(context.Background(), defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	AssertEventually(t, func() (bool, interface{}) {
-		if !probe.IsSessionReady() {
+		if !vcp.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
 		}
 		return true, nil
@@ -393,7 +403,7 @@ func TestVCHubDestroy1(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
 
-	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
+	err = vcp.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
 
 	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
@@ -419,7 +429,7 @@ func TestVCHubDestroy1(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		opts := &api.ListWatchOptions{}
@@ -442,6 +452,7 @@ func TestVCHubDestroy1(t *testing.T) {
 	time.Sleep(3 * time.Second)
 
 	vchub.Destroy(true)
+	vchub = nil
 
 	// Verify hosts are removed from statemgr
 	AssertEventually(t, func() (bool, interface{}) {
@@ -465,28 +476,38 @@ func TestVCHubDestroy2(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	config := log.GetDefaultConfig("vchub_test")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_test_destroy_2")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	var vchub *VCHub
+	var s *sim.VcSim
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 
-	probe := createProbe(context.Background(), defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	AssertEventually(t, func() (bool, interface{}) {
-		if !probe.IsSessionReady() {
+		if !vcp.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
 		}
 		return true, nil
@@ -496,7 +517,7 @@ func TestVCHubDestroy2(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
 
-	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
+	err = vcp.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
 
 	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
@@ -522,7 +543,7 @@ func TestVCHubDestroy2(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		opts := &api.ListWatchOptions{}
@@ -537,6 +558,7 @@ func TestVCHubDestroy2(t *testing.T) {
 	}, "failed to find correct number of hosts")
 
 	vchub.Destroy(true)
+	vchub = nil
 
 	// Verify hosts are removed from statemgr
 	AssertEventually(t, func() (bool, interface{}) {
@@ -550,7 +572,6 @@ func TestVCHubDestroy2(t *testing.T) {
 		}
 		return true, nil
 	}, "failed to find correct number of hosts")
-
 }
 
 func TestVCHubDestroy3(t *testing.T) {
@@ -560,28 +581,40 @@ func TestVCHubDestroy3(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	config := log.GetDefaultConfig("vchub_test")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_test_destroy_3")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	var vchub *VCHub
+	var s *sim.VcSim
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 
-	probe := createProbe(context.Background(), defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	AssertEventually(t, func() (bool, interface{}) {
-		if !probe.IsSessionReady() {
+		if !vcp.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
 		}
 		return true, nil
@@ -591,7 +624,7 @@ func TestVCHubDestroy3(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
 
-	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
+	err = vcp.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
 	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
 	Assert(t, ok, "failed dvs create")
@@ -616,7 +649,7 @@ func TestVCHubDestroy3(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		opts := &api.ListWatchOptions{}
@@ -632,6 +665,7 @@ func TestVCHubDestroy3(t *testing.T) {
 
 	vchub.Sync()
 	vchub.Destroy(true)
+	vchub = nil
 
 	// Verify hosts are removed from statemgr
 	AssertEventually(t, func() (bool, interface{}) {
@@ -676,17 +710,29 @@ func createProbe(ctx context.Context, uri, user, pass string) *mock.ProbeMock {
 
 // Test thrashing DC api
 func TestDCWatchers(t *testing.T) {
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
-	config := log.GetDefaultConfig("vcprobe_testDcWatcher")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_test_dc_watchers")
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	var vchub *VCHub
+	var s *sim.VcSim
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
@@ -699,20 +745,17 @@ func TestDCWatchers(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 
-	// Give time for VCHub to come up
-	time.Sleep(2 * time.Second)
+	// Wait for it to come up
+	AssertEventually(t, func() (bool, interface{}) {
+		return vchub.IsSyncDone(), nil
+	}, "VCHub sync never finished")
 
-	defer func() {
-		vchub.Destroy(false)
-		defer s.Destroy()
-	}()
-
-	vcp := createProbe(context.Background(), defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		if !vcp.IsSessionReady() {
@@ -747,31 +790,44 @@ func TestDCWatchers(t *testing.T) {
 }
 
 func TestUsegVlanLimit(t *testing.T) {
+	eventRecorder := mockevtsrecorder.NewRecorder("vchub_test",
+		log.GetNewLogger(log.GetDefaultConfig("vchub_test")))
+	_ = recorder.Override(eventRecorder)
 	// Lower the limit for testing
 	usegvlanmgr.VlanMax = useg.FirstUsegVlan + 100
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	logger := setupLogger("vchub_test_vlan_limit")
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	var vchub *VCHub
+	var s *sim.VcSim
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 
-	config := log.GetDefaultConfig("vcprobe_testVlanLimit")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
-
-	probe := createProbe(context.Background(), defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	AssertEventually(t, func() (bool, interface{}) {
-		if !probe.IsSessionReady() {
+		if !vcp.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
 		}
 		return true, nil
@@ -781,7 +837,7 @@ func TestUsegVlanLimit(t *testing.T) {
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
 
-	err = probe.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
+	err = vcp.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
 	dvsName := CreateDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc1.GetDVS(dvsName)
 	Assert(t, ok, "failed dvs create")
@@ -814,15 +870,12 @@ func TestUsegVlanLimit(t *testing.T) {
 	}
 	smmock.CreateNetwork(sm, "default", "pg1", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
 
-	// Give time for VCHub to come up
-	time.Sleep(2 * time.Second)
-
-	defer func() {
-		vchub.Destroy(false)
-		defer s.Destroy()
-	}()
+	// Wait for it to come up
+	AssertEventually(t, func() (bool, interface{}) {
+		return vchub.IsSyncDone(), nil
+	}, "VCHub sync never finished")
 
 	pgName := CreatePGName("pg1")
 
@@ -962,21 +1015,33 @@ func TestRapidEvents(t *testing.T) {
 	numVNICs := 4  // VNICs per VM
 
 	// STARTING SIM
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	logger := setupLogger("vchub_test_rapid_events")
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
-
-	config := log.GetDefaultConfig("vcprobe_testRapidEvents")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
@@ -989,15 +1054,12 @@ func TestRapidEvents(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
 
-	defer func() {
-		vchub.Destroy(false)
-		defer s.Destroy()
-	}()
-
-	// Give time for VCHub to come up
-	time.Sleep(2 * time.Second)
+	// Wait for it to come up
+	AssertEventually(t, func() (bool, interface{}) {
+		return vchub.IsSyncDone(), nil
+	}, "VCHub sync never finished")
 	vcsimLock := sync.Mutex{}
 
 	addDC := func(dcName string) *sim.Datacenter {
@@ -1060,7 +1122,7 @@ func TestRapidEvents(t *testing.T) {
 		vchub.vcReadCh <- deleteVMEvent(dc.Obj.Name, dc.Obj.Self.Value, vm.Self.Value)
 	}
 
-	vcp := createProbe(context.Background(), defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	AssertEventually(t, func() (bool, interface{}) {
 		if !vcp.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
@@ -1294,6 +1356,23 @@ func createDCEvent(dcName, dcID string) defs.Probe2StoreMsg {
 	}
 }
 
+func renameDCEvent(dcID string, newName string) defs.Probe2StoreMsg {
+	return defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject:   defs.Datacenter,
+			Key:        dcID,
+			Originator: "127.0.0.1:8990",
+			Changes: []types.PropertyChange{
+				types.PropertyChange{
+					Op:  types.PropertyChangeOpAdd,
+					Val: newName,
+				},
+			},
+		},
+	}
+}
+
 func deleteDCEvent(dcID string) defs.Probe2StoreMsg {
 	return defs.Probe2StoreMsg{
 		MsgType: defs.VCEvent,
@@ -1315,28 +1394,35 @@ func TestUpdateUrl(t *testing.T) {
 	AssertOk(t, err, "Failed to get available port")
 	newURL := listener.ListenURL.String()
 
-	config := log.GetDefaultConfig("vchub_testUpdateUrl")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_test_update_url")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	var vchub *VCHub
+	var s1 *sim.VcSim
+	var s2 *sim.VcSim
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s1 != nil {
+			s1.Destroy()
+		}
+		if s2 != nil {
+			s2.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	// vcsim based on old URL
-	s1, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	s1, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s1.Destroy()
 
 	// vcsim based on new URL
 	u.Host = newURL
-	s2, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	s2, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s2.Destroy()
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
@@ -1349,8 +1435,7 @@ func TestUpdateUrl(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
-	defer vchub.Destroy(false)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		o, err := vchub.StateMgr.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
@@ -1396,21 +1481,26 @@ func TestUpdateUrl(t *testing.T) {
 
 // Test update Orchestrator config credential information
 func TestUpdateOrchConfigCredential(t *testing.T) {
-	config := log.GetDefaultConfig("vchub_testUpdateOrchConfigCredential")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_testUpdateOrchConfigCredential")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
@@ -1422,8 +1512,7 @@ func TestUpdateOrchConfigCredential(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
-	defer vchub.Destroy(false)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
 	AssertEventually(t, func() (bool, interface{}) {
 		// Check if the first connection got established successfully
@@ -1475,10 +1564,17 @@ func TestMultipleVcs(t *testing.T) {
 	orchConfigs := make([]*orchestration.Orchestrator, numConn)
 	vchubs := make([]*VCHub, numConn)
 
-	config := log.GetDefaultConfig("vchub_testMultipleVcs")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_testMultipleVcs")
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		for _, vchub := range vchubs {
+			vchub.Destroy(false)
+		}
+		for _, vc := range vcsims {
+			vc.Destroy()
+		}
+	}()
 
 	sm, _, err := smmock.NewMockStateManager()
 	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
@@ -1495,7 +1591,6 @@ func TestMultipleVcs(t *testing.T) {
 		u.Host = urls[i]
 		vcsims[i], err = sim.NewVcSim(sim.Config{Addr: u.String()})
 		AssertOk(t, err, "Failed to create vcsim")
-		defer vcsims[i].Destroy()
 	}
 
 	time.Sleep(2 * time.Second)
@@ -1505,7 +1600,6 @@ func TestMultipleVcs(t *testing.T) {
 		orchConfigs[i].Status.OrchID = int32(i)
 		err = sm.Controller().Orchestrator().Create(orchConfigs[i])
 		vchubs[i] = LaunchVCHub(sm, orchConfigs[i], logger)
-		defer vchubs[i].Destroy(false)
 	}
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1524,21 +1618,26 @@ func TestMultipleVcs(t *testing.T) {
 }
 
 func TestManageGivenNamespaces(t *testing.T) {
-	config := log.GetDefaultConfig("vchub_testManageNamespaces")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_testManageNamespaces")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 
 	dcName1 := "PenDC1"
 	dcName2 := "PenDC2"
@@ -1562,8 +1661,7 @@ func TestManageGivenNamespaces(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
-	defer vchub.Destroy(false)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
 	// Check if dcName1 is managed by our orchestrator
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1602,21 +1700,26 @@ func TestManageGivenNamespaces(t *testing.T) {
 }
 
 func TestManageAllNamespaces(t *testing.T) {
-	config := log.GetDefaultConfig("vchub_testManageAllNamespaces")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_testManageAllNamespaces")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 
 	dcName1 := "PenDC1"
 	dcName2 := "PenDC2"
@@ -1640,8 +1743,7 @@ func TestManageAllNamespaces(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
-	defer vchub.Destroy(false)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
 	// Check if dcName1 is managed by our orchestrator
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1684,21 +1786,26 @@ func TestManageAllNamespaces(t *testing.T) {
 }
 
 func TestManageNoNamespaces(t *testing.T) {
-	config := log.GetDefaultConfig("vchub_testManageNoNamespaces")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_testManageNoNamespaces")
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 
 	dcName1 := "PenDC1"
 	dcName2 := "PenDC2"
@@ -1722,8 +1829,7 @@ func TestManageNoNamespaces(t *testing.T) {
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
-	vchub := LaunchVCHub(sm, orchConfig, logger)
-	defer vchub.Destroy(false)
+	vchub = LaunchVCHub(sm, orchConfig, logger)
 
 	// Check if dcName1 is managed by our orchestrator
 	AssertEventually(t, func() (bool, interface{}) {
@@ -1763,20 +1869,25 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	config := log.GetDefaultConfig("vchub_test")
-	config.LogToStdout = true
-	config.Filter = log.AllowAllFilter
-	logger := log.SetConfig(config)
+	logger := setupLogger("vchub_testRemoveManagedDC")
+
+	var vchub *VCHub
+	var s *sim.VcSim
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
 
 	logger.Infof("Place holder")
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 
 	for i := 0; i < dcCount; i++ {
@@ -1794,7 +1905,6 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
-		s.Destroy()
 		t.Fatalf("Failed to create state manager. Err : %v", err)
 		return
 	}
@@ -1806,15 +1916,12 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 	AssertOk(t, err, "failed to create orch config")
 
-	vchub := LaunchVCHub(sm, orchConfig, logger, WithTagSyncDelay(2*time.Second))
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithTagSyncDelay(2*time.Second))
 
-	// Give time for VCHub to come up
-	time.Sleep(2 * time.Second)
-
-	defer func() {
-		vchub.Destroy(false)
-		defer s.Destroy()
-	}()
+	// Wait for it to come up
+	AssertEventually(t, func() (bool, interface{}) {
+		return vchub.IsSyncDone(), nil
+	}, "VCHub sync never finished")
 
 	AssertEventually(t, func() (bool, interface{}) {
 		dc := vchub.GetDC(dcNames[0])
@@ -1868,7 +1975,7 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 			}
 		}
 
-		if len(vchub.DcID2NameMap) > 0 || len(vchub.DcMap) > 0 {
+		if len(vchub.DcMap) > 0 {
 			return false, fmt.Errorf("VCHub in-memory state not cleared")
 		}
 
@@ -1885,7 +1992,7 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 			return false, fmt.Errorf("Did not find DC %v", dcNames[1])
 		}
 
-		if len(vchub.DcID2NameMap) != 1 || len(vchub.DcMap) != 1 {
+		if len(vchub.DcMap) != 1 {
 			return false, fmt.Errorf("VCHub in-memory state not cleared")
 		}
 		return true, nil
@@ -1910,7 +2017,7 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 				return false, fmt.Errorf("Pensando DVS not found in DC %s", dcNames[i])
 			}
 
-			if len(vchub.DcID2NameMap) != dcCount || len(vchub.DcMap) != dcCount {
+			if len(vchub.DcMap) != dcCount {
 				return false, fmt.Errorf("VCHub in-memory state not cleared")
 			}
 		}
@@ -1928,10 +2035,341 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 				return false, fmt.Errorf("DC %v should not have been found", dcNames[i])
 			}
 
-			if len(vchub.DcID2NameMap) > 0 || len(vchub.DcMap) > 0 {
+			if len(vchub.DcMap) > 0 {
 				return false, fmt.Errorf("VCHub in-memory state not cleared")
 			}
 		}
 		return true, nil
 	}, "Did not find DC")
+}
+
+func TestDiscoveredDCs(t *testing.T) {
+	logger := setupLogger("vchub_test_discovered_dc")
+
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+
+	dcName1 := "PenDC1"
+	dcName2 := "PenDC2"
+	dcName3 := "PenDC3"
+	dcName4 := "PenDC12"
+	dcName5 := "PenDC31"
+
+	_, err = s.AddDC(dcName1)
+	AssertOk(t, err, "failed dc create")
+
+	dc2, err := s.AddDC(dcName2)
+	AssertOk(t, err, "failed dc create")
+
+	dc3, err := s.AddDC(dcName3)
+	AssertOk(t, err, "failed dc create")
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{dcName1}
+
+	sm, _, err := smmock.NewMockStateManager()
+	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	vchub = LaunchVCHub(sm, orchConfig, logger)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		o, err := sm.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
+		if err != nil {
+			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
+		}
+		act := o.Orchestrator.Status.DiscoveredNamespaces
+		exp := []string{dcName1, dcName2, dcName3}
+		if len(act) != len(exp) {
+			return false, fmt.Errorf("discovered namespaces were %v, expected %v", o.Orchestrator.Status.DiscoveredNamespaces, exp)
+		}
+
+		for i := range act {
+			if act[i] != exp[i] {
+				return false, fmt.Errorf("discovered namespaces were %v, expected %v", o.Orchestrator.Status.DiscoveredNamespaces, exp)
+			}
+		}
+		return true, nil
+	}, "Orch status didn't have all the discovered namespaces ", "100ms", "5s")
+
+	addDC := func(dcName string) *sim.Datacenter {
+		dc, err := s.AddDC(dcName)
+		dc.Obj.Name = dcName
+		AssertOk(t, err, "failed to create DC %s", dcName)
+		vchub.vcReadCh <- createDCEvent(dcName, dc.Obj.Self.Value)
+		return dc
+	}
+
+	renameDC := func(dc *sim.Datacenter, newName string) {
+		vchub.vcReadCh <- renameDCEvent(dc.Obj.Self.Value, newName)
+	}
+
+	removeDC := func(dc *sim.Datacenter) {
+		dc.Destroy()
+		vchub.vcReadCh <- deleteDCEvent(dc.Obj.Self.Value)
+	}
+
+	addDC(dcName4)
+	renameDC(dc3, dcName5)
+	removeDC(dc2)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		o, err := sm.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
+		if err != nil {
+			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
+		}
+		act := o.Orchestrator.Status.DiscoveredNamespaces
+		exp := []string{dcName1, dcName4, dcName5}
+		if len(act) != len(exp) {
+			return false, fmt.Errorf("discovered namespaces were %v, expected %v", o.Orchestrator.Status.DiscoveredNamespaces, exp)
+		}
+
+		for i := range act {
+			if act[i] != exp[i] {
+				return false, fmt.Errorf("discovered namespaces were %v, expected %v", o.Orchestrator.Status.DiscoveredNamespaces, exp)
+			}
+		}
+		if len(vchub.DcID2NameMap) != 3 {
+			return false, fmt.Errorf("Number of entries in DcID2NameMap was incorrect %v", vchub.DcID2NameMap)
+		}
+		return true, nil
+	}, "Orch status never updated to success", "100ms", "5s")
+}
+
+func TestDegradedConn(t *testing.T) {
+	// TODO: enable once this change is committed to the govmomi repo.
+	t.Skipf("This test requires changes in the govmomi REST simulator to check the credentials of the client.")
+	logger := setupLogger("vchub_test_discovered_dc")
+
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+
+	dcName1 := "PenDC1"
+
+	_, err = s.AddDC(dcName1)
+	AssertOk(t, err, "failed dc create")
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{dcName1}
+
+	sm, _, err := smmock.NewMockStateManager()
+	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithTagSyncDelay(1*time.Second), WithMockProbe)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		o, err := sm.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
+		if err != nil {
+			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
+		}
+
+		if o.Orchestrator.Status.Status != orchestration.OrchestratorStatus_Success.String() {
+			return false, fmt.Errorf("status was %v", o.Orchestrator.Status.Status)
+		}
+		return true, nil
+	}, "Orch status never updated to success", "100ms", "5s")
+
+	// Simulate tags server becoming unauthenticated by changing credentials and forcing logout
+	u1 := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, "changePass")
+	s.Service.Listen = u1
+	vchub.State.VcURL.User = url.UserPassword("random", "pass")
+	probe := vchub.probe.(*mock.ProbeMock)
+	tc := probe.GetTagClientWithRLock()
+	tc.Logout(context.Background())
+	probe.ReleaseClientsRLock()
+
+	AssertEventually(t, func() (bool, interface{}) {
+		o, err := sm.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
+		if err != nil {
+			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
+		}
+
+		if o.Orchestrator.Status.Status != orchestration.OrchestratorStatus_Degraded.String() {
+			return false, fmt.Errorf("status was %v", o.Orchestrator.Status.Status)
+		}
+		return true, nil
+	}, "Orch status never updated to success", "100ms", "5s")
+
+}
+
+func TestVCHubStalePG(t *testing.T) {
+	// Test resyncing stale PG
+	// Scenario: vCenter already has PenDVS, PenPG, and VM attached
+	// user tries to have another venice manage this DC.
+	// User creates the network after initial sync has already run.
+	// Orchhub should now take control of the PenPG and take any VMs
+	// on it and create workloads
+	logger := setupLogger("vchub_test_stale_PG")
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+	// VChub comes up with PG in use on vcenter
+	// Create network comes after
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	dc1, err := s.AddDC(defaultTestParams.TestDCName)
+	AssertOk(t, err, "failed dc create")
+
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if !vcp.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	// Create DVS
+	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
+	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
+
+	err = vcp.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
+	dvsName := CreateDVSName(defaultTestParams.TestDCName)
+	dvs, ok := dc1.GetDVS(dvsName)
+	Assert(t, ok, "failed dvs create")
+
+	hostSystem1, err := dc1.AddHost("host1")
+	AssertOk(t, err, "failed host1 create")
+	err = dvs.AddHost(hostSystem1)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac := append(createPenPnicBase(), 0xaa, 0x00, 0x00)
+	// Make it Pensando host
+	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
+
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe)
+
+	// Wait for it to come up
+	AssertEventually(t, func() (bool, interface{}) {
+		return vchub.IsSyncDone(), nil
+	}, "VCHub sync never finished")
+
+	// Create PG it doesn't know about (simulate stale PG in use before we connected)
+	spec := testutils.GenPGConfigSpec(CreatePGName("pg1"), 2, 3)
+	err = vcp.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, nil, retryCount)
+	AssertOk(t, err, "failed to create pg")
+	pg, err := vcp.GetPenPG(dc1.Obj.Name, CreatePGName("pg1"), retryCount)
+	AssertOk(t, err, "failed to get pg")
+
+	// Create VM on this PG
+	_, err = dc1.AddVM("vm1", "host1", []sim.VNIC{
+		sim.VNIC{
+			MacAddress:   "aa:aa:bb:bb:dd:dd",
+			PortgroupKey: pg.Reference().Value,
+			PortKey:      "11",
+		},
+	})
+	// if err != nil {
+	// 	t.Skipf("Skipping test since VM could not be added, %s", err)
+	// }
+
+	// Add network, workload should appear
+	orchInfo1 := []*network.OrchestratorInfo{
+		{
+			Name:      orchConfig.Name,
+			Namespace: defaultTestParams.TestDCName,
+		},
+	}
+	smmock.CreateNetwork(sm, "default", "pg1", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		wl, err := sm.Controller().Workload().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(wl) != 1 {
+			return false, fmt.Errorf("Found %d workloads", len(wl))
+		}
+
+		mac := wl[0].Spec.Interfaces[0].MACAddress
+		if mac != "aaaa.bbbb.dddd" {
+			return false, fmt.Errorf("mac inf did not match, got %s", mac)
+		}
+		return true, nil
+	}, "Failed to get wl")
+
+}
+
+func setupLogger(logName string) log.Logger {
+	config := log.GetDefaultConfig(logName)
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+	return logger
+}
+
+func createURL(host, user, pass string) *url.URL {
+	u := &url.URL{
+		Scheme: "https",
+		Host:   host,
+		Path:   "/sdk",
+	}
+	u.User = url.UserPassword(user, pass)
+	return u
 }

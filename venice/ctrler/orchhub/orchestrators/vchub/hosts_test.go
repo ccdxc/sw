@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -80,11 +81,11 @@ func TestHosts(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name: v.createHostName(dcName, "hostsystem-44"),
 				}
@@ -198,11 +199,11 @@ func TestHosts(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name: v.createHostName(dcName, "hostsystem-41"),
 				}
@@ -317,11 +318,11 @@ func TestHosts(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name: v.createHostName(dcName, "hostsystem-41"),
 				}
@@ -371,11 +372,11 @@ func TestHosts(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name: v.createHostName(dcName, "hostsystem-41"),
 				}
@@ -459,11 +460,11 @@ func TestHosts(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name: v.createHostName(dcName, "hostsystem-41"),
 				}
@@ -497,11 +498,11 @@ func TestHosts(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				expMeta := &api.ObjectMeta{
 					Name: v.createHostName(dcName, "hostsystem-41"),
 				}

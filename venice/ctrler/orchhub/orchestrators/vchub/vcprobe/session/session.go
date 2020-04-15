@@ -2,7 +2,9 @@ package session
 
 import (
 	"context"
+	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/vmware/govmomi/vapi/tags"
 	"github.com/vmware/govmomi/view"
 
+	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -33,10 +36,16 @@ const (
 	retryCount = 3
 )
 
+// ConnectionState contains info about the connection
+type ConnectionState struct {
+	State string
+	Err   error
+}
+
 // Session is a struct for maintaining vCenter client objects.
 type Session struct {
 	ctx        context.Context
-	ConnUpdate chan error // Boolean of the status of the session
+	ConnUpdate chan ConnectionState
 	vcURL      *url.URL
 	logger     log.Logger
 
@@ -51,7 +60,8 @@ type Session struct {
 
 	clientLock sync.RWMutex
 
-	CheckSession bool
+	CheckSession    bool
+	CheckTagSession bool
 	// SessionReady indicates whether watchers should join the wg or not.
 	// When we cancel the watcherWg, we don't want watchers adding themselves back on before
 	// all of them have finished cancelling.
@@ -67,7 +77,7 @@ func NewSession(ctx context.Context, VcURL *url.URL, logger log.Logger) *Session
 		vcURL:      VcURL,
 		logger:     logger,
 		WatcherWg:  &sync.WaitGroup{},
-		ConnUpdate: make(chan error, 100),
+		ConnUpdate: make(chan ConnectionState, 100),
 		LastEvent:  make(map[string]int32),
 	}
 }
@@ -164,6 +174,14 @@ func (s *Session) clearSession() {
 	s.clientCancel = nil
 }
 
+// IsREST401 returns whether the given error is a 401 auth error
+func (s *Session) IsREST401(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "401 Unauthorized")
+}
+
 // PeriodicSessionCheck starts a goroutine that re-establishes the session
 // if it goes down at any point
 func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
@@ -186,11 +204,19 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		for {
 			c, err = govmomi.NewClient(s.ClientCtx, s.vcURL, true)
 			if err == nil {
-				s.ConnUpdate <- nil
+				evt := ConnectionState{
+					orchestration.OrchestratorStatus_Success.String(),
+					nil,
+				}
+				s.ConnUpdate <- evt
 				s.logger.Infof("Connection success")
 				break
 			}
-			s.ConnUpdate <- err
+			evt := ConnectionState{
+				orchestration.OrchestratorStatus_Failure.String(),
+				err,
+			}
+			s.ConnUpdate <- evt
 
 			s.logger.Errorf("login failed: %v", err)
 			select {
@@ -209,17 +235,60 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		s.eventMgr = event.NewManager(c.Client)
 
 		s.CheckSession = false
+		s.CheckTagSession = false
 		s.SessionReady = true
 
 		err := s.tagClient.Login(s.ClientCtx, s.vcURL.User)
 		if err != nil {
+			// Unlikely for this to fail with 401, since we just logged in above
 			s.logger.Errorf("Tags client failed to login, %s", err)
-			s.CheckSession = true
+			s.CheckTagSession = true
 		}
 
 		s.clientLock.Unlock()
 
 		s.logger.Infof("Session check starting...")
+
+		// Start tag session check
+		s.WatcherWg.Add(1)
+		go func() {
+			defer s.WatcherWg.Done()
+
+			ctx := s.ClientCtx
+			if ctx == nil {
+				return
+			}
+
+			for {
+				select {
+				case <-s.ClientCtx.Done():
+					return
+				case <-time.After(5 * retryDelay):
+					if s.CheckTagSession {
+						// Re-authenticate tag session
+						s.clientLock.Lock()
+						err := s.tagClient.Login(s.ClientCtx, s.vcURL.User)
+						if err != nil {
+							s.logger.Errorf("Tags client failed to login, %s", err)
+							evt := ConnectionState{
+								orchestration.OrchestratorStatus_Degraded.String(),
+								fmt.Errorf("Tags client received authentication error due to an invalid username or password. Tags/Labels functionality may be impacted"),
+							}
+							s.ConnUpdate <- evt
+						} else {
+							s.CheckTagSession = false
+							evt := ConnectionState{
+								orchestration.OrchestratorStatus_Success.String(),
+								nil,
+							}
+							s.ConnUpdate <- evt
+						}
+						s.clientLock.Unlock()
+					}
+				}
+			}
+		}()
+
 		count := retryCount
 		for count > 0 {
 			select {

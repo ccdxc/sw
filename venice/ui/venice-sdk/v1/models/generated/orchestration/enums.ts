@@ -33,6 +33,7 @@ export enum OrchestrationOrchestratorStatus_connection_status {
     'unknown' = "unknown",
     'success' = "success",
     'failure' = "failure",
+    'degraded' = "degraded",
 }
 
 
@@ -60,6 +61,7 @@ export enum OrchestrationOrchestratorSpec_type_uihint {
 }
 
 export enum OrchestrationOrchestratorStatus_connection_status_uihint {
+    'degraded' = "Degraded",
     'failure' = "Failure",
     'success' = "Success",
     'unknown' = "Unknown",

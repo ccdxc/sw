@@ -416,12 +416,7 @@ func TestVmotionWithWatchers(t *testing.T) {
 		}
 	}()
 
-	u := &url.URL{
-		Scheme: "https",
-		Host:   defaultTestParams.TestHostName,
-		Path:   "/sdk",
-	}
-	u.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
 	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
@@ -583,8 +578,6 @@ func TestVmotionWithWatchers(t *testing.T) {
 		}
 	}
 
-	// Wait for sync to run
-	// time.Sleep(2 * time.Second)
 	// Build helper functions for the test cases
 	waitForWatch := func() {
 		AssertEventually(t, func() (bool, interface{}) {

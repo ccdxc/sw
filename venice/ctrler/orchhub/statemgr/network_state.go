@@ -45,7 +45,7 @@ func (sm *Statemgr) OnNetworkUpdate(w *ctkit.Network, nw *network.Network) error
 		return err
 	}
 
-	if w.Status.OperState == network.OperState_Active.String() {
+	if nw.Status.OperState == network.OperState_Active.String() {
 		sm.SendNetworkProbeEvent(nw, kvstore.Updated)
 	}
 

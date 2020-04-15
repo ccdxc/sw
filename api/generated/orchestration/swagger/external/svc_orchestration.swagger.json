@@ -454,21 +454,14 @@
             "type": "string"
           },
           {
-            "name": "status.last-connected",
+            "name": "status.last-transition-time",
             "in": "query",
             "required": false,
             "type": "string",
             "format": "date-time"
           },
           {
-            "name": "status.last-sync",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "date-time"
-          },
-          {
-            "name": "status.session-id",
+            "name": "status.message",
             "in": "query",
             "required": false,
             "type": "string"
@@ -479,6 +472,15 @@
             "required": false,
             "type": "integer",
             "format": "int32"
+          },
+          {
+            "name": "status.discovered-namespaces",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -1502,29 +1504,33 @@
           "enum": [
             "unknown",
             "success",
-            "failure"
+            "failure",
+            "degraded"
           ],
           "default": "unknown",
           "x-ui-hints": {
+            "degraded": "Degraded",
             "failure": "Failure",
             "success": "Success",
             "unknown": "Unknown"
           }
         },
-        "last-connected": {
+        "last-transition-time": {
           "type": "string",
           "format": "date-time"
         },
-        "last-sync": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "session-id": {
+        "message": {
           "type": "string"
         },
         "orch-id": {
           "type": "integer",
           "format": "int32"
+        },
+        "discovered-namespaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "description": "OrchestratorStatus contains the current state of connection with the orchestrator."

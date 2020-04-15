@@ -66,7 +66,7 @@ type Config struct {
 // VcSim is the struct for an instance
 type VcSim struct {
 	model   simulator.Model
-	service *simulator.Service
+	Service *simulator.Service
 	client  *vim25.Client
 	dcMap   map[string]*Datacenter
 	Server  *simulator.Server
@@ -92,7 +92,7 @@ func NewVcSim(config Config) (*VcSim, error) {
 	server := Service.NewServer()
 
 	return &VcSim{
-		service: Service,
+		Service: Service,
 		URL:     server.URL,
 		client:  client,
 		Server:  server,

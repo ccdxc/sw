@@ -11,10 +11,10 @@ import { OrchestrationOrchestratorStatus_connection_status,  OrchestrationOrches
 
 export interface IOrchestrationOrchestratorStatus {
     'connection-status': OrchestrationOrchestratorStatus_connection_status;
-    'last-connected'?: Date;
-    'last-sync'?: Date;
-    'session-id'?: string;
+    'last-transition-time'?: Date;
+    'message'?: string;
     'orch-id'?: number;
+    'discovered-namespaces'?: Array<string>;
     '_ui'?: any;
 }
 
@@ -23,10 +23,10 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
     'connection-status': OrchestrationOrchestratorStatus_connection_status = null;
-    'last-connected': Date = null;
-    'last-sync': Date = null;
-    'session-id': string = null;
+    'last-transition-time': Date = null;
+    'message': string = null;
     'orch-id': number = null;
+    'discovered-namespaces': Array<string> = null;
     public static propInfo: { [prop in keyof IOrchestrationOrchestratorStatus]: PropInfoItem } = {
         'connection-status': {
             enum: OrchestrationOrchestratorStatus_connection_status_uihint,
@@ -34,21 +34,21 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
             required: true,
             type: 'string'
         },
-        'last-connected': {
+        'last-transition-time': {
             required: false,
             type: 'Date'
         },
-        'last-sync': {
-            required: false,
-            type: 'Date'
-        },
-        'session-id': {
+        'message': {
             required: false,
             type: 'string'
         },
         'orch-id': {
             required: false,
             type: 'number'
+        },
+        'discovered-namespaces': {
+            required: false,
+            type: 'Array<string>'
         },
     }
 
@@ -74,6 +74,7 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['discovered-namespaces'] = new Array<string>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -93,26 +94,19 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
         } else {
             this['connection-status'] = null
         }
-        if (values && values['last-connected'] != null) {
-            this['last-connected'] = values['last-connected'];
-        } else if (fillDefaults && OrchestrationOrchestratorStatus.hasDefaultValue('last-connected')) {
-            this['last-connected'] = OrchestrationOrchestratorStatus.propInfo['last-connected'].default;
+        if (values && values['last-transition-time'] != null) {
+            this['last-transition-time'] = values['last-transition-time'];
+        } else if (fillDefaults && OrchestrationOrchestratorStatus.hasDefaultValue('last-transition-time')) {
+            this['last-transition-time'] = OrchestrationOrchestratorStatus.propInfo['last-transition-time'].default;
         } else {
-            this['last-connected'] = null
+            this['last-transition-time'] = null
         }
-        if (values && values['last-sync'] != null) {
-            this['last-sync'] = values['last-sync'];
-        } else if (fillDefaults && OrchestrationOrchestratorStatus.hasDefaultValue('last-sync')) {
-            this['last-sync'] = OrchestrationOrchestratorStatus.propInfo['last-sync'].default;
+        if (values && values['message'] != null) {
+            this['message'] = values['message'];
+        } else if (fillDefaults && OrchestrationOrchestratorStatus.hasDefaultValue('message')) {
+            this['message'] = OrchestrationOrchestratorStatus.propInfo['message'].default;
         } else {
-            this['last-sync'] = null
-        }
-        if (values && values['session-id'] != null) {
-            this['session-id'] = values['session-id'];
-        } else if (fillDefaults && OrchestrationOrchestratorStatus.hasDefaultValue('session-id')) {
-            this['session-id'] = OrchestrationOrchestratorStatus.propInfo['session-id'].default;
-        } else {
-            this['session-id'] = null
+            this['message'] = null
         }
         if (values && values['orch-id'] != null) {
             this['orch-id'] = values['orch-id'];
@@ -120,6 +114,13 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
             this['orch-id'] = OrchestrationOrchestratorStatus.propInfo['orch-id'].default;
         } else {
             this['orch-id'] = null
+        }
+        if (values && values['discovered-namespaces'] != null) {
+            this['discovered-namespaces'] = values['discovered-namespaces'];
+        } else if (fillDefaults && OrchestrationOrchestratorStatus.hasDefaultValue('discovered-namespaces')) {
+            this['discovered-namespaces'] = [ OrchestrationOrchestratorStatus.propInfo['discovered-namespaces'].default];
+        } else {
+            this['discovered-namespaces'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -129,10 +130,10 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'connection-status': CustomFormControl(new FormControl(this['connection-status'], [required, enumValidator(OrchestrationOrchestratorStatus_connection_status), ]), OrchestrationOrchestratorStatus.propInfo['connection-status']),
-                'last-connected': CustomFormControl(new FormControl(this['last-connected']), OrchestrationOrchestratorStatus.propInfo['last-connected']),
-                'last-sync': CustomFormControl(new FormControl(this['last-sync']), OrchestrationOrchestratorStatus.propInfo['last-sync']),
-                'session-id': CustomFormControl(new FormControl(this['session-id']), OrchestrationOrchestratorStatus.propInfo['session-id']),
+                'last-transition-time': CustomFormControl(new FormControl(this['last-transition-time']), OrchestrationOrchestratorStatus.propInfo['last-transition-time']),
+                'message': CustomFormControl(new FormControl(this['message']), OrchestrationOrchestratorStatus.propInfo['message']),
                 'orch-id': CustomFormControl(new FormControl(this['orch-id']), OrchestrationOrchestratorStatus.propInfo['orch-id']),
+                'discovered-namespaces': CustomFormControl(new FormControl(this['discovered-namespaces']), OrchestrationOrchestratorStatus.propInfo['discovered-namespaces']),
             });
         }
         return this._formGroup;
@@ -145,10 +146,10 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['connection-status'].setValue(this['connection-status']);
-            this._formGroup.controls['last-connected'].setValue(this['last-connected']);
-            this._formGroup.controls['last-sync'].setValue(this['last-sync']);
-            this._formGroup.controls['session-id'].setValue(this['session-id']);
+            this._formGroup.controls['last-transition-time'].setValue(this['last-transition-time']);
+            this._formGroup.controls['message'].setValue(this['message']);
             this._formGroup.controls['orch-id'].setValue(this['orch-id']);
+            this._formGroup.controls['discovered-namespaces'].setValue(this['discovered-namespaces']);
         }
     }
 }

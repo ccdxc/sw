@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -43,7 +44,7 @@ func TestNetworks(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -71,7 +72,7 @@ func TestNetworks(t *testing.T) {
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
 				addPGState(t, vchub, dcName, CreatePGName("PG1"), "pg-1", "PG1")
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				// Verification is mockprobe AddPenPG getting called 2 times
 			},
 		},
@@ -102,7 +103,7 @@ func TestNetworks(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any(), gomock.Any()).Return(&object.DistributedVirtualPortgroup{
@@ -130,7 +131,7 @@ func TestNetworks(t *testing.T) {
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
 				addPGState(t, vchub, dcName, CreatePGName("PG1"), "pg-1", "PG1")
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				// Verification is mockprobe RenamePG getting called
 				AssertEventually(t, func() (bool, interface{}) {
 					evts := eventRecorder.GetEvents()
@@ -165,7 +166,7 @@ func TestNetworks(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
@@ -176,7 +177,7 @@ func TestNetworks(t *testing.T) {
 				addDCState(t, vchub, dcName)
 
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				// Verification is mockprobe RenamePG getting called
 				AssertEventually(t, func() (bool, interface{}) {
 					evts := eventRecorder.GetEvents()
@@ -238,7 +239,7 @@ func TestNetworks(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName,
@@ -318,7 +319,7 @@ func TestNetworks(t *testing.T) {
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
 				addPGState(t, vchub, dcName, CreatePGName("PG1"), "pg-1", "PG1")
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				// Verification is mockprobe AddPenPG getting called 2 times
 			},
 		},
@@ -354,7 +355,7 @@ func TestNetworks(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -382,7 +383,7 @@ func TestNetworks(t *testing.T) {
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
 				addPGState(t, vchub, dcName, CreatePGName("PG1"), "pg-1", "PG1")
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				AssertEventually(t, func() (bool, interface{}) {
 					evts := eventRecorder.GetEvents()
 					found := false
@@ -416,7 +417,7 @@ func TestNetworks(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenDVS(dcName, gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -435,12 +436,12 @@ func TestNetworks(t *testing.T) {
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				AssertEventually(t, func() (bool, interface{}) {
 					evts := eventRecorder.GetEvents()
 					found := false
 					for _, evt := range evts {
-						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "Port Group") {
+						if evt.EventType == eventtypes.ORCH_INVALID_ACTION.String() && strings.Contains(evt.Message, "DVS") {
 							found = true
 						}
 					}
@@ -466,7 +467,7 @@ func TestNetworks(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().AddPenPG("dispName", gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -499,7 +500,7 @@ func TestNetworks(t *testing.T) {
 				}
 				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				// Verification is mockprobe calls
 			},
 		},
@@ -517,7 +518,7 @@ func TestNetworks(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 
@@ -540,7 +541,7 @@ func TestNetworks(t *testing.T) {
 
 				vchub.StateMgr.Controller().Workload().Create(&w1)
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				opts := &api.ListWatchOptions{}
 				AssertEventually(t, func() (bool, interface{}) {
 					workloads, err := v.StateMgr.Controller().Workload().List(context.Background(), opts)

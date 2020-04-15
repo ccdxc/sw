@@ -88,6 +88,7 @@ func (v *VCHub) RemovePenDC(dcName string) {
 	if !ok {
 		// nothing to do
 		v.Log.Errorf("Remove DC called on %s but there is no entry for it", dcName)
+		return
 	}
 
 	// Stop watcher for this DC

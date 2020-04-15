@@ -75,7 +75,7 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
     { field: 'spec.uri', header: 'URI', class: 'vcenter-integration-column-url', sortable: true, width: '180px' },
     { field: 'associatedWorkloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: 100 },
     { field: 'status.connection-status', header: 'Connection Status', class: 'vcenter-integration-column-status', sortable: true, width: '150px' },
-    { field: 'status.last-connected', header: 'Last Connected Time', class: 'vcenter-integration-column-lastconnected', sortable: true, width: '180px' },
+    { field: 'status.last-transition-time', header: 'Connection Transition Time', class: 'vcenter-integration-column-lastconnected', sortable: true, width: '180px' },
   ];
 
   constructor(private orchestrationService: OrchestrationService,

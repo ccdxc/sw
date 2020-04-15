@@ -47,21 +47,24 @@ func (x OrchestratorSpec_OrchestratorType) String() string {
 
 // OrchestratorStatus_ConnectionStatus_normal is a map of normalized values for the enum
 var OrchestratorStatus_ConnectionStatus_normal = map[string]string{
-	"failure": "failure",
-	"success": "success",
-	"unknown": "unknown",
+	"degraded": "degraded",
+	"failure":  "failure",
+	"success":  "success",
+	"unknown":  "unknown",
 }
 
 var OrchestratorStatus_ConnectionStatus_vname = map[int32]string{
 	0: "unknown",
 	1: "success",
 	2: "failure",
+	3: "degraded",
 }
 
 var OrchestratorStatus_ConnectionStatus_vvalue = map[string]int32{
-	"unknown": 0,
-	"success": 1,
-	"failure": 2,
+	"unknown":  0,
+	"success":  1,
+	"failure":  2,
+	"degraded": 3,
 }
 
 func (x OrchestratorStatus_ConnectionStatus) String() string {

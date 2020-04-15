@@ -52,23 +52,24 @@ var typesMapOrchestration = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":       api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"connection-status": api.CLIInfo{Path: "Status.Status", Skip: false, Insert: "", Help: ""},
-			"generation-id":     api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"labels":            api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"login-data":        api.CLIInfo{Path: "Spec.LoginData", Skip: false, Insert: "", Help: ""},
-			"manage-namespaces": api.CLIInfo{Path: "Spec.ManageNamespaces", Skip: false, Insert: "", Help: ""},
-			"name":              api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
-			"namespace":         api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"orch-id":           api.CLIInfo{Path: "Status.OrchID", Skip: false, Insert: "", Help: ""},
-			"resource-version":  api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"self-link":         api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"session-id":        api.CLIInfo{Path: "Status.SessionID", Skip: false, Insert: "", Help: ""},
-			"tenant":            api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"type":              api.CLIInfo{Path: "Spec.Type", Skip: false, Insert: "", Help: ""},
-			"uri":               api.CLIInfo{Path: "Spec.URI", Skip: false, Insert: "", Help: ""},
-			"uuid":              api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"api-version":           api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"connection-status":     api.CLIInfo{Path: "Status.Status", Skip: false, Insert: "", Help: ""},
+			"discovered-namespaces": api.CLIInfo{Path: "Status.DiscoveredNamespaces", Skip: false, Insert: "", Help: ""},
+			"generation-id":         api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"kind":                  api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":                api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"login-data":            api.CLIInfo{Path: "Spec.LoginData", Skip: false, Insert: "", Help: ""},
+			"manage-namespaces":     api.CLIInfo{Path: "Spec.ManageNamespaces", Skip: false, Insert: "", Help: ""},
+			"message":               api.CLIInfo{Path: "Status.Message", Skip: false, Insert: "", Help: ""},
+			"name":                  api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":             api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"orch-id":               api.CLIInfo{Path: "Status.OrchID", Skip: false, Insert: "", Help: ""},
+			"resource-version":      api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":             api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"tenant":                api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"type":                  api.CLIInfo{Path: "Spec.Type", Skip: false, Insert: "", Help: ""},
+			"uri":                   api.CLIInfo{Path: "Spec.URI", Skip: false, Insert: "", Help: ""},
+			"uuid":                  api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"orchestration.OrchestratorSpec": &api.Struct{
@@ -97,13 +98,13 @@ var typesMapOrchestration = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "connection-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "connection-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"LastConnected": api.Field{Name: "LastConnected", CLITag: api.CLIInfo{ID: "last-connected", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-connected", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+			"LastTransitionTime": api.Field{Name: "LastTransitionTime", CLITag: api.CLIInfo{ID: "last-transition-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-transition-time", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
-			"LastSync": api.Field{Name: "LastSync", CLITag: api.CLIInfo{ID: "last-sync", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-sync", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
-
-			"SessionID": api.Field{Name: "SessionID", CLITag: api.CLIInfo{ID: "session-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "session-id", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"OrchID": api.Field{Name: "OrchID", CLITag: api.CLIInfo{ID: "orch-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "orch-id", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"DiscoveredNamespaces": api.Field{Name: "DiscoveredNamespaces", CLITag: api.CLIInfo{ID: "discovered-namespaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "discovered-namespaces", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

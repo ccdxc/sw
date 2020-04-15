@@ -42,13 +42,15 @@ type VCHub struct {
 	probe        vcprobe.ProbeInf
 	DcMapLock    sync.Mutex
 	// TODO: don't use DC display name as key, use ID instead
-	DcMap        map[string]*PenDC
+	DcMap map[string]*PenDC
+	// Will contain entries for non-pensando managed DCs
+	// Needed for discoveredDCs list when a DC is renamed/deleted
 	DcID2NameMap map[string]string
-	DcName2IDMap map[string]string
 	// Will be taken with write lock by sync
-	syncLock     sync.RWMutex
-	syncDone     bool
-	watchStarted bool
+	syncLock      sync.RWMutex
+	syncDone      bool
+	watchStarted  bool
+	discoveredDCs []string
 	// whether to act upon venice network events
 	// When we are disconnected, we do not want to act upon network events
 	// until we are reconnected and sync has finished.
@@ -62,9 +64,10 @@ type VCHub struct {
 	processVeniceEvents     bool
 	processVeniceEventsLock sync.Mutex
 	// Opts is options used during creation of this instance
-	opts         []Option
-	useMockProbe bool
-	tagSyncDelay time.Duration
+	opts           []Option
+	useMockProbe   bool
+	tagSyncDelay   time.Duration
+	orchUpdateLock sync.Mutex
 }
 
 // Option specifies optional values for vchub
@@ -120,6 +123,22 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	}
 
 	orchID := fmt.Sprintf("orch%d", config.Status.OrchID)
+
+	// Set connection status as unknown
+	o, err := stateMgr.Controller().Orchestrator().Find(&config.ObjectMeta)
+	if err != nil {
+		v.Log.Errorf("Orchestrator Object %v does not exist",
+			config.GetKey())
+	} else {
+		v.orchUpdateLock.Lock()
+		o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Unknown.String()
+		o.Orchestrator.Status.LastTransitionTime = &api.Timestamp{}
+		o.Orchestrator.Status.LastTransitionTime.SetTime(time.Now())
+		o.Orchestrator.Status.Message = ""
+		o.Write()
+		v.orchUpdateLock.Unlock()
+	}
+
 	state := defs.State{
 		VcURL:        vcURL,
 		VcID:         config.GetName(),
@@ -138,11 +157,12 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	v.cancel = cancel
 	v.DcMap = map[string]*PenDC{}
 	v.DcID2NameMap = map[string]string{}
-	v.DcName2IDMap = map[string]string{}
 	v.vcReadCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	v.vcEventCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	v.tagSyncDelay = defaultTagSyncDelay
 	v.opts = opts
+	v.discoveredDCs = []string{}
+
 	v.setupPCache()
 
 	clusterItems, err := v.StateMgr.Controller().Cluster().List(context.Background(), &api.ListWatchOptions{})

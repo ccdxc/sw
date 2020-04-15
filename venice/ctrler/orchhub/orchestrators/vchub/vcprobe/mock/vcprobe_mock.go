@@ -526,6 +526,18 @@ func (mr *MockProbeInfMockRecorder) RemovePenDVS(dcName, dvsName, retry interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePenDVS", reflect.TypeOf((*MockProbeInf)(nil).RemovePenDVS), dcName, dvsName, retry)
 }
 
+// IsREST401 mocks base method
+func (m *MockProbeInf) IsREST401(arg0 error) bool {
+	ret := m.ctrl.Call(m, "IsREST401", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsREST401 indicates an expected call of IsREST401
+func (mr *MockProbeInfMockRecorder) IsREST401(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsREST401", reflect.TypeOf((*MockProbeInf)(nil).IsREST401), arg0)
+}
+
 // StartWatch mocks base method
 func (m *MockProbeInf) StartWatch() {
 	m.ctrl.Call(m, "StartWatch")

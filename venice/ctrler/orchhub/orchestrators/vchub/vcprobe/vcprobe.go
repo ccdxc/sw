@@ -114,6 +114,8 @@ type ProbeInf interface {
 	GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, retry int) ([]types.DistributedVirtualPort, error)
 	RemovePenDVS(dcName, dvsName string, retry int) error
 
+	IsREST401(error) bool
+
 	// Tag methods
 	TagsProbeInf
 }
@@ -192,9 +194,7 @@ func (v *VCProbe) connectionListen() {
 		case <-v.Ctx.Done():
 			return
 		case connErr := <-v.ConnUpdate:
-			if connErr == nil {
-				v.Log.Infof("Connection successful")
-			}
+			v.Log.Infof("Connection status %s, err %s", connErr.State, connErr.Err)
 
 			if v.outbox != nil {
 				m := defs.Probe2StoreMsg{

@@ -10,35 +10,43 @@ import (
 const networkKind = "Network"
 
 func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.Network) {
+	// Update calls might actually be create calls for us, since the active flag would not be set on object creation
 	v.Log.Infof("Handling network event nw %v", nw)
 	v.syncLock.RLock()
 	defer v.syncLock.RUnlock()
 	// TODO: check res version to prevent double ops
 
-	switch evtType {
-	case kvstore.Created, kvstore.Deleted:
-		if evtType == kvstore.Created && len(nw.Spec.Orchestrators) == 0 {
-			return
+	pgName := CreatePGName(nw.Name)
+
+	if evtType == kvstore.Created && len(nw.Spec.Orchestrators) == 0 {
+		return
+	}
+	dcs := map[string]bool{}
+	for _, orch := range nw.Spec.Orchestrators {
+		if orch.Name == v.OrchConfig.GetName() {
+			dcs[orch.Namespace] = true
 		}
-		dcs := []string{}
-		for _, orch := range nw.Spec.Orchestrators {
-			if orch.Name == v.OrchConfig.GetName() {
-				dcs = append(dcs, orch.Namespace)
-			}
-		}
-		v.Log.Infof("evt %s network %s event for dcs %v", evtType, nw.Name, dcs)
-		for _, dc := range dcs {
-			v.DcMapLock.Lock()
-			penDC, ok := v.DcMap[dc]
-			v.DcMapLock.Unlock()
-			if !ok {
-				v.Log.Infof("no state for DC %s", dc)
-				continue
-			}
-			pgName := CreatePGName(nw.Name)
-			if evtType == kvstore.Created {
-				v.Log.Infof("Adding PG %s in DC %s", pgName, dc)
-				penDC.AddPG(pgName, nw.ObjectMeta, "")
+	}
+	v.Log.Infof("evt %s network %s event for dcs %v", evtType, nw.Name, dcs)
+	for _, penDC := range v.DcMap {
+		if _, ok := dcs[penDC.Name]; ok {
+			if evtType == kvstore.Created || evtType == kvstore.Updated {
+				v.Log.Infof("Adding PG %s in DC %s", pgName, penDC.Name)
+				// IF PG NOT in our local state, but does already exist in vCenter,
+				// then we need to resync workloads after creating internal state
+				resync := false
+				if penDC.GetPG(pgName, "") == nil {
+					_, err := v.probe.GetPenPG(penDC.Name, pgName, defaultRetryCount)
+					if err == nil {
+						resync = true
+					}
+				}
+				errs := penDC.AddPG(pgName, nw.ObjectMeta, "")
+				if len(errs) == 0 && resync {
+					v.syncLock.RUnlock()
+					v.fetchVMs(penDC)
+					v.syncLock.RLock()
+				}
 			} else {
 				// err is already logged inside function
 				remainingAllocs, _ := penDC.RemovePG(pgName, "")
@@ -46,35 +54,16 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 				for _, count := range remainingAllocs {
 					if count == useg.MaxPGCount-1 {
 						// Need to recheck networks now that we have space for new networks
-						v.checkNetworks(dc)
+						v.checkNetworks(penDC.Name)
 					}
 				}
 			}
-		}
-	case kvstore.Updated:
-		v.Log.Info("Update network event")
-		pgName := CreatePGName(nw.Name)
-		dcs := map[string]bool{}
-		for _, orch := range nw.Spec.Orchestrators {
-			if orch.Name == v.OrchConfig.GetName() {
-				dcs[orch.Namespace] = true
+		} else if evtType == kvstore.Updated {
+			// Check if we need to delete
+			if penDC.GetPG(pgName, "") != nil {
+				penDC.RemovePG(pgName, "")
 			}
 		}
-
-		v.DcMapLock.Lock()
-		for _, dc := range v.DcMap {
-			if dcs[dc.Name] {
-				// Should exist/create
-				dc.AddPG(pgName, nw.ObjectMeta, "")
-			} else {
-				// Check if we need to delete
-				if dc.GetPG(pgName, "") != nil {
-					dc.RemovePG(pgName, "")
-				}
-			}
-		}
-		v.DcMapLock.Unlock()
-		// TODO: Update vcenter vlan tags
 	}
 }
 

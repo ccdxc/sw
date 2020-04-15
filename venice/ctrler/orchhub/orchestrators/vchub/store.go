@@ -2,15 +2,19 @@ package vchub
 
 import (
 	"fmt"
+	"sort"
+	"time"
 
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/session"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
@@ -50,11 +54,10 @@ func (v *VCHub) startEventsListener() {
 				v.handleVCEvent(m.Val.(defs.VCEventMsg))
 			case defs.VCConnectionStatus:
 				// we've reconnected, trigger sync
-				var connErr error
-				if m.Val != nil {
-					connErr = m.Val.(error)
-				}
+				connStatus := m.Val.(session.ConnectionState)
 				o, err := v.StateMgr.Controller().Orchestrator().Find(&v.OrchConfig.ObjectMeta)
+				// Connection transisitions
+				// only healthy can go to degraded.
 				if err != nil {
 					// orchestrator object does not exists anymore
 					// this should never happen
@@ -62,14 +65,19 @@ func (v *VCHub) startEventsListener() {
 						v.OrchConfig.GetKey())
 					return
 				}
-				if connErr == nil {
-					v.Log.Infof("Updating orchestrator connection status to %v",
-						orchestration.OrchestratorStatus_Success.String())
-					o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Success.String()
 
-					o.Status.OrchID = v.OrchConfig.Status.OrchID
-					o.Write()
+				previousState := o.Orchestrator.Status.Status
+				previousMsg := o.Orchestrator.Status.Message
 
+				v.Log.Infof("Updating orchestrator connection status to %v", connStatus.State)
+
+				var msg string
+				if connStatus.State == orchestration.OrchestratorStatus_Success.String() {
+					// Degraded -> Success should not resync
+					if previousState == orchestration.OrchestratorStatus_Degraded.String() ||
+						previousState == orchestration.OrchestratorStatus_Success.String() {
+						break
+					}
 					// sync and start watchers, network event watcher
 					// will not start until after sync finishes (blocked on processVeniceEvents flag)
 					v.sync()
@@ -78,19 +86,16 @@ func (v *VCHub) startEventsListener() {
 
 					v.watchStarted = true
 
-				} else {
-					v.Log.Infof("Updating orchestrator connection status to %v",
-						orchestration.OrchestratorStatus_Failure.String())
-					o.Orchestrator.Status.Status = orchestration.OrchestratorStatus_Failure.String()
-					o.Write()
-
+				} else if connStatus.State == orchestration.OrchestratorStatus_Failure.String() {
 					evt := eventtypes.ORCH_CONNECTION_ERROR
-					evtMsg := connErr.Error()
+					msg = connStatus.Err.Error()
+					evtMsg := fmt.Sprintf("%s: %s", v.OrchConfig.Name, msg)
 					// Generate event depending on error type
 					// Check if it is a credential issue
-					if soap.IsSoapFault(connErr) {
-						soapErr := soap.ToSoapFault(connErr)
-						evtMsg = soapErr.String
+					if soap.IsSoapFault(connStatus.Err) {
+						soapErr := soap.ToSoapFault(connStatus.Err)
+						msg = soapErr.String
+						evtMsg = fmt.Sprintf("%s: %s", v.OrchConfig.Name, msg)
 						if _, ok := soapErr.Detail.Fault.(types.InvalidLogin); ok {
 							// Login error
 							evt = eventtypes.ORCH_LOGIN_FAILURE
@@ -102,7 +107,31 @@ func (v *VCHub) startEventsListener() {
 					v.processVeniceEventsLock.Lock()
 					v.processVeniceEvents = false
 					v.processVeniceEventsLock.Unlock()
+				} else if connStatus.State == orchestration.OrchestratorStatus_Degraded.String() {
+					evt := eventtypes.ORCH_CONNECTION_ERROR
+					msg = connStatus.Err.Error()
+					evtMsg := fmt.Sprintf("%s: %s", v.OrchConfig.Name, msg)
+					if v.probe.IsREST401(connStatus.Err) {
+						evt = eventtypes.ORCH_LOGIN_FAILURE
+					}
+					recorder.Event(evt, evtMsg, v.State.OrchConfig)
 				}
+
+				//
+				if connStatus.State == previousState && msg == previousMsg {
+					// Duplicate event, nothing to do
+					v.Log.Debugf("Duplicate connection event, nothing to do.")
+					return
+				}
+
+				v.orchUpdateLock.Lock()
+				o.Orchestrator.Status.Status = connStatus.State
+				o.Orchestrator.Status.LastTransitionTime = &api.Timestamp{}
+				o.Orchestrator.Status.LastTransitionTime.SetTime(time.Now())
+				o.Orchestrator.Status.Message = msg
+				o.Status.OrchID = v.OrchConfig.Status.OrchID
+				o.Write()
+				v.orchUpdateLock.Unlock()
 
 			default:
 				v.Log.Errorf("Unknown event %s", m.MsgType)
@@ -172,11 +201,18 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 		v.Log.Infof("DC delete for %s", m.Key)
 		if existingDC == nil {
 			v.Log.Infof("No state for DC %s", m.Key)
+			v.DcMapLock.Lock()
+			if dcName, ok := v.DcID2NameMap[m.Key]; ok {
+				v.removeDiscoveredDC(dcName)
+				delete(v.DcID2NameMap, m.Key)
+			}
+			v.DcMapLock.Unlock()
 			return
 		}
 		v.probe.StopWatchForDC(existingDC.Name, m.Key)
 		// Cleanup internal state
 		v.RemovePenDC(existingDC.Name)
+		v.removeDiscoveredDC(existingDC.Name)
 		return
 	}
 
@@ -188,7 +224,15 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 
 		oldName, ok := v.DcID2NameMap[m.Key]
 		if ok && oldName != name {
-			// Rename event of a DC we have state for
+			// Check if we are managing it
+			if _, ok := v.DcMap[oldName]; !ok {
+				// DC we aren't managing is renamed, update map entry
+				v.DcID2NameMap[m.Key] = name
+				v.DcMapLock.Unlock()
+				v.renameDiscoveredDC(oldName, name)
+				return
+			}
+
 			v.Log.Infof("DC %s renamed to %s, changing back...", name, oldName)
 
 			evtMsg := fmt.Sprintf("User renamed a Pensando managed DC. Name has been changed back.")
@@ -198,6 +242,7 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 			if err != nil {
 				v.Log.Errorf("Failed to rename DC %s back to %s, err %s", name, oldName, err)
 			}
+			v.DcMapLock.Unlock()
 			return
 		}
 
@@ -207,21 +252,131 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 				penDc.Unlock()
 				v.DcMapLock.Unlock()
 				v.probe.StartWatchForDC(name, m.Key)
+				v.addDiscoveredDC(name)
 				return
 			}
 			penDc.Unlock()
 		}
 		v.DcMapLock.Unlock()
+
 		// We create DVS and check networks
 		if !v.isManagedNamespace(name) {
 			v.Log.Infof("Skipping DC event for DC %s", name)
-			continue
+			v.DcMapLock.Lock()
+			v.DcID2NameMap[m.Key] = name
+			v.DcMapLock.Unlock()
+		} else {
+			v.Log.Infof("new DC %s", name)
+			_, err := v.NewPenDC(name, m.Key)
+			if err == nil {
+				v.probe.StartWatchForDC(name, m.Key)
+			}
+			v.checkNetworks(name)
 		}
-		v.Log.Infof("new DC %s", name)
-		_, err := v.NewPenDC(name, m.Key)
-		if err == nil {
-			v.probe.StartWatchForDC(name, m.Key)
+
+		// update discovered list
+		v.addDiscoveredDC(name)
+	}
+}
+
+func (v *VCHub) removeDiscoveredDC(dcName string) {
+	v.Log.Infof("removing DC %s to discovered DCs", dcName)
+	dcList := v.discoveredDCs
+	found := -1
+	for i, entry := range dcList {
+		if dcName == entry {
+			found = i
 		}
-		v.checkNetworks(name)
+	}
+	if found >= 0 {
+		dcList = append(dcList[:found], dcList[found+1:]...)
+		v.discoveredDCs = dcList
+
+		v.orchUpdateLock.Lock()
+		defer v.orchUpdateLock.Unlock()
+		o, err := v.StateMgr.Controller().Orchestrator().Find(&v.OrchConfig.ObjectMeta)
+		if err != nil {
+			// orchestrator object does not exists anymore
+			// this should never happen
+			v.Log.Errorf("removeDiscoveredDC: Orchestrator Object %v does not exist",
+				v.OrchConfig.GetKey())
+			return
+		}
+
+		o.Orchestrator.Status.DiscoveredNamespaces = v.discoveredDCs
+		err = o.Write()
+
+		if err != nil {
+			v.Log.Errorf("removeDiscoveredDC: Failed to update orch status %s", err)
+		}
+	}
+}
+
+func (v *VCHub) addDiscoveredDC(dcName string) {
+	v.Log.Infof("adding DC %s to discovered DCs", dcName)
+	dcList := v.discoveredDCs
+	found := -1
+	for i, entry := range dcList {
+		if dcName == entry {
+			found = i
+		}
+	}
+	if found == -1 {
+		dcList = append(dcList, dcName)
+		sort.Strings(dcList)
+		v.discoveredDCs = dcList
+
+		v.orchUpdateLock.Lock()
+		defer v.orchUpdateLock.Unlock()
+		o, err := v.StateMgr.Controller().Orchestrator().Find(&v.OrchConfig.ObjectMeta)
+		if err != nil {
+			// orchestrator object does not exists anymore
+			// this should never happen
+			v.Log.Errorf("AddDiscoveredDC: Orchestrator Object %v does not exist",
+				v.OrchConfig.GetKey())
+			return
+		}
+
+		o.Orchestrator.Status.DiscoveredNamespaces = v.discoveredDCs
+		err = o.Write()
+
+		if err != nil {
+			v.Log.Errorf("AddDiscoveredDC: Failed to update orch status %s", err)
+		}
+	}
+}
+
+func (v *VCHub) renameDiscoveredDC(oldName, newName string) {
+	v.Log.Infof("renaming DC %s to %s in discovered DCs", oldName, newName)
+	dcList := v.discoveredDCs
+	found := -1
+	for i, entry := range dcList {
+		if oldName == entry {
+			found = i
+		}
+	}
+
+	if found >= 0 {
+		dcList[found] = newName
+		sort.Strings(dcList)
+		v.discoveredDCs = dcList
+
+		v.orchUpdateLock.Lock()
+		defer v.orchUpdateLock.Unlock()
+		o, err := v.StateMgr.Controller().Orchestrator().Find(&v.OrchConfig.ObjectMeta)
+		if err != nil {
+			// orchestrator object does not exists anymore
+			// this should never happen
+			v.Log.Errorf("RenameDiscoveredDC: Orchestrator Object %v does not exist",
+				v.OrchConfig.GetKey())
+			return
+		}
+
+		o.Orchestrator.Status.DiscoveredNamespaces = v.discoveredDCs
+		err = o.Write()
+
+		if err != nil {
+			v.Log.Errorf("RenameDiscoveredDC: Failed to update orch status %s", err)
+		}
 	}
 }

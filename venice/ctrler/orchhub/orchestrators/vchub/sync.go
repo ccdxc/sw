@@ -103,7 +103,7 @@ func (v *VCHub) sync() bool {
 
 		v.syncNetwork(nw, dc, dvsObjs, pgs)
 		v.syncNewHosts(dc, vcHosts, vmkMap)
-		v.syncVMs(workloads, dc, dvsObjs, vms, pgs, vmkMap)
+		v.syncVMs(workloads, dc, vms, pgs, vmkMap)
 		// Removing hosts after removing workloads to fix WL -> Host dependency
 		v.syncStaleHosts(dc, vcHosts, hosts)
 	}
@@ -306,7 +306,39 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 	}
 }
 
-func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs []mo.VmwareDistributedVirtualSwitch, vms []mo.VirtualMachine, pgs []mo.DistributedVirtualPortgroup, vmkMap map[string]bool) {
+func (v *VCHub) fetchVMs(penDC *PenDC) {
+	v.Log.Infof("VCHub sync VMs only called")
+	v.syncLock.Lock()
+	defer func() {
+		v.Log.Infof("VCHub sync VMs only done")
+		v.syncLock.Unlock()
+	}()
+
+	v.Log.Infof("VCHub %v syncing VMs only........", v)
+	// Check that probe session is connected
+	count := 3
+	for !v.probe.IsSessionReady() && count > 0 {
+		select {
+		case <-v.Ctx.Done():
+			return
+		case <-time.After(1 * time.Second):
+			count--
+		}
+	}
+	if count == 0 {
+		v.Log.Infof("Probe session isn't connected, exiting sync...")
+		return
+	}
+
+	vms := v.probe.ListVM(&penDC.dcRef)
+
+	for _, vm := range vms {
+		m := v.convertWorkloadToEvent(penDC.dcRef.Value, penDC.Name, vm)
+		v.handleVM(m)
+	}
+}
+
+func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, vms []mo.VirtualMachine, pgs []mo.DistributedVirtualPortgroup, vmkMap map[string]bool) {
 	v.Log.Infof("Syncing vms on DC %s============", dc.Name)
 	dcName := dc.Name
 	penDC := v.GetDC(dcName)

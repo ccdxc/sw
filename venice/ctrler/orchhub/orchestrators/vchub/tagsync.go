@@ -47,17 +47,22 @@ func (v *VCHub) tagSync() {
 		return
 	}
 
+	idToName := map[string]string{}
+
 	managedObj := []types.ManagedObjectReference{}
 	vlanTagMap := map[string]int{}
 	v.DcMapLock.Lock()
 	for _, dc := range v.DcMap {
 		managedObj = append(managedObj, dc.dcRef)
+		idToName[dc.dcRef.Value] = dc.Name
 		dc.Lock()
 		for _, dvs := range dc.DvsMap {
 			managedObj = append(managedObj, dvs.DvsRef)
+			idToName[dvs.DvsRef.Value] = dvs.DvsName
 			dvs.Lock()
 			for _, pg := range dvs.Pgs {
 				managedObj = append(managedObj, pg.PgRef)
+				idToName[pg.PgRef.Value] = pg.PgName
 				nw, err := v.StateMgr.Controller().Network().Find(&pg.NetworkMeta)
 				if err == nil {
 					externalVlan := int(nw.Spec.VlanID)
@@ -100,10 +105,11 @@ func (v *VCHub) tagSync() {
 			if v.probe.IsManagedTag(tag) {
 				managed = true
 			} else if strings.HasPrefix(tag, defs.VCTagManagedDefault) {
-				v.Log.Errorf("Found tag %s from another PSM on our object, raising event...", tag)
+				objName := idToName[obj.Value]
+				v.Log.Errorf("Found tag %s from another PSM on our object %s %s, raising event...", tag, objName, obj.Value)
 				// Another Venice is/has managed this DC
 				evt := eventtypes.ORCH_ALREADY_MANAGED
-				msg := fmt.Sprintf("Found tag %s from another PSM instance. This namespace might be managed by another PSM.", tag)
+				msg := fmt.Sprintf("Found tag %s on object %s. This namespace might be managed by another PSM.", tag, objName)
 				recorder.Event(evt, msg, v.State.OrchConfig)
 			}
 			vlan, ok := v.probe.IsVlanTag(tag)
@@ -154,5 +160,4 @@ func (v *VCHub) tagSync() {
 			v.Log.Infof("Deleting tag %s on obj %s returned %s", tag, r.Value, err)
 		}
 	}
-
 }

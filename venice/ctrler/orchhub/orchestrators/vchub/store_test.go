@@ -28,17 +28,13 @@ import (
 var (
 	logConfig = log.GetDefaultConfig("vcstore_integ_test")
 	logger    = log.SetConfig(logConfig)
-
-	evRecorder = mockevtsrecorder.NewRecorder("vcstore_integ_test",
-		log.GetNewLogger(log.GetDefaultConfig("vcstore_integ_test")))
-	_ = recorder.Override(evRecorder)
 )
 
 type storeTC struct {
 	name   string
 	events []defs.Probe2StoreMsg
-	setup  func(*VCHub, *gomock.Controller)
-	verify func(*VCHub)
+	setup  func(*VCHub, *gomock.Controller, *mockevtsrecorder.Recorder)
+	verify func(*VCHub, *mockevtsrecorder.Recorder)
 }
 
 func runStoreTC(t *testing.T, testCases []storeTC) {
@@ -55,6 +51,10 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 	tsdb.Init(context.Background(), &tsdb.Opts{})
 
 	for _, tc := range testCases {
+		evRecorder := mockevtsrecorder.NewRecorder("vcstore_integ_test",
+			log.GetNewLogger(log.GetDefaultConfig("vcstore_integ_test")))
+		_ = recorder.Override(evRecorder)
+
 		ctx, cancelFn := context.WithCancel(context.Background())
 
 		if len(forceTestName) != 0 && tc.name != forceTestName {
@@ -102,7 +102,7 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 		var mockCtrl *gomock.Controller
 		if tc.setup != nil {
 			mockCtrl = gomock.NewController(t)
-			tc.setup(vchub, mockCtrl)
+			tc.setup(vchub, mockCtrl, evRecorder)
 		}
 
 		vchub.Wg.Add(1)
@@ -116,7 +116,7 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 			inbox <- e
 		}
 		// Time for events to process
-		tc.verify(vchub)
+		tc.verify(vchub, evRecorder)
 
 		// Terminating store instance
 		cancelFn()
@@ -262,7 +262,7 @@ func TestDCs(t *testing.T) {
 					},
 				},
 			},
-			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller, eventRecorder *mockevtsrecorder.Recorder) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
 				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
@@ -275,7 +275,7 @@ func TestDCs(t *testing.T) {
 				eventRecorder.ClearEvents()
 
 			},
-			verify: func(v *VCHub) {
+			verify: func(v *VCHub, eventRecorder *mockevtsrecorder.Recorder) {
 				// Verification is mockprobe RenamePG getting called
 				AssertEventually(t, func() (bool, interface{}) {
 					evts := eventRecorder.GetEvents()
