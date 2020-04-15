@@ -13,6 +13,20 @@
 namespace test {
 namespace api {
 
+enum rule_attrs {
+    RULE_ATTR_STATEFUL                  = bit(0),
+    RULE_ATTR_PRIORITY                  = bit(1),
+    RULE_ATTR_L3_MATCH                  = bit(2),
+    RULE_ATTR_L4_MATCH                  = bit(3),
+    RULE_ATTR_ACTION                    = bit(4),
+};
+
+enum rule_info_attrs {
+    RULE_INFO_ATTR_AF                   = bit(0),
+    RULE_INFO_ATTR_RULE                 = bit(1),
+    RULE_INFO_ATTR_RULE_DEFAULT_ACTION  = bit(2),
+};
+
 // Policy test feeder class
 class policy_feeder : public feeder {
 public:
@@ -76,6 +90,16 @@ API_CREATE(policy);
 API_READ(policy);
 API_UPDATE(policy);
 API_DELETE(policy);
+
+// Policy crud helper prototypes
+void policy_create(policy_feeder& feeder);
+void policy_read(policy_feeder& feeder, sdk_ret_t exp_result = SDK_RET_OK);
+void policy_rule_update(policy_feeder& feeder, pds_policy_spec_t *spec,
+                        uint64_t chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
+void policy_rule_info_update(policy_feeder& feeder, pds_policy_spec_t *spec,
+                             uint64_t chg_bmap, sdk_ret_t exp_result =
+                                                                SDK_RET_OK);
+void policy_delete(policy_feeder& feeder);
 
 // Function prototypes
 void sample_policy_setup(pds_batch_ctxt_t bctxt);

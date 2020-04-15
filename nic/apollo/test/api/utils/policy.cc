@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/policy.hpp"
 
 namespace test {
@@ -165,6 +166,114 @@ bool
 policy_feeder::status_compare(const pds_policy_status_t *status1,
                               const pds_policy_status_t *status2) const {
     return true;
+}
+
+//----------------------------------------------------------------------------
+// Policy CRUD helper routines
+//----------------------------------------------------------------------------
+
+void
+policy_create (policy_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_create<policy_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+void
+policy_read (policy_feeder& feeder, sdk_ret_t exp_result)
+{
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_read<policy_feeder>(feeder, exp_result)));
+}
+
+static void
+rule_attr_update (policy_feeder& feeder, rule_t *rule,
+                  uint64_t chg_bmap)
+{
+    for(uint32_t i = 0; i < feeder.spec.rule_info->num_rules; i++) {
+        if (bit_isset(chg_bmap, RULE_ATTR_STATEFUL)) {
+            feeder.spec.rule_info->rules[i].stateful =
+                !(feeder.spec.rule_info->rules[i].stateful);
+        }
+        if (bit_isset(chg_bmap, RULE_ATTR_PRIORITY)) {
+            feeder.spec.rule_info->rules[i].priority++;
+        }
+        if (bit_isset(chg_bmap, RULE_ATTR_L3_MATCH)) {
+            memcpy(&feeder.spec.rule_info->rules[i].match.l3_match,
+                   &rule->match.l3_match,
+                   sizeof(rule_l3_match_t));
+        }
+        if (bit_isset(chg_bmap, RULE_ATTR_L4_MATCH)) {
+            memcpy(&feeder.spec.rule_info->rules[i].match.l4_match,
+                   &rule->match.l4_match,
+                   sizeof(rule_l4_match_t));
+        }
+    }
+}
+
+static void
+rule_info_attr_update (policy_feeder& feeder, rule_info_t *info,
+                       uint64_t chg_bmap)
+{
+    if (bit_isset(chg_bmap, RULE_INFO_ATTR_AF)) {
+        feeder.spec.rule_info->af = info->af;
+    }
+    if (bit_isset(chg_bmap, RULE_INFO_ATTR_RULE)) {
+        feeder.spec.rule_info->num_rules = info->num_rules;
+        memcpy(feeder.spec.rule_info->rules, info->rules,
+               sizeof(rule_t) * info->num_rules);
+    }
+    if (bit_isset(chg_bmap, RULE_INFO_ATTR_RULE_DEFAULT_ACTION)) {
+        //feeder.spec.rule_info->default_action.action_data.fw_action.action =
+        //~(feeder.spec.rule_info->default_action.action_data.fw_action.action);
+    }
+}
+
+void
+policy_rule_update (policy_feeder& feeder, pds_policy_spec_t *spec,
+                         uint64_t chg_bmap, sdk_ret_t exp_result)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    rule_attr_update(feeder, spec->rule_info->rules, chg_bmap);
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<policy_feeder>(bctxt, feeder)));
+
+    // if expected result is err, batch commit should fail
+    if (exp_result == SDK_RET_ERR)
+        batch_commit_fail(bctxt);
+    else
+        batch_commit(bctxt);
+}
+
+void
+policy_rule_info_update (policy_feeder& feeder, pds_policy_spec_t *spec,
+                         uint64_t chg_bmap, sdk_ret_t exp_result)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    rule_info_attr_update(feeder, spec->rule_info, chg_bmap);
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<policy_feeder>(bctxt, feeder)));
+
+    // if expected result is err, batch commit should fail
+    if (exp_result == SDK_RET_ERR)
+        batch_commit_fail(bctxt);
+    else
+        batch_commit(bctxt);
+}
+
+void
+policy_delete (policy_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_delete<policy_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
 }
 
 //----------------------------------------------------------------------------
