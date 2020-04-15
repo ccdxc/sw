@@ -1,5 +1,13 @@
 [
     {
+        "name": "pciemgrd",
+        "command": "/nic/bin/pciemgrd -d",
+        "dependencies": [],
+        "flags": ["critical"],
+        "timeout": 30.0,
+        "cpu-affinity": "0x3"
+    },
+    {
         "name": "agent",
         "command": "/nic/tools/start-agent.sh",
         "dependencies": [],
