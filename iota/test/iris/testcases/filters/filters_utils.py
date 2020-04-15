@@ -74,7 +74,7 @@ def getNaplesIntfEndPoints(naples_node, naples_intf_mac_dict):
         vlan = getInterfaceVlanID(naples_node, intf, True)
         naples_ep = (vlan, intf_mac_addr, intf)
         naples_ep_set.add(naples_ep)
-    
+
     return naples_ep_set
 
 def getHostIntfEndPoints(naples_node, host_intf_mac_dict):
@@ -85,7 +85,7 @@ def getHostIntfEndPoints(naples_node, host_intf_mac_dict):
         vlan = getInterfaceVlanID(naples_node, intf)
         host_ep = (vlan, intf_mac_addr, parent_intf)
         host_ep_set.add(host_ep)
-    
+
     return host_ep_set
 
 def getWorkloadEndPoints(naples_node, wload_intf_mac_dict, wload_intf_vlan_map):
@@ -397,6 +397,12 @@ def verifyEndpoints(host_view, hal_view):
         api.Logger.error("Endpoints present in host but NOT in hal ", len(diff_1), diff_1)
         # stale endpoints in HAL
         diff_2 = hal_view - host_view
-        api.Logger.error("Endpoints present in hal but NOT in host ", len(diff_2), diff_2)
+        if len(diff_2) == 1:
+            for (vlan, mac, intf) in diff_2:
+                if intf.find('swm_lif') != -1:
+                    api.Logger.info("SWM endpoints present in hal but NOT in host as expected", len(diff_2), diff_2)
+                    result = True
+        else:
+            api.Logger.error("Endpoints present in hal but NOT in host ", len(diff_2), diff_2)
 
     return result

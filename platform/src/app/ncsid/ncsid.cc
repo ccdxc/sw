@@ -93,6 +93,12 @@ char iface_name[32] = "oob_mnic0";
 bool is_interface_online(const char* interface) {
     struct ifreq ifr;
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+
+    if (sock == -1) {
+        perror("SOCKET OPEN");
+        return false;
+    }
+
     memset(&ifr, 0, sizeof(ifr));
     strcpy(ifr.ifr_name, interface);
 
@@ -100,6 +106,7 @@ bool is_interface_online(const char* interface) {
 
     if (ioctl(sock, SIOCSIFFLAGS, &ifr) < 0) {
         perror("SIOCSIFFLAGS");
+        close(sock);
         return false;
     }
     
@@ -107,6 +114,7 @@ bool is_interface_online(const char* interface) {
     strcpy(ifr.ifr_name, interface);
     if (ioctl(sock, SIOCGIFFLAGS, &ifr) < 0) {
         perror("SIOCGIFFLAGS");
+        close(sock);
         return false;
     }
 
