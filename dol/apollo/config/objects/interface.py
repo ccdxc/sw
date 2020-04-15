@@ -342,6 +342,39 @@ class InterfaceObject(base.ConfigObjectBase):
                 return True
         return False
 
+class HostInterfaceObject(base.ConfigObjectBase):
+    def __init__(self, node, lif):
+        super().__init__(api.ObjectTypes.INTERFACE, node)
+        self.SetOrigin('implicitly-created')
+        lifSpec = lif.Spec
+        lifStatus = lif.Status
+        self.InterfaceId = lifStatus.IfIndex
+        self.GID(f'HostInterface {self.InterfaceId:08x}')
+        self.UUID = utils.PdsUuid(lifSpec.Id)
+        self.InterfaceName = lifStatus.Name
+        self.MacAddr = objects.MacAddressBase(integer=lifSpec.MacAddress)
+        self.Show()
+        return
+
+    def __repr__(self):
+        return f"HostInterface: {self.UUID} {self.InterfaceName}"
+
+    def Show(self):
+        logger.info("InterfaceObject:")
+        logger.info(f"- {repr(self)}")
+        logger.info(f"- IfIndex 0x{self.InterfaceId:08x}")
+        logger.info(f"- MacAddress {self.MacAddr}")
+        return
+
+    def GetInterfaceIndex(self):
+        return self.InterfaceId
+
+    def GetInterfaceName(self):
+        return self.InterfaceName
+
+    def GetInterfaceMac(self):
+        return self.MacAddr
+
 class InterfaceObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.INTERFACE, Resmgr.MAX_INTERFACE)
@@ -361,7 +394,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             return self.__hostifs_iter[node].rrnext()
         return None
 
-    def GetHostInterfaceName(self, node, hostifindex):
+    def GetHostIf(self, node, hostifindex):
         if self.__hostifs[node]:
             return self.__hostifs[node].get(hostifindex, None)
         return None
@@ -415,14 +448,11 @@ class InterfaceObjectClient(base.ConfigClientBase):
                     intf_mac = objects.MacAddressBase(integer=lif.Spec.MacAddress)
                     self.__inband_mgmt_ifs[node].update({intf_name: intf_mac})
                     logger.info(f"Adding inband-mgmt-if {intf_name}-{intf_mac} in {node}")
-                    continue
-                if intf_type != types_pb2.LIF_TYPE_HOST:
-                    continue
-                key = self.GetKeyfromSpec(lif.Spec)
-                intf_name = lif.Status.Name
-                self.__hostifs[node].update({key: intf_name})
+                elif intf_type == types_pb2.LIF_TYPE_HOST:
+                    hostif = HostInterfaceObject(node, lif)
+                    self.__hostifs[node].update({hostif.InterfaceId: hostif})
         if self.__hostifs[node]:
-            self.__hostifs_iter[node] = utils.rrobiniter(self.__hostifs[node].keys())
+            self.__hostifs_iter[node] = utils.rrobiniter(sorted(self.__hostifs[node].keys()))
         return
 
     def __generate_l3_uplink_interfaces(self, node, parent, iflist):

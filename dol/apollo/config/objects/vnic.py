@@ -12,6 +12,7 @@ import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.mirror as mirror
+from apollo.config.objects.interface import client as InterfaceClient
 from apollo.config.objects.meter  import client as MeterClient
 from apollo.config.objects.policy import client as PolicyClient
 from apollo.config.objects.policer import client as PolicerClient
@@ -44,11 +45,15 @@ class VnicObject(base.ConfigObjectBase):
         self.GID('Vnic%d'%self.VnicId)
         self.UUID = utils.PdsUuid(self.VnicId, self.ObjType)
         self.SUBNET = parent
-        if hasattr(spec, 'vmac'):
-            if isinstance(spec.vmac, objects.MacAddressStep):
-                self.MACAddr = spec.vmac.get()
+        vmac = getattr(spec, 'vmac', None)
+        if vmac:
+            if isinstance(vmac, objects.MacAddressStep):
+                self.MACAddr = vmac.get()
+            elif vmac == 'usepfmac':
+                # used in IOTA for workload interface
+                self.MACAddr = InterfaceClient.GetHostIf(node, parent.HostIfIdx).GetInterfaceMac()
             else:
-                self.MACAddr = spec.vmac
+                self.MACAddr = vmac
         else:
             self.MACAddr =  ResmgrClient[node].VnicMacAllocator.get()
         self.dot1Qenabled = getattr(spec, 'tagged', True)

@@ -27,7 +27,7 @@ class Endpoint:
         self.ip_addresses = ip_addresses
         self.node_name = vnic_inst.Node
         self.has_public_ip = vnic_inst.HasPublicIp
-        self.interface = GetObjClient('interface').GetHostInterfaceName(vnic_inst.Node, vnic_inst.SUBNET.HostIfIdx)
+        self.interface = GetObjClient('interface').GetHostIf(vnic_inst.Node, vnic_inst.SUBNET.HostIfIdx).GetInterfaceName()
         self.vnic = vnic_inst
 
 class VnicRoute:

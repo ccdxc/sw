@@ -179,7 +179,7 @@ def MoveEpMACEntry(workload, target_subnet, ep_mac_addr, ep_ip_prefixes):
     workload.ip_address = __ip_from_prefix(ep_ip_prefixes[0])
     workload.sec_ip_prefixes = ep_ip_prefixes[1:]
     workload.sec_ip_addresses = [ __ip_from_prefix(prefix) for prefix in ep_ip_prefixes[1:] ]
-    workload.parent_interface = intf_client.GetHostInterfaceName(target_subnet.Node, target_subnet.HostIfIdx)
+    workload.parent_interface = intf_client.GetHostIf(target_subnet.Node, target_subnet.HostIfIdx).GetInterfaceName()
     workload.interface = workload.parent_interface
     workload.mac_address = vnic.MACAddr.get()
     workload.vlan = vnic.VlanId

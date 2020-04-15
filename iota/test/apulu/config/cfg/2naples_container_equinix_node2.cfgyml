@@ -157,7 +157,7 @@ vpc:
 
           vnic:
             - count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.010a
+              vmac      : usepfmac
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
@@ -184,7 +184,7 @@ vpc:
 
           vnic:
             - count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.020a
+              vmac      : usepfmac
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
@@ -211,7 +211,7 @@ vpc:
 
           vnic:
             - count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.030a
+              vmac      : usepfmac
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
@@ -238,7 +238,7 @@ vpc:
 
           vnic:
             - count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.040a
+              vmac      : usepfmac
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
@@ -265,7 +265,7 @@ vpc:
 
           vnic:
             - count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.050a
+              vmac      : usepfmac
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
@@ -292,7 +292,7 @@ vpc:
 
           vnic:
             - count     : 1             # 1 untagged VNIC
-              vmac      : macaddr/00ae.cd00.060a
+              vmac      : usepfmac
               srcguard  : false         # true or false (default false)
               public    : false
               tagged    : false         # true or false (default true)
