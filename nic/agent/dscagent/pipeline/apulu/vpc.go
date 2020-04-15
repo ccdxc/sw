@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 
@@ -22,12 +23,12 @@ import (
 )
 
 // HandleVPC handles crud operations on vrf
-func HandleVPC(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc msTypes.EvpnSvcClient, oper types.Operation, vrf netproto.Vrf) error {
+func HandleVPC(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc msTypes.EvpnSvcClient, subnetcl halapi.SubnetSvcClient, oper types.Operation, vrf netproto.Vrf) error {
 	switch oper {
 	case types.Create:
 		return createVPCHandler(infraAPI, client, msc, vrf)
 	case types.Update:
-		return updateVPCHandler(infraAPI, client, msc, vrf)
+		return updateVPCHandler(infraAPI, client, msc, subnetcl, vrf)
 	case types.Delete:
 		return deleteVPCHandler(infraAPI, client, msc, vrf)
 	default:
@@ -236,7 +237,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	return nil
 }
 
-func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc msTypes.EvpnSvcClient, vrf netproto.Vrf) error {
+func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc msTypes.EvpnSvcClient, subnetcl halapi.SubnetSvcClient, vrf netproto.Vrf) error {
 	curVrfB, err := infraAPI.Read(vrf.Kind, vrf.GetKey())
 	if err != nil {
 		return err
@@ -445,6 +446,52 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %s", vrf.GetKey(), eVrfRTDResp.ApiStatus)
 	}
 	log.Infof("VRF RT Delete: %s: got response [%v]", vrf.Name, eVrfRTDResp.ApiStatus)
+
+	// Update Subnet if ipam policy has changed for vrf and subnet was not using self's ipam policy
+	if curVrf.Spec.IPAMPolicy != vrf.Spec.IPAMPolicy {
+		dat, err := infraAPI.List("Network")
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Networks not found: Err: %v", types.ErrObjNotFound))
+		}
+
+		for _, o := range dat {
+			var nw netproto.Network
+			err := proto.Unmarshal(o, &nw)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "Network: %s | Err: %v", nw.GetKey(), err))
+				continue
+			}
+			// Subnet has self ipam policy
+			if nw.Spec.IPAMPolicy != "" {
+				continue
+			}
+			// Subnet doesn't use this vpc
+			if nw.Tenant != vrf.Tenant || nw.Namespace != vrf.Namespace || nw.Spec.VrfName != vrf.Name {
+				continue
+			}
+			// Update subnet with new ipam policy
+			nw.Spec.IPAMPolicy = vrf.Spec.IPAMPolicy
+			updsubnet, err := convertNetworkToSubnet(infraAPI, nw, nil)
+			if err != nil {
+				log.Errorf("Network: %s could not convert | Err: %s", nw.GetKey(), err)
+				continue
+			}
+			// If ipam policy being removed
+			if vrf.Spec.IPAMPolicy == "" {
+				updsubnet.Request[0].DHCPPolicyId = [][]byte{}
+			}
+			resp, err := subnetcl.SubnetUpdate(context.TODO(), updsubnet)
+			if err != nil {
+				log.Errorf("Network: %s update failed | Err: %v", nw.GetKey(), err)
+				continue
+			}
+			if resp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
+				log.Errorf("Network: %s update failed  | Status: %s", nw.GetKey(), resp.ApiStatus)
+				continue
+			}
+			log.Infof("Network: %s update | Err: %v | Status : %v | Resp: %v", nw.GetKey(), err, resp.ApiStatus, resp.Response)
+		}
+	}
 
 	dat, _ := vrf.Marshal()
 

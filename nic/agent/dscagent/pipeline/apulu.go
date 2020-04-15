@@ -348,7 +348,7 @@ func (a *ApuluAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []net
 	defer log.Infof("Vrf: %s | Op: %s | %s", vrf.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
-	err = apulu.HandleVPC(a.InfraAPI, a.VPCClient, a.EvpnClient, oper, vrf)
+	err = apulu.HandleVPC(a.InfraAPI, a.VPCClient, a.EvpnClient, a.SubnetClient, oper, vrf)
 	if err != nil {
 		log.Error(err)
 		return nil, err
