@@ -62,7 +62,7 @@ rdma_aq_tx_aqcb_process:
 
         CAPRI_SET_FIELD2(TO_S6_INFO_P, cb_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR)
 
-        CAPRI_SET_FIELD2(TO_S3_INFO_P, tx_psn_or_uplink_port, d.uplink_num)
+        CAPRI_SET_FIELD2(TO_S3_INFO_P, local_ack_timeout_or_uplink_port, d.uplink_num)
 
         // set dma_cmd_ptr in phv
         TXDMA_DMA_CMD_PTR_SET(AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_START_FLIT_CMD_ID)

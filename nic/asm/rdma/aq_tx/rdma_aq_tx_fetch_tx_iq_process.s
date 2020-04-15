@@ -14,11 +14,11 @@ struct aq_tx_s3_t3_k k;
 #define TO_RQCB0_INFO_P to_s5_info    
 #define TO_SQCB0_INFO_P to_s6_info    
 
-#define K_DSCP CAPRI_KEY_RANGE(IN_TO_S_P, local_ack_timeout_or_dscp_sbit0_ebit3, local_ack_timeout_or_dscp_sbit4_ebit4)
+#define K_UPLINK_PORT CAPRI_KEY_RANGE(IN_TO_S_P, local_ack_timeout_or_uplink_port_sbit0_ebit3, local_ack_timeout_or_uplink_port_sbit4_ebit4)
 #define K_PCP CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count_or_pcp)
 #define K_DCQCN_CONFIG_ADDR CAPRI_KEY_RANGE(IN_TO_S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
 #define K_CONGESTION_MGMT_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, congestion_mgmt_enable)
-#define K_UPLINK_PORT CAPRI_KEY_RANGE(IN_TO_S_P, tx_psn_or_uplink_port_sbit0_ebit3, tx_psn_or_uplink_port_sbit20_ebit23)
+#define K_DSCP CAPRI_KEY_RANGE(IN_TO_S_P, tx_psn_or_dscp_sbit0_ebit3, tx_psn_or_dscp_sbit20_ebit23)
 
 #define NUM_DSCP_VALS 64
 #define NUM_PCP_VALS 8

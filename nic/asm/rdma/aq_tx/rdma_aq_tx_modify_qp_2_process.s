@@ -104,7 +104,7 @@ hdr_update:
 pcp_dscp:
     // fetch tm-iq (cosB) for QP looking up dscp-pcp-tm-iq map table
     phvwr       CAPRI_PHV_FIELD(TO_S3_INFO, err_retry_count_or_pcp), d.mod_qp.en_pcp
-    phvwr       CAPRI_PHV_FIELD(TO_S3_INFO, local_ack_timeout_or_dscp), d.mod_qp.ip_dscp
+    phvwr       CAPRI_PHV_FIELD(TO_S3_INFO, tx_psn_or_dscp), d.mod_qp.ip_dscp
     addui       r7, r0, hiword(qos_dscp_cos_map_addr)
     addi        r7, r7, loword(qos_dscp_cos_map_addr)
 
@@ -237,7 +237,7 @@ tx_psn:
     nop
 
     add         r4, d.{mod_qp.sq_psn}.wx, r0
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, tx_psn_or_uplink_port), r4[23:0] 
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, tx_psn_or_dscp), r4[23:0]
     phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, tx_psn_valid), 1
 
     phvwr       p.rdma_feedback.modify_qp.tx_psn, r4[23:0]
@@ -247,9 +247,9 @@ timeout:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_TIMEOUT], 1, retry_cnt
 
     add         r4, d.mod_qp.retry_timeout, r0
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, local_ack_timeout_or_dscp), r4[4:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, local_ack_timeout_or_uplink_port), r4[4:0]
     phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, local_ack_timeout_valid), 1
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, local_ack_timeout_or_dscp), r4[4:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, local_ack_timeout_or_uplink_port), r4[4:0]
     phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, local_ack_timeout_valid), 1
 
 retry_cnt:

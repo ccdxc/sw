@@ -14,7 +14,7 @@ struct aq_tx_s6_t2_k k;
 #define IN_TO_S_P to_s6_info
 #define WQE2_TO_SQCB2_P t2_s2s_wqe2_to_sqcb2_info
     
-#define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_RANGE(IN_TO_S_P, local_ack_timeout_or_dscp_sbit0_ebit3, local_ack_timeout_or_dscp_sbit4_ebit4)
+#define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_RANGE(IN_TO_S_P, local_ack_timeout_or_uplink_port_sbit0_ebit3, local_ack_timeout_or_uplink_port_sbit4_ebit4)
 #define K_LOCAL_ACK_TIMEOUT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout_valid)
 #define K_Q_KEY_VALID CAPRI_KEY_FIELD(IN_TO_S_P, q_key_valid)
 #define K_Q_KEY_TM_IQ CAPRI_KEY_RANGE(IN_TO_S_P, q_key_or_tm_iq_sbit0_ebit1, q_key_or_tm_iq_sbit26_ebit31)
