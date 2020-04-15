@@ -7,6 +7,14 @@ import iota.test.apulu.config.add_routes as add_routes
 
 workloads = {}
 
+def __getOperations(tc_operation):
+    opers = list()
+    if tc_operation is None:
+        return opers
+    else:
+        opers = list(map(lambda x:x.capitalize(), tc_operation))
+    return opers
+
 def verify_dhcp_ips():
     if not api.IsSimulation():
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
@@ -28,6 +36,7 @@ def verify_dhcp_ips():
 def acquire_dhcp_ips(workload_pairs):
     global workloads
 
+    workloads.clear()
     for pair in workload_pairs:
         workloads[ pair[0] ] = True
         workloads[ pair[1] ] = True
@@ -66,6 +75,11 @@ def acquire_dhcp_ips(workload_pairs):
     return
 
 def Setup(tc):
+    tc.opers = None
+    if hasattr(tc.iterators, 'oper'):
+        tc.opers = __getOperations(tc.iterators.oper)
+        tc.selected_objs = config_api.SetupConfigObjects(tc.iterators.objtype)
+
     tc.sec_ip_test_type = getattr(tc.args, "use-sec-ip", 'none')
     if tc.sec_ip_test_type not in ['all', 'random', 'none']:
         api.Logger.error("Invalid value for use-sec-ip %s" %(tc.sec_ip_test_type))
@@ -80,17 +94,29 @@ def Setup(tc):
             return api.types.status.SUCCESS
         return api.types.status.FAILURE
 
+    return api.types.status.SUCCESS
+ 
+def Trigger(tc):
+    tc.is_config_deleted = False
+    tc.is_config_updated = False
+
+    for op in tc.opers:
+        tc.is_config_deleted = True if op == 'Delete' else False
+        tc.is_config_updated = True if op == 'Update' else False
+        res = config_api.ProcessObjectsByOperation(op, tc.selected_objs)
+        if res != api.types.status.SUCCESS:
+            break;
+
     tc.ipconfig = getattr(tc.args, "ipconfig", None)
     if tc.iterators.ipconfig == 'dhcp':
         acquire_dhcp_ips(tc.workload_pairs)
 
-    return api.types.status.SUCCESS
-
-def Trigger(tc):
     for pair in tc.workload_pairs:
         api.Logger.info("%s between %s and %s" % (tc.iterators.proto, pair[0].ip_address, pair[1].ip_address))
 
-    tc.cmd_cookies, tc.resp = conn_utils.TriggerConnectivityTest(tc.workload_pairs, tc.iterators.proto, tc.iterators.ipaf, tc.iterators.pktsize, tc.sec_ip_test_type)
+    tc.cmd_cookies, tc.resp = conn_utils.TriggerConnectivityTest(tc.workload_pairs, tc.iterators.proto,
+                                                                 tc.iterators.ipaf, tc.iterators.pktsize,
+                                                                 tc.sec_ip_test_type)
     return api.types.status.SUCCESS
 
 def Verify(tc):
@@ -104,4 +130,12 @@ def Verify(tc):
 
 
 def Teardown(tc):
+    if tc.is_config_updated:
+        rs = config_api.RestoreObjects('Update', tc.selected_objs)
+        if rs is False:
+            api.Logger.error(f"Teardown failed to restore objs from Update operation: {rs}")
+    if tc.is_config_deleted:
+        rs = config_api.RestoreObjects('Delete', tc.selected_objs)
+        if rs is False:
+            api.Logger.error(f"Teardown failed to restore objs from Delete operation: {rs}")
     return flow_utils.clearFlowTable(tc.workload_pairs)
