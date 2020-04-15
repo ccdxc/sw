@@ -48,6 +48,26 @@ func (x BufferStatus_ValidationStatus) String() string {
 	return BufferStatus_ValidationStatus_vname[int32(x)]
 }
 
+// BulkEditActionStatus_ValidationStatus_normal is a map of normalized values for the enum
+var BulkEditActionStatus_ValidationStatus_normal = map[string]string{
+	"failed":  "failed",
+	"success": "success",
+}
+
+var BulkEditActionStatus_ValidationStatus_vname = map[int32]string{
+	0: "success",
+	1: "failed",
+}
+
+var BulkEditActionStatus_ValidationStatus_vvalue = map[string]int32{
+	"success": 0,
+	"failed":  1,
+}
+
+func (x BulkEditActionStatus_ValidationStatus) String() string {
+	return BulkEditActionStatus_ValidationStatus_vname[int32(x)]
+}
+
 // ClearActionStatus_ClearStatus_normal is a map of normalized values for the enum
 var ClearActionStatus_ClearStatus_normal = map[string]string{
 	"failed":  "failed",
@@ -97,6 +117,16 @@ func (m *Buffer) MakeKey(prefix string) string {
 }
 
 func (m *Buffer) MakeURI(cat, ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/buffers/", in.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *BulkEditAction) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "buffers/", m.Tenant, "/", m.Name)
+}
+
+func (m *BulkEditAction) MakeURI(cat, ver, prefix string) string {
 	in := m
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/buffers/", in.Name)
 }
@@ -188,6 +218,61 @@ func (m *BufferStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *BufferStatus) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.ValidationResult = "success"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *BulkEditAction) Clone(into interface{}) (interface{}, error) {
+	var out *BulkEditAction
+	var ok bool
+	if into == nil {
+		out = &BulkEditAction{}
+	} else {
+		out, ok = into.(*BulkEditAction)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*BulkEditAction))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BulkEditAction) Defaults(ver string) bool {
+	var ret bool
+	m.Kind = "BulkEditAction"
+	ret = m.Tenant != "default" || m.Namespace != "default"
+	if ret {
+		m.Tenant, m.Namespace = "default", "default"
+	}
+	ret = m.Status.Defaults(ver) || ret
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *BulkEditActionStatus) Clone(into interface{}) (interface{}, error) {
+	var out *BulkEditActionStatus
+	var ok bool
+	if into == nil {
+		out = &BulkEditActionStatus{}
+	} else {
+		out, ok = into.(*BulkEditActionStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*BulkEditActionStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *BulkEditActionStatus) Defaults(ver string) bool {
 	var ret bool
 	ret = true
 	switch ver {
@@ -524,6 +609,128 @@ func (m *BufferStatus) Normalize() {
 
 }
 
+func (m *BulkEditAction) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+				RefKind: "Tenant",
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
+func (m *BulkEditAction) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for BulkEditAction"))
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreStatus {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *BulkEditAction) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	m.Spec.Normalize()
+
+	m.Status.Normalize()
+
+}
+
+func (m *BulkEditActionStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *BulkEditActionStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapStaging["BulkEditActionStatus"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapStaging["BulkEditActionStatus"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *BulkEditActionStatus) Normalize() {
+
+	m.ValidationResult = BulkEditActionStatus_ValidationStatus_normal[strings.ToLower(m.ValidationResult)]
+
+}
+
 func (m *ClearAction) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	tenant = m.Tenant
@@ -789,6 +996,7 @@ func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
 		&Buffer{},
+		&BulkEditAction{},
 		&ClearAction{},
 		&CommitAction{},
 	)
@@ -802,6 +1010,20 @@ func init() {
 		if _, ok := BufferStatus_ValidationStatus_vvalue[m.ValidationResult]; !ok {
 			vals := []string{}
 			for k1, _ := range BufferStatus_ValidationStatus_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"ValidationResult", vals)
+		}
+		return nil
+	})
+
+	validatorMapStaging["BulkEditActionStatus"] = make(map[string][]func(string, interface{}) error)
+	validatorMapStaging["BulkEditActionStatus"]["all"] = append(validatorMapStaging["BulkEditActionStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*BulkEditActionStatus)
+
+		if _, ok := BulkEditActionStatus_ValidationStatus_vvalue[m.ValidationResult]; !ok {
+			vals := []string{}
+			for k1, _ := range BulkEditActionStatus_ValidationStatus_vvalue {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"ValidationResult", vals)

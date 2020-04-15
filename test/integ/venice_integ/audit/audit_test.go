@@ -15,14 +15,17 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/bulkedit"
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
 	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/staging"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	loginctx "github.com/pensando/sw/api/login/context"
@@ -1016,4 +1019,379 @@ func getNetworkSecurityPolicyData(nRules int) *security.NetworkSecurityPolicy {
 		})
 	}
 	return sgPolicy
+}
+
+// TestStagingBufferBulkeditAuditLogs Checks to ensure that multiple audit logs are being generated,
+// one for each action when performing a bulkedit operation on a staging buffer
+func TestStagingBufferBulkeditAuditLogs(t *testing.T) {
+	ti := TestInfo{Name: t.Name()}
+	err := ti.SetupElastic()
+	AssertOk(t, err, "setupElastic failed")
+	defer ti.TeardownElastic()
+	err = ti.StartSpyglass()
+	AssertOk(t, err, "failed to start spyglass")
+	defer ti.Fdr.Stop()
+	err = ti.StartAPIServer()
+	AssertOk(t, err, "failed to start API server")
+	defer ti.APIServer.Stop()
+	err = ti.StartAPIGateway()
+	AssertOk(t, err, "failed to start API Gateway")
+	defer ti.APIGw.Stop()
+
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(ti.APIServerAddr, true, nil, nil, adminCred, ti.Logger); err != nil {
+		t.Fatalf("auth setupElastic failed")
+	}
+	defer CleanupAuth(ti.APIServerAddr, true, false, adminCred, ti.Logger)
+
+	ctx, err := NewLoggedInContext(context.Background(), ti.APIGwAddr, adminCred)
+	AssertOk(t, err, "error creating logged in context")
+
+	// Create staging buffer
+	stagingBufferName := "IntegTestStagingBuffer"
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = ti.Restcl.StagingV1().Buffer().Create(ctx, &staging.Buffer{ObjectMeta: api.ObjectMeta{Name: stagingBufferName, Tenant: globals.DefaultTenant}})
+		return err == nil, nil
+	}, fmt.Sprintf("unable to create staging buffer, err: %v", err))
+	defer ti.Restcl.StagingV1().Buffer().Delete(ctx, &api.ObjectMeta{Name: stagingBufferName, Tenant: globals.DefaultTenant})
+
+	netw1 := network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Name:      "TestStagingNetw1",
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+			VlanID:      11,
+		},
+	}
+
+	n1, err := types.MarshalAny(&netw1)
+	AssertOk(t, err, "error marshalling network netw1")
+	netw2 := netw1
+	netw2.ObjectMeta.Name = "TestStagingNetw2"
+	netw2.Spec.IPv4Subnet = "12.1.1.1/24"
+	netw2.Spec.VlanID = 12
+	n2, err := types.MarshalAny(&netw2)
+	AssertOk(t, err, "error marshalling network netw2")
+	netw3 := netw1
+	netw3.ObjectMeta.Name = "TestStagingNetw3"
+	netw3.Spec.IPv4Subnet = "13.1.1.1/24"
+	netw3.Spec.VlanID = 13
+	n3, err := types.MarshalAny(&netw3)
+	AssertOk(t, err, "error marshalling network netw3")
+
+	bulkEditReq := &staging.BulkEditAction{
+		ObjectMeta: api.ObjectMeta{
+			Name:      stagingBufferName,
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_CREATE.String(),
+					Object: &api.Any{Any: *n1},
+				},
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_CREATE.String(),
+					Object: &api.Any{Any: *n2},
+				},
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_CREATE.String(),
+					Object: &api.Any{Any: *n3},
+				},
+			},
+		},
+	}
+
+	bEResp, err := ti.Restcl.StagingV1().Buffer().Bulkedit(ctx, bulkEditReq)
+	AssertOk(t, err, "error Creating networks via bulkedit")
+	Assert(t, bEResp.Status.ValidationResult == "success", "Bulkedit Validation failure")
+
+	ca := staging.CommitAction{}
+	ca.ObjectMeta = bulkEditReq.ObjectMeta
+	_, err = ti.Restcl.StagingV1().Buffer().Commit(ctx, &ca)
+	AssertOk(t, err, "error Committing networks via bulkedit")
+
+	// search for audit events for create oper
+	stages := []string{auditapi.Stage_RequestAuthorization.String(), auditapi.Stage_RequestProcessing.String()}
+	netwNames := []string{"TestStagingNetw1", "TestStagingNetw2", "TestStagingNetw3"}
+	for _, netw := range netwNames {
+		for _, stage := range stages {
+			query := &search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{auth.Permission_AuditEvent.String()},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "action",
+								Operator: "equals",
+								Values:   []string{string(apiintf.CreateOper)},
+							},
+							{
+								Key:      "outcome",
+								Operator: "equals",
+								Values:   []string{strings.ToLower(auditapi.Outcome_Success.String())},
+							},
+							{
+								Key:      "resource.kind",
+								Operator: "equals",
+								Values:   []string{string("Network")},
+							},
+							{
+								Key:      "resource.name",
+								Operator: "equals",
+								Values:   []string{netw},
+							},
+							{
+								Key:      "stage",
+								Operator: "equals",
+								Values:   []string{strings.ToLower(stage)},
+							},
+						},
+					},
+				},
+				From:       0,
+				MaxResults: 50,
+				Aggregate:  true,
+			}
+			resp := testutils.AuditSearchResponse{}
+			AssertEventually(t, func() (bool, interface{}) {
+				err := Search(ctx, ti.APIGwAddr, query, &resp)
+				if err != nil {
+					return false, err
+				}
+				if resp.ActualHits == 0 {
+					return false, fmt.Errorf("no audit logs for network create at stage %s", stage)
+				}
+				if resp.ActualHits > 1 {
+					return false, fmt.Errorf("unexpected number of audit logs: %d", resp.ActualHits)
+				}
+				return true, nil
+			}, "error performing audit log search")
+
+			events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+			Assert(t, (events[0].Object.Action == string(apiintf.CreateOper)) &&
+				(events[0].Object.Resource.Kind == string("Network")) &&
+				(events[0].Object.Outcome == auditapi.Outcome_Success.String()) &&
+				(events[0].Object.Stage == strings.ToLower(stage)), fmt.Sprintf("unexpected audit event: %#v", *events[0]))
+		}
+	}
+
+	netw1.Spec.VlanID = 101
+	n1, err = types.MarshalAny(&netw1)
+	AssertOk(t, err, "error marshalling network netw1")
+	netw2.Spec.VlanID = 102
+	n2, err = types.MarshalAny(&netw2)
+	AssertOk(t, err, "error marshalling network netw2")
+	netw3.Spec.VlanID = 103
+	n3, err = types.MarshalAny(&netw3)
+	AssertOk(t, err, "error marshalling network netw3")
+
+	bulkEditReq = &staging.BulkEditAction{
+		ObjectMeta: api.ObjectMeta{
+			Name:      stagingBufferName,
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_UPDATE.String(),
+					Object: &api.Any{Any: *n1},
+				},
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_UPDATE.String(),
+					Object: &api.Any{Any: *n2},
+				},
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_UPDATE.String(),
+					Object: &api.Any{Any: *n3},
+				},
+			},
+		},
+	}
+
+	bEResp, err = ti.Restcl.StagingV1().Buffer().Bulkedit(ctx, bulkEditReq)
+	AssertOk(t, err, "error Creating networks via bulkedit")
+	Assert(t, bEResp.Status.ValidationResult == "success", "Bulkedit Validation failure")
+
+	ca = staging.CommitAction{}
+	ca.ObjectMeta = bulkEditReq.ObjectMeta
+	_, err = ti.Restcl.StagingV1().Buffer().Commit(ctx, &ca)
+	AssertOk(t, err, "error Committing networks via bulkedit")
+
+	// search for audit events for update oper
+	stages = []string{auditapi.Stage_RequestAuthorization.String(), auditapi.Stage_RequestProcessing.String()}
+	for _, netw := range netwNames {
+		for _, stage := range stages {
+			query := &search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{auth.Permission_AuditEvent.String()},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "action",
+								Operator: "equals",
+								Values:   []string{string(apiintf.UpdateOper)},
+							},
+							{
+								Key:      "outcome",
+								Operator: "equals",
+								Values:   []string{auditapi.Outcome_Success.String()},
+							},
+							{
+								Key:      "resource.kind",
+								Operator: "equals",
+								Values:   []string{string("Network")},
+							},
+							{
+								Key:      "resource.name",
+								Operator: "equals",
+								Values:   []string{netw},
+							},
+							{
+								Key:      "stage",
+								Operator: "equals",
+								Values:   []string{strings.ToLower(stage)},
+							},
+						},
+					},
+				},
+				From:       0,
+				MaxResults: 50,
+				Aggregate:  true,
+			}
+			resp := testutils.AuditSearchResponse{}
+			AssertEventually(t, func() (bool, interface{}) {
+				err := Search(ctx, ti.APIGwAddr, query, &resp)
+				if err != nil {
+					return false, err
+				}
+				if resp.ActualHits == 0 {
+					return false, fmt.Errorf("no audit logs for user create at stage %s", stage)
+				}
+				if resp.ActualHits > 1 {
+					return false, fmt.Errorf("unexpected number of audit logs: %d", resp.ActualHits)
+				}
+				return true, nil
+			}, "error performing audit log search")
+
+			events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+			Assert(t, (events[0].Object.Action == string(apiintf.UpdateOper)) &&
+				(events[0].Object.Resource.Kind == string("Network")) &&
+				(events[0].Object.Outcome == auditapi.Outcome_Success.String()) &&
+				(events[0].Object.Stage == strings.ToLower(stage)), fmt.Sprintf("unexpected audit event: %#v", *events[0]))
+		}
+	}
+
+	bulkEditReq = &staging.BulkEditAction{
+		ObjectMeta: api.ObjectMeta{
+			Name:      stagingBufferName,
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_DELETE.String(),
+					Object: &api.Any{Any: *n1},
+				},
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_DELETE.String(),
+					Object: &api.Any{Any: *n2},
+				},
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_DELETE.String(),
+					Object: &api.Any{Any: *n3},
+				},
+			},
+		},
+	}
+
+	bEResp, err = ti.Restcl.StagingV1().Buffer().Bulkedit(ctx, bulkEditReq)
+	AssertOk(t, err, "error Creating networks via bulkedit")
+	Assert(t, bEResp.Status.ValidationResult == "success", "Bulkedit Validation failure")
+
+	ca = staging.CommitAction{}
+	ca.ObjectMeta = bulkEditReq.ObjectMeta
+	_, err = ti.Restcl.StagingV1().Buffer().Commit(ctx, &ca)
+	AssertOk(t, err, "error Committing networks via bulkedit")
+
+	// search for audit events for delete oper
+	stages = []string{auditapi.Stage_RequestAuthorization.String(), auditapi.Stage_RequestProcessing.String()}
+	for _, netw := range netwNames {
+		for _, stage := range stages {
+			query := &search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{auth.Permission_AuditEvent.String()},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "action",
+								Operator: "equals",
+								Values:   []string{string(apiintf.DeleteOper)},
+							},
+							{
+								Key:      "outcome",
+								Operator: "equals",
+								Values:   []string{auditapi.Outcome_Success.String()},
+							},
+							{
+								Key:      "resource.kind",
+								Operator: "equals",
+								Values:   []string{string("Network")},
+							},
+							{
+								Key:      "resource.name",
+								Operator: "equals",
+								Values:   []string{netw},
+							},
+							{
+								Key:      "stage",
+								Operator: "equals",
+								Values:   []string{strings.ToLower(stage)},
+							},
+						},
+					},
+				},
+				From:       0,
+				MaxResults: 50,
+				Aggregate:  true,
+			}
+			resp := testutils.AuditSearchResponse{}
+			AssertEventually(t, func() (bool, interface{}) {
+				err := Search(ctx, ti.APIGwAddr, query, &resp)
+				if err != nil {
+					return false, err
+				}
+				if resp.ActualHits == 0 {
+					return false, fmt.Errorf("no audit logs for user create at stage %s", stage)
+				}
+				if resp.ActualHits > 1 {
+					return false, fmt.Errorf("unexpected number of audit logs: %d", resp.ActualHits)
+				}
+				return true, nil
+			}, "error performing audit log search")
+
+			events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+			Assert(t, (events[0].Object.Action == string(apiintf.DeleteOper)) &&
+				(events[0].Object.Resource.Kind == string("Network")) &&
+				(events[0].Object.Outcome == auditapi.Outcome_Success.String()) &&
+				(events[0].Object.Stage == strings.ToLower(stage)), fmt.Sprintf("unexpected audit event: %#v", *events[0]))
+		}
+	}
 }

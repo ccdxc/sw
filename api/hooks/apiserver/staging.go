@@ -2,7 +2,9 @@ package impl
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
@@ -12,14 +14,15 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
-	"github.com/pensando/sw/api/errors"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/staging"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 type stagingHooks struct {
@@ -202,6 +205,90 @@ func (h *stagingHooks) clearAction(ctx context.Context, kv kvstore.Interface, tx
 	return buf, false, err
 }
 
+func (h *stagingHooks) bulkeditAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	var err error
+
+	schema := runtime.GetDefaultScheme()
+	buf, ok := i.(staging.BulkEditAction)
+	if !ok {
+		h.l.Error("invalid object in post commit hook for bulkedit request")
+		return nil, false, errors.New("Invalid object type")
+	}
+
+	ov, err := cache.GetOverlay(buf.Tenant, buf.Name)
+	if err != nil {
+		h.l.Errorf("could not find overlay (%s/%s) in Clear action hook (%s)", buf.Tenant, buf.Name, err)
+		err = fmt.Errorf("Invalid Staging buffer Name %s : %v", buf.Name, err)
+		buf.Status.ValidationResult = staging.BufferStatus_FAILED.String()
+		return buf, false, err
+	}
+
+	for _, item := range buf.Spec.Items {
+		buf.Status.Items = append(buf.Status.Items, &staging.Item{
+			ItemId: staging.ItemId{
+				URI:    item.GetURI(),
+				Method: item.GetMethod(),
+			},
+			Object: item.GetObject(),
+		})
+		err = nil
+		objURI := item.GetURI()
+		oper := item.GetMethod()
+
+		typeURL := item.GetObject().GetTypeUrl()
+		typeStr := strings.Split(typeURL, "/")[1] // Remove the type.googleapis.com from the typeURL to get the obj Kind
+
+		kind, objR, err := item.FetchObjectFromBulkEditItem()
+		resVer := objR.(runtime.ObjectMetaAccessor).GetObjectMeta().GetResourceVersion()
+		objKey := schema.GetKey(objURI)
+		svcName := typeStr + "V1"
+
+		switch strings.ToLower(oper) {
+		case "create":
+			method := "AutoAdd" + kind
+			err = ov.CreatePrimary(ctx, svcName, method, objURI, objKey, objR, objR)
+		case "delete":
+			method := "AutoDelete" + kind
+			err = ov.DeletePrimary(ctx, svcName, method, objURI, objKey, objR, objR)
+		case "update":
+			method := "AutoUpdate" + kind
+			err = ov.UpdatePrimary(ctx, svcName, method, objURI, objKey, resVer, objR, objR, nil)
+		default:
+			err = errors.New("Unknown method string " + oper + " for ObjURI " + objURI)
+			h.l.Errorf("Unknown Method string " + oper + " for Obj " + objURI)
+			buf.Status.Errors = append(buf.Status.Errors, &staging.ValidationError{
+				ItemId: staging.ItemId{
+					URI:    item.GetURI(),
+					Method: item.GetMethod(),
+				},
+				Errors: []string{err.Error()},
+			})
+		}
+
+		// Handle failure arising from switch case above
+		if err != nil {
+			err = fmt.Errorf("Performing operation %s on ObjURI %s failed: %v ", oper, objURI, err.Error())
+			h.l.Errorf("Performing operation %s on ObjURI %s failed: %v ", oper, objURI, err.Error())
+			buf.Status.Errors = append(buf.Status.Errors, &staging.ValidationError{
+				ItemId: staging.ItemId{
+					URI:    item.GetURI(),
+					Method: item.GetMethod(),
+				},
+				Errors: []string{err.Error()},
+			})
+		}
+	}
+
+	if len(buf.Status.Errors) > 0 {
+		buf.Status.ValidationResult = staging.BufferStatus_FAILED.String()
+		err = apierrors.ToGrpcError("bulkedit operation failed", []string{"Bulkedit Request failed to be applied to the Staging buffer"}, int32(codes.FailedPrecondition), "", nil)
+	} else {
+		buf.Status.ValidationResult = staging.BufferStatus_SUCCESS.String()
+	}
+
+	return buf, false, err
+}
+
 func registerStagingHooks(svc apiserver.Service, logger log.Logger) {
 	h := stagingHooks{}
 	h.svc = svc
@@ -213,6 +300,7 @@ func registerStagingHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Buffer", apiintf.ListOper).WithResponseWriter(h.listBuffer)
 	svc.GetMethod("Commit").WithPreCommitHook(h.commitAction)
 	svc.GetMethod("Clear").WithPreCommitHook(h.clearAction)
+	svc.GetMethod("Bulkedit").WithPreCommitHook(h.bulkeditAction)
 }
 
 func init() {

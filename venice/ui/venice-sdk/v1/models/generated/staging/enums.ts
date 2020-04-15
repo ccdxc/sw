@@ -18,7 +18,18 @@ export enum ApiListWatchOptions_sort_order {
     'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
+export enum BulkeditBulkEditItem_method {
+    'create' = "create",
+    'update' = "update",
+    'delete' = "delete",
+}
+
 export enum StagingBufferStatus_validation_result {
+    'success' = "success",
+    'failed' = "failed",
+}
+
+export enum StagingBulkEditActionStatus_validation_result {
     'success' = "success",
     'failed' = "failed",
 }
@@ -46,7 +57,18 @@ export enum ApiListWatchOptions_sort_order_uihint {
     'none' = "None",
 }
 
+export enum BulkeditBulkEditItem_method_uihint {
+    'create' = "create",
+    'delete' = "delete",
+    'update' = "update",
+}
+
 export enum StagingBufferStatus_validation_result_uihint {
+    'failed' = "Failed",
+    'success' = "Success",
+}
+
+export enum StagingBulkEditActionStatus_validation_result_uihint {
     'failed' = "Failed",
     'success' = "Success",
 }
@@ -83,10 +105,14 @@ export class AllEnums {
     }
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
+    BulkeditBulkEditItem_method = BulkeditBulkEditItem_method;
     StagingBufferStatus_validation_result = StagingBufferStatus_validation_result;
+    StagingBulkEditActionStatus_validation_result = StagingBulkEditActionStatus_validation_result;
     StagingClearActionStatus_status = StagingClearActionStatus_status;
     StagingCommitActionStatus_status = StagingCommitActionStatus_status;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
+    BulkeditBulkEditItem_method_uihint = BulkeditBulkEditItem_method_uihint;
     StagingBufferStatus_validation_result_uihint = StagingBufferStatus_validation_result_uihint;
+    StagingBulkEditActionStatus_validation_result_uihint = StagingBulkEditActionStatus_validation_result_uihint;
 }

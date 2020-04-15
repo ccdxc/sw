@@ -15,5 +15,6 @@ var _ api.ObjectMeta
 var _ kvstore.Interface
 
 const KindBuffer ObjKind = "Buffer"
+const KindBulkEditAction ObjKind = "BulkEditAction"
 const KindClearAction ObjKind = "ClearAction"
 const KindCommitAction ObjKind = "CommitAction"

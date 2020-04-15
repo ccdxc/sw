@@ -20,10 +20,12 @@ import (
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/bulkedit"
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/client"
 	apierrors "github.com/pensando/sw/api/errors"
@@ -4908,4 +4910,641 @@ func TestRoutingSecrets(t *testing.T) {
 	ret, err = apicl.NetworkV1().RoutingConfig().Get(ctx, &rtCfg.ObjectMeta)
 	AssertOk(t, err, "gRPC get routing config failed {%s)", err)
 	Assert(t, reflect.DeepEqual(ret.Spec, rtCfg.Spec), "grpc get did not match [%v]/[%v]", rtCfg.Spec, ret.Spec)
+}
+
+func TestStagingBulkEdit(t *testing.T) {
+	ctx := context.Background()
+
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	var (
+		bufName    = "StagingTestBuffer"
+		tenantName = "default"
+	)
+	{ // Create a buffer
+		buf := staging.Buffer{}
+		buf.Name = bufName
+		buf.Tenant = tenantName
+		_, err := restcl.StagingV1().Buffer().Create(ctx, &buf)
+		if err != nil {
+			t.Fatalf("failed to create staging buffer %s", err)
+		}
+	}
+
+	// Staging Client
+	stagecl, err := apiclient.NewStagedRestAPIClient("https://localhost:"+tinfo.apigwport, bufName)
+	if err != nil {
+		t.Fatalf("cannot create Staged REST client")
+	}
+	defer stagecl.Close()
+
+	netw1 := &network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "TestNtwork1",
+			Namespace: globals.DefaultNamespace,
+			Tenant:    tenantName,
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+			VlanID:      1,
+		},
+		Status: network.NetworkStatus{},
+	}
+	n1, err := types.MarshalAny(netw1)
+	if err != nil {
+		t.Fatalf("Error marshaling network %v", err)
+	}
+
+	netw2 := &network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "TestNtwork2",
+			Namespace: globals.DefaultNamespace,
+			Tenant:    tenantName,
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+			VlanID:      2,
+		},
+		Status: network.NetworkStatus{},
+	}
+	n2, err := types.MarshalAny(netw2)
+	if err != nil {
+		t.Fatalf("Error marshaling network %v", err)
+	}
+
+	netw3 := &network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "TestNtwork3",
+			Namespace: globals.DefaultNamespace,
+			Tenant:    tenantName,
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+			VlanID:      3,
+		},
+		Status: network.NetworkStatus{},
+	}
+	n3, err := types.MarshalAny(netw3)
+	if err != nil {
+		t.Fatalf("Error marshaling network %v", err)
+	}
+
+	netw4 := &network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "TestNtwork4",
+			Tenant:    tenantName,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+			VlanID:      4,
+		},
+		Status: network.NetworkStatus{},
+	}
+	n4, err := types.MarshalAny(netw4)
+	if err != nil {
+		t.Fatalf("Error marshaling network %v", err)
+	}
+
+	bulkeditAction := &staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      bufName,
+			Tenant:    tenantName,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: "create",
+					Object: &api.Any{Any: *n1},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "create",
+					Object: &api.Any{Any: *n2},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "create",
+					Object: &api.Any{Any: *n3},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "create",
+					Object: &api.Any{Any: *n4},
+				},
+			},
+		},
+	}
+
+	_, err = restcl.StagingV1().Buffer().Bulkedit(ctx, bulkeditAction)
+	if err != nil {
+		t.Fatalf("Error performing bulkeditaction :%v", err)
+	}
+
+	// netwName := "TestNtwork4"
+	{ // Get staged object from staging buffer
+		objectMeta := netw4.ObjectMeta
+		_, err := stagecl.NetworkV1().Network().Get(ctx, &objectMeta)
+		if err != nil {
+			t.Fatalf("Get of network from staged buffer failed (%s)", err)
+		}
+	}
+	{ // Get staged object without staging
+		objectMeta := netw4.ObjectMeta
+		_, err := restcl.NetworkV1().Network().Get(ctx, &objectMeta)
+		if err == nil {
+			t.Fatalf("Get of network unstaged cache succeeded ")
+		}
+	}
+
+	// Commit the buffer
+	{ // commit the buffer and verify that it is accessible in unstaged path.
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 4 {
+			t.Fatalf("expecting [4] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		names := []string{}
+		for _, v := range buf.Status.Items {
+			ns := strings.Split(v.URI, "/")
+			names = append(names, ns[len(ns)-1])
+		}
+		ca := staging.CommitAction{}
+		ca.Name = bufName
+		ca.Tenant = tenantName
+		cresp, err := restcl.StagingV1().Buffer().Commit(ctx, &ca)
+		if err != nil {
+			t.Fatalf("failed to commit staging buffer (%s)", err)
+		}
+
+		if cresp.Status.Status != staging.CommitActionStatus_SUCCESS.String() {
+			t.Fatalf("commit operation failed %v", cresp.Status)
+		}
+		buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
+		if err != nil {
+			t.Fatalf("failed to get staging buffer %s", err)
+		}
+		if len(buf.Status.Items) != 0 {
+			t.Fatalf("expecting [0] item found [%d]", len(buf.Status.Items))
+		}
+		if len(buf.Status.Errors) != 0 {
+			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+		}
+		// Get non-staged object
+		for _, v := range names {
+			objectMeta := api.ObjectMeta{Name: v, Namespace: "default", Tenant: "default"}
+			_, err := restcl.NetworkV1().Network().Get(ctx, &objectMeta)
+			if err != nil {
+				t.Fatalf("Get of Order %s failed after commit (%s)", v, err)
+			}
+			netwObj, err := apicl.NetworkV1().Network().Get(ctx, &objectMeta)
+			if err != nil {
+				t.Fatalf("failed to get network (%s)", err)
+			}
+			if !strings.Contains(netwObj.GetName(), v) {
+				t.Fatalf("Network name mismatch, expecting [%s], got [%s]", v, netwObj.GetName())
+			}
+		}
+	}
+
+	// Update n3, delete n4, add n5
+	netw3.Spec.IPv4Subnet = "11.1.1.1/24"
+	netw3.Spec.VlanID = 33
+	n3, err = types.MarshalAny(netw3)
+	if err != nil {
+		t.Fatalf("Error marshaling network %v", err)
+	}
+
+	netw5 := &network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "TestNtwork5",
+			Namespace: globals.DefaultNamespace,
+			Tenant:    tenantName,
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+			VlanID:      5,
+		},
+		Status: network.NetworkStatus{},
+	}
+	n5, err := types.MarshalAny(netw5)
+	if err != nil {
+		t.Fatalf("Error marshaling network %v", err)
+	}
+
+	bulkeditAction = &staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      bufName,
+			Tenant:    tenantName,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: "update",
+					Object: &api.Any{Any: *n3},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "delete",
+					Object: &api.Any{Any: *n4},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "create",
+					Object: &api.Any{Any: *n5},
+				},
+			},
+		},
+	}
+
+	_, err = restcl.StagingV1().Buffer().Bulkedit(ctx, bulkeditAction)
+	if err != nil {
+		t.Fatalf("Error performing bulkeditction :%v", err)
+	}
+
+	opts := api.ObjectMeta{
+		Tenant: tenantName,
+		Name:   bufName,
+	}
+	buf, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+	if err != nil {
+		t.Fatalf("failed to get staging buffer %s", err)
+	}
+	if len(buf.Status.Items) != len(bulkeditAction.Spec.Items) {
+		t.Fatalf("expecting [%d] item found [%d]", len(bulkeditAction.Spec.Items), len(buf.Status.Items))
+	}
+	if len(buf.Status.Errors) != 0 {
+		t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+	}
+	ca := staging.CommitAction{}
+	ca.Name = bufName
+	ca.Tenant = tenantName
+	cresp, err := restcl.StagingV1().Buffer().Commit(ctx, &ca)
+	if err != nil {
+		t.Fatalf("failed to commit staging buffer (%s)", err)
+	}
+	if cresp.Status.Status != staging.CommitActionStatus_SUCCESS.String() {
+		t.Fatalf("commit operation failed %v", cresp.Status)
+	}
+
+	buf, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
+	if err != nil {
+		t.Fatalf("failed to get staging buffer %s", err)
+	}
+	if len(buf.Status.Items) != 0 {
+		t.Fatalf("expecting [0] item found [%d]", len(buf.Status.Items))
+	}
+	if len(buf.Status.Errors) != 0 {
+		t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
+	}
+
+	// Test that there are now 4 networks present
+	lopts := api.ListWatchOptions{}
+	lst, err := restcl.NetworkV1().Network().List(ctx, &lopts)
+	if len(lst) != 4 {
+		t.Fatalf("expecting 4 objects in list, got %d", len(lst))
+	}
+
+	// Delete all the objects
+	bulkeditAction = &staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      bufName,
+			Tenant:    tenantName,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: "delete",
+					Object: &api.Any{Any: *n1},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "delete",
+					Object: &api.Any{Any: *n2},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "delete",
+					Object: &api.Any{Any: *n3},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "delete",
+					Object: &api.Any{Any: *n5},
+				},
+			},
+		},
+	}
+
+	_, err = restcl.StagingV1().Buffer().Bulkedit(ctx, bulkeditAction)
+	if err != nil {
+		t.Fatalf("Error performing bulkeditction :%v", err)
+	}
+
+	ca = staging.CommitAction{}
+	ca.Name = bufName
+	ca.Tenant = tenantName
+	cresp, err = restcl.StagingV1().Buffer().Commit(ctx, &ca)
+	if err != nil {
+		t.Fatalf("failed to commit staging buffer (%s)", err)
+	}
+	if cresp.Status.Status != staging.CommitActionStatus_SUCCESS.String() {
+		t.Fatalf("commit operation failed %v", cresp.Status)
+	}
+
+	// Test that there are now 0 networks present
+	lopts = api.ListWatchOptions{}
+	lst, err = restcl.NetworkV1().Network().List(ctx, &lopts)
+	if len(lst) != 0 {
+		t.Fatalf("expecting 0 objects in list, got %d", len(lst))
+	}
+
+	// Scale test
+	makeMac := func(in int) string {
+		var b = make([]byte, 6)
+		b[5] = byte(in % 256)
+		b[4] = byte((in / 256) % 256)
+		b[3] = byte((in / (256 * 256)) % 256)
+		b[2] = byte((in / (256 * 256 * 256)) % 256)
+		return fmt.Sprintf("%02x%02x.%02x%02x.%02x%02x", b[0], b[1], b[2], b[3], b[4], b[5])
+	}
+	numHosts := 1000
+	numWLs := 1000
+	HostCreateFunc := func(ctx context.Context, id, iter int, userCtx interface{}) error {
+		host := cluster.Host{
+			ObjectMeta: api.ObjectMeta{
+				Name: fmt.Sprintf("scaleHost-%d", iter),
+			},
+			Spec: cluster.HostSpec{
+				DSCs: []cluster.DistributedServiceCardID{
+					{MACAddress: makeMac(iter)},
+				},
+			},
+		}
+		_, err := apicl.ClusterV1().Host().Create(ctx, &host)
+		if err != nil {
+			log.Errorf("failed to create Host [%v](%s)", host.Name, err)
+			return err
+		}
+		return nil
+	}
+	wf := workfarm.New(20, time.Second*60, HostCreateFunc)
+	statsCh, err := wf.Run(ctx, numHosts, 0, time.Second*60, nil)
+	AssertOk(t, err, "failed to start work farm (%s)", err)
+	stats := <-statsCh
+	t.Logf("Host create stats [%v]", stats)
+
+	// Before creating Workloads, ensure that all hosts have been created
+	HostCreateCheckFunc := func(ctx context.Context, id, iter int, userCtx interface{}) error {
+		// List all hosts
+		actualHosts, err := apicl.ClusterV1().Host().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByName.String()})
+		if err != nil {
+			log.Errorf("Error listing hosts (%s)", err)
+			return err
+		}
+		if len(actualHosts) != numHosts {
+			err = fmt.Errorf("Expected Hostcount was not equal to actual host [%d]/[%d]", numHosts, len(actualHosts))
+			return err
+		}
+		for _, actualHost := range actualHosts {
+			var expHost cluster.Host
+			actualName := actualHost.Name
+			if strings.HasPrefix(actualName, "scaleHost-") {
+				// Verify that the ObjName is of expected type
+				num, _ := strconv.Atoi((strings.Split(actualName, "scaleHost-")[1]))
+				if (num > numHosts) || (num < 0) {
+					log.Errorf("HostName is not of expected type: %s", actualName)
+					return fmt.Errorf("HostName is not of expected type: %s", actualName)
+				}
+				expHost = cluster.Host{
+					ObjectMeta: api.ObjectMeta{
+						Name: fmt.Sprintf("scaleHost-%d", num),
+					},
+					Spec: cluster.HostSpec{
+						DSCs: []cluster.DistributedServiceCardID{
+							{MACAddress: makeMac(num)},
+						},
+					},
+				}
+				// Verify the spec matches
+				if !reflect.DeepEqual(expHost.Spec, actualHost.Spec) {
+					log.Errorf("Expected Host was not equal to actual host [%+v]/[%+v]", expHost.Spec, actualHost.Spec)
+					err = fmt.Errorf("Expected Host was not equal to actual host [%+v]/[%+v]", expHost.Spec, actualHost.Spec)
+				}
+			} else {
+				log.Errorf("HostName is not of expected type: %s", actualName)
+				return fmt.Errorf("HostName is not of expected type: %s", actualName)
+			}
+			if !reflect.DeepEqual(expHost.Spec, actualHost.Spec) {
+				log.Errorf("Expected Host was not equal to actual host [%+v]/[%+v]", expHost.Spec, actualHost.Spec)
+				err = fmt.Errorf("Expected Host was not equal to actual host [%+v]/[%+v]", expHost.Spec, actualHost.Spec)
+			}
+		}
+		return err
+	}
+	wf0 := workfarm.New(1, time.Second*60, HostCreateCheckFunc)
+	statsCh, err = wf0.Run(ctx, 1, 0, time.Second*60, nil)
+	AssertOk(t, err, "failed to start work farm (%s)", err)
+	stats = <-statsCh
+	t.Logf("Host Get stats [%v]", stats)
+
+	bulkeditAction = &staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      bufName,
+			Tenant:    tenantName,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{},
+		},
+	}
+
+	for iter := 0; iter < numWLs; iter++ {
+		wl := &workload.Workload{
+			TypeMeta: api.TypeMeta{
+				Kind:       "Workload",
+				APIVersion: "v1",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name:      fmt.Sprintf("scaleWL-%d", iter),
+				Tenant:    globals.DefaultTenant,
+				Namespace: globals.DefaultNamespace,
+			},
+			Spec: workload.WorkloadSpec{
+				HostName: fmt.Sprintf("scaleHost-%d", (iter % numHosts)),
+				Interfaces: []workload.WorkloadIntfSpec{
+					{
+						ExternalVlan: uint32((iter % 4000) + 1),
+						MicroSegVlan: uint32((iter % 4000) + 1),
+						MACAddress:   makeMac(iter),
+					},
+				},
+			},
+		}
+
+		wlB, err := types.MarshalAny(wl)
+		if err != nil {
+			t.Fatalf("Failed to marshal wl %s:%v", wl.ObjectMeta.Name, err)
+		}
+
+		bulkeditAction.Spec.Items = append(bulkeditAction.Spec.Items, &bulkedit.BulkEditItem{
+			Method: "create",
+			Object: &api.Any{Any: *wlB},
+		})
+	}
+
+	// Make the bulkedit call
+	_, err = restcl.StagingV1().Buffer().Bulkedit(ctx, bulkeditAction)
+	if err != nil {
+		t.Fatalf("Error performing bulkeditction :%v", err)
+	}
+
+	// Commit the buffer
+	caction := staging.CommitAction{}
+	caction.Name = bufName
+	caction.Tenant = tenantName
+	_, err = restcl.StagingV1().Buffer().Commit(ctx, &caction)
+	if err != nil {
+		t.Fatalf("commit should have succeeded (%s)", err)
+	}
+
+	// Clean up, test mix of bulkedit and regular buffer add on the same buffer
+	hostDelFunc := func(ctx context.Context, id, iter int, userctx interface{}) error {
+		objm := &api.ObjectMeta{
+			Name: fmt.Sprintf("scaleHost-%d", iter),
+		}
+		stagecl.ClusterV1().Host().Delete(ctx, objm)
+		return nil
+	}
+
+	bulkeditAction = &staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      bufName,
+			Tenant:    tenantName,
+			Namespace: "default",
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{},
+		},
+	}
+
+	for iter := 0; iter < numWLs; iter++ {
+		wl := &workload.Workload{
+			TypeMeta: api.TypeMeta{
+				Kind:       "Workload",
+				APIVersion: "v1",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name:      fmt.Sprintf("scaleWL-%d", iter),
+				Tenant:    globals.DefaultTenant,
+				Namespace: globals.DefaultNamespace,
+			},
+		}
+
+		wlB, err := types.MarshalAny(wl)
+		if err != nil {
+			t.Fatalf("Failed to marshal wl %s:%v", wl.ObjectMeta.Name, err)
+		}
+
+		bulkeditAction.Spec.Items = append(bulkeditAction.Spec.Items, &bulkedit.BulkEditItem{
+			Method: "delete",
+			Object: &api.Any{Any: *wlB},
+		})
+	}
+
+	// Make the bulkedit call
+	_, err = restcl.StagingV1().Buffer().Bulkedit(ctx, bulkeditAction)
+	if err != nil {
+		t.Fatalf("Error performing bulkeditction :%v", err)
+	}
+
+	_, err = restcl.StagingV1().Buffer().Commit(ctx, &caction)
+	if err != nil {
+		t.Fatalf("commit should have succeeded (%s)", err)
+	}
+
+	wf = workfarm.New(20, time.Second*60, hostDelFunc)
+	statsCh, err = wf.Run(ctx, numHosts, 0, time.Second*60, nil)
+	AssertOk(t, err, "failed to start work farm (%s)", err)
+	stats = <-statsCh
+	t.Logf("Host delete stats [%v]", stats)
+
+	wlRet, err := restcl.WorkloadV1().Workload().List(ctx, &lopts)
+	if err != nil {
+		t.Fatalf("List should have succeeded (%s)", err)
+	}
+
+	if len(wlRet) != 0 {
+		t.Fatalf("expecting 0 objects in list, got %d", len(wlRet))
+	}
+
 }

@@ -37,4 +37,12 @@ service StagingV1 {
       Response: "ClearAction"
       Desc: "Clear operations from a configuration buffer"
     };
+
+    option (venice.apiAction) = {
+      Object: "Buffer"
+      Action: "bulkedit"
+      Request: "BulkEditAction"
+      Response: "BulkEditAction"
+      Desc: "Create/Update/Delete multiple objects as part of a single request"
+    };
 }

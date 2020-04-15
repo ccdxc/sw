@@ -7,7 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/bulkedit"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -1122,4 +1125,147 @@ func TestValidatePerms(t *testing.T) {
 			Assert(t, strings.Contains(err.Error(), test.errmsg), fmt.Sprintf("[%s] test failed, expected error to be [%v], got [%v]]", test.name, test.errmsg, err.Error()))
 		}
 	}
+}
+
+func TestCommitBufferBulkedit(t *testing.T) {
+	// setup auth
+	// Create staging buffer
+	// perform bulkedit
+	// commit
+	// Setup auth with network read permission for a new user
+	// Bulkedit oper with create, update, delete operation should fail
+
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+
+	stagingBufferName := "IntegTestStagingBuffer"
+	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "error creating logged in context")
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.StagingV1().Buffer().Create(ctx, &staging.Buffer{ObjectMeta: api.ObjectMeta{Name: stagingBufferName, Tenant: globals.DefaultTenant}})
+		return err == nil, nil
+	}, fmt.Sprintf("unable to create staging buffer, err: %v", err))
+	defer tinfo.restcl.StagingV1().Buffer().Delete(ctx, &api.ObjectMeta{Name: stagingBufferName, Tenant: globals.DefaultTenant})
+
+	netw1 := network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Name:      "TestStagingNetw1",
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+			VlanID:      10,
+		},
+	}
+
+	n1, err := types.MarshalAny(&netw1)
+	AssertOk(t, err, "error marshalling network netw1")
+	netw2 := netw1
+	netw2.ObjectMeta.Name = "TestStagingNetw2"
+	netw2.Spec.IPv4Subnet = "10.1.1.1/24"
+	netw2.Spec.VlanID = 11
+	n2, err := types.MarshalAny(&netw2)
+	AssertOk(t, err, "error marshalling network netw2")
+
+	bulkEditReq := &staging.BulkEditAction{
+		ObjectMeta: api.ObjectMeta{
+			Name:      stagingBufferName,
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_CREATE.String(),
+					Object: &api.Any{Any: *n1},
+				},
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_CREATE.String(),
+					Object: &api.Any{Any: *n2},
+				},
+			},
+		},
+	}
+
+	bEResp, err := tinfo.restcl.StagingV1().Buffer().Bulkedit(ctx, bulkEditReq)
+	AssertOk(t, err, "error Creating networks via bulkedit")
+	Assert(t, bEResp.Status.ValidationResult == "success", "Bulkedit Validation failure")
+
+	ca := staging.CommitAction{}
+	ca.ObjectMeta = bulkEditReq.ObjectMeta
+	_, err = tinfo.restcl.StagingV1().Buffer().Commit(ctx, &ca)
+	AssertOk(t, err, "error Committing networks via bulkedit")
+
+	// Create a user role with only read permissions, should not be allowed to create or update to staging buffer
+	tuser1 := &auth.User{}
+	tuser1.Name = "tReadUser"
+	tuser1.Tenant = globals.DefaultTenant
+	tuser1.Spec.Password = testPassword
+	tuser1.Spec.Type = auth.UserSpec_Local.String()
+	MustCreateTestUser(tinfo.apicl, tuser1.Name, testPassword, globals.DefaultTenant)
+	defer MustDeleteUser(tinfo.apicl, tuser1.Name, globals.DefaultTenant)
+	MustCreateRole(tinfo.apicl, "netwReaderrole", globals.DefaultTenant, login.NewPermission(globals.DefaultTenant, string(apiclient.GroupNetwork), authz.ResourceKindAll, authz.ResourceNamespaceAll, "", auth.Permission_Read.String()))
+	defer MustDeleteRole(tinfo.apicl, "netwReaderrole", globals.DefaultTenant)
+	MustCreateRoleBinding(tinfo.apicl, "netwReaderRoleBinding", globals.DefaultTenant, "netwReaderrole", []string{tuser1.Name}, nil)
+	defer MustDeleteRoleBinding(tinfo.apicl, "netwReaderRoleBinding", globals.DefaultTenant)
+
+	// Have this user perform bulkedit operations on which he doesn't have permissions
+	userCtx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: tuser1.Name, Password: testPassword, Tenant: globals.DefaultTenant})
+	AssertOk(t, err, "error creating logged in context")
+
+	netw3 := netw1
+	netw3.Name = "TestNetwAuthz1"
+	netw3.Spec.VlanID = 100
+	n3, err := types.MarshalAny(&netw1)
+	AssertOk(t, err, "error marshalling network netw3")
+	netw2.Spec.VlanID = 101
+	n1, err = types.MarshalAny(&netw2)
+	AssertOk(t, err, "error marshalling network netw2")
+
+	bulkEditReq = &staging.BulkEditAction{
+		ObjectMeta: api.ObjectMeta{
+			Name:      stagingBufferName,
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_DELETE.String(),
+					Object: &api.Any{Any: *n1},
+				},
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_CREATE.String(),
+					Object: &api.Any{Any: *n3},
+				},
+				&bulkedit.BulkEditItem{
+					Method: bulkedit.BulkEditItem_UPDATE.String(),
+					Object: &api.Any{Any: *n2},
+				},
+			},
+		},
+	}
+
+	_, err = tinfo.restcl.NetworkV1().Network().Delete(ctx, &netw1.ObjectMeta)
+	AssertOk(t, err, "error deleting network netw1")
+	_, err = tinfo.restcl.NetworkV1().Network().Delete(ctx, &netw2.ObjectMeta)
+	AssertOk(t, err, "error deleting network netw2")
+
+	bEResp, err = tinfo.restcl.StagingV1().Buffer().Bulkedit(userCtx, bulkEditReq)
+	Assert(t, err != nil, "Expecting authz error")
 }

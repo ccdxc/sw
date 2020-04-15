@@ -6,12 +6,16 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/bulkedit"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/staging"
-	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
@@ -480,4 +484,115 @@ func TestStagingAddOwnerPreAuthzHookRegistration(t *testing.T) {
 	svc = mocks.NewFakeAPIGwService(l, true)
 	err = r.registerOpsPreAuthzHook(svc)
 	Assert(t, err != nil, "expected error in opsPreAuthz hook registration")
+}
+
+func TestStagingBulkEdit(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &stagingHooks{}
+	r.logger = l
+
+	ctx := context.Background()
+	netw := &network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "TestNtwork1",
+			Tenant:    "default",
+			Namespace: "default",
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+		},
+		Status: network.NetworkStatus{},
+	}
+
+	netwAny, _ := types.MarshalAny(netw)
+	netw.Spec.IPv4Subnet = "111.1.1.1/24"
+	netw.Spec.IPv6Gateway = "111.1.1.1"
+
+	netwAny2, _ := types.MarshalAny(netw)
+
+	bEditAction := staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "TestBuffer1",
+			Tenant: "default",
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: "create",
+					Object: &api.Any{Any: *netwAny},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "update",
+					Object: &api.Any{Any: *netwAny2},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "delete",
+					Object: &api.Any{Any: *netwAny2},
+				},
+			},
+		},
+		Status: staging.BulkEditActionStatus{},
+	}
+
+	_, rcvdOps, err := r.processBulkeditReq(ctx, &bEditAction)
+	if err != nil {
+		t.Fatalf("Fatal err %s\n", err.Error())
+	}
+	expectedResource := authz.NewResource(
+		"default",
+		"network",
+		"Network",
+		globals.DefaultNamespace,
+		"TestNtwork1",
+	)
+	expectedOp0 := authz.NewOperation(expectedResource, "create")
+	expectedOp1 := authz.NewOperation(expectedResource, "update")
+	expectedOp2 := authz.NewOperation(expectedResource, "delete")
+
+	AssertOk(t, err, "ApiGw BulkEdit hook failed")
+	Assert(t, len(rcvdOps) == 3, "Expected number of operations doesn't match!")
+	Assert(t, reflect.DeepEqual(expectedOp0, rcvdOps[0]), "Create operation comparison failed")
+	Assert(t, reflect.DeepEqual(expectedOp1, rcvdOps[1]), "Update operation comparison failed")
+	Assert(t, reflect.DeepEqual(expectedOp2, rcvdOps[2]), "Delete operation comparison failed")
+
+	// Negative test cases
+	// 1. Send a wrong request type
+
+	wrongReq := staging.ClearAction{}
+	_, _, err = r.processBulkeditReq(ctx, &wrongReq)
+	Assert(t, err != nil, "Expected an invalid input type error")
+
+	// 2. Unknown method type
+	bEditAction = staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "TestBuffer1",
+			Tenant: "default",
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					Method: "qwertyuiop",
+					Object: &api.Any{Any: *netwAny},
+				},
+			},
+		},
+		Status: staging.BulkEditActionStatus{},
+	}
+	_, _, err = r.processBulkeditReq(ctx, &bEditAction)
+	Assert(t, err != nil, "Expected an unknwon opertype type error")
 }

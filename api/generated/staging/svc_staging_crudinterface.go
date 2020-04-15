@@ -28,6 +28,7 @@ type StagingV1BufferInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 	Commit(ctx context.Context, in *CommitAction) (*CommitAction, error)
 	Clear(ctx context.Context, in *ClearAction) (*ClearAction, error)
+	Bulkedit(ctx context.Context, in *BulkEditAction) (*BulkEditAction, error)
 }
 
 // StagingV1Interface exposes objects with CRUD operations allowed by the service

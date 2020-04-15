@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/staging"
@@ -14,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 type stagingHooks struct {
@@ -35,15 +37,26 @@ func (s *stagingHooks) opsPreAuthzHook(ctx context.Context, in interface{}) (con
 		return ctx, in, errors.New("internal error")
 	}
 	var action string
+	var modOps []authz.Operation
+	var err error
+	var bulkEditOper bool
+
 	switch in.(type) {
 	case *staging.CommitAction:
 		action = auth.Permission_Commit.String()
+	case *staging.BulkEditAction:
+		// We don't have an action for the bulkedit Operation, leave it blank
+		in, bulkops, err := s.processBulkeditReq(ctx, in)
+		if err != nil {
+			return ctx, in, err
+		}
+		operations = append(operations, bulkops...)
+		bulkEditOper = true
 	case *staging.ClearAction:
 		action = auth.Permission_Clear.String()
 	default:
 		return ctx, in, errors.New("invalid input type")
 	}
-	var modOps []authz.Operation
 	for _, op := range operations {
 		if !authz.IsValidOperationValue(op) {
 			s.logger.ErrorLog("method", "opsPreAuthzHook", "msg", fmt.Sprintf("invalid operation: %v", op))
@@ -60,8 +73,14 @@ func (s *stagingHooks) opsPreAuthzHook(ctx context.Context, in interface{}) (con
 			modOps = append(modOps, op)
 		}
 	}
+
 	nctx := apigwpkg.NewContextWithOperations(ctx, modOps...)
-	return nctx, in, nil
+	if bulkEditOper {
+		nctx1 := apigwpkg.AddBulkOperationsFlagToContext(nctx)
+		return nctx1, in, err
+	}
+
+	return nctx, in, err
 }
 
 // addOwner makes staging buffer CRUD permissions implicit
@@ -114,8 +133,75 @@ func (s *stagingHooks) userContext(ctx context.Context, in interface{}) (context
 	return nctx, in, false, nil
 }
 
+// bulkedit is a pre-authz helper function that processes the bulkedit request. It converts the bulkedit objects
+// into authz operations and populates the error status in the reponse structure if the validation fails
+func (s *stagingHooks) processBulkeditReq(ctx context.Context, in interface{}) (interface{}, []authz.Operation, error) {
+	schema := runtime.GetDefaultScheme()
+	bulkOps := []authz.Operation{}
+	buf, ok := in.(*staging.BulkEditAction)
+	if !ok {
+		s.logger.Error("msg", "Typecast failed for Invalid object, expected bulkEditAction type")
+		return in, bulkOps, errors.New("Invalid payload type")
+	}
+
+	for _, item := range buf.Spec.Items {
+		oper := item.GetMethod()
+		kind, objR, err := item.FetchObjectFromBulkEditItem()
+		if err != nil {
+			s.logger.Errorf("Failed to fetch BulkEdit object for item %v\n", item)
+			err = errors.New("Unable to decode bulkedit object " + item.GetURI())
+			buf.Status.Errors = append(buf.Status.Errors, &staging.ValidationError{
+				ItemId: staging.ItemId{
+					Method: item.GetMethod(),
+					URI:    item.GetURI(),
+				},
+				Errors: []string{err.Error()},
+			})
+			continue
+		}
+		group := schema.Kind2APIGroup(kind)
+		name := objR.(runtime.ObjectMetaAccessor).GetObjectMeta().GetName()
+		tenant := objR.(runtime.ObjectMetaAccessor).GetObjectMeta().GetTenant()
+
+		resource := authz.NewResource(
+			tenant,
+			group,
+			kind,
+			globals.DefaultNamespace,
+			name,
+		)
+
+		var action string
+		switch strings.ToLower(oper) {
+		case string(apiintf.CreateOper):
+			action = auth.Permission_Create.String()
+		case string(apiintf.UpdateOper):
+			action = auth.Permission_Update.String()
+		case string(apiintf.DeleteOper):
+			action = auth.Permission_Delete.String()
+		default:
+			s.logger.Errorf("Unknown method type \n", oper)
+			err = errors.New("Unknown method type " + oper + " on Object " + item.GetURI())
+			buf.Status.Errors = append(buf.Status.Errors, &staging.ValidationError{
+				// Set Spec.Item.Item here
+				Errors: []string{err.Error()},
+			})
+			continue
+		}
+
+		bulkOps = append(bulkOps, authz.NewOperation(resource, action))
+	}
+
+	if len(buf.Status.Errors) > 0 {
+		// Errors present in one or more objects, fail validation
+		buf.Status.ValidationResult = staging.BufferStatus_FAILED.String()
+		return in, bulkOps, fmt.Errorf("Validation of bulkedit messge failed")
+	}
+	return in, bulkOps, nil
+}
+
 func (s *stagingHooks) registerOpsPreAuthzHook(svc apigw.APIGatewayService) error {
-	methods := []string{"Commit", "Clear"}
+	methods := []string{"Commit", "Clear", "Bulkedit"}
 	for _, method := range methods {
 		prof, err := svc.GetServiceProfile(method)
 		if err != nil {

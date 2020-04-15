@@ -10,6 +10,8 @@ The following Messages are defined.
   Buffer
   BufferSpec
   BufferStatus
+  BulkEditAction
+  BulkEditActionStatus
   ClearAction
   ClearActionSpec
   ClearActionStatus

@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pensando/grpc-gateway/runtime"
 	gwruntime "github.com/pensando/grpc-gateway/runtime"
 	"google.golang.org/grpc"
@@ -24,12 +25,15 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/bulkedit"
 	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/diagnostics"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/staging"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
@@ -1044,6 +1048,7 @@ func TestAudit(t *testing.T) {
 	}
 	b, _ := json.Marshal(sgPolicy)
 	sgPolicyStr := string(b)
+	testCtx := context.Background()
 
 	tests := []struct {
 		name     string
@@ -1065,6 +1070,7 @@ func TestAudit(t *testing.T) {
 			user:     nil,
 			eventStr: "no user to audit",
 			err:      nil,
+			ctx:      testCtx,
 		},
 		{
 			name: "nil ops",
@@ -1083,6 +1089,7 @@ func TestAudit(t *testing.T) {
 			},
 			eventStr: "no operations to audit",
 			err:      nil,
+			ctx:      testCtx,
 		},
 		{
 			name: "nil ops",
@@ -1100,6 +1107,7 @@ func TestAudit(t *testing.T) {
 				},
 			},
 			eventStr: "no operations to audit",
+			ctx:      testCtx,
 			err:      nil,
 		},
 		{
@@ -1128,6 +1136,7 @@ func TestAudit(t *testing.T) {
 			reqURI:   "/configs/security/v1/tenant/testTenant/networksecuritypolicies",
 			eventStr: "request-object=\"" + sgPolicyStr + "\"",
 			err:      nil,
+			ctx:      testCtx,
 		},
 		{
 			name: "log response obj",
@@ -1155,6 +1164,7 @@ func TestAudit(t *testing.T) {
 			reqURI:   "/configs/security/v1/tenant/testTenant/networksecuritypolicies",
 			eventStr: "response-object=\"" + sgPolicyStr + "\"",
 			err:      nil,
+			ctx:      testCtx,
 		},
 		{
 			name: "log api error",
@@ -1181,6 +1191,7 @@ func TestAudit(t *testing.T) {
 			reqURI:   "/configs/security/v1/tenant/testTenant/networksecuritypolicies",
 			eventStr: "duplicate policy",
 			err:      nil,
+			ctx:      testCtx,
 		},
 		{
 			name: "read operation",
@@ -1207,6 +1218,7 @@ func TestAudit(t *testing.T) {
 			apierr:   nil,
 			eventStr: "",
 			err:      nil,
+			ctx:      testCtx,
 		},
 		{
 			name: "log external request id",
@@ -1242,13 +1254,14 @@ func TestAudit(t *testing.T) {
 	a := singletonAPIGw
 	a.runstate.running = true
 	a.runstate.addr = &mockAddr{}
+	eventMap := make(map[authz.Operation]string)
 	for _, test := range tests {
 		buf := &bytes.Buffer{}
 		logConfig := log.GetDefaultConfig("TestApiGw")
 		l := log.GetNewLogger(logConfig).SetOutput(buf)
 		a.logger = l
 		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
-		err := a.audit(test.ctx, "event1", test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, test.reqURI)
+		err := a.audit(test.ctx, test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, test.reqURI, eventMap)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 		bufStr := buf.String()
 		bufStr = strings.Replace(bufStr, "\\", "", -1)
@@ -1348,13 +1361,14 @@ func TestAuditErrorTruncation(t *testing.T) {
 	a := singletonAPIGw
 	a.runstate.running = true
 	a.runstate.addr = &mockAddr{}
+	eventMap := make(map[authz.Operation]string)
 	for _, test := range tests {
 		buf := &bytes.Buffer{}
 		logConfig := log.GetDefaultConfig("TestApiGw")
 		l := log.GetNewLogger(logConfig).SetOutput(buf)
 		a.logger = l
 		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
-		err := a.audit(context.TODO(), "event1", user, sgPolicy, nil, ops, audit.Level_Response, audit.Stage_RequestProcessing, audit.Outcome_Failure, test.err, nil, "/configs/security/v1/tenant/testTenant/networksecuritypolicies")
+		err := a.audit(context.TODO(), user, sgPolicy, nil, ops, audit.Level_Response, audit.Stage_RequestProcessing, audit.Outcome_Failure, test.err, nil, "/configs/security/v1/tenant/testTenant/networksecuritypolicies", eventMap)
 		AssertOk(t, err, "unexpected error logging audit event")
 		bufStr := buf.String()
 		bufStr = strings.Replace(bufStr, "\\", "", -1)
@@ -1409,4 +1423,184 @@ func (m *mockAddr) Network() string {
 
 func (m *mockAddr) String() string {
 	return "localhost:63000"
+}
+
+// TestBulkEditAudit Calls the audit function with the bulkOper flag set in Ctx and checks whether the number of audit logs generated
+// matches the number of bulk operations being performed
+func TestBulkEditAudit(t *testing.T) {
+
+	bufName := "TestBuffer1"
+
+	netw := &network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "TestNtwork1",
+			Tenant: "default",
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+		},
+		Status: network.NetworkStatus{},
+	}
+
+	n1, _ := types.MarshalAny(netw)
+	netw.Spec.IPv4Gateway = "110.1.1.1"
+	netw.Spec.IPv4Subnet = "110.1.1.1/24"
+	n2, _ := types.MarshalAny(netw)
+	netw.Name = "testDelNetw"
+	netw.Spec.IPv4Gateway = "120.2.1.1"
+	netw.Spec.IPv4Subnet = "120.2.1.1/24"
+	n3, _ := types.MarshalAny(netw)
+
+	bulkEditBuff := &staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   bufName,
+			Tenant: "default",
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/network/v1/tenant/default/networks/TestNtwork1",
+					Method: "create",
+					Object: &api.Any{Any: *n1},
+				},
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/network/v1/tenant/default/networks/TestNtwork1",
+					Method: "update",
+					Object: &api.Any{Any: *n2},
+				},
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/network/v1/tenant/default/networks/testDelNetw",
+					Method: "delete",
+					Object: &api.Any{Any: *n3},
+				},
+			},
+		},
+	}
+	b, _ := json.Marshal(bulkEditBuff)
+	bulkEditBufStr := string(b)
+	testCtx := context.Background()
+	testCtx = AddBulkOperationsFlagToContext(testCtx)
+
+	tests := []struct {
+		name         string
+		user         *auth.User
+		ctx          context.Context
+		reqObj       interface{}
+		respObj      interface{}
+		ops          []authz.Operation
+		level        audit.Level
+		stage        audit.Stage
+		outcome      audit.Outcome
+		apierr       error
+		reqURI       string
+		eventStr     string
+		err          error
+		numAuditLogs int
+	}{
+		{
+			name: "log multiple objs",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			reqObj: bulkEditBufStr,
+			ops: []authz.Operation{
+				authz.NewOperation(
+					authz.NewResource(bulkEditBuff.Tenant, string(apiclient.GroupNetwork), "Network", bulkEditBuff.Namespace, "TestNtwork1"),
+					auth.Permission_Create.String()),
+				authz.NewOperation(
+					authz.NewResource(bulkEditBuff.Tenant, string(apiclient.GroupNetwork), "Network", bulkEditBuff.Namespace, "TestNtwork1"),
+					auth.Permission_Update.String()),
+				authz.NewOperation(
+					authz.NewResource(bulkEditBuff.Tenant, string(apiclient.GroupNetwork), "Network", bulkEditBuff.Namespace, "testDelNetw"),
+					auth.Permission_Delete.String()),
+			},
+			level:        audit.Level_Request,
+			stage:        audit.Stage_RequestAuthorization,
+			outcome:      audit.Outcome_Success,
+			apierr:       nil,
+			reqURI:       "/configs/staging/v1/tenant/default/buffers/" + bufName,
+			eventStr:     bulkEditBufStr,
+			err:          nil,
+			ctx:          testCtx,
+			numAuditLogs: 3,
+		},
+		{
+			name: "log response obj",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			respObj: bulkEditBufStr,
+			ops: []authz.Operation{
+				authz.NewOperation(
+					authz.NewResource(bulkEditBuff.Tenant, string(apiclient.GroupNetwork), "Network", bulkEditBuff.Namespace, "TestNtwork1"),
+					auth.Permission_Create.String()),
+				authz.NewOperation(
+					authz.NewResource(bulkEditBuff.Tenant, string(apiclient.GroupNetwork), "Network", bulkEditBuff.Namespace, "TestNtwork1"),
+					auth.Permission_Update.String()),
+				authz.NewOperation(
+					authz.NewResource(bulkEditBuff.Tenant, string(apiclient.GroupNetwork), "Network", bulkEditBuff.Namespace, "testDelNetw"),
+					auth.Permission_Delete.String())},
+			level:        audit.Level_Response,
+			stage:        audit.Stage_RequestProcessing,
+			outcome:      audit.Outcome_Success,
+			apierr:       nil,
+			reqURI:       "/configs/staging/v1/tenant/default/buffers/" + bufName,
+			eventStr:     bulkEditBufStr,
+			err:          nil,
+			ctx:          testCtx,
+			numAuditLogs: 3,
+		},
+	}
+	_ = MustGetAPIGateway()
+
+	a := singletonAPIGw
+	a.runstate.running = true
+	a.runstate.addr = &mockAddr{}
+	eventMap := make(map[authz.Operation]string)
+	for _, test := range tests {
+		buf := &bytes.Buffer{}
+		logConfig := log.GetDefaultConfig("TestApiGw")
+		l := log.GetNewLogger(logConfig).SetOutput(buf)
+		a.logger = l
+		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
+		err := a.audit(test.ctx, test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, test.reqURI, eventMap)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
+		bufStr := buf.String()
+		bufStr = strings.Replace(bufStr, "\\", "", -1)
+		Assert(t, strings.Count(bufStr, "audit log") == test.numAuditLogs, fmt.Sprintf("[%s] test failed, expected log [%s] to contain %d audit logs", test.name, bufStr, test.numAuditLogs))
+		Assert(t, strings.Contains(bufStr, test.eventStr), fmt.Sprintf("[%s] test failed, expected log [%s] to contain [%s]", test.name, bufStr, test.eventStr))
+		if test.eventStr == "" {
+			Assert(t, len(bufStr) == 0, fmt.Sprintf("[%s] test failed, no audit log expected", test.name))
+		}
+	}
 }

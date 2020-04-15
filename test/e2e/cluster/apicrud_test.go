@@ -10,14 +10,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/bulkedit"
 	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -34,6 +37,441 @@ const (
 	caBundle     = "/var/lib/pensando/pki/pen-etcd/auth/ca-bundle.pem"
 	etcdCtlPath  = "/usr/local/bin/etcdctl"
 )
+
+func testBulkeditCUDOps() func() {
+	return func() {
+		lctx, cancel := context.WithCancel(ts.tu.MustGetLoggedInContext(context.Background()))
+		waitWatch := make(chan bool)
+		grpcClient := ts.tu.APIClient
+		Expect(grpcClient).ShouldNot(BeNil())
+		apigwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+		restClient, err := apiclient.NewRestAPIClient(apigwAddr)
+		Expect(err).To(BeNil())
+		defer restClient.Close()
+		addToWatchList := func(list []kvstore.WatchEvent, obj runtime.Object, tpe kvstore.WatchEventType) []kvstore.WatchEvent {
+			return append(list, kvstore.WatchEvent{Type: tpe, Object: obj})
+		}
+		var rcvNEventsMutex sync.Mutex
+		var rcvNEvents, expNEvents []kvstore.WatchEvent
+		var rcvTEventsMutex sync.Mutex
+		var rcvTEvents, expTEvents []kvstore.WatchEvent
+		wctx, wcancel := context.WithCancel(lctx)
+		stopped := false
+		Expect(grpcClient).ShouldNot(BeNil())
+		go func() {
+			success := false
+			defer func() {
+				if !success {
+					close(waitWatch)
+				}
+				GinkgoRecover()
+			}()
+			opts := api.ListWatchOptions{}
+			opts.FieldChangeSelector = []string{"."}
+			opts.Name = globals.DefaultTenant
+			var tWatcher, nWatcher kvstore.Watcher
+			var err error
+			setupWatchers := func() {
+				Eventually(func() error {
+					tWatcher, err = grpcClient.ClusterV1().Tenant().Watch(wctx, &opts)
+					return err
+				}, 30, 1).Should(BeNil(), "Watch should be successful")
+				opts = api.ListWatchOptions{}
+				opts.Tenant = globals.DefaultTenant
+				Eventually(func() error {
+					nWatcher, err = grpcClient.NetworkV1().Network().Watch(wctx, &opts)
+					return err
+				}, 30, 1).Should(BeNil(), "Watch should be successful")
+			}
+			setupWatchers()
+
+			Expect(err).To(BeNil())
+			success = true
+			close(waitWatch)
+			active := true
+			for active {
+				select {
+				case ev, ok := <-tWatcher.EventChan():
+					if ok {
+						rcvTEventsMutex.Lock()
+						rcvTEvents = append(rcvTEvents, *ev)
+						rcvTEventsMutex.Unlock()
+					} else {
+						if !stopped {
+							setupWatchers()
+						} else {
+							active = false
+						}
+					}
+				case ev, ok := <-nWatcher.EventChan():
+					if ok {
+						rcvNEventsMutex.Lock()
+						rcvNEvents = append(rcvNEvents, *ev)
+						rcvNEventsMutex.Unlock()
+					} else {
+						if !stopped {
+							setupWatchers()
+						} else {
+							active = false
+						}
+					}
+				case <-wctx.Done():
+					active = false
+				}
+			}
+		}()
+		<-waitWatch
+
+		stagingBufferName := "testStagingBuffer"
+		deleteStagingBuffer := func() {
+			// perform delete operation
+			BufObjectMeta := &api.ObjectMeta{
+				Name:      stagingBufferName,
+				Tenant:    globals.DefaultTenant,
+				Namespace: globals.DefaultNamespace,
+			}
+			_, err := ts.restSvc.StagingV1().Buffer().Delete(ts.loggedInCtx, BufObjectMeta)
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error performing staging buffer commit (%s)", err))
+		}
+		createStagingBuffer := func() {
+			// Create a staging buffer
+			buf := &staging.Buffer{
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Name:      stagingBufferName,
+				},
+			}
+			// Get to see if it exists
+			_, err = ts.restSvc.StagingV1().Buffer().Get(ts.loggedInCtx, &buf.ObjectMeta)
+			if err == nil {
+				// Staging buffer exisits, delete it, clean up
+				deleteStagingBuffer()
+			}
+			ret, err := ts.restSvc.StagingV1().Buffer().Create(ts.loggedInCtx, buf)
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error creating staging buffer %s, (%v)", buf.ObjectMeta.Name, err))
+			ret, err = ts.restSvc.StagingV1().Buffer().Get(ts.loggedInCtx, &buf.ObjectMeta)
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error getting staging buffer %s, status:%v\n (%v)", buf.ObjectMeta.Name, ret.Status, err))
+
+		}
+
+		bulkeditStagingBuffer := func(items []*bulkedit.BulkEditItem) *staging.BulkEditAction {
+			// Make the bulkedit call, which adds items to the staging buffer
+			bulkEditReq := &staging.BulkEditAction{
+				ObjectMeta: api.ObjectMeta{
+					Name:      stagingBufferName,
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				},
+				Spec: bulkedit.BulkEditActionSpec{
+					Items: items,
+				},
+			}
+			ret, err := ts.restSvc.StagingV1().Buffer().Bulkedit(ts.loggedInCtx, bulkEditReq)
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error making bulkedit request to create networks (%s)", err))
+			return ret
+		}
+
+		commitStagingBuffer := func() {
+			// perform commit operation
+			commitReq := &staging.CommitAction{
+				ObjectMeta: api.ObjectMeta{
+					Name:      stagingBufferName,
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				},
+				Spec: staging.CommitActionSpec{},
+			}
+			_, err := ts.restSvc.StagingV1().Buffer().Commit(ts.loggedInCtx, commitReq)
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error performing staging buffer commit (%s)", err))
+		}
+
+		{ // Create tenant
+			tenant := cluster.Tenant{
+				TypeMeta: api.TypeMeta{
+					Kind:       "Tenant",
+					APIVersion: "v1",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Name: globals.DefaultTenant,
+				},
+				Spec: cluster.TenantSpec{
+					AdminUser: "admin",
+				},
+			}
+			retten, err := grpcClient.ClusterV1().Tenant().Get(lctx, &tenant.ObjectMeta)
+			if err == nil {
+				// Delete all networks
+				netws, err := grpcClient.NetworkV1().Network().List(lctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+				Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%v)", err))
+				for _, n := range netws {
+					expNEvents = addToWatchList(expNEvents, n, kvstore.Created)
+					_, err = grpcClient.NetworkV1().Network().Delete(lctx, &api.ObjectMeta{Tenant: n.Tenant, Name: n.Name})
+					Expect(err).Should(BeNil(), fmt.Sprintf("got error deleting networks[%v] (%v)", n.Name, apierrors.FromError(err)))
+				}
+				// Add deleted for the network
+				for _, n := range netws {
+					expNEvents = addToWatchList(expNEvents, n, kvstore.Deleted)
+				}
+				expTEvents = addToWatchList(expTEvents, retten, kvstore.Created)
+			} else {
+				ret, err := grpcClient.ClusterV1().Tenant().Create(lctx, &tenant)
+				Expect(err).To(BeNil())
+				Expect(reflect.DeepEqual(ret.Spec, tenant.Spec)).To(Equal(true))
+				expTEvents = addToWatchList(expTEvents, ret, kvstore.Created)
+			}
+
+			// Create the staging buffer
+			createStagingBuffer()
+			// Confirm that it got created
+			buf := &staging.Buffer{
+				TypeMeta: api.TypeMeta{
+					Kind:       "Buffer",
+					APIVersion: "v1",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Name:      stagingBufferName,
+				},
+			}
+			_, err = ts.restSvc.StagingV1().Buffer().Get(ts.loggedInCtx, &buf.ObjectMeta)
+			Expect(err).Should(BeNil(), fmt.Sprintf("Error getting the staing buffer %s, (%v)", stagingBufferName, apierrors.FromError(err)))
+		}
+
+		{ // gRPC bulkedit CUD operations
+			netw := network.Network{
+				TypeMeta: api.TypeMeta{
+					Kind:       "Network",
+					APIVersion: "v1",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    globals.DefaultTenant,
+					Name:      "e2eNetwork1",
+					Namespace: globals.DefaultNamespace,
+				},
+				Spec: network.NetworkSpec{
+					Type:        network.NetworkType_Bridged.String(),
+					IPv4Subnet:  "10.0.0.0/8",
+					IPv4Gateway: "10.1.1.1",
+				},
+			}
+			numNetw := 20 // Number of networks
+			netwPrefix := "e2eBeNetwork"
+			{ // Cleanup if object already exists
+				for i := 0; i < numNetw; i++ {
+					var del bool
+					objMeta := netw.ObjectMeta
+					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					if ret, err := grpcClient.NetworkV1().Network().Get(lctx, &objMeta); err == nil {
+						del = true
+						expNEvents = addToWatchList(expNEvents, ret, kvstore.Created)
+					}
+					// Wait to receive event before proceeding
+					if len(expNEvents) > 0 {
+						Eventually(func() string {
+							rcvNEventsMutex.Lock()
+							defer rcvNEventsMutex.Unlock()
+							if len(rcvNEvents) == len(expNEvents) {
+								return "success"
+							}
+							return fmt.Sprintf("got %v Tenant events expecing %v events", len(rcvTEvents), len(expTEvents))
+						}, 10, 1).Should(Equal("success"), "Number of bulk Tenant watch events did not match")
+					}
+					if del {
+						ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &objMeta)
+						Expect(err).To(BeNil())
+						expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
+					}
+				}
+			}
+			{ // Make the bulkedit call via GRPC
+				items := []*bulkedit.BulkEditItem{}
+				for i := 0; i < numNetw; i++ {
+					objMeta := &netw.ObjectMeta
+					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					netw.Spec.VlanID = uint32(i)
+					p, err := types.MarshalAny(&netw)
+					Expect(err).Should(BeNil(), fmt.Sprintf("got error Marshalling network %s (%s)", netw.ObjectMeta.Name, err))
+					items = append(items, &bulkedit.BulkEditItem{
+						Method: bulkedit.BulkEditItem_CREATE.String(),
+						Object: &api.Any{Any: *p},
+					})
+				}
+				ret := bulkeditStagingBuffer(items)
+				for _, it := range ret.Spec.GetItems() {
+					_, obj, err := it.FetchObjectFromBulkEditItem()
+					Expect(err).Should(BeNil(), fmt.Sprintf("got error getting object from bulkedit response (%s)", err))
+					netwObj := (obj).(*network.Network)
+					expNEvents = addToWatchList(expNEvents, netwObj, kvstore.Created)
+				}
+				commitStagingBuffer()
+			}
+			{ // List operation
+				// List all the networks, from:0
+				retList, err := grpcClient.NetworkV1().Network().List(lctx, &api.ListWatchOptions{})
+				Expect(err).To(BeNil())
+				Expect(len(retList)).To(Equal(numNetw))
+				for _, retNetw := range retList {
+					netwFound := false
+					for i := 0; i < numNetw; i++ {
+						objMeta := &netw.ObjectMeta
+						objMeta.Name = netwPrefix + strconv.Itoa(i)
+						netw.Spec.VlanID = uint32(i)
+						if retNetw.GetObjectMeta().GetName() == objMeta.Name {
+							Expect(reflect.DeepEqual(retNetw.Spec, netw.Spec)).To(Equal(true))
+							netwFound = true
+							break
+						}
+					}
+					Expect(netwFound).To(Equal(true), "Network not found "+retNetw.Name)
+				}
+			}
+			{ // Update operation
+				netw.Spec.IPv4Gateway = "10.1.1.254"
+				items := []*bulkedit.BulkEditItem{}
+				for i := 0; i < numNetw; i++ {
+					objMeta := &netw.ObjectMeta
+					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					netw.Spec.VlanID = uint32(i)
+					p, err := types.MarshalAny(&netw)
+					Expect(err).Should(BeNil(), fmt.Sprintf("got error Marshalling network %s (%s)", netw.ObjectMeta.Name, err))
+					items = append(items, &bulkedit.BulkEditItem{
+						Method: bulkedit.BulkEditItem_UPDATE.String(),
+						Object: &api.Any{Any: *p},
+					})
+				}
+				ret := bulkeditStagingBuffer(items)
+				for _, it := range ret.Spec.GetItems() {
+					_, obj, err := it.FetchObjectFromBulkEditItem()
+					Expect(err).Should(BeNil(), fmt.Sprintf("got error getting object from bulkedit response (%s)", err))
+					netwObj := (obj).(*network.Network)
+					expNEvents = addToWatchList(expNEvents, netwObj, kvstore.Updated)
+				}
+				commitStagingBuffer()
+			}
+			{ // List all objects to ensure that they got updated
+				netw.Spec.IPv4Gateway = "10.1.1.254"
+				retList, err := grpcClient.NetworkV1().Network().List(lctx, &api.ListWatchOptions{From: 0})
+				Expect(err).To(BeNil())
+				Expect(len(retList)).To(Equal(numNetw))
+				for _, retNetw := range retList {
+					netwFound := false
+					for i := 0; i < numNetw; i++ {
+						objMeta := &netw.ObjectMeta
+						objMeta.Name = netwPrefix + strconv.Itoa(i)
+						netw.Spec.VlanID = uint32(i)
+						if retNetw.GetObjectMeta().GetName() == objMeta.Name {
+							Expect(reflect.DeepEqual(retNetw.Spec, netw.Spec)).To(Equal(true))
+							netwFound = true
+							break
+						}
+					}
+					Expect(netwFound).To(Equal(true), "Network not found "+retNetw.Name)
+				}
+			}
+			{ // Delete operation
+				items := []*bulkedit.BulkEditItem{}
+				for i := 0; i < numNetw; i++ {
+					objMeta := &netw.ObjectMeta
+					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					netw.Spec.VlanID = uint32(i)
+					p, err := types.MarshalAny(&netw)
+					Expect(err).Should(BeNil(), fmt.Sprintf("got error Marshalling network %s (%s)", netw.ObjectMeta.Name, err))
+					items = append(items, &bulkedit.BulkEditItem{
+						Method: bulkedit.BulkEditItem_DELETE.String(),
+						Object: &api.Any{Any: *p},
+					})
+				}
+				ret := bulkeditStagingBuffer(items)
+				for _, it := range ret.Spec.GetItems() {
+					_, obj, err := it.FetchObjectFromBulkEditItem()
+					Expect(err).Should(BeNil(), fmt.Sprintf("got error getting object from bulkedit response (%s)", err))
+					netwObj := (obj).(*network.Network)
+					expNEvents = addToWatchList(expNEvents, netwObj, kvstore.Deleted)
+				}
+				commitStagingBuffer()
+				// Done with staging buffer, delete it, clean up
+				deleteStagingBuffer()
+			}
+			// Ensure that the delete operation succeeded, list should return none
+			{
+				// List all the networks, from:0
+				retList, err := grpcClient.NetworkV1().Network().List(lctx, &api.ListWatchOptions{From: 0})
+				Expect(err).To(BeNil())
+				Expect(len(retList)).To(Equal(0))
+			}
+		}
+		// Validate Watch Events
+		Eventually(func() string {
+			rcvTEventsMutex.Lock()
+			defer rcvTEventsMutex.Unlock()
+			if len(rcvTEvents) == len(expTEvents) {
+				return "success"
+			}
+			return fmt.Sprintf("got %v Tenant events expecing %v events", len(rcvTEvents), len(expTEvents))
+		}, 10, 1).Should(Equal("success"), "Number of Tenant watch events did not match")
+		Eventually(func() string {
+			rcvNEventsMutex.Lock()
+			defer rcvNEventsMutex.Unlock()
+			// Changing the following check to >= since we are getting a few extra update events than expected
+			if len(rcvNEvents) >= len(expNEvents) {
+				return "success"
+			}
+			retStr := fmt.Sprintf("Got %v Network events expecing %v events\n", len(rcvNEvents), len(expNEvents))
+			for i, ev := range rcvNEvents {
+				retStr += fmt.Sprintf("[%d]: %v, %v, %s\n", i, ev.Type, ev.Key, ev.Object.(*network.Network).GetName())
+			}
+			return retStr
+		}, 10, 1).Should(Equal("success"), "Number of Network watch events did not match")
+		Consistently(func() string {
+			rcvNEventsMutex.Lock()
+			defer rcvNEventsMutex.Unlock()
+			// Changing the following check to >= since we are getting a few extra update events than expected
+			if len(rcvNEvents) >= len(expNEvents) {
+				return "success"
+			}
+			retStr := fmt.Sprintf("Got %v Network events expecing %v events\n", len(rcvNEvents), len(expNEvents))
+			for i, ev := range rcvNEvents {
+				retStr += fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
+			}
+			return retStr
+		}, 10, 1).Should(Equal("success"), "Number of Network watch events did not match")
+		stopped = true
+		wcancel()
+		for k := range expTEvents {
+			eSpec := expTEvents[k].Object.(*cluster.Tenant).Spec
+			rSpec := rcvTEvents[k].Object.(*cluster.Tenant).Spec
+			retStr := fmt.Sprintf("Got %v Network events expecing %v events\n", len(rcvNEvents), len(expNEvents))
+			for i, ev := range rcvNEvents {
+				retStr += fmt.Sprintf("[%d]: %v, %v\n", i, ev.Type, ev.Key)
+			}
+			Expect(expTEvents[k].Type).To(Equal(rcvTEvents[k].Type), fmt.Sprintf("[%d] [%v]want[%+v], got [%v][%+v]\n %s", k, expTEvents[k].Key, eSpec, rcvTEvents[k].Key, rSpec, retStr))
+			Expect(reflect.DeepEqual(eSpec, rSpec)).To(Equal(true), fmt.Sprintf("[%d] [%v]want[%+v], got [[%v]%+v]\n %s", k, expTEvents[k].Key, eSpec, rcvTEvents[k].Key, rSpec, retStr))
+		}
+		for k, ev := range expNEvents {
+			eSpec := ev.Object.(*network.Network).Spec
+			retStr := fmt.Sprintf("Got %v Network events expecing %v events\n", len(rcvNEvents), len(expNEvents))
+			for i, ev := range rcvNEvents {
+				retStr += fmt.Sprintf("[%d]: %v, [%s]\n", i, ev.Type, ev.Object.(*network.Network).GetName())
+			}
+			found := false
+			for i, rv := range rcvNEvents {
+				if rv.Type == ev.Type {
+					rSpec := rv.Object.(*network.Network).Spec
+					if expNEvents[k].Object.(*network.Network).GetName() == rv.Object.(*network.Network).GetName() {
+						found = true
+						Expect(expNEvents[k].Type).To(Equal(rv.Type), fmt.Sprintf("[%d][%d] [%v]want[%+v], [%v]got [%+v]\n %s", k, i, ev.Key, eSpec, rv.Key, rSpec, retStr))
+						Expect(reflect.DeepEqual(eSpec, rSpec)).To(Equal(true), fmt.Sprintf("[%d][%d] [%v]want[%+v], [%v]got [%+v]\n %s", k, i, ev.Key, eSpec, rv.Key, rSpec, retStr))
+						break
+					}
+				}
+			}
+			Expect(found).To(Equal(true), fmt.Sprintf("[%d] [%v]want[%+v],got \n%s", k, ev.Key, eSpec, retStr))
+		}
+		cancel()
+	}
+}
 
 func testAPICRUDOps() func() {
 	return func() {
@@ -254,6 +692,7 @@ func testAPICRUDOps() func() {
 				for i := 0; i < numNetw; i++ {
 					objMeta := &netw.ObjectMeta
 					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					netw.Spec.VlanID = 700 + uint32(i)
 					ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
 					Expect(err).To(BeNil())
 					expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
@@ -363,6 +802,7 @@ func testAPICRUDOps() func() {
 				for i := 0; i < numNetw; i++ {
 					objMeta := &netw.ObjectMeta
 					objMeta.Name = netwPrefix + strconv.Itoa(i)
+					netw.Spec.VlanID = uint32(i)
 					ret, err := restClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
 					Expect(err).To(BeNil())
 					expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
@@ -439,7 +879,7 @@ func testAPICRUDOps() func() {
 }
 
 // Basic CRUD Tests with reload
-var _ = Describe("api crud tests", func() {
+var _ = Describe("api crud and bulkedit tests", func() {
 	getAPIServerNodeNRestartCount := func() (int64, string, string, error) {
 		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods -o wide --no-headers | grep pen-apiserver "), "\n")
 		By(fmt.Sprintf("kubectl get pods -o wide --no-headers | grep pen-apiserver: %s", out))
@@ -669,6 +1109,7 @@ var _ = Describe("api crud tests", func() {
 		})
 
 		It("Validate CRUD ops", testAPICRUDOps())
+		It("Validate bulkedit ops", testBulkeditCUDOps())
 
 		AfterEach(func() {
 			Consistently(func() int {
@@ -712,6 +1153,7 @@ var _ = Describe("api crud tests", func() {
 		})
 
 		It("Restart API Server and validate CRUD ops", testAPICRUDOps())
+		It("Restart API Server and validate bulkedit CUD ops", testBulkeditCUDOps())
 
 		AfterEach(func() {
 			Consistently(func() int {
@@ -753,6 +1195,7 @@ var _ = Describe("api crud tests", func() {
 		})
 
 		It("Restart API Server container and validate CRUD ops", testAPICRUDOps())
+		It("Restart API Server container and validate bulkedit CUD ops", testBulkeditCUDOps())
 
 		AfterEach(func() {
 			Consistently(func() int {
@@ -843,14 +1286,17 @@ var _ = Describe("api crud tests", func() {
 		It(fmt.Sprintf("Check API after [1] ETCD restart"), func() {
 			checkConfig(&scfg)()
 			testAPICRUDOps()()
+			testBulkeditCUDOps()()
 		})
 		It(fmt.Sprintf("Check API after [2] ETCD restart"), func() {
 			checkConfig(&scfg)()
 			testAPICRUDOps()()
+			testBulkeditCUDOps()()
 		})
 		It(fmt.Sprintf("Check API after [3] ETCD restart"), func() {
 			checkConfig(&scfg)()
 			testAPICRUDOps()()
+			testBulkeditCUDOps()()
 		})
 
 		AfterEach(func() {

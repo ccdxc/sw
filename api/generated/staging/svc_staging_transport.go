@@ -31,6 +31,7 @@ type grpcServerStagingV1 struct {
 	AutoLabelBufferHdlr  grpctransport.Handler
 	AutoListBufferHdlr   grpctransport.Handler
 	AutoUpdateBufferHdlr grpctransport.Handler
+	BulkeditHdlr         grpctransport.Handler
 	ClearHdlr            grpctransport.Handler
 	CommitHdlr           grpctransport.Handler
 }
@@ -83,6 +84,13 @@ func MakeGRPCServerStagingV1(ctx context.Context, endpoints EndpointsStagingV1Se
 			DecodeGrpcReqBuffer,
 			EncodeGrpcRespBuffer,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateBuffer", logger)))...,
+		),
+
+		BulkeditHdlr: grpctransport.NewServer(
+			endpoints.BulkeditEndpoint,
+			DecodeGrpcReqBulkEditAction,
+			EncodeGrpcRespBulkEditAction,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Bulkedit", logger)))...,
 		),
 
 		ClearHdlr: grpctransport.NewServer(
@@ -205,6 +213,24 @@ func decodeHTTPrespStagingV1AutoUpdateBuffer(_ context.Context, r *http.Response
 		return nil, errorDecoder(r)
 	}
 	var resp Buffer
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerStagingV1) Bulkedit(ctx oldcontext.Context, req *BulkEditAction) (*BulkEditAction, error) {
+	_, resp, err := s.BulkeditHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respStagingV1Bulkedit).V
+	return &r, resp.(respStagingV1Bulkedit).Err
+}
+
+func decodeHTTPrespStagingV1Bulkedit(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp BulkEditAction
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }

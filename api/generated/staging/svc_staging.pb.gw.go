@@ -460,6 +460,117 @@ func request_StagingV1_AutoListBuffer_1(ctx context.Context, marshaler runtime.M
 
 }
 
+func request_StagingV1_Bulkedit_0(ctx context.Context, marshaler runtime.Marshaler, client StagingV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &BulkEditAction{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Tenant"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.Bulkedit(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
+func request_StagingV1_Bulkedit_1(ctx context.Context, marshaler runtime.Marshaler, client StagingV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	protoReq := &BulkEditAction{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	msg, err := client.Bulkedit(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
+	return msg, smetadata, err
+
+}
+
 func request_StagingV1_Clear_0(ctx context.Context, marshaler runtime.Marshaler, client StagingV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	protoReq := &ClearAction{}
 	var smetadata runtime.ServerMetadata
@@ -942,6 +1053,62 @@ func RegisterStagingV1HandlerWithClient(ctx context.Context, mux *runtime.ServeM
 
 	})
 
+	mux.Handle("POST", pattern_StagingV1_Bulkedit_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_StagingV1_Bulkedit_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_StagingV1_Bulkedit_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_StagingV1_Bulkedit_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		resp, md, err := request_StagingV1_Bulkedit_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_StagingV1_Bulkedit_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_StagingV1_Clear_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1074,6 +1241,10 @@ var (
 
 	pattern_StagingV1_AutoListBuffer_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"buffers"}, ""))
 
+	pattern_StagingV1_Bulkedit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"tenant", "O.Tenant", "buffers", "O.Name", "bulkedit"}, ""))
+
+	pattern_StagingV1_Bulkedit_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"buffers", "O.Name", "bulkedit"}, ""))
+
 	pattern_StagingV1_Clear_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"tenant", "O.Tenant", "buffers", "O.Name", "clear"}, ""))
 
 	pattern_StagingV1_Clear_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"buffers", "O.Name", "clear"}, ""))
@@ -1099,6 +1270,10 @@ var (
 	forward_StagingV1_AutoListBuffer_0 = runtime.ForwardResponseMessage
 
 	forward_StagingV1_AutoListBuffer_1 = runtime.ForwardResponseMessage
+
+	forward_StagingV1_Bulkedit_0 = runtime.ForwardResponseMessage
+
+	forward_StagingV1_Bulkedit_1 = runtime.ForwardResponseMessage
 
 	forward_StagingV1_Clear_0 = runtime.ForwardResponseMessage
 

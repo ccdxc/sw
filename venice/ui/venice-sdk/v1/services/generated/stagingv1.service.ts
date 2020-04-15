@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
-import { IStagingBufferList,StagingBufferList,IApiStatus,ApiStatus,IStagingBuffer,StagingBuffer,IStagingClearAction,StagingClearAction,IStagingCommitAction,StagingCommitAction } from '../../models/generated/staging';
+import { IStagingBufferList,StagingBufferList,IApiStatus,ApiStatus,IStagingBuffer,StagingBuffer,IStagingBulkEditAction,StagingBulkEditAction,IStagingClearAction,StagingClearAction,IStagingCommitAction,StagingCommitAction } from '../../models/generated/staging';
 
 @Injectable()
 export class Stagingv1Service extends AbstractService {
@@ -84,6 +84,26 @@ export class Stagingv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create/Update/Delete multiple objects as part of a single request */
+  public Bulkedit_1(O_Name, body: IStagingBulkEditAction, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IStagingBulkEditAction | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/staging/v1/buffers/{O.Name}/bulkedit';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'Bulkedit_1',
+      objType: 'StagingBulkEditAction',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new StagingBulkEditAction(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingBulkEditAction | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Clear operations from a configuration buffer */
@@ -194,6 +214,27 @@ export class Stagingv1Service extends AbstractService {
       opts.isStaging = true;
     }
     return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IStagingBuffer | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create/Update/Delete multiple objects as part of a single request */
+  public Bulkedit(O_Name, body: IStagingBulkEditAction, stagingID: string = "", trimObject: boolean = true, trimDefaults: boolean = true):Observable<{body: IStagingBulkEditAction | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/bulkedit';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'Bulkedit',
+      objType: 'StagingBulkEditAction',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    body = TrimUIFields(body)
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new StagingBulkEditAction(body), null, trimDefaults)
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IStagingBulkEditAction | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Clear operations from a configuration buffer */

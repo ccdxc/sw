@@ -448,6 +448,75 @@
         ]
       }
     },
+    "/configs/staging/v1/buffers/{O.Name}/bulkedit": {
+      "post": {
+        "summary": "Create/Update/Delete multiple objects as part of a single request",
+        "operationId": "Bulkedit_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/stagingBulkEditAction"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/stagingBulkEditActionCreate"
+            }
+          }
+        ],
+        "tags": [
+          "staging/v1"
+        ]
+      }
+    },
     "/configs/staging/v1/buffers/{O.Name}/clear": {
       "post": {
         "summary": "Clear operations from a configuration buffer",
@@ -1028,6 +1097,81 @@
         ]
       }
     },
+    "/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/bulkedit": {
+      "post": {
+        "summary": "Create/Update/Delete multiple objects as part of a single request",
+        "operationId": "Bulkedit",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/stagingBulkEditAction"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/stagingBulkEditActionCreate"
+            }
+          }
+        ],
+        "tags": [
+          "staging/v1"
+        ]
+      }
+    },
     "/configs/staging/v1/tenant/{O.Tenant}/buffers/{O.Name}/clear": {
       "post": {
         "summary": "Clear operations from a configuration buffer",
@@ -1577,6 +1721,47 @@
         }
       }
     },
+    "bulkeditBulkEditActionSpec": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bulkeditBulkEditItem"
+          }
+        }
+      }
+    },
+    "bulkeditBulkEditItem": {
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "URI field is optional, Backend uses the Kind, tenant and name fields in the Object to Infer the URI."
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "create",
+            "update",
+            "delete"
+          ],
+          "default": "create",
+          "x-ui-hints": {
+            "create": "create",
+            "delete": "delete",
+            "update": "update"
+          }
+        },
+        "object": {
+          "$ref": "#/definitions/apiAny",
+          "description": "Object can be a free form json of an object containing the \"Kind\" type to identify it, a TypeURL is not needed."
+        }
+      }
+    },
     "googleprotobufAny": {
       "type": "object",
       "properties": {
@@ -1683,6 +1868,75 @@
       }
     },
     "stagingBufferStatus": {
+      "type": "object",
+      "required": [
+        "validation-result"
+      ],
+      "properties": {
+        "validation-result": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failed"
+          ],
+          "default": "success",
+          "x-ui-hints": {
+            "failed": "Failed",
+            "success": "Success"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/stagingValidationError"
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/stagingItem"
+          }
+        }
+      }
+    },
+    "stagingBulkEditAction": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/bulkeditBulkEditActionSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/stagingBulkEditActionStatus"
+        }
+      }
+    },
+    "stagingBulkEditActionCreate": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/bulkeditBulkEditActionSpec"
+        }
+      }
+    },
+    "stagingBulkEditActionStatus": {
       "type": "object",
       "required": [
         "validation-result"

@@ -681,16 +681,22 @@ type BufferAPI interface {
 	RegisterLocalClearHandler(fn func(*staging.ClearAction) (*staging.ClearAction, error))
 	SyncClear(obj *staging.ClearAction) (*staging.ClearAction, error)
 	RegisterLocalSyncClearHandler(fn func(*staging.ClearAction) (*staging.ClearAction, error))
+	Bulkedit(obj *staging.BulkEditAction) (*staging.BulkEditAction, error)
+	RegisterLocalBulkeditHandler(fn func(*staging.BulkEditAction) (*staging.BulkEditAction, error))
+	SyncBulkedit(obj *staging.BulkEditAction) (*staging.BulkEditAction, error)
+	RegisterLocalSyncBulkeditHandler(fn func(*staging.BulkEditAction) (*staging.BulkEditAction, error))
 }
 
 // dummy struct that implements BufferAPI
 type bufferAPI struct {
 	ct *ctrlerCtx
 
-	localCommitHandler     func(obj *staging.CommitAction) (*staging.CommitAction, error)
-	localSyncCommitHandler func(obj *staging.CommitAction) (*staging.CommitAction, error)
-	localClearHandler      func(obj *staging.ClearAction) (*staging.ClearAction, error)
-	localSyncClearHandler  func(obj *staging.ClearAction) (*staging.ClearAction, error)
+	localCommitHandler       func(obj *staging.CommitAction) (*staging.CommitAction, error)
+	localSyncCommitHandler   func(obj *staging.CommitAction) (*staging.CommitAction, error)
+	localClearHandler        func(obj *staging.ClearAction) (*staging.ClearAction, error)
+	localSyncClearHandler    func(obj *staging.ClearAction) (*staging.ClearAction, error)
+	localBulkeditHandler     func(obj *staging.BulkEditAction) (*staging.BulkEditAction, error)
+	localSyncBulkeditHandler func(obj *staging.BulkEditAction) (*staging.BulkEditAction, error)
 }
 
 // Create creates Buffer object
@@ -956,6 +962,57 @@ func (api *bufferAPI) RegisterLocalClearHandler(fn func(*staging.ClearAction) (*
 
 func (api *bufferAPI) RegisterLocalSyncClearHandler(fn func(*staging.ClearAction) (*staging.ClearAction, error)) {
 	api.localSyncClearHandler = fn
+}
+
+// Bulkedit is an API action
+func (api *bufferAPI) Bulkedit(obj *staging.BulkEditAction) (*staging.BulkEditAction, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.StagingV1().Buffer().Bulkedit(context.Background(), obj)
+	}
+	if api.localBulkeditHandler != nil {
+		return api.localBulkeditHandler(obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// SyncBulkedit is an API action. Cache will be updated
+func (api *bufferAPI) SyncBulkedit(obj *staging.BulkEditAction) (*staging.BulkEditAction, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		ret, err := apicl.StagingV1().Buffer().Bulkedit(context.Background(), obj)
+		if err != nil {
+			return ret, err
+		}
+		// Perform Get to update the cache
+		newObj, err := apicl.StagingV1().Buffer().Get(context.Background(), obj.GetObjectMeta())
+		if err == nil {
+			api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: newObj, Type: kvstore.Updated})
+		}
+		return ret, err
+	}
+	if api.localSyncBulkeditHandler != nil {
+		return api.localSyncBulkeditHandler(obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+func (api *bufferAPI) RegisterLocalBulkeditHandler(fn func(*staging.BulkEditAction) (*staging.BulkEditAction, error)) {
+	api.localBulkeditHandler = fn
+}
+
+func (api *bufferAPI) RegisterLocalSyncBulkeditHandler(fn func(*staging.BulkEditAction) (*staging.BulkEditAction, error)) {
+	api.localSyncBulkeditHandler = fn
 }
 
 // Buffer returns BufferAPI

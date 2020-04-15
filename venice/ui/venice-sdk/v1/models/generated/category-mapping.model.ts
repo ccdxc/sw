@@ -323,7 +323,7 @@ export const CategoryMapping: CatMap  = {
     "Buffer" : {
       instance: new StagingBuffer(),
       scopes: [ 'tenant', ] ,
-      actions:  [ 'commit',  'clear', ] ,
+      actions:  [ 'commit',  'clear',  'bulkedit', ] ,
     },
   },
   "Workload" : {

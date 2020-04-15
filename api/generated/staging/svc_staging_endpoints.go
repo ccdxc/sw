@@ -49,6 +49,7 @@ type EndpointsStagingV1Client struct {
 	AutoLabelBufferEndpoint  endpoint.Endpoint
 	AutoListBufferEndpoint   endpoint.Endpoint
 	AutoUpdateBufferEndpoint endpoint.Endpoint
+	BulkeditEndpoint         endpoint.Endpoint
 	ClearEndpoint            endpoint.Endpoint
 	CommitEndpoint           endpoint.Endpoint
 }
@@ -68,6 +69,7 @@ type EndpointsStagingV1RestClient struct {
 	AutoUpdateBufferEndpoint      endpoint.Endpoint
 	AutoWatchBufferEndpoint       endpoint.Endpoint
 	AutoWatchSvcStagingV1Endpoint endpoint.Endpoint
+	BulkeditEndpoint              endpoint.Endpoint
 	ClearEndpoint                 endpoint.Endpoint
 	CommitEndpoint                endpoint.Endpoint
 }
@@ -85,6 +87,7 @@ type EndpointsStagingV1Server struct {
 	AutoLabelBufferEndpoint  endpoint.Endpoint
 	AutoListBufferEndpoint   endpoint.Endpoint
 	AutoUpdateBufferEndpoint endpoint.Endpoint
+	BulkeditEndpoint         endpoint.Endpoint
 	ClearEndpoint            endpoint.Endpoint
 	CommitEndpoint           endpoint.Endpoint
 
@@ -172,6 +175,20 @@ func (e EndpointsStagingV1Client) AutoUpdateBuffer(ctx context.Context, in *Buff
 
 type respStagingV1AutoUpdateBuffer struct {
 	V   Buffer
+	Err error
+}
+
+// Bulkedit is endpoint for Bulkedit
+func (e EndpointsStagingV1Client) Bulkedit(ctx context.Context, in *BulkEditAction) (*BulkEditAction, error) {
+	resp, err := e.BulkeditEndpoint(ctx, in)
+	if err != nil {
+		return &BulkEditAction{}, err
+	}
+	return resp.(*BulkEditAction), nil
+}
+
+type respStagingV1Bulkedit struct {
+	V   BulkEditAction
 	Err error
 }
 
@@ -344,6 +361,28 @@ func MakeStagingV1AutoUpdateBufferEndpoint(s ServiceStagingV1Server, logger log.
 	return trace.ServerEndpoint("StagingV1:AutoUpdateBuffer")(f)
 }
 
+// Bulkedit implementation on server Endpoint
+func (e EndpointsStagingV1Server) Bulkedit(ctx context.Context, in BulkEditAction) (BulkEditAction, error) {
+	resp, err := e.BulkeditEndpoint(ctx, in)
+	if err != nil {
+		return BulkEditAction{}, err
+	}
+	return *resp.(*BulkEditAction), nil
+}
+
+// MakeStagingV1BulkeditEndpoint creates  Bulkedit endpoints for the service
+func MakeStagingV1BulkeditEndpoint(s ServiceStagingV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*BulkEditAction)
+		v, err := s.Bulkedit(ctx, *req)
+		return respStagingV1Bulkedit{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("StagingV1:Bulkedit")(f)
+}
+
 // Clear implementation on server Endpoint
 func (e EndpointsStagingV1Server) Clear(ctx context.Context, in ClearAction) (ClearAction, error) {
 	resp, err := e.ClearEndpoint(ctx, in)
@@ -424,6 +463,7 @@ func MakeStagingV1ServerEndpoints(s ServiceStagingV1Server, logger log.Logger) E
 		AutoLabelBufferEndpoint:  MakeStagingV1AutoLabelBufferEndpoint(s, logger),
 		AutoListBufferEndpoint:   MakeStagingV1AutoListBufferEndpoint(s, logger),
 		AutoUpdateBufferEndpoint: MakeStagingV1AutoUpdateBufferEndpoint(s, logger),
+		BulkeditEndpoint:         MakeStagingV1BulkeditEndpoint(s, logger),
 		ClearEndpoint:            MakeStagingV1ClearEndpoint(s, logger),
 		CommitEndpoint:           MakeStagingV1CommitEndpoint(s, logger),
 
@@ -537,6 +577,19 @@ func (m loggingStagingV1MiddlewareClient) AutoUpdateBuffer(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "StagingV1", "method", "AutoUpdateBuffer", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateBuffer(ctx, in)
+	return
+}
+func (m loggingStagingV1MiddlewareClient) Bulkedit(ctx context.Context, in *BulkEditAction) (resp *BulkEditAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "Bulkedit", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.Bulkedit(ctx, in)
 	return
 }
 func (m loggingStagingV1MiddlewareClient) Clear(ctx context.Context, in *ClearAction) (resp *ClearAction, err error) {
@@ -672,6 +725,19 @@ func (m loggingStagingV1MiddlewareServer) AutoUpdateBuffer(ctx context.Context, 
 	resp, err = m.next.AutoUpdateBuffer(ctx, in)
 	return
 }
+func (m loggingStagingV1MiddlewareServer) Bulkedit(ctx context.Context, in BulkEditAction) (resp BulkEditAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "StagingV1", "method", "Bulkedit", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.Bulkedit(ctx, in)
+	return
+}
 func (m loggingStagingV1MiddlewareServer) Clear(ctx context.Context, in ClearAction) (resp ClearAction, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -796,6 +862,11 @@ func makeURIStagingV1AutoWatchBufferWatchOper(in *api.ListWatchOptions) string {
 func makeURIStagingV1AutoWatchSvcStagingV1WatchOper(in *api.ListWatchOptions) string {
 	return ""
 
+}
+
+//
+func makeURIStagingV1BulkeditCreateOper(in *BulkEditAction) string {
+	return fmt.Sprint("/configs/staging/v1", "/tenant/", in.Tenant, "/buffers/", in.Name, "/bulkedit")
 }
 
 //
@@ -994,6 +1065,27 @@ func (r *EndpointsStagingV1RestClient) ClearBuffer(ctx context.Context, in *Clea
 		return nil, err
 	}
 	return ret.(*ClearAction), err
+}
+
+func (r *EndpointsStagingV1RestClient) BulkeditBuffer(ctx context.Context, in *BulkEditAction) (*BulkEditAction, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIStagingV1BulkeditCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespStagingV1Bulkedit(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*BulkEditAction), err
 }
 
 // MakeStagingV1RestClientEndpoints make REST client endpoints

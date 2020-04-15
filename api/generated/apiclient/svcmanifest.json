@@ -925,7 +925,8 @@
             ],
             "Actions": [
               "commit",
-              "clear"
+              "clear",
+              "bulkedit"
             ],
             "URI": "/configs/staging/v1/buffers"
           }

@@ -3,7 +3,7 @@ FIX_VER = sed -i.bak_ 's/proto.ProtoPackageIsVersion/proto.GoGoProtoPackageIsVer
 DEL_BAK = rm *.bak_
 SCHEMA_PROTOS = meta.proto common.proto export.proto
 
-TO_GEN = labels fields
+TO_GEN = bulkedit labels fields
 all: generated/swagger/rice-box.go
 
 generated/swagger/rice-box.go: meta.proto common.proto $(shell ls protos/*.proto)

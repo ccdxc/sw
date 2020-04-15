@@ -14,6 +14,8 @@
 		Buffer
 		BufferSpec
 		BufferStatus
+		BulkEditAction
+		BulkEditActionStatus
 		ClearAction
 		ClearActionSpec
 		ClearActionStatus
@@ -33,6 +35,7 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/pensando/sw/venice/utils/apigen/annotations"
 import api "github.com/pensando/sw/api"
+import bulkedit "github.com/pensando/sw/api/bulkedit"
 
 import io "io"
 
@@ -71,6 +74,29 @@ func (BufferStatus_ValidationStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 //
+type BulkEditActionStatus_ValidationStatus int32
+
+const (
+	// ui-hint: Success
+	BulkEditActionStatus_SUCCESS BulkEditActionStatus_ValidationStatus = 0
+	// ui-hint: Failed
+	BulkEditActionStatus_FAILED BulkEditActionStatus_ValidationStatus = 1
+)
+
+var BulkEditActionStatus_ValidationStatus_name = map[int32]string{
+	0: "SUCCESS",
+	1: "FAILED",
+}
+var BulkEditActionStatus_ValidationStatus_value = map[string]int32{
+	"SUCCESS": 0,
+	"FAILED":  1,
+}
+
+func (BulkEditActionStatus_ValidationStatus) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorStaging, []int{4, 0}
+}
+
+//
 type ClearActionStatus_ClearStatus int32
 
 const (
@@ -90,7 +116,7 @@ var ClearActionStatus_ClearStatus_value = map[string]int32{
 }
 
 func (ClearActionStatus_ClearStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorStaging, []int{5, 0}
+	return fileDescriptorStaging, []int{7, 0}
 }
 
 //
@@ -113,7 +139,7 @@ var CommitActionStatus_CommitStatus_value = map[string]int32{
 }
 
 func (CommitActionStatus_CommitStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorStaging, []int{8, 0}
+	return fileDescriptorStaging, []int{10, 0}
 }
 
 //
@@ -201,6 +227,73 @@ func (m *BufferStatus) GetItems() []*Item {
 	return nil
 }
 
+//
+type BulkEditAction struct {
+	//
+	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	//
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=O,json=meta,inline,embedded=O" json:"meta,inline"`
+	//
+	Spec bulkedit.BulkEditActionSpec `protobuf:"bytes,3,opt,name=Spec,json=spec" json:"spec"`
+	//
+	Status BulkEditActionStatus `protobuf:"bytes,4,opt,name=Status,json=status" json:"status"`
+}
+
+func (m *BulkEditAction) Reset()                    { *m = BulkEditAction{} }
+func (m *BulkEditAction) String() string            { return proto.CompactTextString(m) }
+func (*BulkEditAction) ProtoMessage()               {}
+func (*BulkEditAction) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{3} }
+
+func (m *BulkEditAction) GetSpec() bulkedit.BulkEditActionSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return bulkedit.BulkEditActionSpec{}
+}
+
+func (m *BulkEditAction) GetStatus() BulkEditActionStatus {
+	if m != nil {
+		return m.Status
+	}
+	return BulkEditActionStatus{}
+}
+
+//
+type BulkEditActionStatus struct {
+	//
+	ValidationResult string `protobuf:"bytes,1,opt,name=ValidationResult,json=validation-result,proto3" json:"validation-result"`
+	//
+	Errors []*ValidationError `protobuf:"bytes,2,rep,name=Errors,json=errors" json:"errors"`
+	//
+	Items []*Item `protobuf:"bytes,3,rep,name=Items,json=items" json:"items"`
+}
+
+func (m *BulkEditActionStatus) Reset()                    { *m = BulkEditActionStatus{} }
+func (m *BulkEditActionStatus) String() string            { return proto.CompactTextString(m) }
+func (*BulkEditActionStatus) ProtoMessage()               {}
+func (*BulkEditActionStatus) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{4} }
+
+func (m *BulkEditActionStatus) GetValidationResult() string {
+	if m != nil {
+		return m.ValidationResult
+	}
+	return ""
+}
+
+func (m *BulkEditActionStatus) GetErrors() []*ValidationError {
+	if m != nil {
+		return m.Errors
+	}
+	return nil
+}
+
+func (m *BulkEditActionStatus) GetItems() []*Item {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
 // ClearAction deletes objects from the staging buffer. A list of items to be cleared is specified
 //  in the Spec. If there are no items are specified then all items are deleted from the staging.
 //  buffer.
@@ -218,7 +311,7 @@ type ClearAction struct {
 func (m *ClearAction) Reset()                    { *m = ClearAction{} }
 func (m *ClearAction) String() string            { return proto.CompactTextString(m) }
 func (*ClearAction) ProtoMessage()               {}
-func (*ClearAction) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{3} }
+func (*ClearAction) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{5} }
 
 func (m *ClearAction) GetSpec() ClearActionSpec {
 	if m != nil {
@@ -243,7 +336,7 @@ type ClearActionSpec struct {
 func (m *ClearActionSpec) Reset()                    { *m = ClearActionSpec{} }
 func (m *ClearActionSpec) String() string            { return proto.CompactTextString(m) }
 func (*ClearActionSpec) ProtoMessage()               {}
-func (*ClearActionSpec) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{4} }
+func (*ClearActionSpec) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{6} }
 
 func (m *ClearActionSpec) GetItems() []*ItemId {
 	if m != nil {
@@ -263,7 +356,7 @@ type ClearActionStatus struct {
 func (m *ClearActionStatus) Reset()                    { *m = ClearActionStatus{} }
 func (m *ClearActionStatus) String() string            { return proto.CompactTextString(m) }
 func (*ClearActionStatus) ProtoMessage()               {}
-func (*ClearActionStatus) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{5} }
+func (*ClearActionStatus) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{7} }
 
 func (m *ClearActionStatus) GetStatus() string {
 	if m != nil {
@@ -295,7 +388,7 @@ type CommitAction struct {
 func (m *CommitAction) Reset()                    { *m = CommitAction{} }
 func (m *CommitAction) String() string            { return proto.CompactTextString(m) }
 func (*CommitAction) ProtoMessage()               {}
-func (*CommitAction) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{6} }
+func (*CommitAction) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{8} }
 
 func (m *CommitAction) GetSpec() CommitActionSpec {
 	if m != nil {
@@ -318,7 +411,7 @@ type CommitActionSpec struct {
 func (m *CommitActionSpec) Reset()                    { *m = CommitActionSpec{} }
 func (m *CommitActionSpec) String() string            { return proto.CompactTextString(m) }
 func (*CommitActionSpec) ProtoMessage()               {}
-func (*CommitActionSpec) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{7} }
+func (*CommitActionSpec) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{9} }
 
 //
 type CommitActionStatus struct {
@@ -331,7 +424,7 @@ type CommitActionStatus struct {
 func (m *CommitActionStatus) Reset()                    { *m = CommitActionStatus{} }
 func (m *CommitActionStatus) String() string            { return proto.CompactTextString(m) }
 func (*CommitActionStatus) ProtoMessage()               {}
-func (*CommitActionStatus) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{8} }
+func (*CommitActionStatus) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{10} }
 
 func (m *CommitActionStatus) GetStatus() string {
 	if m != nil {
@@ -358,7 +451,7 @@ type Item struct {
 func (m *Item) Reset()                    { *m = Item{} }
 func (m *Item) String() string            { return proto.CompactTextString(m) }
 func (*Item) ProtoMessage()               {}
-func (*Item) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{9} }
+func (*Item) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{11} }
 
 func (m *Item) GetObject() *api.Any {
 	if m != nil {
@@ -378,7 +471,7 @@ type ItemId struct {
 func (m *ItemId) Reset()                    { *m = ItemId{} }
 func (m *ItemId) String() string            { return proto.CompactTextString(m) }
 func (*ItemId) ProtoMessage()               {}
-func (*ItemId) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{10} }
+func (*ItemId) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{12} }
 
 func (m *ItemId) GetURI() string {
 	if m != nil {
@@ -405,7 +498,7 @@ type ValidationError struct {
 func (m *ValidationError) Reset()                    { *m = ValidationError{} }
 func (m *ValidationError) String() string            { return proto.CompactTextString(m) }
 func (*ValidationError) ProtoMessage()               {}
-func (*ValidationError) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{11} }
+func (*ValidationError) Descriptor() ([]byte, []int) { return fileDescriptorStaging, []int{13} }
 
 func (m *ValidationError) GetErrors() []string {
 	if m != nil {
@@ -418,6 +511,8 @@ func init() {
 	proto.RegisterType((*Buffer)(nil), "staging.Buffer")
 	proto.RegisterType((*BufferSpec)(nil), "staging.BufferSpec")
 	proto.RegisterType((*BufferStatus)(nil), "staging.BufferStatus")
+	proto.RegisterType((*BulkEditAction)(nil), "staging.BulkEditAction")
+	proto.RegisterType((*BulkEditActionStatus)(nil), "staging.BulkEditActionStatus")
 	proto.RegisterType((*ClearAction)(nil), "staging.ClearAction")
 	proto.RegisterType((*ClearActionSpec)(nil), "staging.ClearActionSpec")
 	proto.RegisterType((*ClearActionStatus)(nil), "staging.ClearActionStatus")
@@ -428,6 +523,7 @@ func init() {
 	proto.RegisterType((*ItemId)(nil), "staging.ItemId")
 	proto.RegisterType((*ValidationError)(nil), "staging.ValidationError")
 	proto.RegisterEnum("staging.BufferStatus_ValidationStatus", BufferStatus_ValidationStatus_name, BufferStatus_ValidationStatus_value)
+	proto.RegisterEnum("staging.BulkEditActionStatus_ValidationStatus", BulkEditActionStatus_ValidationStatus_name, BulkEditActionStatus_ValidationStatus_value)
 	proto.RegisterEnum("staging.ClearActionStatus_ClearStatus", ClearActionStatus_ClearStatus_name, ClearActionStatus_ClearStatus_value)
 	proto.RegisterEnum("staging.CommitActionStatus_CommitStatus", CommitActionStatus_CommitStatus_name, CommitActionStatus_CommitStatus_value)
 }
@@ -553,7 +649,7 @@ func (m *BufferStatus) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *ClearAction) Marshal() (dAtA []byte, err error) {
+func (m *BulkEditAction) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -563,7 +659,7 @@ func (m *ClearAction) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ClearAction) MarshalTo(dAtA []byte) (int, error) {
+func (m *BulkEditAction) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -600,6 +696,104 @@ func (m *ClearAction) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n8
+	return i, nil
+}
+
+func (m *BulkEditActionStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BulkEditActionStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.ValidationResult) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintStaging(dAtA, i, uint64(len(m.ValidationResult)))
+		i += copy(dAtA[i:], m.ValidationResult)
+	}
+	if len(m.Errors) > 0 {
+		for _, msg := range m.Errors {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintStaging(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintStaging(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *ClearAction) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClearAction) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintStaging(dAtA, i, uint64(m.TypeMeta.Size()))
+	n9, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n9
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintStaging(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n10, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n10
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintStaging(dAtA, i, uint64(m.Spec.Size()))
+	n11, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n11
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintStaging(dAtA, i, uint64(m.Status.Size()))
+	n12, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n12
 	return i, nil
 }
 
@@ -681,35 +875,35 @@ func (m *CommitAction) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintStaging(dAtA, i, uint64(m.TypeMeta.Size()))
-	n9, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n13, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n9
+	i += n13
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintStaging(dAtA, i, uint64(m.ObjectMeta.Size()))
-	n10, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	n14, err := m.ObjectMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n10
+	i += n14
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintStaging(dAtA, i, uint64(m.Spec.Size()))
-	n11, err := m.Spec.MarshalTo(dAtA[i:])
+	n15, err := m.Spec.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n11
+	i += n15
 	dAtA[i] = 0x22
 	i++
 	i = encodeVarintStaging(dAtA, i, uint64(m.Status.Size()))
-	n12, err := m.Status.MarshalTo(dAtA[i:])
+	n16, err := m.Status.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n12
+	i += n16
 	return i, nil
 }
 
@@ -779,20 +973,20 @@ func (m *Item) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintStaging(dAtA, i, uint64(m.ItemId.Size()))
-	n13, err := m.ItemId.MarshalTo(dAtA[i:])
+	n17, err := m.ItemId.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n13
+	i += n17
 	if m.Object != nil {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintStaging(dAtA, i, uint64(m.Object.Size()))
-		n14, err := m.Object.MarshalTo(dAtA[i:])
+		n18, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n14
+		i += n18
 	}
 	return i, nil
 }
@@ -845,11 +1039,11 @@ func (m *ValidationError) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintStaging(dAtA, i, uint64(m.ItemId.Size()))
-	n15, err := m.ItemId.MarshalTo(dAtA[i:])
+	n19, err := m.ItemId.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n15
+	i += n19
 	if len(m.Errors) > 0 {
 		for _, s := range m.Errors {
 			dAtA[i] = 0x12
@@ -902,6 +1096,42 @@ func (m *BufferSpec) Size() (n int) {
 }
 
 func (m *BufferStatus) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.ValidationResult)
+	if l > 0 {
+		n += 1 + l + sovStaging(uint64(l))
+	}
+	if len(m.Errors) > 0 {
+		for _, e := range m.Errors {
+			l = e.Size()
+			n += 1 + l + sovStaging(uint64(l))
+		}
+	}
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovStaging(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *BulkEditAction) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovStaging(uint64(l))
+	l = m.ObjectMeta.Size()
+	n += 1 + l + sovStaging(uint64(l))
+	l = m.Spec.Size()
+	n += 1 + l + sovStaging(uint64(l))
+	l = m.Status.Size()
+	n += 1 + l + sovStaging(uint64(l))
+	return n
+}
+
+func (m *BulkEditActionStatus) Size() (n int) {
 	var l int
 	_ = l
 	l = len(m.ValidationResult)
@@ -1326,6 +1556,317 @@ func (m *BufferStatus) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: BufferStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidationResult", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStaging
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthStaging
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidationResult = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Errors", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStaging
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthStaging
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Errors = append(m.Errors, &ValidationError{})
+			if err := m.Errors[len(m.Errors)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStaging
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthStaging
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &Item{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipStaging(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthStaging
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BulkEditAction) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowStaging
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BulkEditAction: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BulkEditAction: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStaging
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthStaging
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStaging
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthStaging
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStaging
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthStaging
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowStaging
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthStaging
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipStaging(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthStaging
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BulkEditActionStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowStaging
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BulkEditActionStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BulkEditActionStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2565,53 +3106,58 @@ var (
 func init() { proto.RegisterFile("staging.proto", fileDescriptorStaging) }
 
 var fileDescriptorStaging = []byte{
-	// 768 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0x41, 0x6f, 0xd3, 0x48,
-	0x14, 0x8e, 0x93, 0xd4, 0xd9, 0xbc, 0xb4, 0x9b, 0x74, 0xaa, 0xdd, 0x75, 0xb2, 0x52, 0x52, 0x59,
-	0xda, 0x6e, 0x56, 0x5b, 0x6c, 0x54, 0xa0, 0x12, 0x05, 0x04, 0x75, 0x08, 0x28, 0x52, 0x4b, 0x91,
-	0xd3, 0x72, 0x77, 0x9c, 0x69, 0x6a, 0x94, 0x8c, 0x2d, 0x7b, 0x5c, 0x54, 0x21, 0x8e, 0xf4, 0x17,
-	0x20, 0xf1, 0x03, 0x90, 0x38, 0x54, 0xe2, 0xc0, 0xbf, 0xe8, 0xb1, 0xe2, 0x07, 0x44, 0x28, 0x27,
-	0x94, 0x5f, 0x81, 0x3c, 0x9e, 0x24, 0x8e, 0xd3, 0x52, 0xa9, 0x3d, 0xf4, 0x32, 0x2f, 0xf3, 0xe6,
-	0x7d, 0x6f, 0xde, 0x7b, 0xdf, 0x97, 0x31, 0x2c, 0x78, 0xd4, 0xe8, 0x58, 0xa4, 0xa3, 0x38, 0xae,
-	0x4d, 0x6d, 0x94, 0xe1, 0xdb, 0x52, 0xbd, 0x63, 0xd1, 0x03, 0xbf, 0xa5, 0x98, 0x76, 0x4f, 0x75,
-	0x30, 0xf1, 0x0c, 0xd2, 0xb6, 0x55, 0xef, 0x8d, 0x7a, 0x88, 0x89, 0x65, 0x62, 0xd5, 0xa7, 0x56,
-	0xd7, 0x53, 0x0d, 0xc7, 0xea, 0x60, 0xa2, 0x1a, 0x84, 0xd8, 0xd4, 0xa0, 0x96, 0x4d, 0x3c, 0xd5,
-	0x22, 0x66, 0xd7, 0x6f, 0x63, 0x2f, 0xcc, 0x57, 0xfa, 0xe7, 0x82, 0x34, 0x86, 0x63, 0xa9, 0x3d,
-	0x4c, 0x8d, 0x30, 0x4c, 0xfe, 0x90, 0x04, 0x51, 0xf3, 0xf7, 0xf7, 0xb1, 0x8b, 0xd6, 0x41, 0xd8,
-	0x95, 0x84, 0x65, 0xa1, 0x9a, 0x5b, 0x5b, 0x50, 0x0c, 0xc7, 0x52, 0x76, 0x8f, 0x1c, 0xbc, 0x8d,
-	0xa9, 0xa1, 0x2d, 0x9d, 0xf6, 0x2b, 0x89, 0xb3, 0x7e, 0x45, 0x18, 0xf6, 0x2b, 0x99, 0x55, 0x8b,
-	0x74, 0x2d, 0x82, 0xf5, 0xd1, 0x0f, 0xf4, 0x04, 0x84, 0x1d, 0x29, 0xc9, 0x70, 0x79, 0x86, 0xdb,
-	0x69, 0xbd, 0xc6, 0x26, 0x65, 0xc8, 0xbf, 0x22, 0xc8, 0x5c, 0x70, 0xed, 0x08, 0x1d, 0xdd, 0xa0,
-	0x7b, 0x90, 0x6e, 0x3a, 0xd8, 0x94, 0x52, 0x2c, 0xc9, 0x92, 0x32, 0x9a, 0x4c, 0x58, 0x58, 0x70,
-	0xa4, 0xcd, 0x07, 0x89, 0x86, 0xfd, 0x4a, 0xda, 0x73, 0xb0, 0xa9, 0xb3, 0x15, 0x3d, 0x02, 0xb1,
-	0x49, 0x0d, 0xea, 0x7b, 0x52, 0x9a, 0x01, 0xff, 0x88, 0x03, 0xd9, 0xa1, 0xf6, 0x3b, 0x87, 0x8a,
-	0x1e, 0xdb, 0xeb, 0xdc, 0x6e, 0x94, 0xbe, 0xbd, 0x2f, 0xfe, 0x09, 0x39, 0xf5, 0xed, 0x8e, 0xb2,
-	0x8b, 0x89, 0x41, 0xe8, 0x3b, 0x94, 0x69, 0x31, 0xa0, 0x27, 0xaf, 0x00, 0x4c, 0x2e, 0x47, 0x12,
-	0x64, 0x6a, 0x36, 0xa1, 0x86, 0x49, 0xd9, 0x7c, 0xb2, 0xfa, 0x68, 0x2b, 0x7f, 0x4c, 0xc2, 0x7c,
-	0xf4, 0x32, 0xd4, 0x85, 0xc2, 0x2b, 0xa3, 0x6b, 0xb5, 0x19, 0x29, 0x3a, 0xf6, 0xfc, 0x2e, 0xc7,
-	0x68, 0x8f, 0x4f, 0x8e, 0x8b, 0x2b, 0x4d, 0xea, 0xd6, 0x89, 0xdf, 0xab, 0x46, 0x31, 0xca, 0x04,
-	0x10, 0x3a, 0xfe, 0x1b, 0xf6, 0x2b, 0x8b, 0x87, 0x63, 0xe7, 0x2d, 0x97, 0xa5, 0xd1, 0x67, 0x5d,
-	0xe8, 0x21, 0x88, 0x75, 0xd7, 0xb5, 0x5d, 0x4f, 0x4a, 0x2e, 0xa7, 0xaa, 0xb9, 0x35, 0x69, 0x3c,
-	0x81, 0x49, 0x4e, 0x16, 0xa0, 0x41, 0x30, 0x00, 0xcc, 0x62, 0x75, 0x6e, 0x91, 0x02, 0x73, 0x0d,
-	0x8a, 0x7b, 0x9e, 0x94, 0x62, 0xe0, 0x85, 0x31, 0x38, 0xf0, 0x6a, 0xd9, 0x61, 0xbf, 0x32, 0x67,
-	0x05, 0xe7, 0x7a, 0x68, 0xe4, 0xff, 0xa3, 0xbd, 0xf1, 0x7e, 0x73, 0x90, 0x69, 0xee, 0xd5, 0x6a,
-	0xf5, 0x66, 0xb3, 0x90, 0x40, 0x00, 0xe2, 0xb3, 0xcd, 0xc6, 0x56, 0xfd, 0x69, 0x41, 0x90, 0x3f,
-	0x25, 0x21, 0x57, 0xeb, 0x62, 0xc3, 0xdd, 0x34, 0x83, 0xf0, 0x1b, 0x54, 0xd7, 0xc6, 0x94, 0xba,
-	0x26, 0x23, 0x8a, 0x54, 0x77, 0xa1, 0xc4, 0xb4, 0x98, 0xc4, 0x4a, 0xe7, 0xa2, 0xaf, 0xae, 0xb3,
-	0x1a, 0xe4, 0x63, 0x65, 0xa0, 0xdb, 0x23, 0x56, 0x04, 0xc6, 0x4a, 0x7e, 0x8a, 0x95, 0x46, 0xfb,
-	0x1c, 0x5e, 0xbe, 0x08, 0xb0, 0x38, 0x53, 0x0e, 0xda, 0x1a, 0x97, 0x1e, 0xea, 0xef, 0x6e, 0x54,
-	0x7f, 0x33, 0xe1, 0x61, 0x3f, 0x13, 0xfd, 0xc5, 0x9a, 0x40, 0x32, 0x88, 0x3a, 0x36, 0x3c, 0x9b,
-	0x30, 0x2e, 0xb2, 0xa1, 0x9e, 0x5c, 0xe6, 0xd1, 0xb9, 0x95, 0x57, 0x38, 0xe3, 0x97, 0x49, 0xe3,
-	0x73, 0x12, 0xe6, 0x6b, 0x76, 0xaf, 0x67, 0xd1, 0x1b, 0xd7, 0xc6, 0x83, 0x29, 0x6d, 0x14, 0x27,
-	0xec, 0x46, 0xca, 0xbb, 0x50, 0x1c, 0xb5, 0x98, 0x38, 0xfe, 0x3e, 0x1f, 0x7e, 0x75, 0x75, 0x20,
-	0x28, 0xc4, 0x0b, 0x91, 0xbf, 0x0a, 0x80, 0x66, 0xd3, 0xa3, 0x17, 0x31, 0xb6, 0xd7, 0x4f, 0x8e,
-	0x8b, 0xd5, 0x31, 0xdb, 0x33, 0xf1, 0xbc, 0xc2, 0xeb, 0xf1, 0xfd, 0xef, 0x88, 0xc6, 0xcb, 0x08,
-	0xb7, 0x21, 0x1d, 0x88, 0x17, 0xdd, 0x87, 0x64, 0xa3, 0xcd, 0x89, 0x9e, 0xd1, 0xf5, 0xaf, 0xa9,
-	0x5e, 0x05, 0x31, 0x24, 0x97, 0xf3, 0xfd, 0x1b, 0xe3, 0x7b, 0x93, 0x1c, 0x85, 0x95, 0xd9, 0xec,
-	0x4c, 0xe7, 0x56, 0x7e, 0x0e, 0x62, 0x98, 0x15, 0x15, 0x21, 0xb5, 0xa7, 0x37, 0x78, 0x13, 0x99,
-	0x61, 0xbf, 0x92, 0xf2, 0x5d, 0x4b, 0x0f, 0x96, 0xa0, 0xc5, 0x6d, 0x4c, 0x0f, 0xec, 0x36, 0x63,
-	0x9f, 0xb7, 0xd8, 0x63, 0x1e, 0x9d, 0x5b, 0x99, 0x40, 0x3e, 0xf6, 0x92, 0x5e, 0xa7, 0x89, 0xe5,
-	0xa9, 0xe7, 0x3a, 0x1b, 0xfe, 0x95, 0xd9, 0x63, 0xac, 0x87, 0x46, 0x2b, 0x9c, 0x0e, 0xca, 0xc2,
-	0xd9, 0xa0, 0x2c, 0x7c, 0x1f, 0x94, 0x85, 0x1f, 0x83, 0x72, 0xe2, 0x65, 0xa2, 0x25, 0xb2, 0x2f,
-	0xf5, 0x9d, 0x9f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xc5, 0xe2, 0xf5, 0x81, 0x31, 0x08, 0x00, 0x00,
+	// 842 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x96, 0xdd, 0x8e, 0xdb, 0x44,
+	0x14, 0xc7, 0x63, 0x27, 0x75, 0xc8, 0xc9, 0x6e, 0x93, 0x4e, 0xf9, 0x70, 0x02, 0x24, 0x2b, 0x4b,
+	0x2c, 0x41, 0x14, 0x1b, 0x2d, 0x50, 0x89, 0xf2, 0xb9, 0x0e, 0xa1, 0x8a, 0xd4, 0xb2, 0xc8, 0xd9,
+	0x72, 0xef, 0xd8, 0xd3, 0x74, 0xa8, 0x33, 0xb6, 0xec, 0x71, 0x51, 0x85, 0xb8, 0x64, 0x9f, 0x00,
+	0x89, 0x07, 0x40, 0x02, 0x69, 0xa5, 0x5e, 0xf0, 0x16, 0xbd, 0xac, 0x78, 0x80, 0x08, 0xe5, 0x0a,
+	0xe5, 0x29, 0x90, 0xc7, 0x93, 0xc4, 0x71, 0x92, 0x5d, 0x69, 0xf7, 0x62, 0x11, 0x37, 0x39, 0x9e,
+	0x8f, 0xff, 0xf1, 0x39, 0xf3, 0xff, 0x79, 0x14, 0xd8, 0x8d, 0x98, 0x3d, 0x22, 0x74, 0xa4, 0x07,
+	0xa1, 0xcf, 0x7c, 0x54, 0x16, 0xc3, 0x66, 0x6f, 0x44, 0xd8, 0xa3, 0x78, 0xa8, 0x3b, 0xfe, 0xd8,
+	0x08, 0x30, 0x8d, 0x6c, 0xea, 0xfa, 0x46, 0xf4, 0x83, 0xf1, 0x04, 0x53, 0xe2, 0x60, 0x23, 0x66,
+	0xc4, 0x8b, 0x0c, 0x3b, 0x20, 0x23, 0x4c, 0x0d, 0x9b, 0x52, 0x9f, 0xd9, 0x8c, 0xf8, 0x34, 0x32,
+	0x08, 0x75, 0xbc, 0xd8, 0xc5, 0x51, 0x9a, 0xaf, 0xf9, 0xd6, 0x96, 0x34, 0x76, 0x40, 0x8c, 0x31,
+	0x66, 0xb6, 0xd8, 0x76, 0x70, 0xc6, 0xb6, 0x61, 0xec, 0x3d, 0xc6, 0x2e, 0x61, 0x8b, 0x87, 0x54,
+	0xa3, 0xfd, 0x22, 0x83, 0x62, 0xc6, 0x0f, 0x1f, 0xe2, 0x10, 0xdd, 0x06, 0xe9, 0x58, 0x95, 0xf6,
+	0xa4, 0x4e, 0xf5, 0x60, 0x57, 0xb7, 0x03, 0xa2, 0x1f, 0x3f, 0x0d, 0xf0, 0x7d, 0xcc, 0x6c, 0xf3,
+	0xe6, 0xf3, 0x49, 0xbb, 0xf0, 0x62, 0xd2, 0x96, 0x66, 0x93, 0x76, 0xf9, 0x16, 0xa1, 0x1e, 0xa1,
+	0xd8, 0x9a, 0x3f, 0xa0, 0x2f, 0x41, 0x3a, 0x52, 0x65, 0xae, 0xab, 0x71, 0xdd, 0xd1, 0xf0, 0x7b,
+	0xec, 0x30, 0xae, 0x7c, 0x2d, 0xa3, 0xac, 0x26, 0xa5, 0xce, 0xd5, 0xd9, 0x01, 0xfa, 0x08, 0x4a,
+	0x83, 0x00, 0x3b, 0x6a, 0x91, 0x27, 0xb9, 0xa9, 0xcf, 0x4f, 0x33, 0x2d, 0x2c, 0x59, 0x32, 0x77,
+	0x92, 0x44, 0xb3, 0x49, 0xbb, 0x14, 0x05, 0xd8, 0xb1, 0xf8, 0x2f, 0xfa, 0x0c, 0x94, 0x01, 0xb3,
+	0x59, 0x1c, 0xa9, 0x25, 0x2e, 0x7c, 0x25, 0x2f, 0xe4, 0x8b, 0xe6, 0x75, 0x21, 0x55, 0x22, 0x3e,
+	0xb6, 0x44, 0xbc, 0xd3, 0xfc, 0xeb, 0xe7, 0xc6, 0xab, 0x50, 0x35, 0x7e, 0x3c, 0xd2, 0x8f, 0x31,
+	0xb5, 0x29, 0xfb, 0x09, 0x95, 0x87, 0x5c, 0x18, 0x69, 0xfb, 0x00, 0xcb, 0x97, 0x23, 0x15, 0xca,
+	0x5d, 0x9f, 0x32, 0xdb, 0x61, 0xfc, 0x7c, 0x2a, 0xd6, 0x7c, 0xa8, 0xfd, 0x2a, 0xc3, 0x4e, 0xf6,
+	0x65, 0xc8, 0x83, 0xfa, 0x77, 0xb6, 0x47, 0x5c, 0x6e, 0xa4, 0x85, 0xa3, 0xd8, 0x13, 0x1a, 0xf3,
+	0x8b, 0xd3, 0x93, 0xc6, 0xfe, 0x80, 0x85, 0x3d, 0x1a, 0x8f, 0x3b, 0x59, 0x8d, 0xbe, 0x14, 0xa4,
+	0x13, 0xef, 0xcc, 0x26, 0xed, 0x1b, 0x4f, 0x16, 0x93, 0xef, 0x85, 0x3c, 0x8d, 0xb5, 0x3e, 0x85,
+	0x3e, 0x05, 0xa5, 0x17, 0x86, 0x7e, 0x18, 0xa9, 0xf2, 0x5e, 0xb1, 0x53, 0x3d, 0x50, 0x17, 0x27,
+	0xb0, 0xcc, 0xc9, 0x37, 0x98, 0x90, 0x1c, 0x00, 0xe6, 0x7b, 0x2d, 0x11, 0x91, 0x0e, 0xd7, 0xfa,
+	0x0c, 0x8f, 0x23, 0xb5, 0xc8, 0xc5, 0xbb, 0x0b, 0x71, 0x32, 0x6b, 0x56, 0x66, 0x93, 0xf6, 0x35,
+	0x92, 0xac, 0x5b, 0x69, 0xd0, 0xde, 0xcd, 0xf6, 0x26, 0xfa, 0xad, 0x42, 0x79, 0xf0, 0xa0, 0xdb,
+	0xed, 0x0d, 0x06, 0xf5, 0x02, 0x02, 0x50, 0xbe, 0x3e, 0xec, 0xdf, 0xeb, 0x7d, 0x55, 0x97, 0xb4,
+	0x67, 0x32, 0x5c, 0x37, 0x63, 0xef, 0x71, 0xcf, 0x25, 0xec, 0xd0, 0x49, 0x14, 0x57, 0x08, 0xd8,
+	0xe7, 0x2b, 0x80, 0xbd, 0xa1, 0x2f, 0x3e, 0x82, 0xd5, 0x0a, 0xb7, 0x92, 0xd6, 0xcb, 0x91, 0xf6,
+	0x66, 0x86, 0xb4, 0x95, 0x04, 0x17, 0x27, 0xee, 0x0f, 0x19, 0x5e, 0xde, 0x94, 0x0c, 0xb1, 0xad,
+	0x44, 0xdd, 0x3d, 0x3d, 0x69, 0xe8, 0x4b, 0xa2, 0xd6, 0xb5, 0xff, 0x4f, 0xb2, 0x7e, 0x93, 0xa1,
+	0xda, 0xf5, 0xb0, 0x1d, 0x5e, 0x39, 0x56, 0x77, 0x56, 0xb0, 0x5a, 0x1e, 0x51, 0xa6, 0xba, 0xad,
+	0x48, 0x99, 0x39, 0xa4, 0x9a, 0x1b, 0xd5, 0x17, 0xe7, 0xa9, 0x0b, 0xb5, 0x5c, 0x19, 0xe8, 0xfd,
+	0xb9, 0x2b, 0x12, 0x77, 0xa5, 0xb6, 0xe2, 0x4a, 0xdf, 0xdd, 0xe0, 0xcb, 0x33, 0x09, 0x6e, 0xac,
+	0x95, 0x83, 0xee, 0x2d, 0x4a, 0x4f, 0x39, 0xfc, 0x30, 0x7b, 0xb3, 0xad, 0x6d, 0x4f, 0xfb, 0x59,
+	0xf2, 0x97, 0x6b, 0x02, 0x69, 0xa0, 0x58, 0xd8, 0x8e, 0x7c, 0xca, 0xbd, 0xa8, 0xa4, 0x3c, 0x85,
+	0x7c, 0xc6, 0x12, 0x51, 0xdb, 0x17, 0x8e, 0x9f, 0x87, 0xc6, 0xef, 0x32, 0xec, 0x74, 0xfd, 0xf1,
+	0xf8, 0x3f, 0x70, 0xe5, 0x7c, 0xb2, 0xc2, 0x46, 0x63, 0xe9, 0x6e, 0xa6, 0xbc, 0xad, 0x70, 0x74,
+	0x73, 0x70, 0xbc, 0xbe, 0x59, 0x7e, 0x71, 0x3a, 0x10, 0xd4, 0xf3, 0x85, 0x68, 0x7f, 0x4a, 0x80,
+	0xd6, 0xd3, 0xa3, 0x6f, 0x72, 0x6e, 0xdf, 0x3e, 0x3d, 0x69, 0x74, 0x16, 0x6e, 0xaf, 0xed, 0x17,
+	0x15, 0x5e, 0xce, 0xef, 0xb7, 0xe7, 0x36, 0x9e, 0x67, 0xb8, 0x0f, 0xa5, 0x04, 0x5e, 0xf4, 0x31,
+	0xc8, 0x7d, 0x57, 0x18, 0xbd, 0xc6, 0xf5, 0xd9, 0x56, 0xdf, 0x02, 0x25, 0x35, 0x57, 0xf8, 0xfd,
+	0x12, 0xf7, 0xfb, 0x90, 0x3e, 0x4d, 0x2b, 0xf3, 0xf9, 0x9a, 0x25, 0xa2, 0x76, 0x17, 0x94, 0x34,
+	0x2b, 0x6a, 0x40, 0xf1, 0x81, 0xd5, 0x17, 0x4d, 0x94, 0x67, 0x93, 0x76, 0x31, 0x0e, 0x89, 0x95,
+	0xfc, 0x24, 0x2d, 0xde, 0xc7, 0xec, 0x91, 0xef, 0x72, 0xf7, 0x45, 0x8b, 0x63, 0x3e, 0x63, 0x89,
+	0xa8, 0x51, 0xa8, 0xe5, 0x6e, 0xd2, 0xcb, 0x34, 0xb1, 0xb7, 0x72, 0x5d, 0x57, 0xd2, 0x4f, 0x99,
+	0x5f, 0xc6, 0x56, 0x1a, 0xcc, 0xfa, 0xf3, 0x69, 0x4b, 0x7a, 0x31, 0x6d, 0x49, 0x7f, 0x4f, 0x5b,
+	0xd2, 0x3f, 0xd3, 0x56, 0xe1, 0xdb, 0xc2, 0x50, 0xe1, 0xff, 0x01, 0x3f, 0xf8, 0x37, 0x00, 0x00,
+	0xff, 0xff, 0x29, 0x0c, 0x29, 0x3a, 0xbf, 0x0a, 0x00, 0x00,
 }

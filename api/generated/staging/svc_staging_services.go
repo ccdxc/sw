@@ -25,6 +25,7 @@ type ServiceStagingV1Client interface {
 	AutoLabelBuffer(ctx context.Context, t *api.Label) (*Buffer, error)
 	AutoListBuffer(ctx context.Context, t *api.ListWatchOptions) (*BufferList, error)
 	AutoUpdateBuffer(ctx context.Context, t *Buffer) (*Buffer, error)
+	Bulkedit(ctx context.Context, t *BulkEditAction) (*BulkEditAction, error)
 	Clear(ctx context.Context, t *ClearAction) (*ClearAction, error)
 	Commit(ctx context.Context, t *CommitAction) (*CommitAction, error)
 
@@ -41,6 +42,7 @@ type ServiceStagingV1Server interface {
 	AutoLabelBuffer(ctx context.Context, t api.Label) (Buffer, error)
 	AutoListBuffer(ctx context.Context, t api.ListWatchOptions) (BufferList, error)
 	AutoUpdateBuffer(ctx context.Context, t Buffer) (Buffer, error)
+	Bulkedit(ctx context.Context, t BulkEditAction) (BulkEditAction, error)
 	Clear(ctx context.Context, t ClearAction) (ClearAction, error)
 	Commit(ctx context.Context, t CommitAction) (CommitAction, error)
 

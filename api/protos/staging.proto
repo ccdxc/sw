@@ -5,6 +5,7 @@ package staging;
 // Mandatory imports.
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/bulkedit/bulkedit.proto";
 
 message ItemId {
     string URI      = 2 [(gogoproto.jsontag) = "uri"];
@@ -129,5 +130,39 @@ message Buffer {
                          (gogoproto.jsontag) = "spec"];
 
     BufferStatus Status = 4 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "status"];
+}
+
+message BulkEditActionStatus {
+    enum ValidationStatus {
+        // ui-hint: Success
+        SUCCESS = 0;
+        // ui-hint: Failed
+        FAILED = 1;
+    }
+    string ValidationResult         = 1 [(venice.check) = "StrEnum(BulkEditActionStatus.ValidationStatus)",
+                                        (gogoproto.jsontag) = "validation-result"];
+
+    repeated ValidationError Errors = 2 [(gogoproto.jsontag) = "errors"];
+
+    repeated Item Items             = 3 [(gogoproto.jsontag) = "items"];
+}
+
+
+message BulkEditAction {
+    option (venice.objectPrefix) = {Collection: "buffers", Path: "/{O.Tenant}"};
+    api.TypeMeta T = 1  [(gogoproto.embed) = true,
+                         (gogoproto.nullable) = false,
+                         (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O = 2  [(gogoproto.embed) = true,
+                           (gogoproto.nullable) = false,
+                           (gogoproto.jsontag) = "meta,inline"];
+
+    bulkedit.BulkEditActionSpec Spec          = 3 [(gogoproto.jsontag) = "spec",
+                                    (gogoproto.nullable) = false];
+
+
+    BulkEditActionStatus Status = 4 [(gogoproto.nullable) = false,
                              (gogoproto.jsontag) = "status"];
 }

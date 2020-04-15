@@ -114,6 +114,20 @@ func NewStagingV1(conn *grpc.ClientConn, logger log.Logger) staging.ServiceStagi
 		).Endpoint()
 		lAutoUpdateBufferEndpoint = trace.ClientEndPoint("StagingV1:AutoUpdateBuffer")(lAutoUpdateBufferEndpoint)
 	}
+	var lBulkeditEndpoint endpoint.Endpoint
+	{
+		lBulkeditEndpoint = grpctransport.NewClient(
+			conn,
+			"staging.StagingV1",
+			"Bulkedit",
+			staging.EncodeGrpcReqBulkEditAction,
+			staging.DecodeGrpcRespBulkEditAction,
+			&staging.BulkEditAction{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lBulkeditEndpoint = trace.ClientEndPoint("StagingV1:Bulkedit")(lBulkeditEndpoint)
+	}
 	var lClearEndpoint endpoint.Endpoint
 	{
 		lClearEndpoint = grpctransport.NewClient(
@@ -151,6 +165,7 @@ func NewStagingV1(conn *grpc.ClientConn, logger log.Logger) staging.ServiceStagi
 		AutoLabelBufferEndpoint:  lAutoLabelBufferEndpoint,
 		AutoListBufferEndpoint:   lAutoListBufferEndpoint,
 		AutoUpdateBufferEndpoint: lAutoUpdateBufferEndpoint,
+		BulkeditEndpoint:         lBulkeditEndpoint,
 		ClearEndpoint:            lClearEndpoint,
 		CommitEndpoint:           lCommitEndpoint,
 	}
@@ -296,6 +311,15 @@ func (a *grpcObjStagingV1Buffer) Clear(ctx context.Context, in *staging.ClearAct
 	return a.client.Clear(nctx, in)
 }
 
+func (a *grpcObjStagingV1Buffer) Bulkedit(ctx context.Context, in *staging.BulkEditAction) (*staging.BulkEditAction, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{Bulkedit BulkEditAction BulkEditAction}", "oper", "Bulkedit")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.Bulkedit(nctx, in)
+}
+
 func (a *grpcObjStagingV1Buffer) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
@@ -400,6 +424,12 @@ func (a *restObjStagingV1Buffer) Clear(ctx context.Context, in *staging.ClearAct
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.ClearBuffer(ctx, in)
+}
+func (a *restObjStagingV1Buffer) Bulkedit(ctx context.Context, in *staging.BulkEditAction) (*staging.BulkEditAction, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.BulkeditBuffer(ctx, in)
 }
 
 type crudClientStagingV1 struct {

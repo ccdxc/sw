@@ -220,6 +220,33 @@ func (a adapterStagingV1) AutoUpdateBuffer(oldctx oldcontext.Context, t *staging
 	return ret.(*staging.Buffer), err
 }
 
+func (a adapterStagingV1) Bulkedit(oldctx oldcontext.Context, t *staging.BulkEditAction, options ...grpc.CallOption) (*staging.BulkEditAction, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.StagingV1Bulkedit", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("Bulkedit")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name, "Bulkedit"
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*staging.BulkEditAction)
+		return a.service.Bulkedit(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*staging.BulkEditAction), err
+}
+
 func (a adapterStagingV1) Clear(oldctx oldcontext.Context, t *staging.ClearAction, options ...grpc.CallOption) (*staging.ClearAction, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -399,6 +426,8 @@ func (e *sStagingV1GwService) setupSvcProfile() {
 	e.svcProf["AutoGetBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiintf.GetOper)
 
 	e.svcProf["AutoListBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "BufferList", "staging", apiintf.ListOper)
+
+	e.svcProf["Bulkedit"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiintf.CreateOper)
 
 	e.svcProf["Clear"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiintf.CreateOper)
 

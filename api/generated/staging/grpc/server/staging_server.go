@@ -337,6 +337,294 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 
 		"staging.BufferSpec":   apisrvpkg.NewMessage("staging.BufferSpec"),
 		"staging.BufferStatus": apisrvpkg.NewMessage("staging.BufferStatus"),
+		"staging.BulkEditAction": apisrvpkg.NewMessage("staging.BulkEditAction").WithKeyGenerator(func(i interface{}, prefix string) string {
+			if i == nil {
+				r := staging.BulkEditAction{}
+				return r.MakeKey(prefix)
+			}
+			r := i.(staging.BulkEditAction)
+			return r.MakeKey(prefix)
+		}).WithObjectVersionWriter(func(i interface{}, version string) interface{} {
+			r := i.(staging.BulkEditAction)
+			r.Kind = "BulkEditAction"
+			r.APIVersion = version
+			return r
+		}).WithKvUpdater(func(ctx context.Context, kvs kvstore.Interface, i interface{}, prefix string, create bool, updateFn kvstore.UpdateFunc) (interface{}, error) {
+			r := i.(staging.BulkEditAction)
+			key := r.MakeKey(prefix)
+			r.Kind = "BulkEditAction"
+			var err error
+			if create {
+				if updateFn != nil {
+					upd := &staging.BulkEditAction{}
+					n, err := updateFn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "err", err)
+						return nil, err
+					}
+					new := n.(*staging.BulkEditAction)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					new.SelfLink = r.SelfLink
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
+				err = kvs.Create(ctx, key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV create failed", "key", key, "err", err)
+				}
+			} else {
+				if updateFn != nil {
+					into := &staging.BulkEditAction{}
+					err = kvs.ConsistentUpdate(ctx, key, into, updateFn)
+					if err != nil {
+						l.ErrorLog("msg", "Consistent update failed", "err", err)
+					}
+					r = *into
+				} else {
+					var cur staging.BulkEditAction
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
+						return nil, err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if r.ResourceVersion != "" {
+						l.Infof("resource version is specified %s\n", r.ResourceVersion)
+						err = kvs.Update(ctx, key, &r, kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+					} else {
+						err = kvs.Update(ctx, key, &r)
+					}
+					if err != nil {
+						l.ErrorLog("msg", "KV update failed", "key", key, "err", err)
+					}
+				}
+
+			}
+			return r, err
+		}).WithKvTxnUpdater(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prefix string, create bool, updatefn kvstore.UpdateFunc) error {
+			r := i.(staging.BulkEditAction)
+			key := r.MakeKey(prefix)
+			var err error
+			if create {
+				if updatefn != nil {
+					upd := &staging.BulkEditAction{}
+					n, err := updatefn(upd)
+					if err != nil {
+						l.ErrorLog("msg", "could not create new object", "err", err)
+						return err
+					}
+					new := n.(*staging.BulkEditAction)
+					new.TypeMeta = r.TypeMeta
+					new.GenerationID = "1"
+					new.UUID = r.UUID
+					new.CreationTime = r.CreationTime
+					new.SelfLink = r.SelfLink
+					r = *new
+				} else {
+					r.GenerationID = "1"
+				}
+				err = txn.Create(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction create failed", "key", key, "err", err)
+				}
+			} else {
+				if updatefn != nil {
+					var cur staging.BulkEditAction
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
+						return err
+					}
+					robj, err := updatefn(&cur)
+					if err != nil {
+						l.ErrorLog("msg", "unable to update current object", "key", key, "err", err)
+						return err
+					}
+					r = *robj.(*staging.BulkEditAction)
+					txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", r.ResourceVersion))
+				} else {
+					var cur staging.BulkEditAction
+					err = kvs.Get(ctx, key, &cur)
+					if err != nil {
+						l.ErrorLog("msg", "trying to update an object that does not exist", "key", key, "err", err)
+						return err
+					}
+					r.UUID = cur.UUID
+					r.CreationTime = cur.CreationTime
+					if _, err := strconv.ParseUint(r.GenerationID, 10, 64); err != nil {
+						r.GenerationID = cur.GenerationID
+						_, err := strconv.ParseUint(cur.GenerationID, 10, 64)
+						if err != nil {
+							// Cant recover ID!!, reset ID
+							r.GenerationID = "2"
+						}
+					}
+				}
+				err = txn.Update(key, &r)
+				if err != nil {
+					l.ErrorLog("msg", "KV transaction update failed", "key", key, "err", err)
+				}
+			}
+			return err
+		}).WithUUIDWriter(func(i interface{}) (interface{}, error) {
+			r := i.(staging.BulkEditAction)
+			r.UUID = uuid.NewV4().String()
+			return r, nil
+		}).WithCreationTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(staging.BulkEditAction)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.CreationTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithModTimeWriter(func(i interface{}) (interface{}, error) {
+			r := i.(staging.BulkEditAction)
+			var err error
+			ts, err := types.TimestampProto(time.Now())
+			if err == nil {
+				r.ModTime.Timestamp = *ts
+			}
+			return r, err
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(staging.BulkEditAction)
+			r.SelfLink = path
+			return r, nil
+		}).WithKvGetter(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := staging.BulkEditAction{}
+			err := kvs.Get(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object get failed", "key", key, "err", err)
+			}
+			return r, err
+		}).WithKvDelFunc(func(ctx context.Context, kvs kvstore.Interface, key string) (interface{}, error) {
+			r := staging.BulkEditAction{}
+			err := kvs.Delete(ctx, key, &r)
+			if err != nil {
+				l.ErrorLog("msg", "Object delete failed", "key", key, "err", err)
+			}
+			return r, err
+		}).WithKvTxnDelFunc(func(ctx context.Context, txn kvstore.Txn, key string) error {
+			err := txn.Delete(key)
+			if err != nil {
+				l.ErrorLog("msg", "Object Txn delete failed", "key", key, "err", err)
+			}
+			return err
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(staging.BulkEditAction)
+			return &r
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
+			r := i.(staging.BulkEditAction)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
+		}).WithNormalizer(func(i interface{}) interface{} {
+			r := i.(staging.BulkEditAction)
+			r.Normalize()
+			return r
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(staging.BulkEditAction)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
+		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
+			var n *staging.BulkEditAction
+			if v, ok := i.(staging.BulkEditAction); ok {
+				n = &v
+			} else if v, ok := i.(*staging.BulkEditAction); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if create {
+					n.UUID = uuid.NewV4().String()
+					ts, err := types.TimestampProto(time.Now())
+					if err != nil {
+						return nil, err
+					}
+					n.CreationTime.Timestamp = *ts
+					n.ModTime.Timestamp = *ts
+					n.GenerationID = "1"
+					return n, nil
+				}
+				if oldObj == nil {
+					return nil, errors.New("nil object")
+				}
+				o := oldObj.(*staging.BulkEditAction)
+				n.UUID, n.CreationTime, n.Namespace, n.GenerationID = o.UUID, o.CreationTime, o.Namespace, o.GenerationID
+				ts, err := types.TimestampProto(time.Now())
+				if err != nil {
+					return nil, err
+				}
+				n.ModTime.Timestamp = *ts
+				return n, nil
+			}
+		}).WithReplaceSpecFunction(func(ctx context.Context, i interface{}) kvstore.UpdateFunc {
+			var n *staging.BulkEditAction
+			if v, ok := i.(staging.BulkEditAction); ok {
+				n = &v
+			} else if v, ok := i.(*staging.BulkEditAction); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if oldObj == nil {
+					rete := &staging.BulkEditAction{}
+					rete.TypeMeta, rete.ObjectMeta, rete.Spec = n.TypeMeta, n.ObjectMeta, n.Spec
+					rete.GenerationID = "1"
+					return rete, nil
+				}
+				if ret, ok := oldObj.(*staging.BulkEditAction); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.ModTime, n.SelfLink
+					// Add system labels that are on the existing object
+					for k, v := range ret.Labels {
+						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							if n.Labels == nil {
+								n.Labels = make(map[string]string)
+							}
+							n.Labels[k] = v
+						}
+					}
+					ret.Labels = n.Labels
+					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+					if err != nil {
+						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
+						ret.GenerationID = "2"
+					} else {
+						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+					}
+					ret.Spec = n.Spec
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}).WithReplaceStatusFunction(func(i interface{}) kvstore.UpdateFunc {
+			var n *staging.BulkEditAction
+			if v, ok := i.(staging.BulkEditAction); ok {
+				n = &v
+			} else if v, ok := i.(*staging.BulkEditAction); ok {
+				n = v
+			} else {
+				return nil
+			}
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if ret, ok := oldObj.(*staging.BulkEditAction); ok {
+					ret.ObjectMeta.ModTime = n.ObjectMeta.ModTime
+					ret.Status = n.Status
+					return ret, nil
+				}
+				return nil, errors.New("invalid object")
+			}
+		}),
+
+		"staging.BulkEditActionStatus": apisrvpkg.NewMessage("staging.BulkEditActionStatus"),
 		"staging.ClearAction": apisrvpkg.NewMessage("staging.ClearAction").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := staging.ClearAction{}

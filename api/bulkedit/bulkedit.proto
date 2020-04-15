@@ -1,0 +1,30 @@
+syntax = "proto3";
+// Service name
+package bulkedit;
+
+// Mandatory imports.
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/venice.proto";
+import public "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+message BulkEditItem {
+    enum MethodType {
+        // ui-hint: create
+        CREATE = 0;
+        // ui-hint: update
+        UPDATE = 1;
+        // ui-hint: delete
+        DELETE = 2;
+    }
+    // URI field is optional, Backend uses the Kind, tenant and name fields in the Object to Infer the URI
+    string URI                  = 1 [(gogoproto.jsontag) = "uri"];
+    string Method               = 2 [(venice.check) = "StrEnum(BulkEditItem.MethodType)",
+                                    (gogoproto.jsontag) = "method"];
+    // Object can be a free form json of an object containing the "Kind" type to identify it, a TypeURL is not needed
+    api.Any Object              = 3 [(gogoproto.jsontag) = "object"];
+
+}
+
+message BulkEditActionSpec {
+    repeated BulkEditItem Items = 1 [(gogoproto.jsontag) = "items"];
+}

@@ -119,6 +119,74 @@ func DecodeGrpcRespBufferStatus(ctx context.Context, response interface{}) (inte
 	return response, nil
 }
 
+func encodeHTTPBulkEditAction(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPBulkEditAction(_ context.Context, r *http.Request) (interface{}, error) {
+	var req BulkEditAction
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqBulkEditAction encodes GRPC request
+func EncodeGrpcReqBulkEditAction(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BulkEditAction)
+	return req, nil
+}
+
+// DecodeGrpcReqBulkEditAction decodes GRPC request
+func DecodeGrpcReqBulkEditAction(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BulkEditAction)
+	return req, nil
+}
+
+// EncodeGrpcRespBulkEditAction encodes GRC response
+func EncodeGrpcRespBulkEditAction(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespBulkEditAction decodes GRPC response
+func DecodeGrpcRespBulkEditAction(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPBulkEditActionStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPBulkEditActionStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req BulkEditActionStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqBulkEditActionStatus encodes GRPC request
+func EncodeGrpcReqBulkEditActionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BulkEditActionStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqBulkEditActionStatus decodes GRPC request
+func DecodeGrpcReqBulkEditActionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*BulkEditActionStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespBulkEditActionStatus encodes GRC response
+func EncodeGrpcRespBulkEditActionStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespBulkEditActionStatus decodes GRPC response
+func DecodeGrpcRespBulkEditActionStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPClearAction(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

@@ -34,6 +34,20 @@ func removeBufferOper(obj interface{}) error {
 	return nil
 }
 
+// CreateBulkEditActionFlags specifies flags for BulkEditAction create operation
+var CreateBulkEditActionFlags = []gen.CliFlag{}
+
+func removeBulkEditActionOper(obj interface{}) error {
+	if v, ok := obj.(*staging.BulkEditAction); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = staging.BulkEditActionStatus{}
+	}
+	return nil
+}
+
 // CreateClearActionFlags specifies flags for ClearAction create operation
 var CreateClearActionFlags = []gen.CliFlag{
 	{
@@ -82,6 +96,8 @@ func init() {
 
 	cl.AddCliInfo("staging.Buffer", "create", CreateBufferFlags)
 	cl.AddRemoveObjOperFunc("staging.Buffer", removeBufferOper)
+
+	cl.AddRemoveObjOperFunc("staging.BulkEditAction", removeBulkEditActionOper)
 
 	cl.AddCliInfo("staging.ClearAction", "create", CreateClearActionFlags)
 	cl.AddRemoveObjOperFunc("staging.ClearAction", removeClearActionOper)

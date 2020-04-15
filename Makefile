@@ -10,7 +10,7 @@ endif
 export ASIC ?= capri
 
 # Lists excluded patterns to "go list"
-EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|buildroot|gometrics|netagent|dscagent|tsagent|tpagent|agent/tpa|nic/metaswitch/rtrctl/utils|nic/metaswitch/clientutils"
+EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|bulkedit|vendor|bazel|e2etests|iota|buildroot|gometrics|netagent|dscagent|tsagent|tpagent|agent/tpa|nic/metaswitch/rtrctl/utils|nic/metaswitch/clientutils"
 
 # these are run as part of integ test
 INTEG_TEST_PATTERNS := "sw.test.integ|api.integration|citadel.test.integ"
@@ -19,7 +19,7 @@ INTEG_TEST_PATTERNS := "sw.test.integ|api.integration|citadel.test.integ"
 TO_PREGEN := venice/utils/apigen/annotations
 
 # Lists venice venice protos and all things auto generated.
-TO_GEN := api api/labels api/fields events venice/cmd/types/protos venice/cmd/grpc \
+TO_GEN := api api/bulkedit api/labels api/fields events venice/cmd/types/protos venice/cmd/grpc \
 venice/ctrler/ckm/rpcserver/ckmproto \
 nic/agent/protos/netproto \
 nic/agent/protos/tpmprotos  \

@@ -7,14 +7,18 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
+	"github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/bulkedit"
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/staging"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrv "github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	mocks2 "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -206,10 +210,176 @@ func TestStagingRegistration(t *testing.T) {
 	srv.AddMethod("Buffer", meth)
 	srv.AddMethod("Commit", meth)
 	srv.AddMethod("Clear", meth)
+	srv.AddMethod("Bulkedit", meth)
 	logger := log.GetDefaultInstance()
 	registerStagingHooks(srv, logger)
 	fmeth := meth.(*mocks2.FakeMethod)
-	if fmeth.Pres != 2 || fmeth.Posts != 2 || fmeth.RWriters != 2 {
+	if fmeth.Pres != 3 || fmeth.Posts != 2 || fmeth.RWriters != 2 {
 		t.Fatalf("unexpected number of hooks registered [%+v]", fmeth)
+	}
+}
+
+func TestBulkeditAction(t *testing.T) {
+
+	fcache := mocks.FakeCache{}
+	fov := mocks.FakeOverlay{}
+	apisrvpkg.SetAPIServerCache(&fcache)
+
+	bufName := "TestBuffer1"
+
+	netw := &network.Network{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Network",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "TestNtwork1",
+			Tenant: "default",
+		},
+		Spec: network.NetworkSpec{
+			Type:        network.NetworkType_Bridged.String(),
+			IPv4Subnet:  "10.1.1.1/24",
+			IPv4Gateway: "10.1.1.1",
+		},
+		Status: network.NetworkStatus{},
+	}
+
+	n1, err := types.MarshalAny(netw)
+
+	netw.Spec.IPv4Gateway = "110.1.1.1"
+	netw.Spec.IPv4Subnet = "110.1.1.1/24"
+
+	n2, err := types.MarshalAny(netw)
+
+	cache.SetOverlay("default", bufName, &fov)
+
+	netw.Name = "testDelNetw"
+	netw.Spec.IPv4Gateway = "120.2.1.1"
+	netw.Spec.IPv4Subnet = "120.2.1.1/24"
+	n3, err := types.MarshalAny(netw)
+
+	req := staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   bufName,
+			Tenant: "default",
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/network/v1/tenant/default/networks/TestNtwork1",
+					Method: "create",
+					Object: &api.Any{Any: *n1},
+				},
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/network/v1/tenant/default/networks/TestNtwork1",
+					Method: "update",
+					Object: &api.Any{Any: *n2},
+				},
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/network/v1/tenant/default/networks/testDelNetw",
+					Method: "delete",
+					Object: &api.Any{Any: *n3},
+				},
+			},
+		},
+	}
+
+	hooks := stagingHooks{l: log.GetNewLogger(log.GetDefaultConfig("hooksTest"))}
+	ret, skip, err := hooks.bulkeditAction(context.TODO(), nil, nil, "key", apiintf.CreateOper, false, req)
+	if ret == nil || err != nil {
+		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
+	}
+	if skip != false {
+		t.Fatalf("kvwrite enabled on commit")
+	}
+
+	retBuf := ret.(staging.BulkEditAction)
+	if retBuf.Status.ValidationResult != staging.BufferStatus_SUCCESS.String() {
+		t.Fatalf("Expected SUCCESS Validation status")
+	}
+
+	if fov.CreatePrimaries != 1 {
+		t.Fatalf("Number of createprimary calls %d did not mtch expected\n", fov.CreatePrimaries)
+	}
+	if fov.UpdatePrimaries != 1 {
+		t.Fatalf("Number of updateprimary calls %d did not mtch expected\n", fov.UpdatePrimaries)
+	}
+	if fov.DeletePrimaries != 1 {
+		t.Fatalf("Number of deleteprimary calls %d did not mtch expected\n", fov.DeletePrimaries)
+	}
+
+	// Negative test cases
+	// 1. Invalid bufferName
+
+	req = staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "NewStagingBuffer",
+			Tenant: "default",
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/network/v1/tenant/default/networks/TestNtwork1",
+					Method: "create",
+					Object: &api.Any{Any: *n1},
+				},
+			},
+		},
+	}
+
+	ret, _, err = hooks.bulkeditAction(context.TODO(), nil, nil, "key", apiintf.CreateOper, false, req)
+	if err == nil {
+		t.Fatalf("Expected Unknwon Buffer Error!\n")
+	}
+
+	retBuf = ret.(staging.BulkEditAction)
+	if retBuf.Status.ValidationResult != staging.BufferStatus_FAILED.String() {
+		t.Fatalf("Expected FAILED Validation status, got %s\n", retBuf.Status.ValidationResult)
+	}
+
+	// 2. Send some junk type as input
+	req1 := staging.BufferStatus{}
+	_, _, err = hooks.bulkeditAction(context.TODO(), nil, nil, "key", apiintf.CreateOper, false, req1)
+	if err == nil {
+		t.Fatalf("Expected Invalid object type Error!\n")
+	}
+
+	// 3. Unknown Method type
+	req = staging.BulkEditAction{
+		TypeMeta: api.TypeMeta{
+			Kind:       "BulkEditAction",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   bufName,
+			Tenant: "default",
+		},
+		Spec: bulkedit.BulkEditActionSpec{
+			Items: []*bulkedit.BulkEditItem{
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/network/v1/tenant/default/networks/TestNtwork1",
+					Method: "asdfghjkl0987654321",
+					Object: &api.Any{Any: *n1},
+				},
+			},
+		},
+	}
+
+	_, _, err = hooks.bulkeditAction(context.TODO(), nil, nil, "key", apiintf.CreateOper, false, req)
+	if err == nil {
+		t.Fatalf("Expected Invalid method type Error!\n")
+	}
+
+	retBuf = ret.(staging.BulkEditAction)
+	if retBuf.Status.ValidationResult != staging.BufferStatus_FAILED.String() {
+		t.Fatalf("Expected FAILED Validation status")
 	}
 }

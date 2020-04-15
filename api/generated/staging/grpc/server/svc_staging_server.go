@@ -56,6 +56,7 @@ type eStagingV1Endpoints struct {
 	fnAutoLabelBuffer  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListBuffer   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateBuffer func(ctx context.Context, t interface{}) (interface{}, error)
+	fnBulkedit         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnClear            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnCommit           func(ctx context.Context, t interface{}) (interface{}, error)
 
@@ -195,6 +196,15 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsStagingV1.fnAutoUpdateBuffer = srv.AddMethod("AutoUpdateBuffer",
 			apisrvpkg.NewMethod(srv, pkgMessages["staging.Buffer"], pkgMessages["staging.Buffer"], "staging", "AutoUpdateBuffer")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsStagingV1.fnBulkedit = srv.AddMethod("Bulkedit",
+			apisrvpkg.NewMethod(srv, pkgMessages["staging.BulkEditAction"], pkgMessages["staging.BulkEditAction"], "staging", "Bulkedit")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(staging.BulkEditAction)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "staging/v1/tenant/", in.Tenant, "/buffers/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnClear = srv.AddMethod("Clear",
@@ -419,6 +429,14 @@ func (e *eStagingV1Endpoints) AutoUpdateBuffer(ctx context.Context, t staging.Bu
 		return r.(staging.Buffer), err
 	}
 	return staging.Buffer{}, err
+
+}
+func (e *eStagingV1Endpoints) Bulkedit(ctx context.Context, t staging.BulkEditAction) (staging.BulkEditAction, error) {
+	r, err := e.fnBulkedit(ctx, t)
+	if err == nil {
+		return r.(staging.BulkEditAction), err
+	}
+	return staging.BulkEditAction{}, err
 
 }
 func (e *eStagingV1Endpoints) Clear(ctx context.Context, t staging.ClearAction) (staging.ClearAction, error) {

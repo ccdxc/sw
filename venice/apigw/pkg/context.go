@@ -21,6 +21,8 @@ var (
 
 type authzOperationsKey struct{}
 
+type bulkOperationsFlag struct{}
+
 // NewContextWithOperations creates a new context with requested operations
 func NewContextWithOperations(ctx context.Context, operations ...authz.Operation) context.Context {
 	return context.WithValue(ctx, authzOperationsKey{}, operations)
@@ -37,6 +39,17 @@ func AddOperationsToContext(ctx context.Context, operations ...authz.Operation) 
 	ops, _ := OperationsFromContext(ctx)
 	ops = append(ops, operations...)
 	return context.WithValue(ctx, authzOperationsKey{}, ops)
+}
+
+// AddBulkOperationsFlagToContext creates a new context with the bulkOperationsFlag set in context
+func AddBulkOperationsFlagToContext(ctx context.Context) context.Context {
+	return context.WithValue(ctx, bulkOperationsFlag{}, true)
+}
+
+// BulkOperationsFlagFromContext returns requested bulkOperations flag from context
+func BulkOperationsFlagFromContext(ctx context.Context) (bool, bool) {
+	present, ok := ctx.Value(bulkOperationsFlag{}).(bool)
+	return present, ok
 }
 
 // RequestMethodFromContext get request method from the metadata in context
