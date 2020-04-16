@@ -5,6 +5,8 @@
 #include "include/sdk/base.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "gen/proto/epoch.pb.h"
 
 #define SHARED_DATA_TYPE CSS_LOCAL
 using namespace types;
@@ -247,6 +249,7 @@ pds_ms_api_to_sdk_ret (ApiStatus api_err)
     }
     return SDK_RET_ERR;
 }
+
 ApiStatus
 pds_ms_sdk_ret_to_api_status (sdk_ret_t sdk_ret)
 {
@@ -279,3 +282,16 @@ pds_ms_api_ret_str (ApiStatus api_err)
     }
     return "Unknown error";
 }
+
+namespace pds_ms {
+
+ApiStatus fill_epoch_get_response(const EpochGetRequest *req,
+                                  EpochGetResponse *resp)
+{
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    resp->set_apistatus(API_STATUS_OK);
+    resp->set_epoch(mgmt_ctxt.state()->epoch());
+    return API_STATUS_OK;
+}
+
+} // namespace pds_ms

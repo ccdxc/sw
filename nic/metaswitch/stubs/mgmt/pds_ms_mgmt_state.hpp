@@ -21,6 +21,8 @@
 #include "gen/proto/types.pb.h"
 #include <mutex>
 #include <condition_variable>
+#include <random>
+#include <chrono>
 
 #define PDS_MOCK_MODE() \
             (mgmt_state_t::thread_context().state()->pds_mock_mode())
@@ -84,12 +86,22 @@ public:
             std::unique_lock<std::recursive_mutex> l_;
             mgmt_state_t* state_;
     };
+    
+    void gen_random(void) {
+        unsigned seed = 
+            std::chrono::system_clock::now().time_since_epoch().count();
+        std::mt19937 rand(seed);
+        epoch_ = rand();
+        PDS_TRACE_DEBUG("Using random epoch: %ld", epoch_);
+    }
 
     static void create(void) { 
         SDK_ASSERT (g_state_ == nullptr);
         g_state_ = new mgmt_state_t;
         g_response_ready_ = false;
+        g_state_->gen_random();    
     }
+
     static void destroy(void) {
         delete(g_state_); g_state_ = nullptr;
     }
@@ -124,6 +136,8 @@ public:
         return nbase_thread_;
     }
     
+    uint32_t epoch(void) { return epoch_; }
+
     bool pds_mock_mode(void) const { return pds_mock_mode_;  }
     void set_pds_mock_mode(bool val) { pds_mock_mode_ = val; }
 
@@ -202,6 +216,7 @@ private:
     static std::recursive_mutex g_state_mtx_;
     static std::condition_variable g_cv_resp_;
     static types::ApiStatus g_ms_response_;
+    uint32_t epoch_;
     bool pds_mock_mode_ = false;
     bool rr_mode_ = false;
     std::unordered_map<pds_obj_key_t, uuid_obj_uptr_t, pds_obj_key_hash> uuid_store_;

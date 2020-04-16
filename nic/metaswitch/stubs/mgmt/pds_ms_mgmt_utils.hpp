@@ -33,6 +33,7 @@ extern "C" {
 #include "gen/proto/internal_bgp.pb.h"
 #include "gen/proto/internal_evpn.pb.h"
 #include "gen/proto/internal_cp_route.pb.h"
+#include "gen/proto/epoch.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_bgp_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_evpn_utils_gen.hpp"
 #include "gen/proto/cp_test.pb.h"
@@ -278,6 +279,8 @@ NBB_VOID lim_sw_intf_fill_func (LimInterfaceSpec&    req,
                                 AMB_GEN_IPS         *mib_msg,
                                 AMB_LIM_SOFTWARE_IF *data,
                                 NBB_LONG            row_status);
+types::ApiStatus fill_epoch_get_response(const EpochGetRequest *req,
+                                         EpochGetResponse *resp);
 types::ApiStatus l2f_test_local_mac_ip_add (const CPL2fTestCreateSpec   *req,
                                             CPL2fTestResponse *resp);
 types::ApiStatus l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec   *req,

@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+// protobuf specification for getting the start epoch for the process. This will
+// only be used on the Pegasus Route Reflector
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds_ms;
+
+import "pdsa.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+// service definition
+service EpochSvc
+{
+  rpc EpochGet (EpochGetRequest) returns (EpochGetResponse) {}
+}
+
+// Epoch get request
+message EpochGetRequest {
+  option (venice.pdsaSetGlobOpts) = {
+    ActionFn: "fill_epoch_get_response"
+  };
+}
+
+// Epoch get response
+message EpochGetResponse {
+  types.ApiStatus  ApiStatus = 1;
+  uint32           epoch     = 2;
+}
+
