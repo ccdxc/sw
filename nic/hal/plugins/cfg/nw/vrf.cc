@@ -560,6 +560,16 @@ vrf_create (VrfSpec& spec, VrfResponse *rsp)
         goto end;
     }
 
+    // For Customer VRF create cpu lif and if
+    if (unlikely(g_hal_state->platform_type() == platform_type_t::PLATFORM_TYPE_HW && 
+                 vrf->vrf_type == types::VRF_TYPE_CUSTOMER)) {
+        ret = if_cpu_lif_interface_create();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to create cpu lif/if. err: {}", ret);
+            goto end;
+        }
+    }
+
     // form ctxt and call infra add
     app_ctxt.sec_prof = sec_prof;
     dhl_entry.handle  = vrf->hal_handle;
