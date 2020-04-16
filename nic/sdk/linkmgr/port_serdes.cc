@@ -631,7 +631,7 @@ serdes_ical_start_hw (uint32_t sbus_addr, port_speed_t serdes_speed)
     // 10G ICAL would take ~1s.
     // issue additional interrupts to speed up ICAL for 10G
     if (serdes_speed == port_speed_t::PORT_SPEED_10G) {
-        serdes_pre_ical_start_hw(sbus_addr);
+        // serdes_pre_ical_start_hw(sbus_addr);
     }
     avago_serdes_tune(aapl, sbus_addr, &dfe);
 

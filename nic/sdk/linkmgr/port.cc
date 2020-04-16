@@ -1026,7 +1026,7 @@ port::port_link_sm_dfe_process(void)
                             port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL);
                     set_num_dfe_ical_eye_retries(num_dfe_ical_eye_retries()+1);
                     if (num_dfe_ical_eye_retries() <
-                                     MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES) {
+                            port_ical_eye_retries()) {
                         // reset the ical complete retry counter
                         set_num_dfe_ical_cmplt_retries(0);
                         // start/retry ICAL
@@ -1986,6 +1986,16 @@ port::timers_init(void) {
 uint32_t
 port::port_max_ical_cmplt_retries (void) {
     return MAX_PORT_SERDES_DFE_ICAL_CMPLT_RETRIES;
+}
+
+uint32_t
+port::port_ical_eye_retries (void) {
+    switch (port_speed()) {
+    case port_speed_t::PORT_SPEED_10G:
+        return MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES_10G;
+    default:
+        return MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES;
+    }
 }
 
 uint32_t

@@ -22,6 +22,7 @@
 #define MAX_PORT_MAC_SYNC_RETRIES_10G               20
 #define MAX_PORT_SERDES_DFE_ICAL_CMPLT_RETRIES      10             // DFE ICAL complete
 #define MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES        3              // DFE ICAL eye values
+#define MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES_10G    10             // DFE ICAL eye values
 #define MAX_PORT_MAC_FAULTS_CHECK                   3
 #define MAX_PORT_MAC_NOFAULTS_CHECK                 3
 #define PORT_MAC_STAT_REPORT_SIZE                   1024
@@ -555,6 +556,7 @@ private:
     void port_link_sm_counters_reset(void);
     sdk_ret_t port_link_sm_retry_enabled(bool serdes_reset = true);
     uint32_t port_max_mac_sync_retries(void);
+    uint32_t port_ical_eye_retries(void);
     uint32_t port_mac_sync_ical_timeout(void);
     uint32_t port_max_ical_cmplt_retries(void);
 
