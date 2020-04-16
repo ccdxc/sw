@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	apierrors "github.com/pensando/sw/api/errors"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/utils/log"
@@ -37,10 +38,23 @@ func (fwp *firewallTestGroup) setupTest() {
 		fwp.authAgentClient, err = utils.GetNodeAuthTokenHTTPClient(ctx, ts.tu.APIGwAddr, []string{"*"})
 		return err
 	}, 30, 5).Should(BeNil(), "Failed to get node auth token")
+	snIf := ts.tu.APIClient.ClusterV1().DistributedServiceCard()
+	validateCluster()
+	ctx := context.Background()
+	validateNICHealth(ctx, snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
 }
 
 // teardownTest cleans up test suite
 func (fwp *firewallTestGroup) teardownTest() {
+	for _, nicContainer := range ts.tu.NaplesNodes {
+		By(fmt.Sprintf("teardownTest UnPausing NIC container %s", nicContainer))
+		ts.tu.LocalCommandOutput(fmt.Sprintf("docker unpause %s", nicContainer))
+		time.Sleep(time.Second)
+	}
+	ctx := context.Background()
+	snIf := ts.tu.APIClient.ClusterV1().DistributedServiceCard()
+	validateCluster()
+	validateNICHealth(ctx, snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
 	defaultFwp := security.FirewallProfile{
 		ObjectMeta: api.ObjectMeta{
 			Name:   "default",
@@ -51,25 +65,6 @@ func (fwp *firewallTestGroup) teardownTest() {
 	_, err := fwp.suite.restSvc.SecurityV1().FirewallProfile().Update(fwp.suite.loggedInCtx, &defaultFwp)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	time.Sleep(time.Second)
-	Eventually(func() bool {
-		fwpStat, err := fwp.suite.restSvc.SecurityV1().FirewallProfile().Get(fwp.suite.loggedInCtx, &defaultFwp.ObjectMeta)
-		Expect(err).ShouldNot(HaveOccurred())
-		if fwpStat.Status.PropagationStatus.Pending != 0 {
-			log.Errorf("FirewallProfile Status rsg %v", fwpStat.Status)
-			return false
-		}
-		return true
-	}, 30, 1).Should(BeTrue(), "Failed to Propagate the FirewallProfile update")
-}
-
-// teardown container tests
-func (fwp *firewallTestGroup) dscTeardownTest() {
-	for _, nicContainer := range ts.tu.NaplesNodes {
-		By(fmt.Sprintf("Teardown Unpausing NIC container %s", nicContainer))
-		ts.tu.LocalCommandOutput(fmt.Sprintf("docker unpause %s", nicContainer))
-	}
-	fwp.teardownTest()
 }
 
 // test to check for proper propagation status for unreachable dscs
@@ -82,6 +77,9 @@ func (fwp *firewallTestGroup) testFirewallPendingPropagation() {
 	}
 	updateFwp.Defaults("")
 	numNaples := int32(len(ts.tu.NaplesNodes))
+	if numNaples == 0 {
+		Skip("No DSC's found, skipping propagation test")
+	}
 	for _, nicContainer := range ts.tu.NaplesNodes {
 		By(fmt.Sprintf("Pausing NIC container %s", nicContainer))
 		ts.tu.LocalCommandOutput(fmt.Sprintf("docker pause %s", nicContainer))
@@ -135,6 +133,10 @@ func (fwp *firewallTestGroup) testFirewallDefaultCheck() {
 //
 // test to update firewallprofile
 func (fwp *firewallTestGroup) testFirewallUpdate() {
+	numNaples := int32(len(ts.tu.NaplesNodes))
+	if numNaples == 0 {
+		Skip("No DSC's found, skipping propagation test")
+	}
 	updateFwp := security.FirewallProfile{
 		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
 		ObjectMeta: api.ObjectMeta{
@@ -174,7 +176,7 @@ func (fwp *firewallTestGroup) testFirewallUpdate() {
 			return false
 		}
 		return true
-	}, 30, 1).Should(BeTrue(), "Failed to Propagate the FirewallProfile update")
+	}, 120, 1).Should(BeTrue(), "Failed to Propagate the FirewallProfile update")
 
 }
 
@@ -337,17 +339,9 @@ var _ = Describe("firewall", func() {
 
 		It("FirewallProfile update should succeed", firewallTg.testFirewallUpdate)
 
-		// test cleanup
-		AfterEach(firewallTg.teardownTest)
-	})
-	Context("Firewall Profile propagation tests", func() {
-		// setup
-		BeforeEach(firewallTg.setupTest)
-
-		// test cases
 		It("FirewallProfile pending dsc should report proper propagation", firewallTg.testFirewallPendingPropagation)
 
 		// test cleanup
-		AfterEach(firewallTg.dscTeardownTest)
+		AfterEach(firewallTg.teardownTest)
 	})
 })

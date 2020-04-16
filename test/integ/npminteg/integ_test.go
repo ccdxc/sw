@@ -324,6 +324,7 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 	it.resolverClient.Stop()
 	it.resolverClient = nil
 	testutils.CleanupIntegTLSProvider()
+	tsdb.Cleanup()
 	it.fakehal.Stop()
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 
