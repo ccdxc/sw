@@ -75,7 +75,7 @@ def acquire_dhcp_ips(workload_pairs):
     return
 
 def Setup(tc):
-    tc.opers = None
+    tc.opers = []
     if hasattr(tc.iterators, 'oper'):
         tc.opers = __getOperations(tc.iterators.oper)
         tc.selected_objs = config_api.SetupConfigObjects(tc.iterators.objtype)
