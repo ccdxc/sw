@@ -1,13 +1,17 @@
 #! /usr/bin/python3
 
 import yaml
+import json
 import iota.harness.api as api
 import iota.test.apulu.utils.pdsctl as pdsctl
 import iota.test.apulu.config.api as config_api
 import iota.test.apulu.config.add_routes as add_routes
 from apollo.config.agent.api import ObjectTypes as APIObjTypes
+
+#Following come from dol/infra
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.lmapping as lmap
+import apollo.config.objects.rmapping as rmap
 
 def GetLearnMACObjects(node):
     return list(config_api.GetObjClient('vnic').Objects(node))
@@ -118,6 +122,98 @@ def ReadLearnIPOperData(node, lmapping):
         data = None
         return True, None
 
+def GetBgpNbrL2VPNEntries(json_out):
+    retList = []
+    try:
+        data = json.loads(json_out)
+    except Exception as e:
+        api.Logger.error("No valid L2VPN entries found in %s"%(json_out))
+        api.Logger.error(str(e))
+        return retList
+
+    if "spec" in data:
+        objects = data['spec']
+    else:
+        objects = [data]
+
+    for obj in objects:
+        for entry in obj:
+            if entry['Spec']['Afi'] == "L2VPN":
+                #api.Logger.info("PeerAddr: %s"%(entry['Spec']['PeerAddr']))
+                retList.append(entry['Spec']['PeerAddr'])
+
+    return retList
+
+def ValidateBGPPeerNbrStatus(json_out, l2vpn_nbr_list):
+    try:
+        data = json.loads(json_out)
+    except Exception as e:
+        api.Logger.error("No valid BGP Nbr's found in %s"%(json_out))
+        api.Logger.error(str(e))
+        return False
+
+    if "spec" in data:
+        objects = data['spec']
+    else:
+        objects = [data]
+
+    total_entry_found = 0
+    for obj in objects:
+        for entry in obj:
+            for l2vpn_nbr in l2vpn_nbr_list:
+                if entry['Spec']['PeerAddr'] == l2vpn_nbr and \
+                        entry['Status']['Status'] == "ESTABLISHED":
+                    total_entry_found += 1
+                    api.Logger.info("PeerAddr: %s, Status: %s"%(\
+                         entry['Spec']['PeerAddr'], entry['Status']['Status']))
+
+    # check for total entries in established state
+    if total_entry_found != len(l2vpn_nbr_list):
+        api.Logger.error("Not all BGP Nbr's in Established state, "
+                         "total_entry_found: %s, total L2VPN entries: %s"%(\
+                         total_entry_found, len(l2vpn_nbr_list)))
+        return False
+    return True
+
+def ValidateBGPOverlayNeighborship(node):
+    if api.GlobalOptions.dryrun:
+        return True
+    status_ok, json_output = pdsctl.ExecutePdsctlShowCommand(node,
+            "bgp peers-af", "--json", yaml=False)
+    if not status_ok:
+        api.Logger.error(" - ERROR: pdstcl show bgp peers-af failed")
+        return False
+    #api.Logger.info("pdstcl show output: %s" % (json_output))
+
+    retList = GetBgpNbrL2VPNEntries(json_output)
+    if not len(retList):
+        api.Logger.error(" - ERROR: No L2VPN entries found in show bgp peers-af")
+        return False
+    api.Logger.info("L2VPN Neighbors : %s" % (retList))
+
+    status_ok, json_output = pdsctl.ExecutePdsctlShowCommand(node,
+            "bgp peers", "--json", yaml=False)
+    if not status_ok:
+        api.Logger.error(" - ERROR: pdstcl show bgp peers failed")
+        return False
+    #api.Logger.info("pdstcl show output: %s" % (json_output))
+
+    if not ValidateBGPPeerNbrStatus(json_output, retList):
+        api.Logger.error(" - ERROR: Mismatch in BGP Peer status")
+        return False
+
+    return True
+
+def ValidateBGPOverlayNeighborshipInfo():
+    if api.GlobalOptions.dryrun:
+        return True
+    nodes = api.GetNaplesHostnames()
+    for node in nodes:
+        if not ValidateBGPOverlayNeighborship(node):
+            api.Logger.error("Failed in BGP Neighborship validation for node: %s" %(node))
+            return False
+    return True
+
 def ValidateLearnInfo(node=None):
     if node is None:
         nodes = api.GetNaplesHostnames()
@@ -130,6 +226,17 @@ def ValidateLearnInfo(node=None):
         if not config_api.GetObjClient('lmapping').ValidateLearnIPInfo(n):
             api.Logger.error("IP validation failed on node %s" %n)
             return False
+
+    remote_nodes = api.GetNaplesHostnames()
+    for remote_node in remote_nodes:
+        for n in nodes:
+            if n == remote_node:
+                continue
+            if not config_api.GetObjClient('rmapping').\
+                      ValidateLearnIPWithRMapInfo(remote_node, node):
+                api.Logger.error("RMap validation failed on node %s" %remote_node)
+                return False
+
     api.Logger.verbose("MAC and IP validation successful")
     return True
 

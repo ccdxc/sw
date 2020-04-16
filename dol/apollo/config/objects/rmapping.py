@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+from collections import defaultdict
 
 from infra.common.logging import logger
 
@@ -175,7 +176,11 @@ class RemoteMappingObject(base.ConfigObjectBase):
 class RemoteMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.RMAPPING, Resmgr.MAX_RMAPPING)
+        self.__rmap_objs = defaultdict(dict)
         return
+
+    def GetRMapObjByEpKey(self, node, ip, vpcid):
+        return self.__rmap_objs[node].get((ip, vpcid), None)
 
     def IsReadSupported(self):
         if utils.IsPipelineApulu():
@@ -183,8 +188,66 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
         # TODO: reads are failing for apollo & artemis
         return False
 
-    def PdsctlRead(self, node):
-        # pdsctl show not supported for remote mapping
+    def ValidateRemoteMappingInfo(self, node, ip_str, vpc_uuid, mac, subnet_uuid):
+        # verifying if the info learnt is expected from the dol object
+        rmap_obj = self.GetRMapObjByEpKey(node, ip_str, vpc_uuid)
+        if rmap_obj == None:
+            logger.error(f"rmap not found in client object store "
+                         "in {node} for key {vpc_uuid_str} {ip_str}")
+            return False
+
+        vpc_uuid_str = utils.List2UuidStr(vpc_uuid)
+        mac_str = utils.Int2MacStr(mac)
+
+        # verifying if Remote mapping is present for learnt IP from a peer node.
+        args = " --type l3"
+        args = args + " | grep " + vpc_uuid_str + " | grep " + ip_str + " | grep " + mac_str
+        ret, op = utils.RunPdsctlShowCmd(node, "mapping internal remote", args, False)
+        if not ret:
+            logger.error(f"show mapping internal remote failed for "
+                         "VPC id:{vpc_uuid_str} IP:{ip_str} MAC:{mac_str}")
+            return False
+
+        cmdop = op.split('\n')
+        if not len(cmdop):
+            logger.error("No (%s) entries found in rmap show VPC id:%s, IP:%s MAC:%s"%(
+                         len(cmdop), vpc_uuid_str, ip_str, mac_str))
+            return False
+
+        logger.info("Found (%s) RMAP entry for learn VPC:%s IP:%s MAC:%s Subnet:%s "%(
+                len(cmdop), vpc_uuid_str, ip_str, mac_str, utils.List2UuidStr(subnet_uuid)))
+        return True
+
+    def VerifyLearntIpEntriesWithRemoteMapping(self, node, peer_node, ret, cli_op):
+        if utils.IsDryRun(): return True
+        if not ret:
+            logger.error("pdsctl show learn ip cmd failed for %s"%peer_node)
+            return False
+        # split output per object
+        ip_entries = cli_op.split("---")
+        for ip in ip_entries:
+            yamlOp = utils.LoadYaml(ip)
+            if not yamlOp:
+                continue
+            ip = yamlOp['key']['ipaddr']['v4orv6']['v4addr']
+            ip_str = utils.Int2IPAddrStr(ip)
+            vpc_uuid = utils.GetYamlSpecAttr(yamlOp['key'], 'vpcid')
+            subnet_uuid = utils.GetYamlSpecAttr(yamlOp['macinfo'], 'subnetid')
+            mac = yamlOp['macinfo']['macaddr']
+
+            if not self.ValidateRemoteMappingInfo(node, ip_str,
+                                       vpc_uuid, mac, subnet_uuid):
+                return False
+        return True
+
+    def ValidateLearnIPWithRMapInfo(self, node, peer_node):
+        if not EzAccessStoreClient[node].IsDeviceLearningEnabled():
+            return True
+        # verify learn db against store
+        ret, cli_op = utils.RunPdsctlShowCmd(peer_node, "learn ip", None)
+        if not self.VerifyLearntIpEntriesWithRemoteMapping(node, peer_node, ret, cli_op):
+            logger.error(f"learn ip object validation failed {ret} for remote {node} {cli_op}")
+            return False
         return True
 
     def GenerateObj(self, node, parent, rmap_dict, ipversion, count=0, l2=False):
@@ -196,6 +259,8 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
         tunobj = tunnelAllocator.rrnext()
         obj = RemoteMappingObject(node, parent, rmap_dict, tunobj, ipversion, count, l2)
         self.Objs[node].update({obj.MappingId: obj})
+        if not l2:
+            self.__rmap_objs[node].update({(obj.IP, obj.SUBNET.VPC.UUID.GetUuid()): obj})
         return
 
     def GenerateObjects(self, node, parent, subnet_spec_obj):

@@ -471,12 +471,14 @@ class VnicObjectClient(base.ConfigClientBase):
 
                 logger.info("Found VNIC %s entry for learn MAC MAC:%s, Subnet:%s, VNIC:%s "%(
                         utils.List2UuidStr(utils.GetYamlSpecAttr(vnic_spec, 'id')),
-                        utils.Int2MacStr(vnic_obj.MACAddr.getnum()),
-                        utils.List2UuidStr(vnic_obj.SUBNET.UUID.GetUuid()), vnic_uuid_str))
+                        vnic_obj.MACAddr.get(), vnic_obj.SUBNET.UUID, vnic_uuid_str))
         return True
 
     def ValidateLearnMACInfo(self, node):
+        if not EzAccessStoreClient[node].IsDeviceLearningEnabled():
+            return True
         logger.info(f"Reading VNIC & learn mac objects from {node} ")
+        # verify learn db against store
         ret, cli_op = utils.RunPdsctlShowCmd(node, "learn mac", None)
         if not self.ValidateLearntMacEntries(node, ret, cli_op):
             logger.error(f"learn mac object validation failed {ret} for {node} {cli_op}")

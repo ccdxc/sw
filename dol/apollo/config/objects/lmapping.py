@@ -212,7 +212,10 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         return True
 
     def ValidateLearnIPInfo(self, node):
+        if not EzAccessStoreClient[node].IsDeviceLearningEnabled():
+            return True
         logger.info(f"Reading LMAP & learn ip objects from {node} ")
+        # verify learn db against store
         ret, cli_op = utils.RunPdsctlShowCmd(node, "learn ip", None)
         if not self.VerifyLearntIpEntries(node, ret, cli_op):
             logger.error(f"learn ip object validation failed {ret} for {node} {cli_op}")

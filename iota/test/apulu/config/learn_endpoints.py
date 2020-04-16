@@ -39,6 +39,10 @@ def VerifyLearn():
             api.Logger.error("Failed to execute show learn statistics at node %s : %s" %(node, resp))
             return api.types.status.FAILURE
 
+        if not learn_utils.ValidateBGPOverlayNeighborship(node):
+            api.Logger.error("Failed in BGP Neighborship validation for node: %s" %node)
+            return api.types.status.FAILURE
+
     return api.types.status.SUCCESS
 
 def Main(args):
