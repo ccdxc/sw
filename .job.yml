@@ -592,8 +592,9 @@ dependencies:
     - reference: api
     - reference: test/ci_targets/e2e
     - reference: test/ci_targets/e2erollout
+      exclude_dirs: ["ui"]
     - reference: test/ci_targets/cloud-e2e
-      exclude_dirs: ["ctrler/orchhub"]
+      exclude_dirs: ["ctrler/orchhub", "ui"]
     - reference: iota/test/venice
       exclude_dirs: ["ui"]
   venice/ctrler/orchhub:
