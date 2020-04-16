@@ -557,6 +557,10 @@
 //::                        if pad_to_512 % 128 != 0:
 //::                            ftl_store_field(data_fields_dict, data_fields_list, '__pad_to_512b', pad_to_512 % 128, '')
 //::                        #endif
+//::                    elif is_table_pad_64(table, pipeline):
+//::                        if pad_to_512 % 64 != 0:
+//::                            ftl_store_field(data_fields_dict, data_fields_list, '__pad_to_512b', pad_to_512 % 64, '')
+//::                        #endif
 //::                    elif is_table_pad_32(table, pipeline):
 //::                        if pad_to_512 % 32 != 0:
 //::                            ftl_store_field(data_fields_dict, data_fields_list, '__pad_to_512b', pad_to_512 % 32, '')

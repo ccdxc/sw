@@ -111,6 +111,12 @@ def is_table_pad_128(table, pipeline):
     return False
 
 # TODO use pragmas
+def is_table_pad_64(table, pipeline):
+    if pipeline == 'apulu' and (('local_mapping_tag' in str(table)) or ('mapping_tag' in str(table))):
+        return True
+    return False
+
+# TODO use pragmas
 def is_table_pad_32(table, pipeline):
     if pipeline == 'athena' and ('conntrack' in str(table)):
         return True
