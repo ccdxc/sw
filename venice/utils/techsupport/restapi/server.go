@@ -61,8 +61,9 @@ func (s *RestServer) Start() {
 		diagnosticsRouter := mux.NewRouter()
 		diagnosticsRouter.HandleFunc("/api/diagnostics/", s.HandleDiagnostics).Methods("POST")
 		diagnosticsListener, err := net.Listen("tcp", s.diagnosticsURL)
-		if err != nil {
-			log.Errorf("Failed to create diagnostics listener")
+		if err != nil || diagnosticsListener == nil {
+			log.Errorf("Failed to create diagnostics listener. Err : %v", err)
+			return
 		}
 		s.diagnosticsListener = diagnosticsListener
 

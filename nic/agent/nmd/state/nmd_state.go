@@ -406,7 +406,13 @@ func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
 // When the instance is admitted to a cluster, it receives a corresponding
 // certificate signed by CMD
 func (n *NMD) GenClusterKeyPair() (*keymgr.KeyPair, error) {
-	return n.tlsProvider.CreateClientKeyPair(keymgr.ECDSA384)
+	if n.keyPair != nil {
+		return n.keyPair, nil
+	}
+
+	keypair, err := n.tlsProvider.CreateClientKeyPair(keymgr.ECDSA384)
+	n.keyPair = keypair
+	return n.keyPair, err
 }
 
 // objectKey returns object key from object meta

@@ -87,7 +87,7 @@
             "service-name": "delphi"
         }
     ],
-    "flags": [],
+    "flags": ["restartable", "save_stdout_on_crash"],
     "timeout": 0.0
 },
 {

@@ -21,6 +21,7 @@ import (
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/revproxy"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
@@ -71,6 +72,7 @@ type NMD struct {
 	remoteCertsURLs []string                          // URLs where local process cert request are forwarder
 	certsProxy      *certsproxy.CertsProxy            // the CertsProxy instance
 	tlsProvider     *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
+	keyPair         *keymgr.KeyPair
 	// Rollout related stuff
 	ro           nmd.NaplesRollout
 	objectMeta   api.ObjectMeta

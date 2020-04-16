@@ -404,6 +404,13 @@ func (n *NMD) PostStatusToAgent() (err error) {
 func (n *NMD) handleNetworkModeTransition() error {
 	log.Info("Handling network mode transition")
 
+	// If we reach here, then either the user has triggered a mode transition using penctl
+	// with tokens, or the DSC has not yet been admitted.
+	// Stop all registration requests, if any, already in progress
+	log.Info("Stopping any registration requests in progress")
+	if n.GetRegStatus() {
+	}
+
 	spec := n.config.Spec
 	n.stateMachine = NewNMDStateMachine()
 	if err := n.reconcileIPClient(); err != nil {
