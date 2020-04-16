@@ -109,7 +109,8 @@
              (click)="onAlertNumberClick('info')" [matTooltip]="'Infomational Alerts'"
              *ngIf="(alertNumbers.info>0 && alertNumbers.info !== alerts.length)">
           {{ alertNumbers.info }}</div>
-        <app-timerange fxFlex="nogrow" [selectedTimeRange]="alertsSelectedTimeRange"
+        <app-timerange #timeRangeComponent fxFlex="nogrow"
+                       [selectedTimeRange]="alertsSelectedTimeRange"
                        (timeRange)="setAlertsTimeRange($event)"></app-timerange>
       </div>
     </app-tableheader>

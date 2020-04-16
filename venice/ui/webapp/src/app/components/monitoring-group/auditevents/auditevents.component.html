@@ -5,14 +5,14 @@
        class="archive-status-outer-container">
     <div [ngSwitch]="requestStatus">
       <div *ngSwitchCase="'running'" class="archive-status-container">
-        Archive Request "{{requestName}}" is being PROCESSED. Please wait for the request to
+        Archive Request "{{requestName}}" is {{requestStatus}}. Please wait for the request to
         complete.
         <!-- TODO: Hiding Cancel for now. Currently, CANCEL API is not ready; no cancel permission -->
         <!-- or click <span class="action-clickable"
               (click)="onCancelRecord($event)">Cancel</span> to cancel the request! -->
       </div>
       <div *ngSwitchCase="'completed'" class="archive-status-container">
-        Archive Request "{{requestName}}" is PROCESSED. Click <a class="action-clickable"
+        Archive Request "{{requestName}}" is {{requestStatus}}. Click <a class="action-clickable"
            (click)="$event.stopPropagation()"
            href="{{firstElem.status.uri !== undefined || firstElem.status.uri !== null ? firstElem.status.uri : ''}}">Download</a>
         to download the file!

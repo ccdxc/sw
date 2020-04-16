@@ -18,6 +18,8 @@ import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alerts
 import { IApiStatus } from '@sdk/v1/models/generated/search';
 import { Animations } from '@app/animations';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { TimeRangeComponent } from '../../timerange/timerange.component';
+import { ValidationErrors } from '@angular/forms';
 
 @Component({
   selector: 'app-alertstable',
@@ -27,7 +29,7 @@ import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
   encapsulation: ViewEncapsulation.None
 })
 export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert, MonitoringAlert> implements OnChanges, OnDestroy {
-
+  @ViewChild('timeRangeComponent') timeRangeComponent: TimeRangeComponent;
   isTabComponent: boolean;
   disableTableWhenRowExpanded: boolean;
   exportFilename: string = 'PSM-alerts';
@@ -148,6 +150,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     this.alertSubscription = this.monitoringService.WatchAlert(this.alertQuery).subscribe(
       response => {
         this.alertsEventUtility.processEvents(response);
+        this.dataObjects = Utility.getLodash().cloneDeep(this.dataObjects);
         // Reset counters
         Object.keys(MonitoringAlertStatus_severity).forEach(severity => {
           this.alertNumbers[severity] = 0;
@@ -312,10 +315,19 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     const subscription = observable.subscribe(
       response => {
         this._controllerService.invokeSuccessToaster(summary, msg);
+        this.invokeTimeRangeValidator(); // Gets new time and update table accordingly. Avoids using Stale Time Query
       },
       this._controllerService.restErrorHandler(summary + ' Failed')
     );
     this.subscriptions.push(subscription);
+  }
+
+  invokeTimeRangeValidator() {
+    const timeValidate = this.timeRangeComponent.timeRangeGroupValidator();
+    const err: ValidationErrors = timeValidate(this.timeRangeComponent.timeFormGroup);
+    if (err !== null) {
+      this._controllerService.invokeErrorToaster('Time Range Error', err.message);
+    }
   }
 
   buildUpdateAlertStateObservable(alert: MonitoringAlert, newState: MonitoringAlertSpec_state): Observable<any> {
@@ -363,6 +375,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
       if (isAllOK) {
         this._controllerService.invokeSuccessToaster(summary, msg);
         this.tableContainer.selectedDataObjects = []; // clear this.tableContainer.selectedDataObjects
+        this.invokeTimeRangeValidator();
       } else {
         const error = Utility.joinErrors(results);
         this._controllerService.invokeRESTErrorToaster(summary, error);
