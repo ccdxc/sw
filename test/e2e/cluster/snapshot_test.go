@@ -307,17 +307,23 @@ var _ = Describe("Config SnapShot and restore", func() {
 				}, 60, 1).Should(BeTrue(), "Restore did not reach success in time")
 
 				Eventually(func() error {
+					retStr := fmt.Sprintf("Expecting mirror sessions:\n")
 					for i := 0; i < statemgr.MaxMirrorSessions; i++ {
 						ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
-						By(fmt.Sprintf("GET MirrorSession %v", ms.Name))
 						mc, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
 						if err != nil {
+							retStr = retStr + fmt.Sprintf("GET MirrorSession %v failed %v", ms.Name, err)
+							By(fmt.Sprintf("%s\n", retStr))
 							return err
 						}
 						if mc.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() {
+							retStr = retStr + fmt.Sprintf("Mirror session %v is in %s State\n", ms.Name, mc.Status.ScheduleState)
+							By(fmt.Sprintf("%s\n", retStr))
 							return fmt.Errorf("%s state: %v", ms.Name, mc.Status.ScheduleState)
 						}
+						retStr = retStr + fmt.Sprintf("Mirror session %v is in Active State\n", ms.Name)
 					}
+					By(fmt.Sprintf("%s\n", retStr))
 					return nil
 				}, 180, 1).Should(BeNil(), "mirror session restore failed")
 
