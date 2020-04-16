@@ -29,14 +29,14 @@ NBB_ULONG get_initial_mac_address(NBB_BYTE (&initial_mac)[ATG_L2_MAC_ADDR_LEN],
                                   NBB_ULONG suggested_number)
 {
     std::string value;
-    auto ret = sdk::platform::readFruKey(NUMMACADDR_KEY, value);
+    auto ret = sdk::platform::readfrukey(BOARD_NUMMACADDR_KEY, value);
     if (ret == -1) {
         PDS_TRACE_ERR("Could not read FRU num-mac-address");
         return 0;
     }
     NBB_ULONG total_num_macs = atoi (value.c_str());
 
-    ret = sdk::platform::readFruKey(MACADDRESS_KEY, value);
+    ret = sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, value);
     if (ret == -1) {
         PDS_TRACE_ERR("Could not read FRU mac-address");
         return 0;

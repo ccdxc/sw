@@ -296,7 +296,7 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
         regs->info.asic_rev = (sta_ver >> 4) & 0xfff;
 #ifdef __aarch64__
         std::string sn;
-        sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
+        sdk::platform::readfrukey(BOARD_SERIALNUMBER_KEY, sn);
         strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
 
         boost::property_tree::ptree ver;
@@ -467,7 +467,7 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
         regs->info.asic_rev = (sta_ver >> 4) & 0xfff;
 #ifdef __aarch64__
         std::string sn;
-        sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
+        sdk::platform::readfrukey(BOARD_SERIALNUMBER_KEY, sn);
         strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
 
         boost::property_tree::ptree ver;

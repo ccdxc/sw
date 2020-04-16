@@ -322,7 +322,7 @@ NvmeLif::CmdHandler(void *req,
             ctrlr_data.ssvid = PCI_VENDOR_ID_PENSANDO;
 
             std::string sn;
-            sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
+            sdk::platform::readfrukey(BOARD_SERIALNUMBER_KEY, sn);
             strncpy0((char *)ctrlr_data.sn, sn.c_str(), sizeof(ctrlr_data.sn));
 
             strncpy0((char *)ctrlr_data.mn, "PDS-NVMEDEV1", sizeof(ctrlr_data.mn));

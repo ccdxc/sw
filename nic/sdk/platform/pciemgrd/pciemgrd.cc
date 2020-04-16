@@ -604,16 +604,16 @@ pciemgrd_vpd_params(pciemgrenv_t *pme)
 
 #define SFRU(KEY, field) \
     do { \
-        if (sdk::platform::readFruKey(KEY, s) == 0) {   \
+        if (sdk::platform::readfrukey(KEY, s) == 0) {   \
             S(field, s.c_str());\
         } \
     } while (0)
 
-    SFRU(PRODUCTNAME_KEY, id);
-    SFRU(PARTNUM_KEY, partnum);
-    SFRU(SERIALNUMBER_KEY, serialnum);
-    SFRU(MANUFACTURERDATE_KEY, mfgdate);
-    SFRU(ENGCHANGELEVEL_KEY, engdate); // XXX HPE wants a date
+    SFRU(BOARD_PRODUCTNAME_KEY, id);
+    SFRU(BOARD_PARTNUM_KEY, partnum);
+    SFRU(BOARD_SERIALNUMBER_KEY, serialnum);
+    SFRU(BOARD_MANUFACTURERDATE_KEY, mfgdate);
+    SFRU(BOARD_ENGCHANGELEVEL_KEY, engdate); // XXX HPE wants a date
 #undef SFRU
 
     boost::property_tree::ptree ver;

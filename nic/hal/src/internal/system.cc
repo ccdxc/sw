@@ -488,7 +488,7 @@ system_uuid_get (SystemResponse *rsp)
 
     rsp->set_api_status(types::API_STATUS_OK);
     if (hal::g_hal_cfg.platform == platform_type_t::PLATFORM_TYPE_HW) {
-        sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+        sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_str);
         rsp->set_uuid(mac_str);
     } else {
         uuid = getenv("SYSUUID");

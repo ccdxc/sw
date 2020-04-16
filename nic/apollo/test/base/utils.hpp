@@ -260,7 +260,7 @@ uuid_from_objid (uint32_t id)
     MAC_UINT64_TO_ADDR(system_mac, PENSANDO_NIC_MAC);
 #else
     std::string   mac_str;
-    sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+    sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_str);
     mac_str_to_addr((char *)mac_str.c_str(), system_mac);
 #endif
     memcpy(&key.id[PDS_UUID_SYSTEM_MAC_OFFSET], system_mac, ETH_ADDR_LEN);

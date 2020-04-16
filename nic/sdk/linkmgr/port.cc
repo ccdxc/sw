@@ -2052,7 +2052,7 @@ sdk_ret_t
 port::phy_port_mac_addr(uint32_t phy_port, mac_addr_t mac_addr) {
     std::string   mac_addr_str;
 
-    if (sdk::platform::readFruKey(MACADDRESS_KEY, mac_addr_str) == -1) {
+    if (sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_addr_str) == -1) {
         return SDK_RET_ERR;
     }
 

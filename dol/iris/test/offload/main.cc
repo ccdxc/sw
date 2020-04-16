@@ -380,10 +380,10 @@ common_setup(void)
                 sdk::lib::PAL_RET_OK);
 #endif
     fru_info.clear();
-    sdk::platform::readFruKey(MANUFACTURER_KEY, fru_info);
+    sdk::platform::readfrukey(BOARD_MANUFACTURER_KEY, fru_info);
     product_info_vec.push_back(fru_info);
     fru_info.clear();
-    sdk::platform::readFruKey(PRODUCTNAME_KEY, fru_info);
+    sdk::platform::readfrukey(BOARD_PRODUCTNAME_KEY, fru_info);
     product_info_vec.push_back(fru_info);
     product_info_vec.push_back("Implementation: hardware");
 #endif

@@ -2107,7 +2107,7 @@ void CmdHndler::GetPackageUUID(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     //FIXME: As of now ignoring the state machine for this cmd
 
     //TODO: Implement the logic here
-    sdk::platform::readFruKey(SERIALNUMBER_KEY, serial_num);
+    sdk::platform::readfrukey(BOARD_SERIALNUMBER_KEY, serial_num);
     strncpy((char*)resp.uuid, serial_num.c_str(), sizeof(resp.uuid));
     resp.rsp.NcsiHdr.type = ncsi_cmd_resp_opcode(CMD_GET_PACKAGE_UUID);
     resp.rsp.NcsiHdr.length = htons(NCSI_GET_PKG_UUID_RSP_PAYLOAD_LEN);

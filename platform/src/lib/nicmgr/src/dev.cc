@@ -288,14 +288,14 @@ read_fru_mac_base(uint64_t &mac_base, uint32_t &mac_count)
 {
     string tmp_str;
 
-    if (sdk::platform::readFruKey(MACADDRESS_KEY, tmp_str) == 0) {
+    if (sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, tmp_str) == 0) {
         mac_from_str(&mac_base, tmp_str.c_str());
     } else {
         NIC_LOG_ERR("Failed to read MAC address from FRU");
         return false;
     }
 
-    if (sdk::platform::readFruKey(NUMMACADDR_KEY, tmp_str) == 0) {
+    if (sdk::platform::readfrukey(BOARD_NUMMACADDR_KEY, tmp_str) == 0) {
         mac_count = std::stoi(tmp_str);
     } else {
         NIC_LOG_ERR("Failed to read MAC address count from FRU");

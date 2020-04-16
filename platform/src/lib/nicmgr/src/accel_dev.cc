@@ -368,7 +368,7 @@ AccelDev::_DevInfoRegsInit(void)
     regs->info.base.asic_type = HW_ASIC_TYPE_GET(sta_ver);
     regs->info.base.asic_rev  = HW_ASIC_REV_GET(sta_ver);
     if (platform_is_hw(pd->platform_)) {
-        sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
+        sdk::platform::readfrukey(BOARD_SERIALNUMBER_KEY, sn);
         strncpy0(regs->info.base.serial_num, sn.c_str(),
                  sizeof(regs->info.base.serial_num));
 

@@ -781,7 +781,7 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name,
             std::string part_num(32, '\0');
             std::string part_id;
 
-            if (sdk::platform::readFruKey(PARTNUM_KEY, part_num) == 0) {
+            if (sdk::platform::readfrukey(BOARD_PARTNUM_KEY, part_num) == 0) {
                 // Pensando has part numbers starting with prefix
                 // 68-. The check is to find out which catalog file
                 // to use. Catalog file is named either by using

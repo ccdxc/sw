@@ -169,7 +169,7 @@ system_mac_init (void)
     mac_addr_t        mac_addr;
 
     if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
-        sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+        sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_str);
         mac_str_to_addr((char *)mac_str.c_str(), mac_addr);
         api::g_pds_state.set_system_mac(mac_addr);
     } else {

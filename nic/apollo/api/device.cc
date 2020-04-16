@@ -160,7 +160,7 @@ device_entry::fill_status_(pds_device_status_t *status) {
     std::string   mem_str;
 
     // fill fru mac in status
-    sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+    sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_str);
     mac_str_to_addr((char *)mac_str.c_str(), status->fru_mac);
 
     mem_str = api::g_pds_state.catalogue()->memory_capacity_str();

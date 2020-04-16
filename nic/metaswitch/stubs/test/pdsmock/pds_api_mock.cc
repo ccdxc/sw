@@ -557,14 +557,14 @@ sdk_ret_t pds_teardown() {
 namespace sdk {
 namespace platform {
 
-int readFruKey(std::string key, std::string &value)
+int readfrukey(std::string key, std::string &value)
 {
     // Fill some dummy values
-    if (key == NUMMACADDR_KEY) {
+    if (key == BOARD_NUMMACADDR_KEY) {
         value = "25";
         return 0;
     }
-    if (key == MACADDRESS_KEY) {
+    if (key == BOARD_MACADDRESS_KEY) {
         value = "00:00:cd:00:00:01";
         return 0;
     }
