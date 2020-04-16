@@ -310,6 +310,8 @@ dependencies:
       exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/linux
       exclude_dirs: ["test/iris/testcases/server"]
+    - reference: iota/test/standalone/precheckin/windows
+      exclude_dirs: ["test/iris/testcases/server"]
   iota/svcs:
     - reference: iota/test/standalone/precheckin/freebsd
       exclude_dirs: ["test/iris/testcases/server"]

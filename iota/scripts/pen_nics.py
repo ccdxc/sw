@@ -62,6 +62,7 @@ def __print_intfs_esx(mac_hint, intf_type):
     return exit_code
 
 
+# this function is used by linux and windows OS
 def __get_nics_output_linux():
     out = subprocess.Popen(['lshw', '-json'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, _ = out.communicate()
@@ -223,7 +224,7 @@ def __get_devices_windows(mac_hint):
             if child.get("children") is not None:
                 populateChildren(child.get("children"))
 
-    output = __get_nics_output_linux().decode('utf-8')
+    output = __get_nics_output_linux()
     entries = json.loads(output)
     children = entries["children"]
     populateChildren(children)
