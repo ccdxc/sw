@@ -15,67 +15,45 @@ namespace api {
 void
 device_feeder::init(std::string device_ip_str, std::string mac_addr_str,
                     std::string gw_ip_str, int num_device) {
-    this->device_ip_str = device_ip_str;
-    this->mac_addr_str = mac_addr_str;
-    this->gw_ip_str = gw_ip_str;
+
+    memset(&spec, 0, sizeof(pds_device_spec_t));
+
+    str2ipaddr((const char *)&device_ip_str, &spec.device_ip_addr);
+    str2ipaddr((const char *)&gw_ip_str, &spec.gateway_ip_addr);
+    if (!apulu()) {
+        mac_str_to_addr((char *)mac_addr_str.c_str(), spec.device_mac_addr);
+    }
+
+    if (apulu()) {
+        spec.dev_oper_mode = PDS_DEV_OPER_MODE_HOST;
+    } else {
+        spec.dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
+    }
     num_obj = num_device;
+}
+
+device_feeder::device_feeder(const device_feeder& feeder) {
+    memcpy(&this->spec, &feeder.spec, sizeof(pds_device_spec_t));
+    num_obj = feeder.num_obj;
 }
 
 void
 device_feeder::spec_build(pds_device_spec_t *spec) const {
-    ip_prefix_t device_ip_pfx, gw_ip_pfx;
-
-    memset(spec, 0, sizeof(pds_device_spec_t));
-
-    test::extract_ip_pfx(device_ip_str.c_str(), &device_ip_pfx);
-    if (device_ip_pfx.addr.af == IP_AF_IPV6) {
-        spec->device_ip_addr.af = IP_AF_IPV6;
-        memcpy(spec->device_ip_addr.addr.v6_addr.addr8,
-               device_ip_pfx.addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
-    } else {
-        spec->device_ip_addr.af = IP_AF_IPV4;
-        spec->device_ip_addr.addr.v4_addr = device_ip_pfx.addr.addr.v4_addr;
-    }
-
-    extract_ip_pfx(gw_ip_str.c_str(), &gw_ip_pfx);
-    if (gw_ip_pfx.addr.af == IP_AF_IPV6) {
-        spec->gateway_ip_addr.af = IP_AF_IPV6;
-        memcpy(spec->gateway_ip_addr.addr.v6_addr.addr8,
-               gw_ip_pfx.addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
-    } else {
-        spec->gateway_ip_addr.af = IP_AF_IPV4;
-        spec->gateway_ip_addr.addr.v4_addr = gw_ip_pfx.addr.addr.v4_addr;
-    }
-
-    if (!apulu()) {
-        mac_str_to_addr((char *)mac_addr_str.c_str(), spec->device_mac_addr);
-    }
-
-    if (apulu()) {
-        spec->dev_oper_mode = PDS_DEV_OPER_MODE_HOST;
-    } else {
-        spec->dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
-    }
+    memcpy(spec, &this->spec, sizeof(pds_device_spec_t));
 }
 
 bool
 device_feeder::spec_compare(const pds_device_spec_t *spec) const {
-    ip_prefix_t device_ip_pfx, gw_ip_pfx;
-    mac_addr_t  device_mac_addr;
-
-    test::extract_ip_pfx(device_ip_str.c_str(), &device_ip_pfx);
-    extract_ip_pfx(gw_ip_str.c_str(), &gw_ip_pfx);
-
-    if (!IPADDR_EQ(&device_ip_pfx.addr, &spec->device_ip_addr)) {
+    if (!IPADDR_EQ(&this->spec.device_ip_addr, &spec->device_ip_addr)) {
         return false;
     }
-    mac_str_to_addr((char *)mac_addr_str.c_str(), device_mac_addr);
     if (!apulu()) {
-        if (memcmp(device_mac_addr, spec->device_mac_addr, ETH_ADDR_LEN)) {
+        if (memcmp(this->spec.device_mac_addr, spec->device_mac_addr,
+                   ETH_ADDR_LEN)) {
             return false;
         }
     }
-    if (!IPADDR_EQ(&gw_ip_pfx.addr, &spec->gateway_ip_addr)) {
+    if (!IPADDR_EQ(&this->spec.gateway_ip_addr, &spec->gateway_ip_addr)) {
         return false;
     }
     return true;

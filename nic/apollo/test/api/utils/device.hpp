@@ -31,17 +31,10 @@ enum device_attrs {
 class device_feeder : public feeder {
 public:
     pds_device_spec_t spec;
-    // TODO: use spec_t instead of free form strings
-    std::string device_ip_str;    // Device IP
-    std::string mac_addr_str;     // Device MAC Address
-    std::string gw_ip_str;        // Gateway IP
 
     // Constructor
     device_feeder() { };
-    device_feeder(const device_feeder& feeder) {
-        init(feeder.device_ip_str, feeder.mac_addr_str, feeder.gw_ip_str,
-             feeder.num_obj);
-    }
+    device_feeder(const device_feeder& feeder);
 
     // Initialize feeder with the base set of values
     void init(std::string device_ip_str, std::string mac_addr_str,
@@ -82,9 +75,9 @@ operator<<(std::ostream& os, const pds_device_info_t *obj) {
 inline std::ostream&
 operator<<(std::ostream& os, const device_feeder& obj) {
     os << "Device feeder =>"
-        << " device IP: " << obj.device_ip_str
-        << " mac addr: " << obj.mac_addr_str
-        << " gw IP: " << obj.gw_ip_str << " ";
+        << " device IP: " << ipaddr2str(&obj.spec.device_ip_addr)
+        << " mac addr: " << macaddr2str(obj.spec.device_mac_addr)
+        << " gw IP: " << ipaddr2str(&obj.spec.gateway_ip_addr) << " ";
     return os;
 }
 

@@ -73,15 +73,6 @@ vnic_feeder_encap_next (pds_encap_t *encap, int width)
 // VNIC feeder class routines
 //----------------------------------------------------------------------------
 
-static void
-increment_num (uint8_t *num)
-{
-    (*num)++;
-    if (*num > PDS_MAX_VNIC_POLICY) {
-        *num = 0;
-    }
-}
-
 void
 fill_policy_ids (pds_obj_key_t *pol_arr,
                  uint32_t start_key, uint8_t num_policy)
