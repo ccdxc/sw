@@ -24,9 +24,7 @@ nacl_redirect:
                         d.u.nacl_redirect_d.copp_policer_id
 nacl_redirect_from_arm:
     phvwr           p.p4i_i2e_nexthop_type, k.arm_to_p4i_nexthop_type
-    or              r1, k.arm_to_p4i_nexthop_id_s8_e15, \
-                        k.arm_to_p4i_nexthop_id_s0_e7, 8
-    phvwr           p.p4i_i2e_nexthop_id, r1
+    phvwr           p.p4i_i2e_nexthop_id, k.arm_to_p4i_nexthop_id
 
 nacl_redirect2:
     phvwr           p.p4i_i2e_mapping_bypass, TRUE

@@ -2,6 +2,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "EGRESS_p4e_inter_pipe_k.h"
+#include "CSUM_EGRESS.h"
 
 struct p4e_inter_pipe_k_    k;
 struct phv_                 p;
@@ -28,8 +29,6 @@ egress_to_rxdma:
     add             r7, r0, k.capri_p4_intrinsic_packet_len
     seq             c7, k.ctag_1_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
-    phvwr           p.{p4e_to_p4plus_classic_nic_ip_valid, \
-                        p4e_to_p4plus_classic_nic_valid}, 0x3
     seq             c1, k.p4e_to_arm_valid, TRUE
     bcf             [c1], egress_to_rxdma_arm
     add             r6, r0, r7
@@ -80,32 +79,126 @@ egress_to_rxdma_common:
     sub             r6, r7, 14
     phvwr           p.capri_deparser_len_l2_checksum_len, r6
 
-    seq             c1, k.ipv4_1_valid, TRUE
-    bcf             [c1], egress_to_rxdma_ipv4
+    // rss type and checksum result
+    bbeq            k.ethernet_2_valid, TRUE, egress_to_rxdma_rss2
+    nop
+
+    // native packet
+egress_to_rxdma_rss:
+    bbeq            k.ipv4_1_valid, TRUE, egress_to_rxdma_rss_ipv4
+    phvwr           p.{p4e_to_p4plus_classic_nic_ip2_valid, \
+                        p4e_to_p4plus_classic_nic_ip_valid, \
+                        p4e_to_p4plus_classic_nic_valid}, 0x3
     seq             c1, k.ipv6_1_valid, TRUE
     nop.!c1.e
-egress_to_rxdma_ipv6:
-    seq             c1, k.ipv6_1_nextHdr, IP_PROTO_TCP
-    phvwr.c1.e      p.p4e_to_p4plus_classic_nic_pkt_type, \
-                        CLASSIC_NIC_PKT_TYPE_IPV6_TCP
-    seq             c1, k.ipv6_1_nextHdr, IP_PROTO_UDP
-    phvwr.c1.e      p.p4e_to_p4plus_classic_nic_pkt_type, \
-                        CLASSIC_NIC_PKT_TYPE_IPV6_UDP
-    nop.e
-    phvwr.f         p.p4e_to_p4plus_classic_nic_pkt_type, \
+egress_to_rxdma_rss_ipv6:
+    bbeq            k.tcp_valid, TRUE, egress_to_rxdma_rss_ipv6_tcp
+    sll             r7, 0x1, k.capri_intrinsic_csum_err[csum_hdr_tcp]
+    bbeq            k.udp_1_valid, TRUE, egress_to_rxdma_rss_ipv6_udp
+    sll             r7, 0x1, k.capri_intrinsic_csum_err[csum_hdr_udp_1]
+egress_to_rxdma_rss_ipv6_generic:
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
                         CLASSIC_NIC_PKT_TYPE_IPV6
-egress_to_rxdma_ipv4:
-    phvwr           p.key_metadata_src, k.ipv4_1_srcAddr
-    phvwr           p.key_metadata_dst, k.ipv4_1_dstAddr
-    seq             c1, k.ipv4_1_protocol, IP_PROTO_TCP
-    phvwr.c1.e      p.p4e_to_p4plus_classic_nic_pkt_type, \
-                        CLASSIC_NIC_PKT_TYPE_IPV4_TCP
-    seq             c1, k.ipv4_1_protocol, IP_PROTO_UDP
-    phvwr.c1.e      p.p4e_to_p4plus_classic_nic_pkt_type, \
-                        CLASSIC_NIC_PKT_TYPE_IPV4_UDP
-    nop.e
-    phvwr.f         p.p4e_to_p4plus_classic_nic_pkt_type, \
+    nop
+egress_to_rxdma_rss_ipv6_tcp:
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV6_TCP
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_tcp_bad, \
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
+egress_to_rxdma_rss_ipv6_udp:
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV6_UDP
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_udp_bad, \
+                        p4e_to_p4plus_classic_nic_csum_udp_ok}, r7
+egress_to_rxdma_rss_ipv4:
+    sll             r7, 0x10, k.capri_intrinsic_csum_err[csum_hdr_ipv4_1]
+    bbeq            k.tcp_valid, TRUE, egress_to_rxdma_rss_ipv4_tcp
+    sll             r6, 0x1, k.capri_intrinsic_csum_err[csum_hdr_tcp]
+    bbeq            k.udp_1_valid, TRUE, egress_to_rxdma_rss_ipv4_udp
+    sll             r6, 0x4, k.capri_intrinsic_csum_err[csum_hdr_udp_1]
+egress_to_rxdma_rss_ipv4_generic:
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
                         CLASSIC_NIC_PKT_TYPE_IPV4
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_ip_bad...\
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
+egress_to_rxdma_rss_ipv4_tcp:
+    or              r7, r7, r6
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV4_TCP
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_ip_bad...\
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
+egress_to_rxdma_rss_ipv4_udp:
+    or              r7, r7, r6
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV4_UDP
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_ip_bad...\
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
+
+    // tunneled packet
+egress_to_rxdma_rss2:
+    bbeq            k.ipv4_2_valid, TRUE, egress_to_rxdma_rss2_ipv4
+    phvwr           p.{p4e_to_p4plus_classic_nic_ip2_valid, \
+                        p4e_to_p4plus_classic_nic_ip_valid, \
+                        p4e_to_p4plus_classic_nic_valid}, 0x5
+    seq             c1, k.ipv6_2_valid, TRUE
+    nop.!c1.e
+egress_to_rxdma_rss2_ipv6:
+    sll             r7, 0x4, k.capri_intrinsic_csum_err[csum_hdr_udp_1]
+    seq             c1, k.ipv4_1_valid, TRUE
+    sll             r6, 0x10, k.capri_intrinsic_csum_err[csum_hdr_ipv4_1]
+    or.c1           r7, r7, r6
+    bbeq            k.tcp_valid, TRUE, egress_to_rxdma_rss2_ipv6_tcp
+    sll             r6, 0x1, k.capri_intrinsic_csum_err[csum_hdr_tcp]
+    bbeq            k.udp_2_valid, TRUE, egress_to_rxdma_rss2_ipv6_udp
+    sll             r6, 0x4, k.capri_intrinsic_csum_err[csum_hdr_udp_2]
+egress_to_rxdma_rss2_ipv6_generic:
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV6
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_ip_bad...\
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
+egress_to_rxdma_rss2_ipv6_tcp:
+    or              r7, r7, r6
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV6_TCP
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_ip_bad...\
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
+egress_to_rxdma_rss2_ipv6_udp:
+    or              r7, r7, r6
+    phvwrpair       p.key_metadata_dport, k.udp_2_dstPort, \
+                        p.key_metadata_sport, k.udp_2_srcPort
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV6_UDP
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_ip_bad...\
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
+egress_to_rxdma_rss2_ipv4:
+    or              r6, k.capri_intrinsic_csum_err[csum_hdr_ipv4_1], \
+                        k.capri_intrinsic_csum_err[csum_hdr_ipv4_2]
+    sll             r7, 0x10, r6
+    sll             r6, 0x4, k.capri_intrinsic_csum_err[csum_hdr_udp_1]
+    or.c2           r7, r7, r6
+    bbeq            k.tcp_valid, TRUE, egress_to_rxdma_rss2_ipv4_tcp
+    sll             r6, 0x1, k.capri_intrinsic_csum_err[csum_hdr_tcp]
+    bbeq            k.udp_1_valid, TRUE, egress_to_rxdma_rss2_ipv4_udp
+    sll             r5, 0x4, k.capri_intrinsic_csum_err[csum_hdr_udp_2]
+egress_to_rxdma_rss2_ipv4_generic:
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV4
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_ip_bad...\
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
+egress_to_rxdma_rss2_ipv4_tcp:
+    or              r7, r7, r6
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV4_TCP
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_ip_bad...\
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
+egress_to_rxdma_rss2_ipv4_udp:
+    or              r7, r7, r6
+    phvwrpair       p.key_metadata_dport, k.udp_2_dstPort, \
+                        p.key_metadata_sport, k.udp_2_srcPort
+    phvwr.e         p.p4e_to_p4plus_classic_nic_pkt_type, \
+                        CLASSIC_NIC_PKT_TYPE_IPV4_UDP
+    phvwr.f         p.{p4e_to_p4plus_classic_nic_csum_ip_bad...\
+                        p4e_to_p4plus_classic_nic_csum_tcp_ok}, r7
 
 egress_recirc:
     phvwr           p.capri_intrinsic_tm_span_session, r0

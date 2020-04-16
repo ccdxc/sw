@@ -11,6 +11,70 @@ from scapy.packet import *
 from scapy.contrib.geneve import *
 from socket import ntohs, ntohl
 
+class CapriIntrinsic(Packet):
+    name = "Cari Intrinsic"
+    fields_desc = [
+            BitField("tm_iport", 0, 4),
+            BitField("tm_oport", 0, 4),
+            BitField("tm_iq", 0, 5),
+            BitField("lif", 0, 11),
+            BitField("timestamp", 0, 48),
+            ByteField("tm_span_session", 0),
+            ShortField("tm_replicate_ptr", 0),
+            BitField("tm_replicate_en", 0, 1),
+            BitField("tm_cpu", 0, 1),
+            BitField("tm_q_depth", 0, 14),
+            BitField("drop", 0, 1),
+            BitField("bypass", 0, 1),
+            BitField("hw_error", 0, 1),
+            BitField("tm_oq", 0, 5),
+            BitField("debug_trace", 0, 1),
+            BitField("csum_err", 0, 5),
+            BitField("error_bits", 0, 6),
+            BitField("tm_instance_type", 0, 4)]
+
+class CapriTxDMAIntrinsic(Packet):
+    name = "Cari TxDMA Intrinsic"
+    fields_desc = [
+            BitField("qid", 0, 24),
+            BitField("dma_cmd_ptr", 0, 6),
+            BitField("qstate_addr", 0, 34),
+            BitField("qtype", 0, 3),
+            BitField("txdma_rsv", 0, 5)]
+
+class P4PlusToP4(Packet):
+    name = "P4+ to P4"
+    fields_desc = [
+            BitField("p4plus_app_id", 0, 4),
+            BitField("pad", 0, 4),
+            BitField("flow_index", 0, 24),
+            BitField("lkp_inst", 0, 1),
+            BitField("compute_inner_l4_csum", 0, 1),
+            BitField("compute_l4_csum", 0, 1),
+            BitField("insert_vlan_tag", 0, 1),
+            BitField("update_udp_len", 0, 1),
+            BitField("update_tcp_seq_no", 0, 1),
+            BitField("update_ip_len", 0, 1),
+            BitField("update_ip_id", 0, 1),
+            ByteField("udp_opt_bytes", 0),
+            BitField("dst_lport", 0, 11),
+            BitField("dst_lport_valid", 0, 1),
+            BitField("pad1", 0, 1),
+            BitField("tso_last_segment", 0, 1),
+            BitField("tso_first_segment", 0, 1),
+            BitField("tso_valid", 0, 1),
+            ShortField("ip_id_delta", 0),
+            IntField("tcp_seq_delta", 0),
+            BitField("gso_start", 0, 14),
+            BitField("compute_inner_ip_csum", 0, 1),
+            BitField("compute_ip_csum", 0, 1),
+            BitField("gso_offset", 0, 14),
+            BitField("flow_index_valid", 0, 1),
+            BitField("gso_valid", 0, 1),
+            BitField("pcp", 0, 3),
+            BitField("dei", 0, 1),
+            BitField("vid", 0, 12)]
+
 class P4ToARM(Packet):
     name = "P4ToARM"
     fields_desc = [
@@ -264,7 +328,11 @@ dump_pkt(ipkt, 'g_snd_pkt12')
 dump_pkt(opkt, 'g_rcv_pkt12')
 
 payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
-ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+ipkt = CapriIntrinsic(tm_oport = 0xB, lif=1) / \
+        CapriTxDMAIntrinsic() / \
+        P4PlusToP4(update_ip_len=1, compute_ip_csum=1, compute_l4_csum=1, \
+        compute_inner_ip_csum=1, compute_inner_l4_csum=1) / \
+        Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         UDP(sport=0x1234, dport=6081) / GENEVE(vni=0xFEDCBA) / \

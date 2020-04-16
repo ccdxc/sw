@@ -1779,7 +1779,7 @@ TEST_F(apulu_test, test1)
         std::cout << "[TCID=" << tcid << "] Tx:GENEVE:P4I-P4E" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
-            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            step_network_pkt(ipkt, TM_PORT_DMA);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));

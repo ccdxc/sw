@@ -153,7 +153,6 @@ control ingress_inter_pipe {
 action egress_to_rxdma() {
     add_header(capri_rxdma_intrinsic);
     add_header(p4e_to_p4plus_classic_nic);
-    add_header(p4e_to_p4plus_classic_nic_ip);
 
     if (p4e_to_arm.valid == TRUE) {
         add_to_field(capri_p4_intrinsic.packet_len, APULU_P4_TO_ARM_HDR_SZ);
@@ -196,37 +195,99 @@ action egress_to_rxdma() {
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CLASSIC_NIC_HDR_SZ));
 
-    modify_field(key_metadata.sport, key_metadata.sport);
-    modify_field(key_metadata.dport, key_metadata.dport);
-    if (ipv4_1.valid == TRUE) {
-        modify_field(key_metadata.src, ipv4_1.srcAddr);
-        modify_field(key_metadata.dst, ipv4_1.dstAddr);
-        if (ipv4_1.protocol == IP_PROTO_TCP) {
-            modify_field(p4e_to_p4plus_classic_nic.pkt_type,
-                         CLASSIC_NIC_PKT_TYPE_IPV4_TCP);
-        } else {
-            if (ipv4_1.protocol == IP_PROTO_UDP) {
+    // RSS
+    if (ethernet_2.valid == TRUE) {
+        add_header(p4e_to_p4plus_classic_nic_ip2);
+        if (ipv4_2.valid == TRUE) {
+            if (tcp.valid == TRUE) {
                 modify_field(p4e_to_p4plus_classic_nic.pkt_type,
-                             CLASSIC_NIC_PKT_TYPE_IPV4_UDP);
+                             CLASSIC_NIC_PKT_TYPE_IPV4_TCP);
             } else {
+                if (udp_2.valid == TRUE) {
+                    modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                                 CLASSIC_NIC_PKT_TYPE_IPV4_UDP);
+                } else {
+                    modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                                 CLASSIC_NIC_PKT_TYPE_IPV4);
+                }
+            }
+        }
+        if (ipv6_2.valid == TRUE) {
+            if (tcp.valid == TRUE) {
                 modify_field(p4e_to_p4plus_classic_nic.pkt_type,
-                             CLASSIC_NIC_PKT_TYPE_IPV4);
+                             CLASSIC_NIC_PKT_TYPE_IPV6_TCP);
+            } else {
+                if (udp_2.valid == TRUE) {
+                    modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                                 CLASSIC_NIC_PKT_TYPE_IPV6_UDP);
+                } else {
+                    modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                                 CLASSIC_NIC_PKT_TYPE_IPV6);
+                }
+            }
+            // dummy code to force PHV allocation
+            modify_field(ipv6_2.srcAddr, 0);
+            modify_field(ipv6_2.dstAddr, 0);
+        }
+        if (udp_2.valid == TRUE) {
+            modify_field(key_metadata.sport, udp_2.srcPort);
+            modify_field(key_metadata.dport, udp_2.dstPort);
+        }
+    } else {
+        add_header(p4e_to_p4plus_classic_nic_ip);
+        if (ipv4_1.valid == TRUE) {
+            if (tcp.valid == TRUE) {
+                modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                             CLASSIC_NIC_PKT_TYPE_IPV4_TCP);
+            } else {
+                if (udp_1.valid == TRUE) {
+                    modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                                 CLASSIC_NIC_PKT_TYPE_IPV4_UDP);
+                } else {
+                    modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                                 CLASSIC_NIC_PKT_TYPE_IPV4);
+                }
+            }
+        }
+        if (ipv6_1.valid == TRUE) {
+            if (tcp.valid == TRUE) {
+                modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                             CLASSIC_NIC_PKT_TYPE_IPV6_TCP);
+            } else {
+                if (udp_1.valid == TRUE) {
+                    modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                                 CLASSIC_NIC_PKT_TYPE_IPV6_UDP);
+                } else {
+                    modify_field(p4e_to_p4plus_classic_nic.pkt_type,
+                                 CLASSIC_NIC_PKT_TYPE_IPV6);
+                }
             }
         }
     }
-    if (ipv6_1.valid == TRUE) {
-        if (ipv6_1.nextHdr == IP_PROTO_TCP) {
-            modify_field(p4e_to_p4plus_classic_nic.pkt_type,
-                         CLASSIC_NIC_PKT_TYPE_IPV6_TCP);
-        } else {
-            if (ipv6_1.nextHdr == IP_PROTO_UDP) {
-                modify_field(p4e_to_p4plus_classic_nic.pkt_type,
-                             CLASSIC_NIC_PKT_TYPE_IPV6_UDP);
-            } else {
-                modify_field(p4e_to_p4plus_classic_nic.pkt_type,
-                             CLASSIC_NIC_PKT_TYPE_IPV6);
-            }
-        }
+
+    // checksum bits
+    modify_field(scratch_metadata.flag,
+                 (((capri_intrinsic.csum_err & (1 << CSUM_HDR_IPV4_1)) >> CSUM_HDR_IPV4_1) |
+                  ((capri_intrinsic.csum_err & (1 << CSUM_HDR_IPV4_2)) >> CSUM_HDR_IPV4_2)));
+    modify_field(p4e_to_p4plus_classic_nic.csum_ip_ok, ~scratch_metadata.flag);
+    modify_field(p4e_to_p4plus_classic_nic.csum_ip_bad, scratch_metadata.flag);
+    if (tcp.valid == TRUE) {
+        modify_field(scratch_metadata.flag,
+                     ((capri_intrinsic.csum_err & (1 << CSUM_HDR_TCP)) >> CSUM_HDR_TCP));
+        modify_field(p4e_to_p4plus_classic_nic.csum_tcp_ok, ~scratch_metadata.flag);
+        modify_field(p4e_to_p4plus_classic_nic.csum_tcp_bad, scratch_metadata.flag);
+    }
+    if (udp_1.valid == TRUE) {
+        modify_field(scratch_metadata.flag,
+                     ((capri_intrinsic.csum_err & (1 << CSUM_HDR_UDP_1)) >> CSUM_HDR_UDP_1));
+    }
+    if (udp_2.valid == TRUE) {
+        bit_or(scratch_metadata.flag, scratch_metadata.flag,
+               ((capri_intrinsic.csum_err & (1 << CSUM_HDR_UDP_2)) >> CSUM_HDR_UDP_2));
+    }
+    if ((udp_1.valid == TRUE) or (udp_2.valid == TRUE)) {
+        modify_field(p4e_to_p4plus_classic_nic.csum_udp_ok, ~scratch_metadata.flag);
+        modify_field(p4e_to_p4plus_classic_nic.csum_udp_bad, scratch_metadata.flag);
     }
 }
 

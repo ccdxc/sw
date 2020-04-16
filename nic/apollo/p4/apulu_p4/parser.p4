@@ -37,9 +37,12 @@ header apulu_txdma_to_p4e_header_t txdma_to_p4e;
 @pragma pa_field_union egress p4e_to_p4plus_classic_nic.l4_dport    key_metadata.dport
 header p4_to_p4plus_classic_nic_header_t p4e_to_p4plus_classic_nic;
 @pragma synthetic_header
-@pragma pa_field_union egress p4e_to_p4plus_classic_nic_ip.ip_sa    key_metadata.src
-@pragma pa_field_union egress p4e_to_p4plus_classic_nic_ip.ip_da    key_metadata.dst
+@pragma pa_field_union egress p4e_to_p4plus_classic_nic_ip.ip_sa    ipv6_1.srcAddr
+@pragma pa_field_union egress p4e_to_p4plus_classic_nic_ip.ip_da    ipv6_1.dstAddr
 header p4_to_p4plus_ip_addr_t p4e_to_p4plus_classic_nic_ip;
+@pragma pa_field_union egress p4e_to_p4plus_classic_nic_ip2.ip_sa   ipv6_2.srcAddr
+@pragma pa_field_union egress p4e_to_p4plus_classic_nic_ip2.ip_da   ipv6_2.dstAddr
+header p4_to_p4plus_ip_addr_t p4e_to_p4plus_classic_nic_ip2;
 
 header p4plus_to_p4_s1_t p4plus_to_p4;
 @pragma pa_header_union ingress ctag_1
@@ -543,13 +546,9 @@ parser parse_egress_ipv4_1 {
 }
 
 @pragma xgress egress
-@pragma allow_set_meta key_metadata.src
-@pragma allow_set_meta key_metadata.dst
 parser parse_egress_ipv6_1 {
     extract(ipv6_1);
     set_metadata(ohi.l4_1_len, ipv6_1.payloadLen + 0);
-    set_metadata(key_metadata.src, latest.srcAddr);
-    set_metadata(key_metadata.dst, latest.dstAddr);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_egress_icmp;
         IP_PROTO_TCP : parse_egress_tcp;
@@ -740,6 +739,7 @@ parser deparse_egress {
     // packet to classic NIC application
     extract(p4e_to_p4plus_classic_nic);
     extract(p4e_to_p4plus_classic_nic_ip);
+    extract(p4e_to_p4plus_classic_nic_ip2);
 
     // egress-to-egress recirc
     extract(egress_recirc);

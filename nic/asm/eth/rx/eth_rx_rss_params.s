@@ -83,9 +83,11 @@ eth_rx_rss_none:
 eth_rx_rss_ipv4_l4:
   phvwr               p.toeplitz_input0_data[63:32], k.{p4_to_p4plus_l4_sport, p4_to_p4plus_l4_dport}
 eth_rx_rss_ipv4:
-#if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
+#if defined(APOLLO) || defined(ARTEMIS) || defined(ATHENA)
   phvwr               p.toeplitz_input0_data[95:64], k.p4_to_p4plus_ip_da[31:0]
   phvwr.e             p.toeplitz_input0_data[127:96], k.p4_to_p4plus_ip_sa_s96_e127[31:0]
+#elif defined(APULU)
+  phvwr.e             p.toeplitz_input0_data[127:64], k.p4_to_p4plus_ip_sa_s0_e111[79:16]
 #else
   phvwr.e             p.toeplitz_input0_data[127:64], k.p4_to_p4plus_ip_sa_s0_e95[63:0]
 #endif

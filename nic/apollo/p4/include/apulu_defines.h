@@ -333,7 +333,16 @@
     modify_field(_scratch_qstate_txdma_q.rxdma_cindex_addr, rxdma_cindex_addr)
 
 /*****************************************************************************/
-/* Apulu Pkt memory                                                        */
+/* Apulu Pkt memory                                                          */
 /*****************************************************************************/
-#define APULU_PKT_DESC_SHIFT              7
-#define APULU_PKT_DESC_SIZE              (1 << APULU_PKT_DESC_SHIFT)
+#define APULU_PKT_DESC_SHIFT            7
+#define APULU_PKT_DESC_SIZE             (1 << APULU_PKT_DESC_SHIFT)
+
+/*****************************************************************************/
+/* Checksum bits from parser (for compiling P4 code only, don't use in ASM   */
+/*****************************************************************************/
+#define CSUM_HDR_IPV4_1                 0
+#define CSUM_HDR_IPV4_2                 0
+#define CSUM_HDR_UDP_1                  0
+#define CSUM_HDR_UDP_2                  0
+#define CSUM_HDR_TCP                    0
