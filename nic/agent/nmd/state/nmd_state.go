@@ -1610,10 +1610,10 @@ func runCmd(cmdStr string) error {
 
 func mgmtIntftoNwMode(mgmtIntf string) (nwMode string) {
 	switch mgmtIntf {
-	case "bond0":
+	case ipif.NaplesInbandInterface:
 		nwMode = nmd.NetworkMode_INBAND.String()
 		return
-	case "oob_mnic0":
+	case ipif.NaplesOOBInterface:
 		nwMode = nmd.NetworkMode_OOB.String()
 		return
 	default:
