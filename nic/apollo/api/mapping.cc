@@ -173,13 +173,13 @@ mapping_entry::init_config(api_ctxt_t *api_ctxt) {
             return SDK_RET_INVALID_ARG;
         }
     }
+    memcpy(&key_, &spec->key, sizeof(key_));
+    memcpy(&skey_, &spec->skey, sizeof(skey_));
     if ((spec->skey.type == PDS_MAPPING_TYPE_L2) && spec->num_tags) {
         PDS_TRACE_ERR("tags are not supported on L2 mappings, "
                       "configured %u tags", spec->num_tags);
         return SDK_RET_INVALID_ARG;
     }
-    memcpy(&key_, &spec->key, sizeof(key_));
-    memcpy(&skey_, &spec->skey, sizeof(skey_));
     return SDK_RET_OK;
 }
 

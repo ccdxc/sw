@@ -55,6 +55,7 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
     if (impl->tag_state_ == NULL) {
         goto error;
     }
+    new (impl->tag_state_) vpc_impl_tag_state_t();
 
     // create classid indexer for local mappings
     impl->tag_state_->local_mapping_classs_id_idxr_ =

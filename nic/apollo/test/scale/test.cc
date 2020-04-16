@@ -448,6 +448,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                (32 * PDS_MAX_VNIC));
     // create local vnic IP mappings first
     for (uint32_t i = 1; i <= num_vpcs; i++) {
+        if (apulu()) { svc_tag = 1; }
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
@@ -492,10 +493,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         pds_local_mapping.provider_ip.af = IP_AF_IPV4;
                         pds_local_mapping.provider_ip.addr.v4_addr =
                                         provider_pfx->addr.addr.v4_addr + ip_offset;
-                        if (!apulu()) {
-                            pds_local_mapping.num_tags = 1;
-                            pds_local_mapping.tags[0] = svc_tag++;
-                        }
+                        pds_local_mapping.num_tags = 1;
+                        pds_local_mapping.tags[0] = svc_tag++;
                     }
                     ip_offset++;
                     rv = create_local_mapping(&pds_local_mapping);
@@ -553,6 +552,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     SDK_ASSERT(num_vpcs * num_remote_mappings <= (1 << 20));
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         tep_offset = 2;
+        svc_tag = 1;
         v6_tep_offset = tep_offset + num_teps / 2;
         for (uint32_t j = 1; j <= num_subnets; j++) {
             ip_base = num_vnics * num_ip_per_vnic + 1;
@@ -593,6 +593,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_remote_mapping.provider_ip.addr.v4_addr =
                                     provider_pfx->addr.addr.v4_addr + ip_offset;
                 }
+                if (apulu()) {
+                    pds_remote_mapping.num_tags = 1;
+                    pds_remote_mapping.tags[0] = svc_tag++;
+                }
                 ip_offset++;
 
                 rv = create_remote_mapping(&pds_remote_mapping);
@@ -600,6 +604,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                                         "create v4 remote mapping failed, vpc %u, ret %u",
                                         i, rv);
 
+                // no tags for L2 and IPv6
+                pds_remote_mapping.num_tags = 0;
                 if (apulu() && g_test_params.l2_mappings) {
                     // l2 mapping
                     pds_remote_l2_mapping = pds_remote_mapping;
