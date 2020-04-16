@@ -52,6 +52,9 @@
 #include "app_test_utils.hpp"
 #include "json_parser.hpp"
 
+uint32_t num_flows_added = 0;
+uint32_t attempted_flows = 0;
+
 namespace fte_ath {
 
 #define IP_PROTOCOL_TCP 0x06
@@ -909,7 +912,7 @@ fte_setup_dnat_flow (flow_cache_policy_info_t *policy)
     return SDK_RET_OK;
 }
 
-static sdk_ret_t 
+sdk_ret_t 
 fte_setup_v4_flows_json (void)
 {
     sdk_ret_t ret;
@@ -919,7 +922,6 @@ fte_setup_v4_flows_json (void)
     uint32_t sip, dip;
     uint8_t proto;
     uint16_t sport, dport;
-    uint32_t num_flows_added = 0;
 
     while (v4_flows_cnt < g_num_v4_flows) {
         v4_flows = &g_v4_flows[v4_flows_cnt];
@@ -950,6 +952,7 @@ fte_setup_v4_flows_json (void)
                                     proto, sport, dport,
                                     PDS_FLOW_SPEC_INDEX_SESSION,
                                     g_session_index);
+                            attempted_flows++;
                             if (ret != SDK_RET_OK) {
                                 PDS_TRACE_DEBUG(
                                     "fte_flow_create failed. \n");
@@ -961,6 +964,8 @@ fte_setup_v4_flows_json (void)
                                 // Even on collision/flow insert fail,
                                 // continue the flow creation
                                 // return ret;
+                                dport++;
+                                continue;
                             }
                             g_session_index++;
                             num_flows_added++;
@@ -977,8 +982,8 @@ fte_setup_v4_flows_json (void)
         v4_flows_cnt++;
     }
 
-    PDS_TRACE_DEBUG("fte_setup_v4_flows_json: num_flows_added:%u \n",
-                    num_flows_added);
+    PDS_TRACE_DEBUG("fte_setup_v4_flows_json: num_flows_added:%u,"
+                    " attempted_flows:%u\n", num_flows_added, attempted_flows);
     return SDK_RET_OK;
 }
 

@@ -23,7 +23,7 @@ LDFLAGS = -L$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC}/lib/ -Wl,-rpath=$(TOPDIR)
 		-L$(TOPDIR)/nic/third-party/metaswitch/output/$(ARCH)/$(MODE)
 
 ifeq ($(ARCH), x86_64)
-LDFLAGS += -L/usr/local/lib64 -L/lib64 
+LDFLAGS += -L/usr/local/lib64 -L/lib64 -L$(TOPDIR)/nic/sdk/third-party/googletest-release-1.8.0/googletest/make -l:gtest.a
 else
 LDFLAGS += -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/lib \
            -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/lib \

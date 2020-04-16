@@ -66,6 +66,8 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
             return;
         } else if (mode == "cpp") {
             fte_ath::g_athena_app_mode = ATHENA_APP_MODE_CPP;
+        } else if (mode == "gtest") {
+            fte_ath::g_athena_app_mode = ATHENA_APP_MODE_GTEST;
         }
 
         BOOST_FOREACH (pt::ptree::value_type &vnic,

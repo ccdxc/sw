@@ -55,6 +55,7 @@ static inline void pkt_hex_dump_trace(const char *label, char *buf, uint16_t len
 #define ATHENA_APP_MODE_CPP         0
 #define ATHENA_APP_MODE_L2_FWD      1
 #define ATHENA_APP_MODE_NO_DPDK     2
+#define ATHENA_APP_MODE_GTEST       3
 
 extern uint8_t g_athena_app_mode;
 

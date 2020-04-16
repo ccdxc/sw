@@ -26,10 +26,15 @@
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#ifdef __x86_64__
+#include <gtest/gtest.h>
+#include "nic/sdk/lib/utils/time_profile.hpp"
+#endif
 #include "trace.hpp"
 #include "app_test_utils.hpp"
 #include "fte_athena.hpp"
 #include "athena_app_server.hpp"
+#include "athena_test.hpp"
 #include "json_parser.hpp"
 
 using namespace test::athena_app;
@@ -127,6 +132,10 @@ sdk_logger (uint32_t mod_id, sdk_trace_level_e tracel_level,
     return 0;
 }
 } // namespace core
+
+#ifdef __x86_64__
+sdk::utils::time_profile::time_profile_info t_info;
+#endif
 
 static int skip_fte_flow_prog_;
 
@@ -365,6 +374,9 @@ main (int argc, char **argv)
     string       policy_json_file;
     boost::property_tree::ptree pt;
     bool         success = true;
+#ifdef __x86_64__
+    int          gtest_ret;
+#endif
 
     struct option longopts[] = {
        { "config",      required_argument, NULL, 'c' },
@@ -435,6 +447,9 @@ main (int argc, char **argv)
                 } else if (mode.compare("no-dpdk") == 0) {
                     fte_ath::g_athena_app_mode =
                         ATHENA_APP_MODE_NO_DPDK;
+                } else if (mode.compare("gtest") == 0) {
+                    fte_ath::g_athena_app_mode =
+                        ATHENA_APP_MODE_GTEST;
                 }
             } else {
                 fprintf(stderr, "mode value is not specified\n");
@@ -567,7 +582,9 @@ main (int argc, char **argv)
         goto done;
     }
 
-    fte_ath::fte_init();
+    if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_CPP ||
+        fte_ath::g_athena_app_mode == ATHENA_APP_MODE_L2_FWD)
+        fte_ath::fte_init();
 
     printf("Initialization done ...\n");
 
@@ -584,6 +601,24 @@ main (int argc, char **argv)
     }
 
 #ifdef __x86_64__
+    if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_GTEST) {
+        ::testing::InitGoogleTest(&argc, argv);
+        sdk::utils::time_profile::time_profile_enable = true;
+        t_info.start();
+        ret = (pds_ret_t)fte_ath::fte_setup_v4_flows_json();
+        t_info.stop();
+        if (ret != PDS_RET_OK) {
+            PDS_TRACE_DEBUG("fte_setup_v4_flows_json failed, "
+                            "partial flows may have been installed\n");
+        }
+        gtest_ret = RUN_ALL_TESTS();
+        if (gtest_ret) {
+            PDS_TRACE_ERR("Gtest failed\n");
+        }
+        sdk::utils::time_profile::time_profile_enable = false;
+        goto done;
+    }
+
     /* Packet injection support on SIM.
      * The delay below is required to wait untill the ionic initializations are done
      */
@@ -642,3 +677,14 @@ skip_fte_flow_prog_set(test_vparam_ref_t vparam)
     skip_fte_flow_prog_ = vparam.expected_bool();
     return true;
 }
+
+#ifdef __x86_64__
+TEST(athena_app_gtest, sim)
+{
+    EXPECT_TRUE(num_flows_added >= 0);
+    EXPECT_EQ(num_flows_added, attempted_flows);
+    printf("Flows added = %u, Attempted flows = %u, Time = %s\n",
+           num_flows_added, attempted_flows, t_info.print_diff().c_str());
+    fte_ath::fte_dump_flow_stats();
+}
+#endif
