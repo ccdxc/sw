@@ -701,6 +701,9 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
 
   disableMultiDelIcons() {
     if (this.getSelectedDataObjects() && this.getSelectedDataObjects().length > 0) {
+      if (Utility.getInstance().isAdmin()) {
+        return false;
+      }
       const generatedWorkload: WorkloadWorkload = this.getSelectedDataObjects().find(
         item => this.isWorkloadSystemGenerated(item)
       );

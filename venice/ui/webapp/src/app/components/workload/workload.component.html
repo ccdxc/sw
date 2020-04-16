@@ -132,15 +132,21 @@
 </ng-template>
 
 <ng-template #actionTemplate let-rowData>
-  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px"
-       *ngIf="!isWorkloadSystemGenerated(rowData)">
-    <mat-icon *roleGuard="'workloadworkload_update'" matTooltip="Edit workload"
-              class="global-table-action-icon workload-table-action-icon-edit"
-              (click)="expandRowRequest($event, rowData)">
-      edit</mat-icon>
-    <mat-icon *roleGuard="'workloadworkload_delete'" matTooltip="Delete workload"
-              class="global-table-action-icon"
-              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <ng-container *ngIf="!isWorkloadSystemGenerated(rowData)">
+      <mat-icon *roleGuard="'workloadworkload_update'" matTooltip="Edit Workload"
+                class="global-table-action-icon workload-table-action-icon-edit"
+                (click)="expandRowRequest($event, rowData)">
+        edit</mat-icon>
+      <mat-icon *roleGuard="'workloadworkload_delete'" matTooltip="Delete Workload"
+                class="global-table-action-icon"
+                (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    </ng-container>
+    <ng-container *ngIf="isWorkloadSystemGenerated(rowData)">
+      <mat-icon *roleGuard="'adminrole'" matTooltip="Delete Workload"
+                class="global-table-action-icon"
+                (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    </ng-container>
   </div>
 </ng-template>
 
