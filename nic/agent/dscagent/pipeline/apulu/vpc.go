@@ -478,7 +478,7 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 			}
 			// If ipam policy being removed
 			if vrf.Spec.IPAMPolicy == "" {
-				updsubnet.Request[0].DHCPPolicyId = [][]byte{}
+				updsubnet.Request[0].DHCPPolicyId = [][]byte{[]byte{}}
 			}
 			resp, err := subnetcl.SubnetUpdate(context.TODO(), updsubnet)
 			if err != nil {
