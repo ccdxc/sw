@@ -371,6 +371,7 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *new_vpc,
     sdk_table_api_params_t tparams;
     vpc_impl *orig_impl = (vpc_impl *)orig_vpc->impl();
 
+    spec = &obj_ctxt->api_params->vpc_spec;
     PDS_TRACE_DEBUG("Activating vpc %s update 0x%lx hw id %u", spec->key.str(),
                     obj_ctxt->upd_bmap, orig_impl->hw_id_);
 
@@ -379,7 +380,6 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *new_vpc,
     bd_hw_id_ = orig_impl->bd_hw_id_;
     tag_state_ = orig_impl->tag_state_;
 
-    spec = &obj_ctxt->api_params->vpc_spec;
     // fill the key
     memset(&vni_key, 0, sizeof(vni_key));
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
