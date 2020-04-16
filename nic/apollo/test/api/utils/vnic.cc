@@ -8,6 +8,7 @@
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/vnic.hpp"
+#include "nic/apollo/test/api/utils/utils.hpp"
 
 #define HOST_LIF_ID_MIN 71
 #define HOST_LIF_ID_MAX 78
@@ -167,9 +168,9 @@ void
 vnic_feeder::iter_next(int width) {
     uint64_t mac_u64;
     spec.key = int2pdsobjkey(pdsobjkey2int(spec.key) + width);
-    vnic_feeder_encap_next(&spec.vnic_encap);
+    utils_encap_val_update(&spec.vnic_encap);
     if (apollo()) {
-        vnic_feeder_encap_next(&spec.fabric_encap);
+        utils_encap_val_update(&spec.fabric_encap);
         spec.tx_mirror_session_bmap += width;
         spec.rx_mirror_session_bmap += width;
     }

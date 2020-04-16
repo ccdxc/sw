@@ -18,6 +18,7 @@
 #include "nic/apollo/test/api/utils/route.hpp"
 #include "nic/apollo/test/api/utils/tep.hpp"
 #include "nic/apollo/test/api/utils/vnic.hpp"
+#include "nic/apollo/test/api/utils/utils.hpp"
 #include "nic/apollo/test/api/utils/workflow.hpp"
 
 namespace test {
@@ -25,6 +26,7 @@ namespace api {
 
 // globals
 static constexpr uint32_t k_max_subnet = PDS_MAX_SUBNET + 1;
+static constexpr uint32_t k_num_subnets = 1;
 
 //----------------------------------------------------------------------------
 // Subnet test class
@@ -420,7 +422,8 @@ TEST_F(subnet, subnet_update_vr_mac) {
 
     // init
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 
@@ -453,7 +456,8 @@ TEST_F(subnet, subnet_update_route_table) {
 
     // init
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 
@@ -485,7 +489,8 @@ TEST_F(subnet, DISABLED_subnet_update_hostif) {
 
     // init
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 
@@ -516,7 +521,8 @@ TEST_F(subnet, subnet_update_dhcp_policy) {
 
     // init
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 
@@ -549,7 +555,8 @@ TEST_F(subnet, subnet_update_tos) {
 
     // init
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 
@@ -580,24 +587,20 @@ TEST_F(subnet, subnet_update_fab_encap_type) {
 
     // init
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 
     // trigger
     spec.fabric_encap = feeder.spec.fabric_encap;
-    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-        spec.fabric_encap.val.vnid = 1;
-    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-        spec.fabric_encap.val.mpls_tag = 1;
-    }
+    utils_encap_type_update(&spec.fabric_encap);
     subnet_update(feeder, &spec, SUBNET_ATTR_FAB_ENCAP, SDK_RET_ERR);
 
     // validate
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_read(feeder);
 
     // cleanup
@@ -620,22 +623,17 @@ TEST_F(subnet, subnet_update_fab_encap_val) {
 
     // init
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 
     // trigger
     spec.fabric_encap = feeder.spec.fabric_encap;
-    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        spec.fabric_encap.val.mpls_tag++;
-    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        spec.fabric_encap.val.vnid++;
-    }
-    subnet_update(feeder, &spec, SUBNET_ATTR_FAB_ENCAP, SDK_RET_ERR);
+    utils_encap_val_update(&spec.fabric_encap, feeder.num_obj * 3);
+    subnet_update(feeder, &spec, SUBNET_ATTR_FAB_ENCAP);
 
     // validate
-    feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
     subnet_read(feeder);
 
     // cleanup
@@ -657,7 +655,8 @@ TEST_F(subnet, subnet_update_policy1) {
     uint8_t start_pol_index = 0;
 
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
 
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
@@ -753,7 +752,8 @@ TEST_F(subnet, subnet_update_policy4) {
     uint8_t start_pol_index = 0;
 
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 
@@ -781,7 +781,8 @@ TEST_F(subnet, subnet_update_policy5) {
     uint8_t start_pol_index = 0;
 
     feeder.init(key, k_vpc_key, "10.0.0.0/16",
-                "00:02:01:00:00:01", num_policies, start_pol_index);
+                "00:02:01:00:00:01", k_num_subnets, num_policies,
+                start_pol_index);
     subnet_create(feeder);
     subnet_read(feeder, SDK_RET_OK);
 

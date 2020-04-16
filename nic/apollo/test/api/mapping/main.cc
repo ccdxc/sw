@@ -24,6 +24,7 @@
 #include "nic/apollo/test/api/utils/vpc.hpp"
 #include "nic/apollo/test/api/utils/nexthop.hpp"
 #include "nic/apollo/test/api/utils/if.hpp"
+#include "nic/apollo/test/api/utils/utils.hpp"
 #include "nic/apollo/test/api/utils/workflow.hpp"
 
 namespace test {
@@ -445,13 +446,7 @@ TEST_F(mapping_test, local_mapping_update_fab_encap_type) {
 
     // trigger
     spec.fabric_encap = feeders[0].spec.fabric_encap;
-    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-        spec.fabric_encap.val.vnid = 1;
-    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-        spec.fabric_encap.val.mpls_tag = 1;
-    }
+    utils_encap_type_update(&spec.fabric_encap);
     lmap_update(feeders[0], &spec, LMAP_ATTR_FAB_ENCAP);
 
     // validate
@@ -475,11 +470,7 @@ TEST_F(mapping_test, local_mapping_update_fab_encap_val) {
 
     // trigger
     spec.fabric_encap = feeders[0].spec.fabric_encap;
-    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        spec.fabric_encap.val.mpls_tag++;
-    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        spec.fabric_encap.val.vnid++;
-    }
+    utils_encap_val_update(&spec.fabric_encap, feeders[0].num_obj * 3);
     lmap_update(feeders[0], &spec, LMAP_ATTR_FAB_ENCAP);
 
     // validate
@@ -1628,13 +1619,7 @@ TEST_F(mapping_test, remote_mapping_update_fab_encap_type) {
 
     // trigger
     spec.fabric_encap = feeders[0].spec.fabric_encap;
-    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-        spec.fabric_encap.val.vnid = 1;
-    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-        spec.fabric_encap.val.mpls_tag = 1;
-    }
+    utils_encap_type_update(&spec.fabric_encap);
     rmap_update(feeders[0], &spec, RMAP_ATTR_FAB_ENCAP);
 
     // validate
@@ -1658,11 +1643,7 @@ TEST_F(mapping_test, remote_mapping_update_fab_encap_val) {
 
     // trigger
     spec.fabric_encap = feeders[0].spec.fabric_encap;
-    if (spec.fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
-        spec.fabric_encap.val.mpls_tag++;
-    } else if (spec.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-        spec.fabric_encap.val.vnid++;
-    }
+    utils_encap_val_update(&spec.fabric_encap, feeders[0].num_obj * 3);
     rmap_update(feeders[0], &spec, RMAP_ATTR_FAB_ENCAP);
 
     // validate
