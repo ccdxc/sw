@@ -27,6 +27,8 @@ TOP=$(readlink -f "$(dirname "$0")/../..")
 : ${DRIVERS_SRC:="$TOP/platform/drivers/windows"}
 : ${REMOTE_DRIVERS_SRC:="C:/Builds/$TEMP_BUILDDIR"}
 : ${REMOTE_DRIVERS_SRCSTR:="\"$REMOTE_DRIVERS_SRC"\"}
+: ${PENCTL_IMAGE:="$TOP/nic/build/x86_64/iris/capri/bin/penctl.win64.exe"}
+: ${REMOTE_PENCTL_IMAGE:="$REMOTE_DRIVERS_SRC/IonicInstaller/BuildFiles"}
 : ${REMOTE_DRIVERS_BUILDSCRIPT:="$REMOTE_DRIVERS_SRC/BuildScript/IonicBuild.ps1"}
 : ${REMOTE_DRIVERS_SOLUTION:="$REMOTE_DRIVERS_SRC/Pensando Solution/Pensando Solution.sln"}
 : ${REMOTE_DRIVERS_SOLSTR:="\"$REMOTE_DRIVERS_SOLUTION"\"}
@@ -66,6 +68,9 @@ sshpass -p $BUILD_VM_PW ssh -o StrictHostKeyChecking=no "$BUILD_VM_USER"@"$BUILD
 
 # Copy source code to the remote build source folder.
 sshpass -p $BUILD_VM_PW scp -o StrictHostKeyChecking=no -pr "$DRIVERS_SRC" "$BUILD_VM_USER"@"$BUILD_VM_NAME":"$REMOTE_DRIVERS_SRC"
+
+# Copy penctl image to BuildFiles folder for Installer packaging.
+sshpass -p $BUILD_VM_PW scp -o StrictHostKeyChecking=no -pr "$PENCTL_IMAGE" "$BUILD_VM_USER"@"$BUILD_VM_NAME":"$REMOTE_PENCTL_IMAGE"
 
 # Start remote Build script
 if [ -z "$VER" ] ; then
