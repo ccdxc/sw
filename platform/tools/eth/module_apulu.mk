@@ -1,6 +1,6 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-#
 include ${MKDEFS}/pre.mk
+MODULE_ARCH     := aarch64
 MODULE_TARGET   := eth_dbgtool_apulu.bin
 MODULE_PIPELINE := apulu
 MODULE_SOLIBS   := sdkpal logger sdkplatformutils shmmgr bm_allocator \
