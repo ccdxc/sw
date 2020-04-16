@@ -202,7 +202,7 @@ public:
 
     /// \brief     return the service mapping entry's 2nd-ary key
     /// \return    2nd-ary key of the svc_mapping entry
-    const pds_svc_mapping_key_t& skey(void) const { return skey_; }
+    pds_svc_mapping_key_t& skey(void) { return skey_; }
 
     ///\brief read config
     ///\param[in]  key     pointer to the service mapping key of interest

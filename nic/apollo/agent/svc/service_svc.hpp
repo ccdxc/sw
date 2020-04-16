@@ -56,7 +56,7 @@ pds_service_api_stats_to_proto (pds::SvcMappingStats *proto_stats,
 
 // populate proto buf from service API info
 static inline void
-pds_service_api_info_to_proto (const pds_svc_mapping_info_t *api_info,
+pds_service_api_info_to_proto (pds_svc_mapping_info_t *api_info,
                                void *ctxt)
 {
     pds::SvcMappingGetResponse *proto_rsp = (pds::SvcMappingGetResponse *)ctxt;

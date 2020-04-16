@@ -231,12 +231,14 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
     uint32_t key_ip_offset = 0;
     pds_svc_mapping_spec_t svc_mapping;
     pds_svc_mapping_spec_t svc_v6_mapping;
+    uint32_t svc_mapping_key = 1;
 
     // create local vnic IP mappings first
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
+                    svc_mapping.key = test::int2pdsobjkey(svc_mapping_key++);
                     svc_mapping.skey.vpc = test::int2pdsobjkey(i);
                     // backend IP is one of the local IP mappings
                     svc_mapping.skey.backend_ip.af = IP_AF_IPV4;
@@ -260,6 +262,7 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
                                             i, rv);
                     if (g_test_params.dual_stack) {
                         svc_v6_mapping = svc_mapping;
+                        svc_v6_mapping.key = test::int2pdsobjkey(svc_mapping_key++);
                         svc_v6_mapping.skey.backend_ip.af = IP_AF_IPV6;
                         svc_v6_mapping.skey.backend_ip.addr.v6_addr =
                             g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
@@ -2058,7 +2061,7 @@ create_objects (void)
     }
 
     // create service mappings
-    if (artemis()) {
+    if (apulu() || artemis()) {
         ret = create_svc_mappings(g_test_params.num_vpcs,
                                   g_test_params.num_subnets,
                                   g_test_params.num_vnics,

@@ -16,6 +16,7 @@
 #include "nic/apollo/api/obj_api.hpp"
 #include "nic/apollo/api/service.hpp"
 #include "nic/apollo/api/include/pds_service.hpp"
+#include "nic/apollo/api/pds_state.hpp"
 
 static sdk_ret_t
 pds_svc_mapping_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
@@ -68,18 +69,55 @@ pds_svc_mapping_read (pds_obj_key_t *key, pds_svc_mapping_info_t *info)
 {
     sdk_ret_t rv;
     svc_mapping *entry = NULL;
+    pds_svc_mapping_key_t skey;
 
     if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
     }
 
-    if ((entry = pds_svc_mapping_entry_find(key)) == NULL) {
+    rv = svc_mapping_db()->skey(key, &skey);
+    if (rv != SDK_RET_OK) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-
+    entry = svc_mapping::build(&skey);
+    if (entry == NULL) {
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    memset(info, 0, sizeof(pds_svc_mapping_info_t));
     info->spec.key = *key;
-    rv = entry->read(key, info);
-    return rv;
+
+    return entry->read(key, info);
+}
+
+typedef struct svc_mapping_read_all_args_s {
+    svc_mapping_read_cb_t cb;
+    void *ctxt;
+} svc_mapping_read_all_args_t;
+
+void
+pds_svc_mapping_info_from_entry (svc_mapping *entry, void *ctxt)
+{
+    sdk_ret_t rv;
+    pds_svc_mapping_info_t info;
+    svc_mapping_read_all_args_t *args = (svc_mapping_read_all_args_t *)ctxt;
+
+    info.spec.key = entry->key();
+    info.spec.skey = entry->skey();
+    rv = entry->read(&entry->skey(), &info);
+    if (rv == SDK_RET_OK) {
+        args->cb(&info, args->ctxt);
+    }
+}
+
+sdk_ret_t
+pds_svc_mapping_read_all (svc_mapping_read_cb_t cb, void *ctxt)
+{
+    svc_mapping_read_all_args_t args;
+    args.cb = cb;
+    args.ctxt = ctxt;
+
+    svc_mapping_db()->kvstore_iterate(pds_svc_mapping_info_from_entry, &args);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

@@ -200,6 +200,12 @@ svc_mapping::read(pds_obj_key_t *key, pds_svc_mapping_info_t *info) {
     return SDK_RET_ENTRY_NOT_FOUND;
 }
 
+sdk_ret_t
+svc_mapping::read(pds_svc_mapping_key_t *skey, pds_svc_mapping_info_t *info) {
+    return impl_->read_hw(this, (impl::obj_key_t *)skey,
+                          (impl::obj_info_t *)info);
+}
+
 // even though mapping object is stateless, we need to temporarily insert
 // into the db as back-to-back operations on the same object can be issued
 // in same batch

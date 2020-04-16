@@ -10,11 +10,16 @@ import (
 	"reflect"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
+)
+
+var (
+	svcID string
 )
 
 var serviceShowCmd = &cobra.Command{
@@ -27,6 +32,7 @@ var serviceShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(serviceShowCmd)
 	serviceShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	serviceShowCmd.Flags().StringVarP(&svcID, "id", "i", "", "Specify VPC ID")
 }
 
 func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -45,8 +51,16 @@ func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewSvcClient(c)
 
-	req := &pds.SvcMappingGetRequest{
-		Id: [][]byte{},
+	var req *pds.SvcMappingGetRequest
+	if cmd != nil && cmd.Flags().Changed("id") {
+		req = &pds.SvcMappingGetRequest{
+			Id: [][]byte{uuid.FromStringOrNil(svcID).Bytes()},
+		}
+	} else {
+		// Get all VPCs
+		req = &pds.SvcMappingGetRequest{
+			Id: [][]byte{},
+		}
 	}
 
 	// PDS call
@@ -78,21 +92,21 @@ func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printServiceHeader() {
-	hdrLine := strings.Repeat("-", 60)
-	fmt.Printf("\n")
-	fmt.Printf("BkndVPCId - Backend VPC ID       BkndIP - Backend IP address\n")
-	fmt.Printf("BkndPort  - Backend port number  SvcIP  - Service IP address\n")
-	fmt.Printf("SvcPort   - Service port number\n")
+	hdrLine := strings.Repeat("-", 175)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-16s%-9s%-16s%-9s\n", "BkndVPCId", "BkndIP", "BkndPort", "SvcIP", "SvcPort")
+	fmt.Printf("%-40s%-40s%-40s%-8s%-40s%-7s\n%-40s%-40s%-40s%-8s%-40s%-7s\n",
+		"ID", "Backend", "Backend", "Backend", "Service", "Service",
+		"", "VPC ID", "IP", "Port", "IP", "Port")
 	fmt.Println(hdrLine)
 }
 
 func printService(svc *pds.SvcMapping) {
 	spec := svc.GetSpec()
 	key := spec.GetKey()
-	fmt.Printf("%-10d%-16s%-9d%-16s%-9d\n",
-		key.GetVPCId(), utils.IPAddrToStr(key.GetBackendIP()),
+	fmt.Printf("%-40s%-40s%-40s%-8d%-40s%-7d\n",
+		uuid.FromBytesOrNil(spec.GetId()).String(),
+		uuid.FromBytesOrNil(key.GetVPCId()).String(),
+		utils.IPAddrToStr(key.GetBackendIP()),
 		key.GetBackendPort(),
 		utils.IPAddrToStr(spec.GetIPAddr()),
 		spec.GetSvcPort())

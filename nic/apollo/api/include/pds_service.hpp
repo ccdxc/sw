@@ -60,6 +60,14 @@ sdk_ret_t pds_svc_mapping_create(pds_svc_mapping_spec_t *spec,
 sdk_ret_t pds_svc_mapping_read(pds_obj_key_t *key,
                                pds_svc_mapping_info_t *info);
 
+typedef void (*svc_mapping_read_cb_t)(pds_svc_mapping_info_t *info, void *ctxt);
+
+/// \brief      read all service mapping
+/// \param[in] cb     callback for reading service mappings
+/// \param[in] ctxt   opaque context to be passed to callbacks
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_svc_mapping_read_all(svc_mapping_read_cb_t cb, void *ctxt);
+
 /// \brief      update service mapping
 /// \param[in]  spec service mapping configuration
 /// \param[in] bctxt batch context if API is invoked in a batch

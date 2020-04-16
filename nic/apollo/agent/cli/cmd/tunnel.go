@@ -93,9 +93,9 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printTunnelHeader() {
-	hdrLine := strings.Repeat("-", 128)
+	hdrLine := strings.Repeat("-", 202)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-40s%-16s%-16s%-16s%-16s%-16s\n",
+	fmt.Printf("%-40s%-40s%-16s%-40s%-40s%-20s%-6s\n",
 		"ID", "VpcID", "Encap", "LocalIP", "RemoteIP", "DMAC", "HW ID")
 	fmt.Println(hdrLine)
 }
@@ -103,7 +103,7 @@ func printTunnelHeader() {
 func printTunnel(tunnel *pds.Tunnel) {
 	spec := tunnel.GetSpec()
 	encapStr := utils.EncapToString(spec.GetEncap())
-	fmt.Printf("%-40s%-40s%-16s%-16s%-16s%-16s%-16s%-16d\n",
+	fmt.Printf("%-40s%-40s%-16s%-40s%-40s%-20s%-6d\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
 		uuid.FromBytesOrNil(spec.GetVPCId()).String(),
 		encapStr, utils.IPAddrToStr(spec.GetLocalIP()),

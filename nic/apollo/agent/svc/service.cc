@@ -195,11 +195,8 @@ SvcImpl::SvcMappingGet(ServerContext *context,
         return Status::OK;
     }
     if (proto_req->id_size() == 0) {
-#if 0
-        // get all
-        ret = core::service_get_all(pds_service_api_info_to_proto, proto_rsp);
+        ret = pds_svc_mapping_read_all(pds_service_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-#endif
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
