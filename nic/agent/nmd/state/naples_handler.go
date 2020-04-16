@@ -426,7 +426,11 @@ func (n *NMD) handleNetworkModeTransition() error {
 		}
 	} else {
 		// Use statically passed controllers if any
-		n.config.Status.Controllers = n.config.Spec.Controllers
+		if len(n.config.Spec.Controllers) > 0 {
+			log.Infof("Using controllers passed in Spec. %v", n.config.Spec.Controllers)
+			n.config.Status.Controllers = n.config.Spec.Controllers
+		}
+
 		if err := n.stateMachine.FSM.Event("doDynamic", n); err != nil {
 			log.Errorf("Dynamic mode transition event failed. Err: %v", err)
 			if n.IPClient != nil {

@@ -1582,7 +1582,7 @@ func (n *NMD) SetNetworkMode(intf string) {
 
 // GetVeniceIPs returns the venice co-ordinates
 func (n *NMD) GetVeniceIPs() []string {
-	return n.config.Status.Controllers
+	return n.config.Spec.Controllers
 }
 
 // SetVeniceIPs sets the venice co-ordinates
