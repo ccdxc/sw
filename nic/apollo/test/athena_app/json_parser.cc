@@ -34,7 +34,7 @@ str2mac(const char* mac, uint8_t *out)
     }
 }
 
-void
+sdk_ret_t
 parse_flow_cache_policy_cfg (const char *cfgfile)
 {
     pt::ptree json_pt;
@@ -50,7 +50,7 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
                         "In command-line option, provide the absolute path of the file. "
                         "Otherwise make sure nic/conf/athena/policy.json exists..\n",
                 cfg_file.c_str());
-        return;
+        return SDK_RET_ERR;
     }
 
     std::ifstream json_cfg(cfg_file.c_str());
@@ -60,10 +60,10 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
         std::string mode = json_pt.get<std::string>("app_mode");
         if (mode == "l2_fwd") {
             fte_ath::g_athena_app_mode = ATHENA_APP_MODE_L2_FWD;
-            return;
+            return SDK_RET_OK;
         } else if (mode == "no_dpdk") {
             fte_ath::g_athena_app_mode = ATHENA_APP_MODE_NO_DPDK;
-            return;
+            return SDK_RET_OK;
         } else if (mode == "cpp") {
             fte_ath::g_athena_app_mode = ATHENA_APP_MODE_CPP;
         } else if (mode == "gtest") {
@@ -126,11 +126,23 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
 
             boost::optional<pt::ptree&> nat_opt = vnic.second.get_child_optional("nat");
             if (nat_opt) {
-                 policy->nat_enabled = 1;
-                 str2ipv4addr(nat_opt.get().get<std::string>("local_ip").c_str(),
-                         &policy->nat_info.local_ip);
-                 str2ipv4addr(nat_opt.get().get<std::string>("nat_ip").c_str(),
-                         &policy->nat_info.nat_ip);
+                policy->nat_enabled = 1;
+                str2ipv4addr(nat_opt.get().get<std::string>("local_ip_lo").c_str(),
+                        &policy->nat_info.local_ip_lo);
+                str2ipv4addr(nat_opt.get().get<std::string>("local_ip_hi").c_str(),
+                        &policy->nat_info.local_ip_hi);
+                str2ipv4addr(nat_opt.get().get<std::string>("nat_ip_lo").c_str(),
+                        &policy->nat_info.nat_ip_lo);
+                str2ipv4addr(nat_opt.get().get<std::string>("nat_ip_hi").c_str(),
+                        &policy->nat_info.nat_ip_hi);
+
+                if ((policy->nat_info.local_ip_hi -
+                    policy->nat_info.local_ip_lo) !=
+                    (policy->nat_info.nat_ip_hi -
+                    policy->nat_info.nat_ip_lo)) {
+                    printf("NAT IP range does not match.\n");
+                    return SDK_RET_ERR;
+                }
             } else {
                 policy->nat_enabled = 0;
             }
@@ -161,11 +173,11 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
 
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
-        return;
+        return SDK_RET_ERR;
     }
     printf("POLICIES PARSED %u\n", g_num_policies);
     printf("V4 FLOWS PARSED %u\n", g_num_v4_flows);
-    return;
+    return SDK_RET_OK;
 }
 
 }

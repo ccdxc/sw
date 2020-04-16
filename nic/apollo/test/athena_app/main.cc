@@ -535,7 +535,12 @@ main (int argc, char **argv)
         if (policy_json_file.empty()) {
             policy_json_file = cfg_path + "/" + pipeline + "/policy.json";
         }
-        fte_ath::parse_flow_cache_policy_cfg(policy_json_file.c_str());
+        if (fte_ath::parse_flow_cache_policy_cfg(
+                policy_json_file.c_str()) != SDK_RET_OK) {
+            fprintf(stderr, "Parsing json file:%s failed. \n",
+                    policy_json_file.c_str());
+            exit(1);
+        }
     }
 
     // Initialize the PDS functionality

@@ -14,6 +14,7 @@ namespace fte_ath {
 #define MAX_VLAN_ID 0x1000        // 2^12 = 4096
 #define MAX_MPLS_LABEL 0x100000   // 2^20 = 1048576
 #define MAX_V4_FLOWS 32
+#define MAX_NAT_IP 32
 
 #define ENCAP_MPLSOUDP 1
 #define ENCAP_GENEVE   2
@@ -43,10 +44,19 @@ typedef struct rewrite_host_info_s {
 } rewrite_host_info_t;
 
 typedef struct nat_info_s {
-    uint32_t local_ip;
-    uint32_t nat_ip;
+    uint32_t local_ip_lo;
+    uint32_t local_ip_hi;
+    uint32_t nat_ip_lo;
+    uint32_t nat_ip_hi;
 } nat_info_t;
 
+typedef struct nat_map_tbl_s {
+    uint32_t local_ip;
+    uint32_t nat_ip;
+    uint32_t h2s_rewrite_id;
+    uint32_t s2h_rewrite_id;
+} nat_map_tbl_t;
+    
 typedef struct v4_flows_info_s {
     uint16_t vnic_lo;
     uint16_t vnic_hi;
@@ -67,15 +77,17 @@ typedef struct flow_cache_policy_info_s {
     uint32_t src_slot_id;
     bool skip_flow_log;
     uint32_t epoch;
-    bool nat_enabled;
     session_info_t to_host;
     session_info_t to_switch;
     rewrite_underlay_info_t rewrite_underlay;
     rewrite_host_info_t rewrite_host;
+    bool nat_enabled;
     nat_info_t nat_info;
+    uint8_t num_nat_mappings;
+    nat_map_tbl_t nat_map_tbl[MAX_NAT_IP];
 } flow_cache_policy_info_t;
 
-void parse_flow_cache_policy_cfg(const char *cfg_file);
+sdk_ret_t parse_flow_cache_policy_cfg(const char *cfg_file);
 
 extern uint16_t g_vlan_to_vnic[MAX_VLAN_ID];
 extern uint16_t g_mpls_label_to_vnic[MAX_MPLS_LABEL];
