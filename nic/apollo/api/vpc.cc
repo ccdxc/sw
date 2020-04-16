@@ -137,7 +137,10 @@ vpc_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
         break;
 
     case API_OP_UPDATE:
-        return SDK_RET_OK;
+        if (impl_) {
+            ret = impl_->reserve_resources(this, orig_obj, obj_ctxt);
+        }
+        break;
 
     case API_OP_DELETE:
     default:

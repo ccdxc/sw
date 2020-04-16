@@ -203,16 +203,22 @@ private:
 
     /// \brief  constructor with spec
     subnet_impl(pds_subnet_spec_t *spec) {
-        hw_id_ = 0xFFFF;
-        vni_hdl_ = handle_t::null();
-        v4_vr_ip_mapping_hdl_ = handle_t::null();
-        v6_vr_ip_mapping_hdl_ = handle_t::null();
+        subnet_impl();
         key_ = spec->key;
-        ht_ctxt_.reset();
     }
 
     /// \brief  destructor
     ~subnet_impl() {}
+
+    /// \brief    given a VxLAN vnid, reserve an entry in the VNI table
+    /// \param[in] vnid    VxLAN vnid
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reserve_vni_entry_(uint32_t vnid);
+
+    /// \brief reserve the mapping table resources needed for VR IP of subnet
+    /// \param[in]  spec    subnet configuration
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t add_vr_ip_mapping_entries_(pds_subnet_spec_t *spec);
 
     /// \brief      program subnet related tables during subnet create by
     ///             enabling stage0 tables corresponding to the new epoch

@@ -42,6 +42,7 @@ subnet_entry::subnet_entry() {
     memset(&egr_v4_policy_, 0, sizeof egr_v4_policy_);
     memset(&egr_v6_policy_, 0, sizeof egr_v6_policy_);
     memset(&dhcp_policy_, 0, sizeof dhcp_policy_);
+    host_if_.reset();
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
 }
@@ -126,7 +127,10 @@ subnet_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
         break;
 
     case API_OP_UPDATE:
-        return SDK_RET_OK;
+        if (impl_) {
+            ret = impl_->reserve_resources(this, orig_obj, obj_ctxt);
+        }
+        break;
 
     case API_OP_DELETE:
     default:
@@ -258,13 +262,14 @@ subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
                       vpc_.str(), spec->vpc.str(), key2str().c_str());
             return SDK_RET_INVALID_ARG;
     }
-    if ((fabric_encap_.type != spec->fabric_encap.type) ||
-        (fabric_encap_.val.value != spec->fabric_encap.val.value)) {
-        PDS_TRACE_ERR("Attempt to modify immutable attr \"fabric encap\" "
-                      "from %u to %u on subnet %s",
-                      pds_encap2str(&fabric_encap_),
-                      pds_encap2str(&spec->fabric_encap), key2str().c_str());
+    if (fabric_encap_.type != spec->fabric_encap.type) {
+        PDS_TRACE_ERR("Attempt to modify fabric encap from %u to %u "
+                      "on subnet %s", fabric_encap_.val.value,
+                      spec->fabric_encap.val.value, key2str().c_str());
         return SDK_RET_INVALID_ARG;
+    }
+    if (fabric_encap_.val.value != spec->fabric_encap.val.value) {
+         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_FABRIC_ENCAP;
     }
     if ((v4_route_table_ != spec->v4_route_table) ||
         (v6_route_table_ !=  spec->v6_route_table)) {

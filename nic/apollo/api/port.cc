@@ -77,13 +77,15 @@ port_event_cb (port_event_info_t *port_event_info)
     // find interface instance corresponding to this port
     intf = if_db()->find(&event.port.ifindex);
     if (intf == NULL)  {
-        PDS_TRACE_ERR("Interface instance for ifindex 0x%x not found", event.port.ifindex);
+        PDS_TRACE_ERR("Interface instance for ifindex 0x%x not found",
+                      event.port.ifindex);
         return;
     }
     key = intf->key();
     ret = sdk::linkmgr::port_get(intf->port_info(), &pds_event.port_info.info);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", intf->ifindex(), ret);
+        PDS_TRACE_ERR("Failed to get port 0x%x info, err %u",
+                      intf->ifindex(), ret);
         return;
     }
     pds_event.port_info.info.port_num = intf->ifindex();

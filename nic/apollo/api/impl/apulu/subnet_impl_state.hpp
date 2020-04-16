@@ -59,17 +59,25 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
+    /// \brief      API to find subnet impl obj using hw id
+    /// \param[in]  hw_id   subnet h/w id
+    /// \return     subnet impl object
+    subnet_impl *find(uint16_t hw_id);
+
     /// \brief      API to insert subnet impl into hash table
-    /// \param[in]  key     subnet key
+    /// \param[in]  hw_id   subnet h/w id
     /// \param[in]  impl    subnet impl object
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(uint16_t hw_id, subnet_impl *impl);
 
-    /// \brief      API to find subnet impl obj using hw id
-    /// \return     subnet impl object
-    subnet_impl *find(uint16_t hw_id);
+    /// \brief      API to update subnet impl in the hash table
+    /// \param[in]  hw_id   subnet h/w id
+    /// \param[in]  impl    subnet impl object to be updated with
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t update(uint16_t hw_id, subnet_impl *impl);
 
     /// \brief      API to remove hw id and subnet key from the hash table
+    /// \param[in]  hw_id   subnet h/w id
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t remove(uint16_t hw_id);
 

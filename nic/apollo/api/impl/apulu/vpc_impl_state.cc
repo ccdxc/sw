@@ -100,9 +100,10 @@ vpc_impl_state::insert(uint16_t hw_id, vpc_impl *impl) {
 
 sdk_ret_t
 vpc_impl_state::update(uint16_t hw_id, vpc_impl *impl) {
-    impl_ht_->remove(&hw_id);
-    impl_ht_->insert_with_key(&hw_id, impl, impl->ht_ctxt());
-    return SDK_RET_OK;
+    if (impl_ht_->remove(&hw_id)) {
+        return impl_ht_->insert_with_key(&hw_id, impl, impl->ht_ctxt());
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

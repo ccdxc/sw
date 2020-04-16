@@ -116,7 +116,8 @@ vpc_impl::clone(void) {
                                          sizeof(vpc_impl));
     new (cloned_impl) vpc_impl();
     // NOTE: we don't need to copy the resources at this time, they will be
-    // trasferred during the update process
+    //       transferred during the update process
+    cloned_impl->key_ = key_;
     return cloned_impl;
 }
 
@@ -134,8 +135,7 @@ vpc_impl::reserve_vni_entry_(uint32_t vnid) {
 
     vni_key.vxlan_1_vni = vnid;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
-                                   VNI_VNI_INFO_ID,
-                                   handle_t::null());
+                                   VNI_VNI_INFO_ID, handle_t::null());
     ret = vpc_impl_db()->vni_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
         return ret;
@@ -161,7 +161,7 @@ vpc_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
         ret = vpc_impl_db()->vpc_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to allocate hw id for vpc %s, err %u",
-                           spec->key.str(), ret);
+                          spec->key.str(), ret);
             return ret;
         }
         hw_id_ = idx;
@@ -179,7 +179,8 @@ vpc_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
         ret = reserve_vni_entry_(spec->fabric_encap.val.vnid);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to reserve entry in VNI table for vpc %s, "
-                          "err %u", spec->key.str(), ret);
+                          "vnid %u, err %u", spec->key.str(),
+                          spec->fabric_encap.val.vnid, ret);
             return ret;
         }
         break;
@@ -194,7 +195,8 @@ vpc_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
             ret = reserve_vni_entry_(spec->fabric_encap.val.vnid);
             if (unlikely(ret != SDK_RET_OK)) {
                 PDS_TRACE_ERR("Failed to reserve entry in VNI table for "
-                              "vpc %s, err %u", spec->key.str(), ret);
+                              "vpc %s, vnid %u, err %u", spec->key.str(),
+                              spec->fabric_encap.val.vnid, ret);
                 return ret;
             }
         }
@@ -229,8 +231,8 @@ sdk_ret_t
 vpc_impl::nuke_resources(api_base *api_obj) {
     sdk_ret_t ret;
     vni_swkey_t vni_key =  { 0 };
+    sdk_table_api_params_t tparams;
     vpc_entry *vpc = (vpc_entry *)api_obj;
-    sdk_table_api_params_t tparams = { 0 };
 
     if (hw_id_ != 0xFFFF) {
         vpc_impl_db()->vpc_idxr()->free(hw_id_);
@@ -243,8 +245,7 @@ vpc_impl::nuke_resources(api_base *api_obj) {
     if (vni_hdl_.valid()) {
         vni_key.vxlan_1_vni = vpc->fabric_encap().val.vnid;
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
-                                       VNI_VNI_INFO_ID,
-                                       vni_hdl_);
+                                       VNI_VNI_INFO_ID, vni_hdl_);
        return vpc_impl_db()->vni_tbl()->remove(&tparams);
    }
    return SDK_RET_OK;
@@ -306,9 +307,10 @@ vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 
     // read the VPC table in the egress pipe
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VPC, orig_impl->hw_id_,
-                                       NULL, NULL, &vpc_data);
+                                      NULL, NULL, &vpc_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read VPC table at index %u", hw_id_);
+        PDS_TRACE_ERR("Failed to read VPC table at index %u",
+                      orig_impl->hw_id_);
         return sdk::SDK_RET_HW_READ_ERR;
     }
 
@@ -321,7 +323,8 @@ vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, orig_impl->hw_id_,
                                        NULL, NULL, &vpc_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to update VPC table at index %u", hw_id_);
+        PDS_TRACE_ERR("Failed to update VPC table at index %u",
+                      orig_impl->hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
@@ -332,8 +335,8 @@ vpc_impl::activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
                            pds_vpc_spec_t *spec) {
     sdk_ret_t ret;
     vni_swkey_t vni_key = { 0 };
+    sdk_table_api_params_t tparams;
     vni_actiondata_t vni_data = { 0 };
-    sdk_table_api_params_t tparams = { 0 };
 
     PDS_TRACE_DEBUG("Activating vpc %s, hw id %u create, type %u, "
                     "fabric encap (%u, %u)", spec->key.str(), hw_id_,
@@ -368,48 +371,51 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *new_vpc,
     sdk_table_api_params_t tparams;
     vpc_impl *orig_impl = (vpc_impl *)orig_vpc->impl();
 
+    PDS_TRACE_DEBUG("Activating vpc %s update 0x%lx hw id %u", spec->key.str(),
+                    obj_ctxt->upd_bmap, orig_impl->hw_id_);
+
     // xfer resources from original object to the cloned object
     hw_id_ = orig_impl->hw_id_;
     bd_hw_id_ = orig_impl->bd_hw_id_;
     tag_state_ = orig_impl->tag_state_;
 
-    PDS_TRACE_DEBUG("Activating vpc %s, hw id %u update",
-                    spec->key.str(), hw_id_);
-
+    spec = &obj_ctxt->api_params->vpc_spec;
+    // fill the key
+    memset(&vni_key, 0, sizeof(vni_key));
+    vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
+    // fill the data
+    memset(&vni_data, 0, sizeof(vni_data));
+    vni_data.vni_info.bd_id = bd_hw_id_;
+    vni_data.vni_info.vpc_id = hw_id_;
+    sdk::lib::memrev(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
+    vni_data.vni_info.is_l3_vnid = TRUE;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
+                                   VNI_VNI_INFO_ID, vni_hdl_);
     if (obj_ctxt->upd_bmap & PDS_VPC_UPD_FABRIC_ENCAP) {
-        spec = &obj_ctxt->api_params->vpc_spec;
-        // fill the key
-        memset(&vni_key, 0, sizeof(vni_key));
-        vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
-        // fill the data
-        memset(&vni_data, 0, sizeof(vni_data));
-        vni_data.vni_info.bd_id = bd_hw_id_;
-        vni_data.vni_info.vpc_id = hw_id_;
-        sdk::lib::memrev(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
-        vni_data.vni_info.is_l3_vnid = TRUE;
-        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
-                                       VNI_VNI_INFO_ID, vni_hdl_);
-        // update the VNI table
-        ret = vpc_impl_db()->vni_tbl()->update(&tparams);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Updating VNI table failed for vpc %s, err %u",
-                          spec->key.str(), ret);
-            return ret;
-        }
+        // insert new entry in the VNI table
+        ret = vpc_impl_db()->vni_tbl()->insert(&tparams);
     } else {
-        // take over the existing VNI entry as there is not change
-        vni_hdl_ = orig_impl->vni_hdl_;
-        // and relinquish vni handle resource from original object
-        orig_impl->vni_hdl_ = handle_t::null();
+        // update the existing VNI table entry
+        ret = vpc_impl_db()->vni_tbl()->update(&tparams);
+        vni_hdl_ = tparams.handle;
     }
-    // update the vpc db
-    vpc_impl_db()->update(hw_id_, this);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Updating VNI table failed for vpc %s, err %u",
+                      spec->key.str(), ret);
+        return ret;
+    }
 
-    // reliquish ownership of rest of the resources from original object so
-    // they won't be freed
+    // update the vpc db
+    ret = vpc_impl_db()->update(hw_id_, this);
+    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+
+    // relinquish the ownership of resources from old object
     orig_impl->hw_id_ = 0xFFFF;
     orig_impl->bd_hw_id_ = 0xFFFF;
     orig_impl->tag_state_ = nullptr;
+    if (!(obj_ctxt->upd_bmap & PDS_VPC_UPD_FABRIC_ENCAP)) {
+        orig_impl->vni_hdl_ = handle_t::null();
+    }
     return SDK_RET_OK;
 }
 
@@ -417,8 +423,8 @@ sdk_ret_t
 vpc_impl::activate_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
     sdk_ret_t ret;
     vni_swkey_t vni_key = { 0 };
+    sdk_table_api_params_t tparams;
     vni_actiondata_t vni_data = { 0 };
-    sdk_table_api_params_t tparams = { 0 };
 
     PDS_TRACE_DEBUG("Activating vpc %s delete, type %u, fabric encap (%u, %u)",
                     vpc->key().str(), vpc->type(), vpc->fabric_encap().type,
@@ -481,7 +487,7 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     vni_actiondata_t vni_data;
     vpc_actiondata_t vpc_data;
     vni_swkey_t vni_key = { 0 };
-    sdk_table_api_params_t tparams = { 0 };
+    sdk_table_api_params_t tparams;
     pds_vpc_info_t *vpcinfo = (pds_vpc_info_t *)info;
 
     spec = &vpcinfo->spec;
