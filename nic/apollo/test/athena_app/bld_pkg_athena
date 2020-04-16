@@ -80,7 +80,6 @@ def copy_gen (dest, arch="aarch64"):
         #copytree("build/{0}/athena/{1}/gen/p4gen/p4/include".format(arch, asic),
         #      "{0}/nic/build/{1}/athena/{2}/gen/p4gen/p4/include".format(dest, arch, asic))
 
-
 def copy_test_app (dest="nic"):
     """
         Copy athena_app code except for module.mk 
@@ -188,7 +187,8 @@ def copy_includes (dest, arch):
                     "nic/sdk/third-party/boost/include/boost/mpl/plus.hpp",
                     "nic/sdk/third-party/boost/include/boost/mpl/aux_/arithmetic_op.hpp",
                     "nic/sdk/third-party/boost/include/boost/mpl/aux_/largest_int.hpp",
-                    "nic/sdk/third-party/boost/include/boost/mpl/minus.hpp"]
+                    "nic/sdk/third-party/boost/include/boost/mpl/minus.hpp",
+                    "nic/sdk/third-party/googletest-release-1.8.0/googletest/make/gtest.a"]
     for fp in static_files:
         idx = fp.rfind("/")
         src_dir = "{0}/{1}".format(dest, fp[:idx])
