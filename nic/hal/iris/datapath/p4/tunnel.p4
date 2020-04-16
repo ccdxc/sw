@@ -518,7 +518,6 @@ action f_insert_erspan_header(mac_sa, mac_da) {
             modify_field(gre.proto, GRE_PROTO_ERSPAN);
             add_header(erspan_t2);
             modify_field(erspan_t2.version, 1);
-            modify_field(erspan_t2.port_id, capri_intrinsic.lif);
             /* ERSPAN type II (8) */
             add_to_field(scratch_metadata.packet_len, 8);
         }
@@ -537,8 +536,8 @@ action f_insert_erspan_header(mac_sa, mac_da) {
                 modify_field(erspan_t3.options, 1);
                 add_header(erspan_t3_opt);
                 modify_field(erspan_t3_opt.platf_id, 0x3);
-                modify_field(erspan_t3_opt.port_id, capri_intrinsic.lif);
-                modify_field(erspan_t3.timestamp, control_metadata.current_time_in_ns);
+                modify_field(erspan_t3.timestamp,
+                             control_metadata.current_time_in_ns);
                 modify_field(erspan_t3_opt.timestamp,
                              control_metadata.current_time_in_ns >> 32);
                 /* ERSPAN timestamp (8) */
@@ -546,7 +545,6 @@ action f_insert_erspan_header(mac_sa, mac_da) {
             }
         }
     }
-
 }
 
 action encap_erspan(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {

@@ -66,6 +66,7 @@ erspan_mirror:
     phvwr           p.control_metadata_dst_lport, d.u.erspan_mirror_d.dst_lport
 
 erspan_type_iii:
+    phvwr           p.erspan_t3_opt_port_id, k.capri_intrinsic_lif
     tblwr.l         d.u.erspan_mirror_d.erspan_type, ERSPAN_TYPE_III
     phvwrpair.c6    p.erspan_t3_vlan, k.span_vlan_tag_vid, \
                         p.erspan_t3_cos, k.span_vlan_tag_pcp
@@ -83,6 +84,7 @@ erspan_type_iii:
 
 erspan_type_ii:
     phvwr           p.control_metadata_dst_lport, d.u.erspan_mirror_d.dst_lport
+    phvwr           p.erspan_t2_port_id, k.capri_intrinsic_lif
     phvwrpair.c6    p.erspan_t2_vlan, k.span_vlan_tag_vid, \
                         p.erspan_t2_cos, k.span_vlan_tag_pcp
     add             r5, k.capri_intrinsic_tm_span_session, 1

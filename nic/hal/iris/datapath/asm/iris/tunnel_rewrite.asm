@@ -20,9 +20,9 @@ encap_vxlan:
   add         r7, r5, 16
 
   // ethernet headers
-  phvwrpair   p.inner_ethernet_dstAddr, k.ethernet_dstAddr, \
-                p.{inner_ethernet_srcAddr,inner_ethernet_etherType}, \
-                k.{ethernet_srcAddr,ethernet_etherType}
+  phvwr       p.{inner_ethernet_dstAddr,inner_ethernet_srcAddr}, \
+                k.{ethernet_dstAddr,ethernet_srcAddr}
+  phvwr       p.inner_ethernet_etherType, k.ethernet_etherType
   phvwrpair   p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da, \
                 p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
@@ -126,9 +126,9 @@ encap_mpls_udp:
 encap_erspan:
   phvwr       p.inner_ethernet_valid, 1
   phvwr       p.gre_valid, 1
-  phvwrpair   p.inner_ethernet_dstAddr, k.ethernet_dstAddr, \
-                p.{inner_ethernet_srcAddr,inner_ethernet_etherType}, \
-                k.{ethernet_srcAddr,ethernet_etherType}
+  phvwr       p.{inner_ethernet_dstAddr,inner_ethernet_srcAddr}, \
+                  k.{ethernet_dstAddr,ethernet_srcAddr}
+  phvwr       p.inner_ethernet_etherType, k.ethernet_etherType
   phvwrpair   p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da, \
                   p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
@@ -149,7 +149,6 @@ encap_erspan_type_ii:
   phvwr       p.gre_proto, GRE_PROTO_ERSPAN
   phvwr       p.erspan_t2_valid, 1
   phvwr       p.erspan_t2_version, 0x1
-  phvwr       p.erspan_t2_port_id, k.capri_intrinsic_lif
   b           encap_erspan_common
   add         r5, r5, 8
 
@@ -170,10 +169,9 @@ encap_erspan_type_iii:
   phvwr.!c3   p.erspan_t3_options, 1
   phvwr       p.erspan_t3_timestamp, k.control_metadata_current_time_in_ns[31:0]
   phvwr       p.erspan_t3_opt_valid, 1
-  or          r1, k.control_metadata_current_time_in_ns[63:32], \
-                k.capri_intrinsic_lif, 32
-  or          r1, r1, 0x3, 58
-  phvwr       p.{erspan_t3_opt_platf_id...erspan_t3_opt_timestamp}, r1
+  phvwrpair   p.erspan_t3_opt_platf_id, 0x3, \
+                  p.erspan_t3_opt_timestamp, \
+                  k.control_metadata_current_time_in_ns[63:32]
 #endif
 
 encap_erspan_common:

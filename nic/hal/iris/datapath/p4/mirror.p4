@@ -62,6 +62,7 @@ action erspan_mirror(dst_lport, truncate_len, vlan_strip_en,
 
     if (erspan_type == ERSPAN_TYPE_II) {
         add(erspan_t2.span_id, capri_intrinsic.tm_span_session, 1);
+        modify_field(erspan_t2.port_id, capri_intrinsic.lif);
         if (span_vlan_tag.valid == TRUE) {
             modify_field(erspan_t2.vlan, span_vlan_tag.vid);
             modify_field(erspan_t2.cos, span_vlan_tag.pcp);
@@ -79,6 +80,7 @@ action erspan_mirror(dst_lport, truncate_len, vlan_strip_en,
 
     if ((erspan_type == 0) or (erspan_type == ERSPAN_TYPE_III)) {
         add(erspan_t3.span_id, capri_intrinsic.tm_span_session, 1);
+        modify_field(erspan_t3_opt.port_id, capri_intrinsic.lif);
         if (span_vlan_tag.valid == TRUE) {
             modify_field(erspan_t3.vlan, span_vlan_tag.vid);
             modify_field(erspan_t3.cos, span_vlan_tag.pcp);
