@@ -1351,25 +1351,29 @@ func ifDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func ifShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("If:    Interface	\n")
-	fmt.Printf("TXMirror: TX Mirror Sessions		RXMirror: RX Mirror Sessions\n")
-	hdrLine := strings.Repeat("-", 52)
+	fmt.Printf("If:    Interface                    ID: Interface Ifindex\n")
+	fmt.Printf("TXMirror: TX Mirror Sessions        RXMirror: RX Mirror Sessions\n")
+	hdrLine := strings.Repeat("-", 66)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-15s%-18s%-18s\n",
-		"If", "TxMirror", "RxMirror")
+	fmt.Printf("%-15s%-15s%-18s%-18s\n",
+		"If", "ID", "TxMirror", "RxMirror")
 	fmt.Println(hdrLine)
 }
 
 func ifShowOneResp(resp *halproto.InterfaceGetResponse) {
-	fmt.Printf("%-15s", ifRespToStr(resp))
+	fmt.Printf("%-15s0x%-13x", ifRespToStr(resp), resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
 
 	indent := 0
 	for _, mirrorID := range resp.GetSpec().TxMirrorSessions {
 		fmt.Printf("%d ", mirrorID.GetMirrorsessionId())
 		indent = indent + 2
 	}
-	for ; indent < 18; indent++ {
-		fmt.Printf(" ")
+	if indent == 0 {
+		fmt.Printf("%-18s", "---")
+	} else {
+		for ; indent < 18; indent++ {
+			fmt.Printf(" ")
+		}
 	}
 
 	indent = 0
@@ -1377,8 +1381,12 @@ func ifShowOneResp(resp *halproto.InterfaceGetResponse) {
 		fmt.Printf("%d ", mirrorID.GetMirrorsessionId())
 		indent = indent + 2
 	}
-	for ; indent < 18; indent++ {
-		fmt.Printf(" ")
+	if indent == 0 {
+		fmt.Printf("%-18s", "---")
+	} else {
+		for ; indent < 18; indent++ {
+			fmt.Printf(" ")
+		}
 	}
 
 	fmt.Printf("\n")
