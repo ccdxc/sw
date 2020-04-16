@@ -226,7 +226,7 @@ func NewNMD(pipeline Pipeline,
 		// Override the default mgmt mode as network in case of older version.
 		config.Spec.Mode = nmd.MgmtMode_NETWORK.String()
 		if pipeline != nil && pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
-			config.Spec.NetworkMode = nmd.NetworkMode_OOB.String()
+			config.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
 		} else if len(config.Spec.NetworkMode) == 0 {
 			// Override to inband only if its not set
 			config.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
@@ -240,7 +240,7 @@ func NewNMD(pipeline Pipeline,
 		config.ModTime = ts
 		// Override the default mgmt mode as network in case of older version.
 		if pipeline != nil && pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
-			config.Spec.NetworkMode = nmd.NetworkMode_OOB.String()
+			config.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
 		} else {
 			config.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
 		}
@@ -1375,7 +1375,12 @@ func (n *NMD) CreateIPClient() {
 		pipeline = n.Pipeline.GetPipelineType()
 	}
 
-	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
+	if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+		ipClient, err = ipif.NewIPClient(n, ipif.NaplesOOBInterface, pipeline)
+		if err != nil {
+			log.Errorf("Failed to instantiate ipclient on oob interface. Err: %v", err)
+		}
+	} else if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
 		ipClient, err = ipif.NewIPClient(n, ipif.NaplesInbandInterface, pipeline)
 		if err != nil {
 			log.Errorf("Failed to instantiate ipclient on inband interface. Err: %v", err)

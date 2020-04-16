@@ -588,7 +588,9 @@ func (n *NMD) reconcileIPClient() error {
 
 	log.Info("OOB interface is up.")
 
-	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
+	if n.Pipeline != nil && n.Pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
+		mgmtIntf = ipif.NaplesOOBInterface
+	} else if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
 		mgmtIntf = ipif.NaplesInbandInterface
 	} else {
 		mgmtIntf = ipif.NaplesOOBInterface
