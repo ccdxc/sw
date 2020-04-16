@@ -27,6 +27,7 @@ type TestParams struct {
 	StartPVLAN             int32
 	TestNumPG              int
 	TestNumPortsPerPG      int
+	TestOrchName           string
 }
 
 // ValidateParams validates input test parameters
@@ -48,6 +49,10 @@ func ValidateParams(testParams *TestParams) error {
 		err = fmt.Sprintf("Test is trying to use max vlan id: %d which is greater than 4094",
 			testParams.StartPVLAN+int32(testParams.TestNumPVLANPair*2)+int32(testParams.TestNumPortsPerPG*testParams.TestNumPG))
 		return errors.New(err)
+	}
+
+	if len(testParams.TestOrchName) < 1 || len(testParams.TestOrchName) > 64 {
+		return fmt.Errorf("invalid length %v for orchestrator name", len(testParams.TestOrchName))
 	}
 
 	return nil

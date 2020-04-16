@@ -74,15 +74,15 @@ func HostStateFromObj(obj runtime.Object) (*HostState, error) {
 }
 
 // ListHostByNamespace list all hosts which have the namespace label
-func (sm *Statemgr) ListHostByNamespace(namespace string) ([]*ctkit.Host, error) {
+func (sm *Statemgr) ListHostByNamespace(orchName, namespace string) ([]*ctkit.Host, error) {
 	opts := api.ListWatchOptions{}
-	opts.LabelSelector = fmt.Sprintf("%v=%v", utils.NamespaceKey, namespace)
+	opts.LabelSelector = fmt.Sprintf("%v=%v,%v=%v", utils.OrchNameKey, orchName, utils.NamespaceKey, namespace)
 	return sm.ctrler.Host().List(context.Background(), &opts)
 }
 
 // DeleteHostByNamespace deletes hosts by namespace
-func (sm *Statemgr) DeleteHostByNamespace(namespace string) error {
-	hosts, err := sm.ListHostByNamespace(namespace)
+func (sm *Statemgr) DeleteHostByNamespace(orchName, namespace string) error {
+	hosts, err := sm.ListHostByNamespace(orchName, namespace)
 	if err != nil {
 		return err
 	}

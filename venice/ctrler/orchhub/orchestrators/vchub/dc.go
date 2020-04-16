@@ -105,7 +105,7 @@ func (v *VCHub) RemovePenDC(dcName string) {
 	// Delete any Workloads or hosts associated with this DC
 	// There may be stale hosts or workloads if we were disconnected
 	opts := api.ListWatchOptions{}
-	opts.LabelSelector = fmt.Sprintf("%v=%v", utils.NamespaceKey, dcName)
+	opts.LabelSelector = fmt.Sprintf("%v=%v,%v=%v", utils.OrchNameKey, v.OrchConfig.Name, utils.NamespaceKey, dcName)
 
 	workloads, err := v.StateMgr.Controller().Workload().List(v.Ctx, &opts)
 	if err != nil {

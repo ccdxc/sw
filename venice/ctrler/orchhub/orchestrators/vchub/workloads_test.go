@@ -1188,7 +1188,7 @@ func TestWorkloads(t *testing.T) {
 						Labels: map[string]string{
 							NameKey:            "test-vm",
 							utils.NamespaceKey: dcName,
-							utils.OrchNameKey:  v.VcID,
+							utils.OrchNameKey:  "test-orchestrator",
 						},
 						Tenant:    globals.DefaultTenant,
 						Namespace: globals.DefaultNamespace,
@@ -1550,7 +1550,7 @@ func TestWorkloads(t *testing.T) {
 						fmt.Sprintf("%s%s", VcLabelPrefix, "cat2"): "tag1",
 						NameKey:            "test-vm",
 						utils.NamespaceKey: dcName,
-						utils.OrchNameKey:  "127.0.0.1:8990",
+						utils.OrchNameKey:  "test-orchestrator",
 					},
 				}
 				expWorkload := &workload.Workload{

@@ -41,6 +41,7 @@ var defaultTestParams = &testutils.TestParams{
 	StartPVLAN:             500,
 	TestNumPG:              5,
 	TestNumPortsPerPG:      20,
+	TestOrchName:           "test-orchestrator",
 }
 
 var retryCount = 1
@@ -60,6 +61,7 @@ func TestListAndWatch(t *testing.T) {
 		StartPVLAN:             500,
 		TestNumPG:              5,
 		TestNumPortsPerPG:      20,
+		TestOrchName:           "test-orchestrator",
 	}
 
 	err := testutils.ValidateParams(testParams)
@@ -256,6 +258,7 @@ func TestDVSAndPG(t *testing.T) {
 		StartPVLAN:             500,
 		TestNumPG:              5,
 		TestNumPortsPerPG:      20,
+		TestOrchName:           "test-orchestrator",
 	}
 
 	err := testutils.ValidateParams(testParams)

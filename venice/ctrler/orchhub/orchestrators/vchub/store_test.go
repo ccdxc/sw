@@ -68,15 +68,16 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 			return
 		}
 
-		orchConfig := statemgr.GetOrchestratorConfig("127.0.0.1:8990", "user", "pass")
+		orchConfig := statemgr.GetOrchestratorConfig("test-orchestrator", "user", "pass")
 		orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+		orchConfig.Spec.URI = "127.0.0.1:8990"
 
 		err = sm.Controller().Orchestrator().Create(orchConfig)
 
 		pCache := pcache.NewPCache(sm, logger)
 		AssertOk(t, err, "failed to create useg mgr")
 		state := &defs.State{
-			VcID:         "127.0.0.1:8990",
+			VcID:         "test-orchestrator",
 			Ctx:          ctx,
 			Log:          logger,
 			StateMgr:     sm,

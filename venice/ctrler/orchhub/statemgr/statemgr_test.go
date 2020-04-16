@@ -320,7 +320,8 @@ func TestHostCreateList(t *testing.T) {
 	defer im.watchCancel()
 
 	prodMap := make(map[string]string)
-	prodMap[utils.NamespaceKey] = "prod"
+	prodMap[utils.OrchNameKey] = "prod"
+	prodMap[utils.NamespaceKey] = "dev"
 
 	err = createHost(sm, "default", "prod-beef", prodMap)
 	Assert(t, (err == nil), "Host could not be created")
@@ -364,7 +365,7 @@ func TestHostCreateList(t *testing.T) {
 	nw, err = sm.ctrler.Host().List(context.Background(), &api.ListWatchOptions{})
 	Assert(t, len(nw) == 2, "expected 2, got %v Hosts", len(nw))
 
-	err = sm.DeleteHostByNamespace("prod")
+	err = sm.DeleteHostByNamespace("prod", "dev")
 	Assert(t, err == nil, "did not delete the Host")
 
 	nw, err = sm.ctrler.Host().List(context.Background(), &opts)

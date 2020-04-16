@@ -54,6 +54,7 @@ var defaultTestParams = &testutils.TestParams{
 	StartPVLAN:             500,
 	TestNumPG:              5,
 	TestNumPortsPerPG:      20,
+	TestOrchName:           "test-orchestrator",
 }
 
 // Tests creation of internal DC state, creationg of DVS
@@ -117,8 +118,9 @@ func TestVCWrite(t *testing.T) {
 
 	clusterID := defs.CreateClusterID(clusterItems[0].Cluster)
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 	AssertOk(t, err, "failed to create orch config")
@@ -323,8 +325,9 @@ func TestVCHub(t *testing.T) {
 		return
 	}
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -424,8 +427,9 @@ func TestVCHubDestroy1(t *testing.T) {
 		return
 	}
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -538,8 +542,9 @@ func TestVCHubDestroy2(t *testing.T) {
 		return
 	}
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -644,8 +649,9 @@ func TestVCHubDestroy3(t *testing.T) {
 		return
 	}
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -740,8 +746,9 @@ func TestDCWatchers(t *testing.T) {
 		return
 	}
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -857,8 +864,9 @@ func TestUsegVlanLimit(t *testing.T) {
 		return
 	}
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -1049,8 +1057,9 @@ func TestRapidEvents(t *testing.T) {
 		return
 	}
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -1430,8 +1439,9 @@ func TestUpdateUrl(t *testing.T) {
 		return
 	}
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -1508,7 +1518,8 @@ func TestUpdateOrchConfigCredential(t *testing.T) {
 		return
 	}
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -1655,9 +1666,10 @@ func TestManageGivenNamespaces(t *testing.T) {
 	sm, _, err := smmock.NewMockStateManager()
 	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	// We just want to manage dcName1 and dcName2
 	orchConfig.Spec.ManageNamespaces = []string{dcName1, dcName2}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -1737,9 +1749,9 @@ func TestManageAllNamespaces(t *testing.T) {
 	sm, _, err := smmock.NewMockStateManager()
 	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
-	// We just want to manage dcName1 and dcName2
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -1823,9 +1835,9 @@ func TestManageNoNamespaces(t *testing.T) {
 	sm, _, err := smmock.NewMockStateManager()
 	AssertOk(t, err, "Failed to create state manager. Err : %v", err)
 
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
-	// We just want to manage dcName1 and dcName2
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 
@@ -1910,8 +1922,9 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 	}
 
 	// ADD DC-0
-	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestOrchName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 	orchConfig.Spec.ManageNamespaces = []string{dcNames[0]}
+	orchConfig.Spec.URI = defaultTestParams.TestHostName
 
 	err = sm.Controller().Orchestrator().Create(orchConfig)
 	AssertOk(t, err, "failed to create orch config")
@@ -2024,7 +2037,84 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 		return true, nil
 	}, "Did not find DC")
 
-	// REMOVE ALL DCs
+	// Create a random host with the orchname and namespace key
+	testHost := "another-host"
+	prodMap := make(map[string]string)
+	prodMap[utils.OrchNameKey] = "another-orchestrator"
+	prodMap[utils.NamespaceKey] = dcNames[0]
+
+	np := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      testHost,
+			Namespace: "default",
+			Labels:    prodMap,
+		},
+		Spec:   cluster.HostSpec{},
+		Status: cluster.HostStatus{},
+	}
+
+	// create a Host
+	err = sm.Controller().Host().Create(&np)
+	Assert(t, (err == nil), "Host could not be created")
+
+	// REMOVE ALL DCs - Ensure the above host is not deleted
+	orchConfig.Spec.ManageNamespaces = []string{}
+	vchub.UpdateConfig(orchConfig)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		for i := 1; i < dcCount; i++ {
+			dc := vchub.GetDC(dcNames[i])
+			if dc != nil {
+				return false, fmt.Errorf("DC %v should not have been found", dcNames[i])
+			}
+
+			if len(vchub.DcMap) > 0 {
+				return false, fmt.Errorf("VCHub in-memory state not cleared")
+			}
+		}
+
+		h, err := sm.Controller().Host().List(context.Background(), &api.ListWatchOptions{})
+		if len(h) != 1 || err != nil {
+			return false, fmt.Errorf("found %v hosts instead of 1. Err : %v", len(h), err)
+		}
+
+		return true, nil
+	}, "Unexpected DC found")
+
+	meta := api.ObjectMeta{
+		Name:      testHost,
+		Namespace: "default",
+	}
+
+	h, err := sm.Controller().Host().Find(&meta)
+	AssertOk(t, err, "did not find the Host")
+
+	AssertEquals(t, testHost, h.Host.Name, "Wrong host found")
+
+	// Add non-existing DC
+	orchConfig.Spec.ManageNamespaces = []string{"non-existing-dc"}
+	vchub.UpdateConfig(orchConfig)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		for i := 1; i < dcCount; i++ {
+			dc := vchub.GetDC(dcNames[i])
+			if dc != nil {
+				return false, fmt.Errorf("DC %v should not have been found", dcNames[i])
+			}
+
+			if len(vchub.DcMap) > 0 {
+				return false, fmt.Errorf("VCHub in-memory state not cleared")
+			}
+		}
+		dc := vchub.GetDC("non-existing-dc")
+		if dc != nil {
+			return false, fmt.Errorf("non-existing-dc found")
+		}
+		return true, nil
+	}, "non existing dc test failed")
+
+	// REMOVE ALL DCs - Ensure the above host is not deleted
 	orchConfig.Spec.ManageNamespaces = []string{}
 	vchub.UpdateConfig(orchConfig)
 
@@ -2040,7 +2130,7 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 			}
 		}
 		return true, nil
-	}, "Did not find DC")
+	}, "Unexpected DC found")
 }
 
 func TestDiscoveredDCs(t *testing.T) {

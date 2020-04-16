@@ -532,12 +532,12 @@ func TestNetworks(t *testing.T) {
 
 				h1 := createHostObj(vchub.createHostName("DC1", "h1"), "h1", "aaaa.bbbb.cccc")
 				vchub.StateMgr.Controller().Host().Create(&h1)
-				utils.AddOrchNameLabel(h1.Labels, "127.0.0.1:8990")
+				utils.AddOrchNameLabel(h1.Labels, "test-orchestrator")
 				utils.AddOrchNamespaceLabel(h1.Labels, "DC1")
 
 				w1 := createWorkloadObj(vchub.createVMWorkloadName("DC1", "w1"), h1.Name, nil)
 				utils.AddOrchNamespaceLabel(w1.Labels, "DC1")
-				utils.AddOrchNameLabel(w1.Labels, "127.0.0.1:8990")
+				utils.AddOrchNameLabel(w1.Labels, "test-orchestrator")
 
 				vchub.StateMgr.Controller().Workload().Create(&w1)
 			},
