@@ -6,6 +6,9 @@ MY_DIR=$( readlink -f $( dirname $0 ))
 DOL_ARGS='--pipeline apulu --topo learn --feature learn'
 source $MY_DIR/../../../tools/setup_dol.sh $DOL_ARGS
 
+# start pciemgr
+$BUILD_DIR/bin/pciemgrd -d &
+
 # setup upgrade
 source $MY_DIR/../setup_upgrade_gtests.sh
 upg_operd_init
@@ -17,6 +20,7 @@ function trap_finish () {
     pkill fsm_test
     pkill pdsupgmgr
     stop_process
+    pkill pciemgrd
     stop_model
     upg_finish upgmgr
 }
@@ -28,15 +32,14 @@ trap trap_finish EXIT
 #$DOLDIR/main.py $CMDARGS 2>&1 | tee dol.log
 #status=${PIPESTATUS[0]}
 
-
 # create a sysmgr instance from test service which sends
 # ok for all events
-fsm_test -s sysmgr -i 62 > upgrade_service.log 2>&1 &
+$BUILD_DIR/bin/fsm_test -s sysmgr -i 62 > upgrade_service.log 2>&1 &
 sleep 2
 
 # start upgrade manager
 upg_setup $BUILD_DIR/gen/upgrade_graceful.json
-pdsupgmgr > upgrade_mgr.log 2>&1 &
+$BUILD_DIR/bin/pdsupgmgr > upgrade_mgr.log 2>&1 &
 sleep 2
 
 # run client

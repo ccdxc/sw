@@ -39,6 +39,7 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblist.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libevent_thread.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenipc.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpenipc_ev.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libzmq.so                           /nic/lib/libzmq.so.3
 nic/build/$ARCH/$PIPELINE/lib/libslab.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libshmmgr.so                        /nic/lib/

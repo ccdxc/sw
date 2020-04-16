@@ -274,6 +274,8 @@ server_loop(pciemgrenv_t *pme)
     evutil_timer_start(EV_DEFAULT_
                        &stats_timer, update_stats, pme, 10.0, 10.0);
 #endif
+#else
+    upg_ev_init();
 #endif
 
     pciemgrs_open(NULL, pciemgr_msg_cb);

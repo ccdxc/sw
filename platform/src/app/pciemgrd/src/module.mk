@@ -14,7 +14,7 @@ ifneq (,$(filter $(PIPELINE),apulu))
 MODULE_PIPELINE := apulu
 MODULE_SRCS     += ${MODULE_SRC_DIR}/delphic_stubs.cc \
                    ${NULL}
-MODULE_LDLIBS   := ev edit ncurses
+MODULE_LDLIBS   := rt ev edit ncurses
 ifeq ($(ARCH),aarch64)
 MODULE_SOLIBS   += catalog sdkfru
 endif

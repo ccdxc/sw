@@ -136,7 +136,7 @@ upg_ev_hdlr_register(upg_ev_t &ev)
 
     // subscribe for upgrade events from upgrade manager
     // below 2 are broadcast events and it is mandatory to be provided
-    SDK_ASSERT(ev.start_hdlr);
+    SDK_ASSERT(ev.compat_check_hdlr);
     SDK_ASSERT(ev.ready_hdlr);
     sdk::ipc::subscribe(UPG_EV_COMPAT_CHECK, upg_ev_handler, NULL);
     sdk::ipc::subscribe(UPG_EV_READY, upg_ev_handler, NULL);

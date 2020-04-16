@@ -1,0 +1,17 @@
+{
+    "//" : "This file defines the component versions for graceful upgrade",
+    "versions": {
+        "//": "compat checks on nicmgr - impl,  memory layout, sw state etc",
+        "nicmgr": "1",
+        "//": "compat checks on pciemgr - impl, memory layout, sw state etc",
+        "pcie": "1",
+        "//": "compat checks on drivers, kernel version etc",
+        "kernel": "1",
+        "//": "compat checks on pds-agent - impl, memory layout, sw state etc",
+        "pdsagent": "1",
+        "//": "compat checks on p4 - tables, table engine configs etc",
+        "p4": "1",
+        "//": "compat checks on p4plus - tables, table engine configs etc",
+        "p4plus": "1"
+    }
+}

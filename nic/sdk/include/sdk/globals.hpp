@@ -15,6 +15,7 @@
 typedef enum sdk_ipc_id_s {
     SDK_IPC_ID_MIN          = 0,
     SDK_IPC_ID_UPGMGR       = SDK_IPC_ID_MIN + 1,
+    SDK_IPC_ID_PCIEMGR      = SDK_IPC_ID_MIN + 2,
     SDK_IPC_ID_MAX          = SDK_IPC_ID_MIN + 31,
 } sdk_ipc_id_t;
 

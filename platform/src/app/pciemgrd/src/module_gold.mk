@@ -7,7 +7,7 @@ MODULE_SOLIBS   := pciemgrd pciemgr_if pciemgr pciemgrutils pciehdevices \
 ifeq ($(ARCH),aarch64)
 MODULE_SOLIBS   += catalog sdkfru
 endif
-MODULE_LDLIBS   := ev
+MODULE_LDLIBS   := ev rt
 MODULE_INCS     := ${MODULE_SRC_DIR}/../include
 MODULE_FLAGS    := -DPCIEMGRD_GOLD
 MODULE_SRCS     := ${MODULE_SRC_DIR}/pciemgrd.cc \

@@ -21,15 +21,15 @@ namespace core {
 
 // threads inside the PDS HAL library (these ids are also used as IPC endpoints)
 enum {
-    PDS_THREAD_ID_NONE       = pds_thread_id_t::PDS_THREAD_ID_MIN,
-    PDS_THREAD_ID_CFG        = 1,
-    PDS_THREAD_ID_API        = 2,
-    PDS_THREAD_ID_PERIODIC   = 3,
-    PDS_THREAD_ID_NICMGR     = 4,
-    PDS_THREAD_ID_PCIEMGR    = 5,
-    PDS_THREAD_ID_LEARN      = 6,
-    PDS_THREAD_ID_FTE        = 7,
-    PDS_THREAD_ID_MAX        = pds_thread_id_t::PDS_THREAD_ID_MAX,
+    PDS_THREAD_ID_NONE = pds_thread_id_t::PDS_THREAD_ID_MIN,
+    PDS_THREAD_ID_CFG,
+    PDS_THREAD_ID_API,
+    PDS_THREAD_ID_PERIODIC,
+    PDS_THREAD_ID_NICMGR,
+    PDS_THREAD_ID_PCIEMGR,
+    PDS_THREAD_ID_LEARN,
+    PDS_THREAD_ID_FTE,
+    PDS_THREAD_ID_MAX = pds_thread_id_t::PDS_THREAD_ID_MAX,
 };
 
 enum {

@@ -39,6 +39,7 @@ int upgrade_rollback_in_progress(void);
 int upgrade_rollback_complete(void);
 
 int delphi_client_start();
+void upg_ev_init(void);
 
 typedef enum pciemgr_port_status_e {
     PCIEMGR_UP,
