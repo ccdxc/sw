@@ -22,6 +22,7 @@ import nh_pb2_grpc as nh_pb2_grpc
 import dhcp_pb2_grpc as dhcp_pb2_grpc
 import nat_pb2_grpc as nat_pb2_grpc
 import bgp_pb2_grpc as bgp_pb2_grpc
+import service_pb2_grpc as service_pb2_grpc
 
 import logging
 console = logging.StreamHandler()
@@ -63,7 +64,9 @@ class ObjectTypes(enum.IntEnum):
     BGP = 16
     BGP_PEER = 17
     BGP_PEER_AF = 18
-    MAX = 19
+    SVC_MAPPING = 19
+    SECURITY_PROFILE = 20
+    MAX = 21
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -161,6 +164,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'RouteTable')
         self.__stubs[ObjectTypes.POLICY] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
                                                       self.__channel, 'SecurityPolicy')
+        self.__stubs[ObjectTypes.SECURITY_PROFILE] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
+                                                      self.__channel, 'SecurityProfile')
         self.__stubs[ObjectTypes.MIRROR] = ClientStub(mirror_pb2_grpc.MirrorSvcStub,
                                                       self.__channel, 'MirrorSession')
         self.__stubs[ObjectTypes.DHCP_POLICY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
@@ -173,6 +178,8 @@ class ApolloAgentClient:
                                                    self.__channel, 'BGPPeer')
         self.__stubs[ObjectTypes.BGP_PEER_AF] = ClientStub(bgp_pb2_grpc.BGPSvcStub,
                                                    self.__channel, 'BGPPeerAf')
+        self.__stubs[ObjectTypes.SVC_MAPPING] = ClientStub(service_pb2_grpc.SvcStub,
+                                                   self.__channel, 'SvcMapping')
         return
 
     def Create(self, objtype, objs):

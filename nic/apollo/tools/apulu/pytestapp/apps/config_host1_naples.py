@@ -17,6 +17,7 @@ import nh
 import node
 import nat
 import bgp
+import service_mapping
 
 import netaddr
 import argparse
@@ -134,6 +135,10 @@ subnet2_local_vnic_mac='00:ae:cd:00:08:12'
 subnet2_remote_vnic_mac='00:ae:cd:00:00:0b'
 subnet2_local_host_ip=ipaddress.IPv4Address('3.1.0.2')
 subnet2_local_vnic_public_ip=ipaddress.IPv4Address('50.0.0.100')
+subnet2_backend_ip=subnet2_local_vnic_public_ip
+subnet2_backend_port=9999
+subnet2_vip=ipaddress.IPv4Address('100.0.0.100')
+subnet2_service_port=10000
 
 # NAT Prefix
 nat_prefix=ipaddress.IPv4Network('50.0.0.1/32')
@@ -149,6 +154,8 @@ batch1=batch.BatchObject()
 # Create device object
 # local_tep_ip, gatewayip, local_tep_mac
 device1=device.DeviceObject(ipaddress.IPv4Address(local_tep_ip), None, None)
+
+security_profile1=policy.SecurityProfileObject(1, 60, 60, 30)
 
 # Create VPC object 
 # id, v4prefix, type = vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue
@@ -222,11 +229,16 @@ map2 = mapping.MappingObject( 2, 'l3', subnet1_local_vnic_mac, subnet1_local_hos
 map3 = mapping.MappingObject( 3, 'l3', subnet1_remote_vnic_mac, subnet1_remote_host_ip, vpc1_id, subnetid=1, tunnelid=1 )
 map4 = mapping.MappingObject( 4, 'l3', subnet2_local_vnic_mac, subnet2_local_host_ip, vpc1_id, subnetid=2, vnicid=2, public_ip=subnet2_local_vnic_public_ip )
 
+# Create service mapping
+svc_map1 = service_mapping.SvcMappingObject(1, vpc1_id, subnet2_backend_ip, subnet2_backend_port, subnet2_vip, subnet2_service_port)
+
 # Push the configuration
 api.client.Start(api.ObjectTypes.BATCH, batch1.GetGrpcMessage())
 
 # Create configs on the Naples
 api.client.Create(api.ObjectTypes.SWITCH, [device1.GetGrpcCreateMessage()])
+
+api.client.Create(api.ObjectTypes.SECURITY_PROFILE, [security_profile1.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.VPC, [vpc1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.VPC, [vpc100.GetGrpcCreateMessage()])
@@ -264,5 +276,7 @@ api.client.Create(api.ObjectTypes.MAPPING, [map1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.MAPPING, [map2.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.MAPPING, [map3.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.MAPPING, [map4.GetGrpcCreateMessage()])
+
+api.client.Create(api.ObjectTypes.SVC_MAPPING, [svc_map1.GetGrpcCreateMessage()])
 
 sys.exit(1)

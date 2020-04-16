@@ -1,9 +1,10 @@
 #! /usr/bin/python3
 import pdb
+import ipaddress as ipaddress
 
 import types_pb2 as types_pb2
 import policy_pb2 as policy_pb2
-import ipaddress as ipaddress
+import utils
 
 PROTO_TCP = 6
 PROTO_UDP = 17
@@ -54,3 +55,31 @@ class PolicyObject():
             self.FillRule(spec, rule)
         return grpcmsg
 
+class SecurityProfileObject():
+    def __init__(self, id, tcp_idle_timeout, udp_idle_timeout, icmp_idle_timeout):
+        self.id = id
+        self.uuid = utils.PdsUuid(self.id)
+        self.tcp_idle_timeout = tcp_idle_timeout
+        self.udp_idle_timeout = udp_idle_timeout
+        self.icmp_idle_timeout = icmp_idle_timeout
+        return
+
+    def GetGrpcCreateMessage(self):
+        grpcmsg = policy_pb2.SecurityProfileRequest()
+        spec = grpcmsg.Request.add()
+        spec.Id = self.uuid.GetUuid()
+
+        spec.ConnTrackEn = False
+        spec.DefaultFWAction = types_pb2.SECURITY_RULE_ACTION_ALLOW
+        spec.TCPIdleTimeout = self.tcp_idle_timeout
+        spec.UDPIdleTimeout = self.udp_idle_timeout
+        spec.ICMPIdleTimeout = self.icmp_idle_timeout
+        spec.OtherIdleTimeout = 100
+        spec.TCPCnxnSetupTimeout = 100
+        spec.TCPHalfCloseTimeout = 100
+        spec.TCPCloseTimeout = 100
+        spec.TCPDropTimeout = 100
+        spec.UDPDropTimeout = 100
+        spec.ICMPDropTimeout = 100
+        spec.OtherDropTimeout = 100
+        return grpcmsg

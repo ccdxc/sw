@@ -149,6 +149,8 @@ batch1=batch.BatchObject()
 # local_tep_ip, gatewayip, local_tep_mac
 device1=device.DeviceObject(ipaddress.IPv4Address(local_tep_ip), None, None)
 
+security_profile1=policy.SecurityProfileObject(1, 60, 60, 30)
+
 # Create VPC object 
 # id, v4prefix, type = vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue
 vpc1=vpc.VpcObject(vpc1_id, type=vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue=vpc1_vxlan_encap )
@@ -227,6 +229,8 @@ api.client.Start(api.ObjectTypes.BATCH, batch1.GetGrpcMessage())
 
 # Create configs
 api.client.Create(api.ObjectTypes.SWITCH, [device1.GetGrpcCreateMessage()])
+
+api.client.Create(api.ObjectTypes.SECURITY_PROFILE, [security_profile1.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.VPC, [vpc1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.VPC, [vpc100.GetGrpcCreateMessage()])
