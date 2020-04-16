@@ -12,7 +12,12 @@ module.exports = function(config) {
       require('karma-verbose-reporter'),
       require('karma-coverage-istanbul-reporter'),
       require('@angular-devkit/build-angular/plugins/karma')
-    ],
+    ],    // to avoid DISCONNECTED messages
+    browserDisconnectTimeout : 20000, // default 2000
+    browserDisconnectTolerance : 5, // default 0
+    browserNoActivityTimeout : 4*60*1000, //default 10000
+    captureTimeout : 4*60*1000, //default 60000
+
     files: [
       "node_modules/jquery/dist/jquery.min.js",
     ],
@@ -29,7 +34,7 @@ module.exports = function(config) {
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: true,
-    browsers: ['ChromeHeadless'],
+    browsers: ['ChromeHeadlessCI'],
     //browsers: ['PhantomJS', 'Chrome'],  //this will launch unit test in both PhantomJS and Chrome. It will run UT twices.  ng test --watch false --browser Chrome (to run ut with chrome)
     customLaunchers: {
       ChromeHeadlessCI: {
@@ -38,6 +43,7 @@ module.exports = function(config) {
           '--headless',
           '--disable-gpu',
           '--no-sandbox',
+          '--max-old-space-size=8196',
           // Without a remote debugging port, Google Chrome exits immediately.
           '--remote-debugging-port=9222',
         ],

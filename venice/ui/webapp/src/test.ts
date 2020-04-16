@@ -20,6 +20,17 @@ declare const require: any;
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
+jasmine.getEnv().addReporter({
+  suiteDone() {
+    // Clear the styles after each test suite.
+    const head: HTMLHeadElement = document.getElementsByTagName('head')[0];
+    const styles: HTMLCollectionOf<HTMLStyleElement> = head.getElementsByTagName('style');
+    for (let i = 0; i < styles.length; i++) {
+      head.removeChild(styles[i]);
+    }
+  }
+});
+
 // Prevent Karma from running prematurely.
 __karma__.loaded = function() { };
 

@@ -26,7 +26,7 @@ describe('PagebodyComponent', () => {
       margin: {
         top: '5px',
         left: '5px',
-        url: 'test.com'
+        url: ''
       }
     };
     fixture.detectChanges();
