@@ -63,6 +63,8 @@ type MethodHdlr struct {
 	makeURIFunc apiserver.MakeURIFunc
 	// makeMethDBKey generates the db key for the method
 	makeMethDBKey apiserver.MakeMethDbKeyFunc
+	// resourceAllocFn is callback for resource allocation
+	resourceAllocFn []apiserver.ResourceAllocFunc
 }
 
 type errorStatus struct {
@@ -165,6 +167,12 @@ func (m *MethodHdlr) WithMakeURI(fn apiserver.MakeURIFunc) apiserver.Method {
 // WithMethDbKey sets the methDBKey function for the method
 func (m *MethodHdlr) WithMethDbKey(fn apiserver.MakeMethDbKeyFunc) apiserver.Method {
 	m.makeMethDBKey = fn
+	return m
+}
+
+// WithResourceAllocHook registers a resource allocation callback.
+func (m *MethodHdlr) WithResourceAllocHook(fn apiserver.ResourceAllocFunc) apiserver.Method {
+	m.resourceAllocFn = append(m.resourceAllocFn, fn)
 	return m
 }
 
@@ -423,7 +431,7 @@ func (m *MethodHdlr) retrieveFromKvStore(ctx context.Context, i interface{}, ope
 //       response
 // 8. Version transform - The response is version transformed from the API Server verion
 //    to the request version if needed.
-func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (interface{}, error) {
+func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (retResp interface{}, retErr error) {
 	var (
 		old, resp, orig interface{}
 		err             error
@@ -669,6 +677,29 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		}
 		kvwrite = kvwrite && kvold
 	}
+
+	// XXX-TODO(sanjayt): handle resource reservation for staged calls too.
+	// currently resource reservation only supported on on staged requests
+	rollbackFns := []apiserver.ResourceRollbackFn{}
+	if bufid == "" {
+		for _, f := range m.resourceAllocFn {
+			rollbackFn, err := f(ctx, i, kv, key, dryRun)
+			if err != nil {
+				return nil, errPreOpChecksFailed.makeError(i, []string{err.Error()}, "")
+			}
+			if rollbackFn != nil {
+				rollbackFns = append(rollbackFns, rollbackFn)
+			}
+		}
+	}
+	// rollback in case of failure.
+	defer func() {
+		if retErr != nil {
+			for _, f := range rollbackFns {
+				f(ctx, i, kv, key, dryRun)
+			}
+		}
+	}()
 
 	// Label updates perform a kv consistent update and skips the kv write
 	if kvwrite && oper == apiintf.LabelOper {

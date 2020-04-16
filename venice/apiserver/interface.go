@@ -239,6 +239,12 @@ type UpdateSelfLinkFunc func(path, ver, prefix string, i interface{}) (interface
 // GetReferencesFunc gets the references for an object
 type GetReferencesFunc func(i interface{}) (map[string]apiintf.ReferenceObj, error)
 
+// ResourceRollbackFn rollbacks an allocated resouce on failure of API call
+type ResourceRollbackFn func(ctx context.Context, i interface{}, kvstore kvstore.Interface, key string, dryrun bool)
+
+// ResourceAllocFunc is the resource allocation callback
+type ResourceAllocFunc func(ctx context.Context, i interface{}, kvstore kvstore.Interface, key string, dryrun bool) (ResourceRollbackFn, error)
+
 // ObjStorageTransformer is a pair of functions to be invoked before/after an object
 // is written/read to/from KvStore
 type ObjStorageTransformer interface {
@@ -383,6 +389,9 @@ type MethodRegistration interface {
 	WithMakeURI(fn MakeURIFunc) Method
 	// WithMethDbKey sets the fn to generate the db key for the method
 	WithMethDbKey(fn MakeMethDbKeyFunc) Method
+
+	// WithResourceAllocHook registers a resource allocation callback.
+	WithResourceAllocHook(fn ResourceAllocFunc) Method
 }
 
 // MethodAction is the set of actions on a Method.

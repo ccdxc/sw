@@ -8,19 +8,20 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
-	apiintf "github.com/pensando/sw/api/interfaces"
-	apiutils "github.com/pensando/sw/api/utils"
+	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/featureflags"
@@ -29,8 +30,10 @@ import (
 )
 
 type networkHooks struct {
-	svc    apiserver.Service
-	logger log.Logger
+	svc       apiserver.Service
+	logger    log.Logger
+	vnidMapMu sync.Mutex
+	vnidMap   map[uint32]string
 }
 
 func (h *networkHooks) validateIPAMPolicyConfig(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
@@ -52,15 +55,15 @@ func validateImportExportRTs(rd *network.RouteDistinguisher, name string) (ret [
 	switch strings.ToLower(rd.Type) {
 	case strings.ToLower(network.RouteDistinguisher_Type0.String()):
 		if rd.AdminValue > math.MaxUint16 {
-			ret = append(ret, fmt.Errorf("%s Route Distinguisher %s admin value cannot be greater than %d", name, network.RouteDistinguisher_Type0.String(), math.MaxUint16))
+			ret = append(ret, fmt.Errorf("%s Route Target %s admin value cannot be greater than %d", name, network.RouteDistinguisher_Type0.String(), math.MaxUint16))
 		}
 	case strings.ToLower(network.RouteDistinguisher_Type1.String()):
 		if rd.AssignedValue > math.MaxUint16 {
-			ret = append(ret, fmt.Errorf("%s Route Distinguisher %s assigned value cannot be greater than %d", name, network.RouteDistinguisher_Type1.String(), math.MaxUint16))
+			ret = append(ret, fmt.Errorf("%s Route Target %s assigned value cannot be greater than %d", name, network.RouteDistinguisher_Type1.String(), math.MaxUint16))
 		}
 	case strings.ToLower(network.RouteDistinguisher_Type2.String()):
 		if rd.AssignedValue > math.MaxUint16 {
-			ret = append(ret, fmt.Errorf("%s Route Distinguisher %s assigned value cannot be greater than %d", name, network.RouteDistinguisher_Type2.String(), math.MaxUint16))
+			ret = append(ret, fmt.Errorf("%s Route Target %s assigned value cannot be greater than %d", name, network.RouteDistinguisher_Type2.String(), math.MaxUint16))
 		}
 	}
 	return
@@ -598,28 +601,168 @@ func (h *networkHooks) updateAuthStatus(ctx context.Context, kvs kvstore.Interfa
 	return resp, nil
 }
 
+func (h *networkHooks) networkVNIReserve(ctx context.Context, i interface{}, kvs kvstore.Interface, key string, dryrun bool) (apiserver.ResourceRollbackFn, error) {
+	n, ok := i.(network.Network)
+	if !ok {
+		log.Errorf("networkVNIReserve; invalid kind")
+		return nil, fmt.Errorf("invalid kind received")
+	}
+	if n.Spec.VxlanVNI != 0 {
+		defer h.vnidMapMu.Unlock()
+		h.vnidMapMu.Lock()
+		if v, ok := h.vnidMap[n.Spec.VxlanVNI]; ok {
+			vals := strings.Split(v, "/")
+			if len(vals) == 3 {
+				if vals[1] == n.Tenant {
+					return nil, fmt.Errorf("vxlan-vni [%d] already used by %v", n.Spec.VxlanVNI, v)
+				}
+			}
+			return nil, fmt.Errorf("vxlan-vni [%d] already in use", n.Spec.VxlanVNI)
+		}
+
+		h.vnidMap[n.Spec.VxlanVNI] = "Network/" + n.Tenant + "/" + n.Name
+		return func(ctx context.Context, i interface{}, _ kvstore.Interface, key string, dryrun bool) {
+			delete(h.vnidMap, n.Spec.VxlanVNI)
+		}, nil
+	}
+	return nil, nil
+}
+
+func (h *networkHooks) vrouterVNIReserve(ctx context.Context, i interface{}, kvs kvstore.Interface, key string, dryrun bool) (apiserver.ResourceRollbackFn, error) {
+	n, ok := i.(network.VirtualRouter)
+	if !ok {
+		log.Errorf("vrouterVNIReserve; invalid kind")
+		return nil, fmt.Errorf("invalid kind received")
+	}
+	if n.Spec.VxLanVNI != 0 {
+		defer h.vnidMapMu.Unlock()
+		h.vnidMapMu.Lock()
+		if v, ok := h.vnidMap[n.Spec.VxLanVNI]; ok {
+			vals := strings.Split(v, "/")
+			if len(vals) == 3 {
+				if vals[1] == n.Tenant {
+					return nil, fmt.Errorf("vxlan-vni [%d] already used by %v", n.Spec.VxLanVNI, v)
+				}
+			}
+			return nil, fmt.Errorf("vxlan-vni [%d] already in use", n.Spec.VxLanVNI)
+		}
+
+		h.vnidMap[n.Spec.VxLanVNI] = "VirtualRouter/" + n.Tenant + "/" + n.Name
+		return func(ctx context.Context, i interface{}, _ kvstore.Interface, key string, dryrun bool) {
+			delete(h.vnidMap, n.Spec.VxLanVNI)
+		}, nil
+	}
+	return nil, nil
+}
+
+func (h *networkHooks) releaseNetworkResources(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryRun bool) {
+	n, ok := i.(network.Network)
+	if !ok {
+		log.Errorf("networkVNIReserve; invalid kind")
+		return
+	}
+	if n.Spec.VxlanVNI != 0 {
+		defer h.vnidMapMu.Unlock()
+		h.vnidMapMu.Lock()
+		if v, ok := h.vnidMap[n.Spec.VxlanVNI]; ok {
+			k := "Network/" + n.Tenant + "/" + n.Name
+			if v != k {
+				log.Errorf("current resource did not match [%v][%v]", v, k)
+				return
+			}
+			delete(h.vnidMap, n.Spec.VxlanVNI)
+		} else {
+			log.Errorf("could not find VNI in map [%v/%v][%v]", n.Tenant, n.Name, n.Spec.VxlanVNI)
+		}
+	}
+}
+
+func (h *networkHooks) releaseVRouterResources(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryRun bool) {
+	n, ok := i.(network.VirtualRouter)
+	if !ok {
+		log.Errorf("networkVNIReserve; invalid kind")
+		return
+	}
+
+	if n.Spec.VxLanVNI != 0 {
+		defer h.vnidMapMu.Unlock()
+		h.vnidMapMu.Lock()
+		if v, ok := h.vnidMap[n.Spec.VxLanVNI]; ok {
+			k := "VirtualRouter/" + n.Tenant + "/" + n.Name
+			if v != k {
+				log.Errorf("current resource did not match [%v][%v]", v, k)
+				return
+			}
+			delete(h.vnidMap, n.Spec.VxLanVNI)
+		} else {
+			log.Errorf("could not find VNI in map [%v/%v][%v]", n.Tenant, n.Name, n.Spec.VxLanVNI)
+		}
+	}
+}
+
+func (h *networkHooks) restoreResourceMap(kvs kvstore.Interface, logger log.Logger) {
+	defer h.vnidMapMu.Unlock()
+	h.vnidMapMu.Lock()
+	// list all VRFs across tenants
+	vrList := network.VirtualRouterList{}
+	key := vrList.MakeKey(string(apiclient.GroupNetwork))
+	for strings.HasSuffix(key, "//") {
+		key = strings.TrimSuffix(key, "//")
+	}
+	err := kvs.List(context.TODO(), key, &vrList)
+	if err == nil {
+		for _, v := range vrList.Items {
+			if v.Spec.VxLanVNI != 0 {
+				key = "VirtualRouter/" + v.Tenant + "/" + v.Name
+				h.vnidMap[v.Spec.VxLanVNI] = key
+			}
+		}
+	}
+
+	netList := network.NetworkList{}
+	key = netList.MakeKey(string(apiclient.GroupNetwork))
+	for strings.HasSuffix(key, "//") {
+		key = strings.TrimSuffix(key, "//")
+	}
+	err = kvs.List(context.TODO(), key, &netList)
+	if err == nil {
+		for _, v := range netList.Items {
+			if v.Spec.VxlanVNI != 0 {
+				key = "Network/" + v.Tenant + "/" + v.Name
+				h.vnidMap[v.Spec.VxlanVNI] = key
+			}
+		}
+	}
+}
+
 func registerNetworkHooks(svc apiserver.Service, logger log.Logger) {
-	hooks := networkHooks{}
+	hooks := networkHooks{
+		vnidMap: make(map[uint32]string),
+	}
 	hooks.svc = svc
 	hooks.logger = logger
 	logger.InfoLog("Service", "NetworkV1", "msg", "registering networkAction hook")
 	svc.GetCrudService("IPAMPolicy", apiintf.CreateOper).GetRequestType().WithValidate(hooks.validateIPAMPolicyConfig)
 	svc.GetCrudService("IPAMPolicy", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateIPAMPolicyConfig)
-	svc.GetCrudService("Network", apiintf.CreateOper).WithPreCommitHook(hooks.checkNetworkCreateConfig)
+	svc.GetCrudService("Network", apiintf.CreateOper).WithPreCommitHook(hooks.checkNetworkCreateConfig).WithResourceAllocHook(hooks.networkVNIReserve)
 	svc.GetCrudService("Network", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkConfig)
 	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.networkOrchConfigPrecommit)
 	svc.GetCrudService("Network", apiintf.UpdateOper).WithPreCommitHook(hooks.checkNetworkMutableFields)
+	svc.GetCrudService("Network", apiintf.DeleteOper).WithPostCommitHook(hooks.releaseNetworkResources)
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateNetworkIntfConfig)
 	svc.GetCrudService("NetworkInterface", apiintf.UpdateOper).WithPreCommitHook(hooks.checkNetworkInterfaceMutable)
-	svc.GetCrudService("VirtualRouter", apiintf.CreateOper).WithPreCommitHook(hooks.createDefaultVRFRouteTable)
+	svc.GetCrudService("VirtualRouter", apiintf.CreateOper).WithPreCommitHook(hooks.createDefaultVRFRouteTable).WithResourceAllocHook(hooks.vrouterVNIReserve)
 	svc.GetCrudService("VirtualRouter", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateVirtualrouterConfig)
 	svc.GetCrudService("VirtualRouter", apiintf.UpdateOper).WithPreCommitHook(hooks.checkVirtualRouterMutableUpdate)
-	svc.GetCrudService("VirtualRouter", apiintf.DeleteOper).WithPreCommitHook(hooks.deleteDefaultVRFRouteTable)
+	svc.GetCrudService("VirtualRouter", apiintf.DeleteOper).WithPreCommitHook(hooks.deleteDefaultVRFRouteTable).WithPostCommitHook(hooks.releaseVRouterResources)
 	svc.GetCrudService("RoutingConfig", apiintf.CreateOper).WithPreCommitHook(hooks.routingConfigPreCommit).WithResponseWriter(hooks.updateAuthStatus)
 	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).WithPreCommitHook(hooks.routingConfigPreCommit).WithResponseWriter(hooks.updateAuthStatus)
 	svc.GetCrudService("RoutingConfig", apiintf.GetOper).WithResponseWriter(hooks.updateAuthStatus)
 	svc.GetCrudService("RoutingConfig", apiintf.ListOper).WithResponseWriter(hooks.updateAuthStatus)
 	svc.GetCrudService("RoutingConfig", apiintf.UpdateOper).GetRequestType().WithValidate(hooks.validateRoutingConfig)
+
+	apisrv := apisrvpkg.MustGetAPIServer()
+	apisrv.RegisterRestoreCallback(hooks.restoreResourceMap)
 }
 
 func init() {

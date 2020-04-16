@@ -916,3 +916,130 @@ func TestRoutingConfigResponseWriter(t *testing.T) {
 	AssertOk(t, err, "responseWriter returned error (%s)", err)
 	AssertOk(t, validateList(ret), "create oper response failed (%s)", err)
 }
+
+func TestVNIDResorceMap(t *testing.T) {
+	kvs := &mocks.FakeKvStore{}
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	nh := &networkHooks{
+		logger:  l,
+		vnidMap: make(map[uint32]string),
+	}
+
+	netwlist := network.NetworkList{
+		Items: []*network.Network{
+			{
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "tenant1",
+					Name:   "savedNet1",
+				},
+				Spec: network.NetworkSpec{
+					VxlanVNI: 10000,
+				},
+			},
+			{
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "tenant1",
+					Name:   "savedNet2",
+				},
+				Spec: network.NetworkSpec{
+					VxlanVNI: 10001,
+				},
+			},
+		},
+	}
+
+	vrList := network.VirtualRouterList{
+		Items: []*network.VirtualRouter{
+			{
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "tenant1",
+					Name:   "saveedVrf2",
+				},
+				Spec: network.VirtualRouterSpec{
+					VxLanVNI: 20000,
+				},
+			},
+			{
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "tenant1",
+					Name:   "saveedVrf2",
+				},
+				Spec: network.VirtualRouterSpec{
+					VxLanVNI: 20001,
+				},
+			},
+		},
+	}
+
+	kvs.Listfn = func(ictx context.Context, key string, into runtime.Object) error {
+		switch into.(type) {
+		case *network.VirtualRouterList:
+			in := into.(*network.VirtualRouterList)
+			*in = vrList
+			return nil
+		case *network.NetworkList:
+			in := into.(*network.NetworkList)
+			*in = netwlist
+			return nil
+		}
+		return nil
+	}
+
+	nh.restoreResourceMap(kvs, l)
+	Assert(t, len(nh.vnidMap) == 4, "expecting 4 VNIDS to be restored, got %v", len(nh.vnidMap))
+
+	netw := network.Network{
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "tenant1",
+			Name:   "net1",
+		},
+		Spec: network.NetworkSpec{
+			VxlanVNI: 10002,
+		},
+	}
+
+	vrouter := network.VirtualRouter{
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "tenant1",
+			Name:   "vrf1",
+		},
+		Spec: network.VirtualRouterSpec{
+			VxLanVNI: 20002,
+		},
+	}
+
+	fn, err := nh.networkVNIReserve(ctx, netw, kvs, "/test", false)
+	AssertOk(t, err, "VNI reserve should have passed")
+	Assert(t, len(nh.vnidMap) == 5, "expecting 5 VNIDS to be restored, got %v", len(nh.vnidMap))
+
+	fn(ctx, netw, kvs, "/test", false)
+	Assert(t, len(nh.vnidMap) == 4, "expecting 5 VNIDS to be restored, got %v", len(nh.vnidMap))
+
+	fn, err = nh.vrouterVNIReserve(ctx, vrouter, kvs, "/test", false)
+	AssertOk(t, err, "VNI reserve should have passed")
+	Assert(t, len(nh.vnidMap) == 5, "expecting 5 VNIDS to be restored, got %v", len(nh.vnidMap))
+
+	fn(ctx, vrouter, kvs, "/test", false)
+	Assert(t, len(nh.vnidMap) == 4, "expecting 5 VNIDS to be restored, got %v", len(nh.vnidMap))
+
+	netw.Spec.VxlanVNI = 10001
+	fn, err = nh.networkVNIReserve(ctx, netw, kvs, "/test", false)
+	Assert(t, err != nil, "VNI reserve should have failed")
+
+	vrouter.Spec.VxLanVNI = 10001
+	fn, err = nh.vrouterVNIReserve(ctx, vrouter, kvs, "/test", false)
+	Assert(t, err != nil, "VNI reserve should have failed")
+
+	// should fail because key cannot change
+	nh.releaseNetworkResources(ctx, apiintf.DeleteOper, netw, false)
+	Assert(t, len(nh.vnidMap) == 4, "expecting 4 VNIDS to be restored, got %v", len(nh.vnidMap))
+
+	nh.releaseNetworkResources(ctx, apiintf.DeleteOper, *netwlist.Items[1], false)
+	Assert(t, len(nh.vnidMap) == 3, "expecting 3 VNIDS to be restored, got %v", len(nh.vnidMap))
+
+	nh.releaseVRouterResources(ctx, apiintf.DeleteOper, *vrList.Items[1], false)
+	Assert(t, len(nh.vnidMap) == 2, "expecting 2 VNIDS to be restored, got %v", len(nh.vnidMap))
+}

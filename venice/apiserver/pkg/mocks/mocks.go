@@ -152,16 +152,17 @@ func NewFakeService() apisrv.Service {
 
 // FakeMethod is used as mock Method for testing.
 type FakeMethod struct {
-	Service      apisrv.Service
-	Pres         int
-	Posts        int
-	RWriters     int
-	MakeURIs     int
-	Skipkv       bool
-	Enabled      bool
-	ReqMsg       apisrv.Message
-	RespMsg      apisrv.Message
-	HandleMethod func(context.Context, interface{}) (interface{}, error)
+	Service       apisrv.Service
+	Pres          int
+	Posts         int
+	RWriters      int
+	MakeURIs      int
+	RollackCalled int
+	Skipkv        bool
+	Enabled       bool
+	ReqMsg        apisrv.Message
+	RespMsg       apisrv.Message
+	HandleMethod  func(context.Context, interface{}) (interface{}, error)
 }
 
 // Enable is a mock method for testing
@@ -207,6 +208,11 @@ func (m *FakeMethod) WithMakeURI(fn apisrv.MakeURIFunc) apisrv.Method {
 
 // WithMethDbKey set the URI maker function for the method
 func (m *FakeMethod) WithMethDbKey(fn apisrv.MakeMethDbKeyFunc) apisrv.Method {
+	return m
+}
+
+// WithResourceAllocHook registers a resource allocation callback.
+func (m *FakeMethod) WithResourceAllocHook(fn apisrv.ResourceAllocFunc) apisrv.Method {
 	return m
 }
 
@@ -282,6 +288,17 @@ func (m *FakeMethod) RespWriterFunc(ctx context.Context, kvs kvstore.Interface, 
 func (m *FakeMethod) MakeURIFunc(i interface{}) (string, error) {
 	m.MakeURIs++
 	return "", nil
+}
+
+// ResourceAllocFunc  is a mock method for testing
+func (m *FakeMethod) ResourceAllocFunc(ctx context.Context, i interface{}, kvstore kvstore.Interface, key string, dryrun bool) (apisrv.ResourceRollbackFn, error) {
+	return m.ResourceRollbackFunc, nil
+
+}
+
+// ResourceRollbackFunc  is a mock method for testing
+func (m *FakeMethod) ResourceRollbackFunc(ctx context.Context, i interface{}, kvstore kvstore.Interface, key string, dryrun bool) {
+	m.RollackCalled++
 }
 
 // FakeMessage is used as a mock object for testing.

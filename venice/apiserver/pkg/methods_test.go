@@ -63,7 +63,7 @@ func TestMethodWiths(t *testing.T) {
 	f := mocks.NewFakeMethod(true).(*mocks.FakeMethod)
 	// Add a few Pres and Posts and skip KV for testing
 	m := NewMethod(fsvc, req, resp, "testm", "TestMethodWiths").WithVersion("v1").WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc).WithPreCommitHook(f.PrecommitFunc)
-	m = m.WithPostCommitHook(f.PostcommitfFunc).WithPostCommitHook(f.PostcommitfFunc).WithResponseWriter(f.RespWriterFunc).WithMakeURI(f.MakeURIFunc)
+	m = m.WithPostCommitHook(f.PostcommitfFunc).WithPostCommitHook(f.PostcommitfFunc).WithResponseWriter(f.RespWriterFunc).WithMakeURI(f.MakeURIFunc).WithResourceAllocHook(f.ResourceAllocFunc)
 	m = m.WithOper("POST").WithVersion("Vtest")
 
 	reqmsg := TestType1{}
@@ -124,7 +124,7 @@ func TestMethodWiths(t *testing.T) {
 }
 
 // TestMethodKvWrite
-// Validate KV operation on Method invocation
+// Validate KV operati  on on Method invocation
 func TestMethodKvWrite(t *testing.T) {
 	req := mocks.NewFakeMessage("test.reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
 	// Response kind must be the same as the object for the label operation
@@ -260,6 +260,43 @@ func TestMethodKvWrite(t *testing.T) {
 		t.Errorf("Update status was not called")
 	}
 
+	// Test ResourcAllocation
+	saveUpd, saveCommit := globFakeOverlay.UpdatePrimaries, ftxn.CommitOps
+	allocCalled, rbCalled := 0, 0
+	rollbackFn := func(ctx context.Context, i interface{}, kvstore kvstore.Interface, key string, dryrun bool) {
+		rbCalled++
+	}
+	resAllocFn := func(ctx context.Context, i interface{}, kvstore kvstore.Interface, key string, dryrun bool) (apisrv.ResourceRollbackFn, error) {
+		allocCalled++
+		return rollbackFn, nil
+	}
+	var retErr error
+	respWriterFunc := func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+		return resp, retErr
+	}
+	m.WithResourceAllocHook(resAllocFn).WithResponseWriter(respWriterFunc)
+	if _, err := m.HandleInvocation(ctx2, reqmsg); err != nil {
+		t.Errorf("Expecting to suceed but failed (%+v)", err)
+	}
+	if allocCalled != 1 || rbCalled != 0 {
+		t.Errorf("does not match expected [%v]/[%v]", allocCalled, rbCalled)
+	}
+
+	// Set error in Invocation
+	allocCalled = 0
+	retErr = fmt.Errorf("failed")
+	if _, err := m.HandleInvocation(ctx2, reqmsg); err == nil {
+		t.Errorf("Expecting to fail but succeeded")
+	}
+	if allocCalled != 1 || rbCalled != 1 {
+		t.Errorf("does not match expected [%v]/[%v]", allocCalled, rbCalled)
+	}
+
+	mint := m.(*MethodHdlr)
+	mint.resourceAllocFn = nil
+	mint.responseWriter = nil
+	globFakeOverlay.UpdatePrimaries, ftxn.CommitOps = saveUpd, saveCommit
+
 	// invoke with label update
 	// Object type needs to be known for methods.go to create the into object
 	runtime.GetDefaultScheme().AddKnownTypes(&reqmsg)
@@ -394,6 +431,7 @@ func TestMethodKvWrite(t *testing.T) {
 	if globFakeOverlay.DeletePrimaries != 1 {
 		t.Errorf("Expecting [1] deletes but found [%v]", globFakeOverlay.DeletePrimaries)
 	}
+
 }
 
 func TestMethodKvList(t *testing.T) {
