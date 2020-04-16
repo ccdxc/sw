@@ -2501,7 +2501,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 		if err == nil {
 			return true, nil
 		}
-		return false, nil
+		return false, err
 	}, "Network not found", "1ms", "2s")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -2509,7 +2509,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 		if err == nil {
 			return true, nil
 		}
-		return false, nil
+		return false, err
 	}, "Endpoint not found", "1ms", "2s")
 
 	// verify we can find the network for the workload
@@ -2548,29 +2548,68 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 		if err == nil {
 			return true, nil
 		}
-		return false, nil
+		return false, err
 	}, "Endpoint not found", "1ms", "2s")
 
 	// find the second workload
 	AssertEventually(t, func() (bool, interface{}) {
 		fwr2, err := stateMgr.FindWorkload("default", "testWorkload2")
-		if err == nil && fwr2.Workload.Status.PropagationStatus.Status == "Propagation Failed. Duplicate MAC address" {
+		if err == nil && fwr2.Workload.Status.PropagationStatus.Status == DuplicateMacErr {
 			return true, nil
 		}
-		return false, nil
-	}, "Endpoint not found", "1ms", "2s")
+		return false, fmt.Errorf("Workload propagation status is %v. Err : %v", fwr2.Workload.Status.PropagationStatus.Status, err)
+	}, "workload not found", "1ms", "2s")
 
 	AssertEventually(t, func() (bool, interface{}) {
 		_, err := stateMgr.FindEndpoint("default", "testWorkload2-0001.0203.0405")
 		if err != nil {
 			return true, nil
 		}
-		return false, nil
+		return false, err
 	}, "Endpoint not found", "1ms", "2s")
 
 	// verify endpoint is not created
 	_, ok = nw.FindEndpoint("testWorkload2-0001.0203.0405")
 	Assert(t, (ok == false), "Duplicate endpoint still found in network db", "testWorkload2-0001.0203.0405")
+
+	// update workload with new EP, ensure propagation status message is cleared
+	wr2 = workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload2",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "1101.0203.0405",
+					MicroSegVlan: 201,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+	err = stateMgr.ctrler.Workload().Update(&wr2)
+	AssertOk(t, err, "Could not update the second workload")
+
+	// find the second workload and check propagation status and creation of endpoint
+	AssertEventually(t, func() (bool, interface{}) {
+		fwr2, err := stateMgr.FindWorkload("default", "testWorkload2")
+		if err == nil && len(fwr2.Workload.Status.PropagationStatus.Status) == 0 {
+			return true, nil
+		}
+		return false, err
+	}, "workload not found", "1ms", "2s")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := stateMgr.FindEndpoint("default", "testWorkload2-1101.0203.0405")
+		if err == nil {
+			return true, nil
+		}
+		return false, err
+	}, "Endpoint not found", "1ms", "2s")
 
 	// delete the workload
 	err = stateMgr.ctrler.Workload().Delete(&wr)
@@ -2582,7 +2621,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 		if err != nil && !ok {
 			return true, nil
 		}
-		return false, nil
+		return false, err
 	}, "Endpoint not found", "1ms", "2s")
 
 	// verify endpoint is gone from the database

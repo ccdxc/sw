@@ -25,6 +25,8 @@ import (
 
 const (
 	defaultMigrationTimeout = "3m" // 3 minutes
+	// DuplicateMacErr error string for duplicate mac
+	DuplicateMacErr = "Propagation Failed. Duplicate MAC address"
 )
 
 // WorkloadState is a wrapper for host object
@@ -487,7 +489,7 @@ func (ws *WorkloadState) createEndpoints() error {
 			if err == nil && mep.Endpoint.Name != epName {
 				// we found a duplicate mac address
 				log.Errorf("Error creating endpoint %s. Macaddress %s already exists in ep %s", epName, epMac, mep.Endpoint.Name)
-				ws.Workload.Status.PropagationStatus.Status = "Propagation Failed. Duplicate MAC address"
+				ws.Workload.Status.PropagationStatus.Status = DuplicateMacErr
 
 				// write the status back
 				return ws.Workload.Write()
@@ -532,6 +534,13 @@ func (ws *WorkloadState) createEndpoints() error {
 			log.Errorf("Error creating endpoint. Err: %v", err)
 			return kvstore.NewTxnFailedError()
 		}
+	}
+
+	// Clear propagation error message
+	ws.Workload.Status.PropagationStatus.Status = ""
+	err = ws.Workload.Write()
+	if err != nil {
+		log.Errorf("failed to clear propagation status. Err : %v", err)
 	}
 
 	return nil
