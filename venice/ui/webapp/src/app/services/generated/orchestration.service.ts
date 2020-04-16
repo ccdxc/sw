@@ -1,6 +1,6 @@
-import {Injectable} from '@angular/core';
+import {Injectable, OnDestroy} from '@angular/core';
 import {Orchestrationv1Service} from '@sdk/v1/services/generated/orchestrationv1.service';
-import {Observable } from 'rxjs';
+import {Observable, Subscription } from 'rxjs';
 import {VeniceResponse} from '@app/models/frontend/shared/veniceresponse.interface';
 import {GenServiceUtility} from '@app/services/generated/GenUtility';
 import {HttpClient} from '@angular/common/http';
@@ -13,13 +13,14 @@ import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 @Injectable()
-export class OrchestrationService extends Orchestrationv1Service {
+export class OrchestrationService extends Orchestrationv1Service implements OnDestroy {
 
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
   protected oboeServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
   protected serviceUtility: GenServiceUtility;
+  protected subscriptions: Subscription[] = [];
 
   constructor(protected _http: HttpClient,
               protected _controllerService: ControllerService,
@@ -31,6 +32,12 @@ export class OrchestrationService extends Orchestrationv1Service {
       (payload) => { this.publishAJAXEnd(payload); }
     );
     this.serviceUtility.setId(this.getClassName());
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => {
+      s.unsubscribe();
+    });
   }
 
 

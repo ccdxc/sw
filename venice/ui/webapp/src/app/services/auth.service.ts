@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AbstractService } from './abstract.service';
 import { Utility } from '@app/common/Utility';
@@ -13,10 +13,11 @@ import { GenServiceUtility } from './generated/GenUtility';
 
 
 @Injectable()
-export class AuthService extends AbstractService {
+export class AuthService extends AbstractService implements OnDestroy {
   protected O_Tenant: string = this.getTenant(); protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
   redirectUrl: string;
   protected serviceUtility: GenServiceUtility;
+  protected subscriptions: Subscription[] = [];
 
   constructor(private _http: HttpClient,
               protected _controllerService: ControllerService) {
@@ -26,6 +27,17 @@ export class AuthService extends AbstractService {
       (payload) => { this.publishAJAXEnd(payload); }
     );
     this.serviceUtility.setId(this.getClassName());
+    const sub = this._controllerService.subscribe(Eventtypes.LOGOUT, (payload) => {
+      // After logout, login should take user to dashboard
+      this.redirectUrl = '';
+    });
+    this.subscriptions.push(sub);
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => {
+      s.unsubscribe();
+    });
   }
 
   protected callServer(url: string, payload: any) {

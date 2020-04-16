@@ -1,26 +1,26 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { ClusterDistributedServiceCard, ClusterHost, ClusterDSCProfile } from '@sdk/v1/models/generated/cluster';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 import { Clusterv1Service } from '@sdk/v1/services/generated/clusterv1.service';
-import { NEVER, Observable } from 'rxjs';
+import { NEVER, Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { UIConfigsService } from '../uiconfigs.service';
 import { GenServiceUtility } from './GenUtility';
 
 @Injectable()
-export class ClusterService extends Clusterv1Service {
+export class ClusterService extends Clusterv1Service implements OnDestroy {
 
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
   protected oboeServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
   protected serviceUtility: GenServiceUtility;
+  protected subscriptions: Subscription[] = [];
 
   constructor(protected _http: HttpClient,
               protected _controllerService: ControllerService,
@@ -32,10 +32,19 @@ export class ClusterService extends Clusterv1Service {
         (payload) => { this.publishAJAXEnd(payload); }
       );
       this.serviceUtility.setId(this.getClassName());
-      this.createListDistributedServiceCardCache();
-      this.createListHostCache();
-      this.createListDSCProfileCache();
+      // Cache on load
+      const sub = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
+        this.createListDistributedServiceCardCache();
+        this.createListHostCache();
+        this.createListDSCProfileCache();
+      });
+      this.subscriptions.push(sub);
+  }
 
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => {
+      s.unsubscribe();
+    });
   }
 
   /**

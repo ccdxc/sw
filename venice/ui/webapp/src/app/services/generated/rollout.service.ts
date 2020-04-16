@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { Rolloutv1Service } from '@sdk/v1/services/generated/rolloutv1.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
@@ -13,12 +13,13 @@ import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 @Injectable()
-export class RolloutService extends Rolloutv1Service {
+export class RolloutService extends Rolloutv1Service implements OnDestroy {
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
   protected oboeServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
   protected serviceUtility: GenServiceUtility;
+  protected subscriptions: Subscription[] = [];
 
   constructor(protected _http: HttpClient,
               protected _controllerService: ControllerService,
@@ -30,6 +31,12 @@ export class RolloutService extends Rolloutv1Service {
         (payload) => { this.publishAJAXEnd(payload); }
       );
       this.serviceUtility.setId(this.getClassName());
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => {
+      s.unsubscribe();
+    });
   }
 
   /**

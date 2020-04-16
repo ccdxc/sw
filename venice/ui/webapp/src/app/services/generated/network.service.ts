@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { Networkv1Service } from '@sdk/v1/services/generated/networkv1.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
@@ -14,13 +14,14 @@ import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 
 @Injectable()
-export class NetworkService extends Networkv1Service {
+export class NetworkService extends Networkv1Service implements OnDestroy {
 
   // Attributes used by generated services
   protected O_Tenant: string = this.getTenant();
   protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
   protected oboeServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
   protected serviceUtility: GenServiceUtility;
+  protected subscriptions: Subscription[] = [];
 
   constructor(protected _http: HttpClient,
               protected _controllerService: ControllerService,
@@ -32,7 +33,17 @@ export class NetworkService extends Networkv1Service {
         (payload) => { this.publishAJAXEnd(payload); }
       );
       this.serviceUtility.setId(this.getClassName());
-      this.createListNetworkInterfaceCache();
+      // Cache on load
+      const sub = this._controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
+        this.createListNetworkInterfaceCache();
+      });
+      this.subscriptions.push(sub);
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => {
+      s.unsubscribe();
+    });
   }
 
   /**
