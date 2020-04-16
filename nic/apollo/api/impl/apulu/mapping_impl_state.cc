@@ -86,7 +86,6 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
                                      &tinfo);
     mapping_tag_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
     SDK_ASSERT(mapping_tag_idxr_ != NULL);
-#if 0
 
     // program reserved entry of LOCAL_MAPPING_TAG & MAPPING_TAG with reserved
     // class id
@@ -102,7 +101,6 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = mapping_tag_data.write(PDS_IMPL_RSVD_TAG_HW_ID);
     SDK_ASSERT(ret == SDK_RET_OK);
-#endif
 
     // instantiate indexer for binding table
     p4pd_global_table_properties_get(P4TBL_ID_IP_MAC_BINDING, &tinfo);
