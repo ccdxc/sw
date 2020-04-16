@@ -5,7 +5,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
@@ -589,4 +591,37 @@ func generateRuleHash(r *netproto.PolicyRule, key string) uint64 {
 	rule = append(rule, []byte(key)...)
 	h.Write(rule)
 	return h.Sum64()
+}
+
+// ValidateNwAttach checks if this subnet is attached to any host-pfs
+func ValidateNwAttach(i types.InfraAPI, tenant, namespace, name string) (bool, []byte) {
+	data, err := i.List("Interface")
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Interfaces not found: Err: %v", types.ErrObjNotFound))
+		return false, nil
+	}
+
+	for _, intf := range data {
+		var nwIf netproto.Interface
+		err := proto.Unmarshal(intf, &nwIf)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Interface: %v | Err: %v", intf, err))
+			continue
+		}
+
+		if nwIf.Spec.Type != netproto.InterfaceSpec_HOST_PF.String() {
+			continue
+		}
+
+		if nwIf.Spec.VrfName == tenant && nwIf.Spec.Network == name {
+			uid, err := uuid.FromString(nwIf.UUID)
+			if err != nil {
+				log.Errorf("Interface: %s could not get UUID [%v] | Err: %s", nwIf.GetKey(), nwIf.UUID, err)
+				return false, nil
+			}
+			return true, uid.Bytes()
+		}
+	}
+
+	return false, nil
 }

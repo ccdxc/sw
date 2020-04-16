@@ -586,6 +586,12 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 		return nil, err
 	}
 
+	// check if the network is attached to any host-pfs
+	attached, intfUid := validator.ValidateNwAttach(infraAPI, nw.Tenant, nw.Namespace, nw.Name)
+	if attached == true {
+		log.Infof("subnet %s attached to interface uid: %v", nw.GetKey(), intfUid)
+	}
+
 	var ipamuuid []byte
 	if nw.Spec.IPAMPolicy != "" {
 		ipamName = nw.Spec.IPAMPolicy
@@ -610,6 +616,9 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 
 	getPolicyUuid := func(names []string) []string {
 		ids := []string{}
+		if attached == false {
+			return ids
+		}
 		for _, n := range names {
 			p := netproto.NetworkSecurityPolicy{
 				TypeMeta: api.TypeMeta{
@@ -624,11 +633,13 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 			dat, err := infraAPI.Read(p.Kind, p.GetKey())
 			if err != nil {
 				log.Errorf("Look up failed for %s | err: %s", p.GetKey(), err)
+				continue
 			}
 			obj := netproto.NetworkSecurityPolicy{}
 			err = obj.Unmarshal(dat)
 			if err != nil {
 				log.Errorf("Unmarshal failed for %s | err: %s", p.GetKey(), err)
+				continue
 			}
 			ids = append(ids, obj.UUID)
 		}
@@ -655,6 +666,7 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 				},
 				V4Prefix: v4Prefix,
 				V6Prefix: v6Prefix,
+				HostIf:   intfUid,
 				DHCPPolicyId: [][]byte{
 					ipamuuid,
 				},
