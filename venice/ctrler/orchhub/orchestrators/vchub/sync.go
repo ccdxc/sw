@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
@@ -206,6 +207,10 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 
 		pgNameMap := map[string]api.ObjectMeta{}
 		for _, nw := range networks {
+			if nw.Status.OperState != network.OperState_Active.String() {
+				v.Log.Infof("Skipping network %s since it is not active", nw.Name)
+				continue
+			}
 			for _, orch := range nw.Network.Spec.Orchestrators {
 				if orch.Name == v.VcID && orch.Namespace == dcName {
 					pgName := CreatePGName(nw.Network.Name)
@@ -448,6 +453,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, vms []mo.
 
 	// Set assignments.
 	for _, vm := range vms {
+		workloadName := v.createVMWorkloadName(dc.Self.Value, vm.Self.Value)
 		for _, d := range vm.Config.Hardware.Device {
 			macStr, port, _, ok := v.parseVnic(d)
 			if !ok {
@@ -463,7 +469,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, vms []mo.
 				// assign the right override value
 				v.Log.Errorf("Reassigning vlan to have the override of %v", vlan)
 				// We have an assignment for this vnic that is different, change the override to the right value
-				err := penDvs.SetVlanOverride(port, vlan)
+				err := penDvs.SetVlanOverride(port, vlan, workloadName, macStr)
 				if err != nil {
 					v.Log.Errorf("Failed to set vlan override. DC %s DVS %s port %s vlan %s. Err %s", penDvs.DcName, penDvs.DvsName, port, vlan)
 					continue // Don't delete from overrides as it has the wrong vlan still. We'll try to reset the vlan completely

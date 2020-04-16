@@ -688,7 +688,7 @@ func (v *VCHub) setVlanOverride(dcID string, wlObj *workload.Workload) error {
 		}
 		// TODO: Handle retries if it fails
 		v.Log.Infof("setVlanOverride on dvs %s port %s vlan %d", dvs.DvsName, entry.Port, inf.MicroSegVlan)
-		if err := dvs.SetVlanOverride(entry.Port, int(inf.MicroSegVlan)); err != nil {
+		if err := dvs.SetVlanOverride(entry.Port, int(inf.MicroSegVlan), wlObj.Name, inf.MACAddress); err != nil {
 			v.Log.Errorf("Override vlan failed for workload %s, %s", wlObj.Name, err)
 			return err
 		}
@@ -917,7 +917,7 @@ func (v *VCHub) assignUsegs(workload *workload.Workload) {
 			v.Log.Debugf("inf %s assigned %d", inf.MACAddress, vlan)
 
 			// TODO: Handle retries if it fails
-			err = dvs.SetVlanOverride(entry.Port, vlan)
+			err = dvs.SetVlanOverride(entry.Port, vlan, workload.Name, inf.MACAddress)
 			if err != nil {
 				v.Log.Errorf("Override vlan failed for workload %s, %s", workload.Name, err)
 			} else {

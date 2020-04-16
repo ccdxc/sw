@@ -215,7 +215,7 @@ func (d *PenDVS) GetPortSettings() ([]types.DistributedVirtualPort, error) {
 }
 
 // SetVlanOverride overrides the port settings with the given vlan
-func (d *PenDVS) SetVlanOverride(port string, vlan int) error {
+func (d *PenDVS) SetVlanOverride(port string, vlan int, workloadName string, mac string) error {
 	// Get lock to prevent two different threads
 	// configuring the dvs at the same time.
 	d.Lock()
@@ -230,7 +230,7 @@ func (d *PenDVS) SetVlanOverride(port string, vlan int) error {
 	if err != nil {
 		d.Log.Errorf("Failed to set vlan override for DC %s - dvs %s, err %s", d.DcName, d.DvsName, err)
 
-		evtMsg := fmt.Sprintf("Failed to set vlan override in DC %s. Traffic may be impacted.", d.DcName)
+		evtMsg := fmt.Sprintf("Failed to set vlan override in DC %s for workload %s interface %s. Traffic may be impacted.", d.DcName, workloadName, mac)
 		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
 		return err
 	}

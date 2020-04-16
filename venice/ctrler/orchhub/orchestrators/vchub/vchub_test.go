@@ -2241,6 +2241,25 @@ func TestDiscoveredDCs(t *testing.T) {
 		}
 		return true, nil
 	}, "Orch status never updated to success", "100ms", "5s")
+
+	orchConfig.Spec.Credentials.Password = "badPassword"
+	err = sm.Controller().Orchestrator().Update(orchConfig)
+	AssertOk(t, err, "Failed to update orchestrator")
+
+	vchub.UpdateConfig(orchConfig)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		o, err := sm.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
+		if err != nil {
+			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
+		}
+		act := o.Orchestrator.Status.DiscoveredNamespaces
+		if len(act) != 0 {
+			return false, fmt.Errorf("discovered namespaces were %v, expected none", o.Orchestrator.Status.DiscoveredNamespaces)
+		}
+		return true, nil
+	}, "Orch status never updated to success", "100ms", "5s")
+
 }
 
 func TestDegradedConn(t *testing.T) {

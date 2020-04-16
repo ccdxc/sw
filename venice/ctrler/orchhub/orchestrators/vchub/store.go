@@ -80,6 +80,7 @@ func (v *VCHub) startEventsListener() {
 					}
 					// sync and start watchers, network event watcher
 					// will not start until after sync finishes (blocked on processVeniceEvents flag)
+					v.discoveredDCs = []string{}
 					v.sync()
 
 					v.probe.StartWatchers()
@@ -130,6 +131,10 @@ func (v *VCHub) startEventsListener() {
 				o.Orchestrator.Status.LastTransitionTime.SetTime(time.Now())
 				o.Orchestrator.Status.Message = msg
 				o.Status.OrchID = v.OrchConfig.Status.OrchID
+				if connStatus.State == orchestration.OrchestratorStatus_Failure.String() {
+					v.discoveredDCs = []string{}
+					o.Status.DiscoveredNamespaces = []string{}
+				}
 				o.Write()
 				v.orchUpdateLock.Unlock()
 
