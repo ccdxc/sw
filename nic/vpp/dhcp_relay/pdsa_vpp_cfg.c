@@ -130,8 +130,17 @@ pds_dhcp4_server_add (uint8_t *id,
     svr_addr.ip4.as_u32 = clib_host_to_net_u32(server_ip);
     src_addr.ip4.as_u32 = clib_host_to_net_u32(agent_ip);
 
+    pool_foreach(server, dmain->server_pool, (({
+        if (0 == memcmp(server->obj_id, id, PDS_OBJ_ID_LEN)) {
+            // existing server update
+            goto found;
+        }
+    })));
+    // new server add
     pool_get(dmain->server_pool, server);
     clib_memcpy(server->obj_id, id, PDS_OBJ_ID_LEN);
+
+found:
     server->relay_addr = src_addr;
     server->server_addr = svr_addr;
     server->server_vpc = server_vpc;
