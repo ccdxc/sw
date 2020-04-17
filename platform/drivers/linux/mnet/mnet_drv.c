@@ -196,7 +196,7 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 		if (mnet->busy) {
 			if (cpu_mnic_dev)
-				ret = mnet_uio_pdrv_genirq_probe(mnet->mnic_pdev);
+				ret = mnet_uio_pdrv_genirq_remove(mnet->mnic_pdev);
 			else
 				ret = ionic_remove(mnet->mnic_pdev);
 			if (ret) {
