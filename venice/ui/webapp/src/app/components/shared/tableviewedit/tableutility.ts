@@ -431,14 +431,28 @@ export class TableUtility {
     trimTextValueFunction: (text: string) => string = (text) => text.replace(/"/g, '')
   ): any[] {
     const outputs: any[] = [];
-    for (let i = 0; data && i < data.length; i++) {
-      const recordValue = recordToStringFunction(data[i]);  // JSON.stringify(data[i]);
+    const activateFunc = TableUtility.filterConstraints['contains'];
+    const dupeMap = {}; // map to track existing outputs and prevent duplicates, uses meta.uuid as key
+    if (activateFunc) {
       const texts = searchText.text;
-      for (let j = 0; texts && j < texts.length; j++)   {
-        const text = trimTextValueFunction(texts[j]);
-        const activateFunc = TableUtility.filterConstraints['contains'];
-        if (activateFunc && activateFunc(recordValue, text) && !outputs.find(output => _.isEqual(output, data[i]))) {
-          outputs.push(data[i]);
+      for (let i = 0; data && i < data.length; i++) {
+        const recordValue = recordToStringFunction(data[i]);
+        for (let j = 0; texts && j < texts.length; j++)   {
+          const text = trimTextValueFunction(texts[j]);
+          if (activateFunc(recordValue, text)) {
+            const id = data[i].meta ? data[i].meta.uuid : null;
+            if (id) {
+              if (!dupeMap[id]) {
+                outputs.push(data[i]);
+                dupeMap[id] = true;
+              }
+            } else {
+              // no meta.uuid, use slower deep compare to find dupes
+              if (!outputs.find(output => _.isEqual(output, data[i]))) {
+                outputs.push(data[i]);
+              }
+            }
+          }
         }
       }
     }
