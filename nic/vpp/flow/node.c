@@ -537,14 +537,14 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                                  pds_get_flow_log_en(p0));
         ftlv4_cache_advance_count(1);
 
-        // TODO : Handle service mapping
-        if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
+        if (pds_is_flow_napt_en(p0)) {
             // NAPT - both port and ip are changed
             r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
             if (ip40->protocol != IP_PROTOCOL_ICMP) {
                 r_dport = vnet_buffer2(p0)->pds_nat_data.xlate_port;
             }
-        } else if (vnet_buffer2(p0)->pds_nat_data.xlate_idx) {
+        } else if (vnet_buffer2(p0)->pds_nat_data.xlate_idx &&
+                   !pds_is_flow_svc_map_en(p0)) {
             // static NAT
             if (pds_is_rx_pkt(p0)) {
                 r_src_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;

@@ -52,6 +52,24 @@ pds_get_flow_log_en (vlib_buffer_t *p0)
     return false;
 }
 
+always_inline bool
+pds_is_flow_napt_en (vlib_buffer_t *p0)
+{
+    return false;
+}
+
+always_inline bool
+pds_is_flow_napt_svc_en (vlib_buffer_t *p0)
+{
+    return false;
+}
+
+always_inline bool
+pds_is_flow_svc_map_en (vlib_buffer_t *p0)
+{
+    return false;
+}
+
 __clib_unused static u8 *
 format_pds_p4_rx_cpu_hdr (u8 * s, va_list * args)
 {

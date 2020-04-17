@@ -85,7 +85,7 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
         goto error;
     }
 
-    if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_SVC_VALID) {
+    if (pds_is_flow_napt_svc_en(p0)) {
         nat_address_type = NAT_ADDR_TYPE_INFRA;
     }
     if (nat_flow_alloc(vpc_id, dip, dport, protocol, pvt_ip, pvt_port,
