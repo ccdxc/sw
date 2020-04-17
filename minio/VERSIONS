@@ -11,8 +11,8 @@ sorrento_tools 79567f13b3084375c6617f8234bd6d84d31f6c25
 pbc_config fd7c20fce138741f08565dba9615e9e33aa1ddb9
 upgrade 1.0.20
 iota 1.0.3
-host_tools 1.0.33
-pensando_firmware 1.0.23
+host_tools 1.0.34
+pensando_firmware 1.0.24
 delphi_lib 1.0.9
 buildroot 983009e96974aa84d896040d9701d90c60462f9b
 platform_drivers 1.0.2
