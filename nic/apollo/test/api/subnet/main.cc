@@ -396,10 +396,11 @@ TEST_F(subnet, subnet_update_vr_ip) {
 
     // trigger
     spec.v4_vr_ip = feeder.spec.v4_vr_ip + 1;
-    subnet_update(feeder, &spec, SUBNET_ATTR_V4_VRIP, SDK_RET_ERR);
+    subnet_update(feeder, &spec, SUBNET_ATTR_V4_VRIP, SDK_RET_OK);
 
     // validate
     feeder.init(key, k_vpc_key, "10.0.0.0/16", "00:02:01:00:00:01");
+    feeder.spec.v4_vr_ip = feeder.spec.v4_vr_ip + 1;
     subnet_read(feeder);
 
     // cleanup

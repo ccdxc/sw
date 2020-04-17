@@ -90,19 +90,47 @@ subnet_impl::free(subnet_impl *impl) {
 }
 
 sdk_ret_t
-subnet_impl::reserve_vni_entry_(uint32_t vnid) {
+subnet_impl::reserve_vni_entry_(pds_subnet_spec_t *spec) {
     sdk_ret_t ret;
     vni_swkey_t vni_key =  { 0 };
     sdk_table_api_params_t tparams;
 
-    vni_key.vxlan_1_vni = vnid;
+    vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
                                    VNI_VNI_INFO_ID, handle_t::null());
     ret = vpc_impl_db()->vni_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in VNI table for subnet %s, "
+                      "vnid %u, err %u", spec->key.str(),
+                      spec->fabric_encap.val.vnid, ret);
         return ret;
     }
     vni_hdl_ = tparams.handle;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_impl::reserve_vr_ip_resources_(vpc_impl *vpc, ip_addr_t *vr_ip,
+                                      pds_subnet_spec_t *spec) {
+    sdk_ret_t ret;
+    mapping_swkey_t mapping_key;
+    sdk_table_api_params_t tparams;
+
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(), vr_ip);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
+                                   NULL, NULL, 0, handle_t::null());
+    ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
+                      "subnet %s IPv4 VR IP %s", spec->key.str(),
+                      ipaddr2str(vr_ip));
+        return ret;
+    }
+    if (vr_ip->af == IP_AF_IPV4) {
+        v4_vr_ip_mapping_hdl_ = tparams.handle;
+    } else {
+        v6_vr_ip_mapping_hdl_ = tparams.handle;
+    }
     return SDK_RET_OK;
 }
 
@@ -113,8 +141,6 @@ subnet_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
     sdk_ret_t ret;
     vpc_entry *vpc;
     ip_addr_t vr_ip;
-    mapping_swkey_t mapping_key;
-    sdk_table_api_params_t tparams;
     pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
 
     // find the VPC of this subnet
@@ -141,11 +167,8 @@ subnet_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
         hw_id_ = idx;
 
         // reserve an entry in VNI table
-        ret = reserve_vni_entry_(spec->fabric_encap.val.vnid);
+        ret = reserve_vni_entry_(spec);
         if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to reserve entry in VNI table for subnet %s, "
-                          "vnid %u, err %u", spec->key.str(),
-                          spec->fabric_encap.val.vnid, ret);
             return ret;
         }
 
@@ -154,36 +177,20 @@ subnet_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
             memset(&vr_ip, 0, sizeof(vr_ip));
             vr_ip.af = IP_AF_IPV4;
             vr_ip.addr.v4_addr = spec->v4_vr_ip;
-            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
-                                           ((vpc_impl *)vpc->impl())->hw_id(),
-                                           &vr_ip);
-            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
-                                           0, sdk::table::handle_t::null());
-            ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
-            if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
-                              "subnet %s IPv4 VR IP %s", spec->key.str(),
-                              ipv4addr2str(spec->v4_vr_ip));
+            ret = reserve_vr_ip_resources_((vpc_impl *)vpc->impl(),
+                                           &vr_ip, spec);
+            if (unlikely(ret != SDK_RET_OK)) {
                 return ret;
             }
-            v4_vr_ip_mapping_hdl_ = tparams.handle;
         }
 
         // reserve an entry in the MAPPING table for the IPv6 VR IP, if needed
         if (!ip_addr_is_zero(&spec->v6_vr_ip)) {
-            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
-                                           ((vpc_impl *)vpc->impl())->hw_id(),
-                                           &spec->v6_vr_ip);
-            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
-                                           0, sdk::table::handle_t::null());
-            ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
-            if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
-                              "subnet %s IPv6 VR IP %s", spec->key.str(),
-                              ipaddr2str(&spec->v6_vr_ip));
+            ret = reserve_vr_ip_resources_((vpc_impl *)vpc->impl(),
+                                           &spec->v6_vr_ip, spec);
+            if (unlikely(ret != SDK_RET_OK)) {
                 return ret;
             }
-            v6_vr_ip_mapping_hdl_ = tparams.handle;
         }
         break;
 
@@ -194,11 +201,30 @@ subnet_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
         api_obj->set_rsvd_rsc();
         // if vnid is updated, reserve a handle for it in VNI table
         if (obj_ctxt->upd_bmap & PDS_SUBNET_UPD_FABRIC_ENCAP) {
-            ret = reserve_vni_entry_(spec->fabric_encap.val.vnid);
+            ret = reserve_vni_entry_(spec);
             if (unlikely(ret != SDK_RET_OK)) {
-                PDS_TRACE_ERR("Failed to reserve entry in VNI table for "
-                              "subnet %s, vnid %u, err %u", spec->key.str(),
-                              spec->fabric_encap.val.vnid, ret);
+                return ret;
+            }
+        }
+
+        // reserve resources needed for IPv4 VR IP, if that is updated
+        if ((obj_ctxt->upd_bmap & PDS_SUBNET_UPD_V4_VR_IP) && spec->v4_vr_ip) {
+            memset(&vr_ip, 0, sizeof(vr_ip));
+            vr_ip.af = IP_AF_IPV4;
+            vr_ip.addr.v4_addr = spec->v4_vr_ip;
+            ret = reserve_vr_ip_resources_((vpc_impl *)vpc->impl(),
+                                           &vr_ip, spec);
+            if (unlikely(ret != SDK_RET_OK)) {
+                return ret;
+            }
+        }
+
+        // reserve resources needed for IPv6 VR IP, if that is updated
+        if ((obj_ctxt->upd_bmap & PDS_SUBNET_UPD_V6_VR_IP) &&
+            !ip_addr_is_zero(&spec->v6_vr_ip)) {
+            ret = reserve_vr_ip_resources_((vpc_impl *)vpc->impl(),
+                                           &spec->v6_vr_ip, spec);
+            if (unlikely(ret != SDK_RET_OK)) {
                 return ret;
             }
         }
@@ -485,6 +511,7 @@ subnet_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 
     spec = &obj_ctxt->api_params->subnet_spec;
     orig_impl = (subnet_impl *)(((subnet_entry *)orig_obj)->impl());
+
     // install MAPPING table entries for VR IPs pointing to datapath lif
     if (v4_vr_ip_mapping_hdl_.valid() || v6_vr_ip_mapping_hdl_.valid()) {
         ret = add_vr_ip_mapping_entries_(spec);
@@ -627,8 +654,8 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
     subnet_impl *orig_impl = (subnet_impl *)orig_subnet->impl();
 
     spec = &obj_ctxt->api_params->subnet_spec;
-    PDS_TRACE_DEBUG("Activating subnet %s, update host if %s",
-                    spec->key.str(), spec->host_if.str());
+    PDS_TRACE_DEBUG("Activating subnet %s, update host if %s, upd bmap 0x%x",
+                    spec->key.str(), spec->host_if.str(), obj_ctxt->upd_bmap);
     vpc = vpc_find(&spec->vpc);
     if (vpc == NULL) {
         PDS_TRACE_ERR("No vpc %s found to program subnet %s",
@@ -638,8 +665,6 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
 
     // xfer resources from original object to the cloned object
     hw_id_ = orig_impl->hw_id_;
-    v4_vr_ip_mapping_hdl_ = orig_impl->v4_vr_ip_mapping_hdl_;
-    v6_vr_ip_mapping_hdl_ = orig_impl->v6_vr_ip_mapping_hdl_;
 
     // fill the key
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
@@ -717,11 +742,19 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
 
     // relinquish the ownership of resources from old object
     orig_impl->hw_id_ = 0xFFFF;
-    orig_impl->v4_vr_ip_mapping_hdl_ = handle_t::null();
-    orig_impl->v6_vr_ip_mapping_hdl_ = handle_t::null();
     if (!(obj_ctxt->upd_bmap & PDS_SUBNET_UPD_FABRIC_ENCAP)) {
         // take over the existing VNI entry as there is no vnid change
         orig_impl->vni_hdl_ = handle_t::null();
+    }
+    if (!(obj_ctxt->upd_bmap & PDS_SUBNET_UPD_V4_VR_IP)) {
+        // take over the existing V4 VR IP entry as there is no change
+        v4_vr_ip_mapping_hdl_ = orig_impl->v4_vr_ip_mapping_hdl_;
+        orig_impl->v4_vr_ip_mapping_hdl_ = handle_t::null();
+    }
+    if (!(obj_ctxt->upd_bmap & PDS_SUBNET_UPD_V6_VR_IP)) {
+        // take over the existing V6 VR IP entry as there is no change
+        v6_vr_ip_mapping_hdl_ = orig_impl->v6_vr_ip_mapping_hdl_;
+        orig_impl->v6_vr_ip_mapping_hdl_ = handle_t::null();
     }
 
     return SDK_RET_OK;

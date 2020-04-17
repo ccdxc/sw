@@ -17,6 +17,7 @@
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 
 using sdk::table::handle_t;
@@ -211,9 +212,17 @@ private:
     ~subnet_impl() {}
 
     /// \brief    given a VxLAN vnid, reserve an entry in the VNI table
-    /// \param[in] vnid    VxLAN vnid
+    /// \param[in] spec     subnet configuration
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t reserve_vni_entry_(uint32_t vnid);
+    sdk_ret_t reserve_vni_entry_(pds_subnet_spec_t *spec);
+
+    ///\ brief    reserve resources needed for given VR IP of the subnet
+    /// \param[in] vpc      VPC impl instance of this subnet
+    /// \param[in] vr_ip    IPv4/IPv6 VR IP of this subnet
+    /// \param[in] spec     subnet configuration
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reserve_vr_ip_resources_(vpc_impl *vpc, ip_addr_t *vr_ip,
+                                       pds_subnet_spec_t *spec);
 
     /// \brief reserve the mapping table resources needed for VR IP of subnet
     /// \param[in]  spec    subnet configuration
