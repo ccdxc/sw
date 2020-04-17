@@ -29,15 +29,18 @@ action offloads() {
 
     // update IP id
     if (p4plus_to_p4.update_ip_id == TRUE) {
-        add(ipv4_1.identification, ipv4_1.identification,
-            p4plus_to_p4.ip_id_delta);
-        modify_field(scratch_metadata.update_ip_chksum, TRUE);
+        if (ipv4_2.valid == TRUE) {
+            add(ipv4_2.identification, ipv4_2.identification,
+                p4plus_to_p4.ip_id_delta);
+        } else {
+            add(ipv4_1.identification, ipv4_1.identification,
+                p4plus_to_p4.ip_id_delta);
+        }
     }
 
     // update TCP sequence number
     if (p4plus_to_p4.update_tcp_seq_no == TRUE) {
         add(tcp.seqNo, tcp.seqNo, p4plus_to_p4.tcp_seq_delta);
-        modify_field(scratch_metadata.update_l4_chksum, TRUE);
     }
 
     // tso
@@ -45,12 +48,10 @@ action offloads() {
         if (p4plus_to_p4.tso_first_segment != TRUE) {
             // reset CWR bit
             modify_field(tcp.flags, 0, TCP_FLAG_CWR);
-            modify_field(scratch_metadata.update_l4_chksum, TRUE);
         }
         if (p4plus_to_p4.tso_last_segment != TRUE) {
             // reset FIN and PSH bits
             modify_field(tcp.flags, 0, (TCP_FLAG_FIN|TCP_FLAG_PSH));
-            modify_field(scratch_metadata.update_l4_chksum, TRUE);
         }
     }
 

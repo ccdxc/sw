@@ -142,8 +142,6 @@ header_type scratch_metadata_t {
         packet_len          : 16;
         ipv4_addr           : 32;
         ipv6_addr           : 128;
-        update_ip_chksum    : 1;
-        update_l4_chksum    : 1;
         cpu_flags           : 16;
         encap_type          : 2;
         key_type            : 2;

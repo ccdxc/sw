@@ -19,21 +19,22 @@ offloads:
     phvwr.c1        p.ipv6_1_payloadLen, r1
     sub             r1, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l4_1
     phvwr.c3        p.udp_1_len, r1
-    crestore        [c7-c1], k.{udp_2_valid,udp_2_csum,ipv4_2_valid, \
-                        ipv4_2_udp_csum,ipv4_2_tcp_csum,ipv4_2_csum, \
-                        ipv6_2_valid}, 0x7F
-    bcf             [!c5 & !c1], offloads_update_ip_id
+    crestore        [c3-c1], k.{udp_2_valid,ipv4_2_valid,ipv6_2_valid}, 0x7
+    bcf             [!c2 & !c1], offloads_update_ip_id
     sub             r1, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l3_2
-    phvwr.c5        p.ipv4_2_totalLen, r1
+    phvwr.c2        p.ipv4_2_totalLen, r1
     sub             r1, r1, 40
     phvwr.c1        p.ipv6_2_payloadLen, r1
     sub             r1, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l4_2
-    phvwr.c7        p.udp_2_len, r1
+    phvwr.c3        p.udp_2_len, r1
 
 offloads_update_ip_id:
     bbne            k.p4plus_to_p4_update_ip_id, TRUE, offloads_update_tcp_seq_no
-    add             r1, k.ipv4_1_identification, k.p4plus_to_p4_ip_id_delta
-    phvwr           p.ipv4_1_identification, r1
+    seq             c1, k.ipv4_2_valid, TRUE
+    cmov            r1, c1, k.ipv4_2_identification, k.ipv4_1_identification
+    add             r1, r1, k.p4plus_to_p4_ip_id_delta
+    phvwr.c1        p.ipv4_2_identification, r1
+    phvwr.!c1       p.ipv4_1_identification, r1
 
 offloads_update_tcp_seq_no:
     bbne            k.p4plus_to_p4_update_tcp_seq_no, TRUE, offloads_tso
