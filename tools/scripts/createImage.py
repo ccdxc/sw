@@ -73,7 +73,7 @@ static_images = {
     'pen-filebeat' : 'registry.test.pensando.io:5000/pen-filebeat:v0.2',
     'pen-ntp' : 'registry.test.pensando.io:5000/pens-ntp:v0.6',
     'pen-elastic'  : 'registry.test.pensando.io:5000/elasticsearch-cluster:v0.16',
-    'pen-elastic-curator': 'registry.test.pensando.io:5000/elasticsearch-curator:v0.2',
+    'pen-elastic-curator': 'registry.test.pensando.io:5000/elasticsearch-curator:v0.3',
     'pen-pause' : 'k8s.gcr.io/pause:3.1',
 }
 

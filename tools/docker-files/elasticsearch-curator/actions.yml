@@ -43,26 +43,9 @@ actions:
       exclude:
   3:
     action: delete_indices
-    description: Delete older events and audit log indices once the disk reaches a threshold of 10G
-    options:
-      ignore_empty_list: True
-      timeout_override:
-      continue_if_exception: False
-      disable_action: False
-    filters:
-    - filtertype: space
-      disk_space: 10 # 10G
-      use_age: True
-      source: creation_date
-    - filtertype: pattern
-      kind: regex
-      value: '(^.*external.default.configs.*$|searchguard|^.*firewalllogs.*$)'  # exclude configs, searchguard, firewalllogs indices from getting deleted
-      exclude: True
-  4.:
-    action: delete_indices
     description: Delete firewall logs indices that are older than 24 hours
     options:
-      ignore_empty_list: True # ignore empty actionable list and exit cleanly
+      ignore_empty_list: True
       timeout_override:
       continue_if_exception: False
       disable_action: False
@@ -78,3 +61,54 @@ actions:
       unit: hours
       unit_count: 24
       exclude:
+  4:
+    action: delete_indices
+    description: Delete older audit indices once the size reaches a threshold of 10GB for audit indices
+    options:
+      ignore_empty_list: True
+      timeout_override:
+      continue_if_exception: False
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: regex
+      value: '^.*external.default.auditlogs.*$'
+      exclude:
+    - filtertype: space
+      disk_space: 10 # 10gb
+      use_age: True
+      source: creation_date
+  5:
+    action: delete_indices
+    description: Delete older events indices once the size reaches a threshold of 1GB for events indices
+    options:
+      ignore_empty_list: True
+      timeout_override:
+      continue_if_exception: False
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: regex
+      value: '^.*external.default.events.*$'
+      exclude:
+    - filtertype: space
+      disk_space: 1 # 1gb
+      use_age: True
+      source: creation_date
+  6:
+    action: delete_indices
+    description: Delete older firewall log indices once the size reaches a threshold of 20GB for firewall log indices
+    options:
+      ignore_empty_list: True
+      timeout_override:
+      continue_if_exception: False
+      disable_action: False
+    filters:
+    - filtertype: pattern
+      kind: regex
+      value: '^.*firewalllogs.*$'
+      exclude:
+    - filtertype: space
+      disk_space: 20 # 20gb
+      use_age: True
+      source: creation_date
