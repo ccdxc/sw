@@ -23,14 +23,16 @@ const (
 func generateSystemdKubeletConfig(nodeID string) error {
 	const (
 		// Environment variables
-		kubeletAddressVar       = "KUBELET_ADDRESS"
-		failSwapOnVar           = "FAIL_SWAP_ON"
-		cgroupDriverVar         = "CGROUP_DRIVER"
-		nodeIPVar               = "NODEIP"
-		hostNameOverrideVar     = "HOSTNAME_OVERRIDE"
-		readOnlyPortVar         = "READONLY_PORT"
-		imageGCHighThresholdVar = "IMAGE_GC_HIGH_THRESHOLD"
-		imageGCLowThresholdVar  = "IMAGE_GC_LOW_THRESHOLD"
+		kubeletAddressVar             = "KUBELET_ADDRESS"
+		failSwapOnVar                 = "FAIL_SWAP_ON"
+		cgroupDriverVar               = "CGROUP_DRIVER"
+		nodeIPVar                     = "NODEIP"
+		hostNameOverrideVar           = "HOSTNAME_OVERRIDE"
+		readOnlyPortVar               = "READONLY_PORT"
+		imageGCHighThresholdVar       = "IMAGE_GC_HIGH_THRESHOLD"
+		imageGCLowThresholdVar        = "IMAGE_GC_LOW_THRESHOLD"
+		nodeEvictionHardVar           = "NODE_EVICTION_HARD"
+		nodeEvictionMinimumReclaimVar = "NODE_EVICTION_MIN_RECLAIM"
 
 		// Parameters
 		kubeletAddressParam   = "--address"
@@ -41,9 +43,8 @@ func generateSystemdKubeletConfig(nodeID string) error {
 		readOnlyPortParam     = "--read-only-port"
 
 		// Image collection (GC)
-		imageGCHighThresholdParam = "--image-gc-high-threshold" //  the percent of disk usage which triggers image garbage collection. Default is 85%.
-		imageGCLowThresholdParam  = "--image-gc-low-threshold"  // the percent of disk usage to which image garbage collection attempts to free. Default is 80%.
-
+		evictionHardParam           = "--eviction-hard"
+		evictionMinimumReclaimParam = "--eviction-minimum-reclaim"
 	)
 
 	// Kubelet gets a single set of credentials that it uses to:
@@ -73,8 +74,7 @@ func generateSystemdKubeletConfig(nodeID string) error {
 	cfgMap[tlsCertFileVar] = fmt.Sprintf("%s %s", tlsCertFileParam, kubeletCertFile)
 
 	// garbage collection config
-	cfgMap[imageGCHighThresholdVar] = fmt.Sprintf("%s=%d", imageGCHighThresholdParam, 100)
-	cfgMap[imageGCLowThresholdVar] = fmt.Sprintf("%s=%d", imageGCLowThresholdParam, 99)
+	cfgMap[nodeEvictionHardVar] = fmt.Sprintf("%s=memory.available<1%%,nodefs.available<1%%,imagefs.available<1%%", evictionHardParam)
 
 	return systemd.WriteCfgMapToFile(cfgMap, path.Join(globals.KubeletConfigDir, kubeletSystemdCfgFile))
 }

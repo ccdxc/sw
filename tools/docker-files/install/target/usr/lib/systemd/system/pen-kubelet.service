@@ -24,8 +24,7 @@ ExecStart=/usr/pensando/bin/kubelet \
   $TLS_CERTFILE \
   $TLS_KEYFILE \
   $MIN_TLS_VERSION \
-  $IMAGE_GC_HIGH_THRESHOLD \
-  $IMAGE_GC_LOW_THRESHOLD \
+  $NODE_EVICTION_HARD \
 
 Restart=always
 RestartSec=1s
