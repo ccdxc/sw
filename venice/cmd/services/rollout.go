@@ -168,11 +168,6 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 				OpStatus: opStatus,
 			},
 		}
-		if opSpec.Op == rolloutproto.VeniceOp_VeniceRunVersion {
-			//Wait long enough for citadel to sync-data
-			log.Infof(" Waiting long enough (4mins) for services to comeup")
-			time.Sleep(serviceSyncDelaySeconds)
-		}
 		log.Infof(" Writing venice rollout status :%#v ", s)
 		r.statusWriter.WriteStatus(context.TODO(), &s)
 	}
@@ -241,6 +236,7 @@ func (r *rolloutMgr) doServiceOP(op rolloutproto.ServiceOp, version string) roll
 func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 	var opStatus []rolloutproto.ServiceOpStatus
 	needtoUpdateStatus := false
+	skipWait := false
 
 	versionIf := env.CfgWatcherService.APIClient().Version()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -259,6 +255,7 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 				OpStatus: "success",
 			})
 			needtoUpdateStatus = true
+			skipWait = true
 			continue
 		}
 
@@ -286,7 +283,9 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 		}
 		//Wait long enough for citadel to sync-data
 		log.Infof(" Waiting long enough(4mins) for services to sync data")
-		time.Sleep(serviceSyncDelaySeconds)
+		if skipWait == false {
+			time.Sleep(serviceSyncDelaySeconds)
+		}
 		log.Infof(" Writing service rollout status :%#v ", s)
 		r.serviceStatusWriter.WriteServiceStatus(context.TODO(), &s)
 	}
