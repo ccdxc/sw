@@ -76,6 +76,14 @@ kill_processes()
     fi
 }
 
+wait_for_coremgr()
+{
+    while pidof coremgr; do
+        update_fwupgrade_state "WAITING FOR coremgr"
+        sleep 1s
+    done
+}
+
 mainfwa_partuuid=d4e53be5-7dc1-4199-914c-48edfea92c5e
 mainfwb_partuuid=e2fd6d28-3300-4979-8062-b8ab599f3898
 
@@ -134,7 +142,9 @@ rmmod mnet mnet_uio_pdrv_genirq ionic_mnic
 echo "Killing all processes except init and switch_rootfs.sh"
 update_fwupgrade_state "KILLING ALL PROCESSES EXCEPT INIT..."
 save_fwupgrade_state
+wait_for_coremgr
 kill_processes
+wait_for_coremgr
 update_fwupgrade_state "KILLED ALL PROCESSES EXCEPT INIT"
 save_fwupgrade_state
 
