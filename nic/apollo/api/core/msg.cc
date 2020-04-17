@@ -61,7 +61,6 @@ pds_cmd_response_handler_cb (sdk::ipc::ipc_msg_ptr msg, const void *ret)
         response->status = sdk::SDK_RET_INVALID_ARG;
         return;
     }
-
     memcpy(response, msg->data(), msg->length());
 }
 

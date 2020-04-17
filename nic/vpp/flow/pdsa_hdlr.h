@@ -21,7 +21,7 @@ extern "C" {
         _(L2, "L2 sessions")                                        \
         _(ERROR, "Session create errors")
 
-#define FLOW_STATS_SCHEMA_NAME  "VPPFlowStatsSummary"
+#define FLOW_STATS_SCHEMA_NAME  "FlowStatsSummary"
 #define FLOW_STATS_KEY          1
 
 typedef enum {

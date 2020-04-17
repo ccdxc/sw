@@ -316,6 +316,7 @@ sdk_ret_t
 pds_flow_summary_get (pds_flow_stats_summary_t *flow_stats)
 {
     static void *vpp_stats_handle = NULL;
+    sdk::metrics::counters_t counters;
 
     if (vpp_stats_handle == NULL) {
         vpp_stats_handle = sdk::metrics::metrics_open(FLOW_STATS_SCHEMA_NAME);
@@ -323,9 +324,9 @@ pds_flow_summary_get (pds_flow_stats_summary_t *flow_stats)
             return SDK_RET_ERR;
         }
     }
-    auto cntrs = sdk::metrics::metrics_read(vpp_stats_handle, FLOW_STATS_KEY);
+    counters = sdk::metrics::metrics_read(vpp_stats_handle, FLOW_STATS_KEY);
     for (int i = 0; i < FLOW_STATS_MAX; i++) {
-        flow_stats->value[i] = cntrs[i].second;
+        flow_stats->value[i] = counters[i].second;
     }
     return SDK_RET_OK;
 }

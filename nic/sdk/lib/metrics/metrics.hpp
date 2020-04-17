@@ -28,7 +28,7 @@ typedef struct schema_ {
 } schema_t;
 
 typedef std::pair<std::string, uint64_t> metrics_counter_pair_t;
-typedef std::vector<metrics_counter_pair_t> metrics_counters_t;
+typedef std::vector<metrics_counter_pair_t> counters_t;
 
 // Returns a handle. NULL in case of failure
 extern void *create(schema_t *schema);
@@ -39,7 +39,7 @@ extern void metrics_update(void *handler, key_t key, uint64_t values[]);
 
 // For reader
 extern void *metrics_open(const char *name);
-extern metrics_counters_t metrics_read(void *handler, key_t key);
+extern counters_t metrics_read(void *handler, key_t key);
 
 } // namespace metrics
 } // namespace sdk

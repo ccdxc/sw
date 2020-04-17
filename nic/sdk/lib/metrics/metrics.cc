@@ -245,11 +245,11 @@ metrics_open (const char *name)
     return tbl;
 }
 
-static metrics_counters_t
+static counters_t
 metrics_read_values (void  *handler, key_t key)
 {
     metrics_table_t *tbl;
-    metrics_counters_t counters;
+    counters_t counters;
     uint64_t *values;
 
     tbl = (metrics_table_t *)handler;
@@ -284,11 +284,11 @@ read_value (uint64_t base, unsigned int offset)
     return value;
 }
 
-static metrics_counters_t
+static counters_t
 metrics_read_pointers (void  *handler, key_t key)
 {
     metrics_table_t *tbl;
-    metrics_counters_t counters;
+    counters_t counters;
     uint64_t *base;
 
     tbl = (metrics_table_t *)handler;
@@ -311,7 +311,7 @@ metrics_read_pointers (void  *handler, key_t key)
     return counters;
 }
 
-metrics_counters_t
+counters_t
 metrics_read (void  *handler, key_t key)
 {
     metrics_table_t *tbl;

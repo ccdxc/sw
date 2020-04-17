@@ -56,7 +56,6 @@ typedef struct pds_vnic_cfg_msg_s {
         pds_vnic_spec_t spec;
     };
     pds_vnic_status_t status;
-    pds_vnic_stats_t stats;
 } pds_vnic_cfg_msg_t;
 
 /// subnet configuration
@@ -129,9 +128,9 @@ typedef struct pds_cfg_msg_s {
 
 /// reply to command message sent
 typedef struct pds_cmd_reply_msg_s {
-    uint32_t status; ///< cast to sdk::sdk_ret_t enumeration
+    uint32_t status;
     union {
-        pds_vnic_stats_t         vnic_stats; ///< VPP fills relevant columns
+        pds_vnic_stats_t vnic_stats;
     };
 } pds_cmd_reply_msg_t;
 

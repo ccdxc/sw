@@ -59,11 +59,11 @@ TEST_F (sdk_metrics_test, basic_test) {
     // make sure we do a memcopy
     counters[0] = 0;
     counters[1] = 0;
-    
+
     // Read
     handler = sdk::metrics::metrics_open("utTable");
-    sdk::metrics::metrics_counters_t values;
-    
+    sdk::metrics::counters_t values;
+
     ASSERT_TRUE(handler != NULL);
     values = sdk::metrics::metrics_read(handler, 1);
 
@@ -73,7 +73,7 @@ TEST_F (sdk_metrics_test, basic_test) {
     ASSERT_TRUE(values[0].second = 12);
     ASSERT_TRUE(values[1].first == "counter2");
     ASSERT_TRUE(values[1].second = 13);
-    
+
 };
 
 
@@ -101,7 +101,7 @@ TEST_F (sdk_metrics_test, pointer_test) {
     handler = sdk::metrics::metrics_open("utTableHBM");
     ASSERT_TRUE(handler != NULL);
 
-    sdk::metrics::metrics_counters_t values;
+    sdk::metrics::counters_t values;
     values = sdk::metrics::metrics_read(handler, 1);
 
     printf("%lu\n", values.size());

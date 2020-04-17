@@ -101,7 +101,7 @@ metrics_read (std::string name, sdk::metrics::key_t key,
               MetricsGetResponsePtr rsp)
 {
     void *handler;
-    sdk::metrics::metrics_counters_t counters;
+    sdk::metrics::counters_t counters;
 
     if (g_handlers.count(name) == 0) {
         handler = sdk::metrics::metrics_open(name.c_str());
