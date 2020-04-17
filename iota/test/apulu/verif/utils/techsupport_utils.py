@@ -35,7 +35,8 @@ def GetCoreFiles(tsFiles):
                     for ctinfo in coreTar:
                         cfPath = Path(ctinfo.name).resolve()
                         cfName = cfPath.name
-                        if cfPath.suffix != ".gz":
+                        if cfPath.suffix == "":
+                            # to avoid data/core dir
                             continue
                         if "core" in cfName:
                             # core file found
