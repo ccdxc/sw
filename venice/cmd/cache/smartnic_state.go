@@ -134,8 +134,13 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.DistributedServiceCard, writeback
 			return nic, err
 		}
 		_, err := utils.ExecuteWithRetry(f, apiServerRPCTimeout, maxAPIServerWriteRetries)
-		if err != nil && !strings.Contains(err.Error(), "exists") {
+		if err != nil && !strings.Contains(strings.ToLower(err.Error()), "exists") {
 			log.Errorf("Error creating SmartNIC object %+v: %v", sn.ObjectMeta, err)
+			// if we didn't get to create the object in ApiServer, we need to remove it from local cache as well
+			sm.memDB.DeleteObject(sn)
+			sm.hostnameToSmartNICMapLock.Lock()
+			delete(sm.hostnameToSmartNICMap, sn.Spec.ID)
+			sm.hostnameToSmartNICMapLock.Unlock()
 			return nil, fmt.Errorf("Error creating SmartNIC object")
 		}
 	}
