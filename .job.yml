@@ -67,11 +67,11 @@ builds:
     artifacts:
       - /sw/naples_fw_all_apulu.tgz
       - /sw/naples-protos-apulu.tgz
-  build-custom-athena-image:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=athena && make PIPELINE=athena ARCH=aarch64 PLATFORM=hw && make PIPELINE=athena ARCH=aarch64 PLATFORM=hw CUSTOM_BUILDROOT=1 firmware && pwd && ./apollo/tools/dev-docker/build_dev_docker.sh 0 all athena 1"]
-    owners: ["email:murali@pensando.io"]
-    artifacts:
-      - /sw/customimage.tar.gz
+  # build-custom-athena-image:
+  #   commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=athena && make PIPELINE=athena ARCH=aarch64 PLATFORM=hw && make PIPELINE=athena ARCH=aarch64 PLATFORM=hw CUSTOM_BUILDROOT=1 firmware && pwd && ./apollo/tools/dev-docker/build_dev_docker.sh 1 all athena 1"]
+  #   owners: ["email:murali@pensando.io"]
+  #   artifacts:
+  #     - /sw/customimage.tar.gz
   build-athena-customer-arm:
     commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && ./apollo/test/athena_app/bld_pkg_athena --arch=aarch64 --output=athena-arm"]
     owners: ["email:murali@pensando.io"]
@@ -243,8 +243,8 @@ jobs:
     labels: ["daily"]
   nic/apollo/tools/athena/sanity/base:
     labels: ["precommit", "hourly"]
-  nic/apollo/tools/athena/sanity/customer-docker:
-    labels: ["precommit", "hourly"]
+  # nic/apollo/tools/athena/sanity/customer-docker:
+    # labels: ["precommit", "hourly"]
   nic/sdk:
     labels: ["precommit", "hourly", "2xhourly"]
   nic/utils/ftlite:
@@ -369,7 +369,7 @@ dependencies:
     - reference: test/ci_targets/cloud-e2e
   nic/apollo/tools/dev-docker:
     - reference: nic/apollo/tools/apulu/sanity/customer-docker
-    - reference: nic/apollo/tools/athena/sanity/customer-docker
+    # - reference: nic/apollo/tools/athena/sanity/customer-docker
   nic/agent:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
@@ -481,7 +481,7 @@ dependencies:
     - reference: nic/apollo/tools/athena/sanity/base
   nic/tools/package:
     - reference: nic/apollo/tools/apulu/sanity/customer-docker
-    - reference: nic/apollo/tools/athena/sanity/customer-docker
+    # - reference: nic/apollo/tools/athena/sanity/customer-docker
   nic/upgrade_manager:
     - reference: iota/test/standalone/precheckin/esx
   nic/utils:

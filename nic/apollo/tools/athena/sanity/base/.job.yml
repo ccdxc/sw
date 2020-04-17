@@ -10,7 +10,7 @@ targets:
     build-dependencies:
     - build-athena-x86
     - build-athena-arm
-    - build-custom-athena-image
+    #- build-custom-athena-image
     - build-athena-customer-arm
 
   athena/athena16_compile:

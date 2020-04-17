@@ -174,7 +174,10 @@ def copy_includes (dest, arch):
        until this support comes in copy these files statically.
     """
     static_dirs = ["nic/sdk/third-party/boost/include/boost/mpl/aux_/preprocessed/gcc",
-                   "nic/sdk/third-party/boost/include/boost/mpl/vector"]
+                   "nic/sdk/third-party/boost/include/boost/mpl/vector",
+                   "nic/hal/third-party/google/include/google/protobuf",
+                   "nic/hal/third-party/grpc/include"]
+
     for d in static_dirs :
         copytree(d, "{0}/{1}".format(dest, d))
 
@@ -188,7 +191,9 @@ def copy_includes (dest, arch):
                     "nic/sdk/third-party/boost/include/boost/mpl/aux_/arithmetic_op.hpp",
                     "nic/sdk/third-party/boost/include/boost/mpl/aux_/largest_int.hpp",
                     "nic/sdk/third-party/boost/include/boost/mpl/minus.hpp",
-                    "nic/sdk/third-party/googletest-release-1.8.0/googletest/make/gtest.a"]
+                    "nic/sdk/third-party/googletest-release-1.8.0/googletest/make/gtest.a",
+                    "nic/build/{0}/athena/{1}/gen/proto/gogo.pb.h".format(arch, asic),
+                    "nic/sdk/third-party/libev/include/ev.h"]
     for fp in static_files:
         idx = fp.rfind("/")
         src_dir = "{0}/{1}".format(dest, fp[:idx])

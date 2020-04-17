@@ -16,7 +16,10 @@ endif
 INC_DIRS = -I. -I$(TOPDIR) -I$(TOPDIR)/nic/sdk -I$(TOPDIR)/nic/sdk/dpdk/build/include/ \
 		-I$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC} -I$(TOPDIR)/nic/hal/third-party/spdlog/include \
 		-I$(TOPDIR)/nic/sdk/third-party/googletest-release-1.8.0/googletest/include \
-                -I$(TOPDIR)/nic/sdk/third-party/boost/include
+                -I$(TOPDIR)/nic/sdk/third-party/boost/include \
+                -I$(TOPDIR)/nic/hal/third-party/google/include \
+                -I$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC}/gen/proto \
+				-I$(TOPDIR)/nic/sdk/third-party/libev/include
 
 MODE = debug
 LDFLAGS = -L$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC}/lib/ -Wl,-rpath=$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC}/lib/ \
@@ -31,6 +34,8 @@ LDFLAGS += -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/lib \
 endif
 
 LDLIBS += -lpal -lpdsframework -lpdscore -lpdslearn -lpdsapi -lpdsapi_impl -lsdkftl \
+		-lsvc_athena -lpdsproto -lpdsagentcore_athena -lprotobuf -lsdkeventmgr \
+		-lgrpc++_reflection -lgrpc++ -lgrpc_unsecure -lgrpc++_unsecure \
 		-ldpdk -lthread -ltrace -llogger -lmemhash -lsltcam -leth_p4plus \
 		-levent_thread -lslhash -lpenmetrics -lp4pd_athena -lp4pd_athena_rxdma \
 		-lp4pd_athena_txdma -lutils -llist -lslab -lshmmgr -lmmgr \
@@ -63,7 +68,9 @@ SRC_FILES := app_test_utils.cc \
 		athena_app_server.cc \
 		zmq_wait.cc \
 		trace.cc \
-                json_parser.cc \
+        json_parser.cc \
+		grpc_thread.cc \
+		pds_ms_device_athena_stub.cc \
 		main.cc \
 		$(NULL)
 
@@ -75,7 +82,7 @@ ATH_APP_OBJS := $(OBJ_DIR)/main.o $(OBJ_DIR)/trace.o $(OBJ_DIR)/fte_athena.o $(O
 		$(OBJ_DIR)/app_test_utils.o $(OBJ_DIR)/script_exec.o $(OBJ_DIR)/script_parser.o \
 		$(OBJ_DIR)/session_aging.o $(OBJ_DIR)/conntrack_aging.o $(OBJ_DIR)/fte_athena_static.o \
                 $(OBJ_DIR)/combined_aging.o $(OBJ_DIR)/athena_app_server.o $(OBJ_DIR)/zmq_wait.o \
-                $(OBJ_DIR)/json_parser.o
+                $(OBJ_DIR)/json_parser.o $(OBJ_DIR)/pds_ms_device_athena_stub.o $(OBJ_DIR)/grpc_thread.o
 
 OBJ_FILES := $(basename $(SRC_FILES))
 OBJ_FILES := $(OBJ_FILES:%=$(OBJ_DIR)/%.o)

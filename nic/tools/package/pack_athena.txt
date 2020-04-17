@@ -114,6 +114,7 @@ nic/build/$ARCH/$PIPELINE/lib/libalerts_operd_con.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liboperd_alerts.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liboperd_alert_defs.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsnicmgr_upgrade_stubs.so       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libupgrade_core.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libupgrade_ev.so                    /nic/lib/
 
 # p4/asm specific libs
@@ -239,6 +240,10 @@ nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/athena_app                          /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/athena_client                       /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/pcieutil                            /nic/bin/
+nic/build/$ARCH/$PIPELINE/lib/libsvc_athena.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsagentcore_athena.so           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsproto.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                   /nic/lib/
 
 # Drivers
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                    /nic/bin/

@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = pds.proto
-MODULE_PIPELINE     = apollo artemis apulu
+MODULE_PIPELINE     = apollo artemis apulu athena
 MODULE_PREREQS      = gogo.proto
 MODULE_GEN_TYPES    = PY CC
 MODULE_INCS         = ${MODULE_DIR} \

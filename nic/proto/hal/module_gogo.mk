@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = gogo.proto
-MODULE_PIPELINE     = iris gft apollo artemis apulu
+MODULE_PIPELINE     = iris gft apollo artemis apulu athena
 MODULE_GEN_TYPES    = CC PY
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \

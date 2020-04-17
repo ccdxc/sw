@@ -83,7 +83,9 @@ copy_files() {
     protobuf=" "
     metaswitch=" "
     if [ $agent == 1 ];then
-        export AGENT_MODE=1
+        if [ "$pipeline" != "athena" ];then
+            export AGENT_MODE=1
+        fi
         protobuf+='vendor/github.com vendor/golang.org vendor/google.golang.org vendor/gopkg.in '
         protobuf+='venice/utils/log venice/utils/testenv venice/utils/apigen/annotations venice/Makefile.proto '
         protobuf+='nic/hal/third-party/google nic/proto/hal/module_gogo.mk nic/hal/third-party/grpc '
@@ -250,7 +252,7 @@ rebuild_and_runtest() {
     cd /
     #umount $SWMNTDIR
     #mount --bind /sw/apollo_sw $SWMNTDIR
-    mount --bind /sw/apollo_sw /sw
+    sudo mount --bind /sw/apollo_sw /sw
 
     #build 1 /sw/nic
 
