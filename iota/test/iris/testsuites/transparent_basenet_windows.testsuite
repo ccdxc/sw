@@ -69,7 +69,7 @@ testbundles:
         #- networking/lif_telemetry.testbundle
         #- subifs/subifs.testbundle
         - rx_mode/rx_mode.testbundle
-        #- vlanoffload/vlanoffload.testbundle
+        - vlanoffload/vlanoffload.testbundle
         - linktest/linktest.testbundle
         - mnic/mnic_classic.testbundle
         #- linktest/linktest.testbundle

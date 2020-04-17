@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import json
 import random
 import yaml
 import iota.harness.api as api
@@ -73,6 +74,12 @@ def Trigger(tc):
                         rx_enable = 'on'
                     else:
                         rx_enable = 'off'
+                elif api.GetNodeOs(wl.node_name) == 'windows':
+                    rx_status = json.loads(rx_status.commands[0].stdout)
+                    if rx_status["VlanID"]:
+                        rx_enable = 'on'
+                    else:
+                        rx_enable = 'off'
             else:
                 result = api.types.status.FAILURE
 
@@ -82,6 +89,13 @@ def Trigger(tc):
                 elif api.GetNodeOs(wl.node_name) == 'freebsd':
                     options = (tx_status.commands[0].stdout).split(',')
                     if 'VLAN_HWTAGGING' in options:
+                        tx_enable = 'on'
+                    else:
+                        tx_enable = 'off'
+                elif api.GetNodeOs(wl.node_name) == 'windows':
+                    api.Logger.info("tx_status windows result: %s" % tx_status)
+                    tx_status = json.loads(tx_status.commands[0].stdout)
+                    if tx_status["VlanID"]:
                         tx_enable = 'on'
                     else:
                         tx_enable = 'off'

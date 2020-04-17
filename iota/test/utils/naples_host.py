@@ -56,6 +56,15 @@ def ShowLeakInMemorySlabInNaples(memslab_before, memslab_after, node_name):
 
     return ret_memslab_diff
 
+def GetWindowsIntName(node, name):
+    port_mapping = GetWindowsPortMapping(node)
+    if port_mapping is None:
+        return ""
+    portInfo = port_mapping[name]
+    if portInfo is None:
+        return ""
+    return portInfo["Name"]
+
 # Toggle txvlan options based on <enable>
 # <enable> = on/off
 def Toggle_TxVlanOffload(node, interface, enable):
@@ -68,6 +77,12 @@ def Toggle_TxVlanOffload(node, interface, enable):
             cmd = "ifconfig " + interface + " vlanhwtag "
         else:
             cmd = "ifconfig " + interface + " -vlanhwtag "
+    elif api.GetNodeOs(node) == OS_TYPE_WINDOWS:
+        name = GetWindowsIntName(node, interface)
+        if enable == 'on':
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue 1\"" % name
+        else:
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue 0\"" % name
     else:
         api.Logger.info("Unknown os_type - %s" % api.GetNodeOs(node))
         return api.types.status.FAILURE
@@ -89,6 +104,12 @@ def Toggle_RxVlanOffload(node, interface, enable):
             cmd = "ifconfig " + interface + " vlanhwtag "
         else:
             cmd = "ifconfig " + interface + " -vlanhwtag "
+    elif api.GetNodeOs(node) == OS_TYPE_WINDOWS:
+        name = GetWindowsIntName(node, interface)
+        if enable == 'on':
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue 1\"" % name
+        else:
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue 0\"" % name
     else:
         api.Logger.info("Unknown os_type - %s" % api.GetNodeOs(node))
         return api.types.status.FAILURE
@@ -105,6 +126,9 @@ def Get_RxVlanOffload_Status(node, interface):
         cmd = "ethtool -k " + interface + " | grep rx-vlan-offload"
     elif api.GetNodeOs(node) == OS_TYPE_BSD:
         cmd = "ifconfig " + interface + " | grep options"
+    elif api.GetNodeOs(node) == OS_TYPE_WINDOWS:
+        name = GetWindowsIntName(node, interface)
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetAdapter -Name '%s' | select Name,VlanID | ConvertTo-Json\"" % name
     else:
         api.Logger.info("Unknown os_type - %s" % api.GetNodeOs(node))
         return api.types.status.FAILURE
@@ -120,6 +144,9 @@ def Get_TxVlanOffload_Status(node, interface):
         cmd = "ethtool -k " + interface + " | grep tx-vlan-offload"
     elif api.GetNodeOs(node) == OS_TYPE_BSD:
         cmd = "ifconfig " + interface + " | grep options"
+    elif api.GetNodeOs(node) == OS_TYPE_WINDOWS:
+        name = GetWindowsIntName(node, interface)
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetAdapter -Name '%s' | select Name,VlanID | ConvertTo-Json\"" % name
     else:
         api.Logger.info("Unknown os_type - %s" % api.GetNodeOs(node))
         return api.types.status.FAILURE
