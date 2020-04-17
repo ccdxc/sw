@@ -163,6 +163,7 @@ error:
 static void
 cb_ipc_respond (sdk::ipc::ipc_msg_ptr ipc_msg, pds_msg_id_t id,
                 pds_cmd_ctxt_t *ctxt, sdk::sdk_ret_t ret) {
+    pds_cmd_reply_msg_t reply;
     switch (id) {
     case PDS_CMD_MSG_ID_NAT_PORT_BLOCK_GET:
         {
@@ -171,6 +172,19 @@ cb_ipc_respond (sdk::ipc::ipc_msg_ptr ipc_msg, pds_msg_id_t id,
                               sizeof(uint16_t) + (resp->num_entries *
                               sizeof(pds_nat_port_block_cfg_msg_t)));
         }
+        break;
+    case PDS_CMD_MSG_VNIC_STATS_GET:
+        reply.status = (uint32_t )ret;
+        if (ret == sdk::SDK_RET_OK) {
+            // got active sessions, send back uint64
+            auto resp = ctxt->vnic_stats;
+            memcpy(&reply.vnic_stats, resp, sizeof(pds_vnic_stats_t));
+        } else {
+            // stats retrieve failed, send back error code
+            ipc_log_error("Command msg id:%u failed, ret:%d", id, ret);
+        }
+        sdk::ipc::respond(ipc_msg, (const void *)&reply,
+                          sizeof(pds_cmd_reply_msg_t));
         break;
     default:
         sdk::ipc::respond(ipc_msg, (const void *)&ret,
@@ -224,6 +238,7 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
         if (cb_funs.ctxt_destroy_cb) {
             cb_funs.ctxt_destroy_cb(&msg->cmd_msg, &ctxt);
         }
+        ipc_log_notice("Command msg id:%u processed", msg->id);
         return;
     }
 

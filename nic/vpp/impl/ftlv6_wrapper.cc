@@ -236,6 +236,18 @@ ftlv6_cache_set_flow_miss_hit (uint8_t val)
 }
 
 void
+ftlv6_cache_set_counter_index (uint8_t ctr_idx)
+{
+    g_ip6_flow_cache.flags[g_ip6_flow_cache.count].ctr_idx = ctr_idx;
+}
+
+uint8_t
+ftlv6_cache_get_counter_index (int id)
+{
+    return g_ip6_flow_cache.flags[id].ctr_idx;
+}
+
+void
 ftlv6_cache_batch_flush (ftlv6 *obj, int *status)
 {
     int i;

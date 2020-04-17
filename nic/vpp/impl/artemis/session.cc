@@ -24,3 +24,8 @@ pds_session_state_established (uint8_t state)
     return false;
 }
 
+bool
+pds_session_active_on_vnic_get (uint16_t vnic_id, uint32_t *sess_count)
+{
+    return false;
+}

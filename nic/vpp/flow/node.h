@@ -26,6 +26,7 @@
 #define DISPLAY_BUF_SIZE (1*1024*1024)
 #define PDS_FLOW_TIMER_TICK             0.1
 #define PDS_FLOW_SEC_TO_TIMER_TICK(X)   (X * 10)
+#define PDS_FLOW_STATS_PUBLISH_INTERVAL (60)
 
 #define foreach_flow_classify_next                                  \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
@@ -156,6 +157,14 @@ typedef enum
     SESSION_PROG_COUNTER_LAST,
 } flow_session_counter_t;
 
+typedef enum
+{
+#define _(n,s) FLOW_TYPE_COUNTER_##n,
+    foreach_flow_type_counter
+#undef _
+    FLOW_TYPE_COUNTER_LAST,
+} flow_type_counter_t;
+
 typedef struct fwd_flow_trace_s {
     u32 hw_index;
 } fwd_flow_trace_t;
@@ -252,6 +261,10 @@ typedef struct pds_flow_rewrite_flags_s {
     u16 rx_rewrite;
 } pds_flow_rewrite_flags_t;
 
+typedef struct pds_flow_stats_s {
+    volatile u64 counter[FLOW_TYPE_COUNTER_LAST];
+} pds_flow_stats_t;
+
 typedef struct pds_flow_main_s {
     volatile u32 *flow_prog_lock;
     ftlv4 *table4;
@@ -274,6 +287,8 @@ typedef struct pds_flow_main_s {
     u8 no_threads;
     u8 con_track_en;
     u8 *packet_types;
+    pds_flow_stats_t stats;
+    void *flow_metrics_hdl;
 } pds_flow_main_t;
 
 typedef enum {

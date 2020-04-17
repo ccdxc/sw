@@ -150,6 +150,7 @@ sdk_ret_t pds_meter_stats_get(debug::meter_stats_get_cb_t cb, uint32_t lowidx, u
 sdk_ret_t pds_session_stats_get(debug::session_stats_get_cb_t cb, uint32_t lowidx, uint32_t highidx, void *ctxt);
 sdk_ret_t pds_session_get(debug::session_get_cb_t cb, void *ctxt);
 sdk_ret_t pds_flow_get(debug::flow_get_cb_t cb, void *ctxt);
+sdk_ret_t pds_flow_summary_get(pds_flow_stats_summary_t *flow_stats);
 sdk_ret_t pds_session_clear(uint32_t idx);
 sdk_ret_t pds_flow_clear(pds_flow_key_t key);
 sdk_ret_t pds_fte_api_stats_get(void);

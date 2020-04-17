@@ -459,3 +459,17 @@ DebugSvcImpl::InternalPortGet(ServerContext *context,
     return Status::OK;
 }
 
+Status
+DebugSvcImpl::FlowStatsSummaryGet(ServerContext *context,
+                                  const Empty *req,
+                                  pds::FlowStatsSummaryResponse *rsp) {
+    pds_flow_stats_summary_t flow_stats;
+    sdk_ret_t ret;
+
+    ret = debug::pds_flow_summary_get(&flow_stats);
+    rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    if (ret == sdk::SDK_RET_OK) {
+        pds_flow_stats_summary_to_proto(&flow_stats, rsp);
+    }
+    return Status::OK;
+}

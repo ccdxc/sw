@@ -9,6 +9,7 @@
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/sdk/include/sdk/fd.hpp"
+#include "nic/sdk/lib/metrics/metrics.hpp"
 #include "nic/sdk/platform/asicerror/interrupts.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -17,6 +18,7 @@
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/core/core.hpp"
+#include "nic/vpp/flow/pdsa_hdlr.h"
 
 using sdk::utils::in_mem_fsm_logger;
 using sdk::utils::record_t;
@@ -301,12 +303,31 @@ pds_flow_clear (pds_flow_key_t key)
     memset(&request.cmd_msg.flow_clear, 0, sizeof(pds_flow_clear_cmd_msg_t));
     request.cmd_msg.flow_clear.key = key;
 
-    // send a msg to VPP to clear the flows
+    // send a msg to VPP to clear flows
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
                       sizeof(pds_msg_t), flow_clear_resp_cb,
                       &ret);
 
     return ret;
+}
+
+/// \brief retrieve flow statistics summary from VPP
+sdk_ret_t
+pds_flow_summary_get (pds_flow_stats_summary_t *flow_stats)
+{
+    static void *vpp_stats_handle = NULL;
+
+    if (vpp_stats_handle == NULL) {
+        vpp_stats_handle = sdk::metrics::metrics_open(FLOW_STATS_SCHEMA_NAME);
+        if (vpp_stats_handle == NULL) {
+            return SDK_RET_ERR;
+        }
+    }
+    auto cntrs = sdk::metrics::metrics_read(vpp_stats_handle, FLOW_STATS_KEY);
+    for (int i = 0; i < FLOW_STATS_MAX; i++) {
+        flow_stats->value[i] = cntrs[i].second;
+    }
+    return SDK_RET_OK;
 }
 
 /**

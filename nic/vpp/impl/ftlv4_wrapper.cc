@@ -442,6 +442,18 @@ ftlv4_cache_set_flow_role(uint8_t flow_role)
                         flow_role);
 }
 
+void
+ftlv4_cache_set_counter_index (uint8_t ctr_idx)
+{
+    g_ip4_flow_cache.flags[g_ip4_flow_cache.count].ctr_idx = ctr_idx;
+}
+
+uint8_t
+ftlv4_cache_get_counter_index (int id)
+{
+    return g_ip4_flow_cache.flags[id].ctr_idx;
+}
+
 static uint32_t
 ftlv4_get_session_id (ipv4_flow_hash_entry_t *entry)
 {

@@ -142,6 +142,12 @@ ftll2_cache_set_nexthop (uint32_t nhid,
                          nh_valid);
 }
 
+void
+ftll2_cache_set_counter_index (uint8_t ctr_idx)
+{
+    g_l2_flow_cache.flags[g_l2_flow_cache.count].ctr_idx = ctr_idx;
+}
+
 int
 ftll2_cache_get_count (void)
 {

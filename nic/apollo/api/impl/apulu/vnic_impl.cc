@@ -1171,9 +1171,33 @@ vnic_impl::fill_status_(pds_vnic_status_t *status) {
     status->nh_hw_id = nh_idx_;
 }
 
+/// \brief retrieve vnic statistics summary from VPP
+sdk_ret_t
+vnic_impl::fill_vpp_stats_(pds_vnic_stats_t *stats) {
+    pds_msg_t request;
+    pds_cmd_reply_msg_t response;
+
+    // send an IPC msg to VPP
+    request.id = PDS_CMD_MSG_VNIC_STATS_GET;
+    request.cmd_msg.vnic_stats_get.vnic_hw_id = hw_id_;
+
+    // send a msg to VPP to retrieve VNIC stats
+    sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
+                      sizeof(pds_msg_t), core::pds_cmd_response_handler_cb,
+                      &response);
+
+    if (response.status == sdk::SDK_RET_OK) {
+        stats->active_sessions = response.vnic_stats.active_sessions;
+    }
+
+    return (sdk::sdk_ret_t )response.status;
+}
+
+
 sdk_ret_t
 vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
     p4pd_error_t p4pd_ret;
+    sdk_ret_t ret;
     vnic_tx_stats_actiondata_t tx_stats = { 0 };
     vnic_rx_stats_actiondata_t rx_stats = { 0 };
 
@@ -1196,6 +1220,14 @@ vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
     }
     stats->rx_pkts  = *(uint64_t *)rx_stats.vnic_rx_stats_action.in_packets;
     stats->rx_bytes = *(uint64_t *)rx_stats.vnic_rx_stats_action.in_bytes;
+
+    if (g_pds_state.vpp_ipc_mock() == false) {
+        ret = fill_vpp_stats_(stats);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to read active sessions from VPP");
+            return ret;
+        }
+    }
     return SDK_RET_OK;
 }
 

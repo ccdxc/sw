@@ -34,6 +34,7 @@ extern "C" {
 typedef struct flow_flags_s {
     uint8_t log : 1;
     uint8_t update : 1;
+    uint8_t ctr_idx : 4;
 } flow_flags_t;
 
 // Prototypes
@@ -164,6 +165,10 @@ void ftlv4_cache_set_flow_miss_hit(uint8_t val);
 
 void ftlv4_cache_set_update_flag(uint8_t update);
 
+void ftlv4_cache_set_counter_index(uint8_t ctr_idx);
+
+uint8_t ftlv4_cache_get_counter_index(int id);
+
 void ftlv4_cache_batch_flush(ftlv4 *obj, int *status);
 
 void ftlv4_set_thread_id(ftlv4 *obj, uint32_t thread_id);
@@ -204,6 +209,8 @@ void ftll2_cache_set_key(uint8_t *src,
                          uint16_t ether_type,
                          uint16_t lookup_id);
 
+void ftll2_cache_set_counter_index(uint8_t ctr_idx);
+
 void ftlv6_cache_set_nexthop(uint32_t nhid,
                              uint32_t nhtype,
                              uint8_t nh_valid);
@@ -232,6 +239,10 @@ void ftlv6_cache_set_flow_miss_hit(uint8_t val);
 void ftlv6_cache_set_update_flag(uint8_t update);
 
 void ftlv6_cache_set_hash_log(uint32_t val, uint8_t log);
+
+void ftlv6_cache_set_counter_index(uint8_t ctr_idx);
+
+uint8_t ftlv6_cache_get_counter_index(int id);
 
 void ftlv6_cache_batch_flush(ftlv6 *obj, int *status);
 

@@ -11,6 +11,7 @@
 #ifndef __CORE_MSG_HPP__
 #define __CORE_MSG_HPP__
 
+#include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/framework/api.h"
 #include "nic/apollo/api/core/msg.h"
@@ -26,6 +27,7 @@ pds_msg_list_t *pds_msg_list_alloc(pds_msg_type_t msg_type, pds_epoch_t epoch,
 void pds_msg_list_free(pds_msg_list_t *msg_list);
 uint32_t pds_msg_list_size(pds_msg_list_t *msg_list);
 pds_msg_t *pds_msg(pds_msg_list_t *pds_msg_list, uint32_t idx);
+void pds_cmd_response_handler_cb(sdk::ipc::ipc_msg_ptr msg, const void *ret);
 
 }    // namespace core
 

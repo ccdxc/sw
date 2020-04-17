@@ -27,6 +27,8 @@ void pds_session_get_session_state(uint32_t session_id, uint8_t *iflow_state,
 
 bool pds_session_state_established(uint8_t state);
 
+bool pds_session_active_on_vnic_get(uint16_t vnic_id, uint32_t *sess_count);
+
 #ifdef __cplusplus
 }
 #endif

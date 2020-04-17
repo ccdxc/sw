@@ -312,6 +312,11 @@ private:
     /// \param[out] status status
     void fill_status_(pds_vnic_status_t *status);
 
+    /// \brief      retrieve VNIC stats from VPP
+    /// \param[out] stats statistics
+    /// \return     #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t fill_vpp_stats_(pds_vnic_stats_t *stats);
+
 private:
     // P4 datapath specific state
     uint8_t epoch_;                    ///< datapath epoch of the vnic

@@ -1336,4 +1336,33 @@ pds_learn_api_op_to_proto (uint8_t op_type)
     return pds::LEARN_API_OP_NONE;
 }
 
+static inline void
+pds_flow_stats_summary_to_proto (pds_flow_stats_summary_t *flow_stats,
+                                 void *ctxt)
+{
+    pds::FlowStatsSummaryResponse *proto_rsp =
+        (pds::FlowStatsSummaryResponse *)ctxt;
+
+    proto_rsp->set_numtcpv4sessions(flow_stats->value[
+                                    FLOW_STATS_TCPV4_SESSION_COUNT]);
+    proto_rsp->set_numudpv4sessions(flow_stats->value[
+                                    FLOW_STATS_UDPV4_SESSION_COUNT]);
+    proto_rsp->set_numicmpv4sessions(flow_stats->value[
+                                     FLOW_STATS_ICMPV4_SESSION_COUNT]);
+    proto_rsp->set_numotheripv4sessions(flow_stats->value[
+                                        FLOW_STATS_OTHERV4_SESSION_COUNT]);
+    proto_rsp->set_numtcpv6sessions(flow_stats->value[
+                                    FLOW_STATS_TCPV6_SESSION_COUNT]);
+    proto_rsp->set_numudpv6sessions(flow_stats->value[
+                                    FLOW_STATS_UDPV6_SESSION_COUNT]);
+    proto_rsp->set_numicmpv6sessions(flow_stats->value[
+                                     FLOW_STATS_ICMPV6_SESSION_COUNT]);
+    proto_rsp->set_numotheripv6sessions(flow_stats->value[
+                                        FLOW_STATS_OTHERV6_SESSION_COUNT]);
+    proto_rsp->set_numl2sessions(flow_stats->value[
+                                 FLOW_STATS_L2_SESSION_COUNT]);
+    proto_rsp->set_numsessionerrors(flow_stats->value[
+                                    FLOW_STATS_ERROR_SESSION_COUNT]);
+}
+
 #endif    // __AGENT_SVC_SPECS_HPP__

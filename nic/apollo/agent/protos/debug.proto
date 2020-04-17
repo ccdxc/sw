@@ -34,6 +34,7 @@ service DebugSvc {
   rpc StartAacsServer (AacsRequest) returns (types.Empty) {}
   rpc StopAacsServer (types.Empty) returns (types.Empty) {}
   rpc InternalPortGet (InternalPortRequestMsg) returns (InternalPortResponseMsg) {}
+  rpc FlowStatsSummaryGet (types.Empty) returns (FlowStatsSummaryResponse) {}
 }
 
 enum TraceLevel {
@@ -545,3 +546,16 @@ message InternalPortRequestMsg {
   repeated InternalPortRequest  Request = 1;
 }
 
+message FlowStatsSummaryResponse {
+  types.ApiStatus ApiStatus            = 1;
+  uint64          NumTCPv4Sessions     = 2;
+  uint64          NumUDPv4Sessions     = 3;
+  uint64          NumICMPv4Sessions    = 4;
+  uint64          NumOtherIPv4Sessions = 5;
+  uint64          NumTCPv6Sessions     = 6;
+  uint64          NumUDPv6Sessions     = 7;
+  uint64          NumICMPv6Sessions    = 8;
+  uint64          NumOtherIPv6Sessions = 9;
+  uint64          NumL2Sessions        = 10;
+  uint64          NumSessionErrors     = 11;
+}

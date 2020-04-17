@@ -94,13 +94,15 @@ message VnicStatus {
 // stats of Vnic, if any
 message VnicStats {
   // number of bytes transmitted by the vnic
-  uint64 TxBytes   = 1;
+  uint64 TxBytes        = 1;
   // number of packets transmitted by the vnic
-  uint64 TxPackets = 2;
+  uint64 TxPackets      = 2;
   // number of bytes received by the vnic
-  uint64 RxBytes   = 3;
+  uint64 RxBytes        = 3;
   // number of packets received by the vnic
-  uint64 RxPackets = 4;
+  uint64 RxPackets      = 4;
+  // number of active sessions on the vnic
+  uint64 ActiveSessions = 5;
 }
 
 // vnic object

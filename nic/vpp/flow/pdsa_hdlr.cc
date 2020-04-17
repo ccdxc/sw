@@ -4,17 +4,17 @@
 // Handlers for all messages from PDS Agent
 
 #include <arpa/inet.h>
-#include <nic/sdk/include/sdk/table.hpp>
+#include <nic/sdk/lib/metrics/metrics.hpp>
 #include <gen/p4gen/p4/include/ftl.h>
 #include <nic/vpp/infra/cfg/pdsa_db.hpp>
 #include <nic/vpp/infra/ipc/pdsa_vpp_hdlr.h>
 #include <nic/vpp/infra/ipc/pdsa_hdlr.hpp>
 #include <feature.h>
 #include <ftl_wrapper.h>
+#include "session.h"
 #include "pdsa_hdlr.h"
 #include "pdsa_uds_hdlr.h"
-
-extern "C" int clear_all_flow_entries();
+#include "log.h"
 
 int
 clear_flow_entry (pds_flow_key_t *key)
@@ -56,6 +56,38 @@ clear_flow_entry (pds_flow_key_t *key)
     }
     return ret;
 }
+
+static sdk::sdk_ret_t
+pdsa_flow_vnic_stats_get(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt) {
+    uint32_t active_sessions;
+    bool ret;
+
+    ret = pds_session_active_on_vnic_get(msg->vnic_stats_get.vnic_hw_id,
+                                         &active_sessions);
+    if (!ret) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+    ctxt->vnic_stats->active_sessions = active_sessions;
+    return sdk::SDK_RET_OK;
+}
+
+static sdk::sdk_ret_t
+pdsa_flow_vnic_stats_init(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
+{
+    ctxt->vnic_stats = (pds_vnic_stats_t *)calloc(1, sizeof(pds_vnic_stats_t));
+    if (ctxt->vnic_stats == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    return sdk::SDK_RET_OK;
+}
+
+static sdk::sdk_ret_t
+pdsa_flow_vnic_stats_destroy(const pds_cmd_msg_t *msg, pds_cmd_ctxt_t *ctxt)
+{
+    free(ctxt->vnic_stats);
+    return sdk::SDK_RET_OK;
+}
+
 
 static sdk::sdk_ret_t
 pdsa_flow_cfg_set (const pds_cfg_msg_t *msg)
@@ -135,4 +167,8 @@ pdsa_flow_hdlr_init (void)
     }
     pds_ipc_register_cmd_callbacks(PDS_CMD_MSG_FLOW_CLEAR,
                                    pdsa_flow_clear_cmd);
+    pds_ipc_register_cmd_callbacks(PDS_CMD_MSG_VNIC_STATS_GET,
+                                   pdsa_flow_vnic_stats_get,
+                                   pdsa_flow_vnic_stats_init,
+                                   pdsa_flow_vnic_stats_destroy);
 }

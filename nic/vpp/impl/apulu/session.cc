@@ -51,4 +51,3 @@ pds_session_state_established (uint8_t state)
 {
     return (state == FLOW_STATE_ESTABLISHED);
 }
-

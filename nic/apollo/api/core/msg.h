@@ -127,6 +127,14 @@ typedef struct pds_cfg_msg_s {
     };
 } pds_cfg_msg_t;
 
+/// reply to command message sent
+typedef struct pds_cmd_reply_msg_s {
+    uint32_t status; ///< cast to sdk::sdk_ret_t enumeration
+    union {
+        pds_vnic_stats_t         vnic_stats; ///< VPP fills relevant columns
+    };
+} pds_cmd_reply_msg_t;
+
 typedef struct pds_flow_clear_cmd_msg_s {
     pds_flow_key_t key;
 } pds_flow_clear_cmd_msg_t;
@@ -135,12 +143,17 @@ typedef struct pds_nat_port_block_cmd_msg_s {
     pds_obj_key_t key;
 } pds_nat_port_block_cmd_msg_t;
 
+typedef struct pds_vnic_stats_get_cmd_msg_s {
+    uint16_t vnic_hw_id;
+} pds_vnic_stats_get_cmd_msg_t;
+
 /// command message sent or received
 typedef struct pds_cmd_msg_s {
     /// msg contents
     union {
         pds_flow_clear_cmd_msg_t flow_clear;
         pds_nat_port_block_cmd_msg_t nat_port_block;
+        pds_vnic_stats_get_cmd_msg_t vnic_stats_get;
     };
 } pds_cmd_msg_t;
 

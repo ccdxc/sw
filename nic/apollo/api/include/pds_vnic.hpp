@@ -88,10 +88,11 @@ typedef struct pds_vnic_status_s {
 
 /// \brief VNIC statistics
 typedef struct pds_vnic_stats_s {
-    uint64_t rx_pkts;     ///< received packet count
-    uint64_t rx_bytes;    ///< received bytes
-    uint64_t tx_pkts;     ///< transmit packet count
-    uint64_t tx_bytes;    ///< transmit bytes
+    uint64_t rx_pkts;         ///< received packet count
+    uint64_t rx_bytes;        ///< received bytes
+    uint64_t tx_pkts;         ///< transmit packet count
+    uint64_t tx_bytes;        ///< transmit bytes
+    uint64_t active_sessions; ///< current active sessions
 } pds_vnic_stats_t;
 
 /// \brief VNIC information
