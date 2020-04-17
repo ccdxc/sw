@@ -307,6 +307,10 @@ sdk_ret_t elba_tm_debug_stats_get(tm_port_t port,
 uint32_t elba_tm_get_num_iqs_for_port(tm_port_t port);
 uint32_t elba_tm_get_num_oqs_for_port(tm_port_t port);
 
+sdk_ret_t elba_tm_set_reserved_min(uint32_t reserved_min);
+
+sdk_ret_t elba_queue_stats_get(tm_port_t port, void *stats);
+
 }    // namespace elba
 }    // namespace platform
 }    // namespace sdk

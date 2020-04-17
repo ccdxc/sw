@@ -99,8 +99,7 @@ capri_populate_queue_stats (tm_port_t port,
 }
 
 sdk_ret_t
-capri_queue_stats_get (tm_port_t port,
-                       capri_queue_stats_t *stats)
+capri_queue_stats_get (tm_port_t port, capri_queue_stats_t *stats)
 {
     capri_queue_t iqs[CAPRI_TM_MAX_IQS] = {};
     capri_queue_t oqs[CAPRI_TM_MAX_OQS] = {};

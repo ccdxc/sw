@@ -3059,6 +3059,20 @@ elba_tm_debug_stats_get (tm_port_t port, tm_debug_stats_t *debug_stats,
     return sdk::SDK_RET_OK;
 }
 
+// set the reserved min for uplink ports
+sdk_ret_t
+elba_tm_set_reserved_min(uint32_t reserved_min)
+{
+    return sdk::SDK_RET_OK; // TBD-ELBA-REBASE: fixup
+}
+
+sdk_ret_t
+elba_queue_stats_get (tm_port_t port, void *stats)
+{
+    // TBD-ELBA-REBASE: move to elba_tm_utils[.cc,.hpp] and fixup void *
+    return sdk::SDK_RET_OK;
+}
+
 }    // namespace elba
 }    // namespace platform
 }    // namespace sdk

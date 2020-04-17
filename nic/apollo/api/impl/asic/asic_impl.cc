@@ -1,9 +1,9 @@
 /**
  * Copyright (c) 2018 Pensando Systems, Inc.
  *
- * @file    capri_impl.cc
+ * @file    asic_impl.cc
  *
- * @brief   CAPRI asic implementation
+ * @brief   asic implementation
  */
 
 #include "nic/sdk/include/sdk/mem.hpp"
@@ -11,16 +11,12 @@
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/sensor/sensor.hpp"
-#include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
 #include "nic/sdk/asic/port.hpp"
-#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
-#include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/api/impl/capri/capri_impl.hpp"
+#include "nic/apollo/api/impl/asic/asic_impl.hpp"
 #include "nic/apollo/p4/include/artemis_table_sizes.h"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/sdk/third-party/asic/capri/verif/apis/cap_platform_api.h"
 #include "nic/sdk/platform/sysmon/sysmon.hpp"
 #include "nic/sdk/platform/asicerror/interrupts.hpp"
 
@@ -37,11 +33,11 @@ namespace impl {
  */
 
 /*
- * @brief    initialize an instance of capri impl class
+ * @brief    initialize an instance of asic impl class
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::init_ (void)
+asic_impl::init_ (void)
 {
     return SDK_RET_OK;
 }
@@ -49,18 +45,18 @@ capri_impl::init_ (void)
 /**
  * @brief    factory method to asic impl instance
  * @param[in] asic_cfg    asic information
- * @return    new instance of capri asic impl or NULL, in case of error
+ * @return    new instance of asic asic impl or NULL, in case of error
  */
-capri_impl *
-capri_impl::factory (asic_cfg_t *asic_cfg)
+asic_impl *
+asic_impl::factory (asic_cfg_t *asic_cfg)
 {
-    capri_impl    *impl;
+    asic_impl    *impl;
 
-    impl = (capri_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_ASIC_IMPL,
-                                    sizeof(capri_impl));
-    new (impl) capri_impl();
+    impl = (asic_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_ASIC_IMPL,
+                                    sizeof(asic_impl));
+    new (impl) asic_impl();
     if (impl->init_() != SDK_RET_OK) {
-        impl->~capri_impl();
+        impl->~asic_impl();
         SDK_FREE(SDK_MEM_ALLOC_PDS_ASIC_IMPL, impl);
         return NULL;
     }
@@ -68,9 +64,9 @@ capri_impl::factory (asic_cfg_t *asic_cfg)
 }
 
 void
-capri_impl::destroy (capri_impl *impl)
+asic_impl::destroy (asic_impl *impl)
 {
-    sdk::asic::pd::asicpd_cleanup();
+    asicpd_cleanup();
     sdk::lib::pal_teardown(impl->asic_cfg_.platform);
 }
 
@@ -80,7 +76,7 @@ capri_impl::destroy (capri_impl *impl)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::asic_init (asic_cfg_t *asic_cfg)
+asic_impl::asic_init (asic_cfg_t *asic_cfg)
 {
     sdk::lib::pal_ret_t    pal_ret;
     sdk_ret_t              ret;
@@ -89,14 +85,14 @@ capri_impl::asic_init (asic_cfg_t *asic_cfg)
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
     if (sdk::asic::asic_is_hard_init()) {
         if (sdk::platform::upgrade_mode_none(asic_cfg->upg_init_mode)) {
-            ret = sdk::asic::pd::asicpd_init(asic_cfg);
+            ret = asicpd_init(asic_cfg);
             // set the reserved min for uplink ports
-            sdk::platform::capri::capri_tm_set_reserved_min(200);
+            asicpd_tm_set_reserved_min(200);
         } else {
-            ret = sdk::asic::pd::asicpd_upgrade_init(asic_cfg);
+            ret = asicpd_upgrade_init(asic_cfg);
         }
     } else {
-        ret = sdk::asic::pd::asicpd_soft_init(asic_cfg);
+        ret = asicpd_soft_init(asic_cfg);
     }
     SDK_ASSERT(ret == SDK_RET_OK);
 
@@ -106,27 +102,27 @@ capri_impl::asic_init (asic_cfg_t *asic_cfg)
     return SDK_RET_OK;
 }
 
-static inline pen_adjust_index_t
+static inline pd_adjust_perf_index_t
 pds_clock_frequency_to_perf_id (pds_clock_freq_t freq)
 {
     switch (freq) {
     case PDS_CLOCK_FREQUENCY_833:
-        return PEN_PERF_ID0;
+        return PD_PERF_ID0;
         break;
     case PDS_CLOCK_FREQUENCY_900:
-        return PEN_PERF_ID1;
+        return PD_PERF_ID1;
         break;
     case PDS_CLOCK_FREQUENCY_957:
-        return PEN_PERF_ID2;
+        return PD_PERF_ID2;
         break;
     case PDS_CLOCK_FREQUENCY_1033:
-        return PEN_PERF_ID3;
+        return PD_PERF_ID3;
         break;
     case PDS_CLOCK_FREQUENCY_1100:
-        return PEN_PERF_ID4;
+        return PD_PERF_ID4;
         break;
     default:
-        return PEN_PERF_ID0;
+        return PD_PERF_ID0;
         break;
     }
 }
@@ -136,19 +132,17 @@ pds_clock_frequency_to_perf_id (pds_clock_freq_t freq)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::set_frequency (pds_clock_freq_t freq)
+asic_impl::set_frequency (pds_clock_freq_t freq)
 {
-    pen_adjust_index_t perf_id;
-    pen_adjust_perf_status_t ret;
+    sdk_ret_t ret;
+    pd_adjust_perf_index_t perf_id;
 
     perf_id = pds_clock_frequency_to_perf_id(freq);
-    ret = cap_top_adjust_perf(0, 0, perf_id, PEN_PERF_SET);
-    if (ret != PEN_PERF_SUCCESS) {
+    ret = asicpd_adjust_perf(0, 0, perf_id, PD_PERF_SET);
+    if (ret)
         PDS_TRACE_ERR("Clock frequency set failure, err %u", ret);
-        return SDK_RET_ERR;
-    }
 
-    return SDK_RET_OK;
+    return ret;
 }
 
 /**
@@ -156,16 +150,16 @@ capri_impl::set_frequency (pds_clock_freq_t freq)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::set_arm_frequency (pds_clock_freq_t freq)
+asic_impl::set_arm_frequency (pds_clock_freq_t freq)
 {
     if (freq == PDS_CLOCK_FREQUENCY_2200) {
         PDS_TRACE_DEBUG("Setting ARM CPU freq to 2.2Ghz");
-        cap_set_margin_by_value("arm", 950);
-        cap_top_sbus_cpu_2200(0,0);
+        asicpd_set_margin_by_value("arm", 950);
+        asicpd_sbus_cpu_2200(0,0);
     } else if (freq == PDS_CLOCK_FREQUENCY_1666) {
         PDS_TRACE_DEBUG("Setting ARM CPU freq to 1.67Ghz");
-        cap_set_margin_by_value("arm", 800);
-        cap_top_sbus_cpu_1666(0,0);
+        asicpd_set_margin_by_value("arm", 800);
+        asicpd_sbus_cpu_1666(0,0);
     }
     return SDK_RET_OK;
 }
@@ -175,7 +169,7 @@ capri_impl::set_arm_frequency (pds_clock_freq_t freq)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::get_system_temperature (pds_system_temperature_t *temp)
+asic_impl::get_system_temperature (pds_system_temperature_t *temp)
 {
     int rv;
     sdk::platform::sensor::system_temperature_t temperature;
@@ -198,7 +192,7 @@ capri_impl::get_system_temperature (pds_system_temperature_t *temp)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::get_system_power (pds_system_power_t *pow)
+asic_impl::get_system_power (pds_system_power_t *pow)
 {
     int rv;
     sdk::platform::sensor::system_power_t power;
@@ -221,8 +215,9 @@ capri_impl::get_system_power (pds_system_power_t *pow)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::llc_setup (sdk::asic::pd::llc_counters_t *llc_args) {
-    return sdk::asic::pd::asic_pd_llc_setup(llc_args);
+asic_impl::llc_setup (sdk::asic::pd::llc_counters_t *llc_args)
+{
+    return asicpd_llc_setup(llc_args);
 }
 
 /**
@@ -230,9 +225,9 @@ capri_impl::llc_setup (sdk::asic::pd::llc_counters_t *llc_args) {
  * @return      SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::llc_get (sdk::asic::pd::llc_counters_t *llc_args)
+asic_impl::llc_get (sdk::asic::pd::llc_counters_t *llc_args)
 {
-    return sdk::asic::pd::asic_pd_llc_get(llc_args);
+    return asicpd_llc_get(llc_args);
 }
 
 /**
@@ -242,7 +237,7 @@ capri_impl::llc_get (sdk::asic::pd::llc_counters_t *llc_args)
  * @return      SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::pb_stats (debug::pb_stats_get_cb_t cb, void *ctxt)
+asic_impl::pb_stats (debug::pb_stats_get_cb_t cb, void *ctxt)
 {
     sdk_ret_t ret;
     pds_pb_debug_stats_t pb_stats = {0};
@@ -257,7 +252,8 @@ capri_impl::pb_stats (debug::pb_stats_get_cb_t cb, void *ctxt)
             continue;
         }
         memcpy(&pb_stats.stats, &tm_debug_stats, sizeof(tm_debug_stats));
-        ret = capri_queue_stats_get(tm_port, &pb_stats.qos_queue_stats);
+        ret = asicpd_queue_stats_get(tm_port,
+                                     (void *) &pb_stats.qos_queue_stats);
         pb_stats.port = tm_port;
         cb(&pb_stats, ctxt);
     }
@@ -269,7 +265,8 @@ capri_impl::pb_stats (debug::pb_stats_get_cb_t cb, void *ctxt)
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::monitor (monitor_type_t monitor_type) {
+asic_impl::monitor (monitor_type_t monitor_type)
+{
     if (monitor_type == monitor_type_t::MONITOR_TYPE_SYSTEM) {
         sysmon_monitor();
     } else if (monitor_type == monitor_type_t::MONITOR_TYPE_INTERRUPTS) {
@@ -281,8 +278,8 @@ capri_impl::monitor (monitor_type_t monitor_type) {
 /// \brief  process the interrupts
 /// \return SDK_RET_OK on success, failure status code on error
 sdk_ret_t
-capri_impl::process_interrupts (const intr_reg_t *reg,
-                                const intr_field_t *field) {
+asic_impl::process_interrupts (const intr_reg_t *reg, const intr_field_t *field)
+{
     bool iscattrip = false;
     bool iseccerr = false;
 
@@ -297,7 +294,7 @@ capri_impl::process_interrupts (const intr_reg_t *reg,
     case 416:
     case 420:
     case 424:
-        sdk::asic::pd::asic_pd_unravel_hbm_intrs(&iscattrip, &iseccerr, true);
+        asicpd_unravel_hbm_intrs(&iscattrip, &iseccerr, true);
         if (iscattrip == false && iseccerr == true) {
             PDS_HMON_TRACE_ERR("ECCERR observed on the system.");
         }

@@ -17,6 +17,8 @@
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/elba/elba_toeplitz.hpp"
+#include "third-party/asic/elba/verif/apis/elb_platform_api.h"
+#include "third-party/asic/elba/verif/apis/elb_freq_api.h"
 // TODO: move out pipeline related code out of sdk
 #if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
@@ -391,7 +393,7 @@ asic_pd_hbm_bw_get (hbm_bw_samples_t *hbm_bw_samples)
 }
 
 sdk_ret_t
-asic_pd_llc_setup (llc_counters_t *llc)
+asicpd_llc_setup (llc_counters_t *llc)
 {
     return elba_nx_setup_llc_counters(llc->mask);
 }
@@ -408,7 +410,7 @@ asicpd_toeplitz_init (const char *handle, uint32_t tableid,
 }
 
 sdk_ret_t
-asic_pd_llc_get (llc_counters_t *llc)
+asicpd_llc_get (llc_counters_t *llc)
 {
     return elba_nx_get_llc_counters(&llc->mask, llc->data);
 }
@@ -520,12 +522,14 @@ asicpd_clock_freq_get (void)
     return elba_freq_get();
 }
 
-pd_adjust_perf_status_t
-asic_pd_adjust_perf (int chip_id, int inst_id, pd_adjust_perf_index_t &idx,
-                     pd_adjust_perf_type_t perf_type)
+sdk_ret_t
+asicpd_adjust_perf (int chip_id, int inst_id, pd_adjust_perf_index_t &idx,
+                    pd_adjust_perf_type_t perf_type)
 {
-    return (pd_adjust_perf_status_t) elba_adjust_perf(chip_id, inst_id,
-                (pen_adjust_index_t&) idx, (pen_adjust_perf_type_t) perf_type);
+    pen_adjust_perf_status_t status;
+    status = elba_adjust_perf(chip_id, inst_id, (pen_adjust_index_t &) idx,
+                              (pen_adjust_perf_type_t) perf_type);
+    return (status == PEN_PERF_SUCCESS) ? SDK_RET_OK : SDK_RET_ERR;
 }
 
 void
@@ -535,7 +539,7 @@ asic_pd_set_half_clock (int chip_id, int inst_id)
 }
 
 sdk_ret_t
-asic_pd_unravel_hbm_intrs (bool *iscattrip, bool *iseccerr, bool logging)
+asicpd_unravel_hbm_intrs (bool *iscattrip, bool *iseccerr, bool logging)
 {
     return elba_unravel_hbm_intrs(iscattrip, iseccerr, logging);
 }
@@ -1062,6 +1066,36 @@ asicpd_tm_set_span_threshold (uint32_t span_threshold)
 asicpd_table_rw_init (asic_cfg_t *cfg)
 {
     return elba_table_rw_init(cfg);
+}
+
+sdk_ret_t
+asicpd_tm_set_reserved_min (uint32_t reserved_min)
+{
+    return elba_tm_set_reserved_min(reserved_min);
+}
+
+sdk_ret_t
+asicpd_queue_stats_get (tm_port_t port, void *stats)
+{
+    return elba_queue_stats_get(port, stats);
+}
+
+void
+asicpd_set_margin_by_value (const char *name, uint64_t tgtVoutMv)
+{
+    elb_set_margin_by_value(name, tgtVoutMv);
+}
+
+sdk_ret_t
+asicpd_sbus_cpu_1666 (int chip_id, int inst_id)
+{
+    return elb_top_sbus_cpu_1666(chip_id, inst_id) ? SDK_RET_ERR : SDK_RET_OK;
+}
+
+sdk_ret_t
+asicpd_sbus_cpu_2200 (int chip_id, int inst_id)
+{
+    return elb_top_sbus_cpu_2200(chip_id, inst_id) ? SDK_RET_ERR : SDK_RET_OK;
 }
 
 }    // namespace pd

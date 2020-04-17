@@ -15,11 +15,11 @@ namespace pd {
 // set this macro with max coses supported
 #define ASIC_NUM_MAX_COSES   16
 typedef enum pd_adjust_perf_index {
-    PD_PERF_ID0 = 0,
-    PD_PERF_ID1 = 1,
-    PD_PERF_ID2 = 2,
-    PD_PERF_ID3 = 3,
-    PD_PERF_ID4 = 4
+    PD_PERF_ID0 = 0,    /* clock freq. 833 */
+    PD_PERF_ID1 = 1,    /* clock freq. 900 */
+    PD_PERF_ID2 = 2,    /* clock freq. 957 */
+    PD_PERF_ID3 = 3,    /* clock freq. 1033 */
+    PD_PERF_ID4 = 4     /* clock freq. 1100 */
 } pd_adjust_perf_index_t;
 
 typedef enum pd_adjust_perf_type {
@@ -140,8 +140,8 @@ int asicpd_hbm_table_entry_write(uint32_t tableid, uint32_t index,
                                  uint8_t *hwentry, uint16_t entry_size);
 sdk_ret_t asic_pd_scheduler_stats_get(scheduler_stats_t *sch_stats);
 sdk_ret_t asic_pd_hbm_bw_get(hbm_bw_samples_t *hbm_bw_samples);
-sdk_ret_t asic_pd_llc_setup(llc_counters_t *llc);
-sdk_ret_t asic_pd_llc_get(llc_counters_t *llc);
+sdk_ret_t asicpd_llc_setup(llc_counters_t *llc);
+sdk_ret_t asicpd_llc_get(llc_counters_t *llc);
 sdk_ret_t asicpd_p4plus_recirc_init(void);
 sdk_ret_t asicpd_qstate_map_clear(uint32_t lif_id);
 sdk_ret_t asicpd_qstate_map_write(lif_qstate_t *qstate, uint8_t enable);
@@ -154,12 +154,12 @@ void asicpd_reset_qstate_map(uint32_t lif_id);
 sdk_ret_t asicpd_p4plus_invalidate_cache(mpartition_region_t *reg,
                                          uint64_t q_addr, uint32_t size);
 uint32_t asicpd_clock_freq_get(void);
-pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
-                                            pd_adjust_perf_index_t &idx,
-                                            pd_adjust_perf_type_t perf_type);
+sdk_ret_t asicpd_adjust_perf(int chip_id, int inst_id,
+                             pd_adjust_perf_index_t &idx,
+                             pd_adjust_perf_type_t perf_type);
 void asic_pd_set_half_clock(int chip_id, int inst_id);
-sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr,
-                                    bool logging=false);
+sdk_ret_t asicpd_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr,
+                                   bool logging=false);
 sdk_ret_t asicpd_toeplitz_init(const char *handle, uint32_t table_id,
                                uint32_t rss_indir_tbl_entry_size);
 void asicpd_p4_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
@@ -445,6 +445,15 @@ sdk_ret_t asicpd_table_rw_init(asic_cfg_t *cfg);
 void asicpd_table_constant_write(uint64_t val, uint32_t stage,
                                  uint32_t stage_tableid, bool ingress);
 sdk_ret_t asicpd_tm_set_span_threshold(uint32_t span_threshold);
+
+sdk_ret_t asicpd_tm_set_reserved_min(uint32_t reserved_min);
+
+sdk_ret_t asicpd_queue_stats_get(tm_port_t port, void *stats);
+
+void asicpd_set_margin_by_value(const char *name, uint64_t tgtVoutMv);
+
+sdk_ret_t asicpd_sbus_cpu_1666(int chip_id, int inst_id);
+sdk_ret_t asicpd_sbus_cpu_2200(int chip_id, int inst_id);
 
 }    // namespace pd
 }    // namespace asic

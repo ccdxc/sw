@@ -26,6 +26,8 @@
 #include "platform/capri/capri_barco_sym_apis.hpp"
 #include "platform/capri/capri_barco_asym_apis.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/verif/apis/cap_platform_api.h"
+#include "third-party/asic/capri/verif/apis/cap_freq_api.h"
 // TODO: move out pipeline related code out of sdk
 #if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
@@ -388,7 +390,7 @@ asic_pd_hbm_bw_get (hbm_bw_samples_t *hbm_bw_samples)
 }
 
 sdk_ret_t
-asic_pd_llc_setup (llc_counters_t *llc)
+asicpd_llc_setup (llc_counters_t *llc)
 {
     return capri_nx_setup_llc_counters(llc->mask);
 }
@@ -406,7 +408,7 @@ asicpd_toeplitz_init (const char *handle, uint32_t tableid,
 }
 
 sdk_ret_t
-asic_pd_llc_get (llc_counters_t *llc)
+asicpd_llc_get (llc_counters_t *llc)
 {
     return capri_nx_get_llc_counters(&llc->mask, llc->data);
 }
@@ -518,13 +520,14 @@ asicpd_clock_freq_get(void)
     return capri_freq_get();
 }
 
-pd_adjust_perf_status_t
-asic_pd_adjust_perf (int chip_id, int inst_id,
-             pd_adjust_perf_index_t &idx,
-             pd_adjust_perf_type_t perf_type)
+sdk_ret_t
+asicpd_adjust_perf (int chip_id, int inst_id, pd_adjust_perf_index_t &idx,
+                    pd_adjust_perf_type_t perf_type)
 {
-    return (pd_adjust_perf_status_t) capri_adjust_perf(chip_id, inst_id,
-                (pen_adjust_index_t&) idx, (pen_adjust_perf_type_t) perf_type);
+    pen_adjust_perf_status_t status;
+    status = capri_adjust_perf(chip_id, inst_id, (pen_adjust_index_t &) idx,
+                               (pen_adjust_perf_type_t) perf_type);
+    return (status == PEN_PERF_SUCCESS) ? SDK_RET_OK : SDK_RET_ERR;
 }
 
 void
@@ -534,7 +537,7 @@ asic_pd_set_half_clock (int chip_id, int inst_id)
 }
 
 sdk_ret_t
-asic_pd_unravel_hbm_intrs (bool *iscattrip, bool *iseccerr, bool logging)
+asicpd_unravel_hbm_intrs (bool *iscattrip, bool *iseccerr, bool logging)
 {
     return capri_unravel_hbm_intrs(iscattrip, iseccerr, logging);
 }
@@ -1353,6 +1356,36 @@ sdk_ret_t
 asicpd_tm_set_span_threshold (uint32_t span_threshold)
 {
     return capri_tm_set_span_threshold(span_threshold);
+}
+
+sdk_ret_t
+asicpd_tm_set_reserved_min (uint32_t reserved_min)
+{
+    return capri_tm_set_reserved_min(reserved_min);
+}
+
+sdk_ret_t
+asicpd_queue_stats_get (tm_port_t port, void *stats)
+{
+    return capri_queue_stats_get(port, (capri_queue_stats_t *) stats);
+}
+
+void
+asicpd_set_margin_by_value (const char *name, uint64_t tgtVoutMv)
+{
+    cap_set_margin_by_value(name, tgtVoutMv);
+}
+
+sdk_ret_t
+asicpd_sbus_cpu_1666 (int chip_id, int inst_id)
+{
+    return cap_top_sbus_cpu_1666(chip_id, inst_id) ? SDK_RET_ERR : SDK_RET_OK;
+}
+
+sdk_ret_t
+asicpd_sbus_cpu_2200 (int chip_id, int inst_id)
+{
+    return cap_top_sbus_cpu_2200(chip_id, inst_id) ? SDK_RET_ERR : SDK_RET_OK;
 }
 
 }    // namespace pd

@@ -932,7 +932,7 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->add_entry()->set_type(sys::OflowFifoDropType::CONTROL_FIFO_FULL_DROP);
         port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts()->mutable_entry(5)->set_count(debug_stats.oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
 
-        sdk_ret = capri_queue_stats_get(port, &qos_queue_stats);
+        sdk_ret = asicpd_queue_stats_get(port, (void *) &qos_queue_stats);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         auto q_stats = port_stats->mutable_qos_queue_stats();
         qos_class_queue_stats_to_proto_stats(q_stats, &qos_queue_stats);

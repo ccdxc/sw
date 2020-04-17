@@ -62,7 +62,7 @@ unravel_intr(uint32_t data)
     bool iscattrip = false;
 
     if (data) {
-        asic_pd_unravel_hbm_intrs(&iscattrip, true);
+        asicpd_unravel_hbm_intrs(&iscattrip, true);
         if (iscattrip == false) {
             ERR("ECCERR observed on the system.");
         }

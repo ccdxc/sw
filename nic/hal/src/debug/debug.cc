@@ -17,9 +17,8 @@
 #include "nic/fte/acl/acl_ctx.hpp"
 #include "nic/fte/fte.hpp"
 
-
-
 using sdk::lib::slab;
+
 namespace sdk {
 namespace lib {
 extern sdk::lib::twheel *g_twheel;
@@ -912,7 +911,7 @@ llc_clear (void)
     memset (&llc_args, 0, sizeof(llc_counters_t));
     llc_args.mask = 0xffffffff;
 
-    sdk_ret = sdk::asic::pd::asic_pd_llc_setup(&llc_args);
+    sdk_ret = sdk::asic::pd::asicpd_llc_setup(&llc_args);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     return ret;
 }
@@ -929,7 +928,7 @@ llc_setup(const LlcSetupRequest *req, LlcSetupResponse *rsp)
         llc_args.mask = (1 << (req->type() - 1)); // Req Type starts at 1 so we need to subtract 1
     }
 
-    sdk_ret = sdk::asic::pd::asic_pd_llc_setup(&llc_args);
+    sdk_ret = sdk::asic::pd::asicpd_llc_setup(&llc_args);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_OK);
@@ -949,7 +948,7 @@ llc_get(LlcGetResponse *rsp)
 
     memset (&llc_args, 0, sizeof(llc_counters_t));
 
-    sdk_ret = sdk::asic::pd::asic_pd_llc_get(&llc_args);
+    sdk_ret = sdk::asic::pd::asicpd_llc_get(&llc_args);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_ERR);

@@ -20,15 +20,15 @@ int startingfrequency_1100 = 0;
 #define HBM_TEMP_UPPER_LIMIT 95
 
 static void
-changefrequency(uint64_t hbmtemperature) {
-
-    pd_adjust_perf_status_t status;
+changefrequency (uint64_t hbmtemperature)
+{
+    sdk_ret_t ret;
     int chip_id = 0;
     int inst_id = 0;
 
     if (hbmtemperature <= HBM_TEMP_LOWER_LIMIT) {
-        status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_UP);
-        if (status == PD_PERF_SUCCESS) {
+        ret = asicpd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_UP);
+        if (ret == SDK_RET_OK) {
             SDK_HMON_TRACE_INFO("Increased the frequency.");
         } else {
             if (perf_id != PD_PERF_ID4) {
@@ -37,8 +37,8 @@ changefrequency(uint64_t hbmtemperature) {
             }
         }
     } else if (hbmtemperature >= HBM_TEMP_UPPER_LIMIT) {
-        status = asic_pd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_DOWN);
-        if (status == PD_PERF_SUCCESS) {
+        ret = asicpd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_DOWN);
+        if (ret == SDK_RET_OK) {
             SDK_HMON_TRACE_INFO("Decreased the frequency.");
         } else {
             if (perf_id != PD_PERF_ID0) {
@@ -128,7 +128,7 @@ checktemperature(void)
 
 int configurefrequency() {
     boost::property_tree::ptree input;
-    pd_adjust_perf_status_t status = PD_PERF_FAILED;
+    sdk_ret_t ret;
     int chip_id = 0;
     int inst_id = 0;
     string frequency;
@@ -162,16 +162,12 @@ int configurefrequency() {
             } else {
                 return -1;
             }
-            status = asic_pd_adjust_perf(chip_id, inst_id, perf_id,
-                                         PD_PERF_SET);
+            ret = asicpd_adjust_perf(chip_id, inst_id, perf_id, PD_PERF_SET);
         } catch (std::exception const &ex) {
             SDK_HMON_TRACE_ERR("%s", ex.what());
             return -1;
         }
     }
 
-    if (status == PD_PERF_SUCCESS) {
-        return 0;
-    }
-    return -1;
+    return (ret == SDK_RET_OK) ? 0 : -1;
 }

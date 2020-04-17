@@ -5,7 +5,7 @@ OBJ_DIR = ./obj
 
 export ARCH ?= x86_64
 export ASIC ?= capri
-CXX = /tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-g++ 
+CXX = /tool/toolchain/aarch64-1.1/bin/aarch64-linux-gnu-g++
 CPPFLAGS += -I/usr/local/include -std=c++11 -pthread -g -c -Wall -Werror -O0
 CPPFLAGS += -MT $@ -MMD -MP -MF $(OBJ_DIR)/$*.d -D__FNAME__=__FUNCTION__ -DRTE_FORCE_INTRINSICS
 ifeq ($(ARCH), x86_64)
@@ -30,7 +30,7 @@ LDFLAGS += -L/usr/local/lib64 -L/lib64 -L$(TOPDIR)/nic/sdk/third-party/googletes
 else
 LDFLAGS += -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/lib \
            -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/lib \
-           -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/lib/aarch64-linux-gnu 
+           -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/lib/aarch64-linux-gnu
 endif
 
 LDLIBS += -lpal -lpdsframework -lpdscore -lpdslearn -lpdsapi -lpdsapi_impl -lsdkftl \
@@ -43,7 +43,7 @@ LDLIBS += -lpal -lpdsframework -lpdscore -lpdslearn -lpdsapi -lpdsapi_impl -lsdk
 		-lsldirectmap -lhash -lhbmhash -ltcam -ltimerfd -lcatalog \
 		-ldevice -lsdkplatformutils -lsdkcapri -lsdkp4loader -lsdkasicrw \
 		-llif_mgr -lsdkring -lsysmon -lsensor -lsdkp4 \
-		-lsdkp4utils -lsdkcapri_asicrw_if -lpdsapi_capri_impl \
+		-lsdkp4utils -lsdkcapri_asicrw_if -lpdsapi_asic_impl \
 		-lsdkxcvrdriver -lsdkasicpd -lsdkasiccmn -lkvstore_lmdb -llmdb -lbm_allocator -lsdklinkmgr \
 		-lsdklinkmgrcsr -lnicmgr_athena -lmnet -levutils \
 		-lpciemgr_if -lpciemgr -lpciemgrutils -lpciehdevices \

@@ -103,7 +103,7 @@ nic/build/$ARCH/$PIPELINE/lib/librfc_$PIPELINE.so                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblfq.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libnicmgr_$PIPELINE.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsltcam.so                        /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdsapi_capri_impl.so             /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsapi_asic_impl.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libslhash.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsldirectmap.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libflowtestagenthooks.so            /nic/lib/

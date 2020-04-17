@@ -9,6 +9,8 @@
 #include "platform/src/app/sysmond/event_recorder/sysmond_eventrecorder_cb.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 
+using namespace sdk::asic::pd;
+
 sdk::lib::catalog *g_catalog;
 
 void
@@ -112,7 +114,7 @@ intr_event_cb (const intr_reg_t *reg, const intr_field_t *field)
     case 416:
     case 420:
     case 424:
-        sdk::asic::pd::asic_pd_unravel_hbm_intrs(&iscattrip, &iseccerr, true);
+        asicpd_unravel_hbm_intrs(&iscattrip, &iseccerr, true);
         if (iscattrip == false && iseccerr == true) {
             TRACE_ERR(GetAsicErrLogger(), "ECCERR observed on the system.");
         }

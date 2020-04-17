@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/framework/asic_impl_base.hpp"
-#include "nic/apollo/api/impl/capri/capri_impl.hpp"
+#include "nic/apollo/api/impl/asic/asic_impl.hpp"
 
 namespace api {
 namespace impl {
@@ -18,12 +18,14 @@ namespace impl {
 /// @{
 
 asic_impl_base *
-asic_impl_base::factory(asic_cfg_t *asic_cfg) {
+asic_impl_base::factory (asic_cfg_t *asic_cfg)
+{
     switch (asic_cfg->asic_type) {
     case asic_type_t::SDK_ASIC_TYPE_CAPRI:
+    case asic_type_t::SDK_ASIC_TYPE_ELBA:
         asic_impl_base *impl;
-        impl = capri_impl::factory(asic_cfg);
-        impl->asic_type_ = asic_type_t::SDK_ASIC_TYPE_CAPRI;
+        impl = asic_impl::factory(asic_cfg);
+        impl->asic_type_ = asic_cfg->asic_type;
         return impl;
     default:
         break;
@@ -32,10 +34,12 @@ asic_impl_base::factory(asic_cfg_t *asic_cfg) {
 }
 
 void
-asic_impl_base::destroy(asic_impl_base *impl) {
+asic_impl_base::destroy (asic_impl_base *impl)
+{
     switch (impl->asic_type_) {
     case asic_type_t::SDK_ASIC_TYPE_CAPRI:
-        return capri_impl::destroy(static_cast<capri_impl*>(impl));
+    case asic_type_t::SDK_ASIC_TYPE_ELBA:
+        return asic_impl::destroy(static_cast<asic_impl*>(impl));
     default:
         break;
     }
