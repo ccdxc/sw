@@ -555,6 +555,14 @@ export class Utility {
     return !(isNaN(Date.parse(date)));
   }
 
+  static convertLocalTimeToUTCTime(date: Date): Date {
+    return new Date(date.getTime() + (new Date()).getTimezoneOffset() * 60000);
+  }
+
+  static convertUTCTimeToLocalTime(date: Date): Date {
+    return new Date(date.getTime() - (new Date()).getTimezoneOffset() * 60000);
+  }
+
   static computeAge(dateOfBirth: string): number {
     const today = new Date();
     const nowyear = today.getFullYear();

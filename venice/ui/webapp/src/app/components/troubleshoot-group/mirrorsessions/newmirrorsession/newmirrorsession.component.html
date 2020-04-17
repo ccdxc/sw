@@ -41,15 +41,15 @@
     <div *ngIf="isInline" class="newmirrorsession-inline-buttoncontainer" fxFlex="nogrow"
          fxLayout="row" fxLayoutAlign="start end">
       <div fxFlex="auto" fxLayoutAlign="end center">
-        <div fxFlex="nogrow">
-          <span (click)="saveObject()"
-                class="global-button-primary global-button-padding newmirrorsession-inline-save"
-                [ngClass]="computeInlineButtonClass()">SAVE</span>
+        <div fxFlex="nogrow" class="button-container" [matTooltip]="getTooltip()">
+          <span [ngClass]="computeInlineButtonClass()" (click)="saveObject()"
+                class="global-button-primary global-button-padding newmirrorsession-inline-save">SAVE</span>
         </div>
-        <div fxFlex="nogrow">
+        <div fxFlex="nogrow" class="button-container">
           <span (click)="cancelObject()"
                 class="global-button-neutral global-button-padding newmirrorsession-inline-save">CANCEL</span>
         </div>
+
       </div>
     </div>
   </ng-template>
@@ -129,6 +129,12 @@
                   class="newmirrorsession-collector-box">
               <input fxFlex="nogrow" appFloatLabel="Gateway" appErrorTooltip
                      formControlName="gateway" spellcheck="false" type="text" pInputText>
+            </span>
+            <div fxFlex="10px"></div>
+            <span fxFlex="none" fxLayout="row">
+              <span class="newmirrorsession-stripvlan-label">Strip VLAN</span>
+              <p-inputSwitch class="newmirrorsession-stripvlan-toggle" appendTo="body"
+                             formControlName="strip-vlan-hdr"></p-inputSwitch>
             </span>
             <mat-icon fxFlex="nogrow" class="global-trash-button newmirrorsession-delete"
                       *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec','collectors'])).length > 1"

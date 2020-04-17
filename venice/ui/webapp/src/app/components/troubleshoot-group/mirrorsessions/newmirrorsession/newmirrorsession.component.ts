@@ -20,7 +20,7 @@ import { SearchUtil } from '@app/components/search/SearchUtil';
 import { OrderedItem } from '@app/components/shared/orderedlist/orderedlist.component';
 import { SelectItem } from 'primeng/api';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { minValueValidator } from '@sdk/v1/utils/validators';
+import { minValueValidator, maxValueValidator } from '@sdk/v1/utils/validators';
 import { NetworkNetworkInterface, NetworkNetworkInterfaceSpec_type } from '@sdk/v1/models/generated/network';
 import { NetworkService } from '@app/services/generated/network.service';
 import {SearchExpression, SearchInputTypeValue, SearchModelField, SearchSpec} from '@app/components/search';
@@ -65,8 +65,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     'for example: icmp, any/2345, tcp/60001-60100...';
 
   createButtonTooltip: string = '';
-  minDate: Date = new Date();
-  defaultDate: Date = null;
+  minDate: Date = Utility.convertLocalTimeToUTCTime(new Date());
+  defaultDate: Date = Utility.convertLocalTimeToUTCTime(new Date());
 
   packetFilterOptions = Utility.convertEnumToSelectItem(MonitoringMirrorSessionSpec.propInfo['packet-filters'].enum);
   collectorTypeOptions = Utility.convertEnumToSelectItem(MonitoringMirrorCollector.propInfo['type'].enum);
@@ -131,16 +131,10 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   }
 
   postNgInit(): void {
-    this.getSecurityApps();
+    // this.getSecurityApps();
     this.getNILabels();
 
-    // change the hour seconds to 0 and 0 to avoid confusion of local vs utc
-    // seems backend has iisue, seconds can not be 0, otherwise the schdedule
-    // time will become null on the backend.
-    this.defaultDate = new Date();
-    Utility.clearHourMinuteSecond(this.defaultDate);
-
-    // currently backend does not support any drop packets
+   // currently backend does not support any drop packets
     // UI temporarily drop those choices.
     // once they are supported, pls uncomment out the next lines
     this.packetFilterOptions = this.packetFilterOptions.filter(item =>
@@ -154,15 +148,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
         this.radioSelection = 'labels';
       } else {
         this.radioSelection = 'rules';
-      }
-
-      // conver date from staring to Date Object
-      const dateValue = this.newObject.$formGroup.get(['spec', 'start-condition', 'schedule-time']).value;
-      if (dateValue) {
-        // need to convert utc time to local time to show it on browser
-        const localDate = new Date(dateValue);
-        localDate.setTime(localDate.getTime() + this.minDate.getTimezoneOffset() * 60000);
-        this.newObject.$formGroup.get(['spec', 'start-condition', 'schedule-time']).setValue(localDate);
       }
 
       // process match rules
@@ -187,11 +172,13 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       this.newObject.$formGroup.get(['meta', 'name']).disable();
     }
 
-    this.newObject.$formGroup.get(['meta', 'name']).setValidators([
-      this.newObject.$formGroup.get(['meta', 'name']).validator,
-      this.isMirrorsessionNameValid(this.existingObjects)]);
+    if (!this.isInline) {
+      this.newObject.$formGroup.get(['meta', 'name']).setValidators([
+        this.newObject.$formGroup.get(['meta', 'name']).validator,
+        this.isMirrorsessionNameValid(this.existingObjects)]);
+    }
 
-    this.newObject.$formGroup.get(['spec', 'packet-size']).setValidators([minValueValidator(0)]);
+    this.newObject.$formGroup.get(['spec', 'packet-size']).setValidators([minValueValidator(64), maxValueValidator(2048)]);
 
     // due to currently backend does not support all drops, comment out next lines
     /*
@@ -234,6 +221,25 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     return '';
   }
   */
+
+  // this fix is for vs-1493
+  // p-calendar needs data object, bacned value is string
+  // if ui try to set value as date object afterviewinit,
+  // it may not work, sometimes, the string value already goest to
+  // p-calendar which cause exception on page. so date object has to
+  // be load into formObject before view init.
+  loadExistingObject(data: any) {
+    // conver date from staring to Date Object
+    const dateValue = data.spec['start-condition']['schedule-time'];
+    if (dateValue) {
+      // need to convert utc time to local time to show it on browser
+      const newData = Utility.getLodash().cloneDeep(data);
+      newData.spec['start-condition']['schedule-time'] =
+          Utility.convertLocalTimeToUTCTime(new Date(dateValue));
+      return newData;
+    }
+    return data;
+  }
 
 
 
@@ -303,7 +309,6 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
         }
       }
     }
-
     if (!this.newObject.$formGroup.valid) {
       this.createButtonTooltip = 'Error: Form is invalid.';
       return false;
@@ -317,7 +322,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
       return 'Error: Name field is empty.';
     }
-    if (!this.newObject.$formGroup.get(['meta', 'name']).valid) {
+    if (this.newObject.$formGroup.get(['meta', 'name']).invalid) {
       return 'Error: Name field is invalid.';
     }
     return this.createButtonTooltip;
@@ -329,10 +334,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       const scheduleTime: Date = currValue.spec['start-condition']['schedule-time'];
       // whatever showed on browser is actually local time, we have do magic to conver it
       // to real utc time to send to the backend
-      scheduleTime.setTime(scheduleTime.getTime() - scheduleTime.getTimezoneOffset() * 60000);
-      // set seconds to 30 is because backend issue.
-      // if the seconds are 0, the schedule time will become 0
-      scheduleTime.setSeconds(30);
+      currValue.spec['start-condition']['schedule-time'] = Utility.convertUTCTimeToLocalTime(scheduleTime);
     }
 
     if (this.radioSelection === 'labels') {

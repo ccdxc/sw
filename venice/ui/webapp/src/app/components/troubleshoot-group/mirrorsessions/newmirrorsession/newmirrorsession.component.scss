@@ -77,7 +77,21 @@ $dary-grey: #a9a9a9;
   }
 
   .newmirrorsession-collector-box {
-    width: 177px;
+    width: 137px;
+  }
+
+  .newmirrorsession-stripvlan-label {
+    color: #898989;
+    font-size: 12px;
+    position: relative;
+    top: -10px;
+    width: 55px;
+  }
+
+  .newmirrorsession-stripvlan-toggle {
+    position: relative;
+    left: -55px;
+    top: 8px;
   }
 
   .newmirrorsession-add-collector,
