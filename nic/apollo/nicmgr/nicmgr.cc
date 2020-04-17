@@ -150,7 +150,6 @@ nicmgrapi::xcvr_event_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
     g_devmgr->XcvrEventHandler(&st);
     PDS_TRACE_DEBUG("Rcvd xcvr event for ifidx 0x%x, state %u, cable type %u"
                     "pid %u", st.id, st.xcvr.state, st.xcvr.phy, st.xcvr.pid);
-    g_devmgr->LinkEventHandler(&st);
 }
 
 DeviceManager *

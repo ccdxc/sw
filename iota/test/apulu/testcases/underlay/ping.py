@@ -125,9 +125,11 @@ def Verify(tc):
     return result
 
 def Teardown(tc):
+    tc_intf = (tc.iterators.interface).capitalize()
     naples_nodes = api.GetNaplesHostnames()
     setDataPortState(naples_nodes, adminUp)
-    switchPortOp(naples_nodes, 'up', 'Switchports') 
+    if tc_intf in ['Switchport0', 'Switchport1', 'Switchports']:
+        switchPortOp(naples_nodes, 'up', 'Switchports') 
     ret = verifyDataPortState(naples_nodes, adminUp, operUp)
     api.Logger.info("Reset post Teardown Complete")
     return ret

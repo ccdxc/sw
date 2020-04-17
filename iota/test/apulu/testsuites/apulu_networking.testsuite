@@ -41,6 +41,7 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
+        - networking/underlay_direct.testbundle
         - networking/networking.testbundle
         - h2vrip.testbundle
         - classic/ethtool.testbundle

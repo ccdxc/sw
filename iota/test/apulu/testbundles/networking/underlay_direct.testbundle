@@ -1,0 +1,20 @@
+meta:
+    name    : underlay_direct
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : Ping_Underlay_Workloads
+        testcase: testcases.underlay.ping
+        stress  : True
+        args    :
+            ping_count: 4
+            ping_interval: 0.01
+        iterators :
+            type            : nested
+            ipaf            : [ ipv4 ]
+            pktsize         : [ 64, 1024 ]
+            connectivity    : [ underlay_lb, bgp_peer ]
+            interface       : [ None ]
+            port_status     : [ up ]
