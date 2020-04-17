@@ -17,7 +17,7 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 // MirrorSessionSpec
 message MirrorSessionSpec {
     // PacketSize: Max size of a mirrored packet.
-    uint32                  PacketSize      = 1 [(gogoproto.jsontag) = "packet-size,omitempty"];
+    uint32                  PacketSize      = 1 [(gogoproto.jsontag) = "packet-size,omitempty",  (venice.check)="IntRangeOrZero(64, 2048)"];
 
     // StartConditions
     MirrorStartConditions   StartConditions = 2 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "start-condition,inline"];

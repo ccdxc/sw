@@ -948,6 +948,18 @@ func init() {
 		return nil
 	})
 
+	validatorMapMirror["MirrorSessionSpec"]["all"] = append(validatorMapMirror["MirrorSessionSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*MirrorSessionSpec)
+		args := make([]string, 0)
+		args = append(args, "64")
+		args = append(args, "2048")
+
+		if err := validators.IntRangeOrZero(m.PacketSize, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"PacketSize", err.Error())
+		}
+		return nil
+	})
+
 	validatorMapMirror["MirrorSessionStatus"] = make(map[string][]func(string, interface{}) error)
 	validatorMapMirror["MirrorSessionStatus"]["all"] = append(validatorMapMirror["MirrorSessionStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*MirrorSessionStatus)

@@ -154,6 +154,22 @@ func IntRange(i interface{}, args []string) error {
 	return nil
 }
 
+// IntRangeOrZero validates that the input integer is in the range
+//  args[0]  :  minimum value
+//  args[1]  :  maximum value
+//  or zero
+func IntRangeOrZero(i interface{}, args []string) error {
+	in, ok := getint(i)
+	if !ok {
+		return fmt.Errorf("Value must be an integer")
+	}
+
+	if in == 0 {
+		return nil
+	}
+	return IntRange(i, args)
+}
+
 // IntMin validates that the input integer is at  least the given int
 //  args[0]  :  minimum value
 func IntMin(i interface{}, args []string) error {

@@ -14,7 +14,7 @@ import { MonitoringMirrorSessionSpec_packet_filters,  MonitoringMirrorSessionSpe
 import { MonitoringInterfaceMirror, IMonitoringInterfaceMirror } from './monitoring-interface-mirror.model';
 
 export interface IMonitoringMirrorSessionSpec {
-    'packet-size'?: number;
+    'packet-size': number;
     'start-condition'?: IMonitoringMirrorStartConditions;
     'collectors'?: Array<IMonitoringMirrorCollector>;
     'match-rules'?: Array<IMonitoringMatchRule>;
@@ -27,7 +27,7 @@ export interface IMonitoringMirrorSessionSpec {
 export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitoringMirrorSessionSpec {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
-    /** PacketSize: Max size of a mirrored packet. */
+    /** PacketSize: Max size of a mirrored packet. Value should be between 64 and 2048. */
     'packet-size': number = null;
     /** StartConditions. */
     'start-condition': MonitoringMirrorStartConditions = null;
@@ -40,8 +40,8 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     'interfaces': MonitoringInterfaceMirror = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionSpec]: PropInfoItem } = {
         'packet-size': {
-            description:  `PacketSize: Max size of a mirrored packet.`,
-            required: false,
+            description:  `PacketSize: Max size of a mirrored packet. Value should be between 64 and 2048.`,
+            required: true,
             type: 'number'
         },
         'start-condition': {
@@ -152,7 +152,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'packet-size': CustomFormControl(new FormControl(this['packet-size']), MonitoringMirrorSessionSpec.propInfo['packet-size']),
+                'packet-size': CustomFormControl(new FormControl(this['packet-size'], [required, minValueValidator(64), maxValueValidator(2048), ]), MonitoringMirrorSessionSpec.propInfo['packet-size']),
                 'start-condition': CustomFormGroup(this['start-condition'].$formGroup, MonitoringMirrorSessionSpec.propInfo['start-condition'].required),
                 'collectors': new FormArray([]),
                 'match-rules': new FormArray([]),

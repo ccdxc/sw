@@ -765,6 +765,12 @@ func TestFieldProfiles(t *testing.T) {
 				number: 13
 			>
 			field <
+				name: 'int_field1'
+				type: TYPE_STRING
+				options:<[venice.check]: "IntRangeOrZero(3, 1000)">
+				number: 0
+			>
+			field <
 				name: 'int_field2'
 				type: TYPE_STRING
 				options:<[venice.check]: "IntMin(5)">

@@ -67,7 +67,7 @@ func (s *summaryReporter) SpecSuiteDidEnd(summary *types.SuiteSummary) {
 	}
 
 	for i, k := range keys {
-		fmt.Fprintf(w, "%v%d\t%v\t%v%v\n", cmap[s.spec[k]], i+1, k, s.spec[k], "\x1b[0m")
+		fmt.Fprintf(w, "%v%3d\t%v\t%v%v\n", cmap[s.spec[k]], i+1, k, s.spec[k], "\x1b[0m")
 	}
 
 	w.Flush()
