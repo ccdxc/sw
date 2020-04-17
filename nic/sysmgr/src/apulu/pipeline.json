@@ -5,7 +5,7 @@
         "dependencies": [],
         "flags": ["critical"],
         "timeout": 30.0,
-        "cpu-affinity": "0x1"
+        "cpu-affinity": "0x2"
     },
     {
         "name": "agent",
@@ -15,7 +15,7 @@
         "memory-limit": 800.0,
         "cpu-max-percentage": 75,
         "timeout": 0.0,
-        "cpu-affinity": "0x1"
+        "cpu-affinity": "0x2"
     },
     {
         "name": "vpp",
@@ -23,7 +23,7 @@
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x1"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "operd",
@@ -31,7 +31,7 @@
         "dependencies": [],
         "flags": [],
         "timeout": 0.0,
-        "cpu-affinity": "0x1"
+        "cpu-affinity": "0x2"
     },
     {
         "name": "dhcpd",
@@ -39,7 +39,7 @@
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x1"
+        "cpu-affinity": "0x2"
     },
     {
         "name": "lldpd",
@@ -47,6 +47,6 @@
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x1"
+        "cpu-affinity": "0x2"
     }
 ]
