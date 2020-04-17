@@ -228,34 +228,6 @@ var _ = Describe("distributedservicecard tests", func() {
 				Expect(ok).Should(BeFalse(), fmt.Sprintf("DistributedServiceCard %s had duplicate MAC Address: %s, NIC with same MAC: %s", snic.Name, mac, nicMACMap[mac]))
 				nicMACMap[mac] = snic.Name
 			}
-
-			// de-admit and re-admit multiple times
-			for i := 0; i < 10; i++ {
-				for _, admit := range []bool{false, true} {
-					snics, err = snIf.List(ctx, &api.ListWatchOptions{})
-					Expect(err).ShouldNot(HaveOccurred())
-					Expect(len(snics)).To(Equal(ts.tu.NumNaplesHosts))
-					for _, snic := range snics {
-						snic.Spec.Admit = admit
-						_, err = snIf.Update(ctx, snic)
-						Expect(err).ShouldNot(HaveOccurred())
-					}
-					Eventually(func() bool {
-						snics, err = snIf.List(ctx, &api.ListWatchOptions{})
-						Expect(err).ShouldNot(HaveOccurred())
-						Expect(len(snics)).To(Equal(ts.tu.NumNaplesHosts))
-						for _, snic := range snics {
-							if admit != (snic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_ADMITTED.String()) {
-								By(fmt.Sprintf("ts:%s DistributedServiceCard %s admission phase is not as expected. Have: %v, want: %v",
-									time.Now().String(), snic.Name, admit, snic.Status.AdmissionPhase == cmd.DistributedServiceCardStatus_ADMITTED.String()))
-								return false
-							}
-						}
-						return true
-					}, 60, 3).Should(BeTrue(), fmt.Sprintf("DistributedServiceCard de-admission and re-admission check failed: %+v", snics))
-					validateNICMetrics(ctx, snIf, int64(ts.tu.NumNaplesHosts))
-				}
-			}
 		})
 	})
 

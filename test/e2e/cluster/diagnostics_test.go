@@ -689,9 +689,10 @@ var _ = Describe("diagnostics tests", func() {
 		})
 	})
 	Context("naples", func() {
-		var modObjs []*diagnostics.Module
-		BeforeEach(func() {
+		It("check query", func() {
+			var modObjs []*diagnostics.Module
 			var err error
+			// query through Debug action
 			Eventually(func() error {
 				modObjs, err = ts.restSvc.DiagnosticsV1().Module().List(ts.loggedInCtx, &api.ListWatchOptions{
 					FieldSelector: fmt.Sprintf("status.category=%s", diagnostics.ModuleStatus_Naples.String())})
@@ -701,17 +702,20 @@ var _ = Describe("diagnostics tests", func() {
 				if len(modObjs) == 0 {
 					return errors.New("no module objects found for Naples")
 				}
-				return err
-			}, 60, 1).Should(BeNil())
-		})
-		It("check query", func() {
-			var err error
-			// query through Debug action
-			Eventually(func() error {
+				var modObj *diagnostics.Module
+				for _, obj := range modObjs {
+					if obj.Status.Node != "" {
+						modObj = obj
+						break
+					}
+				}
+				if modObj == nil {
+					return errors.New("DSC IP address is not set in module object")
+				}
 				resp := make(map[string]interface{})
 				var respStr string
 				if respStr, err = ts.tu.Debug(ts.loggedInCtx, &diagnostics.DiagnosticsRequest{
-					ObjectMeta: api.ObjectMeta{Name: modObjs[0].Name},
+					ObjectMeta: api.ObjectMeta{Name: modObj.Name},
 					Parameters: map[string]string{
 						"command": "ps",
 					},

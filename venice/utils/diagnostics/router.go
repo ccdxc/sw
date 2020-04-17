@@ -6,12 +6,14 @@ import (
 
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 type router struct {
 	rslvr        resolver.Interface
 	moduleGetter Getter
+	logger       log.Logger
 }
 
 func (r *router) GetRoute(diagReq *diagapi.DiagnosticsRequest) (string, string, error) {
@@ -33,6 +35,7 @@ func (r *router) GetRoute(diagReq *diagapi.DiagnosticsRequest) (string, string, 
 		switch modObj.Status.Category {
 		case diagapi.ModuleStatus_Naples.String():
 			if modObj.Status.Node == "" {
+				r.logger.ErrorLog("method", "GetRoute", "msg", fmt.Sprintf("IP address not available for the DSC in module object: %#v", modObj.ObjectMeta))
 				break // IP address for Naples not available yet
 			}
 			ip, _, err := net.ParseCIDR(modObj.Status.Node)
@@ -63,10 +66,11 @@ func (r *router) GetRoute(diagReq *diagapi.DiagnosticsRequest) (string, string, 
 }
 
 // NewRouter returns router instance
-func NewRouter(rslver resolver.Interface, moduleGetter Getter) Router {
+func NewRouter(rslver resolver.Interface, moduleGetter Getter, l log.Logger) Router {
 	return &router{
 		rslvr:        rslver,
 		moduleGetter: moduleGetter,
+		logger:       l,
 	}
 }
 

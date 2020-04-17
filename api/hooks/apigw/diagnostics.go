@@ -34,7 +34,7 @@ func (d *diagnosticsHooks) DebugPreCallHook(ctx context.Context, in interface{})
 	var err error
 	clGetter := d.clientGetter
 	if clGetter == nil { // will be not nil for unit testing. will set a mock
-		clGetter, err = diagnostics.NewClientGetter(globals.APIGw, obj, diagnostics.NewRouter(d.rslvr, d.moduleGetter), d.diagSvc, d.rslvr)
+		clGetter, err = diagnostics.NewClientGetter(globals.APIGw, obj, diagnostics.NewRouter(d.rslvr, d.moduleGetter, d.logger), d.diagSvc, d.rslvr)
 		if err != nil {
 			d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("unable to instantiate ClientGetter to process diagnostics request [%#v]", *obj), "error", err)
 			return ctx, nil, true, err
