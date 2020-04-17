@@ -1115,6 +1115,26 @@ ionic_qos_pfc_cos_update(struct ionic_lif *lif, uint8_t *pfc_cos)
 	return (0);
 }
 
+/* Given the current and new DSCP configs for a TC, check if an update is required */
+bool ionic_qos_is_tc_dscp_updated(union ionic_qos_config *qos, int new_ndscp, uint8_t *new_dscp) 
+{
+	int i;
+
+	/* If the ndscp changed, update is required */
+	if (qos->ndscp != new_ndscp) {
+		return true;
+	}
+
+	/* Check if there is difference in DSCP mapping */
+	for (i = 0; i < new_ndscp; i++) {
+		if (qos->ip_dscp[i] != new_dscp[i]) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 int
 ionic_qos_dscp_to_tc_update(struct ionic_lif *lif, uint8_t *dscp)
 {
@@ -1140,7 +1160,14 @@ ionic_qos_dscp_to_tc_update(struct ionic_lif *lif, uint8_t *dscp)
 				new_dscp[ndscp++] = i;
 			}
 		}
-		if (!ndscp)
+
+		if (!ndscp) {
+			IONIC_NETDEV_ERROR(ifp, "TC%d DSCP value missing\n", tc);
+			return (EINVAL);
+		}
+
+		/* Check if update is needed */
+		if (!ionic_qos_is_tc_dscp_updated(qos, ndscp, new_dscp))
 			continue;
 
 		ionic_qos_set_default(lif, tc, qos);

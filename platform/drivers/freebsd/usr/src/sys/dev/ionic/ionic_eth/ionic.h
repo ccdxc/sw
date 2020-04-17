@@ -248,5 +248,6 @@ int ionic_qos_bw_update(struct ionic_lif *lif, uint8_t *bw_perc);
 #endif
 int ionic_qos_pcp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp);
 int ionic_qos_dscp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp);
+bool ionic_qos_is_tc_dscp_updated(union ionic_qos_config *qos, int new_ndscp, uint8_t *new_dscp); 
 
 #endif /* _IONIC_H_ */
