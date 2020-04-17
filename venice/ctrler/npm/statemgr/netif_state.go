@@ -148,6 +148,39 @@ func (sm *Statemgr) OnInterfaceCreateReq(nodeID string, agentNetif *netproto.Int
 
 // OnInterfaceUpdateReq gets called when agent sends update request
 func (sm *Statemgr) OnInterfaceUpdateReq(nodeID string, agentNetif *netproto.Interface) error {
+	obj, err := sm.FindObject("NetworkInterface", agentNetif.ObjectMeta.Tenant, agentNetif.ObjectMeta.Namespace, agentNetif.ObjectMeta.Name)
+	if err != nil {
+		return err
+	}
+
+	// delete the networkInterface
+	ctkitNetif, ok := obj.(*ctkit.NetworkInterface)
+	if !ok {
+		return ErrIncorrectObjectType
+	}
+
+	ctkitNetif.Lock()
+	defer ctkitNetif.Unlock()
+
+	//For now Update only operation status
+	ctkitNetif.Status.OperStatus = agentNetif.Status.OperStatus
+	// retry till it succeeds
+	now := time.Now()
+	retries := 0
+	for {
+		err := ctkitNetif.Write()
+		if err == nil {
+			break
+		}
+		if time.Since(now) > time.Second*2 {
+			log.Errorf("update  interface failed (%s)", err)
+			now = time.Now()
+		}
+		retries++
+		time.Sleep(100 * time.Millisecond)
+
+	}
+
 	return nil
 }
 
