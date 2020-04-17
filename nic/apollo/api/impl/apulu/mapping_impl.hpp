@@ -320,11 +320,6 @@ private:
     /// \param[in] mapping_data pointer to the data structure of MAPPING table
     /// \param[in] mapping_hdl MAPPING table entry handle
     /// \param[in] mapping_tbl_params  table params for MAPPING table
-    /// \param[in] rxdma_mapping_key pointer to the key structure of rxdma MAPPING table
-    /// \param[in] rxdma_mapping_data pointer to the data structure of rxdma MAPPING table
-    /// \param[in] rxdma_mapping_public_hdl rxdma MAPPING table entry handle for
-    ///                                     public IP
-    /// \param[in] rxdma_mapping_tbl_params  table params for rxdma MAPPING table
     /// \param[in] spec IP mapping details
     void fill_public_ip_mapping_key_data_(
              vpc_impl *vpc, subnet_entry *subnet, vnic_entry *vnic,
@@ -335,10 +330,6 @@ private:
              mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
              sdk::table::handle_t mapping_hdl,
              sdk_table_api_params_t *mapping_tbl_params,
-             rxdma_mapping_swkey_t *rxdma_mapping_key,
-             rxdma_mapping_appdata_t *rxdma_mapping_data,
-             sdk::table::handle_t rxdma_mapping_public_ip_hdl,
-             sdk_table_api_params_t *rxdma_mapping_tbl_params,
              pds_mapping_spec_t *spec);
 
     /// \brief     add necessary entries for local mapping's public IP

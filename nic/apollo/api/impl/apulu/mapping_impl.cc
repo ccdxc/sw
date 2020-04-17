@@ -79,9 +79,6 @@ mapping_impl::clone(void) {
 
     cloned_impl = mapping_impl_db()->alloc();
     new (cloned_impl) mapping_impl();
-    // deep copy is not needed as we don't store pointers
-    // TODO: revisit this for update handling !!
-    //*cloned_impl = *this;
     return cloned_impl;
 }
 
@@ -1137,12 +1134,7 @@ mapping_impl::fill_public_ip_mapping_key_data_(
                   mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
                   handle_t mapping_hdl,
                   sdk_table_api_params_t *mapping_tbl_params,
-                  rxdma_mapping_swkey_t *rxdma_mapping_key,
-                  rxdma_mapping_appdata_t *rxdma_mapping_data,
-                  handle_t rxdma_mapping_public_ip_hdl,
-                  sdk_table_api_params_t *rxdma_mapping_tbl_params,
                   pds_mapping_spec_t *spec) {
-
     // fill LOCAL_MAPPING table entry key, data for public IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(local_mapping_key, vpc->hw_id(),
                                          &spec->public_ip);
@@ -1174,19 +1166,6 @@ mapping_impl::fill_public_ip_mapping_key_data_(
                                    NULL, mapping_data,
                                    MAPPING_MAPPING_INFO_ID,
                                    mapping_hdl);
-
-    // fill rxdma MAPPING table entry key, data and table params for public IP
-    if (spec->num_tags) {
-        memset(rxdma_mapping_data, 0, sizeof(*rxdma_mapping_data));
-        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(rxdma_mapping_key, vpc->hw_id(),
-                                           &spec->public_ip);
-        rxdma_mapping_data->tag_idx = rxdma_mapping_tag_idx_;
-        PDS_IMPL_FILL_TABLE_API_PARAMS(rxdma_mapping_tbl_params,
-                                       rxdma_mapping_key,
-                                       NULL, rxdma_mapping_data,
-                                       RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
-                                       rxdma_mapping_public_ip_hdl);
-    }
     return;
 }
 
@@ -1216,11 +1195,7 @@ mapping_impl::add_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
                                      &local_mapping_tbl_params,
                                      &mapping_key, &mapping_data,
                                      mapping_public_ip_hdl_,
-                                     &mapping_tbl_params,
-                                     &rxdma_mapping_key, &rxdma_mapping_data,
-                                     rxdma_mapping_public_ip_hdl_,
-                                     &rxdma_mapping_tbl_params,
-                                     spec);
+                                     &mapping_tbl_params, spec);
 
     // add entry to LOCAL_MAPPING table for public IP
     ret = mapping_impl_db()->local_mapping_tbl()->insert(&local_mapping_tbl_params);
@@ -1232,7 +1207,7 @@ mapping_impl::add_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
 
     // add entry to rxdma MAPPING table for overlay IP
     if (spec->num_tags) {
-        ret = mapping_impl_db()->rxdma_mapping_tbl()->insert(&rxdma_mapping_tbl_params);
+        ret = add_public_ip_rxdma_mapping_entry_(vpc, spec);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return SDK_RET_OK;
@@ -1574,7 +1549,6 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
 
 error:
 
-    // TODO: take care of MAC entries also while printing !!
     PDS_TRACE_ERR("Failed to program %s, err %u",
                   mapping->key2str().c_str(), ret);
     return ret;
@@ -1713,16 +1687,9 @@ mapping_impl::upd_public_ip_entries_(vpc_impl *vpc, subnet_entry *subnet,
     // fill key & data of MAPPING and LOCAL_MAPPING table entries corresponding
     // to public IP
     fill_public_ip_mapping_key_data_(vpc, subnet, vnic, vnic_impl_obj,
-                                      &local_mapping_key, &local_mapping_data,
-                                      handle_t::null(),
-                                      &local_mapping_tbl_params,
-                                      &mapping_key, &mapping_data,
-                                      handle_t::null(),
-                                      &mapping_tbl_params,
-                                      // TODO: these are don't care args
-                                      NULL, NULL,
-                                      handle_t::null(), NULL,
-                                      spec);
+        &local_mapping_key, &local_mapping_data, handle_t::null(),
+        &local_mapping_tbl_params, &mapping_key, &mapping_data,
+        handle_t::null(), &mapping_tbl_params, spec);
 
     // update LOCAL_MAPPING table entry of public IP and take over the resource
     ret = mapping_impl_db()->local_mapping_tbl()->update(&local_mapping_tbl_params);
