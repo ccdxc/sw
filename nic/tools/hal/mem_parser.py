@@ -230,8 +230,15 @@ def parse_inputs():
     pipeline = sys.argv[3]
     return 0
 
-def check_max_usage(sz):
+def check_max_usage(data, sz):
+
     if True:
+        if "meta" in data:
+            if "total_size" in data["meta"]:
+                if sz > size_str_to_bytes(data["meta"]["total_size"]):
+                    return -1
+                else:
+                    return 0
         if pipeline == "iris":
             if sz > (2 << 30): # 2 Gigabyte
                 return -1
@@ -362,7 +369,7 @@ def parse_file():
     print >> fd, "#define %-60s %ld" %("MAX_MEMORY_USED_IN_BYTES" , off)
     print >> fd, "#define %-60s \"%s\"" %("MAX_MEMORY_USED_IN_UNITS" , convert_size(off))
 
-    if check_max_usage(off) != 0:
+    if check_max_usage(data, off) != 0:
         print "Max memory usage exceeded for pipeline : " + pipeline
         return -1
 
