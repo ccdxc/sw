@@ -18,6 +18,7 @@ import { VcenterWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/Obje
 
 interface VcenterUIModel {
   associatedWorkloads: WorkloadWorkload[];
+  associatedDatacenters: string[];
 }
 /**
  * vCenter page.
@@ -73,7 +74,8 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
     { field: 'meta.name', header: 'Name', class: 'vcenter-integration-column-name', sortable: true, width: '150px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'vcenter-integration-column-date', sortable: true, width: '180px' },
     { field: 'spec.uri', header: 'URI', class: 'vcenter-integration-column-url', sortable: true, width: '180px' },
-    { field: 'associatedWorkloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: 100 },
+    { field: 'spec.manage-namespaces', header: 'Managed Datacenters', class: 'vcenter-integration-column-namespaces', sortable: false, width: 30 },
+    { field: 'associatedWorkloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: 40 },
     { field: 'status.connection-status', header: 'Connection Status', class: 'vcenter-integration-column-status', sortable: true, width: '150px' },
     { field: 'status.last-transition-time', header: 'Connection Transition Time', class: 'vcenter-integration-column-lastconnected', sortable: true, width: '180px' },
   ];
@@ -93,6 +95,7 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
           return;
         }
         this.dataObjects = response.data;
+        this.buildVCenterDatacenters();
         this.buildVCenterWorkloadsMap();
       },
       this.controllerService.webSocketErrorHandler('Failed to get vCenters')
@@ -155,6 +158,24 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
     this.subscriptions.push(workloadSubscription);
   }
 
+  buildVCenterDatacenters() {
+    if (this.dataObjects && this.dataObjects.length > 0) {
+      const vcenterWorkloadsTuple: VcenterWorkloadsTuple =
+        ObjectsRelationsUtility.buildVcenterWorkloadsMap(this.workloadList, this.dataObjects);
+      this.dataObjects.forEach(vcenter => {
+        let datacenters: string[] = vcenter.spec['manage-namespaces'];
+        if (datacenters && datacenters.length === 1 && datacenters[0] === 'all_namespaces') {
+          datacenters = ['All Datacenters'];
+        }
+        const uiModel: VcenterUIModel = {
+          associatedDatacenters: datacenters,
+          associatedWorkloads: vcenter._ui.associatedWorkloads
+        };
+        vcenter._ui = uiModel;
+      });
+    }
+  }
+
   buildVCenterWorkloadsMap() {
     if (this.dataObjects && this.dataObjects.length > 0 &&
         this.workloadList && this.workloadList.length > 0) {
@@ -163,7 +184,10 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
       this.dataObjects = this.dataObjects.map(vcenter => {
         const associatedWorkloads: WorkloadWorkload[] =
           vcenterWorkloadsTuple[vcenter.meta.name] || [];
-        const uiModel: VcenterUIModel = { associatedWorkloads };
+        const uiModel: VcenterUIModel = {
+          associatedWorkloads,
+          associatedDatacenters: vcenter._ui.associatedDatacenters
+        };
         vcenter._ui = uiModel;
         return vcenter;
       });

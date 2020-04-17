@@ -228,6 +228,17 @@ export class NewnetworkComponent extends CreationForm<INetworkNetwork, NetworkNe
             };
           });
           return options;
+        } else {
+          const discoveredDatacenters: string[] = vcenterObj.status['discovered-namespaces'];
+          if (discoveredDatacenters && discoveredDatacenters.length > 0) {
+            const options: SelectItem[] =  discoveredDatacenters.map(item => {
+              return {
+                label: item,
+                value: item
+              };
+            });
+            return options;
+          }
         }
       }
     }

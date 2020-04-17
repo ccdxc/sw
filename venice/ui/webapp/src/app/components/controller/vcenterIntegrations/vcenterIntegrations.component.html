@@ -51,6 +51,11 @@
     <ng-container *ngSwitchCase="'status.last-connected'">
       {{rowData.status['last-connected'] | PrettyDate }}
     </ng-container>
+    <ng-container *ngSwitchCase="'spec.manage-namespaces'">
+      <div class="ellipsisText" [title]="rowData._ui.associatedDatacenters.join(', ')">
+        {{ rowData._ui.associatedDatacenters.join(', ') }}
+      </div>
+    </ng-container>
     <ng-container *ngSwitchCase="'associatedWorkloads'">
       <ng-container *ngIf="displayColumn_workloads(rowData) as workloads">
         <div class="ellipsisText" title="{{workloads.title}}">
