@@ -141,6 +141,10 @@ public:
         tx_sched_num_entries_ = num_entries;
     }
 
+    /// \brief     return if initializtion of lifis done or not
+    /// \return    true if lif initialization is done
+    bool init_done(void) const { return init_done_; }
+
     /// \brief    retrieve tx scheduler offset and number of entries from this lif
     /// \retrun   true if it is valid, false otherwise
     bool tx_sched_info(uint32_t *offset, uint32_t *num_entries) {

@@ -417,11 +417,13 @@ private:
 /// \param[in] vnic_hw_id   hw id of the vnic for this lif
 /// \param[in] vr_mac       VR MAC of the subnet corresponding to this lif
 /// \param[in] learn_en     enable or disable learning on this lif
+/// \param[in] init_done    true or false to inidicate whether this programming
+///                         is during init or not
 /// \return SDK_RET_OK on success, failure status code on error
 sdk_ret_t program_lif_table(uint16_t lif_hw_id, uint8_t lif_type,
                             uint16_t vpc_hw_id, uint16_t bd_hw_id,
                             uint16_t vnic_hw_id, mac_addr_t vr_mac,
-                            bool learn_en);
+                            bool learn_en, bool init);
 
 #define POLICER_WRITE_HW_ENTRY(hw, val)       \
 do {                                          \

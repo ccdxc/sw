@@ -578,7 +578,7 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
                                 ((vpc_impl *)vpc->impl())->hw_id(),
                                 hw_id_, lif->vnic_hw_id(),
                                 subnet->vr_mac(),
-                                device_find()->learning_enabled());
+                                device_find()->learning_enabled(), false);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update lif %s on subnet %s create, "
                           "err %u", spec->host_if.str(), spec->key.str(), ret);
@@ -622,9 +622,8 @@ subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
             ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST,
                                     PDS_IMPL_RSVD_VPC_HW_ID,
                                     PDS_IMPL_RSVD_BD_HW_ID,
-                                    lif->vnic_hw_id(),
-                                    g_zero_mac,
-                                    false);
+                                    lif->vnic_hw_id(), g_zero_mac,
+                                    false, false);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to update lif %s on subnet %s"
                               " delete, err %u", host_if.str(),
@@ -697,7 +696,7 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
                                     ((vpc_impl *)vpc->impl())->hw_id(),
                                     hw_id_, lif->vnic_hw_id(),
                                     subnet->vr_mac(),
-                                    device_find()->learning_enabled());
+                                    device_find()->learning_enabled(), false);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to update lif %s table entry on "
                               "subnet %s update, err %u", spec->host_if.str(),
@@ -711,7 +710,7 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
             ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST,
                                     PDS_IMPL_RSVD_VPC_HW_ID,
                                     PDS_IMPL_RSVD_BD_HW_ID, lif->vnic_hw_id(),
-                                    g_zero_mac, false);
+                                    g_zero_mac, false, false);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to reset lif %s on subnet %s update, "
                               "err %u", orig_subnet->host_if().str(),
@@ -727,7 +726,7 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
             ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST,
                                     PDS_IMPL_RSVD_VPC_HW_ID,
                                     PDS_IMPL_RSVD_BD_HW_ID, lif->vnic_hw_id(),
-                                    g_zero_mac, false);
+                                    g_zero_mac, false, false);
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Failed to reset lif %s on subnet %s update, "
                               "err %u", orig_subnet->host_if().str(),

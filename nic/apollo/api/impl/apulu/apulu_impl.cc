@@ -994,34 +994,58 @@ apulu_impl::handle_cmd(cmd_ctxt_t *ctxt) {
 sdk_ret_t
 program_lif_table (uint16_t lif_hw_id, uint8_t lif_type, uint16_t vpc_hw_id,
                    uint16_t bd_hw_id, uint16_t vnic_hw_id, mac_addr_t vr_mac,
-                   bool learn_en)
+                   bool learn_en, bool init)
 {
     sdk_ret_t ret;
+    bool veto = true;
     p4pd_error_t p4pd_ret;
-    lif_actiondata_t lif_data = { 0 };
+    lif_actiondata_t lif_data;
 
     PDS_TRACE_DEBUG("Programming LIF table at idx %u, vpc hw id %u, "
                     "bd hw id %u, vnic hw id %u", lif_hw_id, vpc_hw_id,
                     bd_hw_id, vnic_hw_id, macaddr2str(vr_mac));
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_LIF, lif_hw_id,
+                                      NULL, NULL, &lif_data);
+    if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
+        PDS_TRACE_ERR("Failed to read LIF table for lif %u", lif_hw_id);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
 
     // program the LIF table
     lif_data.action_id = LIF_LIF_INFO_ID;
     lif_data.lif_action.direction = P4_LIF_DIR_HOST;
     lif_data.lif_action.lif_type = lif_type;
     lif_data.lif_action.vnic_id = vnic_hw_id;
-    lif_data.lif_action.bd_id = bd_hw_id;
-    lif_data.lif_action.vpc_id = vpc_hw_id;
-    sdk::lib::memrev(lif_data.lif_action.vrmac, vr_mac, ETH_ADDR_LEN);
-    lif_data.lif_action.learn_enabled = learn_en ? TRUE : FALSE;
+    // for host lifs, before lif is fully initialized, it is possible that
+    // PF to subnet association happened and in that case we shouldn't
+    // override the config
+    if ((init == true) && (lif_type == P4_LIF_TYPE_HOST) &&
+        (lif_data.lif_action.bd_id != PDS_IMPL_RSVD_BD_HW_ID)) {
+        PDS_TRACE_DEBUG("PF-BD association before happened before "
+                        "lif %u init", lif_hw_id);
+        veto = false;
+    }
+
+    if (veto) {
+        // for other types of lifs and post lif init for host lifs, allow any
+        // kind of udpate and override the lif table entry with given info
+        lif_data.lif_action.bd_id = bd_hw_id;
+        lif_data.lif_action.vpc_id = vpc_hw_id;
+        lif_data.lif_action.learn_enabled = learn_en ? TRUE : FALSE;
+        sdk::lib::memrev(lif_data.lif_action.vrmac, vr_mac, ETH_ADDR_LEN);
+    }
+
+    // program LIF tables now
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF, lif_hw_id,
                                        NULL, NULL, &lif_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
         PDS_TRACE_ERR("Failed to program LIF table for lif %u", lif_hw_id);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_LIF2, lif_hw_id,
                                        NULL, NULL, &lif_data);
-    if (p4pd_ret != P4PD_SUCCESS) {
+    if (unlikely(p4pd_ret != P4PD_SUCCESS)) {
         PDS_TRACE_ERR("Failed to program LIF2 table for lif %u", lif_hw_id);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
