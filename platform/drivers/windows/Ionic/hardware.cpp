@@ -28,6 +28,10 @@ ionic_map_bars(struct ionic *Adapter,
 
 	Adapter->assigned_int_cnt = 0;
 
+	if (InitParameters->AllocatedResources == NULL) {
+		return NDIS_STATUS_RESOURCES;
+	}
+
     pResourceList = InitParameters->AllocatedResources;
 
     for (ulIndex = 0; ulIndex < pResourceList->Count; ulIndex++) {
@@ -49,10 +53,10 @@ ionic_map_bars(struct ionic *Adapter,
                           pDescriptor->u.MessageInterrupt.Translated.Vector,
                           pDescriptor->u.MessageInterrupt.Translated.Affinity));
             } else {
-                Adapter->interrupt_level = pDescriptor->u.Interrupt.Level;
+                Adapter->intr_lvl = pDescriptor->u.Interrupt.Level;
                 DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                           "%s LEGACY Interrupt level: %d\n", __FUNCTION__,
-                          Adapter->interrupt_level));
+                          Adapter->intr_lvl));
             }
 
             Adapter->assigned_int_cnt++;
@@ -206,7 +210,8 @@ writeq(u64 data, const volatile void *addr)
 }
 
 NDIS_STATUS
-ionic_register_interrupts(struct ionic *Adapter)
+ionic_register_interrupts(struct ionic *ionic,
+    PNDIS_MINIPORT_INIT_PARAMETERS init_params)
 {
     NDIS_MINIPORT_INTERRUPT_CHARACTERISTICS interrupt;
     NDIS_STATUS status = NDIS_STATUS_NOT_SUPPORTED;
@@ -221,19 +226,153 @@ ionic_register_interrupts(struct ionic *Adapter)
     interrupt.MessageInterruptDpcHandler = ionic_msi_dpc_handler;
     interrupt.DisableMessageInterruptHandler = ionic_msi_disable;
     interrupt.EnableMessageInterruptHandler = ionic_msi_enable;
-    status = NdisMRegisterInterruptEx(Adapter->adapterhandle, Adapter,
-                                      &interrupt, &Adapter->intr_obj);
+    status = NdisMRegisterInterruptEx(ionic->adapterhandle, ionic,
+                                      &interrupt, &ionic->intr_obj);
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "Unable to register interrupt status: %x ionic: 0x%p\n",
-                  status, Adapter));
-    } else {
-        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                  "Interrupt Type: 0x%x ionic: 0x%p\n", interrupt.InterruptType,
-                  Adapter));
-        Adapter->interrupt_type = interrupt.InterruptType;
-        Adapter->message_info_table = interrupt.MessageInfoTable;
-        _dump_message_table(Adapter->message_info_table);
+                  status, ionic));
+        goto exit;
+    }
+
+	DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+		"Interrupt Type: 0x%x ionic: 0x%p\n", interrupt.InterruptType,
+		ionic));
+	ionic->intr_type = interrupt.InterruptType;
+	ionic->intr_msginfo_tbl = interrupt.MessageInfoTable;
+	_dump_message_table(ionic->intr_msginfo_tbl);
+
+    /*
+        Setup the interrupt message table
+    */
+
+    ionic->intr_msg_tbl =
+        (struct intr_msg*)NdisAllocateMemoryWithTagPriority_internal(
+            ionic->adapterhandle,
+            ionic->intr_msginfo_tbl->MessageCount * sizeof(struct intr_msg),
+            IONIC_INT_TABLE_TAG, NormalPoolPriority);
+
+    if (ionic->intr_msg_tbl == NULL) {
+        status = NDIS_STATUS_RESOURCES;
+        goto exit;
+    }
+
+    NdisZeroMemory(ionic->intr_msg_tbl,
+        ionic->intr_msginfo_tbl->MessageCount * sizeof(struct intr_msg));
+
+    if (ionic->intr_msg_tbl == NULL) {
+        status = NDIS_STATUS_FAILURE;
+        goto exit;
+    }
+
+	PCM_PARTIAL_RESOURCE_LIST prl = init_params->AllocatedResources;
+	PCM_PARTIAL_RESOURCE_DESCRIPTOR prd;
+	ULONG msg_id;
+
+	msg_id = 0;
+
+    for (ULONG prd_idx = 0; prd_idx < prl->Count; ++prd_idx) {
+
+        prd = &prl->PartialDescriptors[prd_idx];
+
+        if (prd->Type == CmResourceTypeInterrupt && (prd->Flags & CM_RESOURCE_INTERRUPT_MESSAGE)) {
+
+            ionic->intr_msg_tbl[msg_id].id = msg_id;
+            ionic->intr_msg_tbl[msg_id].proc.Group = prd->u.MessageInterrupt.Translated.Group;
+            if (RtlNumberOfSetBitsUlongPtr((ULONG_PTR)prd->u.MessageInterrupt.Translated.Affinity) == 1) {
+                ionic->intr_msg_tbl[msg_id].proc.Number =
+                    RtlFindLeastSignificantBit(prd->u.MessageInterrupt.Translated.Affinity);
+                ionic->intr_msg_tbl[msg_id].affinity_policy = IrqPolicySpecifiedProcessors;
+                ionic->intr_msg_tbl[msg_id].proc_idx = KeGetProcessorIndexFromNumber(&ionic->intr_msg_tbl[msg_id].proc);
+            }
+            else {
+                ionic->intr_msg_tbl[msg_id].affinity_policy = IrqPolicyAllCloseProcessors;
+                ionic->intr_msg_tbl[msg_id].proc_idx = INVALID_PROCESSOR_INDEX;
+            }
+			ionic->intr_msg_tbl[msg_id].affinity = prd->u.MessageInterrupt.Translated.Affinity;
+
+			DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+				"%s msg_id %d affinity_policy %d group %u proc %d affinity 0x%llx\n",
+				__FUNCTION__,
+				ionic->intr_msg_tbl[msg_id].id,
+                ionic->intr_msg_tbl[msg_id].affinity_policy,
+                ionic->intr_msg_tbl[msg_id].proc.Group,
+                ionic->intr_msg_tbl[msg_id].proc.Number,
+                ionic->intr_msg_tbl[msg_id].affinity));
+			IoPrint("%s msg_id %d affinity_policy %d group %u proc %d affinity 0x%llx\n",
+				__FUNCTION__,
+				ionic->intr_msg_tbl[msg_id].id,
+                ionic->intr_msg_tbl[msg_id].affinity_policy,
+				ionic->intr_msg_tbl[msg_id].proc.Group,
+				ionic->intr_msg_tbl[msg_id].proc.Number,
+				ionic->intr_msg_tbl[msg_id].affinity);
+
+            ++msg_id;
+        }
+    }
+
+    for (ULONG i = 0; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
+        ionic->intr_msg_tbl[i].id = i;
+
+        IoPrint("%s msg %lu vec 0x%lx addr 0x%lx data 0x%lx affinity %lx\n",
+            __FUNCTION__, i,
+            ionic->intr_msginfo_tbl->MessageInfo[i].Vector,
+            ionic->intr_msginfo_tbl->MessageInfo[i].MessageAddress,
+            ionic->intr_msginfo_tbl->MessageInfo[i].MessageData,
+            ionic->intr_msginfo_tbl->MessageInfo[i].TargetProcessorSet);
+    }
+
+    /*
+        Setup the interrupt resource table
+    */
+    ionic->intr_tbl =
+        (struct intr*)NdisAllocateMemoryWithTagPriority_internal(
+            ionic->adapterhandle,
+            ionic->ident.dev.nintrs * sizeof(struct intr),
+            IONIC_INT_TABLE_TAG, NormalPoolPriority);
+
+    if (ionic->intr_tbl == NULL) {
+        status = NDIS_STATUS_RESOURCES;
+        goto exit;
+    }
+
+    NdisZeroMemory(ionic->intr_tbl, ionic->ident.dev.nintrs * sizeof(struct intr));
+
+    if (ionic->intr_tbl == NULL) {
+        status = NDIS_STATUS_FAILURE;
+        goto exit;
+    }
+
+    /*
+        Setup the default mapping of interrupt resources to messages. Initially, the OS sets up the mapping of
+        in the following manner.
+
+        Each message interrupt resource in the list is assigned a message number later that corresponds to the
+        order it shows in the list. For example, the first message interrupt resources in the list is assigned
+        to message 0, the second one is assigned to message 1, and so on.
+
+        Source: https://docs.microsoft.com/en-us/windows-hardware/drivers/network/msi-x-resource-filtering
+    */
+
+    for (ULONG i = 0; i < ionic->ident.dev.nintrs; ++i) {
+        ionic->intr_tbl[i].index = i;
+    }
+
+    return status;
+
+exit:
+	if (ionic->intr_tbl != NULL) {
+		NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle,
+			ionic->intr_tbl,
+			IONIC_INT_TABLE_TAG);
+		ionic->intr_tbl = NULL;
+	}
+
+	if (ionic->intr_msg_tbl != NULL) {
+		NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle,
+			ionic->intr_msg_tbl,
+			IONIC_INT_TABLE_TAG);
+		ionic->intr_msg_tbl = NULL;
     }
 
     return status;
@@ -246,43 +385,28 @@ ionic_msi_handler(PVOID miniport_interrupt_context,
                   PULONG target_processors)
 {
     struct ionic *ionic = (struct ionic *)miniport_interrupt_context;
-    struct interrupt_info *int_tbl = NULL;
-    KAFFINITY scheduled_affinity;
-    GROUP_AFFINITY target_affinity;
+    struct intr_msg* int_tbl = NULL;
 
-    UNREFERENCED_PARAMETER(miniport_interrupt_context);
     UNREFERENCED_PARAMETER(target_processors);
 
-	/* Only receive intterupts on the adminq/notifyq if we're not ready for them */
-	if( ionic->hardware_status != NdisHardwareStatusReady &&
+    /* Only receive interrupts on the adminq/notifyq if we're not ready for them */
+	if (ionic->hardware_status != NdisHardwareStatusReady &&
 		message_id != 0) {
 		IoPrint("%s Have msg id %d before being ready\n", __FUNCTION__, message_id);
 		goto exit;
 	}
 
-    int_tbl = get_interrupt(ionic, message_id);
+    check_intr_msg_affinity(ionic, message_id);
 
-    ASSERT(int_tbl != NULL);
-
-    if (!BooleanFlagOn(int_tbl->Flags, IONIC_TARGET_PROC_CHANGED)) {
-        *queue_default_interrupt_dpc = TRUE;
-    } else {
-        *queue_default_interrupt_dpc = FALSE;
-        *target_processors = 0;
-
-        InterlockedIncrement( &ionic->core_redirect_count);
-
-        NdisZeroMemory(&target_affinity, sizeof(GROUP_AFFINITY));
-
-        target_affinity.Group = int_tbl->group;
-        target_affinity.Mask = 1;
-        target_affinity.Mask <<= int_tbl->group_proc;
-
-        scheduled_affinity = NdisMQueueDpcEx(ionic->intr_obj, message_id,
-                                             &target_affinity, NULL);
+    int_tbl = get_intr_msg(ionic, message_id);
+    if (int_tbl == NULL) {
+        goto exit;
     }
 
+    InterlockedIncrement64(&int_tbl->isr_cnt);
+
 exit:
+    *queue_default_interrupt_dpc = TRUE;
 
     return TRUE;
 }
@@ -297,17 +421,26 @@ ionic_msi_dpc_handler(NDIS_HANDLE miniport_interrupt_context,
     struct ionic *ionic = (struct ionic *)miniport_interrupt_context;
     struct lif *lif;
     u32 budget = RxBudget;
-    struct interrupt_info *int_tbl = NULL;
+    struct intr_msg *int_tbl = NULL;
 
+    UNREFERENCED_PARAMETER(miniport_dpc_context);
     UNREFERENCED_PARAMETER(receive_throttle_params);
     UNREFERENCED_PARAMETER(ndis_reserved2);
-    UNREFERENCED_PARAMETER(miniport_dpc_context);
    
 	ref_request(ionic);
 
-    int_tbl = get_interrupt(ionic, message_id);
+    check_intr_msg_affinity(ionic, message_id);
 
-    if (int_tbl->lif == NULL) {
+    int_tbl = get_intr_msg(ionic, message_id);
+    if (int_tbl == NULL) {
+        IoPrint("%s invalid msg_id %d\n", __FUNCTION__, message_id);
+        goto exit;
+    }
+
+    InterlockedIncrement64(&int_tbl->dpc_cnt);
+
+    if (int_tbl->lif == NULL || int_tbl->qcq == NULL) {
+		IoPrint("%s unbound msg_id %d\n", __FUNCTION__, message_id);
         goto exit;
     }
 
@@ -317,42 +450,17 @@ ionic_msi_dpc_handler(NDIS_HANDLE miniport_interrupt_context,
          "%s Enter Adapter %p Lif %p ionic_msi_dpc_handler msg_id: 0x%08lX\n",
          __FUNCTION__, ionic, lif, message_id));
 
-    if (int_tbl->QueueType == IONIC_QTYPE_ADMINQ) {
+    if (int_tbl->qcq->q.type == IONIC_QTYPE_ADMINQ) {
 
-        // For the admin and notif queue always set the budget to the default
-        budget = IONIC_RX_BUDGET_DEFAULT;
-
-        if (message_id == 0) {
-            if (likely(lif->notifyqcq &&
-                       lif->notifyqcq->flags & QCQ_F_INITED)) {
-                ionic_notifyq_clean(lif, budget);
-            }
+        if (likely(lif->notifyqcq && (lif->notifyqcq->flags & QCQ_F_INITED))) {
+            ionic_notifyq_clean(lif, (unsigned int)-1);
         }
 
-        ionic_napi(lif, budget, ionic_adminq_service, NULL, NULL);
-    } else if (int_tbl->QueueType == IONIC_QTYPE_RXQ) {
-
-        PROCESSOR_NUMBER proc_numb;
-        ULONG proc = KeGetCurrentProcessorNumberEx(&proc_numb);
-        if( BooleanFlagOn( int_tbl->Flags, IONIC_TARGET_PROC_CHANGED)) {
-            
-            if (int_tbl->current_proc != proc || int_tbl->group != proc_numb.Group ||
-                int_tbl->group_proc != proc_numb.Number) {
-                IoPrint(" Msi %d Int proc %d current proc %d group %d current group %d "
-                        "group proc %d current group proc %d\n",
-                        message_id, int_tbl->current_proc, proc, int_tbl->group,
-                        proc_numb.Group, int_tbl->group_proc, proc_numb.Number);
-            }
+        if (likely(lif->adminqcq && (lif->adminqcq->flags & QCQ_F_INITED))) {
+            ionic_napi(lif, (unsigned int)-1, ionic_adminq_service, NULL, NULL);
         }
 
-        DbgTrace((TRACE_COMPONENT_RSS_PROCESSING, TRACE_LEVEL_VERBOSE,
-                "%s Processing rx %d msg_id %d on group %d group core %d core %d\n",
-                __FUNCTION__,
-                int_tbl->rx_id,
-                message_id,
-                proc_numb.Group,
-                proc_numb.Number,
-                proc));
+    } else if (int_tbl->qcq->q.type == IONIC_QTYPE_RXQ) {
 
         ionic_rx_napi(
             int_tbl, budget,
@@ -525,68 +633,64 @@ ionic_bus_unmap_dbpage(struct ionic *ionic, u64 *db_page)
     return;
 }
 
-NDIS_STATUS
-ionic_intr_alloc(struct lif *lif, struct intr *intr, u32 preferred_proc)
+unsigned int
+ionic_intr_alloc(struct ionic* ionic)
 {
-    struct ionic *ionic = lif->ionic;
-    int index = 0;
-    struct interrupt_info *int_tbl = NULL;
-    u32 int_hint = 0;
+    unsigned int index = 0;
 
-    UNREFERENCED_PARAMETER(preferred_proc);
-
-    while (index == 0) {
-        index = RtlFindClearBits(&ionic->intrs, 1, int_hint);
-        if (index >= (int)ionic->nintrs) {
-
-            if (int_hint != 0) {
-                int_hint = 0;
-                index = 0;
-                continue;
+    index = RtlFindClearBits(&ionic->intrs, 1, 0);
+    if (index != (ULONG)-1) {
+        RtlSetBit(&ionic->intrs, (ULONG)index);
             }
 
-            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                      "%s: no intr, index=%d nintrs=%d\n", __FUNCTION__, index,
-                      ionic->nintrs));
-            return NDIS_STATUS_RESOURCES;
-        }
-
-        break;
-    }
-
-    RtlSetBit(&ionic->intrs, index);
-    ionic_intr_init(&ionic->idev, intr, index);
-
-    int_tbl = get_interrupt(ionic, index);
-
-    ASSERT(int_tbl != NULL);
-
-    int_tbl->lif = lif;
-
-    return 0;
+    return (unsigned int)index;
 }
 
 void
-ionic_intr_free(struct lif *lif, int index)
+ionic_intr_free(struct ionic *ionic, unsigned int index)
 {
-
-    struct interrupt_info *int_tbl = NULL;
-
-    if (index != INTR_INDEX_NOT_ASSIGNED && index < (int)lif->ionic->nintrs)
-        RtlClearBit(&lif->ionic->intrs, index);
-
-    int_tbl = get_interrupt(lif->ionic, index);
-
-    ASSERT(int_tbl != NULL);
-
-    int_tbl->lif = NULL;
+    if (index != INTR_INDEX_NOT_ASSIGNED && index < ionic->nintrs)
+        RtlClearBit(&ionic->intrs, (ULONG)index);
 }
 
-inline void
-ionic_intr_init(struct ionic_dev *idev, struct intr *intr, unsigned long index)
+NDIS_STATUS
+ionic_intr_affinitize(struct ionic* ionic, unsigned int index, ULONG message_id)
 {
-    ionic_intr_clean(idev->intr_ctrl, index);
-    intr->index = index;
+    struct intr_msg* intr_msg = &ionic->intr_msg_tbl[message_id];
+    struct intr* intr = &ionic->intr_tbl[index];
+    NDIS_MSIX_CONFIG_PARAMETERS int_cfg;
+    NDIS_STATUS status;
+
+    int_cfg.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+    int_cfg.Header.Revision = NDIS_MSIX_CONFIG_PARAMETERS_REVISION_1;
+    int_cfg.Header.Size = NDIS_SIZEOF_MSIX_CONFIG_PARAMETERS_REVISION_1;
+    int_cfg.ConfigOperation = NdisMSIXTableConfigSetTableEntry;
+    int_cfg.TableEntry = index;
+    int_cfg.MessageNumber = message_id;
+
+    intr_msg->lif = intr->lif;
+    intr_msg->qcq = intr->qcq;
+
+    status = NdisMConfigMSIXTableEntry(ionic->adapterhandle, &int_cfg);
+    if (status != NDIS_STATUS_SUCCESS) {
+        IoPrint("%s tbl_ent %d msg_id %d failed %08lX\n",
+            __FUNCTION__,
+            int_cfg.TableEntry, int_cfg.MessageNumber,
+            status);
+    }
+    else {
+        IoPrint("%s tbl_ent %d msg_id %d\n",
+            __FUNCTION__,
+            int_cfg.TableEntry, int_cfg.MessageNumber);
+    }
+
+    return status;
+}
+
+void
+ionic_intr_init(struct ionic *ionic, unsigned int index)
+{
+    ionic_intr_clean(ionic->idev.intr_ctrl, index);
 }
 
 int
@@ -595,43 +699,121 @@ ionic_db_page_num(struct lif *lif, int pid)
     return (lif->hw_index * lif->dbid_count) + pid;
 }
 
-struct interrupt_info *
-get_interrupt(struct ionic *ionic, ULONG index)
+struct intr_msg *
+get_intr_msg(struct ionic *ionic, ULONG message_id)
 {
-
-    struct interrupt_info *int_info = NULL;
-
-    if (index < ionic->interrupt_count) {
-        int_info = ionic->interrupt_tbl;
-        int_info += index;
+    if (message_id < ionic->intr_msginfo_tbl->MessageCount) {
+        return &ionic->intr_msg_tbl[message_id];
     }
 
-    return int_info;
+    return NULL;
 }
 
-ULONG
-locate_proc(struct ionic *ionic, ULONG preferredProc)
+void
+invoke_intr_msgs_rss(struct ionic *ionic, struct lif *lif)
 {
+    struct intr_msg* intr;
 
-    ULONG proc = 0;
-    ULONG index = 0;
-    struct interrupt_info *int_info = NULL;
+    /* don't touch the control interrupt */
+    for (ULONG i = IONIC_CTL_INTR_CNT; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
+        intr = &ionic->intr_msg_tbl[i];
 
-    int_info = ionic->interrupt_tbl;
-    int_info++;
+        if (intr->lif == lif && intr->inuse) {
+            NDIS_RECEIVE_THROTTLE_PARAMETERS receive_throttle_params = {};
+            KIRQL old_irql;
 
-    while (index < ionic->interrupt_count - 1) {
-
-        if (int_info->current_proc == preferredProc && int_info->lif == NULL) {
-            proc = index;
-            break;
+            NDIS_RAISE_IRQL_TO_DISPATCH(&old_irql);
+            ionic_rx_napi(intr, intr->qcq->cq.num_descs, &receive_throttle_params);
+            NDIS_LOWER_IRQL(old_irql, DISPATCH_LEVEL);
         }
+    }
+}
 
-        int_info++;
-        index++;
+void
+unuse_intr_msgs_rss(struct ionic *ionic, struct lif *lif)
+{
+    struct intr_msg* intr;
+
+    /* don't touch the control interrupt */
+    for (ULONG i = IONIC_CTL_INTR_CNT; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
+        intr = &ionic->intr_msg_tbl[i];
+
+        if (intr->lif == lif) {
+            intr->inuse = false;
+        }
+    }
+}
+
+struct intr_msg *
+find_intr_msg(struct ionic *ionic, ULONG proc_idx)
+{
+    struct intr_msg* intr;
+
+    for (ULONG i = 0; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
+        intr = &ionic->intr_msg_tbl[i];
+        if (!intr->inuse) {
+            if (proc_idx == INVALID_PROCESSOR_INDEX &&
+                intr->affinity_policy == IrqPolicyAllCloseProcessors) {
+                return intr;
+            }
+            if (proc_idx == ANY_PROCESSOR_INDEX) {
+                return intr;
+            }
+            if (proc_idx != INVALID_PROCESSOR_INDEX &&
+                intr->affinity_policy == IrqPolicySpecifiedProcessors &&
+                intr->affinity == (1ull << proc_idx)) {
+                return intr;
+            }
+        }
     }
 
-    return proc;
+    return NULL;
+}
+
+BOOLEAN
+sync_intr_msg(NDIS_HANDLE SynchronizeContext)
+{
+    struct intr_sync_ctx* ctx = (struct intr_sync_ctx *)SynchronizeContext;
+    NDIS_STATUS status;
+
+    status = ionic_intr_affinitize(ctx->ionic, ctx->index, ctx->id);
+
+    return (status == NDIS_STATUS_SUCCESS);
+}
+
+void
+check_intr_msg_affinity(struct ionic* ionic, ULONG message_id)
+{
+    struct intr_msg* int_tbl = NULL;
+
+    int_tbl = get_intr_msg(ionic, message_id);
+    if (int_tbl == NULL) {
+        IoPrint("%s invalid msg %d\n", message_id);
+        return;
+        }
+
+	PROCESSOR_NUMBER proc_numb;
+	KeGetCurrentProcessorNumberEx(&proc_numb);
+
+    if (int_tbl->lif == NULL || int_tbl->qcq == NULL) {
+        IoPrint("%s not bound - msg %d group %d proc %d affinity %d isr_cnt %llu dpc_cnt %llu\n",
+            __FUNCTION__,
+            message_id,
+            proc_numb.Group, proc_numb.Number,
+            int_tbl->affinity,
+            int_tbl->isr_cnt, int_tbl->dpc_cnt);
+        return;
+    }
+
+    if (int_tbl->affinity_policy == IrqPolicySpecifiedProcessors &&
+        !(int_tbl->affinity & (1ull << proc_numb.Number))) {
+        IoPrint("%s wrong affinity - msg %d group %d proc %d affinity %d isr_cnt %llu dpc_cnt %llu\n",
+            __FUNCTION__,
+            message_id,
+            proc_numb.Group, proc_numb.Number,
+            int_tbl->affinity,
+            int_tbl->isr_cnt, int_tbl->dpc_cnt);
+    }
 }
 
 void

@@ -11,11 +11,11 @@ struct txq_nbl_list {
 
 struct rxq_pkt {
 
-	struct rxq_pkt *next;
-
-    struct queue *q;
+	SLIST_ENTRY	next;
 
     ULONG flags;
+
+	struct queue *q;
 
 	u32				sg_count;
 
@@ -48,7 +48,7 @@ struct tx_frag_pool_elem {
 };
 
 struct txq_pkt {
-    struct txq_pkt *next;
+    SLIST_ENTRY next;
     struct queue *q;
     ULONG flags;
     PNET_BUFFER_LIST parent_nbl;
@@ -57,9 +57,6 @@ struct txq_pkt {
     PSCATTER_GATHER_LIST sg_list;
 
 	struct tx_frag_pool_elem *tx_frag_elem;
-
-    LARGE_INTEGER send_nb_time;
-    LARGE_INTEGER queue_nb_time;
 };
 
 struct txq_pkt_private {
@@ -81,8 +78,6 @@ struct txq_nbl_private {
     LONG    ref_count;
 
 	LONG	nb_processed_cnt;
-
-    LARGE_INTEGER send_nbl_time;
 };
 
 typedef struct _Ionic_Logging
@@ -195,20 +190,39 @@ struct queue {
 	u64 drop;
 	u64 stop;
 	u64 wake;
-
-	u32		rx_pkt_cnt;
 };
 
 #define INTR_INDEX_NOT_ASSIGNED		-1
 #define INTR_NAME_MAX_SZ		32
 
 struct intr {
-	char name[INTR_NAME_MAX_SZ];
 	unsigned int index;
-	unsigned int vector;
-	u64 rearm_count;
-	unsigned int cpu;
-	cpumask_t affinity_mask;
+
+    struct lif*			lif;
+    struct qcq*			qcq;
+};
+
+struct intr_msg {
+    ULONG				id;
+    IRQ_DEVICE_POLICY   affinity_policy;
+    PROCESSOR_NUMBER	proc;
+    ULONG               proc_idx;
+    KAFFINITY           affinity;
+
+    bool			inuse;
+    struct lif*			lif;
+    struct qcq*			qcq;
+
+    /* stats */
+    LONG64				isr_cnt;
+    LONG64				dpc_cnt;
+    LONG64				spurious_cnt;
+};
+
+struct intr_sync_ctx {
+    struct ionic*   ionic;
+    unsigned int	index;
+    ULONG			id;
 };
 
 struct cq_info {
@@ -244,7 +258,6 @@ struct qcq {
 	unsigned int total_size;
 	struct queue q;
 	struct cq cq;
-	struct intr intr;
 
 	union
 	{
@@ -256,43 +269,20 @@ struct qcq {
 	struct dentry *dentry;
 	unsigned int master_slot;
 
-	NDIS_HANDLE pkts_pool;
-	union {
-        struct rxq_pkt *rxq_base;
-        struct txq_pkt *txq_base;
-    } pkts_base;
+	NDIS_HANDLE tx_pkts_pool;
+    struct txq_pkt *txq_base;
 
-	union {
+	SLIST_HEADER *tx_pkt_list;
 
-		struct {
-			struct rxq_pkt *rx_pkt_list_head;
-			struct rxq_pkt *rx_pkt_list_tail;
-		};
+    LONG tx_pkts_free_count;
 
-		struct {
-			struct txq_pkt *tx_pkt_list_head;
-			struct txq_pkt *tx_pkt_list_tail;
-		};
-	};
-
-    LONG pkts_free_count;
-	NDIS_SPIN_LOCK pkt_list_lock;
-
+    void *tx_sgl_buffer;
+	
 	LONG outstanding_rx_count;
     LONG outstanding_tx_count;
 
-    void *sgl_buffer;
-
 	NDIS_SPIN_LOCK tx_ring_lock;
 	NDIS_SPIN_LOCK rx_ring_lock;
-
-	void	*netbuffer_base;
-	u32		netbuffer_length;
-	u32		netbuffer_elementsize;
-	NDIS_HANDLE RxBufferHandle;
-	NDIS_HANDLE RxBufferAllocHandle;
-	void   *sg_buffer;
-	ULONG	queue_id;
 
 	NDIS_HANDLE		ring_alloc_handle;
 
@@ -401,16 +391,13 @@ struct lif {
 	u8 rss_hash_key[IONIC_RSS_HASH_KEY_SIZE];
 	u16 rss_hash_key_len;
 	u8 *rss_ind_tbl;
-	u8 *rss_ind_tbl_mapped;
-	dma_addr_t rss_ind_tbl_mapped_pa;
+    dma_addr_t rss_ind_tbl_pa;
 	u32 rss_ind_tbl_sz;
 	u8 rss_base_cpu;
 	u32 rss_hash_flags;
 
 	struct rx_filters rx_filters;
 	struct ionic_deferred deferred;
-	u32 tx_coalesce_usecs;
-	u32 rx_coalesce_usecs;
 	NDIS_SPIN_LOCK dbid_inuse_lock;	/* lock the dbid bit list */
 	RTL_BITMAP dbid_inuse;
 	unsigned long *dbid_inuse_buffer;
@@ -428,6 +415,26 @@ struct lif {
 	struct rss_map *rss_mapping;
 
     KEVENT  state_change;
+
+	//
+	// rx pool
+	//
+
+	NDIS_HANDLE		rx_pkts_nbl_pool;
+    struct rxq_pkt *rxq_pkt_base;
+
+	SLIST_HEADER   *rx_pkts_list;
+
+	LONG			rx_pkts_free_count;
+
+	u32				rx_pkt_cnt;
+
+	void		   *rx_pkt_buffer_base;
+	u32				rx_pkt_buffer_length;
+	u32				rx_pkt_buffer_elementsize;
+	NDIS_HANDLE		rx_pkt_buffer_handle;
+	NDIS_HANDLE		rx_pkt_buffer_alloc_handle;
+	void		   *rx_pkt_sgl_buffer;
 };
 
 #define lif_to_txqcq(lif, i)	((lif)->txqcqs[i].qcq)
@@ -579,34 +586,6 @@ struct vf_info
 	struct ionic_dev_bar BAR[2];
 };
 
-struct interrupt_info
-{
-
-	ULONG			msi_id;
-
-	ULONG			Flags;
-
-	int				QueueType;
-
-	struct lif	   *lif;
-
-	int				rx_id;
-
-	USHORT			queue_id;
-
-	USHORT			group;
-
-	ULONG			group_proc;
-
-	ULONG			original_proc;
-
-	ULONG			current_proc;
-
-    USHORT          target_group;
-    ULONG           target_group_proc;
-
-};
-
 struct filter_info
 {
 	
@@ -634,28 +613,18 @@ struct ionic {
 
 	LIST_ENTRY		lifs;
 
-	RTL_BITMAP		intrs;
-	char			intrs_buffer[BITS_TO_LONGS( INTR_CTRL_REGS_MAX)];
-
-
 	RTL_BITMAP		lifbits;
 	char			lifbits_buffer[BITS_TO_LONGS( IONIC_LIFS_MAX)];
 	
 	NDIS_HANDLE		WatchDogTimer;
 
-	ULONG			proc_count;
-	USHORT			group_cnt;
-	ULONG			proc_per_group;
-
 	ULONG			sgl_size_in_bytes;
 	ULONG			max_sgl_elements;
 	ULONG			dma_alignment;
 	NDIS_HANDLE		dma_handle;
-    NDIS_INTERRUPT_TYPE interrupt_type;
-    PIO_INTERRUPT_MESSAGE_INFO message_info_table;
-	NDIS_HANDLE		intr_obj;
-	ULONG			interrupt_level;
+
 	LONG			dpc_ref_counter;
+
 	PCI_COMMON_CONFIG pci_config;
 
 	UNICODE_STRING	computer_name;
@@ -679,6 +648,30 @@ struct ionic {
 
 	u32				num_rss_queues;
 
+	u32				tx_coalesce_usecs;
+	u32				rx_coalesce_usecs;
+	u32				rx_coalesce_hw;
+
+    PNDIS_SYSTEM_PROCESSOR_INFO_EX  sys_proc_info;
+    PNDIS_PROCESSOR_INFO_EX         sys_proc;
+
+    NDIS_HANDLE						intr_obj;
+    NDIS_INTERRUPT_TYPE				intr_type;
+
+    /* Legacy interrupts */
+    ULONG							intr_lvl;
+
+    /* MSI-x interrupt message info table */
+    PIO_INTERRUPT_MESSAGE_INFO      intr_msginfo_tbl;
+
+    /* MSI-x interrupt info table */
+    struct intr_msg*				intr_msg_tbl;
+    struct intr*					intr_tbl;
+
+    /* interrupt resource allocator */
+    RTL_BITMAP						intrs;
+    char							intrs_buffer[BITS_TO_LONGS(INTR_CTRL_REGS_MAX)];
+
 	struct ionic_default_switch_sriov	SriovSwitch;
 		
 	struct vmq_info	vm_queue[ IONIC_MAX_VM_QUEUE_COUNT];
@@ -687,13 +680,9 @@ struct ionic {
 
 	struct filter_info q_filter[ IONIC_MAX_FILTER_COUNT];
 
-	struct interrupt_info *interrupt_tbl;
-
 	ULONG			total_lif_count;
 
 	PCI_EXPRESS_SRIOV_CAPABILITY	sriov_caps;
-
-	ULONG			interrupt_count;
 
     ULONG           flow_control;
 
@@ -786,22 +775,15 @@ extern "C" {
 
 typedef struct _PERF_MON_COLLECTED_STATS {
     // per-adapter stats
-    ULONG core_redirection_count;
+
+
     // per-lif stats
-    // per-rxq stats
-    ULONG rx_pool_count;
-    // per-txq stats
-    ULONG nbl_per_sec;
-    ULONG nb_per_sec;
-    ULONG byte_per_sec;
-    ULONG pending_nbl_count;
-    ULONG pending_nb_count;
-    ULONG queue_len;
-    ULONG max_queue_len;
-    LONGLONG nb_time_to_queue; // Ave time from send_packets to ionic_queue_txq_pkt for each NB
-    LONGLONG nb_time_to_complete; // Ave time from send_packets to ionic_txq_complete_pkt for each NB
-    LONGLONG nb_time_queue_to_comp; // Ave time from ionic_queue_txq_pkt to completion
-    LONGLONG nbl_time_to_complete; // Ave time from send_packets to when NBL is ack'd to OS for each NBL
+	ULONG rx_pool_alloc_cnt;
+	ULONG rx_pool_free_cnt;
+	ULONG rx_pool_size;
+	ULONGLONG rx_pool_alloc_time;
+	ULONGLONG rx_pool_free_time;
+
 } PERF_MON_COLLECTED_STATS;
 
 };

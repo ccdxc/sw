@@ -96,22 +96,11 @@ struct _PERF_MON_RX_QUEUE_STATS {
 
 struct _PERF_MON_TX_QUEUE_STATS {
 
-    ULONG           nbl_per_sec;
-    
-    ULONG           nb_per_sec;
-    ULONG           byte_per_sec;
-
     ULONG           pending_nbl_count;
     ULONG           pending_nb_count;
 
     ULONG           queue_len;
     ULONG           max_queue_len;
-
-    LONGLONG        nb_time_to_queue; // Ave time from send_packets to ionic_queue_txq_pkt for each NB
-    LONGLONG        nb_time_to_complete; // Ave time from send_packets to ionic_txq_complete_pkt for each NB
-    LONGLONG        nb_time_queue_to_comp; // Ave time from ionic_queue_txq_pkt to completion
-
-    LONGLONG        nbl_time_to_complete; // Ave time from send_packets to when NBL is ack'd to OS for each NBL
 
 };
 
@@ -122,6 +111,18 @@ struct _PERF_MON_LIF_STATS {
     ULONG           rx_queue_count;
 
     ULONG           tx_queue_count;
+
+	/* rx pool stats */
+
+	__le32			rx_pool_alloc_cnt;
+
+	__le32			rx_pool_free_cnt;
+	
+	__le32			rx_pool_size;
+	
+	__le64			rx_pool_alloc_time;
+	
+	__le64			rx_pool_free_time;
 
 };
 

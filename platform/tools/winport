@@ -28,6 +28,10 @@ cd "$EXT_REPO" || exit
 git format-patch --histogram -o "$TOP/$GEN/" "$REF_START..$REF_END" || exit
 cd -
 
+cd "$TOP/$GEN" || exit
+sed -i 's/\(Ionic64\|Ionic64_vf\)\.inf/\1\.inx/g' *.patch || exit
+cd -
+
 cd "$TOP" || exit
 cat "$GEN/"* | git am --reject --directory "$DRV/" || {
     STATUS=$?

@@ -7,6 +7,7 @@ ionic_lif_notifyq_init(struct lif *lif)
     struct qcq *qcq = lif->notifyqcq;
     struct queue *q = &qcq->q;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+    USHORT flags = 0;
 
     struct ionic_admin_ctx ctx = {0};
 
@@ -14,11 +15,14 @@ ionic_lif_notifyq_init(struct lif *lif)
     ctx.cmd.q_init.lif_index = (__le16)cpu_to_le16(lif->index);
     ctx.cmd.q_init.type = (u8)q->type;
     ctx.cmd.q_init.index = cpu_to_le32(q->index);
-    ctx.cmd.q_init.flags = cpu_to_le16(IONIC_QINIT_F_IRQ | IONIC_QINIT_F_ENA);
-    ctx.cmd.q_init.intr_index = (__le16)cpu_to_le16(lif->adminqcq->intr.index);
+    if (lif->adminqcq->flags & IONIC_QINIT_F_IRQ) {
+        flags |= IONIC_QINIT_F_IRQ;
+        ctx.cmd.q_init.intr_index = (__le16)cpu_to_le16(lif->adminqcq->cq.bound_intr->index);
+    }
     ctx.cmd.q_init.pid = (__le16)cpu_to_le16(q->pid);
     ctx.cmd.q_init.ring_size = (u8)ilog2(q->num_descs);
     ctx.cmd.q_init.ring_base = cpu_to_le64(q->base_pa);
+    ctx.cmd.q_init.flags = cpu_to_le16(flags | IONIC_QINIT_F_ENA);
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
               "%s notifyq_init.pid %d\n", __FUNCTION__, ctx.cmd.q_init.pid));
@@ -132,7 +136,7 @@ ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *cb_arg)
 }
 
 int
-ionic_notifyq_clean(struct lif *lif, int budget)
+ionic_notifyq_clean(struct lif *lif, unsigned int budget)
 {
 
     struct ionic_dev *idev = &lif->ionic->idev;

@@ -1,5 +1,7 @@
 
 #include "common.h"
+#define DEFINITIONS_ONLY
+#include "registry.h"
 
 #pragma NDIS_INIT_FUNCTION(DriverEntry)
 #pragma NDIS_PAGEABLE_FUNCTION(DriverUnload)
@@ -202,7 +204,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
     NDIS_PM_CAPABILITIES stPmCaps = {0};
     NDIS_SG_DMA_DESCRIPTION stDmaDesc = {0};
     ULONG ulLength = 0;
-    NDIS_HYPERVISOR_INFO stHyperVInfo;
+    NDIS_HYPERVISOR_INFO stHyperVInfo = {0};
 	DEVICE_OBJECT *phys_device_obj = NULL;
 	ULONG	returned_len = 0;
 
@@ -398,12 +400,11 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
     //
 
     status = ionic_dev_setup(adapter);
-
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s ionic_dev_setup() failed Status %08lX\n", __FUNCTION__,
                   status));
-        goto unmap_bars_exit;
+        goto err_out_unmap_bars;
     }
 
     status = ionic_identify(adapter);
@@ -415,29 +416,41 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
     }
 
     IoPrint("%s ASIC %s rev 0x%X serial num %s fw version %s N_LIF %d "
-            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d\n",
+            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d Coal %s %d\n",
             __FUNCTION__, ionic_dev_asic_name(adapter->idev.dev_info.asic_type),
             adapter->idev.dev_info.asic_rev, adapter->idev.dev_info.serial_num,
             adapter->idev.dev_info.fw_version, adapter->ident.dev.nlifs,
             adapter->ident.dev.ndbpgs_per_lif, RxBudget,
-            adapter->rx_pool_factor, adapter->numa_node);
+            adapter->rx_pool_factor, adapter->numa_node,
+			BooleanFlagOn(adapter->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED)?"Enabled":"Disabled",
+			adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value);
 
     DbgTrace(
         (TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
          "%s ASIC %s rev 0x%X serial num %s fw version %s N_LIF %d "
-            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d\n",
+            "N_DBPGS_LIF %d Rx Budget %d RxPool Factor %d NUMA %d Coal %s %d\n",
             __FUNCTION__, ionic_dev_asic_name(adapter->idev.dev_info.asic_type),
             adapter->idev.dev_info.asic_rev, adapter->idev.dev_info.serial_num,
             adapter->idev.dev_info.fw_version, adapter->ident.dev.nlifs,
             adapter->ident.dev.ndbpgs_per_lif, RxBudget,
-            adapter->rx_pool_factor, adapter->numa_node));
+            adapter->rx_pool_factor, adapter->numa_node,
+			BooleanFlagOn(adapter->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED)?"Enabled":"Disabled",
+			adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value));
+
+	status = ionic_register_interrupts(adapter, InitParameters);
+	if (status != NDIS_STATUS_SUCCESS) {
+		DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+			"%s ionic_register_interrupts() failed Status %08lX\n",
+			__FUNCTION__, status));
+		goto err_out_teardown;
+	}
 
     status = ionic_init(adapter);
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot init device: %d, aborting\n", __FUNCTION__,
                   status));
-        goto err_out_teardown;
+        goto err_out_unregister_interrupts;
     }
 
     /* Configure the ports */
@@ -479,17 +492,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot allocate LIFs: %08lX, aborting\n", __FUNCTION__,
                   status));
-        goto err_out_free_irqs;
-    }
-
-	/* Don't register interrupts until we're ready */
-    status = ionic_register_interrupts(adapter);
-
-    if (status != NDIS_STATUS_SUCCESS) {
-        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                  "%s ionic_register_interrupts() failed Status %08lX\n",
-                  __FUNCTION__, status));
-        goto err_out_free_lifs;
+        goto err_out_port_reset;
     }
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
@@ -509,7 +512,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot open LIFs: %08lX, aborting\n", __FUNCTION__,
                   status));
-        goto err_out_free_lifs;
+        goto err_out_reset_lifs;
     }
 
 	status = set_port_config( adapter);
@@ -521,12 +524,11 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
     }
 
     status = SetGeneralAttribs(adapter);
-
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s SetGeneralAttribs failed Status %08lX\n", __FUNCTION__,
                   status));
-        goto cleanup;
+        goto err_out_stop_ionic;
     }
 
 #if 0
@@ -542,12 +544,11 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
 #endif
 
     status = ionic_set_offload_attributes(adapter);
-
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Failed ionic_set_offload_attributes() Status 0x%08lX\n",
                   __FUNCTION__, status));
-        goto cleanup;
+        goto err_out_stop_ionic;
     }
 
     adapter->hardware_status = NdisHardwareStatusReady;
@@ -556,13 +557,15 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
 
     goto exit;
 
-cleanup:
+err_out_stop_ionic:
+    ionic_stop(adapter);
+
+err_out_reset_lifs:
+    ionic_lifs_reset(adapter);
+
 err_out_free_lifs:
     ionic_lifs_deinit(adapter);
     ionic_lifs_free(adapter);
-
-err_out_free_irqs:
-    //	ionic_bus_free_irq_vectors(adapter);
 
 err_out_port_reset:
     ionic_port_reset(adapter);
@@ -570,14 +573,13 @@ err_out_port_reset:
 err_out_reset:
     ionic_reset(adapter);
 
+err_out_unregister_interrupts:
+    NdisMDeregisterInterruptEx(adapter->intr_obj);
+
 err_out_teardown:
     ionic_dev_teardown(adapter);
 
-	if( adapter->intr_obj != NULL) {
-	    NdisMDeregisterInterruptEx(adapter->intr_obj);
-	}
-
-unmap_bars_exit:
+err_out_unmap_bars:
     ionic_unmap_bars(adapter);
 	ionic_deinit(adapter);
 

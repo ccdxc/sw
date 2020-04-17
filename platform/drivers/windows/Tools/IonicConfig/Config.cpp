@@ -228,6 +228,60 @@ CmdVersion()
 char *
 GetLifTypeName(ULONG type);
 
+void
+DumpTxRingStats(const char *id, struct dev_tx_ring_stats *tx_stats)
+{
+    printf("\t\t\ttx%s_full:\t%I64u\n", id, tx_stats->full);
+    printf("\t\t\ttx%s_wake:\t%I64u\n", id, tx_stats->wake);
+    printf("\t\t\ttx%s_no_descs:\t%I64u\n", id, tx_stats->no_descs);
+    printf("\t\t\ttx%s_doorbell:\t%I64u\n", id, tx_stats->doorbell_count);
+    printf("\t\t\ttx%s_comp:\t%I64u\n", id, tx_stats->comp_count);
+    printf("\t\t\ttx%s_ucast_bytes:\t%I64u\n", id, tx_stats->directed_bytes);
+    printf("\t\t\ttx%s_ucast_packets:\t%I64u\n", id, tx_stats->directed_packets);
+    printf("\t\t\ttx%s_bcast_bytes:\t%I64u\n", id, tx_stats->bcast_bytes);
+    printf("\t\t\ttx%s_mcast_bytes:\t%I64u\n", id, tx_stats->mcast_bytes);
+    printf("\t\t\ttx%s_mcast_packets:\t%I64u\n", id, tx_stats->mcast_packets);
+    printf("\t\t\ttx%s_tso_bytes:\t%I64u\n", id, tx_stats->tso_bytes);
+    printf("\t\t\ttx%s_tso_packets:\t%I64u\n", id, tx_stats->tso_packets);
+    printf("\t\t\ttx%s_encap_tso_bytes:\t%I64u\n", id, tx_stats->encap_tso_bytes);
+    printf("\t\t\ttx%s_encap_tso_packets:\t%I64u\n", id, tx_stats->encap_tso_packets);
+    printf("\t\t\ttx%s_csum_none:\t%I64u\n", id, tx_stats->csum_none);
+    //TODO: remove csum_partial counters, not used anymore
+    //printf("\t\t\ttx%s_csum_partial:\t%I64u\n", id, tx_stats->csum_partial);
+    //printf("\t\t\ttx%s_csum_partial_inner:\t%I64u\n", id, tx_stats->csum_partial_inner);
+    printf("\t\t\ttx%s_csum_hw:\t%I64u\n", id, tx_stats->csum_hw);
+    printf("\t\t\ttx%s_csum_hw_inner:\t%I64u\n", id, tx_stats->csum_hw_inner);
+    printf("\t\t\ttx%s_vlan_inserted:\t%I64u\n", id, tx_stats->vlan_inserted);
+    printf("\t\t\ttx%s_dma_map_error:\t%I64u\n", id, tx_stats->dma_map_error);
+}
+
+void
+DumpRxRingStats(const char *id, struct dev_rx_ring_stats *rx_stats)
+{
+    printf("\t\t\trx%s_poll:\t%I64u\n", id, rx_stats->poll);
+    printf("\t\t\trx%s_arm:\t%I64u\n", id, rx_stats->arm);
+    printf("\t\t\trx%s_comp:\t%I64u\n", id, rx_stats->completion_count);
+    printf("\t\t\trx%s_buffers_posted:\t%I64u\n", id, rx_stats->buffers_posted);
+    printf("\t\t\trx%s_ucast_bytes:\t%I64u\n", id, rx_stats->directed_bytes);
+    printf("\t\t\trx%s_ucast_packets:\t%I64u\n", id, rx_stats->directed_packets);
+    printf("\t\t\trx%s_bcast_bytes:\t%I64u\n", id, rx_stats->bcast_bytes);
+    printf("\t\t\trx%s_bcast_packets:\t%I64u\n", id, rx_stats->bcast_packets);
+    printf("\t\t\trx%s_mcast_bytes:\t%I64u\n", id, rx_stats->mcast_bytes);
+    printf("\t\t\trx%s_mcast_packets:\t%I64u\n", id, rx_stats->mcast_packets);
+    //TODO: remove lro_packets, we don't support
+    //printf("\t\t\trx%s_lro_packets:\t%I64u\n", id, rx_stats->lro_packets);
+    printf("\t\t\trx%s_csum_none:\t%I64u\n", id, rx_stats->csum_none);
+    printf("\t\t\trx%s_csum_complete:\t%I64u\n", id, rx_stats->csum_complete);
+    printf("\t\t\trx%s_csum_verified:\t%I64u\n", id, rx_stats->csum_verified);
+    printf("\t\t\trx%s_csum_ip:\t%I64u\n", id, rx_stats->csum_ip);
+    printf("\t\t\trx%s_csum_ip_bad:\t%I64u\n", id, rx_stats->csum_ip_bad);
+    printf("\t\t\trx%s_csum_udp:\t%I64u\n", id, rx_stats->csum_udp);
+    printf("\t\t\trx%s_csum_udp_bad:\t%I64u\n", id, rx_stats->csum_udp_bad);
+    printf("\t\t\trx%s_csum_tcp:\t%I64u\n", id, rx_stats->csum_tcp);
+    printf("\t\t\trx%s_csum_tcp_bad:\t%I64u\n", id, rx_stats->csum_tcp_bad);
+    printf("\t\t\trx%s_vlan_stripped:\t%I64u\n", id, rx_stats->vlan_stripped);
+}
+
 DWORD
 DumpDevStats(void *Stats)
 {
@@ -240,9 +294,17 @@ DumpDevStats(void *Stats)
 
     while(resp->adapter_name[0])
     {
+        struct dev_tx_ring_stats tx_total = {};
+        struct dev_rx_ring_stats rx_total = {};
+        WCHAR name[ADAPTER_NAME_MAX_SZ] = {};
+        char id[16] = {};
         dev_stats = &resp->stats;
 
+        get_interface_name(name, ADAPTER_NAME_MAX_SZ, NULL, 0,
+                           resp->adapter_name, ADAPTER_NAME_MAX_SZ);
+
         printf("Adapter %S\n", resp->adapter_name);
+        printf("Interface %S\n", name);
         printf("Mgmt %s RSS %s VMQ %s SRIOV %s Up %d Dwn %d\n",
                (dev_stats->device_id == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT)?"Yes":"No",
                (dev_stats->flags & IONIC_PORT_FLAG_RSS)?"Yes":"No",
@@ -258,55 +320,74 @@ DumpDevStats(void *Stats)
         ulLifCount = 0;
         while (ulLifCount < dev_stats->lif_count)
         {
-
             printf("\tLif %d\n", dev_stats->lif_stats[ ulLifCount].lif_id);
             printf("\t\tLif type: %s", GetLifTypeName( dev_stats->lif_stats[ ulLifCount].lif_type));
 
             printf("\t\tLif name: %s\n", dev_stats->lif_stats[ ulLifCount].lif_name);
 
             printf("\t\tRx Count: %d\n", dev_stats->lif_stats[ ulLifCount].rx_count);
-
-            ulRxCnt = 0;
-            while (ulRxCnt < dev_stats->lif_stats[ulLifCount].rx_count)
+            for (ulRxCnt = 0; ulRxCnt < dev_stats->lif_stats[ulLifCount].rx_count; ++ulRxCnt)
             {
+                snprintf(id, sizeof(id), "_%lu", ulRxCnt);
+                DumpRxRingStats(id, &dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt]);
 
-                printf("\t\t\tRx %d Msi %d directed bytes 0x%I64X directed packets 0x%I64X Comp 0x%I64X Vlan 0x%I64X\n",
-                                ulRxCnt,
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].msi_id,
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].directed_bytes,
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].directed_packets,
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].completion_count,
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].vlan_stripped);
-
-				printf("\t\t\t\t TCP CS 0x%I64X-0x%I64X IP CS 0x%I64X-0x%I64X UDP CS 0x%I64X-%I64X No CS 0x%I64X\n",
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].csum_tcp,
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].csum_tcp_bad,
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].csum_ip,
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].csum_ip_bad,
-                                dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].csum_udp,
-								dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].csum_udp_bad,
-								dev_stats->lif_stats[ulLifCount].rx_ring[ ulRxCnt].csum_none);
-
-                ulRxCnt++;
+                rx_total.poll += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].poll;
+                rx_total.arm += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].arm;
+                rx_total.completion_count += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].completion_count;
+                rx_total.buffers_posted += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].buffers_posted;
+                rx_total.directed_bytes += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].directed_bytes;
+                rx_total.directed_packets += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].directed_packets;
+                rx_total.bcast_bytes += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].bcast_bytes;
+                rx_total.bcast_packets += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].bcast_packets;
+                rx_total.mcast_bytes += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].mcast_bytes;
+                rx_total.mcast_packets += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].mcast_packets;
+                //TODO: remove lro_packets, we don't support
+                rx_total.lro_packets += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].lro_packets;
+                rx_total.csum_none += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_none;
+                rx_total.csum_complete += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_complete;
+                rx_total.csum_verified += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_verified;
+                rx_total.csum_ip += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_ip;
+                rx_total.csum_ip_bad += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_ip_bad;
+                rx_total.csum_udp += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_udp;
+                rx_total.csum_udp_bad += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_udp_bad;
+                rx_total.csum_tcp += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_tcp;
+                rx_total.csum_tcp_bad += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].csum_tcp_bad;
+                rx_total.vlan_stripped += dev_stats->lif_stats[ulLifCount].rx_ring[ulRxCnt].vlan_stripped;
             }
+            id[0] = 0;
+            DumpRxRingStats(id, &rx_total);
 
             printf("\t\tTx Count: %d\n", dev_stats->lif_stats[ ulLifCount].tx_count);
-            
-			ulTxCnt = 0;
-            while (ulTxCnt < dev_stats->lif_stats[ulLifCount].tx_count)
+            for (ulTxCnt = 0; ulTxCnt < dev_stats->lif_stats[ulLifCount].tx_count; ++ulTxCnt)
             {
+                snprintf(id, sizeof(id), "_%lu", ulTxCnt);
+                DumpTxRingStats(id, &dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt]);
 
-                printf("\t\t\tTx %d directed bytes 0x%I64X directed packets 0x%I64X tso bytes 0x%I64X tso packets 0x%I64X db cnt 0x%I64X vlan 0x%I64X\n",
-                            ulTxCnt,
-                            dev_stats->lif_stats[ulLifCount].tx_ring[ ulTxCnt].directed_bytes,
-                            dev_stats->lif_stats[ulLifCount].tx_ring[ ulTxCnt].directed_packets,
-                            dev_stats->lif_stats[ulLifCount].tx_ring[ ulTxCnt].tso_bytes,
-                            dev_stats->lif_stats[ulLifCount].tx_ring[ ulTxCnt].tso_packets,
-                            dev_stats->lif_stats[ulLifCount].tx_ring[ ulTxCnt].doorbell_count,
-                            dev_stats->lif_stats[ulLifCount].tx_ring[ ulTxCnt].vlan_inserted);
-
-                ulTxCnt++;
+                tx_total.full += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].full;
+                tx_total.wake += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].wake;
+                tx_total.no_descs += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].no_descs;
+                tx_total.doorbell_count += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].doorbell_count;
+                tx_total.comp_count += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].comp_count;
+                tx_total.directed_bytes += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].directed_bytes;
+                tx_total.directed_packets += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].directed_packets;
+                tx_total.bcast_bytes += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].bcast_bytes;
+                tx_total.mcast_bytes += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].mcast_bytes;
+                tx_total.mcast_packets += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].mcast_packets;
+                tx_total.tso_bytes += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].tso_bytes;
+                tx_total.tso_packets += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].tso_packets;
+                tx_total.encap_tso_bytes += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].encap_tso_bytes;
+                tx_total.encap_tso_packets += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].encap_tso_packets;
+                tx_total.csum_none += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].csum_none;
+                //TODO: remove csum_partial counters, not used anymore
+                tx_total.csum_partial += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].csum_partial;
+                tx_total.csum_partial_inner += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].csum_partial_inner;
+                tx_total.csum_hw += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].csum_hw;
+                tx_total.csum_hw_inner += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].csum_hw_inner;
+                tx_total.vlan_inserted += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].vlan_inserted;
+                tx_total.dma_map_error += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].dma_map_error;
             }
+            id[0] = 0;
+            DumpTxRingStats(id, &tx_total);
 
             ulLifCount++;
         }
@@ -325,12 +406,17 @@ DumpMgmtStats(void *Stats)
 {
     MgmtStatsRespCB *resp = (MgmtStatsRespCB *)Stats;
     struct mgmt_port_stats *mgmt_stats = &resp->stats;
+    WCHAR name[ADAPTER_NAME_MAX_SZ] = {};
 
     // one adapter per response
 
-    printf("Mgmt Port Stats: %S\n", resp->adapter_name);
+    get_interface_name(name, ADAPTER_NAME_MAX_SZ, NULL, 0,
+                       resp->adapter_name, ADAPTER_NAME_MAX_SZ);
 
-    printf("\tRx frames all: 0x%I64X\n", mgmt_stats->frames_rx_all);
+    printf("Mgmt Port Stats: %S\n", resp->adapter_name);
+    printf("Interface: %S\n", name);
+
+    printf("\tRx frames all: %I64u\n", mgmt_stats->frames_rx_all);
 
     printf("\n");
 }
@@ -340,43 +426,48 @@ DumpPortStats(void *Stats)
 {
     PortStatsRespCB *resp = (PortStatsRespCB *)Stats;
     struct port_stats *port_stats = &resp->stats;
+    WCHAR name[ADAPTER_NAME_MAX_SZ] = {};
     ULONGLONG ull9216Frames = 0;
 
     // one adapter per response
 
-    printf("Port Stats: %S\n", resp->adapter_name);
+    get_interface_name(name, ADAPTER_NAME_MAX_SZ, NULL, 0,
+                       resp->adapter_name, ADAPTER_NAME_MAX_SZ);
 
-    printf("\tRx frames ok:\t\t0x%I64X\n", port_stats->frames_rx_ok);
-    printf("\tRx frames all:\t\t0x%I64X\n", port_stats->frames_rx_all);
-    printf("\tRx fcs errors:\t\t0x%I64X\n", port_stats->frames_rx_bad_fcs);
-    printf("\tRx crc errors:\t\t0x%I64X\n", port_stats->frames_rx_bad_all);
-    printf("\tRx bytes ok:\t\t0x%I64X\n", port_stats->octets_rx_ok);
-    printf("\tRx bytes all:\t\t0x%I64X\n", port_stats->octets_rx_all);
-    printf("\tRx u-cast:\t\t0x%I64X\n", port_stats->frames_rx_unicast);
-    printf("\tRx m-cast:\t\t0x%I64X\n", port_stats->frames_rx_multicast);
-    printf("\tRx b-cast:\t\t0x%I64X\n", port_stats->frames_rx_broadcast);
-    printf("\tRx pause:\t\t0x%I64X\n", port_stats->frames_rx_pause);
-    printf("\tRx bad length:\t\t0x%I64X\n", port_stats->frames_rx_bad_length);
-    printf("\tRx undersized:\t\t0x%I64X\n", port_stats->frames_rx_undersized);
-    printf("\tRx oversized:\t\t0x%I64X\n", port_stats->frames_rx_oversized);
-    printf("\tRx fragments:\t\t0x%I64X\n", port_stats->frames_rx_fragments);
-    printf("\tRx jabber:\t\t0x%I64X\n", port_stats->frames_rx_jabber);
-    printf("\tRx pfc frames:\t\t0x%I64X\n", port_stats->frames_rx_pripause);
-    printf("\tRx crc stomped:\t\t0x%I64X\n", port_stats->frames_rx_stomped_crc);
-    printf("\tRx too long:\t\t0x%I64X\n", port_stats->frames_rx_too_long);
-    printf("\tRx vlan ok:\t\t0x%I64X\n", port_stats->frames_rx_vlan_good);
-    printf("\tRx dropped frames:\t0x%I64X\n", port_stats->frames_rx_dropped);
-    printf("\tRx frames < 64:\t\t0x%I64X\n", port_stats->frames_rx_less_than_64b);
-    printf("\tRx frames = 64:\t\t0x%I64X\n", port_stats->frames_rx_64b);
-    printf("\tRx frames 65-127:\t0x%I64X\n", port_stats->frames_rx_65b_127b);
-    printf("\tRx frames 128-255:\t0x%I64X\n", port_stats->frames_rx_128b_255b);
-    printf("\tRx frames 256-511:\t0x%I64X\n", port_stats->frames_rx_256b_511b);
-    printf("\tRx frames 512-1023:\t0x%I64X\n", port_stats->frames_rx_512b_1023b);
-    printf("\tRx frames 1024-1518:\t0x%I64X\n", port_stats->frames_rx_1024b_1518b);
-    printf("\tRx frames 1519-2047:\t0x%I64X\n", port_stats->frames_rx_1519b_2047b);
-    printf("\tRx frames 2048-4095:\t0x%I64X\n", port_stats->frames_rx_2048b_4095b);
-    printf("\tRx frames 4096-8191:\t0x%I64X\n", port_stats->frames_rx_4096b_8191b);
-    printf("\tRx frames 8192-9215:\t0x%I64X\n", port_stats->frames_rx_8192b_9215b);
+    printf("Port Stats: %S\n", resp->adapter_name);
+    printf("Interface: %S\n", name);
+
+    printf("\tRx frames ok:\t\t%I64u\n", port_stats->frames_rx_ok);
+    printf("\tRx frames all:\t\t%I64u\n", port_stats->frames_rx_all);
+    printf("\tRx fcs errors:\t\t%I64u\n", port_stats->frames_rx_bad_fcs);
+    printf("\tRx crc errors:\t\t%I64u\n", port_stats->frames_rx_bad_all);
+    printf("\tRx bytes ok:\t\t%I64u\n", port_stats->octets_rx_ok);
+    printf("\tRx bytes all:\t\t%I64u\n", port_stats->octets_rx_all);
+    printf("\tRx u-cast:\t\t%I64u\n", port_stats->frames_rx_unicast);
+    printf("\tRx m-cast:\t\t%I64u\n", port_stats->frames_rx_multicast);
+    printf("\tRx b-cast:\t\t%I64u\n", port_stats->frames_rx_broadcast);
+    printf("\tRx pause:\t\t%I64u\n", port_stats->frames_rx_pause);
+    printf("\tRx bad length:\t\t%I64u\n", port_stats->frames_rx_bad_length);
+    printf("\tRx undersized:\t\t%I64u\n", port_stats->frames_rx_undersized);
+    printf("\tRx oversized:\t\t%I64u\n", port_stats->frames_rx_oversized);
+    printf("\tRx fragments:\t\t%I64u\n", port_stats->frames_rx_fragments);
+    printf("\tRx jabber:\t\t%I64u\n", port_stats->frames_rx_jabber);
+    printf("\tRx pfc frames:\t\t%I64u\n", port_stats->frames_rx_pripause);
+    printf("\tRx crc stomped:\t\t%I64u\n", port_stats->frames_rx_stomped_crc);
+    printf("\tRx too long:\t\t%I64u\n", port_stats->frames_rx_too_long);
+    printf("\tRx vlan ok:\t\t%I64u\n", port_stats->frames_rx_vlan_good);
+    printf("\tRx dropped frames:\t%I64u\n", port_stats->frames_rx_dropped);
+    printf("\tRx frames < 64:\t\t%I64u\n", port_stats->frames_rx_less_than_64b);
+    printf("\tRx frames = 64:\t\t%I64u\n", port_stats->frames_rx_64b);
+    printf("\tRx frames 65-127:\t%I64u\n", port_stats->frames_rx_65b_127b);
+    printf("\tRx frames 128-255:\t%I64u\n", port_stats->frames_rx_128b_255b);
+    printf("\tRx frames 256-511:\t%I64u\n", port_stats->frames_rx_256b_511b);
+    printf("\tRx frames 512-1023:\t%I64u\n", port_stats->frames_rx_512b_1023b);
+    printf("\tRx frames 1024-1518:\t%I64u\n", port_stats->frames_rx_1024b_1518b);
+    printf("\tRx frames 1519-2047:\t%I64u\n", port_stats->frames_rx_1519b_2047b);
+    printf("\tRx frames 2048-4095:\t%I64u\n", port_stats->frames_rx_2048b_4095b);
+    printf("\tRx frames 4096-8191:\t%I64u\n", port_stats->frames_rx_4096b_8191b);
+    printf("\tRx frames 8192-9215:\t%I64u\n", port_stats->frames_rx_8192b_9215b);
 
     ull9216Frames = port_stats->frames_rx_all - ( port_stats->frames_rx_dropped +
                                                     port_stats->frames_rx_less_than_64b +
@@ -391,30 +482,30 @@ DumpPortStats(void *Stats)
                                                     port_stats->frames_rx_4096b_8191b +
                                                     port_stats->frames_rx_8192b_9215b);
 
-    printf("\tRx frames >= 9216:\t0x%I64X\n", ull9216Frames);
+    printf("\tRx frames >= 9216:\t%I64u\n", ull9216Frames);
 
-    printf("\tTx frames ok:\t\t0x%I64X\n", port_stats->frames_tx_ok);
-    printf("\tTx frames all:\t\t0x%I64X\n", port_stats->frames_tx_all);
-    printf("\tTx frames bad:\t\t0x%I64X\n", port_stats->frames_tx_bad);
-    printf("\tTx bytes ok:\t\t0x%I64X\n", port_stats->octets_tx_ok);
-    printf("\tTx bytes all:\t\t0x%I64X\n", port_stats->octets_tx_total);
-    printf("\tTx u-cast:\t\t0x%I64X\n", port_stats->frames_tx_unicast);
-    printf("\tTx m-cast:\t\t0x%I64X\n", port_stats->frames_tx_multicast);
-    printf("\tTx b-cast:\t\t0x%I64X\n", port_stats->frames_tx_broadcast);
-    printf("\tTx pause frames:\t0x%I64X\n", port_stats->frames_tx_pause);
-    printf("\tTx pfc frames:\t\t0x%I64X\n", port_stats->frames_tx_pripause);
-    printf("\tTx vlan frames:\t\t0x%I64X\n", port_stats->frames_tx_vlan);
-    printf("\tTx frames < 64:\t\t0x%I64X\n", port_stats->frames_tx_less_than_64b);
-    printf("\tTx frames = 64:\t\t0x%I64X\n", port_stats->frames_tx_64b);
-    printf("\tTx frames 65-127:\t0x%I64X\n", port_stats->frames_tx_65b_127b);
-    printf("\tTx frames 128-255:\t0x%I64X\n", port_stats->frames_tx_128b_255b);
-    printf("\tTx frames 256-511:\t0x%I64X\n", port_stats->frames_tx_256b_511b);
-    printf("\tTx frames 512-1023:\t0x%I64X\n", port_stats->frames_tx_512b_1023b);
-    printf("\tTx frames 1024-1518:\t0x%I64X\n", port_stats->frames_tx_1024b_1518b);
-    printf("\tTx frames 1519-2047:\t0x%I64X\n", port_stats->frames_tx_1519b_2047b);
-    printf("\tTx frames 2048-4095:\t0x%I64X\n", port_stats->frames_tx_2048b_4095b);
-    printf("\tTx frames 4096-8191:\t0x%I64X\n", port_stats->frames_tx_4096b_8191b);
-    printf("\tTx frames 8192-9215:\t0x%I64X\n", port_stats->frames_tx_8192b_9215b);
+    printf("\tTx frames ok:\t\t%I64u\n", port_stats->frames_tx_ok);
+    printf("\tTx frames all:\t\t%I64u\n", port_stats->frames_tx_all);
+    printf("\tTx frames bad:\t\t%I64u\n", port_stats->frames_tx_bad);
+    printf("\tTx bytes ok:\t\t%I64u\n", port_stats->octets_tx_ok);
+    printf("\tTx bytes all:\t\t%I64u\n", port_stats->octets_tx_total);
+    printf("\tTx u-cast:\t\t%I64u\n", port_stats->frames_tx_unicast);
+    printf("\tTx m-cast:\t\t%I64u\n", port_stats->frames_tx_multicast);
+    printf("\tTx b-cast:\t\t%I64u\n", port_stats->frames_tx_broadcast);
+    printf("\tTx pause frames:\t%I64u\n", port_stats->frames_tx_pause);
+    printf("\tTx pfc frames:\t\t%I64u\n", port_stats->frames_tx_pripause);
+    printf("\tTx vlan frames:\t\t%I64u\n", port_stats->frames_tx_vlan);
+    printf("\tTx frames < 64:\t\t%I64u\n", port_stats->frames_tx_less_than_64b);
+    printf("\tTx frames = 64:\t\t%I64u\n", port_stats->frames_tx_64b);
+    printf("\tTx frames 65-127:\t%I64u\n", port_stats->frames_tx_65b_127b);
+    printf("\tTx frames 128-255:\t%I64u\n", port_stats->frames_tx_128b_255b);
+    printf("\tTx frames 256-511:\t%I64u\n", port_stats->frames_tx_256b_511b);
+    printf("\tTx frames 512-1023:\t%I64u\n", port_stats->frames_tx_512b_1023b);
+    printf("\tTx frames 1024-1518:\t%I64u\n", port_stats->frames_tx_1024b_1518b);
+    printf("\tTx frames 1519-2047:\t%I64u\n", port_stats->frames_tx_1519b_2047b);
+    printf("\tTx frames 2048-4095:\t%I64u\n", port_stats->frames_tx_2048b_4095b);
+    printf("\tTx frames 4096-8191:\t%I64u\n", port_stats->frames_tx_4096b_8191b);
+    printf("\tTx frames 8192-9215:\t%I64u\n", port_stats->frames_tx_8192b_9215b);
 
     ull9216Frames = port_stats->frames_tx_all - ( port_stats->frames_tx_less_than_64b +
                                                     port_stats->frames_tx_64b +
@@ -428,46 +519,46 @@ DumpPortStats(void *Stats)
                                                     port_stats->frames_tx_4096b_8191b +
                                                     port_stats->frames_tx_8192b_9215b);
 
-    printf("\tTx frames >= 9216:\t0x%I64X\n", ull9216Frames);
+    printf("\tTx frames >= 9216:\t%I64u\n", ull9216Frames);
 
-    printf("\tTx pri-0:\t\t0x%I64X\n", port_stats->frames_tx_pri_0);
-    printf("\tTx pri-1:\t\t0x%I64X\n", port_stats->frames_tx_pri_1);
-    printf("\tTx pri-2:\t\t0x%I64X\n", port_stats->frames_tx_pri_2);
-    printf("\tTx pri-3:\t\t0x%I64X\n", port_stats->frames_tx_pri_3);
-    printf("\tTx pri-4:\t\t0x%I64X\n", port_stats->frames_tx_pri_4);
-    printf("\tTx pri-5:\t\t0x%I64X\n", port_stats->frames_tx_pri_5);
-    printf("\tTx pri-6:\t\t0x%I64X\n", port_stats->frames_tx_pri_6);
-    printf("\tTx pri-7:\t\t0x%I64X\n", port_stats->frames_tx_pri_7);
+    printf("\tTx pri-0:\t\t%I64u\n", port_stats->frames_tx_pri_0);
+    printf("\tTx pri-1:\t\t%I64u\n", port_stats->frames_tx_pri_1);
+    printf("\tTx pri-2:\t\t%I64u\n", port_stats->frames_tx_pri_2);
+    printf("\tTx pri-3:\t\t%I64u\n", port_stats->frames_tx_pri_3);
+    printf("\tTx pri-4:\t\t%I64u\n", port_stats->frames_tx_pri_4);
+    printf("\tTx pri-5:\t\t%I64u\n", port_stats->frames_tx_pri_5);
+    printf("\tTx pri-6:\t\t%I64u\n", port_stats->frames_tx_pri_6);
+    printf("\tTx pri-7:\t\t%I64u\n", port_stats->frames_tx_pri_7);
 
-    printf("\tRx pri-0:\t\t0x%I64X\n", port_stats->frames_rx_pri_0);
-    printf("\tRx pri-1:\t\t0x%I64X\n", port_stats->frames_rx_pri_1);
-    printf("\tRx pri-2:\t\t0x%I64X\n", port_stats->frames_rx_pri_2);
-    printf("\tRx pri-3:\t\t0x%I64X\n", port_stats->frames_rx_pri_3);
-    printf("\tRx pri-4:\t\t0x%I64X\n", port_stats->frames_rx_pri_4);
-    printf("\tRx pri-5:\t\t0x%I64X\n", port_stats->frames_rx_pri_5);
-    printf("\tRx pri-6:\t\t0x%I64X\n", port_stats->frames_rx_pri_6);
-    printf("\tRx pri-7:\t\t0x%I64X\n", port_stats->frames_rx_pri_7);
+    printf("\tRx pri-0:\t\t%I64u\n", port_stats->frames_rx_pri_0);
+    printf("\tRx pri-1:\t\t%I64u\n", port_stats->frames_rx_pri_1);
+    printf("\tRx pri-2:\t\t%I64u\n", port_stats->frames_rx_pri_2);
+    printf("\tRx pri-3:\t\t%I64u\n", port_stats->frames_rx_pri_3);
+    printf("\tRx pri-4:\t\t%I64u\n", port_stats->frames_rx_pri_4);
+    printf("\tRx pri-5:\t\t%I64u\n", port_stats->frames_rx_pri_5);
+    printf("\tRx pri-6:\t\t%I64u\n", port_stats->frames_rx_pri_6);
+    printf("\tRx pri-7:\t\t%I64u\n", port_stats->frames_rx_pri_7);
 
-    printf("\tTx pri-0 pause:\t\t0x%I64X\n", port_stats->tx_pripause_0_1us_count);
-    printf("\tTx pri-1 pause:\t\t0x%I64X\n", port_stats->tx_pripause_1_1us_count);
-    printf("\tTx pri-2 pause:\t\t0x%I64X\n", port_stats->tx_pripause_2_1us_count);
-    printf("\tTx pri-3 pause:\t\t0x%I64X\n", port_stats->tx_pripause_3_1us_count);
-    printf("\tTx pri-4 pause:\t\t0x%I64X\n", port_stats->tx_pripause_4_1us_count);
-    printf("\tTx pri-5 pause:\t\t0x%I64X\n", port_stats->tx_pripause_5_1us_count);
-    printf("\tTx pri-6 pause:\t\t0x%I64X\n", port_stats->tx_pripause_6_1us_count);
-    printf("\tTx pri-7 pause:\t\t0x%I64X\n", port_stats->tx_pripause_7_1us_count);
+    printf("\tTx pri-0 pause:\t\t%I64u\n", port_stats->tx_pripause_0_1us_count);
+    printf("\tTx pri-1 pause:\t\t%I64u\n", port_stats->tx_pripause_1_1us_count);
+    printf("\tTx pri-2 pause:\t\t%I64u\n", port_stats->tx_pripause_2_1us_count);
+    printf("\tTx pri-3 pause:\t\t%I64u\n", port_stats->tx_pripause_3_1us_count);
+    printf("\tTx pri-4 pause:\t\t%I64u\n", port_stats->tx_pripause_4_1us_count);
+    printf("\tTx pri-5 pause:\t\t%I64u\n", port_stats->tx_pripause_5_1us_count);
+    printf("\tTx pri-6 pause:\t\t%I64u\n", port_stats->tx_pripause_6_1us_count);
+    printf("\tTx pri-7 pause:\t\t%I64u\n", port_stats->tx_pripause_7_1us_count);
 
-    printf("\tRx pri-0 pause:\t\t0x%I64X\n", port_stats->rx_pripause_0_1us_count);
-    printf("\tRx pri-1 pause:\t\t0x%I64X\n", port_stats->rx_pripause_1_1us_count);
-    printf("\tRx pri-2 pause:\t\t0x%I64X\n", port_stats->rx_pripause_2_1us_count);
-    printf("\tRx pri-3 pause:\t\t0x%I64X\n", port_stats->rx_pripause_3_1us_count);
-    printf("\tRx pri-4 pause:\t\t0x%I64X\n", port_stats->rx_pripause_4_1us_count);
-    printf("\tRx pri-5 pause:\t\t0x%I64X\n", port_stats->rx_pripause_5_1us_count);
-    printf("\tRx pri-6 pause:\t\t0x%I64X\n", port_stats->rx_pripause_6_1us_count);
-    printf("\tRx pri-7 pause:\t\t0x%I64X\n", port_stats->rx_pripause_7_1us_count);
-    printf("\tRx standard pause:\t0x%I64X\n", port_stats->rx_pause_1us_count);
+    printf("\tRx pri-0 pause:\t\t%I64u\n", port_stats->rx_pripause_0_1us_count);
+    printf("\tRx pri-1 pause:\t\t%I64u\n", port_stats->rx_pripause_1_1us_count);
+    printf("\tRx pri-2 pause:\t\t%I64u\n", port_stats->rx_pripause_2_1us_count);
+    printf("\tRx pri-3 pause:\t\t%I64u\n", port_stats->rx_pripause_3_1us_count);
+    printf("\tRx pri-4 pause:\t\t%I64u\n", port_stats->rx_pripause_4_1us_count);
+    printf("\tRx pri-5 pause:\t\t%I64u\n", port_stats->rx_pripause_5_1us_count);
+    printf("\tRx pri-6 pause:\t\t%I64u\n", port_stats->rx_pripause_6_1us_count);
+    printf("\tRx pri-7 pause:\t\t%I64u\n", port_stats->rx_pripause_7_1us_count);
+    printf("\tRx standard pause:\t%I64u\n", port_stats->rx_pause_1us_count);
 
-    printf("\tFrames truncated:\t0x%I64X\n", port_stats->frames_tx_truncated);
+    printf("\tFrames truncated:\t%I64u\n", port_stats->frames_tx_truncated);
 
     printf("\n");
 }
@@ -477,51 +568,57 @@ DumpLifStats(void *Stats)
 {
     LifStatsRespCB *resp = (LifStatsRespCB *)Stats;
     struct lif_stats *lif_stats = &resp->stats;
+    WCHAR name[ADAPTER_NAME_MAX_SZ] = {};
 
     // one adapter per response
 
-    printf("Adapter %S Lif %u Stats\n", resp->adapter_name, resp->lif_index);
+    get_interface_name(name, ADAPTER_NAME_MAX_SZ, NULL, 0,
+                       resp->adapter_name, ADAPTER_NAME_MAX_SZ);
 
-    printf("\tRx u-cast bytes: \t\t0x%I64X\n", lif_stats->rx_ucast_bytes);
-    printf("\tRx u-cast packets: \t\t0x%I64X\n", lif_stats->rx_ucast_packets);
-    printf("\tRx m-cast bytes: \t\t0x%I64X\n", lif_stats->rx_mcast_bytes);
-    printf("\tRx m-cast packets: \t\t0x%I64X\n", lif_stats->rx_mcast_packets);
-    printf("\tRx b-cast bytes: \t\t0x%I64X\n", lif_stats->rx_bcast_bytes);
-    printf("\tRx b-cast packets: \t\t0x%I64X\n", lif_stats->rx_bcast_packets);
+    printf("Adapter %S\n", resp->adapter_name);
+    printf("Interface %S\n", name);
+    printf("Lif %u Stats\n", resp->lif_index);
 
-    printf("\tRx drop u-cast bytes: \t\t0x%I64X\n", lif_stats->rx_ucast_drop_bytes);
-    printf("\tRx drop u-cast packets: \t0x%I64X\n", lif_stats->rx_ucast_drop_packets);
-    printf("\tRx drop m-cast bytes: \t\t0x%I64X\n", lif_stats->rx_mcast_drop_bytes);
-    printf("\tRx drop m-cast packets: \t0x%I64X\n", lif_stats->rx_mcast_drop_packets);
-    printf("\tRx drop b-cast bytes: \t\t0x%I64X\n", lif_stats->rx_bcast_drop_bytes);
-    printf("\tRx drop b-cast packets: \t0x%I64X\n", lif_stats->rx_bcast_drop_packets);
-    printf("\tRx dma error: \t\t\t0x%I64X\n", lif_stats->rx_dma_error);
+    printf("\tRx u-cast bytes: \t\t%I64u\n", lif_stats->rx_ucast_bytes);
+    printf("\tRx u-cast packets: \t\t%I64u\n", lif_stats->rx_ucast_packets);
+    printf("\tRx m-cast bytes: \t\t%I64u\n", lif_stats->rx_mcast_bytes);
+    printf("\tRx m-cast packets: \t\t%I64u\n", lif_stats->rx_mcast_packets);
+    printf("\tRx b-cast bytes: \t\t%I64u\n", lif_stats->rx_bcast_bytes);
+    printf("\tRx b-cast packets: \t\t%I64u\n", lif_stats->rx_bcast_packets);
 
-    printf("\tTx u-cast bytes: \t\t0x%I64X\n", lif_stats->tx_ucast_bytes);
-    printf("\tTx u-cast packets: \t\t0x%I64X\n", lif_stats->tx_ucast_packets);
-    printf("\tTx m-cast bytes: \t\t0x%I64X\n", lif_stats->tx_mcast_bytes);
-    printf("\tTx m-cast packets: \t\t0x%I64X\n", lif_stats->tx_mcast_packets);
-    printf("\tTx b-cast bytes: \t\t0x%I64X\n", lif_stats->tx_bcast_bytes);
-    printf("\tTx b-cast packets: \t\t0x%I64X\n", lif_stats->tx_bcast_packets);
+    printf("\tRx drop u-cast bytes: \t\t%I64u\n", lif_stats->rx_ucast_drop_bytes);
+    printf("\tRx drop u-cast packets: \t%I64u\n", lif_stats->rx_ucast_drop_packets);
+    printf("\tRx drop m-cast bytes: \t\t%I64u\n", lif_stats->rx_mcast_drop_bytes);
+    printf("\tRx drop m-cast packets: \t%I64u\n", lif_stats->rx_mcast_drop_packets);
+    printf("\tRx drop b-cast bytes: \t\t%I64u\n", lif_stats->rx_bcast_drop_bytes);
+    printf("\tRx drop b-cast packets: \t%I64u\n", lif_stats->rx_bcast_drop_packets);
+    printf("\tRx dma error: \t\t\t%I64u\n", lif_stats->rx_dma_error);
+
+    printf("\tTx u-cast bytes: \t\t%I64u\n", lif_stats->tx_ucast_bytes);
+    printf("\tTx u-cast packets: \t\t%I64u\n", lif_stats->tx_ucast_packets);
+    printf("\tTx m-cast bytes: \t\t%I64u\n", lif_stats->tx_mcast_bytes);
+    printf("\tTx m-cast packets: \t\t%I64u\n", lif_stats->tx_mcast_packets);
+    printf("\tTx b-cast bytes: \t\t%I64u\n", lif_stats->tx_bcast_bytes);
+    printf("\tTx b-cast packets: \t\t%I64u\n", lif_stats->tx_bcast_packets);
     
-    printf("\tTx drop u-cast bytes: \t\t0x%I64X\n", lif_stats->tx_ucast_drop_bytes);
-    printf("\tTx drop u-cast packets: \t0x%I64X\n", lif_stats->tx_ucast_drop_packets);
-    printf("\tTx drop m-cast bytes: \t\t0x%I64X\n", lif_stats->tx_mcast_drop_bytes);
-    printf("\tTx drop m-cast packets: \t0x%I64X\n", lif_stats->tx_mcast_drop_packets);
-    printf("\tTx drop b-cast bytes: \t\t0x%I64X\n", lif_stats->tx_bcast_drop_bytes);
-    printf("\tTx drop b-cast packets: \t0x%I64X\n", lif_stats->tx_bcast_drop_packets);
-    printf("\tTx dma error: \t\t\t0x%I64X\n", lif_stats->tx_dma_error);
+    printf("\tTx drop u-cast bytes: \t\t%I64u\n", lif_stats->tx_ucast_drop_bytes);
+    printf("\tTx drop u-cast packets: \t%I64u\n", lif_stats->tx_ucast_drop_packets);
+    printf("\tTx drop m-cast bytes: \t\t%I64u\n", lif_stats->tx_mcast_drop_bytes);
+    printf("\tTx drop m-cast packets: \t%I64u\n", lif_stats->tx_mcast_drop_packets);
+    printf("\tTx drop b-cast bytes: \t\t%I64u\n", lif_stats->tx_bcast_drop_bytes);
+    printf("\tTx drop b-cast packets: \t%I64u\n", lif_stats->tx_bcast_drop_packets);
+    printf("\tTx dma error: \t\t\t%I64u\n", lif_stats->tx_dma_error);
 
-    printf("\tRx queue disabled drops: \t0x%I64X\n", lif_stats->rx_queue_disabled);
-    printf("\tRx queue empty drops: \t\t0x%I64X\n", lif_stats->rx_queue_empty);
-    printf("\tRx queue error count: \t\t0x%I64X\n", lif_stats->rx_queue_error);
-    printf("\tRx descriptor fetch errors: \t0x%I64X\n", lif_stats->rx_desc_fetch_error);
-    printf("\tRx descriptor data errors: \t0x%I64X\n", lif_stats->rx_desc_data_error);
+    printf("\tRx queue disabled drops: \t%I64u\n", lif_stats->rx_queue_disabled);
+    printf("\tRx queue empty drops: \t\t%I64u\n", lif_stats->rx_queue_empty);
+    printf("\tRx queue error count: \t\t%I64u\n", lif_stats->rx_queue_error);
+    printf("\tRx descriptor fetch errors: \t%I64u\n", lif_stats->rx_desc_fetch_error);
+    printf("\tRx descriptor data errors: \t%I64u\n", lif_stats->rx_desc_data_error);
 
-    printf("\tTx queue disabled drops: \t0x%I64X\n", lif_stats->tx_queue_disabled);
-    printf("\tTx queue error count: \t\t0x%I64X\n", lif_stats->tx_queue_error);
-    printf("\tTx descriptor fetch errors: \t0x%I64X\n", lif_stats->tx_desc_fetch_error);
-    printf("\tTx descriptor data errors: \t0x%I64X\n", lif_stats->tx_desc_data_error);
+    printf("\tTx queue disabled drops: \t%I64u\n", lif_stats->tx_queue_disabled);
+    printf("\tTx queue error count: \t\t%I64u\n", lif_stats->tx_queue_error);
+    printf("\tTx descriptor fetch errors: \t%I64u\n", lif_stats->tx_desc_fetch_error);
+    printf("\tTx descriptor data errors: \t%I64u\n", lif_stats->tx_desc_data_error);
 
     printf("\n");
 }
@@ -561,12 +658,17 @@ DumpPerfStats(void *Stats, DWORD Size)
     adapter_stats = (struct _PERF_MON_ADAPTER_STATS *)((char *)perf_stats + sizeof( struct _PERF_MON_CB));
 
     for (adapter_cnt = 0; adapter_cnt < perf_stats->adapter_count; adapter_cnt++) {
+        WCHAR name[ADAPTER_NAME_MAX_SZ] = {};
 
-        printf("Adapter: %S Mgmt: %s Lif cnt: %d Core redirect cnt: %d\n", 
-                        adapter_stats->name,
-                        adapter_stats->mgmt_device?"Yes":"No",
-                        adapter_stats->lif_count,
-                        adapter_stats->core_redirection_count);
+        get_interface_name(name, ADAPTER_NAME_MAX_SZ, NULL, 0,
+                           adapter_stats->name, ADAPTER_NAME_MAX_SZ);
+
+        printf("Adapter: %S\n", adapter_stats->name);
+        printf("Interface: %S\n", name);
+        printf("Mgmt: %s Lif cnt: %d Core redirect cnt: %d\n", 
+               adapter_stats->mgmt_device ? "Yes" : "No",
+               adapter_stats->lif_count,
+               adapter_stats->core_redirection_count);
 
         lif_stats = (struct _PERF_MON_LIF_STATS *)((char *)adapter_stats + sizeof( struct _PERF_MON_ADAPTER_STATS));
 
@@ -594,21 +696,14 @@ DumpPerfStats(void *Stats, DWORD Size)
 
             for (tx_cnt = 0; tx_cnt < lif_stats->tx_queue_count; tx_cnt++) {
 
-                printf("\t\tTx: %d nblps: %d nbps %d byteps: %d pending nbl: %d pending nb: %d\n",
+                printf("\t\tTx: %d pending nbl: %d pending nb: %d\n",
                                 tx_cnt,
-                                tx_stats->nbl_per_sec,
-                                tx_stats->nb_per_sec,
-                                tx_stats->byte_per_sec,
                                 tx_stats->pending_nbl_count,
                                 tx_stats->pending_nb_count);
 
-                printf("\t\tqueue len: %d max: %d ttq: %lld ttc: %lld qtc: %lld nbl ttc: %lld\n",
+                printf("\t\tqueue len: %d max: %d\n",
                                 tx_stats->queue_len,
-                                tx_stats->max_queue_len,
-                                tx_stats->nb_time_to_queue,
-                                tx_stats->nb_time_to_complete,
-                                tx_stats->nb_time_queue_to_comp,
-                                tx_stats->nbl_time_to_complete);
+                                tx_stats->max_queue_len);
 
                 tx_stats = (struct _PERF_MON_TX_QUEUE_STATS *)((char *)tx_stats + sizeof( struct _PERF_MON_TX_QUEUE_STATS));
             }
@@ -636,7 +731,13 @@ DumpRegKeys(void *KeyInfo, ULONG Size)
 
 	while (processed_len < Size)
 	{
+		WCHAR name[ADAPTER_NAME_MAX_SZ] = {};
+
+		get_interface_name(name, ADAPTER_NAME_MAX_SZ, NULL, 0,
+				   key_info->name, ADAPTER_NAME_MAX_SZ);
+
 		printf("Name: %S\n", key_info->name);
+		printf("Interface: %S\n", name);
 		printf("Location: %S\n", key_info->device_location);
 		++info_count;
 
@@ -766,7 +867,16 @@ DumpAdapterInfo(void *info_buffer, ULONG Size)
 	info = (struct _ADAPTER_INFO *)((char *)adapter_info + sizeof( struct _ADAPTER_INFO_HDR));
 
 	for( count = 0; count < max_info; count++) {
+		WCHAR name[ADAPTER_NAME_MAX_SZ] = {};
+		WCHAR index[ADAPTER_NAME_MAX_SZ] = {};
+
+		get_interface_name(name, ADAPTER_NAME_MAX_SZ,
+				   index, ADAPTER_NAME_MAX_SZ,
+				   info->name, ADAPTER_NAME_MAX_SZ);
+
 		printf("\tName: %S\n", info->name);
+		printf("\tInterface Name: %S\n", name);
+		printf("\tInterface Index: %S\n", index);
 		printf("\tVendor Id: %04lX\n", info->vendor_id);
 		printf("\tProduct Id: %04lX\n", info->product_id);
 		printf("\tLocation: %S\n", info->device_location);

@@ -218,6 +218,7 @@ SetGeneralAttribs(struct ionic *Adapter)
     NDIS_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES stAttribs;
     NDIS_RECEIVE_SCALE_CAPABILITIES rss;
     NDIS_PM_CAPABILITIES pwrCapabilities;
+	ULONGLONG link_spd = 0;
 
     NdisZeroMemory(&stAttribs,
                    sizeof(NDIS_MINIPORT_ADAPTER_GENERAL_ATTRIBUTES));
@@ -237,6 +238,12 @@ SetGeneralAttribs(struct ionic *Adapter)
 
     stAttribs.AutoNegotiationFlags = NDIS_LINK_STATE_XMIT_LINK_SPEED_AUTO_NEGOTIATED |
                                                     NDIS_LINK_STATE_RCV_LINK_SPEED_AUTO_NEGOTIATED;
+
+    link_spd =  le32_to_cpu(Adapter->master_lif->info->status.link_speed);
+    link_spd *= MEGABITS_PER_SECOND;
+
+    stAttribs.XmitLinkSpeed = stAttribs.RcvLinkSpeed = link_spd;
+    stAttribs.MaxXmitLinkSpeed = stAttribs.MaxRcvLinkSpeed = link_spd;
 
     stAttribs.MediaConnectState = MediaConnectStateDisconnected;
     stAttribs.MediaDuplexState = MediaDuplexStateFull;
@@ -303,7 +310,7 @@ SetGeneralAttribs(struct ionic *Adapter)
             rss.NumberOfReceiveQueues = Adapter->nrxqs_per_lif;
         }
 
-        rss.NumberOfIndirectionTableEntries = 128;
+        rss.NumberOfIndirectionTableEntries = Adapter->ident.lif.eth.rss_ind_tbl_sz;
         stAttribs.RecvScaleCapabilities = &rss;
     } else {
         stAttribs.RecvScaleCapabilities = NULL;

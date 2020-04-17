@@ -90,6 +90,7 @@ NTSTATUS
 #define DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
 #define BITS_PER_BYTE   8
 #define BITS_TO_LONGS(nr)   DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
+#define ALIGN_SZ(n, d)		(DIV_ROUND_UP( n, d) * d)
 
 #define BUG_ON(x) ASSERT(!(x))
 #define BUG() ASSERT(1)
@@ -136,8 +137,14 @@ NTSTATUS
 #define IONIC_ONE_SEC_WAIT              10000000
 
 #define IONIC_REG_LEN					25
+#define IONIC_CTL_INTR_CNT				1
 
 #define IONIC_REG_UNDEFINED				0xFFFFFFFF
+
+#define IONIC_PERF_MON_ALL_STATS		0
+#define IONIC_PERF_MON_NO_STATS			MAXULONGLONG
+
+#define ANY_PROCESSOR_INDEX				(INVALID_PROCESSOR_INDEX - 1)
 
 //
 // Flow control options
@@ -169,14 +176,16 @@ NTSTATUS
 // Default Rx budget value
 //
 
-#define IONIC_RX_BUDGET_DEFAULT				1024
+#define IONIC_RX_BUDGET_DEFAULT				128
+#define IONIC_TX_BUDGET_DEFAULT				128
 
 //
-// Max rx pool factor in %
+// Max rx pool factor
 //
 
-#define IONIC_MIN_RX_POOL_FACTOR            100
-#define IONIC_MAX_RX_POOL_FACTOR            5000
+#define IONIC_MIN_RX_POOL_FACTOR            1
+#define IONIC_MAX_RX_POOL_FACTOR            10
+#define IONIC_DEFAULT_RX_POOL_FACTOR        4
 
 //
 // Minimum Rx packet size
@@ -240,8 +249,6 @@ NTSTATUS
 #define IONIC_RX_COPYBREAK_DEFAULT			256
 
 #define IONIC_MAX_VM_QUEUE_COUNT			32
-
-#define IONIC_DEFAULT_RX_POOL_FACTOR        150
 
 //
 // Ionic flags
@@ -329,6 +336,10 @@ NTSTATUS
 #define IONIC_LIFS_MAX			1024
 
 #define GOLDEN_RATIO_32			0x61C88647 // taken from Linux source
+
+#define IONIC_ITR_COAL_USEC_DEFAULT	64
+#define IONIC_ITR_COAL_USEC_MIN		1
+#define IONIC_ITR_COAL_USEC_MAX		84
 
 #define container_of CONTAINING_RECORD
 

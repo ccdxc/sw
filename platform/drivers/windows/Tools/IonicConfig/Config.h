@@ -170,13 +170,12 @@ command CmdInfo();
 //TODO command CmdFwcmdStats();
 
 DWORD
-OptGetAlternateNames(command_info& info,
-				  WCHAR *name,
-				  DWORD name_sz,
-				  WCHAR *ifname,
-				  DWORD ifname_sz,
-				  WCHAR *descrname,
-				  DWORD descrname_sz);
+get_interface_name(WCHAR* name,
+    DWORD name_sz,
+    WCHAR* ifname,
+    DWORD ifname_sz,
+    WCHAR* descrname,
+    DWORD descrname_sz); // in WCHARS, not bytes
 
 void
 OptGetDevName(command_info& info,

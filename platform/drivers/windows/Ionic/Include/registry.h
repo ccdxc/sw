@@ -27,8 +27,10 @@
 #define IONIC_REG_FEC			24
 #define IONIC_REG_PAUSE			25
 #define IONIC_REG_PAUSETYPE		26
+#define IONIC_REG_INTERRUPT_MOD	27
+#define IONIC_REG_RX_INT_MOD_TO	28
 
-#define IONIC_REG_ENTRY_COUNT	27 // Include the 0th entry
+#define IONIC_REG_ENTRY_COUNT	29 // Include the 0th entry
 
 #ifndef DEFINITIONS_ONLY
 struct registry_entry ionic_registry[] = {
@@ -59,5 +61,7 @@ struct registry_entry ionic_registry[] = {
 		{L"FEC",						PORT_FEC_TYPE_NONE,		PORT_FEC_TYPE_RS,	0,		IONIC_REG_UNDEFINED},
 		{L"Pause",						0,		IONIC_PAUSE_F_TX | IONIC_PAUSE_F_RX,		0,		IONIC_REG_UNDEFINED},
 		{L"PauseType",					0,		2,		0,		IONIC_REG_UNDEFINED},
+		{L"*InterruptModeration",		0,		1,		1,		1},
+		{L"RxIntModTimeout",			IONIC_ITR_COAL_USEC_MIN,	IONIC_ITR_COAL_USEC_MAX,	IONIC_ITR_COAL_USEC_DEFAULT,	IONIC_ITR_COAL_USEC_DEFAULT},
 		};
 #endif

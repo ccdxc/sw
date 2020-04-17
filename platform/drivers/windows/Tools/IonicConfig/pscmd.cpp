@@ -88,42 +88,6 @@ out:
 	return rc;
 }
 
-DWORD
-OptGetAlternateNames(command_info& info,
-				  WCHAR *name,
-				  DWORD name_sz,
-				  WCHAR *ifname,
-				  DWORD ifname_sz,
-				  WCHAR *descrname,
-				  DWORD descrname_sz)
-{
-
-	DWORD rc = ERROR_SUCCESS;
-
-	if (info.vm.count("Name")) {
-	    opval_wstrncpy(name, name_sz, info.vm, "Name");
-	}
-	else if (info.vm.count("ifIndex")) {
-	    opval_wstrncpy(ifname, ifname_sz, info.vm, "ifIndex");
-	}
-	else if (info.vm.count("InterfaceDescription")) {
-		opval_wstrncpy(descrname, descrname_sz, info.vm, "InterfaceDescription");
-	}
-	else {
-		rc = ERROR_NOT_FOUND;
-		goto out;
-	}
-
-	if (get_interface_name(name, name_sz, ifname, ifname_sz, descrname, descrname_sz) != ERROR_SUCCESS) {
-		rc = ERROR_INVALID_PARAMETER;
-		goto out;
-	}
-
-out:
-
-	return rc;
-}
-
 void
 OptGetDevName(command_info& info,
 	WCHAR *devname,

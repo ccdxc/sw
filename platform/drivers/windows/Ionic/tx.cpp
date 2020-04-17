@@ -209,7 +209,6 @@ process_nbl(struct ionic *ionic,
         txq_pkt->sg_os_list = NULL;
 
         txq_pkt->flags = NET_BUFFER_SG_LIST_CREATED;
-        txq_pkt->send_nb_time = KeQueryPerformanceCounter( NULL);
 
         DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
                   "%s Service NBL adapter %p NBL %p NB %p\n",
@@ -284,8 +283,6 @@ ionic_txq_complete_pkt(struct queue *q,
     NDIS_TCP_LARGE_SEND_OFFLOAD_NET_BUFFER_LIST_INFO mss = {0};
     BOOLEAN bProcessPacket = TRUE;
     struct txq_comp *comp = (struct txq_comp *)cq_info->cq_desc;
-    LARGE_INTEGER tick_count;
-    struct txq_nbl_private *nbl_private = NULL;
 
     DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
               "%s Enter TXQ complete packet adapter %p NB %p\n", __FUNCTION__,
@@ -362,14 +359,6 @@ ionic_txq_complete_pkt(struct queue *q,
             }
 			txq_pkt->sg_os_list = NULL;
 
-            tick_count = KeQueryPerformanceCounter(NULL);
-
-            InterlockedAdd64( (LONGLONG *)&qcq->tx_stats->nb_sp_to_comp_tick,
-                                (LONGLONG)(tick_count.QuadPart - txq_pkt->send_nb_time.QuadPart));
-
-            InterlockedAdd64( (LONGLONG *)&qcq->tx_stats->nb_queue_to_comp_tick,
-                                (LONGLONG)(tick_count.QuadPart - txq_pkt->queue_nb_time.QuadPart));
-
             ionic_return_txq_pkt(qcq, txq_pkt);
 
             ref_cnt = NET_BUFFER_LIST_DEC_REF_COUNTER(parent_nbl);
@@ -379,12 +368,6 @@ ionic_txq_complete_pkt(struct queue *q,
                           ionic, parent_nbl));
 
                 NET_BUFFER_LIST_STATUS(parent_nbl) = NDIS_STATUS_SUCCESS;
-
-                tick_count = KeQueryPerformanceCounter(NULL);
-                nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( parent_nbl);
-
-                InterlockedAdd64( (LONGLONG *)&qcq->tx_stats->nbl_tick_total,
-                                  (LONGLONG)(tick_count.QuadPart - nbl_private->send_nbl_time.QuadPart));
 
                 NdisMSendNetBufferListsComplete(
                     ionic->adapterhandle, parent_nbl,
@@ -779,8 +762,6 @@ ionic_queue_txq_pkt(struct ionic *ionic,
     ASSERT(q != NULL);
 
     lif = q->lif;
-
-    txq_pkt->queue_nb_time = KeQueryPerformanceCounter( NULL);
 
     // Skip until you reach the SG Element where the Actual Packet
     // Starts from
@@ -1180,18 +1161,12 @@ void
 ionic_return_txq_pkt(struct qcq *qcq, struct txq_pkt *txq_pkt)
 {
 
-    NdisAcquireSpinLock(&qcq->pkt_list_lock);
+    txq_pkt->next.Next = NULL;
+	
+    InterlockedIncrement(&qcq->tx_pkts_free_count);
 
-    txq_pkt->next = NULL;
-    qcq->tx_pkt_list_tail->next = txq_pkt;
-    qcq->tx_pkt_list_tail = txq_pkt;
-
-    if (InterlockedIncrement(&qcq->pkts_free_count) > (LONG)qcq->q.num_descs) {
-        DbgBreakPoint();
-    }
-
-    NdisReleaseSpinLock(&qcq->pkt_list_lock);
-
+	InterlockedPushEntrySList( qcq->tx_pkt_list,
+							   &txq_pkt->next);
     return;
 }
 
@@ -1275,27 +1250,29 @@ ionic_free_txq_pkts(struct ionic *ionic, struct qcq *qcq)
     ASSERT(qcq != NULL);
 
     // Final Freeup no locks are required. No IO happening
-    if (qcq->pkts_base.txq_base != NULL) {
+    if (qcq->txq_base != NULL) {
 
         NdisFreeMemoryWithTagPriority_internal(
-            ionic->adapterhandle, qcq->pkts_base.txq_base, IONIC_TX_MEM_TAG);
-        qcq->pkts_base.txq_base = NULL;
-
-        qcq->tx_pkt_list_head = NULL;
-        qcq->tx_pkt_list_tail = NULL;
-        qcq->pkts_free_count = 0;
-        NdisFreeSpinLock(&qcq->pkt_list_lock);
+            ionic->adapterhandle, qcq->txq_base, IONIC_TX_MEM_TAG);
+        qcq->txq_base = NULL;
+        qcq->tx_pkts_free_count = 0;
     }
 
-    if (qcq->sgl_buffer != NULL) {
-        NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, qcq->sgl_buffer,
+	if (qcq->tx_pkt_list != NULL) {		
+        NdisFreeMemoryWithTagPriority_internal(
+            ionic->adapterhandle, qcq->tx_pkt_list, IONIC_GENERIC_TAG);
+        qcq->tx_pkt_list = NULL;
+	}
+
+    if (qcq->tx_sgl_buffer != NULL) {
+        NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, qcq->tx_sgl_buffer,
                                       IONIC_TX_MEM_TAG);
-        qcq->sgl_buffer = NULL;
+        qcq->tx_sgl_buffer = NULL;
     }
 
-    if (qcq->pkts_pool != NULL) {
-        NdisFreeNetBufferListPool(qcq->pkts_pool);
-        qcq->pkts_pool = NULL;
+    if (qcq->tx_pkts_pool != NULL) {
+        NdisFreeNetBufferListPool(qcq->tx_pkts_pool);
+        qcq->tx_pkts_pool = NULL;
     }
 }
 
@@ -1304,23 +1281,12 @@ ionic_get_next_txq_pkt(struct qcq *qcq)
 {
     struct txq_pkt *txq_pkt = NULL;
 
-    NdisAcquireSpinLock(&qcq->pkt_list_lock);
+	txq_pkt = (struct txq_pkt *)InterlockedPopEntrySList( qcq->tx_pkt_list);
 
-    //
-    // Don't remove the last entry from the list ...
-    //
-
-    if (InterlockedDecrement(&qcq->pkts_free_count) != 0) {
-
-        ASSERT(qcq->tx_pkt_list_head->next != NULL);
-
-        txq_pkt = qcq->tx_pkt_list_head;
-        qcq->tx_pkt_list_head = qcq->tx_pkt_list_head->next;
-    } else {
-        InterlockedIncrement(&qcq->pkts_free_count);
-    }
-
-    NdisReleaseSpinLock(&qcq->pkt_list_lock);
+	if (txq_pkt != NULL) {
+		ASSERT( qcq->tx_pkts_free_count > 0);
+		InterlockedDecrement(&qcq->tx_pkts_free_count);
+	}
 
     return txq_pkt;
 }
@@ -1544,7 +1510,6 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
         tx_queue = val % lif->ntxqs;
 
         nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( nbl);
-        nbl_private->send_nbl_time = KeQueryPerformanceCounter( NULL);
 		nbl_private->nb_processed_cnt = 0;
 
         next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
@@ -1560,8 +1525,8 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 
         qcq = lif->txqcqs[tx_queue].qcq;
 
-        if( BooleanFlagOn( ionic->ConfigStatus, IONIC_TX_MODE_SEND)) {
-            ionic_tx_flush(qcq, false, false);
+        if (BooleanFlagOn(ionic->ConfigStatus, IONIC_TX_MODE_SEND)) {
+            ionic_tx_flush(qcq, IONIC_TX_BUDGET_DEFAULT, false, true);
         }
 
         NdisDprAcquireSpinLock(&qcq->txq_pending_nbl_lock);
@@ -1688,7 +1653,7 @@ get_queue_len(struct qcq *qcq)
 }
 
 ULONG
-ionic_tx_flush(struct qcq *qcq, bool cleanup, bool credits)
+ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits)
 {
     struct cq *cq = &qcq->cq;
     struct ionic_dev *idev = &cq->lif->ionic->idev;
@@ -1722,7 +1687,7 @@ ionic_tx_flush(struct qcq *qcq, bool cleanup, bool credits)
     }
 
     /* walk the completed cq entries */
-    while (work_done < cq->num_descs &&
+    while (work_done < budget &&
            color_match(comp->color, cq->done_color)) {
 
         /* clean the related q entries, there could be
@@ -1775,7 +1740,7 @@ ionic_tx_flush(struct qcq *qcq, bool cleanup, bool credits)
                            flags);
 
     if (!cleanup) {
-		if( work_done) {
+		if (work_done) {
 			ionic_service_pending_nbl_requests(cq->lif->ionic, qcq);
 			NdisDprAcquireSpinLock(&qcq->txq_pending_nb_lock);
 			ionic_service_pending_nb_requests(cq->lif->ionic, qcq);
@@ -1796,6 +1761,7 @@ ionic_alloc_txq_pkts(struct ionic *ionic, struct qcq *qcq)
     struct queue *q = &qcq->q;
     ULONG size;
     struct txq_pkt *tx_pkt;
+	ULONG pkt_len = 0;
 
     ASSERT(ionic != NULL);
     ASSERT(q != NULL);
@@ -1810,10 +1776,10 @@ ionic_alloc_txq_pkts(struct ionic *ionic, struct qcq *qcq)
     pool_params.fAllocateNetBuffer = TRUE;
     pool_params.PoolTag = IONIC_TX_MEM_TAG;
 
-    qcq->pkts_pool =
+    qcq->tx_pkts_pool =
         NdisAllocateNetBufferListPool(ionic->adapterhandle, &pool_params);
 
-    if (qcq->pkts_pool == NULL) {
+    if (qcq->tx_pkts_pool == NULL) {
         status = NDIS_STATUS_RESOURCES;
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Failed to alloc txq packet pool adapter %p.\n",
@@ -1821,30 +1787,31 @@ ionic_alloc_txq_pkts(struct ionic *ionic, struct qcq *qcq)
         goto err_alloc_failed;
     }
 
-    size = q->num_descs * sizeof(struct txq_pkt);
-    qcq->pkts_base.txq_base =
+	pkt_len = ALIGN_SZ( sizeof(struct txq_pkt), MEMORY_ALLOCATION_ALIGNMENT);
+    size = q->num_descs * pkt_len;
+    qcq->txq_base =
         (struct txq_pkt *)NdisAllocateMemoryWithTagPriority_internal(
             ionic->adapterhandle, size, IONIC_TX_MEM_TAG, NormalPoolPriority);
 
-    if (qcq->pkts_base.txq_base == NULL) {
+    if (qcq->txq_base == NULL) {
         status = NDIS_STATUS_RESOURCES;
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Failed to alloc txq pkt adapter %p array size %d\n",
                   __FUNCTION__, ionic, size));
         goto err_alloc_failed;
     }
-    NdisZeroMemory(qcq->pkts_base.txq_base, size);
+    NdisZeroMemory(qcq->txq_base, size);
 
     DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
                   "%s Allocated 0x%p len %08lX\n",
                   __FUNCTION__,
-                  qcq->pkts_base.txq_base, size));
+                  qcq->txq_base, size));
     
     size = q->num_descs * ionic->sgl_size_in_bytes;
-    qcq->sgl_buffer = NdisAllocateMemoryWithTagPriority_internal(
+    qcq->tx_sgl_buffer = NdisAllocateMemoryWithTagPriority_internal(
         ionic->adapterhandle, size, IONIC_TX_MEM_TAG, NormalPoolPriority);
 
-    if (!qcq->sgl_buffer) {
+    if (!qcq->tx_sgl_buffer) {
         DbgTrace((
             TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
             "%s Failed to alloc txq sgl buffer list array adapter %p size %d\n",
@@ -1852,38 +1819,45 @@ ionic_alloc_txq_pkts(struct ionic *ionic, struct qcq *qcq)
         goto err_alloc_failed;
     }
 
-    NdisZeroMemory(qcq->sgl_buffer, size);
+    NdisZeroMemory(qcq->tx_sgl_buffer, size);
 
     DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
                   "%s Allocated 0x%p len %08lX\n",
                   __FUNCTION__,
-                  qcq->sgl_buffer, size));
-    
-    qcq->tx_pkt_list_head = NULL;
-    qcq->tx_pkt_list_tail = NULL;
-    qcq->pkts_free_count = 0;
-    NdisAllocateSpinLock(&qcq->pkt_list_lock);
+                  qcq->tx_sgl_buffer, size));
+
+    qcq->tx_pkt_list = (SLIST_HEADER *)NdisAllocateMemoryWithTagPriority_internal(
+        ionic->adapterhandle, sizeof( SLIST_HEADER), IONIC_GENERIC_TAG, NormalPoolPriority);
+
+    if (!qcq->tx_pkt_list) {
+        DbgTrace((
+            TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+            "%s Failed to alloc txq packet list header adapter %p size %d\n",
+            __FUNCTION__, ionic, size));
+        goto err_alloc_failed;
+    }
+
+	InitializeSListHead( qcq->tx_pkt_list);   
+    qcq->tx_pkts_free_count = 0;
 
     // No lock is required here since this is in the Init Path
     // And we dont have any race conditions.
+	
+	tx_pkt = (struct txq_pkt *)qcq->txq_base;
+
     for (unsigned int i = 0; i < q->num_descs; i++) {
-
-        tx_pkt = (struct txq_pkt *)(qcq->pkts_base.txq_base + i);
-
-        tx_pkt->next = NULL;
+      
+        tx_pkt->next.Next = NULL;
 
         tx_pkt->sg_list = (PSCATTER_GATHER_LIST)(
-            ((ULONG_PTR)qcq->sgl_buffer) + (i * ionic->sgl_size_in_bytes));
+            ((ULONG_PTR)qcq->tx_sgl_buffer) + (i * ionic->sgl_size_in_bytes));
 
-        if (qcq->tx_pkt_list_head == NULL) {
-            qcq->tx_pkt_list_head = tx_pkt;
-        } else {
-            qcq->tx_pkt_list_tail->next = tx_pkt;
-        }
+		InterlockedPushEntrySList( qcq->tx_pkt_list,
+								   &tx_pkt->next);
 
-        qcq->tx_pkt_list_tail = tx_pkt;
+        qcq->tx_pkts_free_count++;
 
-        qcq->pkts_free_count++;
+		tx_pkt = (struct txq_pkt *)((char *)tx_pkt + pkt_len);
     }
 
     return status;
@@ -1911,10 +1885,10 @@ ionic_tx_fill(struct ionic *ionic, struct qcqst *qcqst)
               "%s Fill the TXQ adapter %p NBuffers %d\n", __FUNCTION__, ionic,
               q->num_descs));
 
-    txq_pkt = qcq->tx_pkt_list_head;
+    txq_pkt = (struct txq_pkt *)FirstEntrySList(qcq->tx_pkt_list);
     for (i = 0; i < q->num_descs; i++) {
         txq_pkt->q = q;
-        txq_pkt = txq_pkt->next;
+        txq_pkt = (struct txq_pkt *)txq_pkt->next.Next;
     }
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,

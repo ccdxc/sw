@@ -15,8 +15,6 @@ oid_set_rss_parameters(struct ionic *ionic,
     struct lif *lif = ionic->master_lif;
     int tbl_len = 0;
     int key_len = 0;
-    u8 proc_num = 0;
-    int tbl_indx = 0;
 
     if (!BooleanFlagOn(ionic->ConfigStatus, IONIC_RSS_ENABLED)) {
         ntStatus = NDIS_STATUS_NOT_SUPPORTED;
@@ -75,15 +73,7 @@ oid_set_rss_parameters(struct ionic *ionic,
 
         lif->rss_hash_flags = 0;
 
-        NdisZeroMemory(lif->rss_hash_key, IONIC_RSS_HASH_KEY_SIZE);
-        NdisZeroMemory(lif->rss_ind_tbl, lif->rss_ind_tbl_sz);
-        NdisZeroMemory(lif->rss_ind_tbl_mapped, lif->rss_ind_tbl_sz);
-
-        ntStatus = ionic_lif_rss_config(lif, 0, NULL, NULL);
-
-        if (ntStatus != NDIS_STATUS_SUCCESS) {
-            goto cleanup;
-        }
+        ntStatus = ionic_lif_rss_deinit(lif);
 
         goto cleanup;
     }
@@ -111,48 +101,18 @@ oid_set_rss_parameters(struct ionic *ionic,
         PPROCESSOR_NUMBER proc_array = (PPROCESSOR_NUMBER)(
             ((UCHAR *)pParameters) + pParameters->IndirectionTableOffset);
 
-        for (tbl_indx = 0; tbl_indx < tbl_len; tbl_indx++) {
-
-            proc_num =
-                (UCHAR)KeGetProcessorIndexFromNumber(proc_array + tbl_indx);
-
-            if (proc_num >= (u8)ionic->proc_count) {
-                ntStatus = NDIS_STATUS_INVALID_PARAMETER;
-                goto cleanup;
-            }
-        }
-
-        NdisZeroMemory(lif->rss_ind_tbl, lif->rss_ind_tbl_sz);
-
-        NdisZeroMemory(lif->rss_ind_tbl_mapped, lif->rss_ind_tbl_sz);
-
-        for (tbl_indx = 0; tbl_indx < tbl_len; tbl_indx++) {
-            lif->rss_ind_tbl[tbl_indx] =
-                (UCHAR)KeGetProcessorIndexFromNumber(proc_array + tbl_indx);
-        }
-
-        if (tbl_len < (int)lif->rss_ind_tbl_sz) {
-
-            for (; tbl_indx < (int)lif->rss_ind_tbl_sz; tbl_indx++) {
-                lif->rss_ind_tbl[tbl_indx] =
-                    lif->rss_ind_tbl[tbl_indx % tbl_len];
-            }
-        }
-
-        // Map the indirection table
-        ntStatus = map_rss_table(lif);
+        // program the indirection table
+        ntStatus = map_rss_cpu_ind_tbl(lif, proc_array, tbl_len);
         if (ntStatus != NDIS_STATUS_SUCCESS) {
             goto cleanup;
         }
 
+        // program indirection table in hardware
         ntStatus = ionic_lif_rss_config(lif, lif->rss_types, lif->rss_hash_key,
-                                        lif->rss_ind_tbl_mapped);
+            lif->rss_ind_tbl);
         if (ntStatus != NDIS_STATUS_SUCCESS) {
             goto cleanup;
         }
-
-        // May need to update the affinity for the default port rx queues
-        remap_rss_rx_affinity(lif);
     }
     if (!BooleanFlagOn(pParameters->Flags,
                        NDIS_RSS_PARAM_FLAG_HASH_KEY_UNCHANGED)) {
@@ -168,7 +128,7 @@ oid_set_rss_parameters(struct ionic *ionic,
             ((UCHAR *)pParameters) + pParameters->HashSecretKeyOffset, key_len);
 
         ntStatus = ionic_lif_rss_config(lif, lif->rss_types, lif->rss_hash_key,
-                                        lif->rss_ind_tbl_mapped);
+                                        lif->rss_ind_tbl);
 
         if (ntStatus != NDIS_STATUS_SUCCESS) {
             goto cleanup;
@@ -235,7 +195,6 @@ oid_set_rss_hash(struct ionic *ionic,
 
         NdisZeroMemory(lif->rss_hash_key, IONIC_RSS_HASH_KEY_SIZE);
         NdisZeroMemory(lif->rss_ind_tbl, lif->rss_ind_tbl_sz);
-        NdisZeroMemory(lif->rss_ind_tbl_mapped, lif->rss_ind_tbl_sz);
 
         lif->rss_hash_flags = 0;
 
@@ -278,7 +237,7 @@ oid_set_rss_hash(struct ionic *ionic,
         lif->rss_hash_key_len = (u16)key_len;
 
         ntStatus = ionic_lif_rss_config(lif, lif->rss_types, lif->rss_hash_key,
-                                        lif->rss_ind_tbl_mapped);
+                                        lif->rss_ind_tbl);
 
         if (ntStatus != NDIS_STATUS_SUCCESS) {
             goto cleanup;
@@ -293,53 +252,78 @@ cleanup:
     return ntStatus;
 }
 
-void
-netdev_rss_key_fill(void *buffer, size_t len)
-{
-    /* Set of random keys generated using kernel random number generator */
-    static const u8 seed[NETDEV_RSS_KEY_LEN] = {
-        0xE6, 0xFA, 0x35, 0x62, 0x95, 0x12, 0x3E, 0xA3, 0xFB, 0x46, 0xC1,
-        0x5F, 0xB1, 0x43, 0x82, 0x5B, 0x6A, 0x49, 0x50, 0x95, 0xCD, 0xAB,
-        0xD8, 0x11, 0x8F, 0xC5, 0xBD, 0xBC, 0x6A, 0x4A, 0xB2, 0xD4, 0x1F,
-        0xFE, 0xBC, 0x41, 0xBF, 0xAC, 0xB2, 0x9A, 0x8F, 0x70, 0xE9, 0x2A,
-        0xD7, 0xB2, 0x80, 0xB6, 0x5B, 0xAA, 0x9D, 0x20};
-
-    NdisMoveMemory(buffer, seed, len);
-
-    return;
-}
-
-u8
-ethtool_rxfh_indir_default(u32 index, u32 n_rx_rings)
-{
-    return (u8)(index % n_rx_rings);
-}
-
 NDIS_STATUS
 ionic_lif_rss_init(struct lif *lif)
 {
-    u8 rss_key[IONIC_RSS_HASH_KEY_SIZE];
+    struct ionic* ionic = lif->ionic;
+    NDIS_STATUS status;
+    static const u8 key[IONIC_RSS_HASH_KEY_SIZE] = {
+        0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+        0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+        0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+        0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+        0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A
+    };
 
-    netdev_rss_key_fill(rss_key, IONIC_RSS_HASH_KEY_SIZE);
+    NdisMoveMemory(lif->rss_hash_key, key, IONIC_RSS_HASH_KEY_SIZE);
 
+    ULONG rss_proc_cnt = min(lif->nrxqs, ionic->sys_proc_info->NumberOfProcessors);
+
+    /* select one preferred processor per queue */
+    PPROCESSOR_NUMBER proc_array = (PPROCESSOR_NUMBER)NdisAllocateMemoryWithTagPriority_internal(
+        ionic->adapterhandle,
+        rss_proc_cnt * sizeof(PROCESSOR_NUMBER),
+        IONIC_RSS_INDIR_TBL_TAG,
+        NormalPoolPriority);
+    if (proc_array == NULL) {
+        IoPrint("%s failed to allocate processor array\n", __FUNCTION__);
+        goto err_out;
+    }
+
+	NdisZeroMemory(proc_array, rss_proc_cnt * sizeof(PROCESSOR_NUMBER));
+
+    ULONG proc_idx = 0;
+    for (ULONG i = 0; i < rss_proc_cnt; ++i) {
+
+        /* select the next preferred processor */
+        while (ionic->sys_proc[proc_idx].NodeDistance != 0) {
+            ++proc_idx %= rss_proc_cnt;
+        }
+        proc_array[i].Group = ionic->sys_proc[proc_idx].ProcNum.Group;
+        proc_array[i].Number = ionic->sys_proc[proc_idx].ProcNum.Number;
+        ++proc_idx %= rss_proc_cnt;
+        IoPrint("%s lif %d proc_array[%d] %p group = %d proc = %d\n",
+            __FUNCTION__, lif->index,
+            i, &proc_array[i],
+            proc_array[i].Group, proc_array[i].Number);
+    }
+
+    // program the indirection table
+    status = map_rss_cpu_ind_tbl(lif, proc_array, rss_proc_cnt);
+    if (status != NDIS_STATUS_SUCCESS) {
+        IoPrint("%s failed to map indirection table\n", __FUNCTION__);
+        goto err_out_free_proc_array;
+    }
+
+err_out_free_proc_array:
+    NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, proc_array, IONIC_RSS_INDIR_TBL_TAG);
+
+err_out:
     lif->rss_types = IONIC_RSS_TYPE_IPV4 | IONIC_RSS_TYPE_IPV4_TCP |
                      IONIC_RSS_TYPE_IPV4_UDP | IONIC_RSS_TYPE_IPV6 |
                      IONIC_RSS_TYPE_IPV6_TCP | IONIC_RSS_TYPE_IPV6_UDP;
 
-    return ionic_lif_rss_config(lif, lif->rss_types, rss_key,
-                                lif->rss_ind_tbl_mapped);
+    return ionic_lif_rss_config(lif, lif->rss_types, lif->rss_hash_key,
+                                lif->rss_ind_tbl);
 }
 
 NDIS_STATUS
 ionic_lif_rss_deinit(struct lif *lif)
 {
-	int tbl_sz = 0;
-
     /* Disable RSS on the NIC */
-	tbl_sz = le16_to_cpu(lif->ionic->ident.lif.eth.rss_ind_tbl_sz);
-	NdisZeroMemory(lif->rss_ind_tbl, tbl_sz);
-	NdisZeroMemory(lif->rss_hash_key, IONIC_RSS_HASH_KEY_SIZE);
-
+    NdisZeroMemory(lif->rss_hash_key, IONIC_RSS_HASH_KEY_SIZE);
+    NdisZeroMemory(lif->rss_ind_tbl, lif->rss_ind_tbl_sz);
+   
     return ionic_lif_rss_config(lif, 0x0, NULL, NULL);
 }
 
@@ -442,7 +426,7 @@ oid_query_rss_caps(struct ionic *ionic,
         pParams->NumberOfReceiveQueues = ionic->nrxqs_per_lif;
     }
 
-    pParams->NumberOfIndirectionTableEntries = 128;
+    pParams->NumberOfIndirectionTableEntries = ionic->ident.lif.eth.rss_ind_tbl_sz;
 
     *bytes_written = sizeof(NDIS_RECEIVE_SCALE_CAPABILITIES);
 
@@ -451,170 +435,151 @@ cleanup:
     return ntStatus;
 }
 
-NDIS_STATUS
-map_rss_table(struct lif *lif)
+static NDIS_STATUS
+check_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len)
 {
+    ULONG n_uniq_procs = 0;
+    PPROCESSOR_NUMBER proc;
+    RTL_BITMAP proc_used;
+    char buffer[BITS_TO_LONGS(INTR_CTRL_REGS_MAX)] = {0};
 
-    NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    u8 *rss_tbl = NULL;
-    u8 *mapped_rss_tbl = NULL;
-    u32 queue_indx = 0;
-    u32 proc_indx = 0;
-    u32 rss_indx = 0;
-    struct rss_map *current_map = NULL;
+    RtlInitializeBitMap(&proc_used, (PULONG)buffer, INTR_CTRL_REGS_MAX);
 
-    NdisZeroMemory(lif->rss_ind_tbl_mapped, lif->rss_ind_tbl_sz);
-
-    if (lif->rss_mapping == NULL) {
-        lif->rss_mapping = (struct rss_map *)NdisAllocateMemoryWithTagPriority_internal(
-            lif->ionic->adapterhandle,
-            sizeof(struct rss_map) * lif->ionic->proc_count, IONIC_GENERIC_TAG,
-            NormalPoolPriority);
-        if (lif->rss_mapping == NULL) {
-            status = NDIS_STATUS_RESOURCES;
-            goto cleanup;
-        }
-    }
-
-    NdisZeroMemory(lif->rss_mapping,
-                   sizeof(struct rss_map) * lif->ionic->proc_count);
-
-    DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
-                  "%s Allocated 0x%p len %08lX\n",
-                  __FUNCTION__,
-                  lif->rss_mapping,
-                  sizeof(struct rss_map) * lif->ionic->proc_count));
+    /* Make sure we have an msi-x message affinitized to each processor in the table */
+    for (ULONG i = 0; i < tbl_len; ++i) {
     
-    current_map = lif->rss_mapping;
+        proc = &proc_array[i % tbl_len];
 
-    // Go through the provided indirection table, indicating which processors
-    // are being requested to be used
+        ULONG proc_idx = KeGetProcessorIndexFromNumber(proc);
+        if (proc_idx == INVALID_PROCESSOR_INDEX) {
+            IoPrint("%s invalid group %d proc %d\n",
+                __FUNCTION__, proc->Group, proc->Number);
+            return NDIS_STATUS_INVALID_PARAMETER;
+        }
 
-    rss_tbl = lif->rss_ind_tbl;
+        IoPrint("%s lif %d proc_array[%d] %p group %d proc %d proc_idx %d\n",
+            __FUNCTION__, lif->index,
+            i, proc, proc->Group, proc->Number, proc_idx);
 
-    for (rss_indx = 0; rss_indx < lif->rss_ind_tbl_sz; rss_indx++, rss_tbl++) {
-        current_map = lif->rss_mapping + *rss_tbl;
-        current_map->ref = TRUE;
-        current_map->queue_id = (ULONG)-1;
-    }
+        if (find_intr_msg(lif->ionic, proc_idx) == NULL) {
+            IoPrint("%s did not find any interrupts assigned to processor %d\n",
+                __FUNCTION__, proc_idx);
+            return NDIS_STATUS_INVALID_PARAMETER;
+        }
 
-    current_map = lif->rss_mapping;
-    queue_indx = 0;
-
-    // Get the next cpu id that was referenced in the IT
-    for (proc_indx = 0; proc_indx < lif->ionic->proc_count;
-         proc_indx++, current_map++) {
-
-        if (current_map->ref) {
-
-            if (current_map->queue_id == (ULONG)-1) {
-                current_map->queue_id = queue_indx;
-
-                queue_indx++;
-                if (queue_indx == lif->nrxqs) {
-                    queue_indx = 0;
-                }
-            }
+        if (!RtlCheckBit(&proc_used, proc_idx)) {
+            RtlSetBit(&proc_used, proc_idx);
+            ++n_uniq_procs;
         }
     }
 
-    // Now go through the IT and update each element to be the mapped rx id
-    rss_tbl = lif->rss_ind_tbl;
-    mapped_rss_tbl = lif->rss_ind_tbl_mapped;
-
-    for (rss_indx = 0; rss_indx < lif->rss_ind_tbl_sz;
-         rss_indx++, rss_tbl++, mapped_rss_tbl++) {
-        // Locate the processor entry
-        current_map = lif->rss_mapping + *rss_tbl;
-        ASSERT(current_map->ref);
-        *mapped_rss_tbl = (u8)current_map->queue_id;
-    }
-
-cleanup:
-
-    return status;
+    return NDIS_STATUS_SUCCESS;
 }
 
-u32
-get_rss_affinity(struct lif *lif, u32 queue_id)
+NDIS_STATUS
+map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len)
 {
+    ULONG q_idx = 0;
+    ULONG q_reuse_idx = 0;
+    NDIS_STATUS status;
+    struct intr_msg* intr_msg;
+    PPROCESSOR_NUMBER proc;
+    RTL_BITMAP proc_used;
+    char buffer[BITS_TO_LONGS(INTR_CTRL_REGS_MAX)] = { 0 };
+    u8 proc_to_q_map[INTR_CTRL_REGS_MAX] = { 0 };
 
-    u32 proc_indx = (u32)-1;
-    struct rss_map *current_map = NULL;
+    // start with all msgs unused
+    unuse_intr_msgs_rss(lif->ionic, lif);
 
-    if (lif->rss_mapping == NULL) {
-        goto cleanup;
+    // validate the processor indirection table
+    status = check_rss_cpu_ind_tbl(lif, proc_array, tbl_len);
+    if (status != NDIS_STATUS_SUCCESS) {
+        return status;
     }
 
-    current_map = lif->rss_mapping;
-    for (proc_indx = 0; proc_indx < lif->ionic->proc_count;
-         proc_indx++, current_map++) {
+    NdisZeroMemory(lif->rss_ind_tbl, lif->rss_ind_tbl_sz);
 
-        if (current_map->ref && current_map->queue_id == queue_id) {
-            break;
+    RtlInitializeBitMap(&proc_used, (PULONG)buffer, INTR_CTRL_REGS_MAX);
+
+    // map processors to queues
+    for (ULONG i = 0; i < lif->ionic->ident.lif.eth.rss_ind_tbl_sz; ++i) {
+        proc = &proc_array[i % tbl_len];
+
+        ULONG proc_idx = KeGetProcessorIndexFromNumber(proc);
+        if (proc_idx == INVALID_PROCESSOR_INDEX) {
+            IoPrint("%s Invalid processor - proc_array[%d] %p group %d proc %d\n",
+                    __FUNCTION__, i, proc, proc->Group, proc->Number);
+            return NDIS_STATUS_INVALID_PARAMETER;
         }
-    }
+        IoPrint("%s proc_array[%d] %p group %d proc %d proc_idx %d\n",
+                __FUNCTION__, i, &proc_array[i],
+                proc->Group, proc->Number, proc_idx);
 
-    if (proc_indx == lif->ionic->proc_count) {
-        proc_indx = (ULONG)-1;
-    }
+        if (RtlCheckBit(&proc_used, proc_idx)) {
+            // this proc index is already assigned to a queue
+            lif->rss_ind_tbl[i] = proc_to_q_map[proc_idx];
+        } else if (q_idx == lif->nrxqs) {
+            // no available queues, send flows to a different rss cpu
+            lif->rss_ind_tbl[i] = (u8)q_reuse_idx;
+            proc_to_q_map[proc_idx] = (u8)q_reuse_idx;
+            q_reuse_idx++;
+            RtlSetBit(&proc_used, proc_idx);
+        } else {
+            // this proc index not assigned, and there is a queue available
+            lif->rss_ind_tbl[i] = (u8)q_idx;
+            proc_to_q_map[proc_idx] = (u8)q_idx;
 
-cleanup:
-
-    return proc_indx;
-}
-
-void
-remap_rss_rx_affinity(struct lif *lif)
-{
-
-    u32 procIndex = 0;
-    struct interrupt_info *int_tbl = NULL;
-    PROCESSOR_NUMBER procNumber;
-
-    for (u32 i = 0; i < lif->nrxqs; i++) {
-
-        procIndex = get_rss_affinity(lif, i);
-
-        int_tbl = get_interrupt(lif->ionic, lif->rxqcqs[i].qcq->intr.index);
-
-        DbgTrace((TRACE_COMPONENT_RSS_PROCESSING, TRACE_LEVEL_VERBOSE,                          
-                "%s Rx %d on core %d %d\n", __FUNCTION__, i, procIndex,
-                        int_tbl->original_proc));
-
-        ASSERT(int_tbl != NULL);
-
-        if ((procIndex != (ULONG)-1 && int_tbl->current_proc != procIndex) ||
-            (procIndex == (ULONG)-1 &&
-             int_tbl->current_proc != int_tbl->original_proc)) {
-
-            if (procIndex == (ULONG)-1) {
-
-                DbgTrace((TRACE_COMPONENT_RSS_PROCESSING, TRACE_LEVEL_VERBOSE,
-                          "%s Rx Id %d Remapped %d to %d curr %d\n",
-                          __FUNCTION__, i, lif->rxqcqs[i].qcq->intr.index,
-                          int_tbl->original_proc, int_tbl->current_proc));
-
-                int_tbl->current_proc = int_tbl->original_proc;
-            } else {
-
-                DbgTrace((TRACE_COMPONENT_RSS_PROCESSING, TRACE_LEVEL_VERBOSE,
-                          "%s Rx Id %d Mapped %d to %d curr %d Orig %d\n",
-                          __FUNCTION__, i, lif->rxqcqs[i].qcq->intr.index,
-                          procIndex, int_tbl->current_proc,
-                          int_tbl->original_proc));
-
-                int_tbl->current_proc = procIndex;
-
-                KeGetProcessorNumberFromIndex(procIndex, &procNumber);
-
-                int_tbl->group = procNumber.Group;
-                int_tbl->group_proc = procNumber.Number;
-
-                SetFlag(int_tbl->Flags, IONIC_TARGET_PROC_CHANGED);
+            // find a message with matching cpu affinity
+            intr_msg = find_intr_msg(lif->ionic, proc_idx);
+            if (intr_msg == NULL) {
+                IoPrint("%s did not find interrupt message affinitized to proc %d\n",
+                        __FUNCTION__, proc_idx);
+                return NDIS_STATUS_INVALID_PARAMETER;
             }
+
+            intr_msg->inuse = true;
+
+            // update the table for entry to use the msg
+            struct intr_sync_ctx ctx = { 0 };
+            ctx.ionic = lif->ionic;
+            ctx.id = intr_msg->id;
+            ctx.index = lif->rxqcqs[q_idx].qcq->cq.bound_intr->index;
+
+            NdisMSynchronizeWithInterruptEx(lif->ionic->intr_obj,
+                                            intr_msg->id, sync_intr_msg, &ctx);
+
+            q_idx++;
+            RtlSetBit(&proc_used, proc_idx);
         }
     }
 
-    return;
+    // for remaining queues not in rss indir table, assocaite any unsed msg
+    for (; q_idx < lif->nrxqs; ++q_idx) {
+        // find any unused message, don't care about affinity
+        intr_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+        if (intr_msg == NULL) {
+            IoPrint("%s did not find any unused interrupt message\n",
+                    __FUNCTION__);
+            return NDIS_STATUS_INVALID_PARAMETER;
+        }
+
+        intr_msg->inuse = true;
+
+        // update the table for this entry to use the msg
+        struct intr_sync_ctx ctx = { 0 };
+        ctx.ionic = lif->ionic;
+        ctx.id = intr_msg->id;
+        ctx.index = lif->rxqcqs[q_idx].qcq->cq.bound_intr->index;
+
+        NdisMSynchronizeWithInterruptEx(lif->ionic->intr_obj,
+                                        intr_msg->id, sync_intr_msg, &ctx);
+    }
+
+    // During update, interrupts may have been serviced for the wrong queue
+    // as not all messages are updated at the same time.
+    //
+    // Invoke the service routine once again for each message now inuse.
+    invoke_intr_msgs_rss(lif->ionic, lif);
+
+    return NDIS_STATUS_SUCCESS;
 }

@@ -10,7 +10,7 @@ ionic_lif_adminq_init(struct lif *lif)
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
 
     NdisAcquireSpinLock(&lif->ionic->dev_cmd_lock);
-    ionic_dev_cmd_adminq_init(idev, qcq, (u16)lif->index, (u16)qcq->intr.index);
+    ionic_dev_cmd_adminq_init(idev, qcq, (u16)lif->index);
     status = ionic_dev_cmd_wait(lif->ionic, devcmd_timeout);
     ionic_dev_cmd_comp(idev, (union dev_cmd_comp *)&comp);
     NdisReleaseSpinLock(&lif->ionic->dev_cmd_lock);
@@ -28,20 +28,8 @@ ionic_lif_adminq_init(struct lif *lif)
               "%s hw_type %d hw_index %d\n", __FUNCTION__, q->hw_type,
               q->hw_index));
 
-    // netif_napi_add(lif->netdev, &qcq->napi, ionic_adminq_napi,
-    //	       NAPI_POLL_WEIGHT);
-
-    // err = ionic_request_irq(lif, qcq);
-    // if (err){
-    //	netdev_warn(lif->netdev, "adminq irq request failed %d\n", err);
-    //	netif_napi_del(&qcq->napi);
-    //	return err;
-    //}
-
-    // napi_enable(&qcq->napi);
-
     if (qcq->flags & QCQ_F_INTR)
-        ionic_intr_mask(idev->intr_ctrl, qcq->intr.index,
+        ionic_intr_mask(idev->intr_ctrl, qcq->cq.bound_intr->index,
                         IONIC_INTR_MASK_CLEAR);
 
     qcq->flags |= QCQ_F_INITED;
@@ -62,7 +50,7 @@ ionic_lif_rss_config(struct lif *lif,
     ctx.cmd.lif_setattr.opcode = CMD_OPCODE_LIF_SETATTR;
     ctx.cmd.lif_setattr.attr = IONIC_LIF_ATTR_RSS;
     ctx.cmd.lif_setattr.rss.types = cpu_to_le16(types);
-    ctx.cmd.lif_setattr.rss.addr = cpu_to_le64(lif->rss_ind_tbl_mapped_pa);
+    ctx.cmd.lif_setattr.rss.addr = cpu_to_le64(lif->rss_ind_tbl_pa);
 
     lif->rss_types = types;
 

@@ -27,15 +27,17 @@ IonicPerfCounterCallback(
     ULONG q_idx;
     WCHAR *name_buffer = NULL;
     ULONG name_buffer_len = 512;
+	ULONGLONG counter_mask = 0;
 
     UNREFERENCED_PARAMETER(Context);
 
     switch (Type) {
         case PcwCallbackEnumerateInstances:
+			counter_mask = IONIC_PERF_MON_NO_STATS;
+			break;
         case PcwCallbackCollectData:
+			counter_mask = Info->CollectData.CounterMask;
             break;
-
-
         case PcwCallbackAddCounter:
             IoPrint("%s: PcwCallbackAddCounter received\n", __FUNCTION__);
             break;
@@ -70,7 +72,7 @@ IonicPerfCounterCallback(
     uni_allocated_adapter_name.MaximumLength = (USHORT)(name_buffer_len / 2);
     uni_allocated_adapter_name.Length = 0;
 
-    ndis_status = get_perfmon_stats(NULL, 0, &perfmon_stats, &stats_len);
+    ndis_status = get_perfmon_stats(NULL, 0, &perfmon_stats, &stats_len, counter_mask);
 
     if (ndis_status != NDIS_STATUS_SUCCESS) {
         status = STATUS_UNSUCCESSFUL;
@@ -173,6 +175,7 @@ IonicPerfCounterCallback(
 
                     RtlInitUnicodeString(&uni_q_name, name_buffer);
 
+#ifdef RX_QUEUE_PERF
                     // add an rx queue
                     if (Type == PcwCallbackEnumerateInstances) {
                         status = IonicAddPensando_Systems(
@@ -190,6 +193,7 @@ IonicPerfCounterCallback(
                                 rx_stats);
                         }
                     }
+#endif
                     instance_idx++;
 
                     if (!NT_SUCCESS(status)) {
@@ -215,7 +219,7 @@ IonicPerfCounterCallback(
                     }
 
                     RtlInitUnicodeString(&uni_q_name, name_buffer);
-
+#ifdef TX_QUEUE_PERF
                     // add a tx queue
                     if (Type == PcwCallbackEnumerateInstances) {
                         status = IonicAddPensando_Systems(
@@ -233,6 +237,7 @@ IonicPerfCounterCallback(
                                 tx_stats);
                         }
                     }
+#endif
                     instance_idx++;
 
                     if (!NT_SUCCESS(status)) {
@@ -273,8 +278,8 @@ IonicAddAdapterInstance(
 {
     PERF_MON_COLLECTED_STATS values = { 0 };
 
-    values.core_redirection_count = AdapterStats->core_redirection_count;
-
+	UNREFERENCED_PARAMETER(AdapterStats);
+    
     return IonicAddPensando_Systems(Buffer, Name, InstanceId, &values);
 }
 
@@ -287,9 +292,11 @@ IonicAddLifInstance(
 {
     PERF_MON_COLLECTED_STATS values = { 0 };
 
-    UNREFERENCED_PARAMETER(LifStats);
-
-    // TODO:  add any per-lif stats?
+	values.rx_pool_alloc_cnt = LifStats->rx_pool_alloc_cnt;
+	values.rx_pool_alloc_time = LifStats->rx_pool_alloc_time;
+	values.rx_pool_size = LifStats->rx_pool_size;
+	values.rx_pool_free_cnt = LifStats->rx_pool_free_cnt;
+	values.rx_pool_free_time = LifStats->rx_pool_free_time;
 
     return IonicAddPensando_Systems(Buffer, Name, InstanceId, &values);
 }
@@ -303,7 +310,7 @@ IonicAddRxQueueInstance(
 {
     PERF_MON_COLLECTED_STATS values = { 0 };
 
-    values.rx_pool_count = RxQueueStats->rx_pool_count;
+	UNREFERENCED_PARAMETER(RxQueueStats);
 
     return IonicAddPensando_Systems(Buffer, Name, InstanceId, &values);
 }
@@ -317,17 +324,7 @@ IonicAddTxQueueInstance(
 {
     PERF_MON_COLLECTED_STATS values = { 0 };
 
-    values.byte_per_sec = TxQueueStats->byte_per_sec;
-    values.max_queue_len = TxQueueStats->max_queue_len;
-    values.nbl_per_sec = TxQueueStats->nbl_per_sec;
-    values.nbl_time_to_complete = TxQueueStats->nbl_time_to_complete;
-    values.nb_per_sec = TxQueueStats->nb_per_sec;
-    values.nb_time_queue_to_comp = TxQueueStats->nb_time_queue_to_comp;
-    values.nb_time_to_complete = TxQueueStats->nb_time_to_complete;
-    values.nb_time_to_queue = TxQueueStats->nb_time_to_queue;
-    values.pending_nbl_count = TxQueueStats->pending_nbl_count;
-    values.pending_nb_count = TxQueueStats->pending_nb_count;
-    values.queue_len = TxQueueStats->queue_len;
+	UNREFERENCED_PARAMETER(TxQueueStats);
 
     return IonicAddPensando_Systems(Buffer, Name, InstanceId, &values);
 }

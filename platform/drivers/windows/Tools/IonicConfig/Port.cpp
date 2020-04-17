@@ -132,8 +132,18 @@ CmdPortRun(command_info& info)
                 break;
             }
 
-            std::wstring name(cb.AdapterName);
-            std::cout << "Port Configuration: " << to_bytes(name) << std::endl;
+            WCHAR name[ADAPTER_NAME_MAX_SZ] = {};
+            get_interface_name(name, ADAPTER_NAME_MAX_SZ, NULL, 0,
+                               cb.AdapterName, ADAPTER_NAME_MAX_SZ);
+
+            std::wstring ws_adapter_name(cb.AdapterName);
+            std::wstring ws_interface_name(name);
+
+            std::cout << std::left << std::setw(20) << "Port Configuration: "
+                << to_bytes(ws_adapter_name) << std::endl;
+
+            std::cout << std::left << std::setw(20) << "Interface: "
+                << to_bytes(ws_interface_name) << std::endl;
 
             std::cout << std::left << std::setw(20) << "AutoNeg: "
                 << (cb.Config.AutoNeg ? "yes" : "no") << std::endl;

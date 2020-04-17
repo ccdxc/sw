@@ -160,7 +160,7 @@ void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u16 lif_index);
 void ionic_lif_reset(struct lif *lif);
 
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
-			       u16 lif_index, u16 intr_index);
+                   u16 lif_index);
 
 void 
 ionic_intr_mask_on_assertion(struct intr *intr, u32 mask_on_assert);
@@ -421,7 +421,7 @@ process_work_item(PVOID   WorkItemContext,
     NDIS_HANDLE  work_handle);
 
 NDIS_STATUS
-get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len);
+get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len, ULONGLONG counter_mask);
 
 void
 ref_request(struct ionic *ionic);
@@ -559,7 +559,8 @@ void
 writeq(u64 data, const volatile void *addr);
 
 NDIS_STATUS 
-ionic_register_interrupts(struct ionic *Adapter);
+ionic_register_interrupts(struct ionic *ionic,
+    PNDIS_MINIPORT_INIT_PARAMETERS init_params);
 
 BOOLEAN 
 ionic_msi_handler(PVOID miniport_interrupt_context,
@@ -595,22 +596,34 @@ u64 __iomem *ionic_bus_map_dbpage(struct ionic *ionic, u32 db_page_offset);
 
 void ionic_bus_unmap_dbpage(struct ionic *ionic, u64 *db_page);
 
+unsigned int ionic_intr_alloc(struct ionic *ionic);
+
+void ionic_intr_free(struct ionic *ionic, unsigned int index);
+
+void ionic_intr_init(struct ionic *ionic, unsigned int index);
+
 NDIS_STATUS
-ionic_intr_alloc(struct lif *lif, struct intr *intr, u32 preferred_proc);
-
-void ionic_intr_free(struct lif *lif, int index);
-
-inline void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
-				   unsigned long index);
+ionic_intr_affinitize(struct ionic* ionic, unsigned int index, ULONG message_id);
 
 int ionic_db_page_num(struct lif *lif, int pid);
 
-struct interrupt_info *
-get_interrupt(struct ionic *ionic, ULONG index);
+struct intr_msg *
+get_intr_msg(struct ionic *ionic, ULONG message_id);
 
-ULONG
-locate_proc(struct ionic *ionic,
-			ULONG preferredProc);
+void
+invoke_intr_msgs_rss(struct ionic *ionic, struct lif *lif);
+
+void
+unuse_intr_msgs_rss(struct ionic *ionic, struct lif *lif);
+
+struct intr_msg*
+find_intr_msg(struct ionic *ionic, ULONG proc_idx);
+
+BOOLEAN
+sync_intr_msg(NDIS_HANDLE SynchronizeContext);
+
+void
+check_intr_msg_affinity(struct ionic* ionic, ULONG proc_idx);
 
 NDIS_STATUS 
 ionic_set_offload_attributes(struct ionic *ionic);
@@ -688,7 +701,7 @@ int ionic_station_set(struct lif *lif);
 
 NDIS_STATUS ionic_lif_addr(struct lif *lif, const u8 *addr, bool add);
 
-int ionic_napi(struct lif *lif, int budget, ionic_cq_cb cb,
+int ionic_napi(struct lif *lif, unsigned int budget, ionic_cq_cb cb,
 	       ionic_cq_done_cb done_cb, void *done_arg);
 
 void
@@ -713,8 +726,7 @@ ionic_lif_txqs_init(struct lif *lif);
 NDIS_STATUS
 ionic_txrx_alloc(struct lif *lif,
 				 ULONG vport_id,
-				 ULONG queue_id,
-				 GROUP_AFFINITY Affinity);
+                 ULONG queue_id);
 
 NDIS_STATUS
 ionic_lif_stop(struct lif *lif);
@@ -728,8 +740,7 @@ ionic_flush(struct ionic *ionic);
 NDIS_STATUS
 ionic_lif_open(struct lif *lif,
 			   ULONG vport_id,
-			   ULONG queue_id,
-			   GROUP_AFFINITY Affinity);
+               ULONG queue_id);
 
 NDIS_STATUS
 ionic_open(struct ionic *ionic);
@@ -768,7 +779,7 @@ ionic_lifs_reset(struct ionic *ionic);
 
 NDIS_STATUS ionic_lif_notifyq_init(struct lif *lif);
 
-int ionic_notifyq_clean(struct lif *lif, int budget);
+int ionic_notifyq_clean(struct lif *lif, unsigned int budget);
 
 
 
@@ -932,7 +943,7 @@ ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
 		 size_t desc_size, size_t sg_desc_size, unsigned int pid);
 
 NDIS_STATUS
-ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
+ionic_cq_init(struct lif *lif, struct cq *cq, unsigned int intr_index,
 		  unsigned int num_descs, size_t desc_size);
 
 void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa);
@@ -979,9 +990,6 @@ oid_set_rss_hash( struct ionic *ionic,
 	ULONG *bytes_read,
 	ULONG *bytes_needed);
 
-u8 
-ethtool_rxfh_indir_default(u32 index, u32 n_rx_rings);
-
 NDIS_STATUS
 ionic_lif_rss_init(struct lif *lif);
 
@@ -1006,29 +1014,21 @@ oid_query_rss_caps(struct ionic *ionic,
 	ULONG *bytes_written);
 
 NDIS_STATUS
-map_rss_table(struct lif *lif);
-
-u32
-get_rss_affinity(struct lif *lif,
-	u32 queue_id);
-
-void
-remap_rss_rx_affinity(struct lif *lif);
+map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len);
 
 //
 // rx.cpp prototypes
 //
 
-void ionic_free_rxq_pkts(struct ionic *ionic, struct qcq * qcq);
-
 NDIS_STATUS ionic_alloc_rxq_pkts(struct ionic *ionic, struct qcq *qcq);
 
-struct rxq_pkt* ionic_get_next_rxq_pkt(struct qcq *qcq);
+struct rxq_pkt* ionic_get_next_rxq_pkt(struct lif *lif);
 
-PNET_BUFFER ionic_alloc_rxq_netbuffers(	struct ionic *ionic,
-										struct qcqst *qcqst, 
-										unsigned int size, 
-										struct rxq_pkt *rxq_pkt);
+NDIS_STATUS
+ionic_alloc_rxq_netbuffers(	struct ionic *ionic,
+							struct lif *lif, 
+							unsigned int size, 
+							struct rxq_pkt *rxq_pkt);
 
 void
 ionic_return_rxq_pkt(struct qcq *qcq,
@@ -1041,8 +1041,8 @@ NDIS_STATUS ionic_rx_init(struct lif *lif, struct qcqst *qcqst);
 void ionic_rx_filters_deinit(struct lif *lif);
 
 void
-ionic_rx_napi( struct interrupt_info *int_info, 
-			   int budget, 
+ionic_rx_napi( struct intr_msg *int_info, 
+               unsigned int budget, 
 			   NDIS_RECEIVE_THROTTLE_PARAMETERS *receive_throttle_params);
 
 void ionic_rq_indicate_bufs(struct lif *lif,
@@ -1094,10 +1094,16 @@ GetPktCount( struct ionic *ionic, struct queue *q);
 void ionic_rx_empty(struct queue *q);
 
 void
-ionic_reset_rxq_pkts(struct qcq *qcq);
+ionic_reset_rxq_pkts(struct lif *lif);
 
 void
-ionic_release_rxq_pkts(struct qcq *qcq);
+ionic_release_rxq_pkts(struct lif *lif);
+
+NDIS_STATUS
+ionic_alloc_rxq_pool(struct lif *lif);
+
+void
+ionic_free_rxq_pool( struct lif *lif);
 
 //
 // sriov.cpp prototypes
@@ -1312,7 +1318,8 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 
 void ionic_tx_release_pending(struct ionic *ionic, struct qcq * qcq);
 
-ULONG ionic_tx_flush(struct qcq *qcq, bool cleanup, bool credits);
+ULONG
+ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits);
 
 NDIS_STATUS 
 ionic_alloc_txq_pkts(struct ionic *ionic, struct qcq *qcq);

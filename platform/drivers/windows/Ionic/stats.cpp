@@ -302,7 +302,7 @@ IoctlPerfStats(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
 
     NdisZeroMemory(buf, outlen);
 
-    ntStatus = get_perfmon_stats(&cb, outlen, &stats, outbytes);
+    ntStatus = get_perfmon_stats(&cb, outlen, &stats, outbytes, IONIC_PERF_MON_ALL_STATS);
 
     if (stats != NULL) {
         NdisMoveMemory(buf, stats, *outbytes);

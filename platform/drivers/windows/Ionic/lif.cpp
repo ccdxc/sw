@@ -1,11 +1,11 @@
 
 #include "common.h"
+#define DEFINITIONS_ONLY
+#include "registry.h"
 
 static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index);
 
 static NDIS_STATUS ionic_qcqs_alloc(struct lif *lif);
-
-static void ionic_qcqs_free(struct lif *lif);
 
 static NDIS_STATUS ionic_qcq_alloc(struct lif *lif,
                                    unsigned int type,
@@ -17,12 +17,94 @@ static NDIS_STATUS ionic_qcq_alloc(struct lif *lif,
                                    unsigned int cq_desc_size,
                                    unsigned int sg_desc_size,
                                    unsigned int pid,
-                                   struct qcq **qcq,
-                                   ULONG preferredProc);
+                                   struct qcq **qcq);
 
 static void ionic_link_qcq_interrupts(struct qcq *src_qcq, struct qcq *n_qcq);
 
 static void ionic_qcq_free(struct lif *lif, struct qcq *qcq);
+
+static inline u32
+ionic_coal_usec_to_hw(struct ionic *ionic, u32 usecs)
+{
+
+	u32 hw_val = 0;
+    u32 mult = le32_to_cpu(ionic->ident.dev.intr_coal_mult);
+    u32 div = le32_to_cpu(ionic->ident.dev.intr_coal_div);
+
+    /* Div-by-zero should never be an issue, but check anyway */
+    if (!div || !mult)
+        return 0;
+
+    /* Round up in case usecs is close to the next hw unit */
+    usecs += (div / mult) >> 1;
+
+    /* Convert from usecs to device units */
+
+	hw_val = (usecs * mult) / div;
+
+	if (hw_val > INTR_CTRL_COAL_MAX) {
+		usecs = (INTR_CTRL_COAL_MAX * div)/mult;
+
+		/* Update the registry setting */
+		ionic->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value = usecs;
+		hw_val = INTR_CTRL_COAL_MAX;
+	}
+	else if(hw_val == 0) {
+		hw_val = 1;
+	}
+
+	return hw_val;
+}
+
+static void
+ionic_qcqs_free(struct lif *lif)
+{
+    unsigned int i;
+
+    if (lif->notifyqcq) {
+        ionic_qcq_free(lif, lif->notifyqcq);
+        lif->notifyqcq = NULL;
+    }
+
+    if (lif->adminqcq) {
+        ionic_qcq_free(lif, lif->adminqcq);
+        lif->adminqcq = NULL;
+    }
+
+    if( lif->rxqcqs != NULL) {
+        for (i = 0; i < lif->nrxqs; i++) {
+            if (lif->rxqcqs[i].qcq != NULL) {
+
+                IoPrint("%s Indicating DmaStopped on queue id %d\n", __FUNCTION__,
+                    lif->rxqcqs[i].qcq->q.index);
+                IndicateRxQueueState(lif->ionic, lif->rxqcqs[i].qcq->q.index,
+                                     NdisReceiveQueueOperationalStateDmaStopped);
+
+                ionic_qcq_free(lif, lif->rxqcqs[i].qcq);
+                lif->rxqcqs[i].qcq = NULL;
+            }
+        }
+
+        NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, lif->rxqcqs,
+                                      IONIC_QCQ_TAG);
+        lif->rxqcqs = NULL;
+    }
+
+    if( lif->txqcqs != NULL) {
+        for (i = 0; i < lif->ntxqs; i++) {
+
+            if (lif->txqcqs[i].qcq != NULL) {
+                ionic_free_txq_pkts(lif->ionic, lif->txqcqs[i].qcq);
+                ionic_qcq_free(lif, lif->txqcqs[i].qcq);
+                lif->txqcqs[i].qcq = NULL;
+            }
+        }
+
+        NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, lif->txqcqs,
+                                      IONIC_QCQ_TAG);
+        lif->txqcqs = NULL;
+    }
+}
 
 NDIS_STATUS
 ionic_lif_identify(struct ionic *ionic, u8 lif_type, union lif_identity *lid)
@@ -131,7 +213,7 @@ ionic_lifs_size(struct ionic *ionic)
         nslaves = nlifs - 1;
 
     nxqs = min(ntxqs_per_lif, nrxqs_per_lif);
-    nxqs = min(nxqs, ionic->proc_count); // num_online_cpus());
+    nxqs = min(nxqs, ionic->sys_proc_info->NumberOfProcessors);
     // neqs = min(neqs_per_lif, ionic->proc_count); //num_online_cpus());
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
@@ -250,7 +332,6 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
     struct lif *lif = NULL;
     int tbl_sz;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    unsigned int i;
 
     if (index == 0) {
         // struct net_device *netdev;
@@ -337,7 +418,15 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
     NdisAllocateSpinLock(&lif->deferred.lock);
     InitializeListHead(&lif->deferred.list);
 
-    // INIT_WORK(&lif->deferred.work, ionic_lif_deferred_work);
+	/* Allocate 16 bytes aligned slist header */
+
+	lif->rx_pkts_list = (SLIST_HEADER *)NdisAllocateMemoryWithTagPriority_internal(
+            ionic->adapterhandle, sizeof(SLIST_HEADER), IONIC_GENERIC_TAG,
+            NormalPoolPriority);
+
+    if (lif->rx_pkts_list == NULL) {
+        goto err_out_free_netdev;
+    }
 
     /* allocate lif info */
     lif->info_sz = ALIGN(sizeof(*lif->info), PAGE_SIZE);
@@ -363,26 +452,14 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
     tbl_sz = le16_to_cpu(lif->ionic->ident.lif.eth.rss_ind_tbl_sz);
     lif->rss_ind_tbl_sz = (sizeof(*lif->rss_ind_tbl) * tbl_sz);
 	ASSERT( lif->rss_ind_tbl_sz >= lif->ionic->ident.lif.eth.rss_ind_tbl_sz);
-    lif->rss_ind_tbl_mapped = (u8 *)dma_alloc_coherent(
-        ionic, lif->rss_ind_tbl_sz, &lif->rss_ind_tbl_mapped_pa, 0);
 
-    if (!lif->rss_ind_tbl_mapped) {
+    lif->rss_ind_tbl = (u8 *)dma_alloc_coherent(
+        ionic, lif->rss_ind_tbl_sz, &lif->rss_ind_tbl_pa, 0);
+    if (lif->rss_ind_tbl == NULL) {
         DbgTrace(
             (TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
              "%s Failed to allocate rss indirection table (mapped), aborting\n",
              __FUNCTION__));
-        status = NDIS_STATUS_RESOURCES;
-        goto err_out_free_qcqs;
-    }
-
-    lif->rss_ind_tbl = (u8 *)NdisAllocateMemoryWithTagPriority_internal(
-        ionic->adapterhandle, lif->rss_ind_tbl_sz, IONIC_RSS_INDIR_TBL_TAG,
-        NormalPoolPriority);
-
-    if (!lif->rss_ind_tbl) {
-        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                  "%s Failed to allocate rss indirection table, aborting\n",
-                  __FUNCTION__));
         status = NDIS_STATUS_RESOURCES;
         goto err_out_free_qcqs;
     }
@@ -394,19 +471,6 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
                   __FUNCTION__,
                   lif->rss_ind_tbl, lif->rss_ind_tbl_sz));
     
-    /* Fill indirection table with 'default' values */
-    // Note: this initial default table, prior to mapping, is cpu based, not rx
-    // id based and we skip cpu 0 since it is used by the default admin q
-
-    for (i = 0; i < lif->rss_ind_tbl_sz; i++) {
-        lif->rss_ind_tbl[i] = (u8)(ethtool_rxfh_indir_default(i, lif->nrxqs) +
-                                   (index * lif->nrxqs) + 1);
-        lif->rss_ind_tbl[i] = (lif->rss_ind_tbl[i] % lif->ionic->proc_count);
-    }
-
-    // Map the table
-    map_rss_table(lif);
-
     ionic->total_lif_count++;
     ionic->port_stats.lif_count++;
 
@@ -424,6 +488,10 @@ err_out_free_lif_info:
     lif->info_pa = 0;
 
 err_out_free_netdev:
+	if (lif->rx_pkts_list != NULL) {
+		NdisFreeMemoryWithTagPriority_internal( ionic->adapterhandle, lif->rx_pkts_list, IONIC_GENERIC_TAG);
+		lif->rx_pkts_list = NULL;
+	}
     NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, lif, IONIC_LIF_TAG);
 
     return NULL;
@@ -434,6 +502,7 @@ ionic_qcqs_alloc(struct lif *lif)
 {
     unsigned int q_list_size;
     unsigned int flags;
+    struct intr_msg* intr_msg;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
     int i;
 
@@ -441,16 +510,23 @@ ionic_qcqs_alloc(struct lif *lif)
     status = ionic_qcq_alloc(lif, IONIC_QTYPE_ADMINQ, 0, "admin", flags,
                              IONIC_ADMINQ_LENGTH, sizeof(struct admin_cmd),
                              sizeof(struct admin_comp), 0, lif->kern_pid,
-                             &lif->adminqcq, (ULONG)-1);
+                             &lif->adminqcq);
     if (status != NDIS_STATUS_SUCCESS)
         return status;
 
+    intr_msg = find_intr_msg(lif->ionic, INVALID_PROCESSOR_INDEX);
+    if (intr_msg == NULL)
+        return NDIS_STATUS_FAILURE;
+
+    intr_msg->inuse = true;
+    ionic_intr_affinitize(lif->ionic, lif->adminqcq->cq.bound_intr->index, intr_msg->id);
+
     if (is_master_lif(lif) && lif->ionic->nnqs_per_lif) {
         flags = QCQ_F_NOTIFYQ;
-        status = ionic_qcq_alloc(
-            lif, IONIC_QTYPE_NOTIFYQ, 0, "notifyq", flags, IONIC_NOTIFYQ_LENGTH,
-            sizeof(struct notifyq_cmd), sizeof(union notifyq_comp), 0,
-            lif->kern_pid, &lif->notifyqcq, (ULONG)-1);
+        status = ionic_qcq_alloc(lif, IONIC_QTYPE_NOTIFYQ, 0, "notifyq", flags,
+            IONIC_NOTIFYQ_LENGTH, sizeof(struct notifyq_cmd),
+            sizeof(union notifyq_comp), 0, lif->kern_pid,
+            &lif->notifyqcq);
         if (status != NDIS_STATUS_SUCCESS)
             goto err_out_free_adminqcq;
 
@@ -526,64 +602,6 @@ err_out_free_adminqcq:
     return status;
 }
 
-static void
-ionic_qcqs_free(struct lif *lif)
-{
-    unsigned int i;
-    struct interrupt_info *int_tbl = NULL;
-
-    if (lif->notifyqcq) {
-        ionic_qcq_free(lif, lif->notifyqcq);
-        lif->notifyqcq = NULL;
-    }
-
-    if (lif->adminqcq) {
-        ionic_qcq_free(lif, lif->adminqcq);
-        lif->adminqcq = NULL;
-    }
-
-    if( lif->rxqcqs != NULL) {
-        for (i = 0; i < lif->nrxqs; i++) {
-
-            if (lif->rxqcqs[i].qcq != NULL) {
-
-                int_tbl = get_interrupt(lif->ionic, lif->rxqcqs[i].qcq->intr.index);
-
-                ASSERT(int_tbl != NULL);
-
-                IoPrint("%s Indicating DmaStopped on queue id %d\n", __FUNCTION__,
-                        int_tbl->queue_id);
-
-                IndicateRxQueueState(lif->ionic, int_tbl->queue_id,
-                                     NdisReceiveQueueOperationalStateDmaStopped);
-
-                ionic_free_rxq_pkts(lif->ionic, lif->rxqcqs[i].qcq);
-                ionic_qcq_free(lif, lif->rxqcqs[i].qcq);
-                lif->rxqcqs[i].qcq = NULL;
-            }
-        }
-
-        NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, lif->rxqcqs,
-                                      IONIC_QCQ_TAG);
-        lif->rxqcqs = NULL;
-    }
-
-    if( lif->txqcqs != NULL) {
-        for (i = 0; i < lif->ntxqs; i++) {
-
-            if (lif->txqcqs[i].qcq != NULL) {
-                ionic_free_txq_pkts(lif->ionic, lif->txqcqs[i].qcq);
-                ionic_qcq_free(lif, lif->txqcqs[i].qcq);
-                lif->txqcqs[i].qcq = NULL;
-            }
-        }
-
-        NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, lif->txqcqs,
-                                      IONIC_QCQ_TAG);
-        lif->txqcqs = NULL;
-    }
-}
-
 static NDIS_STATUS
 ionic_qcq_alloc(struct lif *lif,
                 unsigned int type,
@@ -595,8 +613,7 @@ ionic_qcq_alloc(struct lif *lif,
                 unsigned int cq_desc_size,
                 unsigned int sg_desc_size,
                 unsigned int pid,
-                struct qcq **qcq,
-                ULONG preferredProc)
+                struct qcq **qcq)
 {
     struct ionic_dev *idev = &lif->ionic->idev;
     u32 q_size, cq_size, sg_size, total_size;
@@ -606,8 +623,8 @@ ionic_qcq_alloc(struct lif *lif,
     dma_addr_t q_base_pa = 0;
     struct qcq *newqcq;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    long vector = 0;
-    struct interrupt_info *int_tbl = NULL;
+    unsigned int intr_index = (unsigned int)-1;
+    struct intr* intr = NULL;
 
     *qcq = NULL;
 
@@ -646,6 +663,9 @@ ionic_qcq_alloc(struct lif *lif,
     NdisAllocateSpinLock(&newqcq->txq_pending_nb_lock);
     NdisAllocateSpinLock(&newqcq->txq_pending_nbl_lock);
 
+    NdisAllocateSpinLock(&newqcq->tx_ring_lock);
+    NdisAllocateSpinLock(&newqcq->rx_ring_lock);
+
     InitializeListHead(&newqcq->txq_pending_nb);
     ionic_txq_nbl_list_init(&newqcq->txq_pending_nbl);
 
@@ -680,39 +700,21 @@ ionic_qcq_alloc(struct lif *lif,
     }
 
     if (flags & QCQ_F_INTR) {
-        status = ionic_intr_alloc(lif, &newqcq->intr, preferredProc);
-        if (status != NDIS_STATUS_SUCCESS) {
+        intr_index = ionic_intr_alloc(lif->ionic);
+        if (intr_index == -1) {
             DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                       "%s no intr for %s: %08lX\n", __FUNCTION__, name,
                       status));
             goto err_out;
         }
-
-        vector = ionic_bus_get_irq(lif->ionic, newqcq->intr.index);
-        if (vector < 0) {
-            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-                      "%s no vector for %s: %d\n", __FUNCTION__, name, vector));
-            status = NDIS_STATUS_RESOURCES;
-            goto err_out_free_intr;
-        }
-        newqcq->intr.vector = vector;
-        ionic_intr_mask_assert(idev->intr_ctrl, newqcq->intr.index,
+        ionic_intr_mask_assert(idev->intr_ctrl, intr_index,
                                IONIC_INTR_MASK_SET);
 
-        newqcq->intr.cpu =
-            newqcq->intr.index % lif->ionic->proc_count; // num_online_cpus();
-
-        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                  "%s Int index %d Preferred %d\n", __FUNCTION__,
-                  newqcq->intr.index, preferredProc));
-
-        int_tbl = get_interrupt(lif->ionic, newqcq->intr.index);
-
-        ASSERT(int_tbl != NULL);
-
-        int_tbl->QueueType = type;
+        intr = &lif->ionic->intr_tbl[intr_index];
+        intr->lif = lif;
+        intr->qcq = newqcq;
     } else {
-        newqcq->intr.index = (unsigned int)INTR_INDEX_NOT_ASSIGNED;
+        intr_index = (unsigned int)INTR_INDEX_NOT_ASSIGNED;
     }
 
     newqcq->cq.info = (struct cq_info *)NdisAllocateMemoryWithTagPriority_internal(
@@ -733,7 +735,7 @@ ionic_qcq_alloc(struct lif *lif,
                   newqcq->cq.info, sizeof(struct cq_info) * num_descs));
 
     status =
-        ionic_cq_init(lif, &newqcq->cq, &newqcq->intr, num_descs, cq_desc_size);
+        ionic_cq_init(lif, &newqcq->cq, intr_index, num_descs, cq_desc_size);
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s Cannot initialize completion queue status %08lX\n",
@@ -775,7 +777,7 @@ ionic_qcq_alloc(struct lif *lif,
     return NDIS_STATUS_SUCCESS;
 
 err_out_free_intr:
-    ionic_intr_free(lif, newqcq->intr.index);
+    ionic_intr_free(lif->ionic, intr_index);
 err_out:
 
     if (newqcq != NULL) {
@@ -790,6 +792,11 @@ err_out:
                                           newqcq->cq.info, IONIC_CQ_INFO_TAG);
         }
 
+		NdisFreeSpinLock(&newqcq->txq_pending_nb_lock);
+		NdisFreeSpinLock(&newqcq->txq_pending_nbl_lock);
+		NdisFreeSpinLock(&newqcq->tx_ring_lock);
+		NdisFreeSpinLock(&newqcq->rx_ring_lock);
+
         NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, newqcq,
                                       IONIC_QCQ_TAG);
     }
@@ -803,13 +810,10 @@ err_out:
 static void
 ionic_link_qcq_interrupts(struct qcq *src_qcq, struct qcq *n_qcq)
 {
-    if (WARN_ON(n_qcq->flags & QCQ_F_INTR)) {
-        ionic_intr_free(n_qcq->cq.lif, n_qcq->intr.index);
-        n_qcq->flags &= ~QCQ_F_INTR;
+    if (src_qcq->flags & QCQ_F_INTR) {
+        ASSERT((n_qcq->flags & QCQ_F_INTR) == 0);
+        n_qcq->cq.bound_intr = src_qcq->cq.bound_intr;
     }
-
-    n_qcq->intr.vector = src_qcq->intr.vector;
-    n_qcq->intr.index = src_qcq->intr.index;
 }
 
 static void
@@ -829,23 +833,6 @@ ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 		qcq->ring_alloc_handle = NULL;
     }
 
-    if (qcq->netbuffer_base != NULL) {
-
-        NdisFreeSharedMemory(lif->ionic->adapterhandle,
-                             qcq->RxBufferAllocHandle);
-
-        qcq->RxBufferAllocHandle = NULL;
-        qcq->RxBufferHandle = NULL;
-        qcq->netbuffer_base = NULL;
-    }
-
-    if (qcq->sg_buffer != NULL) {
-
-        NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq->sg_buffer,
-                                      IONIC_SG_LIST_TAG);
-        qcq->sg_buffer = NULL;
-    }
-
     /* only the slave Tx and Rx qcqs will have master_slot set */
     if (qcq->master_slot) {
         struct lif *master_lif = lif->ionic->master_lif;
@@ -862,7 +849,7 @@ ionic_qcq_free(struct lif *lif, struct qcq *qcq)
     }
 
     if (qcq->flags & QCQ_F_INTR)
-        ionic_intr_free(lif, qcq->intr.index);
+        ionic_intr_free(lif->ionic, qcq->cq.bound_intr->index);
 
 	if( qcq->cq.info != NULL) {
 		NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq->cq.info,
@@ -876,6 +863,11 @@ ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 
 		qcq->q.info = NULL;
 	}
+
+	NdisFreeSpinLock(&qcq->txq_pending_nb_lock);
+	NdisFreeSpinLock(&qcq->txq_pending_nbl_lock);
+	NdisFreeSpinLock(&qcq->tx_ring_lock);
+	NdisFreeSpinLock(&qcq->rx_ring_lock);
 
     NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq,
                                   IONIC_QCQ_TAG);
@@ -1085,22 +1077,17 @@ ionic_lif_free(struct lif *lif)
 
     struct ionic *ionic = lif->ionic;
 
-    if (lif->rss_ind_tbl_mapped != NULL) {
-        /* free mapped rss indirection table */
-        dma_free_coherent(ionic, lif->rss_ind_tbl_sz, lif->rss_ind_tbl_mapped,
-                          lif->rss_ind_tbl_mapped_pa);
-
-        lif->rss_ind_tbl_mapped = NULL;
-        lif->rss_ind_tbl_mapped_pa = 0;
-    }
-
     if (lif->rss_ind_tbl != NULL) {
-        /* free rss indirection table */
-        NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, lif->rss_ind_tbl,
-                                      IONIC_RSS_INDIR_TBL_TAG);
+        /* free mapped rss indirection table */
+        dma_free_coherent(ionic, lif->rss_ind_tbl_sz, lif->rss_ind_tbl,
+                          lif->rss_ind_tbl_pa);
 
         lif->rss_ind_tbl = NULL;
+        lif->rss_ind_tbl_pa = 0;
     }
+
+	/* Free the rx pkt pool */
+	ionic_free_rxq_pool( lif);
 
     /* free queues */
     ionic_qcqs_free(lif);
@@ -1139,7 +1126,14 @@ ionic_lif_free(struct lif *lif)
     if (lif->rss_mapping != NULL) {
         NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, lif->rss_mapping,
                                       IONIC_GENERIC_TAG);
+		lif->rss_mapping = NULL;
     }
+
+	if (lif->rx_pkts_list != NULL) {
+		NdisFreeMemoryWithTagPriority_internal( ionic->adapterhandle, lif->rx_pkts_list,
+									 IONIC_GENERIC_TAG);
+		lif->rx_pkts_list = NULL;
+	}
 
     NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, lif, IONIC_LIF_TAG);
 
@@ -1592,7 +1586,7 @@ ionic_lif_vlan(struct lif *lif, u16 vlan_id, bool add)
 
 int
 ionic_napi(struct lif *lif,
-           int budget,
+           unsigned int budget,
            ionic_cq_cb cb,
            ionic_cq_done_cb done_cb,
            void *done_arg)
@@ -1748,7 +1742,7 @@ ionic_lif_txq_init(struct lif *lif, struct qcqst *qcqst)
     ctx.cmd.q_init.index = cpu_to_le32(q->index);
     ctx.cmd.q_init.flags = cpu_to_le16(IONIC_QINIT_F_IRQ | IONIC_QINIT_F_SG);
     ctx.cmd.q_init.intr_index =
-        (__le16)cpu_to_le16(lif->txqcqs[q->index].qcq->intr.index);
+        (__le16)cpu_to_le16(lif->txqcqs[q->index].qcq->cq.bound_intr->index);
     ctx.cmd.q_init.pid = (__le16)cpu_to_le16(q->pid);
     ctx.cmd.q_init.ring_size = (u8)ilog2(q->num_descs);
     ctx.cmd.q_init.ring_base = cpu_to_le64(q->base_pa);
@@ -1782,95 +1776,6 @@ ionic_lif_txq_init(struct lif *lif, struct qcqst *qcqst)
     qcq->flags |= QCQ_F_INITED;
 
     return NDIS_STATUS_SUCCESS;
-}
-
-NDIS_STATUS
-ionic_lif_rxq_pkt_init(struct qcq *qcq)
-{
-    NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    u32 ring_index = 0;
-    void *dma_entry_addr = NULL;
-    u32 data_offset = 0;
-    struct rxq_pkt *rxq_pkt = NULL;
-    SCATTER_GATHER_LIST *pSGList = NULL;
-    ULONG sg_count = 0;
-    ULONG sg_index = 0;
-    ULONG rxq_sg_index = 0;
-    SCATTER_GATHER_ELEMENT *pSrcElem = NULL;
-    ULONGLONG ullSrcPA = 0;
-    ULONG ulSrcLen = 0;
-
-    pSGList = (SCATTER_GATHER_LIST *)qcq->sg_buffer;
-
-    dma_entry_addr = qcq->netbuffer_base;
-    data_offset = 0;
-    ring_index = 0;
-
-    ASSERT((qcq->netbuffer_elementsize % PAGE_SIZE) == 0);
-    sg_count = qcq->netbuffer_elementsize / PAGE_SIZE;
-    sg_index = 0;
-
-    rxq_pkt = (struct rxq_pkt *)qcq->pkts_base.rxq_base;
-
-    pSrcElem = &pSGList->Elements[0];
-    ullSrcPA = pSrcElem->Address.QuadPart;
-    ulSrcLen = pSrcElem->Length;
-
-    while (ring_index < qcq->q.rx_pkt_cnt) {
-
-        rxq_pkt->sg_count = sg_count;
-        rxq_pkt->addr = dma_entry_addr;
-
-        rxq_sg_index = 0;
-        while (rxq_sg_index < sg_count) {
-            ASSERT(pSrcElem != NULL);
-            ASSERT((pSrcElem->Length % PAGE_SIZE) == 0);
-
-            rxq_pkt->phys_addr[rxq_sg_index] = ullSrcPA;
-
-            ullSrcPA += PAGE_SIZE;
-            ulSrcLen -= PAGE_SIZE;
-
-            if (ulSrcLen == 0) {
-
-                sg_index++;
-
-                if (sg_index < pSGList->NumberOfElements) {
-
-                    pSrcElem++;
-                    ullSrcPA = pSrcElem->Address.QuadPart;
-                    ulSrcLen = pSrcElem->Length;
-                } else {
-
-                    if (rxq_sg_index == sg_count - 1) {
-                        break;
-                    }
-
-                    status = NDIS_STATUS_RESOURCES;
-                    goto err_out;
-                }
-            }
-
-            rxq_sg_index++;
-        }
-
-        rxq_pkt->offset = data_offset;
-
-        dma_entry_addr =
-            (void *)((char *)dma_entry_addr +
-                        qcq->netbuffer_elementsize);
-        data_offset += qcq->netbuffer_elementsize;
-
-        rxq_pkt = rxq_pkt->next;
-
-        ring_index++;
-    }
-
-    return NDIS_STATUS_SUCCESS;
-
-err_out:
-
-    return status;
 }
 
 NDIS_STATUS
@@ -1932,24 +1837,15 @@ err_out:
 NDIS_STATUS
 ionic_txrx_alloc(struct lif *lif,
                  ULONG vport_id,
-                 ULONG queue_id,
-                 GROUP_AFFINITY Affinity)
+                 ULONG queue_id)
 {
     unsigned int flags;
     unsigned int i;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    u32 len = 0;
     struct ionic *ionic = lif->ionic;
-    struct interrupt_info *int_tbl = NULL;
-    NDIS_SHARED_MEMORY_PARAMETERS stParams;
-    ULONG ulSGListSize = 0;
-    ULONG ulSGListNumElements = 0;
-    PSCATTER_GATHER_LIST pSGListBuffer = NULL;
-    PROCESSOR_NUMBER procNumber;
-    u32 procMaskIndex = 0;
-    u32 procIndex = 0;
     ULONG q_index = 0;
     BOOLEAN default_port = FALSE;
+	struct intr_msg *intr_msg = NULL;
 
     if (queue_id == (ULONG)-1 && vport_id == (ULONG)-1) {
         q_index = 0;
@@ -1966,13 +1862,11 @@ ionic_txrx_alloc(struct lif *lif,
 
     flags = QCQ_F_TX_STATS | QCQ_F_SG;
     for (i = 0; i < lif->ntxqs; i++) {
-
-        procIndex = (ULONG)-1;
         status =
             ionic_qcq_alloc(lif, IONIC_QTYPE_TXQ, i, "tx", flags,
                             lif->ntxq_descs, sizeof(struct txq_desc),
                             sizeof(struct txq_comp), sizeof(struct txq_sg_desc),
-                            lif->kern_pid, &lif->txqcqs[i].qcq, procIndex);
+                            lif->kern_pid, &lif->txqcqs[i].qcq);
         if (status != NDIS_STATUS_SUCCESS) {
 
             DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
@@ -2014,47 +1908,11 @@ ionic_txrx_alloc(struct lif *lif,
     flags = QCQ_F_RX_STATS | QCQ_F_INTR | QCQ_F_SG;
     for (i = 0; i < lif->nrxqs; i++) {
 
-        //
-        // If we were given a group affinity for this queue then try to allocate
-        // that msi
-        //
-
-        procIndex = (ULONG)-1;
-
-        if (q_index != 0 && Affinity.Mask != 0) {
-
-            procMaskIndex = GetNextProcIndex(Affinity.Mask, procMaskIndex);
-            procIndex = 0;
-
-            if (procMaskIndex != INVALID_PROCESSOR_INDEX) {
-
-                procNumber.Reserved = 0;
-                procNumber.Group = Affinity.Group;
-                procNumber.Number = (UCHAR)procMaskIndex;
-
-                procIndex = KeGetProcessorIndexFromNumber(&procNumber);
-
-                if (procIndex != INVALID_PROCESSOR_INDEX) {
-
-                    if (procIndex >= ionic->interrupt_count) {
-                        procIndex = (procIndex % ionic->interrupt_count);
-                    }
-                }
-            } else {
-                procMaskIndex = 0;
-            }
-        } else if (default_port &&
-                   BooleanFlagOn(ionic->ConfigStatus, IONIC_RSS_ENABLED)) {
-
-            // get the affinity from the indirection table
-            procIndex = get_rss_affinity(lif, i);
-        }
-
         status =
             ionic_qcq_alloc(lif, IONIC_QTYPE_RXQ, i, "rx", flags,
                             lif->nrxq_descs, sizeof(struct rxq_desc),
                             sizeof(struct rxq_comp), sizeof(struct rxq_sg_desc),
-                            lif->kern_pid, &lif->rxqcqs[i].qcq, procIndex);
+                            lif->kern_pid, &lif->rxqcqs[i].qcq);
         if (status != NDIS_STATUS_SUCCESS) {
             DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                       "%s Ionic %p Failed to alloc rx qcq. Status %08lX\n",
@@ -2062,143 +1920,19 @@ ionic_txrx_alloc(struct lif *lif,
             goto err_out_free_rxqcqs;
         }
 
-        int_tbl = get_interrupt(lif->ionic, lif->rxqcqs[i].qcq->intr.index);
-
-        ASSERT(int_tbl != NULL);
-
-        int_tbl->rx_id = i;
-
-        int_tbl->msi_id = lif->rxqcqs[i].qcq->intr.index;
-
-        lif->rxqcqs[i].rx_stats->msi_id = lif->rxqcqs[i].qcq->intr.index;
-
-        IoPrint("%s Rx %d on core %d %d\n", __FUNCTION__, i, procIndex,
-                int_tbl->original_proc);
-
-        if ((procIndex != (ULONG)-1 && int_tbl->current_proc != procIndex) ||
-            (procIndex == (ULONG)-1 &&
-             int_tbl->current_proc != int_tbl->original_proc)) {
-
-            if (procIndex == (ULONG)-1) {
-
-                DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                          "%s Ionic %p Rx Id %d Remapped %d to %d curr %d\n",
-                          __FUNCTION__, ionic, i,
-                          lif->rxqcqs[i].qcq->intr.index,
-                          int_tbl->original_proc, int_tbl->current_proc));
-
-                int_tbl->current_proc = int_tbl->original_proc;
-            } else {
-
-                DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                          "%s Ionic %p Rx Id %d Mapped %d to %d curr %d\n",
-                          __FUNCTION__, ionic, i,
-                          lif->rxqcqs[i].qcq->intr.index, procIndex,
-                          int_tbl->current_proc));
-
-                int_tbl->current_proc = procIndex;
-
-                KeGetProcessorNumberFromIndex(procIndex, &procNumber);
-
-                int_tbl->group = procNumber.Group;
-                int_tbl->group_proc = procNumber.Number;
-
-                SetFlag(int_tbl->Flags, IONIC_TARGET_PROC_CHANGED);
-            }
-        }
-
-        int_tbl->queue_id = (USHORT)q_index;
-        lif->rxqcqs[i].qcq->queue_id = q_index;
-
-        len = lif->ionic->frame_size;
-
-        len = ((len / PAGE_SIZE) + 1) * PAGE_SIZE;
-
-        lif->rxqcqs[i].qcq->netbuffer_length =
-            len * lif->rxqcqs[i].qcq->q.rx_pkt_cnt;
-
-        ASSERT(lif->rxqcqs[i].qcq->netbuffer_length != 0);
-
-        if (lif->rxqcqs[i].qcq->netbuffer_length != 0) {
-
-            NdisZeroMemory(&stParams, sizeof(NDIS_SHARED_MEMORY_PARAMETERS));
-
-            stParams.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
-            stParams.Header.Revision = NDIS_SHARED_MEMORY_PARAMETERS_REVISION_2;
-            stParams.Header.Size =
-                NDIS_SIZEOF_SHARED_MEMORY_PARAMETERS_REVISION_2;
-
-            stParams.Flags = 0; // NDIS_SHARED_MEM_PARAMETERS_CONTIGOUS;
-
-            if (queue_id != (ULONG)-1) {
-                stParams.QueueId = queue_id;
-            } else {
-                stParams.VPortId = vport_id;
-            }
-
-            stParams.Usage = NdisSharedMemoryUsageReceive;
-
-            stParams.PreferredNode = ionic->numa_node; //MM_ANY_NODE_OK;
-
-            stParams.Length = lif->rxqcqs[i].qcq->netbuffer_length;
-
-            ulSGListNumElements = BYTES_TO_PAGES(stParams.Length);
-
-            ulSGListSize =
-                sizeof(SCATTER_GATHER_LIST) +
-                (sizeof(SCATTER_GATHER_ELEMENT) * ulSGListNumElements);
-            pSGListBuffer =
-                (PSCATTER_GATHER_LIST)NdisAllocateMemoryWithTagPriority_internal(
-                    ionic->adapterhandle, ulSGListSize, IONIC_SG_LIST_TAG,
-                    NormalPoolPriority);
-
-            if (pSGListBuffer == NULL) {
-                status = NDIS_STATUS_RESOURCES;
-                goto err_out_free_rxqcqs;
-            }
-
-            NdisZeroMemory(pSGListBuffer, ulSGListSize);
-
-            DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
-                  "%s Allocated 0x%p len %08lX\n",
-                  __FUNCTION__,
-                  pSGListBuffer,
-                  ulSGListSize));
-
-            lif->rxqcqs[i].qcq->sg_buffer = (void *)pSGListBuffer;
-
-            pSGListBuffer->NumberOfElements = ulSGListNumElements;
-
-            stParams.SGListBufferLength = ulSGListSize;
-            stParams.SGListBuffer = pSGListBuffer;
-
-            status = NdisAllocateSharedMemory(
-                ionic->adapterhandle, &stParams,
-                &lif->rxqcqs[i].qcq->RxBufferAllocHandle);
-
-            if (status != NDIS_STATUS_SUCCESS) {
-                ASSERT(FALSE);
-                status = NDIS_STATUS_RESOURCES;
-                goto err_out_free_rxqcqs;
-            }
-
-            DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                      "%s Rx VA %p Handle %p RxPool Length 0x%08lX\n",
-                      __FUNCTION__, stParams.VirtualAddress,
-                      stParams.SharedMemoryHandle,
-                      lif->rxqcqs[i].qcq->netbuffer_length));
-
-            NdisZeroMemory(stParams.VirtualAddress,
-                           lif->rxqcqs[i].qcq->netbuffer_length);
-
-			ASSERT( pSGListBuffer->NumberOfElements == 1);
-
-            lif->rxqcqs[i].qcq->RxBufferHandle = stParams.SharedMemoryHandle;
-            lif->rxqcqs[i].qcq->netbuffer_base = stParams.VirtualAddress;
-            lif->rxqcqs[i].qcq->netbuffer_elementsize = len;
-        }
-
         lif->rxqcqs[i].qcq->rx_stats = lif->rxqcqs[i].rx_stats;
+
+		/* If enabled, set the coalescing timer */	
+		if( BooleanFlagOn(ionic->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED)) {
+			ionic_intr_coal_init(lif->ionic->idev.intr_ctrl,
+							 lif->rxqcqs[i].qcq->cq.bound_intr->index,
+							 ionic->rx_coalesce_hw);
+		}
+		else {
+			ionic_intr_coal_init(lif->ionic->idev.intr_ctrl,
+							 lif->rxqcqs[i].qcq->cq.bound_intr->index,
+							 0);
+		}
 
         ionic_link_qcq_interrupts(lif->rxqcqs[i].qcq, lif->txqcqs[i].qcq);
 
@@ -2211,21 +1945,16 @@ ionic_txrx_alloc(struct lif *lif,
                 goto err_out_free_rxqcqs;
         }
 
-        status = ionic_alloc_rxq_pkts(lif->ionic, lif->rxqcqs[i].qcq);
+		/* Affinitize the int */
 
-        if (status != NDIS_STATUS_SUCCESS) {
-            goto err_out_free_rxqcqs;
-        }
+		intr_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+		if (intr_msg == NULL) {
+			 status = NDIS_STATUS_FAILURE;
+			goto err_out_free_rxqcqs;
+		}
 
-        status = ionic_lif_rxq_pkt_init(lif->rxqcqs[i].qcq);
-        if (status != NDIS_STATUS_SUCCESS) {
-            goto err_out_free_rxqcqs;
-        }
-
-        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                  "%s Lif %s Index %d Cnt %d free cnt %d\n", __FUNCTION__,
-                  lif->name, i, lif->rxqcqs[i].qcq->q.rx_pkt_cnt,
-                  lif->rxqcqs[i].qcq->pkts_free_count));
+		intr_msg->inuse = true;
+		ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_msg->id);
     }
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
@@ -2236,7 +1965,6 @@ ionic_txrx_alloc(struct lif *lif,
 err_out_free_rxqcqs:
     for (i = 0; i < lif->nrxqs; i++) {
         if (lif->rxqcqs[i].qcq != NULL) {
-            ionic_free_rxq_pkts(lif->ionic, lif->rxqcqs[i].qcq);
             ionic_qcq_free(lif, lif->rxqcqs[i].qcq);
 			lif->rxqcqs[i].qcq = NULL;
         }
@@ -2334,7 +2062,7 @@ ionic_txrx_deinit(struct lif *lif)
 
     for (i = 0; i < lif->ntxqs; i++) {
         ionic_lif_qcq_deinit(lif, lif->txqcqs[i].qcq);
-        ionic_tx_flush(lif->txqcqs[i].qcq, true, false);
+        ionic_tx_flush(lif->txqcqs[i].qcq, lif->txqcqs[i].qcq->cq.num_descs, true, true);
         ionic_tx_empty(&lif->txqcqs[i].qcq->q);
 
         ionic_reset_qcq( lif->txqcqs[i].qcq);
@@ -2345,7 +2073,6 @@ ionic_txrx_deinit(struct lif *lif)
         ionic_rx_flush(&lif->rxqcqs[i].qcq->cq);
         ionic_rx_empty(&lif->rxqcqs[i].qcq->q);
 
-        ionic_reset_rxq_pkts( lif->rxqcqs[i].qcq);
         ionic_reset_qcq( lif->rxqcqs[i].qcq);
     }
 }
@@ -2368,6 +2095,8 @@ ionic_lif_stop(struct lif *lif)
 
     ionic_txrx_disable(lif);
     ionic_lif_quiesce(lif);
+
+    ionic_reset_rxq_pkts( lif);
 
     ionic_txrx_deinit(lif);
     // ionic_txrx_free(lif);
@@ -2414,7 +2143,7 @@ ionic_lif_tx_flush(struct lif *lif)
     unsigned int i;
 
     for (i = 0; i < lif->ntxqs; i++) {
-        ionic_tx_flush(lif->txqcqs[i].qcq, false, false);
+        ionic_tx_flush(lif->txqcqs[i].qcq, lif->txqcqs[i].qcq->cq.num_descs, false, true);
         ionic_service_pending_nbl_requests(lif->ionic, lif->txqcqs[i].qcq);
     }
 
@@ -2486,12 +2215,19 @@ err_out:
 NDIS_STATUS
 ionic_lif_open(struct lif *lif,
                ULONG vport_id,
-               ULONG queue_id,
-               GROUP_AFFINITY Affinity)
+               ULONG queue_id)
 {
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
 
-    status = ionic_txrx_alloc(lif, vport_id, queue_id, Affinity);
+	status = ionic_alloc_rxq_pool( lif);
+    if (status != NDIS_STATUS_SUCCESS) {
+        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
+                  "%s ionic_txrx_alloc() Failed status %08lX\n", __FUNCTION__,
+                  status));
+        return status;
+    }
+
+    status = ionic_txrx_alloc(lif, vport_id, queue_id);
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s ionic_txrx_alloc() Failed status %08lX\n", __FUNCTION__,
@@ -2507,12 +2243,8 @@ ionic_open(struct ionic *ionic)
 {
     struct lif *lif = ionic->master_lif;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    GROUP_AFFINITY affinity;
 
-    affinity.Group = 0;
-    affinity.Mask = 0;
-
-    status = ionic_lif_open(lif, (ULONG)-1, (ULONG)-1, affinity);
+    status = ionic_lif_open(lif, (ULONG)-1, (ULONG)-1);
 
     if (status != NDIS_STATUS_SUCCESS) {
         KeSetEvent( &perfmon_event, 0, FALSE);
@@ -2522,6 +2254,11 @@ ionic_open(struct ionic *ionic)
 
         return status;
     }
+
+	/* Convert the default coalesce value to actual hw resolution */
+	ionic->rx_coalesce_usecs = ionic->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value;
+	ionic->rx_coalesce_hw = ionic_coal_usec_to_hw(ionic,
+												ionic->rx_coalesce_usecs);
 
     return NDIS_STATUS_SUCCESS;
 }
@@ -2621,12 +2358,12 @@ ionic_start(struct ionic *ionic)
 
 exit:
 
-    if (status != NDIS_STATUS_SUCCESS) {
-        ionic_stop(ionic);
-    }
-
     if( set_event) {
         KeSetEvent( &perfmon_event, 0, FALSE);
+    }
+
+    if (status != NDIS_STATUS_SUCCESS) {
+        ionic_stop(ionic);
     }
 
     return status;
@@ -2809,22 +2546,6 @@ err_out_free_identify:
 
     return NULL;
 }
-static inline u32
-ionic_coal_usec_to_hw(struct ionic *ionic, u32 usecs)
-{
-    u32 mult = le32_to_cpu(ionic->ident.dev.intr_coal_mult);
-    u32 div = le32_to_cpu(ionic->ident.dev.intr_coal_div);
-
-    /* Div-by-zero should never be an issue, but check anyway */
-    if (!div || !mult)
-        return 0;
-
-    /* Round up in case usecs is close to the next hw unit */
-    usecs += (div / mult) >> 1;
-
-    /* Convert from usecs to device units */
-    return (usecs * mult) / div;
-}
 
 NDIS_STATUS
 ionic_set_coalesce(struct ionic *ionic, BOOLEAN Enable)
@@ -2846,7 +2567,7 @@ ionic_set_coalesce(struct ionic *ionic, BOOLEAN Enable)
      * for non-zero and it resolved to zero, bump it up
      */
     if (Enable) {
-        coal = ionic_coal_usec_to_hw(ionic, IONIC_DEFAULT_INT_COAL_US);
+        coal = ionic->rx_coalesce_hw;
     }
 
     if (!coal && Enable)
@@ -2857,10 +2578,27 @@ ionic_set_coalesce(struct ionic *ionic, BOOLEAN Enable)
     if (RtlCheckBit(&ionic->master_lif->state, LIF_UP)) {
         for (i = 0; i < ionic->master_lif->nrxqs; i++) {
             ionic_intr_coal_init(ionic->master_lif->ionic->idev.intr_ctrl,
-                                 ionic->master_lif->rxqcqs[i].qcq->intr.index,
+                                 ionic->master_lif->rxqcqs[i].qcq->cq.bound_intr->index,
                                  coal);
         }
     }
+	/* Update the state in the registry */
+	if (Enable) {
+		if (ionic->registry_config[IONIC_REG_INTERRUPT_MOD].current_value == 0) {
+			ionic->registry_config[IONIC_REG_INTERRUPT_MOD].current_value = 1;
+			UpdateRegistryKeyword( ionic,
+								   IONIC_REG_INTERRUPT_MOD);
+			SetFlag(ionic->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED);
+		}
+	}
+	else {
+		if (ionic->registry_config[IONIC_REG_INTERRUPT_MOD].current_value != 0) {
+			ionic->registry_config[IONIC_REG_INTERRUPT_MOD].current_value = 0;
+			UpdateRegistryKeyword( ionic,
+								   IONIC_REG_INTERRUPT_MOD);
+			ClearFlag(ionic->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED);
+		}
+	}
 
     return NDIS_STATUS_SUCCESS;
 }

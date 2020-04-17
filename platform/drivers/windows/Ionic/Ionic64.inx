@@ -286,7 +286,7 @@ HKR, Ndi\Params\*LsoV1IPv4\Enum,                "1",                    0, %Enab
 HKR, Ndi\Params\*LsoV1IPv4,                     type,                   0, "enum"
 
 ; *JumboPacket
-HKR, NDI\Params\*JumboPacket ,                  ParamDesc,              0, "%JumboPacket%"
+HKR, NDI\Params\*JumboPacket ,                  ParamDesc,              0, %JumboPacket%
 HKR, NDI\Params\*JumboPacket ,                  default,                0, "9212"
 HKR, NDI\Params\*JumboPacket ,                  min,                    0, "590"
 HKR, NDI\Params\*JumboPacket ,                  max,                    0, "9212"
@@ -296,11 +296,11 @@ HKR, NDI\Params\*JumboPacket ,                  type,                   0, "dwor
 
 ; RxQueue Size as % of current ring size
 HKR, Ndi\params\RxPoolSize,                     ParamDesc,              0, %RxPoolSize%
-HKR, Ndi\params\RxPoolSize,                     default,                0, "150"
-HKR, Ndi\params\RxPoolSize,                     min,                    0, "100"
-HKR, Ndi\params\RxPoolSize,                     max,                    0, "5000"
-HKR, Ndi\params\RxPoolSize,                     step,                   0, "10"
-HKR, Ndi\params\RxPoolSize,                     Base,                   0, "10"
+HKR, Ndi\params\RxPoolSize,                     default,                0, "4"
+HKR, Ndi\params\RxPoolSize,                     min,                    0, "1"
+HKR, Ndi\params\RxPoolSize,                     max,                    0, "10"
+HKR, Ndi\params\RxPoolSize,                     step,                   0, "1"
+HKR, Ndi\params\RxPoolSize,                     Base,                   0, "1"
 HKR, Ndi\params\RxPoolSize,                     type,                   0, "DWORD"
 
 ; TxFlushMode
@@ -310,6 +310,22 @@ HKR, Ndi\Params\TxFlushMode\Enum,               "1",                    0, %TxMo
 HKR, Ndi\Params\TxFlushMode\Enum,               "2",                    0, %TxModeSendPath%
 HKR, Ndi\Params\TxFlushMode\Enum,               "3",                    0, %TxModeBoth%
 HKR, Ndi\Params\TxFlushMode,                    type,                   0, "enum"
+
+; *InterruptModeration
+HKR, NDI\Params\*InterruptModeration,			ParamDesc,				0, %InterruptModeration%
+HKR, NDI\Params\*InterruptModeration,			Type,					0, "enum"
+HKR, NDI\Params\*InterruptModeration,			Default,				0, "1"
+HKR, NDI\Params\*InterruptModeration\enum,		"0",					0, "%Disabled%"
+HKR, NDI\Params\*InterruptModeration\enum,		"1",					0, "%Enabled%"
+
+; Rx Interrupt Moderation value
+HKR, Ndi\params\RxIntModTimeout,                ParamDesc,              0, %RxIntModTimeout%
+HKR, Ndi\params\RxIntModTimeout,                default,                0, "64"
+HKR, Ndi\params\RxIntModTimeout,                min,                    0, "1"
+HKR, Ndi\params\RxIntModTimeout,                max,                    0, "84"
+HKR, Ndi\params\RxIntModTimeout,                step,                   0, "1"
+HKR, Ndi\params\RxIntModTimeout,                Base,                   0, "10"
+HKR, Ndi\params\RxIntModTimeout,                type,                   0, "DWORD"
 
 [IonicMini.Powermgmt.Common.reg]
 ; EnablePME
@@ -423,6 +439,9 @@ VlanEnabled                  = "VLAN Enabled"
 
 JumboPacket                  = "Jumbo Packet"
 Bytes9000                    = "9000 Bytes"
+
+InterruptModeration			 = "Interrupt Moderation"
+RxIntModTimeout				 = "Rx Interrupt Moderation Timeout"
 
 RxPoolSize                   = "Rx Pool Size"
 

@@ -33,8 +33,6 @@ ionic_q_init(struct lif *lif,
     q->head = q->tail;
     q->pid = pid;
 
-    q->rx_pkt_cnt = GetPktCount(lif->ionic, q);
-
     _snprintf_s(q->name, QUEUE_NAME_MAX_SZ, sizeof(q->name), "L%d-%s%u", lif->index, name, index);
 
     cur = q->info;
@@ -55,7 +53,7 @@ ionic_q_init(struct lif *lif,
 NDIS_STATUS
 ionic_cq_init(struct lif *lif,
               struct cq *cq,
-              struct intr *intr,
+              unsigned int intr_index,
               unsigned int num_descs,
               size_t desc_size)
 {
@@ -71,7 +69,8 @@ ionic_cq_init(struct lif *lif,
         return NDIS_STATUS_INVALID_DATA;
 
     cq->lif = lif;
-    cq->bound_intr = intr;
+    if (intr_index != INTR_INDEX_NOT_ASSIGNED)
+        cq->bound_intr = &lif->ionic->intr_tbl[intr_index];
     cq->num_descs = num_descs;
     cq->desc_size = (unsigned int)desc_size;
     cq->tail = cq->info;
@@ -171,7 +170,7 @@ ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
         return;
 
     if (qcq->flags & QCQ_F_INTR) {
-        ionic_intr_mask(idev->intr_ctrl, qcq->intr.index, IONIC_INTR_MASK_SET);
+        ionic_intr_mask(idev->intr_ctrl, qcq->cq.bound_intr->index, IONIC_INTR_MASK_SET);
         // synchronize_irq(qcq->intr.vector);
         // devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
         // netif_napi_del(&qcq->napi);
@@ -229,11 +228,8 @@ ionic_qcq_enable(struct qcq *qcq)
               qcq->flags));
 
     if (qcq->flags & QCQ_F_INTR) {
-        // irq_set_affinity_hint(qcq->intr.vector,
-        //		      &qcq->intr.affinity_mask);
-        // napi_enable(&qcq->napi);
-        ionic_intr_clean(idev->intr_ctrl, qcq->intr.index);
-        ionic_intr_mask(idev->intr_ctrl, qcq->intr.index,
+        ionic_intr_clean(idev->intr_ctrl, qcq->cq.bound_intr->index);
+        ionic_intr_mask(idev->intr_ctrl, qcq->cq.bound_intr->index,
                         IONIC_INTR_MASK_CLEAR);
     }
 
@@ -259,7 +255,8 @@ ionic_qcq_disable(struct qcq *qcq)
               ctx.cmd.q_control.index, ctx.cmd.q_control.type));
 
     if (qcq->flags & QCQ_F_INTR) {
-        ionic_intr_mask(idev->intr_ctrl, qcq->intr.index, IONIC_INTR_MASK_SET);
+        ionic_intr_mask(idev->intr_ctrl, qcq->cq.bound_intr->index,
+            IONIC_INTR_MASK_SET);
     }
 
     return ionic_adminq_post_wait(lif, &ctx);

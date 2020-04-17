@@ -705,8 +705,7 @@ oid_filter_queue_alloc_complete(struct ionic *ionic,
 
             ntStatus = ionic_lif_open(
                 ionic->vm_queue[pEntry->QueueId].lif, (ULONG)-1,
-                pEntry->QueueId,
-                ionic->vm_queue[pEntry->QueueId].ProcessorAffinity);
+                pEntry->QueueId);
 
             if (ntStatus != NDIS_STATUS_SUCCESS) {
                 DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
@@ -932,11 +931,6 @@ oid_set_receive_filter_params(struct ionic *ionic,
     NDIS_RECEIVE_QUEUE_PARAMETERS *pParams =
         (NDIS_RECEIVE_QUEUE_PARAMETERS *)info_buffer;
     LOCK_STATE_EX lock_state;
-    ULONG index = 0;
-    struct interrupt_info *int_tbl = NULL;
-    struct lif *lif = NULL;
-    ULONG proc_index = 0;
-    ULONG curr_proc = 0;
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
               "%s QueueId 0x%08lX Flags 0x%08lX\n", __FUNCTION__,
@@ -983,29 +977,6 @@ oid_set_receive_filter_params(struct ionic *ionic,
                  ionic->vm_queue[pParams->QueueId].ProcessorAffinity.Mask, 0),
              pParams->ProcessorAffinity.Group,
              GetNextProcIndex(pParams->ProcessorAffinity.Mask, 0)));
-
-        lif = ionic->vm_queue[pParams->QueueId].lif;
-        for (index = 0; index < lif->nrxqs; index++) {
-
-            int_tbl =
-                get_interrupt(lif->ionic, lif->rxqcqs[index].qcq->intr.index);
-            proc_index = GetNextProcIndex(pParams->ProcessorAffinity.Mask, 0);
-            if (int_tbl->group != pParams->ProcessorAffinity.Group ||
-                int_tbl->group_proc != proc_index) {
-                // Need to sync with the ISR for this change
-                int_tbl->target_group = pParams->ProcessorAffinity.Group;
-                int_tbl->target_group_proc = proc_index;
-                curr_proc = int_tbl->current_proc;
-                NdisMSynchronizeWithInterruptEx(
-                    ionic->intr_obj, int_tbl->msi_id,
-                    synchronize_affinity_change, int_tbl);
-
-                DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                          "%s Successfully updated processor from %d to %d\n",
-                          __FUNCTION__, curr_proc, int_tbl->current_proc));
-                SetFlag(int_tbl->Flags, IONIC_TARGET_PROC_CHANGED);
-            }
-        }
     }
 
 cleanup:
@@ -1019,18 +990,6 @@ cleanup:
 BOOLEAN
 synchronize_affinity_change(NDIS_HANDLE SynchronizeContext)
 {
-    struct interrupt_info *int_tbl =
-        (struct interrupt_info *)SynchronizeContext;
-    PROCESSOR_NUMBER procNumber;
-
-    // Update the group and processor sync'd with teh ISR
-    int_tbl->group = int_tbl->target_group;
-    int_tbl->group_proc = int_tbl->target_group_proc;
-
-    procNumber.Reserved = 0;
-    procNumber.Group = int_tbl->target_group;
-    procNumber.Number = (UCHAR)int_tbl->target_group_proc;
-    int_tbl->current_proc = KeGetProcessorIndexFromNumber(&procNumber);
-
+    UNREFERENCED_PARAMETER(SynchronizeContext);
     return TRUE;
 }

@@ -165,6 +165,9 @@ ConfigureTrace(IN TraceConfigCB *TraceInfo)
     BOOLEAN bUpdateFlags = FALSE;
     BOOLEAN bUpdateBufferLen = FALSE;
 
+    IoPrint("%s level 0x%lx component 0x%lx\n",
+        __FUNCTION__, TraceInfo->Level, TraceInfo->Component);
+
     NdisAcquireSpinLock(&TraceLock);
 
     if ((TraceInfo->TraceBufferLength != -1) &&

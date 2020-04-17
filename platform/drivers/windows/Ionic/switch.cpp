@@ -712,8 +712,7 @@ oid_switch_create_vport(struct ionic *ionic, NDIS_OID_REQUEST *OidRequest)
         }
 
         ntStatus =
-            ionic_lif_open(pVPort->lif, pVPort->PortId, (ULONG)-1,
-                            pVPort->ProcessorAffinity);
+            ionic_lif_open(pVPort->lif, pVPort->PortId, (ULONG)-1);
 
         if (ntStatus != NDIS_STATUS_SUCCESS) {
             DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
@@ -1135,8 +1134,7 @@ oid_switch_set_vport_params(struct ionic *ionic, void *info_buffer)
             }
 
             ntStatus =
-                ionic_lif_open(vPort->lif, vPort->PortId, (ULONG)-1,
-                                vPort->ProcessorAffinity);
+                ionic_lif_open(vPort->lif, vPort->PortId, (ULONG)-1);
 
             if (ntStatus != NDIS_STATUS_SUCCESS) {
                 DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,

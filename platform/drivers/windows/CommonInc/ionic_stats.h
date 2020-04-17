@@ -183,10 +183,6 @@ struct dev_tx_ring_stats {
     __le32      nbl_count;
     __le32      nb_count;
 
-    __le64      nbl_tick_total;
-    __le64      nb_queue_to_comp_tick;
-    __le64      nb_sp_to_comp_tick;
-
     __le32      pending_nbl_count;
     __le32      pending_nb_count;
 
@@ -215,7 +211,13 @@ struct dev_lif_stats {
 	__le32		rx_count;
 	__le32		tx_count;
 
-    __le64      core_redirect_count;
+	__le32		rx_pool_alloc_cnt;
+
+	__le32		rx_pool_free_cnt;
+
+	__le64		rx_pool_alloc_time;
+	
+	__le64		rx_pool_free_time;
 
 	struct dev_tx_ring_stats tx_ring[ MAX_QUEUE_PER_LIF_COUNT];
 

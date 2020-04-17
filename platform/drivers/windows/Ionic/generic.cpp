@@ -240,6 +240,27 @@ ReadRegParameters(struct ionic *Adapter)
                   Adapter->nrx_buffers));
     }
 
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_INTERRUPT_MOD].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
+                          NdisParameterInteger);
+	/* By default it is enabled */
+	SetFlag(Adapter->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		if(pParameters->ParameterData.IntegerData == 0) {
+			ClearFlag(Adapter->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED);
+		}
+		Adapter->registry_config[ IONIC_REG_INTERRUPT_MOD].current_value = pParameters->ParameterData.IntegerData;
+    }
+
+	NdisInitUnicodeString( &uniKeyWord,
+						   ionic_registry[ IONIC_REG_RX_INT_MOD_TO].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
+                          NdisParameterInteger);
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+		Adapter->registry_config[ IONIC_REG_RX_INT_MOD_TO].current_value = pParameters->ParameterData.IntegerData;
+    }
+
     // xsum and LSO offload
 	NdisInitUnicodeString( &uniKeyWord,
 						   ionic_registry[ IONIC_REG_LSOV1].name);
@@ -2190,12 +2211,7 @@ oid_set_interrupt_moderation(struct ionic *ionic,
 
     *bytes_read = info_buffer_length;
 
-    if (pParams->InterruptModeration == NdisInterruptModerationEnabled) {
-        SetFlag(ionic->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED);
-        bEnable = TRUE;
-    } else {
-        ClearFlag(ionic->ConfigStatus, IONIC_INTERRUPT_MOD_ENABLED);
-    }
+    bEnable = (pParams->InterruptModeration == NdisInterruptModerationEnabled);
 
     ntStatus = ionic_set_coalesce(ionic, bEnable);
 
@@ -2465,7 +2481,7 @@ process_work_item(PVOID   WorkItemContext,
 }
 
 NDIS_STATUS
-get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len)
+get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_stats, ULONG *len, ULONGLONG counter_mask)
 {
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
     NDIS_STRING AdapterNameString = {};
@@ -2488,9 +2504,6 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
     PVOID *lut = NULL;
     ULONG lut_index;
     LARGE_INTEGER perf_frequ;
-    ULONG nb_count = 0;
-    ULONGLONG sp_to_comp = 0;
-    ULONGLONG queue_to_comp = 0;
 
     status = KeWaitForSingleObject(&perfmon_event,
                                    Executive,
@@ -2627,9 +2640,9 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
             stats->adapter_count++;
             lut[lut_index++] = adapter_stats;
 
-	    adapter_stats->lif_count = ionic->total_lif_count;
-	    wcscpy_s(adapter_stats->name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
-	    adapter_stats->core_redirection_count = InterlockedExchange( &ionic->core_redirect_count,
+			adapter_stats->lif_count = ionic->total_lif_count;
+			wcscpy_s(adapter_stats->name, ADAPTER_NAME_MAX_SZ, ionic->name.Buffer);
+			adapter_stats->core_redirection_count = InterlockedExchange( &ionic->core_redirect_count,
                                                                          0);
             if (ionic->pci_config.DeviceID == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT) {
                 adapter_stats->mgmt_device = TRUE;
@@ -2651,6 +2664,48 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
                 lif_stats->rx_queue_count = lif->nrxqs;
                 lif_stats->tx_queue_count = lif->ntxqs;
 
+				/* Only perform desctructive collections if requested */
+
+				if( counter_mask != IONIC_PERF_MON_NO_STATS) {
+
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
+						(counter_mask & Rx_Pool_Alloc_Cnt_MASK) == Rx_Pool_Alloc_Cnt_MASK) {
+						lif_stats->rx_pool_alloc_cnt = InterlockedExchange( (LONG *)&lif->lif_stats->rx_pool_alloc_cnt,
+																			0);
+					}
+
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
+						(counter_mask & Rx_Pool_Free_Cnt_MASK) == Rx_Pool_Free_Cnt_MASK) {
+						lif_stats->rx_pool_free_cnt = InterlockedExchange( (LONG *)&lif->lif_stats->rx_pool_free_cnt,
+																		   0);
+					}
+
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
+						(counter_mask & Rx_Pool_Avail_Cnt_MASK) == Rx_Pool_Avail_Cnt_MASK) {
+						lif_stats->rx_pool_size = lif->rx_pkts_free_count;
+					}
+
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
+						(counter_mask & Rx_Pool_Alloc_Time_MASK) == Rx_Pool_Alloc_Time_MASK) {
+						lif_stats->rx_pool_alloc_time = InterlockedExchange64( (LONG64 *)&lif->lif_stats->rx_pool_alloc_time,
+																		  0);
+						if( lif_stats->rx_pool_alloc_time != 0) {
+							lif_stats->rx_pool_alloc_time *= 1000000;
+							lif_stats->rx_pool_alloc_time /= perf_frequ.QuadPart;
+						}
+					}
+
+					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
+						(counter_mask & Rx_Pool_Free_Time_MASK) == Rx_Pool_Free_Time_MASK) {
+						lif_stats->rx_pool_free_time = InterlockedExchange64( (LONG64 *)&lif->lif_stats->rx_pool_free_time,
+																		  0);
+						if( lif_stats->rx_pool_free_time != 0) {
+							lif_stats->rx_pool_free_time *= 1000000;
+							lif_stats->rx_pool_free_time /= perf_frequ.QuadPart;
+						}
+					}
+				}
+
                 rx_stats = (struct _PERF_MON_RX_QUEUE_STATS *)((char *)lif_stats + sizeof( struct _PERF_MON_LIF_STATS));
 
                 if (lif->nrxqs != 0) {
@@ -2663,12 +2718,14 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
                         continue;
                     }
 
-                    if( lif->rxqcqs[ queue_cnt].qcq->rx_stats->pool_sample_count != 0) {
-                        rx_stats->rx_pool_count = InterlockedExchange( (LONG *)&lif->rxqcqs[ queue_cnt].qcq->rx_stats->pool_packet_count,
-                                                                       0);
-                        rx_stats->rx_pool_count /= InterlockedExchange( (LONG *)&lif->rxqcqs[ queue_cnt].qcq->rx_stats->pool_sample_count,
-                                                                       0);
-                    }
+					if( counter_mask != IONIC_PERF_MON_NO_STATS) {
+						if( lif->rxqcqs[ queue_cnt].qcq->rx_stats->pool_sample_count != 0) {
+							rx_stats->rx_pool_count = InterlockedExchange( (LONG *)&lif->rxqcqs[ queue_cnt].qcq->rx_stats->pool_packet_count,
+																		   0);
+							rx_stats->rx_pool_count /= InterlockedExchange( (LONG *)&lif->rxqcqs[ queue_cnt].qcq->rx_stats->pool_sample_count,
+																		   0);
+						}
+					}
 
                     rx_stats = (struct _PERF_MON_RX_QUEUE_STATS *)((char *)rx_stats + sizeof( struct _PERF_MON_RX_QUEUE_STATS));
                 }
@@ -2685,49 +2742,23 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
                         continue;
                     }
 
-                    tx_stats->max_queue_len = lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_max;
-                    lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_max = 0;
+					if( counter_mask != IONIC_PERF_MON_NO_STATS) {
+						tx_stats->max_queue_len = lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_max;
+						lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_max = 0;
 
-                    if( lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_sample != 0) {
-                        tx_stats->queue_len = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_count,
-                                                                     0) /
-                                                InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_sample,
-                                                                     0);
-                    }
+						if( lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_sample != 0) {
+							tx_stats->queue_len = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_count,
+																		 0) /
+													InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_sample,
+																		 0);
+						}
 
-                    if( lif->txqcqs[ queue_cnt].qcq->tx_stats->nbl_tick_total != 0) {
-                        tx_stats->nbl_per_sec = (ULONG)((InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->nbl_count,
-                                                                     0) * perf_frequ.QuadPart) /
-                                                InterlockedExchange64( (LONGLONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->nbl_tick_total,
-                                                                     0));
-                    }
+						tx_stats->pending_nbl_count = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->pending_nbl_count,
+														0);
 
-                    nb_count = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->nb_count,
-                                                    0);
-
-                    sp_to_comp = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->nb_sp_to_comp_tick,
-                                                    0);
-
-                    queue_to_comp = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->nb_queue_to_comp_tick,
-                                                    0);
-
-                    if( sp_to_comp != 0) {
-                        tx_stats->nb_per_sec = (ULONG)((nb_count * perf_frequ.QuadPart) / sp_to_comp);
-    
-                        if( sp_to_comp != queue_to_comp) {
-                            tx_stats->nb_time_to_queue = (ULONG)((nb_count * perf_frequ.QuadPart) / (sp_to_comp - queue_to_comp));
-                        }
-                    }
-
-                    if( queue_to_comp != 0) {
-                        tx_stats->nb_time_queue_to_comp = (ULONG)((nb_count * perf_frequ.QuadPart) / queue_to_comp);
-                    }
-
-                    tx_stats->pending_nbl_count = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->pending_nbl_count,
-                                                    0);
-
-                    tx_stats->pending_nb_count = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->pending_nb_count,
-                                                    0);
+						tx_stats->pending_nb_count = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->pending_nb_count,
+														0);
+					}
 
                     tx_stats = (struct _PERF_MON_TX_QUEUE_STATS *)((char *)tx_stats + sizeof( struct _PERF_MON_TX_QUEUE_STATS));
                 }
@@ -3179,7 +3210,7 @@ IoctlAdapterInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
 
 		entry->link_state = le16_to_cpu(ionic->master_lif->info->status.link_status);
 
-		entry->Mtu = ionic->frame_size;
+		entry->Mtu = ionic->frame_size - ETH_COMPLETE_HDR;
 
 		if (entry->link_state != PORT_OPER_STATUS_UP) {
 			entry->Speed = 0;

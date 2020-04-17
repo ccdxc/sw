@@ -279,8 +279,6 @@ ionic_init(struct ionic *ionic)
 {
     struct ionic_dev *idev = &ionic->idev;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    ULONG index = 0;
-    ULONG proc = 0;
     NDIS_SHARED_MEMORY_PARAMETERS stParams;
     ULONG ulSGListNumElements = 0;
     PSCATTER_GATHER_LIST pSGListBuffer = NULL;
@@ -294,55 +292,6 @@ ionic_init(struct ionic *ionic)
     struct tx_frag_pool_elem *curr_elem = NULL;
     struct tx_frag_pool_elem *next_elem = NULL;
     ULONG elem_cnt = 0;
-    ULONG group = 0;
-
-    //
-    // Initialize our interrupt msi id mappings
-    //
-
-    ionic->interrupt_tbl =
-        (struct interrupt_info *)NdisAllocateMemoryWithTagPriority_internal(
-            ionic->adapterhandle,
-            ionic->interrupt_count * sizeof(struct interrupt_info),
-            IONIC_INT_TABLE_TAG, NormalPoolPriority);
-
-    if (ionic->interrupt_tbl == NULL) {
-        status = NDIS_STATUS_RESOURCES;
-        goto exit;
-    }
-
-    NdisZeroMemory(ionic->interrupt_tbl,
-                   ionic->interrupt_count * sizeof(struct interrupt_info));
-
-    DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
-                  "%s Allocated 0x%p len %08lX\n",
-                  __FUNCTION__,
-                  ionic->interrupt_tbl, ionic->interrupt_count * sizeof(struct interrupt_info)));
-    
-    while (index < ionic->interrupt_count) {
-
-        if (index < ionic->proc_count) {
-            proc = index;
-        } else {
-            proc = index % ionic->proc_count;
-        }
-
-        ionic->interrupt_tbl[index].group = (USHORT)group;
-        ionic->interrupt_tbl[index].group_proc = index % ionic->proc_per_group;
-
-        ionic->interrupt_tbl[index].original_proc = proc;
-        ionic->interrupt_tbl[index].current_proc = proc;
-
-        DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                  "%s msi %d group %d group proc %d proc %d\n", __FUNCTION__,
-                  index, group, ionic->interrupt_tbl[index].group_proc, proc));
-
-        index++;
-
-        if (index == ionic->proc_per_group) {
-            group++;
-        }
-    }
 
     // Alloc our tx fragmention pool
 
@@ -517,19 +466,13 @@ exit:
         if (pSGListBuffer != NULL) {
             NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, pSGListBuffer,
                                           IONIC_SG_LIST_TAG);
+			ionic->tx_frag_pool_sg_list = NULL;
         }
 
         if (ionic->tx_frag_pool != NULL) {
             NdisFreeMemoryWithTagPriority_internal(
                 ionic->adapterhandle, ionic->tx_frag_pool, IONIC_FRAG_POOL_TAG);
             ionic->tx_frag_pool = NULL;
-        }
-
-        if (ionic->interrupt_tbl != NULL) {
-            NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle,
-                                          ionic->interrupt_tbl,
-                                          IONIC_INT_TABLE_TAG);
-            ionic->interrupt_tbl = NULL;
         }
     }
 
@@ -540,10 +483,16 @@ void
 ionic_deinit(struct ionic *ionic)
 {
 
-    if (ionic->interrupt_tbl != NULL) {
+    if (ionic->intr_msg_tbl != NULL) {
         NdisFreeMemoryWithTagPriority_internal(
-            ionic->adapterhandle, ionic->interrupt_tbl, IONIC_INT_TABLE_TAG);
-        ionic->interrupt_tbl = NULL;
+            ionic->adapterhandle, ionic->intr_msg_tbl, IONIC_INT_TABLE_TAG);
+        ionic->intr_msg_tbl = NULL;
+    }
+
+    if (ionic->intr_tbl != NULL) {
+        NdisFreeMemoryWithTagPriority_internal(
+            ionic->adapterhandle, ionic->intr_tbl, IONIC_INT_TABLE_TAG);
+        ionic->intr_tbl = NULL;
     }
 
     if (ionic->computer_name.Buffer != NULL) {
@@ -554,7 +503,6 @@ ionic_deinit(struct ionic *ionic)
     }
 
     if (ionic->tx_frag_pool_handle != NULL) {
-
         NdisFreeSharedMemory(ionic->adapterhandle, ionic->tx_frag_pool_handle);
         ionic->tx_frag_pool_handle = NULL;
     }

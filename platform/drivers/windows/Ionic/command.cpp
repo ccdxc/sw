@@ -527,24 +527,26 @@ ionic_lif_reset(struct lif *lif)
 void
 ionic_dev_cmd_adminq_init(struct ionic_dev *idev,
                           struct qcq *qcq,
-                          u16 lif_index,
-                          u16 intr_index)
+                          u16 lif_index)
 {
     struct queue *q = &qcq->q;
     struct cq *cq = &qcq->cq;
-
+    USHORT flags = 0;
     union dev_cmd cmd = {0};
 
     cmd.q_init.opcode = CMD_OPCODE_Q_INIT;
     cmd.q_init.lif_index = cpu_to_le16(lif_index);
     cmd.q_init.type = (u8)q->type;
     cmd.q_init.index = cpu_to_le32(q->index);
-    cmd.q_init.flags = cpu_to_le16(IONIC_QINIT_F_IRQ | IONIC_QINIT_F_ENA);
     cmd.q_init.pid = (__le16)cpu_to_le16(q->pid);
-    cmd.q_init.intr_index = cpu_to_le16(intr_index);
+    if (qcq->flags & QCQ_F_INTR) {
+        flags |= IONIC_QINIT_F_IRQ;
+        cmd.q_init.intr_index = cpu_to_le16(qcq->cq.bound_intr->index);
+    }
     cmd.q_init.ring_size = (u8)ilog2(q->num_descs);
     cmd.q_init.ring_base = cpu_to_le64(q->base_pa);
     cmd.q_init.cq_ring_base = cpu_to_le64(cq->base_pa);
+    cmd.q_init.flags = cpu_to_le16(flags | IONIC_QINIT_F_ENA);
 
     ionic_dev_cmd_go(idev, &cmd);
 }
