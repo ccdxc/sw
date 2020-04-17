@@ -480,8 +480,8 @@ export class TableUtility {
           for (let l = 0; labelKeys && l < labelKeys.length; l++) {
             const searchInputs = searchValues[j].split(':');  // searchInputs can be env:21, or just "21"
             if (searchInputs.length === 2) {
-              const searchKey = searchInputs[0];
-              const searchVal = searchInputs[1];
+              const searchKey = searchInputs[0].trim();
+              const searchVal = searchInputs[1].trim();
               if (activateFunc && activateFunc(labelKeys[l], searchKey) && activateFunc(recordValue[labelKeys[l]], searchVal)) {
                 outputs.push(data[i]);
               }
