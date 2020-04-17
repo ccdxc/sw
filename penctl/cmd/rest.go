@@ -182,7 +182,7 @@ func restPost(v interface{}, url string) (string, error) {
 	defer postResp.Body.Close()
 	printHTTPResp(postResp)
 	bodyBytes, _ := ioutil.ReadAll(postResp.Body)
-	if postResp.StatusCode != 200 {
+	if postResp.StatusCode != 200 && (len(bodyBytes) > 1) {
 		if verbose {
 			fmt.Println(postResp.Status + " " + url)
 			fmt.Println(postResp.Body)
