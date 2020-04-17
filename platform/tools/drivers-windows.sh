@@ -28,7 +28,7 @@ TOP=$(readlink -f "$(dirname "$0")/../..")
 : ${REMOTE_DRIVERS_SRC:="C:/Builds/$TEMP_BUILDDIR"}
 : ${REMOTE_DRIVERS_SRCSTR:="\"$REMOTE_DRIVERS_SRC"\"}
 : ${PENCTL_IMAGE:="$TOP/nic/build/x86_64/iris/capri/bin/penctl.win64.exe"}
-: ${REMOTE_PENCTL_IMAGE:="$REMOTE_DRIVERS_SRC/IonicInstaller/BuildFiles"}
+: ${REMOTE_PENCTL_IMAGE:="$REMOTE_DRIVERS_SRC/IonicInstaller/BuildFiles/penctl.exe"}
 : ${REMOTE_DRIVERS_BUILDSCRIPT:="$REMOTE_DRIVERS_SRC/BuildScript/IonicBuild.ps1"}
 : ${REMOTE_DRIVERS_SOLUTION:="$REMOTE_DRIVERS_SRC/Pensando Solution/Pensando Solution.sln"}
 : ${REMOTE_DRIVERS_SOLSTR:="\"$REMOTE_DRIVERS_SOLUTION"\"}
@@ -58,10 +58,6 @@ if [ -n "$SW_VERSION" ] ; then
 else
 	VER=`git describe --tags`
 fi
-
-# Remove all remote builds older than 1 (one) day on the build VM
-# TODO: replace with a Task Scheduler task on the build VM 
-sshpass -p $BUILD_VM_PW ssh -o StrictHostKeyChecking=no "$BUILD_VM_USER"@"$BUILD_VM_NAME" "FORFILES /P C:\\Builds /S /D -1 /C \"cmd /c IF @isdir == TRUE rmdir /s /q @path\""
 
 # Remove remote build source folder in case it exists (probably never since its name is based on a uuid).
 sshpass -p $BUILD_VM_PW ssh -o StrictHostKeyChecking=no "$BUILD_VM_USER"@"$BUILD_VM_NAME" "rmdir " "$REMOTE_DRIVERS_SRCSTR" "/s /q"
