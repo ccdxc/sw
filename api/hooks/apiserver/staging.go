@@ -235,13 +235,12 @@ func (h *stagingHooks) bulkeditAction(ctx context.Context, kv kvstore.Interface,
 		objURI := item.GetURI()
 		oper := item.GetMethod()
 
-		typeURL := item.GetObject().GetTypeUrl()
-		typeStr := strings.Split(typeURL, "/")[1] // Remove the type.googleapis.com from the typeURL to get the obj Kind
-
-		kind, objR, err := item.FetchObjectFromBulkEditItem()
+		kind, group, objR, err := item.FetchObjectFromBulkEditItem()
 		resVer := objR.(runtime.ObjectMetaAccessor).GetObjectMeta().GetResourceVersion()
 		objKey := schema.GetKey(objURI)
-		svcName := typeStr + "V1"
+		// Following converts group name "cluster" to svcName cluster.ClusterV1
+		// TODO: Revisit when we have newer versions of out API which are not "V1"
+		svcName := group + "." + strings.Title(group) + "V1"
 
 		switch strings.ToLower(oper) {
 		case "create":

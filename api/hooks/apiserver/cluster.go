@@ -776,40 +776,8 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 
 	apiSrv := apisrvpkg.MustGetAPIServer()
 
-	fl := apiSrv.RuntimeFlags()
-	flags := fl.InternalParams
 	var sleepOnRestore int
 	var failSetObj, failPrep, failWrite, failCommit bool
-	if v, ok := flags["sleep-on-restore"]; ok {
-		in, err := strconv.ParseInt(v, 10, 32)
-		if err == nil {
-			sleepOnRestore = int(in)
-		}
-	}
-	if v, ok := flags["fail-set-obj"]; ok {
-		in, err := strconv.ParseBool(v)
-		if err == nil {
-			failSetObj = in
-		}
-	}
-	if v, ok := flags["fail-prep"]; ok {
-		in, err := strconv.ParseBool(v)
-		if err == nil {
-			failPrep = in
-		}
-	}
-	if v, ok := flags["fail-write"]; ok {
-		in, err := strconv.ParseBool(v)
-		if err == nil {
-			failWrite = in
-		}
-	}
-	if v, ok := flags["fail-commit"]; ok {
-		in, err := strconv.ParseBool(v)
-		if err == nil {
-			failCommit = in
-		}
-	}
 
 	// Validate Object
 	obj := i.(cluster.SnapshotRestore)

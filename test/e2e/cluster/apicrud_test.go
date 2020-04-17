@@ -300,7 +300,7 @@ func testBulkeditCUDOps() func() {
 				}
 				ret := bulkeditStagingBuffer(items)
 				for _, it := range ret.Spec.GetItems() {
-					_, obj, err := it.FetchObjectFromBulkEditItem()
+					_, _, obj, err := it.FetchObjectFromBulkEditItem()
 					Expect(err).Should(BeNil(), fmt.Sprintf("got error getting object from bulkedit response (%s)", err))
 					netwObj := (obj).(*network.Network)
 					expNEvents = addToWatchList(expNEvents, netwObj, kvstore.Created)
@@ -343,7 +343,7 @@ func testBulkeditCUDOps() func() {
 				}
 				ret := bulkeditStagingBuffer(items)
 				for _, it := range ret.Spec.GetItems() {
-					_, obj, err := it.FetchObjectFromBulkEditItem()
+					_, _, obj, err := it.FetchObjectFromBulkEditItem()
 					Expect(err).Should(BeNil(), fmt.Sprintf("got error getting object from bulkedit response (%s)", err))
 					netwObj := (obj).(*network.Network)
 					expNEvents = addToWatchList(expNEvents, netwObj, kvstore.Updated)
@@ -385,7 +385,7 @@ func testBulkeditCUDOps() func() {
 				}
 				ret := bulkeditStagingBuffer(items)
 				for _, it := range ret.Spec.GetItems() {
-					_, obj, err := it.FetchObjectFromBulkEditItem()
+					_, _, obj, err := it.FetchObjectFromBulkEditItem()
 					Expect(err).Should(BeNil(), fmt.Sprintf("got error getting object from bulkedit response (%s)", err))
 					netwObj := (obj).(*network.Network)
 					expNEvents = addToWatchList(expNEvents, netwObj, kvstore.Deleted)

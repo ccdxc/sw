@@ -85,40 +85,41 @@ func (p *BulkEditItem) UnmarshalJSON(b []byte) error {
 }
 
 // FetchObjectFromBulkEditItem Performs the UnamrshalAny operation and returns the runtime.object and its kind
-func (p *BulkEditItem) FetchObjectFromBulkEditItem() (string, runtime.Object, error) {
+func (p *BulkEditItem) FetchObjectFromBulkEditItem() (string, string, runtime.Object, error) {
 
 	var err error
-	var kind string
+	var kind, group string
 	var obj runtime.Object
 	schema := runtime.GetDefaultScheme()
 
 	if p == nil {
-		return kind, obj, err
+		return kind, group, obj, err
 	}
 
 	if p.GetObject() == nil {
 		err = fmt.Errorf("invalid object:%s", err.Error())
-		return kind, obj, err
+		return kind, group, obj, err
 	}
 	typeURL := p.GetObject().GetTypeUrl()
 	typeStr := strings.Split(typeURL, "/")[1] // Remove the type.googleapis.com from the typeURL to get the obj Kind
 	kind = strings.Split(typeStr, ".")[1]
+	group = strings.Split(typeStr, ".")[0]
 	obj, err = schema.New(kind)
 	if err != nil {
 		err = fmt.Errorf("kind field is invalid:%s", err.Error())
-		return kind, obj, err
+		return kind, group, obj, err
 	}
 
 	objp := obj.(proto.Message)
 	err = types.UnmarshalAny(&(p.GetObject().Any), objp)
 	if err != nil {
 		err = fmt.Errorf("invalid BulkEditItem:%s", err.Error())
-		return kind, obj, err
+		return kind, group, obj, err
 	}
 
 	objR := objp.(runtime.Object)
 
-	return kind, objR, err
+	return kind, group, objR, err
 }
 
 // Validate validates the BulkEditActionSpec.

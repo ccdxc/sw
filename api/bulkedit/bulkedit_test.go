@@ -130,12 +130,16 @@ func TestFetchObjectFromBulkEditItem(t *testing.T) {
 		Object: &api.Any{Any: *p},
 	}
 
-	kind, obj, err := bEditAction.FetchObjectFromBulkEditItem()
+	kind, group, obj, err := bEditAction.FetchObjectFromBulkEditItem()
 	if err != nil {
 		t.Fatalf("Error from FetchObjectFromBulkEditItem() %v\n", err.Error())
 	}
 	if kind != netw.TypeMeta.GetKind() {
 		t.Fatalf("Invalid Kind, expected %s, actual %s\n", netw.TypeMeta.GetKind(), kind)
+	}
+
+	if group != "network" {
+		t.Fatalf("Invalid group, expected %s, actual %s\n", "network", kind)
 	}
 
 	netwObj := obj.(*network.Network)

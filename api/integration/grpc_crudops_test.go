@@ -5188,6 +5188,50 @@ func TestStagingBulkEdit(t *testing.T) {
 		t.Fatalf("Error marshaling network %v", err)
 	}
 
+	// Test Host create
+
+	host1 := &cluster.Host{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Host",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "TestHost1",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				cluster.DistributedServiceCardID{
+					ID: "test-host1",
+				},
+			},
+		},
+	}
+	h1, err := types.MarshalAny(host1)
+	if err != nil {
+		t.Fatalf("error creating host1, %v", err)
+	}
+
+	host2 := &cluster.Host{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Host",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "TestHost2",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				cluster.DistributedServiceCardID{
+					MACAddress: "0000.dead.beef",
+				},
+			},
+		},
+	}
+	h2, err := types.MarshalAny(host2)
+	if err != nil {
+		t.Fatalf("error creating host2, %v", err)
+	}
+
 	bulkeditAction = &staging.BulkEditAction{
 		TypeMeta: api.TypeMeta{
 			Kind:       "BulkEditAction",
@@ -5212,13 +5256,21 @@ func TestStagingBulkEdit(t *testing.T) {
 					Method: "create",
 					Object: &api.Any{Any: *n5},
 				},
+				&bulkedit.BulkEditItem{
+					Method: "create",
+					Object: &api.Any{Any: *h1},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "create",
+					Object: &api.Any{Any: *h2},
+				},
 			},
 		},
 	}
 
 	_, err = restcl.StagingV1().Buffer().Bulkedit(ctx, bulkeditAction)
 	if err != nil {
-		t.Fatalf("Error performing bulkeditction :%v", err)
+		t.Fatalf("Error performing bulkeditaction :%v", err)
 	}
 
 	opts := api.ObjectMeta{
@@ -5264,6 +5316,18 @@ func TestStagingBulkEdit(t *testing.T) {
 		t.Fatalf("expecting 4 objects in list, got %d", len(lst))
 	}
 
+	lopts = api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByName.String()}
+	hosts, err := restcl.ClusterV1().Host().List(ctx, &lopts)
+	if len(hosts) != 2 {
+		t.Fatalf("expecting 4 objects in list, got %d", len(lst))
+	}
+	if hosts[0].GetName() != host1.GetName() {
+		t.Fatalf("Host1 object name did not match,expects %s, got %s", host1.GetName(), hosts[0].GetName())
+	}
+	if hosts[1].GetName() != host2.GetName() {
+		t.Fatalf("Host2 object name did not match,expects %s, got %s", host2.GetName(), hosts[1].GetName())
+	}
+
 	// Delete all the objects
 	bulkeditAction = &staging.BulkEditAction{
 		TypeMeta: api.TypeMeta{
@@ -5293,13 +5357,21 @@ func TestStagingBulkEdit(t *testing.T) {
 					Method: "delete",
 					Object: &api.Any{Any: *n5},
 				},
+				&bulkedit.BulkEditItem{
+					Method: "delete",
+					Object: &api.Any{Any: *h1},
+				},
+				&bulkedit.BulkEditItem{
+					Method: "delete",
+					Object: &api.Any{Any: *h2},
+				},
 			},
 		},
 	}
 
 	_, err = restcl.StagingV1().Buffer().Bulkedit(ctx, bulkeditAction)
 	if err != nil {
-		t.Fatalf("Error performing bulkeditction :%v", err)
+		t.Fatalf("Error performing bulkeditaction :%v", err)
 	}
 
 	ca = staging.CommitAction{}
@@ -5318,6 +5390,13 @@ func TestStagingBulkEdit(t *testing.T) {
 	lst, err = restcl.NetworkV1().Network().List(ctx, &lopts)
 	if len(lst) != 0 {
 		t.Fatalf("expecting 0 objects in list, got %d", len(lst))
+	}
+
+	// Test that there are now 0 hosts present
+	lopts = api.ListWatchOptions{}
+	hosts, err = restcl.ClusterV1().Host().List(ctx, &lopts)
+	if len(hosts) != 0 {
+		t.Fatalf("expecting 0 objects in list, got %d", len(hosts))
 	}
 
 	// Scale test
@@ -5461,7 +5540,7 @@ func TestStagingBulkEdit(t *testing.T) {
 	// Make the bulkedit call
 	_, err = restcl.StagingV1().Buffer().Bulkedit(ctx, bulkeditAction)
 	if err != nil {
-		t.Fatalf("Error performing bulkeditction :%v", err)
+		t.Fatalf("Error performing bulkeditaction :%v", err)
 	}
 
 	// Commit the buffer
@@ -5524,7 +5603,7 @@ func TestStagingBulkEdit(t *testing.T) {
 	// Make the bulkedit call
 	_, err = restcl.StagingV1().Buffer().Bulkedit(ctx, bulkeditAction)
 	if err != nil {
-		t.Fatalf("Error performing bulkeditction :%v", err)
+		t.Fatalf("Error performing bulkeditaction :%v", err)
 	}
 
 	_, err = restcl.StagingV1().Buffer().Commit(ctx, &caction)

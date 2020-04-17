@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/bulkedit"
 	"github.com/pensando/sw/api/cache"
 	"github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/staging"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -258,6 +259,48 @@ func TestBulkeditAction(t *testing.T) {
 	netw.Spec.IPv4Subnet = "120.2.1.1/24"
 	n3, err := types.MarshalAny(netw)
 
+	host1 := &cluster.Host{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Host",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "TestHost1",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				cluster.DistributedServiceCardID{
+					ID: "test-host1",
+				},
+			},
+		},
+	}
+	h1, err := types.MarshalAny(host1)
+	if err != nil {
+		t.Fatalf("error creating host1, %v", err)
+	}
+
+	host2 := &cluster.Host{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Host",
+			APIVersion: "v1",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "TestHost2",
+		},
+		Spec: cluster.HostSpec{
+			DSCs: []cluster.DistributedServiceCardID{
+				cluster.DistributedServiceCardID{
+					MACAddress: "0000.dead.beef",
+				},
+			},
+		},
+	}
+	h2, err := types.MarshalAny(host2)
+	if err != nil {
+		t.Fatalf("error creating host2, %v", err)
+	}
+
 	req := staging.BulkEditAction{
 		TypeMeta: api.TypeMeta{
 			Kind:       "BulkEditAction",
@@ -284,6 +327,16 @@ func TestBulkeditAction(t *testing.T) {
 					Method: "delete",
 					Object: &api.Any{Any: *n3},
 				},
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/cluster/v1/hosts/TestHost1",
+					Method: "create",
+					Object: &api.Any{Any: *h1},
+				},
+				&bulkedit.BulkEditItem{
+					URI:    "/configs/cluster/v1/hosts/TestHost2",
+					Method: "create",
+					Object: &api.Any{Any: *h2},
+				},
 			},
 		},
 	}
@@ -302,7 +355,7 @@ func TestBulkeditAction(t *testing.T) {
 		t.Fatalf("Expected SUCCESS Validation status")
 	}
 
-	if fov.CreatePrimaries != 1 {
+	if fov.CreatePrimaries != 3 {
 		t.Fatalf("Number of createprimary calls %d did not mtch expected\n", fov.CreatePrimaries)
 	}
 	if fov.UpdatePrimaries != 1 {

@@ -136,7 +136,6 @@ func (s *stagingHooks) userContext(ctx context.Context, in interface{}) (context
 // bulkedit is a pre-authz helper function that processes the bulkedit request. It converts the bulkedit objects
 // into authz operations and populates the error status in the reponse structure if the validation fails
 func (s *stagingHooks) processBulkeditReq(ctx context.Context, in interface{}) (interface{}, []authz.Operation, error) {
-	schema := runtime.GetDefaultScheme()
 	bulkOps := []authz.Operation{}
 	buf, ok := in.(*staging.BulkEditAction)
 	if !ok {
@@ -146,7 +145,7 @@ func (s *stagingHooks) processBulkeditReq(ctx context.Context, in interface{}) (
 
 	for _, item := range buf.Spec.Items {
 		oper := item.GetMethod()
-		kind, objR, err := item.FetchObjectFromBulkEditItem()
+		kind, group, objR, err := item.FetchObjectFromBulkEditItem()
 		if err != nil {
 			s.logger.Errorf("Failed to fetch BulkEdit object for item %v\n", item)
 			err = errors.New("Unable to decode bulkedit object " + item.GetURI())
@@ -159,7 +158,6 @@ func (s *stagingHooks) processBulkeditReq(ctx context.Context, in interface{}) (
 			})
 			continue
 		}
-		group := schema.Kind2APIGroup(kind)
 		name := objR.(runtime.ObjectMetaAccessor).GetObjectMeta().GetName()
 		tenant := objR.(runtime.ObjectMetaAccessor).GetObjectMeta().GetTenant()
 
