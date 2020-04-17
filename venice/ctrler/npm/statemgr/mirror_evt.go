@@ -600,14 +600,20 @@ func updateCollectorsSpec(ms *monitoring.MirrorSession, collectors []*mirrorColl
 
 func (smm *SmMirrorSessionInterface) getAllInterfaceMirrorSessionCollectors() []*mirrorSelectorCollectors {
 
-	smm.Lock()
-	defer smm.Unlock()
+	//	smm.Lock()
+	//defer smm.Unlock()
 
 	mcols := []*mirrorSelectorCollectors{}
 	for _, ms := range smm.mirrorSessions {
-		if ms.MirrorSession.MirrorSession.Spec.Interfaces == nil {
+		mirror, err := MirrorSessionStateFromObj(ms.MirrorSession)
+		if err != nil {
+			log.Errorf("Error finding mirror object for delete %v", err)
 			continue
 		}
+		if mirror.deleted || ms.MirrorSession.MirrorSession.Spec.Interfaces == nil {
+			continue
+		}
+
 		currentCollectors := ms.MirrorSession.Spec.GetCollectors()
 		curCollectors := []*mirrorCollector{}
 		for _, curCol := range currentCollectors {
@@ -632,6 +638,7 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 	smm.Lock()
 	defer smm.Unlock()
 	//Process only if no match rules
+	smgrMirrorInterface.addMirrorSession(ms)
 	if ms.MirrorSession.Spec.Interfaces == nil {
 		log.Infof("Skipping processing of mirror session %v  as interface selector not assigned yet", ms.MirrorSession.Name)
 		return nil
@@ -658,8 +665,6 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 		mcol.obj.Spec.PacketSize = ms.MirrorSession.MirrorSession.Spec.PacketSize
 		mCollectors = append(mCollectors, mcol)
 	}
-
-	smgrMirrorInterface.addMirrorSession(ms)
 
 	if ms.MirrorSession.Spec.Interfaces != nil {
 		//Now evaluate the interfaces
@@ -837,6 +842,9 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 			newSelCollector = getMirrorCollectors(nmirror, addCollectors)
 		}
 	}
+
+	ms.MirrorSession.Spec.Collectors = nmirror.Spec.Collectors
+	ms.MirrorSession.Spec.Interfaces = nmirror.Spec.Interfaces
 
 	err := smgrNetworkInterface.UpdateCollectorsMatchingSelector(oldSelCollector, newSelCollector)
 	if err != nil {

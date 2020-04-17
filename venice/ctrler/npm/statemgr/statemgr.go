@@ -305,6 +305,7 @@ func (sm *Statemgr) ListObjects(kind string) []runtime.Object {
 // Stop stops the watchers
 func (sm *Statemgr) Stop() error {
 	log.Infof("Statemanager stop called")
+	close(sm.periodicUpdaterQueue)
 	return sm.ctrler.Stop()
 }
 

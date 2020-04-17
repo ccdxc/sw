@@ -95,6 +95,10 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	}
 	expConfig := make(map[string]*monitoring.MirrorExportConfig)
 	for _, mir := range mirrors.Items {
+		if mir.Name == ms.Name {
+			//ignore validation on correct mirror
+			continue
+		}
 		for _, col := range mir.Spec.Collectors {
 			if col.ExportCfg != nil {
 				expConfig[col.ExportCfg.Destination] = col.ExportCfg

@@ -603,6 +603,7 @@ func createVirtualRouter(t *testing.T, stateMgr *Statemgr, tenant, virtualRouter
 func TestNetworkCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -706,6 +707,7 @@ func TestNetworkCreateDelete(t *testing.T) {
 func TestNetworkList(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -737,6 +739,7 @@ func TestNetworkList(t *testing.T) {
 func TestEndpointCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -866,6 +869,7 @@ func timeTrack(start time.Time, name string) time.Duration {
 func TestEndpointStaleDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1029,6 +1033,7 @@ func TestEndpointCreateFailure(t *testing.T) {
 	t.Skip("Skipping as we commented out IP address allocation in workload create")
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1135,6 +1140,7 @@ func TestEndpointCreateFailure(t *testing.T) {
 func TestEndpointList(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1193,6 +1199,7 @@ func TestEndpointList(t *testing.T) {
 func TestEndpointNodeState(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1253,6 +1260,7 @@ func TestSgCreateDelete(t *testing.T) {
 	t.Skip("SG is not implemented")
 	//// create network state manager
 	//stateMgr, err := newStatemgr()
+	//defer stateMgr.Stop()
 	//if err != nil {
 	//	t.Fatalf("Could not create network manager. Err: %v", err)
 	//	return
@@ -1302,6 +1310,7 @@ func TestSgCreateDelete(t *testing.T) {
 func TestSgAttachEndpoint(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1453,6 +1462,7 @@ func TestSgAttachEndpoint(t *testing.T) {
 func TestSgErrorCases(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1565,6 +1575,7 @@ func TestEndpointConcurrency(t *testing.T) {
 
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1698,6 +1709,7 @@ func TestEndpointConcurrency(t *testing.T) {
 func TestTenantCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1784,6 +1796,7 @@ func TestTenantCreateDelete(t *testing.T) {
 func TestNonExistentTenantDeletion(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1805,6 +1818,7 @@ func TestNonExistentTenantDeletion(t *testing.T) {
 func TestWorkloadCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -1925,6 +1939,7 @@ func TestWorkloadCreateDelete(t *testing.T) {
 func TestWorkloadUpdate(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -2271,6 +2286,7 @@ func TestWorkloadUpdate(t *testing.T) {
 func TestWorkloadUpdateHost(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -2427,6 +2443,7 @@ func TestWorkloadUpdateHost(t *testing.T) {
 func TestWorkloadWithDuplicateMac(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -2632,6 +2649,7 @@ func TestWorkloadWithDuplicateMac(t *testing.T) {
 func TestHostCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -2694,6 +2712,7 @@ func TestHostUpdates(t *testing.T) {
 	t.Skip("Skipping as workload create fails if DSC is not created")
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -2856,6 +2875,7 @@ func TestHostUpdates(t *testing.T) {
 func TestDSCProfileCreateUpdateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -2927,6 +2947,7 @@ func TestDSCProfileCreateUpdateDelete(t *testing.T) {
 func TestSmartNicCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3084,6 +3105,7 @@ func TestNetworkInterfaceConvert(t *testing.T) {
 func TestNetworkInterfaceCRUD(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3145,6 +3167,7 @@ func TestNetworkInterfaceCRUD(t *testing.T) {
 
 func TestRouteTableObj(t *testing.T) {
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3189,6 +3212,7 @@ func TestRouteTableObj(t *testing.T) {
 func TestAgentCrudEvents(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+ defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3263,6 +3287,7 @@ func TestAgentCrudEvents(t *testing.T) {
 
 func TestWatchFilter(t *testing.T) {
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3398,6 +3423,7 @@ func TestWatchFilter(t *testing.T) {
 func TestVirtualRouterCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3438,6 +3464,7 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3533,6 +3560,7 @@ func TestRoutingConfigCreateDelete(t *testing.T) {
 
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3633,6 +3661,7 @@ func getCollectorName(i int) string {
 func TestMirrorCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3686,6 +3715,7 @@ func TestMirrorCreateDelete(t *testing.T) {
 func TestFlowMirrorCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3737,6 +3767,7 @@ func TestFlowMirrorCreateDelete(t *testing.T) {
 func TestMirrorCreateDeleteCollectorReuse(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -3830,6 +3861,7 @@ func TestMirrorCreateDeleteCollectorReuse(t *testing.T) {
 func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -4078,6 +4110,7 @@ func deleteDSCs(stateMgr *Statemgr, start, end int) []*cluster.DistributedServic
 func TestNetworkInterfaceCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -4124,6 +4157,7 @@ func TestNetworkInterfaceCreateDelete(t *testing.T) {
 func TestNetworkInterfaceCreateDeleteAfterDSCDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -4182,6 +4216,7 @@ func TestNetworkInterfaceCreateDeleteAfterDSCDelete(t *testing.T) {
 func TestNetworkInterfaceCreateDeleteMultiple(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -4252,6 +4287,7 @@ func TestNetworkInterfaceCreateDeleteMultiple(t *testing.T) {
 func TestNetworkInterfaceCreateDeleteMultipleLabelChange(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -4342,10 +4378,12 @@ func TestNetworkInterfaceCreateDeleteMultipleLabelChange(t *testing.T) {
 func TestMirrorCreateDeleteWithNetworkInterface(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
+
 	// create tenant
 	err = createTenant(t, stateMgr, "default")
 	AssertOk(t, err, "Error creating the tenant")
@@ -4374,50 +4412,211 @@ func TestMirrorCreateDeleteWithNetworkInterface(t *testing.T) {
 
 	numCollectors := 1
 	collectors := getCollectors(0, numCollectors)
-	_, err = createMirror(stateMgr, "default", "testMirror", nil, nil, collectors, labels.SelectorFromSet(labels.Set(label1)))
-	AssertOk(t, err, "Error creating mirror session ")
 
-	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
-		if err == nil {
-			return true, nil
+	for i := 0; i < 1; i++ {
+		_, err = createMirror(stateMgr, "default", "testMirror", nil, nil, collectors, labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Mirror session not found", "1ms", "1s")
+
+		intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
+		AssertOk(t, err, "Error find interfaces")
+		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+		for _, intf := range intfs {
+			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
+			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+			Assert(t, ok, "Collector not present")
+			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+			Assert(t, ok, "Collector not present")
+			Assert(t, len(intf.mirrorSessions) != 0, "Mirror sessions not cleared")
 		}
-		return false, nil
-	}, "Mirror session not found", "1ms", "1s")
 
-	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
-	AssertOk(t, err, "Error find interfaces")
-	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+		_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error creating mirror session ")
 
-	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
-		Assert(t, ok, "Collector not present")
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Mirror session found", "1ms", "1s")
+
+		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
+		AssertOk(t, err, "Error find interfaces")
+		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+		for _, intf := range intfs {
+			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+			Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+			Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+			Assert(t, len(intf.mirrorSessions) == 0, "Mirror sessions not cleared")
+		}
 	}
 
-	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
-	AssertOk(t, err, "Error creating mirror session ")
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = deleteNetworkInterface(stateMgr, name, labels.Set{"env": "production", "app": "procurement"})
+		AssertOk(t, err, "Error creating mirror session ")
 
-	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
-		if err != nil {
-			return true, nil
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface session found", "1ms", "1s")
+
+	}
+
+}
+func TestMirrorCreateDeleteSameCollectorDifferentMirrors(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// create tenant
+	err = createTenant(t, stateMgr, "default")
+	AssertOk(t, err, "Error creating the tenant")
+
+	numOfIntfs := 10
+	dscs := createsDSCs(stateMgr, 0, numOfIntfs)
+	Assert(t, len(dscs) != 0, "Error creating the dscs")
+
+	label1 := map[string]string{
+		"env": "production", "app": "procurement",
+	}
+
+	for i := 0; i < numOfIntfs; i++ {
+		name := "intf" + strconv.Itoa(i)
+		_, err = createNetworkInterface(stateMgr, name, dscs[i].Status.PrimaryMAC, labels.Set(label1))
+		AssertOk(t, err, "Error creating interface ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrNetworkInterface.FindNetworkInterface(name)
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Interface not found", "1ms", "1s")
+	}
+
+	numCollectors := 1
+	collectors := getCollectors(0, numCollectors)
+
+	for i := 0; i < 1; i++ {
+		_, err = createMirror(stateMgr, "default", "testMirror", nil, nil, collectors, labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Mirror session not found", "1ms", "1s")
+
+		intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
+		AssertOk(t, err, "Error find interfaces")
+		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+		for _, intf := range intfs {
+			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
+			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+			Assert(t, ok, "Collector not present")
+			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+			Assert(t, ok, "Collector not present")
+			Assert(t, len(intf.mirrorSessions) == 1, "Mirror sessions not cleared")
 		}
-		return false, nil
-	}, "Mirror session found", "1ms", "1s")
 
-	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
-	AssertOk(t, err, "Error find interfaces")
-	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+		_, err = createMirror(stateMgr, "default", "testMirror1", nil, nil, collectors, labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error creating mirror session ")
 
-	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+			if err == nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Mirror session not found", "1ms", "1s")
+
+		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
+		AssertOk(t, err, "Error find interfaces")
+		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+		for _, intf := range intfs {
+			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
+			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+			Assert(t, ok, "Collector not present")
+			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+			Assert(t, ok, "Collector not present")
+			Assert(t, len(intf.mirrorSessions) == 2, "Mirror sessions not cleared")
+		}
+
+		_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Mirror session found", "1ms", "1s")
+
+		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
+		AssertOk(t, err, "Error find interfaces")
+		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+		for _, intf := range intfs {
+			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
+			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+			Assert(t, ok, "Collector not present")
+			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+			Assert(t, ok, "Collector not present")
+			Assert(t, len(intf.mirrorSessions) == 1, "Mirror sessions not cleared")
+		}
+
+		_, err = deleteMirror(stateMgr, "default", "testMirror1", labels.SelectorFromSet(labels.Set(label1)))
+		AssertOk(t, err, "Error creating mirror session ")
+
+		AssertEventually(t, func() (bool, interface{}) {
+			_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+			if err != nil {
+				return true, nil
+			}
+			return false, nil
+		}, "Mirror session found", "1ms", "1s")
+
+		intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
+		AssertOk(t, err, "Error find interfaces")
+		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
+
+		for _, intf := range intfs {
+			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
+			Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+			Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+			Assert(t, len(intf.mirrorSessions) == 0, "Mirror sessions not cleared")
+		}
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -4440,6 +4639,7 @@ func TestMirrorCreateDeleteWithNetworkInterface(t *testing.T) {
 func TestMirrorCreateUpdateLabelWithNetworkInterface(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -4563,6 +4763,7 @@ func TestMirrorCreateUpdateLabelWithNetworkInterface(t *testing.T) {
 func TestMirrorCreateRemoveLabelWithNetworkInterface(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -4685,6 +4886,7 @@ func TestMirrorCreateRemoveLabelWithNetworkInterface(t *testing.T) {
 func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -4830,6 +5032,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -4981,6 +5184,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection2(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -5132,6 +5336,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection2(t *testi
 func TestMirrorCreateUpdateLaterLabelWithNetworkInterface(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -5251,6 +5456,7 @@ func TestMirrorCreateUpdateLaterLabelWithNetworkInterface(t *testing.T) {
 func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -5415,6 +5621,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -5599,6 +5806,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 func TestNetworkInterfaceUpdateLabelWithMirror(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -5714,6 +5922,7 @@ func TestNetworkInterfaceUpdateLabelWithMirror(t *testing.T) {
 func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -6115,6 +6324,7 @@ func TestWatcherWithMirrorCreateDelete(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -6271,6 +6481,7 @@ func TestWatcherWithMirrorCreateDeleteBeforeWatcherJoin(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -6421,6 +6632,7 @@ func TestWatcherWithMirrorCreateDeleteMultipleTimes(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -6581,6 +6793,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -6808,6 +7021,7 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -7061,6 +7275,7 @@ func TestWatcherWithMirrorCreateUpdateCollector(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -7229,6 +7444,7 @@ func TestWatcherWithMirrorRemoveLabel(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -7382,6 +7598,7 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -7618,6 +7835,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -7870,6 +8088,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -8087,6 +8306,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 func TestM(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -8186,6 +8406,7 @@ func TestWatcherWithFlowMirrorCreateDelete(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -8312,6 +8533,7 @@ func TestWatcherWithFlowMirrorCreateDeleteWithScheduling(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -8465,6 +8687,7 @@ func TestWatcherWithFlowMirrorCreateUpdateWithSchedulingRemoved(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -8630,6 +8853,7 @@ func TestWatcherWithFlowMirrorCreateUpdateWithSchedulingLater(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -8828,6 +9052,7 @@ func TestWatcherWithFlowMirrorCreateUpdateWithSchedulingDeleted(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -8953,6 +9178,7 @@ func TestWatcherWithFlowMirrorCreateUpdateDelete(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -9133,6 +9359,7 @@ func TestWatcherWithFlowMirrorCreateDeleteMaxOutAndReinstall(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -9302,6 +9529,7 @@ func TestWatcherWithFlowMirrorToInterfaceMirror(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -9455,8 +9683,8 @@ func TestWatcherWithFlowMirrorToInterfaceMirror(t *testing.T) {
 		for _, watcher := range watchers {
 			watcher.evtsExp.Reset()
 			//watcher.evtsRcvd.Reset()
-			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 			if i == numOfMirrors-1 {
+				watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 				watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
 			}
 		}
@@ -9492,6 +9720,7 @@ func TestWatcherWithInterfaceMirrorToFlowMirror(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -9615,8 +9844,8 @@ func TestWatcherWithInterfaceMirrorToFlowMirror(t *testing.T) {
 		for _, watcher := range watchers {
 			watcher.evtsExp.Reset()
 			watcher.evtsExp.evKindMap[memdb.CreateEvent]["MirrorSession"] = i + 1
-			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 			if i == numOfMirrors-1 {
+				watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 				watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
 			}
 		}
@@ -9683,6 +9912,7 @@ func TestWatcherWithFlowExportCreateDelete(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
 	stateMgr, err := newStatemgr()
+	defer stateMgr.Stop()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
