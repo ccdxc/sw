@@ -88,5 +88,7 @@ func tsShowCmdHandler(cmd *cobra.Command, args []string) {
 	learnStatsShowCmdHandler(nil, nil)
 	learnMACShowCmdHandler(nil, nil)
 	learnIPShowCmdHandler(nil, nil)
+	fmt.Printf("\n=== Interrupts ===\n")
+	interruptShowCmdHandler(nil, nil)
 	fmt.Printf("\n=== Techsupport dump complete ===\n")
 }
