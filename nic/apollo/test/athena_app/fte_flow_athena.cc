@@ -166,6 +166,7 @@ fte_nmt_get_local_ip (uint16_t vnic_id, uint32_t nat_ip, uint32_t *local_ip)
             *local_ip = nat_map_tbl[i].local_ip;
             return SDK_RET_OK;
         }
+        i++;
     }
 
     return SDK_RET_ENTRY_NOT_FOUND;
@@ -186,6 +187,7 @@ fte_nmt_get_nat_ip (uint16_t vnic_id, uint32_t local_ip, uint32_t *nat_ip)
             *nat_ip = nat_map_tbl[i].nat_ip;
             return SDK_RET_OK;
         }
+        i++;
     }
 
     return SDK_RET_ENTRY_NOT_FOUND;
@@ -209,6 +211,7 @@ fte_nmt_get_rewrite_id (uint16_t vnic_id, uint32_t local_ip,
             *s2h_rewrite_id = nat_map_tbl[i].s2h_rewrite_id;
             return SDK_RET_OK;
         }
+        i++;
     }
 
     return SDK_RET_ENTRY_NOT_FOUND;
