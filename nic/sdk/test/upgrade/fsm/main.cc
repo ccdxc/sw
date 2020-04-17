@@ -51,6 +51,7 @@ init_stage_names (void)
 static sdk_ret_t
 test_upgrade (sdk::upg::upg_ev_params_t *params)
 {
+    printf("\nSuccessfully to handled event\n");
     params->response_cb(SDK_RET_OK, params->response_cookie);
     return SDK_RET_IN_PROGRESS;
 }
@@ -58,6 +59,7 @@ test_upgrade (sdk::upg::upg_ev_params_t *params)
 static sdk_ret_t
 fault_injection (sdk::upg::upg_ev_params_t *params)
 {
+    printf("\nFailed to handle event %s\n", fsm_stage.c_str());
     params->response_cb(ret_code_map[error_code], params->response_cookie);
     return SDK_RET_IN_PROGRESS;
 }
@@ -69,67 +71,77 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
     strncpy(ev->svc_name, svc_name.c_str(), sizeof(ev->svc_name));
 
     if (fsm_stage.compare("compat_check") == 0) {
+        printf("\nSetting fault injection in stage compat_check\n");
         ev->compat_check_hdlr = fault_injection;
     } else {
         ev->compat_check_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("start") == 0) {
+        printf("\nSetting fault injection in stage start\n");
         ev->start_hdlr = fault_injection;
     } else {
         ev->start_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("backup") == 0) {
-        printf("\nsettign fault injection\n");
+        printf("\nSetting fault injection in stage backup\n");
         ev->backup_hdlr = fault_injection;
     } else {
         ev->backup_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("prepare") == 0) {
+        printf("\nSetting fault injection in stage prepare\n");
         ev->prepare_hdlr = fault_injection;
     } else {
         ev->prepare_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("prep_switchover") == 0) {
+        printf("\nSetting fault injection in stage prep_switchover\n");
         ev->prepare_switchover_hdlr = fault_injection;
     } else {
         ev->prepare_switchover_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("switchover") == 0) {
+        printf("\nSetting fault injection in stage switchover\n");
         ev->switchover_hdlr = fault_injection;
     } else {
         ev->switchover_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("rollback") == 0) {
+        printf("\nSetting fault injection in stage rollback\n");
         ev->rollback_hdlr = fault_injection;
     } else {
         ev->rollback_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("ready") == 0) {
+        printf("\nSetting fault injection in stage ready\n");
         ev->ready_hdlr = fault_injection;
     } else {
         ev->ready_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("sync") == 0) {
+        printf("\nSetting fault injection in stage sync\n");
         ev->sync_hdlr = fault_injection;
     } else {
         ev->sync_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("repeal") == 0) {
+        printf("\nSetting fault injection in stage repeal\n");
         ev->repeal_hdlr = fault_injection;
     } else {
         ev->repeal_hdlr = test_upgrade;
     }
 
     if (fsm_stage.compare("finish") == 0) {
+        printf("\nSetting fault injection in stage finish\n");
         ev->finish_hdlr = fault_injection;
     } else {
         ev->finish_hdlr = test_upgrade;

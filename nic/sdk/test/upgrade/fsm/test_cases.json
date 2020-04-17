@@ -1,0 +1,69 @@
+{
+    "test_case_0" : {
+        "description" : "Testing with no fault injection in svc1 and svc2",
+        "svc" : {
+            "svc1" : {
+                "ipc_id" : "51"
+            },
+            "svc2" : {
+                "ipc_id" : "52"
+            }
+        },
+
+        "expected_result" : {
+            "api_return_code" : "0",
+            "log": {
+                "fsm_svc_svc1": ["todo", "todo"],
+                "fsm_svc_svc2": ["todo", "todo"],
+                "upgrade": ["pass", "*****"]
+            }
+        }
+    },
+
+
+    "test_case_1" : {
+        "description" : "Testing with fault injection in Backup stage in svc1",
+        "svc" : {
+            "svc1" : {
+                "ipc_id" : "51",
+                "svc_rsp_code" : "fail",
+                "svc_rsp_stage" : "backup"
+            },
+            "svc2" : {
+                "ipc_id" : "52"
+            }
+        },
+
+        "expected_result" : {
+            "api_return_code" : "1",
+            "log": {
+                "fsm_svc_svc1": ["todo", "todo"],
+                "fsm_svc_svc2": ["todo", "todo"],
+                "upgrade": ["fail", "*****"]
+            }
+        }
+    },
+
+    "test_case_2" : {
+        "description" : "Testing with fault injection in finish stage in svc2",
+        "svc" : {
+            "svc1" : {
+                "ipc_id" : "51"
+            },
+            "svc2" : {
+                "ipc_id" : "52",
+                "svc_rsp_code" : "fail",
+                "svc_rsp_stage" : "finish"
+            }
+        },
+
+        "expected_result" : {
+            "api_return_code" : "1",
+            "log": {
+                "fsm_svc_svc1": ["", ""],
+                "fsm_svc_svc2": ["", ""],
+                "upgrade": ["fail", ""]
+            }
+        }
+    }
+}

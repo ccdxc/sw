@@ -1,11 +1,20 @@
 #!/bin/bash
 
-if [ $# != 1 ];then
-    echo "usage : fsm_test <bin_dir>"
+if [ $# == 3 ]; then
+    TEST_BIN_DIR=$1
+    SVC=$2
+    SVC_ID=$3
+elif [ $# == 5 ]; then
+    TEST_BIN_DIR=$1
+    SVC=$2
+    SVC_ID=$3
+    ERR_CODE=$4
+    ERR_STAG=$5
+else
+    echo "usage : fsm_test <bin_dir> <svc> <id>"
+    echo "usage : fsm_test <bin_dir> <svc> <id> <erro_code> <error_stage>"
     exit 1
 fi
-
-TEST_BIN_DIR=$1
 
 CUR_DIR=$( readlink -f $( dirname $0 ))
 TEST_BIN_NAME=fsm_test
@@ -32,16 +41,16 @@ function log_file()
     echo "$retval"
 }
 
+if [ $# == 3 ];then
+    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s ${SVC} -i ${SVC_ID}"
+elif [ $# == 5 ];then
+    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s ${SVC} -i ${SVC_ID} -e ${ERR_CODE} -f ${ERR_STAG}"
+else
+    echo "Something Wrong !"
+fi
 
-CMD1="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s svc1 -i 51"
-CMD2="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s svc2 -i 52"
-#CMD2="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s svc2 -i 52 -e fail -f backup"
-#CMD3="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s 'svc3' -i '53' -e 'critical' -f 'finish'"
-
-create_svc_thread ${CMD1}
-create_svc_thread ${CMD2}
-#create_svc_thread ${CMD3}
+echo "Starting test service : ${CMD}"
+create_svc_thread ${CMD}
 
 wait
-
 exit 0
