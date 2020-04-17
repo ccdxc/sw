@@ -1,6 +1,6 @@
 meta:
     name    : tso_regr
-    os      : [ linux, freebsd ]
+    os      : [ linux, freebsd, windows ]
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 160
 
