@@ -1,9 +1,9 @@
 <div [style.width]="'100%'" fxLayout="column">
   <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="newtechsupport-container">
-    <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start stretch" class="newtechsupport-content">
+    <div fxLayout="row" fxLayoutAlign="center center" class="newtechsupport-content">
 
       <div fxFlex="nogrow" fxLayout="column">
-        <div fxFlex="nogrow" fxLayout="row" class="newtechsupport-row"
+        <div fxFlex="nogrow" fxLayout="row" class="newtechsupport-row newtechsupport-name-parent"
              [formGroup]="newObject.$formGroup">
           <!-- First row-->
           <div formGroupName="meta">
@@ -16,7 +16,7 @@
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
 
         <div fxFlex="100" fxLayout="row">
-          <div fxFlex="50" fxLayout="row" class="newtechsupport-row">
+          <div fxLayout="row" class="newtechsupport-row">
             <div fxFlex="nogrow" class="">Nodes:</div>
             <div class="newtechsupport-plist-div">
               <p-listbox #nodesListbox [options]="nodesOptions"
@@ -27,7 +27,7 @@
               </p-listbox>
             </div>
           </div>
-          <div fxFlex="50" fxLayout="row" class="newtechsupport-row">
+          <div fxLayout="row" class="newtechsupport-row">
             <div fxFlex="nogrow" class="">DS Cards:</div>
             <div class="newtechsupport-plist-div">
               <p-pickList [source]="sourceNaples" [target]="targetNaples" filterBy="label,title"

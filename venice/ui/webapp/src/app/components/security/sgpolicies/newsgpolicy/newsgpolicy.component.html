@@ -1,27 +1,29 @@
-<div fxFlex="auto" fxLayout="column" class="newsgpolicy-container">
-
-  <div fxFlex="auto" fxLayout="row">
-    <ng-container *ngTemplateOutlet="meta"></ng-container>
-    <div fxFlex></div>
-    <div *ngIf="isInline" class="neweventpolicy-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap"
-         fxLayoutAlign="start start">
-      <div fxFlex="nogrow">
-        <span (click)="saveObject()"
-              class="global-button-primary global-button-padding newsgpolicy-save"
-              [ngClass]="computeInlineButtonClass()">SAVE</span>
-      </div>
-      <div fxFlex="nogrow">
-        <span (click)="cancelObject()"
-              class="global-button-neutral global-button-padding newsgpolicy-save">CANCEL</span>
+<div fxLayout="column" fxLayoutAlign="start center" class="newsgpolicy-container">
+  <div fxLayout="column" fxLayoutAlign="start">
+    <div fxFlex="auto" fxLayout="row">
+      <ng-container *ngTemplateOutlet="meta"></ng-container>
+      <div fxFlex></div>
+      <div *ngIf="isInline" class="neweventpolicy-buttoncontainer" fxFlex="nogrow"
+           fxLayout="row wrap"
+           fxLayoutAlign="start start">
+        <div fxFlex="nogrow">
+          <span (click)="saveObject()"
+                class="global-button-primary global-button-padding newsgpolicy-save"
+                [ngClass]="computeInlineButtonClass()">SAVE</span>
+        </div>
+        <div fxFlex="nogrow">
+          <span (click)="cancelObject()"
+                class="global-button-neutral global-button-padding newsgpolicy-save">CANCEL</span>
+        </div>
       </div>
     </div>
+    <!-- for release A only tenant is allowed by default, hide attachFrom 
+    <div *ngIf="!isInline" fxFlex="30px"></div>
+    <ng-container *ngTemplateOutlet="attachForm"></ng-container>
+    -->
+    <div *ngIf="!isInline" fxFlex="30px"></div>
+    <ng-container *ngTemplateOutlet="rulesSection"></ng-container>
   </div>
-  <!-- for release A only tenant is allowed by default, hide attachFrom 
-  <div *ngIf="!isInline" fxFlex="30px"></div>
-  <ng-container *ngTemplateOutlet="attachForm"></ng-container>
-  -->
-  <div *ngIf="!isInline" fxFlex="30px"></div>
-  <ng-container *ngTemplateOutlet="rulesSection"></ng-container>
 </div>
 
 <ng-template #meta>

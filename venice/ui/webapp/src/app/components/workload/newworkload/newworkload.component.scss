@@ -4,6 +4,10 @@ $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 $dary-grey: #a9a9a9;
 
+.new-workload-container .orderedlist-order-label {
+  padding-left: 18px;
+}
+
 .new-workload-container {
   padding: 20px;
 
@@ -11,10 +15,6 @@ $dary-grey: #a9a9a9;
     width: 590px;
     justify-content: space-between;
     padding-bottom: 10px;
-
-    .new-workload-group-name {
-      margin-left: 25px;
-    }
   }
 
   .new-workload-subtext {

@@ -1,80 +1,89 @@
-<div fxFlex="auto" fxLayout="column">
-  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class=newsecurityapp-container>
-    <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1400px' : '1300px'"
-         fxLayoutAlign="start stretch" class="newsecurityapp-content"
-         [formGroup]="newObject.$formGroup">
-      <div fxFlex fxLayout="column">
-        <div fxFlex="nogrow" fxLayout="row" formGroupName="meta">
-          <div fxFlex="nogrow" class="newsecurityapp-namefield">Name:
-          </div>
-          <div fxFlex="15px">
-          </div>
-          <input fxFlex="300px" formControlName="name"
-                 appErrorTooltip spellcheck="false" type="text"
-                 placeholder="Unique App Name..." pInputText
-                 style="height: 30px !important; margin-top:5px !important;">
-          <div *ngIf="isInline" fxFlex="670px"></div>
-          <div *ngIf="isInline" class="newsecurityapp-buttoncontainer" fxFlex="nogrow"
-               fxLayout="row" fxLayoutAlign="end start">
-            <div fxFlex="nogrow">
-              <span (click)="savePolicy()"
-                    class="global-button-primary newsecurityapp-save"
-                    [ngClass]="isFormValid() ? '' : 'global-button-disabled'">SAVE</span>
-            </div>
-            <div fxFlex="nogrow">
-              <span (click)="cancelObject()"
-                    class="global-button-neutral newsecurityapp-cancel">CANCEL</span>
-            </div>
-          </div>
-        </div>
-        <div fxFlex="30px" fxLayout="row" class="newsecurityapp-spacing"
-             fxLayoutAlign="start center">
-          <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
-                           fxLayoutGap="20px" class="newsecurityapp-format"
-                           [(ngModel)]="pickedOption" [ngModelOptions]="{standalone: true}">
-            <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true"
-
-                              *ngFor="let option of secOptions" [value]="option.label">
-              {{option.label}}
-            </mat-radio-button>
-          </mat-radio-group>
-        </div>
-
-        <div fxFlex="7.5px"></div>
-        <div fxFlex="10px"></div>
-        <div fxFlex="nogrow">
-          <ng-container [ngSwitch]="pickedOption">
-            <ng-container *ngSwitchCase="securityOptions.PROTOCOLSANDPORTS ">
-              <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
-                <ng-container *ngTemplateOutlet="protoandportsTemplate"></ng-container>
-              </div>
-            </ng-container>
-            <ng-container *ngSwitchCase="securityOptions.ALGONLY ">
-              <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
-                <ng-container *ngTemplateOutlet="algOnlyTemplate"></ng-container>
-              </div>
-            </ng-container>
-            <ng-container *ngSwitchCase="securityOptions.BOTH">
-              <div fxFlex fxLayout="row">
-                <div fxFlex fxLayout="row" fxLayoutAlign="center">
-                  <ng-container *ngTemplateOutlet="algOnlyTemplate"></ng-container>
-                </div>
-                <div fxLayout="column" fxLayoutAlign="center center ">
-                  <div fxFlex="75%" class="newsecurityapp-divider"></div>
-                </div>
-                <div fxFlex="15px"></div>
-                <div fxFlex fxLayout="column" fxLayoutAlign="start start">
-                  <ng-container *ngTemplateOutlet="protoandportsTemplate"></ng-container>
-                </div>
-              </div>
-            </ng-container>
-          </ng-container>
-        </div>
-        <div fxFlex="noshrink"></div>
-      </div>
+<div fxFlex="auto" fxLayout="column" class=newsecurityapp-container>
+  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
+  <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center">
+    <div fxFlex="none" fxLayout="row" fxLayoutAlign="center" class="new-network-content">
+      <ng-container *ngTemplateOutlet="newSecurityAppContent"></ng-container>
     </div>
   </div>
 </div>
+<ng-template #inlineButtons>
+  <div *ngIf="isInline" class="newsecurityapp-buttoncontainer" fxFlex="nogrow" fxLayout="row"
+       fxLayoutAlign="end start">
+    <div fxFlex="nogrow">
+      <span (click)="savePolicy()" class="global-button-primary newsecurityapp-save"
+            [ngClass]="isFormValid() ? '' : 'global-button-disabled'">SAVE</span>
+    </div>
+    <div fxFlex="nogrow">
+      <span (click)="cancelObject()"
+            class="global-button-neutral newsecurityapp-cancel">CANCEL</span>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #newSecurityAppContent>
+  <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1400px' : '1300px'"
+       fxLayoutAlign="start stretch"
+       class="newsecurityapp-content" [formGroup]="newObject.$formGroup">
+    <div fxFlex fxLayout="column">
+      <div fxFlex="nogrow" fxLayout="row" formGroupName="meta">
+        <div fxFlex="nogrow" class="newsecurityapp-namefield">Name:
+        </div>
+        <div fxFlex="15px">
+        </div>
+        <input fxFlex="300px" formControlName="name" appErrorTooltip spellcheck="false" type="text"
+               placeholder="Unique App Name..." pInputText
+               style="height: 30px !important; margin-top:5px !important;">
+        <div *ngIf="isInline"></div>
+
+      </div>
+      <div fxFlex="30px" fxLayout="row" class="newsecurityapp-spacing" fxLayoutAlign="start center">
+        <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
+                         fxLayoutGap="20px"
+                         class="newsecurityapp-format" [(ngModel)]="pickedOption"
+                         [ngModelOptions]="{standalone: true}">
+          <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true"
+                            *ngFor="let option of secOptions"
+                            [value]="option.label">
+            {{option.label}}
+          </mat-radio-button>
+        </mat-radio-group>
+      </div>
+
+      <div fxFlex="7.5px"></div>
+      <div fxFlex="10px"></div>
+      <div fxFlex="nogrow">
+        <ng-container [ngSwitch]="pickedOption">
+          <ng-container *ngSwitchCase="securityOptions.PROTOCOLSANDPORTS ">
+            <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
+              <ng-container *ngTemplateOutlet="protoandportsTemplate"></ng-container>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="securityOptions.ALGONLY ">
+            <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
+              <ng-container *ngTemplateOutlet="algOnlyTemplate"></ng-container>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="securityOptions.BOTH">
+            <div fxFlex fxLayout="row">
+              <div fxFlex fxLayout="row" fxLayoutAlign="center">
+                <ng-container *ngTemplateOutlet="algOnlyTemplate"></ng-container>
+              </div>
+              <div fxFlex="15px"></div>
+              <div fxLayout="column" fxLayoutAlign="center center ">
+                <div fxFlex="75%" class="newsecurityapp-divider"></div>
+              </div>
+              <div fxFlex="15px"></div>
+              <div fxFlex fxLayout="column" fxLayoutAlign="start start">
+                <ng-container *ngTemplateOutlet="protoandportsTemplate"></ng-container>
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+      </div>
+      <div fxFlex="noshrink"></div>
+    </div>
+  </div>
+</ng-template>
 
 <ng-template #protoandportsTemplate>
   <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start center" [@slideInOut]
@@ -83,36 +92,35 @@
          style="margin-bottom: 15px; padding-top: 5px;"
          [formGroup]="securityForm.get(['spec','proto-ports',index])">
       <div fxFlex="10px"></div>
-      <div fxFlex="50px" fxLayout="row">
+      <div fxFlex fxLayout="row">
         <span>Protocols:</span>
       </div>
       <div fxFlex="20px"></div>
       <div fxFlex="150px" fxLayout="row">
-        <input class=newsecurityapp-input fxFlex="nogrow"
-               spellcheck="false" placeholder="Enter ..." pInputText
+        <input class=newsecurityapp-input fxFlex="nogrow" spellcheck="false" placeholder="Enter ..."
+               pInputText
                appErrorTooltip formControlName="protocol">
       </div>
       <div fxFlex="30px"></div>
-      <div fxFlex="45px" fxLayout="row">
+      <div fxFlex fxLayout="row">
         <div
              [ngClass]="{'requiredLabel': isPortRequired(securityForm.get(['spec','proto-ports',index]))}">
           Ports:</div>
       </div>
       <div fxFlex="20px"></div>
       <div fxFlex="150px" fxLayout="row">
-        <input class="newsecurityapp-input" fxFlex="nogrow"
-               spellcheck="false" placeholder="Enter ..." pInputText
+        <input class="newsecurityapp-input" fxFlex="nogrow" spellcheck="false"
+               placeholder="Enter ..." pInputText
                appErrorTooltip formControlName="ports">
       </div>
       <div fxFlex="nogrow" fxLayout="row">
         <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
           <div fxFlex="55px" fxLayout="row" fxLayoutAlign="start end"
                class="newsecurityapp-fieldtitle newsecurityapp-and">
-            <span fxFlex="nogrow"
-                  (click)="addProtoTarget()">+ ADD</span>
+            <span fxFlex="nogrow" (click)="addProtoTarget()">+ ADD</span>
             <mat-icon fxFlex="nogrow" [style.color]="'#767676'" [style.cursor]="'pointer'"
-                      *ngIf="protoandports.length > 1"
-                      (click)="removeProtoTarget(index)">delete</mat-icon>
+                      *ngIf="protoandports.length > 1" (click)="removeProtoTarget(index)">delete
+            </mat-icon>
           </div>
         </div>
       </div>
@@ -124,13 +132,12 @@
 
 <ng-template #algOnlyTemplate>
   <div fxFlex="auto" fxLayout="column" fxLayoutAlign="start start"
-       [formGroup]="securityForm.get(['spec','alg'])" style="margin-left: 10px;">
+       [formGroup]="securityForm.get(['spec','alg'])"
+       style="margin-left: 10px;">
     <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start" style="padding: 10px 0px;">
       <div fxFlex class="newsecurityapp-app-type">ALG Type:</div>
       <div fxFlex="15px"></div>
-      <p-dropdown fxFlex="200px"
-                  [options]="algOptions"
-                  (onChange)="onTypeChange($event)"
+      <p-dropdown fxFlex="200px" [options]="algOptions" (onChange)="onTypeChange($event)"
                   appendTo="body"
                   formControlName="type"></p-dropdown>
     </div>
@@ -141,18 +148,21 @@
           <div fxFlex fxLayout="row">
             <div fxFlex>
               <div class="newsecurityapp-text-margin">Type:</div>
-              <div fxFlex="34px"></div>
+              <div fxFlex="20px"></div>
               <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-                     type="number" min="0" max="255" placeholder="Enter .." spellcheck="false"
-                     appErrorTooltip formControlName="type" pInputText style="margin-left:5px;">
+                     type="number" min="0"
+                     max="255" placeholder="Enter .." spellcheck="false" appErrorTooltip
+                     formControlName="type" pInputText
+                     style="margin-left:5px;">
             </div>
-            <div fxFlex="70px"></div>
+            <div fxFlex="50px"></div>
             <div fxFlex>
               <div class="newsecurityapp-text-margin">Code:</div>
-              <div fxFlex="34px"></div>
+              <div fxFlex="20px"></div>
               <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-                     type="number" min="0" max="18" placeholder="Enter..." spellcheck="false"
-                     appErrorTooltip pInputText formControlName="code">
+                     type="number" min="0"
+                     max="18" placeholder="Enter..." spellcheck="false" appErrorTooltip pInputText
+                     formControlName="code">
             </div>
           </div>
 
@@ -196,7 +206,8 @@
               <input class="newsecurityapp-tinywide-input newsecurityapp-small-input"
                      fxFlex="nogrow" appErrorTooltip
                      spellcheck="false" placeholder="Enter length" type="number"
-                     formControlName="max-message-length" pInputText>
+                     formControlName="max-message-length"
+                     pInputText>
               <div fxFlex="30px"></div>
               <div class="newsecurityapp-text-margin newsecurityapp-message-length">Max question
                 response timeout:
@@ -204,7 +215,8 @@
               <input class="newsecurityapp-tinywide-input newsecurityapp-small-input"
                      fxFlex="nogrow" appErrorTooltip
                      spellcheck="false" placeholder="Enter length" type="text"
-                     formControlName="query-response-timeout" pInputText>
+                     formControlName="query-response-timeout"
+                     pInputText>
               <span class="newsecurityapp-dns-timeout-helper">(Example: 1h5m2s, 100ns...)</span>
 
             </div>
@@ -244,8 +256,8 @@
       <div fxFlex="15px"></div>
       <div fxFlex="150px" fxLayout="row">
         <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-               spellcheck="false" type="text" pInputText placeholder="Enter..."
-               formControlName="program-id">
+               spellcheck="false" type="text"
+               pInputText placeholder="Enter..." formControlName="program-id">
       </div>
       <div fxFlex="20px"></div>
       <div class="newsecurityapp-programs" fxFlex="40px" fxLayout="row">
@@ -253,8 +265,8 @@
       </div>
       <div fxFlex="10px"></div>
       <div fxFlex="400px">
-        <input class="newsecurityapp-input" fxFlex="nogrow"
-               appErrorTooltip spellcheck="false" type="text" pInputText
+        <input class="newsecurityapp-input" fxFlex="nogrow" appErrorTooltip spellcheck="false"
+               type="text" pInputText
                formControlName="timeout" placeholder="Enter...">
         <span class="newsecurityapp-timeout-helper">(Example: 1h5m2s, 100ns...)</span>
       </div>
@@ -262,10 +274,8 @@
         <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
           <div fxFlex="55px" fxLayout="row" fxLayoutAlign="start end"
                class="newsecurityapp-fieldtitle newsecurityapp-and">
-            <span fxFlex="nogrow"
-                  (click)="addSunRPCTarget()">+ ADD</span>
-            <mat-icon fxFlex="nogrow" [style.color]="'#767676'"
-                      *ngIf="sunRPCTargets.length > 1"
+            <span fxFlex="nogrow" (click)="addSunRPCTarget()">+ ADD</span>
+            <mat-icon fxFlex="nogrow" [style.color]="'#767676'" *ngIf="sunRPCTargets.length > 1"
                       (click)="removeSunRPCTarget(index)">delete</mat-icon>
           </div>
         </div>
@@ -287,8 +297,8 @@
       <div fxFlex="15px"></div>
       <div fxFlex="150px" fxLayout="row">
         <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-               spellcheck="false" type="text" pInputText placeholder="Enter..."
-               formControlName="program-uuid">
+               spellcheck="false" type="text"
+               pInputText placeholder="Enter..." formControlName="program-uuid">
       </div>
       <div fxFlex="20px"></div>
       <div class="newsecurityapp-programs" fxFlex="40px" fxLayout="row">
@@ -296,19 +306,17 @@
       </div>
       <div fxFlex="10px"></div>
       <div fxFlex="400px" fxLayout="row">
-        <input class="newsecurityapp-input" fxFlex="nogrow"
-               spellcheck="false" type="text" pInputText placeholder="Enter..."
-               appErrorTooltip formControlName="timeout">
+        <input class="newsecurityapp-input" fxFlex="nogrow" spellcheck="false" type="text"
+               pInputText
+               placeholder="Enter..." appErrorTooltip formControlName="timeout">
         <span class="newsecurityapp-timeout-helper">(Example: 1h5m2s, 100ns...)</span>
       </div>
       <div fxFlex="nogrow" fxLayout="row">
         <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
           <div fxFlex="55px" fxLayout="row" fxLayoutAlign="start end"
                class="newsecurityapp-fieldtitle newsecurityapp-and">
-            <span fxFlex="nogrow"
-                  (click)="addMSRPCTarget()">+ ADD</span>
-            <mat-icon fxFlex="nogrow" [style.color]="'#767676'"
-                      *ngIf="msRPCTargets.length > 1"
+            <span fxFlex="nogrow" (click)="addMSRPCTarget()">+ ADD</span>
+            <mat-icon fxFlex="nogrow" [style.color]="'#767676'" *ngIf="msRPCTargets.length > 1"
                       (click)="removeMSRPCTarget(index)">delete</mat-icon>
           </div>
         </div>

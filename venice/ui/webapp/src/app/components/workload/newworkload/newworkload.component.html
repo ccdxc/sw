@@ -34,7 +34,7 @@
 <ng-template #inlineButtons>
   <div *ngIf="isInline" class="new-workload-button-container">
     <div fxFlex="nogrow">
-      <span (click)="saveObject()"
+      <span (click)="saveObject()" [matTooltip]="getTooltip()"
             class="global-button-primary global-button-padding new-workload-save"
             [ngClass]="computeInlineButtonClass()">SAVE</span>
     </div>
@@ -54,6 +54,8 @@
     </div>
     <div fxFlex="10px"></div>
     <app-orderedlist [dataArray]="formControls()" [template]="ruleTemplate"
+                     [enableDragDrop]="false"
+                     [enableOrdering]="false"
                      (itemClick)="orderedListClick($event)">
     </app-orderedlist>
     <div fxFlex="none" (click)="addInterface()" class="new-workload-add-rule">+ INTERFACE</div>
