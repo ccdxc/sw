@@ -20,8 +20,13 @@
 #include "gen/proto/session.grpc.pb.h"
 #include "gen/proto/rdma.grpc.pb.h"
 #include "gen/proto/nwsec.grpc.pb.h"
+#ifdef ELBA
+#include "third-party/asic/elba/model/elb_top/elb_top_csr_defines.h"
+#include "third-party/asic/elba/model/elb_top/csr_defines/elb_txs_c_hdr.h"
+#else
 #include "third-party/asic/capri/design/common/cap_addr_define.h"
 #include "third-party/asic/capri/model/cap_txs/cap_txs_csr_define.h"
+#endif
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -174,7 +179,7 @@ int CreateSecurityProfile(uint64_t *handle) {
   auto resp = rsp_msg.response(0);
   *handle = resp.mutable_profile_status()->profile_handle();
 
-  return 0; 
+  return 0;
 }
 
 int CreateVrf(uint32_t ten_id, uint64_t secprof_hdl) {
@@ -333,13 +338,13 @@ const uint32_t kInitiatorRcvBuf1LKey = 10;
 const uint32_t kInitiatorRcvBuf1RKey = 11;
 
 
-// Variable keys: 
+// Variable keys:
 // Theese are base values which are incremented per test case
 
-// Writeback data buf keys 
+// Writeback data buf keys
 uint32_t WriteBackBufLKey = 16;
 uint32_t WriteBackBufRKey = 24;
-// Send Buf Lkey 
+// Send Buf Lkey
 uint32_t SendBufLKey = 32;
 
 // TODO: Fix this to at least 8K
@@ -374,12 +379,12 @@ uint32_t rdma_r2n_buf_size(void)
     return kR2NBufSize;
 }
 
-void SendBufLKeyIncr() { 
+void SendBufLKeyIncr() {
   SendBufLKey++;
 }
 
 
-void WriteBackBufKeysIncr() { 
+void WriteBackBufKeysIncr() {
   WriteBackBufLKey++;
   WriteBackBufRKey++;
 }
@@ -554,7 +559,7 @@ void CreateInitiatorQP() {
 
   rq->set_num_sq_pages(num_sq_pages);
 #endif
-  
+
   grpc::ClientContext context;
 #ifdef RDMA_ADMIN
   status = rdma_stub->RdmaQpCreate(&context, req, &resp);
@@ -596,7 +601,7 @@ void CreateTargetQP() {
       ++num_sq_pages;
   }
 
-  size_done = 0;  
+  size_done = 0;
   while (size_done < roce_rq_mem_reg_size) {
       rq->add_va_pages_phy_addr(target_rq_va->pa() + size_done);
       size_done += (4096 - (target_rq_va->pa() & 0xFFF));
@@ -604,7 +609,7 @@ void CreateTargetQP() {
 
   rq->set_num_sq_pages(num_sq_pages);
 #endif
-  
+
   grpc::ClientContext context;
 #ifdef RDMA_ADMIN
   status = rdma_stub->RdmaQpCreate(&context, req, &resp);
@@ -687,7 +692,7 @@ void FillTargetRQWQE(dp_mem_t *rqwqe, dp_mem_t *cmd_buf, uint32_t size) {
   rqwqe->clear();
   // Fill the RQ WQE to post the buffer (at the offset)
   rqwqe->write_bit_fields(72, 8, 1);  // num_sges = 1
-  rqwqe->write_bit_fields(256, 64, cmd_buf->va()); // sge0->va 
+  rqwqe->write_bit_fields(256, 64, cmd_buf->va()); // sge0->va
   rqwqe->write_bit_fields(256+64, 32, size);  // sge0->len
   rqwqe->write_bit_fields(256+64+32, 32, kTargetRcvBuf1LKey << 8);  // sge0->l_key
   // wrid passed back in cq is the buffer offset passed in
@@ -699,7 +704,7 @@ void FillInitiatorRQWQE(dp_mem_t *rqwqe, dp_mem_t *status_buf, uint32_t size) {
   rqwqe->clear();
   // Fill the RQ WQE to post the buffer (at the offset)
   rqwqe->write_bit_fields(72, 8, 1);  // num_sges = 1
-  rqwqe->write_bit_fields(256, 64, status_buf->va()); // sge0->va 
+  rqwqe->write_bit_fields(256, 64, status_buf->va()); // sge0->va
   rqwqe->write_bit_fields(256+64, 32, size);  // sge0->len
   rqwqe->write_bit_fields(256+64+32, 32, kInitiatorRcvBuf1LKey << 8);  // sge0->l_key
   // wrid passed back in cq is the buffer offset passed in
@@ -714,9 +719,9 @@ void PostTargetRcvBuf1() {
   uint32_t size = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
   dp_mem_t *cmd_buf = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, cmd_buf),
                                                        sizeof(r2n::nvme_be_cmd_t));
-  printf("Posting target buffer of size %d VA %lx wrid %lx \n", 
+  printf("Posting target buffer of size %d VA %lx wrid %lx \n",
          size, cmd_buf->va(), cmd_buf->pa());
-  
+
   // Fill the WQE to submit here in DOL infra
   dp_mem_t *rqwqe = target_rq_va->fragment_find(0, kRQWQESize);
   FillTargetRQWQE(rqwqe, cmd_buf, size);
@@ -729,17 +734,17 @@ void PostTargetRcvBuf1() {
   // Pre-form the Status descriptor to point to the status buffer
   dp_mem_t *sta_buf = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, sta_buf),
                                                        sizeof(r2n::nvme_be_sta_t));
-  dp_mem_t *sqwqe = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, sta_desc.s), 
+  dp_mem_t *sqwqe = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, sta_desc.s),
                                                      sizeof(r2n::roce_sq_wqe_t));
   sqwqe->clear();
 
   // WRID, Num SGEs and data len are fixed
-  sqwqe->write_bit_fields(0, 64, sta_buf->pa());  // wrid 
+  sqwqe->write_bit_fields(0, 64, sta_buf->pa());  // wrid
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
   sqwqe->write_bit_fields(224, 32, (uint32_t)sizeof(r2n::nvme_be_sta_t));  // data len
 
   // Optype and immediate data varies based on configuration
-  // Store doorbell information of Initiator ROCE CQ in immediate data 
+  // Store doorbell information of Initiator ROCE CQ in immediate data
   // TODO: FIXME later when kRdmaSendOpType changes but nvme_dp_init remains
   if (nvme_dp_init && kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
       sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);  // op_type = OP_TYPE_SEND_IMM
@@ -757,7 +762,7 @@ void PostTargetRcvBuf1() {
   sqwqe->write_thru();
 
   // write the local buffer information of the Write descriptor
-  dp_mem_t *write_desc_local = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, write_desc_local), 
+  dp_mem_t *write_desc_local = target_rcv_buf_va->fragment_find(offsetof(r2n::r2n_buf_t, write_desc_local),
                                                      sizeof(r2n::roce_sq_sge_t));
   write_desc_local->clear();
 
@@ -783,7 +788,7 @@ void IncrTargetRcvBufPtr() {
 void RegisterTargetRcvBufs() {
 
   /*
-   * WARNING: A descendant of invokes test_ring_doorbell() which, when 
+   * WARNING: A descendant of invokes test_ring_doorbell() which, when
    * RTL --skipverify is in effect, can trigger simulation to commence
    * prematurely during init time. This would cause all subsequent
    * tests setup to execute in simulation time (as opposed to zero time)
@@ -795,7 +800,7 @@ void RegisterTargetRcvBufs() {
     return;
   }
 
-  RdmaMemRegister(target_rcv_buf_va->va(), target_rcv_buf_va->pa(), 
+  RdmaMemRegister(target_rcv_buf_va->va(), target_rcv_buf_va->pa(),
                   kR2NNumBufs * kR2NBufSize, kTargetRcvBuf1LKey << 8, kTargetRcvBuf1RKey << 8, true,
                   target_rcv_buf_va->is_mem_type_host_mem());
 
@@ -818,7 +823,7 @@ void PostInitiatorRcvBuf1() {
   // Fill the RQ WQE to post the buffer (at the offset)
   uint32_t size = kR2NBufSize - IO_STATUS_BUF_BE_STATUS_OFFSET;
 
-  printf("Posting initiator buffer of size %d VA %lx wrid %lx \n", 
+  printf("Posting initiator buffer of size %d VA %lx wrid %lx \n",
          kR2NBufSize, status_buf->va(), status_buf->pa());
 
   // Fill the WQE to submit here in DOL infra
@@ -849,7 +854,7 @@ void RegisterInitiatorRcvBufs() {
     return;
   }
 
-  RdmaMemRegister(initiator_rcv_buf_va->va(), initiator_rcv_buf_va->pa(), 
+  RdmaMemRegister(initiator_rcv_buf_va->va(), initiator_rcv_buf_va->pa(),
                   kR2NNumBufs * kR2NBufSize, kInitiatorRcvBuf1LKey << 8, kInitiatorRcvBuf1RKey << 8, true,
                   initiator_rcv_buf_va->is_mem_type_host_mem());
   // Init the initiator recv buffer pointer
@@ -897,7 +902,7 @@ void SendSmallUspaceBuf() {
   //uint32_t data_len = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
   uint32_t data_len = kR2NBufSize;
   // Register R2N buf memory. Only LKey, no remote access.
-  RdmaMemRegister(r2n_buf_va->va(), r2n_buf_va->pa(), kR2NBufSize, SendBufLKey << 8, 0, false, 
+  RdmaMemRegister(r2n_buf_va->va(), r2n_buf_va->pa(), kR2NBufSize, SendBufLKey << 8, 0, false,
                   r2n_buf_va->is_mem_type_host_mem());
   sqwqe->write_bit_fields(224, 32, (uint64_t)data_len);  // data len
   // write the SGE
@@ -915,7 +920,7 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   // Increment the LKey at the beginning of each API
   SendBufLKeyIncr();
 
-  // Get userspace R2N buffer for write command and data. 
+  // Get userspace R2N buffer for write command and data.
   dp_mem_t *r2n_buf_va = new dp_mem_t(1, kR2NBufSize, DP_MEM_ALIGN_PAGE);
 
   // Initialize and form the write command
@@ -940,11 +945,11 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
   // For the send wqe
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
-  sqwqe->write_bit_fields(0, 64, r2n_hbm_buf_pa->pa());  // wrid 
+  sqwqe->write_bit_fields(0, 64, r2n_hbm_buf_pa->pa());  // wrid
   sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
-  // Store doorbell information of PVM's ROCE CQ in immediate data 
+  // Store doorbell information of PVM's ROCE CQ in immediate data
   if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
       sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
       sqwqe->write_bit_fields(107, 3, CQ_TYPE);
@@ -964,9 +969,9 @@ int StartRoceWriteSeq(uint16_t ssd_handle, uint8_t byte_val, dp_mem_t **nvme_cmd
 
   // Now kickstart the sequencer
   tests::test_seq_write_roce(queues::get_seq_pdma_sq(0),
-                             queues::get_seq_roce_sq(0), 
-                             g_rdma_pvm_roce_init_sq, r2n_buf_va->pa(), 
-                             r2n_hbm_buf_pa->pa(), data_len, 
+                             queues::get_seq_roce_sq(0),
+                             g_rdma_pvm_roce_init_sq, r2n_buf_va->pa(),
+                             r2n_hbm_buf_pa->pa(), data_len,
                              sqwqe->pa(), kSQWQESize);
 
   return 0;
@@ -984,17 +989,17 @@ int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
 
   // Register R2N buf memory. Only LKey, no remote access.
   uint32_t data_len = kR2NBufSize - offsetof(r2n::r2n_buf_t, cmd_buf);
-  RdmaMemRegister(r2n_buf->va(), r2n_buf->pa(), kR2NBufSize, 
+  RdmaMemRegister(r2n_buf->va(), r2n_buf->pa(), kR2NBufSize,
                   SendBufLKey << 8, 0, false, r2n_buf->is_mem_type_host_mem());
 
   // For the send wqe
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
-  sqwqe->write_bit_fields(0, 64, r2n_buf->pa());  // wrid 
+  sqwqe->write_bit_fields(0, 64, r2n_buf->pa());  // wrid
   sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
-  // Store doorbell information of PVM's ROCE CQ in immediate data 
+  // Store doorbell information of PVM's ROCE CQ in immediate data
   if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
       sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
       sqwqe->write_bit_fields(107, 3, CQ_TYPE);
@@ -1020,7 +1025,7 @@ int StartRoceWritePdmaPrefilled(uint16_t seq_pdma_q,
 }
 
 int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_handle,
-                     dp_mem_t **nvme_cmd_ptr, dp_mem_t **read_buf_ptr, uint64_t slba, 
+                     dp_mem_t **nvme_cmd_ptr, dp_mem_t **read_buf_ptr, uint64_t slba,
                      uint8_t pdma_dst_lif_override, uint16_t pdma_dst_lif, uint32_t bdf) {
 
   uint64_t db_addr;
@@ -1072,19 +1077,19 @@ int StartRoceReadSeq(uint32_t seq_pdma_q, uint32_t seq_roce_q, uint16_t ssd_hand
   // Get the HBM buffer for the write back data for the read command
   dp_mem_t *r2n_hbm_buf_pa = new dp_mem_t(1, kR2NBufSize, DP_MEM_ALIGN_PAGE);
   // Register the HBM buffer with RDMA
-  RdmaMemRegister(r2n_hbm_buf_pa->va(), r2n_hbm_buf_pa->pa(), kR2NBufSize, 
-                  WriteBackBufLKey << 8, WriteBackBufRKey << 8, true, 
+  RdmaMemRegister(r2n_hbm_buf_pa->va(), r2n_hbm_buf_pa->pa(), kR2NBufSize,
+                  WriteBackBufLKey << 8, WriteBackBufRKey << 8, true,
                   r2n_hbm_buf_pa->is_mem_type_host_mem());
 
 
   // For the RDMA send WQE
   dp_mem_t *sqwqe = new dp_mem_t(1, kSQWQESize);
 
-  sqwqe->write_bit_fields(0, 64, r2n_buf_va->pa());  // wrid 
+  sqwqe->write_bit_fields(0, 64, r2n_buf_va->pa());  // wrid
   sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
-  // Store doorbell information of PVM's ROCE CQ in immediate data 
+  // Store doorbell information of PVM's ROCE CQ in immediate data
   if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
       sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
       sqwqe->write_bit_fields(107, 3, CQ_TYPE);
@@ -1153,12 +1158,12 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
   WriteBackBufKeysIncr();
 
   // Register R2N buf memory. Only LKey, no remote access.
-  RdmaMemRegister(r2n_send_buf->va(), r2n_send_buf->pa(), kR2NBufSize, 
+  RdmaMemRegister(r2n_send_buf->va(), r2n_send_buf->pa(), kR2NBufSize,
                   SendBufLKey << 8, 0, false, r2n_send_buf->is_mem_type_host_mem());
 
   // Register the buffer for the write back data for the read command with RDMA
   uint32_t r2n_data_len = sizeof(r2n::r2n_buf_t) - offsetof(r2n::r2n_buf_t, cmd_buf);
-  RdmaMemRegister(r2n_write_buf->va(), r2n_write_buf->pa(), kR2NBufSize, 
+  RdmaMemRegister(r2n_write_buf->va(), r2n_write_buf->pa(), kR2NBufSize,
                   WriteBackBufLKey << 8, WriteBackBufRKey << 8, true,
                   r2n_write_buf->is_mem_type_host_mem());
 
@@ -1168,11 +1173,11 @@ int StartRoceReadWithNextLifQueue(uint16_t seq_roce_q,
   /*
    * Point sqwqe to the nvme command in r2n_buf
    */
-  sqwqe->write_bit_fields(0, 64, r2n_send_buf->pa());  // wrid 
+  sqwqe->write_bit_fields(0, 64, r2n_send_buf->pa());  // wrid
   sqwqe->write_bit_fields(68, 4, kRdmaSendOpType);
   sqwqe->write_bit_fields(72, 8, 1);  // Num SGEs = 1
 
-  // Store doorbell information of PVM's ROCE CQ in immediate data 
+  // Store doorbell information of PVM's ROCE CQ in immediate data
   if (kRdmaSendOpType == RDMA_OP_TYPE_SEND_IMM) {
       sqwqe->write_bit_fields(96, 11, queues::get_pvm_lif());
       sqwqe->write_bit_fields(107, 3, CQ_TYPE);
@@ -1251,7 +1256,7 @@ int set_rtl_qstate_cmp_ignore(int src_lif, int src_qtype, int src_qid) {
     return -1;
   }
 
-  // Storage/RDMA P4+ running operating in model is known to be able to 
+  // Storage/RDMA P4+ running operating in model is known to be able to
   // consolidate certain processing, resulting in fewer RDMA acks than RTL.
   // This would lead to EOS miscompares on RDMA qstate. The call below
   // sets ignore range for CB up to 4KB in length.
@@ -1265,7 +1270,7 @@ int rdma_roce_ini_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t
   *lif = g_rdma_hw_lif_id;
   *qtype = kSQType;
   *qid = 0; // 0 - initiator; 1 - target
-  
+
   return qstate_if::get_qstate_addr((int) *lif, (int) *qtype, (int) *qid, qaddr);
 }
 
@@ -1274,7 +1279,7 @@ int rdma_roce_tgt_sq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t
   *lif = g_rdma_hw_lif_id;
   *qtype = kSQType;
   *qid = 1; // 0 - initiator; 1 - target
-  
+
   return qstate_if::get_qstate_addr((int) *lif, (int) *qtype, (int) *qid, qaddr);
 }
 
@@ -1284,7 +1289,7 @@ int rdma_roce_ini_rq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t
   *qtype = kRQType;
   *qid = 0; // 0 - initiator; 1 - target
   *base_pa = initiator_rq_va_base;
-  
+
   return qstate_if::get_qstate_addr((int) *lif, (int) *qtype, (int) *qid, qaddr);
 }
 
@@ -1294,7 +1299,7 @@ int rdma_roce_tgt_rq_info(uint16_t *lif, uint8_t *qtype, uint32_t *qid, uint64_t
   *qtype = kRQType;
   *qid = 1; // 0 - initiator; 1 - target
   *base_pa = target_rq_va_base;
-  
+
   return qstate_if::get_qstate_addr((int) *lif, (int) *qtype, (int) *qid, qaddr);
 }
 
@@ -1316,8 +1321,8 @@ uint32_t get_rdma_pvm_roce_tgt_cq() {
 
 int rdma_pvm_qs_init() {
   int rc;
-  // Init the initiator SQ 
-  if ((rc = queues::pvm_roce_sq_init(g_rdma_hw_lif_id, 
+  // Init the initiator SQ
+  if ((rc = queues::pvm_roce_sq_init(g_rdma_hw_lif_id,
                                      kSQType, 0, // 0 - initiator; 1 - target
                                      g_rdma_hw_lif_id,
                                      kRQType, 0, // 0 - initiator; 1 - target
@@ -1335,10 +1340,10 @@ int rdma_pvm_qs_init() {
 
   // Init the initiator CQ only if NVME is running in the datapath
   if  (nvme_dp_init) {
-    // Init the initiator CQ 
-    if ((rc = queues::pvm_roce_cq_init(g_rdma_hw_lif_id, 
+    // Init the initiator CQ
+    if ((rc = queues::pvm_roce_cq_init(g_rdma_hw_lif_id,
                                        kCQType, 0, // 0 - initiator; 1 - target
-                                       initiator_cq_va, 
+                                       initiator_cq_va,
                                        kRoceNumEntries, kRoceCQEntrySize,
                                        pvm_roce_init_sq_xlate_addr)) < 0) {
       printf("RDMA Initiator ROCE CQ init failure\n");
@@ -1349,25 +1354,25 @@ int rdma_pvm_qs_init() {
     printf("RDMA Initiator ROCE CQ init success\n");
 
     // Initiator SQ Xlate
-    qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
-                                  g_rdma_pvm_roce_init_sq, 
+    qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE,
+                                  g_rdma_pvm_roce_init_sq,
                                   pvm_roce_init_sq_xlate_addr + (1 * 64), NULL);
 
     // Initiator R2N Xlate
-    qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
+    qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE,
                                   queues::get_pvm_r2n_init_sq(0),  // Only one R2N SQ
                                   pvm_roce_init_sq_xlate_addr, NULL);
   }
 
-  // Init the target SQ 
-  if ((rc = queues::pvm_roce_sq_init(g_rdma_hw_lif_id, 
+  // Init the target SQ
+  if ((rc = queues::pvm_roce_sq_init(g_rdma_hw_lif_id,
                                      kSQType, 1, // 0 - initiator; 1 - target
                                      g_rdma_hw_lif_id,
                                      kRQType, 1, // 0 - initiator; 1 - target
-                                     target_sq_va, 
+                                     target_sq_va,
                                      kRoceNumEntries, kRoceEntrySize,
                                      target_rq_va->pa(),
-                                     1 // post the buffer 
+                                     1 // post the buffer
                                      )) < 0) {
     printf("RDMA PVM Target ROCE SQ init failure\n");
     return -1;
@@ -1376,10 +1381,10 @@ int rdma_pvm_qs_init() {
   }
   printf("RDMA PVM Target ROCE SQ init success %p\n", target_sq_va);
 
-  // Init the target CQ 
-  if ((rc = queues::pvm_roce_cq_init(g_rdma_hw_lif_id, 
+  // Init the target CQ
+  if ((rc = queues::pvm_roce_cq_init(g_rdma_hw_lif_id,
                                      kCQType, 1, // 0 - initiator; 1 - target
-                                     target_cq_va, 
+                                     target_cq_va,
                                      kRoceNumEntries, kRoceCQEntrySize,
                                      pvm_roce_tgt_sq_xlate_addr)) < 0) {
     printf("RDMA PVM Target ROCE CQ init failure\n");
@@ -1403,13 +1408,13 @@ int rdma_pvm_qs_init() {
 	if(rc < 0) return rc;
 
   // Target SQ Xlate
-  qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
-                                g_rdma_pvm_roce_tgt_sq, 
+  qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE,
+                                g_rdma_pvm_roce_tgt_sq,
                                 pvm_roce_tgt_sq_xlate_addr + (1 * 64), NULL);
 
   // Target R2N Xlate
-  qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE, 
-                                queues::get_pvm_r2n_tgt_sq(1), // 1 for P4+ to update wp_ndx 
+  qstate_if::update_xlate_entry(queues::get_pvm_lif(), SQ_TYPE,
+                                queues::get_pvm_r2n_tgt_sq(1), // 1 for P4+ to update wp_ndx
                                 pvm_roce_tgt_sq_xlate_addr, NULL);
   return 0;
 }
@@ -1425,7 +1430,7 @@ int rdma_init(bool dp_init) {
       return 0;
   }
 
-  // Flag to indicate whether there is an NVME datapath initiator 
+  // Flag to indicate whether there is an NVME datapath initiator
   // => cq needs to be in capri, sq xlate needs to be setup
   nvme_dp_init = dp_init;
 
@@ -1498,7 +1503,7 @@ void rdma_uspace_test() {
 
 dp_mem_t *rdma_get_initiator_rcv_buf() {
   uint32_t size = kR2NBufSize - IO_STATUS_BUF_BE_STATUS_OFFSET;
-  return initiator_rcv_buf_va->fragment_find(IO_STATUS_BUF_BE_STATUS_OFFSET, 
+  return initiator_rcv_buf_va->fragment_find(IO_STATUS_BUF_BE_STATUS_OFFSET,
                                              size);
 }
 
@@ -1509,12 +1514,21 @@ dp_mem_t *rdma_get_target_write_data_buf() {
 // Global disable of Capri fast and slow timers
 void rdma_tmr_global_disable(void)
 {
+#ifdef ELBA
+    uint64_t txs_cfw_tmr_global = ELB_ADDR_BASE_TXS_TXS_OFFSET +
+                                  ELB_TXS_CSR_CFW_TIMER_GLB_BYTE_ADDRESS;
+    uint32_t global_val = tests::test_csr_32bit_get(txs_cfw_tmr_global);
+
+    global_val = ELB_TXS_CSR_CFW_TIMER_GLB_STMR_ENABLE_MODIFY(global_val, 0);
+    global_val = ELB_TXS_CSR_CFW_TIMER_GLB_FTMR_ENABLE_MODIFY(global_val, 0);
+#else
     uint64_t txs_cfw_tmr_global = CAP_ADDR_BASE_TXS_TXS_OFFSET +
                                   CAP_TXS_CSR_CFW_TIMER_GLB_BYTE_ADDRESS;
     uint32_t global_val = tests::test_csr_32bit_get(txs_cfw_tmr_global);
 
     global_val = CAP_TXS_CSR_CFW_TIMER_GLB_STMR_ENABLE_MODIFY(global_val, 0);
     global_val = CAP_TXS_CSR_CFW_TIMER_GLB_FTMR_ENABLE_MODIFY(global_val, 0);
+#endif
     tests::test_csr_32bit_set(txs_cfw_tmr_global, global_val);
     printf("rdma_tmr_global_disable addr 0x%lx data 0x%x\n", txs_cfw_tmr_global, global_val);
 }

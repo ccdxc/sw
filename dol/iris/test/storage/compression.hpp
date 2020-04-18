@@ -8,7 +8,7 @@
 
 using namespace dp_mem;
 
-// Calculate max number of hash blocks required for a given app_max_size 
+// Calculate max number of hash blocks required for a given app_max_size
 // and app_hash_size.
 #define COMP_MAX_HASH_BLKS(app_max_size, app_hash_size)   \
     (((app_max_size) + (app_hash_size) - 1) / (app_hash_size))
@@ -91,6 +91,21 @@ typedef struct cp_desc {
   uint32_t status_data;
 } cp_desc_t;
 
+#ifdef ELBA
+typedef struct cp_sgl {
+  uint64_t addr0;
+  uint32_t rsvd0;
+  uint32_t len0;
+  uint64_t addr1;
+  uint32_t rsvd1;
+  uint32_t len1;
+  uint64_t addr2;
+  uint32_t rsvd2;
+  uint32_t len2;
+  uint64_t link;  // next descriptor
+  uint64_t rsvd;
+} cp_sgl_t;
+#else
 typedef struct cp_sgl {
   uint64_t addr0;
   uint32_t len0;
@@ -104,6 +119,7 @@ typedef struct cp_sgl {
   uint64_t link;  // next descriptor
   uint64_t rsvd;
 } cp_sgl_t;
+#endif
 
 typedef struct cp_hdr {
   uint32_t cksum;
@@ -124,7 +140,7 @@ typedef struct cp_hdr {
 #define CP_STATUS_PAD_ALIGNED_SIZE                              \
   (((sizeof(cp_status_sha512_t) + kMinHostMemAllocSize - 1) /   \
    kMinHostMemAllocSize) * kMinHostMemAllocSize)
-  
+
 typedef struct cp_status_no_hash {
   uint16_t rsvd:12,
            err:3,  // See status code above

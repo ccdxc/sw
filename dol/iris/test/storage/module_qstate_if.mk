@@ -1,5 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
+MODULE_DEFS     = ${ASIC_DEFINES}
 MODULE_TARGET   = libstorage_qstate_if.lib
 MODULE_PIPELINE = iris
 MODULE_PREREQS  = common_p4plus_rxdma.p4bin common_p4plus_txdma.p4bin hal.memrgns

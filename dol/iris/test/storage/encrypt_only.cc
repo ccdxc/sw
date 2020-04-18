@@ -43,7 +43,7 @@ encrypt_only_t::encrypt_only_t(encrypt_only_params_t params) :
     xts_encrypt_buf = new dp_mem_t(1, app_max_size,
                           DP_MEM_ALIGN_PAGE, params.encrypt_mem_type_,
                           0, DP_MEM_ALLOC_NO_FILL);
-    xts_status_buf = new dp_mem_t(1, sizeof(uint64_t),
+    xts_status_buf = new dp_mem_t(1, sizeof(xts::xts_status_t),
                                   DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                   kMinHostMemAllocSize);
     // XTS AOL must be 512 byte aligned
@@ -71,7 +71,7 @@ encrypt_only_t::~encrypt_only_t()
 {
     // Only free buffers on successful completion; otherwise,
     // HW/P4+ might still be trying to access them.
-    
+
     printf("%s success %u destructor_free_buffers %u\n",
            __FUNCTION__, success, destructor_free_buffers);
     if (success && destructor_free_buffers) {
@@ -99,7 +99,7 @@ encrypt_only_t::pre_push(encrypt_only_pre_push_params_t params)
 /*
  * Initiate the test
  */
-int 
+int
 encrypt_only_t::push(encrypt_only_push_params_t params)
 {
     // validate app_blk_size
@@ -143,7 +143,7 @@ encrypt_only_t::post_push(void)
 /*
  * Set up of XTS encryption
  */
-void 
+void
 encrypt_only_t::encrypt_setup(uint32_t seq_xts_qid)
 {
     xts::xts_cmd_t  cmd;
@@ -202,14 +202,15 @@ encrypt_only_t::encrypt_setup(uint32_t seq_xts_qid)
  * status, and avoid any lengthy HBM access (such as data comparison) that would
  * slow down test resubmission in the scaled setup.
  */
-int 
+int
 encrypt_only_t::fast_verify(void)
 {
     // Validate XTS status
-    uint64_t curr_xts_status = *((uint64_t *)caller_xts_status_buf->read_thru());
+    xts::xts_status_t *xts_status =
+         (xts::xts_status_t *)caller_xts_status_buf->read_thru();
     success = false;
-    if (curr_xts_status) {
-      printf("ERROR: encrypt_only XTS error 0x%lx\n", curr_xts_status);
+    if (xts_status->status) {
+      printf("ERROR: encrypt_only XTS error 0x%x\n", xts_status->status);
       return -1;
     }
 
@@ -226,7 +227,7 @@ encrypt_only_t::fast_verify(void)
  *
  * Should only be used in non-scaled setup.
  */
-int 
+int
 encrypt_only_t::full_verify(void)
 {
     uint32_t    poll_factor = app_blk_size / kCompAppMinSize;

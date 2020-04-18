@@ -68,13 +68,13 @@ decrypt_decomp_chain_t::decrypt_decomp_chain_t(decrypt_decomp_chain_params_t par
     // one in HBM for lower latency P4+ processing, and another in host
     // memory which P4+ will copy into for the application.
     max_enc_blks = COMP_MAX_HASH_BLKS(app_max_size, app_enc_size);
-    xts_status_vec1 = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
+    xts_status_vec1 = new dp_mem_t(max_enc_blks, sizeof(xts::xts_status_t),
                           DP_MEM_ALIGN_SPEC, params.xts_status_mem_type1_,
-                          sizeof(uint64_t), DP_MEM_ALLOC_NO_FILL);
+                          sizeof(xts::xts_status_t), DP_MEM_ALLOC_NO_FILL);
     if (params.xts_status_mem_type2_ != DP_MEM_TYPE_VOID) {
-        xts_status_vec2 = new dp_mem_t(max_enc_blks, sizeof(uint64_t),
+        xts_status_vec2 = new dp_mem_t(max_enc_blks, sizeof(xts::xts_status_t),
                               DP_MEM_ALIGN_SPEC, params.xts_status_mem_type2_,
-                              sizeof(uint64_t), DP_MEM_ALLOC_NO_FILL);
+                              sizeof(xts::xts_status_t), DP_MEM_ALLOC_NO_FILL);
     } else {
         xts_status_vec2 = xts_status_vec1;
     }
@@ -107,7 +107,7 @@ decrypt_decomp_chain_t::~decrypt_decomp_chain_t()
 {
     // Only free buffers on successful completion; otherwise,
     // HW/P4+ might still be trying to access them.
-    
+
     printf("%s success %u destructor_free_buffers %u\n",
            __FUNCTION__, success, destructor_free_buffers);
     if (success && destructor_free_buffers) {
@@ -145,7 +145,7 @@ decrypt_decomp_chain_t::pre_push(decrypt_decomp_chain_pre_push_params_t params)
 /*
  * Initiate the test
  */
-int 
+int
 decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
 {
     chain_params_xts_t  chain_params = {0};
@@ -156,7 +156,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     app_blk_size = comp_encrypt_chain->app_blk_size_get();
     app_enc_size = comp_encrypt_chain->app_enc_size_get();
     enc_dec_blk_type = comp_encrypt_chain->enc_dec_blk_type_get();
-    actual_enc_blks = 
+    actual_enc_blks =
         comp_encrypt_chain->actual_enc_blks_get(TEST_RESOURCE_NON_BLOCKING_QUERY);
     if (app_blk_size > app_max_size) {
         printf("%s app_blk_size %u exceeds app_max_size %u\n", __FUNCTION__,
@@ -202,7 +202,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
         /*
          * Configure decrypt_decomp_len_update mode
          */
-        if (params.decrypt_decomp_len_update_ != 
+        if (params.decrypt_decomp_len_update_ !=
                    DECRYPT_DECOMP_LEN_UPDATE_NONE) {
 
             /*
@@ -213,7 +213,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
             chain_params.blk_boundary_shift = (uint8_t)log2(app_enc_size);
             cp_desc.datain_len = xts_decrypt_buf1->line_size_get();
 
-            if (params.decrypt_decomp_len_update_ != 
+            if (params.decrypt_decomp_len_update_ !=
                        DECRYPT_DECOMP_LEN_UPDATE_FLAT) {
                 cp_desc.cmd_bits.src_is_list = 1;
                 cp_desc.src = decomp_sgl_src_vec->pa();
@@ -224,7 +224,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
                  * Validate the mode where the entire SGL describes just
                  * a single buffer.
                  */
-                if (params.decrypt_decomp_len_update_ == 
+                if (params.decrypt_decomp_len_update_ ==
                                    DECRYPT_DECOMP_LEN_UPDATE_SGL_SRC) {
                     comp_sgl_packed_fill(decomp_sgl_src_vec, xts_decrypt_buf1,
                                          xts_decrypt_buf1->line_size_get());
@@ -258,9 +258,9 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
         chain_params.push_spec.barco_pndx_shadow_addr =
                                decomp_ring->shadow_pd_idx_pa_get();
         chain_params.push_spec.barco_desc_addr = xts_decomp_cp_desc->pa();
-        chain_params.push_spec.barco_desc_size = 
+        chain_params.push_spec.barco_desc_size =
                                (uint8_t)log2(xts_decomp_cp_desc->line_size_get());
-        chain_params.push_spec.barco_pndx_size = 
+        chain_params.push_spec.barco_pndx_size =
                                (uint8_t)log2(sizeof(uint32_t));
         chain_params.push_spec.barco_ring_size =
                                (uint8_t)log2(decomp_ring->ring_size_get());
@@ -276,7 +276,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
         xts_status_vec2->all_lines_fill_thru(0xff);
         chain_params.status_addr0 = xts_status_vec1->pa();
         chain_params.status_addr1 = xts_status_vec2->pa();
-        chain_params.status_len = 
+        chain_params.status_len =
                      xts_status_vec2->line_size_get() * (uint32_t)actual_enc_blks;
         chain_params.status_dma_en = 1;
     }
@@ -300,7 +300,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     }
 
     /*
-     * Enable interrupt in case decryption fails; 
+     * Enable interrupt in case decryption fails;
      * also applicable when decomp is skipped.
      */
     xts_opaque_buf->clear_thru();
@@ -317,7 +317,7 @@ decrypt_decomp_chain_t::push(decrypt_decomp_chain_push_params_t params)
     // Set up decryption
     xts_src_aol_vec->line_set(0);
     xts_dst_aol_vec->line_set(0);
-    num_enc_blks = comp_encrypt_chain->encrypt_output_data_len_get() / 
+    num_enc_blks = comp_encrypt_chain->encrypt_output_data_len_get() /
                    app_enc_size;
     xts_aol_sparse_fill(enc_dec_blk_type, xts_src_aol_vec,
                         comp_encrypt_chain->xts_encrypt_buf_get(),
@@ -359,7 +359,7 @@ decrypt_decomp_chain_t::post_push(void)
 /*
  * Set up of XTS decryption
  */
-void 
+void
 decrypt_decomp_chain_t::decrypt_setup(uint32_t block_no,
                                       chain_params_xts_t& chain_params)
 {
@@ -409,21 +409,22 @@ decrypt_decomp_chain_t::decrypt_setup(uint32_t block_no,
  * status, and avoid any lengthy HBM access (such as data comparison) that would
  * slow down test resubmission in the scaled setup.
  */
-int 
+int
 decrypt_decomp_chain_t::fast_verify(void)
 {
-    cp_desc_t   *d;
-    uint64_t    xts_status;
-    uint32_t    block_no;
+    xts::xts_status_t *xts_status;
+    cp_desc_t *d;
+    uint32_t block_no;
 
     // Validate XTS status;
     // The actual number of statuses written is based on actual_enc_blks
     // which equals 1 or num_enc_blks.
     for (block_no = 0; block_no < (uint32_t)actual_enc_blks; block_no++) {
         xts_status_vec2->line_set(block_no);
-        xts_status = *((uint64_t *)xts_status_vec2->read_thru());
-        if (xts_status) {
-            printf("ERROR: decrypt_decomp_chain XTS error 0x%lx\n", xts_status);
+        xts_status = (xts::xts_status_t *)xts_status_vec2->read_thru();
+        if (xts_status->status) {
+            printf("ERROR: decrypt_decomp_chain XTS error 0x%x\n",
+                   xts_status->status);
             return -1;
         }
     }
@@ -451,15 +452,15 @@ decrypt_decomp_chain_t::fast_verify(void)
  *
  * Should only be used in non-scaled setup.
  */
-int 
+int
 decrypt_decomp_chain_t::full_verify(void)
 {
     cp_desc_t       *d;
     xts::xts_aol_t  *xts_aol;
+    xts::xts_status_t   *xts_status = nullptr;
     uint32_t        max_blks;
     uint32_t        block_no;
-    uint64_t        xts_status = 0;
-    uint32_t        poll_factor = app_blk_size / kCompAppMinSize;
+    uint32_t            poll_factor = app_blk_size / kCompAppMinSize;
 
     // Don't call xts_ctx.verify_doorbell() as XTS completion would go
     // to XTS status sequencer in the decrypt chaining case.
@@ -472,8 +473,8 @@ decrypt_decomp_chain_t::full_verify(void)
         // which equals 1 or num_enc_blks.
         for (block_no = 0; block_no < (uint32_t)actual_enc_blks; block_no++) {
             xts_status_vec2->line_set(block_no);
-            xts_status = *((uint64_t *)xts_status_vec2->read_thru());
-            if (xts_status) {
+            xts_status = (xts::xts_status_t *)xts_status_vec2->read_thru();
+            if (xts_status->status) {
                 break;
             }
         }
@@ -487,7 +488,7 @@ decrypt_decomp_chain_t::full_verify(void)
          * interrupt completion.
          */
         if (decomp_bypass) {
-            return *((uint32_t *)xts_opaque_buf->read_thru()) == 
+            return *((uint32_t *)xts_opaque_buf->read_thru()) ==
                                  kCompSeqIntrData ? 0 : 1;
         }
         return 0;
@@ -498,7 +499,8 @@ decrypt_decomp_chain_t::full_verify(void)
     success = false;
 
     if (xts_poll(xts_status_poll_func) != 0) {
-        printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%lx\n", xts_status);
+        printf("ERROR: decrypt_decomp_chain XTS decrypt error 0x%x\n",
+               xts_status->status);
         return -1;
     }
 
@@ -549,7 +551,7 @@ decrypt_decomp_chain_t::full_verify(void)
         }
 
     } else {
-        last_dc_output_data_len = 
+        last_dc_output_data_len =
              comp_status_output_data_len_get(caller_comp_status_buf);
         if (!suppress_info_log) {
             printf("decrypt_decomp_chain: last_dc_output_data_len %u\n",
@@ -585,7 +587,7 @@ decrypt_decomp_chain_t::full_verify(void)
         }
     }
 
-    if (last_decrypt_output_data_len != 
+    if (last_decrypt_output_data_len !=
         comp_encrypt_chain->encrypt_output_data_len_get()) {
         printf("ERROR: decrypt_decomp_chain last_decrypt_output_data_len %u != "
                "exp_encrypt_output_data_len %u\n", last_decrypt_output_data_len,

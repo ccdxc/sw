@@ -1,5 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
+MODULE_DEFS     = ${ASIC_DEFINES}
 MODULE_TARGET   = libstorage_decrypt_decomp_chain.lib
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/decrypt_decomp_chain.cc

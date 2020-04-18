@@ -11,8 +11,13 @@
 #include "comp_hash_chain.hpp"
 #include "chksum_decomp_chain.hpp"
 #include "storage_seq_p4pd.hpp"
-#include "third-party/asic/capri/design/common/cap_addr_define.h"
+#ifdef ELBA
+#include "third-party/asic/elba/model/elb_top/elb_top_csr_defines.h"
+#include "third-party/asic/elba/model/elb_top/csr_defines/elb_hens_c_hdr.h"
+#else
+#include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "third-party/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
+#endif
 
 #ifdef NDEBUG
 #undef NDEBUG
@@ -28,59 +33,177 @@
 
 namespace tests {
 
-static const uint64_t cp_cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_GLB_BYTE_ADDRESS;
+static uint64_t cp_cfg_glob;
+static uint64_t cp_cfg_dist;
+static uint64_t cp_cfg_ueng;
+static uint64_t cp_cfg_q_base;
+static uint64_t cp_cfg_hotq_base;
+static uint64_t cp_cfg_q_pd_idx;
+static uint64_t cp_cfg_hotq_pd_idx;
+static uint64_t cp_cfg_host;
+static uint64_t cp_cfg_host_opaque_tag_addr;
+static uint64_t dc_cfg_glob;
+static uint64_t dc_cfg_dist;
+static uint64_t dc_cfg_ueng;
+static uint64_t dc_cfg_q_base;
+static uint64_t dc_cfg_hotq_base;
+static uint64_t dc_cfg_q_pd_idx;
+static uint64_t dc_cfg_hotq_pd_idx;
+static uint64_t dc_cfg_host;
+static uint64_t dc_cfg_host_opaque_tag_addr;
 
-static const uint64_t cp_cfg_dist = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_BYTE_ADDRESS;
+#ifdef ELBA
+static void init_cpdc_registers(void) {
+    cp_cfg_glob = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_GLB_BYTE_ADDRESS;
 
-static const uint64_t cp_cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_UENG_W0_BYTE_ADDRESS;
+    cp_cfg_dist = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_BYTE_ADDRESS;
 
-static const uint64_t cp_cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
+    cp_cfg_ueng = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_UENG_W0_BYTE_ADDRESS;
 
-static const uint64_t cp_cfg_hotq_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS;
+    cp_cfg_q_base = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q1_BASE_ADR_W0_BYTE_ADDRESS;
 
-static const uint64_t cp_cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_PD_IDX_BYTE_ADDRESS;
+    cp_cfg_hotq_base = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q0_BASE_ADR_W0_BYTE_ADDRESS;
 
-static const uint64_t cp_cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_PD_IDX_BYTE_ADDRESS;
+    cp_cfg_q_pd_idx = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q1_PD_IDX_BYTE_ADDRESS;
 
-static const uint64_t cp_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_BYTE_ADDRESS;
+    cp_cfg_hotq_pd_idx = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q0_PD_IDX_BYTE_ADDRESS;
 
-static const uint64_t cp_cfg_host_opaque_tag_addr = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS;
+    cp_cfg_host = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_BYTE_ADDRESS;
 
-static const uint64_t dc_cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_GLB_BYTE_ADDRESS;
+    cp_cfg_host_opaque_tag_addr = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS;
 
-static const uint64_t dc_cfg_dist = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_BYTE_ADDRESS;
+    dc_cfg_glob = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_GLB_BYTE_ADDRESS;
 
-static const uint64_t dc_cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_UENG_W0_BYTE_ADDRESS;
+    dc_cfg_dist = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_BYTE_ADDRESS;
 
-static const uint64_t dc_cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
+    dc_cfg_ueng = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_UENG_W0_BYTE_ADDRESS;
 
-static const uint64_t dc_cfg_hotq_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS;
+    dc_cfg_q_base = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q1_BASE_ADR_W0_BYTE_ADDRESS;
 
-static const uint64_t dc_cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_PD_IDX_BYTE_ADDRESS;
+    dc_cfg_hotq_base = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q0_BASE_ADR_W0_BYTE_ADDRESS;
 
-static const uint64_t dc_cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_PD_IDX_BYTE_ADDRESS;
+    dc_cfg_q_pd_idx = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q1_PD_IDX_BYTE_ADDRESS;
 
-static const uint64_t dc_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_BYTE_ADDRESS;
+    dc_cfg_hotq_pd_idx = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q0_PD_IDX_BYTE_ADDRESS;
 
-static const uint64_t dc_cfg_host_opaque_tag_addr = CAP_ADDR_BASE_MD_HENS_OFFSET +
-    CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS;
+    dc_cfg_host = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_BYTE_ADDRESS;
+
+    dc_cfg_host_opaque_tag_addr = ELB_ADDR_BASE_MD_HENS_OFFSET +
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS;
+}
+#else
+static void init_cpdc_registers(void) {
+    cp_cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_GLB_BYTE_ADDRESS;
+
+    cp_cfg_dist = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_BYTE_ADDRESS;
+
+    cp_cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_UENG_W0_BYTE_ADDRESS;
+
+    cp_cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
+
+    cp_cfg_hotq_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS;
+
+    cp_cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_PD_IDX_BYTE_ADDRESS;
+
+    cp_cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_PD_IDX_BYTE_ADDRESS;
+
+    cp_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_BYTE_ADDRESS;
+
+    cp_cfg_host_opaque_tag_addr = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS;
+
+    dc_cfg_glob = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_GLB_BYTE_ADDRESS;
+
+    dc_cfg_dist = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_BYTE_ADDRESS;
+
+    dc_cfg_ueng = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_UENG_W0_BYTE_ADDRESS;
+
+    dc_cfg_q_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_BASE_ADR_W0_BYTE_ADDRESS;
+
+    dc_cfg_hotq_base = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_BASE_ADR_W0_BYTE_ADDRESS;
+
+    dc_cfg_q_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_PD_IDX_BYTE_ADDRESS;
+
+    dc_cfg_hotq_pd_idx = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_PD_IDX_BYTE_ADDRESS;
+
+    dc_cfg_host = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_BYTE_ADDRESS;
+
+    dc_cfg_host_opaque_tag_addr = CAP_ADDR_BASE_MD_HENS_OFFSET +
+        CAP_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOST_OPAQUE_TAG_ADR_W0_BYTE_ADDRESS;
+}
+#endif
+
+#define dump_csr_32(r)                          \
+    do {                                \
+        uint32_t lo_dummy ;                 \
+        read_reg(r, lo_dummy);                  \
+        printf("=== %d: %s() %s addr: 0x%lx lo: 0x%x\n",    \
+                __LINE__, __func__, #r, r, lo_dummy);\
+    } while (0)
+
+#define dump_csr_64(r)                          \
+    do {                                \
+        uint32_t lo_dummy, hi_dummy;                \
+        read_reg(r, lo_dummy);                  \
+        read_reg(r+4, hi_dummy);                \
+        printf("=== %d: %s() %s addr: 0x%lx hi: 0x%x lo: 0x%x\n",           \
+                __LINE__, __func__, #r, r, hi_dummy, lo_dummy);\
+    } while (0)
+
+static void dump_cpdc_registers(void) {
+    dump_csr_32(cp_cfg_glob);
+    dump_csr_32(cp_cfg_dist);
+    dump_csr_64(cp_cfg_ueng);
+    dump_csr_64(cp_cfg_q_base);
+    dump_csr_64(cp_cfg_hotq_base);
+    dump_csr_32(cp_cfg_q_pd_idx);
+    dump_csr_32(cp_cfg_hotq_pd_idx);
+    dump_csr_32(cp_cfg_host);
+    dump_csr_64(cp_cfg_host_opaque_tag_addr);
+
+    dump_csr_32(dc_cfg_glob);
+    dump_csr_32(dc_cfg_dist);
+    dump_csr_64(dc_cfg_ueng);
+    dump_csr_64(dc_cfg_q_base);
+    dump_csr_64(dc_cfg_hotq_base);
+    dump_csr_32(dc_cfg_q_pd_idx);
+    dump_csr_32(dc_cfg_hotq_pd_idx);
+    dump_csr_32(dc_cfg_host);
+    dump_csr_64(dc_cfg_host_opaque_tag_addr);
+}
 
 // compression/decompression blocks initialized by HAL
 // or by this DOL module.
@@ -93,10 +216,10 @@ acc_ring_t *dc_ring;
 acc_ring_t *cp_hot_ring;
 acc_ring_t *dc_hot_ring;
 
-// These constants equate to the number of 
+// These constants equate to the number of
 // hardware compression/decompression engines.
-#define MAX_CP_REQ	16
-#define MAX_DC_REQ	2
+#define MAX_CP_REQ  16
+#define MAX_DC_REQ  2
 
 // Sample data generated during test.
 static const uint8_t all_zeros[kCompEngineMaxSize] = {0};
@@ -265,7 +388,7 @@ chain_sgl_pdma_packed_fill(dp_mem_t *seq_sgl_pdma,
     seq_sgl_pdma->clear();
     sgl_pdma_entry = (chain_sgl_pdma_t *)seq_sgl_pdma->read();
     for (uint32_t i = 0; i < ARRAYSIZE(sgl_pdma_entry->tuple); i++) {
-        pdma_size = dst_buf_size > kMaxMem2MemSize ? 
+        pdma_size = dst_buf_size > kMaxMem2MemSize ?
                     kMaxMem2MemSize : dst_buf_size;
         sgl_pdma_entry->tuple[i].addr = dst_buf_addr;
         sgl_pdma_entry->tuple[i].len = pdma_size;
@@ -449,13 +572,13 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
 
     // desc bytes 0-63
     if (chain_params.next_db_action_barco_push) {
-        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_addr, 
+        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_addr,
                                        chain_params.push_spec.barco_ring_addr);
-        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_data, 
+        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_data,
                                        chain_params.push_spec.barco_desc_addr);
-        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, barco_pndx_addr, 
+        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, barco_pndx_addr,
                                        chain_params.push_spec.barco_pndx_addr);
-        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, barco_pndx_shadow_addr, 
+        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, barco_pndx_shadow_addr,
                                        chain_params.push_spec.barco_pndx_shadow_addr);
 
         STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, barco_desc_size,
@@ -468,17 +591,17 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
                                         chain_params.push_spec.barco_num_descs);
 
     } else {
-        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_addr, 
+        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_addr,
                                        chain_params.db_spec.next_doorbell_addr);
-        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_data, 
+        STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, next_db_data,
                                        chain_params.db_spec.next_doorbell_data);
     }
 
-    STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, status_addr0, 
+    STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, status_addr0,
                                    chain_params.status_addr0);
-    STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, status_addr1, 
+    STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, status_addr1,
                                    chain_params.status_addr1);
-    STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, intr_addr, 
+    STORAGE_SEQ_CS_DESC0_ARRAY_SET(desc0_action, intr_addr,
                                    chain_params.intr_addr);
     STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, intr_data,
                                     chain_params.intr_data);
@@ -507,61 +630,61 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
 
 
     // desc bytes 64-127
-    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, comp_buf_addr, 
+    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, comp_buf_addr,
                                    chain_params.comp_buf_addr);
-    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, aol_src_vec_addr, 
+    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, aol_src_vec_addr,
                                    chain_params.aol_src_vec_addr);
-    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, aol_dst_vec_addr, 
+    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, aol_dst_vec_addr,
                                    chain_params.aol_dst_vec_addr);
-    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, sgl_vec_addr, 
+    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, sgl_vec_addr,
                                    chain_params.sgl_vec_addr);
-    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, pad_buf_addr, 
+    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, pad_buf_addr,
                                    chain_params.pad_buf_addr);
-    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, alt_buf_addr, 
+    STORAGE_SEQ_CS_DESC1_ARRAY_SET(desc1_action, alt_buf_addr,
                                    chain_params.alt_buf_addr);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, data_len, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, data_len,
                                     chain_params.data_len);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, alt_data_len, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, alt_data_len,
                                     chain_params.alt_data_len);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, pad_boundary_shift, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, pad_boundary_shift,
                                     chain_params.pad_boundary_shift);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, stop_chain_on_error, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, stop_chain_on_error,
                                     chain_params.stop_chain_on_error);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, data_len_from_desc, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, data_len_from_desc,
                                     chain_params.data_len_from_desc);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, aol_update_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, aol_update_en,
                                     chain_params.aol_update_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_update_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_update_en,
                                     chain_params.sgl_update_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_sparse_format_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_sparse_format_en,
                                     chain_params.sgl_sparse_format_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_en,
                                     chain_params.sgl_pdma_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_pad_only, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_pad_only,
                                     chain_params.sgl_pdma_pad_only);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_alt_src_on_error, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_alt_src_on_error,
                                     chain_params.sgl_pdma_alt_src_on_error);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, desc_vec_push_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, desc_vec_push_en,
                                     chain_params.desc_vec_push_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, chain_alt_desc_on_error, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, chain_alt_desc_on_error,
                                     chain_params.chain_alt_desc_on_error);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, integ_data0_wr_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, integ_data0_wr_en,
                                     chain_params.integ_data0_wr_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, integ_data_null_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, integ_data_null_en,
                                     chain_params.integ_data_null_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, desc_dlen_update_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, desc_dlen_update_en,
                                     chain_params.desc_dlen_update_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, hdr_version, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, hdr_version,
                                     chain_params.hdr_version);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, hdr_version_wr_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, hdr_version_wr_en,
                                     chain_params.hdr_version_wr_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, cp_hdr_update_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, cp_hdr_update_en,
                                     chain_params.cp_hdr_update_en);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, status_len_no_hdr, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, status_len_no_hdr,
                                     chain_params.status_len_no_hdr);
-    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, padding_en, 
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, padding_en,
                                     chain_params.padding_en);
-    STORAGE_SEQ_CS_DESC1_PACK(seq_status_desc->read() + 
+    STORAGE_SEQ_CS_DESC1_PACK(seq_status_desc->read() +
                               STORAGE_SEQ_P4PD_TABLE_BYTE_WIDTH_DFLT, desc1_action);
 
     seq_status_desc->write_thru();
@@ -569,7 +692,7 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
     // Form the doorbell to be returned by the API
     queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
                                chain_params.seq_spec.seq_status_q, 0,
-                               chain_params.seq_spec.ret_seq_status_index, 
+                               chain_params.seq_spec.ret_seq_status_index,
                                &chain_params.seq_spec.ret_doorbell_addr,
                                &chain_params.seq_spec.ret_doorbell_data);
     return 0;
@@ -648,7 +771,7 @@ compression_buf_init()
 
     // Create and initialize compression->XTS-encrypt chaining
     comp_encrypt_chain_params_t cec_ctor;
-    comp_encrypt_chain = 
+    comp_encrypt_chain =
          new comp_encrypt_chain_t(cec_ctor.app_max_size(kCompAppMaxSize).
                                            app_enc_size(kCompAppHashBlkSize).
                                            uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
@@ -659,9 +782,9 @@ compression_buf_init()
                                            encrypt_mem_type(DP_MEM_TYPE_HOST_MEM).
                                            destructor_free_buffers(true));
     max_hash_blks = COMP_MAX_HASH_BLKS(kCompAppMaxSize, kCompAppHashBlkSize);
-    xts_status_host_vec = new dp_mem_t(max_hash_blks, sizeof(uint64_t),
+    xts_status_host_vec = new dp_mem_t(max_hash_blks, sizeof(xts::xts_status_t),
                                        DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
-                                       sizeof(uint64_t));
+                                       sizeof(xts::xts_status_t));
     comp_encrypt_chain_pre_push_params_t cec_pre_push;
     comp_encrypt_chain->pre_push(cec_pre_push.caller_comp_pad_buf(comp_pad_buf).
                                               caller_xts_status_vec(xts_status_host_vec).
@@ -670,7 +793,7 @@ compression_buf_init()
 
     // Create and initialize XTS-decrypt->decompression chaining
     decrypt_decomp_chain_params_t ddc_ctor;
-    decrypt_decomp_chain = 
+    decrypt_decomp_chain =
          new decrypt_decomp_chain_t(ddc_ctor.app_max_size(kCompAppMaxSize).
                                              app_enc_size(kCompAppHashBlkSize).
                                              uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
@@ -687,7 +810,7 @@ compression_buf_init()
                                                 caller_comp_opaque_data(0));
     // Create and initialize compression->hash chaining
     comp_hash_chain_params_t chc_ctor;
-    comp_hash_chain = 
+    comp_hash_chain =
          new comp_hash_chain_t(chc_ctor.app_max_size(kCompAppMaxSize).
                                         uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                         comp_mem_type1(DP_MEM_TYPE_HBM).
@@ -700,7 +823,7 @@ compression_buf_init()
                                         test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM),
                                         kMinHostMemAllocSize);
     hash_opaque_host_vec = new dp_mem_t(max_hash_blks, sizeof(uint64_t),
-                                        DP_MEM_ALIGN_SPEC, 
+                                        DP_MEM_ALIGN_SPEC,
                                         test_mem_type_workaround(DP_MEM_TYPE_HOST_MEM),
                                         kMinHostMemAllocSize);
     comp_hash_chain_pre_push_params_t chc_pre_push;
@@ -710,7 +833,7 @@ compression_buf_init()
                                            caller_hash_opaque_data(kCompHashIntrData));
     // Create and initialize checksum-decompression chaining
     chksum_decomp_chain_params_t cdc_ctor;
-    chksum_decomp_chain = 
+    chksum_decomp_chain =
          new chksum_decomp_chain_t(cdc_ctor.app_max_size(kCompAppMaxSize).
                                             uncomp_mem_type(DP_MEM_TYPE_HOST_MEM).
                                             destructor_free_buffers(true));
@@ -774,6 +897,9 @@ compression_init()
   uint32_t dc_ring_size = kMaxSubqEntries;
   uint32_t dc_hot_ring_size = kMaxSubqEntries;
   uint32_t lo_reg, hi_reg;
+
+  init_cpdc_registers();
+  dump_cpdc_registers();
 
   lo_reg = READ_REG32(cp_cfg_glob);
   if (comp_inited_by_hal) {
@@ -846,15 +972,24 @@ compression_init()
       WRITE_REG32(dc_cfg_ueng, lo_reg);
       WRITE_REG32(dc_cfg_ueng+4, hi_reg);
 
-      // Enable cold/warm queue.
+      // Enable all queues ...
       lo_reg = READ_REG32(cp_cfg_dist);
+#ifdef ELBA
+      lo_reg |= 0xFF;
+#else
       lo_reg |= 1;
+#endif
       WRITE_REG32(cp_cfg_dist, lo_reg);
       lo_reg = READ_REG32(dc_cfg_dist);
+#ifdef ELBA
+      lo_reg |= 0xFF;
+#else
       lo_reg |= 1;
+#endif
       WRITE_REG32(dc_cfg_dist, lo_reg);
   }
 
+  dump_cpdc_registers();
   printf("Compression init done\n");
 }
 
@@ -975,7 +1110,7 @@ int compress_flat_64K_buf() {
 }
 
 int seq_compress_flat_64K_buf() {
-  return _compress_flat_64K_buf(ACC_RING_PUSH_SEQUENCER, 
+  return _compress_flat_64K_buf(ACC_RING_PUSH_SEQUENCER,
                                 queues::get_seq_comp_sq(0));
 }
 
@@ -990,7 +1125,7 @@ int _compress_same_src_and_dst(acc_ring_push_t push_type,
   compressed_buf->write_thru();
   compress_cp_desc_template_fill(d, compressed_buf, compressed_buf,
                                  status_buf, nullptr, kCompAppMinSize);
-  if (run_cp_test(d, compressed_buf, status_buf, 
+  if (run_cp_test(d, compressed_buf, status_buf,
                   push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
@@ -1004,7 +1139,7 @@ int compress_same_src_and_dst() {
 }
 
 int seq_compress_same_src_and_dst() {
-    return _compress_same_src_and_dst(ACC_RING_PUSH_SEQUENCER, 
+    return _compress_same_src_and_dst(ACC_RING_PUSH_SEQUENCER,
                                       queues::get_seq_comp_sq(0));
 }
 
@@ -1043,7 +1178,7 @@ int decompress_to_flat_64K_buf() {
 }
 
 int seq_decompress_to_flat_64K_buf() {
-    return _decompress_to_flat_64K_buf(ACC_RING_PUSH_SEQUENCER, 
+    return _decompress_to_flat_64K_buf(ACC_RING_PUSH_SEQUENCER,
                                        queues::get_seq_comp_sq(0));
 }
 
@@ -1127,7 +1262,7 @@ int _compress_host_sgl_to_host_sgl(acc_ring_push_t push_type,
                                  compressed_host_buf, 6000);
   d.cmd_bits.src_is_list = 1;
   d.cmd_bits.dst_is_list = 1;
-  if (run_cp_test(d, compressed_host_buf, status_host_buf, 
+  if (run_cp_test(d, compressed_host_buf, status_host_buf,
                   push_type, seq_comp_qid) < 0) {
     printf("Testcase %s failed\n", __func__);
     return -1;
@@ -1141,7 +1276,7 @@ int compress_host_sgl_to_host_sgl() {
 }
 
 int seq_compress_host_sgl_to_host_sgl() {
-    return _compress_host_sgl_to_host_sgl(ACC_RING_PUSH_SEQUENCER, 
+    return _compress_host_sgl_to_host_sgl(ACC_RING_PUSH_SEQUENCER,
                                           queues::get_seq_comp_sq(0));
 }
 
@@ -1205,7 +1340,7 @@ int decompress_host_sgl_to_host_sgl() {
 }
 
 int seq_decompress_host_sgl_to_host_sgl() {
-    return _decompress_host_sgl_to_host_sgl(ACC_RING_PUSH_SEQUENCER, 
+    return _decompress_host_sgl_to_host_sgl(ACC_RING_PUSH_SEQUENCER,
                                             queues::get_seq_comp_sq(0));
 }
 
@@ -1230,7 +1365,7 @@ int compress_flat_64K_buf_in_hbm() {
 }
 
 int seq_compress_flat_64K_buf_in_hbm() {
-    return _compress_flat_64K_buf_in_hbm(ACC_RING_PUSH_SEQUENCER, 
+    return _compress_flat_64K_buf_in_hbm(ACC_RING_PUSH_SEQUENCER,
                                          queues::get_seq_comp_sq(0));
 }
 
@@ -1260,7 +1395,7 @@ int decompress_to_flat_64K_buf_in_hbm() {
 }
 
 int seq_decompress_to_flat_64K_buf_in_hbm() {
-    return _decompress_to_flat_64K_buf_in_hbm(ACC_RING_PUSH_SEQUENCER, 
+    return _decompress_to_flat_64K_buf_in_hbm(ACC_RING_PUSH_SEQUENCER,
                                               queues::get_seq_comp_sq(0));
 }
 
@@ -1282,14 +1417,14 @@ int _compress_output_through_sequencer(acc_ring_push_t push_type,
 
   ssgl->tuple[0].addr = compressed_host_buf->pa();
   ssgl->tuple[0].len = 13199;
-  ssgl->tuple[1].addr = compressed_host_buf->pa() + 
+  ssgl->tuple[1].addr = compressed_host_buf->pa() +
                         ssgl->tuple[0].len;
   ssgl->tuple[1].len = 9537;
-  ssgl->tuple[2].addr = compressed_host_buf->pa() + 
+  ssgl->tuple[2].addr = compressed_host_buf->pa() +
                         ssgl->tuple[0].len + ssgl->tuple[1].len;
   ssgl->tuple[2].len = 10123;
   ssgl->tuple[3].addr = compressed_host_buf->pa() +
-                        ssgl->tuple[0].len + ssgl->tuple[1].len + 
+                        ssgl->tuple[0].len + ssgl->tuple[1].len +
                         ssgl->tuple[2].len;
   ssgl->tuple[3].len = kMaxMem2MemSize;
   seq_sgl->write_thru();
@@ -1352,7 +1487,7 @@ int compress_output_through_sequencer() {
 }
 
 int seq_compress_output_through_sequencer() {
-    return _compress_output_through_sequencer(ACC_RING_PUSH_SEQUENCER, 
+    return _compress_output_through_sequencer(ACC_RING_PUSH_SEQUENCER,
                                               queues::get_seq_comp_sq(0));
 }
 
@@ -1503,12 +1638,12 @@ int _max_data_rate(acc_ring_push_t push_type,
       if (memcmp(max_cp_opaque_host_buf->read_thru(),
                  exp_opaque_data_buf->read_thru(),
                  max_cp_opaque_host_buf->line_size_get())) {
-	      return -1;
+          return -1;
       }
       if (memcmp(max_dc_opaque_host_buf->read_thru(),
                  exp_opaque_data_buf->read_thru(),
                  max_dc_opaque_host_buf->line_size_get())) {
-	      return -1;
+          return -1;
       }
 
       for (i = 0, d = &comp_cp_desc[0];
@@ -1900,9 +2035,9 @@ int seq_decrypt_output_decompress_len_update_none() {
 
     // Execute decrypt-decompression on the last compress-pad-encrypted block,
     // i.e., the block size is whatever was last compressed and padded.
-    // 
+    //
     // Execute the operations with no decomp_len_update.
-    // 
+    //
     // Use the xts_ctx default mode of XTS sequencer queue, with chaining
     // to decompression initiated from P4+ handling of XTS status sequencer.
     decrypt_decomp_chain_push_params_t  params;

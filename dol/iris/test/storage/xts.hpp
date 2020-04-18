@@ -15,6 +15,7 @@ DECLARE_uint64(poll_interval);
 extern const uint32_t  kXtsDescSize;
 extern const uint32_t  kXtsQueueSize;
 
+#ifndef ELBA
 //model/cap_hens/readonly/cap_hese_csr_define.h
 
 #define CAPRI_BARCO_MD_HENS_REG_BASE                    (0x6580000)
@@ -61,6 +62,7 @@ extern const uint32_t  kXtsQueueSize;
 #define CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W1_ADDR       (CAPRI_BARCO_MD_HENS_REG_BASE + 0x214)
 #define CAPRI_BARCO_MD_HENS_REG_GCM1_OPA_TAG_W0_ADDR       (CAPRI_BARCO_MD_HENS_REG_BASE + 0x310)
 #define CAPRI_BARCO_MD_HENS_REG_GCM1_OPA_TAG_W1_ADDR       (CAPRI_BARCO_MD_HENS_REG_BASE + 0x314)
+#endif
 
 namespace xts {
 
@@ -77,6 +79,19 @@ namespace xts {
 #define STATUS_DEF_VALUE 0
 
 static constexpr uint32_t kXtsPISize = sizeof(uint32_t);
+
+#ifdef ELBA
+typedef struct {
+  uint32_t status;
+  uint32_t rsvd;
+  uint64_t chksum;
+} __attribute__((packed)) xts_status_t;
+#else
+typedef struct {
+  uint32_t status;
+  uint32_t rsvd;
+} __attribute__((packed)) xts_status_t;
+#endif
 
 typedef struct xts_aol_ {
   uint64_t a0;
@@ -105,8 +120,32 @@ typedef struct xts_cmd_ {
            token4 :4;
 } __attribute__((packed)) xts_cmd_t;
 
+#ifdef ELBA
+#define XTS_REQ_DESC_PADDING 32
+typedef struct xts_desc_ {
+  uint64_t     in_aol;
+  uint64_t     out_aol;
+  xts_cmd_t    cmd;
+  uint32_t     key_desc_idx;
+  uint64_t     iv_addr;
+  uint64_t     auth_tag;
+  uint32_t     hdr;
+  uint64_t     status;
+  uint64_t     opaque_tag_addr;
+  uint32_t     opaque_tag;
+  uint32_t     opaque_tag_en :1,
+               db_bits :1,	/* 1 for 32-bit DB, 0 for 64-bit DB */
+               resv :30;
+  uint64_t     db_addr;
+  uint64_t     db_data;
+  uint32_t     sec_key_desc_idx;
+  uint16_t     sector_size;
+  uint16_t     app_tag;
+  uint32_t     sector_num;
+  char         resv_pad[XTS_REQ_DESC_PADDING];
+} __attribute__((packed)) xts_desc_t;
+#else
 #define XTS_REQ_DESC_PADDING 44
-
 typedef struct xts_desc_ {
   uint64_t     in_aol;
   uint64_t     out_aol;
@@ -126,6 +165,7 @@ typedef struct xts_desc_ {
   uint64_t     db_data;
   char         resv_pad[XTS_REQ_DESC_PADDING];
 } __attribute__((packed)) xts_desc_t;
+#endif
 
 typedef struct xts_prot_info_ {
   uint16_t crc;

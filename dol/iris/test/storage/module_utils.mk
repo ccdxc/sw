@@ -1,5 +1,6 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
+MODULE_DEFS     = ${ASIC_DEFINES}
 MODULE_TARGET   = libstorage_utils.lib
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/utils.cc

@@ -13,6 +13,11 @@
 #include "dol/iris/test/storage/storage_seq_p4pd.hpp"
 #include "pal_compat.hpp"
 
+#ifdef ELBA
+#include "third-party/asic/elba/model/elb_top/elb_top_csr_defines.h"
+#include "third-party/asic/elba/model/elb_top/csr_defines/elb_hens_c_hdr.h"
+#endif
+
 uint32_t key128_desc_idx = 0;
 uint32_t key256_desc_idx = 0;
 bool key_desc_inited = false;
@@ -41,6 +46,28 @@ static acc_ring_t *xts1_ring;
 static acc_ring_t *gcm0_ring;
 static acc_ring_t *gcm1_ring;
 
+uint64_t xts_encr_tag_addr = 0, xts_decr_tag_addr = 0,
+     gcm_encr_tag_addr = 0, gcm_decr_tag_addr = 0;
+
+static int get_xts_opaque_tag_addr(bool decr_en,
+        uint64_t &opaque_tag_addr, bool is_gcm) {
+#ifdef ELBA
+  if(!is_gcm)
+    opaque_tag_addr =
+        decr_en ? xts_decr_tag_addr : xts_encr_tag_addr;
+  else
+    opaque_tag_addr =
+        decr_en ? gcm_decr_tag_addr : gcm_encr_tag_addr;
+#else
+  if(hal_if::get_xts_opaque_tag_addr(decr_en, &opaque_tag_addr, is_gcm)) {
+    printf("can't get xts opaque tag address\n");
+    return -1;
+  }
+#endif
+
+  return 0;
+}
+
 static uint64_t ring_base_addr_get(bool decr_en, bool is_gcm,
                                    uint64_t &opaque_tag_addr) {
   uint64_t ring_base_addr;
@@ -49,7 +76,8 @@ static uint64_t ring_base_addr_get(bool decr_en, bool is_gcm,
     printf("can't get xts ring base address\n");
     assert(0);
   }
-  if(hal_if::get_xts_opaque_tag_addr(decr_en, &opaque_tag_addr, is_gcm)) {
+
+  if (get_xts_opaque_tag_addr(decr_en, opaque_tag_addr, is_gcm)) {
     printf("can't get xts opaque tag address\n");
     assert(0);
   }
@@ -100,6 +128,62 @@ xts_ring_create(const char *ring_name,
                           ring_opaque_tag_pa, opaque_tag_size);
 }
 
+#ifdef ELBA
+int xts_init(void)
+{
+  int rv;
+
+  rv = utils::hbm_addr_alloc(sizeof(uint64_t), &xts_encr_tag_addr);
+  if (rv < 0) {
+    printf("can't allocate opaque tag address for encryption in HBM\n");
+    return -1;
+  }
+  printf("opaque tag address for encryption: %lx\n", xts_encr_tag_addr);
+
+  rv = utils::hbm_addr_alloc(sizeof(uint64_t), &xts_decr_tag_addr);
+  if (rv < 0) {
+    printf("can't allocate opaque tag address for decryption in HBM\n");
+    return -1;
+  }
+  printf("opaque tag address for decryption: %lx\n", xts_decr_tag_addr);
+
+  rv = utils::hbm_addr_alloc(sizeof(uint64_t), &gcm_encr_tag_addr);
+  if (rv < 0) {
+    printf("can't allocate opaque tag address for gcm encryption in HBM\n");
+    return -1;
+  }
+  printf("opaque tag address for gcm encryption: %lx\n", gcm_encr_tag_addr);
+
+  rv = utils::hbm_addr_alloc(sizeof(uint64_t), &gcm_decr_tag_addr);
+  if (rv < 0) {
+    printf("can't allocate opaque tag address for gcm deryption in HBM\n");
+    return -1;
+  }
+  printf("opaque tag address for gcm decryption: %lx\n", gcm_decr_tag_addr);
+
+  xts0_ring = xts_ring_create("xts0_ring", ACCEL_RING_XTS0, false, false,
+                  (ELB_ADDR_BASE_MD_HENS_OFFSET +
+                   ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING0_PRODUCER_IDX_BYTE_ADDRESS),
+                              kXtsQueueSize, kXtsDescSize, xts::kXtsPISize,
+                              sizeof(exp_opaque_tag_encr));
+  xts1_ring = xts_ring_create("xts1_ring", ACCEL_RING_XTS1, true, false,
+                  (ELB_ADDR_BASE_MD_HENS_OFFSET +
+                   ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING0_PRODUCER_IDX_BYTE_ADDRESS),
+                              kXtsQueueSize, kXtsDescSize, xts::kXtsPISize,
+                              sizeof(exp_opaque_tag_decr));
+  gcm0_ring = xts_ring_create("gcm0_ring", ACCEL_RING_GCM0, false, true,
+                  (ELB_ADDR_BASE_MD_HENS_OFFSET +
+                   ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING0_PRODUCER_IDX_BYTE_ADDRESS),
+                              kGcmQueueSize, kGcmDescSize, xts::kXtsPISize,
+                              sizeof(gcm_exp_opaque_tag_encr));
+  gcm1_ring = xts_ring_create("gcm1_ring", ACCEL_RING_GCM1, true, true,
+                  (ELB_ADDR_BASE_MD_HENS_OFFSET +
+                   ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING0_PRODUCER_IDX_BYTE_ADDRESS),
+                              kGcmQueueSize, kGcmDescSize, xts::kXtsPISize,
+                              sizeof(gcm_exp_opaque_tag_decr));
+  return 0;
+}
+#else
 int xts_init(void)
 {
   xts0_ring = xts_ring_create("xts0_ring", ACCEL_RING_XTS0, false, false,
@@ -120,6 +204,7 @@ int xts_init(void)
                               sizeof(gcm_exp_opaque_tag_decr));
   return 0;
 }
+#endif
 
 /*
  * This function may be invoked at the end of any series of tests to resync
@@ -279,11 +364,12 @@ bool fill_aol(void* buf, uint64_t& a, uint32_t& o, uint32_t& l, uint32_t& offset
 }
 
 
-int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en, uint64_t poll_interval=FLAGS_poll_interval, bool is_gcm=false,
-                      bool suppress_info_log=false) {
-
+int verify_opaque_tag(uint32_t exp_opaque_tag, bool decr_en,
+                      uint64_t poll_interval=FLAGS_poll_interval,
+                      bool is_gcm=false, bool suppress_info_log=false)
+{
   uint64_t opaque_tag_addr = 0;
-  if(hal_if::get_xts_opaque_tag_addr(decr_en, &opaque_tag_addr, is_gcm)) {
+  if(get_xts_opaque_tag_addr(decr_en, opaque_tag_addr, is_gcm)) {
     printf("get_xts_opaque_tag_addr failed \n");
     return -1;
   }
@@ -464,7 +550,7 @@ XtsCtx::cmd_eval_seq_xts(xts::xts_cmd_t& cmd) {
 }
 
 // Prefill an XTS descriptor as much as possible.
-// Unfilled that are left for the caller are: 
+// Unfilled that are left for the caller are:
 //    in_aol, out_aol, db_addr, db_data, and cmd
 void
 XtsCtx::desc_prefill_seq_xts(xts::xts_desc_t *xts_desc) {
@@ -500,6 +586,17 @@ XtsCtx::desc_prefill_seq_xts(xts::xts_desc_t *xts_desc) {
     xts_desc->opaque_tag = opaque_tag;
   }
   last_used_opaque_tag = xts_desc->opaque_tag;
+
+#ifdef ELBA
+  if (opa_tag_en) {
+    if(!is_gcm)
+      xts_desc->opaque_tag_addr =
+          decr_en ? xts_decr_tag_addr : xts_encr_tag_addr;
+    else
+      xts_desc->opaque_tag_addr =
+          decr_en ? gcm_decr_tag_addr : gcm_encr_tag_addr;
+  }
+#endif
 
   if(!xts_db_addr) {
     xts_db_addr = xts_db->pa();
@@ -583,13 +680,13 @@ XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
 
   // desc bytes 0-63
   if (chain_params.next_db_action_barco_push) {
-      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_addr, 
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_addr,
                                      chain_params.push_spec.barco_ring_addr);
-      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_data, 
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_data,
                                      chain_params.push_spec.barco_desc_addr);
-      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, barco_pndx_addr, 
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, barco_pndx_addr,
                                      chain_params.push_spec.barco_pndx_addr);
-      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, barco_pndx_shadow_addr, 
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, barco_pndx_shadow_addr,
                                      chain_params.push_spec.barco_pndx_shadow_addr);
 
       STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, barco_desc_size,
@@ -602,17 +699,17 @@ XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
                                       chain_params.push_spec.barco_num_descs);
 
   } else {
-      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_addr, 
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_addr,
                                      chain_params.db_spec.next_doorbell_addr);
-      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_data, 
+      STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, next_db_data,
                                      chain_params.db_spec.next_doorbell_data);
   }
 
-  STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, status_addr0, 
+  STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, status_addr0,
                                  chain_params.status_addr0);
-  STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, status_addr1, 
+  STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, status_addr1,
                                  chain_params.status_addr1);
-  STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, intr_addr, 
+  STORAGE_SEQ_XS_DESC0_ARRAY_SET(desc0_action, intr_addr,
                                  chain_params.intr_addr);
   STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, intr_data,
                                   chain_params.intr_data);
@@ -638,33 +735,33 @@ XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
   STORAGE_SEQ_XS_DESC0_PACK(seq_status_desc->read(), desc0_action);
 
   // desc bytes 64-127
-  STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, comp_sgl_src_addr, 
+  STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, comp_sgl_src_addr,
                                  chain_params.comp_sgl_src_addr);
-  STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, sgl_pdma_dst_addr, 
+  STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, sgl_pdma_dst_addr,
                                  chain_params.sgl_pdma_dst_addr);
-  STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, decr_buf_addr, 
+  STORAGE_SEQ_XS_DESC1_ARRAY_SET(desc1_action, decr_buf_addr,
                                  chain_params.decr_buf_addr);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, data_len, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, data_len,
                                   chain_params.data_len);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, blk_boundary_shift, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, blk_boundary_shift,
                                   chain_params.blk_boundary_shift);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, stop_chain_on_error, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, stop_chain_on_error,
                                   chain_params.stop_chain_on_error);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_len_update_en, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_len_update_en,
                                   chain_params.comp_len_update_en);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_sgl_src_en, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_sgl_src_en,
                                   chain_params.comp_sgl_src_en);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_sgl_src_vec_en, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, comp_sgl_src_vec_en,
                                   chain_params.comp_sgl_src_vec_en);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_sparse_format_en, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_sparse_format_en,
                                   chain_params.sgl_sparse_format_en);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_en, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_en,
                                   chain_params.sgl_pdma_en);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_len_from_desc, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, sgl_pdma_len_from_desc,
                                   chain_params.sgl_pdma_len_from_desc);
-  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, desc_vec_push_en, 
+  STORAGE_SEQ_XS_DESC1_SCALAR_SET(desc1_action, desc_vec_push_en,
                                   chain_params.desc_vec_push_en);
-  STORAGE_SEQ_XS_DESC1_PACK(seq_status_desc->read() + 
+  STORAGE_SEQ_XS_DESC1_PACK(seq_status_desc->read() +
                             STORAGE_SEQ_P4PD_TABLE_BYTE_WIDTH_DFLT, desc1_action);
 
   seq_status_desc->write_thru();
@@ -672,7 +769,7 @@ XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
   // Form the doorbell to be returned by the API
   queues::get_capri_doorbell(queues::get_seq_lif(), SQ_TYPE,
                              chain_params.seq_spec.seq_status_q, 0,
-                             chain_params.seq_spec.ret_seq_status_index, 
+                             chain_params.seq_spec.ret_seq_status_index,
                              &chain_params.seq_spec.ret_doorbell_addr,
                              &chain_params.seq_spec.ret_doorbell_data);
   return 0;
@@ -748,7 +845,8 @@ int XtsCtx::test_seq_xts() {
   }
 
   if (!status) {
-    status = new dp_mem_t(1, sizeof(uint64_t), DP_MEM_ALIGN_NONE, DP_MEM_TYPE_HOST_MEM);
+    status = new dp_mem_t(1, sizeof(xts::xts_status_t), DP_MEM_ALIGN_NONE,
+                          DP_MEM_TYPE_HOST_MEM);
     caller_status_en = false;
   }
 
@@ -845,9 +943,9 @@ int XtsCtx::verify_doorbell(bool verify_pi,
       rv = verify_prot_info((char *)dst_buf, num_aols, out_aol, sector_size, start_sec_num, app_tag);
 
     if(0 == rv) {
-      uint64_t status_data = *((uint64_t *)status->read_thru());
-      if(STATUS_DEF_VALUE != status_data) {
-        printf(" status check failed - status value %lu\n", status_data);
+        xts::xts_status_t *xts_status = ((xts::xts_status_t *)status->read_thru());
+      if (STATUS_DEF_VALUE != xts_status->status) {
+        printf(" status check failed - status value %u\n", xts_status->status);
         return -1;
       }
     }
@@ -1899,7 +1997,6 @@ int e2e_verify_hbm_buf(XtsCtx& xts_ctx1, XtsCtx& xts_ctx2) {
   return rv;
 }
 
-uint64_t xts_encr_tag_addr = 0, xts_decr_tag_addr = 0, gcm_encr_tag_addr = 0, gcm_decr_tag_addr = 0;
 int get_opaque_tag(uint32_t& opaque_tag, bool decr_en, bool is_gcm=false) {
   uint64_t opaque_tag_addr = 0;
   if(!decr_en && !is_gcm) opaque_tag_addr = xts_encr_tag_addr;
@@ -1908,7 +2005,7 @@ int get_opaque_tag(uint32_t& opaque_tag, bool decr_en, bool is_gcm=false) {
   else if(decr_en && is_gcm) opaque_tag_addr = gcm_decr_tag_addr;
 
   if(!opaque_tag_addr) {
-    if(hal_if::get_xts_opaque_tag_addr(decr_en, &opaque_tag_addr, is_gcm)) {
+    if(get_xts_opaque_tag_addr(decr_en, opaque_tag_addr, is_gcm)) {
       printf("get_xts_opaque_tag_addr failed \n");
       return -1;
     }
@@ -1962,6 +2059,22 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     ctx4[i].push_type = ACC_RING_PUSH_HW_INDIRECT_BATCH;
   }
 
+#ifdef ELBA
+  uint64_t xts_encr_tag_addr_tmp = 0,
+       xts_decr_tag_addr_tmp = 0,
+       gcm_encr_tag_addr_tmp = 0;
+
+  xts_encr_tag_addr_tmp = xts_encr_tag_addr;
+  xts_decr_tag_addr_tmp = xts_decr_tag_addr;
+  gcm_encr_tag_addr_tmp = gcm_encr_tag_addr;
+
+  xts_encr_tag_addr = (ELB_ADDR_BASE_MD_HENS_OFFSET +
+    ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING0_PRODUCER_IDX_BYTE_ADDRESS);
+  xts_decr_tag_addr = (ELB_ADDR_BASE_MD_HENS_OFFSET +
+    ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING0_PRODUCER_IDX_BYTE_ADDRESS);
+  gcm_encr_tag_addr = (ELB_ADDR_BASE_MD_HENS_OFFSET +
+    ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING0_PRODUCER_IDX_BYTE_ADDRESS);
+#else
   uint32_t xts_encr_tag_addr = 0, xts_decr_tag_addr = 0, gcm_encr_tag_addr = 0;
   xts_encr_tag_addr = READ_REG32(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR);
   xts_decr_tag_addr = READ_REG32(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR);
@@ -1973,10 +2086,19 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
   WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W1_ADDR, 0);
   WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX);
   WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W1_ADDR, 0);
+#endif
+
   int iter = 1;
   //Queue initial set of requests
   uint32_t pindex = 0;
+
+#ifdef ELBA
+  read_reg((ELB_ADDR_BASE_MD_HENS_OFFSET +
+    ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING0_PRODUCER_IDX_BYTE_ADDRESS),
+          pindex);
+#else
   pindex = READ_REG32(CAPRI_BARCO_MD_HENS_REG_XTS1_PRODUCER_IDX);
+#endif
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(!((i+1) % kBatchSize)) {
       ctx1[i].opaque_tag = (pindex+i+1) % (kXtsQueueSize-1);
@@ -1984,7 +2106,14 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     }
     if(0 == rv) rv = ctx1[i].test_seq_xts();
   }
+
+#ifdef ELBA
+  read_reg((ELB_ADDR_BASE_MD_HENS_OFFSET +
+    ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING0_PRODUCER_IDX_BYTE_ADDRESS),
+          pindex);
+#else
   pindex = READ_REG32(CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX);
+#endif
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(!((i+1) % kBatchSize)) {
       ctx2[i].opaque_tag = (pindex+i+1) % (kXtsQueueSize-1);
@@ -1992,7 +2121,14 @@ int xts_multi_blk_noc_stress_hw_daisy_chain(bool is_hbm_buf=false) {
     }
     if(0 == rv) rv = ctx2[i].test_seq_xts();
   }
+
+#ifdef ELBA
+  read_reg((ELB_ADDR_BASE_MD_HENS_OFFSET +
+    ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING0_PRODUCER_IDX_BYTE_ADDRESS),
+          pindex);
+#else
   pindex = READ_REG32(CAPRI_BARCO_MD_HENS_REG_GCM1_PRODUCER_IDX);
+#endif
   for(uint32_t i = 0; i < kTotalReqs; i++) {
     if(!((i+1) % kBatchSize)) {
       ctx3[i].opaque_tag = (pindex+i+1) % (kXtsQueueSize-1);
@@ -2026,14 +2162,19 @@ done:
   delete[] ctx2;
   delete[] ctx3;
   delete[] ctx4;
+#ifdef ELBA
+  xts_encr_tag_addr = xts_encr_tag_addr_tmp;
+  xts_decr_tag_addr = xts_decr_tag_addr_tmp;
+  gcm_encr_tag_addr = gcm_encr_tag_addr_tmp;
+#else
   WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_XTS0_OPA_TAG_W0_ADDR, xts_encr_tag_addr);
   WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_XTS1_OPA_TAG_W0_ADDR, xts_decr_tag_addr);
   WRITE_REG32(CAPRI_BARCO_MD_HENS_REG_GCM0_OPA_TAG_W0_ADDR, gcm_encr_tag_addr);
+#endif
   if(!is_hbm_buf) {
     FREE_HOST_MEM((void*)in_buffer);
     FREE_HOST_MEM((void*)out_buffer);
   }
-
   return rv;
 }
 

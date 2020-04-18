@@ -93,11 +93,11 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
                                    kMinHostMemAllocSize);
 
     // XTS AOL must be 512 byte aligned.
-    // 
+    //
     // Note: For certain "source" resources, we allocate twice the number
     // of required entries in order to test P4+ ability to do chaining
     // using the alternate descriptor set when there's a compression error.
-    
+
     max_enc_blks = COMP_MAX_HASH_BLKS(app_max_size, app_enc_size);
     max_src_blks = max_enc_blks * 2;
 
@@ -120,7 +120,7 @@ comp_encrypt_chain_t::comp_encrypt_chain_t(comp_encrypt_chain_params_t params) :
 
     // sgl_pad_vec would be used for PDMA of the pad data into comp_buf1
     // unless comp_buf2 is also present, in which case, full PDMA into
-    // comp_buf2 would take place using seq_sgl_pdma. 
+    // comp_buf2 would take place using seq_sgl_pdma.
     sgl_pad_vec = new dp_mem_t(max_enc_blks, sizeof(cp_sgl_t),
                                DP_MEM_ALIGN_SPEC, DP_MEM_TYPE_HOST_MEM,
                                sizeof(cp_sgl_t));
@@ -141,7 +141,7 @@ comp_encrypt_chain_t::~comp_encrypt_chain_t()
 {
     // Only free buffers on successful completion; otherwise,
     // HW/P4+ might still be trying to access them.
-    
+
     printf("%s success %u destructor_free_buffers %u\n",
            __FUNCTION__, success, destructor_free_buffers);
     if (success && destructor_free_buffers) {
@@ -192,7 +192,7 @@ comp_encrypt_chain_t::pre_push(comp_encrypt_chain_pre_push_params_t params)
 /*
  * Initiate the test
  */
-int 
+int
 comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 {
     chain_params_comp_t chain_params = {0};
@@ -266,7 +266,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     if (force_uncomp_encrypt) {
 
         /*
-         * Force compression error to happen by making threshold_len 
+         * Force compression error to happen by making threshold_len
          * really small. When error happens, we'll end up encrypting
          * the uncompressed data instead.
          */
@@ -331,18 +331,18 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     xts_desc_vec->line_set(0);
     chain_params.next_doorbell_en = 1;
     chain_params.next_db_action_barco_push = 1;
-    chain_params.push_spec.barco_ring_addr = 
+    chain_params.push_spec.barco_ring_addr =
                            xts_ctx.acc_ring->ring_base_mem_pa_get();
-    chain_params.push_spec.barco_pndx_addr = 
+    chain_params.push_spec.barco_pndx_addr =
                            xts_ctx.acc_ring->cfg_ring_pd_idx_get();
-    chain_params.push_spec.barco_pndx_shadow_addr = 
+    chain_params.push_spec.barco_pndx_shadow_addr =
                            xts_ctx.acc_ring->shadow_pd_idx_pa_get();
     chain_params.push_spec.barco_desc_addr = xts_desc_vec->pa();
     chain_params.push_spec.barco_desc_size =
                            (uint8_t)log2(xts_ctx.acc_ring->ring_desc_size_get());
     chain_params.push_spec.barco_pndx_size =
                            (uint8_t)log2(xts_ctx.acc_ring->ring_pi_size_get());
-    chain_params.push_spec.barco_ring_size = 
+    chain_params.push_spec.barco_ring_size =
                            (uint8_t)log2(xts_ctx.acc_ring->ring_size_get());
     comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();
     if (comp_status_buf1 != comp_status_buf2) {
@@ -367,7 +367,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
      * comp_buf1 != comp_buf2, or pad-only transfer when
      * comp_buf1 == comp_buf2.
      */
-    chain_params.sgl_pdma_en = 1; 
+    chain_params.sgl_pdma_en = 1;
     if (force_comp_buf2_bypass || (comp_buf1 == comp_buf2)) {
         comp_sgl_packed_fill(sgl_pad_vec, comp_buf1, app_enc_size);
         chain_params.sgl_vec_addr = sgl_pad_vec->pa();
@@ -391,7 +391,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
         return -1;
     }
 
-    // Chain compression to compression status sequencer 
+    // Chain compression to compression status sequencer
     cp_desc.doorbell_addr = chain_params.seq_spec.ret_doorbell_addr;
     cp_desc.doorbell_data = chain_params.seq_spec.ret_doorbell_data;
     cp_desc.cmd_bits.doorbell_on = 1;
@@ -419,7 +419,7 @@ comp_encrypt_chain_t::post_push(void)
  * src_block_no can be different from dst_block_no when we're setting up
  * the "alternate" source descriptor set.
  */
-void 
+void
 comp_encrypt_chain_t::encrypt_setup(uint32_t src_block_no,
                                     uint32_t dst_block_no,
                                     chain_params_comp_t& chain_params)
@@ -430,7 +430,7 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t src_block_no,
     // Use caller's XTS opaque info and status, if any
     if (caller_xts_opaque_vec) {
         caller_xts_opaque_vec->line_set(dst_block_no);
-        xts_ctx.xts_db = 
+        xts_ctx.xts_db =
             caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
         xts_ctx.xts_db_addr = 0;
         xts_ctx.exp_db_data = caller_xts_opaque_data;
@@ -438,7 +438,7 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t src_block_no,
     }
     if (caller_xts_status_vec) {
         caller_xts_status_vec->line_set(dst_block_no);
-        xts_ctx.status = 
+        xts_ctx.status =
             caller_xts_status_vec->fragment_find(0, caller_xts_status_vec->line_size_get());
         xts_ctx.caller_status_en = true;
     }
@@ -480,7 +480,7 @@ comp_encrypt_chain_t::encrypt_setup(uint32_t src_block_no,
  * Return actual number of encryption blocks based on the output data length
  * from compression.
  */
-int 
+int
 comp_encrypt_chain_t::actual_enc_blks_get(test_resource_query_method_t query_method)
 {
     bool    log_error = (query_method == TEST_RESOURCE_BLOCKING_QUERY);
@@ -500,7 +500,7 @@ comp_encrypt_chain_t::actual_enc_blks_get(test_resource_query_method_t query_met
             /*
              * Fall through!!!
              */
-             
+
         case TEST_RESOURCE_NON_BLOCKING_QUERY:
         default:
 
@@ -543,11 +543,11 @@ comp_encrypt_chain_t::actual_enc_blks_get(test_resource_query_method_t query_met
  * status, and avoid any lengthy HBM access (such as data comparison) that would
  * slow down test resubmission in the scaled setup.
  */
-int 
+int
 comp_encrypt_chain_t::fast_verify(void)
 {
-    uint64_t    xts_status;
-    uint32_t    block_no;
+    xts::xts_status_t   *xts_status;
+    uint32_t block_no;
 
     success = false;
     if (actual_enc_blks_get(TEST_RESOURCE_NON_BLOCKING_QUERY) < 0) {
@@ -557,9 +557,10 @@ comp_encrypt_chain_t::fast_verify(void)
     // Validate XTS status
     for (block_no = 0; block_no < (uint32_t)actual_enc_blks; block_no++) {
         caller_xts_status_vec->line_set(block_no);
-        xts_status = *((uint64_t *)caller_xts_status_vec->read_thru());
-        if (xts_status) {
-          printf("ERROR: comp_encrypt_chain XTS error 0x%lx\n", xts_status);
+        xts_status = (xts::xts_status_t *)caller_xts_status_vec->read_thru();
+        if (xts_status->status) {
+          printf("ERROR: comp_encrypt_chain XTS error 0x%x\n",
+                 xts_status->status);
           return -1;
         }
     }
@@ -577,7 +578,7 @@ comp_encrypt_chain_t::fast_verify(void)
  *
  * Should only be used in non-scaled setup.
  */
-int 
+int
 comp_encrypt_chain_t::full_verify(void)
 {
     xts::xts_aol_t  *xts_aol;
@@ -604,18 +605,18 @@ comp_encrypt_chain_t::full_verify(void)
                                                      app_enc_size) * app_enc_size;
     /*
      * Before we start validation of AOLs, ensure that P4+ has had a chance
-     * to write them. For that, we wait for completion of at least one 
+     * to write them. For that, we wait for completion of at least one
      * encryption block.
-     */ 
+     */
     caller_xts_opaque_vec->line_set(0);
-    xts_ctx.xts_db = 
+    xts_ctx.xts_db =
         caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
     if (xts_ctx.verify_doorbell(false, FLAGS_long_poll_interval * poll_factor)) {
         printf("ERROR: comp_encrypt_chain block 0 XTS doorbell engine never came\n");
         return -1;
     }
 
-    /* 
+    /*
      * In XTS_ENC_DEC_ENTIRE_APP_BLK mode, P4+ would have calculated the
      * actual # of blocks required and terminated the last AOL by setting
      * its next pointer to NULL. In the loop below, in order to verify P4+
@@ -652,7 +653,7 @@ comp_encrypt_chain_t::full_verify(void)
         if (enc_dec_blk_type == XTS_ENC_DEC_PER_HASH_BLK) {
             if (caller_xts_opaque_vec) {
                 caller_xts_opaque_vec->line_set(block_no);
-                xts_ctx.xts_db = 
+                xts_ctx.xts_db =
                     caller_xts_opaque_vec->fragment_find(0, caller_xts_opaque_vec->line_size_get());
             }
         }
@@ -733,8 +734,8 @@ comp_encrypt_chain_t::full_verify(void)
             /*
              * Validate padding
              */
-            if (src_len1 && 
-                test_data_verify_and_dump(comp_buf1->read_thru() + 
+            if (src_len1 &&
+                test_data_verify_and_dump(comp_buf1->read_thru() +
                                           last_cp_output_data_len,
                                           caller_comp_pad_buf->read(),
                                           src_len1)) {
@@ -751,7 +752,7 @@ comp_encrypt_chain_t::full_verify(void)
                        "verification failed\n");
                 return -1;
             }
-            if (src_len1 && 
+            if (src_len1 &&
                 test_data_verify_and_dump(comp_buf2->read() +
                                           last_cp_output_data_len,
                                           caller_comp_pad_buf->read(),
