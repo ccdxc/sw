@@ -376,13 +376,13 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
                         key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
                         data->index, (uint8_t)data->index_type);
     } else {
-        PDS_TRACE_DEBUG("SrcIP:%02x:%02x:%02x:%02x "
-                        "DstIP:%02x:%02x:%02x:%02x "
+        PDS_TRACE_DEBUG("SrcIP:%d.%d.%d.%d "
+                        "DstIP:%d.%d.%d.%d "
                         "Dport:%u Sport:%u Proto:%u "
                         "Ktype:%u VNICID:%u "
                         "index:%u index_type:%u\n\n",
-                        key->ip_saddr[0], key->ip_saddr[1], key->ip_saddr[2], key->ip_saddr[3],
-                        key->ip_daddr[0], key->ip_daddr[1], key->ip_daddr[2], key->ip_daddr[3],
+                        key->ip_saddr[3], key->ip_saddr[2], key->ip_saddr[1], key->ip_saddr[0],
+                        key->ip_daddr[3], key->ip_daddr[2], key->ip_daddr[1], key->ip_daddr[0],
                         key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
                         key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
                         data->index, (uint8_t)data->index_type);
