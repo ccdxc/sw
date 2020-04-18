@@ -1,0 +1,192 @@
+@import 'src/global-mixins';
+
+$cpu-color: #b592e3;
+$memory-color: #e57553;
+$storage-color: #70bab4;
+
+.naplesdetail-interface-charts-container .naplesdetail-stats-container {
+  min-width: 590px;
+  height: 345px;
+  opacity: 1;
+  background-image: $backgroundGradient;
+  margin-bottom: 10px;
+
+  .cpu-color {
+    color: $cpu-color;
+  }
+
+  .memory-color {
+    color: $memory-color
+  }
+
+  .storage-color {
+    color: $storage-color;
+  }
+
+  .topbar {
+    width: 100%;
+    height: 1px;
+    background-image: $topbarGradient;
+  }
+
+  svg {
+    height: 300px;
+    width: 300px;
+    position: relative;
+    left: -24px;
+    top: -30px;
+  }
+
+  path.cpuvaluepath,
+  path.memoryvaluepath,
+  path.storagevaluepath,
+  path.basepath {
+    transform: rotate(180deg);
+    transform-origin: 50% 50%;
+    fill: none;
+    stroke-width: 12px;
+  }
+
+  path.basepath {
+    stroke: #ddd;
+  }
+
+  path.cpuvaluepath {
+    stroke: $cpu-color;
+  }
+
+  path.memoryvaluepath {
+    stroke: $memory-color;
+  }
+
+  path.storagevaluepath {
+    stroke: $storage-color;
+  }
+
+  text.labels {
+    font-size: 14px;
+    fill: rgb(103, 103, 99);
+  }
+
+  text.value,
+  text.percent {
+    fill: #e57553;
+  }
+
+  text.cpuvalue,
+  text.cpupercent {
+    fill: $cpu-color;
+  }
+
+  text.memoryvalue,
+  text.memorypercent {
+    fill: $memory-color;
+  }
+
+  text.storagevalue,
+  text.storagepercent {
+    fill: $storage-color;
+  }
+
+  text.value {
+    font-size: 68px;
+  }
+
+  text.percent {
+    font-size: 20px;
+  }
+
+  .naplesdetail-stats-svg-table-container {
+    width: 590px;
+    margin: 0 auto;
+  }
+
+  .naplesdetail-stats-table {
+    width: 320px;
+    height: 240px;
+    position: relative;
+    left: -30px;
+    opacity: 1;
+    background-image: linear-gradient(to bottom, #ffffff -26%, rgba(103, 103, 99, 0.3) 121%);
+
+    .naplesdetail-stats-line {
+      width: 320px;
+      height: 1px;
+      background-image: linear-gradient(to left, rgba(160, 160, 156, 1) 100%, rgba(103, 103, 99, 1) 47%);
+    }
+
+    .naplesdetail-stats-row {
+      width: 320px;
+      height: 78px;
+      padding: 5px 0 0 5px;
+      font-style: normal;
+      line-height: normal;
+      letter-spacing: normal;
+      cursor: pointer;
+
+      .naplesdetail-stats-col1 {
+        width: 88px;
+
+        .naplesdetail-stats-col1-up {
+          font-size: 20px;
+          font-weight: normal;
+          color: rgb(103, 103, 99);
+        }
+
+        .naplesdetail-stats-col1-down {
+          margin-top: 25px;
+          font-size: 14px;
+          font-weight: 300;
+          color: rgb(103, 103, 99);
+        }
+      }
+
+      .naplesdetail-stats-col2 {
+        text-align: center;
+        width: 106px;
+        padding-top: 10px;
+        font-size: 48px;
+        font-weight: normal;
+      }
+
+      .naplesdetail-stats-col3 {
+        width: 80px;
+        padding-top: 30px;
+        font-size: 13px;
+        font-weight: 300;
+      }
+
+      .naplesdetail-stats-col4 {
+        padding-right: 10px;
+        padding-top: 30px;
+        font-size: 13px;
+        font-weight: 300;
+
+        .naplesdetail-stats-usage {
+          text-align: right;
+        }
+      }
+    }
+
+    .naplesdetail-stats-row.selectedrow {
+      opacity: 1;
+      cursor: default;
+      background-image: linear-gradient(to left, rgba(160, 160, 156, 0.5), rgba(103, 103, 99, 0.5));
+    }
+  }
+
+  .naplesdetail-stats-chart-container {
+    width: 590px;
+    margin: 0 auto;
+    position: relative;
+    top: -50px;
+
+    .naplesdetail-stats-chart-content {
+      height: 56px;
+    }
+
+    .naplesdetail-stats-chart-content.storage {
+      z-index: 3000;
+    }
+  }
+}

@@ -13,20 +13,32 @@ import { NaplesComponent } from './naples.component';
 import { NaplesRoutingModule } from './naples.route';
 import { SharedModule } from '@app/components/shared//shared.module';
 import { NaplesdetailComponent } from './naplesdetail/naplesdetail.component';
+import { NaplesdetailchartsComponent } from './naplesdetail/widgets/naplesdetailcharts.component';
+import { NaplesdetailstatsComponent } from './naplesdetail/widgets/naplesdetailstats.component';
+import { NaplesdetailIftopologyComponent } from './naplesdetail/widgets/naplesdetailiftopology.component';
+import { NaplesdetailIftableComponent } from './naplesdetail/widgets/naplesdetailiftable.component';
+import { NaplesdetailIfstatsComponent } from './naplesdetail/widgets/naplesdetailifstats.component';
+
 // import { NodedetailComponent } from './nodedetail/nodedetail.component';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
-
     PrimengModule,
     FlexLayoutModule,
     MaterialdesignModule,
-
     NaplesRoutingModule,
     SharedModule
   ],
-  declarations: [NaplesComponent, NaplesdetailComponent]
+  declarations: [
+    NaplesComponent,
+    NaplesdetailComponent,
+    NaplesdetailchartsComponent,
+    NaplesdetailstatsComponent,
+    NaplesdetailIftopologyComponent,
+    NaplesdetailIftableComponent,
+    NaplesdetailIfstatsComponent
+  ]
 })
 export class NaplesModule { }

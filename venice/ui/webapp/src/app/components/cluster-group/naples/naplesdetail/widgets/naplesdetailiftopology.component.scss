@@ -1,0 +1,244 @@
+.naplesdetail-interface-charts-container .naplesdetail-interface-container .naplesdetail-interface-topology,
+.naplesdetail-interface-charts-container .naplesdetail-interface-table-container .naplesdetail-interface-topology {
+  width: 319px;
+
+  >div {
+    width: 100%;
+
+    >div {
+      margin: 0 auto;
+    }
+  }
+
+  .naplesdetail-interface-topology-uplink {
+    width: 35px;
+    height: 53px;
+    position: relative;
+    top: 1px;
+
+    svg {
+      circle {
+        fill: #F0E4FF;
+        stroke: #979FBD;
+      }
+
+      text {
+        fill: #B592E3;
+        font-family: FiraSansCondensed-Bold, Fira Sans Condensed;
+        font-size: 24px;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .naplesdetail-interface-topology-uplink.hovered {
+    svg {
+      circle {
+        fill: #F0CAFE
+      }
+
+      text {
+        fill: #fff;
+      }
+    }
+  }
+
+  .naplesdetail-interface-topology-card {
+    width: 169px;
+    height: 169px;
+    background: url("/assets/images/topology/interfaces/card.svg") center center no-repeat;
+    background-size: contain;
+  }
+
+  .naplesdetail-interface-topology-vertical-con,
+  .naplesdetail-interface-topology-horizontal-con,
+  .naplesdetail-interface-topology-leaf1only,
+  .naplesdetail-interface-topology-upper-container,
+  .naplesdetail-interface-topology-lower-container {
+    margin: 0px auto;
+  }
+
+  .naplesdetail-interface-topology-vertical-con {
+    width: 1px;
+    height: 25px;
+    background-color: #979fbd;
+  }
+
+  .naplesdetail-interface-topology-vertical-con.moveRightOnepx {
+    position: relative;
+    left: 1px;
+  }
+
+  @media only screen and (min-width: 2000px) {
+    .naplesdetail-interface-topology-vertical-con {
+      width: 1.2px;
+    }
+  }
+
+  @media only screen and (min-width: 2400px) {
+    .naplesdetail-interface-topology-vertical-con {
+      width: 1.5px;
+    }
+  }
+
+  @media only screen and (min-width: 3500px) {
+    .naplesdetail-interface-topology-vertical-con {
+      width: 2px;
+    }
+  }
+
+  .naplesdetail-interface-topology-leaf1only {
+    width: 26px;
+    height: 38px;
+  }
+
+  .naplesdetail-interface-topology-horizontal-con {
+
+    .naplesdetail-interface-topology-horizontal-con-endnode,
+    .naplesdetail-interface-topology-horizontal-con-node,
+    .naplesdetail-interface-topology-horizontal-con-spacer,
+    .naplesdetail-interface-topology-horizontal-con-extra {
+      height: 1px;
+      background-color: #979fbd;
+    }
+
+    @media only screen and (min-width: 2000px) {
+
+      .naplesdetail-interface-topology-horizontal-con-endnode,
+      .naplesdetail-interface-topology-horizontal-con-node,
+      .naplesdetail-interface-topology-horizontal-con-spacer,
+      .naplesdetail-interface-topology-horizontal-con-extra {
+        height: 1.2px;
+      }
+    }
+
+    @media only screen and (min-width: 2400px) {
+
+      .naplesdetail-interface-topology-horizontal-con-endnode,
+      .naplesdetail-interface-topology-horizontal-con-node,
+      .naplesdetail-interface-topology-horizontal-con-spacer,
+      .naplesdetail-interface-topology-horizontal-con-extra {
+        height: 1.5px;
+      }
+    }
+
+    @media only screen and (min-width: 3500px) {
+
+      .naplesdetail-interface-topology-horizontal-con-endnode,
+      .naplesdetail-interface-topology-horizontal-con-node,
+      .naplesdetail-interface-topology-horizontal-con-spacer,
+      .naplesdetail-interface-topology-horizontal-con-extra {
+        height: 2px;
+      }
+    }
+
+    .naplesdetail-interface-topology-horizontal-con-endnode {
+      width: 13px;
+    }
+
+    .naplesdetail-interface-topology-horizontal-con-node {
+      width: 26px;
+    }
+
+    .naplesdetail-interface-topology-horizontal-con-spacer {
+      width: 13px;
+    }
+
+    .naplesdetail-interface-topology-horizontal-con-extra {
+      width: 19.5px;
+    }
+  }
+
+  .naplesdetail-interface-topology-upper-container {
+
+    .naplesdetail-interface-topology-upper-lif,
+    .naplesdetail-interface-topology-upper-spacer {
+      height: 39px;
+    }
+
+    .naplesdetail-interface-topology-upper-lif {
+      width: 26px;
+      position: relative;
+      top: -1px;
+    }
+
+    .naplesdetail-interface-topology-upper-spacer {
+      width: 13px;
+    }
+
+    .naplesdetail-interface-topology-upper-lif.twolayer {
+      left: 6.5px;
+    }
+
+    .naplesdetail-interface-topology-upper-lif.equalLength {
+      left: -3.25px;
+    }
+  }
+
+  .naplesdetail-interface-topology-lower-container {
+
+    .naplesdetail-interface-topology-lower-lif,
+    .naplesdetail-interface-topology-lower-spacer {
+      height: 68px;
+    }
+
+    .naplesdetail-interface-topology-lower-lif {
+      width: 26px;
+      position: relative;
+      left: 0px;
+      top: -40px;
+    }
+
+    .naplesdetail-interface-topology-lower-spacer {
+      width: 13px;
+    }
+
+    .naplesdetail-interface-topology-lower-lif.equalLength {
+      left: 9.75px;
+    }
+  }
+
+  .naplesdetail-interface-topology-leaf1only,
+  .naplesdetail-interface-topology-upper-lif,
+  .naplesdetail-interface-topology-lower-lif {
+    svg {
+
+      circle {
+        fill: #E3F1D3;
+        stroke: #979FBD;
+      }
+
+      path {
+        stroke-width: 1.2;
+      }
+
+      text {
+        fill: #B592E3;
+        font-family: FiraSansCondensed-Bold, Fira Sans Condensed;
+        font-size: 16px;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .naplesdetail-interface-topology-leaf1only.hovered,
+  .naplesdetail-interface-topology-upper-lif.hovered,
+  .naplesdetail-interface-topology-upper-lif.equalLength.hovered,
+  .naplesdetail-interface-topology-lower-lif.hovered,
+  .naplesdetail-interface-topology-lower-lif.equalLength.hovered {
+    svg {
+      circle {
+        fill: rgb(77, 194, 116);
+      }
+
+      text {
+        fill: #fff;
+      }
+    }
+  }
+}
+
+.naplesdetail-interface-charts-container .naplesdetail-interface-container .naplesdetail-interface-topology {
+  position: relative;
+  top: -20px;
+}

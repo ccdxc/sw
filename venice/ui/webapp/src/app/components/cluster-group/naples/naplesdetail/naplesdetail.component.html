@@ -1,26 +1,8 @@
 <app-pagebody [icon]="bodyicon" [header]="selectedObj?.spec.id">
   <div fxFlex="none" fxLayout="column">
     <ng-container *ngTemplateOutlet="detailsTable"></ng-container>
-    <div fxFlex="none" fxLayout="row wrap" class="naplesdetail-card-container">
-      <ng-container *ngFor="let cardData of heroCards">
-        <app-herocard fxFlex="nogrow" [title]="cardData.title" [firstStat]="cardData.firstStat"
-                      [secondStat]="cardData.secondStat" [thirdStat]="cardData.thirdStat"
-                      [backgroundIcon]="cardData.backgroundIcon"
-                      [themeColor]="cardData.themeColor" [icon]="cardData.icon"
-                      [lineData]="cardData.lineData"
-                      [arrowDirection]="cardData.arrowDirection" [lastUpdateTime]="lastUpdateTime"
-                      [cardState]="cardData.cardState">
-        </app-herocard>
-      </ng-container>
-    </div>
-    <div fxFlex="none" fxLayout="row wrap" class="naplesdetail-card-container">
-      <ng-container *ngFor="let item of graphConfigs">
-        <app-telemetrychartview class="naplesdetail-chart-item" fxFlex="nogrow"
-                                [hideEditButtons]="true"
-                                [selectedTimeRange]="selectedTimeRange" [chartConfig]="item">
-        </app-telemetrychartview>
-      </ng-container>
-    </div>
+    <ng-container *ngTemplateOutlet="interface"></ng-container>
+    <ng-container *ngTemplateOutlet="interfaceTable"></ng-container>
   </div>
   <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex
        class="naplesdetail-alertsevents-container">
@@ -274,29 +256,9 @@
               </div>
             </div>
           </div>
-
-          <div fxFlex="none" fxLayout="row">
-            <!-- Field titles -->
-            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
-              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-                   fxLayoutAlign="start center">
-                <div>Network Interfaces:</div>
-              </div>
-            </div>
-            <div fxFlex="40px"></div>
-            <!-- Values -->
-            <div class="naplesdetail-workloads-container" fxFlex="200px" *ngIf="selectedObj">
-              <div *ngFor="let n of networkInterfaces let i=index"
-                   class="naplesdetail-workloads-div">
-                <ng-container>
-                  {{n?.meta.name}} ({{n?.status.type}})
-                </ng-container>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start start"
+        <div fxFlex="" fxLayout="row" fxLayoutAlign="start start"
              class="naplesdetail-detailsTable-container">
           <!-- Field titles -->
           <div class="naplesdetail-node-fieldtitle naplesdetail-node-fieldtitle-labels">
@@ -308,9 +270,9 @@
                       *roleGuard="'clusterdistributedservicecard_update'">edit
             </mat-icon>
           </div>
-          <div fxFlex="40px"></div>
+          <div fxFlex="10px"></div>
           <!-- Values -->
-          <div class="naplesdetail-node-value" fxFlex="200px">
+          <div class="naplesdetail-node-value" fxFlex="">
             <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true"
                      [scrollable]="true"
                      scrollHeight="150px" [resizableColumns]="true">
@@ -337,5 +299,70 @@
         </div>
       </div>
     </div>
+  </div>
+</ng-template>
+
+<ng-template #interface>
+  <div fxFlex="grow" fxLayout="row wrap" class="naplesdetail-interface-charts-container"
+       *ngIf="!showInterfaceTable">
+    <div fxFlex="none" fxLayout="column" class="naplesdetail-interface-container">
+      <div fxFlex="1px" class="topbar"></div>
+      <div fxFlex="nogrow" fxLayout="row">
+        <app-naplesdetail-iftopology *ngIf="networkInterfaces && networkInterfaces.length > 0"
+                                     fxFlex="none" fxLayout="row"
+                                     class="naplesdetail-interface-topology"
+                                     (mouseOverInterfaceEmit)="onMouseOverInterface($event)"
+                                     [interfaceTopos]="interfaceTopos"
+                                     [interfaceStatsUpdateTime]="interfaceStatsUpdateTime"
+                                     [mouseOverInterface]="mouseOverInterface">
+        </app-naplesdetail-iftopology>
+        <app-naplesdetail-ifstats *ngIf="networkInterfaces && networkInterfaces.length > 0"
+                                  fxFlex="nogrow" fxLayout="row"
+                                  [interfaceStats]="interfaceStats"
+                                  [mouseOverInterface]="mouseOverInterface"
+                                  (collapseExpandClickEmit)="onCollapseExpandClick($event)"
+                                  class="naplesdetail-interface-detail-container">
+        </app-naplesdetail-ifstats>
+      </div>
+    </div>
+    <div fxFlex="10px"></div>
+    <app-naplesdetail-stats fxFlex="" fxLayout="row" class="naplesdetail-stats-container"
+                            *ngIf="detailLoaded" [heroCards]="heroCards"
+                            [lastUpdateTime]="lastUpdateTime">
+    </app-naplesdetail-stats>
+    <div fxFlex="10px" class="naplesdetail-charts-container-spacer"></div>
+    <app-naplesdetail-charts fxFlex="nogrow" fxLayout="row" class="naplesdetail-charts-container"
+                             *ngIf="detailLoaded" [selectedId]="selectedId">
+    </app-naplesdetail-charts>
+  </div>
+</ng-template>
+
+<ng-template #interfaceTable>
+  <div fxFlex="grow" fxLayout="row wrap" class="naplesdetail-interface-charts-container"
+       *ngIf="showInterfaceTable">
+    <div fxFlex="grow" fxLayout="column" class="naplesdetail-interface-table-container">
+      <div fxFlex="1px" class="topbar"></div>
+      <div fxFlex="nogrow" fxLayout="row">
+        <app-naplesdetail-iftopology *ngIf="networkInterfaces && networkInterfaces.length > 0"
+                                     fxFlex="none" fxLayout="row"
+                                     class="naplesdetail-interface-topology"
+                                     (mouseOverInterfaceEmit)="onMouseOverInterface($event)"
+                                     [interfaceStatsUpdateTime]="interfaceStatsUpdateTime"
+                                     [interfaceTopos]="interfaceTopos"
+                                     [mouseOverInterface]="mouseOverInterface">
+        </app-naplesdetail-iftopology>
+        <app-naplesdetail-iftable *ngIf="networkInterfaces && networkInterfaces.length > 0"
+                                  fxFlex="glow" fxLayout="column"
+                                  [interfaceStats]="interfaceStats"
+                                  [mouseOverInterface]="mouseOverInterface"
+                                  (collapseExpandClickEmit)="onCollapseExpandClick($event)"
+                                  class="naplesdetail-interface-table">
+        </app-naplesdetail-iftable>
+      </div>
+    </div>
+    <div fxFlex="10px"></div>
+    <app-naplesdetail-charts fxFlex="nogrow" fxLayout="row" class="naplesdetail-charts-container"
+                             *ngIf="detailLoaded" [selectedId]="selectedId">
+    </app-naplesdetail-charts>
   </div>
 </ng-template>

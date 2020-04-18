@@ -1,0 +1,65 @@
+.naplesdetail-interface-charts-container .naplesdetail-interface-table-container .naplesdetail-interface-table {
+
+  .naplesdetail-interface-table-collapseicon {
+    margin: 5px 5px 0px 0px;
+    width: 23px;
+    height: 13px;
+    background: url("/assets/images/icons/icon-collapse-menu.svg") center center no-repeat;
+    background-size: contain;
+    opacity: 0.6;
+    cursor: pointer;
+  }
+
+  p-table {
+    margin: 5px;
+
+    tbody {
+      height: 290px;
+      display: block;
+      overflow: auto;
+    }
+
+    tr {
+      background-color: transparent !important;
+      border-collapse: collapse;
+      height: 28px;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    tr.selected {
+      background-color: rgb(234, 231, 224) !important;
+    }
+
+    th,
+    td {
+      width: 100%;
+      font-family: Roboto;
+      font-weight: normal;
+      font-stretch: condensed;
+      font-style: normal;
+      line-height: normal;
+      letter-spacing: normal;
+      color: #353532;
+      border-left: 1px solid transparent;
+      border-right: 1px solid transparent;
+      border-top: 1px solid transparent;
+    }
+
+    th {
+      background-color: #e7e7e3;
+      font-size: 14px;
+      border-right: 1px solid #fff;
+      border-top: 1px solid #D5D5D5
+    }
+
+    th:last-of-type {
+      border-right: 0px solid transparent;
+    }
+
+    td {
+      font-size: 12px;
+    }
+  }
+}

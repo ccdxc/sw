@@ -26,12 +26,16 @@ import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { NetworkService} from '@app/services/generated/network.service';
-
 import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { configureTestSuite } from 'ng-bullet';
 import { ConfirmationService } from 'primeng/primeng';
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
 import { NaplesdetailComponent } from './naplesdetail.component';
+import { NaplesdetailchartsComponent } from './widgets/naplesdetailcharts.component';
+import { NaplesdetailstatsComponent } from './widgets/naplesdetailstats.component';
+import { NaplesdetailIftopologyComponent } from './widgets/naplesdetailiftopology.component';
+import { NaplesdetailIftableComponent } from './widgets/naplesdetailiftable.component';
+import { NaplesdetailIfstatsComponent } from './widgets/naplesdetailifstats.component';
 import { BrowserService } from '@app/services/generated/browser.service';
 
 class MockActivatedRoute extends ActivatedRoute {
@@ -137,7 +141,14 @@ describe('NaplesdetailComponent', () => {
 
   configureTestSuite(() => {
      TestBed.configureTestingModule({
-      declarations: [NaplesdetailComponent, RouterLinkStubDirective],
+      declarations: [
+        NaplesdetailComponent,
+        NaplesdetailchartsComponent,
+        NaplesdetailstatsComponent,
+        NaplesdetailIftopologyComponent,
+        NaplesdetailIftableComponent,
+        NaplesdetailIfstatsComponent,
+        RouterLinkStubDirective],
       imports: [
         RouterTestingModule,
         HttpClientTestingModule,
@@ -426,6 +437,7 @@ describe('NaplesdetailComponent', () => {
 
   });
 
+  /*
   describe('RBAC', () => {
     it('no permission', () => {
     fixture.detectChanges();
@@ -435,5 +447,6 @@ describe('NaplesdetailComponent', () => {
     });
 
   });
+  */
 
 });

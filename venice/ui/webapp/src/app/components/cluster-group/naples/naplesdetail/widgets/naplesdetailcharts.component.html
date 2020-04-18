@@ -1,0 +1,37 @@
+<div class="naplesdetail-charts-content">
+  <mat-tab-group fxFlex [disableRipple]="true">
+    <mat-tab label="Temperature">
+      <ng-template matTabContent>
+        <app-telemetrychartview class="naplesdetail-charts-chart-item"
+                                *ngIf="graphConfigs && graphConfigs.length > 0"
+                                fxFlex="nogrow"
+                                [hideEditButtons]="true"
+                                [selectedTimeRange]="selectedTimeRange"
+                                [chartConfig]="graphConfigs[1]">
+        </app-telemetrychartview>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="Power">
+      <ng-template matTabContent>
+        <app-telemetrychartview class="naplesdetail-charts-chart-item"
+                                *ngIf="graphConfigs && graphConfigs.length > 0"
+                                fxFlex="nogrow"
+                                [hideEditButtons]="true"
+                                [selectedTimeRange]="selectedTimeRange"
+                                [chartConfig]="graphConfigs[2]">
+        </app-telemetrychartview>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="Frequency">
+      <ng-template matTabContent>
+        <app-telemetrychartview class="naplesdetail-charts-chart-item"
+                                *ngIf="graphConfigs && graphConfigs.length > 0"
+                                fxFlex="nogrow"
+                                [hideEditButtons]="true"
+                                [selectedTimeRange]="selectedTimeRange"
+                                [chartConfig]="graphConfigs[0]">
+        </app-telemetrychartview>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

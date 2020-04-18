@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Animations } from '@app/animations';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
@@ -6,7 +6,7 @@ import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admi
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { MetricsUtility } from '@app/common/MetricsUtility';
-import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
+import { ITelemetry_queryMetricsQueryResponse, Telemetry_queryMetricsResultSeries } from '@sdk/v1/models/telemetry_query';
 import { ControllerService } from '@app/services/controller.service';
 
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,7 +14,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsqueryService, MetricsPollingOptions, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
-import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order } from '@sdk/v1/models/generated/telemetry_query';
+import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order, Telemetry_queryMetricsQueryResult } from '@sdk/v1/models/generated/telemetry_query';
 import { ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
@@ -26,13 +26,31 @@ import { WorkloadService } from '@app/services/generated/workload.service';
 import { NetworkService } from '@app/services/generated/network.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { NetworkNetworkInterface, INetworkNetworkInterfaceList } from '@sdk/v1/models/generated/network';
-import { TimeRange, KeyOperatorValueKeyword } from '@app/components/shared/timerange/utility';
-import { GraphConfig } from '@app/models/frontend/shared/userpreference.interface';
 import { SearchService } from '@app/services/generated/search.service';
-import { SearchSearchRequest } from '@sdk/v1/models/generated/search';
+import { SearchSearchRequest, IFieldsSelector } from '@sdk/v1/models/generated/search';
 import { BrowserService } from '@app/services/generated/browser.service';
 import { IBrowserBrowseRequestList, BrowserBrowseRequestList, BrowserBrowseResponseList } from '@sdk/v1/models/generated/browser';
 import { SelectItem } from 'primeng/api';
+
+interface IfStat {
+  num: number;
+  name: string;
+  ifName: string;
+  status: string;
+}
+
+export interface InterfaceTopos {
+  // macs or ids of the dsc
+  pif: IfStat[];
+  // values of the card
+  lif: {upper: IfStat[], lower: IfStat[]};
+}
+
+export interface InterfaceStats {
+  ifname: string;
+  shortname: string;
+  stats: { status: string, rx: number, tx: number, rxDrop: number, txDrop: number};
+}
 
 /**
  * This component displays DSC detail information.
@@ -49,13 +67,13 @@ import { SelectItem } from 'primeng/api';
   selector: 'app-naplesdetail',
   templateUrl: './naplesdetail.component.html',
   styleUrls: ['./naplesdetail.component.scss'],
-  animations: [Animations]
+  animations: [Animations],
+  encapsulation: ViewEncapsulation.None
 })
 export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDestroy {
   public static NAPLEDETAIL_FIELD_WORKLOADS: string = 'associatedWorkloads';
 
-  selectedTimeRange: TimeRange;
-  graphConfigs: GraphConfig[] = [];
+  detailLoaded: boolean = false;
 
   subscriptions = [];
 
@@ -68,6 +86,9 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   };
 
   cardColor = '#61b3a0';
+  cpuColor: string = '#b592e3';
+  memoryColor: string = '#e57553';
+  storageColor: string = '#70bab4';
   cardIcon: Icon = {
     margin: {
       top: '10px',
@@ -93,11 +114,11 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   lastUpdateTime: string = '';
 
-  cpuChartData: HeroCardOptions = MetricsUtility.detailLevelCPUHeroCard(this.cardColor, this.cardIcon);
+  cpuChartData: HeroCardOptions = MetricsUtility.detailLevelCPUHeroCard(this.cpuColor, this.cardIcon);
 
-  memChartData: HeroCardOptions = MetricsUtility.detailLevelMemHeroCard(this.cardColor, this.cardIcon);
+  memChartData: HeroCardOptions = MetricsUtility.detailLevelMemHeroCard(this.memoryColor, this.cardIcon);
 
-  diskChartData: HeroCardOptions = MetricsUtility.detailLevelDiskHeroCard(this.cardColor, this.cardIcon);
+  diskChartData: HeroCardOptions = MetricsUtility.detailLevelDiskHeroCard(this.storageColor, this.cardIcon);
 
   admissionPhaseEnum = ClusterDistributedServiceCardStatus_admission_phase_uihint;
 
@@ -126,6 +147,15 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   networkInterfacesEventUtility: HttpEventUtility<NetworkNetworkInterface>;
   networkInterfaces: NetworkNetworkInterface[] = [];
   allNetworkInterfaces: NetworkNetworkInterface[] = [];
+  // these stats are form backend
+  lifInterfacePollingStats: ITelemetry_queryMetricsQueryResult = null;
+  upperLinkInterfacePollingStats: Telemetry_queryMetricsQueryResult = null;
+  // the next 3 stats are for gui display
+  interfaceTopos: InterfaceTopos;
+  interfaceStats: InterfaceStats[] = [];
+  interfaceStatsUpdateTime: string = '';
+  mouseOverInterface: string = '';
+  showInterfaceTable: boolean = false;
 
   inProfileAssigningMode: boolean = false;
 
@@ -179,8 +209,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.initializeData();
     this.getNetworkInterfaces();
     this.getNaplesDetails();
+    this.startInterfaceStatsPoll();
     this.setNapleDetailToolbar(this.selectedId); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
-
   }
 
   searchDsc() {
@@ -223,17 +253,22 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
    * This function find all NetworkInterfaces (NIs) belong to this.selectedObj (currrent DSC)
    */
   getThisDSCNetworkInterfaces() {
-    const list: NetworkNetworkInterface[] = [];
-    if (this.allNetworkInterfaces) {
+    if (this.selectedObj && this.allNetworkInterfaces) {
+      const list: NetworkNetworkInterface[] = [];
       this.allNetworkInterfaces.forEach((networkNetworkInterface: NetworkNetworkInterface) => {
-        if (this.selectedObj && networkNetworkInterface.status.dsc === this.selectedObj.meta.name) {
+        // changed the next condition line for the backwards support issues
+        // there are duplicated interfaces for example 00aecd000009-uplink-1-2 and
+        // 00ae.cd00.0009-uplink-1-2
+        // if (this.selectedObj && networkNetworkInterface.status.dsc === this.selectedObj.meta.name) {
+        if (networkNetworkInterface.meta.name.startsWith(this.selectedObj.meta.name)) {
           list.push(networkNetworkInterface);
         }
       });
+      this.networkInterfaces = list;
+      this.processInterfaceData();
+      this.updateLifStats();
     }
-    this.networkInterfaces = list;
   }
-
 
   /**
    * Retrieve network interfaces objects ( whole list of NIs)
@@ -252,6 +287,130 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         }
       );
       this.subscriptions.push(dscSubscription);
+    }
+  }
+
+  processInterfaceData() {
+    if (this.networkInterfaces && this.networkInterfaces.length > 0) {
+      this.interfaceTopos = {
+        pif: [],
+        lif: {
+          upper: [],
+          lower: []
+        }
+      };
+      const pif1: NetworkNetworkInterface = this.networkInterfaces.find(
+        (itf: NetworkNetworkInterface) => itf.meta.name.endsWith('-uplink-1-1')
+      );
+      if (pif1) {
+        const pif2: NetworkNetworkInterface = this.networkInterfaces.find(
+          (itf: NetworkNetworkInterface) => itf.meta.name.endsWith('-uplink-1-2')
+        );
+        if (pif2) {
+          this.interfaceTopos.pif.push({
+            num: 1,
+            name: pif1.meta.name,
+            ifName: 'uplink-1-1',
+            status: pif1.spec['admin-status'] + '/' + pif1.status['oper-status']
+          });
+          this.interfaceTopos.pif.push({
+            num: 2,
+            name: pif2.meta.name,
+            ifName: 'uplink-1-2',
+            status: pif1.spec['admin-status'] + '/' + pif1.status['oper-status']
+          });
+        }
+      }
+      const lifs = [];
+      this.networkInterfaces.forEach((itf: NetworkNetworkInterface) => {
+        if (itf.spec && itf.spec.type === 'host-pf') {
+          const arr: string[] = itf.meta.name.split('-');
+          const num = arr[arr.length - 1];
+          lifs.push({
+            num,
+            name: itf.meta.name,
+            ifName: 'pf-' + num,
+            status: itf.spec['admin-status'] + '/' + itf.status['oper-status']
+          });
+        }
+      });
+      lifs.sort((a, b) => (a.name > b.name) ? 1 : -1);
+      lifs.forEach((itf, index) => {
+        if (lifs.length > 8 && index % 2 === 1) {
+          this.interfaceTopos.lif.lower.push(itf);
+        } else {
+          this.interfaceTopos.lif.upper.push(itf);
+        }
+      });
+
+      // remove none existent intface stats
+      this.interfaceStats = this.interfaceStats.filter((ifs: InterfaceStats) =>
+        this.networkInterfaces.find((itf: NetworkNetworkInterface) =>
+          itf.meta.name === ifs.ifname
+        ) != null
+      );
+
+      this.processInterfacesStats(this.interfaceTopos.pif);
+      this.processInterfacesStats(this.interfaceTopos.lif.upper);
+      this.processInterfacesStats(this.interfaceTopos.lif.lower);
+
+      if (this.interfaceTopos.pif.length > 0) {
+        this.mouseOverInterface = this.interfaceTopos.pif[0].name;
+      } else if (this.interfaceTopos.lif.upper.length > 0) {
+        this.mouseOverInterface = this.interfaceTopos.lif.upper[0].name;
+      }
+    }
+  }
+
+  updateLifStats() {
+    const lifStats = this.lifInterfacePollingStats;
+    const interfaceStats = this.interfaceStats;
+    if (lifStats && lifStats.series && lifStats.series.length > 0 && interfaceStats.length > 0) {
+      this.interfaceStatsUpdateTime = lifStats.series[0].values[0][0];
+      lifStats.series.forEach(item => {
+        const itf = this.interfaceStats.find(interf => {
+          const tags = item.tags as any;
+          return interf.ifname === tags.name;
+        });
+        if (itf) {
+          itf.stats.rx = item.values[0][1] + item.values[0][2] + item.values[0][3];
+          itf.stats.tx = item.values[0][4] + item.values[0][5] + item.values[0][6];
+          itf.stats.rxDrop = item.values[0][7] + item.values[0][8] + item.values[0][9];
+          itf.stats.txDrop = item.values[0][10] + item.values[0][11] + item.values[0][12];
+        }
+      });
+    }
+  }
+
+  processInterfacesStats(itfs: IfStat[]) {
+    itfs.forEach(itf => {
+      if (!this.interfaceStats.find((ifs: InterfaceStats) => ifs.ifname === itf.name)) {
+        this.interfaceStats.push({
+          ifname: itf.name,
+          shortname: itf.ifName,
+          stats: {
+            status: itf.status,
+            rx: -1,
+            tx: -1,
+            rxDrop: -1,
+            txDrop: -1
+          }
+        });
+      }
+    });
+  }
+
+  getInterfacesStatsData() {
+    if (this.interfaceStats && this.interfaceStats.length > 0) {
+      this.interfaceStatsUpdateTime = new Date().toUTCString();
+      this.interfaceStats.forEach((ifs: InterfaceStats) => {
+        if (ifs.stats) {
+          ifs.stats.rx += Math.round(Math.random() * 100);
+          ifs.stats.tx += Math.round(Math.random() * 100);
+          ifs.stats.rxDrop += Math.round(Math.random() * 100);
+          ifs.stats.txDrop += Math.round(Math.random() * 100);
+        }
+      });
     }
   }
 
@@ -378,8 +537,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     // correctly parse smartNic names without it.
     const getSubscription = this.clusterService.GetDistributedServiceCard(this.selectedId + ':').subscribe(
       response => {
-        // after the detail loaded then load chart
-        this.initializeGraphConfigs();
+        this.detailLoaded = true;
       },
       error => {
         // If we receive any error code we display object is missing
@@ -448,84 +606,49 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.subscriptions.push(subscription);
   }
 
-  private initializeGraphConfigs() {
-    this.selectedTimeRange = new TimeRange(new KeyOperatorValueKeyword.instance('now', '-', 24, 'h'), new KeyOperatorValueKeyword.instance('now', '', 0, ''));
-    this.graphConfigs = [{
-      id: 'dsc frequency chart',
-      graphTransforms: {
-        transforms: { GraphTitle: { title: 'Asic Frequency Chart' } }
-      },
-      dataTransforms: [{
-        transforms: {
-          ColorTransform: {
-            colors: {
-              'AsicFrequencyMetrics-Frequency': '#97b8df'
-            }
-          },
-          FieldSelector: {
-            selectedValues: [{
-              keyFormControl: 'reporterID',
-              operatorFormControl: 'in',
-              valueFormControl: [this.selectedId]
-            }]
+  startInterfaceStatsPoll() {
+    if (this.selectedId) {
+      const queryList: TelemetryPollingMetricQueries = {
+        queries: [],
+        tenant: Utility.getInstance().getTenant()
+      };
+      const query1: MetricsPollingQuery = this.topologyInterfaceQuery(
+        'LifMetrics', ['RxBroadcastBytes', 'RxMulticastBytes', 'RxUnicastBytes', 'TxBroadcastBytes',
+        'TxMulticastBytes', 'TxUnicastBytes', 'RxDropBroadcastBytes', 'RxDropMulticastBytes',
+        'RxDropUnicastBytes', 'TxDropBroadcastBytes', 'TxDropMulticastBytes', 'TxDropUnicastBytes'],
+        MetricsUtility.createReporterIDSelector(this.selectedId));
+      queryList.queries.push(query1);
+
+      // refresh every 5 minutes
+      const sub = this.metricsqueryService.pollMetrics('topologyInterfaces', queryList, MetricsUtility.FIVE_MINUTES).subscribe(
+        (data: ITelemetry_queryMetricsQueryResponse) => {
+          if (data && data.results && data.results.length === queryList.queries.length) {
+            this.lifInterfacePollingStats = data.results[0];
+            this.updateLifStats();
           }
         },
-        measurement: 'AsicFrequencyMetrics',
-        fields: ['Frequency']
-      }]
-    },
-    {
-      id: 'dsc temperature chart',
-      graphTransforms: {
-        transforms: { GraphTitle: { title: 'Asic Temperature Chart' } }
-      },
-      dataTransforms: [{
-        transforms: {
-          ColorTransform: {
-            colors: {
-              'AsicTemperatureMetrics-LocalTemperature': '#97b8df',
-              'AsicTemperatureMetrics-DieTemperature': '#61b3a0',
-              'AsicTemperatureMetrics-HbmTemperature': '#ff9cee'
-            }
-          },
-          FieldSelector: {
-            selectedValues: [{
-              keyFormControl: 'reporterID',
-              operatorFormControl: 'in',
-              valueFormControl: [this.selectedId]
-            }]
-          }
-        },
-        measurement: 'AsicTemperatureMetrics',
-        fields: ['LocalTemperature', 'DieTemperature', 'HbmTemperature']
-      }]
-    },
-    {
-      id: 'dsc power chart',
-      graphTransforms: {
-        transforms: { GraphTitle: { title: 'Asic Power Chart' } }
-      },
-      dataTransforms: [{
-        transforms: {
-          ColorTransform: {
-            colors: {
-              'AsicPowerMetrics-Pin': '#97b8df',
-              'AsicPowerMetrics-Pout1': '#61b3a0',
-              'AsicPowerMetrics-Pout2': '#ff9cee'
-            }
-          },
-          FieldSelector: {
-            selectedValues: [{
-              keyFormControl: 'reporterID',
-              operatorFormControl: 'in',
-              valueFormControl: [this.selectedId]
-            }]
-          }
-        },
-        measurement: 'AsicPowerMetrics',
-        fields: ['Pin', 'Pout1', 'Pout2']
-      }]
-    }];
+        (err) => {
+          this._controllerService.invokeErrorToaster('Error', 'Failed to load Top 10 DSC metrics.');
+        }
+      );
+    }
+  }
+
+  topologyInterfaceQuery(kind: string, fields: string[],
+      selector: IFieldsSelector = null): MetricsPollingQuery {
+    const query: ITelemetry_queryMetricsQuerySpec = {
+      'kind': kind,
+      'name': null,
+      'selector': selector,
+      'function': Telemetry_queryMetricsQuerySpec_function.last,
+      'group-by-field': 'name',
+      'group-by-time': null,
+      'fields': fields != null ? fields : [],
+      'sort-order': Telemetry_queryMetricsQuerySpec_sort_order.descending,
+      'start-time': 'now() - 3m' as any,
+      'end-time': 'now()' as any,
+    };
+    return { query: new Telemetry_queryMetricsQuerySpec(query), pollingOptions: {} };
   }
 
   startMetricPolls() {
@@ -801,6 +924,14 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   handleSetDSCProfileCancel($event) {
     this.inProfileAssigningMode = false;
+  }
+
+  onMouseOverInterface(itf: string) {
+    this.mouseOverInterface = itf;
+  }
+
+  onCollapseExpandClick(action: string) {
+    this.showInterfaceTable = action === 'expand';
   }
 
 }

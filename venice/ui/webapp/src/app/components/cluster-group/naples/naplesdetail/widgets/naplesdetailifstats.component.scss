@@ -1,0 +1,86 @@
+.naplesdetail-interface-charts-container .naplesdetail-interface-container .naplesdetail-interface-detail-container {
+  position: relative;
+  top: -20px;
+  height: 345px;
+  width: 190px;
+
+  .naplesdetail-interface-detail-openicon {
+    width: 23px;
+    height: 13px;
+    background: url("/assets/images/icons/icon-expand-menu.svg") center center no-repeat;
+    background-size: contain;
+    margin: 5px 0px;
+    opacity: 0.6;
+    cursor: pointer;
+  }
+
+  .naplesdetail-interface-detail {
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(to bottom, #ffffff -26%, rgba(103, 103, 99, 0.5) 121%);
+
+    .naplesdetail-interface-detail-titlebar {
+      width: 100%;
+      height: 1px;
+      background-image: linear-gradient(to left, rgba(103, 103, 99, 1) 100%, rgba(160, 160, 156, 0.3) 47%, );
+    }
+
+    .naplesdetail-interface-detail-portName {
+      width: 100%;
+      height: 22px;
+      font-size: 18px;
+      font-weight: 300;
+      font-stretch: condensed;
+      font-style: normal;
+      line-height: normal;
+      letter-spacing: normal;
+      color: rgb(103, 103, 99);
+    }
+
+    .naplesdetail-interface-detail-statsrow {
+      width: 100%;
+      opacity: 1;
+
+      .naplesdetail-interface-detail-statsrow-sublabel,
+      .naplesdetail-interface-detail-statsrow-label {
+        width: 100px;
+        padding-left: 5px;
+        font-size: 16px;
+        font-weight: 300;
+        font-stretch: condensed;
+        font-style: normal;
+        line-height: normal;
+        letter-spacing: normal;
+        color: rgb(103, 103, 99);
+      }
+
+      .naplesdetail-interface-detail-statsrow-label {
+        padding-left: 5px;
+        font-size: 16px;
+      }
+
+      .naplesdetail-interface-detail-statsrow-sublabel {
+        padding-left: 15px;
+        font-size: 12px;
+      }
+
+      .naplesdetail-interface-detail-statsrow-subvalue,
+      .naplesdetail-interface-detail-statsrow-value {
+        font-weight: normal;
+        font-stretch: condensed;
+        font-style: normal;
+        line-height: normal;
+        letter-spacing: normal;
+        color: #6ba0e5;
+      }
+
+      .naplesdetail-interface-detail-statsrow-value {
+        font-size: 16px;
+      }
+
+      .naplesdetail-interface-detail-statsrow-subvalue {
+        font-size: 12px;
+      }
+    }
+  }
+}

@@ -1,0 +1,127 @@
+<div fxLayout="column" *ngIf="interfaceTopos">
+  <span class="lastupdateTime">Last Updated: {{ interfaceStatsUpdateTime | PrettyDate}}</span>
+  <div fxFlex="none" fxLayout="row" *ngIf="interfaceTopos.pif.length === 2">
+    <div [ngClass]="{ 'naplesdetail-interface-topology-uplink': true,
+        'hovered': mouseOverInterface === interfaceTopos.pif[0].name }"
+         (mouseenter)="setMouseOverInterface(interfaceTopos.pif[0].name)">
+      <svg width="35" height="53" viewBox="0 0 35 53">
+        <g fill="none" fill-rule="evenodd">
+          <path fill="#979FBD" d="M17 35h1v18h-1z" />
+          <g transform="translate(0 1)">
+            <circle cx="17.5" cy="16.5" r="17" />
+            <text>
+              <tspan x="12" y="25">1</tspan>
+            </text>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div fxFlex="38px"></div>
+    <div [ngClass]="{ 'naplesdetail-interface-topology-uplink': true,
+        'hovered': mouseOverInterface === interfaceTopos.pif[1].name }"
+         (mouseenter)="setMouseOverInterface(interfaceTopos.pif[1].name)">
+      <svg width="35" height="53" viewBox="0 0 35 53">
+        <g fill="none" fill-rule="evenodd">
+          <path fill="#979FBD" d="M17 35h1v18h-1z" />
+          <g transform="translate(0 1)">
+            <circle cx="17.5" cy="16.5" r="17" />
+            <text>
+              <tspan x="12" y="25">2</tspan>
+            </text>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div fxFlex="none" fxLayout="row">
+    <div class="naplesdetail-interface-topology-card"></div>
+  </div>
+  <div fxFlex="none" fxLayout="row">
+    <div [ngClass]="{
+      'naplesdetail-interface-topology-vertical-con': true,
+      'moveRightOnepx': interfaceTopos.lif.lower.length % 2 === 1
+    }"></div>
+  </div>
+  <div fxFlex="none" fxLayout="row"
+       *ngIf="interfaceTopos.lif.upper.length + interfaceTopos.lif.lower.length === 1">
+    <div [ngClass]="{ 'naplesdetail-interface-topology-leaf1only': true,
+      'hovered': mouseOverInterface === interfaceTopos.lif.upper[0].name }"
+         (mouseenter)="setMouseOverInterface(interfaceTopos.lif.upper[0].name)">
+      <svg width="26" height="38" viewBox="0 0 26 38">
+        <g fill="none" fill-rule="evenodd" transform="translate(1)">
+          <path fill="#979FBD" d="M11 0h1v13h-1z" />
+          <circle cx="12" cy="25" r="12.5" />
+          <text fill="#979FBD">
+            <tspan x="8" y="30">1</tspan>
+          </text>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div fxFlex="none" fxLayout="row" *ngIf="interfaceTopos.lif.upper.length > 1">
+    <div fxFlex="nogrow" fxLayout="row"
+         class="naplesdetail-interface-topology-horizontal-con">
+      <ng-container *ngFor="let itf of interfaceTopos.lif.upper; let i=index;">
+        <div class="naplesdetail-interface-topology-horizontal-con-endnode"
+             *ngIf="i===interfaceTopos.lif.upper.length - 1 || i===0"></div>
+        <div class="naplesdetail-interface-topology-horizontal-con-node"
+             *ngIf="i!==interfaceTopos.lif.upper.length - 1 && i!==0"></div>
+        <div class="naplesdetail-interface-topology-horizontal-con-spacer"
+             *ngIf="i!==interfaceTopos.lif.upper.length - 1"></div>
+      </ng-container>
+      <div class="naplesdetail-interface-topology-horizontal-con-extra"
+           *ngIf="interfaceTopos.lif.lower.length===interfaceTopos.lif.upper.length"></div>
+    </div>
+  </div>
+  <div fxFlex="none" fxLayout="row"
+       *ngIf="interfaceTopos.lif.upper.length + interfaceTopos.lif.lower.length > 1">
+    <div fxFlex="nogrow" fxLayout="row"
+         class="naplesdetail-interface-topology-upper-container">
+      <ng-container *ngFor="let itf of interfaceTopos.lif.upper; let i=index;">
+        <div [ngClass]="{ 'naplesdetail-interface-topology-upper-lif': true,
+            'twolayer': interfaceTopos.lif.lower.length > 0,
+            'equalLength': interfaceTopos.lif.lower.length === interfaceTopos.lif.upper.length,
+            'hovered': mouseOverInterface === itf.name }"
+             (mouseenter)="setMouseOverInterface(itf.name)">
+          <svg width="26" height="38" viewBox="0 0 26 38">
+            <g fill="none" fill-rule="evenodd" transform="translate(1)">
+              <path fill="#979FBD" d="M11 0h1v13h-1z" />
+              <circle cx="12" cy="25" r="12.5" />
+              <text fill="#979FBD">
+                <tspan x="8" y="30" *ngIf="itf.num < 10">{{ itf.num }}</tspan>
+                <tspan x="4" y="30" *ngIf="itf.num >= 10">{{ itf.num }}</tspan>
+              </text>
+            </g>
+          </svg>
+        </div>
+        <div class="naplesdetail-interface-topology-upper-spacer"
+             *ngIf="i!==interfaceTopos.lif.upper.length + interfaceTopos.lif.lower.length - 1">
+        </div>
+      </ng-container>
+    </div>
+  </div>
+  <div fxFlex="none" fxLayout="row" *ngIf="interfaceTopos.lif.lower.length > 0">
+    <div fxFlex="nogrow" fxLayout="row"
+         class="naplesdetail-interface-topology-lower-container">
+      <ng-container *ngFor="let itf of interfaceTopos.lif.lower; let i=index;">
+        <div [ngClass]="{ 'naplesdetail-interface-topology-lower-lif': true,
+            'equalLength': interfaceTopos.lif.lower.length===interfaceTopos.lif.upper.length,
+            'hovered': mouseOverInterface === itf.name }"
+             (mouseenter)="setMouseOverInterface(itf.name)">
+          <svg width="26" height="68" viewBox="0 0 26 68">
+            <g fill="none" fill-rule="evenodd" transform="translate(1)">
+              <path fill="#979FBD" d="M12 0h1v43h-1z" />
+              <circle cx="12" cy="55" r="12.5" />
+              <text>
+                <tspan x="8" y="60" *ngIf="itf.num < 10">{{ itf.num }}</tspan>
+                <tspan x="4" y="60" *ngIf="itf.num >= 10">{{ itf.num }}</tspan>
+              </text>
+            </g>
+          </svg>
+        </div>
+        <div class="naplesdetail-interface-topology-lower-spacer"
+             *ngIf="i!==interfaceTopos.lif.lower.length - 1"></div>
+      </ng-container>
+    </div>
+  </div>
+</div>

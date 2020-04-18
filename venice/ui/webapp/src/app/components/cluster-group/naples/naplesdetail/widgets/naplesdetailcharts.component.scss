@@ -1,0 +1,51 @@
+@import 'src/global-mixins';
+
+.naplesdetail-interface-charts-container .naplesdetail-charts-container {
+  width: 100%;
+  height: 345px;
+  margin-bottom: 10px;
+  opacity: 1;
+
+  .naplesdetail-charts-content {
+    width: 100%;
+    background-image: $backgroundGradient;
+
+    .mat-tab-group.mat-primary .mat-tab-labels div:first-of-type.mat-tab-label {
+      border-left: 1px solid #ddd;
+    }
+
+    .mat-tab-group.mat-primary .mat-tab-label-active {
+      background-color: transparent !important;
+      border-bottom-color: rgba(245, 242, 235, 1) !important;
+    }
+
+    .mat-tab-body-wrapper {
+      height: 100%;
+      border: 1px solid rgb(211, 211, 211);
+      border-top-width: 0px !important;
+
+      .naplesdetail-charts-chart-item {
+        width: 100% !important;
+        height: 100% !important;
+
+        &>div {
+          position: relative;
+          top: -10px;
+
+          .telemetrychartview-card {
+            width: calc(100% - 10px) !important;
+            height: 280px !important;
+            margin: 0px !important;
+
+            .basecard-container {
+              box-shadow: none !important;
+              border: none !important;
+              background: none !important;
+            }
+          }
+        }
+      }
+    }
+  }
+
+}

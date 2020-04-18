@@ -463,6 +463,20 @@ export class MetricsUtility {
     }
   }
 
+  public static createReporterIDSelector(reporterID: string): IFieldsSelector {
+    if (name != null) {
+      return {
+        'requirements': [
+          {
+            'key': 'reporterID',
+            'operator': FieldsRequirement_operator.equals,
+            'values': [reporterID]
+          }
+        ]
+      };
+    }
+  }
+
   public static clusterLevelCPUHeroCard(themeColor: string, icon: Icon): HeroCardOptions {
     return {
       title: 'CPU',

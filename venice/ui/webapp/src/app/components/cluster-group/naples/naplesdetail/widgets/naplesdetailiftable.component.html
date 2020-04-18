@@ -1,0 +1,39 @@
+<div fxFlex="none" class="naplesdetail-interface-table" fxLayout="column"
+     fxLayoutAlign="start flex-end">
+  <div class="naplesdetail-interface-table-collapseicon" title="collapse"
+       (click)="collapseInterfaceTable()"></div>
+  <p-table [value]="interfaceStats">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Interface</th>
+        <th>Status</th>
+        <th>TX (bytes)</th>
+        <th>RX (bytes)</th>
+        <th>TX Drop (bytes)</th>
+        <th>RX Drop (bytes)</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-itf>
+      <tr [ngClass]="{'selected': itf.ifname === mouseOverInterface}">
+        <td>
+          <div class="ellipsisText">{{itf.shortname}}</div>
+        </td>
+        <td>
+          <div class="ellipsisText">{{itf.stats.status}}</div>
+        </td>
+        <td>
+          <div class="ellipsisText">{{showStatsNumber(itf.stats.tx)}}</div>
+        </td>
+        <td>
+          <div class="ellipsisText">{{showStatsNumber(itf.stats.rx)}}</div>
+        </td>
+        <td>
+          <div class="ellipsisText">{{showStatsNumber(itf.stats.txDrop)}}</div>
+        </td>
+        <td>
+          <div class="ellipsisText">{{showStatsNumber(itf.stats.rxDrop)}}</div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
