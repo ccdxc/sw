@@ -74,6 +74,8 @@ typedef union {
 #define LIF_QSTATE_MAP_COUNT \
     CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ARRAY_COUNT
 
+#define DBF_QSTATE      0x1
+
 static uint64_t
 lif_qstate_map_addr(const int lif)
 {
@@ -197,7 +199,7 @@ dberr_read(const int entry, db_err_activity_log_entry_t *dberr)
 }
 
 static void
-dberr_display(db_err_activity_log_entry_t *dberr)
+dberr_display(db_err_activity_log_entry_t *dberr, const int flags)
 {
     const int w = 20;
 
@@ -208,7 +210,8 @@ dberr_display(db_err_activity_log_entry_t *dberr)
     printf("%-*s: " fmt "\n", w, #field, dberr->field)
 
     PDB("%ld", vld);
-    if (lif_qstate_map_qinfo(qstate_addr, &qinfo)) {
+    if ((flags & DBF_QSTATE) &&
+        lif_qstate_map_qinfo(qstate_addr, &qinfo)) {
         printf("%-*s: 0x%lx (qstateaddr 0x%lx lif %d qtype %d qid %d)\n",
                w, "qstateaddr_or_qid", dberr->qstateaddr_or_qid,
                qstate_addr,
@@ -230,15 +233,19 @@ static void
 dberr(int argc, char *argv[])
 {
     db_err_activity_log_entry_t dberr;
-    int opt, i, single_entry;
+    int opt, i, single_entry, flags;
 
+    flags = 0;
     single_entry = 0;
     optind = 0;
-    while ((opt = getopt(argc, argv, "e:")) != -1) {
+    while ((opt = getopt(argc, argv, "e:q")) != -1) {
         switch (opt) {
         case 'e':
             dberr.w64 = strtoull(optarg, NULL, 0);
             single_entry = 1;
+            break;
+        case 'q':
+            flags |= DBF_QSTATE;
             break;
         default:
             return;
@@ -246,16 +253,18 @@ dberr(int argc, char *argv[])
     }
 
     if (single_entry) {
-        dberr_display(&dberr);
+        dberr_display(&dberr, flags);
     } else {
         for (i = 0; i < DBERR_COUNT; i++) {
             dberr_read(i, &dberr);
             if (!dberr.vld) continue;
-            printf("\nentry %d\n", i);
-            dberr_display(&dberr);
+            printf("\nentry %d (0x%" PRIx64 ")\n", i, dberr.w64);
+            dberr_display(&dberr, flags);
         }
     }
 }
 CMDFUNC(dberr,
 "display doorbell_err_activity_log entries",
-"dberr -e <hexdigits>\n");
+"dberr [-q][-e <hexdigits>]\n"
+"    -e <hexdigits>     decode raw entry (e.g. capview read)\n"
+"    -q                 decode qstate addr/lif/qtype/qid\n");
