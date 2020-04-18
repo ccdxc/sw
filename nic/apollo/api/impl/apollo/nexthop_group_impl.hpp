@@ -150,7 +150,7 @@ private:
 
     /// \brief      populate status with hardware information
     /// \param[out] status status
-    void fill_status_(pds_nexthop_group_status_t *status);
+    sdk_ret_t fill_status_(pds_nexthop_group_status_t *status);
 
 private:
     uint32_t    hw_id_;    ///< hardware id

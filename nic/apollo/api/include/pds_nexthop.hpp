@@ -36,7 +36,7 @@ typedef enum pds_nh_type_e {
 
 /// \brief nexthop specification
 typedef struct pds_nexthop_spec_s {
-    pds_obj_key_t     key;         ///< key
+    pds_obj_key_t         key;     ///< key
     pds_nh_type_t         type;    ///< (immutable) nexthop type
     union {
         // info specific to PDS_NH_TYPE_OVERLAY
@@ -45,7 +45,7 @@ typedef struct pds_nexthop_spec_s {
         };
         // info specific to PDS_NH_TYPE_UNDERLAY
         struct {
-            pds_obj_key_t  l3_if;          ///< L3 interface key (SMACo,
+            pds_obj_key_t l3_if;           ///< L3 interface key (SMACo,
                                            ///< vlan tag and outgoing port
                                            ///< come from this)
             mac_addr_t    underlay_mac;    ///< underlay/outer DMAC (DMACo)
@@ -70,6 +70,10 @@ typedef struct pds_nexthop_status_s {
         struct {
             uint8_t  port;     ///< physical port
             uint16_t vlan;     ///< VLAN
+        };
+        // info specific to PDS_NH_TYPE_OVERLAY
+        struct {
+            ip_addr_t     tep_ip;
         };
     };
 } __PACK__ pds_nexthop_status_t;

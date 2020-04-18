@@ -285,6 +285,39 @@ fill_nh_status_ (pds_nexthop_status_t *status, uint16_t hw_id) {
     return SDK_RET_OK;
 }
 
+#define tunnel_action   action_u.tunnel_tunnel_info
+static inline sdk_ret_t
+fill_nh_status_overlay_tep_ (pds_nexthop_status_t *status, uint16_t tunnel_id) {
+    tunnel_actiondata_t tep_data;
+    p4pd_error_t p4pdret;
+
+    p4pdret = p4pd_global_entry_read(P4TBL_ID_TUNNEL, tunnel_id,
+                                     NULL, NULL, &tep_data);
+    if (unlikely(p4pdret != P4PD_SUCCESS)) {
+        PDS_TRACE_ERR("Failed to read TUNNEL table at idx %u",
+                      tunnel_id);
+        return sdk::SDK_RET_HW_READ_ERR;
+    }
+    switch (tep_data.tunnel_action.ip_type) {
+    case IPTYPE_IPV4:
+        status->tep_ip.af = IP_AF_IPV4;
+        memcpy(&status->tep_ip.addr.v4_addr,
+               tep_data.tunnel_action.dipo,
+               IP4_ADDR8_LEN);
+        break;
+    case IPTYPE_IPV6:
+        status->tep_ip.af = IP_AF_IPV6;
+        sdk::lib::memrev(status->tep_ip.addr.v6_addr.addr8,
+                         tep_data.tunnel_action.dipo,
+                         IP6_ADDR8_LEN);
+        break;
+    default:
+        break;
+    }
+
+    return SDK_RET_OK;
+}
+
 /// @}
 
 }    // namespace impl

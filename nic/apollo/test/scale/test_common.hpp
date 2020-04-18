@@ -66,6 +66,10 @@ typedef struct test_params_s {
         uint32_t max_l3_if;
         uint32_t max_underlay_nh;
     };
+    // overlay config
+    struct {
+        uint32_t max_overlay_nh;
+    };
     // TEP config
     struct {
         uint32_t num_teps;
@@ -467,6 +471,7 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
     test_params->remote_svc_tep_vnid_base = 20000;
     test_params->max_l3_if = 2;
     test_params->max_underlay_nh = 2;
+    test_params->max_overlay_nh = 2;
     test_params->num_dhcp_policies = 2;
     return SDK_RET_OK;
 }

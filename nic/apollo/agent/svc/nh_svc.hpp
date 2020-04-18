@@ -48,9 +48,9 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
         }
         break;
 
-    case pds::NexthopSpec::kTunnelId:
+    case pds::NexthopSpec::kOverlayNhInfo:
         api_spec->type = PDS_NH_TYPE_OVERLAY;
-        pds_obj_key_proto_to_api_spec(&api_spec->tep, proto_spec.tunnelid());
+        pds_obj_key_proto_to_api_spec(&api_spec->tep, proto_spec.overlaynhinfo().tunnelid());
         break;
 
     case pds::NexthopSpec::kUnderlayNhInfo:
@@ -80,7 +80,8 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
         ipnhinfo->set_vlan(api_spec->vlan);
         ipnhinfo->set_mac(MAC_TO_UINT64(api_spec->mac));
     } else if (api_spec->type == PDS_NH_TYPE_OVERLAY) {
-        proto_spec->set_tunnelid(api_spec->tep.id, PDS_MAX_KEY_LEN);
+        auto overlayinfo = proto_spec->mutable_overlaynhinfo();
+        overlayinfo->set_tunnelid(api_spec->tep.id, PDS_MAX_KEY_LEN);
     } else if (api_spec->type == PDS_NH_TYPE_UNDERLAY) {
         auto underlayinfo = proto_spec->mutable_underlaynhinfo();
         underlayinfo->set_l3interface(api_spec->l3_if.id, PDS_MAX_KEY_LEN);
@@ -103,6 +104,11 @@ pds_nh_api_status_to_proto (pds::NexthopStatus *proto_status,
             status->set_vlan(api_status->vlan);
         }
         break;
+    case PDS_NH_TYPE_OVERLAY:
+        {
+            auto status = proto_status->mutable_overlaynhinfo();
+            ipaddr_api_spec_to_proto_spec(status->mutable_tunnelip(), &api_status->tep_ip);
+        }
     default:
         break;
     }
@@ -134,6 +140,19 @@ pds_nh_api_info_to_proto (pds_nexthop_info_t *api_info, void *ctxt)
     pds_nh_api_spec_to_proto(proto_spec, &api_info->spec);
     pds_nh_api_status_to_proto(proto_status, &api_info->status, &api_info->spec);
     pds_nh_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
+static inline pds_nexthop_group_type_t
+proto_nh_group_type_to_pds_nh_group_type (pds::NhGroupType type)
+{
+    switch (type) {
+    case pds::NEXTHOP_GROUP_TYPE_OVERLAY_ECMP:
+        return PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+    case pds::NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP:
+        return PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+    default:
+        return PDS_NHGROUP_TYPE_NONE;
+    }
 }
 
 // build nh group API spec from protobuf spec
@@ -221,7 +240,13 @@ static inline void
 pds_nh_group_api_info_to_proto (pds_nexthop_group_info_t *api_info,
                                 void *ctxt)
 {
-    pds::NhGroupGetResponse *proto_rsp = (pds::NhGroupGetResponse *)ctxt;
+    nh_group_get_all_args_t *args = (nh_group_get_all_args_t *)ctxt;
+    pds::NhGroupGetResponse *proto_rsp = (pds::NhGroupGetResponse *)(args->ctxt);
+
+    if (api_info->spec.type != args->type) {
+        return;
+    }
+
     auto nh = proto_rsp->add_response();
     pds::NhGroupSpec *proto_spec = nh->mutable_spec();
     pds::NhGroupStatus *proto_status = nh->mutable_status();

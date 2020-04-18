@@ -158,7 +158,7 @@ class NexthopObject(base.ConfigObjectBase):
             spec.UnderlayNhInfo.L3Interface = utils.PdsUuid.GetUUIDfromId(self.L3InterfaceId, ObjectTypes.INTERFACE)
             spec.UnderlayNhInfo.UnderlayMAC = self.underlayMACAddr.getnum()
         elif self.__type == topo.NhType.OVERLAY:
-            spec.TunnelId = utils.PdsUuid.GetUUIDfromId(self.TunnelId, ObjectTypes.TUNNEL)
+            spec.OverlayNhInfo.TunnelId = utils.PdsUuid.GetUUIDfromId(self.TunnelId, ObjectTypes.TUNNEL)
         return
 
     def PopulateSpec(self, grpcmsg):
@@ -184,7 +184,7 @@ class NexthopObject(base.ConfigObjectBase):
             if spec.UnderlayNhInfo.UnderlayMAC != self.underlayMACAddr.getnum():
                 return False
         elif self.__type != topo.NhType.OVERLAY:
-            if spec.TunnelId != utils.PdsUuid.GetUUIDfromId(self.TunnelId, ObjectTypes.TUNNEL):
+            if spec.OverlayNhInfo.TunnelId != utils.PdsUuid.GetUUIDfromId(self.TunnelId, ObjectTypes.TUNNEL):
                 return False
         return True
 

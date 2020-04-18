@@ -29,7 +29,7 @@
 namespace api {
 namespace impl {
 
-#define ecmp_info    action_u.ecmp_ecmp_info
+#define ecmp_info       action_u.ecmp_ecmp_info
 
 /// \defgroup PDS_NEXTHOP_GROUP_IMPL - nexthop group datapath implementation
 /// \ingroup PDS_NEXTHOP
@@ -148,9 +148,17 @@ sdk_ret_t
 nexthop_group_impl::populate_ecmp_tep_info_(pds_nexthop_group_spec_t *spec,
                                             ecmp_actiondata_t *ecmp_data)
 {
+    tep_entry *entry;
     tep_impl *tep;
+
     for (uint8_t i = 0; i < spec->num_nexthops; i++) {
-        tep = (tep_impl *)tep_db()->find(&spec->nexthops[i].tep)->impl();
+        entry = tep_db()->find(&spec->nexthops[i].tep);
+        if (!entry) {
+            PDS_TRACE_ERR("Tep entry %s not found in nexthop group %s",
+                          spec->nexthops[i].tep.str(), spec->key.str());
+            return SDK_RET_ERR;
+        }
+        tep = (tep_impl *)entry->impl();
         switch (i) {
         case 0:
             ecmp_data->ecmp_info.tunnel_id1 = tep->hw_id1();
@@ -319,18 +327,45 @@ nexthop_group_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
     return ret;
 }
 
-void
+sdk_ret_t
 nexthop_group_impl::fill_status_(pds_nexthop_group_status_t *status,
-                                 ecmp_actiondata_t *ecmp_data) {
+                                 ecmp_actiondata_t *ecmp_data,
+                                 pds_nexthop_group_spec_t *spec) {
     uint16_t nh_base_hw_id = ecmp_data->ecmp_info.nexthop_base;
-    status->hw_id = hw_id_;
-    status->nh_base_idx = nh_base_hw_id_;
+    uint16_t tunnel_id;
+    sdk_ret_t ret;
 
+    status->hw_id = hw_id_;
     if (ecmp_data->ecmp_info.nexthop_type == NEXTHOP_TYPE_NEXTHOP) {
+        status->nh_base_idx = nh_base_hw_id_;
         for (uint8_t i = 0; i < ecmp_data->ecmp_info.num_nexthops; i++) {
-            fill_nh_status_(&status->nexthops[i], nh_base_hw_id + i);
+            ret = fill_nh_status_(&status->nexthops[i], nh_base_hw_id + i);
+        }
+    } else if (ecmp_data->ecmp_info.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
+        for (uint8_t i = 0; i < ecmp_data->ecmp_info.num_nexthops; i++) {
+            switch (i) {
+            case 0:
+                tunnel_id = ecmp_data->ecmp_info.tunnel_id1;
+                break;
+            case 1:
+                tunnel_id = ecmp_data->ecmp_info.tunnel_id2;
+                break;
+            case 2:
+                tunnel_id = ecmp_data->ecmp_info.tunnel_id3;
+                break;
+            case 3:
+                tunnel_id = ecmp_data->ecmp_info.tunnel_id4;
+                break;
+            default:
+                PDS_TRACE_ERR("Unexpected nexthop count %u in nexthop group %s",
+                              spec->num_nexthops, spec->key.str());
+                return SDK_RET_ERR;
+            }
+            ret = fill_nh_status_overlay_tep_(&status->nexthops[i], tunnel_id);
         }
     }
+
+    return ret;
 }
 
 sdk_ret_t
@@ -341,6 +376,9 @@ nexthop_group_impl::fill_spec_(pds_nexthop_group_spec_t *spec,
     spec->num_nexthops = ecmp_data->ecmp_info.num_nexthops;
     if (ecmp_data->ecmp_info.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
         spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+        for (uint8_t i = 0; i < spec->num_nexthops; i++) {
+            spec->nexthops[i].type = PDS_NH_TYPE_OVERLAY;
+        }
     } else if (ecmp_data->ecmp_info.nexthop_type == NEXTHOP_TYPE_NEXTHOP) {
         spec->type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
         nh_base_hw_id = ecmp_data->ecmp_info.nexthop_base;
@@ -366,7 +404,7 @@ nexthop_group_impl::fill_info_(pds_nexthop_group_info_t *info) {
     }
 
     fill_spec_(&info->spec, &ecmp_data);
-    fill_status_(&info->status, &ecmp_data);
+    fill_status_(&info->status, &ecmp_data, &info->spec);
 
     return SDK_RET_OK;
 }

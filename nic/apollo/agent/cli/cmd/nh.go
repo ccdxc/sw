@@ -46,6 +46,7 @@ func init() {
 
 	showCmd.AddCommand(nhGroupShowCmd)
 	nhGroupShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	nhGroupShowCmd.Flags().StringVar(&nhType, "type", "overlay-ecmp", "Specify nexthop-group type (overlay-ecmp or underlay-ecmp)")
 	nhGroupShowCmd.Flags().StringVarP(&nhID, "id", "i", "", "Specify nexthop group ID")
 }
 
@@ -69,12 +70,24 @@ func nhGroupShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific NhGroup
 		req = &pds.NhGroupGetRequest{
-			Id: [][]byte{uuid.FromStringOrNil(nhID).Bytes()},
+			Gettype: &pds.NhGroupGetRequest_Id{
+				Id: uuid.FromStringOrNil(nhID).Bytes(),
+			},
+		}
+	} else if cmd != nil && cmd.Flags().Changed("type") {
+		if checkNhGroupTypeValid(nhType) != true {
+			fmt.Printf("Invalid nexthop group type\n")
+			return
+		}
+		// Get specific NhGroup
+		req = &pds.NhGroupGetRequest{
+			Gettype: &pds.NhGroupGetRequest_Type{
+				Type: nhGroupTypeToPdsNhGroupType(nhType),
+			},
 		}
 	} else {
-		req = &pds.NhGroupGetRequest{
-			Id: [][]byte{},
-		}
+		fmt.Printf("--type or --id argument needed\n")
+		return
 	}
 
 	// PDS call
@@ -98,20 +111,59 @@ func nhGroupShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println("---")
 		}
 	} else {
-		printNhGroupHeader()
+		printNhGroupHeader(nhType)
 		for _, resp := range respMsg.Response {
 			printNhGroup(resp)
 		}
 	}
 }
 
-func printNhGroupHeader() {
+func checkNhGroupTypeValid(nh string) bool {
+	switch nh {
+	case "underlay-ecmp":
+		return true
+	case "overlay-ecmp":
+		return true
+	default:
+		return false
+	}
+}
+
+func nhGroupTypeToPdsNhGroupType(nh string) pds.NhGroupType {
+	switch nh {
+	case "underlay-ecmp":
+		return pds.NhGroupType_NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP
+	case "overlay-ecmp":
+		return pds.NhGroupType_NEXTHOP_GROUP_TYPE_OVERLAY_ECMP
+	default:
+		return pds.NhGroupType_NEXTHOP_GROUP_TYPE_NONE
+	}
+}
+
+func printNhGroupUnderlayHeader() {
 	hdrLine := strings.Repeat("-", 118)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-40s%-10s%-16s%-10s%-12s%-12s%-18s\n",
 		"Id", "HwID", "Type", "#Members",
 		"MemberPort", "MemberVLAN", "MemberMAC")
 	fmt.Println(hdrLine)
+}
+
+func printNhGroupOverlayHeader() {
+	hdrLine := strings.Repeat("-", 104)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-40s%-14s%-10s%-40s\n",
+		"Id", "Type", "#Members", "TunnelIP")
+	fmt.Println(hdrLine)
+}
+
+func printNhGroupHeader(nh string) {
+	switch nh {
+	case "underlay-ecmp":
+		printNhGroupUnderlayHeader()
+	case "overlay-ecmp":
+		printNhGroupOverlayHeader()
+	}
 }
 
 func printNhGroup(resp *pds.NhGroup) {
@@ -124,25 +176,40 @@ func printNhGroup(resp *pds.NhGroup) {
 	first := true
 	numMembers := len(memberSpec)
 
-	if typeStr != "UNDERLAY-ECMP" {
-		return
-	}
-
 	for i := 0; i < numMembers; i++ {
-		if first {
-			fmt.Printf("%-40s%-10d%-16s%-10d%-12d%-12d%-18s\n",
-				uuid.FromBytesOrNil(spec.GetId()).String(),
-				status.GetHwId(), typeStr, numMembers,
-				memberStatus[i].GetUnderlayNhInfo().GetPort(),
-				memberStatus[i].GetUnderlayNhInfo().GetVlan(),
-				utils.MactoStr(memberSpec[i].GetUnderlayNhInfo().GetUnderlayMAC()))
-			first = false
-		} else {
-			fmt.Printf("%-76s%-12d%-12d%-18s\n",
-				"",
-				memberStatus[i].GetUnderlayNhInfo().GetPort(),
-				memberStatus[i].GetUnderlayNhInfo().GetVlan(),
-				utils.MactoStr(memberSpec[i].GetUnderlayNhInfo().GetUnderlayMAC()))
+		switch typeStr {
+		case "UNDERLAY-ECMP":
+			if first {
+				fmt.Printf("%-40s%-10d%-16s%-10d%-12d%-12d%-18s\n",
+					uuid.FromBytesOrNil(spec.GetId()).String(),
+					status.GetHwId(), typeStr, numMembers,
+					memberStatus[i].GetUnderlayNhInfo().GetPort(),
+					memberStatus[i].GetUnderlayNhInfo().GetVlan(),
+					utils.MactoStr(memberSpec[i].GetUnderlayNhInfo().GetUnderlayMAC()))
+				first = false
+			} else {
+				fmt.Printf("%-76s%-12d%-12d%-18s\n",
+					"",
+					memberStatus[i].GetUnderlayNhInfo().GetPort(),
+					memberStatus[i].GetUnderlayNhInfo().GetVlan(),
+					utils.MactoStr(memberSpec[i].GetUnderlayNhInfo().GetUnderlayMAC()))
+			}
+			break
+		case "OVERLAY-ECMP":
+			if first {
+				fmt.Printf("%-40s%-14s%-10d%-40s\n",
+					uuid.FromBytesOrNil(spec.GetId()).String(),
+					typeStr, numMembers,
+					utils.IPAddrToStr(memberStatus[i].GetOverlayNhInfo().GetTunnelIP()))
+				first = false
+			} else {
+				fmt.Printf("%-64s%-40s\n",
+					"",
+					utils.IPAddrToStr(memberStatus[i].GetOverlayNhInfo().GetTunnelIP()))
+			}
+			break
+		default:
+			break
 		}
 	}
 }
@@ -271,7 +338,7 @@ func printNexthopHeader(nh *pds.Nexthop) {
 	switch spec.GetNhinfo().(type) {
 	case *pds.NexthopSpec_IPNhInfo:
 		printNexthopIPHeader()
-	case *pds.NexthopSpec_TunnelId:
+	case *pds.NexthopSpec_OverlayNhInfo:
 		printNexthopOverlayHeader()
 	case *pds.NexthopSpec_UnderlayNhInfo:
 		printNexthopUnderlayHeader()
@@ -291,11 +358,12 @@ func printNexthop(nh *pds.Nexthop) {
 				nhInfo.GetVlan(),
 				utils.MactoStr(nhInfo.GetMac()))
 		}
-	case *pds.NexthopSpec_TunnelId:
+	case *pds.NexthopSpec_OverlayNhInfo:
 		{
+			nhInfo := spec.GetOverlayNhInfo()
 			fmt.Printf("%-40s%-40s\n",
-				uuid.FromBytesOrNil(spec.GetId()).String(),
-				uuid.FromBytesOrNil(spec.GetTunnelId()).String())
+				uuid.FromBytesOrNil(nhInfo.GetTunnelId()).String(),
+				utils.IPAddrToStr(status.GetOverlayNhInfo().GetTunnelIP()))
 		}
 	case *pds.NexthopSpec_UnderlayNhInfo:
 		{

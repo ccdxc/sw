@@ -224,8 +224,10 @@ private:
     /// \brief      populate status with hardware information
     /// \param[out] status status
     /// \param[in]  ecmp_data ecmp data
-    void fill_status_(pds_nexthop_group_status_t *status,
-                      ecmp_actiondata_t *ecmp_data);
+    /// \param[in]  spec specification
+    sdk_ret_t fill_status_(pds_nexthop_group_status_t *status,
+                           ecmp_actiondata_t *ecmp_data,
+                           pds_nexthop_group_spec_t *spec);
 
     /// \brief      populate info with hardware information
     /// \param[out] info information

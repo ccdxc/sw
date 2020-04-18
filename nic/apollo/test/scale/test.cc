@@ -1745,21 +1745,60 @@ create_l3_intfs (uint32_t num_if)
 }
 
 sdk_ret_t
-create_underlay_nexthops (uint32_t num_nh)
+create_overlay_nexthop_group (uint32_t num_overlay_nh)
 {
     sdk_ret_t rv;
     pds_nexthop_spec_t pds_nh;
-    pds_nexthop_group_spec_t pds_nhgroup;
+    pds_nexthop_group_spec_t pds_overlay_nhgroup;
+
+    // create an overlay nexthop group object
+    memset(&pds_overlay_nhgroup, 0, sizeof(pds_overlay_nhgroup));
+    pds_overlay_nhgroup.key = test::int2pdsobjkey(2);
+    pds_overlay_nhgroup.type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+    pds_overlay_nhgroup.num_nexthops =
+        (num_overlay_nh > PDS_MAX_ECMP_NEXTHOP) ? PDS_MAX_ECMP_NEXTHOP : num_overlay_nh;
+
+    for (uint32_t i = 1; i <= num_overlay_nh; i++) {
+        memset(&pds_nh, 0, sizeof(pds_nh));
+        pds_nh.type = PDS_NH_TYPE_OVERLAY;
+        pds_nh.tep = test::int2pdsobjkey(TEP_ID_MYTEP + i);
+        if ((i - 1) < PDS_MAX_ECMP_NEXTHOP) {
+            pds_overlay_nhgroup.nexthops[i-1] = pds_nh;
+        }
+    }
+
+    // create the overlay nexthop group
+    rv = create_nexthop_group(&pds_overlay_nhgroup);
+    if (rv != SDK_RET_OK) {
+        return rv;
+    }
+
+    // push leftover objects
+    rv = create_nexthop_group(NULL);
+    if (rv != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return rv;
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_underlay_nexthops (uint32_t num_underlay_nh)
+{
+    sdk_ret_t rv;
+    pds_nexthop_spec_t pds_nh;
+    pds_nexthop_group_spec_t pds_underlay_nhgroup;
     uint64_t peer_mac = 0x00BBBBBBB0ULL;
 
     // create an underlay nexthop group object
-    memset(&pds_nhgroup, 0, sizeof(pds_nhgroup));
-    pds_nhgroup.key = test::int2pdsobjkey(1);
-    pds_nhgroup.type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
-    pds_nhgroup.num_nexthops =
-        (num_nh > PDS_MAX_ECMP_NEXTHOP) ? PDS_MAX_ECMP_NEXTHOP : num_nh;
+    memset(&pds_underlay_nhgroup, 0, sizeof(pds_underlay_nhgroup));
+    pds_underlay_nhgroup.key = test::int2pdsobjkey(1);
+    pds_underlay_nhgroup.type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+    pds_underlay_nhgroup.num_nexthops =
+        (num_underlay_nh > PDS_MAX_ECMP_NEXTHOP) ? PDS_MAX_ECMP_NEXTHOP : num_underlay_nh;
 
-    for (uint32_t i = 1; i <= num_nh; i++) {
+    for (uint32_t i = 1; i <= num_underlay_nh; i++) {
         memset(&pds_nh, 0, sizeof(pds_nh));
         pds_nh.key = test::int2pdsobjkey(i);
         pds_nh.type = PDS_NH_TYPE_UNDERLAY;
@@ -1770,7 +1809,7 @@ create_underlay_nexthops (uint32_t num_nh)
             return rv;
         }
         if ((i - 1) < PDS_MAX_ECMP_NEXTHOP) {
-            pds_nhgroup.nexthops[i-1] = pds_nh;
+            pds_underlay_nhgroup.nexthops[i-1] = pds_nh;
         }
     }
 
@@ -1782,10 +1821,11 @@ create_underlay_nexthops (uint32_t num_nh)
     }
 
     // create the underlay nexthop group
-    rv = create_nexthop_group(&pds_nhgroup);
+    rv = create_nexthop_group(&pds_underlay_nhgroup);
     if (rv != SDK_RET_OK) {
         return rv;
     }
+
     // push leftover objects
     rv = create_nexthop_group(NULL);
     if (rv != SDK_RET_OK) {
@@ -1919,6 +1959,13 @@ create_objects (void)
     ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
     if (ret != SDK_RET_OK) {
         return ret;
+    }
+
+    if (apulu()) {
+        ret = create_overlay_nexthop_group(g_test_params.max_overlay_nh);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
     }
 
     if (artemis()) {

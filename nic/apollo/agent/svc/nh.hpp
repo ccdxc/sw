@@ -19,6 +19,11 @@ typedef struct nh_get_all_args_s {
     void *ctxt;
 } nh_get_all_args_t;
 
+typedef struct nh_group_get_all_args_s {
+    pds_nexthop_group_type_t type;
+    void *ctxt;
+} nh_group_get_all_args_t;
+
 class NhSvcImpl final : public NhSvc::Service {
 public:
     Status NexthopCreate(ServerContext *context, const pds::NexthopRequest *req,

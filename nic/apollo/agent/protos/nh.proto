@@ -51,6 +51,11 @@ message UnderlayNhSpec {
   uint64 UnderlayMAC   = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
+// Overlay nexthop information
+message OverlayNhSpec {
+  bytes TunnelId = 1;
+}
+
 // nexthop specification
 message NexthopSpec {
   // unique nexthop id
@@ -58,7 +63,7 @@ message NexthopSpec {
   // nexthop can be one of different types
   oneof nhinfo {
     // Tunnel/TEP member is used for overlay routing
-    bytes          TunnelId       = 2;
+    OverlayNhSpec  OverlayNhInfo  = 2;
     // Underlay nexthop info is used for a resolved underlay IP
     UnderlayNhSpec UnderlayNhInfo = 3;
     // IP nexthop is used when VTEP IP is to be resolved by PDS
@@ -68,16 +73,22 @@ message NexthopSpec {
 }
 
 message UnderlayNhStatus {
-    uint32 Port = 1;
-    uint32 Vlan = 2;
+  uint32 Port = 1;
+  uint32 Vlan = 2;
 }
+
+message OverlayNhStatus {
+  types.IPAddress TunnelIP = 1;
+}
+
 // operational status of nexthop, if any
 message NexthopStatus {
-    // nexthop hw id
-    uint32             HwId           = 1;
-    oneof nhinfo {
-      UnderlayNhStatus UnderlayNhInfo = 2;
-    }
+  // nexthop hw id
+  uint32             HwId           = 1;
+  oneof nhinfo {
+    UnderlayNhStatus UnderlayNhInfo = 2;
+    OverlayNhStatus  OverlayNhInfo  = 3;
+  }
 }
 
 // stats of a nexthop, if any
@@ -198,8 +209,12 @@ message NhGroupResponse {
 
 // nexthop group get request
 message NhGroupGetRequest {
-  // list of nexthop groups of interest
-  repeated bytes Id = 1;
+  oneof gettype {
+    // nexthop group type to be retrieved
+    NhGroupType Type = 1;
+    // nexthop group to be retrieved
+    bytes       Id   = 2;
+  }
 }
 
 // nexthop group get response
