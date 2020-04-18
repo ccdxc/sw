@@ -50,7 +50,7 @@ static sdk::event_thread::event_thread *g_grpc_reg_thread;
 
 namespace core {
 // number of trace files to keep
-#define TRACE_NUM_FILES                        5
+#define TRACE_NUM_FILES                        4
 #define TRACE_FILE_SIZE                        (20 << 20)
 static inline string
 log_file (const char *logdir, const char *logfile)
