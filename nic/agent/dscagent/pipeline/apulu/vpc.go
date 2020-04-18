@@ -447,8 +447,9 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	log.Infof("VRF RT Delete: %s: got response [%v]", vrf.Name, eVrfRTDResp.ApiStatus)
 
-	// Update Subnet if ipam policy has changed for vrf and subnet was not using self's ipam policy
-	if curVrf.Spec.IPAMPolicy != vrf.Spec.IPAMPolicy {
+	// Update Subnet if ipam policy or RouterMAC has changed for vrf and subnet was not using self's ipam policy
+	if curVrf.Spec.IPAMPolicy != vrf.Spec.IPAMPolicy ||
+		curVrf.Spec.RouterMAC != vrf.Spec.RouterMAC {
 		dat, err := infraAPI.List("Network")
 		if err != nil {
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Networks not found: Err: %v", types.ErrObjNotFound))
@@ -461,8 +462,18 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 				log.Error(errors.Wrapf(types.ErrUnmarshal, "Network: %s | Err: %v", nw.GetKey(), err))
 				continue
 			}
-			// Subnet has self ipam policy
-			if nw.Spec.IPAMPolicy != "" {
+			updateIPAMPolicy := false
+			updateRouterMAC := false
+			// Subnet has no self ipam policy
+			if nw.Spec.IPAMPolicy == "" && curVrf.Spec.IPAMPolicy != vrf.Spec.IPAMPolicy {
+				updateIPAMPolicy = true
+			}
+			// Subnet has no self router mac
+			if nw.Spec.RouterMAC == "" && curVrf.Spec.RouterMAC != vrf.Spec.RouterMAC {
+				updateRouterMAC = true
+			}
+			// Skip if neither ipam policy nor router mac needs updation
+			if !updateIPAMPolicy && !updateRouterMAC {
 				continue
 			}
 			// Subnet doesn't use this vpc
@@ -470,15 +481,25 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 				continue
 			}
 			// Update subnet with new ipam policy
-			nw.Spec.IPAMPolicy = vrf.Spec.IPAMPolicy
+			if updateIPAMPolicy {
+				nw.Spec.IPAMPolicy = vrf.Spec.IPAMPolicy
+			}
+			// Update subnet with new router mac
+			if updateRouterMAC {
+				nw.Spec.RouterMAC = vrf.Spec.RouterMAC
+			}
 			updsubnet, err := convertNetworkToSubnet(infraAPI, nw, nil)
 			if err != nil {
 				log.Errorf("Network: %s could not convert | Err: %s", nw.GetKey(), err)
 				continue
 			}
-			// If ipam policy being removed
-			if vrf.Spec.IPAMPolicy == "" {
+			// If ipam policy being removed update policyID because vrf update has not yet gone to boltDB
+			if vrf.Spec.IPAMPolicy == "" && updateIPAMPolicy {
 				updsubnet.Request[0].DHCPPolicyId = [][]byte{[]byte{}}
+			}
+			// If Router MAC being removed update router mac because vrf update has not yet gone to boltDB
+			if vrf.Spec.RouterMAC == "" && updateRouterMAC {
+				updsubnet.Request[0].VirtualRouterMac = utils.MacStrtoUint64("")
 			}
 			resp, err := subnetcl.SubnetUpdate(context.TODO(), updsubnet)
 			if err != nil {
