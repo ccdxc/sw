@@ -167,18 +167,18 @@ static void init_cpdc_registers(void) {
 #endif
 
 #define dump_csr_32(r)                          \
-    do {                                \
-        uint32_t lo_dummy ;                 \
-        READ_REG32(r, lo_dummy);                  \
+    do {                                        \
+        uint32_t lo_dummy ;                     \
+        lo_dummy = READ_REG32(r);               \
         printf("=== %d: %s() %s addr: 0x%lx lo: 0x%x\n",    \
                 __LINE__, __func__, #r, r, lo_dummy);\
     } while (0)
 
 #define dump_csr_64(r)                          \
-    do {                                \
-        uint32_t lo_dummy, hi_dummy;                \
-        READ_REG32(r, lo_dummy);                  \
-        READ_REG32(r+4, hi_dummy);                \
+    do {                                        \
+        uint32_t lo_dummy, hi_dummy;            \
+        lo_dummy = READ_REG32(r);               \
+        hi_dummy = READ_REG32(r+4);             \
         printf("=== %d: %s() %s addr: 0x%lx hi: 0x%x lo: 0x%x\n",           \
                 __LINE__, __func__, #r, r, hi_dummy, lo_dummy);\
     } while (0)
