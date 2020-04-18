@@ -462,6 +462,10 @@ def GetExpectedCPSPacket(testcase, args):
     logger.info("GetExpectedCPSPacket: packet allowed")
     return testcase.packets.Get(args.epkt_pass)
 
+def IsCPSPacketExpected(testcase, args):
+    pkt = GetExpectedCPSPacket(testcase, args)
+    return True if pkt is None else False
+
 def GetInvalidMPLSTag(testcase, packet, args=None):
     return next(Resmgr.InvalidMplsSlotIdAllocator)
 

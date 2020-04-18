@@ -113,6 +113,8 @@ session:
             delay               : 1
             descriptors         :
                 - descriptor    :
+                    # set negtest to True if packet is NOT expected on this queue
+                    negtest     : callback://networking/packets/IsCPSPacketExpected/ipkt=TO_HOST_PKT,epkt_pass=TO_HOST_PKT
                     object      : ref://testcase/descriptors/id=DESC2
                     ring        : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
 

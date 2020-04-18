@@ -2,6 +2,7 @@
  *  {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
  */
 
+#include <vnet/buffer.h>
 #include <pkt.h>
 #include <session.h>
 #include "node.h"
@@ -10,7 +11,7 @@
 #include "pdsa_hdlr.h"
 #include "pdsa_uds_hdlr.h"
 #include <nic/vpp/infra/utils.h>
-#include <vnet/buffer.h>
+#include <nic/vpp/impl/nh.h>
 
 pds_flow_main_t pds_flow_main;
 
@@ -1230,6 +1231,8 @@ pds_flow_init (vlib_main_t * vm)
     for (i = 0; i < no_of_threads; i++) {
         fm->session_id_thr_local_pool[i].pool_count = -1;
     }
+
+    fm->drop_nexthop = pds_nh_drop_id_get();
 
     pdsa_flow_hdlr_init();
     pds_flow_dump_init();

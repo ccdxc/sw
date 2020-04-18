@@ -6,7 +6,7 @@ feature:
     module      : rfc
     runorder    : 53000
     enable      : True
-    ignore      : False
+    ignore      : True
 
 modules:
 

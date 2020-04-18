@@ -443,6 +443,17 @@ pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
 {
     u32 nexthop = 0;
     pds_impl_db_vnic_entry_t *vnic0;
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    // check if drop bit is set and program nh as drop
+    if (PREDICT_FALSE(vnet_buffer(p0)->pds_flow_data.nexthop >> 18)) {
+        if (is_ip4) {
+            ftlv4_cache_set_nexthop(fm->drop_nexthop, NEXTHOP_TYPE_NEXTHOP, 1);
+        } else {
+            ftlv6_cache_set_nexthop(fm->drop_nexthop, NEXTHOP_TYPE_NEXTHOP, 1);
+        }
+        return;
+    }
 
     u8 rx_pak = (vnet_buffer(p0)->pds_flow_data.flags &
                 VPP_CPU_FLAGS_RX_PKT_VALID) ? 1 : 0;
@@ -1347,4 +1358,5 @@ pds_flow_pipeline_init (vlib_main_t *vm)
 
     return;
 }
+
 #endif    // __VPP_IMPL_APULU_FLOW_H__

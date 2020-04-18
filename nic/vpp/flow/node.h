@@ -289,6 +289,7 @@ typedef struct pds_flow_main_s {
     u8 *packet_types;
     pds_flow_stats_t stats;
     void *flow_metrics_hdl;
+    u16 drop_nexthop;
 } pds_flow_main_t;
 
 typedef enum {
