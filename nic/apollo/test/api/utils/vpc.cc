@@ -17,7 +17,7 @@ namespace api {
 
 void
 vpc_feeder::init(pds_obj_key_t key, pds_vpc_type_t type,
-                 std::string v4_cidr_str, std::string vr_mac_str, int num_vpc,
+                 std::string v4_cidr_str, int num_vpc, std::string vr_mac_str,
                  std::string v6_cidr_str, std::string fabric_encap_str,
                  pds_obj_key_t v4_rttbl, pds_obj_key_t v6_rttbl, uint8_t tos) {
     memset(&spec, 0, sizeof(pds_vpc_spec_t));
@@ -181,36 +181,33 @@ static vpc_feeder k_vpc_feeder;
 
 void sample_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
     // setup and teardown parameters should be in sync
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", "00:02:01:00:00:01");
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
     create(bctxt, k_vpc_feeder);
 }
 
 void sample_vpc_setup_validate(pds_vpc_type_t type) {
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", "00:02:01:00:00:01");
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
     read(k_vpc_feeder);
 }
 
 void sample_vpc_teardown(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", "00:02:01:00:00:01");
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8");
     del(bctxt, k_vpc_feeder);
 }
 
 void sample1_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
     // setup and teardown parameters should be in sync
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8",
-                      "00:02:01:00:00:01", PDS_MAX_VPC);
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
     many_create(bctxt, k_vpc_feeder);
 }
 
 void sample1_vpc_setup_validate(pds_vpc_type_t type) {
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8",
-                      "00:02:01:00:00:01", PDS_MAX_VPC);
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
     many_read(k_vpc_feeder);
 }
 
 void sample1_vpc_teardown(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {
-    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8",
-                      "00:02:01:00:00:01", PDS_MAX_VPC);
+    k_vpc_feeder.init(k_vpc_key, type, "10.0.0.0/8", PDS_MAX_VPC);
     many_delete(bctxt, k_vpc_feeder);
 }
 
