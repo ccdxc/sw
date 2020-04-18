@@ -97,9 +97,13 @@
 // TXFC_PDATA_MIN - For writes, minimum tx fc credits posted data.
 // TXFC_NPHDR_MIN - For reads,  minimum tx fc credits nonposted header.
 //
-#define TXFC_PHDR_MIN           127
-#define TXFC_PDATA_MIN          500
-#define TXFC_NPHDR_MIN          127
+// Wanted PHDR=127, PDATA=500, NPHDR=127 here,
+// but found HPE DL380 server provides PHDR=120, PDATA=352, NPHDR=94,
+// so lower mins to accommodate DL380.
+//
+#define TXFC_PHDR_MIN           100
+#define TXFC_PDATA_MIN          350
+#define TXFC_NPHDR_MIN          90
 
 typedef struct pcie_health_info_s {
     uint64_t tstamp;            // time this was gathered
