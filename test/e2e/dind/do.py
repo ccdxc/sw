@@ -177,7 +177,7 @@ class NaplesNode(Node):
         elif self.testMode == "CLOUD_SIM":
             # Naples sim's sysmgr.json or sysmgr_no_datapath.json will bring up all the services needed.
             runCommand("""docker run --env NO_DATAPATH=1 --cap-add=NET_ADMIN --dns-search my.dummy -td {ports_exposed} -P -l pens -l pens-naples --network pen-dind-net --sysctl net.ipv6.conf.all.disable_ipv6=0 --ip {ip_addr} -v {src_dir}:/sw --rm --name {name} -h {name} pensando/naples:v1""".format(ports_exposed=ports_exposed, ip_addr=self.ipaddress, name=self.name, src_dir=src_dir))
-            runCommand("""docker exec {}  bash -c "ip link set eth0 down && sleep 1 && ip link set eth0 name oob_mnic0 && ip link set oob_mnic0 up" """.format(self.name))
+            runCommand("""docker exec {}  bash -c "ip link set eth0 down && sleep 1 && if [[ \`ip link show oob_mnic0\` ]] ; then ip link set oob_mnic0 name oob_minc0old; fi && sleep 1 && ip link set eth0 name oob_mnic0 && ip link set oob_mnic0 up" """.format(self.name))
         else:
             runCommand("""docker run --cap-add=NET_ADMIN --dns-search my.dummy -td {} -P -l pens -l pens-naples --network pen-dind-net --ip {}  --rm --name {} -h {} pen-netagent /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name, self.name))
             runCommand("""docker exec {}  bash -c "echo exit 0 > /sbin/start-stop-daemon; chmod 700 /sbin/start-stop-daemon" """.format(self.name))

@@ -246,18 +246,24 @@ func (c *ConfigCache) Verify(tenant, kind, naples string, count int) error {
 		}
 		// filter on Tenant
 		for _, v := range nvpcs {
-			if v.Tenant == tenant {
-				if v.Name == "default" {
-					continue
-				}
+			if v.Tenant == tenant && v.Name != "default" {
 				vpcs = append(vpcs, v)
 			}
 		}
-		// no filtering for now
-		if len(vpcs) != len(c.VPCs) {
-			return fmt.Errorf("expecting %d vpcs got %d", len(c.VPCs), len(vpcs))
+		if count != -1 && count != len(vpcs) {
+			str := ""
+			for _, v := range vpcs {
+				str = fmt.Sprintf("%s[%s/%s]", str, v.Tenant, v.Name)
+			}
+			return fmt.Errorf("expecting count [%d] got [%d][%s]", count, len(vpcs), str)
 		}
 		for _, v := range vpcs {
+			if v.Tenant != tenant {
+				continue
+			}
+			if v.Name == "default" {
+				continue
+			}
 			cv, ok := c.VPCs[v.Tenant+"."+v.Name]
 			if !ok {
 				return fmt.Errorf("found unexpected VPC [%s.%s]", v.Tenant, v.Name)
@@ -282,16 +288,23 @@ func (c *ConfigCache) Verify(tenant, kind, naples string, count int) error {
 				nws = append(nws, v)
 			}
 		}
-		count := 0
-		for _, a := range c.Networks {
-			if a.Tenant == tenant {
-				count++
+		if count != -1 {
+			if count != len(nws) {
+				return fmt.Errorf("expecting count [%d] got [%d]", count, len(nws))
+			}
+		} else {
+			count = 0
+			for _, a := range c.Networks {
+				if a.Tenant == tenant {
+					count++
+				}
+			}
+
+			if len(nws) != count {
+				return fmt.Errorf("expecting %d networks got %d", count, len(nws))
 			}
 		}
 
-		if len(nws) != count {
-			return fmt.Errorf("expecting %d networks got %d", count, len(nws))
-		}
 		for _, v := range nws {
 			cv, ok := c.Networks[v.Tenant+"."+v.Name]
 			if !ok {
@@ -318,9 +331,16 @@ func (c *ConfigCache) Verify(tenant, kind, naples string, count int) error {
 				ipams = append(ipams, v)
 			}
 		}
-		if len(ipams) != len(c.IPAMPols) {
-			return fmt.Errorf("expecting %d IPAM Polcies got %d", len(c.IPAMPols), len(ipams))
+		if count != -1 {
+			if count != len(ipams) {
+				return fmt.Errorf("expecting count [%d] got [%d]", count, len(ipams))
+			}
+		} else {
+			if len(ipams) != len(c.IPAMPols) {
+				return fmt.Errorf("expecting %d IPAM Polcies got %d", len(c.IPAMPols), len(ipams))
+			}
 		}
+
 		for _, v := range ipams {
 			cv, ok := c.IPAMPols[v.Tenant+"."+v.Name]
 			if !ok {
@@ -346,7 +366,9 @@ func (c *ConfigCache) Verify(tenant, kind, naples string, count int) error {
 				secPols = append(secPols, v)
 			}
 		}
-
+		if count != -1 && count != len(secPols) {
+			return fmt.Errorf("expecting count [%d] got [%d]", count, len(secPols))
+		}
 		/*
 			if len(secPols) != len(c.SecPols) {
 				return fmt.Errorf("expecting %d Security Polcies got %d", len(c.SecPols), len(secPols))
@@ -571,41 +593,48 @@ var _ = Describe("Cloud E2E", func() {
 		})
 
 		cleanUpObjects := func(ctx context.Context) {
-			subnList, err := restClient.NetworkV1().Network().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenantName}})
-			Expect(err).To(BeNil(), "listing network failed (%s)", err)
+			ifList, err := restClient.NetworkV1().NetworkInterface().List(ctx, &api.ListWatchOptions{FieldSelector: "spec.type=host-pf"})
+			Expect(err).To(BeNil(), "listing network interfaces failed (%s)", err)
+			for _, i := range ifList {
+				if i.Spec.AttachTenant != "" {
+					i.Spec.AttachTenant, i.Spec.AttachNetwork = "", ""
+					_, err := restClient.NetworkV1().NetworkInterface().Update(ctx, i)
+					Expect(err).To(BeNil(), "updating network interfaces failed (%s)", err)
+				}
+			}
+			tenantList, err := restClient.ClusterV1().Tenant().List(ctx, &api.ListWatchOptions{})
+			Expect(err).Should(BeNil(), "failed to get list of tenants")
+			for _, t := range tenantList {
+				if t.Name == "default" {
+					continue
+				}
+				subnList, err := restClient.NetworkV1().Network().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: t.Name}})
+				Expect(err).To(BeNil(), "listing network failed (%s)", err)
 
-			for _, n := range subnList {
-				if n.Tenant == tenantName {
+				for _, n := range subnList {
 					_, err := restClient.NetworkV1().Network().Delete(ctx, &n.ObjectMeta)
 					Expect(err).To(BeNil(), "failed to delete network [%v](%s)", n.Name, err)
 				}
-			}
 
-			nspList, err := restClient.SecurityV1().NetworkSecurityPolicy().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenantName}})
-			Expect(err).To(BeNil(), "listing security policies failed (%s)", err)
+				nspList, err := restClient.SecurityV1().NetworkSecurityPolicy().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: t.Name}})
+				Expect(err).To(BeNil(), "listing security policies failed (%s)", err)
 
-			for _, n := range nspList {
-				if n.Tenant == tenantName {
+				for _, n := range nspList {
 					_, err := restClient.SecurityV1().NetworkSecurityPolicy().Delete(ctx, &n.ObjectMeta)
 					Expect(err).To(BeNil(), "failed to delete security policy [%v](%s)", n.Name, err)
 				}
-			}
 
-			vpcList, err := restClient.NetworkV1().VirtualRouter().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenantName}})
-			Expect(err).To(BeNil(), "error getting list (%s)", err)
-			for _, v := range vpcList {
-				if v.Tenant == tenantName {
+				vpcList, err := restClient.NetworkV1().VirtualRouter().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: t.Name}})
+				Expect(err).To(BeNil(), "error getting list (%s)", err)
+				for _, v := range vpcList {
 					_, err := restClient.NetworkV1().VirtualRouter().Delete(ctx, &v.ObjectMeta)
 					Expect(err).To(BeNil(), "failed to delete vpc [%v](%s)", v.Name, err)
 				}
-			}
 
-			_, err = restClient.ClusterV1().Tenant().Get(ctx, &api.ObjectMeta{Name: tenantName})
-			if err == nil {
-				_, err = restClient.ClusterV1().Tenant().Delete(ctx, &api.ObjectMeta{Name: tenantName})
-				Expect(err).To(BeNil(), "failed to delete tenant[%v](%s)", tenantName, err)
-			}
+				_, err = restClient.ClusterV1().Tenant().Delete(ctx, &api.ObjectMeta{Name: t.Name})
+				Expect(err).To(BeNil(), "failed to delete tenant[%v](%s)", t.Name, err)
 
+			}
 		}
 
 		It("CRUD tests", func() {
@@ -622,6 +651,14 @@ var _ = Describe("Cloud E2E", func() {
 				TypeMeta: api.TypeMeta{Kind: "Tenant"},
 				ObjectMeta: api.ObjectMeta{
 					Name: tenantName,
+				},
+			})
+
+			otherTenant := "second" + tenantName
+			err = cache.Create(lctx, restClient, &cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: "Tenant"},
+				ObjectMeta: api.ObjectMeta{
+					Name: otherTenant,
 				},
 			})
 
@@ -662,7 +699,7 @@ var _ = Describe("Cloud E2E", func() {
 					TypeMeta: api.TypeMeta{Kind: "VirtualRouter"},
 					ObjectMeta: api.ObjectMeta{
 						Name:   "e2eVpc2",
-						Tenant: tenantName,
+						Tenant: otherTenant,
 					},
 					Spec: network.VirtualRouterSpec{
 						Type:             network.VirtualRouterSpec_Tenant.String(),
@@ -824,10 +861,11 @@ var _ = Describe("Cloud E2E", func() {
 			}
 
 			var nwIfs []*network.NetworkInterface
-
-			nwIfs, err = restClient.NetworkV1().NetworkInterface().List(lctx, &opts)
-			Expect(err).Should(BeNil(), fmt.Sprintf("failed to list host-pf interfaces %s)", err))
-			Expect(nwIfs).Should(Not(BeNil()), "No host-pf interfaces found")
+			Eventually(func() []*network.NetworkInterface {
+				nwIfs, err = restClient.NetworkV1().NetworkInterface().List(lctx, &opts)
+				Expect(err).Should(BeNil(), fmt.Sprintf("failed to list host-pf interfaces %s)", err))
+				return nwIfs
+			}, 60, 10).Should(Not(BeNil()), "No host-pf interfaces found")
 
 			By(fmt.Sprintf("List host-pfs [%v]", nwIfs))
 			var dscs []*cluster.DistributedServiceCard
@@ -846,6 +884,9 @@ var _ = Describe("Cloud E2E", func() {
 			nwIfs[0].Spec.AttachTenant = tenantName
 			policyCount := 0
 			for _, l := range cache.Networks {
+				if l.Tenant != tenantName {
+					continue
+				}
 				nwIfs[0].Spec.AttachNetwork = l.Name
 				policyCount += len(l.Spec.IngressSecurityPolicy) + len(l.Spec.EgressSecurityPolicy)
 				break
@@ -856,15 +897,14 @@ var _ = Describe("Cloud E2E", func() {
 				err := cache.Update(lctx, restClient, nwIfs[0])
 				return err
 			}, 60, 10).Should(BeNil(), "Failed to update host-pf (%s)", err)
-			//Expect(err).To(BeNil(), "host-pf update failed (%s)", err)
 
 			By(fmt.Sprintf("Verify objects exist on [%s]", checkNaples))
 			Eventually(func() error {
-				err := cache.Verify(tenantName, string(network.KindVirtualRouter), checkNaples, 0)
+				err := cache.Verify(tenantName, string(network.KindVirtualRouter), checkNaples, -1)
 				if err != nil {
 					return err
 				}
-				err = cache.Verify(tenantName, string(network.KindNetwork), checkNaples, 0)
+				err = cache.Verify(tenantName, string(network.KindNetwork), checkNaples, -1)
 				if err != nil {
 					return err
 				}
@@ -896,7 +936,7 @@ var _ = Describe("Cloud E2E", func() {
 				}
 				By(fmt.Sprintf("veriyfy VPCs okay on %d node(s)", len(naplesList)))
 				return nil
-			}, 60, 10).Should(HaveOccurred(), "Failed to validate on naples (%s)", err)
+			}, 60, 10).Should(BeNil(), "Failed to validate on naples (%s)", err)
 
 			Eventually(func() error {
 				for _, n := range naplesList {
@@ -905,20 +945,20 @@ var _ = Describe("Cloud E2E", func() {
 						return err
 					}
 				}
-				By(fmt.Sprintf("veriyfy subnets okay on %d node(s)", len(naplesList)))
+				By(fmt.Sprintf("verify subnets okay on %d node(s)", len(naplesList)))
 				return nil
-			}, 60, 10).Should(HaveOccurred(), "Failed to validate on naples (%s)", err)
+			}, 60, 10).Should(BeNil(), "Failed to validate on naples (%s)", err)
 
 			Eventually(func() error {
 				for _, n := range naplesList {
-					err = cache.Verify(tenantName, string(security.KindNetworkSecurityPolicy), n, policyCount)
+					err = cache.Verify(tenantName, string(security.KindNetworkSecurityPolicy), n, 0)
 					if err != nil {
 						return err
 					}
 				}
 				By(fmt.Sprintf("veriyfy network security policies okay on %d node(s)", len(naplesList)))
 				return nil
-			}, 60, 10).Should(HaveOccurred(), "Failed to validate on naples (%s)", err)
+			}, 60, 10).Should(BeNil(), "Failed to validate on naples (%s)", err)
 
 			// Cleanup all objects
 			By(fmt.Sprintf("cleaning up created objectd"))
