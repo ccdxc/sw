@@ -651,10 +651,11 @@ def run_athena_app(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf"
     os.environ["PDSPKG_TOPDIR"] = nic_dir
 
-    #Huge-pages for DPDK
-    os.system("echo 2048 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages")
-    os.system("mkdir -p /dev/hugepages")
-    os.system("mount -t hugetlbfs nodev /dev/hugepages")
+    if args.disable_hugepages is False:
+        #Huge-pages for DPDK
+        os.system("echo 2048 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages")
+        os.system("mkdir -p /dev/hugepages")
+        os.system("mount -t hugetlbfs nodev /dev/hugepages")
 
     os.chdir(nic_dir)
     try:
@@ -663,7 +664,7 @@ def run_athena_app(args):
         pass
     os.symlink(nic_dir + "/conf/athena/pipeline.json", nic_dir + "/conf/pipeline.json")
 
-    cmd = ['./athena_app', '-c', 'hal.json', '-d', '/sw/nic/apollo/test/athena_app/scripts', '-t', args.athena_app_test]
+    cmd = ['./athena_app', '-c', 'hal.json']
 
     #pass additional arguments to athena_app, if any
     os.chdir(bin_dir)
@@ -1463,8 +1464,8 @@ def main():
                         help='Run only a subtest of offload test suite')
     parser.add_argument('--offload_runargs', dest='offload_runargs', default='',
                         help='any extra options that should be passed to offload as run_args.')
-    parser.add_argument('--athena_app_test', dest='athena_app_test', default=None,
-                        help='Run a particular script of athena_app test suite')
+    parser.add_argument('--disable_hugepages', dest='disable_hugepages', action='store_true',
+                        help='Disable hugepages setup')
     parser.add_argument('--athena_app_runargs', dest='athena_app_runargs', default='',
                         help='any extra options that should be passed to athena_app as run_args.')
     parser.add_argument('--no_error_check', dest='no_error_check', default=None,

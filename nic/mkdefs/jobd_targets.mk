@@ -302,19 +302,27 @@ jobd/offload: ${JOBD_PREREQS}
 
 .PHONY: jobd/athena_app/session_aging_sim_simple
 jobd/athena_app/session_aging_sim_simple: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test session_aging_sim_simple.txt --athena_app_runargs '\-\-no-fte-flow-prog'
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_runargs '-d /sw/nic/apollo/test/athena_app/scripts -t session_aging_sim_simple.txt \-\-no-fte-flow-prog'
 
 .PHONY: jobd/athena_app/session_aging_sim_medium
 jobd/athena_app/session_aging_sim_medium: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test session_aging_sim_medium.txt --athena_app_runargs '\-\-no-fte-flow-prog'
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_runargs '-d /sw/nic/apollo/test/athena_app/scripts -t session_aging_sim_medium.txt \-\-no-fte-flow-prog'
 
 .PHONY: jobd/athena_app/conntrack_aging_sim_simple
 jobd/athena_app/conntrack_aging_sim_simple: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test conntrack_aging_sim_simple.txt --athena_app_runargs '\-\-no-fte-flow-prog'
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_runargs '-d /sw/nic/apollo/test/athena_app/scripts -t conntrack_aging_sim_simple.txt \-\-no-fte-flow-prog'
 
 .PHONY: jobd/athena_app/conntrack_aging_sim_medium
 jobd/athena_app/conntrack_aging_sim_medium: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_test conntrack_aging_sim_medium.txt --athena_app_runargs '\-\-no-fte-flow-prog'
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --athena_app_runargs '-d /sw/nic/apollo/test/athena_app/scripts -t conntrack_aging_sim_medium.txt \-\-no-fte-flow-prog'
+
+.PHONY: jobd/athena_app/policy_sim_gtests
+jobd/athena_app/policy_sim_gtests: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --disable_hugepages --athena_app_runargs '-j /sw/nic/conf/athena/policy_gtest_8k.json'
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --disable_hugepages --athena_app_runargs '-j /sw/nic/conf/athena/32vnic_scale.json'
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --disable_hugepages --athena_app_runargs '-j /sw/nic/conf/athena/64vnic_scale.json'
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --disable_hugepages --athena_app_runargs '-j /sw/nic/conf/athena/128vnic_scale.json'
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --athena_app --disable_hugepages --athena_app_runargs '-j /sw/nic/conf/athena/256vnic_scale.json'
 
 .PHONY: jobd/athena/gtests_sim
 jobd/athena/gtests_sim: ${JOBD_PREREQS}
