@@ -169,7 +169,7 @@ static void init_cpdc_registers(void) {
 #define dump_csr_32(r)                          \
     do {                                \
         uint32_t lo_dummy ;                 \
-        read_reg(r, lo_dummy);                  \
+        READ_REG32(r, lo_dummy);                  \
         printf("=== %d: %s() %s addr: 0x%lx lo: 0x%x\n",    \
                 __LINE__, __func__, #r, r, lo_dummy);\
     } while (0)
@@ -177,8 +177,8 @@ static void init_cpdc_registers(void) {
 #define dump_csr_64(r)                          \
     do {                                \
         uint32_t lo_dummy, hi_dummy;                \
-        read_reg(r, lo_dummy);                  \
-        read_reg(r+4, hi_dummy);                \
+        READ_REG32(r, lo_dummy);                  \
+        READ_REG32(r+4, hi_dummy);                \
         printf("=== %d: %s() %s addr: 0x%lx hi: 0x%x lo: 0x%x\n",           \
                 __LINE__, __func__, #r, r, hi_dummy, lo_dummy);\
     } while (0)
@@ -707,7 +707,6 @@ queue_mem_pa_get(uint64_t reg_addr)
     hi_val = READ_REG32(reg_addr + 4);
     return ((uint64_t)hi_val << 32) | lo_val;
 }
-
 
 void
 compression_buf_init()
