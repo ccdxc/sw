@@ -5,8 +5,8 @@ PensChecksum16(true)          udpCsum_1;
 PensChecksum16()          icmpv4Csum_1;
 PensChecksum16()          icmpv6Csum_1;
 PensChecksum16()          ipv4HdrCsum_2;
-PensChecksum16()          tcpCsum_2;
 PensChecksum16(true)          udpCsum_2;
+PensChecksum16()          tcpCsum_2;
 PensChecksum16()          icmpv4Csum_2;
 PensChecksum16()          icmpv6Csum_2;
 
@@ -33,8 +33,4 @@ PensChecksum16()          udpCsumDepEg_1;
 PensChecksum16()          icmpv4CsumDepEg_1;
 PensChecksum16()          icmpv6CsumDepEg_1;
 PensChecksum16()          ipv4HdrCsumDepEg_2;
-PensChecksum16()          tcpCsumDepEg_2;
 PensChecksum16()          udpCsumDepEg_2;
-PensChecksum16()          udpCsumDepEg_3;
-PensChecksum16()          icmpv4CsumDepEg_2;
-PensChecksum16()          icmpv6CsumDepEg_2;

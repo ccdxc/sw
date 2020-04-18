@@ -117,19 +117,80 @@ control p4i_statistics(inout cap_phv_intr_global_h capri_intrinsic,
 
 
     @name(".p4i_stats") action p4i_stats_a(@__ref bit<64>  rx_from_host,
-					 @__ref bit<64>  rx_from_switch,
-					 @__ref bit<64>  rx_from_arm
+					   @__ref bit<64>  rx_from_switch,
+					   @__ref bit<64>  rx_from_arm,
+					   @__ref bit<64>  rx_user_csum_err,
+					   @__ref bit<64> rx_substrate_csum_err
 					 ) {
       if(metadata.cntrl.from_arm == TRUE) {
 	rx_from_arm = rx_from_arm + 1;
       } else {
-	if(metadata.cntrl.direction == TX_FROM_HOST) {
-	  rx_from_host = rx_from_host + 1;	  
-	} else {
-	  rx_from_switch = rx_from_switch + 1;
-
+	bool csum_err = false;
+	if((capri_intrinsic.csum_engine0_error |
+	    capri_intrinsic.csum_engine1_error |
+	    capri_intrinsic.csum_engine2_error |
+	    capri_intrinsic.csum_engine3_error |
+	    capri_intrinsic.csum_engine4_error )  
+	   != 0) {
+	  csum_err = true;
 	}
 
+	if(metadata.cntrl.direction == TX_FROM_HOST) {
+	  rx_from_host = rx_from_host + 1;
+	  /*	  
+	  if((capri_intrinsic.csum_engine0_error |
+	      capri_intrinsic.csum_engine1_error |
+	      capri_intrinsic.csum_engine2_error |
+	      capri_intrinsic.csum_engine3_error |
+	      capri_intrinsic.csum_engine4_error )  
+	     != 0) {
+	  */
+	  if(csum_err == true) {
+	    rx_user_csum_err = rx_user_csum_err + 1;
+	  }	  
+	  
+	} else {
+	  rx_from_switch = rx_from_switch + 1;
+	  // check if no csum and return otherwise update counters
+	  if(csum_err == false) {
+	    return;
+	  } else {	  
+
+	    if(hdr.ip_1.ipv4.isValid()) {
+	      if(ipv4HdrCsum_1.get_validate_status() == 0) {
+		rx_substrate_csum_err = rx_substrate_csum_err + 1;
+		capri_intrinsic.drop = 1;
+	      }
+	      if(hdr.ip_2.ipv4.isValid()) {
+		if(ipv4HdrCsum_2.get_validate_status() == 0) {
+		  rx_user_csum_err = rx_user_csum_err + 1;	
+		  capri_intrinsic.drop = 1;
+		}	      
+	      }
+	      if(hdr.l4_u.udp.isValid()) {
+		if(udpCsum_2.get_validate_status() == 0) {
+		  rx_user_csum_err = rx_user_csum_err + 1;
+		  capri_intrinsic.drop = 1;
+		}
+	      } else if(hdr.l4_u.tcp.isValid()) {
+		if(tcpCsum_2.get_validate_status() == 0) {
+		  rx_user_csum_err = rx_user_csum_err + 1;
+		  capri_intrinsic.drop = 1;
+		}
+	      } else if(hdr.l4_u.icmpv4.isValid()) {
+		if(icmpv4Csum_2.get_validate_status() == 0) {
+		  rx_user_csum_err = rx_user_csum_err + 1;
+		  capri_intrinsic.drop = 1;
+		}
+	      } else if(hdr.l4_u.icmpv6.isValid()) {
+		if(icmpv6Csum_2.get_validate_status() == 0) {
+		  rx_user_csum_err = rx_user_csum_err + 1;
+		  capri_intrinsic.drop = 1;
+		}
+	      }
+	    }
+	  }
+	} 
       }
     }
 
@@ -176,12 +237,12 @@ control p4e_statistics(inout cap_phv_intr_global_h capri_intrinsic,
 
     @name(".p4e_stats") table p4e_stats {
         key = {
-	  metadata.cntrl.stats_id : exact;
+	  metadata.cntrl.stats_id : table_index;
         }
         actions = {
             p4e_stats_a;
         }
-        size = 2;
+        size = 1;
         placement = HBM;
         default_action = p4e_stats_a;
         stage = 5;
