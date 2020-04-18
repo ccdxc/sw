@@ -58,7 +58,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 	}
 
 	getResp, err := client.InterfaceGet(context.Background(), intfGetReq)
-	if getResp != nil {
+	if getResp != nil || err != nil {
 		if err := utils.HandleErr(types.Get, getResp.Response[0].ApiStatus, err, fmt.Sprintf("Interface: %s", intf.GetKey())); err != nil {
 			return err
 		}
