@@ -250,9 +250,10 @@ message FlowStatus {
 
 // TFTPInfo captures the operational status of TFTP ALG session
 message TFTPALGInfo {
-  bool                 iscontrol      = 1; // Is this flow control/data TFTP flow
-  uint32               parse_error    = 2; // Number of parse errors recorded for this session
-  uint32               unknown_opcode = 3; // Number of unknown opcode received
+  bool                 iscontrol        = 1; // Is this flow control/data TFTP flow
+  uint32               parse_error      = 2; // Number of parse errors recorded for this session
+  uint32               unknown_opcode   = 3; // Number of unknown opcode received
+  uint32               tftpop           = 4; // TFTP Operation received
 }
 
 // RPCInfo captures the operational status of SUNRPC/MSFT RPC ALG session

@@ -371,6 +371,13 @@ ctx_t::create_session()
                 return ret;
             }
             valid_rflow_ = true;
+        } else {
+            if (key_.flow_type == hal::FLOW_TYPE_L2 ||
+                key_.proto == IP_PROTO_TCP || key_.proto == IP_PROTO_UDP ||
+                key_.proto == IP_PROTO_ICMP || key_.proto == IP_PROTO_ICMPV6) {
+                swap_flow_key(key_, &rkey_);
+                valid_rflow_ = true;
+            }
         }
     } else {
         if (key_.flow_type == hal::FLOW_TYPE_L2 ||

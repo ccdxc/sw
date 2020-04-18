@@ -1240,7 +1240,7 @@ fte_session_update_list (void *data)
 
 // get session info (in protobuf) for a given endpoint
 hal_ret_t
-ep_get_session_info (ep_t *ep, SessionGetResponseMsg *rsp, uint64_t ts) 
+ep_get_session_info (ep_t *ep, SessionGetResponseMsg *rsp, uint64_t ts)
 {
     dllist_ctxt_t                   *curr, *next;
     hal_handle_id_list_entry_t      *entry = NULL;
@@ -2837,7 +2837,7 @@ ep_add_session (ep_t *ep, session_t *session)
     entry->handle_id = session->hal_handle;
 
     ep_lock(ep, __FILENAME__, __LINE__, __func__);
-    sdk::lib::dllist_add(&ep->session_list_head[session->fte_id], &entry->dllist_ctxt);
+    sdk::lib::dllist_add_tail(&ep->session_list_head[session->fte_id], &entry->dllist_ctxt);
 
     if (session->sep_handle == ep->hal_handle) {
         session->sep_sess_list_entry_ctxt = &entry->dllist_ctxt;

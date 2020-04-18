@@ -612,6 +612,7 @@ public:
     bool sync_session_request() { return sess_status_ != NULL; }
     session::SessionSpec* sess_spec() {return sess_spec_; }
     session::SessionResponse* sess_resp() {return sess_resp_; }
+    session::SessionStatus* sess_status() {return sess_status_; }
     session::SessionGetResponse* sess_get_resp() { return sess_get_resp_; }
     void set_sess_get_resp(session::SessionGetResponse* val) { sess_get_resp_ = val; }
     hal::session_t* session() { return session_; }

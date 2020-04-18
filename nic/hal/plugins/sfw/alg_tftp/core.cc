@@ -53,6 +53,8 @@ fte::pipeline_action_t alg_tftp_session_get_cb(fte::ctx_t &ctx) {
                                 set_parse_error(info->parse_errors);
             sess_resp->mutable_status()->mutable_tftp_info()->\
                               set_unknown_opcode(info->unknown_opcode);
+            sess_resp->mutable_status()->mutable_tftp_info()->\
+                              set_tftpop(info->tftpop);
         }
         sess_resp->mutable_status()->mutable_tftp_info()->\
                                 set_iscontrol(true);
@@ -243,6 +245,12 @@ hal_ret_t process_tftp(fte::ctx_t& ctx, l4_alg_status_t *exp_flow) {
     info = (tftp_info_t *)exp_flow->info;
     SDK_ASSERT(info != NULL);
 
+    if (ctx.sync_session_request()) {
+        HAL_TRACE_DEBUG("TFTP Sync session");
+        ctx.register_completion_handler(tftp_completion_hdlr);
+        return ret;
+    }
+
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
 
@@ -306,25 +314,29 @@ hal_ret_t process_tftp_first_packet(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
     tftp_info = (tftp_info_t *)l4_sess->info;
     SDK_ASSERT(tftp_info != NULL);
 
-    // Payload offset from CPU header
-    offset = ctx.cpu_rxhdr()->payload_offset;
+    if (ctx.sync_session_request()) {
+        tftp_info->tftpop = ctx.sess_status()->tftp_info().tftpop();
+    } else {
+        // Payload offset from CPU header
+        offset = ctx.cpu_rxhdr()->payload_offset;
 
-    if (ctx.pkt_len() < offset) {
-        // Should we drop the packet at this point ?
-        HAL_TRACE_ERR("Packet len: {} is less than payload offset: {}", \
-                      ctx.pkt_len(),  offset);
-        incr_parse_error(l4_sess);
-        return ret;
-    }
+        if (ctx.pkt_len() < offset) {
+            // Should we drop the packet at this point ?
+            HAL_TRACE_ERR("Packet len: {} is less than payload offset: {}", \
+                    ctx.pkt_len(),  offset);
+            incr_parse_error(l4_sess);
+            return ret;
+        }
 
-    // Fetch 2-byte opcode
-    tftp_info->tftpop = __pack_uint16(pkt, &offset);
+        // Fetch 2-byte opcode
+        tftp_info->tftpop = __pack_uint16(pkt, &offset);
 
-    // Only act on it if there is a known opcode
-    if (tftp_info->tftpop != TFTP_RRQ && tftp_info->tftpop != TFTP_WRQ) {
-        HAL_TRACE_DEBUG("Unknown Opcode -- parse error");
-        incr_parse_error(l4_sess);
-        return ret;
+        // Only act on it if there is a known opcode
+        if (tftp_info->tftpop != TFTP_RRQ && tftp_info->tftpop != TFTP_WRQ) {
+            HAL_TRACE_DEBUG("Unknown Opcode -- parse error");
+            incr_parse_error(l4_sess);
+            return ret;
+        }
     }
 
     HAL_TRACE_DEBUG("Received Opcode:{}", (tftp_info->tftpop==TFTP_RRQ)?"TFTP_RRQ":"TFTP_WRQ");
@@ -349,12 +361,16 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
                                   ctx.feature_state(FTE_FEATURE_SFW);
     fte::feature_session_state_t  *alg_state = NULL;
 
-    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request() ||
-        ctx.role() == hal::FLOW_ROLE_RESPONDER) {
+    if ((hal::g_hal_state->is_flow_aware()) ||
+        (ctx.protobuf_request() && !ctx.sync_session_request()) ||
+        (ctx.role() == hal::FLOW_ROLE_RESPONDER)) {
+        HAL_TRACE_DEBUG("ALG Flow:{} Proto:{} Sync:{}, Role:{}", hal::g_hal_state->is_flow_aware(),
+                        ctx.protobuf_request(), ctx.sync_session_request(), ctx.role());
         return fte::PIPELINE_CONTINUE;
     }
-
     alg_state = ctx.feature_session_state();
+    HAL_TRACE_DEBUG("ALG Proto:{} Existing:{} State:{:p}", sfw_info->alg_proto,
+                    ctx.existing_session(), (void *)alg_state);
     if (sfw_info->alg_proto == nwsec::APP_SVC_TFTP &&
         (!ctx.existing_session())) {
         HAL_TRACE_DEBUG("Alg Proto TFTP is set");
