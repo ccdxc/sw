@@ -321,6 +321,7 @@ var _ = Describe("firewall policy model tests", func() {
 	})
 	Context("tags:type=extensive;datapath=true;duration=long  policy model tests", func() {
 		It("Should be able to verify whitelist policies", func() {
+			Skip("Skipping whitelist policy model tests")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
