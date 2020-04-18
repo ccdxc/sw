@@ -63,6 +63,7 @@ type NmdAPI interface {
 	SetMgmtInterface(intf string)
 	SetNetworkMode(intf string)
 	SetDSCID(name string)
+	GetParsedControllers() []string
 }
 
 // PlatformAPI is the API provided by PlatformAgent to NMD

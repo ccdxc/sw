@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -404,7 +405,29 @@ func (d *DHCPState) startRenewLoop(ackPacket dhcp4.Packet, mgmtLink netlink.Link
 
 // DoNTPSync does ntp sync with the venice IPs
 func (c *IPClient) DoNTPSync() error {
-	return nil
+	// Wait for controllers to be populated
+	ticker := time.NewTicker(time.Second * 30)
+	for {
+		select {
+		case <-ticker.C:
+			controllers := c.nmd.GetParsedControllers()
+			if len(controllers) == 0 {
+				log.Info("NTP Sync waiting for controllers to be available. Found none")
+				continue
+			}
+			log.Info("Clearing any old NTP if its running")
+			cmd := "/sbin/start-stop-daemon -K -q -p /var/run/ntpd.pid"
+			runCmd(cmd)
+
+			log.Infof("Starting NTP Sync with servers %v", controllers)
+			cmd = "/sbin/start-stop-daemon -b -S  -m -p /var/run/ntpd.pid --exec /usr/sbin/ntpd -- -n "
+			for _, s := range controllers {
+				cmd = cmd + " -p " + s
+			}
+			runCmd(cmd)
+			return nil
+		}
+	}
 }
 
 // GetIPClientIntf returns the current interface for the instantiated IPClient
@@ -758,4 +781,16 @@ func instantiateDHCPClient(link netlink.Link) *dhcp.Client {
 		log.Errorf("Failed to  instantiate primary DHCP Client. Err: %v", err)
 	}
 	return client
+}
+
+func runCmd(cmdStr string) error {
+	log.Infof("Running : " + cmdStr)
+	cmd := exec.Command("bash", "-c", cmdStr)
+	_, err := cmd.Output()
+
+	if err != nil {
+		log.Errorf("Failed Running : " + cmdStr)
+	}
+
+	return err
 }

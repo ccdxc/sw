@@ -829,12 +829,6 @@ func (n *NMD) AdmitNaples() {
 						}
 					}
 
-					_ = stopNtpClient()
-					err = startNtpClient(n.config.Status.Controllers)
-					if err != nil {
-						log.Infof("start NTP client returned %v", err)
-					}
-
 					// start watching objects
 					go n.cmd.WatchSmartNICUpdates()
 					go n.rollout.WatchDSCRolloutUpdates()

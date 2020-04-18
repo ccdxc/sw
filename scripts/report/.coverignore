@@ -21,3 +21,4 @@ github.com/pensando/sw/test/integ/tsdb/client
 github.com/pensando/sw/test/integ/venice_integ/auth
 github.com/pensando/sw/test/integ/tsdb/collector
 github.com/pensando/sw/nic/agent/netagent/ctrlerif
+github.com/pensando/sw/nic/agent/nmd/state/ipif

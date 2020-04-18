@@ -308,3 +308,8 @@ func (ag *NMD) SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig) {
 func (ag *NMD) SetDSCID(name string) {
 	return
 }
+
+// GetParsedControllers returns status controllers
+func (ag *NMD) GetParsedControllers() []string {
+	return ag.Naples.Status.Controllers
+}

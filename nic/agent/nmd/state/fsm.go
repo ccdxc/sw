@@ -62,21 +62,6 @@ func NewNMDStateMachine() *NMDStateMachine {
 						e.Err = err
 						return
 					}
-
-					if nmd.Pipeline != nil && nmd.Pipeline.GetPipelineType() != globals.NaplesPipelineApollo {
-						// TODO We need to temporarily need to run dhclient here to ensure that the default routes are installed. Move this to dhcp config eventually
-						var mgmtIntf string
-						// Wait for mgmt interface to be populated
-						for {
-							if len(nmd.config.Status.ManagementInterface) > 0 {
-								mgmtIntf = nmd.config.Status.ManagementInterface
-								break
-							}
-							time.Sleep(time.Second * 30)
-						}
-						log.Infof("Running dhclient on discovered mgmt interface. %v", mgmtIntf)
-						e.Err = runCmd(fmt.Sprintf("dhclient %s", mgmtIntf))
-					}
 				},
 
 				"doPostStatusToAgent": func(e *fsm.Event) {
@@ -104,7 +89,22 @@ func NewNMDStateMachine() *NMDStateMachine {
 						return
 					}
 					e.Err = nmd.IPClient.DoNTPSync()
-					return
+
+					if nmd.Pipeline != nil && nmd.Pipeline.GetPipelineType() != globals.NaplesPipelineApollo {
+						// TODO We need to temporarily need to run dhclient here to ensure that the default routes are installed. Move this to dhcp config eventually
+						var mgmtIntf string
+						// Wait for mgmt interface to be populated
+						for {
+							if len(nmd.config.Status.ManagementInterface) > 0 {
+								mgmtIntf = nmd.config.Status.ManagementInterface
+								break
+							}
+							time.Sleep(time.Second * 30)
+						}
+						log.Infof("Running dhclient on discovered mgmt interface. %v", mgmtIntf)
+						e.Err = runCmd(fmt.Sprintf("dhclient %s", mgmtIntf))
+						return
+					}
 				},
 
 				"doAdmission": func(e *fsm.Event) {

@@ -1607,6 +1607,11 @@ func (n *NMD) SetDSCID(name string) {
 	n.config.Spec.ID = name
 }
 
+// GetParsedControllers returns the controllers from the status
+func (n *NMD) GetParsedControllers() []string {
+	return n.config.Status.Controllers
+}
+
 func runCmd(cmdStr string) error {
 	log.Infof("Running : " + cmdStr)
 	cmd := exec.Command("bash", "-c", cmdStr)

@@ -164,6 +164,10 @@ func (ag *mockAgent) SetDSCID(name string) {
 	return
 }
 
+func (ag *mockAgent) GetParsedControllers() []string {
+	return ag.nic.Spec.Controllers
+}
+
 type mockRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	nicdb      map[string]*cmd.DistributedServiceCard
