@@ -12,6 +12,64 @@
 #define __AGENT_SVC_PORT_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/port.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
+#include "nic/sdk/linkmgr/port_mac.hpp"
+
+static inline pds::PortLinkSM
+pds_fsmstate_to_proto (sdk::types::port_link_sm_t fsm_state)
+{
+    switch (fsm_state) {
+    case port_link_sm_t::PORT_LINK_SM_DISABLED:
+        return pds::PORT_LINK_FSM_DISABLED;
+    case port_link_sm_t::PORT_LINK_SM_ENABLED:
+        return pds::PORT_LINK_FSM_ENABLED;
+    case port_link_sm_t::PORT_LINK_SM_AN_CFG:
+        return pds::PORT_LINK_FSM_AN_CFG;
+    case port_link_sm_t::PORT_LINK_SM_AN_DISABLED:
+        return pds::PORT_LINK_FSM_AN_DISABLED;
+    case port_link_sm_t::PORT_LINK_SM_AN_START:
+        return pds::PORT_LINK_FSM_AN_START;
+    case port_link_sm_t::PORT_LINK_SM_AN_WAIT_HCD:
+        return pds::PORT_LINK_FSM_AN_WAIT_HCD;
+    case port_link_sm_t::PORT_LINK_SM_AN_COMPLETE:
+        return pds::PORT_LINK_FSM_AN_COMPLETE;
+    case port_link_sm_t::PORT_LINK_SM_SERDES_CFG:
+        return pds::PORT_LINK_FSM_SERDES_CFG;
+    case port_link_sm_t::PORT_LINK_SM_WAIT_SERDES_RDY:
+        return pds::PORT_LINK_FSM_WAIT_SERDES_RDY;
+    case port_link_sm_t::PORT_LINK_SM_MAC_CFG:
+        return pds::PORT_LINK_FSM_MAC_CFG;
+    case port_link_sm_t::PORT_LINK_SM_SIGNAL_DETECT:
+        return pds::PORT_LINK_FSM_SIGNAL_DETECT;
+    case port_link_sm_t::PORT_LINK_SM_AN_DFE_TUNING:
+        return pds::PORT_LINK_FSM_AN_DFE_TUNING;
+    case port_link_sm_t::PORT_LINK_SM_DFE_TUNING:
+        return pds::PORT_LINK_FSM_DFE_TUNING;
+    case port_link_sm_t::PORT_LINK_SM_DFE_DISABLED:
+        return pds::PORT_LINK_FSM_DFE_DISABLED;
+    case port_link_sm_t::PORT_LINK_SM_DFE_START_ICAL:
+        return pds::PORT_LINK_FSM_DFE_START_ICAL;
+    case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_ICAL:
+        return pds::PORT_LINK_FSM_DFE_WAIT_ICAL;
+    case port_link_sm_t::PORT_LINK_SM_DFE_START_PCAL:
+        return pds::PORT_LINK_FSM_DFE_START_PCAL;
+    case port_link_sm_t::PORT_LINK_SM_DFE_WAIT_PCAL:
+        return pds::PORT_LINK_FSM_DFE_WAIT_PCAL;
+    case port_link_sm_t::PORT_LINK_SM_DFE_PCAL_CONTINUOUS:
+        return pds::PORT_LINK_FSM_DFE_PCAL_CONTINUOUS;
+    case port_link_sm_t::PORT_LINK_SM_CLEAR_MAC_REMOTE_FAULTS:
+        return pds::PORT_LINK_FSM_CLEAR_MAC_REMOTE_FAULTS;
+    case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_SYNC:
+        return pds::PORT_LINK_FSM_WAIT_MAC_SYNC;
+    case port_link_sm_t::PORT_LINK_SM_WAIT_MAC_FAULTS_CLEAR:
+        return pds::PORT_LINK_FSM_WAIT_MAC_FAULTS_CLEAR;
+    case port_link_sm_t::PORT_LINK_SM_UP:
+        return pds::PORT_LINK_FSM_UP;
+    default:
+        return pds::PORT_LINK_FSM_DISABLED;
+    }
+}
 
 static inline port_fec_type_t
 pds_port_proto_fec_type_to_sdk_fec_type (pds::PortFecType proto_fec_type)

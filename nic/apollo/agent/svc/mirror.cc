@@ -5,8 +5,7 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/svc/mirror.hpp"
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/mirror_svc.hpp"
 
 // create mirror session object
 Status

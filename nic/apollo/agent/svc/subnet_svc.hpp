@@ -12,6 +12,7 @@
 #define __AGENT_SVC_SUBNET_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/subnet.hpp"
 
 // build subnet API spec from proto buf spec
 static inline sdk_ret_t

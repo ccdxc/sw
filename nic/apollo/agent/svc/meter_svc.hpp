@@ -1,4 +1,3 @@
-
 //
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
@@ -13,6 +12,8 @@
 #define __AGENT_SVC_METER_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/api/include/pds_meter.hpp"
+#include "nic/apollo/agent/svc/meter.hpp"
 
 static inline void
 pds_meter_debug_stats_to_proto (pds_meter_debug_stats_t *stats, void *ctxt)

@@ -12,6 +12,7 @@
 #define __AGENT_SVC_VNIC_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/vnic.hpp"
 
 // populate proto buf spec from vnic API spec
 static inline void

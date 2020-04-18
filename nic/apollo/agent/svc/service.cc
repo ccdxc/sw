@@ -7,7 +7,6 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/service.hpp"
 #include "nic/apollo/agent/svc/service_svc.hpp"
-#include "nic/apollo/agent/svc/service.hpp"
 #include "nic/apollo/agent/hooks.hpp"
 
 Status

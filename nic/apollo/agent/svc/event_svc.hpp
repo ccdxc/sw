@@ -14,6 +14,56 @@
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/interface_svc.hpp"
 #include "nic/apollo/agent/svc/port_svc.hpp"
+#include "nic/apollo/agent/svc/event.hpp"
+#include "nic/apollo/agent/core/event.hpp"
+
+static inline pds::EventId
+pds_event_id_api_to_proto_event_id (pds_event_id_t event_id)
+{
+    switch (event_id) {
+    case PDS_EVENT_ID_LIF_CREATE:
+        return pds::EVENT_ID_LIF_CREATE;
+    case PDS_EVENT_ID_LIF_UPDATE:
+        return pds::EVENT_ID_LIF_UPDATE;
+    case PDS_EVENT_ID_LIF_UP:
+        return pds::EVENT_ID_LIF_UP;
+    case PDS_EVENT_ID_LIF_DOWN:
+        return pds::EVENT_ID_LIF_DOWN;
+    case PDS_EVENT_ID_PORT_CREATE:
+        return pds::EVENT_ID_PORT_CREATE;
+    case PDS_EVENT_ID_PORT_UP:
+        return pds::EVENT_ID_PORT_UP;
+    case PDS_EVENT_ID_PORT_DOWN:
+        return pds::EVENT_ID_PORT_DOWN;
+    default:
+        break;
+    }
+    return pds::EVENT_ID_NONE;
+}
+
+static inline pds_event_id_t
+pds_proto_event_id_to_api_event_id (pds::EventId proto_event_id)
+{
+    switch (proto_event_id) {
+    case pds::EVENT_ID_PORT_CREATE:
+        return PDS_EVENT_ID_PORT_CREATE;
+    case pds::EVENT_ID_PORT_UP:
+        return PDS_EVENT_ID_PORT_UP;
+    case pds::EVENT_ID_PORT_DOWN:
+        return PDS_EVENT_ID_PORT_DOWN;
+    case pds::EVENT_ID_LIF_CREATE:
+        return PDS_EVENT_ID_LIF_CREATE;
+    case pds::EVENT_ID_LIF_UPDATE:
+        return PDS_EVENT_ID_LIF_UPDATE;
+    case pds::EVENT_ID_LIF_UP:
+        return PDS_EVENT_ID_LIF_UP;
+    case pds::EVENT_ID_LIF_DOWN:
+        return PDS_EVENT_ID_LIF_DOWN;
+    default:
+        break;
+    }
+    return PDS_EVENT_ID_NONE;
+}
 
 static inline sdk_ret_t
 pds_event_spec_proto_to_api_spec (pds_event_spec_t *api_spec,

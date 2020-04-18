@@ -40,6 +40,7 @@ var deviceUpdateCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(deviceShowCmd)
 	deviceShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	deviceShowCmd.Flags().Bool("detail", false, "Display detailed output")
 
 	debugCmd.AddCommand(deviceUpdateCmd)
 	deviceUpdateCmd.Flags().StringVar(&memoryProfile, "memory-profile", "default", "Specify memory profile (Ex: default)")
@@ -256,6 +257,8 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 		b, _ := yaml.Marshal(respType.Interface())
 		fmt.Println(string(b))
 		fmt.Println("---")
+	} else if cmd != nil && cmd.Flags().Changed("detail") {
+		printDeviceDetail(resp)
 	} else {
 		printDeviceHeader()
 		printDevice(resp)
@@ -274,7 +277,17 @@ func printDeviceHeader() {
 
 func printDevice(resp *pds.DeviceGetResponse) {
 	spec := resp.GetResponse().GetSpec()
+	if spec == nil {
+		fmt.Println("-")
+		return
+	}
+
 	status := resp.GetResponse().GetStatus()
+	if status == nil {
+		fmt.Println("-")
+		return
+	}
+
 	memoryStr := fmt.Sprintf("%dG", status.GetMemory())
 	fmt.Printf("%-16s%-20s%-16s%-12s%-12s%-12t%-12t%-16d%-10s%-18t%-20s%-6s\n",
 		utils.IPAddrToStr(spec.GetIPAddr()),
@@ -286,4 +299,40 @@ func printDevice(resp *pds.DeviceGetResponse) {
 		strings.Replace(spec.GetDevOperMode().String(), "DEVICE_OPER_MODE_", "", -1),
 		spec.GetOverlayRoutingEn(), utils.MactoStr(status.GetSystemMACAddress()),
 		memoryStr)
+}
+
+func printDeviceDetail(resp *pds.DeviceGetResponse) {
+	spec := resp.GetResponse().GetSpec()
+	if spec == nil {
+		fmt.Println("-")
+		return
+	}
+
+	status := resp.GetResponse().GetStatus()
+	if status == nil {
+		fmt.Println("-")
+		return
+	}
+
+	outStr := fmt.Sprintf("%-26s : %s\n", "IP Address", utils.IPAddrToStr(spec.GetIPAddr()))
+	outStr += fmt.Sprintf("%-26s : %s\n", "MAC Address", utils.MactoStr(spec.GetMACAddr()))
+	outStr += fmt.Sprintf("%-26s : %s\n", "Gateway IP", utils.IPAddrToStr(spec.GetGatewayIP()))
+	outStr += fmt.Sprintf("%-26s : %s\n", "Memory Profile",
+		strings.Replace(spec.GetMemoryProfile().String(), "MEMORY_PROFILE_", "", -1))
+	outStr += fmt.Sprintf("%-26s : %s\n", "Device Profile",
+		strings.Replace(spec.GetDeviceProfile().String(), "DEVICE_PROFILE_", "", -1))
+	outStr += fmt.Sprintf("%-26s : %t\n", "Bridging Enabled", spec.GetBridgingEn())
+	outStr += fmt.Sprintf("%-26s : %t\n", "Learning Enabled", spec.GetLearningEn())
+	outStr += fmt.Sprintf("%-26s : %d\n", "Learn Age Timeout (sec)", spec.GetLearnAgeTimeout())
+	outStr += fmt.Sprintf("%-26s : %s\n", "Device Oper Mode",
+		strings.Replace(spec.GetDevOperMode().String(), "DEVICE_OPER_MODE_", "", -1))
+	outStr += fmt.Sprintf("%-26s : %t\n", "Overlay Routing Enabled", spec.GetOverlayRoutingEn())
+	outStr += fmt.Sprintf("%-26s : %s\n", "FRU MAC Address", utils.MactoStr(status.GetSystemMACAddress()))
+	outStr += fmt.Sprintf("%-26s : %dG\n", "Memory", status.GetMemory())
+	outStr += fmt.Sprintf("%-26s : %s\n", "Manufacturing Date", status.GetManufacturingDate())
+	outStr += fmt.Sprintf("%-26s : %s\n", "Product Name", status.GetProductName())
+	outStr += fmt.Sprintf("%-26s : %s\n", "Serial Number", status.GetSerialNumber())
+	outStr += fmt.Sprintf("%-26s : %s\n", "Part Number", status.GetSku())
+
+	fmt.Printf(outStr)
 }

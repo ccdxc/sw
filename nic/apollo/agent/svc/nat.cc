@@ -6,7 +6,6 @@
 #include "nic/apollo/api/include/pds_nat.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/nat_svc.hpp"
-#include "nic/apollo/agent/svc/nat.hpp"
 #include "nic/apollo/agent/trace.hpp"
 
 Status

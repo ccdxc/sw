@@ -12,6 +12,7 @@
 #define __AGENT_SVC_POLICY_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/policy.hpp"
 
 static inline fw_action_t
 pds_proto_action_to_rule_action (types::SecurityRuleAction action)

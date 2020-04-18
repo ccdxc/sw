@@ -4,7 +4,6 @@
 
 #include "nic/apollo/api/include/pds_lif.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
-#include "nic/apollo/agent/svc/interface.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/svc/interface_svc.hpp"
 #include "nic/apollo/agent/core/interface.hpp"

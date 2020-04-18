@@ -2,7 +2,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
-#include "nic/apollo/agent/svc/session.hpp"
 #include "nic/apollo/agent/svc/session_svc.hpp"
 
 Status

@@ -12,7 +12,7 @@
 #define __AGENT_SVC_ROUTE_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
-
+#include "nic/apollo/agent/svc/route.hpp"
 
 static inline sdk_ret_t
 pds_route_proto_to_api_spec_common (pds_route_t *route,

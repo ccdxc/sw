@@ -12,6 +12,7 @@
 #define __AGENT_SVC_VPC_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/vpc.hpp"
 
 // build VPC API spec from protobuf spec
 static inline void

@@ -1,4 +1,3 @@
-
 //
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
@@ -13,6 +12,7 @@
 #define __AGENT_SVC_TAG_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/tag.hpp"
 
 // populate proto buf spec from tag API spec
 static inline void

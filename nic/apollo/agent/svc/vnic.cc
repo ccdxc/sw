@@ -5,7 +5,6 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/vnic_svc.hpp"
 
 Status

@@ -1,4 +1,3 @@
-
 //
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
@@ -13,6 +12,7 @@
 #define __AGENT_SVC_POLICER_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/policer.hpp"
 
 static inline pds::PolicerDir
 pds_policer_dir_api_spec_to_proto (pds_policer_dir_t dir)

@@ -6,7 +6,6 @@
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/meter_svc.hpp"
-#include "nic/apollo/agent/svc/meter.hpp"
 
 Status
 MeterSvcImpl::MeterCreate(ServerContext *context,

@@ -4,7 +4,6 @@
 
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
-#include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/api/port.hpp"
 // TODO:
 // @rsrikanth -> including this is a clear layer violation, we can only

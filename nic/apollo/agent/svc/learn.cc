@@ -8,7 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/learn_svc.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/learn/ep_aging.hpp"
 #include "nic/apollo/learn/ep_mac_entry.hpp"
@@ -16,12 +16,7 @@
 #include "nic/apollo/learn/ep_mac_state.hpp"
 #include "nic/apollo/learn/ep_ip_state.hpp"
 #include "nic/apollo/learn/ep_utils.hpp"
-#include "nic/apollo/learn/learn.hpp"
 #include "nic/apollo/learn/utils.hpp"
-
-using learn::ep_mac_key_t;
-using learn::ep_ip_key_t;
-using learn::ep_state_t;
 
 typedef struct ep_ip_get_arg_s {
     pds_obj_key_t subnet;

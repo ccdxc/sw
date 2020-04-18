@@ -19,6 +19,8 @@
 #define PDS_MAX_DROP_NAME_LEN      32    ///< Packet drop reason string length
 #define PDS_MAX_DEVICE              1    ///< only one instance of device
 
+using namespace std;
+
 /// \defgroup PDS_DEVICE Device API
 /// \@{
 
@@ -63,9 +65,13 @@ typedef struct pds_device_s {
 
 /// \brief device status
 typedef struct pds_device_status_s {
-    mac_addr_t  fru_mac;    ///< FRU MAC
-    uint8_t     memory_cap; ///< Memory capacity
-} __PACK__ pds_device_status_t;
+    mac_addr_t  fru_mac;      ///< FRU MAC
+    uint8_t     memory_cap;   ///< Memory capacity
+    string      mnfg_date;    ///< FRU Manufacturing date
+    string      product_name; ///< FRU Product name
+    string      serial_num;   ///< FRU Serial Number
+    string      part_num;     ///< FRU Part Number
+} pds_device_status_t;
 
 /// \brief Drop statistics
 typedef struct pds_device_drop_stats_s {
@@ -90,7 +96,7 @@ typedef struct pds_device_info_s {
     pds_device_spec_t   spec;      ///< specification
     pds_device_status_t status;    ///< status
     pds_device_stats_t  stats;     ///< statistics
-} __PACK__ pds_device_info_t;
+} pds_device_info_t;
 
 /// \brief     create device
 /// \param[in] spec specification

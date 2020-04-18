@@ -12,6 +12,11 @@
 #define __AGENT_SVC_DEBUG_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/debug.hpp"
+#include "nic/sdk/asic/port.hpp"
+
+using sdk::asic::pd::port_queue_credit_t;
+using sdk::asic::pd::queue_credit_t;
 
 static inline void
 pds_queue_credits_to_proto (uint32_t port_num,
@@ -247,6 +252,35 @@ pds_table_stats_entry_to_proto (pds_table_stats_t *stats, void *ctxt)
     pds_table_api_stats_to_proto(api_stats, &stats->api_stats);
     pds_table_stats_to_proto(table_stats, &stats->table_stats);
     rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+}
+
+static inline void
+pds_flow_stats_summary_to_proto (pds_flow_stats_summary_t *flow_stats,
+                                 void *ctxt)
+{
+    pds::FlowStatsSummaryResponse *proto_rsp =
+        (pds::FlowStatsSummaryResponse *)ctxt;
+
+    proto_rsp->set_numtcpv4sessions(flow_stats->value[
+                                    FLOW_STATS_TCPV4_SESSION_COUNT]);
+    proto_rsp->set_numudpv4sessions(flow_stats->value[
+                                    FLOW_STATS_UDPV4_SESSION_COUNT]);
+    proto_rsp->set_numicmpv4sessions(flow_stats->value[
+                                     FLOW_STATS_ICMPV4_SESSION_COUNT]);
+    proto_rsp->set_numotheripv4sessions(flow_stats->value[
+                                        FLOW_STATS_OTHERV4_SESSION_COUNT]);
+    proto_rsp->set_numtcpv6sessions(flow_stats->value[
+                                    FLOW_STATS_TCPV6_SESSION_COUNT]);
+    proto_rsp->set_numudpv6sessions(flow_stats->value[
+                                    FLOW_STATS_UDPV6_SESSION_COUNT]);
+    proto_rsp->set_numicmpv6sessions(flow_stats->value[
+                                     FLOW_STATS_ICMPV6_SESSION_COUNT]);
+    proto_rsp->set_numotheripv6sessions(flow_stats->value[
+                                        FLOW_STATS_OTHERV6_SESSION_COUNT]);
+    proto_rsp->set_numl2sessions(flow_stats->value[
+                                 FLOW_STATS_L2_SESSION_COUNT]);
+    proto_rsp->set_numsessionerrors(flow_stats->value[
+                                    FLOW_STATS_ERROR_SESSION_COUNT]);
 }
 
 #endif    //__AGENT_SVC_DEBUG_SVC_HPP__

@@ -12,6 +12,7 @@
 #define __AGENT_SVC_NH_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/nh.hpp"
 
 static inline pds_nh_type_t
 proto_nh_type_to_pds_nh_type (pds::NexthopType type)

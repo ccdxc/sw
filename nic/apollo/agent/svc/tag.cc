@@ -6,7 +6,6 @@
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/tag_svc.hpp"
-#include "nic/apollo/agent/svc/tag.hpp"
 
 Status
 TagSvcImpl::TagCreate(ServerContext *context,

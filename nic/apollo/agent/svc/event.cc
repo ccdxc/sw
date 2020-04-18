@@ -6,7 +6,6 @@
 #include "nic/sdk/lib/eventmgr/eventmgr.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/svc/event_svc.hpp"
-#include "nic/apollo/agent/svc/event.hpp"
 
 Status
 EventSvcImpl::EventSubscribe(ServerContext* context,

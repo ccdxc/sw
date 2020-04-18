@@ -11,7 +11,9 @@
 #ifndef __AGENT_SVC_NAT_SVC_HPP__
 #define __AGENT_SVC_NAT_SVC_HPP__
 
+#include "nic/apollo/api/include/pds_nat.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/nat.hpp"
 
 static inline sdk_ret_t
 pds_nat_port_block_proto_to_api_spec (pds_nat_port_block_spec_t *api_spec,

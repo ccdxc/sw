@@ -12,6 +12,7 @@
 #define __AGENT_SVC_MAPPING_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/mapping.hpp"
 
 static inline sdk_ret_t
 pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,

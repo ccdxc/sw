@@ -12,6 +12,7 @@
 #define __AGENT_SVC_TUNNEL_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/tunnel.hpp"
 
 // populate proto buf spec from tep API spec
 static inline sdk_ret_t

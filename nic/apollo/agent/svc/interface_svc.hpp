@@ -12,6 +12,47 @@
 #define __AGENT_SVC_INTERFACE_SVC_HPP__
 
 #include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/agent/svc/interface.hpp"
+#include "nic/apollo/api/include/pds_lif.hpp"
+#include "nic/apollo/api/internal/pds_if.hpp"
+
+static inline types::LifType
+pds_lif_type_to_proto_lif_type (lif_type_t lif_type)
+{
+    switch (lif_type) {
+    case lif_type_t::LIF_TYPE_HOST:
+        return types::LIF_TYPE_HOST;
+    case lif_type_t::LIF_TYPE_HOST_MGMT:
+        return types::LIF_TYPE_HOST_MGMT;
+    case lif_type_t::LIF_TYPE_MNIC_OOB_MGMT:
+        return types::LIF_TYPE_OOB_MGMT;
+    case lif_type_t::LIF_TYPE_MNIC_INBAND_MGMT:
+        return types::LIF_TYPE_INBAND_MGMT;
+    case lif_type_t::LIF_TYPE_MNIC_INTERNAL_MGMT:
+        return types::LIF_TYPE_INTERNAL_MGMT;
+    case lif_type_t::LIF_TYPE_MNIC_CPU:
+        return types::LIF_TYPE_DATAPATH;
+    case lif_type_t::LIF_TYPE_LEARN:
+        return types::LIF_TYPE_LEARN;
+    case lif_type_t::LIF_TYPE_CONTROL:
+        return types::LIF_TYPE_CONTROL;
+    default:
+        break;
+    }
+    return types::LIF_TYPE_NONE;
+}
+
+static inline pds_if_state_t
+proto_admin_state_to_pds_admin_state (pds::IfStatus state)
+{
+    switch (state) {
+    case pds::IF_STATUS_DOWN:
+        return PDS_IF_STATE_DOWN;
+        return PDS_IF_STATE_UP;
+    default:
+        return PDS_IF_STATE_NONE;
+    }
+}
 
 static inline pds::IfStatus
 pds_admin_state_to_proto_admin_state (pds_if_state_t state)
