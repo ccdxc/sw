@@ -25,6 +25,7 @@ namespace hal {
 #define VMOTION_SESS_NORMALIZATION   300000       // (in Milliseconds) - 5 Minutes
 #define VMOTION_CONNECT_RETRY_TIME   30           // in Seconds
 #define VMOTION_TIMEOUT              900000       // (in Milliseconds) - 15 Minutes
+#define VMOTION_THR_DELAY_DEL_TIME   1000         // (in Milliseconds) - 1 Sec
 
 #define VMOTION_WLOCK   vmotion_.rwlock.wlock();
 #define VMOTION_WUNLOCK vmotion_.rwlock.wunlock();
@@ -181,6 +182,7 @@ public:
     void          incr_stats(uint32_t vmotion_stats_t::* const p_field) { (stats_.*p_field)++; }
     void          incr_migration_state_stats(MigrationState state); 
     TLSContext*   get_tls_context(void) { return tls_context_; }
+    static void   delay_delete_thread(sdk::event_thread::event_thread *thr);
 
     // FSM Related methods
     static vmotion_src_host_fsm_def* src_host_fsm_def_;

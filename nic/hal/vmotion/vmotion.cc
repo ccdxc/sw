@@ -442,4 +442,27 @@ vmotion::incr_migration_state_stats(MigrationState state)
     }
 }
 
+static void
+vmotion_thread_delay_del_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    sdk::event_thread::event_thread *thr = (sdk::event_thread::event_thread *)ctxt;
+
+    HAL_TRACE_DEBUG("vmotion_thread_delay_del_cb thread: {}", thr->thread_id());
+    // Free up event thread memory
+    sdk::event_thread::event_thread::destroy(thr);
+
+    // Free up the thread ID
+    g_hal_state->get_vmotion()->release_thread_id(thr->thread_id());
+}
+
+void
+vmotion::delay_delete_thread(sdk::event_thread::event_thread *thr)
+{
+    if (sdk::lib::timer_schedule(HAL_TIMER_ID_THREAD_DELAY_DEL, VMOTION_THR_DELAY_DEL_TIME,
+                                 reinterpret_cast<void *>(thr),
+                                 vmotion_thread_delay_del_cb, false) == NULL) {
+        HAL_TRACE_ERR("vMotion error in starting thread delay del timer");
+    }
+}
+
 } // namespace hal

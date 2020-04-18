@@ -16,38 +16,47 @@ namespace hal {
 using namespace vmotion_msg;
 
 void
-src_host_end (vmotion_ep *vmn_ep, MigrationState migration_state)
+src_host_end (vmotion_ep *vmn_ep, MigrationState migration_state, vmotion_thread_ctx_t *thread_ctx)
 {
-    auto ep = vmn_ep->get_ep();
+    sdk::event_thread::event_thread  *evt_thread = NULL;
 
-    HAL_TRACE_INFO("Source Host end EP: {:p}, Hdl: {}, MigState:{} exited:{}", (void *)ep,
-                   vmn_ep->get_ep_handle(), migration_state, VMOTION_FLAG_IS_THREAD_EXITED(vmn_ep));
+    if (vmn_ep) {
+        auto ep    = vmn_ep->get_ep();
+        evt_thread = vmn_ep->get_event_thread();
 
-    if (VMOTION_FLAG_IS_THREAD_EXITED(vmn_ep)) {
-        return;
-    }
+        HAL_TRACE_INFO("Source Host end EP: {:p}, Hdl: {}, MigState:{} exited:{}", (void *)ep,
+                       vmn_ep->get_ep_handle(), migration_state,
+                       VMOTION_FLAG_IS_THREAD_EXITED(vmn_ep));
 
-    if (ep) {
-        // Remove EP Quiesce NACL entry
-        if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
-            ep_quiesce(ep, FALSE);
-            VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
+        if (VMOTION_FLAG_IS_THREAD_EXITED(vmn_ep)) {
+            return;
         }
 
-        if (migration_state == MigrationState::SUCCESS) {
-            ep_sessions_delete(ep);
+        if (ep) {
+            // Remove EP Quiesce NACL entry
+            if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
+                ep_quiesce(ep, FALSE);
+                VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
+            }
+
+            if (migration_state == MigrationState::SUCCESS) {
+                ep_sessions_delete(ep);
+            }
+
+            ep->vmotion_state = migration_state;
         }
 
-        ep->vmotion_state = migration_state;
+        VMOTION_FLAG_SET_THREAD_EXITED(vmn_ep);
+
+        // Stats
+        vmn_ep->get_vmotion()->incr_migration_state_stats(migration_state);
+    } else {
+        HAL_TRACE_INFO("Source Host end. Null vmotion_ep");
+        evt_thread = thread_ctx->th;
     }
-
-    VMOTION_FLAG_SET_THREAD_EXITED(vmn_ep);
-
-    // Stats
-    vmn_ep->get_vmotion()->incr_migration_state_stats(migration_state);
 
     // Stop the watcher
-    vmn_ep->get_event_thread()->stop();
+    evt_thread->stop();
 }
 
 vmotion_src_host_fsm_def *
@@ -133,7 +142,7 @@ vmotion_src_host_fsm_def::proc_sync_begin(fsm_state_ctx ctx, fsm_event_data data
     HAL_TRACE_INFO("Sync Begin EP: {} Ptr:{:p}", macaddr2str(ep->l2_key.mac_addr), (void *)ep);
 
     if (!ep) {
-        src_host_end(vmn_ep, MigrationState::FAILED);
+        src_host_end(vmn_ep, MigrationState::FAILED, NULL);
         return false;
     }
 
@@ -203,7 +212,7 @@ vmotion_src_host_fsm_def::proc_term_sync_req(fsm_state_ctx ctx, fsm_event_data d
     HAL_TRACE_INFO("Term Sync Req EP: {} Ptr:{:p}", vmn_ep->get_ep_handle(), (void *)ep);
 
     if (!ep) {
-        src_host_end(vmn_ep, MigrationState::FAILED);
+        src_host_end(vmn_ep, MigrationState::FAILED, NULL);
         return false;
     }
 
@@ -296,7 +305,7 @@ vmotion_src_host_fsm_def::proc_ep_delete(fsm_state_ctx ctx, fsm_event_data data)
 {
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
 
-    src_host_end(vmn_ep, MigrationState::ABORTED);
+    src_host_end(vmn_ep, MigrationState::ABORTED, NULL);
 
     return true;
 }
@@ -306,7 +315,7 @@ vmotion_src_host_fsm_def::state_src_host_end_entry(fsm_state_ctx ctx)
 {
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
 
-    src_host_end(vmn_ep, MigrationState::SUCCESS);
+    src_host_end(vmn_ep, MigrationState::SUCCESS, NULL);
 }
 
 vmotion_ep *
@@ -360,7 +369,7 @@ src_host_thread_rcv_sock_msg (sdk::event_thread::io_t *io, int sock_fd, int even
                     VmotionMessageType_Name(msg.type()), ret);
 
     if (ret == HAL_RET_CONN_CLOSED) {
-        src_host_end(vmn_ep, MigrationState::FAILED);
+        src_host_end(vmn_ep, MigrationState::FAILED, thread_ctx);
         return;
     }
 
@@ -427,10 +436,9 @@ src_host_thread_exit (void *ctxt)
 
     HAL_TRACE_DEBUG("Source host thread exit vmn_ep:{:p}", (void *)vmn_ep);
 
-    sdk::event_thread::event_thread::destroy(thread_ctx->th);
+    vmotion::delay_delete_thread(thread_ctx->th);
 
     if (vmn_ep) {
-        vmn_ep->get_vmotion()->release_thread_id(thread_ctx->tid);
         vmn_ep->get_vmotion()->delete_vmotion_ep(vmn_ep);
     }
 
@@ -480,8 +488,7 @@ src_host_thread_rcv_event (void *message, void *ctx)
         if (vmn_ep) {
             vmn_ep->process_event(EVT_EP_DELETE_RCVD, NULL);
         } else {
-            // Stop the watcher
-            thread_ctx->th->stop();
+            src_host_end (NULL, MigrationState::TIMEOUT, thread_ctx);
         }
     }
     HAL_FREE(HAL_MEM_ALLOC_VMOTION, evt);

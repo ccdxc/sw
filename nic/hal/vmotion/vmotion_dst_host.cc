@@ -587,9 +587,7 @@ vmotion_ep::dst_host_exit(void)
 {
     HAL_TRACE_DEBUG("Destination host thread exit");
 
-    sdk::event_thread::event_thread::destroy(evt_thread_);
-
-    vmotion_ptr_->release_thread_id(thread_id_);
+    vmotion::delay_delete_thread(evt_thread_);
 
     if (expiry_timer_) {
         sdk::lib::timer_delete(expiry_timer_);
