@@ -35,15 +35,14 @@ public:
 
     // Constructor
     vpc_feeder() { };
-    vpc_feeder(const vpc_feeder& feeder) {
-        init(feeder.spec.key, feeder.spec.type,
-             ipv4pfx2str(&feeder.spec.v4_prefix),
-             macaddr2str(feeder.spec.vr_mac), feeder.num_obj);
-    }
 
     // Initialize feeder with the base set of values
-    void init(pds_obj_key_t key, pds_vpc_type_t type, std::string cidr_str,
-              std::string vr_mac, uint32_t num_vpc = 1);
+    void init(pds_obj_key_t key, pds_vpc_type_t type, std::string v4_cidr_str,
+              std::string vr_mac = "00:00:de:ad:be:ef",
+              int num_vpc = 1, std::string v6_cidr_str = "",
+              std::string fabric_encap = "VxLAN 9999",
+              pds_obj_key_t v4_rttbl = int2pdsobjkey(4000),
+              pds_obj_key_t v6_rttbl = int2pdsobjkey(6000), uint8_t tos = 0);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -70,7 +69,8 @@ operator<<(std::ostream& os, const pds_vpc_spec_t *spec) {
        << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
        << " v4 rt table: " << spec->v4_route_table.str()
        << " v6 rt table: " << spec->v6_route_table.str()
-       << " nat46 pfx: " << ippfx2str(&spec->nat46_prefix);
+       << " nat46 pfx: " << ippfx2str(&spec->nat46_prefix)
+       << " tos: " << (int)spec->tos;
     return os;
 }
 
@@ -82,17 +82,14 @@ operator<<(std::ostream& os, const pds_vpc_status_t *status) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_vpc_info_t *obj) {
-    os << " VPC info =>"
-       << &obj->spec
-       << &obj->status
-       << std::endl;
+    os << "VPC info => "
+       << &obj->spec << &obj->status << std::endl;
     return os;
 }
 
 inline std::ostream&
 operator<<(std::ostream& os, const vpc_feeder& obj) {
-    os << "VPC feeder =>"
-       << &obj.spec;
+    os << "VPC feeder => " << &obj.spec << " ";
     return os;
 }
 

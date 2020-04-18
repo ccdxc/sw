@@ -5,6 +5,7 @@
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/test/api/utils/batch.hpp"
+#include "nic/apollo/test/api/utils/utils.hpp"
 #include "nic/apollo/test/api/utils/vpc.hpp"
 
 namespace test {
@@ -16,19 +17,21 @@ namespace api {
 
 void
 vpc_feeder::init(pds_obj_key_t key, pds_vpc_type_t type,
-                 std::string cidr_str, std::string vr_mac,
-                 uint32_t num_vpc) {
-    ip_prefix_t pfx;
-
+                 std::string v4_cidr_str, std::string vr_mac_str, int num_vpc,
+                 std::string v6_cidr_str, std::string fabric_encap_str,
+                 pds_obj_key_t v4_rttbl, pds_obj_key_t v6_rttbl, uint8_t tos) {
     memset(&spec, 0, sizeof(pds_vpc_spec_t));
+
     spec.key = key;
     spec.type = type;
-    mac_str_to_addr((char *)vr_mac.c_str(), spec.vr_mac);
-    spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    spec.fabric_encap.val.value = pdsobjkey2int(key) + 9999;
-    SDK_ASSERT(str2ipv4pfx((char *)cidr_str.c_str(), &pfx) == 0);
-    spec.v4_prefix.len = pfx.len;
-    spec.v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
+    SDK_ASSERT(str2ipv4pfx((char *)v4_cidr_str.c_str(), &spec.v4_prefix) == 0);
+    str2ipv6pfx((char *)v6_cidr_str.c_str(), &spec.v6_prefix);
+    mac_str_to_addr((char *)vr_mac_str.c_str(), spec.vr_mac);
+    pds_str2encap(fabric_encap_str.c_str(), &spec.fabric_encap);
+    spec.fabric_encap.val.value += pdsobjkey2int(key);
+    spec.v4_route_table = v4_rttbl;
+    spec.v6_route_table = v6_rttbl;
+    spec.tos = tos;
     num_obj = num_vpc;
 }
 

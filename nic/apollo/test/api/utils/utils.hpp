@@ -14,7 +14,25 @@
 namespace test {
 namespace api {
 
-void
+static inline void
+pds_str2encap (const char *buf, pds_encap_t *encap)
+{
+    char encap_type[16];
+    uint32_t encap_val = 0;
+
+    sscanf(buf, "%s %u", encap_type, &encap_val);
+    if (strcmp(encap_type, "Dot1q") == 0)
+        encap->type = PDS_ENCAP_TYPE_DOT1Q;
+    if (strcmp(encap_type, "QinQ") == 0)
+        encap->type = PDS_ENCAP_TYPE_QINQ;
+    if (strcmp(encap_type, "MPLSoUDP") == 0)
+        encap->type = PDS_ENCAP_TYPE_MPLSoUDP;
+    else if (strcmp(encap_type, "VxLAN") == 0)
+        encap->type = PDS_ENCAP_TYPE_VXLAN;
+    encap->val.value = encap_val;
+}
+
+inline void
 utils_encap_type_update (pds_encap_t *encap)
 {
     if (encap->type == PDS_ENCAP_TYPE_MPLSoUDP) {
@@ -26,7 +44,7 @@ utils_encap_type_update (pds_encap_t *encap)
     }
 }
 
-void
+inline void
 utils_encap_val_update (pds_encap_t *encap, uint32_t width=1)
 {
     switch (encap->type) {

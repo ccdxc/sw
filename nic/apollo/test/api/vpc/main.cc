@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/test/api/utils/workflow.hpp"
+#include "nic/apollo/test/api/utils/utils.hpp"
 #include "nic/apollo/test/api/utils/vpc.hpp"
 
 namespace test {
@@ -351,6 +352,65 @@ TEST_F(vpc, vpc_update_v4_prefix) {
     vpc_create(feeder);
     str2ipv4pfx((char *)"20.0.0.0/16", &spec.v4_prefix);
     vpc_update(feeder, &spec, VPC_ATTR_V4_PREFIX);
+    vpc_read(feeder);
+    vpc_delete(feeder);
+    vpc_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update v6 prefix
+TEST_F(vpc, vpc_update_v6_prefix) {
+    if (!apulu()) return;
+
+    vpc_feeder feeder;
+    pds_vpc_spec_t spec;
+    pds_obj_key_t key = int2pdsobjkey(1);
+
+    feeder.init(key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16",
+                "00:02:01:00:00:01", 1, "2001::1/64");
+    vpc_create(feeder);
+    str2ipv6pfx((char *) "3001::1/64", &spec.v6_prefix);
+    vpc_update(feeder, &spec, VPC_ATTR_V6_PREFIX);
+    vpc_read(feeder);
+    vpc_delete(feeder);
+    vpc_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update vr mac
+TEST_F(vpc, vpc_update_vr_mac) {
+    if (!apulu()) return;
+
+    vpc_feeder feeder;
+    pds_vpc_spec_t spec;
+    pds_obj_key_t key = int2pdsobjkey(1);
+
+    feeder.init(key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", "00:02:01:00:00:01");
+    vpc_create(feeder);
+    mac_str_to_addr((char *)"00:00:de:ad:be:ef", spec.vr_mac);
+    vpc_update(feeder, &spec, VPC_ATTR_VR_MAC);
+    vpc_read(feeder);
+    vpc_delete(feeder);
+    vpc_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update fabric encap
+TEST_F(vpc, vpc_update_fabric_encap) {
+    if (!apulu()) return;
+
+    vpc_feeder feeder;
+    pds_vpc_spec_t spec;
+    pds_obj_key_t key = int2pdsobjkey(1);
+
+    feeder.init(key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", "00:02:01:00:00:01",
+                1, "", "VxLAN 100");
+    vpc_create(feeder);
+    pds_str2encap("VxLAN 200", &spec.fabric_encap);  // update encap value
+    vpc_update(feeder, &spec, VPC_ATTR_FAB_ENCAP);
+    vpc_read(feeder);
+
+    // updating encap type shouldn't work
+    pds_str2encap("MPLSoUDP 100", &spec.fabric_encap);
+    vpc_update(feeder, &spec, VPC_ATTR_FAB_ENCAP, SDK_RET_ERR);
+    pds_str2encap("VxLAN 200", &feeder.spec.fabric_encap);
     vpc_read(feeder);
     vpc_delete(feeder);
     vpc_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
