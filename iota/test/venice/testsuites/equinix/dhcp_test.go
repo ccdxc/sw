@@ -8,7 +8,6 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
-	"github.com/pensando/sw/venice/utils/log"
 
 	uuid "github.com/satori/go.uuid"
 	yaml "gopkg.in/yaml.v2"
@@ -73,9 +72,8 @@ var _ = Describe("IPAM Tests", func() {
 
 		It("Default IPAM Policy on VPC", func() {
 
-			Skip("Disabling test for sanity")
 			// apply customIpam to VPC- this verifies update IPAM on VPC case also
-			//Expect(vpcc.SetIPAM(customIpam)).Should(Succeed())
+			Expect(vpcc.SetIPAM(customIpam)).Should(Succeed())
 
 			// get network from vpc
 			nwc, err := getNetworkCollectionFromVPC(vpcName)
@@ -83,7 +81,7 @@ var _ = Describe("IPAM Tests", func() {
 			selNetwork := nwc.Any(1)
 
 			// verify ipam on subnet
-			verifyIPAMonSubnet(selNetwork.Subnets()[0].Name, defaultIpam)
+			verifyIPAMonSubnet(selNetwork.Subnets()[0].Name, customIpam)
 
 			if ts.tb.HasNaplesHW() {
 				// get workload pair and validate datapath
@@ -94,7 +92,6 @@ var _ = Describe("IPAM Tests", func() {
 
 		It("Override/Remove IPAM policy on Subnet", func() {
 
-			Skip("Disabling test for sanity")
 			// get network from vpc
 			nwc, err := getNetworkCollectionFromVPC(vpcName)
 			Expect(err).Should(Succeed())
@@ -127,7 +124,6 @@ var _ = Describe("IPAM Tests", func() {
 
 		It("Multiple IPAM per naples", func() {
 
-			Skip("Disabling test for sanity")
 			// get networks from vpc
 			nwc, err := getNetworkCollectionFromVPC(vpcName)
 			Expect(err).Should(Succeed())
@@ -178,7 +174,6 @@ var _ = Describe("IPAM Tests", func() {
 
 		It("Change Servers in IPAM Policy", func() {
 
-			Skip("Disabling test for sanity")
 			// create a test-policy with random dhcp server
 			createIPAMPolicy("test-policy", "", "51.1.1.1")
 
@@ -215,7 +210,6 @@ var _ = Describe("IPAM Tests", func() {
 
 		It("Remove IPAM policy on VPC", func() {
 
-			Skip("Disabling test for sanity - IPAM policy is still retained on subnet even after deleting from VPC")
 			// remove IPAM policy on tenant vpc
 			Expect(vpcc.SetIPAM("")).Should(Succeed())
 
@@ -340,7 +334,6 @@ func verifyIPAMonSubnet(subnet string, ipam string) error {
 			err = yaml.Unmarshal([]byte(cmdLine.Stdout), &data)
 			Expect(err).ShouldNot(HaveOccurred())
 			uid, _ := uuid.FromBytes(data.Spec.DHCPPolicyId[0])
-			log.Infof("IPAM_UUID: %v && NW's DHCP Policy ID: %v\n", ipam_uuid, uid.String())
 			Expect(ipam_uuid == uid.String()).Should(BeTrue())
 		}
 		return nil
@@ -353,7 +346,6 @@ func verifyIPAMonSubnet(subnet string, ipam string) error {
 			err = yaml.Unmarshal([]byte(cmdLine), &data)
 			Expect(err).ShouldNot(HaveOccurred())
 			uid, _ := uuid.FromBytes(data.Spec.DHCPPolicyId[0])
-			log.Infof("IPAM_UUID: %v && NW's DHCP Policy ID: %v\n", ipam_uuid, uid.String())
 			Expect(ipam_uuid == uid.String()).Should(BeTrue())
 		}
 		return nil
@@ -373,6 +365,15 @@ func verifyNoIPAMonSubnet(subnet string) error {
 	// wait for Naples to finish configuring
 	time.Sleep(5 * time.Second)
 
+	var allZeroByteArray = func(b []byte) bool {
+		for _, v := range b {
+			if v != 0 {
+				return false
+			}
+		}
+		return true
+	}
+
 	// fetch network from pdsctl. network should have updated IPAM Policy
 	ts.model.ForEachFakeNaples(func(nc *objects.NaplesCollection) error {
 		cmd := "/naples/nic/bin/pdsctl show subnet --id " + nw_uuid + " --yaml"
@@ -382,8 +383,7 @@ func verifyNoIPAMonSubnet(subnet string) error {
 		for _, cmdLine := range cmdResp {
 			err = yaml.Unmarshal([]byte(cmdLine.Stdout), &data)
 			Expect(err).ShouldNot(HaveOccurred())
-			//uid, _ := uuid.FromBytes(data.Spec.DHCPPolicyId[0])
-			//Expect(uid.String() == ).Should(BeTrue())
+			Expect (allZeroByteArray(data.Spec.DHCPPolicyId[0])).Should(BeTrue())
 		}
 		return nil
 	})
@@ -394,8 +394,7 @@ func verifyNoIPAMonSubnet(subnet string) error {
 		for _, cmdLine := range cmdOut {
 			err = yaml.Unmarshal([]byte(cmdLine), &data)
 			Expect(err).ShouldNot(HaveOccurred())
-			//uid, _ := uuid.FromBytes(data.Spec.DHCPPolicyId[0])
-			//Expect(ipam_uuid == uid.String()).Should(BeTrue())
+			Expect (allZeroByteArray(data.Spec.DHCPPolicyId[0])).Should(BeTrue())
 		}
 		return nil
 	})
