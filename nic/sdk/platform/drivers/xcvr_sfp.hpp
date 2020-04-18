@@ -9,9 +9,24 @@ namespace platform {
 #define SFP_OFFSET_LENGTH_CU                 18
 #define SFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES 36
 
+static inline void
+sfp_25g_an_params (int port, uint32_t *tech_ability, uint32_t *fec_request)
+{
+    if (xcvr_length_dac(port) <= 3) {
+        *tech_ability = AN_USER_CAP_25GBKRCR_S;
+        *fec_request = AN_FEC_REQ_25GB_FCFEC;
+    } else {
+        *tech_ability = AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR;
+        *fec_request = AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC;
+    }
+}
+
 static inline sdk_ret_t
 sfp_sprom_parse (int port, uint8_t *data)
 {
+    uint32_t tech_ability;
+    uint32_t fec_request;
+
     // SFF 8472
 
     if (data[SFP_OFFSET_LENGTH_CU] != 0) {
@@ -121,10 +136,8 @@ sfp_sprom_parse (int port, uint8_t *data)
     case 0xb:
         // 25GBASE-CR CA-L
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_L);
-        xcvr_set_an_args(port,
-                         AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR,
-                         true,
-                         AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC);
+        sfp_25g_an_params(port, &tech_ability, &fec_request);
+        xcvr_set_an_args(port, tech_ability, true, fec_request);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_FC);
         break;
@@ -132,10 +145,8 @@ sfp_sprom_parse (int port, uint8_t *data)
     case 0xc:
         // 25GBASE-CR CA-S
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_S);
-        xcvr_set_an_args(port,
-                         AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR,
-                         true,
-                         AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC);
+        sfp_25g_an_params(port, &tech_ability, &fec_request);
+        xcvr_set_an_args(port, tech_ability, true, fec_request);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_FC);
         break;
@@ -143,10 +154,8 @@ sfp_sprom_parse (int port, uint8_t *data)
     case 0xd:
         // 25GBASE-CR CA-N
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_CR_N);
-        xcvr_set_an_args(port,
-                         AN_USER_CAP_25GBKRCR_S | AN_USER_CAP_25GBKRCR,
-                         true,
-                         AN_FEC_REQ_25GB_RSFEC | AN_FEC_REQ_25GB_FCFEC);
+        sfp_25g_an_params(port, &tech_ability, &fec_request);
+        xcvr_set_an_args(port, tech_ability, true, fec_request);
         xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         xcvr_set_fec_type(port, port_fec_type_t::PORT_FEC_TYPE_FC);
         break;

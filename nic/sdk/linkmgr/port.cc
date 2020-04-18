@@ -777,7 +777,26 @@ port::port_set_an_resolved_params (int an_hcd, int fec_enable, int rsfec_enable)
         break;
 
     case 0x0a: /* 25GBASE-KRCR-S */
+        // (1) For 25G PHYs if neither PHY requests FEC operation in bits F2 or
+        //     F3 then FEC is not enabled.
+        // (2) For 25GBASE-KR-S and 25GBASE-CR-S PHYs if either PHY requests
+        //     RS-FEC or BASE-R FEC then BASE-R operation is enabled. This is
+        //     because 25GBASE-KR-S and 25GBASE-CR-S PHYs do not support RS-FEC
+        //     operation.
+        if (fec_enable == 1 || rsfec_enable == 1) {
+            fec_type = port_fec_type_t::PORT_FEC_TYPE_FC;
+        }
+
+        port_set_an_resolved_params_internal(
+                port_speed_t::PORT_SPEED_25G, 1, fec_type);
+        break;
+
     case 0x0b: /* 25GBASE-KRCR */
+        // (1) For 25G PHYs if neither PHY requests FEC operation in bits F2 or
+        //     F3 then FEC is not enabled.
+        // (2) For 25GBASE-KR and 25GBASE-CR PHYs if either PHY requests RS-FEC
+        //     then RS-FEC operation is enabled, otherwise if either PHY
+        //     requests BASE-R FEC then BASE-R operation is enabled.
         if (fec_enable == 1) {
             fec_type = port_fec_type_t::PORT_FEC_TYPE_FC;
         } else if(rsfec_enable == 1) {
