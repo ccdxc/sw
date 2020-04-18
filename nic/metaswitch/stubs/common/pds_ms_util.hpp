@@ -43,6 +43,7 @@ vrfname_2_vrfid (const NBB_BYTE* vrfname, NBB_ULONG len)
 static inline void
 ms_to_pds_ipaddr (const ATG_INET_ADDRESS& in_ip, ip_addr_t* out_ip)
 {
+    memset(out_ip, 0, sizeof(ip_addr_t));
     switch (in_ip.type) {
     case AMB_INETWK_ADDR_TYPE_IPV4:
         out_ip->af = IP_AF_IPV4;
