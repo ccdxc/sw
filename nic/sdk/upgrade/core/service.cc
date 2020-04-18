@@ -19,6 +19,7 @@ upg_svc&
 upg_svc::operator=(const upg_svc& obj) {
     name_ = obj.name_;
     ipc_id_ = obj.ipc_id_;
+    has_valid_ipc_id_ = obj.has_valid_ipc_id_;
     return *this;
 };
 

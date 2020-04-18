@@ -80,6 +80,7 @@ public:
     void timer_start(void);
     void timer_stop(void);
     void timer_set(void);
+    void skip_svc(void);
     fsm_init_params_t *init_params(void) { return &init_params_; }
     void set_init_params(fsm_init_params_t *params) { init_params_ = *params; }
 private:

@@ -54,7 +54,11 @@ dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id, upg_svc svc)
     UPG_TRACE_VERBOSE("Sending event %s to svc %s ipc_id %u",
                       stage_name.c_str(), svc.name().c_str(), svc.ipc_id());
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
+
     svc.dispatch_event(dom, id, fsm_states.init_params()->upg_mode);
+    if (svc.has_valid_ipc_id()) {
+        svc.dispatch_event(dom, id, fsm_states.init_params()->upg_mode);
+    }
 }
 
 static void
@@ -68,6 +72,13 @@ dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id)
         SDK_ASSERT(fsm_services.find(name) != fsm_services.end());
         upg_svc svc = fsm_services[name];
         dispatch_event(dom, id, svc);
+        if (svc.has_valid_ipc_id()) {
+            dispatch_event(dom, id, svc);
+        } else {
+            fsm_states.skip_svc();
+            UPG_TRACE_WARN("Service %s does't have a valid ipc id",
+                           stage_name.c_str());
+        }
     }
 }
 
@@ -86,12 +97,46 @@ update_ipc_id (std::string name, uint32_t ipc_id)
 {
     SDK_ASSERT(fsm_services.find(name) != fsm_services.end());
 
-    UPG_TRACE_VERBOSE("Updating IPC id of service %s, ipc id %u ",
+    UPG_TRACE_INFO("Updating IPC id of service %s, ipc id %u ",
                       name.c_str(), ipc_id);
     upg_svc service = fsm_services[name];
     service.set_ipc_id(ipc_id);
     fsm_services[name] = service;
     UPG_TRACE_DEBUG("service %s, ipc id %u ", name.c_str(), ipc_id);
+}
+
+static void
+send_ipc_to_next_service (void)
+{
+    ipc_svc_dom_id_t domain = IPC_SVC_DOM_ID_A;
+
+    UPG_TRACE_VERBOSE("Send serial request");
+    if (!fsm_states.has_next_svc()) {
+        // Stage must have pending svc
+        // if it is not over yet
+        SDK_ASSERT(0);
+    } else {
+        upg_stage_t id = fsm_states.current_stage();
+        std::string name(upg_stage2str(fsm_states.current_stage()));
+
+        while (fsm_states.has_next_svc()) {
+            std::string svc_name = fsm_states.next_svc();
+            SDK_ASSERT(fsm_services.find(svc_name) != fsm_services.end());
+            upg_svc svc = fsm_services[svc_name];
+            if (svc.has_valid_ipc_id()) {
+                fsm_states.timer_stop();
+                dispatch_event(domain, id, svc);
+                fsm_states.timer_start();
+                UPG_TRACE_INFO("Send %s serial event to %s(%u)", name.c_str(),
+                               svc_name.c_str(), svc.ipc_id());
+                break;
+            } else {
+                UPG_TRACE_WARN("Not sending %s serial event to %s(%u). No valid IPC ID", name.c_str(),
+                               svc_name.c_str(), svc.ipc_id());
+                fsm_states.skip_svc();
+            }
+        }
+    }
 }
 
 static void
@@ -114,15 +159,7 @@ move_to_nextstage (void)
         UPG_TRACE_VERBOSE("Moving to next stage (serial) %s", name.c_str());
         dump(fsm_states);
         if (fsm_states.has_next_svc()) {
-            upg_stage_t id = fsm_states.current_stage();
-            std::string svc_name = fsm_states.next_svc();
-            SDK_ASSERT(fsm_services.find(svc_name) != fsm_services.end());
-            upg_svc svc = fsm_services[svc_name];
-            fsm_states.timer_stop();
-            fsm_states.timer_start();
-            dispatch_event(domain, id, svc);
-            UPG_TRACE_INFO("Send %s serial event to %s(%u)", name.c_str(),
-                           svc_name.c_str(), svc.ipc_id());
+            send_ipc_to_next_service();
         } else {
             UPG_TRACE_VERBOSE("Oops! no service to send request");
             SDK_ASSERT(0);
@@ -138,25 +175,6 @@ move_to_nextstage (void)
         UPG_TRACE_INFO("Send %s parallel event", name.c_str());
     }else {
        SDK_ASSERT(0);
-    }
-}
-
-static void
-send_ipc_to_next_service (void)
-{
-    ipc_svc_dom_id_t domain = IPC_SVC_DOM_ID_A;
-
-    UPG_TRACE_VERBOSE("Send serial request");
-    if (!fsm_states.has_next_svc()) {
-        // Stage must have pending svc
-        // if it is not over yet
-        SDK_ASSERT(0);
-    } else {
-        upg_stage_t id = fsm_states.current_stage();
-        std::string svc_name = fsm_states.next_svc();
-        SDK_ASSERT(fsm_services.find(svc_name) != fsm_services.end());
-        upg_svc svc = fsm_services[svc_name];
-        dispatch_event(domain, id, svc);
     }
 }
 
@@ -357,6 +375,13 @@ fsm::is_valid_service(const std::string svc) const {
     }
     UPG_TRACE_VERBOSE(" %s is not a valid service", svc.c_str());
     return false;
+}
+
+void
+fsm::skip_svc(void)
+{
+    SDK_ASSERT(pending_response_ > 0);
+    pending_response_--;
 }
 
 std::string

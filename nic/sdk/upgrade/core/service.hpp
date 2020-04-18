@@ -58,17 +58,24 @@ typedef enum event_sequence_t {
 /// \brief    A service is identified by a name(example: pdsagent)
 class upg_svc {
 public:
-    upg_svc(std::string name="") : name_(name) { };
+    upg_svc(std::string name="") : name_(name), ipc_id_(0),
+        has_valid_ipc_id_(false) { };
     ~upg_svc(void){};
     std::string name(void) const { return name_; };
     uint32_t ipc_id(void) const { return ipc_id_; };
-    void set_ipc_id(const uint32_t id) { ipc_id_= id; };
+    void set_ipc_id(const uint32_t id) {
+        ipc_id_ = id;
+        has_valid_ipc_id_ = true;
+    };
+    bool has_valid_ipc_id(void) const { return has_valid_ipc_id_; };
     upg_svc& operator=(const upg_svc &obj);
     void dispatch_event(ipc_svc_dom_id_t dom,
                         upg_stage_t event, upg_mode_t upg_mode) const;
 private:
     std::string name_;
     uint32_t ipc_id_;
+    bool has_valid_ipc_id_;
+
 };
 
 /// \brief a container for a ordered list of interested services
