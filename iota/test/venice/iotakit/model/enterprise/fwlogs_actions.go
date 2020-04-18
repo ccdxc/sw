@@ -75,8 +75,9 @@ func (sm *SysModel) GetFwLogObjectCount(
 func (sm *SysModel) getLatestObjectName(tenantName, bucketName, objectKeyPrefix string) (string, error) {
 	temp := []string{}
 	timeFormat := "2006-01-02T15:04:05Z"
-	startTs := time.Now().UTC().Add(-5 * time.Minute).Format(timeFormat)
-	endTs := time.Now().UTC().Add(5 * time.Minute).Format(timeFormat)
+	// Look for 20 minute time span
+	startTs := time.Now().UTC().Add(-10 * time.Minute).Format(timeFormat)
+	endTs := time.Now().UTC().Add(10 * time.Minute).Format(timeFormat)
 	fs := "start-time=" + startTs + ",end-time=" + endTs + ",dsc-id=" + objectKeyPrefix
 	opts := api.ListWatchOptions{
 		ObjectMeta: api.ObjectMeta{
@@ -166,6 +167,16 @@ func (sm *SysModel) findFwlogForWorkloadPairsFromObjStore(
 	if fwaction == "reject" || fwaction == "deny" {
 		shouldVerifyBothNaples = false
 	}
+
+	sm.ForEachNaples(func(nc *objects.NaplesCollection) error {
+		if out, err := sm.RunNaplesCommand(nc,
+			"/nic/bin/shmdump -file=/dev/shm/fwlog_ipc_shm -type=fwlog"); err == nil {
+			fmt.Println("shmDump, naples", nc.Nodes[0].UUID, nc.Nodes[0].IPAddress, strings.Join(out, ","))
+		} else {
+			fmt.Println("failed to run shmdump", nc.Nodes[0].UUID, nc.Nodes[0].IPAddress, err)
+		}
+		return nil
+	})
 
 	// enhance it to match the given log info
 	errA := sm.isLogPresent(dataNaplesA, srcIP, destIP, protocol, port, fwaction)
