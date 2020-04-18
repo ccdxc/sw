@@ -2,6 +2,7 @@ package vmware
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/vmware/govmomi/object"
@@ -73,7 +74,7 @@ func (vm *VM) PowerOff() error {
 }
 
 // Migrate VM to destination host
-func (vm *VM) Migrate(host *Host, dref *types.ManagedObjectReference) error {
+func (vm *VM) Migrate(host *Host, dref *types.ManagedObjectReference, abortTime int) error {
 
 	href := host.hs.Reference()
 	config := types.VirtualMachineRelocateSpec{
@@ -84,6 +85,12 @@ func (vm *VM) Migrate(host *Host, dref *types.ManagedObjectReference) error {
 		types.VirtualMachineMovePriorityDefaultPriority)
 	if err != nil {
 		return err
+	}
+
+	if abortTime != 0 {
+		// This VM Relocate Request came with a abortTime. sleep for abortTime
+		time.Sleep(time.Duration(abortTime) * time.Second)
+		return task.Cancel(vm.entity.Ctx())
 	}
 
 	return task.Wait(vm.entity.Ctx())

@@ -735,7 +735,7 @@ def Trigger_WorkloadMoveRequest():
 # ================================
 # Wrappers for Workload Move APIs
 # ================================
-def Trigger_WorkloadMoveAddRequest(req, wloads, dst):
+def Trigger_WorkloadMoveAddRequest(req, wloads, dst, abort_time=0):
     store_wloads = GetWorkloads()
     for wl in wloads:
         for s_wl in store_wloads:
@@ -744,6 +744,18 @@ def Trigger_WorkloadMoveAddRequest(req, wloads, dst):
                 move_req.workload_name = wl.workload_name
                 move_req.dst_node_name = dst
                 move_req.src_node_name = s_wl.node_name
+                # Assumption : One of {src, dst} is a naples-host
+                if IsNaplesNode(dst):
+                    if not IsNaplesNode(s_wl.node_name):
+                        Logger.debug("Moving from non-naples to Naples")
+                        move_req.switch_name = GetVCenterDVSName()
+                        move_req.current_vlan = wl.uplink_vlan
+                        move_req.vlan_override = wl.vlan_override
+                else:
+                    # dest host is non-naples. Assuming wload current home is naples-node
+                    Logger.debug("Moving from naples to non-naples node")
+                    # TODO: Check if dvs-port configuration need to be changed
+                move_req.abort_time = abort_time
                 break
     return req
 
@@ -759,11 +771,15 @@ def TriggerMove(req):
         if move_resp.api_response.api_status == types_pb2.API_STATUS_OK:
             for wl in store_wloads:
                 if wl.workload_name == move_resp.workload_name:
-                    Logger.info("Workload move success %s %s -> %s" % (wl.workload_name, wl.node_name, move_resp.dst_node_name))
-                    wl.node_name = move_resp.dst_node_name
+                    if move_resp.abort_time != 0:
+                        Logger.info("Workload move successfully aborted %s %s -> %s" % (wl.workload_name, wl.node_name, move_resp.dst_node_name))
+                    else:
+                        Logger.info("Workload move success %s %s -> %s" % (wl.workload_name, wl.node_name, move_resp.dst_node_name))
+                        wl.node_name = move_resp.dst_node_name
+                    break
         else:
-            # Logger.info("Workload move failed %s %s -> %s, %s" % (wl.workload_name, wl.node_name,
-            #     move_resp.dst_node_name, move_resp.api_response.error_msg))
+            Logger.info("Workload move failed %s %s -> %s, %s" % 
+                    (wl.workload_name, wl.node_name, move_resp.dst_node_name, move_resp.api_response.error_msg))
             result = types.status.FAILURE
     return result
 

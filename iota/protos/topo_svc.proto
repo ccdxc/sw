@@ -642,8 +642,11 @@ message WorkloadMove {
     //Switch name for vlan override
     string              switch_name      = 7;
 
+    //Abort Workload Move after time in sec (if non-zero)
+    uint32              abort_time       = 8;
+
     // workload move response
-    IotaAPIResponse     api_response     = 8;
+    IotaAPIResponse     api_response     = 9;
 }
 
 // WorkloadMoveMsg move workloads 

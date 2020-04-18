@@ -1661,7 +1661,7 @@ func (dc *DataCenter) getDatastoreRefForHost(hostName string) (*types.ManagedObj
 }
 
 //LiveMigrate migrates live VM on data center
-func (dc *DataCenter) LiveMigrate(vmName, srcHostName, dstHostName, clusterName string) error {
+func (dc *DataCenter) LiveMigrate(vmName, srcHostName, dstHostName, clusterName string, abortTime int) error {
 
 	dc.getClientWithRLock()
 	defer dc.releaseClientRLock()
@@ -1690,7 +1690,7 @@ func (dc *DataCenter) LiveMigrate(vmName, srcHostName, dstHostName, clusterName 
 		return err
 	}
 
-	return vmInst.Migrate(&dstHostRef.Host, dstHostDatastoreRef)
+	return vmInst.Migrate(&dstHostRef.Host, dstHostDatastoreRef, abortTime)
 }
 
 func (dc *DataCenter) BootVM(name string) (*VMInfo, error) {

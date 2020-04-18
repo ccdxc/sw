@@ -607,6 +607,7 @@ dependencies:
     - reference: iota/test/venice/vcenter
   iota/test/venice/iotakit/model/vcenter:
     - reference: iota/test/venice/vcenter
+    - reference: iota/test/venice
   test:
     - reference: api
     - reference: test/ci_targets/e2e
