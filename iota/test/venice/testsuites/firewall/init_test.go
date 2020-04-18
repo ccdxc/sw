@@ -64,11 +64,14 @@ var _ = BeforeSuite(func() {
 		model:     model,
 		scaleData: *scaleDataFlag,
 	}
+
+	Expect(ts.model.NewFwlogPolicy("psmCollector").Commit()).ShouldNot(HaveOccurred())
 })
 
 // AfterSuite handles cleanup after test suite completes
 var _ = AfterSuite(func() {
 	if ts != nil && ts.tb != nil {
+		ts.model.FwlogPolicy("psmCollector").Delete()
 		ts.model.Cleanup()
 		ts.tb.PrintResult()
 	}

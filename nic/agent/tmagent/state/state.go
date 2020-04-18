@@ -58,7 +58,8 @@ type PolicyState struct {
 	zipObjects         bool
 }
 
-type psmFwLogCollector struct {
+type psmFwlogCollector struct {
+	sync.Mutex
 	vrf    uint64
 	filter uint32
 }
@@ -81,6 +82,13 @@ func (f *syslogFwlogCollector) String() string {
 	if f != nil {
 		return fmt.Sprintf("vrf:%d format:%v proto:%v destination:%v port:%v fd:%v txCount:%d txErr:%d",
 			f.vrf, f.format, f.proto, f.destination, f.port, f.syslogFd != nil, f.txCount, f.txErr)
+	}
+	return ""
+}
+
+func (f *psmFwlogCollector) String() string {
+	if f != nil {
+		return fmt.Sprintf("vrf:%d filter:%v", f.vrf, f.filter)
 	}
 	return ""
 }
@@ -110,8 +118,6 @@ func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 		zipObjects:         true,
 	}
 
-	// Add default PSM collector for now.
-	state.fwLogCollectors.Store("psm", &psmFwLogCollector{})
 	state.connectSyslog()
 	return state, nil
 }
@@ -190,6 +196,15 @@ func (s *PolicyState) getCollectorKey(vrf uint64, policy *tpmprotos.FwlogPolicy,
 	return strings.Join(key, ":")
 }
 
+func (s *PolicyState) getPSMCollectorKey(vrf uint64, policy *tpmprotos.FwlogPolicy) string {
+	// keys that requires new connection to collector
+	key := []string{fmt.Sprintf("%d", vrf),
+		policy.ObjectMeta.Name,
+	}
+	key = append(key, policy.Spec.Filter...)
+	return strings.Join(key, ":")
+}
+
 // get vrf from netagent
 func (s *PolicyState) getvrf(tenant, namespace, vrfName string) (uint64, error) {
 	var err error
@@ -262,80 +277,92 @@ func (s *PolicyState) closeSyslog(c *syslogFwlogCollector) {
 
 // ValidateFwLogPolicy validates policy, called from api-server for pre-commit
 func ValidateFwLogPolicy(s *monitoring.FwlogPolicySpec) error {
-	if _, ok := monitoring.MonitoringExportFormat_vvalue[s.Format]; !ok {
-		return fmt.Errorf("invalid format %v", s.Format)
+	syslogTargetsPresent, psmTargetPresent := false, false
+	if len(s.Targets) != 0 {
+		syslogTargetsPresent = true
 	}
 
-	for _, f := range s.Filter {
-		if _, ok := monitoring.FwlogFilter_vvalue[f]; !ok {
-			return fmt.Errorf("invalid filter %v", f)
-		}
+	if s.PSMTarget != nil {
+		psmTargetPresent = true
 	}
 
-	if s.Config != nil {
-		if _, ok := monitoring.SyslogFacility_vvalue[s.Config.FacilityOverride]; !ok {
-			return fmt.Errorf("invalid facility override %v", s.Config.FacilityOverride)
-		}
-
-		if s.Config.Prefix != "" {
-			return fmt.Errorf("prefix is not allowed in firewall log")
-		}
-	}
-
-	if len(s.Targets) == 0 {
+	if !syslogTargetsPresent && !psmTargetPresent {
 		return fmt.Errorf("no collectors configured")
 	}
 
-	if len(s.Targets) > tpm.MaxNumCollectorsPerPolicy {
-		return fmt.Errorf("cannot configure more than %v collectors", tpm.MaxNumCollectorsPerPolicy)
-	}
-
-	collectors := map[string]bool{}
-	for _, c := range s.Targets {
-		if key, err := json.Marshal(c); err == nil {
-			ks := string(key)
-			if _, ok := collectors[ks]; ok {
-				return fmt.Errorf("found duplicate collector %v %v", c.Destination, c.Transport)
-			}
-			collectors[ks] = true
-
+	// The following validations are only needed if syslogtarget is configured
+	if syslogTargetsPresent {
+		if _, ok := monitoring.MonitoringExportFormat_vvalue[s.Format]; !ok {
+			return fmt.Errorf("invalid format %v", s.Format)
 		}
 
-		if c.Destination == "" {
-			return fmt.Errorf("cannot configure empty collector")
-		}
-
-		netIP, _, err := net.ParseCIDR(c.Destination)
-		if err != nil {
-			netIP = net.ParseIP(c.Destination)
-		}
-
-		if netIP == nil {
-			// treat it as hostname and resolve
-			if _, err := net.LookupHost(c.Destination); err != nil {
-				return fmt.Errorf("failed to resolve name %s, error: %v", c.Destination, err)
+		for _, f := range s.Filter {
+			if _, ok := monitoring.FwlogFilter_vvalue[f]; !ok {
+				return fmt.Errorf("invalid filter %v", f)
 			}
 		}
 
-		tr := strings.Split(c.Transport, "/")
-		if len(tr) != 2 {
-			return fmt.Errorf("transport should be in protocol/port format")
+		if s.Config != nil {
+			if _, ok := monitoring.SyslogFacility_vvalue[s.Config.FacilityOverride]; !ok {
+				return fmt.Errorf("invalid facility override %v", s.Config.FacilityOverride)
+			}
+
+			if s.Config.Prefix != "" {
+				return fmt.Errorf("prefix is not allowed in firewall log")
+			}
 		}
 
-		if _, ok := map[string]bool{
-			"tcp": true,
-			"udp": true,
-		}[strings.ToLower(tr[0])]; !ok {
-			return fmt.Errorf("invalid protocol %v\n Accepted protocols: TCP, UDP", tr[0])
+		if len(s.Targets) > tpm.MaxNumCollectorsPerPolicy {
+			return fmt.Errorf("cannot configure more than %v collectors", tpm.MaxNumCollectorsPerPolicy)
 		}
 
-		port, err := strconv.Atoi(tr[1])
-		if err != nil {
-			return fmt.Errorf("invalid port %v", tr[1])
-		}
+		collectors := map[string]bool{}
+		for _, c := range s.Targets {
+			if key, err := json.Marshal(c); err == nil {
+				ks := string(key)
+				if _, ok := collectors[ks]; ok {
+					return fmt.Errorf("found duplicate collector %v %v", c.Destination, c.Transport)
+				}
+				collectors[ks] = true
 
-		if uint(port) > uint(^uint16(0)) {
-			return fmt.Errorf("invalid port %v (> %d)", port, ^uint16(0))
+			}
+
+			if c.Destination == "" {
+				return fmt.Errorf("cannot configure empty collector")
+			}
+
+			netIP, _, err := net.ParseCIDR(c.Destination)
+			if err != nil {
+				netIP = net.ParseIP(c.Destination)
+			}
+
+			if netIP == nil {
+				// treat it as hostname and resolve
+				if _, err := net.LookupHost(c.Destination); err != nil {
+					return fmt.Errorf("failed to resolve name %s, error: %v", c.Destination, err)
+				}
+			}
+
+			tr := strings.Split(c.Transport, "/")
+			if len(tr) != 2 {
+				return fmt.Errorf("transport should be in protocol/port format")
+			}
+
+			if _, ok := map[string]bool{
+				"tcp": true,
+				"udp": true,
+			}[strings.ToLower(tr[0])]; !ok {
+				return fmt.Errorf("invalid protocol %v\n Accepted protocols: TCP, UDP", tr[0])
+			}
+
+			port, err := strconv.Atoi(tr[1])
+			if err != nil {
+				return fmt.Errorf("invalid port %v", tr[1])
+			}
+
+			if uint(port) > uint(^uint16(0)) {
+				return fmt.Errorf("invalid port %v (> %d)", port, ^uint16(0))
+			}
 		}
 	}
 
@@ -379,12 +406,18 @@ func (s *PolicyState) getFilter(actions []string) uint32 {
 }
 
 // get collectors with matching vrf
-func (s *PolicyState) getCollector(vrf uint64) (map[string]*syslogFwlogCollector, bool) {
-	c := map[string]*syslogFwlogCollector{}
+func (s *PolicyState) getCollector(vrf uint64) (map[string]interface{}, bool) {
+	c := map[string]interface{}{}
 
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
 		if key, ok := k.(string); ok {
 			if val, ok := v.(*syslogFwlogCollector); ok {
+				val.Lock()
+				if val.vrf == vrf {
+					c[key] = val
+				}
+				val.Unlock()
+			} else if val, ok := v.(*psmFwlogCollector); ok {
 				val.Lock()
 				if val.vrf == vrf {
 					c[key] = val
@@ -412,6 +445,12 @@ func (s *PolicyState) deleteCollectors(vrf uint64) error {
 				c.Lock()
 				if c.vrf == vrf {
 					s.closeSyslog(c)
+					delList[key] = true
+				}
+				c.Unlock()
+			} else if c, ok := v.(*psmFwlogCollector); ok {
+				c.Lock()
+				if c.vrf == vrf {
 					delList[key] = true
 				}
 				c.Unlock()
@@ -498,6 +537,15 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		s.fwLogCollectors.Store(key, fwcollector)
 	}
 
+	if p.Spec.PSMTarget != nil && p.Spec.PSMTarget.Enable {
+		key := s.getPSMCollectorKey(vrf, p)
+		fwcollector := &psmFwlogCollector{
+			vrf:    vrf,
+			filter: filter,
+		}
+		s.fwLogCollectors.Store(key, fwcollector)
+	}
+
 	if err := s.emstore.Write(p); err != nil {
 		s.DeleteFwlogPolicy(ctx, p)
 		msg := fmt.Errorf("failed to save policy, %s", err)
@@ -544,13 +592,14 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		return fmt.Errorf("failed to get tenant for %s/%s", p.Tenant, p.Namespace)
 	}
 
-	oldCollector := make(map[string]*syslogFwlogCollector)
+	oldCollector := make(map[string]interface{})
+	oldFilter := s.getFilter(sp.Spec.Filter)
 	for _, target := range sp.Spec.Targets {
 		key := s.getCollectorKey(vrf, sp, target)
 		transport := strings.Split(target.Transport, "/")
-		oldCollector[key] = &syslogFwlogCollector{
+		fwcollector := &syslogFwlogCollector{
 			vrf:         vrf,
-			filter:      s.getFilter(sp.Spec.Filter),
+			filter:      oldFilter,
 			format:      sp.Spec.Format,
 			destination: target.Destination,
 			proto:       transport[0],
@@ -558,11 +607,19 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		}
 
 		if sp.Spec.Config != nil {
-			oldCollector[key].facility = syslog.Priority(monitoring.SyslogFacility_vvalue[p.Spec.Config.FacilityOverride])
+			fwcollector.facility = syslog.Priority(monitoring.SyslogFacility_vvalue[p.Spec.Config.FacilityOverride])
+		}
+		oldCollector[key] = fwcollector
+	}
+	if sp.Spec.PSMTarget != nil && sp.Spec.PSMTarget.Enable {
+		key := s.getPSMCollectorKey(vrf, sp)
+		oldCollector[key] = &psmFwlogCollector{
+			vrf:    vrf,
+			filter: oldFilter,
 		}
 	}
 
-	newCollector := make(map[string]*syslogFwlogCollector)
+	newCollector := make(map[string]interface{})
 	filter := s.getFilter(p.Spec.Filter)
 	for _, target := range p.Spec.Targets {
 		key := s.getCollectorKey(vrf, p, target)
@@ -572,7 +629,7 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 			continue
 		}
 		transport := strings.Split(target.Transport, "/")
-		newCollector[key] = &syslogFwlogCollector{
+		fwcollector := &syslogFwlogCollector{
 			vrf:         vrf,
 			filter:      filter,
 			format:      p.Spec.Format,
@@ -582,7 +639,19 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		}
 
 		if p.Spec.Config != nil {
-			newCollector[key].facility = syslog.Priority(monitoring.SyslogFacility_vvalue[p.Spec.Config.FacilityOverride])
+			fwcollector.facility = syslog.Priority(monitoring.SyslogFacility_vvalue[p.Spec.Config.FacilityOverride])
+		}
+		newCollector[key] = fwcollector
+	}
+	if p.Spec.PSMTarget != nil && p.Spec.PSMTarget.Enable {
+		key := s.getPSMCollectorKey(vrf, p)
+		if _, ok := oldCollector[key]; ok {
+			delete(oldCollector, key)
+		} else {
+			newCollector[key] = &psmFwlogCollector{
+				vrf:    vrf,
+				filter: filter,
+			}
 		}
 	}
 
@@ -590,10 +659,11 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	for k := range oldCollector {
 		log.Infof("delete collector %v", k)
 		if v, ok := s.fwLogCollectors.Load(k); ok {
-			col := v.(*syslogFwlogCollector)
-			col.Lock()
-			s.closeSyslog(col)
-			col.Unlock()
+			if col, ok := v.(*syslogFwlogCollector); ok {
+				col.Lock()
+				s.closeSyslog(col)
+				col.Unlock()
+			}
 		}
 		s.fwLogCollectors.Delete(k)
 	}
@@ -643,6 +713,10 @@ func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 	delList := map[string]bool{}
 	for _, target := range sp.Spec.Targets {
 		key := s.getCollectorKey(vrf, sp, target)
+		delList[key] = true
+	}
+	if sp.Spec.PSMTarget != nil && sp.Spec.PSMTarget.Enable {
+		key := s.getPSMCollectorKey(vrf, sp)
 		delList[key] = true
 	}
 
@@ -761,12 +835,18 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 
 	var collectors []string
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
+		var temp string
 		if col, ok := v.(*syslogFwlogCollector); ok {
 			col.Lock()
-			s := col.String()
+			temp = col.String()
 			col.Unlock()
-			collectors = append(collectors, s)
+
+		} else if col, ok := v.(*psmFwlogCollector); ok {
+			col.Lock()
+			temp = col.String()
+			col.Unlock()
 		}
+		collectors = append(collectors, temp)
 		return true
 	})
 	sort.Slice(collectors, func(i, j int) bool { return strings.Compare(collectors[i], collectors[j]) < 0 })

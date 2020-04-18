@@ -610,6 +610,9 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Config: &monitoring.SyslogExportConfig{
 						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
+					PSMTarget: &monitoring.PSMExportTarget{
+						Enable: true,
+					},
 				},
 			},
 		},
@@ -675,6 +678,9 @@ func TestFwPolicyOps(t *testing.T) {
 				Config: &monitoring.SyslogExportConfig{
 					FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 				},
+				PSMTarget: &monitoring.PSMExportTarget{
+					Enable: true,
+				},
 			},
 		}
 	}
@@ -700,6 +706,10 @@ func TestFwPolicyOps(t *testing.T) {
 		// get all collectors
 		for _, c := range i.Spec.Targets {
 			key := ps.getCollectorKey(vrf, i, c)
+			cmap[key] = true
+		}
+		if i.Spec.PSMTarget != nil && i.Spec.PSMTarget.Enable {
+			key := ps.getPSMCollectorKey(vrf, i)
 			cmap[key] = true
 		}
 
@@ -739,8 +749,7 @@ func TestFwPolicyOps(t *testing.T) {
 		c[k] = true
 		return true
 	})
-	// By default PSM collector is present
-	Assert(t, len(c) == 1, "collectors exist after delete, %+v", c)
+	Assert(t, len(c) == 0, "collectors exist after delete, %+v", c)
 }
 
 func TestProcessFWEvent(t *testing.T) {
@@ -1085,6 +1094,9 @@ func TestPolicyUpdate(t *testing.T) {
 					Config: &monitoring.SyslogExportConfig{
 						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
+					PSMTarget: &monitoring.PSMExportTarget{
+						Enable: true,
+					},
 				},
 			},
 		},
@@ -1138,6 +1150,9 @@ func TestPolicyUpdate(t *testing.T) {
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String()},
 					Config: &monitoring.SyslogExportConfig{
 						FacilityOverride: monitoring.SyslogFacility_LOG_LOCAL0.String(),
+					},
+					PSMTarget: &monitoring.PSMExportTarget{
+						Enable: false,
 					},
 				},
 			},
@@ -1193,6 +1208,19 @@ func TestPolicyUpdate(t *testing.T) {
 				AssertEquals(t, col.proto, expCol.proto, "proto didn't match")
 				AssertEquals(t, col.port, expCol.port, "port didn't match")
 			}
+			if policySpec.PSMTarget != nil {
+				key := ps.getPSMCollectorKey(vrf, fwPolicyEvent.Policy)
+				val, ok := ps.fwLogCollectors.Load(key)
+				if policySpec.PSMTarget.Enable {
+					Assert(t, ok == true, "failed to get key from map")
+					col, ok := val.(*psmFwlogCollector)
+					Assert(t, ok == true, "failed to get collector from map")
+					AssertEquals(t, col.vrf, vrf, "vrf didn't match")
+					AssertEquals(t, col.filter, filter, "filter didn't match")
+				} else {
+					Assert(t, ok == false, "found stale key from map")
+				}
+			}
 		case api.EventType_DeleteEvent:
 			for _, target := range policySpec.Targets {
 				key := ps.getCollectorKey(vrf, fwPolicyEvent.Policy, target)
@@ -1209,13 +1237,14 @@ func TestPolicyUpdate(t *testing.T) {
 			for _, c := range p.Spec.Targets {
 				polCollector[ps.getCollectorKey(vrf, p, c)] = true
 			}
+			if p.Spec.PSMTarget != nil && p.Spec.PSMTarget.Enable {
+				polCollector[ps.getPSMCollectorKey(vrf, p)] = true
+			}
 		}
 
 		activeCollector := map[string]bool{}
 		ps.fwLogCollectors.Range(func(k, v interface{}) bool {
-			if k != "psm" {
-				activeCollector[k.(string)] = true
-			}
+			activeCollector[k.(string)] = true
 			return true
 		})
 

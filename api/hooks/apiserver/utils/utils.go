@@ -15,80 +15,92 @@ import (
 
 // ValidateFwLogPolicy validates policy, called from api-server for pre-commit
 func ValidateFwLogPolicy(s *monitoring.FwlogPolicySpec) error {
-	if _, ok := monitoring.MonitoringExportFormat_vvalue[s.Format]; !ok {
-		return fmt.Errorf("invalid format %v", s.Format)
+	syslogTargetsPresent, psmTargetPresent := false, false
+	if len(s.Targets) != 0 {
+		syslogTargetsPresent = true
 	}
 
-	for _, f := range s.Filter {
-		if _, ok := monitoring.FwlogFilter_vvalue[f]; !ok {
-			return fmt.Errorf("invalid filter %v", f)
-		}
+	if s.PSMTarget != nil {
+		psmTargetPresent = true
 	}
 
-	if s.Config != nil {
-		if _, ok := monitoring.SyslogFacility_vvalue[s.Config.FacilityOverride]; !ok {
-			return fmt.Errorf("invalid facility override %v", s.Config.FacilityOverride)
-		}
-
-		if s.Config.Prefix != "" {
-			return fmt.Errorf("prefix is not allowed in firewall log")
-		}
-	}
-
-	if len(s.Targets) == 0 {
+	if !syslogTargetsPresent && !psmTargetPresent {
 		return fmt.Errorf("no collectors configured")
 	}
 
-	if len(s.Targets) > tpm.MaxNumCollectorsPerPolicy {
-		return fmt.Errorf("cannot configure more than %v collectors", tpm.MaxNumCollectorsPerPolicy)
-	}
-
-	collectors := map[string]bool{}
-	for _, c := range s.Targets {
-		if key, err := json.Marshal(c); err == nil {
-			ks := string(key)
-			if _, ok := collectors[ks]; ok {
-				return fmt.Errorf("found duplicate collector %v %v", c.Destination, c.Transport)
-			}
-			collectors[ks] = true
-
+	// The following validations are only needed if syslogtarget is configured
+	if syslogTargetsPresent {
+		if _, ok := monitoring.MonitoringExportFormat_vvalue[s.Format]; !ok {
+			return fmt.Errorf("invalid format %v", s.Format)
 		}
 
-		if c.Destination == "" {
-			return fmt.Errorf("cannot configure empty collector")
-		}
-
-		netIP, _, err := net.ParseCIDR(c.Destination)
-		if err != nil {
-			netIP = net.ParseIP(c.Destination)
-		}
-
-		if netIP == nil {
-			// treat it as hostname and resolve
-			if _, err := net.LookupHost(c.Destination); err != nil {
-				return fmt.Errorf("failed to resolve name %s, error: %v", c.Destination, err)
+		for _, f := range s.Filter {
+			if _, ok := monitoring.FwlogFilter_vvalue[f]; !ok {
+				return fmt.Errorf("invalid filter %v", f)
 			}
 		}
 
-		tr := strings.Split(c.Transport, "/")
-		if len(tr) != 2 {
-			return fmt.Errorf("transport should be in protocol/port format")
+		if s.Config != nil {
+			if _, ok := monitoring.SyslogFacility_vvalue[s.Config.FacilityOverride]; !ok {
+				return fmt.Errorf("invalid facility override %v", s.Config.FacilityOverride)
+			}
+
+			if s.Config.Prefix != "" {
+				return fmt.Errorf("prefix is not allowed in firewall log")
+			}
 		}
 
-		if _, ok := map[string]bool{
-			"tcp": true,
-			"udp": true,
-		}[strings.ToLower(tr[0])]; !ok {
-			return fmt.Errorf("invalid protocol %v\n Accepted protocols: TCP, UDP", tr[0])
+		if len(s.Targets) > tpm.MaxNumCollectorsPerPolicy {
+			return fmt.Errorf("cannot configure more than %v collectors", tpm.MaxNumCollectorsPerPolicy)
 		}
 
-		port, err := strconv.Atoi(tr[1])
-		if err != nil {
-			return fmt.Errorf("invalid port %v", tr[1])
-		}
+		collectors := map[string]bool{}
+		for _, c := range s.Targets {
+			if key, err := json.Marshal(c); err == nil {
+				ks := string(key)
+				if _, ok := collectors[ks]; ok {
+					return fmt.Errorf("found duplicate collector %v %v", c.Destination, c.Transport)
+				}
+				collectors[ks] = true
 
-		if uint(port) > uint(^uint16(0)) {
-			return fmt.Errorf("invalid port %v (> %d)", port, ^uint16(0))
+			}
+
+			if c.Destination == "" {
+				return fmt.Errorf("cannot configure empty collector")
+			}
+
+			netIP, _, err := net.ParseCIDR(c.Destination)
+			if err != nil {
+				netIP = net.ParseIP(c.Destination)
+			}
+
+			if netIP == nil {
+				// treat it as hostname and resolve
+				if _, err := net.LookupHost(c.Destination); err != nil {
+					return fmt.Errorf("failed to resolve name %s, error: %v", c.Destination, err)
+				}
+			}
+
+			tr := strings.Split(c.Transport, "/")
+			if len(tr) != 2 {
+				return fmt.Errorf("transport should be in protocol/port format")
+			}
+
+			if _, ok := map[string]bool{
+				"tcp": true,
+				"udp": true,
+			}[strings.ToLower(tr[0])]; !ok {
+				return fmt.Errorf("invalid protocol %v\n Accepted protocols: TCP, UDP", tr[0])
+			}
+
+			port, err := strconv.Atoi(tr[1])
+			if err != nil {
+				return fmt.Errorf("invalid port %v", tr[1])
+			}
+
+			if uint(port) > uint(^uint16(0)) {
+				return fmt.Errorf("invalid port %v (> %d)", port, ^uint16(0))
+			}
 		}
 	}
 

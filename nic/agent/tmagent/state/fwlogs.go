@@ -191,7 +191,7 @@ func (s *PolicyState) handleFwLog(ev *halproto.FWEvent, ts time.Time) {
 				log.Errorf("invalid collector")
 			}
 			col.Unlock()
-		} else if _, ok := v.(*psmFwLogCollector); ok && !logSentToPSM {
+		} else if _, ok := v.(*psmFwlogCollector); ok && !logSentToPSM {
 			// TODO: use sync pool
 			s.logsChannel <- singleLog{ts, ev.GetSourceVrf(), fwLog}
 			logSentToPSM = true

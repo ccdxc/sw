@@ -48,6 +48,10 @@ type ObjClient interface {
 	DeleteNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
 	UpdateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy) error
 
+	CreateFwlogPolicy(flp *monitoring.FwlogPolicy) error
+	UpdateFwlogPolicy(flp *monitoring.FwlogPolicy) error
+	DeleteFwlogPolicy(flp *monitoring.FwlogPolicy) error
+
 	ListNetworkInterfaces() (objs []*network.NetworkInterface, err error)
 	ListNetowrkInterfacesByFilter(string) (objs []*network.NetworkInterface, err error)
 	UpdateNetworkInterface(sgp *network.NetworkInterface) error
@@ -322,6 +326,48 @@ func (r *Client) UpdateNetworkSecurityPolicy(sgp *security.NetworkSecurityPolicy
 	var err error
 	for _, restcl := range r.restcls {
 		_, err = restcl.SecurityV1().NetworkSecurityPolicy().Update(r.ctx, sgp)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
+// CreateFwlogPolicy creates a fwlog policy
+func (r *Client) CreateFwlogPolicy(flp *monitoring.FwlogPolicy) error {
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.MonitoringV1().FwlogPolicy().Create(r.ctx, flp)
+		if err == nil {
+			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.MonitoringV1().FwlogPolicy().Update(r.ctx, flp)
+			if err == nil {
+				break
+			}
+		}
+	}
+
+	return err
+}
+
+// UpdateFwlogPolicy updates a fwlog policy
+func (r *Client) UpdateFwlogPolicy(flp *monitoring.FwlogPolicy) error {
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.MonitoringV1().FwlogPolicy().Update(r.ctx, flp)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
+// DeleteFwlogPolicy deletes a fwlog policy
+func (r *Client) DeleteFwlogPolicy(flp *monitoring.FwlogPolicy) error {
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.MonitoringV1().FwlogPolicy().Delete(r.ctx, &flp.ObjectMeta)
 		if err == nil {
 			break
 		}

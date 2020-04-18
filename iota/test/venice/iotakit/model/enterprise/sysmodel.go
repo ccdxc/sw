@@ -41,6 +41,7 @@ const defaultNumNetworks = 2
 type SysModel struct {
 	baseModel.SysModel
 	sgpolicies        map[string]*objects.NetworkSecurityPolicy  // security policies
+	fwlogpolicies     map[string]*objects.FwlogPolicy            // fwlog policies
 	msessions         map[string]*objects.MirrorSession          // mirror sessions
 	fakeWorkloads     map[string]*objects.Workload               // simulated.Workloads
 	fakeSubnets       map[string]*objects.Network                // simulated subnets
@@ -115,6 +116,7 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSe
 	}
 
 	sm.sgpolicies = make(map[string]*objects.NetworkSecurityPolicy)
+	sm.fwlogpolicies = make(map[string]*objects.FwlogPolicy)
 	sm.msessions = make(map[string]*objects.MirrorSession)
 	sm.FakeNaples = make(map[string]*objects.Naples)
 	sm.fakeWorkloads = make(map[string]*objects.Workload)

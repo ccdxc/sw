@@ -339,3 +339,13 @@ func (sm *SysModel) GetFwLogObjectCount(tenantName string, bucketName string, ob
 func (sm *SysModel) QueryMetricsByReporter(kind, reporter, timestr string) (*telemetryclient.MetricsQueryResponse, error) {
 	return nil, fmt.Errorf("not available")
 }
+
+// NewFwlogPolicy creates new monitoring.FwlogPolicy
+func (sm *SysModel) NewFwlogPolicy(name string) *objects.FwlogPolicyCollection {
+	return nil
+}
+
+// FwlogPolicy finds an existing monitoring.FwlogPolicy
+func (sm *SysModel) FwlogPolicy(name string) *objects.FwlogPolicyCollection {
+	return nil
+}

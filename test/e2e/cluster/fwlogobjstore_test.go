@@ -21,6 +21,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/monitoring"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/nic/agent/tmagent/state/fwgen/fwevent"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
@@ -57,11 +59,60 @@ var _ = Describe("firewall log tests", func() {
 			if fwLogClient == nil && fwLogMetaClient == nil {
 				fwLogClient, fwLogMetaClient = setupFwLogsClients()
 			}
+
+			By("cleanup fwlog policy")
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
+			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+			restSvc, err := apiclient.NewRestAPIClient(apiGwAddr)
+			Expect(err).ShouldNot(HaveOccurred())
+			fwlogPolicyClient := restSvc.MonitoringV1().FwlogPolicy()
+			if testFwSpecList, err := fwlogPolicyClient.List(ctx, &api.ListWatchOptions{}); err == nil {
+				for i := range testFwSpecList {
+					By(fmt.Sprintf("delete %v", testFwSpecList[i].ObjectMeta))
+					fwlogPolicyClient.Delete(ctx, &testFwSpecList[i].ObjectMeta)
+				}
+			}
 		})
 
 		It("push fwlogs to object store", func() {
+			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+			restSvc, err := apiclient.NewRestAPIClient(apiGwAddr)
+			Expect(err).ShouldNot(HaveOccurred())
+			fwlogPolicyClient := restSvc.MonitoringV1().FwlogPolicy()
+
+			fwLogPolicy := &monitoring.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "fwLogPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Name:      "fwpolicy-psm",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					VrfName: globals.DefaultVrf,
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.99.1",
+							Transport:   "tcp/11001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: monitoring.SyslogFacility_LOG_LOCAL0.String(),
+					},
+					PSMTarget: &monitoring.PSMExportTarget{
+						Enable: true,
+					},
+				},
+			}
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
+			_, err = fwlogPolicyClient.Create(ctx, fwLogPolicy)
+			Expect(err).ShouldNot(HaveOccurred())
+
 			snIf := ts.tu.APIClient.ClusterV1().DistributedServiceCard()
-			snics, _ := snIf.List(context.Background(), &api.ListWatchOptions{})
+			snics, _ := snIf.List(ctx, &api.ListWatchOptions{})
 			for _, snic := range snics {
 				napleID := snic.Status.PrimaryMAC
 				fmt.Println("Bucket name", bucketPrefix+"."+bucketName)
@@ -133,6 +184,10 @@ var _ = Describe("firewall log tests", func() {
 				// Just do for one naples. Thats enough for e2e tests.
 				break
 			}
+
+			By(fmt.Sprintf("delete %v", fwLogPolicy.ObjectMeta))
+			_, err = fwlogPolicyClient.Delete(ctx, &(fwLogPolicy.ObjectMeta))
+			Expect(err).ShouldNot(HaveOccurred())
 		})
 
 		It("veirfy file through PSM REST API", func() {

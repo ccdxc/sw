@@ -16,6 +16,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/fwlog"
+	"github.com/pensando/sw/api/generated/monitoring"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	searchutils "github.com/pensando/sw/test/utils"
@@ -319,4 +320,54 @@ func (sm *SysModel) VerifyFwlogFromAllNaples(tenantName string, bucketName strin
 	}
 	log.Infof("%d sims had zero fwlogs", failedCount)
 	return nil
+}
+
+// NewFwlogPolicy creates a new policy
+func (sm *SysModel) NewFwlogPolicy(name string) *objects.FwlogPolicyCollection {
+	policy := &objects.FwlogPolicy{
+		VenicePolicy: &monitoring.FwlogPolicy{
+			TypeMeta: api.TypeMeta{
+				Kind: "fwLogPolicy",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name:      name,
+				Tenant:    globals.DefaultTenant,
+				Namespace: globals.DefaultNamespace,
+			},
+			Spec: monitoring.FwlogPolicySpec{
+				VrfName: globals.DefaultVrf,
+				Targets: []monitoring.ExportConfig{
+					{
+						Destination: "192.168.99.1",
+						Transport:   "tcp/11001",
+					},
+				},
+				Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
+				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String()},
+				Config: &monitoring.SyslogExportConfig{
+					FacilityOverride: monitoring.SyslogFacility_LOG_LOCAL0.String(),
+				},
+				PSMTarget: &monitoring.PSMExportTarget{
+					Enable: true,
+				},
+			},
+		},
+	}
+	sm.fwlogpolicies[name] = policy
+	return objects.NewFwlogPolicyCollection(policy, sm.ObjClient(), sm.Tb)
+}
+
+// FwlogPolicy finds an FwlogPolicy by name
+func (sm *SysModel) FwlogPolicy(name string) *objects.FwlogPolicyCollection {
+	pol, ok := sm.fwlogpolicies[name]
+	if !ok {
+		pol := objects.NewFwlogPolicyCollection(nil, sm.ObjClient(), sm.Tb)
+		pol.SetError(fmt.Errorf("Policy %v not found", name))
+		log.Infof("Error %v", pol.Error())
+		return pol
+	}
+
+	policyCollection := objects.NewFwlogPolicyCollection(pol, sm.ObjClient(), sm.Tb)
+	policyCollection.Policies = []*objects.FwlogPolicy{pol}
+	return policyCollection
 }

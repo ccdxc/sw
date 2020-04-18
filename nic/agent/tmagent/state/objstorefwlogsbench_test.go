@@ -13,8 +13,10 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/nic/agent/tmagent/state"
 	servicetypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -29,8 +31,8 @@ type event struct {
 	fwEvent    *halproto.FWEvent
 }
 
-const eventsPerSecond = 100
-const timeoutInSeconds = 120
+const eventsPerSecond = 1300
+const timeoutInSeconds = 180
 
 func listBuckets(w http.ResponseWriter, r *http.Request) {
 	resp := `{<?xml version="1.0" encoding="UTF-8"?>
@@ -46,7 +48,7 @@ func minioServer(l net.Listener) {
 	go http.Serve(l, router)
 }
 
-func SkipBenchmarkMultiMatchQuery(b *testing.B) {
+func SkipBenchmarkTmAgentFwLogs(b *testing.B) {
 	fmt.Println("RUN *******")
 
 	l, err := net.Listen("tcp", "127.0.0.1:")
@@ -55,7 +57,6 @@ func SkipBenchmarkMultiMatchQuery(b *testing.B) {
 	}
 	minioServer(l)
 	defer l.Close()
-
 	url := "127.0.0.1:9000"
 
 	r := mock.New()
@@ -89,6 +90,11 @@ func SkipBenchmarkMultiMatchQuery(b *testing.B) {
 		}
 
 		err = ps.ObjStoreInit("1", r, time.Duration(5)*time.Second, nil)
+		if err != nil {
+			panic(err)
+		}
+
+		err = createFwlogPolicy(ctx, ps)
 		if err != nil {
 			panic(err)
 		}
@@ -128,7 +134,6 @@ func SkipBenchmarkMultiMatchQuery(b *testing.B) {
 				}
 
 				for _, e := range events {
-					// fmt.Println("Shrey sending event", e.fwEvent)
 					ps.ProcessFWEvent(e.fwEvent, time.Now())
 				}
 
@@ -138,4 +143,22 @@ func SkipBenchmarkMultiMatchQuery(b *testing.B) {
 
 		wg.Wait()
 	}
+}
+
+func createFwlogPolicy(ctx context.Context, ps *state.PolicyState) error {
+	policy := &tpmprotos.FwlogPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind: "FwlogPolicy",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "policy2",
+		},
+		Spec: monitoring.FwlogPolicySpec{
+			Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
+			PSMTarget: &monitoring.PSMExportTarget{
+				Enable: true,
+			},
+		},
+	}
+	return ps.CreateFwlogPolicy(ctx, policy)
 }

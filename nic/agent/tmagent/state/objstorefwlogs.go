@@ -13,9 +13,6 @@ import (
 	"strings"
 	"time"
 
-	halproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
-	"github.com/pensando/sw/venice/utils/netutils"
-
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
@@ -425,59 +422,6 @@ func createBucketClient(ctx context.Context, resolver resolver.Interface, tenant
 	tlsc.ServerName = globals.Vos
 
 	return objstore.NewClient(tenantName, bucketName, resolver, objstore.WithTLSConfig(tlsc))
-}
-
-func (s *PolicyState) handleObjStore(ev *halproto.FWEvent, ts time.Time) {
-	vrfSrc := fmt.Sprintf("%v", ev.GetSourceVrf())
-	vrfDest := fmt.Sprintf("%v", ev.GetDestVrf())
-	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
-	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
-	dPort := fmt.Sprintf("%v", ev.GetDport())
-	sPort := fmt.Sprintf("%v", ev.GetSport())
-	ipProt := fmt.Sprintf("%v", strings.TrimPrefix(ev.GetIpProt().String(), "IPPROTO_"))
-	action := fmt.Sprintf("%v", strings.ToLower(strings.TrimPrefix(ev.GetFwaction().String(), "SECURITY_RULE_ACTION_")))
-	dir := flowDirectionName[ev.GetDirection()]
-	ruleID := fmt.Sprintf("%v", ev.GetRuleId())
-	sessionID := fmt.Sprintf("%v", ev.GetSessionId())
-	state := strings.ToLower(strings.Replace(halproto.FlowLogEventType_name[int32(ev.GetFlowaction())], "LOG_EVENT_TYPE_", "", 1))
-	alg := fmt.Sprintf("%v", strings.TrimPrefix(ev.GetAlg().String(), "APP_SVC_"))
-	// iflowPackets := fmt.Sprintf("%v", ev.GetIflowPackets())
-	// rflowPackets := fmt.Sprintf("%v", ev.GetRflowPackets())
-	unixnano := ev.GetTimestamp()
-	if unixnano != 0 {
-		// if a timestamp was specified in the msg, use it
-		ts = time.Unix(0, unixnano)
-	}
-	appID := fmt.Sprintf("%v", ev.GetAppId()) // TODO: praveen convert to enum
-
-	// Since no aggregation is done as fo now, just report count=1 for every log.
-	count := "1"
-
-	// CSV file format
-	fwLog := []string{
-		vrfSrc,
-		vrfDest,
-		ipSrc,
-		ipDest,
-		ts.Format(time.RFC3339),
-		sPort,
-		dPort,
-		ipProt,
-		action,
-		dir,
-		ruleID,
-		sessionID,
-		state,
-		fmt.Sprintf("%v", int64(ev.GetIcmptype())),
-		fmt.Sprintf("%v", int64(ev.GetIcmpid())),
-		fmt.Sprintf("%v", int64(ev.GetIcmpcode())),
-		appID,
-		alg,
-		count,
-	}
-
-	// TODO: use sync pool
-	s.logsChannel <- singleLog{ts, ev.GetSourceVrf(), fwLog}
 }
 
 func getTenantNameFromSourceVrf(vrf uint64) string {

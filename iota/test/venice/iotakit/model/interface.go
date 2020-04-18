@@ -143,6 +143,8 @@ type ObjectIntf interface {
 	NewVPC(tenant string, name string, rmac string, vni uint32, ipam string) *objects.VpcObjCollection
 	GetVPC(name string, tenant string) (*objects.Vpc, error)
 	ListNetworkInterfacesByFilter(filter string) (*objects.NetworkInterfaceCollection, error)
+	NewFwlogPolicy(name string) *objects.FwlogPolicyCollection
+	FwlogPolicy(name string) *objects.FwlogPolicyCollection
 
 	NewNetwork(nwp *base.NetworkParams) *objects.NetworkCollection
 	GetNetwork(tenant string, name string) (*objects.Network, error)

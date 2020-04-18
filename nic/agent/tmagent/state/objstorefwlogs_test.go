@@ -20,11 +20,12 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/monitoring"
 	_ "github.com/pensando/sw/nic/agent/dscagent"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	_ "github.com/pensando/sw/nic/agent/protos/netproto"
-	_ "github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	servicetypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -88,6 +89,9 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 
 	err = ps.FwlogInit(FwlogIpcShm)
 	AssertOk(t, err, "failed to init FwLog")
+
+	err = createFwlogPolicy(ctx, ps)
+	AssertOk(t, err, "failed to create policy")
 
 	testChannel := make(chan TestObject, 10000)
 	err = ps.ObjStoreInit("1", r, time.Duration(1)*time.Second, testChannel)
@@ -194,4 +198,22 @@ func verifyData(t *testing.T, data bytes.Buffer) {
 	Assert(t, lines[1][16] == "32", "incorrect app id")
 	Assert(t, lines[1][17] == "TFTP", "incorrect alg, %s", lines[1][17])
 	Assert(t, lines[1][18] == "1", "incorrect count")
+}
+
+func createFwlogPolicy(ctx context.Context, ps *PolicyState) error {
+	policy := &tpmprotos.FwlogPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind: "FwlogPolicy",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "policy2",
+		},
+		Spec: monitoring.FwlogPolicySpec{
+			Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
+			PSMTarget: &monitoring.PSMExportTarget{
+				Enable: true,
+			},
+		},
+	}
+	return ps.CreateFwlogPolicy(ctx, policy)
 }
