@@ -109,7 +109,14 @@ public:
 
     /// \brief    stash this object into persistent storage
     /// \return   sdk_ret_ok or error code
-    virtual sdk_ret_t backup(void) override { return SDK_RET_OK; }
+    virtual sdk_ret_t backup(void) override { return SDK_RET_INVALID_OP; }
+
+    /// \brief    restore stashed object from persistent storage
+    /// \param[in] upg_obj_info contains location to read stashed object
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t restore(upg_obj_info_t *info) override {
+        return SDK_RET_INVALID_OP;
+    }
 
     /**
      * @brief    build object given its key from the (sw and/or hw state we

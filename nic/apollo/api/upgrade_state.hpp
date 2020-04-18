@@ -133,9 +133,9 @@ public:
     void set_upg_req_mode(upg_mode_t mode) { upg_req_mode_ = mode; }
     upg_mode_t upg_req_mode(void) { return upg_req_mode_; }
     /// \brief set backup/restore  status
-    void set_status(bool status) { status_ = status; }
+    void set_backup_status(bool status) { backup_status_ = status; }
     /// \brief get backup/restore status
-    bool status(void) { return status_; }
+    bool backup_status(void) { return backup_status_; }
     /// \brief get upg ctxt within upgrade state
     upg_ctxt *api_upg_ctx(void) { return api_upg_ctx_; }
     upg_ctxt *nicmgr_upg_ctx(void) { return nicmgr_upg_ctx_; }
@@ -162,8 +162,8 @@ private:
     upg_mode_t upg_req_mode_;
     ///  initialization mode during process bringup
     upg_mode_t upg_init_mode_;
-    /// backup/restore status
-    bool            status_;
+    /// backup status
+    bool            backup_status_;
     /// api upg obj context
     upg_ctxt        *api_upg_ctx_;
     /// api upg obj context

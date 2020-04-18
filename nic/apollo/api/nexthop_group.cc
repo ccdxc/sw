@@ -221,6 +221,24 @@ nexthop_group::backup(void) {
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+nexthop_group::restore(upg_obj_info_t *upg_info) {
+    sdk_ret_t ret;
+    pds_nexthop_group_info_t info;
+
+    memset(&info, 0, sizeof(pds_nexthop_group_info_t));
+    // fetch info from proto buf
+    ret = impl_->restore((impl::obj_info_t *)&info, upg_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore nexthop group");
+    }
+    // todo 1. now we have spec(info.spec), init_config() is next
+    //      2. followed by add_to_db()
+    //      3. hw_id restoration
+    //      4. shared memory offset and other stuff
+    return ret;
+}
+
 /// @}     // end of PDS_NEXTHOP
 
 }    // namespace api

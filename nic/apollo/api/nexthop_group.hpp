@@ -15,6 +15,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
+#include "nic/apollo/api/internal/upg_ctxt.hpp"
 
 namespace api {
 
@@ -52,6 +53,11 @@ public:
     /// \brief    stash this object into persistent storage
     /// \return   SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t backup(void) override;
+
+    /// \brief     restore stashed object from persistent storage
+    /// \param[in] upg_info contains location to read stashed object
+    /// \return    SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t restore(upg_obj_info_t *upg_info) override;
 
     /// \brief     allocate h/w resources for this object
     /// \param[in] orig_obj old version of the unmodified object

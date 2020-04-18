@@ -16,6 +16,7 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/internal/upg_ctxt.hpp"
 
 using std::string;
 
@@ -69,6 +70,13 @@ public:
     /// \brief    backup method to stash the object into persistent storage
     /// \return   SDK_RET_OK or error code
     virtual sdk_ret_t backup(void) {
+        return SDK_RET_INVALID_OP;
+    }
+
+    /// \brief    restore stashed object from persistent storage
+    /// \param[in] upg_info contains location to read stashed object
+    /// \return   SDK_RET_OK or error code
+    virtual sdk_ret_t restore(upg_obj_info_t *upg_info) {
         return SDK_RET_INVALID_OP;
     }
 

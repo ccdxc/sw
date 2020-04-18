@@ -416,6 +416,19 @@ nexthop_group_impl::backup(obj_info_t *info) {
     return (pbuf_byte_size + 4);
 }
 
+sdk_ret_t
+nexthop_group_impl::restore(obj_info_t *info, upg_obj_info_t *upg_info) {
+    sdk_ret_t ret;
+    uint32_t pbuf_byte_size = 0; // byte read from persistent storage
+
+    // todo 1. read upg_info.mem for location of obj
+    //      2. de-serialize pbuf
+    //      3. convert pbuf to info
+    //      4. misc
+    upg_info->size = pbuf_byte_size;
+    return SDK_RET_OK;
+}
+
 /// \@}    // end of PDS_NEXTHOP_GROUP_IMPL
 
 }    // namespace impl

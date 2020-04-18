@@ -34,6 +34,16 @@ typedef struct upg_obj_stash_meta_s {
     uint64_t        pad;          ///< for future use
 } __PACK__ upg_obj_stash_meta_t;
 
+/// \brief upgrade obj info. will be used per class during backup/restore
+/// to point/fetch data in/from persistent storage. 
+//  it helps objs to navigate to its correct position inside persistent storage
+typedef struct upg_obj_info_s {
+    char *mem;                      ///< reference into persistent storage
+    uint32_t obj_id ;               ///< obj id
+    uint32_t stateless_obj_count;   ///< number of stateless objs stashed
+    size_t   size;                  ///< bytes written/read
+} upg_obj_info_t;
+
 class upg_ctxt {
 public:
     /// \brief factory method to initialize

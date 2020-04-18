@@ -312,6 +312,7 @@ pds_init (pds_init_params_t *params)
     sdk_ret_t         ret;
     asic_cfg_t        asic_cfg;
     std::string       mem_str;
+    sdk::platform::upg_mode_t upg_mode;
 
     sdk::lib::device_profile_t device_profile = { 0 };
     device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
@@ -358,11 +359,16 @@ pds_init (pds_init_params_t *params)
         if (ret != SDK_RET_OK) {
             return SDK_RET_ERR;
         }
+        upg_mode = api::g_upg_state->upg_init_mode();
         // set upgrade mode in asic config
-        asic_cfg.upg_init_mode = api::g_upg_state->upg_init_mode();
+        asic_cfg.upg_init_mode = upg_mode;
 
         // impl init
         SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
+
+        // restore objs in case of upgrade
+        ret = api::upg_obj_restore(upg_mode);
+        SDK_ASSERT(ret == SDK_RET_OK);
 
         // spawn threads
         api::spawn_threads();

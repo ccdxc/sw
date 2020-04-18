@@ -3,6 +3,7 @@
 //
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/upgrade_state.hpp"
@@ -221,6 +222,59 @@ upg_ev_thread_hdlr_register (upg_ev_hitless_t &ev)
     PDS_TRACE_INFO("Upgrade hitless event register for thread %s",
                    ev.thread_name);
     api::g_upg_state->register_ev_thread_hdlr(ev);
+}
+
+sdk_ret_t
+obj_restore_hitless (void)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    std::list<api::upg_ev_hitless_t> hitless_list;
+
+    hitless_list = api::g_upg_state->ev_threads_hdlr_hitless();
+    std::list<api::upg_ev_hitless_t>::iterator it = hitless_list.begin();
+    for (; it != hitless_list.end(); ++it) {
+        if (it->restore_hdlr) {
+            ret = it->restore_hdlr(NULL);
+            if (ret != SDK_RET_OK) {
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
+sdk_ret_t
+obj_restore_graceful (void)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    std::list<api::upg_ev_graceful_t> graceful_list;
+
+    graceful_list = api::g_upg_state->ev_threads_hdlr_graceful();
+    std::list<api::upg_ev_graceful_t>::iterator it = graceful_list.begin();
+    for (; it != graceful_list.end(); ++it) {
+        if (it->restore_hdlr) {
+            ret = it->restore_hdlr(NULL);
+            if (ret != SDK_RET_OK) {
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
+sdk_ret_t
+upg_obj_restore (upg_mode_t mode)
+{
+    sdk_ret_t ret;
+
+    if (upgrade_mode_hitless(mode)) {
+        ret = obj_restore_hitless();
+    } else if (upgrade_mode_graceful(mode)) {
+        ret = obj_restore_graceful();
+    } else {
+        ret = SDK_RET_OK;
+    }
+    return ret;
 }
 
 }   // namespace api

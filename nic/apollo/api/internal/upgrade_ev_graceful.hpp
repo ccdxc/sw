@@ -69,6 +69,10 @@ typedef struct upg_ev_graceful_s {
     /// threads should shutdown by receiving this event
     upg_ev_hdlr_t finish_hdlr;
 
+    /// \brief restore api objs from persistent storage
+    /// \return SDK_RET_OK on success, failure status code on error
+    upg_ev_hdlr_t restore_hdlr;
+
 } upg_ev_graceful_t;
 
 /// register the thread to the main upgrade event handler

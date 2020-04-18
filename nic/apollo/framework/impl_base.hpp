@@ -96,6 +96,14 @@ public:
         return -1;
     }
 
+    /// \brief     restore the stashed object from persistent storage
+    /// \param[in] info pointer to the info object
+    /// \param[in] upg_info contains location to read stashed object
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t restore(obj_info_t *info, upg_obj_info_t *upg_info) {
+        return SDK_RET_INVALID_OP;
+    }
+
     /// \brief Allocate/reserve h/w resources for this object
     ///
     /// \param[in] api_obj  object for which resources are being reserved for
