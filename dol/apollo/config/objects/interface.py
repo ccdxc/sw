@@ -124,7 +124,6 @@ class InterfaceObject(base.ConfigObjectBase):
     def __init__(self, spec, ifspec, node, spec_json=None, type=topo.InterfaceTypes.NONE):
         super().__init__(api.ObjectTypes.INTERFACE, node)
         super().SetOrigin(getattr(ifspec, 'origin', None))
-        print(spec_json)
         if type == topo.InterfaceTypes.ETH:
             self.InterfaceId = next(ResmgrClient[node].InterfaceIdAllocator)
             self.Ifname = spec_json['meta']['name']
@@ -166,7 +165,7 @@ class InterfaceObject(base.ConfigObjectBase):
         info = InterfaceInfoObject(node, self.Type, spec, ifspec, self.InterfaceId)
         self.IfInfo = info
         self.Status = InterfaceStatus()
-        self.GID("Interface ID:%d"%self.InterfaceId)
+        self.GID(f"{self.Type.name}Interface{self.InterfaceId}")
         self.UUID = utils.PdsUuid(self.InterfaceId, self.ObjType)
         self.Mutable = utils.IsUpdateSupported()
         self.UpdateImplicit()
@@ -536,12 +535,12 @@ class InterfaceObjectClient(base.ConfigClientBase):
         self.__generate_loopback_interfaces(node, parent, iflist)
         return
 
-    def AddObjToDict(self, obj, node):
-        self.Objs[node].update({obj.InterfaceId: obj})
+    def AddObjToDict(self, obj):
+        self.Objs[obj.Node].update({obj.InterfaceId: obj})
         return
 
-    def DeleteObjFromDict(self, obj, node):
-        self.Objs[node].pop(obj.InterfaceId, None)
+    def DeleteObjFromDict(self, obj):
+        self.Objs[obj.Node].pop(obj.InterfaceId, None)
         return
 
     def __get_first_host_if(self, node):
@@ -621,6 +620,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         return resp
 
     def ReadObjects(self, node):
+        logger.info(f"Reading {self.ObjType.name} Objects from {node}")
         msg = self.GetGrpcReadAllMessage(node)
         resp = api.client[node].Get(api.ObjectTypes.INTERFACE, [msg])
         result = self.ValidateObjects(resp, node)
@@ -647,6 +647,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
                         return False
                     # update status for this interface object
                     inf.Status.Update(resp.Status)
+        logger.info(f"GRPC read count {numObjs} for {self.ObjType.name} in {node}")
         return (numObjs == self.GetNumHwObjects(node))
 
 

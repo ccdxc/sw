@@ -175,12 +175,12 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
         ResmgrClient[node].CreateOverlayNhGroupAllocator()
         ResmgrClient[node].CreateDualEcmpNhGroupAllocator()
 
-    def AddObjToDict(self, obj, node):
-         self.Objs[node].update({obj.Id: obj})
+    def AddObjToDict(self, obj):
+         self.Objs[obj.Node].update({obj.Id: obj})
          return
 
-    def DeleteObjFromDict(self, obj, node):
-         self.Objs[node].pop(obj.Id, None)
+    def DeleteObjFromDict(self, obj):
+         self.Objs[obj.Node].pop(obj.Id, None)
          return
 
     def AssociateObjects(self, node):

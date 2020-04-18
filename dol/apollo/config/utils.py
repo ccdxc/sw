@@ -1,5 +1,4 @@
 #! /usr/bin/python3
-import ctypes
 import sys
 import uuid
 import ipaddress
@@ -15,6 +14,7 @@ import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 import infra.common.defs as defs
 import apollo.config.agent.api as api
+from apollo.config.agent.api import ObjectTypes as ObjectTypes
 import apollo.config.topo as topo
 from infra.common.logging import logger
 from apollo.config.store import EzAccessStore
@@ -313,11 +313,12 @@ def ValidateBatch(batchList, cookie):
 
         if IsDryRun():
             SetObjectHwHabitantStatus(oper, obj, types_pb2.API_STATUS_OK)
-            continue
+            return True
 
         is_obj_present = obj.IsHwHabitant()
 
-        logger.info(f"ValidateBatch: operation {oper} for {obj} on {obj.Node}, obj_present {is_obj_present}")
+        logger.info(f"ValidateBatch: operation {oper} for {obj} on {obj.Node} "
+                    f"obj_present {is_obj_present}, cookie {cookie}")
         expApiStatus = types_pb2.API_STATUS_OK
         if is_obj_present == True:
             if oper == 'Create':
@@ -340,24 +341,41 @@ def ValidateBatch(batchList, cookie):
                 else:
                     operResp = ValidateUpdate(obj, operStatus, expApiStatus)
 
-        logger.info(f"ValidateBatch: recvd {operStatus} and {commitStatus} and expcted {expApiStatus}")
+        logger.info(f"ValidateBatch: recvd {operStatus}, {commitStatus} "
+                    f"Expected {expApiStatus}")
 
         # setting HwHabitant for an object only if operation succeeds
+        # TODO: @amrita, hwhabitant gets set based on expected status
+        # instead of actual status, please check & fix
         SetObjectHwHabitantStatus(obj, oper, expApiStatus)
 
         # if batch is created internally
         if cookie == INVALID_BATCH_COOKIE:
+            logger.info(f"ValidateBatch: internal batch result {operResp}")
             return operResp
         else:
             commitResp = (expApiStatus == commitStatus)
-            exception = [ api.ObjectTypes.DEVICE, api.ObjectTypes.LMAPPING, api.ObjectTypes.RMAPPING ]
-            if obj.ObjType in exception:
+            # objects which don't do DB lookup in pdsagent
+            noDBObjs = [
+                         ObjectTypes.DEVICE, ObjectTypes.LMAPPING,
+                         ObjectTypes.RMAPPING, ObjectTypes.VNIC,
+                         ObjectTypes.NEXTHOP, ObjectTypes.SUBNET,
+                         ObjectTypes.ROUTE, ObjectTypes.POLICY,
+                       ]
+            if oper != 'Delete':
+                # vpc is being read before delete in agent
+                noDBObjs.append(ObjectTypes.VPC)
+            if obj.ObjType in noDBObjs:
+                # TODO: @amrita, For these objects,
+                # Validate on operStatus should be done against API_STATUS_OK
+                logger.info(f"ValidateBatch: batch result {commitResp}")
                 return commitResp
             else:
+                # TODO: @amrita, agent dbs are now removed for all objects. Please check & fix
                 # all stateful objects are validated in agent db currently, hence
                 # return operation status. Once agent db is removed then change it to batch commit status
+                logger.info(f"ValidateBatch: int batch result {operResp}")
                 return operResp
-
         return True
 
 def ValidateCreate(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
@@ -440,8 +458,9 @@ def InformDependents(dependee, cbFn):
             getattr(depender, cbFn)(dependee)
     return
 
-def TriggerCreate(obj, node):
-    if GlobalOptions.netagent:
+def TriggerCreate(obj):
+    node = obj.Node
+    if IsNetAgentMode():
         return api.client[node].Create(obj.ObjType, [obj])
     else:
         batchClient = EzAccessStore.GetBatchClient()
@@ -455,11 +474,13 @@ def TriggerCreate(obj, node):
         return ValidateBatch([validate], cookie)
 
 def CreateObject(obj):
+    node = obj.Node
     if IsDryRun() and obj.IsHwHabitant():
-        logger.info(f"Already restored {obj} on {obj.Node}")
+        logger.info(f"Already restored {obj} on {node}")
         return True
 
-    def RestoreObj(robj, node):
+    def RestoreObj(robj):
+        node = robj.Node
         logger.info(f"[Re]Creating object {robj} on {node}")
         if robj.Duplicate != None:
             #TODO: Ideally a new dependee object should be created first
@@ -469,25 +490,38 @@ def CreateObject(obj):
             # inconsistency. Doing it this way in DOL, since IOTA scale test cases
             # uses the same code, and at full scale we can't create an object
             # without freeing another.
-            logger.info(f"Deleting object {robj.Duplicate} on {robj.Node}")
-            TriggerDelete(robj.Duplicate, node)
+            logger.info(f"Deleting object {robj.Duplicate} on {node}")
+            res = TriggerDelete(robj.Duplicate)
+            if not res:
+                logger.error(f"Failed to delete {robj} on {node}")
+                return res
             confClient = EzAccessStoreClient[node].GetConfigClient(robj.ObjType)
             if confClient == None:
                 return False
-            confClient.DeleteObjFromDict(robj.Duplicate, node)
+            confClient.DeleteObjFromDict(robj.Duplicate)
             robj.Duplicate = None
-        TriggerCreate(robj, node)
+        res = TriggerCreate(robj)
+        if not res:
+            logger.error(f"Failed to restore {robj} on {node}")
+            return res
         if IsUpdateSupported():
             InformDependents(robj, 'RestoreNotify')
+        return True
 
     # create from top to bottom
-    RestoreObj(obj, obj.Node);
-    for childObj in obj.Children:
-        CreateObject(childObj)
+    res = RestoreObj(obj);
+    if not res:
+        logger.error(f"Failed to restore {obj} on {node}, skip creating children")
+        return res
+    res = list(map(lambda childObj: not(CreateObject(childObj)), obj.Children))
+    if any(res):
+        logger.error(f"Failed to create children of {obj} on {node}, "
+                     f"res {res} children {obj.Children}")
+        return False
     return True
 
 def ReadObject(obj, expApiStatus = types_pb2.API_STATUS_OK):
-    if GlobalOptions.netagent:
+    if IsNetAgentMode():
         found = False
         ret = False
         resps = api.client[obj.Node].GetHttp(obj.ObjType)
@@ -520,7 +554,7 @@ def ReadObject(obj, expApiStatus = types_pb2.API_STATUS_OK):
 def UpdateObject(obj):
     logger.info(f"Updating object {obj} on {obj.Node}")
     node = obj.Node
-    if GlobalOptions.netagent:
+    if IsNetAgentMode():
         return api.client[node].Update(obj.ObjType, [obj])
     else:
         batchClient = EzAccessStore.GetBatchClient()
@@ -533,8 +567,9 @@ def UpdateObject(obj):
         validate = ('Update', obj, operStatus, commitStatus)
         return ValidateBatch([validate], cookie)
 
-def TriggerDelete(obj, node):
-    if GlobalOptions.netagent:
+def TriggerDelete(obj):
+    node = obj.Node
+    if IsNetAgentMode():
         return api.client[node].Delete(obj.ObjType, [obj])
     else:
         batchClient = EzAccessStore.GetBatchClient()
@@ -548,11 +583,13 @@ def TriggerDelete(obj, node):
         return ValidateBatch([validate], cookie)
 
 def DeleteObject(obj):
+    node = obj.Node
     if IsDryRun() and not obj.IsHwHabitant():
-        logger.info(f"Already deleted {obj} on {obj.Node}")
+        logger.info(f"Already deleted {obj} on {node}")
         return True
 
-    def DelObj(dobj, node):
+    def DelObj(dobj):
+        node = dobj.Node
         logger.info(f"Deleting object {dobj} on {node}")
         #TODO: Ideally a new dependee object should be created first
         # and all dependents should be updated to point to the new object
@@ -562,8 +599,9 @@ def DeleteObject(obj):
         # uses the same code, and at full scale we can't create an object
         # without freeing another.
         obj_present = dobj.IsHwHabitant()
-        ret = TriggerDelete(dobj, node)
+        ret = TriggerDelete(dobj)
         if not ret:
+            logger.error(f"Failed to delete {dobj} on {node}")
             return False
 
         # create duplicate object only if object is present
@@ -571,23 +609,26 @@ def DeleteObject(obj):
             return True
 
         if IsUpdateSupported():
-            if dobj.ObjType == api.ObjectTypes.TUNNEL or\
-               dobj.ObjType == api.ObjectTypes.NEXTHOP or\
-               dobj.ObjType == api.ObjectTypes.INTERFACE:
+            if dobj.ObjType == ObjectTypes.TUNNEL or\
+               dobj.ObjType == ObjectTypes.NEXTHOP or\
+               dobj.ObjType == ObjectTypes.INTERFACE:
                 dupObj = dobj.Dup()
                 confClient = EzAccessStore.GetConfigClient(dobj.ObjType)
                 if confClient == None:
                     return False
-                confClient.AddObjToDict(dupObj, node)
-                TriggerCreate(dupObj, node)
+                confClient.AddObjToDict(dupObj)
+                TriggerCreate(dupObj)
                 InformDependents(dobj, 'DeleteNotify')
         return True
 
     # Delete from bottom to top
-    for childObj in obj.Children:
-        DeleteObject(childObj)
+    res = list(map(lambda childObj: not(DeleteObject(childObj)), obj.Children))
+    if any(res):
+        logger.error(f"Failed to cleanup children of {obj} on {node}, "
+                     f"res {res} children {obj.Children}")
+        return False
     # Delete the final
-    return DelObj(obj, obj.Node)
+    return DelObj(obj)
 
 def GetIPProtoByName(protoname):
     """

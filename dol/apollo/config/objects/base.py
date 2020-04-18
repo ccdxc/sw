@@ -173,8 +173,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return utils.ReadObject(self, expApiStatus)
 
     def Delete(self, spec=None):
-        utils.DeleteObject(self)
-        return True
+        return utils.DeleteObject(self)
 
     def Destroy(self):
         if self.IsHwHabitant():
@@ -236,7 +235,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
             self.SetDirty(True)
             logger.info("Object rolled back to -")
             self.Show()
-        return
+            return True
+        logger.info(f"{self} has no precedent to roll back to")
+        return True
 
     def CommitUpdate(self, spec=None):
         if not self.IsDirty():

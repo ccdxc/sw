@@ -1,5 +1,8 @@
 #! /usr/bin/python3
 
+class Error(Exception):
+   """ Base class for DOL exceptions """
+   pass
 
 class Dict2Enum(object):
     def __init__(self, entries):

@@ -347,12 +347,12 @@ class NexthopObjectClient(base.ConfigClientBase):
         self.__num_nh_per_vpc.append(nh_spec_obj.count)
         return
 
-    def AddObjToDict(self, obj, node):
-        self.Objs[node].update({obj.NexthopId: obj})
+    def AddObjToDict(self, obj):
+        self.Objs[obj.Node].update({obj.NexthopId: obj})
         return
 
-    def DeleteObjFromDict(self, obj, node):
-        self.Objs[node].pop(obj.NexthopId, None)
+    def DeleteObjFromDict(self, obj):
+        self.Objs[obj.Node].pop(obj.NexthopId, None)
         return
 
     def CreateObjects(self, node):

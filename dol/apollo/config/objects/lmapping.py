@@ -266,6 +266,7 @@ class LocalMappingObjectClient(base.ConfigClientBase):
             cookie = utils.GetBatchCookie(node)
             msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(cookie), self.Objects(node)))
             api.client[node].Create(api.ObjectTypes.SVCMAPPING, msgs)
+            list(map(lambda x: x.SetHwHabitant(True), self.Objects(node)))
         return True
 
     def ReadObjects(self, node):

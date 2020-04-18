@@ -11,6 +11,10 @@ from infra.asic.pktcollector    import PacketCollector
 
 import infra.e2e.main as E2E 
 
+class TriggerError(defs.Error):
+   """ Raised when the trigger fails """
+   pass
+
 class TriggerEngineObject:
 
     def __init__(self):
@@ -46,16 +50,21 @@ class TriggerEngineObject:
         tc.PreTriggerCallback()
         status = defs.status.SUCCESS
         vfstatus = defs.status.SUCCESS
-        for step in tc.session.steps:
-            tc.StepSetupCallback(step)
-            tc.StepTriggerCallback(step)
-            self._trigger_step(tc, step)
-            vfstatus = self.__verify_step(tc, step)
-            tc.StepTeardownCallback(step)
-            if vfstatus is defs.status.ERROR:
-                break
-        cbstatus = tc.VerifyCallback()
-        status = self.__resolve_status(cbstatus, vfstatus)
+        cbstatus = defs.status.SUCCESS
+        try:
+            for step in tc.session.steps:
+                tc.StepSetupCallback(step)
+                tc.StepTriggerCallback(step)
+                self._trigger_step(tc, step)
+                vfstatus = self.__verify_step(tc, step)
+                tc.StepTeardownCallback(step)
+                if vfstatus is defs.status.ERROR:
+                    break
+            cbstatus = tc.VerifyCallback()
+            status = self.__resolve_status(cbstatus, vfstatus)
+        except TriggerError as e:
+            logger.error(f"Testcase raised exception {e}")
+            status = defs.status.ERROR
         if status is defs.status.ERROR:
             logger.error("TESTCASE FINAL STATUS = %s(Verify:%s Callback:%s)" %\
                          ('IGNORE' if tc.IsIgnore() else 'FAIL',
@@ -134,7 +143,8 @@ class DolTriggerEngineObject(TriggerEngineObject):
                 method = getattr(config.actual_object, config.method)
                 if not method:
                     assert 0
-                method(config.spec)
+                if not method(config.spec):
+                    raise TriggerError("config method failed in step trigger")
         return
 
     def __trigger_delay(self, step):

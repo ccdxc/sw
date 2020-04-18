@@ -221,14 +221,6 @@ class DeviceObjectClient(base.ConfigClientBase):
         EzAccessStoreClient[node].SetDevice(obj)
         return
 
-    def CreateObjects(self, node):
-        super().CreateObjects(node)
-
-        # Creation of NHG and Tunnel objects moved to generator to have correct sequence.
-        #NhGroupClient.CreateObjects(node)
-        #tunnel.client.CreateObjects(node)
-        return
-
     def GetGrpcReadAllMessage(self, node):
         grpcmsg = types_pb2.Empty()
         return grpcmsg
