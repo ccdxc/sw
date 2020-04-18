@@ -71,6 +71,11 @@ func (m *mockInfraAPI) Close() error {
 	return nil
 }
 
+// Purge stubbed out
+func (i *mockInfraAPI) Purge() {
+
+}
+
 func TestExpandRoutingConfig(t *testing.T) {
 	// Base with unspecified
 	in := netproto.RoutingConfig{

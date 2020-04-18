@@ -145,6 +145,8 @@ const (
 	ErrAlertsRecv                            = Error("ErrAlertsRecv")
 	ErrAlertsFwd                             = Error("ErrAlertsFwd")
 	ErrRPCClientFactoryUninitialized         = Error("ErrRPCClientFactoryUninitialized")
+	ErrStorePurgeClose                       = Error("ErrStorePurgeClose")
+	ErrStorePurgeNuke                        = Error("ErrStorePurgeNuke")
 )
 
 // Const Info

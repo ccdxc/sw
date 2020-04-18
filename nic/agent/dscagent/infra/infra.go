@@ -17,9 +17,10 @@ import (
 // API implents types.InfraAPI. This is a collection of all infra specific APIs that are common across pipelines
 type API struct {
 	sync.Mutex
-	config                    types.DistributedServiceCardStatus
-	primaryStore, backupStore emstore.Emstore
-	ifUpdCh                   chan types.UpdateIfEvent
+	config                      types.DistributedServiceCardStatus
+	primaryDBPath, backupDBPath string
+	primaryStore, backupStore   emstore.Emstore
+	ifUpdCh                     chan types.UpdateIfEvent
 }
 
 // NewInfraAPI returns a new instance of InfraAPI. First db path is interpreted as primary and the second is secondary
@@ -56,6 +57,9 @@ func NewInfraAPI(primaryDBPath, backupDBPath string) (*API, error) {
 		log.Error(errors.Wrapf(types.ErrBackupStoreCreate, "Infra API: Err: %v", err))
 		return nil, errors.Wrapf(types.ErrBackupStoreCreate, "Infra API: Err: %v", err)
 	}
+
+	i.primaryDBPath = primaryDBPath
+	i.backupDBPath = backupDBPath
 
 	i.ifUpdCh = make(chan types.UpdateIfEvent, 100)
 	return &i, nil
@@ -153,6 +157,21 @@ func (i *API) Close() error {
 	}
 
 	return nil
+}
+
+// Purge removes the DB files.
+func (i *API) Purge() {
+	if err := i.Close(); err != nil {
+		log.Error(errors.Wrapf(types.ErrStorePurgeClose, "Infra API: %s", err))
+	}
+
+	if err := os.RemoveAll(i.primaryDBPath); err != nil {
+		log.Error(errors.Wrapf(types.ErrStorePurgeNuke, "Infra API: %s | Primary DB: %v", err, i.primaryDBPath))
+	}
+
+	if err := os.RemoveAll(i.backupDBPath); err != nil {
+		log.Error(errors.Wrapf(types.ErrStorePurgeNuke, "Infra API: %s | Backup DB: %v", err, i.backupDBPath))
+	}
 }
 
 // NotifyVeniceConnection marks venice connection status to true.

@@ -1793,16 +1793,22 @@ func (i *IrisAPI) ReplayConfigs() error {
 
 // PurgeConfigs deletes all configs on Naples Decommission
 func (i *IrisAPI) PurgeConfigs() error {
-	// Apps, SGPolicies, Endpoints,  Networks
-	a := netproto.App{TypeMeta: api.TypeMeta{Kind: "App"}}
-	apps, _ := i.HandleApp(types.List, a)
-	for _, app := range apps {
-		if _, err := i.HandleApp(types.Delete, app); err != nil {
-			log.Errorf("Failed to purge the App. Err: %v", err)
-		}
-	}
+	// SGPolicies, Apps, Endpoints,  Networks
+	log.Info("Starting Decomission workflow")
 
+	// Populuate in memory state
 	s := netproto.NetworkSecurityPolicy{TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"}}
+	a := netproto.App{TypeMeta: api.TypeMeta{Kind: "App"}}
+	e := netproto.Endpoint{TypeMeta: api.TypeMeta{Kind: "Endpoint"}}
+	n := netproto.Network{TypeMeta: api.TypeMeta{Kind: "Network"}}
+	c := netproto.Collector{TypeMeta: api.TypeMeta{Kind: "Collector"}}
+	p := netproto.Profile{TypeMeta: api.TypeMeta{Kind: "Profile"}}
+
+	// Clean up the DB
+	i.InfraAPI.Purge()
+
+	log.Info("Stores purged. Ensured state consistency")
+
 	policies, _ := i.HandleNetworkSecurityPolicy(types.List, s)
 	for _, policy := range policies {
 		if _, err := i.HandleNetworkSecurityPolicy(types.Delete, policy); err != nil {
@@ -1810,7 +1816,13 @@ func (i *IrisAPI) PurgeConfigs() error {
 		}
 	}
 
-	e := netproto.Endpoint{TypeMeta: api.TypeMeta{Kind: "Endpoint"}}
+	apps, _ := i.HandleApp(types.List, a)
+	for _, app := range apps {
+		if _, err := i.HandleApp(types.Delete, app); err != nil {
+			log.Errorf("Failed to purge the App. Err: %v", err)
+		}
+	}
+
 	endpoints, _ := i.HandleEndpoint(types.List, e)
 	for _, endpoint := range endpoints {
 		if strings.Contains(endpoint.Name, "_internal") {
@@ -1821,7 +1833,6 @@ func (i *IrisAPI) PurgeConfigs() error {
 		}
 	}
 
-	n := netproto.Network{TypeMeta: api.TypeMeta{Kind: "Network"}}
 	networks, _ := i.HandleNetwork(types.List, n)
 	for _, network := range networks {
 		if strings.Contains(network.Name, "_internal") {
@@ -1832,7 +1843,6 @@ func (i *IrisAPI) PurgeConfigs() error {
 		}
 	}
 
-	c := netproto.Collector{TypeMeta: api.TypeMeta{Kind: "Collector"}}
 	cols, _ := i.HandleCollector(types.List, c)
 	for _, col := range cols {
 		if _, err := i.HandleCollector(types.Delete, col); err != nil {
@@ -1848,13 +1858,14 @@ func (i *IrisAPI) PurgeConfigs() error {
 		}
 	}
 
-	p := netproto.Profile{TypeMeta: api.TypeMeta{Kind: "Profile"}}
 	profiles, _ := i.HandleProfile(types.List, p)
 	for _, profile := range profiles {
 		if _, err := i.HandleProfile(types.Delete, profile); err != nil {
 			log.Errorf("Failed to purge the Profiles. Err: %v", err)
 		}
 	}
+
+	log.Info("Decomission workflow successful")
 
 	return nil
 }

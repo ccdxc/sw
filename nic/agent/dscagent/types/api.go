@@ -53,7 +53,11 @@ type InfraAPI interface {
 	// UpdateIfChannel returns a channel for propagating interface state to the netagent
 	UpdateIfChannel() chan UpdateIfEvent
 
+	// Close closes the DB Write Handlers
 	Close() error
+
+	//Purge cleans up the data stores.
+	Purge()
 }
 
 // PipelineAPI defines methods that all pipelines must implement.

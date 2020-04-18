@@ -95,6 +95,11 @@ func (i *badInfraAPI) NotifyVeniceConnection() {
 
 }
 
+// Purge stubbed out
+func (i *badInfraAPI) Purge() {
+
+}
+
 func (i *badInfraAPI) GetConfig() (cfg types.DistributedServiceCardStatus) {
 	return types.DistributedServiceCardStatus{
 		DSCMode:     "",
