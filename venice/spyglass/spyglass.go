@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -55,6 +56,14 @@ func main() {
 	// Initialize logger config
 	logger := log.SetConfig(logConfig)
 	defer logger.Close()
+
+	// Create events recorder
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+		Component: globals.Tsm}, logger)
+	if err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
+	}
+	defer evtsRecorder.Close()
 
 	// Create a dummy channel to wait forever
 	waitCh := make(chan bool)
