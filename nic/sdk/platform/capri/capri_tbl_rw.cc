@@ -725,23 +725,22 @@ capri_tcam_memory_init (asic_cfg_t *capri_cfg)
         return;
     }
 
+    // Get actual width in bytes (multiple of 4)
+    uint32_t width = (((CAP_PICT_CSR_DHS_TCAM_XY_WIDTH - 1) >> 5) + 1) << 2;
+
     // Ingress
     uint64_t pa = CAP_ADDR_BASE_TSI_PICT_OFFSET + offsetof(Cap_pict_csr,
                                                            dhs_tcam_xy);
-    for (int i = 0; i < CAP_PICT_CSR_DHS_TCAM_XY_ENTRY_ARRAY_COUNT; i++) {
-        pal_memset(pa, 0, 36, 0);
-        pa += 36;
-        // pal_memset(pa, 0, sizeof(Cap_pict_csr_dhs_tcam_xy), 0);
-        // pa += sizeof(Cap_pict_csr_dhs_tcam_xy);
+    for (int i = 0; i < CAPRI_TCAM_ROWS * 8; i++) {
+        pal_memset(pa, 0, width, 0);
+        pa += sizeof(Cap_pict_csr_dhs_tcam_xy_entry);
     }
 
     // Egress
     pa = CAP_ADDR_BASE_TSE_PICT_OFFSET + offsetof(Cap_pict_csr, dhs_tcam_xy);
-    for (int i = 0; i < CAP_PICT_CSR_DHS_TCAM_XY_ENTRY_ARRAY_COUNT; i++) {
-        pal_memset(pa, 0, 36, 0);
-        pa += 36;
-        // pal_memset(pa, 0, sizeof(Cap_pict_csr_dhs_tcam_xy), 0);
-        // pa += sizeof(Cap_pict_csr_dhs_tcam_xy);
+    for (int i = 0; i < CAPRI_TCAM_ROWS * 4; i++) {
+        pal_memset(pa, 0, width, 0);
+        pa += sizeof(Cap_pict_csr_dhs_tcam_xy_entry);
     }
 
 #if 0
@@ -796,32 +795,35 @@ capri_sram_memory_init (asic_cfg_t *capri_cfg)
         return;
     }
 
+    // Get actual width in bytes (multiple of 4)
+    uint32_t width = (((CAP_PICS_CSR_DHS_SRAM_WIDTH - 1) >> 5) + 1) << 2;
+
     // Ingress
     uint64_t pa = CAP_ADDR_BASE_SSI_PICS_OFFSET + offsetof(Cap_pics_csr,
                                                            dhs_sram);
-    for (int i = 0; i < CAP_PICS_CSR_DHS_SRAM_ENTRY_ARRAY_COUNT; i++) {
-        pal_memset(pa, 0, sizeof(Cap_pics_csr_dhs_sram_entry), 0);
+    for (int i = 0; i < CAPRI_SRAM_ROWS * 8; i++) {
+        pal_memset(pa, 0, width, 0);
         pa += sizeof(Cap_pics_csr_dhs_sram_entry);
     }
 
     // Egress
     pa = CAP_ADDR_BASE_SSE_PICS_OFFSET + offsetof(Cap_pics_csr, dhs_sram);
-    for (int i = 0; i < CAP_PICS_CSR_DHS_SRAM_ENTRY_ARRAY_COUNT; i++) {
-        pal_memset(pa, 0, sizeof(Cap_pics_csr_dhs_sram_entry), 0);
+    for (int i = 0; i < CAPRI_SRAM_ROWS * 8; i++) {
+        pal_memset(pa, 0, width, 0);
         pa += sizeof(Cap_pics_csr_dhs_sram_entry);
     }
 
     // RXDMA
     pa = CAP_ADDR_BASE_RPC_PICS_OFFSET + offsetof(Cap_pics_csr, dhs_sram);
-    for (int i = 0; i < CAP_PICS_CSR_DHS_SRAM_ENTRY_ARRAY_COUNT; i++) {
-        pal_memset(pa, 0, sizeof(Cap_pics_csr_dhs_sram_entry), 0);
+    for (int i = 0; i < CAPRI_SRAM_ROWS * 3; i++) {
+        pal_memset(pa, 0, width, 0);
         pa += sizeof(Cap_pics_csr_dhs_sram_entry);
     }
 
     // TXDMA
     pa = CAP_ADDR_BASE_TPC_PICS_OFFSET + offsetof(Cap_pics_csr, dhs_sram);
-    for (int i = 0; i < CAP_PICS_CSR_DHS_SRAM_ENTRY_ARRAY_COUNT; i++) {
-        pal_memset(pa, 0, sizeof(Cap_pics_csr_dhs_sram_entry), 0);
+    for (int i = 0; i < CAPRI_SRAM_ROWS * 3; i++) {
+        pal_memset(pa, 0, width, 0);
         pa += sizeof(Cap_pics_csr_dhs_sram_entry);
     }
 
