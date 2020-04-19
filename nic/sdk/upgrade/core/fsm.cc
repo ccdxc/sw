@@ -106,6 +106,47 @@ update_ipc_id (std::string name, uint32_t ipc_id)
     UPG_TRACE_DEBUG("service %s, ipc id %u ", name.c_str(), ipc_id);
 }
 
+static bool
+invoke_hooks (upg_stage_t stage_id, hook_execution_t hook_type,
+              svc_rsp_code_t status=SVC_RSP_MAX)
+{
+    upg_stage stage;
+    upg_scripts prehook;
+    std::string name;
+    bool result = true;
+
+    name = upg_stage2str(stage_id);
+    stage = fsm_stages[stage_id];
+    prehook = stage.pre_hook_scripts();
+
+    for (const auto& x : prehook) {
+        if (!is_valid_script(x.path())) {
+            UPG_TRACE_ERR("Not a valid script %s", x.path().c_str());
+            result = false;
+            break;
+        }
+        if (!execute_hook(x.path(), name, hook_type, status)) {
+            UPG_TRACE_ERR("Failed to execute %s", x.path().c_str());
+            result = false;
+            break;
+        }
+    }
+    return result;
+}
+
+static bool
+execute_pre_hooks (upg_stage_t stage_id)
+{
+    return invoke_hooks(stage_id, PRE_STAGE);
+}
+
+static bool
+execute_post_hooks (upg_stage_t stage_id, svc_rsp_code_t status)
+{
+    SDK_ASSERT(status != SVC_RSP_MAX);
+    return invoke_hooks(stage_id, POST_STAGE, status);
+}
+
 static void
 send_ipc_to_next_service (void)
 {
@@ -237,6 +278,7 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
                                                             fsm_states.init_params()->msg_in);
                 SDK_ASSERT(0);
             } else {
+                execute_pre_hooks(id);
                 move_to_nextstage();
             }
         } else if (fsm_states.is_serial_event_sequence() &&
@@ -343,6 +385,7 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
         default:
             break;
         }
+        execute_post_hooks(current_stage_, rsp);
         current_stage_ = lookup_stage_transition(current_stage_, rsp);
         pending_response_ = 0;
         size_ = 0;
@@ -357,6 +400,8 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
         if (pending_response_ == 0) {
             str += ". Finish current stage";
             SDK_ASSERT(pending_response_ >= 0);
+
+            execute_post_hooks(current_stage_, rsp);
             current_stage_ = lookup_stage_transition(current_stage_, rsp);
 
             prev_stage_rsp_ = (prev_stage_rsp_ == SVC_RSP_OK) ?
@@ -673,6 +718,7 @@ init_fsm (fsm_init_params_t *params)
 
     SDK_ASSERT (fsm_states.is_discovery() == true);
     fsm_states.set_init_params(params);
+    execute_pre_hooks(fsm_states.current_stage());
     send_discovery_event(IPC_SVC_DOM_ID_A, fsm_states.current_stage());
     return SDK_RET_OK;
 }

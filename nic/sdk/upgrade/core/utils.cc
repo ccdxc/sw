@@ -7,7 +7,11 @@
 ///
 //----------------------------------------------------------------------------
 
-
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdlib.h>
 #include <iostream>
 #include <ev.h>
 #include <boost/property_tree/ptree.hpp>
@@ -251,6 +255,96 @@ svc_rsp_code (const upg_status_t id)
     }
     return svc_rsp_id;
 };
+
+static std::string
+get_script_path (std::string script)
+{
+    std::string file_path;
+    try {
+        std::string conf_path = std::string(std::getenv("CONFIG_PATH"));
+        std::string pipeline = std::string(std::getenv("PIPELINE"));
+        conf_path = conf_path + pipeline + "/";
+        file_path = conf_path + script ;
+
+    } catch (std::exception const& ex) {
+        UPG_TRACE_ERR("Failed to execute hook  %s", ex.what());
+    }
+    return file_path;
+}
+
+bool
+is_valid_script (const std::string script)
+{
+    std::string file;
+    file = get_script_path(script);
+    if (access(file.c_str(), F_OK) != 0) {
+        UPG_TRACE_ERR("File %s doesn't exist !", file.c_str());
+        return false;
+    }
+
+    if (access(file.c_str(), X_OK) != 0) {
+        UPG_TRACE_ERR("File %s doesn't have execute permission !",
+                      file.c_str());
+        return false;
+    }
+    return true;
+}
+
+static bool
+execute (const char *cmd)
+{
+    bool result=true;
+    int status = system(cmd);
+
+    if (status < 0) {
+        UPG_TRACE_ERR("Failed to execute script, return error %d", errno);
+        result = false;
+    } else {
+        if (WIFEXITED(status)) {
+            UPG_TRACE_INFO("Successfully executed script, return status  %d",
+                           WEXITSTATUS(status));
+            result = true;
+        } else {
+            UPG_TRACE_ERR("Failed to execute script, exited abnormaly");
+            result = false;
+        }
+    }
+    return result;
+}
+
+bool
+execute_hook (const std::string script, const std::string stage_name,
+               hook_execution_t hook_type, svc_rsp_code_t status)
+{
+    bool result=true;
+    std::string cmd;
+    try {
+        cmd = get_script_path(script);
+
+        if (hook_type == PRE_STAGE) {
+            UPG_TRACE_INFO("Executing pre-hook %s , in stage %s",
+                           script.c_str(), stage_name.c_str());
+            cmd = cmd + " -f" + stage_name;
+            cmd = cmd + " -t pre" ;
+            execute(cmd.c_str());
+        } else {
+            SDK_ASSERT(status != SVC_RSP_MAX);
+            UPG_TRACE_INFO("Executing post-hook %s , in stage %s, with stage "
+                           "status %d", script.c_str(), stage_name.c_str(),
+                           status);
+            cmd = cmd + " -f" + stage_name;
+            cmd = cmd + " -t post";
+            cmd = cmd + " -r " + std::string(svc_rsp_code_name[status]);
+
+            SDK_ASSERT(status != SVC_RSP_MAX);
+            execute(cmd.c_str());
+        }
+    } catch (std::exception const& ex) {
+        UPG_TRACE_ERR("Failed to execute hook  %s", ex.what());
+    }
+
+    return result;
+}
 
 }    // namespace upg
 }    // namespace sdk

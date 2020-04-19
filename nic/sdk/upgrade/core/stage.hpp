@@ -24,14 +24,14 @@
 namespace sdk {
 namespace upg {
 
-/// \brief function call back type
+/// \brief script hooks
 /// \remark
-/// Type of the registered callback , whether to call the address
+/// Type of the hooks , whether to call the script
 /// before executing the stage or after executing the stage.
-typedef enum stage_callback_t {
+typedef enum hook_execution_t {
     PRE_STAGE = 0,
     POST_STAGE = 1
-} stage_callback_t;
+} hook_execution_t;
 
 /// \brief A lookup table
 /// \remark

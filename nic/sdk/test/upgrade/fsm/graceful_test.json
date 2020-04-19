@@ -35,7 +35,9 @@
                 { "name": "svc_rsp_fail", "next_stage": "repeal" },
                 { "name": "svc_rsp_crit", "next_stage": "exit"   },
                 { "name": "svc_no_rsp",   "next_stage": "repeal" }
-            ]
+            ],
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
         "backup": {
@@ -44,7 +46,9 @@
                 { "name": "svc_rsp_fail", "next_stage": "repeal"  },
                 { "name": "svc_rsp_crit", "next_stage": "exit"    },
                 { "name": "svc_no_rsp",   "next_stage": "repeal"  }
-            ]
+            ],
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
         "prepare": {
@@ -58,7 +62,9 @@
                 { "name": "svc_rsp_fail", "next_stage": "respawn"            },
                 { "name": "svc_rsp_crit", "next_stage": "respawn"            },
                 { "name": "svc_no_rsp",   "next_stage": "respawn"            }
-            ]
+            ],
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
         "prepare_switchover": {
@@ -68,7 +74,9 @@
                 { "name": "svc_rsp_fail", "next_stage": "respawn"    },
                 { "name": "svc_rsp_crit", "next_stage": "respawn"    },
                 { "name": "svc_no_rsp",   "next_stage": "respawn"    }
-            ]
+            ],
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
         "switchover": {
@@ -83,7 +91,10 @@
                 { "name": "svc_rsp_fail", "next_stage": "respawn" },
                 { "name": "svc_rsp_crit", "next_stage": "respawn" },
                 { "name": "svc_no_rsp",   "next_stage": "respawn" }
-            ]
+            ],
+
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
         "ready": {
@@ -96,7 +107,10 @@
                 { "name": "svc_rsp_fail", "next_stage": "rollback" },
                 { "name": "svc_rsp_crit", "next_stage": "rollback" },
                 { "name": "svc_no_rsp",   "next_stage": "rollback" }
-            ]
+            ],
+
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
         "rollback": {
@@ -105,7 +119,10 @@
                 { "name": "svc_rsp_fail", "next_stage": "exit"   },
                 { "name": "svc_rsp_crit", "next_stage": "exit"   },
                 { "name": "svc_no_rsp",   "next_stage": "exit"   }
-            ]
+            ],
+
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
         "repeal": {
@@ -119,7 +136,10 @@
                 { "name": "svc_rsp_fail", "next_stage": "exit"   },
                 { "name": "svc_rsp_crit", "next_stage": "exit"   },
                 { "name": "svc_no_rsp",   "next_stage": "exit"   }
-           ]
+           ],
+
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
         "respawn": {
@@ -133,7 +153,10 @@
                 { "name": "svc_rsp_fail", "next_stage": "exit"   },
                 { "name": "svc_rsp_crit", "next_stage": "exit"   },
                 { "name": "svc_no_rsp",   "next_stage": "exit"   }
-           ]
+           ],
+
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
        "finish": {
@@ -147,7 +170,10 @@
                 { "name": "svc_rsp_fail", "next_stage": "exit" },
                 { "name": "svc_rsp_crit", "next_stage": "exit" },
                 { "name": "svc_no_rsp",   "next_stage": "exit" }
-           ]
+           ],
+
+            "pre_hooks" : ["test_script_1.sh", "test_script_0.sh"],
+            "post_hooks" : ["test_script_2.sh"]
         },
 
         "exit": { }
