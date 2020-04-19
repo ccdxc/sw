@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, ChangeDetectionStrategy } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Animations } from '@app/animations';
@@ -6,6 +6,7 @@ import { IWorkloadWorkload, WorkloadWorkload, WorkloadWorkloadIntfSpec } from '@
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { FormArray, ValidatorFn, AbstractControl, Validators, ValidationErrors, FormGroup } from '@angular/forms';
+import { minValueValidator, maxValueValidator } from '@sdk/v1/utils/validators';
 import { SelectItem } from 'primeng/api';
 import { IPUtility } from '@app/common/IPUtility';
 import { Utility } from '@app/common/Utility';
@@ -16,6 +17,7 @@ import { Utility } from '@app/common/Utility';
   styleUrls: ['./newworkload.component.scss'],
   encapsulation: ViewEncapsulation.None,
   animations: Animations,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, WorkloadWorkload> implements OnInit, AfterViewInit {
 
@@ -25,10 +27,10 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
 
   IPS_LABEL: string = 'IP Addresses';
   IPS_ERRORMSG: string = 'Invalid IP addresses';
+  IPS_TOOLTIP: string = 'Type in ip address and hit enter or space key to add more.';
   MACS_LABEL: string = 'MAC Addresses';
   MACS_ERRORMSG: string = 'Invalid MAC addresses. It should be aaaa.bbbb.cccc format.';
   validationMessage: string;
-  defaultHostName: string;
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -44,22 +46,14 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
   // Empty Hook
   postNgInit() {
     if (!this.isInline && this.hostOptions.length) {
-      this.newObject.$formGroup.get(['spec', 'host-name']).setValue(this.hostOptions[0].value);
+      this.hostOptions.push({label: '', value: null});
     }
     // Add one interface if it doesn't already have one
     const interfaces = this.newObject.$formGroup.get(['spec', 'interfaces']) as FormArray;
 
-    if (interfaces.length > 0) {
-      interfaces.controls.forEach((r, i) => {
-        r['inEdit'] = true;
-      });
-    }
-
     if (interfaces.length === 0) {
       this.addInterface();
     }
-
-
 
     this.newObject.$formGroup.get(['meta', 'name']).setValidators([
       this.newObject.$formGroup.get(['meta', 'name']).validator,
@@ -74,33 +68,14 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
   addInterface() {
     const interfaces = this.newObject.$formGroup.get(['spec', 'interfaces']) as FormArray;
     const newInterface = new WorkloadWorkloadIntfSpec().$formGroup;
-    newInterface['inEdit'] = false;
 
     newInterface.get('mac-address').setValidators([
       this.isValidMacAddress()
     ]);
-    newInterface.get('external-vlan').setValidators([this.minVLanValueValidator('External VLAN')]);
-    newInterface.get('micro-seg-vlan').setValidators([this.minVLanValueValidator('Micro Segement VLAN')]);
+    newInterface.get('external-vlan').setValidators([minValueValidator(0), maxValueValidator(4095)]);
+    newInterface.get('micro-seg-vlan').setValidators([minValueValidator(1), maxValueValidator(4095)]);
 
-    interfaces.insert(interfaces.length, newInterface);
-    this.editInterface(interfaces.length - 1);
-  }
-
-  editInterface(index) {
-    // Collapse any other open rules, and make index rule open
-    this.newObject.$formGroup.get(['spec', 'interfaces'])['controls'].forEach((r, i) => {
-      if (i === index) {
-        r.inEdit = false;
-      } else {
-        r.inEdit = true;
-      }
-    });
-  }
-
-  orderedListClick(index: number) {
-    if (this.newObject.$formGroup.get(['spec', 'interfaces'])['controls'][index].inEdit) {
-      this.editInterface(index);
-    }
+    interfaces.push(newInterface);
   }
 
   removeInterface(index: number) {
@@ -112,7 +87,6 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
 
   isValidIP(ip: string) {
     return IPUtility.isValidIPWithOptionalMask(ip);
-
   }
 
   isValidMacAddress(): ValidatorFn {
@@ -133,39 +107,29 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
     };
   }
 
-  minVLanValueValidator(vlanName: string): ValidatorFn {
-    const min: number = vlanName === 'External VLAN' ? 0 : 1;
-    return (control: AbstractControl): ValidationErrors | null => {
-      const actual = Number(control.value);
-      if (actual < min || actual > 4095) {
-        return {
-          objectName: {
-            required: true,
-            message: actual + ' is not a valid ' + vlanName + ' number'
-          }
-        };
-      }
-      return null;
-    };
-  }
-
-
   // Empty Hook
   isFormValid() {
     this.validationMessage = null;
     if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
-      this.validationMessage = 'Error: Workload name is required.';
       return false;
     }
-    for (let i = 0; i < this.newObject.$formGroup.get(['spec', 'interfaces']).value.length; i++) {
-
-      const fieldValue = this.newObject.$formGroup.get(['spec', 'interfaces'])['controls'][i];
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['spec', 'host-name']).value)) {
+      this.validationMessage = 'Error: Host is required.';
+      return false;
+    }
+    const arr: FormArray = this.newObject.$formGroup.get(['spec', 'interfaces']) as FormArray;
+    for (let i = 0; i < arr.length; i++) {
+      const fieldValue: FormGroup = arr['controls'][i] as FormGroup;
       if ((fieldValue.controls['mac-address']).value !== null) {
         if (!(fieldValue.controls['mac-address']).valid) {
           this.validationMessage =
-            'Error: Interface ' + (i + 1) + ' source Mac addresses are invalid.';
+            'Error: Interface ' + (i + 1) + ' source MAC address is invalid.';
           return false;
         }
+      } else {
+        this.validationMessage =
+          'Error: Interface ' + (i + 1) + ' source MAC address is empty.';
+        return false;
       }
       if ((fieldValue.controls['ip-addresses']).value.length) {
         if (!(fieldValue.controls['ip-addresses']).valid) {
@@ -180,6 +144,10 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
             'Error: Interface ' + (i + 1) + ' external-vlan is invalid.';
           return false;
         }
+      } else {
+        this.validationMessage =
+          'Error: Interface ' + (i + 1) + ' external-vlan is empty.';
+        return false;
       }
       if ((fieldValue.controls['micro-seg-vlan']).value !== null) {
         if (!(fieldValue.controls['micro-seg-vlan']).valid) {
@@ -187,16 +155,51 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
             'Error: Interface ' + (i + 1) + ' micro-seg-vlan is invalid.';
           return false;
         }
+      } else {
+        this.validationMessage =
+          'Error: Interface ' + (i + 1) + '  micro-seg-vlan is empty.';
+        return false;
       }
     }
-    if (!this.areInterfaceValid()) {
-      this.validationMessage = 'Error: At least one interface must be specified';
+    if (!this.newObject.$formGroup.valid) {
+      this.validationMessage = 'Error: form is not valid';
       return false;
     }
 
     return true;
   }
 
+  oneInterfaceIsValid(): boolean {
+    const array: FormArray = this.newObject.$formGroup.get(['spec', 'interfaces']) as FormArray;
+    for (let i = 0; i < array.controls.length; i++) {
+      if (this.isInterfaceValid(array.controls[i] as FormGroup)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  isInterfaceValid(form: FormGroup) {
+    const fields = [
+      form.get(['mac-address']),
+      form.get(['external-vlan']),
+      form.get(['micro-seg-vlan'])
+    ];
+    for (let i = 0; i < fields.length; i++) {
+      if (Utility.isEmpty(fields[i].value) || !fields[i].valid) {
+        return false;
+      }
+    }
+    const field = form.get(['ip-addresses']);
+    return field.valid;
+  }
+
+  getTooltip(): string {
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      return 'Error: Workload name is required.';
+    }
+    return Utility.isEmpty(this.validationMessage) ? 'Ready to save new workload' : this.validationMessage;
+  }
 
   setToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
@@ -218,12 +221,6 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
     this._controllerService.setToolbarData(currToolbar);
   }
 
-  getTooltip(): string {
-    this.isFormValid();
-    return Utility.isEmpty(this.validationMessage) ? 'Ready to save new workload' : this.validationMessage;
-  }
-
-
   createObject(object: IWorkloadWorkload) {
     return this.workloadService.AddWorkload(object);
   }
@@ -238,25 +235,6 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
 
   generateUpdateSuccessMsg(object: IWorkloadWorkload) {
     return 'Updated workload ' + object.meta.name;
-  }
-
-  getInputFieldValue(index: number, field: string): string {
-    return this.newObject.$formGroup.get(['spec', 'interfaces']).value[index][field];
-
-  }
-
-
-  formControls(): AbstractControl[] {
-    return (this.newObject.$formGroup.get(['spec', 'interfaces']) as FormArray).controls;
-  }
-
-  formControlName(index: number, field: string): AbstractControl {
-    const formControl = this.formControls();
-    return (formControl[index] as FormGroup).controls[field];
-  }
-
-  areInterfaceValid(): boolean {
-    return this.newObject.$formGroup.get(['spec', 'interfaces']).valid;
   }
 
 }

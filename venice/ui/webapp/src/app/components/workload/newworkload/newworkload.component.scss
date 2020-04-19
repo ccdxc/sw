@@ -22,6 +22,63 @@ $dary-grey: #a9a9a9;
     @include primary-font(12px, #b2b3b4, 300);
   }
 
+  .new-workload-interfaces {
+    width: 590px;
+    border: 1px solid $dary-grey;
+    padding: 5px;
+
+    legend {
+      width: 180px;
+      padding: 0 2px;
+      font-size: 14px;
+      color: #676763
+    }
+
+    .new-workload-add-interface {
+      @include primary-font(16px, #6ba0e5, 400);
+      margin-top: 15px;
+      width: 120px;
+    }
+
+    .new-workload-delete-interface {
+      margin-top: 15px;
+    }
+
+    .new-workload-interface-box-address,
+    .new-workload-interface-box-vlan {
+      :first-child {
+        width: 100%;
+      }
+
+      height: 30px;
+      font-size: 14px;
+    }
+
+    .new-workload-interface-box-address {
+      width: 140px;
+    }
+
+    .new-workload-interface-box-vlan {
+      width: 110px;
+    }
+
+    .new-workload-interface-ipbox {
+      ul {
+        width: 140px;
+        white-space: nowrap;
+        overflow: hidden !important;
+        font-size: 14px !important;
+        height: 30px !important;
+      }
+    }
+
+    .new-workload-interface-ip {
+      label {
+        font-size: 14px;
+      }
+    }
+  }
+
   .new-workload-rule-source {
     border: 1px solid $dary-grey;
     padding: 5px;
@@ -107,6 +164,14 @@ $dary-grey: #a9a9a9;
     margin-top: 1.5 * $vertical-gutter;
     place-content: flex-end;
     align-items: flex-start;
+
+    // when screen is big enough, move buttons down
+    @media only screen and (min-width: 1200px) {
+      .button-container {
+        position: relative;
+        max-height: 0px;
+      }
+    }
 
     .new-workload-save,
     .new-workload-cancel {
