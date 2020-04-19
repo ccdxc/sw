@@ -265,8 +265,8 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   }
 
   handleEditSave(networkinterfaces: NetworkNetworkInterface[]) {
-   // this.updateWithForkjoin(networkinterfaces);
-   this.bulkeditLabels(networkinterfaces);
+    this.updateWithForkjoin(networkinterfaces);
+   // this.bulkeditLabels(networkinterfaces);  // Use bulkedit when backend is ready
   }
 
   handleEditCancel($event) {
