@@ -24,13 +24,9 @@ var _ = Describe("events tests", func() {
 
 	Context("tags:type=basic;datapath=true;duration=short Basic events tests", func() {
 		It("tags:sanity=true Link flap should trigger an event from hal/linkmgr", func() {
-			Skip("link events not generated from Naples yet")
-			if ts.tb.HasNaplesSim() {
-				Skip("link flap cannot be run on NAPLES sim")
+			if ts.tb.HasNaplesHW() {
+				Skip("link flap test disabled on NAPLES HW for now")
 			}
-			//Naples time in UTC
-			startTime := time.Now().UTC()
-			startTime = startTime.Add(-3 * time.Minute) // TODO: remove this; there is ~2 to ~3 minute delay between naples sim and rund VM
 
 			// get a random naples and flap the port
 			npc := ts.model.Naples()
@@ -40,11 +36,14 @@ var _ = Describe("events tests", func() {
 			time.Sleep(60 * time.Second) // wait for the event to reach venice
 
 			// ensures the link events are triggered and available in venice
-			ec := ts.model.LinkUpEventsSince(startTime, npc)
+			startTime := time.Now().UTC()
+			startTime = startTime.Add(-3 * time.Minute)
+
+			ec := ts.model.LinkDownEventsSince(startTime, npc)
 			Expect(ec.Error()).ShouldNot(HaveOccurred())
 			Expect(ec.LenGreaterThanEqualTo(1)).Should(BeTrue())
 
-			ec = ts.model.LinkDownEventsSince(startTime, npc)
+			ec = ts.model.LinkUpEventsSince(startTime, npc)
 			Expect(ec.Error()).ShouldNot(HaveOccurred())
 			Expect(ec.LenGreaterThanEqualTo(1)).Should(BeTrue())
 
@@ -52,6 +51,25 @@ var _ = Describe("events tests", func() {
 			Eventually(func() error {
 				return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
 			}).Should(Succeed())
+		})
+		It("tags:sanity=true Events generation on sim", func() {
+			if ts.tb.HasNaplesHW() {
+				Skip("Events generation test disabled on NAPLES HW for now")
+			}
+
+			// get a random naples
+			npc := ts.model.Naples()
+			nc := npc.Any(1)
+			Expect(nc.Error()).ShouldNot(HaveOccurred())
+
+			// generate 10 SYSTEM_COLDBOOT events
+			Expect(ts.model.StartEventsGenOnNaples(nc, "10", "10")).Should(Succeed())
+			time.Sleep(120 * time.Second) // wait for the event to reach venice
+
+			// verify the events made it to Venice
+			ec := ts.model.SystemBootEvents(npc)
+			Expect(ec.Error()).ShouldNot(HaveOccurred())
+			Expect(ec.LenGreaterThanEqualTo(1)).Should(BeTrue())
 		})
 	})
 })

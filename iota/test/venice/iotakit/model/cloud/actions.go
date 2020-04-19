@@ -6,9 +6,17 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"reflect"
+
+	yaml "gopkg.in/yaml.v2"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/events/generated/eventattrs"
 )
 
 //VerifyNaplesStatus verify naples status
@@ -273,4 +281,167 @@ func (sm *SysModel) VerifyClusterStatus() error {
 // GetExclusiveServices node on the fly
 func (sm *SysModel) GetExclusiveServices() ([]string, error) {
 	return []string{"pen-pegasus"}, nil
+}
+
+// runCommandOnGivenNaples runs the given command on given naples and returns stdout
+func (sm *SysModel) runCommandOnGivenNaples(np *objects.Naples, cmd string) (string, error) {
+	trig := sm.Tb.NewTrigger()
+
+	for _, inst := range np.Instances {
+		trig.AddCommand(cmd, inst.EntityName, np.NodeName())
+	}
+
+	resp, err := trig.Run()
+	if err != nil {
+		return "", err
+	}
+
+	cmdResp := resp[0]
+	if cmdResp.ExitCode != 0 {
+		return "", fmt.Errorf("command failed: %+v", cmdResp)
+	}
+
+	return cmdResp.Stdout, nil
+}
+
+// PortFlap flaps one port from each simulated naples in the collection
+func (sm *SysModel) PortFlap(npc *objects.NaplesCollection) error {
+	for _, naples := range npc.FakeNodes {
+		naplesName := naples.NodeName()
+		err, port := sm.getNaplesUplinkPort(naples)
+		if err != nil {
+			log.Errorf("Err: %v", err)
+			return err
+		}
+
+		// flap port
+		log.Infof("flapping port {%s} on naples {%v}", port, naplesName)
+		portDownCmd := fmt.Sprintf("/naples/nic/bin/pdsctl debug port --port %s --admin-state down", port)
+		_, err = sm.runCommandOnGivenNaples(naples, portDownCmd)
+		if err != nil {
+			log.Errorf("command(%v) failed on naples: %v, Err: %v", portDownCmd, naplesName, err)
+			return err
+		}
+
+		portUpCmd := fmt.Sprintf("/naples/nic/bin/pdsctl debug port --port %s --admin-state up", port)
+		_, err = sm.runCommandOnGivenNaples(naples, portUpCmd)
+		if err != nil {
+			log.Errorf("command(%v) failed on naples: %v, Err: %v", portUpCmd, naplesName, err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+// LinkUpEventsSince returns all the link down events since the given time.
+func (sm *SysModel) LinkUpEventsSince(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection {
+        fieldSelector := fmt.Sprintf("severity=%s,type=%s,object-ref.kind=DistributedServiceCard,meta.mod-time>=%v", eventattrs.Severity_INFO, eventtypes.LINK_UP.String(), since.Format(time.RFC3339Nano))
+
+        eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+        if err != nil {
+                log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
+                return &objects.EventsCollection{}
+        }
+
+        return &objects.EventsCollection{List: eventsList}
+}
+
+// LinkDownEventsSince returns all the link down events since the given time.
+func (sm *SysModel) LinkDownEventsSince(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection {
+        fieldSelector := fmt.Sprintf("severity=%s,type=%s,object-ref.kind=DistributedServiceCard,meta.mod-time>=%v", eventattrs.Severity_WARN, eventtypes.LINK_DOWN.String(), since.Format(time.RFC3339Nano))
+
+        eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+        if err != nil {
+                log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
+                return &objects.EventsCollection{}
+        }
+
+        return &objects.EventsCollection{List: eventsList}
+}
+
+// StartEventsGenOnNaples generates SYSTEM_COLDBOOT events from the Naples events generation test app.
+// TODO: Generate all possible events
+func (sm *SysModel) StartEventsGenOnNaples(npc *objects.NaplesCollection, rate, count string) error {
+	naples := npc.FakeNodes[0]
+	naplesName := naples.NodeName()
+
+	genEvtCmd := fmt.Sprintf("PATH=$PATH:/naples/nic/bin/; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/naples/nic/lib/:/naples/nic/lib64/; export PATH; export LD_LIBRARY_PATH; OPERD_REGIONS=/naples/nic/conf/operd-regions.json /naples/nic/bin/alerts_gen -t 2 -r %s -n %s", rate, count)
+
+	_, err := sm.runCommandOnGivenNaples(naples, genEvtCmd)
+	if err != nil {
+		log.Errorf("command(%v) failed on naples: %v, Err: %v", genEvtCmd, naplesName, err)
+		return err
+	}
+
+	return nil
+}
+
+// SystemBootEvents returns all SYSTEM_COLDBOOT events.
+func (sm *SysModel) SystemBootEvents(npc *objects.NaplesCollection) *objects.EventsCollection {
+        fieldSelector := fmt.Sprintf("type=%s,object-ref.kind=DistributedServiceCard", eventtypes.SYSTEM_COLDBOOT.String())
+
+        eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+        if err != nil {
+                log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
+                return &objects.EventsCollection{}
+        }
+
+        return &objects.EventsCollection{List: eventsList}
+}
+
+
+// getNaplesUplinkPort returns the first uplink port from the output of "pdsctl show port status --yaml
+func (sm *SysModel) getNaplesUplinkPort(naples *objects.Naples) (error, string) {
+	naplesName := naples.NodeName()
+
+	portStatusCmd := "/naples/nic/bin/pdsctl show port status --yaml"
+	out, err := sm.runCommandOnGivenNaples(naples, portStatusCmd)
+	if err != nil {
+		log.Errorf("command(%v) failed on naples: %v, Err: %v", portStatusCmd, naplesName, err)
+		return err, ""
+	}
+
+	ports := strings.Split(out, "\r\n\r\n---\r\n")
+	port := make(map[interface{}]interface{})
+	for _, p := range ports {
+		err = yaml.Unmarshal([]byte(p), &port)
+		if err != nil {
+			log.Errorf("Port unmarshal failed, Err %v", err)
+			return err, ""
+		}
+
+		var portSpec map[interface{}]interface{}
+		specLoop:for k, v := range port {
+			switch k.(type) {
+			case string:
+				if k.(string) == "spec" {
+					portSpec = v.(map[interface{}]interface{})
+					break specLoop
+				}
+			}
+		}
+
+		var id []byte
+		var typ int
+		for k, v := range portSpec {
+			switch k.(type) {
+			case string:
+				if k.(string) == "id" {
+					y := reflect.ValueOf(v)
+					for i := 0; i < y.Len(); i++ {
+						id = append(id, byte(y.Index(i).Interface().(int)))
+					}
+				}
+				if k.(string) == "type" {
+					typ = v.(int)
+				}
+			}
+		}
+		if typ == 1 {
+			return nil, uuid.FromBytesOrNil(id).String()
+		}
+	}
+
+	return fmt.Errorf("Uplink port not found on %v", naplesName), ""
 }
