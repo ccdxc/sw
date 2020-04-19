@@ -227,6 +227,7 @@ L:
 			if err == nil {
 				log.Infof("Number of DscObjects %v %v", len(dscObject), nc)
 				if len(dscObject) != nc {
+					time.Sleep(3 * time.Second)
 					continue
 				}
 			} else {
@@ -743,7 +744,7 @@ func (sm *SysModel) modifyConfig() error {
 	server := "20.20.0.1"
 	id, iderr := strconv.ParseInt(sm.Tb.ID(), 10, 64)
 	if iderr == nil {
-		server = fmt.Sprintf("20.20.%v.1",id)
+		server = fmt.Sprintf("20.20.%v.1", id)
 	}
 
 	for _, ipam := range cfgObjects.Ipams {

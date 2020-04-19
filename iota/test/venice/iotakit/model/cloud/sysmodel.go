@@ -235,7 +235,15 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 				wload.Spec.Interfaces[0].MicroSegVlan = 0
 				//For now make sure we don't change the mac address
 				wload.Spec.Interfaces[0].MACAddress = ""
-				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", nws[index].Name)
+				os := h.Naples.GetTestNode().GetNodeOs()
+				info, ok := sm.Tb.Topo.WkldInfo[os]
+				if !ok {
+					log.Errorf("Workload info of type %s not found", os)
+					err := fmt.Errorf("Workload info of type %s not found", os)
+					return nil, err
+				}
+
+				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, info.WorkloadType, info.WorkloadImage, "", nws[index].Name)
 				sm.WorkloadsObjs[wload.Name].SetParentInterface(hostIntfs[index])
 				wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
 				//Just 1 workload per network

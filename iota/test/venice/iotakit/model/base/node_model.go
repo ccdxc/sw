@@ -157,8 +157,16 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 	for i, wload := range newWloads {
 		for _, subnet := range subnets {
 			if subnet.VeniceNetwork.Spec.VlanID == wload.Spec.Interfaces[0].ExternalVlan {
-				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(hosts[i], wload, sm.Tb.Topo.WorkloadType,
-					sm.Tb.Topo.WorkloadImage, sm.Tb.GetSwitch(), subnet.Name)
+				os := hosts[i].Naples.GetTestNode().GetNodeOs()
+				info, ok := sm.Tb.Topo.WkldInfo[os]
+				if !ok {
+					log.Errorf("Workload info of tyype %s not found", os)
+					err := fmt.Errorf("Workload info of tyype %s not found", os)
+					wc.SetError(err)
+					return wc
+				}
+				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(hosts[i], wload, info.WorkloadType,
+					info.WorkloadImage, sm.Tb.GetSwitch(), subnet.Name)
 				wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
 			}
 		}

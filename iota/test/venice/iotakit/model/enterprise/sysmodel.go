@@ -264,8 +264,16 @@ func (sm *SysModel) GetWorkloadsForScale(hosts []*objects.Host, policyCollection
 
 	for hostName, wloads := range workloadHostMap {
 		host, _ := hostMap[hostName]
+		os := host.Naples.GetTestNode().GetNodeOs()
+		info, ok := sm.Tb.Topo.WkldInfo[os]
+		if !ok {
+			log.Errorf("Workload info of tyype %s not found", os)
+			err := fmt.Errorf("Workload info of tyype %s not found", os)
+			return nil, err
+		}
+
 		for _, w := range wloads {
-			sm.WorkloadsObjs[w.Name] = objects.NewWorkload(host, w, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", "")
+			sm.WorkloadsObjs[w.Name] = objects.NewWorkload(host, w, info.WorkloadType, info.WorkloadImage, "", "")
 			newCollection.Workloads = append(newCollection.Workloads, sm.WorkloadsObjs[w.Name])
 		}
 	}
@@ -316,9 +324,16 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 			}
 		}
 	}
+	os := h.Naples.GetTestNode().GetNodeOs()
+	info, ok := sm.Tb.Topo.WkldInfo[os]
+	if !ok {
+		log.Errorf("Workload info of tyype %s not found", os)
+		err := fmt.Errorf("Workload info of tyype %s not found", os)
+		return nil, err
+	}
 
 	for _, wload := range wloadsToCreate {
-		sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", "")
+		sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, info.WorkloadType, info.WorkloadImage, "", "")
 		wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
 	}
 

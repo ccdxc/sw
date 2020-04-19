@@ -109,6 +109,13 @@ func (sm *SysModel) VerifyVeniceStatus() error {
 		return err
 	}
 
+	// check health of elastic
+	err = sm.CheckElasticServiceStatus()
+	if err != nil {
+		log.Errorf("Checking venice citadel status failed : %v", err)
+		return err
+	}
+
 	return nil
 }
 

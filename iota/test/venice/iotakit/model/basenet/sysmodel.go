@@ -205,7 +205,15 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 	}
 
 	for _, wload := range wloadsToCreate {
-		sm.WorkloadsObjs[wload.wload.Name] = objects.NewWorkload(h, wload.wload, sm.Tb.Topo.WorkloadType, sm.Tb.Topo.WorkloadImage, "", "")
+		os := h.Naples.GetTestNode().GetNodeOs()
+		info, ok := sm.Tb.Topo.WkldInfo[os]
+		if !ok {
+			log.Errorf("Workload info of type %s not found", os)
+			err := fmt.Errorf("Workload info of type %s not found", os)
+			return nil, err
+		}
+
+		sm.WorkloadsObjs[wload.wload.Name] = objects.NewWorkload(h, wload.wload, info.WorkloadType, info.WorkloadImage, "", "")
 		sm.WorkloadsObjs[wload.wload.Name].SetNaplesUUID(wload.uuid)
 		wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.wload.Name])
 	}

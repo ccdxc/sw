@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -51,6 +52,29 @@ type CommandResp struct {
 	Stderr   string
 	Timedout bool
 	Handle   CommandHandle
+}
+
+//GetChildPids get child PIDs
+func getChildPids(ppid int) []int {
+	ret := []int{}
+	var cmd []string
+	switch runtime.GOOS {
+	case "freebsd":
+		cmd = []string{"pstree", strconv.Itoa(ppid), "|", `sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/'`}
+	default:
+		cmd = []string{"pstree", "-p", strconv.Itoa(ppid), "|", "perl", "-ne", "'print \"$1\\n\" while /\\((\\d+)\\)/g'"}
+	}
+	exitCode, stdoutStderr, err := Run(cmd, 0, false, true, nil)
+	if err == nil && exitCode == 0 {
+		pids := strings.Split(stdoutStderr, "\n")
+		for _, pid := range pids {
+			if ipid, err := strconv.Atoi(pid); err == nil && ipid != ppid {
+				ret = append(ret, ipid)
+			}
+		}
+	}
+
+	return ret
 }
 
 //NewInterface vlan interface create
@@ -468,7 +492,16 @@ func (ctr *Container) StopCommand(cmdHandle CommandHandle) error {
 		}
 		/* Pid may no be immediately available */
 		if cResp.Pid != 0 {
-			cmd := []string{"kill", "-9", strconv.Itoa(cResp.Pid)}
+
+			pids := getChildPids(cResp.Pid)
+			for i := 0; i < len(pids); i++ {
+				cmd := []string{"kill", "-SIGINT", strconv.Itoa(pids[i])}
+				RunCmd(cmd, 0, false, false, nil)
+			}
+			cmd := []string{"kill", "-SIGINT", strconv.Itoa(cResp.Pid)}
+			RunCmd(cmd, 0, false, false, nil)
+			time.Sleep(200 * time.Millisecond)
+			cmd = []string{"kill", "-SIGKILL", strconv.Itoa(cResp.Pid)}
 			RunCmd(cmd, 0, false, false, nil)
 			break
 		}

@@ -1877,7 +1877,7 @@ func (naples *naplesControlSimNode) bringUpNaples(name string, macAddress string
 }
 
 func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAddress string,
-	image string, dockerNW string, veniceIPs []string, defaultGW string) (string, error) {
+	image string, dockerNW string, veniceIPs []string, defaultGW string, reload bool) (string, error) {
 
 	maxAttempts := 3
 	var naplesContainer *Utils.Container
@@ -2013,7 +2013,7 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 		if rerr != nil || cmdResp.ExitCode != 0 || cmdResp.Stderr != "" {
 			msg := fmt.Sprintf("Error running default route command on %v : %v %v", name, cmdResp.Stdout, cmdResp.Stderr)
 			naples.logger.Println(msg)
-			return errors.New(msg)
+			//return errors.New(msg)
 		}
 		return nil
 	}
@@ -2241,7 +2241,7 @@ func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err erro
 					ip, err := naples.bringUpNaples(instance.id, instance.name, instance.macAddress,
 						in.GetImage(), dockerNW,
 						in.GetNaplesMultiSimConfig().GetVeniceIps(),
-						in.GetNaplesMultiSimConfig().Gateway)
+						in.GetNaplesMultiSimConfig().Gateway, in.Reload)
 					simInfo.IpAddress = ip
 					return err
 				})

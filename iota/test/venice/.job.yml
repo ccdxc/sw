@@ -24,8 +24,8 @@ e2e-targets:
      - image: build-160
        count: 3
        resources:
-         cpus: 4
-         memory: 8
+         cpus: 6
+         memory: 16
          pvt-networks:
          - control-1
          - control-2
@@ -66,8 +66,8 @@ e2e-targets:
      - image: build-160
        count: 3
        resources:
-         cpus: 4
-         memory: 8
+         cpus: 6
+         memory: 16
          pvt-networks:
          - control-1
          - control-2

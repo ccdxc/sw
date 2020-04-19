@@ -1,0 +1,21 @@
+model: Cloud
+nodes:
+    naples-sim:
+        image: ../nic/obj/images/naples-release-v1.tgz
+        instances: 1
+    venice:
+        image: ../bin/venice.apulu.tgz
+        instances: 1
+
+
+workload: 
+  esx: 
+    image: build-1007
+    memory: 4
+    cpu: 4
+    type: VM
+  linux: 
+    image: registry.test.pensando.io:5000/pensando/iota/centos:1.1
+    memory: 4
+    cpu: 4
+    type: Container

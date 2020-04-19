@@ -4,12 +4,17 @@ import (
 	context2 "context"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
+	"strconv"
+	"time"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 
+	cmd "github.com/pensando/sw/iota/svcs/agent/command"
+	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model"
 	Testbed "github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/utils/log"
@@ -20,6 +25,8 @@ var rootCmd = &cobra.Command{
 	Short: "commandline to interact with iota based venice setup",
 }
 
+var iotaServerExec = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/test/venice/start_iota.sh", os.Getenv("GOPATH"))
+
 // Execute executes a command
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
@@ -29,8 +36,8 @@ func Execute() {
 }
 
 var (
-	configFile, topology, timeout, testbed string
-	debugFlag, dryRun, scale, scaleData    bool
+	configFile, topology, timeout, testbed, suite, focus          string
+	debugFlag, dryRun, scale, skipSetup, skipInstall, stopOnError bool
 )
 
 var (
@@ -56,7 +63,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "enable debug mode")
 	rootCmd.PersistentFlags().BoolVar(&dryRun, "dry", false, "dry run commands")
 	rootCmd.PersistentFlags().BoolVar(&scale, "scale", false, "dry run commands")
-	rootCmd.PersistentFlags().BoolVar(&scaleData, "scale-data", false, "dry run commands")
+
 }
 
 // Config contains testbed and topology info
@@ -66,8 +73,22 @@ type Config struct {
 	Timeout  string `yaml:"timeout"`
 }
 
+func isServerUp() bool {
+
+	addr := net.JoinHostPort("localhost", strconv.Itoa(constants.IotaSvcPort))
+	conn, _ := net.DialTimeout("tcp", addr, 2*time.Second)
+	if conn != nil {
+		fmt.Printf("Iota server is running already.")
+		conn.Close()
+		return true
+	}
+	return false
+}
+
 func initialize() {
 	// find config file if it exists
+	os.Setenv("VENICE_DEV", "1")
+	os.Setenv("JOB_ID", "1")
 	cfile := configFile
 	if configFile == "" {
 		homedir := os.Getenv("HOME")
@@ -95,6 +116,7 @@ func initialize() {
 			os.Exit(1)
 		}
 	}
+	topology = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/test/venice/iotakit/topos/%s.topo", os.Getenv("GOPATH"), topology)
 	if testbed == "" {
 		testbed = config.Testbed
 		if testbed == "" {
@@ -111,7 +133,6 @@ func initialize() {
 		fmt.Printf("dry run skipping testbed :winit \n")
 		return
 	}
-	var err error
 	cfg := log.GetDefaultConfig("venice-iota")
 	if debugFlag {
 		cfg.Debug = true
@@ -119,26 +140,49 @@ func initialize() {
 	}
 	log.SetConfig(cfg)
 
-	if os.Getenv("JOB_ID") == "" {
-		errorExit("Skipping Iota tests outside warmd environment", nil)
-		return
+	if isServerUp() {
+		if skipSetup {
+			os.Setenv("SKIP_SETUP", "1")
+		}
+	} else {
+		skipSetup = false
+		//Start IOTA server and do skip setup
+		info, err := cmd.ExecCmd([]string{iotaServerExec}, "", 0, false, true, os.Environ())
+		if err != nil {
+			fmt.Printf("Failed to start IOTA server %s\n", err)
+		}
+		fmt.Printf("Started IOTA server...%v", info.Ctx.Stdout)
 	}
 
-	tb, err := Testbed.NewTestBed(topology, testbed)
-	if err != nil {
-		errorExit("failed to setup testbed", err)
+	if skipInstall {
+		os.Setenv("SKIP_INSTALL", "1")
 	}
 
-	setupModel, err = model.NewSysModel(tb)
-	if err != nil || setupModel == nil {
-		errorExit("failed to setup model", err)
-	}
+	if recipe != "" {
+		tb, err := Testbed.NewTestBed(topology, testbed)
+		if err != nil {
+			errorExit("failed to setup testbed", err)
+		}
 
-	err = setupModel.SetupDefaultConfig(context2.TODO(), scale, scaleData)
-	if err != nil {
-		errorExit("error setting up default config", err)
+		setupModel, err = model.NewSysModel(tb)
+		if err != nil || setupModel == nil {
+			errorExit("failed to setup model", err)
+		}
+
+		err = setupModel.SetupDefaultConfig(context2.TODO(), scale, scale)
+		if err != nil {
+			errorExit("error setting up default config", err)
+		}
+
+		err = setupModel.SetupDefaultConfig(context2.TODO(), scale, scale)
+		if err != nil {
+			errorExit("error setting up default config", err)
+		}
+		//if SKIP install not set, make sure we do skip now
+		os.Setenv("SKIP_INSTALL", "1")
+		os.Setenv("SKIP_SETUP", "1")
+
+	} else {
+
 	}
-	//if SKIP install not set, make sure we do skip now
-	os.Setenv("SKIP_INSTALL", "1")
-	os.Setenv("SKIP_SETUP", "1")
 }

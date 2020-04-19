@@ -192,6 +192,10 @@ func (t *TestNode) GetIotaNode() *iota.Node {
 	return t.iotaNode
 }
 
+func (t *TestNode) GetNodeOs() string {
+	return t.topoNode.HostOS
+}
+
 //IsNaplesHW is naples HW node
 func IsNaplesHW(personality iota.PersonalityType) bool {
 	return personality == iota.PersonalityType_PERSONALITY_NAPLES ||
@@ -295,11 +299,9 @@ func GetTestbed(topoName string, paramsFile string) (*TestBed, error) {
 func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, error) {
 	var params Params
 
-	// find the topology by name
-	topo, ok := Topologies[topoName]
-	if !ok {
-		log.Errorf("Can not find topo name: %v", topoName)
-		return nil, fmt.Errorf("Topology not found")
+	topo, err := ParseTopology(topoName)
+	if err != nil {
+		return nil, fmt.Errorf("Error Parsing topology %v", err.Error())
 	}
 
 	// read the testbed params
@@ -1231,6 +1233,10 @@ func (tb *TestBed) initNodeState() error {
 			return err
 		}
 
+		if IsHWNode(tnode.Personality) {
+			node.topoNode.HostOS = tb.Params.Provision.Vars["BmOs"]
+
+		}
 		tb.Nodes[count] = &node
 		count++
 	}

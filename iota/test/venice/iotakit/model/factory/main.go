@@ -19,7 +19,8 @@ func NewDefaultSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup
 	sm := &enterprise.SysModel{SysModel: base.SysModel{Type: common.DefaultModel}}
 
 	if err := sm.Init(tb, cfgType, skipSetup); err != nil {
-		return sm, err
+		sm.CollectLogs()
+		return nil, err
 	}
 
 	return sm, nil
@@ -31,6 +32,7 @@ func NewVcenterSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup
 	vsm := &vcenter.VcenterSysModel{SysModel: enterprise.SysModel{SysModel: base.SysModel{Type: common.VcenterModel}}}
 
 	if err := vsm.SysModel.Init(tb, cfgType, skipSetup); err != nil {
+		vsm.CollectLogs()
 		return nil, err
 	}
 
@@ -43,6 +45,7 @@ func NewCloudSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup b
 	vsm := &cloud.SysModel{SysModel: base.SysModel{Type: common.CloudModel}}
 
 	if err := vsm.Init(tb, cfgType, skipSetup); err != nil {
+		vsm.CollectLogs()
 		return nil, errors.New("could not initialize config objects")
 
 	}
@@ -57,6 +60,7 @@ func NewBasenetSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup
 	vsm := &basenet.SysModel{SysModel: base.SysModel{Type: common.BaseNetModel}}
 
 	if err := vsm.Init(tb, cfgType, skipSetup); err != nil {
+		vsm.CollectLogs()
 		return nil, err
 	}
 

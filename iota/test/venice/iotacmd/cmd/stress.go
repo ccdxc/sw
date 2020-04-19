@@ -105,7 +105,7 @@ func runCmd(cmdArgs []string, outfile string, env []string) (int, string) {
 }
 
 //run testsuite
-func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool) error {
+func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool, outFile string) error {
 	exitCode := 0
 	stdoutStderr := ""
 
@@ -119,8 +119,6 @@ func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool) 
 	if skipInstall {
 		env = append(env, "SKIP_INSTALL=1")
 		skipInstall = false
-	} else {
-		env = append(env, `SKIP_INSTALL=""`)
 	}
 
 	if skipConfig {
@@ -140,7 +138,6 @@ func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool) 
 
 	env = append(env, "VENICE_DEV=1")
 	env = append(env, "JOB_ID=1")
-	env = append(env, "STOP_ON_ERROR=1")
 
 	cmd := []string{"go", "test", testPath, "-timeout", "360m", "-v", "-ginkgo.v", "-topo", topology, "-testbed", testbed}
 	if suite.focus != "" {
@@ -152,14 +149,16 @@ func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool) 
 		cmd = append(cmd, " -scale")
 	}
 
+	if stopOnError {
+		cmd = append(cmd, "-ginkgo.failFast")
+	}
 	if suite.runRandomTrigger {
 		cmd = append(cmd, " -rand-trigger")
 	}
 
-	cmd = append(cmd, "-ginkgo.failFast")
 	fmt.Printf("Test command %v\n", strings.Join(cmd, " "))
 	if !dryRun {
-		exitCode, stdoutStderr = runCmd(cmd, stressRunFile, env)
+		exitCode, stdoutStderr = runCmd(cmd, outFile, env)
 	}
 
 	suite.runCnt++
@@ -416,7 +415,7 @@ Loop:
 					sdata = tg.suiteData[suite.name]
 				}
 				fmt.Printf("Running suite  : %v (iteration : %v)\n", suite.name, it+1)
-				err := suite.run(skipSetup, skipInstall, tg.SkipConfig, rebootOnly)
+				err := suite.run(skipSetup, skipInstall, tg.SkipConfig, rebootOnly, stressRunFile)
 				if err != nil {
 					sdata.failCount++
 					if suite.stopOnError {

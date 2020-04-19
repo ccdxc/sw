@@ -3,28 +3,23 @@ default:
 	cd ../../../ && make naples-firmware
 	cd ../../../ && make venice-image
 	cd ../../ && make
-	./start_iota.sh
-	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/firewall -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples
-	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/techsupport -timeout 120m -v -ginkgo.v -topo 3Venice_2Naples
-	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/monitor -timeout 60m -v -ginkgo.v -topo 3Venice_2Naples
-	# TODO Renebale this test suite once jobd inband changes go in
-	#VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/mirror -timeout 120m -v -ginkgo.v -topo 3Venice_2Naples
-	# VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/cluster -timeout 60m -v -ginkgo.v
+	../../bin/iota_cmd run --suite firewall --topo default 
+	../../bin/iota_cmd run --suite techsupport --topo default --skip-setup
+	../../bin/iota_cmd run --suite mirror --topo default --skip-setup
 
 venice-e2e:
 	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all.tgz -C .
 	ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz
 	cd ../../ && make
-	./start_iota.sh
-	VENICE_DEV=1  go test github.com/pensando/sw/iota/test/venice/testsuites/firewall -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples
-	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/monitor -timeout 60m -v -ginkgo.v -topo 3Venice_2Naples
-	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/techsupport -timeout 120m -v -ginkgo.v -topo 3Venice_2Naples
-	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/mirror -timeout 120m -v -ginkgo.v -topo 3Venice_2Naples -ginkgo.focus "Flow Mirror tests"
-	# VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/rollout -timeout 240m -v -ginkgo.v -topo 3Venice_2Naples
-	# VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/cluster -timeout 60m -v -ginkgo.v
+	../../bin/iota_cmd run --suite firewall --topo default 
+	../../bin/iota_cmd run --suite monitor --topo default --skip-setup
+	../../bin/iota_cmd run --suite techsupport --topo default --skip-setup
+	../../bin/iota_cmd run --suite mirror --topo default --skip-setup
+	#../../bin/iota_cmd run --suite rollout --topo default --skip-setup
+	#../../bin/iota_cmd run --suite cluster --topo default --skip-setup
 upgrade:
 	mkdir -p ${GOPATH}/src/github.com/pensando/sw/upgrade-bundle
-	SKIP_SETUP=1 VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/rollout -timeout 240m -v -ginkgo.v -topo 3Venice_2Naples
+	../../bin/iota_cmd run --suite rollout --topo default --skip-setup
 
 rolloutrela-nightly:
 	cd ../../../ && make ws-tools && make pull-assets
@@ -47,8 +42,7 @@ rolloutrela-nightly:
 	asset-pull host.tar 1.3.2-E-3 ${GOPATH}/src/github.com/pensando/sw/iota/bin/penctl/host.tar
 	cd  ${GOPATH}/src/github.com/pensando/sw/iota/bin/penctl && tar -xvf host.tar
 	cd ../../ && make
-	./start_iota.sh
-	RELEASE_A=1 NO_AUTO_DISCOVERY=1 VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/rollout2rela -timeout 240m -v -ginkgo.v -topo 3Venice_2Naples
+	RELEASE_A=1 NO_AUTO_DISCOVERY=1 ../../bin/iota_cmd run --suite rollout2rela --topo default 
 
 rolloutnightly:
 	cd ../../../ && make ws-tools && make pull-assets
@@ -81,43 +75,38 @@ rolloutnightly:
 	ls -al ${GOPATH}/src/github.com/pensando/sw/nic
 	cd ../../../ && make bundle-upgrade-image
 	cd ../../ && make
-	./start_iota.sh
-	USE_MGMT=1 VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/rolloutnightly -timeout 240m -v -ginkgo.v -topo 3Venice_2Naples
+	USE_MGMT=1 ../../bin/iota_cmd run --suite rolloutnightly --topo default 
 
 vcenter-e2e:
 	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all.tgz -C .
 	ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz
 	cd ../../ && make
 	./modify_warmd.sh
-	./start_iota.sh ${GOPATH}/src/github.com/pensando/sw/iota/warmd.json
 	mkdir -p /go/src/github.com/pensando/sw/bin/upgrade-bundle
 	asset-pull bundle_image 1.2.0-140 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
-	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/vchub -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples_Vcenter -testbed ${GOPATH}/src/github.com/pensando/sw/iota/warmd.json
+	../../bin/iota_cmd run --suite vchub --topo vcenter --testbed /sw/nic/warmd.json
 
 venice-e2e-basenet:
 	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all.tgz -C .
 	ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz
 	cd ../../ && make
-	./start_iota.sh
 	mkdir -p /go/src/github.com/pensando/sw/bin/upgrade-bundle
 	asset-pull bundle_image 1.2.0-140 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
 	#First run mirror suite in basenet
-	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/basenet -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples_Basenet
-	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/mirror -timeout 3h -v -ginkgo.v  -topo 3Venice_2Naples_Basenet -ginkgo.focus "Lif mirror tests"
+	../../bin/iota_cmd run --suite basenet --topo basenet
+	../../bin/iota_cmd run --suite basenet --topo basenet --skip-setup --focus "Lif mirror tests"
 
 venice-e2e-cloud:
 	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all_apulu.tgz -C .
 	ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz
 	cd ../../ && make
-	./start_iota.sh
-	VENICE_DEV=1 NO_INTERNAL_MGMT=1 go test github.com/pensando/sw/iota/test/venice/testsuites/equinix -timeout 3h -v -ginkgo.v  -topo 3Venice_1Naples_Cloud
+	NO_INTERNAL_MGMT=1 ../../bin/iota_cmd run --suite equinix --topo cloud
 
 venice-sim-cloud:
 	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/build_apulu_sim.tar.gz -C .
 	ln -s /sw/bin/venice.apulu.tgz /go/src/github.com/pensando/sw/bin/venice.apulu.tgz
 	cd ../../ && make
-	./start_iota.sh
-	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/equinix -timeout 120m -v -ginkgo.v  -topo 1Venice_2Naples_Sim_Cloud
-	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/techsupport -timeout 30m -v -ginkgo.v -topo 1Venice_2Naples_Sim_Cloud
+	../../bin/iota_cmd run --suite equinix --topo cloud_sim
+	../../bin/iota_cmd run --suite techsupport --topo cloud_sim --skip-setup 
 
 all: venice-e2e upgrade

@@ -117,7 +117,7 @@ docker/run-iota: docker/build-iota-runtime-image
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/iota pensando/nic su -l $(CUR_USER) -c 'set -o pipefail && cd ../iota && ./iota.py --testbed ${HARDWARE_TESTBED_COPIED} ${EXTRA_ARGS}  2>&1 | tee run.log'
 
 docker/run-e2e-iota: docker/build-iota-runtime-image
-	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/iota pensando/nic su -l $(CUR_USER) -c 'set -o pipefail && cd ../iota && test/venice/start_iota.sh &&  ${IOTA_RUN_CMD} -testbed ${HARDWARE_TESTBED_COPIED}  2>&1 | tee run.log'
+	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/iota pensando/nic su -l $(CUR_USER) -c 'set -o pipefail && cd ../iota  &&  ${IOTA_RUN_CMD} --testbed ${HARDWARE_TESTBED_COPIED}  2>&1 | tee run.log'
 
 docker/build-iota: docker/build-runtime-image
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -w /sw/iota pensando/nic su -l $(CUR_USER) -c 'set -o pipefail && cd ../iota && make'

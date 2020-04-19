@@ -171,7 +171,8 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 //ExecCmd Run shell command
 var ExecCmd = execCmd
 
-func getChildPids(ppid int) []int {
+//GetChildPids get child PIDs
+func GetChildPids(ppid int) []int {
 	ret := []int{}
 	var cmd []string
 	switch runtime.GOOS {
@@ -213,7 +214,7 @@ func StopExecCmd(cmdInfo *CmdInfo) error {
 	}
 	process := cmdInfo.Handle.(*exec.Cmd)
 	if process != nil {
-		pids := getChildPids(cmdInfo.Handle.(*exec.Cmd).Process.Pid)
+		pids := GetChildPids(cmdInfo.Handle.(*exec.Cmd).Process.Pid)
 		if len(pids) != 0 {
 			for _, pid := range pids {
 				if pid != 0 {

@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/search"
 	loginctx "github.com/pensando/sw/api/login/context"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
@@ -676,6 +677,42 @@ func (sm *SysModel) CheckCitadelServiceStatus() error {
 	return nil
 }
 
+//CheckElasticServiceStatus check citadel status
+func (sm *SysModel) CheckElasticServiceStatus() error {
+
+	var resp search.SearchResponse
+	req := &search.SearchRequest{
+		Query: &search.SearchQuery{
+			Kinds: []string{"AuditEvent"},
+		},
+		MaxResults: 8000,
+	}
+
+	authzHdr, err := sm.GetAuthorizationHeader()
+	if err != nil {
+		return err
+	}
+	httpClient := netutils.NewHTTPClient()
+	httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	httpClient.SetHeader("Authorization", authzHdr)
+	httpClient.DisableKeepAlives()
+	defer httpClient.CloseIdleConnections()
+
+	URL := fmt.Sprintf("https://%s/search/v1/query", sm.GetVeniceURL()[0])
+	_, err = httpClient.Req("GET", URL, *req, &resp)
+
+	if err != nil {
+		log.Errorf("Error querying elastic %v", err.Error())
+		return err
+	}
+
+	if resp.Error != nil {
+		log.Errorf("Error querying elastic %v", resp.Error)
+	}
+
+	return nil
+}
+
 // CheckVeniceServiceStatus checks if all services are running on venice nodes
 func (sm *SysModel) CheckVeniceServiceStatus(leaderNode string) (string, error) {
 	ret := ""
@@ -818,20 +855,20 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 			return nerr
 		}
 	}*/
-		veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
-		if err != nil {
-			nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
-			log.Errorf("%v", nerr)
-			return nerr
-		}
-		ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
-		defer cancel()
-		agentClient, err := utils.GetNodeAuthTokenHTTPClient(ctx, sm.GetVeniceURL()[0], []string{"*"})
-		if err != nil {
-			nerr := fmt.Errorf("Could not get naples authenticated client from Venice: %v", err)
-			log.Errorf("%v", nerr)
-			return nerr
-		}
+	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
+	if err != nil {
+		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+	ctx, cancel := context.WithTimeout(veniceCtx, 5*time.Second)
+	defer cancel()
+	agentClient, err := utils.GetNodeAuthTokenHTTPClient(ctx, sm.GetVeniceURL()[0], []string{"*"})
+	if err != nil {
+		nerr := fmt.Errorf("Could not get naples authenticated client from Venice: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
 
 	if os.Getenv("RELEASE_A") != "" {
 		// get naples info from Netagent
