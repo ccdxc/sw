@@ -38,9 +38,9 @@ public:
 
     // Initialize feeder with the base set of values
     void init(pds_obj_key_t key, pds_vpc_type_t type, std::string v4_cidr_str,
-              int num_vpc = 1, std::string vr_mac = "00:00:de:ad:be:ef",
+              int num_vpc = 1, std::string vr_mac_str = "00:00:de:ad:be:ef",
               std::string v6_cidr_str = "1000::1/64",
-              std::string fabric_encap = "VxLAN 9999",
+              std::string fabric_encap_str = "VxLAN 9999",
               pds_obj_key_t v4_rttbl = int2pdsobjkey(4000),
               pds_obj_key_t v6_rttbl = int2pdsobjkey(6000), uint8_t tos = 0);
 

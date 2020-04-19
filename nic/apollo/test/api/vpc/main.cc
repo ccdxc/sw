@@ -330,7 +330,8 @@ TEST_F(vpc, vpc_update_type) {
 
     feeder.init(key, PDS_VPC_TYPE_UNDERLAY, "10.0.0.0/16");
     vpc_create(feeder);
-    spec.type = PDS_VPC_TYPE_TENANT;  // change vpc type
+    spec.type = PDS_VPC_TYPE_TENANT;
+    // updating vpc type is not allowed
     vpc_update(feeder, &spec, VPC_ATTR_TYPE, SDK_RET_ERR);
     feeder.init(key, PDS_VPC_TYPE_UNDERLAY, "10.0.0.0/16");
     vpc_read(feeder);
@@ -405,7 +406,7 @@ TEST_F(vpc, vpc_update_fabric_encap) {
     vpc_update(feeder, &spec, VPC_ATTR_FAB_ENCAP);
     vpc_read(feeder);
 
-    // updating encap type shouldn't work
+    // updating encap type is not allowed
     pds_str2encap("MPLSoUDP 100", &spec.fabric_encap);
     vpc_update(feeder, &spec, VPC_ATTR_FAB_ENCAP, SDK_RET_ERR);
     pds_str2encap("VxLAN 200", &feeder.spec.fabric_encap);
@@ -429,11 +430,9 @@ TEST_F(vpc, vpc_update_rttbl) {
     feeder.spec.v4_route_table = int2pdsobjkey(5000);  // update v4 rttbl
     vpc_update(feeder, &spec, VPC_ATTR_V4_RTTBL);
     vpc_read(feeder);
-
     feeder.spec.v6_route_table = int2pdsobjkey(7000);  // update v6 rttbl
     vpc_update(feeder, &spec, VPC_ATTR_V6_RTTBL);
     vpc_read(feeder);
-
     vpc_delete(feeder);
     vpc_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
