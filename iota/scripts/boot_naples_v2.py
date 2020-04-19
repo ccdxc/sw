@@ -239,6 +239,7 @@ class EntityManagement:
 
 
     def NaplesWait(self):
+        self.clear_buffer()
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
                                hdl = self.hdl, timeout = 30)
         if midx == 0: return
@@ -258,8 +259,11 @@ class EntityManagement:
     def WaitAfterReset(self):
         print("sleeping 120 seconds after IpmiReset")
         time.sleep(120)
-        print("finished 120 second sleep. Looking for prompt now...")
+        print("finished 120 second sleep")
+        print("Waiting for host ssh..")
+        self.host.WaitForSsh()
         i = 0
+        print("Logging into naples..")
         while True:
             try:
                 self.NaplesWait()
@@ -269,8 +273,6 @@ class EntityManagement:
                     raise Exception("Naples prompt not observed")
                 i = i + 1
                 continue
-        print("Waiting for host ssh..")
-        self.host.WaitForSsh()
 
     def __syncLine(self, hdl):
         for i in range(3):
@@ -927,6 +929,9 @@ class HostManagement(EntityManagement):
     def InitForUpgrade(self):
         pass
 
+    def RebootRequiredOnDriverInstall(self):
+        return False
+
     def InitForReboot(self):
         pass
 
@@ -1025,7 +1030,7 @@ class EsxHostManagement(HostManagement):
     def __esx_host_init(self):
         self.WaitForSsh(port=443)
         time.sleep(30)
-        if GlobalOptions.auto_discover or all(n.IsSSHUP() for n in self.naples):
+        if all(n.IsSSHUP() for n in self.naples):
             print ("All Naples OOB is up, skipping ctrl vm initialization.")
             return
         # Use first instance of naples
@@ -1103,7 +1108,10 @@ class EsxHostManagement(HostManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
-        self.InstallPrep()
+
+        for naples in self.naples:
+            naples.InstallPrep()
+
 
         #Ctrl VM reboot might have removed the image
         self.ctrl_vm_copyin(os.path.join(GlobalOptions.wsdir, self.fw_images.image),
@@ -1122,6 +1130,9 @@ class EsxHostManagement(HostManagement):
                     naples_dir = "/data")
         self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(self.fw_images.gold_fw_img))
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
+
+    def RebootRequiredOnDriverInstall(self):
+        return True
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
     def InitForUpgrade(self):
@@ -1483,7 +1494,7 @@ class PenOrchestrator:
                     self.__fullUpdate(naples_inst)
             else:
                 naples_inst.ReadInternalIP()
-                if fwType != FIRMWARE_TYPE_GOLD:
+                if fwType != FIRMWARE_TYPE_GOLD or self.__host.RebootRequiredOnDriverInstall():
                     naples_inst.InitForUpgrade(goldfw = True)
                     self.__host.InitForUpgrade()
                     if GlobalOptions.no_mgmt:

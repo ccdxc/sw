@@ -166,7 +166,8 @@ func initEsxCtrlVM() (string, error) {
 		log.Errorf("TOPO SVC | InitTestBed | Failed to create networks %v ", err.Error())
 	}
 
-	vmInfo, err := host.DeployVM("", "", esxControlVMName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
+	vmName := constants.EsxControlVMNamePrefix + esxHost
+	vmInfo, err := host.DeployVM("", "", vmName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
 
 	if err != nil {
 
