@@ -83,6 +83,9 @@ asic_pgm_init (asic_cfg_t *cfg)
     return SDK_RET_OK;
 }
 
+// if write_to_mem is false, the below functions prepares the asm data structures
+// to retrieve pc offset and other infos. if it is true it would write the asm's
+// to the memory specified by mem.json
 sdk_ret_t
 asic_asm_init (asic_cfg_t *cfg, bool write_to_mem)
 {

@@ -29,8 +29,8 @@ upg_ctxt::init(const char *obj_store_name, size_t obj_store_size,
     shm_mmgr_ = api::g_upg_state->shm_mgr();
 
     try {
-        mem_ = (char *)shm_mmgr_->segment_alloc(obj_store_name, obj_store_size,
-                                                obj_store_create);
+        mem_ = (char *)shm_mmgr_->segment_find(obj_store_name, obj_store_create,
+                                               obj_store_create ? obj_store_size: 0);
         if (!mem_) {
             PDS_TRACE_ERR("Failed to init shared memory segment for:%s",
                           obj_store_create == true ? "backup" : "restore");

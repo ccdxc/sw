@@ -89,7 +89,8 @@ send_discovery_event (ipc_svc_dom_id_t dom, upg_stage_t id)
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
     UPG_TRACE_VERBOSE("Sending discovery event %s", stage_name.c_str());
 
-    upg_send_broadcast_request(dom, id, fsm_states.init_params()->upg_mode);
+    upg_send_broadcast_request(dom, id, fsm_states.init_params()->upg_mode,
+                               fsm_services.size(), fsm_states.timeout());
 }
 
 static void

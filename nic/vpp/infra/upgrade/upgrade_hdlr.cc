@@ -67,6 +67,7 @@ vpp_upg_init (void)
 {
     sdk::upg::upg_ev_t ev;
 
+    memset(&ev, 0, sizeof(ev));
     upg_log_facility_init();
     upg_log_notice("%s\n", __FUNCTION__);
     vpp_upg_ev_fill(ev);

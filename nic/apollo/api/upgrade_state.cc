@@ -44,8 +44,8 @@ upg_state::init_(bool shm_create) {
         return SDK_RET_ERR;
     }
 
-    pstate_ = (upg_pstate_t *)shm_mmgr_->segment_alloc(PDS_UPG_SHM_PSTATE_NAME,
-                                                      sizeof(upg_pstate_t), shm_create);
+    pstate_ = (upg_pstate_t *)shm_mmgr_->segment_find(PDS_UPG_SHM_PSTATE_NAME,
+                                                      shm_create, sizeof(upg_pstate_t));
     if (!pstate_) {
         PDS_TRACE_ERR("Upgrade pstate %s failed", op);
         return SDK_RET_ERR;

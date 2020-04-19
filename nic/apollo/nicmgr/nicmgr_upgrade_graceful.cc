@@ -467,6 +467,8 @@ upg_ev_backup (upg_ev_params_t *params)
     sdk_ret_t ret;
     bool create = true;
 
+    // TODO save the existing one for future use
+
     // get and initialize a segment from shread memory for write
     ret = g_upg_state->nicmgr_upg_ctx()->init(PDS_UPGRADE_NICMGR_OBJ_STORE_NAME,
                                               PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE,
@@ -549,7 +551,18 @@ nicmgr_upg_graceful_init (void)
     // register for upgrade events
     api::upg_ev_thread_hdlr_register(ev_hdlr);
 
+    // if it is upgrade mode, open the nicmgr object store for reading
+    if (sdk::platform::upgrade_mode_graceful(g_upg_state->upg_init_mode())) {
+        bool create = false;
+        sdk_ret_t ret;
 
+        ret = g_upg_state->nicmgr_upg_ctx()->init(PDS_UPGRADE_NICMGR_OBJ_STORE_NAME,
+                                                  PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE,
+                                                  create);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
     return SDK_RET_OK;
 }
 

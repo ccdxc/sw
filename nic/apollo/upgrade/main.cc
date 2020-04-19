@@ -8,17 +8,13 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/include/globals.hpp"
 #include "nic/sdk/upgrade/core/fsm.hpp"
+#include "nic/sdk/upgrade/include/ev.hpp"
 #include "nic/apollo/upgrade/svc/upgrade.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
 
 static sdk::event_thread::event_thread *g_upg_event_thread;
-
-// TODO: need to chnange when sysmgr change is ready
-// static upg_stage_t fsm_entry_stage = UPG_STAGE_NONE;
- static upg_stage_t fsm_entry_stage = UPG_STAGE_COMPAT_CHECK;
-//static upg_stage_t fsm_entry_stage = UPG_STAGE_READY;
 
 namespace sdk {
 namespace upg {
@@ -32,7 +28,9 @@ sdk::operd::logger_ptr g_upg_log = sdk::operd::logger::create(UPGRADE_LOG_NAME);
 void
 fsm_completion_hdlr (upg_status_t status, sdk::ipc::ipc_msg_ptr msg_in)
 {
-    sdk::ipc::respond(msg_in, &status, sizeof(status));
+    if (msg_in) {
+        sdk::ipc::respond(msg_in, &status, sizeof(status));
+    }
 
     if (status == UPG_STATUS_OK) {
         UPG_TRACE_INFO("Upgrade finished successfully");
@@ -46,28 +44,38 @@ fsm_completion_hdlr (upg_status_t status, sdk::ipc::ipc_msg_ptr msg_in)
     }
 }
 
+static void
+upg_fsm_init(upg_mode_t mode, sdk::ipc::ipc_msg_ptr msg,
+             upg_stage_t entry_stage)
+{
+    sdk::upg::fsm_init_params_t params;
+    sdk_ret_t ret;
+
+    memset(&params, 0, sizeof(params));
+    params.upg_mode = mode;
+    params.ev_loop = g_upg_event_thread->ev_loop();
+    params.fsm_completion_cb = fsm_completion_hdlr;
+    params.msg_in = msg;
+    params.entry_stage = entry_stage;
+
+    ret = sdk::upg::init(&params);
+    // returns here only in failure
+    if (ret != SDK_RET_OK) {
+        fsm_completion_hdlr(UPG_STATUS_FAIL, msg);
+    }
+    SDK_ASSERT(ret == SDK_RET_OK);
+}
+
 // request from the grpc main thread to processing thread
 static void
 upg_ev_req_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 {
     upg_ev_req_msg_t *req = (upg_ev_req_msg_t *)msg->data();
-    sdk_ret_t ret;
-    sdk::upg::fsm_init_params_t params;
-
-    memset(&params, 0, sizeof(params));
-    params.upg_mode = req->upg_mode;
-    params.ev_loop = g_upg_event_thread->ev_loop();
-    params.fsm_completion_cb = fsm_completion_hdlr;
-    params.msg_in = msg;
-    params.entry_stage = fsm_entry_stage;
 
     if (req->id == UPG_REQ_MSG_ID_START) {
-        ret = sdk::upg::init(&params);
+        upg_fsm_init(req->upg_mode, msg, UPG_STAGE_COMPAT_CHECK);
     } else {
         UPG_TRACE_ERR("Unknown request id %u", req->id);
-        ret = SDK_RET_ERR;
-    }
-    if (ret != SDK_RET_OK) {
         fsm_completion_hdlr(UPG_STATUS_FAIL, msg);
     }
 }
@@ -75,8 +83,17 @@ upg_ev_req_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
 void
 upg_event_thread_init (void *ctxt)
 {
-    // register for upgrade request from grpc thread
-    sdk::ipc::reg_request_handler(UPG_REQ_MSG_ID_START, upg_ev_req_handler, NULL);
+    upg_mode_t mode = sdk::upg::upg_init_mode();
+
+    // if it is an graceful upgrade restart, need to continue the stages
+    // from previous run
+    if (sdk::platform::upgrade_mode_graceful(mode)) {
+        upg_fsm_init(mode, NULL, UPG_STAGE_READY);
+    } else {
+        // register for upgrade request from grpc thread
+        sdk::ipc::reg_request_handler(UPG_REQ_MSG_ID_START,
+                                      upg_ev_req_handler, NULL);
+    }
 }
 
 void

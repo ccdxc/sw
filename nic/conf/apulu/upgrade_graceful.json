@@ -79,7 +79,7 @@
                 "rsp_timeout": "2000ms"
             },
             "events": [
-                { "name": "svc_rsp_ok",   "next_stage": "ready"   },
+                { "name": "svc_rsp_ok",   "next_stage": "exit"   },
                 { "name": "svc_rsp_fail", "next_stage": "respawn" },
                 { "name": "svc_rsp_crit", "next_stage": "respawn" },
                 { "name": "svc_no_rsp",   "next_stage": "respawn" }

@@ -735,8 +735,7 @@ nicmgr_upg_hndlr::upg_shm_alloc(const char *name, uint32_t size, bool create) {
         return SDK_RET_OOM;
     }
     try {
-        mem_ = (char *)shm_mmgr_->segment_alloc("state_mem",
-                                                size, create);
+        mem_ = (char *)shm_mmgr_->segment_find("state_mem", create, size);
         if (!mem_) {
             NIC_LOG_ERR("Bkup shared memory create failed");
             return SDK_RET_OOM;

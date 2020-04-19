@@ -56,8 +56,12 @@ public:
     // NOTE: use it only in exception cases
     void *mmgr(void) const;
 
-    // allocate a named segment from shared memory
-    void *segment_alloc(const char *name, std::size_t size, bool create);
+    // find a named segment from shared memory. if 'create' is true it allocates
+    // a new one for the specified size(should be > 0). otherwise it find and
+    // return the pointer to the already existing segment.
+    // if size is given in the latter case, it compares the allocated and the
+    // requested and returns memory only if requested size <= allocated size
+    void *segment_find(const char *name, bool create, std::size_t size = 0);
     // get size of the named segment
     std::size_t get_segment_size(const char *name);
 private:

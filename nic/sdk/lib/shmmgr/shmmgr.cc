@@ -236,7 +236,7 @@ shmmgr::mmgr(void) const
 }
 
 void *
-shmmgr::segment_alloc(const char *name, std::size_t size, bool create) {
+shmmgr::segment_find(const char *name, bool create, std::size_t size) {
     std::pair<shm_segment*, std::size_t> res;
     shm_segment* state;
     void *addr = NULL;
@@ -245,6 +245,8 @@ shmmgr::segment_alloc(const char *name, std::size_t size, bool create) {
     res = shm->find<shm_segment>(name);
     state = res.first;
     if (create) {
+        // size should be given
+        SDK_ASSERT(size > 0);
         // free the exiting one
         if (state != NULL) {
             addr = (void *)((uint64_t)state - state->offset);
@@ -265,7 +267,12 @@ shmmgr::segment_alloc(const char *name, std::size_t size, bool create) {
         }
     } else {
         SDK_ASSERT(state != NULL);
-        addr = (void *)((uint64_t)state - state->offset);
+        if (size && state->size < size) {
+            SDK_TRACE_ERR("Shmmgr, find size is not valid, allocated %u, requested %u",
+                          state->size, size);
+        } else {
+            addr = (void *)((uint64_t)state - state->offset);
+        }
     }
     return addr;
 }

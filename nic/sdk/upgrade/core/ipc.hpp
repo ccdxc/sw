@@ -10,6 +10,7 @@
 #ifndef __UPGRADE_CORE_IPC_HPP__
 #define __UPGRADE_CORE_IPC_HPP__
 
+#include <ev.h>
 #include "include/sdk/base.hpp"
 #include "lib/ipc/ipc.hpp"
 #include "upgrade/include/upgrade.hpp"
@@ -27,7 +28,8 @@ typedef enum ipc_svc_dom_id_s {
 typedef void (*upg_async_response_cb_t)(sdk::ipc::ipc_msg_ptr msg);
 /// broadcast to a domain
 void upg_send_broadcast_request(ipc_svc_dom_id_t dom_id, upg_stage_t stage,
-                                upg_mode_t mode);
+                                upg_mode_t mode, uint32_t num_svcs,
+                                ev_tstamp timeout);
 /// unicast request to a service in a domain
 void upg_send_request(ipc_svc_dom_id_t dom_id, upg_stage_t stage,
                       uint32_t svc_id, upg_mode_t mode);

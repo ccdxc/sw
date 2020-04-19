@@ -35,6 +35,8 @@ trap trap_finish EXIT
 # create a sysmgr instance from test service which sends
 # ok for all events
 $BUILD_DIR/bin/fsm_test -s sysmgr -i 62 > upgrade_service.log 2>&1 &
+$BUILD_DIR/bin/fsm_test -s pciemgr -i 63 > upgrade_service.log 2>&1 &
+$BUILD_DIR/bin/fsm_test -s vpp -i 61 > upgrade_service.log 2>&1 &
 sleep 2
 
 # start upgrade manager
@@ -47,10 +49,23 @@ pdsupgclient
 [[ $? -ne 0 ]] && echo "upgrade command failed" && exit 1
 echo "upgrade command successful"
 
+# kill testing services
+echo "stopping processes including upgrademgr"
+stop_process
+pkill pdsupgmgr
+
+# set upgrade init mode
 export UPG_INIT_MODE='graceful'
 
-# TODO : respawn the services
+# respawn the services
+echo "respawning processes"
+start_process
+upg_wait_for_pdsagent
 
+# spawn upgrade mgr to continue the post restart states
+echo "respawning upgrademgr"
+$BUILD_DIR/bin/pdsupgmgr > upgrade_mgr.log 2>&1 &
+wait
 # stop all services
 trap_finish
 
