@@ -11,7 +11,7 @@ import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admi
 import { FieldsRequirement_operator, IFieldsSelector, MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
 import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
 import { SearchSearchRequest, SearchSearchRequest_mode } from '@sdk/v1/models/generated/search';
-import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
+import { StagingBuffer, StagingCommitAction, IStagingBulkEditAction, StagingBulkEditAction } from '@sdk/v1/models/generated/staging';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import * as moment from 'moment';
@@ -24,6 +24,7 @@ import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { UIConfigsService } from '../services/uiconfigs.service';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { StagingService } from '@app/services/generated/staging.service';
 
 /**
  * VeniceObjectCacheStore is for data-cache.
@@ -49,6 +50,7 @@ export interface VeniceObjectCache {
 
 
 export class Utility {
+
   static instance: Utility;
 
   // Define how long to keep cache data.
@@ -192,6 +194,7 @@ export class Utility {
   myControllerService: ControllerService;
   myLogService: LogService;
   myUIConfigsService: UIConfigsService;
+  myStagingService: StagingService;
 
   private _maintenanceMode: boolean = false;
   private _currentRollout: RolloutRollout = null;
@@ -1452,6 +1455,19 @@ export class Utility {
     return arr.reduce((a, b) => a + b, 0) / arr.length;
   }
 
+  static buildStagingBulkEditAction(buffername: String ): IStagingBulkEditAction {
+    const data = {
+      'kind': 'BulkEditAction',
+      'meta': {
+        'name': buffername,
+        'tenant': Utility.getInstance().getTenant(),
+        'namespace': Utility.getInstance().getNamespace()
+      },
+      'spec': {}
+    };
+    return new StagingBulkEditAction(data);
+  }
+
   public static buildCommitBuffer(): StagingBuffer {
     const data = {
       'kind': 'Buffer',
@@ -2201,6 +2217,14 @@ export class Utility {
 
   getUIConfigsService(): UIConfigsService {
     return this.myUIConfigsService;
+  }
+
+  getStagingServices(): StagingService {
+    return this.myStagingService ;
+  }
+
+  setStagingServices(stagingService: StagingService) {
+    this.myStagingService = stagingService;
   }
 
   publishAJAXEnd(payload: any) {

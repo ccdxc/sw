@@ -23,6 +23,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { StagingService } from '@app/services/generated/staging.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { ConfirmationService } from 'primeng/primeng';
@@ -59,6 +60,7 @@ describe('NetworkinterfacesComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        StagingService,
         AuthService,
         EventsService,
         SearchService,

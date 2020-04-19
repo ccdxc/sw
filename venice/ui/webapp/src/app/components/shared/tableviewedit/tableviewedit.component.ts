@@ -19,6 +19,9 @@ import { TableUtility } from './tableutility';
 import { LocalSearchRequest, AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
 import { SafeStylePipe } from '../Pipes/SafeStyle.pipe';
 import { AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
+import { StagingBuffer, StagingCommitAction, IStagingBulkEditAction, IBulkeditBulkEditItem } from '@sdk/v1/models/generated/staging';
+import { StagingService } from '@app/services/generated/staging.service';
+import { switchMap } from 'rxjs/operators';
 
 /**
  * Table view edit component provides an easy way for other pages
@@ -359,6 +362,9 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
     }
   ];
 
+  // define StagingService.  It will set using ngInit()
+  protected stagingService: StagingService;
+
 
   // Objects that will be rendered in the table
   abstract dataObjects: ReadonlyArray<T> = [];
@@ -383,6 +389,9 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
   }
 
   ngOnInit() {
+
+    this.stagingService = Utility.getInstance().getStagingServices();  // app.c.ts instantiate stagingservice and assign to Utility.ts
+
     // if not a tab, we will always be the active tab.
     if (!this.isTabComponent) {
       this.isActiveTab = true;
@@ -735,6 +744,109 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
     }
     return labels.join(', ');
   }
+
+  commitStagingBuffer(buffername: string): Observable<any> {
+    const commitBufferBody: StagingCommitAction = Utility.buildCommitBufferCommit(buffername);
+    return this.stagingService.Commit(buffername, commitBufferBody);
+  }
+
+  createStagingBuffer(): Observable<any> {
+    const stagingBuffer: StagingBuffer = Utility.buildCommitBuffer();
+    return this.stagingService.AddBuffer(stagingBuffer);
+  }
+
+  deleteStagingBuffer(buffername: string, reason: string, isToshowToaster: boolean = false) {
+    if (buffername == null) {
+      return;
+    }
+    // Whenever, we have to call delete buffer, there must be error occurred. We print out the buffer detail here.
+    this.stagingService.GetBuffer(buffername).subscribe((res) => {
+      console.error(this.getClassName() + '.deleteStagingBuffer() API. Invoke GetBuffer():', res);
+    });
+    this.stagingService.DeleteBuffer(buffername).subscribe(
+      response => {
+        if (isToshowToaster) {
+          this._controllerService.invokeSuccessToaster('Bulkedit commit ', 'Deleted Buffer ' + buffername + '\n' + reason);
+        }
+      },
+      this._controllerService.restErrorHandler('Delete Staging Buffer Failed')
+    );
+  }
+
+  /**
+   * This API builds an IBulkeditBulkEditItem
+   *
+   */
+  buildBulkEditItemFromVeniceObject(vObject: any, method: string, uri: string = ''): IBulkeditBulkEditItem {
+    const obj = {
+      uri: uri,
+      method: method,
+      object: (vObject.getModelValues) ? vObject.getModelValues() : vObject
+    };
+    return obj as IBulkeditBulkEditItem;
+  }
+
+  /**
+   * This API builds an IStagingBulkEditAction
+   * veniceObjects can be ClusterDistributedServiceCard[] or ClusterNetworkInterface[]. // Any Venice object
+   * It is used in DSCs, NetworkInterfaces pages, etc to update venice-objects meta.labels
+   * @param veniceObjects
+   * @param buffername
+   */
+  buildBulkEditLabelsPayload(veniceObjects: any[], buffername: string = ''): IStagingBulkEditAction {
+    const stagingBulkEditAction: IStagingBulkEditAction = Utility.buildStagingBulkEditAction(buffername);
+    stagingBulkEditAction.spec.items = [];
+
+    for (const vObject of veniceObjects) {
+      const bulkeditBulkEditItem: IBulkeditBulkEditItem = this.buildBulkEditItemFromVeniceObject(vObject, 'update');
+      stagingBulkEditAction.spec.items.push(bulkeditBulkEditItem);
+    }
+    return stagingBulkEditAction;
+  }
+
+  /**
+   * Override-able api
+   * It is used when buledit commit buffer is done successfully.
+   */
+  onBulkEditSuccess(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string) {
+    // do nothing
+  }
+
+  /**
+   * Override-able api
+   * It is used when buledit commit buffer failed.
+   */
+  onBulkEditFailure(error: Error, veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string ) {
+    // doing nothing
+    // By looking into parameters, one can find out the operation context.
+  }
+
+  bulkEditHelper(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string, successTitle: string = Utility.UPDATE_SUCCESS_SUMMARY, failureTitle: string = Utility.UPDATE_FAILED_SUMMARY) {
+    if (veniceObjects.length <= 0) {
+      return;
+    }
+    let createdBuffer: StagingBuffer = null;  // responseBuffer.body as StagingBuffer;
+    let buffername = null; // createdBuffer.meta.name;
+    this.createStagingBuffer().pipe(   // (A) create buffer
+      switchMap(responseBuffer => {
+        createdBuffer = responseBuffer.body as StagingBuffer;
+        buffername = createdBuffer.meta.name;
+        stagingBulkEditAction.meta.name = buffername;  // make sure to set buffer-name to stagingBulkEditAction
+        this.stagingService.Bulkedit(buffername, stagingBulkEditAction, null, false, false); // third parameter has to be 'null'. o.w, REST API url will be screwed up
+        return this.commitStagingBuffer(buffername);  //  commit buffer
+      })
+    ).subscribe(
+      (responseCommitBuffer) => {
+        this._controllerService.invokeSuccessToaster(successTitle, successMsg);
+        this.onBulkEditSuccess(veniceObjects, stagingBulkEditAction, successMsg, failureMsg);
+      },
+      (error) => {
+        this._controllerService.invokeRESTErrorToaster(failureTitle, error);
+        this.deleteStagingBuffer(buffername, failureMsg, false);
+        this.onBulkEditFailure(error, veniceObjects, stagingBulkEditAction, successMsg, failureMsg);
+      }
+    );
+  }
 }
 
 export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
@@ -803,7 +915,7 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
   }
 
   // hook for overriding
-  postViewInit() {}
+  postViewInit() { }
 
   replaceToolbar() {
     if (!this.isInline) {
@@ -815,9 +927,9 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
     }
   }
 
-   /**
-   * This API is for table form toolbar buttons style (the [ADD XXX ] button)
-   */
+  /**
+  * This API is for table form toolbar buttons style (the [ADD XXX ] button)
+  */
   computeButtonClass() {
     if (this.newObject.$formGroup.get('meta.name') && Utility.isEmpty(this.newObject.$formGroup.get('meta.name').value)) {
       return 'global-button-disabled';
@@ -833,7 +945,7 @@ export abstract class CreationForm<I, T extends BaseModel> extends BaseComponent
    * This API is for inline edit [SAVE] button
    */
   computeInlineButtonClass() {
-    if (this.isFormValid()  ) {  // don't disable [SAVE] button
+    if (this.isFormValid()) {  // don't disable [SAVE] button
       return '';
     } else {  // disable [SAVE] button
       return 'global-button-disabled';

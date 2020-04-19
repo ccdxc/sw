@@ -4,6 +4,7 @@ import { BaseComponent} from '@app/components/base/base.component';
 import { Utility } from '@app/common/Utility';
 import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from './services/uiconfigs.service';
+import { StagingService } from './services/generated/staging.service';
 
 
 /**
@@ -20,6 +21,7 @@ export class AppComponent extends BaseComponent implements OnInit  {
     protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected _logService: LogService,
+    protected stagingService: StagingService
   ) {
     super(_controllerService, uiconfigsService);
   }
@@ -32,6 +34,7 @@ export class AppComponent extends BaseComponent implements OnInit  {
     Utility.getInstance().setControllerService(this._controllerService);
     Utility.getInstance().setLogService(this._logService);
     Utility.getInstance().setUIConfigsService(this.uiconfigsService);
+    Utility.getInstance().setStagingServices(this.stagingService);
   }
 
   /**

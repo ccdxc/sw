@@ -13,6 +13,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
+import { StagingService } from '@app/services/generated/staging.service';
 import { MessageService } from '@app/services/message.service';
 import { BehaviorSubject } from 'rxjs';
 import { TablevieweditHTMLComponent, TablevieweditAbstract, CreationForm } from './tableviewedit.component';
@@ -416,7 +417,8 @@ describe('TablevieweditComponent', () => {
         MatIconRegistry,
         MessageService,
         ChangeDetectorRef,
-        UIConfigsService
+        UIConfigsService,
+        StagingService
       ]
     });
   });

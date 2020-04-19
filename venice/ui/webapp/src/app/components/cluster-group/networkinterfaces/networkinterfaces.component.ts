@@ -1,30 +1,28 @@
-import { ChangeDetectorRef, Component, ViewEncapsulation, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { FormArray } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { DSCsNameMacMap, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { Utility } from '@app/common/Utility';
+import { SearchUtil } from '@app/components/search/SearchUtil';
+import { AdvancedSearchComponent } from '@app/components/shared/advanced-search/advanced-search.component';
+import { LabelEditorMetadataModel } from '@app/components/shared/labeleditor';
+import { CustomExportMap, TableCol } from '@app/components/shared/tableviewedit';
+import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { NetworkNetworkInterface, INetworkNetworkInterface, INetworkNetworkInterfaceList, IApiStatus } from '@sdk/v1/models/generated/network';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase_uihint, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
-import { Observable, forkJoin } from 'rxjs';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { ActivatedRoute } from '@angular/router';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { TableCol, RowClickEvent, CustomExportMap } from '@app/components/shared/tableviewedit';
-import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
+import { BrowserService } from '@app/services/generated/browser.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { NetworkService } from '@app/services/generated/network.service';
-import { BrowserService } from '@app/services/generated/browser.service';
-import { LabelEditorMetadataModel } from '@app/components/shared/labeleditor';
-import { ObjectsRelationsUtility, DSCsNameMacMap } from '@app/common/ObjectsRelationsUtility';
-import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
-import { FormArray } from '@angular/forms';
-import { AdvancedSearchComponent } from '@app/components/shared/advanced-search/advanced-search.component';
-import { SearchUtil } from '@app/components/search/SearchUtil';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { IApiStatus, INetworkNetworkInterface, NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 import { FieldsRequirement } from '@sdk/v1/models/generated/search';
-import * as _ from 'lodash';
+import { IBulkeditBulkEditItem, IStagingBulkEditAction, StagingBuffer } from '@sdk/v1/models/generated/staging';
+import { forkJoin, Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 /**
  * NetworkinterfacesComponent is linked to DSC object.
@@ -267,11 +265,22 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   }
 
   handleEditSave(networkinterfaces: NetworkNetworkInterface[]) {
-    this.updateWithForkjoin(networkinterfaces);
+   // this.updateWithForkjoin(networkinterfaces);
+   this.bulkeditLabels(networkinterfaces);
   }
 
   handleEditCancel($event) {
     this.inLabelEditMode = false;
+  }
+
+
+
+  bulkeditLabels(networkinterfaces: NetworkNetworkInterface[]) {
+
+    const successMsg: string = 'updated ' + networkinterfaces.length + ' network interface labels';
+    const failureMsg: string = 'Failed to update network interface labels';
+    const stagingBulkEditAction = this.buildBulkEditLabelsPayload(networkinterfaces);
+    this.bulkEditHelper(networkinterfaces, stagingBulkEditAction, successMsg, failureMsg );
   }
 
   updateWithForkjoin(networkinterfaces: NetworkNetworkInterface[]) {
@@ -285,6 +294,19 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
     const summary = 'Network Interface update';
     const objectType = 'Network Interface';
     this.handleForkJoin(observables, summary, objectType);
+  }
+
+  onForkJoinSuccess() {
+    this.inLabelEditMode = false;
+    this.tableContainer.selectedDataObjects = [];
+  }
+
+  onBulkEditSuccess(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string) {
+    this.onForkJoinSuccess();
+  }
+
+  onBulkEditFailure(error: Error, veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string, ) {
+      this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjectsBackUp);
   }
 
   private handleForkJoin(observables: Observable<any>[], summary: string, objectType: string) {
@@ -303,7 +325,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
       if (successCount > 0) {
         const msg = 'Successfully updated ' + successCount.toString() + ' ' + objectType + '.';
         this._controllerService.invokeSuccessToaster(summary, msg);
-        this.inLabelEditMode = false;
+        this.onForkJoinSuccess();
       }
       if (failCount > 0) {
         this._controllerService.invokeRESTErrorToaster(summary, errors.join('\n'));

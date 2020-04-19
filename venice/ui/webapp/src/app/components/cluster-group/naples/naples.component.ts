@@ -26,12 +26,13 @@ import { IWorkloadAutoMsgWorkloadWatchHelper, WorkloadWorkload, WorkloadWorkload
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import * as _ from 'lodash';
 import { forkJoin, Observable, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, switchMap } from 'rxjs/operators';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesCondition, NaplesConditionValues } from '.';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { SelectItem } from 'primeng/api';
+import { IStagingBulkEditAction, IBulkeditBulkEditItem, StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 
 interface ChartData {
   // macs or ids of the dsc
@@ -63,19 +64,13 @@ interface DSCUiModel {
  * Then we make an api call to get all the matching DSCs using _callSearchRESTAPI.
  * These results do not contain spec information, so we lookup the original naples object from the naplesMap.
  * The matching naples objects are added to this.filteredNaples which is used to render the table.
+ *
+ * 2020-04-17
+ * We added bulkedit to update DSC labels and assign DSC-profile to DSCs.
+ * Note: this.stagingService is from parent class  TablevieweditAbstract
  */
 
-/**
- TODO:
- interface naplesUI {
-  associatedConditionStatus: ....
-  associatedWorkloads:....
- }
-  uiData = data._ui as naplesUI
 
-  That way uiData.associatedConditionStatus has type checking and auto-completion.
-  line 402, 403, 454
- */
 
 export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedServiceCard, ClusterDistributedServiceCard> implements OnInit, OnDestroy {
 
@@ -222,7 +217,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   generateDeleteConfirmMsg(object: ClusterDistributedServiceCard): string {
     let confirmMsg = 'Are you sure you want to delete DSC ';
     if (object.spec['mgmt-mode'] === ClusterDistributedServiceCardSpec_mgmt_mode.host &&
-        object.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted) {
+      object.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted) {
       confirmMsg = 'DSC decommissioning is not completed, are you sure you want to delete DSC ';
     }
     return confirmMsg + object.meta.name + '?';
@@ -1005,7 +1000,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         this.selectedDSCProfiles = null;
       }
     },
-    error => {
+      error => {
         this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
         this.inProfileAssigningMode = false;
       }
@@ -1020,10 +1015,21 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.selectedDSCProfiles = null;
   }
 
+  onBulkEditSuccess(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string) {
+    this.onForkJoinSuccess();
+  }
+
+  onBulkEditFailure(error: Error, veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string, ) {
+     // A DSC used to have "InsertionFWProfile" profile. If user change it to "default" profile. Sever will reject, we restore data here
+     this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjectsBackUp);
+  }
+
+
   // The save emitter from labeleditor returns the updated objects here.
   // We use forkjoin to update all the naples.
   handleEditSave(updatedNaples: ClusterDistributedServiceCard[]) {
-    this.updateDSCLabelsWithForkjoin(updatedNaples);
+    // this.updateDSCLabelsWithForkjoin(updatedNaples);
+    this.updateDSCLabelsWithBulkEdit(updatedNaples);
   }
 
   handleEditCancel($event) {
@@ -1249,9 +1255,51 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   onSaveProfileToDSCs() {
     const updatedNaples = this.tableContainer.selectedDataObjects;
     if (this.selectedDSCProfiles) {
-      this.updateDSCProfilesWithForkjoin(updatedNaples);
+      // this.updateDSCProfilesWithForkjoin(updatedNaples);
+      this.updateDSCProfilesWithBulkEdit(updatedNaples);
     }
   }
+
+
+  buildBulkEditDSCProfilePayload(updatedNaples: ClusterDistributedServiceCard[], buffername: string = ''): IStagingBulkEditAction {
+
+    const stagingBulkEditAction: IStagingBulkEditAction = Utility.buildStagingBulkEditAction(buffername);
+    stagingBulkEditAction.spec.items = [];
+
+    for (const dscObj of updatedNaples) {
+      if (dscObj.spec.dscprofile !== this.selectedDSCProfiles.value) {
+        dscObj.spec.dscprofile = this.selectedDSCProfiles.value;
+        const obj = {
+          uri: '',
+          method: 'update',
+          object: dscObj.getModelValues()
+        };
+        stagingBulkEditAction.spec.items.push(obj as IBulkeditBulkEditItem);
+      }
+    }
+    return (stagingBulkEditAction.spec.items.length > 0) ? stagingBulkEditAction : null;
+  }
+
+  updateDSCProfilesWithBulkEdit(updatedDSCs: ClusterDistributedServiceCard[]) {
+    const successMsg: string = 'updated ' + updatedDSCs.length + ' DSCs profiles ';
+    const failureMsg: string = 'Failed to udpate DSCs profile';
+    const stagingBulkEditAction = this.buildBulkEditDSCProfilePayload(updatedDSCs);
+    if (stagingBulkEditAction) {
+      this.bulkEditHelper(updatedDSCs, stagingBulkEditAction, successMsg, failureMsg);
+    } else {
+      this._controllerService.invokeInfoToaster('No update neccessary', 'All selected DSCs are assigned ' + this.selectedDSCProfiles.value + ' DSC profile already.');
+      this.inProfileAssigningMode = false;
+      return;
+    }
+  }
+
+  updateDSCLabelsWithBulkEdit(updatedDSCs: ClusterDistributedServiceCard[]) {
+    const successMsg: string = 'updated ' + updatedDSCs.length + ' DSCs labels ';
+    const failureMsg: string = 'Failed to udpate DSC labels';
+    const stagingBulkEditAction = this.buildBulkEditLabelsPayload(updatedDSCs);
+    this.bulkEditHelper(updatedDSCs, stagingBulkEditAction, successMsg, failureMsg);
+  }
+
 
   updateDSCProfilesWithForkjoin(updatedNaples: ClusterDistributedServiceCard[]) {
     const observables: Observable<any>[] = [];
