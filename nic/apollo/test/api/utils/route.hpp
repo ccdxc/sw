@@ -60,17 +60,17 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const pds_route_t *route) {
-    os << " pfx: " << ippfx2str(&route->prefix)
-       << " nh type: " << route->nh_type;
-    switch (route->nh_type) {
+    os << " pfx: " << ippfx2str(&route->attrs.prefix)
+       << " nh type: " << route->attrs.nh_type;
+    switch (route->attrs.nh_type) {
     case PDS_NH_TYPE_OVERLAY:
-        os << " TEP: " << route->tep.str();
+        os << " TEP: " << route->attrs.tep.str();
         break;
     case PDS_NH_TYPE_IP:
-        os << " NH: " << route->nh.str();
+        os << " NH: " << route->attrs.nh.str();
         break;
     case PDS_NH_TYPE_PEER_VPC:
-        os << " vpc: " << route->vpc.str();
+        os << " vpc: " << route->attrs.vpc.str();
         break;
     default:
         break;

@@ -122,7 +122,7 @@ route_table_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
 
 route_state::route_state() {
     route_ht_ = ht::factory(PDS_ROUTE_HT_SIZE, route::route_key_func_get,
-                            sizeof(pds_obj_key_t));
+                            sizeof(pds_route_key_t));
     SDK_ASSERT(route_ht_ != NULL);
     route_slab_ = slab::factory("route", PDS_SLAB_ID_ROUTE,
                                 sizeof(route), 16, true, true, true, NULL);
@@ -155,7 +155,7 @@ route_state::free(route *route) {
 }
 
 route *
-route_state::find(pds_obj_key_t *key) const {
+route_state::find(pds_route_key_t *key) const {
     return (route *)(route_ht_->lookup(key));
 }
 

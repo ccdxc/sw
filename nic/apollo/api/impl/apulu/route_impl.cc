@@ -109,20 +109,22 @@ route_table_impl::update_route_table_spec_(pds_route_table_spec_t *spec,
                                            api_obj_ctxt_t *obj_ctxt) {
     uint32_t i;
     bool found;
-    pds_obj_key_t key;
+    pds_route_key_t key;
     api_obj_ctxt_t *octxt;
 
     for (auto it = obj_ctxt->clist.begin(); it != obj_ctxt->clist.end(); it++) {
         octxt = *it;
         if (octxt->api_op == API_OP_CREATE) {
             // add the route to the end of the table
-            spec->route_info->routes[spec->route_info->num_routes] =
-                octxt->api_params->route_spec.route;
+            spec->route_info->routes[spec->route_info->num_routes].key =
+                octxt->api_params->route_spec.key.route_id;
+            spec->route_info->routes[spec->route_info->num_routes].attrs =
+                octxt->api_params->route_spec.attrs;
             spec->route_info->num_routes++;
         } else {
             // either DEL or UPD operation
             if (octxt->api_op == API_OP_DELETE) {
-                key = octxt->api_params->key;
+                key = octxt->api_params->route_key;
             } else {
                 // update case
                 key = octxt->api_params->route_spec.key;
@@ -130,15 +132,15 @@ route_table_impl::update_route_table_spec_(pds_route_table_spec_t *spec,
             // search and find the object to delete or modify
             found = false;
             for (i = 0; i < spec->route_info->num_routes; i++) {
-                if (key == spec->route_info->routes[i].key) {
+                if (key.route_id == spec->route_info->routes[i].key) {
                     found = true;
                     break;
                 }
             }
             if (!found) {
                 PDS_TRACE_ERR("route %s not found in route table %s to "
-                              "perform api op %u",
-                              key.str(), spec->key.str(), octxt->api_op);
+                              "perform api op %u", key.route_id.str(),
+                              spec->key.str(), octxt->api_op);
                 return SDK_RET_INVALID_ARG;
             }
             if (octxt->api_op == API_OP_DELETE) {
@@ -147,8 +149,8 @@ route_table_impl::update_route_table_spec_(pds_route_table_spec_t *spec,
                 spec->route_info->num_routes--;
             } else {
                 // update case
-                spec->route_info->routes[i] =
-                    octxt->api_params->route_spec.route;
+                spec->route_info->routes[i].attrs =
+                    octxt->api_params->route_spec.attrs;
             }
         }
     }
@@ -304,8 +306,8 @@ route_table_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
 
     for (uint32_t i = 0; i < spec->route_info->num_routes; i++) {
         route_spec = &spec->route_info->routes[i];
-        if ((route_spec->nat.dst_nat_ip.af == IP_AF_IPV4) ||
-            (route_spec->nat.dst_nat_ip.af == IP_AF_IPV6)) {
+        if ((route_spec->attrs.nat.dst_nat_ip.af == IP_AF_IPV4) ||
+            (route_spec->attrs.nat.dst_nat_ip.af == IP_AF_IPV6)) {
             num_dnat_entries_++;
         }
     }
@@ -384,8 +386,8 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
     p4pd_error_t           p4pd_ret;
     nexthop_group          *nh_group;
     pds_route_t            *route_spec;
-    dnat_actiondata_t      dnat_data = {0};
-    nat2_actiondata_t      nat2_data = {0};
+    dnat_actiondata_t      dnat_data = { 0 };
+    nat2_actiondata_t      nat2_data = { 0 };
 
     // allocate memory for the library to build route table
     rtable =
@@ -410,48 +412,50 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
     for (uint32_t i = 0, dnat_idx = 0; i < rtable->num_routes; i++) {
         nh_val = 0;
         route_spec = &spec->route_info->routes[i];
-        rtable->routes[i].prefix = route_spec->prefix;
+        rtable->routes[i].prefix = route_spec->attrs.prefix;
         // if user specified priority explicitly, use it or else use prefix
         // length to compute the priority (to provide longest prefix matching
         // semantics)
         if (rtable->pbr_enabled) {
-            rtable->routes[i].prio = route_spec->prio;
+            rtable->routes[i].prio = route_spec->attrs.prio;
         } else {
-            rtable->routes[i].prio = 128 - route_spec->prefix.len;
+            rtable->routes[i].prio = 128 - route_spec->attrs.prefix.len;
         }
         // if metering is enabled on this route, set the M bit in the
         // corresponding nexthop
-        if (route_spec->meter) {
+        if (route_spec->attrs.meter) {
             PDS_IMPL_NH_VAL_SET_METER_EN(nh_val);
         }
         // set the SNAT type
-        PDS_IMPL_NH_VAL_SET_SNAT_TYPE(nh_val, route_spec->nat.src_nat_type);
+        PDS_IMPL_NH_VAL_SET_SNAT_TYPE(nh_val,
+                                      route_spec->attrs.nat.src_nat_type);
         // if DNAT is required for traffic hitting this route, setup the DNA
         // table entry
-        if ((route_spec->nat.dst_nat_ip.af == IP_AF_IPV4) ||
-            (route_spec->nat.dst_nat_ip.af == IP_AF_IPV6)) {
+        if ((route_spec->attrs.nat.dst_nat_ip.af == IP_AF_IPV4) ||
+            (route_spec->attrs.nat.dst_nat_ip.af == IP_AF_IPV6)) {
             // DNAT is enabled on this route
             PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val, TRUE,
                                           dnat_base_idx_ + dnat_idx);
 
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %s, route %s prio: %u -> DNAT %s, "
-                            "nh id 0x%x", spec->key.str(),
+            PDS_TRACE_DEBUG("Processing route table %s, route %s prio %u -> "
+                            "DNAT %s, nh id 0x%x", spec->key.str(),
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].prio,
-                            ipaddr2str(&route_spec->nat.dst_nat_ip),
+                            ipaddr2str(&route_spec->attrs.nat.dst_nat_ip),
                             nh_val);
 
             // write to DNAT table at this index
             dnat_data.action_id = DNAT_DNAT_ID;
             dnat_data.dnat_info.route_table_hw_id = 0;
-            if (route_spec->nat.dst_nat_ip.af == IP_AF_IPV4) {
+            if (route_spec->attrs.nat.dst_nat_ip.af == IP_AF_IPV4) {
                 memcpy(dnat_data.dnat_info.dnat_address,
-                       &route_spec->nat.dst_nat_ip.addr.v4_addr, IP4_ADDR8_LEN);
+                       &route_spec->attrs.nat.dst_nat_ip.addr.v4_addr,
+                       IP4_ADDR8_LEN);
             } else {
                 sdk::lib::memrev(dnat_data.dnat_info.dnat_address,
-                                 route_spec->nat.dst_nat_ip.addr.v6_addr.addr8,
-                                 IP6_ADDR8_LEN);
+                              route_spec->attrs.nat.dst_nat_ip.addr.v6_addr.addr8,
+                              IP6_ADDR8_LEN);
             }
             p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_TXDMA_TBL_ID_DNAT,
                                                dnat_base_idx_ + dnat_idx,
@@ -459,70 +463,75 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
             if (p4pd_ret != P4PD_SUCCESS) {
                 PDS_TRACE_ERR("Failed to program DNAT table at %u for route "
                               "%s in route table %s", dnat_base_idx_ + dnat_idx,
-                              ippfx2str(&route_spec->prefix), spec->key.str());
+                              ippfx2str(&route_spec->attrs.prefix),
+                              spec->key.str());
                 ret = SDK_RET_HW_PROGRAM_ERR;
                 goto cleanup;
             }
 
             PDS_TRACE_DEBUG("Programmed DNAT table at %u for IP %s",
                             dnat_base_idx_ + dnat_idx,
-                            ipaddr2str(&route_spec->nat.dst_nat_ip));
+                            ipaddr2str(&route_spec->attrs.nat.dst_nat_ip));
 
             // write to NAT2 table at this index
             nat2_data.action_id = NAT2_NAT2_REWRITE_ID;
-            if (route_spec->nat.dst_nat_ip.af == IP_AF_IPV4) {
+            if (route_spec->attrs.nat.dst_nat_ip.af == IP_AF_IPV4) {
                 memcpy(nat2_data.action_u.nat2_nat2_rewrite.ip,
-                       &route_spec->nat.dst_nat_ip.addr.v4_addr, IP4_ADDR8_LEN);
+                       &route_spec->attrs.nat.dst_nat_ip.addr.v4_addr,
+                       IP4_ADDR8_LEN);
             } else {
                 sdk::lib::memrev(nat2_data.action_u.nat2_nat2_rewrite.ip,
-                                 route_spec->nat.dst_nat_ip.addr.v6_addr.addr8,
-                                 IP6_ADDR8_LEN);
+                              route_spec->attrs.nat.dst_nat_ip.addr.v6_addr.addr8,
+                              IP6_ADDR8_LEN);
             }
             p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NAT2,
                                                (dnat_base_idx_ + dnat_idx) * 2,
                                                NULL, NULL, &nat2_data);
             if (p4pd_ret != P4PD_SUCCESS) {
                 PDS_TRACE_ERR("Failed to program NAT2 table at %u for route "
-                              "%s in route table %s", (dnat_base_idx_ + dnat_idx) * 2,
-                              ippfx2str(&route_spec->prefix), spec->key.str());
+                              "%s in route table %s",
+                              (dnat_base_idx_ + dnat_idx) * 2,
+                              ippfx2str(&route_spec->attrs.prefix),
+                              spec->key.str());
                 ret = SDK_RET_HW_PROGRAM_ERR;
                 goto cleanup;
             }
 
             PDS_TRACE_DEBUG("Programmed NAT2 table at %u for IP %s",
                             (dnat_base_idx_ + dnat_idx) * 2,
-                            ipaddr2str(&route_spec->nat.dst_nat_ip));
+                            ipaddr2str(&route_spec->attrs.nat.dst_nat_ip));
 
             // program reverse entry in nat2 table
-            if (route_spec->prefix.addr.af == IP_AF_IPV4) {
+            if (route_spec->attrs.prefix.addr.af == IP_AF_IPV4) {
                 memcpy(nat2_data.action_u.nat2_nat2_rewrite.ip,
-                       &route_spec->prefix.addr.addr.v4_addr, IP4_ADDR8_LEN);
+                       &route_spec->attrs.prefix.addr.addr.v4_addr,
+                       IP4_ADDR8_LEN);
             } else {
                 sdk::lib::memrev(nat2_data.action_u.nat2_nat2_rewrite.ip,
-                                 route_spec->prefix.addr.addr.v6_addr.addr8,
-                                 IP6_ADDR8_LEN);
+                              route_spec->attrs.prefix.addr.addr.v6_addr.addr8,
+                              IP6_ADDR8_LEN);
             }
             p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NAT2,
-                                               (dnat_base_idx_ + dnat_idx) * 2 + 1,
-                                               NULL, NULL, &nat2_data);
+                           (dnat_base_idx_ + dnat_idx) * 2 + 1,
+                           NULL, NULL, &nat2_data);
             if (p4pd_ret != P4PD_SUCCESS) {
                 PDS_TRACE_ERR("Failed to program NAT2 table at %u for route "
-                              "%s in route table %s", (dnat_base_idx_ + dnat_idx) * 2 + 1,
-                              ippfx2str(&route_spec->prefix), spec->key.str());
+                    "%s in route table %s", (dnat_base_idx_ + dnat_idx) * 2 + 1,
+                    ippfx2str(&route_spec->attrs.prefix), spec->key.str());
                 ret = SDK_RET_HW_PROGRAM_ERR;
                 goto cleanup;
             }
 
             PDS_TRACE_DEBUG("Programmed NAT2 table at %u for IP %s",
                             (dnat_base_idx_ + dnat_idx) * 2 + 1,
-                            ipaddr2str(&route_spec->prefix.addr));
+                            ipaddr2str(&route_spec->attrs.prefix.addr));
             dnat_idx++;
             continue;
         } else {
             PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val, FALSE, 0);
         }
 
-        switch (route_spec->nh_type) {
+        switch (route_spec->attrs.nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_NEXTHOP,
                                         PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
@@ -534,33 +543,33 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
 
         case PDS_NH_TYPE_OVERLAY:
             // non vpc peering case
-            tep = tep_db()->find(&spec->route_info->routes[i].tep);
+            tep = tep_db()->find(&spec->route_info->routes[i].attrs.tep);
             if (tep == NULL) {
                 PDS_TRACE_ERR("TEP %s not found while processing route %s in "
-                              "route table %s",
-                              spec->route_info->routes[i].tep.str(),
-                              ippfx2str(&spec->route_info->routes[i].prefix),
-                              spec->key.str());
+                    "route table %s",
+                    spec->route_info->routes[i].attrs.tep.str(),
+                    ippfx2str(&spec->route_info->routes[i].attrs.prefix),
+                    spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_TUNNEL,
                                         ((tep_impl *)(tep->impl()))->hw_id1());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %s, route %s prio: %u -> TEP %s, "
-                            "nh id 0x%x", spec->key.str(),
+            PDS_TRACE_DEBUG("Processing route table %s, route %s prio %u -> "
+                            "TEP %s, nh id 0x%x", spec->key.str(),
                             ippfx2str(&rtable->routes[i].prefix),
-                            rtable->routes[i].prio,
-                            tep->key2str().c_str(), nh_val);
+                            rtable->routes[i].prio, tep->key2str().c_str(),
+                            nh_val);
             break;
 
         case PDS_NH_TYPE_OVERLAY_ECMP:
             nh_group =
-                nexthop_group_db()->find(&spec->route_info->routes[i].nh_group);
+                nexthop_group_db()->find(&spec->route_info->routes[i].attrs.nh_group);
             if (nh_group == NULL) {
                 PDS_TRACE_ERR("nexthop group %s not found while processing "
                               "route %s in route table %s",
-                              spec->route_info->routes[i].nh_group.str(),
+                              spec->route_info->routes[i].attrs.nh_group.str(),
                               ippfx2str(&rtable->routes[i].prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
@@ -576,13 +585,13 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
             break;
 
         case PDS_NH_TYPE_PEER_VPC:
-            vpc = vpc_db()->find(&spec->route_info->routes[i].vpc);
+            vpc = vpc_db()->find(&spec->route_info->routes[i].attrs.vpc);
             if (vpc == NULL) {
                 PDS_TRACE_ERR("vpc %s not found while processing route %s in "
-                              "route table %s",
-                              spec->route_info->routes[i].vpc.str(),
-                              ippfx2str(&spec->route_info->routes[i].prefix),
-                              spec->key.str());
+                    "route table %s",
+                    spec->route_info->routes[i].attrs.vpc.str(),
+                    ippfx2str(&spec->route_info->routes[i].attrs.prefix),
+                    spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
@@ -596,13 +605,13 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
             break;
 
         case PDS_NH_TYPE_VNIC:
-            vnic = vnic_db()->find(&spec->route_info->routes[i].vnic);
+            vnic = vnic_db()->find(&spec->route_info->routes[i].attrs.vnic);
             if (vnic == NULL) {
                  PDS_TRACE_ERR("vnic %s not found while processing route %s in "
-                               "route table %s",
-                               spec->route_info->routes[i].vnic.str(),
-                               ippfx2str(&spec->route_info->routes[i].prefix),
-                               spec->key.str());
+                     "route table %s",
+                     spec->route_info->routes[i].attrs.vnic.str(),
+                     ippfx2str(&spec->route_info->routes[i].attrs.prefix),
+                     spec->key.str());
                  break;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_NEXTHOP,
@@ -616,8 +625,9 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
 
         default:
             PDS_TRACE_ERR("Unsupported nh type %u while processing route %s in "
-                          "route table %s", spec->route_info->routes[i].nh_type,
-                          ippfx2str(&spec->route_info->routes[i].prefix),
+                          "route table %s",
+                          spec->route_info->routes[i].attrs.nh_type,
+                          ippfx2str(&spec->route_info->routes[i].attrs.prefix),
                           spec->key.str());
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;

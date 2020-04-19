@@ -388,15 +388,13 @@ route::free(route *rt) {
 }
 
 route *
-route::build(pds_obj_key_t *key) {
+route::build(pds_route_key_t *key) {
     route *rt;
 
     rt = route_db()->alloc();
     if (rt) {
         new (rt) route();
         memcpy(&rt->key_, key, sizeof(*key));
-        // TODO: for delete case, we should look up in kvstore and
-        //       populate the route table's key as well
     }
     return rt;
 }
@@ -413,7 +411,6 @@ route::init_config(api_ctxt_t *api_ctxt) {
     pds_route_spec_t *spec = &api_ctxt->api_params->route_spec;
 
     memcpy(&key_, &spec->key, sizeof(key_));
-    memcpy(&route_table_, &spec->route_table, sizeof(route_table_));
     return SDK_RET_OK;
 }
 
@@ -425,15 +422,16 @@ route::add_deps(api_obj_ctxt_t *obj_ctxt) {
     if ((obj_ctxt->api_op == API_OP_CREATE) ||
         (obj_ctxt->api_op == API_OP_UPDATE)) {
         if (obj_ctxt->cloned_obj) {
-            route_table_key = ((route *)obj_ctxt->cloned_obj)->route_table_;
+            route_table_key =
+                ((route *)obj_ctxt->cloned_obj)->key_.route_table_id;
         } else {
-            route_table_key = route_table_;
+            route_table_key = key_.route_table_id;
         }
         rtable = route_table_find(&route_table_key);
         if (!rtable) {
             PDS_TRACE_ERR("Failed to perform api op %u on route %s, "
-                          "route table %s not found",
-                          obj_ctxt->api_op, key_.str(), route_table_key.str());
+                          "route table not found",
+                          obj_ctxt->api_op, key_.route_id.str());
             return SDK_RET_INVALID_ARG;
         }
         api_obj_add_to_deps(API_OP_UPDATE,

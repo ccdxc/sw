@@ -84,12 +84,11 @@ route_spec_fill (pds_route_spec_t *route_spec, uint32_t route_id,
 {
     uint32_t base_tep_id = 2;
 
-    route_spec->key = int2pdsobjkey(route_id);
-    route_spec->route_table = int2pdsobjkey(k_route_table_id);
-    route_spec->route.key = route_spec->key;
-    route_spec->route.prefix = *ip_pfx;
-    route_spec->route.nh_type = PDS_NH_TYPE_OVERLAY;
-    route_spec->route.tep = int2pdsobjkey(base_tep_id);
+    route_spec->key.route_id = int2pdsobjkey(route_id);
+    route_spec->key.route_table_id = int2pdsobjkey(k_route_table_id);
+    route_spec->attrs.prefix = *ip_pfx;
+    route_spec->attrs.nh_type = PDS_NH_TYPE_OVERLAY;
+    route_spec->attrs.tep = int2pdsobjkey(base_tep_id);
 }
 
 void
@@ -200,7 +199,7 @@ route_table_update_route_verify (std::string base_pfx)
     key = int2pdsobjkey(k_route_table_id);
     ret = pds_route_table_read(&key, &info);
     ASSERT_TRUE(ret == SDK_RET_OK);
-    ASSERT_TRUE(memcmp(&info.spec.route_info->routes[0].prefix,
+    ASSERT_TRUE(memcmp(&info.spec.route_info->routes[0].attrs.prefix,
                        &ip_pfx, sizeof(ip_prefix_t)) == 0);
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
 }

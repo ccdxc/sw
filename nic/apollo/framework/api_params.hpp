@@ -74,6 +74,7 @@ struct api_params_s {
         pds_nat_port_block_spec_t     nat_port_block_spec;
         pds_dhcp_policy_spec_t        dhcp_policy_spec;
         pds_security_profile_spec_t   security_profile_spec;
+        pds_route_key_t               route_key;
         pds_route_spec_t              route_spec;
         pds_policy_rule_spec_t        policy_rule_spec;
     };

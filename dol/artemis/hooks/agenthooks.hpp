@@ -689,13 +689,15 @@ public:
                         // Create flows for the last addresses, saving the first one also
                         if (v4) {
                             uint32_t mask = 0;
-                            local_gw_mapping[lid].remotes[rc].v4_addr[0] = routes[rid].prefix.addr.addr.v4_addr;
+                            local_gw_mapping[lid].remotes[rc].v4_addr[0] =
+                                routes[rid].attrs.prefix.addr.addr.v4_addr;
                             local_gw_mapping[lid].remotes[rc].v4_host_count++;
-                            if (routes[rid].prefix.len != 32) {
-                                mask = (1ULL << (32 - routes[rid].prefix.len)) - 1;
+                            if (routes[rid].attrs.prefix.len != 32) {
+                                mask = (1ULL << (32 - routes[rid].attrs.prefix.len)) - 1;
                                 local_gw_mapping[lid].remotes[rc].v4_host_count++;
                             }
-                            local_gw_mapping[lid].remotes[rc].v4_addr[1] = local_gw_mapping[lid].remotes[rc].v4_addr[0] | mask;
+                            local_gw_mapping[lid].remotes[rc].v4_addr[1] =
+                                local_gw_mapping[lid].remotes[rc].v4_addr[0] | mask;
                             DBG_PRINT("local gw mapping vpc %u, routes %s, count %u, addr0 %s, addr1 %s\n", vpc,
                                       ippfx2str(&local_gw_mapping[lid].remotes[rc].route.prefix),
                                       local_gw_mapping[lid].remotes[rc].v4_host_count,
@@ -703,20 +705,24 @@ public:
                                       ipv4addr2str(local_gw_mapping[lid].remotes[rc].v4_addr[1]));
                         } else {
                             ipv6_addr_t mask = {0};
-                            local_gw_mapping[lid].remotes[rc].v6_addr[0].addr64[0] = routes[rid].prefix.addr.addr.v6_addr.addr64[0];
-                            local_gw_mapping[lid].remotes[rc].v6_addr[0].addr64[1] = routes[rid].prefix.addr.addr.v6_addr.addr64[1];
+                            local_gw_mapping[lid].remotes[rc].v6_addr[0].addr64[0] =
+                                routes[rid].attrs.prefix.addr.addr.v6_addr.addr64[0];
+                            local_gw_mapping[lid].remotes[rc].v6_addr[0].addr64[1] =
+                                routes[rid].attrs.prefix.addr.addr.v6_addr.addr64[1];
                             local_gw_mapping[lid].remotes[rc].v6_host_count++;
-                            if (routes[rid].prefix.len != 128) {
-                                if (routes[rid].prefix.len == 0) {
+                            if (routes[rid].attrs.prefix.len != 128) {
+                                if (routes[rid].attrs.prefix.len == 0) {
                                     mask.addr64[0] = -1ULL;
                                     mask.addr64[1] = -1ULL;
-                                } else if (routes[rid].prefix.len < 64) {
-                                    mask.addr64[0] = (1ULL << (64 - routes[rid].prefix.len)) - 1;
+                                } else if (routes[rid].attrs.prefix.len < 64) {
+                                    mask.addr64[0] =
+                                        (1ULL << (64 - routes[rid].attrs.prefix.len)) - 1;
                                     mask.addr64[1] = -1;
-                                } else if (routes[rid].prefix.len == 64) {
+                                } else if (routes[rid].attrs.prefix.len == 64) {
                                     mask.addr64[1] = -1;
                                 } else {
-                                    mask.addr64[1] = (1ULL << (128 - routes[rid].prefix.len)) - 1;
+                                    mask.addr64[1] =
+                                        (1ULL << (128 - routes[rid].attrs.prefix.len)) - 1;
                                 }
                                 local_gw_mapping[lid].remotes[rc].v4_host_count++;
                             }
@@ -996,7 +1002,7 @@ public:
                     }
                     // create V4 session
                     ret = create_session_info(
-                        vpc, test::objid_from_uuid(local_gw_mapping[i].remotes[rc].route.nh),
+                        vpc, test::objid_from_uuid(local_gw_mapping[i].remotes[rc].route.attrs.nh),
                         VNET_TO_INTERNET_SLB);
                     if (ret != SDK_RET_OK) {
                         local_gw_mapping[i].remote_count = 0;

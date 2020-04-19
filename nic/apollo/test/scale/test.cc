@@ -110,18 +110,24 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
         for (uint32_t j = 0; j < num_routes; j++) {
             if (apollo() || apulu()) {
                 // In apollo, use TEPs as nexthop
-                compute_ipv6_prefix(&v6route_table.route_info->routes[j].prefix,
-                                    v6_route_pfx, v6rtnum++, 120);
-                v6route_table.route_info->routes[j].tep = test::int2pdsobjkey(tep_id++);
+                compute_ipv6_prefix(
+                    &v6route_table.route_info->routes[j].attrs.prefix,
+                    v6_route_pfx, v6rtnum++, 120);
+                v6route_table.route_info->routes[j].attrs.tep =
+                    test::int2pdsobjkey(tep_id++);
                 if (tep_id == tep_id_max) {
                     tep_id = tep_id_start;
                 }
-                v6route_table.route_info->routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
+                v6route_table.route_info->routes[j].attrs.nh_type =
+                    PDS_NH_TYPE_OVERLAY;
             } else if (artemis()) {
-                compute_ipv6_prefix(&v6route_table.route_info->routes[j].prefix,
-                                    v6_route_pfx, v6rtnum++, 124);
-                v6route_table.route_info->routes[j].nh_type = PDS_NH_TYPE_IP;
-                v6route_table.route_info->routes[j].nh = test::int2pdsobjkey(nh_id++);
+                compute_ipv6_prefix(
+                    &v6route_table.route_info->routes[j].attrs.prefix,
+                    v6_route_pfx, v6rtnum++, 124);
+                v6route_table.route_info->routes[j].attrs.nh_type =
+                    PDS_NH_TYPE_IP;
+                v6route_table.route_info->routes[j].attrs.nh =
+                    test::int2pdsobjkey(nh_id++);
                 if (nh_id > num_nh) {
                     nh_id = 1;
                 }
@@ -168,33 +174,39 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
         route_table.key =
             test::int2pdsobjkey(ROUTE_TABLE_ID_BASE + i);
         for (uint32_t j = 0; j < num_routes; j++) {
-            route_table.route_info->routes[j].prefix.addr.af = IP_AF_IPV4;
+            route_table.route_info->routes[j].attrs.prefix.addr.af = IP_AF_IPV4;
             if (apollo() || apulu()) {
-                route_table.route_info->routes[j].prefix.len = 24;
-                route_table.route_info->routes[j].prefix.addr.addr.v4_addr =
+                route_table.route_info->routes[j].attrs.prefix.len = 24;
+                route_table.route_info->routes[j].attrs.prefix.addr.addr.v4_addr =
                         ((0xC << 28) | (rtnum++ << 8));
-                route_table.route_info->routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
-                route_table.route_info->routes[j].tep = test::int2pdsobjkey(tep_id++);
+                route_table.route_info->routes[j].attrs.nh_type =
+                    PDS_NH_TYPE_OVERLAY;
+                route_table.route_info->routes[j].attrs.tep =
+                    test::int2pdsobjkey(tep_id++);
                 if (tep_id == tep_id_max) {
                     tep_id = tep_id_start;
                 }
             } else if (artemis()) {
-                route_table.route_info->routes[j].prefix.len =
+                route_table.route_info->routes[j].attrs.prefix.len =
                     TESTAPP_V4ROUTE_PREFIX_LEN;
-                route_table.route_info->routes[j].prefix.addr.addr.v4_addr =
+                route_table.route_info->routes[j].attrs.prefix.addr.addr.v4_addr =
                     TESTAPP_V4ROUTE_PREFIX_VAL(rtnum);
                 rtnum++;
                 if (i == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
-                    route_table.route_info->routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
-                    route_table.route_info->routes[j].tep =
+                    route_table.route_info->routes[j].attrs.nh_type =
+                        PDS_NH_TYPE_OVERLAY;
+                    route_table.route_info->routes[j].attrs.tep =
                         test::int2pdsobjkey(svc_tep_id++);
                 } else if (i == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
-                   route_table.route_info->routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
-                   route_table.route_info->routes[j].tep =
+                   route_table.route_info->routes[j].attrs.nh_type =
+                       PDS_NH_TYPE_OVERLAY;
+                   route_table.route_info->routes[j].attrs.tep =
                        test::int2pdsobjkey(num_svc_teps + ++svc_tep_id);
                 } else {
-                    route_table.route_info->routes[j].nh_type = PDS_NH_TYPE_IP;
-                    route_table.route_info->routes[j].nh = test::int2pdsobjkey(nh_id++);
+                    route_table.route_info->routes[j].attrs.nh_type =
+                        PDS_NH_TYPE_IP;
+                    route_table.route_info->routes[j].attrs.nh =
+                        test::int2pdsobjkey(nh_id++);
                     if (nh_id > num_nh) {
                         nh_id = 1;
                     }

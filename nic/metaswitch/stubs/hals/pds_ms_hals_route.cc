@@ -60,9 +60,9 @@ void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable,
     rttable.key = rttable_key;
 
     // Populate the new route
-    route_.prefix = ips_info_.pfx;
-    route_.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-    route_.nh_group = msidx2pdsobjkey(ips_info_.ecmp_id);
+    route_.attrs.prefix = ips_info_.pfx;
+    route_.attrs.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
+    route_.attrs.nh_group = msidx2pdsobjkey(ips_info_.ecmp_id);
 
     { // Enter thread-safe context to access/modify global state
         auto state = pds_ms::state_t::thread_context().state();
@@ -73,7 +73,7 @@ void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable,
         }
         if (!op_delete_) {
             // Add/Update the new route in the store
-            auto rt = rttbl_store->get_route(route_.prefix);
+            auto rt = rttbl_store->get_route(route_.attrs.prefix);
             if (rt == nullptr) {
                 op_create_ = true;
             } else {
@@ -83,7 +83,7 @@ void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable,
             rttbl_store->add_upd_route(route_);
         } else {
             // Delete the route from the store
-            rttbl_store->del_route(route_.prefix);
+            rttbl_store->del_route(route_.attrs.prefix);
         }
         // Get the routes pointer. PDS API will make a copy of the
         // route table and free it up once api processing is complete
@@ -136,10 +136,10 @@ pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(const pds_obj_key_t&
 
 sdk_ret_t hals_route_t::underlay_route_add_upd_() {
     pds_route_spec_t route_spec = {0};
-    auto& route = route_spec.route;
-    route.prefix = ips_info_.pfx;
-    route.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
-    route.nh_group = msidx2pdsobjkey(ips_info_.ecmp_id, true);
+    auto& route_attrs = route_spec.attrs;
+    route_attrs.prefix = ips_info_.pfx;
+    route_attrs.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
+    route_attrs.nh_group = msidx2pdsobjkey(ips_info_.ecmp_id, true);
     return api::pds_underlay_route_update(&route_spec);
 }
 

@@ -151,7 +151,7 @@ pds_route_table_delete (_In_ pds_obj_key_t *key,
 
 static inline sdk_ret_t
 pds_route_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                      pds_obj_key_t *key, pds_route_spec_t *spec)
+                      pds_route_key_t *key, pds_route_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
@@ -163,7 +163,7 @@ pds_route_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_ROUTE, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
-            api_ctxt->api_params->key = *key;
+            api_ctxt->api_params->route_key = *key;
         } else {
             api_ctxt->api_params->route_spec = *spec;
         }
@@ -179,7 +179,7 @@ pds_route_create (_In_ pds_route_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_route_read (_In_ pds_obj_key_t *key, _Out_ pds_route_table_info_t *info)
+pds_route_read (_In_ pds_route_key_t *key, _Out_ pds_route_table_info_t *info)
 {
     return SDK_RET_INVALID_OP;
 }
@@ -191,7 +191,7 @@ pds_route_update (_In_ pds_route_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_route_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+pds_route_delete (_In_ pds_route_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_route_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

@@ -150,7 +150,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
     case OBJ_ID_ROUTE:
         // route is a stateless object, so we need to build it on the fly
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return route::build(&api_ctxt->api_params->key);
+            return route::build(&api_ctxt->api_params->route_key);
         }
         return route::build(&api_ctxt->api_params->route_spec.key);
 
@@ -326,7 +326,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_ROUTE:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return route_db()->find(&api_ctxt->api_params->key);
+            return route_db()->find(&api_ctxt->api_params->route_key);
         }
         return route_db()->find(&api_ctxt->api_params->route_spec.key);
 
@@ -463,7 +463,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_ROUTE:
-        api_obj = route_db()->find((pds_obj_key_t *)key);
+        api_obj = route_db()->find((pds_route_key_t *)key);
         break;
 
     case OBJ_ID_POLICY:

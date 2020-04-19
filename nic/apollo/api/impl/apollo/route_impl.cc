@@ -131,9 +131,10 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
     rtable->num_routes = spec->route_info->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
-        rtable->routes[i].prefix = spec->route_info->routes[i].prefix;
-        rtable->routes[i].prio = 128 - spec->route_info->routes[i].prefix.len;
-        switch (spec->route_info->routes[i].nh_type) {
+        rtable->routes[i].prefix = spec->route_info->routes[i].attrs.prefix;
+        rtable->routes[i].prio =
+            128 - spec->route_info->routes[i].attrs.prefix.len;
+        switch (spec->route_info->routes[i].attrs.nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
             rtable->routes[i].nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
             PDS_TRACE_DEBUG("Processing route table %s, route %s -> blackhole "
@@ -143,12 +144,12 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             break;
         case PDS_NH_TYPE_OVERLAY:
             // non vpc peering case
-            tep_key = &spec->route_info->routes[i].tep;
+            tep_key = &spec->route_info->routes[i].attrs.tep;
             tep = tep_db()->find(tep_key);
             if (tep == NULL) {
                 PDS_TRACE_ERR("TEP %s not found while processing route %s in "
                               "route table %s", tep_key->str(),
-                              ippfx2str(&spec->route_info->routes[i].prefix),
+                              ippfx2str(&spec->route_info->routes[i].attrs.prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
@@ -160,12 +161,12 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                             rtable->routes[i].nhid, tep->key2str().c_str());
             break;
         case PDS_NH_TYPE_PEER_VPC:
-            vpc = vpc_db()->find(&spec->route_info->routes[i].vpc);
+            vpc = vpc_db()->find(&spec->route_info->routes[i].attrs.vpc);
             if (vpc == NULL) {
                 PDS_TRACE_ERR("vpc %s not found while processing route %s in "
                               "route table %s",
-                              spec->route_info->routes[i].vpc.str(),
-                              ippfx2str(&spec->route_info->routes[i].prefix),
+                              spec->route_info->routes[i].attrs.vpc.str(),
+                              ippfx2str(&spec->route_info->routes[i].attrs.prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
@@ -179,8 +180,9 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             break;
         default:
             PDS_TRACE_ERR("Unknown nh type %u while processing route %s in "
-                          "route table %s", spec->route_info->routes[i].nh_type,
-                          ippfx2str(&spec->route_info->routes[i].prefix),
+                          "route table %s",
+                          spec->route_info->routes[i].attrs.nh_type,
+                          ippfx2str(&spec->route_info->routes[i].attrs.prefix),
                           spec->key.str());
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
@@ -199,6 +201,7 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
 
 cleanup:
+
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, rtable);
     return ret;
 }

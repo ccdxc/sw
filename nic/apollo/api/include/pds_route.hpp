@@ -27,9 +27,7 @@
 #define PDS_MAX_ROUTE_TABLE            1024   ///< maximum route tables
 #define PDS_MAX_ROUTE_PER_TABLE        1023   ///< maximum routes per table
 
-/// \brief route
-typedef struct pds_route_s {
-    pds_obj_key_t               key;      ///< route identifier
+typedef struct pds_route_attrs_s {
     ip_prefix_t                 prefix;   ///< prefix
     /// NOTE:
     /// 1. priority value must be non-zero
@@ -64,6 +62,12 @@ typedef struct pds_route_s {
     /// metering is enabled on that vnic, such traffic is accounted (bytes &
     /// packets) against the vnic
     bool                        meter;
+} pds_route_attrs_t;
+
+/// \brief route
+typedef struct pds_route_s {
+    pds_obj_key_t     key;      ///< individual route identifier/key
+    pds_route_attrs_t attrs;    ///< route attributes
 } __PACK__ pds_route_t;
 
 typedef struct route_info_s {
@@ -173,11 +177,19 @@ sdk_ret_t pds_route_table_update(pds_route_table_spec_t *spec,
 sdk_ret_t pds_route_table_delete(pds_obj_key_t *key,
                                  pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
+///< \brief route key
+///< \remark when routes are deleted individually or queried individually, the
+///          key must contain both parent route table key and individual route
+//           key/(uu)id
+typedef struct route_key_s {
+    pds_obj_key_t route_id;          ///< route identifier
+    pds_obj_key_t route_table_id;    ///< route table this route is part of
+} pds_route_key_t;
+
 /// \brief route configuration
 typedef struct pds_route_spec_s {
-    pds_obj_key_t key;            ///< route identifier
-    pds_obj_key_t route_table;    ///< route table this route is part of
-    pds_route_t route;            ///< route configuration
+    pds_route_key_t key;        ///< route key
+    pds_route_attrs_t attrs;    ///< route attributes
 } pds_route_spec_t;
 
 /// \brief route operational status
@@ -206,7 +218,7 @@ sdk_ret_t pds_route_create(pds_route_spec_t *spec,
 /// \param[in] key route key
 /// \param[out] info route information
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_route_read(pds_obj_key_t *key, pds_route_info_t *info);
+sdk_ret_t pds_route_read(pds_route_key_t *key, pds_route_info_t *info);
 
 /// \brief update route
 /// \param[in] spec route configuration
@@ -219,7 +231,7 @@ sdk_ret_t pds_route_update(pds_route_spec_t *spec,
 /// \param[in] key key of the route
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_route_delete(pds_obj_key_t *key,
+sdk_ret_t pds_route_delete(pds_route_key_t *key,
                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 /// @}
 

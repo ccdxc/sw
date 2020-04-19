@@ -15,77 +15,75 @@
 #include "nic/apollo/agent/svc/route.hpp"
 
 static inline sdk_ret_t
-pds_route_proto_to_api_spec_common (pds_route_t *route,
-                                    const pds::RouteInfo &proto_route)
+pds_route_attrs_proto_to_api_spec (pds_route_attrs_t *route_attrs,
+                                   const pds::RouteInfo &proto_route)
 {
-    pds_obj_key_proto_to_api_spec(&route->key, proto_route.id());
-    ippfx_proto_spec_to_api_spec(&route->prefix,
+    ippfx_proto_spec_to_api_spec(&route_attrs->prefix,
                                  proto_route.prefix());
-    route->prio = proto_route.priority();
+    route_attrs->prio = proto_route.priority();
     switch (proto_route.nh_case()) {
     case pds::RouteInfo::kNextHop:
     case pds::RouteInfo::kTunnelId:
-        route->nh_type = PDS_NH_TYPE_OVERLAY;
-        pds_obj_key_proto_to_api_spec(&route->tep,
+        route_attrs->nh_type = PDS_NH_TYPE_OVERLAY;
+        pds_obj_key_proto_to_api_spec(&route_attrs->tep,
                                       proto_route.tunnelid());
         break;
     case pds::RouteInfo::kNexthopGroupId:
         // NOTE: UNDERLAY_ECMP is not done in the datapath
-        route->nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-        pds_obj_key_proto_to_api_spec(&route->nh_group,
+        route_attrs->nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
+        pds_obj_key_proto_to_api_spec(&route_attrs->nh_group,
                                       proto_route.nexthopgroupid());
         break;
     case pds::RouteInfo::kVPCId:
-        pds_obj_key_proto_to_api_spec(&route->vpc,
+        pds_obj_key_proto_to_api_spec(&route_attrs->vpc,
                                       proto_route.vpcid());
-        route->nh_type = PDS_NH_TYPE_PEER_VPC;
+        route_attrs->nh_type = PDS_NH_TYPE_PEER_VPC;
         break;
     case pds::RouteInfo::kVnicId:
-        pds_obj_key_proto_to_api_spec(&route->vnic,
+        pds_obj_key_proto_to_api_spec(&route_attrs->vnic,
                                       proto_route.vnicid());
-        route->nh_type = PDS_NH_TYPE_VNIC;
+        route_attrs->nh_type = PDS_NH_TYPE_VNIC;
         break;
     case pds::RouteInfo::kNexthopId:
-        route->nh_type = PDS_NH_TYPE_IP;
-        pds_obj_key_proto_to_api_spec(&route->nh,
+        route_attrs->nh_type = PDS_NH_TYPE_IP;
+        pds_obj_key_proto_to_api_spec(&route_attrs->nh,
                                       proto_route.nexthopid());
         break;
     default:
-        route->nh_type = PDS_NH_TYPE_BLACKHOLE;
+        route_attrs->nh_type = PDS_NH_TYPE_BLACKHOLE;
         break;
     }
     if (proto_route.has_nataction()) {
         auto nat_action = proto_route.nataction();
         switch (nat_action.srcnataction()) {
         case types::NAT_ACTION_STATIC:
-            route->nat.src_nat_type =
+            route_attrs->nat.src_nat_type =
                 PDS_NAT_TYPE_STATIC;
             break;
         case types::NAT_ACTION_NAPT_PUBLIC:
-            route->nat.src_nat_type =
+            route_attrs->nat.src_nat_type =
                 PDS_NAT_TYPE_NAPT_PUBLIC;
             break;
         case types::NAT_ACTION_NAPT_SVC:
-            route->nat.src_nat_type =
+            route_attrs->nat.src_nat_type =
                 PDS_NAT_TYPE_NAPT_SVC;
             break;
         case types::NAT_ACTION_NONE:
         default:
-            route->nat.src_nat_type =
+            route_attrs->nat.src_nat_type =
                 PDS_NAT_TYPE_NONE;
             break;
         }
         if (nat_action.has_dstnatip()) {
             ipaddr_proto_spec_to_api_spec(
-                &route->nat.dst_nat_ip,
+                &route_attrs->nat.dst_nat_ip,
                 nat_action.dstnatip());
         } else {
-            memset(&route->nat.dst_nat_ip, 0,
-                   sizeof(route->nat.dst_nat_ip));
+            memset(&route_attrs->nat.dst_nat_ip, 0,
+                   sizeof(route_attrs->nat.dst_nat_ip));
         }
     }
-    route->meter = proto_route.meteren();
-
+    route_attrs->meter = proto_route.meteren();
     return SDK_RET_OK;
 }
 
@@ -121,8 +119,11 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
     api_spec->route_info->priority_en = proto_spec.priorityen();
     api_spec->route_info->num_routes = num_routes;
     for (uint32_t i = 0; i < num_routes; i++) {
-        pds_route_proto_to_api_spec_common(&api_spec->route_info->routes[i],
-                                           proto_spec.routes(i));
+        pds_obj_key_proto_to_api_spec(&api_spec->route_info->routes[i].key,
+                                      proto_spec.routes(i).id());
+        pds_route_attrs_proto_to_api_spec(
+            &api_spec->route_info->routes[i].attrs,
+            proto_spec.routes(i));
     }
     return SDK_RET_OK;
 }
@@ -153,29 +154,29 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
         pds::RouteInfo *route = proto_spec->add_routes();
         route->set_id(api_spec->route_info->routes[i].key.id, PDS_MAX_KEY_LEN);
         ippfx_api_spec_to_proto_spec(route->mutable_prefix(),
-                                     &api_spec->route_info->routes[i].prefix);
+                                     &api_spec->route_info->routes[i].attrs.prefix);
         if (api_spec->route_info->priority_en) {
-            route->set_priority(api_spec->route_info->routes[i].prio);
+            route->set_priority(api_spec->route_info->routes[i].attrs.prio);
         }
-        switch (api_spec->route_info->routes[i].nh_type) {
+        switch (api_spec->route_info->routes[i].attrs.nh_type) {
         case PDS_NH_TYPE_OVERLAY:
-            route->set_tunnelid(api_spec->route_info->routes[i].tep.id,
+            route->set_tunnelid(api_spec->route_info->routes[i].attrs.tep.id,
                                 PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_OVERLAY_ECMP:
-            route->set_nexthopgroupid(api_spec->route_info->routes[i].nh_group.id,
+            route->set_nexthopgroupid(api_spec->route_info->routes[i].attrs.nh_group.id,
                                       PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_PEER_VPC:
-            route->set_vpcid(api_spec->route_info->routes[i].vpc.id,
+            route->set_vpcid(api_spec->route_info->routes[i].attrs.vpc.id,
                              PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_VNIC:
-            route->set_vnicid(api_spec->route_info->routes[i].vnic.id,
+            route->set_vnicid(api_spec->route_info->routes[i].attrs.vnic.id,
                               PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_IP:
-            route->set_nexthopid(api_spec->route_info->routes[i].nh.id,
+            route->set_nexthopid(api_spec->route_info->routes[i].attrs.nh.id,
                                  PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_BLACKHOLE:
@@ -183,7 +184,7 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
             // blackhole nexthop
             break;
         }
-        switch (api_spec->route_info->routes[i].nat.src_nat_type) {
+        switch (api_spec->route_info->routes[i].attrs.nat.src_nat_type) {
         case PDS_NAT_TYPE_STATIC:
             route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_STATIC);
             break;
@@ -198,12 +199,12 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
             route->mutable_nataction()->set_srcnataction(types::NAT_ACTION_NONE);
             break;
         }
-        if (!ip_addr_is_zero(&api_spec->route_info->routes[i].nat.dst_nat_ip)) {
+        if (!ip_addr_is_zero(&api_spec->route_info->routes[i].attrs.nat.dst_nat_ip)) {
             ipaddr_api_spec_to_proto_spec(
                 route->mutable_nataction()->mutable_dstnatip(),
-                &api_spec->route_info->routes[i].nat.dst_nat_ip);
+                &api_spec->route_info->routes[i].attrs.nat.dst_nat_ip);
         }
-        route->set_meteren(api_spec->route_info->routes[i].meter);
+        route->set_meteren(api_spec->route_info->routes[i].attrs.meter);
     }
     return;
 }
@@ -226,9 +227,11 @@ static inline sdk_ret_t
 pds_route_proto_to_api_spec (pds_route_spec_t *api_spec,
                              const pds::RouteSpec &proto_spec)
 {
-    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
-    pds_obj_key_proto_to_api_spec(&api_spec->route_table, proto_spec.routetableid());
-    return pds_route_proto_to_api_spec_common(&api_spec->route, proto_spec.route());
+    pds_obj_key_proto_to_api_spec(&api_spec->key.route_id, proto_spec.id());
+    pds_obj_key_proto_to_api_spec(&api_spec->key.route_table_id,
+                                  proto_spec.routetableid());
+    return pds_route_attrs_proto_to_api_spec(&api_spec->attrs,
+                                             proto_spec.route());
 }
 
 // populate proto buf from route table API info

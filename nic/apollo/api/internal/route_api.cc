@@ -108,11 +108,11 @@ tep_upd_walk_cb_ (void *obj, void *ctxt) {
     } else {
         // TEP walk triggered by route add/update,
         // 1st route is the best route !!
-        spec.nh_type = g_route_db[0].spec.route.nh_type;
+        spec.nh_type = g_route_db[0].spec.attrs.nh_type;
         if (spec.nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
-            spec.nh_group = g_route_db[0].spec.route.nh_group;
+            spec.nh_group = g_route_db[0].spec.attrs.nh_group;
         } else if (spec.nh_type == PDS_NH_TYPE_UNDERLAY) {
-            spec.nh = g_route_db[0].spec.route.nh;
+            spec.nh = g_route_db[0].spec.attrs.nh;
         }
     }
     ret = pds_tep_update(&spec, bctxt);
@@ -144,10 +144,10 @@ pds_underlay_route_update (_In_ pds_route_spec_t *spec)
 
     for (uint32_t i = 0; i < g_num_routes; i++) {
         if (g_route_db[i].valid &&
-            (ip_prefix_is_equal(&g_route_db[i].spec.route.prefix,
-                                &spec->route.prefix))) {
+            (ip_prefix_is_equal(&g_route_db[i].spec.attrs.prefix,
+                                &spec->attrs.prefix))) {
             PDS_TRACE_DEBUG("Updating underlay route %s",
-                            ippfx2str(&spec->route.prefix));
+                            ippfx2str(&spec->attrs.prefix));
             g_route_db[i].spec = *spec;
             found = true;
             break;
@@ -155,10 +155,10 @@ pds_underlay_route_update (_In_ pds_route_spec_t *spec)
     }
     if (!found) {
         PDS_TRACE_DEBUG("Creating underlay route %s",
-                        ippfx2str(&spec->route.prefix));
+                        ippfx2str(&spec->attrs.prefix));
         if (g_num_routes >= PDS_MAX_UNDERLAY_ROUTES) {
             PDS_TRACE_ERR("Failed to create route %s, underlay route table "
-                          "is full", ippfx2str(&spec->route.prefix));
+                          "is full", ippfx2str(&spec->attrs.prefix));
             return SDK_RET_NO_RESOURCE;
         }
         g_route_db[g_num_routes].valid = TRUE;
@@ -173,7 +173,7 @@ pds_underlay_route_delete (_In_ ip_prefix_t *prefix)
 {
     for (uint32_t i = 0; i < g_num_routes; i++) {
         if (g_route_db[i].valid &&
-            (ip_prefix_is_equal(&g_route_db[i].spec.route.prefix, prefix))) {
+            (ip_prefix_is_equal(&g_route_db[i].spec.attrs.prefix, prefix))) {
             // replace this with the last valid route and fill this slot
             g_route_db[i] = g_route_db[g_num_routes - 1];
             g_route_db[g_num_routes - 1].valid = FALSE;
@@ -196,11 +196,11 @@ pds_underlay_nexthop (_In_ ipv4_addr_t ip_addr, _Out_ pds_nh_type_t *nh_type,
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     // 1st route is the best route !!
-    *nh_type = g_route_db[0].spec.route.nh_type;
+    *nh_type = g_route_db[0].spec.attrs.nh_type;
     if (*nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
-        *nh = g_route_db[0].spec.route.nh_group;
+        *nh = g_route_db[0].spec.attrs.nh_group;
     } else if (*nh_type == PDS_NH_TYPE_UNDERLAY) {
-        *nh = g_route_db[0].spec.route.nh;
+        *nh = g_route_db[0].spec.attrs.nh;
     } else {
         *nh_type = PDS_NH_TYPE_BLACKHOLE;
     }

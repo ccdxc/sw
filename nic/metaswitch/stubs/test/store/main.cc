@@ -145,34 +145,34 @@ TEST_F(route_store_test, create) {
 
     // Add route 1
     pds_route_t route = {0};
-    route.prefix.addr.af = IP_AF_IPV4;
-    route.prefix.addr.addr.v4_addr = 0x01020300;
-    route.prefix.len = 20;
-    route.prio = 100;
+    route.attrs.prefix.addr.af = IP_AF_IPV4;
+    route.attrs.prefix.addr.addr.v4_addr = 0x01020300;
+    route.attrs.prefix.len = 20;
+    route.attrs.prio = 100;
     rttbl->add_upd_route(route);
     ASSERT_TRUE (rttbl->num_routes() == 1);
 
     // Add route 2
-    route.prefix.addr.af = IP_AF_IPV4;
-    route.prefix.addr.addr.v4_addr = 0x11121300;
-    route.prefix.len = 24;
-    route.prio = 200;
+    route.attrs.prefix.addr.af = IP_AF_IPV4;
+    route.attrs.prefix.addr.addr.v4_addr = 0x11121300;
+    route.attrs.prefix.len = 24;
+    route.attrs.prio = 200;
     rttbl->add_upd_route(route);
     ASSERT_TRUE (rttbl->num_routes() == 2);
-    
+
     // Add route 3
-    route.prefix.addr.af = IP_AF_IPV4;
-    route.prefix.addr.addr.v4_addr = 0x11121300;
-    route.prefix.len = 31;
-    route.prio = 500;
+    route.attrs.prefix.addr.af = IP_AF_IPV4;
+    route.attrs.prefix.addr.addr.v4_addr = 0x11121300;
+    route.attrs.prefix.len = 31;
+    route.attrs.prio = 500;
     rttbl->add_upd_route(route);
     ASSERT_TRUE (rttbl->num_routes() == 3);
-    
+
     // Add route 4
-    route.prefix.addr.af = IP_AF_IPV4;
-    route.prefix.addr.addr.v4_addr = 0x11121300;
-    route.prefix.len = 30;
-    route.prio = 600;
+    route.attrs.prefix.addr.af = IP_AF_IPV4;
+    route.attrs.prefix.addr.addr.v4_addr = 0x11121300;
+    route.attrs.prefix.len = 30;
+    route.attrs.prio = 600;
     rttbl->add_upd_route(route);
     ASSERT_TRUE (rttbl->num_routes() == 4);
 }
@@ -191,7 +191,7 @@ TEST_F(route_store_test, get) {
     prefix.len = 24;
     auto rt = rttbl->get_route(prefix);
     ASSERT_TRUE (rt != nullptr);
-    ASSERT_TRUE (rt->prio == 200);
+    ASSERT_TRUE (rt->attrs.prio == 200);
 }
 
 TEST_F(route_store_test, update) {
@@ -200,10 +200,10 @@ TEST_F(route_store_test, update) {
     auto rttbl = state->route_table_store().get(k_route_key);
     // Update route 1
     pds_route_t route = {0};
-    route.prefix.addr.af = IP_AF_IPV4;
-    route.prefix.addr.addr.v4_addr = 0x01020300;
-    route.prefix.len = 20;
-    route.prio = 300;
+    route.attrs.prefix.addr.af = IP_AF_IPV4;
+    route.attrs.prefix.addr.addr.v4_addr = 0x01020300;
+    route.attrs.prefix.len = 20;
+    route.attrs.prio = 300;
     rttbl->add_upd_route(route);
 
     // Get route 1 and validate
@@ -213,7 +213,7 @@ TEST_F(route_store_test, update) {
     pfx.len = 20;
     auto rt = rttbl->get_route(pfx);
     ASSERT_TRUE (rt != nullptr);
-    ASSERT_TRUE (rt->prio == 300);
+    ASSERT_TRUE (rt->attrs.prio == 300);
 }
 
 TEST_F(route_store_test, del) {
@@ -267,7 +267,7 @@ TEST_F(route_store_test, del) {
     // Get should pass now
     rt = rttbl->get_route(pfx);
     ASSERT_TRUE (rt != nullptr);
-    ASSERT_TRUE (rt->prio == 500);
+    ASSERT_TRUE (rt->attrs.prio == 500);
     // Delete route 3
     rttbl->del_route(pfx);
     // Check if route is deleted
@@ -308,11 +308,11 @@ TEST_F(route_store_test, scale) {
     // Add first bucket
 	for (i=1; i<= 1023; ++i) {
 		pds_route_t route = {0};
-		route.prefix.addr.af = IP_AF_IPV4;
+		route.attrs.prefix.addr.af = IP_AF_IPV4;
 		incr_ip(ip, 0);
-		route.prefix.addr.addr.v4_addr = ip;
-		route.prefix.len = 20;
-		route.prio = i;
+		route.attrs.prefix.addr.addr.v4_addr = ip;
+		route.attrs.prefix.len = 20;
+		route.attrs.prio = i;
 		rttbl->add_upd_route(route);
 	}
     ASSERT_EQ (rttbl->num_routes(), (uint32_t) (i-1));
@@ -328,16 +328,16 @@ TEST_F(route_store_test, scale) {
 		prefix.len = 20;
 		auto rt = rttbl->get_route(prefix);
 		ASSERT_TRUE (rt != nullptr);
-		ASSERT_TRUE (rt->prio == i);
+		ASSERT_TRUE (rt->attrs.prio == i);
 	}
     // Add second bucket
 	for (; i<= 3000; ++i) {
 		pds_route_t route = {0};
-		route.prefix.addr.af = IP_AF_IPV4;
+		route.attrs.prefix.addr.af = IP_AF_IPV4;
 		incr_ip(ip, 0);
-		route.prefix.addr.addr.v4_addr = ip;
-		route.prefix.len = 20;
-		route.prio = i;
+		route.attrs.prefix.addr.addr.v4_addr = ip;
+		route.attrs.prefix.len = 20;
+		route.attrs.prio = i;
 		rttbl->add_upd_route(route);
 	}
     ASSERT_EQ (rttbl->num_routes(), (uint32_t) (i-1));
@@ -353,7 +353,7 @@ TEST_F(route_store_test, scale) {
 		prefix.len = 20;
 		auto rt = rttbl->get_route(prefix);
 		ASSERT_TRUE (rt != nullptr);
-		ASSERT_TRUE (rt->prio == i);
+		ASSERT_TRUE (rt->attrs.prio == i);
 	}
 }
 

@@ -90,7 +90,7 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
     while (tmp_bmap) {
         if (tmp_bmap & 0x1) {
             for (uint32_t j = 0; j < num_routes_per_type; j++) {
-                spec->route_info->routes[route_index].prefix = route_pfx;
+                spec->route_info->routes[route_index].attrs.prefix = route_pfx;
                 spec_fill((pds_nh_type_e)index, spec, route_index);
                 ip_prefix_ip_next(&route_pfx, &route_addr);
                 route_pfx.addr = route_addr;
@@ -102,7 +102,7 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
     }
 
     while (route_index < num_routes) {
-        spec->route_info->routes[route_index].prefix = route_pfx;
+        spec->route_info->routes[route_index].attrs.prefix = route_pfx;
         spec_fill(k_rt_def_nh_type, spec, route_index);
         ip_prefix_ip_next(&route_pfx, &route_addr);
         route_pfx.addr = route_addr;
@@ -119,27 +119,31 @@ route_table_feeder::spec_fill(pds_nh_type_t type,
     uint32_t base_tep_id = 2;
 
     spec->route_info->routes[index].key = int2pdsobjkey(index + 1);
-    spec->route_info->routes[index].nh_type = type;
+    spec->route_info->routes[index].attrs.nh_type = type;
     switch (type) {
     case PDS_NH_TYPE_OVERLAY:
         num = (index % PDS_MAX_TEP);
-        spec->route_info->routes[index].tep = int2pdsobjkey(base_tep_id + num);
+        spec->route_info->routes[index].attrs.tep =
+            int2pdsobjkey(base_tep_id + num);
         break;
     case PDS_NH_TYPE_OVERLAY_ECMP:
         num = (index % (PDS_MAX_NEXTHOP_GROUP-1));
-        spec->route_info->routes[index].nh_group = int2pdsobjkey(base_id + num);
+        spec->route_info->routes[index].attrs.nh_group =
+            int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_PEER_VPC:
         num = (index % PDS_MAX_VPC);
-        spec->route_info->routes[index].vpc = int2pdsobjkey(base_id + num);
+        spec->route_info->routes[index].attrs.vpc =
+            int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_VNIC:
         num = (index % PDS_MAX_VNIC);
-        spec->route_info->routes[index].vnic = int2pdsobjkey(base_id + num);
+        spec->route_info->routes[index].attrs.vnic =
+            int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_IP:
         num = (index % PDS_MAX_NEXTHOP);
-        spec->route_info->routes[index].nh = int2pdsobjkey(base_id + num);
+        spec->route_info->routes[index].attrs.nh = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_BLACKHOLE:
     default:

@@ -280,7 +280,7 @@ public:
     /// \param[in] key    key of object instance of interest
     /// \return    route instance corresponding to the key or NULL if
     ///            entry is not found
-    static route *build(pds_obj_key_t *key);
+    static route *build(pds_route_key_t *key);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will
@@ -321,7 +321,8 @@ public:
 
     /// \brief    return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-            return "route-"  + std::string(key_.str());
+            return "route-"  + std::string(key_.route_table_id.str()) + "/" +
+                       std::string(key_.route_id.str());
     }
 
     /// \brief     helper function to get key given route
@@ -334,7 +335,7 @@ public:
 
     /// \brief     return the route key/id
     /// \return    key/id of the route
-    const pds_obj_key_t key(void) const { return key_; }
+    const pds_route_key_t key(void) const { return key_; }
 
 private:
     /// \brief    constructor
@@ -347,12 +348,10 @@ private:
 
 private:
     /// route key
-    pds_obj_key_t key_;
-    /// route table (this route belongs to) key
-    pds_obj_key_t route_table_;
+    pds_route_key_t key_;
 
     ///< hash table context
-    ht_ctxt_t        ht_ctxt_;
+    ht_ctxt_t ht_ctxt_;
     // route_state class is friend of route class
     friend class route_state;
 };

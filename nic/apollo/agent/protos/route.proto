@@ -195,7 +195,9 @@ message RouteResponse {
 // route get request
 message RouteGetRequest {
   // id/key of the route
-  bytes Id = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // route table this route belongs to
+  bytes RouteTableId = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // route get response
@@ -208,9 +210,11 @@ message RouteGetResponse {
 // route delete request
 message RouteDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
-  types.BatchCtxt BatchCtxt = 1;
+  types.BatchCtxt BatchCtxt    = 1;
   // id/key of the route to be deleted
-  bytes           Id        = 2;
+  bytes           Id           = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // route table this route belongs to
+  bytes           RouteTableId = 3 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // route delete response

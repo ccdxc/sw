@@ -130,7 +130,7 @@ public:
 
     /// \brief     lookup a route in database given the key
     /// \param[in] key route key
-    route *find(pds_obj_key_t *key) const;
+    route *find(pds_route_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -151,7 +151,7 @@ private:
 };
 
 static inline route *
-route_find (pds_obj_key_t *key)
+route_find (pds_route_key_t *key)
 {
     return (route *)api_base::find_obj(OBJ_ID_ROUTE, key);
 }

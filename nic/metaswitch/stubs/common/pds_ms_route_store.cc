@@ -62,7 +62,7 @@ void route_table_obj_t::realloc_() {
 
 void route_table_obj_t::add_upd_route(pds_route_t &route)
 {
-    const auto it = route_index_.find(route.prefix);
+    const auto it = route_index_.find(route.attrs.prefix);
     if (it == route_index_.end()) {
         // Route not found. Add the route to the vector
         if (routes_->num_routes >= (routes_capacity_ -1)) {
@@ -75,7 +75,7 @@ void route_table_obj_t::add_upd_route(pds_route_t &route)
         int idx = routes_->num_routes;
         ++routes_->num_routes;
         // Update the map with the index position
-        route_index_[route.prefix] = idx;
+        route_index_[route.attrs.prefix] = idx;
     } else {
         // Route already present, update the contents in the vector
         int idx = it->second;
@@ -97,7 +97,7 @@ void route_table_obj_t::del_route(ip_prefix_t &pfx)
         // TODO Shrink
         --routes_->num_routes;
         // Update the new vector position in the map
-        route_index_[routes_->routes[idx].prefix] = idx;
+        route_index_[routes_->routes[idx].attrs.prefix] = idx;
         // Delete the route from the map
         route_index_.erase(pfx);
     }
