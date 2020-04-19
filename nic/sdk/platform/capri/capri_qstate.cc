@@ -309,47 +309,6 @@ read_lif_params_from_capri (LIFQState *qstate)
     get_qstate_lif_params(qstate, psp_entry, &is_valid);
 }
 
-int32_t
-read_qstate (uint64_t q_addr, uint8_t *buf, uint32_t q_size)
-{
-    sdk_ret_t rv = sdk::asic::asic_mem_read(q_addr, buf, q_size);
-    if (rv != SDK_RET_OK) {
-        return -EIO;
-    }
-    return 0;
-}
-
-int32_t
-write_qstate (uint64_t q_addr, const uint8_t *buf, uint32_t q_size)
-{
-    sdk_ret_t rc = sdk::asic::asic_mem_write(q_addr, (uint8_t *)buf, q_size);
-    if (rc != SDK_RET_OK) {
-        return -EIO;
-    }
-    return 0;
-}
-
-int32_t
-get_pc_offset (program_info *pinfo, const char *prog_name,
-               const char *label, uint8_t *offset)
-{
-    mem_addr_t off;
-
-    off = pinfo->symbol_address((char *)prog_name, (char *)label);
-    if (off == SDK_INVALID_HBM_ADDRESS)
-        return -ENOENT;
-    // 64 byte alignment check
-    if ((off & 0x3F) != 0) {
-        return -EIO;
-    }
-    // offset can be max 14 bits
-    if (off > 0x3FC0) {
-        return -EIO;
-    }
-    *offset = (uint8_t) (off >> 6);
-    return 0;
-}
-
 } // namespace capri
 } // namespace platform
 } // namespace sdk

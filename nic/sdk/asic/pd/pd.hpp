@@ -7,6 +7,8 @@
 #include "lib/p4/p4_api.hpp"
 #include "asic/asic.hpp"
 #include "include/sdk/qos.hpp"
+#include "platform/utils/lif_manager_base.hpp"
+#include "platform/utils/program.hpp"
 
 namespace sdk {
 namespace asic {
@@ -148,6 +150,7 @@ sdk_ret_t asicpd_qstate_map_write(lif_qstate_t *qstate, uint8_t enable);
 sdk_ret_t asicpd_qstate_map_read (lif_qstate_t *qstate);
 sdk_ret_t asicpd_qstate_write(uint64_t addr, const uint8_t *buf,
                               uint32_t size);
+void asicpd_qstate_push(sdk::platform::utils::LIFQState *qstate, int cos);
 sdk_ret_t asicpd_qstate_read(uint64_t addr, uint8_t *buf, uint32_t size);
 sdk_ret_t asicpd_qstate_clear(lif_qstate_t *qstate);
 void asicpd_reset_qstate_map(uint32_t lif_id);

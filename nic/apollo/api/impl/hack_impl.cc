@@ -11,9 +11,9 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/platform/utils/lif_manager_base.hpp"
 #include "nic/sdk/platform/utils/qstate_mgr.hpp"
-#include "nic/sdk/platform/capri/capri_qstate.hpp"
+#include "nic/sdk/asic/cmn/asic_qstate.hpp"
 #include "nic/sdk/p4/loader/loader.hpp"
-#include "nic/sdk/platform/capri/capri_qstate.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/apollo/apollo_impl.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -23,6 +23,7 @@
 #include "nic/apollo/api/upgrade_state.hpp"
 
 using sdk::platform::utils::program_info;
+using namespace sdk::asic::pd;
 
 #define JLIF2QSTATE_MAP_NAME        "lif2qstate_map"
 #define JRXDMA_TO_TXDMA_BUF_NAME    "rxdma_to_txdma_buf"
@@ -75,11 +76,10 @@ init_service_lif (uint32_t lif_id, const char *cfg_path)
     SDK_ASSERT(qstate.hbm_address != INVALID_MEM_ADDRESS);
     qstate.params_in.type[0].entries = 1;
     qstate.params_in.type[0].size = 1; // 64B
-    sdk::platform::capri::push_qstate_to_capri(&qstate, 0);
+    asicpd_qstate_push(&qstate, 0);
 
-    // hal_get_pc_offset("txdma_stage0.bin", "apollo_read_qstate", &pgm_offset);
-    sdk::platform::capri::get_pc_offset(pginfo,
-                                        "txdma_stage0.bin", "apollo_read_qstate", &pgm_offset);
+    sdk::asic::get_pc_offset(pginfo, "txdma_stage0.bin",
+                             "apollo_read_qstate", &pgm_offset);
 
     lifqstate_t lif_qstate = { 0 };
     lif_qstate.pc = pgm_offset;
@@ -89,7 +89,8 @@ init_service_lif (uint32_t lif_id, const char *cfg_path)
     SDK_ASSERT(lif_qstate.ring1_base != INVALID_MEM_ADDRESS);
     lif_qstate.ring_size = log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10);
     lif_qstate.total_rings = 1;
-    sdk::platform::capri::write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate, sizeof(lif_qstate));
+    sdk::asic::write_qstate(qstate.hbm_address, (uint8_t *) &lif_qstate,
+                            sizeof(lif_qstate));
 
     lifqstate_t txdma_qstate = { 0 };
     txdma_qstate.pc = pgm_offset;
@@ -100,8 +101,8 @@ init_service_lif (uint32_t lif_id, const char *cfg_path)
     SDK_ASSERT(txdma_qstate.ring1_base != INVALID_MEM_ADDRESS);
     txdma_qstate.ring_size = log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10);
     txdma_qstate.total_rings = 1;
-    sdk::platform::capri::write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
-                 (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
+    sdk::asic::write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
+                            (uint8_t *) &txdma_qstate, sizeof(txdma_qstate));
 
     //Program the TxDMA scheduler for this LIF.
     sdk::platform::lif_info_t lif_info;
@@ -149,15 +150,15 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
         return SDK_RET_ERR;
     }
     // get the qstate pc offsets
-    rv = sdk::platform::capri::get_pc_offset(pginfo,
-                                        "txdma_stage0.bin", "apollo_read_qstate", &pgm_offset);
+    rv = sdk::asic::get_pc_offset(pginfo, "txdma_stage0.bin",
+                                  "apollo_read_qstate", &pgm_offset);
     if (rv != 0) {
         PDS_TRACE_ERR("TXDMA stage0 pgm not found");
         return SDK_RET_ERR;
     }
 
-    rv = sdk::platform::capri::read_qstate(
-        qstate.hbm_address, (uint8_t *)&lif_qstate, sizeof(lifqstate_t));
+    rv = sdk::asic::read_qstate(qstate.hbm_address, (uint8_t *) &lif_qstate,
+                                sizeof(lifqstate_t));
     if (rv != 0) {
         PDS_TRACE_ERR("RXDMA qstate read failed");
         return SDK_RET_ERR;
@@ -174,8 +175,8 @@ service_lif_upg_verify (uint32_t lif_id, const char *cfg_path)
     PDS_TRACE_DEBUG("Moving qstate addr 0x%lx, pc offset %u, to offset %u",
                     qstate.hbm_address, lif_qstate.pc, pgm_offset);
 
-    rv = sdk::platform::capri::read_qstate(qstate.hbm_address + sizeof(lifqstate_t),
-                 (uint8_t *)&lif_qstate, sizeof(lifqstate_t));
+    rv = sdk::asic::read_qstate(qstate.hbm_address + sizeof(lifqstate_t),
+                                (uint8_t *)&lif_qstate, sizeof(lifqstate_t));
     if (rv != 0) {
         PDS_TRACE_ERR("TXDMA qstate read failed");
         return SDK_RET_ERR;

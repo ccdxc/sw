@@ -11,6 +11,7 @@
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -135,7 +136,8 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
         PDS_TRACE_DEBUG("Creating uplink if 0x%x, port %u, hw_id_ %u, "
                         "tm_port %u", spec->key.id, spec->uplink_info.port.str(),
                         hw_id_, tm_port);
-        ret = sdk::platform::capri::capri_tm_uplink_lif_set(tm_port, sdk::lib::catalog::ifindex_to_logical_port(intf->ifindex()));
+        ret = sdk::asic::pd::asicpd_tm_uplink_lif_set(tm_port,
+                                                      sdk::lib::catalog::ifindex_to_logical_port(intf->ifindex()));
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to program uplink 0x%s's lif %u in TM "
                           "register", spec->key.id, hw_id_);

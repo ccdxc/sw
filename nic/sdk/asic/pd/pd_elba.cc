@@ -1098,6 +1098,12 @@ asicpd_sbus_cpu_2200 (int chip_id, int inst_id)
     return elb_top_sbus_cpu_2200(chip_id, inst_id) ? SDK_RET_ERR : SDK_RET_OK;
 }
 
+void
+asicpd_qstate_push (sdk::platform::utils::LIFQState *qstate, int cos)
+{
+    push_qstate_to_elba(qstate, cos);
+}
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

@@ -19,6 +19,7 @@
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/asic/cmn/asic_qstate.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "platform/utils/lif_manager_base.hpp"
 #include "platform/capri/capri_qstate.hpp"
@@ -42,7 +43,7 @@
     (SACL_SPORT_TABLE_SIZE + SACL_IPV4_TABLE_SIZE + SACL_PROTO_DPORT_TABLE_SIZE)
 
 using namespace sdk::platform::utils;
-using namespace sdk::platform::capri;
+using namespace sdk::asic::pd;
 
 #define JRXDMA_PRGM     "rxdma_program"
 #define JTXDMA_PRGM     "txdma_program"
@@ -605,15 +606,15 @@ init_service_lif ()
     qstate.hbm_address = asicpd_get_mem_addr(JLIFQSTATE);
     qstate.params_in.type[0].entries = 1;
     qstate.params_in.type[0].size = 1; // 64B
-    push_qstate_to_capri(&qstate, 0);
+    asicpd_qstate_push(&qstate, 0);
 
     lifqstate_t lif_qstate = {0};
     lif_qstate.ring0_base = asicpd_get_mem_addr(JPKTBUFFER);
     lif_qstate.ring1_base = asicpd_get_mem_addr(JPKTDESC);
     lif_qstate.ring_size = log2(asicpd_get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
-    write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
-                 sizeof(lif_qstate));
+    sdk::asic::write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
+                            sizeof(lif_qstate));
 
     lifqstate_t txdma_qstate = {0};
     txdma_qstate.rxdma_cindex_addr =
@@ -622,8 +623,8 @@ init_service_lif ()
     txdma_qstate.ring1_base = asicpd_get_mem_addr(JPKTDESC);
     txdma_qstate.ring_size = log2(asicpd_get_mem_size_kb(JPKTBUFFER) / 10);
     txdma_qstate.total_rings = 1;
-    write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
-                 (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
+    sdk::asic::write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
+                            (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
 }
 
 static uint8_t *

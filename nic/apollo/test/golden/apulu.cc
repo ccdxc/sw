@@ -19,6 +19,7 @@
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/asic/cmn/asic_qstate.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/device/device.hpp"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
@@ -42,7 +43,7 @@
 #define EPOCH 0x55
 
 using namespace sdk::platform::utils;
-using namespace sdk::platform::capri;
+using namespace sdk::asic::pd;
 
 #define JRXDMA_PRGM     "rxdma_program"
 #define JTXDMA_PRGM     "txdma_program"
@@ -260,7 +261,7 @@ p4plus_table_init (platform_type_t platform_type)
     prog.control = "apulu_txdma";
     prog.prog_name = "txdma_stage0.bin";
     prog.pipe = P4_PIPELINE_TXDMA;
-    sdk::asic::pd::asicpd_p4plus_table_init(&prog, platform_type);
+    asicpd_p4plus_table_init(&prog, platform_type);
 }
 
 static void
@@ -272,7 +273,7 @@ init_service_lif ()
     qstate.hbm_address = asicpd_get_mem_addr(JLIFQSTATE);
     qstate.params_in.type[0].entries = 1;
     qstate.params_in.type[0].size = 1;
-    push_qstate_to_capri(&qstate, 0);
+    asicpd_qstate_push(&qstate, 0);
 
     uint64_t pc;
     int ret;
@@ -287,8 +288,8 @@ init_service_lif ()
     lif_qstate.ring1_base = asicpd_get_mem_addr(JPKTDESC);
     lif_qstate.ring_size = log2(asicpd_get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
-    write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
-                 sizeof(lif_qstate));
+    sdk::asic::write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
+                            sizeof(lif_qstate));
 
     lifqstate_t txdma_qstate = {0};
     txdma_qstate.pc = pc >> 6;
@@ -298,8 +299,8 @@ init_service_lif ()
     txdma_qstate.ring1_base = asicpd_get_mem_addr(JPKTDESC);
     txdma_qstate.ring_size = log2(asicpd_get_mem_size_kb(JPKTBUFFER) / 10);
     txdma_qstate.total_rings = 1;
-    write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
-                 (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
+    sdk::asic::write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
+                            (uint8_t *)&txdma_qstate, sizeof(txdma_qstate));
 }
 
 static int
@@ -452,14 +453,13 @@ device_init (void)
     p4e_info->device_ipv4_addr = g_device_ipv4_addr;
     entry_write(P4TBL_ID_P4E_DEVICE_INFO, 0, NULL, NULL, &p4e_data, false, 0);
 
-    capri_tm_uplink_lif_set(TM_PORT_UPLINK_0, g_lif0);
-    capri_tm_uplink_lif_set(TM_PORT_UPLINK_1, g_lif1);
+    asicpd_tm_uplink_lif_set(TM_PORT_UPLINK_0, g_lif0);
+    asicpd_tm_uplink_lif_set(TM_PORT_UPLINK_1, g_lif1);
 
     uint64_t session_stats_addr;
     session_stats_addr = asicpd_get_mem_addr(JSTATSBASE);
     session_stats_addr -= ((uint64_t)1 << 31);
-    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION,
-                                                 session_stats_addr);
+    asicpd_program_table_constant(P4TBL_ID_SESSION, session_stats_addr);
 }
 
 static void
