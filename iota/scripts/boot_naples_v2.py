@@ -693,16 +693,16 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.FAILED_TO_READ_FIRMWARE_TYPE, "Failed to read firmware type")
     def ReadRunningFirmwareType(self):
-        fwType = self.RunCommandOnConsoleWithOutput("fwupdate -r")
-        if re.search('\nmainfw',fwType):
-            print('determined running firmware to be type MAIN')
-            return FIRMWARE_TYPE_MAIN
-        elif re.search('\ngoldfw',fwType):
-            print('determined running firmware to be type GOLD')
-            return FIRMWARE_TYPE_GOLD
-        else:
-            print("failed to determine running firmware type from output: {0}".format(fwType))
-            return FIRMWARE_TYPE_UNKNOWN
+        for i in range(3):
+            fwType = self.RunCommandOnConsoleWithOutput("fwupdate -r")
+            if re.search('\nmainfw',fwType):
+                print('determined running firmware to be type MAIN')
+                return FIRMWARE_TYPE_MAIN
+            elif re.search('\ngoldfw',fwType):
+                print('determined running firmware to be type GOLD')
+                return FIRMWARE_TYPE_GOLD
+        print("failed to determine running firmware type from output: {0}".format(fwType))
+        return FIRMWARE_TYPE_UNKNOWN
 
     @_exceptionWrapper(_errCodes.FAILED_TO_READ_FIRMWARE_TYPE, "Failed to read firmware type")
     def ReadSavedFirmwareType(self):
@@ -1475,7 +1475,6 @@ class PenOrchestrator:
         install_mainfw_via_host = False
         for naples_inst in self.__naples:
             naples_inst.StartSSH()
-            naples_inst.ReadGoldFwVersion()
             fwType = naples_inst.ReadRunningFirmwareType()
             
             # Case 1: Main firmware upgrade.
@@ -1497,18 +1496,20 @@ class PenOrchestrator:
                 if fwType != FIRMWARE_TYPE_GOLD or self.__host.RebootRequiredOnDriverInstall():
                     naples_inst.InitForUpgrade(goldfw = True)
                     self.__host.InitForUpgrade()
-                    if GlobalOptions.no_mgmt:
-                        #If non mgmt, do ipmi reset to make sure we reboot
-                        # Since GlobalOptions.no_mgmt would apply to both Naples (?), reset only once
-                        naples_inst.IpmiResetAndWait()
-                        self.__ipmi_reboot_allowed = False
-                    else:
-                        self.__host.Reboot()
+                    naples_inst.IpmiResetAndWait()
+                    self.__ipmi_reboot_allowed = False
 
-                if naples_inst.IsNaplesGoldFWLatest():
-                    gold_pkg = self.__driver_images.gold_drv_latest_pkg 
-                else:
-                    gold_pkg = self.__driver_images.gold_drv_old_pkg
+                try:
+                    naples_inst.ReadGoldFwVersion()
+                    if naples_inst.IsNaplesGoldFWLatest():
+                        gold_pkg = self.__driver_images.gold_drv_latest_pkg 
+                    else:
+                        gold_pkg = self.__driver_images.gold_drv_old_pkg
+                except:
+                    #If gold fw not known, try to install with latest FW to see if ssh come sup
+                    print("ALERT:GoldFW us unknown, trying to bring up with internal mnic with latest drivers, install might fail.")
+                    gold_pkg = self.__driver_images.gold_drv_latest_pkg
+
                 self.__host.Init(driver_pkg =  gold_pkg, cleanup = False, gold_fw = True)
                 if GlobalOptions.use_gold_firmware:
                     if fwType != FIRMWARE_TYPE_GOLD:
