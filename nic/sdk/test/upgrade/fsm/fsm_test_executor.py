@@ -8,17 +8,17 @@ import subprocess
 import sys
 import errno
 import time
+import atexit
 
 msg = {
-    # message id : message
-    1: "invalid input !",
-    2: "Failed to execute cmd {0}, return code is {1}, error is {2}",
-    3: "Cmd is {0}, return code is {1}, result is {2}",
-    4: "Method Name is {0}, starting execution",
-    5: "Method Name is {0}, arguments are {1}, execution Time is {2}",
-    6: "Method Name is {0}, finished execution",
+    1: "Invalid input !",
+    2: "Failed to execute cmd: {0}, return code is: {1}, error is: {2}",
+    3: "Cmd is: {0}, return code is: {1}, result is: {2}",
+    4: "Method Name is: {0}, starting execution",
+    5: "Method Name is: {0}, arguments are: {1}, execution Time is: {2}",
+    6: "Method Name is: {0}, finished execution",
     7: "Failed to execute test",
-    8: "Successfully executed test cases",
+    8: "{0} Finished Test Execution {0}".format("---"),
     9: "Starting {0} ...",
     10: "Stopping {0} ...",
     11: "Executing Test Case : {0}",
@@ -27,8 +27,9 @@ msg = {
     14: "NOTE                : Expected {1} , Got {2}",
     15: "Summary Of Test Run : Total - {0} , PASSED - {1}, FAILED - {2}, "
         "Exit Status - {3}",
-    16: "PDS UPGRADE FSM TEST: EXECUTING {0} TEST CASES"
-
+    16: "PDS UPGRADE FSM TEST: EXECUTING {0} TEST CASES",
+    17: "Invalid key: {0}",
+    18: "Log Files           : {0}"
 }
 
 
@@ -100,6 +101,12 @@ class Log(RuntimeError):
         sys.exit(1)
 
 
+@atexit.register
+def at_exit():
+    os.system("pkill fsm_test")
+    os.system("pkill pdsupgmgr")
+
+
 def add_timestamp(caller):
     def timed(**kwargs):
         start_time = time.time()
@@ -152,10 +159,11 @@ def execute(**kwargs):
                     call_stack=True)
             else:
                 Log("", "INFO", message(3).format(cmd, ret_code, result),
-                    call_stack=True)
+                    call_stack=False)
         else:
-             Log("#"*10, "INFO", message(3).format(cmd, ret_code, result),
-                 call_stack=True)
+            Log("#"*10, "INFO", message(3).format(
+                cmd, ret_code, "Empty" if len(result) is 0 else result),
+                call_stack=False)
 
         return ret_code
 
@@ -171,6 +179,12 @@ class ExecutePdsUpgradeFsmTest(object):
         self.fsm_test_service = ""
         self.pdsupgclient = "pdsupgclient"
         self.pdsupgmgr = "pdsupgmgr"
+        self.setup_upgrade_gtests = ""
+        self.setup_env_mock = ""
+        self.logs_dir = ""
+        self.fsm_logs = ""
+        self.upgrade_log = ""
+        self.pdsagent_log = ""
         self.summary = "*" * 100 + os.linesep
         self.number_of_test = 0
         self.number_of_pass = 0
@@ -202,6 +216,20 @@ class ExecutePdsUpgradeFsmTest(object):
         self.pdsupgmgr = os.path.join(self.PDSPKG_TOPDIR, "build", "x86_64",
                                          self.PIPELINE, "capri", "bin",
                                          self.pdsupgmgr)
+        self.setup_upgrade_gtests = os.path.join(self.PDSPKG_TOPDIR,"apollo",
+                                                 "test","tools",
+                                                 "setup_upgrade_gtests.sh")
+
+        self.setup_env_mock = os.path.join(self.PDSPKG_TOPDIR,"apollo","tools",
+                                           "setup_env_mock.sh")
+        self.setup_env_mock += self.PIPELINE
+
+        self.fsm_logs = "{0}/fsm_test_*.log".format(self.PDSPKG_TOPDIR)
+        self.upgrade_log = "{0}/upgrade.log".format(self.PDSPKG_TOPDIR)
+        self.pdsagent_log = "{0}/pdsagent.log".format(self.PDSPKG_TOPDIR)
+        self.logs_dir = os.path.join("/tmp", "upgmgr_fsm_test")
+        execute(cmd="rm -rf {0}".format(self.logs_dir), return_check=True)
+        execute(cmd="mkdir -p {0}".format(self.logs_dir), return_check=True)
 
         print("PDSPKG_TOPDIR {0}, BUILD_DIR {1}, fsm_test_service {2}".format(
             self.PDSPKG_TOPDIR, self.BUILD_DIR, self.fsm_test_service))
@@ -235,7 +263,7 @@ class ExecutePdsUpgradeFsmTest(object):
             if val is None or val == default:
                 frame_info = inspect.getframeinfo(inspect.currentframe())
                 file = str(frame_info.filename) + str(frame_info.lineno)
-                Log(file, "ERROR", message(13).format(key_path),
+                Log(file, "ERROR", message(17).format(key_path),
                     call_stack=True)
         return val
 
@@ -252,6 +280,25 @@ class ExecutePdsUpgradeFsmTest(object):
         else:
             Log("", "INFO", message(9))
 
+    def __back_path__(self, test_id):
+        path = os.path.join(self.logs_dir, test_id)
+        execute(cmd="mkdir -p {0}".format(path), return_check=True)
+        return path
+
+    def __backup_log__(self, dest):
+        copy="cp {0} {1}".format(self.fsm_logs, dest)
+        execute(cmd=copy, return_check=False)
+        copy="cp {0} {1}".format(self.upgrade_log, dest)
+        execute(cmd=copy, return_check=False)
+        copy="cp {0} {1}".format(self.pdsagent_log, dest)
+        execute(cmd=copy, return_check=False)
+
+    def __generate_log__(self):
+        command = "source {0}".format(self.setup_upgrade_gtests)
+        command += " && upg_finish upgmgr"
+        execute(cmd=command, return_check=True)
+
+
     def __setup__(self):
         execute(cmd="source {0}/apollo/test/tools/setup_upgrade_gtests.sh &&"
                 " upg_setup {1}/gen/graceful_test.json".format(
@@ -262,6 +309,11 @@ class ExecutePdsUpgradeFsmTest(object):
                 " upg_pipeline_init".format(self.PDSPKG_TOPDIR), return_check=True)
         execute(cmd="source {0}/apollo/test/tools/setup_upgrade_gtests.sh &&"
                 " upg_remove_logs".format(self.PDSPKG_TOPDIR), return_check=True)
+
+        command = "source {0}".format(self.setup_upgrade_gtests)
+        command += " && upg_init"
+        execute(cmd=command, return_check=True)
+        execute(cmd="rm -f /dev/shm/upgradelog", return_check=True)
 
     def __cleanup__(self):
         execute(cmd="pkill fsm_test", return_check=True)
@@ -347,6 +399,7 @@ class ExecutePdsUpgradeFsmTest(object):
 
         ret = self.__start_pds_upgrade__()
         ret = self.__start_pds_upgrade_client__()
+        self.__generate_log__()
         self.summary += message(14).format(test_id, expected_result, ret)
         self.summary += os.linesep
 
@@ -359,6 +412,9 @@ class ExecutePdsUpgradeFsmTest(object):
         else:
             self.exit_status = 1
             self.number_of_fail = self.number_of_fail + 1
+            path = self.__back_path__(test_id)
+            self.summary +=  message(18).format(path) + os.linesep
+            self.__backup_log__(path)
             self.summary += message(13).format("FAILURE") + os.linesep
             Log("", "INFO", message(13).format("FAILURE"),
                 call_stack=False)
@@ -382,7 +438,7 @@ class ExecutePdsUpgradeFsmTest(object):
             self.__setup__()
             self.__execute_test__(test_id)
             self.__cleanup__()
-            print ("*" * 100)
+            print ("-" * 100)
             os.system("sleep 5")
 
 
@@ -421,7 +477,7 @@ def main(test_case_json):
         Log(file, "ERROR", message(7), call_stack=True)
         sys.exit(1)
     else:
-        Log("", "INFO", message(8), call_stack=False)
+        print(message(8))
         sys.exit(status)
 
 

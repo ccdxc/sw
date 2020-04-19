@@ -5,9 +5,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <string>
 #include <map>
 #include <set>
+#include <exception>
 #include "include/sdk/base.hpp"
 #include "lib/ipc/ipc.hpp"
 #include "lib/event_thread/event_thread.hpp"
@@ -20,6 +23,7 @@ static std::string fsm_stage;
 static std::string error_code = "ok";
 static std::map<std::string, sdk_ret_t> ret_code_map;
 static std::set<std::string> upg_stages;
+static bool dump_to_log_file = false;
 
 static void
 init_err_codes (void)
@@ -181,9 +185,45 @@ spawn_svc_thread (void)
     return SDK_RET_OK;
 }
 
+static void
+open_logger(std::string log_file)
+{
+    try {
+        std::string log_path;
+        if(const char* env_p = std::getenv("PDSPKG_TOPDIR")) {
+            printf("\nLog PATH is: %s\n",env_p);
+            log_path = *env_p;
+        } else {
+            log_path = "/sw/nic/";
+        }
+        log_file = log_path + "/" + log_file;
+
+        printf ("\n Log file path : %s\n", log_file.c_str());
+        int file_desc = open(log_file.c_str(), O_WRONLY | O_TRUNC | O_CREAT, 644);
+
+        if (file_desc < 0) {
+            fprintf(stderr, "\nFailed to open log file %s\n", log_file.c_str());
+            exit(1);
+        }
+        if (dup2(file_desc,1) < 0) {
+            close(file_desc);
+            fprintf(stderr, "\nFailed to redirect to %s\n", log_file.c_str());
+            exit(1);
+        }
+    } catch (std::exception& e) {
+        printf("\nexception caught: %s\n", e.what());
+    }
+
+}
+
 sdk_ret_t
 init_svc(void)
 {
+    if (dump_to_log_file) {
+        std::string log("fsm_test_");
+        log = log + svc_name + ".log";
+        open_logger(log);
+    }
     spawn_svc_thread();
     printf("\n server thread response handler is running \n");
     return SDK_RET_OK;
@@ -192,19 +232,19 @@ init_svc(void)
 static void
 print_usage (char **argv)
 {
-    fprintf(stdout, "Usage : %s \n\t-s|--svcname <name of the service>"
-            " \n\t-i|--svcid <service id> "
-            "\n\t[ -e|--err < error code >] "
-            "\n\t[ -f|--fsmstage <name of the stage where error code needs "
-            "to be injected > ]\n", argv[0]);
-#if 0
-    fprintf(stdout, "Possible values for stages are : compat_check, start,"
-            " backup, prepare, sync, prep_switchover, switchover, ready, "
-            "respawn, rollback, repeal, finish \n");
+    fprintf(stdout, "\n\nUsage : %s "
+            "\n\t\t -s | --svcname   <name of the service>"
+            "\n\t\t -i | --svcid     <service id> "
+            "\n\t\t -e | --err       <ok|critical|fail|noresponse>"
+            "\n\t\t -f | --fsmstage  <name of the stage where error code needs"
+            " to be injected>\n\n", argv[0]);
 
-    fprintf(stdout, "Possible values are error code :"
-            "ok, critical, fail, noresponse\n");
-#endif
+    fprintf(stdout, "Example : %s -s test_service -i 51 -e fail -f "
+            "backup \n\n", argv[0]);
+
+    fprintf(stdout, "Possible values for -f | --fsmstage : compat_check, start,"
+            " backup, prepare, sync, prep_switchover, switchover, ready, "
+            "respawn, rollback, repeal, finish\n\n");
 }
 
 static void
@@ -225,6 +265,7 @@ main (int argc, char **argv)
         { "svcid", required_argument, NULL, 'i'},
         { "err", required_argument, NULL, 'e'},
         { "fsmstage", required_argument, NULL, 'f'},
+        { "dumplog", no_argument, NULL, 'd'},
         { "help", no_argument, NULL, 'h'}
     };
 
@@ -234,7 +275,7 @@ main (int argc, char **argv)
     init_stage_names();
     try {
 
-        while ((opt = getopt_long(argc, argv, "s:i:e:f:h",
+        while ((opt = getopt_long(argc, argv, "s:i:e:f:hd",
                                   longopts, NULL)) != -1) {
             switch (opt) {
             case 's':
@@ -274,6 +315,10 @@ main (int argc, char **argv)
                 }
                 break;
 
+            case 'd':
+                dump_to_log_file = true;
+                break;
+
             case 'h':
                 print_usage(argv);
                 exit(0);
@@ -304,9 +349,13 @@ main (int argc, char **argv)
     printf("\nsvc : %s, id %d, err %s, stage: %s\n", svc_name.c_str(),
            svc_thread_id, error_code.c_str(), fsm_stage.c_str());
 
-    if ((ret = init_svc ()) != SDK_RET_OK) {
-        fprintf(stderr, "Service (%s) initialization failed, err %u",
-                svc_name.c_str(), ret);
+    try {
+        if ((ret = init_svc ()) != SDK_RET_OK) {
+            fprintf(stderr, "Service (%s) initialization failed, err %u",
+                    svc_name.c_str(), ret);
+        }
+    } catch (std::exception& e) {
+        printf("\nFailed ti start service, exception caught: %s\n", e.what());
     }
 
     printf("\n Main thread waiting .......... \n");

@@ -42,9 +42,9 @@ function log_file()
 }
 
 if [ $# == 3 ];then
-    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s ${SVC} -i ${SVC_ID}"
+    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -d -s ${SVC} -i ${SVC_ID}"
 elif [ $# == 5 ];then
-    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s ${SVC} -i ${SVC_ID} -e ${ERR_CODE} -f ${ERR_STAG}"
+    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -d -s ${SVC} -i ${SVC_ID} -e ${ERR_CODE} -f ${ERR_STAG}"
 else
     echo "Something Wrong !"
 fi
