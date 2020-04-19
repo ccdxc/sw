@@ -230,7 +230,7 @@ func (a *ApuluAPI) HandleVeniceCoordinates(dsc types.DistributedServiceCardStatu
 		Oper: types.Create,
 		Intf: lb,
 	}
-	a.InfraAPI.UpdateIfChannel() <- ifEvnt
+	a.InfraAPI.UpdateIfChannel(ifEvnt)
 
 	// start event/alert policies watcher
 	a.StartAlertPoliciesWatch()
@@ -1621,7 +1621,7 @@ func (a *ApuluAPI) handleHostInterface(spec *halapi.LifSpec, status *halapi.LifS
 		Oper: types.Create,
 		Intf: i,
 	}
-	a.InfraAPI.UpdateIfChannel() <- ifEvnt
+	a.InfraAPI.UpdateIfChannel(ifEvnt)
 	dat, _ := i.Marshal()
 	if err := a.InfraAPI.Store(i.Kind, i.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", i.GetKey(), err))
@@ -1705,7 +1705,7 @@ func (a *ApuluAPI) handleUplinkInterface(spec *halapi.PortSpec, status *halapi.P
 		Oper: types.Create,
 		Intf: i,
 	}
-	a.InfraAPI.UpdateIfChannel() <- ifEvnt
+	a.InfraAPI.UpdateIfChannel(ifEvnt)
 
 	dat, _ := i.Marshal()
 	if err := a.InfraAPI.Store(i.Kind, i.GetKey(), dat); err != nil {
@@ -1915,7 +1915,7 @@ func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
 			Intf: *uplinkInterface,
 		}
 
-		a.InfraAPI.UpdateIfChannel() <- ifEvnt
+		a.InfraAPI.UpdateIfChannel(ifEvnt)
 		dat, _ := uplinkInterface.Marshal()
 		if err := a.InfraAPI.Store(uplinkInterface.Kind, uplinkInterface.GetKey(), dat); err != nil {
 			log.Error(errors.Wrapf(types.ErrBoltDBStoreUpdate, "Port: %s | Port: %v", uplinkInterface.GetKey(), err))

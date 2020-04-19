@@ -50,8 +50,11 @@ type InfraAPI interface {
 	// NotifyVeniceConnection updates venice connection status from netagent
 	NotifyVeniceConnection()
 
-	// UpdateIfChannel returns a channel for propagating interface state to the netagent
-	UpdateIfChannel() chan UpdateIfEvent
+	// UpdateIfChannel updates the intf update channel
+	UpdateIfChannel(evt UpdateIfEvent)
+
+	// IfUpdateChannel returns the interface update channel
+	IfUpdateChannel() chan UpdateIfEvent
 
 	// Close closes the DB Write Handlers
 	Close() error

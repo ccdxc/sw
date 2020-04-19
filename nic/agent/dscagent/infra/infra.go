@@ -181,7 +181,21 @@ func (i *API) NotifyVeniceConnection() {
 	i.config.IsConnectedToVenice = true
 }
 
-// UpdateIfChannel returns a channel for propogating interface state to the netagent
-func (i *API) UpdateIfChannel() chan types.UpdateIfEvent {
+// UpdateIfChannel updates the intf update channel
+func (i *API) UpdateIfChannel(evt types.UpdateIfEvent) {
+	// If buffer if full do an inline drain
+	if len(i.ifUpdCh) == cap(i.ifUpdCh) {
+		select {
+		case ev := <-i.ifUpdCh:
+			log.Infof("Drain evt [%v] because buffer is full", ev)
+		default:
+		}
+	}
+	log.Infof("Length of buffer is %d", len(i.ifUpdCh))
+	i.ifUpdCh <- evt
+}
+
+// IfUpdateChannel returns the interface update channel
+func (i *API) IfUpdateChannel() chan types.UpdateIfEvent {
 	return i.ifUpdCh
 }

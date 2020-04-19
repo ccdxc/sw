@@ -61,8 +61,12 @@ func (m *mockInfraAPI) GetConfig() (cfg types.DistributedServiceCardStatus) {
 // NotifyVeniceConnection updates venice connection status from netagent
 func (m *mockInfraAPI) NotifyVeniceConnection() {}
 
-// UpdateIfChannel returns a channel for propogating interface state to the netagent
-func (m *mockInfraAPI) UpdateIfChannel() chan types.UpdateIfEvent {
+// UpdateIfChannel updates the intf update channel
+func (i *mockInfraAPI) UpdateIfChannel(evt types.UpdateIfEvent) {
+}
+
+// IfUpdateChannel returns a channel for propogating interface state to the netagent
+func (i *mockInfraAPI) IfUpdateChannel() chan types.UpdateIfEvent {
 	return nil
 }
 

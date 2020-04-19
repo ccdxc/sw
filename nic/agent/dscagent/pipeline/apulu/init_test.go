@@ -143,8 +143,12 @@ func (i *badInfraAPI) GetConfig() (cfg types.DistributedServiceCardStatus) {
 	}
 }
 
-// UpdateIfChannel returns a channel for propagating interface state to the netagent
-func (i *badInfraAPI) UpdateIfChannel() chan types.UpdateIfEvent {
+// UpdateIfChannel updates the intf update channel
+func (i *badInfraAPI) UpdateIfChannel(evt types.UpdateIfEvent) {
+}
+
+// IfUpdateChannel returns a channel for propogating interface state to the netagent
+func (i *badInfraAPI) IfUpdateChannel() chan types.UpdateIfEvent {
 	return nil
 }
 

@@ -603,7 +603,7 @@ func (c *API) netIfWorker(ctx context.Context) {
 
 	for {
 		select {
-		case ev := <-c.InfraAPI.UpdateIfChannel():
+		case ev := <-c.InfraAPI.IfUpdateChannel():
 			log.Infof("Got event [%v]", ev)
 			// Set the DSC ID
 			ev.Intf.Status.DSCID = c.InfraAPI.GetConfig().DSCID
