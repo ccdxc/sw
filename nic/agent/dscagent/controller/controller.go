@@ -615,12 +615,17 @@ func (c *API) netIfWorker(ctx context.Context) {
 				for {
 					resp, err := ifClient.CreateInterface(nctx, &ev.Intf)
 					if err != nil && !strings.Contains(err.Error(), "AlreadyExists") {
+						// NPM is down
+						if strings.Contains(err.Error(), "FailedPrecondition") {
+							time.Sleep(time.Minute)
+							continue
+						}
 						if time.Since(now) > time.Second*10 {
 							log.Errorf("create interface failed (%s)", err)
 							now = time.Now()
 						}
 						retries++
-						time.Sleep(100 * time.Millisecond)
+						time.Sleep(time.Second)
 						continue
 					}
 					log.Infof("Created interface [%v](%d retries) [%v]", ev.Intf.Name, retries, resp)
