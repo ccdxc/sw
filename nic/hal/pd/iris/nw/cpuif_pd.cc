@@ -60,8 +60,13 @@ end:
 hal_ret_t
 pd_cpuif_update (pd_if_update_args_t *args)
 {
-    // Nothing to do for now
-    return HAL_RET_OK;
+    hal_ret_t   ret;
+    pd_cpuif_t  *pd_cpuif = (pd_cpuif_t *)args->intf_clone->pd_if;
+
+    // Program Output Mapping
+    ret = pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif, TABLE_OPER_UPDATE);
+
+    return ret;
 }
 
 //-----------------------------------------------------------------------------
@@ -292,46 +297,55 @@ pd_cpuif_program_hw(pd_cpuif_t *pd_cpuif)
     hal_ret_t            ret;
 
     // Program Output Mapping
-    ret = pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif);
+    ret = pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif, TABLE_OPER_INSERT);
 
     return ret;
 }
+
+
 
 // ----------------------------------------------------------------------------
 // Program Output Mapping Table
 // ----------------------------------------------------------------------------
 #define om_cpu data.action_u.output_mapping_redirect_to_cpu
 hal_ret_t
-pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif)
+pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif, table_oper_t oper)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     sdk_ret_t                   sdk_ret;
     output_mapping_actiondata_t   data;
     directmap                   *dm_omap = NULL;
     pd_lif_t                    *pd_lif = NULL;
+    if_t                        *pi_if = (if_t *)pd_cpuif->pi_if;
 
     memset(&data, 0, sizeof(data));
 
-    pd_lif = pd_cpuif_get_pd_lif(pd_cpuif);
-
-    data.action_id = OUTPUT_MAPPING_REDIRECT_TO_CPU_ID;
-    om_cpu.dst_lif = pd_lif->hw_lif_id; // 1023
-    // TODO: Fix this
-    om_cpu.egress_mirror_en = 0;
-    om_cpu.control_tm_oq = 0;
-    om_cpu.cpu_copy_tm_oq = 0;
+    if (!pi_if->allow_rx) {
+        data.action_id = OUTPUT_MAPPING_OUTPUT_MAPPING_DROP_ID;
+    } else {
+        pd_lif = pd_cpuif_get_pd_lif(pd_cpuif);
+        data.action_id = OUTPUT_MAPPING_REDIRECT_TO_CPU_ID;
+        om_cpu.dst_lif = pd_lif->hw_lif_id; // 33
+        // TODO: Fix this
+        om_cpu.egress_mirror_en = 0;
+        om_cpu.control_tm_oq = 0;
+        om_cpu.cpu_copy_tm_oq = 0;
+    }
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
     SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
-    sdk_ret = dm_omap->insert_withid(&data, pd_cpuif->cpu_lport_id);
+    if (oper == TABLE_OPER_INSERT) {
+        sdk_ret = dm_omap->insert_withid(&data, pd_cpuif->cpu_lport_id);
+    } else {
+        sdk_ret = dm_omap->update(pd_cpuif->cpu_lport_id, &data);
+    }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("lif_id:{} Unable to program",
-                      lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+        HAL_TRACE_ERR("cpu if_id:{} Unable to program. err: {}", 
+                      pi_if->if_id, ret);
     } else {
-        HAL_TRACE_DEBUG("lif_id:{} Success",
-                        lif_get_lif_id((lif_t *)pd_lif->pi_lif));
+        HAL_TRACE_DEBUG("cpu if_id:{} Success", pi_if->if_id);
     }
     return ret;
 }

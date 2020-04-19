@@ -551,7 +551,8 @@ message IfTunnelInfo {
 
 // attributes for CPU If
 message IfCPUInfo {
-  kh.LifKeyHandle lif_key_or_handle   = 2 [(gogoproto.moretags) = "venice:ref"];    // LIF identifier for this interface
+  kh.LifKeyHandle lif_key_or_handle   = 1 [(gogoproto.moretags) = "venice:ref"];    // LIF identifier for this interface
+  bool            allow_rx            = 2;
 }
 
 // attributes for App Redirect If

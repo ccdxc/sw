@@ -96,7 +96,8 @@ cpuif_delink_pi_pd(pd_cpuif_t *pd_cpuif, if_t *pi_if)
 
 hal_ret_t pd_cpuif_alloc_res(pd_cpuif_t *pd_cpuif);
 hal_ret_t pd_cpuif_program_hw(pd_cpuif_t *pd_cpuif);
-hal_ret_t pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif);
+hal_ret_t pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif,
+                                             table_oper_t oper);
 hal_ret_t pd_cpuif_cleanup(pd_cpuif_t *upif_pd);
 hal_ret_t pd_cpuif_deprogram_hw (pd_cpuif_t *pd_upif);
 hal_ret_t pd_cpuif_pd_depgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif);

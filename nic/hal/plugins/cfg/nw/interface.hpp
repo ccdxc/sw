@@ -117,6 +117,11 @@ typedef struct if_s {
     vrf_id_t            tid;                        // vrf id (TODO: what is this for ?)
 
     union {
+        // cpu interface info
+        struct {
+            bool allow_rx;
+        } __PACK__;
+
         // enic interface info
         struct {
             IfEnicType          enic_type;          // type of ENIC
@@ -245,6 +250,12 @@ typedef struct if_create_app_ctxt_s {
 
 typedef struct if_update_app_ctxt_s {
     union {
+        // cpu info
+        struct {
+            bool           allow_rx_change;
+            bool           new_allow_rx;
+        } __PACK__;
+
         // uplink interface/pc info
         struct {
             bool            native_l2seg_change;

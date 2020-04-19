@@ -1849,6 +1849,14 @@ cpuif_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
 {
     hal_ret_t           ret = HAL_RET_OK;
 
+    if (hal_if->allow_rx != spec.if_cpu_info().allow_rx()) {
+        HAL_TRACE_DEBUG("CPU If allow rx changed {} => {}",
+                        hal_if->allow_rx, spec.if_cpu_info().allow_rx());
+        *has_changed = true;
+        app_ctxt->allow_rx_change = true;
+        app_ctxt->new_allow_rx = spec.if_cpu_info().allow_rx();
+    }
+
     return ret;
 }
 
@@ -2129,6 +2137,11 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     case intf::IF_TYPE_TUNNEL:
         break;
     case intf::IF_TYPE_CPU:
+        pd_if_args.intf = hal_if;
+        pd_if_args.intf_clone = hal_if_clone;
+        if (app_ctxt->allow_rx_change) {
+            hal_if_clone->allow_rx = app_ctxt->new_allow_rx;
+        }
         break;
     case intf::IF_TYPE_APP_REDIR:
         break;
@@ -2817,12 +2830,14 @@ interface_update (InterfaceSpec& spec, InterfaceResponse *rsp)
         goto end;
     }
 
+#if 0
     // check if this is a CPU type interface
     if (hal_if->if_type == intf::IF_TYPE_CPU) {
         // updates not allowed on CPU interface as this is internal
         ret = HAL_RET_INVALID_OP;
         goto end;
     }
+#endif
 
     HAL_TRACE_DEBUG("if update for id {} type : {} enictype : {}",
                     hal_if->if_id, IfType_Name(hal_if->if_type),
@@ -3031,6 +3046,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     case intf::IF_TYPE_CPU:
     {
         spec->mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_handle(hal_if->lif_handle);
+        spec->mutable_if_cpu_info()->set_allow_rx(hal_if->allow_rx);
     }
         break;
 
@@ -3322,6 +3338,7 @@ cpu_if_create (const InterfaceSpec& spec, if_t *hal_if)
 
     HAL_TRACE_DEBUG("CPUif Create for id {}",
                     spec.key_or_handle().interface_id());
+    hal_if->allow_rx = spec.if_cpu_info().allow_rx();
 
     ret = get_lif_handle_for_cpu_if(spec, hal_if);
     if (ret != HAL_RET_OK) {
@@ -3330,7 +3347,8 @@ cpu_if_create (const InterfaceSpec& spec, if_t *hal_if)
     }
 
     lif = find_lif_by_handle(hal_if->lif_handle);
-    HAL_TRACE_DEBUG("if_id : {} lif_id : {}", hal_if->if_id, lif->lif_id);
+    HAL_TRACE_DEBUG("if_id : {} lif_id : {}, allow_rx: {}", 
+                    hal_if->if_id, lif->lif_id, hal_if->allow_rx);
 
     return ret;
 }
@@ -6038,7 +6056,7 @@ end:
 // dataplane and to inject packets into the dataplane
 //------------------------------------------------------------------------------
 hal_ret_t
-hal_cpu_if_create (uint32_t lif_id)
+hal_cpu_if_create (uint32_t lif_id, bool allow_rx)
 {
     InterfaceSpec      spec;
     InterfaceResponse  response;
@@ -6047,6 +6065,7 @@ hal_cpu_if_create (uint32_t lif_id)
     spec.mutable_key_or_handle()->set_interface_id(IF_ID_CPU);
     spec.set_type(::intf::IfType::IF_TYPE_CPU);
     spec.set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+    spec.mutable_if_cpu_info()->set_allow_rx(allow_rx);
     spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -6056,6 +6075,33 @@ hal_cpu_if_create (uint32_t lif_id)
                         IF_ID_CPU, response.status().if_handle());
     } else {
         HAL_TRACE_ERR("CPU interface {} create failed, err : {}",
+                      IF_ID_CPU, ret);
+    }
+    hal::hal_cfg_db_close();
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+hal_cpu_if_update (uint32_t lif_id, bool allow_rx)
+{
+    InterfaceSpec      spec;
+    InterfaceResponse  response;
+    hal_ret_t          ret;
+
+    spec.mutable_key_or_handle()->set_interface_id(IF_ID_CPU);
+    spec.set_type(::intf::IfType::IF_TYPE_CPU);
+    spec.set_admin_status(::intf::IfStatus::IF_STATUS_UP);
+    spec.mutable_if_cpu_info()->set_allow_rx(allow_rx);
+    spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(lif_id);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = interface_update(spec, &response);
+    if ((ret == HAL_RET_OK) || (ret == HAL_RET_ENTRY_EXISTS)) {
+        HAL_TRACE_DEBUG("CPU interface {} update success, handle {}",
+                        IF_ID_CPU, response.status().if_handle());
+    } else {
+        HAL_TRACE_ERR("CPU interface {} update failed, err : {}",
                       IF_ID_CPU, ret);
     }
     hal::hal_cfg_db_close();
@@ -6086,7 +6132,7 @@ if_cpu_lif_interface_create (void)
     }
 
     // Create cpu if
-    ret = hal_cpu_if_create(HAL_LIF_CPU);
+    ret = hal_cpu_if_create(HAL_LIF_CPU, false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to create cpu if. err: {}", ret);
         goto end;

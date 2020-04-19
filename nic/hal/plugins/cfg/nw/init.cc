@@ -177,7 +177,7 @@ init (hal_cfg_t *hal_cfg)
     // Moved to vrf customer create
     if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM) {
         // create cpu interface
-        ret = hal_cpu_if_create(HAL_LIF_CPU);
+        ret = hal_cpu_if_create(HAL_LIF_CPU, true);
         HAL_ABORT(ret == HAL_RET_OK);
     }
 

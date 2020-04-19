@@ -77,6 +77,7 @@ TEST_F(cpuif_test, test1)
     slab_stats_t                *pre = NULL, *post = NULL;
     bool                        is_leak = false;
 
+#if 0
     // Create nwsec
     sp_spec.mutable_key_or_handle()->set_profile_id(1);
     sp_spec.set_ipsg_en(true);
@@ -105,6 +106,7 @@ TEST_F(cpuif_test, test1)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     // uint64_t nw_hdl = nw_rsp.mutable_status()->nw_handle();
+#endif
 
     // Create a lif
     lif_spec.mutable_key_or_handle()->set_lif_id(1);
@@ -126,6 +128,16 @@ TEST_F(cpuif_test, test1)
     cpuif_spec.mutable_key_or_handle()->set_interface_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(cpuif_spec, &cpuif_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create cpuif
+    cpuif_spec.set_type(intf::IF_TYPE_CPU);
+    cpuif_spec.mutable_if_cpu_info()->mutable_lif_key_or_handle()->set_lif_id(2);
+    cpuif_spec.mutable_if_cpu_info()->set_allow_rx(true);
+    cpuif_spec.mutable_key_or_handle()->set_interface_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_update(cpuif_spec, &cpuif_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 
