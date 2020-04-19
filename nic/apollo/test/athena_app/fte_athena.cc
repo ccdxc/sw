@@ -24,6 +24,7 @@
 #include <getopt.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <time.h>
 #include <vector>
 
 #include <rte_common.h>
@@ -68,16 +69,29 @@ char const * g_eal_args[] = {"fte",
 #define MAX_RX_QUEUE_PER_LCORE 16
 #define MAX_TX_QUEUE_PER_PORT 16
 #define MAX_RX_QUEUE_PER_PORT 128
-#define MEMPOOL_CACHE_SIZE 256
 
+#ifdef __aarch64__ 
+#define MEMPOOL_CACHE_SIZE 512
+#else
+#define MEMPOOL_CACHE_SIZE 256
+#endif
+
+#ifdef __aarch64__ 
+#define MAX_PKT_BURST 64
+#else
 #define MAX_PKT_BURST 32
+#endif
 #define BURST_TX_DRAIN_US 100 // TX drain every ~100us
 #define MAX_ETHPORTS 16
 #define NB_SOCKETS 8
 
 #define FTE_MAX_CORES 4 // Max Cores
 #define FTE_MAX_TXDSCR 256 // Max TX Descriptors
+#ifdef __aarch64__ 
+#define FTE_MAX_RXDSCR 512 // Max RX Descriptors
+#else
 #define FTE_MAX_RXDSCR 256 // Max RX Descriptors
+#endif
 #define FTE_PREFETCH_NLINES 7
 
 const static enum rte_rmt_call_master_t fte_call_master_type = SKIP_MASTER;
@@ -88,6 +102,9 @@ typedef std::vector<uint32_t> pollers_qid_vec_t;
 static pollers_qid_vec_t pollers_qid_conf[FTE_MAX_CORES];
 static rte_atomic32_t pollers_lcore_idx = RTE_ATOMIC32_INIT(-1);
 
+struct timeval stime[MAX_ETHPORTS];
+struct timeval etime[MAX_ETHPORTS];
+bool set_stime[MAX_ETHPORTS];
 // Ports set in promiscuous mode off by default.
 static int promiscuous_on;
 
@@ -123,7 +140,9 @@ struct lcore_params {
 
 static struct lcore_params lcore_params_arr_default[] = {
     {0, 0, 2},
-    {1, 0, 3},
+    {1, 0, 2},
+    {0, 1, 3},
+    {1, 1, 3},
 };
 
 static struct lcore_params * lcore_params = lcore_params_arr_default;
@@ -263,12 +282,18 @@ fte_rx_loop (pollers_qid_vec_t *qid_vec)
         for (i = 0; !fte_threads_done && (i < qconf->n_rx_queue); ++i) {
             portid = qconf->rx_queue_list[i].port_id;
             queueid = qconf->rx_queue_list[i].queue_id;
+#ifdef DEBUG
+            if (set_stime[portid] == false) {
+                PDS_TRACE_DEBUG("\n Setting STIME \n");
+                gettimeofday(&stime[portid], NULL);
+                set_stime[portid] = true;
+            }
+#endif
             nb_rx = rte_eth_rx_burst(portid, queueid, pkts_burst,
                                      MAX_PKT_BURST);
             if (nb_rx == 0) {
                 continue;
             }
-
             PDS_TRACE_DEBUG("Core #%u received %d pkt(s) from "
                             "port:%u queue:%u \n",
                             lcore_id, nb_rx, portid, queueid);
@@ -287,6 +312,10 @@ fte_rx_loop (pollers_qid_vec_t *qid_vec)
                     }    
                 }
                 _process(m, qconf, portid);
+#ifdef DEBUG
+                gettimeofday(&etime[portid], NULL);
+                PDS_TRACE_DEBUG("\n Setting etime \n");
+#endif
             }
         }
     }
@@ -485,10 +514,78 @@ fte_dump_flows(zmq_msg_t *rx_msg,
     return PDS_RET_OK;
 }
 
+void
+calc_print_time_delta(struct timeval *end,
+                      struct timeval *start, 
+                      uint16_t    port)
+{   
+    uint64_t end_us = ((uint64_t)end->tv_sec * USEC_PER_SEC) +
+                      (uint64_t)end->tv_usec;
+    uint64_t start_us = ((uint64_t)start->tv_sec * USEC_PER_SEC) +
+                        (uint64_t)start->tv_usec;
+
+    if (end_us > start_us) {
+        end_us -= start_us;
+        PDS_TRACE_DEBUG("\n Port %d, Last Flow proc - First flow Rcvd %lu.%lu"
+                        "(clear on read) \n", port, 
+                       end_us/USEC_PER_SEC, end_us%USEC_PER_SEC);
+    }
+    end->tv_sec = 0;
+    end->tv_usec = 0;
+    start->tv_sec = 0;
+    start->tv_usec = 0;
+    set_stime[port] = 0;
+}
+
+static uint8_t
+get_port_n_rx_queues (const uint16_t port)
+{
+    int queue = -1;
+    uint16_t i;
+
+    for (i = 0; i < nb_lcore_params; ++i) {
+        if (lcore_params[i].port_id == port) {
+            if (lcore_params[i].queue_id == queue+1) {
+                queue = lcore_params[i].queue_id;
+            } else {
+                rte_exit(EXIT_FAILURE, "queue ids of the port %d must"
+                         " be in sequence and must start with 0\n",
+                         lcore_params[i].port_id);
+            }
+        }
+    }
+    return (uint8_t)(++queue);
+}
+
 pds_ret_t
 fte_dump_flow_stats(zmq_msg_t *rx_msg,
                     zmq_msg_t *tx_msg)
 {
+    struct rte_eth_stats  stats = {0};
+    int                   ret = 0;
+    uint16_t              nb_ports = 0, nb_rx_queue = 0;
+
+    nb_ports = rte_eth_dev_count_avail();
+    PDS_TRACE_DEBUG("\n Printing Interface Stats \n");
+    for (uint16_t i = 0; i <nb_ports ; i++) {
+        calc_print_time_delta(&etime[i], &stime[i], i);                 
+        ret = rte_eth_stats_get(i, &stats);
+        if (ret == 0) {
+            PDS_TRACE_DEBUG("\n Port %d: I/O/IE/OE/IM/RNB: "
+                            "%lu/%lu/%lu/%lu/%lu/%lu \n",
+                   i, stats.ipackets, stats.opackets, 
+                   stats.ierrors, stats.oerrors, 
+                   stats.imissed, stats.rx_nombuf);
+            nb_rx_queue = get_port_n_rx_queues(i);
+            for (uint16_t j = 0; j < nb_rx_queue; j ++) {
+                PDS_TRACE_DEBUG("\n Port %d, Queue %d: "
+                               "I/O/ERRORS: %lu/%lu/%lu \n",
+                   i, j, stats.q_ipackets[j], stats.q_opackets[j], 
+                   stats.q_errors[j]);
+            }
+        }
+    }
+
     memset(&g_flow_stats, 0, sizeof(pds_flow_stats_t));
     for (int i = 0; i < FTE_MAX_CORES; i++) {
          memset(&flow_stats[i], 0, sizeof(pds_flow_stats_t));
@@ -595,26 +692,6 @@ check_port_config (void)
     return 0;
 }
 
-static uint8_t
-get_port_n_rx_queues (const uint16_t port)
-{
-    int queue = -1;
-    uint16_t i;
-
-    for (i = 0; i < nb_lcore_params; ++i) {
-        if (lcore_params[i].port_id == port) {
-            if (lcore_params[i].queue_id == queue+1) {
-                queue = lcore_params[i].queue_id;
-            } else {
-                rte_exit(EXIT_FAILURE, "queue ids of the port %d must"
-                         " be in sequence and must start with 0\n",
-                         lcore_params[i].port_id);
-            }
-        }
-    }
-    return (uint8_t)(++queue);
-}
-
 // Number of mbufs needed.
 // Taking into account memory for rx and tx hardware rings, 
 // cache per lcore and mtable per port per lcore.
@@ -705,8 +782,8 @@ init_rx_queues (void)
                 socketid = 0;
             }
 
-            PDS_TRACE_DEBUG("rxq=%d,%d,%d ", portid, queueid,
-                            socketid);
+            PDS_TRACE_DEBUG("rxq=%d,%d,%d , desc: %d", portid, queueid,
+                            socketid, nb_rxd);
 
             rte_eth_dev_info_get(portid, &dev_info);
             rxq_conf = dev_info.default_rxconf;

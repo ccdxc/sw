@@ -111,7 +111,7 @@ mpart_cfg_path()
 #elif defined(APULU)
     mpart_json = hal_cfg_path_ + "/apulu/8g/hbm_mem.json";
 #elif defined(ATHENA)
-    mpart_json = hal_cfg_path_ + "/athena/hbm_mem.json";
+    mpart_json = hal_cfg_path_ + "/athena/4g/hbm_mem.json";
 #else
     if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
         fwd_mode == sdk::lib::FORWARDING_MODE_SWITCH)

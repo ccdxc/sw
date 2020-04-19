@@ -28,7 +28,6 @@ sdk_ret_t pds_dnat_map_create(void);
 sdk_ret_t pds_dnat_map_delete(void);
 void pds_dnat_map_set_core_id(uint32_t core_id);
 
-
 pds_ret_t
 pds_global_init (pds_cinit_params_t *params)
 {
