@@ -10,7 +10,6 @@
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_indirect_ps_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_tep_store.hpp"
-#include "nic/metaswitch/stubs/common/pds_ms_tep_sync_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_subnet_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_bd_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_if_store.hpp"
@@ -46,7 +45,7 @@ enum slab_id_e {
     PDS_MS_ECMP_IDX_GUARD_SLAB_ID,
     PDS_MS_COOKIE_SLAB_ID,
     PDS_MS_INDIRECT_PS_SLAB_ID,
-    PDS_MS_TEP_SYNC_SLAB_ID,
+    PDS_MS_MS_VXLAN_TUNNEL_SLAB_ID,
     PDS_MS_MAX_SLAB_ID
 };
 
@@ -105,7 +104,6 @@ public:
         }
     }
 public:
-    indirect_ps_store_t& indirect_ps_store(void) {return indirect_ps_store_;}
     tep_store_t& tep_store(void) {return tep_store_;}
     bd_store_t&  bd_store(void) {return bd_store_;}
     if_store_t&  if_store(void) {return if_store_;}
@@ -113,7 +111,7 @@ public:
     subnet_store_t& subnet_store(void) {return subnet_store_;}
     route_table_store_t& route_table_store(void) {return route_table_store_;}
     pathset_store_t& pathset_store(void) {return pathset_store_;}
-    tep_sync_store_t& tep_sync_store(void) {return tep_sync_store_;}
+    indirect_ps_store_t& indirect_ps_store(void) {return indirect_ps_store_;}
 
     uint32_t get_slab_in_use(slab_id_e slab_id) {
         return slabs_[slab_id]->num_in_use();
@@ -157,7 +155,6 @@ private:
     // Unique ptr helps to uninitialize cleanly in case of initialization errors
     slab_uptr_t slabs_[PDS_MS_MAX_SLAB_ID];
 
-    indirect_ps_store_t indirect_ps_store_;
     tep_store_t tep_store_;
     bd_store_t bd_store_;
     if_store_t if_store_;
@@ -165,7 +162,7 @@ private:
     subnet_store_t subnet_store_;
     route_table_store_t route_table_store_;
     pathset_store_t pathset_store_;
-    tep_sync_store_t tep_sync_store_;
+    indirect_ps_store_t indirect_ps_store_;
 
     // Index generator for PDS HAL Overlay ECMP table
     sdk::lib::rte_indexer  *ecmp_idx_gen_;
@@ -190,6 +187,9 @@ using bd_obj_uptr_t = std::unique_ptr<bd_obj_t>;
 using if_obj_uptr_t = std::unique_ptr<if_obj_t>;
 using rttbl_obj_uptr_t = std::unique_ptr<route_table_obj_t>;
 using pathset_obj_uptr_t = std::unique_ptr<pathset_obj_t>;
+
+void state_store_commit_objs (state_t::context_t& state_ctxt,
+                              std::vector<base_obj_uptr_t>& objs);
 
 }
 

@@ -29,7 +29,7 @@ using pds_ms::cookie_t;
 using pds_ms::pds_batch_ctxt_guard_t;
 
 class hals_ecmp_t {
-public:    
+public:
     NBB_BYTE handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips);
     void handle_delete(NBB_CORRELATOR pathset_id);
 
@@ -37,16 +37,16 @@ private:
     struct nh_info_t {
         ms_ifindex_t   ms_ifindex;
         mac_addr_wr_t  mac_addr;
-        nh_info_t(ms_ifindex_t ifi, const mac_addr_t& mac) 
+        nh_info_t(ms_ifindex_t ifi, const mac_addr_t& mac)
             : ms_ifindex(ifi), mac_addr(mac) {};
     };
     struct ips_info_t {
         uint32_t        pathset_id;
         std::vector<nh_info_t> nexthops;
-        uint32_t       num_added_nh = 0; 
-        uint32_t       num_deleted_nh = 0; 
+        uint32_t       num_added_nh = 0;
+        uint32_t       num_deleted_nh = 0;
         pds_nexthop_group_type_t  pds_nhgroup_type = PDS_NHGROUP_TYPE_NONE;
-        uint32_t       ll_dp_corr_id = 0;
+        uint32_t       direct_ps_dpcorr = 0;
     };
     struct store_info_t {
         pathset_obj_t*   pathset_obj = nullptr;
@@ -70,6 +70,7 @@ private:
     void make_pds_overlay_nhgroup_spec_ (pds_nexthop_group_spec_t&,
                                          state_t::context_t& state_ctxt);
     pds_obj_key_t make_pds_nhgroup_key_(void);
+    NBB_BYTE handle_indirect_ps_update_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips);
 };
 
 } // End namespace

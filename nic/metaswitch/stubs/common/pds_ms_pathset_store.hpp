@@ -35,9 +35,12 @@ public:
     pathset_obj_t(ms_ps_id_t ps_id);
     properties_t& properties(void) {return prop_;}
 
+    void print_debug_str(void) override {
+        PDS_TRACE_DEBUG ("  - Overlay Pathset: %d ", prop_.ms_ps_id);
+    }
+
     ms_ps_id_t key(void) const {return prop_.ms_ps_id;}
     void update_store(state_t* state, bool op_delete) override;
-    void print_debug_str(void) override {};
 
 private:  
     properties_t prop_;

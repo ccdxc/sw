@@ -23,18 +23,13 @@ constexpr int k_max_cookie = 1000;
 class cookie_t : public slab_obj_t<cookie_t> {
 public:    
     bool ips_mock = false; // Is this part of a gtest with ips_feeder
-    std::vector<std::unique_ptr<pds_ms::base_obj_t>> objs;
-    void print_debug_str(void);
+    std::vector<base_obj_uptr_t> objs; // Temporarily cache new objects
+                                       // until batch commit. This will
+                                       // be empty by the time the cookie
+                                       // is sent to HAL
     std::function<void(bool,bool)> send_ips_reply;
 };
 
-inline void cookie_t::print_debug_str(void) {
-    if (objs.size() > 0) {PDS_TRACE_DEBUG ("Update store for object(s):");}
-
-    for (auto& obj_uptr: objs) {
-        obj_uptr->print_debug_str();
-    }
-}
 using cookie_uptr_t = std::unique_ptr<cookie_t>;
 }
 #endif

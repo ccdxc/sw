@@ -24,11 +24,12 @@ extern "C"
 namespace pds_ms {
 
 class li_vxlan_port {
-public:    
+public:
    NBB_BYTE handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_tnl_add_upd);
    void handle_delete(ms_ifindex_t vxlan_port_ifindex);
-   void add_pds_tep_spec(pds_batch_ctxt_t bctxt, if_obj_t* vxp_if_obj,
-                         tep_sync_obj_t* tep_obj, bool op_create);
+   void add_pds_tep_spec(pds_batch_ctxt_t bctxt, state_t* state,
+                         if_obj_t* vxp_if_obj,
+                         tep_obj_t* tep_obj, bool op_create);
 
 private:
     struct ips_info_t {
@@ -39,8 +40,9 @@ private:
     };
 
     struct store_info_t {
-        tep_sync_obj_t*   tep_sync_obj;
-        if_obj_t*    vxp_if_obj;
+        tep_obj_t*   tep_obj = nullptr;
+        if_obj_t*    vxp_if_obj = nullptr;
+        ms_hw_tbl_id_t ms_upathset_dpcorr = PDS_MS_ECMP_INVALID_INDEX;
     };
 
 private:
@@ -52,13 +54,12 @@ private:
     bool op_delete_ = false;
 
 private:
-    void cache_obj_in_cookie_(void); 
+    void create_obj_(void);
     pds_batch_ctxt_guard_t make_batch_pds_spec_ (void);
     void fetch_store_info_(pds_ms::state_t* state);
 
     void parse_ips_info_(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_upd);
     pds_tep_spec_t make_pds_tep_spec_(void);
-    pds_nexthop_group_spec_t make_pds_nhgroup_spec_(void);
 
     pds_obj_key_t make_pds_tep_key_
         (const if_obj_t::vxlan_port_properties_t& vxp_prop) {

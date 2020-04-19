@@ -350,19 +350,16 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
 
         auto l_bd_id = ips_info_.bd_id;
         auto l_op_create = op_create_;
+        auto l_tep_ip = *(ips_info_.tep_ip_list.begin());
         mac_addr_t l_mac;
         MAC_ADDR_COPY(l_mac, update_fdb_mac->mac_address);
 
         cookie_uptr_->send_ips_reply =
-            [update_fdb_mac, l_bd_id, l_mac, l_op_create] (bool pds_status,
-                                                           bool ips_mock) -> void {
+            [update_fdb_mac, l_bd_id, l_mac, l_op_create, l_tep_ip]
+            (bool pds_status, bool ips_mock) -> void {
                 // ----------------------------------------------------------------
                 // This block is executed asynchronously when PDS response is rcvd
                 // ----------------------------------------------------------------
-                PDS_TRACE_DEBUG("+++++++++ MS BD %d MAC %s: MAC AddUpd Rcvd Async PDS "
-                                "response %s ++++++++++", l_bd_id, macaddr2str(l_mac),
-                                (pds_status) ? "Success" : "Failure");
-
                 if (!pds_status && l_op_create) {
                     do {
                         // Enter thread-safe context to access/modify global state
@@ -399,9 +396,10 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
                             l2f::FdbMac::set_ips_rc(&update_fdb_mac->ips_hdr,
                                                     (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                         SDK_ASSERT(send_response);
-                        PDS_TRACE_DEBUG ("++++++++ MS BD %d MAC %s: Send Async IPS "
-                                         "reply %s stateless mode +++++++++++",
+                        PDS_TRACE_DEBUG ("++++ BD %d MAC %s TEP %s"
+                                         " Async reply %s ++++",
                                          l_bd_id, macaddr2str(l_mac),
+                                         ipaddr2str(&l_tep_ip),
                                          (pds_status) ? "Success" : "Failure");
                         bdpi_join->send_ips_reply(&update_fdb_mac->ips_hdr);
                     } else {
@@ -442,8 +440,9 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    PDS_TRACE_DEBUG("MS BD %d MAC %s Add PDS Batch commit successful",
-                    ips_info_.bd_id, macaddr2str(ips_info_.mac_address));
+    PDS_TRACE_DEBUG("MS BD %d MAC %s TEP %s Add PDS Batch commit successful",
+                    ips_info_.bd_id, macaddr2str(ips_info_.mac_address),
+                    ipaddr2str(&(*ips_info_.tep_ip_list.begin())));
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
@@ -484,8 +483,7 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            PDS_TRACE_DEBUG("++++++++ MS BD %d MAC %s: MAC Del Rcvd Async PDS"
-                            " response %s +++++++++++",
+            PDS_TRACE_DEBUG("++++ BD %d MAC %s MAC Del Async reply %s ++++",
                             l_bd_id, macaddr2str(l_mac),
                             (pds_status) ? "Success" : "Failure");
 
@@ -507,6 +505,7 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
 
 void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
+    ip_addr_t  l_tep_ip;
 
     parse_ips_info_(mai_ip_id);
 
@@ -554,7 +553,7 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
         cookie_uptr_.reset(new cookie_t);
 
         pds_bctxt_guard = make_batch_pds_spec_();
-
+        l_tep_ip = *(store_info_.mac_obj->tep_ip_list.begin());
     } // End of state thread_context
       // Do Not access/modify global state after this
 
@@ -562,13 +561,13 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
     auto l_ip = ips_info_.ip_address;
 
     cookie_uptr_->send_ips_reply =
-        [l_bd_id, l_ip] (bool pds_status, bool ips_mock) -> void {
+        [l_bd_id, l_ip, l_tep_ip] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            PDS_TRACE_DEBUG("++++++++++ MS BD %d IP %s: Remote IP AddUpd Rcvd Async"
-                            " PDS response %s ++++++++++",
-                            l_bd_id, ipaddr2str(&l_ip),
+            PDS_TRACE_DEBUG("++++ BD %d IP %s TEP %s Remote IP AddUpd"
+                            " Async reply %s ++++",
+                            l_bd_id, ipaddr2str(&l_ip), ipaddr2str(&l_tep_ip),
                             (pds_status) ? "Success" : "Failure");
 
         };
@@ -584,8 +583,8 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
                     .append(" IP ").append(ipaddr2str(&l_ip))
                     .append(" err ").append(std::to_string(ret)));
     }
-    PDS_TRACE_DEBUG("MS BD %d Remote IP %s Add PDS Batch commit successful",
-                    l_bd_id, ipaddr2str(&l_ip));
+    PDS_TRACE_DEBUG("BD %d Remote IP %s TEP %s Add PDS Batch commit successful",
+                    l_bd_id, ipaddr2str(&l_ip), ipaddr2str(&l_tep_ip));
 }
 
 void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
@@ -616,8 +615,7 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            PDS_TRACE_DEBUG("++++++++ MS BD %d IP %s: Remote IP Delete Rcvd Async"
-                            " PDS response %s +++++++++++++",
+            PDS_TRACE_DEBUG("++++ BD %d IP %s: Remote IP Delete Async reply %s",
                             l_bd_id, ipaddr2str(&l_ip),
                             (pds_status) ? "Success" : "Failure");
 

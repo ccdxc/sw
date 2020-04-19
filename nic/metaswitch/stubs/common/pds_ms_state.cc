@@ -18,7 +18,6 @@ template<> sdk::lib::slab* slab_obj_t<cookie_t>::slab_ = nullptr;
 
 state_t::state_t(void)
 {
-    indirect_ps_slab_init(slabs_, PDS_MS_INDIRECT_PS_SLAB_ID);
     tep_slab_init(slabs_, PDS_MS_TEP_SLAB_ID);
     if_slab_init(slabs_, PDS_MS_IF_SLAB_ID);
     subnet_slab_init(slabs_, PDS_MS_SUBNET_SLAB_ID);
@@ -28,7 +27,7 @@ state_t::state_t(void)
     route_table_slab_init (slabs_, PDS_MS_RTTABLE_SLAB_ID);
     pathset_slab_init (slabs_, PDS_MS_PATHSET_SLAB_ID);
     ecmp_idx_guard_slab_init (slabs_, PDS_MS_ECMP_IDX_GUARD_SLAB_ID);
-    tep_sync_slab_init(slabs_, PDS_MS_TEP_SYNC_SLAB_ID);
+    indirect_ps_slab_init(slabs_, PDS_MS_INDIRECT_PS_SLAB_ID);
 
     slabs_[PDS_MS_COOKIE_SLAB_ID].
         reset(sdk::lib::slab::factory("PDS-MS-COOKIE",
@@ -67,4 +66,18 @@ state_destroy (void)
     state_t::destroy();
 }
 
+void state_store_commit_objs (state_t::context_t& state_ctxt,
+                              std::vector<base_obj_uptr_t>& objs)
+{
+    if (objs.size() > 0) {PDS_TRACE_DEBUG ("Committing object(s) to store:");}
+
+    for (auto& obj_uptr: objs) {
+        obj_uptr->print_debug_str();
+        obj_uptr->update_store (state_ctxt.state(), false);
+        // New created object is saved in store.
+        // Release the obj ownership from cookie
+        obj_uptr.release();
+    }
+    objs.clear();
+}
 } // End namespace

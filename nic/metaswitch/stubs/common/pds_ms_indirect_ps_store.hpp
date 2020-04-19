@@ -17,14 +17,14 @@ namespace pds_ms {
 // Used for underlay nexthops that are used by VXLAN Tunnels
 // Holds back-ref from indirect pathset to TEP
 class indirect_ps_obj_t : public slab_obj_t<indirect_ps_obj_t>,
-                 public base_obj_t {
+                             public base_obj_t {
 public:
     indirect_ps_obj_t();
-    indirect_ps_obj_t(ms_ps_id_t ll_direct_ps);
+    indirect_ps_obj_t(ms_hw_tbl_id_t direct_ps_dpcorr_);
     indirect_ps_obj_t(const ip_addr_t& tep);
 
 public:
-    ms_ps_id_t   ll_direct_pathset = 0; // direct pathset ID
+    ms_hw_tbl_id_t direct_ps_dpcorr = 0; // direct pathset DP correlator
     ip_addr_t  tep_ip;       // TEP IP
 };
 

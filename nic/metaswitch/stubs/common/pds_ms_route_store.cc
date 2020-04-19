@@ -44,10 +44,11 @@ void route_table_obj_t::realloc_() {
     PDS_TRACE_DEBUG("Reallocating Route buffer for %d routes", routes_capacity_);
     auto new_buf = (route_info_t *)malloc(sizeof(route_info_t) +
                                           sizeof(pds_route_t) * routes_capacity_);
+    new_buf->af = af_;
+    new_buf->priority_en = false;
+
     if (routes_ == nullptr) {
         new_buf->num_routes = 0;
-        new_buf->af = af_;
-        new_buf->priority_en = false;
     } else {
         // Copy existing routes to new buffer
         new_buf->num_routes = routes_->num_routes;

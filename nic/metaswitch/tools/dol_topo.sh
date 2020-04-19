@@ -133,7 +133,7 @@ do
     fi
     if [ "$i" = "3" ] && [ $RR == 1 ]; then
         echo "Starting Pegasus in "$CONTAINER"$i"
-        docker exec -dit -w "$DOL_CFG"$i -e LD_LIBRARY_PATH=/sw/nic/third-party/metaswitch/output/x86_64/ "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/bin/pegasus' || ret=$?
+        docker exec -dit -w "$DOL_CFG"$i -e LD_LIBRARY_PATH=/sw/nic/third-party/metaswitch/output/x86_64/ "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/capri/bin/pegasus' || ret=$?
     else
         echo "start pdsagent in "$CONTAINER"$i in PDS_MOCK_MODE"
         docker exec -dit -w "$DOL_CFG"$i "$CONTAINER"$i sh -c 'PDS_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
@@ -154,9 +154,9 @@ if [ $UNDERLAY == 0 ] && [ $RR == 0 ]; then
     docker exec -it "$CONTAINER"3 python $MIB_PY set localhost evpnEntTable evpnEntEntityIndex=2 evpnEntLocalRouterAddressType=inetwkAddrTypeIpv4 evpnEntLocalRouterAddress='0xd2 0xd2 0x3 0x3'
 fi
 
-rrcmd='/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_rr_grpc_test'
+rrcmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test'
 if [ $UNDERLAY = 1 ]; then
-    rrcmd='/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_rr_grpc_test underlay'
+    rrcmd='/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_rr_grpc_test underlay'
 fi
 
 for i in {1..3}
@@ -175,7 +175,7 @@ do
         docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c "$rrcmd" || ret=$?
     else   
         echo "push "$DOL_CFG"$i/evpn.json config to "$CONTAINER"$i"
-        docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_grpc_test' || ret=$?
+        docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/capri/bin/pds_ms_uecmp_grpc_test' || ret=$?
     fi
     if [ $ret -ne 0 ]; then
         echo "failed to push config to "$CONTAINER"$i: $ret"

@@ -26,14 +26,13 @@ public:
     struct properties_t {
         ip_addr_t            tep_ip;
         ip_addr_t            src_ip;
-        ms_ps_id_t           uecmp_ps;
-        ms_hw_tbl_id_t       hal_uecmp_idx;
+        ms_ps_id_t           ms_upathset;
         ms_hw_tbl_id_t       hal_tep_idx;
 
         properties_t(const ip_addr_t& tep_ip_, const ip_addr_t& src_ip_, 
-                     const ms_hw_tbl_id_t hal_uecmp_idx,
-                     const ms_hw_tbl_id_t hal_tep_idx_) 
-            : tep_ip(tep_ip_), src_ip(src_ip_), hal_uecmp_idx(hal_uecmp_idx),
+                     ms_ps_id_t ms_upathset_, ms_hw_tbl_id_t hal_tep_idx_)
+            : tep_ip(tep_ip_), src_ip(src_ip_),
+               ms_upathset(ms_upathset_),
               hal_tep_idx(hal_tep_idx_) {}
     };
 
@@ -54,8 +53,8 @@ public:
     std::shared_ptr<ecmp_idx_guard_t> hal_oecmp_idx_guard;
 
     tep_obj_t(const ip_addr_t& tep_ip_, const ip_addr_t& src_ip_,
-              ms_hw_tbl_id_t hal_uecmp_idx,
-              ms_hw_tbl_id_t hal_tep_idx_);
+              ms_ps_id_t ms_upathset_, ms_hw_tbl_id_t hal_tep_idx_);
+
     properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}
     void set_properties(const properties_t& prop) {prop_ = prop;}
@@ -68,8 +67,30 @@ public:
         PDS_TRACE_DEBUG ("  - TEP: %s ", ipaddr2str (&(prop_.tep_ip)));
     }
 
+    void add_l3_vxlan_port(ms_ifindex_t vxp_ifindex) {
+        PDS_TRACE_DEBUG ("TEP %s Add L3 Vxlan Port 0x%x",
+                         ipaddr2str (&(prop_.tep_ip)), vxp_ifindex);
+        l3_vxlan_ports_.push_back(vxp_ifindex);
+    }
+    void del_l3_vxlan_port(ms_ifindex_t vxp_ifindex) {
+        PDS_TRACE_DEBUG ("TEP %s Delete L3 Vxlan Port 0x%x",
+                         ipaddr2str (&(prop_.tep_ip)), vxp_ifindex);
+        l3_vxlan_ports_.erase(std::remove(l3_vxlan_ports_.begin(), l3_vxlan_ports_.end(),
+                                          vxp_ifindex),
+                              l3_vxlan_ports_.end());
+    }
+    void walk_l3_vxlan_ports(std::function<bool(ms_ifindex_t)> cb) {
+        for(auto vxp_ifi: l3_vxlan_ports_) {
+            if (cb(vxp_ifi)) {
+                return;
+            }
+        }
+    }
 private:
     properties_t  prop_;
+    // List of L3 VXLAN ports created for this TEP
+    // Assuming no duplicates - else need to change to std::set
+    std::vector<ms_ifindex_t> l3_vxlan_ports_;
 };
 
 class tep_store_t : public obj_store_t<ip_addr_t, tep_obj_t, ip_hash> {

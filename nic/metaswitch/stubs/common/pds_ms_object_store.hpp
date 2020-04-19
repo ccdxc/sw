@@ -38,7 +38,9 @@ public:
     bool empty(void) {
         return store_.empty();
     }
-
+    size_t count(void) {
+        return store_.size();
+    }
     OBJECT* get(const KEY& k) {
         auto it = store_.find(k);
         if (it == store_.end()) {return nullptr;}
@@ -72,6 +74,7 @@ public:
     virtual void print_debug_str(void) {};
 };
 
+using base_obj_uptr_t = std::unique_ptr<base_obj_t>;
 }
 
 #endif

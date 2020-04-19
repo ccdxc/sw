@@ -28,19 +28,22 @@ hal_callback (sdk_ret_t status, const void *cookie)
     if (cookie == nullptr) return;
     std::unique_ptr<cookie_t> cookie_ptr ((cookie_t*) cookie);
 
-    PDS_TRACE_DEBUG("Async PDS HAL callback, status %d, cookie 0x%lx",
-                     status, cookie);
+#if 0 // TODO: Enable after all object commits are synchronous
+    SDK_ASSERT(cookie_ptr->objs.empty());
+#endif
     if (status != SDK_RET_OK) {
-        PDS_TRACE_ERR("Async PDS HAL callback failure err %d", status);
-        cookie_ptr->print_debug_str();
+        PDS_TRACE_ERR("Async PDS HAL callback failure status %d, cookie 0x%lx",
+                      status, cookie);
     } else {
-        PDS_TRACE_DEBUG("Async PDS Batch success");
-        cookie_ptr->print_debug_str();
+        PDS_TRACE_ERR("Async PDS HAL callback success, cookie 0x%lx", cookie);
+        auto state_ctxt = state_t::thread_context();
+        auto& objs = cookie_ptr->objs;
+        if (objs.size() > 0) {PDS_TRACE_DEBUG ("Committing object(s) to store:");}
 
-        auto state_ctxt = pds_ms::state_t::thread_context();
-        for (auto& obj_uptr: cookie_ptr->objs) {
+        for (auto& obj_uptr: objs) {
+            obj_uptr->print_debug_str();
             obj_uptr->update_store (state_ctxt.state(), false);
-            // For create/update operations the underlying obj is saved in store.
+            // New created object is saved in store.
             // Release the obj ownership from cookie
             obj_uptr.release();
         }

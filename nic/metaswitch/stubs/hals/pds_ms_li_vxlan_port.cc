@@ -40,17 +40,39 @@ void li_vxlan_port::parse_ips_info_(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_
 }
 
 void li_vxlan_port::fetch_store_info_(pds_ms::state_t* state) {
-    store_info_.vxp_if_obj = state->if_store().get(ips_info_.if_index);
+    if (store_info_.vxp_if_obj == nullptr) {
+        store_info_.vxp_if_obj = state->if_store().get(ips_info_.if_index);
+    }
     if (op_delete_) {
         if (store_info_.vxp_if_obj == nullptr) {
             return;
         }
         ips_info_.tep_ip = store_info_.vxp_if_obj->vxlan_port_properties().tep_ip;
     }
-    store_info_.tep_sync_obj = state->tep_sync_store().get(ips_info_.tep_ip);
-    if (unlikely(store_info_.tep_sync_obj == nullptr)) {
+    if (store_info_.tep_obj == nullptr) {
+        store_info_.tep_obj = state->tep_store().get(ips_info_.tep_ip);
+    }
+    if (op_delete_) {
+        return;
+    }
+    if (unlikely(store_info_.tep_obj == nullptr)) {
         throw Error(std::string("Unknown VXLAN Tunnel ")
                     .append(ipaddr2str(&ips_info_.tep_ip)));
+    }
+    auto indirect_ps_obj =
+        state->indirect_ps_store().get(store_info_.tep_obj->properties().
+                                       ms_upathset);
+    if (indirect_ps_obj == nullptr) {
+        store_info_.ms_upathset_dpcorr = PDS_MS_ECMP_INVALID_INDEX;
+    } else {
+        if (store_info_.vxp_if_obj != nullptr) {
+            auto& vxp_prop = store_info_.vxp_if_obj->vxlan_port_properties();
+            SDK_ASSERT(IPADDR_EQ(&indirect_ps_obj->tep_ip, &vxp_prop.tep_ip));
+        } else {
+            auto& tep_prop = store_info_.tep_obj->properties();
+            SDK_ASSERT(IPADDR_EQ(&indirect_ps_obj->tep_ip, &tep_prop.tep_ip));
+        }
+        store_info_.ms_upathset_dpcorr = indirect_ps_obj->direct_ps_dpcorr;
     }
 }
 
@@ -65,8 +87,7 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
     MAC_ADDR_COPY(spec.mac, vxp_prop.dmaci);
 
     spec.ip_addr = ips_info_.src_ip;
-    auto& tep_prop = store_info_.tep_sync_obj->properties();
-    if (tep_prop.hal_uecmp_idx == PDS_MS_ECMP_INVALID_INDEX) {
+    if (store_info_.ms_upathset_dpcorr == PDS_MS_ECMP_INVALID_INDEX) {
         // Metaswitch PSM deletes underlay Nexthops independent of EVPN.
         // So its possible that when a L3 VXLAN Port is being added the
         // underlying VXLAN tunnel has lost its underlay nexthop.
@@ -81,21 +102,24 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
     } else {
         spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
         // Underlay NH is shared with Type 2 TEP
-        PDS_TRACE_DEBUG("Set Underlay NH Group %d for Type 5 TEP", tep_prop.hal_uecmp_idx);
-        spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx, true);
+        PDS_TRACE_DEBUG("Set Underlay NH Group %d for Type 5 TEP",
+                        store_info_.ms_upathset_dpcorr);
+        spec.nh_group = msidx2pdsobjkey(store_info_.ms_upathset_dpcorr, true);
     }
     spec.nat = false;
     return spec;
 }
 
 void li_vxlan_port::add_pds_tep_spec(pds_batch_ctxt_t bctxt,
+                                     state_t* state,
                                      if_obj_t* vxp_if_obj,
-                                     tep_sync_obj_t* tep_sync_obj,
+                                     tep_obj_t* tep_obj,
                                      bool op_create) {
     store_info_.vxp_if_obj = vxp_if_obj;
-    store_info_.tep_sync_obj = tep_sync_obj;
-    auto vxp_prop = vxp_if_obj->vxlan_port_properties();
+    store_info_.tep_obj = tep_obj;
+    fetch_store_info_(state);
 
+    auto vxp_prop = vxp_if_obj->vxlan_port_properties();
     sdk_ret_t ret = SDK_RET_OK;
     auto tep_spec = make_pds_tep_spec_();
     if (op_create_) {
@@ -115,7 +139,7 @@ void li_vxlan_port::add_pds_tep_spec(pds_batch_ctxt_t bctxt,
     }
 }
 
-void li_vxlan_port::cache_obj_in_cookie_(void) {
+void li_vxlan_port::create_obj_(void) {
     // Create new If Object but do not save it in the Global State yet
     std::unique_ptr<if_obj_t> new_if_obj
         (new if_obj_t(if_obj_t::vxlan_port_properties_t
@@ -127,8 +151,9 @@ void li_vxlan_port::cache_obj_in_cookie_(void) {
     // Update the local store info context so that the make_pds_spec
     // refers to the latest fields
     store_info_.vxp_if_obj = new_if_obj.get();
-    // Cache the new object in the cookie to revisit asynchronously
-    // when the PDS API response is received
+
+    // Temporarily cache the new object in the cookie
+    // until we finish batch commit
     cookie_uptr_->objs.push_back(std::move (new_if_obj));
 }
 
@@ -209,103 +234,123 @@ NBB_BYTE li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_po
 
         if (store_info_.vxp_if_obj != nullptr) {
             // Update Port
-            PDS_TRACE_INFO ("Type5 TEP %s Local VNI %d Remote VNI %d MS L3 VXLAN Port 0x%x Update IPS",
+            PDS_TRACE_INFO ("Type5 TEP %s Update IPS Local VNI %d Remote VNI %d"
+                            " MS L3 VXLAN Port 0x%x",
                             ipaddr2str(&ips_info_.tep_ip),
                             vxlan_port_add_upd_ips->port_properties.local_vni,
                             ips_info_.vni, ips_info_.if_index);
+            store_info_.vxp_if_obj->vxlan_port_properties().vni = ips_info_.vni;
         } else {
             // Create VXLAN Port
-            PDS_TRACE_INFO ("Type5 TEP %s Local VNI %d Remote VNI %d MS L3 VXLAN Port 0x%x Create IPS",
+            PDS_TRACE_INFO ("Type5 TEP %s Create IPS Local VNI %d Remote VNI %d"
+                            " MS L3 VXLAN Port 0x%x",
                             ipaddr2str(&ips_info_.tep_ip),
                             vxlan_port_add_upd_ips->port_properties.local_vni,
                             ips_info_.vni, ips_info_.if_index);
             op_create_ = true;
+            create_obj_();
+            store_info_.tep_obj->add_l3_vxlan_port(ips_info_.if_index);
         }
-        cache_obj_in_cookie_();
+
         pds_bctxt_guard = make_batch_pds_spec_();
 
         // If we have batched multiple IPS earlier flush it now
         // Cannot add a VXLAN Port create to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
-    auto l_tep_ip = ips_info_.tep_ip;
-    auto l_vni = ips_info_.vni;
-    cookie_uptr_->send_ips_reply =
-        [l_tep_ip, l_vni, vxlan_port_add_upd_ips] (bool pds_status, bool ips_mock) -> void {
-            // ----------------------------------------------------------------
-            // This block is executed asynchronously when PDS response is rcvd
-            // ----------------------------------------------------------------
-            if (unlikely(ips_mock)) return; // UT
+        auto l_tep_ip = ips_info_.tep_ip;
+        auto l_vni = ips_info_.vni;
+        auto l_ms_l3_vxlan_port_ifindex = ips_info_.if_index;
+        auto l_op_create = op_create_;
+        auto l_ms_upathset =
+            store_info_.tep_obj->properties().ms_upathset;
+        auto l_hal_unhgroup_id =
+            store_info_.ms_upathset_dpcorr;
 
-            if (!pds_status) {
-                // Delete the L3 VXLAN port from the TEP back reference list
-                auto state_ctxt = state_t::thread_context();
-                auto tep_sync_obj = state_ctxt.state()->tep_sync_store().get(l_tep_ip);
-                if (tep_sync_obj != nullptr) {
-                    tep_sync_obj->del_l3_vxlan_port(vxlan_port_add_upd_ips->id.if_index);
+        cookie_uptr_->send_ips_reply =
+            [l_tep_ip, l_vni, l_ms_l3_vxlan_port_ifindex, l_ms_upathset,
+             l_hal_unhgroup_id, l_op_create, vxlan_port_add_upd_ips]
+            (bool pds_status, bool ips_mock) -> void {
+                PDS_TRACE_DEBUG("++++ Type5 TEP %s MS-If 0x%x VNI %d"
+                                " Underlay Pathset %d HAL NHgroup %d"
+                                " Async reply %s ++++",
+                                ipaddr2str(&l_tep_ip), l_ms_l3_vxlan_port_ifindex,
+                                l_vni, l_ms_upathset, l_hal_unhgroup_id,
+                                (pds_status) ? "Success": "Failure");
+                if (!pds_status) {
+                    if (l_op_create) {
+                        PDS_TRACE_DEBUG("Type 5 TEP %s create HAL Failure"
+                                        " revert store",
+                                        ipaddr2str(&l_tep_ip));
+                        auto state_ctxt = pds_ms::state_t::thread_context();
+                        state_ctxt.state()->if_store().erase(l_ms_l3_vxlan_port_ifindex);
+                    } else {
+                        // Update op is not expected to fail in HAL
+                        PDS_TRACE_DEBUG("Type 5 TEP %s update HAL Failure",
+                                        ipaddr2str(&l_tep_ip));
+                        SDK_ASSERT(0);
+                    }
                 }
-            }
-            NBB_CREATE_THREAD_CONTEXT
-            NBS_ENTER_SHARED_CONTEXT(li_proc_id);
-            NBS_GET_SHARED_DATA();
+                // ----------------------------------------------------------------
+                // This block is executed asynchronously when PDS response is rcvd
+                // ----------------------------------------------------------------
+                if (unlikely(ips_mock)) return; // UT
 
-            auto key = li::VxLanPort::get_key(*vxlan_port_add_upd_ips);
-            auto& vxlan_port_store = li::Fte::get().get_lipi_join()->
-                                          get_vxlan_port_store();
-            auto it = vxlan_port_store.find(key);
-            if (likely(it == vxlan_port_store.end())) {
-                // MS Stub Stateless mode
-                auto send_response =
-                    li::VxLanPort::set_ips_rc(&vxlan_port_add_upd_ips->ips_hdr,
-                                              (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
-                SDK_ASSERT(send_response);
-                PDS_TRACE_DEBUG("+++++++ Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
-                                " Send Async IPS reply %s stateless mode ++++++++",
-                                 ipaddr2str(&l_tep_ip), l_vni, key,
-                                 (pds_status) ? "Success": "Failure");
-                li::Fte::get().get_lipi_join()->
-                    send_ips_reply(&vxlan_port_add_upd_ips->ips_hdr);
-            } else {
-                // MS Stub Stateful mode
-                if (pds_status) {
-                    PDS_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
-                                    " Send Async IPS Reply success stateful mode",
-                                     ipaddr2str(&l_tep_ip), l_vni, key);
-                    (*it)->update_complete(ATG_OK);
+                NBB_CREATE_THREAD_CONTEXT
+                NBS_ENTER_SHARED_CONTEXT(li_proc_id);
+                NBS_GET_SHARED_DATA();
+
+                auto key = li::VxLanPort::get_key(*vxlan_port_add_upd_ips);
+                auto& vxlan_port_store = li::Fte::get().get_lipi_join()->
+                    get_vxlan_port_store();
+                auto it = vxlan_port_store.find(key);
+                if (likely(it == vxlan_port_store.end())) {
+                    // MS Stub Stateless mode
+                    auto send_response =
+                        li::VxLanPort::set_ips_rc(&vxlan_port_add_upd_ips->ips_hdr,
+                                                  (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
+                    SDK_ASSERT(send_response);
+                    PDS_TRACE_DEBUG("MS L3 VXLAN Port 0x%x send IPS Reply"
+                                    " stateless mode", key);
+                    li::Fte::get().get_lipi_join()->
+                        send_ips_reply(&vxlan_port_add_upd_ips->ips_hdr);
                 } else {
-                    PDS_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
-                                    " Send Async IPS Reply failure stateful mode",
-                                     ipaddr2str(&l_tep_ip), l_vni, key);
-                    (*it)->update_failed(ATG_UNSUCCESSFUL);
+                    // MS Stub Stateful mode
+                    PDS_TRACE_DEBUG("MS L3 VXLAN Port 0x%x send IPS Reply"
+                                    " stateful mode", key);
+                    if (pds_status) {
+                        (*it)->update_complete(ATG_OK);
+                    } else {
+                        (*it)->update_failed(ATG_UNSUCCESSFUL);
+                    }
                 }
-            }
-            NBS_RELEASE_SHARED_DATA();
-            NBS_EXIT_SHARED_CONTEXT();
-            NBB_DESTROY_THREAD_CONTEXT
-        };
+                NBS_RELEASE_SHARED_DATA();
+                NBS_EXIT_SHARED_CONTEXT();
+                NBB_DESTROY_THREAD_CONTEXT
+            };
 
-    // Hold State lock until batch ciommit end so that the pathset we refer
-    // to does not get deleted in parallel
+        // Move any store objects out of the cookie for
+        // commiting to the store
+        auto store_objs = std::move(cookie_uptr_->objs);
 
-    // All processing complete, only batch commit remains -
-    // safe to release the cookie_uptr_ unique_ptr
-    rc = ATG_ASYNC_COMPLETION;
-    cookie = cookie_uptr_.release();
-    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
-    if (unlikely (ret != SDK_RET_OK)) {
-        delete cookie;
-        throw Error(std::string("Batch commit failed for Add-Update Type5 TEP ")
-                    .append(ipaddr2str(&ips_info_.tep_ip))
-                    .append("VNI ").append(std::to_string(ips_info_.vni))
-                    .append(" err=").append(std::to_string(ret)));
-    }
-    PDS_TRACE_DEBUG ("Type5 TEP %s VNI %d Add/Upd PDS Batch commit successful",
-                     ipaddr2str(&ips_info_.tep_ip), ips_info_.vni);
+        // All processing complete, only batch commit remains -
+        // safe to release the cookie unique_ptr
+        rc = ATG_ASYNC_COMPLETION;
+        cookie = cookie_uptr_.release();
 
-        auto tep_sync_obj = state_ctxt.state()->tep_sync_store().get(ips_info_.tep_ip);
-        if (tep_sync_obj != nullptr) {
-            tep_sync_obj->add_l3_vxlan_port(ips_info_.if_index);
+        auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
+        if (unlikely (ret != SDK_RET_OK)) {
+            delete cookie;
+            throw Error(std::string("Batch commit failed for Add-Update Type5 TEP ")
+                        .append(ipaddr2str(&ips_info_.tep_ip))
+                        .append("VNI ").append(std::to_string(ips_info_.vni))
+                        .append(" err=").append(std::to_string(ret)));
         }
+        PDS_TRACE_DEBUG ("Type5 TEP %s MS-If 0x%x VNI %d Underlay pathset %d "
+                         "HAL NHgroup %d Add/Upd PDS Batch commit successful",
+                         ipaddr2str(&ips_info_.tep_ip), l_ms_l3_vxlan_port_ifindex,
+                         ips_info_.vni, l_ms_upathset, l_hal_unhgroup_id);
+        state_store_commit_objs (state_ctxt, store_objs);
 
     } // End of state thread_context
       // Do Not access/modify global state after this
@@ -338,7 +383,8 @@ void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {
         fetch_store_info_(state_ctxt.state());
 
         if (store_info_.vxp_if_obj == nullptr) {
-            PDS_TRACE_DEBUG("Ignoring possible L2 VXLAN Port 0x%x Delete", vxlan_port_ifindex);
+            PDS_TRACE_DEBUG("Ignoring possible L2 VXLAN Port 0x%x Delete",
+                            vxlan_port_ifindex);
             return;
         }
 
@@ -346,48 +392,47 @@ void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {
         PDS_TRACE_INFO ("Type5 TEP %s MS L3 VXLAN Port 0x%x: Delete IPS",
                         ipaddr2str(&tep_ip), vxlan_port_ifindex);
 
-        pds_bctxt_guard = make_batch_pds_spec_();
-
         // Delete the L3 VXLAN port from the TEP back reference list
-        store_info_.tep_sync_obj->del_l3_vxlan_port(ips_info_.if_index);
+        store_info_.tep_obj->del_l3_vxlan_port(ips_info_.if_index);
+
+        pds_bctxt_guard = make_batch_pds_spec_();
 
         // If we have batched multiple IPS earlier flush it now
         // VXLAN Tunnel deletion cannot be appended to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
 
-    } // End of state thread_context
-      // Do Not access/modify global state after this
+        cookie_uptr_->send_ips_reply =
+            [tep_ip, vxlan_port_ifindex] (bool pds_status, bool ips_mock) -> void {
+                // ----------------------------------------------------------------
+                // This block is executed asynchronously when PDS response is rcvd
+                // ----------------------------------------------------------------
+                PDS_TRACE_DEBUG("++++ Type5 TEP %s MS-If 0x%x Delete"
+                                " Async reply %s ++++",
+                                ipaddr2str(&tep_ip), vxlan_port_ifindex,
+                                (pds_status)?"Success": "Failure");
+                // Deletes are not expected to fail
+                SDK_ASSERT (pds_status);
+            };
 
-    cookie_uptr_->send_ips_reply =
-        [tep_ip, vxlan_port_ifindex] (bool pds_status, bool ips_mock) -> void {
-            // ----------------------------------------------------------------
-            // This block is executed asynchronously when PDS response is rcvd
-            // ----------------------------------------------------------------
-            PDS_TRACE_DEBUG("+++++++ Type5 TEP %s MS L3 VXLAN Port 0x%x Delete"
-                            " Rcvd Async PDS response %s +++++++",
-                            ipaddr2str(&tep_ip), vxlan_port_ifindex,
-                            (pds_status)?"Success": "Failure");
+        // All processing complete, only batch commit remains -
+        // safe to release the cookie_uptr_ unique_ptr
+        auto cookie = cookie_uptr_.release();
+        auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
+        if (unlikely (ret != SDK_RET_OK)) {
+            delete cookie;
+            throw Error(std::string("Batch commit failed for delete Type5 TEP ")
+                        .append(ipaddr2str(&tep_ip))
+                        .append(" err=").append(std::to_string(ret)));
+        }
+        PDS_TRACE_DEBUG ("Type5 TEP %s MS-If 0x%x"
+                         " Delete PDS Batch commit successful",
+                         ipaddr2str(&tep_ip), vxlan_port_ifindex);
 
-        };
-
-    // All processing complete, only batch commit remains -
-    // safe to release the cookie_uptr_ unique_ptr
-    auto cookie = cookie_uptr_.release();
-    auto ret = learn::api_batch_commit(pds_bctxt_guard.release());
-    if (unlikely (ret != SDK_RET_OK)) {
-        delete cookie;
-        throw Error(std::string("Batch commit failed for delete Type5 TEP ")
-                    .append(ipaddr2str(&tep_ip))
-                    .append(" err=").append(std::to_string(ret)));
-    }
-    PDS_TRACE_DEBUG ("Type5 TEP %s MS L3 VXLAN Port 0x%x: Delete PDS Batch commit successful",
-                     ipaddr2str(&tep_ip), ips_info_.if_index);
-
-    { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pds_ms::state_t::thread_context();
         // Deletes are synchronous - Delete the store entry immediately
         state_ctxt.state()->if_store().erase(ips_info_.if_index);
-    }
+
+    } // End of state thread_context
+      // Do Not access/modify global state after this
 }
 
 } // End namespace

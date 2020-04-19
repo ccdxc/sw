@@ -77,11 +77,11 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
             add_upd_ecmp_ips->dp_correlator =
                 next_hop->next_hop_properties.indirect_next_hop_properties.
                 lower_level_dp_correlator;
-            NBB_CORR_GET_VALUE(ips_info_.ll_dp_corr_id, next_hop->next_hop_properties.
+            NBB_CORR_GET_VALUE(ips_info_.direct_ps_dpcorr, next_hop->next_hop_properties.
                                indirect_next_hop_properties.
                                lower_level_dp_correlator);
             PDS_TRACE_DEBUG("MS Cascaded Pathset %d Copy lower level DP Correlator %d",
-                             ips_info_.pathset_id, ips_info_.ll_dp_corr_id);
+                             ips_info_.pathset_id, ips_info_.direct_ps_dpcorr);
         }
         if (next_hop->next_hop_properties.destination_type ==
             ATG_NHPI_NEXT_HOP_DEST_PORT) {
@@ -188,8 +188,8 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
         auto vxp_if_obj = state_ctxt.state()->if_store().get(nh.ms_ifindex);
         SDK_ASSERT(vxp_if_obj != nullptr);
         auto& vxp_prop = vxp_if_obj->vxlan_port_properties();
-        auto tep_sync_obj = state_ctxt.state()->tep_sync_store()
-                                .get(vxp_if_obj->vxlan_port_properties().tep_ip);
+        auto tep_obj = state_ctxt.state()->tep_store()
+                        .get(vxp_if_obj->vxlan_port_properties().tep_ip);
         auto& dmaci = vxp_if_obj->vxlan_port_properties().dmaci;
         if (memcmp(dmaci, nh.mac_addr.m_mac, ETH_ADDR_LEN) != 0) {
             // Change in L3 VXLAN Port DMAC
@@ -205,8 +205,8 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
             }
             MAC_ADDR_COPY(dmaci, nh.mac_addr.m_mac);
             li_vxlan_port vxp;
-            vxp.add_pds_tep_spec(store_info_.bctxt, vxp_if_obj, tep_sync_obj,
-                                 false /* Op Update */);
+            vxp.add_pds_tep_spec(store_info_.bctxt, state_ctxt.state(),
+                                 vxp_if_obj, tep_obj, false /* Op Update */);
             PDS_TRACE_DEBUG("Setting DMAC for Type5 TEP %s VNI %d L3 VXLAN Port"
                             " 0x%x to %s",
                             ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
@@ -327,15 +327,9 @@ static void send_ips_response_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips,
             hals::Ecmp::set_ips_rc(&add_upd_ecmp_ips->ips_hdr,
                                    (pds_status)?ATG_OK:ATG_UNSUCCESSFUL);
         SDK_ASSERT(send_response);
-        PDS_TRACE_DEBUG("+++++++ Send ECMP %ld dp_corr %d Async IPS"
-                        " response %s stateless mode ++++++++",
-                        pathset_id, dp_corr, (pds_status) ? "Success" :
-                        "Failure");
         hals::Fte::get().get_nhpi_join()->
             send_ips_reply(&add_upd_ecmp_ips->ips_hdr);
     } else {
-        PDS_TRACE_DEBUG("Send ECMP %ld Async IPS response %s stateful mode",
-                        pathset_id, (pds_status) ? "Success" : "Failure");
         if (pds_status) {
             (*it)->update_complete(ATG_OK);
         } else {
@@ -350,109 +344,103 @@ static void send_ips_response_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips,
 // Update the indirect PS to direct PS mapping
 // Return TEP using this indirect PS if any
 static ip_addr_t indirect_ps_lookup_and_update_ (state_t* state,
-                                                  ms_ps_id_t indirect_pathset,
-                                                  uint32_t ll_direct_pathset) {
+                                                    ms_ps_id_t indirect_pathset,
+                                                    ms_hw_tbl_id_t direct_ps_dpcorr) {
     ip_addr_t zero_ip = {0};
     auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
     if (indirect_ps_obj == nullptr) {
-        if (ll_direct_pathset == PDS_MS_ECMP_INVALID_INDEX) {
-            PDS_TRACE_DEBUG("Ignore blackhole pathset %d", indirect_pathset);
-            return zero_ip;
-        }
         PDS_TRACE_DEBUG("Set new indirect pathset %d -> direct pathset %d",
-                        indirect_pathset, ll_direct_pathset);
+                        indirect_pathset, direct_ps_dpcorr);
         std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr
-            (new indirect_ps_obj_t(ll_direct_pathset));
+            (new indirect_ps_obj_t(direct_ps_dpcorr));
         state->indirect_ps_store().add_upd(indirect_pathset,
                                            std::move(indirect_ps_obj_uptr));
         return zero_ip;
     }
-    if (indirect_ps_obj->ll_direct_pathset != ll_direct_pathset) {
+    if (indirect_ps_obj->direct_ps_dpcorr != direct_ps_dpcorr) {
         PDS_TRACE_DEBUG("Set indirect pathset %d -> direct pathset %d",
-                        indirect_pathset, ll_direct_pathset);
-        indirect_ps_obj->ll_direct_pathset = ll_direct_pathset;
+                        indirect_pathset, direct_ps_dpcorr);
+        indirect_ps_obj->direct_ps_dpcorr = direct_ps_dpcorr;
     }
     return indirect_ps_obj->tep_ip;
 }
+
+NBB_BYTE hals_ecmp_t::handle_indirect_ps_update_
+                            (ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
+    NBB_BYTE rc = ATG_OK;
+
+    // Received Pathset with Non-direct nextxhops.
+    // Check if this is an Indirect Pathset that is referenced by
+    // existing VXLAN Tunnels (TEPs)
+    auto state_ctxt = pds_ms::state_t::thread_context();
+    auto tep_ip = indirect_ps_lookup_and_update_(state_ctxt.state(),
+                                                    ips_info_.pathset_id,
+                                                    ips_info_.direct_ps_dpcorr);
+    if (ip_addr_is_zero(&tep_ip)) {
+        return rc;
+    }
+    PDS_TRACE_DEBUG("Found TEP %s stitched to Indirect Pathset %d",
+                    ipaddr2str(&tep_ip), ips_info_.pathset_id);
+
+    auto tep_obj = state_ctxt.state()->tep_store().get(tep_ip);
+    if (tep_obj == nullptr) {
+        // This Pathset does not have any reference yet
+        // Nothing to do
+        return rc;
+    }
+    // This is an indirect pathset that is referenced by Tunnels
+    if (ips_info_.direct_ps_dpcorr == PDS_MS_ECMP_INVALID_INDEX) {
+        // The indirect pathset has lost its underlying direct pathset.
+        // It is soon either going to be deleted or updated with a
+        // new direct nexthop.
+        // Update the store for any Tunnels that refer to this
+        // indirect pathset. In case any Type 5 Tunnel gets created
+        // at this point we do not want it to pick up the stale underlying
+        // pathset. But do not disturb the dataplane since Metaswitch
+        // intermittently updates the indirect pathset with black-hole
+        // nexthops when switching direct next-hops upon link down
+        PDS_TRACE_DEBUG("MS Indirect Pathset %d TEP %s black-holed",
+                        ips_info_.pathset_id,
+                        ipaddr2str(&tep_obj->properties().tep_ip));
+        return rc;
+    }
+
+    li_vxlan_tnl tnl;
+    // Alloc new cookie to capture async info
+    cookie_uptr_.reset (new cookie_t);
+    auto direct_ps_dpcorr = ips_info_.direct_ps_dpcorr;
+    auto l_pathset_id = ips_info_.pathset_id;
+    PDS_TRACE_DEBUG("MS Underlay Pathset %d update for TEP %s New DP Corr %d",
+                    ips_info_.pathset_id,
+                    ipaddr2str(&tep_obj->properties().tep_ip),
+                    direct_ps_dpcorr);
+
+    cookie_uptr_->send_ips_reply =
+        [add_upd_ecmp_ips, l_pathset_id, tep_ip,
+        direct_ps_dpcorr] (bool pds_status, bool ips_mock) -> void {
+            //-----------------------------------------------------------------
+            // This block is executed asynchronously when PDS response is rcvd
+            //-----------------------------------------------------------------
+            if (unlikely(ips_mock)) return; // UT
+            PDS_TRACE_DEBUG("++++ TEP %s Underlay Pathset %d "
+                            "NHGroup %d Async reply %s ++++",
+                            ipaddr2str(&tep_ip), l_pathset_id, direct_ps_dpcorr,
+                            (pds_status) ? "Success" : "Failure");
+
+            send_ips_response_(add_upd_ecmp_ips, l_pathset_id,
+                               direct_ps_dpcorr, pds_status);
+        };
+    return tnl.handle_upathset_update(std::move(state_ctxt),
+                                      tep_obj, direct_ps_dpcorr,
+                                      std::move(cookie_uptr_));
+}
+
 
 NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
     NBB_BYTE rc = ATG_OK;
 
     if (!parse_ips_info_(add_upd_ecmp_ips)) {
-        // Received Pathset with Non-direct nextxhops.
-        // Check if this is an Indirect Pathset that is referenced by
-        // existing VXLAN Tunnels (TEPs)
-        auto state_ctxt = pds_ms::state_t::thread_context();
-        auto tep_ip = indirect_ps_lookup_and_update_(state_ctxt.state(),
-                                                      ips_info_.pathset_id,
-                                                      ips_info_.ll_dp_corr_id);
-        if (ip_addr_is_zero(&tep_ip)) {
-            return rc;
-        }
-        PDS_TRACE_DEBUG("Found TEP %s stitched to Indirect Pathset %d",
-                        ipaddr2str(&tep_ip), ips_info_.pathset_id);
-        auto tep_obj = state_ctxt.state()->tep_store().get(tep_ip);
-        if (tep_obj == nullptr) {
-            // This Pathset does not have any reference yet
-            // Nothing to do
-            auto tep_sync_obj = state_ctxt.state()->tep_sync_store().get(tep_ip);
-            if (tep_sync_obj != nullptr) {
-                // Update the synchrnous store so that any L3 VXLAN port created
-                // at this point does not end up using stale pathset
-                PDS_TRACE_DEBUG("TEP sync obj %s -> DP Corr %d while TEP async response is pending",
-                                ipaddr2str(&tep_ip), ips_info_.ll_dp_corr_id);
-                tep_sync_obj->properties().hal_uecmp_idx = ips_info_.ll_dp_corr_id;
-            }
-            return rc;
-        }
-        // This is an indirect pathset that is referenced by Tunnels
-        if (ips_info_.ll_dp_corr_id == PDS_MS_ECMP_INVALID_INDEX) {
-            // The indirect pathset has lost its underlying direct pathset.
-            // It is soon either going to be deleted or updated with a
-            // new direct nexthop.
-            // Update the store for any Tunnels that refer to this
-            // indirect pathset. In case any Type 5 Tunnel gets created
-            // at this point we do not want it to pick up the stale underlying
-            // pathset. But do not disturb the dataplane since Metaswitch
-            // intermittently updates the indirect pathset with black-hole
-            // nexthops when switching direct next-hops upon link down
-            PDS_TRACE_DEBUG("MS Indirect Pathset %d TEP %s black-holed",
-                            ips_info_.pathset_id,
-                            ipaddr2str(&tep_obj->properties().tep_ip));
-            tep_obj->properties().hal_uecmp_idx = PDS_MS_ECMP_INVALID_INDEX;
-            auto tep_sync_obj = state_ctxt.state()->tep_sync_store().get(tep_ip);
-            if (tep_sync_obj != nullptr) {
-                tep_sync_obj->properties().hal_uecmp_idx = PDS_MS_ECMP_INVALID_INDEX;
-            }
-            return rc;
-        }
-
-        li_vxlan_tnl tnl;
-        // Alloc new cookie to capture async info
-        cookie_uptr_.reset (new cookie_t);
-        auto ll_dp_corr_id = ips_info_.ll_dp_corr_id;
-        auto l_pathset_id = ips_info_.pathset_id;
-        PDS_TRACE_DEBUG("MS Indirect Pathset %d update for TEP %s New DP Corr %d",
-                        ips_info_.pathset_id,
-                        ipaddr2str(&tep_obj->properties().tep_ip),
-                        ll_dp_corr_id);
-
-        cookie_uptr_->send_ips_reply =
-            [add_upd_ecmp_ips, l_pathset_id,
-            ll_dp_corr_id] (bool pds_status, bool ips_mock) -> void {
-            //-----------------------------------------------------------------
-            // This block is executed asynchronously when PDS response is rcvd
-            //-----------------------------------------------------------------
-            if (unlikely(ips_mock)) return; // UT
-            PDS_TRACE_DEBUG("MS Indirect Pathset async response");
-            send_ips_response_(add_upd_ecmp_ips, l_pathset_id,
-                               ll_dp_corr_id, pds_status);
-        };
-        return tnl.handle_uecmp_update(std::move(state_ctxt),
-                                       tep_obj, ips_info_.pathset_id,
-                                       ips_info_.ll_dp_corr_id,
-                                       std::move(cookie_uptr_));
-        // state_ctxt has been released - do not access state beyond this
+        return handle_indirect_ps_update_(add_upd_ecmp_ips);
     }
 
     // Direct Pathset - can be underlay or overlay
@@ -543,9 +531,10 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
 
     auto l_overlay = (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_OVERLAY_ECMP);
     auto pathset_id = ips_info_.pathset_id;
+    auto l_num_nh = ips_info_.nexthops.size();
     cookie_uptr_->send_ips_reply =
-        [add_upd_ecmp_ips, pathset_id, l_overlay] (bool pds_status,
-                                                   bool ips_mock) -> void {
+        [add_upd_ecmp_ips, pathset_id, l_overlay, l_num_nh]
+        (bool pds_status, bool ips_mock) -> void {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             //-----------------------------------------------------------------
@@ -564,8 +553,10 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                     dp_corr = pathset_obj->hal_oecmp_idx_guard->idx();
                 }
             }
-            PDS_TRACE_DEBUG("Return %s Pathset %d dp_correlator %d",
-                            (l_overlay) ? "Overlay": "Underlay", pathset_id, dp_corr);
+            PDS_TRACE_DEBUG("++++ %s Pathset %d NHgroup %d Num NH %d Async reply"
+                            " %s ++++", (l_overlay) ? "Overlay": "Underlay",
+                            pathset_id, dp_corr, l_num_nh,
+                            (pds_status) ? "Success" : "Failure");
 
             send_ips_response_(add_upd_ecmp_ips, pathset_id,
                                dp_corr, pds_status);
@@ -582,8 +573,10 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                     .append(std::to_string(ips_info_.pathset_id))
                     .append(" err=").append(std::to_string(ret)));
     }
-    PDS_TRACE_DEBUG ("MS ECMP %ld: Add/Upd PDS Batch commit successful",
-                     ips_info_.pathset_id);
+    PDS_TRACE_DEBUG ("%s Pathset %ld NHgroup %d Add/Upd PDS Batch commit successful",
+                     (l_overlay) ? "Overlay" : "Underlay", ips_info_.pathset_id,
+                     (l_overlay) ? store_info_.pathset_obj->hal_oecmp_idx_guard->idx()
+                     : pathset_id);
 
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -596,6 +589,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
 void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
     op_delete_ = true;
+    bool l_underlay = true;
 
     // MS Stub Integration APIs do not support Async callback for deletes.
     // However since we should not block the MS NBase main thread
@@ -620,6 +614,7 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
         store_info_.pathset_obj = state_ctxt.state()->pathset_store().
                                             get(ips_info_.pathset_id);
         if (store_info_.pathset_obj != nullptr) {
+            l_underlay = false;
             ips_info_.pds_nhgroup_type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
             PDS_TRACE_DEBUG ("MS Overlay ECMP %ld: Delete IPS",
                              ips_info_.pathset_id);
@@ -637,11 +632,12 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
 
     auto pathset_id = ips_info_.pathset_id;
     cookie_uptr_->send_ips_reply =
-        [pathset_id] (bool pds_status, bool ips_mock) -> void {
+        [pathset_id, l_underlay] (bool pds_status, bool ips_mock) -> void {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             //-----------------------------------------------------------------
-            PDS_TRACE_DEBUG("++++++ Async PDS ECMP %ld delete %s ++++++",
+            PDS_TRACE_DEBUG("++++ %s Pathset %ld delete %s Async reply ++++",
+                            (l_underlay) ? "Underlay" : "Overlay",
                             pathset_id, (pds_status) ? "Success" : "Failure");
 
         };
@@ -660,7 +656,8 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
         auto state_ctxt = pds_ms::state_t::thread_context();
         state_ctxt.state()->pathset_store().erase(ips_info_.pathset_id);
     }
-    PDS_TRACE_DEBUG ("MS ECMP %ld: Delete PDS Batch commit successful",
+    PDS_TRACE_DEBUG ("%s Pathset %ld delete PDS Batch commit successful",
+                     (l_underlay) ? "Underlay" : "Overlay",
                      ips_info_.pathset_id);
 }
 

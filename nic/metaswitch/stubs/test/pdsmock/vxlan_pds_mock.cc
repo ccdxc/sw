@@ -59,36 +59,39 @@ void vxlan_pds_mock_t::generate_del_specs(const vxlan_input_params_t& input,
 
 void vxlan_pds_mock_t::validate_()
 {    
+    uint32_t base_if_objs = 0;
+
     if (mock_pds_spec_op_fail_ ||
         mock_pds_batch_commit_fail_) {
         // Verify all temporary objects and cookies are freed
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == (num_tep_objs_));
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == (num_if_objs_));
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID),
+                   (uint32_t) num_tep_objs_);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID),
+                   (uint32_t) num_if_objs_);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID),
+                   (uint32_t) 0);
+        ASSERT_EQ (state->tep_store().count(), (uint32_t) num_tep_objs_);
+        ASSERT_EQ (state->if_store().count(), (uint32_t) (num_if_objs_+base_if_objs));
         return;
     }
 
-     // Verify temporary objects and cookie are created as expected
+     // Verify store objects and cookie are created as expected
 
     { // Enter state thread context
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        if (op_delete_) {
-            // Object is removed from store synchronously for deletes
-            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == (num_if_objs_-1));
-            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == (num_tep_objs_-1));
-        } else {
-            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == (num_tep_objs_+1));
-            if (!op_create_ && !op_delete_) {
-                // Update - No change in Tunnel interface object
-                ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == (num_if_objs_));
-            } else {
-                ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == (num_if_objs_+1));
-            }
-        }
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 1);
+        if (op_create_) {++num_tep_objs_; ++num_if_objs_;}
+        if (op_delete_) {--num_tep_objs_; --num_if_objs_;}
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID),
+                   (uint32_t) num_tep_objs_);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID),
+                   (uint32_t) num_if_objs_);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID),
+                   (uint32_t) 1);
+        ASSERT_EQ (state->tep_store().count(), (uint32_t) num_tep_objs_);
+        ASSERT_EQ (state->if_store().count(), (uint32_t) (num_if_objs_+base_if_objs));
     }
 
     ASSERT_TRUE (pds_ret_status != mock_pds_batch_async_fail_);
@@ -100,22 +103,31 @@ void vxlan_pds_mock_t::validate_()
                             cookie);
 
     if (mock_pds_batch_async_fail_) {
-        // Verify no change to slab - all temporary objects released
+        // Verify that object is reverted upon create async failure
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == num_tep_objs_);
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == num_if_objs_);
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+        if (op_create_) {--num_tep_objs_; --num_if_objs_;}
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID),
+                   (uint32_t) num_tep_objs_);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID),
+                   (uint32_t) num_if_objs_);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID),
+                   (uint32_t) 0);
+        ASSERT_EQ (state->tep_store().count(), (uint32_t) num_tep_objs_);
+        ASSERT_EQ (state->if_store().count(), (uint32_t) (num_if_objs_+base_if_objs));
         return;
     }
 
-    if (op_create_) {++num_tep_objs_; ++num_if_objs_;}
-    if (op_delete_) {--num_tep_objs_; --num_if_objs_;}
     auto state_ctxt = pds_ms::state_t::thread_context();
     auto state = state_ctxt.state();
-    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == num_tep_objs_);
-    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == num_if_objs_);
-    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+    ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID),
+               (uint32_t) num_tep_objs_);
+    ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID),
+               (uint32_t) num_if_objs_);
+    ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID),
+               (uint32_t) 0);
+    ASSERT_EQ (state->tep_store().count(), (uint32_t) num_tep_objs_);
+    ASSERT_EQ (state->if_store().count(), (uint32_t) (num_if_objs_+base_if_objs));
 }
 
 } // End namespace pds_ms_test

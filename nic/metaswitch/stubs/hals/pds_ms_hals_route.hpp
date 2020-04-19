@@ -29,7 +29,7 @@ using pds_ms::cookie_t;
 using pds_ms::pds_batch_ctxt_guard_t;
 
 class hals_route_t {
-public:    
+public:
     NBB_BYTE handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips);
     void handle_delete(ATG_ROPI_ROUTE_ID route_id);
 
@@ -57,9 +57,9 @@ private:
     bool parse_ips_info_(ATG_ROPI_UPDATE_ROUTE* route_add_upd);
     void make_pds_rttable_spec_(pds_route_table_spec_t &rttbl,
                                 const pds_obj_key_t& rttable_key);
-    pds_obj_key_t make_pds_rttable_key_(void);
-    sdk_ret_t underlay_route_add_upd_();
-    sdk_ret_t underlay_route_del_();
+    pds_obj_key_t make_pds_rttable_key_(state_t*);
+    sdk_ret_t underlay_route_add_upd_(void);
+    sdk_ret_t underlay_route_del_(void);
 };
 
 } // End namespace

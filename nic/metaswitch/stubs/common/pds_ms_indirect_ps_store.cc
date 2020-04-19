@@ -32,8 +32,8 @@ indirect_ps_obj_t::indirect_ps_obj_t() {
     set_zero_ip(tep_ip);
 }
 
-indirect_ps_obj_t::indirect_ps_obj_t(uint32_t ll_direct_ps)
-     : ll_direct_pathset (ll_direct_ps) {
+indirect_ps_obj_t::indirect_ps_obj_t(ms_hw_tbl_id_t direct_ps_dpcorr_)
+     : direct_ps_dpcorr (direct_ps_dpcorr_) {
     set_zero_ip(tep_ip);
 }
 

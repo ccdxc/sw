@@ -52,6 +52,10 @@ void if_obj_t::print_debug_str(void) {
         PDS_TRACE_DEBUG ("  - MS Interface 0x%lx for VXLAN Tunnel", 
                          prop_.vxt_.ifindex);
         break;    
+    case ms_iftype_t::VXLAN_PORT:
+        PDS_TRACE_DEBUG ("  - MS Interface 0x%lx for L3 VXLAN Port", 
+                         prop_.vxp_.ifindex);
+        break;    
     case ms_iftype_t::IRB:    
         PDS_TRACE_DEBUG ("  - MS Interface 0x%lx for IRB", 
                          prop_.irb_.ifindex);

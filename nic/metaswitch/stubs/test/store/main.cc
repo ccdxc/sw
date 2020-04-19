@@ -59,7 +59,7 @@ TEST_F(tep_store_test, create) {
                                 tep_obj_uptr_t (new tep_obj_t (
                                         tep_ip, // TEP IP
                                         src_ip,
-                                        11,     // Underlay ECMP Idx
+                                        11, // Underlay Pathset
                                         501009 // PDS TEP Idx
                                         )));
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 1);
@@ -75,7 +75,7 @@ TEST_F(tep_store_test, get) {
     ASSERT_TRUE (tep_obj != nullptr);
     ASSERT_TRUE (tep_obj->properties().tep_ip == tep_ip);
     ASSERT_TRUE (tep_obj->properties().src_ip == src_ip);
-    ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 11);
+    ASSERT_TRUE (tep_obj->properties().ms_upathset == 11);
     ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
     ASSERT_TRUE (tep_obj->hal_oecmp_idx_guard->idx() == 1);
 }
@@ -90,7 +90,7 @@ TEST_F(tep_store_test, update) {
 
     // Make a new copy of the old object and update a field
     auto tep_obj = new tep_obj_t(*tep_old);
-    tep_obj->properties().hal_uecmp_idx = 12;
+    tep_obj->properties().ms_upathset = 15;
 
     // After insert old object should be freed back to slab
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_TEP_SLAB_ID) == 2);
@@ -102,7 +102,7 @@ TEST_F(tep_store_test, update) {
     ASSERT_TRUE (tep_obj_test != nullptr);
     ASSERT_TRUE (tep_obj_test->properties().tep_ip == tep_ip);
     ASSERT_TRUE (tep_obj_test->properties().src_ip == src_ip);
-    ASSERT_TRUE (tep_obj->properties().hal_uecmp_idx == 12);
+    ASSERT_TRUE (tep_obj->properties().ms_upathset == 15);
     ASSERT_TRUE (tep_obj->properties().hal_tep_idx == 501009);
     ASSERT_TRUE (tep_obj->hal_oecmp_idx_guard->idx() == 1);
 }
@@ -315,7 +315,9 @@ TEST_F(route_store_test, scale) {
 		route.prio = i;
 		rttbl->add_upd_route(route);
 	}
-    ASSERT_TRUE (rttbl->num_routes() == i-1);
+    ASSERT_EQ (rttbl->num_routes(), (uint32_t) (i-1));
+    ASSERT_EQ (rttbl->routes()->af, (uint32_t) IP_AF_IPV4);
+    ASSERT_EQ (rttbl->routes()->priority_en, false);
     // Get all
     ip = 0x09020300;
 	for (i=1; i<= 1023; ++i) {
@@ -338,7 +340,9 @@ TEST_F(route_store_test, scale) {
 		route.prio = i;
 		rttbl->add_upd_route(route);
 	}
-    ASSERT_TRUE (rttbl->num_routes() == i-1);
+    ASSERT_EQ (rttbl->num_routes(), (uint32_t) (i-1));
+    ASSERT_EQ (rttbl->routes()->af, (uint32_t) IP_AF_IPV4);
+    ASSERT_EQ (rttbl->routes()->priority_en, false);
     // Get all
     ip = 0x09020300;
 	for (i=1; i<= 3000; ++i) {
