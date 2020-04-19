@@ -1,11 +1,11 @@
 meta:
-    name    : tso_regr
-    os      : [ linux, freebsd, windows ]
+    name    : tso_vxlan_regr
+    os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 160
 
 testcases:
-    -   name    : TSO_REGR
+    -   name    : TSO_REGR_VXLAN
         testcase: testcases.drivers.drivertso
         disable : False
         ignore  : True
@@ -16,34 +16,15 @@ testcases:
             tx_check_sum       : [ 'on']
             mtu                : [ '4096', '9000']
             pktsize            : [  2048, 32768 ]
-            vlantag            : [ 'off']
-            vxlan              : [ 'off']
+            vlantag            : [ 'off' ]
+            vxlan              : [ 'on']
             proto              : [ 'tcp', 'udp']
-            ipproto            : [ 'v4', 'v6']
+            ipproto            : [ 'v4']
         args    :
             timeout : 7200
             type: host
             iperfthreads     :  1
-    -   name    : TSO_LRO_REGR
-        testcase: testcases.drivers.drivertso
-        disable : False
-        ignore  : True
-        iterators :
-            type               : nested
-            tso_offload        : [ 'on', 'off']
-            lro_offload        : [ 'on']
-            tx_check_sum       : [ 'on']
-            mtu                : [ '4096', '9000']
-            pktsize            : [  2048, 32768 ]
-            vlantag            : [ 'off']
-            vxlan              : [ 'off']
-            proto              : [ 'tcp', 'udp']
-            ipproto            : [ 'v4', 'v6']
-        args    :
-            timeout : 7200
-            type: host
-            iperfthreads     :  1
-    -   name    : TSO_REGR_VLAN
+    -   name    : TSO_REGR_VLAN_VXLAN
         testcase: testcases.drivers.drivertso
         disable : True
         ignore  : True
@@ -55,9 +36,9 @@ testcases:
             mtu                : [ '4096', '9000']
             pktsize            : [  2048, 32768 ]
             vlantag            : [ 'on' ]
-            vxlan              : [ 'off']
+            vxlan              : [ 'on']
             proto              : [ 'tcp', 'udp']
-            ipproto            : [ 'v4', 'v6']
+            ipproto            : [ 'v4']
         args    :
             timeout : 7200
             type: host

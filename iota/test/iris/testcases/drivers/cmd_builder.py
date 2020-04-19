@@ -282,7 +282,7 @@ def win_rx_ring_size(node, intf, size):
     return win_powershell_cmd(node, intf, "Set-NetAdapterAdvancedProperty", "*ReceiveBuffers",  int(size))
 
 def win_num_que(node, intf, size):
-    return win_powershell_cmd(node, intf, "Set-NetAdapterAdvancedProperty", "*ReceiveBuffers",  int(size))
+    return win_powershell_cmd(node, intf, "Set-NetAdapterAdvancedProperty", "*NumRssQueues",  int(size))
 
 def win_not_supported(node, intf, size):
     return "echo > /dev/null"
