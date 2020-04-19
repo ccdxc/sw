@@ -58,6 +58,7 @@
 #define foreach_flow_prog_next                                      \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
         _(SESSION_PROG, "pds-session-program")                      \
+        _(NAT_DROP, "pds-nat44-error")                              \
         _(DROP, "error-drop")                                       \
 
 #define foreach_flow_prog_counter                                   \
@@ -77,6 +78,7 @@
 #define foreach_session_prog_next                                   \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
         _(AGE_FLOW, "pds-flow-age-setup" )                          \
+        _(NAT_DROP, "pds-nat44-error")                              \
         _(DROP, "error-drop")                                       \
 
 #define foreach_session_prog_counter                                \

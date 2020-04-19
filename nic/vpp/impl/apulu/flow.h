@@ -47,6 +47,13 @@ pds_session_get_advance_offset (void)
     return (APULU_P4_TO_ARM_HDR_SZ - APULU_ARM_TO_P4_HDR_SZ);
 }
 
+always_inline int
+pds_session_get_nat_drop_next_offset (vlib_buffer_t *p0)
+{
+    return APULU_P4_TO_ARM_HDR_SZ + vnet_buffer(p0)->l3_hdr_offset -
+           vnet_buffer(p0)->l2_hdr_offset;
+}
+
 always_inline void
 pds_packet_type_fill (pds_flow_hw_ctx_t *ctx, u8 type)
 {
@@ -103,11 +110,17 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
     pds_packet_type_fill(ctx0, vnet_buffer(b0)->pds_flow_data.packet_type);
 
     if (PREDICT_FALSE(session_program(session_id0, (void *)&actiondata))) {
-        *next0 = SESSION_PROG_NEXT_DROP;
+        if (pds_is_flow_napt_en(b0)) {
+            *next0 = SESSION_PROG_NEXT_NAT_DROP;
+            vlib_buffer_advance(b0, pds_session_get_nat_drop_next_offset(b0));
+        } else {
+            *next0 = SESSION_PROG_NEXT_DROP;
+        }
     } else {
 skip_prog0:
         *next0 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
                                             SESSION_PROG_NEXT_FWD_FLOW;
+        vlib_buffer_advance(b0, pds_session_get_advance_offset());
     }
 
     if (vnet_buffer(b1)->pds_flow_data.flags &
@@ -147,15 +160,19 @@ skip_prog0:
     pds_packet_type_fill(ctx1, vnet_buffer(b1)->pds_flow_data.packet_type);
 
     if (PREDICT_FALSE(session_program(session_id1, (void *)&actiondata))) {
-        *next1 = SESSION_PROG_NEXT_DROP;
+        if (pds_is_flow_napt_en(b1)) {
+            *next1 = SESSION_PROG_NEXT_NAT_DROP;
+            vlib_buffer_advance(b1, pds_session_get_nat_drop_next_offset(b1));
+        } else {
+            *next1 = SESSION_PROG_NEXT_DROP;
+        }
     } else {
 skip_prog1:
         *next1 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
                                             SESSION_PROG_NEXT_FWD_FLOW;
+        vlib_buffer_advance(b1, pds_session_get_advance_offset());
     }
 
-    vlib_buffer_advance(b0, pds_session_get_advance_offset());
-    vlib_buffer_advance(b1, pds_session_get_advance_offset());
     return;
 }
 
@@ -203,13 +220,18 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     pds_packet_type_fill(ctx, vnet_buffer(b)->pds_flow_data.packet_type);
 
     if (PREDICT_FALSE(session_program(session_id, (void *)&actiondata))) {
-        next[0] = SESSION_PROG_NEXT_DROP;
+        if (pds_is_flow_napt_en(b)) {
+            next[0] = SESSION_PROG_NEXT_NAT_DROP;
+            vlib_buffer_advance(b, pds_session_get_nat_drop_next_offset(b));
+        } else {
+            next[0] = SESSION_PROG_NEXT_DROP;
+        }
     } else {
 skip_prog:
         next[0] = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
                                              SESSION_PROG_NEXT_FWD_FLOW;
+        vlib_buffer_advance(b, pds_session_get_advance_offset());
     }
-    vlib_buffer_advance(b, pds_session_get_advance_offset());
 }
 
 always_inline int
@@ -231,6 +253,13 @@ pds_flow_prog_get_next_offset (vlib_buffer_t *p0)
     }
 
     return -APULU_P4_TO_ARM_HDR_SZ;
+}
+
+always_inline int
+pds_flow_prog_get_nat_drop_next_offset (vlib_buffer_t *p0)
+{
+    return APULU_P4_TO_ARM_HDR_SZ + vnet_buffer(p0)->l3_hdr_offset -
+           vnet_buffer(p0)->l2_hdr_offset;
 }
 
 always_inline int

@@ -469,6 +469,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
     udp_header_t        *udp0;
     icmp46_header_t     *icmp0;
     u8                  miss_hit = 0;
+    u8                  napt = 0;
     pds_flow_hw_ctx_t   *ses = pds_flow_get_hw_ctx(session_id);
 
     vnet_buffer(p0)->pds_flow_data.ses_id = session_id;
@@ -536,10 +537,10 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         pds_flow_extract_nexthop_info(p0, 1, 1);
         ftlv4_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
                                  pds_get_flow_log_en(p0));
-        ftlv4_cache_advance_count(1);
 
         if (pds_is_flow_napt_en(p0)) {
             // NAPT - both port and ip are changed
+            napt = 1;
             r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
             if (ip40->protocol != IP_PROTOCOL_ICMP) {
                 r_dport = vnet_buffer2(p0)->pds_nat_data.xlate_port;
@@ -558,6 +559,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             r_src_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr2;
         }
         lkp_id = vnet_buffer(p0)->pds_flow_data.egress_lkp_id;
+        ftlv4_cache_set_napt_flag(napt);
+        ftlv4_cache_advance_count(1);
         ftlv4_cache_set_key(r_src_ip, r_dst_ip,
                             protocol, r_sport, r_dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
@@ -567,6 +570,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv4_cache_set_update_flag(flow_exists);
         pds_flow_extract_nexthop_info(p0, 1, 0);
         ftlv4_cache_set_hash_log(0, pds_get_flow_log_en(p0));
+        ftlv4_cache_set_napt_flag(napt);
         ftlv4_cache_advance_count(1);
     } else {
         ip6_header_t *ip60;
@@ -670,7 +674,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 }
 
 always_inline void
-pds_flow_program_hw_ip4 (u16 *next, u32 *counter)
+pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
 {
     int i, size = ftlv4_cache_get_count();
     u32 i_pindex, i_sindex, r_pindex, r_sindex;
@@ -710,7 +714,14 @@ pds_flow_program_hw_ip4 (u16 *next, u32 *counter)
         }
     err_iflow:
         counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
-        next[i/2] = FLOW_PROG_NEXT_DROP;
+        if (ftlv4_cache_get_napt_flag(i)) {
+            vlib_buffer_t *p0 = b[i/2];
+            int offset0 = pds_flow_prog_get_nat_drop_next_offset(p0);
+            vlib_buffer_advance(p0, offset0);
+            next[i/2] = FLOW_PROG_NEXT_NAT_DROP;
+        } else {
+            next[i/2] = FLOW_PROG_NEXT_DROP;
+        }
         if (session_id) {
             pds_session_id_dealloc(session_id);
         }
@@ -833,7 +844,8 @@ pds_flow_prog (vlib_main_t *vm,
     } PDS_PACKET_LOOP_END_NO_ENQUEUE;
 
     if (is_ip4) {
-        pds_flow_program_hw_ip4(PDS_PACKET_NEXT_NODE_ARR, counter);
+        pds_flow_program_hw_ip4(PDS_PACKET_BUFFER_ARR, PDS_PACKET_NEXT_NODE_ARR,
+                                counter);
     } else {
         pds_flow_program_hw_ip6_or_l2(PDS_PACKET_NEXT_NODE_ARR, counter);
     }

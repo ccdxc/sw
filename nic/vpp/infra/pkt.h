@@ -84,6 +84,7 @@
 
 #define PDS_PACKET_TRACE_LOOP_END  PDS_PACKET_LOOP_END_NO_ENQUEUE
 
+#define PDS_PACKET_BUFFER_ARR               (_bufs)
 #define PDS_PACKET_BUFFER(_id)              (_b[_id])
 #define PDS_PACKET_NEXT_NODE(_id)           (_next[_id])
 #define PDS_PACKET_NEXT_NODE_PTR(_id)       (_next + _id)

@@ -23,6 +23,12 @@ pds_session_get_advance_offset (void)
     return 0;
 }
 
+always_inline int
+pds_session_get_nat_drop_next_offset (vlib_buffer_t *p0)
+{
+    return 0;
+}
+
 always_inline void
 pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
                      u32 session_id0, u32 session_id1,
@@ -49,6 +55,12 @@ always_inline int
 pds_flow_prog_get_next_node (void)
 {
     return FLOW_PROG_NEXT_FWD_FLOW;
+}
+
+always_inline int
+pds_flow_prog_get_nat_drop_next_offset (vlib_buffer_t *p0)
+{
+    return 0;
 }
 
 always_inline void

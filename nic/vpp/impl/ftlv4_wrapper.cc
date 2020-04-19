@@ -429,6 +429,18 @@ ftlv4_cache_set_update_flag (uint8_t update)
 }
 
 void
+ftlv4_cache_set_napt_flag (uint8_t napt)
+{
+    g_ip4_flow_cache.flags[g_ip4_flow_cache.count].napt = napt;
+}
+
+uint8_t
+ftlv4_cache_get_napt_flag (int id)
+{
+    return g_ip4_flow_cache.flags[id].napt;
+}
+
+void
 ftlv4_cache_set_flow_miss_hit (uint8_t val)
 {
     ftlv4_set_entry_flow_miss_hit(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count,

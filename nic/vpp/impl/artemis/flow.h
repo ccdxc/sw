@@ -25,6 +25,12 @@ pds_session_get_advance_offset (void)
             offsetof(p4_rx_cpu_hdr_t, ses_info) - ARTEMIS_PREDICATE_HDR_SZ);
 }
 
+always_inline int
+pds_session_get_nat_drop_next_offset (vlib_buffer_t *p0)
+{
+    return 0;
+}
+
 always_inline void
 pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
                      u32 session_id0, u32 session_id1,
@@ -57,6 +63,12 @@ pds_flow_prog_get_next_offset (vlib_buffer_t *p0)
 {
     return -(ARTEMIS_P4_TO_ARM_HDR_SZ - offsetof(p4_rx_cpu_hdr_t, ses_info) +
                (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
+}
+
+always_inline int
+pds_flow_prog_get_nat_drop_next_offset (vlib_buffer_t *p0)
+{
+    return 0;
 }
 
 always_inline int

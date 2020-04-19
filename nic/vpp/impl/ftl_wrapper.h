@@ -34,6 +34,7 @@ extern "C" {
 typedef struct flow_flags_s {
     uint8_t log : 1;
     uint8_t update : 1;
+    uint8_t napt : 1;
     uint8_t ctr_idx : 4;
 } flow_flags_t;
 
@@ -164,6 +165,10 @@ void ftlv4_cache_set_hash_log(uint32_t val, uint8_t log);
 void ftlv4_cache_set_flow_miss_hit(uint8_t val);
 
 void ftlv4_cache_set_update_flag(uint8_t update);
+
+void ftlv4_cache_set_napt_flag(uint8_t napt);
+
+uint8_t ftlv4_cache_get_napt_flag (int id);
 
 void ftlv4_cache_set_counter_index(uint8_t ctr_idx);
 
