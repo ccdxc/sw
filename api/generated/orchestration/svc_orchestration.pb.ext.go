@@ -7,6 +7,7 @@ Input file: svc_orchestration.proto
 package orchestration
 
 import (
+	"context"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -196,6 +197,63 @@ func (m *OrchestratorList) Normalize() {
 }
 
 // Transformers
+
+func (m *AutoMsgOrchestratorWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgOrchestratorWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AutoMsgOrchestratorWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AutoMsgOrchestratorWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
+func (m *OrchestratorList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *OrchestratorList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
 
 func init() {
 	scheme := runtime.GetDefaultScheme()

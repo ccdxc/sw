@@ -7,6 +7,7 @@ Input file: alerts.proto
 package monitoring
 
 import (
+	"context"
 	"errors"
 	fmt "fmt"
 	"strings"
@@ -1707,6 +1708,80 @@ func (m *Thresholds) Normalize() {
 }
 
 // Transformers
+
+func (m *AlertDestination) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AlertDestination) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	return
+}
+
+type storageAlertDestinationTransformer struct{}
+
+var StorageAlertDestinationTransformer storageAlertDestinationTransformer
+
+func (st *storageAlertDestinationTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(AlertDestination)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageAlertDestinationTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(AlertDestination)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *AlertDestinationSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.SyslogExport == nil {
+		return nil
+	}
+	if err := m.SyslogExport.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AlertDestinationSpec) EraseSecrets() {
+
+	if m.SyslogExport == nil {
+		return
+	}
+	m.SyslogExport.EraseSecrets()
+
+	return
+}
+
+func (m *SyslogExport) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Targets {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Targets[i] = &c
+	}
+	return nil
+}
+
+func (m *SyslogExport) EraseSecrets() {
+	for _, v := range m.Targets {
+		v.EraseSecrets()
+	}
+	return
+}
 
 func init() {
 	scheme := runtime.GetDefaultScheme()

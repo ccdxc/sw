@@ -7,6 +7,7 @@ Input file: export.proto
 package monitoring
 
 import (
+	"context"
 	fmt "fmt"
 	"strings"
 
@@ -15,10 +16,10 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 
-	validators "github.com/pensando/sw/venice/utils/apigen/validators"
-
 	"github.com/pensando/sw/api/interfaces"
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/transformers/storage"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -188,6 +189,9 @@ func (x SyslogFacility) String() string {
 
 var _ validators.DummyVar
 var validatorMapExport = make(map[string]map[string][]func(string, interface{}) error)
+
+var storageTransformersMapExport = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
+var eraseSecretsMapExport = make(map[string]func(i interface{}))
 
 // Clone clones the object into into or creates one of into is nil
 func (m *AuthConfig) Clone(into interface{}) (interface{}, error) {
@@ -611,6 +615,45 @@ func (m *SyslogExportConfig) Normalize() {
 
 // Transformers
 
+func (m *ExportConfig) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Credentials == nil {
+		return nil
+	}
+	if err := m.Credentials.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *ExportConfig) EraseSecrets() {
+
+	if m.Credentials == nil {
+		return
+	}
+	m.Credentials.EraseSecrets()
+
+	return
+}
+
+func (m *ExternalCred) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapExport["ExternalCred"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *ExternalCred) EraseSecrets() {
+	if v, ok := eraseSecretsMapExport["ExternalCred"]; ok {
+		v(m)
+	}
+	return
+}
+
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes()
@@ -719,5 +762,101 @@ func init() {
 		}
 		return nil
 	})
+
+	{
+		ExternalCredBearerTokenTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapExport["ExternalCred"] = append(storageTransformersMapExport["ExternalCred"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*ExternalCred)
+
+				if toStorage {
+					data, err = ExternalCredBearerTokenTx.TransformToStorage(ctx, []byte(m.BearerToken))
+				} else {
+					data, err = ExternalCredBearerTokenTx.TransformFromStorage(ctx, []byte(m.BearerToken))
+				}
+				m.BearerToken = string(data)
+
+				return err
+			})
+
+		eraseSecretsMapExport["ExternalCred"] = func(i interface{}) {
+			m := i.(*ExternalCred)
+
+			var data []byte
+			m.BearerToken = string(data)
+
+			return
+		}
+
+	}
+
+	{
+		ExternalCredKeyDataTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapExport["ExternalCred"] = append(storageTransformersMapExport["ExternalCred"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*ExternalCred)
+
+				if toStorage {
+					data, err = ExternalCredKeyDataTx.TransformToStorage(ctx, []byte(m.KeyData))
+				} else {
+					data, err = ExternalCredKeyDataTx.TransformFromStorage(ctx, []byte(m.KeyData))
+				}
+				m.KeyData = []byte(data)
+
+				return err
+			})
+
+		eraseSecretsMapExport["ExternalCred"] = func(i interface{}) {
+			m := i.(*ExternalCred)
+
+			var data []byte
+			m.KeyData = []byte(data)
+
+			return
+		}
+
+	}
+
+	{
+		ExternalCredPasswordTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapExport["ExternalCred"] = append(storageTransformersMapExport["ExternalCred"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*ExternalCred)
+
+				if toStorage {
+					data, err = ExternalCredPasswordTx.TransformToStorage(ctx, []byte(m.Password))
+				} else {
+					data, err = ExternalCredPasswordTx.TransformFromStorage(ctx, []byte(m.Password))
+				}
+				m.Password = string(data)
+
+				return err
+			})
+
+		eraseSecretsMapExport["ExternalCred"] = func(i interface{}) {
+			m := i.(*ExternalCred)
+
+			var data []byte
+			m.Password = string(data)
+
+			return
+		}
+
+	}
 
 }

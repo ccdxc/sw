@@ -9,7 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	apiintf "github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -42,9 +42,39 @@ func hasImmutableFieldChange(fieldMeta *api.Field, updFieldValue, refFieldValue 
 	ft := schema.Types[fieldMeta.Type]
 	if ft != nil {
 		for _, f := range ft.Fields {
-			result, fieldName := hasImmutableFieldChange(&f, upd.FieldByName(f.Name).Interface(), ref.FieldByName(f.Name).Interface(), schema)
-			if result {
-				return true, fieldName
+			switch ref.Kind() {
+			case reflect.Array, reflect.Slice:
+				// compare directly by index
+				l1 := upd.Len()
+				l2 := ref.Len()
+				for i := 0; i < l1; i++ {
+					if i >= l2 {
+						break
+					}
+					result, fieldName := hasImmutableFieldChange(fieldMeta, upd.Index(i).Interface(), ref.Index(i).Interface(), schema)
+					if result {
+						return true, fieldName
+					}
+				}
+			case reflect.Map:
+				// compare by key
+				for _, key := range ref.MapKeys() {
+					refVal := ref.MapIndex(key)
+					updVal := upd.MapIndex(key)
+					if !updVal.IsValid() {
+						continue
+					}
+					result, fieldName := hasImmutableFieldChange(fieldMeta, updVal.Interface(), refVal.Interface(), schema)
+					if result {
+						return true, fieldName
+					}
+
+				}
+			default:
+				result, fieldName := hasImmutableFieldChange(&f, upd.FieldByName(f.Name).Interface(), ref.FieldByName(f.Name).Interface(), schema)
+				if result {
+					return true, fieldName
+				}
 			}
 		}
 	}

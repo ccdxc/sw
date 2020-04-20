@@ -7,6 +7,7 @@ Input file: svc_monitoring.proto
 package monitoring
 
 import (
+	"context"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -2137,6 +2138,291 @@ func (m *TroubleshootingSessionList) Normalize() {
 }
 
 // Transformers
+
+func (m *AlertDestinationList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *AlertDestinationList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AuditPolicyList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *AuditPolicyList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AutoMsgAlertDestinationWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgAlertDestinationWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AutoMsgAuditPolicyWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
+func (m *AutoMsgEventPolicyWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgEventPolicyWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
+func (m *AutoMsgFlowExportPolicyWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgFlowExportPolicyWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
+func (m *AutoMsgFwlogPolicyWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgFwlogPolicyWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
+func (m *EventPolicyList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *EventPolicyList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *FlowExportPolicyList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *FlowExportPolicyList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *FwlogPolicyList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *FwlogPolicyList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
 
 func init() {
 	scheme := runtime.GetDefaultScheme()

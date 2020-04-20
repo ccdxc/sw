@@ -315,12 +315,14 @@ func (m *{{$msgname}}) Normalize() {
 // Transformers
 {{range .Messages}}{{if isMapEntry .}}{{else}}{{$x := saveStr (derefStr .Name) 0}}{{if isNestedMessage .}}{{$x := saveStr (getNestedMsgName .) 0}}{{end}}{{$msg := .}}{{$msgname := (getStr 0)}}{{with (index $storageTransformers.Map $msgname)}}{{if .HasTransformers}}
 func (m *{{$msgname}}) ApplyStorageTransformer(ctx context.Context, toStorage bool) error { {{$_ := (saveBool false 0)}}{{range $fldk, $fldv := .Fields}}{{if eq 0 (len $fldv.Transformers)}}{{if $fldv.Repeated}}
-	for i, v := range m.{{$fldk}} {
-		 c := *v
+	for i, v := range m.{{$fldk}} { {{if $fldv.Pointer}}
+		 c := *v {{else}}
+		 c := v {{end}}
 		 if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
 			 return err
-		 }
-		 m.{{$fldk}}[i] = &c
+		 } {{if $fldv.Pointer}}
+		 m.{{$fldk}}[i] = &c {{else}}
+		 m.{{$fldk}}[i] = c {{end}}
 	} {{else}}{{if isSpecStatusMessage $msg}}
 	if err := m.{{$fldk}}.ApplyStorageTransformer(ctx, toStorage); err != nil {
 		return err

@@ -3063,6 +3063,24 @@
         }
       }
     },
+    "bookstoreCartItem": {
+      "type": "object",
+      "required": [
+        ""
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "Quantity": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "Value should be between 1 and 30."
+        }
+      }
+    },
     "bookstoreCoupon": {
       "type": "object",
       "properties": {
@@ -3212,6 +3230,19 @@
         },
         "id": {
           "type": "string"
+        },
+        "security-questions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bookstoreSecurityQuestions"
+          }
+        },
+        "cart": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/bookstoreCartItem"
+          },
+          "description": "Map from item ID to cartItem."
         }
       }
     },
@@ -3476,6 +3507,29 @@
         "Count": {
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "bookstoreSecurityQuestions": {
+      "type": "object",
+      "required": [
+        "question"
+      ],
+      "properties": {
+        "question": {
+          "type": "string",
+          "enum": [
+            "first-pet",
+            "childhood-friend"
+          ],
+          "default": "first-pet",
+          "x-ui-hints": {
+            "childhood-friend": "Childhood Friend",
+            "first-pet": "First Pet"
+          }
+        },
+        "answer": {
+          "type": "string"
         }
       }
     },

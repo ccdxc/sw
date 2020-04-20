@@ -87,6 +87,26 @@ func (x OrderStatus_OrderStatus) String() string {
 	return OrderStatus_OrderStatus_vname[int32(x)]
 }
 
+// SecurityQuestions_QuestionType_normal is a map of normalized values for the enum
+var SecurityQuestions_QuestionType_normal = map[string]string{
+	"childhood-friend": "childhood-friend",
+	"first-pet":        "first-pet",
+}
+
+var SecurityQuestions_QuestionType_vname = map[int32]string{
+	0: "first-pet",
+	1: "childhood-friend",
+}
+
+var SecurityQuestions_QuestionType_vvalue = map[string]int32{
+	"first-pet":        0,
+	"childhood-friend": 1,
+}
+
+func (x SecurityQuestions_QuestionType) String() string {
+	return SecurityQuestions_QuestionType_vname[int32(x)]
+}
+
 var _ validators.DummyVar
 var validatorMapExample = make(map[string]map[string][]func(string, interface{}) error)
 
@@ -752,6 +772,27 @@ func (m *BookStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *CartItem) Clone(into interface{}) (interface{}, error) {
+	var out *CartItem
+	var ok bool
+	if into == nil {
+		out = &CartItem{}
+	} else {
+		out, ok = into.(*CartItem)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*CartItem))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *CartItem) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *Coupon) Clone(into interface{}) (interface{}, error) {
 	var out *Coupon
 	var ok bool
@@ -937,6 +978,10 @@ func (m *CustomerSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *CustomerSpec) Defaults(ver string) bool {
 	var ret bool
+	for k := range m.SecurityQuestions {
+		i := m.SecurityQuestions[k]
+		ret = i.Defaults(ver) || ret
+	}
 	return ret
 }
 
@@ -1266,6 +1311,33 @@ func (m *RestockResponse) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *RestockResponse) Defaults(ver string) bool {
 	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *SecurityQuestions) Clone(into interface{}) (interface{}, error) {
+	var out *SecurityQuestions
+	var ok bool
+	if into == nil {
+		out = &SecurityQuestions{}
+	} else {
+		out, ok = into.(*SecurityQuestions)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*SecurityQuestions))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SecurityQuestions) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Question = "first-pet"
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -2071,6 +2143,32 @@ func (m *BookStatus) Normalize() {
 
 }
 
+func (m *CartItem) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *CartItem) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapExample["CartItem"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapExample["CartItem"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *CartItem) Normalize() {
+
+}
+
 func (m *Coupon) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -2292,6 +2390,26 @@ func (m *CustomerSpec) References(tenant string, path string, resp map[string]ap
 
 func (m *CustomerSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	for k, v := range m.Cart {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sCart[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	for k, v := range m.SecurityQuestions {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sSecurityQuestions[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if vs, ok := validatorMapExample["CustomerSpec"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -2309,6 +2427,19 @@ func (m *CustomerSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec 
 }
 
 func (m *CustomerSpec) Normalize() {
+
+	for k, v := range m.Cart {
+		if v != nil {
+			v.Normalize()
+			m.Cart[k] = v
+		}
+	}
+
+	for k, v := range m.SecurityQuestions {
+		v.Normalize()
+		m.SecurityQuestions[k] = v
+
+	}
 
 }
 
@@ -2813,6 +2944,34 @@ func (m *RestockResponse) Normalize() {
 
 }
 
+func (m *SecurityQuestions) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *SecurityQuestions) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	if vs, ok := validatorMapExample["SecurityQuestions"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapExample["SecurityQuestions"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *SecurityQuestions) Normalize() {
+
+	m.Question = SecurityQuestions_QuestionType_normal[strings.ToLower(m.Question)]
+
+}
+
 func (m *Store) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -3032,6 +3191,13 @@ func (m *CustomerSpec) ApplyStorageTransformer(ctx context.Context, toStorage bo
 	if err := m.PasswordRecoveryInfo.ApplyStorageTransformer(ctx, toStorage); err != nil {
 		return err
 	}
+	for i, v := range m.SecurityQuestions {
+		c := v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.SecurityQuestions[i] = c
+	}
 	if vs, ok := storageTransformersMapExample["CustomerSpec"]; ok {
 		for _, v := range vs {
 			if err := v(ctx, m, toStorage); err != nil {
@@ -3046,7 +3212,28 @@ func (m *CustomerSpec) EraseSecrets() {
 
 	m.PasswordRecoveryInfo.EraseSecrets()
 
+	for _, v := range m.SecurityQuestions {
+		v.EraseSecrets()
+	}
 	if v, ok := eraseSecretsMapExample["CustomerSpec"]; ok {
+		v(m)
+	}
+	return
+}
+
+func (m *SecurityQuestions) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapExample["SecurityQuestions"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *SecurityQuestions) EraseSecrets() {
+	if v, ok := eraseSecretsMapExample["SecurityQuestions"]; ok {
 		v(m)
 	}
 	return
@@ -3092,6 +3279,19 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Category", vals)
+		}
+		return nil
+	})
+
+	validatorMapExample["CartItem"] = make(map[string][]func(string, interface{}) error)
+	validatorMapExample["CartItem"]["all"] = append(validatorMapExample["CartItem"]["all"], func(path string, i interface{}) error {
+		m := i.(*CartItem)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "30")
+
+		if err := validators.IntRange(m.Quantity, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Quantity", err.Error())
 		}
 		return nil
 	})
@@ -3177,6 +3377,20 @@ func init() {
 
 		if err := validators.StrLen(m.WebAddr, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"WebAddr", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapExample["SecurityQuestions"] = make(map[string][]func(string, interface{}) error)
+	validatorMapExample["SecurityQuestions"]["all"] = append(validatorMapExample["SecurityQuestions"]["all"], func(path string, i interface{}) error {
+		m := i.(*SecurityQuestions)
+
+		if _, ok := SecurityQuestions_QuestionType_vvalue[m.Question]; !ok {
+			vals := []string{}
+			for k1, _ := range SecurityQuestions_QuestionType_vvalue {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Question", vals)
 		}
 		return nil
 	})
@@ -3343,6 +3557,38 @@ func init() {
 
 			var data []byte
 			m.Password = []byte(data)
+
+			return
+		}
+
+	}
+
+	{
+		SecurityQuestionsAnswerTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapExample["SecurityQuestions"] = append(storageTransformersMapExample["SecurityQuestions"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*SecurityQuestions)
+
+				if toStorage {
+					data, err = SecurityQuestionsAnswerTx.TransformToStorage(ctx, []byte(m.Answer))
+				} else {
+					data, err = SecurityQuestionsAnswerTx.TransformFromStorage(ctx, []byte(m.Answer))
+				}
+				m.Answer = string(data)
+
+				return err
+			})
+
+		eraseSecretsMapExample["SecurityQuestions"] = func(i interface{}) {
+			m := i.(*SecurityQuestions)
+
+			var data []byte
+			m.Answer = string(data)
 
 			return
 		}

@@ -274,8 +274,11 @@ searchHosts:
 	if hostFound == nil {
 		return fmt.Errorf("No duplicate Host entry found")
 	}
-
-	vcID, ok := hostFound.Labels[utils.OrchNameKey]
+	var vcID string
+	ok := false
+	if hostFound.Labels != nil {
+		vcID, ok = hostFound.Labels[utils.OrchNameKey]
+	}
 	if !ok {
 		return fmt.Errorf("Duplicate Host %s is being used by non-VC application", hostFound.Name)
 	}
@@ -322,6 +325,11 @@ func (v *VCHub) deleteHost(obj *cluster.Host) {
 }
 
 func (v *VCHub) deleteHostFromDc(obj *cluster.Host, penDC *PenDC) {
+	if obj.Labels == nil {
+		// all hosts created from orchhub will have labels
+		v.Log.Debugf("deleteHostFromDc - no lables")
+		return
+	}
 	hostName, ok := obj.Labels[NameKey]
 	if penDC != nil && ok {
 		if hKey, ok := penDC.findHostKeyByName(hostName); ok {

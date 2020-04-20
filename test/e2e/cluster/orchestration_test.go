@@ -74,7 +74,7 @@ func createOrchestrator(name, ip, user, password string) *orchestration.Orchestr
 			},
 		},
 		Status: orchestration.OrchestratorStatus{
-			Status: "unknown",
+			Status: orchestration.OrchestratorStatus_Unknown.String(),
 		},
 	}
 }

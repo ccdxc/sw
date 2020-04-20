@@ -333,7 +333,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				return nil, errors.New("invalid object")
 			}
-		}),
+		}).WithStorageTransformer(&monitoring.StorageFlowExportPolicyTransformer),
 
 		"monitoring.FlowExportPolicySpec":   apisrvpkg.NewMessage("monitoring.FlowExportPolicySpec"),
 		"monitoring.FlowExportPolicyStatus": apisrvpkg.NewMessage("monitoring.FlowExportPolicyStatus"),
@@ -622,7 +622,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 				}
 				return nil, errors.New("invalid object")
 			}
-		}),
+		}).WithStorageTransformer(&monitoring.StorageFwlogPolicyTransformer),
 
 		"monitoring.FwlogPolicySpec":   apisrvpkg.NewMessage("monitoring.FwlogPolicySpec"),
 		"monitoring.FwlogPolicyStatus": apisrvpkg.NewMessage("monitoring.FwlogPolicyStatus"),

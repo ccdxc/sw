@@ -1331,6 +1331,9 @@ func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, dispName, hKey str
 
 func (v *VCHub) addWorkloadLabels(workloadObj *workload.Workload, name, dcName string) {
 	// TODO derive dcName from host
+	if workloadObj.Labels == nil {
+		workloadObj.Labels = map[string]string{}
+	}
 	if name != "" {
 		addNameLabel(workloadObj.Labels, name)
 	}

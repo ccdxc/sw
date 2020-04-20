@@ -54,19 +54,19 @@ message ExternalCred {
     // Password is one time specified, not visibile on read operations
     // Only valid when UserName is defined
     // TBD: need to add (venice.secret) = "true" support for this
-    string Password = 3 [(gogoproto.jsontag) = "password,omitempty"];
+    string Password = 3 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "password,omitempty"];
 
     // External entity supports bearer tokens for authentication and authorization
     // Token refresh is not supported using OAuth2
     // TBD: need to add (venice.secret) = "true" support for this
-    string BearerToken = 4 [(gogoproto.jsontag) = "bearer-token,omitempty"];
+    string BearerToken = 4 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "bearer-token,omitempty"];
 
     // CertData holds PEM-encoded bytes (typically read from a client certificate file).
     bytes CertData = 5 [(gogoproto.jsontag) = "cert-data,omitempty"];
 
     // KeyData holds PEM-encoded bytes (typically read from a client certificate key file).
     // TBD: need to add (venice.secret) = "true" support for this
-    bytes KeyData = 6 [(gogoproto.jsontag) = "key-data,omitempty"];
+    bytes KeyData = 6 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "key-data,omitempty"];
 
     // CaData holds PEM-encoded bytes (typically read from a root certificates bundle).
     bytes CaData = 7 [(gogoproto.jsontag) = "ca-data,omitempty"];

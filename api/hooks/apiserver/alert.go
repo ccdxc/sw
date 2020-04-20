@@ -17,8 +17,8 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/api/utils"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/metrics/genfields"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils"
@@ -406,6 +406,73 @@ func (a *alertHooks) validateStatsAlertPolicy(ctx context.Context, kv kvstore.In
 	return i, true, nil
 }
 
+// If the incoming request has no credentials, we load in credentials from kv store
+func (a *alertHooks) handleCredentialUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	kind := "alertDestination"
+	hookName := "alertHook"
+	methodName := "handleCredentialUpdate"
+	new, ok := i.(monitoring.AlertDestination)
+	cur := &monitoring.AlertDestination{}
+	logger := a.logger
+
+	logger.DebugLog("msg", "%s %s called", hookName, methodName)
+	if !ok {
+		logger.ErrorLog("method", methodName, "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
+		return i, true, fmt.Errorf("Invalid input type")
+	}
+
+	if oper != apiintf.UpdateOper {
+		logger.ErrorLog("method", methodName, "msg", fmt.Sprintf("called for invalid api operation %s", oper))
+		return i, true, fmt.Errorf("Invalid input type")
+	}
+
+	if err := kv.Get(ctx, key, cur); err != nil {
+		logger.ErrorLog("method", methodName,
+			"msg", fmt.Sprintf("error getting object with key [%s] in API server pre-commit hook for update %s", kind, key),
+			"error", err)
+		return new, true, err
+	}
+
+	// Check and merge credentials
+	// Map config by destination,target
+	curCredMap := map[string]*monitoring.ExportConfig{}
+	for _, target := range cur.Spec.SyslogExport.Targets {
+		key := fmt.Sprintf("%s%s", target.Destination, target.Transport)
+		curCredMap[key] = target
+	}
+	newCredMap := map[string]*monitoring.ExportConfig{}
+	for _, target := range new.Spec.SyslogExport.Targets {
+		key := fmt.Sprintf("%s%s", target.Destination, target.Transport)
+		if _, ok := newCredMap[key]; ok {
+			// Duplicate targets found in new object
+			return new, true, fmt.Errorf("duplicate targets are not allowed")
+		}
+		newCredMap[key] = target
+	}
+
+	// decrypt credentials as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty key in that case
+	if err := cur.ApplyStorageTransformer(context.Background(), false); err != nil {
+		logger.ErrorLog("method", methodName, "msg", "error decrypting credentials field", "error", err)
+		return new, true, err
+	}
+
+	for key, newTarget := range newCredMap {
+		if newTarget.Credentials != nil {
+			continue
+		}
+		if curTarget, ok := curCredMap[key]; ok {
+			newTarget.Credentials = curTarget.Credentials
+		}
+	}
+
+	if !dryRun {
+		logger.DebugLog("method", methodName, "msg", fmt.Sprintf("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion))
+		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", cur.ResourceVersion))
+	}
+
+	return new, true, nil
+}
+
 func registerAlertHooks(svc apiserver.Service, l log.Logger) {
 	l.Log("msg", "registering Hooks")
 	ah := alertHooks{logger: l.WithContext("Service", "Alert")}
@@ -416,4 +483,5 @@ func registerAlertHooks(svc apiserver.Service, l log.Logger) {
 	svc.GetCrudService("AlertDestination", apiintf.UpdateOper).WithPreCommitHook(adh.validateAlertDestination)
 	svc.GetCrudService("StatsAlertPolicy", apiintf.CreateOper).WithPreCommitHook(sap.validateStatsAlertPolicy)
 	svc.GetCrudService("StatsAlertPolicy", apiintf.UpdateOper).WithPreCommitHook(sap.validateStatsAlertPolicy)
+	svc.GetCrudService("AlertDestination", apiintf.UpdateOper).WithPreCommitHook(adh.handleCredentialUpdate)
 }

@@ -439,6 +439,7 @@ func (v *VCHub) createHostName(namespace, objName string) string {
 }
 
 func (v *VCHub) createVMWorkloadName(namespace, objName string) string {
+	// Note: Changing this function may break upgrade compatability.
 	// don't include namespace (DC name) in the workload name
 	return fmt.Sprintf("%s", utils.CreateGlobalKey(v.OrchID, "", objName))
 }

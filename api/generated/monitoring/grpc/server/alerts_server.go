@@ -620,7 +620,7 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 				}
 				return nil, errors.New("invalid object")
 			}
-		}),
+		}).WithStorageTransformer(&monitoring.StorageAlertDestinationTransformer),
 
 		"monitoring.AlertDestinationSpec":   apisrvpkg.NewMessage("monitoring.AlertDestinationSpec"),
 		"monitoring.AlertDestinationStatus": apisrvpkg.NewMessage("monitoring.AlertDestinationStatus"),

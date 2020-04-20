@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -22,6 +23,7 @@ import (
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/ctxutils"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -223,6 +225,193 @@ func TestOrchCheckHook(t *testing.T) {
 				AssertOk(t, err, "TC %d, Failed to update object in KVStore", i)
 			}
 		}
+	}
+}
+
+func TestOrchHandleCredentialUpdate(t *testing.T) {
+	kind := string(orchestration.KindOrchestrator)
+	objName := "testObj"
+	tests := []struct {
+		name     string
+		oper     apiintf.APIOperType
+		in       interface{}
+		existing *orchestration.Orchestrator
+		out      interface{}
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object",
+			oper: apiintf.UpdateOper,
+			in: struct {
+				Test string
+			}{"testing"},
+			out: struct {
+				Test string
+			}{"testing"},
+			result: true,
+			err:    fmt.Errorf("Invalid input type"),
+		},
+		{
+			name: "invalid operation type",
+			oper: apiintf.CreateOper,
+			in: orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+			},
+			out: orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+			},
+			result: true,
+			err:    fmt.Errorf("Invalid input type"),
+		},
+		{
+			name: "missing existing obj",
+			oper: apiintf.UpdateOper,
+			in: orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+			},
+			existing: nil,
+			out: orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+			},
+			result: true,
+			err:    kvstore.NewKeyNotFoundError("/venice/config/orchestration/orchestrator/testObj", 0),
+		},
+		{
+			name: "populate existing credentials",
+			oper: apiintf.UpdateOper,
+			in: orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "newUri",
+				},
+			},
+			existing: &orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "oldUri",
+					Credentials: &monitoring.ExternalCred{
+						Password: "testPassword",
+					},
+				},
+			},
+			out: orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "newUri",
+					Credentials: &monitoring.ExternalCred{
+						Password: "testPassword",
+					},
+				},
+			},
+			result: true,
+			err:    nil,
+		},
+		{
+			name: "Update existing",
+			oper: apiintf.UpdateOper,
+			in: orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "newUri",
+					Credentials: &monitoring.ExternalCred{
+						Password: "newPassword",
+					},
+				},
+			},
+			existing: &orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "oldUri",
+					Credentials: &monitoring.ExternalCred{
+						Password: "testPassword",
+					},
+				},
+			},
+			out: orchestration.Orchestrator{
+				TypeMeta: api.TypeMeta{Kind: kind},
+				ObjectMeta: api.ObjectMeta{
+					Name: objName,
+				},
+				Spec: orchestration.OrchestratorSpec{
+					URI: "newUri",
+					Credentials: &monitoring.ExternalCred{
+						Password: "newPassword",
+					},
+				},
+			},
+			result: true,
+			err:    nil,
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestOrchHooks-handleCredentials")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	dummyObj := &orchestration.Orchestrator{
+		TypeMeta: api.TypeMeta{Kind: kind},
+		ObjectMeta: api.ObjectMeta{
+			Name: objName,
+		},
+	}
+	key := dummyObj.MakeKey("orchestration")
+	hook := &orchHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+		defer cancelFunc()
+		txn := kvs.NewTxn()
+		kvs.Delete(ctx, key, nil)
+		if test.existing != nil {
+			// encrypt object as credentials are stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting password, Err: %v", test.name, err)
+			}
+
+			if err := kvs.Create(ctx, key, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with cluster, Err: %v", test.name, err)
+			}
+		}
+		out, ok, err := hook.handleCredentialUpdate(ctx, kvs, txn, key, test.oper, false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		AssertEquals(t, test.err, err, fmt.Sprintf("[%v] test failed", test.name))
+		AssertEquals(t, test.out, out, fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
 	}
 }
 

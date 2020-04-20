@@ -7,6 +7,7 @@ Input file: orchestration.proto
 package orchestration
 
 import (
+	"context"
 	"errors"
 	fmt "fmt"
 	"strings"
@@ -315,6 +316,62 @@ func (m *OrchestratorStatus) Normalize() {
 }
 
 // Transformers
+
+func (m *Orchestrator) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Orchestrator) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	return
+}
+
+type storageOrchestratorTransformer struct{}
+
+var StorageOrchestratorTransformer storageOrchestratorTransformer
+
+func (st *storageOrchestratorTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(Orchestrator)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageOrchestratorTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(Orchestrator)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *OrchestratorSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Credentials == nil {
+		return nil
+	}
+	if err := m.Credentials.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *OrchestratorSpec) EraseSecrets() {
+
+	if m.Credentials == nil {
+		return
+	}
+	m.Credentials.EraseSecrets()
+
+	return
+}
 
 func init() {
 	scheme := runtime.GetDefaultScheme()

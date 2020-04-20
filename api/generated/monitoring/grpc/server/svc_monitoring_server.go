@@ -162,6 +162,10 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+				return nil, err
+			}
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.AlertDestinationList)
@@ -290,6 +294,10 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+				return nil, err
+			}
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.AuditPolicyList)
@@ -334,6 +342,10 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+				return nil, err
+			}
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.EventPolicyList)
@@ -366,6 +378,10 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+				return nil, err
+			}
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(monitoring.FlowExportPolicyList)
@@ -396,6 +412,10 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
+				return nil, err
+			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
 				return nil, err
 			}
 			return into, nil
@@ -1575,7 +1595,14 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 					}
 					in := cin.(*monitoring.EventPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
-
+					{
+						txin, err := monitoring.StorageEventPolicyTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to EventPolicy")
+						}
+						obj := txin.(monitoring.EventPolicy)
+						in = &obj
+					}
 					strEvent := &monitoring.AutoMsgEventPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1678,7 +1705,14 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 					}
 					in := cin.(*monitoring.FwlogPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
-
+					{
+						txin, err := monitoring.StorageFwlogPolicyTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to FwlogPolicy")
+						}
+						obj := txin.(monitoring.FwlogPolicy)
+						in = &obj
+					}
 					strEvent := &monitoring.AutoMsgFwlogPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1781,7 +1815,14 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 					}
 					in := cin.(*monitoring.FlowExportPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
-
+					{
+						txin, err := monitoring.StorageFlowExportPolicyTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to FlowExportPolicy")
+						}
+						obj := txin.(monitoring.FlowExportPolicy)
+						in = &obj
+					}
 					strEvent := &monitoring.AutoMsgFlowExportPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
@@ -2193,7 +2234,14 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 					}
 					in := cin.(*monitoring.AlertDestination)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
-
+					{
+						txin, err := monitoring.StorageAlertDestinationTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to AlertDestination")
+						}
+						obj := txin.(monitoring.AlertDestination)
+						in = &obj
+					}
 					strEvent := &monitoring.AutoMsgAlertDestinationWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
@@ -2708,7 +2756,14 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 					}
 					in := cin.(*monitoring.AuditPolicy)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
-
+					{
+						txin, err := monitoring.StorageAuditPolicyTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to AuditPolicy")
+						}
+						obj := txin.(monitoring.AuditPolicy)
+						in = &obj
+					}
 					strEvent := &monitoring.AutoMsgAuditPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,

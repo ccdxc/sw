@@ -68,12 +68,18 @@ func IsObjForOrch(labels map[string]string, orchID string, namespace string) boo
 
 // GetOrchNameFromObj returns the orch associated with the given labels
 func GetOrchNameFromObj(labels map[string]string) (string, bool) {
+	if labels == nil {
+		return "", false
+	}
 	orch, ok := labels[OrchNameKey]
 	return orch, ok
 }
 
 // GetOrchNamespaceFromObj returns the orch namespace associated with the given labels
 func GetOrchNamespaceFromObj(labels map[string]string) (string, bool) {
+	if labels == nil {
+		return "", false
+	}
 	ns, ok := labels[NamespaceKey]
 	return ns, ok
 }

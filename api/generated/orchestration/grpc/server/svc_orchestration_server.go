@@ -79,6 +79,10 @@ func (s *sorchestrationSvc_orchestrationBackend) regMsgsFunc(l log.Logger, schem
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+				return nil, err
+			}
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(orchestration.OrchestratorList)
@@ -296,7 +300,14 @@ func (s *sorchestrationSvc_orchestrationBackend) regWatchersFunc(ctx context.Con
 					}
 					in := cin.(*orchestration.Orchestrator)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "orchestration")
-
+					{
+						txin, err := orchestration.StorageOrchestratorTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to Orchestrator")
+						}
+						obj := txin.(orchestration.Orchestrator)
+						in = &obj
+					}
 					strEvent := &orchestration.AutoMsgOrchestratorWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,

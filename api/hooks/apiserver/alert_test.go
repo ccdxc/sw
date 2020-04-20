@@ -16,8 +16,8 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/api/utils"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/ctxutils"
@@ -930,6 +930,385 @@ func TestAlertHooks(t *testing.T) {
 			*alertObj = *outObj
 			*ap = *updatedAP
 		}
+	}
+}
+
+func TestAlertDestinationHandleCredentialUpdate(t *testing.T) {
+	kind := string(monitoring.KindAlertDestination)
+	objName := globals.DefaultTenant
+	tests := []struct {
+		name     string
+		oper     apiintf.APIOperType
+		in       interface{}
+		existing *monitoring.AlertDestination
+		out      interface{}
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object",
+			oper: apiintf.UpdateOper,
+			in: struct {
+				Test string
+			}{"testing"},
+			out: struct {
+				Test string
+			}{"testing"},
+			result: true,
+			err:    fmt.Errorf("Invalid input type"),
+		},
+		{
+			name: "invalid operation type",
+			oper: apiintf.CreateOper,
+			in: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			out: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			result: true,
+			err:    fmt.Errorf("Invalid input type"),
+		},
+		{
+			name: "missing existing obj",
+			oper: apiintf.UpdateOper,
+			in: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			existing: nil,
+			out: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			result: true,
+			err:    kvstore.NewKeyNotFoundError("/venice/config/monitoring/alertDestinations/default/default", 0),
+		},
+		{
+			name: "populate existing credentials",
+			oper: apiintf.UpdateOper,
+			in: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{ // new collector
+								Destination: "10.1.1.101",
+								Transport:   "TCP/1234",
+								Credentials: &monitoring.ExternalCred{
+									Password: "testPassword",
+								},
+							},
+							{ // existing collector
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			existing: &monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+								Credentials: &monitoring.ExternalCred{
+									Password: "testPassword",
+								},
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			out: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{ // new collector
+								Destination: "10.1.1.101",
+								Transport:   "TCP/1234",
+								Credentials: &monitoring.ExternalCred{
+									Password: "testPassword",
+								},
+							},
+							{ // existing collector
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+								Credentials: &monitoring.ExternalCred{
+									Password: "testPassword",
+								},
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			result: true,
+			err:    nil,
+		},
+		{
+			name: "Update existing",
+			oper: apiintf.UpdateOper,
+			in: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{ // new collector
+								Destination: "10.1.1.101",
+								Transport:   "TCP/1234",
+								Credentials: &monitoring.ExternalCred{
+									Password: "testPassword",
+								},
+							},
+							{ // existing collector
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+								Credentials: &monitoring.ExternalCred{
+									Password: "newPassword",
+								},
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			existing: &monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+								Credentials: &monitoring.ExternalCred{
+									Password: "testPassword",
+								},
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			out: monitoring.AlertDestination{
+				TypeMeta: api.TypeMeta{
+					Kind: "alertDestination",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      objName,
+					Tenant:    globals.DefaultTenant,
+				},
+				Spec: monitoring.AlertDestinationSpec{
+					SyslogExport: &monitoring.SyslogExport{
+						Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+						Targets: []*monitoring.ExportConfig{
+							{ // new collector
+								Destination: "10.1.1.101",
+								Transport:   "TCP/1234",
+								Credentials: &monitoring.ExternalCred{
+									Password: "testPassword",
+								},
+							},
+							{ // existing collector
+								Destination: "10.1.1.100",
+								Transport:   "TCP/1234",
+								Credentials: &monitoring.ExternalCred{
+									Password: "newPassword",
+								},
+							},
+						},
+						Config: &monitoring.SyslogExportConfig{
+							FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+						},
+					},
+				},
+			},
+			result: true,
+			err:    nil,
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestAlertsHook-handleCredentials")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	dummyObj := &monitoring.AlertDestination{
+		TypeMeta: api.TypeMeta{Kind: kind},
+		ObjectMeta: api.ObjectMeta{
+			Namespace: globals.DefaultNamespace,
+			Name:      objName,
+			Tenant:    globals.DefaultTenant,
+		},
+	}
+	key := dummyObj.MakeKey("monitoring")
+	hook := &alertHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+		defer cancelFunc()
+		txn := kvs.NewTxn()
+		kvs.Delete(ctx, key, nil)
+		if test.existing != nil {
+			// encrypt object as credentials are stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting password, Err: %v", test.name, err)
+			}
+
+			if err := kvs.Create(ctx, key, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with cluster, Err: %v", test.name, err)
+			}
+		}
+		out, ok, err := hook.handleCredentialUpdate(ctx, kvs, txn, key, test.oper, false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		AssertEquals(t, test.err, err, fmt.Sprintf("[%v] test failed", test.name))
+		AssertEquals(t, test.out, out, fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
 	}
 }
 

@@ -333,7 +333,7 @@ func (s *sorchestrationOrchestrationBackend) regMsgsFunc(l log.Logger, scheme *r
 				}
 				return nil, errors.New("invalid object")
 			}
-		}),
+		}).WithStorageTransformer(&orchestration.StorageOrchestratorTransformer),
 
 		"orchestration.OrchestratorSpec":   apisrvpkg.NewMessage("orchestration.OrchestratorSpec"),
 		"orchestration.OrchestratorStatus": apisrvpkg.NewMessage("orchestration.OrchestratorStatus"),

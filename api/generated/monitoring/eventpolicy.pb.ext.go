@@ -7,6 +7,7 @@ Input file: eventpolicy.proto
 package monitoring
 
 import (
+	"context"
 	"errors"
 	fmt "fmt"
 	"strings"
@@ -312,6 +313,59 @@ func (m *EventPolicyStatus) Normalize() {
 }
 
 // Transformers
+
+func (m *EventPolicy) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *EventPolicy) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	return
+}
+
+type storageEventPolicyTransformer struct{}
+
+var StorageEventPolicyTransformer storageEventPolicyTransformer
+
+func (st *storageEventPolicyTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(EventPolicy)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageEventPolicyTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(EventPolicy)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *EventPolicySpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Targets {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Targets[i] = &c
+	}
+	return nil
+}
+
+func (m *EventPolicySpec) EraseSecrets() {
+	for _, v := range m.Targets {
+		v.EraseSecrets()
+	}
+	return
+}
 
 func init() {
 	scheme := runtime.GetDefaultScheme()

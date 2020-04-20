@@ -159,12 +159,31 @@ message CustomerPersonalInfo {
 	repeated uint32 LuckyNumbers = 4 [(venice.mutable) = false, (gogoproto.jsontag) = "lucky-numbers"];
 }
 
+message SecurityQuestions {
+  enum  QuestionType{
+    // ui-hint: First Pet
+    FirstPet = 0 [(venice.enumValueStr) = "first-pet"];
+    // ui-hint: Childhood Friend
+    ChildhoodFriend = 1 [(venice.enumValueStr) = "childhood-friend"];
+  }
+  string Question = 1 [(venice.mutable) = false, (gogoproto.jsontag) = "question", (venice.check) = "StrEnum(SecurityQuestions.QuestionType)"];
+  string Answer = 2 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "answer,omitempty"];
+}
+
+message CartItem {
+  string ID = 1 [(venice.mutable) = false, (gogoproto.jsontag) = "id"];
+  uint32 Quantity = 3 [(venice.check) = "IntRange(1,30)"];
+}
+
 message CustomerSpec {
   string Address = 1;
   repeated string CreditCardNumbers = 2 [(venice.storageTransformer) = "Secret()", (venice.check) = "StrLen(3,16)"];
   bytes Password = 3 [(venice.storageTransformer) = "Secret()"];
   CustomerPersonalInfo PasswordRecoveryInfo = 4 [(gogoproto.nullable) = false];
 	string Id = 5 [(venice.mutable) = false, (gogoproto.jsontag) = "id"];
+  repeated SecurityQuestions SecurityQuestions = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "security-questions"];
+  // Map from item ID to cartItem
+  map<string, CartItem> Cart = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "cart"];
 }
 
 message CustomerStatus {

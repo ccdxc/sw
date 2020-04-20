@@ -26,6 +26,7 @@ The following Messages are defined.
   BookReview
   BookSpec
   BookStatus
+  CartItem
   Coupon
   CouponList
   CouponSpec
@@ -47,6 +48,7 @@ The following Messages are defined.
   PublisherStatus
   RestockRequest
   RestockResponse
+  SecurityQuestions
   Store
   StoreList
   StoreSpec

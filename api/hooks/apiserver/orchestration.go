@@ -170,6 +170,57 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 	return orch, true, nil
 }
 
+// If the incoming request has no credentials, we load in credentials from kv store
+func (o *orchHooks) handleCredentialUpdate(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	hookName := "OrchHook"
+	methodName := "handleCredentialUpdate"
+	new, ok := i.(orchestration.Orchestrator)
+	cur := &orchestration.Orchestrator{}
+	logger := o.logger
+
+	logger.DebugLog("msg", "%s %s called", hookName, methodName)
+	if !ok {
+		logger.ErrorLog("method", methodName, "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
+		return i, true, fmt.Errorf("Invalid input type")
+	}
+
+	if oper != apiintf.UpdateOper {
+		logger.ErrorLog("method", methodName, "msg", fmt.Sprintf("called for invalid api operation %s", oper))
+		return i, true, fmt.Errorf("Invalid input type")
+	}
+
+	if err := kv.Get(ctx, key, cur); err != nil {
+		logger.ErrorLog("method", methodName,
+			"msg", fmt.Sprintf("error getting orchestrator with key [%s] in API server pre-commit hook for update orchestrator", key),
+			"error", err)
+		return new, true, err
+	}
+
+	// Check and merge credentials
+
+	newCred := new.Spec.Credentials
+	curCred := cur.Spec.Credentials
+
+	if newCred != nil {
+		return new, true, nil
+	}
+
+	// decrypt credentials as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty key in that case
+	if err := cur.ApplyStorageTransformer(context.Background(), false); err != nil {
+		logger.ErrorLog("method", methodName, "msg", "error decrypting credentials field", "error", err)
+		return new, true, err
+	}
+
+	new.Spec.Credentials = curCred
+
+	if !dryRun {
+		logger.DebugLog("method", methodName, "msg", fmt.Sprintf("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion))
+		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", cur.ResourceVersion))
+	}
+
+	return new, true, nil
+}
+
 func createOrchCheckHook(kind string) apiserver.PreCommitFunc {
 	return func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 
@@ -216,6 +267,7 @@ func registerOrchestrationHooks(svc apiserver.Service, l log.Logger) {
 	oh := orchHooks{logger: l.WithContext("Service", "Orchestrator")}
 	svc.GetCrudService("Orchestrator", apiintf.CreateOper).WithPreCommitHook(oh.validateOrchestrator)
 	svc.GetCrudService("Orchestrator", apiintf.UpdateOper).WithPreCommitHook(oh.validateOrchestrator)
+	svc.GetCrudService("Orchestrator", apiintf.UpdateOper).WithPreCommitHook(oh.handleCredentialUpdate)
 }
 
 func init() {

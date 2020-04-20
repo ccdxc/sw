@@ -12,7 +12,7 @@ import (
 	bs "github.com/pensando/sw/api/generated/bookstore"
 	_ "github.com/pensando/sw/api/generated/bookstore/grpc/server"
 	. "github.com/pensando/sw/api/hooks/apiserver/fields"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -173,6 +173,166 @@ func TestCheckImmutableFieldChanges(t *testing.T) {
 				},
 			},
 			"",
+		},
+		{ // Immutable field change inside an array, adding an item should be fine
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+					SecurityQuestions: []bs.SecurityQuestions{
+						bs.SecurityQuestions{
+							Question: bs.SecurityQuestions_FirstPet.String(),
+							Answer:   "Go the Gopher",
+						},
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Active",
+				},
+			},
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+					SecurityQuestions: []bs.SecurityQuestions{
+						bs.SecurityQuestions{
+							Question: bs.SecurityQuestions_FirstPet.String(),
+							Answer:   "Go the Gopher1",
+						},
+						bs.SecurityQuestions{
+							Question: bs.SecurityQuestions_ChildhoodFriend.String(),
+							Answer:   "Go the Gopher",
+						},
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Inactive",
+				},
+			},
+			"",
+		},
+		{ // Immutable field change inside an array, modifying immutable field should fail
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+					SecurityQuestions: []bs.SecurityQuestions{
+						bs.SecurityQuestions{
+							Question: bs.SecurityQuestions_FirstPet.String(),
+							Answer:   "Go the Gopher",
+						},
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Active",
+				},
+			},
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+					SecurityQuestions: []bs.SecurityQuestions{
+						bs.SecurityQuestions{
+							Question: bs.SecurityQuestions_ChildhoodFriend.String(),
+							Answer:   "Go the Gopher",
+						},
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Inactive",
+				},
+			},
+			"Question",
+		},
+		{ // Immutable field change on a map, adding entry is fine
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+					Cart: map[string]*bs.CartItem{
+						"id1": &bs.CartItem{
+							ID:       "id1",
+							Quantity: 1,
+						},
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Active",
+				},
+			},
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+					Cart: map[string]*bs.CartItem{
+						"id1": &bs.CartItem{
+							ID:       "id1",
+							Quantity: 2,
+						},
+						// "id2": &bs.CartItem{
+						// 	ID:       "id2",
+						// 	Quantity: 1,
+						// },
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Inactive",
+				},
+			},
+			"",
+		},
+		{ // Immutable field change on a map, modifying immutable field of an entry should fail
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+					Cart: map[string]*bs.CartItem{
+						"id1": &bs.CartItem{
+							ID:       "id1",
+							Quantity: 1,
+						},
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Active",
+				},
+			},
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+					Cart: map[string]*bs.CartItem{
+						"id1": &bs.CartItem{
+							ID:       "id2",
+							Quantity: 2,
+						},
+						"id2": &bs.CartItem{
+							ID:       "id2",
+							Quantity: 1,
+						},
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Inactive",
+				},
+			},
+			"ID",
 		},
 	}
 

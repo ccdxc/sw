@@ -333,7 +333,7 @@ func (s *smonitoringEventpolicyBackend) regMsgsFunc(l log.Logger, scheme *runtim
 				}
 				return nil, errors.New("invalid object")
 			}
-		}),
+		}).WithStorageTransformer(&monitoring.StorageEventPolicyTransformer),
 
 		"monitoring.EventPolicySpec":   apisrvpkg.NewMessage("monitoring.EventPolicySpec"),
 		"monitoring.EventPolicyStatus": apisrvpkg.NewMessage("monitoring.EventPolicyStatus"),

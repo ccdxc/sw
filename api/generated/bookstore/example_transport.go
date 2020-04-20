@@ -1343,6 +1343,40 @@ func DecodeGrpcRespBookStatus(ctx context.Context, response interface{}) (interf
 	return response, nil
 }
 
+func encodeHTTPCartItem(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPCartItem(_ context.Context, r *http.Request) (interface{}, error) {
+	var req CartItem
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqCartItem encodes GRPC request
+func EncodeGrpcReqCartItem(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CartItem)
+	return req, nil
+}
+
+// DecodeGrpcReqCartItem decodes GRPC request
+func DecodeGrpcReqCartItem(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*CartItem)
+	return req, nil
+}
+
+// EncodeGrpcRespCartItem encodes GRC response
+func EncodeGrpcRespCartItem(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespCartItem decodes GRPC response
+func DecodeGrpcRespCartItem(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPCoupon(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -2054,6 +2088,40 @@ func EncodeGrpcRespRestockResponse(ctx context.Context, response interface{}) (i
 
 // DecodeGrpcRespRestockResponse decodes GRPC response
 func DecodeGrpcRespRestockResponse(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSecurityQuestions(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSecurityQuestions(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SecurityQuestions
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSecurityQuestions encodes GRPC request
+func EncodeGrpcReqSecurityQuestions(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityQuestions)
+	return req, nil
+}
+
+// DecodeGrpcReqSecurityQuestions decodes GRPC request
+func DecodeGrpcReqSecurityQuestions(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SecurityQuestions)
+	return req, nil
+}
+
+// EncodeGrpcRespSecurityQuestions encodes GRC response
+func EncodeGrpcRespSecurityQuestions(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSecurityQuestions decodes GRPC response
+func DecodeGrpcRespSecurityQuestions(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

@@ -99,6 +99,22 @@ func TestSecretsTransformer(t *testing.T) {
 				SSN:              "555-67-1234",
 				MotherMaidenName: "Mamma",
 			},
+			Cart: map[string]*bookstore.CartItem{
+				"XXXX": &bookstore.CartItem{
+					ID:       "XXXX",
+					Quantity: 1,
+				},
+			},
+			SecurityQuestions: []bookstore.SecurityQuestions{
+				bookstore.SecurityQuestions{
+					Question: bookstore.SecurityQuestions_FirstPet.String(),
+					Answer:   "Go the Gopher",
+				},
+				bookstore.SecurityQuestions{
+					Question: bookstore.SecurityQuestions_ChildhoodFriend.String(),
+					Answer:   "Go the Gopher",
+				},
+			},
 		},
 	}
 
@@ -111,6 +127,20 @@ func TestSecretsTransformer(t *testing.T) {
 		},
 		Spec: bookstore.CustomerSpec{
 			Address: "123 My Way",
+			Cart: map[string]*bookstore.CartItem{
+				"XXXX": &bookstore.CartItem{
+					ID:       "XXXX",
+					Quantity: 1,
+				},
+			},
+			SecurityQuestions: []bookstore.SecurityQuestions{
+				bookstore.SecurityQuestions{
+					Question: bookstore.SecurityQuestions_FirstPet.String(),
+				},
+				bookstore.SecurityQuestions{
+					Question: bookstore.SecurityQuestions_ChildhoodFriend.String(),
+				},
+			},
 		},
 	}
 

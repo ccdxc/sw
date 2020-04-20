@@ -617,6 +617,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"bookstore.BookReview": apisrvpkg.NewMessage("bookstore.BookReview"),
 		"bookstore.BookSpec":   apisrvpkg.NewMessage("bookstore.BookSpec"),
 		"bookstore.BookStatus": apisrvpkg.NewMessage("bookstore.BookStatus"),
+		"bookstore.CartItem":   apisrvpkg.NewMessage("bookstore.CartItem"),
 		"bookstore.Coupon": apisrvpkg.NewMessage("bookstore.Coupon").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.Coupon{}
@@ -2447,6 +2448,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			return ret, nil
 		}),
 
+		"bookstore.SecurityQuestions": apisrvpkg.NewMessage("bookstore.SecurityQuestions"),
 		"bookstore.Store": apisrvpkg.NewMessage("bookstore.Store").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.Store{}

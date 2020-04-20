@@ -7,6 +7,7 @@ Input file: telemetry.proto
 package monitoring
 
 import (
+	"context"
 	"errors"
 	fmt "fmt"
 	"strings"
@@ -572,6 +573,112 @@ func (m *FwlogPolicyStatus) Normalize() {
 }
 
 // Transformers
+
+func (m *FlowExportPolicy) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *FlowExportPolicy) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	return
+}
+
+type storageFlowExportPolicyTransformer struct{}
+
+var StorageFlowExportPolicyTransformer storageFlowExportPolicyTransformer
+
+func (st *storageFlowExportPolicyTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(FlowExportPolicy)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageFlowExportPolicyTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(FlowExportPolicy)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *FlowExportPolicySpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Exports {
+		c := v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Exports[i] = c
+	}
+	return nil
+}
+
+func (m *FlowExportPolicySpec) EraseSecrets() {
+	for _, v := range m.Exports {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *FwlogPolicy) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *FwlogPolicy) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	return
+}
+
+type storageFwlogPolicyTransformer struct{}
+
+var StorageFwlogPolicyTransformer storageFwlogPolicyTransformer
+
+func (st *storageFwlogPolicyTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(FwlogPolicy)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageFwlogPolicyTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(FwlogPolicy)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *FwlogPolicySpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Targets {
+		c := v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Targets[i] = c
+	}
+	return nil
+}
+
+func (m *FwlogPolicySpec) EraseSecrets() {
+	for _, v := range m.Targets {
+		v.EraseSecrets()
+	}
+	return
+}
 
 func init() {
 	scheme := runtime.GetDefaultScheme()

@@ -43,6 +43,12 @@ func retainSpecialLabels(existingLabels, newLabels map[string]string) {
 	// TODO: vm-name and orch-name could technically conflict
 	// with cateory names. Is this ok?
 	// In case of conflict, we overwrite with vm/orch name
+	if existingLabels == nil {
+		existingLabels = map[string]string{}
+	}
+	if newLabels == nil {
+		existingLabels = map[string]string{}
+	}
 	if v, ok := existingLabels[utils.OrchNameKey]; ok {
 		newLabels[utils.OrchNameKey] = v
 	}
