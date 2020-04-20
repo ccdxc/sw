@@ -284,7 +284,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 			case "{{$value.Object}}":
 
 				if _, ok := eh.statusReactor.({{$value.Object}}StatusReactor); ok {
-					filters = eh.statusReactor.({{$value.Object}}StatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+					filters = eh.statusReactor.({{$value.Object}}StatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 				} 
 				
 				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nodeID, filters)
@@ -649,7 +649,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 		{{range $key, $value := $manifest}}
 		case "{{$value.Object}}":
 			if _, ok := eh.statusReactor.({{$value.Object}}StatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.({{$value.Object}}StatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.({{$value.Object}}StatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true

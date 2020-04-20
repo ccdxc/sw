@@ -74,7 +74,7 @@ type MirrorSessionStatusReactor interface {
 	OnMirrorSessionDeleteReq(nodeID string, objinfo *netproto.MirrorSession) error
 	OnMirrorSessionOperUpdate(nodeID string, objinfo *netproto.MirrorSession) error
 	OnMirrorSessionOperDelete(nodeID string, objinfo *netproto.MirrorSession) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type MirrorSessionNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *MirrorSessionTopic) ListMirrorSessions(ctx context.Context, objsel *ap
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.MirrorSession", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.MirrorSession", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *MirrorSessionTopic) WatchMirrorSessions(watchOptions *api.ListWatchOpt
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["MirrorSession"] = eh.statusReactor.GetAgentWatchFilter("MirrorSession", watchOptions)
+		watcher.Filters["MirrorSession"] = eh.statusReactor.GetAgentWatchFilter(ctx, "MirrorSession", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

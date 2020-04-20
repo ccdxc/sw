@@ -74,7 +74,7 @@ type SecurityProfileStatusReactor interface {
 	OnSecurityProfileDeleteReq(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperUpdate(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperDelete(nodeID string, objinfo *netproto.SecurityProfile) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type SecurityProfileNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.SecurityProfile", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.SecurityProfile", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(watchOptions *api.ListWatc
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["SecurityProfile"] = eh.statusReactor.GetAgentWatchFilter("SecurityProfile", watchOptions)
+		watcher.Filters["SecurityProfile"] = eh.statusReactor.GetAgentWatchFilter(ctx, "SecurityProfile", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

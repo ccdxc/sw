@@ -3305,10 +3305,10 @@ func TestWatchFilter(t *testing.T) {
 	options3 := api.ListWatchOptions{}
 	options3.FieldSelector = "spec.node-uui=0000.0000.0001"
 
-	filterFn1 := stateMgr.GetAgentWatchFilter("Network", &options1)
-	filterFn2 := stateMgr.GetAgentWatchFilter("netproto.Endpoint", &options2)
-	filterFn3 := stateMgr.GetAgentWatchFilter("Endpoint", &options2)
-	filterFn4 := stateMgr.GetAgentWatchFilter("netproto.Endpoint", &options3)
+	filterFn1 := stateMgr.GetAgentWatchFilter(nil, "Network", &options1)
+	filterFn2 := stateMgr.GetAgentWatchFilter(nil, "netproto.Endpoint", &options2)
+	filterFn3 := stateMgr.GetAgentWatchFilter(nil, "Endpoint", &options2)
+	filterFn4 := stateMgr.GetAgentWatchFilter(nil, "netproto.Endpoint", &options3)
 
 	obj1 := netproto.Network{}
 	obj1.Name = "xyz"
@@ -3374,7 +3374,7 @@ func TestWatchFilter(t *testing.T) {
 	obj3.Name = "newtest"
 	options4 := api.ListWatchOptions{}
 	options4.FieldChangeSelector = []string{"ObjectMeta.Name"}
-	filterFn5 := stateMgr.GetAgentWatchFilter("Network", &options4)
+	filterFn5 := stateMgr.GetAgentWatchFilter(nil, "Network", &options4)
 
 	res = true
 	for _, filt := range filterFn5 {
@@ -3389,7 +3389,7 @@ func TestWatchFilter(t *testing.T) {
 	options9 := api.ListWatchOptions{}
 	options9.FieldSelector = "tenant=tenant1,name in (name2)"
 
-	filterFn9 := stateMgr.GetAgentWatchFilter("netproto.Endpoint", &options9)
+	filterFn9 := stateMgr.GetAgentWatchFilter(nil, "netproto.Endpoint", &options9)
 	fmt.Println("Length of flts: ", len(filterFn9))
 	obj9 := obj2
 	obj9.Tenant = "tenant1"

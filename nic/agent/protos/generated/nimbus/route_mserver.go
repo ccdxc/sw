@@ -74,7 +74,7 @@ type RouteTableStatusReactor interface {
 	OnRouteTableDeleteReq(nodeID string, objinfo *netproto.RouteTable) error
 	OnRouteTableOperUpdate(nodeID string, objinfo *netproto.RouteTable) error
 	OnRouteTableOperDelete(nodeID string, objinfo *netproto.RouteTable) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type RouteTableNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *RouteTableTopic) ListRouteTables(ctx context.Context, objsel *api.List
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.RouteTable", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.RouteTable", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *RouteTableTopic) WatchRouteTables(watchOptions *api.ListWatchOptions, 
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["RouteTable"] = eh.statusReactor.GetAgentWatchFilter("RouteTable", watchOptions)
+		watcher.Filters["RouteTable"] = eh.statusReactor.GetAgentWatchFilter(ctx, "RouteTable", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
@@ -628,7 +628,7 @@ type RoutingConfigStatusReactor interface {
 	OnRoutingConfigDeleteReq(nodeID string, objinfo *netproto.RoutingConfig) error
 	OnRoutingConfigOperUpdate(nodeID string, objinfo *netproto.RoutingConfig) error
 	OnRoutingConfigOperDelete(nodeID string, objinfo *netproto.RoutingConfig) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type RoutingConfigNodeStatus struct {
@@ -920,7 +920,7 @@ func (eh *RoutingConfigTopic) ListRoutingConfigs(ctx context.Context, objsel *ap
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.RoutingConfig", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.RoutingConfig", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -953,7 +953,7 @@ func (eh *RoutingConfigTopic) WatchRoutingConfigs(watchOptions *api.ListWatchOpt
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["RoutingConfig"] = eh.statusReactor.GetAgentWatchFilter("RoutingConfig", watchOptions)
+		watcher.Filters["RoutingConfig"] = eh.statusReactor.GetAgentWatchFilter(ctx, "RoutingConfig", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

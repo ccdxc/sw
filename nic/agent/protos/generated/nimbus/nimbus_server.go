@@ -281,7 +281,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "App":
 
 			if _, ok := eh.statusReactor.(AppStatusReactor); ok {
-				filters = eh.statusReactor.(AppStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(AppStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListApps(context.Background(), nodeID, filters)
@@ -301,7 +301,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Collector":
 
 			if _, ok := eh.statusReactor.(CollectorStatusReactor); ok {
-				filters = eh.statusReactor.(CollectorStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(CollectorStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListCollectors(context.Background(), nodeID, filters)
@@ -321,7 +321,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Endpoint":
 
 			if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
-				filters = eh.statusReactor.(EndpointStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(EndpointStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListEndpoints(context.Background(), nodeID, filters)
@@ -341,7 +341,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "FlowExportPolicy":
 
 			if _, ok := eh.statusReactor.(FlowExportPolicyStatusReactor); ok {
-				filters = eh.statusReactor.(FlowExportPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(FlowExportPolicyStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListFlowExportPolicys(context.Background(), nodeID, filters)
@@ -361,7 +361,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "IPAMPolicy":
 
 			if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
-				filters = eh.statusReactor.(IPAMPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(IPAMPolicyStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListIPAMPolicys(context.Background(), nodeID, filters)
@@ -381,7 +381,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Interface":
 
 			if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
-				filters = eh.statusReactor.(InterfaceStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(InterfaceStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListInterfaces(context.Background(), nodeID, filters)
@@ -401,7 +401,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "MirrorSession":
 
 			if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
-				filters = eh.statusReactor.(MirrorSessionStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(MirrorSessionStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListMirrorSessions(context.Background(), nodeID, filters)
@@ -421,7 +421,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Network":
 
 			if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
-				filters = eh.statusReactor.(NetworkStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(NetworkStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListNetworks(context.Background(), nodeID, filters)
@@ -441,7 +441,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "NetworkSecurityPolicy":
 
 			if _, ok := eh.statusReactor.(NetworkSecurityPolicyStatusReactor); ok {
-				filters = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), nodeID, filters)
@@ -461,7 +461,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Profile":
 
 			if _, ok := eh.statusReactor.(ProfileStatusReactor); ok {
-				filters = eh.statusReactor.(ProfileStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(ProfileStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListProfiles(context.Background(), nodeID, filters)
@@ -481,7 +481,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "RouteTable":
 
 			if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
-				filters = eh.statusReactor.(RouteTableStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(RouteTableStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListRouteTables(context.Background(), nodeID, filters)
@@ -501,7 +501,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "RoutingConfig":
 
 			if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
-				filters = eh.statusReactor.(RoutingConfigStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(RoutingConfigStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListRoutingConfigs(context.Background(), nodeID, filters)
@@ -521,7 +521,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "SecurityProfile":
 
 			if _, ok := eh.statusReactor.(SecurityProfileStatusReactor); ok {
-				filters = eh.statusReactor.(SecurityProfileStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(SecurityProfileStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListSecurityProfiles(context.Background(), nodeID, filters)
@@ -541,7 +541,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 		case "Vrf":
 
 			if _, ok := eh.statusReactor.(VrfStatusReactor); ok {
-				filters = eh.statusReactor.(VrfStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				filters = eh.statusReactor.(VrfStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			}
 
 			objlist, err := eh.server.ListVrfs(context.Background(), nodeID, filters)
@@ -1761,7 +1761,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "App":
 			if _, ok := eh.statusReactor.(AppStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(AppStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(AppStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1771,7 +1771,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Collector":
 			if _, ok := eh.statusReactor.(CollectorStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(CollectorStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(CollectorStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1781,7 +1781,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Endpoint":
 			if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(EndpointStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(EndpointStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1791,7 +1791,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "FlowExportPolicy":
 			if _, ok := eh.statusReactor.(FlowExportPolicyStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(FlowExportPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(FlowExportPolicyStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1801,7 +1801,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "IPAMPolicy":
 			if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(IPAMPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(IPAMPolicyStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1811,7 +1811,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Interface":
 			if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(InterfaceStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(InterfaceStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1821,7 +1821,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "MirrorSession":
 			if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(MirrorSessionStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(MirrorSessionStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1831,7 +1831,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Network":
 			if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1841,7 +1841,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "NetworkSecurityPolicy":
 			if _, ok := eh.statusReactor.(NetworkSecurityPolicyStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1851,7 +1851,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Profile":
 			if _, ok := eh.statusReactor.(ProfileStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(ProfileStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(ProfileStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1861,7 +1861,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "RouteTable":
 			if _, ok := eh.statusReactor.(RouteTableStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(RouteTableStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(RouteTableStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1871,7 +1871,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "RoutingConfig":
 			if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(RoutingConfigStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(RoutingConfigStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1881,7 +1881,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "SecurityProfile":
 			if _, ok := eh.statusReactor.(SecurityProfileStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(SecurityProfileStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(SecurityProfileStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true
@@ -1891,7 +1891,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Vrf":
 			if _, ok := eh.statusReactor.(VrfStatusReactor); ok {
-				watcher.Filters[kind.Kind] = eh.statusReactor.(VrfStatusReactor).GetAgentWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+				watcher.Filters[kind.Kind] = eh.statusReactor.(VrfStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
 			} else {
 				filt := func(obj, prev memdb.Object) bool {
 					return true

@@ -74,7 +74,7 @@ type VrfStatusReactor interface {
 	OnVrfDeleteReq(nodeID string, objinfo *netproto.Vrf) error
 	OnVrfOperUpdate(nodeID string, objinfo *netproto.Vrf) error
 	OnVrfOperDelete(nodeID string, objinfo *netproto.Vrf) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type VrfNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *VrfTopic) ListVrfs(ctx context.Context, objsel *api.ListWatchOptions) 
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Vrf", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.Vrf", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *VrfTopic) WatchVrfs(watchOptions *api.ListWatchOptions, stream netprot
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["Vrf"] = eh.statusReactor.GetAgentWatchFilter("Vrf", watchOptions)
+		watcher.Filters["Vrf"] = eh.statusReactor.GetAgentWatchFilter(ctx, "Vrf", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

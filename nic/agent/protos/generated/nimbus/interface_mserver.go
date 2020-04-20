@@ -74,7 +74,7 @@ type InterfaceStatusReactor interface {
 	OnInterfaceDeleteReq(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperUpdate(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperDelete(nodeID string, objinfo *netproto.Interface) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type InterfaceNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.ListWa
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Interface", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.Interface", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *InterfaceTopic) WatchInterfaces(watchOptions *api.ListWatchOptions, st
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["Interface"] = eh.statusReactor.GetAgentWatchFilter("Interface", watchOptions)
+		watcher.Filters["Interface"] = eh.statusReactor.GetAgentWatchFilter(ctx, "Interface", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

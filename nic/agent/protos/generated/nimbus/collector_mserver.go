@@ -74,7 +74,7 @@ type CollectorStatusReactor interface {
 	OnCollectorDeleteReq(nodeID string, objinfo *netproto.Collector) error
 	OnCollectorOperUpdate(nodeID string, objinfo *netproto.Collector) error
 	OnCollectorOperDelete(nodeID string, objinfo *netproto.Collector) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type CollectorNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *CollectorTopic) ListCollectors(ctx context.Context, objsel *api.ListWa
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Collector", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.Collector", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *CollectorTopic) WatchCollectors(watchOptions *api.ListWatchOptions, st
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["Collector"] = eh.statusReactor.GetAgentWatchFilter("Collector", watchOptions)
+		watcher.Filters["Collector"] = eh.statusReactor.GetAgentWatchFilter(ctx, "Collector", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

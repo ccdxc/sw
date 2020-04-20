@@ -74,7 +74,7 @@ type AppStatusReactor interface {
 	OnAppDeleteReq(nodeID string, objinfo *netproto.App) error
 	OnAppOperUpdate(nodeID string, objinfo *netproto.App) error
 	OnAppOperDelete(nodeID string, objinfo *netproto.App) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type AppNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ListWatchOptions) 
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.App", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.App", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *AppTopic) WatchApps(watchOptions *api.ListWatchOptions, stream netprot
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["App"] = eh.statusReactor.GetAgentWatchFilter("App", watchOptions)
+		watcher.Filters["App"] = eh.statusReactor.GetAgentWatchFilter(ctx, "App", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

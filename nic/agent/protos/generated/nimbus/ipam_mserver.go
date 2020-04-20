@@ -74,7 +74,7 @@ type IPAMPolicyStatusReactor interface {
 	OnIPAMPolicyDeleteReq(nodeID string, objinfo *netproto.IPAMPolicy) error
 	OnIPAMPolicyOperUpdate(nodeID string, objinfo *netproto.IPAMPolicy) error
 	OnIPAMPolicyOperDelete(nodeID string, objinfo *netproto.IPAMPolicy) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type IPAMPolicyNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *IPAMPolicyTopic) ListIPAMPolicys(ctx context.Context, objsel *api.List
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.IPAMPolicy", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.IPAMPolicy", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *IPAMPolicyTopic) WatchIPAMPolicys(watchOptions *api.ListWatchOptions, 
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["IPAMPolicy"] = eh.statusReactor.GetAgentWatchFilter("IPAMPolicy", watchOptions)
+		watcher.Filters["IPAMPolicy"] = eh.statusReactor.GetAgentWatchFilter(ctx, "IPAMPolicy", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

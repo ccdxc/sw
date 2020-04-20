@@ -1,11 +1,14 @@
 package statemgr
 
 import (
+	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 var netAgentObjects = []string{"App", "Endpoint", "Network", "SecurityProfile", "NetworkSecurityPolicy", "NetworkInterface", "IPAMPolicy", "RoutingConfig", "Vrf", "RouteTable"}
@@ -32,7 +35,7 @@ func (sm *Statemgr) setWatchFilterFlags() {
 }
 
 // GetAgentWatchFilter is called when filter get is happening based on netagent watchoptions
-func (sm *Statemgr) GetAgentWatchFilter(kind string, opts *api.ListWatchOptions) []memdb.FilterFn {
+func (sm *Statemgr) GetAgentWatchFilter(ctx context.Context, kind string, opts *api.ListWatchOptions) []memdb.FilterFn {
 
 	var filters []memdb.FilterFn
 	// the object kind has "netproto." prefix which is needed for Fieldselector fitlers to work, since the object
@@ -46,5 +49,15 @@ func (sm *Statemgr) GetAgentWatchFilter(kind string, opts *api.ListWatchOptions)
 		return filters
 	}
 
+	// FIX for VS-1305, with Naples running release A code and Venice running newer code, Naples will send
+	// no watchoptions, fix the watchoptions here
+	if kind == ".Endpoint" {
+		if opts.FieldSelector == "" {
+			str := fmt.Sprintf("spec.node-uuid=%s", netutils.GetNodeUUIDFromCtx(ctx))
+			opts.FieldSelector = str
+			kind = "netproto" + kind
+			sm.logger.Infof("GetAgentWatchFilter Update watch options for %s | to: %v", kind, opts)
+		}
+	}
 	return sm.mbus.GetWatchFilter(kind, opts)
 }

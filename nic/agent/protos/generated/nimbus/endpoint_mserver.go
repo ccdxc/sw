@@ -74,7 +74,7 @@ type EndpointStatusReactor interface {
 	OnEndpointDeleteReq(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperUpdate(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperDelete(nodeID string, objinfo *netproto.Endpoint) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type EndpointNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ListWatc
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Endpoint", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.Endpoint", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *EndpointTopic) WatchEndpoints(watchOptions *api.ListWatchOptions, stre
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["Endpoint"] = eh.statusReactor.GetAgentWatchFilter("Endpoint", watchOptions)
+		watcher.Filters["Endpoint"] = eh.statusReactor.GetAgentWatchFilter(ctx, "Endpoint", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

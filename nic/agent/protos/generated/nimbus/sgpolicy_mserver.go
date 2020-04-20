@@ -74,7 +74,7 @@ type NetworkSecurityPolicyStatusReactor interface {
 	OnNetworkSecurityPolicyDeleteReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
 	OnNetworkSecurityPolicyOperUpdate(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
 	OnNetworkSecurityPolicyOperDelete(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type NetworkSecurityPolicyNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *NetworkSecurityPolicyTopic) ListNetworkSecurityPolicys(ctx context.Con
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.NetworkSecurityPolicy", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.NetworkSecurityPolicy", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(watchOptions *
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["NetworkSecurityPolicy"] = eh.statusReactor.GetAgentWatchFilter("NetworkSecurityPolicy", watchOptions)
+		watcher.Filters["NetworkSecurityPolicy"] = eh.statusReactor.GetAgentWatchFilter(ctx, "NetworkSecurityPolicy", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

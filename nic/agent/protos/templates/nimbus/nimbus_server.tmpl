@@ -81,7 +81,7 @@ type {{$crudObject}}StatusReactor interface {
     On{{$crudObject}}DeleteReq(nodeID string, objinfo *netproto.{{$crudObject}}) error
     On{{$crudObject}}OperUpdate(nodeID string, objinfo *netproto.{{$crudObject}}) error
     On{{$crudObject}}OperDelete(nodeID string, objinfo *netproto.{{$crudObject}}) error
-    GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+    GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type {{$crudObject}}NodeStatus struct {
@@ -374,7 +374,7 @@ func (eh *{{$crudObject}}Topic) List{{$crudObject}}s(ctx context.Context, objsel
     }
 
     if  eh.statusReactor != nil {
-        filters = eh.statusReactor.GetAgentWatchFilter("netproto.{{$crudObject}}", objsel)
+        filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.{{$crudObject}}", objsel)
     } else {
         filters = append(filters, filterFn)
     }
@@ -407,7 +407,7 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(watchOptions *api.ListWatc
     nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
     if  eh.statusReactor != nil {
-        watcher.Filters["{{$crudObject}}"] = eh.statusReactor.GetAgentWatchFilter("{{$crudObject}}", watchOptions)
+        watcher.Filters["{{$crudObject}}"] = eh.statusReactor.GetAgentWatchFilter(ctx, "{{$crudObject}}", watchOptions)
     } else {
         filt := func(obj, prev memdb.Object) bool {
             return true

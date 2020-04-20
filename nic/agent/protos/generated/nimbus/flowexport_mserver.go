@@ -74,7 +74,7 @@ type FlowExportPolicyStatusReactor interface {
 	OnFlowExportPolicyDeleteReq(nodeID string, objinfo *netproto.FlowExportPolicy) error
 	OnFlowExportPolicyOperUpdate(nodeID string, objinfo *netproto.FlowExportPolicy) error
 	OnFlowExportPolicyOperDelete(nodeID string, objinfo *netproto.FlowExportPolicy) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type FlowExportPolicyNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *FlowExportPolicyTopic) ListFlowExportPolicys(ctx context.Context, objs
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.FlowExportPolicy", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.FlowExportPolicy", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *FlowExportPolicyTopic) WatchFlowExportPolicys(watchOptions *api.ListWa
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["FlowExportPolicy"] = eh.statusReactor.GetAgentWatchFilter("FlowExportPolicy", watchOptions)
+		watcher.Filters["FlowExportPolicy"] = eh.statusReactor.GetAgentWatchFilter(ctx, "FlowExportPolicy", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true

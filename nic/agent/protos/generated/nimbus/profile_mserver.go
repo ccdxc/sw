@@ -74,7 +74,7 @@ type ProfileStatusReactor interface {
 	OnProfileDeleteReq(nodeID string, objinfo *netproto.Profile) error
 	OnProfileOperUpdate(nodeID string, objinfo *netproto.Profile) error
 	OnProfileOperDelete(nodeID string, objinfo *netproto.Profile) error
-	GetAgentWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
+	GetAgentWatchFilter(ctx context.Context, kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type ProfileNodeStatus struct {
@@ -366,7 +366,7 @@ func (eh *ProfileTopic) ListProfiles(ctx context.Context, objsel *api.ListWatchO
 	}
 
 	if eh.statusReactor != nil {
-		filters = eh.statusReactor.GetAgentWatchFilter("netproto.Profile", objsel)
+		filters = eh.statusReactor.GetAgentWatchFilter(ctx, "netproto.Profile", objsel)
 	} else {
 		filters = append(filters, filterFn)
 	}
@@ -399,7 +399,7 @@ func (eh *ProfileTopic) WatchProfiles(watchOptions *api.ListWatchOptions, stream
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
 	if eh.statusReactor != nil {
-		watcher.Filters["Profile"] = eh.statusReactor.GetAgentWatchFilter("Profile", watchOptions)
+		watcher.Filters["Profile"] = eh.statusReactor.GetAgentWatchFilter(ctx, "Profile", watchOptions)
 	} else {
 		filt := func(obj, prev memdb.Object) bool {
 			return true
