@@ -50,7 +50,14 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
 
   exportFilename: string = 'PSM-networks';
 
-  exportMap: CustomExportMap = {};
+  exportMap: CustomExportMap = {
+    'associatedWorkloads': (opts): string => {
+      return (opts.data._ui.associatedWorkloads) ? opts.data._ui.associatedWorkloads.map(wkld => wkld.meta.name).join(', ') : '';
+    },
+    'spec.orchestrators': (opts): string => {
+      return (opts.data.spec.orchestrators) ? opts.data.spec.orchestrators.map(or => or['orchestrator-name'] + ' Datacenter: ' + or.namespace).join(', ') : '';
+    }
+  };
 
   vcenters: ReadonlyArray<OrchestrationOrchestrator> = [];
   vcenterOptions: SelectItem[] = [];

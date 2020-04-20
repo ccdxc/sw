@@ -121,7 +121,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   ];
   exportMap: CustomExportMap = {
     'workloads': (opts): string => {
-      return opts.data.associatedWorkloads.map(wkld => wkld.meta.name).join(', ');
+      return (opts.data._ui.processedWorkloads) ? opts.data._ui.processedWorkloads.map(wkld => wkld.meta.name).join(', ') : '';
+    },
+    'status.conditions': (opts): string => {
+      return  Utility.getNaplesConditionObject(opts.data).condition.toLowerCase();
+    },
+    'meta.labels': (opts): string => {
+      return  this.formatLabels(opts.data.meta.labels);
     }
   };
 
@@ -422,7 +428,6 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
             this.searchDSCsCount = dscTotal;
             this.getMetrics();
           } else {
-            this.hasDSC = false;
             this.tableLoading = false;
             this.controllerService.invokeInfoToaster('Information', 'There is no DSC record found in PSM');
           }
@@ -555,12 +560,21 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
 
+  /**
+   * For VS-1448
+   * We verify there is at least one DSC admitted.
+   */
+  isAtleastOneDSCAdmitted(): boolean {
+    const admittedDSCs  =  this.dataObjects.find((dsc: ClusterDistributedServiceCard) =>  dsc.status['admission-phase'] === ClusterDistributedServiceCardStatus_admission_phase.admitted );
+    return (!!admittedDSCs);
+  }
+
   processDSCrecords() {
     this.tableLoading = false;
     this._clearDSCMaps(); // VS-730.  Want to clear maps when we get updated data.
     this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
     if (this.dataObjects && this.dataObjects.length > 0 && !this.hasDSC) {
-      this.hasDSC = true; // In a scenario where Venice has no DSC, this page is in idle.  We receive any new DSC, it will turn on hero-cards.
+      this.hasDSC = this.isAtleastOneDSCAdmitted(); // In a scenario where Venice has no DSC, this page is in idle.  We receive any new DSC and at least one DSC admitted, it will turn on hero-cards.
       this.getMetrics();
     }
     if (this.dataObjects.length >= this.searchDSCsCount) {

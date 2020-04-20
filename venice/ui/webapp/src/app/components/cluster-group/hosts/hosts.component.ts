@@ -123,7 +123,10 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
   exportMap: CustomExportMap = {
     'workloads': (opts): string => {
-      return opts.data.processedWorkloads.map(wkld => wkld.meta.name).join(', ');
+      return (opts.data._ui.processedWorkloads) ? opts.data._ui.processedWorkloads.map(wkld => wkld.meta.name).join(', ') : '';
+    },
+    'spec.dscs': (opts): string => {
+      return opts.data._ui.processedSmartNics.map(psn => psn.mac).join(', ');
     }
   };
 

@@ -54,8 +54,12 @@ export class VcenterIntegrationsComponent extends TablevieweditAbstract<IOrchest
   exportFilename: string = 'PSM-vcenter-integrations';
 
   exportMap: CustomExportMap = {
-    'workloads': (opts): string => {
-      return opts.data.associatedWorkloads.map(wkld => wkld.meta.name).join(', ');
+    'associatedWorkloads': (opts): string => {
+      return (opts.data._ui.associatedWorkloads) ? opts.data._ui.associatedWorkloads.map(wkld => wkld.meta.name).join(', ') : '';
+    },
+    ['spec.manage-namespaces'] : (opts): string => {
+      console.log(opts.data);
+      return (opts.data._ui.associatedDatacenters) ? opts.data._ui.associatedDatacenters.join(', ') : '';
     }
   };
 

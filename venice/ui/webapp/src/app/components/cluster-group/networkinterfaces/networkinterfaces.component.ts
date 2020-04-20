@@ -91,7 +91,14 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   ];
 
   exportFilename: string = 'PSM-networkinterfaces';
-  exportMap: CustomExportMap = {};
+  exportMap: CustomExportMap = {
+    'status': (opts): string => {
+      return opts.data.spec['admin-status'] + '/' + opts.data.status['oper-status'];
+    },
+    'meta.labels': (opts): string => {
+      return this.formatLabels(opts.data.meta.labels);
+    }
+  };
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
