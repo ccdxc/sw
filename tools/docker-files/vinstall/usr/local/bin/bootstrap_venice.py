@@ -246,12 +246,37 @@ def bootstrap_venice():
 
     return True
 
-def write_log(msg, verbose=0):
-    if ( opts.verbose < verbose ):
-        return
-    msg = str(datetime.datetime.now()) + ": " + msg
-    print msg 
 
+log_file_handler = None
+
+
+def write_log(msg, verbose=0):
+    if opts.verbose < verbose:
+        return
+    msg = "{0}: {1}".format(str(datetime.datetime.now()),msg)
+    print msg
+    if log_file_handler:
+        msg = msg + '\n'
+        log_file_handler.write(msg)
+
+
+def open_log_file(file_path):
+    try:
+        return open(file_path, "a+")
+    except Exception as e:
+        write_log("* Unable to open log file: {}".format(file_path))
+        write_log("* error: {}".format(e))
+        return None
+
+
+def clean_exit(status=None):
+    if log_file_handler:
+        log_file_handler.close()
+    sys.exit(status)
+
+
+DEFAULT_LOG_FILE_PATH = "/var/log/pensando/pen-bootstrap-venice.log"
+ERROR_STATUS = 1
 # Parse tha command line argument
 parser = argparse.ArgumentParser()
 parser.add_argument("VENICE_IP", nargs="+", help="List of venice IPs")
@@ -265,6 +290,7 @@ parser.add_argument("-autoadmit", help="Auto admit DSC once it registers with Ve
 parser.add_argument("-enablerouting", help="Enable overlay routing on the cluster", action="store_true")
 parser.add_argument("-verbose", "-v", help="Verbose logging", action="count")
 parser.add_argument("-skip_create_cluster", "-s", help="Skip cluster creation step", action="store_true")
+parser.add_argument("-output_log", "-o", help="Custom log file path (Default=" + DEFAULT_LOG_FILE_PATH + ")", default=DEFAULT_LOG_FILE_PATH, type=str)
 opts = parser.parse_args()
 
 # Reformat the data to what each function expects
@@ -272,7 +298,12 @@ opts.ntpservers = [i.strip() for i in opts.ntpservers.split(',')]
 opts.autoadmit = ast.literal_eval(opts.autoadmit)
 if ( opts.verbose is None ):
     opts.verbose = 0
+log_file_handler = open_log_file(opts.output_log)
+if not log_file_handler:
+    write_log("* aborting....")
+    clean_exit(ERROR_STATUS)
 print "\n"
+write_log("* all messages printed to the console will also be logged to the file: " + str(opts.output_log))
 write_log("* start venice bootstrapping process")
 write_log("* - list of venice ips: " + str(opts.VENICE_IP))
 write_log("* - list of ntp servers: " + str(opts.ntpservers))
@@ -283,12 +314,12 @@ write_log("* checking for reachability")
 if not check_reachability():
     print "\n"
     write_log("* aborting....")
-    sys.exit()
+    clean_exit(ERROR_STATUS)
 
 if not is_pencmd_running():
     print "\n"
     write_log("* aborting....")
-    sys.exit()
+    clean_exit(ERROR_STATUS)
 
 if not opts.skip_create_cluster and not is_apigw_running():
     write_log("* creating venice cluster")
@@ -296,14 +327,14 @@ if not opts.skip_create_cluster and not is_apigw_running():
         print "\n"
         write_log("* error creating cluster")
         write_log("* please correct the error and rerun %s with switch -v" % sys.argv[0])
-        sys.exit()
-if bootstrap_venice():
-    print "\n"
-    write_log("* venice bootstrap completed successfully")
-    write_log("* you may access venice at https://" + opts.VENICE_IP[0])
-else:
+        clean_exit(ERROR_STATUS)
+if not bootstrap_venice():
     print "\n"
     write_log("* venice bootstrap failed")
     write_log("* please correct the error and rerun %s with switch -v" % sys.argv[0])
+    clean_exit(ERROR_STATUS)
 
-sys.exit()
+print "\n"
+write_log("* venice bootstrap completed successfully")
+write_log("* you may access venice at https://" + opts.VENICE_IP[0])
+clean_exit()
