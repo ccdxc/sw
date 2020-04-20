@@ -84,6 +84,7 @@
 		SecurityPolicyGetResponse
 		SecurityPolicyDeleteRequest
 		SecurityPolicyDeleteResponse
+		SecurityPolicyRuleId
 		SecurityRuleSpec
 		SecurityRuleStatus
 		SecurityRuleStats

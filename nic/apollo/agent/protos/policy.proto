@@ -114,6 +114,14 @@ message SecurityPolicyDeleteResponse {
   repeated types.ApiStatus ApiStatus = 1;
 }
 
+// unique id to identify a security policy rule
+message SecurityPolicyRuleId {
+  // unique identifier of security rule
+  bytes Id               = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // security policy this rule belongs to
+  bytes SecurityPolicyId = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+}
+
 // security rule configuration
 message SecurityRuleSpec {
   // unique identifier of security rule
@@ -159,28 +167,29 @@ message SecurityRuleResponse {
 
 // security policy rule get request
 message SecurityRuleGetRequest {
-  // id/key of the security policy rule
-  bytes Id = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // list of id/key of the security policy rules of interest
+  repeated SecurityPolicyRuleId Id = 1 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // security policy rule get response
 message SecurityRuleGetResponse {
-  types.ApiStatus  ApiStatus = 1;
+  types.ApiStatus           ApiStatus = 1;
   // security policy rule information
-  SecurityRuleInfo Response  = 2;
+  repeated SecurityRuleInfo Response  = 2;
 }
 
 // security policy rule delete request
 message SecurityRuleDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
-  types.BatchCtxt BatchCtxt = 1;
-  // id/key of the security policy rule to be deleted
-  bytes           Id        = 2;
+  types.BatchCtxt               BatchCtxt = 1;
+  // id/key list of the security policy rule(s) to be deleted
+  repeated SecurityPolicyRuleId Id        = 2;
 }
 
 // security policy rule delete response
 message SecurityRuleDeleteResponse {
-  types.ApiStatus ApiStatus = 1;
+  // API status code
+  repeated types.ApiStatus ApiStatus = 1;
 }
 
 // security profile configuration
