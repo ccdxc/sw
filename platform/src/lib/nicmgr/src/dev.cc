@@ -114,52 +114,103 @@ DevPcieEvHandler::reset(const int port, uint32_t rsttype, const uint32_t lifb, c
 DeviceManager::DeviceManager(devicemgr_cfg_t *cfg)
 {
     string device_json_file, hbm_mem_json_file;
-    sdk::platform::platform_type_t platform = cfg->platform_type;
 
     NIC_HEADER_TRACE("Initializing DeviceManager");
-    init_done = false;
-    instance = this;
 
-    assert(!cfg->cfg_path.empty());
-
-    this->platform = platform;
-    this->cfg_path = cfg->cfg_path;
-    NIC_LOG_DEBUG("Platform {}", platform);
-
-    sdk::lib::pal_init(platform);
+    if (cfg->cfg_path.empty()) {
+        throw runtime_error("config file path empty");
+    }
 
     GetConfigFiles(cfg, hbm_mem_json_file, device_json_file);
 
+    this->instance = this;
+    this->init_done = false;
+    this->cfg_path = cfg->cfg_path;
+    this->platform = cfg->platform_type;
     this->loop = (cfg->loop == NULL) ? EV_DEFAULT : cfg->loop;
     this->fwd_mode = cfg->fwd_mode;
     this->micro_seg_en = cfg->micro_seg_en;
     this->device_json_file = device_json_file;
+    this->hbm_mem_json_file = hbm_mem_json_file;
     this->dev_api = NULL;
+    this->upg_state = UNKNOWN_STATE;
+}
+
+void
+DeviceManager::Init(devicemgr_cfg_t *cfg) {
+    PlatformInit(cfg);
+    HalLifIDReserve();
+    LifsReset();
+    PciemgrInit(cfg);
+    HeartbeatStart();
+    NIC_HEADER_TRACE("DeviceManager Init Done");
+}
+
+void
+DeviceManager::UpgradeGracefulInit(devicemgr_cfg_t *cfg) {
+    PlatformInit(cfg);
+    HalLifIDReserve();
+    LifsReset();
+    PciemgrInit(cfg);
+    HeartbeatStart();
+    NIC_HEADER_TRACE("DeviceManager Graceful Init Done");
+}
+
+void
+DeviceManager::UpgradeHitlessInit(devicemgr_cfg_t *cfg) {
+    PlatformInit(cfg);
+    HalLifIDReserve();
+    PciemgrInit(cfg);
+    HeartbeatStart();
+    NIC_HEADER_TRACE("DeviceManager Hitless Init Done");
+}
+
+void DeviceManager::PlatformInit(devicemgr_cfg_t *cfg) {
+    sdk::platform::platform_type_t platform = cfg->platform_type;
+
+    NIC_LOG_DEBUG("Platform {}", platform);
+    sdk::lib::pal_init(platform);
 
     pd = PdClient::factory(platform, hbm_mem_json_file, cfg->cfg_path);
-    assert(pd);
-    this->skip_hwinit = pd->is_dev_hwinit_done(NULL);
+    if (pd == NULL) {
+        throw runtime_error("Failed to Init PD Client");
+    }
+}
+
+void DeviceManager::HalLifIDReserve(void) {
+    sdk_ret_t ret;
 
     // Reserve all the LIF ids used by HAL
     NIC_LOG_DEBUG("Reserving HAL lifs {}-{}", HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
-    int ret = pd->lm_->reserve_id(HAL_LIF_ID_MIN, (HAL_LIF_ID_MAX - HAL_LIF_ID_MIN + 1));
-    if (ret < 0) {
+    ret = pd->lm_->reserve_id(HAL_LIF_ID_MIN, (HAL_LIF_ID_MAX - HAL_LIF_ID_MIN + 1));
+    if (ret != SDK_RET_OK) {
         throw runtime_error("Failed to reserve HAL LIFs");
     }
-    if (!skip_hwinit) {
-        ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_LIF_ID_MIN,
-                                                        NICMGR_LIF_ID_MAX);
-        if (ret != sdk::SDK_RET_OK) {
-            throw runtime_error("Failed to reset LIFs");
-        }
+}
+
+void DeviceManager::LifsReset(void) {
+    sdk_ret_t ret;
+
+    ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_LIF_ID_MIN,
+                                                    NICMGR_LIF_ID_MAX);
+    if (ret != SDK_RET_OK) {
+        throw runtime_error("Failed to reset LIFs");
     }
-    upg_state = UNKNOWN_STATE;
+}
+
+void
+DeviceManager::PciemgrInit(devicemgr_cfg_t *cfg) {
+    sdk::platform::platform_type_t platform = cfg->platform_type;
+    NIC_LOG_DEBUG("Initializing PcieMgr... {}", platform);
 
     // initialize pciemgr
     if (platform_is_hw(platform)) {
         pciemgr = new class pciemgr("nicmgrd", pcie_evhandler, EV_A);
     }
+}
 
+void
+DeviceManager::HeartbeatStart() {
     // Heartbeat timer
     NIC_LOG_INFO("Starting Heartbeat timer");
     if (!hb_timer_init_done) {
@@ -171,35 +222,31 @@ DeviceManager::DeviceManager(devicemgr_cfg_t *cfg)
     clock_gettime(CLOCK_MONOTONIC, &hb_last);
 }
 
+void
+DeviceManager::HeartbeatStop() {
+    NIC_LOG_INFO("Stopping Heartbeat timer");
+
+    if (hb_timer_init_done) {
+        ev_timer_stop(EV_A_ & heartbeat_timer);
+    }
+}
 
 DeviceManager::~DeviceManager()
 {
     NIC_LOG_INFO("Destroying DeviceManager");
-    // Stop heart beat timer
-    if (hb_timer_init_done) {
-        NIC_LOG_INFO("Stoping Heartbeat timer");
-        ev_timer_stop(EV_A_ & heartbeat_timer);
-    }
+
+    // stop heartbeat timer
+    HeartbeatStop();
 
     // Delete devices
     DeleteDevices();
-}
-
-static std::string
-hal_cfg_path()
-{
-    DeviceManager *devmgr = DeviceManager::GetInstance();
-    if (devmgr == NULL) {
-        throw runtime_error("Devmgr instance not found");
-    }
-    return devmgr->CfgPath();
 }
 
 void
 DeviceManager::GetConfigFiles(devicemgr_cfg_t *cfg, string &hbm_mem_json_file,
                               string &device_json_file)
 {
-    std::string hal_cfg_dir = hal_cfg_path();
+    std::string hal_cfg_dir = cfg->cfg_path;
 
 #if defined(IRIS)
     string profile_name;
@@ -700,81 +747,134 @@ DeviceManager::SetHalClient(devapi *dev_api)
 void
 DeviceManager::HalEventHandler(bool status)
 {
-    uint32_t lif_id = 0;
-    sdk_ret_t ret;
-
     NIC_HEADER_TRACE("HAL Event");
 
-    if (init_done) {
-        return;
-    }
-
-    // Hal UP
     if (status && !init_done) {
-        NIC_LOG_DEBUG("Hal UP: Initializing hal client and creating VRFs.");
-
-        // Instantiate HAL client
-        dev_api = devapi_init();
-        micro_seg_en = dev_api->get_micro_seg_cfg_en();
-        NIC_LOG_DEBUG("micro_seg_en: {}", micro_seg_en);
-        dev_api->set_micro_seg_en(micro_seg_en);
-        pd->update();
-
-        if (!skip_hwinit) {
-            for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
-                uplink_t *up = it->second;
-                if (up->is_oob) {
-                    dev_api->uplink_create(up->id, up->port, up->is_oob);
-                }
-            }
-        }
-
-        // Setting hal clients in all devices
-        SetHalClient(dev_api);
+        DevApiClientInit();
+        OOBCreate();
+        OOBBringup(status);
+        SwmInit();
+        DeviceCreate(status);
     }
+
+    return;
+}
+
+void
+DeviceManager::UpgradeGracefulHalEventHandler(bool status)
+{
+    NIC_HEADER_TRACE("Upgrade Graceful HAL Event");
+
+    if (status && !init_done) {
+        DevApiClientInit();
+        OOBCreate();
+        OOBBringup(status);
+        SwmInit();
+        DeviceCreate(status);
+    }
+
+    return;
+}
+
+void
+DeviceManager::UpgradeHitlessHalEventHandler(bool status) {
+
+    NIC_HEADER_TRACE("Upgrade Hitless HAL Event");
+
+    if (status && !init_done) {
+        DevApiClientInit();
+        OOBBringup(status);
+        init_done = true;
+        DeviceCreate(status);
+    }
+
+    return;
+}
+
+void
+DeviceManager::DevApiClientInit(void) {
+    // Hal UP
+    NIC_LOG_DEBUG("Hal UP: Initializing hal client and creating VRFs.");
+
+    // Instantiate HAL client
+    dev_api = devapi_init();
+    micro_seg_en = dev_api->get_micro_seg_cfg_en();
+    NIC_LOG_DEBUG("micro_seg_en: {}", micro_seg_en);
+    dev_api->set_micro_seg_en(micro_seg_en);
+    pd->update();
+
+    // Setting hal clients in all devices
+    SetHalClient(dev_api);
+}
+
+void
+DeviceManager::OOBCreate(void) {
+    uplink_t *up;
+
+    for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+        up = it->second;
+        if (up->is_oob) {
+            dev_api->uplink_create(up->id, up->port, up->is_oob);
+        }
+    }
+}
+
+void
+DeviceManager::OOBBringup(bool status) {
+    Device  *dev;
+    Eth     *eth_dev;
 
     // OOB bring UP first for NCSI
     for (auto it = devices.begin(); it != devices.end(); it++) {
-        Device *dev = it->second;
+        dev = it->second;
         if (dev->GetType() == ETH) {
-            Eth *eth_dev = (Eth *)dev;
+            eth_dev = (Eth *)dev;
             if (eth_dev->GetEthType() == ETH_MNIC_OOB_MGMT) {
                 eth_dev->HalEventHandler(status);
                 break;
             }
         }
     }
+}
+
+void
+DeviceManager::SwmInit(void) {
+    uint32_t lif_id = 0;
+    sdk_ret_t ret;
 
     // Initialize SWM
-    if (status && !init_done) {
-        // Create uplinks
-        if (!skip_hwinit) {
-            for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
-                uplink_t *up = it->second;
-                if (!up->is_oob) {
-                    dev_api->uplink_create(up->id, up->port, up->is_oob);
-                }
-            }
-            dev_api->swm_enable();
-            // Create NCSI Channels for non-oob uplinks
-            int cid = 0;
-            for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
-                uplink_t *up = it->second;
-                if (!up->is_oob) {
-                    ret = pd->lm_->alloc_id(&lif_id, 1);
-                    if (ret != SDK_RET_OK) {
-                        NIC_LOG_ERR("Unable to allocate swm lif. ret: {}", ret);
-                    }
-                    dev_api->swm_create_channel(cid++, up->port, lif_id);
-                }
-            }
+    // Create uplinks
+    for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+        uplink_t *up = it->second;
+        if (!up->is_oob) {
+            dev_api->uplink_create(up->id, up->port, up->is_oob);
         }
-        init_done = true;
     }
+    dev_api->swm_enable();
+    // Create NCSI Channels for non-oob uplinks
+    int cid = 0;
+    for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+        uplink_t *up = it->second;
+        if (!up->is_oob) {
+            ret = pd->lm_->alloc_id(&lif_id, 1);
+            if (ret != SDK_RET_OK) {
+                NIC_LOG_ERR("Unable to allocate swm lif. ret: {}", ret);
+            }
+            dev_api->swm_create_channel(cid++, up->port, lif_id);
+        }
+    }
+    init_done = true;
+}
+
+void
+DeviceManager::DeviceCreate(bool status) {
+    Device *dev;
+    enum DeviceType type;
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
-        Device *dev = it->second;
-        enum DeviceType type = dev->GetType();
+        dev = it->second;
+        type = dev->GetType();
+
         switch (type) {
         case ETH: {
             Eth *eth_dev = (Eth *)dev;

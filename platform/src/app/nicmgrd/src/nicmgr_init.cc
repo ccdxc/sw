@@ -74,7 +74,11 @@ hal_up_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
         return;
     }
 
-    devmgr->HalEventHandler(true);
+    if (devmgr->GetUpgradeMode() == FW_MODE_UPGRADE) {
+        devmgr->UpgradeGracefulHalEventHandler(true);
+    } else {
+        devmgr->HalEventHandler(true);
+    }
 }
 
 static void
@@ -209,6 +213,12 @@ dev_init:
     if (!devmgr) {
         NIC_LOG_ERR("Devmgr create failed");
         exit(1);
+    }
+
+    if(upg_mode == FW_MODE_UPGRADE) {
+        devmgr->UpgradeGracefulInit(&cfg);
+    } else {
+        devmgr->Init(&cfg);
     }
 
     devmgr->SetUpgradeMode(upg_mode);

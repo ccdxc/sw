@@ -5,11 +5,11 @@
 #ifndef __DEV_HPP__
 #define __DEV_HPP__
 
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <map>
 #include <string>
 #include <vector>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "nic/include/globals.hpp"
 #include "pal_compat.hpp"
@@ -29,28 +29,12 @@
 #include "pd_client.hpp"
 #include "ev.h"
 
-using std::string;
-
-enum {
-    NICMGR_THREAD_ID_MIN = 0,
-    NICMGR_THREAD_ID_DELPHI_CLIENT = 1,
-    NICMGR_THREAD_ID_MAX = 2,
-};
-
-enum {
-    NICMGR_TIMER_ID_NONE = 0,
-    NICMGR_TIMER_ID_MIN = 1,
-    NICMGR_TIMER_ID_HEARTBEAT = NICMGR_TIMER_ID_MIN,
-    NICMGR_TIMER_ID_MAX = 2,
-};
-
 enum {
     NICMGR_MAC_DEV_CAP              = 0x1000000,
     NICMGR_MAC_DEV_MASK             = 0xffffff,
     NICMGR_DEF_MAC_COUNT            = 24,
     NICMGR_MIN_MAC_COUNT            = 8,
 };
-
 
 enum UpgradeState {
     UNKNOWN_STATE,
@@ -119,59 +103,79 @@ class DevPcieEvHandler : public pciemgr::evhandler
 class DeviceManager
 {
 public:
+    // constructor and destructor
     DeviceManager(devicemgr_cfg_t *cfg);
     virtual ~DeviceManager();
 
-    int LoadProfile(std::string path, bool init_pci);
-    void LoadState(std::vector<struct EthDevInfo *> eth_dev_info_list);
-
-    void CreateUplink(uint32_t id, uint32_t port, bool is_oob);
+    // get current instance
     static DeviceManager *GetInstance() { return instance; }
 
+    // init functions
+    void Init(devicemgr_cfg_t *cfg);
+    void UpgradeGracefulInit(devicemgr_cfg_t *cfg);
+    void UpgradeHitlessInit(devicemgr_cfg_t *cfg);
+
+    // Load state from profile cfg
+    int LoadProfile(std::string path, bool init_pci);
+    void CreateUplink(uint32_t id, uint32_t port, bool is_oob);
+
+    // device handling functions
     Device *GetDevice(std::string name);
     Device *GetDeviceByLif(uint32_t lif_id);
-
     void AddDevice(enum DeviceType type, void *dev_spec);
     void RestoreDevice(enum DeviceType type, void *dev_state);
     void DeleteDevices();
 
+    // event handlers
     void HalEventHandler(bool is_up);
+    int HandleUpgradeEvent(UpgradeEvent event);
+    void UpgradeGracefulHalEventHandler(bool is_up);
+    void UpgradeHitlessHalEventHandler(bool is_up);
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
     void DelphiMountEventHandler(bool mounted);
     void DeviceResetEventHandler();
     void SystemSpecEventHandler(bool micro_seg_en);
 
+    // set/get devapi
     void SetHalClient(devapi *dev_api);
-
-    int GenerateQstateInfoJson(std::string qstate_info_file);
-    void GetConfigFiles(devicemgr_cfg_t *cfg, string &hbm_mem_json_file,
-                        string &device_json_file);
-    PdClient *GetPdClient(void) { return pd; }
     devapi *DevApi(void) { return dev_api; }
 
-    UpgradeState GetUpgradeState();
-    int HandleUpgradeEvent(UpgradeEvent event);
-    bool UpgradeCompatCheck();
-    std::vector<struct EthDevInfo *> GetEthDevStateInfo();
-    void SetFwStatus(uint8_t fw_status);
+    // set/get pd client
+    PdClient *GetPdClient(void) { return pd; }
 
-    std::map<uint32_t, uplink_t *> GetUplinks() { return uplinks; };
+    // config path and helper functions
+    std::string CfgPath(void) { return cfg_path; };
+    int GenerateQstateInfoJson(std::string qstate_info_file);
+    void GetConfigFiles(devicemgr_cfg_t *cfg, std::string &hbm_mem_json_file,
+                        std::string &device_json_file);
 
-    void swm_update(bool enable, uint32_t port_num, uint32_t vlan, mac_t mac);
 
-    DevPcieEvHandler pcie_evhandler;
-
-    ev_timer heartbeat_timer = {0};
-    bool hb_timer_init_done = false;
-
-    sdk::lib::thread *Thread(void) { return thread; }
-    void SetThread(sdk::lib::thread *thr) { thread = thr; }
+    // upgrade helper functions
     void SetUpgradeMode(UpgradeMode mode) { upgrade_mode = mode; }
     UpgradeMode GetUpgradeMode(void) { return upgrade_mode; }
-    bool IsHostManaged(void) { return fwd_mode == sdk::lib::FORWARDING_MODE_CLASSIC; }
+    UpgradeState GetUpgradeState();
+    bool UpgradeCompatCheck();
+    void SetFwStatus(uint8_t fw_status);
+
+    // device list
+    std::vector<struct EthDevInfo *> GetEthDevStateInfo();
+    std::map<uint32_t, uplink_t *> GetUplinks() { return uplinks; };
+
+    // swm functions
+    void swm_update(bool enable, uint32_t port_num, uint32_t vlan, mac_t mac);
+
+    // pcie handler
+    DevPcieEvHandler pcie_evhandler;
+
+    // thread funtions
+    sdk::lib::thread *Thread(void) { return thread; }
+    void SetThread(sdk::lib::thread *thr) { thread = thr; }
     struct ev_loop *ev_loop(void) { return EV_A; }
-    string CfgPath(void) { return cfg_path; };
+    ev_timer heartbeat_timer = {0};
+
+    // device mode
+    bool IsHostManaged(void) { return fwd_mode == sdk::lib::FORWARDING_MODE_CLASSIC; }
 
 private:
     static DeviceManager *instance;
@@ -183,7 +187,6 @@ private:
     devapi *dev_api;
     PdClient *pd;
     sdk::lib::thread *thread;
-    bool skip_hwinit;
     std::map<uint32_t, uplink_t *> uplinks;
 
     bool init_done;
@@ -191,18 +194,37 @@ private:
     sdk::platform::platform_type_t platform;
     sdk::lib::dev_forwarding_mode_t fwd_mode;
     bool micro_seg_en;
-    string device_json_file;
-    string cfg_path;
+    std::string device_json_file;
+    std::string hbm_mem_json_file;
+    std::string cfg_path;
 
     std::vector<struct EthDevInfo *> eth_dev_info_list;
 
     UpgradeState upg_state;
 
+    // init helper functions
+    void PlatformInit(devicemgr_cfg_t *cfg);
+    void PciemgrInit(devicemgr_cfg_t *cfg);
+    void HalLifIDReserve(void);
+    void LifsReset(void);
+
+    // hal event handler helper functions
+    void DevApiClientInit();
+    void OOBCreate();
+    void OOBBringup(bool status);
+    void SwmInit();
+    void DeviceCreate(bool status);
+
+    // upgrade helper functions
     bool IsDataPathQuiesced();
     bool CheckAllDevsDisabled();
     int SendFWDownEvent();
 
+    // heartbeat timer
     timespec_t hb_last;
+    bool hb_timer_init_done = false;
+    void HeartbeatStart(void);
+    void HeartbeatStop(void);
     static void HeartbeatEventHandler(EV_P_ ev_timer *w, int events);
 };
 

@@ -86,10 +86,16 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     g_devmgr = new DeviceManager(&cfg);
     SDK_ASSERT(g_devmgr);
     if (upg_init_mode == upg_mode_t::UPGRADE_MODE_NONE) {
+        g_devmgr->Init(&cfg);
         g_devmgr->LoadProfile(device_cfg_file, init_pci);
+    } else if (upg_init_mode == upg_mode_t::UPGRADE_MODE_GRACEFUL) {
+        g_devmgr->UpgradeGracefulInit(&cfg);
+        // upgrade graceful init does the state loading
     } else {
-        // upgrade init does the state loading
+        // upgrade hitless init does the state loading
+        // g_devmgr->UpgradeHitlessInit(&cfg);
     }
+
     sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_, NULL);
     sdk::ipc::subscribe(EVENT_ID_XCVR_STATUS, xcvr_event_handler_, NULL);
     sdk::ipc::subscribe(EVENT_ID_PDS_HAL_UP, hal_up_event_handler_, NULL);
@@ -98,7 +104,7 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
 
     // register for upgrade events
     nicmgr_upg_graceful_init();
- 
+
     PDS_TRACE_INFO("Listening to events ...");
 }
 

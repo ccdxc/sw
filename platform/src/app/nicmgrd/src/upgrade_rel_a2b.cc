@@ -134,7 +134,7 @@ mount_complete_handler (void)
         restore_devices();
         g_device_restored = true;
         if (devapi_iris::is_hal_up()) {
-            devmgr->HalEventHandler(true);
+            devmgr->UpgradeGracefulHalEventHandler(true);
         }
     }
 }

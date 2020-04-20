@@ -135,6 +135,7 @@ nicmgr_init()
 
     devmgr = new DeviceManager(&cfg);
     EXPECT_TRUE(devmgr != NULL);
+    devmgr->Init(&cfg);
     devmgr->LoadProfile("../platform/src/app/nicmgrd/etc/eth.json", false);
     devmgr->HalEventHandler(true);
 }
@@ -490,7 +491,7 @@ TEST_F(nicmgr_test, test3)
     // Enable rx
     dev_api->swm_disable_rx(0);
     // Enable bcast filters
-    lif_bcast_filter_t bc_filter = {0}; 
+    lif_bcast_filter_t bc_filter = {0};
     bc_filter.arp = true;
     bc_filter.dhcp_client = true;
     bc_filter.dhcp_server = true;
@@ -529,13 +530,13 @@ TEST_F(nicmgr_test, test3)
     dev_api->swm_add_mac(0x000000010001);
     // Add Untagged Vlan
     dev_api->swm_add_vlan(0);
-    // Remove BC 
+    // Remove BC
     dev_api->swm_upd_rx_bmode(false);
-    // Remove ALL_MC 
+    // Remove ALL_MC
     dev_api->swm_upd_rx_mmode(false);
-    // Add to BC 
+    // Add to BC
     dev_api->swm_upd_rx_bmode(true);
-    // Add to ALL_MC 
+    // Add to ALL_MC
     dev_api->swm_upd_rx_mmode(true);
     // Add Bcast filter
     lif_bcast_filter_t bcast_filter = {0};
@@ -551,7 +552,7 @@ TEST_F(nicmgr_test, test3)
     dev_api->swm_disable();
 #endif
 
-    
+
 
 #if 0
     // Enable swm
