@@ -389,9 +389,23 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
         }
         execute_post_hooks(current_stage_, rsp);
         current_stage_ = lookup_stage_transition(current_stage_, rsp);
-        pending_response_ = 0;
-        size_ = 0;
+
+        if (current_stage_ != end_stage_) {
+            upg_stage stage = fsm_stages[current_stage_];
+            timeout_ = stage.svc_rsp_timeout();
+            svc_sequence_ = stage.svc_sequence();
+            size_ = 0;
+            for (auto x : svc_sequence_) {
+                size_++;
+            }
+            pending_response_ = size_;
+        } else {
+            timeout_ = 0;
+            pending_response_ = 0;
+            size_ = 0;
+        }
         prev_stage_rsp_ = rsp;
+
     } else {
         std::string str = "Event is successfully handled.";
         pending_response_--;
