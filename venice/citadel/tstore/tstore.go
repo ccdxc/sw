@@ -347,6 +347,7 @@ func (ts *Tstore) Close() error {
 			s.Close()
 		}
 	}
+	ts.services = nil
 
 	if ts.pointsWriter != nil {
 		ts.pointsWriter.Close()
