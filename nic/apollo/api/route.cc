@@ -430,20 +430,28 @@ route::add_deps(api_obj_ctxt_t *obj_ctxt) {
         rtable = route_table_find(&route_table_key);
         if (!rtable) {
             PDS_TRACE_ERR("Failed to perform api op %u on route %s, "
-                          "route table not found",
-                          obj_ctxt->api_op, key_.route_id.str());
+                          "route table %s not found",
+                          obj_ctxt->api_op, key_.route_id.str(),
+                          route_table_key.str());
             return SDK_RET_INVALID_ARG;
         }
-        api_obj_add_to_deps(API_OP_UPDATE,
-                            OBJ_ID_ROUTE, this,
+        api_obj_add_to_deps(API_OP_UPDATE, OBJ_ID_ROUTE, this,
                             OBJ_ID_ROUTE_TABLE, rtable,
                             (obj_ctxt->api_op == API_OP_CREATE) ?
                                  PDS_ROUTE_TABLE_UPD_ROUTE_ADD :
                                  PDS_ROUTE_TABLE_UPD_ROUTE_UPD);
     } else {
-        // need to get route key -> route table key mapping and then
-        // route_table_find()
-        SDK_ASSERT(FALSE);
+        rtable = route_table_find(&key_.route_table_id);
+        if (!rtable) {
+            PDS_TRACE_ERR("Failed to perform api op %u on route %s, "
+                          "route table %s not found",
+                          obj_ctxt->api_op, key_.route_id.str(),
+                          key_.route_table_id.str());
+            return SDK_RET_INVALID_ARG;
+        }
+        api_obj_add_to_deps(API_OP_UPDATE, OBJ_ID_ROUTE, this,
+                            OBJ_ID_ROUTE_TABLE, rtable,
+                            PDS_ROUTE_TABLE_UPD_ROUTE_DEL);
     }
     return SDK_RET_OK;
 }

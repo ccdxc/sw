@@ -524,16 +524,20 @@ policy_rule::add_deps(api_obj_ctxt_t *obj_ctxt) {
                           "policy %s not found", obj_ctxt->api_op,
                           key_.rule_id.str(), policy_key.str());
         }
-        api_obj_add_to_deps(API_OP_UPDATE,
-                            OBJ_ID_POLICY_RULE, this,
+        api_obj_add_to_deps(API_OP_UPDATE, OBJ_ID_POLICY_RULE, this,
                             OBJ_ID_POLICY, policy,
                             (obj_ctxt->api_op == API_OP_CREATE) ?
                                  PDS_POLICY_UPD_RULE_ADD :
                                  PDS_POLICY_UPD_RULE_UPD);
     } else {
-        // need to get route key -> route table key mapping and then
-        // route_table_find()
-        SDK_ASSERT(FALSE);
+        policy = policy_find(&key_.policy_id);
+        if (!policy) {
+            PDS_TRACE_ERR("Failed to perform api op %u on rule %s, "
+                          "policy %s not found", obj_ctxt->api_op,
+                          key_.rule_id.str(), key_.policy_id.str());
+        }
+        api_obj_add_to_deps(API_OP_UPDATE, OBJ_ID_POLICY_RULE, this,
+                            OBJ_ID_POLICY, policy, PDS_POLICY_UPD_RULE_DEL);
     }
     return SDK_RET_OK;
 }
