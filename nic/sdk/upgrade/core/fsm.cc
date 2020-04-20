@@ -109,15 +109,19 @@ invoke_hooks (upg_stage_t stage_id, hook_execution_t hook_type,
               svc_rsp_code_t status=SVC_RSP_MAX)
 {
     upg_stage stage;
-    upg_scripts prehook;
+    upg_scripts hooks;
     std::string name;
     bool result = true;
-
     name = upg_stage2str(stage_id);
     stage = fsm_stages[stage_id];
-    prehook = stage.pre_hook_scripts();
 
-    for (const auto& x : prehook) {
+    if (hook_type == PRE_STAGE) {
+        hooks = stage.pre_hook_scripts();
+    } else {
+        hooks = stage.post_hook_scripts();
+    }
+
+    for (const auto& x : hooks) {
         if (!is_valid_script(fsm_states.init_params()->tools_dir, x.path())) {
             UPG_TRACE_ERR("Not a valid script %s", x.path().c_str());
             result = false;

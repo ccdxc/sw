@@ -575,7 +575,7 @@ class GenerateStateMachine(object):
             pre_hooks = self.pre_hook.format(pre_hooks)
 
             post_hooks = self.__wrap_quote__(":".join(post_hooks))
-            post_hooks = self.pre_hook.format(post_hooks)
+            post_hooks = self.post_hook.format(post_hooks)
 
             self.__validate_object__(domain, self.valid_domain_name, 20)
             domain = self.__wrap_quote__(domain)
