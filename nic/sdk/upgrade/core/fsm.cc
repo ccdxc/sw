@@ -55,7 +55,6 @@ dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id, upg_svc svc)
                       stage_name.c_str(), svc.name().c_str(), svc.ipc_id());
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
 
-    svc.dispatch_event(dom, id, fsm_states.init_params()->upg_mode);
     if (svc.has_valid_ipc_id()) {
         svc.dispatch_event(dom, id, fsm_states.init_params()->upg_mode);
     }
@@ -71,7 +70,6 @@ dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id)
     for (auto& name : fsm_states.svc_sequence()) {
         SDK_ASSERT(fsm_services.find(name) != fsm_services.end());
         upg_svc svc = fsm_services[name];
-        dispatch_event(dom, id, svc);
         if (svc.has_valid_ipc_id()) {
             dispatch_event(dom, id, svc);
         } else {
