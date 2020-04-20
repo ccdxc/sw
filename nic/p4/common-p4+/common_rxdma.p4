@@ -1337,6 +1337,20 @@ table rx_table_cpu_hash {
     size : 0;
 }
 
+action rx_stage0_packet_len() {
+    modify_field(p4_intr_scratch.frame_size, p4_intr.frame_size);
+    modify_field(p4_rxdma_intr_scratch.rx_splitter_offset, p4_rxdma_intr.rx_splitter_offset);
+
+    modify_field(scratch_app.app_type, app_header.app_type);
+}
+
+@pragma stage 0
+table rx_stage0_packet_len {
+    actions {
+        rx_stage0_packet_len;
+    }
+}
+
 control common_p4plus_stage0 {
 
     if (app_header.table0_valid == 1) {
@@ -1379,6 +1393,8 @@ control common_p4plus_stage0 {
     if (app_header.app_type == P4PLUS_APPTYPE_RDMA) {
         apply(rx_stage0_load_rdma_params);
     }
+
+    apply(rx_stage0_packet_len);
 }
 
 control ingress {

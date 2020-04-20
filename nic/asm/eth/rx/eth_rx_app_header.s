@@ -15,6 +15,17 @@ struct common_p4plus_stage0_app_header_table_eth_rx_app_header_d d;
 %%
 
 .align
+eth_rx_packet_len:
+#ifdef IRIS
+  phvwr           p.eth_rx_t1_s2s_pkt_len, r1
+  phvwr.e         p.eth_rx_t0_s2s_pkt_len, r1
+  phvwr.f         p.cq_desc_len, r1.hx
+#else
+  nop.e
+  nop
+#endif
+
+.align
 eth_rx_app_header:
   tblwr.f         d.rsvd, 0
   // !!! No table updates after this point !!!
@@ -28,10 +39,18 @@ eth_rx_app_header:
   // Save required information from APP header for normal packet processing
   phvwr           p.eth_rx_t1_s2s_l2_pkt_type, k.p4_to_p4plus_l2_pkt_type
   phvwr           p.eth_rx_t1_s2s_pkt_type, k.p4_to_p4plus_pkt_type
+
+#ifndef IRIS
   phvwr           p.eth_rx_t1_s2s_pkt_len, k.p4_to_p4plus_packet_len
   phvwr           p.eth_rx_t0_s2s_pkt_len, k.p4_to_p4plus_packet_len
+#endif
 
   // Build completion entry in the PHV
+
+#ifndef IRIS
+  // Packet length information
+  phvwr           p.cq_desc_len, k.{p4_to_p4plus_packet_len}.hx
+#endif
 
   // Packet type information
   phvwr           p.cq_desc_pkt_type, k.p4_to_p4plus_pkt_type
@@ -60,7 +79,7 @@ eth_rx_app_header:
 
   // SAVE_STATS(_r_stats)
 
-  phvwr.e.f       p.cq_desc_len, k.{p4_to_p4plus_packet_len}.hx
+  nop.e
   nop
 
 eth_rx_app_header_other:

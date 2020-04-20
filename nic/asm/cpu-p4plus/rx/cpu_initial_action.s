@@ -10,7 +10,13 @@ struct common_p4plus_stage0_app_header_table_offset_64_d d;
 %%
     .param          cpu_rx_read_desc_pindex_start
     .param          cpu_rx_read_arqrx_pindex_start
-    .align
+
+.align
+cpu_rx_packet_len:
+    phvwr.e         p.t0_s2s_payload_len, r1
+    nop
+
+.align
 cpu_rx_read_shared_stage0_start:
     CAPRI_CLEAR_TABLE0_VALID
 #ifdef CAPRI_IGNORE_TIMESTAMP
@@ -20,7 +26,6 @@ cpu_rx_read_shared_stage0_start:
     phvwr   p.quiesce_pkt_trlr_timestamp, r6.wx
     
     phvwr   p.common_phv_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}
-    phvwr   p.t0_s2s_payload_len, k.{cpu_app_header_packet_len_sbit0_ebit5...cpu_app_header_packet_len_sbit6_ebit13}
     phvwr   p.common_phv_debug_dol, d.u.cpu_rxdma_initial_action_d.debug_dol
     phvwr   p.common_phv_flags, d.u.cpu_rxdma_initial_action_d.flags
     phvwr   p.common_phv_qstate_addr, k.{p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33}

@@ -687,6 +687,7 @@ capri_deparser_init (int tm_port_ingress, int tm_port_egress)
     // Egress deparser is indexed with 0
     cap0.dpr.dpr[0].cfg_global_2.read();
     cap0.dpr.dpr[0].cfg_global_2.increment_recirc_cnt_en(0);
+    cap0.dpr.dpr[0].cfg_global_2.frame_size_rw_bm(0xffff);
     cap0.dpr.dpr[0].cfg_global_2.write();
 }
 
