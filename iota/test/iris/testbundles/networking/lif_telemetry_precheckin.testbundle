@@ -24,6 +24,8 @@ testcases:
             direction : [ingress, egress, both]
             ccount    : [1, 2]
             collection: [unified]
+            erspan    : [mixed]
+            vlan_strip: [mixed]
         args          :
             type      : precheckin
             ps_2263   : [bypass]

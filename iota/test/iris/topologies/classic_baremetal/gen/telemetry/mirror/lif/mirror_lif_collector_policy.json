@@ -12,7 +12,9 @@
             }, 
             "spec": {
                 "packet-size": 128,
-                "destination": "10.255.0.2"
+                "destination": "10.255.0.2",
+                "type": "erspan_type_3",
+                "strip-vlan-hdr": false
             }
         }
     ], 

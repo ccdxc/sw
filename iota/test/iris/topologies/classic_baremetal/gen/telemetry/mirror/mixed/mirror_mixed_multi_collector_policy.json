@@ -127,13 +127,15 @@
                         "export-config": {
                             "destination": "10.255.0.2"
                         }, 
-                        "type": "erspan_type_3"
+                        "type": "erspan_type_3",
+                        "strip-vlan-hdr": false
                     },
                     {
                         "export-config": {
                             "destination": "10.255.0.4"
                         }, 
-                        "type": "erspan_type_3"
+                        "type": "erspan_type_3",
+                        "strip-vlan-hdr": false
                     }
                 ]
             }

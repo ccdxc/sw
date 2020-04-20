@@ -24,6 +24,8 @@ testcases:
             direction : [ingress, egress, both]
             ccount    : [1, 2, 3, 4, 5, 6, 7, 8]
             collection: [unified]
+            erspan    : [mixed]
+            vlan_strip: [mixed]
         args          :
             type      : sanity
             ps_2263   : [bypass]

@@ -54,13 +54,15 @@
                         "export-config": {
                             "destination": "192.168.100.101"
                         }, 
-                        "type": "erspan_type_3"
+                        "type": "erspan_type_3",
+                        "strip-vlan-hdr": false
                     },
                     {
                         "export-config": {
                             "destination": "192.168.100.102"
                         }, 
-                        "type": "erspan_type_3"
+                        "type": "erspan_type_3",
+                        "strip-vlan-hdr": false
                     }
                 ]
             }

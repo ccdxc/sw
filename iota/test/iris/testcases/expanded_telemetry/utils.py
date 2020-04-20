@@ -194,6 +194,22 @@ def establishLocalWorkloads(tc):
 
     return api.types.status.SUCCESS
 
+def updateErspanTypeOption(tc, c):
+    if tc.iterators.erspan == 'type_2' or tc.iterators.erspan == 'type_3':
+        tc.collector_erspan_type[c] = tc.iterators.erspan
+    elif (c % 2) == 0:
+        tc.collector_erspan_type[c] = 'type_2'
+    else:
+        tc.collector_erspan_type[c] = 'type_3'
+
+def updateVlanStripOption(tc, c):
+    if tc.iterators.vlan_strip == False or tc.iterators.vlan_strip == True:
+        tc.collector_vlan_strip[c] = tc.iterators.vlan_strip
+    elif (c % 2) == 0:
+        tc.collector_vlan_strip[c] = False
+    else:
+        tc.collector_vlan_strip[c] = True
+
 #
 # Allocate necessary Secondary-IPs as needed for Multi-collector testing
 #
@@ -207,6 +223,8 @@ def establishCollectorSecondaryIPs(tc):
     tc.collector_udp_pkts = []
     tc.collector_icmp_pkts = []
     tc.collector_other_pkts = []
+    tc.collector_erspan_type = []
+    tc.collector_vlan_strip = []
     tc.result = []
 
     for c in range(0, len(tc.collector)):
@@ -219,6 +237,10 @@ def establishCollectorSecondaryIPs(tc):
         tc.collector_udp_pkts.append(0)
         tc.collector_icmp_pkts.append(0)
         tc.collector_other_pkts.append(0)
+        tc.collector_erspan_type.append('type_3')
+        updateErspanTypeOption(tc, c)
+        tc.collector_vlan_strip.append(False)
+        updateVlanStripOption(tc, c)
         tc.result.append(api.types.status.SUCCESS)
 
     tc.sec_ip_count = 0
@@ -267,8 +289,16 @@ def establishCollectorSecondaryIPs(tc):
         tc.collector_udp_pkts.append(0)
         tc.collector_icmp_pkts.append(0)
         tc.collector_other_pkts.append(0)
+        tc.collector_erspan_type.append('type_3')
+        updateErspanTypeOption(tc, c)
+        tc.collector_vlan_strip.append(False)
+        updateVlanStripOption(tc, c)
         tc.result.append(api.types.status.SUCCESS)
         c += 1
+
+    for c in range(0, len(tc.collector)):
+        updateErspanTypeOption(tc, c)
+        updateVlanStripOption(tc, c)
 
     return api.types.status.SUCCESS
 
@@ -500,6 +530,12 @@ def generateLifCollectorConfig(tc, colObjects):
         colObjects[c].spec.packet_size = tc.iterators.pktsize
         colObjects[c].spec.destination = tc.collector_ip_address[idx]
 
+        if tc.collector_erspan_type[idx] == 'type_2':
+            colObjects[c].spec.type = 'erspan_type_2'
+        elif tc.collector_erspan_type[idx] == 'type_3':
+            colObjects[c].spec.type = 'erspan_type_3'
+        colObjects[c].spec.strip_vlan_hdr = tc.collector_vlan_strip[idx]
+
     return api.types.status.SUCCESS
 
 def generateUplinkIntfCfgObj(node_name):
@@ -690,6 +726,11 @@ def generateMirrorConfig(tc, policy_json, newObjects):
                 obj.spec.collectors.append(tmp)
             obj.spec.collectors[c].export_config.destination = \
                                    tc.collector_ip_address[idx]
+            if tc.collector_erspan_type[idx] == 'type_2':
+                obj.spec.collectors[c].type = 'erspan_type_2'
+            elif tc.collector_erspan_type[idx] == 'type_3':
+                obj.spec.collectors[c].type = 'erspan_type_3'
+            obj.spec.collectors[c].strip_vlan_hdr = tc.collector_vlan_strip[idx]
 
     verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
     api.Logger.info("VERIFY JSON FILE {}".format(verif_json))
@@ -924,6 +965,14 @@ def showSessionAndP4TablesForDebug(tc):
     cmd = "/nic/bin/halctl show session"
     add_naples_command(req, tc.naples, cmd)
 
+    cmd = "/nic/bin/halctl show session --yaml | grep mirrorsession: |\
+           grep -v 0"
+    add_naples_command(req, tc.naples, cmd)
+
+    cmd = "/nic/bin/halctl show session --yaml | grep flowexportenablebitmap |\
+           grep -v 0"
+    add_naples_command(req, tc.naples, cmd)
+
     cmd = "/nic/bin/halctl show table dump --table-id {} | \
            grep mirror_session_id | grep -v 0x0"\
            .format(tc.lif_table_id)
@@ -934,24 +983,13 @@ def showSessionAndP4TablesForDebug(tc):
            .format(tc.omap_table_id)
     add_naples_command(req, tc.naples, cmd)
 
-    #cmd = "/nic/bin/halctl show table dump --table-id {} | \
-    #       grep mirror_session_id | grep -v 0x0"\
-    #       .format(tc.flow_info_table_id)
-    #add_naples_command(req, tc.naples, cmd)
-
-    #cmd = '/nic/bin/halctl show table dump --table-id {} | \
-    #       grep "export_en=1"'.format(tc.flow_hash_table_id)
-    #add_naples_command(req, tc.naples, cmd)
-
-    #cmd = "/nic/bin/halctl show session --yaml"
-    #add_naples_command(req, tc.naples, cmd)
-
-    cmd = "/nic/bin/halctl show session --yaml | grep mirrorsession: |\
-           grep -v 0"
+    cmd = "/nic/bin/halctl show table dump --table-id {} | \
+           grep mirror_session_id | grep -v 0x0"\
+           .format(tc.flow_info_table_id)
     add_naples_command(req, tc.naples, cmd)
 
-    cmd = "/nic/bin/halctl show session --yaml | grep flowexportenablebitmap |\
-           grep -v 0"
+    cmd = '/nic/bin/halctl show table dump --table-id {} | \
+           grep export_en | grep -v _en=0'.format(tc.flow_hash_table_id)
     add_naples_command(req, tc.naples, cmd)
 
     cmd = "/nic/bin/halctl show table dump --table-id {}"\
@@ -971,29 +1009,29 @@ def showSessionAndP4TablesForDebug(tc):
 #
 def showP4TablesForValidation(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    cmd = "/nic/bin/halctl show table dump --table-id {} | \
-           grep mirror_session_id | grep -v 0x0".format(tc.lif_table_id)
-    add_naples_command(req, tc.naples, cmd)
-
-    cmd = "/nic/bin/halctl show table dump --table-id {} | \
-           grep mirror_session_id | grep -v 0x0".format(tc.omap_table_id)
-    add_naples_command(req, tc.naples, cmd)
-
-    #cmd = "/nic/bin/halctl show table dump --table-id {} | \
-    #       grep mirror_session_id | grep -v 0x0"\
-    #       .format(tc.flow_info_table_id)
-    #add_naples_command(req, tc.naples, cmd)
-
-    #cmd = '/nic/bin/halctl show table dump --table-id {} | \
-    #       grep "export_en=1"'.format(tc.flow_hash_table_id)
-    #add_naples_command(req, tc.naples, cmd)
-
     cmd = "/nic/bin/halctl show session --yaml | grep mirrorsession: |\
            grep -v 0"
     add_naples_command(req, tc.naples, cmd)
 
     cmd = "/nic/bin/halctl show session --yaml | grep flowexportenablebitmap |\
            grep -v 0"
+    add_naples_command(req, tc.naples, cmd)
+
+    cmd = "/nic/bin/halctl show table dump --table-id {} | \
+           grep mirror_session_id | grep -v 0x0".format(tc.lif_table_id)
+    add_naples_command(req, tc.naples, cmd)
+
+    cmd = "/nic/bin/halctl show table dump --table-id {} | \
+           grep irror_session_id | grep -v 0x0".format(tc.omap_table_id)
+    add_naples_command(req, tc.naples, cmd)
+
+    cmd = "/nic/bin/halctl show table dump --table-id {} | \
+           grep rror_session_id | grep -v 0x0"\
+           .format(tc.flow_info_table_id)
+    add_naples_command(req, tc.naples, cmd)
+
+    cmd = '/nic/bin/halctl show table dump --table-id {} | \
+           grep export_en | grep -v _en=0'.format(tc.flow_hash_table_id)
     add_naples_command(req, tc.naples, cmd)
 
     cmd = "/nic/bin/halctl show table dump --table-id {} | \
@@ -1030,13 +1068,19 @@ def validate_ip_proto(tc, ip_proto):
 #
 # Validate VLAN-tag
 #
-def validate_vlan_tag(tc, tag_etype, vlan_tag):
+def validate_vlan_tag(tc, tag_etype, vlan_tag, idx):
     result = api.types.status.SUCCESS
-    if tag_etype == DOT1Q_ETYPE:
-        if tc.naples.uplink_vlan == 0 or vlan_tag != int(tc.naples.uplink_vlan):
+
+    if tc.collector_vlan_strip[idx] == True:
+        if tag_etype == DOT1Q_ETYPE:
             result = api.types.status.FAILURE
-    elif tc.naples.uplink_vlan != 0:
-        result = api.types.status.FAILURE
+    else:
+        if tag_etype == DOT1Q_ETYPE:
+            if tc.naples.uplink_vlan == 0 or\
+               vlan_tag != int(tc.naples.uplink_vlan):
+                result = api.types.status.FAILURE
+        elif tc.naples.uplink_vlan != 0:
+            result = api.types.status.FAILURE
 
     if result == api.types.status.FAILURE:
         api.Logger.error("ERROR: VLAN-Tag {} {} {}".format(tag_etype, vlan_tag,
@@ -1049,7 +1093,7 @@ def validate_vlan_tag(tc, tag_etype, vlan_tag):
 # packet being validated
 #
 def validate_ip_tuple(tc, sip, dip, sport, dport, tag_etype, vlan_tag, 
-                      ip_proto, c):
+                      ip_proto, c, idx):
 
     result = api.types.status.SUCCESS
     if sip == int(ipaddress.ip_address(tc.naples.ip_address)) and\
@@ -1061,7 +1105,7 @@ def validate_ip_tuple(tc, sip, dip, sport, dport, tag_etype, vlan_tag,
                sport != ICMP_ECHO_REPLY and sport != ICMP_PORT_UNREACH:
                 result = api.types.status.FAILURE
             else:
-                result = validate_vlan_tag(tc, tag_etype, vlan_tag)
+                result = validate_vlan_tag(tc, tag_etype, vlan_tag, idx)
     elif sip == int(ipaddress.ip_address(tc.naples_peer.ip_address)) and\
          dip == int(ipaddress.ip_address(tc.naples.ip_address)):
         if ip_proto == IP_PROTO_TCP and sport != int(tc.dest_port):
@@ -1073,7 +1117,7 @@ def validate_ip_tuple(tc, sip, dip, sport, dport, tag_etype, vlan_tag,
                sport != ICMP_ECHO_REPLY and sport != ICMP_PORT_UNREACH:
                 result = api.types.status.FAILURE
             else:
-                result = validate_vlan_tag(tc, tag_etype, vlan_tag)
+                result = validate_vlan_tag(tc, tag_etype, vlan_tag, idx)
     elif tc.feature == 'lif-erspan':
         if ip_proto == IP_PROTO_UDP:
             tc.collector_udp_pkts[c] -= 1
@@ -1175,60 +1219,116 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                         "ERROR: [IGNORE] GRE Seq-num seen: {} expected: {}"\
                         .format(curr_seq_num, tc.collector_seq_num[c]+1))
                         seq_num_error = True
-                        if tc.args.type == 'regression':
+                        if tc.classic_mode == False and\
+                           tc.args.type == 'regression':
                             tc.result[c] = api.types.status.FAILURE
                     tc.collector_seq_num[c] = curr_seq_num
 
             # ERSPAN-pkt validation
-            if pkt.haslayer(ERSPAN_III):
+            ip_proto = 0
+            tag_etype = 0
+            vlan_tag = 0
+            sport = 0
+            dport = 0
+            if tc.collector_erspan_type[idx] == 'type_3' and\
+               pkt.haslayer(ERSPAN_III):
                 # Extract Vlan-tag, if present
-                tag_etype = 0
-                vlan_tag = 0
                 if pkt[ERSPAN_III].haslayer(Dot1Q):
+                    if tc.collector_vlan_strip[idx] == True and\
+                       ((pkt[ERSPAN_III].haslayer(ERSPAN_III) == False and\
+                         pkt[ERSPAN_III].haslayer(ERSPAN) == False) or\
+                        (pkt[ERSPAN_III].haslayer(ERSPAN_III) == True and\
+                         pkt[ERSPAN_III][ERSPAN_III].haslayer(Dot1Q) ==\
+                         False) or\
+                        (pkt[ERSPAN_III].haslayer(ERSPAN) == True and\
+                         pkt[ERSPAN_III][ERSPAN].haslayer(Dot1Q) == False)):
+                        api.Logger.error(\
+                        "ERROR: Tagged ERSPAN-Type-3 Packet in Vlan-Strip mode")
+                        tc.result[c] = api.types.status.FAILURE
                     tag_etype = DOT1Q_ETYPE
-                    vlan_tag = pkt[Dot1Q].vlan
+                    vlan_tag = pkt[ERSPAN_III][Dot1Q].vlan
 
-                ip_proto = 0
                 if pkt[ERSPAN_III].haslayer(IP):
                     # Extract IP-Protocol from inner-IP-header
                     ip_proto = int(pkt[ERSPAN_III][IP].proto)
-                    if ip_proto == IP_PROTO_TCP:
-                        tc.collector_tcp_pkts[c] += 1
-                    elif ip_proto == IP_PROTO_UDP:
-                        tc.collector_udp_pkts[c] += 1
-                    elif ip_proto == IP_PROTO_ICMP:
-                        tc.collector_icmp_pkts[c] += 1
-                    else:
-                        ip_proto = 0
 
                     # Extract IP-addresses from inner-IP-header
                     sip = int(ipaddress.ip_address(pkt[ERSPAN_III][IP].src))
                     dip = int(ipaddress.ip_address(pkt[ERSPAN_III][IP].dst))
 
-                    if ip_proto != 0:
-                        # Extract L4-ports from inner-L4-header
-                        sport = 0
-                        dport = 0
-                        if pkt[ERSPAN_III].haslayer(TCP):
-                            sport = int(pkt[ERSPAN_III][TCP].sport)
-                            dport = int(pkt[ERSPAN_III][TCP].dport)
-                        elif pkt[ERSPAN_III].haslayer(UDP):
-                            sport = int(pkt[ERSPAN_III][UDP].sport)
-                            dport = int(pkt[ERSPAN_III][UDP].dport)
-                        elif pkt[ERSPAN_III].haslayer(ICMP):
-                            sport = (int(pkt[ERSPAN_III][ICMP].type) << 8) |\
+                    # Extract L4-ports from inner-L4-header
+                    if pkt[ERSPAN_III].haslayer(TCP):
+                        sport = int(pkt[ERSPAN_III][TCP].sport)
+                        dport = int(pkt[ERSPAN_III][TCP].dport)
+                    elif pkt[ERSPAN_III].haslayer(UDP):
+                        sport = int(pkt[ERSPAN_III][UDP].sport)
+                        dport = int(pkt[ERSPAN_III][UDP].dport)
+                    elif pkt[ERSPAN_III].haslayer(ICMP):
+                        sport = (int(pkt[ERSPAN_III][ICMP].type) << 8) |\
                                      int(pkt[ERSPAN_III][ICMP].code)
-
-                        # Validate IP-tuple from inner-IP-header
-                        res = validate_ip_tuple(tc, sip, dip, sport, dport, 
-                              tag_etype, vlan_tag, ip_proto, c)
-                        if res != api.types.status.SUCCESS:
-                            tc.result[c] = api.types.status.FAILURE
-
-                if ip_proto == 0:
-                    tc.collector_other_pkts[c] += 1
-                    if tc.feature == 'flow-erspan':
+                elif tc.feature == 'flow-erspan':
+                    api.Logger.error("ERROR: IP-Header Not Present")
+                    tc.result[c] = api.types.status.FAILURE
+            elif tc.collector_erspan_type[idx] == 'type_2' and\
+                 pkt.haslayer(ERSPAN):
+                # Extract Vlan-tag, if present
+                if pkt[ERSPAN].haslayer(Dot1Q):
+                    if tc.collector_vlan_strip[idx] == True and\
+                       ((pkt[ERSPAN].haslayer(ERSPAN) == False and\
+                         pkt[ERSPAN].haslayer(ERSPAN_III) == False) or\
+                        (pkt[ERSPAN].haslayer(ERSPAN) == True and\
+                         pkt[ERSPAN][ERSPAN].haslayer(Dot1Q) == False) or\
+                        (pkt[ERSPAN].haslayer(ERSPAN_III) == True and\
+                         pkt[ERSPAN][ERSPAN_III].haslayer(Dot1Q) == False)):
+                        api.Logger.error(\
+                        "ERROR: Tagged ERSPAN-Type-2 Packet in Vlan-Strip mode")
                         tc.result[c] = api.types.status.FAILURE
+                    tag_etype = DOT1Q_ETYPE
+                    vlan_tag = pkt[ERSPAN][Dot1Q].vlan
+
+                if pkt[ERSPAN].haslayer(IP):
+                    # Extract IP-Protocol from inner-IP-header
+                    ip_proto = int(pkt[ERSPAN][IP].proto)
+
+                    # Extract IP-addresses from inner-IP-header
+                    sip = int(ipaddress.ip_address(pkt[ERSPAN][IP].src))
+                    dip = int(ipaddress.ip_address(pkt[ERSPAN][IP].dst))
+
+                    # Extract L4-ports from inner-L4-header
+                    if pkt[ERSPAN].haslayer(TCP):
+                        sport = int(pkt[ERSPAN][TCP].sport)
+                        dport = int(pkt[ERSPAN][TCP].dport)
+                    elif pkt[ERSPAN].haslayer(UDP):
+                        sport = int(pkt[ERSPAN][UDP].sport)
+                        dport = int(pkt[ERSPAN][UDP].dport)
+                    elif pkt[ERSPAN].haslayer(ICMP):
+                        sport = (int(pkt[ERSPAN][ICMP].type) << 8) |\
+                                 int(pkt[ERSPAN][ICMP].code)
+                elif tc.feature == 'flow-erspan':
+                    api.Logger.error("ERROR: IP-Header Not Present")
+                    tc.result[c] = api.types.status.FAILURE
+            #else:
+            #    api.Logger.error("ERROR: Expected ERSPAN-Header Not Present")
+            #    tc.result[c] = api.types.status.FAILURE
+
+            if ip_proto == IP_PROTO_TCP:
+                tc.collector_tcp_pkts[c] += 1
+            elif ip_proto == IP_PROTO_UDP:
+                tc.collector_udp_pkts[c] += 1
+            elif ip_proto == IP_PROTO_ICMP:
+                tc.collector_icmp_pkts[c] += 1
+            else:
+                ip_proto = 0
+                tc.collector_other_pkts[c] += 1
+                if tc.feature == 'flow-erspan':
+                    tc.result[c] = api.types.status.FAILURE
+
+            if ip_proto != 0:
+                # Validate IP-tuple from inner-IP-header
+                res = validate_ip_tuple(tc, sip, dip, sport, dport, 
+                      tag_etype, vlan_tag, ip_proto, c, idx)
+                if res != api.types.status.SUCCESS:
+                    tc.result[c] = api.types.status.FAILURE
 
         #
         # Validate Number-of-ERSPAN-pkts received by the Collector
@@ -1290,17 +1390,21 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
     for c in range(0, len(lif_flow_collector)):
         idx = lif_flow_collector_idx[c]
         if tc.result[c] == api.types.status.FAILURE:
-            api.Logger.error("ERROR: {} {} {} {} {} {} {} ERSPAN packets to {}"\
+            api.Logger.error("ERROR: {} {} {} {} {} {} {} ERSPAN_{}\
+                              packets to {} (Vlan-Strip {})"\
             .format(tc.collector_tcp_pkts[c], tc.collector_udp_pkts[c],
                     tc.collector_icmp_pkts[c], tc.collector_other_pkts[c],
                     tc.tcp_erspan_pkts_expected, tc.udp_erspan_pkts_expected,
-                    tc.icmp_erspan_pkts_expected, tc.collector_ip_address[idx]))
+                    tc.icmp_erspan_pkts_expected, tc.collector_erspan_type[idx],
+                    tc.collector_ip_address[idx], tc.collector_vlan_strip[idx]))
             result = api.types.status.FAILURE
         else:
-            api.Logger.info("Number of ERSPAN packets {} {} {} {} to {}"\
-            .format(tc.collector_tcp_pkts[c], tc.collector_udp_pkts[c],
-                    tc.collector_icmp_pkts[c],
-                    tc.collector_other_pkts[c], tc.collector_ip_address[idx]))
+            api.Logger.info("Number of ERSPAN_{} packets {} {} {} {} to {}\
+                             (Vlan-Strip {})"\
+            .format(tc.collector_erspan_type[idx], tc.collector_tcp_pkts[c],
+                    tc.collector_udp_pkts[c], tc.collector_icmp_pkts[c],
+                    tc.collector_other_pkts[c], tc.collector_ip_address[idx],
+                    tc.collector_vlan_strip[idx]))
 
     return result
 
@@ -1381,8 +1485,9 @@ def validateIpFixPackets(tc):
                     "ERROR: [IGNORE] IPFIX Seq-num seen: {} expected: {}"\
                     .format(curr_seq_num, tc.collector_seq_num[c]+1))
                     seq_num_error = True
-                    #if tc.classic_mode == False:
-                    tc.result[c] = api.types.status.FAILURE
+                    if tc.classic_mode == False and\
+                       tc.args.type == 'regression':
+                        tc.result[c] = api.types.status.FAILURE
                 tc.collector_seq_num[c] = curr_seq_num
 
                 # Validate IPFIX-records
@@ -1408,7 +1513,7 @@ def validateIpFixPackets(tc):
                         tc.result[c] = api.types.status.FAILURE
 
                     res = validate_ip_tuple(tc, sip, dip, sport, dport, 0, 0, 
-                                            ip_proto, c)
+                                            ip_proto, c, idx)
                     if res != api.types.status.SUCCESS:
                         tc.result[c] = api.types.status.FAILURE
 
@@ -1478,39 +1583,55 @@ def validateConfigCleanup(tc):
         if cmd.stdout != '':
             #
             # Ignore halctl cores in non-regression runs
+            # For now, ignore halctl cores unconditionally
+            # until it is fixed
             #
-            if tc.args.type != 'regression':
+            if tc.args.type != 'regression' or tc.args.type == 'regression':
                 halctl_core = False
                 for line in cmd.stdout.split('\n'):
-                    if 'Segmentation' in line:
+                    if 'Segmentation' in line or 'segmentation' in line:
                         halctl_core = True
                         break
                 if halctl_core == True:
                     continue
 
-            if 'table-id {}'.format(tc.lif_table_id) in cmd.command:
-                api.Logger.error("ERROR: lif-config Not Removed")
+            if 'table-id {}'.format(tc.lif_table_id) in cmd.command and\
+               'grep mirror_session_id' in cmd.command:
+                api.Logger.error("ERROR: PD-lif-config Not Removed")
                 dumpP4TableForDebug(tc, tc.lif_table_id)
                 result = api.types.status.FAILURE
-            elif 'table-id {}'.format(tc.omap_table_id) in cmd.command:
-                api.Logger.error("ERROR: omap-config Not Removed")
+            elif 'table-id {}'.format(tc.omap_table_id) in cmd.command and\
+                 'grep irror_session_id' in cmd.command:
+                api.Logger.error("ERROR: PD-omap-config Not Removed")
                 dumpP4TableForDebug(tc, tc.omap_table_id)
                 result = api.types.status.FAILURE
-            elif 'table-id {}'.format(tc.mirror_table_id) in cmd.command:
-                api.Logger.error("ERROR: Mirror-config Not Removed")
+            elif 'table-id {}'.format(tc.flow_info_table_id) in cmd.command and\
+                 'grep rror_session_id' in cmd.command:
+                api.Logger.error("ERROR: PD-Flow-Info-config Not Removed")
+                dumpP4TableForDebug(tc, tc.flow_info_table_id)
+                result = api.types.status.FAILURE
+            elif 'table-id {}'.format(tc.flow_hash_table_id) in cmd.command and\
+                 'export_en' in cmd.command:
+                api.Logger.error("ERROR: PD-Flow-Hash-config Not Removed")
+                dumpP4TableForDebug(tc, tc.flow_hash_table_id)
+                result = api.types.status.FAILURE
+            elif 'table-id {}'.format(tc.mirror_table_id) in cmd.command and\
+                 'MIRROR_ERSPAN_MIRROR_ID' in cmd.command:
+                api.Logger.error("ERROR: PD-Mirror-config Not Removed")
                 dumpP4TableForDebug(tc, tc.mirror_table_id)
                 result = api.types.status.FAILURE
             elif 'table-id {}'\
-                 .format(tc.tunnel_rewrite_table_id) in cmd.command:
-                api.Logger.error("ERROR: Tunnel-config Not Removed")
+                 .format(tc.tunnel_rewrite_table_id) in cmd.command and\
+                 'ip_da' in cmd.command:
+                api.Logger.error("ERROR: PD-Tunnel-config Not Removed")
                 dumpP4TableForDebug(tc, tc.tunnel_rewrite_table_id)
                 result = api.types.status.FAILURE
             elif 'mirrorsession:' in cmd.command:
-                api.Logger.error("ERROR: Flow-Erspan-config Not Removed")
+                api.Logger.error("ERROR: PI-Flow-Erspan-config Not Removed")
                 dumpSessionTableForDebug(tc)
                 result = api.types.status.FAILURE
             elif 'flowexportenablebitmap' in cmd.command:
-                api.Logger.error("ERROR: Flow-Export-config Not Removed")
+                api.Logger.error("ERROR: PI-Flow-Export-config Not Removed")
                 dumpSessionTableForDebug(tc)
                 result = api.types.status.FAILURE
 

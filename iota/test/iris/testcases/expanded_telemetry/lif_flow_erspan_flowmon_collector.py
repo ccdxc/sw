@@ -426,8 +426,8 @@ def Trigger(tc):
                                --immediate-mode -U -w flowmon-{}.pcap"\
                         .format(tc.flowmon_collector[c].interface,
                         tc.export_port[c], tc.collector_ip_address[idx], c)
-                        eutils.add_command(req_tcpdump_flowmon, 
-                                         tc.flowmon_collector[c], cmd, True)
+                    eutils.add_command(req_tcpdump_flowmon, 
+                                       tc.flowmon_collector[c], cmd, True)
 
                 resp_tcpdump_lif_erspan = api.Trigger(\
                                           req_tcpdump_lif_erspan)

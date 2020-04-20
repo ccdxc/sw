@@ -22,6 +22,8 @@ testcases:
             direction : [ingress, egress, both]
             ccount    : [1, 2, 3, 4, 5, 6, 7, 8]
             collection: [unified]
+            erspan    : [mixed]
+            vlan_strip: [mixed]
         args          :
             type      : regression
             ps_2263   : [bypass]
@@ -38,6 +40,8 @@ testcases:
             proto     : [tcp, udp, icmp, mixed]
             ccount    : [1, 2, 4, 8]
             collection: [unified]
+            erspan    : [mixed]
+            vlan_strip: [mixed]
         args          :
             type      : regression
             ps_2263   : [bypass]
@@ -55,6 +59,8 @@ testcases:
             interval  : [1s]
             ccount    : [1, 2, 3, 4]
             collection: [unified]
+            erspan    : [mixed]
+            vlan_strip: [mixed]
         args          :
             type      : regression
             ps_2263   : [bypass]
@@ -72,6 +78,8 @@ testcases:
             interval  : [1s]
             ccount    : [1, 4, 8]
             collection: [unified, distinct]
+            erspan    : [mixed]
+            vlan_strip: [mixed]
         args          :
             type      : regression
             ps_2263   : [bypass]
@@ -91,6 +99,8 @@ testcases:
             interval  : [1s]
             ccount    : [1, 4, 8]
             collection: [unified, distinct]
+            erspan    : [mixed]
+            vlan_strip: [mixed]
         args          :
             type      : regression
             ps_2263   : [bypass]
@@ -109,6 +119,8 @@ testcases:
             proto     : [tcp, udp, icmp, mixed]
             ccount    : [1, 4, 8]
             collection: [unified, distinct]
+            erspan    : [mixed]
+            vlan_strip: [mixed]
         args          :
             type      : regression
             ps_2263   : [bypass]
@@ -128,6 +140,8 @@ testcases:
             interval  : [1s]
             ccount    : [1, 3, 6]
             collection: [unified, distinct]
+            erspan    : [mixed]
+            vlan_strip: [mixed]
         args          :
             type      : regression
             ps_2263   : [bypass]
