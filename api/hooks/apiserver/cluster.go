@@ -1236,6 +1236,36 @@ func (cl *clusterHooks) restoreFeatureFlags(kvs kvstore.Interface, logger log.Lo
 	}
 }
 
+// set erspan to erspan_type_3 in mirror config
+func (cl *clusterHooks) restoreErspanConfig(kvs kvstore.Interface, logger log.Logger) {
+	pl := monitoring.MirrorSessionList{}
+	policyKey := strings.TrimSuffix(pl.MakeKey(string(apiclient.GroupMonitoring)), "/")
+	err := kvs.List(context.Background(), policyKey, &pl)
+	if err != nil {
+		logger.Errorf("failed to read mirror policy %v", err)
+		return
+	}
+
+	for _, m := range pl.Items {
+		update := false
+		for i := range m.Spec.Collectors {
+			if m.Spec.Collectors[i].Type == monitoring.PacketCollectorType_ERSPAN.String() {
+				// set new default
+				m.Spec.Collectors[i].Type = monitoring.PacketCollectorType_ERSPAN_TYPE_3.String()
+				update = true
+			}
+		}
+
+		if update {
+			logger.Infof("update erspan type in %v", m.GetName())
+			k := m.MakeKey(string(apiclient.GroupMonitoring))
+			if err := kvs.Update(context.Background(), k, m); err != nil {
+				logger.Errorf("failed to update erspan type in %v, error %v", m.GetName(), err)
+			}
+		}
+	}
+}
+
 func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	r := clusterHooks{}
 	apisrv := apisrvpkg.MustGetAPIServer()
@@ -1290,6 +1320,7 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("License", apiintf.CreateOper).WithPostCommitHook(r.applyFeatureFlags)
 	svc.GetCrudService("License", apiintf.UpdateOper).WithPostCommitHook(r.applyFeatureFlags)
 	apisrv.RegisterRestoreCallback(r.restoreFeatureFlags)
+	apisrv.RegisterRestoreCallback(r.restoreErspanConfig)
 }
 
 func init() {
