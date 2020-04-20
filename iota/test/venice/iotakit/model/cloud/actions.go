@@ -4,19 +4,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
-	"reflect"
 
-	yaml "gopkg.in/yaml.v2"
 	uuid "github.com/satori/go.uuid"
+	yaml "gopkg.in/yaml.v2"
 
-	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
+	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 //VerifyNaplesStatus verify naples status
@@ -231,6 +232,44 @@ func (sm *SysModel) VerifyBGPCluster() error {
 	return nil
 }
 
+// this API currently checks only for cpu_mnic1 stats for errors.
+// no error returned if the command execution fails
+func (sm *SysModel) CheckNaplesForErrors() {
+
+	cmds := 0
+	trig := sm.Tb.NewTrigger()
+	for _, node := range sm.Tb.Nodes {
+		if testbed.IsNaplesHW(node.Personality) {
+			for _, naples := range node.NaplesConfigs.Configs {
+				trig.AddCommand("LD_LIBRARY_PATH=/nic/lib/ /nic/bin/eth_dbgtool stats 68 | grep -v ': 0'", naples.Name, node.NodeName)
+				cmds++
+			}
+		}
+	}
+
+	//No naples, return
+	if cmds == 0 {
+		return
+	}
+	resp, err := trig.Run()
+	if err != nil {
+		return
+	}
+
+	// check the response
+	for _, cmdResp := range resp {
+		if cmdResp.ExitCode == 0 {
+			if strings.Contains(cmdResp.Stdout, "rx_queue_empty") {
+				log.Infof("DPDK ERROR on %v: RX_QUEUE_EMPTY HAS NON-ZERO VALUE :%v", cmdResp.NodeName, cmdResp.Stdout)
+			}
+
+			if strings.Contains(cmdResp.Stdout, "rx_desc_data_error") {
+				log.Infof("DPDK ERROR on %v: RX_DESC_DATA_ERROR HAS NON-ZERO VALUE :%v", cmdResp.NodeName, cmdResp.Stdout)
+			}
+		}
+	}
+}
+
 // VerifyClusterStatus verifies venice cluster status
 func (sm *SysModel) VerifyClusterStatus() error {
 	log.Infof("Verifying cluster health..")
@@ -274,6 +313,8 @@ func (sm *SysModel) VerifyClusterStatus() error {
 			}
 		}
 		if err != nil {
+			// check for dpdk errors in case of ping failure. this can be removed later
+			sm.CheckNaplesForErrors()
 			return err
 		}
 	}
@@ -338,28 +379,28 @@ func (sm *SysModel) PortFlap(npc *objects.NaplesCollection) error {
 
 // LinkUpEventsSince returns all the link down events since the given time.
 func (sm *SysModel) LinkUpEventsSince(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection {
-        fieldSelector := fmt.Sprintf("severity=%s,type=%s,object-ref.kind=DistributedServiceCard,meta.mod-time>=%v", eventattrs.Severity_INFO, eventtypes.LINK_UP.String(), since.Format(time.RFC3339Nano))
+	fieldSelector := fmt.Sprintf("severity=%s,type=%s,object-ref.kind=DistributedServiceCard,meta.mod-time>=%v", eventattrs.Severity_INFO, eventtypes.LINK_UP.String(), since.Format(time.RFC3339Nano))
 
-        eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
-        if err != nil {
-                log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
-                return &objects.EventsCollection{}
-        }
+	eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+	if err != nil {
+		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
+		return &objects.EventsCollection{}
+	}
 
-        return &objects.EventsCollection{List: eventsList}
+	return &objects.EventsCollection{List: eventsList}
 }
 
 // LinkDownEventsSince returns all the link down events since the given time.
 func (sm *SysModel) LinkDownEventsSince(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection {
-        fieldSelector := fmt.Sprintf("severity=%s,type=%s,object-ref.kind=DistributedServiceCard,meta.mod-time>=%v", eventattrs.Severity_WARN, eventtypes.LINK_DOWN.String(), since.Format(time.RFC3339Nano))
+	fieldSelector := fmt.Sprintf("severity=%s,type=%s,object-ref.kind=DistributedServiceCard,meta.mod-time>=%v", eventattrs.Severity_WARN, eventtypes.LINK_DOWN.String(), since.Format(time.RFC3339Nano))
 
-        eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
-        if err != nil {
-                log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
-                return &objects.EventsCollection{}
-        }
+	eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+	if err != nil {
+		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
+		return &objects.EventsCollection{}
+	}
 
-        return &objects.EventsCollection{List: eventsList}
+	return &objects.EventsCollection{List: eventsList}
 }
 
 // StartEventsGenOnNaples generates SYSTEM_COLDBOOT events from the Naples events generation test app.
@@ -381,17 +422,16 @@ func (sm *SysModel) StartEventsGenOnNaples(npc *objects.NaplesCollection, rate, 
 
 // SystemBootEvents returns all SYSTEM_COLDBOOT events.
 func (sm *SysModel) SystemBootEvents(npc *objects.NaplesCollection) *objects.EventsCollection {
-        fieldSelector := fmt.Sprintf("type=%s,object-ref.kind=DistributedServiceCard", eventtypes.SYSTEM_COLDBOOT.String())
+	fieldSelector := fmt.Sprintf("type=%s,object-ref.kind=DistributedServiceCard", eventtypes.SYSTEM_COLDBOOT.String())
 
-        eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
-        if err != nil {
-                log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
-                return &objects.EventsCollection{}
-        }
+	eventsList, err := sm.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
+	if err != nil {
+		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
+		return &objects.EventsCollection{}
+	}
 
-        return &objects.EventsCollection{List: eventsList}
+	return &objects.EventsCollection{List: eventsList}
 }
-
 
 // getNaplesUplinkPort returns the first uplink port from the output of "pdsctl show port status --yaml
 func (sm *SysModel) getNaplesUplinkPort(naples *objects.Naples) (error, string) {
@@ -414,7 +454,8 @@ func (sm *SysModel) getNaplesUplinkPort(naples *objects.Naples) (error, string) 
 		}
 
 		var portSpec map[interface{}]interface{}
-		specLoop:for k, v := range port {
+	specLoop:
+		for k, v := range port {
 			switch k.(type) {
 			case string:
 				if k.(string) == "spec" {

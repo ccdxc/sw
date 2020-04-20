@@ -71,14 +71,13 @@ var _ = Describe("IPAM Tests", func() {
 
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
-
 		// get back to default policy on VPC
 		Expect(vpcc.SetIPAM(defaultIpam)).Should(Succeed())
 
 		// delete Custom IPAM policy
 		deleteIPAMPolicy(customIpam)
 
+		ts.tb.AfterTestCommon()
 	})
 
 	Context("IPAM Tests", func() {
