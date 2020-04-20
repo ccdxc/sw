@@ -49,6 +49,7 @@ typedef enum sdk_mod_id_e {
     SDK_MOD_ID_SDK   = SDK_MOD_ID_MIN + 1,  ///< generic SDK module id
     SDK_MOD_ID_HMON,                        ///< module id for system monitoring
     SDK_MOD_ID_INTR,                        ///< module id for system interrupts
+    SDK_MOD_ID_LINK,                        ///< module id for port links
     SDK_MOD_ID_MAX
 } sdk_mod_id_t;
 

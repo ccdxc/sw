@@ -27,48 +27,32 @@ extern linkmgr_cfg_t g_linkmgr_cfg;
 extern char log_buf[];
 extern bool hal_cfg;
 
-#define SDK_LINKMGR_LOG(type, log_buf) { \
-    if (g_linkmgr_cfg.port_log_fn) {                                      \
-        g_linkmgr_cfg.port_log_fn(type, log_buf);                         \
-    } else {                                                              \
-        SDK_TRACE_DEBUG("%s", log_buf);                                   \
-    }                                                                     \
-}
-
-#define SDK_PORT_SM_LOG(type, port, fmt, ...) {                           \
-    snprintf(log_buf, MAX_LOG_SIZE,                                       \
-             "port: %d, MAC_ID: %d, MAC_CH: %d, " fmt,                    \
-             port->port_num(), port->mac_id_, port->mac_ch_,              \
-             ##__VA_ARGS__);                                              \
-    SDK_LINKMGR_LOG(type, log_buf);                                       \
-}
-
 #define SDK_PORT_SM_DEBUG(port, fmt, ...)                                 \
-    SDK_PORT_SM_LOG(sdk::lib::SDK_TRACE_LEVEL_DEBUG, port, fmt,           \
-                    ##__VA_ARGS__)
+    SDK_LINK_TRACE_DEBUG("port: %u, MAC_ID: %u, MAC_CH: %u, " fmt,        \
+                         port->port_num(), port->mac_id_, port->mac_ch_,  \
+                         ##__VA_ARGS__);
 
 #define SDK_PORT_SM_TRACE(port, fmt, ...)                                 \
-    SDK_PORT_SM_LOG(sdk::lib::SDK_TRACE_LEVEL_DEBUG, port, fmt,           \
-                    ##__VA_ARGS__)
+    SDK_LINK_TRACE_DEBUG("port: %u, MAC_ID: %u, MAC_CH: %u, " fmt,        \
+                         port->port_num(), port->mac_id_, port->mac_ch_,  \
+                         ##__VA_ARGS__);
 
-#define SDK_LINKMGR_TRACE_DEBUG(format, ...)  {                           \
-    snprintf(log_buf, MAX_LOG_SIZE, format, ##__VA_ARGS__);               \
-    SDK_LINKMGR_LOG(sdk::lib::SDK_TRACE_LEVEL_DEBUG, log_buf);            \
+#define SDK_LINKMGR_TRACE_DEBUG(fmt, ...)  {                              \
+    SDK_LINK_TRACE_DEBUG(fmt, ##__VA_ARGS__);                             \
 }
 
-#define SDK_LINKMGR_TRACE_ERR(format, ...)  {                             \
-    snprintf(log_buf, MAX_LOG_SIZE, format, ##__VA_ARGS__);               \
-    SDK_LINKMGR_LOG(sdk::lib::SDK_TRACE_LEVEL_ERR, log_buf);              \
+#define SDK_LINKMGR_TRACE_ERR(fmt, ...)  {                                \
+    SDK_LINK_TRACE_ERR(fmt, ##__VA_ARGS__);                               \
 }
 
-#define SDK_LINKMGR_TRACE_DEBUG_SIZE(logsize, format, ...)  {             \
-    snprintf(log_buf, logsize, format, ##__VA_ARGS__);                    \
-    SDK_LINKMGR_LOG(sdk::lib::SDK_TRACE_LEVEL_DEBUG, log_buf);            \
+#define SDK_LINKMGR_TRACE_DEBUG_SIZE(logsize, fmt, ...)  {                \
+    snprintf(log_buf, logsize, fmt, ##__VA_ARGS__);                       \
+    SDK_LINK_TRACE_DEBUG("%s", log_buf);                                  \
 }
 
-#define SDK_LINKMGR_TRACE_ERR_SIZE(logsize, format, ...)  {               \
-    snprintf(log_buf, logsize, format, ##__VA_ARGS__);                    \
-    SDK_LINKMGR_LOG(sdk::lib::SDK_TRACE_LEVEL_ERR, log_buf);              \
+#define SDK_LINKMGR_TRACE_ERR_SIZE(logsize, fmt, ...)  {                  \
+    snprintf(log_buf, logsize, fmt, ##__VA_ARGS__);                       \
+    SDK_LINK_TRACE_ERR("%s", log_buf);                                    \
 }
 
 typedef enum sdk_timer_id_e {

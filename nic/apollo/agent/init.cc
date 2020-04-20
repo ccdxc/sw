@@ -31,7 +31,9 @@ sdk_ret_t spawn_routing_thread(void);
 #define TRACE_NUM_FILES                        1
 #define TRACE_FILE_SIZE                        (20 << 20)
 #define TRACE_NUM_FILES_HMON                   1
-#define TRACE_FILE_SIZE_HMON                   (5 << 20)        // 5MB
+#define TRACE_FILE_SIZE_HMON                   (5 << 20)    // 5MB
+#define TRACE_NUM_FILES_LINK                   1
+#define TRACE_FILE_SIZE_LINK                   (4 << 20)    // 4MB
 typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 
 //------------------------------------------------------------------------------
@@ -248,6 +250,14 @@ logger_init (void)
     core::intr_trace_init("intr", 0x1, true, err_logfile.c_str(),
                           logfile.c_str(), TRACE_FILE_SIZE_HMON,
                           TRACE_NUM_FILES_HMON, utils::trace_info);
+
+    // initialize link logger
+    logfile = log_file(std::getenv("LOG_DIR"), "./linkmgr.log");
+    err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"),
+                           "/linkmgr_err.log");
+    core::link_trace_init("linkmgr", 0x1, true, err_logfile.c_str(),
+                          logfile.c_str(), TRACE_FILE_SIZE_LINK,
+                          TRACE_NUM_FILES_LINK, utils::trace_debug);
     return SDK_RET_OK;
 }
 

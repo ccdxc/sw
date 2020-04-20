@@ -139,7 +139,7 @@ get_logfile (const char *env, const char *base, const char *alt)
 
     return std::string(logdir) + "/" + std::string(base);
 }
-    
+
 //------------------------------------------------------------------------------
 // logger init for linkmgr
 //------------------------------------------------------------------------------
@@ -313,7 +313,7 @@ linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
 
     linkmgr_logger = linkmgr_logger_init();
 
-    sdk_cfg->port_log_fn = linkmgr_log;
+    sdk_cfg->port_log_fn = NULL;
     sdk_cfg->xcvr_event_cb  = linkmgr::xcvr_event_cb;
 
     sdk_ret = sdk::linkmgr::linkmgr_init(sdk_cfg);

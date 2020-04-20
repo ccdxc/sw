@@ -1551,11 +1551,11 @@ capri_tm_sop_eop_check (tm_port_t port)
         eop_count_out = pbc_csr.cnt_flits[port].eop_out().convert_to<uint32_t>();
         if ((sop_count_in == eop_count_in) &&
             (sop_count_out == eop_count_out)) {
-            SDK_TRACE_DEBUG("Port %u sop eop match after %u tries. "
-                            "sop_in %u, eop_in %u, sop_out %u, eop_out %u",
-                            port, tries,
-                            sop_count_in, eop_count_in,
-                            sop_count_out, eop_count_out);
+            SDK_TRACE_VERBOSE("Port %u sop eop match after %u tries. "
+                              "sop_in %u, eop_in %u, sop_out %u, eop_out %u",
+                              port, tries,
+                              sop_count_in, eop_count_in,
+                              sop_count_out, eop_count_out);
             break;
         }
         usleep(1000);
@@ -1593,7 +1593,7 @@ capri_tm_drain_hbm_contexts (tm_port_t port)
             if (occupancy) {
                 all_zeroes = false;
             } else {
-                SDK_TRACE_DEBUG("port %u, hbm context %u 0", port, context);
+                SDK_TRACE_VERBOSE("port %u, hbm context %u 0", port, context);
             }
         }
         // TODO: Do we need a sleep here ?
@@ -1628,7 +1628,7 @@ capri_tm_drain_occupancy (tm_port_t port)
             if (cur_occupancy != 0) {
                 all_zeroes = false;
             } else {
-                SDK_TRACE_DEBUG("port %u, iq %u 0", port, iq);
+                SDK_TRACE_VERBOSE("port %u, iq %u 0", port, iq);
             }
         }
         tries++;
@@ -1663,7 +1663,7 @@ capri_tm_drain_oq (tm_port_t port)
             if (queue_depth != 0) {
                 all_zeroes = false;
             } else {
-                SDK_TRACE_DEBUG("port %u, oq %u 0", port, oq);
+                SDK_TRACE_VERBOSE("port %u, oq %u 0", port, oq);
             }
         }
         tries++;
@@ -1756,12 +1756,12 @@ capri_tm_flush_uplink_port (tm_port_t port, bool enable)
             pthread_mutex_unlock(&tm_mutex);
             return sdk::SDK_RET_ERR;
     }
-    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    SDK_TRACE_VERBOSE("%s", data.str().c_str());
 
     pthread_mutex_unlock(&tm_mutex);
 
-    SDK_TRACE_DEBUG("%s uplink port %u flush, ret %u",
-                    enable ? "Enable" : "Disable", port, ret);
+    SDK_TRACE_VERBOSE("%s uplink port %u flush, ret %u",
+                      enable ? "Enable" : "Disable", port, ret);
     return ret;
 }
 
@@ -1813,12 +1813,12 @@ capri_tm_write_control_uplink_port (tm_port_t port, bool enable)
             pthread_mutex_unlock(&tm_mutex);
             return sdk::SDK_RET_ERR;
     }
-    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    SDK_TRACE_VERBOSE("%s", data.str().c_str());
 
     pthread_mutex_unlock(&tm_mutex);
 
-    SDK_TRACE_DEBUG("%s uplink port %u write control, ret %u",
-                    enable ? "Enable" : "Disable", port, ret);
+    SDK_TRACE_VERBOSE("%s uplink port %u write control, ret %u",
+                      enable ? "Enable" : "Disable", port, ret);
     return ret;
 }
 

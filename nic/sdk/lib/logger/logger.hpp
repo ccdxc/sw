@@ -142,4 +142,33 @@ using sdk_logger = sdk::lib::logger;
                                              "[%s:%d] " fmt, __FNAME__,        \
                                              __LINE__, ##__VA_ARGS__)
 
+#define SDK_LINK_TRACE(...)              sdk::lib::logger::trace_cb()(         \
+                                             sdk_mod_id_t::SDK_MOD_ID_LINK,    \
+                                             ##__VA_ARGS__)
+
+#define SDK_LINK_TRACE_ERR(fmt, ...)     SDK_LINK_TRACE(                       \
+                                             sdk::lib::SDK_TRACE_LEVEL_ERR,    \
+                                             "[%s:%d] " fmt, __FNAME__,        \
+                                             __LINE__, ##__VA_ARGS__)
+
+#define SDK_LINK_TRACE_WARN(fmt, ...)    SDK_LINK_TRACE(                       \
+                                             sdk::lib::SDK_TRACE_LEVEL_WARN,   \
+                                             "[%s:%d] " fmt, __FNAME__,        \
+                                             __LINE__, ##__VA_ARGS__)
+
+#define SDK_LINK_TRACE_INFO(fmt, ...)    SDK_LINK_TRACE(                       \
+                                             sdk::lib::SDK_TRACE_LEVEL_INFO,   \
+                                             "[%s:%d] " fmt, __FNAME__,        \
+                                             __LINE__, ##__VA_ARGS__)
+
+#define SDK_LINK_TRACE_DEBUG(fmt, ...)   SDK_LINK_TRACE(                       \
+                                             sdk::lib::SDK_TRACE_LEVEL_DEBUG,  \
+                                             "[%s:%d] " fmt, __FNAME__,        \
+                                             __LINE__, ##__VA_ARGS__)
+
+#define SDK_LINK_TRACE_VERBOSE(fmt, ...) SDK_LINK_TRACE(                       \
+                                             sdk::lib::SDK_TRACE_LEVEL_VERBOSE,\
+                                             "[%s:%d] " fmt, __FNAME__,        \
+                                             __LINE__, ##__VA_ARGS__)
+
 #endif    // __SDK_LOGGER_HPP__

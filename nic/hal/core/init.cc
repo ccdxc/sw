@@ -498,19 +498,19 @@ hal_sdk_logger (uint32_t mod_id, sdk_trace_level_e tracel_level,
         vsnprintf(logbuf, sizeof(logbuf), format, args);
         switch (tracel_level) {
         case sdk::lib::SDK_TRACE_LEVEL_ERR:
-            HAL_TRACE_ERR_NO_META("{}", logbuf);
+            HAL_MOD_TRACE_ERR_NO_META(mod_id, "{}", logbuf);
             break;
         case sdk::lib::SDK_TRACE_LEVEL_WARN:
-            HAL_TRACE_WARN_NO_META("{}", logbuf);
+            HAL_MOD_TRACE_WARN_NO_META(mod_id, "{}", logbuf);
             break;
         case sdk::lib::SDK_TRACE_LEVEL_INFO:
-            HAL_TRACE_INFO_NO_META("{}", logbuf);
+            HAL_MOD_TRACE_INFO_NO_META(mod_id, "{}", logbuf);
             break;
         case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
-            HAL_TRACE_DEBUG_NO_META("{}", logbuf);
+            HAL_MOD_TRACE_DEBUG_NO_META(mod_id, "{}", logbuf);
             break;
         case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
-            HAL_TRACE_VERBOSE_NO_META("{}", logbuf);
+            HAL_MOD_TRACE_VERBOSE_NO_META(mod_id, "{}", logbuf);
             break;
         default:
             break;
@@ -614,11 +614,6 @@ hal_logger_init (hal_cfg_t *hal_cfg)
     std::string persistent_logfile;
     std::string non_persistent_logfile;
 
-    persistent_logfile = get_logfile("PERSISTENT_LOGDIR", "hal.log",
-        "./hal.pers.log");
-    non_persistent_logfile = get_logfile("NON_PERSISTENT_LOGDIR", "hal.log",
-        "./hal.nonpers.log");
-
     // initialize the logger
     hal_cfg->sync_mode_logging = false;
     if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM) {
@@ -626,16 +621,35 @@ hal_logger_init (hal_cfg_t *hal_cfg)
         //       sync disabled.
         hal_cfg->sync_mode_logging = true;
     }
+
+    persistent_logfile = get_logfile("PERSISTENT_LOGDIR", "hal.log",
+                                     "./hal.pers.log");
+    non_persistent_logfile = get_logfile("NON_PERSISTENT_LOGDIR", "hal.log",
+                                         "./hal.nonpers.log");
     hal::utils::trace_init("hal", hal_cfg->control_cores_mask,
                            hal_cfg->sync_mode_logging,
                            persistent_logfile.c_str(),
                            non_persistent_logfile.c_str(),
-                           5 << 20, // 50MB
+                           5 << 20, // 5MB
                            10,      // 10 files
                            ::utils::trace_err,
                            getenv("DISABLE_LOGGING") ? (::utils::trace_none) :
                                                        (::utils::trace_debug));
 
+    // link logger
+    persistent_logfile = get_logfile("PERSISTENT_LOGDIR", "linkmgr_err.log",
+                                     "./linkmgr_err.pers.log");
+    non_persistent_logfile = get_logfile("NON_PERSISTENT_LOGDIR", "linkmgr.log",
+                                     "./linkmgr.nonpers.log");
+    hal::utils::link_trace_init("linkmgr", hal_cfg->control_cores_mask,
+                                hal_cfg->sync_mode_logging,
+                                persistent_logfile.c_str(),
+                                non_persistent_logfile.c_str(),
+                                4 << 20, // 4MB
+                                1,       // 1 file
+                                ::utils::trace_err,
+                                getenv("DISABLE_LOGGING") ? (::utils::trace_none) :
+                                                       (::utils::trace_debug));
     return HAL_RET_OK;
 }
 

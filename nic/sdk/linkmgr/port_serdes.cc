@@ -303,7 +303,7 @@ sbus_access (uint32_t sbus_addr,
         if(ring_number == 0) {
             cap_pp_sbus_reset(chip_id, sbus_id);
         } else {
-            SDK_LINKMGR_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            SDK_LINKMGR_TRACE_DEBUG("NO-OP for ring: %d", ring_number);
             // cap_ms_sbus_reset(chip_id, sbus_id);
         }
         status = 1;
@@ -321,7 +321,7 @@ sbus_access (uint32_t sbus_addr,
         if(ring_number == 0) {
             cap_pp_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
         } else {
-            SDK_LINKMGR_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            SDK_LINKMGR_TRACE_DEBUG("NO-OP for ring: %d", ring_number);
             // cap_ms_sbus_write(chip_id, sbus_id, reg_addr, *sbus_data);
         }
         status = 1;
@@ -331,7 +331,7 @@ sbus_access (uint32_t sbus_addr,
         if(ring_number == 0) {
             *sbus_data = cap_pp_sbus_read(chip_id, sbus_id, reg_addr);
         } else {
-            SDK_LINKMGR_TRACE_ERR("NO-OP for ring: %d", ring_number);
+            SDK_LINKMGR_TRACE_DEBUG("NO-OP for ring: %d", ring_number);
             // *sbus_data = cap_ms_sbus_read(chip_id, sbus_id, reg_addr);
         }
 
@@ -399,7 +399,7 @@ aapl_log_fn(Aapl_t *aapl, Aapl_log_type_t log_type,
         SDK_LINKMGR_TRACE_ERR_SIZE(new_item_len, "%s", buf);
         break;
      case Aapl_log_type_t::AVAGO_WARNING:
-        SDK_LINKMGR_TRACE_ERR_SIZE(new_item_len, "%s", buf);
+        SDK_LINKMGR_TRACE_DEBUG_SIZE(new_item_len, "%s", buf);
         break;
      case Aapl_log_type_t::AVAGO_INFO:
         SDK_LINKMGR_TRACE_DEBUG_SIZE(new_item_len, "%s", buf);
@@ -581,7 +581,7 @@ serdes_spico_upload_hw (uint32_t sbus_addr, const char* filename)
     return rc;
 }
 
-static int
+int
 serdes_pre_ical_start_hw (uint32_t sbus_addr)
 {
     int int_code;
@@ -598,6 +598,10 @@ serdes_pre_ical_start_hw (uint32_t sbus_addr)
         return -1;
     }
 
+    // reducing the dwell time caused ICAL not to tune correctly with a
+    // specific range of ports (9-12) on 10G N3K (N3K-C31108PC-V).
+    // ICAL would complete, but the eye values were bad.
+    // need to experiment with different values
     int_code = 0x19;
     int_data = 0x2710;
     int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
@@ -628,11 +632,6 @@ serdes_ical_start_hw (uint32_t sbus_addr, port_speed_t serdes_speed)
     avago_serdes_tune_init(aapl, &dfe);
     dfe.tune_mode = Avago_serdes_dfe_tune_mode_t::AVAGO_DFE_ICAL;
 
-    // 10G ICAL would take ~1s.
-    // issue additional interrupts to speed up ICAL for 10G
-    if (serdes_speed == port_speed_t::PORT_SPEED_10G) {
-        // serdes_pre_ical_start_hw(sbus_addr);
-    }
     avago_serdes_tune(aapl, sbus_addr, &dfe);
 
     return 0;
