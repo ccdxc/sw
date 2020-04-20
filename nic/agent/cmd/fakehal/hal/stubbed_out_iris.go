@@ -310,15 +310,6 @@ func (h Hal) DropMonitorRuleGet(ctx context.Context, req *irisproto.DropMonitorR
 	return nil, nil
 }
 
-// MirrorSessionUpdate Stubbed out
-func (h Hal) MirrorSessionUpdate(ctx context.Context, req *irisproto.MirrorSessionRequestMsg) (*irisproto.MirrorSessionResponseMsg, error) {
-	dat, _ := json.MarshalIndent(req, "", "  ")
-	log.Info("Got MirrorSessionUpdate Request:")
-	fmt.Println(string(dat))
-
-	return nil, nil
-}
-
 // MirrorSessionGet Stubbed out
 func (h Hal) MirrorSessionGet(ctx context.Context, req *irisproto.MirrorSessionGetRequestMsg) (*irisproto.MirrorSessionGetResponseMsg, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")

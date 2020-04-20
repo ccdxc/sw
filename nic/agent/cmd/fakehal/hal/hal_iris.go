@@ -586,6 +586,24 @@ func (h Hal) MirrorSessionCreate(ctx context.Context, req *irisproto.MirrorSessi
 	}, nil
 }
 
+// MirrorSessionUpdate Stubbed out
+func (h Hal) MirrorSessionUpdate(ctx context.Context, req *irisproto.MirrorSessionRequestMsg) (*irisproto.MirrorSessionResponseMsg, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got MirrorSessionUpdate Request:")
+	fmt.Println(string(dat))
+	return &irisproto.MirrorSessionResponseMsg{
+		Response: []*irisproto.MirrorSessionResponse{
+			{
+				ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+				Status: &irisproto.MirrorSessionStatus{
+					Handle:      req.Request[0].KeyOrHandle.GetMirrorsessionId(),
+					ActiveFlows: 0,
+				},
+			},
+		},
+	}, nil
+}
+
 // FlowMonitorRuleCreate stubbed out
 func (h Hal) FlowMonitorRuleCreate(ctx context.Context, req *irisproto.FlowMonitorRuleRequestMsg) (*irisproto.FlowMonitorRuleResponseMsg, error) {
 	dat, _ := json.MarshalIndent(req, "", "  ")

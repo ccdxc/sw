@@ -49,6 +49,32 @@ func TestHandleCollectorUpdates(t *testing.T) {
 	if len(lateralDB[internalCol1]) != 1 {
 		t.Fatalf("Collector keys not populated. %v", lateralDB[internalCol1])
 	}
+	var dbcol netproto.Collector
+	dat, err := infraAPI.Read(col.Kind, col.GetKey())
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dbcol.Unmarshal(dat)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mirrorSessionID := dbcol.Status.Collector
+	dbcol.Spec.PacketSize = 100
+	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Update, dbcol, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dat, err = infraAPI.Read(col.Kind, col.GetKey())
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = dbcol.Unmarshal(dat)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if dbcol.Status.Collector != mirrorSessionID {
+		t.Fatalf("Mirror Session ID should not have changed. %v %v", mirrorSessionID, dbcol.Status.Collector)
+	}
 	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, 65)
 	if err != nil {
 		t.Fatal(err)

@@ -89,6 +89,26 @@ func createCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 	return nil
 }
 
+func updateMirrorSession(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, col netproto.Collector, vrfID uint64) error {
+	dstIP := col.Spec.Destination
+	// Create MirrorSession
+	mirrorReqMsg := convertMirrorSession(col, dstIP, vrfID)
+	resp, err := telemetryClient.MirrorSessionUpdate(context.Background(), mirrorReqMsg)
+	if resp != nil {
+		if err := utils.HandleErr(types.Update, resp.Response[0].ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", col.GetKind(), col.GetKey())); err != nil {
+			return err
+		}
+	}
+
+	dat, _ := col.Marshal()
+
+	if err := infraAPI.Store(col.Kind, col.GetKey(), dat); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreUpdate, "Collector: %s | Collector: %v", col.GetKey(), err))
+		return errors.Wrapf(types.ErrBoltDBStoreUpdate, "Collector: %s | Collector: %v", col.GetKey(), err)
+	}
+	return nil
+}
+
 func updateCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, col netproto.Collector, vrfID uint64) error {
 	var existingCol netproto.Collector
 	dat, err := infraAPI.Read(col.Kind, col.GetKey())
@@ -99,6 +119,12 @@ func updateCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err))
 		return errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err)
+	}
+	oldKey := commonUtils.BuildDestKey(existingCol.Spec.VrfName, existingCol.Spec.Destination)
+	newKey := commonUtils.BuildDestKey(col.Spec.VrfName, col.Spec.Destination)
+	// If keys are still the same, no need to flap the mirror session
+	if oldKey == newKey {
+		return updateMirrorSession(infraAPI, telemetryClient, col, vrfID)
 	}
 	if err := deleteCollectorHandler(infraAPI, telemetryClient, intfClient, epClient, existingCol, vrfID); err != nil {
 		log.Error(errors.Wrapf(types.ErrCollectorDeleteDuringUpdate, "Collector: %s | Collector: %v", existingCol.GetKey(), err))
