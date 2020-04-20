@@ -39,6 +39,10 @@
     Perform only a "Clean" operation 
 
 .PARAMETER ResetVerBuild
+    Reset version build number for this Maj.Min.SP to 0
+
+.PARAMETER Sign
+    Perform driver signing
 
 #>
 
@@ -84,7 +88,10 @@ param(
     [switch] $CleanOnly=$false,
 
     [Parameter(Mandatory=$false)]
-    [switch] $ResetVerBuild=$false
+    [switch] $ResetVerBuild=$false,
+
+    [Parameter(Mandatory=$false)]
+    [switch] $Sign=$true
 )
 
 
@@ -226,6 +233,20 @@ $Env:IONIC_VERSION_EXT = $VerExt
 
 $Env:IONIC_VERSION_STR = $VerStr
 
+#Copy signing enabled Ionic.vcxproj.user
+$PathToSignStuff = $PathToSln+"\SignStuff"
+$IonicUserFile = $PathToSignStuff+"\Ionic.vcxproj.user"
+$PathToSlnParent = Split-Path -Path $PathToSln
+$PathToIonicProj = $PathToSlnParent + "\Ionic"
+$BuildIsSigned = $false
+if ($Sign) {
+    if (Test-Path -Path $IonicUserFile -PathType Leaf) {
+        Copy-Item -Path $IonicUserFile -Destination $PathToIonicProj -Verbose -Force
+        
+        $BuildIsSigned = $true
+    }
+}
+
 # Clean all previous build logs.
 $BuildLogPath = $PathToSln+"\BuildLogs\"
 if (Test-Path -Path $BuildLogPath -PathType Container) {
@@ -259,10 +280,6 @@ if ($LASTEXITCODE -ne 0) {
 
 # This was a successful build -> record build number in the build number file.
 Set-Content -Path $PathToBuildVersionFile -Value $VerBuild
-
-$OperationEndTime = Get-Date
-$OperationRunTime = $OperationEndTime - $OperationStartTime
-"Script execution Time - $($OperationRunTime.Hours):$('{0:00}' -f $OperationRunTime.Minutes):$('{0:00}' -f $OperationRunTime.Seconds).$('{0:000}' -f $OperationRunTime.Milliseconds)" | Write-Host
 
 # ==== Artifacts collection ====
 # Use path to solution as destination for collecting artifacts if an explicit path was not provided.
@@ -315,6 +332,41 @@ if ($CollectArtifacts) {
             }
         }
     }
+
+    # Build and sign cab file
+    if ($BuildIsSigned) {
+        $DriverSignFolder = $PathToSignStuff + "\cat64"
+        if (Test-Path -Path $DriverSignFolder -PathType Container) {
+            $AllDriverFiles = $DriverSignFolder+"\*"
+            Remove-Item -Path $AllDriverFiles -Force -Recurse
+        }
+        else {
+            New-Item -Path $DriverSignFolder -ItemType Directory -Name "cat64"
+        }
+        # Read artifacts list file and copy any driver item listed to the cat64 folder.
+        Get-Content $PathToArtifactsListFile | Foreach-Object {
+            $Line = $_
+            $Line.Trim()
+            $DriverFolder = "Ionic\"
+            if ((!([string]::IsNullOrWhiteSpace($Line))) -and ($Line.Contains($DriverFolder))) {
+                $ArtifactLeaf = $PathToSln+"\"+$Platform+"\"+$Configuration+"\"+$Line
+        
+                if (Test-Path -Path $ArtifactLeaf -PathType Leaf) {
+                    Copy-Item -Path $ArtifactLeaf -Destination $DriverSignFolder -Verbose
+                }
+            }
+        }
+        $BuildCabBatch = $PathToSignStuff + "\BuildCab.bat"
+        
+        & $BuildCabBatch
+        
+        $CabFilePath = $PathToSignStuff + "\cab64\disk1\*.cab"
+        if (Test-Path -Path $CabFilePath -PathType Leaf) {
+            Copy-Item -Path $CabFilePath -Destination $NewArtifactsFolder -Verbose
+        }
+        
+    }
+
     # Remove any previous artifacts from the destination zip folder or 
     # create the destination zip folder if it didn't exist.
     $ArtifactsZipFolder = $ArtifactsPath + "\ArtifactsZipped"
@@ -330,5 +382,9 @@ if ($CollectArtifacts) {
     Add-Type -AssemblyName "system.io.compression.filesystem"
     [io.compression.zipfile]::CreateFromDirectory($NewArtifactsFolder, $ZipFilePath)
 }
+
+$OperationEndTime = Get-Date
+$OperationRunTime = $OperationEndTime - $OperationStartTime
+"Script execution Time - $($OperationRunTime.Hours):$('{0:00}' -f $OperationRunTime.Minutes):$('{0:00}' -f $OperationRunTime.Seconds).$('{0:000}' -f $OperationRunTime.Milliseconds)" | Write-Host
 
 PauseThenExit -ExitCode 0

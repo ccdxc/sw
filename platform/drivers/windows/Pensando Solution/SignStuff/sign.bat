@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe" sign /sha1 d95862623ff82ae1b9a244cb4593b55f6e3dd199 /v /ac ".\VeriSign Class 3 Public Primary Certification Authority - G5.cer" /a /tr http://timestamp.digicert.com /td sha256 /fd sha256 %1
