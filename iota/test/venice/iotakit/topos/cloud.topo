@@ -5,7 +5,7 @@ nodes:
         instances: 2
     venice:
         image: ../bin/venice.apulu.tgz
-        instances: 1
+        instances: 3
 
 
 workload: 
