@@ -1,7 +1,6 @@
 package state
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -20,6 +19,29 @@ import (
 const FwlogIpcShm = "/fwlog_ipc_shm"
 
 var flowDirectionName map[uint32]string
+
+type fwevent struct {
+	*halproto.FWEvent
+}
+
+// String show json string
+func (ev *fwevent) String() string {
+	return fmt.Sprintf("[{"+
+		"\"time\":\"%v\",\"destaddr\":\"%v\",\"destport\":%v,\"srcaddr\":\"%v\",\"srcport\":%v,\"protocol\":\"%v\",\"action\":\"%v\","+
+		"\"direction\":\"%v\",\"rule-id\":%v,\"session-id\":%v,\"session-state\":\"%v\",\"app-id\":\"%v\"}]",
+		time.Unix(0, ev.GetTimestamp()).Format(time.RFC3339),
+		netutils.IPv4Uint32ToString(ev.GetDipv4()),
+		ev.GetDport(),
+		netutils.IPv4Uint32ToString(ev.GetSipv4()),
+		ev.GetSport(),
+		strings.TrimPrefix(ev.GetIpProt().String(), "IPPROTO_"),
+		strings.ToLower(strings.TrimPrefix(ev.GetFwaction().String(), "SECURITY_RULE_ACTION_")),
+		flowDirectionName[ev.GetDirection()],
+		ev.GetRuleId(),
+		ev.GetSessionId(),
+		strings.ToLower(strings.Replace(halproto.FlowLogEventType_name[int32(ev.GetFlowaction())], "LOG_EVENT_TYPE_", "", 1)),
+		ev.GetAppId())
+}
 
 // TsdbInit initilaizes tsdb and fwlog object
 func (s *PolicyState) TsdbInit(nodeUUID string, rc resolver.Interface) error {
@@ -91,6 +113,8 @@ func (s *PolicyState) handleFwLog(ev *halproto.FWEvent, ts time.Time) {
 		return
 	}
 
+	fwev := &fwevent{FWEvent: ev}
+
 	vrfSrc := fmt.Sprintf("%v", ev.GetSourceVrf())
 	vrfDest := fmt.Sprintf("%v", ev.GetDestVrf())
 	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
@@ -137,12 +161,6 @@ func (s *PolicyState) handleFwLog(ev *halproto.FWEvent, ts time.Time) {
 
 	log.Debugf("Fwlog syslog: %+v", syslogFields)
 
-	syslogJSONMsg, err := json.Marshal([]map[string]interface{}{syslogFields})
-	if err != nil {
-		log.Errorf("failed to marshal json msg, %v", err)
-		return
-	}
-
 	// CSV file format
 	// Since no aggregation is done as fo now, just report count=1 for every log.
 	count := "1"
@@ -185,7 +203,7 @@ func (s *PolicyState) handleFwLog(ev *halproto.FWEvent, ts time.Time) {
 			col.Lock()
 			if _, ok := vrfList[col.vrf]; ok {
 				if col.syslogFd != nil && col.filter&(1<<uint32(ev.Fwaction)) != 0 {
-					s.sendFwLog(col, string(syslogJSONMsg))
+					s.sendFwLog(col, fwev)
 				}
 			} else {
 				log.Errorf("invalid collector")

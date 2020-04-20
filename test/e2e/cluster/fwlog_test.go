@@ -446,17 +446,17 @@ var _ = Describe("fwlog policy tests", func() {
 					return nil
 				}, "20s", "2s").Should(BeNil(), "failed to send syslog")
 
-				flowKeys := []string{"destination-port",
-					"destination-address",
-					"source-address",
-					"source-port",
+				flowKeys := []string{"destport",
+					"destaddr",
+					"srcaddr",
+					"srcport",
 					"protocol",
 					"action",
 					"direction",
 					"rule-id",
 					"session-id",
 					"session-state",
-					"timestamp",
+					"time",
 					"app-id",
 				}
 

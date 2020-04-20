@@ -30,7 +30,6 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/nic/utils/ntranslate/metrics"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/syslog"
@@ -46,28 +45,28 @@ func TestMain(m *testing.M) {
 	// Start Fake HAL
 	var lis netutils.TestListenAddr
 	if err := lis.GetAvailablePort(); err != nil {
-		log.Errorf("Test Setup Failed. Err: %v", err)
+		fmt.Printf("Test Setup Failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 	//if err := restLis.GetAvailablePort(); err != nil {
-	//	log.Errorf("Test Setup Failed. Err: %v", err)
+	//	fmt.Printf("Test Setup Failed. Err: %v", err)
 	//	os.Exit(1)
 	//}
 	primaryDB, err := ioutil.TempFile("", "")
 	if err != nil {
-		log.Errorf("Test Setup Failed. Err: %v", err)
+		fmt.Printf("Test Setup Failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	secondaryDB, err := ioutil.TempFile("", "")
 	if err != nil {
-		log.Errorf("Test Setup Failed. Err: %v", err)
+		fmt.Printf("Test Setup Failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Infof("Primary DB: %s | Backup DB: %s", primaryDB.Name(), secondaryDB.Name())
+	fmt.Printf("Primary DB: %s | Backup DB: %s\n", primaryDB.Name(), secondaryDB.Name())
 
 	if err := os.Setenv("HAL_GRPC_PORT", strings.Split(lis.ListenURL.String(), ":")[1]); err != nil {
-		log.Errorf("Test Setup Failed. Err: %v", err)
+		fmt.Printf("Test Setup Failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -75,13 +74,13 @@ func TestMain(m *testing.M) {
 
 	mockAgent, err = dscagent.NewDSCAgent(nil, "", "", "", types.DefaultAgentRestURL)
 	if err != nil {
-		log.Errorf("Test Setup Failed. Err: %v", err)
+		fmt.Printf("Test Setup Failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 	time.Sleep(time.Second * 2)
 	mockAgent.InfraAPI, err = infra.NewInfraAPI(primaryDB.Name(), secondaryDB.Name())
 	if err != nil {
-		log.Errorf("Test Setup Failed. Err: %v", err)
+		fmt.Printf("Test Setup Failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -92,12 +91,12 @@ func TestMain(m *testing.M) {
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    fmt.Sprintf("vpc-%d", i),
 				Namespace: "default",
-				Name:      fmt.Sprintf("vpc-%d", i),
+				Name:      fmt.Sprintf("vpc-%d\n", i),
 			},
 		}
 		_, err := mockAgent.PipelineAPI.HandleVrf(types.Create, vrf)
 		if err != nil {
-			log.Errorf("Test Setup Failed. Err: %v", err)
+			fmt.Printf("Test Setup Failed. Err: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -116,8 +115,8 @@ func parseRfc3164(ch chan []byte) (syslogparser.LogParts, error) {
 	case buff := <-ch:
 		p := rfc3164.NewParser(buff)
 		if err := p.Parse(); err != nil {
-			log.Errorf("failed to create new Rfc3164 parser, %s", err)
-			log.Errorf("received syslog [%v]", string(buff))
+			fmt.Printf("failed to create new Rfc3164 parser, %s\n", err)
+			fmt.Printf("received syslog [%v]\n", string(buff))
 			return nil, err
 		}
 		return p.Dump(), nil
@@ -133,8 +132,8 @@ func parseRfc5424(ch chan []byte) (syslogparser.LogParts, error) {
 	case buff := <-ch:
 		p := rfc5424.NewParser(buff)
 		if err := p.Parse(); err != nil {
-			log.Errorf("failed to create new Rfc5424 parser, %s", err)
-			log.Errorf("received syslog [%v]", string(buff))
+			fmt.Printf("failed to create new Rfc5424 parser, %s\n", err)
+			fmt.Printf("received syslog [%v]\n", string(buff))
 			return nil, err
 		}
 		return p.Dump(), nil
@@ -158,16 +157,16 @@ func startSyslogServer(proto string, ch chan []byte) (string, func(), error) {
 			for {
 				buff := make([]byte, 1024)
 				// block on read
-				log.Infof("udp syslog server %s ready", l.LocalAddr().String())
+				fmt.Printf("udp syslog server %s ready\n", l.LocalAddr().String())
 				n, _, err := l.ReadFrom(buff)
 				if err != nil {
 					for _, s := range []string{"closed network connection", "EOF"} {
 						if strings.Contains(err.Error(), s) {
-							log.Infof("read %s from udp socket", s)
+							fmt.Printf("read %s from udp socket\n", s)
 							return
 						}
 					}
-					log.Infof("error %s from udp socket", err)
+					fmt.Printf("error %s from udp socket\n", err)
 					continue
 				}
 				ch <- buff[:n]
@@ -186,22 +185,22 @@ func startSyslogServer(proto string, ch chan []byte) (string, func(), error) {
 		go func() {
 			conn, err := l.Accept()
 			if err != nil {
-				log.Errorf("failed to accept connection, %s", err)
+				fmt.Printf("failed to accept connection, %s\n", err)
 				return
 			}
 
 			for {
 				buff := make([]byte, 1024)
-				log.Infof("tcp syslog server %s ready", l.Addr().String())
+				fmt.Printf("tcp syslog server %s ready\n", l.Addr().String())
 				n, err := conn.Read(buff)
 				if err != nil {
 					for _, s := range []string{"closed network connection", "EOF"} {
 						if strings.Contains(err.Error(), s) {
-							log.Infof("read %s from tcp socket", s)
+							fmt.Printf("read %s from tcp socket\n", s)
 							return
 						}
 					}
-					log.Infof("error %s from tcp socket", err)
+					fmt.Printf("error %s from tcp socket\n", err)
 					continue
 				}
 				ch <- buff[:n]
@@ -1168,7 +1167,7 @@ func TestPolicyUpdate(t *testing.T) {
 
 		switch fwPolicyEvent.EventType {
 		case api.EventType_CreateEvent:
-			log.Info("Create")
+			fmt.Printf("Create\n")
 			err := ps.CreateFwlogPolicy(ctx, fwPolicyEvent.Policy)
 			AssertOk(t, err, "failed to create policy %+v", fwPolicyEvent.Policy)
 		case api.EventType_UpdateEvent:
@@ -1349,7 +1348,7 @@ func TestFwlogInit(t *testing.T) {
 
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
 	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
-	log.Infof("memsize=%d instances=%d", mSize, instCount)
+	fmt.Printf("memsize=%d instances=%d\n", mSize, instCount)
 
 	fd, err := syscall.Open(shmPath, syscall.O_RDWR|syscall.O_CREAT, 0666)
 	if err != nil || fd < 0 {
@@ -1359,4 +1358,15 @@ func TestFwlogInit(t *testing.T) {
 
 	err = ps.FwlogInit(shmPath)
 	AssertOk(t, err, "failed to init fwlog")
+}
+
+func TestSyslogJson(t *testing.T) {
+	fwevent := fwevent{
+		FWEvent: &halproto.FWEvent{},
+	}
+	s := fwevent.String()
+	fmt.Printf("%v\n", s)
+	m := []map[string]interface{}{}
+	err := json.Unmarshal([]byte(s), &m)
+	AssertOk(t, err, "invalid json")
 }
