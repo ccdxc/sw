@@ -420,7 +420,7 @@ func intRangeOrZeroProfile(field *descriptor.Field, reg *descriptor.Registry, ve
 	prof.MinInt[ver] = min
 	prof.MaxInt[ver] = max
 	prof.DocStrings[ver] = append(prof.DocStrings[ver], fmt.Sprintf("value should be between %v and %v", min, max))
-	prof.Required[ver] = true
+	prof.Required[ver] = false
 	return nil
 }
 

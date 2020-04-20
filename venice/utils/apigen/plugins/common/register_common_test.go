@@ -765,12 +765,6 @@ func TestFieldProfiles(t *testing.T) {
 				number: 13
 			>
 			field <
-				name: 'int_field1'
-				type: TYPE_STRING
-				options:<[venice.check]: "IntRangeOrZero(3, 1000)">
-				number: 0
-			>
-			field <
 				name: 'int_field2'
 				type: TYPE_STRING
 				options:<[venice.check]: "IntMin(5)">
@@ -811,6 +805,18 @@ func TestFieldProfiles(t *testing.T) {
 				type: TYPE_STRING
 				options:<[venice.check]: "EmptyOr(Duration(4m,30m))">
 				number: 20
+			>
+			field <
+				name: 'IntRangeOrZero1'
+				type: TYPE_STRING
+				options:<[venice.check]: "IntRangeOrZero(3, 1000)">
+				number: 0
+			>
+			field <
+				name: 'IntRangeOrZero2'
+				type: TYPE_STRING
+				options:<[venice.check]: "IntRangeOrZero(64, 1000)">
+				number: 64
 			>
 		>
 		enum_type <
@@ -952,11 +958,24 @@ func TestFieldProfiles(t *testing.T) {
 			DocStrings: map[string][]string{"all": []string{"should be a valid time duration between 4m0s and 30m0s"}},
 			Required:   map[string]bool{"all": false},
 		},
+		"IntRangeOrZero1": FieldProfile{
+			MinInt:     map[string]int64{"all": int64(3)},
+			MaxInt:     map[string]int64{"all": int64(1000)},
+			DocStrings: map[string][]string{"all": []string{"value should be between 3 and 1000"}},
+			Required:   map[string]bool{"all": false},
+		},
+		"IntRangeOrZero2": FieldProfile{
+			MinInt:     map[string]int64{"all": int64(64)},
+			MaxInt:     map[string]int64{"all": int64(1000)},
+			DocStrings: map[string][]string{"all": []string{"value should be between 64 and 1000"}},
+			Required:   map[string]bool{"all": false},
+		},
 	}
 	msg, err := r.LookupMsg("", ".example.TestMsg")
 	if err != nil {
 		t.Fatalf("Could not find msg")
 	}
+
 	for _, fld := range msg.Fields {
 		if c, ok := cases[*fld.Name]; ok {
 			cks, err := gwplugins.GetExtension("venice.check", fld)
