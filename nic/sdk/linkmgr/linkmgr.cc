@@ -204,14 +204,13 @@ current_thread (void)
 bool
 is_linkmgr_ctrl_thread (void)
 {
-    bool is_ctrl_thread;
+    bool is_ctrl_thread = false;
 
     sdk::lib::thread *curr_thread = current_thread();
     sdk::lib::thread *ctrl_thread = g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL];
 
     // TODO assert once the thread store is fixed
     if (curr_thread == NULL) {
-        is_ctrl_thread = false;
         goto end;
     }
 
@@ -225,7 +224,6 @@ is_linkmgr_ctrl_thread (void)
         goto end;
     }
 
-    is_ctrl_thread = false;
 end:
     // SDK_TRACE_DEBUG("ctrl thread %s", is_ctrl_thread == true? "true" : "false");
     return is_ctrl_thread;

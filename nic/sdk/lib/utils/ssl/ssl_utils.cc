@@ -11,7 +11,7 @@ namespace utils {
 EVP_PKEY *
 generate_key (uint32_t key_width)
 {
-    RSA *rsa;
+    RSA *rsa = NULL;
     BIGNUM *bne;
     EVP_PKEY *pkey;
 

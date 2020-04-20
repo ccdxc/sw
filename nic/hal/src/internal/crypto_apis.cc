@@ -92,7 +92,7 @@ crypto_asym_api_ecdsa_sig_gen (internal::CryptoApiRequest &req,
     int32_t             key_idx;
     bool                async_en;
     uint8_t             *p, *n, *xg, *yg, *a, *b, *da, *k, *h;
-    const uint8_t       *unique_key;
+    const uint8_t       *unique_key = NULL;
     uint8_t             r[ECC_MAX_KEY_SIZE];
     uint8_t             s[ECC_MAX_KEY_SIZE];
 
@@ -147,7 +147,7 @@ crypto_asym_api_ecdsa_sig_verify (internal::CryptoApiRequest &req,
     uint32_t            key_size;
     bool                async_en;
     uint8_t             *p, *n, *xg, *yg, *a, *b, *xq, *yq, *r, *s, *h;;
-    const uint8_t       *unique_key;
+    const uint8_t       *unique_key = NULL;
 
     key_size = req.ecdsa_sig_verify_fp().ecc_domain_params().keysize();
     switch (key_size) {
@@ -187,14 +187,14 @@ crypto_asym_api_ecdsa_sig_verify (internal::CryptoApiRequest &req,
 }
 
 hal_ret_t
-crypto_asym_api_rsa_encrypt(internal::CryptoApiRequest &req,
-                            internal::CryptoApiResponse *resp)
+crypto_asym_api_rsa_encrypt (internal::CryptoApiRequest &req,
+                             internal::CryptoApiResponse *resp)
 {
     sdk_ret_t           sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
     uint8_t             cipher_text[RSA_MAX_KEY_SIZE];
-    const uint8_t       *unique_key;
+    const uint8_t       *unique_key = NULL;
 
     key_size = req.rsa_encrypt().keysize();
 
@@ -227,8 +227,8 @@ crypto_asym_api_rsa_encrypt(internal::CryptoApiRequest &req,
 }
 
 hal_ret_t
-crypto_asym_api_rsa_decrypt(internal::CryptoApiRequest &req,
-                            internal::CryptoApiResponse *resp)
+crypto_asym_api_rsa_decrypt (internal::CryptoApiRequest &req,
+                             internal::CryptoApiResponse *resp)
 {
     sdk_ret_t           sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
@@ -264,14 +264,14 @@ crypto_asym_api_rsa_decrypt(internal::CryptoApiRequest &req,
 }
 
 hal_ret_t
-crypto_asym_api_rsa_crt_decrypt(internal::CryptoApiRequest &req,
-                                internal::CryptoApiResponse *resp)
+crypto_asym_api_rsa_crt_decrypt (internal::CryptoApiRequest &req,
+                                 internal::CryptoApiResponse *resp)
 {
     sdk_ret_t           sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size;
     uint8_t             plain_text[RSA_MAX_KEY_SIZE];
-    const uint8_t       *unique_key;
+    const uint8_t       *unique_key = NULL;
 
     key_size = req.rsa_crt_decrypt().keysize();
 
@@ -287,8 +287,7 @@ crypto_asym_api_rsa_crt_decrypt(internal::CryptoApiRequest &req,
                                   (uint8_t *)req.rsa_crt_decrypt().cipher_text().data(),
                                   plain_text,
                                   req.rsa_crt_decrypt().async_en(),
-                                  unique_key
-                                  );
+                                  unique_key);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             break;
         default:
@@ -648,15 +647,15 @@ crypto_asym_api_setup_priv_key_ex(internal::CryptoApiRequest &req,
 }
 
 hal_ret_t
-crypto_asym_api_rsa_sig_gen(internal::CryptoApiRequest &req,
-                            internal::CryptoApiResponse *resp)
+crypto_asym_api_rsa_sig_gen (internal::CryptoApiRequest &req,
+                             internal::CryptoApiResponse *resp)
 {
     sdk_ret_t           sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
     uint32_t            key_size, key_idx;
     bool                async_en;
     uint8_t             *n, *d, *h;
-    const uint8_t       *unique_key;
+    const uint8_t       *unique_key = NULL;
     uint8_t             s[RSA_MAX_KEY_SIZE];
 
     key_size = req.rsa_sig_gen().keysize();
@@ -978,8 +977,8 @@ crypto_symm_api_hash_request (internal::CryptoApiRequest &req,
 }
 
 hal_ret_t
-crypto_asym_api_fips_rsa_sig_gen(internal::CryptoApiRequest &req,
-                                 internal::CryptoApiResponse *resp)
+crypto_asym_api_fips_rsa_sig_gen (internal::CryptoApiRequest &req,
+                                  internal::CryptoApiResponse *resp)
 {
     sdk_ret_t           sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
@@ -988,7 +987,7 @@ crypto_asym_api_fips_rsa_sig_gen(internal::CryptoApiRequest &req,
     uint16_t            msg_len;
     uint8_t             hash_type, sig_scheme;
     uint8_t             s[RSA_MAX_KEY_SIZE];
-    const uint8_t       *unique_key;
+    const uint8_t       *unique_key = NULL;
 
     key_size = req.fips_rsa_sig_gen().mod_n().size();
     switch (key_size) {
@@ -1029,8 +1028,8 @@ crypto_asym_api_fips_rsa_sig_gen(internal::CryptoApiRequest &req,
 }
 
 hal_ret_t
-crypto_asym_api_fips_rsa_sig_verify(internal::CryptoApiRequest &req,
-                                    internal::CryptoApiResponse *resp)
+crypto_asym_api_fips_rsa_sig_verify (internal::CryptoApiRequest &req,
+                                     internal::CryptoApiResponse *resp)
 {
     sdk_ret_t           sdk_ret;
     hal_ret_t           ret = HAL_RET_OK;
@@ -1038,7 +1037,7 @@ crypto_asym_api_fips_rsa_sig_verify(internal::CryptoApiRequest &req,
     uint8_t             *n, *e, *s, *msg;
     uint16_t            msg_len;
     uint8_t             hash_type, sig_scheme;
-    const uint8_t       *unique_key;
+    const uint8_t       *unique_key = NULL;
 
     key_size = req.fips_rsa_sig_verify().mod_n().size();
     switch (key_size) {

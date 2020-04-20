@@ -717,13 +717,13 @@ feature_profile_get (FeatureProfileResponse *rsp)
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-micro_seg_update(MicroSegUpdateRequest &req, 
+hal_ret_t
+micro_seg_update(MicroSegUpdateRequest &req,
                  MicroSegUpdateResponse *rsp)
 {
     proto_msg_dump(req);
 
-    if ((hal::g_hal_cfg.device_cfg.micro_seg_en && 
+    if ((hal::g_hal_cfg.device_cfg.micro_seg_en &&
         req.micro_seg_mode() == sys::MICRO_SEG_ENABLE) ||
         (!hal::g_hal_cfg.device_cfg.micro_seg_en &&
          req.micro_seg_mode() == sys::MICRO_SEG_DISABLE)) {
@@ -733,7 +733,7 @@ micro_seg_update(MicroSegUpdateRequest &req,
     }
 
     HAL_TRACE_DEBUG("Micro segmentation mode change. {} -> {}",
-                    hal::g_hal_cfg.device_cfg.micro_seg_en ? 
+                    hal::g_hal_cfg.device_cfg.micro_seg_en ?
                     MicroSegMode_Name(sys::MICRO_SEG_ENABLE) : MicroSegMode_Name(sys::MICRO_SEG_DISABLE),
                     MicroSegMode_Name(req.micro_seg_mode()));
 
@@ -742,15 +742,15 @@ micro_seg_update(MicroSegUpdateRequest &req,
     // Send micro seg mode change to Nicmgr
     hal::svc::micro_seg_mode_notify(req.micro_seg_mode());
 
-    hal::g_hal_cfg.device_cfg.micro_seg_en = 
+    hal::g_hal_cfg.device_cfg.micro_seg_en =
         (req.micro_seg_mode() == sys::MICRO_SEG_ENABLE) ? true : false;
 end:
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 
-hal_ret_t 
-micro_seg_status_update(MicroSegSpec &req, 
+hal_ret_t
+micro_seg_status_update(MicroSegSpec &req,
                         MicroSegResponse *rsp)
 {
     // TODO: Do we have to consider if HAL is done with cleanup.
@@ -797,9 +797,9 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
     }
 
     HAL_TRACE_DEBUG("Mode change: {},{} => {},{}",
-                    ForwardMode_Name(hal::g_hal_state->fwd_mode()), 
+                    ForwardMode_Name(hal::g_hal_state->fwd_mode()),
                     PolicyMode_Name(hal::g_hal_state->policy_mode()),
-                    ForwardMode_Name(spec->fwd_mode()), 
+                    ForwardMode_Name(spec->fwd_mode()),
                     PolicyMode_Name(spec->policy_mode()));
 
     // (Transparent, Basenet) => ...
@@ -835,7 +835,7 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
              */
             ret = hal::plugins::sfw::
                 sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT, false);
-            
+
             // 1. Cleanup config from nicmgr.
             hal::svc::micro_seg_mode_notify(sys::MICRO_SEG_ENABLE);
 
@@ -866,7 +866,7 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             }
         }
     }
-    
+
     // (Transparent, Flowaware) => ...
     if (IS_MODE(hal::g_hal_state->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
                 hal::g_hal_state->policy_mode(), sys::POLICY_MODE_FLOW_AWARE)) {
@@ -878,10 +878,10 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             // Stop FTE processing of packets
             fte::fte_set_quiesce(0 /* FTE ID */, true);
 
-            // Change l4 profile to disable policy_enf_cfg_en to 
+            // Change l4 profile to disable policy_enf_cfg_en to
             // stop pulling packets to FTE
             ret = hal::plugins::sfw::
-                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT, 
+                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,
                                                     false);
 
             // Clear sessions
@@ -895,7 +895,7 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
                     spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
             hal::g_hal_state->set_policy_mode(spec->policy_mode());
         }
-  
+
         if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_MICROSEG,
                     spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
 
@@ -984,7 +984,7 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
                 HAL_TRACE_ERR("Unable to sched for ports flap. err {}", ret);
             }
         }
-    } 
+    }
 
 end:
     rsp->set_api_status(types::API_STATUS_OK);
@@ -998,15 +998,13 @@ hal_ret_t
 system_sched_to_flap_ports (void)
 {
     auto flap_cb = [](void *timer, uint32_t timer_id, void *ctxt) {
-        hal_ret_t ret = HAL_RET_OK;
-
         HAL_TRACE_DEBUG("Flapping ports for VMs to trigger RARPs.");
 
-        ret = port_update_type_admin_state(port_type_t::PORT_TYPE_ETH,
-                            port_admin_state_t::PORT_ADMIN_STATE_DOWN);
+        port_update_type_admin_state(port_type_t::PORT_TYPE_ETH,
+                                     port_admin_state_t::PORT_ADMIN_STATE_DOWN);
 
-        ret = port_update_type_admin_state(port_type_t::PORT_TYPE_ETH,
-                            port_admin_state_t::PORT_ADMIN_STATE_UP);
+        port_update_type_admin_state(port_type_t::PORT_TYPE_ETH,
+                                     port_admin_state_t::PORT_ADMIN_STATE_UP);
 
     };
 
@@ -1021,7 +1019,7 @@ system_sched_to_flap_ports (void)
 //----------------------------------------------------------------------------
 // Handle system policy & forward mode get
 //----------------------------------------------------------------------------
-hal_ret_t 
+hal_ret_t
 system_get_fwd_policy_mode(SysSpecGetResponse *rsp) {
    rsp->mutable_spec()->set_fwd_mode(hal::g_hal_state->fwd_mode());
    rsp->mutable_spec()->set_policy_mode(hal::g_hal_state->policy_mode());
