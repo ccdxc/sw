@@ -338,6 +338,15 @@ read_qsfp_temperature(int port, qsfp_temperature_t *qsfp_temp_data)
             alarm_temperature = INVALID_TEMP;
     }
 
+    // If the alarm/warning temperature is invalid,
+    // dont report the actual temperature as well
+    if (alarm_temperature == INVALID_TEMP ||
+        warning_temperature == INVALID_TEMP ){
+        qsfp_temp_data->temperature = INVALID_TEMP;
+        qsfp_temp_data->warning_temperature = INVALID_TEMP;
+        qsfp_temp_data->alarm_temperature = INVALID_TEMP;
+    }
+
     qsfp_temp_data->temperature = temperature;
     qsfp_temp_data->warning_temperature = warning_temperature;
     qsfp_temp_data->alarm_temperature = alarm_temperature;
