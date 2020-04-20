@@ -56,8 +56,8 @@ class VnicObject(base.ConfigObjectBase):
                 self.MACAddr = vmac
         else:
             self.MACAddr =  ResmgrClient[node].VnicMacAllocator.get()
-        self.dot1Qenabled = getattr(spec, 'tagged', True)
-        if self.dot1Qenabled or utils.IsDol():
+        self.Dot1Qenabled = getattr(spec, 'tagged', True)
+        if self.Dot1Qenabled or utils.IsDol():
             self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
         else:
             self.VlanId = 0
@@ -116,7 +116,7 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("VNIC object:", self)
         logger.info("- %s" % repr(self))
         logger.info("- Vlan: %s %d|Mpls:%d|Vxlan:%d|MAC:%s|SourceGuard:%s|Movable:%s"\
-        % (self.dot1Qenabled, self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard), self.Movable))
+        % (self.Dot1Qenabled, self.VlanId, self.MplsSlot, self.Vnid, self.MACAddr, str(self.SourceGuard), self.Movable))
         logger.info("- RxMirror:", self.RxMirror)
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
@@ -143,14 +143,21 @@ class VnicObject(base.ConfigObjectBase):
         self.Status.Show()
         return
 
+    def IsFilterMatch(self, selectors):
+        vnicSelector = getattr(selectors, 'vnic', None)
+        if vnicSelector:
+            return super().IsFilterMatch(vnicSelector.filters)
+        return True
+        
+
     def UpdateAttributes(self):
-        if self.dot1Qenabled:
+        if self.Dot1Qenabled:
             self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
         self.UseHostIf = not(self.UseHostIf)
         return
 
     def RollbackAttributes(self):
-        if self.dot1Qenabled:
+        if self.Dot1Qenabled:
             self.VlanId = self.GetPrecedent().VlanId
         self.UseHostIf = not(self.UseHostIf)
         return
@@ -163,7 +170,7 @@ class VnicObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
         spec.SubnetId = self.SUBNET.GetKey()
-        if self.dot1Qenabled:
+        if self.Dot1Qenabled:
             spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.VnicEncap.value.VlanId = self.VlanId
         else:
@@ -254,7 +261,7 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def IsEncapTypeVLAN(self):
-        return self.dot1Qenabled
+        return self.Dot1Qenabled
 
     def IsIgwVnic(self):
         return self.VnicType =="igw" or self.VnicType == "igw_service"

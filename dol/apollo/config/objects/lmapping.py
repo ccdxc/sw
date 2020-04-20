@@ -97,6 +97,8 @@ class LocalMappingObject(base.ConfigObjectBase):
         return
 
     def IsFilterMatch(self, selectors):
+        if not self.VNIC.IsFilterMatch(selectors):
+            return False
         return super().IsFilterMatch(selectors.flow.filters)
 
     def PopulateKey(self, grpcmsg):

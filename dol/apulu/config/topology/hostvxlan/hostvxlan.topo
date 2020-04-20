@@ -81,76 +81,11 @@ node:
             - type : specific
               policytype : default
               direction : bidir
-        # artemis - this vpc is only for artemis for nat46 functionality
         - stack  : dual # dual, ipv4 , ipv6
           count : 1
           type  : tenant
           subnet:
             - count     : 1
-              v4prefixlen : 24
-              v6prefixlen : 64
-              vnic:
-                - count   : 1             # VNICs per subnet
-                  ipcount : 4             # Local IP mapping per vnic
-                  srcguard : false        # true or false (default false)
-                  public  : true
-                  rxpolicer: 1
-                  txpolicer: 2
-              rmap:                       # Remote IP mappings per subnet
-                - count : 4
-          nexthop:
-            - type : overlay
-              count : 2
-            - type : overlay
-              dual-ecmp : true
-              count : 2
-          nexthop-group:
-            - type : underlay
-              count : 2
-            - type : overlay
-              count : 2
-            - type : overlay
-              dual-ecmp : true
-              count : 2
-          routetbl:
-            - type: specific
-              routetype: only_default
-              teptype : underlay-ecmp
-              v4routes:
-                 - '0.0.0.0\0'
-              v6routes:
-                 - '0::\0'
-
-            - type: specific
-              routetype: only_default
-              teptype : overlay-ecmp
-              v4routes:
-                 - '0.0.0.0\0'
-              v6routes:
-                 - '0::\0'
-          meter:
-            - count: 1
-              auto_fill: False
-              rule:
-                - type: PDS_METER_TYPE_ACCOUNTING
-                  priority: 1
-                  num_prefixes: 0
-                  v4base: '66.0.0.0\24'
-                  v6base: '2002::\120'
-                  v4prefixes:
-                    - '0.0.0.0\0'
-                  v6prefixes:
-                    - '0::\0'
-          policy:
-            - type : specific
-              policytype : default
-              direction : bidir
-          nat46: true
-        - stack  : dual # dual, ipv4 , ipv6
-          count : 1
-          type  : tenant
-          subnet:
-            - count     : 2
               v4prefixlen : 24
               v6prefixlen : 64
               vnic:
@@ -159,14 +94,26 @@ node:
                   srcguard: false         # true or false (default false)
                   public  : false
                   tagged  : false         # true or false (default true)
-                  rxpolicer: 3
-                  txpolicer: 4
+                  rxpolicer: 1
+                  txpolicer: 2
               rmap:                       # Remote IP mappings per subnet
                 - count : 4
             - count     : 1
               v4prefixlen : 28
               v6prefixlen : 96
               vnic:
+                - count   : 1             # 1 tagged VNIC
+                  ipcount : 4
+                  srcguard: false
+                  public  : true
+                  #tagged  : true
+                  rxpolicer: 3
+                  txpolicer: 4
+                - count   : 1             # 1 tagged VNIC
+                  ipcount : 4
+                  srcguard: false
+                  public  : false
+                  #tagged  : true
                 - count   : 1             # 1 untagged VNIC
                   ipcount : 2
                   srcguard: false
@@ -176,6 +123,26 @@ node:
                   txpolicer: 6
               rmap:
                 - count : 4
+            - count     : 1
+              v4prefixlen : 28
+              v6prefixlen : 96
+              vnic:
+                - count   : 2             # 2 tagged VNICs
+                  ipcount : 2
+                  srcguard: false
+                  public  : false
+                  #tagged  : true
+                  rxpolicer: 3
+                  txpolicer: 4
+                - count   : 2             # 2 tagged VNICs
+                  ipcount : 2
+                  srcguard: false
+                  public  : true
+                  #tagged  : true
+                  rxpolicer: 3
+                  txpolicer: 4
+              rmap:
+                - count : 2
           nat:
             count : 2
             prefixlen : 32
@@ -211,7 +178,7 @@ node:
 
                  - type: base
                    routetype: adjacent
-                   count : 2
+                   count : 1
                    v4base: '64.0.0.0\16'
                    v4prefixlen : 28
                    nv4routes   : 10

@@ -9,6 +9,9 @@ def Setup(infra, module):
         if 'flow' in iterelem.__dict__:
             logger.info("Extending flow selector to : %s" % iterelem.flow)
             module.testspec.selectors.flow.Extend(iterelem.flow)
+        if 'vnic' in iterelem.__dict__:
+            logger.info("Extending vnic selector to : %s" % iterelem.vnic)
+            module.testspec.selectors.vnic.Extend(iterelem.vnic)
         if 'route' in iterelem.__dict__:
             logger.info("Extending route selector to : %s" % iterelem.route)
             module.testspec.selectors.route.Extend(iterelem.route)

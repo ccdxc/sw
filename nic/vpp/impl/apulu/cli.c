@@ -57,7 +57,7 @@ vnic_impl_db_dump ()
                         itr, format_ethernet_address, vnic_info->mac,
                         vnic_info->max_sessions, vnic_info->active_ses_count,
                         vnic_info->subnet_hw_id, vnic_info->flow_log_en,
-                        vnic_info->enacp_type, vnic_info->l2_encap_len,
+                        vnic_info->encap_type, vnic_info->l2_encap_len,
                         vnic_info->vlan_id, vnic_info->nh_hw_id);
         }
     }

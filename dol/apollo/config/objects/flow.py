@@ -230,9 +230,6 @@ class FlowMapObjectHelper:
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
-                    if not routetblobj.IsTwiceNatEnabled():
-                        # Skip IGWs without service nat flag set to True
-                        continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.TUNNEL)
                     if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)

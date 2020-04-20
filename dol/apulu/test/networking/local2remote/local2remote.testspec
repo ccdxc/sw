@@ -5,6 +5,7 @@ selectors:
     # if route table has a default route,
     # then the packet might end up going to internet gateway instead of getting dropped.
     flow: filter://HasDefaultRoute=False
+    vnic: filter://any
 
 packets:
     - packet:

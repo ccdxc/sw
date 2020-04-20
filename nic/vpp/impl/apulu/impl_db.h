@@ -32,7 +32,7 @@ typedef struct {
     u16 subnet_hw_id;               // subnet hwid to index subnet store in infra
     u8 flow_log_en : 1;             // flag indicating flow logging enabled
     u8 reserve : 7;
-    u8 enacp_type;                  // pds_eth_encap_type
+    u8 encap_type;                  // pds_eth_encap_type
     u8 l2_encap_len;                // layer2 encapsulation length
     u16 vlan_id;                    // vlan id if encap type is != no vlan
     u16 nh_hw_id;                   // nexthop id

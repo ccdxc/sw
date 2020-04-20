@@ -147,8 +147,9 @@ class RouteTableObject(base.ConfigObjectBase):
         logger.info("RouteTable object:", self)
         logger.info("- %s" % repr(self))
         logger.info(f"- PriorityEnabled:{self.PriorityType != None}")
-        logger.info("- HasDefaultRoute:%s|HasBlackHoleRoute:%s"\
-                    %(self.HasDefaultRoute, self.HasBlackHoleRoute))
+        logger.info(f"- HasDefaultRoute:{self.HasDefaultRoute}|"
+                    f"HasBlackHoleRoute:{self.HasBlackHoleRoute}|"
+                    f"TwiceNatEnabled:{self.TwiceNatEnabled}")
         logger.info("- VPCPeering:%s Peer Vpc%d" %(self.VPCPeeringEnabled, self.PeerVPCId))
         logger.info("- NH : Nexthop%d|Type:%s" %(self.NexthopId, self.NextHopType))
         if utils.IsPipelineApulu():
@@ -352,6 +353,7 @@ class RouteTableObject(base.ConfigObjectBase):
         if svc_nat_prefix:
             self.ServiceNatPrefix = ipaddress.ip_network(svc_nat_prefix.replace('\\', '/'))
         self.DstNatIp = getattr(spec, 'dnatip', None)
+        self.TwiceNatEnabled = self.DstNatIp != None
         natspec = getattr(spec, 'nat', None)
         if natspec:
             self.NatLevel = getattr(natspec, 'level', None)
@@ -407,11 +409,6 @@ class RouteTableObject(base.ConfigObjectBase):
         elif natlevel == 'route':
             # all routes in route table has same NAT action in DOL
             # TODO: make it random / rrobin
-            return True
-        return False
-
-    def IsTwiceNatEnabled(self):
-        if self.DstNatIp != None:
             return True
         return False
 

@@ -821,7 +821,7 @@ def GetSrcMacInArpReply(testcase, packet, args):
 
 def GetEncapForARP(testcase, packet):
     vlan_encap = None
-    if testcase.config.localmapping.VNIC.dot1Qenabled:
+    if testcase.config.localmapping.VNIC.Dot1Qenabled:
         vlan_encap = infra_api.GetPacketTemplate('ENCAP_QTAG')
     elif testcase.config.localmapping.VNIC.QinQenabled:
         vlan_encap = infra_api.GetPacketTemplate('ENCAP_QINQ')

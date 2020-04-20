@@ -87,13 +87,13 @@ pds_impl_db_vnic_set (uint8_t *mac,
     vnic_info->l2_encap_len = sizeof(ethernet_header_t);
     vnic_info->vlan_id = vlan_id;
     if (dot1q) {
-        vnic_info->enacp_type = PDS_ETH_ENCAP_DOT1Q;
+        vnic_info->encap_type = PDS_ETH_ENCAP_DOT1Q;
         vnic_info->l2_encap_len += sizeof(ethernet_vlan_header_t);
     } else if (dot1ad) {
-        vnic_info->enacp_type = PDS_ETH_ENCAP_DOT1AD;
+        vnic_info->encap_type = PDS_ETH_ENCAP_DOT1AD;
         vnic_info->l2_encap_len += (2 * sizeof(ethernet_vlan_header_t));
     } else {
-        vnic_info->enacp_type = PDS_ETH_ENCAP_NO_VLAN;
+        vnic_info->encap_type = PDS_ETH_ENCAP_NO_VLAN;
     }
     vnic_info->nh_hw_id = nh_hw_id;
 

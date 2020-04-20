@@ -3,13 +3,13 @@ selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 1
     flow: filter://any
+    vnic: filter://any
 
 packets:
     - packet:
-        id          : FROM_HOST_PKT # Input packet
+        id          : BASE_PKT # Base packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
-        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
@@ -31,15 +31,20 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : TO_HOST_PKT # Expected packet
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        id          : FROM_HOST_PKT # Input packet
+        clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic/vnic=remote
         headers     :
             eth:
                 dst     : ref://testcase/config/remotemapping/VNIC/MACAddr
                 src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2L
             qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                vlan    : ref://testcase/config/remotemapping/VNIC/VlanId
                 prio    : 0
             ipv4:
                 ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2L,ipkt=FROM_HOST_PKT
