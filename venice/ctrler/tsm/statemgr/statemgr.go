@@ -53,6 +53,8 @@ const (
 	watcherQueueLen = 16
 	// MaxMirrorSessions is the maximum number of mirror sessions allowed
 	MaxMirrorSessions = 8
+	// MaxUniqueCollectors is the maximum unique number of collectors allowed across policy
+	MaxUniqueCollectors = 4
 )
 
 // FindObject looks up an object in local db

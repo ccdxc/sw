@@ -95,7 +95,7 @@ var _ = Describe("mirror session tests", func() {
 								IPAddresses: []string{"10.1.1.10"},
 							},
 							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{""},
+								ProtoPorts: []string{"UDP/5555"},
 							},
 						},
 					},
@@ -163,7 +163,7 @@ var _ = Describe("mirror session tests", func() {
 					{
 						Type: monitoring.PacketCollectorType_ERSPAN_TYPE_2.String(),
 						ExportCfg: &monitoring.MirrorExportConfig{
-							Destination: fmt.Sprintf("192.168.1.%d", i+1),
+							Destination: fmt.Sprintf("192.168.%d.1", i%statemgr.MaxUniqueCollectors),
 						},
 						StripVlanHdr: true,
 					},
@@ -187,6 +187,43 @@ var _ = Describe("mirror session tests", func() {
 				listMirrorMap[sess.GetName()] = sess.GetSpec()
 			}
 			Expect(reflect.DeepEqual(initMirrorMap, listMirrorMap)).To(Equal(true))
+		})
+
+		It("Check max unique session and update of gateway should succeed", func() {
+			ctx := ts.tu.MustGetLoggedInContext(context.Background())
+			ms := testMirrorSessions[0]
+			initMirrorMap := make(map[string]monitoring.MirrorSession)
+
+			for i := 0; i < statemgr.MaxUniqueCollectors+1; i++ {
+				ms.Name = fmt.Sprintf("unique-mirror-%d", i+1)
+				ms.Spec.Collectors = []monitoring.MirrorCollector{
+					{
+						Type: monitoring.PacketCollectorType_ERSPAN_TYPE_2.String(),
+						ExportCfg: &monitoring.MirrorExportConfig{
+							Destination: fmt.Sprintf("192.168.%d.1", i),
+							Gateway:     "192.168.1.254",
+						},
+					},
+				}
+
+				By(fmt.Sprintf("Creating MirrorSession %v", ms.Name))
+				_, err := mirrorRestIf.Create(ctx, &ms)
+				if i < statemgr.MaxUniqueCollectors {
+					Expect(err).ShouldNot(HaveOccurred())
+					initMirrorMap[ms.GetName()] = ms
+				} else {
+					Expect(err).Should(HaveOccurred())
+				}
+			}
+			for i := 0; i < statemgr.MaxUniqueCollectors; i++ {
+				key := fmt.Sprintf("unique-mirror-%d", i+1)
+				By(fmt.Sprintf("Update mirror session gateway for %v", key))
+				if tms, ok := initMirrorMap[key]; ok {
+					tms.Spec.Collectors[0].ExportCfg.Gateway = "192.168.2.254"
+					_, err := mirrorRestIf.Update(ctx, &tms)
+					Expect(err).ShouldNot(HaveOccurred())
+				}
+			}
 		})
 
 		It("Should run mirror sessions Test 1", func() {

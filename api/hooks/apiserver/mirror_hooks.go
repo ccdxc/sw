@@ -25,7 +25,7 @@ type mirrorSessionHooks struct {
 const (
 	// Finalize these parameters once we decide how to store the packets captured by Venice
 	veniceMaxPacketSize           = 2048
-	veniceMaxCollectorsPerSession = 4
+	veniceMaxCollectorsPerSession = 2
 )
 
 func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
@@ -58,7 +58,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	// PacketSize <= 256 if collector is Venice
 	// StartCondition: if specified, must not be in the past
 	// StopCondition: MUST be specified, MaxPacketCount <= 1000, expiryDuration <= 2h
-	// Collectors: atleast 1 must be specified, max 2 collectors, max 1 can be venice
+	// Collectors: atleast 1 must be specified, max 2 collectors, max 1 can be venice, unique 4 collectors across policies
 	// For erspan collectors, valid export config must be specified
 	// ExportCfg Validator: Destination - must be valid IP address (vrf?), Transport="GRE/ERSPANv3"
 	//  no credentials
@@ -93,18 +93,6 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	if err := kv.List(ctx, mirrorKey, &mirrors); err != nil {
 		return nil, true, fmt.Errorf("failed to list mirrors. Err: %v", err)
 	}
-	expConfig := make(map[string]*monitoring.MirrorExportConfig)
-	for _, mir := range mirrors.Items {
-		if mir.Name == ms.Name {
-			//ignore validation on correct mirror
-			continue
-		}
-		for _, col := range mir.Spec.Collectors {
-			if col.ExportCfg != nil {
-				expConfig[col.ExportCfg.Destination] = col.ExportCfg
-			}
-		}
-	}
 	for _, c := range ms.Spec.Collectors {
 		if c.Type == monitoring.PacketCollectorType_ERSPAN_TYPE_3.String() ||
 			c.Type == monitoring.PacketCollectorType_ERSPAN_TYPE_2.String() ||
@@ -122,13 +110,10 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 			return i, false, fmt.Errorf("Unsupported collector type")
 		}
 
-		if c.ExportCfg != nil {
-			existingCfg, ok := expConfig[c.ExportCfg.Destination]
-			if ok && existingCfg.Gateway != c.ExportCfg.Gateway {
-				return i, false, fmt.Errorf("Collector %v already added with different gateway %v, current %v",
-					c.ExportCfg.Destination, existingCfg.Gateway, c.ExportCfg.Gateway)
-			}
-		}
+	}
+	// perform global validation across policy
+	if err := globalMirrorSessionValidator(&ms, &mirrors); err != nil {
+		return i, false, err
 	}
 	if numVeniceCollectors > 0 && ms.Spec.PacketSize > veniceMaxPacketSize {
 		errStr := fmt.Errorf("Max packet size allowed by Venice collector is %v", veniceMaxPacketSize)
@@ -208,14 +193,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 
 	switch oper {
 	case apiintf.CreateOper:
-		pl := monitoring.MirrorSessionList{}
-		policyKey := strings.TrimSuffix(pl.MakeKey(string(apiclient.GroupMonitoring)), "/")
-		err := kv.List(ctx, policyKey, &pl)
-		if err != nil {
-			return nil, false, fmt.Errorf("error retrieving mirror policy: %v", err)
-		}
-
-		if len(pl.Items) >= statemgr.MaxMirrorSessions {
+		if len(mirrors.Items) >= statemgr.MaxMirrorSessions {
 			return nil, false, fmt.Errorf("can't configure more than %v mirror policy", statemgr.MaxMirrorSessions)
 		}
 	}
@@ -230,4 +208,31 @@ func registerMirrorSessionHooks(svc apiserver.Service, logger log.Logger) {
 	logger.Log("msg", "registering Hooks")
 	svc.GetCrudService("MirrorSession", apiintf.CreateOper).WithPreCommitHook(r.validateMirrorSession)
 	svc.GetCrudService("MirrorSession", apiintf.UpdateOper).WithPreCommitHook(r.validateMirrorSession)
+}
+
+func globalMirrorSessionValidator(ms *monitoring.MirrorSession, mirrors *monitoring.MirrorSessionList) error {
+	expConfig := make(map[string]*monitoring.MirrorExportConfig)
+	for _, mir := range mirrors.Items {
+		if mir.Name == ms.Name {
+			continue
+		}
+		for _, col := range mir.Spec.Collectors {
+			expConfig[col.ExportCfg.Destination] = col.ExportCfg
+		}
+	}
+	for _, col := range ms.Spec.Collectors {
+		if col.ExportCfg != nil {
+			if existingCfg, ok := expConfig[col.ExportCfg.Destination]; !ok {
+				expConfig[col.ExportCfg.Destination] = col.ExportCfg
+			} else if ok && existingCfg.Gateway != col.ExportCfg.Gateway {
+				return fmt.Errorf("Collector %v already added with different gateway %v, current %v",
+					col.ExportCfg.Destination, existingCfg.Gateway, col.ExportCfg.Gateway)
+			}
+		}
+	}
+	if len(expConfig) > statemgr.MaxUniqueCollectors {
+		return fmt.Errorf("invalid %v unique collectors, can't configure more than %v unique collectors",
+			len(expConfig), statemgr.MaxUniqueCollectors)
+	}
+	return nil
 }

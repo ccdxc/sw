@@ -415,6 +415,48 @@ var testBadMirrorSessions = []monitoring.MirrorSession{
 			MatchRules: []monitoring.MatchRule{},
 		},
 	},
+	{
+		// bad collector with same ip and diff gateway
+		ObjectMeta: api.ObjectMeta{
+			Name:   "Test Mirror Session 14",
+			Tenant: "Tenant 1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind:       "MirrorSession",
+			APIVersion: "v1",
+		},
+		Spec: monitoring.MirrorSessionSpec{
+			PacketSize:    128,
+			PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_DROPS.String()},
+			Collectors: []monitoring.MirrorCollector{
+				{
+					Type: "ERSPAN_TYPE_3",
+					ExportCfg: &monitoring.MirrorExportConfig{
+						Destination: "127.0.10.1",
+						Gateway:     "127.0.10.254",
+					},
+				},
+				{
+					Type: "ERSPAN_TYPE_3",
+					ExportCfg: &monitoring.MirrorExportConfig{
+						Destination: "127.0.10.1",
+						Gateway:     "127.0.10.254",
+					},
+				},
+			},
+			MatchRules: []monitoring.MatchRule{
+				{
+					AppProtoSel: &monitoring.AppProtoSelector{
+						ProtoPorts: []string{"UDP"},
+					},
+				},
+			},
+
+			Interfaces: &monitoring.InterfaceMirror{
+				Selectors: []*labels.Selector{labels.SelectorFromSet(labels.Set{"app": "procurement"})},
+			},
+		},
+	},
 }
 
 var testGoodMirrorSession = []monitoring.MirrorSession{

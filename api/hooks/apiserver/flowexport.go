@@ -31,21 +31,42 @@ func (r *flowExpHooks) validateFlowExportPolicy(ctx context.Context, kv kvstore.
 	if ok != true {
 		return i, false, fmt.Errorf("invalid object %T instead of monitoring.FlowExportPolicy", i)
 	}
+	// Perform validation only if Spec has changed
+	// No change to spec indicates status update, for which no need to validate the spec
+	oldfp := monitoring.FlowExportPolicy{}
+	err := kv.Get(ctx, key, &oldfp)
+	if err == nil {
+		// found old object, compare spec
+		if oper == apiintf.CreateOper {
+			// Create on already existing flow export policy
+			// return success and let api server take care of this error
+			return i, true, nil
+		}
+	} else if oper == apiintf.UpdateOper {
+		// update on non-existing flow export policy
+		// return success and let api server take care of this error
+		return i, true, nil
+	}
 
+	// perform spec validation
 	if err := flowexportPolicyValidator(&policy); err != nil {
+		return i, false, err
+	}
+
+	policyList := monitoring.FlowExportPolicyList{}
+	policyKey := strings.TrimSuffix(policyList.MakeKey(string(apiclient.GroupMonitoring)), "/")
+	err = kv.List(ctx, policyKey, &policyList)
+	if err != nil {
+		return nil, false, fmt.Errorf("error retrieving FlowExportPolicy: %v", err)
+	}
+	// perform global validation across policy
+	if err := globalFlowExportValidator(&policy, &policyList); err != nil {
 		return i, false, err
 	}
 
 	switch oper {
 	case apiintf.CreateOper:
-		pl := monitoring.FlowExportPolicyList{}
-		policyKey := strings.TrimSuffix(pl.MakeKey(string(apiclient.GroupMonitoring)), "/")
-		err := kv.List(ctx, policyKey, &pl)
-		if err != nil {
-			return nil, false, fmt.Errorf("error retrieving FlowExportPolicy: %v", err)
-		}
-
-		if len(pl.Items) >= tpm.MaxNumExportPolicy {
+		if len(policyList.Items) >= tpm.MaxNumExportPolicy {
 			return nil, false, fmt.Errorf("can't configure more than %v FlowExportPolicy", tpm.MaxNumExportPolicy)
 		}
 	}
@@ -270,4 +291,29 @@ func parsePortProto(src string) (uint32, error) {
 	}
 
 	return uint32(port), nil
+}
+
+func globalFlowExportValidator(newfp *monitoring.FlowExportPolicy, policyList *monitoring.FlowExportPolicyList) error {
+	expConfig := make(map[string]monitoring.ExportConfig)
+	for _, policy := range policyList.Items {
+		if policy.Name == newfp.Name {
+			continue
+		}
+		for _, col := range policy.Spec.Exports {
+			expConfig[col.Destination] = col
+		}
+	}
+	for _, col := range newfp.Spec.Exports {
+		if existingCfg, ok := expConfig[col.Destination]; !ok {
+			expConfig[col.Destination] = col
+		} else if ok && existingCfg.Transport != col.Transport {
+			return fmt.Errorf("Export %v already added with different proto-port %v, current %v",
+				existingCfg.Destination, existingCfg.Transport, col.Transport)
+		}
+	}
+	if len(expConfig) > tpm.MaxUniqueNumCollectors {
+		return fmt.Errorf("invalid %v unique collectors, can't configure more than %v unique collectors",
+			len(expConfig), tpm.MaxUniqueNumCollectors)
+	}
+	return nil
 }

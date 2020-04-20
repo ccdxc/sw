@@ -273,6 +273,64 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		},
 
 		{
+			name: "duplicate targets with diff proto-ports",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      "duplicate-targets-diff-protoport",
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []*monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval:         "15s",
+					TemplateInterval: "5m",
+					Format:           "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1234",
+						},
+						{
+							Destination: "10.1.1.100",
+							Transport:   "UDP/1235",
+						},
+					},
+				},
+			},
+		},
+
+		{
 			name: "invalid destination (empty)",
 			fail: true,
 			policy: monitoring.FlowExportPolicy{
