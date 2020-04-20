@@ -40,7 +40,7 @@ using namespace std;
 namespace pt = boost::property_tree;
 
 #define HEARTBEAT_PERIOD_S       1 // seconds
-#define HEARTBEAT_MAX_PERIOD_S   10 // seconds
+#define HEARTBEAT_MAX_PERIOD_S   2 // seconds
 
 DeviceManager *DeviceManager::instance;
 pciemgr *pciemgr;
