@@ -660,13 +660,13 @@ ionic_qcq_alloc(struct lif *lif,
                   __FUNCTION__,
                   newqcq, sizeof( struct qcq)));
     
-    NdisAllocateSpinLock(&newqcq->txq_pending_nb_lock);
+    NdisAllocateSpinLock(&newqcq->txq_nb_lock);
     NdisAllocateSpinLock(&newqcq->txq_pending_nbl_lock);
 
     NdisAllocateSpinLock(&newqcq->tx_ring_lock);
     NdisAllocateSpinLock(&newqcq->rx_ring_lock);
 
-    InitializeListHead(&newqcq->txq_pending_nb);
+    InitializeListHead(&newqcq->txq_nb_list);
     ionic_txq_nbl_list_init(&newqcq->txq_pending_nbl);
 
     newqcq->flags = flags;
@@ -772,6 +772,14 @@ ionic_qcq_alloc(struct lif *lif,
     ionic_cq_map(&newqcq->cq, cq_base, cq_base_pa);
     ionic_cq_bind(&newqcq->cq, &newqcq->q);
 
+	if (type == IONIC_QTYPE_TXQ) {							 
+		KeInitializeDpc( &newqcq->tx_packet_dpc,
+								 tx_packet_dpc_callback,
+								 (void *)newqcq);
+		KeSetImportanceDpc( &newqcq->tx_packet_dpc,
+							MediumHighImportance);
+	}
+
     *qcq = newqcq;
 
     return NDIS_STATUS_SUCCESS;
@@ -792,7 +800,7 @@ err_out:
                                           newqcq->cq.info, IONIC_CQ_INFO_TAG);
         }
 
-		NdisFreeSpinLock(&newqcq->txq_pending_nb_lock);
+		NdisFreeSpinLock(&newqcq->txq_nb_lock);
 		NdisFreeSpinLock(&newqcq->txq_pending_nbl_lock);
 		NdisFreeSpinLock(&newqcq->tx_ring_lock);
 		NdisFreeSpinLock(&newqcq->rx_ring_lock);
@@ -864,7 +872,7 @@ ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 		qcq->q.info = NULL;
 	}
 
-	NdisFreeSpinLock(&qcq->txq_pending_nb_lock);
+	NdisFreeSpinLock(&qcq->txq_nb_lock);
 	NdisFreeSpinLock(&qcq->txq_pending_nbl_lock);
 	NdisFreeSpinLock(&qcq->tx_ring_lock);
 	NdisFreeSpinLock(&qcq->rx_ring_lock);
@@ -1943,7 +1951,7 @@ ionic_txrx_alloc(struct lif *lif,
             status = ionic_link_master_qcq(lif->rxqcqs[i].qcq, rxqs);
             if (status != NDIS_STATUS_SUCCESS)
                 goto err_out_free_rxqcqs;
-        }
+		}
 
 		/* Affinitize the int */
 
@@ -1955,6 +1963,15 @@ ionic_txrx_alloc(struct lif *lif,
 
 		intr_msg->inuse = true;
 		ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_msg->id);
+
+		/* Set the processor affniity for the tx packet dpc */
+		status = KeSetTargetProcessorDpcEx( &lif->txqcqs[i].qcq->tx_packet_dpc,
+											&intr_msg->proc);
+		if (status != STATUS_SUCCESS) {
+			IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+								__FUNCTION__,
+								status);
+		}
     }
 
     DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
@@ -2021,7 +2038,14 @@ ionic_txrx_disable(struct lif *lif)
             DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR, "%s Failed to disable tx queue %d lif %s Status %08lX\n",
               __FUNCTION__, i, lif->name, status));
         }
-        ionic_tx_release_pending(lif->ionic, lif->txqcqs[i].qcq);
+
+		// Flush currently queued or executing DPCs
+		KeFlushQueuedDpcs();
+
+		// Call final time to process any remaining items
+		ionic_service_nb_requests(lif->txqcqs[i].qcq, true, IONIC_TX_BUDGET_DEFAULT);
+        
+		ionic_tx_release_pending(lif->ionic, lif->txqcqs[i].qcq);
     }
     for (i = 0; i < lif->nrxqs; i++) {
         status = ionic_qcq_disable(lif->rxqcqs[i].qcq);

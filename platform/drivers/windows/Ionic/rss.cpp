@@ -69,12 +69,12 @@ oid_set_rss_parameters(struct ionic *ionic,
 
     *bytes_needed = 0;
 
-    if (BooleanFlagOn(pParameters->Flags, NDIS_RSS_PARAM_FLAG_DISABLE_RSS)) {
-
-        lif->rss_hash_flags = 0;
+    if (BooleanFlagOn(pParameters->Flags, NDIS_RSS_PARAM_FLAG_DISABLE_RSS) ||
+		(!BooleanFlagOn(pParameters->Flags,
+                       NDIS_RSS_PARAM_FLAG_HASH_INFO_UNCHANGED) && 
+		 !(pParameters->HashInformation & NdisHashFunctionToeplitz))) {
 
         ntStatus = ionic_lif_rss_deinit(lif);
-
         goto cleanup;
     }
 
@@ -190,26 +190,15 @@ oid_set_rss_hash(struct ionic *ionic,
               "%s For %p Flags %08lX HashInfo %08lX\n", __FUNCTION__, ionic,
               pParameters->Flags, pParameters->HashInformation));
 
-    if (!BooleanFlagOn(pParameters->Flags,
+    *bytes_read = sizeof(NDIS_RECEIVE_HASH_PARAMETERS);
+    
+	if (!BooleanFlagOn(pParameters->Flags,
                        NDIS_RECEIVE_HASH_FLAG_ENABLE_HASH)) {
 
-        NdisZeroMemory(lif->rss_hash_key, IONIC_RSS_HASH_KEY_SIZE);
-        NdisZeroMemory(lif->rss_ind_tbl, lif->rss_ind_tbl_sz);
-
-        lif->rss_hash_flags = 0;
-
-        ntStatus = ionic_lif_rss_config(lif, 0, NULL, NULL);
-
-        if (ntStatus != NDIS_STATUS_SUCCESS) {
-            goto cleanup;
-        }
-
-        *bytes_read = sizeof(NDIS_RECEIVE_HASH_PARAMETERS);
-
+		ntStatus = ionic_lif_rss_deinit(lif);
         goto cleanup;
     }
 
-    *bytes_read = sizeof(NDIS_RECEIVE_HASH_PARAMETERS);
 
     if (!BooleanFlagOn(pParameters->Flags,
                        NDIS_RECEIVE_HASH_FLAG_HASH_INFO_UNCHANGED) ||
@@ -321,6 +310,7 @@ NDIS_STATUS
 ionic_lif_rss_deinit(struct lif *lif)
 {
     /* Disable RSS on the NIC */
+	lif->rss_hash_flags = 0;
     NdisZeroMemory(lif->rss_hash_key, IONIC_RSS_HASH_KEY_SIZE);
     NdisZeroMemory(lif->rss_ind_tbl, lif->rss_ind_tbl_sz);
    

@@ -243,6 +243,8 @@ DumpTxRingStats(const char *id, struct dev_tx_ring_stats *tx_stats)
     printf("\t\t\ttx%s_mcast_packets:\t%I64u\n", id, tx_stats->mcast_packets);
     printf("\t\t\ttx%s_tso_bytes:\t%I64u\n", id, tx_stats->tso_bytes);
     printf("\t\t\ttx%s_tso_packets:\t%I64u\n", id, tx_stats->tso_packets);
+    printf("\t\t\ttx%s_max_tso_packet:\t%I64u\n", id, tx_stats->max_tso_sz);
+    printf("\t\t\ttx%s_last_tso_packets:\t%I64u\n", id, tx_stats->last_tso_sz);
     printf("\t\t\ttx%s_encap_tso_bytes:\t%I64u\n", id, tx_stats->encap_tso_bytes);
     printf("\t\t\ttx%s_encap_tso_packets:\t%I64u\n", id, tx_stats->encap_tso_packets);
     printf("\t\t\ttx%s_csum_none:\t%I64u\n", id, tx_stats->csum_none);

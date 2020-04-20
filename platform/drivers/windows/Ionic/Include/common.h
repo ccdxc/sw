@@ -1274,7 +1274,8 @@ void ionic_txq_nbl_list_push_head(struct txq_nbl_list *list,
 
 void ionic_service_pending_nbl_requests(struct ionic *ionic, struct qcq *qcq);
 
-void ionic_service_pending_nb_requests(struct ionic *ionic, struct qcq *qcq);
+bool
+ionic_service_nb_requests(struct qcq *qcq, bool exiting, u32 budget);
 
 NDIS_STATUS
 process_nbl(struct ionic *ionic,
@@ -1339,6 +1340,12 @@ comp_data(NET_BUFFER *packet,
 	tx_frag_pool_elem *fragment);
 
 void ionic_tx_empty(struct queue *q);
+
+void 
+tx_packet_dpc_callback( _KDPC *Dpc,
+					    PVOID DeferredContext,
+					    PVOID SystemArgument1,
+					    PVOID SystemArgument2);
 
 //
 // vmq.cpp prototypes

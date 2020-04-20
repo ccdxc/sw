@@ -46,12 +46,12 @@ ionic_map_bars(struct ionic *Adapter,
                 CM_RESOURCE_INTERRUPT_MESSAGE) {
 
                 DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
-                          "%s MSI Group %d Int Lvl %d Vec %d Aff %I64X\n",
+                          "%s MSI Group %d Int Vec %d Msg cnt %d Aff %I64X\n",
                           __FUNCTION__,
-                          pDescriptor->u.MessageInterrupt.Translated.Group,
-                          pDescriptor->u.MessageInterrupt.Translated.Level,
-                          pDescriptor->u.MessageInterrupt.Translated.Vector,
-                          pDescriptor->u.MessageInterrupt.Translated.Affinity));
+                          pDescriptor->u.MessageInterrupt.Raw.Group,
+                          pDescriptor->u.MessageInterrupt.Raw.Vector,
+						  pDescriptor->u.MessageInterrupt.Raw.MessageCount,
+                          pDescriptor->u.MessageInterrupt.Raw.Affinity));
             } else {
                 Adapter->intr_lvl = pDescriptor->u.Interrupt.Level;
                 DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
@@ -278,10 +278,10 @@ ionic_register_interrupts(struct ionic *ionic,
         if (prd->Type == CmResourceTypeInterrupt && (prd->Flags & CM_RESOURCE_INTERRUPT_MESSAGE)) {
 
             ionic->intr_msg_tbl[msg_id].id = msg_id;
-            ionic->intr_msg_tbl[msg_id].proc.Group = prd->u.MessageInterrupt.Translated.Group;
-            if (RtlNumberOfSetBitsUlongPtr((ULONG_PTR)prd->u.MessageInterrupt.Translated.Affinity) == 1) {
+            ionic->intr_msg_tbl[msg_id].proc.Group = prd->u.MessageInterrupt.Raw.Group;
+            if (RtlNumberOfSetBitsUlongPtr((ULONG_PTR)prd->u.MessageInterrupt.Raw.Affinity) == 1) {
                 ionic->intr_msg_tbl[msg_id].proc.Number =
-                    RtlFindLeastSignificantBit(prd->u.MessageInterrupt.Translated.Affinity);
+                    RtlFindLeastSignificantBit(prd->u.MessageInterrupt.Raw.Affinity);
                 ionic->intr_msg_tbl[msg_id].affinity_policy = IrqPolicySpecifiedProcessors;
                 ionic->intr_msg_tbl[msg_id].proc_idx = KeGetProcessorIndexFromNumber(&ionic->intr_msg_tbl[msg_id].proc);
             }
@@ -289,7 +289,7 @@ ionic_register_interrupts(struct ionic *ionic,
                 ionic->intr_msg_tbl[msg_id].affinity_policy = IrqPolicyAllCloseProcessors;
                 ionic->intr_msg_tbl[msg_id].proc_idx = INVALID_PROCESSOR_INDEX;
             }
-			ionic->intr_msg_tbl[msg_id].affinity = prd->u.MessageInterrupt.Translated.Affinity;
+			ionic->intr_msg_tbl[msg_id].affinity = prd->u.MessageInterrupt.Raw.Affinity;
 
 			DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
 				"%s msg_id %d affinity_policy %d group %u proc %d affinity 0x%llx\n",
@@ -299,13 +299,6 @@ ionic_register_interrupts(struct ionic *ionic,
                 ionic->intr_msg_tbl[msg_id].proc.Group,
                 ionic->intr_msg_tbl[msg_id].proc.Number,
                 ionic->intr_msg_tbl[msg_id].affinity));
-			IoPrint("%s msg_id %d affinity_policy %d group %u proc %d affinity 0x%llx\n",
-				__FUNCTION__,
-				ionic->intr_msg_tbl[msg_id].id,
-                ionic->intr_msg_tbl[msg_id].affinity_policy,
-				ionic->intr_msg_tbl[msg_id].proc.Group,
-				ionic->intr_msg_tbl[msg_id].proc.Number,
-				ionic->intr_msg_tbl[msg_id].affinity);
 
             ++msg_id;
         }
@@ -512,15 +505,12 @@ ionic_process_sg_list(PDEVICE_OBJECT DeviceObject,
     UNREFERENCED_PARAMETER(DeviceObject);
     UNREFERENCED_PARAMETER(Irp);
 
-    NDIS_STATUS status = NDIS_STATUS_SUCCESS;
     struct txq_pkt *txq_pkt = (struct txq_pkt *)Context;
     PNET_BUFFER nb = txq_pkt->packet_orig;
     struct txq_pkt_private *txq_pkt_private =
         (struct txq_pkt_private *)NET_BUFFER_MINIPORT_RESERVED(nb);
     struct queue *q;
     struct qcq *qcq;
-    struct txq_nbl_list completed_list;
-    struct lif *lif;
     struct ionic *ionic;
 
     q = txq_pkt->q;
@@ -529,67 +519,26 @@ ionic_process_sg_list(PDEVICE_OBJECT DeviceObject,
     qcq = q_to_qcq(q);
     ASSERT(qcq != NULL);
 
-    lif = q->lif;
-    ASSERT(lif != NULL);
-
-    ionic = lif->ionic;
+    ionic = q->lif->ionic;
     ASSERT(ionic != NULL);
 
     DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
               "%s Enter Process SG List adapter %p NB %p\n", __FUNCTION__,
-              ionic, nb));
+              ionic, txq_pkt->packet_orig));
 
     txq_pkt->sg_os_list = sg_list;
 
     BUG_ON(NDIS_CURRENT_IRQL() != DISPATCH_LEVEL);
 
-    NdisDprAcquireSpinLock(&qcq->txq_pending_nb_lock);
+    NdisDprAcquireSpinLock(&qcq->txq_nb_lock);
+    InsertTailList(&qcq->txq_nb_list, &txq_pkt_private->link);
+    NdisDprReleaseSpinLock(&qcq->txq_nb_lock);
 
-    if (!IsListEmpty(&qcq->txq_pending_nb)) {
+	KeInsertQueueDpc( &qcq->tx_packet_dpc,
+						NULL,
+						NULL);
 
-        DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
-                  "%s Queue packet %p to non-empty NB pended list\n",
-                  __FUNCTION__, nb));
-
-        InsertTailList(&qcq->txq_pending_nb, &txq_pkt_private->link);
-        InterlockedIncrement64( (LONGLONG *)&qcq->tx_stats->pending_nb_count);
-    } else {
-
-        ionic_txq_nbl_list_init(&completed_list);
-
-        status = ionic_queue_txq_pkt(ionic, qcq, nb);
-        if (status == NDIS_STATUS_PENDING) {
-            // Insert to the tail of the list
-            InsertTailList(&qcq->txq_pending_nb, &txq_pkt_private->link);
-            InterlockedIncrement64( (LONGLONG *)&qcq->tx_stats->pending_nb_count);
-
-            DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
-                      "%s Queue packet %p to NB pended list\n", __FUNCTION__,
-                      nb));
-        } else if (status != NDIS_STATUS_SUCCESS) {
-            DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_ERROR,
-                      "%s Queue TXQ Failed adapter %p NB %p\n", __FUNCTION__,
-                      ionic, nb));
-
-            ionic_txq_complete_failed_pkt(ionic, qcq, 
-										  txq_pkt->parent_nbl, 
-										  nb, 
-										  &completed_list,
-                                          NDIS_STATUS_SEND_ABORTED);
-        }
-
-        ionic_send_complete(ionic, &completed_list, DISPATCH_LEVEL);
-    }
-
-    ionic_service_pending_nb_requests(ionic, qcq);
-
-    NdisDprReleaseSpinLock(&qcq->txq_pending_nb_lock);
-
-    DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
-              "%s Exit Process SG adapter %p NB %p\n", __FUNCTION__, ionic,
-              nb));
-
-    return;
+	return;
 }
 
 NDIS_STATUS
@@ -761,7 +710,8 @@ find_intr_msg(struct ionic *ionic, ULONG proc_idx)
             }
             if (proc_idx != INVALID_PROCESSOR_INDEX &&
                 intr->affinity_policy == IrqPolicySpecifiedProcessors &&
-                intr->affinity == (1ull << proc_idx)) {
+				intr->proc_idx == proc_idx) {
+                //intr->affinity == (1ull << proc_idx)) {
                 return intr;
             }
         }

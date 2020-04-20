@@ -128,9 +128,6 @@ ionic_reset_rxq_pkts(struct lif *lif)
         lif->rx_pkts_free_count++;
 #endif
     }
-
-    /* Now release any nbls associated to the entries */
-    ionic_release_rxq_pkts( lif);
 }
 
 void

@@ -286,11 +286,15 @@ struct qcq {
 
 	NDIS_HANDLE		ring_alloc_handle;
 
-    LIST_ENTRY      txq_pending_nb;
-    NDIS_SPIN_LOCK  txq_pending_nb_lock;
+    LIST_ENTRY      txq_nb_list;
+    NDIS_SPIN_LOCK  txq_nb_lock;
 
     struct txq_nbl_list txq_pending_nbl;
     NDIS_SPIN_LOCK  txq_pending_nbl_lock;
+
+	/* tx packet processing */
+	KDPC			tx_packet_dpc;
+	LONG			dpc_exec_cnt;
 };
 
 struct qcqst {

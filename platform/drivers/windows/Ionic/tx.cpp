@@ -63,28 +63,27 @@ ionic_service_pending_nbl_requests(struct ionic *ionic, struct qcq *qcq)
     return;
 }
 
-void
-ionic_service_pending_nb_requests(struct ionic *ionic, struct qcq *qcq)
+bool
+ionic_service_nb_requests(struct qcq *qcq, bool exiting, u32 budget)
 {
+	bool more_items = true;
+	struct ionic *ionic = qcq->q.lif->ionic;
     struct txq_pkt_private *txq_pkt_private;
     struct txq_pkt *txq_pkt;
-    NDIS_STATUS status;
+    NDIS_STATUS status = NDIS_STATUS_SUCCESS;
     NDIS_TCP_LARGE_SEND_OFFLOAD_NET_BUFFER_LIST_INFO mss = {0};
     txq_nbl_list completed_list;
     LIST_ENTRY *list_entry = NULL;
 
     ionic_txq_nbl_list_init(&completed_list);
 
-    DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
-              "%s Enter Service Pending NB adapter %p\n", __FUNCTION__,
-              ionic));
+	NdisAcquireSpinLock( &qcq->txq_nb_lock);
 
-    BUG_ON(NDIS_CURRENT_IRQL() != DISPATCH_LEVEL);
+    while (!IsListEmpty(&qcq->txq_nb_list) && (budget != 0)) {
 
-    while (!IsListEmpty(&qcq->txq_pending_nb)) {
+        list_entry = RemoveHeadList(&qcq->txq_nb_list);
 
-        list_entry = RemoveHeadList(&qcq->txq_pending_nb);
-        InterlockedDecrement( (LONG *)&qcq->tx_stats->pending_nb_count);
+		NdisReleaseSpinLock( &qcq->txq_nb_lock);
 
         txq_pkt_private =
             CONTAINING_RECORD(list_entry, struct txq_pkt_private, link);
@@ -92,13 +91,23 @@ ionic_service_pending_nb_requests(struct ionic *ionic, struct qcq *qcq)
 
         DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
                   "%s Processing NB %p\n", __FUNCTION__, txq_pkt->packet_orig));
+
+		if (exiting) {
+            ionic_txq_complete_failed_pkt(ionic, qcq, 
+										  txq_pkt->parent_nbl,
+										  txq_pkt->packet_orig,
+                                          &completed_list,
+                                          NDIS_STATUS_SEND_ABORTED);
+			NdisAcquireSpinLock( &qcq->txq_nb_lock);
+			continue;
+		}
        
         status = ionic_queue_txq_pkt(ionic, qcq, txq_pkt->packet_orig);
 
         if (status == NDIS_STATUS_PENDING) {
+			NdisAcquireSpinLock( &qcq->txq_nb_lock);
             // Insert it back to the head of the list
-            InsertHeadList(&qcq->txq_pending_nb, &txq_pkt_private->link);
-            InterlockedIncrement( (LONG *)&qcq->tx_stats->pending_nb_count);
+            InsertHeadList(&qcq->txq_nb_list, &txq_pkt_private->link);
 
             DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
                       "%s Re-inserting NB %p\n", __FUNCTION__,
@@ -107,22 +116,34 @@ ionic_service_pending_nb_requests(struct ionic *ionic, struct qcq *qcq)
         } else if (status != NDIS_STATUS_SUCCESS) {
 
             DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
-                      "%s Faileing NB %p Status %08lX\n", __FUNCTION__,
+                      "%s Failing NB %p Status %08lX\n", __FUNCTION__,
                       txq_pkt->packet_orig, status));
             ionic_txq_complete_failed_pkt(ionic, qcq, 
 										  txq_pkt->parent_nbl,
 										  txq_pkt->packet_orig,
                                           &completed_list,
                                           NDIS_STATUS_SEND_ABORTED);
+			status = NDIS_STATUS_SUCCESS;
         }
+
+		NdisAcquireSpinLock( &qcq->txq_nb_lock);
+
+		budget--;
     }
 
-    //NdisDprReleaseSpinLock(&qcq->txq_pending_nb_lock);
+	if (status == NDIS_STATUS_SUCCESS &&
+		budget != 0) {
+		more_items = false;
+	}
+
+	NdisReleaseSpinLock( &qcq->txq_nb_lock);
+
+	ionic_send_complete(ionic, &completed_list, NDIS_CURRENT_IRQL());
 
     DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
               "%s Exit Service Pending NB adapter %p\n", __FUNCTION__, ionic));
 
-    return;
+    return more_items;
 }
 
 NDIS_STATUS
@@ -703,6 +724,20 @@ ionic_enqueue_txq_pkt(struct qcq *qcq,
     return;
 }
 
+bool
+is_1q_hdr_present(void *Buffer)
+{
+
+	bool has_tag = false;
+	struct ethhdr *hdr = (struct ethhdr *)Buffer;
+
+	if (hdr->h_proto == IONIC_1Q_TAG) {
+		has_tag = true;
+	}
+
+	return has_tag;
+}
+
 NDIS_STATUS
 ionic_queue_txq_pkt(struct ionic *ionic,
                     struct qcq *qcq,
@@ -789,30 +824,32 @@ ionic_queue_txq_pkt(struct ionic *ionic,
 
     frame_type = get_frame_type(pHdrBuffer);
 
-    vlan_pri_info.Value =
-        NET_BUFFER_LIST_INFO(parent_nbl, Ieee8021QNetBufferListInfo);
+	if( !is_1q_hdr_present( pHdrBuffer)) { // Don't overwrite an existing .1q header
+		vlan_pri_info.Value =
+			NET_BUFFER_LIST_INFO(parent_nbl, Ieee8021QNetBufferListInfo);
 
-    DbgTrace((TRACE_COMPONENT_VLAN_PRI, TRACE_LEVEL_VERBOSE,
-              "%s VLAN %d Lif %d\n", __FUNCTION__, lif->vlan_id, lif->index));
+		DbgTrace((TRACE_COMPONENT_VLAN_PRI, TRACE_LEVEL_VERBOSE,
+				  "%s VLAN %d Lif %d\n", __FUNCTION__, lif->vlan_id, lif->index));
 
-    if (vlan_pri_info.TagHeader.VlanId == 0 && lif->vlan_id != 0) {
-        // vlan_tag = ETH_MAKE_VLAN(vlan_pri_info.TagHeader.UserPriority, 0,
-        //                         lif->vlan_id);
-    } else {
-        vlan_tag = ETH_MAKE_VLAN(vlan_pri_info.TagHeader.UserPriority, 0,
-                                 vlan_pri_info.TagHeader.VlanId);
-    }
-    vlan_tag_insert = vlan_tag ? TRUE : FALSE;
+		if (vlan_pri_info.TagHeader.VlanId == 0 && lif->vlan_id != 0) {
+			vlan_tag = ETH_MAKE_VLAN(vlan_pri_info.TagHeader.UserPriority, 0,
+									 lif->vlan_id);
+		} else {
+			vlan_tag = ETH_MAKE_VLAN(vlan_pri_info.TagHeader.UserPriority, 0,
+									 vlan_pri_info.TagHeader.VlanId);
+		}
+		vlan_tag_insert = vlan_tag ? TRUE : FALSE;
 
-    if (vlan_tag_insert) {
-        DbgTrace((TRACE_COMPONENT_VLAN_PRI, TRACE_LEVEL_VERBOSE,
-                  "%s Queue Packet VLAN adapter %p VLAN %d Priority %d Passed "
-                  "%d Curr %d Lif %d\n",
-                  __FUNCTION__, ionic, ETH_GET_VLAN_ID(vlan_tag),
-                  ETH_GET_VLAN_PRIORITY(vlan_tag),
-                  vlan_pri_info.TagHeader.VlanId, lif->vlan_id, lif->index));
-        tx_stats->vlan_inserted++;
-    }
+		if (vlan_tag_insert) {
+			DbgTrace((TRACE_COMPONENT_VLAN_PRI, TRACE_LEVEL_VERBOSE,
+					  "%s Queue Packet VLAN adapter %p VLAN %d Priority %d Passed "
+					  "%d Curr %d Lif %d\n",
+					  __FUNCTION__, ionic, ETH_GET_VLAN_ID(vlan_tag),
+					  ETH_GET_VLAN_PRIORITY(vlan_tag),
+					  vlan_pri_info.TagHeader.VlanId, lif->vlan_id, lif->index));
+			tx_stats->vlan_inserted++;
+		}
+	}
 
     mss.Value = NET_BUFFER_LIST_INFO(parent_nbl, TcpLargeSendNetBufferListInfo);
     csum_info.Value =
@@ -921,12 +958,6 @@ ionic_queue_txq_pkt(struct ionic *ionic,
         DbgTrace((TRACE_COMPONENT_TX_NONLSO, TRACE_LEVEL_VERBOSE,
                   "%s Processing non-TSO packet %p len %08lX sg cnt %d\n",
                   __FUNCTION__, packet, packet_len, sg_element_count));
-
-        // IoPrint("%s Packet Len %d csum L3 %s L4 %s\n",
-        //                __FUNCTION__,
-        //                packet_len,
-        //                csum_l3 != 0?"Yes":"No",
-        //                csum_l4 != 0?"Yes":"No");
 
         ionic_enqueue_txq_pkt(qcq, packet, packet_len, data_offset, sg_element,
                               sg_element_count, csum_offset, vlan_tag,
@@ -1047,6 +1078,8 @@ ionic_queue_txq_pkt(struct ionic *ionic,
             break;
         }
 
+		ASSERT( ulDescCnt < txq_pkt_private->desc_cnt);
+
         ASSERT(sg_element_count != 0);
 
         segment_len = mss.LsoV2Transmit.MSS;
@@ -1082,6 +1115,12 @@ ionic_queue_txq_pkt(struct ionic *ionic,
         txq_pkt_private->bytes_processed -= ulHdrLen;
         tx_stats->tso_packets++;
         tx_stats->tso_bytes += packet_len;
+
+		if (packet_len > tx_stats->max_tso_sz) {
+			tx_stats->max_tso_sz = packet_len;
+		}
+
+		tx_stats->last_tso_sz = packet_len;
     }
 
     DbgTrace((TRACE_COMPONENT_TX_LSO, TRACE_LEVEL_VERBOSE,
@@ -1567,13 +1606,10 @@ void
 ionic_tx_release_pending(struct ionic *ionic, struct qcq * qcq)
 {
 
-    struct txq_pkt_private *txq_pkt_private;
 	struct txq_nbl_private *nbl_private;
-    struct txq_pkt *txq_pkt;
     struct txq_nbl_list completed_list;
     PNET_BUFFER_LIST cur_nbl;
     PNET_BUFFER cur_nb, next_nb;
-    PLIST_ENTRY list_entry = NULL;
 	LONG	processed_cnt = 0;
 
     ASSERT(ionic != NULL);
@@ -1584,29 +1620,6 @@ ionic_tx_release_pending(struct ionic *ionic, struct qcq * qcq)
     ionic_txq_nbl_list_init(&completed_list);
 
     NdisAcquireSpinLock(&qcq->txq_pending_nbl_lock);
-    NdisAcquireSpinLock(&qcq->txq_pending_nb_lock);
-
-    while (!IsListEmpty(&qcq->txq_pending_nb)) {
-
-        list_entry = RemoveHeadList(&qcq->txq_pending_nb);
-        InterlockedDecrement( (LONG *)&qcq->tx_stats->pending_nb_count);
-        txq_pkt_private =
-            CONTAINING_RECORD(list_entry, struct txq_pkt_private, link);
-        txq_pkt = txq_pkt_private->txq_pkt;
-
-        DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
-                  "%s Cleaning packet %p\n", __FUNCTION__,
-                  txq_pkt->packet_orig));
-
-        ionic_txq_complete_failed_pkt(ionic, qcq, 
-									  txq_pkt->parent_nbl, 
-									  txq_pkt->packet_orig,
-                                      &completed_list,
-                                      NDIS_STATUS_SEND_ABORTED);
-    }
-
-    NdisReleaseSpinLock(&qcq->txq_pending_nb_lock);
-
     cur_nbl = ionic_txq_nbl_list_pop_head(&qcq->txq_pending_nbl);
     while (cur_nbl) {
 
@@ -1741,10 +1754,10 @@ ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits)
 
     if (!cleanup) {
 		if (work_done) {
+			KeInsertQueueDpc( &qcq->tx_packet_dpc,
+					  NULL,
+					  NULL);
 			ionic_service_pending_nbl_requests(cq->lif->ionic, qcq);
-			NdisDprAcquireSpinLock(&qcq->txq_pending_nb_lock);
-			ionic_service_pending_nb_requests(cq->lif->ionic, qcq);
-			NdisDprReleaseSpinLock(&qcq->txq_pending_nb_lock);
 		}
     } else {
         ionic_tx_release_pending(cq->lif->ionic, qcq);
@@ -2204,4 +2217,34 @@ ionic_tx_empty(struct queue *q)
         desc_info->cb_arg = NULL;
         done++;
     }
+}
+
+
+void 
+tx_packet_dpc_callback( _KDPC *Dpc,
+					    PVOID DeferredContext,
+					    PVOID SystemArgument1,
+					    PVOID SystemArgument2)
+{
+
+	struct qcq *qcq = (struct qcq *)DeferredContext;
+
+	UNREFERENCED_PARAMETER(SystemArgument1);
+	UNREFERENCED_PARAMETER(SystemArgument2);
+
+	// In the event our targeting of the DPC failed, we only want this running
+	// once at any given time during normal processing
+	if (InterlockedIncrement(&qcq->dpc_exec_cnt) == 1) {
+
+		if (ionic_service_nb_requests(qcq, false, IONIC_TX_BUDGET_DEFAULT) &&
+			RtlCheckBit(&qcq->q.lif->state, LIF_UP)) {
+			KeInsertQueueDpc(Dpc,
+				NULL,
+				NULL);
+		}
+	}
+
+	InterlockedDecrement( &qcq->dpc_exec_cnt);
+
+	return;
 }

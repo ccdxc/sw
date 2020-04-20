@@ -168,6 +168,9 @@ struct dev_tx_ring_stats {
 
 	__le64		tso_packets;
 	__le64		tso_bytes;
+	__le64		max_tso_sz;
+	__le64		last_tso_sz;
+
 	__le64		encap_tso_packets;
 	__le64		encap_tso_bytes;
 	__le64		csum_none;

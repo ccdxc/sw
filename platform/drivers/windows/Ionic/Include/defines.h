@@ -146,6 +146,8 @@ NTSTATUS
 
 #define ANY_PROCESSOR_INDEX				(INVALID_PROCESSOR_INDEX - 1)
 
+#define IONIC_1Q_TAG					0x0081
+
 //
 // Flow control options
 //
