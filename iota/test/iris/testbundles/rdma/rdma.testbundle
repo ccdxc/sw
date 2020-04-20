@@ -104,6 +104,19 @@ testcases:
         args    :
             type: remote_only
 
+    -   name    : Rc_SendBw_BiDir_Check_Bw
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1]
+            size     : [4096,8192,65536]
+            bidir    : ['yes']
+            command  : ['ib_send_bw']
+            check_bw : ['yes']
+        args    :
+            type: remote_only
+
     -   name    : Rc_SendLat_Only
         testcase: testcases.rdma.rdma_perftest
         stress  : True

@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import re
+import math
 import iota.test.utils.naples_host as host
 
 def Setup(tc):
@@ -23,6 +24,9 @@ def Setup(tc):
     tc.w.append(pairs[0][0])
     tc.w.append(pairs[0][1])
 
+    tc.nodes = api.GetNaplesHostnames()
+    tc.os = api.GetNodeOs(tc.nodes[0])
+
     if getattr(tc.iterators, 'transport', None) == 'UD':
         unames = api.GetTestsuiteAttr("unames")
         for name in unames:
@@ -44,7 +48,7 @@ def Setup(tc):
         else:
             tc.ib_prefix.append('')
 
-    if getattr(tc.iterators, 'tcpdump', 'no') == 'yes':
+    if getattr(tc.iterators, 'tcpdump', None) == 'yes':
         for n in api.GetNaplesHostnames():
             if api.GetNodeOs(n) not in [host.OS_TYPE_BSD]:
                 api.Logger.info("IGNORED: TCPDUMP tests on non-FreeBSD")
@@ -61,6 +65,9 @@ def Trigger(tc):
 
     # Populate bw lookup table - manual entry to speed up development
     bw_dict = {}
+    bw_dict[(1,4096)] = 10
+    bw_dict[(1,8192)] = 10
+    bw_dict[(1,65536)] = 50
     bw_dict[(2,4000)] = 10
     bw_dict[(2,4096)] = 10
     bw_dict[(2,8192)] = 10
@@ -110,6 +117,7 @@ def Trigger(tc):
     cm_opt        = ''
     enable_dcqcn  = False
     transport_opt = ''
+    msg_size      = 65536
     size_opt      = ' -a '
     mtu_opt       = ' -m 4096 '
     qp_opt        = ''
@@ -128,92 +136,87 @@ def Trigger(tc):
     async_event_stats_opt = ''
     bw_opt        = ''
     port_flap     = False
-    tc.tcpdump       = False
+    tc.tcpdump    = False
 
     #==============================================================
     # update non-default cmd options
     #==============================================================
     # if use both duration '-D' and count '-n', count will take precedence
     if hasattr(tc.iterators, 'duration'):
-        iter_opt = ' -D {dur} '.format(dur = tc.iterators.duration)
+        iter_opt = ' -D {} '.format(tc.iterators.duration)
         # For scale tests, we noticed all 8 threads not started early,
         # so need to give extra timeout
         bkg_timeout = tc.iterators.duration + 30
 
     if hasattr(tc.iterators, 'count'):
-        iter_opt = ' -n {iter} '.format(iter = tc.iterators.count)
+        iter_opt = ' -n {} '.format(tc.iterators.count)
 
-    if hasattr(tc.iterators, 'rdma_cm') and \
-       tc.iterators.rdma_cm == 'yes':
+    if getattr(tc.iterators, 'rdma_cm', None) == 'yes':
         cm_opt = ' -R '
 
-    if hasattr(tc.iterators, 'transport') and \
-       tc.iterators.transport == 'UD':
+    if getattr(tc.iterators, 'transport', None) == 'UD':
         transport_opt = ' -c UD '
 
     if hasattr(tc.iterators, 'size'):
         msg_size = int(tc.iterators.size)
-        size_opt  =  ' -s {size} '.format(size = tc.iterators.size)
+        size_opt = ' -s {} '.format(msg_size)
 
     if hasattr(tc.iterators, 'mtu'):
-        mtu_opt = ' -m {mtu} '.format(mtu = tc.iterators.mtu)
+        mtu_opt = ' -m {} '.format(tc.iterators.mtu)
 
-    if hasattr(tc.iterators, 'numsges'):
-        numsges = int(tc.iterators.numsges)
-        numsges_opt  =  ' -W {numsges} '.format(numsges = tc.iterators.numsges)
+    numsges = getattr(tc.iterators, 'numsges', 1)
+    if numsges > 1:
+        numsges_opt = ' -W {} '.format(numsges)
 
-    if hasattr(tc.iterators, 'num_qp'):
-        num_qp = tc.iterators.num_qp
-        qp_opt = ' -q {numqp} '.format(numqp = str(tc.iterators.num_qp))
+    num_qp = getattr(tc.iterators, 'num_qp', 1)
+    if num_qp > 1:
+        qp_opt = ' -q {} '.format(num_qp)
 
-    if hasattr(tc.iterators, 'threads') and \
-       tc.iterators.threads > 1:
+    num_threads = getattr(tc.iterators, 'threads', 1)
+    if num_threads > 1:
         tc.client_bkg = True
         e_port = s_port + tc.iterators.threads
 
-    if hasattr(tc.iterators, 'server') and \
-       tc.iterators.server == 'no':
+    if getattr(tc.iterators, 'server', None) == 'no':
         server_idx = 1
         client_idx = 0
 
-    if hasattr(tc.iterators, 'bidir') and \
-       tc.iterators.bidir == 'yes':
+    if getattr(tc.iterators, 'bidir', None) == 'yes':
         bidir_opt = ' -b '
 
     if hasattr(tc.iterators, 'rxdepth'):
-        rxdepth_opt = ' -r {rxdepth} '.format(rxdepth = str(tc.iterators.rxdepth))
+        rxdepth_opt = ' -r {} '.format(tc.iterators.rxdepth)
 
     if hasattr(tc.iterators, 'txdepth'):
-        txdepth_opt = ' -t {txdepth} '.format(txdepth = str(tc.iterators.txdepth))
+        txdepth_opt = ' -t {} '.format(tc.iterators.txdepth)
 
-    if hasattr(tc.iterators, 'cmp_swp') and \
-       tc.iterators.cmp_swp == 'yes':
+    if getattr(tc.iterators, 'cmp_swp', None) == 'yes':
        atomic_opt = ' -A CMP_AND_SWAP '
 
-    if hasattr(tc.iterators, 'enable_dcqcn') and \
-       tc.iterators.enable_dcqcn == 'yes':
+    if getattr(tc.iterators, 'enable_dcqcn', None) == 'yes':
         enable_dcqcn = True
 
-    if hasattr(tc.iterators, 'sq_drain') and \
-       tc.iterators.sq_drain == 'yes':
+    if getattr(tc.iterators, 'sq_drain', None) == 'yes':
        sq_drain_opt = ' --sq-drain '
 
-    if hasattr(tc.iterators, 'async_event_stats') and \
-       tc.iterators.async_event_stats == 'yes':
+    if getattr(tc.iterators, 'async_event_stats', None) == 'yes':
        async_event_stats_opt = ' --report-async-ev-stats '
 
-    if hasattr(tc.iterators, 'check_bw') and \
-       tc.iterators.check_bw == 'yes' and num_qp == 1:
-        bw_opt = ' -w {bw} '.format(bw = str(bw_dict[numsges, msg_size]))
+    if getattr(tc.iterators, 'check_bw', None) == 'yes' and \
+       num_qp == 1 and \
+       (numsges, msg_size) in bw_dict:
+        bw_opt = ' -w {} '.format(math.ceil(bw_dict[(numsges, msg_size)] / num_threads))
 
-    if getattr(tc.iterators, 'port_flap', 'false') == 'true' and hasattr(tc.iterators, 'duration'):
+    if getattr(tc.iterators, 'port_flap', None) == 'true' and \
+       hasattr(tc.iterators, 'duration'):
         port_flap = True
         tc.client_bkg = True
-    
-    if getattr(tc.iterators, 'tcpdump', 'no') == 'yes' and hasattr(tc.iterators, 'duration') == False:
+
+    if getattr(tc.iterators, 'tcpdump', None) == 'yes' and \
+       not hasattr(tc.iterators, 'duration'):
         tc.tcpdump = True
-        iter_opt      = ' -n 5 '
-    
+        iter_opt = ' -n 5 '
+
     #==============================================================
     # run the cmds
     #==============================================================
@@ -225,82 +228,68 @@ def Trigger(tc):
 
     api.Logger.info("Starting ib_send_bw multi_sge test from %s" % (tc.cmd_descr))
 
-    #Enable rdma sniffer and start tcpdump on Naples Hosts
+    # Enable rdma sniffer and start tcpdump on Naples Hosts
     if tc.tcpdump == True:
-        if w1.IsNaples():
-            tcpdump_intf = w1.interface.split('.')[0] #Get the parent interface
-            os = api.GetNodeOs(w1.node_name)
-            if os == host.OS_TYPE_BSD:
-                sniffer_cmd = 'sysctl dev.' + host.GetNaplesSysctl(w1.interface) + '.rdma_sniffer=1'
-            elif os == host.OS_TYPE_LINUX:
-                sniffer_cmd = 'sudo ethtool --set-priv-flags ' + tcpdump_intf + ' rdma-sniffer on'
+        for w in [w1, w2]:
+            if not w.IsNaples():
+                continue
 
-            api.Trigger_AddCommand(req, 
-                                   w1.node_name, 
-                                   w1.workload_name,
-                                   sniffer_cmd)
-            api.Trigger_AddCommand(req, 
-                                   w1.node_name, 
-                                   w1.workload_name,
-                                   "sudo tcpdump -l --immediate-mode -i {} -XXX udp dst port 4791 -w rdma_capture.pcap &".format(tcpdump_intf),
-                                   background = True)
-        elif w2.IsNaples():
-            tcpdump_intf = w2.interface.split('.')[0] #Get the parent interface
-            os = api.GetNodeOs(w2.node_name)
-            if os == host.OS_TYPE_BSD:
-                sniffer_cmd = 'sysctl dev.' + host.GetNaplesSysctl(w2.interface) + '.rdma_sniffer=1'
-            elif os == host.OS_TYPE_LINUX:
-                sniffer_cmd = 'sudo ethtool --set-priv-flags ' + tcpdump_intf + ' rdma-sniffer on'
+            tcpdump_intf = w.interface.split('.')[0] # Get the parent interface
+            tcpdump_cmd = "sudo tcpdump -l --immediate-mode -i {} -XXX udp dst port 4791 -w rdma_capture.pcap &".format(tcpdump_intf)
 
-            api.Trigger_AddCommand(req, 
-                                   w2.node_name, 
-                                   w2.workload_name,
+            if tc.os == host.OS_TYPE_BSD:
+                sniffer_cmd = 'sysctl dev.' + host.GetNaplesSysctl(w.interface) + '.rdma_sniffer=1'
+            elif tc.os == host.OS_TYPE_LINUX:
+                sniffer_cmd = 'sudo ethtool --set-priv-flags ' + tcpdump_intf + ' rdma-sniffer on'
+            else:
+                continue
+
+            api.Trigger_AddCommand(req,
+                                   w.node_name,
+                                   w.workload_name,
                                    sniffer_cmd)
-            api.Trigger_AddCommand(req, 
-                                   w2.node_name, 
-                                   w2.workload_name,
-                                   "sudo tcpdump -l --immediate-mode -i {} -XXX udp dst port 4791 -w rdma_capture.pcap &".format(tcpdump_intf),
+            api.Trigger_AddCommand(req,
+                                   w.node_name,
+                                   w.workload_name,
+                                   tcpdump_cmd,
                                    background = True)
-        else:
-            tc.tcpdump = False
+
     if enable_dcqcn == True:
-        os = api.GetNodeOs(w1.node_name)
-        if os == host.OS_TYPE_BSD:
-            cmd1 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w1.interface) + '.dcqcn.match_default="1"'
-            cmd2 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w2.interface) + '.dcqcn.match_default="1"'
-        elif os == host.OS_TYPE_LINUX:
-            cmd1 = 'echo 1 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w1.interface) + '/dcqcn/match_default'
-            cmd2 = 'echo 1 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w2.interface) + '/dcqcn/match_default'
+        for w in [w1, w2]:
+            if not w.IsNaples():
+                continue
 
-        api.Trigger_AddCommand(req,
-                               w1.node_name,
-                               w1.workload_name,
-                               cmd1,
-                               timeout=120)
-        api.Trigger_AddCommand(req,
-                               w2.node_name,
-                               w2.workload_name,
-                               cmd2,
-                               timeout=120)
+            if tc.os == host.OS_TYPE_BSD:
+                cmd = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w.interface) + '.dcqcn.match_default="1"'
+            elif tc.os == host.OS_TYPE_LINUX:
+                cmd = 'echo 1 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w.interface) + '/dcqcn/match_default'
+            else:
+                continue
+
+            api.Trigger_AddCommand(req,
+                                   w.node_name,
+                                   w.workload_name,
+                                   cmd,
+                                   timeout=120)
 
     #==============================================================
     # cmd for server
     #==============================================================
     for p in range(s_port, e_port):
-        port_opt  = ' -p {port} '.format(port = p)
-        dev_opt   = ' -d {dev} '.format(dev = tc.devices[server_idx])
-        gid_opt   = ' -x {gid} '.format(gid = tc.gid[server_idx])
+        port_opt  = ' -p {} '.format(p)
+        dev_opt   = ' -d {} '.format(tc.devices[server_idx])
+        gid_opt   = ' -x {} '.format(tc.gid[server_idx])
 
         cmd       = tc.iterators.command
-        cmd       += dev_opt + iter_opt + gid_opt 
+        cmd       += dev_opt + iter_opt + gid_opt
         cmd       += size_opt + mtu_opt + qp_opt
         cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt + rxdepth_opt + txdepth_opt + atomic_opt + bw_opt
         # add numsges_opt only for Naples
         if w1.IsNaples():
             cmd   += numsges_opt
 
-        api.Trigger_AddCommand(req, 
-                               w1.node_name, 
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
                                w1.workload_name,
                                tc.ib_prefix[server_idx] + cmd,
                                background=True, timeout=120)
@@ -317,22 +306,22 @@ def Trigger(tc):
     # cmd for client
     #==============================================================
     for p in range(s_port, e_port):
-        port_opt  = ' -p {port} '.format(port = p)
-        dev_opt   = ' -d {dev} '.format(dev = tc.devices[client_idx])
-        gid_opt   = ' -x {gid} '.format(gid = tc.gid[client_idx])
+        port_opt  = ' -p {} '.format(p)
+        dev_opt   = ' -d {} '.format(tc.devices[client_idx])
+        gid_opt   = ' -x {} '.format(tc.gid[client_idx])
 
         cmd       = tc.iterators.command
-        cmd       += dev_opt + iter_opt + gid_opt 
+        cmd       += dev_opt + iter_opt + gid_opt
         cmd       += size_opt + mtu_opt + qp_opt
         cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt + rxdepth_opt + txdepth_opt + atomic_opt
         # add numsges_opt only for Naples
         if w2.IsNaples():
             cmd   += numsges_opt + sq_drain_opt + async_event_stats_opt
-        # append server's ip_address 
+        # append server's ip_address
         cmd       += w1.ip_address
 
-        api.Trigger_AddCommand(req, 
-                               w2.node_name, 
+        api.Trigger_AddCommand(req,
+                               w2.node_name,
                                w2.workload_name,
                                tc.ib_prefix[client_idx] + cmd,
                                background=tc.client_bkg, timeout=125) #5 secs more than def test timeout=120
@@ -348,7 +337,7 @@ def Trigger(tc):
         port_down_cmd = "/nic/bin/halctl debug port --port 1  --admin-state down"
         port_up_cmd = "/nic/bin/halctl debug port --port 1  --admin-state up"
 
-        #Sleep for 10 to make sure that we dont flap during connection create
+        #Sleep for 10 to make sure that we don't flap during connection create
         cmd = 'sleep 10'
         api.Trigger_AddCommand(req,
                                w1.node_name,
@@ -387,16 +376,19 @@ def Trigger(tc):
 
     # print the next_qpid
     for w in [w1, w2]:
-        os = api.GetNodeOs(w.node_name)
-        if os == host.OS_TYPE_BSD:
+        if not w.IsNaples():
+            continue
+
+        if tc.os == host.OS_TYPE_BSD:
             cmd = 'sysctl dev.' + host.GetNaplesSysctl(w.interface) + '.rdma.info.next_qpid'
-        elif os == host.OS_TYPE_LINUX:
+        elif tc.os == host.OS_TYPE_LINUX:
             pci = host.GetNaplesPci(w.node_name, w.interface)
             if pci is None:
                 continue
             cmd = 'grep next_qpid /sys/kernel/debug/ionic/' + pci + '/lif0/rdma/info'
         else:
             continue
+
         api.Trigger_AddCommand(req,
                                w.node_name,
                                w.workload_name,
@@ -407,43 +399,40 @@ def Trigger(tc):
                                w1.node_name,
                                w1.workload_name,
                                "sleep 5")
-        if w1.IsNaples():
+
+        tshark_cmd = "sudo tshark -r rdma_capture.pcap -T fields -e ip.addr -e infiniband.bth.opcode -e infiniband.aeth.msn"
+        for w in [w1, w2]:
+            if not w.IsNaples():
+                continue
+
             api.Trigger_AddCommand(req,
-                                   w1.node_name,
-                                   w1.workload_name,
+                                   w.node_name,
+                                   w.workload_name,
                                    "sudo killall tcpdump")
             api.Trigger_AddCommand(req,
-                                   w1.node_name,
-                                   w1.workload_name,
-                                   "sudo tshark -r rdma_capture.pcap -T fields -e ip.addr -e infiniband.bth.opcode -e infiniband.aeth.msn", timeout = 60)
-        elif w2.IsNaples():
-            api.Trigger_AddCommand(req,
-                                   w2.node_name,
-                                   w2.workload_name,
-                                   "sudo killall tcpdump")
-            api.Trigger_AddCommand(req,
-                                   w2.node_name,
-                                   w2.workload_name,
-                                   "sudo tshark -r rdma_capture.pcap -T fields -e ip.addr -e infiniband.bth.opcode -e infiniband.aeth.msn", timeout = 60)
+                                   w.node_name,
+                                   w.workload_name,
+                                   tshark_cmd,
+                                   timeout = 60)
 
     #if dcqcn was enabled, disable it at the end of the test
     if enable_dcqcn == True:
-        if os == host.OS_TYPE_BSD:
-            cmd1 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w1.interface) + '.dcqcn.match_default="0"'
-            cmd2 = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w2.interface) + '.dcqcn.match_default="0"'
-        elif os == host.OS_TYPE_LINUX:
-            cmd1 = 'echo 0 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w1.interface) + '/dcqcn/match_default'
-            cmd2 = 'echo 0 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w2.interface) + '/dcqcn/match_default'
-        api.Trigger_AddCommand(req,
-                               w1.node_name,
-                               w1.workload_name,
-                               cmd1,
-                               timeout=120)
-        api.Trigger_AddCommand(req,
-                               w2.node_name,
-                               w2.workload_name,
-                               cmd2,
-                               timeout=120)
+        for w in [w1, w2]:
+            if not w.IsNaples():
+                continue
+
+            if tc.os == host.OS_TYPE_BSD:
+                cmd = 'sysctl sys.class.infiniband.' + host.GetNaplesSysClassSysctl(w.interface) + '.dcqcn.match_default="0"'
+            elif tc.os == host.OS_TYPE_LINUX:
+                cmd = 'echo 0 > /sys/class/infiniband/' + host.GetNaplesSysClassSysctl(w.interface) + '/dcqcn/match_default'
+            else:
+                continue
+
+            api.Trigger_AddCommand(req,
+                                   w.node_name,
+                                   w.workload_name,
+                                   cmd,
+                                   timeout=120)
 
     #==============================================================
     # trigger the request
@@ -472,7 +461,7 @@ def Verify(tc):
         if tc.client_bkg and api.Trigger_IsBackgroundCommand(cmd) and len(cmd.stderr) != 0:
             # check if stderr has anything other than the following msg:
             # Requested SQ size might be too big. Try reducing TX depth and/or inline size.
-            # Current TX depth is 5 and  inline size is 0 .
+            # Current TX depth is 5 and inline size is 0.
             lines = cmd.stderr.split('\n')
             for line in lines:
                 if "Requested SQ size might be too big" in line or \
@@ -492,35 +481,35 @@ def Verify(tc):
             w1w2_send_count = 0
             w1w2_ack_first_msn = float('inf')
             w1w2_ack_last_msn = float('-inf')
-            
+
             w2w1_tuple = "{},{}".format(w2.ip_address, w1.ip_address)
             w2w1_send_count = 0
             w2w1_ack_first_msn = float('inf')
             w2w1_ack_last_msn = float('-inf')
-            
+
             for l in tshark_output_list:
-                if(l == None or len(l) == 0):
+                if (l == None or len(l) == 0):
                     continue
-                if(l[0] == w1w2_tuple):
-                    if(l[1] == '4'):
+                if (l[0] == w1w2_tuple):
+                    if (l[1] == '4'):
                         w1w2_send_count += 1
-                    if(l[1] == '17'):
+                    if (l[1] == '17'):
                         msn = int(l[2])
-                        if(msn < w1w2_ack_first_msn):
+                        if (msn < w1w2_ack_first_msn):
                             w1w2_ack_first_msn = msn
-                        elif(msn > w1w2_ack_last_msn):
+                        elif (msn > w1w2_ack_last_msn):
                             w1w2_ack_last_msn = msn
-                elif(l[0] == w2w1_tuple):
-                    if(l[1] == '4'):
+                elif (l[0] == w2w1_tuple):
+                    if (l[1] == '4'):
                         w2w1_send_count += 1
-                    if(l[1] == '17'):
+                    if (l[1] == '17'):
                         msn = int(l[2])
-                        if(msn < w2w1_ack_first_msn):
+                        if (msn < w2w1_ack_first_msn):
                             w2w1_ack_first_msn = msn
-                        elif(msn > w2w1_ack_last_msn):
+                        elif (msn > w2w1_ack_last_msn):
                             w2w1_ack_last_msn = msn
             api.Logger.info("w1w2_send_count {}, w1w2_ack_first_msn {}, w1w2_ack_last_msn {}, w2w1_send_count {}, w2w1_ack_first_msn {} w2w1_ack_last_msn {}".format(w1w2_send_count,w1w2_ack_first_msn,w1w2_ack_last_msn,w2w1_send_count,w2w1_ack_first_msn,w2w1_ack_last_msn))
-            if((w1w2_send_count != 5) or (w1w2_ack_last_msn-w1w2_ack_first_msn+1 != 5) or (w2w1_send_count != 5) or (w2w1_ack_last_msn-w2w1_ack_first_msn+1 != 5)):
+            if ((w1w2_send_count != 5) or (w1w2_ack_last_msn-w1w2_ack_first_msn+1 != 5) or (w2w1_send_count != 5) or (w2w1_ack_last_msn-w2w1_ack_first_msn+1 != 5)):
                 api.Logger.info("ERROR: Mismatch in send or ack count.")
                 result = api.types.status.FAILURE
                 break

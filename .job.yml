@@ -215,8 +215,8 @@ jobs:
     labels: ["daily"]
   iota/test/standalone/regression/windows:
     labels: ["daily"]
-    #  iota/test/standalone/regression/linkmgr:
-    #    labels: ["daily"]
+#  iota/test/standalone/regression/linkmgr:
+#    labels: ["daily"]
 #  iota/test/standalone/compat/server-linux:
 #    labels: ["compat-linux"]
 #  iota/test/standalone/compat/server-esx:
@@ -300,29 +300,18 @@ dependencies:
     - reference: venice/ui
   iota/harness:
     - reference: iota/test/standalone/precheckin/freebsd
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/linux
-      exclude_dirs: ["test/iris/testcases/server"]
   iota/scripts:
     - reference: iota/test/standalone/precheckin/freebsd
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/linux
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/windows
-      exclude_dirs: ["test/iris/testcases/server"]
   iota/svcs:
     - reference: iota/test/standalone/precheckin/freebsd
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/linux
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/venice
-      exclude_dirs: ["test/iris/testcases/server"]
   iota/test/apollo:
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
@@ -331,29 +320,32 @@ dependencies:
     - reference: iota/test/standalone/sanity/apulu-networking-scale
   iota/test/iris:
     - reference: iota/test/standalone/precheckin/freebsd
-      exclude_dirs: ["test/iris/testcases/server"]
+      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma"]
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["test/iris/testcases/server"]
+      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma"]
     - reference: iota/test/standalone/precheckin/linux
-      exclude_dirs: ["test/iris/testcases/server"]
+      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma"]
     - reference: iota/test/standalone/precheckin/windows
-      exclude_dirs: ["test/iris/testcases/server"]
+      exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma"]
   iota/test/standalone:
     - reference: iota/test/standalone/precheckin/freebsd
-      exclude_dirs: ["test/iris/testcases/server"]
+      exclude_dirs: ["regression"]
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["test/iris/testcases/server"]
+      exclude_dirs: ["regression"]
     - reference: iota/test/standalone/precheckin/linux
-      exclude_dirs: ["test/iris/testcases/server"]
+      exclude_dirs: ["regression"]
   iota/test/utils:
     - reference: iota/test/standalone/precheckin/freebsd
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/esx
-      exclude_dirs: ["test/iris/testcases/server"]
     - reference: iota/test/standalone/precheckin/linux
-      exclude_dirs: ["test/iris/testcases/server"]
   iota/test/iris/testcases/swm:
     - reference: iota/test/standalone/sanity/swm
+  iota/test/iris/testcases/rdma:
+    - reference: iota/test/standalone/precheckin/freebsd-rdma
+    - reference: iota/test/standalone/precheckin/linux-rdma
+  iota/test/iris/testbundles/rdma:
+    - reference: iota/test/standalone/precheckin/freebsd-rdma
+    - reference: iota/test/standalone/precheckin/linux-rdma
   metrics:
     - reference: api
     - reference: test/ci_targets/e2e
@@ -384,8 +376,8 @@ dependencies:
       exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/precheckin/esx
       exclude_dirs: ["rdma"]
-   # - reference: iota/test/standalone/precheckin/freebsd
-   #   exclude_dirs: ["rdma"]
+    - reference: iota/test/standalone/precheckin/freebsd
+      exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/precheckin/linux
       exclude_dirs: ["rdma"]
   nic/asm/rdma:
@@ -394,7 +386,7 @@ dependencies:
   nic/buildroot:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
@@ -414,19 +406,19 @@ dependencies:
   nic/hal:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/sanity/swm
   nic/include:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
 #   - reference: iota/test/standalone/sanity/apulu-networking
   nic/linkmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
   nic/metaswitch:
     - reference: nic/apollo/tools/apulu/sanity/base
@@ -436,15 +428,15 @@ dependencies:
   nic/p4-hlir:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
   nic/p4:
     - reference: iota/test/venice
       exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/precheckin/esx
       exclude_dirs: ["rdma"]
-   # - reference: iota/test/standalone/precheckin/freebsd
-   #   exclude_dirs: ["rdma"]
+    - reference: iota/test/standalone/precheckin/freebsd
+      exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/precheckin/linux
       exclude_dirs: ["rdma"]
   nic/asm/rdma:
@@ -468,13 +460,13 @@ dependencies:
   nic/third-party:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
-   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
   nic/tools:
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
     - reference: iota/test/standalone/precheckin/esx
-   # - reference: iota/test/standalone/precheckin/freebsd
+    - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/venice
       exclude_dirs: ["arm_compiler","asic_sw_combined_sanity","client","gcov","hal","jenkins","ncc","package","server", "valgrind"]

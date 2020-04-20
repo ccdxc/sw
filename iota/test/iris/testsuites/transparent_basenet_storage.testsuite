@@ -64,20 +64,22 @@ testbundles:
         # Relative paths from iota/test/iris/testbundles/
         - classic/ethtool.testbundle
         - networking/connectivity.testbundle
-        - classic/rdma.testbundle
+        - rdma/rdma.testbundle
+        - rdma/qos.testbundle
         - linktest/linktest.testbundle
         - storage/storage.testbundle
 
     extended:
         # Relative paths from iota/test/iris/testbundles/
-        - classic/rdma_ext.testbundle
+        - rdma/rdma_ext.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
-        - classic/rdma_reg.testbundle
-        - classic/rdma_stress.testbundle
+        - rdma/rdma_reg.testbundle
+        - rdma/rdma_stress.testbundle
+        - rdma/qos_reg.testbundle
         - classic/driver-features.testbundle
-        - storage/regression.testbundle
+        - storage/storage_regr.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

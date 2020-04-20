@@ -63,7 +63,6 @@ testbundles:
         # Relative paths from iota/test/iris/testbundles/
         - classic/ethtool.testbundle
         - networking/connectivity.testbundle
-        - classic/qos.testbundle
         - linktest/linktest.testbundle
         - filters/filters.testbundle
         - mtu/mtu.testbundle
@@ -98,7 +97,6 @@ testbundles:
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
-        - classic/qos_reg.testbundle
         - tso/tso_regr.testbundle
         - classic/driver-features.testbundle
         - rss/rss.testbundle
