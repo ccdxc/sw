@@ -290,6 +290,24 @@ func NewNMD(pipeline Pipeline,
 
 	nm.RunningFirmwareVersion = GetRunningFirmwareVersion(nm.RunningFirmwareName, nm.RunningFirmware)
 
+	// Instantiate a KeyMgr to store the cluster certificate and a TLS provider
+	// to use it to connect to other cluster components.
+	// Keys are not persisted. They will be refreshed next time we access the cluster
+	// or when they expire (TBD).
+	tlsProvider, err := tlsproviders.NewDefaultKeyMgrBasedProvider("")
+	if err != nil {
+		log.Errorf("Failed to create tls provider. Err : %v", err)
+		return nil, err
+	}
+	nm.tlsProvider = tlsProvider
+
+	keypair, err := nm.tlsProvider.CreateClientKeyPair(keymgr.ECDSA384)
+	if err != nil {
+		log.Errorf("Failed to create key pair. Err : %v", err)
+		return nil, err
+	}
+	nm.keyPair = keypair
+
 	err = nm.updateLocalTimeZone()
 	if err != nil {
 		log.Errorf("Could not set timezone to %v. Err : %v", config.Status.TimeZone, err)
@@ -401,18 +419,12 @@ func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
 	return nil
 }
 
-// GenClusterKeyPair generates a (public key, private key) for this NMD instance
+// GetClusterKeyPair generates a (public key, private key) for this NMD instance
 // to authenticate itself to other entities in the Venice cluster.
 // When the instance is admitted to a cluster, it receives a corresponding
 // certificate signed by CMD
-func (n *NMD) GenClusterKeyPair() (*keymgr.KeyPair, error) {
-	if n.keyPair != nil {
-		return n.keyPair, nil
-	}
-
-	keypair, err := n.tlsProvider.CreateClientKeyPair(keymgr.ECDSA384)
-	n.keyPair = keypair
-	return n.keyPair, err
+func (n *NMD) GetClusterKeyPair() *keymgr.KeyPair {
+	return n.keyPair
 }
 
 // objectKey returns object key from object meta
@@ -730,19 +742,6 @@ func (n *NMD) GetGetNMDUploadURL() string {
 // GetReverseProxyListenURL returns the URL of the reverse proxy
 func (n *NMD) GetReverseProxyListenURL() string {
 	return n.revProxy.GetListenURL()
-}
-
-func (n *NMD) initTLSProvider() error {
-	// Instantiate a KeyMgr to store the cluster certificate and a TLS provider
-	// to use it to connect to other cluster components.
-	// Keys are not persisted. They will be refreshed next time we access the cluster
-	// or when they expire (TBD).
-	tlsProvider, err := tlsproviders.NewDefaultKeyMgrBasedProvider("")
-	if err != nil {
-		return errors.Wrapf(err, "Error instantiating tls provider")
-	}
-	n.tlsProvider = tlsProvider
-	return nil
 }
 
 func (n *NMD) setClusterCredentials(cert *x509.Certificate, caTrustChain, trustRoots []*x509.Certificate) error {

@@ -168,9 +168,6 @@ func NewNMDStateMachine() *NMDStateMachine {
 					}
 					nmd.rollout = roClient
 
-					nmd.modeChange.Lock()
-					err = nmd.initTLSProvider()
-					nmd.modeChange.Unlock()
 					if err != nil {
 						log.Errorf("Error initializing TLS provider: %v", err)
 						e.Err = fmt.Errorf("error initializing TLS provider: %v", err)

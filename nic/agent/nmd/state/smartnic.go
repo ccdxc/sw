@@ -235,11 +235,6 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 					n.cmd = cmdAPI
 					n.rollout = roClient
 
-					err = n.initTLSProvider()
-					if err != nil {
-						log.Errorf("Error initializing TLS provider: %v", err)
-						return
-					}
 					n.modeChange.Unlock()
 
 					go n.AdmitNaples()

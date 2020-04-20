@@ -43,7 +43,7 @@ type NmdAPI interface {
 	RegisterCMD(cmd CmdAPI) error
 	UnRegisterCMD() error
 	UpdateCMDClient(resolvers []string) error
-	GenClusterKeyPair() (*keymgr.KeyPair, error)
+	GetClusterKeyPair() *keymgr.KeyPair
 	GetAgentID() string
 	GetPrimaryMAC() string
 	GetControllerIps() []string

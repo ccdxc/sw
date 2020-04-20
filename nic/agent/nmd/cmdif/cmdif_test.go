@@ -123,9 +123,12 @@ func (ag *mockAgent) SetSmartNIC(nic *cmd.DistributedServiceCard) error {
 	return nil
 }
 
-func (ag *mockAgent) GenClusterKeyPair() (*keymgr.KeyPair, error) {
+func (ag *mockAgent) GetClusterKeyPair() *keymgr.KeyPair {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	return keymgr.NewKeyPairObject("mock-agent-key", key), err
+	if err != nil {
+		return nil
+	}
+	return keymgr.NewKeyPairObject("mock-agent-key", key)
 }
 
 func (ag *mockAgent) GetPlatformCertificate(nic *cmd.DistributedServiceCard) ([]byte, error) {

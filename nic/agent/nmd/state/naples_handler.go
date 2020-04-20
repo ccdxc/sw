@@ -972,12 +972,6 @@ func (n *NMD) StopManagedMode() error {
 		n.rollout = nil
 	}
 
-	// release TLS provider resources
-	if n.tlsProvider != nil {
-		n.tlsProvider.Close()
-		n.tlsProvider = nil
-	}
-
 	log.Infof("Stopping managed mode done.")
 	return nil
 }

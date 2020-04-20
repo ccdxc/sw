@@ -304,11 +304,11 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.DistributedServiceCard
 	}
 	defer client.closeRegistrationRPC()
 
-	// Generate cluster key and CSR
+	// Get cluster key and Generate CSR
 	// CMD will sign if the NIC is admitted
-	kp, err := client.nmd.GenClusterKeyPair()
-	if err != nil {
-		return makeErrorResp(err, "Error generating key pair", nic)
+	kp := client.nmd.GetClusterKeyPair()
+	if kp == nil {
+		return makeErrorResp(fmt.Errorf("Cluster key is nil"), "Error generating key pair", nic)
 	}
 	csr, err := certs.CreateCSR(kp, nil, []string{globals.Nmd + "-" + nic.Name}, nil)
 	if err != nil {

@@ -278,10 +278,14 @@ func (ag *NMD) SetSmartNIC(nic *cmd.DistributedServiceCard) error {
 	return nil
 }
 
-// GenClusterKeyPair generates the cluster key pair
-func (ag *NMD) GenClusterKeyPair() (*keymgr.KeyPair, error) {
+// GetClusterKeyPair generates the cluster key pair
+func (ag *NMD) GetClusterKeyPair() *keymgr.KeyPair {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	return keymgr.NewKeyPairObject("mock-agent-key", key), err
+	if err != nil {
+		return nil
+	}
+
+	return keymgr.NewKeyPairObject("mock-agent-key", key)
 }
 
 // GetPlatformCertificate gets the platform certificate
