@@ -38,12 +38,10 @@ message NATAction {
   types.IPAddress DstNatIP     = 2;
 }
 
-// route configuration information
-message RouteInfo {
-  // optional route id needed if incremental route ADD/DEL/UPD functionality is needed
-  bytes               Id             = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+// route attributes
+message RouteAttrs {
   // IP prefix
-  types.IPPrefix      Prefix         = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPPrefix      Prefix         = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // priority of the route
   // NOTE:
   // 1. priority value must be non-zero
@@ -53,31 +51,38 @@ message RouteInfo {
   // 4. if no priority value is set (i.e. 0) then route priority is computed as
   //    128 - <prefix length>, so longer prefixes will have higher precedence
   //    over shorter ones giving regular LPM semantics
-  uint32              Priority       = 3 [(gogoproto.moretags) = "meta:range:1-65535"];
+  uint32              Priority       = 2 [(gogoproto.moretags) = "meta:range:1-65535"];
   // route either points to a Nexthop ID or peer-VPC in case of VPC peering
   oneof nh {
       // TODO: this should be obsoleted in apollo, TunnelId should be used
-      types.IPAddress NextHop        = 4;
+      types.IPAddress NextHop        = 3;
       // nexthop for this route
-      bytes           NexthopId      = 5;
+      bytes           NexthopId      = 4;
       // ECMP nexthop for this route
-      bytes           NexthopGroupId = 6;
+      bytes           NexthopGroupId = 5;
       // peer VPC in case of VPC peering
-      bytes           VPCId          = 7;
+      bytes           VPCId          = 6;
       // Tunnel this prefix is pointing to
-      bytes           TunnelId       = 8;
+      bytes           TunnelId       = 7;
       // vnic this prefix is pointing to
-      bytes           VnicId         = 9;
+      bytes           VnicId         = 8;
   }
   // if NATAction is set, source and/or destination NAT will be performed on
   // the packet and if destination NAT is performed, another route lookup
   // will be done in the same route table with the post-NAT destination IP
   // address being rewritten
-  NATAction           NatAction      = 10;
+  NATAction           NatAction      = 9;
   // if MeterEn is true, when traffic from a vnic hits the route and
   // metering is enabled on that vnic, such traffic is accounted (bytes &
   // packets) against the vnic
-  bool                MeterEn        = 11;
+  bool                MeterEn        = 10;
+}
+
+// route configuration information
+message RouteInfo {
+  // optional route id needed if incremental route ADD/DEL/UPD functionality is needed
+  bytes      Id    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  RouteAttrs Attrs = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // route table specification
@@ -149,14 +154,22 @@ message RouteTableDeleteResponse {
   repeated types.ApiStatus ApiStatus = 1;
 }
 
-// route specification
-message RouteSpec {
+// route identifier
+message RouteId {
   // unique route table id (this id is not scoped under VPC or subnet)
   bytes     Id           = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // route table this route belongs to
   bytes     RouteTableId = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+}
+
+// route specification
+message RouteSpec {
+  // unique route table id (this id is not scoped under VPC or subnet)
+  bytes      Id           = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // route table this route belongs to
+  bytes      RouteTableId = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // route configuration
-  RouteInfo Route        = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  RouteAttrs Attrs        = 3 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // operational status of the route, if any
@@ -194,30 +207,28 @@ message RouteResponse {
 
 // route get request
 message RouteGetRequest {
-  // id/key of the route
-  bytes Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];
-  // route table this route belongs to
-  bytes RouteTableId = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // list of keys of interest
+  repeated RouteId Id = 1 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // route get response
 message RouteGetResponse {
-  types.ApiStatus ApiStatus = 1;
+  // API status code
+  types.ApiStatus    ApiStatus = 1;
   // route information
-  RouteInfo       Response  = 2;
+  repeated Route     Response  = 2;
 }
 
 // route delete request
 message RouteDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
-  types.BatchCtxt BatchCtxt    = 1;
-  // id/key of the route to be deleted
-  bytes           Id           = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // route table this route belongs to
-  bytes           RouteTableId = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  types.BatchCtxt  BatchCtxt  = 1;
+  // list of routes to delete
+  repeated RouteId Id         = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // route delete response
 message RouteDeleteResponse {
-  types.ApiStatus ApiStatus = 1;
+  // API status code
+  repeated types.ApiStatus ApiStatus = 1;
 }

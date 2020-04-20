@@ -82,16 +82,16 @@ class RouteObject():
     def ValidateSpec(self, spec):
         if spec.Id != self.UUID.GetUuid():
             return False
-        if not utils.ValidateRpcIPPrefix(self.ipaddr, spec.Prefix):
+        if not utils.ValidateRpcIPPrefix(self.ipaddr, spec.Attrs.Prefix):
             return False
-        if spec.NatAction.SrcNatAction != self.SNatAction:
+        if spec.Attrs.NatAction.SrcNatAction != self.SNatAction:
             return False
         return True
 
     def ValidateYamlSpec(self, spec):
         if utils.GetYamlSpecAttr(spec) != self.UUID.GetUuid():
             return False
-        if spec['nataction']['srcnataction'] != self.SNatAction:
+        if spec['attrs']['nataction']['srcnataction'] != self.SNatAction:
             return False
         return True
 
@@ -197,13 +197,13 @@ class RouteTableObject(base.ConfigObjectBase):
 
     def PopulateNh(self, rtspec, route):
         if route.NextHopType == "vpcpeer":
-            rtspec.VPCId = utils.PdsUuid.GetUUIDfromId(route.PeerVPCId, ObjectTypes.VPC)
+            rtspec.Attrs.VPCId = utils.PdsUuid.GetUUIDfromId(route.PeerVPCId, ObjectTypes.VPC)
         elif route.NextHopType == "tep":
-            rtspec.TunnelId = utils.PdsUuid.GetUUIDfromId(route.TunnelId, ObjectTypes.TUNNEL)
+            rtspec.Attrs.TunnelId = utils.PdsUuid.GetUUIDfromId(route.TunnelId, ObjectTypes.TUNNEL)
         elif route.NextHopType == "nh":
-            rtspec.NexthopId = utils.PdsUuid.GetUUIDfromId(route.NexthopId, ObjectTypes.NEXTHOP)
+            rtspec.Attrs.NexthopId = utils.PdsUuid.GetUUIDfromId(route.NexthopId, ObjectTypes.NEXTHOP)
         elif route.NextHopType == "nhg":
-            rtspec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(route.NexthopGroupId, ObjectTypes.NEXTHOPGROUP)
+            rtspec.Attrs.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(route.NexthopGroupId, ObjectTypes.NEXTHOPGROUP)
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
@@ -213,13 +213,13 @@ class RouteTableObject(base.ConfigObjectBase):
         for route in self.routes.values():
             rtspec = spec.Routes.add()
             rtspec.Id = route.UUID.GetUuid()
-            rtspec.NatAction.SrcNatAction = route.SNatAction
+            rtspec.Attrs.NatAction.SrcNatAction = route.SNatAction
             if route.DstNatIp:
-                rtspec.NatAction.DstNatIP.Af = types_pb2.IP_AF_INET
-                rtspec.NatAction.DstNatIP.V4Addr = int(ipaddress.ip_address(route.DstNatIp))
-            utils.GetRpcIPPrefix(route.ipaddr, rtspec.Prefix)
+                rtspec.Attrs.NatAction.DstNatIP.Af = types_pb2.IP_AF_INET
+                rtspec.Attrs.NatAction.DstNatIP.V4Addr = int(ipaddress.ip_address(route.DstNatIp))
+            utils.GetRpcIPPrefix(route.ipaddr, rtspec.Attrs.Prefix)
             if self.PriorityType:
-                rtspec.Priority = route.Priority
+                rtspec.Attrs.Priority = route.Priority
                 self.PopulateNh(rtspec, route)
             else:
                 #TODO move to per route populate nh eventually

@@ -179,7 +179,7 @@ pds_route_create (_In_ pds_route_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_route_read (_In_ pds_route_key_t *key, _Out_ pds_route_table_info_t *info)
+pds_route_read (_In_ pds_route_key_t *key, _Out_ pds_route_info_t *info)
 {
     return SDK_RET_INVALID_OP;
 }

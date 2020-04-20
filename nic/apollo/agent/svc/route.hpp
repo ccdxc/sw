@@ -36,6 +36,12 @@ public:
     Status RouteUpdate(ServerContext *context,
                        const pds::RouteRequest *req,
                        pds::RouteResponse *rsp) override;
+    Status RouteDelete(ServerContext *context,
+                       const pds::RouteDeleteRequest *proto_req,
+                       pds::RouteDeleteResponse *proto_rsp) override;
+    Status RouteGet(ServerContext *context,
+                    const pds::RouteGetRequest *proto_req,
+                    pds::RouteGetResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_ROUTE_HPP__
