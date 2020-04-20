@@ -275,7 +275,7 @@ __label__ done;
         ctx->params->handle.sindex(match_ctx->table_index);
     }
 
-    ctx->entry->copy_key_data(match_ctx->params->entry);
+    ctx->params->entry->copy_key_data(match_ctx->entry);
 
 done:
     unlock_(ctx);

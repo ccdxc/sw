@@ -30,12 +30,6 @@ extern "C" {
 static ftl_base *g_dnat_mapping_tbl;
 
 uint32_t dnat_entry_count;
-thread_local bool dnat_entry_valid;
-
-typedef struct pds_dnat_map_read_cbdata_s {
-    pds_dnat_mapping_key_t *key;
-    pds_dnat_mapping_info_t *info;
-} pds_dnat_map_read_cbdata_t;
 
 static pds_ret_t
 dnat_map_entry_setup_key (dnat_entry_t *entry,
@@ -136,28 +130,6 @@ pds_dnat_map_entry_create (pds_dnat_mapping_spec_t *spec)
     return (pds_ret_t)ret;
 }
 
-static void
-dnat_map_entry_find_cb (sdk_table_api_params_t *params)
-{
-    dnat_entry_t *hwentry = (dnat_entry_t *)params->entry;
-    pds_dnat_map_read_cbdata_t *cbdata =
-        (pds_dnat_map_read_cbdata_t *)params->cbdata;
-
-    // Iterate only when entry valid and if another entry is not found already
-    if (hwentry->entry_valid && (dnat_entry_valid == false)) {
-        if ((hwentry->key_metadata_ktype == cbdata->key->key_type) &&
-            (dnat_get_key_vnic_id(hwentry) == cbdata->key->vnic_id) &&
-            (!memcmp(hwentry->key_metadata_src, cbdata->key->addr,
-                     IP6_ADDR8_LEN))) {
-                dnat_get_map_ip(hwentry, cbdata->info->spec.data.addr);
-                cbdata->info->spec.data.addr_type = dnat_get_map_addr_type(hwentry);
-                cbdata->info->spec.data.epoch = dnat_get_map_epoch(hwentry);
-                dnat_entry_valid = true;
-        }
-    }
-    return;
-}
-
 pds_ret_t
 pds_dnat_map_entry_read (pds_dnat_mapping_key_t *key,
                          pds_dnat_mapping_info_t *info)
@@ -165,7 +137,6 @@ pds_dnat_map_entry_read (pds_dnat_mapping_key_t *key,
     pds_ret_t ret;
     sdk_table_api_params_t params = { 0 };
     dnat_entry_t entry;
-    pds_dnat_map_read_cbdata_t cbdata = { 0 };
 
     if (!key || !info) {
         PDS_TRACE_ERR("key/info is null");
@@ -183,20 +154,17 @@ pds_dnat_map_entry_read (pds_dnat_mapping_key_t *key,
     }
 
     entry.clear();
-    dnat_entry_valid = false;
     if ((ret = dnat_map_entry_setup_key(&entry, key))
              != PDS_RET_OK)
          return (pds_ret_t)ret;
     params.entry = &entry;
-    params.itercb = dnat_map_entry_find_cb;
-    cbdata.key = key;
-    cbdata.info = info;
-    params.cbdata = &cbdata;
-    ret = (pds_ret_t)g_dnat_mapping_tbl->iterate(&params);
-    if (dnat_entry_valid == false) {
-        //PDS_TRACE_ERR("Failed to read entry in DNAT mapping "
-        //              "table for (vnic id %u, IP %s), err %u\n", key->vnic_id,
-        //              ipv6addr2str(*(ipv6_addr_t *)key->addr), ret);
+    ret = (pds_ret_t)g_dnat_mapping_tbl->get(&params);
+    if (ret == PDS_RET_OK) {
+        dnat_get_map_ip(&entry, info->spec.data.addr);
+        info->spec.data.addr_type = dnat_get_map_addr_type(&entry);
+        info->spec.data.epoch = dnat_get_map_epoch(&entry);
+    }
+    else {
         return PDS_RET_ENTRY_NOT_FOUND;
     }
     return PDS_RET_OK;

@@ -29,12 +29,6 @@ extern "C" {
 static ftl_base *ftl_table;
 
 uint32_t ftl_entry_count;
-thread_local bool ftl_entry_valid;
-
-typedef struct pds_flow_read_cbdata_s {
-    pds_flow_key_t *key;
-    pds_flow_info_t *info;
-} pds_flow_read_cbdata_t;
 
 typedef struct pds_flow_iterate_cbdata_s {
     pds_flow_iter_cb_t        iter_cb;
@@ -170,60 +164,6 @@ pds_flow_cache_entry_create (pds_flow_spec_t *spec)
     return (pds_ret_t) ftl_table->insert(&params);
 }
 
-static void
-flow_cache_entry_find_cb (sdk_table_api_params_t *params)
-{
-    flow_hash_entry_t *hwentry = (flow_hash_entry_t *)params->entry;
-    pds_flow_read_cbdata_t *cbdata = (pds_flow_read_cbdata_t *)params->cbdata;
-    uint16_t vnic_id;
-
-    // Iterate only when entry valid and if another entry is not found already
-    if (hwentry->entry_valid && (ftl_entry_valid == false)) {
-        if (hwentry->key_metadata_ktype != cbdata->key->key_type) {
-            return;
-        }
-        vnic_id = ftlv6_get_key_vnic_id(hwentry);
-        if ((vnic_id == cbdata->key->vnic_id) &&
-            (!memcmp(hwentry->key_metadata_dst, cbdata->key->ip_daddr, IP6_ADDR8_LEN)) &&
-            (!memcmp(hwentry->key_metadata_src, cbdata->key->ip_saddr, IP6_ADDR8_LEN)) &&
-            (hwentry->key_metadata_proto == cbdata->key->ip_proto)) { 
-            switch (hwentry->key_metadata_proto) {
-                case IP_PROTO_TCP:
-                case IP_PROTO_UDP:    
-                    if ((hwentry->key_metadata_sport ==
-                            cbdata->key->l4.tcp_udp.sport) &&
-                        (hwentry->key_metadata_dport ==
-                             cbdata->key->l4.tcp_udp.dport)) {
-                        // Key matching with index, so fill data
-                        cbdata->info->spec.data.index = hwentry->idx;
-                        cbdata->info->spec.data.index_type =
-                            (pds_flow_spec_index_type_t)hwentry->idx_type;
-                        ftl_entry_valid = true;
-                    }
-                    break;
-                case IP_PROTO_ICMP:
-                case IP_PROTO_ICMPV6:
-                    if ((hwentry->key_metadata_sport ==
-                            cbdata->key->l4.icmp.identifier) &&
-                        (hwentry->key_metadata_dport ==
-                             (((uint16_t)cbdata->key->l4.icmp.type << 8) |
-                                 cbdata->key->l4.icmp.code))) {
-                        // Key matching with index, so fill data
-                        cbdata->info->spec.data.index = hwentry->idx;
-                        cbdata->info->spec.data.index_type =
-                            (pds_flow_spec_index_type_t)hwentry->idx_type;
-                        ftl_entry_valid = true;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-        return;
-    }
-    return;
-}
-
 pds_ret_t
 pds_flow_cache_entry_read (pds_flow_key_t *key,
                            pds_flow_info_t *info)
@@ -231,7 +171,6 @@ pds_flow_cache_entry_read (pds_flow_key_t *key,
     sdk_ret_t ret;
     sdk_table_api_params_t params = { 0 };
     flow_hash_entry_t entry;
-    pds_flow_read_cbdata_t cbdata = { 0 };
 
     if (!key || !info) {
         PDS_TRACE_ERR("key/info is null");
@@ -244,20 +183,19 @@ pds_flow_cache_entry_read (pds_flow_key_t *key,
     }
 
     entry.clear();
-    ftl_entry_valid = false;
     if ((ret = flow_cache_entry_setup_key(&entry, key))
              != SDK_RET_OK)
          return (pds_ret_t)ret;
     params.entry = &entry;
-    params.itercb = flow_cache_entry_find_cb;
-    cbdata.key = key;
-    cbdata.info = info;
-    params.cbdata = &cbdata;
-    ret = ftl_table->iterate(&params);
-    if (ftl_entry_valid == false)
+    ret = ftl_table->get(&params);
+    if (ret == SDK_RET_OK) {
+        info->spec.data.index_type = (pds_flow_spec_index_type_t)entry.idx_type;
+        info->spec.data.index = entry.idx;
+        return (pds_ret_t)ret;
+    }
+    else {
         return PDS_RET_ENTRY_NOT_FOUND;
-    else
-        return PDS_RET_OK;
+    }
 }
 
 pds_ret_t
