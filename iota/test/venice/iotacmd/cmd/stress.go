@@ -142,7 +142,7 @@ func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool, 
 	cmd := []string{"go", "test", testPath, "-timeout", "360m", "-v", "-ginkgo.v", "-topo", topology, "-testbed", testbed}
 	if suite.focus != "" {
 		cmd = append(cmd, "-ginkgo.focus")
-		cmd = append(cmd, suite.focus)
+		cmd = append(cmd, "\""+suite.focus+"\"")
 	}
 	if suite.scaleData {
 		cmd = append(cmd, " -scale-data")

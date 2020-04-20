@@ -100,7 +100,7 @@ func (r *Requirement) hasValue(value string) bool {
 // (2) The operator is NotEquals or NotIn, Labels has the Requirement's key and
 //     Labels' value for that key is not in Requirement's value set.
 func (r *Requirement) Matches(ls Labels) bool {
-	switch strings.ToLower(Operator(Operator_value[r.Operator]).String()) {
+	switch strings.ToLower(r.Operator) {
 	case strings.ToLower(Operator_equals.String()), strings.ToLower(Operator_in.String()):
 		if !ls.Has(r.Key) {
 			return false

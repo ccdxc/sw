@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -108,7 +109,11 @@ func (venice *veniceNode) Init(in *iota.Node) (*iota.Node, error) {
 		in.GetVeniceConfig().GetControlIntf(), in.GetVeniceConfig().GetControlIp(),
 		in.GetReload(), veniceNodes); err != nil {
 		venice.logger.Println("Venice bring up failed.")
-		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
+		msg := fmt.Sprintf("Venice bring up failed. %v", err.Error())
+		venice.logger.Println(msg)
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR,
+			ErrorMsg: msg,
+		}}, err
 
 	}
 

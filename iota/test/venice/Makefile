@@ -94,7 +94,7 @@ venice-e2e-basenet:
 	asset-pull bundle_image 1.2.0-140 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
 	#First run mirror suite in basenet
 	../../bin/iota_cmd run --suite basenet --topo basenet
-	../../bin/iota_cmd run --suite basenet --topo basenet --skip-setup --focus "Lif mirror tests"
+	../../bin/iota_cmd run --suite mirror --topo basenet --skip-setup --focus "Lif mirror tests"
 
 venice-e2e-cloud:
 	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all_apulu.tgz -C .

@@ -778,6 +778,27 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 				return fmt.Errorf("Error adding collector %v", err)
 			}
 			addCollectors = append(addCollectors, mcol)
+		} else {
+			/* Collector has not changed, check whether we have to update the gateway */
+			collector, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
+				cref.col.ExportCfg.Destination)
+			if err == nil {
+				ckey := collectorKey(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
+					cref.col.ExportCfg.Destination)
+				for _, col := range newCollectors {
+					key := collectorKey(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, col.ExportCfg.Destination)
+					if key == ckey {
+						if col.ExportCfg.Gateway != cref.col.ExportCfg.Gateway {
+							refs := make(map[string]apiintf.ReferenceObj)
+							//Update gateway IP if it has changed
+							log.Infof("Updating gateway to %v", col.ExportCfg.Gateway)
+							collector.obj.Spec.Gateway = col.ExportCfg.Gateway
+							collector.pushObj.UpdateObjectWithReferences(collector.obj.GetKey(), collector.obj, refs)
+						}
+						break
+					}
+				}
+			}
 		}
 	}
 
