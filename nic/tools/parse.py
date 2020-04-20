@@ -49,6 +49,9 @@ def parse_loader_conf(loader_conf):
             yield str(pgm_or_label), str(start_pc_hex)
             for s in p['symbols']:
                 pgm_or_label = s['name']
+                if 'Lfunc' == s['name'][:5]:
+                   #print "skipped"
+                   continue
                 s_pc = int(start_pc) + int(s['addr'])
                 #print str(pgm_or_label) + '.LAB', hex(s_pc)
                 yield str(pgm_or_label) + '.LAB', hex(s_pc)
@@ -58,6 +61,7 @@ def build_symbols():
     print "* Building symbols....."
     if os.path.isfile(sym_log3):
        for pgm_or_label, start_pc in parse_loader_conf(sym_log3):
+             #print pgm_or_label
              symbols[start_pc] = pgm_or_label[0:-4]
        #pp.pprint(symbols)
        return

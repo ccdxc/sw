@@ -13,8 +13,8 @@ targets:
     #- build-custom-athena-image
     - build-athena-customer-arm
 
-  athena/athena16_compile:
-    commands: ["/bin/true"]
+  athena/gtests_16:
+    commands: ["make", "PIPELINE=athena", "P4VER=P4_16", "PKG_PIPELINE=athena16", "jobd/athena/gtests"]
     owners: ["email:skittur@pensando.io"]
     area:
     sub-area:

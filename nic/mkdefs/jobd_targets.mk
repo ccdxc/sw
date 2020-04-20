@@ -4,15 +4,17 @@ jobd/runner/core_count_check:
 	${NICDIR}/tools/core_count_check.sh
 
 JOBD_PREREQS:= jobd/runner/core_count_check | jobd/package
-
+ifeq (${PKG_PIPELINE},)
+  PKG_PIPELINE=${PIPELINE}
+endif
 # jobd uses pre-build package
 .PHONY: jobd/package
 jobd/package:
 	@if [ "x${JOB_ID}" = "x" ] || [ "x${IGNORE_BUILD_PIPELINE}" != "x" ]; then \
 		make package; \
 	else \
-	  if [ -f /sw/build_$(PIPELINE)_x86.tar.gz ]; then \
-	    tar -zxf /sw/build_$(PIPELINE)_x86.tar.gz -C /; \
+	  if [ -f /sw/build_$(PKG_PIPELINE)_x86.tar.gz ]; then \
+	    tar -zxf /sw/build_$(PKG_PIPELINE)_x86.tar.gz -C /; \
 	  fi \
 	fi
 
