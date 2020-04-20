@@ -2,7 +2,6 @@ package objects
 
 import (
 	"fmt"
-
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
@@ -48,6 +47,23 @@ func (intf *NetworkInterfaceCollection) Uplinks() *NetworkInterfaceCollection {
 	return nintfc
 }
 
+// Loopbacks get loopback interfaces
+func GetLoopbacks(client objClient.ObjClient, testbed *testbed.TestBed) *NetworkInterfaceCollection {
+
+	intfc := NewInterfaceCollection(client, testbed)
+
+	intfs, err := client.ListNetworkLoopbackInterfaces()
+
+	if err != nil {
+		intfc.SetError(err)
+		return intfc
+	}
+	for _, intf := range intfs {
+		intfc.Interfaces = append(intfc.Interfaces, intf)
+	}
+	return intfc
+}
+
 // AddLabel add label
 func (intf *NetworkInterfaceCollection) AddLabel(label map[string]string) *NetworkInterfaceCollection {
 
@@ -58,7 +74,7 @@ func (intf *NetworkInterfaceCollection) AddLabel(label map[string]string) *Netwo
 	return intf
 }
 
-// Commit add label
+// Commit updates network interface
 func (intf *NetworkInterfaceCollection) Commit() error {
 
 	var rerr error
@@ -67,7 +83,6 @@ func (intf *NetworkInterfaceCollection) Commit() error {
 		if err != nil {
 			rerr = err
 		}
-
 	}
 
 	return rerr

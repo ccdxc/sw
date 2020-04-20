@@ -156,6 +156,8 @@ type RtrCtlStruct []struct {
 		SendComm     bool   `json:"SendComm"`
 		SendExtComm  bool   `json:"SendExtComm"`
 		ConnectRetry int    `json:"ConnectRetry"`
+		HoldTime     uint32 `json:"HoldTime"`
+		KeepAlive    uint32 `json:"KeepAlive"`
 	} `json:"Spec"`
 	Status struct {
 		ID            string `json:"Id"`

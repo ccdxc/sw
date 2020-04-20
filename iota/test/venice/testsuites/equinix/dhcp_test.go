@@ -19,8 +19,21 @@ type Subnet struct {
 	TypeMeta string `yaml:"typemeta"`
 	ObjMeta  string `yaml:"objmeta"`
 	Spec     struct {
-		Id           []byte   `yaml:"id"`
-		VPCId        []byte   `yaml:"vpcid"`
+		Id         []byte `yaml:"id"`
+		VPCId      []byte `yaml:"vpcid"`
+		IPV4prefix struct {
+			Addr uint32 `yaml:"addr"`
+			Len  uint32 `yaml:"len"`
+		} `yaml:"v4prefix"`
+		IPv4Gateway uint32 `yaml:"ipv4virtualrouterip"`
+		FabricEncap struct {
+			Type  int32 `yaml:"type"`
+			Value struct {
+				Val struct {
+					Vnid uint32 `yaml:"vnid"`
+				} `yaml:"val"`
+			} `yaml:"value"`
+		} `yaml:"fabricencap"`
 		DHCPPolicyId [][]byte `yaml:"dhcppolicyid"`
 	} `yaml:"spec"`
 	Status struct {

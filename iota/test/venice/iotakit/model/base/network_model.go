@@ -17,9 +17,9 @@ type NetworkParams struct {
 }
 
 // Networks returns a list of subnets
-func (sm *SysModel) Networks() *objects.NetworkCollection {
+func (sm *SysModel) Networks(tenant string) *objects.NetworkCollection {
 	snc := objects.NetworkCollection{}
-	nws, err := sm.CfgModel.ListNetwork("")
+	nws, err := sm.CfgModel.ListNetwork(tenant)
 	if err != nil {
 		log.Errorf("Error listing networks %v", err)
 		return nil
@@ -58,11 +58,6 @@ func (sm *SysModel) NewNetwork(nwp *NetworkParams) *objects.NetworkCollection {
 							Type:          "type2",
 							AdminValue:    200,
 							AssignedValue: 100,
-						},
-						{
-							Type:          "type2",
-							AdminValue:    200,
-							AssignedValue: 101,
 						},
 					},
 					ImportRTs: []*network.RouteDistinguisher{

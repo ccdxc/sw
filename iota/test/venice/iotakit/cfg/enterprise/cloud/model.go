@@ -77,7 +77,7 @@ func (cl *CloudCfg) PopulateConfig(params *base.ConfigParams) error {
 	cl.params = params
 
 	cl.Cfg.NumRoutingConfigs = len(params.VeniceNodes)
-	cl.Cfg.NumNeighbors = 2 + len(params.Dscs) //2 Ecx and from 3rd, naples
+	cl.Cfg.NumNeighbors = 2 //+ len(params.Dscs) //2 Ecx and from 3rd, naples
 
 	if params.Scale {
 		cl.Cfg.NumOfTenants = 1
@@ -422,12 +422,14 @@ func (cl *CloudCfg) pushConfigViaRest() error {
 
 		r.Spec.BGPConfig.RouterId = node.Name
 
-		dscs := cl.params.Dscs
-		for i := 2; i < len(r.Spec.BGPConfig.Neighbors); i++ {
-			neigh := r.Spec.BGPConfig.Neighbors[i]
-			//Assuming only 1 DSC per host
-			neigh.IPAddress = strings.Split(dscs[i-2][0].Status.IPConfig.IPAddress, "/")[0]
-		}
+		/*
+			dscs := cl.params.Dscs
+			for i := 2; i < len(r.Spec.BGPConfig.Neighbors); i++ {
+				neigh := r.Spec.BGPConfig.Neighbors[i]
+				//Assuming only 1 DSC per host
+				neigh.IPAddress = strings.Split(dscs[i-2][0].Status.IPConfig.IPAddress, "/")[0]
+			}
+		*/
 
 		err := rClient.CreateRoutingConfig(r)
 		if err != nil {

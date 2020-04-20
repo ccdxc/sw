@@ -21,7 +21,7 @@ var _ = Describe("workload tests", func() {
 	Context("Basic workload tests", func() {
 		It("Should be able to bringup new workloads and connect between them", func() {
 			return
-			workloads := ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks().Any(1), 1)
+			workloads := ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks("").Any(1), 1)
 			Expect(workloads.Error()).ShouldNot(HaveOccurred())
 			// verify workload status is good
 			Eventually(func() error {

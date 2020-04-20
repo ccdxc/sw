@@ -54,7 +54,11 @@ type ObjClient interface {
 
 	ListNetworkInterfaces() (objs []*network.NetworkInterface, err error)
 	ListNetowrkInterfacesByFilter(string) (objs []*network.NetworkInterface, err error)
-	UpdateNetworkInterface(sgp *network.NetworkInterface) error
+	CreateNetworkInterface(intf *network.NetworkInterface) error
+	UpdateNetworkInterface(intf *network.NetworkInterface) error
+	DeleteNetworkInterface(nw *network.NetworkInterface) error
+	ListNetworkLoopbackInterfaces() (objs []*network.NetworkInterface, err error)
+
 	CreateDscProfile(dscProfile *cluster.DSCProfile) error
 	GetDscProfile(meta *api.ObjectMeta) (dscProfile *cluster.DSCProfile, err error)
 	ListDscProfile() (objs []*cluster.DSCProfile, err error)
@@ -592,11 +596,36 @@ func (r *Client) ListNetowrkInterfacesByFilter(filter string) (objs []*network.N
 	return objs, err
 }
 
+// CreateNetworkInterface creates network interface
+func (r *Client) CreateNetworkInterface(nw *network.NetworkInterface) error {
+	var err error
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().NetworkInterface().Create(r.ctx, nw)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
 // UpdateNetworkInterface updates network interface
 func (r *Client) UpdateNetworkInterface(nw *network.NetworkInterface) error {
 	var err error
 	for _, restcl := range r.restcls {
 		_, err = restcl.NetworkV1().NetworkInterface().Update(r.ctx, nw)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
+// DeleteNetworkInterface deletes network interface
+func (r *Client) DeleteNetworkInterface(nw *network.NetworkInterface) error {
+	var err error
+	objMeta := &api.ObjectMeta{Name: nw.Name}
+	for _, restcl := range r.restcls {
+		_, err = restcl.NetworkV1().NetworkInterface().Delete(r.ctx, objMeta)
 		if err == nil {
 			break
 		}
@@ -998,7 +1027,7 @@ func (r *Client) DeleteClusterNode(node *cluster.Node) (err error) {
 	}
 	log.Info("Initiating deleted competed..")
 	if err != nil {
-		log.Errorf("Error deleting cluster nodeÃÂ %v", err)
+		log.Errorf("Error deleting cluster node %v", err)
 	}
 	return err
 }

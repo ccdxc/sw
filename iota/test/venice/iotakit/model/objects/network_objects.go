@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/pensando/sw/api/generated/network"
@@ -164,5 +165,25 @@ func (nwc *NetworkCollection) SetIPAMOnNetwork(network *Network, ipam string) er
 			}
 		}
 	}
+	return nil
+}
+
+func (nw *Network) UpdateIPv4Subnet(prefix string) error {
+	if nw.VeniceNetwork == nil {
+		return fmt.Errorf("Invalid network\n")
+	}
+
+	spec := &nw.VeniceNetwork.Spec
+	spec.IPv4Subnet = prefix
+	return nil
+}
+
+func (nw *Network) UpdateIPv4Gateway(gw string) error {
+	if nw.VeniceNetwork == nil {
+		return fmt.Errorf("Invalid network\n")
+	}
+
+	spec := &nw.VeniceNetwork.Spec
+	spec.IPv4Gateway = gw
 	return nil
 }

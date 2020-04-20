@@ -124,7 +124,7 @@ type ObjectIntf interface {
 	SwitchPorts() *objects.SwitchPortCollection
 	VeniceNodes() *objects.VeniceNodeCollection
 	Naples() *objects.NaplesCollection
-	Networks() *objects.NetworkCollection
+	Networks(tenant string) *objects.NetworkCollection
 	Workloads() *objects.WorkloadCollection
 	NetworkInterfaces() *objects.NetworkInterfaceCollection
 	WorkloadPairs() *objects.WorkloadPairCollection
@@ -195,6 +195,7 @@ type NodeActionIntf interface {
 	DisconnectNaples(npc *objects.NaplesCollection) error
 	ConnectNaples(npc *objects.NaplesCollection) error
 	RunNaplesCommand(npc *objects.NaplesCollection, cmd string) ([]string, error)
+	RunFakeNaplesCommand(npc *objects.NaplesCollection, cmd string) ([]string, error)
 	RunFakeNaplesBackgroundCommand(npc *objects.NaplesCollection, cmd string) (interface{}, error)
 
 	StopCommands(cmdCtx interface{}) ([]string, error)

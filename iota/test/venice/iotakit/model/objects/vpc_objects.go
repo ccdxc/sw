@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"fmt"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
@@ -18,6 +19,10 @@ type VpcObjCollection struct {
 	CollectionCommon
 	//err      error
 	Objs []*Vpc
+}
+
+func (v *VpcObjCollection) AddVPC(vpc *Vpc) {
+	v.Objs = append(v.Objs, vpc)
 }
 
 func NewVPC(tenant string, name string, rmac string, vni uint32, ipam string,
@@ -117,5 +122,16 @@ func (vpcc *VpcObjCollection) SetIPAM(ipam string) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (v *Vpc) UpdateRMAC(rmac string) error {
+
+	if v.Obj == nil {
+		return fmt.Errorf("VPC object not created\n")
+	}
+
+	v.Obj.Spec.RouterMACAddress = rmac
+
 	return nil
 }

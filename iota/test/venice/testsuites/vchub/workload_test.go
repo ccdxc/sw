@@ -43,7 +43,7 @@ var _ = Describe("Vc hub workload tests", func() {
 			err := ts.model.TeardownWorkloads(workloads)
 			Expect(err == nil)
 
-			workloads = ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks().Any(1), 1)
+			workloads = ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks("").Any(1), 1)
 			Expect(workloads.Error()).ShouldNot(HaveOccurred())
 
 			// verify workload status is good, Put all check w.r.t to venice here.
@@ -100,7 +100,7 @@ var _ = Describe("Vc hub workload tests", func() {
 			Expect(err == nil)
 
 			// Skip("Skipping move tests..")
-			workloads = ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks().Any(1), 1)
+			workloads = ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks("").Any(1), 1)
 			Expect(workloads.Error()).ShouldNot(HaveOccurred())
 
 			// verify workload status is good, Put all check w.r.t to venice here.
@@ -163,7 +163,7 @@ var _ = Describe("Vc hub workload tests", func() {
 			}).Should(Succeed())
 
 			// Use 4 WLs on host 1 and 2 (two in each network)
-			networks := ts.model.Networks().Any(2)
+			networks := ts.model.Networks("").Any(2)
 
 			// Run traffic between 8 remote pairs
 
