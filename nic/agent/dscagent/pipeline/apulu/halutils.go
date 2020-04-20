@@ -26,9 +26,11 @@ func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapp
 		}
 		for _, match := range ruleMatches {
 			rule := &halapi.SecurityRuleInfo{
-				Stateful: true,
-				Match:    match,
-				Action:   convertRuleAction(r.Action),
+				Attrs: &halapi.SecurityRuleAttrs{
+					Stateful: true,
+					Match:    match,
+					Action:   convertRuleAction(r.Action),
+				},
 			}
 			fwRules = append(fwRules, rule)
 		}

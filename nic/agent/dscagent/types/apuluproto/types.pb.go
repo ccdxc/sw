@@ -73,6 +73,7 @@
 		DeviceGetResponse
 		DeviceDeleteRequest
 		DeviceDeleteResponse
+		SecurityRuleAttrs
 		SecurityRuleInfo
 		SecurityPolicySpec
 		SecurityPolicyStatus

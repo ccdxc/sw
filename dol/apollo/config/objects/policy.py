@@ -262,35 +262,35 @@ class PolicyObject(base.ConfigObjectBase):
     def FillRuleSpec(self, spec, rule):
         proto = 0
         specrule = spec.Rules.add()
-        specrule.Stateful = rule.Stateful
-        specrule.Priority = rule.Priority
-        specrule.Action = rule.Action
+        specrule.Attrs.Stateful = rule.Stateful
+        specrule.Attrs.Priority = rule.Priority
+        specrule.Attrs.Action = rule.Action
         l3match = rule.L3Match
         if l3match and l3match.valid:
             proto = l3match.Proto
-            specrule.Match.L3Match.ProtoNum = proto
+            specrule.Attrs.Match.L3Match.ProtoNum = proto
             if l3match.SrcIPLow and l3match.SrcIPHigh:
-                utils.GetRpcIPRange(l3match.SrcIPLow, l3match.SrcIPHigh, specrule.Match.L3Match.SrcRange)
+                utils.GetRpcIPRange(l3match.SrcIPLow, l3match.SrcIPHigh, specrule.Attrs.Match.L3Match.SrcRange)
             if l3match.DstIPLow and l3match.DstIPHigh:
-                utils.GetRpcIPRange(l3match.DstIPLow, l3match.DstIPHigh, specrule.Match.L3Match.DstRange)
+                utils.GetRpcIPRange(l3match.DstIPLow, l3match.DstIPHigh, specrule.Attrs.Match.L3Match.DstRange)
             if l3match.SrcTag:
-                specrule.Match.L3Match.SrcTag = l3match.SrcTag.TagId
+                specrule.Attrs.Match.L3Match.SrcTag = l3match.SrcTag.TagId
             if l3match.DstTag:
-                specrule.Match.L3Match.DstTag = l3match.DstTag.TagId
+                specrule.Attrs.Match.L3Match.DstTag = l3match.DstTag.TagId
             if l3match.SrcPrefix is not None:
-                utils.GetRpcIPPrefix(l3match.SrcPrefix, specrule.Match.L3Match.SrcPrefix)
+                utils.GetRpcIPPrefix(l3match.SrcPrefix, specrule.Attrs.Match.L3Match.SrcPrefix)
             if l3match.DstPrefix is not None:
-                utils.GetRpcIPPrefix(l3match.DstPrefix, specrule.Match.L3Match.DstPrefix)
+                utils.GetRpcIPPrefix(l3match.DstPrefix, specrule.Attrs.Match.L3Match.DstPrefix)
         l4match = rule.L4Match
         if l4match and l4match.valid:
             if utils.IsICMPProtocol(proto):
-                specrule.Match.L4Match.TypeCode.TypeNum = l4match.IcmpType
-                specrule.Match.L4Match.TypeCode.CodeNum = l4match.IcmpCode
+                specrule.Attrs.Match.L4Match.TypeCode.TypeNum = l4match.IcmpType
+                specrule.Attrs.Match.L4Match.TypeCode.CodeNum = l4match.IcmpCode
             else:
-                specrule.Match.L4Match.Ports.SrcPortRange.PortLow = l4match.SportLow
-                specrule.Match.L4Match.Ports.SrcPortRange.PortHigh = l4match.SportHigh
-                specrule.Match.L4Match.Ports.DstPortRange.PortLow = l4match.DportLow
-                specrule.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
+                specrule.Attrs.Match.L4Match.Ports.SrcPortRange.PortLow = l4match.SportLow
+                specrule.Attrs.Match.L4Match.Ports.SrcPortRange.PortHigh = l4match.SportHigh
+                specrule.Attrs.Match.L4Match.Ports.DstPortRange.PortLow = l4match.DportLow
+                specrule.Attrs.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
 
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.GetKey())

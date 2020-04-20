@@ -31,19 +31,24 @@ service SecurityPolicySvc {
   rpc SecurityProfileDelete (SecurityProfileDeleteRequest) returns (SecurityProfileDeleteResponse) {}
 }
 
+// security rule attributes
+message SecurityRuleAttrs {
+  // stateful rule results in flow/session creation whereas stateless rule
+  // will not result in flow creation
+  bool                     Stateful = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // priority of this rule (lower the numeric value, higher the priority is)
+  uint32                   Priority = 2 [(gogoproto.moretags) = "meta:range:0-1022"];
+  // rule match criteria
+  types.RuleMatch          Match    = 3;
+  // action to take when this rule is matched
+  types.SecurityRuleAction Action   = 4 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
 // SecurityRuleInfo is a single rule in the security policy
 message SecurityRuleInfo {
   // optional rule id needed if incremental route ADD/DEL/UPD functionality is needed
-  bytes                     Id      = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  // stateful rule results in flow/session creation whereas stateless rule
-  // will not result in flow creation
-  bool                     Stateful = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // rule match criteria
-  types.RuleMatch          Match    = 3;
-  // priority of this rule (lower the numeric value, higher the priority is)
-  uint32                   Priority = 4 [(gogoproto.moretags) = "meta:range:0-1022"];
-  // action to take when this rule is matched
-  types.SecurityRuleAction Action   = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes             Id    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  SecurityRuleAttrs Attrs = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // security policy configuration
@@ -125,11 +130,11 @@ message SecurityPolicyRuleId {
 // security rule configuration
 message SecurityRuleSpec {
   // unique identifier of security rule
-  bytes            Id               = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes             Id               = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // security policy this rule belongs to
-  bytes            SecurityPolicyId = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes             SecurityPolicyId = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // rule information
-  SecurityRuleInfo SecurityRule     = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  SecurityRuleAttrs Attrs            = 3 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // operational status of the security rule, if any
@@ -173,9 +178,9 @@ message SecurityRuleGetRequest {
 
 // security policy rule get response
 message SecurityRuleGetResponse {
-  types.ApiStatus           ApiStatus = 1;
+  types.ApiStatus       ApiStatus = 1;
   // security policy rule information
-  repeated SecurityRuleInfo Response  = 2;
+  repeated SecurityRule Response  = 2;
 }
 
 // security policy rule delete request

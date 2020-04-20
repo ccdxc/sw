@@ -474,8 +474,7 @@ SecurityPolicySvcImpl::SecurityRuleCreate(ServerContext *context,
     }
 
     memset(&api_spec, 0, sizeof(pds_policy_rule_spec_t));
-    ret = pds_policy_rule_proto_to_api_spec(&api_spec,
-                                            proto_req->request());
+    ret = pds_security_rule_proto_to_api_spec(&api_spec, proto_req->request());
     if (unlikely(ret != SDK_RET_OK)) {
         goto end;
     }
@@ -531,8 +530,7 @@ SecurityPolicySvcImpl::SecurityRuleUpdate(ServerContext *context,
     }
 
     memset(&api_spec, 0, sizeof(pds_policy_spec_t));
-    ret = pds_policy_rule_proto_to_api_spec(&api_spec,
-                                            proto_req->request());
+    ret = pds_security_rule_proto_to_api_spec(&api_spec, proto_req->request());
     if (unlikely(ret != SDK_RET_OK)) {
         goto end;
     }

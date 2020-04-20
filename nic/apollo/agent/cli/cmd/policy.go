@@ -133,7 +133,7 @@ func printPolicy(resp *pds.SecurityPolicy) {
 		// Print Source (Prefix or Range or Tag)
 		// Print Destination (Prefix or Range or Tag)
 
-		l3Match := rule.GetMatch().GetL3Match()
+		l3Match := rule.GetAttrs().GetMatch().GetL3Match()
 		outStr += fmt.Sprintf("%-10d", l3Match.GetProtoNum())
 
 		switch l3Match.GetSrcmatch().(type) {
@@ -194,7 +194,7 @@ func printPolicy(resp *pds.SecurityPolicy) {
 		// Print Source Port: Low to High
 		// Print Dest Port: Low to High
 		// Print ICMP info
-		l4Match := rule.GetMatch().GetL4Match()
+		l4Match := rule.GetAttrs().GetMatch().GetL4Match()
 
 		switch l4Match.GetL4Info().(type) {
 		case *pds.RuleL4Match_Ports:
@@ -214,10 +214,10 @@ func printPolicy(resp *pds.SecurityPolicy) {
 			outStr += fmt.Sprintf("%-13s%-13s%-13s", "-", "-", "-")
 		}
 
-		outStr += fmt.Sprintf("%-10d", rule.GetPriority())
-		outStr += fmt.Sprintf("%-10s", utils.BoolToString(rule.GetStateful()))
+		outStr += fmt.Sprintf("%-10d", rule.GetAttrs().GetPriority())
+		outStr += fmt.Sprintf("%-10s", utils.BoolToString(rule.GetAttrs().GetStateful()))
 		outStr += fmt.Sprintf("%-10s",
-			strings.ToLower(strings.Replace(rule.GetAction().String(), "SECURITY_RULE_ACTION_", "", -1)))
+			strings.ToLower(strings.Replace(rule.GetAttrs().GetAction().String(), "SECURITY_RULE_ACTION_", "", -1)))
 
 		// Display the overhang of IPv6 Src/Dst Range in the second line
 		if ipv6SrcRangeStr != "" || ipv6DstRangeStr != "" {
