@@ -226,6 +226,14 @@ txqcqs_err:
                                         priv_data);
         }
 
+        for (i = 0; i < lif->nrxqcqs; i++) {
+                ionic_qcq_disable(lif->rxqcqs[i]);
+        }
+
+        for (i = 0; i < lif->nrxqcqs; i++) {
+                ionic_rx_flush(&lif->rxqcqs[i]->cq);
+        }
+
         if (!lif->uplink_handle->is_mgmt_nic) {
                 ionic_en_rx_rss_deinit(priv_data,
                                        lif);
