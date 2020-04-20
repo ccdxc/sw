@@ -28,6 +28,7 @@
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "third-party/asic/capri/verif/apis/cap_platform_api.h"
 #include "third-party/asic/capri/verif/apis/cap_freq_api.h"
+#include "platform/capri/capri_qos.hpp"
 // TODO: move out pipeline related code out of sdk
 #if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
@@ -1393,6 +1394,121 @@ void
 asicpd_qstate_push (sdk::platform::utils::LIFQState *qstate, int cos)
 {
     push_qstate_to_capri(qstate, cos);
+}
+
+// qos related asic APIs
+tm_q_t
+asicpd_qos_span_queue (void)
+{
+    return sdk::platform::capri::capri_qos_span_queue();
+}
+
+tm_q_t
+asicpd_qos_p4eg_uplink_span_q_replacement (void)
+{
+    return sdk::platform::capri::capri_qos_p4eg_uplink_span_q_replacement();
+}
+
+tm_q_t
+asicpd_qos_cpu_copy_queue (void)
+{
+    return sdk::platform::capri::capri_qos_cpu_copy_queue();
+}
+
+tm_q_t
+asicpd_qos_p4eg_uplink_cpu_copy_q_replacement (void)
+{
+    return sdk::platform::capri::capri_qos_p4eg_uplink_cpu_copy_q_replacement();
+}
+
+tm_q_t
+asicpd_qos_max_tx_qs_per_class (void)
+{
+    return sdk::platform::capri::capri_qos_max_tx_qs_per_class();
+}
+
+tm_q_t
+asicpd_qos_p4ig_uplink_iq_offset (void)
+{
+    return sdk::platform::capri::capri_qos_p4ig_uplink_iq_offset();
+}
+
+tm_q_t
+asicpd_qos_rxdma_oq_offset (void)
+{
+    return sdk::platform::capri::capri_qos_rxdma_oq_offset();
+}
+
+uint32_t
+asicpd_qos_default_xon_threshold (void)
+{
+    return sdk::platform::capri::capri_qos_default_xon_threshold();
+}
+
+uint32_t
+asicpd_qos_default_xoff_threshold (void)
+{
+    return sdk::platform::capri::capri_qos_default_xoff_threshold();
+}
+
+tm_port_t
+asicpd_qos_uplink_port_start (void)
+{
+    return sdk::platform::capri::capri_qos_uplink_port_start();
+}
+
+tm_port_t
+asicpd_qos_uplink_port_end (void)
+{
+    return sdk::platform::capri::capri_qos_uplink_port_end();
+}
+
+uint32_t
+asicpd_qos_max_txdma_iqs (void)
+{
+    return sdk::platform::capri::capri_qos_max_txdma_iqs();
+}
+
+uint32_t
+asicpd_qos_max_uplink_iqs (void)
+{
+    return sdk::platform::capri::capri_qos_max_uplink_iqs();
+}
+
+uint32_t
+asicpd_qos_max_common_oqs (void)
+{
+    return sdk::platform::capri::capri_qos_max_common_oqs();
+}
+
+uint32_t
+asicpd_qos_max_rxdma_oqs (void)
+{
+    return sdk::platform::capri::capri_qos_max_rxdma_oqs();
+}
+
+sdk_ret_t
+asicpd_qos_uplink_q_params_update (tm_port_t port,
+                                   tm_uplink_q_params_t *q_params)
+{
+    return sdk::platform::capri::capri_qos_uplink_q_params_update(
+                                                    port, q_params);
+}
+
+sdk_ret_t
+asicpd_qos_uplink_iq_nodrop_update (tm_port_t port, tm_q_t iq,
+                                    bool no_drop)
+{
+    return sdk::platform::capri::capri_qos_uplink_iq_nodrop_update(
+                                                        port, iq, no_drop);
+}
+
+sdk_ret_t
+asicpd_qos_uplink_input_map_update (tm_port_t port, uint32_t dot1q_pcp,
+                                    tm_q_t iq)
+{
+    return sdk::platform::capri::capri_qos_uplink_input_map_update(
+                                                        port, dot1q_pcp, iq);
 }
 
 }    // namespace pd

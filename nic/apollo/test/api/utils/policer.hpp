@@ -28,8 +28,9 @@ public:
     }
 
     // Initialize feeder with the base set of values
-    void init(pds_obj_key_t key, sdk::policer_type_t type, pds_policer_dir_t dir,
-              uint64_t rate, uint64_t burst, uint32_t num_policer = 1);
+    void init(pds_obj_key_t key, sdk::qos::policer_type_t type,
+              pds_policer_dir_t dir, uint64_t rate, uint64_t burst,
+              uint32_t num_policer = 1);
 
     // Iterate helper routines
     void iter_next(int width = 1);

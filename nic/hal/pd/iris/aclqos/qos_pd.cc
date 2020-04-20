@@ -508,23 +508,22 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t             ret = HAL_RET_OK;
     sdk_ret_t             sdk_ret;
-    tm_uplink_iq_params_t iq_params;
     tm_port_t             port;
     qos_class_t           *qos_class = pd_qos_class->pi_qos_class;
     tm_q_t                iq;
+    tm_uplink_q_params_t  q_params = { 0 };
 
     iq = pd_qos_class->uplink.iq;
     if (!capri_tm_q_valid(iq)) {
         return HAL_RET_OK;
     }
 
-    memset(&iq_params, 0, sizeof(iq_params));
-
-    iq_params.mtu = qos_class->mtu;
-    iq_params.xoff_threshold = qos_class->pause.xoff_threshold;
-    iq_params.xon_threshold = qos_class->pause.xon_threshold;
+    q_params.iq = iq;
+    q_params.mtu = qos_class->mtu;
+    q_params.xoff_threshold = qos_class->pause.xoff_threshold;
+    q_params.xon_threshold = qos_class->pause.xon_threshold;
     SDK_ASSERT(capri_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX]));
-    iq_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
+    q_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         sdk_ret = capri_tm_uplink_iq_no_drop_update(
@@ -536,7 +535,7 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
                           qos_class->key, port, ret);
             return ret;
         }
-        sdk_ret = capri_tm_uplink_iq_params_update(port, iq, &iq_params);
+        sdk_ret = capri_tm_uplink_q_params_update(port, &q_params);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the iq params for "
@@ -597,7 +596,6 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     bool                       has_dscp = false;
     tm_q_t                     iq;
     uint32_t                   dot1q_pcp = 0;
-    tm_uplink_input_dscp_map_t dscp_map = {0};
 
     iq = pd_qos_class->uplink.iq;
     if (!capri_tm_q_valid(iq)) {
@@ -606,16 +604,11 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     has_pcp = cmap_type_pcp(qos_class->cmap.type);
     has_dscp = cmap_type_dscp(qos_class->cmap.type);
 
-    SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) == sizeof(dscp_map.ip_dscp));
-
-    memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
-               sizeof(qos_class->cmap.ip_dscp));
     if (has_pcp) {
         dot1q_pcp = qos_class->cmap.dot1q_pcp;
     } else {
         dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
     }
-    dscp_map.dot1q_pcp = dot1q_pcp;
     for (port = TM_UPLINK_PORT_BEGIN; port < TM_UPLINK_PORT_END; port++) {
         sdk_ret = capri_tm_uplink_input_map_update(
                                                port,
@@ -629,7 +622,8 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
             return ret;
         }
         if (has_dscp) {
-            sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+            sdk_ret = capri_tm_uplink_input_dscp_map_update(
+                               port, dot1q_pcp, qos_class->cmap.ip_dscp);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error programming the uplink dscp map for "
@@ -650,7 +644,6 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
     sdk_ret_t                  sdk_ret;
     tm_port_t                  port;
     qos_class_t                *default_qos_class = NULL;
-    tm_uplink_input_dscp_map_t dscp_map = {0};
     uint32_t                   default_qos_class_dot1q_pcp = 0;
     tm_q_t                     default_qos_class_iq = 0;
 
@@ -661,10 +654,6 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
         default_qos_class_dot1q_pcp = default_qos_class->cmap.dot1q_pcp;
         default_qos_class_iq = default_qos_class->pd->uplink.iq;
     }
-
-    SDK_ASSERT(cnt_ip_dscp == SDK_ARRAY_SIZE(dscp_map.ip_dscp));
-    memcpy(dscp_map.ip_dscp, ip_dscp_vals, sizeof(dscp_map.ip_dscp));
-    dscp_map.dot1q_pcp = default_qos_class_dot1q_pcp;
 
     for (port = TM_UPLINK_PORT_BEGIN; port < TM_UPLINK_PORT_END; port++) {
         if (dot1q_remove) {
@@ -679,8 +668,8 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
                 return ret;
             }
         }
-
-        sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+        sdk_ret = capri_tm_uplink_input_dscp_map_update(
+                           port, default_qos_class_dot1q_pcp, ip_dscp_vals);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the uplink dscp map "
@@ -1291,15 +1280,9 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     bool                       has_dscp = false;
     tm_q_t                     iq;
     uint32_t                   dot1q_pcp = 0;
-    tm_uplink_input_dscp_map_t dscp_map = {0};
 
     has_pcp = cmap_type_pcp(qos_class->cmap.type);
     has_dscp = cmap_type_dscp(qos_class->cmap.type);
-
-    SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
-               sizeof(dscp_map.ip_dscp));
-    memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
-           sizeof(qos_class->cmap.ip_dscp));
 
     if (has_pcp) {
         dot1q_pcp = qos_class->cmap.dot1q_pcp;
@@ -1321,10 +1304,6 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     if (!capri_tm_q_valid(iq)) {
         return HAL_RET_OK;
     }
-
-    // program the default COS for dscp map
-    dscp_map.dot1q_pcp = QOS_COS_DEFAULT;
-
     for (port = TM_UPLINK_PORT_BEGIN; port < TM_UPLINK_PORT_END; port++) {
         sdk_ret = capri_tm_uplink_input_map_update(
                                                port,
@@ -1339,7 +1318,9 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
         }
 
         if (has_dscp) {
-            sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+            // program the default COS for dscp map
+            sdk_ret = capri_tm_uplink_input_dscp_map_update(
+                               port, QOS_COS_DEFAULT, qos_class->cmap.ip_dscp);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error deprogramming the uplink dscp map for "

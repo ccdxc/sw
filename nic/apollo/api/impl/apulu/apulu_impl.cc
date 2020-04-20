@@ -30,6 +30,7 @@
 #include "gen/p4gen/apulu/include/p4pd.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
+#include "nic/apollo/api/impl/apulu/qos_impl.hpp"
 
 extern sdk_ret_t init_service_lif(uint32_t lif_id, const char *cfg_path);
 extern sdk_ret_t service_lif_upg_verify(uint32_t lif_id, const char *cfg_path);
@@ -609,6 +610,8 @@ apulu_impl::pipeline_init(void) {
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
 
+    ret = qos_impl::qos_init();
+    SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }
 
@@ -704,6 +707,8 @@ apulu_impl::pipeline_upgrade_hitless_init(void) {
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
 
+    ret = qos_impl::qos_init();
+    SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }
 

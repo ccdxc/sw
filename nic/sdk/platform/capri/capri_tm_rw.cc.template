@@ -825,10 +825,11 @@ capri_tm_uplink_iq_no_drop_update (tm_port_t port,
 }
 
 sdk_ret_t
-capri_tm_uplink_iq_params_update (tm_port_t port,
-                                  tm_q_t iq,
-                                  tm_uplink_iq_params_t *iq_params)
+capri_tm_uplink_q_params_update (tm_port_t port,
+                                 tm_uplink_q_params_t *q_params)
 {
+    tm_q_t iq = q_params->iq;
+
     /* Do some sanity checks for port and iq */
     if (!capri_tm_port_is_uplink_port(port)) {
         SDK_TRACE_ERR("%u is not a valid TM uplink port",
@@ -837,16 +838,16 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
     }
 
     tm_port_type_e port_type = capri_tm_get_port_type(port);
-    if (iq_params->mtu > tm_cfg_profile()->jumbo_mtu[port_type]) {
+    if (q_params->mtu > tm_cfg_profile()->jumbo_mtu[port_type]) {
         SDK_TRACE_ERR("Invalid mtu %u larger than the jumbo %u",
-                      iq_params->mtu, tm_cfg_profile()->jumbo_mtu[port_type]);
+                      q_params->mtu, tm_cfg_profile()->jumbo_mtu[port_type]);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
-    if ((iq_params->p4_q < (signed)CAPRI_TM_P4_UPLINK_IQ_OFFSET) ||
-        (iq_params->p4_q >= (signed)capri_tm_get_num_iqs_for_port_type(TM_PORT_TYPE_P4IG))) {
+    if ((q_params->p4_q < (signed)CAPRI_TM_P4_UPLINK_IQ_OFFSET) ||
+        (q_params->p4_q >= (signed)capri_tm_get_num_iqs_for_port_type(TM_PORT_TYPE_P4IG))) {
         SDK_TRACE_ERR("Invalid P4 Oq %u for uplink port %u",
-                      iq_params->p4_q, port);
+                      q_params->p4_q, port);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
@@ -877,7 +878,7 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                 pbc_csr.cfg_parser${p}.read();
                 oq_map_val = pbc_csr.cfg_parser${p}.oq_map();
 
-                cpp_helper.set_slc(oq_map_val, iq_params->p4_q,
+                cpp_helper.set_slc(oq_map_val, q_params->p4_q,
                                     iq * 5,
                                     ((iq + 1) * 5) - 1);
 
@@ -900,7 +901,7 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                         {
                             /* Update the MTU in the MTU register */
                             pbc_csr.port_${p}.cfg_account_mtu_table.pg${pg}(
-                                bytes_to_cells(iq_params->mtu));
+                                bytes_to_cells(q_params->mtu));
                             break;
                         }
 //::        #endfor
@@ -928,7 +929,7 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                         port_payload_occupancy_val,
                         iq*19, ((iq + 1) * 19) - 1).convert_to<uint32_t>();
                     payload_occupancy_bytes = payload_occupancy << 10;
-                    xoff_threshold = iq_params->xoff_threshold;
+                    xoff_threshold = q_params->xoff_threshold;
                     if (xoff_threshold &&
                                    (payload_occupancy_bytes > xoff_threshold)) {
                         xoff_threshold =
@@ -943,9 +944,9 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                     // for xoff)
 
                     xoff_threshold =
-                                (iq_params->xoff_threshold + (1<<9) - 1) >> 9;
+                                (q_params->xoff_threshold + (1<<9) - 1) >> 9;
                     xon_threshold =
-                                (iq_params->xon_threshold + (1<<9) - 1) >> 9;
+                                (q_params->xon_threshold + (1<<9) - 1) >> 9;
 
                     hbm_csr.cfg_hbm_threshold.read();
                     xoff_val = hbm_csr.cfg_hbm_threshold.xoff();
@@ -1033,8 +1034,8 @@ capri_tm_uplink_input_map_update (tm_port_t port,
 }
 
 sdk_ret_t
-capri_tm_uplink_input_dscp_map_update(tm_port_t port,
-                                      tm_uplink_input_dscp_map_t *dscp_map)
+capri_tm_uplink_input_dscp_map_update (tm_port_t port, uint32_t tc,
+                                       bool *ip_dscp)
 {
     if (!capri_tm_port_is_uplink_port(port)) {
         SDK_TRACE_ERR("%u is not a valid TM uplink port",
@@ -1047,10 +1048,7 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
     cpp_int dscp_map_val;
-    uint32_t tc;
     int use_ip = 0;
-
-    tc = dscp_map->dot1q_pcp;
 
     switch(port) {
 //:: for p in range(TM_PORTS):
@@ -1061,8 +1059,8 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
                 hbm_csr.hbm_port_${p}.cfg_hbm_parser.read();
                 dscp_map_val = hbm_csr.hbm_port_${p}.cfg_hbm_parser.dscp_map();
 
-                for (unsigned i = 0; i < SDK_ARRAY_SIZE(dscp_map->ip_dscp); i++) {
-                    if (dscp_map->ip_dscp[i]) {
+                for (unsigned i = 0; i < TM_MAX_DSCP_VALS; i++) {
+                    if (ip_dscp[i]) {
                         cpp_helper.set_slc(dscp_map_val,
                                            tc,
                                            i * 3,
@@ -5001,20 +4999,20 @@ capri_tm_debug_stats_get (tm_port_t port, tm_debug_stats_t *debug_stats,
         debug_stats->buffer_stats.sop_count_out = pbc_csr.cnt_flits[port].sop_out().convert_to<uint32_t>();
         debug_stats->buffer_stats.eop_count_out = pbc_csr.cnt_flits[port].eop_out().convert_to<uint32_t>();
 
-        debug_stats->buffer_stats.drop_counts[BUFFER_INTRINSIC_DROP] = pbc_csr.sat_write_error[port].intrinsic_drop().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_DISCARDED] = pbc_csr.sat_write_error[port].discarded().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_ADMITTED] = pbc_csr.sat_write_error[port].admitted().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_OUT_OF_CELLS_DROP] = pbc_csr.sat_write_error[port].out_of_cells().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_OUT_OF_CELLS_DROP_2] = pbc_csr.sat_write_error[port].out_of_cells1().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_OUT_OF_CREDIT_DROP] = pbc_csr.sat_write_error[port].out_of_credit().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_TRUNCATION_DROP] = pbc_csr.sat_write_error[port].truncation().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_PORT_DISABLED_DROP] = pbc_csr.sat_write_error[port].port_disabled().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_COPY_TO_CPU_TAIL_DROP] = pbc_csr.sat_write_error[port].tail_drop_cpu().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_SPAN_TAIL_DROP] = pbc_csr.sat_write_error[port].tail_drop_span().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_MIN_SIZE_VIOLATION_DROP] = pbc_csr.sat_write_error[port].min_size_viol().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_ENQUEUE_ERROR_DROP] = pbc_csr.sat_write_error[port].enqueue().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_INVALID_PORT_DROP] = pbc_csr.sat_write_error[port].port_range().convert_to<uint32_t>();
-        debug_stats->buffer_stats.drop_counts[BUFFER_INVALID_OUTPUT_QUEUE_DROP] = pbc_csr.sat_write_error[port].oq_range().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_INTRINSIC_DROP] = pbc_csr.sat_write_error[port].intrinsic_drop().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_DISCARDED] = pbc_csr.sat_write_error[port].discarded().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_ADMITTED] = pbc_csr.sat_write_error[port].admitted().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_OUT_OF_CELLS_DROP] = pbc_csr.sat_write_error[port].out_of_cells().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_OUT_OF_CELLS_DROP_2] = pbc_csr.sat_write_error[port].out_of_cells1().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_OUT_OF_CREDIT_DROP] = pbc_csr.sat_write_error[port].out_of_credit().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_TRUNCATION_DROP] = pbc_csr.sat_write_error[port].truncation().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_PORT_DISABLED_DROP] = pbc_csr.sat_write_error[port].port_disabled().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_COPY_TO_CPU_TAIL_DROP] = pbc_csr.sat_write_error[port].tail_drop_cpu().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_SPAN_TAIL_DROP] = pbc_csr.sat_write_error[port].tail_drop_span().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_MIN_SIZE_VIOLATION_DROP] = pbc_csr.sat_write_error[port].min_size_viol().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_ENQUEUE_ERROR_DROP] = pbc_csr.sat_write_error[port].enqueue().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_INVALID_PORT_DROP] = pbc_csr.sat_write_error[port].port_range().convert_to<uint32_t>();
+        debug_stats->buffer_stats.drop_counts[sdk::qos::BUFFER_INVALID_OUTPUT_QUEUE_DROP] = pbc_csr.sat_write_error[port].oq_range().convert_to<uint32_t>();
     }
 
     if (reset) {

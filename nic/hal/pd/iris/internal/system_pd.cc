@@ -908,7 +908,7 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
         port_stats->mutable_buffer_stats()->set_eop_count_out(debug_stats.buffer_stats.eop_count_out);
 
         auto drop_stats = port_stats->mutable_buffer_stats()->mutable_drop_counts();
-        for (int i = BUFFER_INTRINSIC_DROP; i < BUFFER_DROP_MAX; i ++) {
+        for (int i = sdk::qos::BUFFER_INTRINSIC_DROP; i < sdk::qos::BUFFER_DROP_MAX; i ++) {
             auto drop_stats_entry = drop_stats->add_stats_entries();
             drop_stats_entry->set_reasons(sys::BufferDropReasons(i));
             drop_stats_entry->set_drop_count(debug_stats.buffer_stats.drop_counts[i]);

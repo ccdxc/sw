@@ -97,7 +97,7 @@ pds_pb_stats_port_to_proto (pds::PacketBufferPort *buf_port, uint32_t port)
 static inline void
 pds_pb_stats_entry_to_proto (pds_pb_debug_stats_t *pds_stats, void *ctxt)
 {
-    sdk::tm_debug_stats_t *stats = &pds_stats->stats;
+    sdk::qos::tm_debug_stats_t *stats = &pds_stats->stats;
     sdk::platform::capri::capri_queue_stats_t *qos_queue_stats =
         &pds_stats->qos_queue_stats;
     pds::PbStatsGetResponse *rsp = (pds::PbStatsGetResponse *)ctxt;
@@ -115,7 +115,8 @@ pds_pb_stats_entry_to_proto (pds_pb_debug_stats_t *pds_stats, void *ctxt)
     buffer_stats->set_eopcountout(stats->buffer_stats.eop_count_out);
 
     auto drop_stats = buffer_stats->mutable_dropcounts();
-    for (int i = sdk::BUFFER_INTRINSIC_DROP; i < sdk::BUFFER_DROP_MAX; i ++) {
+    for (int i = sdk::qos::BUFFER_INTRINSIC_DROP; i < sdk::qos::BUFFER_DROP_MAX;
+            i++) {
         auto drop_stats_entry = drop_stats->add_statsentries();
         drop_stats_entry->set_reasons(pds::BufferDropReasons(i));
         drop_stats_entry->set_dropcount(stats->buffer_stats.drop_counts[i]);

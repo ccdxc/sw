@@ -29,6 +29,7 @@
 #include "nic/apollo/api/impl/apulu/service_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/policer_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/dhcp_impl_state.hpp"
+#include "nic/apollo/api/impl/apulu/qos_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -61,6 +62,7 @@ enum {
     PDS_IMPL_STATE_SVC_MAPPING,
     PDS_IMPL_STATE_POLICER,
     PDS_IMPL_STATE_DHCP,
+    PDS_IMPL_STATE_QOS,
     PDS_IMPL_STATE_MAX,
 };
 
@@ -123,6 +125,9 @@ public:
     }
     dhcp_impl_state *dhcp_impl_db(void) const {
         return (dhcp_impl_state *)impl_state_[PDS_IMPL_STATE_DHCP];
+    }
+    qos_impl_state *qos_impl_db(void) const {
+        return (qos_impl_state *)impl_state_[PDS_IMPL_STATE_QOS];
     }
 
 private:
@@ -219,6 +224,12 @@ static inline dhcp_impl_state *
 dhcp_impl_db (void)
 {
     return g_pds_impl_state.dhcp_impl_db();
+}
+
+static inline qos_impl_state *
+qos_impl_db (void)
+{
+    return g_pds_impl_state.qos_impl_db();
 }
 
 /// \@}

@@ -459,13 +459,13 @@ do {                                          \
     tbl ## _data.action_id = aid;                                              \
     if (policer->rate) {                                                       \
         tbl ## _data.tbl ## _info.entry_valid = 1;                             \
-        if (policer->type == sdk::POLICER_TYPE_PPS) {                          \
+        if (policer->type == sdk::qos::POLICER_TYPE_PPS) {                     \
             tbl ## _data.tbl ## _info.pkt_rate = 1;                            \
         }                                                                      \
-        ret = policer_to_token_rate(policer,                                   \
-                                    refresh_interval,                          \
-                                    PDS_POLICER_MAX_TOKENS_PER_INTERVAL,       \
-                                    &rate_tokens, &burst_tokens);              \
+        ret = sdk::qos::policer_to_token_rate(                                 \
+                                         policer, refresh_interval,            \
+                                         PDS_POLICER_MAX_TOKENS_PER_INTERVAL,  \
+                                         &rate_tokens, &burst_tokens);         \
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);                           \
         PDS_TRACE_DEBUG("burst %lu, rate %lu, tbkt %u", burst_tokens,          \
                         rate_tokens, burst_tokens);                            \
@@ -502,7 +502,7 @@ do {                                          \
 
 #define copp_info    action_u.copp_copp
 static inline sdk_ret_t
-program_copp_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
+program_copp_entry_ (sdk::qos::policer_t *policer, uint16_t idx, bool upd)
 {
     p4pd_table_properties_t tbl_props = { 0 };
 

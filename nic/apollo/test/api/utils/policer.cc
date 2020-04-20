@@ -14,7 +14,7 @@ namespace api {
 
 void
 policer_feeder::init(pds_obj_key_t key,
-                     sdk::policer_type_t type,
+                     sdk::qos::policer_type_t type,
                      pds_policer_dir_t dir,
                      uint64_t rate,
                      uint64_t burst,
@@ -23,7 +23,7 @@ policer_feeder::init(pds_obj_key_t key,
     this->spec.key = key;
     this->spec.type = type;
     this->spec.dir = dir;
-    if (type == sdk::POLICER_TYPE_PPS) {
+    if (type == sdk::qos::POLICER_TYPE_PPS) {
         this->spec.pps = rate;
         this->spec.pps_burst = burst;
     } else {
@@ -60,7 +60,7 @@ policer_feeder::spec_compare(const pds_policer_spec_t *spec) const {
         return false;
     if (spec->dir != this->spec.dir)
         return false;
-    if (spec->type == sdk::POLICER_TYPE_PPS) {
+    if (spec->type == sdk::qos::POLICER_TYPE_PPS) {
         if (spec->pps != this->spec.pps)
             return false;
         //if (spec->pps_burst != this->spec.pps_burst)
@@ -86,23 +86,23 @@ void sample_policer_setup(pds_batch_ctxt_t bctxt) {
     pds_obj_key_t pol_key = int2pdsobjkey(20000);
 
     // setup and teardown parameters should be in sync
-    k_pol_feeder.init(pol_key, sdk::POLICER_TYPE_PPS, PDS_POLICER_DIR_INGRESS,
-                      5000, 15000, 5);
+    k_pol_feeder.init(pol_key, sdk::qos::POLICER_TYPE_PPS,
+                      PDS_POLICER_DIR_INGRESS, 5000, 15000, 5);
     many_create(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, sdk::POLICER_TYPE_BPS, PDS_POLICER_DIR_INGRESS,
-                      500000, 1500000, 5);
+    k_pol_feeder.init(pol_key, sdk::qos::POLICER_TYPE_BPS,
+                      PDS_POLICER_DIR_INGRESS, 500000, 1500000, 5);
     many_create(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, sdk::POLICER_TYPE_PPS, PDS_POLICER_DIR_EGRESS,
-                      5000, 15000, 5);
+    k_pol_feeder.init(pol_key, sdk::qos::POLICER_TYPE_PPS,
+                      PDS_POLICER_DIR_EGRESS, 5000, 15000, 5);
     many_create(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, sdk::POLICER_TYPE_BPS, PDS_POLICER_DIR_EGRESS,
-                      500000, 1500000, 5);
+    k_pol_feeder.init(pol_key, sdk::qos::POLICER_TYPE_BPS,
+                      PDS_POLICER_DIR_EGRESS, 500000, 1500000, 5);
     many_create(bctxt, k_pol_feeder);
 }
 
@@ -110,23 +110,23 @@ void sample_policer_teardown(pds_batch_ctxt_t bctxt) {
     pds_obj_key_t pol_key = int2pdsobjkey(1);
 
     // this feeder base values doesn't matter in case of deletes
-    k_pol_feeder.init(pol_key, sdk::POLICER_TYPE_PPS, PDS_POLICER_DIR_INGRESS,
-                      5000, 15000, 5);
+    k_pol_feeder.init(pol_key, sdk::qos::POLICER_TYPE_PPS,
+                      PDS_POLICER_DIR_INGRESS, 5000, 15000, 5);
     many_delete(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, sdk::POLICER_TYPE_BPS, PDS_POLICER_DIR_INGRESS,
-                      500000, 1500000, 5);
+    k_pol_feeder.init(pol_key, sdk::qos::POLICER_TYPE_BPS,
+                      PDS_POLICER_DIR_INGRESS, 500000, 1500000, 5);
     many_delete(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, sdk::POLICER_TYPE_PPS, PDS_POLICER_DIR_EGRESS,
-                      5000, 15000, 5);
+    k_pol_feeder.init(pol_key, sdk::qos::POLICER_TYPE_PPS,
+                      PDS_POLICER_DIR_EGRESS, 5000, 15000, 5);
     many_delete(bctxt, k_pol_feeder);
 
     pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
-    k_pol_feeder.init(pol_key, sdk::POLICER_TYPE_BPS, PDS_POLICER_DIR_EGRESS,
-                      500000, 1500000, 5);
+    k_pol_feeder.init(pol_key, sdk::qos::POLICER_TYPE_BPS,
+                      PDS_POLICER_DIR_EGRESS, 500000, 1500000, 5);
     many_delete(bctxt, k_pol_feeder);
 }
 

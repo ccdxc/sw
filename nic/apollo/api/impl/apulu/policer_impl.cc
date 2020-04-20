@@ -29,7 +29,7 @@ namespace impl {
 #define vnic_policer_rx_info    action_u.vnic_policer_rx_vnic_policer_rx
 #define vnic_policer_tx_info    action_u.vnic_policer_tx_vnic_policer_tx
 static inline sdk_ret_t
-program_vnic_policer_rx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
+program_vnic_policer_rx_entry_ (sdk::qos::policer_t *policer, uint16_t idx, bool upd)
 {
     p4pd_table_properties_t tbl_props = { 0 };
 
@@ -41,7 +41,7 @@ program_vnic_policer_rx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
 }
 
 static inline sdk_ret_t
-program_vnic_policer_tx_entry_ (sdk::policer_t *policer, uint16_t idx, bool upd)
+program_vnic_policer_tx_entry_ (sdk::qos::policer_t *policer, uint16_t idx, bool upd)
 {
     p4pd_table_properties_t tbl_props = { 0 };
 
@@ -160,22 +160,22 @@ sdk_ret_t
 policer_impl::activate_create_(pds_epoch_t epoch, policer_entry *policer,
                                pds_policer_spec_t *spec) {
     sdk_ret_t ret;
-    sdk::policer_t pol;
+    sdk::qos::policer_t pol;
 
     if (spec->dir == PDS_POLICER_DIR_INGRESS) {
-        if (spec->type == sdk::POLICER_TYPE_PPS) {
-            pol = { sdk::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
+        if (spec->type == sdk::qos::POLICER_TYPE_PPS) {
+            pol = { sdk::qos::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
             ret = program_vnic_policer_rx_entry_(&pol, hw_id_, false);
         } else {
-            pol = { sdk::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
+            pol = { sdk::qos::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
             ret = program_vnic_policer_rx_entry_(&pol, hw_id_, false);
         }
     } else {
-        if (spec->type == sdk::POLICER_TYPE_PPS) {
-            pol = { sdk::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
+        if (spec->type == sdk::qos::POLICER_TYPE_PPS) {
+            pol = { sdk::qos::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
             ret = program_vnic_policer_tx_entry_(&pol, hw_id_, false);
         } else {
-            pol = { sdk::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
+            pol = { sdk::qos::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
             ret = program_vnic_policer_tx_entry_(&pol, hw_id_, false);
         }
     }
@@ -190,22 +190,22 @@ sdk_ret_t
 policer_impl::activate_update_(pds_epoch_t epoch, policer_entry *policer,
                                pds_policer_spec_t *spec) {
     sdk_ret_t ret;
-    sdk::policer_t pol;
+    sdk::qos::policer_t pol;
 
     if (spec->dir == PDS_POLICER_DIR_INGRESS) {
-        if (spec->type == sdk::POLICER_TYPE_PPS) {
-            pol = { sdk::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
+        if (spec->type == sdk::qos::POLICER_TYPE_PPS) {
+            pol = { sdk::qos::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
             ret = program_vnic_policer_rx_entry_(&pol, hw_id_, true);
         } else {
-            pol = { sdk::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
+            pol = { sdk::qos::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
             ret = program_vnic_policer_rx_entry_(&pol, hw_id_, true);
         }
     } else {
-        if (spec->type == sdk::POLICER_TYPE_PPS) {
-            pol = { sdk::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
+        if (spec->type == sdk::qos::POLICER_TYPE_PPS) {
+            pol = { sdk::qos::POLICER_TYPE_PPS, spec->pps, spec->pps_burst };
             ret = program_vnic_policer_tx_entry_(&pol, hw_id_, true);
         } else {
-            pol = { sdk::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
+            pol = { sdk::qos::POLICER_TYPE_BPS, spec->bps, spec->bps_burst };
             ret = program_vnic_policer_tx_entry_(&pol, hw_id_, true);
         }
     }
@@ -219,15 +219,15 @@ policer_impl::activate_update_(pds_epoch_t epoch, policer_entry *policer,
 sdk_ret_t
 policer_impl::activate_delete_(pds_epoch_t epoch, policer_entry *policer) {
     sdk_ret_t ret;
-    sdk::policer_t pol;
+    sdk::qos::policer_t pol;
 
     // while deactivating policer, exact policer type doesn't matter as values
     // are 0 for rate
     if (policer->dir() == PDS_POLICER_DIR_INGRESS) {
-        pol = { sdk::POLICER_TYPE_PPS, 0, 0 };
+        pol = { sdk::qos::POLICER_TYPE_PPS, 0, 0 };
         ret = program_vnic_policer_rx_entry_(&pol, hw_id_, false);
     } else {
-        pol = { sdk::POLICER_TYPE_PPS, 0, 0 };
+        pol = { sdk::qos::POLICER_TYPE_PPS, 0, 0 };
         ret = program_vnic_policer_tx_entry_(&pol, hw_id_, false);
     }
     if (ret != SDK_RET_OK) {
@@ -306,15 +306,15 @@ policer_impl::fill_spec_(pds_policer_spec_t *spec) {
 
         p4pd_global_table_properties_get(P4TBL_ID_VNIC_POLICER_RX, &tbl_props);
         if (rx_data.vnic_policer_rx_info.pkt_rate) {
-            spec->type = sdk::POLICER_TYPE_PPS;
-            sdk::policer_token_to_rate(rate, burst,
-                                       tbl_props.token_refresh_rate,
-                                       &spec->pps, &spec->pps_burst);
+            spec->type = sdk::qos::POLICER_TYPE_PPS;
+            sdk::qos::policer_token_to_rate(rate, burst,
+                                            tbl_props.token_refresh_rate,
+                                            &spec->pps, &spec->pps_burst);
         } else {
-            spec->type = sdk::POLICER_TYPE_BPS;
-            sdk::policer_token_to_rate(rate, burst,
-                                       tbl_props.token_refresh_rate,
-                                       &spec->bps, &spec->bps_burst);
+            spec->type = sdk::qos::POLICER_TYPE_BPS;
+            sdk::qos::policer_token_to_rate(rate, burst,
+                                            tbl_props.token_refresh_rate,
+                                            &spec->bps, &spec->bps_burst);
         }
     } else if (spec->dir == PDS_POLICER_DIR_EGRESS) {
         p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_POLICER_TX, hw_id_,
@@ -328,15 +328,15 @@ policer_impl::fill_spec_(pds_policer_spec_t *spec) {
 
         p4pd_global_table_properties_get(P4TBL_ID_VNIC_POLICER_TX, &tbl_props);
         if (tx_data.vnic_policer_tx_info.pkt_rate) {
-            spec->type = sdk::POLICER_TYPE_PPS;
-            sdk::policer_token_to_rate(rate, burst,
-                                       tbl_props.token_refresh_rate,
-                                       &spec->pps, &spec->pps_burst);
+            spec->type = sdk::qos::POLICER_TYPE_PPS;
+            sdk::qos::policer_token_to_rate(rate, burst,
+                                            tbl_props.token_refresh_rate,
+                                            &spec->pps, &spec->pps_burst);
         } else {
-            spec->type = sdk::POLICER_TYPE_BPS;
-            sdk::policer_token_to_rate(rate, burst,
-                                       tbl_props.token_refresh_rate,
-                                       &spec->bps, &spec->bps_burst);
+            spec->type = sdk::qos::POLICER_TYPE_BPS;
+            sdk::qos::policer_token_to_rate(rate, burst,
+                                            tbl_props.token_refresh_rate,
+                                            &spec->bps, &spec->bps_burst);
         }
     }
     return SDK_RET_OK;

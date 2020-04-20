@@ -458,6 +458,29 @@ void asicpd_set_margin_by_value(const char *name, uint64_t tgtVoutMv);
 sdk_ret_t asicpd_sbus_cpu_1666(int chip_id, int inst_id);
 sdk_ret_t asicpd_sbus_cpu_2200(int chip_id, int inst_id);
 
+// qos related asic APIs
+tm_q_t asicpd_qos_span_queue(void);
+tm_q_t asicpd_qos_p4eg_uplink_span_q_replacement(void);
+tm_q_t asicpd_qos_cpu_copy_queue(void);
+tm_q_t asicpd_qos_p4eg_uplink_cpu_copy_q_replacement(void);
+tm_q_t asicpd_qos_max_tx_qs_per_class(void);
+tm_q_t asicpd_qos_p4ig_uplink_iq_offset(void);
+tm_q_t asicpd_qos_rxdma_oq_offset(void);
+uint32_t asicpd_qos_default_xon_threshold(void);
+uint32_t asicpd_qos_default_xoff_threshold(void);
+tm_port_t asicpd_qos_uplink_port_start(void);
+tm_port_t asicpd_qos_uplink_port_end(void);
+uint32_t asicpd_qos_max_txdma_iqs(void);
+uint32_t asicpd_qos_max_uplink_iqs(void);
+uint32_t asicpd_qos_max_common_oqs(void);
+uint32_t asicpd_qos_max_rxdma_oqs(void);
+sdk_ret_t asicpd_qos_uplink_q_params_update(tm_port_t port,
+                                            tm_uplink_q_params_t *q_params);
+sdk_ret_t asicpd_qos_uplink_iq_nodrop_update(tm_port_t port, tm_q_t iq,
+                                             bool no_drop);
+sdk_ret_t asicpd_qos_uplink_input_map_update(tm_port_t port, uint32_t dot1q_pcp,
+                                             tm_q_t iq);
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

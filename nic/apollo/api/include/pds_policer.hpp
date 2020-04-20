@@ -36,7 +36,7 @@ typedef enum pds_policer_dir_e {
 /// \brief policer specification
 typedef struct pds_policer_spec_s {
     pds_obj_key_t key;              ///< policer's unique key
-    sdk::policer_type_t type;       ///< type of the policer
+    sdk::qos::policer_type_t type;  ///< type of the policer
     pds_policer_dir_t dir;          ///< traffic direction policer is applied on
     union {
         struct {

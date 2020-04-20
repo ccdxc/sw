@@ -77,7 +77,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
 // TODO: usage of SDK_DEFAULT_POLICER_REFRESH_INTERVAL is broken ??
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
 sdk_ret_t
-lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
+lif_impl::program_tx_policer(uint32_t lif_id, sdk::qos::policer_t *policer) {
     sdk_ret_t ret;
     uint64_t rate_tokens = 0, burst_tokens = 0, rate;
     uint64_t refresh_interval_us = SDK_DEFAULT_POLICER_REFRESH_INTERVAL;
@@ -90,9 +90,11 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
     } else {
         rlimit_data.lif_egress_rl_params.entry_valid = 1;
         rlimit_data.lif_egress_rl_params.pkt_rate =
-            (policer->type == sdk::policer_type_t::POLICER_TYPE_PPS) ? 1 : 0;
+            (policer->type ==
+                      sdk::qos::policer_type_t::POLICER_TYPE_PPS) ? 1 : 0;
         rlimit_data.lif_egress_rl_params.rlimit_en = 1;
-        ret = sdk::policer_to_token_rate(policer, refresh_interval_us,
+        ret = sdk::qos::policer_to_token_rate(
+                                         policer, refresh_interval_us,
                                          SDK_MAX_POLICER_TOKENS_PER_INTERVAL,
                                          &rate_tokens, &burst_tokens);
         if (ret != SDK_RET_OK) {
@@ -122,7 +124,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
-    sdk::policer_t policer;
+    sdk::qos::policer_t policer;
     pds_ifindex_t if_index;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
@@ -158,7 +160,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     policer = {
-        sdk::POLICER_TYPE_PPS, COPP_ARP_FROM_ARM_PPS, 0
+        sdk::qos::POLICER_TYPE_PPS, COPP_ARP_FROM_ARM_PPS, 0
     };
     program_copp_entry_(&policer, idx, false);
     // install NACL entry for ARM to uplink ARP traffic (all vlans)
@@ -297,7 +299,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
-    sdk::policer_t policer;
+    sdk::qos::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     pds_ifindex_t if_index;
@@ -334,7 +336,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     policer = {
-        sdk::POLICER_TYPE_PPS, COPP_ARP_FROM_ARM_PPS, 0
+        sdk::qos::POLICER_TYPE_PPS, COPP_ARP_FROM_ARM_PPS, 0
     };
     program_copp_entry_(&policer, idx, false);
     // install NACL entry for ARM to uplink ARP traffic (all vlans)
@@ -501,7 +503,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
     uint32_t idx, nacl_idx;
-    sdk::policer_t policer;
+    sdk::qos::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t dplif = 0;
@@ -533,7 +535,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     policer = {
-        sdk::POLICER_TYPE_PPS, COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS,
+        sdk::qos::POLICER_TYPE_PPS, COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS,
         COPP_FLOW_MISS_ARP_REQ_FROM_HOST_PPS
     };
     program_copp_entry_(&policer, idx, false);
@@ -578,7 +580,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     policer = {
-        sdk::POLICER_TYPE_PPS, COPP_FLOW_MISS_DHCP_REQ_FROM_HOST_PPS,
+        sdk::qos::POLICER_TYPE_PPS, COPP_FLOW_MISS_DHCP_REQ_FROM_HOST_PPS,
         COPP_FLOW_MISS_DHCP_REQ_FROM_HOST_PPS
     };
     program_copp_entry_(&policer, idx, false);
@@ -624,7 +626,7 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     // allocate and program copp table entry for flow miss
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
-    policer = { sdk::POLICER_TYPE_PPS, 300000, 300000 }; // (type, pps, burst)
+    policer = { sdk::qos::POLICER_TYPE_PPS, 300000, 300000 }; // (type, pps, burst)
     program_copp_entry_(&policer, idx, false);
 
     // redirect flow miss encapped TCP traffic from uplinks to s/w datapath lif
@@ -980,7 +982,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     sdk_ret_t ret;
     nacl_swkey_t key;
     p4pd_error_t p4pd_ret;
-    sdk::policer_t policer;
+    sdk::qos::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
     static uint32_t lif_num = 0;
@@ -1013,7 +1015,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     policer = {
-        sdk::POLICER_TYPE_PPS, COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS, 0
+        sdk::qos::POLICER_TYPE_PPS, COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS, 0
     };
     program_copp_entry_(&policer, idx, false);
     // install NACL entry
@@ -1097,7 +1099,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     policer = {
-        sdk::POLICER_TYPE_PPS, COPP_LEARN_MISS_DHCP_REQ_FROM_HOST_PPS, 0
+        sdk::qos::POLICER_TYPE_PPS, COPP_LEARN_MISS_DHCP_REQ_FROM_HOST_PPS, 0
     };
     program_copp_entry_(&policer, idx, false);
     // install NACL entry for DHCP requests going to vpp

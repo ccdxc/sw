@@ -18,6 +18,7 @@
 #include "lib/catalog/catalog.hpp"
 #include "asic/asic.hpp"
 #include "platform/capri/capri_p4.hpp"
+#include "include/sdk/qos.hpp"
 
 namespace sdk {
 namespace platform {
@@ -35,7 +36,6 @@ using sdk::lib::indexer;
 #define CAPRI_TM_COUNT_L0_NODES       32
 #define CAPRI_TM_COUNT_L1_NODES       16
 #define CAPRI_TM_COUNT_L2_NODES       4
-#define CAPRI_TM_MAX_DSCP_VALS        64
 #define CAPRI_TM_NUM_BUFFER_ISLANDS   2
 #define CAPRI_TM_MAX_SCHED_NODES      16
 #define CAPRI_TM_MAX_SCHED_NODE_INPUTS 32
@@ -115,9 +115,6 @@ using sdk::lib::indexer;
 #define QOS_UPLINK_IQ_START_INDEX   0
 #define QOS_UPLINK_IQ_END_INDEX     7
 
-typedef uint32_t tm_port_t;
-typedef int32_t tm_q_t;
-
 #define TM_PORT_TYPES(ENTRY)                                \
     ENTRY(TM_PORT_TYPE_UPLINK,      0, "uplink")            \
     ENTRY(TM_PORT_TYPE_P4IG,        1, "p4ig")              \
@@ -148,30 +145,19 @@ capri_tm_q_valid (tm_q_t tm_q)
 bool capri_tm_port_is_uplink_port(uint32_t port);
 bool capri_tm_port_is_dma_port(uint32_t port);
 
-// APIs to update the hardware
-typedef struct tm_uplink_iq_params_s {
-    uint32_t mtu;
-    uint32_t xoff_threshold;
-    uint32_t xon_threshold;
-    tm_q_t   p4_q;
-} __PACK__ tm_uplink_iq_params_t;
-
-sdk_ret_t capri_tm_uplink_iq_no_drop_update (tm_port_t port, tm_q_t iq,
+sdk_ret_t capri_tm_uplink_iq_no_drop_update (tm_port_t port,
+                                             tm_q_t iq,
                                              bool no_drop);
-sdk_ret_t capri_tm_uplink_iq_params_update(tm_port_t port, tm_q_t iq,
-                                           tm_uplink_iq_params_t *iq_params);
+sdk_ret_t capri_tm_uplink_q_params_update(tm_port_t port,
+                                          tm_uplink_q_params_t *q_params);
 
 sdk_ret_t capri_tm_uplink_input_map_update(tm_port_t port, uint32_t dot1q_pcp,
                                            tm_q_t iq);
 
-typedef struct tm_uplink_input_dscp_map_s {
-    bool        ip_dscp[CAPRI_TM_MAX_DSCP_VALS];
-    uint32_t    dot1q_pcp;
-} tm_uplink_input_dscp_map_t;
-
-sdk_ret_t capri_tm_uplink_input_dscp_map_update(tm_port_t port,
-                                                tm_uplink_input_dscp_map_t *dscp_map);
-sdk_ret_t capri_tm_uplink_oq_update(tm_port_t port, tm_q_t oq,
+sdk_ret_t capri_tm_uplink_input_dscp_map_update(tm_port_t port, uint32_t tc,
+                                                bool *ip_dscp);
+sdk_ret_t capri_tm_uplink_oq_update(tm_port_t port,
+                                    tm_q_t oq,
                                     uint32_t xoff_cos);
 sdk_ret_t capri_tm_set_uplink_mac_xoff(tm_port_t port, bool reset_all_xoff,
                                        bool set_all_xoff, bool reset_pfc_xoff,

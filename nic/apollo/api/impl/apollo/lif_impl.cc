@@ -55,7 +55,7 @@ lif_impl::lif_impl(pds_lif_spec_t *spec) {
 
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
 sdk_ret_t
-lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
+lif_impl::program_tx_policer(uint32_t lif_id, sdk::qos::policer_t *policer) {
     sdk_ret_t ret;
     tx_table_s5_t4_lif_rate_limiter_table_actiondata_t rlimit_data = { 0 };
     uint64_t refresh_interval_us = SDK_DEFAULT_POLICER_REFRESH_INTERVAL;
@@ -68,9 +68,11 @@ lif_impl::program_tx_policer(uint32_t lif_id, sdk::policer_t *policer) {
     } else {
         rlimit_data.lif_egress_rl_params.entry_valid = 1;
         rlimit_data.lif_egress_rl_params.pkt_rate =
-            (policer->type == sdk::policer_type_t::POLICER_TYPE_PPS) ? 1 : 0;
+            (policer->type ==
+                      sdk::qos::policer_type_t::POLICER_TYPE_PPS) ? 1 : 0;
         rlimit_data.lif_egress_rl_params.rlimit_en = 1;
-        ret = sdk::policer_to_token_rate(policer, refresh_interval_us,
+        ret = sdk::qos::policer_to_token_rate(
+                                         policer, refresh_interval_us,
                                          SDK_MAX_POLICER_TOKENS_PER_INTERVAL,
                                          &rate_tokens, &burst_tokens);
         if (ret != SDK_RET_OK) {

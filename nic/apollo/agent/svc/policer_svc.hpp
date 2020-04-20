@@ -48,11 +48,11 @@ pds_policer_proto_to_api_spec (pds_policer_spec_t *api_spec,
     pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     api_spec->dir = pds_policer_dir_proto_to_api_spec(proto_spec.direction());
     if (proto_spec.has_ppspolicer()) {
-        api_spec->type = sdk::POLICER_TYPE_PPS;
+        api_spec->type = sdk::qos::POLICER_TYPE_PPS;
         api_spec->pps = proto_spec.ppspolicer().packetspersecond();
         api_spec->pps_burst = proto_spec.ppspolicer().burst();
     } else if (proto_spec.has_bpspolicer()) {
-        api_spec->type = sdk::POLICER_TYPE_BPS;
+        api_spec->type = sdk::qos::POLICER_TYPE_BPS;
         api_spec->bps = proto_spec.bpspolicer().bytespersecond();
         api_spec->bps_burst = proto_spec.bpspolicer().burst();
     }
@@ -70,14 +70,14 @@ pds_policer_api_spec_to_proto (pds::PolicerSpec *proto_spec,
     proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     proto_spec->set_direction(pds_policer_dir_api_spec_to_proto(api_spec->dir));
     switch (api_spec->type) {
-    case sdk::POLICER_TYPE_PPS:
+    case sdk::qos::POLICER_TYPE_PPS:
         {
             auto pps = proto_spec->mutable_ppspolicer();
             pps->set_packetspersecond(api_spec->pps);
             pps->set_burst(api_spec->pps_burst);
         }
         break;
-    case sdk::POLICER_TYPE_BPS:
+    case sdk::qos::POLICER_TYPE_BPS:
         {
             auto bps = proto_spec->mutable_bpspolicer();
             bps->set_bytespersecond(api_spec->bps);

@@ -71,7 +71,7 @@ public:
     ///< param[in] policer    policer parameters
     /// \return    SDK_RET_OK on success, failure status code on error
     static sdk_ret_t program_tx_policer(uint32_t lif_id,
-                                        sdk::policer_t *policer);
+                                        sdk::qos::policer_t *policer);
 
     /// \brief     ifindex this lif is pinned to
     /// \return    pinned interface index

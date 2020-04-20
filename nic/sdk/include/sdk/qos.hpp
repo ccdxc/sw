@@ -9,9 +9,38 @@
 #include "include/sdk/platform.hpp"
 
 namespace sdk {
+namespace qos {
 
 #define SDK_DEFAULT_POLICER_REFRESH_INTERVAL    250 // in usecs
 #define SDK_MAX_POLICER_TOKENS_PER_INTERVAL     ((1ull<<39)-1)
+#define TM_MAX_DSCP_VALS                        64
+
+#define QOS_CMAP_TYPES(ENTRY)                     \
+    ENTRY(QOS_CMAP_TYPE_NONE,         0, "none")  \
+    ENTRY(QOS_CMAP_TYPE_PCP,          1, "pcp")   \
+    ENTRY(QOS_CMAP_TYPE_DSCP,         2, "dscp")
+
+SDK_DEFINE_ENUM(qos_cmap_type_e, QOS_CMAP_TYPES);
+#undef QOS_CMAP_TYPES
+
+#define QOS_IQS(ENTRY)                                        \
+    ENTRY(QOS_IQ_COMMON,                 0, "common")         \
+    ENTRY(QOS_IQ_TX_UPLINK_GROUP_0,      1, "uplink-group-0") \
+    ENTRY(QOS_IQ_TX_UPLINK_GROUP_1,      2, "uplink-group-1") \
+    ENTRY(QOS_IQ_RX,                     3, "rx")             \
+    ENTRY(QOS_NUM_IQ_TYPES,              4, "num-iq-types")
+
+SDK_DEFINE_ENUM(qos_iq_type_e, QOS_IQS)
+#undef QOS_IQS
+
+#define QOS_OQS(ENTRY)                                \
+    ENTRY(QOS_OQ_COMMON,                 0, "common") \
+    ENTRY(QOS_OQ_RXDMA,                  1, "rxdma")
+SDK_DEFINE_ENUM(qos_oq_type_e, QOS_OQS)
+#undef QOS_OQS
+
+typedef uint32_t tm_port_t;
+typedef int32_t tm_q_t;
 
 typedef enum policer_type_e {
     POLICER_TYPE_NONE = 0,
@@ -91,7 +120,47 @@ typedef struct p4plus_table_params_s {
     int stage_tableid_sxdma_act;
 } p4plus_table_params_t;
 
-typedef uint32_t tm_port_t;
+typedef struct tm_uplink_q_params_s {
+    tm_q_t   iq;                           ///< uplink iq
+    uint32_t mtu;                          ///< max size for incoming packet
+    uint32_t xoff_threshold;               ///< threshold for transmitter off
+    uint32_t xon_threshold;                ///< threshold for transmitter on
+    tm_q_t   p4_q;                         ///< p4 ingress oq
+    uint32_t dot1q_pcp;                    ///< incoming pcp cos value for classification
+    bool     no_drop;                      ///< queue is drop or no-drop
+    bool     use_ip;                       ///< use ip_dscp for classification
+    bool     ip_dscp[TM_MAX_DSCP_VALS];    ///< valid dscp values
+} tm_uplink_q_params_t;
+
+typedef struct qos_q_alloc_params_s {
+    uint32_t         cnt_uplink_iq;        ///< number of uplink IQs to be allocated
+    uint32_t         cnt_txdma_iq;         ///< number of TxDMA IQs to be allocated
+    uint32_t         cnt_oq;               ///< number of OQs to be allocated
+    qos_oq_type_e    dest_oq_type;         ///< destination OQ type - COMMON/RxDMA
+    bool             pcie_oq;              ///< indicates if rxdma oq is towards pcie/hbm
+} qos_q_alloc_params_t;
+
+typedef struct qos_cmap_s {
+    qos_cmap_type_e type;                       ///< classfication type - PCP/DSCP
+    uint32_t        dot1q_pcp;                  ///< pcp cos value
+    bool            ip_dscp[TM_MAX_DSCP_VALS];  ///< valid dscp values (0-63)
+} __PACK__ qos_cmap_t;
+
+static inline bool
+cmap_type_pcp (qos_cmap_type_e type) {
+    return type == QOS_CMAP_TYPE_PCP;
+}
+
+static inline bool
+cmap_type_dscp (qos_cmap_type_e type) {
+    return type == QOS_CMAP_TYPE_DSCP;
+}
+
+static inline bool
+tm_q_valid (tm_q_t tm_q)
+{
+    return tm_q < 0? false : true;
+}
 
 static inline sdk_ret_t
 policer_to_token_rate (policer_t *policer, uint64_t refresh_interval_us,
@@ -135,6 +204,21 @@ policer_token_to_rate (uint64_t token_rate, uint64_t token_burst,
     return SDK_RET_OK;
 }
 
+}    // namespace qos
 }    // namespace sdk
+
+using sdk::qos::tm_port_t;
+using sdk::qos::tm_q_t;
+using sdk::qos::tm_uplink_q_params_t;
+using sdk::qos::qos_q_alloc_params_t;
+using sdk::qos::qos_cmap_t;
+using sdk::qos::policer_type_t;
+using sdk::qos::policer_t;
+using sdk::qos::tm_debug_buffer_drop_stats_t;
+using sdk::qos::tm_debug_buffer_stats_t;
+using sdk::qos::tm_debug_oflow_fifo_drop_stats_t;
+using sdk::qos::tm_debug_oflow_fifo_stats_t;
+using sdk::qos::tm_debug_stats_t;
+using sdk::qos::p4plus_table_params_t;
 
 #endif    // __SDK_QOS_HPP__

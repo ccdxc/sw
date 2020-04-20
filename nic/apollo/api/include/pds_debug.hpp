@@ -54,7 +54,7 @@ typedef struct pds_table_stats_e {
 
 typedef struct pds_pb_debug_stats_e {
     uint32_t port;
-    sdk::tm_debug_stats_t stats;
+    sdk::qos::tm_debug_stats_t stats;
     sdk::platform::capri::capri_queue_stats_t qos_queue_stats;
 } pds_pb_debug_stats_t;
 
