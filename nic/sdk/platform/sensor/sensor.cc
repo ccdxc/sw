@@ -32,6 +32,7 @@ read_file(const char *filename, int *variable)
     return 0;
 }
 
+static
 int read_local_temperature(int *localtemp)
 {
     if (localtemp == NULL) {

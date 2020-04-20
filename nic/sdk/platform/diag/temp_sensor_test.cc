@@ -93,35 +93,22 @@ void temp_sensor_test_usage(test_mode_e mode)
 #define MAX_HBM_TEMPERATURE_SUPPORTED      (105)
 
 
-int local_temp_sensor_test()
+int local_temp_sensor_test(int local_temperature)
 {
-    int local_temperature = 0;
     int retval = 0;
 
-    retval = sdk::platform::sensor::read_local_temperature(&local_temperature);
+    SDK_TRACE_INFO("Local temperature is (%d) degree Celsius \n", local_temperature);
 
-    if (retval)
+    if (local_temperature > MAX_LOCAL_TEMPERATURE_SUPPORTED)
     {
-        SDK_TRACE_ERR("Cannnot read Local temperature sensor data\n");
+        SDK_TRACE_ERR("Local temperature(%d) is above Max limit(%d)\n", local_temperature,  MAX_LOCAL_TEMPERATURE_SUPPORTED);
+        retval = -1;
     }
-    else
+
+    if (local_temperature < MIN_LOCAL_TEMPERATURE_SUPPORTED)
     {
-        //convert to degree celsius
-        local_temperature = local_temperature/1000;
-
-        SDK_TRACE_INFO("Local temperature is (%d) degree Celsius \n", local_temperature);
-
-        if (local_temperature > MAX_LOCAL_TEMPERATURE_SUPPORTED)
-        {
-            SDK_TRACE_ERR("Local temperature(%d) is above Max limit(%d)\n", local_temperature,  MAX_LOCAL_TEMPERATURE_SUPPORTED);
-            retval = -1;
-        }
-
-        if (local_temperature < MIN_LOCAL_TEMPERATURE_SUPPORTED)
-        {
-            SDK_TRACE_ERR("Local temperature(%d) is below Min limit(%d)\n", local_temperature,  MIN_LOCAL_TEMPERATURE_SUPPORTED);
-            retval = -1;
-        }
+        SDK_TRACE_ERR("Local temperature(%d) is below Min limit(%d)\n", local_temperature,  MIN_LOCAL_TEMPERATURE_SUPPORTED);
+        retval = -1;
     }
 
     LOG_TEST_RESULT("Local Temperature Sensor Test", retval);
@@ -129,23 +116,21 @@ int local_temp_sensor_test()
     return retval;
 }
 
-int die_temp_sensor_test()
+int die_temp_sensor_test(int die_temperature)
 {
-    float die_temperature = 0;
     int retval = 0;
 
-    die_temperature = cap_get_temp();
-    SDK_TRACE_INFO("Die temperature is (%f) degree Celsius\n", die_temperature);
+    SDK_TRACE_INFO("Die temperature is (%d) degree Celsius\n", die_temperature);
 
     if (die_temperature > MAX_DIE_TEMPERATURE_SUPPORTED)
     {
-        SDK_TRACE_ERR("Die temperature(%f) is above Max limit(%d)\n", die_temperature,  MAX_DIE_TEMPERATURE_SUPPORTED);
+        SDK_TRACE_ERR("Die temperature(%d) is above Max limit(%d)\n", die_temperature,  MAX_DIE_TEMPERATURE_SUPPORTED);
         retval = -1;
     }
 
     if (die_temperature < MIN_DIE_TEMPERATURE_SUPPORTED)
     {
-        SDK_TRACE_ERR("Die temperature(%f) is below Min limit(%d)\n", die_temperature,  MIN_DIE_TEMPERATURE_SUPPORTED);
+        SDK_TRACE_ERR("Die temperature(%d) is below Min limit(%d)\n", die_temperature,  MIN_DIE_TEMPERATURE_SUPPORTED);
         retval = -1;
     }
 
@@ -154,12 +139,9 @@ int die_temp_sensor_test()
     return retval;
 }
 
-int hbm_temp_test()
+int hbm_temp_test(int hbm_temperature)
 {
-    uint64_t hbm_temperature = 0;
     int retval = 0;
-
-    hbm_temperature = cap_nwl_sbus_get_1500_temperature();
 
     SDK_TRACE_INFO("HBM temperature is (%d) degree Celsius \n", hbm_temperature);
     if (hbm_temperature > MAX_HBM_TEMPERATURE_SUPPORTED)
@@ -184,6 +166,7 @@ diag_ret_e temp_sensor_test(test_mode_e mode, int argc, char* argv[])
     int arg_option;
     int index, retval = 0;
     struct option* option;
+    sdk::platform::sensor::system_temperature_t temperature;
 
     /** test flags */
     int test_all=0;
@@ -247,14 +230,29 @@ diag_ret_e temp_sensor_test(test_mode_e mode, int argc, char* argv[])
        test_hbm_temp = 1;
    }
 
+    retval = sdk::platform::sensor::read_temperatures(&temperature);
+    if (retval)
+    {
+        SDK_TRACE_ERR("Cannnot read Local temperature sensor data\n");
+        return (retval ? TEST_PASS : TEST_FAIL);
+    }
+
    if (test_local_temp)
-       retval = local_temp_sensor_test();
+   {
+        temperature.localtemp /= 1000;
+        retval = local_temp_sensor_test(temperature.localtemp);
+   }
 
    if (test_die_temp)
-       retval = die_temp_sensor_test();
+   {
+        temperature.dietemp /= 1000;
+        retval = die_temp_sensor_test(temperature.dietemp);
+   }
 
    if (test_hbm_temp)
-       retval = hbm_temp_test();
+   {
+        retval = hbm_temp_test(temperature.hbmtemp);
+   }
 
    return (retval ? TEST_PASS : TEST_FAIL);
 }
