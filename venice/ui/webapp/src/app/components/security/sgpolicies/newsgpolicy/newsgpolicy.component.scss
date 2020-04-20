@@ -6,6 +6,7 @@ $vertical-gutter: 5px;
 
 .newsgpolicy-appContainer {
   padding-top: 10px;
+  margin-bottom: 15px;
 }
 
 .newsgpolicy-name-box,
@@ -58,6 +59,7 @@ $vertical-gutter: 5px;
 
 .newsgpolicy-bold-subtext {
   @include primary-font(16px, #383838);
+  width: 165px;
 }
 
 .newsgpolicy-number {
@@ -81,8 +83,13 @@ $vertical-gutter: 5px;
 }
 
 .newsgpolicy-chip {
-  width: 400px;
-  height: 30px;
+  ul {
+    width: 200px;
+    white-space: nowrap;
+    overflow: hidden !important;
+    font-size: 14px !important;
+    height: 30px !important;
+  }
 }
 
 .newsgpolicy-input {
@@ -96,6 +103,10 @@ $vertical-gutter: 5px;
 
 .newsgpolicy-fieldtitle {
   margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newsgpolicy-protocol-app-container {
+  width: 525px;
 }
 
 .newsgpolicy-rule-template {

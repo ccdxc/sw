@@ -23,7 +23,9 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newsgpolicy (formClose)="creationFormClose()" fxFlex="none">
+  <app-newsgpolicy (formClose)="creationFormClose()" fxFlex="none"
+                   [existingObjects]='dataObjects' [securityAppOptions]='securityAppOptions'
+                   [securityGroupOptions]='securityGroupOptions' [ipOptions]='ipOptions'>
   </app-newsgpolicy>
 </ng-template>
 
@@ -65,6 +67,8 @@
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <ng-container *ngIf="attemptInlineEdit(rowData)">
     <app-newsgpolicy [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
+                     [existingObjects]='dataObjects' [securityAppOptions]='securityAppOptions'
+                     [securityGroupOptions]='securityGroupOptions' [ipOptions]='ipOptions'
                      (formClose)="closeRowExpand()" fxFlex="none">
     </app-newsgpolicy>
   </ng-container>

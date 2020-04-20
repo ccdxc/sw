@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy, SecuritySGRule, SecurityProtoPort, SecurityApp, SecuritySecurityGroup, ISecuritySecurityGroup } from '@sdk/v1/models/generated/security';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
@@ -10,9 +10,6 @@ import { Utility } from '@app/common/Utility';
 import { SelectItem } from 'primeng/api';
 import { IPUtility } from '@app/common/IPUtility';
 import { AbstractControl, FormGroup, FormArray, FormControl, ValidatorFn, ValidationErrors } from '@angular/forms';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
-import { WorkloadService } from '@app/services/generated/workload.service';
 
 @Component({
   selector: 'app-newsgpolicy',
@@ -20,6 +17,7 @@ import { WorkloadService } from '@app/services/generated/workload.service';
   styleUrls: ['./newsgpolicy.component.scss'],
   encapsulation: ViewEncapsulation.None,
   animations: Animations,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy> implements OnInit, AfterViewInit {
   // TODO: Add validation
@@ -41,7 +39,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected securityService: SecurityService,
-    protected workloadService: WorkloadService,
+    protected cdr: ChangeDetectorRef
   ) {
     super(_controllerService, uiconfigsService, SecurityNetworkSecurityPolicy);
   }
@@ -91,20 +89,11 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   // To smooth the experience, we disable animation on that index only
   indexToSkipAnimation: number;
 
-  securityAppsEventUtility: HttpEventUtility<SecurityApp>;
-  securityApps: ReadonlyArray<SecurityApp> = [];
-  securityAppOptions: SelectItem[] = [];
-  securityGroupsEventUtility: HttpEventUtility<SecuritySecurityGroup>;
-  securityGroups: ReadonlyArray<SecuritySecurityGroup> = [];
-  securityGroupOptions: SelectItem[] = [];
-  workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
-  workloads: ReadonlyArray<WorkloadWorkload> = [];
-
-  // Map from IP to workload name
-  ipOptions: any[] = [];
-
   @Input() isInline: boolean = false;
   @Input() existingObjects: ISecurityNetworkSecurityPolicy[] = [];
+  @Input() securityAppOptions: SelectItem[] = [];
+  @Input() securityGroupOptions: SelectItem[] = [];
+  @Input() ipOptions: any[] = [];
   @Input() objectData: ISecurityNetworkSecurityPolicy;
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
@@ -115,9 +104,6 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
 
   // Empty Hook
   postNgInit() {
-    this.getSecurityApps();
-    this.getWorkloads();
-    this.getSecuritygroups();
     if (this.isInline) {
       // TODO: comment out me and implement editing policy
       this.objectData.spec.rules.forEach((rule: SecuritySGRule) => {
@@ -153,73 +139,6 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
     // checks if name field is valid
     return Utility.isModelNameUniqueValidator(existingObjects, 'newPolicy-name');
   }
-
-  getWorkloads() {
-    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
-    this.workloads = this.workloadEventUtility.array;
-    const subscription = this.workloadService.WatchWorkload().subscribe(
-      (response) => {
-        this.workloadEventUtility.processEvents(response);
-        this.buildIPMap();
-      },
-      this._controllerService.webSocketErrorHandler('Failed to get Workloads')
-    );
-    this.subscriptions.push(subscription);
-  }
-
-  buildIPMap() {
-    const ipMap = {};
-    this.ipOptions = [];
-    // Taking IPs from spec, since status isn't always filled out currently
-    // TODO: Take IPs from status
-    this.workloads.forEach((w) => {
-      w.spec.interfaces.forEach((intf) => {
-        intf['ip-addresses'].forEach((ip) => {
-          ipMap[ip] = w.meta.name;
-        });
-      });
-    });
-    Object.keys(ipMap).forEach(ip => {
-      this.ipOptions.push({ ip: ip, workload: ipMap[ip] });
-    });
-  }
-
-  getSecurityApps() {
-    this.securityAppsEventUtility = new HttpEventUtility<SecurityApp>(SecurityApp, false, null, true); // https://pensando.atlassian.net/browse/VS-93 we want to trim the object
-    this.securityApps = this.securityAppsEventUtility.array as ReadonlyArray<SecurityApp>;
-    const subscription = this.securityService.WatchApp().subscribe(
-      response => {
-        this.securityAppsEventUtility.processEvents(response);
-        this.securityAppOptions = this.securityApps.map(app => {
-          return {
-            label: app.meta.name,
-            value: app.meta.name,
-          };
-        });
-      },
-      this._controllerService.webSocketErrorHandler('Failed to get Apps')
-    );
-    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
-  }
-
-  getSecuritygroups() {
-    this.securityGroupsEventUtility = new HttpEventUtility<SecuritySecurityGroup>(SecuritySecurityGroup, true);
-    this.securityGroups = this.securityGroupsEventUtility.array as ReadonlyArray<SecuritySecurityGroup>;
-    const subscription = this.securityService.WatchSecurityGroup().subscribe(
-      response => {
-        this.securityGroupsEventUtility.processEvents(response);
-        this.securityGroupOptions = this.securityGroups.map(group => {
-          return {
-            label: group.meta.name,
-            value: group.meta.name,
-          };
-        });
-      },
-      this.controllerService.webSocketErrorHandler('Failed to get Security Groups info')
-    );
-    this.subscriptions.push(subscription);
-  }
-
 
   // Empty Hook
   isFormValid() {
@@ -304,6 +223,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
         }
       }
     }
+    this.createButtonTooltip = '';
     return true;
   }
 
@@ -315,7 +235,8 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
         !this.newObject.$formGroup.get(['meta', 'name']).valid)  {
       return 'Error: Name field is invalid.';
     }
-    return this.createButtonTooltip;
+    return Utility.isEmpty(this.createButtonTooltip) ? 'Ready to save new policy' :
+            this.createButtonTooltip;
   }
 
   setToolbar() {
@@ -507,10 +428,10 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
         }
         return entry.protocol + '/' + entry.ports;
       });
-      return protoPorts.join('<br>');
+      return protoPorts.join(', ');
     }
     if (field === 'apps') {
-      return rule.rule.$formGroup.get(field).value.join('<br>');
+      return rule.rule.$formGroup.get(field).value.join(', ');
     }
     return rule.rule.$formGroup.get(field).value.join(', ');
   }

@@ -101,84 +101,46 @@
        [ngClass]="{'newsgpolicy-hide-primeng-panel': !rules[index].inEdit}">
     <ng-container [formGroup]="data.rule.$formGroup">
       <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
-        <div fxFlex="none">ACTION</div>
         <div fxFlex="none" fxLayout="row">
-          <div fxFlex="15px"></div>
-          <div fxFlex="none" fxLayout="column">
-            <div fxFlex="10px"></div>
-            <p-dropdown class="newsgpolicy-action-input"
-                        formControlName="action"
-                        styleClass="newsgpolicy-font" [options]="actionOptions">
-            </p-dropdown>
-          </div>
+          <p-dropdown class="newsgpolicy-action-input"
+                      formControlName="action" appFloatLabel="Action"
+                      styleClass="newsgpolicy-font" [options]="actionOptions">
+          </p-dropdown>
         </div>
-      </div>
-      <div fxFlex="20px"></div>
-      <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
-        <div fxFlex="none">FROM</div>
+        <div fxFlex="20px"></div>
         <div fxFlex="none" fxLayout="row">
-          <div fxFlex="15px"></div>
-          <div fxFlex="none" fxLayout="column" fxLayoutGap="10px">
-            <div fxFlex="5px"></div>
-            <span
-                  [ngClass]="{'app-formchips-requiredField': isFieldEmpty(data.rule.$formGroup.get(['from-ip-addresses']))}">
-              <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
-                             [formControl]="data.rule.$formGroup.get(['from-ip-addresses'])"
-                             boxStyleClass="newsgpolicy-chip" [itemValidator]="isValidIP"
-                             [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
-              </app-formchips>
-            </span>
-          </div>
+          <span
+                [ngClass]="{'app-formchips-requiredField': isFieldEmpty(data.rule.$formGroup.get(['from-ip-addresses']))}">
+            <app-formchips fxFlex="none" chipsLabel="Source IP Addresses"
+                           [formControl]="data.rule.$formGroup.get(['from-ip-addresses'])"
+                           boxStyleClass="newsgpolicy-chip" [itemValidator]="isValidIP"
+                           [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+            </app-formchips>
+          </span>
+          <div fxFlex="20px"></div>
+          <span
+                [ngClass]="{'app-formchips-requiredField': isFieldEmpty(data.rule.$formGroup.get(['to-ip-addresses']))}">
+            <app-formchips fxFlex="none" chipsLabel="Destination IP Addresses"
+                           [formControl]="data.rule.$formGroup.get(['to-ip-addresses'])"
+                           boxStyleClass="newsgpolicy-chip" [itemValidator]="isValidIP"
+                           [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+            </app-formchips>
+          </span>
           <!-- Release-A Constraints -->
           <!-- <div fxFlex="none" fxLayout="column" fxLayoutGap="10px">            
-            <div fxFlex="none" fxLayout="row">
-              <div fxFlex="none">Security Groups:</div>
-              <div fxFlex="5px"></div>
-              <div fxFlex="none" class="newsgpolicy-subtext">(specify one or more)</div>
-            </div>
-            <div fxFlex="30px">
-              <p-multiSelect class="newsgpolicy-from-sg" fxFlex="300px"
-                             formControlName="from-security-groups"
-                             appErrorTooltip appendTo="body" styleClass="newsgpolicy-font"
-                             [filter]="false" [showToggleAll]="false"
-                             [showHeader]="false" [options]="securityGroupOptions"></p-multiSelect>
-            </div>
-          </div> -->
-        </div>
-      </div>
-
-      <div fxFlex="20px"></div>
-
-      <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
-        <div fxFlex="none">TO</div>
-        <div fxFlex="none" fxLayout="row">
-          <div fxFlex="15px"></div>
-          <div fxFlex="none" fxLayout="column" fxLayoutGap="10px">
-            <div fxFlex="5px"></div>
-            <span
-                  [ngClass]="{'app-formchips-requiredField': isFieldEmpty(data.rule.$formGroup.get(['to-ip-addresses']))}">
-              <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
-                             [formControl]="data.rule.$formGroup.get(['to-ip-addresses'])"
-                             boxStyleClass="newsgpolicy-chip" [itemValidator]="isValidIP"
-                             [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
-              </app-formchips>
-            </span>
-          </div>
-          <!-- Release-A Constraints -->
-          <!-- <div fxFlex="none" fxLayout="column" fxLayoutGap="10px">
-            <div fxFlex="none" fxLayout="row">
-              <div fxFlex="none">Security Groups:</div>
-              <div fxFlex="5px"></div>
-              <div fxFlex="none" class="newsgpolicy-subtext">(specify one or more)</div>
-            </div>
-            <div fxFlex="30px">
-              <p-multiSelect class="newsgpolicy-from-sg" fxFlex="300px"
-                             formControlName="to-security-groups"
-                             appErrorTooltip appendTo="body" styleClass="newsgpolicy-font"
-                             [filter]="false" [showToggleAll]="false"
-                             [showHeader]="false" [options]="securityGroupOptions"></p-multiSelect>
-            </div>
-          </div> -->
+              <div fxFlex="none" fxLayout="row">
+                <div fxFlex="none">Security Groups:</div>
+                <div fxFlex="5px"></div>
+                <div fxFlex="none" class="newsgpolicy-subtext">(specify one or more)</div>
+              </div>
+              <div fxFlex="30px">
+                <p-multiSelect class="newsgpolicy-from-sg" fxFlex="300px"
+                              formControlName="from-security-groups"
+                              appErrorTooltip appendTo="body" styleClass="newsgpolicy-font"
+                              [filter]="false" [showToggleAll]="false"
+                              [showHeader]="false" [options]="securityGroupOptions"></p-multiSelect>
+              </div>
+            </div> -->
         </div>
       </div>
       <div fxFlex="20px"></div>
@@ -230,53 +192,51 @@
     </div>
 
     <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start start">
-      <div fxFlex="37px"></div>
-      <div fxFlex="80%" fxLayout="row wrap" fxLayoutAlign="space-between start">
-        <div fxFlex="none" fxLayout="column" fxLayouAlign="start start">
-          <div fxFlex="none" class="newsgpolicy-bold">FROM</div>
-          <div *ngIf="data.rule.$formGroup.get('from-security-groups').value.length !== 0"
-               fxFlex="auto"
-               fxLayout="row"
-               fxLayoutAlign="start end">
-            <div fxFlex="15px"></div>
-            <div fxFlex="none" class="newsgpolicy-bold-subtext">Security Groups</div>
-            <div fxFlex="30px"></div>
-            <div>{{ displayArrayField(data, 'from-security-groups') }}</div>
+      <div fxFlex="" fxLayout="column" fxLayoutAlign="space-between start">
+        <div fxFlex="" fxLayout="row">
+          <div fxFlex="none" fxLayout="column" fxLayouAlign="start start">
+            <div *ngIf="data.rule.$formGroup.get('from-security-groups').value.length !== 0"
+                 fxFlex="auto"
+                 fxLayout="row"
+                 fxLayoutAlign="start end">
+              <div fxFlex="15px"></div>
+              <div fxFlex="none" class="newsgpolicy-bold-subtext">Source Security Groups</div>
+              <div fxFlex="30px"></div>
+              <div>{{ displayArrayField(data, 'from-security-groups') }}</div>
+            </div>
+            <div *ngIf="data.rule.$formGroup.get('from-ip-addresses').value.length !== 0"
+                 fxFlex="auto"
+                 fxLayout="row"
+                 fxLayoutAlign="start end">
+              <div fxFlex="15px"></div>
+              <div fxFlex="none" class="newsgpolicy-bold-subtext">Source IP Addresses</div>
+              <div fxFlex="50px"></div>
+              <div>{{ displayArrayField(data, 'from-ip-addresses') }}</div>
+            </div>
           </div>
-          <div *ngIf="data.rule.$formGroup.get('from-ip-addresses').value.length !== 0"
-               fxFlex="auto"
-               fxLayout="row"
-               fxLayoutAlign="start end">
-            <div fxFlex="15px"></div>
-            <div fxFlex="none" class="newsgpolicy-bold-subtext">IP Addresses</div>
-            <div fxFlex="50px"></div>
-            <div>{{ displayArrayField(data, 'from-ip-addresses') }}</div>
+          <div fxFlex="20px"></div>
+          <div fxFlex="none" fxLayout="column" fxLayouAlign="start start">
+            <div *ngIf="data.rule.$formGroup.get('to-security-groups').value.length !== 0"
+                 fxFlex="auto"
+                 fxLayout="row"
+                 fxLayoutAlign="start end">
+              <div fxFlex="15px"></div>
+              <div fxFlex="none" class="newsgpolicy-bold-subtext">Destination Security Groups</div>
+              <div fxFlex="30px"></div>
+              <div>{{ displayArrayField(data, 'to-security-groups') }}</div>
+            </div>
+            <div *ngIf="data.rule.$formGroup.get('to-ip-addresses').value.length !== 0"
+                 fxFlex="auto"
+                 fxLayout="row"
+                 fxLayoutAlign="start end">
+              <div fxFlex="15px"></div>
+              <div fxFlex="none" class="newsgpolicy-bold-subtext">Destination IP Addresses</div>
+              <div fxFlex="50px"></div>
+              <div>{{ displayArrayField(data, 'to-ip-addresses') }}</div>
+            </div>
           </div>
         </div>
-
-        <div fxFlex="none" fxLayout="column" fxLayouAlign="start start">
-          <div fxFlex="none" class="newsgpolicy-bold">TO</div>
-          <div *ngIf="data.rule.$formGroup.get('to-security-groups').value.length !== 0"
-               fxFlex="auto"
-               fxLayout="row"
-               fxLayoutAlign="start end">
-            <div fxFlex="15px"></div>
-            <div fxFlex="none" class="newsgpolicy-bold-subtext">Security Groups</div>
-            <div fxFlex="30px"></div>
-            <div>{{ displayArrayField(data, 'to-security-groups') }}</div>
-          </div>
-          <div *ngIf="data.rule.$formGroup.get('to-ip-addresses').value.length !== 0" fxFlex="auto"
-               fxLayout="row"
-               fxLayoutAlign="start end">
-            <div fxFlex="15px"></div>
-            <div fxFlex="none" class="newsgpolicy-bold-subtext">IP Addresses</div>
-            <div fxFlex="50px"></div>
-            <div>{{ displayArrayField(data, 'to-ip-addresses') }}</div>
-          </div>
-        </div>
-
         <div fxFlex="none" fxLayout="column" fxLayouAlign="start start" fxLayoutAlign="start end">
-          <div fxFlex="none" class="newsgpolicy-bold">PROTO-PORTS/APPS</div>
           <div *ngIf="data.selectedProtoAppOption === APPS_OPTION"
                fxFlex="auto" fxLayout="row" fxLayout="start stretch">
             <div fxFlex="15px"></div>
@@ -300,10 +260,9 @@
 <ng-template #protoandportsTemplate let-data="data" let-ruleIndex="index">
   <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start center" [@slideInOut]
        *ngFor="let target of controlAsFormArray(data.rule.$formGroup.get('proto-ports')).controls ; let index = index ; let first = first"
-       [formGroup]="target">
+       [formGroup]="target" class="newsgpolicy-protocol-app-container">
     <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
-         style="margin-bottom: 15px; padding-top: 5px;">
-      <div fxFlex="15px"></div>
+         style="margin-bottom: 15px;">
       <div fxFlex="none" fxLayout="row">
         <span [style.width]="'200px'"
               [ngClass]="{'requiredField': isFieldEmpty(target.get(['protocol']))}">
@@ -311,7 +270,7 @@
                  pInputText formControlName="protocol" appFloatLabel="Protocol">
         </span>
       </div>
-      <div fxFlex="30px"></div>
+      <div fxFlex="20px"></div>
       <div fxFlex="none" fxLayout="row">
         <span [style.width]="'200px'" [ngClass]="{'requiredField': isPortRequired(target)}">
           <input class="newsgpolicy-name-box" fxFlex="nogrow" spellcheck="false"
@@ -336,17 +295,15 @@
 </ng-template>
 
 <ng-template #appsTemplate let-data="data" let-index="index">
-  <div fxFlex="none" fxLayout="row">
-    <div fxFlex="15px"></div>
+  <div fxFlex="none" fxLayout="row" class="newsgpolicy-protocol-app-container" [@slideInOut]>
     <span [ngClass]="{
       'newsgpolicy-appContainer': true,
       'requiredField': isFieldEmpty(data.rule.$formGroup.get(['apps']))
     }">
-      <p-multiSelect class="newsgpolicy-multiselect" fxFlex="300px" appendTo="body"
+      <p-multiSelect class="newsgpolicy-multiselect" fxFlex="200px" appendTo="body"
                      styleClass="newsgpolicy-font"
                      [filter]="false" [showHeader]="false" [showToggleAll]="false"
                      [defaultLabel]="!securityAppOptions || securityAppOptions.length < 1 ? 'No Apps Available' : 'Select Apps...'"
-                     [disabled]="!securityAppOptions || securityAppOptions.length < 1"
                      [options]="securityAppOptions"
                      [formControl]="data.rule.$formGroup.get('apps')">
       </p-multiSelect>

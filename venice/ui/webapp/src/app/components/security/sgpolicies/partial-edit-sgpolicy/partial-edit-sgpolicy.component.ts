@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy, SecuritySGRule, SecurityProtoPort, SecurityApp, SecuritySecurityGroup, ISecuritySecurityGroup } from '@sdk/v1/models/generated/security';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
@@ -20,6 +20,7 @@ import { NewsgpolicyComponent } from '@app/components/security/sgpolicies/newsgp
   styleUrls: ['./partial-edit-sgpolicy.component.scss'],
   encapsulation: ViewEncapsulation.None,
   animations: Animations,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PartialEditSgpolicyComponent extends NewsgpolicyComponent implements OnInit, AfterViewInit {
 
@@ -29,8 +30,9 @@ export class PartialEditSgpolicyComponent extends NewsgpolicyComponent implement
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected securityService: SecurityService,
-    protected workloadService: WorkloadService, ) {
-    super(_controllerService, uiconfigsService, securityService, workloadService);
+    protected workloadService: WorkloadService,
+    protected cdr: ChangeDetectorRef) {
+    super(_controllerService, uiconfigsService, securityService, cdr);
   }
 
   getClassName(): string {

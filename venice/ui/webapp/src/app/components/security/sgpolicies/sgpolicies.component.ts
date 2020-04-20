@@ -5,12 +5,14 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
-import { SecurityNetworkSecurityPolicy, ISecurityNetworkSecurityPolicy, IApiStatus, ISecurityNetworkSecurityPolicyList } from '@sdk/v1/models/generated/security';
+import { SecurityNetworkSecurityPolicy, ISecurityNetworkSecurityPolicy, IApiStatus, ISecurityNetworkSecurityPolicyList, SecurityApp, SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
 import { Observable } from 'rxjs';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { SearchSearchRequest } from '@sdk/v1/models/generated/search';
+import { SelectItem } from 'primeng/api';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { WorkloadService } from '@app/services/generated/workload.service';
 
 @Component({
   selector: 'app-sgpolicies',
@@ -24,6 +26,16 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
   dataObjects: ReadonlyArray<SecurityNetworkSecurityPolicy> = [];
   exportFilename: string = 'PSM-sgpolicies';
   exportMap: CustomExportMap = {};
+
+  securityApps: ReadonlyArray<SecurityApp> = [];
+  securityAppOptions: SelectItem[] = [];
+
+  securityGroups: ReadonlyArray<SecuritySecurityGroup> = [];
+  securityGroupOptions: SelectItem[] = [];
+
+  workloads: ReadonlyArray<WorkloadWorkload> = [];
+  // Map from IP to workload name
+  ipOptions: any[] = [];
 
   // Currently venice supports only one security policy.
   MAX_POLICY_NUM: number = 1;
@@ -58,6 +70,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected securityService: SecurityService,
+    protected workloadService: WorkloadService,
     protected cdr: ChangeDetectorRef,
   ) {
     super(_controllerService, cdr, uiconfigsService);
@@ -66,6 +79,9 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
 
   postNgInit() {
     this.getSecurityPolicies();
+    this.getSecurityApps();
+    // this.getWorkloads();
+    // this.getSecuritygroups();
   }
 
   setDefaultToolbar() {
@@ -116,6 +132,76 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
       this._controllerService.webSocketErrorHandler('Failed to get security policies')
     );
     this.subscriptions.push(subscription);
+  }
+
+  getSecurityApps() {
+    const sub = this.securityService.ListAppCache().subscribe(
+      response => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.securityApps = response.data;
+        this.securityAppOptions = this.securityApps.map(item => {
+          return {
+            label: item.meta.name,
+            value: item.meta.name
+          };
+        });
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get apps')
+    );
+    this.subscriptions.push(sub);
+  }
+
+  getSecuritygroups() {
+    const sub = this.securityService.ListSecurityGroupCache().subscribe(
+      response => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.securityGroups = response.data;
+        this.securityAppOptions = this.securityGroups.map(item => {
+          return {
+            label: item.meta.name,
+            value: item.meta.name
+          };
+        });
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get security policy groups')
+    );
+    this.subscriptions.push(sub);
+  }
+
+
+  getWorkloads() {
+    const workloadSubscription = this.workloadService.ListWorkloadCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.workloads = response.data as WorkloadWorkload[];
+        this.buildIPMap();
+      },
+      this.controllerService.webSocketErrorHandler('Failed to get workloads')
+    );
+    this.subscriptions.push(workloadSubscription);
+  }
+
+  buildIPMap() {
+    const ipMap = {};
+    this.ipOptions = [];
+    // Taking IPs from spec, since status isn't always filled out currently
+    // TODO: Take IPs from status
+    this.workloads.forEach((w) => {
+      w.spec.interfaces.forEach((intf) => {
+        intf['ip-addresses'].forEach((ip) => {
+          ipMap[ip] = w.meta.name;
+        });
+      });
+    });
+    Object.keys(ipMap).forEach(ip => {
+      this.ipOptions.push({ ip: ip, workload: ipMap[ip] });
+    });
   }
 
   displayColumn(data, col): any {

@@ -13,6 +13,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
 import { SecurityService } from '@app/services/generated/security.service';
+import { WorkloadService } from '@app/services/generated/workload.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
@@ -56,6 +57,7 @@ describe('SgpoliciesComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         SecurityService,
+        WorkloadService,
         UIConfigsService,
         AuthService,
         MessageService
