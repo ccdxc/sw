@@ -1447,6 +1447,9 @@ class PenOrchestrator:
                     #If not able to read then we will reset
                     naples_inst.ReadGoldFwVersion()
 
+                if not self.__host.IsSSHUP():
+                    raise
+
                 self.__host.WaitForSsh()
                 #need to unload driver as host might crash in ESX case.
                 #unloading of driver should not fail, else reset to goldfw
