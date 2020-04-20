@@ -429,7 +429,6 @@ func (ws *WorkloadState) createEndpoints() error {
 					err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 					if err != nil {
 						log.Errorf("Error creating network, ignoring  Err: %v", err)
-						netName = ns.Network.Network.Name
 					}
 				}
 			} else {
