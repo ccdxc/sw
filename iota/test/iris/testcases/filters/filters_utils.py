@@ -235,6 +235,7 @@ def getAllIntfPktFilter(naples_node):
                         break
                 if not found:
                     api.Logger.error("not able to find windows adapter name", intfName)
+                    continue
             bc = lifObj['spec']['packetfilter']['receivebroadcast']
             mc = lifObj['spec']['packetfilter']['receiveallmulticast']
             pr = lifObj['spec']['packetfilter']['receivepromiscuous']

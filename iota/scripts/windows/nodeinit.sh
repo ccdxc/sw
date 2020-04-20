@@ -3,12 +3,6 @@
 filename=test_nodeinit.ps1
 touch /mnt/c/Windows/temp/$filename
 cp /naples/drivers-windows.zip /mnt/c/Windows/temp
-wget http://pm.test.pensando.io/tools/iperf-3.1.3-win64.zip
-wget http://pm.test.pensando.io/tools/arp-ping.exe
-wget https://www.microolap.com/downloads/tcpdump/tcpdump_trial_license.zip
-mv iperf-3.1.3-win64.zip /mnt/c/Windows/temp
-mv tcpdump_trial_license.zip /mnt/c/Windows/temp
-mv arp-ping.exe /mnt/c/Windows/system32
 
 cat << "EOF" > /mnt/c/Windows/temp/$filename
 $ownIP="169.254.XX.2"
@@ -28,9 +22,9 @@ while($args.Count -gt 0 -and $loop -eq $true) {
 			'--cleanup' { $cleanUp=1 }
 			'--no-mgmt' { $noMgmt=1}
 			'--skip-install' { $skipInstall=1}
-			'--own_ip' {ownIP=$args[$arg+1]; $skipIteration=$true}
-			'--trg_ip' {trgIP=$args[$arg+1]; $skipIteration=$true}
-			default {echo "Unknown parameter passed:"+$arg[$arg]; exit 1}
+			'--own_ip' {$ownIP=$args[$arg+1]; $skipIteration=$true}
+			'--trg_ip' {$trgIP=$args[$arg+1]; $skipIteration=$true}
+			default {echo "Unknown parameter passed:"+$args[$arg]; exit 1}
 		}
 	}
 	$loop=$false
@@ -117,9 +111,6 @@ function Uninstall-Driver {
 	echo "Un-installed driver successfully"
 }
 
-cd temp
-expand-archive -path "iperf-3.1.3-win64.zip" -dest ..\system32 -force
-expand-archive -path "tcpdump_trial_license.zip" -dest ..\system32 -force
 
 if ($skipInstall) {
 	echo "user requested to skip install"
