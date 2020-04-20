@@ -130,6 +130,7 @@ export enum MonitoringMeasurementCriteria_function {
 export enum MonitoringMirrorCollector_type {
     'erspan_type_3' = "erspan_type_3",
     'erspan_type_2' = "erspan_type_2",
+    'erspan' = "erspan",
 }
 
 export enum MonitoringMirrorSessionSpec_packet_filters {
@@ -303,6 +304,7 @@ export enum MonitoringMatchedRequirement_operator_uihint {
 }
 
 export enum MonitoringMirrorCollector_type_uihint {
+    'erspan' = "ERSPAN - deprecated",
     'erspan_type_2' = "ERSPAN Type 2",
     'erspan_type_3' = "ERSPAN Type 3",
 }

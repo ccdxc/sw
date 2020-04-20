@@ -392,7 +392,7 @@ func (smm *SmMirrorSessionInterface) findCollector(tenant, vrf, dest string) (*m
 	return nil, errors.New("Collector not found")
 }
 
-func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest, gateway string) (*mirrorCollector, error) {
+func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest, gateway string, ctype string, stripVlanHdr bool) (*mirrorCollector, error) {
 
 	key := collectorKey(tenant, vrf, dest)
 	col, ok := smm.collectors[key]
@@ -410,9 +410,11 @@ func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest, gateway str
 			GenerationID: "1",
 		},
 		Spec: netproto.CollectorSpec{
-			Destination: dest,
-			VrfName:     vrf,
-			Gateway:     gateway,
+			Destination:  dest,
+			VrfName:      vrf,
+			Gateway:      gateway,
+			Type:         ctype,
+			StripVlanHdr: stripVlanHdr,
 		},
 	}
 
@@ -588,8 +590,12 @@ func updateCollectorsSpec(ms *monitoring.MirrorSession, collectors []*mirrorColl
 		for _, curCol := range collectors {
 			if col.ExportCfg.Destination == curCol.obj.Spec.Destination &&
 				col.ExportCfg.Gateway == curCol.obj.Spec.Gateway {
-				if curCol.obj.Spec.PacketSize != ms.Spec.PacketSize {
+				if curCol.obj.Spec.PacketSize != ms.Spec.PacketSize ||
+					curCol.obj.Spec.Type != col.Type || curCol.obj.Spec.StripVlanHdr != col.StripVlanHdr {
 					curCol.obj.Spec.PacketSize = ms.Spec.PacketSize
+					curCol.obj.Spec.Type = col.Type
+					curCol.obj.Spec.StripVlanHdr = col.StripVlanHdr
+
 					curCol.pushObj.UpdateObjectWithReferences(
 						curCol.obj.GetKey(), curCol.obj, nil)
 				}
@@ -654,7 +660,7 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 		mcol, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, collector.ExportCfg.Destination)
 		if err != nil {
 			mcol, err = smgrMirrorInterface.addCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
-				collector.ExportCfg.Destination, collector.ExportCfg.Gateway)
+				collector.ExportCfg.Destination, collector.ExportCfg.Gateway, collector.Type, collector.StripVlanHdr)
 			if err != nil {
 				log.Errorf("Error Adding collector %+v. Err: %v", collector.ExportCfg.Destination, err)
 				return err
@@ -766,7 +772,7 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 			delCollectors = append(delCollectors, mcol)
 		} else if cref.cnt == 2 {
 			mcol, err := smgrMirrorInterface.addCollector(nmirror.Tenant, nmirror.Namespace,
-				cref.col.ExportCfg.Destination, cref.col.ExportCfg.Gateway)
+				cref.col.ExportCfg.Destination, cref.col.ExportCfg.Gateway, cref.col.Type, cref.col.StripVlanHdr)
 			if err != nil {
 				log.Infof("Error adding collector %v", err)
 				return fmt.Errorf("Error adding collector %v", err)

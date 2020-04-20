@@ -18468,10 +18468,12 @@
           "type": "string",
           "enum": [
             "erspan_type_3",
-            "erspan_type_2"
+            "erspan_type_2",
+            "erspan"
           ],
           "default": "erspan_type_3",
           "x-ui-hints": {
+            "erspan": "ERSPAN - deprecated",
             "erspan_type_2": "ERSPAN Type 2",
             "erspan_type_3": "ERSPAN Type 3"
           },

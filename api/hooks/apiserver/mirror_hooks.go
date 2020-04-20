@@ -24,7 +24,7 @@ type mirrorSessionHooks struct {
 
 const (
 	// Finalize these parameters once we decide how to store the packets captured by Venice
-	veniceMaxPacketSize           = 256
+	veniceMaxPacketSize           = 2048
 	veniceMaxCollectorsPerSession = 4
 )
 
@@ -106,7 +106,9 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 		}
 	}
 	for _, c := range ms.Spec.Collectors {
-		if c.Type == monitoring.PacketCollectorType_ERSPAN_TYPE_3.String() || c.Type == monitoring.PacketCollectorType_ERSPAN_TYPE_2.String() {
+		if c.Type == monitoring.PacketCollectorType_ERSPAN_TYPE_3.String() ||
+			c.Type == monitoring.PacketCollectorType_ERSPAN_TYPE_2.String() ||
+			c.Type == monitoring.PacketCollectorType_ERSPAN.String() {
 			if c.ExportCfg == nil || c.ExportCfg.Destination == "" {
 				return i, false, fmt.Errorf("Provide valid destination for ERSPAN collector")
 			}

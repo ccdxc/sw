@@ -79,6 +79,7 @@ func (x Direction) String() string {
 
 // PacketCollectorType_normal is a map of normalized values for the enum
 var PacketCollectorType_normal = map[string]string{
+	"erspan":        "erspan",
 	"erspan_type_2": "erspan_type_2",
 	"erspan_type_3": "erspan_type_3",
 }
@@ -86,11 +87,13 @@ var PacketCollectorType_normal = map[string]string{
 var PacketCollectorType_vname = map[int32]string{
 	0: "erspan_type_3",
 	1: "erspan_type_2",
+	2: "erspan",
 }
 
 var PacketCollectorType_vvalue = map[string]int32{
 	"erspan_type_3": 0,
 	"erspan_type_2": 1,
+	"erspan":        2,
 }
 
 func (x PacketCollectorType) String() string {

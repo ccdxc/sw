@@ -167,6 +167,12 @@ func deleteCollectorHandler(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 }
 
 func convertMirrorSession(col netproto.Collector, destIP string, vrfID uint64) *halapi.MirrorSessionRequestMsg {
+	ctype := strings.ToUpper(col.Spec.Type)
+	if _, ok := halapi.ERSpanType_value[ctype]; !ok {
+		// erspan type 3 by default
+		ctype = halapi.ERSpanType_ERSPAN_TYPE_3.String()
+	}
+
 	return &halapi.MirrorSessionRequestMsg{
 		Request: []*halapi.MirrorSessionSpec{
 			{
@@ -177,7 +183,7 @@ func convertMirrorSession(col netproto.Collector, destIP string, vrfID uint64) *
 					ErspanSpec: &halapi.ERSpanSpec{
 						DestIp:      utils.ConvertIPAddresses(destIP)[0],
 						SpanId:      uint32(col.Status.Collector),
-						Type:        halapi.ERSpanType(halapi.ERSpanType_value[strings.ToUpper(col.Spec.Type)]),
+						Type:        halapi.ERSpanType(halapi.ERSpanType_value[ctype]),
 						VlanStripEn: col.Spec.StripVlanHdr,
 					},
 				},

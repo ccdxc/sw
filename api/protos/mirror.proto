@@ -72,6 +72,8 @@ enum PacketCollectorType {
     ERSPAN_TYPE_3     = 0;    // external packet capture using ERSPAN type 3 format
     // ui-hint: ERSPAN Type 2
     ERSPAN_TYPE_2     = 1;    // external packet capture using ERSPAN type 2 format
+    // ui-hint: ERSPAN - deprecated
+    ERSPAN            = 2;    // external packet capture using ERSPAN type 3 format
 }
 
 message MirrorExportConfig {
