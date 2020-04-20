@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, AfterViewInit, Input, ChangeDetectionStrategy } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Animations } from '@app/animations';
@@ -24,6 +24,8 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
   // Let workload.component pass in hostOptions
   @Input() hostOptions: SelectItem[] = [];
   @Input() existingObjects: IWorkloadWorkload[] = [];
+
+  @Output() editFormClose: EventEmitter<any> = new EventEmitter<any>();
 
   IPS_LABEL: string = 'IP Addresses';
   IPS_ERRORMSG: string = 'Invalid IP addresses';
@@ -237,4 +239,13 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
     return 'Updated workload ' + object.meta.name;
   }
 
+  editSaveObject() {
+    this.saveObject();
+    this.editFormClose.emit();
+  }
+
+  editCancelObject() {
+    this.cancelObject();
+    this.editFormClose.emit();
+  }
 }

@@ -23,6 +23,7 @@
                 [exportFilename]="exportFilename"
                 [exportMap]="exportMap"
                 [loading]="tableLoading"
+                [numRows]="10"
                 [rowHeight]="95">
   </app-pentable>
 </app-pagebody>
@@ -55,7 +56,7 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newworkload [objectData]="rowData" [isInline]="true" (formClose)="editFormClose(rowData)"
+  <app-newworkload [objectData]="rowData" [isInline]="true" (editFormClose)="editFormClose(rowData)"
                    [hostOptions]="hostOptions"
                    fxFlex="none">
   </app-newworkload>
@@ -86,15 +87,16 @@
         <a routerLink="/cluster/hosts" [matTooltip]="'Host machine'">
           {{rowData.spec["host-name"]}}</a>
       </div>
-      <div *ngIf="rowData.dscs && rowData.dscs.length>0"> DSCS:
-        <ng-container *ngFor="let dsc of rowData.dscs">
+      <div *ngIf="rowData._ui.dscs && rowData._ui.dscs.length>0">
+        DSCS:
+        <ng-container *ngFor="let dsc of rowData._ui.dscs">
           <a [matTooltip]="'Disctributed Services Card'"
              routerLink="/cluster/dscs/{{dsc.meta.name}}">{{dsc.spec.id}}</a>
         </ng-container>
       </div>
-      <div *ngIf="rowData.linkedsecuritygroups && rowData.linkedsecuritygroups.length>0"> SECURITY
-        GROUPS:
-        <ng-container *ngFor="let securitygroup of rowData.linkedsecuritygroups">
+      <div *ngIf="rowData._ui.linkedsecuritygroups && rowData._ui.linkedsecuritygroups.length>0">
+        SECURITY GROUPS:
+        <ng-container *ngFor="let securitygroup of rowData._ui.linkedsecuritygroups">
           <a [matTooltip]="'Security Groups'"
              routerLink="/security/securitygroups/">{{securitygroup.meta.name}}</a>
         </ng-container>
@@ -163,29 +165,29 @@
 </ng-template>
 
 <ng-template #actionButtonsTemplate>
-  <div fxFlex="none" fxLayoutAlign="start center" *roleGuard="'workloadworkload_update'">
-    <mat-icon [ngClass]="{
-                'global-multi-records-label-button': true,
-                'multi-delete-icon-disabled': !hasSelectedRows()
-              }"
-              (click)="editLabels()"
-              [matTooltip]="hasSelectedRows() ? 'Edit labels of selected workloads' : 'Select workloads to edit labels'">
-      label
-    </mat-icon>
-    <app-labeleditor [metadata]="labelEditorMetaData" [inLabelEditMode]="inLabelEditMode"
-                     (saveEmitter)="handleEditSave($event)"
-                     (cancelEmitter)="handleEditCancel($event)"
-                     [objects]="getSelectedDataObjects()" [nameKey]="'meta.name'">
-    </app-labeleditor>
-    <mat-icon [ngClass]="{
-                'global-multi-records-delete-icon': true,
-                'multi-delete-icon-disabled': disableMultiDelIcons() || !hasSelectedRows()
-              }"
-              (click)="onDeleteSelectedWorkloads($event)"
-              [matTooltip]="!hasSelectedRows() ? 'Select workloads to delete' : disableMultiDelIcons() ? 'At least one workload can not be deleted' : 'Delete selected workloads'">
-      delete
-    </mat-icon>
+  <div *roleGuard="'workloadworkload_update'">
+    <div fxFlex="none" fxLayoutAlign="start center" *ngIf="dataObjects.length > 0">
+      <mat-icon [ngClass]="{
+                  'global-multi-records-delete-icon': true,
+                  'global-button-disabled': !hasSelectedRows()
+                }"
+                (click)="editLabels()"
+                [matTooltip]="hasSelectedRows() ? 'Edit labels of selected workloads' : 'Select workloads to edit labels'">
+        label
+      </mat-icon>
+      <app-labeleditor [metadata]="labelEditorMetaData" [inLabelEditMode]="inLabelEditMode"
+                       (saveEmitter)="handleEditSave($event)"
+                       (cancelEmitter)="handleEditCancel($event)"
+                       [objects]="getSelectedDataObjects()" [nameKey]="'meta.name'">
+      </app-labeleditor>
+      <mat-icon [ngClass]="{
+                  'global-multi-records-delete-icon': true,
+                  'global-button-disabled': disableMultiDelIcons() || !hasSelectedRows()
+                }"
+                (click)="onDeleteSelectedWorkloads($event)"
+                [matTooltip]="!hasSelectedRows() ? 'Select workloads to delete' : disableMultiDelIcons() ? 'At least one workload can not be deleted' : 'Delete selected workloads'">
+        delete
+      </mat-icon>
+    </div>
   </div>
-
-
 </ng-template>

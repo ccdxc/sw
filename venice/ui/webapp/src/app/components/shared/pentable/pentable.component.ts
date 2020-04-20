@@ -34,7 +34,7 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
   @Input() exportFilename: string = 'Pensando';
   @Input() exportMap: CustomExportMap = {};
   @Input() loading: boolean;
-  @Input() numRows: number = 10;
+  @Input() numRows: number = 25;
   @Input() resizableColumns: boolean = true;
   @Input() rowHeight: number = 0;
   @Input() scrollable: boolean = false;
@@ -51,6 +51,7 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
   expandedRowData: any;
   first: number = 0;
   hoveredRowID: string;
+  rowsPerPageOptions: number[] = [10, 25, 50, 100];
   scrollHeight: string = `100%`;
   selectedColumns: TableCol[] = [];
   selectedDataObjects: any[] = [];
@@ -296,9 +297,9 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
     $('.pentable-widget .ui-table-scrollable-header-box').css('margin-right', `${scrollWidth}px`);
   }
 
-  rowExpandAnimationComplete(event, rowData) {
+  rowExpandAnimationComplete(rowData) {
     if (!this.showRowExpand) {
-      this.table.toggleRow(rowData, event);
+      this.table.toggleRow(rowData);
     }
   }
 

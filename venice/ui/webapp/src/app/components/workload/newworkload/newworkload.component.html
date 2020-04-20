@@ -34,12 +34,12 @@
 <ng-template #inlineButtons>
   <div *ngIf="isInline" class="new-workload-button-container">
     <div fxFlex="nogrow" class="button-container">
-      <span (click)="saveObject()" [matTooltip]="getTooltip()"
+      <span (click)="editSaveObject()" [matTooltip]="getTooltip()"
             class="global-button-primary global-button-padding new-workload-save"
             [ngClass]="computeInlineButtonClass()">SAVE</span>
     </div>
     <div fxFlex="nogrow" class="button-container">
-      <span (click)="cancelObject()"
+      <span (click)="editCancelObject()"
             class="global-button-neutral global-button-padding new-workload-cancel">CANCEL</span>
     </div>
   </div>

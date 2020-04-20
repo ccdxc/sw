@@ -29,6 +29,11 @@ import { PentableComponent } from '../shared/pentable/pentable.component';
 import { BaseComponent } from '../base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 
+interface WorkloadUiModel {
+  dscs: ClusterDistributedServiceCard[];
+  linkedsecuritygroups?: SecuritySecurityGroup[];
+}
+
 /**
  * Creates the workload page. Uses workload widget for the hero stats
  * section and a PrimeNG data table to list the workloads.
@@ -52,9 +57,6 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
   encapsulation: ViewEncapsulation.None
 })
 export class WorkloadComponent extends BaseComponent implements OnInit {
-
-  public static WORKLOAD_FIELD_DSCS: string = 'dscs';
-  public static WORKLOAD_FIELD_SECURITYGROUPS: string = 'linkedsecuritygroups';
   // Feature Flags
   hideWorkloadWidgets: boolean = !this.uiconfigsService.isFeatureEnabled('workloadWidgets');
 
@@ -477,8 +479,21 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
 
   public buildObjectsMap() {
     this.workloadDSCHostTupleMap = ObjectsRelationsUtility.buildWorkloadDscHostSecuritygroupMap(this.dataObjects, this.naples, this.hostObjects, this.securitygroups);
-    this.buildWorkloadDSCS();
-    this.buildWorkloadSecurityGroups();
+    this.buildUiModel();
+  }
+
+  buildUiModel() {
+    this.dataObjects.forEach((workload, idx) => {
+      const dscs = this.getDSCs(workload);
+      const linkedSecuritygroups = this.getLinkedSecuritygroups(workload);
+
+      const workloadUiModel: WorkloadUiModel = {
+        dscs: (dscs || dscs.length > 0) ? dscs : [],
+        linkedsecuritygroups: (linkedSecuritygroups && linkedSecuritygroups.length > 0) ? linkedSecuritygroups : [],
+      };
+
+      workload._ui = workloadUiModel;
+    });
   }
 
   deleteRecord(object: WorkloadWorkload): Observable<{ body: IWorkloadWorkload | IApiStatus | Error, statusCode: number }> {
@@ -521,20 +536,6 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
     } else {
       return [];
     }
-  }
-
-  buildWorkloadDSCS() {
-    this.dataObjects.forEach((workload) => {
-      const dscs = this.getDSCs(workload);
-      workload[WorkloadComponent.WORKLOAD_FIELD_DSCS] = (dscs || dscs.length > 0) ? dscs : [];
-    });
-  }
-
-  buildWorkloadSecurityGroups() {
-    this.dataObjects.forEach((workload) => {
-      const linkedSecuritygroups = this.getLinkedSecuritygroups(workload);
-      workload[WorkloadComponent.WORKLOAD_FIELD_SECURITYGROUPS] = (linkedSecuritygroups && linkedSecuritygroups.length > 0) ? linkedSecuritygroups : [];
-    });
   }
 
   editLabels() {
@@ -580,7 +581,6 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
     const observables: Observable<any>[] = [];
     for (const workloadObj of updatedWorkloads) {
       const name = workloadObj.meta.name;
-      delete workloadObj[WorkloadComponent.WORKLOAD_FIELD_DSCS];  // Remove the workload.dscs field as it is only needed in UI.
       const sub = this.workloadService.UpdateWorkload(name, workloadObj);
       observables.push(sub);
     }

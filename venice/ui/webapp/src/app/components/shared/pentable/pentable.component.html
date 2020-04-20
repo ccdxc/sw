@@ -4,7 +4,7 @@
     <div class="pentable-form-border"></div>
   </div>
   <p-table #primengTable
-           [alwaysShowPaginator]="false"
+           [alwaysShowPaginator]="data.length > numRows"
            [columns]="selectedColumns"
            [dataKey]="dataKey"
            [first]="first"
@@ -16,7 +16,7 @@
            [resizableColumns]="resizableColumns && !isDisabled()"
            [responsive]="true"
            [rows]="numRows"
-           [rowsPerPageOptions]="[10, 25, 50, 100]"
+           [rowsPerPageOptions]="rowsPerPageOptions"
            [(selection)]="selectedDataObjects"
            [sortField]="sortField"
            [sortOrder]="sortOrder"
@@ -80,7 +80,7 @@
     <ng-template pTemplate="rowexpansion" let-rowData>
       <tr #expandRow>
         <td [attr.colspan]="enableCheckbox ? selectedColumns.length + 1 : selectedColumns.length">
-          <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event, rowData)"
+          <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete(rowData)"
                *ngIf="showRowExpand" class="pentable-rowexpand">
             <ng-container
                           *ngTemplateOutlet="expandTemplate; context: {$implicit: rowData, columns: selectedColumns}">
@@ -94,7 +94,9 @@
         Showing
         <span class="pentable-paginator-value">{{state.first + 1}}</span>
         to
-        <span class="pentable-paginator-value">{{state.first + state.rows}}</span>
+        <span class="pentable-paginator-value">
+          {{state.rows > data.length - state.first ? data.length : state.first + state.rows}}
+        </span>
         of
         <span class="pentable-paginator-value">{{data.length}}</span>
         records
