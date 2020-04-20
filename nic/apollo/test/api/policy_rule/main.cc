@@ -87,29 +87,28 @@ policy_add_rules (pds_batch_ctxt_t bctxt, std::string cidr_str)
 
     test::extract_ip_pfx((char *)cidr_str.c_str(), &ip_pfx);
     for (uint32_t i = 0; i < add_rule_count; i ++) {
-        spec.key = int2pdsobjkey(rule_id + i);
-        spec.policy = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
-        spec.rule.key = int2pdsobjkey(rule_id + i);
-        spec.rule.match.l4_match.sport_range.port_lo = 0;
-        spec.rule.match.l4_match.sport_range.port_hi = 65535;
-        spec.rule.match.l4_match.dport_range.port_lo = 0;
-        spec.rule.match.l4_match.dport_range.port_hi = 65535;
-        spec.rule.match.l3_match.proto_match_type = MATCH_SPECIFIC;
-        spec.rule.match.l3_match.ip_proto = IP_PROTO_TCP;
-        spec.rule.match.l3_match.src_match_type = IP_MATCH_RANGE;
-        spec.rule.match.l3_match.dst_match_type = IP_MATCH_RANGE;
-        spec.rule.match.l3_match.src_ip_range.af = ip_pfx.addr.af;
-        memcpy(&spec.rule.match.l3_match.src_ip_range.ip_lo,
+        spec.key.rule_id = int2pdsobjkey(rule_id + i);
+        spec.key.policy_id = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
+        spec.attrs.match.l4_match.sport_range.port_lo = 0;
+        spec.attrs.match.l4_match.sport_range.port_hi = 65535;
+        spec.attrs.match.l4_match.dport_range.port_lo = 0;
+        spec.attrs.match.l4_match.dport_range.port_hi = 65535;
+        spec.attrs.match.l3_match.proto_match_type = MATCH_SPECIFIC;
+        spec.attrs.match.l3_match.ip_proto = IP_PROTO_TCP;
+        spec.attrs.match.l3_match.src_match_type = IP_MATCH_RANGE;
+        spec.attrs.match.l3_match.dst_match_type = IP_MATCH_RANGE;
+        spec.attrs.match.l3_match.src_ip_range.af = ip_pfx.addr.af;
+        memcpy(&spec.attrs.match.l3_match.src_ip_range.ip_lo,
                &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
-        memcpy(&spec.rule.match.l3_match.dst_ip_range.ip_lo,
+        memcpy(&spec.attrs.match.l3_match.dst_ip_range.ip_lo,
                &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
         test::increment_ip_addr(&ip_pfx.addr, 2);
-        memcpy(&spec.rule.match.l3_match.src_ip_range.ip_hi,
+        memcpy(&spec.attrs.match.l3_match.src_ip_range.ip_hi,
                &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
-        memcpy(&spec.rule.match.l3_match.dst_ip_range.ip_hi,
+        memcpy(&spec.attrs.match.l3_match.dst_ip_range.ip_hi,
                &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
         increment_ip_addr(&ip_pfx.addr);
-        spec.rule.action_data.fw_action.action = SECURITY_RULE_ACTION_DENY;
+        spec.attrs.action_data.fw_action.action = SECURITY_RULE_ACTION_DENY;
         ret = pds_policy_rule_create(&spec, bctxt);
         ASSERT_TRUE(ret == SDK_RET_OK);
     }
@@ -143,29 +142,28 @@ policy_update_rule (pds_batch_ctxt_t bctxt, std::string cidr_str)
     sdk_ret_t ret;
 
     test::extract_ip_pfx((char *)cidr_str.c_str(), &ip_pfx);
-    spec.key = int2pdsobjkey(1);
-    spec.policy = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
-    spec.rule.key = int2pdsobjkey(1);
-    spec.rule.match.l4_match.sport_range.port_lo = 0;
-    spec.rule.match.l4_match.sport_range.port_hi = 65535;
-    spec.rule.match.l4_match.dport_range.port_lo = 0;
-    spec.rule.match.l4_match.dport_range.port_hi = 65535;
-    spec.rule.match.l3_match.proto_match_type = MATCH_SPECIFIC;
-    spec.rule.match.l3_match.ip_proto = IP_PROTO_TCP;
-    spec.rule.match.l3_match.src_match_type = IP_MATCH_RANGE;
-    spec.rule.match.l3_match.dst_match_type = IP_MATCH_RANGE;
-    spec.rule.match.l3_match.src_ip_range.af = ip_pfx.addr.af;
-    memcpy(&spec.rule.match.l3_match.src_ip_range.ip_lo,
+    spec.key.rule_id = int2pdsobjkey(1);
+    spec.key.policy_id = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
+    spec.attrs.match.l4_match.sport_range.port_lo = 0;
+    spec.attrs.match.l4_match.sport_range.port_hi = 65535;
+    spec.attrs.match.l4_match.dport_range.port_lo = 0;
+    spec.attrs.match.l4_match.dport_range.port_hi = 65535;
+    spec.attrs.match.l3_match.proto_match_type = MATCH_SPECIFIC;
+    spec.attrs.match.l3_match.ip_proto = IP_PROTO_TCP;
+    spec.attrs.match.l3_match.src_match_type = IP_MATCH_RANGE;
+    spec.attrs.match.l3_match.dst_match_type = IP_MATCH_RANGE;
+    spec.attrs.match.l3_match.src_ip_range.af = ip_pfx.addr.af;
+    memcpy(&spec.attrs.match.l3_match.src_ip_range.ip_lo,
            &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
-    memcpy(&spec.rule.match.l3_match.dst_ip_range.ip_lo,
+    memcpy(&spec.attrs.match.l3_match.dst_ip_range.ip_lo,
            &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
     test::increment_ip_addr(&ip_pfx.addr, 2);
-    memcpy(&spec.rule.match.l3_match.src_ip_range.ip_hi,
+    memcpy(&spec.attrs.match.l3_match.src_ip_range.ip_hi,
            &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
-    memcpy(&spec.rule.match.l3_match.dst_ip_range.ip_hi,
+    memcpy(&spec.attrs.match.l3_match.dst_ip_range.ip_hi,
            &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
     increment_ip_addr(&ip_pfx.addr);
-    spec.rule.action_data.fw_action.action = SECURITY_RULE_ACTION_DENY;
+    spec.attrs.action_data.fw_action.action = SECURITY_RULE_ACTION_DENY;
     ret = pds_policy_rule_update(&spec, bctxt);
     ASSERT_TRUE(ret == SDK_RET_OK);
 }
@@ -195,7 +193,7 @@ policy_update_rule_verify (std::string cidr_str)
     ret = pds_policy_read(&key, &info);
     ASSERT_TRUE(ret == SDK_RET_OK);
     test::extract_ip_pfx((char *)cidr_str.c_str(), &ip_pfx);
-    ASSERT_TRUE(memcmp(&info.spec.rule_info->rules[0].match.l3_match.src_ip_range.ip_lo,
+    ASSERT_TRUE(memcmp(&info.spec.rule_info->rules[0].attrs.match.l3_match.src_ip_range.ip_lo,
                        &ip_pfx.addr.addr, sizeof(ipvx_addr_t)) == 0);
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.rule_info);
 

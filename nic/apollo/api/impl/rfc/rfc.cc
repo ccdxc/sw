@@ -24,63 +24,64 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
 
     rule_str += std::to_string(rule_num) + ". ";
     rule_str += (policy->af == IP_AF_IPV4) ? "v4, " : "v6, ";
-    rule_str += rule->stateful ? "stateful : " : "stateless : ";
-    if (rule->match.l3_match.proto_match_type == MATCH_SPECIFIC) {
+    rule_str += rule->attrs.stateful ? "stateful : " : "stateless : ";
+    if (rule->attrs.match.l3_match.proto_match_type == MATCH_SPECIFIC) {
         rule_str += "match = (proto " +
-                    std::to_string(rule->match.l3_match.ip_proto) + ", ";
+                    std::to_string(rule->attrs.match.l3_match.ip_proto) + ", ";
     } else {
         rule_str += "match = (proto ANY, ";
     }
-    if (rule->match.l3_match.src_match_type == IP_MATCH_PREFIX) {
+    if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_PREFIX) {
         rule_str+=
-            "src " + string(ippfx2str(&rule->match.l3_match.src_ip_pfx)) + ", ";
-    } else if (rule->match.l3_match.src_match_type == IP_MATCH_TAG) {
-        rule_str+= "src " + std::to_string(rule->match.l3_match.src_tag) + ", ";
+            "src " + string(ippfx2str(&rule->attrs.match.l3_match.src_ip_pfx)) + ", ";
+    } else if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_TAG) {
+        rule_str+= "src " + std::to_string(rule->attrs.match.l3_match.src_tag) + ", ";
     }
-    if (rule->match.l3_match.dst_match_type == IP_MATCH_PREFIX) {
+    if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_PREFIX) {
         rule_str+=
-            "dst " + string(ippfx2str(&rule->match.l3_match.dst_ip_pfx)) + ", ";
-    } else if (rule->match.l3_match.dst_match_type == IP_MATCH_TAG) {
-        rule_str+= "dst " + std::to_string(rule->match.l3_match.dst_tag) + ", ";
+            "dst " + string(ippfx2str(&rule->attrs.match.l3_match.dst_ip_pfx)) + ", ";
+    } else if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_TAG) {
+        rule_str+= "dst " + std::to_string(rule->attrs.match.l3_match.dst_tag) + ", ";
     }
-    if (rule->match.l3_match.proto_match_type == MATCH_SPECIFIC) {
-        if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
-            if (rule->match.l4_match.type_match_type == MATCH_SPECIFIC) {
-                if (rule->match.l4_match.code_match_type == MATCH_SPECIFIC) {
+    if (rule->attrs.match.l3_match.proto_match_type == MATCH_SPECIFIC) {
+        if (rule->attrs.match.l3_match.ip_proto == IP_PROTO_ICMP) {
+            if (rule->attrs.match.l4_match.type_match_type == MATCH_SPECIFIC) {
+                if (rule->attrs.match.l4_match.code_match_type == MATCH_SPECIFIC) {
                     rule_str += "ICMP type/code " +
-                            std::to_string(rule->match.l4_match.icmp_type) + "/" +
-                            std::to_string(rule->match.l4_match.icmp_code) + ", ";
+                            std::to_string(rule->attrs.match.l4_match.icmp_type) + "/" +
+                            std::to_string(rule->attrs.match.l4_match.icmp_code) + ", ";
                 } else {
                     rule_str += "ICMP type/code " +
-                            std::to_string(rule->match.l4_match.icmp_type) + "/" +
+                            std::to_string(rule->attrs.match.l4_match.icmp_type) + "/" +
                             "ANY, ";
                 }
             } else {
                 rule_str += "ICMP type/code ANY/ANY, ";
             }
-        } else if ((rule->match.l3_match.ip_proto == IP_PROTO_UDP) ||
-                   (rule->match.l3_match.ip_proto == IP_PROTO_TCP)) {
+        } else if ((rule->attrs.match.l3_match.ip_proto == IP_PROTO_UDP) ||
+                   (rule->attrs.match.l3_match.ip_proto == IP_PROTO_TCP)) {
             rule_str +=
                     "sport [" +
-                    std::to_string(rule->match.l4_match.sport_range.port_lo) + "-" +
-                    std::to_string(rule->match.l4_match.sport_range.port_hi) + "], ";
+                    std::to_string(rule->attrs.match.l4_match.sport_range.port_lo) + "-" +
+                    std::to_string(rule->attrs.match.l4_match.sport_range.port_hi) + "], ";
             rule_str +=
                     "dport [" +
-                    std::to_string(rule->match.l4_match.dport_range.port_lo) + "-" +
-                    std::to_string(rule->match.l4_match.dport_range.port_hi) + "]) ";
+                    std::to_string(rule->attrs.match.l4_match.dport_range.port_lo) + "-" +
+                    std::to_string(rule->attrs.match.l4_match.dport_range.port_hi) + "]) ";
         }
     }
 
     rule_str += "action = ";
-    if (rule->action_data.fw_action.action == SECURITY_RULE_ACTION_ALLOW) {
+    if (rule->attrs.action_data.fw_action.action ==
+            SECURITY_RULE_ACTION_ALLOW) {
         rule_str += "A";
-    } else if (rule->action_data.fw_action.action ==
+    } else if (rule->attrs.action_data.fw_action.action ==
                    SECURITY_RULE_ACTION_DENY) {
         rule_str += "D";
     } else {
         rule_str += "U";
     }
-    rule_str += ", prio = " + std::to_string(rule->priority);
+    rule_str += ", prio = " + std::to_string(rule->attrs.priority);
     PDS_TRACE_DEBUG_NO_HEADER("%s", rule_str.c_str());
 }
 

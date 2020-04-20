@@ -166,7 +166,7 @@ public:
 
     /// \brief     lookup a security policy rule in database given the key
     /// \param[in] key security policy rule key
-    policy_rule *find(pds_obj_key_t *key) const;
+    policy_rule *find(pds_policy_rule_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -196,7 +196,7 @@ policy_find (pds_obj_key_t *key)
 }
 
 static inline policy_rule *
-policy_rule_find (pds_obj_key_t *key)
+policy_rule_find (pds_policy_rule_key_t *key)
 {
     return (policy_rule *)api_base::find_obj(OBJ_ID_POLICY_RULE, key);
 }

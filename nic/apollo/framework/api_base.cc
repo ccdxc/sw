@@ -157,7 +157,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
     case OBJ_ID_POLICY_RULE:
         // policy rule is a stateless object, so we need to build it on the fly
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policy_rule::build(&api_ctxt->api_params->key);
+            return policy_rule::build(&api_ctxt->api_params->policy_rule_key);
         }
         return policy_rule::build(&api_ctxt->api_params->policy_rule_spec.key);
 
@@ -338,7 +338,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_POLICY_RULE:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policy_rule_db()->find(&api_ctxt->api_params->key);
+            return policy_rule_db()->find(&api_ctxt->api_params->policy_rule_key);
         }
         return policy_rule_db()->find(&api_ctxt->api_params->policy_rule_spec.key);
 
@@ -471,7 +471,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_POLICY_RULE:
-        api_obj = policy_rule_db()->find((pds_obj_key_t *)key);
+        api_obj = policy_rule_db()->find((pds_policy_rule_key_t *)key);
         break;
 
     case OBJ_ID_MIRROR_SESSION:

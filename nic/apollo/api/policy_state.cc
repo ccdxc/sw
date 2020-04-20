@@ -162,7 +162,7 @@ policy_rule_state::policy_rule_state(void) {
     policy_rule_ht_ =
         ht::factory(PDS_SECURITY_POLICY_RULE_HT_SIZE,
                     policy_rule::policy_rule_key_func_get,
-                    sizeof(pds_obj_key_t));
+                    sizeof(pds_policy_rule_key_t));
     SDK_ASSERT(policy_rule_ht_ != NULL);
     policy_rule_slab_ =
         slab::factory("security-policy-rule", PDS_SLAB_ID_POLICY_RULE,
@@ -196,7 +196,7 @@ policy_rule_state::free(policy_rule *rule) {
 }
 
 policy_rule *
-policy_rule_state::find(pds_obj_key_t *key) const {
+policy_rule_state::find(pds_policy_rule_key_t *key) const {
     return (policy_rule *)(policy_rule_ht_->lookup(key));
 }
 

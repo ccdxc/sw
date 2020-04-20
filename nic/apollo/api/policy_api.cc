@@ -147,7 +147,8 @@ pds_policy_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 
 static inline sdk_ret_t
 pds_policy_rule_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                            pds_obj_key_t *key, pds_policy_rule_spec_t *spec)
+                            pds_policy_rule_key_t *key,
+                            pds_policy_rule_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
@@ -159,7 +160,7 @@ pds_policy_rule_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
     api_ctxt = api::api_ctxt_alloc(OBJ_ID_POLICY_RULE, op);
     if (likely(api_ctxt != NULL)) {
         if (op == API_OP_DELETE) {
-            api_ctxt->api_params->key = *key;
+            api_ctxt->api_params->policy_rule_key = *key;
         } else {
             api_ctxt->api_params->policy_rule_spec = *spec;
         }
@@ -176,7 +177,8 @@ pds_policy_rule_create (_In_ pds_policy_rule_spec_t *spec,
 }
 
 sdk_ret_t
-pds_policy_rule_read (_In_ pds_obj_key_t *key, _Out_ pds_policy_info_t *info)
+pds_policy_rule_read (_In_ pds_policy_rule_key_t *key,
+                      _Out_ pds_policy_info_t *info)
 {
     return SDK_RET_INVALID_OP;
 }
@@ -189,7 +191,8 @@ pds_policy_rule_update (_In_ pds_policy_rule_spec_t *spec,
 }
 
 sdk_ret_t
-pds_policy_rule_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+pds_policy_rule_delete (_In_ pds_policy_rule_key_t *key,
+                        _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_policy_rule_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

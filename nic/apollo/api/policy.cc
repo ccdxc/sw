@@ -480,15 +480,13 @@ policy_rule::free(policy_rule *rule) {
 }
 
 policy_rule *
-policy_rule::build(pds_obj_key_t *key) {
+policy_rule::build(pds_policy_rule_key_t *key) {
     policy_rule *rule;
 
     rule = policy_rule_db()->alloc();
     if (rule) {
         new (rule) policy_rule();
         memcpy(&rule->key_, key, sizeof(*key));
-        // TODO: for delete case, we should look up in kvstore and populate the
-        //       policy's key as well
     }
     return rule;
 }
@@ -505,7 +503,6 @@ policy_rule::init_config(api_ctxt_t *api_ctxt) {
     pds_policy_rule_spec_t *spec = &api_ctxt->api_params->policy_rule_spec;
 
     memcpy(&key_, &spec->key, sizeof(key_));
-    memcpy(&policy_, &spec->policy, sizeof(policy_));
     return SDK_RET_OK;
 }
 
@@ -517,15 +514,15 @@ policy_rule::add_deps(api_obj_ctxt_t *obj_ctxt) {
     if ((obj_ctxt->api_op == API_OP_CREATE) ||
         (obj_ctxt->api_op == API_OP_UPDATE)) {
         if (obj_ctxt->cloned_obj) {
-            policy_key = ((policy_rule *)obj_ctxt->cloned_obj)->policy_;
+            policy_key = ((policy_rule *)obj_ctxt->cloned_obj)->key_.policy_id;
         } else {
-            policy_key = policy_;
+            policy_key = key_.policy_id;
         }
         policy = policy_find(&policy_key);
         if (!policy) {
             PDS_TRACE_ERR("Failed to perform api op %u on rule %s, "
-                          "policy %s not found", obj_ctxt->api_op, key_.str(),
-                          policy_key.str());
+                          "policy %s not found", obj_ctxt->api_op,
+                          key_.rule_id.str(), policy_key.str());
         }
         api_obj_add_to_deps(API_OP_UPDATE,
                             OBJ_ID_POLICY_RULE, this,

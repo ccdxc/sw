@@ -136,20 +136,22 @@ security_policy_impl::update_policy_spec_(pds_policy_spec_t *spec,
                                           api_obj_ctxt_t *obj_ctxt) {
     uint32_t i;
     bool found;
-    pds_obj_key_t key;
     api_obj_ctxt_t *octxt;
+    pds_policy_rule_key_t key;
 
     for (auto it = obj_ctxt->clist.begin(); it != obj_ctxt->clist.end(); it++) {
         octxt = *it;
         if (octxt->api_op == API_OP_CREATE) {
             // add the route to the end of the table
-            spec->rule_info->rules[spec->rule_info->num_rules] =
-                octxt->api_params->policy_rule_spec.rule;
+            spec->rule_info->rules[spec->rule_info->num_rules].key =
+                octxt->api_params->policy_rule_spec.key.rule_id;
+            spec->rule_info->rules[spec->rule_info->num_rules].attrs =
+                octxt->api_params->policy_rule_spec.attrs;
             spec->rule_info->num_rules++;
         } else {
             // either DEL or UPD operation
             if (octxt->api_op == API_OP_DELETE) {
-                key = octxt->api_params->key;
+                key = octxt->api_params->policy_rule_key;
             } else {
                 // update case
                 key = octxt->api_params->policy_rule_spec.key;
@@ -157,15 +159,15 @@ security_policy_impl::update_policy_spec_(pds_policy_spec_t *spec,
             // search and find the object to delete or modify
             found = false;
             for (i = 0; i < spec->rule_info->num_rules; i++) {
-                if (key == spec->rule_info->rules[i].key) {
+                if (key.rule_id == spec->rule_info->rules[i].key) {
                     found = true;
                     break;
                 }
             }
             if (!found) {
                 PDS_TRACE_ERR("policy rule %s not found in policy %s to "
-                              "perform api op %u",
-                              key.str(), spec->key.str(), octxt->api_op);
+                              "perform api op %u", key.rule_id.str(),
+                              spec->key.str(), octxt->api_op);
                 return SDK_RET_INVALID_ARG;
             }
             if (octxt->api_op == API_OP_DELETE) {
@@ -175,8 +177,8 @@ security_policy_impl::update_policy_spec_(pds_policy_spec_t *spec,
                 spec->rule_info->num_rules--;
             } else {
                 // update case
-                spec->rule_info->rules[i] =
-                    octxt->api_params->policy_rule_spec.rule;
+                spec->rule_info->rules[i].attrs =
+                    octxt->api_params->policy_rule_spec.attrs;
             }
         }
     }

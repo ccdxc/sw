@@ -101,13 +101,18 @@ typedef union rule_action_data_s {
     fw_action_data_t    fw_action;    ///< Firewall action data
 } rule_action_data_t;
 
-/// \brief    generic rule
-typedef struct rule_s {
-    pds_obj_key_t         key;            ///< rule identifier
+///< \brief    policy rule attributes
+typedef struct pds_policy_rule_attrs_s {
     bool                  stateful;       ///< true, if rule is stateful
     uint32_t              priority;       ///< rule Priority
     rule_match_t          match;          ///< rule match
     rule_action_data_t    action_data;    ///< action and related information
+} pds_policy_rule_attrs_t;
+
+/// \brief    generic rule
+typedef struct rule_s {
+    pds_obj_key_t key;             ///< rule identifier
+    pds_policy_rule_attrs_t attrs; ///< rule attributes
 } __PACK__ rule_t;
 
 /// \brief rule info contains all rule specific information
@@ -203,11 +208,19 @@ sdk_ret_t pds_policy_update(pds_policy_spec_t *spec,
 sdk_ret_t pds_policy_delete(pds_obj_key_t *key,
                             pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
+/// \brief    policy rule key
+///< \remark  when rules are deleted individually or queried individually, the
+///           key must contain both parent policy key and individual policy rule
+///           key/(uu)id
+typedef struct pds_policy_rule_key_s {
+    pds_obj_key_t rule_id;      ///< policy rule identifier
+    pds_obj_key_t policy_id;    ///< policy this rule is part of
+} pds_policy_rule_key_t;
+
 /// \brief    policy rule specification
 typedef struct pds_policy_rule_spec_s {
-    pds_obj_key_t key;       ///< rule identifier
-    pds_obj_key_t policy;    ///< policy this rule is part of
-    rule_t rule;             ///< rule configuration
+    pds_policy_rule_key_t key;        ///< rule identifier
+    pds_policy_rule_attrs_t attrs;    ///< rule configuration
 } pds_policy_rule_spec_t;
 
 /// \brief policy rule status
@@ -236,7 +249,7 @@ sdk_ret_t pds_policy_rule_create(pds_policy_rule_spec_t *spec,
 /// \param[in]  key    rule key
 /// \param[out] info    rule information
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_rule_read(pds_obj_key_t *key,
+sdk_ret_t pds_policy_rule_read(pds_policy_rule_key_t *key,
                                pds_policy_rule_info_t *info);
 
 /// \brief    update policy rule
@@ -250,7 +263,7 @@ sdk_ret_t pds_policy_rule_update(pds_policy_rule_spec_t *spec,
 /// \param[in] key    rule key
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_rule_delete(pds_obj_key_t *key,
+sdk_ret_t pds_policy_rule_delete(pds_policy_rule_key_t *key,
                                  pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 #define PDS_MAX_SECURITY_PROFILE  1 ///< only one instance of security profile

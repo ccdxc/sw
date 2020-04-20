@@ -282,7 +282,7 @@ public:
     /// \param[in] key    key of object instance of interest
     /// \return    security policy rule instance corresponding to the key or
     ///            NULL if entry is not found
-    static policy_rule *build(pds_obj_key_t *key);
+    static policy_rule *build(pds_policy_rule_key_t *key);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will
@@ -323,7 +323,8 @@ public:
 
     /// \brief    return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-            return "rule-"  + std::string(key_.str());
+            return "rule-"  + std::string(key_.rule_id.str()) + "/" +
+                       std::string(key_.policy_id.str());
     }
 
     /// \brief     helper function to get key given security policy rule
@@ -336,7 +337,7 @@ public:
 
     /// \brief     return the security policy rule key/id
     /// \return    key/id of the security policy rule
-    const pds_obj_key_t key(void) const { return key_; }
+    const pds_policy_rule_key_t key(void) const { return key_; }
 
 private:
     /// \brief    constructor
@@ -349,9 +350,7 @@ private:
 
 private:
     /// security policy rule key
-    pds_obj_key_t key_;
-    /// security policy (this rule belongs to) key
-    pds_obj_key_t policy_;
+    pds_policy_rule_key_t key_;
 
     ///< hash table context
     ht_ctxt_t        ht_ctxt_;

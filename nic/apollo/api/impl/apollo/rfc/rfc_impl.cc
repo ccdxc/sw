@@ -97,28 +97,29 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     for (rule_num = 0; rule_num < policy->num_rules; rule_num++) {
         rule = &policy->rules[rule_num];
         rfc_policy_rule_dump(policy, rule_num);
-        if (ip_prefix_is_zero(&rule->match.l3_match.dst_ip_pfx)) {
+        if (ip_prefix_is_zero(&rule->attrs.match.l3_match.dst_ip_pfx)) {
             // ingress policy
-            rule->match.l3_match.src_ip_pfx.addr.af = policy->af;
+            rule->attrs.match.l3_match.src_ip_pfx.addr.af = policy->af;
             itable_add_address_inodes(rule_num, addr_inode,
-                                      &rule->match.l3_match.src_ip_pfx);
+                                      &rule->attrs.match.l3_match.src_ip_pfx);
         } else {
             // egress policy
-            rule->match.l3_match.dst_ip_pfx.addr.af = policy->af;
+            rule->attrs.match.l3_match.dst_ip_pfx.addr.af = policy->af;
             itable_add_address_inodes(rule_num, addr_inode,
-                                      &rule->match.l3_match.dst_ip_pfx);
+                                      &rule->attrs.match.l3_match.dst_ip_pfx);
         }
         port_inode = itable_add_port_inodes(rule_num, port_inode,
-                                            &rule->match.l4_match);
+                                            &rule->attrs.match.l4_match);
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
-                                     &rule->match.l3_match,
-                                     &rule->match.l4_match);
+                                     &rule->attrs.match.l3_match,
+                                     &rule->attrs.match.l4_match);
         addr_inode += 2;
         proto_port_inode += 2;
     }
     addr_itable->num_nodes = addr_inode - &addr_itable->nodes[0];
     port_itable->num_nodes = port_inode - &port_itable->nodes[0];
-    proto_port_itable->num_nodes = proto_port_inode - &proto_port_itable->nodes[0];
+    proto_port_itable->num_nodes =
+        proto_port_inode - &proto_port_itable->nodes[0];
     return SDK_RET_OK;
 }
 

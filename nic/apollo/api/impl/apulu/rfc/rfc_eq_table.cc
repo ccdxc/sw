@@ -836,11 +836,11 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
             while (rte_bitmap_slab_scan(slab, posn, &new_posn) != 0) {
                 ruleidx =
                     rte_bitmap_get_global_bit_pos(cbm->index2-1, new_posn);
-                if (priority > rfc_ctxt->policy->rules[ruleidx].priority) {
-                    priority = rfc_ctxt->policy->rules[ruleidx].priority;
+                if (priority > rfc_ctxt->policy->rules[ruleidx].attrs.priority) {
+                    priority = rfc_ctxt->policy->rules[ruleidx].attrs.priority;
                     PDS_TRACE_DEBUG("Picked high priority rule %u", ruleidx);
                     result = 0;
-                    if (rfc_ctxt->policy->rules[ruleidx].fw_act ==
+                    if (rfc_ctxt->policy->rules[ruleidx].attrs.fw_act ==
                             SECURITY_RULE_ACTION_ALLOW) {
                         RFC_RESULT_SET_ACTION_BIT(result,
                                                   RFC_RESULT_RULE_ACTION_ALLOW);
@@ -851,9 +851,9 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                     RFC_RESULT_SET_PRIORITY_BITS(result, priority);
                 } else {
                     PDS_TRACE_VERBOSE("rule %u priority %u < current %u"
-                                      ", skipping", ruleidx,
-                                      rfc_ctxt->policy->rules[ruleidx].priority,
-                                      priority);
+                        ", skipping", ruleidx,
+                        rfc_ctxt->policy->rules[ruleidx].attrs.priority,
+                        priority);
                 }
                 posn = new_posn;
             }

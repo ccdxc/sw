@@ -250,47 +250,44 @@ pds_security_profile_proto_to_api_spec (pds_security_profile_spec_t *api_spec,
 }
 
 static inline sdk_ret_t
-pds_policy_rule_proto_to_api_spec_common (rule_t *rule,
-                                          const pds::SecurityRuleInfo &proto_rule,
-                                          pds_obj_key_t policy_key)
+pds_policy_rule_attrs_proto_to_api_spec_common (
+    pds_policy_rule_attrs_t *rule_attrs,
+    const pds::SecurityRuleInfo &proto_rule,
+    pds_obj_key_t& rule_key, pds_obj_key_t& policy_key)
 {
     sdk_ret_t ret;
-
-    pds_obj_key_proto_to_api_spec(&rule->key, proto_rule.id());
 
     if (unlikely(proto_rule.priority() > PDS_MAX_RULE_PRIORITY)) {
         PDS_TRACE_ERR("Security policy {}, rule {} priority {} is invalid,"
                       " must be <= {}", policy_key.str(),
-                      rule->key.str(), proto_rule.priority(),
+                      rule_key.str(), proto_rule.priority(),
                       PDS_MAX_RULE_PRIORITY);
         return SDK_RET_INVALID_ARG;
     }
 
     if (unlikely(proto_rule.has_match() == false)) {
         PDS_TRACE_ERR("Security policy {}, rule {} has no match condition",
-                      policy_key.str(), rule->key.str());
+                      policy_key.str(), rule_key.str());
         return SDK_RET_INVALID_ARG;
     }
 
     if (unlikely(proto_rule.match().has_l3match() == false)) {
         PDS_TRACE_ERR("Security policy {}, rule {} has no L3 match condition, "
                       "IP protocol is a mandatory match condition",
-                      policy_key.str(), rule->key.str());
+                      policy_key.str(), rule_key.str());
         return SDK_RET_INVALID_ARG;
     }
-
-    rule->stateful = proto_rule.stateful();
-    rule->priority = proto_rule.priority();
-    rule->action_data.fw_action.action =
+    rule_attrs->stateful = proto_rule.stateful();
+    rule_attrs->priority = proto_rule.priority();
+    rule_attrs->action_data.fw_action.action =
                 pds_proto_action_to_rule_action(proto_rule.action());
 
-    ret = pds_policy_rule_match_proto_to_api_spec(policy_key, rule->key,
-                  &rule->match, proto_rule.match());
+    ret = pds_policy_rule_match_proto_to_api_spec(policy_key, rule_key,
+                  &rule_attrs->match, proto_rule.match());
     if (unlikely(ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Failed converting security policy {} rule {} spec,"
-                      " err {}", policy_key.str(), rule->key.str(), ret);
+        PDS_TRACE_ERR("Failed converting security policy {} rule {} spec, "
+                      "err {}", policy_key.str(), rule_key.str(), ret);
     }
-
     return ret;
 }
 
@@ -299,12 +296,12 @@ static inline sdk_ret_t
 pds_policy_rule_proto_to_api_spec (pds_policy_rule_spec_t *api_spec,
                                    const pds::SecurityRuleSpec &proto_spec)
 {
-    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
-    pds_obj_key_proto_to_api_spec(&api_spec->policy,
+    pds_obj_key_proto_to_api_spec(&api_spec->key.rule_id, proto_spec.id());
+    pds_obj_key_proto_to_api_spec(&api_spec->key.policy_id,
                                   proto_spec.securitypolicyid());
-    return pds_policy_rule_proto_to_api_spec_common(&api_spec->rule,
-                                                    proto_spec.securityrule(),
-                                                    api_spec->policy);
+    return pds_policy_rule_attrs_proto_to_api_spec_common(&api_spec->attrs,
+               proto_spec.securityrule(), api_spec->key.rule_id,
+               api_spec->key.policy_id);
 }
 
 // populate proto buf spec from policy API spec
@@ -331,86 +328,94 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
         pds::SecurityRuleInfo *proto_rule = proto_spec->add_rules();
         rule_t *api_rule = &api_spec->rule_info->rules[i];
         proto_rule->set_id(api_rule->key.id, PDS_MAX_KEY_LEN);
-        proto_rule->set_priority(api_rule->priority);
-        proto_rule->set_action(pds_rule_action_to_proto_action(&api_rule->action_data));
-        proto_rule->set_stateful(api_rule->stateful);
-        switch (api_rule->match.l3_match.src_match_type) {
+        proto_rule->set_priority(api_rule->attrs.priority);
+        proto_rule->set_action(pds_rule_action_to_proto_action(&api_rule->attrs.action_data));
+        proto_rule->set_stateful(api_rule->attrs.stateful);
+        switch (api_rule->attrs.match.l3_match.src_match_type) {
         case IP_MATCH_PREFIX:
-            if ((api_rule->match.l3_match.src_ip_pfx.len) &&
-                ((api_rule->match.l3_match.src_ip_pfx.addr.af == IP_AF_IPV4) ||
-                 (api_rule->match.l3_match.src_ip_pfx.addr.af == IP_AF_IPV6))) {
+            if ((api_rule->attrs.match.l3_match.src_ip_pfx.len) &&
+                ((api_rule->attrs.match.l3_match.src_ip_pfx.addr.af ==
+                      IP_AF_IPV4) ||
+                 (api_rule->attrs.match.l3_match.src_ip_pfx.addr.af ==
+                      IP_AF_IPV6))) {
                 ippfx_api_spec_to_proto_spec(
                     proto_rule->mutable_match()->mutable_l3match()->mutable_srcprefix(),
-                    &api_rule->match.l3_match.src_ip_pfx);
+                    &api_rule->attrs.match.l3_match.src_ip_pfx);
             }
             break;
         case IP_MATCH_RANGE:
             iprange_api_spec_to_proto_spec(
                 proto_rule->mutable_match()->mutable_l3match()->mutable_srcrange(),
-                &api_rule->match.l3_match.src_ip_range);
+                &api_rule->attrs.match.l3_match.src_ip_range);
             break;
         case IP_MATCH_TAG:
             proto_rule->mutable_match()->mutable_l3match()->set_srctag(
-                api_rule->match.l3_match.src_tag);
+                api_rule->attrs.match.l3_match.src_tag);
             break;
         default:
             break;
         }
 
-        switch (api_rule->match.l3_match.dst_match_type) {
+        switch (api_rule->attrs.match.l3_match.dst_match_type) {
         case IP_MATCH_PREFIX:
-            if ((api_rule->match.l3_match.dst_ip_pfx.len) &&
-                ((api_rule->match.l3_match.dst_ip_pfx.addr.af == IP_AF_IPV4) ||
-                 (api_rule->match.l3_match.dst_ip_pfx.addr.af == IP_AF_IPV6))) {
+            if ((api_rule->attrs.match.l3_match.dst_ip_pfx.len) &&
+                ((api_rule->attrs.match.l3_match.dst_ip_pfx.addr.af ==
+                      IP_AF_IPV4) ||
+                 (api_rule->attrs.match.l3_match.dst_ip_pfx.addr.af ==
+                      IP_AF_IPV6))) {
                 ippfx_api_spec_to_proto_spec(
                     proto_rule->mutable_match()->mutable_l3match()->mutable_dstprefix(),
-                    &api_rule->match.l3_match.dst_ip_pfx);
+                    &api_rule->attrs.match.l3_match.dst_ip_pfx);
             }
             break;
         case IP_MATCH_RANGE:
             iprange_api_spec_to_proto_spec(
                 proto_rule->mutable_match()->mutable_l3match()->mutable_dstrange(),
-                &api_rule->match.l3_match.dst_ip_range);
+                &api_rule->attrs.match.l3_match.dst_ip_range);
             break;
         case IP_MATCH_TAG:
             proto_rule->mutable_match()->mutable_l3match()->set_dsttag(
-                api_rule->match.l3_match.dst_tag);
+                api_rule->attrs.match.l3_match.dst_tag);
             break;
         default:
             break;
         }
-        if (api_rule->match.l3_match.proto_match_type == MATCH_SPECIFIC) {
+        if (api_rule->attrs.match.l3_match.proto_match_type == MATCH_SPECIFIC) {
             proto_rule->mutable_match()->mutable_l3match()->set_protonum(
-                    api_rule->match.l3_match.ip_proto);
-            if ((api_rule->match.l3_match.ip_proto == IP_PROTO_UDP) ||
-                (api_rule->match.l3_match.ip_proto == IP_PROTO_TCP)) {
+                    api_rule->attrs.match.l3_match.ip_proto);
+            if ((api_rule->attrs.match.l3_match.ip_proto == IP_PROTO_UDP) ||
+                (api_rule->attrs.match.l3_match.ip_proto == IP_PROTO_TCP)) {
                 proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->
                     mutable_srcportrange()->set_portlow(api_rule->
-                    match.l4_match.sport_range.port_lo);
+                    attrs.match.l4_match.sport_range.port_lo);
                 proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->
                     mutable_srcportrange()->set_porthigh(api_rule->
-                    match.l4_match.sport_range.port_hi);
+                    attrs.match.l4_match.sport_range.port_hi);
                 proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->
                     mutable_dstportrange()->set_portlow(api_rule->
-                    match.l4_match.dport_range.port_lo);
+                    attrs.match.l4_match.dport_range.port_lo);
                 proto_rule->mutable_match()->mutable_l4match()->mutable_ports()->
                     mutable_dstportrange()->set_porthigh(api_rule->
-                    match.l4_match.dport_range.port_hi);
-            } else if ((api_rule->match.l3_match.ip_proto == IP_PROTO_ICMP) ||
-                       (api_rule->match.l3_match.ip_proto == IP_PROTO_ICMPV6)) {
-                if (api_rule->match.l4_match.type_match_type == MATCH_SPECIFIC) {
+                    attrs.match.l4_match.dport_range.port_hi);
+            } else if ((api_rule->attrs.match.l3_match.ip_proto ==
+                            IP_PROTO_ICMP) ||
+                       (api_rule->attrs.match.l3_match.ip_proto ==
+                            IP_PROTO_ICMPV6)) {
+                if (api_rule->attrs.match.l4_match.type_match_type ==
+                        MATCH_SPECIFIC) {
                     proto_rule->mutable_match()->mutable_l4match()->
                         mutable_typecode()->set_typenum(api_rule->
-                        match.l4_match.icmp_type);
+                        attrs.match.l4_match.icmp_type);
                 } else {
                     proto_rule->mutable_match()->mutable_l4match()->
                         mutable_typecode()->set_typewildcard(
                         types::WildcardMatch::MATCH_ANY);
                 }
-                if (api_rule->match.l4_match.code_match_type == MATCH_SPECIFIC) {
+                if (api_rule->attrs.match.l4_match.code_match_type ==
+                        MATCH_SPECIFIC) {
                     proto_rule->mutable_match()->mutable_l4match()->
                         mutable_typecode()->set_codenum(
-                        api_rule->match.l4_match.icmp_code);
+                        api_rule->attrs.match.l4_match.icmp_code);
                 } else {
                     proto_rule->mutable_match()->mutable_l4match()->
                         mutable_typecode()->set_codewildcard(
@@ -481,9 +486,11 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
             pds_proto_action_to_rule_action(proto_spec.defaultfwaction());
     api_spec->rule_info->num_rules = num_rules;
     for (uint32_t i = 0; i < num_rules; i++) {
-        ret = pds_policy_rule_proto_to_api_spec_common(&api_spec->rule_info->rules[i],
-                                                       proto_spec.rules(i),
-                                                       api_spec->key);
+        pds_obj_key_proto_to_api_spec(&api_spec->rule_info->rules[i].key,
+                                      proto_spec.rules(i).id());
+        ret = pds_policy_rule_attrs_proto_to_api_spec_common(
+                  &api_spec->rule_info->rules[i].attrs, proto_spec.rules(i),
+                  api_spec->rule_info->rules[i].key, api_spec->key);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed converting policy {} spec, err {}",
                           api_spec->key.str(), ret);

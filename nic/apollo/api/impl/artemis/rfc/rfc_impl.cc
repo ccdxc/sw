@@ -116,53 +116,55 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
         rfc_policy_rule_dump(policy, rule_num);
 
         // handle source IP match conditions
-        if (rule->match.l3_match.src_match_type == IP_MATCH_PREFIX) {
+        if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_PREFIX) {
             itable_add_address_inodes(rule_num, sip_inode,
-                                      &rule->match.l3_match.src_ip_pfx);
+                                      &rule->attrs.match.l3_match.src_ip_pfx);
             sip_inode += 2;
-        } else if (rule->match.l3_match.src_match_type == IP_MATCH_RANGE) {
+        } else if (rule->attrs.match.l3_match.src_match_type ==
+                       IP_MATCH_RANGE) {
             itable_add_address_range_inodes(rule_num, sip_inode,
-                                            &rule->match.l3_match.src_ip_range);
+                &rule->attrs.match.l3_match.src_ip_range);
             sip_inode += 2;
-        } else if (rule->match.l3_match.src_match_type == IP_MATCH_TAG) {
+        } else if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_TAG) {
             itable_add_tag_inodes(rule_num, stag_inode,
-                                  rule->match.l3_match.src_tag);
+                                  rule->attrs.match.l3_match.src_tag);
             stag_inode += 2;
-        } else if (rule->match.l3_match.src_match_type == IP_MATCH_NONE) {
-            rule->match.l3_match.src_ip_pfx.addr.af = policy->af;
+        } else if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_NONE) {
+            rule->attrs.match.l3_match.src_ip_pfx.addr.af = policy->af;
             itable_add_address_inodes(rule_num, sip_inode,
-                                      &rule->match.l3_match.src_ip_pfx);
+                                      &rule->attrs.match.l3_match.src_ip_pfx);
             sip_inode += 2;
         }
 
         // handle destination IP match conditions
-        if (rule->match.l3_match.dst_match_type == IP_MATCH_PREFIX) {
+        if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_PREFIX) {
             itable_add_address_inodes(rule_num, dip_inode,
-                                      &rule->match.l3_match.dst_ip_pfx);
+                                      &rule->attrs.match.l3_match.dst_ip_pfx);
             dip_inode += 2;
-        } else if (rule->match.l3_match.dst_match_type == IP_MATCH_RANGE) {
+        } else if (rule->attrs.match.l3_match.dst_match_type ==
+                       IP_MATCH_RANGE) {
             itable_add_address_range_inodes(rule_num, dip_inode,
-                                            &rule->match.l3_match.dst_ip_range);
+                &rule->attrs.match.l3_match.dst_ip_range);
             dip_inode += 2;
-        } else if (rule->match.l3_match.dst_match_type == IP_MATCH_TAG) {
+        } else if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_TAG) {
             itable_add_tag_inodes(rule_num, dtag_inode,
-                                  rule->match.l3_match.dst_tag);
+                                  rule->attrs.match.l3_match.dst_tag);
             dtag_inode += 2;
-        } else if (rule->match.l3_match.dst_match_type == IP_MATCH_NONE) {
-            rule->match.l3_match.dst_ip_pfx.addr.af = policy->af;
+        } else if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_NONE) {
+            rule->attrs.match.l3_match.dst_ip_pfx.addr.af = policy->af;
             itable_add_address_inodes(rule_num, dip_inode,
-                                      &rule->match.l3_match.dst_ip_pfx);
+                                      &rule->attrs.match.l3_match.dst_ip_pfx);
             dip_inode += 2;
         }
 
         // handle source port match condition
         port_inode = itable_add_port_inodes(rule_num, port_inode,
-                                            &rule->match.l4_match);
+                                            &rule->attrs.match.l4_match);
 
         // handle protocol and destination port match condition
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
-                                     &rule->match.l3_match,
-                                     &rule->match.l4_match);
+                                     &rule->attrs.match.l3_match,
+                                     &rule->attrs.match.l4_match);
         proto_port_inode += 2;
     }
     sip_itable->num_nodes = sip_inode - &sip_itable->nodes[0];
@@ -170,7 +172,8 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     dip_itable->num_nodes = dip_inode - &dip_itable->nodes[0];
     dtag_itable->num_nodes = dtag_inode - &dtag_itable->nodes[0];
     port_itable->num_nodes = port_inode - &port_itable->nodes[0];
-    proto_port_itable->num_nodes = proto_port_inode - &proto_port_itable->nodes[0];
+    proto_port_itable->num_nodes =
+        proto_port_inode - &proto_port_itable->nodes[0];
     return SDK_RET_OK;
 }
 

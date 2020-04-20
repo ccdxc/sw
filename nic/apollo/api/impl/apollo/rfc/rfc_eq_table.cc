@@ -1166,7 +1166,7 @@ rfc_compute_p2_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                 ruleidx =
                         rte_bitmap_get_global_bit_pos(cbm->index2 - 1, new_posn);
                 PDS_TRACE_DEBUG("ruleidx = %u", ruleidx);
-                if (rfc_ctxt->policy->rules[ruleidx].stateful) {
+                if (rfc_ctxt->policy->rules[ruleidx].attrs.stateful) {
                     PDS_TRACE_DEBUG("rule %u is SF", ruleidx);
                     RFC_RESULT_SET_STATEFUL_BIT(result);
                 } else {
