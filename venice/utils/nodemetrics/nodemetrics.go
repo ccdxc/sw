@@ -152,7 +152,21 @@ func (w *nodemetrics) periodicUpdate(ctx context.Context) {
 			diskUsed := uint64(0)
 			diskTotal := uint64(0)
 
+			mountPoints := []string{"/dev", "/data", "/data/lib/etcd", "/run/initramfs/live", "/usr/local/bin"}
+			ignorePart := func(pt string) bool {
+				for _, mp := range mountPoints {
+					if pt == mp {
+						return false
+					}
+				}
+				return true
+			}
+
 			for _, p := range part {
+				if ignorePart(p.Mountpoint) {
+					continue
+				}
+
 				usage, err := disk.UsageWithContext(ctx, p.Mountpoint)
 				if err != nil {
 					w.logger.Errorf("Node Watcher: failed to read disk %+v, error: %v", p, err)

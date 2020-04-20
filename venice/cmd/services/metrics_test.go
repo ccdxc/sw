@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/nodemetrics"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -92,22 +91,4 @@ func TestMetricsService(t *testing.T) {
 	time.Sleep(2 * testSendInterval)
 	ok = collector.ValidateCount("test", nodeTags, 1, numInts, numFloats, numBools, numStrings)
 	Assert(t, ok, "Node metrics validation failed")
-
-	// test resource events
-	globals.DiskHighThresholdEventStatus = false
-	globals.DiskHighThreshold = 0
-	time.Sleep(2 * testSendInterval)
-	Assert(t, globals.DiskHighThresholdEventStatus, "DiskHighThreshold event not raised")
-	globals.DiskHighThreshold = 100
-	time.Sleep(2 * testSendInterval)
-	Assert(t, !globals.DiskHighThresholdEventStatus, "DiskHighThreshold event status not reset")
-
-	// resource events must not be generated when disabled
-	globals.ThresholdEventConfig = false
-
-	globals.DiskHighThresholdEventStatus = false
-	globals.DiskHighThreshold = 0
-	time.Sleep(2 * testSendInterval)
-	Assert(t, !globals.DiskHighThresholdEventStatus, "DiskHighThreshold event raised even when feature disabled")
-	globals.DiskHighThreshold = globals.DefaultDiskHighThreshold
 }
