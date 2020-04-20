@@ -532,448 +532,49 @@ func TestMain(m *testing.M) {
 	}
 
 	c = NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), ctrlerLis.ListenURL.String())
-	defer c.Stop()
+	o := types.DistributedServiceCardStatus{
+		DSCName:  "mock-dsc",
+		DSCMode:  "network_managed_inband",
+		MgmtIP:   "42.42.42.42/24",
+		MgmtIntf: "lo",
+	}
+
+	// Network Mode Migration
+	if err := c.HandleVeniceCoordinates(o); err != nil {
+		log.Errorf("Test Setup Failed. Err: %v", err)
+		os.Exit(1)
+	}
 
 	code := m.Run()
 	mockHal.Stop()
-	pipelineAPI.PurgeConfigs()
-	infraAPI.Close()
 	tsdb.Cleanup()
-	os.Remove(primaryDB.Name())
-	os.Remove(secondaryDB.Name())
+
+	// Host Mode Migration
+	hostObj := types.DistributedServiceCardStatus{
+		DSCName: "mock-dsc",
+		DSCMode: "host_managed",
+	}
+
+	if err := c.HandleVeniceCoordinates(hostObj); err != nil {
+		log.Errorf("Host Mode Migration failed. Err: %v", err)
+		os.Exit(1)
+	}
+
+	// Check if the DBs are purged
+	if _, err := os.Stat(primaryDB.Name()); !os.IsNotExist(err) {
+		log.Errorf("Failed to purge primary DB on host mode migration. Err: %v", err)
+		os.Exit(1)
+	}
+
+	if _, err := os.Stat(secondaryDB.Name()); !os.IsNotExist(err) {
+		log.Errorf("Failed to purge secondary DB on host mode migration. Err: %v", err)
+		os.Exit(1)
+	}
+
+	c.Stop()
+	log.Infof("Exit Code for Controller Tests. Code: %d", code)
 	os.Exit(code)
 }
-
-// ############################ Agg Watch Methods ############################
-// Infinite looping of sending objects with specific oper. Ensure its gone from the db on stream.send. This
-// is a poor man's simulation of looped npm cruds. On the bright side, the validation is all the way down to datapath
-//func (srv *fakeRPCServer) WatchObjects(kinds *netproto.AggKinds, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
-//	// walk local db and send stream resp
-//	for {
-//
-//		appdbcreate.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.App)
-//			log.Infof("Sending App Create: %s", obj.GetKey())
-//
-//			// watch event
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_CreateEvent,
-//				AggObj:    netproto.AggObject{Kind: "App", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//			if err != nil {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			}
-//
-//			appdbcreate.Delete(key)
-//
-//			return err == nil
-//		})
-//
-//		appdbupdate.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.App)
-//			log.Infof("Sending App Update: %s", obj.GetKey())
-//
-//			// watch event
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_UpdateEvent,
-//				AggObj:    netproto.AggObject{Kind: "App", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//			if err != nil {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			}
-//			appdbupdate.Delete(key)
-//
-//			return err == nil
-//		})
-//
-//		appdbdelete.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.App)
-//			log.Infof("Sending App Delete: %s", obj.GetKey())
-//
-//			// watch event
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_DeleteEvent,
-//				AggObj:    netproto.AggObject{Kind: "App", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//			if err != nil {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			}
-//			appdbdelete.Delete(key)
-//
-//			return err == nil
-//		})
-//
-//		nspdbcreate.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.NetworkSecurityPolicy)
-//			// watch event
-//			log.Infof("Sending NetworkSecurityPolicy Create: %s", obj.GetKey())
-//
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_CreateEvent,
-//				AggObj:    netproto.AggObject{Kind: "NetworkSecurityPolicy", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//			if err != nil {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			} else {
-//				nspdbcreate.Delete(key)
-//			}
-//			return err == nil
-//		})
-//
-//		nspdbupdate.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.NetworkSecurityPolicy)
-//			// watch event
-//			log.Infof("Sending NetworkSecurityPolicy Update: %s", obj.GetKey())
-//
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_UpdateEvent,
-//				AggObj:    netproto.AggObject{Kind: "NetworkSecurityPolicy", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//			if err == nil {
-//				nspdbupdate.Delete(key)
-//			} else {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			}
-//
-//			return err == nil
-//		})
-//
-//		nspdbdelete.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.NetworkSecurityPolicy)
-//			// watch event
-//			log.Infof("Sending NetworkSecurityPolicy Delete: %s", obj.GetKey())
-//
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_DeleteEvent,
-//				AggObj:    netproto.AggObject{Kind: "NetworkSecurityPolicy", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//
-//			if err == nil {
-//				nspdbdelete.Delete(key)
-//			} else {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			}
-//
-//			return err == nil
-//		})
-//
-//		networkdbcreate.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.Network)
-//			// watch event
-//			log.Infof("Sending Network Create: %s", obj.GetKey())
-//
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_CreateEvent,
-//				AggObj:    netproto.AggObject{Kind: "Network", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//			if err != nil {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			} else {
-//				networkdbcreate.Delete(key)
-//			}
-//			return err == nil
-//		})
-//
-//		networkdbupdate.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.Network)
-//			// watch event
-//			log.Infof("Sending Network Update: %s", obj.GetKey())
-//
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_UpdateEvent,
-//				AggObj:    netproto.AggObject{Kind: "Network", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//			if err == nil {
-//				networkdbupdate.Delete(key)
-//			} else {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			}
-//
-//			return err == nil
-//		})
-//
-//		networkdbdelete.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.Network)
-//			// watch event
-//			log.Infof("Sending Network Delete: %s", obj.GetKey())
-//
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_DeleteEvent,
-//				AggObj:    netproto.AggObject{Kind: "Network", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//
-//			if err == nil {
-//				networkdbdelete.Delete(key)
-//			} else {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			}
-//
-//			return err == nil
-//		})
-//
-//		endpointdbcreate.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.Endpoint)
-//			// watch event
-//			log.Infof("Sending Endpoint Create: %s", obj.GetKey())
-//
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_CreateEvent,
-//				AggObj:    netproto.AggObject{Kind: "Endpoint", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//			if err != nil {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			} else {
-//				endpointdbcreate.Delete(key)
-//			}
-//			return err == nil
-//		})
-//
-//		endpointdbupdate.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.Endpoint)
-//			// watch event
-//			log.Infof("Sending Endpoint Update: %s", obj.GetKey())
-//
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_UpdateEvent,
-//				AggObj:    netproto.AggObject{Kind: "Endpoint", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//			if err == nil {
-//				endpointdbupdate.Delete(key)
-//			} else {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			}
-//
-//			return err == nil
-//		})
-//
-//		endpointdbdelete.Range(func(key, value interface{}) bool {
-//			obj := value.(*netproto.Endpoint)
-//			// watch event
-//			log.Infof("Sending Endpoint Delete: %s", obj.GetKey())
-//
-//			watchEvt := netproto.AggObjectEvent{
-//				EventType: api.EventType_DeleteEvent,
-//				AggObj:    netproto.AggObject{Kind: "Endpoint", Object: &api.Any{}},
-//			}
-//
-//			watchEvts := netproto.AggObjectEventList{}
-//
-//			mobj, err := ptypes.MarshalAny(obj)
-//			if err != nil {
-//				log.Errorf("Error  marshalling any object. Err: %v", err)
-//				return err == nil
-//			}
-//
-//			watchEvt.AggObj.Object = &api.Any{
-//				Any: *mobj,
-//			}
-//
-//			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)
-//			// send create event
-//			err = stream.Send(&watchEvts)
-//
-//			if err == nil {
-//				endpointdbdelete.Delete(key)
-//			} else {
-//				log.Errorf("NetAgent Responded Err: %v", err)
-//			}
-//
-//			return err == nil
-//		})
-//
-//	}
-//}
-//
-//func (srv fakeRPCServer) ObjectOperUpdate(ostream netproto.AggWatchApiV1_ObjectOperUpdateServer) error {
-//	for {
-//		aggEvt, err := ostream.Recv()
-//		if err != nil {
-//			log.Errorf("Ostream Err: %v", err)
-//			return err
-//		}
-//		log.Infof("Got Agg Evt: %s", aggEvt.String())
-//	}
-//}
-//
-//func (srv fakeRPCServer) ListObjects(context.Context, *netproto.AggKinds) (*netproto.AggObjectList, error) {
-//	return &netproto.AggObjectList{}, nil
-//}
 
 //// ############################ MirrorSessionApi Methods ############################
 

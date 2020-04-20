@@ -3,65 +3,22 @@
 package controller
 
 import (
-	"net/http"
 	"testing"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 // ##################################### Happy Path Test Cases  #####################################
-func TestControllerAPINetworkMode(t *testing.T) {
-	t.Parallel()
-	var l netutils.TestListenAddr
-	err := l.GetAvailablePort()
-	AssertOk(t, err, "failed to get an available port for REST Server")
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
-	defer c.Stop()
-	o := types.DistributedServiceCardStatus{
-		DSCName:  "mock-dsc",
-		DSCMode:  "network_managed_inband",
-		MgmtIP:   "42.42.42.42/24",
-		MgmtIntf: "lo",
-	}
-	err = c.HandleVeniceCoordinates(o)
-	time.Sleep(time.Second * 2)
-	AssertOk(t, err, "Changing to network mode failed")
-}
-
-func TestControllerAPIHostMode(t *testing.T) {
-	t.Parallel()
-	var l netutils.TestListenAddr
-	err := l.GetAvailablePort()
-	AssertOk(t, err, "failed to get an available port for REST Server")
-
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
-	defer c.Stop()
-	c.ResolverClient = &mock.ResolverClient{}
-	o := types.DistributedServiceCardStatus{
-		DSCName: "mock-dsc",
-		DSCMode: "host_managed",
-	}
-	err = c.HandleVeniceCoordinates(o)
-	time.Sleep(time.Second * 2)
-	AssertOk(t, err, "Changing to host mode failed")
-}
-
 func TestAppWatch(t *testing.T) {
-	t.Parallel()
 	var l netutils.TestListenAddr
 	err := l.GetAvailablePort()
 	AssertOk(t, err, "failed to get an available port for REST Server")
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
-	defer c.Stop()
 
 	// Create App
 	app := &netproto.App{
@@ -82,7 +39,7 @@ func TestAppWatch(t *testing.T) {
 	}
 	appdbcreate.LoadOrStore(app.GetKey(), app)
 
-	c.ResolverClient = &mock.ResolverClient{}
+	//c.ResolverClient = &mock.ResolverClient{}
 	o := types.DistributedServiceCardStatus{
 		DSCName:     "mock-dsc",
 		DSCMode:     "network_managed_inband",
@@ -133,13 +90,9 @@ func TestAppWatch(t *testing.T) {
 }
 
 func TestNetworkSecurityPolicyWatch(t *testing.T) {
-	t.Parallel()
 	var l netutils.TestListenAddr
 	err := l.GetAvailablePort()
 	AssertOk(t, err, "failed to get an available port for REST Server")
-
-	//c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
-	//defer c.Stop()
 
 	// Create NetworkSecurityPolicy
 	nsp := &netproto.NetworkSecurityPolicy{
@@ -274,7 +227,6 @@ func TestNetworkSecurityPolicyWatch(t *testing.T) {
 }
 
 func TestNetworkWatch(t *testing.T) {
-	t.Parallel()
 	var l netutils.TestListenAddr
 	err := l.GetAvailablePort()
 	AssertOk(t, err, "failed to get an available port for REST Server")
@@ -293,9 +245,6 @@ func TestNetworkWatch(t *testing.T) {
 	}
 	networkdbcreate.LoadOrStore(network.GetKey(), network)
 
-	//c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
-	//defer c.Stop()
-	//c.ResolverClient = &mock.ResolverClient{}
 	o := types.DistributedServiceCardStatus{
 		DSCName:     "mock-dsc",
 		DSCMode:     "network_managed_inband",
@@ -345,10 +294,6 @@ func TestEndpointWatch(t *testing.T) {
 	var l netutils.TestListenAddr
 	err := l.GetAvailablePort()
 	AssertOk(t, err, "failed to get an available port for REST Server")
-
-	//c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), l.ListenURL.String())
-	//defer c.Stop()
-	//c.ResolverClient = &mock.ResolverClient{}
 
 	// Create Endpoint
 	endpoint := &netproto.Endpoint{
@@ -444,77 +389,4 @@ func TestEndpointWatch(t *testing.T) {
 		_, err := pipelineAPI.HandleEndpoint(types.Get, *endpoint)
 		return err != nil, nil
 	}, "NetAgent did not get Endpoint Delete.")
-}
-
-func TestDynamicWatch(t *testing.T) {
-	t.Parallel()
-	var l netutils.TestListenAddr
-	err := l.GetAvailablePort()
-	AssertOk(t, err, "failed to get an available port for REST Server")
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), "")
-	defer c.Stop()
-	o := types.DistributedServiceCardStatus{
-		DSCName:  "mock-dsc",
-		DSCMode:  "network_managed_inband",
-		MgmtIP:   "42.42.42.42/24",
-		MgmtIntf: "lo",
-	}
-	err = c.HandleVeniceCoordinates(o)
-	startWatcher := func() {
-		ticker := time.NewTicker(time.Second * 30)
-		for {
-			select {
-			case <-ticker.C:
-				if c == nil {
-					log.Info("Waiting for controller registration")
-				} else {
-					log.Infof("AggWatchers Start for kinds %s", types.InsertionKinds)
-					c.Start(types.InsertionKinds)
-					return
-				}
-			}
-		}
-
-	}
-	go startWatcher()
-	c.Start(types.InsertionKinds)
-}
-
-// ##################################### Corner Test Cases  #####################################
-func TestControllerAPIDefaultRestURL(t *testing.T) {
-	t.Parallel()
-	var l netutils.TestListenAddr
-	err := l.GetAvailablePort()
-	AssertOk(t, err, "failed to get an available port for REST Server")
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), "")
-	defer c.Stop()
-	o := types.DistributedServiceCardStatus{
-		DSCName:     "mock-dsc",
-		DSCMode:     "network_managed_inband",
-		MgmtIP:      "42.42.42.42/24",
-		Controllers: []string{"10.10.10.1"},
-		MgmtIntf:    "lo",
-	}
-	err = c.HandleVeniceCoordinates(o)
-	time.Sleep(time.Second * 2)
-	AssertOk(t, err, "Changing to network mode failed")
-}
-
-func TestControllerAPIMalformedRestURL(t *testing.T) {
-	t.Parallel()
-	var l netutils.TestListenAddr
-	err := l.GetAvailablePort()
-	AssertOk(t, err, "failed to get an available port for REST Server")
-	c := NewControllerAPI(pipelineAPI, infraAPI, fakeServer.grpcServer.GetListenURL(), "bad-url-%^&&")
-	defer c.Stop()
-	o := types.DistributedServiceCardStatus{
-		DSCName:     "mock-dsc",
-		DSCMode:     "network_managed_inband",
-		MgmtIP:      "42.42.42.42/24",
-		Controllers: []string{"10.10.10.1"},
-		MgmtIntf:    "lo",
-	}
-	err = c.HandleVeniceCoordinates(o)
-	time.Sleep(time.Second * 2)
-	AssertEquals(t, c.RestServer, (*http.Server)(nil), "Rest Server must be nil on malformed URLs")
 }
