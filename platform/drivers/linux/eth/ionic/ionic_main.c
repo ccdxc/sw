@@ -536,6 +536,7 @@ int ionic_port_identify(struct ionic *ionic)
 
 	mutex_unlock(&ionic->dev_cmd_lock);
 
+	dev_dbg(dev, "type %d\n", ident->port.type);
 	dev_dbg(dev, "speed %d\n", ident->port.config.speed);
 	dev_dbg(dev, "mtu %d\n", ident->port.config.mtu);
 	dev_dbg(dev, "state %d\n", ident->port.config.state);

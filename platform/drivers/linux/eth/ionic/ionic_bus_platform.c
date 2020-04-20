@@ -228,8 +228,6 @@ static int ionic_probe(struct platform_device *pfdev)
 	ionic->dev = dev;
 	mutex_init(&ionic->dev_cmd_lock);
 
-	ionic->is_mgmt_nic = true;
-
 	err = ionic_set_dma_mask(ionic);
 	if (err) {
 		dev_err(dev, "Cannot set DMA mask, aborting\n");
@@ -268,6 +266,10 @@ static int ionic_probe(struct platform_device *pfdev)
 		dev_err(dev, "Cannot identify port: %d, aborting\n", err);
 		goto err_out_unmap_bars;
 	}
+
+	if (ionic->ident.port.type == IONIC_ETH_HOST_MGMT ||
+	    ionic->ident.port.type == IONIC_ETH_MNIC_INTERNAL_MGMT)
+		ionic->is_mgmt_nic = true;
 
 	err = ionic_port_init(ionic);
 	if (err) {

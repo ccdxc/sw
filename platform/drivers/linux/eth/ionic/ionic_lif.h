@@ -238,13 +238,6 @@ static inline bool ionic_is_platform_dev(struct ionic *ionic)
 	return !!ionic->pfdev;
 }
 
-static inline bool ionic_is_mnic(struct ionic *ionic)
-{
-	return ionic->pfdev ||
-	       (ionic->pdev &&
-		ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT);
-}
-
 static inline bool ionic_is_pf(struct ionic *ionic)
 {
 	return ionic->pdev &&

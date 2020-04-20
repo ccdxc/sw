@@ -2394,6 +2394,18 @@ struct ionic_port_pb_stats {
 	__le64 output_queue_port_monitor[IONIC_QOS_TC_MAX];
 };
 
+enum port_type {
+	IONIC_ETH_UNKNOWN,
+	IONIC_ETH_HOST,
+	IONIC_ETH_HOST_MGMT,
+	IONIC_ETH_MNIC_OOB_MGMT,
+	IONIC_ETH_MNIC_INTERNAL_MGMT,
+	IONIC_ETH_MNIC_INBAND_MGMT,
+	IONIC_ETH_MNIC_CPU,
+	IONIC_ETH_MNIC_LEARN,
+	IONIC_ETH_MNIC_CONTROL,
+};
+
 /**
  * struct ionic_port_identity - port identity structure
  * @version:        identity structure version

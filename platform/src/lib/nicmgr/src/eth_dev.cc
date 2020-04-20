@@ -1319,14 +1319,16 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     DEVAPI_CHECK
 
+    memset(info, 0, sizeof(union ionic_port_identity));
+
+    info->type = spec->eth_type;
+
     if (spec->uplink_port_num == 0) {
         port_config->speed = IONIC_SPEED_1G;
         port_config->mtu = MTU_DEFAULT + ETH_FCS;
         port_config->state = IONIC_PORT_ADMIN_STATE_UP;
         return (IONIC_RC_SUCCESS);
     }
-
-    memset(info, 0, sizeof(union ionic_port_identity));
 
     ret = dev_api->port_get_config(spec->uplink_port_num, (port_config_t *)cfg);
     if (ret != SDK_RET_OK) {

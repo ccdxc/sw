@@ -1359,7 +1359,7 @@ static int ionic_init_nic_features(struct ionic_lif *lif)
 		   NETIF_F_TSO6 |
 		   NETIF_F_TSO_ECN;
 
-	if (!ionic_is_mnic(lif->ionic))
+	if (lif->nxqs > 1)
 		features |= NETIF_F_RXHASH;
 
 	err = ionic_set_nic_features(lif, features);
@@ -2604,7 +2604,7 @@ static struct ionic_lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index
 		lif->netdev = netdev;
 		ionic->master_lif = lif;
 
-		if (ionic_is_mnic(ionic))
+		if (ionic->is_mgmt_nic || ionic->pfdev)
 			netdev->netdev_ops = &ionic_mnic_netdev_ops;
 		else
 			netdev->netdev_ops = &ionic_netdev_ops;

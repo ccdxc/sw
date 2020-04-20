@@ -122,6 +122,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
 	struct ionic_dev *idev = &lif->ionic->idev;
+	struct ionic *ionic = lif->ionic;
 	int copper_seen = 0;
 
 	ethtool_link_ksettings_zero_link_mode(ks, supported);
@@ -233,7 +234,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		break;
 	case IONIC_XCVR_PID_UNKNOWN:
 		/* This means there's no module plugged in */
-		if (ionic_is_mnic(lif->ionic))
+		if (ionic->is_mgmt_nic)
 			ethtool_link_ksettings_add_link_mode(ks, supported,
 							     1000baseT_Full);
 		break;
@@ -254,7 +255,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_RS);
 #endif
 
-	if (ionic_is_mnic(lif->ionic))
+	if (ionic->is_mgmt_nic)
 		ethtool_link_ksettings_add_link_mode(ks, supported, Backplane);
 	else
 		ethtool_link_ksettings_add_link_mode(ks, supported, FIBRE);
@@ -266,7 +267,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		ks->base.port = PORT_DA;
 	else if (idev->port_info->status.xcvr.phy == IONIC_PHY_TYPE_FIBER)
 		ks->base.port = PORT_FIBRE;
-	else if (ionic_is_mnic(lif->ionic))
+	else if (ionic->is_mgmt_nic)
 		ks->base.port = PORT_OTHER;
 	else
 		ks->base.port = PORT_NONE;
@@ -279,7 +280,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		else
 			ks->base.duplex = DUPLEX_UNKNOWN;
 
-		if (ionic_is_pf(lif->ionic) && !ionic_is_mnic(lif->ionic)) {
+		if (ionic_is_pf(lif->ionic) && !ionic->is_mgmt_nic) {
 			ethtool_link_ksettings_add_link_mode(ks, supported,
 							     Autoneg);
 
@@ -825,9 +826,6 @@ static int ionic_get_module_info(struct net_device *netdev,
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ionic_xcvr_status *xcvr;
 
-	if (ionic_is_mnic(lif->ionic))
-		return -EOPNOTSUPP;
-
 	xcvr = &idev->port_info->status.xcvr;
 
 	/* report the module data type and length */
@@ -842,8 +840,9 @@ static int ionic_get_module_info(struct net_device *netdev,
 		modinfo->eeprom_len = ETH_MODULE_SFF_8436_LEN;
 		break;
 	default:
-		netdev_info(netdev, "unknown xcvr type 0x%02x\n",
-			    xcvr->sprom[0]);
+		if (!lif->ionic->is_mgmt_nic)
+			netdev_info(netdev, "unknown xcvr type 0x%02x\n",
+				    xcvr->sprom[0]);
 		return -EOPNOTSUPP;
 	}
 
