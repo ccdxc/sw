@@ -556,3 +556,89 @@ end:
     }
     return Status::CANCELLED;
 }
+
+Status
+SecurityPolicySvcImpl::SecurityRuleDelete(ServerContext *context,
+                                          const pds::SecurityRuleDeleteRequest *req,
+                                          pds::SecurityRuleDeleteResponse *rsp) {
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policy_rule_key_t key;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((req == NULL) || (req->id_size() == 0)) {
+        rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, rule "
+                          "delete failed");
+            rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::OK;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key.rule_id, req->id(i).id());
+        pds_obj_key_proto_to_api_spec(&key.policy_id,
+                                      req->id(i).securitypolicyid());
+        ret = pds_policy_rule_delete(&key, bctxt);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+}
+
+Status
+SecurityPolicySvcImpl::SecurityRuleGet(ServerContext *context,
+                                       const pds::SecurityRuleGetRequest *req,
+                                       pds::SecurityRuleGetResponse *rsp) {
+    sdk_ret_t ret;
+    pds_policy_rule_key_t key;
+    pds_policy_rule_info_t info;
+
+    if (req == NULL) {
+        rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < req->id_size(); i++) {
+        memset(&info, 0, sizeof(info));
+        pds_obj_key_proto_to_api_spec(&key.rule_id, req->id(i).id());
+        pds_obj_key_proto_to_api_spec(&key.policy_id,
+                                      req->id(i).securitypolicyid());
+        ret = pds_policy_rule_read(&key, &info);
+        if (ret != SDK_RET_OK) {
+            rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            break;
+        }
+        rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+        //pds_policy_rule_api_info_to_proto(&info, rsp);
+    }
+    PDS_MEMORY_TRIM();
+    return Status::OK;
+}

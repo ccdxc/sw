@@ -30,6 +30,7 @@ public:
     Status RouteTableDelete(ServerContext *context,
                             const pds::RouteTableDeleteRequest *proto_req,
                             pds::RouteTableDeleteResponse *proto_rsp) override;
+
     Status RouteCreate(ServerContext *context,
                        const pds::RouteRequest *req,
                        pds::RouteResponse *rsp) override;

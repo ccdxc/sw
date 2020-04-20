@@ -178,7 +178,7 @@ pds_policy_rule_create (_In_ pds_policy_rule_spec_t *spec,
 
 sdk_ret_t
 pds_policy_rule_read (_In_ pds_policy_rule_key_t *key,
-                      _Out_ pds_policy_info_t *info)
+                      _Out_ pds_policy_rule_info_t *info)
 {
     return SDK_RET_INVALID_OP;
 }
