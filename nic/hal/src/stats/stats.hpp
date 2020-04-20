@@ -34,6 +34,19 @@ typedef enum {
     IONIC_BUFFER_DROP_MAX,
 } ionic_pb_buffer_drop_stats_t;
 
+// until we figure out how to include ionic_if.h
+// need to create replica of interested oflow_drop_stats from hal-pd
+// ref: $srcroot/platform/drivers/common/ionic_if.h
+typedef enum {
+    IONIC_OFLOW_OCCUPANCY_DROP,                     // Pkts dropped due to fifo full
+    IONIC_OFLOW_EMERGENCY_STOP_DROP,                // Pkts dropped due to emergency condition hit due to slow oflow memory to write-buffer communication
+    IONIC_OFLOW_WRITE_BUFFER_ACK_FILL_UP_DROP,      // Pkts dropped due to write buffer's ack fifo filling up
+    IONIC_OFLOW_WRITE_BUFFER_ACK_FULL_DROP,         // Pkts dropped due to write buffer's ack fifo full
+    IONIC_OFLOW_WRITE_BUFFER_FULL_DROP,             // Pkts dropped due to write buffer filling up
+    IONIC_OFLOW_CONTROL_FIFO_FULL_DROP,             // Pkts dropped due to control fifo full
+    IONIC_OFLOW_DROP_MAX,
+} ionic_oflow_drop_stats_t;
+
 /*
  * Packet Buffer statistics
  * Note: This content is frozen from top down
@@ -50,6 +63,13 @@ typedef struct ionic_pb_stats_s {
     uint64_t   input_queue_buffer_occupancy[IONIC_PORT_QOS_MAX_QUEUES];
     uint64_t   input_queue_port_monitor[IONIC_PORT_QOS_MAX_QUEUES];
     uint64_t   output_queue_port_monitor[IONIC_PORT_QOS_MAX_QUEUES];
+    uint64_t   oflow_drop_counts[IONIC_OFLOW_DROP_MAX]; // Oflow Drop counts; drop reason is index
+    uint64_t   input_queue_good_pkts_in[IONIC_PORT_QOS_MAX_QUEUES];           // Count of good packets in
+    uint64_t   input_queue_good_pkts_out[IONIC_PORT_QOS_MAX_QUEUES];          // Count of good packets out
+    uint64_t   input_queue_err_pkts_in[IONIC_PORT_QOS_MAX_QUEUES];            // Count of errored packes in
+    uint64_t   input_queue_fifo_depth[IONIC_PORT_QOS_MAX_QUEUES];             // Current FIFO depth
+    uint64_t   input_queue_max_fifo_depth[IONIC_PORT_QOS_MAX_QUEUES];         // Max FIFO depth
+    uint64_t   input_queue_peak_occupancy[IONIC_PORT_QOS_MAX_QUEUES];	      // Peak buffer occupancy
 } ionic_pb_stats_t;
 
 

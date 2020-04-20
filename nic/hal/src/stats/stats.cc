@@ -124,7 +124,7 @@ static void
 hal_update_pb_stats (SystemResponse *rsp)
 {
     sdk_ret_t ret = SDK_RET_OK;
-    int index = 0, drop_entries = 0;
+    int index = 0, drop_entries = 0, oflow_drop_entries = 0;
     uint32_t tm_port, offset_multiplier, len;
     ionic_pb_stats_t pb_stats;
     sdk::types::mem_addr_t uplink_stats_base = INVALID_MEM_ADDRESS;
@@ -173,6 +173,17 @@ hal_update_pb_stats (SystemResponse *rsp)
             pb_stats.drop_counts[index] = entry->drop_count();
         }
 
+        auto oflow_drop_stats = port_stats->mutable_oflow_fifo_stats()->mutable_drop_counts();
+        oflow_drop_entries = oflow_drop_stats->entry_size();
+        if (drop_entries > IONIC_OFLOW_DROP_MAX) {
+            drop_entries = IONIC_OFLOW_DROP_MAX;
+        }
+
+        for (index = 0; index < oflow_drop_entries; index++) {
+            auto oflow_entry = oflow_drop_stats->mutable_entry(index);
+            pb_stats.oflow_drop_counts[index] = oflow_entry->count();
+        }
+
         auto qstats = port_stats->qos_queue_stats();
 
         // For any queue that is not assigned to a TC, the qos_group_idx will be 0.
@@ -186,6 +197,12 @@ hal_update_pb_stats (SystemResponse *rsp)
             uint64_t input_tc = iqstats.qos_group_idx(); // Get the Qos Group (TC) index for this iq
             pb_stats.input_queue_buffer_occupancy[input_tc] = iqstats.buffer_occupancy();
             pb_stats.input_queue_port_monitor[input_tc] = iqstats.port_monitor();
+            pb_stats.input_queue_peak_occupancy[input_tc] = iqstats.peak_occupancy();
+            pb_stats.input_queue_good_pkts_in[input_tc] = iqstats.mutable_oflow_fifo_stats()->good_pkts_in();
+            pb_stats.input_queue_good_pkts_out[input_tc] = iqstats.mutable_oflow_fifo_stats()->good_pkts_out();
+            pb_stats.input_queue_err_pkts_in[input_tc] = iqstats.mutable_oflow_fifo_stats()->errored_pkts_in();
+            pb_stats.input_queue_fifo_depth[input_tc] = iqstats.mutable_oflow_fifo_stats()->fifo_depth();
+            pb_stats.input_queue_max_fifo_depth[input_tc] = iqstats.mutable_oflow_fifo_stats()->max_fifo_depth();
             
             // oqstats fill
             uint64_t output_tc = oqstats.qos_group_idx(); // Get the Qos Group (TC) index for this oq

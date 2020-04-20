@@ -2581,16 +2581,22 @@ ionic_setup_qos_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 		&pb_stats->drop_counts[IONIC_BUFFER_INVALID_PORT_DROP], "");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "buffer_invalid_output_queue_drop", CTLFLAG_RD,
 		&pb_stats->drop_counts[IONIC_BUFFER_INVALID_OUTPUT_QUEUE_DROP], "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "occupancy_drop", CTLFLAG_RD,
+		&pb_stats->oflow_drop_counts[IONIC_OFLOW_OCCUPANCY_DROP], "");
 
 	for (i = 0; i < IONIC_QOS_TC_MAX; i++) {
 		snprintf(namebuf, QUEUE_NAME_LEN, "tc%d", i);
 		queue_node1 = SYSCTL_ADD_NODE(ctx, queue_list, OID_AUTO, namebuf,
 					CTLFLAG_RD, NULL, "QoS per class stats");
 		queue_list1 = SYSCTL_CHILDREN(queue_node1);
+		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_peak_occupancy", CTLFLAG_RD,
+			&pb_stats->input_queue_peak_occupancy[i], "");
 		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_buffer_occupancy", CTLFLAG_RD,
 			&pb_stats->input_queue_buffer_occupancy[i], "");
 		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_port_monitor", CTLFLAG_RD,
 			&pb_stats->input_queue_port_monitor[i], "");
+		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "queue_drops", CTLFLAG_RD,
+			&pb_stats->input_queue_err_pkts_in[i], "");
 		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "output_queue_port_monitor", CTLFLAG_RD,
 			&pb_stats->output_queue_port_monitor[i], "");
 	}

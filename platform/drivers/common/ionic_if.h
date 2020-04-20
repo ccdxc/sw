@@ -2379,6 +2379,16 @@ enum ionic_pb_buffer_drop_stats {
 	IONIC_BUFFER_DROP_MAX,
 };
 
+enum ionic_oflow_drop_stats {
+	IONIC_OFLOW_OCCUPANCY_DROP,
+	IONIC_OFLOW_EMERGENCY_STOP_DROP,
+	IONIC_OFLOW_WRITE_BUFFER_ACK_FILL_UP_DROP,
+	IONIC_OFLOW_WRITE_BUFFER_ACK_FULL_DROP,
+	IONIC_OFLOW_WRITE_BUFFER_FULL_DROP,
+	IONIC_OFLOW_CONTROL_FIFO_FULL_DROP,
+	IONIC_OFLOW_DROP_MAX,
+};
+
 /**
  * struct port_pb_stats - packet buffers system stats
  * uses ionic_pb_buffer_drop_stats for drop_counts[]
@@ -2392,6 +2402,13 @@ struct ionic_port_pb_stats {
 	__le64 input_queue_buffer_occupancy[IONIC_QOS_TC_MAX];
 	__le64 input_queue_port_monitor[IONIC_QOS_TC_MAX];
 	__le64 output_queue_port_monitor[IONIC_QOS_TC_MAX];
+	__le64 oflow_drop_counts[IONIC_OFLOW_DROP_MAX];
+	__le64 input_queue_good_pkts_in[IONIC_QOS_TC_MAX];
+	__le64 input_queue_good_pkts_out[IONIC_QOS_TC_MAX];
+	__le64 input_queue_err_pkts_in[IONIC_QOS_TC_MAX];
+	__le64 input_queue_fifo_depth[IONIC_QOS_TC_MAX];
+	__le64 input_queue_max_fifo_depth[IONIC_QOS_TC_MAX];
+	__le64 input_queue_peak_occupancy[IONIC_OFLOW_DROP_MAX];
 };
 
 enum port_type {
