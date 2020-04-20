@@ -82,11 +82,11 @@ func printFwLog(fwlog *halproto.FWEvent) {
 			"ICMP ID: "+icmpID,
 			"ICMP Code: "+icmpCode)
 	}
-	iflowPackets := fmt.Sprintf("%v", fwlog.GetIflowPackets())
-	rflowPackets := fmt.Sprintf("%v", fwlog.GetRflowPackets())
+	iflowBytes := fmt.Sprintf("%v", fwlog.GetIflowBytes())
+	rflowBytes := fmt.Sprintf("%v", fwlog.GetRflowBytes())
 	dumpSlice = append(dumpSlice,
-		"Iflow Packets: "+iflowPackets,
-		"Rflow Packets: "+rflowPackets)
+		"Iflow Bytes: "+iflowBytes,
+		"Rflow Bytes: "+rflowBytes)
 	if fwlog.GetTimestamp() != 0 {
 		tsStr := fmt.Sprintf("%v", fwlog.GetTimestamp())
 		dumpSlice = append(dumpSlice,

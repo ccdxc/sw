@@ -458,8 +458,8 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
     clock_gettime(CLOCK_REALTIME, &ctime);
     if (pipeline_event() == FTE_SESSION_DELETE) {
         t_fwlg.set_flowaction(fwlog::FLOW_LOG_EVENT_TYPE_DELETE);
-        t_fwlg.set_iflow_packets(session_state.iflow_state.packets);
-        t_fwlg.set_rflow_packets(session_state.rflow_state.packets);
+        t_fwlg.set_iflow_bytes(session_state.iflow_state.bytes);
+        t_fwlg.set_rflow_bytes(session_state.rflow_state.bytes);
     }
     sdk::timestamp_to_nsecs(&ctime, &ctime_ns);
     t_fwlg.set_timestamp(ctime_ns);

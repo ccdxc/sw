@@ -110,8 +110,8 @@ class ShmDumpHelper:
                     if session_id == '' or session_id == lineMap['Session-Id']:
                         session_id = lineMap['Session-Id']
                         delete_event = True
-                        ipackets = int(lineMap['Iflow Packets'])
-                        rpackets = int(lineMap['Rflow Packets'])
+                        ipackets = int(lineMap['Iflow Bytes'])
+                        rpackets = int(lineMap['Rflow Bytes'])
                         stats = stats - (ipackets - rpackets)
                         api.Logger.info("Flow Delete seen at line %d" % lineno)
                         api.Logger.info(lineMap)
