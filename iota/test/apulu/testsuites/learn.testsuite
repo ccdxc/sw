@@ -8,6 +8,7 @@ meta:
 
 packages:
     - iota.test.apulu
+    - iota.test.common
 
 images:
     naples: nic/naples_fw_venice.tar

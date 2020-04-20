@@ -7,9 +7,23 @@ meta:
 testcases:
     -   name: DISRUPTIVE_UPGRADE
         testcase    : testcases.naples_upgrade.disruptive_upgrade
-        disable : True
-        iterators :
-            type : simple
-            option : [""]
-        args      :
-            sleep : 300
+        #disable    : True
+        ignore      : True
+        iterators   :
+            type    : simple
+            option  : [""]
+        args        :
+            sleep   : 100
+
+    -   name: DISRUPTIVE_UPGRADE_GRACEFUL
+        testcase    : testcases.naples_upgrade.disruptive_upgrade
+        #disable    : True
+        ignore      : True
+        iterators   :
+            type    : nested
+            option  : [""]
+            workload_type : [ local, remote ]
+            workload_scope : [ intra-subnet, inter-subnet ]
+        args        :
+            sleep   : 100
+            mode    : "graceful"

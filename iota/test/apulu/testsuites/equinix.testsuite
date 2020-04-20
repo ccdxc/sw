@@ -25,11 +25,11 @@ setup:
                 node1 : 2naples_container_equinix_node1.cfgyml
                 node2 : 2naples_container_equinix_node2.cfgyml
         - step : config.bringup_workloads
+        - step : config.add_routes
+        - step : config.learn_endpoints
         - step : utils.naples_upgrade.install
           args :
              naples_upgr_pkgs : ["naples_fw_venice.tar"]
-        - step : config.add_routes
-        - step : config.learn_endpoints
 
 common:
     verifs:
