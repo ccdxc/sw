@@ -31,6 +31,7 @@ typedef enum upg_ev_req_msg_id_s {
 typedef struct upg_ev_req_msg_s {
     upg_ev_req_msg_id_t id;              ///< message id
     sdk::platform::upg_mode_t upg_mode;  ///< upgrade mode
+    std::string fw_pkgname;              ///< firmware package name with path
     // TODO fill other details
     upg_status_t rsp_status;             ///< upgrade status
 } upg_ev_req_msg_t;

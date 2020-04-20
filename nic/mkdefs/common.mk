@@ -307,7 +307,7 @@ export NIC_FTL_LIBS         := sdkftl
 export NIC_apollo_NICMGR_LIBS := nicmgr_apollo rdmamgr_apollo mnet evutils \
                                  pciemgr_if pciemgr pciemgrutils  eth_p4plus \
                                  pciehdevices pcietlp cfgspace intrutils misc \
-                                 pdsnicmgr_upgrade
+                                 pdsupg_nicmgr
 
 # ==========================================================================
 #                        ARTEMIS specific defs
@@ -315,7 +315,7 @@ export NIC_apollo_NICMGR_LIBS := nicmgr_apollo rdmamgr_apollo mnet evutils \
 export NIC_artemis_NICMGR_LIBS := nicmgr_artemis mnet evutils eth_p4plus \
                                   pciemgr_if pciemgr pciemgrutils \
                                   pciehdevices pcietlp cfgspace intrutils misc \
-                                  pdsnicmgr_upgrade
+                                  pdsupg_nicmgr
 
 # ==========================================================================
 #                        APULU specific defs
@@ -323,7 +323,7 @@ export NIC_artemis_NICMGR_LIBS := nicmgr_artemis mnet evutils eth_p4plus \
 export NIC_apulu_NICMGR_LIBS := nicmgr_apulu mnet evutils eth_p4plus \
                                 pciemgr_if pciemgr pciemgrutils \
                                 pciehdevices pcietlp cfgspace intrutils misc \
-                                pdsnicmgr_upgrade
+                                pdsupg_nicmgr
 
 # ==========================================================================
 #                        ATHENA specific defs
@@ -331,7 +331,7 @@ export NIC_apulu_NICMGR_LIBS := nicmgr_apulu mnet evutils eth_p4plus \
 export NIC_athena_NICMGR_LIBS := nicmgr_athena mnet evutils eth_p4plus \
                                 pciemgr_if pciemgr pciemgrutils \
                                 pciehdevices pcietlp cfgspace intrutils misc \
-                                pdsnicmgr_upgrade_stubs
+                                pdsupg_nicmgr_stubs
 
 # ==========================================================================
 #                        Pipeline Specific Defs

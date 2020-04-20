@@ -17,7 +17,7 @@ upg_wait_for_pdsagent
 
 # override trap
 function trap_finish () {
-    pkill fsm_test
+#   pkill fsm_test
     pkill pdsupgmgr
     stop_process
     pkill pciemgrd
@@ -32,16 +32,14 @@ trap trap_finish EXIT
 #$DOLDIR/main.py $CMDARGS 2>&1 | tee dol.log
 #status=${PIPESTATUS[0]}
 
-# create a sysmgr instance from test service which sends
+# create a dummy instance from test service for easy validations which sends
 # ok for all events
-$BUILD_DIR/bin/fsm_test -s sysmgr -i 62 > upgrade_service.log 2>&1 &
-$BUILD_DIR/bin/fsm_test -s pciemgr -i 63 > upgrade_service.log 2>&1 &
-$BUILD_DIR/bin/fsm_test -s vpp -i 61 > upgrade_service.log 2>&1 &
+#$BUILD_DIR/bin/fsm_test -s sysmgr -i 62 > upgrade_service.log 2>&1 &
 sleep 2
 
 # start upgrade manager
 upg_setup $BUILD_DIR/gen/upgrade_graceful.json
-$BUILD_DIR/bin/pdsupgmgr > upgrade_mgr.log 2>&1 &
+$BUILD_DIR/bin/pdsupgmgr -t $PDSPKG_TOPDIR/apollo/tools/apulu/upgrade > upgrade_mgr.log 2>&1 &
 sleep 2
 
 # run client

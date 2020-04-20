@@ -1,5 +1,13 @@
 [
     {
+        "name": "upgmgr",
+        "command": "/nic/tools/start-upgmgr.sh",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 30.0,
+        "cpu-affinity": "0x1"
+    },
+    {
         "name": "pciemgrd",
         "command": "/nic/bin/pciemgrd -d",
         "dependencies": [],

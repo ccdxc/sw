@@ -256,27 +256,10 @@ svc_rsp_code (const upg_status_t id)
     return svc_rsp_id;
 };
 
-static std::string
-get_script_path (std::string script)
-{
-    std::string file_path;
-    try {
-        std::string conf_path = std::string(std::getenv("CONFIG_PATH"));
-        std::string pipeline = std::string(std::getenv("PIPELINE"));
-        conf_path = conf_path + pipeline + "/";
-        file_path = conf_path + script ;
-
-    } catch (std::exception const& ex) {
-        UPG_TRACE_ERR("Failed to execute hook  %s", ex.what());
-    }
-    return file_path;
-}
-
 bool
-is_valid_script (const std::string script)
+is_valid_script (std::string tools_dir, const std::string script)
 {
-    std::string file;
-    file = get_script_path(script);
+    std::string file = tools_dir + "/" + script;
     if (access(file.c_str(), F_OK) != 0) {
         UPG_TRACE_ERR("File %s doesn't exist !", file.c_str());
         return false;
@@ -313,18 +296,19 @@ execute (const char *cmd)
 }
 
 bool
-execute_hook (const std::string script, const std::string stage_name,
-               hook_execution_t hook_type, svc_rsp_code_t status)
+execute_hook (const std::string tools_dir, const std::string script,
+              const std::string stage_name, std::string fw_pkgname,
+              hook_execution_t hook_type, svc_rsp_code_t status)
 {
     bool result=true;
     std::string cmd;
     try {
-        cmd = get_script_path(script);
-
+        cmd = tools_dir + "/" + script;
+        cmd = cmd + " -f " + fw_pkgname;
         if (hook_type == PRE_STAGE) {
             UPG_TRACE_INFO("Executing pre-hook %s , in stage %s",
                            script.c_str(), stage_name.c_str());
-            cmd = cmd + " -f" + stage_name;
+            cmd = cmd + " -s " + stage_name;
             cmd = cmd + " -t pre" ;
             execute(cmd.c_str());
         } else {
@@ -332,7 +316,7 @@ execute_hook (const std::string script, const std::string stage_name,
             UPG_TRACE_INFO("Executing post-hook %s , in stage %s, with stage "
                            "status %d", script.c_str(), stage_name.c_str(),
                            status);
-            cmd = cmd + " -f" + stage_name;
+            cmd = cmd + " -s " + stage_name;
             cmd = cmd + " -t post";
             cmd = cmd + " -r " + std::string(svc_rsp_code_name[status]);
 

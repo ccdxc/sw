@@ -1,7 +1,7 @@
 # {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libpdsnicmgr_upgrade.lib
+MODULE_TARGET   = libpdsupg_nicmgr.lib
 MODULE_PIPELINE = apollo artemis apulu
 MODULE_INCS     := ${MODULE_SRC_DIR} \
                    ${TOPDIR}/platform/src/lib/nicmgr/include \

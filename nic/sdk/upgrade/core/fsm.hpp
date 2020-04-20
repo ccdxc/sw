@@ -38,6 +38,8 @@ typedef struct fsm_init_params_s {
     sdk::ipc::ipc_msg_ptr msg_in;           // used for async response. not used
                                             // by fsm
     upg_stage_t entry_stage;                // start a specific discovery stage
+    std::string tools_dir;                  // tools directory
+    std::string fw_pkgname;                 // firmware package name with full path
 } fsm_init_params_t;
 
 class fsm {

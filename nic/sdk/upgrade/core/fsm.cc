@@ -120,12 +120,14 @@ invoke_hooks (upg_stage_t stage_id, hook_execution_t hook_type,
     prehook = stage.pre_hook_scripts();
 
     for (const auto& x : prehook) {
-        if (!is_valid_script(x.path())) {
+        if (!is_valid_script(fsm_states.init_params()->tools_dir, x.path())) {
             UPG_TRACE_ERR("Not a valid script %s", x.path().c_str());
             result = false;
             break;
         }
-        if (!execute_hook(x.path(), name, hook_type, status)) {
+        if (!execute_hook(fsm_states.init_params()->tools_dir,
+                          x.path(), name, fsm_states.init_params()->fw_pkgname,
+                          hook_type, status)) {
             UPG_TRACE_ERR("Failed to execute %s", x.path().c_str());
             result = false;
             break;

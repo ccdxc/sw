@@ -7,8 +7,8 @@ valid_stage="UPG_STAGE_COMPAT_CHECK, UPG_STAGE_START, UPG_STAGE_BACKUP, UPG_STAG
 valid_response="ok, critical, fail, noresponse"
 
 function usage() {
-    echo "Usage: $0 -f <stage> -t pre " 1>&2;
-    echo "Usage: $0 -f <stage> -t post -r <ok|fail|critical|nortesponse>" 1>&2;
+    echo "Usage: $0 -s <stage> -t pre " 1>&2;
+    echo "Usage: $0 -s <stage> -t post -r <ok|fail|critical|no-response>" 1>&2;
     echo
     echo "Valid stages are     : ${valid_stage}"
     echo "Valid responses are  : ${valid_response}"
@@ -18,7 +18,7 @@ function usage() {
 
 while getopts ":f:t:r:" o; do
     case "${o}" in
-        f)
+        s)
             stage=${OPTARG}
             ;;
         t)

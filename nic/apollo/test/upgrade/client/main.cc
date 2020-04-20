@@ -28,6 +28,7 @@ send_upg_grpc (void)
     pds::UpgradeSpec        *spec = req.mutable_request();
 
     spec->set_requesttype(pds::UpgradeRequestType::UPGRADE_REQUEST_START);
+    spec->set_packagename("naples_fw.tar"); // unused in simulation
     spec->set_mode(pds::UpgradeMode::UPGRADE_MODE_GRACEFUL);
 
     ret_status = g_upg_svc_stub_->UpgRequest(&context, req, &rsp);

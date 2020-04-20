@@ -59,6 +59,11 @@ UpgSvcImpl::UpgRequest(ServerContext *context,
         UPG_TRACE_ERR("Invalid upgrade mode");
         goto err_exit;
     }
+    msg.fw_pkgname = request.packagename();
+    if (msg.fw_pkgname.empty()) {
+        UPG_TRACE_ERR("Invalid upgrade package name");
+        goto err_exit;
+    }
     sdk::ipc::request(SDK_IPC_ID_UPGMGR, UPG_REQ_MSG_ID_START, &msg,
                       sizeof(msg), upg_sync_response_hdlr, &status);
     proto_rsp->set_status(proto_status(status));

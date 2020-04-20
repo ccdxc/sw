@@ -1,6 +1,6 @@
 {
     "svc": {
-        "names": [ "sysmgr", "pdsagent", "vpp", "pciemgr" ],
+        "names": [ "pdsagent", "vpp", "pciemgr" ],
         "event_sequence": "parallel",
         "rsp_timeout": "1000ms",
         "domain": "A",
@@ -20,22 +20,20 @@
                 { "name": "svc_rsp_fail", "next_stage": "exit"  },
                 { "name": "svc_rsp_crit", "next_stage": "exit"  },
                 { "name": "svc_no_rsp",   "next_stage": "exit"  }
-            ]
+            ],
+            "pre_hooks" : ["upgmgr_graceful.sh"]
         },
 
         "start": {
             "//": "stops external communication channels and",
             "//": "prepare for B bringup",
-            "svc": {
-                "event_sequence": "serial",
-                "names": [ "sysmgr", "pdsagent" ]
-            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "backup" },
                 { "name": "svc_rsp_fail", "next_stage": "repeal" },
                 { "name": "svc_rsp_crit", "next_stage": "exit"   },
                 { "name": "svc_no_rsp",   "next_stage": "repeal" }
-            ]
+            ],
+            "post_hooks" : ["upgmgr_graceful.sh"]
         },
 
         "backup": {
@@ -51,7 +49,7 @@
             "//": "shuting it down the services",
             "svc": {
                 "event_sequence": "serial",
-                "names": [ "pdsagent", "vpp", "pciemgr", "sysmgr" ]
+                "names": [ "vpp", "pciemgr", "pdsagent" ]
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "prepare_switchover" },
@@ -68,35 +66,34 @@
                 { "name": "svc_rsp_fail", "next_stage": "respawn"    },
                 { "name": "svc_rsp_crit", "next_stage": "respawn"    },
                 { "name": "svc_no_rsp",   "next_stage": "respawn"    }
-            ]
+            ],
+            "post_hooks" : ["upgmgr_graceful.sh"]
         },
 
         "switchover": {
             "//": "kill A and bringup B",
-            "svc": {
-                "names": [ "sysmgr" ],
-                "event_sequence": "serial",
-                "rsp_timeout": "2000ms"
-            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "exit"   },
                 { "name": "svc_rsp_fail", "next_stage": "respawn" },
                 { "name": "svc_rsp_crit", "next_stage": "respawn" },
                 { "name": "svc_no_rsp",   "next_stage": "respawn" }
-            ]
+            ],
+            "pre_hooks" : ["upgmgr_graceful.sh"]
         },
 
         "ready": {
             "//": "runtime compatchecks, service readiness",
             "svc": {
-                "discovery": "yes"
+                "discovery": "yes",
+                "rsp_timeout": "5000ms"
             },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "finish"   },
                 { "name": "svc_rsp_fail", "next_stage": "rollback" },
                 { "name": "svc_rsp_crit", "next_stage": "rollback" },
                 { "name": "svc_no_rsp",   "next_stage": "rollback" }
-            ]
+            ],
+            "post_hooks" : ["upgmgr_graceful.sh"]
         },
 
         "rollback": {
@@ -109,11 +106,6 @@
         },
 
         "repeal": {
-            "svc": {
-                "names": [ "sysmgr", "pdsagent" ],
-                "event_sequence": "serial",
-                "rsp_timeout": "2000ms"
-            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "finish" },
                 { "name": "svc_rsp_fail", "next_stage": "exit"   },
@@ -124,7 +116,7 @@
 
         "respawn": {
             "svc": {
-                "names": [ "sysmgr" ],
+                "names": [ "pdsagent" ],
                 "event_sequence": "serial",
                 "rsp_timeout": "2000ms"
             },
@@ -138,10 +130,6 @@
 
        "finish": {
             "//": "todo: failure or failure-non-recovarable status to netagent",
-            "svc": {
-                "event_sequence": "serial",
-                "names": [ "pdsagent", "sysmgr" ]
-            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "exit" },
                 { "name": "svc_rsp_fail", "next_stage": "exit" },

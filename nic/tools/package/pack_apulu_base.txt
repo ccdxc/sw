@@ -116,9 +116,6 @@ nic/build/$ARCH/$PIPELINE/lib/libpenmetrics.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libalerts_operd_con.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liboperd_alerts.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liboperd_alert_defs.so              /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libupgrade_core.so                  /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libupgrade_ev.so                    /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdsnicmgr_upgrade.so             /nic/lib/
 
 # p4/asm specific libs
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
@@ -316,3 +313,19 @@ nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libisccfg.so.163    /usr/lib/
 # lldp
 nic/tools/lldp/S60lldpd                                          /nic/tools/start-lldpd.sh
 nic/conf/apulu/lldpd.conf                                        /etc/lldpd.d/lldpd.conf
+
+# upgrade
+nic/build/$ARCH/$PIPELINE/lib/libupgrade_core.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libupgrade_ev.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsupg_nicmgr.so                 /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsupgsvc.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsupgproto.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/gen/upgrade_graceful.json               /nic/conf/gen/
+nic/build/$ARCH/$PIPELINE/gen/upgrade_hitless.json                /nic/conf/gen/
+nic/apollo/tools/apulu/upgrade/start_upgmgr.sh                    /nic/tools/
+nic/apollo/tools/apulu/upgrade/upgmgr_base.sh                     /nic/tools/
+nic/apollo/tools/apulu/upgrade/upgmgr_cc_meta.py                  /nic/tools/
+nic/apollo/tools/apulu/upgrade/upgmgr_graceful.sh                 /nic/tools/
+nic/tools/switch_rootfs.sh                                        /nic/tools/
+nic/build/$ARCH/$PIPELINE/bin/pdsupgmgr                           /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/pdsupgclient                        /nic/bin/
