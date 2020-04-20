@@ -10,6 +10,8 @@ var DscMetricsList = []string{
 	"IPv4FlowDropMetrics",
 	"FteCPSMetrics",
 	"FteLifQMetrics",
+	"MacMetrics",
+	"MgmtMacMetrics",
 	"LifMetrics",
 	"RuleMetrics",
 	"SessionSummaryMetrics",
