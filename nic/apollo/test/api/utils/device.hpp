@@ -37,8 +37,11 @@ public:
     device_feeder(const device_feeder& feeder);
 
     // Initialize feeder with the base set of values
-    void init(std::string device_ip_str, std::string mac_addr_str,
-              std::string gw_ip_str, int num_device = 1);
+    void init(const char * device_ip_str, std::string mac_addr_str,
+              const char * gw_ip_str, bool bridge_en, bool learn_en,
+              uint32_t learn_age_time, bool overlay_routing_en,
+              pds_device_profile_t dp, pds_memory_profile_t mp,
+              pds_device_oper_mode_t dev_op_mode, int num_device = 1);
 
     // Iterate helper routines
     void iter_next(int width = 1) { cur_iter_pos++; }
@@ -88,7 +91,7 @@ API_UPDATE(device);
 API_DELETE_SINGLETON(device);
 
 // Export variables
-extern std::string k_device_ip;
+extern const char * k_device_ip;
 
 // Device crud helper prototypes
 void device_create(device_feeder& feeder);

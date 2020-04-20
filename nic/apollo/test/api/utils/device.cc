@@ -13,19 +13,27 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-device_feeder::init(std::string device_ip_str, std::string mac_addr_str,
-                    std::string gw_ip_str, int num_device) {
+device_feeder::init(const char * device_ip_str, std::string mac_addr_str,
+                    const char *  gw_ip_str, bool bridge_en, bool learn_en,
+                    uint32_t learn_age_timeout, bool overlay_routing_en,
+                    pds_device_profile_t dp, pds_memory_profile_t mp,
+                    pds_device_oper_mode_t dev_op_mode, int num_device) {
 
     memset(&spec, 0, sizeof(pds_device_spec_t));
 
-    str2ipaddr((const char *)&device_ip_str, &spec.device_ip_addr);
-    str2ipaddr((const char *)&gw_ip_str, &spec.gateway_ip_addr);
+    str2ipaddr(device_ip_str, &spec.device_ip_addr);
+    str2ipaddr(gw_ip_str, &spec.gateway_ip_addr);
     if (!apulu()) {
         mac_str_to_addr((char *)mac_addr_str.c_str(), spec.device_mac_addr);
     }
-
+    spec.bridging_en = bridge_en;
+    spec.learning_en = learn_en;
+    spec.learn_age_timeout = learn_age_timeout;
+    spec.overlay_routing_en = overlay_routing_en;
+    spec.device_profile = dp;
+    spec.memory_profile = mp;
     if (apulu()) {
-        spec.dev_oper_mode = PDS_DEV_OPER_MODE_HOST;
+        spec.dev_oper_mode = dev_op_mode;
     } else {
         spec.dev_oper_mode = PDS_DEV_OPER_MODE_BITW;
     }
@@ -155,23 +163,29 @@ device_delete (device_feeder& feeder)
 //----------------------------------------------------------------------------
 
 // do not modify these sample values as rest of system is sync with these
-std::string k_device_ip("91.0.0.1");
+const char *  k_device_ip ="91.0.0.1";
 static device_feeder k_device_feeder;
 
 void sample_device_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
-    k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2");
+    k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2", false,
+                         false, 0, false, PDS_DEVICE_PROFILE_DEFAULT,
+                         PDS_MEMORY_PROFILE_DEFAULT, PDS_DEV_OPER_MODE_HOST);
     many_create(bctxt, k_device_feeder);
 }
 
 void sample_device_setup_validate() {
-    k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2");
+    k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2", false,
+                         false, 0, false, PDS_DEVICE_PROFILE_DEFAULT,
+                         PDS_MEMORY_PROFILE_DEFAULT, PDS_DEV_OPER_MODE_HOST);
     many_read(k_device_feeder);
 }
 
 void sample_device_teardown(pds_batch_ctxt_t bctxt) {
     // this feeder base values doesn't matter in case of deletes
-    k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2");
+    k_device_feeder.init(k_device_ip, "00:00:01:02:0a:0b", "90.0.0.2", false,
+                         false, 0, false, PDS_DEVICE_PROFILE_DEFAULT,
+                         PDS_MEMORY_PROFILE_DEFAULT, PDS_DEV_OPER_MODE_HOST);
     many_delete(bctxt, k_device_feeder);
 }
 
