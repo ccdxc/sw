@@ -14,13 +14,13 @@ eventrecorder_cattrip_event_cb (void)
 void
 eventrecorder_temp_event_cb (
                     sdk::platform::sensor::system_temperature_t *temperature,
-                    sysmond_hbm_threshold_event_t hbm_event)
+                    sysmon_hbm_threshold_event_t hbm_event)
 {
-    if (hbm_event == SYSMOND_HBM_TEMP_ABOVE_THRESHOLD) {
+    if (hbm_event == SYSMON_HBM_TEMP_ABOVE_THRESHOLD) {
         EventLogger::getInstance()->LogOverTempAlarmEvent(
                 "System temperature is above threshold - %dC",
                 temperature->hbmtemp);
-    } else if (hbm_event == SYSMOND_HBM_TEMP_BELOW_THRESHOLD) {
+    } else if (hbm_event == SYSMON_HBM_TEMP_BELOW_THRESHOLD) {
         EventLogger::getInstance()->LogOverTempExitAlarmEvent(
                 "System temperature is normal - %dC", temperature->hbmtemp);
     }
@@ -43,4 +43,16 @@ void
 eventrecorder_postdiag_event_cb (void)
 {
     EventLogger::getInstance()->LogPostdiagEvent("Post diag test failed on this boot");
+}
+
+void
+eventrecorder_pciehealth_event_cb(sysmon_pciehealth_severity_t sev, const char *reason)
+{
+    if (sev == SYSMON_PCIEHEALTH_INFO) {
+        EventLogger::getInstance()->LogInfoPcieHealthEvent(reason);
+    } else if (sev == SYSMON_PCIEHEALTH_WARN){
+        EventLogger::getInstance()->LogWarnPcieHealthEvent(reason);
+    } else if (sev == SYSMON_PCIEHEALTH_ERROR){
+        EventLogger::getInstance()->LogErrorPcieHealthEvent(reason);
+    }
 }

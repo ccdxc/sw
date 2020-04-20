@@ -79,12 +79,15 @@ export const categoryToEventType: { [cat: string]: string[] } = {
   ],
   system: [
     'NAPLES_CATTRIP_INTERRUPT',
+    'NAPLES_ERR_PCIEHEALTH_EVENT',
     'NAPLES_FATAL_INTERRUPT',
+    'NAPLES_INFO_PCIEHEALTH_EVENT',
     'NAPLES_OVER_TEMP',
     'NAPLES_OVER_TEMP_EXIT',
     'NAPLES_PANIC_EVENT',
     'NAPLES_POST_DIAG_FAILURE_EVENT',
     'NAPLES_SERVICE_STOPPED',
+    'NAPLES_WARN_PCIEHEALTH_EVENT',
     'SERVICE_PENDING',
     'SERVICE_RUNNING',
     'SERVICE_STARTED',
@@ -401,10 +404,20 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.critical,
       "Desc": "System encountered cattrip resetting system",
   },
+  'NAPLES_ERR_PCIEHEALTH_EVENT' : {
+      "Name": "NAPLES_ERR_PCIEHEALTH_EVENT",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "System has detected a pcie link health error",
+  },
   'NAPLES_FATAL_INTERRUPT' : {
       "Name": "NAPLES_FATAL_INTERRUPT",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Naples has a fatal interrupt",
+  },
+  'NAPLES_INFO_PCIEHEALTH_EVENT' : {
+      "Name": "NAPLES_INFO_PCIEHEALTH_EVENT",
+      "Severity": EventsEvent_severity.info,
+      "Desc": "System has detected a pcie link health event",
   },
   'NAPLES_OVER_TEMP' : {
       "Name": "NAPLES_OVER_TEMP",
@@ -430,6 +443,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "NAPLES_SERVICE_STOPPED",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Naples service stopped",
+  },
+  'NAPLES_WARN_PCIEHEALTH_EVENT' : {
+      "Name": "NAPLES_WARN_PCIEHEALTH_EVENT",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "System has detected a pcie link health warning",
   },
   'SERVICE_PENDING' : {
       "Name": "SERVICE_PENDING",

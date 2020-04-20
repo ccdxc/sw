@@ -98,7 +98,7 @@ asic_temperature_metrics_update (system_temperature_t *temperature)
 /// \param[in] hbm_event events for hbm temperature threshold
 static inline void
 temperature_event_cb (system_temperature_t *temperature,
-                      sysmond_hbm_threshold_event_t hbm_event)
+                      sysmon_hbm_threshold_event_t hbm_event)
 {
     PDS_HMON_TRACE_VERBOSE("Die temperature is %dC, local temperature is "
                            "%dC, HBM temperature is %dC",

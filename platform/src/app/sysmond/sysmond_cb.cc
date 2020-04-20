@@ -40,7 +40,7 @@ power_event_cb (sdk::platform::sensor::system_power_t *power)
 
 void
 temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature,
-               sysmond_hbm_threshold_event_t hbm_event)
+               sysmon_hbm_threshold_event_t hbm_event)
 {
     cpld_temp_event_cb(temperature);
     delphi_temp_event_cb(temperature);
@@ -70,6 +70,12 @@ void
 liveness_event_cb (void)
 {
     cpld_liveness_event_cb();
+}
+
+void
+pciehealth_event_cb (sysmon_pciehealth_severity_t sev, const char *reason)
+{
+    eventrecorder_pciehealth_event_cb(sev, reason);
 }
 
 void

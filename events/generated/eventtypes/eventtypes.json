@@ -316,9 +316,19 @@
    "Desc": "System encountered cattrip resetting system"
   },
   {
+   "Name": "NAPLES_ERR_PCIEHEALTH_EVENT",
+   "Severity": "critical",
+   "Desc": "System has detected a pcie link health error"
+  },
+  {
    "Name": "NAPLES_FATAL_INTERRUPT",
    "Severity": "critical",
    "Desc": "Naples has a fatal interrupt"
+  },
+  {
+   "Name": "NAPLES_INFO_PCIEHEALTH_EVENT",
+   "Severity": "info",
+   "Desc": "System has detected a pcie link health event"
   },
   {
    "Name": "NAPLES_OVER_TEMP",
@@ -344,6 +354,11 @@
    "Name": "NAPLES_SERVICE_STOPPED",
    "Severity": "critical",
    "Desc": "Naples service stopped"
+  },
+  {
+   "Name": "NAPLES_WARN_PCIEHEALTH_EVENT",
+   "Severity": "warn",
+   "Desc": "System has detected a pcie link health warning"
   },
   {
    "Name": "SERVICE_PENDING",

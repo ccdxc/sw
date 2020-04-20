@@ -48,3 +48,15 @@ void EventLogger::LogPostdiagEvent(std::string description)
 {
     this->recorder->event(eventtypes::NAPLES_POST_DIAG_FAILURE_EVENT, description.c_str());
 }
+
+void EventLogger::LogInfoPcieHealthEvent(const char *desc) {
+    this->recorder->event(eventtypes::NAPLES_INFO_PCIEHEALTH_EVENT, desc);
+}
+
+void EventLogger::LogWarnPcieHealthEvent(const char *desc) {
+    this->recorder->event(eventtypes::NAPLES_WARN_PCIEHEALTH_EVENT, desc);
+}
+
+void EventLogger::LogErrorPcieHealthEvent(const char *desc) {
+    this->recorder->event(eventtypes::NAPLES_ERR_PCIEHEALTH_EVENT, desc);
+}

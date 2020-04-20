@@ -18,10 +18,16 @@ typedef enum {
 } sysmond_led_event_t;
 
 typedef enum {
-   SYSMOND_HBM_TEMP_NONE = 0,
-   SYSMOND_HBM_TEMP_ABOVE_THRESHOLD = 1,
-   SYSMOND_HBM_TEMP_BELOW_THRESHOLD = 2
-} sysmond_hbm_threshold_event_t;
+   SYSMON_HBM_TEMP_NONE = 0,
+   SYSMON_HBM_TEMP_ABOVE_THRESHOLD = 1,
+   SYSMON_HBM_TEMP_BELOW_THRESHOLD = 2
+} sysmon_hbm_threshold_event_t;
+
+typedef enum {
+    SYSMON_PCIEHEALTH_INFO = 0,
+    SYSMON_PCIEHEALTH_WARN = 1,
+    SYSMON_PCIEHEALTH_ERROR = 2,
+} sysmon_pciehealth_severity_t;
 
 typedef struct systemled_s {
     sysmond_led_event_t event;
@@ -34,12 +40,14 @@ typedef void (*cattrip_event_cb_t)(void);
 typedef void (*power_event_cb_t)(sdk::platform::sensor::system_power_t *power);
 typedef void (*temp_event_cb_t)(
         sdk::platform::sensor::system_temperature_t *temperature,
-        sysmond_hbm_threshold_event_t hbm_event);
+        sysmon_hbm_threshold_event_t hbm_event);
 typedef void (*memory_event_cb_t)(
         uint64_t total_mem, uint64_t available_mem, uint64_t free_mem);
 typedef void (*panic_event_cb_t)(void);
 typedef void (*postdiag_event_cb_t)(void);
 typedef void (*liveness_event_cb_t)(void);
+typedef void (*pciehealth_event_cb_t)(sysmon_pciehealth_severity_t sev,
+                                      const char *reason);
 
 typedef struct sysmon_cfg_s {
     frequency_change_event_cb_t frequency_change_event_cb;
@@ -50,6 +58,7 @@ typedef struct sysmon_cfg_s {
     panic_event_cb_t            panic_event_cb;
     postdiag_event_cb_t         postdiag_event_cb;
     liveness_event_cb_t         liveness_event_cb;
+    pciehealth_event_cb_t       pciehealth_event_cb;
     sdk::lib::catalog           *catalog;
 } sysmon_cfg_t;
 

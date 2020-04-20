@@ -287,6 +287,18 @@ enum EventTypes {
                                            (severity)    = WARN,
                                            (desc)        = "System post diag test failed"];
 
+    NAPLES_INFO_PCIEHEALTH_EVENT    = 514 [(category)    = System,
+                                           (severity)    = INFO,
+                                           (desc)        = "System has detected a pcie link health event"];
+
+    NAPLES_WARN_PCIEHEALTH_EVENT    = 515 [(category)    = System,
+                                           (severity)    = WARN,
+                                           (desc)        = "System has detected a pcie link health warning"];
+
+    NAPLES_ERR_PCIEHEALTH_EVENT     = 516 [(category)    = System,
+                                           (severity)    = CRITICAL,
+                                           (desc)        = "System has detected a pcie link health error"];
+
      // ------------------------------ Resource events -------------------------- //
      DISK_THRESHOLD_EXCEEDED         = 601 [(category) = Resource,
                                             (severity) = CRITICAL,

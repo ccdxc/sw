@@ -144,6 +144,7 @@ main(int argc, char *argv[])
     sysmon_cfg.panic_event_cb = panic_event_cb;
     sysmon_cfg.postdiag_event_cb = postdiag_event_cb;
     sysmon_cfg.liveness_event_cb = liveness_event_cb;
+    sysmon_cfg.pciehealth_event_cb = pciehealth_event_cb;
     sysmon_cfg.catalog = g_catalog;
 
     //TODO: Use enum for IDs

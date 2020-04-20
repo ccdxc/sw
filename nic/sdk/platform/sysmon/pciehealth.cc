@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <inttypes.h>
 #include <sys/time.h>
@@ -143,6 +142,7 @@ typedef struct pcie_health_state_s {
     uint64_t lastlogtm;         // last event logged time
     uint64_t logdelay;          // delay to next time to log
     uint64_t ltssmst_base;      // intr_ltssmst baseline
+    sysmon_pciehealth_severity_t sev; // severity of current event
     char reason[80];            // reason for current event
 } pcie_health_state_t;
 
@@ -158,6 +158,18 @@ static pcie_health_state_t health_state[PCIEPORT_NPORTS];
                                  PCI_EXP_LNKSTA2_EQ2 | \
                                  PCI_EXP_LNKSTA2_EQ3)
 
+#define set_reason(hs, severity, fmt, ...) \
+    do { \
+        (hs)->sev = severity; \
+        snprintf((hs)->reason, sizeof((hs)->reason), fmt, ##__VA_ARGS__); \
+    } while (0)
+
+#define set_warn(hs, fmt, ...) \
+    set_reason(hs, SYSMON_PCIEHEALTH_WARN, fmt, ##__VA_ARGS__)
+
+#define set_error(hs, fmt, ...) \
+    set_reason(hs, SYSMON_PCIEHEALTH_ERROR, fmt, ##__VA_ARGS__)
+
 // Get timestamp in microseconds.
 static uint64_t
 get_timestamp(void)
@@ -168,21 +180,11 @@ get_timestamp(void)
     return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
-static void set_reason(pcie_health_state_t *hs, const char *fmt, ...)
-    __attribute__((format (printf, 2, 3)));
-static void
-set_reason(pcie_health_state_t *hs, const char *fmt, ...)
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    vsnprintf(hs->reason, sizeof(hs->reason), fmt, ap);
-    va_end(ap);
-}
-
 static void
 pcie_healthlog(const int port, const char *reason)
 {
+    pciesys_logerror("port%d healthlog %s\n", port, reason);
+
     // increment stats here before running healthlog below
     pciemgr_stats_t *stats = pciehw_stats_get(port);
     stats->healthlog++;
@@ -193,6 +195,18 @@ pcie_healthlog(const int port, const char *reason)
 
     int r = evutil_system(EV_DEFAULT_ cmd, NULL, NULL);
     if (r < 0) pciesys_logerror("pcie_healthlog %d failed %d\n", port, r);
+}
+
+static void
+pcie_health_event(const int port)
+{
+    pcie_health_state_t *hs = &health_state[port];
+
+    pcie_healthlog(port, hs->reason);
+
+    if (g_sysmon_cfg.pciehealth_event_cb) {
+        g_sysmon_cfg.pciehealth_event_cb(hs->sev, hs->reason);
+    }
 }
 
 static void
@@ -313,17 +327,17 @@ process_health_info(const int port)
 
     // faults stat
     if (nhi->faults > lhi->faults) {
-        set_reason(hs, "faults %" PRIu64, nhi->faults);
+        set_error(hs, "faults %" PRIu64, nhi->faults);
         goto want_log;
     }
     // phypollfail stat
     if (nhi->phypollfail > lhi->phypollfail) {
-        set_reason(hs, "phypollfail %" PRIu64, nhi->phypollfail);
+        set_error(hs, "phypollfail %" PRIu64, nhi->phypollfail);
         goto want_log;
     }
     // core_initiated_recovery events
     if (nhi->recovery > lhi->recovery) {
-        set_reason(hs, "recovery %d", nhi->recovery);
+        set_warn(hs, "recovery %d", nhi->recovery);
         goto want_log;
     }
     // mac bouncing up/down
@@ -331,12 +345,12 @@ process_health_info(const int port)
          nhi->macup - lhi->macup >= MACUP_THRESHOLD) ||
         (!same_session(nhi, lhi) &&
          nhi->macup - hs->macup_base >= MACUP_THRESHOLD)) {
-        set_reason(hs, "mac flaps %u", nhi->macup);
+        set_error(hs, "mac flaps %u", nhi->macup);
         goto want_log;
     }
     // link up timeout
     if (nhi->linkuptmo > lhi->linkuptmo) {
-        set_reason(hs, "link up timeout");
+        set_warn(hs, "link up timeout");
         goto want_log;
     }
     // current link parameters match expected capability
@@ -347,8 +361,8 @@ process_health_info(const int port)
      nhi->cur_##field < nhi->cap_##field && \
      (nhi->cur_##field != lhi->cur_##field || !same_session(nhi, lhi)))
     if (check_genwidth(gen) || check_genwidth(width)) {
-        set_reason(hs, "gen%dx%d (capable gen%dx%d)",
-                   nhi->cur_gen, nhi->cur_width, nhi->cap_gen, nhi->cap_width);
+        set_warn(hs, "gen%dx%d (capable gen%dx%d)",
+                 nhi->cur_gen, nhi->cur_width, nhi->cap_gen, nhi->cap_width);
         goto want_log;
     }
     // newly up in gen3, check gen3 equalization complete
@@ -356,19 +370,19 @@ process_health_info(const int port)
         (lhi->portst <  PCIEPORTST_UP || lhi->cur_gen != 3 ||
          !same_session(nhi, lhi)) &&
         (nhi->lnksta2 & PCI_EXP_LNKSTA2_EQ_ALL) != PCI_EXP_LNKSTA2_EQ_ALL) {
-        set_reason(hs, "lnksta2 0x%04x", nhi->lnksta2);
+        set_warn(hs, "lnksta2 0x%04x", nhi->lnksta2);
         goto want_log;
     }
     // any new AER uncorrectable errors
     if (nhi->aer_uesta &&
         (nhi->aer_uesta != lhi->aer_uesta || !same_session(nhi, lhi))) {
-        set_reason(hs, "uesta 0x%08x", nhi->aer_uesta);
+        set_error(hs, "uesta 0x%08x", nhi->aer_uesta);
         goto want_log;
     }
     // any new AER correctable errors (disabled due to NonFatalErr+)
     if (0 && nhi->aer_cesta &&
         (nhi->aer_cesta != lhi->aer_cesta || !same_session(nhi, lhi))) {
-        set_reason(hs, "cesta 0x%08x", nhi->aer_cesta);
+        set_warn(hs, "cesta 0x%08x", nhi->aer_cesta);
         goto want_log;
     }
     // ltssmst changes happen occasionally,
@@ -377,7 +391,7 @@ process_health_info(const int port)
          (nhi->intr_ltssmst - lhi->intr_ltssmst >= LTSSMST_THRESHOLD)) ||
         (!same_session(nhi, lhi) &&
          (nhi->intr_ltssmst - hs->ltssmst_base >= LTSSMST_THRESHOLD))) {
-        set_reason(hs, "intr_ltssmst %" PRIu64, nhi->intr_ltssmst);
+        set_warn(hs, "intr_ltssmst %" PRIu64, nhi->intr_ltssmst);
         goto want_log;
     }
     // perf: check tx fc credits
@@ -389,9 +403,9 @@ process_health_info(const int port)
         (check_txfc(txfc_phdr,  0, TXFC_PHDR_MIN) ||
          check_txfc(txfc_pdata, 0, TXFC_PDATA_MIN) ||
          check_txfc(txfc_nphdr, 0, TXFC_NPHDR_MIN))) {
-        set_reason(hs, "tx fc credits post %d/%d nonpost %d/%d",
-                   nhi->txfc_phdr,  nhi->txfc_pdata,
-                   nhi->txfc_nphdr, nhi->txfc_npdata);
+        set_warn(hs, "tx fc credits post %d/%d nonpost %d/%d",
+                 nhi->txfc_phdr,  nhi->txfc_pdata,
+                 nhi->txfc_nphdr, nhi->txfc_npdata);
         goto want_log;
     }
     // perf: check devctl ExtTag, MaxPayload, MaxReadReq
@@ -400,21 +414,21 @@ process_health_info(const int port)
         const int enc_to_sz[8] = { 128, 256, 512, 1024, 2048, 4096, -6, -7 };
 
         if ((nhi->devctl & PCI_EXP_DEVCTL_EXT_TAG) == 0) {
-            set_reason(hs, "devctl 0x%04x exttag disabled", nhi->devctl);
+            set_warn(hs, "devctl 0x%04x exttag disabled", nhi->devctl);
             goto want_log;
         }
         const uint16_t payloadenc = (nhi->devctl >>  5) & 0x7;
         const int payloadsz = enc_to_sz[payloadenc];
         if (payloadsz < 256) {
-            set_reason(hs, "devctl 0x%04x maxpayload %d",
-                       nhi->devctl, payloadsz);
+            set_warn(hs, "devctl 0x%04x maxpayload %d",
+                     nhi->devctl, payloadsz);
             goto want_log;
         }
         const uint16_t readreqenc = (nhi->devctl >> 12) & 0x7;
         const int readreqsz = enc_to_sz[readreqenc];
         if (readreqsz < 512) {
-            set_reason(hs, "devctl 0x%04x maxreadreq %d",
-                       nhi->devctl, readreqsz);
+            set_warn(hs, "devctl 0x%04x maxreadreq %d",
+                     nhi->devctl, readreqsz);
             goto want_log;
         }
     }
@@ -428,8 +442,7 @@ process_health_info(const int port)
     }
     // no more log events until enough time since last logged event
     if (nhi->tstamp - hs->lastlogtm > hs->logdelay) {
-        pciesys_logerror("port%d healthlog %s\n", port, hs->reason);
-        pcie_healthlog(port, hs->reason);
+        pcie_health_event(port);
         hs->hilog = *nhi; // save last logged event
         hs->lastlogtm = nhi->tstamp;
 

@@ -18,6 +18,9 @@ public:
     void LogFatalInterruptEvent(const char *desc);
     void LogPanicEvent(std::string description);
     void LogPostdiagEvent(std::string description);
+    void LogInfoPcieHealthEvent(const char *desc);
+    void LogWarnPcieHealthEvent(const char *desc);
+    void LogErrorPcieHealthEvent(const char *desc);
 };
 typedef std::shared_ptr<EventLogger> EventLoggerPtr;
 

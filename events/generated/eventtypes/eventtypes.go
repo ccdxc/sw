@@ -405,6 +405,27 @@ func init() {
 		Desc:       "System post diag test failed",
 		SuppressMM: false}
 
+	eventTypes[NAPLES_INFO_PCIEHEALTH_EVENT] = &EventTypeAttributes{
+		EType:      NAPLES_INFO_PCIEHEALTH_EVENT.String(),
+		Severity:   "info",
+		Category:   "system",
+		Desc:       "System has detected a pcie link health event",
+		SuppressMM: false}
+
+	eventTypes[NAPLES_WARN_PCIEHEALTH_EVENT] = &EventTypeAttributes{
+		EType:      NAPLES_WARN_PCIEHEALTH_EVENT.String(),
+		Severity:   "warn",
+		Category:   "system",
+		Desc:       "System has detected a pcie link health warning",
+		SuppressMM: false}
+
+	eventTypes[NAPLES_ERR_PCIEHEALTH_EVENT] = &EventTypeAttributes{
+		EType:      NAPLES_ERR_PCIEHEALTH_EVENT.String(),
+		Severity:   "critical",
+		Category:   "system",
+		Desc:       "System has detected a pcie link health error",
+		SuppressMM: false}
+
 	eventTypes[DISK_THRESHOLD_EXCEEDED] = &EventTypeAttributes{
 		EType:      DISK_THRESHOLD_EXCEEDED.String(),
 		Severity:   "critical",

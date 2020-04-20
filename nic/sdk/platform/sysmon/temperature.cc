@@ -60,8 +60,8 @@ checktemperature(void)
     static int max_die_temp;
     static int max_local_temp;
     static int max_hbm_temp;
-    static sysmond_hbm_threshold_event_t prev_hbmtemp_event;
-    sysmond_hbm_threshold_event_t hbmtemp_event;
+    static sysmon_hbm_threshold_event_t prev_hbmtemp_event;
+    sysmon_hbm_threshold_event_t hbmtemp_event;
     sdk::platform::sensor::system_temperature_t temperature;
 
     ret = read_temperatures(&temperature);
@@ -95,7 +95,7 @@ checktemperature(void)
         }
         if ((temperature.hbmtemp >=
                  g_sysmon_cfg.catalog->hbmtemperature_threshold()) &&
-            (prev_hbmtemp_event != SYSMOND_HBM_TEMP_ABOVE_THRESHOLD)) {
+            (prev_hbmtemp_event != SYSMON_HBM_TEMP_ABOVE_THRESHOLD)) {
             SDK_HMON_TRACE_ERR(
                 "HBM temperature is : %uC ***, threshold is %u",
                 temperature.hbmtemp,
@@ -104,15 +104,15 @@ checktemperature(void)
                 "HBM temperature is : %uC ***, threshold is %u",
                 temperature.hbmtemp,
                 g_sysmon_cfg.catalog->hbmtemperature_threshold());
-            hbmtemp_event = SYSMOND_HBM_TEMP_ABOVE_THRESHOLD;
-            prev_hbmtemp_event = SYSMOND_HBM_TEMP_ABOVE_THRESHOLD;
-        } else if ((prev_hbmtemp_event == SYSMOND_HBM_TEMP_ABOVE_THRESHOLD) &&
+            hbmtemp_event = SYSMON_HBM_TEMP_ABOVE_THRESHOLD;
+            prev_hbmtemp_event = SYSMON_HBM_TEMP_ABOVE_THRESHOLD;
+        } else if ((prev_hbmtemp_event == SYSMON_HBM_TEMP_ABOVE_THRESHOLD) &&
                    (temperature.hbmtemp <
                         g_sysmon_cfg.catalog->hbmtemperature_threshold())) {
-            hbmtemp_event = SYSMOND_HBM_TEMP_BELOW_THRESHOLD;
-            prev_hbmtemp_event = SYSMOND_HBM_TEMP_BELOW_THRESHOLD;
+            hbmtemp_event = SYSMON_HBM_TEMP_BELOW_THRESHOLD;
+            prev_hbmtemp_event = SYSMON_HBM_TEMP_BELOW_THRESHOLD;
         } else {
-            hbmtemp_event = SYSMOND_HBM_TEMP_NONE;
+            hbmtemp_event = SYSMON_HBM_TEMP_NONE;
         }
         if (g_sysmon_cfg.temp_event_cb) {
             g_sysmon_cfg.temp_event_cb(&temperature, hbmtemp_event);
