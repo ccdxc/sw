@@ -245,8 +245,7 @@ qos_impl::qos_class_create_ (qos_class_t *qos_class) {
 sdk_ret_t
 qos_impl::qos_init (void) {
     qos_class_t qos_class;
-    // TODO assume dscp 63 for control traffic
-    uint32_t dscp_val = 63;
+    uint32_t dscp_val = QOS_CONTROL_DEFAULT_DSCP;
 
     // create qos default class with cos 0
     memset(&qos_class, 0, sizeof(qos_class_t));

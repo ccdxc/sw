@@ -13,6 +13,9 @@
 #include "nic/sdk/platform/capri/capri_qos.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 
+// default network control traffic dscp value (CS6)
+#define QOS_CONTROL_DEFAULT_DSCP 48
+
 namespace api {
 namespace impl {
 
