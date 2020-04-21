@@ -1113,7 +1113,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         const updatedObject: ClusterDistributedServiceCard = new ClusterDistributedServiceCard(object);
         updatedObject.spec.admit = true;
         this.invokeUpdateCard(updatedObject, object,
-          'Successfully admitted ' + object.meta.name, 'Admit Service');
+          'Admitting DSC ' + object.meta.name + ' request has been submitted.', 'Admit Service');
       }
     });
   }
@@ -1125,7 +1125,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     const sub = this.clusterService.UpdateDistributedServiceCard(updatedObject.meta.name, updatedObject, null,
       oldObject, false).subscribe(
         () => {
-          this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY,
+          this.controllerService.invokeInfoToaster(Utility.CHANGE_REQUEST_SUCCESS_SUMMIT_SUMMARY,
             successMsg);
         },
         (error) => {
@@ -1134,7 +1134,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           } else {
             console.error(actionType + ' returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
           }
-          this.controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
+          this.controllerService.invokeRESTErrorToaster(Utility.CHANGE_REQUEST_FAILURE_SUMMIT_SUMMARY, error);
         }
       );
     this.subscriptions.push(sub);

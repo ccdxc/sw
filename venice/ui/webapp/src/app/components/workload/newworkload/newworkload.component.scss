@@ -12,9 +12,13 @@ $dary-grey: #a9a9a9;
   padding: 20px;
 
   .new-workload-groups {
-    width: 590px;
+    width: 630px;
     justify-content: space-between;
     padding-bottom: 10px;
+
+    .requiredField :first-child {
+      width: 100% !important;
+    }
   }
 
   .new-workload-subtext {
@@ -23,7 +27,7 @@ $dary-grey: #a9a9a9;
   }
 
   .new-workload-interfaces {
-    width: 590px;
+    width: 630px;
     border: 1px solid $dary-grey;
     padding: 5px;
 
@@ -59,7 +63,7 @@ $dary-grey: #a9a9a9;
     }
 
     .new-workload-interface-box-vlan {
-      width: 110px;
+      width: 130px;
     }
 
     .new-workload-interface-ipbox {
@@ -93,12 +97,7 @@ $dary-grey: #a9a9a9;
   }
 
   .new-workload-input {
-    .new-workload-mac-address {
-      width: 215px;
-      height: 30px;
-    }
-
-    width: 215px;
+    width: 325px;
     height: 30px;
   }
 
@@ -115,49 +114,9 @@ $dary-grey: #a9a9a9;
     }
   }
 
-  .new-workload-rule-template {
-    cursor: pointer;
-
-    .new-workload-edit-buttons,
-    .new-workload-delete-buttons {
-      display: none;
-    }
-
-    &:hover {
-
-      .new-workload-edit-buttons,
-      .new-workload-delete-buttons {
-        display: inherit;
-      }
-    }
-
-    .new-workload-bold {
-      @include primary-font(16px, #383838, bold);
-    }
-
-    .new-workload-bold-subtext-ipmac {
-      @include primary-font(16px, $dary-grey, 500);
-      width: 110px;
-    }
-
-    .new-workload-rule-content {
-      @include primary-font(16px, #b2b3b4, normal);
-    }
-  }
-
   .new-workload-subtext {
     margin-top: 2px;
     @include primary-font(12px, #b2b3b4, 300);
-  }
-
-  .export-policy-rule-boxes {
-    ul {
-      width: 215px;
-      white-space: nowrap;
-      overflow: hidden !important;
-      font-size: 14px !important;
-      height: 30px !important;
-    }
   }
 
   .new-workload-button-container {
@@ -166,7 +125,7 @@ $dary-grey: #a9a9a9;
     align-items: flex-start;
 
     // when screen is big enough, move buttons down
-    @media only screen and (min-width: 1200px) {
+    @media only screen and (min-width: 1240px) {
       .button-container {
         position: relative;
         max-height: 0px;
@@ -182,14 +141,5 @@ $dary-grey: #a9a9a9;
       line-height: 25px;
       margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
     }
-  }
-
-  .new-workload-add-rule {
-    cursor: pointer;
-    width: 100px;
-  }
-
-  app-orderedlist {
-    width: 590px;
   }
 }

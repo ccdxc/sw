@@ -118,7 +118,8 @@
           Micro-seg vlan: {{rowData.spec.interfaces[index]['micro-seg-vlan']}}
           <ng-container
                         *ngIf="!isWorkloadSystemGenerated(rowData)">
-            External vlan: {{rowData.spec.interfaces[index]['external-vlan']}}
+            External vlan: {{rowData.spec.interfaces[index]['external-vlan'] ?
+                rowData.spec.interfaces[index]['external-vlan'] : 0}}
           </ng-container>
           <ng-container
                         *ngIf="isWorkloadSystemGenerated(rowData)">

@@ -82,6 +82,8 @@ export class Utility {
   public static DELETE_FAILED_SUMMARY = 'Delete Failed';
   public static CANCEL_FAILED_SUMMARY = 'Cancel Failed';
   public static UPDATE_SUCCESS_SUMMARY = 'Update Successful';
+  public static CHANGE_REQUEST_SUCCESS_SUMMIT_SUMMARY = 'Change Request Successed';
+  public static CHANGE_REQUEST_FAILURE_SUMMIT_SUMMARY = 'Change Request Failed';
   public static CREATE_SUCCESS_SUMMARY = 'Create Successful';
   public static DELETE_SUCCESS_SUMMARY = 'Delete Successful';
   public static CANCEL_SUCCESS_SUMMARY = 'Cancel Successful';
