@@ -18,6 +18,7 @@ export CONFIG_PATH=$NICDIR/conf/
 export ZMQ_SOC_DIR=$NICDIR
 #This is used in DPDK to chosing DESC/Pkt buffer memory pool
 export DPDK_SIM_APP_ID=1
+export VPP_LOG_FILE=$NICDIR/vpp.log
 
 ulimit -c unlimited
 
