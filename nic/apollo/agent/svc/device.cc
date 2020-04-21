@@ -7,6 +7,7 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/device_svc.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/device.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_device.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 
@@ -260,58 +261,11 @@ device_spec_fill (pds_device_spec_t *spec)
     spec->memory_profile = api::g_pds_state.memory_profile();
 }
 
-static void
-device_status_fill (pds_device_status_t *status)
-{
-    std::string   mac_str;
-    std::string   mem_str;
-    std::string   value;
-
-    // fill fru mac in status
-    sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_str);
-    mac_str_to_addr((char *)mac_str.c_str(), status->fru_mac);
-
-    mem_str = api::g_pds_state.catalogue()->memory_capacity_str();
-    if (mem_str == "4g") {
-        status->memory_cap = 4;
-    } else if (mem_str == "8g") {
-        status->memory_cap = 8;
-    }
-
-    sdk::platform::readfrukey(BOARD_MANUFACTURERDATE_KEY, value);
-    if (value.empty()) {
-        status->mnfg_date = std::string("-");
-    } else {
-        status->mnfg_date = value;
-    }
-
-    sdk::platform::readfrukey(BOARD_PARTNUM_KEY, value);
-    if (value.empty() || value == "") {
-        status->part_num = std::string("-");
-    } else {
-        status->part_num = value;
-    }
-
-    sdk::platform::readfrukey(BOARD_SERIALNUMBER_KEY, value);
-    if (value.empty() || value == "") {
-        status->serial_num = std::string("-");
-    } else {
-        status->serial_num = value;
-    }
-
-    sdk::platform::readfrukey(BOARD_PRODUCTNAME_KEY, value);
-    if (value.empty() || value == "") {
-        status->product_name = std::string("-");
-    } else {
-        status->product_name = value;
-    }
-}
-
 sdk_ret_t
 device_info_fill (pds_device_info_t *info)
 {
     device_spec_fill(&info->spec);
-    device_status_fill(&info->status);
+    api::device_entry::fill_status(&info->status);
     return SDK_RET_OK;
 }
 

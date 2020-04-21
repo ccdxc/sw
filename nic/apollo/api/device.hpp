@@ -37,6 +37,10 @@ public:
     ///            impl->cleanup_hw() before calling this
     static void destroy(device_entry *device);
 
+    /// \brief      fill the device sw status
+    /// \param[out] status specification
+    static void fill_status(pds_device_status_t *status);
+
     /// \brief    clone this object and return cloned object
     /// \param[in]    api_ctxt API context carrying object related configuration
     /// \return       new object instance of current object
@@ -214,9 +218,6 @@ private:
     /// \param[out] spec specification
     void fill_spec_(pds_device_spec_t *spec);
 
-    /// \brief      fill the device sw status
-    /// \param[out] status specification
-    void fill_status_(pds_device_status_t *status);
 
     /// \brief  free h/w resources used by this object, if any
     ///         (this API is invoked during object deletes)

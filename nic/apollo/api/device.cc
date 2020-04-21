@@ -155,7 +155,7 @@ device_entry::fill_spec_(pds_device_spec_t *spec) {
 }
 
 void
-device_entry::fill_status_(pds_device_status_t *status) {
+device_entry::fill_status(pds_device_status_t *status) {
     std::string   mac_str;
     std::string   mem_str;
     std::string   value;
@@ -203,7 +203,7 @@ device_entry::fill_status_(pds_device_status_t *status) {
 sdk_ret_t
 device_entry::read(pds_device_info_t *info) {
     fill_spec_(&info->spec);
-    fill_status_(&info->status);
+    api::device_entry::fill_status(&info->status);
     return impl_->read_hw(this, NULL, (impl::obj_info_t *)info);
 }
 
