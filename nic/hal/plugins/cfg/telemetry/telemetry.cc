@@ -443,10 +443,6 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
                                          dst_addr);
         session->type = hal::MIRROR_DEST_ERSPAN;
         auto erspan_type = erspan.type();
-        // TODO: cleanup code, when Netagent set correct erspan_type
-        if (erspan_type == 0) {
-            erspan_type = telemetry::ERSPAN_TYPE_3;
-        }
         SDK_ASSERT(erspan_type == ERSPAN_TYPE_II || erspan_type == ERSPAN_TYPE_III);
         session->mirror_destination_u.er_span_dest.type = erspan_type;
         session->mirror_destination_u.er_span_dest.vlan_strip_en = erspan.vlan_strip_en();

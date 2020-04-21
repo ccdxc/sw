@@ -4,20 +4,6 @@ from scapy.packet import Packet, bind_layers
 from scapy.fields import XIntField, BitField
 from scapy.all import GRE, Ether
 
-class ERSPAN(Packet):
-    name = "ERSPAN"
-    fields_desc = [ BitField("version", 1, 4),
-                    BitField("vlan", 0, 12),
-                    BitField("cos", 0, 3),
-                    BitField("encap_type", 0, 2),
-                    BitField("truncated", 0, 1),
-                    BitField("span_id", 0, 10),
-                    BitField("reserved", 0, 12),
-                    BitField("port_id", 0, 20)]
-
-bind_layers(GRE, ERSPAN, proto=0x88be)
-bind_layers(ERSPAN, Ether)
-
 class ERSPAN_III(Packet):
     name = "ERSPAN_III"
     fields_desc = [ BitField("version", 2, 4),

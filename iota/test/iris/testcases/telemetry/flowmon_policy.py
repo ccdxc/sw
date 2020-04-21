@@ -70,8 +70,8 @@ def Trigger(tc):
 
         api.Logger.info("collect_dest len: {} ".format(len(export_cfg)))
         api.Logger.info("collect_wl len: {} ".format(len(collector_wl)))
-
-        ret = utils.RunAll(collector_wl, verif_json, tc, 'flowmon', export_cfg, is_wl_type_bm)
+        collector_info = utils.GetFlowmonCollectorsInfo(collector_wl, export_cfg)
+        ret = utils.RunAll(tc, verif_json, 'flowmon', collector_info, is_wl_type_bm)
         result = ret['res']
         ret_count = ret['count']
         count = count + ret_count

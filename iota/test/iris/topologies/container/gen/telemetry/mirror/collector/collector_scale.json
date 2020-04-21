@@ -12,7 +12,8 @@
             }, 
             "spec": {
                 "packet-size": 128, 
-                "destination": "192.168.100.101"
+                "destination": "192.168.100.101",
+                "type": "erspan_type_3"
             }
         }, 
         {
@@ -27,7 +28,8 @@
             }, 
             "spec": {
                 "packet-size": 128, 
-                "destination": "192.168.100.102"
+                "destination": "192.168.100.102",
+                "type": "erspan_type_2"
             }
         }, 
         {
@@ -42,7 +44,8 @@
             }, 
             "spec": {
                 "packet-size": 128, 
-                "destination": "192.168.101.101"
+                "destination": "192.168.101.101",
+                "type": "erspan_type_3"
             }
         }, 
         {
@@ -57,7 +60,8 @@
             }, 
             "spec": {
                 "packet-size": 128, 
-                "destination": "192.168.101.102"
+                "destination": "192.168.101.102",
+                "type": "erspan_type_2"
             }
         }, 
         {
@@ -72,7 +76,8 @@
             }, 
             "spec": {
                 "packet-size": 128, 
-                "destination": "192.168.100.103"
+                "destination": "192.168.100.103",
+                "type": "erspan_type_2"
             }
         }, 
         {
@@ -87,7 +92,8 @@
             }, 
             "spec": {
                 "packet-size": 128, 
-                "destination": "192.168.100.104"
+                "destination": "192.168.100.104",
+                "type": "erspan_type_3"
             }
         }, 
         {
@@ -102,7 +108,8 @@
             }, 
             "spec": {
                 "packet-size": 128, 
-                "destination": "192.168.101.103"
+                "destination": "192.168.101.103",
+                "type": "erspan_type_2"
             }
         }, 
         {
@@ -117,7 +124,8 @@
             }, 
             "spec": {
                 "packet-size": 128, 
-                "destination": "192.168.101.104"
+                "destination": "192.168.101.104",
+                "type": "erspan_type_3"
             }
         }
     ], 

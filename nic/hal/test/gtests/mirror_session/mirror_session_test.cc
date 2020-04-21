@@ -27,6 +27,7 @@ using telemetry::MirrorSessionGetRequest;
 using telemetry::MirrorSessionGetResponse;
 using telemetry::RuleAction;
 using telemetry::ERSpanSpec;
+using telemetry::ERSpanType;
 
 hal_handle_t vrfh_, nwh_, l2segh_, eph1_, eph2_,  intfh1_, intfh2_, gre_, flowmonh_;
 
@@ -127,7 +128,11 @@ protected:
         spec.mutable_erspan_spec()->mutable_dest_ip()->set_ip_af(::types::IP_AF_INET);
         spec.mutable_erspan_spec()->mutable_dest_ip()->set_v4_addr(dip);
         spec.mutable_erspan_spec()->set_span_id(session_id);
-
+        if (session_id % 2) {
+            spec.mutable_erspan_spec()->set_type(ERSpanType::ERSPAN_TYPE_3);
+        } else {
+            spec.mutable_erspan_spec()->set_type(ERSpanType::ERSPAN_TYPE_2);
+        }
         mirror_session_create(spec, &rsp);
         return rsp;
     }
@@ -236,6 +241,11 @@ TEST_F (mirror_session_test, erspan_basic) {
     EXPECT_EQ(erspan.src_ip().v4_addr(), mgmt_ip);
     EXPECT_EQ(erspan.dest_ip().ip_af(), types::IPAddressFamily::IP_AF_INET);
     EXPECT_EQ(erspan.dest_ip().v4_addr(), collector_ip);
+    if (session_id % 2) {
+        EXPECT_EQ(erspan.type(), ERSpanType::ERSPAN_TYPE_3);
+    } else {
+        EXPECT_EQ(erspan.type(), ERSpanType::ERSPAN_TYPE_2);
+    }
 
     // delete erspan session
     auto del_rsp = delete_erspan_session(session_id);
@@ -288,6 +298,11 @@ TEST_F (mirror_session_test, erspan_scale) {
         EXPECT_EQ(erspan.src_ip().v4_addr(), mgmt_ip);
         EXPECT_EQ(erspan.dest_ip().ip_af(), types::IPAddressFamily::IP_AF_INET);
         EXPECT_EQ(erspan.dest_ip().v4_addr(), collector_ip);
+        if (spec.key_or_handle().mirrorsession_id() % 2) {
+            EXPECT_EQ(erspan.type(), ERSpanType::ERSPAN_TYPE_3);
+        } else {
+            EXPECT_EQ(erspan.type(), ERSpanType::ERSPAN_TYPE_2);
+        }
     }
     EXPECT_EQ(mirror_session_id_set.size(), MAX_MIRROR_SESSION_DEST);
 

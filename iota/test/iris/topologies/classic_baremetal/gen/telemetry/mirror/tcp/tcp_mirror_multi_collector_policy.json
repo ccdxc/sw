@@ -62,7 +62,7 @@
                         "export-config": {
                             "destination": "10.255.0.4"
                         }, 
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "strip-vlan-hdr": false
                     }
                 ]

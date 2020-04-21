@@ -69,7 +69,7 @@ def ConfigMirrorSession(tc, num_collectors, mirror_spec_objects):
 
         utils.generateMirrorSpecConfig(iteration, w1, w2, tc.iterators.proto, tc.port, clonedObject)
 
-        (coll_wl_list, coll_ip_list) = utils.updateMirrorCollectorConfig(tc.workloads,
+        (coll_wl_list, coll_ip_list, coll_type) = utils.updateMirrorCollectorConfig(tc.workloads,
                                   num_collectors, local_wl, wl_sec_ip_info, clonedObject)
 
         if len(coll_ip_list) == 0:
@@ -92,6 +92,7 @@ def ConfigMirrorSession(tc, num_collectors, mirror_spec_objects):
         tc.test_iterator_data[iteration]['peer_wl'] = peer_wl
         tc.test_iterator_data[iteration]['coll_wl_list'] = coll_wl_list
         tc.test_iterator_data[iteration]['coll_ip_list'] = coll_ip_list
+        tc.test_iterator_data[iteration]['coll_type'] = coll_type
         tc.test_iterator_data[iteration]['del_obj'] = clonedObject
 
         iteration = iteration + 1
@@ -109,6 +110,7 @@ def updateMirrorSessionCollectors(tc, num_collectors):
         peer_wl = tc.test_iterator_data[iteration]['peer_wl']
         coll_wl_list = tc.test_iterator_data[iteration]['coll_wl_list']
         coll_ip_list = tc.test_iterator_data[iteration]['coll_ip_list']
+        coll_type    = tc.test_iterator_data[iteration]['coll_type']
 
         utils.generateMirrorCollectorConfig(mirror_objects, num_collectors)
 
@@ -145,14 +147,14 @@ def InjectTestTrafficAndValidateCapture(tc, num_mirror_sessions, collector_count
         peer_wl = tc.test_iterator_data[iteration]['peer_wl']
         coll_wl_list = tc.test_iterator_data[iteration]['coll_wl_list']
         coll_ip_list = tc.test_iterator_data[iteration]['coll_ip_list']
+        coll_type    = tc.test_iterator_data[iteration]['coll_type']
         api.Logger.info("Running traffic validation iteration: {} {}-->{}".format(iteration,
                     local_wl.workload_name, peer_wl.workload_name))
 
         utils.setSourceWorkloadsUpLinkVlan(local_wl.uplink_vlan)
+        collector_info = utils.GetMirrorCollectorsInfo(coll_wl_list, coll_ip_list, coll_type)
         result = utils.RunCmd(local_wl, tc.iterators.proto, peer_wl,
-                peer_wl.ip_address, tc.port, collector_count, coll_wl_list,
-                coll_ip_list, 'mirror', 'mirror', is_wl_type_bm)
-
+                              peer_wl.ip_address, tc.port, collector_info, 'mirror', is_wl_type_bm)
         if result != api.types.status.SUCCESS:
             api.Logger.error("Failed in packet validation at collector: {}".format(iteration))
             break

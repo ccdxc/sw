@@ -13,6 +13,7 @@ def GetCollectorWorkloadFromObjects(tc):
             collector_ip = col.export_config.destination
             api.Logger.info("export-dest: %s "%collector_ip)
             tc.collector_ip.append(collector_ip)
+            tc.collector_type.append(col.type)
 
     if len(tc.collector_ip) == 0:
         return api.types.status.FAILURE
@@ -28,6 +29,7 @@ def Setup(tc):
     tc.newObjects = None
     tc.collector_ip = []
     tc.collector_wl = []
+    tc.collector_type = []
     tc.wl_sec_ip_info = defaultdict(lambda: dict())
     tc.IsBareMetal = utils.IsBareMetal()
     tc.port_down_time = getattr(tc.args, "port_down_time", 60)
@@ -67,7 +69,8 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    ret = utils.RunAll(tc.collector_wl, tc.verif_json, tc, 'mirror', tc.collector_ip, tc.IsBareMetal)
+    collector_info = utils.GetMirrorCollectorsInfo(tc.collector_wl, tc.collector_ip, tc.collector_type)
+    ret = utils.RunAll(tc, tc.verif_json, 'mirror', collector_info, tc.IsBareMetal)
     if ret['res'] != api.types.status.SUCCESS:
         return ret['res']
 
@@ -87,7 +90,7 @@ def Trigger(tc):
         return ret
 
     # Rerun the test
-    ret = utils.RunAll(tc.collector_wl, tc.verif_json, tc, 'mirror', tc.collector_ip, tc.IsBareMetal)
+    ret = utils.RunAll(tc, tc.verif_json, 'mirror', collector_info, tc.IsBareMetal)
     api.Logger.info("Waiting for switch flap thread to join..")
     flapTask.join(tc.port_down_time)
     return ret['res']

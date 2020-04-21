@@ -520,7 +520,7 @@
                 ], 
                 "collectors": [
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.100.102"
                         }
@@ -1054,7 +1054,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.101"
                         }
@@ -1588,7 +1588,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.101"
                         }
@@ -2050,7 +2050,7 @@
                 ], 
                 "collectors": [
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.100.102"
                         }
@@ -2062,7 +2062,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.102"
                         }
@@ -2524,7 +2524,7 @@
                 ], 
                 "collectors": [
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.100.102"
                         }
@@ -2536,7 +2536,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.102"
                         }
@@ -2548,7 +2548,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.100.104"
                         }
@@ -3010,7 +3010,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.101"
                         }
@@ -3022,7 +3022,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.100.103"
                         }
@@ -3034,7 +3034,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.103"
                         }
@@ -3418,7 +3418,7 @@
                 ], 
                 "collectors": [
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.100.102"
                         }
@@ -3430,7 +3430,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.102"
                         }
@@ -3442,7 +3442,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.100.104"
                         }
@@ -3454,7 +3454,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.104"
                         }
@@ -3844,7 +3844,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.101"
                         }
@@ -3856,7 +3856,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.100.103"
                         }
@@ -3868,7 +3868,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.101.103"
                         }
@@ -3880,7 +3880,7 @@
                         }
                     }, 
                     {
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "export-config": {
                             "destination": "192.168.100.101"
                         }

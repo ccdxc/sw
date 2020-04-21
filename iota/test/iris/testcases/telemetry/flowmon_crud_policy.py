@@ -171,10 +171,10 @@ def InjectTestTrafficAndValidateCapture(tc, num_flowmon_sessions, num_exports):
                     local_wl.workload_name, peer_wl.workload_name))
 
         utils.setSourceWorkloadsUpLinkVlan(local_wl.uplink_vlan)
+        collector_info = utils.GetFlowmonCollectorsInfo(coll_wl_list, export_cfg_list)
         result = utils.RunCmd(local_wl, tc.iterators.proto, peer_wl,
-                peer_wl.ip_address, tc.port, num_exports, coll_wl_list,
-                export_cfg_list, 'flowmon', 'flowmon', is_wl_type_bm)
-
+                              peer_wl.ip_address, tc.port, collector_info,
+                              'flowmon', is_wl_type_bm)
         if result != api.types.status.SUCCESS:
             api.Logger.error("Failed in packet validation at collector: {}".format(iteration))
             break

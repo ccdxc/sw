@@ -313,14 +313,14 @@ func mirrorShowHeader() {
 	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 75)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-5s%-5s%-5s%-15s%-15s%-15s%-15s\n",
+	fmt.Printf("%-5s%-5s%-5s%-17s%-17s%-15s%-15s\n",
 		"SID", "HWID", "Snap", "LTEP", "RTEP", "ETYPE", "Flags")
 	fmt.Println(hdrLine)
 }
 
 func mirrorShowOneResp(resp *halproto.MirrorSessionGetResponse) {
 	spec := resp.GetSpec()
-	fmt.Printf("%-5d%-5d%-5d%-15s%-15s%-15s%-15s\n",
+	fmt.Printf("%-5d%-5d%-5d%-17s%-17s%-15s%-15s\n",
 		spec.GetKeyOrHandle().GetMirrorsessionId(),
 		resp.GetStatus().GetHandle(),
 		spec.GetSnaplen(),

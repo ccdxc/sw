@@ -26,7 +26,7 @@ mirrorpolicy_template = {
           {
              "type": "erspan_type_3",
              "export-config": {
-              "destination": "192.168.100.101"
+                 "destination": "192.168.100.101",
             }
           }
         ],
@@ -54,7 +54,8 @@ collector_template = {
             },
             "spec": {
                 "packet-size": 128,
-                "destination": "192.168.100.101"
+                "destination": "192.168.100.101",
+                "type": "erspan_type_2"
             },
             "status": {},
         }

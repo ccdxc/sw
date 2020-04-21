@@ -9,9 +9,8 @@ from scapy.utils import *
 from scapy.utils import rdpcap
 from scapy.utils import wrpcap
 from scapy import packet
-from scapy.all import Dot1Q
-from iota.test.utils.erspan import ERSPAN_III
-from iota.test.utils.erspan import PlatformSpecific
+from scapy.all import Dot1Q, ERSPAN
+from iota.test.utils.erspan import ERSPAN_III, PlatformSpecific
 import glob
 import json
 import copy
@@ -25,6 +24,8 @@ import iota.test.iris.utils.naples_workloads as naples_workload_utils
 import iota.harness.infra.utils.periodic_timer as timer
 import iota.test.iris.config.netagent.hw_sec_ip_config as sec_ip_api
 
+ERSPAN_TYPE_2 = "erspan_type_2"
+ERSPAN_TYPE_3 = "erspan_type_3"
 
 uplink_vlan = 0
 # for local work loads, the packet vlan may not be wire encap vlan.
@@ -36,6 +37,22 @@ INB_MNIC0 = "inb_mnic0"
 INB_MNIC1 = "inb_mnic1"
 PORT_OPER_STATUS_UP = 1
 PORT_OPER_STATUS_DOWN = 2
+
+def DumpMirrorSessions(nodes=[]):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    nodes = nodes if nodes else api.GetNaplesHostnames()
+    for node in nodes:
+        api.Trigger_AddNaplesCommand(req, node, "/nic/bin/halctl show mirror")
+
+    resp = api.Trigger(req)
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+
+def GetMirrorCollectorsInfo(collector_wl, collector_ip, collector_type):
+    return [ {'workload': wl, 'cfg': ip, 'type': t} for wl,ip,t in zip(collector_wl, collector_ip, collector_type) ]
+
+def GetFlowmonCollectorsInfo(collector_wl, collector_cfg):
+    return [ {'workload': wl, 'cfg': cfg} for wl,cfg in zip(collector_wl, collector_cfg) ]
 
 def IsBareMetal():
     for node_name in api.GetNaplesHostnames():
@@ -208,7 +225,7 @@ def updateMirrorCollectorConfig(tc_workloads, num_collectors, local_wl, collecto
 
     coll_wl_list = []
     coll_ip_list = []
-
+    coll_type    = []
     for wl in tc_workloads:
         #collector cannot be in local node
         if wl.node_name == local_wl.node_name:
@@ -228,7 +245,7 @@ def updateMirrorCollectorConfig(tc_workloads, num_collectors, local_wl, collecto
     #api.Logger.info("Collector WL list-len: {} ip list-len: {}".format(len(coll_wl_list), coll_ip_list_len))
 
     if coll_ip_list_len == 0:
-        return (coll_wl_list, coll_ip_list)
+        return (coll_wl_list, coll_ip_list, coll_type)
 
     if coll_ip_list_len < num_collectors:
         api.Logger.info("Number of collector IP's available {} in topology is less than the"
@@ -246,12 +263,14 @@ def updateMirrorCollectorConfig(tc_workloads, num_collectors, local_wl, collecto
     coll_ip_list_len = len(coll_ip_list)
 
     for obj in mirror_objects:
+        coll_type = []
         for c in range(0, num_collectors):
             obj.spec.collectors[c].export_config.destination = "{}".format(coll_ip_list[c])
+            coll_type.append(obj.spec.collectors[c].type)
             #api.Logger.info("updating collector idx: {} to dst: {} from collector_WL: {}".format(c,
             #            obj.spec.collectors[c].export_config.destination, coll_wl_list[c]))
 
-    return (coll_wl_list, coll_ip_list)
+    return (coll_wl_list, coll_ip_list, coll_type)
 
 def generateFlowmonCollectorConfig(flowmon_spec_objects, num_exports):
     api.Logger.info("Extending number of flow exports to {}".format(num_exports))
@@ -377,88 +396,95 @@ def GetNpingCmd(protocol, destination_ip, destination_port, source_ip = "", coun
 def GetVerifJsonFromPolicyJson(policy_json):
     return policy_json.replace("_policy", "_verif")
 
-def VerifyVlan(pcap_file_name):
-    result = api.types.status.SUCCESS
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    mirrorscapy = dir_path + '/' + pcap_file_name
-    api.Logger.info("File Name: %s" % (mirrorscapy))
-    try:
-        pkts = rdpcap(mirrorscapy)
-    except Exception as e:
-        api.Logger.error("VerifyVlan Failed: Exception {} in parsing pcap file."
-                "Possibly file size is 0 bytes.".format(str(e)))
+def VerifyVlan(pkt):
+    if (uplink_vlan == 0 and pkt.haslayer(Dot1Q)):
+        api.Logger.error("Vlan verification Failed: uplink_vlan: {} Pkt Vlan: {} ".format(uplink_vlan, pkt[Dot1Q].vlan))
+        pkt.show()
         return api.types.status.FAILURE
-    spanpktsfound = False
-    for pkt in pkts:
-        if pkt.haslayer(ERSPAN_III):
-            spanpktsfound = True
-            if (uplink_vlan == 0 and pkt.haslayer(Dot1Q)):
-                result = api.types.status.FAILURE
-                api.Logger.error("Vlan verification Failed: uplink_vlan: {} Pkt Vlan: {} ".format(uplink_vlan, pkt[Dot1Q].vlan))
-                pkt.show()
-            elif ((local_wls_ignore_vlan_check == False) and pkt.haslayer(Dot1Q) and (pkt[Dot1Q].vlan != uplink_vlan)):
-                result = api.types.status.FAILURE
-                api.Logger.error("Vlan verfication Failed: uplink_vlan: {} Pkt Vlan id: {}".format(uplink_vlan, pkt[Dot1Q].vlan))
-                pkt.show()
-    if spanpktsfound == False:
-       result = api.types.status.FAILURE
-       api.Logger.info("VerifyVlan Failed: spanpkts not found ")
-    return result
+    elif ((local_wls_ignore_vlan_check == False) and pkt.haslayer(Dot1Q) and (pkt[Dot1Q].vlan != uplink_vlan)):
+        api.Logger.error("Vlan verfication Failed: uplink_vlan: {} Pkt Vlan id: {}".format(uplink_vlan, pkt[Dot1Q].vlan))
+        pkt.show()
+        return api.types.status.FAILURE
+    return api.types.status.SUCCESS
 
-def VerifyTimeStamp(command, pcap_file_name):
-    global g_time
-    result = api.types.status.SUCCESS
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    mirrorscapy = dir_path + '/' + pcap_file_name
-    api.Logger.info("File Name: %s" % (mirrorscapy))
-    try:
-        pkts = rdpcap(mirrorscapy)
-    except Exception as e:
-        api.Logger.error("VerifyTimeStamp Failed: Exception {} in parsing pcap file."
-                "Possibly file size is 0 bytes.".format(str(e)))
-        return api.types.status.FAILURE
-    spanpktsfound = False
+def VerifyTimeStamp(pkt):
     g_time = datetime.fromtimestamp(time.clock_gettime(time.CLOCK_REALTIME))
     api.Logger.info("Current Global time {}".format(g_time))
-    for pkt in pkts:
-        if pkt.haslayer(ERSPAN_III):
-            spanpktsfound = True
-            l_ts = pkt[ERSPAN_III].timestamp
-            u_ts = pkt[PlatformSpecific].timestamp
-            pkttime = u_ts << 32 | l_ts
-            api.Logger.info("Timestamp from the packet: %s" % (pkttime))
-            pkttime /= 1000000000
-            pkttimestamp = datetime.fromtimestamp(pkttime)
-            if g_time > pkttimestamp:
-               tdelta = g_time-pkttimestamp
-            else:
-               tdelta = pkttimestamp-g_time
-            #Its pretty hard to comapare the time the actual packet
-            #was sent to when the comparator is obtained. May be execute
-            #date in naples might help
-            if (tdelta.days != 0):
-                result = api.types.status.FAILURE
-            api.Logger.info("Timestamp delta: %s" %(tdelta))
-    if spanpktsfound == False:
-       result = api.types.status.FAILURE
-    return result
+    l_ts = pkt[ERSPAN_III].timestamp
+    u_ts = pkt[PlatformSpecific].timestamp
+    pkttime = u_ts << 32 | l_ts
+    api.Logger.info("Timestamp from the packet: %s" % (pkttime))
+    pkttime /= 1000000000
+    pkttimestamp = datetime.fromtimestamp(pkttime)
+    if g_time > pkttimestamp:
+        tdelta = g_time-pkttimestamp
+    else:
+        tdelta = pkttimestamp-g_time
 
-def VerifyCmd(cmd, action, feature, pcap_file_name, export_cfg_port=2055):
+    # Its pretty hard to comapare the time the actual packet
+    # was sent to when the comparator is obtained. May be execute
+    # date in naples might help
+    if (tdelta.days != 0):
+        api.Logger.info("Timestamp delta: %s" %(tdelta))
+        return api.types.status.FAILURE
+    return api.types.status.SUCCESS
+
+def VerifyErspanPackets(pcap_file_name, erspan_type):
+    result = api.types.status.SUCCESS
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    mirrorscapy = dir_path + '/' + pcap_file_name
+    span_packet_found = False
+    api.Logger.info("File Name: %s" % (mirrorscapy))
+    try:
+        pkts = rdpcap(mirrorscapy)
+    except Exception as e:
+        api.Logger.error(f"Exception {e} in parsing pcap file."
+                         "Possibly file size is 0 bytes.")
+        return api.types.status.FAILURE
+
+    for pkt in pkts:
+        # Skip non ERSPAN packets.
+        if not (pkt.haslayer(ERSPAN_III) or pkt.haslayer(ERSPAN)):
+            api.Logger.info(f"skipping packet ERSPAN: {pkt.haslayer(ERSPAN)} or ERSPAN_III: {pkt.haslayer(ERSPAN_III)}")
+            pkt.show()
+            continue
+        else:
+            span_packet_found = True
+
+        if erspan_type == ERSPAN_TYPE_3 and not pkt.haslayer(ERSPAN_III):
+            api.Logger.error(f"Expecting {erspan_type} packet, but found")
+            pkt.show()
+            result = api.types.status.FAILURE
+            continue
+        elif erspan_type == ERSPAN_TYPE_2 and not pkt.haslayer(ERSPAN):
+            api.Logger.error(f"Expecting {erspan_type} packet, but found")
+            pkt.show()
+            result = api.types.status.FAILURE
+            continue
+
+        if VerifyVlan(pkt) == api.types.status.FAILURE:
+            result = api.types.status.FAILURE
+
+        if erspan_type == ERSPAN_TYPE_3 and \
+           VerifyTimeStamp(pkt) == api.types.status.FAILURE:
+            result = api.types.status.FAILURE
+
+    if span_packet_found:
+        return result
+    else:
+        api.Logger.error(f"Failed to find any ERSPAN packet in {mirrorscapy} ")
+        return api.types.status.FAILURE
+
+def VerifyCmd(cmd, feature, pcap_file_name, export_cfg_port=2055, erspan_type=ERSPAN_TYPE_3):
     api.PrintCommandResults(cmd)
     result = api.types.status.SUCCESS
-    if 'tcpdump' in cmd.command:
-        if feature == 'mirror':
-            if 'pcap' in cmd.command:
-                if VerifyVlan(pcap_file_name) == api.types.status.FAILURE:
-                    result = api.types.status.FAILURE
-                    api.Logger.info("VerifyVlan failed")
-                if VerifyTimeStamp(cmd, pcap_file_name) == api.types.status.FAILURE:
-                    result = api.types.status.FAILURE
-        elif feature == 'flowmon':
-            search_str = r'(.*)%s: UDP, length(.*)'%export_cfg_port
-            matchObj = re.search(search_str, cmd.stdout, 0)
-            if matchObj is None:
-                result = api.types.status.FAILURE
+    if feature == 'mirror':
+        result =  VerifyErspanPackets(pcap_file_name, erspan_type)
+    elif feature == 'flowmon':
+        search_str = r'(.*)%s: UDP, length(.*)'%export_cfg_port
+        matchObj = re.search(search_str, cmd.stdout, 0)
+        if matchObj is None:
+            result = api.types.status.FAILURE
     return result
 
 def GetDestPort(port):
@@ -470,35 +496,32 @@ def GetDestPort(port):
         return '3000'
     return port
 
-def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_count, collector_w, collector_ip, action, feature, is_wl_type_bm=False):
-    backgroun_req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collector_info, feature, is_wl_type_bm=False):
     result = api.types.status.SUCCESS
+    backgroun_req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    for col in collector_info:
+        coll_wl   = col['workload']
+        coll_ip   = col['cfg']
 
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    # Add the ping commands from collector to source and dest workload
-    # to avoid flooding on the vswitch
-    api.Trigger_AddCommand(req, collector_w[0].node_name, collector_w[0].workload_name,
-                           "ping -c 1 %s " % (src_wl.ip_address), timeout=2)
-    api.Trigger_AddCommand(req, collector_w[0].node_name, collector_w[0].workload_name,
-                           "ping -c 1 %s " % (destination_ip), timeout=2)
-    trig_resp = api.Trigger(req)
-
-    coll_idx = 0
-    while coll_idx < collector_count:
-        coll_wl = collector_w[coll_idx]
-        coll_ip = collector_ip[coll_idx]
+        # Add the ping commands from collector to source and dest workload
+        # to avoid flooding on the vswitch
+        api.Trigger_AddCommand(req, coll_wl.node_name, coll_wl.workload_name,
+                               "ping -c 1 %s " % (src_wl.ip_address), timeout=2)
+        api.Trigger_AddCommand(req, coll_wl.node_name, coll_wl.workload_name,
+                               "ping -c 1 %s " % (destination_ip), timeout=2)
 
         if feature == 'mirror':
             api.Trigger_AddCommand(backgroun_req, coll_wl.node_name, coll_wl.workload_name,
-                                   "tcpdump -c 10 -nnSXi %s  ip proto gre and dst %s -U -w mirror-%d.pcap" %
-                                   (coll_wl.interface, coll_ip, coll_idx), background=True, timeout=20)
+                                   "tcpdump -c 10 -nnSXi %s ip proto gre and dst %s -U -w mirror-%s.pcap" %
+                                   (coll_wl.interface, coll_ip, coll_ip), background=True, timeout=20)
         elif feature == 'flowmon':
             api.Trigger_AddCommand(backgroun_req, coll_wl.node_name, coll_wl.workload_name,
                                    "tcpdump -c 10 -nni %s udp and dst port %s and dst host %s"%
                                    (coll_wl.interface, coll_ip.proto_port.port, coll_ip.destination),
                                    background=True, timeout=20)
-        coll_idx += 1
 
+    trig_resp = api.Trigger(req)
     background_trig_resp = api.Trigger(backgroun_req)
 
     #delay for background cmds to start before issuing ping
@@ -531,33 +554,29 @@ def RunCmd(src_wl, protocol, dest_wl, destination_ip, destination_port, collecto
     if feature == 'mirror':
         time.sleep(2)
 
+    # Verify packets received on collectors.
     term_resp = api.Trigger_TerminateAllCommands(background_trig_resp)
     background_resp = api.Trigger_AggregateCommandsResponse(background_trig_resp, term_resp)
-
-    #api.Logger.info("background resp commands")
-    #for cmd in background_resp.commands:
-    #    api.PrintCommandResults(cmd)
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    coll_idx = 0
-    while coll_idx < collector_count:
-        coll_wl = collector_w[coll_idx]
-        coll_ip = collector_ip[coll_idx]
+    for coll_idx, col in enumerate(collector_info):
+        coll_wl   = col['workload']
+        coll_ip   = col['cfg']
+        coll_type = col.get('type', None)
+
         pcap_file_name = None
         proto_port = None
         cmd_resp_idx = coll_idx
         if feature == 'mirror':
-            pcap_file_name = ('mirror-%d.pcap'%coll_idx)
+            pcap_file_name = ('mirror-%s.pcap'%coll_ip)
             api.CopyFromWorkload(coll_wl.node_name, coll_wl.workload_name, [pcap_file_name], dir_path)
         elif feature == 'flowmon':
             proto_port = coll_ip.proto_port.port
 
         cmd = background_resp.commands[cmd_resp_idx]
-        result = VerifyCmd(cmd, action, feature, pcap_file_name, proto_port)
+        result = VerifyCmd(cmd, feature, pcap_file_name, proto_port, erspan_type=coll_type)
         if (result == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!! cmd: {}".format(cmd))
             break
-        coll_idx += 1
 
     return result
 
@@ -636,13 +655,12 @@ def GetDestWorkload(verif, tc, src_w):
     api.Logger.info("Uplink vlan: {} local_wls_ignore_vlan_check: {}".format(uplink_vlan,local_wls_ignore_vlan_check))
     return dst_wl
 
-def RunAll(collector_w, verif_json, tc, feature, collector_ip, is_wl_type_bm=False):
+def RunAll(tc, verif_json, feature, collector_info, is_wl_type_bm=False):
     res = api.types.status.SUCCESS
     api.Logger.info("VERIFY JSON FILE {}".format(verif_json))
 
     verif = []
     ret = {}
-    collector_count = len(collector_ip)
 
     with open(verif_json, 'r') as fp:
         verif = json.load(fp)
@@ -668,9 +686,8 @@ def RunAll(collector_w, verif_json, tc, feature, collector_ip, is_wl_type_bm=Fal
                 api.Logger.info("Source and Dest workloads are same {}".format(dest_w.node_name))
                 continue
         dest_port = GetDestPort(verif[i]['port'])
-        action = verif[i]['result']
         res = RunCmd(src_w, protocol, dest_w, dest_w.ip_address, dest_port,
-                collector_count, collector_w, collector_ip, action, feature, is_wl_type_bm)
+                     collector_info, feature, is_wl_type_bm)
         if (res == api.types.status.FAILURE):
             api.Logger.info("Testcase FAILED!!")
             break;

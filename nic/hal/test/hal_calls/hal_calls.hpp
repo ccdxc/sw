@@ -32,6 +32,6 @@ hal_ret_t update_ep(uint32_t vrf_id, uint32_t l2seg_id, uint32_t if_id, uint64_t
 hal_ret_t delete_ep(uint32_t vrf_id, uint32_t l2seg_id, uint64_t mac);
 hal_ret_t create_mcast(uint32_t l2seg_id, uint64_t mac, uint32_t ifid[], uint32_t ifid_count);
 hal_ret_t delete_mcast(uint32_t l2seg_id, uint64_t mac);
-hal_ret_t create_mirror(uint32_t session_id, uint32_t vrf_id, uint32_t sip, uint32_t dip, bool vlan_strip_en = false);
+hal_ret_t create_mirror(uint32_t session_id, uint32_t vrf_id, uint32_t sip, uint32_t dip, bool vlan_strip_en = false, uint8_t erspan_type=3);
 hal_ret_t create_collector(uint32_t cid, uint32_t vrf, uint32_t l2seg, 
                            uint32_t src_ip, uint32_t dst_ip);

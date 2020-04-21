@@ -4,7 +4,7 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.telemetry.utils as utils
 import iota.test.iris.config.netagent.hw_sec_ip_config as sec_ip_api
-import pdb
+
 from collections import defaultdict
 
 is_wl_type_bm = False
@@ -41,10 +41,12 @@ def Trigger(tc):
     ret_count = 0
     collector_dest = []
     collector_wl = []
+    collector_type = []
     for policy_json in policies:
         collector_dest.clear()
         collector_wl.clear()
-        #pdb.set_trace()
+        collector_type.clear()
+
         verif_json = utils.GetVerifJsonFromPolicyJson(policy_json)
         api.Logger.info("Using policy_json = {}".format(policy_json))
         newObjects = agent_api.AddOneConfig(policy_json)
@@ -55,13 +57,16 @@ def Trigger(tc):
         if ret != api.types.status.SUCCESS:
             api.Logger.error("Unable to push mirror objects")
             return api.types.status.FAILURE
+        utils.DumpMirrorSessions()
 
         # Get collector to find the workload
         for obj in newObjects:
             for obj_collector in obj.spec.collectors:
                 coll_dst = obj_collector.export_config.destination
+                coll_type = obj_collector.type
                 collector_dest.append(coll_dst)
-                api.Logger.info("export-dest: {} ".format(coll_dst))
+                collector_type.append(coll_type)
+                api.Logger.info(f"export-dest: {coll_dst}, erspan-type: {coll_type}")
 
         for coll_dst in collector_dest:
             for wl in tc.workloads:
@@ -69,8 +74,8 @@ def Trigger(tc):
                     collector_wl.append(wl)
 
         api.Logger.info("collect_dest len: {} collect_wl len: {}".format(len(collector_dest), len(collector_wl)))
-
-        ret = utils.RunAll(collector_wl, verif_json, tc, 'mirror', collector_dest, is_wl_type_bm)
+        collector_info = utils.GetMirrorCollectorsInfo(collector_wl, collector_dest, collector_type)
+        ret = utils.RunAll(tc, verif_json, 'mirror', collector_info, is_wl_type_bm)
         result = ret['res']
         ret_count = ret['count']
         count = count + ret_count
@@ -84,24 +89,23 @@ def Trigger(tc):
 
         # Update collector
         newObjects = agent_api.QueryConfigs(kind='MirrorSession')
-
         # mirror config update to local collector is applicable only for ESX topology
         if is_wl_type_bm is False:
-            # Get new collector
-            for wl in tc.workloads:
-                if wl.ip_address == "192.168.100.102":
-                    collector_dest[0] = "192.168.100.102"
-                    collector_wl[0] = wl
-                    break
-
             for obj in newObjects:
-                obj.spec.collectors[0].export_config.destination = collector_dest[0]
+                if obj.spec.collectors[0].type == utils.ERSPAN_TYPE_2:
+                    obj.spec.collectors[0].type = utils.ERSPAN_TYPE_3
+                    collector_info[0]['type'] = utils.ERSPAN_TYPE_3
+                else:
+                    obj.spec.collectors[0].type = utils.ERSPAN_TYPE_2
+                    collector_info[0]['type'] = utils.ERSPAN_TYPE_2
                 break
 
             # Now push the update as we modified
             agent_api.UpdateConfigObjects(newObjects)
+            utils.DumpMirrorSessions()
+
             # Rerun the tests
-            ret = utils.RunAll(collector_wl, verif_json, tc, 'mirror', collector_dest, is_wl_type_bm)
+            ret = utils.RunAll(tc, verif_json, 'mirror', collector_info, is_wl_type_bm)
             result = ret['res']
             ret_count = ret['count']
             count = count + ret_count

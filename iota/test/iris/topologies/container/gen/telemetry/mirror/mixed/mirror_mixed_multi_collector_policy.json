@@ -126,7 +126,7 @@
                         "export-config": {
                             "destination": "192.168.100.101"
                         }, 
-                        "type": "erspan_type_3",
+                        "type": "erspan_type_2",
                         "strip-vlan-hdr": false
                     },
                     {

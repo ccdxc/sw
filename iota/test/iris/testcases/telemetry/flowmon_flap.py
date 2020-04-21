@@ -67,7 +67,8 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    ret = utils.RunAll(tc.collector_wl, tc.verif_json, tc, 'flowmon', tc.collector_cfg, tc.IsBareMetal)
+    collector_info = utils.GetFlowmonCollectorsInfo(tc.collector_wl, tc.collector_cfg)
+    ret = utils.RunAll(tc, tc.verif_json, 'flowmon', collector_info, tc.IsBareMetal)
     if ret['res'] != api.types.status.SUCCESS:
         return ret['res']
 
@@ -87,7 +88,7 @@ def Trigger(tc):
         return ret
 
     # Rerun the tests
-    ret = utils.RunAll(tc.collector_wl, tc.verif_json, tc, 'flowmon', tc.collector_cfg, tc.IsBareMetal)
+    ret = utils.RunAll(tc, tc.verif_json, 'flowmon', collector_info, tc.IsBareMetal)
     api.Logger.info("Waiting for switch flap thread to join..")
     flapTask.join(tc.port_down_time)
     return ret["res"]
