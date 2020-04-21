@@ -58,8 +58,8 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
 
   maxSearchRecords: number = 8000;
 
-  dataObjects: ReadonlyArray<NetworkNetworkInterface>;
-  dataObjectsBackUp: ReadonlyArray<NetworkNetworkInterface> = null;
+  dataObjects: ReadonlyArray<NetworkNetworkInterface> = [];
+  dataObjectsBackUp: ReadonlyArray<NetworkNetworkInterface> = [];
   naplesList: ClusterDistributedServiceCard[] = [];
 
   techsupportrequestsEventUtility: HttpEventUtility<NetworkNetworkInterface>;
@@ -195,11 +195,13 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
 
   handleDataReady() {
     // When naplesList and networkinterfaces list are ready, build networkinterface-dsc map.
-    if (this.naplesList && this.naplesList.length > 0 && this.dataObjects) {
+    if (this.naplesList && this.naplesList.length > 0 && this.dataObjects.length > 0) {
       this.dataObjects.forEach((networkNetworkInterface: NetworkNetworkInterface) => {
         this.updateOneNetworkInterface(networkNetworkInterface);
       });
       this.updateSelectedNetworkInterface();
+      this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjects);
+      this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects);
     }
   }
 

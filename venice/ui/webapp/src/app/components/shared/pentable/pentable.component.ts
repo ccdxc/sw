@@ -52,6 +52,7 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
   first: number = 0;
   hoveredRowID: string;
   rowsPerPageOptions: number[] = [10, 25, 50, 100];
+  defaultRows: number = Math.min(...this.rowsPerPageOptions);
   scrollHeight: string = `100%`;
   selectedColumns: TableCol[] = [];
   selectedDataObjects: any[] = [];

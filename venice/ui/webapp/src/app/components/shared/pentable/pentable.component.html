@@ -4,7 +4,7 @@
     <div class="pentable-form-border"></div>
   </div>
   <p-table #primengTable
-           [alwaysShowPaginator]="data.length > numRows"
+           [alwaysShowPaginator]="data.length > defaultRows"
            [columns]="selectedColumns"
            [dataKey]="dataKey"
            [first]="first"
