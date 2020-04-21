@@ -36,7 +36,6 @@ func (p *Pipeline) onMountComplete() {
 	if err := p.Agent.Nmd.UpdateNaplesConfig(p.Agent.Nmd.GetNaplesConfig()); err != nil {
 		log.Errorf("Failed to update naples during onMountComplete. Err: %v", err)
 	}
-	p.Agent.Nmd.UpdateCurrentManagementMode()
 	p.Agent.Nmd.CreateIPClient()
 }
 
