@@ -13,8 +13,11 @@ monfunc_t monfunclist[] = {
     { checkcattrip     },
     { checkfrequency   },
     { checkruntime     },
+#ifndef APULU
+    // commented out for Apulu until issue with learn thread is understood
     { checktemperature },
     { checkdisk        },
+#endif
     { checkmemory      },
     { checkpostdiag    },
     { checkliveness    },
