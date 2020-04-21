@@ -52,6 +52,17 @@ action p4i_to_p4e_state() {
                 modify_field(control_metadata.conntrack_index_valid , TRUE);
             }
         }
+        else {
+            if (udp_1.valid == TRUE) {
+                modify_field(p4e_to_p4plus_classic_nic.l4_sport, udp_1.srcPort);
+                modify_field(p4e_to_p4plus_classic_nic.l4_dport, udp_1.dstPort);
+            }
+
+            if (tcp.valid == TRUE) {
+                modify_field(p4e_to_p4plus_classic_nic.l4_sport, tcp.srcPort);
+                modify_field(p4e_to_p4plus_classic_nic.l4_dport, tcp.dstPort);
+            }
+        }
         modify_field(control_metadata.update_checksum, p4i_to_p4e_header.update_checksum);
     }
 }
