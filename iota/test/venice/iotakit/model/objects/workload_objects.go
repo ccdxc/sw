@@ -603,7 +603,7 @@ func (wpc *WorkloadPairCollection) WorkloadPairGetDynamicIps(tb *testbed.TestBed
 		log.Infof("Workload pair %v-%v getting IPs dynamically.", pair.First.GetInterface(), pair.Second.GetInterface())
 		cmdF := iota.Command{
 			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
-			Command:    fmt.Sprintf("dhclient -r %s && dhclient %s", pair.First.GetInterface(), pair.First.GetInterface()),
+			Command:    fmt.Sprintf("ifconfig %s 0 && dhclient -r %s && dhclient %s", pair.First.GetInterface(), pair.First.GetInterface(), pair.First.GetInterface()),
 			EntityName: pair.First.Name(),
 			NodeName:   pair.First.NodeName(),
 		}
@@ -611,7 +611,7 @@ func (wpc *WorkloadPairCollection) WorkloadPairGetDynamicIps(tb *testbed.TestBed
 
 		cmdS := iota.Command{
 			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
-			Command:    fmt.Sprintf("dhclient -r %s && dhclient %s", pair.Second.GetInterface(), pair.Second.GetInterface()),
+			Command:    fmt.Sprintf("ifconfig %s 0 && dhclient -r %s && dhclient %s", pair.Second.GetInterface(), pair.Second.GetInterface(), pair.Second.GetInterface()),
 			EntityName: pair.Second.Name(),
 			NodeName:   pair.Second.NodeName(),
 		}
