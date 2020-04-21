@@ -100,7 +100,6 @@ mpart_cfg_path()
     std::string hal_cfg_path_ = hal_cfg_path();
     sdk::lib::device *device =
         sdk::lib::device::factory("/sysconfig/config0/device.conf");
-    sdk::lib::dev_forwarding_mode_t fwd_mode = device->get_forwarding_mode();
 
     // WARNING -- this must be picked based on profile, this is guaranteed to be
     // broken soon
@@ -113,11 +112,16 @@ mpart_cfg_path()
 #elif defined(ATHENA)
     mpart_json = hal_cfg_path_ + "/athena/4g/hbm_mem.json";
 #else
-    if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
-        fwd_mode == sdk::lib::FORWARDING_MODE_SWITCH)
-        mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
-    else
-        mpart_json = hal_cfg_path_ + "/iris/hbm_classic_mem.json" ;
+    std::string profile_name;
+    sdk::lib::dev_feature_profile_t feature_profile;
+
+    feature_profile = device->get_feature_profile();
+    profile_name = std::string(DEV_FEATURE_PROFILE_str(feature_profile));
+    profile_name.replace(0, std::string("FEATURE_PROFILE").length(), "");
+    std::transform(profile_name.begin(), profile_name.end(),
+                   profile_name.begin(), ::tolower);
+    mpart_json =  hal_cfg_path_ + "/" +
+        "iris" + "/hbm_mem" + profile_name + ".json";
 #endif
 
     return mpart_json;
