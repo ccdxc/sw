@@ -194,7 +194,7 @@ func (v *VCProbe) connectionListen() {
 		case <-v.Ctx.Done():
 			return
 		case connErr := <-v.ConnUpdate:
-			v.Log.Infof("Connection status %s, err %s", connErr.State, connErr.Err)
+			v.Log.Infof("Connection status %s, Error: %s", connErr.State, connErr.Err)
 
 			if v.outbox != nil {
 				m := defs.Probe2StoreMsg{

@@ -27,7 +27,7 @@
   },
   {
    "Name": "ORCH_CONNECTION_ERROR",
-   "Severity": "warn",
+   "Severity": "critical",
    "Desc": "Failed to connect to orchestrator"
   },
   {
@@ -39,6 +39,11 @@
    "Name": "ORCH_LOGIN_FAILURE",
    "Severity": "critical",
    "Desc": "Login credentials were invalid for orchestrator."
+  },
+  {
+   "Name": "ORCH_UNSUPPORTED_VERSION",
+   "Severity": "critical",
+   "Desc": "Unsupported orchestrator version"
   }
  ],
  "cluster": [

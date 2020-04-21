@@ -22,6 +22,11 @@ var (
 	NamespaceKey = fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "namespace")
 )
 
+var (
+	// UnsupportedVersionMsg is an error msg string
+	UnsupportedVersionMsg = "Unsupported orchestrator version"
+)
+
 // CreateGlobalKey creates a global key
 func CreateGlobalKey(orchID, namespace, objName string) string {
 	return fmt.Sprintf("%s%s%s%s%s", orchID, Delim, namespace, Delim, objName)

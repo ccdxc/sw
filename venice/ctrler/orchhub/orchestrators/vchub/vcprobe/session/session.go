@@ -16,6 +16,7 @@ import (
 	"github.com/vmware/govmomi/view"
 
 	"github.com/pensando/sw/api/generated/orchestration"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -32,8 +33,19 @@ import (
  */
 
 const (
-	retryDelay = time.Second
-	retryCount = 3
+	retryCount           = 3
+	sessionCheckDelay    = time.Second
+	tagCheckDelay        = 5 * time.Second
+	connectionCheckDelay = time.Second
+	versionCheckDelay    = 300 * time.Second // when connected to unsupported version, try every 5 min
+)
+
+var (
+	supportedVersionPrefixes = []string{
+		"6.5.",
+		"6.7.",
+		"7.0.",
+	}
 )
 
 // ConnectionState contains info about the connection
@@ -203,7 +215,12 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		// Forever try to login until it succeeds
 		for {
 			c, err = govmomi.NewClient(s.ClientCtx, s.vcURL, true)
+			var versionErr error
+
 			if err == nil {
+				versionErr = s.checkSupportedVersion(c)
+			}
+			if err == nil && versionErr == nil {
 				evt := ConnectionState{
 					orchestration.OrchestratorStatus_Success.String(),
 					nil,
@@ -214,7 +231,15 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 			}
 			evt := ConnectionState{
 				orchestration.OrchestratorStatus_Failure.String(),
-				err,
+				nil,
+			}
+			retryDelay := connectionCheckDelay
+			if versionErr != nil {
+				c.Logout(s.ClientCtx)
+				evt.Err = versionErr
+				retryDelay = versionCheckDelay
+			} else {
+				evt.Err = err
 			}
 			s.ConnUpdate <- evt
 
@@ -224,7 +249,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 				s.clientLock.Unlock()
 				s.logger.Infof("Session check exiting")
 				return
-			case <-time.After(5 * retryDelay):
+			case <-time.After(retryDelay):
 			}
 		}
 
@@ -247,7 +272,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 
 		s.clientLock.Unlock()
 
-		s.logger.Infof("Session check starting...")
+		s.logger.Infof("Tags session check starting...")
 
 		// Start tag session check
 		s.WatcherWg.Add(1)
@@ -263,7 +288,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 				select {
 				case <-s.ClientCtx.Done():
 					return
-				case <-time.After(5 * retryDelay):
+				case <-time.After(tagCheckDelay):
 					if s.CheckTagSession {
 						// Re-authenticate tag session
 						s.clientLock.Lock()
@@ -295,7 +320,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 			case <-s.ctx.Done():
 				s.logger.Infof("Session check exiting")
 				return
-			case <-time.After(retryDelay):
+			case <-time.After(sessionCheckDelay):
 				// if any of the watchers is experiencing the problem, check the session state
 				if s.CheckSession {
 					client := s.GetClientWithRLock()
@@ -326,4 +351,17 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 	// Exiting run release lock
 	s.clientLock.Unlock()
 	s.logger.Infof("Session check exiting")
+}
+
+func (s *Session) checkSupportedVersion(c *govmomi.Client) error {
+	aboutInfo := c.ServiceContent.About
+	for _, sver := range supportedVersionPrefixes {
+		// check only prefix to avoid minor# and build# comparison
+		// hopefully these minor versions are api-comatible
+		if strings.HasPrefix(aboutInfo.Version, sver) {
+			s.logger.Infof("Orchestrator version is %s", aboutInfo.Version)
+			return nil
+		}
+	}
+	return fmt.Errorf("%s - %s", utils.UnsupportedVersionMsg, aboutInfo.Version)
 }

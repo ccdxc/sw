@@ -413,7 +413,9 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 	// Old VnicInfo is retained as vMotion can be aborted.
 	_, err := v.StateMgr.Controller().Workload().SyncStartMigration(&wlCopy)
 	if err != nil {
-		v.Log.Errorf("Could not start migration on workload %s - %s", wlName, err)
+		evtMsg := fmt.Sprintf("Could not start migration on workload %s - %s", wlName, err)
+		recorder.Event(eventtypes.MIGRATION_FAILED, evtMsg, &wlCopy)
+		v.Log.Errorf("%s", evtMsg)
 		// free the useg allocation done on new host
 		if err := v.releaseUsegVlans(&wlCopy, false /*old*/); err != nil {
 			v.Log.Errorf("%s", err)
@@ -456,13 +458,15 @@ func (v *VCHub) handleVMotionFailed(m defs.VMotionFailedMsg) {
 		v.releaseNewUsegs(wlObj)
 		_, err := v.StateMgr.Controller().Workload().SyncAbortMigration(wlObj)
 		if err != nil {
-			v.Log.Errorf("Could not cancel vmotion on workload %s - %s", wlName, err)
+			evtMsg := fmt.Sprintf("Could not cancel migration on workload %s - %s", wlObj.Name, err)
+			recorder.Event(eventtypes.MIGRATION_FAILED, evtMsg, wlObj)
+			v.Log.Errorf("%s", evtMsg)
 			// If workload has finished migration, but the call hasn't finished
 			// executing when we got the object from the cache, call might fail
 			v.resyncWorkload(wlObj)
 		}
 	} else {
-		v.Log.Errorf("Cannot Cancel vMotion for %s to host %s - Not Migrating", wlName, hostName)
+		v.Log.Errorf("Could not cancel vMotion for %s to host %s - Not Migrating", wlName, hostName)
 		// vCenter is sometimes sending the Failed event after VM config update was performed..
 		// i.e migration was complete from venice perspective.
 		// In that case we should get another config update to set the correct (old) host
@@ -630,8 +634,9 @@ func (v *VCHub) finishMigration(wlObj *workload.Workload) {
 	}
 	_, err := v.StateMgr.Controller().Workload().SyncFinishMigration(wlObj)
 	if err != nil {
-		v.Log.Errorf("Could not complete migration on workload %s - %s", wlObj.Name, err)
-		// This shouldn't fail
+		evtMsg := fmt.Sprintf("Could not complete migration on workload %s - %s", wlObj.Name, err)
+		recorder.Event(eventtypes.MIGRATION_FAILED, evtMsg, wlObj)
+		v.Log.Errorf("%s", evtMsg)
 	}
 	return
 }

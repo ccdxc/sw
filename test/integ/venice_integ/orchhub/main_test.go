@@ -90,6 +90,7 @@ func (tInfo *tInfo) setup() error {
 	// start OrchHub
 	config := log.GetDefaultConfig("OrchhubIntegTest")
 	config.Filter = log.AllowAllFilter
+	config.LogToStdout = true
 	l := log.GetNewLogger(config)
 
 	url := fmt.Sprintf(":%s", globals.OrchHubAPIPort)

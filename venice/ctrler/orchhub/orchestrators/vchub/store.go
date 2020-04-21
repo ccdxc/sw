@@ -3,6 +3,7 @@ package vchub
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/vmware/govmomi/vim25/soap"
@@ -15,6 +16,7 @@ import (
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/session"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 )
 
@@ -92,8 +94,10 @@ func (v *VCHub) startEventsListener() {
 					msg = connStatus.Err.Error()
 					evtMsg := fmt.Sprintf("%s: %s", v.OrchConfig.Name, msg)
 					// Generate event depending on error type
-					// Check if it is a credential issue
-					if soap.IsSoapFault(connStatus.Err) {
+					if strings.HasPrefix(msg, utils.UnsupportedVersionMsg) {
+						evt = eventtypes.ORCH_UNSUPPORTED_VERSION
+					} else if soap.IsSoapFault(connStatus.Err) {
+						// Check if it is a credential issue
 						soapErr := soap.ToSoapFault(connStatus.Err)
 						msg = soapErr.String
 						evtMsg = fmt.Sprintf("%s: %s", v.OrchConfig.Name, msg)
@@ -122,7 +126,7 @@ func (v *VCHub) startEventsListener() {
 				if connStatus.State == previousState && msg == previousMsg {
 					// Duplicate event, nothing to do
 					v.Log.Debugf("Duplicate connection event, nothing to do.")
-					return
+					break
 				}
 
 				v.orchUpdateLock.Lock()

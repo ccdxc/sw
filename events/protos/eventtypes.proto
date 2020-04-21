@@ -359,7 +359,7 @@ enum EventTypes {
                                                      (desc)     = "OTHER Session Limit reached"];
     // ------------------------- Orchestration events ------------------------- //
     ORCH_CONNECTION_ERROR                  = 1001 [(category) = Orchestration,
-                                           (severity) = WARN,
+                                           (severity) = CRITICAL,
                                            (desc)     = "Failed to connect to orchestrator"];
     ORCH_LOGIN_FAILURE                     = 1002 [(category) = Orchestration,
                                            (severity) = CRITICAL,
@@ -379,4 +379,7 @@ enum EventTypes {
     ORCH_ALREADY_MANAGED                   = 1007 [(category) = Orchestration,
                                            (severity) = WARN,
                                            (desc)     = "Another PSM may be managing the same namespace"];
+    ORCH_UNSUPPORTED_VERSION               = 1008 [(category) = Orchestration,
+                                           (severity) = CRITICAL,
+                                           (desc)     = "Unsupported orchestrator version"];
 }

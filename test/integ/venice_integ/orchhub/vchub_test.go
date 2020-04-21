@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
@@ -56,9 +57,13 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 		return foundEvent, nil
 	}, "Failed to find connection error event", "1s", "10s")
 
+	eventRecorder.ClearEvents()
+
 	// bring up sim
 	vcSim, err := startVCSim(uri, vcInfo.user, vcInfo.pass)
 	AssertOk(t, err, "Failed to create vcsim")
+
+	time.Sleep(10 * time.Second)
 
 	// Should have gotten login failure event
 	AssertEventually(t, func() (bool, interface{}) {

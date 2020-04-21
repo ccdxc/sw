@@ -526,7 +526,7 @@ func init() {
 
 	eventTypes[ORCH_CONNECTION_ERROR] = &EventTypeAttributes{
 		EType:      ORCH_CONNECTION_ERROR.String(),
-		Severity:   "warn",
+		Severity:   "critical",
 		Category:   "",
 		Desc:       "Failed to connect to orchestrator",
 		SuppressMM: false}
@@ -571,6 +571,13 @@ func init() {
 		Severity:   "warn",
 		Category:   "",
 		Desc:       "Another PSM may be managing the same namespace",
+		SuppressMM: false}
+
+	eventTypes[ORCH_UNSUPPORTED_VERSION] = &EventTypeAttributes{
+		EType:      ORCH_UNSUPPORTED_VERSION.String(),
+		Severity:   "critical",
+		Category:   "",
+		Desc:       "Unsupported orchestrator version",
 		SuppressMM: false}
 
 }

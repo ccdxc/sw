@@ -16,6 +16,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'ORCH_CONNECTION_ERROR',
     'ORCH_INVALID_ACTION',
     'ORCH_LOGIN_FAILURE',
+    'ORCH_UNSUPPORTED_VERSION',
   ],
   cluster: [
     'AUDITING_FAILED',
@@ -126,7 +127,7 @@ export const eventTypes: { [name: string]: EventType } = {
   },
   'ORCH_CONNECTION_ERROR' : {
       "Name": "ORCH_CONNECTION_ERROR",
-      "Severity": EventsEvent_severity.warn,
+      "Severity": EventsEvent_severity.critical,
       "Desc": "Failed to connect to orchestrator",
   },
   'ORCH_INVALID_ACTION' : {
@@ -138,6 +139,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "ORCH_LOGIN_FAILURE",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Login credentials were invalid for orchestrator.",
+  },
+  'ORCH_UNSUPPORTED_VERSION' : {
+      "Name": "ORCH_UNSUPPORTED_VERSION",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "Unsupported orchestrator version",
   },
   'AUDITING_FAILED' : {
       "Name": "AUDITING_FAILED",
