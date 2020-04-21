@@ -210,23 +210,43 @@ func registerMirrorSessionHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("MirrorSession", apiintf.UpdateOper).WithPreCommitHook(r.validateMirrorSession)
 }
 
+type gCollector struct {
+	pktSize uint32
+	c       *monitoring.MirrorCollector
+}
+
 func globalMirrorSessionValidator(ms *monitoring.MirrorSession, mirrors *monitoring.MirrorSessionList) error {
-	expConfig := make(map[string]*monitoring.MirrorExportConfig)
+	expConfig := make(map[string]gCollector)
+
 	for _, mir := range mirrors.Items {
 		if mir.Name == ms.Name {
 			continue
 		}
-		for _, col := range mir.Spec.Collectors {
-			expConfig[col.ExportCfg.Destination] = col.ExportCfg
+		for j, col := range mir.Spec.Collectors {
+			expConfig[col.ExportCfg.Destination] = gCollector{pktSize: mir.Spec.PacketSize, c: &mir.Spec.Collectors[j]}
 		}
 	}
-	for _, col := range ms.Spec.Collectors {
+	for j, col := range ms.Spec.Collectors {
 		if col.ExportCfg != nil {
 			if existingCfg, ok := expConfig[col.ExportCfg.Destination]; !ok {
-				expConfig[col.ExportCfg.Destination] = col.ExportCfg
-			} else if ok && existingCfg.Gateway != col.ExportCfg.Gateway {
-				return fmt.Errorf("Collector %v already added with different gateway %v, current %v",
-					col.ExportCfg.Destination, existingCfg.Gateway, col.ExportCfg.Gateway)
+				expConfig[col.ExportCfg.Destination] = gCollector{pktSize: ms.Spec.PacketSize, c: &ms.Spec.Collectors[j]}
+			} else {
+				if existingCfg.c.ExportCfg.Gateway != col.ExportCfg.Gateway {
+					return fmt.Errorf("Collector %v already added with gateway %v",
+						col.ExportCfg.Destination, existingCfg.c.ExportCfg.Gateway)
+				}
+				if existingCfg.c.Type != col.Type {
+					return fmt.Errorf("Collector %v already added with type %v",
+						col.ExportCfg.Destination, existingCfg.c.Type)
+				}
+				if existingCfg.c.StripVlanHdr != col.StripVlanHdr {
+					return fmt.Errorf("Collector %v already added with strip-vlan %v",
+						col.ExportCfg.Destination, existingCfg.c.StripVlanHdr)
+				}
+				if existingCfg.pktSize != ms.Spec.PacketSize {
+					return fmt.Errorf("Collector %v already added with packet-size %v",
+						col.ExportCfg.Destination, existingCfg.pktSize)
+				}
 			}
 		}
 	}
