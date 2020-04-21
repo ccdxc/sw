@@ -101,9 +101,14 @@ func NewNMDStateMachine() *NMDStateMachine {
 							}
 							time.Sleep(time.Second * 30)
 						}
-						log.Infof("Running dhclient on discovered mgmt interface. %v", mgmtIntf)
-						e.Err = runCmd(fmt.Sprintf("dhclient %s", mgmtIntf))
-						return
+						// Run dhclient on the mgmt interface in non static mode migrations
+						if !(nmd.config.Spec.IPConfig != nil && len(nmd.config.Spec.IPConfig.IPAddress) != 0) {
+							log.Infof("Running dhclient on discovered mgmt interface. %v", mgmtIntf)
+							if err := runCmd(fmt.Sprintf("dhclient %s", mgmtIntf)); err != nil {
+								log.Errorf("Failed to run dhclient after NTP Sync. Err: %v", err)
+							}
+						}
+
 					}
 				},
 
