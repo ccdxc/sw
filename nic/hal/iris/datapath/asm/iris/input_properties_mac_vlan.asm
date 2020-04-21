@@ -11,18 +11,21 @@ struct phv_                         p;
 %%
 
 input_properties_mac_vlan:
-    seq             c2, k.control_metadata_tm_iport, TM_PORT_DMA
-    phvwr.c2        p.flow_lkp_metadata_lkp_inst, k.p4plus_to_p4_lkp_inst
+    bbne            k.p4plus_to_p4_valid, TRUE, input_properties_mac_vlan_common
+    seq             c2, k.p4plus_to_p4_update_ip_len, TRUE
+    phvwr           p.flow_lkp_metadata_lkp_inst, k.p4plus_to_p4_lkp_inst
+    sub             r1, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l4_2
+    sub             r1, r1, k.tcp_dataOffset, 2
+    phvwr.c2        p.l4_metadata_tcp_data_len, r1
 
-    cmov            r1, c2, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                        CAPRI_TXDMA_INTRINSIC_HDR_SZ + P4PLUS_TO_P4_HDR_SZ), \
-                        CAPRI_GLOBAL_INTRINSIC_HDR_SZ
-    sub             r1, k.capri_p4_intrinsic_frame_size, r1
+input_properties_mac_vlan_common:
+    seq             c2, k.recirc_header_valid, TRUE
+    phvwr.c2        p.control_metadata_recirc_reason, k.recirc_header_reason[1:0]
+    phvwr.c2        p.qos_metadata_qos_class_id[4:0], k.capri_intrinsic_tm_iq[4:0]
 
-    seq             c3, k.recirc_header_valid, TRUE
-    phvwr.c3        p.control_metadata_recirc_reason, k.recirc_header_reason[1:0]
-    phvwr.c3        p.qos_metadata_qos_class_id[4:0], k.capri_intrinsic_tm_iq[4:0]
-    sub.c3          r1, r1, P4_RECIRC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ
+    sub             r1, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1
+    seq             c2, k.p4plus_to_p4_insert_vlan_tag, TRUE
+    add.c2          r1, r1, 4
 
     or              r2, k.capri_intrinsic_lif_s3_e10, \
                         k.capri_intrinsic_lif_s0_e2, 8
@@ -35,7 +38,7 @@ input_properties_mac_vlan:
     // clear mirror, return
 	seq             c1, d.input_properties_mac_vlan_d.clear_ingresss_mirror, TRUE
 	phvwr.c1.e      p.control_metadata_clear_ingresss_mirror, \
-	                    d.input_properties_mac_vlan_d.clear_ingresss_mirror    
+	                    d.input_properties_mac_vlan_d.clear_ingresss_mirror
     // skip_flow_update, return
     seq             c2, d.input_properties_mac_vlan_d.skip_flow_update, TRUE
     phvwr.c2.e      p.control_metadata_skip_flow_update, \

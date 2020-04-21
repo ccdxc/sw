@@ -96,13 +96,9 @@ header_type control_metadata_t {
         clear_promiscuous_repl         : 1;
         i2e_flags                      : 8;
         flow_miss_ingress              : 1;  // workaround for predication
-        // nic_mode_e                     : 1;  // workaround for predication
         lkp_flags_egress               : 8;
         vlan_strip                     : 1;
         span_copy                      : 1;
-        // nic_mode                       : 1;
-        // registered_mac_launch          : 1;
-        // registered_mac_nic_mode        : 1;
         registered_mac_miss            : 1;
         mode_switch_en                 : 1;
         skip_flow_lkp                  : 1;
@@ -110,9 +106,6 @@ header_type control_metadata_t {
         allow_flood                    : 1;
         checksum_ctl                   : 8;
         checksum_results               : 8;
-        parser_outer_eth_offset        : 8;
-        parser_inner_eth_offset        : 8;
-        parser_payload_offset          : 16;
         udp_opt_bytes                  : 8;
         same_if_check_failed           : 1;
         mirror_on_drop_en              : 1;
@@ -156,13 +149,25 @@ header_type entry_inactive_t {
     }
 }
 
+header_type offset_metadata_t {
+    fields {
+        l2_1            : 8;
+        l2_2            : 8;
+        l3_1            : 8;
+        l3_2            : 8;
+        l4_1            : 8;
+        l4_2            : 8;
+        payload_offset  : 16;
+    }
+}
+
 header_type scratch_metadata_t {
     fields {
         cond_processed             : 1;
         flow_packets               : 64;
         flow_bytes                 : 64;
-        flow_start_timestamp       : 32;       // when flow started
-        flow_last_seen_timestamp   : 32;       // when was the flow last seen
+        flow_start_timestamp       : 32;
+        flow_last_seen_timestamp   : 32;
         tx_drop_count              : 16;
         policer_packets            : 4;
         policer_bytes              : 18;
@@ -233,13 +238,12 @@ header_type scratch_metadata_t {
         rcvr_win_sz                : 32;   // receiver's window size
         tcp_seq_num_hi             : 32;   // seq# of last byte of the window
         adjusted_ack_num           : 32;   // delta adjusted ack# of this flow.
-        b2b_expected_seq_num       : 32;   // when back2back traffic is coming in one direction.
 
         // RTT
         flow_rtt_seq_check_enabled    : 1;
         flow_rtt_in_progress          : 1;
         flow_rtt_seq_no               : 32;
-        flow_rtt                      : 34; // Max 16 sec assuming nano sec granularity
+        flow_rtt                      : 34;
         flow_rtt_timestamp            : 48;
 
         // ipsg
@@ -329,11 +333,10 @@ metadata capri_deparser_len_t capri_deparser_len;
 metadata capri_gso_csum_phv_loc_t   capri_gso_csum;
 
 metadata l3_metadata_t l3_metadata;
-@pragma parser_end_offset parser_payload_offset
 metadata control_metadata_t control_metadata;
 metadata entry_inactive_t entry_inactive;
-// scratch_metadata : no phvs will be allocated for this. These fields
-// should  only be used in action routines as temporary/local variables
+@pragma parser_end_offset payload_offset
+metadata offset_metadata_t offset_metadata;
 @pragma scratch_metadata
 metadata scratch_metadata_t scratch_metadata;
 

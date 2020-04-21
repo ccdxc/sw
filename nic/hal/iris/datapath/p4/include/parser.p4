@@ -128,7 +128,7 @@ header udp_t udp;
 @pragma hdr_len parser_metadata.l4_len
 header udp_payload_t udp_payload;
 
-@pragma pa_header_union xgress vxlan_gpe genv nvgre mpls[0]
+@pragma pa_header_union xgress vxlan_gpe genv mpls[0]
 header vxlan_t vxlan;
 header vxlan_gpe_t vxlan_gpe;
 header genv_t genv;
@@ -139,7 +139,6 @@ header roce_deth_immdt_t roce_deth_immdt;
 header icrc_t icrc;
 
 header gre_t gre;
-header nvgre_t nvgre;
 header gre_opt_seq_t gre_opt_seq;
 header erspan_t2_t erspan_t2;
 header erspan_t3_t erspan_t3;
@@ -461,10 +460,6 @@ parser parse_recirc {
     }
 }
 
-parser parse_vm_bounce {
-    return parse_ethernet;
-}
-
 @pragma xgress ingress
 parser parse_txdma {
     extract(capri_txdma_intrinsic);
@@ -517,7 +512,7 @@ parser parse_tm_replication_data {
 }
 
 parser parse_ethernet {
-    set_metadata(control_metadata.parser_outer_eth_offset, current+0);
+    set_metadata(offset_metadata.l2_1, current + 0);
     extract(ethernet);
     return select(latest.etherType) {
         0 mask 0xfe00 : parse_llc_header;
@@ -807,6 +802,7 @@ parser parse_ipv4 {
     set_metadata(ohi.ipv4_options_blob___hdr_len, (current(4,4) << 2) - 20);
     set_metadata(ohi.l3_len, current(16,16) + 0);
     set_metadata(ohi.l4_len, current(16,16) + 0);
+    set_metadata(offset_metadata.l3_1, current + 0);
     return select(current(48,16), current(0,8)) {
         0x000045 mask 0x3fffff : parse_base_ipv4;
         0x000044 mask 0x3fffff : ingress;
@@ -830,21 +826,25 @@ parser parse_ipv6_in_ip {
 parser parse_ipv6_tcp {
     set_metadata(ohi.l4_len, parser_metadata.l4_trailer -
                  parser_metadata.ip_options_len + 20);
+    set_metadata(offset_metadata.l4_2, current + 0);
     return parse_tcp_ipv6;
 }
 
 parser parse_ipv4_tcp {
     set_metadata(ohi.l4_len, parser_metadata.l4_trailer + 0);
+    set_metadata(offset_metadata.l4_2, current + 0);
     return parse_tcp_ipv4;
 }
 
 parser parse_inner_ipv6_tcp {
     set_metadata(ohi.inner_l4_len, parser_metadata.l4_trailer + 0);
+    set_metadata(offset_metadata.l4_2, current + 0);
     return parse_tcp_ipv6;
 }
 
 parser parse_inner_ipv4_tcp {
     set_metadata(ohi.inner_l4_len, parser_metadata.l4_trailer + 0);
+    set_metadata(offset_metadata.l4_2, current + 0);
     return parse_tcp_ipv4;
 }
 
@@ -936,11 +936,15 @@ parser parse_ipv6_extn_hdrs {
     }
 }
 
+parser parse_ipv6 {
+    set_metadata(offset_metadata.l3_1, current + 0);
+    return parse_ipv6_main;
+}
+
 @pragma packet_len_check outer_ipv6 len gt ohi.l3_len + 40
 @pragma packet_len_check outer_ipv6 start ohi.ipv6___start_off
-parser parse_ipv6 {
+parser parse_ipv6_main {
     extract(ipv6);
-    set_metadata(ohi.ipv6___start_off, current + 0);
     set_metadata(parser_metadata.ipv6_nextHdr, latest.nextHdr);
     set_metadata(parser_metadata.l4_trailer, ipv6.payloadLen);
     set_metadata(parser_metadata.ip_options_len, ipv6.payloadLen);
@@ -1467,6 +1471,7 @@ parser parse_udp {
     set_metadata(ohi.icrc_len, parser_metadata.ip_options_len + udp.len + 28);
     set_metadata(ohi.l4_len, udp.len + 0);
     set_metadata(parser_metadata.ip_options_len, udp.len);
+    set_metadata(offset_metadata.l4_1, current + 0);
     return select(latest.dstPort) {
         UDP_PORT_VXLAN : parse_vxlan;
         UDP_PORT_GENV : parse_geneve;
@@ -1514,7 +1519,7 @@ parser parse_geneve {
     extract(genv);
     set_metadata(tunnel_metadata.tunnel_vni, latest.vni);
     set_metadata(tunnel_metadata.tunnel_type, INGRESS_TUNNEL_TYPE_GENEVE);
-    return select(genv.ver, genv.optLen, genv.protoType) {
+    return select(genv.protoType) {
         ETHERTYPE_ETHERNET : parse_inner_ethernet;
         ETHERTYPE_IPV4 : parse_inner_ipv4;
         ETHERTYPE_IPV6 : parse_inner_ipv6;
@@ -1647,6 +1652,7 @@ parser parse_inner_ipv4 {
     set_metadata(ohi.inner_ipv4_options_blob___hdr_len, (current(4,4) << 2) - 20);
     set_metadata(ohi.inner_l3_len, current(16,16) + 0);
     set_metadata(ohi.inner_l4_len, current(16,16) + 0);
+    set_metadata(offset_metadata.l3_2, current + 0);
     return select(current(48,16), current(0,8)) {
         0x000045 mask 0x3fffff : parse_base_inner_ipv4;
         0x000044 mask 0x3fffff : ingress;
@@ -1818,6 +1824,7 @@ parser parse_inner_udp {
     set_metadata(ohi.icrc_len, parser_metadata.inner_ip_options_len + inner_udp.len + 28);
     set_metadata(ohi.inner_l4_len, inner_udp.len + 0);
     set_metadata(parser_metadata.inner_ip_options_len, inner_udp.len);
+    set_metadata(offset_metadata.l4_2, current + 0);
     return select(latest.dstPort) {
         UDP_PORT_ROCE_V2: parse_inner_roce_v2_pre;
         default:    ingress;
@@ -1921,9 +1928,15 @@ parser parse_inner_ipv6_extn_hdrs {
     }
 }
 
+parser parse_inner_ipv6 {
+    set_metadata(parser_metadata.inner_ip_options_len, 0);
+    set_metadata(offset_metadata.l3_2, current + 0);
+    return parse_inner_ipv6_main;
+}
+
 @pragma packet_len_check inner_ipv6 len gt ohi.inner_l3_len + 40
 @pragma packet_len_check inner_ipv6 start ohi.inner_ipv6___start_off
-parser parse_inner_ipv6 {
+parser parse_inner_ipv6_main {
     extract(inner_ipv6);
     set_metadata(parser_metadata.inner_ipv6_nextHdr, latest.nextHdr);
     set_metadata(flow_lkp_metadata.lkp_src, latest.srcAddr);
@@ -1932,7 +1945,6 @@ parser parse_inner_ipv6 {
     set_metadata(ohi.inner_l3_len, inner_ipv6.payloadLen + 0);
     set_metadata(l3_metadata.inner_ipv6_ulp, latest.nextHdr);
     set_metadata(parser_metadata.l4_trailer, inner_ipv6.payloadLen);
-    set_metadata(parser_metadata.inner_ip_options_len, 0);
     return select(parser_metadata.inner_ipv6_nextHdr) {
         IPV6_PROTO_EXTN_HOPBYHOP :  parse_inner_ipv6_option_blob;
         IPV6_PROTO_EXTN_ROUTING_HDR : parse_inner_ipv6_option_blob;
@@ -1954,7 +1966,7 @@ parser parse_inner_ipv6_ulp_no_options {
 }
 
 parser parse_inner_ethernet {
-    set_metadata(control_metadata.parser_inner_eth_offset, current+0);
+    set_metadata(offset_metadata.l2_2, current + 0);
     extract(inner_ethernet);
     return select(latest.etherType) {
         ETHERTYPE_IPV4 : parse_inner_ipv4;

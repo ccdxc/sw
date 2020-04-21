@@ -9,16 +9,6 @@ struct phv_ p;
 %%
 
 f_p4plus_to_p4_2:
-  // update UDP length
-  seq           c3, k.ipv4_valid, TRUE
-  sub.c3        r2, k.ipv4_totalLen, k.ipv4_ihl, 2
-  seq           c4, k.ipv6_valid, TRUE
-  sub.c4        r2, k.ipv6_payloadLen, r0
-  sub           r2, r2, k.p4plus_to_p4_udp_opt_bytes
-  seq           c2, k.p4plus_to_p4_update_udp_len, TRUE
-  phvwr.c2      p.udp_len, r2
-  phvwr         p.control_metadata_udp_opt_bytes, k.p4plus_to_p4_udp_opt_bytes
-
   // copy gso_valid to capri_gso_csum.gso field
   phvwr         p.capri_gso_csum_gso, k.p4plus_to_p4_gso_valid
 
@@ -41,7 +31,8 @@ f_p4plus_to_p4_2:
 
 f_p4plus_to_p4_2_other_apps:
   // compute IP header checksum if ipv4.valid is true
-  phvwr.c3      p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
+  seq           c1, k.ipv4_valid, TRUE
+  phvwr.c1      p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], TRUE
 
   // set compute_icrc flag (rdma)
   seq           c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA

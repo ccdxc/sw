@@ -282,7 +282,6 @@ table input_properties_otcam {
     reads {
         entry_inactive.input_properties : ternary;
         capri_intrinsic.lif             : ternary;
-        p4plus_to_p4.insert_vlan_tag    : ternary;
         vlan_tag.valid                  : ternary;
         vlan_tag.vid                    : ternary;
         tunnel_metadata.tunnel_type     : ternary;
@@ -300,7 +299,6 @@ table input_properties {
     reads {
         entry_inactive.input_properties : exact;
         capri_intrinsic.lif             : exact;
-        p4plus_to_p4.insert_vlan_tag    : exact;
         vlan_tag.valid                  : exact;
         vlan_tag.vid                    : exact;
         tunnel_metadata.tunnel_type     : exact;
@@ -359,23 +357,26 @@ action input_properties_mac_vlan(vrf, dir, mdest_flow_miss_action,
 }
 
 action adjust_lkp_fields() {
-    if (control_metadata.tm_iport == TM_PORT_DMA) {
+    if (p4plus_to_p4.valid == TRUE) {
         modify_field(flow_lkp_metadata.lkp_inst, p4plus_to_p4.lkp_inst);
-        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
-                  P4PLUS_TO_P4_HDR_SZ));
-    } else {
-        subtract(scratch_metadata.packet_len, capri_p4_intrinsic.frame_size,
-                 CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
+        if (p4plus_to_p4.update_ip_len == 1) {
+            modify_field(l4_metadata.tcp_data_len,
+                         (capri_p4_intrinsic.frame_size -
+                          (offset_metadata.l4_2 + (tcp.dataOffset * 4))));
+        }
     }
     if (recirc_header.valid == TRUE) {
         modify_field(control_metadata.recirc_reason, recirc_header.reason);
         modify_field(qos_metadata.qos_class_id, capri_intrinsic.tm_iq);
-        subtract(scratch_metadata.packet_len, scratch_metadata.packet_len,
-                 P4_RECIRC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ);
     }
 
-    modify_field(capri_p4_intrinsic.packet_len, scratch_metadata.packet_len);
+    if (p4plus_to_p4.insert_vlan_tag == 1) {
+        modify_field(capri_p4_intrinsic.packet_len,
+                     capri_p4_intrinsic.frame_size - offset_metadata.l2_1 + 4);
+    } else {
+        modify_field(capri_p4_intrinsic.packet_len,
+                     capri_p4_intrinsic.frame_size - offset_metadata.l2_1);
+    }
 }
 
 // this table will be programmed during enic-if create time frame only
@@ -389,7 +390,6 @@ table input_properties_mac_vlan {
     reads {
         entry_inactive.input_mac_vlan : ternary;
         control_metadata.uplink       : ternary;
-        p4plus_to_p4.insert_vlan_tag  : ternary;
         vlan_tag.valid                : ternary;
         vlan_tag.vid                  : ternary;
         ethernet.srcAddr              : ternary;

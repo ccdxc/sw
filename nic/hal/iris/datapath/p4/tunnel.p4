@@ -156,15 +156,11 @@ action remove_tunnel_hdrs() {
     if (gre.valid == TRUE) {
         add_to_field(capri_p4_intrinsic.packet_len, -4);
     }
-    if (nvgre.valid == TRUE) {
-        add_to_field(capri_p4_intrinsic.packet_len, -4);
-    }
     if (mpls[0].valid == TRUE) {
         add_to_field(capri_p4_intrinsic.packet_len, -4);
     }
     remove_header(vxlan);
     remove_header(genv);
-    remove_header(nvgre);
     remove_header(gre);
     remove_header(mpls[0]);
 #ifdef PHASE2
@@ -400,6 +396,7 @@ action encap_genv(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
 /*****************************************************************************/
 /* NVGRE tunnel encap actions                                                */
 /*****************************************************************************/
+#ifdef PHASE2
 action f_insert_nvgre_header(mac_sa, mac_da) {
     copy_header(inner_ethernet, ethernet);
     add_header(gre);
@@ -430,12 +427,10 @@ action encap_nvgre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV4);
         add_to_field(capri_p4_intrinsic.packet_len, 42);
     } else {
-#ifdef PHASE2
         f_insert_ipv6_header(ip_sa, ip_da, IP_PROTO_GRE);
         add(ipv6.payloadLen, capri_p4_intrinsic.packet_len, 8);
         modify_field(scratch_metadata.ethtype, ETHERTYPE_IPV6);
         add_to_field(capri_p4_intrinsic.packet_len, 62);
-#endif /* PHASE2 */
     }
     if (vlan_valid == TRUE) {
         f_encap_vlan(vlan_id, scratch_metadata.ethtype);
@@ -448,6 +443,7 @@ action encap_nvgre(mac_sa, mac_da, ip_sa, ip_da, ip_type, vlan_valid, vlan_id) {
     modify_field(scratch_metadata.vlan_id, vlan_id);
     modify_field(scratch_metadata.flag, ip_type);
 }
+#endif /* PHASE2 */
 
 /*****************************************************************************/
 /* GRE tunnel encap actions                                                  */

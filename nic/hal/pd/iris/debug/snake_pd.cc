@@ -401,11 +401,7 @@ pd_snake_test_loop_pgm_inp_props (pd_snake_test_if_t *snake_if,
 
     // Key
     key.capri_intrinsic_lif = snake_if->hw_lif_id;
-    if (snake_if->vlan_insert_en) {
-        key.p4plus_to_p4_insert_vlan_tag = 1;
-    } else {
-        key.vlan_tag_valid = 1;
-    }
+    key.vlan_tag_valid = 1;
     key.vlan_tag_vid = snake->vlan;
 
     // Data

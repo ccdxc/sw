@@ -21,7 +21,6 @@ struct pd_enicif_s {
     uint32_t    enic_lport_id;                  // lport
     uint32_t    inp_prop_native_l2seg_clsc;     // Classic mode, pkts from host
     uint32_t    inp_prop_native_l2seg_pri_clsc; // Classic mode, pkts from host with priority tag
-    uint32_t    inp_prop_native_l2seg_pri_sband_clsc; // Classic mode, pkts from host with priority tag in sideband
 
     // pi ptr
     void        *pi_if;
@@ -29,7 +28,6 @@ struct pd_enicif_s {
 
 struct pd_if_l2seg_entry_s {
     uint32_t    inp_prop_idx;
-    uint32_t    inp_prop_idx_sband;
 
     // pi ptr
     void        *pi_if_l2seg_entry;
@@ -67,7 +65,6 @@ pd_enicif_init (pd_enicif_t *enicif)
     enicif->enic_lport_id                        = INVALID_INDEXER_INDEX;
     enicif->inp_prop_native_l2seg_clsc           = INVALID_INDEXER_INDEX;
     enicif->inp_prop_native_l2seg_pri_clsc       = INVALID_INDEXER_INDEX;
-    enicif->inp_prop_native_l2seg_pri_sband_clsc = INVALID_INDEXER_INDEX;
 
     return enicif;
 }

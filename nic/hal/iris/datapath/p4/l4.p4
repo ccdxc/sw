@@ -206,10 +206,6 @@ action l4_profile(icmp_normalization_en,
             }
         }
     }
-
-    if (p4plus_to_p4.valid == TRUE) {
-        f_p4plus_to_p4_1();
-    }
 }
 
 @pragma stage 2
@@ -1274,9 +1270,9 @@ action ip_normalization_checks() {
         // but don’t truncate below minimum frame length.
         // Non-tunneled packet or tunnel is not terminated
 
-        modify_field(scratch_metadata.size8, control_metadata.parser_outer_eth_offset);
-        modify_field(scratch_metadata.size8, control_metadata.parser_inner_eth_offset);
-        modify_field(scratch_metadata.size16, control_metadata.parser_payload_offset);
+        modify_field(scratch_metadata.size8, offset_metadata.l2_1);
+        modify_field(scratch_metadata.size8, offset_metadata.l2_2);
+        modify_field(scratch_metadata.size16, offset_metadata.payload_offset);
         // if VLAN header was inserted, then adjust payload length accordingly
         modify_field(scratch_metadata.flag, p4plus_to_p4.insert_vlan_tag);
 
@@ -1790,7 +1786,7 @@ action tcp_session_normalization() {
         modify_field(control_metadata.drop_reason, DROP_TCP_NORMALIZATION);
         drop_packet();
     }
-    // sack option present, but not negotiated 
+    // sack option present, but not negotiated
     if ((l4_metadata.tcp_sack_perm_option_negotiated == FALSE) and
         ((tcp_option_one_sack.valid == TRUE) or (tcp_option_two_sack.valid == TRUE) or
          (tcp_option_three_sack.valid == TRUE) or (tcp_option_four_sack.valid == TRUE)) and

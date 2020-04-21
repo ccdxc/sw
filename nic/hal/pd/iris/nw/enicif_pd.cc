@@ -353,10 +353,6 @@ pd_enicif_upd_native_l2seg_clsc_change(pd_if_update_args_t *args)
                                             inp_prop_native_l2seg_pri_clsc);
     pd_enicif->inp_prop_native_l2seg_pri_clsc = INVALID_INDEXER_INDEX;
 
-    ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_enicif->
-                                            inp_prop_native_l2seg_pri_sband_clsc);
-    pd_enicif->inp_prop_native_l2seg_pri_sband_clsc = INVALID_INDEXER_INDEX;
-
     if (args->new_native_l2seg_clsc != HAL_HANDLE_INVALID) {
         // Install new native l2seg input prop entry
         native_l2seg = l2seg_lookup_by_handle(args->new_native_l2seg_clsc);
@@ -470,7 +466,6 @@ pd_enicif_alloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list)
         }
         pd_l2seg_entry = (pd_if_l2seg_entry_t *)(pi_l2seg_entry->pd);
         pd_l2seg_entry->inp_prop_idx       = INVALID_INDEXER_INDEX;
-        pd_l2seg_entry->inp_prop_idx_sband = INVALID_INDEXER_INDEX;
         // Link PI to PD
         pd_l2seg_entry->pi_if_l2seg_entry = pi_l2seg_entry;
 
@@ -678,19 +673,6 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif, bool del_only_inp_mac_vlan)
             goto end;
         }
         pd_enicif->inp_prop_native_l2seg_pri_clsc = INVALID_INDEXER_INDEX;
-    }
-
-    if (pd_enicif->inp_prop_native_l2seg_pri_sband_clsc != INVALID_INDEXER_INDEX) {
-        ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_enicif->
-                                                inp_prop_native_l2seg_pri_sband_clsc);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("unable to deprogram input properties for "
-                          "native l2seg prio sband at index:{}  ret:{}",
-                          pd_enicif->inp_prop_native_l2seg_pri_sband_clsc,
-                          ret);
-            goto end;
-        }
-        pd_enicif->inp_prop_native_l2seg_pri_sband_clsc = INVALID_INDEXER_INDEX;
     }
 
     // De programming non-native input properties. Classic
@@ -982,13 +964,6 @@ pd_enicif_pd_depgm_inp_prop(pd_enicif_t *pd_enicif, dllist_ctxt_t *l2sege_list)
                           pd_l2seg_entry->inp_prop_idx, ret);
         }
         pd_l2seg_entry->inp_prop_idx = INVALID_INDEXER_INDEX;
-
-        ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_l2seg_entry->inp_prop_idx_sband);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("unable to depgm input props sideband entry: {}. ret: {}",
-                          pd_l2seg_entry->inp_prop_idx_sband, ret);
-        }
-        pd_l2seg_entry->inp_prop_idx_sband = INVALID_INDEXER_INDEX;
     }
 
     return ret;
@@ -1199,7 +1174,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     lif_t                                   *lif = NULL;
     pd_l2seg_t                              *l2seg_pd;
     sdk_hash                                *inp_prop_tbl = NULL;
-    uint32_t                                *vlan_tag_idx = NULL, *sband_tag_idx = NULL, nwsec_prof_id = 0;
+    uint32_t                                *vlan_tag_idx = NULL, nwsec_prof_id = 0;
     bool                                    direct_to_otcam = false;
     bool                                    key_changed = false;
     l2seg_t                                 *hp_l2seg = NULL;
@@ -1269,20 +1244,6 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
 
     // Key
     key.capri_intrinsic_lif = if_get_hw_lif_id(hal_if);
-#if 0
-    if (lif_args && lif_args->vlan_insert_en_changed) {
-        vlan_insert_en = lif_args->vlan_insert_en;
-        key_changed = true;
-    } else {
-        vlan_insert_en = lif->vlan_insert_en;
-    }
-    if (vlan_insert_en) {
-        // vlan tag is in sideband
-        key.p4plus_to_p4_insert_vlan_tag = 1;
-    } else {
-        key.vlan_tag_valid = 1;
-    }
-#endif
     if (!is_l2seg_native_on_enicif_classic(hal_if, l2seg)) {
         key.vlan_tag_vid = l2seg_get_wire_encap_val(l2seg);
     }
@@ -1371,16 +1332,13 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                     inp_prop.clear_promiscuous_repl, l2seg->single_wire_mgmt);
     if (if_l2seg) {
         vlan_tag_idx = &if_l2seg->inp_prop_idx;
-        sband_tag_idx = &if_l2seg->inp_prop_idx_sband;
     } else {
         vlan_tag_idx = &pd_enicif->inp_prop_native_l2seg_pri_clsc;
-        sband_tag_idx = &pd_enicif->inp_prop_native_l2seg_pri_sband_clsc;
     }
 
     if (oper == TABLE_OPER_INSERT) {
         // Insert vlan in the packet entry
         key.vlan_tag_valid = 1;
-        key.p4plus_to_p4_insert_vlan_tag = 0;
         sdk_ret = inp_prop_tbl->insert(&key, &data, vlan_tag_idx,
                                        key_mask, direct_to_otcam);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1396,27 +1354,8 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                             *vlan_tag_idx);
         }
 
-        // Insert vlan in sideband entry
-        key.vlan_tag_valid = 0;
-        key.p4plus_to_p4_insert_vlan_tag = 1;
-        sdk_ret = inp_prop_tbl->insert(&key, &data, sband_tag_idx,
-                                       key_mask, direct_to_otcam);
-        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("classic: unable to program sideband for "
-                          "(l2seg, upif): ({}, {}). ret: {}",
-                          hal::l2seg_get_l2seg_id(l2seg),
-                          if_get_if_id(hal_if), ret);
-            goto end;
-        } else {
-            HAL_TRACE_DEBUG("classic: Programmed sideband entry"
-                            "table:input_properties index:{} ",
-                            *sband_tag_idx);
-        }
-
         if (!if_l2seg) {
             // Insert for native l2seg without priority tag
-            key.p4plus_to_p4_insert_vlan_tag = 0;
             key.vlan_tag_valid = 0;
             // Insert
             sdk_ret = inp_prop_tbl->insert(&key, &data,
@@ -1447,14 +1386,6 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                     goto end;
                 }
             }
-            if (*sband_tag_idx != INVALID_INDEXER_INDEX) {
-                ret = pd_enicif_pd_depgm_inp_prop_l2seg(*sband_tag_idx);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("Unable to remove input props entry at: {}",
-                                  *sband_tag_idx);
-                    goto end;
-                }
-            }
             if (!if_l2seg) {
                 if (pd_enicif->inp_prop_native_l2seg_clsc != INVALID_INDEXER_INDEX) {
                     ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_enicif->inp_prop_native_l2seg_clsc);
@@ -1468,7 +1399,6 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
 
             // Insert vlan in the packet entry
             key.vlan_tag_valid = 1;
-            key.p4plus_to_p4_insert_vlan_tag = 0;
             sdk_ret = inp_prop_tbl->insert(&key, &data, vlan_tag_idx,
                                            key_mask, direct_to_otcam);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1484,27 +1414,8 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                                 *vlan_tag_idx);
             }
 
-            // Insert vlan in sideband entry
-            key.vlan_tag_valid = 0;
-            key.p4plus_to_p4_insert_vlan_tag = 1;
-            sdk_ret = inp_prop_tbl->insert(&key, &data, sband_tag_idx,
-                                           key_mask, direct_to_otcam);
-            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("classic: unable to program sideband for "
-                              "(l2seg, upif): ({}, {})",
-                              hal::l2seg_get_l2seg_id(l2seg),
-                              if_get_if_id(hal_if));
-                goto end;
-            } else {
-                HAL_TRACE_DEBUG("classic: Programmed sideband entry"
-                                "table:input_properties index:{} ",
-                                *sband_tag_idx);
-            }
-
             if (!if_l2seg) {
                 // Insert for native l2seg without priority tag
-                key.p4plus_to_p4_insert_vlan_tag = 0;
                 key.vlan_tag_valid = 0;
                 // Insert
                 sdk_ret = inp_prop_tbl->insert(&key, &data, &pd_enicif->inp_prop_native_l2seg_clsc,
@@ -1540,21 +1451,6 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                                     *vlan_tag_idx);
                 }
             }
-            if (*sband_tag_idx != INVALID_INDEXER_INDEX) {
-                sdk_ret = inp_prop_tbl->update(*sband_tag_idx, &data);
-                ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-                if (ret != HAL_RET_OK) {
-                    HAL_TRACE_ERR("classic: unable to reprogram for "
-                                  "(l2seg, upif): ({}, {})",
-                                  hal::l2seg_get_l2seg_id(l2seg),
-                                  if_get_if_id(hal_if));
-                    goto end;
-                } else {
-                    HAL_TRACE_DEBUG("classic: reprogrammed sideband entry "
-                                    "table:input_properties index:{} ",
-                                    *sband_tag_idx);
-                }
-            }
             if (!if_l2seg) {
                 if (pd_enicif->inp_prop_native_l2seg_clsc) {
                     sdk_ret = inp_prop_tbl->update(pd_enicif->inp_prop_native_l2seg_clsc,
@@ -1569,7 +1465,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                     } else {
                         HAL_TRACE_DEBUG("classic: reprogrammed "
                                         "table:input_properties non-priority index:{} ",
-                                        *sband_tag_idx);
+                                        pd_enicif->inp_prop_native_l2seg_clsc);
                     }
                 }
             }
@@ -2106,7 +2002,6 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
     lif_t                                       *lif = NULL;
     if_t                                        *hal_if =
                                                 (if_t *)pd_enicif->pi_if;
-    bool                                        vlan_insert_en = false;
     bool                                        key_changed = false;
 
     memset(&key, 0, sizeof(key));
@@ -2124,18 +2019,8 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
     // Entry 1: Host Side Entry
     // form key
     key.entry_inactive_input_mac_vlan = 0;
-    if (lif_args && lif_args->vlan_insert_en_changed) {
-        vlan_insert_en = lif_args->vlan_insert_en;
-        key_changed = true;
-    } else if (lif) {
-        vlan_insert_en = lif->vlan_insert_en;
-    }
-    if (vlan_insert_en) {
-        // vlan tag is in sideband
-        key.p4plus_to_p4_insert_vlan_tag = 1;
-    } else {
-        key.vlan_tag_valid = 1;
-    }
+    key.vlan_tag_valid = 1;
+
     // Useg vlan change
     if (args && args->encap_vlan_change) {
         key_changed = true;
@@ -2155,9 +2040,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
      *    vlan is coming from.
      */
     // mask.vlan_tag_valid_mask                = ~(mask.vlan_tag_valid_mask & 0);
-    // mask.p4plus_to_p4_insert_vlan_tag_mask  = ~(mask.p4plus_to_p4_insert_vlan_tag_mask & 0);
     mask.vlan_tag_valid_mask                = 0;
-    mask.p4plus_to_p4_insert_vlan_tag_mask  = 0;
     memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));
 
     key.control_metadata_uplink = 0;

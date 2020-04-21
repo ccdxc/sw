@@ -194,8 +194,6 @@ action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
     modify_field(scratch_metadata.flag, genv.valid);
     modify_field(scratch_metadata.flag, vxlan_gpe.valid);
     modify_field(scratch_metadata.flag, udp.valid);
-    modify_field(scratch_metadata.flag, nvgre.valid);
-    modify_field(scratch_metadata.flag, erspan_t3.valid);
     modify_field(scratch_metadata.flag, gre.valid);
     modify_field(scratch_metadata.flag, ipv4_options_blob.valid);
     modify_field(scratch_metadata.flag, ipv4.valid);

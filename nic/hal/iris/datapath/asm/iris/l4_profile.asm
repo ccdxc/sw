@@ -93,19 +93,15 @@ l4_profile:
                         d.u.l4_profile_d.flow_learn_cfg_en, 2
     seq             c1, k.ipv4_valid, TRUE
     or.c1           r1, r1, d.u.l4_profile_d.policy_enf_cfg_en, 1
-    phvwrpair       p.{l4_metadata_flow_learn_cfg_en, \
+    phvwrpair.e     p.{l4_metadata_flow_learn_cfg_en, \
                         l4_metadata_policy_enf_cfg_en, \
                         l4_metadata_ip_bm_mc_policy_enf_cfg_en}, r1, \
                         p.l4_metadata_uuc_fl_pe_sup_en, \
                         d.u.l4_profile_d.uuc_fl_pe_sup_en
-
-    bbeq            k.p4plus_to_p4_valid, TRUE, f_p4plus_to_p4_1
     phvwrpair       p.l4_metadata_ip_ttl_change_detect_en, \
                         d.u.l4_profile_d.ip_ttl_change_detect_en, \
                         p.l4_metadata_tcp_normalize_mss, \
                         d.u.l4_profile_d.tcp_normalize_mss
-    nop.e
-    nop
 
 
 // Don't use c1 in this code. It is used in delay slot of caller for optimal path
@@ -131,8 +127,6 @@ lb_l4_profile_ip_option_update_tcp_data_len:
 nop:
     nop.e
     nop
-
-#include "p4plus_to_p4_1.h"
 
 /*****************************************************************************/
 /* error function                                                            */

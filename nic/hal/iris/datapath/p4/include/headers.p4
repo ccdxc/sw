@@ -495,7 +495,10 @@ header_type genv_t {
         protoType : 16;
         vni : 24;
         reserved2 : 8;
+        options : *;
     }
+    length : (optLen << 2) + 8;
+    max_length : 256;
 }
 
 header_type roce_bth_t {

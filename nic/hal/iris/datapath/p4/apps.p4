@@ -634,33 +634,51 @@ table p4plus_app_prep {
 /* P4+ to P4 app processing                                                  */
 /*****************************************************************************/
 action f_p4plus_to_p4_1() {
-    // update IP id
-    if (p4plus_to_p4.update_ip_id == TRUE) {
-        add(ipv4.identification, ipv4.identification, p4plus_to_p4.ip_id_delta);
-    }
-
     // update IP length
     if (p4plus_to_p4.update_ip_len == TRUE) {
-        if (vlan_tag.valid == TRUE) {
-            subtract(scratch_metadata.packet_len,
-                     capri_p4_intrinsic.packet_len, 18);
-        } else {
-            subtract(scratch_metadata.packet_len,
-                     capri_p4_intrinsic.packet_len, 14);
-        }
         if (ipv4.valid == TRUE) {
-            modify_field(ipv4.totalLen, scratch_metadata.packet_len);
-            subtract_from_field(scratch_metadata.packet_len, ipv4.ihl << 2);
-        } else {
-            if (ipv6.valid == TRUE) {
-                subtract_from_field(scratch_metadata.packet_len, 40);
-                modify_field(ipv6.payloadLen, scratch_metadata.packet_len);
-            }
+            modify_field(ipv4.totalLen,
+                (capri_p4_intrinsic.frame_size - offset_metadata.l3_1));
         }
+        if (ipv6.valid == TRUE) {
+            modify_field(ipv6.payloadLen,
+                (capri_p4_intrinsic.frame_size - (offset_metadata.l3_1 + 40)));
+        }
+        if (udp.valid == TRUE) {
+            modify_field(udp.len,
+                (capri_p4_intrinsic.frame_size - offset_metadata.l4_1));
+        }
+        if (inner_ipv4.valid == TRUE) {
+            modify_field(inner_ipv4.totalLen,
+                (capri_p4_intrinsic.frame_size - offset_metadata.l3_2));
+        }
+        if (inner_ipv6.valid == TRUE) {
+            modify_field(inner_ipv6.payloadLen,
+                (capri_p4_intrinsic.frame_size - (offset_metadata.l3_2 + 40)));
+        }
+        if (inner_udp.valid == TRUE) {
+            modify_field(inner_udp.len,
+                (capri_p4_intrinsic.frame_size - offset_metadata.l4_2));
+        }
+    }
 
-        // update tcp_data_len
-        modify_field(l4_metadata.tcp_data_len,
-                     (scratch_metadata.packet_len - (tcp.dataOffset) * 4));
+    // update UDP length
+    modify_field(control_metadata.udp_opt_bytes, p4plus_to_p4.udp_opt_bytes);
+    if (p4plus_to_p4.update_udp_len == 1) {
+        modify_field(udp.len,
+                     (capri_p4_intrinsic.frame_size - offset_metadata.l4_1 -
+                      p4plus_to_p4.udp_opt_bytes));
+    }
+
+    // update IP id
+    if (p4plus_to_p4.update_ip_id == TRUE) {
+        if (inner_ipv4.valid == TRUE) {
+            add(inner_ipv4.identification, inner_ipv4.identification,
+                p4plus_to_p4.ip_id_delta);
+        } else {
+            add(ipv4.identification, ipv4.identification,
+                p4plus_to_p4.ip_id_delta);
+        }
     }
 
     // update TCP sequence number
@@ -688,7 +706,6 @@ action f_p4plus_to_p4_1() {
         modify_field(vlan_tag.vid, p4plus_to_p4_vlan.vid);
         modify_field(vlan_tag.etherType, ethernet.etherType);
         modify_field(ethernet.etherType, ETHERTYPE_VLAN);
-        add(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 4);
     }
 
     // update from cpu flag
@@ -705,20 +722,6 @@ action f_p4plus_to_p4_1() {
 }
 
 action f_p4plus_to_p4_2() {
-    // update UDP length
-    if (ipv4.valid == TRUE) {
-        subtract(scratch_metadata.packet_len, ipv4.totalLen, ipv4.ihl << 2);
-    } else {
-        if (ipv6.valid == TRUE) {
-            modify_field(scratch_metadata.packet_len, ipv6.payloadLen);
-        }
-    }
-    modify_field(control_metadata.udp_opt_bytes, p4plus_to_p4.udp_opt_bytes);
-    if (p4plus_to_p4.update_udp_len == 1) {
-        subtract(udp.len, scratch_metadata.packet_len,
-                 p4plus_to_p4.udp_opt_bytes);
-    }
-
     // update checksum/icrc compute flags
     modify_field(scratch_metadata.size8, 0);
     if ((p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_CLASSIC_NIC) or
@@ -765,7 +768,7 @@ action f_p4plus_to_p4_2() {
     remove_header(capri_txdma_intrinsic);
 }
 
-@pragma stage 1
+@pragma stage 0
 table p4plus_to_p4_1 {
     actions {
         f_p4plus_to_p4_1;
@@ -783,6 +786,7 @@ table p4plus_to_p4_2 {
 
 control process_p4plus_to_p4 {
     if (p4plus_to_p4.valid == TRUE) {
+        apply(p4plus_to_p4_1);
         apply(p4plus_to_p4_2);
     }
 }

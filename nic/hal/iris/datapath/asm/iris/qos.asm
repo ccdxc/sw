@@ -18,10 +18,10 @@ qos:
     phvwr           p.capri_intrinsic_tm_oq, d.qos_d.egress_tm_oq
 
     /* qos info */
-    phvwr           p.{qos_metadata_cos_en,qos_metadata_cos}, \
-                        d.{qos_d.cos_en,qos_d.cos}
-    phvwr.e         p.{qos_metadata_dscp_en,qos_metadata_dscp}, \
-                        d.{qos_d.dscp_en,qos_d.dscp}
+    phvwr           p.qos_metadata_cos_en, d.qos_d.cos_en
+    phvwr           p.qos_metadata_cos, d.qos_d.cos
+    phvwr           p.qos_metadata_dscp_en, d.qos_d.dscp_en
+    phvwr.e         p.qos_metadata_dscp, d.qos_d.dscp
 
     /* output queue selection */
     phvwr.f         p.control_metadata_dest_tm_oq, d.qos_d.dest_tm_oq
