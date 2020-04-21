@@ -26,6 +26,7 @@ void link_trace_init(const char *name, uint64_t cpu_mask, bool sync_mode,
                      ::utils::trace_level_e persistent_trace_level,
                      ::utils::trace_level_e non_persistent_trace_level);
 void link_trace_deinit(void);
+void trace_update(::utils::trace_level_e trace_level);
 
 // wrapper APIs to get logger and syslogger
 static inline std::shared_ptr<logger>

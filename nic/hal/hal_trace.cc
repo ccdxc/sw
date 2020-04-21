@@ -83,5 +83,16 @@ link_trace_deinit (void)
     return;
 }
 
+void
+trace_update (::utils::trace_level_e trace_level)
+{
+    if (g_trace_logger) {
+        g_trace_logger->set_trace_level(trace_level);
+    }
+    if (g_link_trace_logger) {
+        g_link_trace_logger->set_trace_level(trace_level);
+    }
+}
+
 }    // utils
 }    // hal

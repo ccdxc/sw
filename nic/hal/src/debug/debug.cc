@@ -292,16 +292,16 @@ hal_ret_t
 trace_update (TraceSpec& spec, TraceResponse *rsp)
 {
     if (spec.trace_level() == debug::TRACE_LEVEL_ERROR) {
-        utils::g_trace_logger->set_trace_level(::utils::trace_err);
+        utils::trace_update(::utils::trace_err);
         rsp->set_trace_level(debug::TRACE_LEVEL_ERROR);
     } else if (spec.trace_level() == debug::TRACE_LEVEL_DEBUG) {
-        utils::g_trace_logger->set_trace_level(::utils::trace_debug);
+        utils::trace_update(::utils::trace_debug);
         rsp->set_trace_level(debug::TRACE_LEVEL_DEBUG);
     } else if (spec.trace_level() == debug::TRACE_LEVEL_VERBOSE) {
-        utils::g_trace_logger->set_trace_level(::utils::trace_verbose);
+        utils::trace_update(::utils::trace_verbose);
         rsp->set_trace_level(debug::TRACE_LEVEL_VERBOSE);
     } else {
-        utils::g_trace_logger->set_trace_level(::utils::trace_none);
+        utils::trace_update(::utils::trace_none);
         rsp->set_trace_level(debug::TRACE_LEVEL_NONE);
     }
     rsp->set_api_status(types::API_STATUS_OK);
