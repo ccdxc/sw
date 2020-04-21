@@ -19,7 +19,7 @@ MODULE_SRCS     := ${MODULE_SRCS} \
 endif
 MODULE_DEPS     = libpacket_parser.lib
 MODULE_ARLIBS_BEGIN = -Wl,--whole-archive -Wl,--start-group
-MODULE_ARLIBS_END = -l:libsdkcapri_csrint.a -Wl,--end-group \
+MODULE_ARLIBS_END = -l:libsdk${ASIC}_csrint.a -Wl,--end-group \
 			-Wl,--no-whole-archive
 MODULE_ARLIBS	= \
 	agent_api \
@@ -102,8 +102,8 @@ MODULE_ARLIBS	= \
 	sdkasiccmn \
 	sdkasicpd \
 	sdkasicrw \
-	sdkcapri \
-	sdkcapri_asicrw_if \
+	sdk${ASIC} \
+	sdk_asicrw_if \
 	sdkfru \
 	sdkftl \
 	sdklinkmgr \
@@ -146,7 +146,7 @@ MODULE_SOLIBS   = \
         plugin_classic \
         plugin_ep_learn_common \
         plugin_sfw_pkt_utils \
-	sdkcapri_asicrw_if
+		sdk_asicrw_if
 
 MODULE_LDLIBS        = zmq ${NIC_HAL_ALL_LDLIBS} ev tins
 include ${MKDEFS}/post.mk

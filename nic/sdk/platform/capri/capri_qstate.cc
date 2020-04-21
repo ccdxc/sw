@@ -4,8 +4,8 @@
 
 #include "platform/capri/capri_state.hpp"
 #include "platform/capri/capri_qstate.hpp"
-#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "asic/rw/asicrw.hpp"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 
 using namespace sdk::platform::utils;
 
@@ -103,6 +103,7 @@ capri_program_qstate_map (lif_qstate_t *qstate, uint8_t enable)
 #define CAPRI_GET_QSTATE_MAP_ENTRY(QID)                                     \
     qstate->type[QID].qtype_info.entries = (uint8_t)entry->length ## QID(); \
     qstate->type[QID].qtype_info.size = (uint8_t)entry->size ## QID();
+
 template <typename T>
 void
 capri_get_qstate_map (lif_qstate_t *qstate, T *entry)
@@ -180,6 +181,7 @@ capri_clear_qstate_mem (uint64_t base_addr, uint32_t size)
     // qstate is a multiple for 4K So it is safe to assume
     // 256 byte boundary.
     static uint8_t zeros[256] = {0};
+
     for (uint32_t i = 0; i < (size / sizeof(zeros)); i++) {
         ret = sdk::asic::asic_mem_write(base_addr + (i * sizeof(zeros)),
                                         zeros, sizeof(zeros));
@@ -187,6 +189,7 @@ capri_clear_qstate_mem (uint64_t base_addr, uint32_t size)
             return ret;
         }
     }
+
     return ret;
 }
 

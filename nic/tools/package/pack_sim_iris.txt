@@ -131,7 +131,7 @@ nic/hal/third-party/google/x86_64/lib/libprotobuf.so.14             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmodel_client.so                        /nic/lib/
 nic/sdk/model_sim/libs/*.so                                         /nic/lib/
 nic/sdk/third-party/zmq/x86_64/lib/libzmq.so                        /nic/lib/libzmq.so.3
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk_asicrw_if.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblfq.so                                 /nic/lib/

@@ -18,7 +18,11 @@
 #include "lib/pal/pal.hpp"
 #include "platform/pal/include/pal_mem.h"
 #include "include/sdk/platform.hpp"
+#ifdef ELBA
+#include "platform/elba/elba_tbl_rw.hpp"
+#else
 #include "platform/capri/capri_tbl_rw.hpp"
+#endif
 #include "lib/utils/time_profile.hpp"
 
 #ifdef USE_ARM64_SIMD
@@ -53,7 +57,11 @@ class Bucket;
 
 using namespace std;
 using namespace sdk::lib;
+#ifdef ELBA
+using namespace sdk::platform::elba;
+#else
 using namespace sdk::platform::capri;
+#endif
 
 using sdk::table::ftl_base;
 using sdk::table::internal::main_table;

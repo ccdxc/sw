@@ -3,13 +3,15 @@
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
+#include "nic/sdk/asic/port.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/platform/capri/capri_tm_utils.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
-#include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
+#include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 
+using namespace sdk::platform::capri;
 using qos::QosClassStatusEpd;
 
 namespace hal {
@@ -115,8 +117,8 @@ qos_class_pd_delink_pi_pd (pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_cla
     qos_class_set_pd_qos_class(pi_qos_class, NULL);
 }
 
-static void 
-qos_class_populate_dscp_cos_txdma_iq_map(pd_qos_class_t *pd_qos_class, uint32_t dscp_or_pcp, bool is_no_drop) 
+static void
+qos_class_populate_dscp_cos_txdma_iq_map(pd_qos_class_t *pd_qos_class, uint32_t dscp_or_pcp, bool is_no_drop)
 {
     uint32_t    i = dscp_or_pcp;
     uint8_t     no_drop_index = 0;
@@ -156,7 +158,7 @@ qos_class_populate_dscp_cos_txdma_iq_map(pd_qos_class_t *pd_qos_class, uint32_t 
                     "txdma_iq_map.txdma_iq1 {}, no_drop_index {}, txdma_iq_map.no_drop {}",
                      dscp_cos_txdma_iq_map.is_dscp, dscp_or_pcp, is_no_drop,
                      pd_qos_class->txdma[0].iq, pd_qos_class->txdma[1].iq,
-                     dscp_cos_txdma_iq_map.txdma_iq[i / 2], no_drop_index, 
+                     dscp_cos_txdma_iq_map.txdma_iq[i / 2], no_drop_index,
                      dscp_cos_txdma_iq_map.no_drop[i / 4]);
 }
 
@@ -232,13 +234,13 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
             pd_qos_class->p4_eg_q[p4_q_idx] = pd_qos_class->txdma[i].iq;
         }
     }
- 
+
     // Update dscp/pcp to tx-iq map for user-defined classes.
     if (qos_is_user_defined_class(qos_group)) {
        if (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) {
            for (i = 0; i < HAL_MAX_IP_DSCP_VALS; i++) {
                if (qos_class->cmap.ip_dscp[i]) {
-                   dscp_cos_txdma_iq_map.is_dscp = true; 
+                   dscp_cos_txdma_iq_map.is_dscp = true;
                    qos_class_populate_dscp_cos_txdma_iq_map(pd_qos_class, i, qos_class->no_drop);
                }
            }
@@ -288,19 +290,19 @@ static hal_ret_t
 qos_class_pd_program_dscp_cos_map_table ()
 {
     hal_ret_t      ret = HAL_RET_OK;
-        
+
     uint64_t       dscp_cos_map_hbm_base_addr;
     dscp_cos_map_hbm_base_addr =  (uint64_t)asicpd_get_mem_addr(ASIC_HBM_REG_QOS_DSCP_COS_MAP);
-        
+
     HAL_TRACE_DEBUG("Programming DSCP-PCP to TxDMA IQ mapping "
-                    "dscp_cos_map_hbm_base_addr is {} and size of dscp-cos-map-table is {}", 
+                    "dscp_cos_map_hbm_base_addr is {} and size of dscp-cos-map-table is {}",
                         dscp_cos_map_hbm_base_addr, sizeof(dscp_cos_txdma_iq_map));
 
     p4plus_hbm_write(dscp_cos_map_hbm_base_addr, (uint8_t *)&dscp_cos_txdma_iq_map, sizeof(dscp_cos_txdma_iq_map),
             P4PLUS_CACHE_INVALIDATE_BOTH);
 
     return ret;
-}           
+}
 
 // ----------------------------------------------------------------------------
 // Allocate resources for PD Qos-class
@@ -327,12 +329,12 @@ qos_class_depopulate_dscp_cos_txdma_iq_map(pd_qos_class_t *pd_qos_class, uint32_
 {
     uint32_t    i = dscp_or_pcp;
     uint8_t     no_drop_index = 0;
-    
+
     if ((i % 2) == 1) {
          dscp_cos_txdma_iq_map.txdma_iq[i / 2] &= 0xf0;
     } else {
          dscp_cos_txdma_iq_map.txdma_iq[i / 2] &= 0x0f;
-    }    
+    }
     if (is_no_drop) {
          if ((i % 4) == 0) {
              no_drop_index = (dscp_cos_txdma_iq_map.no_drop[i / 4] & 0xc0);
@@ -349,16 +351,16 @@ qos_class_depopulate_dscp_cos_txdma_iq_map(pd_qos_class_t *pd_qos_class, uint32_
          } else {
              no_drop_index = (dscp_cos_txdma_iq_map.no_drop[i / 4] & 0x3);
              dscp_cos_txdma_iq_map.no_drop[i / 4] &= 0xfc;
-         } 
+         }
          if (no_drop_index == 1) {
              dscp_cos_txdma_iq_map.no_drop1_txdma_iq = 0;
          } else if (no_drop_index == 2) {
              dscp_cos_txdma_iq_map.no_drop2_txdma_iq = 0;
          } else if (no_drop_index == 3) {
              dscp_cos_txdma_iq_map.no_drop3_txdma_iq = 0;
-         } 
-    }    
-    
+         }
+    }
+
     HAL_TRACE_DEBUG("De-Programming DSCP-PCP to TxDMA IQ mapping "
                     "for is_dscp{}, dscp/pcp {}, no_drop {}, txdma-iq1 {}, txdma-iq2 {} "
                     "txdma_iq_map.txdma_iq1 {}, no_drop_index {}, txdma_iq_map.no_drop {}",
@@ -366,7 +368,7 @@ qos_class_depopulate_dscp_cos_txdma_iq_map(pd_qos_class_t *pd_qos_class, uint32_
                      pd_qos_class->txdma[0].iq, pd_qos_class->txdma[1].iq,
                      dscp_cos_txdma_iq_map.txdma_iq[i / 2], no_drop_index,
                      dscp_cos_txdma_iq_map.no_drop[i / 4]);
-}                    
+}
 
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD Qos-class
@@ -378,7 +380,7 @@ qos_class_pd_dealloc_res (pd_qos_class_t *pd_qos_class)
     qos_class_t             *qos_class = pd_qos_class->pi_qos_class;
     uint32_t                i;
     hal_ret_t               ret = HAL_RET_OK;
-    
+
     qos_group = qos_class_get_qos_group(qos_class);
 
     // Reset dscp/pcp to tx-iq map for user-defined classes.
@@ -406,7 +408,7 @@ qos_class_pd_dealloc_res (pd_qos_class_t *pd_qos_class)
                       "Qos-class {} ret {}",
                       qos_class->key, ret);
         return ret;
-    }                
+    }
 
     if (capri_tm_q_valid(pd_qos_class->uplink.iq)) {
         g_hal_state_pd->qos_uplink_iq_idxr()->free(pd_qos_class->uplink.iq);
@@ -715,7 +717,7 @@ qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
          * By default, in PFC mode, PCP0/PFC-COS0 is mapped to default-class (TC0).
          * Since, user has mapped PCP0/PFC-COS0 to a different user-defined class,
          * default class was remapped to first free PFC-COS value.
-         * Now that the user-defined class is being deleted, map default class 
+         * Now that the user-defined class is being deleted, map default class
          * back to its original value - PCP0/PFC-COS0.
          */
         has_pcp = cmap_type_pcp(qos_class->cmap.type);
@@ -743,7 +745,7 @@ qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
 
     HAL_TRACE_DEBUG("reset xoff2oq and mac_xoff mapping for dest_oq {} "
         "no_drop {} pfc_enable {} pfc_cos {} reset_pfc_xoff {}",
-        pd_qos_class->dest_oq, qos_class->no_drop, qos_class->pause.pfc_enable, 
+        pd_qos_class->dest_oq, qos_class->no_drop, qos_class->pause.pfc_enable,
         qos_class->pause.pfc_cos, reset_pfc_xoff);
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
@@ -771,7 +773,7 @@ qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
                 HAL_TRACE_DEBUG("mac xoff bitmap {} port {}",
                                 xoff_cos_bitmap, port);
                 if((xoff_cos_bitmap == 0xFF) || (qos_class->pause.pfc_cos == 0)) {
-                    // if link-pause is set or if pfc-cos is 0 
+                    // if link-pause is set or if pfc-cos is 0
                     // (intended for default-class); do not reset PFC-COS.
                     reset_pfc_xoff = false;
                 }
@@ -837,7 +839,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
     bool                  has_pcp = false;
     uint32_t              dot1q_pcp = 0;
     bool                  update_default_class_pfc = false;
-    int                   xoff_val=0; 
+    int                   xoff_val=0;
     uint32_t              xoff_val_pgm=0;
     uint32_t              xoff_cos_bitmap0;
 
@@ -866,7 +868,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
         /*
          * By default, in PFC mode, PCP0/PFC-COS0 is mapped to default-class (TC0).
          * Now, if user has mapped PCP0/PFC-COS0 to a different user-defined class,
-         * re-map the default class to first free PFC-COS value. Actually, 
+         * re-map the default class to first free PFC-COS value. Actually,
          * default-class maps to all others PCPs/PFC-COS alues, but since we cannot
          * programme a bitmap and need to pick only 1 value - choosing the first one.
          */
@@ -884,7 +886,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
         } else {
             /*
              * oq0 would have been mapped to some then unused PFC-COS;
-             * Now if that PFC-COS value is used by some other user-defined class, 
+             * Now if that PFC-COS value is used by some other user-defined class,
              * remap oq0 to a new unused PFC-COS value
              */
             sdk_ret = capri_tm_get_uplink_oq_xoff_map(0, // port
@@ -947,7 +949,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
                 HAL_TRACE_DEBUG("mac xoff bitmap {} port {}",
                                 xoff_cos_bitmap, port);
                 if((xoff_cos_bitmap == 0xFF) || (qos_class->pause.pfc_cos == 0)) {
-                    // if link-pause is set or if pfc-cos is 0 
+                    // if link-pause is set or if pfc-cos is 0
                     // (intended for default-class); do not reset PFC-COS.
                     reset_pfc_xoff = false;
                 }
@@ -1291,10 +1293,10 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     }
 
     /*
-     * Setting the PCP-to-Q mapping one-to-one may cause packets to get 
-     * classified to an IQ matching the packet's PCP, even though it was not 
+     * Setting the PCP-to-Q mapping one-to-one may cause packets to get
+     * classified to an IQ matching the packet's PCP, even though it was not
      * configured to do so. In case of congestion, PFC/Link pause behavior could be broken.
-     * Setting it to 0 maps all PCPs to Q0. In PFC mode, in case Q0 is congested, 
+     * Setting it to 0 maps all PCPs to Q0. In PFC mode, in case Q0 is congested,
      * PFCs could be TXed out of all priorities.
      */
     // reset the PCP to default Q
@@ -1582,21 +1584,21 @@ pd_qos_class_get_iq_oq_to_tc_mapping(uint32_t *iq_to_tc, uint32_t *oq_to_tc)
     qos_class_t *qos_class = NULL;
     qos_group_t qos_group;
 
-    for (qos_group = QOS_GROUP_USER_DEFINED_1; 
-         qos_group <= QOS_GROUP_USER_DEFINED_6; 
+    for (qos_group = QOS_GROUP_USER_DEFINED_1;
+         qos_group <= QOS_GROUP_USER_DEFINED_6;
          qos_group = qos_group_get_next_user_defined(qos_group)) {
 
         qos_class = find_qos_class_by_group(qos_group);
 
         if(!qos_class)
             continue;
-    
+
         iq_to_tc[qos_class->pd->uplink.iq] = qos_group;
         oq_to_tc[qos_class->pd->dest_oq] = qos_group;
     }
 }
 
-// walk through all the user-defined no-drop classes and form 
+// walk through all the user-defined no-drop classes and form
 // the bitmap of all the pfc-cos values
 uint32_t
 pd_qos_class_get_all_tc_pfc_cos_bitmap()
@@ -1611,8 +1613,8 @@ pd_qos_class_get_all_tc_pfc_cos_bitmap()
     uint32_t    dot1q_pcp = 0;
     bool        update_default_class_pfc = false;
 
-    for (qos_group = QOS_GROUP_USER_DEFINED_1; 
-         qos_group <= QOS_GROUP_USER_DEFINED_6; 
+    for (qos_group = QOS_GROUP_USER_DEFINED_1;
+         qos_group <= QOS_GROUP_USER_DEFINED_6;
          qos_group = qos_group_get_next_user_defined(qos_group)) {
 
         qos_class = find_qos_class_by_group(qos_group);
@@ -1632,7 +1634,7 @@ pd_qos_class_get_all_tc_pfc_cos_bitmap()
             }
 
             if (dot1q_pcp == qos_class->pause.pfc_cos) {
-                // if user-defined class has PCP/PFC-COS 0, then update 
+                // if user-defined class has PCP/PFC-COS 0, then update
                 // default-class to first available PCP
                 update_default_class_pfc = true;
             }
@@ -1641,7 +1643,7 @@ pd_qos_class_get_all_tc_pfc_cos_bitmap()
 
     if(update_default_class_pfc) {
         /*
-         * class-default could have been set a different PFC-COS value, 
+         * class-default could have been set a different PFC-COS value,
          * read xoff2oq for oq0 and get the PFC-COS value
          */
 
@@ -1859,7 +1861,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
 
     if (mgmt_port) {
         // program the ethertype to cam_type and set cam_enable to compare ethertype
-        sdk_ret = capri_tm_uplink_set_cam_type(TM_PORT_NCSI, 
+        sdk_ret = capri_tm_uplink_set_cam_type(TM_PORT_NCSI,
                                                QOS_SWM_CAM_ENTRY, etype);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
@@ -1867,9 +1869,9 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
                           etype, TM_PORT_NCSI, sdk_ret);
             return ret;
         }
-    } else { 
+    } else {
         // program the dmac to cam_da and set cam_enable to compare DA
-        sdk_ret = capri_tm_uplink_set_cam_da(swm_uplink_port, 
+        sdk_ret = capri_tm_uplink_set_cam_da(swm_uplink_port,
                                              QOS_SWM_CAM_ENTRY, dmac);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
@@ -1886,7 +1888,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
      */
 
     // program cam_cos to drive SWM_CAM_COS/ SWM_CAM_NCSI_COS
-    sdk_ret = capri_tm_uplink_set_cam_cos(swm_uplink_port, 
+    sdk_ret = capri_tm_uplink_set_cam_cos(swm_uplink_port,
                                          QOS_SWM_CAM_ENTRY, cos);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -1896,7 +1898,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
     }
 
     // program tc_to_q mapping based on SWM_CAM_COS/ SWM_CAM_NCSI_COS
-    sdk_ret = capri_tm_uplink_input_map_update(swm_uplink_port, 
+    sdk_ret = capri_tm_uplink_input_map_update(swm_uplink_port,
                                                tc,          // cos
                                                tc_to_iq);   // iq
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1908,7 +1910,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
     }
 
     // program iq_to_p4_oq map for BMC UC queue/ NCSI queue
-    sdk_ret = capri_tm_set_uplink_iq_to_p4_oq_map(swm_uplink_port, 
+    sdk_ret = capri_tm_set_uplink_iq_to_p4_oq_map(swm_uplink_port,
                                                   uplink_iq,
                                                   p4_oq);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1919,7 +1921,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
         return ret;
     }
 
-    // set default RX queue for SWM uplink/ mgmt  port to 
+    // set default RX queue for SWM uplink/ mgmt  port to
     // CAPRI_TM_P4_SWM_FLOOD_QUEUE/ CAPRI_TM_P4_SWM_UC_QUEUE,
     // map all uplink iqs other than QOS_SWM_CAM_COS/ QOS_SWM_CAM_NCSI_COS
     for (int iq = 0; iq < 8; iq ++) {
@@ -1955,20 +1957,20 @@ pd_qos_reserve_and_program_swm_queues (uint32_t swm_p4_q, bool alloc)
 
     swm_uplink_q = swm_p4_q - CAPRI_TM_P4_UPLINK_IQ_OFFSET; // 5 or 6
 
-    HAL_TRACE_DEBUG("{} of swm_uplink_q {} swm_p4_q {}", 
+    HAL_TRACE_DEBUG("{} of swm_uplink_q {} swm_p4_q {}",
                     str, swm_uplink_q, swm_p4_q);
 
     if (g_hal_state_pd->qos_uplink_iq_idxr()->is_index_allocated(swm_uplink_q)) {
         if(alloc) {
 #if 0
         HAL_TRACE_ERR("swm_uplink_q {} already in use; "
-                      "failing swm qos config for swm uplink port {}", 
+                      "failing swm qos config for swm uplink port {}",
                       swm_uplink_q, args->swm_uplink_port);
         return HAL_RET_ENTRY_EXISTS;
 #endif
             // TODO: to fig out why is it already allocated even w/o any config
             HAL_TRACE_DEBUG("swm_uplink_q {} already in use; "
-                            "freeing it up for swm qos config", 
+                            "freeing it up for swm qos config",
                             swm_uplink_q);
         }
 
@@ -2017,7 +2019,7 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
     HAL_TRACE_DEBUG("SWM queue init for uplink {}", args->swm_uplink_port);
 
     if (args->swm_uplink_port > TM_PORT_UPLINK_7) {
-        HAL_TRACE_ERR("unsupported port number for SWM {}", 
+        HAL_TRACE_ERR("unsupported port number for SWM {}",
                       args->swm_uplink_port);
         return HAL_RET_INVALID_ARG;
     }
@@ -2026,12 +2028,12 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
      * Reserving Queue #30 at P4 ingr, #16 at P4 egr ports for SWM UC traffic.
      * Reserving Queue #29 at P4 ingr/egr ports for SWM NCSI protocol traffic.
      *
-     * To be able to do that, respective uplink queues need to be reserved, 
-     * hence allocating queues 6 and 5 (at uplinks) so that they remain 
+     * To be able to do that, respective uplink queues need to be reserved,
+     * hence allocating queues 6 and 5 (at uplinks) so that they remain
      * unavailable for user-defined classes.
      *
      * Queue #31 is used at P4 ingr, #17 at P4 egr for SWM flood traffic, but
-     * since this queue is not associated with uplink-queues - they are unused 
+     * since this queue is not associated with uplink-queues - they are unused
      * and hence need not be reserved in the indexer.
      */
 
@@ -2048,9 +2050,9 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to reserve/program queues for swm_p4_q {} ret {}",
                       CAPRI_TM_P4_SWM_NCSI_QUEUE, ret);
-        //TODO: should this be freed as it failed or use whatever has been 
+        //TODO: should this be freed as it failed or use whatever has been
         // allocated successfully? That would make debugging a nightmare..
-        if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE, 
+        if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE,
                                                         false) != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} "
                           "ret {}",
@@ -2060,12 +2062,12 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
     }
 
     // nothing to reserve, just program BMC Flood queue for SWM
-    ret = qos_class_pd_program_qos_table_for_swm(CAPRI_TM_P4_SWM_FLOOD_QUEUE, 
+    ret = qos_class_pd_program_qos_table_for_swm(CAPRI_TM_P4_SWM_FLOOD_QUEUE,
                                                  true);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program queues for swm_p4_q {} ret {}",
                       CAPRI_TM_P4_SWM_FLOOD_QUEUE, ret);
-        //TODO: should this be freed as it failed or use whatever has been 
+        //TODO: should this be freed as it failed or use whatever has been
         // allocated successfully? That would make debugging a nightmare..
         if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE,
                                                         false) != HAL_RET_OK) {
@@ -2087,7 +2089,7 @@ pd_qos_swm_queue_init (pd_func_args_t *pd_func_args)
     ret = pd_qos_program_uplink_for_swm(args->swm_uplink_port, args->dmac, true);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to program HW ret {}", ret);
-        //TODO: should this be freed as it failed or use whatever has been 
+        //TODO: should this be freed as it failed or use whatever has been
         // allocated successfully? That would make debugging a nightmare..
         if(pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE,
                                                         false) != HAL_RET_OK) {
@@ -2126,13 +2128,13 @@ pd_qos_swm_queue_deinit (pd_func_args_t *pd_func_args)
     HAL_TRACE_DEBUG("SWM queue deinit for uplink {}", args->swm_uplink_port);
 
     if (args->swm_uplink_port > TM_PORT_UPLINK_7) {
-        HAL_TRACE_ERR("unsupported port number for SWM {}", 
+        HAL_TRACE_ERR("unsupported port number for SWM {}",
                       args->swm_uplink_port);
         return HAL_RET_INVALID_ARG;
     }
 
     // free BMC UC queue for SWM
-    ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE, 
+    ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_UC_QUEUE,
                                                 false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} ret {}",
@@ -2140,15 +2142,15 @@ pd_qos_swm_queue_deinit (pd_func_args_t *pd_func_args)
     }
 
     // free NCSI queue for SWM
-    ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE, 
-                                                false); 
+    ret = pd_qos_reserve_and_program_swm_queues(CAPRI_TM_P4_SWM_NCSI_QUEUE,
+                                                false);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to free/de-program queues for swm_p4_q {} ret {}",
                       CAPRI_TM_P4_SWM_NCSI_QUEUE, ret);
     }
 
     // deprogram BMC Flood queue for SWM
-    ret = qos_class_pd_program_qos_table_for_swm(CAPRI_TM_P4_SWM_FLOOD_QUEUE, 
+    ret = qos_class_pd_program_qos_table_for_swm(CAPRI_TM_P4_SWM_FLOOD_QUEUE,
                                                  false);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to deprogram queues for swm_p4_q {} ret {}",

@@ -6,13 +6,16 @@
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
+#ifdef ELBA
+#include "platform/elba/elba_tm_rw.hpp"
+#include "platform/elba/elba_tm_utils.hpp"
+#else
 #include "platform/capri/capri_tm_rw.hpp"
 #include "platform/capri/capri_tm_utils.hpp"
+#endif
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include <memory>
 #include <map>
-
-using namespace sdk::platform::capri;
 
 namespace hal {
 namespace pd {
@@ -27,7 +30,7 @@ namespace pd {
 #define HAL_MAX_RXDMA_ONLY_OQS              16
 
 // Using a non-zero value for admic cos so that any uninitialized
-// rings do not use this 
+// rings do not use this
 #define HAL_QOS_ADMIN_COS                   1
 
 #define HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS  2
@@ -76,7 +79,7 @@ struct pd_qos_class_s {
 typedef struct pd_qos_dscp_cos_map_s {
     uint8_t     is_dscp : 1;
     uint8_t     rsvd1: 7;
-    uint8_t     no_drop[16]; // 128-bits. 2 bits per DSCP/PCP. 
+    uint8_t     no_drop[16]; // 128-bits. 2 bits per DSCP/PCP.
     uint8_t     txdma_iq[32];
     uint8_t     no_drop1_txdma_iq : 4;
     uint8_t     no_drop2_txdma_iq : 4;
@@ -86,7 +89,7 @@ typedef struct pd_qos_dscp_cos_map_s {
 } __PACK__ pd_qos_dscp_cos_map_t;
 
 
-inline std::ostream& operator<<(std::ostream& os, const struct pd_qos_class_s& s) 
+inline std::ostream& operator<<(std::ostream& os, const struct pd_qos_class_s& s)
 {
     os << fmt::format("{{");
     os << fmt::format("uplink iq {} ", s.uplink.iq);
@@ -171,7 +174,7 @@ qos_class_pd_free (pd_qos_class_t *pd_qos_class)
 
 
 static inline hal_ret_t
-policer_to_token_rate (policer_t *policer, uint64_t refresh_interval_us, 
+policer_to_token_rate (policer_t *policer, uint64_t refresh_interval_us,
                        uint64_t *token_rate_p, uint64_t *token_burst_p)
 {
     uint64_t rate_per_sec = policer->rate;
@@ -192,7 +195,7 @@ policer_to_token_rate (policer_t *policer, uint64_t refresh_interval_us,
 
     if ((burst + rate_tokens) > HAL_MAX_POLICER_TOKENS_PER_INTERVAL) {
         HAL_TRACE_ERR("Policer rate {} is too high for the "
-                      "refresh interval {}us", 
+                      "refresh interval {}us",
                       rate_per_sec, refresh_interval_us);
         return HAL_RET_INVALID_ARG;
     }
@@ -223,16 +226,16 @@ qos_class_pd_port_to_packet_buffer_port (tm_port_t port, qos::PacketBufferPort *
     }
 }
 
-static inline bool 
+static inline bool
 qos_is_user_defined_class (qos_group_t qos_group) {
-    
+
     if ((qos_group > QOS_GROUP_DEFAULT) && (qos_group <= QOS_GROUP_USER_DEFINED_6)) {
         return true;
     }
     return false;
 }
 
-static inline qos_group_t 
+static inline qos_group_t
 qos_group_get_next_user_defined(qos_group_t qos_group)
 {
     switch(qos_group) {
@@ -255,9 +258,15 @@ qos_group_get_next_user_defined(qos_group_t qos_group)
     return NUM_QOS_GROUPS;
 }
 
+#ifdef ELBA
+void
+qos_class_queue_stats_to_proto_stats(qos::QosClassQueueStats *q_stats,
+                                     sdk::platform::elba::elba_queue_stats_t *qos_queue_stats);
+#else
 void
 qos_class_queue_stats_to_proto_stats(qos::QosClassQueueStats *q_stats,
                                      sdk::platform::capri::capri_queue_stats_t *qos_queue_stats);
+#endif
 
 }   // namespace pd
 }   // namespace hal

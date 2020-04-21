@@ -1,8 +1,8 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
 #include <map>
+#include "asic/cmn/asic_common.hpp"
 #include "platform/elba/elba_common.hpp"
-#include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "lib/p4/p4_api.hpp"
 #include "platform/elba/elba_tbl_rw.hpp"
 #include "platform/elba/csrint/csr_init.hpp"
@@ -12,6 +12,7 @@
 #include "third-party/asic/elba/model/utils/elb_csr_py_if.h"
 #include "asic/rw/asicrw.hpp"
 #include "asic/asic.hpp"
+
 #include "third-party/asic/elba/model/utils/elb_blk_reg_model.h"
 #include "third-party/asic/elba/model/elb_top/elb_top_csr.h"
 #include "third-party/asic/elba/model/elb_pic/elb_pict_csr.h"
@@ -20,8 +21,7 @@
 #include "third-party/asic/ip/verif/pcpp/cpp_int_helper.h"
 #include "third-party/asic/elba/verif/apis/elb_pics_api.h"
 #include "third-party/asic/elba/verif/apis/elb_pict_api.h"
-#include "platform/elba/csr/asicrw_if.hpp"
-#include "gen/platform/mem_regions.hpp"
+#include "third-party/asic/elba/model/elb_top/csr_defines/elb_pics_c_hdr.h"
 #include "third-party/asic/elba/design/common/gen/elb_pf_decoders.h"
 
 extern pen_csr_base *get_csr_base_from_path(string);
@@ -200,8 +200,8 @@ elba_program_table_mpu_pc (int tableid, bool ingress, int stage,
 }
 
 void
-elba_program_hbm_table_base_addr (int stage_tableid, char *tablename,
-                                  int stage, int pipe)
+elba_program_hbm_table_base_addr (int tableid, int stage_tableid,
+                                  char *tablename, int stage, int pipe)
 {
     mem_addr_t start_offset;
 
@@ -249,6 +249,17 @@ elba_program_hbm_table_base_addr (int stage_tableid, char *tablename,
 
 #define ELBA_P4PLUS_RX_STAGE0_QSTATE_OFFSET_0            0
 #define ELBA_P4PLUS_RX_STAGE0_QSTATE_OFFSET_64           64
+
+void
+elba_program_p4plus_table_mpu_pc(int tableid, int stage_tbl_id, int stage)
+{
+    // TBD-ELBA-REBASE:: Missing function from capri
+}
+uint64_t
+elba_get_p4plus_table_mpu_pc(int tableid)
+{
+    return 0; // TBD-ELBA-REBASE:: Missing function from capri
+}
 
 static void
 elba_program_p4plus_table_mpu_pc_args (int tbl_id, elb_te_csr_t *te_csr,
@@ -301,86 +312,6 @@ elba_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
     te_csr->cfg_table_property[stage_tbl_id].mpu_pc_dyn(0);
     te_csr->cfg_table_property[stage_tbl_id].addr_base(0);
     te_csr->cfg_table_property[stage_tbl_id].write();
-}
-
-// RSS Topelitz Table
-#define ETH_RSS_INDIR_PROGRAM               "eth_rx_rss_indir.bin"
-// Maximum number of queue per LIF
-#define ETH_RSS_MAX_QUEUES                  (128)
-// Number of entries in a LIF's indirection table
-#define ETH_RSS_LIF_INDIR_TBL_LEN           ETH_RSS_MAX_QUEUES
-// Size of each LIF indirection table entry
-#define ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ      (sizeof(eth_rx_rss_indir_eth_rx_rss_indir_t))
-// Size of a LIF's indirection table
-#define ETH_RSS_LIF_INDIR_TBL_SZ            (ETH_RSS_LIF_INDIR_TBL_LEN * ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ)
-// Max number of LIFs supported
-#define MAX_LIFS                            (2048)
-// Size of the entire LIF indirection table
-#define ETH_RSS_INDIR_TBL_SZ                (MAX_LIFS * ETH_RSS_LIF_INDIR_TBL_SZ)
-
-sdk_ret_t
-elba_toeplitz_init (const char *handle, int stage, int stage_tableid)
-{
-    int tbl_id;
-    uint64_t pc;
-    uint64_t tbl_base;
-    elb_top_csr_t & elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
-    elb_te_csr_t *te_csr = NULL;
-
-    if (sdk::p4::p4_program_to_base_addr((char *) ELBA_P4PLUS_HANDLE,
-                                   (char *) ETH_RSS_INDIR_PROGRAM,
-                                   &pc) != 0) {
-        SDK_TRACE_ERR("Could not resolve handle %s program %s",
-                        (char *) ELBA_P4PLUS_HANDLE,
-                        (char *) ETH_RSS_INDIR_PROGRAM);
-        return SDK_RET_ERR;
-    }
-    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%lx",
-                    (char *) ELBA_P4PLUS_HANDLE,
-                    (char *) ETH_RSS_INDIR_PROGRAM,
-                    pc);
-
-    // Program rss params table with the PC
-    te_csr = &elb0.pcr.te[stage];
-
-    tbl_id = stage_tableid;
-
-#ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
-    tbl_base = get_mem_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
-    SDK_ASSERT(tbl_base != INVALID_MEM_ADDRESS);
-#else
-    SDK_ASSERT(0);
-#endif
-    // Align the table address because while calculating the read address TE shifts the LIF
-    // value by LOG2 of size of the per lif indirection table.
-    tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
-
-    SDK_TRACE_DEBUG("rss_indir_table id %u table_base %llx\n", tbl_id, tbl_base);
-
-    te_csr->cfg_table_property[tbl_id].read();
-    te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
-    te_csr->cfg_table_property[tbl_id].mpu_pc_dyn(0);
-    // HBM Table
-    te_csr->cfg_table_property[tbl_id].axi(0); //1==table in SRAM, 0== table in HBM
-    // TE addr = hash
-    // TE mask = (1 << addr_sz) - 1
-    te_csr->cfg_table_property[tbl_id].addr_sz((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_LEN));
-    // TE addr <<= addr_shift
-    te_csr->cfg_table_property[tbl_id].addr_shift((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
-    // TE addr = (hash & mask) + addr_base
-    te_csr->cfg_table_property[tbl_id].addr_base(tbl_base);
-    // TE lif_shift_en
-    te_csr->cfg_table_property[tbl_id].addr_vf_id_en(1);
-    // TE lif_shift
-    te_csr->cfg_table_property[tbl_id].addr_vf_id_loc((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_SZ));
-    // addr |= (lif << lif_shift)
-    // TE addr = addr & ((1 << chain_shift) - 1) if 0 <= cycle_id < 63 else addr
-    te_csr->cfg_table_property[tbl_id].chain_shift(0x3f);
-    // size of each indirection table entry
-    te_csr->cfg_table_property[tbl_id].lg2_entry_size((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
-    te_csr->cfg_table_property[tbl_id].write();
-
-    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -788,7 +719,7 @@ elba_p4plus_shadow_init (void)
 sdk_ret_t
 elba_table_rw_init (asic_cfg_t *elba_cfg)
 {
-    int ret;
+    sdk_ret_t ret;
     // Before making this call, it is expected that
     // in HAL init sequence, p4pd_init() needs to be called before this
     // Create shadow memory and init to zero
@@ -817,7 +748,7 @@ elba_table_rw_init (asic_cfg_t *elba_cfg)
     // Initialize sram memories
     elba_sram_memory_init(elba_cfg);
 
-    return (SDK_RET_OK);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -1522,44 +1453,33 @@ elba_tcam_table_hw_entry_read (uint32_t tableid, uint32_t index,
 
 sdk_ret_t
 elba_hbm_table_entry_write (uint32_t tableid, uint32_t index, uint8_t *hwentry,
-                            uint16_t entry_size,
-                            p4_table_mem_layout_t &tbl_info)
+                            uint16_t entry_size, uint16_t entry_width,
+                            p4pd_table_properties_t *tbl_info)
 {
-    assert((entry_size >> 3) <= tbl_info.entry_width);
-    assert(index < tbl_info.tabledepth);
-    uint64_t entry_start_addr = (index * tbl_info.entry_width);
+    assert((entry_size >> 3) <= entry_width);
+    assert(index < tbl_info->tabledepth);
+    uint64_t entry_start_addr = (index * entry_width);
 
-    sdk::asic::asic_mem_write(get_mem_addr(tbl_info.tablename) +
+    sdk::asic::asic_mem_write(get_mem_addr(tbl_info->tablename) +
                               entry_start_addr, hwentry, (entry_size >> 3));
 
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-elba_hbm_table_entry_cache_invalidate (bool ingress, uint64_t entry_addr,
-                                       p4_table_mem_layout_t &tbl_info)
+elba_hbm_table_entry_cache_invalidate (p4pd_table_cache_t cache,
+                                       uint64_t entry_addr,
+                                       uint16_t entry_width,
+                                       mem_addr_t base_mem_pa)
 {
-    elb_top_csr_t & elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
-
-    if (ingress) {
-        elb_pics_csr_t & pics_csr = elb0.ssi.pics;
-        // write upper 28b of 34b hbm addr.
-        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_mem_addr(tbl_info.tablename) + entry_addr) >> 6);
-        pics_csr.picc.dhs_cache_invalidate.entry.write();
-    } else {
-        elb_pics_csr_t & pics_csr = elb0.sse.pics;
-        // write upper 28b of 34b hbm addr.
-        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_mem_addr(tbl_info.tablename) + entry_addr) >> 6);
-        pics_csr.picc.dhs_cache_invalidate.entry.write();
-    }
-
-    return SDK_RET_OK;
+    return SDK_RET_INVALID_OP;  /* TBD-ELBA-REBASE: revisit */
 }
 
 sdk_ret_t
 elba_hbm_table_entry_read (uint32_t tableid, uint32_t index, uint8_t *hwentry,
                             uint16_t *entry_size,
-                            p4_table_mem_layout_t &tbl_info)
+                            p4_table_mem_layout_t &tbl_info,
+                            bool read_thru)
 {
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);

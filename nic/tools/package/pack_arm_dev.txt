@@ -97,7 +97,7 @@ nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1             /nic/lib/
 nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14             /nic/lib/
 
 nic/build/aarch64/iris/lib/*.so                                      /nic/lib/
-nic/build/aarch64/gft/lib/libsdkcapri_asicrw_if.so                   /nic/lib/
+nic/build/aarch64/gft/lib/libsdk_asicrw_if.so                   /nic/lib/
 nic/build/aarch64/gft/lib/libsdkcapri_csrint.so                      /nic/lib/
 
 nic/build/aarch64/iris/bin/asicerrord                                /platform/bin/

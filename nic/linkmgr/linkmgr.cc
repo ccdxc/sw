@@ -11,8 +11,13 @@
 #include "nic/linkmgr/utils.hpp"
 #include "linkmgr_utils.hpp"
 #include "lib/periodic/periodic.hpp"
+#ifdef ELBA
+#include "third-party/asic/elba/model/elb_top/elb_top_csr.h"
+#include "third-party/asic/elba/model/utils/elb_csr_py_if.h"
+#else
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
+#endif
 #include "nic/sdk/platform/csr/asicrw_if.hpp"
 #include "nic/linkmgr/delphi/linkmgr_delphi.hpp"
 
@@ -152,6 +157,14 @@ linkmgr_csr_init (void)
     cpu::access()->add_if("cpu_if", cpu_if);
     cpu::access()->set_cur_if_name("cpu_if");
 
+#ifdef ELBA
+    // Register at top level all MRL classes.
+    elb_top_csr_t *elb0_ptr = new elb_top_csr_t("elb0");
+
+    elb0_ptr->init(0);
+    ELB_BLK_REG_MODEL_REGISTER(elb_top_csr_t, 0, 0, elb0_ptr);
+    register_chip_inst("elb0", 0, 0);
+#else
     // Register at top level all MRL classes.
     cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
 
@@ -159,6 +172,7 @@ linkmgr_csr_init (void)
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
     register_chip_inst("cap0", 0, 0);
 
+#endif
     return HAL_RET_OK;
 }
 

@@ -43,7 +43,7 @@ LDLIBS += -lpal -lpdsframework -lpdscore -lpdslearn -lpdsapi -lpdsapi_impl -lsdk
 		-lsldirectmap -lhash -lhbmhash -ltcam -ltimerfd -lcatalog \
 		-ldevice -lsdkplatformutils -lsdkcapri -lsdkp4loader -lsdkasicrw \
 		-llif_mgr -lsdkring -lsysmon -lsensor -lsdkp4 \
-		-lsdkp4utils -lsdkcapri_asicrw_if -lpdsapi_asic_impl \
+		-lsdkp4utils -lsdk_asicrw_if -lpdsapi_asic_impl \
 		-lsdkxcvrdriver -lsdkasicpd -lsdkasiccmn -lkvstore_lmdb -llmdb -lbm_allocator -lsdklinkmgr \
 		-lsdklinkmgrcsr -lnicmgr_athena -lmnet -levutils \
 		-lpciemgr_if -lpciemgr -lpciemgrutils -lpciehdevices \

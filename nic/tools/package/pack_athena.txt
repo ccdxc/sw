@@ -34,7 +34,7 @@ nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE.so                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_rxdma.so          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_txdma.so          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so               /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so            /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk_asicrw_if.so            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblist.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libevent_thread.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkeventmgr.so                   /nic/lib/

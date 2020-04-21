@@ -16,30 +16,26 @@ namespace diag {
     {"die", no_argument, NULL, 'd'}, /* test for die*/ \
     {"hbm", no_argument, NULL, 'm'}, /* test for hbm*/ \
 
-
-struct option temp_sensor_online_diag_options[] =
-{
+struct option temp_sensor_online_diag_options[] = {
     TEMP_SENSOR_COMMON_TESTS_OPTION
     /* Add online diags specific options here  */
     {0, 0, NULL, 0}
 };
 
-struct option temp_sensor_offline_diag_options[] =
-{
+struct option temp_sensor_offline_diag_options[] = {
     TEMP_SENSOR_COMMON_TESTS_OPTION
     /* Add offline diags specific options here  */
     {0, 0, NULL, 0}
 };
 
-struct option temp_sensor_post_options[] =
-{
+struct option temp_sensor_post_options[] = {
     TEMP_SENSOR_COMMON_TESTS_OPTION
     /* Add post specific options here  */
     {0, 0, NULL, 0}
 };
 
-
-void temp_sensor_common_tests_usage()
+void
+temp_sensor_common_tests_usage(void)
 {
     printf (
 "-all           Run all the temp sensor test in given mode\n"
@@ -48,28 +44,31 @@ void temp_sensor_common_tests_usage()
 "-hbm           Run HBM temp test\n"
 "-help          Show this usage summary\n"
 );
-
 }
 
-void temp_sensor_online_diag_usage()
+void
+temp_sensor_online_diag_usage(void)
 {
     /* Add online diag specific usage here  */
     //As of now nothing
 }
 
-void temp_sensor_offline_diag_usage()
+void
+temp_sensor_offline_diag_usage(void)
 {
     /* Add offline diag specific usage here  */
     //As of now nothing
 }
 
-void temp_sensor_post_usage()
+void
+temp_sensor_post_usage(void)
 {
     /* Add post specific usage here  */
     //As of now nothing
 }
 
-void temp_sensor_test_usage(test_mode_e mode)
+void
+temp_sensor_test_usage (test_mode_e mode)
 {
     temp_sensor_common_tests_usage();
 
@@ -92,22 +91,23 @@ void temp_sensor_test_usage(test_mode_e mode)
 #define MIN_HBM_TEMPERATURE_SUPPORTED      (1)
 #define MAX_HBM_TEMPERATURE_SUPPORTED      (105)
 
-
-int local_temp_sensor_test(int local_temperature)
+int
+local_temp_sensor_test (int local_temperature)
 {
     int retval = 0;
 
-    SDK_TRACE_INFO("Local temperature is (%d) degree Celsius \n", local_temperature);
+    SDK_TRACE_INFO("Local temperature is (%d) degree Celsius \n",
+                   local_temperature);
 
-    if (local_temperature > MAX_LOCAL_TEMPERATURE_SUPPORTED)
-    {
-        SDK_TRACE_ERR("Local temperature(%d) is above Max limit(%d)\n", local_temperature,  MAX_LOCAL_TEMPERATURE_SUPPORTED);
+    if (local_temperature > MAX_LOCAL_TEMPERATURE_SUPPORTED) {
+        SDK_TRACE_ERR("Local temperature(%d) is above Max limit(%d)\n",
+                      local_temperature,  MAX_LOCAL_TEMPERATURE_SUPPORTED);
         retval = -1;
     }
 
-    if (local_temperature < MIN_LOCAL_TEMPERATURE_SUPPORTED)
-    {
-        SDK_TRACE_ERR("Local temperature(%d) is below Min limit(%d)\n", local_temperature,  MIN_LOCAL_TEMPERATURE_SUPPORTED);
+    if (local_temperature < MIN_LOCAL_TEMPERATURE_SUPPORTED) {
+        SDK_TRACE_ERR("Local temperature(%d) is below Min limit(%d)\n",
+                      local_temperature,  MIN_LOCAL_TEMPERATURE_SUPPORTED);
         retval = -1;
     }
 
@@ -116,7 +116,8 @@ int local_temp_sensor_test(int local_temperature)
     return retval;
 }
 
-int die_temp_sensor_test(int die_temperature)
+int
+die_temp_sensor_test (int die_temperature)
 {
     int retval = 0;
 
@@ -124,13 +125,14 @@ int die_temp_sensor_test(int die_temperature)
 
     if (die_temperature > MAX_DIE_TEMPERATURE_SUPPORTED)
     {
-        SDK_TRACE_ERR("Die temperature(%d) is above Max limit(%d)\n", die_temperature,  MAX_DIE_TEMPERATURE_SUPPORTED);
+        SDK_TRACE_ERR("Die temperature(%d) is above Max limit(%d)\n",
+                      die_temperature,  MAX_DIE_TEMPERATURE_SUPPORTED);
         retval = -1;
     }
 
-    if (die_temperature < MIN_DIE_TEMPERATURE_SUPPORTED)
-    {
-        SDK_TRACE_ERR("Die temperature(%d) is below Min limit(%d)\n", die_temperature,  MIN_DIE_TEMPERATURE_SUPPORTED);
+    if (die_temperature < MIN_DIE_TEMPERATURE_SUPPORTED) {
+        SDK_TRACE_ERR("Die temperature(%d) is below Min limit(%d)\n",
+                      die_temperature,  MIN_DIE_TEMPERATURE_SUPPORTED);
         retval = -1;
     }
 
@@ -139,20 +141,22 @@ int die_temp_sensor_test(int die_temperature)
     return retval;
 }
 
-int hbm_temp_test(int hbm_temperature)
+int
+hbm_temp_test (int hbm_temperature)
 {
     int retval = 0;
 
-    SDK_TRACE_INFO("HBM temperature is (%d) degree Celsius \n", hbm_temperature);
-    if (hbm_temperature > MAX_HBM_TEMPERATURE_SUPPORTED)
-    {
-        SDK_TRACE_ERR("HBM temperature(%d) is above Max limit(%d)\n", hbm_temperature,  MAX_HBM_TEMPERATURE_SUPPORTED);
+    SDK_TRACE_INFO("HBM temperature is (%d) degree Celsius \n",
+                   hbm_temperature);
+    if (hbm_temperature > MAX_HBM_TEMPERATURE_SUPPORTED) {
+        SDK_TRACE_ERR("HBM temperature(%d) is above Max limit(%d)\n",
+                      hbm_temperature,  MAX_HBM_TEMPERATURE_SUPPORTED);
         retval = -1;
     }
 
-    if (hbm_temperature < MIN_HBM_TEMPERATURE_SUPPORTED)
-    {
-        SDK_TRACE_ERR("HBM temperature(%d) is below Min limit(%d)\n", hbm_temperature,  MIN_HBM_TEMPERATURE_SUPPORTED);
+    if (hbm_temperature < MIN_HBM_TEMPERATURE_SUPPORTED) {
+        SDK_TRACE_ERR("HBM temperature(%d) is below Min limit(%d)\n",
+                      hbm_temperature,  MIN_HBM_TEMPERATURE_SUPPORTED);
         retval = -1;
     }
 
@@ -161,7 +165,8 @@ int hbm_temp_test(int hbm_temperature)
     return retval;
 }
 
-diag_ret_e temp_sensor_test(test_mode_e mode, int argc, char* argv[])
+diag_ret_e
+temp_sensor_test (test_mode_e mode, int argc, char* argv[])
 {
     int arg_option;
     int index, retval = 0;
@@ -172,7 +177,6 @@ diag_ret_e temp_sensor_test(test_mode_e mode, int argc, char* argv[])
     int test_all=0;
     int test_local_temp=0, test_die_temp=0, test_hbm_temp=0;
 
-
     if(mode == OFFLINE_DIAG)
         option = temp_sensor_offline_diag_options;
     else if(mode == ONLINE_DIAG)
@@ -180,17 +184,15 @@ diag_ret_e temp_sensor_test(test_mode_e mode, int argc, char* argv[])
     else if(mode == POST)
         option = temp_sensor_post_options;
     else
-    {
         return TEST_INVALID_OPTION;
-    }
 
     if (argc < 2)
         test_all = 1;
 
-    while ((arg_option = getopt_long_only(argc, argv, "", option, &index)) >= 0) /* Parse command line args */
-    {
-        switch (arg_option)
-        {
+    /* Parse command line args */
+    while ((arg_option =
+            getopt_long_only(argc, argv, "", option, &index)) >= 0) {
+        switch (arg_option) {
             case 'l':
                 test_local_temp = 1;
                 break;
@@ -220,7 +222,7 @@ diag_ret_e temp_sensor_test(test_mode_e mode, int argc, char* argv[])
             printf("%s ", argv[optind++]);
         printf("\n");
     }
- 
+
    LOG_TEST_BANNER("Temperature Sensors Tests:");
 
    if (test_all)
@@ -231,31 +233,27 @@ diag_ret_e temp_sensor_test(test_mode_e mode, int argc, char* argv[])
    }
 
     retval = sdk::platform::sensor::read_temperatures(&temperature);
-    if (retval)
-    {
+    if (retval) {
         SDK_TRACE_ERR("Cannnot read Local temperature sensor data\n");
         return (retval ? TEST_PASS : TEST_FAIL);
     }
 
-   if (test_local_temp)
-   {
+   if (test_local_temp) {
         temperature.localtemp /= 1000;
         retval = local_temp_sensor_test(temperature.localtemp);
    }
 
-   if (test_die_temp)
-   {
+   if (test_die_temp) {
         temperature.dietemp /= 1000;
         retval = die_temp_sensor_test(temperature.dietemp);
    }
 
    if (test_hbm_temp)
-   {
         retval = hbm_temp_test(temperature.hbmtemp);
-   }
 
    return (retval ? TEST_PASS : TEST_FAIL);
 }
+
 } // namespace diag
 } // namespace platform
 } // namespace sdk

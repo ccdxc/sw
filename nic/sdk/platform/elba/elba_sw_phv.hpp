@@ -50,7 +50,7 @@ sdk_ret_t elba_sw_phv_inject(asic_swphv_type_t type, uint8_t prof_num,
 // state: current state of swphv injection to return
 //
 sdk_ret_t elba_sw_phv_get(asic_swphv_type_t type, uint8_t prof_num,
-                           asic_sw_phv_state_t *state);
+                          asic_sw_phv_state_t *state);
 
 }    // namespace capri
 }    // namespace platform

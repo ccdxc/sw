@@ -16,6 +16,7 @@
 #include "include/sdk/qos.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/elba/elba_p4.hpp"
+#include "nic/sdk/asic/port.hpp"
 
 namespace sdk {
 namespace platform {
@@ -33,6 +34,17 @@ namespace elba {
 #define ELBA_TM_COUNT_L2_NODES       4
 #define ELBA_TM_MAX_DSCP_VALS        64
 #define ELBA_TM_NUM_BUFFER_ISLANDS   2
+#define ELBA_TM_MAX_SCHED_NODES      16
+#define ELBA_TM_MAX_SCHED_NODE_INPUTS 32
+#define ELBA_TM_MAX_PORTS             12
+#define ELBA_TM_DWRR_UNIT             10000
+#define ELBA_TM_SCHED_TIMER           5000
+#define ELBA_TM_CLK_PERIOD            833
+#define ELBA_TM_BUS_WIDTH             512
+#define ELBA_TM_MAX_QUEUES            32
+
+#define ELBA_TM_MAX_IQS               32
+#define ELBA_TM_MAX_OQS               32
 
 #define ELBA_TM_BUFFER_ISLAND_0_CELL_COUNT 8192
 #define ELBA_TM_BUFFER_ISLAND_1_CELL_COUNT 5120
@@ -48,8 +60,6 @@ namespace elba {
 #define ELBA_TM_DEFAULT_XOFF_THRESHOLD_BYTES (64*1000)
 #define ELBA_TM_DEFAULT_XON_THRESHOLD  0x4B8800
 #define ELBA_TM_DEFAULT_XOFF_THRESHOLD 0x4C8200
-
-#define TM_P4_RECIRC_QUEUE             23 /* Recirc queue in the P4 ports */
 
 // There are 32 queues at both P4-ig and P4-eg. The idea is to
 // maintain the same queue when pkt goes through the pipeline in P4-ig and
@@ -119,6 +129,7 @@ typedef struct qos_profile_s {
     int32_t  p4_high_perf_qs[2];
 } qos_profile_t;
 
+
 static inline bool
 elba_tm_q_valid (tm_q_t tm_q)
 {
@@ -154,7 +165,7 @@ sdk_ret_t elba_tm_uplink_input_dscp_map_update(tm_port_t port,
                                                tm_uplink_input_dscp_map_t *dscp_map);
 
 sdk_ret_t elba_tm_uplink_oq_update(tm_port_t port, tm_q_t oq,
-                                   bool xoff_enable, uint32_t xoff_cos);
+                                   uint32_t xoff_cos);
 
 #define TM_SCHED_TYPES(ENTRY)                    \
     ENTRY(TM_SCHED_TYPE_DWRR,       0, "dwrr")   \
@@ -253,6 +264,13 @@ sdk_ret_t elba_tm_port_program_uplink_byte_count(void);
  */
 sdk_ret_t elba_tm_get_clock_tick(uint64_t *tick);
 
+sdk_ret_t elba_tm_write_control_uplink_port(tm_port_t port, bool enable);
+
+/** elba_tm_drain_uplink_port
+ * TBD: Missing function description
+ */
+sdk_ret_t elba_tm_drain_uplink_port(tm_port_t port);
+
 /** elba_tm_enable_disable_uplink_port
  * API to enable/disable an uplink port. Need to be called for link up/down
  * events etc
@@ -270,6 +288,8 @@ elba_tm_port_to_fp_port(uint32_t tm_port)
     return tm_port - ELBA_TM_UPLINK_PORT_BEGIN + 1;
 }
 
+sdk_ret_t elba_tm_flush_uplink_port(tm_port_t port, bool enable);
+
 void elba_tm_dump_debug_regs(void);
 void elba_tm_dump_config_regs(void);
 
@@ -285,6 +305,7 @@ typedef struct tm_iq_stats_s {
     tm_iq_oflow_fifo_stats_t oflow;
     uint32_t                 buffer_occupancy;
     uint32_t                 peak_occupancy;
+    uint64_t                 port_monitor;
 } __PACK__ tm_iq_stats_t;
 
 sdk_ret_t elba_tm_get_iq_stats(tm_port_t port, tm_q_t iq,
@@ -294,7 +315,19 @@ sdk_ret_t elba_tm_reset_iq_stats(tm_port_t port, tm_q_t iq);
 
 typedef struct tm_oq_stats_s {
     uint32_t queue_depth;
+    uint64_t port_monitor;
 } __PACK__ tm_oq_stats_t;
+
+typedef struct pb_sched_node_input_info_s {
+    uint32_t weight;
+    uint64_t cfg_quota;
+    float    dwrr_ratio;
+
+    // strict priotiry Q params
+    bool     is_strict;
+    uint64_t priority_bypass_timer;
+    uint64_t sp_rate_mbps;
+} pb_sched_node_input_info_t;
 
 sdk_ret_t elba_tm_get_oq_stats(tm_port_t port, tm_q_t oq,
                                tm_oq_stats_t *oq_stats);
@@ -307,12 +340,38 @@ sdk_ret_t elba_tm_debug_stats_get(tm_port_t port,
 uint32_t elba_tm_get_num_iqs_for_port(tm_port_t port);
 uint32_t elba_tm_get_num_oqs_for_port(tm_port_t port);
 
+sdk_ret_t elb_pb_sched_spq_pgm(uint32_t chip_id, uint32_t inst_id,
+                               tm_port_t port, tm_q_t oq,
+                               pb_sched_node_input_info_t *input_info);
+
 sdk_ret_t elba_tm_set_reserved_min(uint32_t reserved_min);
 
 sdk_ret_t elba_queue_stats_get(tm_port_t port, void *stats);
 
+sdk_ret_t elba_tm_uplink_iq_no_drop_update(tm_port_t port, tm_q_t iq,
+                                           bool no_drop);
+sdk_ret_t elba_tm_get_uplink_oq_xoff_map(tm_port_t port, tm_q_t oq,
+                                         uint32_t *xoff_cos);
+sdk_ret_t elba_tm_set_uplink_iq_to_p4_oq_map(tm_port_t port, tm_q_t iq,
+                                             tm_q_t p4_q);
+
+sdk_ret_t elba_tm_set_uplink_mac_xoff(tm_port_t port, bool reset_all_xoff,
+                                      bool set_all_xoff, bool reset_pfc_xoff,
+                                      bool set_pfc_xoff,
+                                      uint32_t xoff_cos_bitmap);
+sdk_ret_t elba_tm_uplink_set_cam_type(tm_port_t port, uint32_t  entry,
+                                      uint32_t  etype);
+sdk_ret_t elba_tm_uplink_set_cam_cos(tm_port_t port, uint32_t  entry,
+                                     uint32_t  cos);
+sdk_ret_t elba_tm_get_uplink_mac_xoff(tm_port_t port,
+                                      uint32_t *xoff_cos_bitmap);
+
+sdk_ret_t elba_tm_uplink_set_cam_da(tm_port_t port, uint32_t  entry,
+                                    uint64_t  dmac);
+
 }    // namespace elba
 }    // namespace platform
 }    // namespace sdk
+
 
 #endif    // __ELBA_TM_RW_HPP__

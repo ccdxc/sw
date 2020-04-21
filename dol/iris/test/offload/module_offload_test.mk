@@ -38,7 +38,7 @@ MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
                   delphisdk \
                   upgrade upgrade_app upgradeutils \
                   sysmgr \
-                  sdkcapri_asicrw_if \
+                  sdk_asicrw_if \
                   sdkasicpd pdcommon hal_mock \
                   sdkp4 sdkp4utils sdkxcvrdriver sdkfru p4pd_${PIPELINE} \
                   p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \

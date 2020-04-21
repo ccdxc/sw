@@ -8,17 +8,21 @@
 #include "platform/elba/elba_state.hpp"
 #include "platform/elba/elba_mon.hpp"
 #include "platform/elba/elba_tm_utils.hpp"
+#include "platform/elba/elba_tm_rw.hpp"
 #include "platform/elba/elba_sw_phv.hpp"
 #include "platform/elba/elba_quiesce.hpp"
 #include "platform/elba/elba_pxb_pcie.hpp"
 #include "platform/elba/csrint/csr_init.hpp"
+#include "platform/elba/elba_cfg.hpp"
+#include "asic/asic.hpp"
 #include "asic/pd/pd.hpp"
+#include "asic/cmn/asic_state.hpp"
+#include "asic/port.hpp"
 #include "asic/pd/pd_internal.hpp"
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "platform/elba/elba_toeplitz.hpp"
-#include "third-party/asic/elba/verif/apis/elb_platform_api.h"
-#include "third-party/asic/elba/verif/apis/elb_freq_api.h"
+
 // TODO: move out pipeline related code out of sdk
 #if defined(APOLLO) || defined(ARTEMIS) || defined(APULU) || defined(ATHENA)
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
@@ -331,7 +335,8 @@ asicpd_hbm_table_entry_write (uint32_t tableid, uint32_t index,
                                       tbl_ctx.hbm_layout.entry_width, &tbl_ctx);
 
     uint64_t entry_addr = (index * tbl_ctx.hbm_layout.entry_width);
-    ret |= elba_hbm_table_entry_cache_invalidate(tbl_ctx.cache, entry_addr,
+    ret |= elba_hbm_table_entry_cache_invalidate(tbl_ctx.cache,
+                                                 entry_addr,
                                                  tbl_ctx.hbm_layout.entry_width,
                                                  tbl_ctx.base_mem_pa);
 
@@ -385,7 +390,7 @@ asicpd_p4plus_recirc_init (void)
 }
 
 sdk_ret_t
-asic_pd_hbm_bw_get (hbm_bw_samples_t *hbm_bw_samples)
+asicpd_hbm_bw_get (hbm_bw_samples_t *hbm_bw_samples)
 {
     return elba_hbm_bw(hbm_bw_samples->num_samples,
                        hbm_bw_samples->sleep_interval, true,
@@ -406,7 +411,7 @@ asicpd_toeplitz_init (const char *handle, uint32_t tableid,
 
     p4pd_global_table_properties_get(tableid, &tbl_ctx);
 
-    return elba_toeplitz_init(handle, tbl_ctx.stage, tbl_ctx.stage_tableid);
+    return elba_toeplitz_init(handle, tbl_ctx.stage, tbl_ctx.stage_tableid, rss_indir_tbl_entry_size);
 }
 
 sdk_ret_t
@@ -416,7 +421,7 @@ asicpd_llc_get (llc_counters_t *llc)
 }
 
 sdk_ret_t
-asic_pd_scheduler_stats_get (scheduler_stats_t *sch_stats)
+asicpd_scheduler_stats_get (scheduler_stats_t *sch_stats)
 {
     sdk_ret_t ret;
     elba_txs_scheduler_stats_t asic_stats = {};
@@ -444,47 +449,47 @@ asic_pd_scheduler_stats_get (scheduler_stats_t *sch_stats)
 }
 
 sdk_ret_t
-asic_pd_qstate_map_clear (uint32_t lif_id)
+asicpd_qstate_map_clear (uint32_t lif_id)
 {
     elba_clear_qstate_map(lif_id);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-asic_pd_qstate_map_write (lif_qstate_t *qstate, uint8_t enable)
+asicpd_qstate_map_write (lif_qstate_t *qstate, uint8_t enable)
 {
     elba_program_qstate_map(qstate, enable);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-asic_pd_qstate_map_rewrite (uint32_t lif_id, uint8_t enable)
+asicpd_qstate_map_rewrite (uint32_t lif_id, uint8_t enable)
 {
     elba_reprogram_qstate_map(lif_id, enable);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-asic_pd_qstate_map_read (lif_qstate_t *qstate)
+asicpd_qstate_map_read (lif_qstate_t *qstate)
 {
     elba_read_qstate_map(qstate);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-asic_pd_qstate_write (uint64_t addr, const uint8_t *buf, uint32_t size)
+asicpd_qstate_write (uint64_t addr, const uint8_t *buf, uint32_t size)
 {
     return elba_write_qstate(addr, buf, size);
 }
 
 sdk_ret_t
-asic_pd_qstate_read (uint64_t addr, uint8_t *buf, uint32_t size)
+asicpd_qstate_read (uint64_t addr, uint8_t *buf, uint32_t size)
 {
     return elba_read_qstate(addr, buf, size);
 }
 
 sdk_ret_t
-asic_pd_qstate_clear (lif_qstate_t *qstate)
+asicpd_qstate_clear (lif_qstate_t *qstate)
 {
     return elba_clear_qstate(qstate);
 }
@@ -519,7 +524,7 @@ asicpd_p4plus_invalidate_cache (mpartition_region_t *reg, uint64_t q_addr,
 uint32_t
 asicpd_clock_freq_get (void)
 {
-    return elba_freq_get();
+    return 0;   /* ASIC yet to implement */
 }
 
 sdk_ret_t
@@ -533,7 +538,7 @@ asicpd_adjust_perf (int chip_id, int inst_id, pd_adjust_perf_index_t &idx,
 }
 
 void
-asic_pd_set_half_clock (int chip_id, int inst_id)
+asicpd_set_half_clock (int chip_id, int inst_id)
 {
     elba_set_half_clock(chip_id, inst_id);
 }
@@ -644,7 +649,113 @@ asicpd_rss_tbl_eng_cfg_get (const char *handle, uint32_t tableid,
 void
 asicpd_rss_tbl_eng_cfg_modify (p4_tbl_eng_cfg_t *rss)
 {
-    return;  /* ELBA-REBASE-TBD */
+    return;  /* TBD-ELBA-REBASE: */
+}
+
+//------------------------------------------------------------------------------
+// perform all the ELBA specific initialization
+//------------------------------------------------------------------------------
+static sdk_ret_t
+elba_cfg_init (asic_cfg_t *cfg, asic_cfg_t& elba_cfg)
+{
+    sdk_ret_t     ret;
+
+    SDK_ASSERT(cfg != NULL);
+
+    ret = sdk::asic::asic_state_init(cfg);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "asic_state_init failure, err : %d", ret);
+
+    elba_cfg.default_config_dir = cfg->default_config_dir;
+    elba_cfg.cfg_path = cfg->cfg_path;
+    elba_cfg.admin_cos = cfg->admin_cos;
+    elba_cfg.repl_entry_width = cfg->repl_entry_width;
+    elba_cfg.catalog = cfg->catalog;
+    elba_cfg.mempartition = cfg->mempartition;
+    elba_cfg.p4_cache = true;
+    elba_cfg.p4plus_cache = true;
+    elba_cfg.llc_cache = true;
+    elba_cfg.platform = cfg->platform;
+    elba_cfg.num_pgm_cfgs = cfg->num_pgm_cfgs;
+    elba_cfg.pgm_name = cfg->pgm_name;
+    for (int i = 0; i < cfg->num_pgm_cfgs; i++) {
+        elba_cfg.pgm_cfg[i].path = cfg->pgm_cfg[i].path;
+    }
+    elba_cfg.num_asm_cfgs = cfg->num_asm_cfgs;
+    for (int i = 0; i < cfg->num_asm_cfgs; i++) {
+        elba_cfg.asm_cfg[i].name = cfg->asm_cfg[i].name;
+        elba_cfg.asm_cfg[i].path = cfg->asm_cfg[i].path;
+        elba_cfg.asm_cfg[i].symbols_func = cfg->asm_cfg[i].symbols_func;
+        elba_cfg.asm_cfg[i].base_addr = cfg->asm_cfg[i].base_addr;
+        elba_cfg.asm_cfg[i].sort_func =
+            cfg->asm_cfg[i].sort_func;
+    }
+    for (int i = 0; i < cfg->num_rings; i++) {
+        sdk::platform::ring ring;
+        ring.init(&cfg->ring_meta[i], cfg->mempartition);
+    }
+
+    elba_cfg.completion_func = cfg->completion_func;
+    elba_cfg.device_profile = cfg->device_profile;
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+elba_soft_init (asic_cfg_t *cfg)
+{
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+asicpd_init (asic_cfg_t *cfg)
+{
+    asic_cfg_t elba_cfg;
+
+    elba_cfg_init(cfg, elba_cfg);
+    if (sdk::asic::asic_is_hard_init()) {
+        //@@TODO - check and update redundant initializations within
+        // asic_state_init() and elba_init().
+        return elba_init(&elba_cfg);
+    } else {
+        return elba_soft_init(&elba_cfg);
+    }
+}
+
+sdk_ret_t
+asicpd_soft_init (asic_cfg_t *cfg)
+{
+    asic_cfg_t elba_cfg;
+
+    elba_cfg_init(cfg, elba_cfg);
+    return elba_soft_init(&elba_cfg);
+}
+
+sdk_ret_t
+asicpd_upgrade_init (asic_cfg_t *cfg)
+{
+    asic_cfg_t elba_cfg;
+
+    // in upgrade mode asic should be in hard-init mode
+    SDK_ASSERT(sdk::asic::asic_is_hard_init());
+    elba_cfg_init(cfg, elba_cfg);
+
+    if (sdk::platform::upgrade_mode_graceful(cfg->upg_init_mode)) {
+        // it is same as hardinit. memory regions marked as reset will
+        // be zeroed out by asic_reset_hbm_regions function during elba_init
+        return elba_init(&elba_cfg);
+    } else if (sdk::platform::upgrade_mode_hitless(cfg->upg_init_mode)) {
+        SDK_ASSERT(0);
+        // return elba_hitless_init(&elba_cfg);
+    } else {
+        SDK_TRACE_ERR("Invalid upgrade mode");
+        SDK_ASSERT(0);
+    }
+}
+
+sdk_ret_t
+asicpd_pgm_init (void)
+{
+    return elba_pgm_init();
 }
 
 sdk_ret_t
@@ -740,6 +851,24 @@ asicpd_set_table_txdma_asm_base (int tableid, uint64_t asm_base)
     elba_set_table_txdma_asm_base(tableid, asm_base);
 }
 
+uint64_t
+asicpd_host_dbaddr_get (void)
+{
+    return elba_host_dbaddr();
+}
+
+uint64_t
+asicpd_local_dbaddr_get (void)
+{
+    return elba_local_dbaddr();
+}
+
+uint64_t
+asicpd_local_db32_addr_get (void)
+{
+    return elba_local_db32_addr();
+}
+
 sdk_ret_t
 asicpd_tm_uplink_lif_set (tm_port_t port, uint32_t lif)
 {
@@ -828,12 +957,6 @@ sdk_ret_t
 asicpd_quiesce_stop (void)
 {
     return elba_quiesce_stop();
-}
-
-sdk_ret_t
-asicpd_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
-{
-    return elba_pxb_cfg_lif_bdf(lif, bdf);
 }
 
 sdk_ret_t
@@ -1063,6 +1186,7 @@ asicpd_tm_set_span_threshold (uint32_t span_threshold)
     return SDK_RET_INVALID_OP;
 }
 
+sdk_ret_t
 asicpd_table_rw_init (asic_cfg_t *cfg)
 {
     return elba_table_rw_init(cfg);
@@ -1083,19 +1207,19 @@ asicpd_queue_stats_get (tm_port_t port, void *stats)
 void
 asicpd_set_margin_by_value (const char *name, uint64_t tgtVoutMv)
 {
-    elb_set_margin_by_value(name, tgtVoutMv);
+    return; /* not applicable for elba */
 }
 
 sdk_ret_t
 asicpd_sbus_cpu_1666 (int chip_id, int inst_id)
 {
-    return elb_top_sbus_cpu_1666(chip_id, inst_id) ? SDK_RET_ERR : SDK_RET_OK;
+    return SDK_RET_OK;  /* not applicable for elba */
 }
 
 sdk_ret_t
 asicpd_sbus_cpu_2200 (int chip_id, int inst_id)
 {
-    return elb_top_sbus_cpu_2200(chip_id, inst_id) ? SDK_RET_ERR : SDK_RET_OK;
+    return SDK_RET_OK;  /* not applicable for elba */
 }
 
 void
@@ -1232,6 +1356,16 @@ asicpd_qos_uplink_input_map_update (tm_port_t port, uint32_t dot1q_pcp,
 {
     SDK_TRACE_DEBUG("Not implemented");
     return SDK_RET_OK;
+}
+
+int
+asicpd_hbm_table_entry_cache_invalidate (p4pd_table_cache_t cache,
+                                         uint64_t entry_addr,
+                                         uint16_t entry_width,
+                                         mem_addr_t base_mem_pa)
+{
+    return elba_hbm_table_entry_cache_invalidate(cache, entry_addr,
+                                                 entry_width, base_mem_pa);
 }
 
 }    // namespace pd

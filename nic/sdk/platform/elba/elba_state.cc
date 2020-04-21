@@ -1,8 +1,11 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
 #include "include/sdk/base.hpp"
+#include "platform/elba/csrint/csr_init.hpp"
+#include "asic/asic.hpp"
 #include "platform/elba/elba_state.hpp"
 #include "platform/elba/elba_txs_scheduler.hpp"
+#include "third-party/asic/elba/model/elb_top/elb_top_csr.h"
 
 namespace sdk {
 namespace platform {
@@ -11,17 +14,14 @@ namespace elba {
 //------------------------------------------------------------------------------
 // (private) constructor method
 //------------------------------------------------------------------------------
-void
 elba_state_pd::elba_state_pd (void)
 {
     txs_scheduler_map_idxr_ = NULL;
-    mempartition_ = NULL;
 }
 
 //------------------------------------------------------------------------------
 // destructor
 //------------------------------------------------------------------------------
-void
 elba_state_pd::~elba_state_pd (void)
 {
     txs_scheduler_map_idxr_ ? delete txs_scheduler_map_idxr_ : (void)0;
@@ -33,12 +33,15 @@ elba_state_pd::~elba_state_pd (void)
 bool
 elba_state_pd::init (asic_cfg_t *cfg)
 {
-    // BMAllocator based bmp range allocator to manage txs scheduler mapping
-    txs_scheduler_map_idxr_ =
-        new sdk::lib::BMAllocator(ELBA_TXS_SCHEDULER_MAP_MAX_ENTRIES);
-    SDK_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
-    mempartition_ = cfg->mempartition;
-    cfg_path_ = cfg->cfg_path;
+    if (cfg) {
+        // BMAllocator based bmp range allocator to manage txs scheduler mapping
+        txs_scheduler_map_idxr_ =
+                        new sdk::lib::BMAllocator(ELBA_TXS_SCHEDULER_MAP_MAX_ENTRIES);
+        SDK_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
+        cfg_ = *cfg;
+    }
+
+    elb_top_ = &ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
 
     return true;
 }
@@ -66,12 +69,11 @@ elba_state_pd_init (asic_cfg_t *cfg)
     if (g_elba_state_pd) {
         return SDK_RET_OK;
     }
+    csr_init();
 
-    sdk::platform::elba::csr_init();
-
-    g_elba_state_pd = sdk::platform::elba::elba_state_pd::factory(cfg);
+    g_elba_state_pd = elba_state_pd::factory(cfg);
     SDK_ASSERT_TRACE_RETURN((g_elba_state_pd != NULL), SDK_RET_INVALID_ARG,
-                            "Failed to instantiate Elba PD");
+                            "Failed to instantiate Capri PD");
     return SDK_RET_OK;
 }
 

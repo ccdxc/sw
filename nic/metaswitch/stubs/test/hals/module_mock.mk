@@ -19,7 +19,7 @@ MODULE_SOLIBS   += pdsmscommon slab shmmgr rte_indexer pdscore pdsproto \
 		  pal pdsframework pdscore pdsapi pdsapi_impl pdstest \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
-                  sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri \
+                  sdkp4 sdkp4utils sdk_asicrw_if sdk${ASIC} \
                   sdkplatformutils sdkxcvrdriver sdkasicpd sdkfru pal \
                   lpmitree_${PIPELINE} rfc_${PIPELINE} pdsrfc penmetrics \
                   bm_allocator sdklinkmgr sdklinkmgrcsr kvstore_lmdb \

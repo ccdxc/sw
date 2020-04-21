@@ -8,7 +8,11 @@
 #include "nic/hal/hal.hpp"
 #include "nic/linkmgr/linkmgr_src.hpp"
 #include "nic/linkmgr/linkmgr_state.hpp"
+#ifdef ELBA
+#include "nic/sdk/platform/elba/csrint/csr_init.hpp"
+#else
 #include "nic/sdk/platform/capri/csrint/csr_init.hpp"
+#endif
 
 using sdk::SDK_RET_OK;
 using boost::property_tree::ptree;
@@ -82,7 +86,11 @@ linkmgr_initialize (const char c_file[])
     sdk_cfg.cfg_path = cfg_path;
     sdk_cfg.catalog  = catalog;
 
+#ifdef ELBA
+    sdk::platform::elba::csr_init();
+#else
     sdk::platform::capri::csr_init();
+#endif
 
     ret_hal = linkmgr::linkmgr_init(&sdk_cfg);
     if (ret_hal != HAL_RET_OK) {

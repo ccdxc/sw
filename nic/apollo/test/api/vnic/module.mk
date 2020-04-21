@@ -8,7 +8,7 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
                   pdstest pdstestapiutils pdsproto \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
-                  sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri \
+                  sdkp4 sdkp4utils sdk_asicrw_if sdk${ASIC} \
                   sdkplatformutils sdkxcvrdriver sdkasicpd penmetrics \
                   lpmitree_${PIPELINE} rfc_${PIPELINE} pdsrfc \
                   bm_allocator sdklinkmgr sdklinkmgrcsr memhash sltcam \

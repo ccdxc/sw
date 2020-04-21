@@ -7,7 +7,15 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
+#ifdef ELBA
+#include "nic/sdk/platform/elba/elba_tm_utils.hpp"
+#define ASIC_QUEUES_PER_PORT ELBA_QUEUES_PER_PORT
+#define ASIC_TM_MAX_HBM_ETH_CONTEXTS ELBA_TM_MAX_HBM_ETH_CONTEXTS
+#else
 #include "nic/sdk/platform/capri/capri_tm_utils.hpp"
+#define ASIC_QUEUES_PER_PORT CAPRI_QUEUES_PER_PORT
+#define ASIC_TM_MAX_HBM_ETH_CONTEXTS CAPRI_TM_MAX_HBM_ETH_CONTEXTS
+#endif
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "gen/proto/qos.pb.h"
@@ -263,7 +271,7 @@ qos_class_set_global_pause_type (
     pd::pd_func_args_t pd_func_args = {0};
 
     HAL_TRACE_DEBUG("invoked to update global_pause_type "
-                    "g_pause_type {} req.pause_type() {}", 
+                    "g_pause_type {} req.pause_type() {}",
                     g_pause_type, req.pause_type());
 
     if (g_pause_type != req.pause_type()) {
@@ -600,9 +608,14 @@ qos_class_thresholds_get (qos::QosClassThresholdsGetRequest& req,
 {
     sdk_ret_t sdk_ret = SDK_RET_OK;
     auto response = rsp->add_response();
+#ifdef ELBA
+    sdk::platform::elba::elba_thresholds_t thresholds = {0};
+    sdk_ret = sdk::platform::elba::elba_thresholds_get(&thresholds);
+#else
     sdk::platform::capri::capri_thresholds_t thresholds = {0};
-
     sdk_ret = sdk::platform::capri::capri_thresholds_get(&thresholds);
+#endif
+
     if (sdk_ret != SDK_RET_OK) {
         response->set_api_status(types::API_STATUS_ERR);
         HAL_TRACE_ERR("Unable to do PD get for qos class threshold. ret : {}", hal_sdk_ret_to_hal_ret(sdk_ret));
@@ -611,13 +624,13 @@ qos_class_thresholds_get (qos::QosClassThresholdsGetRequest& req,
     for (uint32_t port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         auto port_occupancy = response->add_port_occupancy();
         port_occupancy->set_port_num(port);
-        for (uint32_t i = 0; i < CAPRI_QUEUES_PER_PORT; i ++) {
+        for (uint32_t i = 0; i < ASIC_QUEUES_PER_PORT; i ++) {
             auto occupancy = port_occupancy->add_occupancy();
             occupancy->set_queue_idx(i);
             occupancy->set_occupancy(thresholds.occupancy[port].queue_occupancy[i]);
         }
     }
-    for (uint32_t i = 0; i < CAPRI_TM_MAX_HBM_ETH_CONTEXTS; i ++) {
+    for (uint32_t i = 0; i < ASIC_TM_MAX_HBM_ETH_CONTEXTS; i ++) {
         auto threshold = response->add_thresholds();
         threshold->set_hbm_context(i);
         threshold->set_xon_threshold(thresholds.threshold[i].xon_threshold);
@@ -957,7 +970,7 @@ static hal_ret_t
 update_pfc_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
     //if (spec.has_pause()) {
-    if ( spec.no_drop() || 
+    if ( spec.no_drop() ||
          (spec.key_or_handle().qos_group() == kh::DEFAULT) ||
          (spec.key_or_handle().qos_group() == kh::SPAN) ) {
         qos_class->pause.xon_threshold = spec.pause().xon_threshold();
@@ -971,9 +984,9 @@ update_pfc_params (const QosClassSpec& spec, qos_class_t *qos_class)
     } else {
         qos_class->no_drop = false;
     }
-    HAL_TRACE_DEBUG("no_drop {} xon_thr {} xoff_thr {} pfc_cos {} pfc_enable {}", 
-                    qos_class->no_drop, qos_class->pause.xon_threshold, 
-                    qos_class->pause.xoff_threshold, qos_class->pause.pfc_cos, 
+    HAL_TRACE_DEBUG("no_drop {} xon_thr {} xoff_thr {} pfc_cos {} pfc_enable {}",
+                    qos_class->no_drop, qos_class->pause.xon_threshold,
+                    qos_class->pause.xoff_threshold, qos_class->pause.pfc_cos,
                     qos_class->pause.pfc_enable);
     return HAL_RET_OK;
 }
@@ -2019,14 +2032,14 @@ end:
 }
 
 
-hal_ret_t 
+hal_ret_t
 qos_swm_queue_init(uint32_t swm_uplink_port, uint64_t dmac)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd::pd_qos_swm_queue_init_args_t pd_qos_swm_args = {0};
     pd::pd_func_args_t pd_func_args = {0};
 
-    HAL_TRACE_DEBUG("invoked SWM queue init for uplink port {} dmac {}", 
+    HAL_TRACE_DEBUG("invoked SWM queue init for uplink port {} dmac {}",
                     swm_uplink_port, dmac);
 
    // PD Call to init SWM queue
@@ -2042,14 +2055,14 @@ qos_swm_queue_init(uint32_t swm_uplink_port, uint64_t dmac)
     return ret;
 }
 
-hal_ret_t 
+hal_ret_t
 qos_swm_queue_deinit(uint32_t swm_uplink_port)
 {
     hal_ret_t ret = HAL_RET_OK;
     pd::pd_qos_swm_queue_deinit_args_t pd_qos_swm_args = {0};
     pd::pd_func_args_t pd_func_args = {0};
 
-    HAL_TRACE_DEBUG("invoked SWM queue de-init for uplink port {}", 
+    HAL_TRACE_DEBUG("invoked SWM queue de-init for uplink port {}",
                     swm_uplink_port);
 
     // PD Call to de-init SWM queue
@@ -2065,7 +2078,7 @@ qos_swm_queue_deinit(uint32_t swm_uplink_port)
 }
 
 uint32_t
-qos_get_span_tm_oq (void) 
+qos_get_span_tm_oq (void)
 {
     // TODO: Ravi is going to clean this up.
     return 1;

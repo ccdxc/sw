@@ -4,7 +4,7 @@
 include ${MKDEFS}/pre.mk
 
 MODULE_TARGET   = ${PIPELINE}_ftl_test.gtest
-MODULE_SOLIBS_COMMON = ${NIC_FTL_LIBS} logger sdkpal sdkcapri \
+MODULE_SOLIBS_COMMON = ${NIC_FTL_LIBS} logger sdkpal sdk${ASIC} \
                        sdkp4 sdkp4utils sdkasicpd bm_allocator sdkxcvrdriver\
                        ${NIC_SDK_SOLIBS} ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                        ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}}

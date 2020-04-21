@@ -2,6 +2,8 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libsdkelba.lib
+MODULE_ASIC     = elba
+MODULE_LDLIBS 	= ssl crypto
+MODULE_FLAGS    = -O3
 MODULE_DEFS     = ${NIC_CSR_DEFINES}
-MODULE_PREREQS  = hal.memrgns
 include ${MKDEFS}/post.mk

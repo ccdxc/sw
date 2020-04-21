@@ -11,7 +11,7 @@ MODULE_PREREQS  = iris.p4bin \
                   p4pt.p4bin tls.p4bin rdma.p4bin smbdc.p4bin \
                   storage.p4bin iris_nvme.p4bin
 MODULE_SRCS     := $(wildcard ${MODULE_SRC_DIR}/*.cc) \
-                   $(wildcard ${MODULE_SRC_DIR}/aclqos/*.cc) \
+                   ${MODULE_SRC_DIR}/aclqos/acl_pd.cc \
                    $(wildcard ${MODULE_SRC_DIR}/lif/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/mcast/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/nw/*.cc) \
@@ -24,6 +24,12 @@ MODULE_SRCS     := $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/event/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/../common_p4plus/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/flow/*.cc)
+ifeq ($(ASIC),elba)
+MODULE_SRCS     += ${MODULE_SRC_DIR}/aclqos/qos_pd_elba.cc
+else
+MODULE_SRCS     += ${MODULE_SRC_DIR}/aclqos/qos_pd_capri.cc
+endif
+
 ifeq ($(ARCH),x86_64)
 MODULE_SRCS     := ${MODULE_SRCS} \
                    $(wildcard ${MODULE_SRC_DIR}/ipsec/*.cc) \
@@ -48,4 +54,9 @@ MODULE_SRCS     := ${MODULE_SRCS} \
 endif
 MODULE_INCS     = ${BLD_PROTOGEN_DIR}
 MODULE_SOLIBS   = ${NIC_FTL_LIBS}
+ifeq ($(ASIC),capri)
+MODULE_FLAGS    += -DBARCO
+else
+MODULE_FLAGS    += -DELBA
+endif
 include ${MKDEFS}/post.mk

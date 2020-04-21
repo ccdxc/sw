@@ -1,11 +1,12 @@
 # {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libsdkelba_csrint.so
+MODULE_TARGET   = libsdkelba_csrint.lib
 MODULE_DEFS     = ${NIC_CSR_DEFINES}
 MODULE_FLAGS    = -DELBA_SW ${NIC_CSR_FLAGS}
-MODULE_SOLIBS   := sdkcapri_asicrw_if pal
+MODULE_LDPATHS  := ${SDKDIR}/third-party/sknobs/${ARCH}/lib
+MODULE_SOLIBS   := sdk_asicrw_if pal
 MODULE_EXCLUDE_FLAGS = -O2
-MODULE_INCS     = ${ELBA_CSR_INCS} ${MODULE_DIR} 
+MODULE_INCS     = ${NIC_CSR_INCS} ${MODULE_DIR}
 MODULE_SRCS     = ${ASIC_SRC}/elba/model/elb_top/elb_top_csr.cc \
                   ${ASIC_SRC}/elba/model/utils/elb_mem_access.cc \
                   ${ASIC_SRC}/elba/model/utils/elb_addr.cc \
@@ -51,6 +52,10 @@ MODULE_SRCS     = ${ASIC_SRC}/elba/model/elb_top/elb_top_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_em/elb_emm_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_em/emmc_SDHOST_Memory_Map.cc \
                   ${ASIC_SRC}/elba/model/elb_ap/elb_ap_csr.cc \
+                  ${ASIC_SRC}/elba/model/elb_ap/elb_apm0_csr.cc \
+                  ${ASIC_SRC}/elba/model/elb_ap/elb_apm1_csr.cc \
+                  ${ASIC_SRC}/elba/model/elb_ap/elb_apm2_csr.cc \
+                  ${ASIC_SRC}/elba/model/elb_ap/elb_apm3_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_ap/elb_apb_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_pcie/elb_pxp_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_pcie/elb_pxc_csr.cc \
@@ -126,26 +131,26 @@ MODULE_SRCS     = ${ASIC_SRC}/elba/model/elb_top/elb_top_csr.cc \
                   ${ASIC_SRC}/elba/model/utils/elb_csr_py_if.cc \
                   ${ASIC_SRC}/ip/verif/pcpp/cpu.cc \
                   ${ASIC_SRC}/ip/verif/pcpp/pknobs.cc \
-                  ${ASIC_SRC}/elba/verif/apis/gen/elb_pb_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_txs_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/gen/elb_pb_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_txs_sw_api.cc \
                   ${ASIC_SRC}/elba/design/common/gen/elb_phv_intr_decoders.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_npv_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_dpa_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_npv_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_dpa_sw_api.cc \
                   ${ASIC_SRC}/elba/verif/apis/elb_intr_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_pics_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_pict_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_ppa_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_prd_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_psp_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_ptd_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_stg_api.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_wa_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_pics_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_pict_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_ppa_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_prd_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_psp_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_ptd_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_stg_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_wa_sw_api.cc \
                   ${ASIC_SRC}/elba/design/common/gen/elb_lif_qstate_decoders.cc \
                   ${ASIC_SRC}/elba/design/common/gen/elb_pf_decoders.cc \
                   ${ASIC_SRC}/elba/model/elb_ppa/elb_ppa_decoders.cc \
                   ${ASIC_SRC}/elba/verif/apis/elb_csr_util_api.cc \
                   ${ASIC_SRC}/elba/model/elb_pic/elb_pic_decoders.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_mpu_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_mpu_sw_api.cc \
                   ${ASIC_SRC}/ip/verif/pcpp/pknobs_reader.cc \
                   ${ASIC_SRC}/elba/model/elb_is/readonly/elb_is_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_pcie/elb_pxe_csr.cc \
@@ -197,12 +202,14 @@ MODULE_SRCS     = ${ASIC_SRC}/elba/model/elb_top/elb_top_csr.cc \
                   ${ASIC_SRC}/elba/model/elb_sema/elb_sema_decoders.cc \
                   ${ASIC_SRC}/elba/model/utils/elb_csr_base.cc \
                   ${ASIC_SRC}/ip/verif/pcpp/pen_csr_base.cc \
-                  ${ASIC_SRC}/elba/verif/apis/elb_te_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_te_sw_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_sdp_sw_api.cc \
                   ${ASIC_SRC}/elba/model/elb_ms/elb_mse_csr.cc \
                   ${ASIC_SRC}/elba/verif/apis/elb_icache_api.cc \
                   ${ASIC_SRC}/elba/verif/apis/elb_dcache_api.cc \
                   ${ASIC_SRC}/elba/verif/apis/elb_pcie_api.cc \
                   ${ASIC_SRC}/elba/verif/apis/elb_sbus_api.cc \
+                  ${ASIC_SRC}/elba/verif/apis/elb_elam_api.cc \
                   $(wildcard ${ASIC_SRC}/elba/model/elb_dpa/*csr.cc) \
                   $(wildcard ${ASIC_SRC}/elba/model/elb_pb/*port*csr.cc) \
                   ${SDKDIR}/platform/elba/csrint/csr_init.cc

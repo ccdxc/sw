@@ -9,7 +9,9 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#ifndef _DISABLE_SKNOBS_
 #include "sknobs.h"
+#endif
 #ifdef _CSV_INCLUDED_
 #include "vpi_user.h"
 #endif

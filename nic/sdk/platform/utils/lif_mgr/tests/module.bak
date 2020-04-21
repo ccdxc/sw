@@ -12,7 +12,7 @@ MODULE_SOLIBS   := pal ${NIC_SDK_SOLIBS} \
                    delphisdk \
                    upgrade upgrade_app upgradeutils \
                    sysmgr \
-                   sdkcapri_asicrw_if \
+                   sdk_asicrw_if \
                    sdkasicpd pdcommon hal_mock \
                    sdkp4 sdkp4utils sdkxcvrdriver p4pd_${PIPELINE} \
                    p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \

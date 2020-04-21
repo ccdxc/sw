@@ -41,7 +41,7 @@ nic/build/$ARCH/$PIPELINE/lib/libhaldelphi.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libhalsysmgr.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libhalupgrade.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so                  /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so               /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk_asicrw_if.so               /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblist.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libslab.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblfq.so                              /nic/lib/

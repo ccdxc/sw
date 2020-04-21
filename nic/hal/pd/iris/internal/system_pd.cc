@@ -6,8 +6,6 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/asic/cmn/asic_hbm.hpp"
-#include "platform/capri/capri_tm_rw.hpp"
-#include "platform/capri/capri_tm_utils.hpp"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
@@ -16,9 +14,19 @@
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
+#ifdef ELBA
+#include "nic/sdk/platform/elba/elba_tbl_rw.hpp"
+#else
+#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
+#endif
 
 using namespace sdk;
 using namespace sdk::asic::pd;
+#ifdef ELBA
+using namespace sdk::platform::elba;
+#else
+using namespace sdk::platform::capri;
+#endif
 
 namespace hal {
 namespace pd {
@@ -772,8 +780,17 @@ clock_delta_comp_cb (void *timer, uint32_t timer_id, void *ctxt)
     clock_gettime(CLOCK_REALTIME, &sw_ts);
     sdk::timestamp_to_nsecs(&sw_ts, &sw_ns);
 
-    capri_hbm_table_entry_cache_invalidate((p4pd_table_cache_t)g_clock_table_info.cache, 0,
-                                 g_clock_table_info.entry_width, g_clock_table_info.start_addr);
+#ifdef ELBA
+    sdk::platform::elba::elba_hbm_table_entry_cache_invalidate((p4pd_table_cache_t)g_clock_table_info.cache,
+                                          0,
+                                          g_clock_table_info.entry_width,
+                                          g_clock_table_info.start_addr);
+#else
+    capri_hbm_table_entry_cache_invalidate((p4pd_table_cache_t)g_clock_table_info.cache,
+                                           0,
+                                           g_clock_table_info.entry_width,
+                                           g_clock_table_info.start_addr);
+#endif
     bzero(g_hbm_clockaddr, sizeof(clock_gettimeofday_t));
     sdk::lib::memrev(g_hbm_clockaddr->time_in_ns, (uint8_t *)&sw_ns, CLOCK_WIDTH);
     sdk::lib::memrev(g_hbm_clockaddr->ticks, (uint8_t *)&hw_tick, CLOCK_WIDTH);
@@ -884,7 +901,11 @@ pd_pb_stats_get (pd_func_args_t *pd_func_args)
     unsigned               port;
     // TODO: Hook up the reset flag to API call
     bool                   reset = false;
-    capri_queue_stats_t    qos_queue_stats = {0};
+#ifdef ELBA
+    elba_queue_stats_t    qos_queue_stats = {0};
+#else
+    capri_queue_stats_t   qos_queue_stats = {0};
+#endif
 
     pb_stats = rsp->mutable_stats()->mutable_packet_buffer_stats();
 

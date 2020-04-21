@@ -1,6 +1,9 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
 #include "platform/elba/elba_state.hpp"
+#include "platform/elba/elba_qstate.hpp"
+#include "asic/cmn/asic_qstate.hpp"
+#include "asic/rw/asicrw.hpp"
 #include "third-party/asic/elba/model/elb_top/elb_top_csr.h"
 
 using namespace sdk::platform::utils;
@@ -17,6 +20,31 @@ namespace elba {
 #define ELBA_GET_QSTATE_MAP_ENTRY(QID)                                     \
     qstate->type[QID].qtype_info.entries = (uint8_t)entry->length ## QID();\
     qstate->type[QID].qtype_info.size = (uint8_t)entry->size ## QID();
+
+sdk_ret_t
+elba_clear_qstate_mem (uint64_t base_addr, uint32_t size)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    // qstate is a multiple for 4K So it is safe to assume
+    // 256 byte boundary.
+    static uint8_t zeros[256] = {0};
+
+    for (uint32_t i = 0; i < (size / sizeof(zeros)); i++) {
+        ret = sdk::asic::asic_mem_write(base_addr + (i * sizeof(zeros)),
+                                        zeros, sizeof(zeros));
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    return ret;
+}
+
+sdk_ret_t
+elba_clear_qstate (lif_qstate_t *qstate)
+{
+    return elba_clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
+}
 
 
 template <typename T>
@@ -235,6 +263,20 @@ read_lif_params_from_elba (LIFQState *qstate)
     // Since content is going to be same in ASIC across all
     // 3 blocks - reading from one is enough ??
     get_qstate_lif_params(qstate, psp_entry, &is_valid);
+}
+
+sdk_ret_t
+elba_read_qstate (uint64_t q_addr, uint8_t *buf, uint32_t q_size)
+{
+    // TBD-ELBA-REBASE: hal to sdk Missing Function compared to Capri
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
+elba_write_qstate (uint64_t q_addr, const uint8_t *buf, uint32_t q_size)
+{
+    // TBD-ELBA-REBASE: hal to sdk Missing Function compared to Capri
+    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t

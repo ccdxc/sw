@@ -5,6 +5,19 @@ export ASIC_GEN=$NIC_DIR/asic_gen
 echo "ASIC_SRC = $ASIC_SRC"
 echo "ASIC_GEN = $ASIC_GEN"
 
+
+export ASIC_REPO_DIR=$NIC_DIR/sdk/asic_repo
+export ASIC_EXPORT_DIR=$NIC_DIR/sdk/third-party/asic
+
+function export_asic_files () {
+    cd $SW_DIR
+    for file in `cat nic/tools/asic_sw_combined_sanity/elba_asic_headers.txt`
+    do
+        destdir=`dirname $file`
+        cp $ASIC_REPO_DIR/asic/$file $ASIC_EXPORT_DIR/$destdir/
+    done
+}
+
 cp -v $ASIC_SRC/elba/model/elb_top/elb_env_base.h $NIC_DIR/sdk/model_sim/include/elb_env_base.h
 cp -v $ASIC_SRC/elba/model/elb_top/elb_model_base.h $NIC_DIR/sdk/model_sim/include/elb_model_base.h
 cp -v $ASIC_SRC/ip/verif/pcpp/pen_blk_env_base.h $NIC_DIR/sdk/model_sim/include/pen_blk_env_base.h
@@ -27,3 +40,5 @@ cp -v $ASIC_SRC/elba/model/elb_pic/elb_pics_csr.json $NIC_DIR/tools/ncc/csr_json
 cp -v $ASIC_SRC/elba/model/elb_dpa/elb_dpr_csr.json $NIC_DIR/tools/ncc/csr_json/
 cp -v $ASIC_SRC/elba/model/elb_dpa/elb_dpp_csr.json $NIC_DIR/tools/ncc/csr_json/
 cp -v $ASIC_SRC/elba/design/common/elb_addr.json $NIC_DIR/tools/ncc/csr_json/
+
+export_asic_files

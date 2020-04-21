@@ -10,7 +10,7 @@ MODULE_SRCS     = $(wildcard ${MODULE_DIR}/*.c)                             \
 MODULE_PREREQS  = vpp_pkg.export
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl pdsproto      \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} ${NIC_SDK_SOLIBS}          \
-                  sdkp4 sdkp4utils sdkcapri_asicrw_if sdkcapri              \
+                  sdkp4 sdkp4utils sdk_asicrw_if sdk${ASIC}              	\
                   sdkplatformutils sdkxcvrdriver sdkasicpd                  \
                   rfc_${PIPELINE} pdsrfc kvstore_lmdb                       \
                   bm_allocator sdklinkmgr sdklinkmgrcsr  utils              \

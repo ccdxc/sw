@@ -12,7 +12,6 @@
 #include "third-party/asic/elba/model/elb_wa/elb_wa_csr.h"
 #include "third-party/asic/elba/model/elb_pcie/elb_pxb_csr.h"
 #include "third-party/asic/elba/model/elb_top/elb_top_csr_defines.h"
-#include "third-party/asic/elba/verif/apis/elb_nx_api.h"
 #include "third-party/asic/elba/model/elb_top/elb_top_csr.h"
 #include "third-party/asic/elba/model/elb_pic/elb_pics_csr.h"
 #include "third-party/asic/elba/model/elb_ms/elb_ms_csr.h"
@@ -48,7 +47,7 @@ elb_nx_block_read (uint32_t chip, uint64_t addr, int size,
 unsigned int
 elb_nx_read_pb_axi_cnt (int rd)
 { // 1=>rd , 0=> wr
-    return 0
+    return 0;   /* TBD-ELBA-REBASE: TOT diverged?? */
 }
 
 mem_addr_t
@@ -393,7 +392,7 @@ populate_hbm_bw (uint64_t max_rd, uint64_t max_wr,
                     hbm_bw->max.read, hbm_bw->max.write);
 }
 
-static uint32_t
+uint32_t
 elba_freq_get (void)
 {
     uint64_t prev_ts     = 0;
@@ -557,7 +556,7 @@ elba_nx_set_llc_counters (uint32_t *data)
 }
 
 sdk_ret_t
-elba_nx_get_llc_counters (uint32_t *rd_data)
+elba_nx_get_llc_counters (uint32_t *mask, uint32_t *rd_data)
 {
     return SDK_RET_OK;
 }

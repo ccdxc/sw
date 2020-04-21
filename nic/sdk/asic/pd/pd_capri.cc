@@ -330,8 +330,10 @@ asicpd_hbm_table_entry_write (uint32_t tableid, uint32_t index,
                                       tbl_ctx.hbm_layout.entry_width, &tbl_ctx);
 
     uint64_t entry_addr = (index * tbl_ctx.hbm_layout.entry_width);
-    ret |= capri_hbm_table_entry_cache_invalidate(tbl_ctx.cache, entry_addr,
-                tbl_ctx.hbm_layout.entry_width, tbl_ctx.base_mem_pa);
+    ret |= capri_hbm_table_entry_cache_invalidate(tbl_ctx.cache,
+                                                  entry_addr,
+                                                  tbl_ctx.hbm_layout.entry_width,
+                                                  tbl_ctx.base_mem_pa);
 
 #if SDK_LOG_TABLE_WRITE
     char    buffer[2048];
@@ -383,7 +385,7 @@ asicpd_p4plus_recirc_init (void)
 }
 
 sdk_ret_t
-asic_pd_hbm_bw_get (hbm_bw_samples_t *hbm_bw_samples)
+asicpd_hbm_bw_get (hbm_bw_samples_t *hbm_bw_samples)
 {
     return capri_hbm_bw(hbm_bw_samples->num_samples,
                         hbm_bw_samples->sleep_interval, true,
@@ -415,7 +417,7 @@ asicpd_llc_get (llc_counters_t *llc)
 }
 
 sdk_ret_t
-asic_pd_scheduler_stats_get (scheduler_stats_t *sch_stats)
+asicpd_scheduler_stats_get (scheduler_stats_t *sch_stats)
 {
     sdk_ret_t ret;
     capri_txs_scheduler_stats_t asic_stats = {};
@@ -532,7 +534,7 @@ asicpd_adjust_perf (int chip_id, int inst_id, pd_adjust_perf_index_t &idx,
 }
 
 void
-asic_pd_set_half_clock (int chip_id, int inst_id)
+asicpd_set_half_clock (int chip_id, int inst_id)
 {
     capri_set_half_clock(chip_id, inst_id);
 }
@@ -1509,6 +1511,16 @@ asicpd_qos_uplink_input_map_update (tm_port_t port, uint32_t dot1q_pcp,
 {
     return sdk::platform::capri::capri_qos_uplink_input_map_update(
                                                         port, dot1q_pcp, iq);
+}
+
+int
+asicpd_hbm_table_entry_cache_invalidate (p4pd_table_cache_t cache,
+                                         uint64_t entry_addr,
+                                         uint16_t entry_width,
+                                         mem_addr_t base_mem_pa)
+{
+    return capri_hbm_table_entry_cache_invalidate(cache, entry_addr,
+                                                  entry_width, base_mem_pa);
 }
 
 }    // namespace pd

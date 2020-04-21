@@ -878,7 +878,7 @@ hbm_bw_get(const HbmBwGetRequest *req, HbmBwGetResponseMsg *rsp)
                                     * asic_block_t::ASIC_BLOCK_MAX
                                     * sizeof(asic_hbm_bw_t));
 
-    sdk_ret = sdk::asic::pd::asic_pd_hbm_bw_get(&hbm_bw_args);
+    sdk_ret = sdk::asic::pd::asicpd_hbm_bw_get(&hbm_bw_args);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_FREE(HAL_MEM_ALLOC_DEBUG_CLI, hbm_bw_args.hbm_bw);
@@ -992,7 +992,7 @@ scheduler_stats_get(debug::SchedulerStatsResponse *rsp)
 
     scheduler_stats_t sch_stats;
 
-    sdk_ret = sdk::asic::pd::asic_pd_scheduler_stats_get(&sch_stats);
+    sdk_ret = sdk::asic::pd::asicpd_scheduler_stats_get(&sch_stats);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_ERR);

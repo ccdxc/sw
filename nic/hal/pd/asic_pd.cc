@@ -83,9 +83,13 @@ pd_program_to_base_addr (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_get_opaque_tag_addr (pd_func_args_t *pd_func_args)
 {
+#ifdef BARCO     /* TBD-ELBA-REBASE: */
     pd_get_opaque_tag_addr_args_t *args = pd_func_args->pd_get_opaque_tag_addr;
     return (get_opaque_tag_addr((barco_rings_t)args->ring_type, args->addr) ==
             SDK_RET_OK ? HAL_RET_OK : HAL_RET_ERR);
+#else
+    return HAL_RET_ERR;
+#endif
 }
 
 hal_ret_t

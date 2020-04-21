@@ -13,6 +13,7 @@ namespace sdk  {
 namespace asic {
 
 sdk_ret_t asic_clear_qstate(lif_qstate_t *qstate);
+int clear_qstate_mem (uint64_t base_addr, uint32_t size);
 int32_t read_qstate(uint64_t q_addr, uint8_t *buf, uint32_t q_size);
 int32_t write_qstate(uint64_t q_addr, const uint8_t *buf, uint32_t q_size);
 int32_t get_pc_offset(program_info *pinfo, const char *prog_name,

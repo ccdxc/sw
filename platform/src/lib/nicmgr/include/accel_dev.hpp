@@ -28,7 +28,6 @@
 #include "nic/hal/pd/elba/elba_cpdc.hpp"
 #include "nic/hal/pd/elba/elba_barco_crypto.hpp"
 #include "nic/hal/pd/elba/elba_barco_rings.hpp"
-#include "nic/hal/pd/elba/elba_hbm.hpp"
 
 // Temporarily using CHIPID since VER is not yet exported from model
 #define HW_CHIP_VER_CSR                 (ELB_ADDR_BASE_MS_MS_OFFSET + \

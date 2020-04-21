@@ -68,6 +68,7 @@ typedef struct system_voltage {
 
 //Read temperature functions will fill the value in millidegrees
 int read_temperatures(system_temperature_t *temperature);
+int read_local_temperature(int *localtemp);
 int read_voltages(system_voltage_t *voltage);
 
 //Read power functions will fill the value in microwatts

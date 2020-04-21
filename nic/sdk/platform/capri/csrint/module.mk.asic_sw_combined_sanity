@@ -1,9 +1,9 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libsdkcapri_csrint.so
+MODULE_TARGET   = libsdkcapri_csrint.lib
 MODULE_DEFS     = ${NIC_CSR_DEFINES}
 MODULE_FLAGS    = -DCAPRI_SW ${NIC_CSR_FLAGS}
-MODULE_SOLIBS   := sdkcapri_asicrw_if pal
+MODULE_SOLIBS   := sdk_asicrw_if pal
 MODULE_EXCLUDE_FLAGS = -O2
 MODULE_INCS     = ${ASIC_INCL_DIR}/capri/model/cap_top \
                   ${ASIC_INCL_DIR}/capri/model/utils \

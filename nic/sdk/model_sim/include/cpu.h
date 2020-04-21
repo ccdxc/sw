@@ -24,6 +24,8 @@ private:
   map <string, cpu_bus_base *>  cpu_if_map; // map of cpu interface name -> cpu interface pointer
   vector< std::shared_ptr< cpu_csr_node_info_base > > cpu_csr_info_array;
   string cur_cpu_if_name;
+  string chip_name, chp_name;
+  uint32_t chip_id, aod_only_mode;
   static atomic<cpu*> _cpu_if;
   static mutex m_;
   cpu_access_type_e access_type;
@@ -39,12 +41,34 @@ public:
   }
 
   virtual string get_cur_chip_name() {
-     string chip_name = "capri";
      return(chip_name);
   }
 
+  virtual void set_cur_chip_name(string ss) {
+    PLOG_MSG("cpu::set_cur_chip_name : setting chip_name to " << ss << endl);
+    chip_name = ss;
+  }
+
+  virtual void set_cur_chp_name(string ss) {
+    PLOG_MSG("cpu::set_cur_chp_name : setting chp_name to " << ss << endl);
+    chp_name = ss;
+  }
+
+  virtual void set_cur_chip_id(uint32_t id) {
+    PLOG_MSG("cpu::set_cur_chip_id : setting chip_id to " << id << endl);
+    chip_id = id;
+  }
+
+  virtual void set_aod_only_mode(uint32_t id) {
+    PLOG_MSG("cpu::set_aod_only_mode : setting chip_id to " << id << endl);
+    aod_only_mode = id;
+  }
+
+  virtual uint32_t get_aod_only_mode() {
+     return(aod_only_mode);
+  }
+
   virtual uint32_t get_cur_chip_id() {
-     uint32_t chip_id = 0;
      return(chip_id);
   }
 
@@ -53,7 +77,6 @@ public:
   }
 
   virtual string get_cur_chp_name() {
-     string chp_name = "cap";
      return(chp_name);
   }
 

@@ -1,11 +1,11 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
 #include "platform/elba/elba_txs_scheduler.hpp"
+#include "asic/cmn/asic_common.hpp"
 #include "platform/elba/elba_common.hpp"
 #include "platform/elba/elba_state.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "platform/utils/mpartition.hpp"
-#include "gen/platform/mem_regions.hpp"
 
 #include "third-party/asic/elba/model/elb_psp/elb_psp_csr.h"
 #include "third-party/asic/elba/model/utils/elb_blk_reg_model.h"

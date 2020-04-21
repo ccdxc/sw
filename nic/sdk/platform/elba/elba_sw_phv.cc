@@ -179,6 +179,11 @@ elba_pr_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx,
         for (i = 0; i < ASIC_FLIT_SIZE; i++) {
             rdata.flit_data[ASIC_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
         }
+        printf("\n");
+        for (i = 0; i < ASIC_FLIT_SIZE; i++) {
+            printf("%02x ", rdata.flit_data[i]);
+        }
+        printf("\n");
 
         elb_psp_csr_dhs_sw_phv_mem_entry_t &phv_mem_entry =
             pr_psp_csr.dhs_sw_phv_mem.entry[index];
@@ -237,8 +242,11 @@ elba_pt_psp_sw_phv_inject (uint8_t prof_num, uint8_t start_idx,
         for (i = 0; i < ASIC_FLIT_SIZE; i++) {
             rdata.flit_data[ASIC_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
         }
+        printf("\n");
         for (i = 0; i < ASIC_FLIT_SIZE; i++) {
+            printf("%02x ", rdata.flit_data[i]);
         }
+        printf("\n");
 
         elb_psp_csr_dhs_sw_phv_mem_entry_t &phv_mem_entry =
             pt_psp_csr.dhs_sw_phv_mem.entry[index];
@@ -297,6 +305,12 @@ elba_ppa_sw_phv_inject (uint8_t pidx, uint8_t prof_num, uint8_t start_idx,
         for (i = 0; i < ASIC_FLIT_SIZE; i++) {
             rdata.flit_data[ASIC_FLIT_SIZE-1-i] = curr_flit_ptr->flit_data[i];
         }
+        printf("\n");
+        for (i = 0; i < ASIC_FLIT_SIZE; i++) {
+            printf("%02x ", rdata.flit_data[i]);
+        }
+        printf("\n");
+
         elb_ppa_csr_dhs_sw_phv_mem_entry_t &phv_mem_entry =
             ppa_csr.dhs_sw_phv_mem.entry[index];
         cpp_int_helper::s_cpp_int_from_array(flit_data, 0,

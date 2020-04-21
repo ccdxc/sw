@@ -9,4 +9,7 @@ MODULE_LDLIBS = ${NIC_HAL_GTEST_LDLIBS}
 MODULE_FLAGS  = -pthread -rdynamic
 MODULE_INCS     = ${BLD_PROTOGEN_DIR}
 MODULE_ARCH   = x86_64
+ifeq ($(ASIC),elba)
+MODULE_FLAGS    += -DELBA
+endif
 include ${MKDEFS}/post.mk

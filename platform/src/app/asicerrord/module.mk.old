@@ -8,7 +8,7 @@ MODULE_SOLIBS   = sdkpal delphisdk logger halproto shmmgr utils sdkasicpd\
                   p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
                   asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} ${NIC_SDK_SOLIBS} \
                   bm_allocator sdkxcvrdriver hal_mock \
-                  sdkcapri_asicrw_if events_recorder eventproto eventtypes
+                  sdk_asicrw_if events_recorder eventproto eventtypes
 MODULE_LDLIBS   = rt dl :libprotobuf.so.14 ev grpc++ crypto \
                   ${NIC_COMMON_LDLIBS} \
                   ${SDK_THIRDPARTY_CAPRI_LDLIBS} \

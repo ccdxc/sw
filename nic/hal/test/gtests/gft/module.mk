@@ -6,11 +6,11 @@ MODULE_PIPELINE = gft
 MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                   pal hal_mock halproto \
-                  sdkcapri_asicrw_if \
+                  sdk_asicrw_if \
                   ${NIC_SDK_SOLIBS} \
                   pdcommon fte_mock agent_api \
                   bm_allocator bitmap trace  \
-                  sdkcapri sdkp4 sdkp4utils \
+                  sdk${ASIC} sdkp4 sdkp4utils \
                   sdkasicpd sdkasiccmn asicpd hal_mock hal_lib haltrace \
                   ${NIC_LINKMGR_SOLIBS}
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

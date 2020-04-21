@@ -13,25 +13,23 @@
 #include "platform/elba/elba_common.hpp"
 #include "platform/elba/elba_hbm_rw.hpp"
 #include "platform/elba/elba_tbl_rw.hpp"
-#include "gen/platform/mem_regions.hpp"
-#include "third-party/asic/elba/verif/apis/elb_npv_api.h"
-#include "third-party/asic/elba/verif/apis/elb_dpa_api.h"
-#include "third-party/asic/elba/verif/apis/elb_pics_api.h"
-#include "third-party/asic/elba/verif/apis/elb_pict_api.h"
-#include "third-party/asic/elba/verif/apis/elb_ppa_api.h"
-#include "third-party/asic/elba/verif/apis/elb_prd_api.h"
-#include "third-party/asic/elba/verif/apis/elb_psp_api.h"
-#include "third-party/asic/elba/verif/apis/elb_ptd_api.h"
-#include "third-party/asic/elba/verif/apis/elb_stg_api.h"
-#include "third-party/asic/elba/verif/apis/elb_wa_api.h"
+
+#include "third-party/asic/elba/verif/apis/elb_npv_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_dpa_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_pics_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_pict_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_ppa_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_prd_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_psp_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_ptd_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_stg_sw_api.h"
+#include "third-party/asic/elba/verif/apis/elb_wa_sw_api.h"
 #include "third-party/asic/elba/model/elb_top/elb_top_csr.h"
+#include "third-party/asic/elba/model/elb_top/elb_top_csr_defines.h"
+#include "third-party/asic/elba/model/elb_wa/elb_wa_csr_define.h"
 #include "third-party/asic/elba/model/elb_prd/elb_prd_csr.h"
 #include "third-party/asic/elba/model/utils/elb_csr_py_if.h"
 #include "third-party/asic/elba/verif/apis/elb_txs_api.h"
-//@@TODO - remove pipeline specific inclusion in sdk
-#ifndef ELEKTRA
-#include "nic/hal/pd/elba/elba_barco_crypto.hpp"
-#endif
 
 namespace sdk {
 namespace platform {
@@ -65,11 +63,12 @@ elba_timer_hbm_init (void)
     return ret;
 }
 
-static sdk_ret_t
-elba_pgm_init (asic_cfg_t *cfg)
+sdk_ret_t
+elba_pgm_init (void)
 {
-    sdk_ret_t ret;
-    std::string full_path;
+    sdk_ret_t      ret;
+    std::string    full_path;
+    asic_cfg_t     *cfg = g_elba_state_pd->cfg();
 
     for (uint8_t i = 0; i < cfg->num_pgm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
@@ -82,7 +81,7 @@ elba_pgm_init (asic_cfg_t *cfg)
                           full_path.c_str());
             return SDK_RET_ERR;
         }
-        ret = asic_load_config((char *)full_path.c_str());
+        ret = sdk::asic::asic_load_config((char *)full_path.c_str());
         if (ret != SDK_RET_OK) {
             SDK_TRACE_ERR("Failed to load config %s", full_path);
             return ret;
@@ -95,6 +94,7 @@ elba_pgm_init (asic_cfg_t *cfg)
 static sdk_ret_t
 elba_asm_init (asic_cfg_t *cfg)
 {
+#if 0   /* TBD-ELBA-REBASE: */
     int iret = 0;
     uint64_t base_addr;
     std::string full_path;
@@ -134,6 +134,7 @@ elba_asm_init (asic_cfg_t *cfg)
             return SDK_RET_ERR;
         }
    }
+#endif
 
    return SDK_RET_OK;
 }
@@ -148,7 +149,7 @@ elba_hbm_regions_init (asic_cfg_t *cfg)
         return ret;
     }
 
-    ret = elba_pgm_init(cfg);
+    ret = elba_pgm_init();
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -440,7 +441,7 @@ elba_block_init (asic_cfg_t *cfg)
 // - do all the parser/deparser related register programming
 // - do all the table configuration related register programming
 //------------------------------------------------------------------------------
-static sdk_ret_t
+sdk_ret_t
 elba_init (asic_cfg_t *cfg)
 {
     sdk_ret_t ret;
@@ -453,9 +454,9 @@ elba_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "elba_state_pd_init failure, err : %d", ret);
 
-    if (elba_table_rw_init(cfg) != ELBA_OK) {
-        return SDK_RET_ERR;
-    }
+    ret = elba_table_rw_init(cfg);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "elba_table_rw_init failure, err : %d", ret);
 
     ret = elba_hbm_regions_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
@@ -548,6 +549,7 @@ elba_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                  "Elba enable ipsec_inline failure, err : %d", ret);
 
+#if 0   /* TBD-ELBA-REBASE: */
 #ifndef ELEKTRA
     if (hal::pd::elba_barco_crypto_init(cfg->platform) != HAL_RET_OK) {
         ret = SDK_RET_INVALID_ARG;
@@ -558,6 +560,7 @@ elba_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                  "Elba Barco initialization failure, err : %d", ret);
 #endif
+#endif
 
     if (cfg->completion_func) {
         cfg->completion_func(sdk::SDK_STATUS_ASIC_INIT_DONE);
@@ -566,51 +569,36 @@ elba_init (asic_cfg_t *cfg)
     return SDK_RET_OK;
 }
 
-} // namespace elba
-} // namespace platform
-} // namespace sdk
-
-namespace sdk {
-namespace asic {
-
-//------------------------------------------------------------------------------
-// perform all the ELBA specific initialization
-//------------------------------------------------------------------------------
-sdk_ret_t
-elba_asic_init (asic_cfg_t *cfg)
+uint64_t
+elba_local_dbaddr (void)
 {
-    asic_cfg_t    elba_cfg;
+    uint64_t db_addr =
+#ifdef __aarch64__
+       ELB_ADDR_BASE_DB_WA_OFFSET +
+#endif // __aarch64__
+       ELB_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS;
 
-    SDK_ASSERT(cfg != NULL);
-    //elba_cfg.loader_info_file = cfg->loader_info_file;
-    elba_cfg.default_config_dir = cfg->default_config_dir;
-    elba_cfg.cfg_path = cfg->cfg_path;
-    elba_cfg.admin_cos = cfg->admin_cos;
-    elba_cfg.repl_entry_width = cfg->repl_entry_width;
-    elba_cfg.catalog = cfg->catalog;
-    elba_cfg.mempartition = cfg->mempartition;
-    elba_cfg.p4_cache = true;
-    elba_cfg.p4plus_cache = true;
-    elba_cfg.llc_cache = true;
-    elba_cfg.platform = cfg->platform;
-    elba_cfg.num_pgm_cfgs = cfg->num_pgm_cfgs;
-    elba_cfg.pgm_name = cfg->pgm_name;
-    for (int i = 0; i < cfg->num_pgm_cfgs; i++) {
-        elba_cfg.pgm_cfg[i].path = cfg->pgm_cfg[i].path;
-    }
-    elba_cfg.num_asm_cfgs = cfg->num_asm_cfgs;
-    for (int i = 0; i < cfg->num_asm_cfgs; i++) {
-        elba_cfg.asm_cfg[i].name = cfg->asm_cfg[i].name;
-        elba_cfg.asm_cfg[i].path = cfg->asm_cfg[i].path;
-        elba_cfg.asm_cfg[i].symbols_func = cfg->asm_cfg[i].symbols_func;
-        elba_cfg.asm_cfg[i].base_addr = cfg->asm_cfg[i].base_addr;
-        elba_cfg.asm_cfg[i].sort_func =
-            cfg->asm_cfg[i].sort_func;
-    }
-    elba_cfg.completion_func = cfg->completion_func;
-
-    return elba_init(&elba_cfg);
+    return db_addr;
 }
 
-} // namespace asic
+uint64_t
+elba_local_db32_addr (void)
+{
+    uint64_t db_addr =
+#ifdef __aarch64__
+       ELB_ADDR_BASE_DB_WA_OFFSET +
+#endif // __aarch64__
+       ELB_WA_CSR_DHS_32B_DOORBELL_BYTE_ADDRESS;
+
+    return db_addr;
+}
+
+uint64_t
+elba_host_dbaddr (void)
+{
+    return ELB_WA_CSR_DHS_HOST_DOORBELL_BYTE_ADDRESS;
+}
+
+} // namespace elba
+} // namespace platform
 } // namespace sdk

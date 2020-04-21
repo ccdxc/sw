@@ -31,9 +31,10 @@ export NIC_COMMON_FLAGS := -pthread -rdynamic
 
 export NIC_SDK_SOLIBS   := utils list slab shmmgr mmgr sdkpal sdkfru \
     ht indexer logger thread event_thread periodic twheel directmap sldirectmap \
-    hash hbmhash tcam timerfd catalog device sdkplatformutils sdkcapri \
-    sdkp4loader sdkasicrw sdkasiccmn lif_mgr sdkring sysmon sensor sdkxcvrdriver \
-    pcieport pciemgrutils pciemgr pcietlp intrutils cfgspace evutils misc
+    hash hbmhash tcam timerfd catalog device sdkplatformutils sdk${ASIC} \
+    sdkp4loader sdkasicrw sdkasiccmn sdkasicpd lif_mgr sdkring sysmon sensor \
+    sdkxcvrdriver pcieport pciemgrutils pciemgr pcietlp intrutils cfgspace \
+    evutils misc
 
 export NIC_HAL_DLOPEN_SOLIBS := plugin_network \
                                 plugin_sfw \
@@ -99,7 +100,7 @@ export NIC_HAL_UTILS_SOLIBS := utils bitmap block_list nat eventmgr \
 
 export NIC_HAL_PD_SOLIBS_x86_64 := model_client
 export NIC_HAL_PD_SOLIBS_aarch64 :=
-export NIC_HAL_PD_SOLIBS := sdkcapri_asicrw_if pdcommon sdkp4 \
+export NIC_HAL_PD_SOLIBS := sdk_asicrw_if pdcommon sdkp4 \
        pd_${PIPELINE} sdkasicpd sdkasiccmn asicpd pd_acl_tcam pd_met \
        ${NIC_HAL_PD_SOLIBS_${ARCH}}
 export NIC_CAPSIM_LDLIBS := mpuobj capisa isa sknobs
@@ -160,7 +161,7 @@ export NIC_THIRDPARTY_SSL_LDLIBS := ssl crypto
 export NIC_THIRDPARTY_GOOGLE_LDLIBS := :libprotobuf.so.14 grpc++_reflection \
        grpc++ grpc_unsecure grpc++_unsecure
 export NIC_THIRDPARTY_PACKET_PARSER_LDLIBS := packet_parser
-export SDK_THIRDPARTY_CAPRI_LDLIBS := sdkcapri_csrint
+export SDK_THIRDPARTY_CAPRI_LDLIBS := sdk${ASIC}_csrint
 export PDS_UPG_LDLIBS := ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
 
 # ==========================================================================
@@ -223,37 +224,37 @@ export CLI_iris_P4PD_SOLIBS :=   p4pd_iris p4pd_common_p4plus_txdma  p4pd_common
                                  ${NIC_SDK_SOLIBS} \
                                  ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                                  sdkp4 sdkp4utils \
-                                 sdkcapri_asicrw_if sdkcapri \
-                                 sdkplatformutils sdkasicpd sdkasiccmn memhash \
+                                 sdk_asicrw_if \
+                                 sdkplatformutils memhash \
                                  bm_allocator pal
 export CLI_apollo_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                                  ${NIC_SDK_SOLIBS} \
                                  ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                                  sdkp4 sdkp4utils \
-                                 sdkcapri_asicrw_if sdkcapri \
-                                 sdkplatformutils sdkasicpd sdkasiccmn memhash \
+                                 sdk_asicrw_if \
+                                 sdkplatformutils memhash \
                                  bm_allocator pal
 export CLI_artemis_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                                   ${NIC_SDK_SOLIBS} \
                                   ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                                   sdkp4 sdkp4utils \
-                                  sdkcapri_asicrw_if sdkcapri \
-                                  sdkplatformutils sdkasicpd sdkasiccmn memhash \
+                                  sdk_asicrw_if \
+                                  sdkplatformutils memhash \
                                   bm_allocator pal
 
 export CLI_apulu_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                                   ${NIC_SDK_SOLIBS} \
                                   ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                                   sdkp4 sdkp4utils \
-                                  sdkcapri_asicrw_if sdkcapri \
-                                  sdkplatformutils sdkasicpd sdkasiccmn memhash \
+                                  sdk_asicrw_if \
+                                  sdkplatformutils memhash \
                                   bm_allocator pal
 export CLI_athena_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                                    ${NIC_SDK_SOLIBS} \
                                    ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                                    sdkp4 sdkp4utils \
-                                   sdkcapri_asicrw_if sdkcapri \
-                                   sdkplatformutils sdkasicpd sdkasiccmn memhash \
+                                   sdk_asicrw_if \
+                                   sdkplatformutils memhash \
                                    bm_allocator pal
 # ==========================================================================
 #                        HAL Binary/Gtest Libs
@@ -281,7 +282,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_LINKMGR_SOLIBS} \
                                ${NIC_SDK_SOLIBS} \
                                marvell pal agent_api delphisdk haldelphi halsysmgr \
-                               nicmgrproto sdkcapri_asicrw_if commonproto \
+                               nicmgrproto sdk_asicrw_if commonproto \
                                ftestatsproto dropstatsproto rulestatsproto hal_mem linkmgrproto \
 			       			   haltrace vmotion flowstatsproto ${NIC_HAL_NICMGR_SOLIBS} penipc penipc_ev
 

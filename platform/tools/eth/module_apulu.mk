@@ -5,7 +5,7 @@ MODULE_TARGET   := eth_dbgtool_apulu.bin
 MODULE_PIPELINE := apulu
 MODULE_SOLIBS   := sdkpal logger sdkplatformutils shmmgr bm_allocator \
                     ${NIC_SDK_SOLIBS} \
-                    sdkcapri_asicrw_if \
+                    sdk_asicrw_if \
                     sdkasicpd \
                     sdkp4 sdkp4utils \
                     p4pd_${PIPELINE} \

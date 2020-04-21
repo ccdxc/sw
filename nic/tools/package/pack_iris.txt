@@ -161,7 +161,7 @@ nic/build/$ARCH/$PIPELINE/lib/libpenlog.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/*upgrade*                                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenctlproto.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4loader.so                        /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so                 /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk_asicrw_if.so                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdevapi_iris.so                        /nic/lib/

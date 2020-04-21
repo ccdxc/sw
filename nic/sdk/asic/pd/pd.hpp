@@ -124,10 +124,6 @@ int asicpd_tcam_table_entry_write(uint32_t tableid, uint32_t index,
 int asicpd_tcam_table_entry_read(uint32_t tableid, uint32_t index,
                                  uint8_t  *trit_x, uint8_t  *trit_y,
                                  uint16_t *hwentry_bit_len);
-int asicpd_hbm_table_entry_write (uint32_t tableid, uint32_t index,
-                                  uint8_t *hwentry, uint16_t entry_size);
-int asicpd_hbm_table_entry_write (uint32_t tableid, uint32_t index,
-                                  uint8_t *hwentry, uint16_t *entry_size);
 int asicpd_table_hw_entry_read(uint32_t tableid, uint32_t index,
                                uint8_t  *hwentry, uint16_t *hwentry_bit_len);
 int asicpd_tcam_table_hw_entry_read(uint32_t tableid, uint32_t index,
@@ -140,13 +136,14 @@ int asicpd_hbm_table_entry_read(uint32_t tableid, uint32_t index,
                                 uint8_t *hwentry, uint16_t *entry_size);
 int asicpd_hbm_table_entry_write(uint32_t tableid, uint32_t index,
                                  uint8_t *hwentry, uint16_t entry_size);
-sdk_ret_t asic_pd_scheduler_stats_get(scheduler_stats_t *sch_stats);
-sdk_ret_t asic_pd_hbm_bw_get(hbm_bw_samples_t *hbm_bw_samples);
+sdk_ret_t asicpd_scheduler_stats_get(scheduler_stats_t *sch_stats);
+sdk_ret_t asicpd_hbm_bw_get(hbm_bw_samples_t *hbm_bw_samples);
 sdk_ret_t asicpd_llc_setup(llc_counters_t *llc);
 sdk_ret_t asicpd_llc_get(llc_counters_t *llc);
 sdk_ret_t asicpd_p4plus_recirc_init(void);
 sdk_ret_t asicpd_qstate_map_clear(uint32_t lif_id);
 sdk_ret_t asicpd_qstate_map_write(lif_qstate_t *qstate, uint8_t enable);
+sdk_ret_t asicpd_qstate_map_rewrite(uint32_t lif_id, uint8_t enable);
 sdk_ret_t asicpd_qstate_map_read (lif_qstate_t *qstate);
 sdk_ret_t asicpd_qstate_write(uint64_t addr, const uint8_t *buf,
                               uint32_t size);
@@ -160,7 +157,7 @@ uint32_t asicpd_clock_freq_get(void);
 sdk_ret_t asicpd_adjust_perf(int chip_id, int inst_id,
                              pd_adjust_perf_index_t &idx,
                              pd_adjust_perf_type_t perf_type);
-void asic_pd_set_half_clock(int chip_id, int inst_id);
+void asicpd_set_half_clock(int chip_id, int inst_id);
 sdk_ret_t asicpd_unravel_hbm_intrs(bool *iscattrip, bool *iseccerr,
                                    bool logging=false);
 sdk_ret_t asicpd_toeplitz_init(const char *handle, uint32_t table_id,
@@ -480,7 +477,10 @@ sdk_ret_t asicpd_qos_uplink_iq_nodrop_update(tm_port_t port, tm_q_t iq,
                                              bool no_drop);
 sdk_ret_t asicpd_qos_uplink_input_map_update(tm_port_t port, uint32_t dot1q_pcp,
                                              tm_q_t iq);
-
+int asicpd_hbm_table_entry_cache_invalidate(p4pd_table_cache_t cache,
+                                            uint64_t entry_addr,
+                                            uint16_t entry_width,
+                                            mem_addr_t base_mem_pa);
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

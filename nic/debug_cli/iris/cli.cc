@@ -5,8 +5,6 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/platform.hpp"
-#include "nic/sdk/platform/capri/csrint/csr_init.hpp"
-#include "nic/sdk/platform/capri/capri_state.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_utils.hpp"

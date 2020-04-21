@@ -9,7 +9,6 @@
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_tcp_proxy_api.h"
 #include "nic/sdk/asic/cmn/asic_hbm.hpp"
-#include "platform/capri/capri_txs_scheduler.hpp"
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
@@ -19,7 +18,22 @@
 #include "nic/include/tls_common.h"
 #include "nic/include/app_redir_shared.h"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
+#ifdef ELBA
+#include "nic/sdk/platform/elba/elba_txs_scheduler.hpp"
+#else
+#include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
+#endif
+
+#ifdef ELBA
+using namespace sdk::platform::elba;
+/* TBD-ELBA-REBASE: get these from elba_barco_crypto.hpp */
+#define ELBA_MAX_TLS_PAD_SIZE              512
+#define ELBA_GC_GLOBAL_TABLE               (ELBA_MAX_TLS_PAD_SIZE + 128)
+#define ELBA_GC_GLOBAL_OOQ_TX2RX_FP_PI     (ELBA_GC_GLOBAL_TABLE + 8)
+#else
+using namespace sdk::platform::capri;
+#endif
 
 namespace hal {
 namespace pd {
@@ -961,9 +975,13 @@ debug_dol_init_timer_full_area(int state)
     uint64_t data[DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES * 2 * 8];
 
     timer_key_hbm_base_addr = (uint64_t)asicpd_get_mem_addr((char *)JTIMERS);
+#ifdef ELBA
+    timer_key_hbm_base_addr += (DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES *
+                    ELBA_TIMER_NUM_KEY_PER_CACHE_LINE * 64);
+#else
     timer_key_hbm_base_addr += (DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES *
                     CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * 64);
-
+#endif
     if (state == DEBUG_DOL_TEST_TIMER_FULL_SET) {
         byte = 0xff;
     } else {
@@ -979,16 +997,29 @@ debug_dol_init_timer_full_area(int state)
 static void
 debug_dol_test_timer_full(int state)
 {
+#ifdef ELBA
     if (state == DEBUG_DOL_TEST_TIMER_FULL_SET) {
         /*
          * Debug code to force num key_lines to 2
          */
         HAL_TRACE_DEBUG("setting num key_lines = 2");
-        capri_txs_timer_init_hsh_depth(DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES);
+        sdk::platform::elba::elba_txs_timer_init_hsh_depth(DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES);
     } else {
         HAL_TRACE_DEBUG("resetting num key_lines back to default");
-        capri_txs_timer_init_hsh_depth(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
+        sdk::platform::elba::elba_txs_timer_init_hsh_depth(ELBA_TIMER_NUM_KEY_CACHE_LINES);
     }
+#else
+    if (state == DEBUG_DOL_TEST_TIMER_FULL_SET) {
+        /*
+         * Debug code to force num key_lines to 2
+         */
+        HAL_TRACE_DEBUG("setting num key_lines = 2");
+        sdk::platform::capri::capri_txs_timer_init_hsh_depth(DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES);
+    } else {
+        HAL_TRACE_DEBUG("resetting num key_lines back to default");
+        sdk::platform::capri::capri_txs_timer_init_hsh_depth(CAPRI_TIMER_NUM_KEY_CACHE_LINES);
+    }
+#endif
 
     debug_dol_init_timer_full_area(state);
 }
@@ -1024,8 +1055,13 @@ p4pd_add_or_del_tcp_ooo_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             data.u.load_stage0_d.ooo_rx2tx_qbase = htonll(ooo_rx2tx_qbase);
         }
 
+#ifdef ELBA
+        uint64_t mem_addr = (uint64_t)asicpd_get_mem_addr(
+                ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) + ELBA_GC_GLOBAL_OOQ_TX2RX_FP_PI;
+#else
         uint64_t mem_addr = (uint64_t)asicpd_get_mem_addr(
                 ASIC_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_GC_GLOBAL_OOQ_TX2RX_FP_PI;
+#endif
         data.u.load_stage0_d.ooo_rx2tx_free_pi_addr = htonll(mem_addr);
 
         data.u.load_stage0_d.ooo_rx2tx_producer_ci_addr =

@@ -30,15 +30,15 @@ LDLIBS += -lpal -lpdsframework -lpdscore -lpdslearn -lpdsapi -lpdsapi_impl -lsdk
                 -lp4pd_athena_txdma -lutils -llist -lslab -lshmmgr -lmmgr \
                 -lsdkpal -lsdkfru -lht -lindexer -lperiodic -ltwheel -ldirectmap \
                 -lsldirectmap -lhash -lhbmhash -ltcam -ltimerfd -lcatalog \
-                -ldevice -lsdkplatformutils -lsdkcapri -lsdkp4loader -lsdkasicrw \
+                -ldevice -lsdkplatformutils -lsdk${ASIC} -lsdkp4loader -lsdkasicrw \
                 -llif_mgr -lsdkring -lsysmon -lsensor -lsdkp4 \
-                -lsdkp4utils -lsdkcapri_asicrw_if -lpdsapi_asic_impl \
+                -lsdkp4utils -lsdk_asicrw_if -lpdsapi_asic_impl \
                 -lsdkxcvrdriver -lsdkasicpd -lsdkasiccmn -lkvstore_lmdb -llmdb -lbm_allocator -lsdklinkmgr \
                 -lsdklinkmgrcsr -lnicmgr_athena -lmnet -levutils \
                 -lpciemgr_if -lpciemgr -lpciemgrutils -lpciehdevices \
                 -lpcietlp -lcfgspace -lintrutils -lmisc -lpdsnicmgr_upgrade_stubs\
                 -lev \
-                -lmpuobj -lcapisa -lisa -lsknobs -lsdkcapri_csrint -lAAPL \
+                -lmpuobj -lcapisa -lisa -lsknobs -lsdk${ASIC}_csrint -lAAPL \
                 -lpthread -lz -lrt -lJudy -ldl -lzmq -ledit -lncurses \
                 -lstdc++ -lm -lgcc -lc
 
@@ -49,7 +49,7 @@ OBJECTS := $(basename $(SRC_FILES))
 OBJECTS := $(OBJECTS:%=$(OBJ_DIR)/%.o)
 DEPENDS = $(OBJECTS:.o=.d)
 
-ATH_APP_OBJS := $(OBJ_DIR)/main.o 
+ATH_APP_OBJS := $(OBJ_DIR)/main.o
 
 OBJ_FILES := $(basename $(SRC_FILES))
 OBJ_FILES := $(OBJ_FILES:%=$(OBJ_DIR)/%.o)
@@ -62,7 +62,7 @@ $(OBJ_DIR)/%.o: %.c
 all: $(OBJ_FILES)
 	$(CXX) $(ATH_APP_OBJS) $(LDFLAGS) $(LDLIBS) -o athena_cps
 
-clean:  
+clean:
 	rm -rf $(OBJ_DIR)
 
 -include $(DEPENDS)

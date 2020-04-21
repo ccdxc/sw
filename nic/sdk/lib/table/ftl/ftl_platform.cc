@@ -64,7 +64,11 @@ memwr(Apictx *ctx) {
     auto basepa = ctx->level ? ctx->props->stable_base_mem_pa :
                                ctx->props->ptable_base_mem_pa;
     auto size = ctx->table_index * ctx->entry->entry_size();
+#ifdef ELBA
+    elba_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS, size, 1, basepa);
+#else
     capri_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS, size, 1, basepa);
+#endif
 #endif
 
     return SDK_RET_OK;
@@ -83,9 +87,15 @@ memclr(uint64_t memva, uint64_t mempa, uint32_t num_entries,
 
 #ifndef SIM
     for (uint32_t i = 0; i < num_entries; i++) {
+#ifdef ELBA
+        elba_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS, 
+                                              (i * entry_size),
+                                              1, mempa);
+#else
         capri_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS,
                                                (i * entry_size),
                                                1, mempa);
+#endif
     }
 #endif
 

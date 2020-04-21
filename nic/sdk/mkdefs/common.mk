@@ -39,6 +39,7 @@ export SDK_THIRD_PARTY_OMAPI_INCLUDES := \
        ${SDKDIR}/third-party/dhcp-server-pkg/${ARCH}/include
 
 export SDK_THIRDPARTY_CAPRI_LDLIBS := sdkcapri_csrint
+export SDK_THIRDPARTY_ELBA_LDLIBS := sdkelba_csrint
 
 export THIRD_PARTY_INCLUDES := ${SDK_THIRD_PARTY_INCLUDES}
 

@@ -18,12 +18,12 @@
 #include "platform/elba/elba_tm_rw.hpp"
 #include "platform/elba/elba_state.hpp"
 #include "lib/bitmap/bitmap.hpp"
-#include "gen/platform/mem_regions.hpp"
+#include "asic/pd/pd.hpp"
 
 #include "third-party/asic/elba/model/utils/elb_blk_reg_model.h"
 #include "third-party/asic/elba/model/elb_top/elb_top_csr.h"
 #include "third-party/asic/elba/model/elb_pb/elb_pbc_csr.h"
-#include "third-party/asic/elba/verif/apis/elb_pb_api.h"
+#include "third-party/asic/elba/verif/apis/elb_pb_sw_api.h"
 #include "third-party/asic/elba/model/elb_pb/elb_pbc_decoders.h"
 #include "third-party/asic/elba/design/common/gen/elb_pf_decoders.h"
 
@@ -718,9 +718,7 @@ elba_tm_uplink_iq_params_update (tm_port_t             port,
 }
 
 sdk_ret_t
-elba_tm_uplink_input_map_update (tm_port_t port,
-                                 uint32_t dot1q_pcp,
-                                 tm_q_t iq)
+elba_tm_uplink_input_map_update (tm_port_t port, uint32_t dot1q_pcp, tm_q_t iq)
 {
     if (!elba_tm_port_is_uplink_port(port)) {
         SDK_TRACE_ERR("%u is not a valid TM uplink port",
@@ -828,73 +826,16 @@ elba_tm_uplink_input_dscp_map_update (tm_port_t port,
     return sdk::SDK_RET_OK;
 }
 
+sdk_ret_t elb_pb_sched_spq_pgm(uint32_t chip_id, uint32_t inst_id,
+                               tm_port_t port, tm_q_t oq,
+                               pb_sched_node_input_info_t *input_info) {
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
 
 sdk_ret_t
-elba_tm_uplink_oq_update (tm_port_t port,
-                          tm_q_t oq,
-                          bool xoff_enable,
-                          uint32_t xoff_cos)
+elba_tm_uplink_oq_update (tm_port_t port, tm_q_t oq, uint32_t xoff_cos)
 {
-    elb_top_csr_t &elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
-    elb_pbc_csr_t &pbc_csr = elb0.pb.pbc;
-    uint32_t xoff_enable_val;
-    cpp_int xoff2oq_map_val;
-    elb_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder;
-    xoff2oq_map_decoder.init();
-
-    if (!elba_tm_port_is_uplink_port(port)) {
-        SDK_TRACE_ERR("%u is not a valid TM uplink port",
-                      port);
-        return sdk::SDK_RET_INVALID_ARG;
-    }
-
-    stringstream data;
-    data << hex << endl;
-    switch(port) {
-//:: for p in range(TM_PORTS):
-//::    pinfo = port_info[p]
-//::    if pinfo["type"] == "uplink":
-        case ${pinfo["enum"]}:
-            {
-                pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
-                xoff2oq_map_val = pbc_csr.port_${p}.cfg_oq_xoff2oq.map();
-
-                cpp_helper.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
-
-                // TODO: write to disable xoff by default
-                // pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
-
-                pbc_csr.port_${p}.cfg_mac_xoff.read();
-                xoff_enable_val = pbc_csr.port_${p}.cfg_mac_xoff.enable().convert_to<uint32_t>();
-                if (xoff_enable) {
-                    xoff_enable_val |= 1<<xoff_cos;
-                } else {
-                    xoff_enable_val &= ~(1<<xoff_cos);
-                }
-                // TODO: write to disable xoff by default
-                // pbc_csr.port_${p}.cfg_mac_xoff.enable(xoff_enable_val);
-
-                xoff2oq_map_decoder.all(pbc_csr.port_${p}.cfg_oq_xoff2oq.map());
-                xoff2oq_map_decoder.set_name("elb0.pb.pbc.port_${p}.cfg_oq_xoff2oq.decoder");
-                if (tm_sw_cfg_write_enabled()) {
-                    xoff2oq_map_decoder.show();
-
-                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq_xoff2oq")}
-                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_mac_xoff")}
-
-                    pbc_csr.port_${p}.cfg_oq_xoff2oq.write();
-                    pbc_csr.port_${p}.cfg_mac_xoff.write();
-                }
-                break;
-            }
-//::    #endif
-//:: #endfor
-        default:
-            return sdk::SDK_RET_INVALID_ARG;
-    }
-    SDK_TRACE_DEBUG("%s", data.str().c_str());
-
-    return sdk::SDK_RET_OK;
+    return sdk::SDK_RET_INVALID_OP; /* TBD-ELBA-REBASE: */
 }
 
 //:: for level in range(3):
@@ -1040,8 +981,7 @@ elba_tm_scheduler_map_update (uint32_t port,
 
 /* Program the lif value on an uplink port */
 sdk_ret_t
-elba_tm_uplink_lif_set (uint32_t port,
-                         uint32_t lif)
+elba_tm_uplink_lif_set (uint32_t port, uint32_t lif)
 {
     if (!elba_tm_port_is_uplink_port(port)) {
         SDK_TRACE_ERR("%u is not a valid TM uplink port",
@@ -1157,8 +1097,7 @@ elba_tm_get_buffer_occupancy (tm_port_t port, tm_q_t iq,
     }
 }
 
-
-static sdk_ret_t
+sdk_ret_t
 elba_tm_drain_uplink_port (tm_port_t port)
 {
     bool all_zeroes = false;
@@ -1266,9 +1205,12 @@ elba_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
 sdk_ret_t
 elba_tm_hw_config_load_poll (int phase)
 {
+// TBD:: fix ELBA_ASIC_API
+/*
     if (phase == 0) {
         elb_pb_init_done(0,0);
     }
+*/
     return sdk::SDK_RET_OK;
 }
 
@@ -2648,9 +2590,11 @@ elba_tm_init_qos_profile (elba_tm_cfg_profile_t *tm_cfg_profile,
 
     tm_cfg_profile->hbm_fifo_base =
             g_elba_state_pd->mempartition()->start_addr(
-                                            MEM_REGION_QOS_HBM_FIFO_NAME);
+                                            MEM_REGION_QOS_FIFO_NAME);
+                                            /* TBD-ELBA-REBASE: */
     tm_cfg_profile->hbm_fifo_size =
-        g_elba_state_pd->mempartition()->size(MEM_REGION_QOS_HBM_FIFO_NAME);
+        g_elba_state_pd->mempartition()->size(MEM_REGION_QOS_FIFO_NAME);
+                                            /* TBD-ELBA-REBASE: */
 
     tm_cfg_profile->num_active_uplink_ports = catalog->num_fp_ports();
 
@@ -2775,7 +2719,7 @@ elba_tm_init (sdk::lib::catalog* catalog)
     }
     if (tm_sw_init_enabled()) {
         // Poll for the completion of the inits
-        elb_pb_init_done(0,0);
+        // elb_pb_init_done(0,0); // TBD:: fix ELBA_ASIC_API
     }
 
     ret = elba_tm_init_ports();
@@ -3061,7 +3005,7 @@ elba_tm_debug_stats_get (tm_port_t port, tm_debug_stats_t *debug_stats,
 
 // set the reserved min for uplink ports
 sdk_ret_t
-elba_tm_set_reserved_min(uint32_t reserved_min)
+elba_tm_set_reserved_min (uint32_t reserved_min)
 {
     return sdk::SDK_RET_OK; // TBD-ELBA-REBASE: fixup
 }
@@ -3072,6 +3016,78 @@ elba_queue_stats_get (tm_port_t port, void *stats)
     // TBD-ELBA-REBASE: move to elba_tm_utils[.cc,.hpp] and fixup void *
     return sdk::SDK_RET_OK;
 }
+
+// called during upgrade scenarios to update the table property
+// based on the new configuration.
+sdk_ret_t
+elba_tbl_eng_cfg_modify (p4pd_pipeline_t pipeline,
+                         p4_tbl_eng_cfg_t *cfg, uint32_t ncfgs)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_flush_uplink_port (tm_port_t port, bool enable)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_uplink_iq_no_drop_update (tm_port_t port, tm_q_t iq, bool no_drop)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_get_uplink_oq_xoff_map (tm_port_t port, tm_q_t oq, uint32_t *xoff_cos)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_set_uplink_iq_to_p4_oq_map (tm_port_t  port, tm_q_t iq, tm_q_t p4_q)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_set_uplink_mac_xoff (tm_port_t port, bool reset_all_xoff,
+                             bool set_all_xoff, bool reset_pfc_xoff,
+                             bool set_pfc_xoff, uint32_t xoff_cos_bitmap)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_uplink_set_cam_type (tm_port_t port, uint32_t  entry, uint32_t  etype)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_uplink_set_cam_cos (tm_port_t port, uint32_t  entry, uint32_t  cos)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_get_uplink_mac_xoff (tm_port_t port, uint32_t *xoff_cos_bitmap)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_uplink_set_cam_da (tm_port_t port, uint32_t  entry, uint64_t  dmac)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
+sdk_ret_t
+elba_tm_write_control_uplink_port (tm_port_t port, bool enable)
+{
+    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE:: fixup
+}
+
 
 }    // namespace elba
 }    // namespace platform

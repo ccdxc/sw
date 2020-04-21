@@ -78,7 +78,7 @@ nic/build/x86_64/iris/lib/libsdkxcvrdriver.so                       /nic/lib/
 nic/build/x86_64/iris/lib/libproto.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libcommonproto.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libsdkp4loader.so                         /nic/lib/
-nic/build/x86_64/iris/lib/libsdkcapri_asicrw_if.so                  /nic/lib/
+nic/build/x86_64/iris/lib/libsdk_asicrw_if.so                  /nic/lib/
 nic/build/x86_64/iris/lib/libsdkcapri_csrint.so                     /nic/lib/
 
 # linkmgr
