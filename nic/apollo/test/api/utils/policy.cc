@@ -40,6 +40,8 @@ policy_feeder::init(pds_obj_key_t key,
     this->stateful_rules = stateful_rules;
     this->spec.rule_info = NULL;
     this->cidr_str = cidr_str;
+    create_rules(this->cidr_str, this->af, this->stateful_rules,
+                 (rule_info_t **)&(this->spec.rule_info), this->num_rules);
     num_obj = num_policy;
 }
 
@@ -49,95 +51,148 @@ policy_feeder::iter_next(int width) {
     cur_iter_pos++;
 }
 
+static inline bool
+is_l3 (layer_t layer)
+{
+    if (layer == L3 || layer == LAYER_ALL) {
+        return true;
+    }
+    return false;
+}
+
+static inline bool
+is_l4 (layer_t layer)
+{
+    if (layer == L4 || layer == LAYER_ALL) {
+        return true;
+    }
+    return false;
+}
+
+static inline fw_action_t
+action_get (action_t action)
+{
+    switch (action) {
+    case DENY:
+        return SECURITY_RULE_ACTION_DENY;
+    case RANDOM:
+        return rand()%2 ? SECURITY_RULE_ACTION_ALLOW :
+                          SECURITY_RULE_ACTION_DENY;
+    case ALLOW:
+    default:
+        return SECURITY_RULE_ACTION_ALLOW;
+    }
+}
+
 void
 policy_feeder::key_build(pds_obj_key_t *key) const {
     memcpy(key, &this->spec.key, sizeof(pds_obj_key_t));
 }
 
 void
-create_rules(std::string cidr_str, uint8_t af, uint16_t num_rules,
-             rule_info_t **rule_info, uint16_t stateful_rules)
+create_rules(std::string cidr_str, uint8_t af, uint16_t stateful_rules,
+             rule_info_t **rule_info, uint16_t num_rules,
+             layer_t layer, action_t action, uint32_t priority,
+             bool wildcard)
 {
     ip_prefix_t ip_pfx;
-    uint16_t    num_range_rules;
+    uint16_t num_range_rules;
+    rule_t *rule;
 
     *rule_info =
         (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                   POLICY_RULE_INFO_SIZE(num_rules));
     (*rule_info)->af = af;
     (*rule_info)->num_rules = num_rules;
+    if (num_rules == 0) return;
     test::extract_ip_pfx((char *)cidr_str.c_str(), &ip_pfx);
 
     if (apulu()) {
         num_range_rules = (ip_pfx.addr.af == IP_AF_IPV6)?
                            MAX_RANGE_RULES_V6 : MAX_RANGE_RULES_V4;
         for (uint32_t i = 0; i < num_rules; i++) {
-            (*rule_info)->rules[i].key = int2pdsobjkey(i+1);
-            (*rule_info)->rules[i].attrs.match.l4_match.sport_range.port_lo = 0;
-            (*rule_info)->rules[i].attrs.match.l4_match.sport_range.port_hi = 65535;
-            (*rule_info)->rules[i].attrs.match.l4_match.dport_range.port_lo = 0;
-            (*rule_info)->rules[i].attrs.match.l4_match.dport_range.port_hi = 65535;
-            (*rule_info)->rules[i].attrs.match.l3_match.proto_match_type = MATCH_SPECIFIC;
-            (*rule_info)->rules[i].attrs.match.l3_match.ip_proto = IP_PROTO_TCP;
-            // create few as range match rules and rest as prefix
-            if (num_range_rules) {
-                (*rule_info)->rules[i].attrs.match.l3_match.src_match_type = IP_MATCH_RANGE;
-                (*rule_info)->rules[i].attrs.match.l3_match.dst_match_type = IP_MATCH_RANGE;
-                (*rule_info)->rules[i].attrs.match.l3_match.src_ip_range.af = ip_pfx.addr.af;
-                memcpy(&(*rule_info)->rules[i].attrs.match.l3_match.src_ip_range.ip_lo,
-                       &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
-                memcpy(&(*rule_info)->rules[i].attrs.match.l3_match.dst_ip_range.ip_lo,
-                       &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
-                test::increment_ip_addr(&ip_pfx.addr, 2);
-                memcpy(&(*rule_info)->rules[i].attrs.match.l3_match.src_ip_range.ip_hi,
-                       &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
-                memcpy(&(*rule_info)->rules[i].attrs.match.l3_match.dst_ip_range.ip_hi,
-                       &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
-                increment_ip_addr(&ip_pfx.addr);
-                (*rule_info)->rules[i].attrs.action_data.fw_action.action
-                                = SECURITY_RULE_ACTION_DENY;
-                num_range_rules--;
-            } else {
-                (*rule_info)->rules[i].attrs.match.l3_match.src_match_type = IP_MATCH_PREFIX;
-                (*rule_info)->rules[i].attrs.match.l3_match.dst_match_type = IP_MATCH_PREFIX;
-                memcpy(&(*rule_info)->rules[i].attrs.match.l3_match.src_ip_pfx,
-                       &ip_pfx, sizeof(ip_prefix_t));
-                // using same ip as dst ip just for testing
-                memcpy(&(*rule_info)->rules[i].attrs.match.l3_match.dst_ip_pfx,
-                       &ip_pfx, sizeof(ip_prefix_t));
-                test::increment_ip_addr(&ip_pfx.addr);
-                (*rule_info)->rules[i].attrs.action_data.fw_action.action
-                                = SECURITY_RULE_ACTION_ALLOW;
+            rule = &(*rule_info)->rules[i];
+            rule->key = int2pdsobjkey(i+1);
+            rule->attrs.priority = priority;
+            if (is_l4(layer)) {
+                rule->attrs.match.l4_match.sport_range.port_lo = 0;
+                rule->attrs.match.l4_match.sport_range.port_hi = 65535;
+                rule->attrs.match.l4_match.dport_range.port_lo = 0;
+                rule->attrs.match.l4_match.dport_range.port_hi = 65535;
             }
-            cidr_str = ippfx2str(&ip_pfx);
+            if (is_l3(layer)) {
+                rule->attrs.match.l3_match.proto_match_type = MATCH_SPECIFIC;
+                rule->attrs.match.l3_match.ip_proto = IP_PROTO_TCP;
+
+                // create few as range match rules and rest as prefix
+                if (num_range_rules) {
+                    rule->attrs.match.l3_match.src_match_type = IP_MATCH_RANGE;
+                    rule->attrs.match.l3_match.dst_match_type = IP_MATCH_RANGE;
+                    rule->attrs.match.l3_match.src_ip_range.af = ip_pfx.addr.af;
+                    memcpy(&rule->attrs.match.l3_match.src_ip_range.ip_lo,
+                           &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
+                    memcpy(&rule->attrs.match.l3_match.dst_ip_range.ip_lo,
+                           &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
+                    test::increment_ip_addr(&ip_pfx.addr, 2);
+                    memcpy(&rule->attrs.match.l3_match.src_ip_range.ip_hi,
+                           &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
+                    memcpy(&rule->attrs.match.l3_match.dst_ip_range.ip_hi,
+                           &ip_pfx.addr.addr, sizeof(ipvx_addr_t));
+                    increment_ip_addr(&ip_pfx.addr);
+                    num_range_rules--;
+                } else {
+                    rule->attrs.match.l3_match.src_match_type = IP_MATCH_PREFIX;
+                    rule->attrs.match.l3_match.dst_match_type = IP_MATCH_PREFIX;
+                    memcpy(&rule->attrs.match.l3_match.src_ip_pfx,
+                           &ip_pfx, sizeof(ip_prefix_t));
+                    // using same ip as dst ip just for testing
+                    memcpy(&rule->attrs.match.l3_match.dst_ip_pfx,
+                           &ip_pfx, sizeof(ip_prefix_t));
+                    test::increment_ip_addr(&ip_pfx.addr);
+                }
+                cidr_str = ippfx2str(&ip_pfx);
+            }
+            rule->attrs.action_data.fw_action.action = action_get(action);
         }
     } else {
         for (uint32_t i = 0; i < num_rules; i++) {
-            (*rule_info)->rules[i].key = int2pdsobjkey(i+1);
+            rule = &(*rule_info)->rules[i];
+            rule->key = int2pdsobjkey(i+1);
+            rule->attrs.priority = priority;
             if (stateful_rules) {
-                (*rule_info)->rules[i].attrs.stateful = true;
-                (*rule_info)->rules[i].attrs.match.l4_match.sport_range.port_lo = 0;
-                (*rule_info)->rules[i].attrs.match.l4_match.sport_range.port_hi = 65535;
-                (*rule_info)->rules[i].attrs.match.l4_match.dport_range.port_lo = 0;
-                (*rule_info)->rules[i].attrs.match.l4_match.dport_range.port_hi = 65535;
-                (*rule_info)->rules[i].attrs.match.l3_match.proto_match_type = MATCH_SPECIFIC;
-                (*rule_info)->rules[i].attrs.match.l3_match.ip_proto = IP_PROTO_TCP;
+                rule->attrs.stateful = true;
+                if (is_l4(layer)) {
+                    rule->attrs.match.l4_match.sport_range.port_lo = 0;
+                    rule->attrs.match.l4_match.sport_range.port_hi = 65535;
+                    rule->attrs.match.l4_match.dport_range.port_lo = 0;
+                    rule->attrs.match.l4_match.dport_range.port_hi = 65535;
+                }
+                if (is_l3(layer)) {
+                    rule->attrs.match.l3_match.proto_match_type = MATCH_SPECIFIC;
+                    rule->attrs.match.l3_match.ip_proto = IP_PROTO_TCP;
+                }
                 stateful_rules--;
             } else {
-                (*rule_info)->rules[i].attrs.stateful = false;
-                (*rule_info)->rules[i].attrs.match.l3_match.proto_match_type = MATCH_SPECIFIC;
-                (*rule_info)->rules[i].attrs.match.l3_match.ip_proto = IP_PROTO_ICMP;
-                (*rule_info)->rules[i].attrs.match.l4_match.type_match_type = MATCH_SPECIFIC;
-                (*rule_info)->rules[i].attrs.match.l4_match.icmp_type = 1;
-                (*rule_info)->rules[i].attrs.match.l4_match.code_match_type = MATCH_SPECIFIC;
-                (*rule_info)->rules[i].attrs.match.l4_match.icmp_code = 1;
+                rule->attrs.stateful = false;
+                if (is_l3(layer)) {
+                    rule->attrs.match.l3_match.proto_match_type = MATCH_SPECIFIC;
+                    rule->attrs.match.l3_match.ip_proto = IP_PROTO_ICMP;
+                }
+                if (is_l4(layer)) {
+                    rule->attrs.match.l4_match.type_match_type = MATCH_SPECIFIC;
+                    rule->attrs.match.l4_match.icmp_type = 1;
+                    rule->attrs.match.l4_match.code_match_type = MATCH_SPECIFIC;
+                    rule->attrs.match.l4_match.icmp_code = 1;
+                }
             }
-            memcpy(&(*rule_info)->rules[i].attrs.match.l3_match.src_ip_pfx,
-                   &ip_pfx, sizeof(ip_prefix_t));
-            test::increment_ip_addr(&ip_pfx.addr);
-            cidr_str = ippfx2str(&ip_pfx);
-            (*rule_info)->rules[i].attrs.action_data.fw_action.action =
-                SECURITY_RULE_ACTION_ALLOW;
+            if (is_l3(layer)) {
+                memcpy(&rule->attrs.match.l3_match.src_ip_pfx,
+                       &ip_pfx, sizeof(ip_prefix_t));
+                test::increment_ip_addr(&ip_pfx.addr);
+                cidr_str = ippfx2str(&ip_pfx);
+            }
+            rule->attrs.action_data.fw_action.action =
+                                                action_get(action);
         }
     }
 }
@@ -145,8 +200,8 @@ create_rules(std::string cidr_str, uint8_t af, uint16_t num_rules,
 void
 policy_feeder::spec_build(pds_policy_spec_t *spec) const {
     memcpy(spec, &this->spec, sizeof(pds_policy_spec_t));
-    create_rules(this->cidr_str, this->af, this->num_rules,
-                 (rule_info_t **)&(spec->rule_info), this->stateful_rules);
+    create_rules(this->cidr_str, this->af, this->stateful_rules,
+                 (rule_info_t **)&(spec->rule_info), this->num_rules);
 }
 
 bool
@@ -190,28 +245,13 @@ policy_read (policy_feeder& feeder, sdk_ret_t exp_result)
 }
 
 static void
-rule_attr_update (policy_feeder& feeder, rule_t *rule,
+rule_attr_update (policy_feeder& feeder, rule_info_t *info,
                   uint64_t chg_bmap)
 {
-    for(uint32_t i = 0; i < feeder.spec.rule_info->num_rules; i++) {
-        if (bit_isset(chg_bmap, RULE_ATTR_STATEFUL)) {
-            feeder.spec.rule_info->rules[i].attrs.stateful =
-                !(feeder.spec.rule_info->rules[i].attrs.stateful);
-        }
-        if (bit_isset(chg_bmap, RULE_ATTR_PRIORITY)) {
-            feeder.spec.rule_info->rules[i].attrs.priority++;
-        }
-        if (bit_isset(chg_bmap, RULE_ATTR_L3_MATCH)) {
-            memcpy(&feeder.spec.rule_info->rules[i].attrs.match.l3_match,
-                   &rule->attrs.match.l3_match,
-                   sizeof(rule_l3_match_t));
-        }
-        if (bit_isset(chg_bmap, RULE_ATTR_L4_MATCH)) {
-            memcpy(&feeder.spec.rule_info->rules[i].attrs.match.l4_match,
-                   &rule->attrs.match.l4_match,
-                   sizeof(rule_l4_match_t));
-        }
-    }
+    SDK_ASSERT(info);
+    feeder.spec.rule_info->num_rules = info->num_rules;
+    memcpy(feeder.spec.rule_info->rules, info->rules,
+           sizeof(rule_t) * info->num_rules);
 }
 
 static void
@@ -220,25 +260,31 @@ rule_info_attr_update (policy_feeder& feeder, rule_info_t *info,
 {
     if (bit_isset(chg_bmap, RULE_INFO_ATTR_AF)) {
         feeder.spec.rule_info->af = info->af;
-    }
-    if (bit_isset(chg_bmap, RULE_INFO_ATTR_RULE)) {
         feeder.spec.rule_info->num_rules = info->num_rules;
-        memcpy(feeder.spec.rule_info->rules, info->rules,
+        memcpy(&feeder.spec.rule_info->rules, &info->rules,
                sizeof(rule_t) * info->num_rules);
     }
-    if (bit_isset(chg_bmap, RULE_INFO_ATTR_RULE_DEFAULT_ACTION)) {
-        //feeder.spec.rule_info->default_action.action_data.fw_action.action =
-        //~(feeder.spec.rule_info->default_action.action_data.fw_action.action);
+    if (bit_isset(chg_bmap, RULE_INFO_ATTR_RULE)) {
+        memcpy(&feeder.spec.rule_info->rules, &info->rules,
+               sizeof(rule_t) * info->num_rules);
+    }
+    if (bit_isset(chg_bmap, RULE_INFO_ATTR_DEFAULT_ACTION)) {
+        feeder.spec.rule_info->default_action.fw_action.action =
+                            info->default_action.fw_action.action;
+        memcpy(&feeder.spec.rule_info->default_action,
+               &info->default_action,
+               sizeof(rule_action_data_t));
     }
 }
 
 void
 policy_rule_update (policy_feeder& feeder, pds_policy_spec_t *spec,
-                         uint64_t chg_bmap, sdk_ret_t exp_result)
+                    uint64_t chg_bmap, sdk_ret_t exp_result)
 {
     pds_batch_ctxt_t bctxt = batch_start();
+    rule_info_t *rule_info = spec ? spec->rule_info : NULL;
 
-    rule_attr_update(feeder, spec->rule_info->rules, chg_bmap);
+    rule_attr_update(feeder, rule_info, chg_bmap);
     SDK_ASSERT_RETURN_VOID(
         (SDK_RET_OK == many_update<policy_feeder>(bctxt, feeder)));
 
@@ -264,6 +310,16 @@ policy_rule_info_update (policy_feeder& feeder, pds_policy_spec_t *spec,
         batch_commit_fail(bctxt);
     else
         batch_commit(bctxt);
+}
+
+void
+policy_update (policy_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<policy_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
 }
 
 void

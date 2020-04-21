@@ -551,6 +551,292 @@ TEST_F(policy, policy_workflow_neg_9) {
     // workflow_neg_8<policy_feeder>(feeder1, feeder2);
 }
 
+//---------------------------------------------------------------------
+// Non templatized test cases
+//---------------------------------------------------------------------
+
+/// \brief delete rules from a policy
+TEST_F(policy, rule_info_update_rules_del) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    pds_policy_spec_t spec;
+    policy_feeder feeder;
+    uint32_t num_policy = 1;
+
+    // v4 policy
+    // delete some rules
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    create_rules("10.1.0.0/16", IP_AF_IPV4, 2, &spec.rule_info, 10);
+    policy_rule_info_update(feeder, &spec, RULE_INFO_ATTR_RULE);
+    feeder.init(key, 2, IP_AF_IPV4, "10.1.0.0/16", num_policy, 5);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // delete all rules
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    memset(&spec, 0, sizeof(spec));
+    create_rules("", IP_AF_IPV4, 0, &spec.rule_info, 0);
+    policy_rule_info_update(feeder, &spec, RULE_INFO_ATTR_RULE);
+    feeder.init(key, 0, IP_AF_IPV4, "10.0.0.0/16", num_policy, 0);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief add rules to empty policy
+TEST_F(policy, rule_info_update_rules_add) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    policy_feeder feeder;
+    pds_policy_spec_t spec;
+    uint32_t num_policy = 1;
+
+    // v4 policy
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 0, IP_AF_IPV4, "10.0.0.0/16", num_policy);
+    policy_create(feeder);
+    policy_read(feeder);
+    create_rules("10.1.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10);
+    policy_rule_info_update(feeder, &spec, RULE_INFO_ATTR_RULE);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // add rules to a non-empty policy
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    create_rules("10.1.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10);
+    policy_rule_info_update(feeder, &spec, RULE_INFO_ATTR_RULE);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief change default action in a policy
+TEST_F(policy, rule_info_update_default_action) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    pds_policy_spec_t spec;
+    policy_feeder feeder;
+    uint32_t num_policy = 1;
+
+    // v4 policy
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 0, IP_AF_IPV4, "10.0.0.0/16", num_policy);
+    policy_create(feeder);
+    policy_read(feeder);
+    create_rules("10.1.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10);
+    spec.rule_info->default_action.fw_action.action =
+                                    SECURITY_RULE_ACTION_DENY;
+    policy_rule_info_update(feeder, &spec, RULE_INFO_ATTR_DEFAULT_ACTION);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief change af in a policy
+TEST_F(policy, rule_info_update_af) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    pds_policy_spec_t spec;
+    policy_feeder feeder;
+    uint32_t num_policy = 1;
+
+    // v4 policy
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", 2);
+    policy_create(feeder);
+    policy_read(feeder);
+    create_rules("10::1/64", IP_AF_IPV6, 5, &spec.rule_info, 10);
+    spec.rule_info->af = IP_AF_IPV6;
+    policy_rule_info_update(feeder, &spec, RULE_INFO_ATTR_AF);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief change stateful attr in a rule
+TEST_F(policy, rule_update_stateful) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    pds_policy_spec_t spec;
+    policy_feeder feeder;
+    uint32_t num_policy = 1;
+
+    // no stateful rules to all stateful rules
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 0, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    // update stateful
+    create_rules("10.0.0.0/16", IP_AF_IPV4, 10, &spec.rule_info, 10);
+    policy_rule_update(feeder, &spec, RULE_ATTR_STATEFUL);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // all stateful rules to no stateful rules
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 10, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    // update stateful
+    create_rules("10.0.0.0/16", IP_AF_IPV4, 0, &spec.rule_info, 10);
+    policy_rule_update(feeder, &spec, RULE_ATTR_STATEFUL);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief change priority in a rule
+TEST_F(policy, rule_update_priority) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    pds_policy_spec_t spec;
+    policy_feeder feeder;
+    uint32_t num_policy = 1;
+    uint32_t priority = 8;
+
+    // v4 policy
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    // update priority
+    create_rules("10.0.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10, LAYER_ALL,
+                 RANDOM, priority);
+    policy_rule_update(feeder, &spec, RULE_ATTR_PRIORITY);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief change action in a rule
+TEST_F(policy, rule_update_action) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    pds_policy_spec_t spec;
+    policy_feeder feeder;
+    uint32_t num_policy = 1;
+
+    // v4 policy
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    // update action to deny for all rules
+    create_rules("10.0.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10, LAYER_ALL,
+                 DENY);
+    policy_rule_update(feeder, &spec, RULE_ATTR_ACTION);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief change l3 match rules
+TEST_F(policy, rule_update_l3_match) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    pds_policy_spec_t spec;
+    policy_feeder feeder;
+    uint32_t num_policy = 1;
+
+    // v4 policy
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    create_rules("10.1.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10, L3);
+    policy_rule_update(feeder, &spec, RULE_ATTR_L3_MATCH);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // wildcard
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    create_rules("10.1.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10, L3,
+                 RANDOM, true);
+    policy_rule_update(feeder, &spec, RULE_ATTR_L3_MATCH);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief change l4 match rules
+TEST_F(policy, rule_update_l4_match) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    pds_policy_spec_t spec;
+    policy_feeder feeder;
+    uint32_t num_policy = 1;
+
+    // v4 policy
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    // update priority
+    create_rules("10.1.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10, L4);
+    policy_rule_update(feeder, &spec, RULE_ATTR_L3_MATCH);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // wildcard
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    create_rules("10.1.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10, L4,
+                 RANDOM, true);
+    policy_rule_update(feeder, &spec, RULE_ATTR_L3_MATCH);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update to wildcard rules
+TEST_F(policy, rule_update_wildcard) {
+    if (!apulu()) return;
+
+    pds_obj_key_t key = int2pdsobjkey(1);
+    pds_policy_spec_t spec;
+    policy_feeder feeder;
+    uint32_t num_policy = 1;
+
+    // v4 policy
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(key, 5, IP_AF_IPV4, "10.0.0.0/16", num_policy, 10);
+    policy_create(feeder);
+    policy_read(feeder);
+    // update priority
+    create_rules("10.1.0.0/16", IP_AF_IPV4, 5, &spec.rule_info, 10,
+                 LAYER_ALL, RANDOM, true);
+    policy_update(feeder);
+    policy_read(feeder);
+    policy_delete(feeder);
+    policy_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
 /// @}
 
 }    // namespace api

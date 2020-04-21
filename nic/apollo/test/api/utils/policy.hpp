@@ -14,17 +14,29 @@ namespace test {
 namespace api {
 
 enum rule_attrs {
-    RULE_ATTR_STATEFUL                  = bit(0),
-    RULE_ATTR_PRIORITY                  = bit(1),
-    RULE_ATTR_L3_MATCH                  = bit(2),
-    RULE_ATTR_L4_MATCH                  = bit(3),
-    RULE_ATTR_ACTION                    = bit(4),
+    RULE_ATTR_STATEFUL              = bit(0),
+    RULE_ATTR_PRIORITY              = bit(1),
+    RULE_ATTR_L3_MATCH              = bit(2),
+    RULE_ATTR_L4_MATCH              = bit(3),
+    RULE_ATTR_ACTION                = bit(4),
 };
 
 enum rule_info_attrs {
-    RULE_INFO_ATTR_AF                   = bit(0),
-    RULE_INFO_ATTR_RULE                 = bit(1),
-    RULE_INFO_ATTR_RULE_DEFAULT_ACTION  = bit(2),
+    RULE_INFO_ATTR_AF               = bit(0),
+    RULE_INFO_ATTR_RULE             = bit(1),
+    RULE_INFO_ATTR_DEFAULT_ACTION   = bit(2),
+};
+
+enum layer_t {
+    L3,
+    L4,
+    LAYER_ALL,
+};
+
+enum action_t {
+    ALLOW,
+    DENY,
+    RANDOM,
 };
 
 // Policy test feeder class
@@ -99,7 +111,14 @@ void policy_rule_update(policy_feeder& feeder, pds_policy_spec_t *spec,
 void policy_rule_info_update(policy_feeder& feeder, pds_policy_spec_t *spec,
                              uint64_t chg_bmap, sdk_ret_t exp_result =
                                                                 SDK_RET_OK);
+void policy_update(policy_feeder& feeder);
 void policy_delete(policy_feeder& feeder);
+
+void create_rules(std::string cidr_str, uint8_t af=IP_AF_IPV4,
+                  uint16_t stateful_rules=0, rule_info_t **rule_info=NULL,
+                  uint16_t num_rules=1, layer_t layer=LAYER_ALL,
+                  action_t action=ALLOW, uint32_t priority=0,
+                  bool wildcard=false);
 
 // Function prototypes
 void sample_policy_setup(pds_batch_ctxt_t bctxt);
