@@ -32,19 +32,19 @@ class RouteTableObject():
         for route in self.routes:
             rtspec = spec.Routes.add()
             if route.nhtype == 'tunnel':
-                rtspec.TunnelId = utils.PdsUuid.GetUUIDfromId(route.nhid)
+                rtspec.Attrs.TunnelId = utils.PdsUuid.GetUUIDfromId(route.nhid)
             else:
                 assert(0)
-            rtspec.Prefix.Addr.Af = self.addrfamily
-            rtspec.Prefix.Addr.V4Addr = int(route.prefix.network_address)
-            rtspec.Prefix.Len = route.prefix.prefixlen
+            rtspec.Attrs.Prefix.Addr.Af = self.addrfamily
+            rtspec.Attrs.Prefix.Addr.V4Addr = int(route.prefix.network_address)
+            rtspec.Attrs.Prefix.Len = route.prefix.prefixlen
             if route.nat_type:
                 if route.nat_type == "napt":
                     if route.nat_addr_type == "public":
-                        rtspec.NatAction.SrcNatAction = types_pb2.NAT_ACTION_NAPT_PUBLIC
+                        rtspec.Attrs.NatAction.SrcNatAction = types_pb2.NAT_ACTION_NAPT_PUBLIC
                     else:
-                        rtspec.NatAction.SrcNatAction = types_pb2.NAT_ACTION_NAPT_SVC
+                        rtspec.Attrs.NatAction.SrcNatAction = types_pb2.NAT_ACTION_NAPT_SVC
                 elif route.nat_type == "static":
-                    rtspec.NatAction.SrcNatAction = types_pb2.NAT_ACTION_STATIC
-            rtspec.MeterEn = route.meteren
+                    rtspec.Attrs.NatAction.SrcNatAction = types_pb2.NAT_ACTION_STATIC
+            rtspec.Attrs.MeterEn = route.meteren
         return grpcmsg
