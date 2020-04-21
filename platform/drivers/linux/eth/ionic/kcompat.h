@@ -6446,15 +6446,12 @@ __kc_eth_get_headlen(const struct net_device __always_unused *dev, void *data,
 #define HAVE_NETDEV_XMIT_MORE
 #endif /* 5.2.0 */
 
-#ifndef DEVLINK_INFO_VERSION_GENERIC_FW
-#define DEVLINK_INFO_VERSION_GENERIC_FW        "fw.version"
-#endif
-#ifndef DEVLINK_INFO_VERSION_GENERIC_ASIC_ID
+/*****************************************************************************/
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5,4,0))
+#define DEVLINK_INFO_VERSION_GENERIC_FW        "fw"
 #define DEVLINK_INFO_VERSION_GENERIC_ASIC_ID   "asic.id"
-#endif
-#ifndef DEVLINK_INFO_VERSION_GENERIC_ASIC_REV
 #define DEVLINK_INFO_VERSION_GENERIC_ASIC_REV  "asic.rev"
-#endif
+#endif /* 5.4.0 */
 
 
 #endif /* _KCOMPAT_H_ */

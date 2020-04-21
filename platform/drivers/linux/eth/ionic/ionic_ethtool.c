@@ -4,6 +4,20 @@
 #include <linux/module.h>
 #include <linux/netdevice.h>
 
+/* Normally we would #include <linux/sfp.h> here, but some of the
+ * older distros don't have that file, and some that do have an
+ * older version that doesn't include these definitions.
+ */
+enum {
+	SFF8024_ID_UNK			= 0x00,
+	SFF8024_ID_SFF_8472		= 0x02,
+	SFF8024_ID_SFP			= 0x03,
+	SFF8024_ID_DWDM_SFP		= 0x0b,
+	SFF8024_ID_QSFP_8438		= 0x0c,
+	SFF8024_ID_QSFP_8436_8636	= 0x0d,
+	SFF8024_ID_QSFP28_8636		= 0x11,
+};
+
 #include "ionic.h"
 #include "ionic_bus.h"
 #include "ionic_lif.h"
@@ -830,12 +844,12 @@ static int ionic_get_module_info(struct net_device *netdev,
 
 	/* report the module data type and length */
 	switch (xcvr->sprom[0]) {
-	case 0x03: /* SFP */
+	case SFF8024_ID_SFP:
 		modinfo->type = ETH_MODULE_SFF_8079;
 		modinfo->eeprom_len = ETH_MODULE_SFF_8079_LEN;
 		break;
-	case 0x0D: /* QSFP */
-	case 0x11: /* QSFP28 */
+	case SFF8024_ID_QSFP_8436_8636:
+	case SFF8024_ID_QSFP28_8636:
 		modinfo->type = ETH_MODULE_SFF_8436;
 		modinfo->eeprom_len = ETH_MODULE_SFF_8436_LEN;
 		break;
@@ -843,7 +857,9 @@ static int ionic_get_module_info(struct net_device *netdev,
 		if (!lif->ionic->is_mgmt_nic)
 			netdev_info(netdev, "unknown xcvr type 0x%02x\n",
 				    xcvr->sprom[0]);
-		return -EOPNOTSUPP;
+		modinfo->type = 0;
+		modinfo->eeprom_len = ETH_MODULE_SFF_8079_LEN;
+		break;
 	}
 
 	return 0;
@@ -909,6 +925,9 @@ static int ionic_nway_reset(struct net_device *netdev)
 }
 
 static const struct ethtool_ops ionic_ethtool_ops = {
+#ifdef ETHTOOL_COALESCE_USECS
+	.supported_coalesce_params = ETHTOOL_COALESCE_USECS,
+#endif
 	.get_drvinfo		= ionic_get_drvinfo,
 	.get_regs_len		= ionic_get_regs_len,
 	.get_regs		= ionic_get_regs,

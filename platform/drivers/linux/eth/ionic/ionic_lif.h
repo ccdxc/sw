@@ -124,13 +124,17 @@ struct ionic_lif_sw_stats {
 	u64 rx_csum_none;
 	u64 rx_csum_complete;
 	u64 rx_csum_error;
+	u64 hw_tx_dropped;
+	u64 hw_rx_dropped;
+	u64 hw_rx_over_errors;
+	u64 hw_rx_missed_errors;
+	u64 hw_tx_aborted_errors;
 };
 
 enum ionic_lif_state_flags {
 	IONIC_LIF_F_INITED,
 	IONIC_LIF_F_SW_DEBUG_STATS,
 	IONIC_LIF_F_UP,
-	IONIC_LIF_F_TRANS,
 	IONIC_LIF_F_LINK_CHECK_REQUESTED,
 	IONIC_LIF_F_QUEUE_RESET,
 	IONIC_LIF_F_FW_RESET,
@@ -233,6 +237,35 @@ static inline int ionic_wait_for_bit(struct ionic_lif *lif, int bitname)
 	return wait_on_bit_lock(lif->state, bitname, TASK_INTERRUPTIBLE);
 }
 
+static inline u32 ionic_coal_usec_to_hw(struct ionic *ionic, u32 usecs)
+{
+	u32 mult = le32_to_cpu(ionic->ident.dev.intr_coal_mult);
+	u32 div = le32_to_cpu(ionic->ident.dev.intr_coal_div);
+
+	/* Div-by-zero should never be an issue, but check anyway */
+	if (!div || !mult)
+		return 0;
+
+	/* Round up in case usecs is close to the next hw unit */
+	usecs += (div / mult) >> 1;
+
+	/* Convert from usecs to device units */
+	return (usecs * mult) / div;
+}
+
+static inline u32 ionic_coal_hw_to_usec(struct ionic *ionic, u32 units)
+{
+	u32 mult = le32_to_cpu(ionic->ident.dev.intr_coal_mult);
+	u32 div = le32_to_cpu(ionic->ident.dev.intr_coal_div);
+
+	/* Div-by-zero should never be an issue, but check anyway */
+	if (!div || !mult)
+		return 0;
+
+	/* Convert from device units to usec */
+	return (units * div) / mult;
+}
+
 static inline bool ionic_is_platform_dev(struct ionic *ionic)
 {
 	return !!ionic->pfdev;
@@ -253,6 +286,13 @@ static inline bool ionic_is_vf(struct ionic *ionic)
 void ionic_lif_deferred_enqueue(struct ionic_deferred *def,
 				struct ionic_deferred_work *work);
 void ionic_link_status_check_request(struct ionic_lif *lif);
+#ifdef HAVE_VOID_NDO_GET_STATS64
+void ionic_get_stats64(struct net_device *netdev,
+		       struct rtnl_link_stats64 *ns);
+#else
+struct rtnl_link_stats64 *ionic_get_stats64(struct net_device *netdev,
+					    struct rtnl_link_stats64 *ns);
+#endif
 int ionic_lifs_alloc(struct ionic *ionic);
 void ionic_lifs_free(struct ionic *ionic);
 void ionic_lifs_deinit(struct ionic *ionic);
@@ -301,35 +341,6 @@ static inline void debug_stats_napi_poll(struct ionic_qcq *qcq,
 		work_done = IONIC_MAX_NUM_NAPI_CNTR - 1;
 
 	qcq->napi_stats.work_done_cntr[work_done]++;
-}
-
-static inline u32 ionic_coal_usec_to_hw(struct ionic *ionic, u32 usecs)
-{
-	u32 mult = le32_to_cpu(ionic->ident.dev.intr_coal_mult);
-	u32 div = le32_to_cpu(ionic->ident.dev.intr_coal_div);
-
-	/* Div-by-zero should never be an issue, but check anyway */
-	if (!div || !mult)
-		return 0;
-
-	/* Round up in case usecs is close to the next hw unit */
-	usecs += (div / mult) >> 1;
-
-	/* Convert from usecs to device units */
-	return (usecs * mult) / div;
-}
-
-static inline u32 ionic_coal_hw_to_usec(struct ionic *ionic, u32 units)
-{
-	u32 mult = le32_to_cpu(ionic->ident.dev.intr_coal_mult);
-	u32 div = le32_to_cpu(ionic->ident.dev.intr_coal_div);
-
-	/* Div-by-zero should never be an issue, but check anyway */
-	if (!div || !mult)
-		return 0;
-
-	/* Convert from device units to usec */
-	return (units * div) / mult;
 }
 
 #define DEBUG_STATS_CQE_CNT(cq)		((cq)->compl_count++)

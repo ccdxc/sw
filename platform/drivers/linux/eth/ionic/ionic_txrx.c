@@ -947,9 +947,12 @@ static int ionic_tx_calc_csum(struct ionic_queue *q, struct sk_buff *skb)
 				  flags, skb_shinfo(skb)->nr_frags, dma_addr);
 	desc->cmd = cpu_to_le64(cmd);
 	desc->len = cpu_to_le16(skb_headlen(skb));
-	desc->vlan_tci = cpu_to_le16(skb_vlan_tag_get(skb));
 	desc->csum_start = cpu_to_le16(skb_checksum_start_offset(skb));
 	desc->csum_offset = cpu_to_le16(skb->csum_offset);
+	if (has_vlan) {
+		desc->vlan_tci = cpu_to_le16(skb_vlan_tag_get(skb));
+		stats->vlan_inserted++;
+	}
 
 #ifdef HAVE_CSUM_NOT_INET
 	if (skb->csum_not_inet)

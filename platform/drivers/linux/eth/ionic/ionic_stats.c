@@ -19,6 +19,11 @@ static const struct ionic_stat_desc ionic_lif_stats_desc[] = {
 	IONIC_LIF_STAT_DESC(rx_csum_none),
 	IONIC_LIF_STAT_DESC(rx_csum_complete),
 	IONIC_LIF_STAT_DESC(rx_csum_error),
+	IONIC_LIF_STAT_DESC(hw_tx_dropped),
+	IONIC_LIF_STAT_DESC(hw_rx_dropped),
+	IONIC_LIF_STAT_DESC(hw_rx_over_errors),
+	IONIC_LIF_STAT_DESC(hw_rx_missed_errors),
+	IONIC_LIF_STAT_DESC(hw_tx_aborted_errors),
 };
 
 static const struct ionic_stat_desc ionic_port_stats_desc[] = {
@@ -210,6 +215,7 @@ static void ionic_get_lif_stats(struct ionic_lif *lif,
 {
 	struct ionic_tx_stats *tstats;
 	struct ionic_rx_stats *rstats;
+	struct rtnl_link_stats64 ns;
 	struct ionic_qcq *txqcq;
 	struct ionic_qcq *rxqcq;
 	int q_num;
@@ -238,6 +244,13 @@ static void ionic_get_lif_stats(struct ionic_lif *lif,
 			stats->rx_csum_error += rstats->csum_error;
 		}
 	}
+
+	ionic_get_stats64(lif->netdev, &ns);
+	stats->hw_tx_dropped = ns.tx_dropped;
+	stats->hw_rx_dropped = ns.rx_dropped;
+	stats->hw_rx_over_errors = ns.rx_over_errors;
+	stats->hw_rx_missed_errors = ns.rx_missed_errors;
+	stats->hw_tx_aborted_errors = ns.tx_aborted_errors;
 }
 
 static u64 ionic_sw_stats_get_count(struct ionic_lif *lif)

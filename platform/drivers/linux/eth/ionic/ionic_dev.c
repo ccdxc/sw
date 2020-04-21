@@ -155,8 +155,8 @@ int ionic_heartbeat_check(struct ionic *ionic)
 	if (time_before(hb_time, (idev->last_hb_time + ionic->watchdog_period)))
 		return 0;
 
-	/* firmware is useful only if fw_status has the running bit set and
-	 * is not 0xff (dead PCI)
+	/* firmware is useful only if the running bit is set and
+	 * fw_status != 0xff (bad PCI read)
 	 */
 	fw_status = ioread8(&idev->dev_info_regs->fw_status);
 	if (fw_status != 0xff)
@@ -169,17 +169,13 @@ int ionic_heartbeat_check(struct ionic *ionic)
 		bool trigger = false;
 
 		if (!fw_status || fw_status == 0xff) {
-			dev_info(ionic->dev, "FW status STOPPED %u\n", fw_status);
-			if (lif && !test_bit(IONIC_LIF_F_FW_RESET, lif->state)) {
-				dev_info(ionic->dev, " ... triggering stop\n");
+			dev_info(ionic->dev, "FW stopped %u\n", fw_status);
+			if (lif && !test_bit(IONIC_LIF_F_FW_RESET, lif->state))
 				trigger = true;
-			}
 		} else {
-			dev_info(ionic->dev, "FW status RUNNING %u\n", fw_status);
-			if (lif && test_bit(IONIC_LIF_F_FW_RESET, lif->state)) {
-				dev_info(ionic->dev, " ... triggering restart\n");
+			dev_info(ionic->dev, "FW running %u\n", fw_status);
+			if (lif && test_bit(IONIC_LIF_F_FW_RESET, lif->state))
 				trigger = true;
-			}
 		}
 
 		if (trigger) {
@@ -196,7 +192,6 @@ int ionic_heartbeat_check(struct ionic *ionic)
 				ionic_lif_deferred_enqueue(&lif->deferred, work);
 			}
 		}
-
 	}
 	idev->last_fw_status = fw_status;
 
@@ -515,7 +510,7 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct ionic_qcq *qcq,
 		.q_init.opcode = IONIC_CMD_Q_INIT,
 		.q_init.lif_index = cpu_to_le16(lif_index),
 		.q_init.type = q->type,
-		.q_init.ver = qcq->q.lif->qtype_ver[q->type],
+		.q_init.ver = qcq->q.lif->qtype_info[q->type].version,
 		.q_init.index = cpu_to_le32(q->index),
 		.q_init.flags = cpu_to_le16(IONIC_QINIT_F_IRQ |
 					    IONIC_QINIT_F_ENA),
