@@ -95,7 +95,9 @@ func (h Hal) SecurityRuleDelete(ctx context.Context, req *apuluproto.SecurityRul
 	fmt.Println(string(dat))
 
 	return &apuluproto.SecurityRuleDeleteResponse{
-		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+		ApiStatus: []apuluproto.ApiStatus{
+			apuluproto.ApiStatus_API_STATUS_OK,
+		},
 	}, nil
 }
 
