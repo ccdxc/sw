@@ -86,5 +86,7 @@ sshpass -p $BUILD_VM_PW scp -o StrictHostKeyChecking=no -pr "$BUILD_VM_USER"@"$B
 # Copy package from the ArtifactsZipped folder
 cd "$GEN_DIR/.."
 cp "$GEN_DIR/ArtifactsZipped/Artifacts.zip" .
-mv -f Artifacts.zip "$GEN_PKG"
+mv -f Artifacts.zip "$GEN_PKG_UNSIGNED"
+
+asset-pull windows-driver 1.1.47.0 $GEN_PKG
 
