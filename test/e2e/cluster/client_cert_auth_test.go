@@ -4,8 +4,13 @@ package cluster
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/netutils"
+
+	"github.com/pensando/sw/api/generated/cluster"
 
 	"github.com/pensando/sw/venice/globals"
 
@@ -33,8 +38,13 @@ func waitForDSCsToBeAdmitted(apiGwAddr string) {
 				if naplesStatus.Status.AdmissionPhase == "admitted" {
 					By(fmt.Sprintf("ts:%s DSC has been admitted", time.Now().String()))
 					continue
+				} else if naplesStatus.Status.AdmissionPhase == "" && naplesStatus.Status.Mode == "HOST" {
+					By(fmt.Sprintf("ts:%s DSC found in HOST mode, trying to switch to NETWORK mode", time.Now().String()))
+					// switch to network mode
+					switchToNetworkMode(naplesStatus, naples, httpClient)
+					return false
 				}
-				By(fmt.Sprintf("ts: %s DSC has not been admitted yet", time.Now().String()))
+				By(fmt.Sprintf("ts: %s DSC has not been admitted yet, it is in admission-phase: %s, mode: %s", time.Now().String(), naplesStatus.Status.AdmissionPhase, naplesStatus.Status.Mode))
 				return false
 			}
 			if status != http.StatusUnauthorized {
@@ -47,18 +57,35 @@ func waitForDSCsToBeAdmitted(apiGwAddr string) {
 	}, 1200, 5).Should(BeTrue(), "Unable to verify all DSCs have been admitted")
 }
 
+func switchToNetworkMode(naplesStatus nmd.DistributedServiceCard, naples string, httpClient *netutils.HTTPClient) {
+	agIP := net.ParseIP(ts.tu.FirstNaplesIP).To4()
+	gw := net.ParseIP(ts.tu.NameToIPMap[naples])
+	naplesStatus.Spec.Mode = nmd.MgmtMode_NETWORK.String()
+	naplesStatus.Spec.Controllers = []string{ts.tu.ClusterVIP}
+	naplesStatus.Spec.ID = naples
+	naplesStatus.Spec.NetworkMode = nmd.NetworkMode_OOB.String()
+	// Ensure that a random static IP is given
+	naplesStatus.Spec.IPConfig = &cluster.IPConfig{
+		IPAddress: agIP.String() + "/24",
+		DefaultGW: gw.String(),
+	}
+	By(fmt.Sprintf("Switching Naples %+v to managed mode", naples))
+	_, err := httpClient.Req("POST", fmt.Sprintf("https://%s:8888/api/v1/naples/", ts.tu.NameToIPMap[naples]), naplesStatus, nil)
+	if err != nil {
+		By(fmt.Sprintf("ts:%s received error: %s, when switching to NETWORK mode", time.Now().String(), err.Error()))
+	}
+}
+
 var _ = Describe("Client certificates", func() {
 
 	var apiGwAddr string
 	BeforeEach(func() {
-		Skip("Skipping client cert auth tests")
 		apiGwAddr = ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 		waitForDSCsToBeAdmitted(apiGwAddr)
 	})
 
 	Context("with wild-card audience", func() {
 		It("should be allowed", func() {
-			Skip("Skipping client cert auth tests")
 			Eventually(func() bool {
 				// get token with * audience from Venice/api-gw
 				httpClient, err := utils.GetNodeAuthTokenHTTPClient(ts.loggedInCtx, apiGwAddr, []string{"*"})
@@ -81,7 +108,6 @@ var _ = Describe("Client certificates", func() {
 
 	Context("with specific mac-address audience", func() {
 		It("should be allowed only when mac-address in token audience matches request serving device mac", func() {
-			Skip("Skipping client cert auth tests")
 			Eventually(func() bool {
 				// get mac-address to allow
 				allowedNaplesNode := ts.tu.NaplesNodes[0]
@@ -119,7 +145,6 @@ var _ = Describe("Client certificates", func() {
 		})
 
 		It("should be rejected when mac-address in token audience does not match request serving device mac", func() {
-			Skip("Skipping client cert auth tests")
 			Eventually(func() bool {
 				// get token with specific audience from Venice/api-gw
 				httpClient, err := utils.GetNodeAuthTokenHTTPClient(ts.loggedInCtx, apiGwAddr, []string{testMac})
