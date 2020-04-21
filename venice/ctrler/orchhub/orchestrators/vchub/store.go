@@ -106,7 +106,9 @@ func (v *VCHub) startEventsListener() {
 							evt = eventtypes.ORCH_LOGIN_FAILURE
 						}
 					}
-					recorder.Event(evt, evtMsg, v.State.OrchConfig)
+					if v.Ctx.Err() == nil {
+						recorder.Event(evt, evtMsg, v.State.OrchConfig)
+					}
 					// Stop acting on network events from venice until reconnect sync
 					// Lock must be taken in case periodic sync runs
 					v.processVeniceEventsLock.Lock()
@@ -119,10 +121,11 @@ func (v *VCHub) startEventsListener() {
 					if v.probe.IsREST401(connStatus.Err) {
 						evt = eventtypes.ORCH_LOGIN_FAILURE
 					}
-					recorder.Event(evt, evtMsg, v.State.OrchConfig)
+					if v.Ctx.Err() == nil {
+						recorder.Event(evt, evtMsg, v.State.OrchConfig)
+					}
 				}
 
-				//
 				if connStatus.State == previousState && msg == previousMsg {
 					// Duplicate event, nothing to do
 					v.Log.Debugf("Duplicate connection event, nothing to do.")

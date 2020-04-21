@@ -209,6 +209,18 @@ func (v *ProbeMock) GetPenDVSPorts(dcName, dvsName string, criteria *types.Distr
 			portsRet = append(portsRet, p)
 		}
 	}
+
+	// Remove any ports not in the criteria
+	filteredPorts := []types.DistributedVirtualPort{}
+	portKeys := criteria.PortKey
+	for _, p := range portsRet {
+		for _, portKey := range portKeys {
+			if portKey == p.Key {
+				filteredPorts = append(filteredPorts, p)
+			}
+		}
+	}
+
 	return portsRet, nil
 }
 

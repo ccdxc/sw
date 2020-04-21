@@ -49,7 +49,9 @@ func (d *PenDVS) AddPenPG(pgName string, networkMeta api.ObjectMeta) error {
 	if err != nil {
 		evtMsg := fmt.Sprintf("Failed to set configuration for network %s in Datacenter %s", networkMeta.Name, d.DcName)
 		d.Log.Errorf("%s, err %s", evtMsg, err)
-		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
+		if d.Ctx.Err() == nil {
+			recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
+		}
 	}
 	return err
 }

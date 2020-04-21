@@ -7,12 +7,17 @@ import (
 	"net"
 	"strings"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/hooks/apiserver/utils"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	orchhubUtils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -52,6 +57,56 @@ func (s *workloadHooks) validateIPAddressHook(ctx context.Context, kvs kvstore.I
 				}
 			}
 		}
+		return i, true, nil
+	}
+
+	return i, true, nil
+}
+
+// Validates user is not creating a workload on a host from an orchestrator.
+func (s *workloadHooks) validateHost(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	workload, ok := i.(workload.Workload)
+	if !ok {
+		return i, false, fmt.Errorf("invalid object type %T. Expecting Workload", i)
+	}
+
+	if ctx == nil || kvs == nil {
+		return i, false, fmt.Errorf("validateHost called with NIL parameter, ctx: %p, kvs: %p", ctx, kvs)
+	}
+
+	if ctxutils.GetPeerID(ctx) != globals.APIGw {
+		// No checks required if coming from inside venice
+		return i, true, nil
+	}
+
+	switch oper {
+	case apiintf.CreateOper, apiintf.UpdateOper:
+		// Get the corresponding host and verify it doesn't have orchhub label
+		curHost := &cluster.Host{
+			ObjectMeta: api.ObjectMeta{
+				Name: workload.Spec.HostName,
+			},
+		}
+		hostKey := curHost.MakeKey(string(apiclient.GroupCluster))
+		err := kvs.Get(ctx, hostKey, curHost)
+		if err != nil {
+			// Fallthrough and let infra complain about invalid host
+			return i, true, nil
+		}
+
+		if curHost.Labels == nil {
+			// no labels
+			return i, true, nil
+		}
+		// if the host has an orch-name label then a user
+		// cannot create a workload on it
+
+		for k := range curHost.Labels {
+			if k == orchhubUtils.OrchNameKey {
+				return i, true, fmt.Errorf("cannot create workload on a host used by an orchestrator")
+			}
+		}
+
 		return i, true, nil
 	}
 
@@ -162,6 +217,8 @@ func registerWorkloadHooks(svc apiserver.Service, logger log.Logger) {
 	logger.Log("msg", "registering Hooks")
 	svc.GetCrudService("Workload", apiintf.CreateOper).WithPreCommitHook(r.validateIPAddressHook)
 	svc.GetCrudService("Workload", apiintf.UpdateOper).WithPreCommitHook(r.validateIPAddressHook)
+	svc.GetCrudService("Workload", apiintf.CreateOper).WithPreCommitHook(r.validateHost)
+	svc.GetCrudService("Workload", apiintf.UpdateOper).WithPreCommitHook(r.validateHost)
 	// For workloads created by orchhub
 	svc.GetCrudService("Workload", apiintf.UpdateOper).WithPreCommitHook(createOrchCheckHook("Workload"))
 	svc.GetCrudService("Workload", apiintf.DeleteOper).WithPreCommitHook(createOrchCheckHook("Workload"))

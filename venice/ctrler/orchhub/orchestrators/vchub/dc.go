@@ -71,7 +71,10 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 		evtMsg := fmt.Sprintf("Failed to create DVS in Datacenter %s. Network configuration cannot be pushed.", dcName)
 		v.Log.Errorf(evtMsg)
 
-		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
+		if v.Ctx.Err() == nil {
+			recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
+		}
+
 		return nil, err
 	}
 

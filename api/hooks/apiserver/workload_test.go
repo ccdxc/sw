@@ -2,13 +2,22 @@ package impl
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"net"
 	"testing"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/workload"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	apisrvmocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	orchhubUtils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -225,6 +234,77 @@ func TestIPAddressValidityCheck(t *testing.T) {
 
 	_, _, err = s.validateIPAddressHook(context.Background(), kvs, kvs.NewTxn(), "", apiintf.CreateOper, false, work)
 	Assert(t, err != nil, "Created workload Error: %v", err)
+}
+
+func TestValidateHost(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	logConfig.LogToStdout = true
+	s := &workloadHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+
+	work := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "workload-1",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "host1",
+		},
+	}
+
+	host := makeHostObj("host1", "01-02-03-04-05-06", "")
+	// Make it a orchhub host
+	host.Labels = map[string]string{
+		orchhubUtils.OrchNameKey: "orch1",
+	}
+
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+
+	kvs, err := store.New(storecfg)
+	AssertOk(t, err, "Failed to create kv store. Err: %v", err)
+
+	// Workload create with host not existing should be fine
+
+	_, _, err = s.validateHost(context.Background(), kvs, kvs.NewTxn(), "", apiintf.CreateOper, false, work)
+	Assert(t, err == nil, "failed to create workload Error: %v", err)
+
+	// Create host
+	err = kvs.Create(context.Background(), host.MakeKey(string(apiclient.GroupCluster)), host)
+	AssertOk(t, err, "failed to create host")
+
+	// Creating workload with apigw context should fail
+	addr := &net.IPAddr{
+		IP: net.ParseIP("1.2.3.4"),
+	}
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("error generating key: %v", err)
+	}
+	cert, err := certs.SelfSign(globals.APIGw, privateKey, certs.WithValidityDays(1))
+	if err != nil {
+		t.Fatalf("error generating certificate: %v", err)
+	}
+	apigwCtx := ctxutils.MakeMockContext(addr, cert)
+
+	_, _, err = s.validateHost(apigwCtx, kvs, kvs.NewTxn(), "", apiintf.CreateOper, false, work)
+	Assert(t, err != nil, "Workload create should have failed")
+
+	// Creating workload without apigw ctx
+	_, _, err = s.validateHost(context.Background(), kvs, kvs.NewTxn(), "", apiintf.CreateOper, false, work)
+	AssertOk(t, err, "Workload create should have passed")
+
+	// Delete should be successful
+	_, _, err = s.validateHost(context.Background(), kvs, kvs.NewTxn(), "", apiintf.DeleteOper, false, work)
+	AssertOk(t, err, "failed to create workload Error: %v", err)
 }
 
 func initWorkLoadHooksAndKVStore(t *testing.T) (*workloadHooks, kvstore.Interface) {

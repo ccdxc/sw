@@ -2337,6 +2337,10 @@ func TestDegradedConn(t *testing.T) {
 }
 
 func TestVCHubStalePG(t *testing.T) {
+	// NOTE: This test creates a VM while vchub watchers are running.
+	// it is prone to hitting the deadlock issue in vcsim.
+	// If this test fails too often in CI, then it should be disabled.
+
 	// Test resyncing stale PG
 	// Scenario: vCenter already has PenDVS, PenPG, and VM attached
 	// user tries to have another venice manage this DC.

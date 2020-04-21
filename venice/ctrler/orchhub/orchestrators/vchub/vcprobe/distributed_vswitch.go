@@ -246,42 +246,48 @@ func (v *VCProbe) getPenDVSPorts(dcName, dvsName string, criteria *types.Distrib
 	return ret, nil
 }
 
+func (v *VCProbe) isOverrideEqual(portsSetting PenDVSPortSettings, ports []types.DistributedVirtualPort) bool {
+	expMap := map[string]int32{}
+	for key, portInfo := range portsSetting {
+		expMap[key] = portInfo.(*types.VmwareDistributedVirtualSwitchVlanIdSpec).VlanId
+	}
+
+	for _, port := range ports {
+		key := port.Key
+		expVlan := expMap[key]
+		setting, ok := port.Config.Setting.(*types.VMwareDVSPortSetting)
+		if ok {
+			vlanSpec, ok := setting.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
+			if ok {
+				if expVlan == vlanSpec.VlanId {
+					delete(expMap, key)
+				}
+			}
+		}
+	}
+	return len(expMap) == 0
+}
+
 // UpdateDVSPortsVlan updates the port settings
 func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings, retry int) error {
 	v.Log.Debugf("UpdateDVSPortsVlan called with %s %s %v", dcName, dvsName, portsSetting)
-
-	fn := func() (interface{}, error) {
+	getAndCheck := func(client *govmomi.Client) ([]types.DVPortConfigSpec, bool, error) {
 		numPorts := len(portsSetting)
-		if numPorts == 0 {
-			// Nothing to do
-			return nil, nil
-		}
-
 		portKeys := make([]string, numPorts)
 		portSpecs := make([]types.DVPortConfigSpec, numPorts)
-
-		client := v.GetClientWithRLock()
-		defer v.ReleaseClientsRLock()
-
-		dvsObj, err := v.getDVSObj(dcName, dvsName, client)
-		if err != nil {
-			return nil, err
-		}
 
 		for k := range portsSetting {
 			portKeys = append(portKeys, k)
 		}
-
 		criteria := &types.DistributedVirtualSwitchPortCriteria{
 			PortKey: portKeys,
 		}
-
 		ports, err := v.getPenDVSPorts(dcName, dvsName, criteria, client)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
-		for i := 0; i < numPorts; i++ {
+		for i := range portSpecs {
 			portSpecs[i].ConfigVersion = ports[i].Config.ConfigVersion
 			portSpecs[i].Key = ports[i].Key
 			portSpecs[i].Operation = string("edit")
@@ -294,15 +300,47 @@ func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVS
 			portSpecs[i].Setting = setting
 		}
 
+		return portSpecs, v.isOverrideEqual(portsSetting, ports), nil
+	}
+
+	fn := func() (interface{}, error) {
+		client := v.GetClientWithRLock()
+		defer v.ReleaseClientsRLock()
+
+		portSpecs, isEqual, err := getAndCheck(client)
+		if err != nil {
+			return nil, err
+		}
+		if isEqual {
+			return nil, nil
+		}
+
+		dvsObj, err := v.getDVSObj(dcName, dvsName, client)
+		if err != nil {
+			return nil, err
+		}
+
 		task, err := dvsObj.ReconfigureDVPort(v.ClientCtx, portSpecs)
 		if err != nil {
 			v.Log.Errorf("Failed at reconfig DVS ports, err: %s", err)
+			_, isEqual, err1 := getAndCheck(client)
+			if err1 != nil {
+				v.Log.Errorf("Error while checking dvs port overrides, %s", err1)
+			} else if isEqual {
+				return nil, nil
+			}
 			return nil, err
 		}
 
 		_, err = task.WaitForResult(v.ClientCtx, nil)
 		if err != nil {
 			v.Log.Errorf("Failed at modifying DVS ports, err: %s", err)
+			_, isEqual, err1 := getAndCheck(client)
+			if err1 != nil {
+				v.Log.Errorf("Error while checking dvs port overrides, %s", err1)
+			} else if isEqual {
+				return nil, nil
+			}
 			return nil, err
 		}
 

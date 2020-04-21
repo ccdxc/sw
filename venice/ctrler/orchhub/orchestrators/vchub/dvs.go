@@ -231,7 +231,10 @@ func (d *PenDVS) SetVlanOverride(port string, vlan int, workloadName string, mac
 		d.Log.Errorf("Failed to set vlan override for DC %s - dvs %s, err %s", d.DcName, d.DvsName, err)
 
 		evtMsg := fmt.Sprintf("Failed to set vlan override in DC %s for workload %s interface %s. Traffic may be impacted.", d.DcName, workloadName, mac)
-		recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
+
+		if d.Ctx.Err() == nil {
+			recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, d.State.OrchConfig)
+		}
 		return err
 	}
 	return nil
@@ -302,8 +305,10 @@ func (v *VCHub) handleDVS(m defs.VCEventMsg) {
 		if err != nil {
 			v.Log.Errorf("Failed to recreate DVS for DC %s, %s", m.DcName, err)
 			// Generate event
-			evtMsg := fmt.Sprintf("Failed to recreate DVS in Datacenter %s. Network configuration cannot be pushed.", m.DcName)
-			recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
+			if v.Ctx.Err() == nil {
+				evtMsg := fmt.Sprintf("Failed to recreate DVS in Datacenter %s. Network configuration cannot be pushed.", m.DcName)
+				recorder.Event(eventtypes.ORCH_CONFIG_PUSH_FAILURE, evtMsg, v.State.OrchConfig)
+			}
 		} else {
 			// Recreate PGs
 			v.checkNetworks(m.DcName)
