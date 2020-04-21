@@ -30,6 +30,9 @@ namespace hal {
 #define VMOTION_WLOCK   vmotion_.rwlock.wlock();
 #define VMOTION_WUNLOCK vmotion_.rwlock.wunlock();
 
+#define VMOTION_PD_LOCK   vmotion_.pd_lock.wlock();
+#define VMOTION_PD_UNLOCK vmotion_.pd_lock.wunlock();
+
 #define VMOTION_MAX_THREADS \
         (HAL_THREAD_ID_VMOTION_THREADS_MAX - HAL_THREAD_ID_VMOTION_THREADS_MIN + 1)
 
@@ -183,6 +186,8 @@ public:
     void          incr_migration_state_stats(MigrationState state); 
     TLSContext*   get_tls_context(void) { return tls_context_; }
     static void   delay_delete_thread(sdk::event_thread::event_thread *thr);
+    hal_ret_t     vmotion_ep_quiesce_program(ep_t *ep, bool entry_add);
+    hal_ret_t     vmotion_ep_migration_normalization_cfg(ep_t *ep, bool disable);
 
     // FSM Related methods
     static vmotion_src_host_fsm_def* src_host_fsm_def_;
@@ -206,6 +211,7 @@ private:
         uint32_t                         max_threads;
         uint32_t                         port;
         sdk::wp_rwlock                   rwlock;
+        sdk::wp_rwlock                   pd_lock;
     } vmotion_t;
 
     vmotion_t                  vmotion_;

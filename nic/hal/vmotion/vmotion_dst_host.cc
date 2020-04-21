@@ -34,7 +34,7 @@ dst_host_end (vmotion_ep *vmn_ep)
             (vmn_ep->get_migration_state() == MigrationState::TIMEOUT)) {
             // Remove EP Quiesce NACL entry
             if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
-                ep_quiesce(ep, FALSE);
+                vmn_ep->get_vmotion()->vmotion_ep_quiesce_program(ep, FALSE);
                 VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
             }
 
@@ -158,7 +158,8 @@ vmotion_dst_host_fsm_def::process_start_sync(fsm_state_ctx ctx, fsm_event_data d
     }
 
     // Add EP Quiesce NACL entry
-    ep_quiesce(ep, TRUE);
+    vmn_ep->get_vmotion()->vmotion_ep_quiesce_program(ep, TRUE);
+
     VMOTION_FLAG_SET_EP_QUIESCE_ADDED(vmn_ep);
 
     return true;
@@ -319,7 +320,7 @@ vmotion_dst_host_fsm_def::process_term_sync_end(fsm_state_ctx ctx, fsm_event_dat
         return false;
     }
 
-    endpoint_migration_normalization_cfg(ep, true);
+    vmn_ep->get_vmotion()->vmotion_ep_migration_normalization_cfg(ep, true);
 
     msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC_ACK);
 
@@ -385,7 +386,7 @@ vmotion_dst_host_fsm_def::process_ep_moved(fsm_state_ctx ctx, fsm_event_data dat
 
     // Remove EP Quiesce NACL entry
     if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
-        ep_quiesce(ep, FALSE);
+        vmn_ep->get_vmotion()->vmotion_ep_quiesce_program(ep, FALSE);
         VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
     }
 

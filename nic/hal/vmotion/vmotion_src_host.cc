@@ -35,7 +35,7 @@ src_host_end (vmotion_ep *vmn_ep, MigrationState migration_state, vmotion_thread
         if (ep) {
             // Remove EP Quiesce NACL entry
             if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
-                ep_quiesce(ep, FALSE);
+                vmn_ep->get_vmotion()->vmotion_ep_quiesce_program(ep, FALSE);
                 VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
             }
 
@@ -217,7 +217,7 @@ vmotion_src_host_fsm_def::proc_term_sync_req(fsm_state_ctx ctx, fsm_event_data d
     }
 
     // Add EP Quiesce NACL entry
-    ep_quiesce(ep, TRUE);
+    vmn_ep->get_vmotion()->vmotion_ep_quiesce_program(ep, TRUE);
     VMOTION_FLAG_SET_EP_QUIESCE_ADDED(vmn_ep);
 
     // Reset the enic interface to NULL in PD

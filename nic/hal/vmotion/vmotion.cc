@@ -182,7 +182,7 @@ vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
     if (event == VMOTION_EVT_EP_MV_COLD) {
         // vMotion is happening from a non-pensando device to locally here.
         // We do - Disable TCP Normalization for the EP that migrated
-        endpoint_migration_normalization_cfg(ep, true);
+        vmotion_ep_migration_normalization_cfg(ep, true);
         return;
     }
 
@@ -463,6 +463,30 @@ vmotion::delay_delete_thread(sdk::event_thread::event_thread *thr)
                                  vmotion_thread_delay_del_cb, false) == NULL) {
         HAL_TRACE_ERR("vMotion error in starting thread delay del timer");
     }
+}
+
+hal_ret_t
+vmotion::vmotion_ep_quiesce_program(ep_t *ep, bool entry_add)
+{
+    hal_ret_t ret;
+
+    VMOTION_PD_LOCK
+    ret = ep_quiesce(ep, entry_add);
+    VMOTION_PD_UNLOCK
+
+    return ret;
+}
+
+hal_ret_t
+vmotion::vmotion_ep_migration_normalization_cfg(ep_t *ep, bool disable)
+{
+    hal_ret_t ret;
+
+    VMOTION_PD_LOCK
+    ret = endpoint_migration_normalization_cfg(ep, disable);
+    VMOTION_PD_UNLOCK
+
+    return ret;
 }
 
 } // namespace hal
