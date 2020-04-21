@@ -318,24 +318,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
     sdk::lib::thread    *hal_thread;
 
     if (!getenv("DISABLE_FTE")) {
-        if (hal_cfg->device_cfg.forwarding_mode == sdk::lib::FORWARDING_MODE_CLASSIC) {
-            // 1 FTE thread for fte-span
-            tid = HAL_THREAD_ID_FTE_MIN;
-            HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
-            snprintf(thread_name, sizeof(thread_name), "fte-%u",
-                     ffsl(data_cores_mask) - 1);
-            hal_thread =
-                hal_thread_create(static_cast<const char *>(thread_name),
-                                  tid, sdk::lib::THREAD_ROLE_CONTROL,
-                                  0x0, // use all control cores
-                                  fte_pkt_loop_start,
-                                  0, /* priority. used only for real time */
-                                  SCHED_OTHER, /* sched. policy: non-real time */
-                                  hal_cfg);
-            SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
-                                    "FTE thread {} creation failed", tid);
-
-        } else if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
+        if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
             // spawn data core threads and pin them to their cores
             for (i = 0; i < hal_cfg->num_data_cores; i++) {
                 // pin each data thread to a specific core

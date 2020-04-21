@@ -286,11 +286,11 @@ func l2segShowHeader(cmd *cobra.Command, args []string) {
 	fmt.Printf("vrfId:         L2segs's VRF ID                       WireEncap:   Wire encap type/value\n")
 	fmt.Printf("B-M-P-SB-SM:   Bcast, Mcast, Prom , Shared BC, Shared MC Repl indices\n")
 	fmt.Printf("#EPs:          Num. of EPs in L2seg                  IFs:         Member Interfaces\n")
-	fmt.Printf("PinUplnkId:    Pinned Uplink Interface ID            Attach:      Attached L2segs\n")
+	fmt.Printf("Attach:      Attached L2segs\n")
 	hdrLine := strings.Repeat("-", 100)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-8s%-5s%-6s%-10s%-20s%-5s%-15s%-10s%-20s\n",
-		"Id", "Mode", "vrfId", "WireEncap", "OIFLs", "#EPs", "IFs", "PinUp", "Attach.")
+	fmt.Printf("%-8s%-5s%-6s%-10s%-20s%-5s%-15s%-20s\n",
+		"Id", "Mode", "vrfId", "WireEncap", "OIFLs", "#EPs", "IFs", "Attach.")
 	fmt.Println(hdrLine)
 }
 
@@ -374,10 +374,10 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		}
 	}
 
-	ifIDStr := "-"
-	if resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId() != 0 {
-		ifIDStr = utils.IfIndexToStr(uint32(resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId()))
-	}
+	// ifIDStr := "-"
+	// if resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId() != 0 {
+	// 	ifIDStr = utils.IfIndexToStr(uint32(resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId()))
+	// }
 
 	vrfTypeStr := "Mgmt"
 	vrfType, desUplink := vrfGetType(resp.GetSpec().GetVrfKeyHandle().GetVrfId())
@@ -407,7 +407,7 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		attachStr += "-"
 	}
 
-	fmt.Printf("%-8d%-5s%-6d%-10s%-20s%-5d%-15s%-11s%-20s\n",
+	fmt.Printf("%-8d%-5s%-6d%-10s%-20s%-5d%-15s%-20s\n",
 		resp.GetSpec().GetKeyOrHandle().GetSegmentId(),
 		vrfTypeStr,
 		resp.GetSpec().GetVrfKeyHandle().GetVrfId(),
@@ -415,7 +415,6 @@ func l2segShowOneResp(resp *halproto.L2SegmentGetResponse) {
 		oiflStr,
 		resp.GetStats().GetNumEndpoints(),
 		ifStr,
-		ifIDStr,
 		attachStr)
 }
 
