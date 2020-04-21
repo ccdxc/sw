@@ -34,7 +34,7 @@ namespace api {
 static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 pds_encap_type_t g_encap_type = PDS_ENCAP_TYPE_MPLSoUDP;
 uint32_t g_encap_val = 1;
-
+//#define SCALE_DOWN_FOR_DEBUG
 
 //----------------------------------------------------------------------------
 // Mapping test class
@@ -118,8 +118,6 @@ protected:
             pds_test_base::TearDownTestCase();
     }
 };
-
-//#define SCALE_DOWN_FOR_DEBUG
 
 /// helper functions to create feeders
 static void create_local_mapping_feeders(local_mapping_feeder feeders[],
@@ -612,7 +610,7 @@ TEST_F(mapping_test, local_mapping_update_vnic_mac) {
 }
 
 /// \brief update mapping M1 with no tags to Tag T1.
-TEST_F(mapping_test, DISABLED_local_mapping_update_tag1) {
+TEST_F(mapping_test, local_mapping_update_tag1) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -638,7 +636,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_update_tag1) {
 }
 
 /// \brief update mapping M1 with tags set T1 to T2.
-TEST_F(mapping_test, DISABLED_local_mapping_update_tag2) {
+TEST_F(mapping_test, local_mapping_update_tag2) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -664,7 +662,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_update_tag2) {
 }
 
 /// \brief update mapping M1 with tags set T1 to no tags.
-TEST_F(mapping_test, DISABLED_local_mapping_update_tag3) {
+TEST_F(mapping_test, local_mapping_update_tag3) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};

@@ -25,11 +25,9 @@ remote_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
                             uint32_t num_teps, uint32_t num_vnic_per_tep,
                             pds_mapping_type_t map_type,
                             int num_tags) {
-
     ip_prefix_t vnic_ip_pfx;
 
     test::extract_ip_pfx(vnic_ip_cidr_str.c_str(), &vnic_ip_pfx);
-
     memset(&spec, 0, sizeof(spec));
     spec.skey.type = map_type;
     if (map_type == PDS_MAPPING_TYPE_L3) {
@@ -47,8 +45,8 @@ remote_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
     else
         spec.nh_group = int2pdsobjkey(nh_id);
 
-    // enable after tag support
 #if 0
+    // enable after tag support
     spec.num_tags = num_tags;
     for (int i=0; i<num_tags; i++) {
         spec.tags[i] = i+1;

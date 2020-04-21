@@ -49,12 +49,10 @@ local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
         spec.public_ip = public_ip_pfx.addr;
 
     // enable after tag support
-#if 0
     spec.num_tags = num_tags;
     for (int i=0; i<num_tags; i++) {
         spec.tags[i] = i+1;
     }
-#endif
 
     this->spec.fabric_encap.type = encap_type;
     switch(encap_type) {

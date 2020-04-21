@@ -798,6 +798,7 @@ mapping_impl::nuke_resources(api_base *api_obj) {
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams;
     local_mapping_swkey_t local_mapping_key;
+    rxdma_mapping_swkey_t rxdma_mapping_key;
     mapping_entry *mapping = (mapping_entry *)api_obj;
 
     if (mapping_hdl_.valid()) {
@@ -859,6 +860,19 @@ mapping_impl::nuke_resources(api_base *api_obj) {
     }
 #endif
 
+    if (rxdma_mapping_hdl_.valid()) {
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
+                                           &mapping->skey().ip_addr);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                       NULL, NULL, 0, handle_t::null());
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->remove(&tparams);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to remove entry in rxdma MAPPING table %s, "
+                          "err %u", mapping->key2str().c_str(), ret);
+            return ret;
+        }
+    }
+
     // nothing else to do if public IP is not configured
     if (!mapping->is_public_ip_valid()) {
         return SDK_RET_OK;
@@ -897,6 +911,14 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         if (to_overlay_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
             apulu_impl_db()->nat_idxr()->free(to_overlay_ip_nat_idx_);
         }
+
+        if (rxdma_mapping_public_ip_hdl_.valid()) {
+            PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
+                                               &mapping->public_ip());
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                           NULL, NULL, 0, handle_t::null());
+            mapping_impl_db()->rxdma_mapping_tbl()->remove(&tparams);
+        }
     }
 
     return SDK_RET_OK;
@@ -909,6 +931,9 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
     sdk_table_api_params_t tparams = { 0 };
     mapping_entry *mapping = (mapping_entry *)api_obj;
 
+    // TODO: for memhash tables, we need to fill key and handle for release()
+    //       API to work because key itself wasn't written to the table when
+    //       an entry was reserved
     if (local_mapping_overlay_ip_hdl_.valid()) {
         tparams.handle = local_mapping_overlay_ip_hdl_;
         mapping_impl_db()->local_mapping_tbl()->release(&tparams);
@@ -1224,10 +1249,6 @@ mapping_impl::fill_local_overlay_ip_mapping_key_data_(
                   mapping_swkey_t *mapping_key, mapping_appdata_t *mapping_data,
                   handle_t mapping_hdl,
                   sdk_table_api_params_t *mapping_tbl_params,
-                  rxdma_mapping_swkey_t *rxdma_mapping_key,
-                  rxdma_mapping_appdata_t *rxdma_mapping_data,
-                  handle_t rxdma_mapping_hdl,
-                  sdk_table_api_params_t *rxdma_mapping_tbl_params,
                   pds_mapping_spec_t *spec) {
     // fill LOCAL_MAPPING table entry key, data and table params for overlay IP
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(local_mapping_key, vpc->hw_id(),
@@ -1258,20 +1279,6 @@ mapping_impl::fill_local_overlay_ip_mapping_key_data_(
     PDS_IMPL_FILL_TABLE_API_PARAMS(mapping_tbl_params, mapping_key,
                                    NULL, mapping_data,
                                    MAPPING_MAPPING_INFO_ID, mapping_hdl);
-
-    // fill rxdma MAPPING table entry key, data and table params for overlay IP
-    if (spec->num_tags) {
-        memset(rxdma_mapping_data, 0, sizeof(*rxdma_mapping_data));
-        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(rxdma_mapping_key, vpc->hw_id(),
-                                           &spec->skey.ip_addr);
-        rxdma_mapping_data->tag_idx = rxdma_mapping_tag_idx_;
-        PDS_IMPL_FILL_TABLE_API_PARAMS(rxdma_mapping_tbl_params,
-                                       rxdma_mapping_key,
-                                       NULL, rxdma_mapping_data,
-                                       RXDMA_MAPPING_RXDMA_MAPPING_INFO_ID,
-                                       rxdma_mapping_hdl);
-    }
-    return;
 }
 
 sdk_ret_t
@@ -1299,10 +1306,6 @@ mapping_impl::add_overlay_ip_mapping_entries_(vpc_impl *vpc,
                                             &local_mapping_tbl_params,
                                             &mapping_key, &mapping_data,
                                             mapping_hdl_, &mapping_tbl_params,
-                                            &rxdma_mapping_key,
-                                            &rxdma_mapping_data,
-                                            rxdma_mapping_hdl_,
-                                            &rxdma_mapping_tbl_params,
                                             spec);
 
     // add entry to LOCAL_MAPPING table for overlay IP
@@ -1315,7 +1318,7 @@ mapping_impl::add_overlay_ip_mapping_entries_(vpc_impl *vpc,
 
     // add entry to rxdma MAPPING table for overlay IP
     if (spec->num_tags) {
-        ret = mapping_impl_db()->rxdma_mapping_tbl()->insert(&rxdma_mapping_tbl_params);
+        ret = add_overlay_ip_rxdma_mapping_entry_(vpc, spec);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return ret;
@@ -1735,11 +1738,7 @@ mapping_impl::upd_overlay_ip_mapping_entries_(vpc_impl *vpc,
                                             &local_mapping_tbl_params,
                                             &mapping_key, &mapping_data,
                                             handle_t::null(),
-                                            &mapping_tbl_params,
-                                            // rxdma params are don't care
-                                            NULL, NULL,
-                                            handle_t::null(), NULL,
-                                            spec);
+                                            &mapping_tbl_params, spec);
 
 
     // update entry corresponding to overlay IP in LOCAL_MAPPING table and take
@@ -2014,6 +2013,8 @@ mapping_impl::activate_remote_mapping_update_(vpc_entry *vpc,
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_UPD) {
         // update rxdma MAPPING table to point to the updated MAPPING_TAG table
         // entry
+        // TODO: we don't need to update because rxdma_mapping_tag_idx_ remains
+        //       same ?
         ret = mapping_impl_db()->rxdma_mapping_tbl()->update(&rxdma_mapping_tbl_params);
         SDK_ASSERT(ret == SDK_RET_OK);
         rxdma_mapping_hdl_ = rxdma_mapping_tbl_params.handle;
