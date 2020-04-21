@@ -1,13 +1,17 @@
 package finder
 
 import (
+	"compress/gzip"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	es "github.com/olivere/elastic"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,11 +21,21 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/fwlog"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/spyglass/indexer"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/log"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
+)
+
+const (
+	waitIntvl  = time.Second
+	maxRetries = 200
 )
 
 type fwlogHandler struct {
-	fdr *Finder
+	fdr                 *Finder
+	vosFwLogsHTTPClient objstore.Client
 }
 
 // GetLogs returns firewall logs based upon the provided query
@@ -79,8 +93,20 @@ func (a *fwlogHandler) AutoWatchSvcFwLogV1(*api.ListWatchOptions, fwlog.FwLogV1_
 	return errors.New("not implemented")
 }
 
-func newFwLogHandler(fdr *Finder) fwlog.FwLogV1Server {
-	return &fwlogHandler{fdr: fdr}
+func newFwLogHandler(fdr *Finder) (fwlog.FwLogV1Server, error) {
+	fh := &fwlogHandler{fdr: fdr}
+	if fdr.vosFinder {
+		// Create objstore http client for fwlogs
+		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			return indexer.CreateBucketClient(ctx, fdr.rsr, globals.DefaultTenant, globals.FwlogsBucketName)
+		}, waitIntvl, maxRetries)
+		if err != nil {
+			log.Errorf("Failed to create objstore client for fwlogs")
+			return nil, err
+		}
+		fh.vosFwLogsHTTPClient = result.(objstore.Client)
+	}
+	return fh, nil
 }
 
 func fwlogQuery(r *fwlog.FwLogQuery) es.Query {
@@ -229,4 +255,121 @@ func validateFwLogQuery(r *fwlog.FwLogQuery) []error {
 		}
 	}
 	return errs
+}
+
+// DownloadFwLogFileContent downloads the fwlog object content.
+func (a *fwlogHandler) DownloadFwLogFileContent(ctx context.Context, in *api.ListWatchOptions) (*fwlog.FwLogList, error) {
+	log.Infof("got call to DownloadFwLogFileContent %s, %s", in.Tenant, in.Name)
+	if in.Tenant != "" && in.Tenant != globals.DefaultTenant {
+		return nil, fmt.Errorf("query is supported only for 'default' tenant")
+	}
+	// convert 1st 5 "_" to "/"
+	name := strings.Replace(in.Name, "_", "/", 5)
+	objReader, err := a.vosFwLogsHTTPClient.GetObject(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	defer objReader.Close()
+	dscID := strings.Split(name, "/")[0]
+	zipReader, err := gzip.NewReader(objReader)
+	if err != nil {
+		a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in unzipping object", "error", err)
+		return nil, err
+	}
+
+	rd := csv.NewReader(zipReader)
+	data, err := rd.ReadAll()
+	if err != nil {
+		a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in reading object", "error", err)
+		return nil, err
+	}
+	fwlogList := fwlog.FwLogList{}
+	fwlogList.Kind = fmt.Sprintf("%sList", auth.Permission_FwLog.String())
+	fwlogList.TotalCount = int32(len(data))
+
+	for i := 1; i < len(data); i++ {
+		line := data[i]
+
+		ts, err := time.Parse(time.RFC3339, line[4])
+		if err != nil {
+			a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in parsing time", "error", err)
+			return nil, fmt.Errorf("error in parsing time %s", err.Error())
+		}
+
+		timestamp, err := types.TimestampProto(ts)
+		if err != nil {
+			a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in converting time to proto", "error", err)
+			return nil, fmt.Errorf("error in converting time to proto %s", err.Error())
+		}
+
+		srcVRF, err := strconv.ParseUint(line[0], 10, 64)
+		if err != nil {
+			a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in conversion", "error", err)
+			return nil, fmt.Errorf("error in conversion err %s", err.Error())
+		}
+
+		sport, err := strconv.ParseUint(line[5], 10, 64)
+		if err != nil {
+			a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in conversion", "error", err)
+			return nil, fmt.Errorf("error in conversion err %s", err.Error())
+		}
+
+		dport, err := strconv.ParseUint(line[6], 10, 64)
+		if err != nil {
+			a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in conversion", "error", err)
+			return nil, fmt.Errorf("error in conversion err %s", err.Error())
+		}
+
+		icmpType, err := strconv.ParseUint(line[13], 10, 64)
+		if err != nil {
+			a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in conversion", "error", err)
+			return nil, fmt.Errorf("error in conversion err %s", err.Error())
+		}
+
+		icmpID, err := strconv.ParseUint(line[14], 10, 64)
+		if err != nil {
+			a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in conversion", "error", err)
+			return nil, fmt.Errorf("error in conversion err %s", err.Error())
+		}
+
+		icmpCode, err := strconv.ParseUint(line[15], 10, 64)
+		if err != nil {
+			a.fdr.logger.ErrorLog("method", "DownloadFwLogFileContent", "msg", "error in conversion", "error", err)
+			return nil, fmt.Errorf("error in conversion err %s", err.Error())
+		}
+
+		obj := fwlog.FwLog{
+			TypeMeta: api.TypeMeta{
+				Kind: "FwLog",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant: globals.DefaultTenant,
+				CreationTime: api.Timestamp{
+					Timestamp: *timestamp,
+				},
+				ModTime: api.Timestamp{
+					Timestamp: *timestamp,
+				},
+			},
+			SrcVRF:     srcVRF,
+			SrcIP:      line[2],
+			DestIP:     line[3],
+			SrcPort:    uint32(sport),
+			DestPort:   uint32(dport),
+			Protocol:   line[7],
+			Action:     line[8],
+			Direction:  line[9],
+			RuleID:     line[10],
+			SessionID:  line[11],
+			ReporterID: dscID,
+			FlowAction: line[12],
+			IcmpType:   uint32(icmpType),
+			IcmpID:     uint32(icmpID),
+			IcmpCode:   uint32(icmpCode),
+		}
+
+		fwlogList.Items = append(fwlogList.Items, &obj)
+	}
+
+	return &fwlogList, nil
 }

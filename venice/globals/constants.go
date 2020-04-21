@@ -259,6 +259,9 @@ const (
 
 	// MaxAllowedSGRules tracks the maximum number of rules in a given network security policy. 32K
 	MaxAllowedSGRules = 32 * 1024
+
+	// FwlogsBucketName represents the bucket name used for storing fwlogs in object store
+	FwlogsBucketName = "fwlogs"
 )
 
 var (

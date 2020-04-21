@@ -1,10 +1,7 @@
 package vospkg
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
-	"encoding/csv"
 	"fmt"
 	"io"
 	"net/http"
@@ -729,91 +726,4 @@ func TestListFwlogObjects(t *testing.T) {
 		FieldSelector: "start-time=2006-01-02T15:10:00Z,end-time=2006-01-02T16:10:00Z,dsc-id=aaa.bbb.ccc.ddd"})
 	AssertOk(t, err, "List Objects failed")
 	Assert(t, len(res.Items) == 60, "result is %d", len(res.Items))
-}
-
-func TestListFwlogObjectContent(t *testing.T) {
-	ctx := context.Background()
-	fb := &mockBackend{}
-	inst := &instance{}
-	inst.Init(fb)
-	srv := grpcBackend{client: fb, instance: inst}
-	objBuffer, rawLogs, totalLogs := getDummyFwLogs()
-	timeFormat := "2006-01-02T15:04:05"
-	ts, _ := time.Parse(time.RFC3339, "2006-01-02T15:00:00Z")
-	h, _, _ := ts.Clock()
-	key := "aaa.bbb.ccc.ddd" + "/2006/1/2/" + strconv.Itoa(h) + "/" +
-		ts.Format(timeFormat) + "_" + ts.Add(time.Minute).Format(timeFormat) + ".csv.gz"
-	fb.PutObject("default"+fwlogsBucketName,
-		key, bytes.NewReader(objBuffer.Bytes()), int64(len(objBuffer.Bytes())), minio.PutObjectOptions{})
-
-	obj := &objstore.Object{
-		ObjectMeta: api.ObjectMeta{
-			Name:      strings.Replace(key, "/", "_", 5),
-			Namespace: fwlogsBucketName,
-			Tenant:    "default",
-		},
-	}
-
-	logs, err := srv.DownloadFwLogs(ctx, obj)
-	AssertOk(t, err, "DownloadFwLogs failed")
-	Assert(t, len(logs.Items) == totalLogs, "DownloadFwLogs returned incorrect number of logs", len(logs.Items))
-	for i := 0; i < totalLogs; i++ {
-		Assert(t, rawLogs[i+1][0] == strconv.Itoa(int(logs.Items[i].SrcVRF)), "src vrf is not matching", rawLogs[i][0], logs.Items[i].SrcVRF)
-		Assert(t, rawLogs[i+1][2] == logs.Items[i].SrcIP, "src ip is not matching")
-		Assert(t, rawLogs[i+1][3] == logs.Items[i].DestIP, "dest ip is not matching")
-		Assert(t, rawLogs[i+1][5] == strconv.Itoa(int(logs.Items[i].SrcPort)), "src port is not matching")
-		Assert(t, rawLogs[i+1][6] == strconv.Itoa(int(logs.Items[i].DestPort)), "dest port is not matching")
-	}
-}
-
-func getDummyFwLogs() (bytes.Buffer, [][]string, int) {
-	totalLogs := 100
-	logs := [][]string{}
-	logs = append(logs, []string{"svrf", "dvrf", "sip",
-		"dip", "ts", "sport", "dport",
-		"proto", "act", "dir", "ruleid",
-		"sessionid", "sessionstate",
-		"icmptype", "icmpid", "icmpcode",
-		"appid", "alg", "count"})
-
-	helper := func(csvBytes *bytes.Buffer) {
-		w := csv.NewWriter(csvBytes)
-		for _, l := range logs {
-			w.Write(l)
-		}
-		w.Flush()
-	}
-
-	for i := 0; i < totalLogs; i++ {
-		// CSV file format
-		fwLog := []string{
-			"65",
-			"65",
-			"10.10.10." + strconv.Itoa(i),
-			"10.10.10." + strconv.Itoa(i),
-			time.Now().UTC().Format(time.RFC3339),
-			"8000",
-			"8000",
-			"TCP",
-			"allow",
-			"from-host",
-			"1989",
-			"1990",
-			"create",
-			"10",
-			"20",
-			"30",
-			"32",
-			"TFTP",
-			"1",
-		}
-		logs = append(logs, fwLog)
-	}
-
-	var csvBytes, zipBytes bytes.Buffer
-	helper(&csvBytes)
-	zw := gzip.NewWriter(&zipBytes)
-	zw.Write(csvBytes.Bytes())
-	zw.Close()
-	return zipBytes, logs, totalLogs
 }

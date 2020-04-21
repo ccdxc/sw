@@ -51,6 +51,29 @@ type adapterFwLogV1 struct {
 	gw      apigw.APIGateway
 }
 
+func (a adapterFwLogV1) DownloadFwLogFileContent(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*fwlog.FwLogList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.FwLogV1DownloadFwLogFileContent", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("DownloadFwLogFileContent")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.DownloadFwLogFileContent(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*fwlog.FwLogList), err
+}
+
 func (a adapterFwLogV1) GetLogs(oldctx oldcontext.Context, t *fwlog.FwLogQuery, options ...grpc.CallOption) (*fwlog.FwLogList, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -82,6 +105,8 @@ func (e *sFwLogV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["DownloadFwLogFileContent"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 
 	e.svcProf["GetLogs"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 }

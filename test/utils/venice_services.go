@@ -226,7 +226,8 @@ func StartSpyglassWithArchiveService(service, apiServerAddr string, mr resolver.
 			finder.WithElasticClient(esClient),
 			finder.WithModuleWatcher(diagmock.GetModuleWatcher()),
 			finder.WithDiagnosticsService(diagmock.GetDiagnosticsService()),
-			finder.WithArchiveService(archiveService))
+			finder.WithArchiveService(archiveService),
+			finder.WithDisableVosFinder())
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create finder, err: %v", err)
 		}

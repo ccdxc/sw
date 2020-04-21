@@ -292,7 +292,7 @@ func NewIndexer(ctx context.Context,
 	if indexer.watchVos {
 		// Create objstrore http client for fwlogs
 		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-			return createBucketClient(ctx, rsr, globals.DefaultTenant, fwlogsBucketName)
+			return CreateBucketClient(ctx, rsr, globals.DefaultTenant, fwlogsBucketName)
 		}, apiSrvWaitIntvl, maxAPISrvRetries)
 		if err != nil {
 			logger.Errorf("Failed to create objstore client for fwlogs")
@@ -733,7 +733,9 @@ func (idr *Indexer) deleteIndexHelper(indexMapper globals.DataType, tenantName s
 	return nil
 }
 
-func createBucketClient(ctx context.Context, resolver resolver.Interface, tenantName string, bucketName string) (objstore.Client, error) {
+// CreateBucketClient creates an objstore client
+// Its upper case becuase finder package is also using the same function
+func CreateBucketClient(ctx context.Context, resolver resolver.Interface, tenantName string, bucketName string) (objstore.Client, error) {
 	tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
 	if err != nil {
 		return nil, fmt.Errorf("Error getting tls provider (%s)", err)
@@ -765,7 +767,7 @@ func (idr *Indexer) updateLastProcessedkeys(lastProcessedKey string) {
 func (idr *Indexer) getLastProcessedKeys() (map[string]string, error) {
 	// Create objstrore http client for fwlogs
 	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		return createBucketClient(idr.ctx, idr.rsr, globals.DefaultTenant, fwlogsSystemMetaBucketName)
+		return CreateBucketClient(idr.ctx, idr.rsr, globals.DefaultTenant, fwlogsSystemMetaBucketName)
 	}, apiSrvWaitIntvl, maxAPISrvRetries)
 
 	if err != nil {
@@ -818,7 +820,7 @@ func (idr *Indexer) persistLastProcessedkeys() error {
 	idr.logger.Infof("start persising fwlogs lastProcessedObjectKey")
 	// Create objstrore http client for fwlogs
 	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		return createBucketClient(ctx, idr.rsr, globals.DefaultTenant, fwlogsSystemMetaBucketName)
+		return CreateBucketClient(ctx, idr.rsr, globals.DefaultTenant, fwlogsSystemMetaBucketName)
 	}, apiSrvWaitIntvl, maxAPISrvRetries)
 
 	if err != nil {

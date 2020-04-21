@@ -19,6 +19,7 @@ var _ api.ObjectMeta
 type ServiceFwLogV1Client interface {
 	AutoWatchSvcFwLogV1(ctx context.Context, in *api.ListWatchOptions) (FwLogV1_AutoWatchSvcFwLogV1Client, error)
 
+	DownloadFwLogFileContent(ctx context.Context, t *api.ListWatchOptions) (*FwLogList, error)
 	GetLogs(ctx context.Context, t *FwLogQuery) (*FwLogList, error)
 }
 
@@ -26,5 +27,6 @@ type ServiceFwLogV1Client interface {
 type ServiceFwLogV1Server interface {
 	AutoWatchSvcFwLogV1(in *api.ListWatchOptions, stream FwLogV1_AutoWatchSvcFwLogV1Server) error
 
+	DownloadFwLogFileContent(ctx context.Context, t api.ListWatchOptions) (FwLogList, error)
 	GetLogs(ctx context.Context, t FwLogQuery) (FwLogList, error)
 }

@@ -1,21 +1,14 @@
 package vospkg
 
 import (
-	"compress/gzip"
-	"encoding/csv"
 	"fmt"
-	"io"
 	"strconv"
 	"time"
 
-	"github.com/gogo/protobuf/types"
 	"github.com/minio/minio-go"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/api/generated/fwlog"
 	"github.com/pensando/sw/api/generated/objstore"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/vos"
 )
@@ -98,110 +91,4 @@ loop:
 	}
 
 	return ret, nil
-}
-
-func parseFwLogCSV(reporterID string, objReader io.ReadCloser) (*fwlog.FwLogList, error) {
-	defer objReader.Close()
-
-	zipReader, err := gzip.NewReader(objReader)
-	if err != nil {
-		log.Errorf("error in unzipping object err %s", err.Error())
-		return nil, err
-	}
-
-	rd := csv.NewReader(zipReader)
-	data, err := rd.ReadAll()
-	if err != nil {
-		log.Errorf("error in reading object err %s", err.Error())
-		return nil, err
-	}
-	fwlogList := fwlog.FwLogList{}
-	fwlogList.Kind = fmt.Sprintf("%sList", auth.Permission_FwLog.String())
-	fwlogList.TotalCount = int32(len(data))
-
-	for i := 1; i < len(data); i++ {
-		line := data[i]
-
-		ts, err := time.Parse(time.RFC3339, line[4])
-		if err != nil {
-			log.Errorf("error in parsing time %s", err.Error())
-			return nil, fmt.Errorf("error in parsing time %s", err.Error())
-		}
-
-		timestamp, err := types.TimestampProto(ts)
-		if err != nil {
-			log.Errorf("error in converting time to proto %s", err.Error())
-			return nil, fmt.Errorf("error in converting time to proto %s", err.Error())
-		}
-
-		srcVRF, err := strconv.ParseUint(line[0], 10, 64)
-		if err != nil {
-			log.Errorf("error in conversion err %s", err.Error())
-			return nil, fmt.Errorf("error in conversion err %s", err.Error())
-		}
-
-		sport, err := strconv.ParseUint(line[5], 10, 64)
-		if err != nil {
-			log.Errorf("error in conversion err %s", err.Error())
-			return nil, fmt.Errorf("error in conversion err %s", err.Error())
-		}
-
-		dport, err := strconv.ParseUint(line[6], 10, 64)
-		if err != nil {
-			log.Errorf("error in conversion err %s", err.Error())
-			return nil, fmt.Errorf("error in conversion err %s", err.Error())
-		}
-
-		icmpType, err := strconv.ParseUint(line[13], 10, 64)
-		if err != nil {
-			log.Errorf("error in conversion err %s", err.Error())
-			return nil, fmt.Errorf("error in conversion err %s", err.Error())
-		}
-
-		icmpID, err := strconv.ParseUint(line[14], 10, 64)
-		if err != nil {
-			log.Errorf("error in conversion err %s", err.Error())
-			return nil, fmt.Errorf("error in conversion err %s", err.Error())
-		}
-
-		icmpCode, err := strconv.ParseUint(line[15], 10, 64)
-		if err != nil {
-			log.Errorf("error in conversion err %s", err.Error())
-			return nil, fmt.Errorf("error in conversion err %s", err.Error())
-		}
-
-		obj := fwlog.FwLog{
-			TypeMeta: api.TypeMeta{
-				Kind: "FwLog",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant: globals.DefaultTenant,
-				CreationTime: api.Timestamp{
-					Timestamp: *timestamp,
-				},
-				ModTime: api.Timestamp{
-					Timestamp: *timestamp,
-				},
-			},
-			SrcVRF:     srcVRF,
-			SrcIP:      line[2],
-			DestIP:     line[3],
-			SrcPort:    uint32(sport),
-			DestPort:   uint32(dport),
-			Protocol:   line[7],
-			Action:     line[8],
-			Direction:  line[9],
-			RuleID:     line[10],
-			SessionID:  line[11],
-			ReporterID: reporterID,
-			FlowAction: line[12],
-			IcmpType:   uint32(icmpType),
-			IcmpID:     uint32(icmpID),
-			IcmpCode:   uint32(icmpCode),
-		}
-
-		fwlogList.Items = append(fwlogList.Items, &obj)
-	}
-
-	return &fwlogList, nil
 }

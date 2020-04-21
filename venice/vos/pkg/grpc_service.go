@@ -15,7 +15,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/fields"
-	"github.com/pensando/sw/api/generated/fwlog"
 	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -644,23 +643,4 @@ func (g *grpcBackend) WatchDiskThresholdUpdates(opts *api.ListWatchOptions,
 
 	err := g.instance.Watch(stream.Context(), diskUpdateWatchPath, peer, handleFn, nil)
 	return err
-}
-
-func (g *grpcBackend) DownloadFwLogs(ctx context.Context, obj *objstore.Object) (*fwlog.FwLogList, error) {
-	log.Infof("got call to DownloadFwLogs [%+v]", obj.Name)
-
-	bucket := obj.Tenant + "." + obj.Namespace
-	// convert 1st 5 "_" to "/"
-	name := strings.Replace(obj.Name, "_", "/", 5)
-
-	if len(name) == 0 || len(obj.Tenant) == 0 || len(obj.Namespace) == 0 {
-		return nil, errors.New("prefix or tenant or namespace passed is empty")
-	}
-
-	objReader, err := g.client.GetStoreObject(ctx, bucket, name, minio.GetObjectOptions{})
-	if err != nil {
-		return nil, apierrors.ToGrpcError("client error", []string{err.Error()}, int32(codes.Internal), "", nil)
-	}
-	dscID := strings.Split(name, "/")[0]
-	return parseFwLogCSV(dscID, objReader)
 }

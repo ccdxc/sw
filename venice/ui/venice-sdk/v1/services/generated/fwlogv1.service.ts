@@ -20,6 +20,18 @@ export class Fwlogv1Service extends AbstractService {
     return this.constructor.name;
   }
 
+  /** fwlog/v1/tenants/default/objects/<objectName> */
+  public GetDownloadFwLogFileContent_1(O_Name, queryParam: any = null):Observable<{body: IFwlogFwLogList | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/fwlog/v1/objects/{O.Name}';
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetDownloadFwLogFileContent_1',
+      objType: 'FwlogFwLogList',
+      isStaging: false,
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IFwlogFwLogList | Error, statusCode: number}>;
+  }
+  
   /** Queries firewall logs */
   public GetGetLogs_1(queryParam: any = null):Observable<{body: IFwlogFwLogList | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/fwlog/v1/query';
@@ -44,6 +56,19 @@ export class Fwlogv1Service extends AbstractService {
       body = TrimDefaultsAndEmptyFields(body, new FwlogFwLogQuery(body), null, trimDefaults)
     }
     return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IFwlogFwLogList | Error, statusCode: number}>;
+  }
+  
+  /** fwlog/v1/tenants/default/objects/<objectName> */
+  public GetDownloadFwLogFileContent(O_Name, queryParam: any = null):Observable<{body: IFwlogFwLogList | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/fwlog/v1/tenants/{O.Tenant}/objects/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetDownloadFwLogFileContent',
+      objType: 'FwlogFwLogList',
+      isStaging: false,
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IFwlogFwLogList | Error, statusCode: number}>;
   }
   
 }

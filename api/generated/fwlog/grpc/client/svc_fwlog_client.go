@@ -23,6 +23,20 @@ var _ kvstore.Interface
 // NewFwLogV1 sets up a new client for FwLogV1
 func NewFwLogV1(conn *grpc.ClientConn, logger log.Logger) fwlog.ServiceFwLogV1Client {
 
+	var lDownloadFwLogFileContentEndpoint endpoint.Endpoint
+	{
+		lDownloadFwLogFileContentEndpoint = grpctransport.NewClient(
+			conn,
+			"fwlog.FwLogV1",
+			"DownloadFwLogFileContent",
+			fwlog.EncodeGrpcReqListWatchOptions,
+			fwlog.DecodeGrpcRespFwLogList,
+			&fwlog.FwLogList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lDownloadFwLogFileContentEndpoint = trace.ClientEndPoint("FwLogV1:DownloadFwLogFileContent")(lDownloadFwLogFileContentEndpoint)
+	}
 	var lGetLogsEndpoint endpoint.Endpoint
 	{
 		lGetLogsEndpoint = grpctransport.NewClient(
@@ -40,7 +54,8 @@ func NewFwLogV1(conn *grpc.ClientConn, logger log.Logger) fwlog.ServiceFwLogV1Cl
 	return fwlog.EndpointsFwLogV1Client{
 		Client: fwlog.NewFwLogV1Client(conn),
 
-		GetLogsEndpoint: lGetLogsEndpoint,
+		DownloadFwLogFileContentEndpoint: lDownloadFwLogFileContentEndpoint,
+		GetLogsEndpoint:                  lGetLogsEndpoint,
 	}
 }
 

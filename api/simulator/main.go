@@ -18,13 +18,13 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
@@ -110,7 +110,8 @@ func startSpyglass() finder.Interface {
 		tinfo.l,
 		finder.WithElasticClient(esClient),
 		finder.WithModuleWatcher(diagmock.GetModuleWatcher()),
-		finder.WithDiagnosticsService(diagmock.GetDiagnosticsService()))
+		finder.WithDiagnosticsService(diagmock.GetDiagnosticsService()),
+		finder.WithDisableVosFinder())
 	if err != nil {
 		log.Errorf("Error creating finder: %+v", err)
 		os.Exit(-1)

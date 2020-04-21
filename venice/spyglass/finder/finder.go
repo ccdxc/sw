@@ -18,7 +18,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/errors"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	diagapi "github.com/pensando/sw/api/generated/diagnostics"
@@ -75,6 +75,7 @@ type Finder struct {
 	diagSvc       diagnostics.Service
 	moduleWatcher module.Watcher
 	archiveSvc    archive.Service
+	vosFinder     bool
 }
 
 // WithElasticClient passes a custom client for Elastic
@@ -105,6 +106,13 @@ func WithArchiveService(archiveSvc archive.Service) Option {
 	}
 }
 
+// WithDisableVosFinder disables finding over Vos
+func WithDisableVosFinder() Option {
+	return func(fdr *Finder) {
+		fdr.vosFinder = false
+	}
+}
+
 // NewFinder instantiates a new finder instance
 func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, cache cache.Interface, logger log.Logger, opts ...Option) (Interface, error) {
 
@@ -114,6 +122,7 @@ func NewFinder(ctx context.Context, finderAddr string, rsr resolver.Interface, c
 		rsr:        rsr,
 		cache:      cache,
 		logger:     logger,
+		vosFinder:  true,
 	}
 
 	for _, opt := range opts {
@@ -989,7 +998,11 @@ func (fdr *Finder) startRPCServer(serverName, listenURL string) error {
 	archive.RegisterService(rpcServer.GrpcServer, fdr.archiveSvc)
 
 	// Register fwlog handler
-	fwlog.RegisterFwLogV1Server(rpcServer.GrpcServer, newFwLogHandler(fdr))
+	fwLogHandler, err := newFwLogHandler(fdr)
+	if err != nil {
+		return err
+	}
+	fwlog.RegisterFwLogV1Server(rpcServer.GrpcServer, fwLogHandler)
 
 	rpcServer.Start()
 	fdr.rpcServer = rpcServer

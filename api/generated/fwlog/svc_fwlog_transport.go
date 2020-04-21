@@ -26,7 +26,8 @@ var _ api.ObjectMeta
 type grpcServerFwLogV1 struct {
 	Endpoints EndpointsFwLogV1Server
 
-	GetLogsHdlr grpctransport.Handler
+	DownloadFwLogFileContentHdlr grpctransport.Handler
+	GetLogsHdlr                  grpctransport.Handler
 }
 
 // MakeGRPCServerFwLogV1 creates a GRPC server for FwLogV1 service
@@ -37,6 +38,13 @@ func MakeGRPCServerFwLogV1(ctx context.Context, endpoints EndpointsFwLogV1Server
 	}
 	return &grpcServerFwLogV1{
 		Endpoints: endpoints,
+		DownloadFwLogFileContentHdlr: grpctransport.NewServer(
+			endpoints.DownloadFwLogFileContentEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespFwLogList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("DownloadFwLogFileContent", logger)))...,
+		),
+
 		GetLogsHdlr: grpctransport.NewServer(
 			endpoints.GetLogsEndpoint,
 			DecodeGrpcReqFwLogQuery,
@@ -44,6 +52,24 @@ func MakeGRPCServerFwLogV1(ctx context.Context, endpoints EndpointsFwLogV1Server
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("GetLogs", logger)))...,
 		),
 	}
+}
+
+func (s *grpcServerFwLogV1) DownloadFwLogFileContent(ctx oldcontext.Context, req *api.ListWatchOptions) (*FwLogList, error) {
+	_, resp, err := s.DownloadFwLogFileContentHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respFwLogV1DownloadFwLogFileContent).V
+	return &r, resp.(respFwLogV1DownloadFwLogFileContent).Err
+}
+
+func decodeHTTPrespFwLogV1DownloadFwLogFileContent(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FwLogList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
 }
 
 func (s *grpcServerFwLogV1) GetLogs(ctx oldcontext.Context, req *FwLogQuery) (*FwLogList, error) {

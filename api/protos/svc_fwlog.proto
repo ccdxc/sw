@@ -9,6 +9,7 @@ package fwlog;
 import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
 import "fwlog.proto";
 
 // fileGrpcDest is the gRPC destination for this service
@@ -32,5 +33,16 @@ service FwLogV1 {
             get: "/query"
         }
       };
+    }
+
+    // fwlog/v1/tenants/default/objects/<objectName>
+    rpc DownloadFwLogFileContent(api.ListWatchOptions) returns (FwLogList) {
+        option (google.api.http) = {
+            get: "/tenants/{O.Tenant}/objects/{O.Name}"
+            additional_bindings {
+                // path for default tenant
+                get: "/objects/{O.Name}"
+            }
+        };
     }
 }

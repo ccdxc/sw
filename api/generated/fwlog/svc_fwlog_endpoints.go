@@ -39,7 +39,8 @@ type EndpointsFwLogV1Client struct {
 	Client                      FwLogV1Client
 	AutoWatchSvcFwLogV1Endpoint endpoint.Endpoint
 
-	GetLogsEndpoint endpoint.Endpoint
+	DownloadFwLogFileContentEndpoint endpoint.Endpoint
+	GetLogsEndpoint                  endpoint.Endpoint
 }
 
 // EndpointsFwLogV1RestClient is the REST client
@@ -49,8 +50,9 @@ type EndpointsFwLogV1RestClient struct {
 	instance string
 	bufferId string
 
-	AutoWatchSvcFwLogV1Endpoint endpoint.Endpoint
-	GetLogsEndpoint             endpoint.Endpoint
+	AutoWatchSvcFwLogV1Endpoint      endpoint.Endpoint
+	DownloadFwLogFileContentEndpoint endpoint.Endpoint
+	GetLogsEndpoint                  endpoint.Endpoint
 }
 
 // MiddlewareFwLogV1Server adds middle ware to the server
@@ -60,7 +62,22 @@ type MiddlewareFwLogV1Server func(ServiceFwLogV1Server) ServiceFwLogV1Server
 type EndpointsFwLogV1Server struct {
 	svcWatchHandlerFwLogV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 
-	GetLogsEndpoint endpoint.Endpoint
+	DownloadFwLogFileContentEndpoint endpoint.Endpoint
+	GetLogsEndpoint                  endpoint.Endpoint
+}
+
+// DownloadFwLogFileContent is endpoint for DownloadFwLogFileContent
+func (e EndpointsFwLogV1Client) DownloadFwLogFileContent(ctx context.Context, in *api.ListWatchOptions) (*FwLogList, error) {
+	resp, err := e.DownloadFwLogFileContentEndpoint(ctx, in)
+	if err != nil {
+		return &FwLogList{}, err
+	}
+	return resp.(*FwLogList), nil
+}
+
+type respFwLogV1DownloadFwLogFileContent struct {
+	V   FwLogList
+	Err error
 }
 
 // GetLogs is endpoint for GetLogs
@@ -79,6 +96,28 @@ type respFwLogV1GetLogs struct {
 
 func (e EndpointsFwLogV1Client) AutoWatchSvcFwLogV1(ctx context.Context, in *api.ListWatchOptions) (FwLogV1_AutoWatchSvcFwLogV1Client, error) {
 	return nil, errors.New("not implemented")
+}
+
+// DownloadFwLogFileContent implementation on server Endpoint
+func (e EndpointsFwLogV1Server) DownloadFwLogFileContent(ctx context.Context, in api.ListWatchOptions) (FwLogList, error) {
+	resp, err := e.DownloadFwLogFileContentEndpoint(ctx, in)
+	if err != nil {
+		return FwLogList{}, err
+	}
+	return *resp.(*FwLogList), nil
+}
+
+// MakeFwLogV1DownloadFwLogFileContentEndpoint creates  DownloadFwLogFileContent endpoints for the service
+func MakeFwLogV1DownloadFwLogFileContentEndpoint(s ServiceFwLogV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.DownloadFwLogFileContent(ctx, *req)
+		return respFwLogV1DownloadFwLogFileContent{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("FwLogV1:DownloadFwLogFileContent")(f)
 }
 
 // GetLogs implementation on server Endpoint
@@ -115,7 +154,8 @@ func MakeFwLogV1ServerEndpoints(s ServiceFwLogV1Server, logger log.Logger) Endpo
 	return EndpointsFwLogV1Server{
 		svcWatchHandlerFwLogV1: MakeAutoWatchSvcFwLogV1Endpoint(s, logger),
 
-		GetLogsEndpoint: MakeFwLogV1GetLogsEndpoint(s, logger),
+		DownloadFwLogFileContentEndpoint: MakeFwLogV1DownloadFwLogFileContentEndpoint(s, logger),
+		GetLogsEndpoint:                  MakeFwLogV1GetLogsEndpoint(s, logger),
 	}
 }
 
@@ -149,6 +189,19 @@ type loggingFwLogV1MiddlewareServer struct {
 	next   ServiceFwLogV1Server
 }
 
+func (m loggingFwLogV1MiddlewareClient) DownloadFwLogFileContent(ctx context.Context, in *api.ListWatchOptions) (resp *FwLogList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FwLogV1", "method", "DownloadFwLogFileContent", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.DownloadFwLogFileContent(ctx, in)
+	return
+}
 func (m loggingFwLogV1MiddlewareClient) GetLogs(ctx context.Context, in *FwLogQuery) (resp *FwLogList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -167,6 +220,19 @@ func (m loggingFwLogV1MiddlewareClient) AutoWatchSvcFwLogV1(ctx context.Context,
 	return nil, errors.New("not implemented")
 }
 
+func (m loggingFwLogV1MiddlewareServer) DownloadFwLogFileContent(ctx context.Context, in api.ListWatchOptions) (resp FwLogList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "FwLogV1", "method", "DownloadFwLogFileContent", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.DownloadFwLogFileContent(ctx, in)
+	return
+}
 func (m loggingFwLogV1MiddlewareServer) GetLogs(ctx context.Context, in FwLogQuery) (resp FwLogList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -216,6 +282,10 @@ func (r *EndpointsFwLogV1RestClient) getHTTPRequest(ctx context.Context, in inte
 func makeURIFwLogV1AutoWatchSvcFwLogV1WatchOper(in *api.ListWatchOptions) string {
 	return ""
 
+}
+
+func (r *EndpointsFwLogV1RestClient) FwLogV1DownloadFwLogFileContentEndpoint(ctx context.Context, in *api.ListWatchOptions) (*FwLogList, error) {
+	return nil, errors.New("not allowed")
 }
 
 func (r *EndpointsFwLogV1RestClient) FwLogV1GetLogsEndpoint(ctx context.Context, in *FwLogQuery) (*FwLogList, error) {

@@ -22,6 +22,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/fwlog"
 	"github.com/pensando/sw/api/generated/monitoring"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/nic/agent/tmagent/state/fwgen/fwevent"
@@ -206,6 +207,12 @@ var _ = Describe("firewall log tests", func() {
 			objectsIndex := elastic.GetIndex(globals.FwLogsObjects, "")
 			verifyIndexExistsOnElastic(esClient, objectsIndex)
 			verifyMinioObjectsOnElastic(esClient, fwLogClient, objectsIndex)
+		})
+
+		It("veirfy api that downloads object content", func() {
+			objName, err := getLastObjectName(fwLogClient, "")
+			Expect(err).NotTo(HaveOccurred())
+			verifyObjectContentAPI(objName, ts.tu.APIGwAddr)
 		})
 
 		AfterEach(func() {
@@ -542,4 +549,40 @@ func downloadCsvFileViaPSMRESTAPI(bucketName, objectName string, url string) [][
 	Expect(len(lines) != 0).Should(BeTrue())
 	By(fmt.Sprintf("downloaded object, data %s", lines))
 	return lines
+}
+
+func verifyObjectContentAPI(objectName string, url string) {
+	fwlogs1 := downloadFwlogObjectContentViaPSMRESTAPI(objectName, url)
+	Expect(len(fwlogs1.Items) != 0).Should(BeTrue())
+	fwlogs2 := downloadCsvFileViaPSMRESTAPI("fwlogs", objectName, url)
+	// +1 becauase there is CSV header as well in fwlogs2
+	Expect(len(fwlogs1.Items)+1 == len(fwlogs2)).Should(BeTrue())
+}
+
+func downloadFwlogObjectContentViaPSMRESTAPI(objectName string, url string) fwlog.FwLogList {
+	By(fmt.Sprintf("downloading object content %s, using url %s", objectName, url))
+	ctx := ts.tu.MustGetLoggedInContext(context.Background())
+	// replace first 5 "/" with "_"
+	name := strings.Replace(objectName, "/", "_", 5)
+	uri := fmt.Sprintf("https://%s/fwlog/v1/objects/%s", url, name)
+	req, err := http.NewRequest("GET", uri, nil)
+	Expect(err).NotTo(HaveOccurred())
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	Expect(ok).Should(BeTrue())
+
+	req.Header.Set("Authorization", authzHeader)
+	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: transport}
+	resp, err := client.Do(req)
+	Expect(err).NotTo(HaveOccurred())
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(resp.StatusCode == http.StatusOK).Should(BeTrue())
+
+	fwLogList := fwlog.FwLogList{}
+	err = json.Unmarshal(body, &fwLogList)
+	Expect(err).NotTo(HaveOccurred())
+	return fwLogList
 }

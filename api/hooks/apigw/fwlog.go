@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/fwlog"
 	"github.com/pensando/sw/venice/apigw"
@@ -46,13 +47,25 @@ func (e *fwlogHooks) operations(ctx context.Context, in interface{}) (context.Co
 		}
 		nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
 		return nctx, in, nil
+	case *api.ListWatchOptions:
+		resource = authz.NewResource(
+			obj.Tenant,
+			"",
+			auth.Permission_FwLog.String(),
+			globals.DefaultNamespace,
+			"",
+		)
+		operations, _ := apigwpkg.OperationsFromContext(ctx)
+		operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
+		nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
+		return nctx, in, nil
 	default:
 		return ctx, in, errors.New("invalid input type")
 	}
 }
 
 func (e *fwlogHooks) registerFwLogHooks(svc apigw.APIGatewayService) error {
-	methods := []string{"GetLogs"}
+	methods := []string{"GetLogs", "DownloadFwLogFileContent"}
 	for _, method := range methods {
 		prof, err := svc.GetServiceProfile(method)
 		if err != nil {
