@@ -104,7 +104,7 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     nat_rewrite_entry_t nat_data;
     bool public_ip_valid = false;
     sdk_table_api_params_t tparams;
-    mapping_appdata_t mapping_data;
+    mapping_appdata_t mapping_data, public_ip_mapping_data;
     rxdma_mapping_swkey_t rxdma_mapping_key;
     local_mapping_swkey_t local_mapping_key;
     mapping_tag_info_entry_t mapping_tag_data;
@@ -118,6 +118,7 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     handle_t rxdma_mapping_public_ip_hdl = handle_t::null();
     handle_t local_mapping_overlay_ip_hdl = handle_t::null();
     handle_t local_mapping_public_ip_hdl = handle_t::null();
+    handle_t mapping_public_ip_hdl = handle_t::null();
 
     device = device_find();
     if (key->type == PDS_MAPPING_TYPE_L2) {
@@ -239,7 +240,7 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
         // read public IP from NAT data
         P4_IPADDR_TO_IPADDR(nat_data.ip, public_ip, key->ip_addr.af);
 
-        // read local mapping for pub IP to get it's xlate index
+        // read local mapping for public IP to get it's xlate index
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
                                              ((vpc_impl *)vpc->impl())->hw_id(),
                                              &public_ip);
@@ -251,6 +252,19 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
             return NULL;
         }
         local_mapping_public_ip_hdl = tparams.handle;
+
+        // read MAPPPING table entry for public IP
+        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
+                                       &public_ip);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL,
+                                       &public_ip_mapping_data, 0,
+                                       handle_t::null());
+        ret = mapping_impl_db()->mapping_tbl()->get(&tparams);
+        if (ret != SDK_RET_OK) {
+            return NULL;
+        }
+        mapping_public_ip_hdl = tparams.handle;
 
         // read the rxdma MAPPING table entry of public IP if this mapping
         // has tags configured
@@ -302,6 +316,7 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     impl->mapping_hdl_ = mapping_hdl;
     impl->local_mapping_overlay_ip_hdl_ = local_mapping_overlay_ip_hdl;
     impl->local_mapping_public_ip_hdl_ = local_mapping_public_ip_hdl;
+    impl->mapping_public_ip_hdl_ = mapping_public_ip_hdl;
     impl->rxdma_local_mapping_tag_idx_ = local_mapping_data.tag_idx;
     impl->rxdma_mapping_tag_idx_ = rxdma_mapping_tag_idx;
     impl->rxdma_mapping_hdl_ = rxdma_mapping_hdl;
@@ -878,49 +893,56 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         return SDK_RET_OK;
     }
 
-    if (local_mapping_public_ip_hdl_.valid()) {
-        // remove public IP mapping
+    // remove public IP mapping
+    if (mapping_public_ip_hdl_.valid()) {
         PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_,
                                        &mapping->public_ip());
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
                                        0, handle_t::null());
         ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to remove entry in MAPPING table for %s, err %u",
-                          mapping->key2str().c_str(), ret);
+            PDS_TRACE_ERR("Failed to remove entry in MAPPING table for %s, "
+                          "err %u", mapping->key2str().c_str(), ret);
             return ret;
         }
+    }
 
-        // remove public IP local mapping
+    // remove public IP local mapping
+    if (local_mapping_public_ip_hdl_.valid()) {
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc_hw_id_,
                                              &mapping->public_ip());
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
                                        NULL, 0, handle_t::null());
         ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING table for %s, "
-                          "err %u", mapping->key2str().c_str(), ret);
+            PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING table "
+                          "for %s, err %u", mapping->key2str().c_str(), ret);
             return ret;
-        }
-
-        // free NAT entries
-        if (to_public_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
-            apulu_impl_db()->nat_idxr()->free(to_public_ip_nat_idx_);
-        }
-
-        if (to_overlay_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
-            apulu_impl_db()->nat_idxr()->free(to_overlay_ip_nat_idx_);
-        }
-
-        if (rxdma_mapping_public_ip_hdl_.valid()) {
-            PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
-                                               &mapping->public_ip());
-            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
-                                           NULL, NULL, 0, handle_t::null());
-            mapping_impl_db()->rxdma_mapping_tbl()->remove(&tparams);
         }
     }
 
+    // free NAT entries
+    if (to_public_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
+        apulu_impl_db()->nat_idxr()->free(to_public_ip_nat_idx_);
+    }
+
+    if (to_overlay_ip_nat_idx_ != PDS_IMPL_RSVD_NAT_HW_ID) {
+        apulu_impl_db()->nat_idxr()->free(to_overlay_ip_nat_idx_);
+    }
+
+    if (rxdma_mapping_public_ip_hdl_.valid()) {
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
+                                           &mapping->public_ip());
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                       NULL, NULL, 0, handle_t::null());
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->remove(&tparams);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to remove public IP entry in rxdma "
+                          "MAPPING table for %s, err %u",
+                          mapping->key2str().c_str(), ret);
+            return ret;
+        }
+    }
     return SDK_RET_OK;
 }
 
@@ -1853,7 +1875,8 @@ mapping_impl::handle_public_ip_update_(vpc_impl *vpc, subnet_entry *subnet,
         upd_public_ip_mappings = false;
     } else {
         // no change in public IP information
-        if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD) {
+        if (spec->public_ip_valid &&
+            (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD)) {
             // but tags are added, program rxdma MAPPING entry for public IP
             ret = add_public_ip_rxdma_mapping_entry_(vpc, spec);
             SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
@@ -1872,7 +1895,7 @@ mapping_impl::handle_public_ip_update_(vpc_impl *vpc, subnet_entry *subnet,
                 handle_t::null();
         } else if (spec->public_ip_valid && spec->num_tags &&
                    !IS_TAGS_CFG_UPDATED(obj_ctxt->upd_bmap)) {
-            // public exists but didn't change, tags also not changed, just
+            // public IP exists but didn't change, tags also not changed, just
             // xfer the relevant resources to cloned object now
             rxdma_mapping_public_ip_hdl_ =
                 orig_impl->rxdma_mapping_public_ip_hdl_;
