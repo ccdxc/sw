@@ -95,12 +95,6 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 	spc = spc.AddRuleForWorkloadCombo(workloadPairs, fromIP, toIP, proto, port, "PERMIT")
 	// TODO: when PDS agent support any proto
 	// spc = spc.AddRule("any", "any", "any", "DENY")
-	/*
-		err := spc.Commit()
-		if err != nil {
-			return err
-		}
-	*/
 	spc.SetTenant(selNetwork.GetTenant())
 	Expect(spc.Commit()).Should(Succeed())
 	//Now attach ingress and egress
@@ -193,17 +187,23 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 
 // testBlacklistPolicy tests if black list policies work
 func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
-	workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+	//workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+	nwc, err := getNetworkCollection()
+	Expect(err).Should(Succeed())
+
+	selNetwork := nwc.Any(1)
+	workloadPairs := ts.model.WorkloadPairs().OnNetwork(selNetwork.Subnets()[0]).Any(1)
 	spc := ts.model.NetworkSecurityPolicy("test-policy").DeleteAllRules()
 
 	// add deny rule for workload followed by allow all rule
 	spc = spc.AddRuleForWorkloadCombo(workloadPairs, fromIP, toIP, proto, port, "DENY")
 	// TODO: when PDS agent support any proto
-	// spc = spc.AddRule("any", "any", "any", "PERMIT")
-	err := spc.Commit()
-	if err != nil {
-		return err
-	}
+	// spc = spc.AddRule("any", "any", "any", "DENY")
+	spc.SetTenant(selNetwork.GetTenant())
+	Expect(spc.Commit()).Should(Succeed())
+	//Now attach ingress and egress
+	selNetwork.SetIngressSecurityPolicy(spc)
+	selNetwork.SetEgressSecurityPolicy(spc)
 
 	// verify policy was propagated correctly
 	err = checkEventually(func() error {
