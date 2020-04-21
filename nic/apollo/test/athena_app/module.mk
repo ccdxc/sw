@@ -7,7 +7,7 @@ MODULE_INCS     = ${MODULE_GEN_DIR} ${SDKDIR}/dpdk/build/include/
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_SOLIBS   = pal pdsframework pdscore pdslearn pdsapi pdsapi_impl \
                   thread trace logger pdsapi memhash sltcam \
-                  svc_athena pdsproto pdsagentcore_athena \
+                  pdsagent_athena\
                   event_thread slhash penmetrics \
                   ${NIC_FTL_LIBS} \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
@@ -24,7 +24,6 @@ MODULE_DEFS     = -DRTE_FORCE_INTRINSICS
 MODULE_PREREQS  = dpdk.submake
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
                    ${NIC_CAPSIM_LDLIBS} ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
-                   ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                    AAPL edit ncurses dpdk lmdb zmq
 ifeq ($(ARCH), x86_64)
 MODULE_INCS     +=  ${CONFIG_GTEST_INCS}

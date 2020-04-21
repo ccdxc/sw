@@ -34,7 +34,7 @@ LDFLAGS += -L/tool/toolchain/aarch64-1.1/aarch64-linux-gnu/usr/lib \
 endif
 
 LDLIBS += -lpal -lpdsframework -lpdscore -lpdslearn -lpdsapi -lpdsapi_impl -lsdkftl \
-		-lsvc_athena -lpdsproto -lpdsagentcore_athena -lprotobuf -lsdkeventmgr \
+		-lpdsagent_athena -lprotobuf\
 		-lgrpc++_reflection -lgrpc++ -lgrpc_unsecure -lgrpc++_unsecure \
 		-ldpdk -lthread -ltrace -llogger -lmemhash -lsltcam -leth_p4plus \
 		-levent_thread -lslhash -lpenmetrics -lp4pd_athena -lp4pd_athena_rxdma \
@@ -69,7 +69,6 @@ SRC_FILES := app_test_utils.cc \
 		zmq_wait.cc \
 		trace.cc \
         json_parser.cc \
-		grpc_thread.cc \
 		pds_ms_device_athena_stub.cc \
 		main.cc \
 		$(NULL)
@@ -82,7 +81,7 @@ ATH_APP_OBJS := $(OBJ_DIR)/main.o $(OBJ_DIR)/trace.o $(OBJ_DIR)/fte_athena.o $(O
 		$(OBJ_DIR)/app_test_utils.o $(OBJ_DIR)/script_exec.o $(OBJ_DIR)/script_parser.o \
 		$(OBJ_DIR)/session_aging.o $(OBJ_DIR)/conntrack_aging.o $(OBJ_DIR)/fte_athena_static.o \
                 $(OBJ_DIR)/combined_aging.o $(OBJ_DIR)/athena_app_server.o $(OBJ_DIR)/zmq_wait.o \
-                $(OBJ_DIR)/json_parser.o $(OBJ_DIR)/pds_ms_device_athena_stub.o $(OBJ_DIR)/grpc_thread.o
+                $(OBJ_DIR)/json_parser.o $(OBJ_DIR)/pds_ms_device_athena_stub.o
 
 OBJ_FILES := $(basename $(SRC_FILES))
 OBJ_FILES := $(OBJ_FILES:%=$(OBJ_DIR)/%.o)

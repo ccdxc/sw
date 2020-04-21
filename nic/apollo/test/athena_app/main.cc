@@ -16,9 +16,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <rte_common.h>
-#include "nic/apollo/agent/core/svc_thread.hpp"
-#include "nic/apollo/agent/core/state.hpp"
-#include "nic/apollo/agent/core/core.hpp"
+#include "nic/apollo/agent/athena/pds_agent_init.h"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
@@ -40,13 +38,9 @@
 #include "fte_athena.hpp"
 #include "athena_app_server.hpp"
 #include "athena_test.hpp"
-#include "grpc_thread.hpp"
 #include "json_parser.hpp"
 
 using namespace test::athena_app;
-
-static sdk::event_thread::event_thread *g_svc_server_thread;
-static sdk::event_thread::event_thread *g_grpc_reg_thread;
 
 namespace core {
 // number of trace files to keep
@@ -139,52 +133,6 @@ sdk_logger (uint32_t mod_id, sdk_trace_level_e tracel_level,
     va_end(args);
 
     return 0;
-}
-
-//------------------------------------------------------------------------------
-// spawn command server thread
-//------------------------------------------------------------------------------
-sdk_ret_t
-spawn_svc_server_thread (void)
-{
-    // spawn periodic thread that does background tasks
-    g_svc_server_thread =
-        sdk::event_thread::event_thread::factory(
-            "svc", PDS_AGENT_THREAD_ID_SVC_SERVER,
-            sdk::lib::THREAD_ROLE_CONTROL, 0x0, core::svc_server_thread_init,
-            core::svc_server_thread_exit, NULL, // message
-            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            true);
-
-    SDK_ASSERT_TRACE_RETURN((g_svc_server_thread != NULL), SDK_RET_ERR,
-                            "Service server thread create failure");
-    g_svc_server_thread->start(g_svc_server_thread);
-
-    return SDK_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// spawn grpc reg thread
-//------------------------------------------------------------------------------
-sdk_ret_t
-spawn_grpc_reg_thread (void)
-{
-    // spawn periodic thread that does background tasks
-    g_grpc_reg_thread =
-        sdk::event_thread::event_thread::factory(
-            "grpc", PDS_AGENT_THREAD_ID_GRPC_REG,
-            sdk::lib::THREAD_ROLE_CONTROL, 0x0, core::grpc_reg_thread_init,
-            core::grpc_reg_thread_exit, NULL, // message
-            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-            true);
-
-    SDK_ASSERT_TRACE_RETURN((g_grpc_reg_thread != NULL), SDK_RET_ERR,
-                            "Grpc registrition thread create failure");
-    g_grpc_reg_thread->start(g_grpc_reg_thread);
-
-    return SDK_RET_OK;
 }
 } // namespace core
 
@@ -422,7 +370,6 @@ int
 main (int argc, char **argv)
 {
     pds_ret_t    ret;
-    sdk_ret_t    sdk_ret;
     int          oc;
     string       cfg_path, cfg_file, profile, pipeline, file;
     string       script_fname, script_dir;
@@ -626,22 +573,10 @@ main (int argc, char **argv)
         exit(1);
     }
 
-    // init agent state
-    sdk_ret = core::agent_state::init();
-    if (sdk_ret != SDK_RET_OK) {
-        return (pds_ret_t)sdk_ret;
-    }
-
-    // spawn service server thread
-    sdk_ret = core::spawn_svc_server_thread();
-    if (sdk_ret != SDK_RET_OK) {
-        return (pds_ret_t)sdk_ret;
-    }
-
-    // register for all gRPC services
-    sdk_ret = core::spawn_grpc_reg_thread();
-    if (sdk_ret != SDK_RET_OK) {
-        return (pds_ret_t)sdk_ret;
+    ret = pds_agent_init();
+    if (ret != PDS_RET_OK) {
+        printf("pdsctl init failed with ret %u\n", ret);
+        return ret;
     }
 
     if (hw()) {
