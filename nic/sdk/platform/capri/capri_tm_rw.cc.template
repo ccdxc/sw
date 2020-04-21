@@ -4796,6 +4796,8 @@ capri_tm_periodic_stats_update (void)
         return sdk::SDK_RET_OK;
     }
 
+    // Take lock and update
+    SDK_SPINLOCK_LOCK(&tm_ctx()->stats.slock);
     // Read from asic
     for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
         for (context = 0; context < capri_tm_max_hbm_contexts_for_fifo(fifo_type);
@@ -4818,8 +4820,6 @@ capri_tm_periodic_stats_update (void)
             new_val->max_oflow_fifo_depth = watermark_in.convert_to<uint32_t>();
         }
     }
-    // Take lock and update
-    SDK_SPINLOCK_LOCK(&tm_ctx()->stats.slock);
     for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
         for (context = 0; context < capri_tm_max_hbm_contexts_for_fifo(fifo_type);
              context++) {

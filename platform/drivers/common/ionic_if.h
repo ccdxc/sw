@@ -2408,7 +2408,7 @@ struct ionic_port_pb_stats {
 	__le64 input_queue_err_pkts_in[IONIC_QOS_TC_MAX];
 	__le64 input_queue_fifo_depth[IONIC_QOS_TC_MAX];
 	__le64 input_queue_max_fifo_depth[IONIC_QOS_TC_MAX];
-	__le64 input_queue_peak_occupancy[IONIC_OFLOW_DROP_MAX];
+	__le64 input_queue_peak_occupancy[IONIC_QOS_TC_MAX];
 };
 
 enum port_type {
