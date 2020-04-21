@@ -16,6 +16,7 @@ def __getOperations(tc_operation):
     return opers
 
 def verify_dhcp_ips():
+    api.Logger.info("Verifying the IP addresses acquired")
     if not api.IsSimulation():
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     else:
@@ -120,14 +121,14 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    if verify_dhcp_ips() != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+
     if conn_utils.VerifyConnectivityTest(tc.iterators.proto, tc.cmd_cookies, tc.resp) != api.types.status.SUCCESS:
         return api.types.status.FAILURE
 
     if tc.iterators.workload_type == "igw":
         return flow_utils.verifyFlows(tc.iterators.ipaf, tc.workload_pairs)
-
-    return verify_dhcp_ips()
-
 
 def Teardown(tc):
     if tc.is_config_updated:

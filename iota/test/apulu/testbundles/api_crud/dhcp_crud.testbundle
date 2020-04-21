@@ -1,0 +1,64 @@
+meta:
+    name    : dhcp_crud
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : DHCP_Workload_Connectivity
+        testcase: testcases.networking.dhcp_connectivity
+        stress  : True
+        ignore  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            proto   : [ icmp ]
+            pktsize : [ 64 ]
+            workload_type : [ local ]
+            workload_scope : [ intra-subnet, inter-subnet ]
+            ipconfig : [ dhcp ]
+
+    -   name    : DHCP_Workload_Connectivity_Update
+        testcase: testcases.networking.dhcp_connectivity
+        stress  : True
+        ignore  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            proto   : [ icmp ]
+            pktsize : [ 64 ]
+            workload_type : [ local ]
+            workload_scope : [ intra-subnet, inter-subnet ]
+            ipconfig : [ dhcp ]
+            oper    : [ [update] ]
+            objtype : [ dhcp_relay ]
+
+    -   name    : DHCP_Workload_Connectivity_Update
+        testcase: testcases.networking.dhcp_connectivity
+        stress  : True
+        ignore  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            proto   : [ icmp ]
+            pktsize : [ 64 ]
+            workload_type : [ local ]
+            workload_scope : [ intra-subnet, inter-subnet ]
+            ipconfig : [ dhcp ]
+            oper    : [ [delete, create] ]
+            objtype : [ dhcp_relay ]
+
+    -   name    : DHCP_Workload_Connectivity_Update
+        testcase: testcases.networking.dhcp_connectivity
+        stress  : True
+        ignore  : True
+        iterators :
+            type    : nested
+            ipaf    : [ ipv4 ]
+            proto   : [ icmp ]
+            pktsize : [ 64 ]
+            workload_type : [ local ]
+            workload_scope : [ intra-subnet, inter-subnet ]
+            ipconfig : [ dhcp ]
+            oper    : [ [delete] ]
+            objtype : [ dhcp_relay ]
