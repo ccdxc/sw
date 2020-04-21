@@ -36,8 +36,8 @@
 
 #define IONIC_DRV_NAME        "ionic_en"
 #define DRV_DESCRIPTION       "Pensando Ethernet NIC Driver"
-#define DRV_VERSION           "1.4"
-#define DRV_REL_DATE          "Jan-31-2020"
+#define DRV_VERSION           "1.8"
+#define DRV_REL_DATE          "April-30-2020"
 #define IONIC_MAX_DEVCMD_TIMEOUT 60
 #define IONIC_DEFAULT_DEVCMD_TIMEOUT 50
 /* In bytes */

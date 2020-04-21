@@ -83,6 +83,7 @@ typedef struct {
         vmk_Bool                        is_encap;
 
         vmk_ByteCountSmall              frame_len;
+        vmk_ByteCountSmall              all_sgs_len;
 
         /* only valid for TSO packets */
         vmk_PktHeaderEntry              *l3_hdr_entry;

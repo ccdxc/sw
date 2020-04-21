@@ -1104,8 +1104,9 @@ ionic_tx_descs_needed(vmk_PktHandle *pkt,
         /* If TSO, need roundup(len/mss) descs */
         if (ctx->is_tso_needed) {
                 ctx->mss = vmk_PktGetLargeTcpPacketMss(pkt);
+                ctx->all_sgs_len = vmk_PktSgArrayTotalLenGet(pkt);
                 /* we need one additional descriptor per tso segment */
-                *num_tx_descs += (ctx->frame_len / ctx->mss);
+                *num_tx_descs += (ctx->all_sgs_len / ctx->mss);
 
                 *is_linearize_needed = ionic_tso_is_sparse(pkt, ctx);
         } else {
