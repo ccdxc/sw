@@ -25,6 +25,7 @@ func init() {
 		"QueuedTxPackets",
 		"FreedTxPackets",
 		"MaxSessionThresholdDrops",
+		"SessionCreatesIgnored",
 	}
 	globalMetricsMap["ftestats"]["FteLifQMetrics"] = kindToFieldNameMap["FteLifQMetrics"]
 

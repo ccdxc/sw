@@ -67,6 +67,7 @@ func TestGetFieldNamesFromKind(t *testing.T) {
 		"QueuedTxPackets",
 		"FreedTxPackets",
 		"MaxSessionThresholdDrops",
+		"SessionCreatesIgnored",
 	}
 	sort.Strings(v)
 	sort.Strings(ftestatsAnswer)

@@ -218,6 +218,8 @@ type FteLifQMetrics struct {
 
 	MaxSessionThresholdDrops metrics.Counter
 
+	SessionCreatesIgnored metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -251,6 +253,8 @@ func (mtr *FteLifQMetrics) Size() int {
 	sz += mtr.FreedTxPackets.Size()
 
 	sz += mtr.MaxSessionThresholdDrops.Size()
+
+	sz += mtr.SessionCreatesIgnored.Size()
 
 	return sz
 }
@@ -293,6 +297,9 @@ func (mtr *FteLifQMetrics) Unmarshal() error {
 
 	mtr.MaxSessionThresholdDrops = mtr.metrics.GetCounter(offset)
 	offset += mtr.MaxSessionThresholdDrops.Size()
+
+	mtr.SessionCreatesIgnored = mtr.metrics.GetCounter(offset)
+	offset += mtr.SessionCreatesIgnored.Size()
 
 	return nil
 }
@@ -355,6 +362,11 @@ func (mtr *FteLifQMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.MaxSessionThresholdDrops.Size()
+
+	if fldName == "SessionCreatesIgnored" {
+		return offset
+	}
+	offset += mtr.SessionCreatesIgnored.Size()
 
 	return offset
 }
@@ -422,6 +434,12 @@ func (mtr *FteLifQMetrics) SetFreedTxPackets(val metrics.Counter) error {
 // SetMaxSessionThresholdDrops sets cunter in shared memory
 func (mtr *FteLifQMetrics) SetMaxSessionThresholdDrops(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MaxSessionThresholdDrops"))
+	return nil
+}
+
+// SetSessionCreatesIgnored sets cunter in shared memory
+func (mtr *FteLifQMetrics) SetSessionCreatesIgnored(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SessionCreatesIgnored"))
 	return nil
 }
 

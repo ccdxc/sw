@@ -58,7 +58,7 @@ perform_ingress_checks(fte::ctx_t&ctx)
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_ACTION};
 
     if (broadcast_pkt) {
-        HAL_TRACE_ERR("Ignore session create");
+        HAL_TRACE_VERBOSE("Ignore session create");
         ctx.set_ignore_session_create(true);
         return HAL_RET_OK;
     }
@@ -68,7 +68,7 @@ perform_ingress_checks(fte::ctx_t&ctx)
     if (mcast_dmac) {
         flowupd.action = session::FLOW_ACTION_DROP;
         ctx.set_ignore_session_create(true);
-        HAL_TRACE_ERR("Dropping packet for multicast dmac");
+        HAL_TRACE_VERBOSE("Dropping packet for multicast dmac");
         ctx.update_flow(flowupd);
     }
 

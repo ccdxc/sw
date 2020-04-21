@@ -507,6 +507,7 @@ typedef struct fte_hbm_stats_ {
         uint64_t          queued_tx_pkts;              // Number of packets queued from this FTE to be transmitted
         uint64_t          freed_tx_pkts;               // Number of dropped/non-flowmiss packets for which the CPU buffers are freed 
         uint64_t          max_session_drop_pkts;       // Number of pkts dropped because of max sessions
+        uint64_t          session_create_ignored;      // Number of packets for which session create is ignored 
     } __PACK__ qstats;
 } __PACK__ fte_hbm_stats_t;
 

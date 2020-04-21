@@ -2006,6 +2006,17 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
+      "name": "SessionCreatesIgnored",
+      "displayName": "Session creates ignored",
+      "description": "Number of flow miss packets ignored for session creation",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
       "name": "reporterID",
       "description": "Name of reporting object",
       "baseType": "string",

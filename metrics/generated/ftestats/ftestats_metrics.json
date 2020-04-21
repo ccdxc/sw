@@ -132,6 +132,13 @@
           "Description": "Number of flowmiss packets dropped due to max session limit being hit",
           "Units": "Count",
           "BaseType": "Counter"
+        },
+        {
+          "Name": "SessionCreatesIgnored",
+          "DisplayName": "Session creates ignored",
+          "Description": "Number of flow miss packets ignored for session creation",
+          "Units": "Count",
+          "BaseType": "Counter"
         }
       ],
       "Tags": [
