@@ -106,14 +106,14 @@ node:
                   ipcount : 4
                   srcguard: false
                   public  : true
-                  #tagged  : true
+                  tagged  : true
                   rxpolicer: 3
                   txpolicer: 4
                 - count   : 1             # 1 tagged VNIC
                   ipcount : 4
                   srcguard: false
                   public  : false
-                  #tagged  : true
+                  tagged  : true
                 - count   : 1             # 1 untagged VNIC
                   ipcount : 2
                   srcguard: false
@@ -131,14 +131,14 @@ node:
                   ipcount : 2
                   srcguard: false
                   public  : false
-                  #tagged  : true
+                  tagged  : true
                   rxpolicer: 3
                   txpolicer: 4
                 - count   : 2             # 2 tagged VNICs
                   ipcount : 2
                   srcguard: false
                   public  : true
-                  #tagged  : true
+                  tagged  : true
                   rxpolicer: 3
                   txpolicer: 4
               rmap:

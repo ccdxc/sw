@@ -21,7 +21,6 @@ modules:
     - module:
         name    : L2_IPV4_TCP_QTAG
         spec    : local2remote.testspec
-        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
               vnic : filter://Dot1Qenabled=True
@@ -36,7 +35,6 @@ modules:
     - module:
         name    : L3_IPV4_TCP_QTAG
         spec    : local2remote.testspec
-        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
               vnic : filter://Dot1Qenabled=True

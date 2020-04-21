@@ -59,7 +59,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
 }
 
 always_inline int
-pds_flow_prog_get_next_offset (vlib_buffer_t *p0)
+pds_flow_prog_get_next_offset (vlib_buffer_t *p0, u8 is_l2)
 {
     return -(ARTEMIS_P4_TO_ARM_HDR_SZ - offsetof(p4_rx_cpu_hdr_t, ses_info) +
                (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));

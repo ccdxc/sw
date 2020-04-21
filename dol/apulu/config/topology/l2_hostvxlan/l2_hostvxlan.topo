@@ -80,7 +80,7 @@ node:
           count : 1
           type  : tenant
           subnet:
-            - count     : 2
+            - count     : 1
               v4prefixlen : 24
               v6prefixlen : 64
               vnic:
@@ -89,8 +89,8 @@ node:
                   srcguard: false         # true or false (default false)
                   public  : false
                   tagged  : false         # true or false (default true)
-                  rxpolicer: 3
-                  txpolicer: 4
+                  rxpolicer: 1
+                  txpolicer: 2
               rmap:                       # Remote IP mappings per subnet
                 - count : 4
                   l2 : true
@@ -98,6 +98,18 @@ node:
               v4prefixlen : 28
               v6prefixlen : 96
               vnic:
+                - count   : 1             # 1 tagged VNIC
+                  ipcount : 4
+                  srcguard: false
+                  public  : true
+                  tagged  : true
+                  rxpolicer: 3
+                  txpolicer: 4
+                - count   : 1             # 1 tagged VNIC
+                  ipcount : 4
+                  srcguard: false
+                  public  : false
+                  tagged  : true
                 - count   : 1             # 1 untagged VNIC
                   ipcount : 2
                   srcguard: false
@@ -107,6 +119,27 @@ node:
                   txpolicer: 6
               rmap:
                 - count : 4
+                  l2 : true
+            - count     : 1
+              v4prefixlen : 28
+              v6prefixlen : 96
+              vnic:
+                - count   : 2             # 2 tagged VNICs
+                  ipcount : 2
+                  srcguard: false
+                  public  : false
+                  tagged  : true
+                  rxpolicer: 3
+                  txpolicer: 4
+                - count   : 2             # 2 tagged VNICs
+                  ipcount : 2
+                  srcguard: false
+                  public  : true
+                  tagged  : true
+                  rxpolicer: 3
+                  txpolicer: 4
+              rmap:
+                - count : 2
                   l2 : true
           nat:
             count : 2

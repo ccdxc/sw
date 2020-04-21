@@ -20,17 +20,9 @@ modules:
     - module:
         name    : L2_QTAG_IPV4_TCP_ENCAP
         spec    : remote2local.testspec
-        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
               vnic : filter://Dot1Qenabled=True
-
-    - module:
-        name    : L2_IPV6_TCP_ENCAP
-        spec    : remote2local.testspec
-        enable  : False
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
 
     - module:
         name    : L3_IPV4_TCP_ENCAP
@@ -39,11 +31,11 @@ modules:
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
-        name    : L3_IPV6_TCP_ENCAP
+        name    : L3_QTAG_IPV4_TCP_ENCAP
         spec    : remote2local.testspec
-        enable  : False
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+              vnic : filter://Dot1Qenabled=True
 
     - module:
         name    : L2_IPV4_TCP_ENCAP_SRCGUARD_ENABLE

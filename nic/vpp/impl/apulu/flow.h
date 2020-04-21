@@ -24,6 +24,11 @@
 #define PDS_FLOW_UPLINK0_LIF_ID     0x0
 #define PDS_FLOW_UPLINK1_LIF_ID     0x1
 
+#define session_tx_rewrite_flags \
+    actiondata.action_u.session_session_info.tx_rewrite_flags
+#define session_rx_rewrite_flags \
+    actiondata.action_u.session_session_info.rx_rewrite_flags
+
 typedef CLIB_PACKED(struct pds_vxlan_template_header_s {
     ethernet_header_t eth;
     ip4_header_t ip4;
@@ -102,8 +107,10 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
             vnet_buffer2(b0)->pds_nat_data.xlate_idx2 + 1;
     }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b0)->pds_flow_data.packet_type));
-    actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
-    actiondata.action_u.session_session_info.rx_rewrite_flags = rewrite_flags->rx_rewrite;
+    session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
+    session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
+        (pds_is_flow_rx_vlan(b0) ?
+            (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
     ctx0 = pds_flow_get_hw_ctx(session_id0);
     ses_en = fm->con_track_en && (ctx0->proto == PDS_FLOW_PROTO_TCP);
     actiondata.action_u.session_session_info.session_tracking_en = ses_en;
@@ -152,8 +159,10 @@ skip_prog0:
             vnet_buffer2(b1)->pds_nat_data.xlate_idx2 + 1;
     }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b1)->pds_flow_data.packet_type));
-    actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
-    actiondata.action_u.session_session_info.rx_rewrite_flags = rewrite_flags->rx_rewrite;
+    session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
+    session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
+        (pds_is_flow_rx_vlan(b1) ?
+            (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
     ctx1 = pds_flow_get_hw_ctx(session_id1);
     ses_en = fm->con_track_en && (ctx1->proto == PDS_FLOW_PROTO_TCP);
     actiondata.action_u.session_session_info.session_tracking_en = ses_en;
@@ -214,8 +223,10 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
             vnet_buffer2(b)->pds_nat_data.xlate_idx2 + 1;
     }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b)->pds_flow_data.packet_type));
-    actiondata.action_u.session_session_info.tx_rewrite_flags = rewrite_flags->tx_rewrite;
-    actiondata.action_u.session_session_info.rx_rewrite_flags = rewrite_flags->rx_rewrite;
+    session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
+    session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
+        (pds_is_flow_rx_vlan(b) ?
+            (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
     ctx = pds_flow_get_hw_ctx(session_id);
     pds_packet_type_fill(ctx, vnet_buffer(b)->pds_flow_data.packet_type);
 
@@ -235,11 +246,9 @@ skip_prog:
 }
 
 always_inline int
-pds_flow_prog_get_next_offset (vlib_buffer_t *p0)
+pds_flow_prog_get_next_offset (vlib_buffer_t *p0, u8 is_l2)
 {
-    if (PREDICT_TRUE(vnet_buffer(p0)->pds_flow_data.flags &
-                     (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV4_2_VALID |
-                      VPP_CPU_FLAGS_IPV6_1_VALID | VPP_CPU_FLAGS_IPV6_2_VALID))) {
+    if (PREDICT_TRUE(!is_l2)) {
         return -(APULU_P4_TO_ARM_HDR_SZ +
                  (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer(p0)->l2_hdr_offset));
     }
@@ -524,9 +533,9 @@ pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
 }
 
 always_inline int
-pds_flow_classify_get_advance_offset (vlib_buffer_t *b)
+pds_flow_classify_get_advance_offset (vlib_buffer_t *b, u8 p4_flags)
 {
-    if (PREDICT_TRUE(vnet_buffer(b)->pds_flow_data.flags &
+    if (PREDICT_TRUE(p4_flags &
                      (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV4_2_VALID |
                       VPP_CPU_FLAGS_IPV6_1_VALID | VPP_CPU_FLAGS_IPV6_2_VALID))) {
         return (VPP_P4_TO_ARM_HDR_SZ +
@@ -807,13 +816,17 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
         next_determined |= 0x1;
     } else {
+        if (vnic0->encap_type != PDS_ETH_ENCAP_NO_VLAN) {
+            vnet_buffer(p0)->pds_flow_data.flags |=
+                    VPP_CPU_FLAGS_RX_VLAN_ENCAP_VALID;
+        }
         vnet_buffer(p0)->pds_flow_data.flow_hash = hdr0->flow_hash;
         vnet_buffer(p0)->pds_flow_data.ses_id = hdr0->session_id;
         if (0 != hdr0->session_id) {
             vnet_buffer(p0)->pds_flow_data.flags |=
                     VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID;
         }
-        vnet_buffer(p0)->pds_flow_data.flags |= flags0 |
+        vnet_buffer(p0)->pds_flow_data.flags |=
             (hdr0->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
             (((!hdr0->rx_packet) && hdr0->is_local) <<
             VPP_CPU_FLAGS_FLOW_L2L_POS) |
@@ -876,13 +889,17 @@ next_pak:
         counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
         next_determined |= 0x2;
     } else {
+        if (vnic1->encap_type != PDS_ETH_ENCAP_NO_VLAN) {
+            vnet_buffer(p1)->pds_flow_data.flags |=
+                    VPP_CPU_FLAGS_RX_VLAN_ENCAP_VALID;
+        }
         vnet_buffer(p1)->pds_flow_data.flow_hash = hdr1->flow_hash;
         vnet_buffer(p1)->pds_flow_data.ses_id = hdr1->session_id;
         if (0 != hdr1->session_id) {
             vnet_buffer(p1)->pds_flow_data.flags |=
                     VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID;
         }
-        vnet_buffer(p1)->pds_flow_data.flags |= flags1 |
+        vnet_buffer(p1)->pds_flow_data.flags |=
             (hdr1->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
             (((!hdr1->rx_packet) && hdr1->is_local) <<
             VPP_CPU_FLAGS_FLOW_L2L_POS) |
@@ -940,10 +957,12 @@ next_pak:
 
 pak_done:
     if ((next_offset_done & 0x1) == 0) {
-        vlib_buffer_advance(p0, pds_flow_classify_get_advance_offset(p0));
+        vlib_buffer_advance(p0,
+            pds_flow_classify_get_advance_offset(p0, flag_orig0));
     }
     if ((next_offset_done & 0x2) == 0) {
-        vlib_buffer_advance(p1, pds_flow_classify_get_advance_offset(p1));
+        vlib_buffer_advance(p1,
+            pds_flow_classify_get_advance_offset(p1, flag_orig1));
     }
 
     if ((flags0 == flags1) && !next_determined) {
@@ -1022,12 +1041,16 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
         return;
     }
+    if (vnic->encap_type != PDS_ETH_ENCAP_NO_VLAN) {
+        vnet_buffer(p)->pds_flow_data.flags |=
+            VPP_CPU_FLAGS_RX_VLAN_ENCAP_VALID;
+    }
     vnet_buffer(p)->pds_flow_data.ses_id = hdr->session_id;
     if (0 != hdr->session_id) {
         vnet_buffer(p)->pds_flow_data.flags |= VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID;
     }
     vnet_buffer(p)->pds_flow_data.flow_hash = hdr->flow_hash;
-    vnet_buffer(p)->pds_flow_data.flags |= flag_orig |
+    vnet_buffer(p)->pds_flow_data.flags |=
         (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
         (((!hdr->rx_packet) && hdr->is_local) << VPP_CPU_FLAGS_FLOW_L2L_POS) |
         (vnic->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS) |
@@ -1065,7 +1088,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         goto end;
     }
 
-    vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p));
+    vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p, flag_orig));
     if (PREDICT_FALSE(vnic->max_sessions &&
         (vnic->active_ses_count >= vnic->max_sessions))) {
         *next = FLOW_CLASSIFY_NEXT_DROP;

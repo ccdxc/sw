@@ -12,7 +12,6 @@
 #include <vppinfra/format.h>
 #include <vlib/vlib.h>
 
-// Flags passed from p4 pipeline (1st byte filled from p4)
 #define VPP_CPU_FLAGS_VLAN_VALID           APULU_CPU_FLAGS_VLAN_VALID
 #define VPP_CPU_FLAGS_IPV4_1_VALID         APULU_CPU_FLAGS_IPV4_1_VALID
 #define VPP_CPU_FLAGS_IPV6_1_VALID         APULU_CPU_FLAGS_IPV6_1_VALID
@@ -20,15 +19,16 @@
 #define VPP_CPU_FLAGS_IPV4_2_VALID         APULU_CPU_FLAGS_IPV4_2_VALID
 #define VPP_CPU_FLAGS_IPV6_2_VALID         APULU_CPU_FLAGS_IPV6_2_VALID
 
-// Flags defined and used within vpp (2nd byte filled in VPP)
-#define VPP_CPU_FLAGS_RX_PKT_POS           8
-#define VPP_CPU_FLAGS_NAPT_POS             9
-#define VPP_CPU_FLAGS_NAPT_SVC_POS         10
-#define VPP_CPU_FLAGS_FLOW_LOG_POS         11
-#define VPP_CPU_FLAGS_FLOW_L2L_POS         12
-#define VPP_CPU_FLAGS_FLOW_SES_EXIST_POS   13
-#define VPP_CPU_FLAGS_FLOW_RESPONDER_POS   14
-#define VPP_CPU_FLAGS_NAT_SVC_MAP          15
+// Flags defined and used within vpp (2bytes)
+#define VPP_CPU_FLAGS_RX_PKT_POS           0
+#define VPP_CPU_FLAGS_NAPT_POS             1
+#define VPP_CPU_FLAGS_NAPT_SVC_POS         2
+#define VPP_CPU_FLAGS_FLOW_LOG_POS         3
+#define VPP_CPU_FLAGS_FLOW_L2L_POS         4
+#define VPP_CPU_FLAGS_FLOW_SES_EXIST_POS   5
+#define VPP_CPU_FLAGS_FLOW_RESPONDER_POS   6
+#define VPP_CPU_FLAGS_NAT_SVC_MAP          7
+#define VPP_CPU_FLAGS_RX_VLAN_ENCAP        8
 
 #define VPP_CPU_FLAGS_RX_PKT_VALID         (1 << VPP_CPU_FLAGS_RX_PKT_POS)
 #define VPP_CPU_FLAGS_NAPT_VALID           (1 << VPP_CPU_FLAGS_NAPT_POS)
@@ -38,9 +38,17 @@
 #define VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID (1 << VPP_CPU_FLAGS_FLOW_SES_EXIST_POS)
 #define VPP_CPU_FLAGS_FLOW_RESPONDER_VALID (1 << VPP_CPU_FLAGS_FLOW_RESPONDER_POS)
 #define VPP_CPU_FLAGS_NAT_SVC_MAP_VALID    (1 << VPP_CPU_FLAGS_NAT_SVC_MAP)
+#define VPP_CPU_FLAGS_RX_VLAN_ENCAP_VALID  (1 << VPP_CPU_FLAGS_RX_VLAN_ENCAP)
 
 #define VPP_ARM_TO_P4_HDR_SZ               APULU_ARM_TO_P4_HDR_SZ
 #define VPP_P4_TO_ARM_HDR_SZ               APULU_P4_TO_ARM_HDR_SZ
+
+always_inline bool
+pds_is_flow_rx_vlan (vlib_buffer_t *p0)
+{
+    return (vnet_buffer(p0)->pds_flow_data.flags &
+            VPP_CPU_FLAGS_RX_VLAN_ENCAP_VALID) ? true : false;
+}
 
 always_inline bool
 pds_is_rx_pkt (vlib_buffer_t *p0)

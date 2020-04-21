@@ -11,7 +11,7 @@ build
 # run all apulu DOL dry runs
 DryRunSanity hostvxlan networking
 DryRunSanity l2_hostvxlan networking
-DryRunSanity learn networking
+DryRunSanity learn learn
 #DryRunSanity overlay networking SUB="local2remote,remote2local"
 
 DryRunSanity rfc_disjoint rfc SUB="ipv4_egress_disjoint,ipv4_ingress_disjoint"

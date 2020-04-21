@@ -414,7 +414,7 @@ pds_flow_prog_populate_trace (vlib_buffer_t *CLIB_UNUSED(b0),
 void
 pds_flow_prog_trace_add (vlib_main_t *vm,
                          vlib_node_runtime_t *node,
-                         vlib_frame_t *from_frame, u8 is_ip4)
+                         vlib_frame_t *from_frame, u8 is_ip4, u8 is_l2)
 {
     PDS_PACKET_TRACE_LOOP_START {
         PDS_PACKET_TRACE_DUAL_LOOP_START {
@@ -426,8 +426,8 @@ pds_flow_prog_trace_add (vlib_main_t *vm,
             b0 = PDS_PACKET_BUFFER(0);
             b1 = PDS_PACKET_BUFFER(1);
 
-            offset0 = pds_flow_prog_get_next_offset(b0);
-            offset1 = pds_flow_prog_get_next_offset(b1);
+            offset0 = pds_flow_prog_get_next_offset(b0, is_l2);
+            offset1 = pds_flow_prog_get_next_offset(b1, is_l2);
             data0 = vlib_buffer_get_current(b0) - offset0;
             data1 = vlib_buffer_get_current(b1) - offset1;
 
@@ -449,7 +449,7 @@ pds_flow_prog_trace_add (vlib_main_t *vm,
 
             b0 = PDS_PACKET_BUFFER(0);
 
-            offset0 = pds_flow_prog_get_next_offset(b0);
+            offset0 = pds_flow_prog_get_next_offset(b0, is_l2);
             data0 = vlib_buffer_get_current(b0) - offset0;
 
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
@@ -818,8 +818,8 @@ pds_flow_prog (vlib_main_t *vm,
                                           flow_exists0);
             pds_flow_extract_prog_args_x1(b1, session_id1, is_ip4, is_l2,
                                           flow_exists1);
-            offset0 = pds_flow_prog_get_next_offset(b0);
-            offset1 = pds_flow_prog_get_next_offset(b1);
+            offset0 = pds_flow_prog_get_next_offset(b0, is_l2);
+            offset1 = pds_flow_prog_get_next_offset(b1, is_l2);
             vlib_buffer_advance(b0, offset0);
             vlib_buffer_advance(b1, offset1);
         } PDS_PACKET_DUAL_LOOP_END;
@@ -838,7 +838,7 @@ pds_flow_prog (vlib_main_t *vm,
             flow_exists0 = vnet_buffer(b0)->pds_flow_data.ses_id ? 1 : 0;
             pds_flow_extract_prog_args_x1(b0, session_id0, is_ip4, is_l2,
                                           flow_exists0);
-            offset0 = pds_flow_prog_get_next_offset(b0);
+            offset0 = pds_flow_prog_get_next_offset(b0, is_l2);
             vlib_buffer_advance(b0, offset0);
         } PDS_PACKET_SINGLE_LOOP_END;
     } PDS_PACKET_LOOP_END_NO_ENQUEUE;
@@ -864,7 +864,7 @@ pds_flow_prog (vlib_main_t *vm,
 #undef _
 
     if (node->flags & VLIB_NODE_FLAG_TRACE) {
-        pds_flow_prog_trace_add(vm, node, from_frame, is_ip4);
+        pds_flow_prog_trace_add(vm, node, from_frame, is_ip4, is_l2);
     }
 
     return from_frame->n_vectors;
