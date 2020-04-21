@@ -238,6 +238,11 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 
 	if len(qs.Fields) > 0 {
 		selectedFields = qs.Fields
+		// Double quoted feild name if it is not *
+		// in order to avoid influxdb keyword error
+		for idx, field := range selectedFields {
+			selectedFields[idx] = `"` + field + `"`
+		}
 	}
 
 	if qs.Function != "" {

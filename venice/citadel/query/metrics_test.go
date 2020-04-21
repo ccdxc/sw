@@ -107,7 +107,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 					Kind: "test-db",
 				},
 			},
-			resp: "SELECT * FROM test-db ORDER BY time ASC",
+			resp: `SELECT * FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -118,7 +118,18 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				},
 				Fields: []string{"cpu"},
 			},
-			resp: "SELECT cpu FROM test-db ORDER BY time ASC",
+			resp: `SELECT "cpu" FROM test-db ORDER BY time ASC`,
+			pass: true,
+		},
+		{
+			desc: "Selecting measurement with name",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Fields: []string{"cpu", "name"},
+			},
+			resp: `SELECT "cpu","name" FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -129,7 +140,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				},
 				Function: telemetry_query.TsdbFunctionType_MEAN.String(),
 			},
-			resp: "SELECT mean(*) FROM test-db ORDER BY time ASC",
+			resp: `SELECT mean(*) FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -141,7 +152,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Fields:   []string{"cpu"},
 				Function: telemetry_query.TsdbFunctionType_MEAN.String(),
 			},
-			resp: "SELECT mean(cpu) FROM test-db ORDER BY time ASC",
+			resp: `SELECT mean("cpu") FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -153,7 +164,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Fields:   []string{"cpu", "memory"},
 				Function: telemetry_query.TsdbFunctionType_MEAN.String(),
 			},
-			resp: "SELECT mean(cpu),mean(memory) FROM test-db ORDER BY time ASC",
+			resp: `SELECT mean("cpu"),mean("memory") FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -164,7 +175,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				},
 				Function: telemetry_query.TsdbFunctionType_LAST.String(),
 			},
-			resp: "SELECT last(*) FROM test-db ORDER BY time ASC",
+			resp: `SELECT last(*) FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -176,7 +187,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Function:    telemetry_query.TsdbFunctionType_LAST.String(),
 				GroupbyTime: "3m",
 			},
-			resp: "SELECT last(*) FROM test-db GROUP BY time(3m) ORDER BY time ASC",
+			resp: `SELECT last(*) FROM test-db GROUP BY time(3m) ORDER BY time ASC`,
 			pass: true,
 		},
 
@@ -188,7 +199,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				},
 				Function: "median",
 			},
-			resp: "SELECT median(*) FROM test-db ORDER BY time ASC",
+			resp: `SELECT median(*) FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -199,7 +210,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				},
 				Function: "derivative",
 			},
-			resp: "SELECT derivative(*) FROM test-db ORDER BY time ASC",
+			resp: `SELECT derivative(*) FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -211,7 +222,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				GroupbyTime: "5m",
 				Function:    "derivative",
 			},
-			resp: "SELECT derivative(mean(*)) FROM test-db GROUP BY time(5m) ORDER BY time ASC",
+			resp: `SELECT derivative(mean(*)) FROM test-db GROUP BY time(5m) ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -222,7 +233,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				},
 				Function: "difference",
 			},
-			resp: "SELECT difference(*) FROM test-db ORDER BY time ASC",
+			resp: `SELECT difference(*) FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -234,7 +245,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				GroupbyTime: "5m",
 				Function:    "difference",
 			},
-			resp: "SELECT difference(mean(*)) FROM test-db GROUP BY time(5m) ORDER BY time ASC",
+			resp: `SELECT difference(mean(*)) FROM test-db GROUP BY time(5m) ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -246,7 +257,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Fields:   []string{"cpu"},
 				Function: telemetry_query.TsdbFunctionType_MAX.String(),
 			},
-			resp: "SELECT max(cpu),* FROM test-db ORDER BY time ASC",
+			resp: `SELECT max("cpu"),* FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -258,7 +269,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Fields:   []string{"cpu"},
 				Function: telemetry_query.TsdbFunctionType_TOP.String(),
 			},
-			resp: "SELECT top(cpu,reporterID,10) FROM test-db ORDER BY time ASC",
+			resp: `SELECT top("cpu",reporterID,10) FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -270,7 +281,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Fields:   []string{"cpu"},
 				Function: telemetry_query.TsdbFunctionType_BOTTOM.String(),
 			},
-			resp: "SELECT bottom(cpu,reporterID,10) FROM test-db ORDER BY time ASC",
+			resp: `SELECT bottom("cpu",reporterID,10) FROM test-db ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -282,7 +293,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Name:   "test",
 				Fields: []string{"cpu"},
 			},
-			resp: "SELECT cpu FROM test-db WHERE \"Name\" = 'test' ORDER BY time ASC",
+			resp: `SELECT "cpu" FROM test-db WHERE "Name" = 'test' ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -302,7 +313,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				},
 				Fields: []string{"cpu"},
 			},
-			resp: "SELECT cpu FROM test-db WHERE \"Name\" > 2 ORDER BY time ASC",
+			resp: `SELECT "cpu" FROM test-db WHERE "Name" > 2 ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -315,7 +326,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				StartTime: startTime,
 				EndTime:   endTime,
 			},
-			resp: "SELECT cpu FROM test-db_1day WHERE time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' ORDER BY time ASC",
+			resp: `SELECT "cpu" FROM test-db_1day WHERE time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -327,7 +338,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Fields:       []string{"cpu"},
 				GroupbyField: "ReporterID",
 			},
-			resp: "SELECT cpu FROM test-db GROUP BY \"ReporterID\" ORDER BY time ASC",
+			resp: `SELECT "cpu" FROM test-db GROUP BY "ReporterID" ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -340,7 +351,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Function:    telemetry_query.TsdbFunctionType_MEAN.String(),
 				GroupbyTime: "30s",
 			},
-			resp: "SELECT mean(cpu) FROM test-db GROUP BY time(30s) ORDER BY time ASC",
+			resp: `SELECT mean("cpu") FROM test-db GROUP BY time(30s) ORDER BY time ASC`,
 			pass: true,
 		},
 		{
@@ -354,7 +365,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				GroupbyTime: "30s",
 				SortOrder:   telemetry_query.SortOrder_Descending.String(),
 			},
-			resp: "SELECT mean(cpu) FROM test-db GROUP BY time(30s) ORDER BY time DESC",
+			resp: `SELECT mean("cpu") FROM test-db GROUP BY time(30s) ORDER BY time DESC`,
 			pass: true,
 		},
 		{
@@ -371,7 +382,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 					Offset: 10,
 				},
 			},
-			resp: "SELECT mean(cpu) FROM test-db GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			resp: `SELECT mean("cpu") FROM test-db GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10`,
 			pass: true,
 		},
 		{
@@ -390,7 +401,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				StartTime: cqTestStartTimeOneHour,
 				EndTime:   cqTestEndTime,
 			},
-			resp: "SELECT mean(cpu) FROM test-db WHERE time > '" + cqStartOneHourString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			resp: `SELECT mean("cpu") FROM test-db WHERE time > '` + cqStartOneHourString + `' AND time < '` + cqEndString + `' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10`,
 			pass: true,
 		},
 		{
@@ -409,7 +420,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				StartTime: cqTestStartTimeOneDay,
 				EndTime:   cqTestEndTime,
 			},
-			resp: "SELECT mean(cpu) FROM test-db_5minutes WHERE time > '" + cqStartOneDayString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			resp: `SELECT mean("cpu") FROM test-db_5minutes WHERE time > '` + cqStartOneDayString + `' AND time < '` + cqEndString + `' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10`,
 			pass: true,
 		},
 		{
@@ -428,7 +439,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				StartTime: cqTestStartTimeTenDay,
 				EndTime:   cqTestEndTime,
 			},
-			resp: "SELECT mean(cpu) FROM test-db_1hour WHERE time > '" + cqStartTenDayString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			resp: `SELECT mean("cpu") FROM test-db_1hour WHERE time > '` + cqStartTenDayString + `' AND time < '` + cqEndString + `' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10`,
 			pass: true,
 		},
 		{
@@ -447,7 +458,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				StartTime: cqTestStartTimeTwoMonth,
 				EndTime:   cqTestEndTime,
 			},
-			resp: "SELECT mean(cpu) FROM test-db_1day WHERE time > '" + cqStartTwoMonthString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			resp: `SELECT mean("cpu") FROM test-db_1day WHERE time > '` + cqStartTwoMonthString + `' AND time < '` + cqEndString + `' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10`,
 			pass: true,
 		},
 		{
@@ -466,7 +477,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				StartTime: cqTestStartTimeTwoYear,
 				EndTime:   cqTestEndTime,
 			},
-			resp: "SELECT mean(cpu) FROM test-db_1day WHERE time > '" + cqStartTwoYearString + "' AND time < '" + cqEndString + "' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10",
+			resp: `SELECT mean("cpu") FROM test-db_1day WHERE time > '` + cqStartTwoYearString + `' AND time < '` + cqEndString + `' GROUP BY time(30s) ORDER BY time ASC LIMIT 10 OFFSET 10`,
 			pass: true,
 		},
 	}
@@ -1000,6 +1011,29 @@ func TestValidateQuerySpec(t *testing.T) {
 				},
 				Function:     "mean",
 				Fields:       []string{},
+				GroupbyField: "validField",
+				SortOrder:    telemetry_query.SortOrder_Ascending.String(),
+			},
+			errMsgs: []string{},
+			pass:    true,
+		},
+		{
+			desc: "query with valid requirements and fields",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "Node",
+				},
+				Selector: &fields.Selector{
+					Requirements: []*fields.Requirement{
+						&fields.Requirement{
+							Key:      "Name",
+							Operator: "equals",
+							Values:   []string{"test"},
+						},
+					},
+				},
+				Function:     "mean",
+				Fields:       []string{"cpu", "name"},
 				GroupbyField: "validField",
 				SortOrder:    telemetry_query.SortOrder_Ascending.String(),
 			},
