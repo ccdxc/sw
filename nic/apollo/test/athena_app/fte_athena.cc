@@ -156,6 +156,9 @@ pds_flow_stats_t g_flow_stats;
 static bool fte_threads_started;
 static bool fte_threads_done;
 
+// File to dump flows on HW
+static FILE *g_flows_fp;
+
 // Send burst of packets on an output interface 
 static inline void
 send_burst (struct lcore_conf *qconf, uint16_t n, uint16_t port)
@@ -388,11 +391,11 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
     pds_flow_data_t *data = &iter_cb_arg->flow_appdata;
 
     if (key->key_type == KEY_TYPE_IPV6) {
-        PDS_TRACE_DEBUG("SrcIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
+        fprintf(g_flows_fp, "SrcIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
                         "DstIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
                         "Dport:%u Sport:%u Proto:%u "
                         "Ktype:%u VNICID:%u "
-                        "index:%u index_type:%u\n\n",
+                        "index:%u index_type:%u\n",
                         key->ip_saddr[0], key->ip_saddr[1], key->ip_saddr[2], key->ip_saddr[3],
                         key->ip_saddr[4], key->ip_saddr[5], key->ip_saddr[6], key->ip_saddr[7],
                         key->ip_saddr[8], key->ip_saddr[9], key->ip_saddr[10], key->ip_saddr[11],
@@ -404,17 +407,19 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
                         key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
                         key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
                         data->index, (uint8_t)data->index_type);
+        fflush(g_flows_fp);
     } else {
-        PDS_TRACE_DEBUG("SrcIP:%d.%d.%d.%d "
+        fprintf(g_flows_fp, "SrcIP:%d.%d.%d.%d "
                         "DstIP:%d.%d.%d.%d "
                         "Dport:%u Sport:%u Proto:%u "
                         "Ktype:%u VNICID:%u "
-                        "index:%u index_type:%u\n\n",
+                        "index:%u index_type:%u\n",
                         key->ip_saddr[3], key->ip_saddr[2], key->ip_saddr[1], key->ip_saddr[0],
                         key->ip_daddr[3], key->ip_daddr[2], key->ip_daddr[1], key->ip_daddr[0],
                         key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
                         key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
                         data->index, (uint8_t)data->index_type);
+        fflush(g_flows_fp);
     }
     return;
 }
@@ -613,7 +618,7 @@ signal_handler (int signum)
         program_prepare_exit();
     }
     if (signum == SIGUSR1) {
-        PDS_TRACE_DEBUG("\nSIGNAL %d received..\n",
+        PDS_TRACE_DEBUG("\nSIGNAL %d received..dumping flows to /data/flows\n",
                         signum);
         fte_dump_flows();
     }
@@ -1019,6 +1024,14 @@ fte_main (void)
     // launch per-lcore init on every slave lcore
     fte_threads_started = true;
     rte_eal_mp_remote_launch(fte_launch_one_lcore, NULL, fte_call_master_type);
+
+#ifndef SIM
+     // /var/log/pensando doesn't have sufficient memory
+     // Create a /data/flows.log file for flow dump
+     // First delete the file, so logs are cleared(new file created) on every reboot
+     remove("/data/flows.log");
+     g_flows_fp = fopen("/data/flows.log", "w+");
+#endif
 
     return ret;
 }
