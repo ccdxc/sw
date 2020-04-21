@@ -230,12 +230,8 @@ def setupVxLAN(ipv4, srv, cli):
 
     return api.types.status.SUCCESS
 
-#
-# Return index of tcpdump -D output which is interfaceUUID
-# Input is node name and Linux name like ethX
 
-def winIntfGuid(node, intf):
-    api.Logger.info("Get intfGUID for: %s " %(intf))
+def winIntfJson(node, intf, key):
     intf_list = workloads.GetNodeInterface(node)
     # Got windows name - Ethernet from ethX
     winName = intf_list.WindowsIntName(intf)
@@ -265,10 +261,28 @@ def winIntfGuid(node, intf):
         api.Logger.error("Failed to parse iperf json output :", cmd.stdout)
         return api.types.status.FAILURE
     
-    intfGuid = jsonOut["InterfaceGuid"]
-    api.Logger.info("InterfaceGuid: %s for %s" %(intfGuid, intf))
-    return intfGuid
+    value = jsonOut[key]
+    api.Logger.info("%s[%s]: %s" %(intf, key, value))
+    return value
 
+
+def winIntfGuid(node, intf):
+    api.Logger.info("Get intfGUID for: %s " %(intf))
+    return winIntfJson(node, intf, "InterfaceGuid")
+
+#
+# Windows interface name translation from Linux ethX name
+# ethX is Windows "Pensando DSC 2p 40/100G Services Adapter #""
+# same in HAL -yaml name is "Pen~ Adapeter" 
+#
+def winHalIntfName(node, intf):
+    winName = winIntfJson(node, intf, "ifDesc")
+    # HAL name is trimmed for Windows so
+    # Pensando -> Pen~
+    halName = winName.replace("Pensando DSC 2p 40/100G Services Adapter","Pen~ Adapter")
+    api.Logger.info("(Win Name): Linux: %s -> Windows name: %s -> Hal name: %s" % (intf, winName, halName))
+    return halName
+                
 # Use Interface GUID to get tcpdump -D index value for tcpdump -i input
 def winTcpDumpIdx(node, intfGuid):
     hostCmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "

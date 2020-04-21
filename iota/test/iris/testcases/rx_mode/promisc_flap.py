@@ -81,10 +81,10 @@ def verify_hal_output(tc, is_promisc):
                     break
             # If LIF does not belong to any of the software interfaces, it's PR flag must be False
             if intf_lif == False and lif_pr_flag == True:
-                api.Logger.error("Halctl PR flag set for non-promiscuous mode LIF [%s]" %(lif_obj['spec']['name']))
+                api.Logger.error("Halctl PR flag set for non-promiscuous mode LIF [%s]" %(lif_obj['spec']))
                 result = api.types.status.FAILURE
             elif intf_lif == True and lif_pr_flag != True:
-                api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
+                api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(lif_obj['spec']))
                 result = api.types.status.FAILURE
     return result
 

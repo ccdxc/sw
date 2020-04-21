@@ -35,9 +35,9 @@ def Setup(tc):
         return api.types.status.IGNORED
 
     if api.GetNodeOs(tc.naples_node) != "linux" and tc.args.mode == "enable_allmulti":
-        api.Logger.info("Skipping testcase because allmulti cannot be set in FreeBSD")
+        api.Logger.info("Skipping testcase because allmulti cannot be set")
         tc.skip = True
-        return api.types.status.IGNORED
+        return api.types.status.SUCCESS
 
     tc.expect_pkt = {}
     tc.on_host = {}
@@ -154,7 +154,7 @@ def Trigger(tc):
 
 
     if api.GetNodeOs(tc.naples_node) == "windows":
-        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 1; ping -n 5 -S " + tc.peer_workloads[0].ip_address + " " + tc.target_multicast_IP + ";sleep 1 \" "
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 10; ping -n 5 -S " + tc.peer_workloads[0].ip_address + " " + tc.target_multicast_IP + ";sleep 10 \" "
     else:
         cmd = "sleep 1; ping -c 5 -I " + tc.peer_workloads[0].ip_address + " " + tc.target_multicast_IP + ";sleep 1"
 

@@ -58,7 +58,7 @@ def Setup(tc):
         tc.on_host[intf] = False
 
     tc.all_intfs = tc.host_intfs + tc.host_int_intfs + tc.inband_intfs + tc.naples_int_mgmt_intfs + tc.naples_oob_mgmt_intfs
-    api.Logger.debug("Promiscuous test interfaces: ", tc.all_intfs)
+    api.Logger.info("Promiscuous test interfaces: ", tc.all_intfs)
 
     workloads = api.GetWorkloads()
     tc.peer_workloads = []
@@ -75,13 +75,14 @@ def Setup(tc):
     #TODO: Generate a random MAC instead
     tc.random_mac = "00:0f:b7:aa:bb:cc"
 
-    api.Logger.debug("Random_Ip = %s Random_MAC = %s " %(tc.target_IP, tc.random_mac))
+    api.Logger.info("Random_Ip = %s Random_MAC = %s " %(tc.target_IP, tc.random_mac))
 
     host_utils.DeleteARP(tc.peer_node, tc.peer_workloads[0].interface, tc.target_IP)
     if  host_utils.AddStaticARP(tc.peer_node, tc.peer_workloads[0].interface, tc.target_IP, tc.random_mac) != api.types.status.SUCCESS:
         api.Logger.error("Failed to add Static ARP entry on %s" %(tc.peer_node))
         return api.types.status.FAILURE
-
+    else:
+        api.Logger.info("Added Random_Ip = %s Random_MAC = %s on %s" %(tc.target_IP, tc.random_mac, tc.peer_workloads[0].interface))
     return api.types.status.SUCCESS
 
 
@@ -132,7 +133,7 @@ def Trigger(tc):
 
 
         if api.GetNodeOs(tc.naples_node) == "windows":
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 1; ping -n 5 " + tc.target_IP + ";sleep 1 \" "
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 10; ping -n 5 " + tc.target_IP + ";sleep 10 \" "
         else:
             cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
 
@@ -151,13 +152,18 @@ def Trigger(tc):
         for lif_obj in lif_obj_docs:
             if lif_obj == None:
                 break
-            if lif_obj['spec']['name'].startswith(intf1):
+            if api.GetNodeOs(tc.naples_node) == "windows":
+                halIntfName = ionic_utils.winHalIntfName(tc.naples_node, intf1)
+            else:
+                halIntfName = intf1
+                
+            if lif_obj['spec']['name'].startswith(halIntfName):
                 if lif_obj['spec']['packetfilter']['receivepromiscuous'] != True:
                     api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(intf1))
                     result = api.types.status.FAILURE
             else:
                 if lif_obj['spec']['packetfilter']['receivepromiscuous'] == True:
-                    api.Logger.error("halctl PR flag set for non-promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
+                    api.Logger.error("halctl PR flag set for non-promiscuous mode interface [%s]" %(lif_obj['spec']))
                     result = api.types.status.FAILURE
 
         term_resp = api.Trigger_TerminateAllCommands(trig_resp)
@@ -170,7 +176,8 @@ def Trigger(tc):
         # Parse tcpdump stdout of promiscuous mode interface
         found = resp.commands[0].stdout.find(pattern)
         if tc.expect_pkt[intf1] and found == -1:
-            api.Logger.error("Interface [%s] did not receive Unknown Unicast packet in promiscuous mode" %(intf1))
+            api.Logger.error("Interface [%s] did not receive Unknown Unicast packet in promiscuous mode IP(%s) MAC(%s)" 
+                             %(intf1, tc.target_IP, tc.random_mac))
             api.PrintCommandResults(resp.commands[0])
             result = api.types.status.FAILURE
         elif not tc.expect_pkt[intf1] and found > 0:

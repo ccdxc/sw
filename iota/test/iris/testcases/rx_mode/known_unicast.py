@@ -139,7 +139,7 @@ def Trigger(tc):
             __PR_AddCommand(intf2, tc, req, cmd, True)
 
         if api.GetNodeOs(tc.naples_node) == "windows":
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \" sleep 1; ping -n 5 " + tc.target_IP + ";sleep 1 \" "
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \" sleep 10; ping -n 5 " + tc.target_IP + ";sleep 10 \" "
         else:
             cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
 
@@ -165,8 +165,9 @@ def Trigger(tc):
 
         # Cleanup for current host interface 'intf1'
         if host_utils.DeleteARP(tc.peer_node, tc.peer_workloads[0].interface, tc.target_IP) != api.types.status.SUCCESS:
-                api.Logger.error("Failed to delete Static ARP entry on %s %s" %(tc.peer_node, tc.target_IP))
-                result = api.types.status.FAILURE
+            api.Logger.error("Failed to delete Static ARP entry on %s %s" % (
+                tc.peer_node, tc.target_IP))
+            result = api.types.status.FAILURE
 
     if tc.args.mode == "promiscuous":
         term_resp_node2 = api.Trigger_TerminateAllCommands(trig_resp_node2)

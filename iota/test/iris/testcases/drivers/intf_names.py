@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import iota.harness.api as api
 import iota.test.utils.naples_host as naples_host
-
+import iota.test.utils.ionic_utils as ionic_utils
 # Testing that interface names get pushed to Naples
 #
 # For each NaplesHost
@@ -15,7 +15,7 @@ def Setup(tc):
     tc.nodes = api.GetNaplesHostnames()
     tc.os = api.GetNodeOs(tc.nodes[0])
 
-    if tc.os != naples_host.OS_TYPE_BSD and tc.os != naples_host.OS_TYPE_LINUX:
+    if tc.os == naples_host.OS_TYPE_ESX:
         api.Logger.info("Not implemented for %s" % tc.os)
         return api.types.status.IGNORED
 
@@ -38,7 +38,7 @@ def __getLifInfo(host_name):
 
 
 def Trigger(tc):
-    if tc.os != naples_host.OS_TYPE_BSD and tc.os != naples_host.OS_TYPE_LINUX:
+    if tc.os == naples_host.OS_TYPE_ESX:
         api.Logger.info("Not implemented for %s" % tc.os)
         return api.types.status.IGNORED
     
@@ -55,10 +55,14 @@ def Trigger(tc):
 
         intfs = api.GetNaplesHostInterfaces(host.node_name)
         for intf in intfs:
-            api.Logger.info("Checking interface %s" % intf)
+            # Windows HAL interface name is translated two times.
+            if tc.os == naples_host.OS_TYPE_WINDOWS:
+                intf = ionic_utils.winHalIntfName(host.node_name, intf)
+                # HAL yaml o/p is Pen..Adapter, halctl cli op/ is pen..adap.
+                intf = intf.lower();
 
             if lif_info.find(intf) == -1:
-                api.Logger.info("interface %s not found" % intf)
+                api.Logger.error("interface %s not found" % intf)
                 fail += 1
 
     if fail != 0:

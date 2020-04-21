@@ -322,17 +322,23 @@ def AddStaticARP(node, interface, hostname, macaddr):
     elif os == "freebsd":
         cmd = "arp -s " + hostname + " " + macaddr
     elif os == "windows":
+        intf_list = workload.GetNodeInterface(node)
+        # Got windows name - Ethernet from ethX
+        winIntf = intf_list.WindowsIntName(interface)
         winMac = macaddr.replace(':', '-', 5)
-        cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
-           "\" arp -s %s  %s \"" % (hostname, winMac))
+        cmd = ('/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe '
+           '  netsh interface ipv4 add neighbors \\\"%s\\\" %s  %s  ' % (winIntf, hostname, winMac))
+        api.Logger.info("win cmd: %s" %cmd)
     else:
         assert(0)
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
-    if resp.commands[0].exit_code != 0:
+    cmd = resp.commands[0]
+    if cmd.exit_code != 0:
         result = api.types.status.FAILURE
+        api.PrintCommandResults(cmd)
     return result
 
 
@@ -344,15 +350,21 @@ def DeleteARP(node, interface, hostname):
     elif os == "freebsd":
         cmd = "arp -d " + hostname
     elif os == "windows":
-        cmd = ("/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe "
-           "\" arp -d %s \"" % (hostname))
+        intf_list = workload.GetNodeInterface(node)
+        # Got windows name - Ethernet from ethX
+        winIntf = intf_list.WindowsIntName(interface)
+        cmd = ('/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe '
+           ' netsh interface ipv4 delete neighbors \\\"%s\\\" %s ' % (winIntf, hostname))
+        api.Logger.info("win cmd: %s" %cmd)
     else:
         assert(0)
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
-    if resp.commands[0].exit_code != 0:
+    cmd = resp.commands[0]
+    if cmd.exit_code != 0:
         result = api.types.status.FAILURE
+        api.PrintCommandResults(cmd)
     return result
 

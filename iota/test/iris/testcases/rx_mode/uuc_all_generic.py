@@ -132,7 +132,7 @@ def Trigger(tc):
         __PR_AddCommand(intf, tc, req, cmd, True)
 
     if api.GetNodeOs(tc.naples_node) == "windows":
-        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 1; ping -n 5 " + tc.target_IP + ";sleep 1 \" "
+        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 10; ping -n 5 " + tc.target_IP + ";sleep 10 \" "
     else:
         cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
     api.Trigger_AddHostCommand(req, tc.peer_node, cmd)
@@ -154,7 +154,11 @@ def Trigger(tc):
         # See if the lif belongs to any of the interface in tc.all_intfs (inteface lif)
         intf_lif = False
         for intf in tc.all_intfs:
-            if lif_obj['spec']['name'].startswith(intf):
+            if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
+                halIntfName = ionic_utils.winHalIntfName(tc.naples_node, intf)
+            else:
+                halIntfName = intf
+            if lif_obj['spec']['name'].startswith(halIntfName):
                 intf_lif = True
                 break
 
@@ -163,11 +167,11 @@ def Trigger(tc):
         # A lif must have its PR flag when it is an interface lif and tc.args.mode is 'promiscuous'
         if tc.args.mode == "promiscuous":
             if intf_lif and lif_pr_flag != True:
-                api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
+                api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(lif_obj['spec']))
                 result = api.types.status.FAILURE
         else:
             if lif_pr_flag == True:
-                api.Logger.error("halctl PR flag set for non-promiscuous mode LIF [%s]" %(lif_obj['spec']['name']))
+                api.Logger.error("halctl PR flag set for non-promiscuous mode LIF [%s]" %(lif_obj['spec']))
                 result = api.types.status.FAILURE
 
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
