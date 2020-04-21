@@ -62,6 +62,7 @@ testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         #- classic/ethtool.testbundle
+        - classic/ionic_config.testbundle
         #- networking/connectivity.testbundle
         - linktest/linktest.testbundle
         - filters/filters.testbundle

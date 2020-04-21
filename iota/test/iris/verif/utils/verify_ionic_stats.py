@@ -25,7 +25,7 @@ def Main(tc):
                 intf = workload.GetNodeInterface(node)
                 name = intf.WindowsIntName(i)
                 api.Trigger_AddHostCommand(
-                    req, node, "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Get-NetAdapterStatistics -Name '%s'\"" % name)
+                    req, node, "/mnt/c/Windows/temp/drivers-windows/IonicConfig.exe portstats -n '%s'" % name)
             else:
                 api.Trigger_AddHostCommand(
                     req, node, 'ethtool -S %s | grep packets' % i)

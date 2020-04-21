@@ -1,0 +1,18 @@
+meta:
+    name    : ionic_config
+    os      : [ windows ]
+    nics    : [ pensando ]
+    targetcount : 2
+
+testcases:
+    -   name    : info
+        testcase: testcases.drivers.ionic_config.info
+        enable  : True
+        args    :
+            type         : remote_only
+
+    -   name    : registry_key
+        testcase: testcases.drivers.ionic_config.print_registry_key
+        enable  : True
+        args    :
+            type         : remote_only
