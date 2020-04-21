@@ -103,6 +103,7 @@ mapping_state_entry_cb_ (void *key, void *val, void *ctxt) {
     entry = mapping_entry::build(pkey);
     if (entry) {
         it_ctxt->cb(entry, it_ctxt->ctxt);
+        mapping_entry::soft_delete(entry);
     }
 }
 

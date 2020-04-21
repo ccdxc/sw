@@ -102,6 +102,7 @@ svc_mapping_state_entry_cb_ (void *key, void *val, void *ctxt) {
     entry = svc_mapping::build(pkey);
     if (entry) {
         it_ctxt->cb(entry, it_ctxt->ctxt);
+        svc_mapping::soft_delete(entry);
     }
 }
 
