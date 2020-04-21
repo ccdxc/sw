@@ -11,18 +11,14 @@ import re
 
 INTF_TEST_TYPE_OOB_1G       = "oob-1g"
 INTF_TEST_TYPE_IB_100G      = "inb-100g"
-INTF_TEST_TYPE_INT_MGMT     = "int-mgmt"
 INTF_TEST_TYPE_HOST         = "host"
 
 ip_prefix = 24
 
-mgmtIp = api.GetPrimaryIntNicMgmtIp()
-nextIp = api.GetPrimaryIntNicMgmtIpNext()
 
 ip_map =  {
     INTF_TEST_TYPE_HOST: ("1.1.1.1", "1.1.1.2"),
     INTF_TEST_TYPE_OOB_1G: ("2.2.2.1", "2.2.2.2"),
-    INTF_TEST_TYPE_INT_MGMT: (nextIp, mgmtIp),
     INTF_TEST_TYPE_IB_100G: ("4.4.4.1", "4.4.4.2"),
 }
 
@@ -193,13 +189,6 @@ def __setup_host_interface_test(tc):
     tc.intf2 = host_intfs1[0]
     return __configure_interfaces(tc, INTF_TEST_TYPE_HOST)
 
-def __setup_int_mgmt_interface_test(tc):
-    host_intfs = tc.node_intfs[tc.nodes[0]].HostIntIntfs()
-    naples_intfs = tc.node_intfs[tc.nodes[0]].NaplesIntMgmtIntfs()
-    tc.intf1 = host_intfs[0]
-    tc.intf2 = naples_intfs[0]
-    return __configure_interfaces(tc, INTF_TEST_TYPE_INT_MGMT)
-
 def __setup_oob_1g_interface_test(tc):
     intfs = tc.node_intfs[tc.nodes[0]].Oob1GIntfs()
     intfs1 = tc.node_intfs[tc.nodes[1]].Oob1GIntfs()
@@ -217,8 +206,6 @@ def __setup_inb_100g_inteface_test(tc):
 def ConfigureInterfaces(tc, test_type = INTF_TEST_TYPE_HOST):
     if test_type == INTF_TEST_TYPE_HOST:
         ret = __setup_host_interface_test(tc)
-    elif test_type == INTF_TEST_TYPE_INT_MGMT:
-        ret = __setup_int_mgmt_interface_test(tc)
     elif test_type == INTF_TEST_TYPE_OOB_1G:
         ret = __setup_oob_1g_interface_test(tc)
     elif test_type == INTF_TEST_TYPE_IB_100G:
@@ -231,17 +218,3 @@ def ConfigureInterfaces(tc, test_type = INTF_TEST_TYPE_HOST):
 
     return ret
 
-def RestoreIntMmgmtInterfaceConfig():
-    nodes = api.GetNaplesHostnames()
-    node_intfs = {}
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    mgmtIp = store.GetPrimaryIntNicMgmtIp()
-    nextIp = api.GetPrimaryIntNicMgmtIpNext()
-    for node in nodes:
-        node_if_info = GetNodeInterface(node)
-        for intf in node_if_info.HostIntIntfs():
-            api.Trigger_AddHostCommand(req, node, "ifconfig %s " + nextIp + "/24" % intf.Name())
-    resp = api.Trigger(req)
-    if resp == None:
-        api.Abort()
-    return api.types.status.FAILURE

@@ -34,9 +34,7 @@ def Setup(tc):
         api.Logger.info('Target version is latest - nothing to change')
         return api.types.status.IGNORED
 
-    tc.resp = api.DownloadAssets(tc.args.asset_name,
-                                 parent_dir = os.path.join(api.GetTopDir(), 'images'), 
-                                 release_version = tc.target_version)
+    tc.resp = api.DownloadAssets(release_version = tc.target_version)
     if not api.IsApiResponseOk(tc.resp):
         api.Logger.error("Failed to download assets for %s" % tc.target_version)
         return api.types.status.FAILURE

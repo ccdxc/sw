@@ -6,11 +6,6 @@ import iota.harness.infra.resmgr as resmgr
 import iota.harness.infra.store as store
 import iota.test.utils.naples_host as naples_host
 
-ip_prefix = 24
-mgmtIp = api.GetPrimaryIntNicMgmtIp()
-nextIp = api.GetPrimaryIntNicMgmtIpNext()
-
-IntMgmtIpAllocator = resmgr.IpAddressStep(nextIp, "0.0.0.1")
 IntMgmtIpAllocator = resmgr.IpAddressStep("192.169.1.2", "0.0.0.1")
 InbandIpAllocator = resmgr.IpAddressStep("192.170.1.2", "0.0.0.1")
 OobIpAllocator = resmgr.IpAddressStep("192.171.1.2", "0.0.0.1")

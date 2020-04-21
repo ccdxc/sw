@@ -4,7 +4,7 @@ set -e
 own_ip="169.254.0.2"
 trg_ip="169.254.0.1"
 
-DEFAULT_IONIC_DRIVER_PATH=/naples/drivers-freebsd-eth/sys/modules/ionic/ionic.ko
+DEFAULT_IONIC_DRIVER_PATH=/naples/*/sys/modules/ionic/ionic.ko
 while [[ "$#" > 0 ]]; do
     case $1 in
         -c|--cleanup) cleanup=1;;
@@ -14,7 +14,8 @@ while [[ "$#" > 0 ]]; do
         --own_ip) own_ip=$2; shift;;
         --no-mgmt) no_mgmt=1;;
         --trg_ip) trg_ip=$2; shift;;
-        *) echo "Unknown parameter passed: $1"; exit 1;;
+        --image) driver_img=$2; shift;;
+        *) echo "Unknown parameter passed: $1"; exit 10;;
     esac; shift;
 done
 
@@ -29,7 +30,7 @@ function init_host() {
     if [[ $cnt -eq 0 ]] ; 
     then
         echo "No IONIC driver loaded. Loading $DEFAULT_IONIC_DRIVER_PATH"
-        kldload $DEFAULT_IONIC_DRIVER_PATH || (dmesg && exit 1)
+        kldload $DEFAULT_IONIC_DRIVER_PATH || (dmesg && exit 11)
         sleep 2
     fi
 
@@ -98,7 +99,7 @@ function setup_legacy_mgmt_ip() {
     echo "Attempting to ping target: $trg_ip"
     if ! (ping -c 5 $trg_ip); then 
         ./print-cores.sh 
-        exit 1
+        exit 12
     fi
 }
 
@@ -128,7 +129,7 @@ function setup_pci_mgmt_ip() {
         echo "Attempting to ping target: $mnic_ip"
         if ! (ping -c 5 $mnic_ip); then
             ./print-cores.sh
-            exit 1
+            exit 13
         fi
     done
 }
@@ -185,12 +186,17 @@ else
         cat /tmp/log.txt
         echo '---'
 
-        kldunload ionic 2> /dev/null || rc=$?
-        cd /naples
-        tar xf drivers-freebsd-eth.tar.xz
-        cd drivers-freebsd-eth
-        env OS_DIR=/usr/src ./build.sh
-        sleep 2
+        if [[ ! -z ${driver_img+x} ]] ;
+        then
+            kldunload ionic 2> /dev/null || rc=$?
+            cd /naples
+            tar xf ${driver_img}
+            tmp="${driver_img##*/}"
+            dir_name="${tmp%.tar.xz}"
+            cd ${dir_name}
+            env OS_DIR=/usr/src ./build.sh
+            sleep 2
+        fi
 
         init_host
         # dhcp_disable

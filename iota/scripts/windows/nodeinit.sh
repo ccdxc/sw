@@ -24,6 +24,7 @@ while($args.Count -gt 0 -and $loop -eq $true) {
 			'--skip-install' { $skipInstall=1}
 			'--own_ip' {$ownIP=$args[$arg+1]; $skipIteration=$true}
 			'--trg_ip' {$trgIP=$args[$arg+1]; $skipIteration=$true}
+                        '--image' {$driverImg=$args[$arg+1]; $skipIteration=$true}
 			default {echo "Unknown parameter passed:"+$args[$arg]; exit 1}
 		}
 	}

@@ -77,6 +77,8 @@ def GetNaplesMgmtIntf(node):
     return naples_host_mgmt_if[0]
 
 def __get_pen_ctl_cmd(node):
+    if api.GetFirmwareVersion() == "1.1.1-E-15":
+        return "DSC_URL=http://%s %s --compat-1.1 " % (GetNaplesMgmtIP(node), PENCTL_EXEC[node])
     return "DSC_URL=http://%s %s " % (GetNaplesMgmtIP(node), PENCTL_EXEC[node])
 
 def AddPenctlCommand(req, node, cmd):

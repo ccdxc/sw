@@ -84,6 +84,12 @@ parser.add_argument('--netagent', dest='netagent', action='store_true',
 
 parser.add_argument('--naples-type', dest='naples_type', default="capri",
                     help='Naples type to run')
+parser.add_argument('--compat', dest='compat_test', action='store_true', 
+                    help='Run driver/Fw compatibility test', default=False)
+parser.add_argument('--driver-version', dest='driver_version', default='latest', 
+                    help='Target Driver Version')
+parser.add_argument('--fw-version', dest='fw_version', default='latest',
+                    help='Target Fw Version')
 
 GlobalOptions = parser.parse_args()
 

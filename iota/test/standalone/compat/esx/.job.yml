@@ -6,34 +6,108 @@ image:
 
 queue_name: baremetal
 
-# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
   # baremetal + baremetal Esx test cases
-  e2e-esx-fwdr-compat:
-     commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite useg_enf_esx --testbundle driver-compat"]
-   # commands: [ "cat /warmd.json && sleep 30000000"]
-     owners: ["email:srivatsa@pensando.io"]
-     area:
-     sub-area:
-     feature:
-     build-dependencies:
-       - build-iris-arm
-       - build-iota
-     clusters:
-       - image: build-10
-         count: 2
-         resources:
-           servers:
-             - type: server-a
-           nic-type: naples
-     provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: esx
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
+  e2e-esx-bm-regression-compat-dr-132-fw-111:
+    commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite useg_enf_esx --regression --compat --driver-version 1.3.2-E-3 --fw-version 1.1.1-E-15"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-10
+        count: 2
+        resources:
+        servers:
+          - type: server-a
+        nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: esx
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-esx-bm-regression-compat-dr-111-fw-132:
+    commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite useg_enf_esx --regression --compat --driver-version 1.1.1-E-15 --fw-version 1.3.2-E-3"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-10
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: esx
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-esx-bm-regression-compat-dr-150-fw-132:
+    commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite useg_enf_esx --regression --compat --driver-version 1.5.0-E-14 --fw-version 1.3.2-E-3"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-10
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: esx
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-esx-bm-regression-compat-dr-132-fw-150:
+    commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite useg_enf_esx --regression --compat --driver-version 1.3.2-E-3 --fw-version 1.5.0-E-14"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-10
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: esx
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
 
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz

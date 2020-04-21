@@ -9,33 +9,117 @@ queue_name: baremetal
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
   # baremetal
-  e2e-freebsd-fwdr-compat:
-     commands: ["sh", "-c", "make freebsd && ./run_iota.sh --testsuite classic --testbundle driver-compat"]
-     owners: ["email:srivatsa@pensando.io"]
-     area:
-     sub-area:
-     feature:
-     build-dependencies:
-       - build-iris-arm
-       - build-iota
-     clusters:
-       - image: build-14
-         count: 2
-         resources:
-           # Freebsd works with only server-d
-           server-type: server-a
-           # nic-type can be naples, mellanox, or raw
-           nic-type: naples
-           constraints:
-             same-switch: true
-     provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: freebsd
-          VmOs: freebsd
-          EsxUsername: root
-          EsxPassword: Pen0trl!
+  e2e-freebsd-bm-regression-eth-compat-dr-132-fw-111:
+    commands: ["sh", "-c", "make freebsd && ./run_iota.sh --testsuite transparent_basenet --regression --compat --driver-version 1.3.2-E-3 --fw-version 1.1.1-E-15"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-14
+        count: 2
+        resources:
+          # Freebsd works with only server-d
+          server-type: server-a
+          # nic-type can be naples, mellanox, or raw
+          nic-type: naples
+          constraints:
+            same-switch: true
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: freebsd
+        VmOs: freebsd
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-freebsd-bm-regression-eth-compat-dr-111-fw-132:
+    commands: ["sh", "-c", "make freebsd && ./run_iota.sh --testsuite transparent_basenet --regression --compat --driver-version 1.1.1-E-15 --fw-version 1.3.2-E-3"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-14
+        count: 2
+        resources:
+          # Freebsd works with only server-d
+          server-type: server-a
+          # nic-type can be naples, mellanox, or raw
+          nic-type: naples
+          constraints:
+            same-switch: true
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: freebsd
+        VmOs: freebsd
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-freebsd-bm-regression-eth-compat-dr-132-fw-150:
+    commands: ["sh", "-c", "make freebsd && ./run_iota.sh --testsuite transparent_basenet --regression --compat --driver-version 1.3.2-E-3 --fw-version 1.5.0-E-14"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-14
+        count: 2
+        resources:
+          # Freebsd works with only server-d
+          server-type: server-a
+          # nic-type can be naples, mellanox, or raw
+          nic-type: naples
+          constraints:
+            same-switch: true
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: freebsd
+        VmOs: freebsd
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-freebsd-bm-regression-eth-compat-dr-150-fw-132:
+    commands: ["sh", "-c", "make freebsd && ./run_iota.sh --testsuite transparent_basenet --regression --compat --driver-version 1.5.0-E-14 --fw-version 1.3.2-E-3"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-14
+        count: 2
+        resources:
+          # Freebsd works with only server-d
+          server-type: server-a
+          # nic-type can be naples, mellanox, or raw
+          nic-type: naples
+          constraints:
+            same-switch: true
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: freebsd
+        VmOs: freebsd
+        EsxUsername: root
+        EsxPassword: Pen0trl!
 
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz

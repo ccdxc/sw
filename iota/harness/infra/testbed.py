@@ -67,29 +67,6 @@ def setUpSwitchQos(switch_ctx):
     dscpClass.dscp = "0-7"
 
 
-def updateMultiNicInfo():
-    try:
-        nicInfo = gnhi.getNicHostInfo(GlobalOptions.testbed_json)
-        nicInfo = nicInfo['Instances']
-        if len(nicInfo) == 0:
-            Logger.debug('no instance found in testbed topology file {0}'.format(GlobalOptions.testbed_json))
-        elif len(nicInfo[0]['Nics']) == 0:
-            Logger.debug('no nics found for instance 0 in testbed topology file {0}'.format(GlobalOptions.testbed_json))
-        elif len(nicInfo[0]['Nics'][0]['Ports']) == 0:
-            Logger.debug('no ports found for multi nic 0 in testbed topology file {0}'.format(GlobalOptions.testbed_json))
-        else:
-            ip = nicInfo[0]['Nics'][0]['Ports'][0].get('IP',None)
-            if not ip:
-                Logger.debug('no ip found for multi nic 0 / port 0 in testbed topology file {0}'.format(GlobalOptions.testbed_json))
-            else:
-                msg = 'determined multi nic mgmt ip to be: {0}'.format(ip)
-                print(msg)
-                Logger.info(msg)
-                store.SetPrimaryIntNicMgmtIp(ip)
-    except:
-        Logger.info('setting nic int mgmt ip to default of 169.254.0.1')
-        store.SetPrimaryIntNicMgmtIp('169.254.0.1')
-
 class _Testbed:
 
     SUPPORTED_OS = ["linux", "freebsd", "esx"]
@@ -208,7 +185,6 @@ class _Testbed:
             print(msg)
             Logger.debug(msg)
             sys.exit(types.status.OFFLINE_TESTBED)
-        updateMultiNicInfo()
         try:
             for instance in self.__tbspec.Instances:
                 if hasattr(self.__tbspec.Provision, "Vars") and hasattr(self.__tbspec.Provision.Vars, 'BmOs') and instance.Type == "bm":
@@ -400,10 +376,7 @@ class _Testbed:
         for instance in self.__tbspec.Instances:
             cmd = ["timeout", "2400"]
 
-            if getattr(instance, "NicIntMgmtIP",'') == '':
-                instance.NicIntMgmtIP = api.GetPrimaryIntNicMgmtIp()
-            else:
-                instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP")
+            instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", "")
             if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP.replace(" ", "") == '':
                 instance.NicMgmtIP = instance.NicIntMgmtIP
             if self.__get_instance_nic_type(instance) in ["pensando", "naples"]:
@@ -439,7 +412,6 @@ class _Testbed:
                 cmd.extend(["--testbed", GlobalOptions.testbed_json])
                 cmd.extend(["--instance-name", instance.Name])
                 cmd.extend(["--naples", GlobalOptions.naples_type])
-                cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
                 nics = getattr(instance, "Nics", None)
                 if nics != None and len(nics) != 0:
                     for nic in nics:
@@ -447,9 +419,6 @@ class _Testbed:
                             cmd.extend(["--mac-hint", port.MAC])
                             break
                 cmd.extend(["--mode", "%s" % api.GetNicMode()])
-                if instance.NodeOs == "esx":
-                    pass
-                    # cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
                 if GlobalOptions.skip_driver_install:
                     cmd.extend(["--skip-driver-install"])
                 if GlobalOptions.use_gold_firmware:
@@ -531,8 +500,6 @@ class _Testbed:
             Logger.info("Stopping after firmware upgrade based on cmdline options.")
             sys.exit(0)
 
-        #read multi nic info again in case ip changed after running boot naples
-        updateMultiNicInfo()
         return
 
     def __init_testbed(self):

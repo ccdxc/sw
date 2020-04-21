@@ -29,7 +29,6 @@ type TopologyService struct {
 	Nodes            map[string]testbed.TestNodeInterface
 	ProvisionedNodes map[string]testbed.TestNodeInterface
 	downloadedImages bool
-	downloadedAssets bool
 }
 
 type testBedInfo struct {
@@ -1376,11 +1375,6 @@ func (ts *TopologyService) DownloadAssets(ctx context.Context, req *iota.Downloa
 	log.Infof("TOPO SVC | DEBUG | DownloadAssets. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | DownloadAssets Returned: %v", req)
 
-	if ts.downloadedAssets {
-		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-		return req, nil
-	}
-
 	// TODO: Explore integrating with asset-build. For now invoke the cmd to asset-pull
 	mkdir := []string{"mkdir", "-p", req.ParentDir}
 	if stdout, err := exec.Command(mkdir[0], mkdir[1:]...).CombinedOutput(); err != nil {
@@ -1397,10 +1391,7 @@ func (ts *TopologyService) DownloadAssets(ctx context.Context, req *iota.Downloa
 
 	destFile := req.ReleaseVersion + ".tgz"
 
-	gopath := os.Getenv("GOPATH")
-	asset_pull_bin := gopath + "/src/github.com/pensando/sw/iota/bin/asset-pull"
-
-	pullAsset := []string{asset_pull_bin, req.AssetName, req.ReleaseVersion, destFile}
+	pullAsset := []string{common.AssetPullBin, req.AssetName, req.ReleaseVersion, destFile}
 	if stdout, err := exec.Command(pullAsset[0], pullAsset[1:]...).CombinedOutput(); err != nil {
 		log.Errorf("TOPO SVC | DownloadAssets | Failed to download asset: %v %v (%v %v)",
 			req.AssetName, req.ReleaseVersion, err.Error(), string(stdout))
@@ -1417,8 +1408,6 @@ func (ts *TopologyService) DownloadAssets(ctx context.Context, req *iota.Downloa
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to untar downloaded asset")
 		return req, nil
 	}
-
-	ts.downloadedAssets = true
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil

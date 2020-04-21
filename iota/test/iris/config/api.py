@@ -87,7 +87,7 @@ if __name__ == '__main__':
     #ObjectConfigStore.PrintConfigs()
     objects = QueryConfigs("Endpoint", filter="spec.useg_vlan=1001;spec.ipv4_address=192.168.100.103")
     PrintConfigsObjects(objects)
-    mgmtIp = store.GetPrimaryIntNicMgmtIp()
+    mgmtIp = "0.0.0.0" # change as per unit-testing purpose
     for obj in objects:
         obj.spec.node_uuid = "myuuid"
         print (obj.Update("http://" + mgmtIp + ":8888/", remote_node="192.168.69.23"))

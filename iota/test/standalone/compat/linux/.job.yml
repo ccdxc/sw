@@ -6,40 +6,122 @@ image:
 rebase: true
 queue_name: baremetal
 
-# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
-  # baremetal + baremetal Esx test cases
-  e2e-linux-fwdr-compat:
-     commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite classic --testbundle driver-compat"]
-     #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-     owners: ["email:srivatsa@pensando.io"]
-     area:
-     sub-area:
-     feature:
-     build-dependencies:
-       - build-iris-arm
-       - build-iota
-     clusters:
-       - image: build-17
-         count: 2
-         resources:
-           servers:
-             - type: server-a
-             - type: hpe
-           # nic-type can be naples, mellanox, or raw
-           nic-type: naples
-         # Required when RDMA is reenabled
-         #constraints:
-         #  same-switch: true
-     provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
+  e2e-linux-bm-regression-eth-Ubuntu1804-compat-dr-132-fw-111:
+    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --compat --driver-version 1.3.2-E-3 --fw-version 1.1.1-E-15"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-17
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+            - type: hpe
+        # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+        nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: linux
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+
+  e2e-linux-bm-regression-eth-Ubuntu1804-compat-dr-111-fw-132:
+    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --compat --fw-version 1.3.2-E-3 --driver-version 1.1.1-E-15"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-17
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+            - type: hpe
+          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: linux
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-linux-bm-regression-eth-Ubuntu1804-compat-dr-150-fw-132:
+    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --compat --driver-version 1.5.0-E-14 --fw-version 1.3.2-E-3"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-17
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+            - type: hpe
+          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: linux
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+
+  e2e-linux-bm-regression-eth-Ubuntu1804-compat-dr-132-fw-150:
+    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --compat --fw-version 1.5.0-E-14 --driver-version 1.3.2-E-3"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-17
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+            - type: hpe
+          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: linux
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
 
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
-  - /sw/iota/all_corefiles.tgz
+  - /testcase_result_export/testsuite_transparent_basenet_results.json

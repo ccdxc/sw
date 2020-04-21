@@ -74,6 +74,7 @@ class TestSuite:
         self.__teardowns = []
         self.__common_args = parser.Dict2Object({})
         self.__setup_complete = False
+        self.__release_versions = {}
 
         self.__aborted = False
         self.__attrs = {}
@@ -124,11 +125,24 @@ class TestSuite:
     def GetImages(self):
         return self.__images
 
+    def GetFirmwareVersion(self):
+        return self.__release_versions.get('Firmware', 'latest')
+
+    def GetDriverVersion(self):
+        return self.__release_versions.get('Driver', 'latest')
+
     def GetImageManifestFile(self):
-        path = 'images/latest.json'
-        if hasattr(self.__spec, 'image_manifest'):
-            path = getattr(self.__spec.image_manifest, 'file', 'images/latest.json')
-        return os.path.join(GlobalOptions.topdir, path)
+        if GlobalOptions.compat_test:
+            Logger.debug("Compat-testing for driver: %s and firmware: %s" % (GlobalOptions.driver_version, GlobalOptions.fw_version))
+            # assert(GlobalOptions.driver_version != GlobalOptions.fw_version)
+            return self.__build_new_image_manifest()
+        else:
+            Logger.debug("Using testsuite spec for image-manifest")
+            if hasattr(self.__spec, 'image_manifest'):
+                path = getattr(self.__spec.image_manifest, 'file', 'images/latest.json')
+            else:
+                path = 'images/latest.json'
+            return os.path.join(GlobalOptions.topdir, path)
 
     def GetTopology(self):
         return self.__topology
@@ -177,6 +191,48 @@ class TestSuite:
 
     def GetCommonArgs(self):
         return self.__common_args
+
+    def __build_new_image_manifest(self):
+        # Pick up latest.json (from testsuite spec)
+        if hasattr(self.__spec, 'image_manifest'):
+            path = getattr(self.__spec.image_manifest, 'file', 'images/latest.json')
+        else:
+            path = 'images/latest.json'
+
+        with open(os.path.join(GlobalOptions.topdir, path), 'r') as fh:
+            new_img_manifest = json.loads(fh.read())
+
+        # pick the non-latest versions
+        if GlobalOptions.driver_version != 'latest':
+            # driver image to be changed
+            self.__release_versions['Driver'] = GlobalOptions.driver_version
+            new_img_manifest["Drivers"] = None
+            dr_img_manifest_file = os.path.join(GlobalOptions.topdir, 
+                                                "images", GlobalOptions.driver_version + ".json")
+            with open(dr_img_manifest_file, "r") as fh:
+                dr_img_manifest = json.loads(fh.read())
+            new_img_manifest["Drivers"] = dr_img_manifest["Drivers"]
+
+        if GlobalOptions.fw_version != 'latest':
+            # Firmware image to be changed
+            self.__release_versions['Firmware'] = GlobalOptions.fw_version
+            new_img_manifest["Firmwares"] = None
+            fw_img_manifest_file = os.path.join(GlobalOptions.topdir, 
+                                                "images", GlobalOptions.fw_version + ".json")
+            with open(fw_img_manifest_file, "r") as fh:
+                fw_img_manifest = json.loads(fh.read())
+            new_img_manifest["Firmwares"] = fw_img_manifest["Firmwares"]
+
+        new_img_manifest["Version"] = "DriverVersion:{0},FwVersion:{1}".format(GlobalOptions.driver_version, GlobalOptions.fw_version)
+
+        # Create {GlobalOptions.topdir}/images if not exists
+        folder = os.path.join(GlobalOptions.topdir, "images")
+        if not os.path.isdir(folder):
+            os.mkdir(folder)
+        manifest_file = os.path.join(folder, self.Name() + ".json")
+        with open(manifest_file, "w") as fh:
+            fh.write(json.dumps(new_img_manifest, indent=2))
+        return manifest_file
 
     def __load_image_manifest(self):
         manifest_file = self.GetImageManifestFile()
@@ -461,6 +517,7 @@ class TestSuite:
             return types.status.SUCCESS
 
         atexit.register(self.ExitHandler)
+
         # Start the testsuite timer
         self.__timer.Start()
 
@@ -472,6 +529,11 @@ class TestSuite:
         if self.GetFirmwareType() == types.firmware.GOLD:
             Logger.debug("setting global firmware type to gold")
             GlobalOptions.use_gold_firmware = True
+
+        if GlobalOptions.compat_test:
+            # Download Assets
+            for sw, rel in self.__release_versions.items():
+                api.DownloadAssets(rel)
 
         # Initialize Testbed for this testsuite
         status = store.GetTestbed().InitForTestsuite(self)

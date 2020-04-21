@@ -5,7 +5,7 @@ import sys
 import json
 
 
-parser = argparse.ArgumentParser(description='ESX pen nic finder')
+parser = argparse.ArgumentParser(description='Pensando NIC Finder')
 parser.add_argument('--intf-type', dest='intf_type', default='data-nic', choices=['int-mnic','data-nic'])
 parser.add_argument('--op', dest='op', default='intfs', choices=['intfs','mnic-ip'])
 parser.add_argument('--os', dest='os', default='linux', choices=['linux','esx','freebsd','windows'])
@@ -112,11 +112,24 @@ def __print_intfs_linux(mac_hint, intf_type):
             return 1
         print(devs[0][0])
 
+def __get_fw_version_linux(if_name):
+    import subprocess
+    output = subprocess.check_output(['ethtool', '-i', if_name]).decode('utf-8').split('\n')
+    ethtool_data = {}
+    for line in output:
+        if line:
+            k, v = line.split(' ')
+            ethtool_data[k] = v
+    return ethtool_data['firmware-version:']
 
 def __print_mnic_ip_linux(mac_hint, intf_type):
     devs=__get_devices_linux(mac_hint, physical=False)
-    print("169.254.{}.1".format(devs[0][1]))
-
+    fw_version = __get_fw_version_linux(devs[0][0])
+    if fw_version == '1.1.1-E-15':
+        print("169.254.0.1")
+    else:
+        print("169.254.{}.1".format(devs[0][1]))
+    return
 
 def __get_devices_freebsd(mac_hint):
     cmd0='pciconf  -l | grep ion'

@@ -213,6 +213,8 @@ jobs:
     labels: ["daily"]
   iota/test/standalone/regression/linux:
     labels: ["daily"]
+  iota/test/standalone/compat/tot:
+    labels: ["daily"]
   iota/test/standalone/regression/windows:
     labels: ["daily"]
 #  iota/test/standalone/regression/linkmgr:

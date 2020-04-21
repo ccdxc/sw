@@ -14,9 +14,6 @@ from iota.test.iris.testcases.penctl.common import GetNaplesUUID
 
 _cfg_dir = api.GetTopDir() + "/iota/test/iris/config/netagent/cfg/"
 
-ip=api.GetPrimaryIntNicMgmtIp()
-base_url = "https://"+ip+":8888/"
-
 def formatMac(mac: str) -> str:
     mac = re.sub('[.:-]', '', mac).lower()  # remove delimiters and convert to lower case
     mac = ''.join(mac.split())  # remove whitespaces

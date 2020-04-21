@@ -5,7 +5,7 @@ set -x
 own_ip="169.254.XX.2"
 trg_ip="169.254.XX.1"
 
-DEFAULT_IONIC_DRIVER_PATH=/naples/drivers-linux-eth/drivers/eth/ionic/ionic.ko
+DEFAULT_IONIC_DRIVER_PATH=/naples/*/drivers/eth/ionic/ionic.ko
 
 while [[ "$#" > 0 ]]; do
     case $1 in
@@ -16,7 +16,8 @@ while [[ "$#" > 0 ]]; do
         --version) version_only=1;;
         --own_ip) own_ip=$2; shift;;
         --trg_ip) trg_ip=$2; shift;;
-        *) echo "Unknown parameter passed: $1"; exit 1;;
+        --image) driver_img=$2; shift;;
+        *) echo "Unknown parameter passed: $1"; exit 10;;
     esac; shift;
 done
 
@@ -33,7 +34,7 @@ function init_host() {
     if [[ $cnt -eq 0 ]] ; 
     then
         echo "No IONIC driver loaded. Loading $DEFAULT_IONIC_DRIVER_PATH"
-        insmod $DEFAULT_IONIC_DRIVER_PATH || (dmesg && exit 1)
+        insmod $DEFAULT_IONIC_DRIVER_PATH || (dmesg && exit 11)
         sleep 2
     fi
 
@@ -114,7 +115,7 @@ function setup_legacy_mgmt_ip() {
     echo "Attempting to ping target: $trg_ip"
     if ! (ping -c 5 $trg_ip); then 
         ./print-cores.sh 
-        exit 1
+        exit 12
     fi
 }
 
@@ -126,7 +127,7 @@ function setup_pci_mgmt_ip() {
     if [[ $num_mgmt -ne $num_mgmt_expected ]]; then
         echo "ERROR: Internal mgmt interface is required."
         echo "Should have $num_mgmt_expected but see $num_mgmt"
-        exit 1
+        exit 13
     fi
 
     # override possible command line setting
@@ -153,7 +154,7 @@ function setup_pci_mgmt_ip() {
             echo "Attempting to ping target: $mnic_ip"
             if ! (ping -c 5 $mnic_ip); then
                 ./print-cores.sh
-                exit 1
+                exit 14
             fi
         done
     fi
@@ -197,12 +198,20 @@ else
         init_host
         setup_mgmt_ip
     else
-        rmmod ionic 2> /dev/null || rc=$?
-        cd /naples/
-        tar xf drivers-linux-eth.tar.xz
-        cd drivers-linux-eth
-        ./setup_libs.sh
-        ./build.sh
+
+        if [[ ! -z ${driver_img+x} ]] ;
+        then
+            rmmod ionic 2> /dev/null || rc=$?
+
+            cd /naples/
+            tar xf ${driver_img}
+            tmp="${driver_img##*/}"
+            dir_name="${tmp%.tar.xz}"
+            cd ${dir_name}
+            ./setup_libs.sh
+            ./build.sh
+        fi
+
         init_host
 
         dhcp_disable

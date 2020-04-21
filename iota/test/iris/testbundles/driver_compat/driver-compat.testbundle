@@ -7,10 +7,9 @@ meta:
 testcases:
     -   name    : Driver-Compatibility
         testcase: testcases.drivers.driver_compat
-        enable  : True
+        enable  : False
         ignore  : True
         args:
-            asset_name : 'released-naples-sw'
             pktsize : 64
             ipaf : ipv4
         iterators :
@@ -22,7 +21,6 @@ testcases:
         enable  : False
         ignore  : True
         args:
-            asset_name : 'released-naples-sw'
             pktsize : 64
             ipaf : ipv4
         iterators :

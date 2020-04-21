@@ -216,6 +216,8 @@ var (
 	// DstIotaEntitiesDir has all workload related data for each workload
 	IotaServerEntitiesDir = IotaServerDir + "/entities"
 
+	AssetPullBin = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/bin/asset-pull", os.Getenv("GOPATH"))
+
 	// BuildItBinary
 	BuildItBinary = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/images/buildit", os.Getenv("GOPATH"))
 

@@ -1,0 +1,180 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+
+queue_name: baremetal
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
+e2e-targets:
+  # baremetal + baremetal Esx test cases
+  e2e-esx-bm-regression-compat-dr:
+    commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite useg_enf_esx --regression --skip-sanity --compat --driver-version 1.5.0-E-14"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-10
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: esx
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-esx-bm-regression-compat-fw:
+    commands: ["sh", "-c", "make esx && ./run_iota.sh --testsuite useg_enf_esx --regression --skip-sanity --compat --fw-version 1.5.0-E-14"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-10
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: esx
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-linux-bm-regression-eth-compat-dr:
+    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity --compat --driver-version 1.5.0-E-14"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-17
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+            - type: hpe
+          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: linux
+        VmOs: linux
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-linux-bm-regression-eth-compat-fw:
+    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity --compat --fw-version 1.5.0-E-14"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-17
+        count: 2
+        resources:
+          servers:
+            - type: server-a
+            - type: hpe
+          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+          nic-type: naples
+    provision:
+      username: vm
+      password: vm
+      vars:
+      BmOs: linux
+      VmOs: linux
+      EsxUsername: root
+      EsxPassword: Pen0trl!
+
+  e2e-freebsd-bm-regression-eth-compat-dr:
+    commands: ["sh", "-c", "make freebsd && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity --compat --driver-version 1.5.0-E-14"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-14
+        count: 2
+        resources:
+          # Freebsd works with only server-d
+          server-type: server-a
+          # nic-type can be naples, mellanox, or raw
+          nic-type: naples
+          constraints:
+            same-switch: true
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: freebsd
+        VmOs: freebsd
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+  e2e-freebsd-bm-regression-eth-compat-fw:
+    commands: ["sh", "-c", "make freebsd && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity --compat --fw-version 1.5.0-E-14"]
+    owners: ["email:srivatsa@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    max-duration: 24h
+    build-dependencies:
+      - build-iris-arm
+      - build-iota
+    clusters:
+      - image: build-14
+        count: 2
+        resources:
+          # Freebsd works with only server-d
+          server-type: server-a
+          # nic-type can be naples, mellanox, or raw
+          nic-type: naples
+          constraints:
+            same-switch: true
+    provision:
+      username: vm
+      password: vm
+      vars:
+        BmOs: freebsd
+        VmOs: freebsd
+        EsxUsername: root
+        EsxPassword: Pen0trl!
+
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
+  - /sw/iota/all_corefiles.tgz

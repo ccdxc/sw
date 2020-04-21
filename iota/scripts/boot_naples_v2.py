@@ -811,6 +811,9 @@ class HostManagement(EntityManagement):
     def SetNodeOs(self, os):
         self.__host_os = os
 
+    def GetNodeOs(self):
+        return self.__host_os
+
     def GetPrimaryIntNicMgmtIpNext(self):
         nxt = str((int(re.search('\.([\d]+)$',GlobalOptions.mnic_ip).group(1))+1)%255)
         return re.sub('\.([\d]+)$','.'+nxt,GlobalOptions.mnic_ip)
@@ -882,7 +885,7 @@ class HostManagement(EntityManagement):
                         print("failed to run pre-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
                 try:
                     print('running nodeinit.sh with args: {0}'.format(nodeinit_args))
-                    self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt" % (HOST_NAPLES_DIR))
+                    self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt --image %s" % (HOST_NAPLES_DIR, os.path.basename(driver_pkg)))
                     #mgmtIPCmd = "sudo python5  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, self.__host_os)
                     #output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
                     #print("Command output ", output)
@@ -899,7 +902,7 @@ class HostManagement(EntityManagement):
                         except:
                             print("failed to run post-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
             else:
-                nodeinit_args += " --no-mgmt"
+                nodeinit_args += " --no-mgmt" + " --image " + os.path.basename(driver_pkg)
             if os.path.exists(pre_node_init_script):
                 print("running pre-nodeinit.sh script to gather debug info")
                 try:
@@ -1117,7 +1120,7 @@ class EsxHostManagement(HostManagement):
         self.__esx_host_init()
 
     @_exceptionWrapper(_errCodes.HOST_DRIVER_INSTALL_FAILED, "ESX Driver install failed")
-    def __install_drivers(self, pkg):
+    def __install_drivers(self, pkg, file_type="SrcBundle"):
         if GlobalOptions.skip_driver_install:
             print('user requested to skip driver install')
             return
@@ -1126,26 +1129,21 @@ class EsxHostManagement(HostManagement):
         self.RunSshCmd("rm -rf %s" % HOST_NAPLES_DIR)
         self.RunSshCmd("mkdir -p %s" % HOST_NAPLES_DIR)
 
+        node_init_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', self.GetNodeOs(), 'nodeinit.sh')
         self.CopyIN(os.path.join(GlobalOptions.wsdir, pkg), HOST_NAPLES_DIR)
-        assert(self.RunSshCmd("cd %s && tar xf %s" %\
-                 (HOST_NAPLES_DIR, os.path.basename(pkg))) == 0)
+        self.CopyIN(node_init_script, HOST_NAPLES_DIR)
         install_success = False
-        self.__host_connect()
+        if file_type == "SrcBundle":
+            assert(self.RunSshCmd("cd %s && tar xf %s" % (HOST_NAPLES_DIR, os.path.basename(pkg))) == 0)
         for _ in range(0, 5):
-
-            stdin, stdout, stderr  = self.__ssh_handle.exec_command("cd %s/drivers-esx-eth/ && chmod +x ./build.sh && ./build.sh --install" % HOST_NAPLES_DIR)
-            #ret = self.run("cd %s/drivers-esx/ && chmod +x ./build.sh && ./build.sh" % HOST_NAPLES_DRIVERS_DIR, ignore_result = True)
-            exit_status = stdout.channel.recv_exit_status()
-            outlines=stdout.readlines()
-            print (''.join(outlines))
+            exit_status = self.RunSshCmd("/%s/nodeinit.sh --install" % (HOST_NAPLES_DIR))
             if  exit_status == 0:
             #if ret == 0:
                 install_success = True
                 break
             print("Installed failed , trying again..")
             time.sleep(5)
-            #self._connect()
-            self.__host_connect()
+
         if not install_success:
             raise Exception("Driver install failed")
 
@@ -1162,7 +1160,6 @@ class EsxHostManagement(HostManagement):
 
         for naples in self.naples:
             naples.InstallPrep()
-
 
         #Ctrl VM reboot might have removed the image
         self.ctrl_vm_copyin(os.path.join(GlobalOptions.wsdir, self.fw_images.image),
@@ -1195,7 +1192,7 @@ class EsxHostManagement(HostManagement):
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FOR_REBOOT_FAILED, "Init for reboot failed")
     def InitForReboot(self):
-        self.__install_drivers(self.driver_images.drivers_pkg)
+        self.__install_drivers(self.driver_images.drivers_pkg, self.driver_images.pkg_file_type)
 
 
     def UnloadDriver(self):

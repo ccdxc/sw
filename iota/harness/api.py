@@ -29,6 +29,7 @@ DEFAULT_COMMAND_TIMEOUT = 30
 
 HOST_NAPLES_DIR         = "/naples"
 
+NAPLES_SW_ASSET_NAME = 'released-naples-sw'
 gl_iota_svc_channel = None
 gl_topo_svc_stub = None
 gl_cfg_svc_stub = None
@@ -281,15 +282,6 @@ def MakeCluster(req):
     Logger.debug("Make Cluster:")
     return __rpc(req, gl_cfg_svc_stub.MakeCluster)
 
-def GetPrimaryIntNicMgmtIp():
-    return store.GetPrimaryIntNicMgmtIp()
-
-def GetPrimaryIntNicMgmtIpNext():
-    ip=store.GetPrimaryIntNicMgmtIp()
-    nxt = str((int(re.search('\.([\d]+)$',ip).group(1))+1)%255)
-    ip=re.sub('\.([\d]+)$','.'+nxt,ip)
-    return ip
-
 def GetVeniceMgmtIpAddresses():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVeniceMgmtIpAddresses()
 
@@ -504,6 +496,12 @@ def GetFwdMode():
 
 def GetPolicyMode():
     return store.GetTestbed().GetCurrentTestsuite().GetPolicyMode()
+
+def GetFirmwareVersion():
+    return store.GetTestbed().GetCurrentTestsuite().GetFirmwareVersion()
+
+def GetDriverVersion():
+    return store.GetTestbed().GetCurrentTestsuite().GetDriverVersion()
 
 #Returns true if tests running on same switch
 def RunningOnSameSwitch():
@@ -1056,16 +1054,16 @@ def AllocateUdpPort():
 # ================================
 # Asset Management APIs
 # ================================
-def DownloadAssets(asset_name, parent_dir, release_version):
+def DownloadAssets(release_version):
     """
     API to download assets from minio.test.pensando.io
     """
     global gl_topo_svc_stub
     Logger.debug("Downloading assets:")
     req = topo_svc.DownloadAssetsMsg()
-    req.asset_name = asset_name
+    req.asset_name = NAPLES_SW_ASSET_NAME
     req.release_version = release_version
-    req.parent_dir = parent_dir
+    req.parent_dir = os.path.join(GetTopDir(), 'images')
     return __rpc(req, gl_topo_svc_stub.DownloadAssets)
 
 def ReInstallImage(fw_version=None, dr_version=None):
