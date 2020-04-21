@@ -117,10 +117,27 @@ func (vc *Vcenter) DisconnectHost(ip string) error {
 			for _, host := range hosts {
 				if host.Name() == ip {
 					var h mo.HostSystem
-					err := host.Properties(vc.Ctx(), host.Reference(), []string{"parent"}, &h)
+					err := host.Properties(vc.Ctx(), host.Reference(), []string{"parent", "config.network"}, &h)
 					if err != nil {
 						return err
 					}
+					// Remove all vmk nics on the host
+					ns, err := host.ConfigManager().NetworkSystem(vc.Ctx())
+					if err != nil {
+						return err
+					}
+					for _, vnic := range h.Config.Network.Vnic {
+						// HACK skip vmk0 as it is used for host communication
+						if vnic.Device == "vmk0" {
+							continue
+						}
+						log.Infof("Remove vmk %v from host %v", vnic.Device, host.Name())
+						if err := ns.RemoveVirtualNic(vc.Ctx(), vnic.Device); err != nil {
+							log.Errorf("%v", err)
+							// return err
+						}
+					}
+
 					remove := host.Destroy
 					if h.Parent.Type == "ComputeResource" {
 						// Standalone host.  From the docs:
@@ -619,7 +636,7 @@ func (dc *DataCenter) RemoveKernelNic(cluster, host string, pgName string) error
 		return errors.Wrap(err, "Error finding host")
 	}
 
-	return vhost.RemoveKernelNic(cluster, host, pgName)
+	return vhost.RemoveKernelNic(pgName)
 }
 
 //AddNetworks add a vswitch to host

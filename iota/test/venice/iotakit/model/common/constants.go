@@ -23,7 +23,7 @@ const (
 	//DefaultNetworkType
 	DefaultNetworkType NetworkType = 0
 	//VmotionNetworkType vmotion
-	VmotionNetworkType NetworkType = 0
+	VmotionNetworkType NetworkType = 1
 )
 
 //NetworkSpec to ceate
@@ -36,3 +36,5 @@ type NetworkSpec struct {
 
 //MockVeniceURL mock venice url
 const MockVeniceURL = "localhost:9443"
+// Vmotion subnet used for vmotion
+const VmotionSubnet = "169.254.0"

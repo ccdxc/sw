@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	TestUtils "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -323,6 +324,61 @@ func Test_vcenter_find_host(t *testing.T) {
 		TestUtils.Assert(t, err == nil, "Add network failed")
 
 	*/
+}
+func Test_vcenter_vmotion_vmk(t *testing.T) {
+
+	//	TestUtils.Assert(t, false, "Ds not created")
+
+	ctx, _ := context.WithCancel(context.Background())
+	vc, err := NewVcenter(ctx, "barun-vc-7.pensando.io", "administrator@pensando.io", "N0isystem$",
+		"YN69K-6YK5J-78X8T-0M3RH-0T12H")
+
+	TestUtils.Assert(t, err == nil, "Connected to venter")
+	TestUtils.Assert(t, vc != nil, "Vencter context set")
+
+	dc, err := vc.SetupDataCenter("pbhide-iota-dc")
+	TestUtils.Assert(t, err == nil, "successfuly setup dc")
+	dc, ok := vc.datacenters["pbhide-iota-dc"]
+	TestUtils.Assert(t, ok, "pbhide setup dc")
+
+	c, ok := dc.clusters["pbhide-iota-cluster"]
+	TestUtils.Assert(t, ok, "successfuly setup cluster")
+	TestUtils.Assert(t, len(c.hosts) == 2, "successfuly setup cluster")
+
+	dvs, err := dc.findDvs("#Pen-DVS-pbhide-iota-dc")
+	TestUtils.Assert(t, err == nil, "successfuly found dvs")
+	TestUtils.Assert(t, dvs != nil, "dvs nil")
+	fmt.Printf("====Create VMKNIC\n")
+	vHost, err := dc.findHost("pbhide-iota-cluster", "10.8.101.31")
+	TestUtils.Assert(t, err == nil, "host not found")
+	vmkSpec := KernelNetworkSpec{
+		IPAddress:     "169.254.0.31",
+		Subnet:        "255.255.255.0",
+		Portgroup:     "#Pen-PG-Network-Vlan-1",
+		EnableVmotion: true,
+	}
+	err = vHost.AddKernelNic(vmkSpec)
+	TestUtils.Assert(t, err == nil, "Failed to setup vmknic %v", err)
+
+	// time.Sleep(5 * time.Second)
+	// fmt.Printf("Remove vmks on host %s\n", vHost.Name)
+	// err = vHost.RemoveKernelNic("#Pen-PG-Network-Vlan-1")
+	// TestUtils.Assert(t, err == nil, "Failed to remove vmknic %v", err)
+
+	vHost, err = dc.findHost("pbhide-iota-cluster", "10.8.104.65")
+	TestUtils.Assert(t, err == nil, "host not found")
+	vmkSpec = KernelNetworkSpec{
+		IPAddress:     "169.254.0.65",
+		Subnet:        "255.255.255.0",
+		Portgroup:     "#Pen-PG-Network-Vlan-1",
+		EnableVmotion: true,
+	}
+	err = vHost.AddKernelNic(vmkSpec)
+	TestUtils.Assert(t, err == nil, "Failed to setup vmknic %v", err)
+	time.Sleep(5 * time.Second)
+	// fmt.Printf("Remove vmks on host %s\n", vHost.Name)
+	// err = vHost.RemoveKernelNic("#Pen-PG-Network-Vlan-1")
+	// TestUtils.Assert(t, err == nil, "Failed to remove vmknic %v", err)
 }
 
 func Test_vcenter_ovf_deploy(t *testing.T) {

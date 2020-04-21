@@ -1436,6 +1436,8 @@ func (ts *TopologyService) RemoveNetworks(ctx context.Context, req *iota.Network
 		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR,
 			ErrorMsg: "Switch not set"}
 		// TODO return fully formed resp here
+		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR,
+			ErrorMsg: "Switch not set"}
 		return req, nil
 	}
 

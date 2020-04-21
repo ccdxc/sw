@@ -3,11 +3,13 @@
 package vchub_test
 
 import (
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/venice/utils/log"
-	"time"
 )
 
 var _ = Describe("Vc hub workload tests", func() {
@@ -153,8 +155,25 @@ var _ = Describe("Vc hub workload tests", func() {
 
 		It("tags:sanity=true Bring up 8 local and remote workloads and test traffic", func() {
 
+			// Create a vmk interface for vmotion, use one of the available network for vmotion traffic
+			nc := ts.model.Networks("")
+			Expect(len(nc.Subnets()) > 0)
+			vmotionNet := nc.Subnets()[0].Name
+
+			log.Infof("Create vmk interface for vmotion using network %s on hosts %v", vmotionNet,
+				ts.model.Hosts().Names())
+			networkSpec := common.NetworkSpec{
+				Name:   vmotionNet,
+				Switch: "",
+				Nodes:  ts.model.Hosts().Names(),
+				NwType: common.VmotionNetworkType,
+			}
+
+			err := ts.model.AddNetworks(networkSpec)
+			Expect(err == nil)
+
 			workloads := ts.model.Workloads()
-			err := ts.model.TeardownWorkloads(workloads)
+			err = ts.model.TeardownWorkloads(workloads)
 			Expect(err == nil)
 
 			// verify workload status is good, Put all check w.r.t to venice here.
@@ -184,6 +203,8 @@ var _ = Describe("Vc hub workload tests", func() {
 			}
 
 			spc := ts.model.NewNetworkSecurityPolicy("test-policy").AddRulesForWorkloadPairs(wlp, "tcp/8000", "PERMIT")
+			vmotionSubnet := common.VmotionSubnet + ".0/24"
+			spc.AddRule(vmotionSubnet, vmotionSubnet, "any", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
 			// verify policy was propagated correctly
@@ -191,6 +212,22 @@ var _ = Describe("Vc hub workload tests", func() {
 				return ts.model.VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
+			// Create a vmk interface for vmotion, use one of the available network for vmotion traffic
+			//			nc := ts.model.Networks("")
+			//			Expect(len(nc.Subnets()) > 0)
+			//			vmotionNet := nc.Subnets()[0].Name
+			//
+			//			log.Infof("Create vmk interface for vmotion using network %s on hosts %v", vmotionNet,
+			//				ts.model.Hosts().Names())
+			//			networkSpec := common.NetworkSpec {
+			//				Name: vmotionNet,
+			//				Switch: "",
+			//				Nodes: ts.model.Hosts().Names(),
+			//				NwType: common.VmotionNetworkType,
+			//			}
+			//
+			//			err = ts.model.AddNetworks(networkSpec)
+			//			Expect(err == nil)
 			// Run traffic between one local pair and one remote pair (same workload)
 			// vmotion the work-load so local pair becomes remote and remote pair becomes
 			// local
@@ -239,7 +276,15 @@ var _ = Describe("Vc hub workload tests", func() {
 			Eventually(func() error {
 				return ts.model.VerifyWorkloadMigrationStatus(mvWlc)
 			}).Should(Succeed())
+			time.Sleep(30 * time.Second)
 
+			// log.Infof("Migrate workload (AGAIN) %s", moveWl.Name())
+			// Repeat migration - self host - remove it later
+			// err = ts.model.MoveWorkloads(mvWlc, dstHosts)
+			// Expect(err == nil)
+			// Eventually(func() error {
+			// 		return ts.model.VerifyWorkloadMigrationStatus(mvWlc)
+			// 	}).Should(Succeed())
 			dstHosts = objects.NewHostCollection(workloads.Client, workloads.Testbed)
 			dstHosts.Hosts = append(dstHosts.Hosts, srcHost)
 

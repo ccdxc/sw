@@ -9,6 +9,7 @@ import (
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/agent/workload"
 	constants "github.com/pensando/sw/iota/svcs/common"
+	modelconsts "github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pkg/errors"
@@ -127,28 +128,6 @@ func (n *VcenterNode) initVcenter() error {
 			hostSpec.Pnics = append(hostSpec.Pnics, intf)
 		}
 		hostSpecs = append(hostSpecs, hostSpec)
-
-		vNWs := []vmware.NWSpec{
-			{Name: constants.IotaVmotionPortgroup},
-		}
-		vspec := vmware.VswitchSpec{Name: constants.IotaVmotionSwitch}
-
-		err = dc.AddNetworks(n.ClusterName, node.GetNodeInfo().IPAddress, vNWs, vspec)
-		if err != nil {
-			//Ignore as it may be created already.
-			log.Errorf("Error creating vmotion pg %v", err.Error())
-		}
-
-		nwSpec := vmware.KernelNetworkSpec{
-			EnableVmotion: true,
-			Portgroup:     constants.IotaVmotionPortgroup,
-		}
-		err = dc.AddKernelNic(n.ClusterName, node.GetNodeInfo().IPAddress, nwSpec)
-
-		if err != nil {
-			//Ignore as it may be created already.
-			log.Errorf("Error creating vmotion pg %v", err.Error())
-		}
 	}
 
 	dvsSpec := vmware.DVSwitchSpec{Hosts: hostSpecs,
@@ -399,9 +378,10 @@ func (n *VcenterNode) AddNetworks(ctx context.Context, networkMsg *iota.Networks
 							Portgroup:     nw.Name,
 						}
 						if !nw.Dhcp {
-							nwSpec.IPAddress = "169.254.0." + strings.Split(mn.GetNodeInfo().IPAddress, ".")[3]
-							nwSpec.Subnet = "169.254.255.0"
+							nwSpec.IPAddress = modelconsts.VmotionSubnet + "." + strings.Split(mn.GetNodeInfo().IPAddress, ".")[3]
+							nwSpec.Subnet = "255.255.255.0"
 						}
+						log.Infof("Add vmk IP addr %v, %v on node %v", nwSpec.IPAddress, nwSpec.Subnet, host)
 						err := n.dc.AddKernelNic(nw.Cluster, mn.GetNodeInfo().IPAddress, nwSpec)
 						if err != nil {
 							networkMsg.ApiResponse.ErrorMsg = errors.Wrap(err, "Error adding vmotion pg").Error()
@@ -419,8 +399,31 @@ func (n *VcenterNode) AddNetworks(ctx context.Context, networkMsg *iota.Networks
 //RemoveNetworks not supported for other nodes
 func (n *VcenterNode) RemoveNetworks(ctx context.Context, req *iota.NetworksMsg) (*iota.NetworksMsg, error) {
 
-	err := n.dc.RemoveAllPortGroupsFromDvs(req.Switch)
+	pgs, err := n.dc.FetchDVPortGroupsNames(req.Switch)
+	if err != nil {
+		req.ApiResponse.ErrorMsg = errors.Wrap(err, "Error removing networks - no PGs found").Error()
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		return req, nil
+	}
+	if req.Network[0] == nil {
+		req.ApiResponse.ErrorMsg = errors.Wrap(err, "Error removing networks - no cluster info").Error()
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		return req, nil
+	}
+	managedNodes := n.GetManagedNodes()
+	for _, pg := range pgs {
+		for _, mn := range managedNodes {
+			log.Infof("Remove vmks on PG %v on host %v", pg, mn.GetNodeInfo().Name)
+			err := n.dc.RemoveKernelNic(req.Network[0].Cluster, mn.GetNodeInfo().IPAddress, pg)
+			if err != nil {
+				req.ApiResponse.ErrorMsg = errors.Wrap(err, "Error removing vmknic").Error()
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+				return req, nil
+			}
+		}
+	}
 
+	err = n.dc.RemoveAllPortGroupsFromDvs(req.Switch)
 	if err != nil {
 		req.ApiResponse = &iota.IotaAPIResponse{
 			ApiStatus: iota.APIResponseType_API_SERVER_ERROR,
@@ -435,7 +438,6 @@ func (n *VcenterNode) RemoveNetworks(ctx context.Context, req *iota.NetworksMsg)
 	}
 
 	return req, nil
-
 }
 
 func init() {

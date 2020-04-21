@@ -84,7 +84,7 @@ vcenter-e2e:
 	./modify_warmd.sh
 	mkdir -p /go/src/github.com/pensando/sw/bin/upgrade-bundle
 	asset-pull bundle_image 1.2.0-140 /go/src/github.com/pensando/sw/bin/upgrade-bundle/bundle.tar
-	../../bin/iota_cmd run --suite vchub --topo vcenter --testbed /sw/nic/warmd.json
+	../../bin/iota_cmd run --suite vchub --topo vcenter --testbed ${GOPATH}/src/github.com/pensando/sw/iota/warmd.json
 
 venice-e2e-basenet:
 	cd ../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all.tgz -C .

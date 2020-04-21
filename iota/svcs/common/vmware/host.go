@@ -604,38 +604,45 @@ L:
 		return fmt.Errorf("Network %v not found", nwspec.Portgroup)
 	}
 
-	nwRef, err := net.EthernetCardBackingInfo(h.Ctx())
-	if err != nil {
-		return errors.Wrap(err, "Failed Find Network devices")
+	portGroupName := ""
+	tso := true
+	spec := types.HostVirtualNicSpec{
+		Ip: &types.HostIpConfig{
+			Dhcp:       false,
+			IpAddress:  nwspec.IPAddress,
+			SubnetMask: nwspec.Subnet,
+		},
+		DistributedVirtualPort: &types.DistributedVirtualSwitchPortConnection{
+			// get this info from port connection info
+		},
+		Portgroup:           "",
+		Mtu:                 1500,
+		TsoEnabled:          &tso,
+		NetStackInstanceKey: "defaultTcpipStack",
 	}
-
-	portGroupName := nwspec.Portgroup
-	spec := types.HostVirtualNicSpec{}
-	switch nw := nwRef.(type) {
-	case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
-
-		fmt.Printf("NW %v key %v\n", nw, nw.Port.PortKey)
-
-		spec = types.HostVirtualNicSpec{
-			Ip: &types.HostIpConfig{Dhcp: true},
-			DistributedVirtualPort: &types.DistributedVirtualSwitchPortConnection{
-				PortgroupKey: nw.Port.PortgroupKey,
-				SwitchUuid:   nw.Port.SwitchUuid,
-			},
+	objPg, ok := net.(*object.DistributedVirtualPortgroup)
+	if ok {
+		spec.DistributedVirtualPort.PortgroupKey = objPg.Reference().Value
+		pgConfig, err := net.EthernetCardBackingInfo(h.Ctx())
+		if err != nil {
+			return errors.Wrap(err, "Failed Find PG backing config")
 		}
-		portGroupName = ""
-	default:
-		spec = types.HostVirtualNicSpec{
-			Ip: &types.HostIpConfig{Dhcp: true},
+
+		if vPortConfig, ok := pgConfig.(*types.VirtualEthernetCardDistributedVirtualPortBackingInfo); ok {
+			spec.DistributedVirtualPort.SwitchUuid = vPortConfig.Port.SwitchUuid
+		} else {
+			return errors.Wrap(err, "Cannot find DVS PG port confign info")
 		}
+	} else {
+		// standart PG
+		portGroupName = nwspec.Portgroup
+		spec.Portgroup = nwspec.Portgroup
 	}
-
-	if nwspec.IPAddress != "" {
-		spec.Ip.IpAddress = nwspec.IPAddress
-		spec.Ip.SubnetMask = nwspec.Subnet
-		spec.Ip.Dhcp = false
+	if nwspec.EnableVmotion {
+		// use default stack and then enable vmotion on it, this is done so it is easy to debug the
+		// setup. We can enable this later if needed
+		// spec.NetStackInstanceKey = "vmotion"
 	}
-
 	name, err := ns.AddVirtualNic(h.Ctx(), portGroupName, spec)
 	if err != nil {
 		return err
@@ -656,8 +663,9 @@ L:
 	return nil
 }
 
-// RemoveKernelNic removes the specified kernel nic
-func (h *VHost) RemoveKernelNic(cluster, host string, vnicName string) error {
+// RemoveKernelNic removes the kernel nic on a givne pg
+func (h *VHost) RemoveKernelNic(pgName string) error {
+	fmt.Printf("Remove vmknics\n")
 	ns, err := h.hostNetworkSystem()
 	if err != nil {
 		return err
@@ -670,10 +678,32 @@ func (h *VHost) RemoveKernelNic(cluster, host string, vnicName string) error {
 	if err != nil {
 		return err
 	}
-
-	for _, pg := range mns.NetworkInfo.Vnic {
-		if vnicName == pg.Spec.Portgroup {
-			return ns.RemoveVirtualNic(h.Ctx(), pg.Device)
+	net, err := h.Finder().Network(h.Ctx(), pgName)
+	if err != nil {
+		return err
+	}
+	objPg, ok := net.(*object.DistributedVirtualPortgroup)
+	if !ok {
+		// standard PG
+		for _, vmknic := range mns.NetworkInfo.Vnic {
+			if pgName == vmknic.Spec.Portgroup {
+				err = ns.RemoveVirtualNic(h.Ctx(), vmknic.Device)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	} else {
+		for _, vmknic := range mns.NetworkInfo.Vnic {
+			if vmknic.Spec.DistributedVirtualPort == nil {
+				continue
+			}
+			if objPg.Reference().Value == vmknic.Spec.DistributedVirtualPort.PortgroupKey {
+				err = ns.RemoveVirtualNic(h.Ctx(), vmknic.Device)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil

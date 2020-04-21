@@ -334,6 +334,9 @@ func (sm *VcenterSysModel) RemoveNetworks(switchName string) error {
 	removeNetworkMsg := &iota.NetworksMsg{
 		Switch:           switchName,
 		OrchestratorNode: orch.Name,
+		Network: []*iota.Network{&iota.Network{
+			Cluster: sm.Tb.GetCluster(),
+		}},
 	}
 
 	removeResp, err := topoClient.RemoveNetworks(context.Background(), removeNetworkMsg)
