@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnInit, ViewEncapsulation, ViewChild, OnDestroy } from '@angular/core';
+import { AfterViewInit, Component, Input, OnInit, ViewEncapsulation, ViewChild, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormArray, ValidatorFn } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
@@ -24,25 +24,23 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
   templateUrl: './newtechsupport.component.html',
   styleUrls: ['./newtechsupport.component.scss'],
   animations: [Animations],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupportRequest, MonitoringTechSupportRequest> implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('cslabelRepeater') cslabelRepeater: RepeaterComponent;
   @ViewChild('nmlabelRepeater') nmlabelRepeater: RepeaterComponent;
 
   @Input() existingTechSupportRequest: MonitoringTechSupportRequest[] = [];
+  @Input() nodes: ReadonlyArray<ClusterNode> = [];
+  @Input() naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+
+  createButtonTooltip: string = '';
 
   cslabelData: RepeaterData[] = [];
   nmlabelData: RepeaterData[] = [];
   cslabelFormArray = new FormArray([]);
   nmlabelFormArray = new FormArray([]);
-
-  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
-  naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
-
-
-  nodes: ReadonlyArray<ClusterNode> = [];
-  nodeEventUtility: HttpEventUtility<ClusterNode>;
 
   nodesOptions: SelectItem[] = [];
   selectedNodes: SelectItem[] = [];
@@ -53,6 +51,7 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
     protected _monitoringService: MonitoringService,
     protected uiconfigsService: UIConfigsService,
     private clusterService: ClusterService,
+    private cdr: ChangeDetectorRef,
   ) {
     super(_controllerService, uiconfigsService, MonitoringTechSupportRequest);
   }
@@ -82,8 +81,10 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
         valueType: ValueType.inputField
       }
     ];
-    this.getNaples();
-    this.getNodes();
+
+    this.populateNodes();
+    this.populateNaples();
+    this.cdr.detectChanges();
   }
 
   setToolbar() {
@@ -93,6 +94,7 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
         cssClass: 'global-button-primary techsupportrequests-toolbar-button techsupportrequests-toolbar-SAVE',
         text: 'CREATE TECH SUPPORT REQUEST',
         callback: () => { this.saveObject(); },
+        genTooltip: () => this.getTooltip(),
         computeClass: () => this.computeButtonClass()
       },
       {
@@ -105,34 +107,8 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
     this._controllerService.setToolbarData(currToolbar);
   }
 
-  getNaples() {
-    const dscSubscription = this.clusterService.ListDistributedServiceCardCache().subscribe(
-      (response) => {
-        if (response.connIsErrorState) {
-          return;
-        }
-        this.naples  = response.data;
-        this.populateNaples();
-      }
-    );
-    this.subscriptions.push(dscSubscription);
-  }
-
-  getNodes() {
-    this.nodeEventUtility = new HttpEventUtility<ClusterNode>(ClusterNode);
-    this.nodes = this.nodeEventUtility.array;
-    const subscription = this.clusterService.WatchNode().subscribe(
-      response => {
-        this.nodeEventUtility.processEvents(response);
-        this.populateNodes();
-      },
-      this._controllerService.webSocketErrorHandler('Failed to get Nodes')
-    );
-    this.subscriptions.push(subscription);
-  }
-
   populateNodes () {
-    this.nodesOptions.length = 0;
+    this.nodesOptions = [];
     this.nodes.forEach( (node: ClusterNode) => {
       this.nodesOptions.push({
           label: node.meta.name,
@@ -143,8 +119,8 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
   }
 
   populateNaples() {
-    this.sourceNaples.length = 0;
-    this.targetNaples.length = 0;
+    this.sourceNaples = [];
+    this.targetNaples = [];
     this.naples.forEach ( (naple: ClusterDistributedServiceCard) => {
       this.sourceNaples.push({
         label: naple.spec.id,  // naple name
@@ -162,14 +138,31 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
       return false;
     }
     // we want user picks nodes or naples
-    if (this.selectedNodes.length === 0 && this.targetNaples.length  === 0) {
+    if (!this.oneTargetPicked()) {
+      this.createButtonTooltip = 'Error: At least one node or DSC card has to be selected as a target.';
       return false;
     }
+    this.createButtonTooltip = '';
     return true;
+  }
+
+  getTooltip(): string {
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      return 'Error: Name field is empty.';
+    }
+    if (this.newObject.$formGroup.get(['meta', 'name']).invalid)  {
+      return 'Error: Name field is invalid.';
+    }
+    return this.createButtonTooltip ? this.createButtonTooltip :
+      'Ready to save new Tech Support';
   }
 
   isTechSupportRequestNameValid(existingTechSupportRequest: MonitoringTechSupportRequest[]): ValidatorFn {
     return Utility.isModelNameUniqueValidator(existingTechSupportRequest, 'tech-support-request-name');
+  }
+
+  oneTargetPicked() {
+    return this.selectedNodes.length > 0 || this.targetNaples.length  > 0;
   }
 
   getObjectValues(): IMonitoringTechSupportRequest {
@@ -208,5 +201,4 @@ export class NewtechsupportComponent extends CreationForm<IMonitoringTechSupport
   generateUpdateSuccessMsg(object: IMonitoringTechSupportRequest) {
     return 'Updated tech support request ' + object.meta.name;
   }
-
 }

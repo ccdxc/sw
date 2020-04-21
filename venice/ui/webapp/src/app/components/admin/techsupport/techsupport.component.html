@@ -19,6 +19,7 @@
 
 <ng-template #createTemplate>
   <app-newtechsupport (formClose)="creationFormClose()" fxFlex="none"
+                      [naples]="naples" [nodes]="nodes"
                       [existingTechSupportRequest]='dataObjects'>
   </app-newtechsupport>
 </ng-template>

@@ -9,9 +9,11 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringTechSupportRequest, MonitoringTechSupportRequest, MonitoringTechSupportRequestStatus_status, IMonitoringTechSupportRequestStatus } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { TableCol, RowClickEvent, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
+import { ClusterDistributedServiceCard, ClusterNode } from '@sdk/v1/models/generated/cluster';
 
 
 
@@ -53,12 +55,16 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   exportFilename: string = 'PSM-tech-support-requests';
   exportMap: CustomExportMap = {};
 
+  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  nodes: ReadonlyArray<ClusterNode> = [];
+
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
   tableLoading: boolean = false;
 
   constructor(protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
+    private clusterService: ClusterService,
     protected cdr: ChangeDetectorRef,
     protected monitoringService: MonitoringService) {
     super(controllerService, cdr, uiconfigsService);
@@ -74,9 +80,37 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
   postNgInit() {
     this.getTechSupportRequests();
+    this.getNaples();
+    this.getNodes();
     if (!this.checkPermissions()) {
-      this.controllerService.invokeInfoToaster('Additional authorizaiton required', 'Cluster node and DSC read permissions are required to create tech-support request.');
+      this.controllerService.invokeInfoToaster('Additional authorization required', 'Cluster node and DSC read permissions are required to create tech support request.');
     }
+  }
+
+  getNaples() {
+    const dscSubscription = this.clusterService.ListDistributedServiceCardCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.naples  = response.data;
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get DSCs')
+    );
+    this.subscriptions.push(dscSubscription);
+  }
+
+  getNodes() {
+    const subscription = this.clusterService.ListNodeCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.nodes  = response.data;
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get nodes')
+    );
+    this.subscriptions.push(subscription);
   }
 
   setDefaultToolbar() {

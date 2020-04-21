@@ -1,66 +1,49 @@
 <div [style.width]="'100%'" fxLayout="column">
-  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="newtechsupport-container">
-    <div fxLayout="row" fxLayoutAlign="center center" class="newtechsupport-content">
-
-      <div fxFlex="nogrow" fxLayout="column">
-        <div fxFlex="nogrow" fxLayout="row" class="newtechsupport-row newtechsupport-name-parent"
-             [formGroup]="newObject.$formGroup">
-          <!-- First row-->
-          <div formGroupName="meta">
-            <input fxFlex="300px" formControlName="name" class="newtechsupport-name" appErrorTooltip
-                   spellcheck="false"
-                   type="text" pInputText placeholder="Unique Techsupport Name...">
-          </div>
-        </div>
-        <div fxFlex="25px"></div>
-        <!-- Buffer, creating as a div so there are no hiccups in the animation-->
-
-        <div fxFlex="100" fxLayout="row">
-          <div fxLayout="row" class="newtechsupport-row">
-            <div fxFlex="nogrow" class="">Nodes:</div>
-            <div class="newtechsupport-plist-div">
-              <p-listbox #nodesListbox [options]="nodesOptions"
-                         *ngIf="nodesOptions && nodesOptions.length>0"
-                         [(ngModel)]="selectedNodes" multiple="multiple" checkbox="checkbox"
-                         [showToggleAll]="true"
-                         optionLabel="label" [listStyle]="{'height':'100px'}">
-              </p-listbox>
+  <div fxFlex="auto" fxLayout="row wrap" fxLayoutAlign="center start"
+       class="newtechsupport-content">
+    <div fxFlex="none" fxLayout="row" [formGroup]="newObject.$formGroup.get(['meta'])">
+      <span [ngClass]="{
+        'newtechsupport-name': true,
+        'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+      }">
+        <input formControlName="name" appErrorTooltip spellcheck="false" type="text"
+               class="newtechsupport-name" pInputText appFloatLabel="Tech Support Request Name">
+      </span>
+    </div>
+    <div fxFlex="10px"></div>
+    <div fxLayout="column" class="newtechsupport-row">
+      <div fxFlex="nogrow" [ngClass]="{
+        'newtechsupport-row-label': true, 'requiredLabel': !oneTargetPicked()
+      }">Nodes</div>
+      <div class="newtechsupport-plist-div">
+        <p-listbox #nodesListbox [options]="nodesOptions"
+                   *ngIf="nodesOptions && nodesOptions.length>0"
+                   [(ngModel)]="selectedNodes" multiple="multiple" checkbox="checkbox"
+                   [showToggleAll]="true"
+                   optionLabel="label" [listStyle]="{'height':'100px'}">
+        </p-listbox>
+      </div>
+    </div>
+    <div fxLayout="column" class="newtechsupport-row">
+      <div fxFlex="nogrow" [ngClass]="{
+        'newtechsupport-row-label': true, 'requiredLabel': !oneTargetPicked()
+      }">DS Cards</div>
+      <div class="newtechsupport-plist-div">
+        <p-pickList [source]="sourceNaples" [target]="targetNaples" filterBy="label,title"
+                    sourceHeader="Available"
+                    targetHeader="Selected" dragdrop="true"
+                    sourceFilterPlaceholder="Search by name/MAC"
+                    targetFilterPlaceholder="Search by name/MAC" [showSourceControls]="false"
+                    [showTargetControls]="false"
+                    [sourceStyle]="{'height':'100px'}" [targetStyle]="{'height':'100px'}">
+          <ng-template let-naple pTemplate="item">
+            <div class="newtechsupport-plist-item">
+              <div class="newtechsupport-naple-label">{{naple.label}} </div>
+              <div class="newtechsupport-naple-description">{{naple.title}} </div>
             </div>
-          </div>
-          <div fxLayout="row" class="newtechsupport-row">
-            <div fxFlex="nogrow" class="">DS Cards:</div>
-            <div class="newtechsupport-plist-div">
-              <p-pickList [source]="sourceNaples" [target]="targetNaples" filterBy="label,title"
-                          sourceHeader="Available"
-                          targetHeader="Selected" dragdrop="true"
-                          sourceFilterPlaceholder="Search by name/mac"
-                          targetFilterPlaceholder="Search by name/mac" [showSourceControls]="false"
-                          [showTargetControls]="false"
-                          [sourceStyle]="{'height':'100px'}" [targetStyle]="{'height':'100px'}">
-                <ng-template let-naple pTemplate="item">
-                  <div class="newtechsupport-plist-item">
-                    <div class="newtechsupport-naple-label">{{naple.label}} </div>
-                    <div class="newtechsupport-naple-description">{{naple.title}} </div>
-                  </div>
-                </ng-template>
-              </p-pickList>
-            </div>
-          </div>
-        </div>
-
-        <div fxFlex="10px"></div>
-        <!-- Buffer, creating as a div so there are no hiccups in the animation-->
-
-
+          </ng-template>
+        </p-pickList>
       </div>
     </div>
   </div>
 </div>
-
-<ng-template #divider>
-  <div fxFlex="20px" fxLayout="row">
-    <div fxFlex="30px"></div>
-    <div fxFlex="auto" class="newtechsupport-divider"></div>
-    <div fxFlex="30px"></div>
-  </div>
-</ng-template>

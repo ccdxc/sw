@@ -3,41 +3,64 @@
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
-.newtechsupport-container {
-  background: white;
-
-  &:hover {
-    background: white;
-  }
-}
-
 .newtechsupport-content {
   background: white;
   min-height: 180px;
   margin-top: 4* $vertical-gutter;
   @include primary-font();
+
+  &:hover {
+    background: white;
+  }
+
+  span.ui-float-label {
+    margin-top: 20px !important;
+  }
+
+  .newtechsupport-name {
+    width: 190px;
+
+    :first-child {
+      height: 30px;
+      font-size: 14px;
+      width: 100%;
+    }
+  }
+
+  .newtechsupport-row {
+    margin: 0px $horizontal-gutter;
+
+    .newtechsupport-row-label {
+      font-size: 12px;
+    }
+  }
+
+  .newtechsupport-plist-div .ui-picklist-filter-icon {
+    margin-top: -0.5em !important;
+  }
+
+  .newtechsupport-plist-div .ui-picklist .ui-picklist-filter-container .ui-picklist-filter {
+    text-indent: 0.25em !important;
+    padding: .125em .2em;
+  }
 }
 
 .newtechsupport-font {
   @include primary-font();
 }
 
-.newtechsupport-row {
-  margin: 0px $horizontal-gutter;
-}
+
 
 .newtechsupport-name-parent {
   margin-left: 0px;
 }
 
-.newtechsupport-name,
 .newtechsupport-verbosity,
 .newtechsupport-nodes {
   margin: $vertical-gutter $horizontal-gutter;
   height: 30px !important;
+  width: 300px;
 }
-
-
 
 .newtechsupport-value {
   margin: $vertical-gutter $horizontal-gutter;
@@ -60,9 +83,7 @@ $vertical-gutter: 5px;
   width: 120px;
 }
 
-.newtechsupport-divider {
-  border-bottom: 1px solid #dddddd;
-}
+
 
 .newtechsupport-fieldtitle {
   margin: $vertical-gutter $horizontal-gutter;
@@ -72,19 +93,6 @@ $vertical-gutter: 5px;
 
 .newtechsupport-group {
   margin-top: 2*$vertical-gutter;
-}
-
-.newtechsupport-row .newtechsupport-plist-div {
-  margin-left: 2 * $horizontal-gutter;
-}
-
-.newtechsupport-plist-div .ui-picklist-filter-icon {
-  margin-top: -0.5em !important;
-}
-
-.newtechsupport-plist-div .ui-picklist .ui-picklist-filter-container .ui-picklist-filter {
-  text-indent: 0.25em !important;
-  padding: .125em .2em;
 }
 
 .newtechsupport-naple-description {
