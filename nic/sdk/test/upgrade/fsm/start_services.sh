@@ -27,7 +27,7 @@ function create_svc_thread()
 
     echo "Starting service : ($start_time)..."
     "$@" && time2=$(date +"%H:%M:%S") && \
-        echo "Exiting $2 ($start_time--$time2)..." &
+        echo "Exiting $2 ($start_time--$time2)..."
 }
 
 function log_file()
@@ -42,9 +42,9 @@ function log_file()
 }
 
 if [ $# == 3 ];then
-    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -d -s ${SVC} -i ${SVC_ID}"
+    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s ${SVC} -i ${SVC_ID}"
 elif [ $# == 5 ];then
-    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -d -s ${SVC} -i ${SVC_ID} -e ${ERR_CODE} -f ${ERR_STAG}"
+    CMD="${TEST_BIN_DIR}/${TEST_BIN_NAME} -s ${SVC} -i ${SVC_ID} -e ${ERR_CODE} -f ${ERR_STAG}"
 else
     echo "Something Wrong !"
 fi
@@ -53,4 +53,5 @@ echo "Starting test service : ${CMD}"
 create_svc_thread ${CMD}
 
 wait
+sleep 3
 exit 0

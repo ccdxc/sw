@@ -1,5 +1,4 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
-//
 //----------------------------------------------------------------------------
 ///
 /// \file
@@ -59,11 +58,6 @@ script_to_str(const upg_scripts& scripts)
 void
 dump (const fsm& fsm)
 {
-    std::string str;
-    upg_stage_t start = fsm.start_stage();
-    upg_stage_t curr  = fsm.current_stage();
-    upg_stage_t end   = fsm.end_stage();
-
     UPG_TRACE_VERBOSE("Runtime state : \n"
                       "\tstart stage   : %s\n"
                       "\tcurrent stage : %s\n"
@@ -73,9 +67,9 @@ dump (const fsm& fsm)
                       "\tevent seq     : %s\n"
                       "\tdiscovery     : %u\n"
                       "\tsvc sequence  : %s\n",
-                      upg_stage2str(start),
-                      upg_stage2str(curr),
-                      upg_stage2str(end),
+                      upg_stage2str(fsm.start_stage()),
+                      upg_stage2str(fsm.current_stage()),
+                      upg_stage2str(fsm.end_stage()),
                       fsm.pending_response(),
                       fsm.timeout(),
                       (fsm.is_serial_event_sequence() ? "serial":"parallel"),

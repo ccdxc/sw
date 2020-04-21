@@ -1,5 +1,7 @@
 #!/bin/bash
-source ${CONFIG_PATH}/${PIPELINE}/validate_options.sh
+
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+source ${SCRIPTPATH}/validate_options.sh 2>&1 > /dev/null
 
 echo "stage = ${stage}"
 echo "hook_type = ${hook_type}"
