@@ -735,9 +735,11 @@ func (sm *SysModel) modifyConfig() error {
 
 	cfgObjects := sm.GetCfgObjects()
 
-	//Remove all network references from workload
-	for _, workload := range cfgObjects.Workloads {
-		workload.Spec.Interfaces[0].Network = ""
+	if os.Getenv("DYNAMIC_IP") != "" {
+		// Workloads to get IP dynamically. reset static IP
+		for _, workload := range cfgObjects.Workloads {
+			workload.Spec.Interfaces[0].IpAddresses[0] = ""
+		}
 	}
 
 	// Workloads DHCP server for all testbeds is configured with 20.20.<testbed-id>.1

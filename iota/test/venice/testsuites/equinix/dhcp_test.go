@@ -446,9 +446,5 @@ func verifyIPAMDataPathFail(wpc *objects.WorkloadPairCollection) {
 
 	// Get dynamic IP for workloadPair
 	err := wpc.WorkloadPairGetDynamicIps(ts.model.Testbed())
-	Expect(err).Should(Succeed())
-
-	Eventually(func() error {
-		return ts.model.PingFails(wpc)
-	}).Should(Succeed())
+	Expect(err).ShouldNot(Succeed())
 }

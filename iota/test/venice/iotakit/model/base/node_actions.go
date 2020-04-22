@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -79,6 +80,9 @@ func (sm *SysModel) ReloadHosts(hc *objects.HostCollection) error {
 	}
 
 	log.Debugf("Got reload resp: %+v", reloadResp)
+	if os.Getenv("DYNAMIC_IP") != "" {
+		sm.WorkloadsGoGetIPs()
+	}
 	return sm.SetUpNaplesAuthenticationOnHosts(hc)
 }
 

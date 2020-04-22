@@ -480,8 +480,7 @@ func (sm *SysModel) WorkloadsGoGetIPs() error {
 	for _, wr := range sm.Workloads().Workloads {
 		cmd := iota.Command{
 			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
-			// TODO: for now set ip to zero before starting dhclient. we should not set IP Address with DYNAMIC_IP flag.
-			Command:    fmt.Sprintf("ifconfig %s 0 && dhclient -r %s && dhclient %s", wr.GetInterface(), wr.GetInterface(), wr.GetInterface()),
+			Command:    fmt.Sprintf("dhclient -r %s && dhclient %s", wr.GetInterface(), wr.GetInterface()),
 			EntityName: wr.Name(),
 			NodeName:   wr.NodeName(),
 		}
@@ -515,6 +514,12 @@ func (sm *SysModel) WorkloadsGoGetIPs() error {
 		}
 	}
 
+	for _, wr := range sm.Workloads().Workloads {
+		err := objects.WorkloadUpdateDynamicIPs(wr, sm.Testbed())
+		if err != nil {
+			return fmt.Errorf("Failed to update dynamic IP on workload %v | Err:", wr.Name(), err)
+		}
+	}
 	return nil
 }
 

@@ -85,6 +85,10 @@ func (w *Workload) GetMgmtIP() string {
 	return w.iotaWorkload.MgmtIp
 }
 
+func (w *Workload) SetIpPrefix(ipPrefix string) {
+	w.iotaWorkload.IpPrefix = ipPrefix
+}
+
 func (w *Workload) GetIP() string {
 	return strings.Split(w.iotaWorkload.IpPrefix, "/")[0]
 }
@@ -136,7 +140,6 @@ func NewWorkload(host *Host, w *workload.Workload, wtype iota.WorkloadType, wima
 		NodeName:        host.iotaNode.Name,
 		WorkloadImage:   wimage,
 		EncapVlan:       w.Spec.Interfaces[0].MicroSegVlan,
-		IpPrefix:        w.Spec.Interfaces[0].IpAddresses[0] + "/24", //Assuming it is /24 for now
 		MacAddress:      convertMac(w.Spec.Interfaces[0].MACAddress),
 		Interface:       "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
 		ParentInterface: "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
@@ -145,6 +148,10 @@ func NewWorkload(host *Host, w *workload.Workload, wtype iota.WorkloadType, wima
 		UplinkVlan:      w.Spec.Interfaces[0].ExternalVlan,
 		NetworkName:     nwName,
 		SwitchName:      switchName,
+	}
+
+	if w.Spec.Interfaces[0].IpAddresses[0] != "" {
+		iotaWorkload.IpPrefix = w.Spec.Interfaces[0].IpAddresses[0] + "/24" //Assuming it is /24 for now
 	}
 
 	return &Workload{
@@ -643,5 +650,58 @@ func (wpc *WorkloadPairCollection) WorkloadPairGetDynamicIps(tb *testbed.TestBed
 		}
 	}
 
+	for _, pair := range wpc.Pairs {
+		err := WorkloadUpdateDynamicIPs(pair.First, tb)
+		if err != nil {
+			return err
+		}
+		err = WorkloadUpdateDynamicIPs(pair.Second, tb)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func WorkloadUpdateDynamicIPs(w *Workload, tb *testbed.TestBed) error {
+	cmds := []*iota.Command{
+		{
+			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
+			Command:    fmt.Sprintf("ip -o -4 addr list %s | awk '{print $4}'", w.GetInterface()),
+			EntityName: w.Name(),
+			NodeName:   w.NodeName(),
+		},
+	}
+
+	trmode := iota.TriggerMode_TRIGGER_PARALLEL
+	if !tb.HasNaplesSim() {
+		trmode = iota.TriggerMode_TRIGGER_NODE_PARALLEL
+	}
+
+	trigMsg := &iota.TriggerMsg{
+		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
+		TriggerMode: trmode,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Commands:    cmds,
+	}
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(tb.Client().Client)
+	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to update dynamic IP on workload. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
+	}
+
+	for _, cmdResp := range triggerResp.Commands {
+		if cmdResp.ExitCode != 0 {
+			return fmt.Errorf("Update dynamic IP failed. Resp: %#v", cmdResp)
+		}
+		ipPrefix := strings.Split(cmdResp.Stdout, "\r\n")
+		if ipPrefix[0] == "" {
+			return fmt.Errorf("Workload :%v failed to get IP", w.Name())
+		}
+		log.Infof("%v's dynamic IpPrefix: [%v]", w.Name(), ipPrefix[0])
+		w.SetIpPrefix(ipPrefix[0])
+	}
 	return nil
 }
