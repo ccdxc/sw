@@ -152,7 +152,7 @@ nexthop::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_nexthop_spec_t *spec = &obj_ctxt->api_params->nexthop_spec;
 
     if (type_ != spec->type) {
-        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %s",
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u",
                       " on nexthop %s", type_, spec->type, spec->key.str());
         return SDK_RET_INVALID_ARG;
     }

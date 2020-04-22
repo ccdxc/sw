@@ -349,7 +349,7 @@ TEST_F(nh_test, nh_workflow_neg_5) {
 
 /// \brief NH WF_N_6
 /// \ref WF_N_6
-TEST_F(nh_test, DISABLED_nh_workflow_neg_6) {
+TEST_F(nh_test, nh_workflow_neg_6) {
     nexthop_feeder feeder1, feeder1A;
 
     if (apulu()) {
@@ -400,6 +400,66 @@ TEST_F(nh_test, nh_workflow_neg_8) {
         feeder2.init("20.20.1.1", 0x0E010B0A2000, 20, int2pdsobjkey(200));
     }
     workflow_neg_8<nexthop_feeder>(feeder1, feeder2);
+}
+
+//---------------------------------------------------------------------
+// Non templatized test cases
+//---------------------------------------------------------------------
+
+/// \brief update type
+TEST_F(nh_test, nh_update_type) {
+    if (!apulu()) return;
+
+    nexthop_feeder feeder;
+    pds_nexthop_spec_t spec = {0};
+    pds_nexthop_spec_t old_spec = {0};
+
+    // init
+    feeder.init("", 0x0E0D0A0B0100, 1, int2pdsobjkey(100),
+                PDS_NH_TYPE_UNDERLAY);
+    nexthop_create(feeder);
+
+    memcpy(&old_spec, &feeder.spec, sizeof(pds_nexthop_spec_t));
+
+    // trigger
+    spec.type = PDS_NH_TYPE_OVERLAY;
+    // update should fail as type is immutable attribute
+    nexthop_update(feeder, &spec, NEXTHOP_ATTR_TYPE, SDK_RET_ERR);
+
+    // validate
+    // as the update fails, rollback the feeder to original values
+    memcpy(&feeder.spec, &old_spec, sizeof(pds_nexthop_spec_t));
+    nexthop_read(feeder, SDK_RET_OK);
+
+    // cleanup
+    nexthop_delete(feeder);
+    nexthop_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief update underlay nexthop
+TEST_F(nh_test, nh_update_underlay_info) {
+    if (!apulu()) return;
+
+    nexthop_feeder feeder;
+    pds_nexthop_spec_t spec = {0};
+    uint64_t mac;
+    // init
+    feeder.init("", 0x0E0D0A0B0100, 1, int2pdsobjkey(100),
+                PDS_NH_TYPE_UNDERLAY);
+    nexthop_create(feeder);
+
+    // trigger
+    mac  = MAC_TO_UINT64(feeder.spec.underlay_mac) + 1;
+    MAC_UINT64_TO_ADDR(spec.underlay_mac, mac);
+    spec.l3_if = int2pdsobjkey(0x70000002);
+    nexthop_update(feeder, &spec, NEXTHOP_ATTR_NH_INFO_UNDERLAY);
+
+    // validate
+    nexthop_read(feeder, SDK_RET_OK);
+
+    // cleanup
+    nexthop_delete(feeder);
+    nexthop_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// @}

@@ -136,6 +136,76 @@ nexthop_feeder::status_compare(const pds_nexthop_status_t *status1,
 }
 
 //----------------------------------------------------------------------------
+// NEXTHOP CRUD helper routines
+//----------------------------------------------------------------------------
+
+void
+nexthop_create (nexthop_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_create<nexthop_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+void
+nexthop_read (nexthop_feeder& feeder, sdk_ret_t exp_result)
+{
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_read<nexthop_feeder>(feeder, exp_result)));
+}
+
+static void
+nexthop_attr_update (nexthop_feeder& feeder, pds_nexthop_spec_t *spec,
+                     uint64_t chg_bmap)
+{
+    if (bit_isset(chg_bmap, NEXTHOP_ATTR_TYPE)) {
+        feeder.spec.type = spec->type;
+    }
+    if (bit_isset(chg_bmap, NEXTHOP_ATTR_NH_INFO_OVERLAY)) {
+        feeder.spec.tep = spec->tep;
+    }
+    if (bit_isset(chg_bmap, NEXTHOP_ATTR_NH_INFO_UNDERLAY)) {
+        feeder.spec.l3_if = spec->l3_if;
+        memcpy(&feeder.spec.underlay_mac, &spec->underlay_mac,
+               sizeof(spec->underlay_mac));
+    }
+    if (bit_isset(chg_bmap, NEXTHOP_ATTR_NH_INFO_NH_IP)) {
+        feeder.spec.vlan = spec->vlan;
+        feeder.spec.vpc = spec->vpc;
+        feeder.spec.ip = spec->ip;
+    }
+}
+
+void
+nexthop_update (nexthop_feeder& feeder, pds_nexthop_spec_t *spec,
+                uint64_t chg_bmap, sdk_ret_t exp_result)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    nexthop_attr_update(feeder, spec, chg_bmap);
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_update<nexthop_feeder>(bctxt, feeder)));
+
+    // if expected result is err, batch commit should fail
+    if (exp_result == SDK_RET_ERR)
+        batch_commit_fail(bctxt);
+    else
+        batch_commit(bctxt);
+}
+
+void
+nexthop_delete (nexthop_feeder& feeder)
+{
+    pds_batch_ctxt_t bctxt = batch_start();
+
+    SDK_ASSERT_RETURN_VOID(
+        (SDK_RET_OK == many_delete<nexthop_feeder>(bctxt, feeder)));
+    batch_commit(bctxt);
+}
+
+//----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------
 

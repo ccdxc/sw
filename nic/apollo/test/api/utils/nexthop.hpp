@@ -8,6 +8,7 @@
 
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/test/api/utils/api_base.hpp"
+#include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/feeder.hpp"
 #include "nic/apollo/test/api/utils/if.hpp"
 
@@ -17,6 +18,13 @@ namespace api {
 // globals
 extern const pds_nh_type_t k_nh_type;
 extern const uint32_t k_max_nh;
+
+enum nexthop_attrs {
+    NEXTHOP_ATTR_TYPE                   =  bit(0),
+    NEXTHOP_ATTR_NH_INFO_OVERLAY        =  bit(1),
+    NEXTHOP_ATTR_NH_INFO_UNDERLAY       =  bit(2),
+    NEXTHOP_ATTR_NH_INFO_NH_IP          =  bit(3),
+};
 
 // NH test feeder class
 class nexthop_feeder : public feeder {
@@ -102,6 +110,13 @@ API_CREATE(nexthop);
 API_READ(nexthop);
 API_UPDATE(nexthop);
 API_DELETE(nexthop);
+
+// Nexthop crud helper prototypes
+void nexthop_create(nexthop_feeder& feeder);
+void nexthop_read(nexthop_feeder& feeder, sdk_ret_t exp_result = SDK_RET_OK);
+void nexthop_update(nexthop_feeder& feeder, pds_nexthop_spec_t *spec,
+                    uint64_t chg_bmap, sdk_ret_t exp_result = SDK_RET_OK);
+void nexthop_delete(nexthop_feeder& feeder);
 
 // Misc function prototypes
 void sample_nexthop_setup(pds_batch_ctxt_t);
