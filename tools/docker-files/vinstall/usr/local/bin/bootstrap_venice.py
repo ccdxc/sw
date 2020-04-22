@@ -13,6 +13,19 @@ import argparse
 import subprocess
 import ast
 
+def retry(func, timeout, wait_time, args):
+    attempt_count = 1
+    start_time = int(time.time())
+    response_code = None
+    while int(time.time()) - start_time <= timeout:
+        response_code = func(**args)
+        if response_code < 400 or response_code == 409:
+            return response_code
+        write_log("* attempt #{0} received response code: {1}, retrying...".format(attempt_count, response_code))
+        time.sleep(wait_time)
+        attempt_count += 1
+    return response_code
+
 def curl_send(**data):
     # Note that code 503 is Server Unavailable
     code = 503 
@@ -129,9 +142,10 @@ def create_cluster():
     return curl_send(**ctx)
 
 def create_tenant():
-    ctx = { "method": "POST", "url": "https://localhost/configs/cluster/v1/tenants" }
-    ctx["postdata"] = json.dumps({"kind": "Tenant", "meta": {"name": "default"}})
-    return curl_send(**ctx)
+    ctx = {"method": "POST",
+           "url": "https://localhost/configs/cluster/v1/tenants",
+           "postdata": json.dumps({"kind": "Tenant", "meta": {"name": "default"}})}
+    return retry(curl_send, opts.timeout, opts.waittime, ctx)
 
 def create_auth_policy():
     ctx = { "method": "POST", "url": "https://localhost/configs/auth/v1/authn-policy" }
@@ -155,7 +169,7 @@ def create_auth_policy():
         }, 
         "APIVersion": "v1"
     })
-    return curl_send(**ctx)
+    return retry(curl_send, opts.timeout, opts.waittime, ctx)
     
 def create_admin_user():
     ctx = { "method": "POST", "url": "https://localhost/configs/auth/v1/tenant/default/users" }
@@ -172,7 +186,7 @@ def create_admin_user():
             "email": "admin@" + opts.domain
         }
     })
-    return curl_send(**ctx)
+    return retry(curl_send, opts.timeout, opts.waittime, ctx)
 
 def create_admin_role_binding():
     ctx = { "method": "PUT", "url": "https://localhost/configs/auth/v1/tenant/default/role-bindings/AdminRoleBinding" }
@@ -190,33 +204,34 @@ def create_admin_role_binding():
             ]
         }
     })
-    return curl_send(**ctx)
+    return retry(curl_send, opts.timeout, opts.waittime, ctx)
 
 def enable_overlay_routing():
     ctx = { "method": "POST", "url": "https://localhost/configs/cluster/v1/licenses" }
     ctx["postdata"] = json.dumps({
-    "kind": "License",
-    "api-version": "v1",
-    "meta": {
-        "name": "default-license"
-    },
-    "spec": {
-        "features": [
-            {
-                "feature-key": "OverlayRouting"
-            },
-            {
-                "feature-key": "SubnetSecurityPolicies"
-            }
-        ]
-    }
+        "kind": "License",
+        "api-version": "v1",
+        "meta": {
+            "name": "default-license"
+        },
+        "spec": {
+            "features": [
+                {
+                    "feature-key": "OverlayRouting"
+                },
+                {
+                    "feature-key": "SubnetSecurityPolicies"
+                }
+            ]
+        }
     })
-    return curl_send(**ctx)
+    return retry(curl_send, opts.timeout, opts.waittime, ctx)
 
 def complete_auth_bootstrap():
-    ctx = { "method": "POST", "url": "https://localhost/configs/cluster/v1/cluster/AuthBootstrapComplete" }
-    ctx["postdata"] = json.dumps({})
-    return curl_send(**ctx)
+    ctx = {"method": "POST",
+           "url": "https://localhost/configs/cluster/v1/cluster/AuthBootstrapComplete",
+           "postdata": json.dumps({})}
+    return retry(curl_send, opts.timeout, opts.waittime, ctx)
 
 def bootstrap_venice():
     write_log("* creating default tenant")
