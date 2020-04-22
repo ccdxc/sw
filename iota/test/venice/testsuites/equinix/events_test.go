@@ -24,10 +24,6 @@ var _ = Describe("events tests", func() {
 
 	Context("tags:type=basic;datapath=true;duration=short Basic events tests", func() {
 		It("tags:sanity=true Link flap should trigger an event from hal/linkmgr", func() {
-			if ts.tb.HasNaplesHW() {
-				Skip("link flap test disabled on NAPLES HW for now")
-			}
-
 			// get a random naples and flap the port
 			npc := ts.model.Naples()
 			nc := npc.Any(1)
@@ -53,10 +49,6 @@ var _ = Describe("events tests", func() {
 			}).Should(Succeed())
 		})
 		It("tags:sanity=true Events generation on sim", func() {
-			if ts.tb.HasNaplesHW() {
-				Skip("Events generation test disabled on NAPLES HW for now")
-			}
-
 			// get a random naples
 			npc := ts.model.Naples()
 			nc := npc.Any(1)

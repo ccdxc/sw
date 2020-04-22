@@ -347,11 +347,36 @@ func (sm *SysModel) runCommandOnGivenNaples(np *objects.Naples, cmd string) (str
 	return cmdResp.Stdout, nil
 }
 
-// PortFlap flaps one port from each simulated naples in the collection
+// PortFlap flaps one port from each naples in the collection
 func (sm *SysModel) PortFlap(npc *objects.NaplesCollection) error {
+	for _, naples := range npc.Nodes {
+		naplesName := naples.NodeName()
+		err, port := sm.getNaplesUplinkPort(naples, false)
+		if err != nil {
+			log.Errorf("Err: %v", err)
+			return err
+		}
+
+		// flap port
+		log.Infof("flapping port {%s} on naples {%v}", port, naplesName)
+		portDownCmd := fmt.Sprintf("/nic/bin/pdsctl debug port --port %s --admin-state down", port)
+		_, err = sm.runCommandOnGivenNaples(naples, portDownCmd)
+		if err != nil {
+			log.Errorf("command(%v) failed on naples: %v, Err: %v", portDownCmd, naplesName, err)
+			return err
+		}
+
+		portUpCmd := fmt.Sprintf("/nic/bin/pdsctl debug port --port %s --admin-state up", port)
+		_, err = sm.runCommandOnGivenNaples(naples, portUpCmd)
+		if err != nil {
+			log.Errorf("command(%v) failed on naples: %v, Err: %v", portUpCmd, naplesName, err)
+			return err
+		}
+	}
+
 	for _, naples := range npc.FakeNodes {
 		naplesName := naples.NodeName()
-		err, port := sm.getNaplesUplinkPort(naples)
+		err, port := sm.getNaplesUplinkPort(naples, true)
 		if err != nil {
 			log.Errorf("Err: %v", err)
 			return err
@@ -406,10 +431,19 @@ func (sm *SysModel) LinkDownEventsSince(since time.Time, npc *objects.NaplesColl
 // StartEventsGenOnNaples generates SYSTEM_COLDBOOT events from the Naples events generation test app.
 // TODO: Generate all possible events
 func (sm *SysModel) StartEventsGenOnNaples(npc *objects.NaplesCollection, rate, count string) error {
-	naples := npc.FakeNodes[0]
-	naplesName := naples.NodeName()
+	var naples *objects.Naples
+	var naplesName string
+	var genEvtCmd string
 
-	genEvtCmd := fmt.Sprintf("PATH=$PATH:/naples/nic/bin/; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/naples/nic/lib/:/naples/nic/lib64/; export PATH; export LD_LIBRARY_PATH; OPERD_REGIONS=/naples/nic/conf/operd-regions.json /naples/nic/bin/alerts_gen -t 2 -r %s -n %s", rate, count)
+	if len(npc.Nodes) > 0 {
+		naples = npc.Nodes[0]
+		naplesName = naples.NodeName()
+		genEvtCmd = fmt.Sprintf("PATH=$PATH:/nic/bin/; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/nic/lib/:/nic/lib64/; export PATH; export LD_LIBRARY_PATH; OPERD_REGIONS=/nic/conf/operd-regions.json /nic/bin/alerts_gen -t 2 -r %s -n %s", rate, count)
+	} else {
+		naples = npc.FakeNodes[0]
+		naplesName = naples.NodeName()
+		genEvtCmd = fmt.Sprintf("PATH=$PATH:/naples/nic/bin/; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/naples/nic/lib/:/naples/nic/lib64/; export PATH; export LD_LIBRARY_PATH; OPERD_REGIONS=/naples/nic/conf/operd-regions.json /naples/nic/bin/alerts_gen -t 2 -r %s -n %s", rate, count)
+	}
 
 	_, err := sm.runCommandOnGivenNaples(naples, genEvtCmd)
 	if err != nil {
@@ -434,10 +468,16 @@ func (sm *SysModel) SystemBootEvents(npc *objects.NaplesCollection) *objects.Eve
 }
 
 // getNaplesUplinkPort returns the first uplink port from the output of "pdsctl show port status --yaml
-func (sm *SysModel) getNaplesUplinkPort(naples *objects.Naples) (error, string) {
+func (sm *SysModel) getNaplesUplinkPort(naples *objects.Naples, fake bool) (error, string) {
 	naplesName := naples.NodeName()
 
-	portStatusCmd := "/naples/nic/bin/pdsctl show port status --yaml"
+	var portStatusCmd string
+	if fake {
+		portStatusCmd = "/naples/nic/bin/pdsctl show port status --yaml"
+	} else {
+		portStatusCmd = "/nic/bin/pdsctl show port status --yaml"
+	}
+
 	out, err := sm.runCommandOnGivenNaples(naples, portStatusCmd)
 	if err != nil {
 		log.Errorf("command(%v) failed on naples: %v, Err: %v", portStatusCmd, naplesName, err)
