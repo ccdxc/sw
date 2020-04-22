@@ -39,6 +39,10 @@ func (sm *Statemgr) GetCluster() (*cluster.Cluster, error) {
 // UpdateClusterStatus updates the Leader and Quorum parts of cluster object
 func (sm *Statemgr) UpdateClusterStatus(clusterObj *cluster.Cluster) error {
 	for i := 0; i < maxAPIServerWriteRetries; i++ {
+		if !sm.isLeader() {
+			log.Infof("CMD instance is no longer leader, exiting UpdateClusterStatus after %d tries", i)
+			return nil
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
 		cl := sm.APIClient()
 		if cl == nil {
