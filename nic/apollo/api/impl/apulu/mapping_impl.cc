@@ -778,6 +778,7 @@ mapping_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
                 }
             }
         } else {
+            vpc = vpc_find(&spec->skey.vpc);
             // except for tags, if any, remote mapping uses existing resources
             if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_TAGS_ADD) {
                 // allocate all the resources needed to support tags

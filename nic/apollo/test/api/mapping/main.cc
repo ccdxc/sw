@@ -1777,7 +1777,7 @@ TEST_F(mapping_test, remote_mapping_update_vnic_mac) {
 }
 
 /// \brief update mapping M1 with no tags to Tag T1.
-TEST_F(mapping_test, DISABLED_remote_mapping_update_tag1) {
+TEST_F(mapping_test, remote_mapping_update_tag1) {
     if (!apulu()) return;
 
     pds_remote_mapping_spec_t spec = {0};
@@ -1803,7 +1803,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_update_tag1) {
 }
 
 /// \brief update mapping M1 with tags set T1 to T2.
-TEST_F(mapping_test, DISABLED_remote_mapping_update_tag2) {
+TEST_F(mapping_test, remote_mapping_update_tag2) {
     if (!apulu()) return;
 
     pds_remote_mapping_spec_t spec = {0};
@@ -1829,7 +1829,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_update_tag2) {
 }
 
 /// \brief update mapping M1 with tags set T1 to no tags.
-TEST_F(mapping_test, DISABLED_remote_mapping_update_tag3) {
+TEST_F(mapping_test, remote_mapping_update_tag3) {
     if (!apulu()) return;
 
     pds_remote_mapping_spec_t spec = {0};
