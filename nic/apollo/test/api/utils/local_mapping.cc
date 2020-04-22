@@ -193,7 +193,7 @@ local_mapping_feeder::update_spec(uint32_t width) {
         MAC_UINT64_TO_ADDR(this->spec.vnic_mac, mac);
     }
     if (spec.public_ip_valid)
-        increment_ip_addr(&spec.public_ip, 1);
+        increment_ip_addr(&spec.public_ip, this->num_obj);
 
     // updating this filed is causing some failures, will put it comment now
     //uint16_t vnic_id = (pdsobjkey2int(vnic) + 1)%k_max_vnic;

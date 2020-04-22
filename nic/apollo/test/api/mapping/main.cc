@@ -147,7 +147,7 @@ static void create_local_mapping_feeders(local_mapping_feeder feeders[],
     // required position.
     for (i = 1; i < num_feeders; i++) {
         feeders[i] = feeders[i - 1];
-        feeders[i].iter_next(num_vnics * PDS_MAX_VNIC_IP);
+        feeders[i].iter_next(4 * num_vnics * PDS_MAX_VNIC_IP);
     }
 }
 
@@ -302,7 +302,7 @@ TEST_F(mapping_test, local_mapping_workflow_9) {
 
 /// \brief Local mappings WF_10
 /// \ref WF_10
-TEST_F(mapping_test, DISABLED_local_mapping_workflow_10) {
+TEST_F(mapping_test, local_mapping_workflow_10) {
     local_mapping_feeder feeders[4], feeder2A, feeder3A;
 
     create_local_mapping_feeders(feeders, 4, k_max_vnic, PDS_MAX_VNIC_IP,
@@ -480,7 +480,7 @@ TEST_F(mapping_test, local_mapping_update_fab_encap_val) {
 }
 
 /// \brief update mapping mapping M1 public IP P1 to no public IP.
-TEST_F(mapping_test, DISABLED_local_mapping_update_publicip1) {
+TEST_F(mapping_test, local_mapping_update_publicip1) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -503,7 +503,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_update_publicip1) {
 }
 
 /// \brief update mapping mapping M1 public IP P1 to P2.
-TEST_F(mapping_test, DISABLED_local_mapping_update_publicip2) {
+TEST_F(mapping_test, local_mapping_update_publicip2) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -528,7 +528,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_update_publicip2) {
 }
 
 /// \brief update mapping mapping M1 no public IP  to valid public ip.
-TEST_F(mapping_test, DISABLED_local_mapping_update_publicip3) {
+TEST_F(mapping_test, local_mapping_update_publicip3) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -1100,7 +1100,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_3_5) {
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
 
-#if 0
 /// \brief initial state  with public IP no Tag,
 /// \update mapping M1 no public IP and no Tag.
 TEST_F(mapping_test, local_mapping_update_pip_tag_4_1) {
@@ -1124,7 +1123,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_1) {
     lmap_delete(feeders[0]);
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
-#endif
 
 /// \brief initial state with public IP and with  Tag,
 /// \update mapping M1  no public IP and with Tag.
@@ -1237,7 +1235,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_5) {
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
 
-#if 0
 /// \brief initial state  with public IP no Tag,
 /// \update mapping M1 new public IP and no Tag.
 TEST_F(mapping_test, local_mapping_update_pip_tag_5_1) {
@@ -1252,6 +1249,7 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_5_1) {
 
     // trigger
     spec.public_ip_valid = feeders[0].spec.public_ip_valid;
+    spec.public_ip = feeders[0].spec.public_ip;
     increment_ip_addr(&spec.public_ip, 1);
     lmap_update(feeders[0], &spec, LMAP_ATTR_PUBLIC_IP);
 
@@ -1277,6 +1275,7 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_5_2) {
 
     // trigger
     spec.public_ip_valid = feeders[0].spec.public_ip_valid;
+    spec.public_ip = feeders[0].spec.public_ip;
     increment_ip_addr(&spec.public_ip, 1);
     lmap_update(feeders[0], &spec, LMAP_ATTR_PUBLIC_IP);
 
@@ -1307,6 +1306,7 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_5_3) {
         spec.tags[i] = i+1;
     }
     spec.public_ip_valid = feeders[0].spec.public_ip_valid;
+    spec.public_ip = feeders[0].spec.public_ip;
     increment_ip_addr(&spec.public_ip, 1);
     chg_bmap = (LMAP_ATTR_TAGS | LMAP_ATTR_PUBLIC_IP);
     lmap_update(feeders[0], &spec, chg_bmap);
@@ -1335,6 +1335,7 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_5_4) {
     // trigger
     spec.num_tags = 0;
     spec.public_ip_valid = feeders[0].spec.public_ip_valid;
+    spec.public_ip = feeders[0].spec.public_ip;
     increment_ip_addr(&spec.public_ip, 1);
     chg_bmap = (LMAP_ATTR_TAGS | LMAP_ATTR_PUBLIC_IP);
     lmap_update(feeders[0], &spec, chg_bmap);
@@ -1366,6 +1367,7 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_5_5) {
         spec.tags[i] = feeders[0].spec.tags[i] + spec.num_tags;
     }
     spec.public_ip_valid = feeders[0].spec.public_ip_valid;
+    spec.public_ip = feeders[0].spec.public_ip;
     increment_ip_addr(&spec.public_ip, 1);
     chg_bmap = (LMAP_ATTR_TAGS | LMAP_ATTR_PUBLIC_IP);
     lmap_update(feeders[0], &spec, chg_bmap);
@@ -1377,7 +1379,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_5_5) {
     lmap_delete(feeders[0]);
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
-#endif
 
 // --------------------------- END LOCAL MAPPINGS --------------------
 
@@ -1465,7 +1466,7 @@ TEST_F(mapping_test, remote_mapping_workflow_7) {
 
 /// \brief Remote mappings WF_8
 /// \ref WF_8
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_8) {
+TEST_F(mapping_test, remote_mapping_workflow_8) {
     remote_mapping_feeder feeders[1], feeder1A, feeder1B;
 
     create_remote_mapping_feeders(feeders, 1, PDS_MAX_TEP, k_max_vnic,
@@ -1493,7 +1494,7 @@ TEST_F(mapping_test, remote_mapping_workflow_9) {
 
 /// \brief Remote mappings WF_10
 /// \ref WF_10
-TEST_F(mapping_test, DISABLED_remote_mapping_workflow_10) {
+TEST_F(mapping_test, remote_mapping_workflow_10) {
     remote_mapping_feeder feeders[4], feeder2A, feeder3A;
 
     create_remote_mapping_feeders(feeders, 4, PDS_MAX_TEP, k_max_vnic,
