@@ -392,7 +392,7 @@ func (smm *SmMirrorSessionInterface) findCollector(tenant, vrf, dest string) (*m
 	return nil, errors.New("Collector not found")
 }
 
-func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest, gateway string, ctype string, stripVlanHdr bool) (*mirrorCollector, error) {
+func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf string, pktSize uint32, dest string, gateway string, ctype string, stripVlanHdr bool) (*mirrorCollector, error) {
 
 	key := collectorKey(tenant, vrf, dest)
 	col, ok := smm.collectors[key]
@@ -413,6 +413,7 @@ func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf, dest, gateway str
 			Destination:  dest,
 			VrfName:      vrf,
 			Gateway:      gateway,
+			PacketSize:   pktSize,
 			Type:         ctype,
 			StripVlanHdr: stripVlanHdr,
 		},
@@ -660,6 +661,7 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 		mcol, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, collector.ExportCfg.Destination)
 		if err != nil {
 			mcol, err = smgrMirrorInterface.addCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
+				ms.MirrorSession.Spec.PacketSize,
 				collector.ExportCfg.Destination, collector.ExportCfg.Gateway, collector.Type, collector.StripVlanHdr)
 			if err != nil {
 				log.Errorf("Error Adding collector %+v. Err: %v", collector.ExportCfg.Destination, err)
@@ -668,7 +670,6 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 		} else {
 			mcol.refCount++
 		}
-		mcol.obj.Spec.PacketSize = ms.MirrorSession.MirrorSession.Spec.PacketSize
 		mCollectors = append(mCollectors, mcol)
 	}
 
@@ -772,6 +773,7 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 			delCollectors = append(delCollectors, mcol)
 		} else if cref.cnt == 2 {
 			mcol, err := smgrMirrorInterface.addCollector(nmirror.Tenant, nmirror.Namespace,
+				nmirror.Spec.PacketSize,
 				cref.col.ExportCfg.Destination, cref.col.ExportCfg.Gateway, cref.col.Type, cref.col.StripVlanHdr)
 			if err != nil {
 				log.Infof("Error adding collector %v", err)
