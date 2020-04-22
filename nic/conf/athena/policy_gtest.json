@@ -1,5 +1,4 @@
 {
-    "app_mode": "gtest",
     "vnic": [
          {
             "vnic_id": "1",

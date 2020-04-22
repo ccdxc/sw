@@ -133,6 +133,7 @@ uint8_t s2h_l2vlan_encap_hdr[] = {
     0x08, 0x00
 };
 
+
 #if 0
 static void
 fte_flow_dump (void)
@@ -1037,6 +1038,12 @@ fte_setup_v4_flows_json (void)
         v4_flows = &g_v4_flows[v4_flows_cnt];
         vnic_id = v4_flows->vnic_lo;
         proto = v4_flows->proto;
+        PDS_TRACE_DEBUG("v4_flows[%u] VNIC: Lo-%u Hi-%u, SIP: Lo-0x%x Hi-0x%x "
+               "DIP: Lo-0x%x Hi-0x%x SPORT: Lo-%u Hi-%u, DPORT: Lo-%u Hi-%u\n PROTO: %u\n",
+               v4_flows_cnt, v4_flows->vnic_lo, v4_flows->vnic_hi,
+               v4_flows->sip_lo, v4_flows->sip_hi, v4_flows->dip_lo, v4_flows->dip_hi,
+               v4_flows->sport_lo, v4_flows->sport_hi, v4_flows->dport_lo, v4_flows->dport_hi,
+               v4_flows->proto);
         while (vnic_id <= v4_flows->vnic_hi) {
             if (g_flow_cache_policy[vnic_id].vnic_id == 0) {
                 vnic_id++;
@@ -1064,11 +1071,9 @@ fte_setup_v4_flows_json (void)
                                     g_session_index);
                             attempted_flows++;
                             if (ret != SDK_RET_OK) {
-                                PDS_TRACE_DEBUG(
-                                    "fte_flow_create failed. \n");
-                                PDS_TRACE_DEBUG("SrcIP:0x%x DstIP:0x%x "
+                                PDS_TRACE_DEBUG("Flow Create Fail: SrcIP:0x%x DstIP:0x%x "
                                     "Dport:%u Sport:%u Proto:%u "
-                                    "VNICID:%u index:%u\n\n",
+                                    "VNICID:%u index:%u\n",
                                     sip, dip, dport, sport, proto,
                                     vnic_id, g_session_index);
                                 // Even on collision/flow insert fail,
@@ -1076,6 +1081,12 @@ fte_setup_v4_flows_json (void)
                                 // return ret;
                                 dport++;
                                 continue;
+                            } else {
+                                //PDS_TRACE_DEBUG("Created: SrcIP:0x%x DstIP:0x%x "
+                                //    "Dport:%u Sport:%u Proto:%u "
+                                //    "VNICID:%u index:%u\n",
+                                //    sip, dip, dport, sport, proto,
+                                //    vnic_id, session_index);
                             }
                             g_session_index++;
                             num_flows_added++;

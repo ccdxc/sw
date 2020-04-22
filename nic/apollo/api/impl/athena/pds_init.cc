@@ -64,6 +64,12 @@ pds_global_init (pds_cinit_params_t *params)
         PDS_TRACE_ERR("PDS init failed with ret %u\n", ret);
         return (pds_ret_t)ret;
     }
+
+    if (asic::asic_is_soft_init()) {
+        PDS_TRACE_ERR("PDS soft init done\n");
+        //return (pds_ret_t)ret;
+    }
+        
     ret = pds_flow_cache_create();
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Flow cache init failed with ret %u\n", ret);
@@ -74,10 +80,12 @@ pds_global_init (pds_cinit_params_t *params)
         PDS_TRACE_ERR("DNAT map init failed with ret %u\n", ret);
         return (pds_ret_t)ret;
     }
-    ret = (sdk_ret_t)pds_flow_age_init();
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Flow aging init failed with ret %u\n", ret);
-    }
+    if (!asic::asic_is_soft_init()) {
+        ret = (sdk_ret_t)pds_flow_age_init();
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Flow aging init failed with ret %u\n", ret);
+        }
+    }    
     return (pds_ret_t)ret;
 }
 
@@ -92,7 +100,9 @@ pds_thread_init (uint32_t core_id)
 void
 pds_global_teardown ()
 {
-    pds_flow_age_fini();
+    if (!asic::asic_is_soft_init()) {
+        pds_flow_age_fini();
+    }
     pds_dnat_map_delete();
     pds_flow_cache_delete();
     pds_teardown();

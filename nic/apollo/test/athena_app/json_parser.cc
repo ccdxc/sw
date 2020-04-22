@@ -57,19 +57,6 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
     read_json(json_cfg, json_pt);
     printf("Parsing file %s for policies...\n", cfg_file.c_str());
     try {
-        std::string mode = json_pt.get<std::string>("app_mode");
-        if (mode == "l2_fwd") {
-            fte_ath::g_athena_app_mode = ATHENA_APP_MODE_L2_FWD;
-            return SDK_RET_OK;
-        } else if (mode == "no_dpdk") {
-            fte_ath::g_athena_app_mode = ATHENA_APP_MODE_NO_DPDK;
-            return SDK_RET_OK;
-        } else if (mode == "cpp") {
-            fte_ath::g_athena_app_mode = ATHENA_APP_MODE_CPP;
-        } else if (mode == "gtest") {
-            fte_ath::g_athena_app_mode = ATHENA_APP_MODE_GTEST;
-        }
-
         BOOST_FOREACH (pt::ptree::value_type &vnic,
                        json_pt.get_child("vnic")) {
             vnic_id = vnic.second.get<uint32_t>("vnic_id");
@@ -153,21 +140,41 @@ parse_flow_cache_policy_cfg (const char *cfgfile)
         BOOST_FOREACH (pt::ptree::value_type &v4_flows,
                        json_pt.get_child("v4_flows")) {
             v4_flows_info = &g_v4_flows[g_num_v4_flows];
+            printf("Parsing v4_flows section %u:\n", g_num_v4_flows);
             v4_flows_info->vnic_lo = v4_flows.second.get<uint16_t>("vnic_lo");
+            printf("vnic_lo %u\n", v4_flows_info->vnic_lo);
             v4_flows_info->vnic_hi = v4_flows.second.get<uint16_t>("vnic_hi");
+            printf("vnic_hi %u\n", v4_flows_info->vnic_hi);
             str2ipv4addr(v4_flows.second.get<std::string>("sip_lo").c_str(),
                          &v4_flows_info->sip_lo);
+            printf("sip_lo 0x%x\n", v4_flows_info->sip_lo);
             str2ipv4addr(v4_flows.second.get<std::string>("sip_hi").c_str(),
                          &v4_flows_info->sip_hi);
+            printf("sip_hi 0x%x\n", v4_flows_info->sip_hi);
             str2ipv4addr(v4_flows.second.get<std::string>("dip_lo").c_str(),
                          &v4_flows_info->dip_lo);
+            printf("dip_lo 0x%x\n", v4_flows_info->dip_lo);
             str2ipv4addr(v4_flows.second.get<std::string>("dip_hi").c_str(),
                          &v4_flows_info->dip_hi);
+            printf("dip_hi 0x%x\n", v4_flows_info->dip_hi);
             v4_flows_info->proto = v4_flows.second.get<uint8_t>("proto");
+            printf("proto %u\n", v4_flows_info->proto);
             v4_flows_info->sport_lo = v4_flows.second.get<uint16_t>("sport_lo");
+            printf("sport_lo %u\n", v4_flows_info->sport_lo);
             v4_flows_info->sport_hi = v4_flows.second.get<uint16_t>("sport_hi");
+            printf("sport_hi %u\n", v4_flows_info->sport_hi);
             v4_flows_info->dport_lo = v4_flows.second.get<uint16_t>("dport_lo");
+            printf("dport_lo %u\n", v4_flows_info->dport_lo);
             v4_flows_info->dport_hi = v4_flows.second.get<uint16_t>("dport_hi");
+            printf("dport_hi %u\n", v4_flows_info->dport_hi);
+            if ((v4_flows_info->vnic_hi < v4_flows_info->vnic_lo) ||
+                (v4_flows_info->sip_hi < v4_flows_info->sip_lo) ||
+                (v4_flows_info->dip_hi < v4_flows_info->dip_lo) ||
+                (v4_flows_info->sport_hi < v4_flows_info->sport_lo) ||
+                (v4_flows_info->dport_hi < v4_flows_info->dport_lo)) {
+                printf("Please fix the config: High should be >= Low.\n");
+                return SDK_RET_ERR;
+            }
             g_num_v4_flows++;
         }
 

@@ -49,6 +49,7 @@
 #include <rte_mbuf.h>
 
 #include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/sdk/asic/asic.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
@@ -207,7 +208,8 @@ _process (struct rte_mbuf *m, struct lcore_conf *qconf,
     uint16_t dst_port;
 
     if (!skip_fte_flow_prog() &&
-        (g_athena_app_mode == ATHENA_APP_MODE_CPP)) {
+        (g_athena_app_mode == ATHENA_APP_MODE_CPP ||
+         g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT)) {
         if (fte_flow_prog(m) != SDK_RET_OK) {
             PDS_TRACE_DEBUG("fte_flow_prog failed..\n");
             // TODO: Unsupported traffic should be dropped?
@@ -333,7 +335,8 @@ fte_launch_one_lcore (__attribute__((unused)) void *dummy)
     int lcore_idx;
 
     lcore_id = rte_lcore_id();
-    if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+    if (g_athena_app_mode == ATHENA_APP_MODE_CPP ||
+        g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT) {
         fte_thread_init(lcore_id);
     }
 
@@ -1012,13 +1015,15 @@ fte_main (void)
     _init_port();
 
     // init FTL
-    if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+    if (g_athena_app_mode == ATHENA_APP_MODE_CPP ||
+        g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT) {
         if ((sdk_ret = fte_flows_init()) != SDK_RET_OK) {
             PDS_TRACE_DEBUG("FTE flow init failed: ret=%d ", sdk_ret);
         }
     }
 
-    _init_pollers_client();
+    if (!sdk::asic::asic_is_soft_init())
+        _init_pollers_client();
 
     ret = 0;
     // launch per-lcore init on every slave lcore

@@ -85,7 +85,11 @@ logger_init (void)
 {
     std::string logfile, err_logfile;
 
-    logfile = log_file(std::getenv("LOG_DIR"), "/pds-athena-agent.log");
+    if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT)
+        logfile = log_file(std::getenv("LOG_DIR"), "/pds-athena-sec-agent.log");
+    else
+        logfile = log_file(std::getenv("LOG_DIR"), "/pds-athena-agent.log");
+
     err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"), "/obfl.log");
 
     if (logfile.empty() || err_logfile.empty()) {
@@ -94,7 +98,7 @@ logger_init (void)
 
     // initialize the logger
     core::trace_init("agent", 0x1, true, err_logfile.c_str(), logfile.c_str(),
-                     TRACE_FILE_SIZE, TRACE_NUM_FILES, utils::trace_verbose);
+                     TRACE_FILE_SIZE, TRACE_NUM_FILES, utils::trace_debug);
 
     return SDK_RET_OK;
 }
@@ -152,7 +156,7 @@ void inline
 print_usage (char **argv)
 {
     fprintf(stdout, "Usage : %s -c|--config <cfg.json> "
-            "[ -m | --mode { l2-fwd | no-dpdk } ] "
+            "[ -m | --mode { l2-fwd | no-dpdk | gtest | soft-init } ] "
             "[ -j | --policy_json </abs-path/policy.json> ] \n", argv[0]);
 }
 #ifdef __x86_64__
@@ -453,6 +457,9 @@ main (int argc, char **argv)
                 } else if (mode.compare("gtest") == 0) {
                     fte_ath::g_athena_app_mode =
                         ATHENA_APP_MODE_GTEST;
+                } else if (mode.compare("soft-init") == 0) {
+                    fte_ath::g_athena_app_mode =
+                        ATHENA_APP_MODE_SOFT_INIT;
                 }
             } else {
                 fprintf(stderr, "mode value is not specified\n");
@@ -567,16 +574,22 @@ main (int argc, char **argv)
     // initialize the logger instance
     core::logger_init();
 
+    if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT)
+        init_params.flags = PDS_FLAG_INIT_TYPE_SOFT;
+
     ret = pds_global_init(&init_params);
     if (ret != PDS_RET_OK) {
         printf("PDS global init failed with ret %u\n", ret);
         exit(1);
     }
 
-    ret = pds_agent_init();
-    if (ret != PDS_RET_OK) {
-        printf("pdsctl init failed with ret %u\n", ret);
-        return ret;
+    if (!sdk::asic::asic_is_soft_init()) {
+        printf("PDS hard init\n");
+        ret = pds_agent_init();
+        if (ret != PDS_RET_OK) {
+            printf("pdsctl init failed with ret %u\n", ret);
+            return ret;
+        }
     }
 
     if (hw()) {
@@ -597,7 +610,8 @@ main (int argc, char **argv)
     }
 
     if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_CPP ||
-        fte_ath::g_athena_app_mode == ATHENA_APP_MODE_L2_FWD)
+        fte_ath::g_athena_app_mode == ATHENA_APP_MODE_L2_FWD ||
+        fte_ath::g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT)
         fte_ath::fte_init();
 
     printf("Initialization done ...\n");
