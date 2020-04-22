@@ -322,6 +322,8 @@ sdk_ret_t capri_tm_get_iq_stats(tm_port_t port, tm_q_t iq,
 
 sdk_ret_t capri_tm_reset_iq_stats(tm_port_t port, tm_q_t iq);
 
+sdk_ret_t capri_tm_reset_iq_port_mon_stats(tm_port_t port, tm_q_t iq);
+
 typedef struct tm_oq_stats_s {
     uint32_t queue_depth;
     uint64_t port_monitor;
@@ -329,6 +331,8 @@ typedef struct tm_oq_stats_s {
 
 sdk_ret_t capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq,
                                 tm_oq_stats_t *oq_stats);
+
+sdk_ret_t capri_tm_reset_oq_port_mon_stats(tm_port_t port, tm_q_t oq);
 
 sdk_ret_t capri_tm_periodic_stats_update(void);
 
@@ -376,8 +380,17 @@ uint32_t capri_tm_get_xon_threshold(uint32_t ctx);
 uint32_t capri_tm_get_xoff_threshold(uint32_t ctx);
 uint64_t capri_tm_get_port_mon_out(int chip_id, int inst_id, tm_port_t tm_port,
                                    tm_q_t tm_oq);
+uint64_t capri_tm_clear_port_mon_out (int chip_id,
+                                   int inst_id,
+                                   tm_port_t tm_port,
+                                   tm_q_t tm_oq);
 uint64_t capri_tm_get_port_mon_in(int chip_id, int inst_id, tm_port_t tm_port,
                                   tm_q_t tm_iq);
+uint64_t capri_tm_clear_port_mon_in (int chip_id,
+                                  int inst_id,
+                                  tm_port_t tm_port,
+                                  tm_q_t tm_iq);
+
 // set the span queue threshold
 sdk_ret_t capri_tm_set_span_threshold(uint32_t span_threshold);
 // set the reserved min for uplink ports

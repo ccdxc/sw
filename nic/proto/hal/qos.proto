@@ -19,6 +19,7 @@ service QOS {
   rpc QosClassGet(QosClassGetRequestMsg) returns (QosClassGetResponseMsg) {}
   rpc QosClassThresholdsGet(QosClassThresholdsGetRequestMsg) returns (QosClassThresholdsGetResponseMsg) {}
   rpc QosClassSetGlobalPauseType(QosClassSetGlobalPauseTypeRequestMsg) returns (QosClassSetGlobalPauseTypeResponseMsg) {}
+  rpc QosClearPortStats(QosClearPortStatsRequestMsg) returns (QosClearPortStatsResponseMsg) {}
 
   // Copp related APIs
   rpc CoppUpdate(CoppRequestMsg) returns (CoppResponseMsg) {}
@@ -177,6 +178,7 @@ message QosClassResponseMsg {
 message QosClassDeleteRequest {
   // key_or_handle is to identify QosClass being deleted
   kh.QosClassKeyHandle key_or_handle = 1 [(gogoproto.moretags) = "venice:key"];
+  bool                 clear_stats = 2;
 }
 
 // QosClassDeleteRequestMsg is used to delete a batch of QosClasss
@@ -192,6 +194,26 @@ message QosClassDeleteResponse {
 // QosClassDeleteResponseMsg is batched response to QosClassDeleteRequestMsg
 message QosClassDeleteResponseMsg {
   repeated QosClassDeleteResponse response = 1;    // batched responses
+}
+
+// QosClearPortStatsRequest  is used to clear port mon stats for a given port
+message QosClearPortStatsRequest {
+  uint32 port_num = 1;
+}
+
+// QosClearPortStatsRequestMsg is used to clear port mon stats for a bunch of ports
+message QosClearPortStatsRequestMsg {
+  repeated QosClearPortStatsRequest request = 1;    // batch of requests
+}
+
+// QosClearPortStatsResponse is response to QosClearPortStatsRequest
+message QosClearPortStatsResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+}
+
+// QosClearPortStatsResponseMsg is batched response to QosClearPortStatsRequestMsg
+message QosClearPortStatsResponseMsg {
+  repeated QosClearPortStatsResponse response = 1;    // batched responses
 }
 
 message QosClassInputOflowQueueStats {

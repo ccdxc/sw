@@ -1750,7 +1750,7 @@ Eth::_CmdQosUpdate(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    rs = dev_api->qos_class_delete(cmd->group);
+    rs = dev_api->qos_class_delete(cmd->group, false);
     if (rs != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to delete qos group for update {}", spec->name, cmd->group);
         return (IONIC_RC_ERROR);
@@ -1814,13 +1814,14 @@ Eth::_CmdQosReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
     struct ionic_qos_reset_cmd *cmd = (struct ionic_qos_reset_cmd *)req;
+    bool clear_stats = true;
 
     NIC_LOG_DEBUG("{}: {} {}", spec->name, opcode_to_str(cmd->opcode),
                   qos_class_to_str(cmd->group));
 
     DEVAPI_CHECK
 
-    rs = dev_api->qos_class_delete(cmd->group);
+    rs = dev_api->qos_class_delete(cmd->group, clear_stats);
     if (rs != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to delete qos group {}", spec->name, cmd->group);
         return (IONIC_RC_ERROR);

@@ -1721,6 +1721,14 @@ pd_qos_class_delete_args_init (pd_qos_class_delete_args_t *args)
     return;
 }
 
+typedef struct pd_qos_class_reset_stats_args_s {
+    qos_class_t    *qos_class;
+} __PACK__ pd_qos_class_reset_stats_args_t;
+
+typedef struct pd_qos_clear_port_stats_args_s {
+    uint32_t       port_num;
+} __PACK__ pd_qos_clear_port_stats_args_t;
+
 typedef struct pd_qos_class_update_args_s {
     qos_class_t    *qos_class;
     bool mtu_changed;
@@ -3369,7 +3377,9 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_IF_INP_MAC_VLAN_PGM,        349, "PD_FUNC_ID_IF_INP_MAC_VLAN_PGM") \
     ENTRY(PD_FUNC_ID_IF_INP_PROP_PGM,            350, "PD_FUNC_ID_IF_INP_PROP_PGM") \
     ENTRY(PD_FUNC_ID_LIF_SCHED_DATA,            351, "PD_FUNC_ID_LIF_SCHED_DATA")  \
-    ENTRY(PD_FUNC_ID_MAX,                        352, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_QOS_CLASS_RESET_STATS,     352, "PD_FUNC_ID_QOS_CLASS_RESET_STATS")        \
+    ENTRY(PD_FUNC_ID_QOS_CLEAR_PORT_STATS,      353, "PD_FUNC_ID_QOS_CLEAR_PORT_STATS")        \
+    ENTRY(PD_FUNC_ID_MAX,                        354, "pd_func_id_max")
 
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
@@ -3557,6 +3567,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_qos_class_create);
         PD_UNION_ARGS_FIELD(pd_qos_class_restore);
         PD_UNION_ARGS_FIELD(pd_qos_class_delete);
+        PD_UNION_ARGS_FIELD(pd_qos_class_reset_stats);
         PD_UNION_ARGS_FIELD(pd_qos_class_update);
         PD_UNION_ARGS_FIELD(pd_qos_class_mem_free);
         PD_UNION_ARGS_FIELD(pd_qos_class_make_clone);
@@ -3565,6 +3576,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_qos_class_set_global_pause_type);
         PD_UNION_ARGS_FIELD(pd_qos_swm_queue_init);
         PD_UNION_ARGS_FIELD(pd_qos_swm_queue_deinit);
+        PD_UNION_ARGS_FIELD(pd_qos_clear_port_stats);
 
         // copp
         PD_UNION_ARGS_FIELD(pd_copp_create);
@@ -4012,6 +4024,7 @@ PD_FUNCP_TYPEDEF(pd_proxyccb_get);
 PD_FUNCP_TYPEDEF(pd_qos_class_create);
 PD_FUNCP_TYPEDEF(pd_qos_class_restore);
 PD_FUNCP_TYPEDEF(pd_qos_class_delete);
+PD_FUNCP_TYPEDEF(pd_qos_class_reset_stats);
 PD_FUNCP_TYPEDEF(pd_qos_class_update);
 PD_FUNCP_TYPEDEF(pd_qos_class_mem_free);
 PD_FUNCP_TYPEDEF(pd_qos_class_make_clone);
@@ -4021,6 +4034,7 @@ PD_FUNCP_TYPEDEF(pd_qos_class_set_global_pause_type);
 PD_FUNCP_TYPEDEF(pd_qos_class_init_tc_to_iq_map);
 PD_FUNCP_TYPEDEF(pd_qos_swm_queue_init);
 PD_FUNCP_TYPEDEF(pd_qos_swm_queue_deinit);
+PD_FUNCP_TYPEDEF(pd_qos_clear_port_stats);
 
 // copp
 PD_FUNCP_TYPEDEF(pd_copp_create);

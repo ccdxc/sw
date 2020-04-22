@@ -25,6 +25,7 @@ namespace pd {
 
 #define HAL_MAX_TXDMA_IQS                   16
 #define HAL_MAX_UPLINK_IQS                  8
+#define HAL_MAX_UPLINK_OQS                  8
 
 #define HAL_MAX_COMMON_OQS                  16
 #define HAL_MAX_RXDMA_ONLY_OQS              16
