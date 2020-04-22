@@ -78,6 +78,9 @@
 
 namespace pds_ms {
 
+void create_irb_if(pds_subnet_spec_t *subnet_spec, uint32_t bd_id,
+                   NBB_LONG row_status);
+
 static void
 populate_evpn_bd_spec (pds_subnet_spec_t *subnet_spec,
                        uint32_t          bd_id,
@@ -179,7 +182,7 @@ process_subnet_update (pds_subnet_spec_t *subnet_spec,
     populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
     pds_ms_set_evpnbdspec_amb_evpn_bd (evpn_bd_spec, row_status,
                                        PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
-
+    create_irb_if(subnet_spec, bd_id, row_status);
     if (!is_pds_obj_key_invalid(subnet_spec->host_if)) {
         config_evpn_bd_if_bind(subnet_spec, bd_id, subnet_spec->host_if,
                                row_status, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -568,17 +571,10 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     return SDK_RET_OK;
 }
 
-#if 0 /* L3 IRB interface is suppressed to prevent Type-2 advertisement of the
-         local Gateway IP and MAC for each subnet from every Naples node.
-         Metaswitch need not be configured with a L3 interface for each Subnet
-         since MS APIs are not used to implement local subnet gateway
-         functionality and also there is no egress routing from remote to local.
-         Enable MS L3 IRB Interface creation for each BD if needed in future.
-       */
 static void
 populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
                        uint32_t          bd_id,
-                       pds::LimGenIrbIfSpec& req)
+                       pds_ms::LimGenIrbIfSpec& req)
 {
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_bdindex (bd_id);
@@ -588,7 +584,7 @@ populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
 
 static void
 populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
-                              pds::LimInterfaceCfgSpec&  req,
+                              pds_ms::LimInterfaceCfgSpec&  req,
                               uint32_t                   if_index)
 {
     std::string vrf_name;
@@ -617,17 +613,22 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
     req.set_ifindex (if_index);
     req.set_ifenable (AMB_TRUE);
     req.set_ipv4enabled (AMB_TRISTATE_TRUE);
-    req.set_ipv4fwding (AMB_TRISTATE_TRUE);
-    req.set_ipv6enabled (AMB_TRISTATE_TRUE);
-    req.set_ipv6fwding (AMB_TRISTATE_TRUE);
+    req.set_ipv4fwding (AMB_TRISTATE_FALSE);
+    req.set_ipv6enabled (AMB_TRISTATE_FALSE);
+    req.set_ipv6fwding (AMB_TRISTATE_FALSE);
     req.set_fwdingmode (AMB_LIM_FWD_MODE_L3);
     req.set_vrfname (vrf_name);
 }
 
-static void create_irb_if_() {
-    pds::LimGenIrbIfSpec irb_spec;
+void
+create_irb_if (pds_subnet_spec_t *subnet_spec, uint32_t bd_id,
+               NBB_LONG row_status)
+{
+    pds_ms::LimGenIrbIfSpec irb_spec;
     populate_lim_irb_spec (subnet_spec, bd_id, irb_spec);
-    pds_ms_set_amb_lim_gen_irb_if (irb_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+    pds_ms_set_limgenirbifspec_amb_lim_gen_irb_if(irb_spec, row_status,
+                                                  PDS_MS_CTM_GRPC_CORRELATOR,
+                                                  FALSE);
 
     // Get IRB If Index
     auto if_index = bd_id_to_ms_ifindex (bd_id);
@@ -636,20 +637,23 @@ static void create_irb_if_() {
                      bd_id, if_index);
 
     // Update IRB to VRF binding
-    pds::LimInterfaceCfgSpec lim_if_spec;
+    pds_ms::LimInterfaceCfgSpec lim_if_spec;
     populate_lim_irb_if_cfg_spec (subnet_spec, lim_if_spec, if_index);
-    pds_ms_set_amb_lim_if_cfg (lim_if_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+    pds_ms_set_liminterfacecfgspec_amb_lim_if_cfg(lim_if_spec, row_status,
+                                                  PDS_MS_CTM_GRPC_CORRELATOR,
+                                                  FALSE);
 
     // Configure IRB IP Address
     ip_prefix_t ip_prefix;
     ip_prefix.len = subnet_spec->v4_prefix.len;
     ip_prefix.addr.af = IP_AF_IPV4;
-    ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
-    pds::LimInterfaceAddrSpec lim_addr_spec;
+    ip_prefix.addr.addr.v4_addr = subnet_spec->v4_vr_ip;
+    pds_ms::LimInterfaceAddrSpec lim_addr_spec;
     populate_lim_addr_spec (&ip_prefix, lim_addr_spec,
-                            pds::LIM_IF_TYPE_IRB, bd_id);
-    pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR, FALSE);
+                            pds_ms::LIM_IF_TYPE_IRB, bd_id);
+    pds_ms_set_liminterfaceaddrspec_amb_lim_l3_if_addr(lim_addr_spec,row_status,
+                                                       PDS_MS_CTM_GRPC_CORRELATOR,
+                                                       FALSE);
 }
-#endif
 
 };    // namespace pds_ms

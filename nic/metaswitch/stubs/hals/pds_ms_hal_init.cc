@@ -35,7 +35,7 @@ hal_callback (sdk_ret_t status, const void *cookie)
         PDS_TRACE_ERR("Async PDS HAL callback failure status %d, cookie 0x%lx",
                       status, cookie);
     } else {
-        PDS_TRACE_ERR("Async PDS HAL callback success, cookie 0x%lx", cookie);
+        PDS_TRACE_VERBOSE("Async PDS HAL callback success, cookie 0x%lx", cookie);
         auto state_ctxt = state_t::thread_context();
         auto& objs = cookie_ptr->objs;
         if (objs.size() > 0) {PDS_TRACE_DEBUG ("Committing object(s) to store:");}

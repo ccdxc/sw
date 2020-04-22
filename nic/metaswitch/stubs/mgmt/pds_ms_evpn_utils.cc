@@ -321,7 +321,9 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
 
     // update RT in bgpRouteMapTable
     if (update_orf) {
-        update_bgp_route_map_table(test_correlator);
+        // Disabling the EVI RT in the ORF route-map since we are doing the
+        // outbound filtering at the RR based on the VRF RT
+        // update_bgp_route_map_table(test_correlator);
     }
 }
 
@@ -511,8 +513,8 @@ evpn_evi_set_fill_func (EvpnEviSpec&    req,
     oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_ENTITY_IX);
 
-    // Do not advertise Router MAC, VRF RT in Type 2 routes
-    data->add_vrf_info                = AMB_FALSE;
+    // Advertise Router MAC, VRF RT in Type 2 routes
+    data->add_vrf_info                = AMB_TRUE;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_ADD_VRF_INFO);
 }
 

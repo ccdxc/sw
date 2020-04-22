@@ -234,7 +234,7 @@ var scaleCfgenParams = &Cfgen{
 					ExportRTs: []*network.RouteDistinguisher{
 						&network.RouteDistinguisher{
 							Type:          "type2",
-							AdminValue:    200,
+							AdminValue:    100,
 							AssignedValue: 100,
 						},
 						&network.RouteDistinguisher{
