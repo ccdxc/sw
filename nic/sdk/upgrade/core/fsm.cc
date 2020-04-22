@@ -51,7 +51,7 @@ dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id, upg_svc svc)
 {
     // TODO: domain
     std::string stage_name(upg_stage2str(id));
-    UPG_TRACE_VERBOSE("Sending event %s to svc %s ipc_id %u",
+    UPG_TRACE_INFO("Sending event %s to service %s IPC ID %u",
                       stage_name.c_str(), svc.name().c_str(), svc.ipc_id());
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
 
@@ -65,7 +65,7 @@ dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id)
 {
     std::string stage_name(upg_stage2str(id));
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
-    UPG_TRACE_VERBOSE("Sending parallel event %s", stage_name.c_str());
+    UPG_TRACE_INFO("Sending parallel event %s", stage_name.c_str());
 
     for (auto& name : fsm_states.svc_sequence()) {
         SDK_ASSERT(fsm_services.find(name) != fsm_services.end());
@@ -74,8 +74,8 @@ dispatch_event (ipc_svc_dom_id_t dom, upg_stage_t id)
             dispatch_event(dom, id, svc);
         } else {
             fsm_states.skip_svc();
-            UPG_TRACE_WARN("Service %s does't have a valid ipc id",
-                           stage_name.c_str());
+            UPG_TRACE_WARN("Service %s does't have a valid IPC ID",
+                           name.c_str());
         }
     }
 }
@@ -85,7 +85,7 @@ send_discovery_event (ipc_svc_dom_id_t dom, upg_stage_t id)
 {
     std::string stage_name(upg_stage2str(id));
     SDK_ASSERT(fsm_stages.find(id) != fsm_stages.end());
-    UPG_TRACE_VERBOSE("Sending discovery event %s", stage_name.c_str());
+    UPG_TRACE("Sending discovery event %s", stage_name.c_str());
 
     upg_send_broadcast_request(dom, id, fsm_states.init_params()->upg_mode,
                                fsm_services.size(), fsm_states.timeout());
@@ -96,12 +96,11 @@ update_ipc_id (std::string name, uint32_t ipc_id)
 {
     SDK_ASSERT(fsm_services.find(name) != fsm_services.end());
 
-    UPG_TRACE_INFO("Updating IPC id of service %s, ipc id %u ",
+    UPG_TRACE_INFO("Updating IPC ID of service %s, IPC ID %u ",
                       name.c_str(), ipc_id);
     upg_svc service = fsm_services[name];
     service.set_ipc_id(ipc_id);
     fsm_services[name] = service;
-    UPG_TRACE_DEBUG("service %s, ipc id %u ", name.c_str(), ipc_id);
 }
 
 static bool
@@ -123,14 +122,14 @@ invoke_hooks (upg_stage_t stage_id, hook_execution_t hook_type,
 
     for (const auto& x : hooks) {
         if (!is_valid_script(fsm_states.init_params()->tools_dir, x.path())) {
-            UPG_TRACE_ERR("Not a valid script %s", x.path().c_str());
+            UPG_TRACE_ERR("Not a valid Script %s", x.path().c_str());
             result = false;
             break;
         }
         if (!execute_hook(fsm_states.init_params()->tools_dir,
                           x.path(), name, fsm_states.init_params()->fw_pkgname,
                           hook_type, status)) {
-            UPG_TRACE_ERR("Failed to execute %s", x.path().c_str());
+            UPG_TRACE_ERR("Failed to execute Script %s", x.path().c_str());
             result = false;
             break;
         }
@@ -156,7 +155,7 @@ send_ipc_to_next_service (void)
 {
     ipc_svc_dom_id_t domain = IPC_SVC_DOM_ID_A;
 
-    UPG_TRACE_VERBOSE("Send serial request");
+    UPG_TRACE("Sending serial request");
     if (!fsm_states.has_next_svc()) {
         // Stage must have pending svc
         // if it is not over yet
@@ -173,11 +172,12 @@ send_ipc_to_next_service (void)
                 fsm_states.timer_stop();
                 dispatch_event(domain, id, svc);
                 fsm_states.timer_start();
-                UPG_TRACE_INFO("Send %s serial event to %s(%u)", name.c_str(),
-                               svc_name.c_str(), svc.ipc_id());
+                UPG_TRACE_INFO("Sending %s serial event to %s, IPC ID %u",
+                               name.c_str(), svc_name.c_str(), svc.ipc_id());
                 break;
             } else {
-                UPG_TRACE_WARN("Not sending %s serial event to %s(%u). No valid IPC ID", name.c_str(),
+                UPG_TRACE_WARN("Not sending %s serial event to %s, IPC ID %u."
+                               " Not a valid IPC ID", name.c_str(),
                                svc_name.c_str(), svc.ipc_id());
                 fsm_states.skip_svc();
             }
@@ -193,32 +193,33 @@ move_to_nextstage (void)
 
     std::string name(upg_stage2str(fsm_states.current_stage()));
     if (fsm_states.is_discovery()) {
-        UPG_TRACE_VERBOSE("Moving to next stage (discovery) %s",
+        UPG_TRACE_INFO("Moving to next discovery stage %s",
                           name.c_str());
         dump(fsm_states);
         upg_stage_t id = fsm_states.current_stage();
         fsm_states.timer_stop();
         fsm_states.timer_start();
         send_discovery_event(domain, id);
-        UPG_TRACE_INFO("Send %s service discovery event", name.c_str());
+        UPG_TRACE_INFO("Sent service discovery event %s", name.c_str());
     } else if (fsm_states.is_serial_event_sequence()) {
-        UPG_TRACE_VERBOSE("Moving to next stage (serial) %s", name.c_str());
+        UPG_TRACE_INFO("Moving to next serial stage %s", name.c_str());
         dump(fsm_states);
         if (fsm_states.has_next_svc()) {
             send_ipc_to_next_service();
+            UPG_TRACE_DEBUG("Sent serial event %s", name.c_str());
         } else {
-            UPG_TRACE_VERBOSE("Oops! no service to send request");
+            UPG_TRACE_ERR("Oops! no service to send request !");
             SDK_ASSERT(0);
         }
     } else if (fsm_states.is_parallel_event_sequence()) {
-        UPG_TRACE_VERBOSE("Moving to next stage (parallel) %s",
+        UPG_TRACE_INFO("Moving to next parallel stage %s",
                           name.c_str());
         dump(fsm_states);
         upg_stage_t id = fsm_states.current_stage();
         fsm_states.timer_stop();
         fsm_states.timer_start();
         dispatch_event(domain, id);
-        UPG_TRACE_INFO("Send %s parallel event", name.c_str());
+        UPG_TRACE_DEBUG("Sent parallel event %s", name.c_str());
     }else {
        SDK_ASSERT(0);
     }
@@ -234,12 +235,12 @@ get_exit_status (void)
         UPG_TRACE_ERR("Upgrade is in a critical state. Need manual recovery");
     } else if (fsm_states.prev_stage_rsp() == SVC_RSP_FAIL) {
         status = UPG_STATUS_FAIL;
-        UPG_TRACE_ERR("Exit status failure !")
+        UPG_TRACE_ERR("Exit status, failure !")
     } else if (fsm_states.prev_stage_rsp() == SVC_RSP_NONE) {
-        UPG_TRACE_ERR("Exit status failure due to service timeout !");
+        UPG_TRACE_ERR("Exit status, failure due to service timeout !");
         status = UPG_STATUS_FAIL;
     } else if (fsm_states.prev_stage_rsp() == SVC_RSP_OK) {
-        UPG_TRACE_INFO("Exit status success");
+        UPG_TRACE_INFO("Exit status, success");
         status = UPG_STATUS_OK;
     } else {
         SDK_ASSERT(0);
@@ -253,13 +254,13 @@ get_exit_status (void)
 void
 upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
 {
-    UPG_TRACE_VERBOSE("IPC response event handler called");
+    UPG_TRACE_INFO("IPC response event handler called");
 
     upg_stage_t id = fsm_states.current_stage();
     upg_event_msg_t *event = (upg_event_msg_t *)msg->data();
     std::string svc_name = event->rsp_svc_name;
 
-    UPG_TRACE_INFO("Received UPG IPC event stageid %s, status %s,"
+    UPG_TRACE_INFO("Received UPG IPC event %s, status %s,"
                    " service %s, ipc id %u",
                    upg_stage2str(event->stage),
                    upg_status2str(event->rsp_status), event->rsp_svc_name,
@@ -292,7 +293,7 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
             UPG_TRACE_INFO("Stage progress is updated");
         }
     } else {
-        UPG_TRACE_INFO("Dropping event response, not expecting it !");
+        UPG_TRACE_WARN("Dropping event response, not expecting it !");
     }
 
     UPG_TRACE_INFO("Done with IPC response event handler");
@@ -307,7 +308,7 @@ timeout_cb (EV_P_ ev_timer *w, int revents)
     if (fsm_states.current_stage() != fsm_states.end_stage()) {
         move_to_nextstage();
     } else {
-        UPG_TRACE_VERBOSE("Upgrade must not wait for response in last stage");
+        UPG_TRACE_WARN("Upgrade must not wait for response in last stage");
         fsm_states.init_params()->fsm_completion_cb(UPG_STATUS_FAIL,
             fsm_states.init_params()->msg_in);
         SDK_ASSERT(0);
@@ -340,21 +341,21 @@ fsm::set_current_stage(const upg_stage_t stage_id) {
     timeout_ = stage.svc_rsp_timeout();
     timeout_ = double(timeout_ * 1.0) / 1000;
 
-    UPG_TRACE_INFO("Stage %s, pending response %u, svc sequence %s,"
-                   " timeout %f ",
+    UPG_TRACE_DEBUG("Stage %s, pending response %u, service sequence %s,"
+                   " Timeout %f ",
                    upg_stage2str(current_stage_), pending_response_,
                    svc_sequence_to_str(svc_sequence_).c_str(), timeout_);
 }
 
 void
 fsm::timer_stop(void) {
-    UPG_TRACE_VERBOSE("Stopping the timer !");
+    UPG_TRACE("Stopping the timer !");
     ev_timer_stop(loop, &timeout_watcher);
 }
 
 void
 fsm::timer_init(struct ev_loop *ev_loop) {
-    UPG_TRACE_VERBOSE("Initializing the timer with timeout %f", timeout_);
+    UPG_TRACE("Initializing the timer with timeout %f", timeout_);
 
     loop = ev_loop;
     ev_timer_init(&timeout_watcher, timeout_cb, timeout_, 0.0);
@@ -362,13 +363,13 @@ fsm::timer_init(struct ev_loop *ev_loop) {
 
 void
 fsm::timer_set(void) {
-    UPG_TRACE_VERBOSE("Setting the timer %f", timeout_);
+    UPG_TRACE("Setting the timer %f", timeout_);
     ev_timer_set(&timeout_watcher, timeout_, 0.0);
 }
 
 void
 fsm::timer_start(void) {
-    UPG_TRACE_VERBOSE("Starting the timer");
+    UPG_TRACE("Starting the timer");
     ev_timer_start(loop, &timeout_watcher);
 }
 
@@ -378,13 +379,13 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
         switch (rsp) {
         // prev_stage_rsp_ will carry the response
         case SVC_RSP_FAIL:
-            UPG_TRACE_VERBOSE("Got failure svc response");
+            UPG_TRACE_ERR("Got failure service response");
             break;
         case SVC_RSP_CRIT:
-            UPG_TRACE_VERBOSE("Got critical svc response");
+            UPG_TRACE_ERR("Got critical service response");
             break;
         case SVC_RSP_NONE:
-            UPG_TRACE_VERBOSE("Timer expired, no svc response so far");
+            UPG_TRACE_ERR("Timer expired, no service response so far");
             break;
         default:
             break;
@@ -437,7 +438,7 @@ fsm::is_valid_service(const std::string svc) const {
             return true;
         }
     }
-    UPG_TRACE_VERBOSE(" %s is not a valid service", svc.c_str());
+    UPG_TRACE_WARN(" %s is not a valid service", svc.c_str());
     return false;
 }
 
@@ -570,7 +571,8 @@ init_svc (pt::ptree& tree)
     }
     catch (std::exception const& ex)
     {
-        UPG_TRACE_ERR("Error reading upgrade spec %s", ex.what());
+        UPG_TRACE_ERR("Failed to read service config from "
+                      "upgrade spec %s", ex.what());
     }
     return ret;
 }
@@ -608,7 +610,8 @@ init_stage_transitions (pt::ptree& tree)
     }
     catch (std::exception const& ex)
     {
-        UPG_TRACE_ERR("Error reading upgrade spec %s", ex.what());
+        UPG_TRACE_ERR("Failed to read fsm stage transition from "
+                      "upgrade spec %s", ex.what());
     }
     return ret;
 }
@@ -638,7 +641,7 @@ init_fsm_stages (pt::ptree& tree)
             std::string post_hook_str;
             std::string discovery_str;
             if(subtree.empty()) {
-                UPG_TRACE_ERR(" Parsing Error !");
+                UPG_TRACE_ERR("Parsing Error !");
                 return SDK_RET_ERR;
             } else {
                 timeout_str = subtree.get<std::string>("rsp_timeout", "5000");
@@ -665,7 +668,8 @@ init_fsm_stages (pt::ptree& tree)
     }
     catch (std::exception const& ex)
     {
-        UPG_TRACE_ERR("Error reading upgrade spec %s", ex.what());
+        UPG_TRACE_ERR("Failed to read fsm stages from "
+                      "upgrade spec %s", ex.what());
     }
     dump(fsm_stages);
     return ret;
@@ -682,7 +686,8 @@ set_entry_stage (pt::ptree& tree)
     }
     catch (std::exception const& ex)
     {
-        UPG_TRACE_ERR("Error reading upgrade spec %s", ex.what());
+        UPG_TRACE_ERR("Failed to read entry stage "
+                      " from upgrade spec %s", ex.what());
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -699,7 +704,8 @@ set_event_sequence (pt::ptree& tree)
     }
     catch (std::exception const& ex)
     {
-        UPG_TRACE_ERR("Error reading upgrade spec %s", ex.what());
+        UPG_TRACE_ERR("Failed to read event sequence"
+                      " from upgrade spec %s", ex.what());
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -761,13 +767,13 @@ load_pipeline_json(pt::ptree& tree, sdk::platform::upg_mode_t upg_mode)
             UPG_TRACE_INFO("Successfully loaded %s", upg_gen_json.c_str());
             return SDK_RET_OK;
         } else {
-            UPG_TRACE_ERR("Error reading upgrade spec, no access");
+            UPG_TRACE_ERR("Failed to read upgrade spec, no access");
             return SDK_RET_ERR;
         }
     }
     catch (std::exception const& ex)
     {
-        UPG_TRACE_ERR("Error reading upgrade spec %s", ex.what());
+        UPG_TRACE_ERR("Failed to read upgrade spec %s", ex.what());
     }
     return ret;
 }

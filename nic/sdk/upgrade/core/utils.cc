@@ -174,7 +174,6 @@ name_to_stage_id (const std::string stage)
     }
     catch (std::exception const& ex)
     {
-        UPG_TRACE_VERBOSE("Stage %s doesn't exist\n", stage.c_str());
         UPG_TRACE_ERR("Stage %s doesn't exist", stage.c_str());
         SDK_ASSERT(0);
     }
@@ -192,7 +191,6 @@ id_to_stage_name (const upg_stage_t stage)
         }
         it++;
     }
-    UPG_TRACE_VERBOSE("Stage %u doesn't exist\n", stage);
     UPG_TRACE_ERR("Stage %u doesn't exist", stage);
     SDK_ASSERT(0);
 };
@@ -255,12 +253,12 @@ is_valid_script (std::string tools_dir, const std::string script)
 {
     std::string file = tools_dir + "/" + script;
     if (access(file.c_str(), F_OK) != 0) {
-        UPG_TRACE_ERR("File %s doesn't exist !", file.c_str());
+        UPG_TRACE_ERR("Script %s doesn't exist !", file.c_str());
         return false;
     }
 
     if (access(file.c_str(), X_OK) != 0) {
-        UPG_TRACE_ERR("File %s doesn't have execute permission !",
+        UPG_TRACE_ERR("Script %s doesn't have execute permission !",
                       file.c_str());
         return false;
     }
@@ -274,15 +272,15 @@ execute (const char *cmd)
     int status = system(cmd);
 
     if (status < 0) {
-        UPG_TRACE_ERR("Failed to execute script, return error %d", errno);
+        UPG_TRACE_ERR("Failed to execute script, return code is %d", errno);
         result = false;
     } else {
         if (WIFEXITED(status)) {
-            UPG_TRACE_INFO("Successfully executed script, return status  %d",
+            UPG_TRACE_INFO("Successfully executed script, return code is %d",
                            WEXITSTATUS(status));
             result = true;
         } else {
-            UPG_TRACE_ERR("Failed to execute script, exited abnormaly");
+            UPG_TRACE_ERR("Failed to execute script, exited abnormaly !");
             result = false;
         }
     }
@@ -300,14 +298,14 @@ execute_hook (const std::string tools_dir, const std::string script,
         cmd = tools_dir + "/" + script;
         cmd = cmd + " -f " + fw_pkgname;
         if (hook_type == PRE_STAGE) {
-            UPG_TRACE_INFO("Executing pre-hook %s , in stage %s",
+            UPG_TRACE_INFO("Executing pre-hook %s, in stage %s",
                            script.c_str(), stage_name.c_str());
             cmd = cmd + " -s " + stage_name;
             cmd = cmd + " -t pre" ;
             execute(cmd.c_str());
         } else {
             SDK_ASSERT(status != SVC_RSP_MAX);
-            UPG_TRACE_INFO("Executing post-hook %s , in stage %s, with stage "
+            UPG_TRACE_INFO("Executing post-hook %s, in stage %s, with stage "
                            "status %d", script.c_str(), stage_name.c_str(),
                            status);
             cmd = cmd + " -s " + stage_name;
