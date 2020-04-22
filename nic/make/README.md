@@ -30,7 +30,7 @@ This is to build .a libraries which we are not using in our repo.
 
 ### 3. Shared/Dynamic Library (.so)
 
-Makefile will build Shared libraries from given SOUCESS (.cc). Currently this is being used to form PI utils and PD utils libraries.
+Makefile will build Shared libraries from given SOURCES (.cc). Currently this is being used to form PI utils and PD utils libraries.
 
 Example: nic/utils/indexer/Makefile
 

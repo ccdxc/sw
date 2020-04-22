@@ -290,7 +290,7 @@ vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 
 sdk_ret_t
 vnic_entry::reprogram_config(api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Reprogramming vnic %s, subnet %s, fabric encap %s, ",
+    PDS_TRACE_DEBUG("Reprogramming vnic %s, subnet %s, fabric encap %s, "
                     "upd bmap 0x%lx", key_.str(), subnet_.str(),
                     pds_encap2str(&fabric_encap_), obj_ctxt->upd_bmap);
     return impl_->reprogram_hw(this, obj_ctxt);

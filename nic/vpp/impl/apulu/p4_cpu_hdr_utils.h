@@ -7,96 +7,107 @@
 #define __VPP_IMPL_APULU_P4_CPU_HDR_UTILS_H__
 
 #include <stdbool.h>
+#include <vlib/vlib.h>
+#include <vppinfra/format.h>
+#include <nic/vpp/infra/utils.h>
 #include <nic/apollo/packet/apulu/p4_cpu_hdr.h>
 #include <nic/apollo/p4/include/apulu_defines.h>
-#include <vppinfra/format.h>
-#include <vlib/vlib.h>
 
-#define VPP_CPU_FLAGS_VLAN_VALID           APULU_CPU_FLAGS_VLAN_VALID
-#define VPP_CPU_FLAGS_IPV4_1_VALID         APULU_CPU_FLAGS_IPV4_1_VALID
-#define VPP_CPU_FLAGS_IPV6_1_VALID         APULU_CPU_FLAGS_IPV6_1_VALID
-#define VPP_CPU_FLAGS_ETH_2_VALID          APULU_CPU_FLAGS_ETH_2_VALID
-#define VPP_CPU_FLAGS_IPV4_2_VALID         APULU_CPU_FLAGS_IPV4_2_VALID
-#define VPP_CPU_FLAGS_IPV6_2_VALID         APULU_CPU_FLAGS_IPV6_2_VALID
+#define VPP_ARM_TO_P4_HDR_SZ          APULU_ARM_TO_P4_HDR_SZ
+#define VPP_P4_TO_ARM_HDR_SZ          APULU_P4_TO_ARM_HDR_SZ
 
-// Flags defined and used within vpp (2bytes)
-#define VPP_CPU_FLAGS_RX_PKT_POS           0
-#define VPP_CPU_FLAGS_NAPT_POS             1
-#define VPP_CPU_FLAGS_NAPT_SVC_POS         2
-#define VPP_CPU_FLAGS_FLOW_LOG_POS         3
-#define VPP_CPU_FLAGS_FLOW_L2L_POS         4
-#define VPP_CPU_FLAGS_FLOW_SES_EXIST_POS   5
-#define VPP_CPU_FLAGS_FLOW_RESPONDER_POS   6
-#define VPP_CPU_FLAGS_NAT_SVC_MAP          7
-#define VPP_CPU_FLAGS_RX_VLAN_ENCAP        8
+#define VPP_CPU_FLAGS_VLAN_VALID      APULU_CPU_FLAGS_VLAN_VALID
+#define VPP_CPU_FLAGS_IPV4_1_VALID    APULU_CPU_FLAGS_IPV4_1_VALID
+#define VPP_CPU_FLAGS_IPV6_1_VALID    APULU_CPU_FLAGS_IPV6_1_VALID
+#define VPP_CPU_FLAGS_ETH_2_VALID     APULU_CPU_FLAGS_ETH_2_VALID
+#define VPP_CPU_FLAGS_IPV4_2_VALID    APULU_CPU_FLAGS_IPV4_2_VALID
+#define VPP_CPU_FLAGS_IPV6_2_VALID    APULU_CPU_FLAGS_IPV6_2_VALID
 
-#define VPP_CPU_FLAGS_RX_PKT_VALID         (1 << VPP_CPU_FLAGS_RX_PKT_POS)
-#define VPP_CPU_FLAGS_NAPT_VALID           (1 << VPP_CPU_FLAGS_NAPT_POS)
-#define VPP_CPU_FLAGS_NAPT_SVC_VALID       (1 << VPP_CPU_FLAGS_NAPT_SVC_POS)
-#define VPP_CPU_FLAGS_FLOW_LOG_VALID       (1 << VPP_CPU_FLAGS_FLOW_LOG_POS)
-#define VPP_CPU_FLAGS_FLOW_L2L_VALID       (1 << VPP_CPU_FLAGS_FLOW_L2L_POS)
-#define VPP_CPU_FLAGS_FLOW_SES_EXIST_VALID (1 << VPP_CPU_FLAGS_FLOW_SES_EXIST_POS)
-#define VPP_CPU_FLAGS_FLOW_RESPONDER_VALID (1 << VPP_CPU_FLAGS_FLOW_RESPONDER_POS)
-#define VPP_CPU_FLAGS_NAT_SVC_MAP_VALID    (1 << VPP_CPU_FLAGS_NAT_SVC_MAP)
-#define VPP_CPU_FLAGS_RX_VLAN_ENCAP_VALID  (1 << VPP_CPU_FLAGS_RX_VLAN_ENCAP)
+#define VPP_CPU_FLAGS_IP_VALID        (VPP_CPU_FLAGS_IPV4_1_VALID |\
+                                       VPP_CPU_FLAGS_IPV6_1_VALID |\
+                                       VPP_CPU_FLAGS_IPV4_2_VALID |\
+                                       VPP_CPU_FLAGS_IPV6_2_VALID)
 
-#define VPP_ARM_TO_P4_HDR_SZ               APULU_ARM_TO_P4_HDR_SZ
-#define VPP_P4_TO_ARM_HDR_SZ               APULU_P4_TO_ARM_HDR_SZ
+#define VPP_CPU_FLAGS_RX_PKT          BIT(0)
+#define VPP_CPU_FLAGS_NAPT            BIT(1)
+#define VPP_CPU_FLAGS_NAPT_SVC        BIT(2)
+#define VPP_CPU_FLAGS_FLOW_LOG        BIT(3)
+#define VPP_CPU_FLAGS_FLOW_L2L        BIT(4)
+#define VPP_CPU_FLAGS_FLOW_SES_EXIST  BIT(5)
+#define VPP_CPU_FLAGS_FLOW_RESPONDER  BIT(6)
+#define VPP_CPU_FLAGS_NAT_SVC_MAP     BIT(7)
+#define VPP_CPU_FLAGS_RX_VLAN_ENCAP   BIT(8)
 
 always_inline bool
 pds_is_flow_rx_vlan (vlib_buffer_t *p0)
 {
-    return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_RX_VLAN_ENCAP_VALID) ? true : false;
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                     VPP_CPU_FLAGS_RX_VLAN_ENCAP);
 }
 
 always_inline bool
 pds_is_rx_pkt (vlib_buffer_t *p0)
 {
-    return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_RX_PKT_VALID) ? true : false;
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                     VPP_CPU_FLAGS_RX_PKT);
 }
 
 always_inline bool
 pds_is_rflow (vlib_buffer_t *p0)
 {
-    return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_FLOW_RESPONDER_VALID) ? true : false;
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                      VPP_CPU_FLAGS_FLOW_RESPONDER);
 }
 
 always_inline bool
 pds_is_flow_l2l (vlib_buffer_t *p0)
 {
-    return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_FLOW_L2L_VALID) ? true : false;
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                     VPP_CPU_FLAGS_FLOW_L2L);
 }
 
 always_inline bool
 pds_get_flow_log_en (vlib_buffer_t *p0)
 {
-    return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_FLOW_LOG_VALID) ? true : false;
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                     VPP_CPU_FLAGS_FLOW_LOG);
 }
 
 always_inline bool
 pds_is_flow_napt_en (vlib_buffer_t *p0)
 {
-    return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_NAPT_VALID) ? true : false;
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                     VPP_CPU_FLAGS_NAPT);
 }
 
 always_inline bool
 pds_is_flow_napt_svc_en (vlib_buffer_t *p0)
 {
-    return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_NAPT_SVC_VALID) ? true : false;
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                     VPP_CPU_FLAGS_NAPT_SVC);
 }
 
 always_inline bool
 pds_is_flow_svc_map_en (vlib_buffer_t *p0)
 {
-    return (vnet_buffer(p0)->pds_flow_data.flags &
-            VPP_CPU_FLAGS_NAT_SVC_MAP_VALID) ? true : false;
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                     VPP_CPU_FLAGS_NAT_SVC_MAP);
+}
+
+always_inline u16
+pds_get_cpu_flags_from_hdr (p4_rx_cpu_hdr_t *hdr)
+{
+    u16 flags = 0;
+
+    if (hdr->rx_packet)
+        BIT_SET(flags, VPP_CPU_FLAGS_RX_PKT);
+    if ((!hdr->rx_packet) && hdr->is_local)
+        BIT_SET(flags, VPP_CPU_FLAGS_FLOW_L2L);
+    if (hdr->flow_role)
+        BIT_SET(flags, VPP_CPU_FLAGS_FLOW_RESPONDER);
+    if (0 != hdr->session_id)
+        BIT_SET(flags, VPP_CPU_FLAGS_FLOW_SES_EXIST);
+    return flags;
 }
 
 always_inline void
