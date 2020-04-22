@@ -130,6 +130,8 @@ def Verify(tc):
     if tc.iterators.workload_type == "igw":
         return flow_utils.verifyFlows(tc.iterators.ipaf, tc.workload_pairs)
 
+    return api.types.status.SUCCESS
+
 def Teardown(tc):
     if tc.is_config_updated:
         rs = config_api.RestoreObjects('Update', tc.selected_objs)

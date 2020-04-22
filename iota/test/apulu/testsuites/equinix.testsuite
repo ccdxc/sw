@@ -51,6 +51,7 @@ testbundles:
         - arp_proxy.testbundle
         #- h2vrip.testbundle
         - api_crud/netagent_api_crud.testbundle
+        - api_crud/dhcp_crud.testbundle
         - networking/link_events.testbundle
         - networking/node_events.testbundle
         #- networking/h2n.testbundle
