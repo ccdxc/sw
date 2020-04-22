@@ -54,7 +54,7 @@ func (w *Watcher) handleApisrvWatch(ctx context.Context, apicl apiclient.Service
 	defer controllerNodeWatcher.Stop()
 
 	smartNICOpts := api.ListWatchOptions{
-		FieldChangeSelector: []string{"ObjectMeta.Labels", "Status.AdmissionPhase"},
+		FieldChangeSelector: []string{"Spec.ID", "ObjectMeta.Labels", "Status.AdmissionPhase"},
 	}
 
 	// Do not watch for changes in Status.Phase, as NICs that are
