@@ -206,19 +206,17 @@ nexthop_group::delay_delete(void) {
 }
 
 sdk_ret_t
-nexthop_group::backup(void) {
-    int size;
+nexthop_group::backup(upg_obj_info_t *upg_info) {
+    sdk_ret_t ret;
     pds_nexthop_group_info_t info;
 
     memset(&info, 0, sizeof(pds_nexthop_group_info_t));
     fill_spec_(&info.spec);
-    size = impl_->backup((impl::obj_info_t *)&info);
-    if (size < 0) {
+    ret = impl_->backup((impl::obj_info_t *)&info, upg_info);
+    if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to backup nexthop group %s", key_.str());
-        return SDK_RET_ERR;
     }
-    g_upg_state->api_upg_ctx()->incr_obj_offset(size);
-    return SDK_RET_OK;
+    return ret;
 }
 
 sdk_ret_t

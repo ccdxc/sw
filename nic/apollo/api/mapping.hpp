@@ -108,8 +108,11 @@ public:
     static sdk_ret_t free(mapping_entry *mapping);
 
     /// \brief    stash this object into persistent storage
+    /// \param[in] upg_obj_info contains location to put stashed object
     /// \return   sdk_ret_ok or error code
-    virtual sdk_ret_t backup(void) override { return SDK_RET_INVALID_OP; }
+    virtual sdk_ret_t backup(upg_obj_info_t *info) override {
+        return SDK_RET_INVALID_OP;
+    }
 
     /// \brief    restore stashed object from persistent storage
     /// \param[in] upg_obj_info contains location to read stashed object

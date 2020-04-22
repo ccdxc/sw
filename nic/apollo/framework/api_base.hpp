@@ -68,8 +68,9 @@ public:
     static sdk_ret_t free(obj_id_t obj_id, api_base *api_obj);
 
     /// \brief    backup method to stash the object into persistent storage
+    /// \param[in] upg_info contains location to put stashed object
     /// \return   SDK_RET_OK or error code
-    virtual sdk_ret_t backup(void) {
+    virtual sdk_ret_t backup(upg_obj_info_t *upg_info) {
         return SDK_RET_INVALID_OP;
     }
 

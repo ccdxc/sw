@@ -91,9 +91,10 @@ public:
 
     /// \brief     stash the object into persistent storage
     /// \param[in] info pointer to the info object
-    /// \return    bytes written into persistent storage for this object
-    virtual int backup(obj_info_t *info) {
-        return -1;
+    /// \param[in] upg_info contains location to put stashed object
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t backup(obj_info_t *info, upg_obj_info_t *upg_info) {
+        return SDK_RET_INVALID_OP;
     }
 
     /// \brief     restore the stashed object from persistent storage

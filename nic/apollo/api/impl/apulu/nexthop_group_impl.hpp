@@ -56,14 +56,15 @@ public:
 
     /// \brief     stash this object into persistent storage
     /// \param[in] info pointer to the info object
-    /// \return    bytes written into persistent storage, -1 in case of error
-    virtual int backup(obj_info_t *info) override;
+    /// \param[in] upg_info contains location to put stashed object
+    /// \return    sdk_ret_ok or error code
+    virtual sdk_ret_t backup(obj_info_t *info, upg_obj_info_t *upg_info) override;
 
     /// \brief     restore stashed object from persistent storage
     /// \param[in] info pointer to the info object
     /// \param[in] upg_info contains location to read stashed object
     /// \return    sdk_ret_ok or error code
-    virtual sdk_ret_t restore(obj_info_t *info, upg_obj_info_t *upg_info);
+    virtual sdk_ret_t restore(obj_info_t *info, upg_obj_info_t *upg_info) override;
 
     /// \brief      allocate/reserve h/w resources for this object
     /// \param[in]  api_obj  object for which resources are being reserved

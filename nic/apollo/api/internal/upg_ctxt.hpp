@@ -21,6 +21,8 @@
 #define PDS_UPGRADE_NICMGR_OBJ_STORE_NAME "pds_upg_nicmgr_objs_info"
 #define PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE (20 * 1024)
 
+#define PDS_PROTO_MSG_OBJ_LEN (sizeof(uint32_t ))
+
 namespace api {
 
 /// \brief upgrade objs meta data. saved in the front of persistent storage.
@@ -34,15 +36,32 @@ typedef struct upg_obj_stash_meta_s {
     uint64_t        pad;          ///< for future use
 } __PACK__ upg_obj_stash_meta_t;
 
+/// \brief upgrade backup obj info. This is specifically used for backup
+/// contains info about the size left in persistent storage for each obj,
+/// total size of stashed objs per class and number of objs stashed
+typedef struct upg_backup_info_s {
+    uint32_t size_left;             ///< size left in persistent storage per obj
+    uint32_t total_size;            ///< total size of stashed objs per class
+    uint32_t stashed_obj_count;     ///< number of objs stashed
+} upg_backup_info_t;
+
 /// \brief upgrade obj info. will be used per class during backup/restore
 /// to point/fetch data in/from persistent storage. 
 //  it helps objs to navigate to its correct position inside persistent storage
 typedef struct upg_obj_info_s {
     char *mem;                      ///< reference into persistent storage
     uint32_t obj_id ;               ///< obj id
-    uint32_t stateless_obj_count;   ///< number of stateless objs stashed
     size_t   size;                  ///< bytes written/read
+    upg_backup_info_t backup;       ///< backup specific data
 } upg_obj_info_t;
+
+/// \brief obj tlv. abstraction used to read/write from/at specified location
+/// in persistent storage
+// ...WARNING.. this structure should be preserved across upgrades
+typedef struct obj_tlv_s {
+    uint32_t len;         ///< length of read/write from/to persistent stoarge
+    char obj[0];          ///< location in persistent stoarge for read/write
+} obj_tlv_t;
 
 class upg_ctxt {
 public:

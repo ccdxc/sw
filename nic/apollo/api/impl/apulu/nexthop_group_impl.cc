@@ -422,36 +422,41 @@ nexthop_group_impl::read_hw(api_base *api_obj, obj_key_t *key,
     return SDK_RET_OK;
 }
 
-int
-nexthop_group_impl::backup(obj_info_t *info) {
+sdk_ret_t
+nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     sdk_ret_t ret;
-    pds::NhGroupGetResponse nhg_pbuf;
-    uint32_t pbuf_byte_size;
-    uint32_t obj_size   = g_upg_state->api_upg_ctx()->obj_size();
-    uint32_t obj_offset = g_upg_state->api_upg_ctx()->obj_offset();
-    char           *mem = g_upg_state->api_upg_ctx()->mem();
-    pds_nexthop_group_info_t *dinfo = (pds_nexthop_group_info_t *)info;
+    pds::NhGroupGetResponse proto_msg;;
+    pds_nexthop_group_info_t *nh_group_info;
+    obj_tlv_t *tlv;
+    uint32_t obj_size, size_left;
 
-    ret = fill_info_(dinfo);
+    tlv = (obj_tlv_t *)upg_info->mem;
+    size_left = upg_info->backup.size_left;
+    nh_group_info = (pds_nexthop_group_info_t *)info;
+
+    ret = fill_info_(nh_group_info);
     if (unlikely(ret != SDK_RET_OK)) {
-        return -1;
+        return ret;
     }
     // convert api info to proto
-    pds_nh_group_api_info_to_proto(dinfo, (void *)&nhg_pbuf);
-    pbuf_byte_size = nhg_pbuf.ByteSizeLong();
-    if ((obj_offset + pbuf_byte_size + 4) > obj_size) {
-        PDS_TRACE_ERR("Failed to backup nh group:%s, out of space",
-                                           dinfo->spec.key.str());
-        return -1;
+    pds_nh_group_api_info_to_proto(nh_group_info, (void *)&proto_msg);
+    obj_size = proto_msg.ByteSizeLong();
+    if ((obj_size + PDS_PROTO_MSG_OBJ_LEN) > size_left) {
+        PDS_TRACE_ERR("Failed to backup nh group %s, bytes needed %u left %u",
+                      nh_group_info->spec.key.str(),
+                      obj_size + PDS_PROTO_MSG_OBJ_LEN, size_left);
+        return SDK_RET_OOM;
     }
-    // now serialize the proto buf
-    *(uint32_t *)&mem[obj_offset] = pbuf_byte_size;
-    if (nhg_pbuf.SerializeToArray(&mem[obj_offset + 4],
-                              pbuf_byte_size) == false) {
-        PDS_TRACE_ERR("Failed to serialize nh group:%s", dinfo->spec.key.str());
-        return -1;
+
+    // now serialize the proto msg
+    tlv->len = obj_size;
+    if (proto_msg.SerializeToArray(tlv->obj, tlv->len) == false) {
+        PDS_TRACE_ERR("Failed to serialize nh group %s",
+                      nh_group_info->spec.key.str());
+        return SDK_RET_OOM;
     }
-    return (pbuf_byte_size + 4);
+    upg_info->size = obj_size + PDS_PROTO_MSG_OBJ_LEN;
+    return ret;
 }
 
 sdk_ret_t
