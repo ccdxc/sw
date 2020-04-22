@@ -88,6 +88,10 @@ def is_table_gen_key_with_data(table, pddict):
 def is_table_gen_hints(table, pddict):
     return is_table_hash_based(table, pddict)
 
+# generate c compatible struct
+def is_table_gen_c_compatible(table, pddict):
+    return is_table_index_based(table, pddict)
+
 # TODO use pragmas
 def is_table_pad_256(table, pipeline):
     if 'v4' in str(table):

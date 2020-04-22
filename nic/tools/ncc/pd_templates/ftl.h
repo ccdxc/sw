@@ -120,11 +120,13 @@
 #ifndef ${header_define}
 #define ${header_define}
 
+#ifdef __cplusplus
 #include "include/sdk/base_table_entry.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
+#endif
 #include "nic/sdk/lib/p4/p4_utils.hpp"
 //::
 //::     k_d_action_data_json = {}
@@ -628,9 +630,11 @@ ${setters_gen_str}
 //::                # DATA STRUCT
 //::                ######################################
 //::
-//::                if is_table_index_based(table, pddict):
+//::                if is_table_gen_c_compatible(table, pddict):
 struct __attribute__((__packed__)) ${struct_full_name} {
 //::                else:
+//::                    # enclose c++ class in ifdef
+#ifdef __cplusplus
 struct __attribute__((__packed__)) ${struct_full_name} : base_table_entry_t {
 //::                #endif
 //::                for data_field in reversed(data_fields_list):
@@ -1231,6 +1235,10 @@ public:
 //::                #endfor
 #endif
 };
+//::                if not is_table_gen_c_compatible(table, pddict):
+//::                    # enclose c++ class in ifdef
+#endif
+//::                #endif
 //::
 //::                # dont generate derived class methods for index tables
 //::                if not is_table_index_based(table, pddict):
