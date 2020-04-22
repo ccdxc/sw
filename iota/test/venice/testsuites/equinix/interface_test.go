@@ -28,7 +28,6 @@ var _ = Describe("Interface tests", func() {
 	Context("Interfaces", func() {
 
 		It("Update Loopback IP", func() {
-			Skip("Disable test for sanity")
 			fakeNaples := !ts.tb.HasNaplesHW()
 
 			lbc := objects.GetLoopbacks(ts.model.ConfigClient(), ts.model.Testbed())

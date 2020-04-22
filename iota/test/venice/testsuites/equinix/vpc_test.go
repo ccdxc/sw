@@ -33,13 +33,11 @@ var _ = Describe("VPC", func() {
 
 	Context("VPC tests", func() {
 		It("Add & delete VPC two times", func() {
-			Skip("Disabling test for sanity")
 			vpcAddDel()
 			vpcAddDel()
 		})
 
 		It("Multiple VPCs per Tenant", func() {
-			Skip("Disabling test for sanity")
 			tenantName, err := defaultTenantName()
 			Expect(err).ShouldNot(HaveOccurred())
 			log.Infof("Tenant name : %s", tenantName)

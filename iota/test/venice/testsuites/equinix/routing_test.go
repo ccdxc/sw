@@ -31,8 +31,6 @@ var _ = Describe("Routing Config Tests", func() {
 
 	Context("Routing tests", func() {
 		It("Update Underlay ASN", func() {
-			Skip("Disabling test for sanity")
-
 			// get all existing routing config
 			rcc, err := ts.model.ListRoutingConfig()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -125,7 +123,6 @@ var _ = Describe("Routing Config Tests", func() {
 			Expect(rcc.Commit()).Should(Succeed())
 		})
 		It("Change Timer config & verify", func() {
-			Skip("Disable till intermittent pdsagent crash is fixed")
 			// get all existing routing config
 			rcc, err := ts.model.ListRoutingConfig()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -154,7 +151,6 @@ var _ = Describe("Routing Config Tests", func() {
 			Expect(orig.Commit()).Should(Succeed())
 		})
 		It("Add, delete ECX Peer in RR", func() {
-			Skip("Disable test for sanity")
 			// get all existing routing config
 			rcc, err := ts.model.ListRoutingConfig()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -177,8 +173,6 @@ var _ = Describe("Routing Config Tests", func() {
 					}
 					nbrs = append(nbrs, newNbr)
 					v.RoutingObj.Spec.BGPConfig.Neighbors = nbrs
-					log.Infof("2. %v", nbrs)
-					log.Infof("%+v", v)
 					break
 				}
 			}
@@ -211,7 +205,6 @@ var _ = Describe("Routing Config Tests", func() {
 		})
 
 		It("Add, delete DSCAutoConfig for Naples in RR", func() {
-			Skip("Disable test for sanity")
 			// get all existing routing config
 			rcc, err := ts.model.ListRoutingConfig()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -278,7 +271,7 @@ var _ = Describe("Routing Config Tests", func() {
 				for _, n := range v.RoutingObj.Spec.BGPConfig.Neighbors {
 					if n.DSCAutoConfig {
 						found = true
-						n.Password = "N0isytem$"
+						n.Password = "N0isystem$"
 					}
 				}
 				if !found {
@@ -290,7 +283,7 @@ var _ = Describe("Routing Config Tests", func() {
 						RemoteAS:              100,
 						MultiHop:              10,
 						EnableAddressFamilies: []string{"l2vpn-evpn"},
-						Password:              "N0isytem$",
+						Password:              "N0isystem$",
 						DSCAutoConfig:         true,
 					}
 					nbrs = append(nbrs, newNbr)
@@ -684,17 +677,19 @@ func verifyNaplesBgpState(expectedState string) {
 	//Get pdsagent o/p from Naples and compare
 	fakeNodes := ts.model.Naples().FakeNodes
 	for _, node := range fakeNodes {
-		//populate expected o/p
-		expected, _ := getExpectedNaplesState(r, node, false, expectedState)
-
 		//verify pdsinfo matches expected veniceinfo
 		Eventually(func() bool {
+			//populate expected o/p
+			expected, _ := getExpectedNaplesState(r, node, false, expectedState)
+
 			existing := getNaplesState(node, "/naples/nic/bin/pdsctl", false)
+			log.Infof("Naples: Expected bgp state %+v", expected)
+			log.Infof("Naples: Existing bgp state %+v", existing)
 			for _, n := range expected.Neighbors {
-				log.Infof("**** Expected %+v", n)
+				log.Infof("Naples: Expected nbr %+v", n)
 			}
 			for _, n := range existing.Neighbors {
-				log.Infof("**** Existing %+v", n)
+				log.Infof("Naples: Existing nbr %+v", n)
 			}
 			return reflect.DeepEqual(expected, existing)
 		}).Should(BeTrue())
@@ -707,14 +702,14 @@ func verifyNaplesBgpState(expectedState string) {
 			expected, _ := getExpectedNaplesState(r, node, true, expectedState)
 
 			existing := getNaplesState(node, "/nic/bin/pdsctl", true)
-			log.Infof("***** 2.Expected %+v", expected)
-			log.Infof("***** 2. Existing %+v", existing)
+			log.Infof("Naples: Expected bgp state %+v", expected)
+			log.Infof("Naples: Existing bgp state %+v", existing)
 
 			for _, n := range expected.Neighbors {
-				log.Infof("**** 1.Expected %+v", n)
+				log.Infof("Naples: Expected nbr %+v", n)
 			}
 			for _, n := range existing.Neighbors {
-				log.Infof("**** 1.Existing %+v", n)
+				log.Infof("Naples: Existing nbr %+v", n)
 			}
 
 			return reflect.DeepEqual(expected, existing)
@@ -741,11 +736,15 @@ func verifyRRState() {
 		expected := getExpectedRRState(r)
 
 		existing := getRRState(pegContainerCollection, pegContainer, "/bin/rtrctl")
+
+		log.Infof("RR: Expected bgp state %+v", expected)
+		log.Infof("RR: Existing bgp state %+v", existing)
+
 		for _, n := range expected.Neighbors {
-			log.Infof("**** RR: Expected %+v", n)
+			log.Infof("RR: Expected nbr %+v", n)
 		}
 		for _, n := range existing.Neighbors {
-			log.Infof("**** RR: Existing %+v", n)
+			log.Infof("RR: Existing nbr %+v", n)
 		}
 		Expect(reflect.DeepEqual(expected, existing)).Should(BeTrue())
 	}

@@ -39,7 +39,6 @@ var _ = Describe("Network", func() {
 
 	Context("Network tests", func() {
 		It("Add a subnet & verify config", func() {
-			Skip("Disabling test for sanity")
 			tenantName, err := defaultTenantName()
 			Expect(err).ShouldNot(HaveOccurred())
 			log.Infof("Tenant name : %s", tenantName)
@@ -100,7 +99,6 @@ var _ = Describe("Network", func() {
 		})
 
 		It("Change subnet prefix & verify config", func() {
-			Skip("Disable test for sanity")
 			tenantName, err := defaultTenantName()
 			Expect(err).ShouldNot(HaveOccurred())
 			log.Infof("Tenant name : %s", tenantName)
@@ -165,7 +163,6 @@ var _ = Describe("Network", func() {
 		})
 
 		It("Change Gateway IP & verify config", func() {
-			Skip("Disable for now ; enable after gateway ip change is allowed")
 			//Get existing tenant and network
 			nwc, err := getNetworkCollection()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -218,7 +215,6 @@ var _ = Describe("Network", func() {
 		})
 
 		It("Change Vni & verify it's not allowed", func() {
-			Skip("Disabling test for sanity")
 			//Get existing tenant and network
 			nwc, err := getNetworkCollection()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -250,7 +246,6 @@ var _ = Describe("Network", func() {
 		})
 
 		It("Change VPC for subnet & verify it's not allowed", func() {
-			Skip("Disabling test for sanity")
 			//Get existing tenant and network
 			nwc, err := getNetworkCollection()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -285,7 +280,6 @@ var _ = Describe("Network", func() {
 		})
 
 		It("Change RT & verify config", func() {
-			Skip("Disabling test for sanity")
 			//Get existing tenant and network
 			nwc, err := getNetworkCollection()
 			Expect(err).ShouldNot(HaveOccurred())
