@@ -1,6 +1,7 @@
 package base
 
 import (
+	"context"
 	"errors"
 	"math/rand"
 	"strings"
@@ -136,8 +137,13 @@ func (sm *SysModel) TriggerDeleteAddConfig(percent int) error {
 		return err
 	}
 
-	err = sm.InitConfig(sm.Scale, sm.ScaleData)
-	return err
+	err = sm.TeardownWorkloads(sm.Workloads())
+	if err != nil {
+		return err
+	}
+
+	return sm.SetupDefaultConfig(context.Background(), sm.Scale, sm.ScaleData)
+
 }
 
 //RunRandomTrigger runs a random trigger
