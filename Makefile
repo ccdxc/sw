@@ -759,29 +759,23 @@ naples-firmware-gold:
 naples-firmware:
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 clean
 	$(MAKE) ws-tools
-	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 firmware
-	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
+	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=${ASIC} firmware
+	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=${ASIC} package-drivers
 
 naples-firmware-iterative:
 	$(MAKE) ws-tools
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 firmware
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
 
-naples-firmware-elba:
-	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=elba clean
-	$(MAKE) ws-tools
-	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=elba firmware
-	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=elba package-drivers
-
 naples-firmware-tarball:
-	@if [ "x${RELEASE}" = "x" ]; then echo "RELEASE is not set"; else cd ../ ; asset-push --assets-server-colo NULL --remote-name sw-${PIPELINE}.tar.gz builds hourly ${RELEASE} sw || cd sw; fi
-	tar -zcf $(NAPLES_FW_TAR) nic/naples_fw.tar nic/naples_fw_.tar --ignore-failed-read nic/naples_upg_fw.tar --ignore-failed-read nic/naples_upg_fw_.tar platform/gen/drivers-*.tar.xz platform/gen/drivers-*.zip platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
+	@if [ "x${RELEASE}" = "x" ]; then echo "RELEASE is not set"; else cd ../ ; if [ "${ASIC}" = "capri" ]; then REMOTE_NAME=sw-${PIPELINE}; else REMOTE_NAME=sw-${PIPELINE}-${ASIC}; fi; asset-push --assets-server-colo NULL --remote-name sw-${PIPELINE}.tar.gz builds hourly ${RELEASE} sw || cd sw; fi
+	tar -zcf $(NAPLES_FW_TAR) nic/naples_fw*.tar nic/naples_fw_*.tar --ignore-failed-read nic/naples_upg_fw*.tar --ignore-failed-read nic/naples_upg_fw_*.tar platform/gen/drivers-*.tar.xz platform/gen/drivers-*.zip platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
 
 naples-firmware-apulu-tarball:
 	@if [ "x${RELEASE}" = "x" ]; then echo "RELEASE is not set"; else cd ../ ; asset-push --assets-server-colo NULL --remote-name sw-${PIPELINE}.tar.gz builds hourly ${RELEASE} sw || cd sw; fi
-	tar -zcf $(NAPLES_FW_TAR) nic/naples_fw.tar nic/naples_fw_venice.tar nic/naples_fw_.tar --ignore-failed-read nic/naples_upg_fw.tar --ignore-failed-read nic/naples_upg_fw_.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
+	tar -zcf $(NAPLES_FW_TAR) nic/naples_fw*.tar nic/naples_fw_venice.tar nic/naples_fw_*.tar --ignore-failed-read nic/naples_upg_fw*.tar --ignore-failed-read nic/naples_upg_fw_*.tar platform/gen/drivers-*.tar.xz platform/goldfw/naples/naples_fw.tar platform/hosttools nic/host.tar nic/test-utils.tgz  nic/box.rb nic/entrypoint.sh tools/test-build storage/gen/*.tar.xz
 
-naples-firmware-tarball-iris: NAPLES_FW_TAR=naples_fw_all.tgz
+naples-firmware-tarball-iris: NAPLES_FW_TAR=$(shell if [ "${ASIC}" = "capri" ]; then echo naples_fw_all.tgz; else echo naples_fw_all_${ASIC}.tgz; fi)
 naples-firmware-tarball-iris: naples-firmware-tarball
 
 naples-firmware-tarball-apulu: NAPLES_FW_TAR=naples_fw_all_apulu.tgz

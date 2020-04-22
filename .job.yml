@@ -22,10 +22,10 @@ builds:
     artifacts:
       - /sw/naples_fw_all.tgz
   build-iris-arm-elba:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && V=1 make naples-firmware-elba && touch /sw/build_elba.txt"]
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && V=1 ASIC=elba make CUSTOM_BUILDROOT=1 naples-firmware && ASIC=elba make PIPELINE=iris naples-firmware-tarball-iris"]
     owners: ["email:rahulshekhar@pensando.io"]
     artifacts:
-      - /sw/build_elba.txt
+      - /sw/naples_fw_all_elba.tgz
   build-iota:
     commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && cd iota && make iota-tarball"]
     owners: ["email:jainvipin@pensando.io"]
