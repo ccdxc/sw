@@ -842,6 +842,29 @@ public:
         clear_data();
     }
 
+    bool compare_key_data(void *s) {
+        return compare_key(s) && compare_data(s);
+    }
+
+    bool compare_data(void *_s) {
+        ${struct_full_name} *s = (${struct_full_name} *)_s;
+//::                for data_field in reversed(data_fields_list):
+//::                    # skip over key fields if part of data fields
+//::                    if find_field(data_field, key_fields_list) or not data_field.is_key_appdata_field():
+//::                        continue
+//::                    #endif
+//::                    field_name = data_field.name()
+//::                    field_width = data_field.width()
+//::                    if field_width > get_field_bit_unit():
+//::                        arr_len = get_bit_arr_length(field_width)
+        if (memcmp(${field_name}, s->${field_name}, ${arr_len})) return false;
+//::                        else:
+        if (${field_name} != s->${field_name}) return false;
+//::                    #endif
+//::                 #endfor
+        return true;
+    }
+
     bool compare_key(void *_s) {
         ${struct_full_name} *s = (${struct_full_name} *)_s;
 

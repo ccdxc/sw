@@ -16,8 +16,11 @@ struct __attribute__((__packed__)) base_table_entry_t {
     virtual void build_key(void *s) { SDK_ASSERT(0); }
     virtual base_table_entry_t *construct(uint32_t size = 0) { SDK_ASSERT(0); return NULL; }
     virtual void copy_key_data(void *s) { SDK_ASSERT(0); }
+    virtual void clear_data(void) { SDK_ASSERT(0); }
     virtual void clear_key_data(void) { SDK_ASSERT(0); }
-    virtual bool compare_key(void *s) { SDK_ASSERT(0); return false;}
+    virtual bool compare_key(void *s) { SDK_ASSERT(0); return false; }
+    virtual bool compare_data(void *s) { SDK_ASSERT(0); return false; }
+    virtual bool compare_key_data(void *s) { SDK_ASSERT(0); return false; }
     virtual void set_hint_hash(uint32_t slot, uint32_t hint, uint32_t hash) { SDK_ASSERT(0); }
     virtual void get_hint_hash(uint32_t slot, uint32_t &hint, uint16_t &hash) { SDK_ASSERT(0); }
     virtual void get_hint(uint32_t slot, uint32_t &hint) { SDK_ASSERT(0); }

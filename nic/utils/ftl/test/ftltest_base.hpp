@@ -185,10 +185,12 @@ public:
                          bool with_hash = false) {
         auto params = gen_entry(index, with_hash);
         auto params2 = gen_entry(index, with_hash);
+
+        params->entry->clear_data();
         auto rs = get_(params);
         MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         assert(params->handle.valid());
-        if (!params->entry->compare_key(params2->entry)) {
+        if (!params->entry->compare_key_data(params2->entry)) {
             return sdk::SDK_RET_ENTRY_NOT_FOUND;
         }
         return SDK_RET_OK;
