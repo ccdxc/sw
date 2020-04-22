@@ -296,13 +296,7 @@ devapi_impl::qos_class_create(qos_class_info_t *info) {
 }
 
 sdk_ret_t
-devapi_impl::qos_class_delete(uint8_t group, bool clear_stats) {
-    PDS_TRACE_WARN("Not implemented");
-    return SDK_RET_OK;
-}
-
-sdk_ret_t 
-devapi_impl::qos_clear_port_stats(uint32_t port_num) {
+devapi_impl::qos_class_delete(uint8_t group) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }

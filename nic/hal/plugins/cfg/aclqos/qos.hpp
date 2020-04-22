@@ -26,10 +26,6 @@ using qos::QosClassDeleteRequest;
 using qos::QosClassDeleteResponse;
 using qos::QosClassDeleteRequestMsg;
 using qos::QosClassDeleteResponseMsg;
-using qos::QosClearPortStatsRequest;
-using qos::QosClearPortStatsResponse;
-using qos::QosClearPortStatsRequestMsg;
-using qos::QosClearPortStatsResponseMsg;
 using qos::QosClassSetGlobalPauseTypeRequest;
 using qos::QosClassSetGlobalPauseTypeRequestMsg;
 using qos::QosClassSetGlobalPauseTypeResponseMsg;
@@ -310,8 +306,6 @@ hal_ret_t qosclass_update(qos::QosClassSpec& spec,
                           qos::QosClassResponse *rsp);
 hal_ret_t qosclass_delete(qos::QosClassDeleteRequest& req,
                           qos::QosClassDeleteResponse *rsp);
-hal_ret_t qosclearport_stats(qos::QosClearPortStatsRequest& req,
-                          qos::QosClearPortStatsResponse *rsp);
 hal_ret_t qosclass_get(qos::QosClassGetRequest& req,
                        qos::QosClassGetResponseMsg *rsp);
 hal_ret_t qos_class_thresholds_get(qos::QosClassThresholdsGetRequest& req,

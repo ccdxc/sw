@@ -375,24 +375,6 @@ func (mr *MockQOSClientMockRecorder) QosClassSetGlobalPauseType(ctx, in interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassSetGlobalPauseType", reflect.TypeOf((*MockQOSClient)(nil).QosClassSetGlobalPauseType), varargs...)
 }
 
-// QosClearPortStats mocks base method
-func (m *MockQOSClient) QosClearPortStats(ctx context.Context, in *QosClearPortStatsRequestMsg, opts ...grpc.CallOption) (*QosClearPortStatsResponseMsg, error) {
-	varargs := []interface{}{ctx, in}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "QosClearPortStats", varargs...)
-	ret0, _ := ret[0].(*QosClearPortStatsResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QosClearPortStats indicates an expected call of QosClearPortStats
-func (mr *MockQOSClientMockRecorder) QosClearPortStats(ctx, in interface{}, opts ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClearPortStats", reflect.TypeOf((*MockQOSClient)(nil).QosClearPortStats), varargs...)
-}
-
 // CoppUpdate mocks base method
 func (m *MockQOSClient) CoppUpdate(ctx context.Context, in *CoppRequestMsg, opts ...grpc.CallOption) (*CoppResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -528,19 +510,6 @@ func (m *MockQOSServer) QosClassSetGlobalPauseType(arg0 context.Context, arg1 *Q
 // QosClassSetGlobalPauseType indicates an expected call of QosClassSetGlobalPauseType
 func (mr *MockQOSServerMockRecorder) QosClassSetGlobalPauseType(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassSetGlobalPauseType", reflect.TypeOf((*MockQOSServer)(nil).QosClassSetGlobalPauseType), arg0, arg1)
-}
-
-// QosClearPortStats mocks base method
-func (m *MockQOSServer) QosClearPortStats(arg0 context.Context, arg1 *QosClearPortStatsRequestMsg) (*QosClearPortStatsResponseMsg, error) {
-	ret := m.ctrl.Call(m, "QosClearPortStats", arg0, arg1)
-	ret0, _ := ret[0].(*QosClearPortStatsResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// QosClearPortStats indicates an expected call of QosClearPortStats
-func (mr *MockQOSServerMockRecorder) QosClearPortStats(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClearPortStats", reflect.TypeOf((*MockQOSServer)(nil).QosClearPortStats), arg0, arg1)
 }
 
 // CoppUpdate mocks base method

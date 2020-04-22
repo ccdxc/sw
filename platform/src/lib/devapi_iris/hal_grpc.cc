@@ -340,18 +340,6 @@ hal_grpc::qos_class_delete(QosClassDeleteRequestMsg& req_msg,
 }
 
 Status
-hal_grpc::qos_clear_port_stats(QosClearPortStatsRequestMsg& req_msg,
-                           QosClearPortStatsResponseMsg& rsp_msg)
-{
-    grpc::ClientContext context;
-    grpc::Status        status;
-
-    SET_TIMEOUT();
-    status = qos_stub_->QosClearPortStats(&context, req_msg, &rsp_msg);
-    return status;
-}
-
-Status
 hal_grpc::qos_class_set_global_pause_type(
                                 QosClassSetGlobalPauseTypeRequestMsg& req_msg,
                                 QosClassSetGlobalPauseTypeResponseMsg& rsp_msg)

@@ -106,8 +106,6 @@ using qos::QosClassRequestMsg;
 using qos::QosClassResponseMsg;
 using qos::QosClassDeleteRequestMsg;
 using qos::QosClassDeleteResponseMsg;
-using qos::QosClearPortStatsRequestMsg;
-using qos::QosClearPortStatsResponseMsg;
 using qos::QosClassSetGlobalPauseTypeRequestMsg;
 using qos::QosClassSetGlobalPauseTypeResponseMsg;
 using accelRGroup::AccelRGroupAddRequestMsg;
@@ -256,8 +254,6 @@ public:
                             QosClassResponseMsg& rsp_msg);
     Status qos_class_delete(QosClassDeleteRequestMsg& req_msg,
                             QosClassDeleteResponseMsg& rsp_msg);
-    Status qos_clear_port_stats(QosClearPortStatsRequestMsg& req_msg,
-                            QosClearPortStatsResponseMsg& rsp_msg);
     Status qos_class_set_global_pause_type(
                                 QosClassSetGlobalPauseTypeRequestMsg& req_msg,
                                 QosClassSetGlobalPauseTypeResponseMsg& rsp_msg);

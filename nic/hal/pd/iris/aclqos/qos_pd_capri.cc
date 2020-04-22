@@ -469,47 +469,6 @@ end:
     return ret;
 }
 
-//-----------------------------------------------------------------------------
-// PD Qos-class Reset Stats 
-//-----------------------------------------------------------------------------
-static hal_ret_t
-qos_class_pd_reset_group_stats (pd_qos_class_t *qos_class_pd)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-
-    if (!qos_class_pd) {
-        // Nothing to do
-        goto end;
-    }
-
-    for (unsigned port = 0; port < TM_NUM_PORTS; port++) {
-        capri_tm_reset_iq_port_mon_stats(port, qos_class_pd->uplink.iq);
-        capri_tm_reset_oq_port_mon_stats(port, qos_class_pd->dest_oq);
-    }
-
-end:
-    return ret;
-}
-
-//-----------------------------------------------------------------------------
-// PD Qos Clear Port Stats 
-//-----------------------------------------------------------------------------
-static hal_ret_t
-qos_pd_clear_port_stats(uint32_t port_num)
-{
-    hal_ret_t       ret = HAL_RET_OK;
-
-    for (unsigned iq = 0; iq < HAL_MAX_UPLINK_IQS; iq++) {
-        capri_tm_reset_iq_port_mon_stats(port_num, iq);
-    }
-
-    for (unsigned oq = 0; oq < HAL_MAX_UPLINK_OQS; oq++) {
-        capri_tm_reset_oq_port_mon_stats(port_num, oq);
-    }
-
-    return ret;
-}
-
 // Program the oq scheduler in the given port
 static hal_ret_t
 program_oq (tm_port_t port, tm_q_t oq, qos_class_t *qos_class)
@@ -2421,59 +2380,6 @@ pd_qos_class_delete (pd_func_args_t *pd_func_args)
     }
 
 err:
-    return ret;
-}
-
-//-----------------------------------------------------------------------------
-// PD Qos-class Reset Stats
-//-----------------------------------------------------------------------------
-hal_ret_t
-pd_qos_class_reset_stats(pd_func_args_t *pd_func_args)
-{
-    hal_ret_t      ret;
-    pd_qos_class_reset_stats_args_t *args = pd_func_args->pd_qos_class_reset_stats;
-    pd_qos_class_t *qos_class_pd;
-
-    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    SDK_ASSERT_RETURN((args->qos_class != NULL), HAL_RET_INVALID_ARG);
-    SDK_ASSERT_RETURN((args->qos_class->pd != NULL), HAL_RET_INVALID_ARG);
-    HAL_TRACE_DEBUG("clearing stats for qos_class {}",
-                    args->qos_class->key);
-    qos_class_pd = (pd_qos_class_t *)args->qos_class->pd;
-
-    // Reset QoS Stats
-    if (!qos_class_pd) {
-        // Nothing to do
-        goto end;
-    }
-
-    ret = qos_class_pd_reset_group_stats(qos_class_pd);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed pd qos_class cleanup Qos-class {}, ret {}",
-                      args->qos_class->key, ret);
-    }
-end:
-    return ret;
-}
-
-//-----------------------------------------------------------------------------
-// PD Qos Clear Port Stats
-//-----------------------------------------------------------------------------
-hal_ret_t
-pd_qos_clear_port_stats(pd_func_args_t *pd_func_args)
-{
-    hal_ret_t      ret;
-    pd_qos_clear_port_stats_args_t *args = pd_func_args->pd_qos_clear_port_stats;
-
-    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-
-    // Clear port stats for the port
-    ret = qos_pd_clear_port_stats(args->port_num);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed pd qos clear port stats for port {}, ret {}",
-                      args->port_num, ret);
-    }
-
     return ret;
 }
 

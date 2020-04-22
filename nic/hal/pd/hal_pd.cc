@@ -252,7 +252,6 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_CREATE, pd_qos_class_create);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_RESTORE, pd_qos_class_restore);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_DELETE, pd_qos_class_delete);
-    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_RESET_STATS, pd_qos_class_reset_stats);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_UPDATE, pd_qos_class_update);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_MAKE_CLONE, pd_qos_class_make_clone);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_MEM_FREE, pd_qos_class_mem_free);
@@ -267,7 +266,6 @@ hal_pd_load_symbols (void)
                    pd_qos_swm_queue_init);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT,
                    pd_qos_swm_queue_deinit);
-    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLEAR_PORT_STATS, pd_qos_clear_port_stats);
 
     // copp
     PD_FUNC_LOAD(PD_FUNC_ID_COPP_CREATE, pd_copp_create);
