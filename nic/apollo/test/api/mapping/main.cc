@@ -686,7 +686,7 @@ TEST_F(mapping_test, local_mapping_update_tag3) {
 
 /// \brief initial state no public IP no Tag,
 /// \update mapping M1 with no public IP and no Tag.(effectively no change)
-TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_1_1) {
+TEST_F(mapping_test, local_mapping_update_pip_tag_1_1) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
@@ -918,7 +918,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_2_4) {
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
 
-#if 0
 /// \brief initial state with public IP and with Tag,
 /// \update mapping M1 with with public IP and with new Tag.
 TEST_F(mapping_test, local_mapping_update_pip_tag_2_5) {
@@ -945,7 +944,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_2_5) {
     lmap_delete(feeders[0]);
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
-#endif
 
 /// \brief initial state with no public IP no Tag,
 /// \update mapping M1 with public IP and no Tag.
@@ -1110,7 +1108,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_1) {
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
 
     // init
     create_local_mapping_feeders(feeders, 1, 1, 1, 0);
@@ -1136,7 +1133,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_2) {
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
 
     // init
     create_local_mapping_feeders(feeders, 1, 1, 1, 1);
@@ -1154,7 +1150,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_2) {
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
 
-#if 0
 /// \brief initial state with public IP and no Tag,
 /// \update mapping M1 no public IP and with Tag.
 TEST_F(mapping_test, local_mapping_update_pip_tag_4_3) {
@@ -1162,7 +1157,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_3) {
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
     uint64_t chg_bmap = 0;
 
     // init
@@ -1185,7 +1179,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_3) {
     lmap_delete(feeders[0]);
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
-#endif
 
 /// \brief initial state with  with public IP and with Tag,
 /// \update mapping M1 no public IP and no Tag.
@@ -1194,7 +1187,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_4) {
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
     uint64_t chg_bmap;
 
     // init
@@ -1222,7 +1214,6 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_5) {
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
     uint64_t chg_bmap;
 
     // init
@@ -1246,14 +1237,14 @@ TEST_F(mapping_test, local_mapping_update_pip_tag_4_5) {
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
 
+#if 0
 /// \brief initial state  with public IP no Tag,
 /// \update mapping M1 new public IP and no Tag.
-TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_1) {
+TEST_F(mapping_test, local_mapping_update_pip_tag_5_1) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
 
     // init
     create_local_mapping_feeders(feeders, 1, 1, 1, 0);
@@ -1274,12 +1265,11 @@ TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_1) {
 
 /// \brief initial state with public IP and with  Tag,
 /// \update mapping M1  new public IP and with Tag.
-TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_2) {
+TEST_F(mapping_test, local_mapping_update_pip_tag_5_2) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
 
     // init
     create_local_mapping_feeders(feeders, 1, 1, 1, 1);
@@ -1300,12 +1290,11 @@ TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_2) {
 
 /// \brief initial state with public IP and no Tag,
 /// \update mapping M1 new public IP and with Tag.
-TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_3) {
+TEST_F(mapping_test, local_mapping_update_pip_tag_5_3) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
     uint64_t chg_bmap = 0;
 
     // init
@@ -1332,12 +1321,11 @@ TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_3) {
 
 /// \brief initial state with  with public IP and with Tag,
 /// \update mapping M1 new public IP and no Tag.
-TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_4) {
+TEST_F(mapping_test, local_mapping_update_pip_tag_5_4) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
     uint64_t chg_bmap;
 
     // init
@@ -1361,12 +1349,11 @@ TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_4) {
 
 /// \brief initial state with public IP and with Tag,
 /// \update mapping M1 with new public IP and with new Tag.
-TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_5) {
+TEST_F(mapping_test, local_mapping_update_pip_tag_5_5) {
     if (!apulu()) return;
 
     pds_local_mapping_spec_t spec = {0};
     local_mapping_feeder feeders[1];
-    ip_prefix_t public_ip_pfx;
     uint64_t chg_bmap;
 
     // init
@@ -1390,6 +1377,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_update_pip_tag_5_5) {
     lmap_delete(feeders[0]);
     lmap_read(feeders[0], SDK_RET_ENTRY_NOT_FOUND);
 }
+#endif
 
 // --------------------------- END LOCAL MAPPINGS --------------------
 

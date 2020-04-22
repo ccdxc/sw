@@ -360,6 +360,12 @@ public:
     void set_local(bool local) { is_local_ = local; }
 
     /**
+     * @brief return the number of tags this mapping has
+     * @return    tag count of this mapping
+     */
+    uint32_t num_tags(void) const { return num_tags_; }
+
+    /**
      * @brief set the number of tags this mapping has
      * @param[in] num_tags    number of tags
      */

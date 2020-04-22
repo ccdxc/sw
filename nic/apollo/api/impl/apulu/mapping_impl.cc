@@ -1854,8 +1854,10 @@ mapping_impl::handle_public_ip_update_(vpc_impl *vpc, subnet_entry *subnet,
         // here because old version of the object, when nuked, will remove
         // the public IP mapping entries and NAT entries previously installed
         // and free all the resources
-        ret = deactivate_public_ip_rxdma_mapping_entry_(vpc, orig_mapping);
-        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        if (orig_mapping->num_tags()) {
+            ret = deactivate_public_ip_rxdma_mapping_entry_(vpc, orig_mapping);
+            SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        }
         upd_public_ip_mappings = false;
     } else if (obj_ctxt->upd_bmap & PDS_MAPPING_UPD_PUBLIC_IP_UPD) {
         // before updating the NAT table, 1st transfer the ownership of
