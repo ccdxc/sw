@@ -257,16 +257,23 @@ func (sm *SysModel) CheckNaplesForErrors() {
 	}
 
 	// check the response
+	match := false
 	for _, cmdResp := range resp {
 		if cmdResp.ExitCode == 0 {
 			if strings.Contains(cmdResp.Stdout, "rx_queue_empty") {
 				log.Infof("DPDK ERROR on %v: RX_QUEUE_EMPTY HAS NON-ZERO VALUE :%v", cmdResp.NodeName, cmdResp.Stdout)
+				match = true
 			}
 
 			if strings.Contains(cmdResp.Stdout, "rx_desc_data_error") {
 				log.Infof("DPDK ERROR on %v: RX_DESC_DATA_ERROR HAS NON-ZERO VALUE :%v", cmdResp.NodeName, cmdResp.Stdout)
+				match = true
 			}
 		}
+	}
+
+	if match == false {
+		log.Infof("No DPDK ERRORs")
 	}
 }
 
@@ -312,9 +319,10 @@ func (sm *SysModel) VerifyClusterStatus() error {
 				break
 			}
 		}
+		// check for dpdk errors. this can be removed later
+		sm.CheckNaplesForErrors()
+
 		if err != nil {
-			// check for dpdk errors in case of ping failure. this can be removed later
-			sm.CheckNaplesForErrors()
 			return err
 		}
 	}

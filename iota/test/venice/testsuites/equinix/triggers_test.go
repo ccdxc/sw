@@ -22,7 +22,6 @@ var _ = Describe("Trigger Tests", func() {
 	Context("Trigger Tests", func() {
 
 		It("Venice Reboot", func() {
-			//Skip("Disabling test for sanity")
 			Expect(ts.model.TriggerVeniceReboot(100)).Should(Succeed())
 			Eventually(func() error {
 				return ts.model.VerifyClusterStatus()
@@ -30,7 +29,6 @@ var _ = Describe("Trigger Tests", func() {
 		})
 
 		It("Host Reboot", func() {
-			//Skip("Disabling test for sanity")
 			Expect(ts.model.TriggerHostReboot(100)).Should(Succeed())
 			Eventually(func() error {
 				return ts.model.VerifyClusterStatus()
@@ -38,7 +36,6 @@ var _ = Describe("Trigger Tests", func() {
 		})
 
 		It("Link Flap", func() {
-			Skip("Disabling test for sanity")
 			Expect(ts.model.TriggerLinkFlap(100)).Should(Succeed())
 			Eventually(func() error {
 				return ts.model.VerifyClusterStatus()
@@ -46,7 +43,6 @@ var _ = Describe("Trigger Tests", func() {
 		})
 
 		It("Venice Paritition", func() {
-			Skip("Disabling test for sanity")
 			Expect(ts.model.TriggerVenicePartition(100)).Should(Succeed())
 			Eventually(func() error {
 				return ts.model.VerifyClusterStatus()
