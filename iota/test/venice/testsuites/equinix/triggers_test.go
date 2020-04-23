@@ -50,7 +50,6 @@ var _ = Describe("Trigger Tests", func() {
 		})
 
 		It("Delete Add config", func() {
-			Skip("Disabling test for sanity")
 			Expect(ts.model.TriggerDeleteAddConfig(100)).Should(Succeed())
 			Eventually(func() error {
 				return ts.model.VerifyClusterStatus()

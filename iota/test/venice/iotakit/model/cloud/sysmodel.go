@@ -502,3 +502,20 @@ func (sm *SysModel) TeardownWorkloads(wc *objects.WorkloadCollection) error {
 	log.Info("Delete workload successful")
 	return nil
 }
+
+
+//TriggerDeleteAddConfig triggers link flap
+func (sm *SysModel) TriggerDeleteAddConfig(percent int) error {
+
+    err := sm.CleanupAllConfig()
+         if err != nil {
+             return err
+         }
+
+     err = sm.TeardownWorkloads(sm.Workloads())
+         if err != nil {
+             return err
+         }
+
+     return sm.SetupDefaultConfig(context.Background(), sm.Scale, sm.ScaleData)
+}
