@@ -36,6 +36,9 @@ var _ = Describe("Trigger Tests", func() {
 		})
 
 		It("Link Flap", func() {
+			if ts.tb.HasNaplesSim() {
+				Skip("link flap trigger disabled on SIM")
+			}
 			Expect(ts.model.TriggerLinkFlap(100)).Should(Succeed())
 			Eventually(func() error {
 				return ts.model.VerifyClusterStatus()
