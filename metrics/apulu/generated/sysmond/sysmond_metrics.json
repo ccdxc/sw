@@ -1,0 +1,137 @@
+{
+    "FileName": "metrics.cc",
+    "Package": "api",
+    "Prefix": "sysmond",
+    "Pipeline": "apulu",
+    "Messages": [
+      {
+        "Name": "MemoryMetrics",
+        "Description": "System Memory",
+        "DisplayName": "System Memory",
+        "Tags": [
+          "Level7"
+        ],
+        "Scope": "PerASIC",
+        "Fields": [
+          {
+            "Name": "Totalmemory",
+            "DisplayName": "Total memory",
+            "Description": "Total memory of the system",
+            "Units": "KB",
+            "BaseType": "Counter"
+          },
+          {
+            "Name": "Availablememory",
+            "DisplayName": "Available memory",
+            "Description": "Available memory of the system",
+            "Units": "KB",
+            "BaseType": "Counter"
+          },
+          {
+            "Name": "Freememory",
+            "DisplayName": "Free memory",
+            "Description": "Free memory of the system",
+            "Units": "KB",
+            "BaseType": "Counter"
+          }
+        ]
+      },
+      {
+        "Name": "PowerMetrics",
+        "Description": "Asic Power",
+        "DisplayName": "Asic Power",
+        "Tags": [
+            "Level7"
+        ],
+        "Scope": "PerASIC",
+        "Fields": [
+          {
+            "Name": "Pin",
+            "DisplayName": "Input Power",
+            "Description": "Input power to the system",
+            "Units": "MilliWatts",
+            "BaseType": "Counter"
+          },
+          {
+            "Name": "Pout1",
+            "DisplayName": "Core Output Power",
+            "Description": "Core output power",
+            "Units": "MilliWatts",
+            "BaseType": "Counter"
+          },
+          {
+            "Name": "Pout2",
+            "DisplayName": "ARM Output Power",
+            "Description": "ARM output power",
+            "Units": "MilliWatts",
+            "BaseType": "Counter"
+          }
+        ]
+      },
+      {
+        "Name": "AsicTemperatureMetrics",
+        "Description": "Asic Temperature",
+        "DisplayName": "Asic Temperature",
+        "Tags": [
+            "Level7"
+        ],
+        "Scope": "PerASIC",
+        "Fields": [
+          {
+            "Name": "LocalTemperature",
+            "DisplayName": "Local Temperature",
+            "Description": "Temperature of the board in celsius",
+            "Units": "Celsius",
+            "BaseType": "Counter"
+          },
+          {
+            "Name": "DieTemperature",
+            "DisplayName": "Die Temperature",
+            "Description": "Temperature of the die in celsius",
+            "Units": "Celsius",
+            "BaseType": "Counter"
+          },
+          {
+            "Name": "HbmTemperature",
+            "DisplayName": "HBM Temperature",
+            "Description": "Temperature of the HBM in celsius",
+            "Units": "Celsius",
+            "BaseType": "Counter"
+          }
+        ]
+      },
+      {
+        "Name": "PortTemperatureMetrics",
+        "Description": "Port Transceiver Temperature",
+        "DisplayName": "Port Transceiver Temperature",
+        "Tags": [
+            "Level7"
+        ],
+        "Scope": "PerPort",
+        "Fields": [
+          {
+            "Name": "Temperature",
+            "DisplayName": "Transceiver temperature",
+            "Description": "Transceiver temperature in celsius",
+            "Units": "Celsius",
+            "BaseType": "Counter"
+          },
+          {
+            "Name": "WarningTemperature",
+            "DisplayName": "Transceiver warning temperature",
+            "Description": "Transceiver warning temperature in celsius",
+            "Units": "Celsius",
+            "BaseType": "Counter"
+          },
+          {
+            "Name": "AlarmTemperature",
+            "DisplayName": "Transceiver alarm temperature",
+            "Description": "Transceiver alarm temperature in celsius",
+            "Units": "Celsius",
+            "BaseType": "Counter"
+          }
+        ]
+      }
+    ]
+  }
+  
