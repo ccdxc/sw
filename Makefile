@@ -890,7 +890,7 @@ venice-image:
 		if [ -a nic/pegasus.tgz ]; then \
 			cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.apulu.tgz; \
 			else \
-			cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz; \
+			cd bin && tar -cf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz && tar -ztvf venice.tgz && ls -al venice.tgz; \
 			fi \
 	fi
 	printf "\n+++++++++++++++++ complete venice-image $$(date) +++++++++++++++++\n"

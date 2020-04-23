@@ -37,6 +37,8 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+ls -al /sw/bin/venice.tgz
+tar -ztvf /sw/bin/venice.tgz
 cp /sw/bin/venice.apulu.tgz bin/
 cp /sw/bin/venice.tgz bin/
 if [ $? -ne 0 ]; then
@@ -97,7 +99,10 @@ mkdir -p /sw/output/bundle
 mkdir -p /sw/output/apulu-bundle
 cp /sw/build_iris_sim.tar.gz /sw/output
 cp /sw/bin/venice_apidoc.pdf /sw/output
+ls -al bin/
 mv bin/venice.tgz /sw/output
+ls -al /sw/output
+tar -ztvf /sw/output/venice.tgz
 mv tools/docker-files/ova/output/venice.ova /sw/output
 mv tools/docker-files/ova/output/venice.qcow2 /sw/output
 mv tools/docker-files/ova/output-apulu/venice.ova /sw/output/venice.apulu.ova

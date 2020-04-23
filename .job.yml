@@ -98,7 +98,7 @@ builds:
     artifacts:
       - /sw/naples_fw_all_athena.tgz
   build-venice-image:
-    commands: ["bash", "-c", "mkdir -p /sw/bin; cd /usr/src/github.com/pensando/sw/test/ci_targets/e2e-venice-image; GIT_VERSION=$(git describe --tags --dirty --always) GIT_COMMIT=$(git rev-list -1 HEAD --abbrev-commit) go run make-venice-image.go"]
+    commands: ["bash", "-c", "mkdir -p /sw/bin; cd /usr/src/github.com/pensando/sw/test/ci_targets/e2e-venice-image; GIT_VERSION=$(git describe --tags --dirty --always) GIT_COMMIT=$(git rev-list -1 HEAD --abbrev-commit) go run make-venice-image.go; sync; ls -al /sw/bin"]
     owners: ["email:jainvipin@pensando.io"]
     artifacts:
       - /sw/bin/venice.tgz
