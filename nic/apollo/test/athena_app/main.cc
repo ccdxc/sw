@@ -631,6 +631,12 @@ main (int argc, char **argv)
 #ifdef __x86_64__
     if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_GTEST) {
         ::testing::InitGoogleTest(&argc, argv);
+        ret = (pds_ret_t)fte_ath::fte_session_indexer_init();
+        if (ret != PDS_RET_OK) {
+            PDS_TRACE_DEBUG("fte_session_indexer_init failed.\n");
+            PDS_TRACE_ERR("Gtest NOT started. \n");
+            goto done;
+        }
         sdk::utils::time_profile::time_profile_enable = true;
         t_info.start();
         ret = (pds_ret_t)fte_ath::fte_setup_v4_flows_json();

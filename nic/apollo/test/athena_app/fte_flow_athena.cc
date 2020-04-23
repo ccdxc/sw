@@ -40,6 +40,7 @@
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/sdk/lib/table/ftl/ftl_base.hpp"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "fte_athena.hpp"
 #include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
@@ -70,7 +71,8 @@ namespace fte_ath {
 #define HOST_TO_SWITCH 0x1
 #define SWITCH_TO_HOST 0x2
 
-uint32_t g_session_index = 1;
+#define MAX_SESSION_INDEX 0x3D0900   // 4M Seesion IDs
+static rte_indexer *g_session_indexer;
 uint32_t g_session_rewrite_index = 1;
 
 // H2S specific fields
@@ -150,6 +152,36 @@ fte_flow_dump (void)
     return;
 }
 #endif
+
+sdk_ret_t
+fte_session_indexer_init (void)
+{
+    g_session_indexer = rte_indexer::factory(MAX_SESSION_INDEX,
+                                             true, true);
+    if (g_session_indexer == NULL) {
+        PDS_TRACE_DEBUG("g_session_indexer init failed.\n");
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+void
+fte_session_indexer_destroy (void)
+{
+    rte_indexer::destroy(g_session_indexer);
+}
+
+static inline sdk_ret_t
+fte_session_index_alloc (uint32_t *sess_id)
+{
+    return g_session_indexer->alloc(sess_id);
+}
+
+static inline sdk_ret_t
+fte_session_index_free (uint32_t sess_id)
+{
+    return g_session_indexer->free(sess_id);
+}
 
 // NAT MAP TABLE APIs
 static sdk_ret_t
@@ -730,6 +762,7 @@ fte_flow_prog (struct rte_mbuf *m)
     uint8_t flow_dir;
     uint16_t ip_offset;
     uint16_t vnic_id = 0;
+    uint32_t session_index;
 
     memset(&flow_spec, 0, sizeof(pds_flow_spec_t));
     ret = fte_flow_extract_prog_args(m, &flow_spec, &flow_dir,
@@ -739,12 +772,17 @@ fte_flow_prog (struct rte_mbuf *m)
         return ret;
     }
     flow_spec.data.index_type = PDS_FLOW_SPEC_INDEX_SESSION;
-    flow_spec.data.index = g_session_index;
+    ret = fte_session_index_alloc(&session_index);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_session_index_alloc failed. \n");
+        return ret;
+    }
+    flow_spec.data.index = session_index;
 
     // PKT Rewrite
     fte_flow_pkt_rewrite(m, flow_dir, ip_offset, vnic_id);
 
-    ret = fte_session_info_create(g_session_index, vnic_id,
+    ret = fte_session_info_create(session_index, vnic_id,
                           (*(uint32_t *)flow_spec.key.ip_saddr));
     if (ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_session_info_create failed. \n");
@@ -757,7 +795,6 @@ fte_flow_prog (struct rte_mbuf *m)
         return ret;
     }
 
-    g_session_index++;
     return SDK_RET_OK;    
 }
 
@@ -1033,6 +1070,7 @@ fte_setup_v4_flows_json (void)
     uint32_t sip, dip;
     uint8_t proto;
     uint16_t sport, dport;
+    uint32_t session_index;
 
     while (v4_flows_cnt < g_num_v4_flows) {
         v4_flows = &g_v4_flows[v4_flows_cnt];
@@ -1057,8 +1095,16 @@ fte_setup_v4_flows_json (void)
                     while (sport <= v4_flows->sport_hi) {
                         dport = v4_flows->dport_lo;
                         while (dport <= v4_flows->dport_hi) {
+                            ret = fte_session_index_alloc(
+                                    &session_index);
+                            if (ret != SDK_RET_OK) {
+                                PDS_TRACE_DEBUG(
+                                    "fte_session_index_alloc failed.\n");
+                                return ret;
+                            }
+
                             ret = fte_session_info_create(
-                                    g_session_index, vnic_id, sip);
+                                    session_index, vnic_id, sip);
                             if (ret != SDK_RET_OK) {
                                 PDS_TRACE_DEBUG(
                                     "fte_session_info_create failed.\n");
@@ -1068,14 +1114,14 @@ fte_setup_v4_flows_json (void)
                             ret = fte_flow_create(vnic_id, sip, dip,
                                     proto, sport, dport,
                                     PDS_FLOW_SPEC_INDEX_SESSION,
-                                    g_session_index);
+                                    session_index);
                             attempted_flows++;
                             if (ret != SDK_RET_OK) {
                                 PDS_TRACE_DEBUG("Flow Create Fail: SrcIP:0x%x DstIP:0x%x "
                                     "Dport:%u Sport:%u Proto:%u "
                                     "VNICID:%u index:%u\n",
                                     sip, dip, dport, sport, proto,
-                                    vnic_id, g_session_index);
+                                    vnic_id, session_index);
                                 // Even on collision/flow insert fail,
                                 // continue the flow creation
                                 // return ret;
@@ -1088,7 +1134,6 @@ fte_setup_v4_flows_json (void)
                                 //    sip, dip, dport, sport, proto,
                                 //    vnic_id, session_index);
                             }
-                            g_session_index++;
                             num_flows_added++;
                             dport++;
                         }
@@ -1186,22 +1231,6 @@ fte_setup_flow (void)
         return ret;
     }
 
-// TODO: Hard coded static flows will be removed as it could be
-// done through policy.json file. 
-#if 0
-    ret = fte_setup_static_flows();
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("fte_setup_static_flows failed.\n");
-        return ret;
-    }
-
-    ret = fte_setup_static_dnat_flows();
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("fte_setup_static_dnat_flows failed.\n");
-        return ret;
-    }
-#endif
-
     return ret;
 }
 
@@ -1209,6 +1238,12 @@ sdk_ret_t
 fte_flows_init ()
 {
     sdk_ret_t sdk_ret = SDK_RET_OK;
+
+    sdk_ret = fte_session_indexer_init();
+    if (sdk_ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("fte_session_indexer_init failed.\n");
+        return sdk_ret;
+    }
 
     if (!skip_fte_flow_prog()) {
         if ((sdk_ret = fte_setup_flow()) != SDK_RET_OK) {

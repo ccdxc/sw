@@ -14,7 +14,7 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdslearn pdsapi pdsapi_impl \
                   ${NIC_SDK_SOLIBS} ${NIC_HAL_PD_SOLIBS_${ARCH}} \
                   sdkp4 sdkp4utils sdk_asicrw_if sdk${ASIC} pdsapi_asic_impl \
                   sdkplatformutils sdkxcvrdriver sdkasicpd sdkeventmgr kvstore_lmdb \
-                  bm_allocator sdklinkmgr sdklinkmgrcsr memhash \
+                  bm_allocator sdklinkmgr sdklinkmgrcsr memhash rte_indexer \
                   sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS}
 MODULE_FLAGS    = -O3
 ifeq ($(ARCH), x86_64)

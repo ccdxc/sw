@@ -1054,6 +1054,8 @@ fte_init (void)
 void
 fte_fini (void)
 {
+    fte_session_indexer_destroy();
+
     if (fte_threads_started) {
         fte_threads_done = true;
         rte_eal_mp_wait_lcore();

@@ -48,7 +48,7 @@ LDLIBS += -lpal -lpdsframework -lpdscore -lpdslearn -lpdsapi -lpdsapi_impl -lsdk
 		-lsdklinkmgrcsr -lnicmgr_athena -lmnet -levutils \
 		-lpciemgr_if -lpciemgr -lpciemgrutils -lpciehdevices \
 		-lpcietlp -lcfgspace -lintrutils -lmisc -lpdsupg_nicmgr_stubs \
-		-lev \
+		-lev -lrte_indexer \
 		-lmpuobj -lcapisa -lisa -lsknobs -lsdkcapri_csrint -lAAPL \
 		-lpthread -lz -lrt -lJudy -ldl -lzmq -ledit -lncurses \
 		-lstdc++ -lm -lgcc -lc
@@ -59,7 +59,6 @@ endif
 SRC_FILES := app_test_utils.cc \
 		fte_athena.cc \
 		fte_flow_athena.cc \
-		fte_athena_static.cc \
 		script_exec.cc \
 		script_parser.cc \
 		session_aging.cc \
@@ -79,7 +78,7 @@ DEPENDS = $(OBJECTS:.o=.d)
 
 ATH_APP_OBJS := $(OBJ_DIR)/main.o $(OBJ_DIR)/trace.o $(OBJ_DIR)/fte_athena.o $(OBJ_DIR)/fte_flow_athena.o \
 		$(OBJ_DIR)/app_test_utils.o $(OBJ_DIR)/script_exec.o $(OBJ_DIR)/script_parser.o \
-		$(OBJ_DIR)/session_aging.o $(OBJ_DIR)/conntrack_aging.o $(OBJ_DIR)/fte_athena_static.o \
+		$(OBJ_DIR)/session_aging.o $(OBJ_DIR)/conntrack_aging.o \
                 $(OBJ_DIR)/combined_aging.o $(OBJ_DIR)/athena_app_server.o $(OBJ_DIR)/zmq_wait.o \
                 $(OBJ_DIR)/json_parser.o $(OBJ_DIR)/pds_ms_device_athena_stub.o
 
