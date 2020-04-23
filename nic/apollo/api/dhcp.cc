@@ -211,11 +211,25 @@ dhcp_policy::activate_config(pds_epoch_t epoch, api_op_t api_op,
     return SDK_RET_OK;
 }
 
+static inline void
+dhcp_policy_from_ipc_response(sdk::ipc::ipc_msg_ptr msg,
+                              const void *response) {
+    pds_dhcp_relay_spec_t *dhcp_relay_spec_ = (pds_dhcp_relay_spec_t *)response;
+
+    memcpy(dhcp_relay_spec_, msg->data(), sizeof(pds_dhcp_relay_spec_t));
+}
+
 void
 dhcp_policy::fill_spec_(pds_dhcp_policy_spec_t *spec) {
+    pds_dhcp_proxy_spec_t *dhcp_proxy_spec;
+    #if 0
+    // Remove #if after VPP side is done.
+    pds_dhcp_relay_spec_t *dhcp_relay_spec;
+    pds_msg_t request;
+    #endif
+
     spec->key = key_;
     spec->type = type_;
-    pds_dhcp_proxy_spec_t *dhcp_proxy_spec;
 
     if (spec->type == PDS_DHCP_POLICY_TYPE_PROXY) {
         dhcp_proxy_spec = &spec->proxy_spec;
@@ -227,7 +241,17 @@ dhcp_policy::fill_spec_(pds_dhcp_policy_spec_t *spec) {
         memcpy(dhcp_proxy_spec->domain_name, domain_name_, sizeof(domain_name_));
         dhcp_proxy_spec->lease_timeout = lease_timeout_;
     } else if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
-        // TODO: Communicate with vpp to the relay config.
+        #if 0
+	// Remove #if after VPP side is done.
+        dhcp_relay_spec = &spec->relay_spec;
+        request.id = PDS_CFG_MSG_ID_DHCP_POLICY;
+        request.cmd_msg.dhcp_policy.key = key_;
+        if (api::g_pds_state.vpp_ipc_mock() == false) {
+            sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
+                sizeof(pds_msg_t), dhcp_policy_from_ipc_response,
+                &dhcp_relay_spec);
+        }
+	#endif
     }
 }
 

@@ -142,6 +142,10 @@ typedef struct pds_nat_port_block_cmd_msg_s {
     pds_obj_key_t key;
 } pds_nat_port_block_cmd_msg_t;
 
+typedef struct pds_dhcp_policy_cmd_msg_s {
+    pds_obj_key_t key;
+} pds_dhcp_policy_cmd_msg_t;
+
 typedef struct pds_vnic_stats_get_cmd_msg_s {
     uint16_t vnic_hw_id;
 } pds_vnic_stats_get_cmd_msg_t;
@@ -153,6 +157,7 @@ typedef struct pds_cmd_msg_s {
         pds_flow_clear_cmd_msg_t flow_clear;
         pds_nat_port_block_cmd_msg_t nat_port_block;
         pds_vnic_stats_get_cmd_msg_t vnic_stats_get;
+        pds_dhcp_policy_cmd_msg_t dhcp_policy;
     };
 } pds_cmd_msg_t;
 
