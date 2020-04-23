@@ -21,17 +21,20 @@
 #include "platform/pal/include/pal.h"
 #include "elbmon.hpp"
 
-const char *offloadname[9] = {"GCM0", "GCM1", "XTS", "XTS_ENC", "HE",
-                              "CP",   "DC",   "MP",  "Master"};
+const char *offloadname[15] = {"GCM_XTS_0", "GCM_XTS_1", "GCM_XTS_2", "GCM_XTS_3", "HE", "CP", "DC", "MP",
+                               "HS", "CS", "EC", "GZ", "GU", "Master0", "Master1"};
 
 int
 read_num_entries (uint32_t base, uint32_t pi_addr, uint32_t ci_addr,
-                  uint32_t ring_size_addr)
+                  uint32_t ring_size_addr, int ring_size_shift,
+		  int ring_size_mask)
 {
     uint32_t pi, ci, ring_size;
     pal_reg_rd32w(base + pi_addr, &pi, 1);
     pal_reg_rd32w(base + pi_addr, &ci, 1);
     pal_reg_rd32w(base + pi_addr, &ring_size, 1);
+    ring_size = ring_size >> ring_size_shift;
+    ring_size = ring_size & ring_size_mask;
     if (pi >= ci)
         return (pi - ci);
     else
@@ -41,219 +44,581 @@ read_num_entries (uint32_t base, uint32_t pi_addr, uint32_t ci_addr,
 void
 crypto_read_queues (int verbose)
 {
-    uint32_t cnt;
+    uint32_t cnt[8];
     uint64_t aw, dw, wrsp, ar, dr, wrsp_err, rrsp_err;
 
-    // XTS ENC
-    cnt = read_num_entries(
+    // GCM_XTS_0
+    cnt[0] = read_num_entries(
         ELB_ADDR_BASE_MD_HENS_OFFSET,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_PRODUCER_IDX_BYTE_ADDRESS,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_XTS_ENC_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" XTS ENC has %d ring entries\n", cnt);
-
-    //. XTS
-    cnt = read_num_entries(
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING0_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING0_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING0_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[1] = read_num_entries(
         ELB_ADDR_BASE_MD_HENS_OFFSET,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_XTS_PRODUCER_IDX_BYTE_ADDRESS,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_XTS_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_XTS_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" XTS has %d ring entries\n", cnt);
-
-    // GCM0
-    cnt = read_num_entries(
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING1_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING1_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING1_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[2] = read_num_entries(
         ELB_ADDR_BASE_MD_HENS_OFFSET,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_GCM0_PRODUCER_IDX_BYTE_ADDRESS,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_GCM0_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_GCM0_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" GCM0 has %d ring entries\n", cnt);
-
-    // GCM1
-    cnt = read_num_entries(
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING2_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING2_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING2_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[3] = read_num_entries(
         ELB_ADDR_BASE_MD_HENS_OFFSET,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_GCM1_PRODUCER_IDX_BYTE_ADDRESS,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_GCM1_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_HENS_CSR_DHS_CRYPTO_CTL_GCM1_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" GCM1 has %d ring entries\n", cnt);
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING3_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING3_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING3_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING4_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING4_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING4_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING5_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING5_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING5_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING6_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING6_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING6_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING7_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING7_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM0_RING7_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" GCM_XTS_0 ring %d has %d ring entries\n", i, cnt[i]);
+    }
 
-    // CP hotq
-    uint32_t pi, ci, cp_cfg;
+    // GCM_XTS_1
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING0_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING0_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING0_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING1_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING1_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING1_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING2_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING2_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING2_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING3_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING3_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING3_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING4_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING4_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING4_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING5_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING5_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING5_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING6_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING6_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING6_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING7_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING7_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM1_RING7_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" GCM_XTS_1 ring %d has %d ring entries\n", i, cnt[i]);
+    }
 
-    pal_reg_rd32w(
-        ELB_ADDR_BASE_MD_HENS_OFFSET +
-            ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_HOTQ_PD_IDX_BYTE_ADDRESS,
-        &pi, 1);
-    pal_reg_rd32w(
-        ELB_ADDR_BASE_MD_HENS_OFFSET +
-            ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_HOTQ_CP_IDX_BYTE_ADDRESS,
-        &ci, 1);
-    pal_reg_rd32w(ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_BYTE_ADDRESS +
-                      ELB_ADDR_BASE_MD_HENS_OFFSET,
-                  &cp_cfg, 1);
-    uint32_t hotq_size = (cp_cfg >> 6) & 0xfff;
-    uint32_t descq_size = (cp_cfg >> 18) & 0xfff;
-    if (pi >= ci)
-        cnt = pi - ci;
-    else
-        cnt = (hotq_size - ci) + pi;
-    if (cnt != 0)
-        printf(" CP HOTQ has %d ring entries\n", cnt);
+    // GCM_XTS_2
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING0_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING0_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING0_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING1_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING1_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING1_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING2_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING2_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING2_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING3_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING3_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING3_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING4_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING4_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING4_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING5_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING5_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING5_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING6_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING6_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING6_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING7_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING7_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM2_RING7_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" GCM_XTS_2 ring %d has %d ring entries\n", i, cnt[i]);
+    }
+
+    // GCM_XTS_3
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING0_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING0_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING0_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING1_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING1_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING1_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING2_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING2_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING2_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING3_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING3_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING3_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING4_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING4_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING4_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING5_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING5_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING5_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING6_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING6_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING6_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING7_PRODUCER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING7_CONSUMER_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_SYM3_RING7_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" GCM_XTS_3 ring %d has %d ring entries\n", i, cnt[i]);
+    }
 
     // CP
-    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q_PD_IDX_BYTE_ADDRESS,
-                  &pi, 1);
-    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q_CP_IDX_BYTE_ADDRESS,
-                  &ci, 1);
-    if (pi >= ci)
-        cnt = pi - ci;
-    else
-        cnt = (descq_size - ci) + pi;
-    if (cnt != 0)
-        printf(" CP has %d ring entries\n", cnt);
-
-    // DC hotq
-    pal_reg_rd32w(
-        ELB_ADDR_BASE_MD_HENS_OFFSET +
-            ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_HOTQ_PD_IDX_BYTE_ADDRESS,
-        &pi, 1);
-    pal_reg_rd32w(
-        ELB_ADDR_BASE_MD_HENS_OFFSET +
-            ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_HOTQ_CP_IDX_BYTE_ADDRESS,
-        &ci, 1);
-    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_BYTE_ADDRESS,
-                  &cp_cfg, 1);
-    hotq_size = (cp_cfg >> 6) & 0xfff;
-    descq_size = (cp_cfg >> 18) & 0xfff;
-    if (pi >= ci)
-        cnt = pi - ci;
-    else
-        cnt = (hotq_size - ci) + pi;
-    if (cnt != 0)
-        printf(" DC HOTQ has %d ring entries\n", cnt);
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q0_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q0_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q1_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q1_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q2_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q2_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q3_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q3_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 12, 0xfff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q4_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q4_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q5_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q5_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q6_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q6_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_Q7_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_STA_Q7_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CP_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 12, 0xfff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" CP ring %d has %d ring entries\n", i, cnt[i]);
+    }
 
     // DC
-    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q_PD_IDX_BYTE_ADDRESS,
-                  &pi, 1);
-    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q_CP_IDX_BYTE_ADDRESS,
-                  &ci, 1);
-    if (pi >= ci)
-        cnt = pi - ci;
-    else
-        cnt = (descq_size - ci) + pi;
-    if (cnt != 0)
-        printf(" DC has %d ring entries\n", cnt);
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q0_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q0_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q1_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q1_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q2_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q2_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q3_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q3_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 12, 0xfff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q4_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q4_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q5_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q5_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q6_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q6_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_Q7_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_STA_Q7_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_DC_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 12, 0xfff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" DC ring %d has %d ring entries\n", i, cnt[i]);
+    }
+
+    // CS
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_Q0_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_STA_Q0_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_Q1_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_STA_Q1_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_Q2_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_STA_Q2_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_Q3_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_STA_Q3_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 12, 0xfff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_Q4_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_STA_Q4_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_Q5_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_STA_Q5_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_Q6_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_STA_Q6_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_Q7_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_STA_Q7_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_CS_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 12, 0xfff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" CS ring %d has %d ring entries\n", i, cnt[i]);
+    }
+
+    // HS
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_Q0_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_STA_Q0_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_Q1_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_STA_Q1_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_Q2_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_STA_Q2_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_Q3_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_STA_Q3_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 12, 0xfff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_Q4_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_STA_Q4_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_Q5_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_STA_Q5_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_Q6_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_STA_Q6_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_Q7_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_STA_Q7_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_HS_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 12, 0xfff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" HS ring %d has %d ring entries\n", i, cnt[i]);
+    }
+
+    // EC
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_Q0_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_STA_Q0_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_Q1_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_STA_Q1_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_Q2_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_STA_Q2_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_Q3_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_STA_Q3_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 12, 0xfff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_Q4_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_STA_Q4_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_Q5_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_STA_Q5_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_Q6_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_STA_Q6_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_Q7_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_STA_Q7_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_EC_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 12, 0xfff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" EC ring %d has %d ring entries\n", i, cnt[i]);
+    }
+
+    // GZ
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_Q0_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_STA_Q0_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_Q1_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_STA_Q1_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_Q2_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_STA_Q2_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_Q3_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_STA_Q3_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 12, 0xfff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_Q4_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_STA_Q4_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_Q5_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_STA_Q5_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_Q6_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_STA_Q6_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_Q7_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_STA_Q7_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GZ_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 12, 0xfff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" GZ ring %d has %d ring entries\n", i, cnt[i]);
+    }
+
+    // GU
+    cnt[0] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_Q0_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_STA_Q0_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[1] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_Q1_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_STA_Q1_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_DIST_QSIZE0_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[2] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_Q2_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_STA_Q2_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[3] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_Q3_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_STA_Q3_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_DIST_QSIZE0_W1_BYTE_ADDRESS, 12, 0xfff);
+    cnt[4] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_Q4_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_STA_Q4_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 0, 0xfff);
+    cnt[5] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_Q5_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_STA_Q5_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_DIST_QSIZE1_W0_BYTE_ADDRESS, 12, 0xfff);
+    cnt[6] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_Q6_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_STA_Q6_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 0, 0xfff);
+    cnt[7] = read_num_entries(
+        ELB_ADDR_BASE_MD_HENS_OFFSET,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_Q7_PD_IDX_BYTE_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_STA_Q7_CP_IDX_ADDRESS,
+        ELB_HENS_CSR_DHS_CRYPTO_CTL_GU_CFG_DIST_QSIZE1_W1_BYTE_ADDRESS, 12, 0xfff);
+    for (int i = 0; i < 8; i++) {
+        if (cnt[i] != 0)
+            printf(" GU ring %d has %d ring entries\n", i, cnt[i]);
+    }
 
     // MPP0
-    cnt = read_num_entries(
+    cnt[0] = read_num_entries(
         ELB_ADDR_BASE_MP_MPNS_OFFSET,
         ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP0_PRODUCER_IDX_BYTE_ADDRESS,
         ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP0_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP0_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" MPP0 has %d ring entries\n", cnt);
+        (uint32_t)ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP0_RING_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    if (cnt[0] != 0)
+        printf(" MPP0 has %d ring entries\n", cnt[0]);
 
     // MPP1
-    cnt = read_num_entries(
+    cnt[0] = read_num_entries(
         ELB_ADDR_BASE_MP_MPNS_OFFSET,
         ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP1_PRODUCER_IDX_BYTE_ADDRESS,
         ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP1_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP1_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" MPP1 has %d ring entries\n", cnt);
+        (uint32_t)ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP1_RING_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    if (cnt[0] != 0)
+        printf(" MPP1 has %d ring entries\n", cnt[0]);
 
     // MPP2
-    cnt = read_num_entries(
+    cnt[0] = read_num_entries(
         ELB_ADDR_BASE_MP_MPNS_OFFSET,
         ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP2_PRODUCER_IDX_BYTE_ADDRESS,
         ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP2_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP2_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" MPP2 has %d ring entries\n", cnt);
+        (uint32_t)ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP2_RING_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    if (cnt[0] != 0)
+        printf(" MPP2 has %d ring entries\n", cnt[0]);
 
     // MPP3
-    cnt = read_num_entries(
+    cnt[0] = read_num_entries(
         ELB_ADDR_BASE_MP_MPNS_OFFSET,
         ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP3_PRODUCER_IDX_BYTE_ADDRESS,
         ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP3_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP3_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" MPP3 has %d ring entries\n", cnt);
-
-    // MPP4
-    cnt = read_num_entries(
-        ELB_ADDR_BASE_MP_MPNS_OFFSET,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP4_PRODUCER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP4_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP4_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" MPP4 has %d ring entries\n", cnt);
-
-    // MPP5
-    cnt = read_num_entries(
-        ELB_ADDR_BASE_MP_MPNS_OFFSET,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP5_PRODUCER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP5_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP5_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf("MPP5 has %d ring entries\n", cnt);
-
-    // MPP6
-    cnt = read_num_entries(
-        ELB_ADDR_BASE_MP_MPNS_OFFSET,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP6_PRODUCER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP6_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP6_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" MPP6 has %d ring entries\n", cnt);
-
-    // MPP7
-    cnt = read_num_entries(
-        ELB_ADDR_BASE_MP_MPNS_OFFSET,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP7_PRODUCER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP7_CONSUMER_IDX_BYTE_ADDRESS,
-        ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP7_RING_SIZE_BYTE_ADDRESS);
-    if (cnt != 0)
-        printf(" MPP7 has %d ring entries\n", cnt);
+        (uint32_t)ELB_MPNS_CSR_DHS_CRYPTO_CTL_MPP3_RING_SIZE_BYTE_ADDRESS, 0, 0xffffffff);
+    if (cnt[0] != 0)
+        printf(" MPP3 has %d ring entries\n", cnt[0]);
 
     if (verbose) {
-        uint32_t stride = (ELB_HENS_CSR_CNT_AXI_AW_GCM1_BYTE_ADDRESS -
-                           ELB_HENS_CSR_CNT_AXI_AW_GCM0_BYTE_ADDRESS);
-        for (int i = 0; i < 9; i++) {
+        uint32_t stride = (ELB_HENS_CSR_CNT_AXI_AW_SYM1_BYTE_ADDRESS -
+                           ELB_HENS_CSR_CNT_AXI_AW_SYM0_BYTE_ADDRESS);
+        for (int i = 0; i < 15; i++) {
             pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                              ELB_HENS_CSR_CNT_AXI_AW_GCM0_BYTE_ADDRESS +
+                              ELB_HENS_CSR_CNT_AXI_AW_SYM0_BYTE_ADDRESS +
                               (i * stride),
                           (uint32_t *)&aw, 1);
             pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                              ELB_HENS_CSR_CNT_AXI_DW_GCM0_BYTE_ADDRESS +
+                              ELB_HENS_CSR_CNT_AXI_DW_SYM0_BYTE_ADDRESS +
                               (i * stride),
                           (uint32_t *)&dw, 1);
             pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                              ELB_HENS_CSR_CNT_AXI_WRSP_GCM0_BYTE_ADDRESS +
+                              ELB_HENS_CSR_CNT_AXI_WRSP_SYM0_BYTE_ADDRESS +
                               (i * stride),
                           (uint32_t *)&wrsp, 1);
             pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                              ELB_HENS_CSR_CNT_AXI_AR_GCM0_BYTE_ADDRESS +
+                              ELB_HENS_CSR_CNT_AXI_AR_SYM0_BYTE_ADDRESS +
                               (i * stride),
                           (uint32_t *)&ar, 1);
             pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                              ELB_HENS_CSR_CNT_AXI_DR_GCM0_BYTE_ADDRESS +
+                              ELB_HENS_CSR_CNT_AXI_DR_SYM0_BYTE_ADDRESS +
                               (i * stride),
                           (uint32_t *)&dr, 1);
             pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                              ELB_HENS_CSR_CNT_AXI_WRSP_ERR_GCM0_BYTE_ADDRESS +
+                              ELB_HENS_CSR_CNT_AXI_WRSP_ERR_SYM0_BYTE_ADDRESS +
                               (i * stride),
                           (uint32_t *)&wrsp_err, 1);
             pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                              ELB_HENS_CSR_CNT_AXI_RRSP_ERR_GCM0_BYTE_ADDRESS +
+                              ELB_HENS_CSR_CNT_AXI_RRSP_ERR_SYM0_BYTE_ADDRESS +
                               (i * stride),
                           (uint32_t *)&rrsp_err, 1);
             printf(" offload=%s AW=%ld DW=%ld WRSP=%ld AR=%ld DR=%ld "
@@ -264,42 +629,66 @@ crypto_read_queues (int verbose)
 }
 
 static inline void
-elbmon_asic_crypto_store (uint64_t xts_cnt, uint64_t xtsenc_cnt,
-                          uint64_t gcm0_cnt, uint64_t gcm1_cnt, uint64_t pk_cnt)
+elbmon_asic_crypto_store (uint64_t cnt[])
 {
-    asic->xts_cnt = xts_cnt;
-    asic->xtsenc_cnt = xtsenc_cnt;
-    asic->gcm0_cnt = gcm0_cnt;
-    asic->gcm1_cnt = gcm1_cnt;
-    asic->pk_cnt = pk_cnt;
+    asic->gcm_xts0_cnt = cnt[0];
+    asic->gcm_xts1_cnt = cnt[1];
+    asic->gcm_xts2_cnt = cnt[2];
+    asic->gcm_xts3_cnt = cnt[3];
+    asic->pk0_cnt = cnt[4];
+    asic->pk1_cnt = cnt[5];
+    asic->mpp0_cnt = cnt[6];
+    asic->mpp1_cnt = cnt[7];
+    asic->mpp2_cnt = cnt[8];
+    asic->mpp3_cnt = cnt[9];
 }
 
 void
 crypto_read_counters (int verbose)
 {
-    uint64_t xts_cnt, xtsenc_cnt, gcm0_cnt, gcm1_cnt, pk_cnt;
+    uint64_t cnt[10];
 
     pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_XTS_BYTE_ADDRESS,
-                  (uint32_t *)&xts_cnt, 2);
+                      ELB_HENS_CSR_CNT_DOORBELL_SYM0_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[0], 2);
 
     pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_XTS_ENC_BYTE_ADDRESS,
-                  (uint32_t *)&xtsenc_cnt, 2);
+                      ELB_HENS_CSR_CNT_DOORBELL_SYM1_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[1], 2);
 
     pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_GCM0_BYTE_ADDRESS,
-                  (uint32_t *)&gcm0_cnt, 2);
+                      ELB_HENS_CSR_CNT_DOORBELL_SYM2_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[2], 2);
 
     pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_GCM1_BYTE_ADDRESS,
-                  (uint32_t *)&gcm1_cnt, 2);
+                      ELB_HENS_CSR_CNT_DOORBELL_SYM3_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[3], 2);
 
     pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_PK_BYTE_ADDRESS,
-                  (uint32_t *)&pk_cnt, 2);
+                      ELB_HENS_CSR_CNT_DOORBELL_PK0_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[4], 2);
 
-    elbmon_asic_crypto_store(xts_cnt, xtsenc_cnt, gcm0_cnt, gcm1_cnt, pk_cnt);
+    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
+                      ELB_HENS_CSR_CNT_DOORBELL_PK1_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[5], 2);
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MP_MPNS_OFFSET +
+                      ELB_MPNS_CSR_CNT_DOORBELL_MPP0_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[6], 2);
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MP_MPNS_OFFSET +
+                      ELB_MPNS_CSR_CNT_DOORBELL_MPP1_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[7], 2);
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MP_MPNS_OFFSET +
+                      ELB_MPNS_CSR_CNT_DOORBELL_MPP2_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[8], 2);
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MP_MPNS_OFFSET +
+                      ELB_MPNS_CSR_CNT_DOORBELL_MPP3_BYTE_ADDRESS,
+                  (uint32_t *)&cnt[9], 2);
+
+    elbmon_asic_crypto_store(cnt);
 }
 
 void
@@ -307,19 +696,44 @@ crypto_reset_counters (int verbose)
 {
     uint32_t zero[4] = {0};
 
-    pal_reg_wr32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_XTS_BYTE_ADDRESS,
+    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
+                      ELB_HENS_CSR_CNT_DOORBELL_SYM0_BYTE_ADDRESS,
                   zero, 2);
-    pal_reg_wr32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_XTS_ENC_BYTE_ADDRESS,
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
+                      ELB_HENS_CSR_CNT_DOORBELL_SYM1_BYTE_ADDRESS,
                   zero, 2);
-    pal_reg_wr32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_GCM0_BYTE_ADDRESS,
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
+                      ELB_HENS_CSR_CNT_DOORBELL_SYM2_BYTE_ADDRESS,
                   zero, 2);
-    pal_reg_wr32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_GCM1_BYTE_ADDRESS,
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
+                      ELB_HENS_CSR_CNT_DOORBELL_SYM3_BYTE_ADDRESS,
                   zero, 2);
-    pal_reg_wr32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
-                      ELB_HENS_CSR_CNT_DOORBELL_PK_BYTE_ADDRESS,
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
+                      ELB_HENS_CSR_CNT_DOORBELL_PK0_BYTE_ADDRESS,
                   zero, 2);
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MD_HENS_OFFSET +
+                      ELB_HENS_CSR_CNT_DOORBELL_PK1_BYTE_ADDRESS,
+                  zero, 2);
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MP_MPNS_OFFSET +
+                      ELB_MPNS_CSR_CNT_DOORBELL_MPP0_BYTE_ADDRESS,
+                  zero, 2);
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MP_MPNS_OFFSET +
+                      ELB_MPNS_CSR_CNT_DOORBELL_MPP1_BYTE_ADDRESS,
+                  zero, 2);
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MP_MPNS_OFFSET +
+                      ELB_MPNS_CSR_CNT_DOORBELL_MPP2_BYTE_ADDRESS,
+                  zero, 2);
+
+    pal_reg_rd32w(ELB_ADDR_BASE_MP_MPNS_OFFSET +
+                      ELB_MPNS_CSR_CNT_DOORBELL_MPP3_BYTE_ADDRESS,
+                  zero, 2);
+
 }

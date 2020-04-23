@@ -159,25 +159,20 @@ elbmon_mpu_display_fn(void *ptr)
         ELBMON_REPORT(" mpu %d cycles=%u", mpu->index, cycles);
         ELBMON_REPORT(" inst=%u", mpu->inst_executed);
         ELBMON_REPORT(" miss=%u", mpu->icache_miss);
-        ELBMON_REPORT(" istl=%u", mpu->icache_fill_stall);
+        ELBMON_REPORT(" miss=%u", mpu->dcache_miss);
         ELBMON_REPORT(" phv=%u", mpu->phv_executed);
-        ELBMON_REPORT(" hzrd=%u", mpu->hazard_stall);
         ELBMON_REPORT(" phvwr_stl=%u", mpu->phvwr_stall);
-        ELBMON_REPORT(" memwr_stl=%u", mpu->memwr_stall);
-        ELBMON_REPORT(" tblwr_stl=%u", mpu->tblwr_stall);
-        ELBMON_REPORT(" fence_stl=%u\n", mpu->fence_stall);
+        ELBMON_REPORT(" st_stl=%u", mpu->st_stall);
+        ELBMON_REPORT(" inst_per_prog=%u", mpu->inst_per_phv);
 
         cycles = cycles == 0 ? 1 : cycles;
         ELBMON_REPORT(" mpu %u percentages", mpu->index);
         ELBMON_REPORT(" inst=%u%%", (mpu->inst_executed * 100) / cycles);
-        ELBMON_REPORT(" miss=%u%%", (mpu->icache_miss * 100) / cycles);
-        ELBMON_REPORT(" istl=%u%%", (mpu->icache_fill_stall * 100) / cycles);
+	ELBMON_REPORT(" miss=%u%%", (mpu->icache_miss * 100) / cycles);
+	ELBMON_REPORT(" miss=%u%%", (mpu->dcache_miss * 100) / cycles);
         ELBMON_REPORT(" phv=%u%%", (mpu->phv_executed * 100) / cycles);
-        ELBMON_REPORT(" hzrd=%u%%", (mpu->hazard_stall * 100) / cycles);
         ELBMON_REPORT(" phvwr_stl=%u%%", (mpu->phvwr_stall * 100) / cycles);
-        ELBMON_REPORT(" memwr_stl=%u%%", (mpu->memwr_stall * 100) / cycles);
-        ELBMON_REPORT(" tblwr_stl=%u%%", (mpu->tblwr_stall * 100) / cycles);
-        ELBMON_REPORT(" fence_stl=%u%%\n", (mpu->fence_stall * 100) / cycles);
+        ELBMON_REPORT(" st_stl=%u%%", (mpu->st_stall * 100) / cycles);
         ELBMON_REPORT("  mpu %u table address = 0x%lx\n", mpu->index,
                       mpu->addr);
     }
@@ -201,11 +196,10 @@ elbmon_stage_mpu_basic_display(stage_t *stage)
     for (int i = 0; i < MPU_COUNT; i++) {
         mpu = &stage->mpus[i];
         if (verbose) {
-            ELBMON_REPORT("  mpu %u  processing %2d%%, stalls: hazard %2d%% "
-                          "phvwr %2d%% tblwr %2d%% memwr "
-                          "%2d%%\n",
-                          mpu->index, mpu->processing_pc, mpu->stall[3],
-                          mpu->stall[2], mpu->stall[1], mpu->stall[0]);
+            ELBMON_REPORT("  mpu %u  processing %2d%%, stalls: "
+                          "phvwr %2d%% icache_miss %2d%%\n",
+                          mpu->index, mpu->processing_pc, 
+			  mpu->phvwr_stall_pc, mpu->icache_miss_pc);
         } else {
             ELBMON_REPORT(" m%1d=%3d%%", i, mpu->processing_pc);
         }
@@ -237,11 +231,11 @@ elbmon_stage_display(stage_t *stage)
     if (verbose) {
         ELBMON_REPORT("\n");
     }
-    ELBMON_REPORT(" (util/xoff/idle) in=%3d/%3d/%3d stg=%3d/%3d/%3d "
+    ELBMON_REPORT(" (util/xoff/idle) in=%3d/%3d/%3d "
                   "out=%3d/%3d/%3d TE=%2u",
                   stage->util.in, stage->xoff.in, stage->idle.in,
-                  stage->util.stg, stage->xoff.stg, stage->idle.stg,
-                  stage->util.out, stage->xoff.out, stage->idle.out, stage->te);
+                  stage->util.out, stage->xoff.out, stage->idle.out, 
+		  stage->te_queued + stage->te_issued);
 
     if (stage->last_table_type == TABLE_PCI) {
         ELBMON_REPORT(" PCI_lat=");
@@ -252,17 +246,6 @@ elbmon_stage_display(stage_t *stage)
     }
     ELBMON_REPORT("%5u", stage->_lat);
 
-    if (verbose) {
-        ELBMON_REPORT(" min=%u, max=%u\n", stage->min, stage->max);
-        ELBMON_REPORT(" phvwr depths");
-        mpu_t *mpu = NULL;
-        for (int i = 0; i < 4; i++) {
-            mpu = &stage->mpus[i];
-            ELBMON_REPORT(" m%u=%u,%u", i, (int)(mpu->phv_cmd_depth),
-                          (int)(mpu->phv_data_depth));
-        }
-        ELBMON_REPORT("\n");
-    }
 }
 
 static inline void
@@ -558,8 +541,7 @@ elbmon_asic_display_doorbells()
 static inline void
 elbmon_asic_display_tx_sched()
 {
-    uint32_t cnt_txdma;
-    int cos;
+  int cos, i;
     ELBMON_REPORT("== TX Scheduler ==\n");
     ELBMON_REPORT(" Set=%u", asic->sets);
     ELBMON_REPORT(" Clear=%u", asic->clears);
@@ -568,14 +550,18 @@ elbmon_asic_display_tx_sched()
         ELBMON_REPORT(" %x%%", asic->xoff[cos]);
     }
     ELBMON_REPORT("\n");
-    ELBMON_REPORT(" PHVs:");
-    for (cos = 0; cos < 16; cos++) {
-        cnt_txdma = asic->phvs[cos];
-        if (cnt_txdma > 0) {
-            ELBMON_REPORT(" [%u]=%u", cos, cnt_txdma);
-        }
+    ELBMON_REPORT(" TXDMA TOKENS: %ull", asic->txdma_phvs);
+    ELBMON_REPORT(" SXDMA TOKENS: %ull", asic->sxdma_phvs);
+    ELBMON_REPORT("\n");
+
+    ELBMON_REPORT("  Debug Counters (if enabled)\n");
+    for(i=0; i<4; i++) {
+      if(asic->cnt_enable[i] == 0) continue;
+      ELBMON_REPORT("LIF %0d: DOORBELL %u TXDMA %u SXDMA %u\n",  
+		    asic->cnt_lif[i], asic->cnt_doorbell[i], asic->cnt_txdma[i], asic->cnt_sxdma[i]);
     }
     ELBMON_REPORT("\n");
+
 }
 
 static inline void
@@ -635,9 +621,12 @@ elbmon_asic_crypto_display()
 {
     ELBMON_REPORT("==Crypto==\n");
     ELBMON_REPORT("  Doorbells:\n");
-    ELBMON_REPORT("    XTS %ld XTS ENC %ld GCM0 %ld GCM1 %ld PK %ld\n",
-                  asic->xts_cnt, asic->xtsenc_cnt, asic->gcm0_cnt,
-                  asic->gcm1_cnt, asic->pk_cnt);
+
+    ELBMON_REPORT("    GCM_XTS0 %ld GCM_XTS1 %ld GCM_XTS2 %ld GCM_XTS3 %ld PK0 %ld PK1 %ld MPP0 %ld MPP1 %ld MPP2 %ld MPP3 %ld\n",
+		  asic->gcm_xts0_cnt, asic->gcm_xts1_cnt, asic->gcm_xts2_cnt,
+		  asic->gcm_xts3_cnt, asic->pk0_cnt, asic->pk1_cnt,
+		  asic->mpp0_cnt, asic->mpp1_cnt, asic->mpp2_cnt, asic->mpp3_cnt);
+
 }
 
 static inline void
@@ -761,6 +750,11 @@ elbmon_asic_stage_mem_init()
     pipeline->type = P4EG;
     pipeline->stages = (stage_t *)calloc(1, sizeof(stage_t) * STAGE_COUNT_P4);
 
+    pipeline = &asic->pipelines[SXDMA];
+    pipeline->stage_count = STAGE_COUNT_SXDMA;
+    pipeline->type = SXDMA;
+    pipeline->stages = (stage_t *)calloc(1, sizeof(stage_t) * STAGE_COUNT_SXDMA);
+
     elbmon_stage_init();
 }
 
@@ -787,6 +781,7 @@ elbmon_asic_init(void *)
     elbmon_pipeline_init(&asic->pipelines[RXDMA]);
     elbmon_pipeline_init(&asic->pipelines[P4IG]);
     elbmon_pipeline_init(&asic->pipelines[P4EG]);
+    elbmon_pipeline_init(&asic->pipelines[SXDMA]);
     return NULL;
 }
 void *

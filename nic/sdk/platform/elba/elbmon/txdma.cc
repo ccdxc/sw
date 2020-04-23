@@ -66,8 +66,9 @@ elbmon_pipeline_data_store2 (uint8_t type, uint64_t pend_rd, uint64_t pend_wr,
 void
 ptd_read_counters (int verbose)
 {
-    uint32_t cnt_pend = 0;
-    uint32_t sta_xoff = 0, sta_fifo = 0;
+    uint32_t cnt_pend[2];
+    uint32_t sta_xoff = 0;
+    uint32_t  sta_fifo[2];
     int i;
     int pend_rd = 0;
     int pend_wr = 0;
@@ -111,22 +112,22 @@ ptd_read_counters (int verbose)
         // FIFO Status
         pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
                           ELB_PT_CSR_PTD_STA_FIFO_BYTE_ADDRESS,
-                      &sta_fifo, 1);
-        rd_ff_full += ELB_PTD_CSR_STA_FIFO_LAT_FF_FULL_GET(sta_fifo);
-        rd_ff_empty += ELB_PTD_CSR_STA_FIFO_LAT_FF_EMPTY_GET(sta_fifo);
-        wr_ff_full += ELB_PTD_CSR_STA_FIFO_WR_MEM_FF_FULL_GET(sta_fifo);
-        wr_ff_empty += ELB_PTD_CSR_STA_FIFO_WR_MEM_FF_EMPTY_GET(sta_fifo);
-        pkt_ff_full += ELB_PTD_CSR_STA_FIFO_PKT_FF_FULL_GET(sta_fifo);
-        pkt_ff_empty += ELB_PTD_CSR_STA_FIFO_PKT_FF_EMPTY_GET(sta_fifo);
+                      sta_fifo, 2);
+        rd_ff_full   += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_LAT_FF_FULL_GET(sta_fifo[0]);
+        rd_ff_empty  += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_LAT_FF_EMPTY_GET(sta_fifo[0]);
+        wr_ff_full   += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_WR_MEM_FF_FULL_GET(sta_fifo[0]);
+        wr_ff_empty  += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_WR_MEM_FF_EMPTY_GET(sta_fifo[0]);
+        pkt_ff_full  += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_PKT_FF_FULL_GET(sta_fifo[0]);
+        pkt_ff_empty += ELB_PTD_CSR_STA_FIFO_STA_FIFO_0_2_PKT_FF_EMPTY_GET(sta_fifo[0]);
         // Pending:
         pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
                           ELB_PT_CSR_PTD_STA_ID_BYTE_ADDRESS,
-                      &cnt_pend, 1);
+                      cnt_pend, 2);
         pal_reg_rd32w(ELB_ADDR_BASE_PT_PT_OFFSET +
                           ELB_PT_CSR_PTD_STA_XOFF_BYTE_ADDRESS,
                       &sta_xoff, 1);
-        pend_rd += ELB_PTD_CSR_STA_ID_RD_PEND_CNT_GET(cnt_pend);
-        pend_wr += ELB_PTD_CSR_STA_ID_WR_PEND_CNT_GET(cnt_pend);
+        pend_rd += ELB_PTD_CSR_STA_ID_STA_ID_0_2_RD_PEND_CNT_GET(cnt_pend[0]);
+        pend_wr += ELB_PTD_CSR_STA_ID_STA_ID_0_2_WR_PEND_CNT_GET(cnt_pend[0]);
         num_phv += ELB_PTD_CSR_STA_XOFF_NUMPHV_COUNTER_GET(sta_xoff);
     }
 
@@ -288,7 +289,9 @@ void
 txs_read_counters (int verbose)
 {
     uint32_t cnt[2];
-    uint32_t xoff_vector, cnt_txdma;
+    uint32_t xoff_vector;
+    uint32_t cnt_txdma[2];
+    uint32_t cnt_sxdma[2];
     uint32_t xoff[16] = {0};
     int cos, i;
     int polls = 100;
@@ -323,26 +326,116 @@ txs_read_counters (int verbose)
     }
 
     // TxDMA PHVs
-    for (cos = 0; cos < 16; cos++) {
-        pal_reg_rd32w(ELB_ADDR_BASE_TXS_TXS_OFFSET +
-                          ELB_TXS_CSR_CNT_SCH_TXDMA_COS0_ADDRESS + (cos * 8),
-                      &cnt_txdma, 1);
-        asic->phvs[cos] = cnt_txdma;
-        if (cnt_txdma > 0) {
-        }
+    pal_reg_rd32w(ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_OFFSET,
+		  cnt_txdma, 2);
+    asic->txdma_phvs = ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_CNT_SCH_TXDMA_SENT_0_2_VAL_31_0_GET(cnt_txdma[0]) +
+                 ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_CNT_SCH_TXDMA_SENT_1_2_VAL_63_32_GET(cnt_txdma[1]);
+
+    // SxDMA PHVs
+    pal_reg_rd32w(ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_OFFSET,
+		  cnt_sxdma, 2);
+    asic->sxdma_phvs = ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_CNT_SCH_SXDMA_SENT_0_2_VAL_31_0_GET(cnt_sxdma[0]) +
+                 ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_CNT_SCH_SXDMA_SENT_1_2_VAL_63_32_GET(cnt_sxdma[1]);
+
+
+}
+
+void
+txs_read_debug_counters (int verbose)
+{
+    uint32_t cnt, enable, lif;
+    uint32_t cfg[3];
+    int i;
+    int stride = ELB_TXS_CSR_CNT_DOORBELL_DEBUG1_OFFSET - ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_OFFSET;
+
+    for(i=0; i<4; i++) {
+      pal_reg_rd32w(ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_OFFSET + (i * stride), &cnt, 1);
+      asic->cnt_doorbell[i] = cnt;
+      pal_reg_rd32w(ELB_TXS_CSR_CNT_TXDMA_DEBUG0_OFFSET + (i * stride), &cnt, 1);
+      asic->cnt_txdma[i] = cnt;
+      pal_reg_rd32w(ELB_TXS_CSR_CNT_SXDMA_DEBUG0_OFFSET + (i * stride), &cnt, 1);
+      asic->cnt_sxdma[i] = cnt;
+    }
+
+    stride = ELB_TXS_CSR_CFG_DOORBELL_DEBUG1_OFFSET - ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_OFFSET;
+    for(i=0; i<4; i++) {
+      pal_reg_rd32w(ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_OFFSET + (i * stride), cfg, 3);
+      enable = ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_ENABLE_GET(cfg[0]);
+      lif = ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_LIF_START_GET(cfg[0]);
+      asic->cnt_lif[i] = lif;
+      asic->cnt_enable[i] = enable;
     }
 }
 
 void
 txs_reset_counters (int verbose)
 {
-    uint32_t zero[4] = {0};
-    int cos;
+    uint32_t zero[2] = {0};
 
     // TXS counter reset
-    for (cos = 0; cos < 16; cos++) {
-        pal_reg_wr32w(ELB_ADDR_BASE_TXS_TXS_OFFSET + (cos * 8) +
-                          ELB_TXS_CSR_CNT_SCH_TXDMA_COS0_ADDRESS,
-                      zero, 1);
+    pal_reg_wr32w(ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_OFFSET,
+		  zero, 2);
+    pal_reg_wr32w(ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_OFFSET,
+		  zero, 2);
+
+}
+
+void
+txs_reset_debug_counters (int verbose)
+{
+    uint32_t zero = 0;
+    int i;
+    int stride = ELB_TXS_CSR_CNT_DOORBELL_DEBUG1_OFFSET - ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_OFFSET;
+
+    for(i=0; i<4; i++) {
+      pal_reg_wr32w(ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_OFFSET + (i * stride), &zero, 1);
+      pal_reg_wr32w(ELB_TXS_CSR_CNT_TXDMA_DEBUG0_OFFSET + (i * stride), &zero, 1);
+      pal_reg_wr32w(ELB_TXS_CSR_CNT_SXDMA_DEBUG0_OFFSET + (i * stride), &zero, 1);
+    }
+}
+
+void
+txs_program_debug_counters (int verbose)
+{
+    uint32_t cfg[3] = {0};
+    int i;
+    int stride;
+    int lif;
+    int lif_start = 0;
+    int lif_end = 2047;
+    u_int32_t cnt[8];
+    u_int32_t valid;
+
+    i = 0;
+    // Detect enabled LIFs, choose first 4:
+    for (lif = lif_start; lif <= lif_end; lif++) {
+        pal_reg_rd32w(ELB_ADDR_BASE_DB_WA_OFFSET +
+                          ELB_WA_CSR_DHS_LIF_QSTATE_MAP_BYTE_ADDRESS +
+                          (16 * lif),
+                      cnt, 8);
+        valid = ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_8_VLD_GET(cnt[0]);
+        if (!valid) {
+            continue;
+        }
+	asic->cnt_lif[i] = lif; // chose next debug LIF to observe
+	asic->cnt_enable[i] = 1;
+	if(i >= 3) break; // got the first 4 enabled LIFs
+	else i++;
+    }
+    // Program the debug count registers
+    stride = ELB_TXS_CSR_CFG_DOORBELL_DEBUG1_OFFSET - ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_OFFSET;
+    for(i=0; i<4; i++) {
+      // DB
+      cfg[0] = ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_ENABLE_SET(asic->cnt_enable[i]) |
+	ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_LIF_START_SET(asic->cnt_lif[i]) |
+	ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_LIF_END_SET(asic->cnt_lif[i]) |
+	ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_LIF_EN_SET(asic->cnt_enable[i]);
+      pal_reg_wr32w(ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_OFFSET + (i * stride), cfg, 3);
+      // TXDMA
+      cfg[0] = ELB_TXS_CSR_CFG_TXDMA_DEBUG0_CFG_TXDMA_DEBUG0_0_3_ENABLE_SET(asic->cnt_enable[i]) |
+	ELB_TXS_CSR_CFG_TXDMA_DEBUG0_CFG_TXDMA_DEBUG0_0_3_LIF_START_SET(asic->cnt_lif[i]) |
+	ELB_TXS_CSR_CFG_TXDMA_DEBUG0_CFG_TXDMA_DEBUG0_0_3_LIF_END_SET(asic->cnt_lif[i]) |
+	ELB_TXS_CSR_CFG_TXDMA_DEBUG0_CFG_TXDMA_DEBUG0_0_3_LIF_EN_SET(asic->cnt_enable[i]);
+      pal_reg_wr32w(ELB_TXS_CSR_CFG_TXDMA_DEBUG0_OFFSET + (i * stride), cfg, 3);
     }
 }

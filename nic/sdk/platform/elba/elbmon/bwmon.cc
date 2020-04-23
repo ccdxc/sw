@@ -16,7 +16,15 @@
 #include "elb_pp_c_hdr.h"
 #include "elb_pxb_c_hdr.h"
 #include "elb_top_csr_defines.h"
-
+#include "elb_ns_ap_m_mini_c_hdr.h"
+#include "elb_gl0_c_hdr.h"
+#include "elb_gl1_c_hdr.h"
+#include "elb_gl2_c_hdr.h"
+#include "elb_gl3_c_hdr.h"
+#include "elb_gl4_c_hdr.h"
+#include "elb_gl5_c_hdr.h"
+#include "elb_gl6_c_hdr.h"
+#include "elb_gl7_c_hdr.h"
 #include "platform/pal/include/pal.h"
 #include "elbmon.hpp"
 
@@ -53,7 +61,7 @@ elbmon_asic_bwmon_wr_store(bwmon_t *bwmon_data, uint64_t wr_cnt,
 void
 bwmon_fn(int index, uint32_t base_addr)
 {
-    // Use PICS defines to get relative spacing between monitor regs
+    // Use NS defines to get relative spacing between monitor regs
     // base_addr is the address of
     // ELB_*_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS =
     uint32_t rd_latency, rd_bandwidth, rd_cnt, rd_trans;
@@ -61,52 +69,52 @@ bwmon_fn(int index, uint32_t base_addr)
     bwmon_t *bwmon_data = &asic->bwmons[index];
 
     pal_reg_rd32w(base_addr +
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS -
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS -
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
                   &rd_latency, 1);
     pal_reg_rd32w(base_addr +
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_BYTE_ADDRESS -
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_BYTE_ADDRESS -
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
                   &rd_bandwidth, 1);
-    pal_reg_rd32w(base_addr + ELB_PICS_CSR_CNT_AXI_BW_MON_RD_BYTE_ADDRESS -
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+    pal_reg_rd32w(base_addr + NS_AP_M_MINI_CSR_CNT_AXI_BW_MON_RD_BYTE_ADDRESS -
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
                   &rd_cnt, 1);
     pal_reg_rd32w(base_addr +
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_BYTE_ADDRESS -
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_BYTE_ADDRESS -
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
                   &rd_trans, 1);
     pal_reg_rd32w(base_addr +
-                      ELB_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_BYTE_ADDRESS -
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_WR_LATENCY_BYTE_ADDRESS -
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
                   &wr_latency, 1);
     pal_reg_rd32w(base_addr +
-                      ELB_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_BYTE_ADDRESS -
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_BYTE_ADDRESS -
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
                   &wr_bandwidth, 1);
-    pal_reg_rd32w(base_addr + ELB_PICS_CSR_CNT_AXI_BW_MON_WR_BYTE_ADDRESS -
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+    pal_reg_rd32w(base_addr + NS_AP_M_MINI_CSR_CNT_AXI_BW_MON_WR_BYTE_ADDRESS -
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
                   &wr_cnt, 1);
     pal_reg_rd32w(base_addr +
-                      ELB_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_BYTE_ADDRESS -
-                      ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_BYTE_ADDRESS -
+                      NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS,
                   &wr_trans, 1);
 
     elbmon_asic_bwmon_rd_store(
         bwmon_data, rd_cnt,
-        ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_AVRG_GET(rd_latency),
-        ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_MAXV_GET(rd_latency),
-        ELB_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_AVRG_GET(rd_bandwidth),
-        ELB_PICS_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_MAXV_GET(rd_bandwidth),
-        ELB_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_OUTSTANDING_GET(rd_trans),
-        ELB_PICS_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_DESS_RDY_GET(rd_trans));
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_AVRG_GET(rd_latency),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_MAXV_GET(rd_latency),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_AVRG_GET(rd_bandwidth),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_BANDWIDTH_MAXV_GET(rd_bandwidth),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_OUTSTANDING_GET(rd_trans),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_RD_TRANSACTIONS_DESS_RDY_GET(rd_trans));
     elbmon_asic_bwmon_wr_store(
         bwmon_data, wr_cnt,
-        ELB_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_AVRG_GET(wr_latency),
-        ELB_PICS_CSR_STA_AXI_BW_MON_WR_LATENCY_MAXV_GET(wr_latency),
-        ELB_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_AVRG_GET(wr_bandwidth),
-        ELB_PICS_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_MAXV_GET(wr_bandwidth),
-        ELB_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_OUTSTANDING_GET(wr_trans),
-        ELB_PICS_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_DESS_RDY_GET(wr_trans));
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_WR_LATENCY_AVRG_GET(wr_latency),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_WR_LATENCY_MAXV_GET(wr_latency),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_AVRG_GET(wr_bandwidth),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_WR_BANDWIDTH_MAXV_GET(wr_bandwidth),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_OUTSTANDING_GET(wr_trans),
+        NS_AP_M_MINI_CSR_STA_AXI_BW_MON_WR_TRANSACTIONS_DESS_RDY_GET(wr_trans));
 }
 
 void
@@ -115,22 +123,23 @@ bwmon_read_counters()
     int index = 0;
 
     bwmon_fn(index++, (ELB_ADDR_BASE_PXB_PXB_OFFSET +
-                       ELB_PXB_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+		       ELB_GL0_CSR_PX_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
-    bwmon_fn(index++, (ELB_ADDR_BASE_RPC_PICS_OFFSET +
-                       ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+    bwmon_fn(index++, (ELB_ADDR_BASE_PR_PR_OFFSET +
+		       ELB_GL1_CSR_PR_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
-    bwmon_fn(index++, (ELB_ADDR_BASE_TPC_PICS_OFFSET +
-                       ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+    bwmon_fn(index++, (ELB_ADDR_BASE_PT_PT_OFFSET +
+		       ELB_GL4_CSR_PT_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
     bwmon_fn(index++, (ELB_ADDR_BASE_SSI_PICS_OFFSET +
-                       ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+		       ELB_GL7_CSR_SI_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
     bwmon_fn(index++, (ELB_ADDR_BASE_SSE_PICS_OFFSET +
-                       ELB_PICS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+		       ELB_GL5_CSR_SE_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
 
     bwmon_fn(index++, (ELB_ADDR_BASE_MS_MS_OFFSET +
-                       ELB_MS_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+		       ELB_GL0_CSR_MS_M_MINI_CSR_STA_AXI_BW_MON_RD_LATENCY_BYTE_ADDRESS));
+
 }
 
 void

@@ -21,7 +21,8 @@ enum pipeline {
     RXDMA = 1,
     P4IG = 2,
     P4EG = 3,
-    PIPE_CNT = 4,
+    SXDMA = 4,
+    PIPE_CNT = 5,
 };
 
 enum table_type {
@@ -63,7 +64,10 @@ void prd_reset_counters(int verbose);
 void doorbell_read_counters(int verbose);
 void doorbell_reset_counters(int verbose);
 void txs_read_counters(int verbose);
+void txs_read_debug_counters(int verbose);
 void txs_reset_counters(int verbose);
+void txs_reset_debug_counters(int verbose);
+void txs_program_debug_counters(int verbose);
 void npv_read_counters(int verbose);
 void npv_reset_counters(int verbose);
 void ptd_read_counters(int verbose);

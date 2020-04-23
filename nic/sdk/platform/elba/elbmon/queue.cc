@@ -117,7 +117,7 @@ void
 qstate_lif_dump (int lif_start, int lif_end, int queue_type, int qid_start,
                  int qid_end, int rid, int rsize, int poll, int verbose)
 {
-    u_int32_t cnt[4], size[8], length[8];
+    u_int32_t cnt[8], size[8], length[8];
     u_int32_t valid, hint, hint_cos;
     u_int64_t base;
     int type, max_type;
@@ -128,15 +128,15 @@ qstate_lif_dump (int lif_start, int lif_end, int queue_type, int qid_start,
         pal_reg_rd32w(ELB_ADDR_BASE_DB_WA_OFFSET +
                           ELB_WA_CSR_DHS_LIF_QSTATE_MAP_BYTE_ADDRESS +
                           (16 * lif),
-                      cnt, 4);
-        valid = ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_VLD_GET(cnt[0]);
+                      cnt, 8);
+        valid = ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_8_VLD_GET(cnt[0]);
         if (!valid) {
             continue;
         }
 
         // decode lif qstate table:
         base = (u_int64_t)
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_QSTATE_BASE_GET(
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_8_QSTATE_BASE_GET(
                 cnt[0]);
 
 #if 0 /* TODO_ELBA */
@@ -147,46 +147,46 @@ qstate_lif_dump (int lif_start, int lif_end, int queue_type, int qid_start,
                 cnt[2]);
         // 3 bit size is qstate size: 32B/64B/128B...
         size[0] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_SIZE0_GET(cnt[0]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_8_SIZE0_GET(cnt[0]);
         size[1] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE1_GET(cnt[1]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_8_SIZE1_GET(cnt[1]);
         size[2] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE2_GET(cnt[1]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_8_SIZE2_GET(cnt[1]);
         size[3] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE3_GET(cnt[1]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_8_SIZE3_GET(cnt[1]);
         size[4] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_SIZE4_GET(cnt[1]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_8_SIZE4_GET(cnt[1]);
         size[5] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SIZE5_GET(cnt[2]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_8_SIZE5_GET(cnt[2]);
         size[6] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SIZE6_GET(cnt[2]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_8_SIZE6_GET(cnt[2]);
         size[7] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_SIZE7_GET(cnt[2]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_8_SIZE7_GET(cnt[2]);
         // 5 bit length is lg2 # entries:
         length[0] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_LENGTH0_GET(cnt[0]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_8_LENGTH0_GET(cnt[0]);
         length[1] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_4_LENGTH1_0_0_GET(
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_8_LENGTH1_0_0_GET(
                 cnt[0]) |
-            (ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH1_4_1_GET(
+            (ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_8_LENGTH1_8_1_GET(
                  cnt[1])
              << 1);
         length[2] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH2_GET(cnt[1]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_8_LENGTH2_GET(cnt[1]);
         length[3] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH3_GET(cnt[1]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_8_LENGTH3_GET(cnt[1]);
         length[4] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH4_GET(cnt[1]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_8_LENGTH4_GET(cnt[1]);
         length[5] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_4_LENGTH5_0_0_GET(
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_1_8_LENGTH5_0_0_GET(
                 cnt[1]) |
-            (ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_LENGTH5_4_1_GET(
+            (ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_8_LENGTH5_8_1_GET(
                  cnt[2])
              << 1);
         length[6] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_LENGTH6_GET(cnt[2]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_8_LENGTH6_GET(cnt[2]);
         length[7] =
-            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_4_LENGTH7_GET(cnt[2]);
+            ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_2_8_LENGTH7_GET(cnt[2]);
 #else
         hint = 0;
         hint_cos = 0;

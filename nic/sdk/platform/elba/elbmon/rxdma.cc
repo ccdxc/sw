@@ -15,6 +15,7 @@
 #include "dtls.hpp"
 
 #include "elb_top_csr_defines.h"
+#include "elb_prd_c_hdr.h"
 namespace pr {
 #include "elb_pr_c_hdr.h"
 }
@@ -44,7 +45,8 @@ elbmon_pipeline_rx_data_store1 (int type, uint64_t hostq_xoff_cnt,
 void
 prd_read_counters (int verbose)
 {
-    uint32_t sta_id, sta_fifo = 0;
+  uint32_t sta_id[3];
+  uint32_t sta_fifo[3];
     uint32_t cnt[4];
     int i;
     int pend_rd = 0;
@@ -65,7 +67,7 @@ prd_read_counters (int verbose)
     pal_reg_rd32w(ELB_ADDR_BASE_PR_PR_OFFSET + ELB_PR_CSR_PRD_BYTE_ADDRESS +
                       ELB_PRD_CSR_CNT_PHV_BYTE_OFFSET,
                   cnt, 4);
-    uint32_t phv_drop = ELB_PRD_CSR_CNT_PHV_CNT_PHV_1_4_DROP_GET(cnt[0]);
+    uint32_t phv_drop = ELB_PRD_CSR_CNT_PHV_CNT_PHV_1_4_DROP_GET(cnt[1]);
     uint32_t phv_err = ELB_PRD_CSR_CNT_PHV_CNT_PHV_2_4_ERR_GET(cnt[2]);
     uint32_t phv_recirc = ELB_PRD_CSR_CNT_PHV_CNT_PHV_3_4_RECIRC_GET(cnt[3]);
 
@@ -127,22 +129,22 @@ prd_read_counters (int verbose)
         // FIFO Status
         pal_reg_rd32w(ELB_ADDR_BASE_PR_PR_OFFSET +
                           ELB_PR_CSR_PRD_STA_FIFO_BYTE_ADDRESS,
-                      &sta_fifo, 1);
+                      sta_fifo, 3);
 
-        rd_ff_full += ELB_PRD_CSR_STA_FIFO_RD_LAT_FF_FULL_GET(sta_fifo);
-        rd_ff_empty += ELB_PRD_CSR_STA_FIFO_RD_LAT_FF_EMPTY_GET(sta_fifo);
-        wr_ff_full += ELB_PRD_CSR_STA_FIFO_WR_LAT_FF_FULL_GET(sta_fifo);
-        wr_ff_empty += ELB_PRD_CSR_STA_FIFO_WR_LAT_FF_EMPTY_GET(sta_fifo);
-        pkt_ff_full += ELB_PRD_CSR_STA_FIFO_PKT_FF_FULL_GET(sta_fifo);
-        pkt_ff_empty += ELB_PRD_CSR_STA_FIFO_PKT_FF_EMPTY_GET(sta_fifo);
+        rd_ff_full   += ELB_PRD_CSR_STA_FIFO_STA_FIFO_0_3_RD_LAT_FF_FULL_GET(sta_fifo[0]);
+        rd_ff_empty  += ELB_PRD_CSR_STA_FIFO_STA_FIFO_0_3_RD_LAT_FF_EMPTY_GET(sta_fifo[0]);
+        wr_ff_full   += ELB_PRD_CSR_STA_FIFO_STA_FIFO_0_3_WR_LAT_FF_FULL_GET(sta_fifo[0]);
+        wr_ff_empty  += ELB_PRD_CSR_STA_FIFO_STA_FIFO_0_3_WR_LAT_FF_EMPTY_GET(sta_fifo[0]);
+        pkt_ff_full  += ELB_PRD_CSR_STA_FIFO_STA_FIFO_0_3_PKT_FF_FULL_GET(sta_fifo[0]);
+        pkt_ff_empty += ELB_PRD_CSR_STA_FIFO_STA_FIFO_1_3_PKT_FF_EMPTY_GET(sta_fifo[1]);
 
         // Pending reads/writes:
         pal_reg_rd32w(ELB_ADDR_BASE_PR_PR_OFFSET +
-                          ELB_PR_CSR_PRD_STA_ID_BYTE_ADDRESS,
-                      &sta_id, 1);
+		      ELB_PRD_CSR_CNT_PHV_ID_BYTE_ADDRESS, 
+                      sta_id, 3);
 
-        pend_rd += ELB_PRD_CSR_STA_ID_RD_PEND_CNT_GET(sta_id);
-        pend_wr += ELB_PRD_CSR_STA_ID_WR_PEND_CNT_GET(sta_id);
+        pend_rd += ELB_PRD_CSR_STA_ID_STA_ID_0_3_RD_PEND_CNT_GET(sta_id[0]);
+        pend_wr += ELB_PRD_CSR_STA_ID_STA_ID_0_3_WR_PEND_CNT_GET(sta_id[0]);
 
         // num PHVs, xoff:
         pal_reg_rd32w(ELB_ADDR_BASE_PR_PR_OFFSET +
@@ -154,9 +156,9 @@ prd_read_counters (int verbose)
         phv_xoff_cnt +=
             ELB_PRD_CSR_STA_XOFF_STA_XOFF_0_3_NUMPHV_COUNTER_GET(cnt[0]);
         pkt_xoff_cnt +=
-            (ELB_PRD_CSR_STA_XOFF_STA_XOFF_1_3_PKT_XOFF_COUNTER_10_9_GET(cnt[1])
+            (ELB_PRD_CSR_STA_XOFF_STA_XOFF_1_3_PKT_XOFF_COUNTER_11_8_GET(cnt[1])
              << 8) +
-            ELB_PRD_CSR_STA_XOFF_STA_XOFF_0_3_PKT_XOFF_COUNTER_8_0_GET(cnt[0]);
+            ELB_PRD_CSR_STA_XOFF_STA_XOFF_0_3_PKT_XOFF_COUNTER_7_0_GET(cnt[0]);
 
         phv_xoff += ELB_PRD_CSR_STA_XOFF_STA_XOFF_0_3_NUMPHV_XOFF_GET(cnt[0]);
 

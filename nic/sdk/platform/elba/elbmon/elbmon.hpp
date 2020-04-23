@@ -19,8 +19,9 @@
 #include <stdio.h>
 #include "nic/sdk/platform/elba/elbmon/dtls.hpp"
 
-#define STAGE_COUNT_P4 6
+#define STAGE_COUNT_P4 8
 #define STAGE_COUNT_DMA 8
+#define STAGE_COUNT_SXDMA 4
 
 #define BUFFER_LEN 512
 #define NUM_OF_LINES 6
@@ -62,33 +63,23 @@ typedef struct _var_ {
 
 #define STALL_COUNT 4
 typedef struct mpu_ {
-    // processing  0%, stalls: hazard  0% phvwr  0% tblwr  0% memwr  0%
     uint8_t index;
     uint8_t processing_pc;
-    uint8_t stall[4];
-    uint8_t phv_data_depth;
-    uint8_t phv_cmd_depth;
 
     uint32_t inst_executed;
     uint32_t icache_miss;
-    uint32_t icache_fill_stall;
+    uint32_t dcache_miss;
     uint32_t cycles;
     uint32_t phv_executed;
-    uint32_t hazard_stall;
     uint32_t phvwr_stall;
-    uint32_t memwr_stall;
-    uint32_t tblwr_stall;
-    uint32_t fence_stall;
+    uint32_t st_stall;
 
     uint8_t inst_executed_pc;
     uint8_t icache_miss_pc;
-    uint8_t icache_fill_stall_pc;
-    uint8_t phv_executed_pc;
-    uint8_t hazard_stall_pc;
+    uint8_t dcache_miss_pc;
+    uint8_t inst_per_phv;
     uint8_t phvwr_stall_pc;
-    uint8_t memwr_stall_pc;
-    uint8_t tblwr_stall_pc;
-    uint8_t fence_stall_pc;
+    uint8_t st_stall_pc;
     uint64_t addr;
 
     functions_t functions;
@@ -99,12 +90,14 @@ typedef struct mpu_ {
 typedef struct stage_ {
     uint8_t srdy;
     uint8_t drdy;
-    uint32_t te;
+    uint32_t te_idle;
+    uint32_t te_new;
+    uint32_t te_issued;
+    uint32_t te_queued;
     uint8_t last_table_type;
     uint32_t _lat;
     uint32_t min;
     uint32_t max;
-    uint32_t m[MPU_COUNT];
     mpu_t mpus[MPU_COUNT];
     uint32_t te_phv_cnt;
     uint32_t te_axi_cnt;
@@ -112,6 +105,8 @@ typedef struct stage_ {
     uint32_t te_mpu_cnt;
     uint32_t phv_fifo_depth;
     uint32_t phv_processed_count;
+    uint32_t sdp_nodrdy_in;
+    uint32_t sdp_nodrdy_out;
     _var_t util, xoff, idle;
     int index;
 
@@ -262,8 +257,15 @@ typedef struct asic_data_ {
        0% 0% 0% 0% 0% 0% 0% 0% 0% PHVs to Stage0:
     */
     uint32_t sets, clears, phvs_to_stage0;
+    uint32_t cnt_doorbell[4];
+    uint32_t cnt_txdma[4];
+    uint32_t cnt_sxdma[4];
+    uint32_t cnt_enable[4];
+    uint32_t cnt_lif[4];
+
     uint8_t xoff[16] = {};
-    uint32_t phvs[16] = {};
+    uint64_t txdma_phvs = 0;
+    uint64_t sxdma_phvs = 0;
     /*
 Txdma: NPV phv=5719238143 pb_pbus=24217657610 pr_pbus=0 sw=0 phv_drop=0 recirc=0
 Rxdma: PSP phv=1520308648 pb_pbus=0 pr_pbus=1520308672 sw=829091064 phv_drop=0
@@ -277,7 +279,8 @@ phv_to_s0=2472772866 pkt_to_dp=2472772848
     bwmon_t bwmons[BWMON_COUNT];
 
     /* crypto */
-    uint64_t xts_cnt, xtsenc_cnt, gcm0_cnt, gcm1_cnt, pk_cnt;
+  uint64_t gcm_xts0_cnt, gcm_xts1_cnt, gcm_xts2_cnt, gcm_xts3_cnt,
+           pk0_cnt, pk1_cnt, mpp0_cnt, mpp1_cnt, mpp2_cnt, mpp3_cnt;
 
     pipeline_t pipelines[PIPE_CNT];
     functions_t functions;

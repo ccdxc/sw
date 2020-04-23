@@ -30,6 +30,7 @@
 #include "elb_te_c_hdr.h"
 #include "elb_top_csr_defines.h"
 #include "elb_wa_c_hdr.h"
+#include "elb_pf_c_hdr.h"
 #include "elbmon.hpp"
 namespace pt {
 #include "elb_pt_c_hdr.h"
@@ -278,16 +279,17 @@ measure_pps (int interval)
                   zero, 4);
 
     // Capture Timestamp
-    pal_reg_rd32w(ELB_ADDR_BASE_PB_PBC_OFFSET +
-                      ELB_PBC_CSR_HBM_STA_HBM_TIMESTAMP_BYTE_ADDRESS,
+    pal_reg_rd32w(
+		  ELB_PF_CSR_STA_HBM_TIMESTAMP_OFFSET +
+		  ELB_PF_CSR_STA_HBM_TIMESTAMP_BYTE_ADDRESS,
                   cnt, 2);
     timestamp_start =
         ((uint64_t)
-             ELB_PBCHBM_CSR_STA_HBM_TIMESTAMP_STA_HBM_TIMESTAMP_0_2_VALUE_31_0_GET(
+	 ELB_PF_CSR_STA_HBM_TIMESTAMP_STA_HBM_TIMESTAMP_0_2_VALUE_31_0_GET(
                  cnt[0])) |
         ((uint64_t)
-             ELB_PBCHBM_CSR_STA_HBM_TIMESTAMP_STA_HBM_TIMESTAMP_1_2_VALUE_47_32_GET(
-                 cnt[1])
+         ELB_PF_CSR_STA_HBM_TIMESTAMP_STA_HBM_TIMESTAMP_1_2_VALUE_47_32_GET(
+	         cnt[1])
          << 32);
 
     // TXDMA
@@ -323,16 +325,17 @@ measure_pps (int interval)
     sleep(interval);
 
     // Capture Timestamp
-    pal_reg_rd32w(ELB_ADDR_BASE_PB_PBC_OFFSET +
-                      ELB_PBC_CSR_HBM_STA_HBM_TIMESTAMP_BYTE_ADDRESS,
+    pal_reg_rd32w(
+		  ELB_PF_CSR_STA_HBM_TIMESTAMP_OFFSET +
+		  ELB_PF_CSR_STA_HBM_TIMESTAMP_BYTE_ADDRESS,
                   cnt, 2);
     timestamp_end =
         ((uint64_t)
-             ELB_PBCHBM_CSR_STA_HBM_TIMESTAMP_STA_HBM_TIMESTAMP_0_2_VALUE_31_0_GET(
+	 ELB_PF_CSR_STA_HBM_TIMESTAMP_STA_HBM_TIMESTAMP_0_2_VALUE_31_0_GET(
                  cnt[0])) |
         ((uint64_t)
-             ELB_PBCHBM_CSR_STA_HBM_TIMESTAMP_STA_HBM_TIMESTAMP_1_2_VALUE_47_32_GET(
-                 cnt[1])
+         ELB_PF_CSR_STA_HBM_TIMESTAMP_STA_HBM_TIMESTAMP_1_2_VALUE_47_32_GET(
+	         cnt[1])
          << 32);
 
     // TXDMA
@@ -400,6 +403,8 @@ read_counters (void)
     doorbell_read_counters(verbose);
 
     txs_read_counters(verbose);
+
+    txs_read_debug_counters(verbose);
 
     // Pipelines
     for (pipeline = 0; pipeline < PIPE_CNT; pipeline++) {
@@ -469,7 +474,9 @@ reset_counters (void)
     // Doorbell counter reset
     doorbell_reset_counters(verbose);
     // TXS counter reset
+    txs_program_debug_counters(verbose);
     txs_reset_counters(verbose);
+    txs_reset_debug_counters(verbose);
 
     // Pipelines
     for (pipeline = 0; pipeline < 4; pipeline++) {
