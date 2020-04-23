@@ -333,8 +333,8 @@ if ($CollectArtifacts) {
         }
     }
 
-    # Build and sign cab file
     if ($BuildIsSigned) {
+        # Build and sign cab file
         $DriverSignFolder = $PathToSignStuff + "\cat64"
         if (Test-Path -Path $DriverSignFolder -PathType Container) {
             $AllDriverFiles = $DriverSignFolder+"\*"
@@ -363,6 +363,12 @@ if ($CollectArtifacts) {
         $CabFilePath = $PathToSignStuff + "\cab64\disk1\*.cab"
         if (Test-Path -Path $CabFilePath -PathType Leaf) {
             Copy-Item -Path $CabFilePath -Destination $NewArtifactsFolder -Verbose
+        }
+        
+        # copy Pensando certificate to artifacts folder
+        $CerFilePath = $PathToSignStuff + "\Pensando*.cer"
+        if (Test-Path -Path $CerFilePath -PathType Leaf) {
+            Copy-Item -Path $CerFilePath -Destination $NewArtifactsFolder -Verbose
         }
         
     }

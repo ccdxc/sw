@@ -132,6 +132,9 @@ if ($skipInstall) {
 		# unzip
 		expand-archive -path "drivers-windows.zip" -force
 
+		# Add Pensando certificate to the store
+		certutil -f -addstore trustedpublisher '.\drivers-windows\pensando_v1.cer'
+
 		# Running exe to install driver
 		$Env:Path += "C:\Program Files (x86)\Windows Kits\10\Tools\x64\"
 
