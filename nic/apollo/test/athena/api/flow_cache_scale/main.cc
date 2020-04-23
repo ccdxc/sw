@@ -9,6 +9,7 @@
 #include "nic/apollo/test/api/utils/base.hpp"
 #include "nic/sdk/lib/utils/time_profile.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/test/athena/api/include/ftl_scale.hpp"
 #include "ftl_p4pd_mock.hpp"
 #include "ftltest_utils.hpp"
@@ -19,6 +20,8 @@ pds_ret_t pds_flow_cache_create(void);
 void pds_flow_cache_delete(void);
 void pds_flow_cache_set_core_id(uint32_t core_id);
 }
+
+sdk_logger::trace_cb_t g_trace_cb;
 
 namespace test {
 namespace api {
@@ -273,5 +276,6 @@ TEST_F(flow_cache_scale, DISABLED_delete4M) {
 int
 main (int argc, char **argv)
 {
+    register_trace_cb(sdk_test_logger);
     return api_test_program_run(argc, argv);
 }
