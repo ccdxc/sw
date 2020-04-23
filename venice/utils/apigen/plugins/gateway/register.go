@@ -2011,6 +2011,24 @@ func getDefaulterManifest(file *descriptor.File) (fileDefaults, error) {
 	return ret, nil
 }
 
+// GetMetricsFieldMapFromJSON unmarshal input byte to
+func GetMetricsFieldMapFromJSON(b []byte) (map[string][]string, error) {
+	obj := fileMetricOptions{}
+	err := json.Unmarshal(b, &obj)
+	if err != nil {
+		return nil, err
+	}
+	result := map[string][]string{}
+	for _, metricOption := range obj.Messages {
+		fields := []string{}
+		for _, f := range metricOption.Fields {
+			fields = append(fields, f.Name)
+		}
+		result[metricOption.Name] = fields
+	}
+	return result, nil
+}
+
 // -- Storage Transformers ---
 type storageTransformerArgs func(string) bool
 

@@ -352,6 +352,13 @@ func TestDataNodeWithContinuousQuery(t *testing.T) {
 		AssertOk(t, err, "Error making the create shard call")
 	}
 
+	cqQuery := `CREATE CONTINUOUS QUERY "testcq" ON "cqdb" 
+	BEGIN 
+		SELECT mean("value") INTO "cqdb"."new_rp"."average_value_five_seconds" 
+		FROM "cpu" 
+		GROUP BY time(5s) 
+	END`
+
 	// make create database call
 	for idx := 0; idx < numNodes; idx++ {
 		dnclient := tproto.NewDataNodeClient(clients[idx].ClientConn)
@@ -386,12 +393,6 @@ func TestDataNodeWithContinuousQuery(t *testing.T) {
 			return true, nil
 		}, "failed to read db")
 
-		cqQuery := `CREATE CONTINUOUS QUERY "testcq" ON "cqdb" 
-					BEGIN 
-						SELECT mean("value") INTO "cqdb"."new_rp"."average_value_five_seconds" 
-						FROM "cpu" 
-						GROUP BY time(5s) 
-					END`
 		cqRequest := &tproto.ContinuousQueryReq{
 			ClusterType:         meta.ClusterTypeTstore,
 			ReplicaID:           uint64(idx + 1),
@@ -488,9 +489,12 @@ func TestDataNodeWithContinuousQuery(t *testing.T) {
 		resp, err := dnclient.GetContinuousQuery(context.Background(), &req)
 		AssertOk(t, err, "Error executing query")
 		log.Infof("Got query resp: %+v", resp)
-		cqList := strings.Split(resp.Status, " ")
+		var cqList []influxmeta.ContinuousQueryInfo
+		err = json.Unmarshal([]byte(resp.Status), &cqList)
+		AssertOk(t, err, "Failed to unmarshal cq info. Err: %v", err)
 		Assert(t, len(cqList) == 1, "Invalid number of continuous query obtained. Get %v Expect 1", len(cqList))
-		Assert(t, cqList[0] == "testcq", "Unexpect continuous query. Get %v Expect testcq", cqList[0])
+		Assert(t, cqList[0].Name == "testcq", "Unexpect continuous query. Get %v Expect testcq", cqList[0].Name)
+		Assert(t, cqList[0].Query == cqQuery, "Unexpect continuous query. Get %v Expect testcq", cqList[0].Query)
 	}
 
 	// make delete continuous query call

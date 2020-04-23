@@ -460,17 +460,13 @@ func (ts *Tstore) CheckContinuousQuery(database string, cqName string) (bool, er
 }
 
 // GetContinuousQuery reads all CQs in the database
-func (ts *Tstore) GetContinuousQuery(database string) ([]string, error) {
-	result := []string{}
+func (ts *Tstore) GetContinuousQuery(database string) ([]meta.ContinuousQueryInfo, error) {
 	// read continuous queries
 	dbInfo := ts.metaClient.Database(database)
 	if dbInfo == nil {
-		return result, fmt.Errorf("Database %+v doesn't exist", database)
+		return nil, fmt.Errorf("Database %+v doesn't exist", database)
 	}
-	for _, cq := range dbInfo.ContinuousQueries {
-		result = append(result, cq.Name)
-	}
-	return result, nil
+	return dbInfo.ContinuousQueries, nil
 }
 
 // DeleteContinuousQuery deletes the database

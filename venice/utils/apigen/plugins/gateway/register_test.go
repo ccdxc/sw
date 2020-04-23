@@ -4329,6 +4329,17 @@ func TestGetMetricsJSON(t *testing.T) {
 	}
 }
 
+func TestGetMetricsFieldMapFromJSON(t *testing.T) {
+	bytes, err := ioutil.ReadFile("../../../../../metrics/apulu/generated/nicmgr/metrics_metrics.json")
+	if err != nil {
+		t.Fatalf("Error read file metrics/apulu/generated/nicmgr/metrics_metrics.json")
+	}
+	_, err = GetMetricsFieldMapFromJSON(bytes)
+	if err != nil {
+		t.Fatalf("Error call GetMetricsFieldMapFromJSON. Err: %v", err)
+	}
+}
+
 func TestGenParamPrefix(t *testing.T) {
 	flag.Parse()
 	_, err := getGenParamsPrefix()

@@ -53,6 +53,12 @@ type Broker struct {
 	metaWatcher *meta.Watcher // metadata watcher
 	rpcClients  map[string]*rpckit.RPCClient
 	logger      log.Logger
+
+	cqCtx                context.Context
+	cqCtxCancelFunc      context.CancelFunc
+	cqRoutineCreated     bool
+	metricsWithCQCreated map[string]bool   // original metrics name : true
+	cqInfoMap            map[string]string // cq name : query string
 }
 
 // broker retry constants
@@ -81,6 +87,12 @@ func NewBroker(cfg *meta.ClusterConfig, nodeUUID string, logger log.Logger) (*Br
 		logger:      logger.WithContext("brokeruuid", nodeUUID),
 	}
 
+	// continuous query
+	broker.metricsWithCQCreated = make(map[string]bool)
+	broker.cqInfoMap = make(map[string]string)
+	broker.cqCtx, broker.cqCtxCancelFunc = context.WithCancel(context.Background())
+	go broker.continuousQueryWaitDB()
+
 	return &broker, nil
 }
 
@@ -99,6 +111,9 @@ func (br *Broker) Stop() error {
 		br.metaWatcher.Stop()
 		br.metaWatcher = nil
 	}
+
+	// cancel continuous query context
+	br.cqCtxCancelFunc()
 
 	// close the rpc clients
 	for idx, rc := range br.rpcClients {

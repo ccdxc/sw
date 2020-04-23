@@ -5,6 +5,7 @@ package broker_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/venice/citadel/broker/continuous_query"
+	cq "github.com/pensando/sw/venice/citadel/broker/continuous_query"
 
 	"github.com/influxdata/influxdb/models"
 	_ "github.com/influxdata/influxdb/tsdb/engine"
@@ -352,25 +353,46 @@ func TestBrokerTstoreContinuousQuery(t *testing.T) {
 	AssertOk(t, err, "Error creating database")
 
 	// check retention policy in database
-	rpList, err := brokers[0].GetRetentionPolicy(context.Background(), "default")
-	AssertOk(t, err, "Failed to get retention policy for default database")
-	Assert(t, len(rpList) == 1+len(cq.RetentionPolicyMap), "Invalid number of retention policy. Get %v, expect %v", len(rpList), 1+len(cq.RetentionPolicyMap))
+	AssertEventually(t, func() (bool, interface{}) {
+		rpList, err := brokers[0].GetRetentionPolicy(context.Background(), "default")
+		if err != nil {
+			log.Errorf("Failed to get retention policy for default database")
+			return false, err
+		}
+		// expected retention policy should be default + retention pplicy for CQ
+		if len(rpList) != 1+len(cq.RetentionPolicyMap) {
+			log.Errorf("Invalid number of retention policy. Get %v, expect %v", len(rpList), 1+len(cq.RetentionPolicyMap))
+			return false, errors.New("Invalid number of retention policy")
+		}
+		return true, nil
+	}, "Error validating retention policy", "10s", "180s")
 
 	// create continuous query
-	cqQuery := `CREATE CONTINUOUS QUERY "testcq" ON "cqdb" 
+	cqQuery := `CREATE CONTINUOUS QUERY "Node_5seconds" ON "cqdb" 
 				BEGIN 
-					SELECT mean("value") AS "mean_value" INTO "cqdb"."default"."cpu_5seconds" 
-					FROM "cpu" 
+					SELECT mean("value") AS "mean_value" INTO "cqdb"."default"."Node_5seconds" 
+					FROM "Node" 
 					GROUP BY time(5s), type 
 				END`
+
 	// In order to pass the cq measurement name validation
 	cq.RetentionPolicyMap["5seconds"] = cq.ContinuousQueryRetentionSpec{
 		Name:    "default",
 		Hours:   7 * 24,
 		GroupBy: "5s",
 	}
+	cq.AllCQMeasurementMap["Node_5seconds"] = true
+	defer delete(cq.RetentionPolicyMap, "5seconds")
+	defer delete(cq.AllCQMeasurementMap, "Node_5seconds")
+
 	err = brokers[0].CreateContinuousQuery(context.Background(), "cqdb", "testcq", "default", 7*24, cqQuery)
 	AssertOk(t, err, "Error creating continuous query")
+
+	// raise error from CreateContinuousQuery for test coverage
+	err = brokers[0].CreateContinuousQuery(context.Background(), "cqdb", "testcq2", "default", 7*24, "InvalidQuery")
+	Assert(t, err != nil, "Failed to raise error for providing invalid query into CreateContinuousQuery")
+	err = brokers[0].CreateContinuousQuery(context.Background(), "cqdb", "testcq3", "default", 7*24, "SHOW CONTINUOUS QUERIES")
+	Assert(t, err != nil, "Failed to raise error for providing wrong type of query into CreateContinuousQuery")
 
 	// read databases
 	AssertEventually(t, func() (bool, interface{}) {
@@ -394,27 +416,32 @@ func TestBrokerTstoreContinuousQuery(t *testing.T) {
 	// write some points
 	log.Infof("Writing data for 30s on each broker to test continunous query")
 	for i := 0; i < 30; i++ {
-		data := fmt.Sprintf("cpu,type=numType%d,host=serverB,svc=nginx value=%d\n", i%2, i)
+		data := fmt.Sprintf("Node,type=numType%d,host=serverB,svc=nginx value=%d\n", i%2, i)
 		points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
 		AssertOk(t, err, "Error parsing points")
 		err = brokers[0].WritePoints(context.Background(), "cqdb", points)
 		AssertOk(t, err, "Error writing points")
+		err = brokers[0].WritePoints(context.Background(), "default", points)
+		AssertOk(t, err, "Error writing points")
 		time.Sleep(1 * time.Second)
 	}
 
+	// wait for continuous query routine to detect data points in Node
+	time.Sleep(40 * time.Second)
+
 	// Check continuous query result
-	targetShard, err := brokers[0].GetCluster(meta.ClusterTypeTstore).ShardMap.GetShardForPoint("cqdb", "cpu", "")
+	targetShard, err := brokers[0].GetCluster(meta.ClusterTypeTstore).ShardMap.GetShardForPoint("cqdb", "Node", "")
 	AssertOk(t, err, "Failed to get target shard for written points. Error: %v", err)
-	checkQuery := "SELECT * FROM \"cqdb\".\"default\".\"cpu_5seconds\""
+	checkQuery := "SELECT * FROM cqdb.\"default\".Node_5seconds"
 	results, err := brokers[0].ExecuteQueryShard(context.Background(), "cqdb", checkQuery, uint(targetShard.ShardID)-1)
 	AssertOk(t, err, "Error executing query")
 	Assert(t, len(results[0].Series[0].Values) >= 10 && len(results[0].Series[0].Values) <= 14,
-		"Invalid number of continuous query result. Get %v Expect 5, 6 or 7", len(results[0].Series[0].Values))
+		"Invalid number of continuous query result. Get %v Expect >= 10 and <= 14", len(results[0].Series[0].Values))
 
 	// For test coverage
 	targetShard, err = brokers[0].GetCluster(meta.ClusterTypeTstore).ShardMap.GetShardForPoint("default", "Node", "")
 	AssertOk(t, err, "Failed to get target shard for written points. Error: %v", err)
-	checkQuery = "SELECT * FROM \"default\".\"default\".\"Node_5minutes\""
+	checkQuery = "SELECT * FROM \"default\".\"default\".\"Node_5seconds\""
 	results, err = brokers[0].ExecuteQueryShard(context.Background(), "default", checkQuery, uint(targetShard.ShardID)-1)
 	AssertOk(t, err, "Error executing query")
 	_, err = brokers[0].ExecuteQueryReplica(context.Background(), "default", checkQuery, uint(targetShard.ShardID)-1, true)
@@ -428,10 +455,15 @@ func TestBrokerTstoreContinuousQuery(t *testing.T) {
 	cqList, err := brokers[0].GetContinuousQuery(context.Background(), "cqdb", "")
 	AssertOk(t, err, "Error getting continuous query")
 	Assert(t, len(cqList) == 1, "Invalid number of continuous query. Get %v Expect 1", len(cqList))
-	Assert(t, cqList[0] == "testcq", "Unexpect continuous query. Get %v Expect testcq", cqList[0])
+	Assert(t, cqList[0].Name == "testcq", "Unexpect continuous query. Get %v Expect testcq", cqList[0].Name)
+	Assert(t, cqList[0].Query == cqQuery, "Unexpect continuous query. Get %v Expect testcq", cqList[0].Query)
+
+	// raise error from GetContinuousQuery for test coverage
+	_, err = brokers[0].GetContinuousQuery(context.Background(), "InvalidDBName", "")
+	Assert(t, err != nil, "Failed to raise error for getting continuous query with invalid database name")
 
 	// make call delete continuous query
-	err = brokers[0].DeleteContinuousQuery(context.Background(), "cqdb", "testcq", "cpu")
+	err = brokers[0].DeleteContinuousQuery(context.Background(), "cqdb", "testcq", "Node")
 	AssertOk(t, err, "Error deleting continuous query")
 
 	// make call delete retention policy
@@ -439,6 +471,10 @@ func TestBrokerTstoreContinuousQuery(t *testing.T) {
 		err = brokers[0].DeleteRetentionPolicy(context.Background(), "cqdb", rpSpec.Name)
 		AssertOk(t, err, fmt.Sprintf("Failed to delete retention policy %v for database cqdb", rpSpec.Name))
 	}
+
+	// raise error from DeleteRetentionPolicy for test coverage
+	err = brokers[0].DeleteContinuousQuery(context.Background(), "InvalidDBName", "xxx", "xxx")
+	Assert(t, err != nil, "Failed to raise error for deleting continuous query with invalid database name")
 
 	AssertEventually(t, func() (bool, interface{}) {
 		dbList, err := brokers[0].ReadDatabases(context.Background())

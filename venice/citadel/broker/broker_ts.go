@@ -14,8 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/log"
-
 	"github.com/imdario/mergo"
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
@@ -26,10 +24,6 @@ import (
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
 )
-
-func init() {
-	cq.InitContinuousQueryMap()
-}
 
 // createDatabaseInReplica creates the database in replica
 func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, retention uint64, repl *meta.Replica) error {
@@ -91,16 +85,6 @@ func (br *Broker) CreateDatabaseWithRetention(ctx context.Context, database stri
 				return err
 			}
 		}
-	}
-
-	for k, v := range cq.ContinuousQueryMap {
-		log.Infof("CQ: %v:%v", k, v)
-	}
-
-	err := br.RunContinuousQueries(ctx)
-	if err != nil {
-		br.logger.Errorf("Error launching continuous query for database %v. Err: %v", database, err)
-		return err
 	}
 
 	return nil
@@ -960,7 +944,7 @@ func (br *Broker) CreateContinuousQuery(ctx context.Context, database string, cq
 		}
 		// walk all replicas in the shard
 		for _, repl := range shard.Replicas {
-			log.Infof("create cq in shard:%v replica:%v(%v) %v", repl.ShardID, repl.ReplicaID, repl.IsPrimary, query)
+			br.logger.Infof("create cq in shard:%v replica:%v(%v) %v", repl.ShardID, repl.ReplicaID, repl.IsPrimary, query)
 			err := br.createContinuousQueryInReplica(ctx, database, cqName, rpName, rpPeriod, query, repl)
 			if err != nil {
 				br.logger.Errorf("Error creating the continuous query in replica %v. Err: %v", repl, err)
@@ -973,7 +957,7 @@ func (br *Broker) CreateContinuousQuery(ctx context.Context, database string, cq
 }
 
 // getContinuousQueryInReplica reads cotinuous queries in replica
-func (br *Broker) getContinuousQueryInReplica(ctx context.Context, database string, repl *meta.Replica) ([]string, error) {
+func (br *Broker) getContinuousQueryInReplica(ctx context.Context, database string, repl *meta.Replica) ([]influxmeta.ContinuousQueryInfo, error) {
 	// retry read if there are transient errors
 	for i := 0; i < numBrokerRetries; i++ {
 
@@ -1001,7 +985,14 @@ func (br *Broker) getContinuousQueryInReplica(ctx context.Context, database stri
 		if err == nil {
 			br.logger.Infof("=>get continuous queries from database on node %+v", repl.NodeUUID)
 			if resp.Status != "" {
-				return strings.Split(resp.Status, " "), nil
+				// this means we get the results successfully
+				var cqResult []influxmeta.ContinuousQueryInfo
+				err = json.Unmarshal([]byte(resp.Status), &cqResult)
+				if err != nil {
+					br.logger.Errorf("Failed to unmarshal continuous query info. Err: %v", err)
+					return nil, err
+				}
+				return cqResult, nil
 			}
 			// If there is no continuous query in the replica, just return nil
 			return nil, nil
@@ -1014,7 +1005,7 @@ func (br *Broker) getContinuousQueryInReplica(ctx context.Context, database stri
 }
 
 // GetContinuousQuery reads all continuous queries
-func (br *Broker) GetContinuousQuery(ctx context.Context, database string, replicaID string) ([]string, error) {
+func (br *Broker) GetContinuousQuery(ctx context.Context, database string, replicaID string) ([]influxmeta.ContinuousQueryInfo, error) {
 
 	// get cluster
 	cl := br.GetCluster(meta.ClusterTypeTstore)
@@ -1022,7 +1013,7 @@ func (br *Broker) GetContinuousQuery(ctx context.Context, database string, repli
 		return nil, errors.New("shard map is empty")
 	}
 
-	cqMap := map[string]bool{}
+	cqMap := map[influxmeta.ContinuousQueryInfo]bool{}
 	// walk all shards
 	for _, shard := range cl.ShardMap.Shards {
 		for _, repl := range shard.Replicas {
@@ -1047,7 +1038,7 @@ func (br *Broker) GetContinuousQuery(ctx context.Context, database string, repli
 			}
 		}
 	}
-	allCQ := []string{}
+	allCQ := []influxmeta.ContinuousQueryInfo{}
 	for k := range cqMap {
 		allCQ = append(allCQ, k)
 	}
@@ -1116,23 +1107,125 @@ func (br *Broker) DeleteContinuousQuery(ctx context.Context, database string, cq
 	return nil
 }
 
-// RunContinuousQueries Run continuous query through existed broker
-func (br *Broker) RunContinuousQueries(ctx context.Context) error {
-	// create corresponded continuous query for database
-	for _, rpSpec := range cq.RetentionPolicyMap {
-		err := br.CreateRetentionPolicy(ctx, "default", rpSpec.Name, rpSpec.Hours)
+// continuousQueryWaitDB launch goroutine for CQ until db is created
+func (br *Broker) continuousQueryWaitDB() {
+	for {
+		if br.cqCtx.Err() != nil {
+			br.logger.Infof("Broker cq ctx cancel detected. Won't wait for default db creation anymore.")
+			return
+		}
+
+		databases, err := br.ReadDatabases(br.cqCtx)
 		if err != nil {
-			br.logger.Errorf("Error creating retention policy for database default. Err: %v", err)
-			return err
+			br.logger.Errorf("Error reading databases for cq routine. Err: %v", err)
+			time.Sleep(30 * time.Second)
+			continue
+		}
+
+		for _, dbInfo := range databases {
+			if dbInfo.Name == "default" {
+				if !br.cqRoutineCreated {
+					br.continuousQueryRoutine(br.cqCtx, "default")
+				}
+				return
+			}
+		}
+		// check database every 30 second
+		time.Sleep(30 * time.Second)
+	}
+}
+
+// continuousQueryRoutine goroutine to auto-create continuous query by detecting the field name inside database
+func (br *Broker) continuousQueryRoutine(ctx context.Context, database string) {
+	br.cqRoutineCreated = true
+	br.logger.Infof("Continuous query routine launched")
+
+	// only call create function for new retention policy
+	for _, rpSpec := range cq.RetentionPolicyMap {
+		err := br.CreateRetentionPolicy(ctx, database, rpSpec.Name, rpSpec.Hours)
+		if err != nil {
+			// there exists possibility that retention policy already exists, let the routine continue
+			br.logger.Errorf("Error creating retention policy for database %v. Err: %v", database, err)
+			continue
 		}
 	}
 
-	for _, cqSpec := range cq.ContinuousQueryMap {
-		err := br.CreateContinuousQuery(ctx, cqSpec.DBName, cqSpec.CQName,
-			cqSpec.RetentionPolicyName, cqSpec.RetentionPolicyInHours, cqSpec.Query)
-		if err != nil {
-			return fmt.Errorf("Error creating continuous query %v. Err: %v", cqSpec.CQName, err)
+	// loop forever to create CQ for target measurement
+	for {
+		if ctx.Err() != nil {
+			br.logger.Infof("Broker cq ctx cancel detected. Quit cq goroutine.")
+			br.cqRoutineCreated = false
+			return
 		}
+
+		// fetch current cq information
+		cqInfoList, err := br.GetContinuousQuery(ctx, database, "")
+		if err != nil {
+			br.logger.Errorf("Error fetching cq info from database %v. Err: %v", database, err)
+			time.Sleep(30 * time.Second)
+			continue
+		}
+		for _, cqInfo := range cqInfoList {
+			br.cqInfoMap[cqInfo.Name] = cqInfo.Query
+		}
+
+		// check each measurement
+		for measurement := range cq.CQMeasurementGroupByMap {
+			// if this measurement's cq is created, skip
+			if _, ok := br.metricsWithCQCreated[measurement]; ok {
+				continue
+			}
+
+			// query the measurement
+			resp, err := br.ExecuteQuery(ctx, database, "SELECT * FROM "+measurement+" ORDER BY time DESC LIMIT 1")
+			if err != nil {
+				br.logger.Errorf("Error query metrics %v for continuous query. Err: %v", measurement, err)
+				continue
+			}
+
+			// check if there is any response or not
+			if len(resp) == 0 || len(resp[0].Series) == 0 || len(resp[0].Series[0].Columns) == 0 {
+				continue
+			}
+
+			// collect field name
+			fields := []string{}
+			for _, column := range resp[0].Series[0].Columns {
+				if !cq.IsTag(column) {
+					fields = append(fields, column)
+				}
+			}
+
+			// generate continuous query
+			cqMap := cq.GenerateContinuousQueryMap(database, measurement, "last", fields)
+
+			// run continuous query
+			for _, cqSpec := range cqMap {
+				// when different version of query string is detected, delete the old cq and create a new one
+				if cqQuery, ok := br.cqInfoMap[cqSpec.CQName]; ok && cqQuery != cqSpec.Query {
+					br.logger.Infof("Detect different version of cq query. Old: %v, New: %v", br.cqInfoMap[cqSpec.CQName], cqQuery)
+					err := br.DeleteContinuousQuery(ctx, database, cqSpec.CQName, measurement)
+					if err != nil {
+						br.logger.Errorf("Failed to delete old version cq %v. Err: %v", cqSpec.CQName, err)
+						continue
+					}
+				}
+
+				err := br.CreateContinuousQuery(ctx, cqSpec.DBName, cqSpec.CQName,
+					cqSpec.RetentionPolicyName, cqSpec.RetentionPolicyInHours, cqSpec.Query)
+				if err != nil {
+					// there exists possibility that cq already exists, let the routine continue
+					br.logger.Errorf("Error creating continuous query %v. Err: %v", cqSpec.CQName, err)
+					continue
+				}
+
+				// if created without error, registered in AllCQMeasurement
+				cq.AllCQMeasurementMap[cqSpec.CQName] = true
+			}
+			br.metricsWithCQCreated[measurement] = true
+		}
+
+		// wake up every 30 seconds
+		time.Sleep(30 * time.Second)
 	}
-	return nil
 }

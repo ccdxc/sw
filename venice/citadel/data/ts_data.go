@@ -558,7 +558,12 @@ func (dn *DNode) GetContinuousQuery(ctx context.Context, req *tproto.DatabaseReq
 		dn.logger.Errorf("Failed to get continuous query because error: %v", err)
 		return &resp, err
 	}
-	resp.Status = strings.Join(cqs, " ")
+	cqBytes, err := json.Marshal(cqs)
+	if err != nil {
+		dn.logger.Errorf("Failed to marshal continuous query because error: %v", err)
+		return &resp, nil
+	}
+	resp.Status = string(cqBytes)
 	return &resp, nil
 }
 

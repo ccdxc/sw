@@ -589,7 +589,8 @@ func TestTstoreContinuousQuery(t *testing.T) {
 	cqs, err := ts.GetContinuousQuery("cqdb")
 	AssertOk(t, err, "Error failed to get continuous query. Err: %v", err)
 	Assert(t, len(cqs) == 1, "Invalid number of existed continuous query. Get %v Expect %v", len(cqs), 1)
-	Assert(t, cqs[0] == "testcq", "Unexpected continuous query. Get %v Expect %v", cqs[0], "testcq")
+	Assert(t, cqs[0].Name == "testcq", "Unexpected continuous query. Get %v Expect %v", cqs[0].Name, "testcq")
+	Assert(t, cqs[0].Query == cqQuery, "Unexpected continuous query. Get %v Expect %v", cqs[0].Query, cqQuery)
 
 	err = ts.DeleteContinuousQuery("cqdb", "testcq")
 	AssertOk(t, err, "Error failed to delete continuous query. Err: %v", err)
@@ -680,7 +681,8 @@ func TestTstoreContinuousQueryWithNewRetentionPolicy(t *testing.T) {
 	cqs, err := ts.GetContinuousQuery("cqdb")
 	AssertOk(t, err, "Error failed to get continuous query. Err: %v", err)
 	Assert(t, len(cqs) == 1, "Invalid number of existed continuous query. Get %v Expect %v", len(cqs), 1)
-	Assert(t, cqs[0] == "testcq", "Unexpected continuous query. Get %v Expect %v", cqs[0], "testcq")
+	Assert(t, cqs[0].Name == "testcq", "Unexpected continuous query. Get %v Expect %v", cqs[0].Name, "testcq")
+	Assert(t, cqs[0].Query == cqQuery, "Unexpected continuous query. Get %v Expect %v", cqs[0].Query, cqQuery)
 
 	err = ts.DeleteContinuousQuery("cqdb", "testcq")
 	AssertOk(t, err, "Error failed to delete continuous query. Err: %v", err)

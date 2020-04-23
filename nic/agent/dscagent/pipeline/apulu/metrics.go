@@ -9,7 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -97,7 +97,7 @@ func queryInterfaceMetrics(infraAPI types.InfraAPI, stream halapi.OperSvc_Metric
 
 		// build the row to be added to tsdb
 		points := []*tsdb.Point{}
-		tags := map[string]string{"Key": intf.UUID, "Name": intf.Name}
+		tags := map[string]string{"tenant": "", "name": intf.Name}
 		fields := make(map[string]interface{})
 		for _, row := range resp.Response {
 			for _, counter := range row.Counters {

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
-	"github.com/pensando/sw/metrics/genfields"
+	"github.com/pensando/sw/metrics/apulu/genfields"
 	"github.com/pensando/sw/metrics/types"
 	cq "github.com/pensando/sw/venice/citadel/broker/continuous_query"
 
@@ -27,7 +27,6 @@ var _ = Describe("metrics test", func() {
 
 	Context("tags:type=basic;datapath=true;duration=short Verify basic metrics ", func() {
 		It("tags:sanity=true Check metrics fields", func() {
-			Skip("Disabling test for sanity")
 			tms := time.Now().UTC().Add(time.Second * -30).Format(time.RFC3339)
 
 			// get node collection and init telemetry client
@@ -81,7 +80,6 @@ var _ = Describe("metrics test", func() {
 		})
 
 		It("tags:sanity=true Check CQ metrics fields", func() {
-			Skip("Disabling test for sanity")
 			tms := time.Now().Add(time.Hour * -2).Format(time.RFC3339)
 
 			// get node collection and init telemetry client

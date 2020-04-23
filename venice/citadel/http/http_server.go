@@ -227,8 +227,13 @@ func (hsrv *HTTPServer) readcqReqHandler(r *http.Request) (interface{}, error) {
 		log.Errorf("Error reading continuous queries. Err: %v", err)
 		return nil, err
 	}
+	cqBytes, err := json.Marshal(result)
+	if err != nil {
+		log.Errorf("Error marshal continuous query result for output. Err: %v", err)
+		return nil, err
+	}
 
-	return result, nil
+	return string(cqBytes), nil
 }
 
 // deletecqReqHandler deletes a database
