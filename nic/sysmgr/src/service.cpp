@@ -217,6 +217,11 @@ void Service::fault(std::string reason)
                     this->spec->name.c_str());
         FaultLoop::getInstance()->set_fault(reason);
     }
+
+    g_bus->ProcessDied(this->spec->name, pid, reason);
+
+    ServiceLoop::getInstance()->queue_event(
+        ServiceEvent::create(this->spec->name, SERVICE_EVENT_STOP));
     
     g_log->info("System in fault mode (%s)", reason.c_str());
     g_bus->SystemFault(reason);
@@ -272,11 +277,6 @@ void Service::on_child(pid_t pid)
         this->launch();
         return;
     }
-
-    g_bus->ProcessDied(this->spec->name, pid, reason);
-
-    ServiceLoop::getInstance()->queue_event(
-        ServiceEvent::create(this->spec->name, SERVICE_EVENT_STOP));
 
     this->fault("Process died");
 }
