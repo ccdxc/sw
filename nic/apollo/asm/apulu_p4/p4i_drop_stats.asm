@@ -16,4 +16,4 @@ p4i_drop_stats:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 p4i_drop_stats_error:
     phvwr.e         p.capri_intrinsic_drop, 1
-    nop
+    phvwr.f         p.capri_p4_intrinsic_valid, 1
