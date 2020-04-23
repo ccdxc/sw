@@ -55,6 +55,12 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
 
     if (interfaces.length === 0) {
       this.addInterface();
+    } else {
+      interfaces.controls.forEach((form: FormGroup) => {
+        if (!form.get(['external-vlan']).value) {
+          form.get(['external-vlan']).setValue(0);
+        }
+      });
     }
 
     this.newObject.$formGroup.get(['meta', 'name']).setValidators([
