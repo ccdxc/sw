@@ -209,12 +209,56 @@ writeq(u64 data, const volatile void *addr)
     WRITE_REGISTER_ULONG64((PULONG64)addr, data);
 }
 
+bool
+is_rss_entry(PROCESSOR_NUMBER *proc,
+	NDIS_RSS_PROCESSOR_INFO *rss_tbl)
+{
+
+	bool is_rss = false;
+	NDIS_RSS_PROCESSOR *entry = NULL;
+
+	entry = (NDIS_RSS_PROCESSOR *)((char *)rss_tbl + rss_tbl->RssProcessorArrayOffset);
+
+	for (ULONG idx = 0; idx < rss_tbl->RssProcessorCount; idx++, entry++) {
+
+		if (entry->ProcNum.Group == proc->Group &&
+			entry->ProcNum.Number == proc->Number) {
+			is_rss = true;
+			break;
+		}
+	}
+
+	return is_rss;
+}
+
+USHORT
+get_numa_node(struct ionic *ionic,
+			  PROCESSOR_NUMBER *proc_num)
+{
+
+	USHORT numa_node = 0;
+
+    for (ULONG i = 0; i < ionic->sys_proc_info->NumberOfProcessors; ++i) {
+        PNDIS_PROCESSOR_INFO_EX proc = &ionic->sys_proc[i];
+
+		if (proc_num->Group == proc->ProcNum.Group &&
+			proc_num->Number == proc->ProcNum.Number) {
+			numa_node = proc->NodeId;
+			break;
+		}
+    }
+
+	return numa_node;
+}
+
 NDIS_STATUS
 ionic_register_interrupts(struct ionic *ionic,
     PNDIS_MINIPORT_INIT_PARAMETERS init_params)
 {
     NDIS_MINIPORT_INTERRUPT_CHARACTERISTICS interrupt;
     NDIS_STATUS status = NDIS_STATUS_NOT_SUPPORTED;
+	SIZE_T	rss_tbl_sz = 0;
+	NDIS_RSS_PROCESSOR_INFO *rss_tbl = NULL;
 
     NdisZeroMemory(&interrupt, sizeof(NDIS_MINIPORT_INTERRUPT_CHARACTERISTICS));
     interrupt.Header.Type = NDIS_OBJECT_TYPE_MINIPORT_INTERRUPT;
@@ -304,18 +348,63 @@ ionic_register_interrupts(struct ionic *ionic,
         }
     }
 
+	// Grab the RSS processor list and mark the entries below if they are to be used for RSS
+	status = NdisGetRssProcessorInformation( ionic->adapterhandle,
+											 NULL,
+											 &rss_tbl_sz);
+
+	if( status != NDIS_STATUS_BUFFER_TOO_SHORT) {
+        status = NDIS_STATUS_RESOURCES;
+        goto exit;
+	}
+
+	rss_tbl =
+        (NDIS_RSS_PROCESSOR_INFO *)NdisAllocateMemoryWithTagPriority_internal(
+            ionic->adapterhandle,
+            (ULONG)rss_tbl_sz,
+            IONIC_GENERIC_TAG, NormalPoolPriority);
+
+	if (rss_tbl == NULL) {
+        status = NDIS_STATUS_RESOURCES;
+        goto exit;
+	}
+
+	NdisZeroMemory( rss_tbl, rss_tbl_sz);
+
+	status = NdisGetRssProcessorInformation( ionic->adapterhandle,
+											 rss_tbl,
+											 &rss_tbl_sz);
+
+	if( status != NDIS_STATUS_SUCCESS) {
+		NdisFreeMemoryWithTagPriority_internal( ionic->adapterhandle,
+												rss_tbl,
+												IONIC_GENERIC_TAG);
+        goto exit;
+	}
+
     for (ULONG i = 0; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
         ionic->intr_msg_tbl[i].id = i;
 
-        IoPrint("%s msg %lu vec 0x%lx addr 0x%lx data 0x%lx affinity %lx\n",
+		ionic->intr_msg_tbl[i].rss_entry = is_rss_entry( &ionic->intr_msg_tbl[i].proc,
+														 rss_tbl);
+		ionic->intr_msg_tbl[i].numa_node = get_numa_node( ionic,
+														  &ionic->intr_msg_tbl[i].proc);
+
+        IoPrint("%s msg %lu vec 0x%lx addr 0x%lx data 0x%lx affinity %lx rss %s NUMA %d\n",
             __FUNCTION__, i,
             ionic->intr_msginfo_tbl->MessageInfo[i].Vector,
             ionic->intr_msginfo_tbl->MessageInfo[i].MessageAddress,
             ionic->intr_msginfo_tbl->MessageInfo[i].MessageData,
-            ionic->intr_msginfo_tbl->MessageInfo[i].TargetProcessorSet);
+            ionic->intr_msginfo_tbl->MessageInfo[i].TargetProcessorSet,
+			ionic->intr_msg_tbl[i].rss_entry?"Yes":"No",
+			ionic->intr_msg_tbl[i].numa_node);
     }
 
-    /*
+	NdisFreeMemoryWithTagPriority_internal( ionic->adapterhandle,
+											rss_tbl,
+											IONIC_GENERIC_TAG);
+    
+	/*
         Setup the interrupt resource table
     */
     ionic->intr_tbl =
@@ -354,6 +443,7 @@ ionic_register_interrupts(struct ionic *ionic,
     return status;
 
 exit:
+
 	if (ionic->intr_tbl != NULL) {
 		NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle,
 			ionic->intr_tbl,
@@ -708,6 +798,15 @@ find_intr_msg(struct ionic *ionic, ULONG proc_idx)
             if (proc_idx == ANY_PROCESSOR_INDEX) {
                 return intr;
             }
+			if( proc_idx == ANY_NON_RSS_PROCESSOR_CLOSE_INDEX &&
+				!intr->rss_entry &&
+				intr->numa_node == ionic->numa_node) {
+				return intr;
+			}
+			if( proc_idx == ANY_NON_RSS_PROCESSOR_INDEX &&
+				!intr->rss_entry) {
+				return intr;
+			}
             if (proc_idx != INVALID_PROCESSOR_INDEX &&
                 intr->affinity_policy == IrqPolicySpecifiedProcessors &&
 				intr->proc_idx == proc_idx) {
@@ -726,7 +825,7 @@ sync_intr_msg(NDIS_HANDLE SynchronizeContext)
     struct intr_sync_ctx* ctx = (struct intr_sync_ctx *)SynchronizeContext;
     NDIS_STATUS status;
 
-    status = ionic_intr_affinitize(ctx->ionic, ctx->index, ctx->id);
+    status = ionic_intr_affinitize(ctx->lif->ionic, ctx->index, ctx->id);
 
     return (status == NDIS_STATUS_SUCCESS);
 }

@@ -15,22 +15,21 @@
 #define IONIC_REG_UDPCSV4		12
 #define IONIC_REG_UDPCSV6		13
 #define IONIC_REG_RXPOOL		14
-#define IONIC_REG_TXMODE		15
-#define IONIC_REG_NUMVFS		16
-#define IONIC_REG_VMQVLAN		17
-#define IONIC_REG_RSSQUEUES		18
-#define IONIC_REG_TXBUFFERS		19
-#define IONIC_REG_RXBUFFERS		20
-#define IONIC_REG_PME			21
-#define IONIC_REG_AUTONEG		22
-#define IONIC_REG_SPEED			23
-#define IONIC_REG_FEC			24
-#define IONIC_REG_PAUSE			25
-#define IONIC_REG_PAUSETYPE		26
-#define IONIC_REG_INTERRUPT_MOD	27
-#define IONIC_REG_RX_INT_MOD_TO	28
+#define IONIC_REG_NUMVFS		15
+#define IONIC_REG_VMQVLAN		16
+#define IONIC_REG_RSSQUEUES		17
+#define IONIC_REG_TXBUFFERS		18
+#define IONIC_REG_RXBUFFERS		19
+#define IONIC_REG_PME			20
+#define IONIC_REG_AUTONEG		21
+#define IONIC_REG_SPEED			22
+#define IONIC_REG_FEC			23
+#define IONIC_REG_PAUSE			24
+#define IONIC_REG_PAUSETYPE		25
+#define IONIC_REG_INTERRUPT_MOD	26
+#define IONIC_REG_RX_INT_MOD_TO	27
 
-#define IONIC_REG_ENTRY_COUNT	29 // Include the 0th entry
+#define IONIC_REG_ENTRY_COUNT	28 // Include the 0th entry
 
 #ifndef DEFINITIONS_ONLY
 struct registry_entry ionic_registry[] = {
@@ -49,7 +48,6 @@ struct registry_entry ionic_registry[] = {
 		{L"*UDPChecksumOffloadIPv4",	0,		3,		3,		3},
 		{L"*UDPChecksumOffloadIPv6",	0,		3,		3,		3},
 		{L"RxPoolSize",					IONIC_MIN_RX_POOL_FACTOR,	IONIC_MAX_RX_POOL_FACTOR,	IONIC_DEFAULT_RX_POOL_FACTOR,	IONIC_DEFAULT_RX_POOL_FACTOR},
-		{L"TxFlushMode",				1,		3,		1,		1},
 		{L"*NUMVFs",					0,		256,	0,		0},
 		{L"*VMQVlanFiltering",			0,		1,		0,		0},
 		{L"*NumRSSQueues",				1,		32,		4,		4},

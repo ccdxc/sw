@@ -31,7 +31,7 @@
     <ProjectGuid>{F2659EAC-E5B2-4522-9A1A-C1E5A5CE5D81}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>TestTool</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>Config Tool</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

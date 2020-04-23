@@ -208,8 +208,10 @@ struct intr_msg {
     PROCESSOR_NUMBER	proc;
     ULONG               proc_idx;
     KAFFINITY           affinity;
+	USHORT				numa_node;
 
-    bool			inuse;
+    bool				inuse;
+	bool				rss_entry;
     struct lif*			lif;
     struct qcq*			qcq;
 
@@ -220,7 +222,7 @@ struct intr_msg {
 };
 
 struct intr_sync_ctx {
-    struct ionic*   ionic;
+    struct lif	   *lif;
     unsigned int	index;
     ULONG			id;
 };
@@ -281,7 +283,6 @@ struct qcq {
 	LONG outstanding_rx_count;
     LONG outstanding_tx_count;
 
-	NDIS_SPIN_LOCK tx_ring_lock;
 	NDIS_SPIN_LOCK rx_ring_lock;
 
 	NDIS_HANDLE		ring_alloc_handle;

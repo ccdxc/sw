@@ -923,11 +923,9 @@ ionic_rx_napi(struct intr_msg *int_info,
     u32 flags = 0;
     PNET_BUFFER_LIST packets_to_indicate = NULL;
 
-    // Process tx if in mode 1 or 3
-    if (BooleanFlagOn( lif->ionic->ConfigStatus, IONIC_TX_MODE_DPC)) {
-        tx_work_done = ionic_tx_flush(lif->txqcqs[qi].qcq, IONIC_TX_BUDGET_DEFAULT,
-            false, false);
-    }
+	KeInsertQueueDpc( &lif->txqcqs[qi].qcq->tx_packet_dpc,
+					  NULL,
+					  NULL);
 
     NdisDprAcquireSpinLock(&qcq->rx_ring_lock);
 
@@ -1461,16 +1459,6 @@ ionic_rx_empty(struct queue *q)
         desc->len = 0;
 
         sg_desc = (struct rxq_sg_desc *)cur->sg_desc;
-#if 0
-		for (i = 0; i < cur->npages; i++) {
-			if (likely(cur->pages[i].page)) {
-				ionic_rx_page_free(q, cur->pages[i].page,
-						   cur->pages[i].dma_addr);
-				cur->pages[i].page = NULL;
-				cur->pages[i].dma_addr = 0;
-			}
-		}
-#endif
 
         cur->cb_arg = NULL;
     }

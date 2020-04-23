@@ -663,7 +663,6 @@ ionic_qcq_alloc(struct lif *lif,
     NdisAllocateSpinLock(&newqcq->txq_nb_lock);
     NdisAllocateSpinLock(&newqcq->txq_pending_nbl_lock);
 
-    NdisAllocateSpinLock(&newqcq->tx_ring_lock);
     NdisAllocateSpinLock(&newqcq->rx_ring_lock);
 
     InitializeListHead(&newqcq->txq_nb_list);
@@ -777,7 +776,7 @@ ionic_qcq_alloc(struct lif *lif,
 								 tx_packet_dpc_callback,
 								 (void *)newqcq);
 		KeSetImportanceDpc( &newqcq->tx_packet_dpc,
-							MediumHighImportance);
+							MediumImportance);
 	}
 
     *qcq = newqcq;
@@ -802,7 +801,6 @@ err_out:
 
 		NdisFreeSpinLock(&newqcq->txq_nb_lock);
 		NdisFreeSpinLock(&newqcq->txq_pending_nbl_lock);
-		NdisFreeSpinLock(&newqcq->tx_ring_lock);
 		NdisFreeSpinLock(&newqcq->rx_ring_lock);
 
         NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, newqcq,
@@ -874,7 +872,6 @@ ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 
 	NdisFreeSpinLock(&qcq->txq_nb_lock);
 	NdisFreeSpinLock(&qcq->txq_pending_nbl_lock);
-	NdisFreeSpinLock(&qcq->tx_ring_lock);
 	NdisFreeSpinLock(&qcq->rx_ring_lock);
 
     NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq,
@@ -1853,9 +1850,10 @@ ionic_txrx_alloc(struct lif *lif,
     struct ionic *ionic = lif->ionic;
     ULONG q_index = 0;
     BOOLEAN default_port = FALSE;
-	struct intr_msg *intr_msg = NULL;
+	struct intr_msg *intr_rx_msg = NULL;
+	struct intr_msg *intr_tx_msg = NULL;
 
-    if (queue_id == (ULONG)-1 && vport_id == (ULONG)-1) {
+	if (queue_id == (ULONG)-1 && vport_id == (ULONG)-1) {
         q_index = 0;
         default_port = TRUE;
     } else if (queue_id != (ULONG)-1) {
@@ -1954,23 +1952,34 @@ ionic_txrx_alloc(struct lif *lif,
 		}
 
 		/* Affinitize the int */
-
-		intr_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
-		if (intr_msg == NULL) {
+		intr_rx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+		if (intr_rx_msg == NULL) {
 			 status = NDIS_STATUS_FAILURE;
 			goto err_out_free_rxqcqs;
 		}
 
-		intr_msg->inuse = true;
-		ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_msg->id);
-
+		intr_rx_msg->inuse = true;
+		ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_rx_msg->id);
+	
 		/* Set the processor affniity for the tx packet dpc */
+		intr_tx_msg = find_intr_msg(lif->ionic, ANY_NON_RSS_PROCESSOR_CLOSE_INDEX);
+		if (intr_tx_msg == NULL) {
+			intr_tx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+			if (intr_tx_msg == NULL) {
+				intr_tx_msg = intr_rx_msg;
+			}
+		}
+
+		intr_tx_msg->inuse = true;
+
 		status = KeSetTargetProcessorDpcEx( &lif->txqcqs[i].qcq->tx_packet_dpc,
-											&intr_msg->proc);
+											&intr_tx_msg->proc);
 		if (status != STATUS_SUCCESS) {
 			IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
 								__FUNCTION__,
 								status);
+			status = NDIS_STATUS_FAILURE;
+			goto err_out_free_rxqcqs;
 		}
     }
 
@@ -2086,7 +2095,6 @@ ionic_txrx_deinit(struct lif *lif)
 
     for (i = 0; i < lif->ntxqs; i++) {
         ionic_lif_qcq_deinit(lif, lif->txqcqs[i].qcq);
-        ionic_tx_flush(lif->txqcqs[i].qcq, lif->txqcqs[i].qcq->cq.num_descs, true, true);
         ionic_tx_empty(&lif->txqcqs[i].qcq->q);
 
         ionic_reset_qcq( lif->txqcqs[i].qcq);
@@ -2167,7 +2175,6 @@ ionic_lif_tx_flush(struct lif *lif)
     unsigned int i;
 
     for (i = 0; i < lif->ntxqs; i++) {
-        ionic_tx_flush(lif->txqcqs[i].qcq, lif->txqcqs[i].qcq->cq.num_descs, false, true);
         ionic_service_pending_nbl_requests(lif->ionic, lif->txqcqs[i].qcq);
     }
 

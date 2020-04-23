@@ -303,14 +303,6 @@ HKR, Ndi\params\RxPoolSize,                     step,                   0, "1"
 HKR, Ndi\params\RxPoolSize,                     Base,                   0, "1"
 HKR, Ndi\params\RxPoolSize,                     type,                   0, "DWORD"
 
-; TxFlushMode
-HKR, Ndi\Params\TxFlushMode,                    ParamDesc,              0, %TxFlushMode%
-HKR, Ndi\Params\TxFlushMode,                    default,                0, "1"
-HKR, Ndi\Params\TxFlushMode\Enum,               "1",                    0, %TxModeDPC%
-HKR, Ndi\Params\TxFlushMode\Enum,               "2",                    0, %TxModeSendPath%
-HKR, Ndi\Params\TxFlushMode\Enum,               "3",                    0, %TxModeBoth%
-HKR, Ndi\Params\TxFlushMode,                    type,                   0, "enum"
-
 ; *InterruptModeration
 HKR, NDI\Params\*InterruptModeration,			ParamDesc,				0, %InterruptModeration%
 HKR, NDI\Params\*InterruptModeration,			Type,					0, "enum"

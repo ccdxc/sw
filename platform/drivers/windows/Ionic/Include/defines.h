@@ -83,6 +83,10 @@ NTSTATUS
 #define IONIC_WINDOWS_DISTRO			"Windows"
 #define IONIC_WINDOWS_DISTRO_LEN		strlen( IONIC_WINDOWS_DISTRO)
 
+#ifndef TRACK_MEMORY_BUFFER_ALLOC
+#define NdisAllocateMemoryWithTagPriority_internal		NdisAllocateMemoryWithTagPriority
+#define NdisFreeMemoryWithTagPriority_internal			NdisFreeMemoryWithTagPriority
+#endif
 //
 // Coding definitions
 //
@@ -145,6 +149,8 @@ NTSTATUS
 #define IONIC_PERF_MON_NO_STATS			MAXULONGLONG
 
 #define ANY_PROCESSOR_INDEX				(INVALID_PROCESSOR_INDEX - 1)
+#define ANY_NON_RSS_PROCESSOR_INDEX		(INVALID_PROCESSOR_INDEX - 2)
+#define ANY_NON_RSS_PROCESSOR_CLOSE_INDEX	(INVALID_PROCESSOR_INDEX - 3)
 
 #define IONIC_1Q_TAG					0x0081
 
@@ -170,9 +176,6 @@ NTSTATUS
 #define IONIC_INTERRUPT_MOD_ENABLED			0x00000040
 #define IONIC_PRIORITY_ENABLED				0x00000080
 #define IONIC_VLAN_ENABLED					0x00000100
-
-#define IONIC_TX_MODE_DPC                   0x00000400 // Flush in the rx DPC
-#define IONIC_TX_MODE_SEND                  0x00000800 // Flush in the tx send_path
 
 //
 // Default Rx budget value

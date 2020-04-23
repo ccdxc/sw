@@ -256,7 +256,8 @@ ionic_lif_rss_init(struct lif *lif)
 
     NdisMoveMemory(lif->rss_hash_key, key, IONIC_RSS_HASH_KEY_SIZE);
 
-    ULONG rss_proc_cnt = min(lif->nrxqs, ionic->sys_proc_info->NumberOfProcessors);
+    ULONG num_procs = ionic->sys_proc_info->NumberOfProcessors;
+    ULONG rss_proc_cnt = min(lif->nrxqs, num_procs);
 
     /* select one preferred processor per queue */
     PPROCESSOR_NUMBER proc_array = (PPROCESSOR_NUMBER)NdisAllocateMemoryWithTagPriority_internal(
@@ -271,16 +272,26 @@ ionic_lif_rss_init(struct lif *lif)
 
 	NdisZeroMemory(proc_array, rss_proc_cnt * sizeof(PROCESSOR_NUMBER));
 
+    USHORT min_distance = ionic->sys_proc[0].NodeDistance;
+    for (ULONG i = 0; i < num_procs; ++i) {
+        if (ionic->sys_proc[i].NodeDistance < min_distance) {
+            min_distance = ionic->sys_proc[i].NodeDistance;
+        }
+
+    }
+    DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
+              "%s min node distance %hu\n", __FUNCTION__, min_distance));
+
     ULONG proc_idx = 0;
     for (ULONG i = 0; i < rss_proc_cnt; ++i) {
 
         /* select the next preferred processor */
-        while (ionic->sys_proc[proc_idx].NodeDistance != 0) {
-            ++proc_idx %= rss_proc_cnt;
+        while (ionic->sys_proc[proc_idx].NodeDistance != min_distance) {
+            proc_idx = (proc_idx + 1) % num_procs;
         }
         proc_array[i].Group = ionic->sys_proc[proc_idx].ProcNum.Group;
         proc_array[i].Number = ionic->sys_proc[proc_idx].ProcNum.Number;
-        ++proc_idx %= rss_proc_cnt;
+        proc_idx = (proc_idx + 1) % num_procs;
         IoPrint("%s lif %d proc_array[%d] %p group = %d proc = %d\n",
             __FUNCTION__, lif->index,
             i, &proc_array[i],
@@ -531,7 +542,7 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
 
             // update the table for entry to use the msg
             struct intr_sync_ctx ctx = { 0 };
-            ctx.ionic = lif->ionic;
+            ctx.lif = lif;
             ctx.id = intr_msg->id;
             ctx.index = lif->rxqcqs[q_idx].qcq->cq.bound_intr->index;
 
@@ -557,7 +568,7 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
 
         // update the table for this entry to use the msg
         struct intr_sync_ctx ctx = { 0 };
-        ctx.ionic = lif->ionic;
+        ctx.lif = lif;
         ctx.id = intr_msg->id;
         ctx.index = lif->rxqcqs[q_idx].qcq->cq.bound_intr->index;
 

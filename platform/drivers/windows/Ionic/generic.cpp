@@ -157,27 +157,6 @@ ReadRegParameters(struct ionic *Adapter)
     }
 
 	NdisInitUnicodeString( &uniKeyWord,
-						   ionic_registry[ IONIC_REG_TXMODE].name);
-    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
-                          NdisParameterInteger);
-
-    SetFlag( Adapter->ConfigStatus, IONIC_TX_MODE_DPC);
-
-    if (ntStatus == NDIS_STATUS_SUCCESS) {
-		if(pParameters->ParameterData.IntegerData != 0) {
-
-			if (pParameters->ParameterData.IntegerData == 2) {
-				ClearFlag( Adapter->ConfigStatus, IONIC_TX_MODE_DPC);
-				SetFlag( Adapter->ConfigStatus, IONIC_TX_MODE_SEND);
-			}
-			else if( pParameters->ParameterData.IntegerData == 3) {
-				SetFlag( Adapter->ConfigStatus, IONIC_TX_MODE_SEND);
-			}
-		}
-		Adapter->registry_config[ IONIC_REG_TXMODE].current_value = pParameters->ParameterData.IntegerData;
-    }
-
-	NdisInitUnicodeString( &uniKeyWord,
 						   ionic_registry[ IONIC_REG_JUMBO].name);
     Adapter->frame_size = IONIC_DEFAULT_MTU;
     NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord,
@@ -2823,6 +2802,7 @@ wait_on_requests(struct ionic *ionic)
     return;
 }
 
+#ifdef TRACK_MEMORY_BUFFER_ALLOC
 void *
 NdisAllocateMemoryWithTagPriority_internal(NDIS_HANDLE      NdisHandle,
     UINT             Length,
@@ -2830,8 +2810,6 @@ NdisAllocateMemoryWithTagPriority_internal(NDIS_HANDLE      NdisHandle,
     EX_POOL_PRIORITY Priority)
 {
     void *buffer = NULL;
-
-#ifdef TRACK_MEMORY_BUFFER_ALLOC
     struct memory_track_cb *pMem = NULL;
 
     pMem = (struct memory_track_cb *)NdisAllocateMemoryWithTagPriority( NdisHandle,
@@ -2874,12 +2852,6 @@ exit:
     if (pMem != NULL && pMem->buffer == NULL) {
         NdisFreeMemoryWithTagPriority( NdisHandle, pMem, IONIC_MEMORY_TRACK_TAG);
     }
-#else
-    buffer = NdisAllocateMemoryWithTagPriority( NdisHandle,
-                                       Length,
-                                       Tag,
-                                       Priority);
-#endif
 
     return buffer;
 }
@@ -2889,7 +2861,6 @@ NdisFreeMemoryWithTagPriority_internal(NDIS_HANDLE NdisHandle,
     PVOID       VirtualAddress,
     ULONG       Tag)
 {
-#ifdef TRACK_MEMORY_BUFFER_ALLOC
     struct memory_track_cb *pMem = NULL;
     LIST_ENTRY *list_entry;
     BOOLEAN found = FALSE;
@@ -2937,11 +2908,6 @@ NdisFreeMemoryWithTagPriority_internal(NDIS_HANDLE NdisHandle,
                                    IONIC_MEMORY_TRACK_TAG);
 
 exit:
-#else
-    NdisFreeMemoryWithTagPriority( NdisHandle,
-                                   VirtualAddress,
-                                   Tag);
-#endif
 
     return;
 }
@@ -2977,6 +2943,7 @@ validate_memory()
 
     return;
 }
+#endif
 
 NTSTATUS
 IoctlRegKeyInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes)
