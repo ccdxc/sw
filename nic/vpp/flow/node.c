@@ -401,12 +401,12 @@ pds_flow_prog_populate_trace (vlib_buffer_t *CLIB_UNUSED(b0),
 
     if (PREDICT_TRUE(((t0->iprotocol == IP_PROTOCOL_TCP) ||
                       (t0->iprotocol == IP_PROTOCOL_UDP)))) {
-        udp_header_t *udp0 =
-            (udp_header_t *)(((u8 *) data) +
+        tcp_header_t *tcp0 =
+            (tcp_header_t *)(((u8 *) data) +
                              (vnet_buffer(b0)->l4_hdr_offset -
                               vnet_buffer(b0)->l3_hdr_offset));
-        t0->isrc_port = t0->rdst_port = udp0->src_port;
-        t0->idst_port = t0->rsrc_port = udp0->dst_port;
+        t0->isrc_port = t0->rdst_port = tcp0->src_port;
+        t0->idst_port = t0->rsrc_port = tcp0->dst_port;
     }
     return;
 }
@@ -466,11 +466,12 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                                u8 is_ip4, u8 is_l2,
                                u8 flow_exists)
 {
-    udp_header_t        *udp0;
+    tcp_header_t        *tcp0 = NULL;
     icmp46_header_t     *icmp0;
     u8                  miss_hit = 0;
     u8                  napt = 0;
     pds_flow_hw_ctx_t   *ses = pds_flow_get_hw_ctx(session_id);
+    pds_flow_main_t     *fm = &pds_flow_main;
 
     vnet_buffer(p0)->pds_flow_data.ses_id = session_id;
 
@@ -494,16 +495,15 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 
         if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP) ||
                           (ip40->protocol == IP_PROTOCOL_UDP)))) {
-            udp0 = (udp_header_t *)(((u8 *) ip40) +
-                    (vnet_buffer(p0)->l4_hdr_offset -
-                            vnet_buffer(p0)->l3_hdr_offset));
-            r_dport = sport = clib_net_to_host_u16(udp0->src_port);
-            r_sport = dport = clib_net_to_host_u16(udp0->dst_port);
             if (ip40->protocol == IP_PROTOCOL_TCP) {
                 ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_TCPV4);
             } else {
                 ftlv4_cache_set_counter_index(FLOW_TYPE_COUNTER_UDPV4);
             }
+            tcp0 = (tcp_header_t *)(((u8 *) ip40) +
+                   (vnet_buffer(p0)->l4_hdr_offset - vnet_buffer(p0)->l3_hdr_offset));
+            r_dport = sport = clib_net_to_host_u16(tcp0->src_port);
+            r_sport = dport = clib_net_to_host_u16(tcp0->dst_port);
         } else if (ip40->protocol == IP_PROTOCOL_ICMP) {
             icmp0 = (icmp46_header_t *) (((u8 *) ip40) +
                     (vnet_buffer (p0)->l4_hdr_offset -
@@ -572,6 +572,11 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv4_cache_set_hash_log(0, pds_get_flow_log_en(p0));
         ftlv4_cache_set_napt_flag(napt);
         ftlv4_cache_advance_count(1);
+
+        if (fm->con_track_en && tcp0) {
+            vnet_buffer(p0)->pds_flow_data.tcp_seq_no = clib_net_to_host_u32(tcp0->seq_number);
+            vnet_buffer(p0)->pds_flow_data.tcp_win_sz = clib_net_to_host_u16(tcp0->window);
+        }
     } else {
         ip6_header_t *ip60;
         ethernet_header_t *e0;
@@ -611,16 +616,16 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 
             if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP) ||
                              (ip60->protocol == IP_PROTOCOL_UDP)))) {
-                udp0 = (udp_header_t *)(((u8 *) ip60) +
+                tcp0 = (tcp_header_t *)(((u8 *) ip60) +
                                         (vnet_buffer(p0)->l4_hdr_offset -
                                          vnet_buffer(p0)->l3_hdr_offset));
-                r_dport = sport = clib_net_to_host_u16(udp0->src_port);
-                r_sport = dport = clib_net_to_host_u16(udp0->dst_port);
                 if (ip60->protocol == IP_PROTOCOL_TCP) {
                     ftlv6_cache_set_counter_index(FLOW_TYPE_COUNTER_TCPV6);
                 } else {
                     ftlv6_cache_set_counter_index(FLOW_TYPE_COUNTER_UDPV6);
                 }
+                r_dport = sport = clib_net_to_host_u16(tcp0->src_port);
+                r_sport = dport = clib_net_to_host_u16(tcp0->dst_port);
             } else if (ip60->protocol == IP_PROTOCOL_ICMP6) {
                 icmp0 = (icmp46_header_t *) (((u8 *) ip60) +
                         (vnet_buffer (p0)->l4_hdr_offset -
@@ -1253,6 +1258,29 @@ pds_flow_init (vlib_main_t * vm)
     pds_packet_type_flags_build();
 
     fm->flow_metrics_hdl = pdsa_flow_stats_init();
+    
+    /* Create the TCP keep alive packet template */
+    {
+        ip4_and_tcp_header_t h;
+
+        clib_memset (&h, 0, sizeof (h));
+
+        /* 
+         * Fill in the constant fields. Data should be empty and rest will 
+         * be filled when sending the packet 
+         * */
+        h.ip4_hdr.ip_version_and_header_length = 0x45;
+        h.ip4_hdr.protocol = IP_PROTOCOL_TCP;
+        h.ip4_hdr.ttl = 255;        
+        h.tcp_hdr.flags |= TCP_FLAG_BIT_ACK;
+
+        vlib_packet_template_init
+            (vm, &fm->tcp_keepalive_packet_template,
+            /* data */ &h,
+            sizeof (h),
+            /* alloc chunk size */ 8,
+            "tcp-keepalive");
+    }
 
     ftl_reg_session_update_cb(pds_session_update_data);
     return 0;

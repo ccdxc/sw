@@ -36,6 +36,7 @@ typedef struct {
     u8 l2_encap_len;                // layer2 encapsulation length
     u16 vlan_id;                    // vlan id if encap type is != no vlan
     u16 nh_hw_id;                   // nexthop id
+    u16 host_lif_hw_id;             // host lif id
 } pds_impl_db_vnic_entry_t;
 
 typedef struct {
@@ -43,6 +44,7 @@ typedef struct {
     u8 prefix_len;                  // subnet prefix len
     ip46_address_t vr_ip;           // subnet VR ip
     u32 vnid;
+    u16 vpc_id;                     // VPC id to which the subnet belongs
 } pds_impl_db_subnet_entry_t;
 
 typedef struct {

@@ -29,3 +29,15 @@ pds_session_active_on_vnic_get (uint16_t vnic_id, uint32_t *sess_count)
 {
     return false;
 }
+
+int
+session_track_program(uint32_t ses_id, void *action)
+{
+    return 0;
+}
+
+void
+pds_session_get_info (uint32_t session_id, session_info_t *info)
+{
+    return;
+}

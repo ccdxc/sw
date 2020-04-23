@@ -42,9 +42,25 @@ using namespace table;
     (api_params)->force_hwread = TRUE;                                       \
 }
 
+#define PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(key, vpc_hw_id, ip)             \
+{                                                                            \
+    memset((key), 0, sizeof(*(key)));                                        \
+    (key)->key_metadata_local_mapping_lkp_id = vpc_hw_id;                    \
+    if ((ip)->af == IP_AF_IPV6) {                                            \
+        (key)->key_metadata_local_mapping_lkp_type = KEY_TYPE_IPV6;          \
+        sdk::lib::memrev((key)->key_metadata_local_mapping_lkp_addr,         \
+                         (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
+    } else {                                                                 \
+        (key)->key_metadata_local_mapping_lkp_type = KEY_TYPE_IPV4;          \
+        memcpy((key)->key_metadata_local_mapping_lkp_addr,                   \
+               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
+    }                                                                        \
+}
+
 extern "C" {
 
 mem_hash *mapping_tbl;
+mem_hash *local_mapping_tbl;
 
 void
 pds_mapping_table_init (void)
@@ -68,6 +84,31 @@ pds_mapping_table_init (void)
     tparams.num_hints = P4_MAPPING_NUM_HINTS_PER_ENTRY;
     mapping_tbl = mem_hash::factory(&tparams);
     SDK_ASSERT(mapping_tbl != NULL);
+    init_done = TRUE;
+}
+
+void
+pds_local_mapping_table_init (void)
+{
+    static bool init_done = FALSE;
+    sdk_table_factory_params_t tparams;
+
+    if (init_done == TRUE) {
+        return;
+    }
+
+    // instantiate P4 tables for bookkeeping
+    bzero(&tparams, sizeof(tparams));
+    tparams.max_recircs = 8;
+    tparams.entry_trace_en = true;
+    tparams.key2str = NULL;
+    tparams.appdata2str = NULL;
+
+    // MAPPING table bookkeeping
+    tparams.table_id = P4TBL_ID_LOCAL_MAPPING;
+    tparams.num_hints = P4_LOCAL_MAPPING_NUM_HINTS_PER_ENTRY;
+    local_mapping_tbl = mem_hash::factory(&tparams);
+    SDK_ASSERT(local_mapping_tbl != NULL);
     init_done = TRUE;
 }
 
@@ -123,4 +164,26 @@ pds_dst_mac_get (uint16_t vpc_id, uint16_t bd_id, mac_addr_t mac_addr,
     return ret;
 }
 
+int 
+pds_local_mapping_vnic_id_get (uint16_t vpc_id, uint32_t addr, uint16_t *vnic_id)
+{
+    sdk_table_api_params_t tparams;
+    local_mapping_swkey_t local_mapping_key;
+    local_mapping_appdata_t local_mapping_data;
+    ip_addr_t dst;
+    sdk_ret_t ret;
+
+    pds_dst_addr_get(addr, &dst);
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc_id, &dst);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
+                                   &local_mapping_data, 0,
+                                   sdk::table::handle_t::null());
+    ret = local_mapping_tbl->get(&tparams);
+    if (ret != SDK_RET_OK) {
+        return -1;
+    }
+    
+    *vnic_id = local_mapping_data.vnic_id;
+    return 0;
+}
 }

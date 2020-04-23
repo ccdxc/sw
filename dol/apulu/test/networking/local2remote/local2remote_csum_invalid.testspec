@@ -29,6 +29,7 @@ packets:
             tcp:
                 sport   : 100
                 dport   : 200
+                flags   : syn
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

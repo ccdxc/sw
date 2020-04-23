@@ -21,6 +21,7 @@ packets:
             tcp:
                 sport   : callback://networking/packets/GetUsableSPortFromPolicy
                 dport   : callback://networking/packets/GetUsableDPortFromPolicy
+                flags   : syn
             udp:
                 sport   : callback://networking/packets/GetUsableSPortFromPolicy
                 dport   : callback://networking/packets/GetUsableDPortFromPolicy

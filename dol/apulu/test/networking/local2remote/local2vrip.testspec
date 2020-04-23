@@ -39,6 +39,7 @@ packets:
             tcp:
                 sport   : 100
                 dport   : 200
+                flags   : syn
             icmp:
                 code    : 0
                 type    : 8

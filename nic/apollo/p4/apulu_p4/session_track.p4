@@ -48,13 +48,13 @@ action session_track_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
     modify_field(tcp_scratch.iflow_tcp_exceptions, iflow_tcp_exceptions);
     modify_field(tcp_scratch.iflow_tcp_win_scale_option_sent,
                  iflow_tcp_win_scale_option_sent);
-    modify_field(tcp_scratch.iflow_tcp_state, rflow_tcp_state);
-    modify_field(tcp_scratch.iflow_tcp_seq_num, rflow_tcp_seq_num);
-    modify_field(tcp_scratch.iflow_tcp_ack_num, rflow_tcp_ack_num);
-    modify_field(tcp_scratch.iflow_tcp_win_size, rflow_tcp_win_size);
-    modify_field(tcp_scratch.iflow_tcp_win_scale, rflow_tcp_win_scale);
-    modify_field(tcp_scratch.iflow_tcp_mss, rflow_tcp_mss);
-    modify_field(tcp_scratch.iflow_tcp_exceptions, rflow_tcp_exceptions);
+    modify_field(tcp_scratch.rflow_tcp_state, rflow_tcp_state);
+    modify_field(tcp_scratch.rflow_tcp_seq_num, rflow_tcp_seq_num);
+    modify_field(tcp_scratch.rflow_tcp_ack_num, rflow_tcp_ack_num);
+    modify_field(tcp_scratch.rflow_tcp_win_size, rflow_tcp_win_size);
+    modify_field(tcp_scratch.rflow_tcp_win_scale, rflow_tcp_win_scale);
+    modify_field(tcp_scratch.rflow_tcp_mss, rflow_tcp_mss);
+    modify_field(tcp_scratch.rflow_tcp_exceptions, rflow_tcp_exceptions);
 
     modify_field(tcp_scratch.tcp_exceptions, 0);
     if (ipv4_1.valid == TRUE) {

@@ -26,23 +26,17 @@ using namespace sdk::platform;
 
 extern "C" {
 
+extern session_update_cb g_ses_cb;
+
 typedef struct ftlv4_cache_s {
     ipv4_flow_hash_entry_t ip4_flow[MAX_FLOW_ENTRIES_PER_BATCH];
-    ipv4_flow_hash_entry_t ip4_delete_flow;
+    ipv4_flow_hash_entry_t ip4_last_read_flow;
     uint32_t ip4_hash[MAX_FLOW_ENTRIES_PER_BATCH];
     flow_flags_t flags[MAX_FLOW_ENTRIES_PER_BATCH];
     uint16_t count;
 } ftlv4_cache_t;
 
 thread_local ftlv4_cache_t g_ip4_flow_cache;
-
-static session_update_cb g_ses_cb;
-
-void
-ftl_reg_session_update_cb (session_update_cb cb)
-{
-    g_ses_cb = cb;
-}
 
 ftlv4 *
 ftlv4_create (void *key2str,
@@ -176,7 +170,7 @@ ftlv4_get_with_handle(ftlv4 *obj, uint32_t index, bool primary)
         return -1;
     }
 
-    ftlv4_set_key(&g_ip4_flow_cache.ip4_delete_flow, 
+    ftlv4_set_key(&g_ip4_flow_cache.ip4_last_read_flow, 
                   v4entry.get_key_metadata_ipv4_src(),
                   v4entry.get_key_metadata_ipv4_dst(),
                   v4entry.get_key_metadata_proto(),
@@ -189,7 +183,7 @@ ftlv4_get_with_handle(ftlv4 *obj, uint32_t index, bool primary)
 int 
 ftlv4_remove_cached_entry(ftlv4 *obj)
 {
-    return ftlv4_remove(obj, &g_ip4_flow_cache.ip4_delete_flow, 0, 0);
+    return ftlv4_remove(obj, &g_ip4_flow_cache.ip4_last_read_flow, 0, 0);
 }
 
 int
@@ -573,6 +567,18 @@ ftlv4_cache_batch_flush (ftlv4 *obj, int *status)
                                 g_ip4_flow_cache.flags[i].log,
                                 g_ip4_flow_cache.flags[i].update);
     }
+}
+
+void 
+ftlv4_get_last_read_session_info (uint32_t *sip, uint32_t *dip, uint16_t *sport,
+                                  uint16_t *dport, uint16_t *lkd_id)
+{
+    ipv4_flow_hash_entry_t v4entry = g_ip4_flow_cache.ip4_last_read_flow;
+    *sip = v4entry.get_key_metadata_ipv4_src();
+    *dip = v4entry.get_key_metadata_ipv4_dst();
+    *sport = v4entry.get_key_metadata_sport();
+    *dport = v4entry.get_key_metadata_dport();
+    *lkd_id = ftlv4_get_key_lookup_id(&v4entry);
 }
 
 void

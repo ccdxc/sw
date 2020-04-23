@@ -253,9 +253,8 @@ build_sdk_x86_64() {
 
 build_dpdk_x86_64() {
     docker_exec "rm -rf $DOCKER_DPDK_DIR/build"
-    build_sdk_x86_64
     echo "Building DPDK - x86_64, check $DPDK_DIR/dpdk_build_x86_64.log"
-    docker_exec "cd $DOCKER_DPDK_DIR && make -j8 -f REPOmakefile config T=x86_64-default-linuxapp-gcc && make V=1 -j8 -f REPOmakefile CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=\"-I ${DOCKER_NUMAROOT}/include -I ${DOCKER_SDK_DIR} -DDPDK_SIM -g -fPIC -O0 -Wno-error -L ${DOCKER_NUMAROOT}/x86_64/lib\" EXTRA_LDFLAGS=\"-L${DOCKER_NUMAROOT}/x86_64/lib -L/sdk/build/x86_64/lib/ -lnuma -ldpdksim -lsdkpal -llogger\" &> dpdk_build_x86_64.log"
+    build_sdk_x86_64
     if [[ $? -ne 0 ]]; then
         echo "DPDK - x86_64 build Failed"
         exit 1;

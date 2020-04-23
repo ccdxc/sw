@@ -27,6 +27,8 @@
 #define PDS_FLOW_TIMER_TICK             0.1
 #define PDS_FLOW_SEC_TO_TIMER_TICK(X)   (X * 10)
 #define PDS_FLOW_STATS_PUBLISH_INTERVAL (60)
+#define TCP_KEEP_ALIVE_RETRY_COUNT_MAX  3
+#define TCP_KEEP_ALIVE_TIMEOUT          60 // in seconds
 
 #define foreach_flow_classify_next                                  \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
@@ -52,8 +54,8 @@
         _(ICMP_VRIP, "VR IPv4 request packets received")            \
         _(UNKOWN, "Unknown flow packets")                           \
         _(VRIP_DROP, "Unknown VR IPv4 packets")                     \
-        _(FIN_RST, "FIN/RST packets")                               \
-        _(FIN_RST_NO_SES, "FIN/RST with invalid session id")        \
+        _(TCP_PKT, "TCP packets")                                   \
+        _(TCP_PKT_NO_SES, "TCP packets with invalid session id")    \
 
 #define foreach_flow_prog_next                                      \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
@@ -87,12 +89,14 @@
 
 #define foreach_flow_age_setup_next                                 \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
+        _(SEND_PACKET, "pds-vnic-l2-rewrite" )                      \
         _(DROP, "error-drop")                                       \
 
 #define foreach_flow_age_setup_counter                              \
         _(SYN, "SYN packet processed" )                             \
         _(FIN, "FIN packet processed")                              \
         _(RST, "RST packet processed" )                             \
+        _(ACK, "ACK packet processed")                              \
         _(OTHER, "Other packet processed")                          \
 
 typedef enum
@@ -210,6 +214,7 @@ typedef enum {
     PDS_FLOW_STATE_CONN_INIT,
     PDS_FLOW_STATE_CONN_SETUP,
     PDS_FLOW_STATE_ESTABLISHED,
+    PDS_FLOW_STATE_KEEPALIVE_SENT,
     PDS_FLOW_STATE_HALF_CLOSE_IFLOW,
     PDS_FLOW_STATE_HALF_CLOSE_RFLOW,
     PDS_FLOW_STATE_CLOSE,
@@ -248,8 +253,9 @@ typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
     // other threads, we need lock here.
     volatile u8 lock;
     u8 packet_type : 2;
+    u8 iflow_rx : 1; // true if iflow is towards the host
     // make 4 byte aligned.
-    u8 reserved_1 : 6;
+    u8 reserved_1 : 5;
     u16 reserved_2;
 }) pds_flow_hw_ctx_t;
 
@@ -267,6 +273,12 @@ typedef struct pds_flow_stats_s {
     volatile u64 counter[FLOW_TYPE_COUNTER_LAST];
 } pds_flow_stats_t;
 
+typedef CLIB_PACKED (struct
+                     {
+                        ip4_header_t ip4_hdr;
+                        tcp_header_t tcp_hdr;
+                     }) ip4_and_tcp_header_t;
+
 typedef struct pds_flow_main_s {
     volatile u32 *flow_prog_lock;
     ftlv4 *table4;
@@ -279,6 +291,7 @@ typedef struct pds_flow_main_s {
     f64 tcp_con_setup_timeout;
     f64 tcp_half_close_timeout;
     f64 tcp_close_timeout;
+    f64 tcp_keep_alive_timeout;
     f64 *idle_timeout;
     f64 *drop_timeout;
     u64 *idle_timeout_ticks;
@@ -292,6 +305,8 @@ typedef struct pds_flow_main_s {
     pds_flow_stats_t stats;
     void *flow_metrics_hdl;
     u16 drop_nexthop;
+    // packet template to send TCP keep alives
+    vlib_packet_template_t tcp_keepalive_packet_template;
 } pds_flow_main_t;
 
 typedef enum {

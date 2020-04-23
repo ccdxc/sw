@@ -81,7 +81,7 @@ uint32_t ftl_get_session_id(flow_entry *entry);
 
 uint8_t ftl_get_proto(flow_entry *entry);
 
-uint8_t ftl_get_proto(flow_entry *entry);
+uint16_t ftl_get_key_lookup_id (flow_entry *entry);
 
 void ftl_set_thread_id(ftl *obj, uint32_t thread_id);
 
@@ -279,7 +279,17 @@ int ftlv4_remove_cached_entry(ftlv4 *obj);
 
 int ftlv4_get_with_handle(ftlv4 *obj, uint32_t index, bool primary);
 
+void ftlv4_get_last_read_session_info (uint32_t *sip, uint32_t *dip, uint16_t *sport,
+                                       uint16_t *dport, uint16_t *lkp_id);
+
 int ftlv6_remove(ftlv6 *obj, flow_entry *entry, uint32_t hash, uint8_t log);
+
+int ftlv6_remove_cached_entry(ftlv6 *obj);
+
+int ftlv6_get_with_handle(ftlv6 *obj, uint32_t index, bool primary);
+
+void ftlv6_get_last_read_session_info (uint8_t *sip, uint8_t *dip, uint16_t *sport,
+                                       uint16_t *dport, uint16_t *lkp_id);
 
 void ftlv6_set_thread_id(ftlv6 *obj, uint32_t thread_id);
 

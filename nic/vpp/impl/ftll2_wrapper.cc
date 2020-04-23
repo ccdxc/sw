@@ -15,6 +15,7 @@ extern "C" {
 
 typedef struct ftll2_cache_s {
     flow_hash_entry_t flow[MAX_FLOW_ENTRIES_PER_BATCH]; 
+    flow_hash_entry_t last_read_flow;
     uint32_t hash[MAX_FLOW_ENTRIES_PER_BATCH];
     flow_flags_t flags[MAX_FLOW_ENTRIES_PER_BATCH];
     uint16_t count;
@@ -27,6 +28,45 @@ ftll2_remove (ftll2 *obj, flow_hash_entry_t *entry, uint32_t hash,
               uint8_t log)
 {
     return ftl_remove(obj, entry, hash, log);
+}
+
+int
+ftll2_get_with_handle(ftl *obj, uint32_t index, bool primary)
+{
+    sdk_table_api_params_t params = {0};
+    flow_hash_entry_t entry;
+    uint8_t sip[16], dip[16];
+
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
+
+    if (primary) {
+        params.handle.pindex(index);
+    } else {
+        params.handle.sindex(index);
+    }
+    params.entry = &entry;
+
+    if (SDK_RET_OK != obj->get_with_handle(&params)) {
+        return -1;
+    }
+
+    entry.get_key_metadata_src(sip);
+    entry.get_key_metadata_dst(dip);
+    ftll2_set_key(&g_l2_flow_cache.last_read_flow,
+                  sip, dip,
+                  // dport is used to store ether type for L2 flows
+                  entry.get_key_metadata_dport(),
+                  ftl_get_key_lookup_id(&entry));
+
+    return 0;
+}
+
+int
+ftll2_remove_cached_entry(ftl *obj)
+{
+    return ftll2_remove(obj, &g_l2_flow_cache.last_read_flow, 0, 0);
 }
 
 int

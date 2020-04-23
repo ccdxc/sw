@@ -32,6 +32,8 @@ static int skip_ftl_program = 0;
 static sdk_table_api_stats_t g_api_stats;
 static sdk_table_stats_t g_table_stats;
 
+session_update_cb g_ses_cb;
+
 void
 set_skip_ftl_program (int val)
 {
@@ -42,6 +44,12 @@ int
 get_skip_ftl_program (void)
 {
     return skip_ftl_program;
+}
+
+void
+ftl_reg_session_update_cb (session_update_cb cb)
+{
+    g_ses_cb = cb;
 }
 
 void
@@ -223,6 +231,30 @@ ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
     return 0;
 }
 
+static void
+ftl_move_cb (base_table_entry_t *entry, handle_t old_handle,
+             handle_t new_handle, bool move_complete)
+{
+    flow_hash_entry_t *flow_entry = (flow_hash_entry_t *)entry;
+    uint32_t ses_id = flow_entry->get_session_index();
+    uint32_t new_pindex, new_sindex = ~0;
+
+    if (new_handle.svalid()) {
+        new_pindex = (uint32_t) (~0L);
+        new_sindex = new_handle.sindex();
+    } else {
+        new_pindex = new_handle.pindex();
+    }
+
+    if (flow_entry->get_flow_role() == TCP_FLOW_INITIATOR) {
+        g_ses_cb (ses_id, new_sindex, new_pindex, true,
+                  move_complete);
+    } else {
+        g_ses_cb (ses_id, new_sindex, new_pindex, false,
+                  move_complete);
+    }
+}
+
 int
 ftl_remove (ftl *obj, flow_hash_entry_t *entry, uint32_t hash, 
             uint8_t log)
@@ -238,6 +270,7 @@ ftl_remove (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
         params.hash_valid = 1;
     }
     params.entry = entry;
+    params.movecb = ftl_move_cb;
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
     }
@@ -260,34 +293,6 @@ ftl_remove (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
                                      ftl_get_lookup_id(entry), 0, 1);
         }
     }
-    return 0;
-}
-
-int
-ftl_remove_with_handle(ftl *obj, uint32_t index, bool primary)
-{
-    sdk_table_api_params_t params = {0};
-    flow_hash_entry_t entry;
-
-    if (get_skip_ftl_program()) {
-        return 0;
-    }
-
-    if (primary) {
-        params.handle.pindex(index);
-    } else {
-        params.handle.sindex(index);
-    }
-    params.entry = &entry;
-
-    if (SDK_RET_OK != obj->get_with_handle(&params)) {
-        return -1;
-    }
-
-    if (!ftl_remove(obj, &entry, 0, 0)) {
-        return -1;
-    }
-
     return 0;
 }
 
@@ -479,6 +484,12 @@ uint8_t
 ftl_get_proto(flow_hash_entry_t *entry)
 {
     return entry->get_key_metadata_proto();
+}
+
+uint16_t
+ftl_get_key_lookup_id (flow_hash_entry_t *entry)
+{
+    return ftl_get_lookup_id(entry);
 }
 
 void

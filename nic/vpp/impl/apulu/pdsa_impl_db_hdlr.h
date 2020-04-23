@@ -22,7 +22,8 @@ int pds_impl_db_vnic_set(uint8_t *mac,
                          uint8_t dot1q,
                          uint8_t dot1ad,
                          uint16_t vlan_id,
-                         uint16_t nh_hw_id);
+                         uint16_t nh_hw_id,
+                         uint16_t host_lif_hw_id);
 
 int pds_impl_db_vnic_del(uint16_t vnic_hw_id);
 
@@ -30,7 +31,9 @@ int pds_impl_db_subnet_set(uint8_t pfx_len,
                            uint32_t vr_ip,
                            uint8_t *mac,
                            uint16_t subnet_hw_id,
-                           uint32_t vnid);
+                           uint32_t vnid,
+                           uint16_t vpc_id);
+
 int pds_impl_db_subnet_del(uint16_t subnet_hw_id);
 
 int pds_impl_db_vpc_set(uint16_t vpc_hw_id, uint16_t bd_hw_id, uint16_t flags);

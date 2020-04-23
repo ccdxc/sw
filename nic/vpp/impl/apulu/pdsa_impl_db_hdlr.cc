@@ -15,12 +15,30 @@ static sdk::sdk_ret_t
 pds_cfg_db_subnet_set_cb (const pds_cfg_msg_t *msg)
 {
     int rc;
+    uint16_t vpc_id;
+    pds_cfg_msg_t vpc_msg;
+
+    vpp_config_data &config = vpp_config_data::get();
+
+    vpc_msg.obj_id = OBJ_ID_VPC;
+    vpc_msg.vpc.key = msg->subnet.spec.vpc;
+
+    if (!config.exists(vpc_msg)) {
+        return sdk::SDK_RET_ERR;
+    }
+
+    if (!config.get(vpc_msg)) {
+        return sdk::SDK_RET_ERR;
+    }
+
+    vpc_id = vpc_msg.vpc.status.hw_id;
 
     rc = pds_impl_db_subnet_set(msg->subnet.spec.v4_prefix.len,
                                 msg->subnet.spec.v4_vr_ip,
                                 (uint8_t *) msg->subnet.spec.vr_mac,
                                 msg->subnet.status.hw_id,
-                                msg->subnet.spec.fabric_encap.val.vnid);
+                                msg->subnet.spec.fabric_encap.val.vnid,
+                                vpc_id);
 
     if (rc == 0) {
         return sdk::SDK_RET_OK;
@@ -78,7 +96,8 @@ pds_cfg_db_vnic_set_cb (const pds_cfg_msg_t *msg)
                               msg->vnic.spec.flow_learn_en,
                               dot1q, dot1ad,
                               msg->vnic.spec.vnic_encap.val.vlan_tag,
-                              msg->vnic.status.nh_hw_id);
+                              msg->vnic.status.nh_hw_id,
+                              msg->vnic.status.host_if_hw_id);
 
     if (rc == 0) {
         return sdk::SDK_RET_OK;

@@ -15,6 +15,7 @@ extern "C" {
 
 typedef struct ftlv6_cache_s {
     flow_hash_entry_t flow[MAX_FLOW_ENTRIES_PER_BATCH]; 
+    flow_hash_entry_t last_read_flow;
     uint32_t hash[MAX_FLOW_ENTRIES_PER_BATCH];
     flow_flags_t flags[MAX_FLOW_ENTRIES_PER_BATCH];
     uint16_t count;
@@ -26,6 +27,45 @@ void
 ftlv6_set_thread_id (ftlv6 *obj, uint32_t thread_id)
 {
     ftl_set_thread_id(obj, thread_id);
+}
+
+int
+ftlv6_get_with_handle(ftl *obj, uint32_t index, bool primary)
+{
+    sdk_table_api_params_t params = {0};
+    flow_hash_entry_t entry;
+    uint8_t sip[16], dip[16];
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
+
+    if (primary) {
+        params.handle.pindex(index);
+    } else {
+        params.handle.sindex(index);
+    }
+    params.entry = &entry;
+
+    if (SDK_RET_OK != obj->get_with_handle(&params)) {
+        return -1;
+    }
+
+    entry.get_key_metadata_src(sip);
+    entry.get_key_metadata_dst(dip);
+    ftlv6_set_key(&g_ip6_flow_cache.last_read_flow,
+                  sip, dip,
+                  entry.get_key_metadata_proto(),
+                  entry.get_key_metadata_sport(),
+                  entry.get_key_metadata_dport(),
+                  ftl_get_key_lookup_id(&entry));
+
+    return 0;
+}
+
+int 
+ftlv6_remove_cached_entry(ftl *obj)
+{
+    return ftl_remove(obj, &g_ip6_flow_cache.last_read_flow, 0, 0);
 }
 
 int
@@ -245,6 +285,18 @@ uint8_t
 ftlv6_cache_get_counter_index (int id)
 {
     return g_ip6_flow_cache.flags[id].ctr_idx;
+}
+
+void
+ftlv6_get_last_read_session_info (uint8_t *sip, uint8_t *dip, uint16_t *sport,
+                                  uint16_t *dport, uint16_t *lkp_id)
+{
+    flow_hash_entry_t entry = g_ip6_flow_cache.last_read_flow;
+    entry.get_key_metadata_src(sip);
+    entry.get_key_metadata_dst(dip);
+    *sport = entry.get_key_metadata_sport();
+    *dport = entry.get_key_metadata_dport();
+    *lkp_id = ftl_get_key_lookup_id(&entry);
 }
 
 void

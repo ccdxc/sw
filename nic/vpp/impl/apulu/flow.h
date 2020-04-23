@@ -84,10 +84,11 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
                      u16 *next0, u16 *next1, u32 *counter)
 {
     session_actiondata_t actiondata = {0};
+    session_track_actiondata_t track_actiondata = {0};
     pds_flow_main_t *fm = &pds_flow_main;
     pds_flow_rewrite_flags_t *rewrite_flags;
     pds_flow_hw_ctx_t *ctx0, *ctx1;
-    bool ses_en;
+    bool ses_track_en;
 
     if (BIT_ISSET(vnet_buffer(b0)->pds_flow_data.flags,
                   VPP_CPU_FLAGS_FLOW_SES_EXIST)) {
@@ -123,9 +124,25 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         (pds_is_flow_rx_vlan(b0) ?
             (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
     ctx0 = pds_flow_get_hw_ctx(session_id0);
-    ses_en = fm->con_track_en && (ctx0->proto == PDS_FLOW_PROTO_TCP);
-    actiondata.action_u.session_session_info.session_tracking_en = ses_en;
+    ses_track_en = fm->con_track_en && (ctx0->proto == PDS_FLOW_PROTO_TCP);
+    actiondata.action_u.session_session_info.session_tracking_en = ses_track_en;
     pds_packet_type_fill(ctx0, vnet_buffer(b0)->pds_flow_data.packet_type);
+    if (BIT_ISSET(vnet_buffer(b0)->pds_flow_data.flags, VPP_CPU_FLAGS_RX_PKT)) {
+        ctx0->iflow_rx = 1;
+    }
+
+    if (ses_track_en) {
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_state = FLOW_STATE_INIT;
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num = 
+            vnet_buffer(b0)->pds_flow_data.tcp_seq_no + 1;
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_win_size = 
+            vnet_buffer(b0)->pds_flow_data.tcp_win_sz;
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_state = FLOW_STATE_INIT;
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_ack_num = 
+            vnet_buffer(b0)->pds_flow_data.tcp_seq_no + 1;
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_win_size =
+            vnet_buffer(b0)->pds_flow_data.tcp_win_sz;
+    }
 
     if (PREDICT_FALSE(session_program(session_id0, (void *)&actiondata))) {
         if (pds_is_flow_napt_en(b0)) {
@@ -134,6 +151,9 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         } else {
             *next0 = SESSION_PROG_NEXT_DROP;
         }
+    } else if (ses_track_en &&
+               PREDICT_FALSE(session_track_program(session_id0, (void *)&track_actiondata))) {
+        *next0 = SESSION_PROG_NEXT_DROP;
     } else {
 skip_prog0:
         *next0 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
@@ -175,9 +195,25 @@ skip_prog0:
         (pds_is_flow_rx_vlan(b1) ?
             (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
     ctx1 = pds_flow_get_hw_ctx(session_id1);
-    ses_en = fm->con_track_en && (ctx1->proto == PDS_FLOW_PROTO_TCP);
-    actiondata.action_u.session_session_info.session_tracking_en = ses_en;
+    ses_track_en = fm->con_track_en && (ctx1->proto == PDS_FLOW_PROTO_TCP);
+    actiondata.action_u.session_session_info.session_tracking_en = ses_track_en;
     pds_packet_type_fill(ctx1, vnet_buffer(b1)->pds_flow_data.packet_type);
+    if (BIT_ISSET(vnet_buffer(b1)->pds_flow_data.flags, VPP_CPU_FLAGS_RX_PKT)) {
+        ctx1->iflow_rx = 1;
+    }
+
+    if (ses_track_en) {
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_state = FLOW_STATE_INIT;
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num = 
+            vnet_buffer(b1)->pds_flow_data.flow_hash + 1;
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_win_size = 
+            vnet_buffer(b1)->pds_flow_data.tcp_win_sz;
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_state = FLOW_STATE_INIT;
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_ack_num = 
+            vnet_buffer(b1)->pds_flow_data.flow_hash + 1;
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_win_size =
+            vnet_buffer(b1)->pds_flow_data.tcp_win_sz;
+    }
 
     if (PREDICT_FALSE(session_program(session_id1, (void *)&actiondata))) {
         if (pds_is_flow_napt_en(b1)) {
@@ -186,6 +222,9 @@ skip_prog0:
         } else {
             *next1 = SESSION_PROG_NEXT_DROP;
         }
+    } else if (ses_track_en &&
+               PREDICT_FALSE(session_track_program(session_id1, (void *)&track_actiondata))) {
+        *next1 = SESSION_PROG_NEXT_DROP; 
     } else {
 skip_prog1:
         *next1 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
@@ -201,9 +240,11 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
                      u16 *next, u32 *counter)
 {
     session_actiondata_t actiondata = {0};
+    session_track_actiondata_t track_actiondata = {0};
     pds_flow_main_t *fm = &pds_flow_main;
     pds_flow_rewrite_flags_t *rewrite_flags;
     pds_flow_hw_ctx_t *ctx;
+    bool ses_track_en;
 
     if (BIT_ISSET(vnet_buffer(b)->pds_flow_data.flags,
                   VPP_CPU_FLAGS_FLOW_SES_EXIST)) {
@@ -239,8 +280,25 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         (pds_is_flow_rx_vlan(b) ?
             (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
     ctx = pds_flow_get_hw_ctx(session_id);
+    ses_track_en = fm->con_track_en && (ctx->proto == PDS_FLOW_PROTO_TCP);
+    actiondata.action_u.session_session_info.session_tracking_en = ses_track_en;    
     pds_packet_type_fill(ctx, vnet_buffer(b)->pds_flow_data.packet_type);
+    if (BIT_ISSET(vnet_buffer(b)->pds_flow_data.flags, VPP_CPU_FLAGS_RX_PKT)) {
+        ctx->iflow_rx = 1;
+    }
 
+    if (ses_track_en) {
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_state = FLOW_STATE_INIT;
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num = 
+            vnet_buffer(b)->pds_flow_data.flow_hash + 1;
+        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_win_size = 
+            vnet_buffer(b)->pds_flow_data.tcp_win_sz;
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_state = FLOW_STATE_INIT;
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_ack_num = 
+            vnet_buffer(b)->pds_flow_data.flow_hash + 1;
+        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_win_size =
+            vnet_buffer(b)->pds_flow_data.tcp_win_sz;
+    }
     if (PREDICT_FALSE(session_program(session_id, (void *)&actiondata))) {
         if (pds_is_flow_napt_en(b)) {
             next[0] = SESSION_PROG_NEXT_NAT_DROP;
@@ -248,6 +306,9 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         } else {
             next[0] = SESSION_PROG_NEXT_DROP;
         }
+    } else if (ses_track_en &&
+               PREDICT_FALSE(session_track_program(session_id, (void *)&track_actiondata))) {
+        next[0] = SESSION_PROG_NEXT_DROP;
     } else {
 skip_prog:
         next[0] = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
@@ -846,24 +907,30 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         vnet_buffer(p0)->pds_flow_data.lif = hdr0->lif;
         vnet_buffer2(p0)->pds_nat_data.vpc_id = hdr0->vpc_id;
         vnet_buffer2(p0)->pds_nat_data.vnic_id = hdr0->vnic_id;
-        if (hdr0->tcp_flags & (TCP_FLAG_FIN | TCP_FLAG_RST)) {
-            if (!pds_flow_age_supported() ||
-                PREDICT_FALSE(0 == hdr0->session_id)) {
+
+        // If it's a TCP SYN packet, it should always go to FLOW_PROG node
+        if (hdr0->tcp_flags && !(hdr0->tcp_flags & TCP_FLAG_SYN)) {
+            // IF flow ageing is not supported or session is not present, all other 
+            // TCP packets can be dropped
+            if (!pds_flow_age_supported() || (PREDICT_FALSE(0 == hdr0->session_id))) {
                 *next0 = FLOW_CLASSIFY_NEXT_DROP;
-                counter[FLOW_CLASSIFY_COUNTER_FIN_RST_NO_SES] += 1;
+                counter[FLOW_CLASSIFY_COUNTER_TCP_PKT_NO_SES] += 1;
                 next_determined |= 0x1;
                 goto next_pak;
             }
+            // If ageing is supported, all TCP packets excpet SYN should go to 
+            // AGE_FLOW node
             vnet_buffer(p0)->pds_flow_data.nexthop = nexthop |
-                    (hdr0->nexthop_type << 16);
+                                                     (hdr0->nexthop_type << 16);
             vlib_buffer_advance(p0, (APULU_P4_TO_ARM_HDR_SZ -
-                                APULU_ARM_TO_P4_HDR_SZ));
+                                     APULU_ARM_TO_P4_HDR_SZ));
             *next0 = FLOW_CLASSIFY_NEXT_AGE_FLOW;
-            counter[FLOW_CLASSIFY_COUNTER_FIN_RST] += 1;
+            counter[FLOW_CLASSIFY_COUNTER_TCP_PKT] += 1;
             next_determined |= 0x1;
             next_offset_done |= 0x1;
             goto next_pak;
-        }
+        } 
+
         if (PREDICT_FALSE(vnic0->max_sessions &&
                 (vnic0->active_ses_count >= vnic0->max_sessions))) {
             *next0 = FLOW_CLASSIFY_NEXT_DROP;
@@ -909,24 +976,30 @@ next_pak:
         vnet_buffer(p1)->pds_flow_data.lif = hdr1->lif;
         vnet_buffer2(p1)->pds_nat_data.vpc_id = hdr1->vpc_id;
         vnet_buffer2(p1)->pds_nat_data.vnic_id = hdr1->vnic_id;
-        if (hdr1->tcp_flags & (TCP_FLAG_FIN | TCP_FLAG_RST)) {
-            if (!pds_flow_age_supported() ||
-                PREDICT_FALSE(0 == hdr1->session_id)) {
+
+        // If it's a TCP SYN packet, it should always go to FLOW_PROG node
+        if (hdr1->tcp_flags && !(hdr1->tcp_flags & TCP_FLAG_SYN)) {
+            // IF flow ageing is not supported or session is not present, all other
+            // TCP packets can be dropped
+            if (!pds_flow_age_supported() || (PREDICT_FALSE(0 == hdr1->session_id))) {
                 *next1 = FLOW_CLASSIFY_NEXT_DROP;
-                counter[FLOW_CLASSIFY_COUNTER_FIN_RST_NO_SES] += 1;
+                counter[FLOW_CLASSIFY_COUNTER_TCP_PKT_NO_SES] += 1;
                 next_determined |= 0x2;
                 goto pak_done;
             }
+            // If ageing is supported, all TCP packets excpet SYN should go to
+            // AGE_FLOW node
             vnet_buffer(p1)->pds_flow_data.nexthop = nexthop |
                                                      (hdr1->nexthop_type << 16);
             vlib_buffer_advance(p1, (APULU_P4_TO_ARM_HDR_SZ -
-                                APULU_ARM_TO_P4_HDR_SZ));
+                                     APULU_ARM_TO_P4_HDR_SZ));
             *next1 = FLOW_CLASSIFY_NEXT_AGE_FLOW;
-            counter[FLOW_CLASSIFY_COUNTER_FIN_RST] += 1;
+            counter[FLOW_CLASSIFY_COUNTER_TCP_PKT] += 1;
             next_determined |= 0x2;
             next_offset_done |= 0x2;
             goto pak_done;
         }
+
         if (PREDICT_FALSE(vnic1->max_sessions &&
             (vnic1->active_ses_count >= vnic1->max_sessions))) {
             *next1 = FLOW_CLASSIFY_NEXT_DROP;
@@ -1048,19 +1121,23 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
     vnet_buffer2(p)->pds_nat_data.vnic_id = hdr->vnic_id;
 
-    if (hdr->tcp_flags & (TCP_FLAG_FIN | TCP_FLAG_RST)) {
-        if (!pds_flow_age_supported() ||
-            PREDICT_FALSE(0 == hdr->session_id)) {
+    // If it's a TCP SYN packet, it should always go to FLOW_PROG node
+    if (hdr->tcp_flags && !(hdr->tcp_flags & TCP_FLAG_SYN)) { 
+        // IF flow ageing is not supported or session is not present, all other TCP
+        // packets can be dropped
+        if (!pds_flow_age_supported() || (PREDICT_FALSE(0 == hdr->session_id))) {
             *next = FLOW_CLASSIFY_NEXT_DROP;
-            counter[FLOW_CLASSIFY_COUNTER_FIN_RST_NO_SES] += 1;
+            counter[FLOW_CLASSIFY_COUNTER_TCP_PKT_NO_SES] += 1;
             goto end;
         }
+        // If ageing is supported, all TCP packets except SYN should go to AGE_FLOW 
+        // node
         vnet_buffer(p)->pds_flow_data.nexthop = nexthop |
                                                 (hdr->nexthop_type << 16);
         vlib_buffer_advance(p, (APULU_P4_TO_ARM_HDR_SZ -
-                            APULU_ARM_TO_P4_HDR_SZ));
+                                APULU_ARM_TO_P4_HDR_SZ));
         *next = FLOW_CLASSIFY_NEXT_AGE_FLOW;
-        counter[FLOW_CLASSIFY_COUNTER_FIN_RST] += 1;
+        counter[FLOW_CLASSIFY_COUNTER_TCP_PKT] += 1;
         goto end;
     }
 

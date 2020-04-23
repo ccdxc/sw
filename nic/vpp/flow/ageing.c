@@ -5,12 +5,16 @@
 #include <vlib/vlib.h>
 #include <vnet/buffer.h>
 #include <session.h>
+#include <mapping.h>
 #include <system.h>
 #include <feature.h>
 #include <pkt.h>
+#include <nic/vpp/infra/api/intf.h>
+#include "utils.h"
 #include "node.h"
 #include "pdsa_hdlr.h"
 #include "pdsa_uds_hdlr.h"
+#include <vnet/tcp/tcp_packet.h>
 
 typedef void (flow_expiration_handler) (u32 ses_id);
 
@@ -424,8 +428,7 @@ pds_flow_age_setup (vlib_main_t *vm,
                 counter[FLOW_AGE_SETUP_COUNTER_SYN]++;
             } else if (tcp_flags0 & TCP_FLAG_FIN) {
                 rflow0 = pds_is_rflow(b0);
-                pds_flow_age_setup_fin_x1(session_id0, node->thread_index, 
-                                          rflow0);
+                pds_flow_age_setup_fin_x1(session_id0, node->thread_index, rflow0);
                 counter[FLOW_AGE_SETUP_COUNTER_FIN]++;
             } else if (PREDICT_FALSE(tcp_flags0 & TCP_FLAG_RST)) {
                 pds_flow_age_setup_rst_x1(session_id0, node->thread_index);
@@ -510,13 +513,6 @@ pds_flow_age_session_expired (pds_flow_hw_ctx_t *session, u64 cur_time,
 }
 
 void
-pds_flow_start_keep_alive (pds_flow_hw_ctx_t *session)
-{
-    // TODO: start tcp keep-alive to both ends
-    return;
-}
-
-void
 pds_flow_delete_session (u32 ses_id)
 {
     pds_flow_hw_ctx_t *session = pds_flow_get_hw_ctx(ses_id);
@@ -525,7 +521,7 @@ pds_flow_delete_session (u32 ses_id)
     if (session->v4) {
         ftlv4 *table4 = (ftlv4 *)pds_flow_get_table4();
         session = pds_flow_get_hw_ctx_lock(ses_id);
-        if (PREDICT_FALSE(ftlv4_get_with_handle(table4, session->iflow.table_id, 
+        if (PREDICT_FALSE(ftlv4_get_with_handle(table4, session->iflow.table_id,
                                                 session->iflow.primary) != 0)) {
             goto end;
         }
@@ -546,25 +542,213 @@ pds_flow_delete_session (u32 ses_id)
     } else {
         ftl *table = (ftl *)pds_flow_get_table6_or_l2();
         session = pds_flow_get_hw_ctx_lock(ses_id);
-        if (PREDICT_FALSE(ftl_remove_with_handle(table, session->iflow.table_id,
-                                                 session->iflow.primary) != 0)) {
+        if (PREDICT_FALSE(ftlv6_get_with_handle(table, session->iflow.table_id,
+                                                session->iflow.primary) != 0)) {
             goto end;
         }
         pds_flow_hw_ctx_unlock(session);
+        if (PREDICT_FALSE(ftlv6_remove_cached_entry(table)) != 0) {
+            return;
+        }
 
         session = pds_flow_get_hw_ctx_lock(ses_id);
-        if (PREDICT_FALSE(ftl_remove_with_handle(table, session->rflow.table_id,
-                                                 session->rflow.primary) != 0)) {
+        if (PREDICT_FALSE(ftlv6_get_with_handle(table, session->rflow.table_id,
+                                                session->rflow.primary) != 0)) {
            goto end;
-        } 
+        }
         pds_flow_hw_ctx_unlock(session);
+        if (PREDICT_FALSE(ftlv6_remove_cached_entry(table)) != 0) {
+            return;
+        }
     }
-    
+
     pds_session_id_dealloc(ses_id);
     return;
 
 end:
     pds_flow_hw_ctx_unlock(session);
+    return;
+}
+
+static u8
+pds_flow_send_keep_alive_helper (pds_flow_hw_ctx_t *session,
+                                 bool iflow)
+{
+    pds_flow_index_t flow_index;
+    ip4_and_tcp_header_t *h;
+    pds_flow_main_t *fm = &pds_flow_main;
+    vlib_buffer_t *b;
+    u32 bi;
+    u32 ses_id = session - fm->session_index_pool + 1;
+    vlib_main_t *vm = vlib_get_main();
+    session_info_t info;
+    u32 sip, dip;
+    u16 sport, dport, lkp_id;
+    u32 *to_next = NULL;
+    bool to_host = false;
+
+    h = vlib_packet_template_get_packet(vlib_get_main(),
+                                        &fm->tcp_keepalive_packet_template, &bi);
+    // we ran out of packet buffers
+    if (PREDICT_FALSE(!h)) {
+        return -1;
+    }
+        
+    if (iflow) {
+        flow_index = session->iflow;
+        // iflow is from the network to host, so the keepalive is also sent
+        // from network to host
+        to_host = session->iflow_rx;
+    } else {
+        flow_index = session->rflow;
+        if (session->packet_type == PDS_PKT_TYPE_L2L) {
+            to_host = true;
+        } else {
+            to_host = !session->iflow_rx;
+        }
+    }
+
+    if (session->v4) {
+        ftlv4 *table4 = pds_flow_prog_get_table4();
+        if (ftlv4_get_with_handle(table4, flow_index.table_id,
+                                  flow_index.primary) != 0) {
+            return -1;
+        }
+
+        ftlv4_get_last_read_session_info(&sip, &dip, &sport, &dport, &lkp_id);
+        // Fill in IP and TCP header details
+        h->ip4_hdr.src_address.as_u32 = sip;
+        h->ip4_hdr.dst_address.as_u32 = dip;
+        h->tcp_hdr.src_port = sport;
+        h->tcp_hdr.dst_port = dport;
+    } else {
+        // Will implement v6 later
+        return -1;
+    }
+#if 0
+    } else {
+
+        ftlv6 *table = pds_flow_prog_get_table6_or_l2();
+        if (ftlv6_get_with_handle(table, flow_index.table_id,
+                                  flow_index.primary) != 0) {
+            return -1;
+        }
+
+        ftlv6_get_last_read_session_info(sip6, dip6, &sport, &dport, &lkp_id);
+        h->ip_hdr.ip6_hdr.protocol = IP_PROTOCOL_TCP;
+        memcpy(&h->ip_hdr.ip6_hdr.src_address.as_u8, sip6, sizeof(ip6_address_t));
+        memcpy(&h->ip_hdr.ip6_hdr.dst_address.as_u8, dip6, sizeof(ip6_address_t));
+        h->tcp_hdr.src_port = sport;
+        h->tcp_hdr.dst_port = dport;
+    }
+#endif 
+
+    pds_session_get_info(ses_id, &info);
+
+    if (iflow) {
+        h->tcp_hdr.seq_number = info.iflow_tcp_seq_num;
+        h->tcp_hdr.ack_number = info.iflow_tcp_ack_num;
+        h->tcp_hdr.window = info.iflow_tcp_win_size;
+    } else {
+        h->tcp_hdr.seq_number = info.rflow_tcp_seq_num;
+        h->tcp_hdr.ack_number = info.rflow_tcp_ack_num;
+        h->tcp_hdr.window = info.rflow_tcp_win_size;
+    }
+
+    // Send the packet
+    if (to_host) {
+        u16 vnic_id = 0, vnic_nh_hw_id = 0;
+        // Get the VNIC information
+        int ret = pds_dst_vnic_info_get(lkp_id, dip, &vnic_id, 
+                                                  &vnic_nh_hw_id);
+        if (PREDICT_FALSE(ret == -1)) {
+            return -1;
+        }
+
+        b = vlib_get_buffer(vm, bi);
+        vnet_buffer(b)->pds_tx_data.vnic_id = vnic_id;
+        vnet_buffer(b)->pds_tx_data.vnic_nh_hw_id = vnic_nh_hw_id;
+
+        static vlib_node_t *vnic_node = NULL;
+        if (!vnic_node) {
+            vnic_node = vlib_get_node_by_name(vm, (u8 *) "pds-vnic-l2-rewrite");
+        }
+        vlib_frame_t *to_frame = vlib_get_frame_to_node(vm, vnic_node->index);
+        to_next = vlib_frame_vector_args(to_frame);
+        to_next[0] = bi;
+        to_frame->n_vectors++;
+        vlib_put_frame_to_node(vm, vnic_node->index, to_frame);
+    } else {
+        ethernet_header_t *eth0;
+        mac_addr_t mac;
+        u16 host_lif_hw_id = 0;
+
+        // Get the VNIC to which the packet belongs
+        int ret = pds_src_vnic_info_get(lkp_id, sip, mac, &host_lif_hw_id);
+        if (PREDICT_FALSE(ret == -1)) {
+            return -1;
+        }
+
+        // Add the ethernet header
+        b = vlib_get_buffer(vm, bi);
+        vlib_buffer_advance(b, - sizeof (ethernet_header_t));
+        eth0 = vlib_buffer_get_current(b);
+        // Src MAC will be VNIC mac and dst mac is dummy
+        clib_memcpy(&eth0->src_address, mac, ETH_ADDR_LEN);
+        
+        static u32 cpu_mnic_if_index = ~0;
+        if (((u32) ~0) == cpu_mnic_if_index) {
+            cpu_mnic_if_index = pds_infra_get_sw_ifindex_by_name((u8*)"cpu_mnic0");
+        }
+        vnet_buffer(b)->sw_if_index[VLIB_RX] = cpu_mnic_if_index;
+        vnet_buffer(b)->pds_flow_data.lif = host_lif_hw_id;
+        vnet_buffer(b)->pds_flow_data.ses_id = ses_id;
+        
+        static vlib_node_t *fwd_node = NULL;
+        if (!fwd_node) {
+            fwd_node = vlib_get_node_by_name(vm, (u8 *) "pds-fwd-flow");
+        }
+        vlib_frame_t *to_frame = vlib_get_frame_to_node(vm, fwd_node->index);
+        to_next = vlib_frame_vector_args(to_frame);
+        to_next[0] = bi;
+        to_frame->n_vectors++;
+        vlib_put_frame_to_node(vm, fwd_node->index, to_frame);
+    }
+    return 0;
+}
+
+static void
+pds_flow_send_keep_alive (pds_flow_hw_ctx_t *session)
+{
+    u8 ret1, ret2;
+    pds_flow_main_t *fm = &pds_flow_main;
+    int thread = vlib_get_thread_index();
+    u32 ses_id = session - fm->session_index_pool + 1;
+
+    // send keepalive packet for iflow
+    ret1 = pds_flow_send_keep_alive_helper(session, true);
+    if (ret1 != 0) {
+        goto end;
+    }
+    
+    // if send for iflow succeeded, send keepalive for rflow
+    ret2 = pds_flow_send_keep_alive_helper(session, false);
+    
+    // if we successfully sent the packets, then start the keepalive timer to
+    // retry if required, otherwise delete the session
+    if (ret2 == 0) {
+        session->keep_alive_retry += 1;
+        // if send was successful, then start the keepalive timer to retry.
+        session->timer_hdl = tw_timer_start_16t_1w_2048sl(&fm->timer_wheel[thread],
+                                                          ses_id,
+                                                          PDS_FLOW_KEEP_ALIVE_TIMER, 
+                                                          fm->tcp_keep_alive_timeout);
+        session->flow_state = PDS_FLOW_STATE_KEEPALIVE_SENT;
+        return;
+    }
+
+end:
+    pds_flow_delete_session(ses_id);
     return;
 }
 
@@ -644,14 +828,14 @@ pds_flow_idle_timeout (u32 ses_id)
     if (pds_flow_age_session_expired(session, cur_time, timestamp, &diff_time)) {
         pds_flow_delete_session(ses_id);
         return;
-    // enable once keepalive implemented.
+    // Enable once keepalive is tested
 #if 0
         if (!fm->con_track_en || session->proto != PDS_FLOW_PROTO_TCP) {
-            pds_flow_delete_session(session);
-            goto end;
+            pds_flow_delete_session(ses_id);
+            return;
         }
         // connection tracking enabled and protocol is TCP, send keep-alive
-        pds_flow_start_keep_alive(session);
+        pds_flow_send_keep_alive(session);
 #endif
     } else {
         // restart idle timeout with the time left for timeout
@@ -667,7 +851,33 @@ pds_flow_idle_timeout (u32 ses_id)
 static void
 pds_flow_keep_alive_timeout (u32 ses_id)
 {
-    return;
+    pds_flow_main_t *fm = &pds_flow_main;
+    int thread = vlib_get_thread_index();
+    pds_flow_hw_ctx_t *session;
+    u64 timestamp;
+    u64 cur_time, diff_time;
+
+    // If the session timestamp is updated, then start idle timeout, otherwise retry
+    // sending keepalives
+    session = pds_flow_get_hw_ctx_lock(ses_id);
+    timestamp = pds_session_get_timestamp(ses_id);
+    pds_flow_hw_ctx_unlock(session);
+    cur_time = pds_system_get_current_tick();
+    if (timestamp && 
+        !pds_flow_age_session_expired(session, cur_time, timestamp, &diff_time)) {
+        // restart idle timeout with the time left for timeout
+        session->timer_hdl = tw_timer_start_16t_1w_2048sl(&fm->timer_wheel[thread],
+                                                          ses_id,
+                                                          PDS_FLOW_IDLE_TIMER,
+                                                          fm->idle_timeout[session->proto] - diff_time);
+        return;
+    }
+
+    if (session->keep_alive_retry > TCP_KEEP_ALIVE_RETRY_COUNT_MAX) {
+        pds_flow_delete_session(ses_id);
+    }
+    // send a keep alive message for both flows
+    pds_flow_send_keep_alive(session);
 }
 
 static void
@@ -761,6 +971,8 @@ pds_flow_age_init (vlib_main_t *vm)
     vec_validate_init_empty(fm->idle_timeout_ticks, PDS_FLOW_PROTO_OTHER, 0);
     vec_validate_init_empty(fm->drop_timeout, PDS_FLOW_PROTO_OTHER, 0);
     vec_validate_init_empty(fm->drop_timeout_ticks, PDS_FLOW_PROTO_OTHER, 0);
+
+    pds_local_mapping_table_init();
 
     return 0;
 }

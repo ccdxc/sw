@@ -317,6 +317,13 @@ vnic_impl::populate_msg(pds_msg_t *msg, api_base *api_obj,
     msg->cfg_msg.vnic.status.hw_id = hw_id_;
     msg->cfg_msg.vnic.status.nh_hw_id = nh_idx_;
 
+    // also read host LIF id from lif DB and populate in vnic status
+    pds_lif_info_t info = { 0 };
+    sdk_ret_t ret = pds_lif_read(&msg->cfg_msg.vnic.spec.host_if, &info);
+    if (ret == SDK_RET_OK) {
+        msg->cfg_msg.vnic.status.host_if_hw_id = info.spec.id;
+    }
+
     return SDK_RET_OK;
 }
 

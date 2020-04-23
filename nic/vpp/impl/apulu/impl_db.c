@@ -72,7 +72,8 @@ pds_impl_db_vnic_set (uint8_t *mac,
                       uint8_t dot1q,
                       uint8_t dot1ad,
                       uint16_t vlan_id,
-                      uint16_t nh_hw_id)
+                      uint16_t nh_hw_id,
+                      uint16_t host_lif_hw_id)
 {
     POOL_IMPL_DB_ADD(vnic, vnic_hw_id);
 
@@ -96,7 +97,7 @@ pds_impl_db_vnic_set (uint8_t *mac,
         vnic_info->encap_type = PDS_ETH_ENCAP_NO_VLAN;
     }
     vnic_info->nh_hw_id = nh_hw_id;
-
+    vnic_info->host_lif_hw_id = host_lif_hw_id;
     return 0;
 }
 
@@ -109,7 +110,8 @@ pds_impl_db_subnet_set (uint8_t pfx_len,
                         uint32_t vr_ip,
                         uint8_t *mac,
                         uint16_t subnet_hw_id,
-                        uint32_t vnid)
+                        uint32_t vnid,
+                        uint16_t vpc_id)
 {
     POOL_IMPL_DB_ADD(subnet, subnet_hw_id);
 
@@ -120,6 +122,7 @@ pds_impl_db_subnet_set (uint8_t pfx_len,
     // conversion required in packet path
     vnid = vnid << 8;
     subnet_info->vnid = clib_host_to_net_u32(vnid);
+    subnet_info->vpc_id = clib_host_to_net_u32(vpc_id);
     return 0;
 }
 
