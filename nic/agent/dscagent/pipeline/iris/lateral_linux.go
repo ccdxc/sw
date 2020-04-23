@@ -16,9 +16,12 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -313,11 +316,22 @@ func startRefreshLoop(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient
 	go func(refreshCtx context.Context, IP, gIP string) {
 		mac := resolveIPAddress(refreshCtx, IP, gIP)
 		log.Infof("Resolved MAC 1st Tick: %s", mac)
+		nic := &cluster.DistributedServiceCard{
+			TypeMeta: api.TypeMeta{
+				Kind: "DistributedServiceCard",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name: infraAPI.GetDscName(),
+			},
+		}
 		if mac != oldMAC {
 			if err := createOrUpdateLateralEP(infraAPI, intfClient, epClient, vrfID, owner, IP, mac); err != nil {
 				log.Errorf("Failed to create or update lateral endpoint IP: %s mac:%s. Err: %v", IP, mac, err)
 			}
 			oldMAC = mac
+			recorder.Event(eventtypes.COLLECTOR_REACHABILITY, fmt.Sprintf("DSC %s %s reachable from DSC", nic.Name, IP), nic)
+		} else {
+			recorder.Event(eventtypes.COLLECTOR_REACHABILITY, fmt.Sprintf("DSC %s %s not reachable from DSC", nic.Name, IP), nic)
 		}
 		// Populate the ARPCache.
 		log.Infof("Populate ARP %s -> %s", IP, mac)
@@ -334,6 +348,11 @@ func startRefreshLoop(infraAPI types.InfraAPI, intfClient halapi.InterfaceClient
 						if err := createOrUpdateLateralEP(infraAPI, intfClient, epClient, vrfID, owner, IP, mac); err != nil {
 							log.Errorf("Failed to create or update lateral endpoint IP: %s mac:%s. Err: %v", IP, mac, err)
 						}
+					}
+					if mac == "" {
+						recorder.Event(eventtypes.COLLECTOR_REACHABILITY, fmt.Sprintf("DSC %s %s not reachable from DSC", nic.Name, IP), nic)
+					} else if oldMAC == "" {
+						recorder.Event(eventtypes.COLLECTOR_REACHABILITY, fmt.Sprintf("DSC %s %s reachable from DSC", nic.Name, IP), nic)
 					}
 				}
 				oldMAC = mac

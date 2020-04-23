@@ -382,4 +382,9 @@ enum EventTypes {
     ORCH_UNSUPPORTED_VERSION               = 1008 [(category) = Orchestration,
                                            (severity) = CRITICAL,
                                            (desc)     = "Unsupported orchestrator version"];
+    // ------------------------- Controller events ------------------------- //
+    COLLECTOR_REACHABILITY                 = 1101 [(category) = Network,
+                                           (severity)         = INFO,
+                                           (desc)             = "Controller reachability from DSC",
+                                           (suppress_mm)      = true];
 }

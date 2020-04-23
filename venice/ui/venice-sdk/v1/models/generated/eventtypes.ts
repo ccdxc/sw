@@ -69,6 +69,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'CONFIG_FAIL',
   ],
   network: [
+    'COLLECTOR_REACHABILITY',
     'LINK_DOWN',
     'LINK_UP',
   ],
@@ -374,6 +375,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "CONFIG_FAIL",
       "Severity": EventsEvent_severity.warn,
       "Desc": "Configuration failed",
+  },
+  'COLLECTOR_REACHABILITY' : {
+      "Name": "COLLECTOR_REACHABILITY",
+      "Severity": EventsEvent_severity.info,
+      "Desc": "Controller reachability from DSC",
   },
   'LINK_DOWN' : {
       "Name": "LINK_DOWN",

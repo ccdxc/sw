@@ -580,6 +580,13 @@ func init() {
 		Desc:       "Unsupported orchestrator version",
 		SuppressMM: false}
 
+	eventTypes[COLLECTOR_REACHABILITY] = &EventTypeAttributes{
+		EType:      COLLECTOR_REACHABILITY.String(),
+		Severity:   "info",
+		Category:   "network",
+		Desc:       "Controller reachability from DSC",
+		SuppressMM: true}
+
 }
 
 func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {

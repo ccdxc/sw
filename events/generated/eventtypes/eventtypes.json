@@ -282,6 +282,11 @@
  ],
  "network": [
   {
+   "Name": "COLLECTOR_REACHABILITY",
+   "Severity": "info",
+   "Desc": "Controller reachability from DSC"
+  },
+  {
    "Name": "LINK_DOWN",
    "Severity": "warn",
    "Desc": "Port link status is down"

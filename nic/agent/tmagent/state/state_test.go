@@ -30,6 +30,7 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/nic/utils/ntranslate/metrics"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/syslog"
@@ -72,7 +73,8 @@ func TestMain(m *testing.M) {
 
 	mockHal := fakehal.NewFakeHalServer(lis.ListenURL.String())
 
-	mockAgent, err = dscagent.NewDSCAgent(nil, "", "", "", types.DefaultAgentRestURL)
+	logger := log.GetNewLogger(log.GetDefaultConfig("netagent_iris_test"))
+	mockAgent, err = dscagent.NewDSCAgent(logger, "", "", "", types.DefaultAgentRestURL)
 	if err != nil {
 		fmt.Printf("Test Setup Failed. Err: %v\n", err)
 		os.Exit(1)

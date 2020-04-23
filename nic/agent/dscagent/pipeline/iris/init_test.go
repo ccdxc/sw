@@ -21,6 +21,8 @@ import (
 
 	"github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
@@ -62,6 +64,8 @@ func findMgmtIP(destIP string) (mgmtIP string, mgmtLink netlink.Link, mgmtIntf *
 
 // Sets up the grpc client handlers for the package
 func TestMain(m *testing.M) {
+	logger := log.GetNewLogger(log.GetDefaultConfig("netagent_iris_test"))
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("nmd_state_test", logger))
 	primaryDB, err := ioutil.TempFile("", "")
 	if err != nil {
 		log.Errorf("Test Setup Failed. Err: %v", err)
