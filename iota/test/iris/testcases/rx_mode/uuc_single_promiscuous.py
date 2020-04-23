@@ -106,7 +106,6 @@ def Trigger(tc):
         #  Run tcpdump on intf1 in promiscuous mode
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
         if api.GetNodeOs(tc.naples_node) == "windows" and intf1 in tc.host_intfs:
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe tcpdump.exe "
             intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf1)
             intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
         else:
@@ -114,7 +113,7 @@ def Trigger(tc):
             
         cmd = "tcpdump -l -i " + intfVal + " -tne ether host " + tc.random_mac
         if api.GetNodeOs(tc.naples_node) == "windows":
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " ;sleep 10 \""
         __PR_AddCommand(intf1, tc, req, cmd, True)
 
         # Run tcpdump in non-promiscuous mode on all other interfaces
@@ -128,7 +127,7 @@ def Trigger(tc):
                 
                 cmd = "tcpdump -l -i " + intfVal + " -ptne ether host " + tc.random_mac
                 if api.GetNodeOs(tc.naples_node) == "windows" and intf2 in tc.host_intfs:
-                    cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
+                    cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " ;sleep 10 \""
                 __PR_AddCommand(intf2, tc, req, cmd, True)
 
 
@@ -161,10 +160,14 @@ def Trigger(tc):
                 if lif_obj['spec']['packetfilter']['receivepromiscuous'] != True:
                     api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(intf1))
                     result = api.types.status.FAILURE
+                else:
+                    api.Logger.info("halctl PR flag set for promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
             else:
                 if lif_obj['spec']['packetfilter']['receivepromiscuous'] == True:
                     api.Logger.error("halctl PR flag set for non-promiscuous mode interface [%s]" %(lif_obj['spec']))
                     result = api.types.status.FAILURE
+                else:
+                    api.Logger.info("halctl PR flag clear for non-promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
 
         term_resp = api.Trigger_TerminateAllCommands(trig_resp)
         resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)

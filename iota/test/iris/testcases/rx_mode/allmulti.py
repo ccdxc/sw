@@ -149,7 +149,7 @@ def Trigger(tc):
 
         cmd = "tcpdump -l -i " + intfVal  + " -ptne  host " + tc.target_multicast_IP
         if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + ";sleep 10 \""
         __PR_AddCommand(intf, tc, req, cmd, True)
 
 
@@ -179,7 +179,11 @@ def Trigger(tc):
         # See if the lif belongs to any of the interfaces in tc.all_intfs (inteface lif)
         intf_lif = False
         for intf in tc.all_intfs:
-            if lif_obj['spec']['name'].startswith(intf):
+            if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
+                halIntfName = ionic_utils.winHalIntfName(tc.naples_node, intf)
+            else:
+                halIntfName = intf
+            if lif_obj['spec']['name'].startswith(halIntfName):
                 intf_lif = True
                 break
         lif_am_flag = lif_obj['spec']['packetfilter']['receiveallmulticast']
@@ -187,16 +191,16 @@ def Trigger(tc):
         # A lif must have its AM flag set when it is an interface lif and tc.args.mode is 'enable_allmulti'
         if intf_lif == True:
             if tc.args.mode == "enable_allmulti" and lif_am_flag != True:
-                api.Logger.error("halctl AM flag not set for allmulti mode interface [%s]" %(lif_obj['spec']['name']))
+                api.Logger.error("halctl AM flag not set for allmulti mode interface [%s]" %(lif_obj['spec']))
                 result = api.types.status.FAILURE
             elif tc.args.mode == "disable_allmulti" and lif_am_flag == True:
-                api.Logger.error("halctl AM flag set for no-allmulti mode interface [%s]" %(lif_obj['spec']['name']))
+                api.Logger.error("halctl AM flag set for no-allmulti mode interface [%s]" %(lif_obj['spec']))
                 result = api.types.status.FAILURE
 
         else:
             # Ignore for SWM lifs
             if lif_am_flag == True and lif_obj['spec']['type'] != 7:
-                api.Logger.error("halctl AM flag set for LIF [%s]" %(lif_obj['spec']['name']))
+                api.Logger.error("halctl AM flag set for LIF [%s]" %(lif_obj['spec']))
                 result = api.types.status.FAILURE
 
 

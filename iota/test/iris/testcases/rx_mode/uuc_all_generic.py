@@ -119,7 +119,6 @@ def Trigger(tc):
     # Run tcpdump on all interfaces
     for intf in tc.all_intfs:
         if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe tcpdump.exe "
             intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf)
             intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
         else:
@@ -128,7 +127,7 @@ def Trigger(tc):
         cmd = "tcpdump -l -i " + intfVal + tcpdump_flags_extra + " -tne ether host " + tc.random_mac
         
         if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " ;sleep 10 \""
         __PR_AddCommand(intf, tc, req, cmd, True)
 
     if api.GetNodeOs(tc.naples_node) == "windows":

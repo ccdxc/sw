@@ -2,6 +2,7 @@ import iota.harness.api as api
 import iota.test.utils.naples_host as host
 import iota.test.iris.utils.naples_workloads as workloads
 import json
+import re
 
 VXLAN_SERVER_IP = "100.1.1.1"
 VXLAN_CLIENT_IP = "100.1.1.2"
@@ -262,12 +263,12 @@ def winIntfJson(node, intf, key):
         return api.types.status.FAILURE
     
     value = jsonOut[key]
-    api.Logger.info("%s[%s]: %s" %(intf, key, value))
+    api.Logger.debug("%s[%s]: %s" %(intf, key, value))
     return value
 
 
 def winIntfGuid(node, intf):
-    api.Logger.info("Get intfGUID for: %s " %(intf))
+    api.Logger.debug("Get intfGUID for: %s " %(intf))
     return winIntfJson(node, intf, "InterfaceGuid")
 
 #
@@ -279,7 +280,11 @@ def winHalIntfName(node, intf):
     winName = winIntfJson(node, intf, "ifDesc")
     # HAL name is trimmed for Windows so
     # Pensando -> Pen~
-    halName = winName.replace("Pensando DSC 2p 40/100G Services Adapter","Pen~ Adapter")
+    # First interface missing "#"
+    if winName.find('#') == -1:
+        halName = re.sub("Pensando.*Adapter", "Pen~ces Adapter", winName)
+    else:
+        halName = re.sub("Pensando.*Adapter", "Pen~ Adapter", winName)
     api.Logger.info("(Win Name): Linux: %s -> Windows name: %s -> Hal name: %s" % (intf, winName, halName))
     return halName
                 

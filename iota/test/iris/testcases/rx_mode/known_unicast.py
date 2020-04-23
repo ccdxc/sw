@@ -89,7 +89,6 @@ def Trigger(tc):
         req_node2 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
         for workload in tc.peer_workloads:
             if api.GetNodeOs(tc.naples_node) == "windows":
-                cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe tcpdump.exe "
                 intfGuid = ionic_utils.winIntfGuid(
                     tc.naples_node, workload.interface)
                 intf = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
@@ -98,7 +97,7 @@ def Trigger(tc):
 
             cmd = "tcpdump -l -i " + intf + " -tne arp host " + tc.target_IP + " or icmp"
             if api.GetNodeOs(tc.naples_node) == "windows":
-                cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
+                cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " ;sleep 10\""
 
             api.Trigger_AddHostCommand(req_node2, tc.peer_node, cmd, True)
         trig_resp_node2 = api.Trigger(req_node2)
@@ -135,7 +134,7 @@ def Trigger(tc):
 
             cmd = "tcpdump -l -i " + intfVal + tcpdump_flags_extra + " -tne ether host " + mac_addr
             if api.GetNodeOs(tc.naples_node) == "windows" and intf2 in tc.host_intfs:
-                cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " \""
+                cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " ;sleep 10 \""
             __PR_AddCommand(intf2, tc, req, cmd, True)
 
         if api.GetNodeOs(tc.naples_node) == "windows":

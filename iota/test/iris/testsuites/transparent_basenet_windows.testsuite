@@ -53,7 +53,7 @@ testbundles:
         #- filters/filters.testbundle
         #- subifs/subifs-precheckin.testbundle
         - rx_mode/rx_mode.testbundle
-        - classic/driver-features-sanity.testbundle
+        #- classic/driver-features-sanity.testbundle
         #- system/obfl_check.testbundle
         #- sysmon/interrupts.testbundle
         #- cpld/cpldupgrade.testbundle

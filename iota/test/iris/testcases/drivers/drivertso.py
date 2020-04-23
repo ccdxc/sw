@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import time
 import copy
-from scapy.all import rdpcap
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
 import iota.test.utils.ionic_utils as ionic_utils
@@ -10,26 +9,6 @@ import iota.test.iris.testcases.drivers.common as common
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 
-def startTcpDump(node, intf, src_port, filename):
-
-    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
-    # XXX: for testing capture only few packets.
-    api.Trigger_AddHostCommand(req, node, 'sudo tcpdump -i %s -c 10 -w %s port %s &'
-                               % (intf, filename, src_port))
-    resp = api.Trigger(req)
-    if resp is None:
-        api.Logger.error("Failed to start tcpdump for %s on %s" % (intf, node))
-        return api.types.status.FAILURE
-
-    for cmd in resp.commands:
-        if cmd.exit_code != 0:
-            api.Logger.error(
-                "Failed to start tcpdump for %s on %s\n"
-                % (intf, node))
-            api.PrintCommandResults(cmd)
-            return api.types.status.FAILURE
-
-    return api.types.status.SUCCESS
 
 def VerifyNetStat(tc):
     status = api.types.status.SUCCESS
@@ -91,17 +70,6 @@ def VerifyRetrans(tc):
     return api.types.status.SUCCESS, retran, bw
 
 
-def VerifyMSS(tc):
-    srv_packets = rdpcap(tc.srv_pcap_file)
- #   cli_packets = scapy.rdpcap(tc.cli_pcap_file)
-
-    for p in srv_packets:
-        if p.haslayer(scapy.TCP):
-            print(p)
-
-    return api.types.status.SUCCESS
-
-
 def verifySingle(tc):
 # TODO: covered in csum test.
 #    status = VerifyNetStat(tc)
@@ -110,9 +78,6 @@ def verifySingle(tc):
     if status1 == api.types.status.SUCCESS:
         status = status1
         
- #   status = VerifyMSS(tc)
- #   if status != api.types.status.SUCCESS:
- #       return status
     return status, retran, bw
 
 
@@ -154,17 +119,13 @@ def runIperfTest(tc, srv, cli):
             str(i) + proto + "_" + ipproto + "_" + str(pktsize)
 
         file_name = '/tmp/' + 'srv_' + srv.interface + file_name_suffix
-        tc.srv_pcap_file = file_name + '.pcap'
-        startTcpDump(srv.node_name, srv.interface, port, tc.srv_pcap_file)
         iperf_server_cmd = cmd_builder.iperf_server_cmd(port=port)
         api.Trigger_AddCommand(
             req1, srv.node_name, srv.workload_name,
             iperf_server_cmd, background=True)
 
         file_name = '/tmp/' + 'cli_' + cli.interface + file_name_suffix
-        tc.cli_pcap_file = file_name + ".pcap"
         iperf_file_name = file_name + ".log"
-        startTcpDump(cli.node_name, cli.interface, port, tc.cli_pcap_file)
         iperf_client_cmd = cmd_builder.iperf_client_cmd(server_ip=srv_ip_address,
                                                         port=port,
                                                         proto=proto, pktsize=pktsize,
@@ -230,7 +191,8 @@ def runTest(tc, srv, cli):
 
     lro = getattr(tc.iterators, 'lro_offload', 'off')
     mtu = getattr(tc.iterators, 'mtu', '1500')
-
+    proto = getattr(tc.iterators, "proto", 'tcp')
+    
     ipproto = getattr(tc.iterators, "ipproto", 'v4')
     if ipproto == 'v4':
         cli_before_tso_stats = ionic_stats.getTSOIPv4Stats(cli, cli_intf)
@@ -268,7 +230,7 @@ def runTest(tc, srv, cli):
     #
     # Validate LRO if receiver is Naples card.
     #
-    if tc.is_srv_naples and lro == 'on' and api.GetNodeOs(tc.srv.node_name) == host.OS_TYPE_BSD:
+    if tc.is_srv_naples and lro == 'on' and proto == 'tcp' and api.GetNodeOs(tc.srv.node_name) == host.OS_TYPE_BSD:
         api.Logger.info("For LRO, counters before: %s after: %s"
                          %(str(srv_before_lro_stats), str(srv_after_lro_stats)))
         if srv_before_lro_stats == srv_after_lro_stats:
