@@ -17,9 +17,13 @@ namespace test {
 namespace athena_app {
 
 bool combined_aging_test(test_vparam_ref_t vparam);
+bool combined_aging_enable(test_vparam_ref_t vparam);
+bool aging_enable(test_vparam_ref_t vparam);
 
 #define COMBINED_AGING_NAME2FN_MAP                                      \
     APP_TEST_NAME2FN_MAP_ENTRY(combined_aging_test),                    \
+    APP_TEST_NAME2FN_MAP_ENTRY(combined_aging_enable),                  \
+    APP_TEST_NAME2FN_MAP_ENTRY(aging_enable),                           \
     
 }    // namespace athena_app
 }    // namespace test

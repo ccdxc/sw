@@ -20,6 +20,7 @@
 #include "nic/apollo/p4/include/athena_table_sizes.h"
 #include "ftl_wrapper.h"
 #include "gen/p4gen/athena/include/p4pd.h"
+#include "pds_flow_session_ctx.hpp"
 
 using namespace sdk;
 using namespace sdk::table;
@@ -108,6 +109,13 @@ pds_flow_cache_create ()
 {
     sdk_table_factory_params_t factory_params = { 0 };
 
+    sdk_ret_t ret = (sdk_ret_t)
+                    pds_flow_session_ctx_init(SESSION_CTX_LOCK_INTERNAL);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Session context init failed with ret %u\n", ret);
+        return ret;
+    }
+
     factory_params.table_id = P4TBL_ID_FLOW;
     factory_params.num_hints = 5;
     factory_params.max_recircs = 8;
@@ -161,7 +169,17 @@ pds_flow_cache_entry_create (pds_flow_spec_t *spec)
     ftlv6_set_index(&entry, index);
     ftlv6_set_index_type(&entry, index_type);
     params.entry = &entry;
-    return (pds_ret_t) ftl_table->insert(&params);
+    ret = ftl_table->insert(&params);
+    if (ret == SDK_RET_OK) {
+        //PDS_TRACE_VERBOSE("session_ctx create session_id %u pindex %u "
+        //                  "sindex %u", index, params.handle.pindex(),
+        //                  params.handle.sindex());
+        ret = (sdk_ret_t)
+              pds_flow_session_ctx_set(index, params.handle.pindex(),
+                                       params.handle.sindex(),
+                                       params.handle.pvalid());
+    }
+    return (pds_ret_t) ret;
 }
 
 pds_ret_t
@@ -231,7 +249,33 @@ pds_flow_cache_entry_update (pds_flow_spec_t *spec)
     ftlv6_set_index(&entry, index);
     ftlv6_set_index_type(&entry, index_type);
     params.entry = &entry;
-    return (pds_ret_t)ftl_table->update(&params);
+    ret = ftl_table->update(&params);
+    if (ret == SDK_RET_OK) {
+        //PDS_TRACE_VERBOSE("session_ctx update session_id %u pindex %u "
+        //                  "sindex %u", index, params.handle.pindex(),
+        //                  params.handle.sindex());
+        ret = (sdk_ret_t)
+              pds_flow_session_ctx_set(index, params.handle.pindex(),
+                                       params.handle.sindex(),
+                                       params.handle.pvalid());
+    }
+    return (pds_ret_t) ret;
+}
+
+static void
+ftl_table_entry_move (base_table_entry_t *base_entry,
+                      handle_t old_handle, 
+                      handle_t new_handle,
+                      bool move_complete)
+{
+    flow_hash_entry_t *entry = (flow_hash_entry_t *)base_entry;
+    uint32_t session_id = entry->get_idx();
+    uint32_t cache_id;
+
+    cache_id = new_handle.pvalid() ? 
+               new_handle.pindex() : new_handle.sindex();
+    pds_flow_session_ctx_move(session_id, cache_id, 
+                              new_handle.pvalid(), move_complete);
 }
 
 pds_ret_t
@@ -256,6 +300,55 @@ pds_flow_cache_entry_delete (pds_flow_key_t *key)
              != SDK_RET_OK)
          return (pds_ret_t) ret;
     params.entry = &entry;
+    params.movecb = ftl_table_entry_move;
+    ret = ftl_table->remove(&params);
+    if (ret == SDK_RET_OK) {
+        pds_flow_session_ctx_clr(entry.get_idx());
+    }
+    return (pds_ret_t) ret;
+}
+
+pds_ret_t
+pds_flow_cache_entry_delete_by_flow_info (pds_flow_info_t *info)
+{
+    pds_ret_t ret;
+    sdk_table_api_params_t params = { 0 };
+    flow_hash_entry_t entry;
+    uint32_t cache_id;
+    bool primary;
+
+    if (!info) {
+        PDS_TRACE_ERR("flow info is null");
+        return PDS_RET_INVALID_ARG;
+    }
+    ret = pds_flow_session_ctx_get_clr(info->spec.data.index,
+                                       &cache_id, &primary);
+    if (ret == PDS_RET_ENTRY_NOT_FOUND) {
+
+        // This is a soft error so no need to log;
+        // either session was never mapped to cache, or was already deleted.
+        return PDS_RET_OK;
+    }
+    if (ret != PDS_RET_OK) {
+        return ret;
+    }
+    //PDS_TRACE_VERBOSE("delete_by_flow_info cache_id %u primary %u",
+    //                  cache_id, primary);
+    if (primary) {
+        params.handle.pindex(cache_id);
+    } else {
+        params.handle.sindex(cache_id);
+    }
+    params.entry = &entry;
+    ret = (pds_ret_t) ftl_table->get_with_handle(&params);
+    if (ret != PDS_RET_OK) {
+        PDS_TRACE_ERR("Failed to get cache handle for cache_id %u",
+                      cache_id);
+        return ret;
+    }
+    params.hash_valid = true;
+    params.hash_32b = cache_id;
+    params.movecb = ftl_table_entry_move;
     return (pds_ret_t) ftl_table->remove(&params);
 }
 
@@ -263,6 +356,7 @@ void
 pds_flow_cache_delete ()
 {
     ftl_table->destroy(ftl_table);
+    pds_flow_session_ctx_fini();
     return;
 }
 

@@ -150,6 +150,12 @@ pds_ret_t pds_flow_cache_entry_update(pds_flow_spec_t *spec);
 /// \remark    A valid flow key should be passed
 pds_ret_t pds_flow_cache_entry_delete(pds_flow_key_t *key);
 
+/// \brief     delete flow cache entry corresponding to flow info
+/// \param[out] info flow information
+/// \return    #SDK_RET_OK on success, failure status code on error
+/// \remark    A valid session info ID should be passed
+pds_ret_t pds_flow_cache_entry_delete_by_flow_info(pds_flow_info_t *info);
+
 /// \brief     iterate through flow cache table
 /// \param[in] iterate callback function
 ///  \param[in] iterate callback argument

@@ -192,6 +192,15 @@ Bucket::update_(Apictx *ctx) {
     // Update app data
     ctx->entry->copy_data(ctx->params->entry);
 
+    // Set the Handle
+    if (ctx->is_main()) {
+        ctx->params->handle.pindex(ctx->table_index);
+        FTL_TRACE_VERBOSE("pindex: %d", ctx->params->handle.pindex());
+    } else {
+        ctx->params->handle.sindex(ctx->table_index);
+        FTL_TRACE_VERBOSE("sindex: %d", ctx->params->handle.sindex());
+    }
+
     // New entry, write required.
     ctx->write_pending = true;
 
@@ -508,7 +517,14 @@ Bucket::defragment_(Apictx *ectx, Apictx *tctx) {
     }
     // second notifucation - move complete
     if (ectx->params->movecb) {
-        ectx->params->movecb(tctx->entry, old_handle, new_handle, true);
+
+        // Note: tctx->entry by this time has been zeroed out by move_().
+        // However, it has been copied to ectx but, if ectx itself had gone
+        // thru write_() above, it would have been byte swizzled. So to provide
+        // correct context to the 2nd move step, ectx has to be re-read.
+        ret = ectx->bucket->read_(ectx, true);
+        SDK_ASSERT(ret == SDK_RET_OK);
+        ectx->params->movecb(ectx->entry, old_handle, new_handle, true);
     }
     return SDK_RET_OK;
 }

@@ -49,5 +49,23 @@ combined_aging_test(test_vparam_ref_t vparam)
     return conntrack_res && sesion_res;
 }
 
+bool
+combined_aging_enable(test_vparam_ref_t vparam)
+{
+    pds_ret_t ret = vparam.expected_bool() ?
+                    pds_flow_age_hw_scanners_start() :
+                    pds_flow_age_hw_scanners_stop(true);
+    return ret == PDS_RET_OK;
+}
+
+/*
+ * Synonym for combined_aging_enable()
+ */
+bool
+aging_enable(test_vparam_ref_t vparam)
+{
+    return combined_aging_enable(vparam);
+}
+
 }    // namespace athena_app
 }    // namespace test

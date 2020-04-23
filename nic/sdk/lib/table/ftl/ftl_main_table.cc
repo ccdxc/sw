@@ -174,6 +174,11 @@ __label__ done;
 
     SDK_ASSERT(ctx->bucket->read_(ctx) == SDK_RET_OK);
 
+    // Some caller may reference the returned data to drive the next action.
+    if (ctx->params->entry) {
+        ctx->params->entry->copy_data(ctx->entry);
+    }
+
     auto ret = buckets_[ctx->table_index].remove_(ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket remove r:%d", ret);
 

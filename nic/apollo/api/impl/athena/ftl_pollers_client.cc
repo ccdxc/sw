@@ -11,6 +11,7 @@
 #include "ftl_dev_impl.hpp"
 #include "ftl_pollers_client.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
+#include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_conntrack.h"
 
 #include <rte_spinlock.h>
@@ -402,28 +403,39 @@ expiry_fn_dflt_fn(uint32_t expiry_id,
 {
     pds_ret_t   ret = PDS_RET_INVALID_ARG;
 
-    if (expiry_log_en) {
-        PDS_TRACE_DEBUG("entry %u type %d expired", expiry_id, expiry_type);
-    }
-
     switch (expiry_type) {
 
     case EXPIRY_TYPE_SESSION: {
+        pds_flow_info_t         info = {0};
         pds_flow_session_key_t  key = {0};
+        pds_ret_t               cache_ret;
+        pds_ret_t               session_ret;
+
+        if (expiry_log_en) {
+            PDS_TRACE_DEBUG("session_id %u expired", expiry_id);
+        }
 
         /*
-         * TODO: need to also delete at least the corresponding flow cache
-         * (hash) entry but to do that, the session entry must provide
-         * a back pointer to the flow cache index.
+         * After this, caller needs to also release the session ID to
+         * its ID management pool.
          */
+        info.spec.data.index_type = PDS_FLOW_SPEC_INDEX_SESSION;
+        info.spec.data.index = expiry_id;
+        cache_ret = pds_flow_cache_entry_delete_by_flow_info(&info);
+
         key.session_info_id = expiry_id;
         key.direction = HOST_TO_SWITCH | SWITCH_TO_HOST;
-        ret = pds_flow_session_info_delete(&key);
+        session_ret = pds_flow_session_info_delete(&key);
+        ret = cache_ret != PDS_RET_OK ? cache_ret : session_ret;
         break;
     }
 
     case EXPIRY_TYPE_CONNTRACK: {
         pds_conntrack_key_t     key = {0};
+
+        if (expiry_log_en) {
+            PDS_TRACE_DEBUG("conntrack_id %u expired", expiry_id);
+        }
 
         /*
          * Temporary: the following code is just a placeholder as the API
