@@ -59,7 +59,7 @@ func main() {
 
 	// Create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component: globals.Tsm}, logger)
+		Component: globals.Spyglass}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
