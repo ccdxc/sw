@@ -22,6 +22,8 @@ import { IMonitoringFwlogPolicy, MonitoringEventPolicySpec_format, MonitoringFwl
 import { TestingUtility } from '@app/common/TestingUtility';
 import * as _ from 'lodash';
 import { TrimUIFields } from '@sdk/v1/utils/utility';
+import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+
 
 
 describe('NewfwlogpolicyComponent', () => {
@@ -40,7 +42,8 @@ describe('NewfwlogpolicyComponent', () => {
         HttpClientTestingModule,
         FormsModule,
         NoopAnimationsModule,
-        PrimengModule
+        PrimengModule,
+        MaterialdesignModule
       ],
       providers: [
         ControllerService,
@@ -117,6 +120,9 @@ describe('NewfwlogpolicyComponent', () => {
         config: {
           prefix: 'prefix',
           'facility-override': MonitoringSyslogExportConfig_facility_override.local0,
+        },
+        'psm-target': {
+          enable: true
         }
       }
     };

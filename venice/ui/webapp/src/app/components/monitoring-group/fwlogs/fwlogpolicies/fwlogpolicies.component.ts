@@ -50,9 +50,10 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   };
 
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'Name', class: 'fwlogpolicies-column-name', sortable: false, width: 30 },
-    { field: 'spec.filter', header: 'Exports', class: 'fwlogpolicies-column-filter', sortable: false, width: 35 },
-    { field: 'spec.targets', header: 'Targets', class: 'fwlogpolicies-column-targets', sortable: false, width: 35 },
+    { field: 'meta.name', header: 'Name', class: 'fwlogpolicies-column-name', sortable: true, width: 20 },
+    { field: 'spec.psm-target.enable', header: 'Enabled PSM Targets', class: 'fwlogpolicies-column-targets', sortable: true, width: 20 },
+    { field: 'spec.filter', header: 'Exports', class: 'fwlogpolicies-column-filter', sortable: false, width: 30 },
+    { field: 'spec.targets', header: 'Targets', class: 'fwlogpolicies-column-targets', sortable: false, width: 30 },
   ];
   arrayDiffers: IterableDiffer<any>;
 

@@ -49,15 +49,24 @@
                          [options]="filterOptions"
                          (onChange)="onLogOptionChange($event)"></p-multiSelect>
         </span>
+
       </div>
+      <div fxFlex="noshrink" fxLayout="row" class="newfwlogpolicy-toggle-div" formGroupName="spec">
+        <div formGroupName="psm-target">
+          <mat-slide-toggle formControlName="enable" fxFlex='30px'
+                            class="newfwlogpolicy-input-slidetoggle">
+          </mat-slide-toggle>
+        </div>
+        <div class="newfwlogpolicy-toggle-text">Enable PSM Target
+        </div>
+      </div>
+
       <!-- Buffer -->
       <div fxFlex="10px" fxLayout="column">
       </div>
 
       <div fxFlex="noshrink" fxLayout="row">
-        <app-syslog #syslogComponent
-                    [syslogFieldsetWidth]="true"
-                    [syslogRequiredOption]="true"
+        <app-syslog #syslogComponent [syslogFieldsetWidth]="true" [syslogRequiredOption]="true"
                     [syslogExport]="newObject.$formGroup.get(['spec']).value"
                     targetTransport="<TCP/UDP>/<port>"
                     [maxTargets]="maxTargets" fxFlex="nogrow" fxLayout="column"></app-syslog>

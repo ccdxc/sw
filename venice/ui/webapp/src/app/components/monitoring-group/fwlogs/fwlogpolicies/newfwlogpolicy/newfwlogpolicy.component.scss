@@ -105,3 +105,16 @@ $vertical-gutter: 5px;
   margin-top: 14px;
   margin-left: 20px
 }
+
+.newfwlogpolicy-toggle-text {
+  margin-left: 15px;
+  word-wrap: break-all;
+}
+
+.newfwlogpolicy-toggle-div {
+  margin-top: 10px;
+}
+
+.newfwlogpolicy-input-slidetoggle {
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+}

@@ -94,8 +94,8 @@ export class Utility {
 
   public static HERO_CARD_THIRDVALUE_LENGTH: number = 15;
 
-  public static UNSUPPORTED_CATEGORIES = ['Diagnostics', 'Orchestration'];
-  public static UNSUPPORTED_KINDS = ['License', 'Module', 'StatsPolicy', 'Service', 'LbPolicy', 'Orchestration',  'VirtualRouter', 'IPAMPolicy', 'RoutingConfig', 'RouteTable', 'Bucket', 'Object', 'Orchestrator', 'SecurityGroup', 'Certificate', 'TrafficEncryptionPolicy'];
+  public static UNSUPPORTED_CATEGORIES = ['Diagnostics'];
+  public static UNSUPPORTED_KINDS = ['License', 'Module', 'StatsPolicy', 'Service', 'LbPolicy', 'VirtualRouter', 'IPAMPolicy', 'RoutingConfig', 'RouteTable', 'Bucket', 'Object',  'SecurityGroup', 'Certificate', 'TrafficEncryptionPolicy'];
 
   public static allColors = [
     '#97b8df',
@@ -1359,6 +1359,10 @@ export class Utility {
         return 'security/firewallprofiles';
       case 'Network':
         return 'network';
+      case 'Orchestrator':
+          return 'controller/vcenter';
+      case 'ArchiveRequest':
+            return 'monitoring/archive';
       default:
         return (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }

@@ -338,8 +338,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
       },
       (error) => {
       // 20202-04-03 Looking at the backend code, it seems that the License object is not created unless it's in cloud mode. If the object is missing, Venice assumes default features.
-       console.log('Cluster license is not found. It is not a cloud deployment');
-       // this._controllerService.invokeRESTErrorToaster('Error: Filed to get cluster license', error);
+      // VS-1451 console.log('Cluster license is not found. It is not a cloud deployment');
       }
     );
     this.subscriptions.push(sub);
