@@ -9,58 +9,6 @@ queue_name: baremetal
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
 
- e2e-linux-bm-regression-rdma:
-   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_reg"]
-   owners: ["email:rdma-dpath@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   max-duration: 12h
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-17
-       count: 2
-       resources:
-         servers:
-           - type: server-a
-           - type: hpe
-         nic-type: naples
-         constraints:
-           same-switch: true
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: linux
-
- e2e-linux-bm-regression-rdma-stress:
-   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_stress"]
-   owners: ["email:rdma-dpath@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   max-duration: 12h
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-17
-       count: 2
-       resources:
-         servers:
-           - type: server-a
-           - type: hpe
-         nic-type: naples
-         constraints:
-           same-switch: true
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: linux
-
  e2e-linux-bm-regression-eth-RHEL76:
    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity"]
    owners: ["email:dbarsky@pensando.io"]
@@ -116,30 +64,6 @@ e2e-targets:
    sub-area:
    feature:
    max-duration: 24h
-   build-dependencies:
-     - build-iris-arm
-     - build-iota
-   clusters:
-     - image: build-17
-       count: 2
-       resources:
-         servers:
-           - type: server-a
-           - type: hpe
-         nic-type: naples
-   provision:
-       username: vm
-       password: vm
-       vars:
-          BmOs: linux
-
- e2e-linux-bm-regression-storage:
-   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle storage_regr"]
-   owners: ["email:stg-dev@pensando.io"]
-   area:
-   sub-area:
-   feature:
-   max-duration: 12h
    build-dependencies:
      - build-iris-arm
      - build-iota

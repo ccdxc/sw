@@ -76,6 +76,7 @@ testbundles:
     regression:
         # Relative paths from iota/test/iris/testbundles/
         - rdma/rdma_reg.testbundle
+        - rdma/rdma_reg_dcqcn.testbundle
         - rdma/rdma_stress.testbundle
         - rdma/qos_reg.testbundle
         - classic/driver-features.testbundle

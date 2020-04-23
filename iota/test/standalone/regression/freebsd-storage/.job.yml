@@ -9,13 +9,13 @@ queue_name: baremetal
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
 
- e2e-freebsd-regression-eth:
-   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity"]
-   owners: ["email:anish@pensando.io"]
+ e2e-freebsd-regression-storage:
+   commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle storage_regr"]
+   owners: ["email:stg-dev@pensando.io"]
    area:
    sub-area:
    feature:
-   max-duration: 24h
+   max-duration: 12h
    build-dependencies:
      - build-iris-arm
      - build-iota
@@ -37,4 +37,4 @@ e2e-targets:
 
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
-  - /testcase_result_export/testsuite_transparent_basenet_results.json
+  - /testcase_result_export/testsuite_transparent_basenet_storage_results.json

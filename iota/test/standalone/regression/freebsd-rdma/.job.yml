@@ -1,0 +1,98 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+
+queue_name: baremetal
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
+e2e-targets:
+
+ e2e-freebsd-regression-rdma:
+   commands: ["sh", "-c", "make regression-rdma && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_reg"]
+   owners: ["email:rdma-dpath@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-14
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         server-type: server-d
+         nic-type: naples
+         constraints:
+           same-switch: true
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: freebsd
+          VmOs: freebsd
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ e2e-freebsd-regression-rdma-dcqcn:
+   commands: ["sh", "-c", "make regression-rdma-dcqcn && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_reg_dcqcn"]
+   owners: ["email:rdma-dpath@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-14
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         server-type: server-d
+         nic-type: naples
+         constraints:
+           same-switch: true
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: freebsd
+          VmOs: freebsd
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ e2e-freebsd-regression-rdma-stress:
+   commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_stress"]
+   owners: ["email:rdma-dpath@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-14
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         server-type: server-d
+         nic-type: naples
+         constraints:
+           same-switch: true
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: freebsd
+          VmOs: freebsd
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
+  - /testcase_result_export/testsuite_transparent_basenet_storage_results.json
