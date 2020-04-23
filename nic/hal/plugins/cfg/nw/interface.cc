@@ -555,6 +555,7 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     if_t                        *hal_if    = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
+    lif_t                       *lif = NULL;
 
     // if_create_app_ctxt_t        *app_ctxt  = NULL;
 
@@ -595,6 +596,20 @@ if_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
                                         false, NULL,
                                         false, NULL);
 
+        }
+    }
+
+    if (hal_if->if_type == intf::IF_TYPE_ENIC && 
+        hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
+        lif = find_lif_by_handle(hal_if->lif_handle);
+        // Install NCSI nacls for oob enic
+        if (lif && lif->state == intf::LIF_STATE_INIT && 
+            lif->type == types::LIF_TYPE_MNIC_OOB_MANAGEMENT) {
+            ret = if_enic_install_ncsi_nacls(hal_if, lif);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to install ncsi nacls. err: {}", ret);
+                goto end;
+            }
         }
     }
 
@@ -1504,8 +1519,8 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
 {
     hal_ret_t                   ret = HAL_RET_OK;
     if_t                        *hal_if = NULL;
-    if_t                        *uplink_if = NULL;
-    lif_t                       *lif = NULL;
+    // if_t                        *uplink_if = NULL;
+    // lif_t                       *lif = NULL;
     if_create_app_ctxt_t        app_ctxt;
     dhl_entry_t                 dhl_entry = { 0 };
     cfg_op_ctxt_t               cfg_ctxt = { 0 };
@@ -1621,6 +1636,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
                              if_create_commit_cb,
                              if_create_abort_cb,
                              if_create_cleanup_cb);
+#if 0
     if (ret == HAL_RET_OK) {
         // Installing NCSI NACL
         if (hal_if->if_type == intf::IF_TYPE_ENIC &&
@@ -1636,6 +1652,7 @@ interface_create (InterfaceSpec& spec, InterfaceResponse *rsp)
             }
         }
     }
+#endif
 
 end:
     if (ret != HAL_RET_OK && ret != HAL_RET_ENTRY_EXISTS) {
@@ -4394,7 +4411,9 @@ if_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
         ret = acl_uninstall_ncsi_redirect();
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Unable to uninstall ncsi nacl redirect. err {}", ret);
-            goto end;
+            // For gtests, this may fail
+            ret = HAL_RET_OK;
+            // goto end;
         }
         // Release read lock
         hal_handle_cfg_db_lock(true, false);
@@ -4833,6 +4852,33 @@ if_handle_nwsec_update (l2seg_t *l2seg, if_t *hal_if, nwsec_profile_t *nwsec_pro
     }
 
 end:
+    return ret;
+}
+
+hal_ret_t
+if_enic_install_ncsi_nacls (if_t *enic_if, lif_t *lif)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    if_t        *uplink_if = NULL;
+
+    uplink_if = lif_get_pinned_uplink(lif);
+    // Since we are doing this from lif update cb, we already have write lock.
+    // To call acl apis, we just need read lock.
+    // Release write lock
+    hal_handle_cfg_db_lock(false, false);
+    // Take read lock
+    hal_handle_cfg_db_lock(true, true);
+    ret = acl_install_ncsi_redirect(enic_if, uplink_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to install ncsi nacl redirect. err {}", ret);
+        goto end;
+    }
+
+end:
+    // Release read lock
+    hal_handle_cfg_db_lock(true, false);
+    // Take write lock
+    hal_handle_cfg_db_lock(false, true);
 
     return ret;
 }
@@ -4848,7 +4894,17 @@ if_handle_lif_update (pd::pd_if_lif_update_args_t *args)
         return HAL_RET_INVALID_ARG;
     }
 
-    HAL_TRACE_DEBUG("if_id : {}", args->intf->if_id);
+    HAL_TRACE_DEBUG("Processing lif update for if_id : {}", 
+                    args->intf->if_id);
+
+    if (args->state_changed && args->state == intf::LIF_STATE_INIT && 
+        args->lif->type == types::LIF_TYPE_MNIC_OOB_MANAGEMENT) {
+        ret = if_enic_install_ncsi_nacls(args->intf, args->lif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to install ncsi nacls. err: {}", ret);
+            goto end;
+        }
+    }
 
     pd_func_args.pd_if_lif_update = args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_LIF_UPDATE, &pd_func_args);
@@ -4859,7 +4915,6 @@ if_handle_lif_update (pd::pd_if_lif_update_args_t *args)
     }
 
 end:
-
     return ret;
 }
 

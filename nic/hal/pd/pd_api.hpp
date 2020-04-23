@@ -685,6 +685,8 @@ typedef struct pd_if_lif_update_args_s {
     bool            pinned_uplink_changed;
     bool            rx_en_changed;
     bool            rx_en;
+    bool            state_changed;
+    intf::LifState  state;
 } __PACK__ pd_if_lif_update_args_t;
 
 static inline void

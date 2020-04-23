@@ -56,6 +56,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
 
     spec->set_vlan_strip_en(lif->vlan_strip_en);
     spec->set_vlan_insert_en(lif->vlan_insert_en);
+    spec->set_state(lif->state);
     if (lif->pinned_uplink != HAL_HANDLE_INVALID) {
         if_t *hal_if = find_if_by_handle(lif->pinned_uplink);
         spec->mutable_pinned_uplink_if_key_handle()->set_interface_id(hal_if->if_id);
@@ -1157,6 +1158,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
                                                 receive_all_multicast();
     lif_populate_filters(lif, spec);
     lif->rx_en               = spec.rx_en();
+    lif->state               = spec.state();
 
     // RSS configuration
     lif->rss.type = spec.rss().type();
@@ -1432,6 +1434,9 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     // in change of original, it can be done here.
 
     // Update PI clone
+    if (app_ctxt->state_changed) {
+        lif_clone->state = spec->state();
+    }
     if (app_ctxt->vlan_strip_en_changed) {
         lif_clone->vlan_strip_en = spec->vlan_strip_en();
     }
@@ -1523,16 +1528,10 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     if (app_ctxt->vlan_strip_en_changed || app_ctxt->vlan_insert_en_changed
-        || app_ctxt->pinned_uplink_changed || app_ctxt->rx_en_changed) {
+        || app_ctxt->pinned_uplink_changed || app_ctxt->rx_en_changed ||
+        app_ctxt->state_changed) {
         // Triggers reprogramming of output mapping table for enicifs and uplinks
-        ret = lif_update_trigger_if(lif, app_ctxt->vlan_strip_en_changed,
-                                    app_ctxt->vlan_strip_en,
-                                    app_ctxt->vlan_insert_en_changed,
-                                    app_ctxt->vlan_insert_en,
-                                    app_ctxt->pinned_uplink_changed,
-                                    app_ctxt->new_pinned_uplink,
-                                    app_ctxt->rx_en_changed,
-                                    app_ctxt->rx_en);
+        ret = lif_update_trigger_if(lif, app_ctxt);
     }
 
     lif_populate_filters(lif_clone, *spec);
@@ -1786,18 +1785,25 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 
     app_ctxt->new_pinned_uplink = HAL_HANDLE_INVALID;
 
+    if (lif->state != spec->state()) {
+        HAL_TRACE_DEBUG("lif state changed {} =>{}",
+                        lif->state, spec->state());
+        app_ctxt->state_changed = true;
+        app_ctxt->state = spec->state();
+    }
+
     // Handle vlan_strip_en change
     if (lif->vlan_strip_en != spec->vlan_strip_en()) {
-        HAL_TRACE_DEBUG("{}:vlan_strip_en changed {} => {}",
-                        __FUNCTION__, lif->vlan_strip_en, spec->vlan_strip_en());
+        HAL_TRACE_DEBUG("vlan_strip_en changed {} => {}",
+                        lif->vlan_strip_en, spec->vlan_strip_en());
         app_ctxt->vlan_strip_en_changed = true;
         app_ctxt->vlan_strip_en = spec->vlan_strip_en();
     }
 
     // Handle vlan_insert_en change
     if (lif->vlan_insert_en != spec->vlan_insert_en()) {
-        HAL_TRACE_DEBUG("{}:vlan_insert_en changed {} => {}",
-                        __FUNCTION__, lif->vlan_insert_en, spec->vlan_insert_en());
+        HAL_TRACE_DEBUG("vlan_insert_en changed {} => {}",
+                        lif->vlan_insert_en, spec->vlan_insert_en());
         app_ctxt->vlan_insert_en_changed = true;
         app_ctxt->vlan_insert_en = spec->vlan_insert_en();
     }
@@ -1806,8 +1812,8 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 
     // Handle pinned uplink change
     if (lif->pinned_uplink != uplink_if_handle) {
-        HAL_TRACE_DEBUG("{}:pinned uplink hdl changed {} => {}",
-                        __FUNCTION__, lif->pinned_uplink, uplink_if_handle);
+        HAL_TRACE_DEBUG("pinned uplink hdl changed {} => {}",
+                        lif->pinned_uplink, uplink_if_handle);
         app_ctxt->pinned_uplink_changed = true;
         app_ctxt->new_pinned_uplink     = uplink_if_handle;
     }
@@ -1822,7 +1828,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
                  sizeof(lif->rss.indir));
     if (lif->rss.type != spec->rss().type() || cmp_key || cmp_indir) {
         app_ctxt->rss_config_changed = true;
-        HAL_TRACE_DEBUG("{}:rss configuration changed", __FUNCTION__);
+        HAL_TRACE_DEBUG("rss configuration changed");
     }
 
     if (spec->has_rx_policer()) {
@@ -1830,7 +1836,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
     }
     if (!qos_policer_spec_same(&lif->qos_info.rx_policer, &new_rx_policer)) {
         app_ctxt->rx_policer_changed = true;
-        HAL_TRACE_DEBUG("{}: rx policer configuration changed", __FUNCTION__);
+        HAL_TRACE_DEBUG("rx policer configuration changed");
     }
 
     if (spec->has_tx_policer()) {
@@ -1838,7 +1844,7 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
     }
     if (!qos_policer_spec_same(&lif->qos_info.tx_policer, &new_tx_policer)) {
         app_ctxt->tx_policer_changed = true;
-        HAL_TRACE_DEBUG("{}: tx policer configuration changed", __FUNCTION__);
+        HAL_TRACE_DEBUG("tx policer configuration changed");
     }
 
     if (lif->packet_filters.receive_promiscuous !=
@@ -2004,7 +2010,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.name_changed ||
           app_ctxt.status_changed ||
           app_ctxt.rx_en_changed ||
-          app_ctxt.rdma_sniff_en_changed)) {
+          app_ctxt.rdma_sniff_en_changed ||
+          app_ctxt.state_changed)) {
         HAL_TRACE_DEBUG("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }
@@ -2565,15 +2572,7 @@ lif_handle_egress_en (lif_t *lif, filter_key_t *key, bool egress_en)
 // handling lif update in corresponding IFs
 //------------------------------------------------------------------------------
 hal_ret_t
-lif_update_trigger_if (lif_t *lif,
-                       bool vlan_strip_en_changed,
-                       bool vlan_strip_en,
-                       bool vlan_insert_en_changed,
-                       bool vlan_insert_en,
-                       bool pinned_uplink_changed,
-                       hal_handle_t pinned_uplink,
-                       bool rx_en_changed,
-                       bool rx_en)
+lif_update_trigger_if (lif_t *lif, lif_update_app_ctxt_t *app_ctxt)
 {
     hal_ret_t                  ret     = HAL_RET_OK;
     dllist_ctxt_t              *lnode  = NULL;
@@ -2600,14 +2599,16 @@ lif_update_trigger_if (lif_t *lif,
         }
         args.intf = hal_if;
         args.lif = lif;
-        args.vlan_strip_en_changed = vlan_strip_en_changed;
-        args.vlan_strip_en = vlan_strip_en;
-        args.vlan_insert_en_changed = vlan_insert_en_changed;
-        args.vlan_insert_en = vlan_insert_en;
-        args.pinned_uplink_changed = pinned_uplink_changed;
-        args.pinned_uplink = pinned_uplink;
-        args.rx_en_changed = rx_en_changed;
-        args.rx_en         = rx_en;
+        args.vlan_strip_en_changed = app_ctxt->vlan_strip_en_changed;
+        args.vlan_strip_en = app_ctxt->vlan_strip_en;
+        args.vlan_insert_en_changed = app_ctxt->vlan_insert_en_changed;
+        args.vlan_insert_en = app_ctxt->vlan_insert_en;
+        args.pinned_uplink_changed = app_ctxt->pinned_uplink_changed;
+        args.pinned_uplink = app_ctxt->new_pinned_uplink;
+        args.rx_en_changed = app_ctxt->rx_en_changed;
+        args.rx_en         = app_ctxt->rx_en;
+        args.state_changed = app_ctxt->state_changed;
+        args.state         = app_ctxt->state;
         if_handle_lif_update(&args);
     }
 
@@ -2748,10 +2749,11 @@ lif_print(lif_t *lif)
         return;
     }
 
-    buf.write("lif id:{}, vlan_strip_en:{}, vlan_insert_en:{}, "
+    buf.write("lif id:{}, state: {}, vlan_strip_en:{}, vlan_insert_en:{}, "
               "pinned_uplink:{}, enable_rdma:{}, enable_nvme:{}, "
               "hal_handle:{}, num_enics:{} ",
-              lif->lif_id, lif->vlan_strip_en, lif->vlan_insert_en,
+              lif->lif_id, lif->state, lif->vlan_strip_en, 
+              lif->vlan_insert_en,
               lif->pinned_uplink, lif->enable_rdma, lif->enable_nvme,
               lif->hal_handle,
               dllist_count(&(lif->if_list_head)));

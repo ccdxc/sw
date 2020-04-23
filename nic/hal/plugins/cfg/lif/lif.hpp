@@ -98,6 +98,7 @@ typedef struct lif_s {
     char                name[LIF_NAME_LEN]; // LIF's name
     types::LifType      type;            // lif type
     intf::IfStatus      admin_status;    // admin status
+    intf::LifState      state;
     bool                vlan_strip_en;   // vlan strip enable
     bool                vlan_insert_en;  // if en, ingress vlan is in p4plus_to_p4 dr
     bool                is_management;   // set for OOB MNIC, int_mgmt MNIC and host management NIC
@@ -173,6 +174,7 @@ typedef struct lif_update_app_ctxt_s {
     uint64_t     rx_policer_changed:1;
     uint64_t     tx_policer_changed:1;
     uint64_t     rdma_sniff_en_changed:1;
+    uint64_t     state_changed:1;
     bool         rdma_sniff_en;
     uint64_t     vlan_insert_en;
     hal_handle_t new_pinned_uplink;
@@ -183,6 +185,7 @@ typedef struct lif_update_app_ctxt_s {
     bool         mcast_filters_changed:1;
     bool         rx_en_changed:1;
     bool         rx_en:1;
+    intf::LifState state;
 } __PACK__ lif_update_app_ctxt_t;
 
 typedef struct lif_sched_control_cb_ctxt_s {
@@ -220,15 +223,7 @@ extern lif_t *find_lif_by_id(lif_id_t lif_id);
 extern lif_t *find_lif_by_handle(hal_handle_t handle);
 void lif_print_ifs(lif_t *lif);
 void lif_print(lif_t *lif);
-hal_ret_t lif_update_trigger_if(lif_t *lif,
-                                bool vlan_strip_en_changed,
-                                bool vlan_strip_en,
-                                bool vlan_insert_en_changed,
-                                bool vlan_insert_en,
-                                bool pinned_uplink_changed,
-                                hal_handle_t pinned_uplink,
-                                bool rx_en_changed,
-                                bool rx_en);
+hal_ret_t lif_update_trigger_if(lif_t *lif, lif_update_app_ctxt_t *app_ctxt);
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
 void lif_spec_dump (LifSpec& spec);

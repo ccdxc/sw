@@ -200,6 +200,7 @@ devapi_lif::init_(lif_info_t *info)
     vrf_ = NULL;
     enic_ = NULL;
     native_l2seg_ = NULL;
+    state_ = intf::LIF_STATE_CREATE;
 
     return SDK_RET_OK;
 }
@@ -706,6 +707,24 @@ devapi_lif::del_macvlan(mac_t mac, vlan_t vlan, bool update_db, bool add_failure
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_lif::upd_state(intf::LifState state)
+{
+    sdk_ret_t status = SDK_RET_OK;
+
+    if (state == state_) {
+        NIC_LOG_WARN("state: {}. No change in state. Nop", state);
+        return SDK_RET_OK;
+    }
+
+    state_ = state;
+    if (is_oobmnic()) {
+        status = lif_halupdate();
+    }
+
+    return status;
 }
 
 sdk_ret_t
@@ -1350,6 +1369,7 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     req->mutable_key_or_handle()->set_lif_id(get_id());
     req->set_name(lif_info->name);
     req->set_type((types::LifType)lif_info->type);
+    req->set_state(state_);
     req->set_hw_lif_id(lif_info->lif_id);
     req->mutable_pinned_uplink_if_key_handle()->
         set_interface_id(get_uplink() ? get_uplink()->get_id() : 0);

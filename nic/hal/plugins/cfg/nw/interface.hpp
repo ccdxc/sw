@@ -463,6 +463,7 @@ if_t * if_pick_uplink_oper_up(void);
 hal_ret_t hal_if_repin_inb_enics(void);
 hal_ret_t port_update_type_admin_state(port_type_t port_type, 
                                        port_admin_state_t admin_state);
+hal_ret_t if_enic_install_ncsi_nacls(if_t *enic_if, lif_t *lif);
 
 
 }    // namespace hal

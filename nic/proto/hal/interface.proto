@@ -141,6 +141,12 @@ message McastPktFilter {
     bool  ipv6_neigh_sol    = 6;
 }
 
+enum LifState {
+    LIF_STATE_NONE    = 0;   
+    LIF_STATE_CREATE  = 1;  // Create Lif
+    LIF_STATE_INIT    = 2;  // Init Lif
+}
+
 // LIF object
 message LifSpec {
   option (delphi.update_event) = true;
@@ -179,8 +185,9 @@ message LifSpec {
   McastPktFilter                     mcast_pkt_filter            = 31;
   bool                               rx_en                       = 32;   // SWM: Applicable only for SWM LIFs
   fixed64                            mac_address                 = 33;   // LIF's mac
-  repeated kh.MirrorSessionKeyHandle TxMirrorSessions            = 34 [(gogoproto.moretags) = "venice:ref"]; // Tx MirrorSessions
-  repeated kh.MirrorSessionKeyHandle RxMirrorSessions            = 35 [(gogoproto.moretags) = "venice:ref"]; // Rx MirrorSessions
+  LifState                           state                       = 34;
+  repeated kh.MirrorSessionKeyHandle TxMirrorSessions            = 35 [(gogoproto.moretags) = "venice:ref"]; // Tx MirrorSessions
+  repeated kh.MirrorSessionKeyHandle RxMirrorSessions            = 36 [(gogoproto.moretags) = "venice:ref"]; // Rx MirrorSessions
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs
