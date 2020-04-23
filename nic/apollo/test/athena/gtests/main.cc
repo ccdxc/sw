@@ -215,6 +215,78 @@ sdk_ret_t send_packet(const char *out_pkt_descr, uint8_t *out_pkt, uint16_t out_
     return SDK_RET_OK;
 }
 
+sdk_ret_t send_packet_wmask(const char *out_pkt_descr, uint8_t *out_pkt, uint16_t out_pkt_len, uint32_t out_port,
+			    uint8_t *in_pkt, uint16_t in_pkt_len, uint32_t in_port, uint32_t mask_start_pos)
+{
+    uint32_t                port;
+    uint32_t                cos = 0;
+    std::vector<uint8_t>    ipkt;
+    std::vector<uint8_t>    opkt;
+    std::vector<uint8_t>    epkt;
+
+    if (out_pkt_descr)
+        printf("Test with Pkt:%s\n", out_pkt_descr);
+
+    opkt.resize(out_pkt_len);
+    memcpy(opkt.data(), out_pkt, out_pkt_len);
+
+    printf("Sending Packet of len %d B on port: %d\n", out_pkt_len, out_port);
+     
+    //dump_pkt(ipkt);
+
+    step_network_pkt(opkt, out_port);
+
+    get_next_pkt(ipkt, port, cos);
+
+    printf("Received Packet of len %lu B on port: %d\n", ipkt.size(), port);
+    //dump_pkt(opkt);
+    //mask 2 bytes of received packet starting from mask_start_pos
+    if(ipkt.size() >= (mask_start_pos + 2)) {
+	for(int i=0; i<2; i++) {
+	  printf("Masking byte 0x(%02x) at position (%u)\n", ipkt[i+mask_start_pos], (i+mask_start_pos));
+	  ipkt[i+mask_start_pos] = 0x00;
+	}
+      }
+
+    if (in_pkt && in_pkt_len) {
+        epkt.resize(in_pkt_len);
+        memcpy(epkt.data(), in_pkt, in_pkt_len);
+        if (port != in_port) {
+            printf("Input port (%u) does not match the expected port (%u)\n", port, in_port);
+            printf("Sent Packet:\n");
+            dump_pkt(opkt);
+            printf("Expected Packet:\n");
+            dump_pkt(epkt);
+            printf("Received Packet:\n");
+            dump_pkt(ipkt);
+            return SDK_RET_ERR;
+        }
+        if (in_pkt_len != ipkt.size()) {
+            printf("Output packet size (%lu B) does not match the expected packet size (%u B)\n",
+                    ipkt.size(), in_pkt_len);
+            printf("Sent Packet:\n");
+            dump_pkt(opkt);
+            printf("Expected Packet:\n");
+            dump_pkt(epkt);
+            printf("Received Packet:\n");
+            dump_pkt(ipkt);
+            return SDK_RET_ERR;
+        }
+
+        if (ipkt != epkt) {
+            printf("Output packet does not match the expected packet\n");
+            printf("Sent Packet:\n");
+            dump_pkt(opkt);
+            printf("Expected Packet:\n");
+            dump_pkt(epkt);
+            printf("Received Packet:\n");
+            dump_pkt(ipkt);
+            return SDK_RET_ERR;
+        }
+    }
+    return SDK_RET_OK;
+}
+
 
 uint8_t     g_h_port = UPLINK_HOST;
 uint8_t     g_s_port = UPLINK_SWITCH;

@@ -1,3 +1,4 @@
+
 /*****************************************************************************/
 /* Inter pipe : ingress pipeline                                             */
 /*****************************************************************************/
@@ -53,8 +54,9 @@ control egress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
 
   @name(".p4i_to_p4e_state") action p4i_to_p4e_state_a() {
     metadata.cntrl.direction = hdr.p4i_to_p4e_header.direction;
-    metadata.cntrl.flow_miss = hdr.p4i_to_p4e_header.flow_miss;
+    //    metadata.cntrl.flow_miss = hdr.p4i_to_p4e_header.flow_miss;
      if(hdr.p4i_to_p4e_header.isValid()) {
+       metadata.cntrl.update_checksum = hdr.p4i_to_p4e_header.update_checksum;
        if(hdr.p4i_to_p4e_header.flow_miss == FALSE) {
 	 if(hdr.p4i_to_p4e_header.index_type == FLOW_CACHE_INDEX_TYPE_SESSION_INFO) {
 	 
@@ -62,11 +64,16 @@ control egress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
 	   metadata.cntrl.session_index_valid = TRUE;
 	 }
 	 if(hdr.p4i_to_p4e_header.index_type == FLOW_CACHE_INDEX_TYPE_CONNTRACK_INFO) {
-	   metadata.cntrl.conntrack_index = hdr.p4i_to_p4e_header.index;
+	   metadata.cntrl.conntrack_index = hdr.p4i_to_p4e_header.index[21:0];
 	   metadata.cntrl.conntrack_index_valid = TRUE;
 	 }
+	 
+	 metadata.cntrl.l2_session_index = hdr.p4i_to_p4e_header.l2_index;
+	 metadata.cntrl.l2_session_index_valid = TRUE;
+	
        }
      }
+     
   }
 
 
@@ -103,10 +110,14 @@ control egress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
 	  hdr.p4_to_p4plus_classic_nic_ip.ip_sa = (bit<128>)hdr.ip_1.ipv4.srcAddr;
 	  hdr.p4_to_p4plus_classic_nic_ip.ip_da = (bit<128>)hdr.ip_1.ipv4.dstAddr;
 	  if(hdr.l4_u.tcp.isValid()) {
-	    hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV4_TCP;	    
+	    hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV4_TCP;
+	    hdr.p4_to_p4plus_classic_nic.l4_sport = hdr.l4_u.tcp.srcPort;
+	    hdr.p4_to_p4plus_classic_nic.l4_dport = hdr.l4_u.tcp.dstPort;
 	  } else {
-	    if(hdr.l4_u.udp.isValid()) {
-	      hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV4_UDP;	    
+	    if(hdr.udp.isValid()) {
+	      hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV4_UDP;		    hdr.p4_to_p4plus_classic_nic.l4_sport = hdr.udp.srcPort;
+	      hdr.p4_to_p4plus_classic_nic.l4_dport = hdr.udp.dstPort;
+     
 	    } else {
 	      hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV4;	    
 	    }
@@ -116,10 +127,15 @@ control egress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
 	  hdr.p4_to_p4plus_classic_nic_ip.ip_sa = hdr.ip_1.ipv6.srcAddr;
 	  hdr.p4_to_p4plus_classic_nic_ip.ip_da = hdr.ip_1.ipv6.dstAddr;
 	  if(hdr.l4_u.tcp.isValid()) {
-	    hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV6_TCP;	    
+	    hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV6_TCP;
+	    hdr.p4_to_p4plus_classic_nic.l4_sport = hdr.l4_u.tcp.srcPort;
+	    hdr.p4_to_p4plus_classic_nic.l4_dport = hdr.l4_u.tcp.dstPort;
+	    
 	  } else {
-	    if(hdr.l4_u.udp.isValid()) {
-	      hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV6_UDP;	    
+	    if(hdr.udp.isValid()) {
+	      hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV6_UDP;		    hdr.p4_to_p4plus_classic_nic.l4_sport = hdr.udp.srcPort;
+	      hdr.p4_to_p4plus_classic_nic.l4_dport = hdr.udp.dstPort;
+     
 	    } else {
 	      hdr.p4_to_p4plus_classic_nic.pkt_type = CLASSIC_NIC_PKT_TYPE_IPV6;	    
 	    }

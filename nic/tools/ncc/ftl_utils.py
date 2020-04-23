@@ -276,7 +276,7 @@ memset(${field_name}, ${field_arg}, ${arr_len});\
 
 get_field_template_1 = Template(
 """\
-${field_arg} |= (${field_name} << ${shift}) & ${mask_str};\
+${field_arg} |= ((${field_name} & ${mask_str}) << ${shift});\
 """)
 
 get_field_template_2 = Template(

@@ -44,7 +44,7 @@ control flow_lookup(inout cap_phv_intr_global_h intr_global,
 
         if (__table_hit()) {
 	    hdr.ingress_recirc_header.flow_done = TRUE;
-	    hdr.p4i_to_p4e_header.index = idx;
+	    hdr.p4i_to_p4e_header.index = (bit<24>)idx;
 	    hdr.p4i_to_p4e_header.index_type = idx_type;
 	    hdr.p4i_to_p4e_header.direction = metadata.cntrl.direction;
 	    metadata.cntrl.index = idx;

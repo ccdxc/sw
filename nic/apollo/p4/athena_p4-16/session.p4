@@ -57,14 +57,15 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 						       ) {
       if(valid_flag == TRUE) {
 	timestamp = intr_global.timestamp[47:30];
-	unlock();
+	__unlock();
 	metadata.cntrl.skip_flow_log = skip_flow_log;
 	if(conntrack_id != 0) {
 	    metadata.cntrl.conntrack_index = conntrack_id;
 	    metadata.cntrl.conntrack_index_valid = TRUE;
 	}
 	
-	if(metadata.cntrl.direction == TX_FROM_HOST) {
+	//	if(metadata.cntrl.direction == TX_FROM_HOST) {
+	if(hdr.p4i_to_p4e_header.direction == TX_FROM_HOST) {
 	  if(metadata.cntrl.l2_vnic == FALSE) {
 	    if(h2s_session_rewrite_id != 0) {
 	      metadata.cntrl.session_rewrite_id_valid = TRUE;      
@@ -139,7 +140,8 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
     
 	}
 
-	if(metadata.cntrl.direction == RX_FROM_SWITCH) {
+	//	if(metadata.cntrl.direction == RX_FROM_SWITCH) {
+	if(hdr.p4i_to_p4e_header.direction == RX_FROM_SWITCH) {
 	  if(metadata.cntrl.l2_vnic == FALSE) {
 	    if(s2h_session_rewrite_id != 0) {
 	      metadata.cntrl.session_rewrite_id_valid = TRUE;  				     
@@ -221,17 +223,136 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
       @name(".session_info")
 	table session_info {
         key = {
-	metadata.cntrl.session_index  : exact;
+	  // metadata.cntrl.session_index  : exact;
+	  //	hdr.p4i_to_p4e_header.index : exact  @name(".control.metadata.session_index");
+	hdr.p4i_to_p4e_header.index : table_index  @name(".control.metadata.session_index");
         } 
         actions  = {
 	  session_info_a;
         }
         size  = SESSION_TABLE_SIZE;
 	default_action = session_info_a; 
-        stage = 1;
+        stage = 0;
         placement = HBM;
     }
 
+    @name(".l2_session_info")
+    action l2_session_info_a(
+				        bit<1>  skip_flow_log,
+				        bit<22> conntrack_id,
+				 @__ref bit<18> timestamp,
+				        bit<48> smac,
+				 bit<16> h2s_epoch_vnic_value,
+				 bit<20> h2s_epoch_vnic_id,
+				 bit<16> h2s_epoch_mapping_value,
+				 bit<20> h2s_epoch_mapping_id,
+				 bit<13>     h2s_throttle_bw1_id,
+				 bit<13>     h2s_throttle_bw2_id,
+				        bit<9>     h2s_vnic_statistics_id,
+				        bit<32>     h2s_vnic_statistics_mask,
+				        bit<9>     h2s_vnic_histogram_packet_len_id,
+				        bit<9>     h2s_vnic_histogram_latency_id,
+				        bit<8>     h2s_slow_path_tcp_flags_match,
+				 bit<22> h2s_session_rewrite_id,
+				 bit<3> h2s_egress_action,
+				 bit<10> h2s_allowed_flow_state_bitmap,
+
+
+				 bit<16> s2h_epoch_vnic_value,
+				 bit<20> s2h_epoch_vnic_id,
+				 bit<16> s2h_epoch_mapping_value,
+				 bit<20> s2h_epoch_mapping_id,
+				 bit<13>     s2h_throttle_bw1_id,
+				 bit<13>     s2h_throttle_bw2_id,
+				        bit<9>     s2h_vnic_statistics_id,
+				        bit<32>     s2h_vnic_statistics_mask,
+				        bit<9>     s2h_vnic_histogram_packet_len_id,
+				        bit<9>     s2h_vnic_histogram_latency_id,
+				        bit<8>     s2h_slow_path_tcp_flags_match,
+				 bit<22> s2h_session_rewrite_id,
+				 bit<3> s2h_egress_action,
+					bit<10> s2h_allowed_flow_state_bitmap,
+				        bit<1>  valid_flag
+
+						       ) {
+      if(valid_flag == TRUE) {
+	timestamp = intr_global.timestamp[47:30];
+	__unlock();
+	
+	if(metadata.cntrl.direction == TX_FROM_HOST) {
+	  if(metadata.cntrl.l2_vnic == TRUE) {
+	    if(h2s_session_rewrite_id != 0) {
+	      metadata.cntrl.session_rewrite_id_valid = TRUE;      
+	      metadata.cntrl.session_rewrite_id = h2s_session_rewrite_id;      
+					     
+	    } else {
+	      metadata.cntrl.flow_miss = TRUE;
+	      return;
+	    }
+	  }
+	  	    
+	  if(h2s_epoch_vnic_id != 0) {
+	    metadata.cntrl.l2_epoch1_id = h2s_epoch_vnic_id;
+	    metadata.cntrl.l2_epoch1_value = h2s_epoch_vnic_value;
+	    metadata.cntrl.l2_epoch1_id_valid = TRUE;
+	  }
+
+	  if(h2s_epoch_mapping_id != 0) {
+	    metadata.cntrl.l2_epoch2_id = h2s_epoch_mapping_id;
+	    metadata.cntrl.l2_epoch2_value = h2s_epoch_mapping_value;
+	    metadata.cntrl.l2_epoch2_id_valid = TRUE;
+	  }
+
+	}
+
+	if(metadata.cntrl.direction == RX_FROM_SWITCH) {
+	  if(metadata.cntrl.l2_vnic == TRUE) {
+	    if(s2h_session_rewrite_id != 0) {
+	      metadata.cntrl.session_rewrite_id_valid = TRUE;  				     
+	      metadata.cntrl.session_rewrite_id = s2h_session_rewrite_id;
+					     
+	    } else {
+	      metadata.cntrl.flow_miss = TRUE;
+	      return;
+	    }
+	  }
+
+	  if(s2h_epoch_vnic_id != 0) {
+	    metadata.cntrl.l2_epoch1_id = s2h_epoch_vnic_id;
+	    metadata.cntrl.l2_epoch1_value = s2h_epoch_vnic_value;
+	    metadata.cntrl.l2_epoch1_id_valid = TRUE;
+	  }
+
+	  if(s2h_epoch_mapping_id != 0) {
+	    metadata.cntrl.l2_epoch2_id = s2h_epoch_mapping_id;
+	    metadata.cntrl.l2_epoch2_value = s2h_epoch_mapping_value;
+	    metadata.cntrl.l2_epoch2_id_valid = TRUE;
+	  }
+
+
+	}
+
+      } else {
+	metadata.cntrl.flow_miss = TRUE;
+      }	
+    }
+
+      @hbm_table
+    @capi_bitfields_struct
+      @name(".l2_session_info")
+	table l2_session_info {
+        key = {
+	  //	metadata.cntrl.l2_session_index  : exact;
+	   hdr.p4i_to_p4e_header.l2_index  : table_index;
+        } 
+        actions  = {
+	  l2_session_info_a;
+        }
+        size  = SESSION_TABLE_SIZE;
+	default_action = l2_session_info_a; 
+        stage = 0;
+        placement = HBM;
+    }
 
 #define SESSION_REWRITE_COMMON_FIELDS       bit<1> strip_outer_encap_flag, \
                                             bit<1> strip_l2_header_flag, \
@@ -266,6 +387,8 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	   hdr.mpls_src.setInvalid();
 	   hdr.mpls_dst.setInvalid();
 	   hdr.mpls_label3_1.setInvalid();
+	   hdr.geneve_1.setInvalid();
+	   hdr.geneve_options_blob.setInvalid();
 	      
 	 }
        }
@@ -484,6 +607,27 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
      session_rewrite_encap_l2_common(add_vlan_tag_flag,dmac, smac, vlan, hdr.ethernet_0.etherType);     
    }
 
+   @name(".session_rewrite_insert_ctag") 
+     action session_rewrite_insert_ctag( bit<1> valid_flag,
+					 bit<12> vlan) {
+
+     if (valid_flag == FALSE) {
+       metadata.cntrl.flow_miss = TRUE;
+       return;
+     }
+     hdr.ctag_2.setValid();
+     hdr.ctag_2.vid = vlan;
+     hdr.ethernet_2.etherType = ETHERTYPE_VLAN;
+
+     if(hdr.ip_2.ipv4.isValid()) {
+       hdr.ctag_2.etherType = ETHERTYPE_IPV4;
+     }
+     if(hdr.ip_2.ipv6.isValid()) {
+       hdr.ctag_2.etherType = ETHERTYPE_IPV6;
+     }
+     
+   }
+
    @name(".session_rewrite_encap_ip") 
      action session_rewrite_encap_ip(SESSION_REWRITE_ENCAP_IP_FIELDS) {
 
@@ -519,9 +663,11 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 
 	
 	 hdr.mpls_label1_0.setValid();
-	 //hdr.mpls_label1_0.label = mpls_label1;
-	 hdr.mpls_label1_0.label_b20_b4 = mpls_label1[19:4];
-	 hdr.mpls_label1_0.label_b3_b0 = mpls_label1[3:0];
+	 hdr.mpls_label1_0.label = mpls_label1;
+	 //hdr.mpls_label1_0.label_b20_b4 = mpls_label1[19:4];
+	 //hdr.mpls_label1_0.label_b20_b12 = mpls_label1[19:12];
+	 //hdr.mpls_label1_0.label_b11_b4 = mpls_label1[11:4];
+	 //hdr.mpls_label1_0.label_b3_b0 = mpls_label1[3:0];
 	 hdr.mpls_label1_0.ttl = 64;
 	 if(hdr.ctag_1.isValid()) {
 	   hdr.l4_0.udp.len = hdr.p4i_to_p4e_header.packet_len -6;// 8 UDP + 4 MPLS0 - 14 L1ETH -4 L1CTAG
@@ -533,9 +679,11 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	   hdr.mpls_label1_0.bos = 1;	   
 	 } else {
 	   hdr.mpls_label2_0.setValid();
-	   //  hdr.mpls_label2_0.label = mpls_label2;
-	   hdr.mpls_label2_0.label_b20_b4 = mpls_label2[19:4];
-	   hdr.mpls_label2_0.label_b3_b0 = mpls_label2[3:0];
+	   hdr.mpls_label2_0.label = mpls_label2;
+	   //hdr.mpls_label2_0.label_b20_b4 = mpls_label2[19:4];
+	   //hdr.mpls_label2_0.label_b20_b12 = mpls_label2[19:12];
+	   //hdr.mpls_label2_0.label_b11_b4 = mpls_label2[11:4];
+	   //hdr.mpls_label2_0.label_b3_b0 = mpls_label2[3:0];
 
 	   hdr.mpls_label2_0.ttl = 64;
 	   //	   hdr.ip_0.ipv4.totalLen = hdr.ip_0.ipv4.totalLen + 4;
@@ -545,9 +693,11 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	     hdr.mpls_label2_0.bos = 1;	   
 	   } else {
 	     hdr.mpls_label3_0.setValid();
-	     //hdr.mpls_label3_0.label = mpls_label3;
-	     hdr.mpls_label3_0.label_b20_b4 = mpls_label3[19:4];
-	     hdr.mpls_label3_0.label_b3_b0 = mpls_label3[3:0];
+	     hdr.mpls_label3_0.label = mpls_label3;
+	     // hdr.mpls_label3_0.label_b20_b4 = mpls_label3[19:4];
+	     //hdr.mpls_label3_0.label_b20_b12 = mpls_label3[19:12];
+	     //hdr.mpls_label3_0.label_b11_b4 = mpls_label3[11:4];
+	     //hdr.mpls_label3_0.label_b3_b0 = mpls_label3[3:0];
 	     
 	     hdr.mpls_label3_0.ttl = 64;
 	     //	     hdr.ip_0.ipv4.totalLen = hdr.ip_0.ipv4.totalLen + 4;
@@ -584,28 +734,88 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 					  
 ) {
       session_rewrite_encap_common(SESSION_REWRITE_ENCAP_COMMON_FIELDS_ARGS);
-	 hdr.ip_0.ipv4.setValid();
-	 //	 hdr.ip_0.ipv4.ttl = ip_ttl;
-	 hdr.ip_0.ipv4.srcAddr = ipv4_sa;
-	 hdr.ip_0.ipv4.dstAddr = ipv4_da;
+      session_rewrite_encap_l2_common(add_vlan_tag_flag, dmac, smac, vlan, ETHERTYPE_IPV4);     
+      metadata.csum.ip_hdr_len_0        = PKT_IPV4_HDRLEN_0;
+      ipv4HdrCsumDepEg_0.enable_update();
+      hdr.geneve_0.setValid();
+      hdr.geneve_0.oam = 0; //TODO
+      hdr.geneve_0.protoType = ETHERTYPE_ETHERNET;
+      hdr.geneve_0.vni = vni;
+      hdr.geneve_0.optLen = 0;
 
-	 hdr.l4_0.udp.setValid();
-	 hdr.l4_0.udp.srcPort = udp_sport;
-	 hdr.l4_0.udp.dstPort = udp_dport;
-	 hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
+      if(source_slot_id != 0) {
+	hdr.geneve_option_srcSlotId.setValid();
+	hdr.geneve_option_srcSlotId.type = GENEVE_OPTION_SRC_SLOT_ID;
+	hdr.geneve_option_srcSlotId.Lenght = 1;
+	hdr.geneve_option_srcSlotId.srcSlotId = source_slot_id;
+	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
+      } 
 
-	 metadata.scratch.vni = vni;
-	 metadata.scratch.source_slot_id = source_slot_id;
-	 metadata.scratch.destination_slot_id = destination_slot_id;
-	 metadata.scratch.sg_id = sg_id1;
-	 metadata.scratch.sg_id = sg_id2;
-	 metadata.scratch.sg_id = sg_id3;
-	 metadata.scratch.sg_id = sg_id4;
-	 metadata.scratch.sg_id = sg_id5;
-	 metadata.scratch.sg_id = sg_id6;
-	 metadata.scratch.originator_physical_ip = originator_physical_ip;
-	 
-	 
+      if(destination_slot_id != 0) {
+	hdr.geneve_option_dstSlotId.setValid();
+	hdr.geneve_option_dstSlotId.type = GENEVE_OPTION_DST_SLOT_ID;
+	hdr.geneve_option_dstSlotId.Lenght = 1;
+	hdr.geneve_option_dstSlotId.dstSlotId = destination_slot_id;	
+	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
+      } 
+
+      if(originator_physical_ip != 0) {
+	hdr.geneve_option_origPhysicalIp.setValid();
+	hdr.geneve_option_origPhysicalIp.type = GENEVE_OPTION_ORIGINATOR_PHYSICAL_IP;
+	hdr.geneve_option_origPhysicalIp.Lenght = 1;
+	hdr.geneve_option_origPhysicalIp.origPhysicalIp = originator_physical_ip;	
+	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
+      } 
+
+      if(sg_id6 != 0 || sg_id5 != 0) {
+	hdr.geneve_option_srcSecGrpList_3.setValid();
+	if(sg_id6 != 0) { 
+	  hdr.geneve_option_srcSecGrpList_3.type = GENEVE_OPTION_SRC_SECURITY_GRP_LIST_EVEN;
+	} else {
+	  hdr.geneve_option_srcSecGrpList_3.type = GENEVE_OPTION_SRC_SECURITY_GRP_LIST_ODD;
+	}
+	hdr.geneve_option_srcSecGrpList_3.Lenght = 3;
+	hdr.geneve_option_srcSecGrpList_3.srcSecGrp0 = sg_id1;	
+	hdr.geneve_option_srcSecGrpList_3.srcSecGrp1 = sg_id2;	
+	hdr.geneve_option_srcSecGrpList_3.srcSecGrp2 = sg_id3;	
+	hdr.geneve_option_srcSecGrpList_3.srcSecGrp3 = sg_id4;	
+	hdr.geneve_option_srcSecGrpList_3.srcSecGrp4 = sg_id5;	
+	hdr.geneve_option_srcSecGrpList_3.srcSecGrp5 = sg_id6;	
+	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 4;	
+      } else if (sg_id4 != 0 || sg_id3 != 0) {
+	hdr.geneve_option_srcSecGrpList_2.setValid();
+	if(sg_id4 != 0) { 
+	  hdr.geneve_option_srcSecGrpList_2.type = GENEVE_OPTION_SRC_SECURITY_GRP_LIST_EVEN;
+	} else {
+	  hdr.geneve_option_srcSecGrpList_2.type = GENEVE_OPTION_SRC_SECURITY_GRP_LIST_ODD;
+	}
+	hdr.geneve_option_srcSecGrpList_2.Lenght = 2;
+	hdr.geneve_option_srcSecGrpList_2.srcSecGrp0 = sg_id1;	
+	hdr.geneve_option_srcSecGrpList_2.srcSecGrp1 = sg_id2;	
+	hdr.geneve_option_srcSecGrpList_2.srcSecGrp2 = sg_id3;	
+	hdr.geneve_option_srcSecGrpList_2.srcSecGrp3 = sg_id4;	
+	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 3;	
+      } else if (sg_id2 != 0 || sg_id1 != 0) {
+	hdr.geneve_option_srcSecGrpList_1.setValid();
+	if(sg_id2 != 0) { 
+	  hdr.geneve_option_srcSecGrpList_1.type = GENEVE_OPTION_SRC_SECURITY_GRP_LIST_EVEN;
+	} else {
+	  hdr.geneve_option_srcSecGrpList_1.type = GENEVE_OPTION_SRC_SECURITY_GRP_LIST_ODD;
+	}
+	hdr.geneve_option_srcSecGrpList_1.Lenght = 1;
+	hdr.geneve_option_srcSecGrpList_1.srcSecGrp0 = sg_id1;	
+	hdr.geneve_option_srcSecGrpList_1.srcSecGrp1 = sg_id2;	
+	hdr.geneve_0.optLen = hdr.geneve_0.optLen + 2;	
+      } 
+
+      hdr.l4_0.udp.len = hdr.p4i_to_p4e_header.packet_len + 16 + (bit<16>)hdr.geneve_0.optLen; // packet + 8 UDP + 8 GENEVE + OPTLEN
+      hdr.ip_0.ipv4.totalLen = hdr.l4_0.udp.len + 20;
+      //Setup UDP
+      hdr.l4_0.udp.setValid();
+      hdr.l4_0.udp.srcPort = hdr.p4i_to_p4e_header.flow_hash[15:0];
+      hdr.l4_0.udp.dstPort = 0x17C1;
+      session_rewrite_encap_ip(ipv4_sa, ipv4_da,IP_PROTO_UDP, hdr.ip_0.ipv4.totalLen);
+      session_rewrite_encap_ip(ipv4_sa, ipv4_da,IP_PROTO_UDP, hdr.ip_0.ipv4.totalLen);
    }
 
       @hbm_table
@@ -619,6 +829,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 	  session_rewrite_encap_l2;
 	  session_rewrite_encap_mplsoudp;
 	  session_rewrite_encap_geneve;	  
+	  session_rewrite_insert_ctag;	  
         }
 	default_action = session_rewrite_encap_l2;
         size  = SESSION_TABLE_SIZE;
@@ -629,6 +840,10 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
     apply {
       if(metadata.cntrl.flow_miss == FALSE) {
         session_info.apply();
+	if(metadata.cntrl.l2_vnic == TRUE) {
+	  l2_session_info.apply();
+	}
+
       }
       if(metadata.cntrl.session_rewrite_id_valid == TRUE) {
         table_session_rewrite.apply();

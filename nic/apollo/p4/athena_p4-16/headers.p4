@@ -10,23 +10,27 @@ header capri_i2e_metadata_h {
 }
 
 header p4i_to_p4e_header_h {
-    bit<22> index;
+    bit<24> l2_index;
+    bit<24> index;
     bit<1>  index_type;
-    bit<1>  pad0;
-    bit<16> packet_len;
-    bit<16> dnat_epoch;
-    bit<32> flow_hash;
     bit<1>  flow_miss;
     bit<1>  direction;
     bit<1>  update_checksum;
-    bit<5>  pad1;
+    bit<1>  l2_vnic;
+    bit<3>  pad1;
+    //    bit<1>  pad1;
+    bit<16> packet_len;
+    bit<16> dnat_epoch;
+    bit<32> flow_hash;
 }
 
 header ingress_recirc_header_h {
+    bit<32> l2_flow_ohash;
     bit<32> flow_ohash;
     bit<32> dnat_ohash;
-    bit<5>  pad1;
+    bit<4>  pad1;
     bit<1>  direction;
+    bit<1>  l2_flow_done;
     bit<1>  flow_done;
     bit<1>  dnat_done;
 }
@@ -66,21 +70,22 @@ header ipv4_h {
 
 
 header mpls_h {
-    bit<16> label_b20_b4;
-    bit<4> label_b3_b0;
+    bit<8> label_b20_b12;
+    bit<8> label_b11_b4;
+    bit<4>  label_b3_b0;
     bit<3>  exp;
     bit<1>  bos;
     bit<8>  ttl;
 }
 
-/*
-header mpls_h {
+
+header mpls_orig_h {
     bit<20> label;
     bit<3>  exp;
     bit<1>  bos;
     bit<8>  ttl;
 }
-*/
+
 
 header ipv6_h {
     bit<4>    version;
@@ -277,6 +282,113 @@ header vxlan_h {
    bit<8>     reserved2;
 }
 
+header geneve_h {
+    bit<2>   ver;
+    bit<6>   optLen;
+    bit<1>   oam;
+    bit<1>   critical;
+    bit<6>   reserved;
+    bit<16>  protoType;
+    bit<24>  vni;
+    bit<8>   reserved2;
+}
+
+header geneve_options_blob_h {
+    varbit<252> data;
+}
+
+header geneve_options_generic_h {
+    // only the fixed portion of a genericoption definition
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+}
+
+
+header geneve_option_srcSlotId_h {
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+    bit<32>     srcSlotId;
+}
+
+header geneve_option_dstSlotId_h {
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+    bit<32>     dstSlotId;
+}
+
+header geneve_option_dstSlotId_split_h {
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+    bit<12>     dstSlotId_b32_b21;
+    bit<8>      dstSlotId_b20_b12;
+    bit<8>      dstSlotId_b11_b4;
+    bit<4>      dstSlotId_b3_b0;
+}
+
+header geneve_option_srcSecGrpList_h {
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+    varbit<96>  srcSecGrpList;
+}
+
+header geneve_option_srcSecGrpList_1_h {
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+    bit<16>     srcSecGrp0;
+    bit<16>     srcSecGrp1;
+}
+
+header geneve_option_srcSecGrpList_2_h {
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+    bit<16>     srcSecGrp0;
+    bit<16>     srcSecGrp1;
+    bit<16>     srcSecGrp2;
+    bit<16>     srcSecGrp3;
+}
+header geneve_option_srcSecGrpList_3_h {
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+    bit<16>     srcSecGrp0;
+    bit<16>     srcSecGrp1;
+    bit<16>     srcSecGrp2;
+    bit<16>     srcSecGrp3;
+    bit<16>     srcSecGrp4;
+    bit<16>     srcSecGrp5;
+}
+
+header geneve_option_origPhysicalIp_h {
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+    bit<32>     origPhysicalIp;
+}
+
+
+header geneve_option_unknown_hdr_h {
+    bit<16>     optionClass;
+    bit<8>      type;
+    bit<3>      res;
+    bit<5>      Lenght;
+    varbit<256>  optData;
+}
 
 
 header_union ip_1_uh {
@@ -406,9 +518,10 @@ struct headers {
     
     vxlan_h vxlan_0;
     gre_h gre_0;
-    mpls_h mpls_label1_0;
-    mpls_h mpls_label2_0;
-    mpls_h mpls_label3_0;
+    mpls_orig_h mpls_label1_0;
+    mpls_orig_h mpls_label2_0;
+    mpls_orig_h mpls_label3_0;
+    geneve_h geneve_0;
 
     erspan_header_t3_h erspan_0;
 
@@ -421,6 +534,17 @@ struct headers {
     udp_h  udp;
     icmp_echo_h icmp_echo;
     encap_uh encapl4_1;
+    geneve_h geneve_1;
+    geneve_options_blob_h geneve_options_blob;
+    geneve_option_srcSlotId_h geneve_option_srcSlotId;
+    geneve_option_dstSlotId_h geneve_option_dstSlotId;
+    geneve_option_dstSlotId_split_h geneve_option_dstSlotIdSplit;
+  geneve_option_srcSecGrpList_h geneve_option_srcSecGrpList;
+  geneve_option_srcSecGrpList_1_h geneve_option_srcSecGrpList_1;
+  geneve_option_srcSecGrpList_2_h geneve_option_srcSecGrpList_2;
+  geneve_option_srcSecGrpList_3_h geneve_option_srcSecGrpList_3;
+  geneve_option_origPhysicalIp_h geneve_option_origPhysicalIp;
+  geneve_option_unknown_hdr_h geneve_option_unknown;
 
 
 

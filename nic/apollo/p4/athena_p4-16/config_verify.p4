@@ -23,6 +23,22 @@ control config_verify(inout cap_phv_intr_global_h intr_global,
     }
 
 
+  @name(".l2_config1_epoch_verify")
+    action l2_config1_epoch_verify(bit<16>  epoch) {
+      if(metadata.cntrl.l2_epoch1_value != epoch) {
+	metadata.cntrl.flow_miss = TRUE;
+      }
+//      metadata.scratch.config_epoch = epoch;
+    }
+
+    @name(".l2_config2_epoch_verify")
+    action l2_config2_epoch_verify(bit<16>  epoch) {
+      if(metadata.cntrl.l2_epoch2_value != epoch) {
+	metadata.cntrl.flow_miss = TRUE;
+      }
+//      metadata.scratch.config_epoch = epoch;
+    }
+
 
     @capi_bitfields_struct
     @name(".config1") table config1 {
@@ -52,9 +68,38 @@ control config_verify(inout cap_phv_intr_global_h intr_global,
         stage = 2;
     }
     
+     @hbm_table
+    @capi_bitfields_struct
+    @name(".l2_config1") table l2_config1 {
+        key = {
+            metadata.cntrl.l2_epoch1_id        : exact;
+        }
+        actions = {
+            l2_config1_epoch_verify;
+        }
+        size = SESSION_TABLE_SIZE;
+        placement = HBM;
+        default_action = l2_config1_epoch_verify;
+        stage = 2;
+    }
 
+      @hbm_table
+    @capi_bitfields_struct
+    @name(".l2_config2") table l2_config2 {
+        key = {
+            metadata.cntrl.l2_epoch2_id        : exact;
+        }
+        actions = {
+            l2_config2_epoch_verify;
+        }
+        size = SESSION_TABLE_SIZE;
+        placement = HBM;
+        default_action = l2_config2_epoch_verify;
+        stage = 2;
+    }
+   
     apply {
-        if (metadata.cntrl.flow_miss == FALSE) {
+      //        if (metadata.cntrl.flow_miss == FALSE) {
 	  if(metadata.cntrl.epoch1_id_valid == TRUE) {
 	    config1.apply();
 	  }
@@ -62,7 +107,15 @@ control config_verify(inout cap_phv_intr_global_h intr_global,
 	  if(metadata.cntrl.epoch2_id_valid == TRUE) {
             config2.apply();
 	  }
-        }
+
+	  if(metadata.cntrl.l2_epoch1_id_valid == TRUE) {
+	    l2_config1.apply();
+	  }
+	  
+	  if(metadata.cntrl.l2_epoch2_id_valid == TRUE) {
+	    l2_config2.apply();
+	  }
+	  //	}
     }
 
 }

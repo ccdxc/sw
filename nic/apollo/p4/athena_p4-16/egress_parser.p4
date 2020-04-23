@@ -26,6 +26,8 @@ parser AthenaEgressParser(packet_in packet,
   bit<1>      pkt_from_host;
   bit<12> default_vlan;
   
+  bit <16> geneve_options_len;
+  bit <16> geneve_prototype;
 
   state start {
     //    metadata.cntrl.tm_iport  = intr_global.tm_iport;
@@ -37,6 +39,11 @@ parser AthenaEgressParser(packet_in packet,
 
   state parse_egress {
     packet.extract(hdr.p4i_to_p4e_header);
+    //    metadata.cntrl.direction = hdr.p4i_to_p4e_header.direction;
+    // metadata.cntrl.session_index = hdr.p4i_to_p4e_header.index;
+
+    //  metadata.cntrl.flow_miss = hdr.p4i_to_p4e_header.flow_miss;
+    metadata.cntrl.l2_vnic = hdr.p4i_to_p4e_header.l2_vnic;
     /* Skip flow lookup for now for packets injected from ARM */
     transition select(hdr.p4i_to_p4e_header.flow_miss) {
       TRUE : parse_egress_flow_miss;
@@ -380,11 +387,37 @@ parser AthenaEgressParser(packet_in packet,
     }
  
   state parse_geneve_1 {
-    //     metadata.tunnel.tunnel_type_1 = INGRESS_TUNNEL_TYPE_GENEVE;
+    //    metadata.tunnel.tunnel_type_1 = INGRESS_TUNNEL_TYPE_GENEVE;
      //TODO
-     transition  accept;
+     packet.extract(hdr.geneve_1);
+     geneve_options_len = (bit<16>)(hdr.geneve_1.optLen << 3);
+     geneve_prototype = hdr.geneve_1.protoType;
+     transition select(geneve_options_len) {
+        0                    : parse_geneve_ulp;
+        default              : parse_geneve_options_blob;
+     }
+  }
+ 
+
+  state parse_geneve_options_blob {
+     pensParser.capture_payload_offset(true);
+     //     packet.no_advance();
+     packet.extract_bytes(hdr.geneve_options_blob, geneve_options_len);
+     transition parse_geneve_ulp;
+    
+  }
+ 
+  state parse_geneve_ulp {
+     
+     transition select(geneve_prototype) {
+       ETHERTYPE_ETHERNET   : parse_ethernet_2;
+       ETHERTYPE_IPV4       : parse_ipv4_2;
+       ETHERTYPE_IPV6       : parse_ipv6_2;
+       default              : accept;
+     }
   }
   
+
   state parse_udp_mpls_1 {
     //     metadata.tunnel.tunnel_type_1 = INGRESS_TUNNEL_TYPE_UDP_MPLS;
      transition  parse_mpls;
@@ -630,6 +663,13 @@ control AthenaEgressDeparser(packet_out packet,
 	packet.emit(hdr.mpls_label1_0);
 	packet.emit(hdr.mpls_label2_0);
 	packet.emit(hdr.mpls_label3_0);
+        packet.emit(hdr.geneve_0);
+	packet.emit(hdr.geneve_option_srcSlotId);
+	packet.emit(hdr.geneve_option_dstSlotId);
+	packet.emit(hdr.geneve_option_srcSecGrpList_1);
+	packet.emit(hdr.geneve_option_srcSecGrpList_2);
+	packet.emit(hdr.geneve_option_srcSecGrpList_3);
+	packet.emit(hdr.geneve_option_origPhysicalIp);
 	
 	ipv4HdrCsumDepEg_0.update_len(hdr.ip_0.ipv4, metadata.csum.ip_hdr_len_0);
 	hdr.ip_0.ipv4.hdrChecksum = ipv4HdrCsumDepEg_0.get();
@@ -648,6 +688,8 @@ control AthenaEgressDeparser(packet_out packet,
 	packet.emit(hdr.mpls_src);
 	packet.emit(hdr.mpls_dst);
 	packet.emit(hdr.mpls_label3_1);
+        packet.emit(hdr.geneve_1);
+	packet.emit(hdr.geneve_options_blob);
 	
        
 	

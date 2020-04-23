@@ -45,7 +45,7 @@ control conntrack_state_update(inout cap_phv_intr_global_h intr_global,
         size = CONNTRACK_TABLE_SIZE;
         placement = HBM;
 	default_action = conntrack_a;
-        stage = 2;
+        stage = 1;
     }
 
 

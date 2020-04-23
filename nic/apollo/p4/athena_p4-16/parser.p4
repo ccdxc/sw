@@ -25,6 +25,8 @@ parser AthenaIngressParser(packet_in packet,
   bit<8>      options_len;
   bit<1>      pkt_from_host;
   bit<12> default_vlan;
+  bit <16> geneve_options_len;
+  bit <16> geneve_prototype;
   
   
   state start {
@@ -47,6 +49,8 @@ parser AthenaIngressParser(packet_in packet,
     packet.extract(hdr.p4plus_to_p4_vlan);    
     /* Skip flow lookup for now for packets injected from ARM */
     metadata.cntrl.skip_flow_lkp = TRUE;
+    metadata.cntrl.skip_l2_flow_lkp = TRUE;
+
     transition select((bit<1>)hdr.p4plus_to_p4.gso_valid, (bit<4>)hdr.p4plus_to_p4.p4plus_app_id) {
     ( 0x1 &&& 0x1, 0x0 &&& 0x0) : parse_txdma_gso;      
     ( 0x0 &&& 0x1, P4PLUS_APPTYPE_CPU) : parse_packet;
@@ -517,8 +521,105 @@ state parse_txdma_gso {
   state parse_geneve_1 {
     //    metadata.tunnel.tunnel_type_1 = INGRESS_TUNNEL_TYPE_GENEVE;
      //TODO
-     transition  accept;
+     packet.extract(hdr.geneve_1);
+     geneve_options_len = (bit<16>)(hdr.geneve_1.optLen << 3);
+     geneve_prototype = hdr.geneve_1.protoType;
+     transition select(geneve_options_len) {
+        0                    : parse_geneve_ulp;
+        default              : parse_geneve_options_blob;
+     }
   }
+
+
+  state parse_geneve_options_blob {
+     pensParser.capture_payload_offset(true);
+     packet.no_advance();
+     packet.extract_bytes(hdr.geneve_options_blob, geneve_options_len);
+     transition parse_geneve_options;
+    
+  }
+  
+  state parse_geneve_options {
+    bit<8> opt_type = packet.lookahead<bit<24>>()[7:0];
+    //    bit<8> opt_len = (bit<8>)packet.lookahead<bit<32>>()[4:0];
+    transition select(geneve_options_len, opt_type) {
+      (0x00 &&& 0xFF, 0x00 &&& 0x00)              : parse_geneve_ulp;
+      (0x00 &&& 0x00, GENEVE_OPTION_SRC_SLOT_ID ) : parse_geneve_option_src_slot_id; 
+      (0x00 &&& 0x00, GENEVE_OPTION_DST_SLOT_ID ) : parse_geneve_option_dst_slot_id; 
+      (0x00 &&& 0x00, GENEVE_OPTION_ORIGINATOR_PHYSICAL_IP ) : parse_geneve_option_originator_physical_ip; 
+      (0x00 &&& 0x00, GENEVE_OPTION_SRC_SECURITY_GRP_LIST &&& 0xfe ) : parse_geneve_option_src_security_grp_list;
+      default : parse_geneve_option_unknown;
+      //      (0x00 &&& 0x00, GENEVE_OPTION_SRC_SECURITY_GRP_LIST_EVEN ) : parse_geneve_option_src_security_grp_list_even;
+      //      (0x00 &&& 0x00, GENEVE_OPTION_SRC_SECURITY_GRP_LIST_ODD ) : parse_geneve_option_src_security_grp_list_odd;
+
+    }   
+  }
+  
+  state parse_geneve_option_src_slot_id {
+    packet.extract(hdr.geneve_option_srcSlotId);
+    geneve_options_len = geneve_options_len - 8;
+    transition select(geneve_options_len) {
+    0x00 : parse_geneve_ulp;
+       default : parse_geneve_options;
+    }
+  }
+
+  state parse_geneve_option_dst_slot_id {
+    bit<8> dstSlotId_b3_b0 = (bit<8>)(packet.lookahead<bit<32>>()[3:0]);
+    packet.extract(hdr.geneve_option_dstSlotIdSplit);
+    //    metadata.cntrl.mpls_vnic_label = hdr.geneve_option_dstSlotIdSplit.dstSlotId_b20_b0;
+
+    metadata.cntrl.mpls_label_b20_b12 = hdr.geneve_option_dstSlotIdSplit.dstSlotId_b20_b12;
+    metadata.cntrl.mpls_label_b11_b4 = hdr.geneve_option_dstSlotIdSplit.dstSlotId_b11_b4;
+    metadata.cntrl.mpls_label_b3_b0 = hdr.geneve_option_dstSlotIdSplit.dstSlotId_b3_b0;
+    geneve_options_len = geneve_options_len - 8;
+    transition select(geneve_options_len) {
+        0x00 :  parse_geneve_ulp;
+       default : parse_geneve_options;
+    }
+  }
+
+
+  state parse_geneve_option_originator_physical_ip {
+    packet.extract(hdr.geneve_option_origPhysicalIp);
+    geneve_options_len = geneve_options_len - 8;
+    transition select(geneve_options_len) {
+    0x00 : parse_geneve_ulp;
+       default : parse_geneve_options;
+    }
+  }
+
+  state parse_geneve_option_src_security_grp_list {
+    bit<8> src_sec_grp_list_opt_len = (bit<8>)(packet.lookahead<bit<32>>()[4:0]) << 3; 
+    packet.extract_bytes(hdr.geneve_option_srcSecGrpList, (bit<16>)src_sec_grp_list_opt_len);
+    geneve_options_len = geneve_options_len - (bit<16>)src_sec_grp_list_opt_len;
+    transition select(geneve_options_len) {
+    0x00 : parse_geneve_ulp;
+       default : parse_geneve_options;
+    }
+  }
+
+  state parse_geneve_option_unknown {
+    bit<8> unk_opt_len = (bit<8>)(packet.lookahead<bit<32>>()[4:0]) << 3;
+    packet.extract_bytes(hdr.geneve_option_unknown, (bit<16>)unk_opt_len);
+    geneve_options_len = geneve_options_len - (bit<16>)unk_opt_len;
+    transition select(geneve_options_len) {
+    0x00 : parse_geneve_ulp;
+       default : parse_geneve_options;
+    }
+  }
+
+
+  state parse_geneve_ulp {
+     
+     transition select(geneve_prototype) {
+       ETHERTYPE_ETHERNET   : parse_ethernet_2;
+       ETHERTYPE_IPV4       : parse_ipv4_2;
+       ETHERTYPE_IPV6       : parse_ipv6_2;
+       default              : accept;
+     }
+  }
+  
   
   state parse_udp_mpls_1 {
     //     metadata.tunnel.tunnel_type_1 = INGRESS_TUNNEL_TYPE_UDP_MPLS;
@@ -599,11 +700,12 @@ state parse_txdma_gso {
   state parse_mpls_dst {
     //    bit<1> bos = (packet.lookahead<bit<32>>())[8:8];
     packet.extract(hdr.mpls_dst);
-    metadata.cntrl.mpls_label_b20_b4 = hdr.mpls_dst.label_b20_b4;
-    metadata.cntrl.mpls_label_b3_b0 = (bit<8>)hdr.mpls_dst.label_b3_b0;
     //    metadata.cntrl.mpls_label_b20_b4 = hdr.mpls_dst.label_b20_b4;
-    //    metadata.cntrl.mpls_label_b3_b0 = (bit<8>)hdr.mpls_dst.label_b3_b0;
-    //    metadata.cntrl.mpls_vnic_label = (bit<32>)hdr.mpls_label2_1.label;
+    // metadata.cntrl.mpls_label_b3_b0 = (bit<8>)hdr.mpls_dst.label_b3_b0;
+        metadata.cntrl.mpls_label_b20_b12 = hdr.mpls_dst.label_b20_b12;
+        metadata.cntrl.mpls_label_b11_b4 = hdr.mpls_dst.label_b11_b4;
+        metadata.cntrl.mpls_label_b3_b0 = hdr.mpls_dst.label_b3_b0;
+    // metadata.cntrl.mpls_vnic_label = hdr.mpls_dst.label;
     transition select(hdr.mpls_dst.bos) {
         0                   : parse_mpls3_1;
         default             : parse_mpls_payload;
@@ -861,6 +963,8 @@ control AthenaIngressDeparser(packet_out packet,
         packet.emit(hdr.mpls_src);
         packet.emit(hdr.mpls_dst);
         packet.emit(hdr.mpls_label3_1);
+        packet.emit(hdr.geneve_1);
+	packet.emit(hdr.geneve_options_blob);
 
 	/*
         ipv4HdrCsumDep_1.update_len(hdr.ip_1.ipv4, metadata.cntrl.ip_hdr_len_1);

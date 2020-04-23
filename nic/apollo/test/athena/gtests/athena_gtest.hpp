@@ -33,6 +33,10 @@ send_packet(const char *out_pkt_descr, uint8_t *out_pkt, uint16_t out_pkt_len, u
         uint8_t *in_pkt, uint16_t in_pkt_len, uint32_t in_port);
 
 sdk_ret_t
+send_packet_wmask(const char *out_pkt_descr, uint8_t *out_pkt, uint16_t out_pkt_len, uint32_t out_port,
+		  uint8_t *in_pkt, uint16_t in_pkt_len, uint32_t in_port, uint32_t mask_start_pos);
+
+sdk_ret_t
 create_flow_v4_tcp_udp (uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_dip,
         uint8_t proto, uint16_t sport, uint16_t dport,
         pds_flow_spec_index_type_t index_type, uint32_t index);

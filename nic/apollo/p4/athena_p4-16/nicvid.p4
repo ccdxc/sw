@@ -11,6 +11,7 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
         /* Skip DNAT and Flow lookup */
 	metadata.cntrl.skip_dnat_lkp = TRUE;
 	metadata.cntrl.skip_flow_lkp = TRUE;
+	metadata.cntrl.skip_l2_flow_lkp = TRUE;
 	hdr.ingress_recirc_header.dnat_done = TRUE;
 	hdr.ingress_recirc_header.flow_done = TRUE;
         /* Treat it as a flow miss for now */
@@ -18,7 +19,10 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
 	
       } else {		
 	metadata.cntrl.vnic_type = vnic_type;
+	hdr.p4i_to_p4e_header.l2_vnic = vnic_type;
+	metadata.cntrl.skip_l2_flow_lkp = ~vnic_type;
 	metadata.key.vnic_id = vnic_id;
+	//	metadata.l2_key.vnic_id16 = (bit<16>)vnic_id;
       }
     }
 
@@ -28,8 +32,10 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
     table  mpls_label_to_vnic{
         key = {
 	  //	  hdr.mpls_dst.label : exact;
-	  metadata.cntrl.mpls_label_b20_b4 : table_index;
-	  metadata.cntrl.mpls_label_b3_b0 : table_index;
+	   metadata.cntrl.mpls_label_b20_b12 : table_index;
+	   metadata.cntrl.mpls_label_b11_b4 : table_index;
+	   metadata.cntrl.mpls_label_b3_b0 : table_index;
+	  //metadata.cntrl.mpls_vnic_label : table_index;
         }
         actions  = {
           mpls_label_to_vnic_a ;
@@ -47,15 +53,21 @@ control vnic(inout cap_phv_intr_global_h capri_intrinsic,
         /* Skip DNAT and Flow lookup */
 	metadata.cntrl.skip_dnat_lkp = TRUE;
 	metadata.cntrl.skip_flow_lkp = TRUE;
+	metadata.cntrl.skip_l2_flow_lkp = TRUE;
 	hdr.ingress_recirc_header.dnat_done = TRUE;
 	hdr.ingress_recirc_header.flow_done = TRUE;
+	hdr.ingress_recirc_header.l2_flow_done = TRUE;
+
         /* Treat it as a flow miss for now */
 	metadata.cntrl.flow_miss = TRUE;
 	
       } else {
 		
 	metadata.cntrl.vnic_type = vnic_type;
+	metadata.cntrl.skip_l2_flow_lkp = ~vnic_type;
+	hdr.p4i_to_p4e_header.l2_vnic = vnic_type;
 	metadata.key.vnic_id = vnic_id;
+	//	metadata.l2_key.vnic_id16 = (bit<16>)vnic_id;
       }
     }
 

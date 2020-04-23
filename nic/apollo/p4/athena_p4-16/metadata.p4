@@ -28,6 +28,23 @@ struct key_metadata_t {
 	bit<1> ingress_port;
     }
 
+struct l2_key_metadata_t {
+	bit<2> ktype;
+	bit<7> ktype7;
+	bit<9> vnic_id;
+	bit<16> vnic_id16;
+	bit<128> src;
+	bit<128> dst;
+	bit<48> smac;
+	bit<48> dmac;
+	bit<8> proto;
+	bit<16> sport;
+	bit<16> dport;
+	bit<32> ipv4_src;
+	bit<32> ipv4_dst;
+	bit<6> tcp_flags;
+	bit<1> ingress_port;
+    }
 
 struct control_metadata_t {
         bit<1> conn_track_tcp;
@@ -37,18 +54,24 @@ struct control_metadata_t {
 	bit<1> parser_encap_error;
 	bit<1> forward_to_uplink;
 	bit<1> redir_to_rxdma;
+	bit<1> skip_l2_flow_lkp;
 	bit<1> skip_flow_lkp;
 	bit<1> skip_dnat_lkp;
+	bit<1> l2_flow_ohash_lkp;
 	bit<1> flow_ohash_lkp;
 	bit<1> dnat_ohash_lkp;
 	bit<1> direction;
 	bit<1> from_arm;
 	bit<1> parse_tcp_option_error;
+	bit<1> l2_flow_miss;
 	bit<1> flow_miss;
+	bit<1> l2_session_index_valid;
 	bit<1> session_index_valid;
 	bit<1> conntrack_index_valid;
 	bit<1> epoch1_id_valid;
 	bit<1> epoch2_id_valid;
+	bit<1> l2_epoch1_id_valid;
+	bit<1> l2_epoch2_id_valid;
 	bit<1> throttle_bw1_id_valid;
 	bit<1> throttle_bw2_id_valid;
 	bit<1> statistics_id_valid;
@@ -67,8 +90,11 @@ struct control_metadata_t {
 	bit<2> nat_type;
 	bit<2> encap_type;
 	bit<16> mpls_label_b20_b4;
-	bit<8> mpls_label_b3_b0;
-
+	bit<8> mpls_label_b20_b12;
+	bit<8> mpls_label_b11_b4;
+//	bit<8> mpls_label_b3_b0;
+	bit<4> mpls_label_b3_b0;
+        bit<20> mpls_vnic_label; 
         /* Rewrite info */
 	bit<128> nat_address;
 	bit<48> dmac;
@@ -89,10 +115,16 @@ struct control_metadata_t {
 	bit<9> histogram_latency_id;
 	bit<10> allowed_flow_state_bitmap;
 	bit<32> vnic_statistics_mask;
+	bit<22> l2_index;
 	bit<22> index;
-	bit<22> session_index;
+	bit<24> l2_session_index;
+	bit<24> session_index;
 	bit<22> conntrack_index;
 	bit<22> session_rewrite_id;
+	bit<16> l2_epoch1_value;
+	bit<16> l2_epoch2_value;
+	bit<20> l2_epoch1_id;
+	bit<20> l2_epoch2_id;
 	bit<16> epoch1_value;
 	bit<16> epoch2_value;
 	bit<20> epoch1_id;
@@ -125,6 +157,8 @@ struct scratch_metadata_t {
 	bit<32> ipv4_src;
 	bit<18> flow_hash;
 	bit<19> flow_hint;
+	bit<18> l2_flow_hash;
+	bit<17> l2_flow_hint;
 	bit<8> class_id;
 	bit<32> addr;
 	bit<10> local_vnic_tag;
@@ -261,6 +295,8 @@ struct metadata_t {
     l4_metadata_t         l4;
     @name(".key_metadata")
     key_metadata_t        key;
+    @name(".key_metadata")
+    l2_key_metadata_t        l2_key;
     @name(".control_metadata")
     control_metadata_t    cntrl;
     @name(".offset_metadata")

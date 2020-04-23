@@ -4,4 +4,13 @@
 #define POS_OVERFLOW_HASH_BIT                      0x80000000
 #define P4I_DROP_POLICER                10
 
+#define GENEVE_OPTION_SRC_SLOT_ID                  0x21
+#define GENEVE_OPTION_DST_SLOT_ID                  0x22
+#define GENEVE_OPTION_ORIGINATOR_PHYSICAL_IP       0x24
+#define GENEVE_OPTION_SRC_SECURITY_GRP_LIST_EVEN   0xA0
+#define GENEVE_OPTION_SRC_SECURITY_GRP_LIST_ODD    0xA1
+#define GENEVE_OPTION_SRC_SECURITY_GRP_LIST        0xA0
+
+#define VNIC_TYPE_L2        1
+
 #endif /* _ATHENA_16_DEFINES_H_ */

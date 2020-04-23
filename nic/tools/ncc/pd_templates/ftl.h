@@ -152,12 +152,13 @@
 //::        key_fields_dict = {}
 //::
 //::        if 'ftl_asm_ki_fields' in pddict['tables'][table]:
-//::          for field in pddict['tables'][table]['ftl_asm_ki_fields']['Full']:
-//::            ftl_store_field_full(key_fields_dict,key_fields_list,field['name'],field['width'])
-//::          #endfor
-//::          for field in pddict['tables'][table]['ftl_asm_ki_fields']['Splitted']:
-//::            name = field['split_field_name'] + "_sbit" + str(field['sbit']) + "_ebit" + str(field['ebit'])
-//::            ftl_store_field_splitted(key_fields_dict,key_fields_list,name,field['split_field_name'],field['width'],field['sbit'],field['ebit'])
+//::          for field in pddict['tables'][table]['ftl_asm_ki_fields']:
+//::            name = field['name']
+//::            if 'split' in field:
+//::              split_info = field['split']
+//::              name = split_info['split_field_name'] + "_sbit" + str(split_info['sbit']) + "_ebit" + str(split_info['ebit'])
+//::            #endif
+//::            ftl_store_field(key_fields_dict,key_fields_list,name,field['width'], "")
 //::          #endfor
 //::        #endif
 //::

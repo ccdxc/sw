@@ -29,6 +29,8 @@
 #include "key.p4"
 #include "offloads.p4"
 #include "dnat.p4"
+//#include "l2_flow.p4"
+#include "mac_flow.p4"
 #include "flow.p4"
 #include "policer.p4"
 #include "config_verify.p4"
@@ -58,6 +60,8 @@ control AthenaIngressPipeline(inout cap_phv_intr_global_h intr_global,
       key_init.apply(intr_global, intr_p4, hdr, metadata);
       dnat_lookup.apply(intr_global, intr_p4, hdr, metadata);
       offloads.apply(intr_global, intr_p4, hdr, metadata);
+      //     l2_flow_lookup.apply(intr_global, intr_p4, hdr, metadata);
+      mac_flow_lookup.apply(intr_global, intr_p4, hdr, metadata);
       flow_lookup.apply(intr_global, intr_p4, hdr, metadata);
       ingress_inter_pipe.apply(intr_global, intr_p4, hdr, metadata);
       p4i_statistics.apply(intr_global, intr_p4, hdr, metadata);
