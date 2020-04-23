@@ -845,7 +845,7 @@ class HostManagement(EntityManagement):
                 print("running pre-nodeinit.sh script to gather debug info")
                 try:
                     self.CopyIN(pre_node_init_script, HOST_NAPLES_DIR)
-                    self.RunSshCmd("sudo %s/pre-nodeinit.sh" % (HOST_NAPLES_DIR))
+                    self.RunSshCmd("sudo %s/pre-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
                 except:
                     print("failed to run pre-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
             try:
@@ -856,7 +856,7 @@ class HostManagement(EntityManagement):
                     print("running post-nodeinit.sh script to gather debug info")
                     try:
                         self.CopyIN(post_node_init_script, HOST_NAPLES_DIR)
-                        self.RunSshCmd("sudo %s/post-nodeinit.sh" % (HOST_NAPLES_DIR))
+                        self.RunSshCmd("sudo %s/post-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
                     except:
                         print("failed to run post-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
 
@@ -880,7 +880,7 @@ class HostManagement(EntityManagement):
                     print("running pre-nodeinit.sh script to gather debug info")
                     try:
                         self.CopyIN(pre_node_init_script, HOST_NAPLES_DIR)
-                        self.RunSshCmd("sudo %s/pre-nodeinit.sh" % (HOST_NAPLES_DIR))
+                        self.RunSshCmd("sudo %s/pre-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
                     except:
                         print("failed to run pre-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
                 try:
@@ -898,7 +898,7 @@ class HostManagement(EntityManagement):
                         print("running post-nodeinit.sh script to gather debug info")
                         try:
                             self.CopyIN(post_node_init_script, HOST_NAPLES_DIR)
-                            self.RunSshCmd("sudo %s/post-nodeinit.sh" % (HOST_NAPLES_DIR))
+                            self.RunSshCmd("sudo %s/post-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
                         except:
                             print("failed to run post-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
             else:
@@ -907,7 +907,7 @@ class HostManagement(EntityManagement):
                 print("running pre-nodeinit.sh script to gather debug info")
                 try:
                     self.CopyIN(pre_node_init_script, HOST_NAPLES_DIR)
-                    self.RunSshCmd("sudo %s/pre-nodeinit.sh" % (HOST_NAPLES_DIR))
+                    self.RunSshCmd("sudo %s/pre-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
                 except:
                     print("failed to run pre-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
             try:
@@ -918,7 +918,7 @@ class HostManagement(EntityManagement):
                     print("running post-nodeinit.sh script to gather debug info")
                     try:
                         self.CopyIN(post_node_init_script, HOST_NAPLES_DIR)
-                        self.RunSshCmd("sudo %s/post-nodeinit.sh" % (HOST_NAPLES_DIR))
+                        self.RunSshCmd("sudo %s/post-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
                     except:
                         print("failed to run post-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
         return
