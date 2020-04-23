@@ -367,6 +367,7 @@ e2e-targets:
        resources:
          servers:
            - type: server-a
+           - type: server-d
          nic-type: naples
    provision:
        username: vm

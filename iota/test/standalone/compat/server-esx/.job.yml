@@ -3,11 +3,9 @@ version: 2.0
 image:
   bind_dir: "/sw"
   work_dir: "/sw/iota/test/standalone"
-rebase: true
 
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
-  # baremetal + baremetal Esx test cases
  compat-smc-1114S-esx:
    commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite server_compat_hostpin"]
    owners: ["email:dbarsky@pensando.io"]
@@ -30,7 +28,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: esx
-          VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
 
@@ -56,7 +53,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: esx
-          VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
 
@@ -82,7 +78,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: esx
-          VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
 
@@ -108,7 +103,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: esx
-          VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
 
@@ -135,7 +129,6 @@ e2e-targets:
 #       password: vm
 #       vars:
 #          BmOs: esx
-#          VmOs: linux
 #          EsxUsername: root
 #          EsxPassword: Pen0trl!
 
@@ -161,7 +154,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: esx
-          VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
 

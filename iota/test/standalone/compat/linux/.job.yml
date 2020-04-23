@@ -3,7 +3,7 @@ version: 2.0
 image:
   bind_dir: "/sw"
   work_dir: "/sw/iota/test/standalone"
-rebase: true
+
 queue_name: baremetal
 
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
@@ -32,10 +32,6 @@ e2e-targets:
       password: vm
       vars:
         BmOs: linux
-        VmOs: linux
-        EsxUsername: root
-        EsxPassword: Pen0trl!
-
 
   e2e-linux-bm-regression-eth-Ubuntu1804-compat-dr-111-fw-132:
     commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --compat --fw-version 1.3.2-E-3 --driver-version 1.1.1-E-15"]
@@ -61,9 +57,6 @@ e2e-targets:
       password: vm
       vars:
         BmOs: linux
-        VmOs: linux
-        EsxUsername: root
-        EsxPassword: Pen0trl!
 
   e2e-linux-bm-regression-eth-Ubuntu1804-compat-dr-150-fw-132:
     commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --compat --driver-version 1.5.0-E-14 --fw-version 1.3.2-E-3"]
@@ -89,10 +82,6 @@ e2e-targets:
       password: vm
       vars:
         BmOs: linux
-        VmOs: linux
-        EsxUsername: root
-        EsxPassword: Pen0trl!
-
 
   e2e-linux-bm-regression-eth-Ubuntu1804-compat-dr-132-fw-150:
     commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --compat --fw-version 1.5.0-E-14 --driver-version 1.3.2-E-3"]
@@ -118,9 +107,6 @@ e2e-targets:
       password: vm
       vars:
         BmOs: linux
-        VmOs: linux
-        EsxUsername: root
-        EsxPassword: Pen0trl!
 
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz

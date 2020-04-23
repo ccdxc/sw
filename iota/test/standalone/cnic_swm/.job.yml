@@ -3,7 +3,7 @@ version: 2.0
 image:
   bind_dir: "/sw"
   work_dir: "/sw/iota/test/standalone"
-rebase: true
+
 queue_name: baremetal
 
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
@@ -34,9 +34,7 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
+
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
   - /sw/iota/all_corefiles.tgz

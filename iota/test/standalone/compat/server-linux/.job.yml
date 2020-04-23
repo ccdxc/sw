@@ -3,11 +3,9 @@ version: 2.0
 image:
   bind_dir: "/sw"
   work_dir: "/sw/iota/test/standalone"
-rebase: true
 
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
-  # baremetal + baremetal Esx test cases
  compat-smc-1114S-linux:
    commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
    owners: ["email:dbarsky@pensando.io"]
@@ -30,10 +28,7 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
- 
+
  compat-ucs220-cascade-linux:
    commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
    owners: ["email:dbarsky@pensando.io"]
@@ -56,9 +51,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
  compat-DELL-R6525-linux:
    commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
@@ -82,10 +74,7 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
- 
+
  compat-Dell-R6415-linux:
    commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
    owners: ["email:dbarsky@pensando.io"]
@@ -108,9 +97,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
 # compat-HPE-DL325-linux:
 #   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
@@ -134,9 +120,6 @@ e2e-targets:
 #       password: vm
 #       vars:
 #          BmOs: linux
-#          VmOs: linux
-#          EsxUsername: root
-#          EsxPassword: Pen0trl!
 
  compat-HPE-DL360-linux:
    commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
@@ -160,9 +143,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz

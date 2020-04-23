@@ -382,9 +382,6 @@ dependencies:
       exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/precheckin/linux
       exclude_dirs: ["rdma"]
-  nic/asm/rdma:
-    - reference: iota/test/standalone/precheckin/linux-rdma
-    - reference: iota/test/standalone/precheckin/freebsd-rdma
   nic/buildroot:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx

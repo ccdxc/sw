@@ -3,7 +3,7 @@ version: 2.0
 image:
   bind_dir: "/sw"
   work_dir: "/sw/iota/test/standalone"
-rebase: true
+
 queue_name: baremetal
 
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
@@ -34,9 +34,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
  e2e-linux-bm-regression-rdma-stress:
    commands: ["sh", "-c", "make regression-rdma-stress && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle mtu,rdma_stress"]
@@ -63,8 +60,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
 
  e2e-linux-bm-regression-eth-RHEL76:
    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity"]
@@ -89,9 +84,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
  e2e-linux-bm-regression-eth-RHEL80:
    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity"]
@@ -116,9 +108,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
  e2e-linux-bm-regression-eth-Ubuntu1804:
    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet --regression --skip-sanity"]
@@ -143,9 +132,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
  e2e-linux-bm-regression-storage:
    commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite transparent_basenet_storage --regression --testbundle storage_regr"]
@@ -170,9 +156,6 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-          VmOs: linux
-          EsxUsername: root
-          EsxPassword: Pen0trl!
 
 logfiles:
   - /sw/iota/iota_sanity_logs.tar.gz
