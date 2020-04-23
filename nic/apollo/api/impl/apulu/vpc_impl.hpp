@@ -29,6 +29,12 @@ namespace impl {
 /// \ingroup PDS_VPC
 /// @{
 
+// max of 256 classes are suppored for both remote and local mapping
+// class id 255 (PDS_IMPL_RSVD_MAPPING_CLASS_ID) is reserved to indicate
+// that class id is not configured, so 0 to (PDS_IMPL_RSVD_MAPPING_CLASS_ID-1)
+// class id values are valid
+#define PDS_MAX_CLASS_ID_PER_VPC   256
+
 ///< per VPC tag -> class id info map element
 typedef struct vpc_tag_class_info_s {
     uint32_t class_id;   ///< class id allocated for this tag

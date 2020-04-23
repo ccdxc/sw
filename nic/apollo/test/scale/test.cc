@@ -42,6 +42,7 @@ uint32_t tep_id = 0;
 
 #define POLICY_ID_BASE         1
 #define ROUTE_TABLE_ID_BASE    4096
+#define SVC_TAG_NEXT(tag_)     ((tag_)++ % 255)
 
 //----------------------------------------------------------------------------
 // create dhcp relay policies
@@ -509,7 +510,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         pds_local_mapping.provider_ip.addr.v4_addr =
                                         provider_pfx->addr.addr.v4_addr + ip_offset;
                         pds_local_mapping.num_tags = 1;
-                        pds_local_mapping.tags[0] = svc_tag++;
+                        pds_local_mapping.tags[0] = SVC_TAG_NEXT(svc_tag);
                     }
                     ip_offset++;
                     rv = create_local_mapping(&pds_local_mapping);
@@ -610,7 +611,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 }
                 if (apulu()) {
                     pds_remote_mapping.num_tags = 1;
-                    pds_remote_mapping.tags[0] = svc_tag++;
+                    pds_remote_mapping.tags[0] = SVC_TAG_NEXT(svc_tag);
                 }
                 ip_offset++;
 

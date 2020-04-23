@@ -29,12 +29,6 @@ namespace impl {
 /// \ingroup PDS_VPC
 /// \@{
 
-// max of 1k classes are suppored for both remote and local mapping
-// class id 1023 (PDS_IMPL_RSVD_MAPPING_CLASS_ID) is reserved to indicate
-// that class id is not configured, so 0 to (PDS_IMPL_RSVD_MAPPING_CLASS_ID-1)
-// class id values are valid
-#define PDS_MAX_CLASS_ID_PER_VPC    1024
-
 vpc_impl *
 vpc_impl::factory(pds_vpc_spec_t *spec) {
     vpc_impl *impl;
@@ -48,6 +42,7 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
     impl = vpc_impl_db()->alloc();
     new (impl) vpc_impl(spec);
 
+#if 0
     // allocate tag/class state for this vpc
     impl->tag_state_ =
         (vpc_impl_tag_state_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_VPC_IMPL_TAG_STATE,
@@ -74,11 +69,13 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
     }
     // set the reserved classid aside
     impl->tag_state_->remote_mapping_class_id_idxr_->alloc(PDS_IMPL_RSVD_MAPPING_CLASS_ID);
+#endif
     return impl;
 
 error:
 
     if (impl) {
+#if 0
         if (impl->tag_state_) {
             if (impl->tag_state_->local_mapping_classs_id_idxr_) {
                 rte_indexer::destroy(impl->tag_state_->local_mapping_classs_id_idxr_);
@@ -88,6 +85,7 @@ error:
             }
             SDK_FREE(PDS_MEM_ALLOC_ID_VPC_IMPL_TAG_STATE, impl->tag_state_);
         }
+#endif
         impl->~vpc_impl();
         vpc_impl_db()->free(impl);
     }
@@ -96,6 +94,7 @@ error:
 
 void
 vpc_impl::destroy(vpc_impl *impl) {
+#if 0
     if (impl->tag_state_) {
         if (impl->tag_state_->local_mapping_classs_id_idxr_) {
             rte_indexer::destroy(impl->tag_state_->local_mapping_classs_id_idxr_);
@@ -105,6 +104,7 @@ vpc_impl::destroy(vpc_impl *impl) {
         }
         SDK_FREE(PDS_MEM_ALLOC_ID_VPC_IMPL_TAG_STATE, impl->tag_state_);
     }
+#endif
     impl->~vpc_impl();
     vpc_impl_db()->free(impl);
 }
@@ -519,6 +519,8 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
 
 sdk_ret_t
 vpc_impl::alloc_class_id(uint32_t tag, bool local, uint32_t *class_id) {
+    return vpc_impl_db()->alloc_class_id(tag, local, class_id);
+#if 0
     sdk_ret_t ret;
     rte_indexer *class_idxr;
     tag2class_map_t::iterator it;
@@ -554,10 +556,13 @@ vpc_impl::alloc_class_id(uint32_t tag, bool local, uint32_t *class_id) {
         (*class2tag_map)[*class_id] = tag;
     }
     return SDK_RET_OK;
+#endif
 }
 
 sdk_ret_t
 vpc_impl::release_class_id(uint32_t class_id, bool local) {
+    return vpc_impl_db()->release_class_id(class_id, local);
+#if 0
     uint32_t tag;
     sdk_ret_t ret;
     rte_indexer *class_idxr;
@@ -595,12 +600,14 @@ vpc_impl::release_class_id(uint32_t class_id, bool local) {
         // handle it gracefully
         PDS_TRACE_ERR("class id %u not in use", class_id);
     }
-
     return SDK_RET_OK;
+#endif
 }
 
 sdk_ret_t
 vpc_impl::release_tag(uint32_t tag, bool local) {
+    return vpc_impl_db()->release_tag(tag, local);
+#if 0
     sdk_ret_t ret;
     uint32_t class_id;
     rte_indexer *class_idxr;
@@ -632,6 +639,7 @@ vpc_impl::release_tag(uint32_t tag, bool local) {
         PDS_TRACE_ERR("Tag %u has no class id allocated", tag);
     }
     return SDK_RET_OK;
+#endif
 }
 
 /// \@}    // end of PDS_VPC_IMPL

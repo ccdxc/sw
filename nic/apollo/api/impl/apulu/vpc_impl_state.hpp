@@ -16,6 +16,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 
 using sdk::table::slhash;
 
@@ -84,6 +85,36 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t remove(uint16_t hw_id);
 
+    /// \brief      API to allocate class id given user configured tag
+    /// \param[in]   tag     user give tag (for the mapping)
+    /// \param[in]   local   if true, tag is that of local mapping, else for
+    ///                      remote mapping
+    /// \param[out]  class_id class_id corresponding to the tag, if allocation
+    ///              was succesful
+    /// \remark if the tag is seen 1st time, new class id allocated for it
+    ///         if tag is already seen, refcount is incremented and
+    ///         corresponding class_id is returned
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t alloc_class_id(uint32_t tag, bool local, uint32_t *class_id);
+
+    /// \brief      API to release class id that was previously allocated
+    /// \param[in]   class_id user give tag (for the mapping)
+    /// \param[in]   local    if true, tag is that of local mapping, else for
+    ///                       remote mapping
+    /// \remark if the refcount corresponding to the class goes down to 0,
+    ///         class_id is freed back to the pool
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t release_class_id(uint32_t class_id, bool local);
+
+    /// \brief      API to release a tag, if its not in use
+    /// \param[in]   tag     user given tag (for the mapping)
+    /// \param[in]   local   if true, tag is that of local mapping, else for
+    ///                      remote mapping
+    /// \remark if the refcount corresponding to the tag goes down to 0,
+    ///         corresponding class_id is freed back to the pool
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t release_tag(uint32_t tag, bool local);
+
 private:
     slhash *vni_tbl(void) { return vni_tbl_; }
     rte_indexer *vpc_idxr(void) const { return vpc_idxr_; }
@@ -96,6 +127,8 @@ private:
     slhash      *vni_tbl_;
     ///< indexer to allocate hw vpc id
     rte_indexer *vpc_idxr_;
+    ///< state needed for tag/class maintenance for all mappings
+    vpc_impl_tag_state_t *tag_state_;
     ///< hash table for hw_id to vpc key
     ht *impl_ht_;
 };

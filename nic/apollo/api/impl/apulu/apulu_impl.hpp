@@ -44,7 +44,7 @@
 #define PDS_IMPL_RSVD_TAG_HW_ID                0
 
 // reserved class id to indicate that tag is not configured on a mapping
-#define PDS_IMPL_RSVD_MAPPING_CLASS_ID         1023
+#define PDS_IMPL_RSVD_MAPPING_CLASS_ID         255
 
 // reserved DHCP relay NACL index
 // NOTE:
