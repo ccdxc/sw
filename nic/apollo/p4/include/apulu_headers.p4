@@ -91,7 +91,8 @@ header_type apulu_p4_to_arm_header_t {
 
 header_type apulu_arm_to_p4_header_t {
     fields {
-        pad                     : 2;
+        pad                     : 1;
+        skip_stats_update       : 1;
         flow_lkp_id_override    : 1;
         local_mapping_override  : 1;
         nexthop_valid           : 1;

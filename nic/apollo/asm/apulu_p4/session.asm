@@ -11,8 +11,10 @@ struct phv_         p;
 %%
 
 session_info:
+    seq             c7, k.p4e_i2e_skip_stats_update, FALSE
     // update timestamp and release lock
-    tblwr.f         d.session_info_d.timestamp, r4
+    tblwr.c7.f      d.session_info_d.timestamp, r4
+    tblwr.!c7.f     d.session_info_d.timestamp, d.session_info_d.timestamp
 
     seq             c1, k.p4e_i2e_copp_policer_id, r0
     phvwr.!c1       p.control_metadata_copp_policer_valid, TRUE
@@ -26,13 +28,14 @@ session_info:
                         p.control_metadata_update_checksum, \
                         k.p4e_i2e_update_checksum
 
-    bbeq            k.egress_recirc_valid, TRUE, session_info_common
+    seq             c1, k.egress_recirc_valid, FALSE
+    bcf             [!c1|!c7], session_info_common
+    phvwr.c1        p.control_metadata_session_tracking_en, \
+                        d.session_info_d.session_tracking_en
     // non-recirc packet
     seq             c1, k.p4e_i2e_meter_enabled, TRUE
     sne.c1          c1, d.session_info_d.meter_id, r0
     bcf             [!c1], session_info_common
-    phvwr           p.control_metadata_session_tracking_en, \
-                        d.session_info_d.session_tracking_en
     add             r1, r0, d.session_info_d.meter_id
     seq             c1, k.p4e_i2e_rx_packet, TRUE
     add.c1          r1, r1, (METER_TABLE_SIZE >> 1)
@@ -69,6 +72,7 @@ session_tx:
 
 session_stats:
     seq             c1, k.egress_recirc_valid, TRUE
+    seq.!c1         c1, k.p4e_i2e_skip_stats_update, TRUE
     seq.!c1         c1, r5, r0
     nop.c1.e
     add             r5, r5, k.p4e_i2e_session_id, 5

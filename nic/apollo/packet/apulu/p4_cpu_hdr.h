@@ -87,7 +87,8 @@ typedef struct p4_tx_cpu_hdr_s {
             uint16_t nexthop_valid          : 1;
             uint16_t local_mapping_override : 1;
             uint16_t flow_lkp_id_override   : 1;
-            uint16_t pad                    : 2;
+            uint16_t skip_stats_update      : 1;
+            uint16_t pad                    : 1;
         };
     };
     uint8_t nexthop_type;

@@ -11,7 +11,8 @@ header_type apulu_i2e_metadata_t {
         mapping_lkp_id      : 16;
         nexthop_id          : 16;
         xlate_id            : 16;
-        pad0                : 2;
+        pad0                : 1;
+        skip_stats_update   : 1;
         meter_enabled       : 1;
         rx_packet           : 1;
         nexthop_type        : 2;

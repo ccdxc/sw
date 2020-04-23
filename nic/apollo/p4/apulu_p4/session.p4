@@ -23,27 +23,29 @@ action session_info(tx_policer_id, tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
 
     // update stats and state only on first pass through egress pipeline
     if (egress_recirc.valid == FALSE) {
-        modify_field(scratch_metadata.session_stats_addr,
-                     scratch_metadata.session_stats_addr +
-                     (p4e_i2e.session_id * 8 * 4));
-        modify_field(scratch_metadata.in_bytes, capri_p4_intrinsic.packet_len);
-
-        if ((meter_id != 0) and (p4e_i2e.meter_enabled == TRUE)) {
-            modify_field(meter_metadata.meter_enabled, TRUE);
-            modify_field(scratch_metadata.meter_id, meter_id);
-            if (p4e_i2e.rx_packet == TRUE) {
-                modify_field(meter_metadata.meter_id,
-                             scratch_metadata.meter_id + (METER_TABLE_SIZE/2));
-            } else {
-                modify_field(meter_metadata.meter_id,
-                             scratch_metadata.meter_id);
-            }
-            modify_field(meter_metadata.meter_len,
-                         capri_p4_intrinsic.packet_len);
-        }
-
         modify_field(control_metadata.session_tracking_en, session_tracking_en);
         modify_field(scratch_metadata.timestamp, timestamp);
+        if (p4e_i2e.skip_stats_update == FALSE) {
+            modify_field(scratch_metadata.session_stats_addr,
+                         scratch_metadata.session_stats_addr +
+                         (p4e_i2e.session_id * 8 * 4));
+            modify_field(scratch_metadata.in_bytes,
+                         capri_p4_intrinsic.packet_len);
+
+            if ((meter_id != 0) and (p4e_i2e.meter_enabled == TRUE)) {
+                modify_field(meter_metadata.meter_enabled, TRUE);
+                modify_field(scratch_metadata.meter_id, meter_id);
+                if (p4e_i2e.rx_packet == TRUE) {
+                    modify_field(meter_metadata.meter_id,
+                        scratch_metadata.meter_id + (METER_TABLE_SIZE/2));
+                } else {
+                    modify_field(meter_metadata.meter_id,
+                                 scratch_metadata.meter_id);
+                }
+                modify_field(meter_metadata.meter_len,
+                             capri_p4_intrinsic.packet_len);
+            }
+        }
     }
 
     if (p4e_i2e.rx_packet == FALSE) {
