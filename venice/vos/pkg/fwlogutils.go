@@ -87,7 +87,15 @@ loop:
 			}
 		}
 		close(doneCh)
-		temp = temp.Add(time.Hour)
+		// round the time to nearest hour. If the rounded hour is same as current hour
+		// then increase the time by 1 hour to go to the next hour, else take the rounded time.
+		rounded := temp.Round(time.Hour)
+		rh, _, _ := rounded.Clock()
+		if rh == h {
+			temp = rounded.Add(time.Hour)
+		} else {
+			temp = rounded
+		}
 	}
 
 	return ret, nil
