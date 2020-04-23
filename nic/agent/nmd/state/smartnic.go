@@ -156,6 +156,7 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.DistributedServiceCard) error {
 					// Update config status to reflect the mode change
 					cfg.Spec.Mode = nmd.MgmtMode_HOST.String()
 					cfg.Spec.DSCProfile = "FEATURE_PROFILE_BASE"
+					cfg.Spec.PrimaryMAC = n.config.Spec.PrimaryMAC
 					err = n.StartNMDRestServer()
 					if err != nil {
 						log.Errorf("Error starting NIC managed mode: %v", err)
