@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import json
 import time
+import traceback
 import iota.harness.api as api
 import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
@@ -250,24 +251,31 @@ def stop_pcap_capture(tc):
 
     return api.types.status.SUCCESS
 
+
 def start_single_pcap_capture(tc):
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    nodes = api.GetWorkloadNodeHostnames()
-    tc.pcap_cmds = []
-    intf = api.GetRemoteWorkloadPairs()[0].interface
-    tc.pcap_filename = pcap_file_name(intf)
-    cmd = cmd_builder.tcpdump_cmd(intf, tc.pcap_filename)
-    api.Trigger_AddHostCommand(req, n, cmd, background = True)
-    resp = api.Trigger(req)
-    for cmd in resp.commands:
-        if cmd.handle == None or len(cmd.handle) == 0:
-            api.Logger.error("Error starting pcap : %s " % cmd.command)
-            api.Logger.error("Std Output : %s "% cmd.stdout)
-            api.Logger.error("Std Err :  %s "% cmd.stdout)
-            return api.types.status.FAILURE
-        api.Logger.info("Success running cmd : %s" % cmd.command)
-    tc.pcap_trigger = resp
-    return api.types.status.SUCCESS
+    try:
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+        nodes = api.GetWorkloadNodeHostnames()
+        tc.pcap_cmds = []
+        intf = api.GetRemoteWorkloadPairs()[0][0].interface
+        tc.pcap_filename = pcap_file_name(intf)
+        cmd = cmd_builder.tcpdump_cmd(intf, tc.pcap_filename)
+        api.Trigger_AddHostCommand(req, n, cmd, background = True)
+        resp = api.Trigger(req)
+        for cmd in resp.commands:
+            if cmd.handle == None or len(cmd.handle) == 0:
+                api.Logger.error("Error starting pcap : %s " % cmd.command)
+                api.Logger.error("Std Output : %s "% cmd.stdout)
+                api.Logger.error("Std Err :  %s "% cmd.stdout)
+                return api.types.status.FAILURE
+            api.Logger.info("Success running cmd : %s" % cmd.command)
+        tc.pcap_trigger = resp
+        return api.types.status.SUCCESS
+    except:
+        api.Logger.info("failed to start single pcap capture")
+        api.Logger.debug("failed to start single pcap capture. error was: {0}".format(traceback.format_exc()))
+        return api.types.status.SUCCESS
+        #return api.types.status.FAILURE
 
 def stop_single_pcap_capture(tc):
     api.Trigger_TerminateAllCommands(tc.pcap_trigger)

@@ -21,8 +21,9 @@ def Import(modname, packages = []):
         if module:
             return module
     Logger.error("Failed to import module: %s in packages: " % modname, packages)
-    assert(0)
-    return None
+    #assert(0)
+    #return None
+    raise Exception("failed to import test module")
 
 def RunCallback(module, attr, required, args):
     cb = getattr(module, attr, None)
