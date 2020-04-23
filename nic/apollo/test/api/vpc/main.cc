@@ -427,10 +427,10 @@ TEST_F(vpc, vpc_update_rttbl) {
                 "ba:de:de:ad:be:ef", "1000::1/64", "VxLAN 9999",
                 int2pdsobjkey(4000), int2pdsobjkey(6000));
     vpc_create(feeder);
-    feeder.spec.v4_route_table = int2pdsobjkey(5000);  // update v4 rttbl
+    spec.v4_route_table = int2pdsobjkey(5000); // update v4 route table
     vpc_update(feeder, &spec, VPC_ATTR_V4_RTTBL);
     vpc_read(feeder);
-    feeder.spec.v6_route_table = int2pdsobjkey(7000);  // update v6 rttbl
+    spec.v6_route_table = int2pdsobjkey(7000); // update v6 route table
     vpc_update(feeder, &spec, VPC_ATTR_V6_RTTBL);
     vpc_read(feeder);
     vpc_delete(feeder);
@@ -449,7 +449,7 @@ TEST_F(vpc, vpc_update_tos) {
                 "ba:de:de:ad:be:ef", "1000::1/64", "VxLAN 9999",
                 int2pdsobjkey(4000), int2pdsobjkey(6000), 1);
     vpc_create(feeder);
-    feeder.spec.tos = 2;  // update tos
+    spec.tos = 2; // update tos
     vpc_update(feeder, &spec, VPC_ATTR_TOS);
     vpc_read(feeder);
     vpc_delete(feeder);
