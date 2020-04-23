@@ -62,6 +62,8 @@ fd_recv (int sock, int *fd, void *iov_data, int iov_len)
     cmsg->cmsg_len = CMSG_LEN(sizeof(int));
     cmsg->cmsg_level = SOL_SOCKET;
     cmsg->cmsg_type = SCM_RIGHTS;
+    // initialize to -1, to identify invalid fds
+    *((int *)CMSG_DATA(cmsg)) = -1;
 
     if ((bytes_read = recvmsg(sock, &msghdr, 0)) < 0) {
 	    return -1;

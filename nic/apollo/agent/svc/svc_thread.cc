@@ -8,12 +8,15 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
-#include "nic/apollo/agent/trace.hpp"
+#include "nic/apollo/agent/svc/vpc_svc.hpp"
+#include "nic/apollo/agent/svc/vnic_svc.hpp"
+#include "nic/apollo/agent/svc/subnet_svc.hpp"
 #include "nic/apollo/agent/core/core.hpp"
+#include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/include/pds_upgrade.hpp"
 #include "nic/apollo/core/mem.hpp"
-#include "gen/proto/debug.pb.h"
+#include "gen/proto/types.pb.h"
 
 #define SVC_SERVER_SOCKET_PATH          "/var/run/pds_svc_server_sock"
 #define CMD_IOVEC_DATA_LEN              (256)
@@ -24,11 +27,91 @@ namespace core {
 
 static thread_local sdk::event_thread::io_t cmd_accept_io;
 
+static sdk_ret_t
+pds_handle_cfg (int fd, cfg_ctxt_t *ctxt)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    char *iov_data;
+    types::ServiceResponseMessage proto_rsp;
+    google::protobuf::Any *any_resp = proto_rsp.mutable_response();
+
+    PDS_TRACE_VERBOSE("Received UDS config message {}", ctxt->cfg);
+
+    switch (ctxt->cfg) {
+    case CFG_MSG_VPC_CREATE:
+    case CFG_MSG_VPC_UPDATE:
+    case CFG_MSG_VPC_DELETE:
+    case CFG_MSG_VPC_GET:
+        ret = pds_svc_vpc_handle_cfg(ctxt, any_resp);
+        break;
+    case CFG_MSG_VPC_PEER_CREATE:
+    case CFG_MSG_VPC_PEER_DELETE:
+    case CFG_MSG_VPC_PEER_GET:
+        ret = pds_svc_vpc_peer_handle_cfg(ctxt, any_resp);
+        break;
+    case CFG_MSG_VNIC_CREATE:
+    case CFG_MSG_VNIC_UPDATE:
+    case CFG_MSG_VNIC_DELETE:
+    case CFG_MSG_VNIC_GET:
+        ret = pds_svc_vnic_handle_cfg(ctxt, any_resp);
+        break;
+    case CFG_MSG_SUBNET_CREATE:
+    case CFG_MSG_SUBNET_UPDATE:
+    case CFG_MSG_SUBNET_DELETE:
+    case CFG_MSG_SUBNET_GET:
+        ret = pds_svc_subnet_handle_cfg(ctxt, any_resp);
+        break;
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
+
+    proto_rsp.set_apistatus(sdk_ret_to_api_status(ret));
+    iov_data = (char *)SDK_CALLOC(PDS_MEM_ALLOC_CMD_READ_IO, proto_rsp.ByteSizeLong());
+    if (proto_rsp.SerializeToArray(iov_data, proto_rsp.ByteSizeLong())) {
+        if (send(fd, iov_data, proto_rsp.ByteSizeLong(), 0) < 0) {
+            PDS_TRACE_ERR("Send on socket failed. Error {}", errno);
+        }
+    } else {
+        PDS_TRACE_ERR("Serializing config message {} response failed", ctxt->cfg);
+    }
+    SDK_FREE(PDS_MEM_ALLOC_CMD_READ_IO, iov_data);
+
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+handle_svc_req (int fd, svc_req_ctxt_t *req)
+{
+    sdk_ret_t ret;
+
+    switch (req->type) {
+    case SVC_REQ_TYPE_CFG:
+        ret = pds_handle_cfg(fd, &req->cfg_ctxt);
+        break;
+    case SVC_REQ_TYPE_CMD:
+        {
+            types::ServiceResponseMessage proto_rsp;
+            char iov_data[CMD_IOVEC_DATA_LEN];
+
+            ret = debug::pds_handle_cmd(&req->cmd_ctxt);
+            proto_rsp.set_apistatus(sdk_ret_to_api_status(ret));
+            proto_rsp.SerializeToArray(iov_data, proto_rsp.ByteSizeLong());
+            send(fd, iov_data, proto_rsp.ByteSizeLong(), 0);
+        }
+        break;
+    default:
+        ret = SDK_RET_INVALID_ARG;
+    }
+    return ret;
+}
+
 static void
 svc_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
 {
     char iov_data[CMD_IOVEC_DATA_LEN];
-    int cmd_fd,bytes_read;
+    types::ServiceRequestMessage proto_req;
+    svc_req_ctxt_t svc_req;
+    int cmd_fd, bytes_read;
 
     // read from existing connection
     if ((bytes_read = fd_recv(fd, &cmd_fd, &iov_data, CMD_IOVEC_DATA_LEN)) < 0) {
@@ -36,23 +119,19 @@ svc_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
     }
     // execute command
     if (bytes_read > 0) {
-        pds::CommandCtxt proto_cmd_ctxt;
-        pds::CommandResponse cmd_resp;
-        cmd_ctxt_t cmd_ctxt = { 0 };
-        sdk_ret_t ret;
-
         // convert to proto msg
-        proto_cmd_ctxt.ParseFromArray(iov_data, bytes_read);
-        // parse cmd ctxt
-        pds_cmd_proto_to_cmd_ctxt(&cmd_ctxt, &proto_cmd_ctxt, cmd_fd);
-        // handle cmd
-        ret = debug::pds_handle_cmd(&cmd_ctxt);
+        if (proto_req.ParseFromArray(iov_data, bytes_read)) {
+            // parse cmd ctxt
+            pds_svc_req_proto_to_svc_req_ctxt(&svc_req, &proto_req, cmd_fd);
+            // handle cmd
+            handle_svc_req(fd, &svc_req);
+        } else {
+            PDS_TRACE_ERR("Parse service request message from socket failed");
+        }
         // close fd
-        close(cmd_fd);
-        // send response
-        cmd_resp.set_apistatus(sdk_ret_to_api_status(ret));
-        cmd_resp.SerializeToArray(iov_data, cmd_resp.ByteSizeLong());
-        send(fd, iov_data, cmd_resp.ByteSizeLong(), 0);
+        if (cmd_fd >= 0) {
+            close(cmd_fd);
+        }
     }
     // close connection
     close(fd);

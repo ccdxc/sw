@@ -7,6 +7,7 @@
 syntax = "proto3";
 
 import public "gogo.proto";
+import "google/protobuf/any.proto";
 
 package types;
 option go_package="pds";
@@ -337,7 +338,7 @@ enum AdminState {
 // PortSpeed specifies the speed of the port
 enum PortSpeed {
   PORT_SPEED_NONE  = 0; // port speed not configured
-  PORT_SPEED_10M   = 1; // port speed is 10Mbps 
+  PORT_SPEED_10M   = 1; // port speed is 10Mbps
   PORT_SPEED_100M  = 2; // port speed is 100Mbps
   PORT_SPEED_1G    = 3; // port speed is 1Gbps
   PORT_SPEED_10G   = 4; // port speed is 10Gbps
@@ -348,3 +349,46 @@ enum PortSpeed {
   PORT_SPEED_RESVD = 9;
 }
 
+enum Command {
+  CMD_NONE                  = 0;
+  CMD_MAPPING_DUMP          = 1;
+  CMD_INTR_DUMP             = 2;
+  CMD_INTR_CLEAR            = 3;
+  CMD_API_ENGINE_STATS_DUMP = 4;
+  CMD_FLOW_DUMP             = 5;
+  CMD_STORE_STATS_DUMP      = 6;
+  CMD_NAT_PB_DUMP           = 7;
+  CMD_NACL_DUMP             = 8;
+  CMD_PORT_FSM_DUMP         = 9;
+}
+
+message CommandMessage {
+  Command             Command    = 1;
+  google.protobuf.Any CommandMsg = 2;
+}
+
+enum ServiceRequestOp {
+  SERVICE_OP_NONE    = 0;
+  SERVICE_OP_CREATE  = 1;
+  SERVICE_OP_DELETE  = 2;
+  SERVICE_OP_UPDATE  = 3;
+  SERVICE_OP_READ    = 4;
+}
+
+message ConfigMessage {
+  ServiceRequestOp    ConfigOp  = 1;
+  google.protobuf.Any ConfigMsg = 2;
+}
+
+message ServiceRequestMessage {
+  int64   Version          = 1;
+  oneof request {
+    CommandMessage Command = 2;
+    ConfigMessage  Config  = 3;
+  }
+}
+
+message ServiceResponseMessage {
+  ApiStatus           ApiStatus = 1;
+  google.protobuf.Any Response  = 2;
+}

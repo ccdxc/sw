@@ -395,19 +395,6 @@ message QueueCreditsGetResponse {
   repeated PortQueueCredit PortQueueCredit = 2;
 }
 
-enum Command {
-  CMD_NONE                  = 0;
-  CMD_MAPPING_DUMP          = 1;
-  CMD_INTR_DUMP             = 2;
-  CMD_INTR_CLEAR            = 3;
-  CMD_API_ENGINE_STATS_DUMP = 4;
-  CMD_FLOW_DUMP             = 5;
-  CMD_STORE_STATS_DUMP      = 6;
-  CMD_NAT_PB_DUMP           = 7;
-  CMD_NACL_DUMP             = 8;
-  CMD_PORT_FSM_DUMP         = 9;
-}
-
 enum MappingDumpType {
   MAPPING_DUMP_LOCAL     = 0;
   MAPPING_DUMP_REMOTE_L2 = 1;
@@ -436,17 +423,8 @@ message MappingDumpFilter {
   MappingDumpType Type = 2;
 }
 
-message CommandCtxt {
-  int64               Version           = 1;
-  Command             Cmd               = 2;
-  oneof commandfilter {
-    MappingDumpFilter MappingDumpFilter = 3;
-    bytes Id                            = 4;
-  }
-}
-
-message CommandResponse {
-  types.ApiStatus ApiStatus = 1;
+message CommandUUID {
+  bytes Id = 1;
 }
 
 message AacsRequest {
@@ -501,30 +479,30 @@ message InternalPortStatus {
 }
 
 message InternalPortStats {
-  uint64  InGoodOctets   = 2;    
-  uint64  OutOctets      = 3;
-  uint32  InBadOctets    = 4;
-  uint32  InUnicast      = 5;
-  uint32  Inbroadcast    = 6;
-  uint32  Inmulticast    = 7;
-  uint32  InPause        = 8;
-  uint32  InUndersize    = 9;
-  uint32  InFragments    = 10;
-  uint32  InOversize     = 11;
-  uint32  InJabber       = 12;
-  uint32  InRxErr        = 13;
-  uint32  InFcsErr       = 14;
-  uint32  OutUnicast     = 15;
-  uint32  OutBroadcast   = 16;
-  uint32  OutMulticast   = 17;
-  uint32  OutFcsErr      = 18;
-  uint32  OutPause       = 19;
-  uint32  OutCollisions  = 20;
-  uint32  OutDeferred    = 21;
-  uint32  OutSingle      = 22;
-  uint32  OutMultiple    = 23;
-  uint32  OutExcessive   = 24;
-  uint32  OutLate        = 25;
+  uint64  InGoodOctets   = 1;
+  uint64  OutOctets      = 2;
+  uint32  InBadOctets    = 3;
+  uint32  InUnicast      = 4;
+  uint32  Inbroadcast    = 5;
+  uint32  Inmulticast    = 6;
+  uint32  InPause        = 7;
+  uint32  InUndersize    = 8;
+  uint32  InFragments    = 9;
+  uint32  InOversize     = 10;
+  uint32  InJabber       = 11;
+  uint32  InRxErr        = 12;
+  uint32  InFcsErr       = 13;
+  uint32  OutUnicast     = 14;
+  uint32  OutBroadcast   = 15;
+  uint32  OutMulticast   = 16;
+  uint32  OutFcsErr      = 17;
+  uint32  OutPause       = 18;
+  uint32  OutCollisions  = 19;
+  uint32  OutDeferred    = 20;
+  uint32  OutSingle      = 21;
+  uint32  OutMultiple    = 22;
+  uint32  OutExcessive   = 23;
+  uint32  OutLate        = 24;
 }
 
 message InternalPortResponse {

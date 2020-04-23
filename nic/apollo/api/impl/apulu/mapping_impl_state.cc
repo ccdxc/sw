@@ -428,6 +428,10 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
     sdk_table_api_params_t api_params = { 0 };
     mapping_dump_type_t    type;
 
+    if (!args) {
+        return SDK_RET_OK;
+    }
+
     if (!args->mapping_dump.key_valid) {
         type = args->mapping_dump.type;
         if (type == MAPPING_DUMP_TYPE_LOCAL) {

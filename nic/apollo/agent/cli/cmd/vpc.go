@@ -20,7 +20,8 @@ import (
 
 var (
 	// ID holds VPC ID
-	ID string
+	ID        string
+	transport string
 )
 
 var vpcShowCmd = &cobra.Command{
@@ -33,6 +34,8 @@ var vpcShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(vpcShowCmd)
 	vpcShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	vpcShowCmd.Flags().StringVarP(&transport, "transport", "t", "grpc",
+		"Specify PDS agent transport (uds | grpc)")
 	vpcShowCmd.Flags().StringVarP(&ID, "id", "i", "", "Specify VPC ID")
 }
 
@@ -52,7 +55,8 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewVPCSvcClient(c)
 
-	var req *pds.VPCGetRequest
+	req := &pds.VPCGetRequest{}
+	respMsg := &pds.VPCGetResponse{}
 	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific VPC
 		req = &pds.VPCGetRequest{
@@ -65,8 +69,18 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// PDS call
-	respMsg, err := client.VPCGet(context.Background(), req)
+	AgentTransport, err := GetAgentTransport(cmd)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	if AgentTransport == AGENT_TRANSPORT_UDS {
+		err = HandleSvcReqConfigMsg(pds.ServiceRequestOp_SERVICE_OP_READ,
+			req, respMsg)
+	} else {
+		respMsg, err = client.VPCGet(context.Background(), req)
+	}
 	if err != nil {
 		fmt.Printf("Getting VPC failed. %v\n", err)
 		return

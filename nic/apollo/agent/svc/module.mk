@@ -10,8 +10,11 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
                   sdkp4 sdkp4utils sdk_asicrw_if sdk${ASIC} \
                   sdkplatformutils sdkxcvrdriver sdkasicpd \
                   bm_allocator sdklinkmgr sdklinkmgrcsr operd \
-		  operd_alerts operd_alert_defs
+                  operd_alerts operd_alert_defs
 MODULE_LDLIBS   = ${NIC_CAPSIM_LDLIBS} \
                   ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                   AAPL
+ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc)
+ATHENA_CC_FILES = $(wildcard ${MODULE_SRC_DIR}/*_athena.cc)
+MODULE_SRCS     = $(filter-out $(ATHENA_CC_FILES), $(ALL_CC_FILES))
 include ${MKDEFS}/post.mk

@@ -12,8 +12,8 @@
 #include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/agent/svc/debug.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
+#include "nic/apollo/agent/svc/svc_thread.hpp"
 #include "nic/apollo/agent/core/core.hpp"
-#include "nic/apollo/agent/core/svc_thread.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/athena/grpc_thread.hpp"
 #include "nic/apollo/api/include/athena/pds_base.h"
@@ -82,7 +82,7 @@ spawn_grpc_reg_thread (void)
 // initialize the agent
 //------------------------------------------------------------------------------
 pds_ret_t
-pds_agent_init() 
+pds_agent_init()
 {
     sdk_ret_t    ret;
 

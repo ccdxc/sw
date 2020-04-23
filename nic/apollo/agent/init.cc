@@ -9,7 +9,7 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/core.hpp"
-#include "nic/apollo/agent/core/svc_thread.hpp"
+#include "nic/apollo/agent/svc/svc_thread.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/event.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"

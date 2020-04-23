@@ -58,20 +58,13 @@ func naclShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var cmdCtxt *pds.CommandCtxt
-
 	// dump nacl table
-	cmdCtxt = &pds.CommandCtxt{
-		Version: 1,
-		Cmd:     pds.Command_CMD_NACL_DUMP,
-	}
-
-	// handle command
-	cmdResp, err := HandleCommand(cmdCtxt)
+	cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_NACL_DUMP, nil)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		return
 	}
+
 	if cmdResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 		fmt.Printf("Command failed with %v error\n", cmdResp.ApiStatus)
 		return

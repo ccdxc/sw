@@ -107,25 +107,64 @@ typedef struct cmd_args_s {
     };
 } cmd_args_t;
 
-typedef enum cli_cmd_e {
-    CLI_CMD_START = 0,
-    CLI_CMD_MAPPING_DUMP = CLI_CMD_START,
-    CLI_CMD_INTR_DUMP,
-    CLI_CMD_INTR_CLEAR,
-    CLI_CMD_API_ENGINE_STATS_DUMP,
-    CLI_CMD_FLOW_DUMP,
-    CLI_CMD_STORE_STATS_DUMP,
-    CLI_CMD_NAT_PB_DUMP,
-    CLI_CMD_NACL_DUMP,
-    CLI_CMD_PORT_FSM_DUMP,
-    CLI_CMD_MAX = 255,
-} cli_cmd_t;
+typedef enum cmd_msg_e {
+    CMD_MSG_NONE = 0,
+    CMD_MSG_MAPPING_DUMP = CMD_MSG_NONE,
+    CMD_MSG_INTR_DUMP,
+    CMD_MSG_INTR_CLEAR,
+    CMD_MSG_API_ENGINE_STATS_DUMP,
+    CMD_MSG_FLOW_DUMP,
+    CMD_MSG_STORE_STATS_DUMP,
+    CMD_MSG_NAT_PB_DUMP,
+    CMD_MSG_NACL_DUMP,
+    CMD_MSG_PORT_FSM_DUMP,
+    CMD_MSG_MAX = 255,
+} cmd_msg_t;
 
 typedef struct cmd_ctxt_s {
-    int fd;           // File descriptor
-    cli_cmd_t cmd;    // CLI command
-    cmd_args_t args;  // Command arguments
+    int fd;           // file descriptor
+    cmd_msg_t cmd;    // CLI command
+    cmd_args_t args;  // command arguments
 } cmd_ctxt_t;
+
+typedef enum cfg_msg_e {
+    CFG_MSG_NONE = 0,
+    CFG_MSG_VPC_CREATE = CFG_MSG_NONE,
+    CFG_MSG_VPC_UPDATE,
+    CFG_MSG_VPC_DELETE,
+    CFG_MSG_VPC_GET,
+    CFG_MSG_VPC_PEER_CREATE,
+    CFG_MSG_VPC_PEER_DELETE,
+    CFG_MSG_VPC_PEER_GET,
+    CFG_MSG_VNIC_CREATE,
+    CFG_MSG_VNIC_UPDATE,
+    CFG_MSG_VNIC_DELETE,
+    CFG_MSG_VNIC_GET,
+    CFG_MSG_SUBNET_CREATE,
+    CFG_MSG_SUBNET_UPDATE,
+    CFG_MSG_SUBNET_DELETE,
+    CFG_MSG_SUBNET_GET,
+    CFG_MSG_MAX = 255,
+} cfg_msg_t;
+
+typedef struct cfg_ctxt_s {
+    cfg_msg_t cfg;    // CLI config command
+    void *req;        // config request
+} cfg_ctxt_t;
+
+typedef enum svc_req_type_e {
+    SVC_REQ_TYPE_NONE = 0,
+    SVC_REQ_TYPE_CFG,
+    SVC_REQ_TYPE_CMD,
+} svc_req_type_t;
+
+typedef struct svc_req_ctxt_s {
+    svc_req_type_t type;
+    union {
+        cfg_ctxt_t cfg_ctxt;
+        cmd_ctxt_t cmd_ctxt;
+    };
+} svc_req_ctxt_t;
 
 namespace debug {
 

@@ -303,11 +303,13 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 			}
 		}
 	} else {
-		var cmdCtxt *pds.CommandCtxt
-
-		cmdCtxt = &pds.CommandCtxt{
+		cmdCtxt := &pds.ServiceRequestMessage{
 			Version: 1,
-			Cmd:     pds.Command_CMD_FLOW_DUMP,
+			Request: &pds.ServiceRequestMessage_Command{
+				Command: &pds.CommandMessage{
+					Command: pds.Command_CMD_FLOW_DUMP,
+				},
+			},
 		}
 
 		flow := myFlowMsg{}

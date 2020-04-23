@@ -36,14 +36,8 @@ func interruptClearCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	var cmdCtxt *pds.CommandCtxt
-	cmdCtxt = &pds.CommandCtxt{
-		Version: 1,
-		Cmd:     pds.Command_CMD_INTR_CLEAR,
-	}
-
 	// handle command
-	cmdResp, err := HandleCommand(cmdCtxt)
+	cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_INTR_CLEAR, nil)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		return
@@ -62,15 +56,8 @@ func interruptShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	var cmdCtxt *pds.CommandCtxt
-
-	cmdCtxt = &pds.CommandCtxt{
-		Version: 1,
-		Cmd:     pds.Command_CMD_INTR_DUMP,
-	}
-
 	// handle command
-	cmdResp, err := HandleCommand(cmdCtxt)
+	cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_INTR_DUMP, nil)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		return

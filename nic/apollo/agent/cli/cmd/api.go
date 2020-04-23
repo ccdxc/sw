@@ -47,17 +47,12 @@ func storeShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// dump API counters
-	cmdCtxt := &pds.CommandCtxt{
-		Version: 1,
-		Cmd:     pds.Command_CMD_STORE_STATS_DUMP,
-	}
-
-	// handle command
-	cmdResp, err := HandleCommand(cmdCtxt)
+	cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_STORE_STATS_DUMP, nil)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		return
 	}
+
 	if cmdResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 		fmt.Printf("Command failed with %v error\n", cmdResp.ApiStatus)
 		return
@@ -79,13 +74,7 @@ func apiShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// dump API counters
-	cmdCtxt := &pds.CommandCtxt{
-		Version: 1,
-		Cmd:     pds.Command_CMD_API_ENGINE_STATS_DUMP,
-	}
-
-	// handle command
-	cmdResp, err := HandleCommand(cmdCtxt)
+	cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_API_ENGINE_STATS_DUMP, nil)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		return

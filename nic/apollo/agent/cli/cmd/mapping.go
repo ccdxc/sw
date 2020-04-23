@@ -111,9 +111,8 @@ func localMappingInternalHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var cmdCtxt *pds.CommandCtxt
+	var filter *pds.MappingDumpFilter
 	mType := pds.MappingDumpType_MAPPING_DUMP_LOCAL
-
 	if cmd != nil && cmd.Flags().Changed("vpc") && cmd.Flags().Changed("ip") {
 		// dump specific Mapping
 		key := &pds.HWMappingKey{
@@ -124,31 +123,19 @@ func localMappingInternalHandler(cmd *cobra.Command, args []string) {
 				},
 			},
 		}
-		cmdCtxt = &pds.CommandCtxt{
-			Version: 1,
-			Cmd:     pds.Command_CMD_MAPPING_DUMP,
-			Commandfilter: &pds.CommandCtxt_MappingDumpFilter{
-				MappingDumpFilter: &pds.MappingDumpFilter{
-					Key:  key,
-					Type: mType,
-				},
-			},
+		filter = &pds.MappingDumpFilter{
+			Key:  key,
+			Type: mType,
 		}
 	} else {
 		// dump all local mappings
-		cmdCtxt = &pds.CommandCtxt{
-			Version: 1,
-			Cmd:     pds.Command_CMD_MAPPING_DUMP,
-			Commandfilter: &pds.CommandCtxt_MappingDumpFilter{
-				MappingDumpFilter: &pds.MappingDumpFilter{
-					Type: mType,
-				},
-			},
+		filter = &pds.MappingDumpFilter{
+			Type: mType,
 		}
 	}
 
 	// handle command
-	cmdResp, err := HandleCommand(cmdCtxt)
+	cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_MAPPING_DUMP, filter)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		return
@@ -495,9 +482,8 @@ func remoteL2MappingInternalHandler(cmd *cobra.Command) {
 		return
 	}
 
-	var cmdCtxt *pds.CommandCtxt
+	var filter *pds.MappingDumpFilter
 	mType := pds.MappingDumpType_MAPPING_DUMP_REMOTE_L2
-
 	if cmd != nil && cmd.Flags().Changed("subnet") && cmd.Flags().Changed("mac") {
 		// dump specific Mapping
 		key := &pds.HWMappingKey{
@@ -508,31 +494,19 @@ func remoteL2MappingInternalHandler(cmd *cobra.Command) {
 				},
 			},
 		}
-		cmdCtxt = &pds.CommandCtxt{
-			Version: 1,
-			Cmd:     pds.Command_CMD_MAPPING_DUMP,
-			Commandfilter: &pds.CommandCtxt_MappingDumpFilter{
-				MappingDumpFilter: &pds.MappingDumpFilter{
-					Key:  key,
-					Type: mType,
-				},
-			},
+		filter = &pds.MappingDumpFilter{
+			Key:  key,
+			Type: mType,
 		}
 	} else {
 		// dump all l2 remote mappings
-		cmdCtxt = &pds.CommandCtxt{
-			Version: 1,
-			Cmd:     pds.Command_CMD_MAPPING_DUMP,
-			Commandfilter: &pds.CommandCtxt_MappingDumpFilter{
-				MappingDumpFilter: &pds.MappingDumpFilter{
-					Type: mType,
-				},
-			},
+		filter = &pds.MappingDumpFilter{
+			Type: mType,
 		}
 	}
 
 	// handle command
-	cmdResp, err := HandleCommand(cmdCtxt)
+	cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_MAPPING_DUMP, filter)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		return
@@ -549,9 +523,8 @@ func remoteL3MappingInternalHandler(cmd *cobra.Command) {
 		return
 	}
 
-	var cmdCtxt *pds.CommandCtxt
+	var filter *pds.MappingDumpFilter
 	mType := pds.MappingDumpType_MAPPING_DUMP_REMOTE_L3
-
 	if cmd != nil && cmd.Flags().Changed("vpc") && cmd.Flags().Changed("ip") {
 		// dump specific Mapping
 		key := &pds.HWMappingKey{
@@ -562,31 +535,19 @@ func remoteL3MappingInternalHandler(cmd *cobra.Command) {
 				},
 			},
 		}
-		cmdCtxt = &pds.CommandCtxt{
-			Version: 1,
-			Cmd:     pds.Command_CMD_MAPPING_DUMP,
-			Commandfilter: &pds.CommandCtxt_MappingDumpFilter{
-				MappingDumpFilter: &pds.MappingDumpFilter{
-					Key:  key,
-					Type: mType,
-				},
-			},
+		filter = &pds.MappingDumpFilter{
+			Key:  key,
+			Type: mType,
 		}
 	} else {
 		// dump all l3 remote mappings
-		cmdCtxt = &pds.CommandCtxt{
-			Version: 1,
-			Cmd:     pds.Command_CMD_MAPPING_DUMP,
-			Commandfilter: &pds.CommandCtxt_MappingDumpFilter{
-				MappingDumpFilter: &pds.MappingDumpFilter{
-					Type: mType,
-				},
-			},
+		filter = &pds.MappingDumpFilter{
+			Type: mType,
 		}
 	}
 
 	// handle command
-	cmdResp, err := HandleCommand(cmdCtxt)
+	cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_MAPPING_DUMP, filter)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		return

@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"syscall"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/proto"
+
+	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -16,18 +20,28 @@ import (
 var CmdSocket string = "/var/run/pds_svc_server_sock"
 var vppUdsPath string = "/run/vpp/pds.sock"
 
+type Transport int
+
+const (
+	AGENT_TRANSPORT_NONE Transport = 0
+	AGENT_TRANSPORT_GRPC Transport = 1
+	AGENT_TRANSPORT_UDS  Transport = 2
+)
+
+var AgentTransport Transport
+
 type PrintObject interface {
 	PrintHeader()
 	HandleObject([]byte) bool
 }
 
 // function to handle commands over unix domain sockets
-// param[in] cmd     Command context to be sent
-// return    cmdResp Command response
+// param[in] cmdReq  Service request message to be sent
+// return    cmdResp Service response message
 //           err     Error
-func HandleCommand(cmdCtxt *pds.CommandCtxt) (*pds.CommandResponse, error) {
+func HandleCommand(cmdReq *pds.ServiceRequestMessage) (*pds.ServiceResponseMessage, error) {
 	// marshall cmdCtxt
-	iovec, err := proto.Marshal(cmdCtxt)
+	iovec, err := proto.Marshal(cmdReq)
 	if err != nil {
 		fmt.Printf("Marshall command failed with error %v\n", err)
 		return nil, err
@@ -41,7 +55,7 @@ func HandleCommand(cmdCtxt *pds.CommandCtxt) (*pds.CommandResponse, error) {
 	}
 
 	// unmarshal response
-	cmdResp := &pds.CommandResponse{}
+	cmdResp := &pds.ServiceResponseMessage{}
 	err = proto.Unmarshal(resp, cmdResp)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
@@ -51,10 +65,121 @@ func HandleCommand(cmdCtxt *pds.CommandCtxt) (*pds.CommandResponse, error) {
 	return cmdResp, nil
 }
 
+// function to handle configs over unix domain sockets
+// param[in] cfgReq  Service request message to be sent
+// return    cfgResp Service response message
+//           err     Error
+func HandleConfig(cfgReq *pds.ServiceRequestMessage) (*pds.ServiceResponseMessage, error) {
+	// marshall cmdCtxt
+	iovec, err := proto.Marshal(cfgReq)
+	if err != nil {
+		fmt.Printf("Marshall command failed with error %v\n", err)
+		return nil, err
+	}
+
+	// send over UDS
+	resp, err := utils.CmdSend(CmdSocket, iovec, -1)
+	if err != nil {
+		fmt.Printf("Command send operation failed with error %v\n", err)
+		return nil, err
+	}
+
+	// unmarshal response
+	cmdResp := &pds.ServiceResponseMessage{}
+	err = proto.Unmarshal(resp, cmdResp)
+	if err != nil {
+		fmt.Printf("Command failed with %v error\n", err)
+		return nil, err
+	}
+
+	return cmdResp, nil
+}
+
+// function to handle command service request message
+// param[in]  cmd       command
+// param[in]  req       request
+// param[out] resp      response
+// return     err       Error
+func HandleSvcReqCommandMsg(cmd pds.Command,
+	req proto.Message) (*pds.ServiceResponseMessage, error) {
+	var reqMsg *types.Any
+	var err error
+
+	if req != nil {
+		reqMsg, err = types.MarshalAny(req)
+		if err != nil {
+			fmt.Printf("Command failed with %v error\n", err)
+			return nil, err
+		}
+	} else {
+		reqMsg = nil
+	}
+
+	cmdReq := &pds.ServiceRequestMessage{
+		Version: 1,
+		Request: &pds.ServiceRequestMessage_Command{
+			Command: &pds.CommandMessage{
+				Command:    cmd,
+				CommandMsg: reqMsg,
+			},
+		},
+	}
+
+	// handle config
+	return HandleCommand(cmdReq)
+}
+
+// function to handle config service request message
+// param[in]  req       request
+// param[in]  op        operation (crud)
+// param[out] resp      response
+// return     err       Error
+func HandleSvcReqConfigMsg(op pds.ServiceRequestOp,
+	req proto.Message, resp proto.Message) error {
+	reqMsg, err := types.MarshalAny(req)
+	if err != nil {
+		fmt.Printf("Command failed with %v error\n", err)
+		return err
+	}
+
+	cmdReq := &pds.ServiceRequestMessage{
+		Version: 1,
+		Request: &pds.ServiceRequestMessage_Config{
+			Config: &pds.ConfigMessage{
+				ConfigOp:  op,
+				ConfigMsg: reqMsg,
+			},
+		},
+	}
+
+	// handle config
+	cmdResp, err := HandleConfig(cmdReq)
+	if err != nil {
+		return err
+	}
+
+	if cmdResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Command failed with %v error\n", cmdResp.ApiStatus)
+		return err
+	}
+
+	anyResp := cmdResp.GetResponse()
+
+	if resp != nil {
+		err = types.UnmarshalAny(anyResp, resp)
+		if err != nil {
+			fmt.Printf("Command failed with %v error\n", err)
+			return err
+		}
+	}
+
+	return err
+}
+
 // function to handle show object command over unix domain sockets
 // param[in] cmd     Command context to be sent
 // return    err     Error
-func HandleUdsShowObject(cmdCtxt *pds.CommandCtxt, i PrintObject) error {
+func HandleUdsShowObject(cmdCtxt *pds.ServiceRequestMessage, i PrintObject) error {
 	// marshall cmdCtxt
 	iovec, err := proto.Marshal(cmdCtxt)
 	if err != nil {
@@ -101,4 +226,32 @@ func HandleUdsShowObject(cmdCtxt *pds.CommandCtxt, i PrintObject) error {
 		}
 	}
 	return nil
+}
+
+func GetAgentTransport(cmd *cobra.Command) (Transport, error) {
+	if cmd.Flags().Changed("transport") {
+		if transport == "uds" {
+			return AGENT_TRANSPORT_UDS, nil
+		} else if transport == "grpc" {
+			return AGENT_TRANSPORT_GRPC, nil
+		} else {
+			return AGENT_TRANSPORT_NONE,
+				errors.New("Transport specified is invalid. Refer help string")
+		}
+	} else {
+		val, present := os.LookupEnv("PDS_AGENT_TRANSPORT")
+		if present != true {
+			return AGENT_TRANSPORT_GRPC, nil
+		} else {
+			if val == "uds" {
+				return AGENT_TRANSPORT_UDS, nil
+			} else if val == "grpc" {
+				return AGENT_TRANSPORT_GRPC, nil
+			} else {
+				return AGENT_TRANSPORT_NONE,
+					errors.New("Environment variable PDS_AGENT_TRANSPORT is invalid. Should be uds or grpc")
+			}
+		}
+	}
+	return AGENT_TRANSPORT_NONE, errors.New("Invalid transport")
 }

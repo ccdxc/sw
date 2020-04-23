@@ -177,29 +177,36 @@ dump_port_fsm (sdk::linkmgr::port_args_t *port_info, void *ctxt)
 sdk_ret_t
 pds_handle_cmd (cmd_ctxt_t *ctxt)
 {
+    sdk_ret_t ret;
+
+    PDS_TRACE_VERBOSE("Received UDS command message %u", ctxt->cmd);
+
     switch (ctxt->cmd) {
-    case CLI_CMD_MAPPING_DUMP:
-    case CLI_CMD_NACL_DUMP:
-        return impl_base::pipeline_impl()->handle_cmd(ctxt);
-    case CLI_CMD_INTR_DUMP:
-        dump_interrupts(ctxt->fd);
+    case CMD_MSG_MAPPING_DUMP:
+    case CMD_MSG_NACL_DUMP:
+        ret = impl_base::pipeline_impl()->handle_cmd(ctxt);
         break;
-    case CLI_CMD_INTR_CLEAR:
-        clear_interrupts(ctxt->fd);
+    case CMD_MSG_INTR_DUMP:
+        ret = dump_interrupts(ctxt->fd);
         break;
-    case CLI_CMD_API_ENGINE_STATS_DUMP:
-        api::api_engine_get()->dump_api_counters(ctxt->fd);
+    case CMD_MSG_INTR_CLEAR:
+        ret = clear_interrupts(ctxt->fd);
         break;
-    case CLI_CMD_STORE_STATS_DUMP:
-        dump_state_base_stats(ctxt->fd);
+    case CMD_MSG_API_ENGINE_STATS_DUMP:
+        ret = api::api_engine_get()->dump_api_counters(ctxt->fd);
         break;
-    case CLI_CMD_PORT_FSM_DUMP:
-        return api::port_get(&ctxt->args.port_id, dump_port_fsm,
-                             (void *)&ctxt->fd);
+    case CMD_MSG_STORE_STATS_DUMP:
+        ret = dump_state_base_stats(ctxt->fd);
+        break;
+    case CMD_MSG_PORT_FSM_DUMP:
+        ret = api::port_get(&ctxt->args.port_id, dump_port_fsm,
+                            (void *)&ctxt->fd);
+        break;
     default:
-        return SDK_RET_INVALID_ARG;
+        ret = SDK_RET_INVALID_ARG;
     }
-    return SDK_RET_OK;
+
+    return ret;
 }
 
 /**

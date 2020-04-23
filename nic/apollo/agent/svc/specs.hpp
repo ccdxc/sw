@@ -427,30 +427,30 @@ pds_af_api_spec_to_proto_spec (uint8_t af)
     }
 }
 
-static inline cli_cmd_t
-pds_proto_cmd_to_api_cmd (pds::Command proto_cmd)
+static inline cmd_msg_t
+pds_proto_cmd_to_api_cmd (types::Command proto_cmd)
 {
     switch (proto_cmd) {
-    case pds::CMD_MAPPING_DUMP:
-        return CLI_CMD_MAPPING_DUMP;
-    case pds::CMD_NACL_DUMP:
-        return CLI_CMD_NACL_DUMP;
-    case pds::CMD_INTR_DUMP:
-        return CLI_CMD_INTR_DUMP;
-    case pds::CMD_INTR_CLEAR:
-        return CLI_CMD_INTR_CLEAR;
-    case pds::CMD_API_ENGINE_STATS_DUMP:
-        return CLI_CMD_API_ENGINE_STATS_DUMP;
-    case pds::CMD_FLOW_DUMP:
-        return CLI_CMD_FLOW_DUMP;
-    case pds::CMD_STORE_STATS_DUMP:
-        return CLI_CMD_STORE_STATS_DUMP;
-    case pds::CMD_NAT_PB_DUMP:
-        return CLI_CMD_NAT_PB_DUMP;
-    case pds::CMD_PORT_FSM_DUMP:
-        return CLI_CMD_PORT_FSM_DUMP;
+    case types::CMD_MAPPING_DUMP:
+        return CMD_MSG_MAPPING_DUMP;
+    case types::CMD_NACL_DUMP:
+        return CMD_MSG_NACL_DUMP;
+    case types::CMD_INTR_DUMP:
+        return CMD_MSG_INTR_DUMP;
+    case types::CMD_INTR_CLEAR:
+        return CMD_MSG_INTR_CLEAR;
+    case types::CMD_API_ENGINE_STATS_DUMP:
+        return CMD_MSG_API_ENGINE_STATS_DUMP;
+    case types::CMD_FLOW_DUMP:
+        return CMD_MSG_FLOW_DUMP;
+    case types::CMD_STORE_STATS_DUMP:
+        return CMD_MSG_STORE_STATS_DUMP;
+    case types::CMD_NAT_PB_DUMP:
+        return CMD_MSG_NAT_PB_DUMP;
+    case types::CMD_PORT_FSM_DUMP:
+        return CMD_MSG_PORT_FSM_DUMP;
     default:
-        return CLI_CMD_MAX;
+        return CMD_MSG_MAX;
     }
 }
 
@@ -468,43 +468,155 @@ proto_mapping_dump_type_to_pds (pds::MappingDumpType type)
     }
 }
 
+static inline cfg_msg_t
+pds_proto_cfg_to_api_cfg (std::string cfg_msg,
+                          types::ServiceRequestOp op)
+{
+    if (!cfg_msg.compare("pds.VPCRequest")) {
+        if (op == types::SERVICE_OP_CREATE) {
+            return CFG_MSG_VPC_CREATE;
+        } else if (op == types::SERVICE_OP_UPDATE) {
+            return CFG_MSG_VPC_UPDATE;
+        }
+    } else if (!cfg_msg.compare("pds.VPCDeleteRequest")) {
+        return CFG_MSG_VPC_DELETE;
+    } else if (!cfg_msg.compare("pds.VPCGetRequest")) {
+        return CFG_MSG_VPC_GET;
+    } else if (!cfg_msg.compare("pds.VPCPeerRequest")) {
+        return CFG_MSG_VPC_PEER_CREATE;
+    } else if (!cfg_msg.compare("pds.VPCPeerDeleteRequest")) {
+        return CFG_MSG_VPC_PEER_DELETE;
+    } else if (!cfg_msg.compare("pds.VPCPeerGetRequest")) {
+        return CFG_MSG_VPC_PEER_GET;
+    } else if (!cfg_msg.compare("pds.VnicRequest")) {
+        if (op == types::SERVICE_OP_CREATE) {
+            return CFG_MSG_VNIC_CREATE;
+        } else if (op == types::SERVICE_OP_UPDATE) {
+            return CFG_MSG_VNIC_UPDATE;
+        }
+    } else if (!cfg_msg.compare("pds.VnicDeleteRequest")) {
+        return CFG_MSG_VNIC_DELETE;
+    } else if (!cfg_msg.compare("pds.VnicGetRequest")) {
+        return CFG_MSG_VNIC_GET;
+    } else if (!cfg_msg.compare("pds.SubnetRequest")) {
+        if (op == types::SERVICE_OP_CREATE) {
+            return CFG_MSG_SUBNET_CREATE;
+        } else if (op == types::SERVICE_OP_UPDATE) {
+            return CFG_MSG_SUBNET_UPDATE;
+        }
+    } else if (!cfg_msg.compare("pds.SubnetDeleteRequest")) {
+        return CFG_MSG_SUBNET_DELETE;
+    } else if (!cfg_msg.compare("pds.SubnetGetRequest")) {
+        return CFG_MSG_SUBNET_GET;
+    } else {
+        return CFG_MSG_MAX;
+    }
+
+    return CFG_MSG_MAX;
+}
+
+static inline void
+pds_cfg_proto_to_cfg_ctxt (cfg_ctxt_t *cfg_ctxt,
+                           const types::ConfigMessage *proto_msg)
+{
+    google::protobuf::Any *any_msg;
+    std::string cfg_msg;
+    std::size_t delim_pos;
+
+    cfg_ctxt->req = (void *)&proto_msg->configmsg();
+    any_msg = (google::protobuf::Any *)cfg_ctxt->req;
+    cfg_msg = any_msg->type_url();
+    delim_pos = cfg_msg.find("/");
+    if (delim_pos != std::string::npos) {
+        cfg_msg = cfg_msg.substr(delim_pos + 1);
+        cfg_ctxt->cfg = pds_proto_cfg_to_api_cfg(cfg_msg,
+                                                 proto_msg->configop());
+    } else {
+        cfg_ctxt->cfg = CFG_MSG_MAX;
+    }
+}
+
 static inline void
 pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
-                           pds::CommandCtxt *proto_ctxt,
+                           const types::CommandMessage *proto_msg,
                            int fd)
 {
+    google::protobuf::Any *any_msg;
+    pds::MappingDumpFilter filter;
+    pds::CommandUUID uuid;
+    std::string cmd_msg;
+    std::size_t delim_pos;
+
     cmd_ctxt->fd = fd;
-    cmd_ctxt->cmd = pds_proto_cmd_to_api_cmd(proto_ctxt->cmd());
-    if (proto_ctxt->has_mappingdumpfilter()) {
-        cmd_ctxt->args.valid = true;
-        cmd_ctxt->args.mapping_dump.type =
-                proto_mapping_dump_type_to_pds(
-                proto_ctxt->mappingdumpfilter().type());
-        if (proto_ctxt->mappingdumpfilter().has_key()) {
-            auto key = proto_ctxt->mappingdumpfilter().key();
-            cmd_ctxt->args.mapping_dump.key_valid = true;
-            switch (cmd_ctxt->args.mapping_dump.type) {
-            case MAPPING_DUMP_TYPE_LOCAL:
-            case MAPPING_DUMP_TYPE_REMOTE_L3:
-                cmd_ctxt->args.mapping_dump.skey.type = PDS_MAPPING_TYPE_L3;
-                cmd_ctxt->args.mapping_dump.skey.vpc = key.ipkey().vpcid();
-                ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.skey.ip_addr,
-                                              key.ipkey().ipaddr());
-                break;
-            case MAPPING_DUMP_TYPE_REMOTE_L2:
-                cmd_ctxt->args.mapping_dump.skey.type = PDS_MAPPING_TYPE_L2;
-                cmd_ctxt->args.mapping_dump.skey.subnet = key.mackey().subnetid();
-                MAC_UINT64_TO_ADDR(cmd_ctxt->args.mapping_dump.skey.mac_addr,
-                                   key.mackey().macaddr());
-                break;
-            default:
-                break;
+    cmd_ctxt->cmd = pds_proto_cmd_to_api_cmd(proto_msg->command());
+
+    if (proto_msg->has_commandmsg()) {
+        any_msg = (google::protobuf::Any *)&proto_msg->commandmsg();
+        cmd_msg = any_msg->type_url();
+        delim_pos = cmd_msg.find("/");
+        if (delim_pos != std::string::npos) {
+            cmd_msg = cmd_msg.substr(delim_pos + 1);
+            if (!cmd_msg.compare("pds.MappingDumpFilter")) {
+                any_msg->UnpackTo(&filter);
+                cmd_ctxt->args.valid = true;
+                cmd_ctxt->args.mapping_dump.type =
+                        proto_mapping_dump_type_to_pds(filter.type());
+                if (filter.has_key()) {
+                    auto key = filter.key();
+                    cmd_ctxt->args.mapping_dump.key_valid = true;
+                    switch (cmd_ctxt->args.mapping_dump.type) {
+                    case MAPPING_DUMP_TYPE_LOCAL:
+                    case MAPPING_DUMP_TYPE_REMOTE_L3:
+                        cmd_ctxt->args.mapping_dump.skey.type = PDS_MAPPING_TYPE_L3;
+                        cmd_ctxt->args.mapping_dump.skey.vpc = key.ipkey().vpcid();
+                        ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.skey.ip_addr,
+                                                      key.ipkey().ipaddr());
+                        break;
+                    case MAPPING_DUMP_TYPE_REMOTE_L2:
+                        cmd_ctxt->args.mapping_dump.skey.type = PDS_MAPPING_TYPE_L2;
+                        cmd_ctxt->args.mapping_dump.skey.subnet = key.mackey().subnetid();
+                        MAC_UINT64_TO_ADDR(cmd_ctxt->args.mapping_dump.skey.mac_addr,
+                                           key.mackey().macaddr());
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            } else if (!cmd_msg.compare("pds.CommandUUID")) {
+                any_msg->UnpackTo(&uuid);
+                cmd_ctxt->args.valid = true;
+                pds_obj_key_proto_to_api_spec(&cmd_ctxt->args.port_id, uuid.id());
             }
         }
-    } else if (proto_ctxt->cmd() == pds::CMD_PORT_FSM_DUMP) {
-        cmd_ctxt->args.valid = true;
-        pds_obj_key_proto_to_api_spec(&cmd_ctxt->args.port_id,
-                                      proto_ctxt->id());
+    }
+}
+
+static inline void
+pds_svc_req_proto_to_svc_req_ctxt (svc_req_ctxt_t *svc_req,
+                                   types::ServiceRequestMessage *proto_req,
+                                   int fd)
+{
+    switch (proto_req->request_case()) {
+    case types::ServiceRequestMessage::kCommand:
+        {
+            cmd_ctxt_t *ctxt = &svc_req->cmd_ctxt;
+            svc_req->type = SVC_REQ_TYPE_CMD;
+            return pds_cmd_proto_to_cmd_ctxt(ctxt,
+                                             &proto_req->command(),
+                                             fd);
+        }
+    case types::ServiceRequestMessage::kConfig:
+        {
+            cfg_ctxt_t *ctxt = &svc_req->cfg_ctxt;
+            svc_req->type = SVC_REQ_TYPE_CFG;
+            return pds_cfg_proto_to_cfg_ctxt(ctxt,
+                                             &proto_req->config());
+        }
+    default:
+        {
+            svc_req->type = SVC_REQ_TYPE_NONE;
+        }
+        return;
     }
 }
 

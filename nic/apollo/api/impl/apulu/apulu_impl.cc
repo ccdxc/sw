@@ -981,11 +981,11 @@ apulu_impl::session_clear(uint32_t idx) {
 sdk_ret_t
 apulu_impl::handle_cmd(cmd_ctxt_t *ctxt) {
     switch (ctxt->cmd) {
-    case CLI_CMD_MAPPING_DUMP:
+    case CMD_MSG_MAPPING_DUMP:
         mapping_impl_db()->mapping_dump(ctxt->fd,
             (ctxt->args.valid == true) ? &ctxt->args : NULL);
         break;
-    case CLI_CMD_NACL_DUMP:
+    case CMD_MSG_NACL_DUMP:
         apulu_impl_db()->nacl_dump(ctxt->fd);
         break;
     default:

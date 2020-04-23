@@ -26,7 +26,11 @@ func CmdSend(udsPath string, cmd []byte, fds ...int) ([]byte, error) {
 	socket := int(udsFile.Fd())
 	defer udsFile.Close()
 
-	rights := syscall.UnixRights(fds...)
+	var rights []byte
+	rights = nil
+	if fds[0] >= 0 {
+		rights = syscall.UnixRights(fds...)
+	}
 	err = syscall.Sendmsg(socket, cmd, rights, nil, 0)
 	if err != nil {
 		fmt.Printf("Sendmsg failed with error %v\n", err)
@@ -34,7 +38,7 @@ func CmdSend(udsPath string, cmd []byte, fds ...int) ([]byte, error) {
 	}
 
 	// wait for response
-	resp := make([]byte, 256)
+	resp := make([]byte, 20480)
 	n, _, _, _, err := syscall.Recvmsg(socket, resp, nil, 0)
 	if err != nil {
 		fmt.Printf("Recvmsg failed with error %v\n", err)

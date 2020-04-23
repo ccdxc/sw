@@ -949,28 +949,21 @@ func portShowFsmCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Invalid argument\n")
 		return
 	}
-	var cmdCtxt *pds.CommandCtxt
+
+	var filter *pds.CommandUUID
 	if cmd != nil && cmd.Flags().Changed("port") {
-		cmdCtxt = &pds.CommandCtxt{
-			Version: 1,
-			Cmd:     pds.Command_CMD_PORT_FSM_DUMP,
-			Commandfilter: &pds.CommandCtxt_Id{
-				Id: uuid.FromStringOrNil(portID).Bytes(),
-			},
+		filter = &pds.CommandUUID{
+			Id: uuid.FromStringOrNil(portID).Bytes(),
 		}
 	} else {
 		// Get all Ports
-		cmdCtxt = &pds.CommandCtxt{
-			Version: 1,
-			Cmd:     pds.Command_CMD_PORT_FSM_DUMP,
-			Commandfilter: &pds.CommandCtxt_Id{
-					Id: uuid.FromStringOrNil(portID).Bytes(),
-			},
+		filter = &pds.CommandUUID{
+			Id: uuid.FromStringOrNil(portID).Bytes(),
 		}
 	}
 
 	// handle command
-	cmdResp, err := HandleCommand(cmdCtxt)
+	cmdResp, err := HandleSvcReqCommandMsg(pds.Command_CMD_PORT_FSM_DUMP, filter)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		return
