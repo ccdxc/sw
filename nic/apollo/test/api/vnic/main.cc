@@ -743,7 +743,7 @@ TEST_F(vnic_test, vnic_update_v6_meter) {
 }
 
 /// \brief update vnic switch flag
-TEST_F(vnic_test, DISABLED_vnic_update_switch_vnic) {
+TEST_F(vnic_test, vnic_update_switch_vnic) {
     if (!apulu()) return;
 
     vnic_feeder feeder;
@@ -755,9 +755,14 @@ TEST_F(vnic_test, DISABLED_vnic_update_switch_vnic) {
                 true, true, 0, 0, 5, 0);
     vnic_create(feeder);
 
-    // trigger
+    // trigger switch_vnic update (switch vnics should have binding checks
+    // disable and no VLAN encap)
     spec.switch_vnic = true;
-    vnic_update(feeder, &spec, VNIC_ATTR_SWITCH_VNIC);
+    spec.binding_checks_en = false;
+    spec.vnic_encap.type = PDS_ENCAP_TYPE_NONE;
+    vnic_update(feeder, &spec,
+                VNIC_ATTR_SWITCH_VNIC | VNIC_ATTR_VNIC_ENCAP |
+                    VNIC_ATTR_BINDING_CHECKS_EN);
 
     // validate
     vnic_read(feeder, SDK_RET_OK);
@@ -914,7 +919,7 @@ TEST_F(vnic_test, vnic_update_policy4) {
 
 /// \brief update policy - attach policy P1, P2 to vnic V1 and update V1
 ///        with P2, P3
-TEST_F(vnic_test, DISABLED_vnic_update_policy5) {
+TEST_F(vnic_test, vnic_update_policy5) {
     if (!apulu()) return;
 
     pds_vnic_spec_t spec = {0};
@@ -1022,7 +1027,7 @@ TEST_F(vnic_test, vnic_update_rx_policer) {
 }
 
 /// \brief update primary flag
-TEST_F(vnic_test, DISABLED_vnic_update_primary) {
+TEST_F(vnic_test, vnic_update_primary) {
     if (!apulu()) return;
 
     vnic_feeder feeder;
@@ -1039,8 +1044,7 @@ TEST_F(vnic_test, DISABLED_vnic_update_primary) {
 
     // trigger
     spec.primary = true;
-    // update should fail as subnet id is immutable attribute
-    vnic_update(feeder, &spec, VNIC_ATTR_PRIMARY, SDK_RET_ERR);
+    vnic_update(feeder, &spec, VNIC_ATTR_PRIMARY, SDK_RET_OK);
 
     // validate
     // as the update fails, rollback the feeder to original values

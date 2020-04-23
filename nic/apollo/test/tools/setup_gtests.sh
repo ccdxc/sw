@@ -29,11 +29,12 @@ function finish () {
 trap finish EXIT
 
 function setup () {
-    rm -f ${PDSPKG_TOPDIR}/*log* ${PDSPKG_TOPDIR}/core*
-    rm -f ${PDSPKG_TOPDIR}/conf/pipeline.json
-    sudo rm -f /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
+    sudo rm -rf ${PDSPKG_TOPDIR}/*log* ${PDSPKG_TOPDIR}/core*
+    sudo rm -rf ${PDSPKG_TOPDIR}/conf/pipeline.json
+    sudo rm -rf /tmp/pen_* /dev/shm/pds_* /dev/shm/ipc_*
     ln -s ${PDSPKG_TOPDIR}/conf/${PIPELINE}/pipeline.json ${PDSPKG_TOPDIR}/conf/pipeline.json
 
+    echo "xxx"
     if [ $PIPELINE == 'apulu' ]; then
         if [ -z "$VPP_IPC_MOCK_MODE" ]; then
             echo "Starting VPP"
