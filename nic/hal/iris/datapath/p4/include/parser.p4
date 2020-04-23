@@ -532,13 +532,15 @@ parser parse_llc_header {
 parser parse_snap_header {
     extract(snap_header);
     return select(latest.type_) {
-        PARSE_ETHERTYPE;
+        PARSE_ETHERTYPE_MINUS_VLAN;
     }
 }
 
 parser parse_vlan {
     extract(vlan_tag);
     return select(latest.etherType) {
+        0 mask 0xfe00 : parse_llc_header;
+        0 mask 0xfa00 : parse_llc_header;
         PARSE_ETHERTYPE_MINUS_VLAN;
     }
 }
