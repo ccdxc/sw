@@ -1,14 +1,18 @@
 #!/bin/bash
 
+fw=""
 stage=""
 hook_type=""
 response=""
-valid_stage="UPG_STAGE_COMPAT_CHECK, UPG_STAGE_START, UPG_STAGE_BACKUP, UPG_STAGE_PREPARE, UPG_STAGE_SYNC, UPG_STAGE_PREP_SWITCHOVER, UPG_STAGE_SWITCHOVER, UPG_STAGE_READY, UPG_STAGE_RESPAWN, UPG_STAGE_ROLLBACK, UPG_STAGE_REPEAL, UPG_STAGE_FINISH"
 valid_response="ok, critical, fail, noresponse"
+valid_stage="UPG_STAGE_COMPAT_CHECK, UPG_STAGE_START, UPG_STAGE_BACKUP, \
+    UPG_STAGE_PREPARE, UPG_STAGE_SYNC, UPG_STAGE_PREP_SWITCHOVER, \
+    UPG_STAGE_SWITCHOVER, UPG_STAGE_READY, UPG_STAGE_RESPAWN, \
+    UPG_STAGE_ROLLBACK, UPG_STAGE_REPEAL, UPG_STAGE_FINISH"
 
 function usage() {
-    echo "Usage: $0 -s <stage> -t pre " 1>&2;
-    echo "Usage: $0 -s <stage> -t post -r <ok|fail|critical|no-response>" 1>&2;
+    echo "Usage: $0 -f <firmware> -s <stage> -t pre " 1>&2;
+    echo "Usage: $0 -f <firmware> -s <stage> -t post -r <ok|fail|critical|no-response>" 1>&2;
     echo
     echo "Valid stages are     : ${valid_stage}"
     echo "Valid responses are  : ${valid_response}"
@@ -16,8 +20,11 @@ function usage() {
     exit 1;
 }
 
-while getopts ":f:t:r:" o; do
+while getopts ":f:s:t:r:" o; do
     case "${o}" in
+        f)
+            fw=${OPTARG}
+            ;;
         s)
             stage=${OPTARG}
             ;;
@@ -35,7 +42,7 @@ while getopts ":f:t:r:" o; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${stage}" ] || [ -z "${hook_type}" ] ; then
+if [ -z "${fw}" ] || [ -z "${stage}" ] || [ -z "${hook_type}" ] ; then
     usage
 fi
 

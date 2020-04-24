@@ -8,6 +8,7 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -268,6 +269,7 @@ is_valid_script (std::string tools_dir, const std::string script)
 static bool
 execute (const char *cmd)
 {
+    UPG_TRACE_INFO("Executing script  %s", cmd);
     bool result=true;
     int status = system(cmd);
 
@@ -276,9 +278,18 @@ execute (const char *cmd)
         result = false;
     } else {
         if (WIFEXITED(status)) {
-            UPG_TRACE_INFO("Successfully executed script, return code is %d",
-                           WEXITSTATUS(status));
-            result = true;
+            if (WEXITSTATUS(status) == 0) {
+                UPG_TRACE_INFO("Successfully executed script");
+                result = true;
+            } else {
+                UPG_TRACE_ERR("Script execution failure, return code is %d",
+                               WEXITSTATUS(status));
+                result = false;
+            }
+        } else if (WIFSIGNALED(status)) {
+            UPG_TRACE_ERR("Abnormal termination, signal number is %d",
+                          WTERMSIG(status));
+            result = false;
         } else {
             UPG_TRACE_ERR("Failed to execute script, exited abnormaly !");
             result = false;
