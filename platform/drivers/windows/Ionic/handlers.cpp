@@ -48,6 +48,13 @@ HaltEx(NDIS_HANDLE MiniportAdapterContext, NDIS_HALT_ACTION HaltAction)
 
         ionic->hardware_status = NdisHardwareStatusClosing;        
 
+        NdisCancelTimerObject(ionic->LinkCheckTimer);
+        NdisFreeTimerObject(ionic->LinkCheckTimer);
+
+        // XXX Insufficient synchronization with the link state event.
+        // It could still be running, already queued, or still become queued
+        // due to receiving an event on the notifyq.
+
         IndicateRxQueueState(ionic, 0,
                              NdisReceiveQueueOperationalStateDmaStopped);
 

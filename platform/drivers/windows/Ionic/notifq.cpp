@@ -61,7 +61,6 @@ static bool
 ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *cb_arg)
 {
     union notifyq_comp *comp = (union notifyq_comp *)cq_info->cq_desc;
-    // struct ionic_deferred_work *work;
     // struct net_device *netdev;
     struct queue *q;
     struct lif *lif;
@@ -105,7 +104,7 @@ ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *cb_arg)
              "%s Notifyq EVENT_OPCODE_RESET eid=%lld reset_code=%d state=%d\n",
              __FUNCTION__, eid, comp->reset.reset_code, comp->reset.state));
 
-        ASSERT(FALSE);
+        RtlSetBit(&lif->state, LIF_LINK_CHECK_NEEDED);
 
         break;
     }

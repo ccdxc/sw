@@ -64,7 +64,7 @@ ionic_service_pending_nbl_requests(struct ionic *ionic, struct qcq *qcq)
 }
 
 bool
-ionic_service_nb_requests(struct qcq *qcq, bool exiting, u32 budget)
+ionic_service_nb_requests(struct qcq *qcq, bool exiting)
 {
 	bool more_items = true;
 	struct ionic *ionic = qcq->q.lif->ionic;
@@ -79,7 +79,7 @@ ionic_service_nb_requests(struct qcq *qcq, bool exiting, u32 budget)
 
 	NdisAcquireSpinLock( &qcq->txq_nb_lock);
 
-    while (!IsListEmpty(&qcq->txq_nb_list) && (budget != 0)) {
+    while (!IsListEmpty(&qcq->txq_nb_list)) {
 
         list_entry = RemoveHeadList(&qcq->txq_nb_list);
 
@@ -127,14 +127,7 @@ ionic_service_nb_requests(struct qcq *qcq, bool exiting, u32 budget)
         }
 
 		NdisAcquireSpinLock( &qcq->txq_nb_lock);
-
-		budget--;
     }
-
-	if (status == NDIS_STATUS_SUCCESS &&
-		budget != 0) {
-		more_items = false;
-	}
 
 	NdisReleaseSpinLock( &qcq->txq_nb_lock);
 
@@ -1647,7 +1640,7 @@ get_queue_len(struct qcq *qcq)
     return len;
 }
 
-ULONG
+bool
 ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits)
 {
     struct cq *cq = &qcq->cq;
@@ -1660,10 +1653,9 @@ ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits)
     desc_cb cb;
     ULONG desc_cnt = 0;
     ULONG flags = 0;
+
+#ifdef DBG
     ULONG queue_len = 0;
-
-    comp = (struct txq_comp *)cq->tail->cq_desc;
-
     queue_len = get_queue_len( qcq);
     if( queue_len != 0) {
         InterlockedAdd( (LONG *)&qcq->tx_stats->descriptor_count,
@@ -1673,6 +1665,9 @@ ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits)
     if (queue_len > qcq->tx_stats->descriptor_max) {
         qcq->tx_stats->descriptor_max = queue_len;
     }
+#endif
+
+    comp = (struct txq_comp *)cq->tail->cq_desc;
 
     /* walk the completed cq entries */
     while (work_done < budget &&
@@ -1721,7 +1716,7 @@ ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits)
         ionic_intr_credits(idev->intr_ctrl, cq->bound_intr->index, work_done,
                            flags);
 
-    return work_done;
+    return (work_done == budget);
 }
 
 NDIS_STATUS
@@ -2190,19 +2185,19 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 	UNREFERENCED_PARAMETER(SystemArgument1);
 	UNREFERENCED_PARAMETER(SystemArgument2);
 
-	// In the event our targeting of the DPC failed, we only want this running
-	// once at any given time during normal processing
+	// In the event our targeting of the DPC failed, or we are changing the affinity for the DPC,
+	// check there is only 1 instance running
 	if (InterlockedIncrement(&qcq->dpc_exec_cnt) == 1) {
 
-		if (ionic_service_nb_requests(qcq, false, IONIC_TX_BUDGET_DEFAULT) &&
-			RtlCheckBit(&qcq->q.lif->state, LIF_UP)) {
+		ionic_service_nb_requests(qcq, false);
+
+		if(ionic_tx_flush(qcq, IONIC_TX_BUDGET_DEFAULT,
+				false, false) &&
+		   RtlCheckBit(&qcq->q.lif->state, LIF_UP)) {
 			KeInsertQueueDpc(Dpc,
 				NULL,
 				NULL);
 		}
-
-		ionic_tx_flush(qcq, IONIC_TX_BUDGET_DEFAULT,
-				false, false);
 	}
 	else {
 		IoPrint("%s Running in parallel\n", __FUNCTION__);

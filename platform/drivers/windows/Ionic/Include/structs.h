@@ -212,6 +212,7 @@ struct intr_msg {
 
     bool				inuse;
 	bool				rss_entry;
+	bool				tx_entry;
     struct lif*			lif;
     struct qcq*			qcq;
 
@@ -296,6 +297,8 @@ struct qcq {
 	/* tx packet processing */
 	KDPC			tx_packet_dpc;
 	LONG			dpc_exec_cnt;
+
+	LONG			zero_cnt;
 };
 
 struct qcqst {
@@ -307,12 +310,6 @@ struct qcqst {
 		struct dev_tx_ring_stats	*tx_stats;
 		struct dev_rx_ring_stats	*rx_stats;
 	};
-};
-
-struct ionic_deferred {
-	NDIS_SPIN_LOCK lock;		/* lock for deferred work list */
-	LIST_ENTRY list;
-	//struct work_struct work;
 };
 
 #define RXQ_INDEX_ANY		(0xFFFF)
@@ -402,7 +399,6 @@ struct lif {
 	u32 rss_hash_flags;
 
 	struct rx_filters rx_filters;
-	struct ionic_deferred deferred;
 	NDIS_SPIN_LOCK dbid_inuse_lock;	/* lock the dbid bit list */
 	RTL_BITMAP dbid_inuse;
 	unsigned long *dbid_inuse_buffer;
@@ -622,6 +618,7 @@ struct ionic {
 	char			lifbits_buffer[BITS_TO_LONGS( IONIC_LIFS_MAX)];
 	
 	NDIS_HANDLE		WatchDogTimer;
+	NDIS_HANDLE		LinkCheckTimer;
 
 	ULONG			sgl_size_in_bytes;
 	ULONG			max_sgl_elements;
@@ -652,6 +649,8 @@ struct ionic {
 	ULONG			max_vmq_cnt;
 
 	u32				num_rss_queues;
+
+	u32				nearby_core_count;
 
 	u32				tx_coalesce_usecs;
 	u32				rx_coalesce_usecs;

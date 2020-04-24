@@ -1255,73 +1255,13 @@ ionic_rx_filters_init(struct lif *lif)
 NDIS_STATUS
 _ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 {
-
-    NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-
-    //	struct ionic_deferred_work *work;
-
-    //	if (in_interrupt()) {
-    //		work = kzalloc(sizeof(*work), GFP_ATOMIC);
-    //		if (!work) {
-    //			netdev_err(lif->netdev, "%s OOM\n", __func__);
-    //			return;
-    //		}
-    //		work->type = DW_TYPE_RX_MODE;
-    //		work->rx_mode = rx_mode;
-    //		netdev_dbg(lif->netdev, "deferred: rx_mode\n");
-    //		ionic_lif_deferred_enqueue(&lif->deferred, work);
-    //	} else {
-    status = ionic_lif_rx_mode(lif, rx_mode);
-    //	}
-
-    return status;
+    return ionic_lif_rx_mode(lif, rx_mode);
 }
 
 NDIS_STATUS
 ionic_set_rx_mode(struct lif *lif, int rx_mode)
 {
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    // netdev_priv(netdev);
-    //	struct identity *ident = &lif->ionic->ident;
-    //	unsigned int nfilters;
-    // unsigned int rx_mode;
-
-    // rx_mode = RX_MODE_F_UNICAST;
-    // rx_mode |= RX_MODE_F_MULTICAST; //(netdev->flags & IFF_MULTICAST) ?
-    // RX_MODE_F_MULTICAST : 0; rx_mode |= RX_MODE_F_BROADCAST; //(netdev->flags
-    // & IFF_BROADCAST) ? RX_MODE_F_BROADCAST : 0; rx_mode |= (netdev->flags &
-    // IFF_PROMISC) ? RX_MODE_F_PROMISC : 0; rx_mode |= (netdev->flags &
-    // IFF_ALLMULTI) ? RX_MODE_F_ALLMULTI : 0;
-
-    /* sync unicast addresses
-     * next check to see if we're in an overflow state
-     *    if so, we track that we overflowed and enable NIC PROMISC
-     *    else if the overflow is set and not needed
-     *       we remove our overflow flag and check the netdev flags
-     *       to see if we can disable NIC PROMISC
-     */
-    //__dev_uc_sync(netdev, ionic_addr_add, ionic_addr_del);
-    // nfilters = le32_to_cpu(ident->lif.eth.max_ucast_filters);
-    // if (netdev_uc_count(netdev) + 1 > nfilters) {
-    //	rx_mode |= RX_MODE_F_PROMISC;
-    //	lif->uc_overflow = true;
-    //} else if (lif->uc_overflow) {
-    //	lif->uc_overflow = false;
-    //	if (!(netdev->flags & IFF_PROMISC))
-    //		rx_mode &= ~RX_MODE_F_PROMISC;
-    //}
-
-    /* same for multicast */
-    //__dev_mc_sync(netdev, ionic_addr_add, ionic_addr_del);
-    // nfilters = le32_to_cpu(ident->lif.eth.max_mcast_filters);
-    // if (netdev_mc_count(netdev) > nfilters) {
-    //	rx_mode |= RX_MODE_F_ALLMULTI;
-    //	lif->mc_overflow = true;
-    //} else if (lif->mc_overflow) {
-    //	lif->mc_overflow = false;
-    //	if (!(netdev->flags & IFF_ALLMULTI))
-    //		rx_mode &= ~RX_MODE_F_ALLMULTI;
-    //}
 
     if (lif->rx_mode != (unsigned int)rx_mode)
         status = _ionic_lif_rx_mode(lif, rx_mode);

@@ -177,6 +177,11 @@ ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
     }
 
     qcq->flags &= ~QCQ_F_INITED;
+    qcq->q.tail = qcq->q.info;
+    qcq->q.head = qcq->q.tail;
+    qcq->cq.tail = qcq->cq.info;
+    qcq->cq.done_color = 1;
+    NdisZeroMemory(qcq->base, qcq->total_size);
 }
 
 unsigned int

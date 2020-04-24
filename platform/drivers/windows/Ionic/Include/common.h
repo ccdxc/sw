@@ -483,6 +483,9 @@ IoctlAdapterInfo(PVOID buf, ULONG inlen, ULONG outlen, PULONG outbytes);
 NDIS_STATUS
 init_registry_config( struct ionic *adapter);
 
+void
+get_nearby_core_count(struct ionic *ionic);
+
 //
 // handlers.cpp prototypes
 //
@@ -617,6 +620,9 @@ void
 unuse_intr_msgs_rss(struct ionic *ionic, struct lif *lif);
 
 struct intr_msg*
+is_tx_entry(struct ionic *ionic, ULONG proc_idx);
+
+struct intr_msg*
 find_intr_msg(struct ionic *ionic, ULONG proc_idx);
 
 BOOLEAN
@@ -704,9 +710,8 @@ NDIS_STATUS ionic_lif_addr(struct lif *lif, const u8 *addr, bool add);
 int ionic_napi(struct lif *lif, unsigned int budget, ionic_cq_cb cb,
 	       ionic_cq_done_cb done_cb, void *done_arg);
 
-void
-CheckLinkStatusCb( PVOID   WorkItemContext,
-				   NDIS_HANDLE  NdisIoWorkItemHandle);
+NDIS_IO_WORKITEM_FUNCTION CheckLinkStatusCb;
+NDIS_TIMER_FUNCTION CheckLinkStatusTimerCb;
 
 NDIS_STATUS
 ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode);
@@ -1016,6 +1021,9 @@ oid_query_rss_caps(struct ionic *ionic,
 NDIS_STATUS
 map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len);
 
+ULONG
+get_rss_queue_cnt(struct ionic *ionic);
+
 //
 // rx.cpp prototypes
 //
@@ -1275,7 +1283,7 @@ void ionic_txq_nbl_list_push_head(struct txq_nbl_list *list,
 void ionic_service_pending_nbl_requests(struct ionic *ionic, struct qcq *qcq);
 
 bool
-ionic_service_nb_requests(struct qcq *qcq, bool exiting, u32 budget);
+ionic_service_nb_requests(struct qcq *qcq, bool exiting);
 
 NDIS_STATUS
 process_nbl(struct ionic *ionic,
@@ -1319,7 +1327,7 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 
 void ionic_tx_release_pending(struct ionic *ionic, struct qcq * qcq);
 
-ULONG
+bool
 ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits);
 
 NDIS_STATUS 

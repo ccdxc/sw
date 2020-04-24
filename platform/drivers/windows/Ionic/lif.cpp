@@ -415,9 +415,6 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
     NdisAllocateSpinLock(&lif->adminq_lock);
 
-    NdisAllocateSpinLock(&lif->deferred.lock);
-    InitializeListHead(&lif->deferred.list);
-
 	/* Allocate 16 bytes aligned slist header */
 
 	lif->rx_pkts_list = (SLIST_HEADER *)NdisAllocateMemoryWithTagPriority_internal(
@@ -1422,7 +1419,6 @@ NDIS_STATUS
 ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 {
     struct ionic *ionic = lif->ionic;
-    //	struct ionic_deferred_work *work;
     unsigned int nmfilters;
     unsigned int nufilters;
 
@@ -1622,7 +1618,6 @@ ionic_napi(struct lif *lif,
 void
 CheckLinkStatusCb(PVOID WorkItemContext, NDIS_HANDLE NdisIoWorkItemHandle)
 {
-
     struct ionic *ionic = (struct ionic *)WorkItemContext;
 
     ionic_link_status_check(ionic->master_lif, PORT_OPER_STATUS_NONE);
@@ -1630,6 +1625,25 @@ CheckLinkStatusCb(PVOID WorkItemContext, NDIS_HANDLE NdisIoWorkItemHandle)
     NdisFreeIoWorkItem(NdisIoWorkItemHandle);
 
     return;
+}
+
+void
+CheckLinkStatusTimerCb(void *SystemContext,
+                       void *FunctionContext,
+                       void *Context1,
+                       void *Context2)
+{
+    struct ionic *ionic = (struct ionic *)FunctionContext;
+    NDIS_HANDLE workItem = NULL;
+
+    UNREFERENCED_PARAMETER(SystemContext);
+    UNREFERENCED_PARAMETER(Context1);
+    UNREFERENCED_PARAMETER(Context2);
+
+    workItem = NdisAllocateIoWorkItem(ionic->adapterhandle);
+    if (workItem != NULL) {
+        NdisQueueIoWorkItem(workItem, CheckLinkStatusCb, ionic);
+    }
 }
 
 NDIS_STATUS
@@ -1970,7 +1984,11 @@ ionic_txrx_alloc(struct lif *lif,
 			}
 		}
 
-		intr_tx_msg->inuse = true;
+		if( intr_tx_msg != intr_rx_msg) {
+			intr_tx_msg->inuse = true;
+			intr_tx_msg->tx_entry = true;
+			intr_tx_msg->qcq = lif->txqcqs[i].qcq;
+		}
 
 		status = KeSetTargetProcessorDpcEx( &lif->txqcqs[i].qcq->tx_packet_dpc,
 											&intr_tx_msg->proc);
@@ -2052,7 +2070,7 @@ ionic_txrx_disable(struct lif *lif)
 		KeFlushQueuedDpcs();
 
 		// Call final time to process any remaining items
-		ionic_service_nb_requests(lif->txqcqs[i].qcq, true, IONIC_TX_BUDGET_DEFAULT);
+		ionic_service_nb_requests(lif->txqcqs[i].qcq, true);
         
 		ionic_tx_release_pending(lif->ionic, lif->txqcqs[i].qcq);
     }

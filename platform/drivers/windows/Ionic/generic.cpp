@@ -743,6 +743,16 @@ ReadRssConfig(struct ionic *Adapter, NDIS_HANDLE Config)
     NdisReadConfiguration(&ntStatus, &pParameters, Config,
                           &uniKeyword, NdisParameterInteger);
 
+	// If the registry setting is 0, then this is a fresh installation so update the current value 
+	// to be the nearby core count/2
+	if (pParameters->ParameterData.IntegerData == 0) {
+		Adapter->registry_config[ IONIC_REG_RSSQUEUES].current_value = get_rss_queue_cnt( Adapter);
+		UpdateRegistryKeyword( Adapter,
+							   IONIC_REG_RSSQUEUES);
+		NdisReadConfiguration(&ntStatus, &pParameters, Config,
+                          &uniKeyword, NdisParameterInteger);
+	}
+
     if (ntStatus == NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s NumRSSQueues keyword status %08lX Value %08lX\n",
@@ -1534,17 +1544,15 @@ ionic_link_down(struct ionic *ionic)
 void
 ionic_link_status_check(struct lif *lif, u16 link_status)
 {
-
+    struct ionic *ionic = lif->ionic;
     NTSTATUS status = STATUS_SUCCESS;
-    bool link_up;
+    bool link_up, link_change;
+    bool fw_run, fw_change;
+    UCHAR fw_status;
     LARGE_INTEGER time_out;
     BOOLEAN set_event = FALSE;
 
-    if( link_status == PORT_OPER_STATUS_NONE) {
-        link_status = le16_to_cpu(lif->info->status.link_status);
-    }
-    link_up = link_status == PORT_OPER_STATUS_UP;
-
+    // XXX why?
     time_out.QuadPart = -(IONIC_ONE_SEC_WAIT * 10);
     status = KeWaitForSingleObject(&lif->state_change, Executive, KernelMode,
                                    FALSE, &time_out);
@@ -1554,26 +1562,57 @@ ionic_link_status_check(struct lif *lif, u16 link_status)
     }
     set_event = TRUE;
 
+    // first clear the bit, then check the status
+
     RtlClearBit(&lif->state, LIF_LINK_CHECK_NEEDED);
 
-    if (link_up) {
+    if( link_status == PORT_OPER_STATUS_NONE) {
+        link_status = le16_to_cpu(lif->info->status.link_status);
+    }
+
+    // check fw running status
+    fw_status = ionic->idev.dev_info_regs->fw_status;
+    fw_run = (fw_status != 0xff) && (fw_status & IONIC_FW_STS_F_RUNNING);
+    fw_change = fw_run != (bool)RtlCheckBit(&lif->state, LIF_INITED);
+
+    // check link status, force down if fw is down
+    link_up = fw_run && link_status == PORT_OPER_STATUS_UP;
+    link_change = link_up != (bool)RtlCheckBit(&lif->state, LIF_UP);
+
+    // lif was up, but link or fw has gone down
+    if (link_change && !link_up) {
+        DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
+                  "%s Link down\n", __FUNCTION__));
+        ionic_stop(lif->ionic);
+        ionic_link_down(lif->ionic);
+    }
+
+    // lif was initted, but fw has gone down
+    if (fw_change && !fw_run) {
+        DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
+            "%s Firmware down\n", __FUNCTION__));
+        ionic_lif_deinit(lif);
+    }
+
+    // lif was not initted, and fw has come up
+    if (fw_change && fw_run) {
+        DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
+            "%s Firmware running\n", __FUNCTION__));
+        status = ionic_lif_init(lif);
+        if (status != STATUS_SUCCESS) {
+            goto cleanup;
+        }
+    }
+
+    // lif was not up, but link has come up
+    if (link_change && link_up) {
         DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
                   "%s Link up - %d Gbps\n", __FUNCTION__,
                   le32_to_cpu(lif->info->status.link_speed) / 1000));
 
-        if (!RtlCheckBit(&lif->state, LIF_UP)) {
-            status = ionic_start(lif->ionic);
-            if( status == NDIS_STATUS_SUCCESS) {
-                ionic_link_up(lif->ionic);
-            }
-        }
-    } else {
-        DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE, "%s Link down\n",
-                  __FUNCTION__));
-
-        if (RtlCheckBit(&lif->state, LIF_UP)) {
-            ionic_stop(lif->ionic);
-            ionic_link_down(lif->ionic);
+        status = ionic_start(lif->ionic);
+        if( status == NDIS_STATUS_SUCCESS) {
+            ionic_link_up(lif->ionic);
         }
     }
 
@@ -3222,4 +3261,22 @@ init_registry_config( struct ionic *adapter)
 cleanup:
 
 	return status;
+}
+
+void
+get_nearby_core_count(struct ionic *ionic)
+{
+
+	ionic->nearby_core_count = 0;
+
+    for (ULONG i = 0; i < ionic->sys_proc_info->NumberOfProcessors; ++i) {
+        PNDIS_PROCESSOR_INFO_EX proc = &ionic->sys_proc[i];
+		if (proc->NodeId == ionic->numa_node) {
+			ionic->nearby_core_count++;
+		}
+    }
+
+	IoPrint("%s Have %d nearby cores\n", __FUNCTION__, ionic->nearby_core_count);
+
+	return;
 }

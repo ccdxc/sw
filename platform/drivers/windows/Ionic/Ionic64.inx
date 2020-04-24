@@ -361,7 +361,7 @@ HKR,Ndi\Params\EnablePME\Enum,                  "0",                    0, %Disa
 [IonicMini.RSS.Common.reg]
 ; NumRssQueues
 HKR, Ndi\Params\*NumRssQueues,                   ParamDesc,              0, %NumRssQueues%
-HKR, Ndi\Params\*NumRssQueues,                   default,                0, "4"
+HKR, Ndi\Params\*NumRssQueues,                   default,                0, "0"
 HKR, Ndi\Params\*NumRssQueues,                   type,                   0, "enum"
 HKR, Ndi\Params\*NumRssQueues\Enum,              "1",                    0, %1queue%
 HKR, Ndi\Params\*NumRssQueues\Enum,              "2",                    0, %2queues%

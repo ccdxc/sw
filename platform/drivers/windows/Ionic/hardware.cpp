@@ -783,6 +783,25 @@ unuse_intr_msgs_rss(struct ionic *ionic, struct lif *lif)
     }
 }
 
+struct intr_msg*
+is_tx_entry(struct ionic *ionic, ULONG proc_idx)
+{
+    struct intr_msg* intr = NULL;
+    struct intr_msg* tx_intr = NULL;
+
+    for (ULONG i = IONIC_CTL_INTR_CNT; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
+        intr = &ionic->intr_msg_tbl[i];
+        if (intr->inuse &&
+			intr->proc_idx == proc_idx &&
+			intr->tx_entry) {
+			tx_intr = intr;
+			break;
+		}
+    }
+
+    return tx_intr;
+}
+
 struct intr_msg *
 find_intr_msg(struct ionic *ionic, ULONG proc_idx)
 {
