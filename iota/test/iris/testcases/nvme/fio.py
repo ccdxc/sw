@@ -10,7 +10,8 @@ def Setup(tc):
 def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    api.Trigger_AddHostCommand(req, tc.nodes[1], "fio --filename=/dev/{} --direct=1 --rw={} --bs={} --ioengine=libaio --iodepth={} --runtime={} --numjobs={} --time_based --group_reporting --name=throughput-test-job".format(tc.iterators.namespace, tc.iterators.command, tc.iterators.block_size, tc.iterators.io_depth, tc.iterators.runtime, tc.iterators.num_jobs), timeout=125)
+    api.Trigger_AddHostCommand(req, tc.nodes[1], "mkdir -p /naples/fio_logs")
+    api.Trigger_AddHostCommand(req, tc.nodes[1], "fio --filename=/dev/{} --rw={} --bs={} --iodepth={} --numjobs={} --write_bw_log=/naples/fio_logs/{}_{}_{}qd_{}j_bw.log --write_iops_log=/naples/fio_logs/{}_{}_{}qd_{}j_iops.log /naples/nvme.fio".format(tc.iterators.namespace, tc.iterators.command, tc.iterators.block_size, tc.iterators.io_depth, tc.iterators.num_jobs, tc.iterators.block_size, tc.iterators.command, tc.iterators.io_depth, tc.iterators.num_jobs, tc.iterators.block_size, tc.iterators.command, tc.iterators.io_depth, tc.iterators.num_jobs), timeout=125)
 
     tc.resp = api.Trigger(req)
 
@@ -22,15 +23,11 @@ def Verify(tc):
 
     result = api.types.status.SUCCESS
 
-    f = open('fio_dump.txt', 'a')
     api.Logger.info("nvme_fio results for the following nodes: {0}".format(tc.nodes))
     for cmd in tc.resp.commands:
-        f.write(cmd.stdout)
-        f.write(cmd.stderr)
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             result = api.types.status.FAILURE
-        f.close()
 
     return result
 
