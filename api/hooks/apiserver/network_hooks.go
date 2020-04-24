@@ -658,7 +658,7 @@ func (h *networkHooks) vrouterVNIReserve(ctx context.Context, i interface{}, kvs
 func (h *networkHooks) releaseNetworkResources(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryRun bool) {
 	n, ok := i.(network.Network)
 	if !ok {
-		log.Errorf("networkVNIReserve; invalid kind")
+		log.Errorf("releaseNetworkResources; invalid kind")
 		return
 	}
 	if n.Spec.VxlanVNI != 0 {
@@ -680,7 +680,7 @@ func (h *networkHooks) releaseNetworkResources(ctx context.Context, oper apiintf
 func (h *networkHooks) releaseVRouterResources(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryRun bool) {
 	n, ok := i.(network.VirtualRouter)
 	if !ok {
-		log.Errorf("networkVNIReserve; invalid kind")
+		log.Errorf("releaseVRouterResources; invalid kind")
 		return
 	}
 

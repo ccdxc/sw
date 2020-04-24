@@ -218,16 +218,30 @@ func (m *ServiceHandlers) handleAutoConfig(in *network.RoutingConfig) (*network.
 		return ret, forceUpdate
 	}
 	var peers []*network.BGPNeighbor
+	foundAutoConfig := false
 	for _, n := range ret.Spec.BGPConfig.Neighbors {
 		if n.DSCAutoConfig {
+			oldTemplate := m.naplesTemplate
 			m.naplesTemplate = &network.BGPNeighbor{
 				MultiHop: n.MultiHop,
 				Password: n.Password,
 				Shutdown: n.Shutdown,
 			}
+			if oldTemplate == nil {
+				forceUpdate = true
+			} else {
+				if oldTemplate.MultiHop != n.MultiHop || oldTemplate.Password != n.Password || oldTemplate.Shutdown != n.Shutdown {
+					forceUpdate = true
+				}
+			}
+			foundAutoConfig = true
 			continue
 		}
 		peers = append(peers, n)
+	}
+	if !foundAutoConfig && m.naplesTemplate != nil {
+		m.naplesTemplate = nil
+		forceUpdate = true
 	}
 	ret.Spec.BGPConfig.Neighbors = peers
 	return ret, forceUpdate
