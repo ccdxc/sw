@@ -9,13 +9,16 @@
 #include <platform/capri/capri_tbl_rw.hpp>
 #include <pd_utils.h>
 #include "session.h"
+#include "gen/p4gen/p4/include/ftl.h"
 
 using namespace sdk::lib;
 using namespace sdk::platform;
 
+p4pd_table_properties_t g_session_tbl_ctx;
+
 static int skip_session_program = 0;
 
-static int
+int
 get_skip_session_program(void)
 {
     return skip_session_program;
@@ -27,8 +30,6 @@ set_skip_session_program(int val)
     skip_session_program = val;
 }
 
-p4pd_table_properties_t g_session_tbl_ctx;
-
 int
 initialize_session(void)
 {
@@ -37,24 +38,6 @@ initialize_session(void)
     p4pd_ret = p4pd_table_properties_get(P4TBL_ID_SESSION, &g_session_tbl_ctx);
     SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
 
-    return 0;
-}
-
-int
-session_program(uint32_t ses_id, void *action)
-{
-    p4pd_error_t p4pd_ret0;
-    uint32_t tableid = P4TBL_ID_SESSION;
-
-    if (get_skip_session_program()) {
-        return 0;
-    }
-
-    p4pd_ret0 = p4pd_global_entry_write(tableid, ses_id,
-                                        NULL, NULL, action);
-    if (p4pd_ret0 != P4PD_SUCCESS) {
-        return -1;
-    }
     return 0;
 }
 

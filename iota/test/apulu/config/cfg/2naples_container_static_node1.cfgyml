@@ -8,7 +8,7 @@ device:
     stack       : ipv4 # ipv4 (default), ipv6
     bridging    : false # false (default), true
     learning    : false # false (default), true
-    ipaddress   : '1.0.0.2' # Taken from resmgr
+    ipaddress   : '30.30.30.30' # Taken from resmgr
     gateway     : '1.0.0.1' # Taken from resmgr
     macaddress  : macaddr/0000.aaaa.aaa1
     encap       : vxlan # vxlan or mplsodup
@@ -25,6 +25,15 @@ uplink:
         mode    : switch
         status  : UP
 
+security_profile:
+    - id        : 1
+
+security_profile:
+    id        : 1
+    tcpidletimeout : 5000
+    udpidletimeout : 5000
+    icmpidletimeout : 5000
+
 vpc:
     - id         : 100
       stack      : ipv4 # dual, ipv4 , ipv6
@@ -34,16 +43,21 @@ vpc:
         - iid           : 1
           iftype        : l3
           ifadminstatus : UP
-          ipprefix      : '1.1.0.102\24'
+          ipprefix      : '30.1.0.1\24'
           macaddress    : macaddr/00ae.cd00.4fde
           portid        : 1
           encap         : none
         - iid           : 2
           iftype        : l3
           ifadminstatus : UP
-          ipprefix      : '1.2.0.102\24'
+          ipprefix      : '30.2.0.1\24'
           macaddress    : macaddr/00ae.cd00.4fdd
           portid        : 2
+          encap         : none
+        - iid           : 3
+          iftype        : loopback
+          ifadminstatus : UP
+          ipprefix      : '30.30.30.30\32'
           encap         : none
       nexthop:
         - id         : 1
@@ -56,6 +70,46 @@ vpc:
           type       : underlay
           l3intfid   : 2
           macaddress : macaddr/00ae.cd00.14cd
+      bgpglobal:
+        - localasn      : 100
+          routerid      : 30.30.30.30
+      bgppeer:
+        # underlay bgp peer 1
+        - peeraddr      : 30.1.0.2
+          localaddr     : 30.1.0.1
+          adminstate    : 1
+          sendcomm      : true
+          sendextcomm   : true
+          connectretry  : 5
+          rrclient      : false
+          # specify interface to override ip addresses from testbed json
+          interface     : "Uplink0"
+          remoteasn     : 100
+          holdtime      : 180
+          keepalive     : 60
+          bgppeeraf:
+              peeraddr  : 30.1.0.2
+              localaddr : 30.1.0.1
+              afi       : ipv4
+              safi      : unicast
+        # underlay bgp peer 2
+        - peeraddr      : 30.2.0.2
+          localaddr     : 30.2.0.1
+          adminstate    : 1
+          sendcomm      : true
+          sendextcomm   : true
+          connectretry  : 5
+          rrclient      : false
+          # specify interface to override ip addresses from testbed json
+          interface     : "Uplink1"
+          remoteasn     : 100
+          holdtime      : 180
+          keepalive     : 60
+          bgppeeraf:
+              peeraddr  : 30.2.0.2
+              localaddr : 30.2.0.1
+              afi       : ipv4
+              safi      : unicast
     - id         : 1
       stack      : ipv4 # dual, ipv4 , ipv6
       count      : 1
@@ -64,8 +118,8 @@ vpc:
         - id         : 1
           count      : 1
           type       : underlay
-          srcaddr    : '1.0.0.2'
-          dstaddr    : '1.0.0.3'
+          srcaddr    : '30.30.30.30'
+          dstaddr    : '40.40.40.40'
           macaddress : macaddr/0000.aaaa.aaa1
           encap      : vxlan
           nhid       : 1
@@ -295,6 +349,7 @@ vpc:
                 direction : bidir
       nat:
         count : 2
+        prefixlen : 32
         addrtype : PUBLIC_AND_SERVICE
         protocol : tcp,udp,icmp
 

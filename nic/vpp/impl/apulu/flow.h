@@ -19,14 +19,13 @@
 #include "p4_cpu_hdr_utils.h"
 #include "impl_db.h"
 #include <netinet/ether.h>
+#include "gen/p4gen/p4/include/ftl.h"
 
 #define PDS_FLOW_UPLINK0_LIF_ID     0x0
 #define PDS_FLOW_UPLINK1_LIF_ID     0x1
 
-#define session_tx_rewrite_flags \
-    actiondata.action_u.session_session_info.tx_rewrite_flags
-#define session_rx_rewrite_flags \
-    actiondata.action_u.session_session_info.rx_rewrite_flags
+#define session_tx_rewrite_flags actiondata.tx_rewrite_flags
+#define session_rx_rewrite_flags actiondata.rx_rewrite_flags
 
 typedef CLIB_PACKED(struct pds_vxlan_template_header_s {
     ethernet_header_t eth;
@@ -83,8 +82,8 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
                      u32 session_id0, u32 session_id1,
                      u16 *next0, u16 *next1, u32 *counter)
 {
-    session_actiondata_t actiondata = {0};
     session_track_actiondata_t track_actiondata = {0};
+    struct session_info_entry_t actiondata;
     pds_flow_main_t *fm = &pds_flow_main;
     pds_flow_rewrite_flags_t *rewrite_flags;
     pds_flow_hw_ctx_t *ctx0, *ctx1;
@@ -94,28 +93,29 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
                   VPP_CPU_FLAGS_FLOW_SES_EXIST)) {
         goto skip_prog0;
     }
-    actiondata.action_id = SESSION_SESSION_INFO_ID;
+    
+    clib_memset(&actiondata, 0, sizeof(actiondata));
     if (pds_is_flow_napt_en(b0)) {
-        actiondata.action_u.session_session_info.tx_xlate_id =
+        actiondata.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
-        actiondata.action_u.session_session_info.rx_xlate_id =
+        actiondata.rx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx_rflow;
     } else if (pds_is_flow_svc_map_en(b0)) {
         /* Service mapping case (pip, port --> vip, port) */
-        actiondata.action_u.session_session_info.tx_xlate_id =
+        actiondata.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
     } else if (vnet_buffer2(b0)->pds_nat_data.xlate_idx) {
         /* static nat */
-        actiondata.action_u.session_session_info.tx_xlate_id =
+        actiondata.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
-        actiondata.action_u.session_session_info.rx_xlate_id =
+        actiondata.rx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx + 1;
     }
     if (vnet_buffer2(b0)->pds_nat_data.xlate_idx2) {
         // Twice NAT
-        actiondata.action_u.session_session_info.tx_xlate_id2 =
+        actiondata.tx_xlate_id2 =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx2;
-        actiondata.action_u.session_session_info.rx_xlate_id2 =
+        actiondata.rx_xlate_id2 =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx2 + 1;
     }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b0)->pds_flow_data.packet_type));
@@ -125,7 +125,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
             (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
     ctx0 = pds_flow_get_hw_ctx(session_id0);
     ses_track_en = fm->con_track_en && (ctx0->proto == PDS_FLOW_PROTO_TCP);
-    actiondata.action_u.session_session_info.session_tracking_en = ses_track_en;
+    actiondata.session_tracking_en = ses_track_en;
     pds_packet_type_fill(ctx0, vnet_buffer(b0)->pds_flow_data.packet_type);
     if (BIT_ISSET(vnet_buffer(b0)->pds_flow_data.flags, VPP_CPU_FLAGS_RX_PKT)) {
         ctx0->iflow_rx = 1;
@@ -144,7 +144,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
             vnet_buffer(b0)->pds_flow_data.tcp_win_sz;
     }
 
-    if (PREDICT_FALSE(session_program(session_id0, (void *)&actiondata))) {
+    if (PREDICT_FALSE(pds_session_program(session_id0, (void *)&actiondata))) {
         if (pds_is_flow_napt_en(b0)) {
             *next0 = SESSION_PROG_NEXT_NAT_DROP;
             vlib_buffer_advance(b0, pds_session_get_nat_drop_next_offset(b0));
@@ -167,26 +167,26 @@ skip_prog0:
     }
     clib_memset(&actiondata, 0, sizeof(actiondata));
     if (pds_is_flow_napt_en(b1)) {
-        actiondata.action_u.session_session_info.tx_xlate_id =
+        actiondata.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
-        actiondata.action_u.session_session_info.rx_xlate_id =
+        actiondata.rx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx_rflow;
     } else if (pds_is_flow_svc_map_en(b1)) {
         /* Service mapping case (pip, port --> vip, port) */
-        actiondata.action_u.session_session_info.tx_xlate_id =
+        actiondata.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
     } else if (vnet_buffer2(b1)->pds_nat_data.xlate_idx) {
         /* static nat */
-        actiondata.action_u.session_session_info.tx_xlate_id =
+        actiondata.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
-        actiondata.action_u.session_session_info.rx_xlate_id =
+        actiondata.rx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx + 1;
     }
     if (vnet_buffer2(b1)->pds_nat_data.xlate_idx2) {
         // Twice NAT
-        actiondata.action_u.session_session_info.tx_xlate_id2 =
+        actiondata.tx_xlate_id2 =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx2;
-        actiondata.action_u.session_session_info.rx_xlate_id2 =
+        actiondata.rx_xlate_id2 =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx2 + 1;
     }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b1)->pds_flow_data.packet_type));
@@ -194,9 +194,10 @@ skip_prog0:
     session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
         (pds_is_flow_rx_vlan(b1) ?
             (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
+
     ctx1 = pds_flow_get_hw_ctx(session_id1);
     ses_track_en = fm->con_track_en && (ctx1->proto == PDS_FLOW_PROTO_TCP);
-    actiondata.action_u.session_session_info.session_tracking_en = ses_track_en;
+    actiondata.session_tracking_en = ses_track_en;
     pds_packet_type_fill(ctx1, vnet_buffer(b1)->pds_flow_data.packet_type);
     if (BIT_ISSET(vnet_buffer(b1)->pds_flow_data.flags, VPP_CPU_FLAGS_RX_PKT)) {
         ctx1->iflow_rx = 1;
@@ -215,7 +216,7 @@ skip_prog0:
             vnet_buffer(b1)->pds_flow_data.tcp_win_sz;
     }
 
-    if (PREDICT_FALSE(session_program(session_id1, (void *)&actiondata))) {
+    if (PREDICT_FALSE(pds_session_program(session_id1, (void *)&actiondata))) {
         if (pds_is_flow_napt_en(b1)) {
             *next1 = SESSION_PROG_NEXT_NAT_DROP;
             vlib_buffer_advance(b1, pds_session_get_nat_drop_next_offset(b1));
@@ -239,8 +240,8 @@ always_inline void
 pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
                      u16 *next, u32 *counter)
 {
-    session_actiondata_t actiondata = {0};
     session_track_actiondata_t track_actiondata = {0};
+    struct session_info_entry_t actiondata;
     pds_flow_main_t *fm = &pds_flow_main;
     pds_flow_rewrite_flags_t *rewrite_flags;
     pds_flow_hw_ctx_t *ctx;
@@ -250,28 +251,28 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
                   VPP_CPU_FLAGS_FLOW_SES_EXIST)) {
         goto skip_prog;
     }
-    actiondata.action_id = SESSION_SESSION_INFO_ID;
+    clib_memset(&actiondata, 0, sizeof(actiondata));
     if (pds_is_flow_napt_en(b)) {
-        actiondata.action_u.session_session_info.tx_xlate_id =
+        actiondata.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
-        actiondata.action_u.session_session_info.rx_xlate_id =
+        actiondata.rx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx_rflow;
     } else if (pds_is_flow_svc_map_en(b)) {
         /* Service mapping case (pip, port --> vip, port) */
-        actiondata.action_u.session_session_info.tx_xlate_id =
+        actiondata.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
     } else if (vnet_buffer2(b)->pds_nat_data.xlate_idx) {
         /* static nat */
-        actiondata.action_u.session_session_info.tx_xlate_id =
+        actiondata.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
-        actiondata.action_u.session_session_info.rx_xlate_id =
+        actiondata.rx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx + 1;
     }
     if (vnet_buffer2(b)->pds_nat_data.xlate_idx2) {
         // Twice NAT
-        actiondata.action_u.session_session_info.tx_xlate_id2 =
+        actiondata.tx_xlate_id2 =
             vnet_buffer2(b)->pds_nat_data.xlate_idx2;
-        actiondata.action_u.session_session_info.rx_xlate_id2 =
+        actiondata.rx_xlate_id2 =
             vnet_buffer2(b)->pds_nat_data.xlate_idx2 + 1;
     }
     rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b)->pds_flow_data.packet_type));
@@ -281,7 +282,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
             (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
     ctx = pds_flow_get_hw_ctx(session_id);
     ses_track_en = fm->con_track_en && (ctx->proto == PDS_FLOW_PROTO_TCP);
-    actiondata.action_u.session_session_info.session_tracking_en = ses_track_en;    
+    actiondata.session_tracking_en = ses_track_en;    
     pds_packet_type_fill(ctx, vnet_buffer(b)->pds_flow_data.packet_type);
     if (BIT_ISSET(vnet_buffer(b)->pds_flow_data.flags, VPP_CPU_FLAGS_RX_PKT)) {
         ctx->iflow_rx = 1;
@@ -299,7 +300,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         track_actiondata.action_u.session_track_session_track_info.rflow_tcp_win_size =
             vnet_buffer(b)->pds_flow_data.tcp_win_sz;
     }
-    if (PREDICT_FALSE(session_program(session_id, (void *)&actiondata))) {
+    if (PREDICT_FALSE(pds_session_program(session_id, (void *)&actiondata))) {
         if (pds_is_flow_napt_en(b)) {
             next[0] = SESSION_PROG_NEXT_NAT_DROP;
             vlib_buffer_advance(b, pds_session_get_nat_drop_next_offset(b));

@@ -207,9 +207,11 @@ void p4pd_cleanup();
  *  P4PD_FAIL                          : If tableid is not valid
 
  */
-p4pd_error_t p4pd_table_properties_get(uint32_t                 tableid,
+p4pd_error_t p4pd_table_properties_get(uint32_t tableid,
                                        p4pd_table_properties_t *tbl_ctx);
 
+p4pd_error_t p4pd_table_properties_optimal_get(uint32_t tableid,
+                                               p4pd_table_properties_t **tbl_ctx);
 
 
 /* P4PD API that uses tableID to set the table write mode that ASIC
@@ -637,6 +639,10 @@ extern void p4pluspd_rxdma_cleanup();
 
 extern p4pd_error_t p4pluspd_rxdma_table_properties_get(uint32_t tableid,
     p4pd_table_properties_t *tbl_ctx);
+
+extern p4pd_error_t p4pluspd_rxdma_table_properties_optimal_get(uint32_t tableid,
+    p4pd_table_properties_t **tbl_ctx);
+
 extern void p4pd_rxdma_hbm_table_address_set(uint32_t tableid, mem_addr_t pa,
                                              mem_addr_t va,
                                              p4pd_table_cache_t cache);
@@ -693,6 +699,9 @@ extern void p4pluspd_txdma_cleanup();
 
 extern p4pd_error_t p4pluspd_txdma_table_properties_get(uint32_t tableid,
     p4pd_table_properties_t *tbl_ctx);
+extern p4pd_error_t p4pluspd_txdma_table_properties_optimal_get(uint32_t tableid,
+    p4pd_table_properties_t **tbl_ctx);
+
 extern void p4pd_txdma_hbm_table_address_set(uint32_t tableid, mem_addr_t pa,
                                              mem_addr_t va,
                                              p4pd_table_cache_t cache);
@@ -917,6 +926,8 @@ p4pd_global_table_ds_decoded_string_get(uint32_t   tableid,
                                         uint16_t   buf_len);
 
 p4pd_error_t p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
+
+p4pd_error_t p4pd_global_table_properties_optimal_get(uint32_t tableid, void *tbl_ctx);
 
 uint32_t
 p4pd_global_actiondata_appdata_size_get(uint32_t tableid, uint8_t actionid);

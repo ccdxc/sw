@@ -98,7 +98,7 @@ def is_table_pad_256(table, pipeline):
         return True
 
     # TODO nexthop and session_track is 256 bits in Apulu
-    if pipeline == 'apulu' and ('nexthop' in str(table) or 'session_track' in str(table) or 'nat' in str(table)):
+    if pipeline == 'apulu' and ('nexthop' in str(table) or 'session_track' in str(table) or 'nat' in str(table) or 'session' in str(table)):
         return True
 
     if pipeline == 'athena' and ('session_rewrite' == str(table)):

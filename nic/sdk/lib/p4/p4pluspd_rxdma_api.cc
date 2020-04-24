@@ -282,3 +282,34 @@ p4pluspd_rxdma_table_properties_get (uint32_t tableid,
     memcpy(tbl_ctx, _p4plus_rxdma_tbls + tableid, sizeof(p4pd_table_properties_t));
     return P4PD_SUCCESS;
 }
+
+/* P4PD API that uses tableID to return table properties that HAL
+ * layer can use to construct, initialize P4 tables in local memory.
+ *
+ * Arguments:
+ *
+ *  IN  : uint32_t          tableid    : Table Id that identifies
+ *                                       P4 table. This id is obtained
+ *                                       from p4pd_table_id_enum.
+ *  OUT : p4pd_table_ctx_t **table_ctx : Returns a ptr to structure of data
+ *                                       that contains table properties.
+ * Return Value:
+ *  P4PD_SUCCESS                       : Table properties copied into tbl_ctx
+ *                                       Memory for tbl_ctx is provided by
+ *                                       API caller.
+ *
+ *  P4PD_FAIL                          : If tableid is not valid
+ */
+p4pd_error_t
+p4pluspd_rxdma_table_properties_optimal_get (uint32_t tableid,
+                                             p4pd_table_properties_t **tbl_ctx)
+
+{
+    if ((tableid >= p4pd_rxdma_tableid_max_get()) || !_p4plus_rxdma_tbls) {
+        return P4PD_FAIL;
+    }
+
+    *tbl_ctx = (p4pd_table_properties_t *) (_p4plus_rxdma_tbls + tableid);
+    
+    return P4PD_SUCCESS;
+}

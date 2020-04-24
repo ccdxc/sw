@@ -322,18 +322,19 @@ asicpd_hbm_table_entry_write (uint32_t tableid, uint32_t index,
                               uint8_t *hwentry, uint16_t entry_size)
 {
     int ret;
-    p4pd_table_properties_t tbl_ctx;
+    p4pd_table_properties_t *tbl_ctx = NULL;
+
 
     time_profile_begin(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE);
-    p4pd_global_table_properties_get(tableid, &tbl_ctx);
+    p4pd_global_table_properties_optimal_get(tableid, &tbl_ctx);
     ret = capri_hbm_table_entry_write(tableid, index, hwentry, entry_size,
-                                      tbl_ctx.hbm_layout.entry_width, &tbl_ctx);
+                                      tbl_ctx->hbm_layout.entry_width, tbl_ctx);
 
-    uint64_t entry_addr = (index * tbl_ctx.hbm_layout.entry_width);
-    ret |= capri_hbm_table_entry_cache_invalidate(tbl_ctx.cache,
-                                                  entry_addr,
-                                                  tbl_ctx.hbm_layout.entry_width,
-                                                  tbl_ctx.base_mem_pa);
+    uint64_t entry_addr = (index * tbl_ctx->hbm_layout.entry_width);
+    ret = capri_hbm_table_entry_cache_invalidate(tbl_ctx->cache, 
+                                                 entry_addr,
+                                                 tbl_ctx->hbm_layout.entry_width, 
+                                                 tbl_ctx->base_mem_pa);
 
 #if SDK_LOG_TABLE_WRITE
     char    buffer[2048];
@@ -364,15 +365,12 @@ asicpd_hbm_table_entry_read (uint32_t tableid, uint32_t index,
                              uint8_t *hwentry, uint16_t *entry_size)
 {
     int ret;
-    p4pd_table_properties_t tbl_ctx;
-    p4_table_mem_layout_t cap_tbl_info = {0};
+    p4pd_table_properties_t *tbl_ctx = NULL;
 
     time_profile_begin(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ);
-    p4pd_global_table_properties_get(tableid, &tbl_ctx);
-    asicpd_copy_table_info(&cap_tbl_info, &tbl_ctx.hbm_layout, &tbl_ctx);
+    p4pd_global_table_properties_optimal_get(tableid, &tbl_ctx);
     ret = capri_hbm_table_entry_read(tableid, index, hwentry,
-                                     entry_size, cap_tbl_info,
-                                     tbl_ctx.read_thru_mode);
+                                     entry_size, tbl_ctx);
     time_profile_end(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ);
     return ret;
 }

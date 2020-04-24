@@ -1730,28 +1730,30 @@ capri_hbm_table_entry_cache_invalidate (p4pd_table_cache_t cache,
 
 int
 capri_hbm_table_entry_read (uint32_t tableid, uint32_t index, uint8_t *hwentry,
-                            uint16_t *entry_size,
-                            p4_table_mem_layout_t &tbl_info, bool read_thru)
+                            uint16_t *entry_size, p4pd_table_properties_t *tbl_ctx)
 {
     mem_addr_t entry_start_addr, addr;
+    bool read_thru = tbl_ctx->read_thru_mode;
+    uint16_t entry_width;
 
-    assert(index < tbl_info.tabledepth);
-    entry_start_addr = (index * tbl_info.entry_width);
+    entry_width = tbl_ctx->hbm_layout.entry_width;
+    assert(index < tbl_ctx->tabledepth);
+    entry_start_addr = (index * entry_width);
 
-    if (tbl_info.base_mem_va) {
-        addr = tbl_info.base_mem_va + entry_start_addr;
-        sdk::asic::asic_vmem_read(addr, hwentry, tbl_info.entry_width,
+    if (tbl_ctx->base_mem_va) {
+        addr = tbl_ctx->base_mem_va + entry_start_addr;
+        sdk::asic::asic_vmem_read(addr, hwentry, entry_width,
                                   read_thru);
-    } else if (tbl_info.base_mem_pa) {
-        addr  = tbl_info.base_mem_pa + entry_start_addr;
-        sdk::asic::asic_mem_read(addr, hwentry, tbl_info.entry_width);
+    } else if (tbl_ctx->base_mem_pa) {
+        addr  = tbl_ctx->base_mem_pa + entry_start_addr;
+        sdk::asic::asic_mem_read(addr, hwentry, entry_width);
     } else {
         // if base_mem_va/base_mem_pa is not set, get hbm addr from tablename
-        addr = sdk::asic::asic_get_mem_addr(tbl_info.tablename) +
+        addr = sdk::asic::asic_get_mem_addr(tbl_ctx->tablename) +
             entry_start_addr;
-        sdk::asic::asic_mem_read(addr, hwentry, tbl_info.entry_width);
+        sdk::asic::asic_mem_read(addr, hwentry, entry_width);
     }
-    *entry_size = tbl_info.entry_width;
+    *entry_size = entry_width;
     return CAPRI_OK;
 }
 
