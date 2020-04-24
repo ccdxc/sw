@@ -49,7 +49,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', sortable: true, width: '175px', notReorderable: true },
-    { field: 'spec.packet-size', header: 'Packet Size', sortable: false, width: '100px', },
+    { field: 'spec.packet-size', header: 'Packet Size', sortable: true, width: '100px', },
     // { field: 'spec.packet-filters', header: 'Packet Filters', sortable: false, width: 10 },
     { field: 'spec.collectors', header: 'Collectors', sortable: false, width: '275px' },
     { field: 'spec.interfaces.selectors', header: 'Uplink Interface Selectors', sortable: false, width: 20 },
