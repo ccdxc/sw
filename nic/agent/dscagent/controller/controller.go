@@ -50,20 +50,20 @@ import (
 type API struct {
 	sync.Mutex
 	sync.WaitGroup
-	nimbusClient        *nimbus.NimbusClient
-	WatchCtx            context.Context
-	PipelineAPI         types.PipelineAPI
-	InfraAPI            types.InfraAPI
-	ResolverClient      resolver.Interface
-	RestServer          *http.Server
-	npmClient, ifClient *rpckit.RPCClient
-	cancelWatcher       context.CancelFunc
-	factory             *rpckit.RPCClientFactory
-	npmURL              string
-	kinds               []string // Captures the current Watch Kinds
-	evtsDispatcher      events.Dispatcher
-	policyMgr           *policy.Manager
-	policyWatcher       *policy.Watcher
+	nimbusClient   *nimbus.NimbusClient
+	WatchCtx       context.Context
+	PipelineAPI    types.PipelineAPI
+	InfraAPI       types.InfraAPI
+	ResolverClient resolver.Interface
+	RestServer     *http.Server
+	npmClient      *rpckit.RPCClient
+	cancelWatcher  context.CancelFunc
+	factory        *rpckit.RPCClientFactory
+	npmURL         string
+	kinds          []string // Captures the current Watch Kinds
+	evtsDispatcher events.Dispatcher
+	policyMgr      *policy.Manager
+	policyWatcher  *policy.Watcher
 }
 
 // RestServer implements REST APIs
@@ -267,13 +267,7 @@ func (c *API) start(ctx context.Context, kinds []string) error {
 			rpckit.WithBalancer(balancer.New(c.ResolverClient)),
 			rpckit.WithRemoteServerName(types.Npm))
 
-		c.ifClient, _ = c.factory.NewRPCClient(
-			c.InfraAPI.GetDscName(),
-			c.npmURL,
-			rpckit.WithBalancer(balancer.New(c.ResolverClient)),
-			rpckit.WithRemoteServerName(types.Npm))
-
-		if c.npmClient != nil && c.ifClient != nil {
+		if c.npmClient != nil {
 			log.Infof("Controller API: %s", types.InfoConnectedToNPM)
 			c.InfraAPI.NotifyVeniceConnection()
 		} else {
@@ -549,14 +543,7 @@ func (c *API) closeConnections() {
 		}
 	}
 
-	if c.ifClient != nil {
-		if err := c.ifClient.Close(); err != nil {
-			log.Error(errors.Wrapf(types.ErrNPMWatcherClose, "Controller API: %s", err))
-		}
-	}
-
 	c.npmClient = nil
-	c.ifClient = nil
 }
 
 // Stop cancels all watchers and closes all clients to venice controllers
@@ -582,7 +569,12 @@ func (c *API) Stop() error {
 
 func (c *API) netIfWorker(ctx context.Context) {
 	log.Infof("Starting Netif worker")
-	ifClient := netproto.NewInterfaceApiV1Client(c.ifClient.ClientConn)
+	if c.npmClient == nil {
+		log.Info("NPM Client not intialized. Exiting Interface updater")
+		return
+	}
+
+	ifClient := netproto.NewInterfaceApiV1Client(c.npmClient.ClientConn)
 	var operUpd netproto.InterfaceApiV1_InterfaceOperUpdateClient
 	var err error
 	nctx, cancel := context.WithCancel(context.Background())
