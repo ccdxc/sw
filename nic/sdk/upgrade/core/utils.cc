@@ -64,7 +64,7 @@ dump (const fsm& fsm)
                       "\tcurrent stage : %s\n"
                       "\tend stage     : %s\n"
                       "\tPending resp  : %u\n"
-                      "\ttimeout       : %f\n"
+                      "\ttimeout       : %f sec\n"
                       "\tevent seq     : %s\n"
                       "\tdiscovery     : %u\n"
                       "\tsvc sequence  : %s\n",
@@ -93,7 +93,7 @@ dump (const upg_scripts& scripts)
 dump (upg_stage& stage)
 {
     UPG_TRACE_VERBOSE("\t upg stage :"
-                      "\n\t\t svc rsp timeout: %f"
+                      "\n\t\t svc rsp timeout: %f ms"
                       "\n\t\t svc sequence   : %s"
                       "\n\t\t event sequence : %s"
                       "\n\t\t discovery      : %u"

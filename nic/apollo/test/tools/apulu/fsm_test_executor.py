@@ -22,7 +22,7 @@ msg = {
     10: "  Stopping '{0}' ...",
     11: "  Executing Test Case: {0}",
     12: "  Test Description   : {0}",
-    13: "  Execution status   : {0}",
+    13: "  Execution status   : {0}, Test ID {1}",
     14: "  NOTE               : Expected '{1}' , Got '{2}'",
     15: " Summary Of Test Run : Total - {0} , PASSED - {1}, FAILED - {2}, "
         "Exit Status - {3}",
@@ -412,8 +412,8 @@ class ExecutePdsUpgradeFsmTest(object):
         expected_result = int(expected_result)
         if ret == expected_result:
             self.number_of_pass = self.number_of_pass + 1
-            self.summary += message(13).format("SUCCESS") + os.linesep
-            Log("", "INFO", message(13).format("SUCCESS"),
+            self.summary += message(13).format("SUCCESS", test_id) + os.linesep
+            Log("", "INFO", message(13).format("SUCCESS", test_id),
                 call_stack=False)
         else:
             self.exit_status = 1
@@ -421,10 +421,11 @@ class ExecutePdsUpgradeFsmTest(object):
             path = self.__back_path__(test_id)
             self.summary +=  message(18).format(path) + os.linesep
             self.__backup_log__(path)
-            self.summary += message(13).format("FAILURE") + os.linesep
-            Log("", "INFO", message(13).format("FAILURE"),
+            self.summary += message(13).format("FAILURE", test_id) + os.linesep
+            Log("", "INFO", message(13).format("FAILURE", test_id),
                 call_stack=False)
 
+        print ("*"*100)
 
         # log_files = list(self.__get_data_by_key_walk__(
         #     self.test_exp_log_file_fmt.format(test_id)))
@@ -444,9 +445,9 @@ class ExecutePdsUpgradeFsmTest(object):
             self.summary += "-" * 100 + os.linesep
             self.__setup__()
             self.__execute_test__(test_id)
+            os.system("sleep 5")
             self.__cleanup__()
             print ("-" * 100)
-            os.system("sleep 5")
 
 
         self.summary += "=" * 100 + os.linesep
