@@ -152,9 +152,9 @@ func (w *nodemetrics) periodicUpdate(ctx context.Context) {
 			diskUsed := uint64(0)
 			diskTotal := uint64(0)
 
-			mountPoints := []string{"/dev", "/data", "/data/lib/etcd", "/run/initramfs/live", "/usr/local/bin"}
+			veniceMountPoints := []string{"/dev", "/data", "/data/lib/etcd", "/run/initramfs/live", "/usr/local/bin"}
 			ignorePart := func(pt string) bool {
-				for _, mp := range mountPoints {
+				for _, mp := range veniceMountPoints {
 					if pt == mp {
 						return false
 					}
@@ -163,10 +163,6 @@ func (w *nodemetrics) periodicUpdate(ctx context.Context) {
 			}
 
 			for _, p := range part {
-				if ignorePart(p.Mountpoint) {
-					continue
-				}
-
 				usage, err := disk.UsageWithContext(ctx, p.Mountpoint)
 				if err != nil {
 					w.logger.Errorf("Node Watcher: failed to read disk %+v, error: %v", p, err)
@@ -174,6 +170,9 @@ func (w *nodemetrics) periodicUpdate(ctx context.Context) {
 				}
 
 				if globals.ThresholdEventConfig && (usage.Total > 0) {
+					if ignorePart(p.Mountpoint) {
+						continue
+					}
 					partitionUsedPercent := math.Ceil(float64(usage.Used*10000)/float64(usage.Total)) / 100
 					if partitionUsedPercent > globals.DiskHighThreshold {
 						s, found := w.diskPEvtStatus[p.Mountpoint]

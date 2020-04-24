@@ -53,7 +53,7 @@ func testQueryingMetrics(kind string) {
 		Expect(len(series.Values)).ShouldNot(BeZero(), "Query response had no value entries in its series")
 
 		colMap := make(map[string]int)
-		expectedCols := []string{"CPUUsedPercent", "MemUsedPercent", "DiskUsedPercent"}
+		expectedCols := []string{"CPUUsedPercent", "MemUsedPercent"}
 		for i, col := range series.Columns {
 			colMap[col] = i
 		}
