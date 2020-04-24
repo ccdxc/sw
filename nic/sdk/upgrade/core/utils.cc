@@ -313,7 +313,7 @@ execute_hook (const std::string tools_dir, const std::string script,
                            script.c_str(), stage_name.c_str());
             cmd = cmd + " -s " + stage_name;
             cmd = cmd + " -t pre" ;
-            execute(cmd.c_str());
+            return execute(cmd.c_str());
         } else {
             SDK_ASSERT(status != SVC_RSP_MAX);
             UPG_TRACE_INFO("Executing post-hook %s, in stage %s, with stage "
@@ -324,10 +324,11 @@ execute_hook (const std::string tools_dir, const std::string script,
             cmd = cmd + " -r " + std::string(svc_rsp_code_name[status]);
 
             SDK_ASSERT(status != SVC_RSP_MAX);
-            execute(cmd.c_str());
+            return execute(cmd.c_str());
         }
     } catch (std::exception const& ex) {
         UPG_TRACE_ERR("Failed to execute hook  %s", ex.what());
+        result = false;
     }
 
     return result;

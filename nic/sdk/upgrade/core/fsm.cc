@@ -283,7 +283,11 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
                                                             fsm_states.init_params()->msg_in);
                 SDK_ASSERT(0);
             } else {
-                execute_pre_hooks(id);
+                if (!execute_pre_hooks(id)) {
+                    UPG_TRACE_ERR("Failed to execute pre hooks in stage %s",
+                                  upg_stage2str(id));
+                    fsm_states.update_stage_progress(SVC_RSP_FAIL);
+                }
                 move_to_nextstage();
             }
         } else if (fsm_states.is_serial_event_sequence() &&
@@ -379,18 +383,25 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
         switch (rsp) {
         // prev_stage_rsp_ will carry the response
         case SVC_RSP_FAIL:
-            UPG_TRACE_ERR("Got failure service response");
+            UPG_TRACE_ERR("Got failure response in stage %s",
+                          upg_stage2str(current_stage_));
             break;
         case SVC_RSP_CRIT:
-            UPG_TRACE_ERR("Got critical service response");
+            UPG_TRACE_ERR("Got critical service response in stage %s",
+                          upg_stage2str(current_stage_));
             break;
         case SVC_RSP_NONE:
-            UPG_TRACE_ERR("Timer expired, no service response so far");
+            UPG_TRACE_ERR("Timer expired, no service response so far"
+                          " in stage %s",upg_stage2str(current_stage_));
             break;
         default:
             break;
         }
-        execute_post_hooks(current_stage_, rsp);
+        if (!execute_post_hooks(current_stage_, rsp)) {
+            UPG_TRACE_ERR("Failed to execute post hooks in stage %s",
+                          upg_stage2str(current_stage_));
+            fsm_states.update_stage_progress(SVC_RSP_FAIL);
+        }
         current_stage_ = lookup_stage_transition(current_stage_, rsp);
 
         if (current_stage_ != end_stage_) {
@@ -420,14 +431,22 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
             str += ". Finish current stage";
             SDK_ASSERT(pending_response_ >= 0);
 
-            execute_post_hooks(current_stage_, rsp);
+            UPG_TRACE_INFO("%s", str.c_str());
+            if (!execute_post_hooks(current_stage_, rsp)) {
+                UPG_TRACE_ERR("Failed to execute post hooks in stage %s",
+                              upg_stage2str(current_stage_));
+                UPG_TRACE_ERR("Setting stage progress failure for stage %s",
+                              upg_stage2str(current_stage_));
+                fsm_states.update_stage_progress(SVC_RSP_FAIL);
+            }
             current_stage_ = lookup_stage_transition(current_stage_, rsp);
 
             prev_stage_rsp_ = (prev_stage_rsp_ == SVC_RSP_OK) ?
                 SVC_RSP_OK : prev_stage_rsp_;
             size_ = 0;
+        } else {
+            UPG_TRACE_INFO("%s", str.c_str());
         }
-        UPG_TRACE_INFO("%s", str.c_str());
     }
 }
 
@@ -742,7 +761,11 @@ init_fsm (fsm_init_params_t *params)
 
     SDK_ASSERT (fsm_states.is_discovery() == true);
     fsm_states.set_init_params(params);
-    execute_pre_hooks(fsm_states.current_stage());
+    if (!execute_pre_hooks(fsm_states.current_stage())) {
+        UPG_TRACE_ERR("Failed to execute pre hooks in stage %s",
+                      upg_stage2str(fsm_states.current_stage()));
+        return SDK_RET_ERR;
+    }
     send_discovery_event(IPC_SVC_DOM_ID_A, fsm_states.current_stage());
     return SDK_RET_OK;
 }
