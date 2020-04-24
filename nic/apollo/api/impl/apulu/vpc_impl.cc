@@ -40,7 +40,10 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
         return NULL;
     }
     impl = vpc_impl_db()->alloc();
-    new (impl) vpc_impl(spec);
+    if (impl) {
+        new (impl) vpc_impl(spec);
+    }
+    return impl;
 
 #if 0
     // allocate tag/class state for this vpc
@@ -69,13 +72,11 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
     }
     // set the reserved classid aside
     impl->tag_state_->remote_mapping_class_id_idxr_->alloc(PDS_IMPL_RSVD_MAPPING_CLASS_ID);
-#endif
     return impl;
 
 error:
 
     if (impl) {
-#if 0
         if (impl->tag_state_) {
             if (impl->tag_state_->local_mapping_classs_id_idxr_) {
                 rte_indexer::destroy(impl->tag_state_->local_mapping_classs_id_idxr_);
@@ -85,11 +86,11 @@ error:
             }
             SDK_FREE(PDS_MEM_ALLOC_ID_VPC_IMPL_TAG_STATE, impl->tag_state_);
         }
-#endif
         impl->~vpc_impl();
         vpc_impl_db()->free(impl);
     }
     return NULL;
+#endif
 }
 
 void

@@ -23,7 +23,7 @@ pds_proto_action_to_rule_action (types::SecurityRuleAction action)
     case types::SECURITY_RULE_ACTION_DENY:
         return SECURITY_RULE_ACTION_DENY;
     default:
-        return SECURITY_RULE_ACTION_DENY;
+        return SECURITY_RULE_ACTION_NONE;
     }
 }
 
@@ -202,6 +202,12 @@ pds_policy_rule_attrs_proto_to_api_spec (
     rule_attrs->priority = proto_attrs.priority();
     rule_attrs->action_data.fw_action.action =
                 pds_proto_action_to_rule_action(proto_attrs.action());
+    if (rule_attrs->action_data.fw_action.action == SECURITY_RULE_ACTION_NONE) {
+        PDS_TRACE_ERR("Invalid action in security policy {} rule {}",
+                      policy_key.str(), rule_key.str());
+        return SDK_RET_INVALID_ARG;
+    }
+
     ret = pds_policy_rule_match_proto_to_api_spec(policy_key, rule_key,
                   &rule_attrs->match, proto_attrs.match());
     if (unlikely(ret != SDK_RET_OK)) {
@@ -542,6 +548,11 @@ pds_security_profile_proto_to_api_spec (pds_security_profile_spec_t *api_spec,
     api_spec->conn_track_en = proto_spec.conntracken();
     api_spec->default_action.fw_action.action =
             pds_proto_action_to_rule_action(proto_spec.defaultfwaction());
+    if (api_spec->default_action.fw_action.action ==
+            SECURITY_RULE_ACTION_NONE) {
+        // global default action is allow
+        api_spec->default_action.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
+    }
     api_spec->tcp_idle_timeout = proto_spec.tcpidletimeout();
     api_spec->udp_idle_timeout = proto_spec.udpidletimeout();
     api_spec->icmp_idle_timeout = proto_spec.icmpidletimeout();

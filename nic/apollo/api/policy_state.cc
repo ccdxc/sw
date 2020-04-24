@@ -131,14 +131,32 @@ policy_state::alloc_security_profile(void) {
 }
 
 sdk_ret_t
-policy_state::insert(security_profile *obj) {
-    return security_profile_ht_->insert_with_key(&obj->key_, obj,
-                                                 &obj->ht_ctxt_);
+policy_state::insert(security_profile *profile) {
+    if (security_profile_) {
+        PDS_TRACE_ERR("Attempt to overwrite an existing security profile");
+        return SDK_RET_ENTRY_EXISTS;
+    }
+    security_profile_ = profile;
+    return security_profile_ht_->insert_with_key(&profile->key_, profile,
+                                                 &profile->ht_ctxt_);
 }
 
 security_profile *
-policy_state::remove(security_profile *obj) {
-    return (security_profile *)(security_profile_ht_->remove(&obj->key_));
+policy_state::remove_security_profile(void) {
+    security_profile *profile_inst;
+
+    security_profile_ht_->remove(&security_profile_->key_);
+    profile_inst = security_profile_;
+    security_profile_ = NULL;
+    return profile_inst;
+}
+
+security_profile *
+policy_state::remove(security_profile *profile) {
+    if (profile == security_profile_) {
+        return remove_security_profile();
+    }
+    return (security_profile *)(security_profile_ht_->remove(&profile->key_));
 }
 
 void

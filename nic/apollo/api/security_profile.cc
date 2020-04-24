@@ -21,6 +21,8 @@ namespace api {
 
 // security profile API implementation
 security_profile::security_profile() {
+    // default action if user has not configured is ALLOW
+    default_fw_action_ = SECURITY_RULE_ACTION_ALLOW;
     ht_ctxt_.reset();
 }
 
@@ -72,28 +74,13 @@ security_profile::free(security_profile *profile) {
     return SDK_RET_OK;
 }
 
-security_profile *
-security_profile::build(pds_obj_key_t *key) {
-    security_profile *profile;
-
-    profile = policy_db()->alloc_security_profile();
-    if (profile) {
-        new (profile) security_profile();
-        memcpy(&profile->key_, key, sizeof(*key));
-    }
-    return profile;
-}
-
-void
-security_profile::soft_delete(security_profile *profile) {
-    profile->del_from_db();
-    profile->~security_profile();
-    policy_db()->free(profile);
-}
-
 sdk_ret_t
 security_profile::init_config(api_ctxt_t *api_ctxt) {
-    key_ = api_ctxt->api_params->security_profile_spec.key;
+    pds_security_profile_spec_t *spec;
+
+    spec = &api_ctxt->api_params->security_profile_spec;
+    key_ = spec->key;
+    default_fw_action_ = spec->default_action.fw_action.action;
     return SDK_RET_OK;
 }
 
@@ -114,6 +101,8 @@ security_profile::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
 
 void
 security_profile::fill_spec_(pds_security_profile_spec_t *spec) {
+    spec->key = key_;
+    spec->default_action.fw_action.action = default_fw_action_;
 }
 
 sdk_ret_t

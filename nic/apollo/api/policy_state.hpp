@@ -87,6 +87,11 @@ public:
     /// \return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(security_profile *profile);
 
+    /// \brief     remove the default security profile
+    /// \return    pointer to the removed security profile instance or NULL,
+    ///            if not found
+    security_profile *remove_security_profile(void);
+
     /// \brief     remove the given instance of security profile object from db
     /// \param[in] profile security profile entry to be deleted from the db
     /// \return    pointer to the removed security profile instance or NULL,
@@ -106,6 +111,11 @@ public:
     /// \brief     lookup a security security profile in database given the key
     /// \param[in] key    security profile key
     security_profile *find_security_profile(pds_obj_key_t *key) const;
+
+    /// \brief     return the global default security profile
+    security_profile *find_security_profile(void) {
+        return security_profile_;
+    }
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -127,11 +137,18 @@ private:
     friend class security_profile;
 
 private:
-    ht      *policy_ht_;             ///< security policy database
-    slab    *policy_slab_;           ///< slab to allocate security policy instance
-    ht      *security_profile_ht_;   ///< security profile database
-    slab    *security_profile_slab_; ///< slab to allocate security profile
-    sdk::lib::kvstore *kvstore_;     ///< key-value store instance
+    /// security policy database
+    ht      *policy_ht_;
+    /// slab to allocate security policy instance
+    slab    *policy_slab_;
+    /// global default security profile instance
+    security_profile *security_profile_;
+    /// security profile database
+    ht      *security_profile_ht_;
+    /// slab to allocate security profile
+    slab    *security_profile_slab_;
+    /// key-value store instance
+    sdk::lib::kvstore *kvstore_;
 };
 
 /// \brief state maintained for stateful & stateless policy rules
@@ -205,6 +222,12 @@ static inline security_profile *
 security_profile_find (pds_obj_key_t *key)
 {
     return (security_profile *)api_base::find_obj(OBJ_ID_SECURITY_PROFILE, key);
+}
+
+static inline security_profile *
+security_profile_find (void)
+{
+    return (security_profile *)api_base::find_obj(OBJ_ID_SECURITY_PROFILE, NULL);
 }
 
 /// \@}    // end of PDS_POLICY_STATE

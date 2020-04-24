@@ -51,21 +51,6 @@ public:
     /// \return   sdk_ret_ok or error code
     static sdk_ret_t free(security_profile *profile);
 
-    /// \brief    build object given its key from the (sw and/or hw state we
-    ///           have) and return an instance of the object (this is useful for
-    ///           stateless objects to be operated on by framework during DELETE
-    ///           or UPDATE operations)
-    /// \param[in] key    key of object instance of interest
-    /// \return    security profile instance corresponding to the key
-    static security_profile *build(pds_obj_key_t *key);
-
-    /// \brief    free a stateless entry's temporary s/w only resources like
-    ///           memory etc., for a stateless entry calling destroy() will
-    ///           remove resources from h/w, which can't be done during ADD/UPD
-    ///           etc. operations esp. when object is constructed on the fly
-    /// \param[in] profile    security profile instance to be freed
-    static void soft_delete(security_profile *profile);
-
     /// \brief          initialize security profile entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error
@@ -117,6 +102,12 @@ public:
         return (void *)&(profile->key_);
     }
 
+    /// \brief     return the global default firewall policy action
+    /// \return    global default firewall policy action
+    fw_action_t default_fw_action(void) const {
+        return default_fw_action_;
+    }
+
 private:
     /// \brief constructor
     security_profile();
@@ -131,6 +122,9 @@ private:
 private:
     /// security profile key
     pds_obj_key_t key_;
+
+    /// default firewall policy action
+    fw_action_t default_fw_action_;
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;

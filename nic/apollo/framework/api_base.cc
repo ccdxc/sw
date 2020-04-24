@@ -139,6 +139,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
         }
         return nat_port_block::build(&api_ctxt->api_params->nat_port_block_spec.key);
 
+#if 0
     case OBJ_ID_SECURITY_PROFILE:
         // security profile is a stateless object, so we need to build it on
         // the fly
@@ -146,6 +147,7 @@ api_base::build(api_ctxt_t *api_ctxt) {
             return security_profile::build(&api_ctxt->api_params->key);
         }
         return security_profile::build(&api_ctxt->api_params->security_profile_spec.key);
+#endif
 
     case OBJ_ID_ROUTE:
         // route is a stateless object, so we need to build it on the fly
@@ -188,9 +190,11 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
         nat_port_block::soft_delete((nat_port_block *)api_obj);
         break;
 
+#if 0
     case OBJ_ID_SECURITY_PROFILE:
         security_profile::soft_delete((security_profile *)api_obj);
         break;
+#endif
 
     case OBJ_ID_ROUTE:
         route::soft_delete((route *)api_obj);
@@ -403,10 +407,13 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
         return dhcp_db()->find(&api_ctxt->api_params->dhcp_policy_spec.key);
 
     case OBJ_ID_SECURITY_PROFILE:
+        return policy_db()->find_security_profile();
+#if 0
         if (api_ctxt->api_op == API_OP_DELETE) {
             return policy_db()->find_security_profile(&api_ctxt->api_params->key);
         }
         return policy_db()->find_security_profile(&api_ctxt->api_params->security_profile_spec.key);
+#endif
 
     case OBJ_ID_MIRROR_SESSION:
         if (api_ctxt->api_op == API_OP_DELETE) {
@@ -515,7 +522,10 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_SECURITY_PROFILE:
+        api_obj = policy_db()->find_security_profile();
+#if 0
         api_obj = policy_db()->find_security_profile((pds_obj_key_t *)key);
+#endif
         break;
 
     default:
@@ -536,7 +546,6 @@ api_base::stateless(obj_id_t obj_id) {
     case OBJ_ID_SVC_MAPPING:
     case OBJ_ID_VPC_PEER:
     case OBJ_ID_NAT_PORT_BLOCK:
-    case OBJ_ID_SECURITY_PROFILE:
     case OBJ_ID_ROUTE:
     case OBJ_ID_POLICY_RULE:
         return true;

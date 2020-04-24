@@ -87,8 +87,9 @@ typedef struct rule_match_s {
 
 /// \brief    security rule action
 typedef enum fw_action_e {
-    SECURITY_RULE_ACTION_ALLOW = 0,    ///< Allow the packet
-    SECURITY_RULE_ACTION_DENY  = 1,    ///< Drop the packet silently
+    SECURITY_RULE_ACTION_NONE  = 0,    ///< invalid action
+    SECURITY_RULE_ACTION_ALLOW = 1,    ///< allow the packet
+    SECURITY_RULE_ACTION_DENY  = 2,    ///< drop the packet silently
 } fw_action_t;
 
 /// \brief    security rule specific action data
