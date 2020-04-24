@@ -221,7 +221,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 				err = sm.CreateDSCRolloutState(&snicRollout, &ros, snicStatus)
 				if err != nil {
 					log.Errorf("Error %v creating smartnic rollout state", err)
-					return err
+					/*do not return error. The failure could be due to forcerollout running in  parallel*/
 				}
 			}
 		}
