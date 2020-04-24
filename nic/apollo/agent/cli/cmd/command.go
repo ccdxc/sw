@@ -229,7 +229,7 @@ func HandleUdsShowObject(cmdCtxt *pds.ServiceRequestMessage, i PrintObject) erro
 }
 
 func GetAgentTransport(cmd *cobra.Command) (Transport, error) {
-	if cmd.Flags().Changed("transport") {
+	if cmd != nil && cmd.Flags().Changed("transport") {
 		if transport == "uds" {
 			return AGENT_TRANSPORT_UDS, nil
 		} else if transport == "grpc" {
