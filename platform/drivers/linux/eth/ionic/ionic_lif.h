@@ -134,6 +134,7 @@ struct ionic_lif_sw_stats {
 enum ionic_lif_state_flags {
 	IONIC_LIF_F_INITED,
 	IONIC_LIF_F_SW_DEBUG_STATS,
+	IONIC_LIF_F_READY,
 	IONIC_LIF_F_UP,
 	IONIC_LIF_F_LINK_CHECK_REQUESTED,
 	IONIC_LIF_F_QUEUE_RESET,

@@ -1886,6 +1886,9 @@ static int ionic_start_queues(struct ionic_lif *lif)
 {
 	int err;
 
+	if (!test_bit(IONIC_LIF_F_READY, lif->state))
+		return 0;
+
 	if (test_and_set_bit(IONIC_LIF_F_UP, lif->state))
 		return 0;
 
@@ -1914,6 +1917,7 @@ static int ionic_lif_open(struct ionic_lif *lif)
 	err = ionic_txrx_init(lif);
 	if (err)
 		goto err_out;
+	set_bit(IONIC_LIF_F_READY, lif->state);
 
 	/* don't start the queues until we have link */
 	ionic_link_status_check_request(lif);
@@ -1977,6 +1981,7 @@ static int ionic_lif_stop(struct ionic_lif *lif)
 	}
 	dev_dbg(lif->ionic->dev, "%s: %s state=UP\n", __func__, lif->name);
 	clear_bit(IONIC_LIF_F_UP, lif->state);
+	clear_bit(IONIC_LIF_F_READY, lif->state);
 
 	ionic_stop_queues(lif);
 	ionic_txrx_deinit(lif);
