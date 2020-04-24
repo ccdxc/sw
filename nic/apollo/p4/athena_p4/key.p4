@@ -220,9 +220,6 @@ action init_config() {
     if (control_metadata.skip_flow_lkp == TRUE) {
         modify_field(control_metadata.flow_miss, TRUE);
     }
-
-    /* Drop packet on PB errors */
-    modify_field(capri_intrinsic.drop, capri_intrinsic.hw_error);
 }
 
 @pragma stage 0

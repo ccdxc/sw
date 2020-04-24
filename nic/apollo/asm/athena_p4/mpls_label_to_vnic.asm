@@ -23,3 +23,12 @@ mpls_label_to_vnic_failed:
     phvwr           p.ingress_recirc_header_dnat_done, TRUE
     phvwr.e         p.control_metadata_skip_dnat_lkp, TRUE
     phvwr           p.control_metadata_skip_flow_lkp, TRUE
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+mpls_label_to_vnic_error:
+    phvwr.e         p.capri_intrinsic_drop, 1
+    phvwr           p.capri_p4_intrinsic_valid, TRUE

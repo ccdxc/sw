@@ -61,3 +61,12 @@ p4i_stats_from_host:
 p4i_stats_from_arm:
     nop.e
     nop
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+p4i_stats_error:
+    phvwr.e         p.capri_intrinsic_drop, 1
+    phvwr           p.capri_p4_intrinsic_valid, TRUE

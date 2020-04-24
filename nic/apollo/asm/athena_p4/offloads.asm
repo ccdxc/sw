@@ -99,5 +99,5 @@ offloads_end:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 offloads_error:
-    nop.e
-    nop
+    phvwr.e         p.capri_intrinsic_drop, 1
+    phvwr           p.capri_p4_intrinsic_valid, TRUE

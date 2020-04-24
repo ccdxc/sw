@@ -92,4 +92,4 @@ native_nonip_packet:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 key_native_error:
     phvwr.e         p.capri_intrinsic_drop, 1
-    nop
+    phvwr           p.capri_p4_intrinsic_valid, TRUE

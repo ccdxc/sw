@@ -42,3 +42,12 @@ p4i_to_p4e:
 #endif
     phvwr.c1.e      p.{p4plus_to_p4_vlan_valid...capri_intrinsic_valid}, 0x0b
     phvwr.c1.f      p.capri_intrinsic_tm_oport, TM_PORT_EGRESS
+
+/*****************************************************************************/
+/* error function                                                            */
+/*****************************************************************************/
+.align
+.assert $ < ASM_INSTRUCTION_OFFSET_MAX
+p4i_to_p4e_error:
+    phvwr.e         p.capri_intrinsic_drop, 1
+    phvwr           p.capri_p4_intrinsic_valid, TRUE
