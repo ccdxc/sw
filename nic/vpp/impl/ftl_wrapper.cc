@@ -196,18 +196,11 @@ ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
         if (SDK_RET_OK != obj->update(&params)) {
             return -1;
         }
-        return 0;
+        goto done;
     }
  
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
-    }
-
-    if (params.handle.svalid()) {
-        *pindex = (uint32_t) (~0L);
-        *sindex = params.handle.sindex();
-    } else {
-        *pindex = params.handle.pindex();
     }
 
     if (log) {
@@ -228,6 +221,15 @@ ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
                                      ftl_get_lookup_id(entry), 1, 1);
         }
     }
+
+done:
+    if (params.handle.svalid()) {
+        *pindex = (uint32_t) (~0L);
+        *sindex = params.handle.sindex();
+    } else {
+        *pindex = params.handle.pindex();
+    }
+
     return 0;
 }
 

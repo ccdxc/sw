@@ -472,7 +472,7 @@ Bucket::defragment_(Apictx *ectx, Apictx *tctx) {
     // notification is sent twice - once before move and once after move.
     // reason for 2 notifications is application can invoke its locking
     // mechanism before start move and unlock after move.
-    if (ectx->params->movecb) {
+    if ((ectx != tctx) && ectx->params->movecb) {
         tctx->is_main() ? old_handle.pindex(tctx->table_index) :
                           old_handle.sindex(tctx->table_index);
         ectx->is_main() ? new_handle.pindex(ectx->table_index) :
@@ -514,17 +514,18 @@ Bucket::defragment_(Apictx *ectx, Apictx *tctx) {
         // some hint to this entry, but we never account that stats.
         tctx->tstats->remove(!tctx->is_main());
         FTL_TRACE_VERBOSE("decrementing table stats for %s", tctx->idstr());
-    }
-    // second notifucation - move complete
-    if (ectx->params->movecb) {
 
-        // Note: tctx->entry by this time has been zeroed out by move_().
-        // However, it has been copied to ectx but, if ectx itself had gone
-        // thru write_() above, it would have been byte swizzled. So to provide
-        // correct context to the 2nd move step, ectx has to be re-read.
-        ret = ectx->bucket->read_(ectx, true);
-        SDK_ASSERT(ret == SDK_RET_OK);
-        ectx->params->movecb(ectx->entry, old_handle, new_handle, true);
+        // second notification - move complete
+        if (ectx->params->movecb) {
+
+            // Note: tctx->entry by this time has been zeroed out by move_().
+            // However, it has been copied to ectx but, if ectx itself had gone
+            // thru write_() above, it would have been byte swizzled. So to provide
+            // correct context to the 2nd move step, ectx has to be re-read.
+            ret = ectx->bucket->read_(ectx, true);
+            SDK_ASSERT(ret == SDK_RET_OK);
+            ectx->params->movecb(ectx->entry, old_handle, new_handle, true);
+        }
     }
     return SDK_RET_OK;
 }

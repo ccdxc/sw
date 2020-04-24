@@ -250,6 +250,7 @@ __label__ done;
     FTL_RET_CHECK_AND_GOTO(ret, done, "find r:%d", ret);
 
     ret = match_ctx->bucket->update_(match_ctx);
+    ctx->params->handle.pindex(ctx->table_index);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket update r:%d", ret);
 
 done:

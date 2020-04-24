@@ -70,18 +70,11 @@ ftlv4_insert (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
         if (SDK_RET_OK != obj->update(&params)) {
             return -1;
         }
-        return 0;
+        goto done;
     }
 
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
-    }
-
-    if (params.handle.svalid()) {
-        *pindex = (uint32_t) (~0L);
-        *sindex = params.handle.sindex();
-    } else {
-        *pindex = params.handle.pindex();
     }
 
     if (log) {
@@ -92,6 +85,15 @@ ftlv4_insert (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
                                   entry->get_key_metadata_dport(),
                                   ftlv4_get_key_lookup_id(entry), 1, 1);
     }
+
+done:
+    if (params.handle.svalid()) {
+        *pindex = (uint32_t) (~0L);
+        *sindex = params.handle.sindex();
+    } else {
+        *pindex = params.handle.pindex();
+    }
+
     return 0;
 }
 
