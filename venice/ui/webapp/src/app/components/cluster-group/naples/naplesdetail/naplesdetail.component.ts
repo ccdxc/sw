@@ -25,7 +25,7 @@ import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsR
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { NetworkService } from '@app/services/generated/network.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { NetworkNetworkInterface, INetworkNetworkInterfaceList } from '@sdk/v1/models/generated/network';
+import { NetworkNetworkInterface, INetworkNetworkInterfaceList, NetworkNetworkInterfaceSpec_type } from '@sdk/v1/models/generated/network';
 import { SearchService } from '@app/services/generated/search.service';
 import { SearchSearchRequest, IFieldsSelector } from '@sdk/v1/models/generated/search';
 import { BrowserService } from '@app/services/generated/browser.service';
@@ -149,13 +149,15 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   allNetworkInterfaces: NetworkNetworkInterface[] = [];
   // these stats are form backend
   lifInterfacePollingStats: ITelemetry_queryMetricsQueryResult = null;
-  upperLinkInterfacePollingStats: Telemetry_queryMetricsQueryResult = null;
+  pifInterfacePollingStats: ITelemetry_queryMetricsQueryResult = null;
   // the next 3 stats are for gui display
   interfaceTopos: InterfaceTopos;
   interfaceStats: InterfaceStats[] = [];
   interfaceStatsUpdateTime: string = '';
   mouseOverInterface: string = '';
   showInterfaceTable: boolean = false;
+
+  asicFrequency: string = '';
 
   inProfileAssigningMode: boolean = false;
 
@@ -260,13 +262,14 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         // there are duplicated interfaces for example 00aecd000009-uplink-1-2 and
         // 00ae.cd00.0009-uplink-1-2
         // if (this.selectedObj && networkNetworkInterface.status.dsc === this.selectedObj.meta.name) {
-        if (networkNetworkInterface.meta.name.startsWith(this.selectedObj.meta.name)) {
+        if (networkNetworkInterface.meta.name.startsWith(this.selectedObj.meta.name) &&
+            !Utility.isInterfaceInValid(networkNetworkInterface)) {
           list.push(networkNetworkInterface);
         }
       });
       this.networkInterfaces = list;
       this.processInterfaceData();
-      this.updateLifStats();
+      this.updateInterfacesStats();
     }
   }
 
@@ -299,35 +302,29 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           lower: []
         }
       };
-      const pif1: NetworkNetworkInterface = this.networkInterfaces.find(
-        (itf: NetworkNetworkInterface) => itf.meta.name.endsWith('-uplink-1-1')
-      );
-      if (pif1) {
-        const pif2: NetworkNetworkInterface = this.networkInterfaces.find(
-          (itf: NetworkNetworkInterface) => itf.meta.name.endsWith('-uplink-1-2')
-        );
-        if (pif2) {
-          this.interfaceTopos.pif.push({
-            num: 1,
-            name: pif1.meta.name,
-            ifName: 'uplink-1-1',
-            status: pif1.spec['admin-status'] + '/' + pif1.status['oper-status']
-          });
-          this.interfaceTopos.pif.push({
-            num: 2,
-            name: pif2.meta.name,
-            ifName: 'uplink-1-2',
-            status: pif1.spec['admin-status'] + '/' + pif1.status['oper-status']
+      const pifs: IfStat[] = [];
+      this.networkInterfaces.forEach((itf: NetworkNetworkInterface) => {
+        if (itf.spec && itf.spec.type === NetworkNetworkInterfaceSpec_type['uplink-eth']) {
+          const arr: string[] = itf.meta.name.split('-uplink-1-');
+          const num = arr[arr.length - 1];
+          pifs.push({
+            num: parseInt(num, 10),
+            name: itf.meta.name,
+            ifName: 'uplink-1-' + num,
+            status: itf.spec['admin-status'] + '/' + itf.status['oper-status']
           });
         }
-      }
-      const lifs = [];
+      });
+      pifs.sort((a, b) => (a.name > b.name) ? 1 : -1);
+      this.interfaceTopos.pif = pifs;
+
+      const lifs: IfStat[] = [];
       this.networkInterfaces.forEach((itf: NetworkNetworkInterface) => {
         if (itf.spec && itf.spec.type === 'host-pf') {
           const arr: string[] = itf.meta.name.split('-');
           const num = arr[arr.length - 1];
           lifs.push({
-            num,
+            num: parseInt(num, 10),
             name: itf.meta.name,
             ifName: 'pf-' + num,
             status: itf.spec['admin-status'] + '/' + itf.status['oper-status']
@@ -362,23 +359,53 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     }
   }
 
-  updateLifStats() {
+  updateInterfacesStats() {
     const lifStats = this.lifInterfacePollingStats;
+    const pifStats = this.pifInterfacePollingStats;
     const interfaceStats = this.interfaceStats;
+    if (pifStats && pifStats.series && pifStats.series.length > 0 && interfaceStats.length > 0) {
+      this.interfaceStatsUpdateTime = pifStats.series[0].values[0][0];
+      pifStats.series.forEach(item => {
+        const itf = this.interfaceStats.find(interf => {
+          const tags = item.tags as any;
+          const tagsName = tags.name;
+          return interf.shortname === tagsName.substring(tagsName.length - 10);
+        });
+        if (itf) {
+          itf.stats.rx = item.values[0][1];
+          itf.stats.tx = item.values[0][2];
+          itf.stats.rxDrop = -1000;
+          itf.stats.txDrop = -1000;
+        }
+      });
+    }
     if (lifStats && lifStats.series && lifStats.series.length > 0 && interfaceStats.length > 0) {
-      this.interfaceStatsUpdateTime = lifStats.series[0].values[0][0];
+      if (!this.interfaceStatsUpdateTime) {
+        this.interfaceStatsUpdateTime = lifStats.series[0].values[0][0];
+      }
       lifStats.series.forEach(item => {
         const itf = this.interfaceStats.find(interf => {
           const tags = item.tags as any;
           return interf.ifname === tags.name;
         });
         if (itf) {
-          itf.stats.rx = item.values[0][1] + item.values[0][2] + item.values[0][3];
-          itf.stats.tx = item.values[0][4] + item.values[0][5] + item.values[0][6];
-          itf.stats.rxDrop = item.values[0][7] + item.values[0][8] + item.values[0][9];
-          itf.stats.txDrop = item.values[0][10] + item.values[0][11] + item.values[0][12];
+          itf.stats.rx = item.values[0][7];
+          itf.stats.tx = item.values[0][8];
+          itf.stats.rxDrop = item.values[0][1] + item.values[0][2] + item.values[0][3];
+          itf.stats.txDrop = item.values[0][4] + item.values[0][5] + item.values[0][6];
         }
       });
+    }
+    // if current selected interfac having not stats, then  move to one having stats
+    const selectedInterfaceStats: InterfaceStats = this.interfaceStats.find(
+        (inf: InterfaceStats) => inf.ifname === this.mouseOverInterface);
+    if (selectedInterfaceStats && selectedInterfaceStats.stats.rx === -1) {
+      // find first available interface stats having value;
+      const avialInf = this.interfaceStats.find(
+          (inf: InterfaceStats) => inf.stats.rx !== -1);
+      if (avialInf) {
+        this.mouseOverInterface = avialInf.ifname;
+      }
     }
   }
 
@@ -398,20 +425,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         });
       }
     });
-  }
-
-  getInterfacesStatsData() {
-    if (this.interfaceStats && this.interfaceStats.length > 0) {
-      this.interfaceStatsUpdateTime = new Date().toUTCString();
-      this.interfaceStats.forEach((ifs: InterfaceStats) => {
-        if (ifs.stats) {
-          ifs.stats.rx += Math.round(Math.random() * 100);
-          ifs.stats.tx += Math.round(Math.random() * 100);
-          ifs.stats.rxDrop += Math.round(Math.random() * 100);
-          ifs.stats.txDrop += Math.round(Math.random() * 100);
-        }
-      });
-    }
   }
 
   getDSCProfiles() {
@@ -613,24 +626,55 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
         tenant: Utility.getInstance().getTenant()
       };
       const query1: MetricsPollingQuery = this.topologyInterfaceQuery(
-        'LifMetrics', ['RxBroadcastBytes', 'RxMulticastBytes', 'RxUnicastBytes', 'TxBroadcastBytes',
-        'TxMulticastBytes', 'TxUnicastBytes', 'RxDropBroadcastBytes', 'RxDropMulticastBytes',
-        'RxDropUnicastBytes', 'TxDropBroadcastBytes', 'TxDropMulticastBytes', 'TxDropUnicastBytes'],
+        'LifMetrics', ['RxDropBroadcastBytes', 'RxDropMulticastBytes', 'RxDropUnicastBytes',
+        'TxDropBroadcastBytes', 'TxDropMulticastBytes', 'TxDropUnicastBytes', 'RxTotalBytes', 'TxTotalBytes'],
         MetricsUtility.createReporterIDSelector(this.selectedId));
       queryList.queries.push(query1);
+
+      const query2: MetricsPollingQuery = this.topologyInterfaceQuery(
+        'MacMetrics', ['OctetsRxOk', 'OctetsTxOk'],
+        MetricsUtility.createReporterIDSelector(this.selectedId));
+      queryList.queries.push(query2);
+
+      const query3: MetricsPollingQuery = this.topologyInterfaceQuery(
+        'AsicFrequencyMetrics', ['Frequency'],
+        MetricsUtility.createReporterIDSelector(this.selectedId));
+      queryList.queries.push(query3);
+
+      // this is the example of inetrface stats resutl
+      /*
+         {"tenant":"default","results":[{"statement_id":0,"series":[{"name":"LifMetrics",
+         "tags":{"name":"00ae.cd01.0ed8-pf-70"},"columns":["time","last","last_1","last_2",
+         "last_3","last_4","last_5","last_6","last_7"],"values":[["2020-04-24T06:26:33.000000001Z",
+         1411652,26316,778696198369,24283200,0,849048307,27563196641199,17813711841860]]},
+         {"name":"LifMetrics","tags":{"name":"00ae.cd01.0ed8-pf-69"},"columns":["time","last",
+         "last_1","last_2","last_3","last_4","last_5","last_6","last_7"],"values":[
+           ["2020-04-24T06:26:33.000000001Z",1422183,37678,835038121918,7353088,0,1508136395,67235370456757,
+           30693719401173]]}]},{"statement_id":1,"series":[{"name":"MacMetrics","tags":{"name":
+           "00ae.cd01.0ed8-00ae.cd01.0ed8-uplink-1-2"},"columns":["time","last","last_1"],"values":[
+             ["2020-04-24T06:26:33.000000001Z",68674314086022,2743570971019
+      */
 
       // refresh every 5 minutes
       const sub = this.metricsqueryService.pollMetrics('topologyInterfaces', queryList, MetricsUtility.FIVE_MINUTES).subscribe(
         (data: ITelemetry_queryMetricsQueryResponse) => {
           if (data && data.results && data.results.length === queryList.queries.length) {
             this.lifInterfacePollingStats = data.results[0];
-            this.updateLifStats();
+            this.pifInterfacePollingStats = data.results[1];
+            const asiqFreqStats: ITelemetry_queryMetricsQueryResult = data.results[2];
+            if (asiqFreqStats && asiqFreqStats.series &&  asiqFreqStats.series.length > 0) {
+              const series = asiqFreqStats.series;
+              if (series[0].values && series[0].values.length > 0) {
+                this.asicFrequency = series[0].values[0][1] + ' MHz';
+              }
+            }
           }
         },
         (err) => {
-          this._controllerService.invokeErrorToaster('Error', 'Failed to load Top 10 DSC metrics.');
+          this._controllerService.invokeErrorToaster('Error', 'Failed to load interface metrics.');
         }
       );
+      this.subscriptions.push(sub);
     }
   }
 

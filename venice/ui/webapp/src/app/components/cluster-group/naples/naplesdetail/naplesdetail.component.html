@@ -168,6 +168,10 @@
               </div>
               <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
                    fxLayoutAlign="start center">
+                <div>ASIC Frequency:</div>
+              </div>
+              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
                 <div>DSC Profile:</div>
                 <mat-icon matTooltip="Edit DSC Profile" class="global-table-action-icon"
                           (click)="assignDSCProfile()"
@@ -211,6 +215,12 @@
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-auto-admit-nics">
                   {{ selectedObj?.status['system-info']['os-info']['processor'] }}
+                </div>
+              </div>
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                   class="naplesdetail-node-value">
+                <div class="naplesdetail-panel-asic-frequency">
+                  {{ asicFrequency }}
                 </div>
               </div>
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"

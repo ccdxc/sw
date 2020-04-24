@@ -25,6 +25,7 @@ import { LogService } from '../services/logging/log.service';
 import { UIConfigsService } from '../services/uiconfigs.service';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { StagingService } from '@app/services/generated/staging.service';
+import { NetworkNetworkInterface, NetworkNetworkInterfaceSpec_type } from '@sdk/v1/models/generated/network';
 
 /**
  * VeniceObjectCacheStore is for data-cache.
@@ -2200,6 +2201,34 @@ export class Utility {
       title += '\n' + hiddenNumber + ' more ...';
     }
     return { list, title };
+  }
+
+  // this function is used to determin whether an interface should be filtered
+  // for display
+  // rules are here.
+  // 1) if the interface.status.type = 'none', those interfaces were old lif
+  //    interfaces should be filtered out by backend. They are still here
+  //    is because the venis version issue.
+  // 2) if the interface.status.type = 'uplink-eth', then the name must end
+  //    '-uplink-1-1' or '-uplink-1-2', otherwise they are old uplink interface
+  //    should be filtered but survived because of the venis version issue.
+  // 3) if the interface.status.type = 'uplink-mgmt',then the name must end
+  //    '-mgmt-1-3', otherwise they are old management interface should be
+  //    filtered but survived because of the venis version issue.
+  public static isInterfaceInValid(networkNetworkInterface: NetworkNetworkInterface): boolean {
+    const type: string = networkNetworkInterface.spec.type;
+    const name: string = networkNetworkInterface.meta.name;
+    if (type === NetworkNetworkInterfaceSpec_type.none) {
+      return true;
+    }
+    if (type === NetworkNetworkInterfaceSpec_type['uplink-mgmt'] && !name.endsWith('-mgmt-1-3')) {
+      return true;
+    }
+    if (type === NetworkNetworkInterfaceSpec_type['uplink-eth'] &&
+        !name.endsWith('-uplink-1-1') && !name.endsWith('-uplink-1-2')) {
+      return true;
+    }
+    return false;
   }
 
   setControllerService(controllerService: ControllerService) {

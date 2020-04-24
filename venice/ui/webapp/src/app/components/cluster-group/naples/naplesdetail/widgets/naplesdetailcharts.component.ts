@@ -20,30 +20,6 @@ export class NaplesdetailchartsComponent implements OnInit {
   ngOnInit() {
     this.selectedTimeRange = new TimeRange(new KeyOperatorValueKeyword.instance('now', '-', 24, 'h'), new KeyOperatorValueKeyword.instance('now', '', 0, ''));
     this.graphConfigs = [{
-      id: 'dsc-frequency-chart',
-      graphTransforms: {
-        transforms: { GraphTitle: { title: 'ASIC Frequency' } }
-      },
-      dataTransforms: [{
-        transforms: {
-          ColorTransform: {
-            colors: {
-              'AsicFrequencyMetrics-Frequency': '#97b8df'
-            }
-          },
-          FieldSelector: {
-            selectedValues: [{
-              keyFormControl: 'reporterID',
-              operatorFormControl: 'in',
-              valueFormControl: [this.selectedId]
-            }]
-          }
-        },
-        measurement: 'AsicFrequencyMetrics',
-        fields: ['Frequency']
-      }]
-    },
-    {
       id: 'dsc-temperature-chart',
       graphTransforms: {
         transforms: { GraphTitle: { title: 'ASIC Temperature' } }

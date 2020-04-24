@@ -70,7 +70,7 @@ describe('NaplesdetailComponent', () => {
 
   function verifyMeta(naples: IClusterDistributedServiceCard) {
     const fields = fixture.debugElement.queryAll(By.css('.naplesdetail-node-value'));
-    expect(fields.length).toBe(14); // there are 13 columns defined in naplesdetail.c.ts
+    expect(fields.length).toBe(15); // there are 15 columns defined in naplesdetail.c.ts
     if (naples.status['primary-mac'] != null) {
       expect(fields[0].nativeElement.textContent).toContain(naples.status['primary-mac']);
     } else {
@@ -438,17 +438,5 @@ describe('NaplesdetailComponent', () => {
     expect(getOverlay()).toBeTruthy();
 
   });
-
-  /*
-  describe('RBAC', () => {
-    it('no permission', () => {
-    fixture.detectChanges();
-      // metrics should be visible
-      const cards = fixture.debugElement.queryAll(By.css('app-herocard'));
-      expect(cards.length).toBe(3);
-    });
-
-  });
-  */
 
 });

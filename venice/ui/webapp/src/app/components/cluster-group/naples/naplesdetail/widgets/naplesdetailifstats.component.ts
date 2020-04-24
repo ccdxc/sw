@@ -34,12 +34,17 @@ export class NaplesdetailIfstatsComponent implements OnInit {
     if (bytes === -1) {
       return '';
     }
+
+    if (bytes === -1000) {
+      return 'N/A';
+    }
+
     if (bytes === 0) {
       return '0 Bytes';
     }
 
     const k = 1024;
-    const dm = 0;
+    const dm = 2;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 
     const i = Math.floor(Math.log(bytes) / Math.log(k));

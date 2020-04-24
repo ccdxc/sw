@@ -18,6 +18,12 @@ export class NaplesdetailIftableComponent implements OnInit {
   }
 
   showStatsNumber (num: number): string {
+    if (num === -1) {
+      return '';
+    }
+    if (num === -1000) {
+      return 'N/A';
+    }
     return num === -1 ? '' : num.toString();
   }
 
