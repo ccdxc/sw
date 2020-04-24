@@ -22,9 +22,15 @@
                 [expandTemplate]="expandTemplate"
                 [exportFilename]="exportFilename"
                 [exportMap]="exportMap"
-                [loading]="tableLoading"
+                [loading]="uiModelLoading"
                 [numRows]="10"
-                [rowHeight]="95">
+                [rowHeight]="95"
+                [searchable]="true"
+                (searchCancelledEmitter)="onCancelSearch()"
+                [searchCols]="advSearchCols"
+                (searchEmitter)="onSearchWorkloads()"
+                [searchFormArray]="fieldFormArray"
+                searchKind="Workload">
   </app-pentable>
 </app-pagebody>
 
@@ -38,13 +44,6 @@
                        [tableMenuItems]="workloadTable.tableMenuItems">
         <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
       </app-tableheader>
-    </div>
-    <div>
-      <app-advanced-search #advancedSearchComponent [formArray]="fieldFormArray"
-                           [cols]="advSearchCols"
-                           (cancelEmitter)="onCancelSearch($event)"
-                           (searchEmitter)="onSearchWorkloads()" kind="Workload" fxFlex="grow">
-      </app-advanced-search>
     </div>
   </div>
 </ng-template>
@@ -166,29 +165,40 @@
 </ng-template>
 
 <ng-template #actionButtonsTemplate>
-  <div *roleGuard="'workloadworkload_update'">
-    <div fxFlex="none" fxLayoutAlign="start center" *ngIf="dataObjects.length > 0">
-      <mat-icon [ngClass]="{
-                  'global-multi-records-delete-icon': true,
-                  'global-button-disabled': !hasSelectedRows()
-                }"
-                (click)="editLabels()"
-                [matTooltip]="hasSelectedRows() ? 'Edit labels of selected workloads' : 'Select workloads to edit labels'">
-        label
-      </mat-icon>
-      <app-labeleditor [metadata]="labelEditorMetaData" [inLabelEditMode]="inLabelEditMode"
-                       (saveEmitter)="handleEditSave($event)"
-                       (cancelEmitter)="handleEditCancel($event)"
-                       [objects]="getSelectedDataObjects()" [nameKey]="'meta.name'">
-      </app-labeleditor>
-      <mat-icon [ngClass]="{
-                  'global-multi-records-delete-icon': true,
-                  'global-button-disabled': disableMultiDelIcons() || !hasSelectedRows()
-                }"
-                (click)="onDeleteSelectedWorkloads($event)"
-                [matTooltip]="!hasSelectedRows() ? 'Select workloads to delete' : disableMultiDelIcons() ? 'At least one workload can not be deleted' : 'Delete selected workloads'">
-        delete
-      </mat-icon>
+  <div *ngIf="!tableLoading" class="workloads-action-template" fxLayout="row">
+    <div fxFlex="1 0 50%">
+      <div *ngIf="dataObjects.length !== searchWorkloadCount"
+           class="workloads-table-header-title-append"
+           matTooltip="Total workloads">
+        | System has ({{ searchWorkloadCount }})
+      </div>
+    </div>
+    <div *roleGuard="'workloadworkload_update'" fxFlex="1 0 50%">
+      <div *ngIf="dataObjects.length > 0" fxFlex="none" fxLayoutAlign="start center">
+        <mat-icon [ngClass]="{
+                    'global-multi-records-delete-icon': true,
+                    'global-button-disabled': !hasSelectedRows()
+                  }"
+                  (click)="editLabels()"
+                  [matTooltip]="hasSelectedRows() ? 'Edit labels of selected workloads' : 'Select workloads to edit labels'">
+          label
+        </mat-icon>
+        <app-labeleditor (cancelEmitter)="handleEditCancel($event)"
+                         (saveEmitter)="handleEditSave($event)"
+                         [inLabelEditMode]="inLabelEditMode"
+                         [metadata]="labelEditorMetaData"
+                         [nameKey]="'meta.name'"
+                         [objects]="getSelectedDataObjects()">
+        </app-labeleditor>
+        <mat-icon [ngClass]="{
+                    'global-multi-records-delete-icon': true,
+                    'global-button-disabled': disableMultiDelIcons() || !hasSelectedRows()
+                  }"
+                  (click)="onDeleteSelectedWorkloads($event)"
+                  [matTooltip]="!hasSelectedRows() ? 'Select workloads to delete' : disableMultiDelIcons() ? 'At least one workload can not be deleted' : 'Delete selected workloads'">
+          delete
+        </mat-icon>
+      </div>
     </div>
   </div>
 </ng-template>

@@ -98,11 +98,19 @@
       <div *ngFor="let w of rowData._ui['processedWorkloads'] let i=index"
            class="hosts-workloads-div">
         <ng-container *roleGuard="'workloadworkload_read'">
-          <a *ngIf="i < maxWorkloadsPerRow" routerLink="/workload"
-             [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
-          <a *ngIf="i === maxWorkloadsPerRow" routerLink="/workload"
-             [matTooltip]="buildMoreWorkloadTooltip(rowData)"> ...
-            {{rowData._ui['processedWorkloads'].length - maxWorkloadsPerRow}} more</a>
+          <a *ngIf="i < maxWorkloadsPerRow"
+             [matTooltip]="'View in workloads page'"
+             [queryParams]="{ filter: w?.meta.name || rowData.meta.name }"
+             routerLink="/workload">
+            {{w?.meta.name}}
+          </a>
+          <a *ngIf="i === maxWorkloadsPerRow"
+             [matTooltip]="buildMoreWorkloadTooltip(rowData)"
+             [queryParams]="{ filter: rowData.meta.name }"
+             routerLink="/workload">
+            ...
+            {{rowData._ui['processedWorkloads'].length - maxWorkloadsPerRow}} more
+          </a>
         </ng-container>
       </div>
     </ng-container>

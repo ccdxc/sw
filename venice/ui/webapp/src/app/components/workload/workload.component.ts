@@ -61,7 +61,6 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
   hideWorkloadWidgets: boolean = !this.uiconfigsService.isFeatureEnabled('workloadWidgets');
 
   @ViewChild('workloadTable') workloadTable: PentableComponent;
-  @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
   maxSearchRecords: number = 8000;
 
   subscriptions: Subscription[] = [];
@@ -98,6 +97,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
 
   // Used for the table - when true there is a loading icon displayed
   tableLoading: boolean = false;
+  uiModelLoading: boolean = false;
 
   // Used for processing watch events
   workloadEventUtility: HttpEventUtility<WorkloadWorkload>;
@@ -210,6 +210,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
     this.setDefaultToolbar();
     this.buildAdvSearchCols();
     this.tableLoading = true;
+    this.uiModelLoading = true;
     this.getHosts(); // prepare hostOptions needed by newworkload component.
     this.getNaples(); // get DSC cards
     this.getSecuritygroups(); // get security groups
@@ -425,6 +426,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
             this.searchWorkloadCount = dscTotal;
           } else {
             this.tableLoading = false;
+            this.uiModelLoading = false;
           }
           this.starttimeWatchWorkload = (new Date()).getTime();
           this.watchWorkloads();
@@ -444,8 +446,8 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
         const currenttimeWatchWorkload = (new Date()).getTime();
         const timeDiff = currenttimeWatchWorkload - this.starttimeWatchWorkload;
         const timeOut = (timeDiff > 2 * 60 * 1000);
-        // wait up to 2 * 60 seconds, then turn off tableLoading.  Or current # of  workloads is up to 90% of searchWorkloadCount.
-        if (timeOut || (this.dataObjects && this.dataObjects.length > 0.9 * this.searchWorkloadCount)) {
+        // wait up to 2 * 60 seconds, then turn off tableLoading.  Or current # of workloads has reached searchWorkloadCount.
+        if (timeOut || (this.dataObjects && this.dataObjects.length >= this.searchWorkloadCount)) {
           this.tableLoading = false;
         }
 
@@ -466,6 +468,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
       },
       (error) => {
         this.tableLoading = false;
+        this.uiModelLoading = false;
         this._controllerService.invokeRESTErrorToaster('Failed to get workloads', error);
       }
     );
@@ -475,6 +478,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
   mapData() {
     this.buildObjectsMap();
     this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
+    this.uiModelLoading = this.tableLoading;
   }
 
   public buildObjectsMap() {
@@ -593,7 +597,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
   }
 
   // advance search APIs
-  onCancelSearch($event) {
+  onCancelSearch() {
     this._controllerService.invokeInfoToaster('Information', 'Cleared search criteria, Table refreshed.');
     this.dataObjects = this.dataObjectsBackUp;
   }
@@ -604,7 +608,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
    * @param order
    */
   onSearchWorkloads(field = this.workloadTable.sortField, order = this.workloadTable.sortOrder) {
-    const searchResults = this.workloadTable.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.advancedSearchComponent);
+    const searchResults = this.workloadTable.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp);
     if (searchResults && searchResults.length > 0) {
       this.dataObjects = [];
       this.dataObjects = searchResults;

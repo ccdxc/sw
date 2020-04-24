@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { MatIconRegistry } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
-import { Router } from '@angular/router';
+import { Router, NavigationExtras } from '@angular/router';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { PinPayload } from '@app/models/frontend/shared/pinpayload.interface.ts';
 import { ToolbarData, ToolbarButton } from '@app/models/frontend/shared/toolbar.interface.ts';
@@ -232,8 +232,12 @@ export class ControllerService {
     return this._router.url;
   }
 
-  public navigate(paths: string[]) {
-    this._router.navigate(paths);
+  public navigate(paths: string[], extras?: NavigationExtras) {
+    if (extras) {
+      this._router.navigate(paths, extras);
+    } else {
+      this._router.navigate(paths);
+    }
   }
 
   /***** Building component from another module *****/

@@ -7,6 +7,10 @@
   width: 100%;
 }
 
+.tableheader-title-container {
+  margin-right: 5px;
+}
+
 .tableheader-title {
   @include primary-font(20px, #484848);
   margin-left: 10px;

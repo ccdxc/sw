@@ -1,4 +1,6 @@
-import { AfterViewInit, Component, EventEmitter, Input, OnDestroy, OnInit, Output, Renderer2, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, Renderer2, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { FormArray } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, Subscription, forkJoin } from 'rxjs';
 import { Table } from 'primeng/table';
 import { Animations } from '@app/animations';
@@ -19,8 +21,9 @@ import { TableMenuItem } from '../tableheader/tableheader.component';
     encapsulation: ViewEncapsulation.None,
     animations: [Animations]
 })
-export class PentableComponent extends BaseComponent implements AfterViewInit, OnDestroy, OnInit {
+export class PentableComponent extends BaseComponent implements AfterViewInit, OnChanges, OnDestroy, OnInit {
   @ViewChild('primengTable') table: Table;
+  @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
   @Input() actionTemplate: TemplateRef<any>;
   @Input() bodyTemplate: TemplateRef<any>;
@@ -38,17 +41,24 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
   @Input() resizableColumns: boolean = true;
   @Input() rowHeight: number = 0;
   @Input() scrollable: boolean = false;
+  @Input() searchable: boolean = false;
+  @Input() searchCols: TableCol[] = [];
+  @Input() searchFormArray = new FormArray([]);
+  @Input() searchKind: string;
   @Input() sortField: string = 'meta.mod-time';
   @Input() sortOrder: number = -1;
 
   @Output() operationOnMultiRecordsComplete: EventEmitter<any> = new EventEmitter<any>();
   @Output() rowSelectedEmitter: EventEmitter<any> = new EventEmitter<any>();
   @Output() rowUnselectedEmitter: EventEmitter<any> = new EventEmitter<any>();
+  @Output() searchCancelledEmitter: EventEmitter<any> = new EventEmitter<any>();
+  @Output() searchEmitter: EventEmitter<any> = new EventEmitter<any>();
 
   colMouseMoveUnlisten: () => void;
   colMouseUpUnlisten: () => void;
   creatingMode: boolean = false;
   expandedRowData: any;
+  filter: string;
   first: number = 0;
   hoveredRowID: string;
   rowsPerPageOptions: number[] = [10, 25, 50, 100];
@@ -73,7 +83,7 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
     }
   ];
 
-  constructor(protected controllerService: ControllerService, protected renderer: Renderer2) {
+  constructor(private _route: ActivatedRoute, protected controllerService: ControllerService, protected renderer: Renderer2) {
     super(controllerService);
   }
 
@@ -83,10 +93,33 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
       'component': this.getClassName(), 'state':
         Eventtypes.COMPONENT_INIT
     });
+
+    if (this.searchable) {
+      const sub = this._route.queryParams.subscribe(params => {
+        if (params.hasOwnProperty('filter')) {
+          this.filter = params['filter'];
+        }
+      });
+      this.subscriptions.push(sub);
+    }
   }
 
   ngAfterViewInit() {
     this.resizeTable();
+  }
+
+  ngOnChanges(change: SimpleChanges) {
+    if (this.searchable && this.filter && change.loading) {
+      // wait until data finishes loading
+      if (change.loading.previousValue && !change.loading.currentValue) {
+        // emit search based on query params after current cycle
+        setTimeout(() => {
+          this.advancedSearchComponent.search = this.filter;
+          this.advancedSearchComponent.generalSearch = this.filter;
+          this.searchEmitter.emit(null);
+        }, 0);
+      }
+    }
   }
 
   ngOnDestroy() {
@@ -258,6 +291,20 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
     });
   }
 
+  onSearch() {
+    this.controllerService.navigate([], {
+      queryParams: {
+        filter: this.advancedSearchComponent.search || this.advancedSearchComponent.generalSearch || null,
+      },
+    });
+    this.searchEmitter.emit(null);
+  }
+
+  onSearchCancelled() {
+    this.controllerService.navigate([], { queryParams: null });
+    this.searchCancelledEmitter.emit();
+  }
+
   onThMouseDown(event) {
     if (event.target.classList.contains('ui-column-resizer')) {
       this.colMouseMoveUnlisten = this.renderer.listen('document', 'mousemove', () => {
@@ -395,16 +442,16 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
    * @param maxSearchRecords
    * @param advSearchCols
    * @param dataObjects
-   * @param advancedSearchComponent
    * @param isShowToasterOnSearchHasResult default is false.
    * @param isShowToasterOnSearchNoResult default is true.
    */
-  onSearchDataObjects(field, order, kind: string, maxSearchRecords, advSearchCols: TableCol[], dataObjects, advancedSearchComponent: AdvancedSearchComponent,
+  onSearchDataObjects(field, order, kind: string, maxSearchRecords, advSearchCols: TableCol[], dataObjects, advancedSearchComponent?: AdvancedSearchComponent,
     isShowToasterOnSearchHasResult: boolean = false,
     isShowToasterOnSearchNoResult: boolean = true): any[] | ReadonlyArray<any> {
     try {
-      const searchSearchRequest = advancedSearchComponent.getSearchRequest(field, order, kind, true, maxSearchRecords);
-      const localSearchRequest: LocalSearchRequest = advancedSearchComponent.getLocalSearchRequest(field, order);
+      const searchComponent = this.searchable ? this.advancedSearchComponent : advancedSearchComponent;
+      const searchSearchRequest = searchComponent.getSearchRequest(field, order, kind, true, maxSearchRecords);
+      const localSearchRequest: LocalSearchRequest = searchComponent.getLocalSearchRequest(field, order);
       const requirements: FieldsRequirement[] = (searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : [];
       const localRequirements: FieldsRequirement[] = (localSearchRequest.query) ? localSearchRequest.query as FieldsRequirement[] : [];
 

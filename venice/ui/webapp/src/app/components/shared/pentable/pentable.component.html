@@ -25,6 +25,16 @@
     <ng-template pTemplate="caption" *ngIf="captionTemplate != null">
       <ng-container *ngTemplateOutlet="captionTemplate; context: {count: data.length}">
       </ng-container>
+      <div *ngIf="searchable">
+        <app-advanced-search #advancedSearchComponent
+                             (cancelEmitter)="onSearchCancelled()"
+                             [cols]="searchCols"
+                             [formArray]="searchFormArray"
+                             fxFlex="grow"
+                             [kind]="searchKind"
+                             (searchEmitter)="onSearch()">
+        </app-advanced-search>
+      </div>
       <ng-container *ngTemplateOutlet="disabledMask;">
       </ng-container>
     </ng-template>

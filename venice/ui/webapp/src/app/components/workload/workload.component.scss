@@ -39,8 +39,20 @@ $table-headercontentheight: 25px;
   height: $table-headerheight;
 }
 
+.workload-table-caption .tableheader-title-container {
+  flex: 0 0 auto !important;
+}
+
 .workload-table-caption .tableheader-title {
-  min-width: 150px;
+  text-align: left;
+}
+
+.workloads-action-template {
+  width: 100%;
+}
+
+.workloads-table-header-title-append {
+  @include primary-font(20px, #484848);
   text-align: left;
 }
 
