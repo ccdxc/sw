@@ -86,22 +86,25 @@ sdk_ret_t
 security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t            ret;
     pds_policy_spec_t    *spec;
-    rfc::policy_t        policy;
+    rfc::policy_params_t policy_params;
 
-    spec = &obj_ctxt->api_params->policy_spec;
-
-    memset(&policy, 0, sizeof(policy));
-    policy.af = spec->rule_info->af;
-    policy.max_rules =
-        (policy.af ==IP_AF_IPV4) ? PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY:
-                                   PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY;
-    policy.num_rules = spec->rule_info->num_rules;
-    policy.rules = &spec->rule_info->rules[0];
     PDS_TRACE_DEBUG("Processing security policy %s", spec->key.str());
-    ret = rfc_policy_create(&policy, security_policy_root_addr_,
-              security_policy_impl_db()->security_policy_table_size(spec->rule_info->af));
+    spec = &obj_ctxt->api_params->policy_spec;
+    memset(&policy_params, 0, sizeof(policy_params));
+    policy_params.policy.af = spec->rule_info->af;
+    policy_params.policy.max_rules =
+        (policy_params.policy.af ==IP_AF_IPV4) ?
+            PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY:
+            PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY;
+    policy_params.policy.num_rules = spec->rule_info->num_rules;
+    policy_params.policy.rules = &spec->rule_info->rules[0];
+    policy_params.rfc_tree_root_addr = security_policy_root_addr_;
+    policy_params.rfc_mem_size =
+        security_policy_impl_db()->security_policy_table_size(spec->rule_info->af);
+    ret = rfc_policy_create(&policy_params);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to build RFC policy table, err : %u", ret);
+        PDS_TRACE_ERR("Failed to build RFC policy %s table, err %u",
+                      spec->key.str(), ret);
     }
     return ret;
 }

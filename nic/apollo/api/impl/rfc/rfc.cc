@@ -199,18 +199,20 @@ rfc_policy_add_defaults (rfc_ctxt_t *rfc_ctxt)
 }
 
 sdk_ret_t
-rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
-                   uint32_t mem_size)
+rfc_policy_create (policy_params_t *policy_params)
+
 {
     sdk_ret_t     ret;
     rfc_ctxt_t    rfc_ctxt;
 
-    if (policy->num_rules > policy->max_rules) {
+    if (policy_params->policy.num_rules > policy_params->policy.max_rules) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
 
     ///< allocate memory for all the RFC itree tables
-    ret = rfc_ctxt_init(&rfc_ctxt, policy, rfc_tree_root_addr, mem_size);
+    ret = rfc_ctxt_init(&rfc_ctxt, &policy_params->policy,
+                        policy_params->rfc_tree_root_addr,
+                        policy_params->rfc_mem_size);
     if (ret != SDK_RET_OK) {
         goto cleanup;
     }
@@ -226,13 +228,14 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
     rfc_p0_eq_class_tables_dump(&rfc_ctxt);
 
     ///< build LPM trees for phase 0 of RFC
-    ret = rfc_build_lpm_trees(&rfc_ctxt, rfc_tree_root_addr, mem_size);
+    ret = rfc_build_lpm_trees(&rfc_ctxt, policy_params->rfc_tree_root_addr,
+                              policy_params->rfc_mem_size);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build RFC LPM trees, err %u", ret);
         goto cleanup;
     }
 
-    // Add default rules for RFC trees that dont have at least one rule
+    // add default rules for RFC trees that dont have at least one rule
     ret = rfc_policy_add_defaults(&rfc_ctxt);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add default rules, err %u", ret);

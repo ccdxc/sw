@@ -24,18 +24,25 @@ typedef struct policy_s {
     rule_t             *rules;         /**< rule list */
 } policy_t;
 
+/**< RFC policy related params for creation of the policy */
+typedef struct policy_params_s {
+    /**< policy consisting of rules */
+    policy_t policy;
+    /**< memory address at which tree should be built */
+    mem_addr_t rfc_tree_root_addr;
+    /**< RFC memory block size reserved for this policy (for error
+     *   detection
+     */
+    uint32_t rfc_mem_size;
+} policy_params_t;
+
 /**
  * @brief    build interval tree based RFC LPM trees and index tables for
  *           subsequent RFC phases, starting at the given memory address
- * @param[in] policy           pointer to the policy
- * @param[in] rfc_tree_root    pointer to the memory address at which tree
- *                             should be built
- * @param[in] rfc_mem_size     RFC memory block size provided (for error
- *                             detection)
+ * @param[in] policy_params    pointer to the policy related parameters
  * @return    SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t rfc_policy_create(policy_t *policy, mem_addr_t rfc_tree_root_addr,
-                            uint32_t rfc_mem_size);
+sdk_ret_t rfc_policy_create(policy_params_t *params);
 
 /**
 * @brief    dump a given policy rule
