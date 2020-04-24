@@ -45,7 +45,6 @@ func (s *stagingHooks) opsPreAuthzHook(ctx context.Context, in interface{}) (con
 	case *staging.CommitAction:
 		action = auth.Permission_Commit.String()
 	case *staging.BulkEditAction:
-		// We don't have an action for the bulkedit Operation, leave it blank
 		in, bulkops, err := s.processBulkeditReq(ctx, in)
 		if err != nil {
 			return ctx, in, err
@@ -63,12 +62,14 @@ func (s *stagingHooks) opsPreAuthzHook(ctx context.Context, in interface{}) (con
 			return ctx, in, errors.New("internal error")
 		}
 		if op.GetResource().GetKind() == string(staging.KindBuffer) {
-			resource := op.GetResource()
-			// allow implicit permissions only if staging buffer is in the user tenant
-			if resource.GetTenant() == user.Tenant {
-				resource.SetOwner(user)
+			if bulkEditOper == false {
+				resource := op.GetResource()
+				// allow implicit permissions only if staging buffer is in the user tenant
+				if resource.GetTenant() == user.Tenant {
+					resource.SetOwner(user)
+				}
+				modOps = append(modOps, authz.NewOperation(resource, action))
 			}
-			modOps = append(modOps, authz.NewOperation(resource, action))
 		} else {
 			modOps = append(modOps, op)
 		}
