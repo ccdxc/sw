@@ -36,6 +36,9 @@ const (
 
 	// AdmissionRetryDuration captures time to wait between dhcp and admission retry attempts
 	AdmissionRetryDuration = time.Minute * 1
+
+	// DHCPTimeout captures the timeout the dhcp client waits for the packets to be received
+	DHCPTimeout = time.Minute * 1
 )
 
 var (

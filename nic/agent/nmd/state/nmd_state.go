@@ -233,6 +233,12 @@ func NewNMD(pipeline Pipeline,
 		}
 		// Always re-read the contents of fru.json upon startup
 		config.Status.Fru = ReadFruFromJSON()
+
+		// Clear persisted controllers and status fields
+		config.Status.Controllers = []string{}
+		config.Status.AdmissionPhaseReason = ""
+		config.Status.Mode = ""
+		config.Status.ManagementInterface = ""
 	} else {
 		// persist the default naples config
 		log.Info("Config object not found in NMD DB. Persisting it in the DB.")

@@ -776,7 +776,7 @@ func instantiateDHCPClient(link netlink.Link) *dhcp.Client {
 		return nil
 	}
 
-	client, err := dhcp.New(dhcp.HardwareAddr(link.Attrs().HardwareAddr), dhcp.Connection(pktSock), dhcp.Timeout(time.Second*30))
+	client, err := dhcp.New(dhcp.HardwareAddr(link.Attrs().HardwareAddr), dhcp.Connection(pktSock), dhcp.Timeout(DHCPTimeout))
 	if err != nil {
 		log.Errorf("Failed to  instantiate primary DHCP Client. Err: %v", err)
 	}
