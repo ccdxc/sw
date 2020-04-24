@@ -11,6 +11,7 @@ import { LogPublishersService } from './logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
 import { MessageService } from './message.service';
 import { AuthService } from './auth.service';
+import { LicenseService } from './license.service';
 
 describe('UiconfigsService', () => {
   beforeEach(() => {
@@ -26,6 +27,7 @@ describe('UiconfigsService', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         MessageService,
         AuthService
       ]

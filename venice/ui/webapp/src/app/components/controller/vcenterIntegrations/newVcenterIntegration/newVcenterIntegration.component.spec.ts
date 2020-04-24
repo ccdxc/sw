@@ -19,6 +19,7 @@ import {MessageService} from '@app/services/message.service';
 import {OrchestrationService} from '@app/services/generated/orchestration.service';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { StagingService } from '@app/services/generated/staging.service';
 
 describe('NewVcenterIntegrationComponent', () => {
@@ -42,6 +43,7 @@ describe('NewVcenterIntegrationComponent', () => {
      providers: [
        ControllerService,
        UIConfigsService,
+       LicenseService,
        AuthService,
        ConfirmationService,
        LogService,

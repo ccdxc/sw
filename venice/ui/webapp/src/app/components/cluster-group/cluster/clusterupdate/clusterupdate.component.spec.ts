@@ -16,6 +16,7 @@ import { MessageService } from '@app/services/message.service';
 import { AuthService } from '@app/services/auth.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ClusterNode, ClusterCluster} from '@sdk/v1/models/generated/cluster';
 import { NgModule } from '@angular/core';
@@ -54,7 +55,8 @@ describe('ClusterupdateComponent', () => {
         MessageService,
         AuthService,
         ConfirmationService,
-        UIConfigsService
+        UIConfigsService,
+        LicenseService,
       ]
     })
     .compileComponents();

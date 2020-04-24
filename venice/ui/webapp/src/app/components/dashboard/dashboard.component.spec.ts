@@ -31,6 +31,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
@@ -76,6 +77,7 @@ describe('DashboardComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         AuthServiceGen,
         ConfirmationService,

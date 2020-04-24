@@ -16,6 +16,7 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { MessageService } from '@app/services/message.service';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { AuthService } from '@app/services/auth.service';
 import { ImageuploadComponent } from './imageupload.component';
@@ -49,6 +50,7 @@ describe('ImageuploadComponent', () => {
         AuthService,
         AuthServiceGen,
         UIConfigsService,
+        LicenseService,
         RolloutService
       ]
     });

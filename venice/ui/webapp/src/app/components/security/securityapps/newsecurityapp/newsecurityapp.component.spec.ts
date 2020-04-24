@@ -12,6 +12,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { SecurityService } from '@app/services/generated/security.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { MessageService } from '@app/services/message.service';
 import { AuthService } from '@app/services/auth.service';
 import { NewsecurityappComponent } from './newsecurityapp.component';
@@ -54,6 +55,7 @@ describe('NewsecurityappComponent', () => {
         SecurityService,
         SearchService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         MessageService
       ],

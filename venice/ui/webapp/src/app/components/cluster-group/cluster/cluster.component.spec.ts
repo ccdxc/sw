@@ -27,6 +27,7 @@ import { ClusterCluster, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { EventsService } from '@app/services/events.service';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { BehaviorSubject } from 'rxjs';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
@@ -77,6 +78,7 @@ describe('ClusterComponent', () => {
         AlerttableService,
         EventsService,
         UIConfigsService,
+        LicenseService,
         SearchService,
         MonitoringService,
         MessageService,

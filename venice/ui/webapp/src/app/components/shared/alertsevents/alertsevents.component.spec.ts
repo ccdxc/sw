@@ -13,6 +13,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { MessageService } from '@app/services/message.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { HttpClientModule } from '@angular/common/http';
 
@@ -45,6 +46,7 @@ describe('AlertsEventsComponent', () => {
         MessageService,
         ConfirmationService,
         UIConfigsService,
+        LicenseService,
         AuthService
       ]
     });

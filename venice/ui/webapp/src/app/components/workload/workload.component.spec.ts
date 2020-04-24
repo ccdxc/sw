@@ -37,6 +37,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { BehaviorSubject } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -194,6 +195,7 @@ describe('WorkloadComponent', () => {
         WorkloadService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         MessageService,
         AuthService,
         ClusterService,

@@ -2408,26 +2408,6 @@ export class Utility {
     return responseData;
   }
 
-  setClusterLicense(clusterLicence: ClusterLicense) {
-    this.clusterLicense = clusterLicence;
-  }
-
-  getClusterLicense(): ClusterLicense {
-    return this.clusterLicense;
-  }
-
-  /**
-   * If return true, it means PSM is a cloud deployment
-   * Otherwise, PSM is an enterprise deployment
-   *
-   *  2020-04-03
-   *  License object is not created unless it's in cloud mode. If the object is missing, Venice assumes default features.
-   *
-   */
-  isCloudDeployment(): boolean {
-    return (!this.clusterLicense);
-  }
-
   /**
    * @param kind
    * @param veniceObjectCache

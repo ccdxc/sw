@@ -17,6 +17,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { IMonitoringFwlogPolicy, MonitoringEventPolicySpec_format, MonitoringFwlogPolicySpec_filter, MonitoringFwlogPolicySpec_format, MonitoringSyslogExportConfig_facility_override, MonitoringFwlogPolicy } from '@sdk/v1/models/generated/monitoring';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -48,6 +49,7 @@ describe('NewfwlogpolicyComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

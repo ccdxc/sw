@@ -25,6 +25,7 @@ import {ClusterHost} from '@sdk/v1/models/generated/cluster';
 import {DebugElement} from '@angular/core';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { StagingService } from '@app/services/generated/staging.service';
 
@@ -58,7 +59,8 @@ describe('NewhostComponent', () => {
        MatIconRegistry,
        ClusterService,
        MessageService,
-       StagingService
+       StagingService,
+       LicenseService,
      ]
    });
   });

@@ -15,6 +15,7 @@ import { MatIconRegistry } from '@angular/material';
 import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { AuthService } from '@app/services/auth.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -47,6 +48,7 @@ describe('ApiCaptureComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         MessageService,
         ConfirmationService,
         AuthService,

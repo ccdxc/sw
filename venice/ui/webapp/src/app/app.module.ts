@@ -81,6 +81,7 @@ import { BgfileuploadComponent } from './widgets/bgfileupload/bgfileupload.compo
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { RolloutsModule } from './components/admin/systemupgrade/rollouts/rollouts.module';
 import { LoginModule } from './components/login/login.module';
+import { LicenseService } from './services/license.service';
 
 /**
  * This is pensando UI web-app module. It imports all required libraries.
@@ -187,6 +188,7 @@ import { LoginModule } from './components/login/login.module';
     BrowserService,
     OrchestrationService,
     FwlogService,
+    LicenseService,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true },

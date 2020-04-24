@@ -22,6 +22,7 @@ import { MonitoringGroupModule } from '../../monitoring-group.module';
 import { TestTablevieweditRBAC } from '@app/components/shared/tableviewedit/tableviewedit.component.spec';
 import { MonitoringEventPolicy } from '@sdk/v1/models/generated/monitoring';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { never } from 'rxjs';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -48,6 +49,7 @@ describe('EventpolicyComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

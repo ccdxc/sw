@@ -57,6 +57,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-cluster-dscprofiles'
         },
+        featureGuard: Features.enterprise,
         roleGuard: UIRolePermissions.clusterdscprofile_read,
         link: ['/cluster/', 'dscprofiles']
       },

@@ -44,6 +44,7 @@ import { GuidesearchComponent } from '@app/components/search/guidedsearch/guided
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from './services/uiconfigs.service';
+import { LicenseService } from './services/license.service';
 import { StagingService } from './services/generated/staging.service';
 
 describe('AppComponent', () => {
@@ -83,6 +84,7 @@ describe('AppComponent', () => {
         MessageService,
         AuthServiceGen,
         UIConfigsService,
+        LicenseService,
         StagingService
       ],
     });

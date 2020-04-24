@@ -14,6 +14,7 @@ import { configureTestSuite } from 'ng-bullet';
  import { LogPublishersService } from '@app/services/logging/log-publishers.service';
  import { LogService } from '@app/services/logging/log.service';
  import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
  import { By } from '@angular/platform-browser';
  import { MessageService } from '@app/services/message.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
@@ -77,9 +78,11 @@ describe('featureGuard directive', () => {
         LogService,
         LogPublishersService,
         UIConfigsService,
+        LicenseService,
         MessageService,
         ViewContainerRef,
-        AuthService
+        AuthService,
+        LicenseService,
       ]
     });
       });

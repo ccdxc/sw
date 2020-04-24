@@ -24,6 +24,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { WidgetsModule } from 'web-app-framework';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { AuthService } from '@app/services/auth.service';
 import { MonitoringAlertPolicy } from '@sdk/v1/models/generated/monitoring';
@@ -50,6 +51,7 @@ describe('EventalertpolicyComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

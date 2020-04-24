@@ -25,6 +25,7 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { By } from '@angular/platform-browser';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
@@ -51,6 +52,7 @@ describe('ToolbarComponent', () => {
         MatIconRegistry,
         MessageService,
         UIConfigsService,
+        LicenseService,
         AuthService
       ]
     });

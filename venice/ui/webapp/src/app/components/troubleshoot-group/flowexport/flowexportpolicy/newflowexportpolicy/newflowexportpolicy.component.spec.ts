@@ -15,6 +15,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
@@ -45,6 +46,7 @@ describe('NewflowexportComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

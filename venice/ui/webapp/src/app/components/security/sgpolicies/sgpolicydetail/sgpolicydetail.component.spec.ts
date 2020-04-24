@@ -31,6 +31,7 @@ import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
 import { SgpolicydetailComponent } from './sgpolicydetail.component';
 import { ActivatedRoute } from '@angular/router';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
 import { MessageService } from '@app/services/message.service';
 import { AuthService } from '@app/services/auth.service';
@@ -271,6 +272,7 @@ describe('SgpolicydetailComponent', () => {
         SearchService,
         SecurityService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         MessageService,
         ClusterService,

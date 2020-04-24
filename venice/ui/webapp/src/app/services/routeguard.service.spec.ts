@@ -7,6 +7,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { MessageService } from '@app/services/message.service';
 import { LogService } from './logging/log.service';
 import { AuthService } from './auth.service';
@@ -40,7 +41,8 @@ describe('RouteGuardService', () => {
         MessageService,
         LogService,
         LogPublishersService,
-        AuthService
+        AuthService,
+        LicenseService,
       ],
     });
   });

@@ -15,6 +15,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { By } from '@angular/platform-browser';
@@ -37,6 +38,7 @@ describe('NaplesComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         ClusterService,

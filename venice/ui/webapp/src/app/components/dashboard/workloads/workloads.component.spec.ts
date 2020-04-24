@@ -16,6 +16,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { LogService } from '@app/services/logging/log.service';
 import { ConfirmationService } from 'primeng/api';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 
 describe('WorkloadsComponent', () => {
@@ -42,6 +43,7 @@ describe('WorkloadsComponent', () => {
         MessageService,
         ConfirmationService,
         UIConfigsService,
+        LicenseService,
         AuthService
       ]
     });

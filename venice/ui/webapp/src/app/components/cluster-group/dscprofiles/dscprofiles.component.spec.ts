@@ -20,6 +20,7 @@
  import { MaterialdesignModule } from '@lib/materialdesign.module';
  import { PrimengModule } from '@lib/primeng.module';
  import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
  import { EventsService } from '@app/services/events.service';
  import { SearchService } from '@app/services/generated/search.service';
  import { MonitoringService } from '@app/services/generated/monitoring.service';
@@ -53,13 +54,13 @@ describe('DscprofileComponent', () => {
       ],
       providers: [
         ControllerService,
-        UIConfigsService,
         AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         AuthService,
         EventsService,
         SearchService,

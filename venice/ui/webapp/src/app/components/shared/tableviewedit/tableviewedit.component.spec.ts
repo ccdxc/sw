@@ -23,6 +23,7 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 import { TableCol, CustomExportMap } from '.';
 import { RoleGuardDirective } from '../directives/roleGuard.directive';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { AuthService } from '@app/services/auth.service';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -418,6 +419,7 @@ describe('TablevieweditComponent', () => {
         MessageService,
         ChangeDetectorRef,
         UIConfigsService,
+        LicenseService,
         StagingService
       ]
     });

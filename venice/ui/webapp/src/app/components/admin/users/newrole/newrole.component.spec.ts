@@ -23,6 +23,7 @@ import { StagingService } from '@app/services/generated/staging.service';
 
 import { NewroleComponent } from './newrole.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 
 describe('NewroleComponent', () => {
@@ -45,6 +46,7 @@ describe('NewroleComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

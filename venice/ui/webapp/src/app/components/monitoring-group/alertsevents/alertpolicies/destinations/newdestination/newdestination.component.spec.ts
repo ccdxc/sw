@@ -19,6 +19,7 @@ import { MessageService } from '@app/services/message.service';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 
 describe('NewdestinationComponent', () => {
@@ -43,6 +44,7 @@ describe('NewdestinationComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

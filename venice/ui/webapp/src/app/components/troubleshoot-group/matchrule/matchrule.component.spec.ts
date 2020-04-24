@@ -13,6 +13,7 @@ import { ConfirmationService } from 'primeng/primeng';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AuthService } from '@app/services/auth.service';
 
@@ -38,6 +39,7 @@ describe('MatchruleComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         MessageService,
         AuthService,
       ]

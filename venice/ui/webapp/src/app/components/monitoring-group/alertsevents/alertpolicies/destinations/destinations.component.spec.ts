@@ -25,6 +25,7 @@ import { MessageService } from '@app/services/message.service';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
 import { TestTablevieweditRBAC } from '@app/components/shared/tableviewedit/tableviewedit.component.spec';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 
@@ -50,6 +51,7 @@ describe('DestinationpolicyComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

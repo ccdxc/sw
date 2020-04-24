@@ -15,6 +15,7 @@ import { MessageService } from '@app/services/message.service';
 import { LogService } from '@app/services/logging/log.service';
 import { ConfirmationService } from 'primeng/api';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 
 describe('PolicyhealthComponent', () => {
@@ -40,6 +41,7 @@ describe('PolicyhealthComponent', () => {
         MessageService,
         ConfirmationService,
         UIConfigsService,
+        LicenseService,
         AuthService
       ]
     });

@@ -25,6 +25,7 @@
  import { EventsService as EventsServiceGen } from '@app/services/generated/events.service';
  import { SearchService } from '@app/services/generated/search.service';
  import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
  import { BehaviorSubject } from 'rxjs';
  import { Utility } from '@app/common/Utility';
  import { EventsEvent, EventsEventAttributes_severity, ApiListWatchOptions_sort_order, EventsEvent_type } from '@sdk/v1/models/generated/events';
@@ -103,6 +104,7 @@ describe('EventstableComponent', () => {
         AlerttableService,
         SearchService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         MonitoringService,
         MessageService

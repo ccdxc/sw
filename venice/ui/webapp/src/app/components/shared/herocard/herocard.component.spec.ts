@@ -12,6 +12,7 @@ import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { CardStates, StatArrowDirection, BasecardComponent } from '../basecard/basecard.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { ControllerService } from '@app/services/controller.service';
 import { NgModuleFactoryLoader } from '@angular/core';
 import { LogService } from '@app/services/logging/log.service';
@@ -51,6 +52,7 @@ describe('HerocardComponent', () => {
       providers: [
         { provide: Router, useValue: mockRouter },
         UIConfigsService,
+        LicenseService,
         ControllerService,
         NgModuleFactoryLoader,
         LogService,

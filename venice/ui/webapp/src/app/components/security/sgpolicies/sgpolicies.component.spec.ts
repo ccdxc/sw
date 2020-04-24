@@ -17,6 +17,7 @@ import { WorkloadService } from '@app/services/generated/workload.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { BehaviorSubject } from 'rxjs';
 import { SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -59,6 +60,7 @@ describe('SgpoliciesComponent', () => {
         SecurityService,
         WorkloadService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         MessageService
       ]

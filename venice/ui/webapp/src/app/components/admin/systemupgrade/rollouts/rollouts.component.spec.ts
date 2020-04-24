@@ -24,6 +24,7 @@ import {ObjstoreService} from '@app/services/generated/objstore.service';
 import { RolloutsComponent } from './rollouts.component';
 import { NewrolloutComponent } from './newrollout/newrollout.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 
 describe('RolloutsComponent', () => {
@@ -47,6 +48,7 @@ describe('RolloutsComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         RolloutService,

@@ -1,25 +1,55 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { AUTH_BODY } from '@app/core';
 import { ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from '@angular/router';
-import { Subject, of, forkJoin } from 'rxjs';
+import { Subject, of, forkJoin, Subscription } from 'rxjs';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { IAuthOperationStatus, IAuthSubjectAccessReviewRequest, AuthPermission_actions, IAuthOperation, IAuthUser, AuthOperation_action, AuthOperation } from '@sdk/v1/models/generated/auth';
 import { ControllerService } from './controller.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
 import { AuthService } from './auth.service';
+import { LicenseService } from './license.service';
+import { IClusterLicense } from '@sdk/v1/models/generated/cluster';
 
-export enum Features {
+type derivedFeaturesFn = (configJson: UIConfig, licenseObj: IClusterLicense) => boolean;
+
+export enum UIFeatures {
+  // Config json features
   fwlogs = 'fwlogs',
-  help = 'help',
   workloadWidgets = 'workloadWidgets',
   showDebugMetrics = 'showDebugMetrics',
   troubleshooting = 'troubleshooting',
   securitygroup = 'securitygroup',
   dataCache = 'dataCache',
-  apiCapture = 'apiCapture'
+  apiCapture = 'apiCapture',
+
+  // derived features
+  cloud = 'cloud',
+  enterprise = 'enterprise',
 }
+
+// Any features that are computed based on multipe attributes
+// from config.json or license object
+const derivedFeatures: { [key in UIFeatures]?: derivedFeaturesFn } = {
+  cloud: (configJson, licenseObj) => {
+    return licenseObj != null;
+  },
+  enterprise: (configJson, licenseObj) => {
+    return licenseObj == null;
+  },
+};
+
+
+// TODO: this should come from venice-sdk once PSM feature flags are moved to proto file
+export enum BackendFeatures {
+  OverlayRouting         = 'OverlayRouting',
+  SubnetSecurityPolicies = 'SubnetSecurityPolicies',
+  SecurityALG            = 'SecurityALG',
+}
+
+export const Features = { ...UIFeatures, ...BackendFeatures };
+export type Features =  UIFeatures | BackendFeatures;
 
 interface MetricsQuery {
   startTimeLength?: string;
@@ -27,6 +57,7 @@ interface MetricsQuery {
 
 export interface UIConfig {
   'enabled-features': Features[];
+  'disabled-features': Features[]; // Used for force disbaling backend features
   'metricsQuery'?: MetricsQuery;
 }
 
@@ -44,9 +75,7 @@ interface PageRequirementMap {
 const CONFIG_FILENAME = 'config.json';
 
 @Injectable()
-export class UIConfigsService {
-  configFile: UIConfig;
-
+export class UIConfigsService implements OnDestroy {
   // For each url listed, we list object dependenies
   // For the required field, if any of the objects are disabled,
   // we disable the route.
@@ -166,7 +195,11 @@ export class UIConfigsService {
   };
 
   private _userPermissions: IAuthOperationStatus[] = [];
+  private _licenseObj: IClusterLicense;
+  private _configFile: UIConfig;
+  private features: { [key: string]: boolean } = {};
   private uiPermissions: { [key: string]: boolean } = {};
+
 
   get userPermissions() {
     return this._userPermissions;
@@ -177,12 +210,33 @@ export class UIConfigsService {
     this.setUIPermissions();
   }
 
+  get licenseObj() {
+    return this._licenseObj;
+  }
+
+  set licenseObj(value: IClusterLicense) {
+    this._licenseObj = value;
+    this.setFeatures();
+  }
+
+  get configFile() {
+    return this._configFile;
+  }
+
+  set configFile(value: UIConfig) {
+    this._configFile = value;
+    this.setFeatures();
+  }
+
+  subscriptions: Subscription[] = [];
+
   constructor(protected router: Router,
     protected controllerService: ControllerService,
     protected authService: AuthService,
-    protected http: HttpClient
+    protected http: HttpClient,
+    protected licenseService: LicenseService,
   ) {
-    this.controllerService.subscribe(Eventtypes.FETCH_USER_PERMISSIONS, (payload) => {
+    let sub = this.controllerService.subscribe(Eventtypes.FETCH_USER_PERMISSIONS, (payload) => {
       this.getUserObj().subscribe(
         (resp: any) => {
           if (resp != null) {
@@ -196,6 +250,76 @@ export class UIConfigsService {
         }
       );
     });
+    this.subscriptions.push(sub);
+    sub = this.controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
+      // TODO: switch to watch once it's added
+      const sub1 = this.licenseService.GetLicense().subscribe(
+        (response) => {
+          // Setting the property will trigger updates to features
+          this.licenseObj = response.body as IClusterLicense;
+        },
+        (error) => {
+          this.licenseObj = null;
+        }
+      );
+      this.subscriptions.push(sub1);
+    });
+    this.subscriptions.push(sub);
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => {
+      s.unsubscribe();
+    });
+  }
+
+  setFeatures() {
+    // Populate features
+    const _ = Utility.getLodash();
+    this.features = {};
+
+    // First check backend flags
+    if (this._licenseObj != null) {
+      this._licenseObj.status.features.forEach(elem => {
+        if (Features[elem['feature-key']] == null) {
+          console.error('Unrecognized backend feature flag ' + elem['feature-key']);
+        }
+        this.features[elem['feature-key']] = true;
+      });
+    }
+
+    // call any registered callbacks for derived features
+    Object.keys(derivedFeatures).forEach(key => {
+      this.features[key] = derivedFeatures[key](this._configFile, this._licenseObj);
+    });
+
+    // Then load config json flags
+    // this allows config file to supercede all
+    if (this._configFile != null) {
+      const enabledFeatures: string[] = this._configFile['enabled-features'];
+      if (enabledFeatures != null) {
+        enabledFeatures.forEach(elem => {
+          if (Features[elem] == null) {
+            console.error('Unrecognized feature flag ' + elem);
+          }
+          this.features[elem] = true;
+        });
+      }
+      const disabledFeatures: string[] = this._configFile['disabled-feature'];
+      if (disabledFeatures != null) {
+        disabledFeatures.forEach(elem => {
+          if (Features[elem] == null) {
+            console.error('Unrecognized feature flag ' + elem);
+          }
+          if (this.features[elem]) {
+            this.features[elem] = false;
+          }
+        });
+      }
+    }
+
+    // Publish to roleGuards that features have been changed
+    this.controllerService.publish(Eventtypes.NEW_FEATURE_PERMISSIONS, null);
   }
 
   setUIPermissions() {
@@ -353,10 +477,10 @@ export class UIConfigsService {
     if (this.configFile == null) {
       return true;
     }
-    const enabledFeatures: string[] = this.configFile['enabled-features'];
-    return enabledFeatures.some((elem) => {
-      return elem.toLowerCase() === featureName.toLowerCase();
-    });
+    if (this.features[featureName] == null) {
+      return false;
+    }
+    return this.features[featureName];
   }
 
   featureGuardIsEnabled(req: Features[], opt: Features[]): boolean {

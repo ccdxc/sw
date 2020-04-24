@@ -13,6 +13,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { NaplesdetailIftopologyComponent } from './naplesdetailiftopology.component';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { AuthService } from '@app/services/auth.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
@@ -43,6 +44,7 @@ describe('NaplesdetailIftopologyComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         MessageService,
         ClusterService,
         MetricsqueryService,

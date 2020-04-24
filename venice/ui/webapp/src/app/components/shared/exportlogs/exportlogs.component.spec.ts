@@ -8,6 +8,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { LogService } from '@app/services/logging/log.service';
@@ -36,6 +37,7 @@ describe('ExportLogsComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         MonitoringService,
         SecurityService,
         LogService,

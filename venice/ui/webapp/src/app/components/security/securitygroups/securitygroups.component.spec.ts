@@ -18,6 +18,7 @@ import { ISecuritySecurityGroup, SecuritySecurityGroup} from '@sdk/v1/models/gen
 import { SecurityService } from '@app/services/generated/security.service';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
@@ -45,6 +46,7 @@ describe('SecuritygroupsComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

@@ -23,6 +23,7 @@ import { By } from '@angular/platform-browser';
 import { MessageService } from '@app/services/message.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { AuthService } from '@app/services/auth.service';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -109,6 +110,7 @@ describe('AuthpolicyComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

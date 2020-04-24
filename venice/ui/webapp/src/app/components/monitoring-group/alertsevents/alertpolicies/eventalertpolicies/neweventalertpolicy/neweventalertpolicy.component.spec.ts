@@ -17,6 +17,7 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { IMonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertPolicySpec_severity, MonitoringAlertPolicy } from '@sdk/v1/models/generated/monitoring';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -46,6 +47,7 @@ describe('NeweventalertpolicyComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

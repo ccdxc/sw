@@ -8,6 +8,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { RolloutService } from '@app/services/generated/rollout.service';
@@ -49,6 +50,7 @@ describe('RolloutstatusComponent', () => {
         MatIconRegistry,
         ObjstoreService,
         UIConfigsService,
+        LicenseService,
         RolloutService,
         AuthService,
         ClusterService

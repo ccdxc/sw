@@ -8,6 +8,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -67,6 +68,7 @@ describe('NodedetailComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         MessageService,
         ClusterService,
         AlerttableService,

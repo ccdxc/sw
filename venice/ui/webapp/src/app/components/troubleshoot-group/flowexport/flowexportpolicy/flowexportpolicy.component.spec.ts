@@ -20,6 +20,7 @@ import { MessageService } from '@app/services/message.service';
 import { TroubleshootGroupModule } from '../../troubleshoot-group.module';
 import { NewflowexportpolicyComponent } from './newflowexportpolicy/newflowexportpolicy.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { TestTablevieweditRBAC } from '@app/components/shared/tableviewedit/tableviewedit.component.spec';
 import { MonitoringFlowExportPolicy } from '@sdk/v1/models/generated/monitoring';
@@ -47,6 +48,7 @@ describe('FlowexportpolicyComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

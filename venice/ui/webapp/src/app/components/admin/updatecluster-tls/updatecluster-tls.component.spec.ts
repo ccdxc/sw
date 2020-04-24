@@ -20,6 +20,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { PrimengModule } from '@lib/primeng.module';
 import { UpdateclusterTlsComponent } from './updatecluster-tls.component';
 
@@ -56,6 +57,7 @@ class DummyComponent { }
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

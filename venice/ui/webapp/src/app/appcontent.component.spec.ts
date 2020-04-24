@@ -47,6 +47,7 @@ import { AppcontentComponent } from '@app/appcontent.component';
 import { SearchService } from '@app/services/generated/search.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ToasterComponent, ToasterItemComponent } from '@app/widgets/toaster/toaster.component';
 import { ConfirmationService } from 'primeng/primeng';
@@ -112,11 +113,12 @@ describe('AppcontentComponent', () => {
         SearchService,
         OverlayContainer,
         UIConfigsService,
+        LicenseService,
         AuthServiceGen,
         MessageService,
         ClusterService,
         RolloutService,
-        WorkloadService
+        WorkloadService,
       ],
     });
 
@@ -282,6 +284,7 @@ describe('UIBlock during rollout progress', () => {
       ClusterService,
       RolloutService,
       WorkloadService,
+      LicenseService,
       {provide: Router, useValue: mockRouter}
     ],
   });

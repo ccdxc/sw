@@ -20,6 +20,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { StagingService } from '@app/services/generated/staging.service';
 import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { configureTestSuite } from 'ng-bullet';
@@ -211,6 +212,7 @@ describe('NaplesComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         StagingService,
         AuthService,
         ConfirmationService,

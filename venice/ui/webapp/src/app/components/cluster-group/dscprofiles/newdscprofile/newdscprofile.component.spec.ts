@@ -9,6 +9,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ControllerService } from '@app/services/controller.service';
 import { LogService } from '@app/services/logging/log.service';
@@ -39,6 +40,7 @@ describe('NewdscprofileComponent', () => {
         ControllerService,
         ClusterService,
         UIConfigsService,
+        LicenseService,
         LogService,
         ControllerService,
         LogPublishersService,

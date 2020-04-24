@@ -15,6 +15,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import * as _ from 'lodash';
 import { configureTestSuite } from 'ng-bullet';
 import { ConfirmationService } from 'primeng/primeng';
@@ -44,6 +45,7 @@ describe('NewnetworkComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

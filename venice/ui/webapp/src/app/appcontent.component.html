@@ -62,7 +62,7 @@
             </a>
 
             <ng-container>
-              <button *featureGuard="'help'" mat-icon-button matTooltip="Online help"
+              <button mat-icon-button matTooltip="Online help"
                       (click)="onToolbarIconClick($event, 'help')">
                 <mat-icon>help_outline</mat-icon>
               </button>
@@ -289,7 +289,7 @@
 
 <ng-template #sideNavHelp let-item="item">
   <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Help">
-    <app-helpoverlay #helpOverlay *featureGuard="'help'" fxFlex="none"
+    <app-helpoverlay #helpOverlay fxFlex="none"
                      (toggleHelpSideNav)="handleRightSideNavToggle($event, 'help')">
     </app-helpoverlay>
   </div>

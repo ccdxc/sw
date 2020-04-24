@@ -14,6 +14,7 @@ import { MetricsUtility } from '@app/common/MetricsUtility';
 import { throwError, BehaviorSubject, Subscription } from 'rxjs';
 import { UIConfigsService } from './uiconfigs.service';
 import { AuthService } from './auth.service';
+import { LicenseService } from './license.service';
 
 @Component({
   template: ''
@@ -59,6 +60,7 @@ describe('MetricsqueryService', () => {
         MetricsqueryService,
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

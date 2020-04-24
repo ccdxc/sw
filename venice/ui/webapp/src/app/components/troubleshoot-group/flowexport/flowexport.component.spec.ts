@@ -26,6 +26,7 @@ import { FlowexportpolicyComponent } from './flowexportpolicy/flowexportpolicy.c
 import { MessageService } from '@app/services/message.service';
 import { TroubleshootGroupModule } from '../troubleshoot-group.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 
 
@@ -55,6 +56,7 @@ describe('FlowexportComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

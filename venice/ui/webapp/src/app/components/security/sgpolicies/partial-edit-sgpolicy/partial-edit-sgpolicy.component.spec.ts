@@ -18,6 +18,7 @@ import {MessageService} from '@app/services/message.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { AuthService } from '@app/services/auth.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 
 import { NewsgpolicyComponent } from '../newsgpolicy/newsgpolicy.component';
 import { WorkloadService } from '@app/services/generated/workload.service';
@@ -44,6 +45,7 @@ describe('PartialEditSgpolicyComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

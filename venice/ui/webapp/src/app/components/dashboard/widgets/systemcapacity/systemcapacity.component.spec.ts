@@ -13,6 +13,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MatIconRegistry } from '@angular/material';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { MessageService } from '@app/services/message.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -48,8 +49,9 @@ describe('SystemcapacitywidgetComponent', () => {
         ClusterService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         MessageService,
-        AuthService
+        AuthService,
       ]
     });
       });
@@ -158,7 +160,8 @@ describe('node cluster test', () => {
        MatIconRegistry,
        UIConfigsService,
        MessageService,
-       AuthService
+       AuthService,
+       LicenseService
      ]
    });
      });

@@ -12,6 +12,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { MessageService } from '@app/services/message.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { AuthService } from '@app/services/auth.service';
@@ -38,6 +39,7 @@ describe('SyslogComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         AuthService,
         MessageService,
       ]

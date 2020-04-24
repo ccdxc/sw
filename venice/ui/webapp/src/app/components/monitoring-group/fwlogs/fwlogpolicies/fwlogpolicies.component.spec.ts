@@ -20,6 +20,7 @@ import { MessageService } from '@app/services/message.service';
 import { MonitoringGroupModule } from '../../monitoring-group.module';
 import { NewfwlogpolicyComponent } from './newfwlogpolicy/newfwlogpolicy.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { TestTablevieweditRBAC } from '@app/components/shared/tableviewedit/tableviewedit.component.spec';
 import { MonitoringFwlogPolicy } from '@sdk/v1/models/generated/monitoring';
@@ -48,6 +49,7 @@ describe('FwlogpoliciesComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

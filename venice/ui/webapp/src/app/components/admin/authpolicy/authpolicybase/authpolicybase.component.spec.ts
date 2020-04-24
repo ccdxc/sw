@@ -17,6 +17,7 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { AuthService } from '@app/services/auth.service';
 
@@ -47,6 +48,7 @@ describe('AuthpolicybaseComponent', () => {
         MatIconRegistry,
         MessageService,
         UIConfigsService,
+        LicenseService,
         AuthService
       ]
     });

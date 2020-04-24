@@ -7,6 +7,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
 
@@ -51,12 +52,14 @@ describe('ApiSampleComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        LicenseService,
         AuthService,
         EventsService,
         SearchService,

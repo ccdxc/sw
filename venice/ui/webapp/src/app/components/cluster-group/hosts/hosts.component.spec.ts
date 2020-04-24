@@ -15,6 +15,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { LogService } from '@app/services/logging/log.service';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { RouterLinkStubDirective } from '@common/RouterLinkStub.directive.spec';
 import { TestingUtility } from '@common/TestingUtility';
 import { Utility } from '@common/Utility';
@@ -247,6 +248,7 @@ describe('HostsComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

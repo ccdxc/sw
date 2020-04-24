@@ -22,6 +22,7 @@ import { MessageService } from '@app/services/message.service';
 import { NewroleComponent } from '../newrole/newrole.component';
 import { NewrolebindingComponent } from './newrolebinding.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 
 describe('NewrolebindingComponent', () => {
@@ -44,6 +45,7 @@ describe('NewrolebindingComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

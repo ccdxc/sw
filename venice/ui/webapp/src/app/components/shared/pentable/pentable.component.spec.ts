@@ -16,6 +16,7 @@ import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { SorticonComponent } from '../sorticon/sorticon.component';
 import { RoleGuardDirective } from '../directives/roleGuard.directive';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { AuthService } from '@app/services/auth.service';
 import { FlexLayoutModule } from '@angular/flex-layout';

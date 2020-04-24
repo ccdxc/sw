@@ -13,6 +13,7 @@ import { MessageService } from '@app/services/message.service';
 import { ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { UIConfigsService } from './uiconfigs.service';
 import { AuthService } from './auth.service';
+import { LicenseService } from './license.service';
 
 describe('EventsService', () => {
   let postSpy;
@@ -21,6 +22,7 @@ describe('EventsService', () => {
       providers: [EventsService,
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

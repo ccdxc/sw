@@ -26,6 +26,7 @@ import { SearchresultComponent } from '@app/components/search/searchresult/searc
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
 import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 
 @Component({
@@ -63,6 +64,7 @@ describe('SearchboxComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         ConfirmationService,
         LogService,

@@ -26,6 +26,7 @@ import { FwlogpoliciesComponent } from './fwlogpolicies/fwlogpolicies.component'
 import { NewfwlogpolicyComponent } from './fwlogpolicies/newfwlogpolicy/newfwlogpolicy.component';
 import { FwlogsComponent } from './fwlogs.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -157,6 +158,7 @@ describe('fwlogsComponent', () => {
       providers: [
         ControllerService,
         UIConfigsService,
+        LicenseService,
         AuthService,
         FwlogService,
         ConfirmationService,
