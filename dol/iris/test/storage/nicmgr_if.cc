@@ -66,7 +66,7 @@ nicmgr_if_init(void)
     /*
      * Initializations needed by libnicmgr
      */
-    utils::logger::init(false);
+    utils::logger::init();
     sdk_init();
 
     cfg.platform_type = platform_type_t::PLATFORM_TYPE_SIM;
@@ -315,7 +315,7 @@ nicmgr_if_push(dev_cmd_t& cmd)
         dev_cmd->doorbell = true;
         dev_cmd->done = false;
         memcpy((void *)&dev_cmd->cmd, &cmd, sizeof(dev_cmd->cmd));
-        accel_devcmdpa_buf->fragment_find(0, 
+        accel_devcmdpa_buf->fragment_find(0,
                             offsetof(dev_cmd_regs_t, cmd) +
                             sizeof(dev_cmd_t))->write_thru();
 

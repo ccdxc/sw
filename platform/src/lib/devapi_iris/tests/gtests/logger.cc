@@ -1,7 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include <cstdlib>
-#include <vector>
 
 #include "logger.hpp"
 
@@ -11,14 +10,13 @@ namespace logger {
 const auto LOG_FILENAME = "nicmgr.log";
 const auto LOG_MAX_FILESIZE = 10*1024*1024; // 10 MiB
 const auto LOG_MAX_FILES = 10;
-const auto LOG_OVERFLOW_POLICY = spdlog::async_overflow_policy::discard_log_msg;
 const auto LOG_PATTERN = "%L [%Y-%m-%d %H:%M:%S.%e%z] %v";
 
 static std::shared_ptr<spdlog::logger> _logger = NULL;
 static std::shared_ptr<spdlog::logger> _syslogger = NULL;
 
 void
-init(bool log_to_console)
+init (void)
 {
     std::string logfile;
     char        *logdir;
@@ -76,14 +74,10 @@ init(bool log_to_console)
     spdlog::set_level(level);
     spdlog::set_pattern(LOG_PATTERN);
 
-    std::vector<spdlog::sink_ptr> sinks;
-    if (log_to_console) {
-        sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_st>());
-    }
-    sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile,
-        LOG_MAX_FILESIZE, LOG_MAX_FILES));
+    auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logfile,
+        LOG_MAX_FILESIZE, LOG_MAX_FILES);
 
-    _logger = std::make_shared<spdlog::logger>("nicmgr", begin(sinks), end(sinks));
+    _logger = std::make_shared<spdlog::logger>("nicmgr", rotating_sink);
     assert(_logger != NULL);
     _logger->set_level(level);
     // messages at this level or higher should be flushed immediately

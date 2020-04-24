@@ -8,7 +8,7 @@
 
 namespace utils {
 namespace logger {
-    void init(bool log_to_console=false);
+    void init(void);
     std::shared_ptr<spdlog::logger> logger(void);
     std::shared_ptr<spdlog::logger> syslogger(void);
     void nicmgr_api_trace(const char *trace);

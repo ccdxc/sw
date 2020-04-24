@@ -122,7 +122,7 @@ nicmgr_init()
 {
     devicemgr_cfg_t cfg;
 
-    utils::logger::init(false);
+    utils::logger::init();
     sdk_init();
 
     cfg.platform_type = platform_type_t::PLATFORM_TYPE_SIM;
