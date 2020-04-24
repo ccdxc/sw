@@ -246,7 +246,7 @@ spawn_threads (void)
 {
     // for Apulu, pciemgr is started as a separate process
     if (g_pds_state.pipeline() != "apulu") {
-        // spawn pciemgr thread    
+        // spawn pciemgr thread
         core::spawn_pciemgr_thread(&api::g_pds_state);
 
         PDS_TRACE_INFO("Waiting for pciemgr server to come up ...");
@@ -388,8 +388,12 @@ pds_init (pds_init_params_t *params)
         // initialize all the signal handlers
         core::sig_init(SIGUSR1, api::sig_handler);
 
+        // temporary workaround - disable sysmon on apulu pipeline to mask
+        // learn DPDK corruption
+#ifndef APULU
         // initialize and start system monitoring
         api::sysmon_init();
+#endif
 
         // don't interfere with nicmgr
         while (!core::is_nicmgr_ready()) {
