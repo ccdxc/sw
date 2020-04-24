@@ -25,7 +25,7 @@ void FmtMsgWriteToEventLog(PVOID IoObject, ULONG Signature, SEVERITY_EVENTLOG_MS
 void WriteToEventLog(PVOID IoObject, ULONG Signature, NTSTATUS Status, PCWSTR wstrExpl);
 
 
-#define EvLogMsg(lvl,fmt,...)			FmtMsgWriteToEventLog(IonicDriverObject, 'WmiD', lvl, fmt, ##__VA_ARGS__)
+#define EvLogMsg(lvl,fmt,...)			FmtMsgWriteToEventLog(IonicDriverObject, 'vEoI', lvl, fmt, ##__VA_ARGS__)
 
 #define EvLogError(fmt,...)				EvLogMsg(EVLOGTYPE_ERROR, fmt, ##__VA_ARGS__)
 #define EvLogWarning(fmt,...)			EvLogMsg(EVLOGTYPE_WARNING, fmt, ##__VA_ARGS__)

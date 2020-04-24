@@ -46,6 +46,8 @@ HaltEx(NDIS_HANDLE MiniportAdapterContext, NDIS_HALT_ACTION HaltAction)
 
     if (ionic != NULL) {
 
+        EvLogInformational("%wZ - adapter is halting.", ionic->name);
+
         ionic->hardware_status = NdisHardwareStatusClosing;        
 
         NdisCancelTimerObject(ionic->LinkCheckTimer);

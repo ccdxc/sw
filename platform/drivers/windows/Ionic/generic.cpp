@@ -1164,6 +1164,9 @@ ionic_heartbeat_check(struct ionic *ionic)
                       "%s FW heartbeat stalled at %d\n", __FUNCTION__,
                       idev->last_hb));
             idev->last_hb_time = 1;
+
+            EvLogWarning("%wZ - FW heartbeat stalled.", ionic->name);
+
         } else {
             DbgTrace((TRACE_COMPONENT_DEVICE, TRACE_LEVEL_ERROR,
                       "%s Stalled detection\n", __FUNCTION__));
@@ -1514,6 +1517,9 @@ ionic_link_up(struct ionic *ionic)
                           sizeof(LinkState));
 
     ionic->port_stats.link_up++;
+
+    EvLogInformational("%wZ - The network link is up.", ionic->name);
+
 }
 
 void
@@ -1539,6 +1545,8 @@ ionic_link_down(struct ionic *ionic)
                           sizeof(LinkState));
 
     ionic->port_stats.link_dn++;
+
+    EvLogWarning("%wZ - The network link is down.", ionic->name);
 }
 
 void

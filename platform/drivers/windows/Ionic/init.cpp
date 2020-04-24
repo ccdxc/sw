@@ -29,7 +29,7 @@ VOID InitIonicVersionInfo(PIONIC_VERSION_INFO pVersionInfo)
     pVersionInfo->VerMin = IONIC_MINOR_DRIVER_VERSION;
     pVersionInfo->VerSP = IONIC_SP_DRIVER_VERSION;
     pVersionInfo->VerBuild = IONIC_BUILD_DRIVER_VERSION;
-    RtlStringCchCopyA(pVersionInfo->VerString, REVISION_MAX_STR_SIZE, IONIC_MP_VERSION_STRING IONIC_MP_VERSION_EXTENSION);
+    RtlStringCchPrintfA(pVersionInfo->VerString, REVISION_MAX_STR_SIZE, "%s-%s", IONIC_MP_VERSION_STRING, IONIC_MP_VERSION_EXTENSION);
     for (i = 0; i < REVISION_MAX_STR_SIZE; i++) {
         pVersionInfo->VerStringW[i] = pVersionInfo->VerString[i];
     }
@@ -148,7 +148,7 @@ cleanup:
     if (NDIS_STATUS_SUCCESS != ntStatus) {
         DriverUnload((PDRIVER_OBJECT)DriverObject);
 
-        EvLogError("DTDimm failed to load: 0x%x", ntStatus);
+        EvLogError("Ionic driver failed to load: 0x%x", ntStatus);
     } else {
 
         ReadConfigParams();
@@ -157,8 +157,7 @@ cleanup:
             InitializeTrace();
         }
 
-        EvLogInformational("Ionic driver successfully loaded.");
-        EvLogInformational("Ionic Ver.:%s", IonicVersionInfo.VerString);
+        EvLogInformational("Ionic driver Ver:%s successfully loaded.", IonicVersionInfo.VerString);
     }
 
     return ntStatus;
@@ -188,7 +187,7 @@ DriverUnload(PDRIVER_OBJECT DriverObject)
         IonicUnregisterPensando_Systems();
     }
 
-    IoPrint("%s Complete\n", __FUNCTION__);
+    EvLogInformational("Ionic driver Ver:%s unload completed.", IonicVersionInfo.VerString);
 
     return;
 }
@@ -309,6 +308,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Failed SetRegistrationAttribs Status %08lX\n",
                   __FUNCTION__, status));
+        EvLogError("Failed SetRegistrationAttribs.");
         goto exit;
     }
 
@@ -321,6 +321,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Failed ReadRegParameters Status %08lX\n", __FUNCTION__,
                   status));
+        EvLogError("Failed to read registry parameters.");
         goto exit;
     }
 
@@ -333,10 +334,11 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
                                &adapter->pci_config, PCI_COMMON_HDR_LENGTH);
 
     if (ulLength != PCI_COMMON_HDR_LENGTH) {
+        status = NDIS_STATUS_ADAPTER_NOT_FOUND;
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Failed NdisMGetBusData Length %08lX (%08lX)\n",
                   __FUNCTION__, ulLength, PCI_COMMON_HDR_LENGTH));
-        status = NDIS_STATUS_ADAPTER_NOT_FOUND;
+        EvLogError("Invalid NdisMGetBusData Length: %08lX", ulLength);
         goto exit;
     }
 
@@ -345,6 +347,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Invalid VID-PID %08lX-%08lX\n", __FUNCTION__,
                   adapter->pci_config.VendorID, adapter->pci_config.DeviceID));
+        EvLogError("Invalid VID-PID %08lX-%08lX", adapter->pci_config.VendorID, adapter->pci_config.DeviceID);
         goto exit;
     }
 
@@ -362,6 +365,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Invalid VID-PID %08lX-%08lX\n", __FUNCTION__,
                   adapter->pci_config.VendorID, adapter->pci_config.DeviceID));
+        EvLogError("Invalid VID-PID %08lX-%08lX", adapter->pci_config.VendorID, adapter->pci_config.DeviceID);
         goto exit;
     }
 
@@ -382,6 +386,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Failed to retrieve adapter name Error 0x%08lX\n", __FUNCTION__,
                   status));
+        EvLogError("Failed to retrieve adapter name.");
         goto exit;
     }
 
@@ -395,6 +400,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s ionic_map_bars() failed Status %08lX\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - map bars failure.", adapter->name);
         goto exit;
     }
 
@@ -407,6 +413,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s ionic_dev_setup() failed Status %08lX\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - dev setup failure.", adapter->name);
         goto err_out_unmap_bars;
     }
 
@@ -415,6 +422,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot identify device: %d, aborting\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - device identify failure.", adapter->name);
         goto err_out_teardown;
     }
 
@@ -445,6 +453,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
 		DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
 			"%s ionic_register_interrupts() failed Status %08lX\n",
 			__FUNCTION__, status));
+        EvLogError("%wZ - register interrupts failure.", adapter->name);
 		goto err_out_teardown;
 	}
 
@@ -453,6 +462,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot init device: %d, aborting\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - init device failure.", adapter->name);
         goto err_out_unregister_interrupts;
     }
 
@@ -462,6 +472,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot identify port: %d, aborting\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - port identify failure.", adapter->name);
         goto err_out_reset;
     }
 
@@ -469,6 +480,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
     if (status != NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot init port: %d, aborting\n", __FUNCTION__, status));
+        EvLogError("%wZ - port init failure.", adapter->name);
         goto err_out_reset;
     }
 
@@ -479,6 +491,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot identify LIFs: %d, aborting\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - LIFs identify failure.", adapter->name);
         goto err_out_port_reset;
     }
 
@@ -487,6 +500,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot size LIFs: %08lX, aborting\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - LIFs size failure.", adapter->name);
         goto err_out_port_reset;
     }
 
@@ -495,6 +509,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot allocate LIFs: %08lX, aborting\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - LIFs allocation failure.", adapter->name);
         goto err_out_port_reset;
     }
 
@@ -507,6 +522,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot init LIFs: %08lX, aborting\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - LIFs init failure.", adapter->name);
         goto err_out_free_lifs;
     }
 
@@ -515,6 +531,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Cannot open LIFs: %08lX, aborting\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - LIFs open failure.", adapter->name);
         goto err_out_reset_lifs;
     }
 
@@ -523,6 +540,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Failed to configure port: %08lX, aborting\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - port configure failure.", adapter->name);
         goto err_out_free_lifs;
     }
 
@@ -531,6 +549,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s SetGeneralAttribs failed Status %08lX\n", __FUNCTION__,
                   status));
+        EvLogError("%wZ - SetGeneralAttribs failure.", adapter->name);
         goto err_out_stop_ionic;
     }
 
@@ -551,6 +570,7 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
                   "%s Failed ionic_set_offload_attributes() Status 0x%08lX\n",
                   __FUNCTION__, status));
+        EvLogError("%wZ - offload attributes set failure.", adapter->name);
         goto err_out_stop_ionic;
     }
 
@@ -611,6 +631,12 @@ exit:
     DbgTrace((TRACE_COMPONENT_HANDLERS_ENT_EX, TRACE_LEVEL_VERBOSE,
               "%s Exit status %08lX\n", __FUNCTION__, status));
 
+    if (STATUS_SUCCESS == status) {
+        EvLogInformational("%wZ adapter successfully initialized.", adapter->name);
+    }
+    else {
+        EvLogError("Failed to initialize new adapter. Err: 0x%08x", status);
+    }
     KeSetEvent(&InitEvent, 0, FALSE);
 
     return status;
