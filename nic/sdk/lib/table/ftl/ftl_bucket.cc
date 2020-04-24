@@ -100,7 +100,7 @@ Bucket::create_(Apictx *ctx) {
 
 sdk_ret_t
 Bucket::compare_(Apictx *ctx) {
-    uint16_t hashX = 0;
+    uint32_t hashX = 0;
     uint32_t hintX = 0;
 
     // There are 3 possible cases from here
@@ -270,7 +270,7 @@ Bucket::find_last_hint_(Apictx *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 Bucket::find_hint_(Apictx *ctx) {
-    uint16_t hashX = 0;
+    uint32_t hashX = 0;
     uint32_t hintX = 0;
 
     // Find a free hint slot in the bucket entry

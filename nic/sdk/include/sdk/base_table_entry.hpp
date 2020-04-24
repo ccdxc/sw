@@ -22,7 +22,7 @@ struct __attribute__((__packed__)) base_table_entry_t {
     virtual bool compare_data(void *s) { SDK_ASSERT(0); return false; }
     virtual bool compare_key_data(void *s) { SDK_ASSERT(0); return false; }
     virtual void set_hint_hash(uint32_t slot, uint32_t hint, uint32_t hash) { SDK_ASSERT(0); }
-    virtual void get_hint_hash(uint32_t slot, uint32_t &hint, uint16_t &hash) { SDK_ASSERT(0); }
+    virtual void get_hint_hash(uint32_t slot, uint32_t &hint, uint32_t &hash) { SDK_ASSERT(0); }
     virtual void get_hint(uint32_t slot, uint32_t &hint) { SDK_ASSERT(0); }
     virtual uint32_t get_more_hint_slot(void) { SDK_ASSERT(0); return 0; }
     virtual bool is_hint_slot_valid(uint32_t slot) { SDK_ASSERT(0); return false; }

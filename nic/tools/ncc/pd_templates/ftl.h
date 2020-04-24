@@ -969,13 +969,13 @@ public:
 //::                        #endfor
                 break;
 //::                    #endfor
-            default: more_hints = hint; more_hashes = hash; break;
+            default: more_hints = hint; more_hashes = 1; break;
         }
     }
 
 //::                    _hash_field_size = next_pow_2(hash_field_size)
 //::                    _hint_field_size = next_pow_2(hint_field_size)
-    void get_hint_hash(uint32_t slot, uint32_t &hint, uint16_t &hash) {
+    void get_hint_hash(uint32_t slot, uint32_t &hint, uint32_t &hash) {
         assert(slot);
         switch(slot) {
 //::                    hash_field_cnt = ftl_hash_field_cnt()

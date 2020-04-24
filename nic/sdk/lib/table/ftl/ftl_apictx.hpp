@@ -57,8 +57,8 @@ public:
     base_table_entry_t *entry;
 
     uint8_t hint_slot;
-    uint16_t hash_msbits;
-    uint16_t more_hashs;
+    uint32_t hash_msbits;
+    uint32_t more_hashs;
     uint8_t level;
 
     bool match;
