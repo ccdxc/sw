@@ -47,6 +47,7 @@
 #include "nic/apollo/api/include/athena/pds_flow_session_info.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_rewrite.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/api/include/athena/pds_flow_age.h"
 #include "nic/apollo/api/include/athena/pds_dnat.h"
 #include "gen/p4gen/p4/include/ftl.h"
 #include "athena_test.hpp"
@@ -57,6 +58,8 @@ uint32_t num_flows_added = 0;
 uint32_t attempted_flows = 0;
 
 namespace fte_ath {
+
+static pds_flow_expiry_fn_t aging_expiry_dflt_fn;
 
 #define IP_PROTOCOL_TCP 0x06
 #define IP_PROTOCOL_UDP 0x11
@@ -1234,6 +1237,31 @@ fte_setup_flow (void)
     return ret;
 }
 
+static pds_ret_t
+fte_flows_aging_expiry_fn(uint32_t expiry_id,
+                          pds_flow_age_expiry_type_t expiry_type,
+                          void *user_ctx)
+{
+    pds_ret_t   ret = PDS_RET_OK;
+
+    switch (expiry_type) {
+
+    case EXPIRY_TYPE_SESSION:
+        ret = (*aging_expiry_dflt_fn)(expiry_id, expiry_type, user_ctx);
+        fte_session_index_free(expiry_id);
+        break;
+
+    case EXPIRY_TYPE_CONNTRACK:
+        ret = (*aging_expiry_dflt_fn)(expiry_id, expiry_type, user_ctx);
+        break;
+
+    default:
+        ret = PDS_RET_INVALID_ARG;
+        break;
+    }
+    return ret;
+}
+
 sdk_ret_t
 fte_flows_init ()
 {
@@ -1242,6 +1270,19 @@ fte_flows_init ()
     sdk_ret = fte_session_indexer_init();
     if (sdk_ret != SDK_RET_OK) {
         PDS_TRACE_DEBUG("fte_session_indexer_init failed.\n");
+        return sdk_ret;
+    }
+
+    /*
+     * Override the default aging callback so session indices can be managed
+     */
+    sdk_ret = (sdk_ret_t)pds_flow_age_sw_pollers_expiry_fn_dflt(&aging_expiry_dflt_fn);
+    if (sdk_ret == SDK_RET_OK) {
+        sdk_ret = (sdk_ret_t)pds_flow_age_sw_pollers_poll_control(false,
+                                                     fte_flows_aging_expiry_fn);
+    }
+    if (sdk_ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("fte aging callback override failed.\n");
         return sdk_ret;
     }
 

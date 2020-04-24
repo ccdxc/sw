@@ -466,8 +466,9 @@ lif_init(void)
                 }
 #if 0
                 /*
-                 * Keep disabled for now until flow cache (hash) deletion
-                 * is implemented for aging.
+                 * Keep aging disabled by default for now and let testing
+                 * take smaller steps first using dynamic enablement
+                 * from scripts.
                  */
                 if (session_scanners() && (ret == PDS_RET_OK)) {
                     ret = session_scanners()->start(&devcmd_qinit);
