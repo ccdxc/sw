@@ -94,13 +94,17 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   getNetworks() {
     const hostSubscription = this.networkService.ListNetworkCache().subscribe(
       (response) => {
+        this.tableLoading = false;
         if (response.connIsErrorState) {
           return;
         }
         this.dataObjects = response.data;
         this.buildVCenterWorkloadsMap();
       },
-      this.controllerService.webSocketErrorHandler('Failed to get networks')
+      (error) => {
+        this.tableLoading = false;
+        this.controllerService.invokeRESTErrorToaster('Error', 'Failed to get networks');
+      }
     );
     this.subscriptions.push(hostSubscription);
   }
@@ -199,6 +203,7 @@ export class NetworkComponent extends TablevieweditAbstract<INetworkNetwork, Net
   }
 
   postNgInit() {
+    this.tableLoading = false;
     this.getNetworks();
     this.getVcenterIntegrations();
     this.watchWorkloads();

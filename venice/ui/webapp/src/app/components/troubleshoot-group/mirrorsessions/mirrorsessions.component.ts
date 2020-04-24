@@ -52,7 +52,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
     { field: 'spec.packet-size', header: 'Packet Size', sortable: false, width: '100px', },
     // { field: 'spec.packet-filters', header: 'Packet Filters', sortable: false, width: 10 },
     { field: 'spec.collectors', header: 'Collectors', sortable: false, width: '275px' },
-    { field: 'spec.interfaces.selectors', header: 'Upperlink Interface Selectors', sortable: false, width: 20 },
+    { field: 'spec.interfaces.selectors', header: 'Uplink Interface Selectors', sortable: false, width: 20 },
     { field: 'spec.match-rules', header: 'Match Rules', sortable: false, width: 30 },
     { field: 'meta.creation-time', header: 'Creation Time', sortable: true, width: '180px', notReorderable: true },
     { field: 'meta.mod-time', header: 'Update Time', sortable: true, width: '180px', notReorderable: true },

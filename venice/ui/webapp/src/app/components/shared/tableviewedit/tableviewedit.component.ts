@@ -759,10 +759,6 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
     if (buffername == null) {
       return;
     }
-    // Whenever, we have to call delete buffer, there must be error occurred. We print out the buffer detail here.
-    this.stagingService.GetBuffer(buffername).subscribe((res) => {
-      console.error(this.getClassName() + '.deleteStagingBuffer() API. Invoke GetBuffer():', res);
-    });
     this.stagingService.DeleteBuffer(buffername).subscribe(
       response => {
         if (isToshowToaster) {
@@ -821,6 +817,45 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
     // By looking into parameters, one can find out the operation context.
   }
 
+  /**
+   * This API verify if (about to commit) buffer content match bulkedit request and original user request
+   * @stagingBulkEditAction is original user input
+   * @bulkeditResponse has bulkedit content
+   * @getbufferResponse buffer content
+   *
+   * One can override this API to customize verification logic
+   * In case, there are multiple bulkedi operations in one component
+   * stagingBulkEditAction can tell the differences of bulkedit operations
+   *
+   */
+  verifybulkEditBufferContent(stagingBulkEditAction: IStagingBulkEditAction, bulkeditResponse: any, getbufferResponse: any ): boolean {
+    try {
+       return  (stagingBulkEditAction.spec.items.length  === getbufferResponse.body.status.items.length &&  getbufferResponse.body.status.items.length === bulkeditResponse.body.status.items.length);
+    } catch (error) {
+      console.error(this.getClassName() + ' .verifybulkEditBufferContent() ' + error);
+      return false;
+    }
+
+  }
+
+  /**
+   * This API perform bulkedit call.
+   * @param veniceObjects
+   * @param stagingBulkEditAction
+   * @param successMsg
+   * @param failureMsg
+   * @param successTitle
+   * @param failureTitle
+   *
+   * Per VS-1530,
+   *    0. prepare data
+   *    1. create staging buffer  (AAA)
+   *    2. invoke bulkedit    (using ASS)
+   *    3. get buffer  (fetch content of AAA)
+   *    4. verify (0, 1, 2 are matching)
+   *    5. commit buffer (commit AAA)
+   *    6. finally, delete buffer (delete AAA) to release server resource
+  */
   bulkEditHelper(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string, successTitle: string = Utility.UPDATE_SUCCESS_SUMMARY, failureTitle: string = Utility.UPDATE_FAILED_SUMMARY) {
     if (veniceObjects.length <= 0) {
       return;
@@ -832,18 +867,34 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
         createdBuffer = responseBuffer.body as StagingBuffer;
         buffername = createdBuffer.meta.name;
         stagingBulkEditAction.meta.name = buffername;  // make sure to set buffer-name to stagingBulkEditAction
-        this.stagingService.Bulkedit(buffername, stagingBulkEditAction, null, false, false); // third parameter has to be 'null'. o.w, REST API url will be screwed up
-        return this.commitStagingBuffer(buffername);  //  commit buffer
+        return  this.stagingService.Bulkedit(buffername, stagingBulkEditAction, null, false, false).pipe(
+          // third parameter has to be 'null'. o.w, REST API url will be screwed up
+         switchMap( (bulkeditResponse) => {
+           return this.stagingService.GetBuffer(buffername).pipe(
+             switchMap( getbufferResponse => {
+               if (this.verifybulkEditBufferContent(stagingBulkEditAction, bulkeditResponse, getbufferResponse)) {
+                   return this.commitStagingBuffer(buffername); //  commit buffer
+               } else {
+                  console.error(this.getClassName() + ' bulkEditHelper() verifybulkEditBufferContent() failed ' , stagingBulkEditAction, bulkeditResponse,  getbufferResponse ) ;
+                  const error = new Error('Failed to verify commit buffer content');
+                  this.onBulkEditFailure(error, veniceObjects, stagingBulkEditAction, successMsg, failureMsg + ' ' + error.toString());
+                  throw error;
+              }
+             })
+           );
+         }),
+        );
       })
     ).subscribe(
       (responseCommitBuffer) => {
         this._controllerService.invokeSuccessToaster(successTitle, successMsg);
         this.onBulkEditSuccess(veniceObjects, stagingBulkEditAction, successMsg, failureMsg);
+        this.deleteStagingBuffer(buffername, failureMsg, false); // if bulked is successful  just delete tbe buffer to release resource
       },
       (error) => {
         this._controllerService.invokeRESTErrorToaster(failureTitle, error);
-        this.deleteStagingBuffer(buffername, failureMsg, false);
         this.onBulkEditFailure(error, veniceObjects, stagingBulkEditAction, successMsg, failureMsg);
+        this.deleteStagingBuffer(buffername, failureMsg, false); // just delete tbe buffer to release resource
       }
     );
   }

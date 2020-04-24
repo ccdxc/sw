@@ -134,6 +134,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   }
 
   postNgInit() {
+    this.tableLoading = false;
     this._route.queryParams.subscribe(params => {
       if (params.hasOwnProperty('interface')) {
         // alerttab selected
@@ -182,12 +183,17 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   watchNetworkInterfaces() {
     const dscSubscription = this.networkService.ListNetworkInterfaceCache().subscribe(
       (response) => {
+        this.tableLoading = false;
         if (response.connIsErrorState) {
           return;
         }
         this.dataObjects = response.data;
         this.handleDataReady();
         this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
+      },
+      (error) => {
+        this.tableLoading = false;
+        this.controllerService.invokeRESTErrorToaster('Error', 'Failed to fetch network interfaces');
       }
     );
     this.subscriptions.push(dscSubscription);
