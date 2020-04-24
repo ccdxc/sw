@@ -11,6 +11,7 @@
 #include "nic/apollo/agent/svc/vpc_svc.hpp"
 #include "nic/apollo/agent/svc/vnic_svc.hpp"
 #include "nic/apollo/agent/svc/subnet_svc.hpp"
+#include "nic/apollo/agent/svc/policy_svc.hpp"
 #include "nic/apollo/agent/core/core.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
@@ -60,6 +61,24 @@ pds_handle_cfg (int fd, cfg_ctxt_t *ctxt)
     case CFG_MSG_SUBNET_DELETE:
     case CFG_MSG_SUBNET_GET:
         ret = pds_svc_subnet_handle_cfg(ctxt, any_resp);
+        break;
+    case CFG_MSG_SECURITY_POLICY_CREATE:
+    case CFG_MSG_SECURITY_POLICY_UPDATE:
+    case CFG_MSG_SECURITY_POLICY_DELETE:
+    case CFG_MSG_SECURITY_POLICY_GET:
+        ret = pds_svc_security_policy_handle_cfg(ctxt, any_resp);
+        break;
+    case CFG_MSG_SECURITY_PROFILE_CREATE:
+    case CFG_MSG_SECURITY_PROFILE_UPDATE:
+    case CFG_MSG_SECURITY_PROFILE_DELETE:
+    case CFG_MSG_SECURITY_PROFILE_GET:
+        ret = pds_svc_security_profile_handle_cfg(ctxt, any_resp);
+        break;
+    case CFG_MSG_SECURITY_RULE_CREATE:
+    case CFG_MSG_SECURITY_RULE_UPDATE:
+    case CFG_MSG_SECURITY_RULE_DELETE:
+    case CFG_MSG_SECURITY_RULE_GET:
+        ret = pds_svc_security_rule_handle_cfg(ctxt, any_resp);
         break;
     default:
         return SDK_RET_INVALID_ARG;

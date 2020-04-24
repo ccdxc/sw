@@ -13,6 +13,12 @@
 
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/trace.hpp"
+#include <malloc.h>
 
 static inline fw_action_t
 pds_proto_action_to_rule_action (types::SecurityRuleAction action)
@@ -565,6 +571,820 @@ pds_security_profile_proto_to_api_spec (pds_security_profile_spec_t *api_spec,
     api_spec->icmp_drop_timeout = proto_spec.icmpdroptimeout();
     api_spec->other_drop_timeout = proto_spec.otherdroptimeout();
     return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_svc_security_policy_create (const pds::SecurityPolicyRequest *proto_req,
+                                pds::SecurityPolicyResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policy_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security policy "
+                          "creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(pds_policy_spec_t));
+        ret = pds_policy_proto_to_api_spec(&api_spec,
+                                           proto_req->request(i));
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+        ret = pds_policy_create(&api_spec, bctxt);
+        if (api_spec.rule_info != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rule_info);
+            api_spec.rule_info = NULL;
+        }
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_policy_update (const pds::SecurityPolicyRequest *proto_req,
+                                pds::SecurityPolicyResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policy_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security policy "
+                          "update failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(pds_policy_spec_t));
+        ret = pds_policy_proto_to_api_spec(&api_spec,
+                                           proto_req->request(i));
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+        ret = pds_policy_update(&api_spec, bctxt);
+        if (api_spec.rule_info != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rule_info);
+            api_spec.rule_info = NULL;
+        }
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_policy_delete (const pds::SecurityPolicyDeleteRequest *proto_req,
+                                pds::SecurityPolicyDeleteResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security policy "
+                          "delete failed");
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_policy_delete(&key, bctxt);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_policy_get (const pds::SecurityPolicyGetRequest *proto_req,
+                             pds::SecurityPolicyGetResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_obj_key_t key;
+    pds_policy_info_t info;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        memset(&info, 0, sizeof(info));
+        info.spec.rule_info =
+            (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                      POLICY_RULE_INFO_SIZE(0));
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        // get number of rules
+        ret = pds_policy_read(&key, &info);
+        if (ret == SDK_RET_OK) {
+            uint32_t num_rules = info.spec.rule_info->num_rules;
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+            info.spec.rule_info =
+                (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                          POLICY_RULE_INFO_SIZE(num_rules));
+            info.spec.rule_info->num_rules = num_rules;
+            ret = pds_policy_read(&key, &info);
+        }
+        if (ret != SDK_RET_OK) {
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+            info.spec.rule_info = NULL;
+            break;
+        }
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+        pds_policy_api_info_to_proto(&info, proto_rsp);
+        if (info.spec.rule_info) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+            info.spec.rule_info = NULL;
+        }
+    }
+
+    if (proto_req->id_size() == 0) {
+        ret = pds_policy_read_all(pds_policy_api_info_to_proto, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+
+    PDS_MEMORY_TRIM();
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_policy_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+{
+    sdk_ret_t ret;
+    google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
+    
+    switch (ctxt->cfg) {
+    case CFG_MSG_SECURITY_POLICY_CREATE:
+        {
+            pds::SecurityPolicyRequest req;
+            pds::SecurityPolicyResponse rsp;
+
+            ret = pds_svc_security_policy_create(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    case CFG_MSG_SECURITY_POLICY_UPDATE:
+        {
+            pds::SecurityPolicyRequest req;
+            pds::SecurityPolicyResponse rsp;
+
+            ret = pds_svc_security_policy_update(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    case CFG_MSG_SECURITY_POLICY_DELETE:
+        {
+            pds::SecurityPolicyDeleteRequest req;
+            pds::SecurityPolicyDeleteResponse rsp;
+
+            ret = pds_svc_security_policy_delete(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    case CFG_MSG_SECURITY_POLICY_GET:
+        {
+            pds::SecurityPolicyGetRequest req;
+            pds::SecurityPolicyGetResponse rsp;
+
+            ret = pds_svc_security_policy_get(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_profile_create (const pds::SecurityProfileRequest *proto_req,
+                                 pds::SecurityProfileResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_security_profile_spec_t api_spec;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // only one global security profile is allowed (at this time)
+    if (proto_req->request_size() > 1) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security profile"
+                          "creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(api_spec));
+        ret = pds_security_profile_proto_to_api_spec(&api_spec,
+                                                     proto_req->request(i));
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+        ret = pds_security_profile_create(&api_spec, bctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_profile_update (const pds::SecurityProfileRequest *proto_req,
+                                 pds::SecurityProfileResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_security_profile_spec_t api_spec;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // only one global security profile is allowed (at this time)
+    if (proto_req->request_size() > 1) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security profile "
+                          "update failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(api_spec));
+        ret = pds_security_profile_proto_to_api_spec(&api_spec,
+                                                     proto_req->request(i));
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+        ret = pds_security_profile_update(&api_spec, bctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_profile_delete (const pds::SecurityProfileDeleteRequest *proto_req,
+                                 pds::SecurityProfileDeleteResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // only one global security profile is allowed (at this time)
+    if (proto_req->id_size() > 1) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security profile "
+                          "delete failed");
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_security_profile_delete(&key, bctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_profile_get (const pds::SecurityProfileGetRequest *proto_req,
+                              pds::SecurityProfileGetResponse *proto_rsp)
+{
+    // TODO: coming as part of PR 22772
+    PDS_TRACE_ERR("SecurityProfile GET not implemented");
+    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+{
+    sdk_ret_t ret;
+    google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
+    
+    switch (ctxt->cfg) {
+    case CFG_MSG_SECURITY_POLICY_CREATE:
+        {
+            pds::SecurityProfileRequest req;
+            pds::SecurityProfileResponse rsp;
+
+            ret = pds_svc_security_profile_create(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    case CFG_MSG_SECURITY_POLICY_UPDATE:
+        {
+            pds::SecurityProfileRequest req;
+            pds::SecurityProfileResponse rsp;
+
+            ret = pds_svc_security_profile_update(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    case CFG_MSG_SECURITY_POLICY_DELETE:
+        {
+            pds::SecurityProfileDeleteRequest req;
+            pds::SecurityProfileDeleteResponse rsp;
+
+            ret = pds_svc_security_profile_delete(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    case CFG_MSG_SECURITY_POLICY_GET:
+        {
+            pds::SecurityProfileGetRequest req;
+            pds::SecurityProfileGetResponse rsp;
+
+            ret = pds_svc_security_profile_get(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_rule_create (const pds::SecurityRuleRequest *proto_req,
+                              pds::SecurityRuleResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policy_rule_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security rule "
+                          "creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    memset(&api_spec, 0, sizeof(pds_policy_rule_spec_t));
+    ret = pds_security_rule_proto_to_api_spec(&api_spec, proto_req->request());
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto end;
+    }
+    ret = pds_policy_rule_create(&api_spec, bctxt);
+    if (ret != SDK_RET_OK) {
+        goto end;
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_rule_update (const pds::SecurityRuleRequest *proto_req,
+                              pds::SecurityRuleResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policy_rule_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security rule "
+                          "update failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    memset(&api_spec, 0, sizeof(pds_policy_spec_t));
+    ret = pds_security_rule_proto_to_api_spec(&api_spec, proto_req->request());
+    if (unlikely(ret != SDK_RET_OK)) {
+        goto end;
+    }
+    ret = pds_policy_rule_update(&api_spec, bctxt);
+    if (ret != SDK_RET_OK) {
+        goto end;
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_rule_delete (const pds::SecurityRuleDeleteRequest *req,
+                              pds::SecurityRuleDeleteResponse *rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policy_rule_key_t key;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((req == NULL) || (req->id_size() == 0)) {
+        rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, rule "
+                          "delete failed");
+            rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key.rule_id, req->id(i).id());
+        pds_obj_key_proto_to_api_spec(&key.policy_id,
+                                      req->id(i).securitypolicyid());
+        ret = pds_policy_rule_delete(&key, bctxt);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_rule_get (const pds::SecurityRuleGetRequest *req,
+                           pds::SecurityRuleGetResponse *rsp)
+{
+    sdk_ret_t ret;
+    pds_policy_rule_key_t key;
+    pds_policy_rule_info_t info;
+
+    if (req == NULL) {
+        rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    for (int i = 0; i < req->id_size(); i++) {
+        memset(&info, 0, sizeof(info));
+        pds_obj_key_proto_to_api_spec(&key.rule_id, req->id(i).id());
+        pds_obj_key_proto_to_api_spec(&key.policy_id,
+                                      req->id(i).securitypolicyid());
+        ret = pds_policy_rule_read(&key, &info);
+        if (ret != SDK_RET_OK) {
+            rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            break;
+        }
+        rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+        //pds_policy_rule_api_info_to_proto(&info, rsp);
+    }
+    PDS_MEMORY_TRIM();
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_security_rule_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+{
+    sdk_ret_t ret;
+    google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
+    
+    switch (ctxt->cfg) {
+    case CFG_MSG_SECURITY_POLICY_CREATE:
+        {
+            pds::SecurityRuleRequest req;
+            pds::SecurityRuleResponse rsp;
+
+            ret = pds_svc_security_rule_create(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    case CFG_MSG_SECURITY_POLICY_UPDATE:
+        {
+            pds::SecurityRuleRequest req;
+            pds::SecurityRuleResponse rsp;
+
+            ret = pds_svc_security_rule_update(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    case CFG_MSG_SECURITY_POLICY_DELETE:
+        {
+            pds::SecurityRuleDeleteRequest req;
+            pds::SecurityRuleDeleteResponse rsp;
+
+            ret = pds_svc_security_rule_delete(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    case CFG_MSG_SECURITY_POLICY_GET:
+        {
+            pds::SecurityRuleGetRequest req;
+            pds::SecurityRuleGetResponse rsp;
+
+            ret = pds_svc_security_rule_get(&req, &rsp);
+            any_req->UnpackTo(&req);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    return ret;
 }
 
 #endif    //__AGENT_SVC_POLICY_SVC_HPP__
