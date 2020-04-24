@@ -25,7 +25,11 @@
       }">
         <p-dropdown class="new-workload-input new-workload-host" formControlName="host-name"
                     appFloatLabel="Host name"
-                    [options]="hostOptions" fxFlex="235px"></p-dropdown>
+                    [options]="hostOptions" fxFlex="235px">
+          <ng-template let-item pTemplate="item">
+            <span *ngIf="item.value">{{item.label}}</span>
+          </ng-template>
+        </p-dropdown>
       </span>
     </div>
   </div>

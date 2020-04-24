@@ -176,6 +176,9 @@
                 <p-dropdown formControlName="key" appFloatLabel="Label Key" appendTo="body"
                             class="newmirrorsession-interface-selectbox" [options]="labelKeyOptions"
                             (onChange)="onInterfaceKeyChange(selector)">
+                  <ng-template let-item pTemplate="item">
+                    <span *ngIf="item.value">{{item.label}}</span>
+                  </ng-template>
                 </p-dropdown>
               </span>
               <div fxFlex="15px"></div>

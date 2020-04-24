@@ -1,10 +1,9 @@
-import { Component, OnInit, Input, Output, DoCheck, EventEmitter, AfterViewInit, ViewEncapsulation,  } from '@angular/core';
+import { Component, OnInit, Input, Output, DoCheck, EventEmitter, AfterViewInit, ViewEncapsulation, ChangeDetectionStrategy,  } from '@angular/core';
 import { Animations } from '@app/animations';
-import { IApiStatus, ISecurityApp, SecurityApp, SecurityAppSpec, SecurityALG, SecurityALG_type, SecuritySunrpc, SecurityMsrpc} from '@sdk/v1/models/generated/security';
-import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
+import { ISecurityApp, SecurityApp, SecurityALG, SecurityALG_type, SecuritySunrpc, SecurityMsrpc} from '@sdk/v1/models/generated/security';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
-import { SelectItem, MultiSelect } from 'primeng/primeng';
+import { SelectItem } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
 import { FormArray, FormGroup, AbstractControl, ValidatorFn, ValidationErrors, FormControl } from '@angular/forms';
 import { SecurityAppOptions} from '@app/components/security';
@@ -19,7 +18,8 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
   templateUrl: './newsecurityapp.component.html',
   styleUrls: ['./newsecurityapp.component.scss'],
   animations: [Animations],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewsecurityappComponent extends CreationForm<ISecurityApp, SecurityApp> implements OnInit, AfterViewInit {
 
@@ -37,6 +37,12 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
   sunRPCTargets: any = null;
   msRPCTargets: any = null;
 
+  ftpTimeoutTooltip = 'Timeout for this program ID. Should be a valid time duration.\n' +
+                    'Example: 1h5m2s, 100ns... ';
+  dnsTimeoutTooltip = ' Timeout for DNS Query, default 60s. Should be a valid time duration.\n' +
+                    'Example: 1h5m2s, 100ns... ';
+
+  createButtonTooltip: string = '';
 
   constructor(protected _controllerService: ControllerService,
     protected _securityService: SecurityService,
@@ -110,6 +116,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
         {
           cssClass: 'global-button-primary newsecurityapp-button',
           text: 'CREATE APP ',
+          genTooltip: () => this.getTooltip(),
           callback: () => { this.savePolicy(); },
           computeClass: () => this.computeButtonClass()
         },
@@ -170,7 +177,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     const newFormGroup: FormGroup = new SecuritySunrpc().$formGroup;
     const ctrl: AbstractControl = newFormGroup.get(['timeout']);
     this.addFieldValidator(ctrl, this.isTimeoutValid('sunrpcTimeout'));
-    tempTargets.insert(0, newFormGroup);
+    tempTargets.push(newFormGroup);
   }
 
   addProtoTarget() {
@@ -181,7 +188,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     this.addFieldValidator(ctrl, this.isPortsFieldValid());
     const ctrl2: AbstractControl = newFormGroup.get(['protocol']);
     this.addFieldValidator(ctrl2, this.isProtocolFieldValid());
-    tempTargets.insert(0, newFormGroup);
+    tempTargets.push(newFormGroup);
   }
 
   addMSRPCTarget() {
@@ -189,7 +196,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     const newFormGroup: FormGroup = new SecurityMsrpc().$formGroup;
     const ctrl: AbstractControl = newFormGroup.get(['timeout']);
     this.addFieldValidator(ctrl, this.isTimeoutValid('msrpcTimeout'));
-    tempTargets.insert(0, newFormGroup);
+    tempTargets.push(newFormGroup);
   }
 
   removeProtoTarget(index) {
@@ -360,6 +367,16 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     this.saveObject();
   }
 
+  getTooltip(): string {
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      return 'Error: Name field is empty.';
+    }
+    if (this.newObject.$formGroup.get(['meta', 'name']).invalid) {
+      return 'Error: Name field is invalid.';
+    }
+    return this.createButtonTooltip ? this.createButtonTooltip : 'Ready to submit';
+  }
+
   isFormValid(): boolean {
     if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
       return false;
@@ -370,21 +387,31 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
       }
     }
     if (this.pickedOption === SecurityAppOptions.PROTOCOLSANDPORTS) {
-      return this.validatingProtoInputs() && !this.isProtoInputsEmpty();
-    } else if (this.pickedOption === SecurityAppOptions.ALGONLY) {
-      return this.validatingALGinputs();
-    } else {
-      if (!this.validatingALGinputs()) {
-        return false;
+      const isValid: boolean = this.validatingProtoInputs() && !this.isProtoInputsEmpty();
+      if (isValid) {
+        this.createButtonTooltip = '';
       }
-      if (!this.validatingProtoInputs()) {
-        return false;
-      }
-      if (this.selectedType === SecurityALG_type.icmp) {
-        return true;
-      }
-      return !this.isProtoInputsEmpty();
+      return isValid;
     }
+    if (this.pickedOption === SecurityAppOptions.ALGONLY) {
+      return this.validatingALGinputs();
+    }
+    if (!this.validatingALGinputs()) {
+      return false;
+    }
+    if (!this.validatingProtoInputs()) {
+      return false;
+    }
+    if (this.selectedType === SecurityALG_type.icmp) {
+      this.createButtonTooltip = '';
+      return true;
+    }
+
+    const result: boolean = this.isProtoInputsEmpty();
+    if (!result) {
+      this.createButtonTooltip = '';
+    }
+    return !result;
   }
 
   isProtoInputsEmpty() {
@@ -402,6 +429,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
         }
       }
     }
+    this.createButtonTooltip = 'Error: Protocols and ports are empty.';
     return true;
   }
 
@@ -410,11 +438,17 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     const formGroups: FormGroup[] = tempProto.controls as FormGroup[];
     for (let i = 0; i < formGroups.length; i++) {
       const formGroup: FormGroup = formGroups[i];
+      if (Utility.isEmpty(formGroup.value.protocol)) {
+        this.createButtonTooltip = 'Error: Protocol ' + (i + 1) + ' is empty.';
+        return false;
+      }
       if (formGroup.value && (formGroup.value.protocol === 'tcp' || formGroup.value.protocol === 'udp')
           && Utility.isEmpty(formGroup.value.ports, true)) {
+        this.createButtonTooltip = 'Error: Port ' + (i + 1) + ' is empty.';
         return false;
       }
       if (!formGroup.valid) { // validate error
+        this.createButtonTooltip = 'Error: Protocal and port ' + (i + 1) + ' are invalid.';
         return false;
       }
     }
@@ -424,10 +458,12 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
   validatingALGinputs() {
     if (this.selectedType === SecurityALG_type.icmp) {
       if (!this.securityForm.get(['spec', 'alg', 'icmp']).valid) {
+        this.createButtonTooltip = 'Error: ICMP values are invalid.';
         return false;
       }
     } else if (this.selectedType === SecurityALG_type.dns) {
       if (!this.securityForm.get(['spec', 'alg', 'dns']).valid) {
+        this.createButtonTooltip = 'Error: DNS values are invalid.';
         return false;
       }
     } else if (this.selectedType === SecurityALG_type.sunrpc) {
@@ -437,9 +473,11 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
         const formGroup: FormGroup = formArray.controls[i] as FormGroup;
         if (!formGroup.value || !formGroup.value['program-id'] ||
             !formGroup.value.timeout) {
+          this.createButtonTooltip = 'Error: SUNRPC program ID or timeout ' + (i + 1) + ' is empty.';
           return false;
         }
         if (!formGroup.valid) {
+          this.createButtonTooltip = 'Error: SUNRPC program ID or timeout ' + (i + 1) + ' is invalid.';
           return false;
         }
       }
@@ -450,9 +488,11 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
         const formGroup: FormGroup = formArray.controls[i] as FormGroup;
         if (!formGroup.value || !formGroup.value['program-uuid'] ||
             !formGroup.value.timeout) {
+          this.createButtonTooltip = 'Error: MSRPC program UUID or timeout ' + (i + 1) + ' is empty.';
           return false;
         }
         if (!formGroup.valid) {
+          this.createButtonTooltip = 'Error: MSRPC program UUID or timeout ' + (i + 1) + ' is invalid.';
           return false;
         }
       }

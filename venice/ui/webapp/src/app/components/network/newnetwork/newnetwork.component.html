@@ -40,6 +40,9 @@
               <p-dropdown appFloatLabel="vCenter Name" appendTo="body" class="new-network-select"
                           (onChange)="onVcenterChange(orchestrator)"
                           [options]="vcenterOptions" formControlName="orchestrator-name">
+                <ng-template let-item pTemplate="item">
+                  <span *ngIf="item.value">{{item.label}}</span>
+                </ng-template>
               </p-dropdown>
             </span>
             <div fxFlex="15px"></div>

@@ -2,53 +2,106 @@
 
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
+$form-width: 450px;
 
 .newsecurityapp-container {
   background: white;
-  padding: 20px;
+  padding: 0px 10px 10px 10px;
 
   &:hover {
     background: white;
   }
-}
 
-.newsecurityapp-name {
-  margin: $vertical-gutter $horizontal-gutter;
-  height: 30px !important;
-}
+  .newsecurityapp-content {
+    background: white;
+    min-height: 180px;
+    margin-top: 4* $vertical-gutter;
+    @include primary-font();
 
-.newsecurityapp-small-input {
-  height: 30px;
-}
+    .newsecurityapp-input-box {
+      height: 30px;
 
-.newsecurityapp-divider {
-  border-right: 1px solid #dddddd;
-}
+      :first-child {
+        height: 30px;
+        font-size: 14px;
+        width: 100%;
+      }
+    }
 
-.newsecurityapp-input {
-  width: 155px;
-  padding: 5px 10px !important;
+    .newsecurityapp-radios,
+    .newsecurityapp-name {
+      width: $form-width;
+    }
 
-}
+    fieldset {
+      border: 1px solid #a9a9a9;
+      margin-bottom: 10px;
+      padding: 5px;
 
-.newsecurityapp-tinywide-input {
-  width: 100px;
-}
+      legend {
+        padding: 0 2px;
+        font-size: 14px;
+        color: #676763;
+      }
+    }
 
-.newsecurityapp-both-proto {
-  margin-top: 15px;
-}
+    .newsecurityapp-protocolsandports {
+      width: $form-width;
 
-.newsecurityapp-fieldtitle {
-  margin: $vertical-gutter $horizontal-gutter;
-}
+      legend {
+        width: 120px;
+      }
 
-.newsecurityapp-and {
-  white-space: nowrap;
-  margin-top: 2*$vertical-gutter;
-  color: #6ba0e5;
-  display: inline-block;
-  cursor: pointer;
+      .newsecurityapp-prot-box {
+        width: 170px;
+      }
+    }
+
+    .newsecurityapp-alg {
+      width: $form-width;
+
+      legend {
+        width: 25px;
+      }
+
+      .newsecurityapp-alg-type,
+      .newsecurityapp-alg-icmp-box,
+      .newsecurityapp-alg-dns-box,
+      .newsecurityapp-alg-ftp-box {
+        width: 170px;
+      }
+
+      .newsecurityapp-alg-content {
+        margin-top: 15px;
+        margin-left: 10px;
+      }
+
+      .newsecurityapp-toggle-text {
+        white-space: normal;
+      }
+
+      .newsecurityapp-toggle-color {
+        @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+      }
+    }
+
+    .newsecurityapp-fieldtitle {
+      margin: $vertical-gutter $horizontal-gutter;
+    }
+
+    .newsecurityapp-and {
+      white-space: nowrap;
+      margin-top: 2*$vertical-gutter;
+      color: #6ba0e5;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    .newsecurityapp-del {
+      color: #767676;
+      cursor: pointer;
+    }
+  }
 }
 
 
@@ -62,75 +115,12 @@ $vertical-gutter: 5px;
 }
 
 
-.newsecurityapp-app-type {
-  margin-top: 3px;
-}
-
-.newsecurityapp-toggle-text {
-  white-space: normal;
-}
-
-.newsecurityapp-toggle-color {
-  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
-}
-
-.newsecurityapp-text-margin {
-  margin-top: 2px;
-}
-
-.newsecurityapp-message-length {
-  font-size: 14px;
-  margin-right: 10px;
-  margin-top: 8px;
-}
-
-.newsecurityapp-content {
-  background: white;
-  min-height: 180px;
-  margin-top: 4* $vertical-gutter;
-  @include primary-font();
-}
-
-.newsecurityapp-programs {
-  margin-right: 10px;
-}
-
-.newsecurityapp-text {
-  width: 35px;
-  height: 17px;
-  font-size: 14px;
-  margin-top: 2*$vertical-gutter;
-  margin-left: $horizontal-gutter;
-  @include primary-font();
-}
-
-.newsecurityapp-namefield {
-  margin-top: 10px;
-  margin-left: 10px;
-}
-
-.newsecurityapp-format {
-  margin-left: 5px;
-  margin-top: 9px;
-  @include global-mat-radio(12px);
-}
-
-.newsecurityapp-spacing {
-  margin-top: 15px;
-  margin-left: 10px;
-}
-
-.newsecurityapp-save,
-.newsecuritypp-cancel {
-  font-size: 16px;
-  display: inline-block;
-  padding: 4px 10px;
-  line-height: 25px;
-  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-}
-
 .newsecurityapp-buttoncontainer {
   margin-top: $vertical-gutter;
+
+  .button-container {
+    margin-top: 5px;
+  }
 }
 
 .newsecurityapp-button {
@@ -139,13 +129,14 @@ $vertical-gutter: 5px;
   cursor: pointer;
 }
 
-.newsecurityapp-timeout-helper,
-.newsecurityapp-dns-timeout-helper {
-  line-height: 30px;
-  margin-left: 10px;
-}
+@media only screen and (min-width: 1024px) {
+  .newsecurityapp-buttoncontainer .button-container {
+    position: relative;
+    max-height: 0px;
+  }
 
-.newsecurityapp-dns-timeout-helper {
-  position: relative;
-  top: 5px;
+  .newsecurityapp-save-tooltip {
+    position: relative;
+    top: 30px;
+  }
 }

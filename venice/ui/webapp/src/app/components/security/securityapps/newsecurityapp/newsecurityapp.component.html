@@ -1,7 +1,7 @@
 <div fxFlex="auto" fxLayout="column" class=newsecurityapp-container>
   <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
   <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center">
-    <div fxFlex="none" fxLayout="row" fxLayoutAlign="center" class="new-network-content">
+    <div fxFlex="none" fxLayout="row" fxLayoutAlign="center">
       <ng-container *ngTemplateOutlet="newSecurityAppContent"></ng-container>
     </div>
   </div>
@@ -9,11 +9,12 @@
 <ng-template #inlineButtons>
   <div *ngIf="isInline" class="newsecurityapp-buttoncontainer" fxFlex="nogrow" fxLayout="row"
        fxLayoutAlign="end start">
-    <div fxFlex="nogrow">
+    <div fxFlex="nogrow" class="button-container" [matTooltip]="getTooltip()"
+         matTooltipClass="newsecurityapp-save-tooltip">
       <span (click)="savePolicy()" class="global-button-primary newsecurityapp-save"
             [ngClass]="isFormValid() ? '' : 'global-button-disabled'">SAVE</span>
     </div>
-    <div fxFlex="nogrow">
+    <div fxFlex="nogrow" class="button-container" [matTooltip]="getTooltip()">
       <span (click)="cancelObject()"
             class="global-button-neutral newsecurityapp-cancel">CANCEL</span>
     </div>
@@ -21,25 +22,22 @@
 </ng-template>
 
 <ng-template #newSecurityAppContent>
-  <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1400px' : '1300px'"
-       fxLayoutAlign="start stretch"
+  <div fxFlex fxLayout="row" fxLayoutAlign="start stretch"
        class="newsecurityapp-content" [formGroup]="newObject.$formGroup">
     <div fxFlex fxLayout="column">
-      <div fxFlex="nogrow" fxLayout="row" formGroupName="meta">
-        <div fxFlex="nogrow" class="newsecurityapp-namefield">Name:
-        </div>
-        <div fxFlex="15px">
-        </div>
-        <input fxFlex="300px" formControlName="name" appErrorTooltip spellcheck="false" type="text"
-               placeholder="Unique App Name..." pInputText
-               style="height: 30px !important; margin-top:5px !important;">
-        <div *ngIf="isInline"></div>
-
+      <div fxFlex="none" fxLayout="row" formGroupName="meta">
+        <span [ngClass]="{
+          'newsecurityapp-input-box': true, 'newsecurityapp-name': true,
+          'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+        }">
+          <input formControlName="name" appFloatLabel="Unique App Name"
+                 appErrorTooltip spellcheck="false" type="text" pInputText>
+        </span>
       </div>
-      <div fxFlex="30px" fxLayout="row" class="newsecurityapp-spacing" fxLayoutAlign="start center">
-        <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
-                         fxLayoutGap="20px"
-                         class="newsecurityapp-format" [(ngModel)]="pickedOption"
+      <div fxFlex="15px"></div>
+      <div fxFlex="none" fxLayout="row">
+        <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="space-between center"
+                         class="newsecurityapp-radios" [(ngModel)]="pickedOption"
                          [ngModelOptions]="{standalone: true}">
           <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true"
                             *ngFor="let option of secOptions"
@@ -48,32 +46,25 @@
           </mat-radio-button>
         </mat-radio-group>
       </div>
-
-      <div fxFlex="7.5px"></div>
-      <div fxFlex="10px"></div>
       <div fxFlex="nogrow">
         <ng-container [ngSwitch]="pickedOption">
           <ng-container *ngSwitchCase="securityOptions.PROTOCOLSANDPORTS ">
-            <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
+            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
               <ng-container *ngTemplateOutlet="protoandportsTemplate"></ng-container>
             </div>
           </ng-container>
           <ng-container *ngSwitchCase="securityOptions.ALGONLY ">
-            <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
+            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
               <ng-container *ngTemplateOutlet="algOnlyTemplate"></ng-container>
             </div>
           </ng-container>
           <ng-container *ngSwitchCase="securityOptions.BOTH">
-            <div fxFlex fxLayout="row">
-              <div fxFlex fxLayout="row" fxLayoutAlign="center">
+            <div fxFlex fxLayout="row wrap">
+              <div fxFlex fxLayout="row">
                 <ng-container *ngTemplateOutlet="algOnlyTemplate"></ng-container>
               </div>
-              <div fxFlex="15px"></div>
-              <div fxLayout="column" fxLayoutAlign="center center ">
-                <div fxFlex="75%" class="newsecurityapp-divider"></div>
-              </div>
-              <div fxFlex="15px"></div>
-              <div fxFlex fxLayout="column" fxLayoutAlign="start start">
+              <div fxFlex="20px"></div>
+              <div fxFlex fxLayout="column">
                 <ng-container *ngTemplateOutlet="protoandportsTemplate"></ng-container>
               </div>
             </div>
@@ -86,242 +77,205 @@
 </ng-template>
 
 <ng-template #protoandportsTemplate>
-  <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start center" [@slideInOut]
-       *ngFor="let target of protoandports; let index = index; let first = first">
-    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
-         style="margin-bottom: 15px; padding-top: 5px;"
-         [formGroup]="securityForm.get(['spec','proto-ports',index])">
-      <div fxFlex="10px"></div>
-      <div fxFlex fxLayout="row">
-        <span>Protocols:</span>
-      </div>
-      <div fxFlex="20px"></div>
-      <div fxFlex="150px" fxLayout="row">
-        <input class=newsecurityapp-input fxFlex="nogrow" spellcheck="false" placeholder="Enter ..."
-               pInputText
-               appErrorTooltip formControlName="protocol">
-      </div>
-      <div fxFlex="30px"></div>
-      <div fxFlex fxLayout="row">
-        <div
-             [ngClass]="{'requiredLabel': isPortRequired(securityForm.get(['spec','proto-ports',index]))}">
-          Ports:</div>
-      </div>
-      <div fxFlex="20px"></div>
-      <div fxFlex="150px" fxLayout="row">
-        <input class="newsecurityapp-input" fxFlex="nogrow" spellcheck="false"
-               placeholder="Enter ..." pInputText
-               appErrorTooltip formControlName="ports">
-      </div>
-      <div fxFlex="nogrow" fxLayout="row">
-        <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
-          <div fxFlex="55px" fxLayout="row" fxLayoutAlign="start end"
-               class="newsecurityapp-fieldtitle newsecurityapp-and">
-            <span fxFlex="nogrow" (click)="addProtoTarget()">+ ADD</span>
-            <mat-icon fxFlex="nogrow" [style.color]="'#767676'" [style.cursor]="'pointer'"
-                      *ngIf="protoandports.length > 1" (click)="removeProtoTarget(index)">delete
-            </mat-icon>
-          </div>
+  <fieldset class="newsecurityapp-protocolsandports">
+    <legend>Protocols and Ports</legend>
+    <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
+         *ngFor="let target of protoandports; let index = index; let first = first">
+      <div fxFlex="nogrow" fxLayout="row" style="margin-bottom: 15px;"
+           [formGroup]="securityForm.get(['spec','proto-ports',index])">
+        <div fxFlex="10px"></div>
+        <div fxFlex="none" [ngClass]="{
+          'newsecurityapp-input-box': true, 'newsecurityapp-prot-box': true,
+          'requiredField': isFieldEmpty(securityForm.get(['spec','proto-ports',index, 'protocol']))
+        }">
+          <input formControlName="protocol" appFloatLabel="Protocols"
+                 appErrorTooltip spellcheck="false" type="text" pInputText>
+        </div>
+        <div fxFlex="20px"></div>
+        <div fxFlex="none" [ngClass]="{
+          'newsecurityapp-input-box': true, 'newsecurityapp-prot-box': true,
+          'requiredField': isPortRequired(securityForm.get(['spec','proto-ports',index]))
+        }">
+          <input formControlName="ports" appFloatLabel="Ports"
+                 appErrorTooltip spellcheck="false" type="text" pInputText>
+        </div>
+        <div fxLayout="row" fxFlex="nogrow" fxLayoutAlign="start end"
+             class="newsecurityapp-fieldtitle newsecurityapp-and">
+          <span fxFlex="nogrow" (click)="addProtoTarget()">+ ADD</span>
+          <mat-icon fxFlex="nogrow" *ngIf="protoandports.length > 1"
+                    class="newsecurityapp-del" (click)="removeProtoTarget(index)">delete
+          </mat-icon>
         </div>
       </div>
-      <div fxFlex="10px"></div>
-
     </div>
-  </div>
+  </fieldset>
 </ng-template>
 
 <ng-template #algOnlyTemplate>
-  <div fxFlex="auto" fxLayout="column" fxLayoutAlign="start start"
-       [formGroup]="securityForm.get(['spec','alg'])"
-       style="margin-left: 10px;">
-    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start" style="padding: 10px 0px;">
-      <div fxFlex class="newsecurityapp-app-type">ALG Type:</div>
-      <div fxFlex="15px"></div>
-      <p-dropdown fxFlex="200px" [options]="algOptions" (onChange)="onTypeChange($event)"
-                  appendTo="body"
-                  formControlName="type"></p-dropdown>
-    </div>
-    <div fxFlex="20px"></div>
-    <div fxFlex *ngIf="selectedType != null" fxLayout="row" style="margin-bottom: 10px;">
-      <ng-container [ngSwitch]="selectedType">
-        <ng-container *ngSwitchCase="algEnumOptions.icmp" [formGroupName]="'icmp'">
-          <div fxFlex fxLayout="row">
-            <div fxFlex>
-              <div class="newsecurityapp-text-margin">Type:</div>
-              <div fxFlex="20px"></div>
-              <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-                     type="number" min="0"
-                     max="255" placeholder="Enter .." spellcheck="false" appErrorTooltip
-                     formControlName="type" pInputText
-                     style="margin-left:5px;">
+  <fieldset class="newsecurityapp-alg">
+    <legend>ALG</legend>
+    <div fxFlex="nogrow" fxLayout="column" [@slideInOut] fxLayoutAlign="start start"
+         [formGroup]="securityForm.get(['spec','alg'])">
+      <div fxLayout="row">
+        <div fxFlex="10px"></div>
+        <div fxFlex="none" fxLayout="row" class="newsecurityapp-input-box newsecurityapp-alg-type">
+          <p-dropdown appFloatLabel="Type" appendTo="body" [options]="algOptions"
+                      (onChange)="onTypeChange($event)" formControlName="type">
+          </p-dropdown>
+        </div>
+      </div>
+      <div fxFlex *ngIf="selectedType != null" fxLayout="row">
+        <ng-container [ngSwitch]="selectedType">
+          <ng-container *ngSwitchCase="algEnumOptions.icmp" [formGroupName]="'icmp'">
+            <div fxLayout="row" [@slideInOut] class="newsecurityapp-alg-content">
+              <div fxFlex="none" class="newsecurityapp-input-box newsecurityapp-alg-icmp-box">
+                <input formControlName="type" appFloatLabel="ICMP Type" min="0" max="255"
+                       type="number" appErrorTooltip spellcheck="false" pInputText>
+              </div>
+              <div fxFlex="50px"></div>
+              <div fxFlex="none" class="newsecurityapp-input-box newsecurityapp-alg-icmp-box">
+                <input formControlName="code" appFloatLabel="ICMP Code" min="0" max="18"
+                       type="number" appErrorTooltip spellcheck="false" pInputText>
+              </div>
             </div>
-            <div fxFlex="50px"></div>
-            <div fxFlex>
-              <div class="newsecurityapp-text-margin">Code:</div>
-              <div fxFlex="20px"></div>
-              <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-                     type="number" min="0"
-                     max="18" placeholder="Enter..." spellcheck="false" appErrorTooltip pInputText
-                     formControlName="code">
-            </div>
-          </div>
-
-        </ng-container>
-        <ng-container *ngSwitchCase="algEnumOptions.dns" [formGroupName]="'dns'">
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="nogrow" fxLayout="row">
-              <div fxFlex="auto" fxLayout="row wrap">
-                <mat-slide-toggle fxFlex="180px" [checked]="false"
+          </ng-container>
+          <ng-container *ngSwitchCase="algEnumOptions.dns" [formGroupName]="'dns'">
+            <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start start"
+                 [@slideInOut] class="newsecurityapp-alg-content">
+              <div fxFlex="none" fxLayout="column">
+                <mat-slide-toggle [checked]="false"
                                   formControlName="drop-multi-question-packets"
                                   class="newsecurityapp-toggle-color">
                   <div [style.word-wrap]="'break-all'" class="newsecurityapp-toggle-text">Drop
-                    multi-question
-                    packets</div>
+                    multi-question packets</div>
                 </mat-slide-toggle>
-              </div>
-              <div fxFlex="auto" fxLayout="row wrap">
-                <mat-slide-toggle fxFlex="180px" [checked]="false"
+                <mat-slide-toggle [checked]="false"
                                   formControlName="drop-large-domain-name-packets"
                                   class="newsecurityapp-toggle-color">
                   <div [style.word-wrap]="'break-all'" class="newsecurityapp-toggle-text"> Drop
-                    large domain
-                    name packets</div>
+                    large domain name packets</div>
                 </mat-slide-toggle>
-              </div>
-              <div fxFlex="auto" fxLayout="row wrap">
-                <mat-slide-toggle fxFlex="180px" [checked]="false"
+                <mat-slide-toggle [checked]="false"
                                   formControlName="drop-long-label-packets"
                                   class="newsecurityapp-toggle-color">
                   <div [style.word-wrap]="'break-all'" class="newsecurityapp-toggle-text"> Drop long
-                    label
-                    packets</div>
+                    label packets</div>
                 </mat-slide-toggle>
               </div>
-            </div>
-            <div fxFlex="30px"></div>
-            <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
-
-              <div class="newsecurityapp-text-margin newsecurityapp-message-length">Max Message
-                Length: </div>
-              <input class="newsecurityapp-tinywide-input newsecurityapp-small-input"
-                     fxFlex="nogrow" appErrorTooltip
-                     spellcheck="false" placeholder="Enter length" type="number"
-                     formControlName="max-message-length"
-                     pInputText>
-              <div fxFlex="30px"></div>
-              <div class="newsecurityapp-text-margin newsecurityapp-message-length">Max question
-                response timeout:
+              <div fxFlex="5px"></div>
+              <div fxFlex="none" fxLayout="row" fxLayoutAlign="start start">
+                <div fxFlex="none" [ngClass]="{
+                  'newsecurityapp-input-box': true,
+                  'newsecurityapp-alg-dns-box': true
+                }">
+                  <input formControlName="max-message-length" appFloatLabel="Max Message Length"
+                         type="number" appErrorTooltip spellcheck="false" pInputText min="1"
+                         max="8129">
+                </div>
+                <div fxFlex="50px"></div>
+                <div fxFlex="none" [ngClass]="{
+                  'newsecurityapp-input-box': true,
+                  'newsecurityapp-alg-dns-box': true,
+                  'requiredField': isFieldEmpty(newObject.$formGroup.get(['spec','alg','dns','query-response-timeout']))
+                }">
+                  <input formControlName="query-response-timeout"
+                         appFloatLabel="Max Response Timeout"
+                         type="text" [appErrorTooltip]="dnsTimeoutTooltip" spellcheck="false"
+                         pInputText>
+                </div>
               </div>
-              <input class="newsecurityapp-tinywide-input newsecurityapp-small-input"
-                     fxFlex="nogrow" appErrorTooltip
-                     spellcheck="false" placeholder="Enter length" type="text"
-                     formControlName="query-response-timeout"
-                     pInputText>
-              <span class="newsecurityapp-dns-timeout-helper">(Example: 1h5m2s, 100ns...)</span>
-
             </div>
-          </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="algEnumOptions.ftp" [formGroupName]="'ftp'">
+            <div fxLayout="row" [@slideInOut] class="newsecurityapp-alg-content">
+              <mat-slide-toggle [checked]=false formControlName="allow-mismatch-ip-address"
+                                class="newsecurityapp-toggle-color">
+                <div class="newsecurityapp-toggle-text">Allow Mismatched IP address?</div>
+              </mat-slide-toggle>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="algEnumOptions.sunrpc" [formGroupName]="'sunrpc'">
+            <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
+              <ng-container *ngTemplateOutlet="SunRPCTemplate"></ng-container>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="algEnumOptions.msrpc" [formGroupName]="'msrpc'">
+            <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
+              <ng-container *ngTemplateOutlet="MSRPCTemplate"></ng-container>
+            </div>
+          </ng-container>
         </ng-container>
-        <ng-container *ngSwitchCase="algEnumOptions.ftp" [formGroupName]="'ftp'">
-          <div fxFlex="auto" fxLayout="row">
-            <mat-slide-toggle [checked]=false formControlName="allow-mismatch-ip-address"
-                              class="newsecurityapp-toggle-color">
-              <div class="newsecurityapp-toggle-text">Allow Mismatched IP address?</div>
-            </mat-slide-toggle>
-          </div>
-        </ng-container>
-        <ng-container *ngSwitchCase="algEnumOptions.sunrpc" [formGroupName]="'sunrpc'">
-          <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
-            <ng-container *ngTemplateOutlet="SunRPCTemplate"></ng-container>
-          </div>
-        </ng-container>
-        <ng-container *ngSwitchCase="algEnumOptions.msrpc" [formGroupName]="'msrpc'">
-          <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
-            <ng-container *ngTemplateOutlet="MSRPCTemplate"></ng-container>
-          </div>
-        </ng-container>
-      </ng-container>
+      </div>
+      <div fxFlex="10px"></div>
     </div>
-  </div>
+  </fieldset>
 </ng-template>
 
 <ng-template #SunRPCTemplate>
-  <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start center" [@slideInOut]
+  <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start center"
+       [@slideInOut] class="newsecurityapp-alg-content"
        *ngFor="let sunrpctarget of sunRPCTargets; let index = index;let first = first">
     <div fxFlex="nogrow" fxLayout="row " fxLayoutAlign="start center"
-         [formGroup]="securityForm.get(['spec','alg','sunrpc',index])" style="margin-bottom: 15px;">
-      <div fxFlex="70px" fxLayout="row">
-        <span>Program ID:</span>
+         [formGroup]="securityForm.get(['spec','alg','sunrpc',index])" style="margin-bottom: 5px;">
+      <div fxFlex="none" [ngClass]="{
+        'newsecurityapp-input-box': true,
+        'newsecurityapp-alg-ftp-box': true,
+        'requiredField': isFieldEmpty(newObject.$formGroup.get(['spec','alg','sunrpc',index,'program-id']))
+      }">
+        <input formControlName="program-id" appFloatLabel="Program ID"
+               type="text" appErrorTooltip spellcheck="false" pInputText>
       </div>
       <div fxFlex="15px"></div>
-      <div fxFlex="150px" fxLayout="row">
-        <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-               spellcheck="false" type="text"
-               pInputText placeholder="Enter..." formControlName="program-id">
+      <div fxFlex="none" [ngClass]="{
+        'newsecurityapp-input-box': true,
+        'newsecurityapp-alg-ftp-box': true,
+        'requiredField': isFieldEmpty(newObject.$formGroup.get(['spec','alg','sunrpc',index,'timeout']))
+      }">
+        <input formControlName="timeout" appFloatLabel="Timeout"
+               type="text" [appErrorTooltip]="ftpTimeoutTooltip" spellcheck="false" pInputText>
       </div>
-      <div fxFlex="20px"></div>
-      <div class="newsecurityapp-programs" fxFlex="40px" fxLayout="row">
-        <span>Timeout:</span>
+      <div fxLayout="row" fxLayoutAlign="start end"
+           class="newsecurityapp-fieldtitle newsecurityapp-and">
+        <span fxFlex="nogrow" (click)="addSunRPCTarget()">+ ADD</span>
+        <mat-icon fxFlex="nogrow" *ngIf="sunRPCTargets.length > 1"
+                  class="newsecurityapp-del" (click)="removeSunRPCTarget(index)">delete
+        </mat-icon>
       </div>
-      <div fxFlex="10px"></div>
-      <div fxFlex="400px">
-        <input class="newsecurityapp-input" fxFlex="nogrow" appErrorTooltip spellcheck="false"
-               type="text" pInputText
-               formControlName="timeout" placeholder="Enter...">
-        <span class="newsecurityapp-timeout-helper">(Example: 1h5m2s, 100ns...)</span>
-      </div>
-      <div fxFlex="nogrow" fxLayout="row">
-        <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
-          <div fxFlex="55px" fxLayout="row" fxLayoutAlign="start end"
-               class="newsecurityapp-fieldtitle newsecurityapp-and">
-            <span fxFlex="nogrow" (click)="addSunRPCTarget()">+ ADD</span>
-            <mat-icon fxFlex="nogrow" [style.color]="'#767676'" *ngIf="sunRPCTargets.length > 1"
-                      (click)="removeSunRPCTarget(index)">delete</mat-icon>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </ng-template>
 
 <!-- very similar to SunRpc template-->
 <ng-template #MSRPCTemplate>
-  <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start center" [@slideInOut]
+  <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="start center"
+       [@slideInOut] class="newsecurityapp-alg-content"
        *ngFor="let msrpctarget of msRPCTargets; let index = index; let first = first">
     <div fxFlex="nogrow" fxLayout="row " fxLayoutAlign="start center"
-         [formGroup]="securityForm.get(['spec','alg','msrpc',index])" style="margin-bottom: 15px;">
-      <div fxFlex="70px" fxLayout="row">
-        <span>Program UUID:</span>
+         [formGroup]="securityForm.get(['spec','alg','msrpc',index])" style="margin-bottom: 5px;">
+      <div fxFlex="none" [ngClass]="{
+        'newsecurityapp-input-box': true,
+        'newsecurityapp-alg-ftp-box': true,
+        'requiredField': isFieldEmpty(newObject.$formGroup.get(['spec','alg','msrpc',index,'program-uuid']))
+      }">
+        <input formControlName="program-uuid" appFloatLabel="Program UUID"
+               type="text" appErrorTooltip spellcheck="false" pInputText>
       </div>
       <div fxFlex="15px"></div>
-      <div fxFlex="150px" fxLayout="row">
-        <input class="newsecurityapp-input newsecurityapp-small-input" fxFlex="nogrow"
-               spellcheck="false" type="text"
-               pInputText placeholder="Enter..." formControlName="program-uuid">
+      <div fxFlex="none" [ngClass]="{
+        'newsecurityapp-input-box': true,
+        'newsecurityapp-alg-ftp-box': true,
+        'requiredField': isFieldEmpty(newObject.$formGroup.get(['spec','alg','msrpc',index,'timeout']))
+      }">
+        <input formControlName="timeout" appFloatLabel="Timeout"
+               type="text" [appErrorTooltip]="ftpTimeoutTooltip" spellcheck="false" pInputText>
       </div>
-      <div fxFlex="20px"></div>
-      <div class="newsecurityapp-programs" fxFlex="40px" fxLayout="row">
-        <span>Timeout:</span>
+      <div fxLayout="row" fxLayoutAlign="start end"
+           class="newsecurityapp-fieldtitle newsecurityapp-and">
+        <span fxFlex="nogrow" (click)="addMSRPCTarget()">+ ADD</span>
+        <mat-icon fxFlex="nogrow" *ngIf="msRPCTargets.length > 1"
+                  (click)="removeMSRPCTarget(index)">delete
+        </mat-icon>
       </div>
-      <div fxFlex="10px"></div>
-      <div fxFlex="400px" fxLayout="row">
-        <input class="newsecurityapp-input" fxFlex="nogrow" spellcheck="false" type="text"
-               pInputText
-               placeholder="Enter..." appErrorTooltip formControlName="timeout">
-        <span class="newsecurityapp-timeout-helper">(Example: 1h5m2s, 100ns...)</span>
-      </div>
-      <div fxFlex="nogrow" fxLayout="row">
-        <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
-          <div fxFlex="55px" fxLayout="row" fxLayoutAlign="start end"
-               class="newsecurityapp-fieldtitle newsecurityapp-and">
-            <span fxFlex="nogrow" (click)="addMSRPCTarget()">+ ADD</span>
-            <mat-icon fxFlex="nogrow" [style.color]="'#767676'" *ngIf="msRPCTargets.length > 1"
-                      (click)="removeMSRPCTarget(index)">delete</mat-icon>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </ng-template>
