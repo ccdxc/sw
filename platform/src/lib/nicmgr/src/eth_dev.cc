@@ -200,18 +200,174 @@ Eth::PortPbStatsMappingInit(const struct eth_devspec *spec, PdClient *pd)
                  port_pb_stats_addr, port_pb_stats_size);
 }
 
-Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P)
-{
-    sdk_ret_t ret;
-    int err = 0;
-    Eth::dev_api = dev_api;
-    Eth::spec = dev_info->eth_spec;
-    Eth::pd = pd_client;
-    dev_resources = *(dev_info->eth_res);
-
+// constructor used for normal boot
+Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P) {
+    this->dev_api = dev_api;
+    this->spec = (struct eth_devspec *)dev_spec;
+    this->pd = pd_client;
     this->loop = loop;
-    this->skip_hwinit = pd->is_dev_hwinit_done(spec->name.c_str());
+    this->active_lif_set.clear();
+    this->host_port_info_addr = 0;
+    this->host_port_mac_stats_addr = 0;
+    this->host_port_pb_stats_addr = 0;
+    this->host_port_status_addr = 0;
+    this->host_port_config_addr = 0;
+    NIC_LOG_DEBUG("{}: eth device initializing", spec->name);
+}
+
+// constructor used in upgrade boot
+Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info,
+         PdClient *pd_client, EV_P) {
+    this->dev_api = dev_api;
+    this->spec = dev_info->eth_spec;
+    this->pd = pd_client;
+    this->dev_resources = *(dev_info->eth_res);
+    this->loop = loop;
+    this->active_lif_set.clear();
+    this->host_port_info_addr = 0;
+    this->host_port_mac_stats_addr = 0;
+    this->host_port_pb_stats_addr = 0;
+    this->host_port_status_addr = 0;
+    this->host_port_config_addr = 0;
     NIC_LOG_DEBUG("{}: Restoring eth device in Upgrade mode", spec->name);
+}
+
+void
+Eth::Init(struct eth_devspec *spec) {
+    uint64_t        lif_id;
+    eth_lif_res_t   *lif_res;
+    EthLif          *eth_lif;
+
+    // alloc lif memory
+    LifIDAlloc();
+    IntrMemAlloc();
+    EQstateMemAlloc();
+    DevcmdRegMemAlloc();
+    DevcmdRegInit();
+    CMBMemAlloc();
+
+    // Create all LIFs
+    for (uint32_t lif_index = 0; lif_index < spec->lif_count; lif_index++) {
+        lif_res = new eth_lif_res_t();
+        lif_id = dev_resources.lif_base + lif_index;
+
+        lif_res->lif_index = lif_index;
+        lif_res->lif_id = lif_id;
+        lif_res->intr_base = dev_resources.intr_base;
+        lif_res->rx_eq_base = dev_resources.rx_eq_base;
+        lif_res->tx_eq_base = dev_resources.tx_eq_base;
+        lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
+        lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
+
+        eth_lif = new EthLif(this, dev_api, spec, pd, lif_res, loop);
+        eth_lif->Init();
+
+        lif_map[lif_id] = eth_lif;
+    }
+
+    // config stats and start services
+    PortConfigMem(true);
+    PortStatusMem(true);
+    DevcmdInit();
+    DevcmdStart();
+    StatsInit();
+}
+
+void
+Eth::UpgradeGracefulInit(struct eth_devspec *spec) {
+    uint64_t        lif_id;
+    eth_lif_res_t   *lif_res;
+    EthLif          *eth_lif;
+
+    // reserve lif memory
+    LifIDReserve();
+    IntrMemReserve();
+    DevcmdRegMemReserve();
+    CMBMemReserve();
+
+    // Create all LIFs
+    for (uint32_t lif_index = 0; lif_index < spec->lif_count; lif_index++) {
+        lif_res = new eth_lif_res_t();
+        lif_id = dev_resources.lif_base + lif_index;
+
+        lif_res->lif_index = lif_index;
+        lif_res->lif_id = lif_id;
+        lif_res->intr_base = dev_resources.intr_base;
+        lif_res->rx_eq_base = dev_resources.rx_eq_base;
+        lif_res->tx_eq_base = dev_resources.tx_eq_base;
+        lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
+        lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
+
+        eth_lif = new EthLif(this, dev_api, spec, pd, lif_res, loop);
+        eth_lif->UpgradeGracefulInit();
+
+        lif_map[lif_id] = eth_lif;
+    }
+
+    // config stats and start services
+    PortConfigMem(false);
+    PortStatusMem(false);
+    DevcmdInit();
+    DevcmdStart();
+    StatsInit();
+}
+
+void
+Eth::UpgradeHitlessInit(struct eth_devspec *spec) {
+    uint64_t        lif_id;
+    eth_lif_res_t   *lif_res;
+    EthLif          *eth_lif;
+
+    // reserve lif memory
+    LifIDReserve();
+    IntrMemReserve();
+    DevcmdRegMemReserve();
+    CMBMemReserve();
+
+    // Create all LIFs
+    for (uint32_t lif_index = 0; lif_index < spec->lif_count; lif_index++) {
+        lif_res = new eth_lif_res_t();
+        lif_id = dev_resources.lif_base + lif_index;
+
+        lif_res->lif_index = lif_index;
+        lif_res->lif_id = lif_id;
+        lif_res->intr_base = dev_resources.intr_base;
+        lif_res->rx_eq_base = dev_resources.rx_eq_base;
+        lif_res->tx_eq_base = dev_resources.tx_eq_base;
+        lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
+        lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
+
+        eth_lif = new EthLif(this, dev_api, spec, pd, lif_res, loop);
+        eth_lif->UpgradeHitlessInit();
+
+        lif_map[lif_id] = eth_lif;
+    }
+
+    // config stats and start services
+    PortConfigMem(false);
+    PortStatusMem(false);
+    DevcmdInit();
+    DevcmdStart();
+    StatsInit();
+}
+
+void
+Eth::LifIDAlloc(void) {
+    sdk_ret_t ret = SDK_RET_OK;
+
+    // Allocate lifs
+    ret = pd->lm_->alloc_id(&dev_resources.lif_base, spec->lif_count);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
+        throw;
+    }
+    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, dev_resources.lif_base,
+                  spec->lif_count);
+}
+
+void
+Eth::LifIDReserve(void) {
+    sdk_ret_t ret = SDK_RET_OK;
 
     // Reserve lifs
     ret = pd->lm_->reserve_id(dev_resources.lif_base, spec->lif_count);
@@ -221,6 +377,23 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     }
     NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, dev_resources.lif_base,
                   spec->lif_count);
+}
+
+void
+Eth::IntrMemAlloc(void) {
+    // Allocate interrupts
+    dev_resources.intr_base = pd->intr_alloc(spec->intr_count);
+    if (dev_resources.intr_base < 0) {
+        NIC_LOG_ERR("{}: Failed to allocate interrupts", spec->name);
+        throw;
+    }
+    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name, dev_resources.intr_base,
+                  spec->intr_count);
+}
+
+void
+Eth::IntrMemReserve(void) {
+    int err = 0;
 
     // Reserve interrupts
     err = pd->intr_reserve(dev_resources.intr_base, spec->intr_count);
@@ -230,8 +403,25 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     }
     NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name, dev_resources.intr_base,
                   spec->intr_count);
+}
 
-    // Reserve or allocate EQ states
+void
+Eth::EQstateMemAlloc(void) {
+    // Allocate EQ states
+    if (spec->eq_count) {
+        dev_resources.rx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+        dev_resources.tx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
+        if (dev_resources.rx_eq_base == 0 || dev_resources.tx_eq_base == 0) {
+            NIC_LOG_ERR("{}: Failed to allocate eq states", spec->name);
+            throw;
+        }
+    }
+}
+
+void
+Eth::EQstateMemReserve(void) {
+    int err = 0;
+
     if (spec->eq_count) {
         if (dev_resources.rx_eq_base) {
             err = pd->nicmgr_mem_reserve(dev_resources.rx_eq_base,
@@ -265,6 +455,34 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
             }
         }
     }
+}
+
+void
+Eth::DevcmdRegMemAlloc(void) {
+    // Allocate & Init Device registers
+    dev_resources.regs_mem_addr = pd->devcmd_mem_alloc(sizeof(union ionic_dev_regs));
+    if (dev_resources.regs_mem_addr == 0) {
+        NIC_LOG_ERR("{}: Failed to allocate registers", spec->name);
+        throw;
+    }
+    devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union ionic_dev_regs, devcmd);
+
+    NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}", spec->name,
+                  dev_resources.regs_mem_addr, devcmd_mem_addr);
+
+    regs = (union ionic_dev_regs *)MEM_MAP(dev_resources.regs_mem_addr,
+                                           sizeof(union ionic_dev_regs), 0);
+    if (regs == NULL) {
+        NIC_LOG_ERR("{}: Failed to map register region", spec->name);
+        throw;
+    }
+
+    devcmd = &regs->devcmd;
+}
+
+void
+Eth::DevcmdRegMemReserve() {
+    int err = 0;
 
     // Reserve Device registers
     err = pd->devcmd_mem_reserve(dev_resources.regs_mem_addr, sizeof(union ionic_dev_regs));
@@ -284,30 +502,63 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     }
 
     devcmd = &regs->devcmd;
+}
 
-    if (!skip_hwinit) {
-        // Init Device registers
-        regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
-        regs->info.version = 0x1;
+void
+Eth::DevcmdRegInit(void) {
+    const uint32_t sta_ver =
+        READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET + CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
 
-        const uint32_t sta_ver =
-            READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET + CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
-        regs->info.asic_type = sta_ver & 0xf;
-        regs->info.asic_rev = (sta_ver >> 4) & 0xfff;
+    // Init Device registers
+    regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
+    regs->info.version = 0x1;
+
+    regs->info.asic_type = sta_ver & 0xf;
+    regs->info.asic_rev = (sta_ver >> 4) & 0xfff;
+
 #ifdef __aarch64__
-        std::string sn;
-        sdk::platform::readfrukey(BOARD_SERIALNUMBER_KEY, sn);
-        strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
+    std::string sn;
+    sdk::platform::readfrukey(BOARD_SERIALNUMBER_KEY, sn);
+    strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
 
-        boost::property_tree::ptree ver;
-        boost::property_tree::read_json(VERSION_FILE, ver);
-        strncpy0(regs->info.fw_version, ver.get<std::string>("sw.version").c_str(),
-                 sizeof(regs->info.fw_version));
+    boost::property_tree::ptree ver;
+    boost::property_tree::read_json(VERSION_FILE, ver);
+    strncpy0(regs->info.fw_version, ver.get<std::string>("sw.version").c_str(),
+             sizeof(regs->info.fw_version));
 #endif
+
 #ifndef __aarch64__
-        WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+    WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 #endif
+}
+
+void
+Eth::CMBMemAlloc(void) {
+    // Allocate CMB region
+    if (spec->barmap_size) {
+        dev_resources.cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
+        if (dev_resources.cmb_mem_size < (8 * 1024 * 1024)) {
+            NIC_LOG_ERR("{}: Invalid cmb bar size {}", spec->name, dev_resources.cmb_mem_size);
+            throw;
+        }
+
+        dev_resources.cmb_mem_addr = pd->cmb_mem_alloc(dev_resources.cmb_mem_size);
+        assert(dev_resources.cmb_mem_addr != 0);
+        // bar address must be aligned to bar size
+        assert((dev_resources.cmb_mem_size % dev_resources.cmb_mem_size) == 0);
+
+        NIC_LOG_DEBUG("{}: cmb_mem_addr {:#x}, cmb_mem_size: {}", spec->name,
+                      dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
+    } else {
+        dev_resources.cmb_mem_addr = 0;
+        dev_resources.cmb_mem_size = 0;
     }
+}
+
+
+void
+Eth::CMBMemReserve(void) {
+    int err = 0;
 
     // Allocate CMB region
     if (spec->barmap_size) {
@@ -329,238 +580,48 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
         dev_resources.cmb_mem_size = 0;
     }
 
-    // Create all LIFs
-    for (uint32_t lif_index = 0; lif_index < spec->lif_count; lif_index++) {
-        eth_lif_res_t *lif_res = new eth_lif_res_t();
-        uint64_t lif_id = dev_resources.lif_base + lif_index;
-
-        lif_res->lif_index = lif_index;
-        lif_res->lif_id = lif_id;
-        lif_res->intr_base = dev_resources.intr_base;
-        lif_res->rx_eq_base = dev_resources.rx_eq_base;
-        lif_res->tx_eq_base = dev_resources.tx_eq_base;
-        lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
-        lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
-
-        EthLif *eth_lif = new EthLif(this, dev_api, dev_info->eth_spec, pd_client, lif_res, loop);
-        lif_map[lif_id] = eth_lif;
-    }
-
-    host_port_info_addr = 0;
-    host_port_mac_stats_addr = 0;
-    host_port_pb_stats_addr = 0;
-
-    // Port Config
-    port_config_addr = pd->nicmgr_mem_alloc(sizeof(union ionic_port_config));
-    host_port_config_addr = 0;
-    port_config = (union ionic_port_config *)MEM_MAP(port_config_addr, sizeof(union ionic_port_config), 0);
-    if (port_config == NULL) {
-        NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
-        throw;
-    }
-    MEM_CLR(port_config_addr, port_config, sizeof(union ionic_port_config), skip_hwinit);
-
-    NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name, port_config_addr);
-
-    // Port Status
-    port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct ionic_port_status));
-    host_port_status_addr = 0;
-    port_status = (struct ionic_port_status *)MEM_MAP(port_status_addr, sizeof(struct ionic_port_status), 0);
-    if (port_status == NULL) {
-        NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
-        throw;
-    }
-    MEM_CLR(port_status_addr, port_status, sizeof(struct ionic_port_status), skip_hwinit);
-
-    NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
-
-    // init stats interface to host
-    PortMacStatsMappingInit(spec, pd);
-    PortPbStatsMappingInit(spec, pd);
-
-    // Init Devcmd Handling
-    ev_prepare_init(&devcmd_prepare, Eth::DevcmdPreparePoll);
-    devcmd_prepare.data = this;
-    ev_check_init(&devcmd_check, Eth::DevcmdCheckPoll);
-    devcmd_check.data = this;
-    ev_timer_init(&devcmd_timer, Eth::DevcmdTimerPoll, 0.0, 0.001);
-    devcmd_timer.data = this;
-
-    // Start Devcmd Handling
-    ev_prepare_start(EV_A_ & devcmd_prepare);
-    ev_check_start(EV_A_ & devcmd_check);
-    ev_timer_start(EV_A_ & devcmd_timer);
-
-    // Init stats timer
-    ev_timer_init(&stats_timer, &Eth::StatsUpdate, 0.0, 0.1);
-    stats_timer.data = this;
-
-    active_lif_set.clear();
 }
 
-Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
-{
-    sdk_ret_t ret = SDK_RET_OK;
-    Eth::dev_api = dev_api;
-    Eth::spec = (struct eth_devspec *)dev_spec;
-    Eth::pd = pd_client;
-
-    this->loop = loop;
-    this->skip_hwinit = pd->is_dev_hwinit_done(spec->name.c_str());
-
-    // Allocate lifs
-    ret = pd->lm_->alloc_id(&dev_resources.lif_base, spec->lif_count);
-    if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
-        throw;
-    }
-    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, dev_resources.lif_base,
-                  spec->lif_count);
-
-    // Allocate interrupts
-    dev_resources.intr_base = pd->intr_alloc(spec->intr_count);
-    if (dev_resources.intr_base < 0) {
-        NIC_LOG_ERR("{}: Failed to allocate interrupts", spec->name);
-        throw;
-    }
-    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name, dev_resources.intr_base,
-                  spec->intr_count);
-
-    // Allocate EQ states
-    if (spec->eq_count) {
-        dev_resources.rx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
-        dev_resources.tx_eq_base = pd->nicmgr_mem_alloc(spec->eq_count * sizeof(eth_eq_qstate_t));
-        if (dev_resources.rx_eq_base == 0 || dev_resources.tx_eq_base == 0) {
-            NIC_LOG_ERR("{}: Failed to allocate eq states", spec->name);
-            throw;
-        }
-    }
-
-    // Allocate & Init Device registers
-    dev_resources.regs_mem_addr = pd->devcmd_mem_alloc(sizeof(union ionic_dev_regs));
-    if (dev_resources.regs_mem_addr == 0) {
-        NIC_LOG_ERR("{}: Failed to allocate registers", spec->name);
-        throw;
-    }
-    devcmd_mem_addr = dev_resources.regs_mem_addr + offsetof(union ionic_dev_regs, devcmd);
-
-    NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}", spec->name,
-                  dev_resources.regs_mem_addr, devcmd_mem_addr);
-
-    regs = (union ionic_dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union ionic_dev_regs), 0);
-    ;
-    if (regs == NULL) {
-        NIC_LOG_ERR("{}: Failed to map register region", spec->name);
-        throw;
-    }
-
-    devcmd = &regs->devcmd;
-
-    if (!skip_hwinit) {
-        // Init Device registers
-        regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
-        regs->info.version = 0x1;
-
-        const uint32_t sta_ver =
-            READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET + CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
-        regs->info.asic_type = sta_ver & 0xf;
-        regs->info.asic_rev = (sta_ver >> 4) & 0xfff;
-#ifdef __aarch64__
-        std::string sn;
-        sdk::platform::readfrukey(BOARD_SERIALNUMBER_KEY, sn);
-        strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
-
-        boost::property_tree::ptree ver;
-        boost::property_tree::read_json(VERSION_FILE, ver);
-        strncpy0(regs->info.fw_version, ver.get<std::string>("sw.version").c_str(),
-                 sizeof(regs->info.fw_version));
-#endif
-#ifndef __aarch64__
-        WRITE_MEM(dev_resources.regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
-#endif
-    }
-
-    // Allocate CMB region
-    if (spec->barmap_size) {
-        dev_resources.cmb_mem_size = (spec->barmap_size << MEM_BARMAP_SIZE_SHIFT);
-        if (dev_resources.cmb_mem_size < (8 * 1024 * 1024)) {
-            NIC_LOG_ERR("{}: Invalid cmb bar size {}", spec->name, dev_resources.cmb_mem_size);
-            throw;
-        }
-
-        dev_resources.cmb_mem_addr = pd->cmb_mem_alloc(dev_resources.cmb_mem_size);
-        assert(dev_resources.cmb_mem_addr != 0);
-        // bar address must be aligned to bar size
-        assert((dev_resources.cmb_mem_size % dev_resources.cmb_mem_size) == 0);
-
-        NIC_LOG_DEBUG("{}: cmb_mem_addr {:#x}, cmb_mem_size: {}", spec->name,
-                      dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
-    } else {
-        dev_resources.cmb_mem_addr = 0;
-        dev_resources.cmb_mem_size = 0;
-    }
-
-    // Create all LIFs
-    for (uint32_t lif_index = 0; lif_index < spec->lif_count; lif_index++) {
-        eth_lif_res_t *lif_res = new eth_lif_res_t();
-        uint64_t lif_id = dev_resources.lif_base + lif_index;
-
-        lif_res->lif_index = lif_index;
-        lif_res->lif_id = lif_id;
-        lif_res->intr_base = dev_resources.intr_base;
-        lif_res->rx_eq_base = dev_resources.rx_eq_base;
-        lif_res->tx_eq_base = dev_resources.tx_eq_base;
-        lif_res->cmb_mem_addr = dev_resources.cmb_mem_addr;
-        lif_res->cmb_mem_size = dev_resources.cmb_mem_size;
-
-        EthLif *eth_lif = new EthLif(this, dev_api, dev_spec, pd_client, lif_res, loop);
-        lif_map[lif_id] = eth_lif;
-    }
-
-    host_port_info_addr = 0;
-    host_port_mac_stats_addr = 0;
-    host_port_pb_stats_addr = 0;
-
+void
+Eth::PortConfigMem(bool mem_clr) {
     // Port Config
     port_config_addr = pd->nicmgr_mem_alloc(sizeof(union ionic_port_config));
-    host_port_config_addr = 0;
-    port_config = (union ionic_port_config *)MEM_MAP(port_config_addr, sizeof(union ionic_port_config), 0);
+    port_config = (union ionic_port_config *)MEM_MAP(port_config_addr,
+                                             sizeof(union ionic_port_config), 0);
     if (port_config == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
         throw;
     }
-    MEM_CLR(port_config_addr, port_config, sizeof(union ionic_port_config), skip_hwinit);
 
+    if (mem_clr) {
+        MEM_CLR(port_config_addr, port_config, sizeof(union ionic_port_config));
+    }
     NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name, port_config_addr);
+}
 
+void
+Eth::PortStatusMem(bool mem_clr) {
     // Port Status
     port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct ionic_port_status));
-    host_port_status_addr = 0;
-    port_status = (struct ionic_port_status *)MEM_MAP(port_status_addr, sizeof(struct ionic_port_status), 0);
+    port_status = (struct ionic_port_status *)MEM_MAP(port_status_addr,
+                                              sizeof(struct ionic_port_status), 0);
+
     if (port_status == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
         throw;
     }
-    MEM_CLR(port_status_addr, port_status, sizeof(struct ionic_port_status), skip_hwinit);
 
+    if (mem_clr) {
+        MEM_CLR(port_status_addr, port_status, sizeof(struct ionic_port_status));
+    }
     NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name, port_status_addr);
+}
 
+void
+Eth::StatsInit(void) {
     // init stats interface to host
     PortMacStatsMappingInit(spec, pd);
     PortPbStatsMappingInit(spec, pd);
-
-    // Init Devcmd Handling
-    ev_prepare_init(&devcmd_prepare, Eth::DevcmdPreparePoll);
-    devcmd_prepare.data = this;
-    ev_check_init(&devcmd_check, Eth::DevcmdCheckPoll);
-    devcmd_check.data = this;
-    ev_timer_init(&devcmd_timer, Eth::DevcmdTimerPoll, 0.0, 0.001);
-    devcmd_timer.data = this;
-
-    // Start Devcmd Handling
-    ev_prepare_start(EV_A_ & devcmd_prepare);
-    ev_check_start(EV_A_ & devcmd_check);
-    ev_timer_start(EV_A_ & devcmd_timer);
 
     // Init stats timer
     ev_timer_init(&stats_timer, &Eth::StatsUpdate, 0.0, 0.1);
@@ -568,8 +629,33 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
 
     // initialize heartbeat as 0 when device got created.
     regs->info.fw_heartbeat = 0;
+}
 
-    active_lif_set.clear();
+void
+Eth::DevcmdInit(void) {
+    // Init Devcmd Handling
+    ev_prepare_init(&devcmd_prepare, Eth::DevcmdPreparePoll);
+    devcmd_prepare.data = this;
+    ev_check_init(&devcmd_check, Eth::DevcmdCheckPoll);
+    devcmd_check.data = this;
+    ev_timer_init(&devcmd_timer, Eth::DevcmdTimerPoll, 0.0, 0.001);
+    devcmd_timer.data = this;
+}
+
+void
+Eth::DevcmdStart(void) {
+    // Start Devcmd Handling
+    ev_prepare_start(EV_A_ & devcmd_prepare);
+    ev_check_start(EV_A_ & devcmd_check);
+    ev_timer_start(EV_A_ & devcmd_timer);
+}
+
+void
+Eth::DevcmdStop(void) {
+    // Disable devcmd polling
+    ev_prepare_stop(EV_A_ & devcmd_prepare);
+    ev_check_stop(EV_A_ & devcmd_check);
+    ev_timer_stop(EV_A_ & devcmd_timer);
 }
 
 Eth::~Eth()
@@ -580,10 +666,7 @@ Eth::~Eth()
         NIC_LOG_ERR("{}: Device not in RESET state during destroy", spec->name);
     }
 
-    // Disable devcmd polling
-    ev_prepare_stop(EV_A_ & devcmd_prepare);
-    ev_check_stop(EV_A_ & devcmd_check);
-    ev_timer_stop(EV_A_ & devcmd_timer);
+    DevcmdStop();
 }
 
 std::vector<Eth *>
@@ -595,6 +678,7 @@ Eth::factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
 
     // Create object for PF device
     dev_obj = new Eth(dev_api, spec, pd_client, EV_A);
+    dev_obj->Init(spec);
     eth_devs.push_back(dev_obj);
 
     NIC_LOG_DEBUG("{}: num_vfs: {}", spec->name, spec->pcie_total_vfs);
@@ -615,6 +699,7 @@ Eth::factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
         vf_spec->barmap_size = 0;
         // Create object for VF device
         dev_obj = new Eth(dev_api, vf_spec, pd_client, EV_A);
+        dev_obj->Init(vf_spec);
         eth_devs.push_back(dev_obj);
     }
 
@@ -714,24 +799,23 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
 }
 
 bool
-Eth::CreateLocalDevice()
-{
-    bool skip_init = skip_hwinit;
+Eth::LocalDeviceCreateSkip(void) {
+    NIC_LOG_DEBUG("{}: Skipping MNIC device creation", spec->name);
+    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_HOST_MGMT) {
+        WRITE_DEVINFO(DeviceManager::GetInstance()->CfgPath().c_str(),
+                      spec->name.c_str(), dev_resources.regs_mem_addr,
+                      dev_resources.lif_base);
+    }
+    return true;
+}
+
+bool
+Eth::LocalDeviceCreate(void) {
     struct mnet_dev_create_req_t *mnet_req = NULL;
 
 #ifndef __aarch64__
-    skip_init = true;
+    return LocalDeviceCreateSkip();
 #endif
-
-    if (skip_init) {
-        NIC_LOG_DEBUG("{}: Skipping MNIC device creation", spec->name);
-        if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_HOST_MGMT) {
-            WRITE_DEVINFO(DeviceManager::GetInstance()->CfgPath().c_str(),
-                          spec->name.c_str(), dev_resources.regs_mem_addr,
-                          dev_resources.lif_base);
-        }
-        return true;
-    }
 
     NIC_LOG_DEBUG("{}: Creating MNIC device", spec->name);
 
@@ -1938,7 +2022,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     }
     eth_lif = it->second;
 
-    ret = eth_lif->Init(req, req_data, resp, resp_data);
+    ret = eth_lif->CmdInit(req, req_data, resp, resp_data);
     if (ret != IONIC_RC_SUCCESS) {
         NIC_LOG_ERR("{}: Failed to initialize lif, status {}", spec->name, ret);
         return (ret);
@@ -2143,7 +2227,7 @@ Eth::HalEventHandler(bool status)
         if (spec->eth_type == ETH_MNIC_OOB_MGMT || spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
             spec->eth_type == ETH_MNIC_INBAND_MGMT || spec->eth_type == ETH_MNIC_CPU ||
             spec->eth_type == ETH_MNIC_LEARN || spec->eth_type == ETH_MNIC_CONTROL) {
-            if (!CreateLocalDevice()) {
+            if (!LocalDeviceCreate()) {
                 NIC_LOG_ERR("{}: Failed to create device", spec->name);
             }
         }
@@ -2156,6 +2240,27 @@ Eth::HalEventHandler(bool status)
 
     SetFwStatus(status);
 }
+
+void
+Eth::UpgradeHalEventHandler(bool status)
+{
+    if (status) {
+        // Create the MNIC devices
+        if (spec->eth_type == ETH_MNIC_OOB_MGMT || spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
+            spec->eth_type == ETH_MNIC_INBAND_MGMT || spec->eth_type == ETH_MNIC_CPU ||
+            spec->eth_type == ETH_MNIC_LEARN || spec->eth_type == ETH_MNIC_CONTROL) {
+                LocalDeviceCreateSkip();
+        }
+    }
+
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        EthLif *eth_lif = it->second;
+        eth_lif->HalEventHandler(status);
+    }
+
+    SetFwStatus(status);
+}
+
 
 void
 Eth::DelphiMountEventHandler(bool mounted)

@@ -49,7 +49,6 @@ public:
 private:
     const char *name;
     PdClient *pd;
-    bool skip_hwinit;
     bool init;
 
     uint16_t lif;

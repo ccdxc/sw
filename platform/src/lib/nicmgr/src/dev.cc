@@ -667,7 +667,9 @@ DeviceManager::RestoreDevice(enum DeviceType type, void *dev_state)
 {
     switch (type) {
     case ETH: {
-        Eth *eth_dev = new Eth(dev_api, (struct EthDevInfo *)dev_state, pd, EV_A);
+        struct EthDevInfo *dev_info = (struct EthDevInfo *)dev_state;
+        Eth *eth_dev = new Eth(dev_api, dev_info, pd, EV_A);
+        eth_dev->UpgradeGracefulInit(dev_info->eth_spec);
         eth_dev->SetType(ETH);
         devices[eth_dev->GetName()] = eth_dev;
         break;
@@ -753,6 +755,7 @@ DeviceManager::HalEventHandler(bool status)
         DevApiClientInit();
         OOBCreate();
         OOBBringup(status);
+        UplinkInit();
         SwmInit();
         DeviceCreate(status);
     }
@@ -769,6 +772,7 @@ DeviceManager::UpgradeGracefulHalEventHandler(bool status)
         DevApiClientInit();
         OOBCreate();
         OOBBringup(status);
+        UplinkInit();
         SwmInit();
         DeviceCreate(status);
     }
@@ -782,9 +786,9 @@ DeviceManager::UpgradeHitlessHalEventHandler(bool status) {
     NIC_HEADER_TRACE("Upgrade Hitless HAL Event");
 
     if (status && !init_done) {
+        init_done = true;
         DevApiClientInit();
         OOBBringup(status);
-        init_done = true;
         DeviceCreate(status);
     }
 
@@ -838,18 +842,24 @@ DeviceManager::OOBBringup(bool status) {
 }
 
 void
+DeviceManager::UplinkInit(void) {
+    uplink_t    *up;
+
+    // Create uplinks
+    for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+        up = it->second;
+        if (!up->is_oob) {
+            dev_api->uplink_create(up->id, up->port, up->is_oob);
+        }
+    }
+}
+
+void
 DeviceManager::SwmInit(void) {
     uint32_t lif_id = 0;
     sdk_ret_t ret;
 
     // Initialize SWM
-    // Create uplinks
-    for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
-        uplink_t *up = it->second;
-        if (!up->is_oob) {
-            dev_api->uplink_create(up->id, up->port, up->is_oob);
-        }
-    }
     dev_api->swm_enable();
     // Create NCSI Channels for non-oob uplinks
     int cid = 0;

@@ -128,8 +128,6 @@ public:
     uint64_t rdma_get_ah_base_addr(uint32_t lif);
 #endif
     bool is_dev_hwinit_done(const char *dev_name);
-    bool is_lif_hwinit_done(uint32_t lif_id);
-    bool is_queue_hwinit_done(uint32_t lif_id, uint32_t qtype, uint32_t qid);
 private:
     PdClient(){}
     ~PdClient(){}

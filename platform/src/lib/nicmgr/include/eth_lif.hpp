@@ -109,7 +109,11 @@ class EthLif
     EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, eth_lif_res_t *res,
            EV_P);
 
-    status_code_t Init(void *req, void *req_data, void *resp, void *resp_data);
+    void Init(void);
+    void UpgradeGracefulInit(void);
+    void UpgradeHitlessInit(void);
+
+    status_code_t CmdInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t Reset();
     bool EdmaProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
                    struct edmaq_ctx *ctx);
@@ -152,7 +156,6 @@ class EthLif
     // HAL Info
     devapi *dev_api;
     lif_info_t hal_lif_info_;
-    bool skip_hwinit;
     // LIF Info
     eth_lif_res_t *res;
     uint8_t cosA, cosB, admin_cosA, admin_cosB;
@@ -253,6 +256,12 @@ class EthLif
     bool IsLifInitialized();
 
     void Create();
+
+    void LifConfigStatusMem(bool mem_clr);
+    void LifQInit(bool mem_clr);
+    void QinfoInit(void);
+    void FwBufferInit(void);
+    void StatsEnable(void);
 
     static const char *lif_state_to_str(enum eth_lif_state state);
     static lif_state_t ConvertEthLifStateToLifState(enum eth_lif_state lif_state);

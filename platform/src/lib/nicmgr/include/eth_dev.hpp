@@ -134,12 +134,15 @@ struct EthDevInfo {
  */
 class Eth : public Device
 {
-  public:
+public:
     Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P);
     Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P);
     ~Eth();
 
     static std::vector<Eth *> factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P);
+    void Init(struct eth_devspec *spec);
+    void UpgradeGracefulInit(struct eth_devspec *spec);
+    void UpgradeHitlessInit(struct eth_devspec *spec);
 
     std::string GetName() { return spec->name; }
     EthDevType GetEthType() { return spec->eth_type; }
@@ -156,6 +159,7 @@ class Eth : public Device
     void QuiesceEventHandler(bool quiesce);
     void UpdateQStatus (bool enable);
     void HalEventHandler(bool status);
+    void UpgradeHalEventHandler(bool status);
     void DelphiMountEventHandler(bool mounted);
     status_code_t Reset();
     void PcieResetEventHandler(uint32_t rsttype);
@@ -176,7 +180,7 @@ class Eth : public Device
     static std::string eth_type_to_str(EthDevType type);
     static EthDevType str_to_eth_type(std::string const &s);
 
-  private:
+private:
     // Device Spec
     const struct eth_devspec *spec;
     // Info
@@ -185,7 +189,6 @@ class Eth : public Device
     PdClient *pd;
     // HAL Info
     devapi *dev_api;
-    bool skip_hwinit;
     // Lif map
     std::map<uint64_t, EthLif *> lif_map;
     // Active lif set
@@ -224,17 +227,37 @@ class Eth : public Device
     ev_timer stats_timer = {0};
 
     // Device Constructors
-    bool CreateLocalDevice();
-    //
+    bool LocalDeviceCreate(void);
+    bool LocalDeviceCreateSkip(void);
+
     bool LoadOprom();
 
+    // Devcmd Memory/control opertions
+    void DevcmdRegInit(void);
+    void DevcmdRegMemReserve(void);
+    void DevcmdRegMemAlloc(void);
     void DevcmdRegsReset();
+    void DevcmdPoll(void);
+    void DevcmdInit(void);
+    void DevcmdStart(void);
+    void DevcmdStop(void);
+
+    // init helper Funcitons
+    void PortStatusMem(bool mem_clr);
+    void PortConfigMem(bool mem_clr);
+    void CMBMemReserve(void);
+    void CMBMemAlloc(void);
+    void EQstateMemAlloc(void);
+    void EQstateMemReserve(void);
+    void LifIDAlloc(void);
+    void LifIDReserve(void);
+    void IntrMemAlloc(void);
+    void IntrMemReserve(void);
 
     /* Command Handlers */
     static void DevcmdPreparePoll(EV_P_ ev_prepare *w, int events);
     static void DevcmdCheckPoll(EV_P_ ev_check *w, int events);
     static void DevcmdTimerPoll(EV_P_ ev_timer *w, int events);
-    void DevcmdPoll();
 
     status_code_t _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdInit(void *req, void *req_data, void *resp, void *resp_data);
@@ -268,6 +291,7 @@ class Eth : public Device
     const char *qos_class_to_str(uint8_t qos_class);
 
     // stats
+    void StatsInit(void);
     uint64_t PortStatsGetOffset(uint32_t ifindex, sdk::types::mem_addr_t stats_hbm_base_addr);
     void PortMacStatsUpdateSize(uint32_t ifindex);
     void PortMacStatsMappingInit(const struct eth_devspec *spec, PdClient *pd);

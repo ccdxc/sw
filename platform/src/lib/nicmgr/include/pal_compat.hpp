@@ -60,10 +60,8 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #define PAL_barrier()           do {} while (0)
 #endif
 
-#define MEM_CLR(pa, va, sz, skip) { \
-    if (!skip) { \
+#define MEM_CLR(pa, va, sz) { \
         MEM_SET(pa, 0, sz, 0); \
-    } \
 }
 
 // used by dpdk driver to get the lifid and and devcmd regions
@@ -106,10 +104,8 @@ static inline void WRITE_DEVINFO(const char *cfg_path, const char *fname,
 #define READ_REG64      pal_reg_rd64
 #define WRITE_REG64     pal_reg_wr64
 
-#define MEM_CLR(pa, va, sz, skip) { \
-    if (!skip) { \
+#define MEM_CLR(pa, va, sz) { \
         MEM_SET(pa, 0, sz, 0); \
-    } \
 }
 #define WRITE_DEVINFO(cfg_path, fname, pa, lif) { }
 

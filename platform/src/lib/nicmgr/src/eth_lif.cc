@@ -100,8 +100,8 @@ EthLif::opcode_to_str(cmd_opcode_t opcode)
     }
 }
 
-EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, eth_lif_res_t *res,
-               EV_P)
+EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec,
+               PdClient *pd_client, eth_lif_res_t *res, EV_P)
 {
     EthLif::dev = dev;
     EthLif::dev_api = dev_api;
@@ -110,15 +110,20 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
     EthLif::pd = pd_client;
     EthLif::adminq = NULL;
     strncpy0(EthLif::name, spec->name.c_str(), sizeof(EthLif::name));
-
     EthLif::loop = loop;
+    EthLif::host_lif_stats_addr = 0;
+    EthLif::mtu = MTU_DEFAULT;
+    EthLif::active_q_ref_cnt = 0;
+    EthLif::notify_enabled = 0;
+    EthLif::notify_ring_head = 0;
+}
 
-    // Update Init type (Master or Slave). State syncing can be done later
-    // If the lif has been created already(from shm info), update to slave init
-    skip_hwinit = pd->is_lif_hwinit_done(res->lif_id);
-
+void
+EthLif::Init(void) {
     // Create LIF
     state = LIF_STATE_CREATING;
+
+    NIC_LOG_INFO("{}: Lif Init", spec->name);
 
     memset(&hal_lif_info_, 0, sizeof(lif_info_t));
     strncpy0(hal_lif_info_.name, name, sizeof(hal_lif_info_.name));
@@ -129,12 +134,159 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
     hal_lif_info_.tx_sched_table_offset = INVALID_INDEXER_INDEX;
     hal_lif_info_.tx_sched_num_table_entries = 0;
     MAC_UINT64_TO_ADDR(hal_lif_info_.mac, spec->mac_addr);
+
     // For debugging: by default enables rdma sniffer on all host ifs
 #if 0
     if (hal_lif_info_.type == sdk::platform::LIF_TYPE_HOST) {
         hal_lif_info_.rdma_sniff = true;
     }
 #endif
+
+    QinfoInit();
+
+#ifdef __x86_64__
+    pd->program_qstate((struct queue_info *)hal_lif_info_.queue_info, &hal_lif_info_, 0x0);
+#endif
+
+    NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}", spec->name, hal_lif_info_.lif_id,
+                 mac2str(spec->mac_addr), spec->uplink_port_num);
+
+    // Stats
+    lif_stats_addr = pd->mp_->start_addr(MEM_REGION_LIF_STATS_NAME);
+    if (lif_stats_addr == INVALID_MEM_ADDRESS || lif_stats_addr == 0) {
+        NIC_LOG_ERR("{}: Failed to locate stats region", hal_lif_info_.name);
+        throw;
+    }
+    lif_stats_addr += (hal_lif_info_.lif_id << LG2_LIF_STATS_SIZE);
+
+    NIC_LOG_INFO("{}: lif_stats_addr: {:#x}", hal_lif_info_.name, lif_stats_addr);
+
+    AddLifMetrics();
+    LifConfigStatusMem(true);
+
+    // init Queues and FW buffer memory
+    LifQInit(true);
+    FwBufferInit();
+
+    if (dev_api != NULL) {
+        Create();
+    }
+
+    StatsEnable();
+}
+
+void
+EthLif::UpgradeGracefulInit(void) {
+    // Create LIF
+    state = LIF_STATE_CREATING;
+
+    NIC_LOG_INFO("{}: Lif Upgrade graceful Init", spec->name);
+
+    memset(&hal_lif_info_, 0, sizeof(lif_info_t));
+    strncpy0(hal_lif_info_.name, name, sizeof(hal_lif_info_.name));
+    hal_lif_info_.lif_id = res->lif_id;
+    hal_lif_info_.type = (lif_type_t)Eth::ConvertDevTypeToLifType(spec->eth_type);
+    hal_lif_info_.pinned_uplink_port_num = spec->uplink_port_num;
+    hal_lif_info_.enable_rdma = spec->enable_rdma;
+    hal_lif_info_.tx_sched_table_offset = INVALID_INDEXER_INDEX;
+    hal_lif_info_.tx_sched_num_table_entries = 0;
+    MAC_UINT64_TO_ADDR(hal_lif_info_.mac, spec->mac_addr);
+
+    // For debugging: by default enables rdma sniffer on all host ifs
+#if 0
+    if (hal_lif_info_.type == sdk::platform::LIF_TYPE_HOST) {
+        hal_lif_info_.rdma_sniff = true;
+    }
+#endif
+
+    QinfoInit();
+
+#ifdef __x86_64__
+    pd->program_qstate((struct queue_info *)hal_lif_info_.queue_info, &hal_lif_info_, 0x0);
+#endif
+
+    NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}", spec->name, hal_lif_info_.lif_id,
+                 mac2str(spec->mac_addr), spec->uplink_port_num);
+
+    // Stats
+    lif_stats_addr = pd->mp_->start_addr(MEM_REGION_LIF_STATS_NAME);
+    if (lif_stats_addr == INVALID_MEM_ADDRESS || lif_stats_addr == 0) {
+        NIC_LOG_ERR("{}: Failed to locate stats region", hal_lif_info_.name);
+        throw;
+    }
+    lif_stats_addr += (hal_lif_info_.lif_id << LG2_LIF_STATS_SIZE);
+
+    NIC_LOG_INFO("{}: lif_stats_addr: {:#x}", hal_lif_info_.name, lif_stats_addr);
+
+    AddLifMetrics();
+    LifConfigStatusMem(false);
+
+    // init Queues and FW buffer memory
+    LifQInit(false);
+    FwBufferInit();
+
+    if (dev_api != NULL) {
+        Create();
+    }
+
+    StatsEnable();
+}
+
+void
+EthLif::UpgradeHitlessInit(void) {
+    // Create LIF
+    state = LIF_STATE_CREATING;
+
+    NIC_LOG_INFO("{}: Lif Upgrade Hitless Init", spec->name);
+
+    memset(&hal_lif_info_, 0, sizeof(lif_info_t));
+    strncpy0(hal_lif_info_.name, name, sizeof(hal_lif_info_.name));
+    hal_lif_info_.lif_id = res->lif_id;
+    hal_lif_info_.type = (lif_type_t)Eth::ConvertDevTypeToLifType(spec->eth_type);
+    hal_lif_info_.pinned_uplink_port_num = spec->uplink_port_num;
+    hal_lif_info_.enable_rdma = spec->enable_rdma;
+    hal_lif_info_.tx_sched_table_offset = INVALID_INDEXER_INDEX;
+    hal_lif_info_.tx_sched_num_table_entries = 0;
+    MAC_UINT64_TO_ADDR(hal_lif_info_.mac, spec->mac_addr);
+
+    // For debugging: by default enables rdma sniffer on all host ifs
+#if 0
+    if (hal_lif_info_.type == sdk::platform::LIF_TYPE_HOST) {
+        hal_lif_info_.rdma_sniff = true;
+    }
+#endif
+
+    QinfoInit();
+
+    NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}", spec->name, hal_lif_info_.lif_id,
+                 mac2str(spec->mac_addr), spec->uplink_port_num);
+
+    // Stats
+    lif_stats_addr = pd->mp_->start_addr(MEM_REGION_LIF_STATS_NAME);
+    if (lif_stats_addr == INVALID_MEM_ADDRESS || lif_stats_addr == 0) {
+        NIC_LOG_ERR("{}: Failed to locate stats region", hal_lif_info_.name);
+        throw;
+    }
+    lif_stats_addr += (hal_lif_info_.lif_id << LG2_LIF_STATS_SIZE);
+
+    NIC_LOG_INFO("{}: lif_stats_addr: {:#x}", hal_lif_info_.name, lif_stats_addr);
+
+    AddLifMetrics();
+    LifConfigStatusMem(false);
+
+    // init Queues and FW buffer memory
+    LifQInit(false);
+    FwBufferInit();
+
+    if (dev_api != NULL) {
+        Create();
+    }
+
+    StatsEnable();
+}
+
+void
+EthLif::QinfoInit(void) {
 
     memset(qinfo, 0, sizeof(qinfo));
 
@@ -187,66 +339,57 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
     };
 
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
+}
 
-#ifdef __x86_64__
-        if (!skip_hwinit) {
-            pd->program_qstate((struct queue_info *)hal_lif_info_.queue_info, &hal_lif_info_, 0x0);
-        }
-#endif
-
-    NIC_LOG_INFO("{}: created lif_id {} mac {} uplink {}", spec->name, hal_lif_info_.lif_id,
-                 mac2str(spec->mac_addr), spec->uplink_port_num);
-
-    // Stats
-    lif_stats_addr = pd->mp_->start_addr(MEM_REGION_LIF_STATS_NAME);
-    if (lif_stats_addr == INVALID_MEM_ADDRESS || lif_stats_addr == 0) {
-        NIC_LOG_ERR("{}: Failed to locate stats region", hal_lif_info_.name);
-        throw;
-    }
-    lif_stats_addr += (hal_lif_info_.lif_id << LG2_LIF_STATS_SIZE);
-    host_lif_stats_addr = 0;
-
-    NIC_LOG_INFO("{}: lif_stats_addr: {:#x}", hal_lif_info_.name, lif_stats_addr);
-
-    AddLifMetrics();
-
+void
+EthLif::LifConfigStatusMem(bool mem_clr) {
     // Lif Config
     lif_config_addr = pd->nicmgr_mem_alloc(sizeof(union ionic_lif_config));
     host_lif_config_addr = 0;
-    lif_config = (union ionic_lif_config *)MEM_MAP(lif_config_addr, sizeof(union ionic_lif_config), 0);
+    lif_config = (union ionic_lif_config *)MEM_MAP(lif_config_addr,
+                                           sizeof(union ionic_lif_config), 0);
     if (lif_config == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif config!", hal_lif_info_.name);
         throw;
     }
-    MEM_CLR(lif_config_addr, lif_config, sizeof(union ionic_lif_config), skip_hwinit);
+
+    if (mem_clr) {
+        MEM_CLR(lif_config_addr, lif_config, sizeof(union ionic_lif_config));
+    }
 
     NIC_LOG_INFO("{}: lif_config_addr {:#x}", hal_lif_info_.name, lif_config_addr);
 
     // Lif Status
     lif_status_addr = pd->nicmgr_mem_alloc(sizeof(struct ionic_lif_status));
     host_lif_status_addr = 0;
-    lif_status = (struct ionic_lif_status *)MEM_MAP(lif_status_addr, sizeof(struct ionic_lif_status), 0);
+    lif_status = (struct ionic_lif_status *)MEM_MAP(lif_status_addr,
+                                            sizeof(struct ionic_lif_status), 0);
     if (lif_status == NULL) {
         NIC_LOG_ERR("{}: Failed to map lif status!", hal_lif_info_.name);
         throw;
     }
-    MEM_CLR(lif_status_addr, lif_status, sizeof(struct ionic_lif_status), skip_hwinit);
+    if (mem_clr) {
+        MEM_CLR(lif_status_addr, lif_status, sizeof(struct ionic_lif_status));
+    }
 
     NIC_LOG_INFO("{}: lif_status_addr {:#x}", hal_lif_info_.name, lif_status_addr);
+}
 
-    mtu = MTU_DEFAULT;
-
+void
+EthLif::LifQInit(bool mem_clr) {
     // NotifyQ
-    notify_enabled = 0;
-    notify_ring_head = 0;
     notify_ring_base =
-        pd->nicmgr_mem_alloc(4096 + (sizeof(union ionic_notifyq_comp) * ETH_NOTIFYQ_RING_SIZE));
+        pd->nicmgr_mem_alloc(4096 + (sizeof(union ionic_notifyq_comp) *
+                                     ETH_NOTIFYQ_RING_SIZE));
     if (notify_ring_base == 0) {
         NIC_LOG_ERR("{}: Failed to allocate notify ring!", hal_lif_info_.name);
         throw;
     }
-    MEM_CLR(notify_ring_base, 0, 4096 + (sizeof(union ionic_notifyq_comp) * ETH_NOTIFYQ_RING_SIZE),
-            skip_hwinit);
+
+    if (mem_clr) {
+        MEM_CLR(notify_ring_base, 0, 4096 + (sizeof(union ionic_notifyq_comp) *
+                                             ETH_NOTIFYQ_RING_SIZE));
+    }
 
     NIC_LOG_INFO("{}: notify_ring_base {:#x}", hal_lif_info_.name, notify_ring_base);
 
@@ -278,6 +421,10 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
         new AdminQ(hal_lif_info_.name, pd, hal_lif_info_.lif_id, ETH_ADMINQ_REQ_QTYPE,
                    ETH_ADMINQ_REQ_QID, ETH_ADMINQ_REQ_RING_SIZE, ETH_ADMINQ_RESP_QTYPE,
                    ETH_ADMINQ_RESP_QID, ETH_ADMINQ_RESP_RING_SIZE, AdminCmdHandler, this, EV_A);
+}
+
+void
+EthLif::FwBufferInit(void) {
 
     // Firmware Update
     fw_buf_addr = pd->mp_->start_addr(MEM_REGION_FWUPDATE_NAME);
@@ -299,12 +446,10 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
         NIC_LOG_ERR("{}: Failed to map firmware buffer", hal_lif_info_.name);
         throw;
     };
+}
 
-    active_q_ref_cnt = 0;
-
-    if (dev_api != NULL) {
-        Create();
-    }
+void
+EthLif::StatsEnable(void) {
 
     // Init stats timer
     ev_timer_init(&stats_timer, &EthLif::StatsUpdate, 0.0, 0.1);
@@ -336,7 +481,7 @@ EthLif::Create()
 }
 
 status_code_t
-EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
+EthLif::CmdInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
     uint64_t addr;
@@ -365,9 +510,8 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     // first time, program txdma scheduler
     if (pre_state == LIF_STATE_CREATED) {
 #ifndef __x86_64__
-        if (!skip_hwinit) {
-            pd->program_qstate((struct queue_info *)hal_lif_info_.queue_info, &hal_lif_info_, 0x0);
-        }
+        //TODO: Revisit for Hitless Upgrade
+        pd->program_qstate((struct queue_info *)hal_lif_info_.queue_info, &hal_lif_info_, 0x0);
 #endif
         hal_lif_info_.lif_state = ConvertEthLifStateToLifState(state);
         rs = dev_api->lif_init(&hal_lif_info_);
@@ -490,16 +634,16 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     // 2. Read scheduler-table and issue Eval for all sched set RQs as part of timer callback.
     // Currently this is done only for RDMA RQs.
     if (spec->enable_rdma) {
-        // Store HBM scheduler-table start addr of RQs of this LIF. 
+        // Store HBM scheduler-table start addr of RQs of this LIF.
         // This will be used in SchedBulkEvalHandler for reading scheduler table and issue Bulk Eval
         // for all current active queues in datapath.
         // RQ qtype is 4. So find number of queues for qtypes 0-3 from eth lif spec to calculate base addr.
         // Also each row in scheduler table covers 8K queues (1KB), 1 bit per queue.
         hal_lif_info_.tx_sched_bulk_eval_start_addr = pd->mp_->start_addr(MEM_REGION_TX_SCHEDULER_NAME) +
-                                                      (hal_lif_info_.tx_sched_table_offset * 1024) + 
-                                                      ((spec->rxq_count + spec->txq_count + spec->adminq_count + 
+                                                      (hal_lif_info_.tx_sched_table_offset * 1024) +
+                                                      ((spec->rxq_count + spec->txq_count + spec->adminq_count +
                                                         spec->rdma_aq_count + spec->rdma_sq_count) / 8);
-        // Start BulkEval timer for 20ms. 
+        // Start BulkEval timer for 20ms.
         ev_timer_start(EV_A_ & sched_eval_timer);
     }
 
@@ -3141,7 +3285,7 @@ EthLif::SchedBulkEvalHandler(EV_P_ ev_timer *w, int events)
     // HBM scheduler table base-addr for RQ
     uint64_t addr = eth->hal_lif_info_.tx_sched_bulk_eval_start_addr;
     char     sched_map[1024] = {0};
-    uint32_t num_entries_per_cos = (eth->hal_lif_info_.tx_sched_num_table_entries / 
+    uint32_t num_entries_per_cos = (eth->hal_lif_info_.tx_sched_num_table_entries /
                                         eth->hal_lif_info_.tx_sched_num_coses);
 
     // Scheduler table is indexed by (lif,cos).

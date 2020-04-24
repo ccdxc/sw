@@ -209,16 +209,18 @@ private:
     void LifsReset(void);
 
     // hal event handler helper functions
-    void DevApiClientInit();
-    void OOBCreate();
+    void DevApiClientInit(void);
+    void OOBCreate(void);
     void OOBBringup(bool status);
-    void SwmInit();
+    void UplinkInit(void);
+    void SwmInit(void);
     void DeviceCreate(bool status);
+    void UpgradeDeviceCreate(bool status);
 
     // upgrade helper functions
-    bool IsDataPathQuiesced();
-    bool CheckAllDevsDisabled();
-    int SendFWDownEvent();
+    bool IsDataPathQuiesced(void);
+    bool CheckAllDevsDisabled(void);
+    int SendFWDownEvent(void);
 
     // heartbeat timer
     timespec_t hb_last;
