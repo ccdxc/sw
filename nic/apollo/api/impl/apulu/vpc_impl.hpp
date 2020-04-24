@@ -29,12 +29,6 @@ namespace impl {
 /// \ingroup PDS_VPC
 /// @{
 
-// max of 256 classes are suppored for both remote and local mapping
-// class id 255 (PDS_IMPL_RSVD_MAPPING_CLASS_ID) is reserved to indicate
-// that class id is not configured, so 0 to (PDS_IMPL_RSVD_MAPPING_CLASS_ID-1)
-// class id values are valid
-#define PDS_MAX_CLASS_ID_PER_VPC   256
-
 ///< per VPC tag -> class id info map element
 typedef struct vpc_tag_class_info_s {
     uint32_t class_id;   ///< class id allocated for this tag
@@ -47,8 +41,15 @@ typedef std::unordered_map<uint32_t, vpc_tag_class_info_t> tag2class_map_t;
 typedef std::unordered_map<uint32_t, uint32_t> class2tag_map_t;
 ///< per VPC tag, class info state along with indexers
 typedef struct vpc_impl_tag_state_s {
+    ///< tag to class id mapper for mappings
+    tag2class_map_t tag2class_map_;
+    ///< class id to tag mapper for mappings
+    class2tag_map_t class2tag_map_;
+    ///< class id indexer for local and remote mappings
+    rte_indexer *class_id_idxr_;
+#if 0
     ///< local mapping class id indexer for LOCAL_MAPPING_TAG table
-    rte_indexer *local_mapping_classs_id_idxr_;
+    rte_indexer *local_mapping_class_id_idxr_;
     ///< remote mapping tag indexer for MAPPING_TAG table
     rte_indexer *remote_mapping_class_id_idxr_;
     ///< tag to class id mapper for local mappings
@@ -62,9 +63,10 @@ typedef struct vpc_impl_tag_state_s {
 
     ///< constructor
     vpc_impl_tag_state_s() {
-        local_mapping_classs_id_idxr_ = nullptr;
+        local_mapping_class_id_idxr_ = nullptr;
         remote_mapping_class_id_idxr_ = nullptr;
     }
+#endif
 } vpc_impl_tag_state_t;
 
 /// \brief  VPC implementation

@@ -116,9 +116,6 @@ security_policy_impl::program_security_policy_(pds_policy_spec_t *spec) {
 
     PDS_TRACE_DEBUG("Processing security policy %s", spec->key.str());
     memset(&policy_params, 0, sizeof(policy_params));
-
-
-
     policy_params.policy.af = spec->rule_info->af;
     policy_params.policy.max_rules =
         (policy_params.policy.af ==IP_AF_IPV4) ?

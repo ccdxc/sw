@@ -43,8 +43,14 @@
 // reserved index in LOCAL_MAPPING_TAG and MAPPING_TAG tables
 #define PDS_IMPL_RSVD_TAG_HW_ID                0
 
+// max of 512 classes are supported for both remote and local mapping
+// class id 511 (PDS_IMPL_RSVD_MAPPING_CLASS_ID) is reserved to indicate
+// that class id is not configured, so 0 to (PDS_IMPL_RSVD_MAPPING_CLASS_ID-1)
+// class id values are valid
+#define PDS_MAX_CLASS_ID_PER_VPC               512
+
 // reserved class id to indicate that tag is not configured on a mapping
-#define PDS_IMPL_RSVD_MAPPING_CLASS_ID         255
+#define PDS_IMPL_RSVD_MAPPING_CLASS_ID         (PDS_MAX_CLASS_ID_PER_VPC - 1)
 
 // reserved DHCP relay NACL index
 // NOTE:
