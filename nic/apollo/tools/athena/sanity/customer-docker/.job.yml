@@ -20,9 +20,6 @@ targets:
   build-dependencies:
     - build-custom-athena-image
 
-cache:
-  name: "sw"
-  mount_dir: "/root/.cache"
 image:
   bind_dir: "/sw"
   work_dir: "/sw/nic"

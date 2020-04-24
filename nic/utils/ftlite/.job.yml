@@ -33,9 +33,6 @@ targets:
     build-dependencies:
     - build-artemis-x86
 
-cache:
-  name: "sw"
-  mount_dir: "/root/.cache"
 image:
   bind_dir: "/sw"
   work_dir: "/sw/nic"
