@@ -113,7 +113,7 @@ header_type scratch_metadata_t {
         flag                : 1;
         ipv4_src            : 32;
         flow_hash           : 11;
-        flow_hint           : 19;
+        flow_hint           : 20;
         dnat_hash           : 18;
         dnat_hint           : 12;
         class_id            : 8;

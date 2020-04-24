@@ -33,7 +33,7 @@ flow_hash:
     // Check hash4 and hint4
     CHECK_FLOW_HASH(hash4, hint4);
     // Check hash5 and hint5
-    CHECK_FLOW_HASH(hash5, hint5);
+    //CHECK_FLOW_HASH(hash5, hint5);
     // Check for more hashes
     seq         c1, d.flow_hash_d.more_hashes, TRUE
     sne         c2, d.flow_hash_d.more_hints, r0

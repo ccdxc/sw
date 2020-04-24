@@ -5,7 +5,7 @@
 @pragma capi hwfields_access_api
 action flow_hash(idx, idx_type, pad,
                 hash1, hint1, hash2, hint2, hash3, hint3,
-                hash4, hint4, hash5, hint5,
+                hash4, hint4,
                 more_hashes, more_hints, entry_valid) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -40,11 +40,6 @@ action flow_hash(idx, idx_type, pad,
             modify_field(scratch_metadata.flow_hint, hint4);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
-        if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.flow_hash == hash5)) {
-            modify_field(scratch_metadata.flow_hint, hint5);
-            modify_field(scratch_metadata.hint_valid, TRUE);
-        }
         modify_field(scratch_metadata.flag, more_hashes);
         if ((scratch_metadata.hint_valid == FALSE) and
             (scratch_metadata.flag == TRUE)) {
@@ -73,7 +68,6 @@ action flow_hash(idx, idx_type, pad,
     modify_field(scratch_metadata.flow_hash, hash2);
     modify_field(scratch_metadata.flow_hash, hash3);
     modify_field(scratch_metadata.flow_hash, hash4);
-    modify_field(scratch_metadata.flow_hash, hash5);
 }
 
 @pragma stage 3
