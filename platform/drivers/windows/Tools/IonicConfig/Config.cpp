@@ -1,4 +1,5 @@
 #include "Config.h"
+#include "NetCfg.h"
 
 int
 _cdecl
@@ -890,10 +891,12 @@ DumpAdapterInfo(void *info_buffer, ULONG Size)
 		printf("\tLink State: %s\n", link_state_to_str(info->link_state));
 		printf("\tMtu: %d\n", info->Mtu);
 		printf("\tSpeed: %lldGbps\n", info->Speed/1000000000);
+        DisplayInterface(info->name);
 		printf("\n");
 
 		info = (struct _ADAPTER_INFO *)((char *)info + sizeof( struct _ADAPTER_INFO));
 	};
+
 
 	return count;
 }

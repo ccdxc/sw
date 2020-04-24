@@ -18,9 +18,15 @@
     <ClCompile Include="pscmd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NetCfg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NetCfg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
