@@ -86,11 +86,17 @@
 		ProtoPort
 		MatchRule
 		MirrorSession
+		InterfaceMirrorSession
 		MirrorSessionSpec
+		InterfaceMirrorSessionSpec
 		MirrorSessionStatus
+		InterfaceMirrorSessionStatus
 		MirrorSessionList
 		MirrorSessionEvent
 		MirrorSessionEventList
+		InterfaceMirrorSessionList
+		InterfaceMirrorSessionEvent
+		InterfaceMirrorSessionEventList
 		MirrorExportConfig
 		MirrorCollector
 		Namespace

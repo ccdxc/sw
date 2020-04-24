@@ -279,11 +279,10 @@ type SmNetworkInterface struct {
 // NetworkInterfaceState is a wrapper for NetworkInterface object
 type NetworkInterfaceState struct {
 	featureMgrBase
-	NetworkInterfaceState *ctkit.NetworkInterface `json:"-"` // NetworkInterface object
-	pushObject            memdb.PushObjectHandle
-	txCollectors          []string
-	rxCollectors          []string
-	mirrorSessions        []string
+	NetworkInterfaceState  *ctkit.NetworkInterface `json:"-"` // NetworkInterface object
+	pushObject             memdb.PushObjectHandle
+	netProtoMirrorSessions []string
+	mirrorSessions         []string
 }
 
 var smgrNetworkInterface *SmNetworkInterface
@@ -373,14 +372,13 @@ func convertNetworkInterfaceObject(ifcfg *NetworkInterfaceState) *netproto.Inter
 			UUID:            ifcfg.NetworkInterfaceState.UUID,
 		},
 		Spec: netproto.InterfaceSpec{
-			Type:         convertIFTypeToAgentProto(ifcfg.NetworkInterfaceState.Spec.Type),
-			AdminStatus:  ifcfg.NetworkInterfaceState.Spec.AdminStatus,
-			Speed:        ifcfg.NetworkInterfaceState.Spec.Speed,
-			MTU:          ifcfg.NetworkInterfaceState.Spec.MTU,
-			VrfName:      ifcfg.NetworkInterfaceState.Spec.AttachTenant,
-			Network:      ifcfg.NetworkInterfaceState.Spec.AttachNetwork,
-			TxCollectors: ifcfg.txCollectors,
-			RxCollectors: ifcfg.rxCollectors,
+			Type:           convertIFTypeToAgentProto(ifcfg.NetworkInterfaceState.Spec.Type),
+			AdminStatus:    ifcfg.NetworkInterfaceState.Spec.AdminStatus,
+			Speed:          ifcfg.NetworkInterfaceState.Spec.Speed,
+			MTU:            ifcfg.NetworkInterfaceState.Spec.MTU,
+			VrfName:        ifcfg.NetworkInterfaceState.Spec.AttachTenant,
+			Network:        ifcfg.NetworkInterfaceState.Spec.AttachNetwork,
+			MirrorSessions: ifcfg.mirrorSessions,
 		},
 		Status: netproto.InterfaceStatus{
 			DSC: ifcfg.NetworkInterfaceState.Status.DSC,
@@ -496,10 +494,11 @@ func (sma *SmNetworkInterface) getInterfacesMatchingSelector(selectors []*labels
 }
 
 type collectorIntState int
+type mirrorSessionIntState int
 
-type intfCollectorState struct {
-	nwIntf   *NetworkInterfaceState
-	colState map[collectorDir]map[string]collectorIntState
+type intfMirrorState struct {
+	nwIntf      *NetworkInterfaceState
+	mirrorState map[string]mirrorSessionIntState
 }
 
 const (
@@ -509,7 +508,15 @@ const (
 	collIntfStateRemoved
 )
 
+const (
+	mirrorIntfStateInitial mirrorSessionIntState = iota
+	mirrorIntfStateStatusQuo
+	mirrorIntfStateAdded
+	mirrorIntfStateRemoved
+)
+
 type collectorOp int
+type mirrorOp int
 type collectorDir int
 
 const (
@@ -518,24 +525,24 @@ const (
 )
 
 const (
+	mirrorAdd mirrorOp = iota
+	mirrorDelete
+)
+
+const (
 	collectorTxDir collectorDir = iota
 	collectorRxDir
 )
 
-func setupInitialStates(nwInterfaceStates []*NetworkInterfaceState, collectorIntfState map[string]*intfCollectorState) {
+func setupInitialStates(nwInterfaceStates []*NetworkInterfaceState, collectorIntfState map[string]*intfMirrorState) {
 	//Setup the initial state to figure out if something has changed
 	for _, nwIntf := range nwInterfaceStates {
-		intfColState := &intfCollectorState{
+		intfColState := &intfMirrorState{
 			nwIntf: nwIntf,
 		}
-		intfColState.colState = make(map[collectorDir]map[string]collectorIntState)
-		intfColState.colState[collectorTxDir] = make(map[string]collectorIntState)
-		intfColState.colState[collectorRxDir] = make(map[string]collectorIntState)
-		for _, collector := range nwIntf.txCollectors {
-			intfColState.colState[collectorTxDir][collector] = collIntfStateInitial
-		}
-		for _, collector := range nwIntf.rxCollectors {
-			intfColState.colState[collectorRxDir][collector] = collIntfStateInitial
+		intfColState.mirrorState = make(map[string]mirrorSessionIntState)
+		for _, mirror := range nwIntf.mirrorSessions {
+			intfColState.mirrorState[mirror] = mirrorIntfStateInitial
 		}
 
 		collectorIntfState[nwIntf.NetworkInterfaceState.Name] = intfColState
@@ -543,67 +550,67 @@ func setupInitialStates(nwInterfaceStates []*NetworkInterfaceState, collectorInt
 
 }
 
-func clearUnusedCollectors(intfState *intfCollectorState, dir collectorDir, collectors []string) []string {
+func clearUnusedMirrorSessions(intfState *intfMirrorState, netprotoMirrorSessions []string) []string {
 
 	done := false
 	for !done {
 		done = true
-		for i, col := range collectors {
-			if state, ok := intfState.colState[dir][col]; ok && state == collIntfStateInitial {
-				intfState.colState[dir][col] = collIntfStateRemoved
-				collectors[i] = collectors[len(collectors)-1]
-				collectors[len(collectors)-1] = ""
-				collectors = collectors[:len(collectors)-1]
+		for i, ms := range netprotoMirrorSessions {
+			if state, ok := intfState.mirrorState[ms]; ok && state == mirrorIntfStateInitial {
+				intfState.mirrorState[ms] = mirrorIntfStateRemoved
+				netprotoMirrorSessions[i] = netprotoMirrorSessions[len(netprotoMirrorSessions)-1]
+				netprotoMirrorSessions[len(netprotoMirrorSessions)-1] = ""
+				netprotoMirrorSessions = netprotoMirrorSessions[:len(netprotoMirrorSessions)-1]
 				done = false
 				break
 			}
 		}
 	}
-	return collectors
+	return netprotoMirrorSessions
 }
 
-func updateCollectors(intfState *intfCollectorState,
-	op collectorOp, dir collectorDir, intfName string, receiver objReceiver.Receiver,
-	collectors []string, opCollectors []*mirrorCollector) []string {
-	for _, newCol := range opCollectors {
-		if _, ok := intfState.colState[dir][newCol.obj.Name]; !ok {
-			if op == collectorAdd {
-				intfState.colState[dir][newCol.obj.Name] = collIntfStateAdded
-				log.Infof("Sending collector %v (dir : %v) for DSC %v Intf %v",
-					newCol.obj.Name, dir, intfState.nwIntf.NetworkInterfaceState.Status.DSC,
+func updateMirrorSession(intfState *intfMirrorState,
+	op mirrorOp, intfName string, receiver objReceiver.Receiver,
+	mirrorSessions []string, opMirrorSessions []*interfaceMirrorSession) []string {
+	for _, newMs := range opMirrorSessions {
+		if _, ok := intfState.mirrorState[newMs.obj.GetKey()]; !ok {
+			if op == mirrorAdd {
+				intfState.mirrorState[newMs.obj.GetKey()] = mirrorIntfStateAdded
+				log.Infof("Sending Interface Mirror session %v for DSC %v Intf %v",
+					newMs.obj.GetKey(), intfState.nwIntf.NetworkInterfaceState.Status.DSC,
 					intfState.nwIntf.NetworkInterfaceState.Name)
-				err := newCol.pushObj.AddObjReceivers([]objReceiver.Receiver{receiver})
+				err := newMs.pushObj.AddObjReceivers([]objReceiver.Receiver{receiver})
 				if err != nil {
 					log.Errorf("Error adding receiver %v", err)
 				}
-				collectors = append(collectors, newCol.obj.Name)
+				mirrorSessions = append(mirrorSessions, newMs.obj.GetKey())
 			}
 		} else {
-			if op == collectorDelete {
-				intfState.colState[dir][newCol.obj.Name] = collIntfStateRemoved
-				for i, col := range collectors {
-					if col == newCol.obj.Name {
-						collectors[i] = collectors[len(collectors)-1]
-						collectors[len(collectors)-1] = ""
-						collectors = collectors[:len(collectors)-1]
+			if op == mirrorDelete {
+				intfState.mirrorState[newMs.obj.GetKey()] = mirrorIntfStateRemoved
+				for i, ms := range mirrorSessions {
+					if ms == newMs.obj.GetKey() {
+						mirrorSessions[i] = mirrorSessions[len(mirrorSessions)-1]
+						mirrorSessions[len(mirrorSessions)-1] = ""
+						mirrorSessions = mirrorSessions[:len(mirrorSessions)-1]
 					}
 				}
 			} else {
 				//Make sure collector added back
-				intfState.colState[dir][newCol.obj.Name] = collIntfStateStatusQuo
+				intfState.mirrorState[newMs.obj.GetKey()] = mirrorIntfStateStatusQuo
 				found := false
-				for _, col := range collectors {
-					if col == newCol.obj.Name {
+				for _, ms := range mirrorSessions {
+					if ms == newMs.obj.GetKey() {
 						found = true
 					}
 				}
 				if !found {
-					collectors = append(collectors, newCol.obj.Name)
+					mirrorSessions = append(mirrorSessions, newMs.obj.GetKey())
 				}
 			}
 		}
 	}
-	return collectors
+	return mirrorSessions
 }
 
 func removeMirrorSession(nw *NetworkInterfaceState, session string) {
@@ -629,22 +636,11 @@ func addMirrorSession(nw *NetworkInterfaceState, session string) {
 	nw.mirrorSessions = append(nw.mirrorSessions, session)
 }
 
-func updateInterfaceRequired(intfColState *intfCollectorState) bool {
+func updateInterfaceRequired(intfColState *intfMirrorState) bool {
 
-	for _, dirColState := range intfColState.colState {
-		for _, state := range dirColState {
-			//Not changed, removed
-			if state == collIntfStateInitial {
-				//dirColState
-			}
-		}
-	}
-
-	for _, dirColState := range intfColState.colState {
-		for _, state := range dirColState {
-			if state != collIntfStateStatusQuo {
-				return true
-			}
+	for _, state := range intfColState.mirrorState {
+		if state != mirrorIntfStateStatusQuo {
+			return true
 		}
 	}
 	return false
@@ -666,7 +662,7 @@ func selectorsMatch(selectors []*labels.Selector, l labels.Set) bool {
 
 func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 
-	collectorIntfState := make(map[string]*intfCollectorState)
+	collectorIntfState := make(map[string]*intfMirrorState)
 	setupInitialStates([]*NetworkInterfaceState{nw}, collectorIntfState)
 
 	receiver, err := sma.sm.mbus.FindReceiver(nw.NetworkInterfaceState.Status.DSC)
@@ -677,29 +673,27 @@ func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 
 	intfState, _ := collectorIntfState[nw.NetworkInterfaceState.Name]
 
-	mcollectors := smgrMirrorInterface.getAllInterfaceMirrorSessionCollectors()
+	intfMirrorSessions := smgrMirrorInterface.getAllInterfaceMirrorSessions()
 
 	//Step 1 : First delete all collectors which don't match any existing mirrors
-	for _, mcol := range mcollectors {
-		if !selectorsMatch(mcol.selectors, labels.Set(nw.NetworkInterfaceState.Labels)) {
+	for _, ms := range intfMirrorSessions {
+		if !selectorsMatch(ms.selectors, labels.Set(nw.NetworkInterfaceState.Labels)) {
 			//Mirror selector does not match
-			nw.txCollectors = updateCollectors(intfState, collectorDelete, collectorTxDir, nw.NetworkInterfaceState.Name, receiver, nw.txCollectors, mcol.txCollectors)
-			nw.rxCollectors = updateCollectors(intfState, collectorDelete, collectorRxDir, nw.NetworkInterfaceState.Name, receiver, nw.rxCollectors, mcol.rxCollectors)
+			nw.netProtoMirrorSessions = updateMirrorSession(intfState, mirrorDelete, nw.NetworkInterfaceState.Name, receiver, nw.netProtoMirrorSessions, []*interfaceMirrorSession{ms.intfMirrorSession})
 			log.Infof("Removing mirror %v for DSC %v Intf %v",
-				mcol.mirrorSession, intfState.nwIntf.NetworkInterfaceState.Status.DSC, intfState.nwIntf.NetworkInterfaceState.Name)
-			removeMirrorSession(nw, mcol.mirrorSession)
+				ms.mirrorSession, intfState.nwIntf.NetworkInterfaceState.Status.DSC, intfState.nwIntf.NetworkInterfaceState.Name)
+			removeMirrorSession(nw, ms.mirrorSession)
 		}
 	}
 
 	//Step 2 : Next add collectors which match existing mirrors
-	for _, mcol := range mcollectors {
-		if selectorsMatch(mcol.selectors, labels.Set(nw.NetworkInterfaceState.Labels)) {
+	for _, ms := range intfMirrorSessions {
+		if selectorsMatch(ms.selectors, labels.Set(nw.NetworkInterfaceState.Labels)) {
 			//Mirror selector still matches
-			nw.txCollectors = updateCollectors(intfState, collectorAdd, collectorTxDir, nw.NetworkInterfaceState.Name, receiver, nw.txCollectors, mcol.txCollectors)
-			nw.rxCollectors = updateCollectors(intfState, collectorAdd, collectorRxDir, nw.NetworkInterfaceState.Name, receiver, nw.rxCollectors, mcol.rxCollectors)
+			nw.netProtoMirrorSessions = updateMirrorSession(intfState, mirrorAdd, nw.NetworkInterfaceState.Name, receiver, nw.netProtoMirrorSessions, []*interfaceMirrorSession{ms.intfMirrorSession})
 			log.Infof("Adding mirror %v for DSC %v Intf %v",
-				mcol.mirrorSession, intfState.nwIntf.NetworkInterfaceState.Status.DSC, intfState.nwIntf.NetworkInterfaceState.Name)
-			addMirrorSession(nw, mcol.mirrorSession)
+				ms.mirrorSession, intfState.nwIntf.NetworkInterfaceState.Status.DSC, intfState.nwIntf.NetworkInterfaceState.Name)
+			addMirrorSession(nw, ms.mirrorSession)
 
 		}
 	}
@@ -707,8 +701,8 @@ func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 	//Step 3 : Remove mirror sessions which are not used.
 	for _, ms := range nw.mirrorSessions {
 		found := false
-		for _, mcol := range mcollectors {
-			if mcol.mirrorSession == ms {
+		for _, curMs := range intfMirrorSessions {
+			if curMs.mirrorSession == ms {
 				found = true
 				break
 			}
@@ -721,13 +715,12 @@ func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 	}
 
 	//Step 4 : Clear all selectors which are not used by any mirrors
-	nw.txCollectors = clearUnusedCollectors(intfState, collectorTxDir, nw.txCollectors)
-	nw.rxCollectors = clearUnusedCollectors(intfState, collectorRxDir, nw.rxCollectors)
+	nw.netProtoMirrorSessions = clearUnusedMirrorSessions(intfState, nw.netProtoMirrorSessions)
 
 	if updateInterfaceRequired(intfState) {
 		//Sendupdate
-		log.Infof("Sending mirror update for DSC %v Intf %v Tx Collectors %v Rx Collectors %v",
-			nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.txCollectors, nw.rxCollectors)
+		log.Infof("Sending mirror update for DSC %v Intf %v Mirror Sessions %v",
+			nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.mirrorSessions)
 		err = nw.pushObject.UpdateObjectWithReferences(nw.NetworkInterfaceState.MakeKey(string(apiclient.GroupNetwork)),
 			convertNetworkInterfaceObject(nw), references(nw.NetworkInterfaceState))
 		if err != nil {
@@ -735,17 +728,16 @@ func (sma *SmNetworkInterface) updateMirror(nw *NetworkInterfaceState) error {
 			return err
 		}
 	} else {
-		log.Infof("No mirror update for DSC %v Intf %v Collectors %v ",
-			nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.txCollectors)
+		log.Infof("No mirror update for DSC %v Intf %v  Mirror Sessions %v ",
+			nw.NetworkInterfaceState.Status.DSC, nw.NetworkInterfaceState.Name, nw.mirrorSessions)
 	}
 
 	return nil
 }
 
-//UpdateCollectorsMatchingSelector  updates collectors matching selector
-func (sma *SmNetworkInterface) UpdateCollectorsMatchingSelector(oldSelCol *mirrorSelectorCollectors,
-	newSelCol *mirrorSelectorCollectors) error {
-
+//UpdateInterfacesMatchingSelector  updates interface mirror matching selector
+func (sma *SmNetworkInterface) UpdateInterfacesMatchingSelector(oldSelCol *interfaceMirrorSelector,
+	newSelCol *interfaceMirrorSelector) error {
 	sma.Lock()
 	defer sma.Unlock()
 	nwInterfaceStatesMap := make(map[string]*NetworkInterfaceState)
@@ -772,6 +764,7 @@ func (sma *SmNetworkInterface) UpdateCollectorsMatchingSelector(oldSelCol *mirro
 
 	}
 
+	log.Infof("Number of nw interfaces states %v", len(nwInterfaceStatesMap))
 	for _, nw := range nwInterfaceStatesMap {
 		nw.Lock()
 		sma.updateMirror(nw)

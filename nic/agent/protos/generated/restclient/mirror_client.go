@@ -11,6 +11,43 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 )
 
+// InterfaceMirrorSessionList lists all InterfaceMirrorSession objects
+func (cl *AgentClient) InterfaceMirrorSessionList() ([]netproto.InterfaceMirrorSession, error) {
+	var interfacemirrorsessionList []netproto.InterfaceMirrorSession
+
+	err := netutils.HTTPGet("http://"+cl.agentURL+"/api/mirror/interface-sessions/", &interfacemirrorsessionList)
+
+	return interfacemirrorsessionList, err
+}
+
+// InterfaceMirrorSessionPost creates InterfaceMirrorSession object
+func (cl *AgentClient) InterfaceMirrorSessionCreate(postData netproto.InterfaceMirrorSession) error {
+	var resp Response
+
+	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/mirror/interface-sessions/", &postData, &resp)
+
+	return err
+
+}
+
+// InterfaceMirrorSessionDelete deletes InterfaceMirrorSession object
+func (cl *AgentClient) InterfaceMirrorSessionDelete(deleteData netproto.InterfaceMirrorSession) error {
+	var resp Response
+
+	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/mirror/interface-sessions/default/default/testDeleteInterfaceMirrorSession", &deleteData, &resp)
+
+	return err
+}
+
+// InterfaceMirrorSessionPut updates InterfaceMirrorSession object
+func (cl *AgentClient) InterfaceMirrorSessionUpdate(putData netproto.InterfaceMirrorSession) error {
+	var resp Response
+
+	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/mirror/interface-sessions/default/default/preCreatedInterfaceMirrorSession", &putData, &resp)
+
+	return err
+}
+
 // MirrorSessionList lists all MirrorSession objects
 func (cl *AgentClient) MirrorSessionList() ([]netproto.MirrorSession, error) {
 	var mirrorsessionList []netproto.MirrorSession

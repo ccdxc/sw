@@ -617,6 +617,7 @@ func (sm *Statemgr) registerKindsWithMbus() {
 	sm.mbus.RegisterKind("NetworkSecurityPolicy")
 	sm.mbus.RegisterKind("NetworkInterface")
 	sm.mbus.RegisterKind("Collector")
+	sm.mbus.RegisterKind("InterfaceMirrorSession")
 	sm.mbus.RegisterKind("Profile")
 	sm.mbus.RegisterKind("MirrorSession")
 	sm.mbus.RegisterKind("FlowExportPolicy")

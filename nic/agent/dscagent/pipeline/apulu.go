@@ -1029,6 +1029,11 @@ func (a *ApuluAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPo
 	return
 }
 
+// HandleInterfaceMirrorSession handles CRUD Methods for MirrorSession Object
+func (i *ApuluAPI) HandleInterfaceMirrorSession(oper types.Operation, mirror netproto.InterfaceMirrorSession) (mirrors []netproto.InterfaceMirrorSession, err error) {
+	return nil, errors.New("Not implemented")
+}
+
 // HandleMirrorSession handles CRUDs for MirrorSession object
 func (a *ApuluAPI) HandleMirrorSession(oper types.Operation, mirror netproto.MirrorSession) (mirrors []netproto.MirrorSession, err error) {
 	a.Lock()

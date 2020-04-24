@@ -686,8 +686,8 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 		intf = existingInterface
 	}
 	// Perform object validations
-	collectorToIDMap := make(map[string]uint64)
-	err = validator.ValidateInterface(i.InfraAPI, intf, collectorToIDMap)
+	collectorMap := make(map[string]int)
+	err = validator.ValidateInterface(i.InfraAPI, intf, collectorMap)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -697,7 +697,7 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 	defer log.Infof("Interface: %s | Op: %s | %s", intf.GetKey(), oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
-	err = iris.HandleInterface(i.InfraAPI, i.IntfClient, oper, intf, collectorToIDMap)
+	err = iris.HandleInterface(i.InfraAPI, i.IntfClient, oper, intf, collectorMap)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -1110,6 +1110,123 @@ func (i *IrisAPI) HandleSecurityProfile(oper types.Operation, profile netproto.S
 	}
 	// Take a lock to ensure a single HAL API is active at any given point
 	err = iris.HandleSecurityProfile(i.InfraAPI, i.NspClient, i.VrfClient, oper, profile, vrf)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return
+}
+
+// HandleInterfaceMirrorSession handles CRUD Methods for MirrorSession Object
+func (i *IrisAPI) HandleInterfaceMirrorSession(oper types.Operation, mirror netproto.InterfaceMirrorSession) (mirrors []netproto.InterfaceMirrorSession, err error) {
+	i.Lock()
+	defer i.Unlock()
+
+	err = utils.ValidateMeta(oper, mirror.Kind, mirror.ObjectMeta)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Handle Get and LIST. This doesn't need any pipeline specific APIs
+	switch oper {
+	case types.Get:
+		var (
+			dat []byte
+			obj netproto.InterfaceMirrorSession
+		)
+		dat, err = i.InfraAPI.Read(mirror.Kind, mirror.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound)
+		}
+		err = obj.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err)
+		}
+		mirrors = append(mirrors, obj)
+
+		return
+	case types.List:
+		var (
+			dat [][]byte
+		)
+		dat, err = i.InfraAPI.List(mirror.Kind)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound)
+		}
+
+		for _, o := range dat {
+			var mirror netproto.InterfaceMirrorSession
+			err := proto.Unmarshal(o, &mirror)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err))
+				continue
+			}
+			mirrors = append(mirrors, mirror)
+		}
+
+		return
+	case types.Create:
+
+	case types.Update:
+		// Get to ensure that the object exists
+		var existingMirrorSession netproto.InterfaceMirrorSession
+		dat, err := i.InfraAPI.Read(mirror.Kind, mirror.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound)
+		}
+		err = existingMirrorSession.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err)
+		}
+
+		// Check for idempotency
+		if proto.Equal(&mirror.Spec, &existingMirrorSession.Spec) {
+			//log.Infof("MirrorSession: %s | Info: %s ", mirror.GetKey(), types.InfoIgnoreUpdate)
+			return nil, nil
+		}
+
+	case types.Delete:
+		var existingMirrorSession netproto.InterfaceMirrorSession
+		dat, err := i.InfraAPI.Read(mirror.Kind, mirror.GetKey())
+		if err != nil {
+			log.Infof("Controller API: %s | Err: %s", types.InfoIgnoreDelete, err)
+			return nil, nil
+		}
+		err = existingMirrorSession.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "InterfaceMirrorSession: %s | Err: %v", mirror.GetKey(), err)
+		}
+		mirror = existingMirrorSession
+	}
+	log.Infof("InterfaceMirrorSession: %s | Op: %s | %s", mirror.GetKey(), oper, types.InfoHandleObjBegin)
+	defer log.Infof("InterfaceMirrorSession: %s | Op: %s | %s", mirror.GetKey(), oper, types.InfoHandleObjEnd)
+
+	// Perform object validations
+	mirrorDestToKeys := map[string]int{}
+	for dest, keys := range iris.MirrorDestToIDMapping {
+		mirrorDestToKeys[dest] = len(keys.MirrorKeys)
+	}
+	vrf, err := validator.ValidateInterfaceMirrorSession(i.InfraAPI, mirror, oper, mirrorDestToKeys)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	if oper == types.Create || oper == types.Update {
+		if ip := utils.GetMgmtIP(iris.MgmtLink); ip == "" {
+			log.Error(errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink))
+			return nil, errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink)
+		}
+	}
+	// Take a lock to ensure a single HAL API is active at any given point
+	err = iris.HandleInterfaceMirrorSession(i.InfraAPI, i.TelemetryClient, i.IntfClient, i.EpClient, oper, mirror, vrf.Status.VrfID)
 	if err != nil {
 		log.Error(err)
 		return nil, err

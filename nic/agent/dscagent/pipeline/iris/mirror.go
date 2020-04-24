@@ -8,7 +8,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
 	commonUtils "github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -46,7 +45,7 @@ func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 		destKey := commonUtils.BuildDestKey(mirror.Spec.VrfName, dstIP)
 		// Create collector
 		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c, mirror.Spec.PacketSize)
-		if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, vrfID); err != nil {
+		if err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 			return errors.Wrapf(types.ErrCollectorCreate, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
 		}
@@ -129,7 +128,7 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 		}
 		// Try to delete collector if ref count is 0
 		col := buildCollector(mirror.Name+"-"+destKey, mirror.Spec.VrfName, dstIP, c, mirror.Spec.PacketSize)
-		if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, vrfID); err != nil {
+		if err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, vrfID); err != nil {
 			log.Error(errors.Wrapf(types.ErrCollectorDelete, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
 		}
 	}
@@ -247,21 +246,14 @@ func convertMirrorSessionKeyHandle(mirrorID uint64) *halapi.MirrorSessionKeyHand
 	}
 }
 
-func buildCollector(name, vrfName, dstIP string, mc netproto.MirrorCollector, packetSize uint32) netproto.Collector {
-	return netproto.Collector{
-		TypeMeta: api.TypeMeta{Kind: "Collector"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      name,
-		},
-		Spec: netproto.CollectorSpec{
-			VrfName:      vrfName,
-			Destination:  dstIP,
-			PacketSize:   packetSize,
-			Gateway:      mc.ExportCfg.Gateway,
-			Type:         mc.Type,
-			StripVlanHdr: mc.StripVlanHdr,
-		},
+func buildCollector(name, vrfName, dstIP string, mc netproto.MirrorCollector, packetSize uint32) Collector {
+	return Collector{
+		Name:         name,
+		VrfName:      vrfName,
+		Destination:  dstIP,
+		PacketSize:   packetSize,
+		Gateway:      mc.ExportCfg.Gateway,
+		Type:         mc.Type,
+		StripVlanHdr: mc.StripVlanHdr,
 	}
 }

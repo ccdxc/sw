@@ -14,19 +14,19 @@ import (
 type Operation int
 
 // CloudPipelineKinds captures all the objects that agent will watch from Venice
-var CloudPipelineKinds = []string{"IPAMPolicy", "App", "NetworkSecurityPolicy", "Vrf", "Network", "Interface", "Collector", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig"}
+var CloudPipelineKinds = []string{"IPAMPolicy", "App", "NetworkSecurityPolicy", "Vrf", "Network", "Interface", "InterfaceMirrorSession", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig"}
 
 // BaseNetKinds captures all the objects needed for Transparent Basenet Profile
-var BaseNetKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector"}
+var BaseNetKinds = []string{"Profile", "IPAMPolicy", "Interface", "InterfaceMirrorSession"}
 
 // FlowAwareKinds catpures all the objects needed for FlowAware Profile
-var FlowAwareKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy"}
+var FlowAwareKinds = []string{"Profile", "IPAMPolicy", "Interface", "InterfaceMirrorSession", "MirrorSession", "FlowExportPolicy"}
 
 // EnforcedKinds catpures all the objects needed for Enfroced Profile
-var EnforcedKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "SecurityProfile"}
+var EnforcedKinds = []string{"Profile", "IPAMPolicy", "Interface", "InterfaceMirrorSession", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "SecurityProfile"}
 
 // InsertionKinds captures all the objects needed for Insertion USeg Enforced Profile
-var InsertionKinds = []string{"Profile", "IPAMPolicy", "Interface", "Collector", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "Network", "Endpoint", "SecurityProfile"}
+var InsertionKinds = []string{"Profile", "IPAMPolicy", "Interface", "InterfaceMirrorSession", "MirrorSession", "FlowExportPolicy", "App", "NetworkSecurityPolicy", "Network", "Endpoint", "SecurityProfile"}
 
 // AllKinds captures all the objects that agent will watch from Venice
 var AllKinds = []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpoint", "SecurityProfile", "RouteTable", "RoutingConfig", "IPAMPolicy", "Interface"}
@@ -53,6 +53,12 @@ const (
 	AlgSIP
 	AlgSUNRPC
 	AlgTFTP
+)
+
+const (
+	MirrorDirINGRESS = 1
+	MirrorDirEGRESS  = 2
+	MirrorDirBOTH    = 3
 )
 
 // IPAddress type

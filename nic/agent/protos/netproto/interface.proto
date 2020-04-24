@@ -100,6 +100,9 @@ message InterfaceSpec {
 
     // Rx Collectors
     repeated string RxCollectors = 10;
+
+    // Mirror sessions, Tx and Rx collectors should be removed once implemented.
+    repeated string MirrorSessions = 11 [(gogoproto.jsontag) = "mirror-sessions,omitemtpy"];
 }
 
 // InterfaceHostStatus is populated for PF and VF

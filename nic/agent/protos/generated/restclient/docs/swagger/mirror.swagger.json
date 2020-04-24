@@ -16,6 +16,98 @@
     "application/json"
   ],
   "paths": {
+    "/api/mirror/interface-sessions//": {
+      "get": {
+        "summary": "List all InterfaceMirrorSession Objects",
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/netprotoInterfaceMirrorSession"
+              }
+            }
+          }
+        },
+        "tags": [
+          "InterfaceMirrorSession"
+        ]
+      },
+      "post": {
+        "summary": "Creates a InterfaceMirrorSession Object",
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/netprotoInterfaceMirrorSession"
+            }
+          }
+        ],
+        "tags": [
+          "InterfaceMirrorSession"
+        ]
+      }
+    },
+    "/api/mirror/interface-sessions//{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
+      "delete": {
+        "summary": "Deletes a InterfaceMirrorSession Object",
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "meta": {
+                  "$ref": "#/definitions/apiObjectMeta"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "InterfaceMirrorSession"
+        ]
+      }
+    },
     "/api/mirror/sessions//": {
       "get": {
         "summary": "List all MirrorSession Objects",
@@ -446,6 +538,113 @@
         }
       }
     },
+    "netprotoInterfaceMirrorSession": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoInterfaceMirrorSessionSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoInterfaceMirrorSessionStatus"
+        }
+      }
+    },
+    "netprotoInterfaceMirrorSessionEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "interface-mirror-session": {
+          "$ref": "#/definitions/netprotoInterfaceMirrorSession"
+        }
+      },
+      "description": "mirror watch event."
+    },
+    "netprotoInterfaceMirrorSessionEventList": {
+      "type": "object",
+      "properties": {
+        "InterfaceMirrorSessionEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoInterfaceMirrorSessionEvent"
+          }
+        }
+      },
+      "description": "mirror watch events batched."
+    },
+    "netprotoInterfaceMirrorSessionList": {
+      "type": "object",
+      "properties": {
+        "InterfaceMirrorSessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoInterfaceMirrorSession"
+          }
+        }
+      }
+    },
+    "netprotoInterfaceMirrorSessionSpec": {
+      "type": "object",
+      "required": [
+        "mirror-direction"
+      ],
+      "properties": {
+        "vrf-name": {
+          "type": "string"
+        },
+        "collectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoMirrorCollector"
+          },
+          "description": "Mirrored packet collectors."
+        },
+        "span-id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "packet-size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "mirror-direction": {
+          "$ref": "#/definitions/netprotoMirrorDir",
+          "enum": [
+            "both",
+            "ingress",
+            "egress"
+          ],
+          "default": "both"
+        },
+        "type": {
+          "type": "string"
+        },
+        "strip-vlan-hdr": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "netprotoInterfaceMirrorSessionStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "description": "InterfaceMirrorSessionStatus captures status."
+    },
     "netprotoMatchRule": {
       "type": "object",
       "properties": {
@@ -622,6 +821,10 @@
             "egress"
           ],
           "default": "both"
+        },
+        "span-id": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

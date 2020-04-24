@@ -3,7 +3,6 @@
 package statemgr
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -267,6 +266,11 @@ func MirrorSessionStateFromObj(obj runtime.Object) (*MirrorSessionState, error) 
 	}
 }
 
+type interfaceMirrorSession struct {
+	obj     *netproto.InterfaceMirrorSession
+	pushObj memdb.PushObjectHandle
+}
+
 // MirrorSessionState keep state of mirror session
 type MirrorSessionState struct {
 	MirrorSession *ctkit.MirrorSession `json:"-"`
@@ -275,8 +279,9 @@ type MirrorSessionState struct {
 	schTimer      *time.Timer
 	expTimer      *time.Timer
 	// Local information
-	State   monitoring.MirrorSessionState
-	deleted bool
+	State             monitoring.MirrorSessionState
+	intfMirrorSession interfaceMirrorSession
+	deleted           bool
 }
 
 // runMirrorSessionWatcher watches on a channel for changes from api server and internal events
@@ -331,17 +336,10 @@ func (smm *SmMirrorSessionInterface) FindMirrorSession(tenant, name string) (*Mi
 	return MirrorSessionStateFromObj(obj)
 }
 
-type mirrorCollector struct {
-	refCount int
-	obj      *netproto.Collector
-	pushObj  memdb.PushObjectHandle
-}
-
 //SmMirrorSessionInterface is statemanagers struct for mirror session handling
 type SmMirrorSessionInterface struct {
 	featureMgrBase
 	sm                 *Statemgr
-	collectors         map[string]*mirrorCollector
 	mirrorSessions     map[string]*MirrorSessionState
 	mirrorTimerWatcher chan MirrorTimerEvent // mirror session Timer watcher
 	numMirrorSessions  int                   // total mirror sessions created
@@ -358,7 +356,7 @@ func (smm *SmMirrorSessionInterface) CompleteRegistration() {
 	log.Infof("Got CompleteRegistration for SmMirrorSessionInterface %v", smm)
 	smm.sm.SetMirrorSessionReactor(smgrMirrorInterface)
 	//Send collectors selectively
-	smm.sm.EnableSelectivePushForKind("Collector")
+	smm.sm.EnableSelectivePushForKind("InterfaceMirrorSession")
 	go smgrMirrorInterface.runMirrorSessionWatcher()
 }
 
@@ -366,7 +364,6 @@ func initSmMirrorInterface() {
 	mgr := MustGetStatemgr()
 	smgrMirrorInterface = &SmMirrorSessionInterface{
 		sm:                 mgr,
-		collectors:         make(map[string]*mirrorCollector),
 		mirrorSessions:     make(map[string]*MirrorSessionState),
 		mirrorTimerWatcher: make(chan MirrorTimerEvent, watcherQueueLen),
 	}
@@ -381,77 +378,6 @@ func collectorKey(tenant, vrf, dest string) string {
 	return tenant + "-" + vrf + "-" + dest
 }
 
-func (smm *SmMirrorSessionInterface) findCollector(tenant, vrf, dest string) (*mirrorCollector, error) {
-
-	key := collectorKey(tenant, vrf, dest)
-	col, ok := smm.collectors[key]
-	if ok {
-		return col, nil
-	}
-
-	return nil, errors.New("Collector not found")
-}
-
-func (smm *SmMirrorSessionInterface) addCollector(tenant, vrf string, pktSize uint32, dest string, gateway string, ctype string, stripVlanHdr bool) (*mirrorCollector, error) {
-
-	key := collectorKey(tenant, vrf, dest)
-	col, ok := smm.collectors[key]
-	if ok {
-		col.refCount++
-		return col, nil
-	}
-
-	collector := &netproto.Collector{
-		TypeMeta: api.TypeMeta{Kind: "Collector"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:       tenant,
-			Namespace:    vrf,
-			Name:         key,
-			GenerationID: "1",
-		},
-		Spec: netproto.CollectorSpec{
-			Destination:  dest,
-			VrfName:      vrf,
-			Gateway:      gateway,
-			PacketSize:   pktSize,
-			Type:         ctype,
-			StripVlanHdr: stripVlanHdr,
-		},
-	}
-
-	col = &mirrorCollector{
-		obj:      collector,
-		refCount: 1,
-	}
-	smm.collectors[key] = col
-
-	refs := make(map[string]apiintf.ReferenceObj)
-	mcolPush, err := smm.sm.mbus.AddPushObject(col.obj.GetKey(), col.obj, refs, nil)
-	if err != nil {
-		log.Errorf("Error adding collector to push DB %v", err)
-	}
-	col.pushObj = mcolPush
-
-	return col, nil
-}
-
-func (smm *SmMirrorSessionInterface) deleteCollector(tenant, vrf, dest string) (*mirrorCollector, error) {
-
-	key := collectorKey(tenant, vrf, dest)
-	col, ok := smm.collectors[key]
-	if ok {
-		if col.refCount > 0 {
-			col.refCount--
-		}
-		if col.refCount == 0 {
-			delete(smm.collectors, key)
-		}
-		return col, nil
-	}
-
-	return nil, fmt.Errorf("Error finding the collector %v", key)
-}
-
 // NewMirroSessionState creates new app state object
 func NewMirroSessionState(mirror *ctkit.MirrorSession, stateMgr *SmMirrorSessionInterface) (*MirrorSessionState, error) {
 	ms := &MirrorSessionState{
@@ -463,11 +389,10 @@ func NewMirroSessionState(mirror *ctkit.MirrorSession, stateMgr *SmMirrorSession
 	return ms, nil
 }
 
-type mirrorSelectorCollectors struct {
-	selectors     []*labels.Selector
-	txCollectors  []*mirrorCollector
-	rxCollectors  []*mirrorCollector
-	mirrorSession string
+type interfaceMirrorSelector struct {
+	selectors         []*labels.Selector
+	intfMirrorSession *interfaceMirrorSession
+	mirrorSession     string
 }
 
 func (smm *SmMirrorSessionInterface) pushAddMirrorSession(mss *MirrorSessionState) error {
@@ -562,55 +487,9 @@ func (smm *SmMirrorSessionInterface) getMirrorSession(name string) (*MirrorSessi
 	return ms, nil
 }
 
-func getMirrorCollectors(ms *monitoring.MirrorSession, collectors []*mirrorCollector) *mirrorSelectorCollectors {
-	mcol := &mirrorSelectorCollectors{
-		mirrorSession: ms.Name,
-	}
+func (smm *SmMirrorSessionInterface) getAllInterfaceMirrorSessions() []*interfaceMirrorSelector {
 
-	if ms.Spec.Interfaces != nil {
-		mcol.selectors = ms.Spec.Interfaces.Selectors
-		if ms.Spec.Interfaces.Direction == monitoring.Direction_RX.String() {
-			mcol.rxCollectors = collectors
-		} else if ms.Spec.Interfaces.Direction == monitoring.Direction_TX.String() {
-			mcol.txCollectors = collectors
-		} else {
-			mcol.txCollectors = collectors
-			mcol.rxCollectors = collectors
-		}
-	} else {
-		mcol.txCollectors = collectors
-		mcol.rxCollectors = collectors
-	}
-
-	return mcol
-}
-
-func updateCollectorsSpec(ms *monitoring.MirrorSession, collectors []*mirrorCollector) {
-
-	for _, col := range ms.Spec.Collectors {
-		for _, curCol := range collectors {
-			if col.ExportCfg.Destination == curCol.obj.Spec.Destination &&
-				col.ExportCfg.Gateway == curCol.obj.Spec.Gateway {
-				if curCol.obj.Spec.PacketSize != ms.Spec.PacketSize ||
-					curCol.obj.Spec.Type != col.Type || curCol.obj.Spec.StripVlanHdr != col.StripVlanHdr {
-					curCol.obj.Spec.PacketSize = ms.Spec.PacketSize
-					curCol.obj.Spec.Type = col.Type
-					curCol.obj.Spec.StripVlanHdr = col.StripVlanHdr
-
-					curCol.pushObj.UpdateObjectWithReferences(
-						curCol.obj.GetKey(), curCol.obj, nil)
-				}
-			}
-		}
-	}
-}
-
-func (smm *SmMirrorSessionInterface) getAllInterfaceMirrorSessionCollectors() []*mirrorSelectorCollectors {
-
-	//	smm.Lock()
-	//defer smm.Unlock()
-
-	mcols := []*mirrorSelectorCollectors{}
+	intfMirrors := []*interfaceMirrorSelector{}
 	for _, ms := range smm.mirrorSessions {
 		mirror, err := MirrorSessionStateFromObj(ms.MirrorSession)
 		if err != nil {
@@ -621,23 +500,75 @@ func (smm *SmMirrorSessionInterface) getAllInterfaceMirrorSessionCollectors() []
 			continue
 		}
 
-		currentCollectors := ms.MirrorSession.Spec.GetCollectors()
-		curCollectors := []*mirrorCollector{}
-		for _, curCol := range currentCollectors {
-
-			key := collectorKey(ms.MirrorSession.Tenant,
-				ms.MirrorSession.Namespace, curCol.ExportCfg.Destination)
-			collector, ok := smm.collectors[key]
-			if ok {
-				curCollectors = append(curCollectors, collector)
-			}
-		}
-		mcol := getMirrorCollectors(&ms.MirrorSession.MirrorSession, curCollectors)
-		mcols = append(mcols, mcol)
-
+		intfMirrors = append(intfMirrors, &interfaceMirrorSelector{
+			selectors:         ms.MirrorSession.MirrorSession.Spec.Interfaces.Selectors,
+			intfMirrorSession: &ms.intfMirrorSession,
+			mirrorSession:     interfaceMirrorSessionKey(ms),
+		})
 	}
 
-	return mcols
+	return intfMirrors
+}
+
+func interfaceMirrorSessionKey(ms *MirrorSessionState) string {
+
+	return ms.intfMirrorSession.obj.GetObjectMeta().GetKey()
+}
+
+func getNetProtoDirection(dir string) netproto.MirrorDir {
+
+	switch strings.ToLower(dir) {
+	case strings.ToLower(monitoring.Direction_BOTH.String()):
+		return netproto.MirrorDir_BOTH
+	case strings.ToLower(monitoring.Direction_TX.String()):
+		return netproto.MirrorDir_EGRESS
+	case strings.ToLower(monitoring.Direction_RX.String()):
+		return netproto.MirrorDir_INGRESS
+	}
+
+	return netproto.MirrorDir_BOTH
+}
+
+func (smm *SmMirrorSessionInterface) initInterfaceMirrorSession(ms *MirrorSessionState) error {
+
+	collectors := ms.MirrorSession.Spec.GetCollectors()
+	if len(collectors) == 0 {
+		return nil
+	}
+	ms.intfMirrorSession = interfaceMirrorSession{
+		obj: &netproto.InterfaceMirrorSession{
+			ObjectMeta: ms.MirrorSession.ObjectMeta,
+			TypeMeta: api.TypeMeta{
+				Kind: "InterfaceMirrorSession",
+			},
+			Spec: netproto.InterfaceMirrorSessionSpec{
+				PacketSize: ms.MirrorSession.Spec.PacketSize,
+				VrfName:    ms.MirrorSession.Namespace,
+				SpanID:     0, //update once proto changed
+			},
+		},
+	}
+	ms.intfMirrorSession.obj.Spec.MirrorDirection = getNetProtoDirection(ms.MirrorSession.Spec.Interfaces.Direction)
+	refs := make(map[string]apiintf.ReferenceObj)
+	pobj, err := smm.sm.mbus.AddPushObject(interfaceMirrorSessionKey(ms), ms.intfMirrorSession.obj, refs, nil)
+	if err != nil {
+		log.Errorf("Error adding interface mirror session to push DB %v", err)
+		return err
+	}
+	ms.intfMirrorSession.pushObj = pobj
+	for _, collector := range collectors {
+		ms.intfMirrorSession.obj.Spec.Collectors = append(ms.intfMirrorSession.obj.Spec.Collectors,
+			netproto.MirrorCollector{
+				ExportCfg: netproto.MirrorExportConfig{
+					Destination: collector.ExportCfg.Destination,
+					Gateway:     collector.ExportCfg.Gateway,
+				},
+				StripVlanHdr: collector.StripVlanHdr,
+				Type:         collector.Type,
+			},
+		)
+	}
+	return nil
 }
 
 func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) error {
@@ -656,28 +587,19 @@ func (smm *SmMirrorSessionInterface) addInterfaceMirror(ms *MirrorSessionState) 
 		return nil
 	}
 
-	mCollectors := []*mirrorCollector{}
-	for _, collector := range collectors {
-		mcol, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, collector.ExportCfg.Destination)
-		if err != nil {
-			mcol, err = smgrMirrorInterface.addCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
-				ms.MirrorSession.Spec.PacketSize,
-				collector.ExportCfg.Destination, collector.ExportCfg.Gateway, collector.Type, collector.StripVlanHdr)
-			if err != nil {
-				log.Errorf("Error Adding collector %+v. Err: %v", collector.ExportCfg.Destination, err)
-				return err
-			}
-		} else {
-			mcol.refCount++
-		}
-		mCollectors = append(mCollectors, mcol)
+	err := smm.initInterfaceMirrorSession(ms)
+	if err != nil {
+		log.Errorf("Error initing mirror session %v : %v", ms.MirrorSession.Name, err)
+		return err
 	}
 
 	if ms.MirrorSession.Spec.Interfaces != nil {
 		//Now evaluate the interfaces
-		selCollector := getMirrorCollectors(&ms.MirrorSession.MirrorSession, mCollectors)
+		interMirrorSelector := &interfaceMirrorSelector{intfMirrorSession: &ms.intfMirrorSession,
+			selectors:     ms.MirrorSession.Spec.Interfaces.Selectors,
+			mirrorSession: ms.MirrorSession.Name}
 
-		err := smgrNetworkInterface.UpdateCollectorsMatchingSelector(nil, selCollector)
+		err := smgrNetworkInterface.UpdateInterfacesMatchingSelector(nil, interMirrorSelector)
 		if err != nil {
 			log.Infof("Error updating collector state %v", err)
 		}
@@ -735,78 +657,23 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 	}
 	newColMap := make(map[string]colRef)
 
-	addCollectors := []*mirrorCollector{}
-	delCollectors := []*mirrorCollector{}
-	curCollectors := []*mirrorCollector{}
 	for _, curCol := range currentCollectors {
 		key := collectorKey(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, curCol.ExportCfg.Destination)
 		//1 indiates object is present in update tpp
-		collector, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
-			curCol.ExportCfg.Destination)
-		if err == nil {
-			curCollectors = append(curCollectors, collector)
-			newColMap[key] = colRef{cnt: 1, col: curCol}
-		}
+		newColMap[key] = colRef{cnt: 1, col: curCol}
 	}
 
 	for _, newCol := range newCollectors {
 		key := collectorKey(nmirror.Tenant, nmirror.Namespace, newCol.ExportCfg.Destination)
-		if cref, ok := newColMap[key]; !ok {
+		if _, ok := newColMap[key]; !ok {
 			//2 indiates object is new in update
 			newColMap[key] = colRef{cnt: 2, col: newCol}
 		} else {
 			//0 indiates same is present in update too
-			cref.cnt = 0
-			newColMap[key] = cref
+			newColMap[key] = colRef{cnt: 0, col: newCol}
+			//update to check if some fields have changed
 		}
 	}
-
-	for _, cref := range newColMap {
-		if cref.cnt == 1 {
-			log.Infof("Deleting  collector %v", cref.col.ExportCfg.Destination)
-			mcol, err := smgrMirrorInterface.deleteCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, cref.col.ExportCfg.Destination)
-			if err != nil {
-				//Collector may not be added before as part of create.
-				log.Infof("Error deleting collector %v", err)
-				return fmt.Errorf("Error adding collector %v", err)
-			}
-			delCollectors = append(delCollectors, mcol)
-		} else if cref.cnt == 2 {
-			mcol, err := smgrMirrorInterface.addCollector(nmirror.Tenant, nmirror.Namespace,
-				nmirror.Spec.PacketSize,
-				cref.col.ExportCfg.Destination, cref.col.ExportCfg.Gateway, cref.col.Type, cref.col.StripVlanHdr)
-			if err != nil {
-				log.Infof("Error adding collector %v", err)
-				return fmt.Errorf("Error adding collector %v", err)
-			}
-			addCollectors = append(addCollectors, mcol)
-		} else {
-			/* Collector has not changed, check whether we have to update the gateway */
-			collector, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
-				cref.col.ExportCfg.Destination)
-			if err == nil {
-				ckey := collectorKey(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
-					cref.col.ExportCfg.Destination)
-				for _, col := range newCollectors {
-					key := collectorKey(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, col.ExportCfg.Destination)
-					if key == ckey {
-						if col.ExportCfg.Gateway != cref.col.ExportCfg.Gateway {
-							refs := make(map[string]apiintf.ReferenceObj)
-							//Update gateway IP if it has changed
-							log.Infof("Updating gateway to %v", col.ExportCfg.Gateway)
-							collector.obj.Spec.Gateway = col.ExportCfg.Gateway
-							collector.pushObj.UpdateObjectWithReferences(collector.obj.GetKey(), collector.obj, refs)
-						}
-						break
-					}
-				}
-			}
-		}
-	}
-
-	//Now evaluate the interfaces
-	var oldSelCollector *mirrorSelectorCollectors
-	var newSelCollector *mirrorSelectorCollectors
 
 	selectorChanged := true
 	if (ms.MirrorSession.Spec.Interfaces == nil && nmirror.Spec.Interfaces == nil) ||
@@ -815,93 +682,114 @@ func (smm *SmMirrorSessionInterface) updateInterfaceMirror(ms *MirrorSessionStat
 		selectorChanged = false
 	}
 
-	//Now evaluate the interfaces
-	if len(nmirror.Spec.GetMatchRules()) != 0 ||
-		(len(addCollectors) == 0 && len(delCollectors) == 0 && selectorChanged) {
-		//case 1:
-		//Interface selector
-		//Collectors are same but label selectors have changed
-		// Remove current collectors and change label
-		if ms.MirrorSession.Spec.Interfaces != nil {
-			oldSelCollector = getMirrorCollectors(&ms.MirrorSession.MirrorSession, curCollectors)
-		}
+	var oldIntfMirrorSelector *interfaceMirrorSelector
 
-		if nmirror.Spec.Interfaces != nil {
-			//Now evaluate the interfaces
-			newSelCollector = getMirrorCollectors(nmirror, curCollectors)
-			updateCollectorsSpec(nmirror, curCollectors)
-
+	if ms.intfMirrorSession.obj != nil {
+		oldIntfMirrorSelector = &interfaceMirrorSelector{
+			mirrorSession:     interfaceMirrorSessionKey(ms),
+			intfMirrorSession: &ms.intfMirrorSession,
 		}
-
-	} else if (len(addCollectors) != 0 || len(delCollectors) != 0) && !selectorChanged {
-		//case 2: Collectors are different but label is the same
-		// Delete old collectors and new collectors to existing label
-		if ms.MirrorSession.Spec.Interfaces != nil {
-			oldSelCollector = getMirrorCollectors(&ms.MirrorSession.MirrorSession, delCollectors)
-		}
-
-		if nmirror.Spec.Interfaces != nil {
-			//Now evaluate the interfaces
-			newSelCollector = getMirrorCollectors(nmirror, addCollectors)
-		}
-	} else {
-		//Now evaluate the interfaces
-		//case 3: Both Collectors and label has changed.
-		// For new label, send both new and old col collecotrs
-		// for old lablel, send the old collectors only.
-		if ms.MirrorSession.Spec.Interfaces != nil {
-			oldSelCollector = getMirrorCollectors(&ms.MirrorSession.MirrorSession, curCollectors)
-		}
-		newCurCollectors := []*mirrorCollector{}
-		for _, col := range curCollectors {
-			found := false
-			for _, delCol := range delCollectors {
-				if delCol.obj.Spec.Destination == col.obj.Spec.Destination &&
-					delCol.obj.Tenant == col.obj.Tenant {
-					found = true
+		oldIntfMirrorSelector.selectors = ms.MirrorSession.Spec.Interfaces.Selectors
+		updateReqd := false
+		for _, cref := range newColMap {
+			if cref.cnt == 1 {
+				updateReqd = true
+				log.Infof("Deleting collector %v %v %v", cref.col.ExportCfg.Destination, cref.col.ExportCfg.Gateway, ms.intfMirrorSession)
+				for i, c := range ms.intfMirrorSession.obj.Spec.Collectors {
+					if c.ExportCfg.Destination == cref.col.ExportCfg.Destination {
+						ms.intfMirrorSession.obj.Spec.Collectors[i] = ms.intfMirrorSession.obj.Spec.Collectors[len(ms.intfMirrorSession.obj.Spec.Collectors)-1]
+						ms.intfMirrorSession.obj.Spec.Collectors[len(ms.intfMirrorSession.obj.Spec.Collectors)-1].ExportCfg.Destination = ""
+						ms.intfMirrorSession.obj.Spec.Collectors[len(ms.intfMirrorSession.obj.Spec.Collectors)-1].ExportCfg.Gateway = ""
+						ms.intfMirrorSession.obj.Spec.Collectors = ms.intfMirrorSession.obj.Spec.Collectors[:len(ms.intfMirrorSession.obj.Spec.Collectors)-1]
+						break
+					}
 				}
+
+			} else if cref.cnt == 2 {
+				updateReqd = true
+				ms.intfMirrorSession.obj.Spec.Collectors = append(ms.intfMirrorSession.obj.Spec.Collectors,
+					netproto.MirrorCollector{
+						ExportCfg: netproto.MirrorExportConfig{
+							Destination: cref.col.ExportCfg.Destination,
+							Gateway:     cref.col.ExportCfg.Gateway,
+						},
+						StripVlanHdr: cref.col.StripVlanHdr,
+						Type:         cref.col.Type,
+					})
+			} else {
+				//Update, check if something has changed in collector
+				for i, cur := range ms.intfMirrorSession.obj.Spec.Collectors {
+					if cur.ExportCfg.Destination == cref.col.ExportCfg.Destination {
+						if cur.StripVlanHdr != cref.col.StripVlanHdr {
+							updateReqd = true
+							ms.intfMirrorSession.obj.Spec.Collectors[i].StripVlanHdr = cref.col.StripVlanHdr
+						}
+						if cur.Type != cref.col.Type {
+							updateReqd = true
+							ms.intfMirrorSession.obj.Spec.Collectors[i].Type = cref.col.Type
+						}
+						if cur.ExportCfg.Gateway != cref.col.ExportCfg.Gateway {
+							updateReqd = true
+							ms.intfMirrorSession.obj.Spec.Collectors[i].ExportCfg.Destination = cref.col.ExportCfg.Gateway
+						}
+						break
+					}
+				}
+
 			}
-			if !found {
-				newCurCollectors = append(newCurCollectors, col)
-			}
-			updateCollectorsSpec(nmirror, newCurCollectors)
 		}
-		if nmirror.Spec.Interfaces != nil {
-			addCollectors = append(addCollectors, newCurCollectors...)
-			newSelCollector = getMirrorCollectors(nmirror, addCollectors)
+
+		if ms.MirrorSession.MirrorSession.Spec.Interfaces != nil && nmirror.Spec.Interfaces != nil {
+			if ms.MirrorSession.MirrorSession.Spec.Interfaces.Direction != nmirror.Spec.Interfaces.Direction {
+				updateReqd = true
+				ms.intfMirrorSession.obj.Spec.MirrorDirection = getNetProtoDirection(ms.MirrorSession.MirrorSession.Spec.Interfaces.Direction)
+			}
+		}
+
+		if ms.MirrorSession.MirrorSession.Spec.PacketSize != nmirror.Spec.PacketSize {
+			updateReqd = true
+			ms.intfMirrorSession.obj.Spec.PacketSize = nmirror.Spec.PacketSize
+		}
+
+		if updateReqd {
+			refs := make(map[string]apiintf.ReferenceObj)
+			err := ms.intfMirrorSession.pushObj.UpdateObjectWithReferences(ms.intfMirrorSession.obj.GetObjectMeta().GetKey(),
+				ms.intfMirrorSession.obj, refs)
+			if err != nil {
+				log.Errorf("Error updating object %v %v", ms.intfMirrorSession.obj.GetObjectMeta().GetKey(), err.Error())
+			}
 		}
 	}
 
 	ms.MirrorSession.Spec.Collectors = nmirror.Spec.Collectors
 	ms.MirrorSession.Spec.Interfaces = nmirror.Spec.Interfaces
 
-	err := smgrNetworkInterface.UpdateCollectorsMatchingSelector(oldSelCollector, newSelCollector)
-	if err != nil {
-		log.Infof("Error updating collector state %v", err)
+	if ms.intfMirrorSession.obj == nil {
+		err := smm.initInterfaceMirrorSession(ms)
+		if err != nil {
+			log.Errorf("Error initing mirror session %v : %v", ms.MirrorSession.Name, err)
+			return err
+		}
+
 	}
 
-	//Collectors hav no references, delete it.
-	for _, col := range delCollectors {
-		if col.refCount == 0 {
-			col.pushObj.RemoveAllObjReceivers()
-			refs := make(map[string]apiintf.ReferenceObj)
-			log.Infof("Deleting collector as no referenees %v", col.obj.GetKey())
-			col.pushObj.DeleteObjectWithReferences(col.obj.GetKey(), col.obj, refs)
-		}
+	var newIntfMirrorSelector = &interfaceMirrorSelector{
+		mirrorSession:     interfaceMirrorSessionKey(ms),
+		intfMirrorSession: &ms.intfMirrorSession,
 	}
-
-	//Collectors hav no references, delete it.
-	for _, col := range curCollectors {
-		if col.refCount == 0 {
-			col.pushObj.RemoveAllObjReceivers()
-			refs := make(map[string]apiintf.ReferenceObj)
-			log.Infof("Deleting collector as no referenees %v", col.obj.GetKey())
-			col.pushObj.DeleteObjectWithReferences(col.obj.GetKey(), col.obj, refs)
-		}
+	if nmirror.Spec.Interfaces != nil {
+		newIntfMirrorSelector.selectors = nmirror.Spec.Interfaces.Selectors
 	}
 
 	ms.MirrorSession.Spec.Collectors = nmirror.Spec.Collectors
 	ms.MirrorSession.Spec.Interfaces = nmirror.Spec.Interfaces
+
+	if selectorChanged {
+		err := smgrNetworkInterface.UpdateInterfacesMatchingSelector(oldIntfMirrorSelector, newIntfMirrorSelector)
+		if err != nil {
+			log.Infof("Error updating collector state %v", err)
+		}
+	}
 
 	if ms.MirrorSession.Spec.Interfaces != nil {
 		for index, selector := range ms.MirrorSession.Spec.Interfaces.Selectors {
@@ -1064,37 +952,24 @@ func (smm *SmMirrorSessionInterface) updateFlowMirror(ms *MirrorSessionState) er
 //OnMirrorSessionDelete mirror session delete handle
 func (smm *SmMirrorSessionInterface) deleteInterfaceMirror(ms *MirrorSessionState) error {
 
-	collectors := ms.MirrorSession.Spec.GetCollectors()
-	delCollectors := []*mirrorCollector{}
-	for _, collector := range collectors {
-		mcol, err := smgrMirrorInterface.findCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace, collector.ExportCfg.Destination)
-		if err == nil {
-			smgrMirrorInterface.deleteCollector(ms.MirrorSession.Tenant, ms.MirrorSession.Namespace,
-				collector.ExportCfg.Destination)
-			delCollectors = append(delCollectors, mcol)
-		}
-	}
-
 	smgrMirrorInterface.deleteMirrorSession(ms)
 
 	if ms.MirrorSession.Spec.Interfaces != nil {
-		//Now evaluate the interfaces
-		oldSelCollector := getMirrorCollectors(&ms.MirrorSession.MirrorSession, delCollectors)
 
-		err := smgrNetworkInterface.UpdateCollectorsMatchingSelector(oldSelCollector, nil)
+		//Now evaluate the interfaces
+		interMirrorSelector := &interfaceMirrorSelector{intfMirrorSession: &ms.intfMirrorSession,
+			selectors:     ms.MirrorSession.Spec.Interfaces.Selectors,
+			mirrorSession: ms.MirrorSession.Name}
+
+		err := smgrNetworkInterface.UpdateInterfacesMatchingSelector(interMirrorSelector, nil)
 		if err != nil {
 			log.Infof("Error updating collector state %v", err)
 		}
-	}
+		refs := make(map[string]apiintf.ReferenceObj)
 
-	//Collectors hav no references, delete it.
-	for _, col := range delCollectors {
-		if col.refCount == 0 {
-			log.Infof("Deleting  collector %v", col.obj.Spec.Destination)
-			col.pushObj.RemoveAllObjReceivers()
-			refs := make(map[string]apiintf.ReferenceObj)
-			col.pushObj.DeleteObjectWithReferences(col.obj.GetKey(), col.obj, refs)
-		}
+		ms.intfMirrorSession.pushObj.DeleteObjectWithReferences(ms.intfMirrorSession.obj.GetObjectMeta().GetKey(),
+			ms.intfMirrorSession.obj, refs)
+
 	}
 
 	return nil

@@ -35,12 +35,36 @@ service MirrorSessionApiV2 {
     rpc MirrorSessionOperUpdate (stream MirrorSessionEvent) returns (api.TypeMeta) {};
 }
 
+service InterfaceMirrorSessionApiV1 {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "InterfaceMirrorSession",
+        Method: ["list", "get", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/mirror/interface-sessions/"
+        Version: "V1"
+    };
+    rpc WatchInterfaceMirrorSessions (api.ListWatchOptions) returns (stream InterfaceMirrorSessionEventList) {};
+    rpc ListInterfaceMirrorSessions (api.ListWatchOptions) returns (InterfaceMirrorSessionList) {};
+    rpc InterfaceMirrorSessionOperUpdate (stream InterfaceMirrorSessionEvent) returns (api.TypeMeta) {};
+}
+
+
 message MirrorSession {
     api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
     MirrorSessionSpec       Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
     MirrorSessionStatus     Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
+
+
+message InterfaceMirrorSession {
+    api.TypeMeta                  TypeMeta     = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta                ObjectMeta   = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    InterfaceMirrorSessionSpec    Spec         = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    InterfaceMirrorSessionStatus  Status       = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
+
 
 enum MirrorDir {
     BOTH = 0;
@@ -57,12 +81,28 @@ message MirrorSessionSpec {
 
     uint32          PacketSize              = 4 [(gogoproto.jsontag) = "packet-size,omitempty"];
     MirrorDir       MirrorDirection         = 5 [(gogoproto.jsontag) = "mirror-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
+    uint32          SpanID                  = 6 [(gogoproto.jsontag) = "span-id,inline"];
 }
 
 
+message InterfaceMirrorSessionSpec {
+    string                   VrfName         = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+    // Mirrored packet collectors
+    repeated MirrorCollector Collectors      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "collectors,inline"];
+    uint32                   SpanID          = 3 [(gogoproto.jsontag) = "span-id,inline"];
+    uint32                   PacketSize      = 4 [(gogoproto.jsontag) = "packet-size,omitempty"];
+    MirrorDir                MirrorDirection = 5 [(gogoproto.jsontag) = "mirror-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
+    string                   Type            = 6 [(gogoproto.jsontag) = "type,omitempty"];
+    bool                     StripVlanHdr    = 7 [(gogoproto.jsontag) = "strip-vlan-hdr,omitempty" ];
+}
 
 // MirrorSessionStatus captures the sg policy status
 message MirrorSessionStatus {
+    uint64 MirrorSessionID  = 1 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+// InterfaceMirrorSessionStatus captures status
+message InterfaceMirrorSessionStatus {
     uint64 MirrorSessionID  = 1 [(gogoproto.jsontag) = "id,omitempty"];
 }
 
@@ -81,6 +121,20 @@ message MirrorSessionEventList {
     repeated MirrorSessionEvent MirrorSessionEvents  = 1;
 }
 
+message InterfaceMirrorSessionList {
+    repeated InterfaceMirrorSession InterfaceMirrorSessions  = 1;
+}
+
+// mirror watch event
+message InterfaceMirrorSessionEvent {
+    api.EventType           EventType               = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    InterfaceMirrorSession  InterfaceMirrorSession   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "interface-mirror-session,omitempty"];
+}
+
+// mirror watch events batched
+message InterfaceMirrorSessionEventList {
+    repeated InterfaceMirrorSessionEvent InterfaceMirrorSessionEvents  = 1;
+}
 
 
 message MirrorExportConfig {

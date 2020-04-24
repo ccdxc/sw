@@ -55,6 +55,8 @@ import (
 														err := netutils.HTTPGet("http://"+cl.agentURL+"/api/security/profiles/", &{{lower $crudObject}}{{title .}} )
 												{{else if strEq $crudObject "MirrorSession"}}
 														err := netutils.HTTPGet("http://"+cl.agentURL+"/api/mirror/sessions/", &{{lower $crudObject}}{{title .}} )
+												{{else if strEq $crudObject "InterfaceMirrorSession"}}
+														err := netutils.HTTPGet("http://"+cl.agentURL+"/api/mirror/interface-sessions/", &{{lower $crudObject}}{{title .}} )
 												{{else if strEq $crudObject "FlowExportPolicy"}}
 														err := netutils.HTTPGet("http://"+cl.agentURL+"/api/telemetry/flowexports/", &{{lower $crudObject}}{{title .}} )
 												{{else if strEq $crudObject "Profile"}}
@@ -118,6 +120,8 @@ import (
 														err := netutils.HTTPPost("http://"+cl.agentURL+"/api/vrfs/", &{{lower .}}Data, &resp)
 												{{else if strEq $crudObject "MirrorSession"}}
 														err := netutils.HTTPPost("http://"+cl.agentURL+"/api/mirror/sessions/", &{{lower .}}Data, &resp)
+												{{else if strEq $crudObject "InterfaceMirrorSession"}}
+														err := netutils.HTTPPost("http://"+cl.agentURL+"/api/mirror/interface-sessions/", &{{lower .}}Data, &resp)
 												{{else if strEq $crudObject "FlowExportPolicy"}}
 														err := netutils.HTTPPost("http://"+cl.agentURL+"/api/telemetry/flowexports/", &{{lower .}}Data, &resp)
 												{{else if strEq $crudObject "Profile"}}
@@ -181,6 +185,8 @@ import (
                                 	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/vrfs/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "MirrorSession"}}
 																	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/mirror/sessions/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
+															{{else if strEq $crudObject "InterfaceMirrorSession"}}
+																	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/mirror/interface-sessions/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "FlowExportPolicy"}}
 																	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/telemetry/flowexports/default/default/preCreated{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "Profile"}}
@@ -243,6 +249,8 @@ import (
                             			err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/vrfs/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "MirrorSession"}}
                             			err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/mirror/sessions/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
+															{{else if strEq $crudObject "InterfaceMirrorSession"}}
+                            			err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/mirror/interface-sessions/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "FlowExportPolicy"}}
 																	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/telemetry/flowexports/default/default/test{{title .}}{{title $crudObject}}", &{{lower .}}Data, &resp)
 															{{else if strEq $crudObject "Profile"}}

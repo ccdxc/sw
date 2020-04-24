@@ -176,6 +176,9 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 	case "Interface":
 		err = client.processInterfaceDynamic(evt.EventType, object.Message.(*netproto.Interface), reactor.(InterfaceReactor))
 
+	case "InterfaceMirrorSession":
+		err = client.processInterfaceMirrorSessionDynamic(evt.EventType, object.Message.(*netproto.InterfaceMirrorSession), reactor.(InterfaceMirrorSessionReactor))
+
 	case "MirrorSession":
 		err = client.processMirrorSessionDynamic(evt.EventType, object.Message.(*netproto.MirrorSession), reactor.(MirrorSessionReactor))
 
@@ -650,6 +653,81 @@ func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceLis
 			if err == nil {
 				mobj, err := protoTypes.MarshalAny(obj)
 				aggObj := netproto.AggObject{Kind: "Interface", Object: &api.Any{}}
+				aggObj.Object.Any = *mobj
+				robj := netproto.AggObjectEvent{
+					EventType: api.EventType_UpdateEvent,
+					AggObj:    aggObj,
+				}
+				// send oper status
+				ostream.Lock()
+				err = ostream.stream.Send(&robj)
+				if err != nil {
+					log.Errorf("failed to send Agg oper Status, %s", err)
+					client.debugStats.AddInt("AggOperSendError", 1)
+				} else {
+					client.debugStats.AddInt("AggOperSent", 1)
+				}
+				ostream.Unlock()
+			}
+		}
+	}
+}
+
+// diffInterfaceMirrorSessionsDynamic diffs local state with controller state
+func (client *NimbusClient) diffInterfaceMirrorSessionsDynamic(objList *netproto.InterfaceMirrorSessionList, reactor InterfaceMirrorSessionReactor,
+	ostream *AggWatchOStream, op diffOpType) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.InterfaceMirrorSession)
+	for _, obj := range objList.InterfaceMirrorSessions {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	o := netproto.InterfaceMirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "InterfaceMirrorSession"},
+	}
+
+	localObjs, err := reactor.HandleInterfaceMirrorSession(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: InterfaceMirrorSession | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListInterfaceMirrorSession()
+	if op == delAddUpdateDiffOp || op == delteDiffOp {
+		for _, lobj := range localObjs {
+			ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+			if ok && ctby == "Venice" {
+				key := lobj.ObjectMeta.GetKey()
+				if _, ok := objmap[key]; !ok {
+					evt := netproto.InterfaceMirrorSessionEvent{
+						EventType: api.EventType_DeleteEvent,
+
+						InterfaceMirrorSession: lobj,
+					}
+					log.Infof("diffInterfaceMirrorSessions(): Deleting object %+v", lobj.ObjectMeta)
+					client.lockObject(evt.InterfaceMirrorSession.GetObjectKind(), evt.InterfaceMirrorSession.ObjectMeta)
+					client.processInterfaceMirrorSessionEvent(evt, reactor, nil)
+				}
+			} else {
+				log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+			}
+		}
+	}
+
+	if op == delAddUpdateDiffOp || op == addUpdateOp {
+		// add/update all new objects
+		for _, obj := range objList.InterfaceMirrorSessions {
+			evt := netproto.InterfaceMirrorSessionEvent{
+				EventType: api.EventType_UpdateEvent,
+
+				InterfaceMirrorSession: *obj,
+			}
+			client.lockObject(evt.InterfaceMirrorSession.GetObjectKind(), evt.InterfaceMirrorSession.ObjectMeta)
+			err := client.processInterfaceMirrorSessionEvent(evt, reactor, nil)
+
+			if err == nil {
+				mobj, err := protoTypes.MarshalAny(obj)
+				aggObj := netproto.AggObject{Kind: "InterfaceMirrorSession", Object: &api.Any{}}
 				aggObj.Object.Any = *mobj
 				robj := netproto.AggObjectEvent{
 					EventType: api.EventType_UpdateEvent,
@@ -1327,6 +1405,11 @@ func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netprot
 					msglist.Interfaces = append(msglist.Interfaces, obj.Message.(*netproto.Interface))
 					return
 
+				case "InterfaceMirrorSession":
+					msglist := lobj.objects.(*netproto.InterfaceMirrorSessionList)
+					msglist.InterfaceMirrorSessions = append(msglist.InterfaceMirrorSessions, obj.Message.(*netproto.InterfaceMirrorSession))
+					return
+
 				case "MirrorSession":
 					msglist := lobj.objects.(*netproto.MirrorSessionList)
 					msglist.MirrorSessions = append(msglist.MirrorSessions, obj.Message.(*netproto.MirrorSession))
@@ -1403,6 +1486,11 @@ func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netprot
 			listObj.objects = &netproto.InterfaceList{}
 			msglist := listObj.objects.(*netproto.InterfaceList)
 			msglist.Interfaces = append(msglist.Interfaces, obj.Message.(*netproto.Interface))
+
+		case "InterfaceMirrorSession":
+			listObj.objects = &netproto.InterfaceMirrorSessionList{}
+			msglist := listObj.objects.(*netproto.InterfaceMirrorSessionList)
+			msglist.InterfaceMirrorSessions = append(msglist.InterfaceMirrorSessions, obj.Message.(*netproto.InterfaceMirrorSession))
 
 		case "MirrorSession":
 			listObj.objects = &netproto.MirrorSessionList{}
@@ -1492,6 +1580,9 @@ func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netprot
 		case "Interface":
 			client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream, addUpdateOp)
 
+		case "InterfaceMirrorSession":
+			client.diffInterfaceMirrorSessionsDynamic(lobj.objects.(*netproto.InterfaceMirrorSessionList), reactor.(InterfaceMirrorSessionReactor), ostream, addUpdateOp)
+
 		case "MirrorSession":
 			client.diffMirrorSessionsDynamic(lobj.objects.(*netproto.MirrorSessionList), reactor.(MirrorSessionReactor), ostream, addUpdateOp)
 
@@ -1545,6 +1636,9 @@ func (client *NimbusClient) diffAggWatchObjects(kinds []string, objList *netprot
 
 		case "Interface":
 			client.diffInterfacesDynamic(lobj.objects.(*netproto.InterfaceList), reactor.(InterfaceReactor), ostream, delteDiffOp)
+
+		case "InterfaceMirrorSession":
+			client.diffInterfaceMirrorSessionsDynamic(lobj.objects.(*netproto.InterfaceMirrorSessionList), reactor.(InterfaceMirrorSessionReactor), ostream, delteDiffOp)
 
 		case "MirrorSession":
 			client.diffMirrorSessionsDynamic(lobj.objects.(*netproto.MirrorSessionList), reactor.(MirrorSessionReactor), ostream, delteDiffOp)
@@ -1672,6 +1766,18 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			aggKind.Kind = kind
 			aggKind.Group = "netproto"
 			listWatchOptions := reactor.(InterfaceReactor).GetWatchOptions(ctx, "Interface")
+			aggKind.Options = listWatchOptions
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
+
+		case "InterfaceMirrorSession":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
+			if _, ok := reactor.(InterfaceMirrorSessionReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "InterfaceMirrorSessionReactor")
+			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(InterfaceMirrorSessionReactor).GetWatchOptions(ctx, "InterfaceMirrorSession")
 			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 

@@ -17,14 +17,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-type mirrorIDs struct {
-	sessionID  uint64
-	MirrorKeys []string
-}
-
-// MirrorDestToIDMapping maps the unique tuple of vrfname-destinationIP to mirror session IDs for hal and referenced objects.
-var MirrorDestToIDMapping = map[string]*mirrorIDs{}
-
 // HandleCollector handles crud operations on collector
 func HandleCollector(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, oper types.Operation, col netproto.Collector, vrfID uint64) error {
 	switch oper {

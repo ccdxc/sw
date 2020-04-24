@@ -11,19 +11,12 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
-func TestHandleCollectorUpdates(t *testing.T) {
-	col := netproto.Collector{
-		TypeMeta: api.TypeMeta{Kind: "Collector"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testCollector",
-		},
-		Spec: netproto.CollectorSpec{
-			Destination: "192.168.100.101",
-		},
+func TestHandleColUpdates(t *testing.T) {
+	col := Collector{
+		Name:        "testCollector",
+		Destination: "192.168.100.101",
 	}
-	err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, 65)
+	err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, 65)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,8 +28,12 @@ func TestHandleCollectorUpdates(t *testing.T) {
 	if len(lateralDB[internalCol]) != 1 {
 		t.Fatalf("Collector keys not populated for 192.168.100.101. %v", lateralDB[internalCol])
 	}
-	col.Spec.Destination = "192.168.100.103"
-	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Update, col, 65)
+	err = HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, 65)
+	if err != nil {
+		t.Fatal(err)
+	}
+	col.Destination = "192.168.100.103"
+	err = HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, 65)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,33 +46,7 @@ func TestHandleCollectorUpdates(t *testing.T) {
 	if len(lateralDB[internalCol1]) != 1 {
 		t.Fatalf("Collector keys not populated. %v", lateralDB[internalCol1])
 	}
-	var dbcol netproto.Collector
-	dat, err := infraAPI.Read(col.Kind, col.GetKey())
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = dbcol.Unmarshal(dat)
-	if err != nil {
-		t.Fatal(err)
-	}
-	mirrorSessionID := dbcol.Status.Collector
-	dbcol.Spec.PacketSize = 100
-	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Update, dbcol, 65)
-	if err != nil {
-		t.Fatal(err)
-	}
-	dat, err = infraAPI.Read(col.Kind, col.GetKey())
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = dbcol.Unmarshal(dat)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if dbcol.Status.Collector != mirrorSessionID {
-		t.Fatalf("Mirror Session ID should not have changed. %v %v", mirrorSessionID, dbcol.Status.Collector)
-	}
-	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, 65)
+	err = HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, 65)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,33 +58,19 @@ func TestHandleCollectorUpdates(t *testing.T) {
 	}
 }
 
-func TestMirrorSessionIDRefcouting(t *testing.T) {
-	cols := []netproto.Collector{
+func TestMirrorSessionIDRefcoutingCol(t *testing.T) {
+	cols := []Collector{
 		{
-			TypeMeta: api.TypeMeta{Kind: "Collector"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      "testCollector1",
-			},
-			Spec: netproto.CollectorSpec{
-				VrfName:     "default",
-				Destination: "192.168.100.101",
-				PacketSize:  128,
-			},
+			Name:        "testCollector1",
+			VrfName:     "default",
+			Destination: "192.168.100.101",
+			PacketSize:  128,
 		},
 		{
-			TypeMeta: api.TypeMeta{Kind: "Collector"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      "testCollector2",
-			},
-			Spec: netproto.CollectorSpec{
-				VrfName:     "default",
-				Destination: "192.168.100.102",
-				PacketSize:  128,
-			},
+			Name:        "testCollector2",
+			VrfName:     "default",
+			Destination: "192.168.100.102",
+			PacketSize:  128,
 		},
 	}
 	mirrors := []netproto.MirrorSession{
@@ -189,7 +146,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 	}
 	// Create collectors
 	for _, col := range cols {
-		err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, 65)
+		err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, 65)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -205,11 +162,11 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 		t.Fatalf("Must have 3 items in the map, %v", MirrorDestToIDMapping)
 	}
 	// Verify that first collector delete is successful
-	if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, cols[0], 65); err != nil {
+	if err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Delete, cols[0], 65); err != nil {
 		t.Fatalf("Must return a valid error. Err: %v", err)
 	}
 	// Verify that second collector delete is successful
-	if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, cols[1], 65); err != nil {
+	if err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Delete, cols[1], 65); err != nil {
 		t.Fatalf("Must not return an error. Err: %v", err)
 	}
 	// Verify the mappings
@@ -220,7 +177,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 	if len(mirrorIDs.MirrorKeys) != 2 {
 		t.Fatalf("Expected 2 entries in MirrorKeys %v", mirrorIDs.MirrorKeys)
 	}
-	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror2-default-192.168.100.101", "default/default/testMirror1-default-192.168.100.101"}) {
+	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"testMirror2-default-192.168.100.101", "testMirror1-default-192.168.100.101"}) {
 		t.Fatalf("Unexpected mirror %v", mirrorIDs.MirrorKeys)
 	}
 
@@ -231,7 +188,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 	if len(mirrorIDs.MirrorKeys) != 1 {
 		t.Fatalf("Expected 1 entry in MirrorKeys %v", mirrorIDs.MirrorKeys)
 	}
-	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror3-default-192.168.100.103"}) {
+	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"testMirror3-default-192.168.100.103"}) {
 		t.Fatalf("Unexpected mirror %v", mirrorIDs.MirrorKeys)
 	}
 
@@ -253,7 +210,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 	if len(mirrorIDs.MirrorKeys) != 1 {
 		t.Fatalf("Expected 1 entries in MirrorKeys %v", mirrorIDs.MirrorKeys)
 	}
-	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"default/default/testMirror2-default-192.168.100.101"}) {
+	if !reflect.DeepEqual(mirrorIDs.MirrorKeys, []string{"testMirror2-default-192.168.100.101"}) {
 		t.Fatalf("Unexpected mirror %v", mirrorIDs.MirrorKeys)
 	}
 
@@ -264,7 +221,7 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 	}
 
 	// Verify that first collector delete is erred as already deleted
-	if err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, cols[0], 65); err == nil {
+	if err := HandleCol(infraAPI, telemetryClient, intfClient, epClient, types.Delete, cols[0], 65); err == nil {
 		t.Fatal(err)
 	}
 
@@ -279,72 +236,5 @@ func TestMirrorSessionIDRefcouting(t *testing.T) {
 
 	if _, ok = MirrorDestToIDMapping["default-192.168.100.103"]; ok {
 		t.Fatalf("Expected MirrorDestToIDMapping to not have default-192.168.100.103 %v", MirrorDestToIDMapping["default-192.168.100.103"])
-	}
-}
-
-func TestHandleCollector(t *testing.T) {
-	col := netproto.Collector{
-		TypeMeta: api.TypeMeta{Kind: "Collector"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testCollector",
-		},
-		Spec: netproto.CollectorSpec{
-			Destination: "192.168.100.101",
-		},
-		Status: netproto.CollectorStatus{Collector: 1},
-	}
-
-	err := HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Create, col, 65)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Update, col, 65)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, types.Delete, col, 65)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = HandleCollector(infraAPI, telemetryClient, intfClient, epClient, 42, col, 65)
-	if err == nil {
-		t.Fatal("Invalid op must return a valid error.")
-	}
-}
-
-func TestHandleCollectorInfraFailures(t *testing.T) {
-	t.Skip("Lateral objects cause issues in lateralDB")
-	col := netproto.Collector{
-		TypeMeta: api.TypeMeta{Kind: "Collector"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testCollector",
-		},
-		Spec: netproto.CollectorSpec{
-			Destination: "192.168.100.101",
-		},
-		Status: netproto.CollectorStatus{Collector: 1},
-	}
-
-	i := newBadInfraAPI()
-	err := HandleCollector(i, telemetryClient, intfClient, epClient, types.Create, col, 65)
-	if err == nil {
-		t.Fatalf("Must return a valid error. Err: %v", err)
-	}
-
-	err = HandleCollector(i, telemetryClient, intfClient, epClient, types.Update, col, 65)
-	if err == nil {
-		t.Fatalf("Must return a valid error. Err: %v", err)
-	}
-
-	err = HandleCollector(i, telemetryClient, intfClient, epClient, types.Delete, col, 65)
-	if err == nil {
-		t.Fatalf("Must return a valid error. Err: %v", err)
 	}
 }

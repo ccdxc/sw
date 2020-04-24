@@ -108,7 +108,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -119,7 +119,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyNoMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyNoMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -133,7 +133,6 @@ var _ = Describe("Lif mirror tests", func() {
 		})
 
 		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror uplink with change in collector", func() {
-			Skip("Skipping until fixed in HAL")
 			veniceCollector := ts.model.VeniceNodes().Leader()
 			otherVeniceCollector := ts.model.VeniceNodes().NonLeaders().Any(1)
 
@@ -156,7 +155,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -168,7 +167,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -207,7 +206,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -217,7 +216,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Delete()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyNoMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyNoMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -229,7 +228,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(newMsc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror-new"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror-new"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -261,7 +260,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyNoMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyNoMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -271,7 +270,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(intfCollection.AddLabel(label).Commit()).ShouldNot(HaveOccurred())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -304,7 +303,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -314,7 +313,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(intfCollection.AddLabel(nil).Commit()).ShouldNot(HaveOccurred())
 
 			Eventually(func() error {
-				return intfCollection.VerifyNoMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyNoMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -325,7 +324,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(intfCollection.AddLabel(label).Commit()).ShouldNot(HaveOccurred())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -360,7 +359,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -371,7 +370,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -422,7 +421,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -435,7 +434,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(newMsc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror", "lif-mirror-new"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror", "default/default/lif-mirror-new"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -450,7 +449,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Delete()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror-new"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror-new"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -464,7 +463,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(newMsc.Delete()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyNoMirrors([]string{"lif-mirror", "lif-mirror-new"})
+				return intfCollection.VerifyNoMirrors([]string{"default/default/lif-mirror", "default/default/lif-mirror-new"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -500,7 +499,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -513,7 +512,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(newMsc.Commit()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror", "lif-mirror-new"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror", "default/default/lif-mirror-new"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -527,7 +526,7 @@ var _ = Describe("Lif mirror tests", func() {
 			//remove from the interfaces
 			Expect(intfCollection.AddLabel(nil).Commit()).ShouldNot(HaveOccurred())
 			Eventually(func() error {
-				return intfCollection.VerifyNoMirrors([]string{"lif-mirror", "lif-mirror-new"})
+				return intfCollection.VerifyNoMirrors([]string{"default/default/lif-mirror", "default/default/lif-mirror-new"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -541,7 +540,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(intfCollection.AddLabel(label).Commit()).ShouldNot(HaveOccurred())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror", "lif-mirror-new"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror", "default/default/lif-mirror-new"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -556,7 +555,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Delete()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyMirrors([]string{"lif-mirror-new"})
+				return intfCollection.VerifyMirrors([]string{"default/default/lif-mirror-new"})
 			}).Should(Succeed())
 
 			Eventually(func() error {
@@ -570,7 +569,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(newMsc.Delete()).Should(Succeed())
 
 			Eventually(func() error {
-				return intfCollection.VerifyNoMirrors([]string{"lif-mirror", "lif-mirror-new"})
+				return intfCollection.VerifyNoMirrors([]string{"default/default/lif-mirror", "default/default/lif-mirror-new"})
 			}).Should(Succeed())
 
 			Eventually(func() error {

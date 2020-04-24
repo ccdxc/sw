@@ -71,6 +71,7 @@ var typesMapInterface = map[string]*api.Struct{
 			"link-speed":       api.CLIInfo{Path: "Status.IFUplinkStatus.LinkSpeed", Skip: false, Insert: "", Help: ""},
 			"mac-address":      api.CLIInfo{Path: "Status.IFHostStatus.MacAddress", Skip: false, Insert: "", Help: ""},
 			"mirror-enabled":   api.CLIInfo{Path: "Status.MirrorEnabled", Skip: false, Insert: "", Help: ""},
+			"mirror-sessions":  api.CLIInfo{Path: "Spec.MirrorSessions", Skip: false, Insert: "", Help: ""},
 			"mtu":              api.CLIInfo{Path: "Spec.MTU", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
@@ -143,6 +144,8 @@ var typesMapInterface = map[string]*api.Struct{
 			"TxCollectors": api.Field{Name: "TxCollectors", CLITag: api.CLIInfo{ID: "TxCollectors", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"RxCollectors": api.Field{Name: "RxCollectors", CLITag: api.CLIInfo{ID: "RxCollectors", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MirrorSessions": api.Field{Name: "MirrorSessions", CLITag: api.CLIInfo{ID: "mirror-sessions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mirror-sessions", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"netproto.InterfaceStatus": &api.Struct{

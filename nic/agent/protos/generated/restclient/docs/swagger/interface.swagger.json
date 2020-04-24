@@ -585,6 +585,13 @@
             "type": "string"
           },
           "description": "Rx Collectors."
+        },
+        "mirror-sessions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Mirror sessions, Tx and Rx collectors should be removed once implemented."
         }
       },
       "description": "InterfaceSpec captures all the interface level configuration."

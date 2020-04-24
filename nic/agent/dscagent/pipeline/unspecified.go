@@ -1090,6 +1090,11 @@ func (i *FakeAgentAPI) HandleSecurityProfile(oper types.Operation, profile netpr
 	return
 }
 
+// HandleInterfaceMirrorSession handles CRUD Methods for MirrorSession Object
+func (i *FakeAgentAPI) HandleInterfaceMirrorSession(oper types.Operation, mirror netproto.InterfaceMirrorSession) (mirrors []netproto.InterfaceMirrorSession, err error) {
+	return nil, errors.New("Not implemented")
+}
+
 // HandleMirrorSession handles CRUD methods for MirrorSession Object
 func (i *FakeAgentAPI) HandleMirrorSession(oper types.Operation, mirror netproto.MirrorSession) (mirrors []netproto.MirrorSession, err error) {
 	i.Lock()

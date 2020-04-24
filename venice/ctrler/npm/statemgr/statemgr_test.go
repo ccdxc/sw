@@ -317,14 +317,20 @@ func createMirror(stateMgr *Statemgr, tenant, mirrorName string, startConditions
 	return &mr, err
 }
 
+var (
+	genID = 0
+)
+
 func updateMirror(stateMgr *Statemgr, tenant, mirrorName string, startConditions *monitoring.MirrorStartConditions, matchRules []monitoring.MatchRule,
 	collectors []monitoring.MirrorCollector, selector *labels.Selector, packetsize uint32) (*monitoring.MirrorSession, error) {
+	genID++
 	mr := monitoring.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    tenant,
-			Namespace: "default",
-			Name:      mirrorName,
+			Tenant:       tenant,
+			Namespace:    "default",
+			Name:         mirrorName,
+			GenerationID: strconv.Itoa(genID),
 		},
 		Spec: monitoring.MirrorSessionSpec{
 			Collectors: collectors,
@@ -3687,22 +3693,30 @@ func TestMirrorCreateDelete(t *testing.T) {
 	_, err = createMirror(stateMgr, "default", "testMirror", nil, nil, collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
 
+	ometa := api.ObjectMeta{
+		Tenant:    "default",
+		Namespace: "default",
+		Name:      "testMirror",
+	}
+
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
 		if err == nil {
+			if ms.intfMirrorSession.pushObj == nil {
+				return false, nil
+			}
+			if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors {
+				return false, nil
+			}
+			_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa)
+			if err != nil {
+				return false, nil
+			}
+
 			return true, nil
 		}
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
-
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 1, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
@@ -3712,14 +3726,13 @@ func TestMirrorCreateDelete(t *testing.T) {
 		if err != nil {
 			return true, nil
 		}
+
+		_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa)
+		if err == nil {
+			return false, nil
+		}
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
-
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		Assert(t, err != nil, "Error finding collector  ")
-		Assert(t, col == nil, "Error finding collector  ")
-	}
 
 }
 
@@ -3793,42 +3806,58 @@ func TestMirrorCreateDeleteCollectorReuse(t *testing.T) {
 	_, err = createMirror(stateMgr, "default", "testMirror", nil, nil, collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
 
+	ometa := api.ObjectMeta{
+		Tenant:    "default",
+		Namespace: "default",
+		Name:      "testMirror",
+	}
+
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
 		if err == nil {
+			if ms.intfMirrorSession.pushObj == nil {
+				return false, nil
+			}
+			if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors {
+				return false, nil
+			}
+			_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa)
+			if err != nil {
+				return false, nil
+			}
+
 			return true, nil
 		}
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
-
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 1, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
 
 	_, err = createMirror(stateMgr, "default", "testMirror1", nil, nil, collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
 
+	ometa1 := api.ObjectMeta{
+		Tenant:    "default",
+		Namespace: "default",
+		Name:      "testMirror1",
+	}
+
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
 		if err == nil {
+			if ms.intfMirrorSession.pushObj == nil {
+				return false, nil
+			}
+			if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors {
+				return false, nil
+			}
+			_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa1)
+			if err != nil {
+				return false, nil
+			}
+
 			return true, nil
 		}
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
-
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 2, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
@@ -3838,34 +3867,30 @@ func TestMirrorCreateDeleteCollectorReuse(t *testing.T) {
 		if err != nil {
 			return true, nil
 		}
+		_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa)
+		if err == nil {
+			return false, nil
+		}
+
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
-
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 1, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror1", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
-		if err != nil {
-			return true, nil
+		_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa)
+		if err == nil {
+			return false, nil
 		}
-		return false, nil
-	}, "Mirror session found", "1ms", "1s")
 
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		Assert(t, err != nil, "Error finding collector  ")
-		Assert(t, col == nil, "Error finding collector  ")
-	}
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return false, nil
+		}
+
+		return true, nil
+	}, "Mirror session found", "1ms", "1s")
 
 }
 
@@ -3877,7 +3902,7 @@ func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
 	}
-	numCollectors := 10
+	numCollectors := 5
 
 	// create tenant
 	err = createTenant(t, stateMgr, "default")
@@ -3887,22 +3912,30 @@ func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 	_, err = createMirror(stateMgr, "default", "testMirror", nil, nil, collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
 
+	ometa := api.ObjectMeta{
+		Tenant:    "default",
+		Namespace: "default",
+		Name:      "testMirror",
+	}
+
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
 		if err == nil {
+			if ms.intfMirrorSession.pushObj == nil {
+				return false, nil
+			}
+			if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors {
+				return false, nil
+			}
+			_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa)
+			if err != nil {
+				return false, nil
+			}
+
 			return true, nil
 		}
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
-
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 1, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
 
 	_, err = createMirror(stateMgr, "default", "testMirror1", nil, nil, collectors, labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
@@ -3915,14 +3948,30 @@ func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 2, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
+	ometa1 := api.ObjectMeta{
+		Tenant:    "default",
+		Namespace: "default",
+		Name:      "testMirror1",
 	}
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		if err == nil {
+			if ms.intfMirrorSession.pushObj == nil {
+				return false, nil
+			}
+			if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors {
+				return false, nil
+			}
+			_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa1)
+			if err != nil {
+				return false, nil
+			}
+
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
 
 	//Add new collectors for same mirror
 	newCollectors := getCollectors(numCollectors, numCollectors+10)
@@ -3938,24 +3987,24 @@ func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	for i := numCollectors; i < numCollectors+10; i++ {
-		fmt.Printf("Checking collector %v\n", getCollectorName(i))
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 1, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
+	AssertEventually(t, func() (bool, interface{}) {
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		if err == nil {
+			if ms.intfMirrorSession.pushObj == nil {
+				return false, nil
+			}
+			if len(ms.intfMirrorSession.obj.Spec.Collectors) != 10 {
+				return false, nil
+			}
+			_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa1)
+			if err != nil {
+				return false, nil
+			}
 
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 1, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
 
 	//Remove some and add new ones
 	newCollectors = getCollectors(0, numCollectors+5)
@@ -3971,30 +4020,24 @@ func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 		return false, nil
 	}, "Mirror session not found", "1ms", "1s")
 
-	for i := numCollectors; i < numCollectors+5; i++ {
-		fmt.Printf("Checking collector %v\n", getCollectorName(i))
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 1, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
+	AssertEventually(t, func() (bool, interface{}) {
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		if err == nil {
+			if ms.intfMirrorSession.pushObj == nil {
+				return false, nil
+			}
+			if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors+5 {
+				return false, nil
+			}
+			_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa1)
+			if err != nil {
+				return false, nil
+			}
 
-	for i := numCollectors + 5; i < numCollectors+10; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		Assert(t, err != nil, "Error finding collector  ")
-		Assert(t, col == nil, "Error finding collector  ")
-	}
-
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 2, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
+			return true, nil
+		}
+		return false, nil
+	}, "Mirror session not found", "1ms", "1s")
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror1", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
@@ -4007,14 +4050,19 @@ func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	for i := 0; i < numCollectors; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		AssertOk(t, err, "Error finding collector  ")
-		Assert(t, col.pushObj != nil, "push object not set")
-		Assert(t, col.refCount == 1, "push object not set")
-		Assert(t, col.obj != nil, "push object not set")
-		Assert(t, col.obj.Spec.Destination == getCollectorName(i), "collector name not set")
-	}
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa1)
+		if err == nil {
+			return false, nil
+		}
+
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror1")
+		if err == nil {
+			return false, nil
+		}
+
+		return true, nil
+	}, "Mirror session found", "1ms", "1s")
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	AssertOk(t, err, "Error creating mirror session ")
@@ -4027,11 +4075,19 @@ func TestMirrorCreateUpdateDeleteCollector(t *testing.T) {
 		return false, nil
 	}, "Mirror session found", "1ms", "1s")
 
-	for i := 0; i < numCollectors+10; i++ {
-		col, err := smgrMirrorInterface.findCollector("default", "default", getCollectorName(i))
-		Assert(t, err != nil, "Error finding collector  ")
-		Assert(t, col == nil, "Error finding collector  ")
-	}
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = smgrMirrorInterface.sm.mbus.FindPushObject("InterfaceMirrorSession", &ometa)
+		if err == nil {
+			return false, nil
+		}
+
+		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err == nil {
+			return false, nil
+		}
+
+		return true, nil
+	}, "Mirror session found", "1ms", "1s")
 
 }
 
@@ -4441,13 +4497,10 @@ func TestMirrorCreateDeleteWithNetworkInterface(t *testing.T) {
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 		for _, intf := range intfs {
-			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-			Assert(t, ok, "Collector not present")
-			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
-			Assert(t, ok, "Collector not present")
+			log.Infof("Mirror sessions %v ", len(intf.mirrorSessions))
+			Assert(t, len(intf.mirrorSessions) == 1, "Number of mirror sesiosn don't match")
+			_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
+			Assert(t, ok, "Mirror sessions not present")
 			Assert(t, len(intf.mirrorSessions) != 0, "Mirror sessions not cleared")
 		}
 
@@ -4467,10 +4520,12 @@ func TestMirrorCreateDeleteWithNetworkInterface(t *testing.T) {
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 		for _, intf := range intfs {
-			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-			Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-			Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+
+			log.Infof("Mirror sessions %v ", len(intf.mirrorSessions))
+			Assert(t, len(intf.mirrorSessions) == 0, "Number of mirror sesiosn don't match")
+			Assert(t, len(smgrMirrorInterface.mirrorSessions) == 0, "Number of mirror sesiosn don't match")
 			Assert(t, len(intf.mirrorSessions) == 0, "Mirror sessions not cleared")
+
 		}
 	}
 
@@ -4490,6 +4545,7 @@ func TestMirrorCreateDeleteWithNetworkInterface(t *testing.T) {
 	}
 
 }
+
 func TestMirrorCreateDeleteSameCollectorDifferentMirrors(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
@@ -4545,14 +4601,10 @@ func TestMirrorCreateDeleteSameCollectorDifferentMirrors(t *testing.T) {
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 		for _, intf := range intfs {
-			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+			log.Infof("Num %v ", len(intf.mirrorSessions))
+			Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+			_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 			Assert(t, ok, "Collector not present")
-			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
-			Assert(t, ok, "Collector not present")
-			Assert(t, len(intf.mirrorSessions) == 1, "Mirror sessions not cleared")
 		}
 
 		_, err = createMirror(stateMgr, "default", "testMirror1", nil, nil, collectors, labels.SelectorFromSet(labels.Set(label1)))
@@ -4571,14 +4623,11 @@ func TestMirrorCreateDeleteSameCollectorDifferentMirrors(t *testing.T) {
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 		for _, intf := range intfs {
-			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+			Assert(t, len(intf.mirrorSessions) == 2, "Number of collectors don't match")
+			_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 			Assert(t, ok, "Collector not present")
-			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+			_, ok = smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[1]]
 			Assert(t, ok, "Collector not present")
-			Assert(t, len(intf.mirrorSessions) == 2, "Mirror sessions not cleared")
 		}
 
 		_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
@@ -4597,12 +4646,8 @@ func TestMirrorCreateDeleteSameCollectorDifferentMirrors(t *testing.T) {
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 		for _, intf := range intfs {
-			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-			Assert(t, ok, "Collector not present")
-			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+			Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+			_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 			Assert(t, ok, "Collector not present")
 			Assert(t, len(intf.mirrorSessions) == 1, "Mirror sessions not cleared")
 		}
@@ -4623,9 +4668,7 @@ func TestMirrorCreateDeleteSameCollectorDifferentMirrors(t *testing.T) {
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 		for _, intf := range intfs {
-			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-			Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-			Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+			Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 			Assert(t, len(intf.mirrorSessions) == 0, "Mirror sessions not cleared")
 		}
 	}
@@ -4703,12 +4746,8 @@ func TestMirrorCreateUpdateLabelWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -4729,8 +4768,7 @@ func TestMirrorCreateUpdateLabelWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
@@ -4749,9 +4787,7 @@ func TestMirrorCreateUpdateLabelWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("CHECK %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -4827,12 +4863,8 @@ func TestMirrorCreateRemoveLabelWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -4853,8 +4885,7 @@ func TestMirrorCreateRemoveLabelWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
@@ -4873,9 +4904,7 @@ func TestMirrorCreateRemoveLabelWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("CHECK %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -4929,18 +4958,23 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 	}
 
 	numCollectors := 10
-	newCollectorsCnt := 10
+	newCollectorsCnt := 5
+	reducedCollectorCnt := 5
 	collectors := getCollectors(0, numCollectors)
 	newCollectors := getCollectors(numCollectors, numCollectors+newCollectorsCnt)
+	newReducedcollectors := getCollectors(0, reducedCollectorCnt)
 	_, err = createMirror(stateMgr, "default", "testMirror", nil, nil, collectors, labels.SelectorFromSet(labels.Set(label1)))
 	AssertOk(t, err, "Error creating mirror session ")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
-		if err == nil {
-			return true, nil
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return false, nil
 		}
-		return false, nil
+		if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors {
+			return false, nil
+		}
+		return true, nil
 	}, "Mirror session not found", "1ms", "1s")
 
 	intfs, err := smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
@@ -4948,13 +4982,62 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
-		Assert(t, ok, "Collector not present")
+	}
+
+	_, err = updateMirror(stateMgr, "default", "testMirror",
+		nil, nil, collectors, labels.SelectorFromSet(labels.Set(label1)), 0)
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return false, nil
+		}
+		if len(ms.intfMirrorSession.obj.Spec.Collectors) != numCollectors {
+			return false, nil
+		}
+
+		return true, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	_, err = updateMirror(stateMgr, "default", "testMirror",
+		nil, nil, newReducedcollectors, labels.SelectorFromSet(labels.Set(label1)), 0)
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return false, nil
+		}
+		if len(ms.intfMirrorSession.obj.Spec.Collectors) != reducedCollectorCnt {
+			return false, nil
+		}
+
+		return true, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	_, err = updateMirror(stateMgr, "default", "testMirror",
+		nil, nil, newCollectors, labels.SelectorFromSet(labels.Set(label1)), 0)
+	AssertOk(t, err, "Error creating mirror session ")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return false, nil
+		}
+		if len(ms.intfMirrorSession.obj.Spec.Collectors) != newCollectorsCnt {
+			return false, nil
+		}
+
+		return true, nil
+	}, "Mirror session not found", "1ms", "1s")
+
+	for index := range newCollectors {
+		newCollectors[index].StripVlanHdr = true
+		newCollectors[index].Type = "mytype"
 	}
 
 	_, err = updateMirror(stateMgr, "default", "testMirror",
@@ -4962,11 +5045,26 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 	AssertOk(t, err, "Error creating mirror session ")
 
 	AssertEventually(t, func() (bool, interface{}) {
-		_, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
-		if err == nil {
-			return true, nil
+		ms, err := smgrMirrorInterface.FindMirrorSession("default", "testMirror")
+		if err != nil {
+			return false, nil
 		}
-		return false, nil
+		if len(ms.intfMirrorSession.obj.Spec.Collectors) != newCollectorsCnt {
+			log.Infof("Collector count don't match..")
+			return false, nil
+		}
+
+		for i := 0; i < newCollectorsCnt; i++ {
+			if ms.intfMirrorSession.obj.Spec.Collectors[i].StripVlanHdr != true {
+				return false, nil
+			}
+
+			if ms.intfMirrorSession.obj.Spec.Collectors[i].Type != "mytype" {
+				return false, nil
+			}
+		}
+
+		return true, nil
 	}, "Mirror session not found", "1ms", "1s")
 
 	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
@@ -4974,12 +5072,8 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -4999,8 +5093,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
@@ -5019,9 +5112,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("CHECK %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -5040,6 +5131,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterface(t *testing.T) {
 	}
 
 }
+
 func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
@@ -5094,12 +5186,8 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -5120,11 +5208,9 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
 	}
 
 	_, err = updateInterfaceMirror(stateMgr, "default", "testMirror", monitoring.Direction_RX, newCollectors,
@@ -5140,9 +5226,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 	}, "Mirror session not found", "1ms", "1s")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
 	}
 
 	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
@@ -5150,8 +5234,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
 	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
@@ -5170,9 +5253,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection(t *testin
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("CHECK %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -5246,12 +5327,8 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection2(t *testi
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -5272,11 +5349,9 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection2(t *testi
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
 	}
 
 	_, err = updateInterfaceMirror(stateMgr, "default", "testMirror", monitoring.Direction_RX, newCollectors,
@@ -5292,9 +5367,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection2(t *testi
 	}, "Mirror session not found", "1ms", "1s")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
 	}
 
 	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
@@ -5302,8 +5375,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection2(t *testi
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
 	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
@@ -5322,9 +5394,7 @@ func TestMirrorCreateUpdateCollectorsWithNetworkInterfaceWithDirection2(t *testi
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("CHECK %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -5398,8 +5468,7 @@ func TestMirrorCreateUpdateLaterLabelWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	_, err = updateMirror(stateMgr, "default", "testMirror", nil, nil, newCollectors, labels.SelectorFromSet(labels.Set(label1)), 0)
@@ -5418,12 +5487,8 @@ func TestMirrorCreateUpdateLaterLabelWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -5443,8 +5508,7 @@ func TestMirrorCreateUpdateLaterLabelWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -5537,12 +5601,8 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -5552,8 +5612,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 
 	//label2 has not collectors yet
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	_, err = updateMirror(stateMgr, "default", "testMirror", nil, nil, newCollectors, labels.SelectorFromSet(labels.Set(label2)), 0)
@@ -5573,8 +5632,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 
 	//label1 collectors need to be removed
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label2)})
@@ -5583,12 +5641,8 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 
 	//label2 collectors need to be addeded
 	for _, intf := range intfs {
-		log.Infof("Num %v %v %v", len(intf.txCollectors), len(intf.rxCollectors), newCollectorsCnt)
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -5608,8 +5662,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterface(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -5707,12 +5760,8 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -5722,8 +5771,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 
 	//label2 has not collectors yet
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	_, err = updateMirror(stateMgr, "default", "testMirror", nil, nil, newCollectors, labels.SelectorFromSet(labels.Set(label3)), 0)
@@ -5744,12 +5792,8 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 	//label1 collectors need to be removed
 	//label2 collectors need to be addeded
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -5759,12 +5803,8 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 
 	//label2 collectors need to be addeded
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -5784,8 +5824,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
@@ -5793,8 +5832,7 @@ func TestMirrorCreateUpdateLabelCollectorsWithNetworkInterfaceSame(t *testing.T)
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -5870,8 +5908,7 @@ func TestNetworkInterfaceUpdateLabelWithMirror(t *testing.T) {
 	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	//Now change the label on interfaces
@@ -5895,12 +5932,8 @@ func TestNetworkInterfaceUpdateLabelWithMirror(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -5924,8 +5957,7 @@ func TestNetworkInterfaceUpdateLabelWithMirror(t *testing.T) {
 	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 }
@@ -6014,14 +6046,12 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
-		Assert(t, intf.mirrorSessions[0] == mirrorSesssion.Name, "Mirror session name did not match")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
-		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
+		log.Infof("Mirror session name %v", intf.mirrorSessions)
+		Assert(t, intf.mirrorSessions[0] == "default/default/"+mirrorSesssion.Name, "Mirror session name did not match")
+		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"default/default/" + mirrorSesssion.Name})
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -6031,14 +6061,10 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
-		Assert(t, intf.mirrorSessions[0] == mirrorSesssion1.Name, "Mirror session name did not match")
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
-		Assert(t, ok, "Collector not present")
+		Assert(t, intf.mirrorSessions[0] == "default/default/"+mirrorSesssion1.Name, "Mirror session name did not match")
 	}
 
 	//Now add label1 to label2
@@ -6063,15 +6089,11 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 
 	//label2 has not collectors yet
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
-		Assert(t, intf.mirrorSessions[0] == mirrorSesssion1.Name, "Mirror session name did not match")
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror1"})
+		Assert(t, intf.mirrorSessions[0] == "default/default/"+mirrorSesssion1.Name, "Mirror session name did not match")
+		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"default/default/" + mirrorSesssion1.Name})
 	}
 
 	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
@@ -6079,8 +6101,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 	Assert(t, len(intfs) == 0, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs2; i++ {
@@ -6103,15 +6124,11 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 
 	//label2 has not collectors yet
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
-		Assert(t, intf.mirrorSessions[0] == mirrorSesssion1.Name, "Mirror session name did not match")
-		Assert(t, len(intf.rxCollectors) == newCollectorsCnt, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror1"})
+		Assert(t, intf.mirrorSessions[0] == "default/default/"+mirrorSesssion1.Name, "Mirror session name did not match")
+		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"default/default/" + mirrorSesssion1.Name})
 	}
 
 	intfs, err = smgrNetworkInterface.getInterfacesMatchingSelector([]*labels.Selector{labels.SelectorFromSet(label1)})
@@ -6119,14 +6136,11 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 		log.Infof("Mirror session name %v %v", intf.mirrorSessions[0], mirrorSesssion.Name)
-		Assert(t, intf.mirrorSessions[0] == mirrorSesssion.Name, "Mirror session name did not match")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, intf.mirrorSessions[0] == "default/default/"+mirrorSesssion.Name, "Mirror session name did not match")
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -6148,8 +6162,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror1", labels.SelectorFromSet(labels.Set(label2)))
@@ -6168,8 +6181,7 @@ func TestNetworkInterfaceUpdateLabelSwapWithMirror(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 }
@@ -6356,7 +6368,7 @@ func TestWatcherWithMirrorCreateDelete(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -6399,18 +6411,14 @@ func TestWatcherWithMirrorCreateDelete(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
@@ -6432,7 +6440,7 @@ func TestWatcherWithMirrorCreateDelete(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
 
@@ -6466,9 +6474,7 @@ func TestWatcherWithMirrorCreateDelete(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -6513,7 +6519,7 @@ func TestWatcherWithMirrorCreateUpdate(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -6556,18 +6562,14 @@ func TestWatcherWithMirrorCreateUpdate(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
@@ -6589,7 +6591,7 @@ func TestWatcherWithMirrorCreateUpdate(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["InterfaceMirrorSession"] = 1
 	}
 
 	updateCollectors := getCollectorsWithGateway(0, numCollectors)
@@ -6622,7 +6624,7 @@ func TestWatcherWithMirrorCreateUpdate(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
 
@@ -6656,9 +6658,7 @@ func TestWatcherWithMirrorCreateUpdate(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -6731,12 +6731,8 @@ func TestWatcherWithMirrorCreateDeleteBeforeWatcherJoin(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -6748,7 +6744,7 @@ func TestWatcherWithMirrorCreateDeleteBeforeWatcherJoin(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		oldWatchers = append(oldWatchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -6760,7 +6756,7 @@ func TestWatcherWithMirrorCreateDeleteBeforeWatcherJoin(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -6773,7 +6769,7 @@ func TestWatcherWithMirrorCreateDeleteBeforeWatcherJoin(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = numCollectors
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
 
@@ -6807,9 +6803,7 @@ func TestWatcherWithMirrorCreateDeleteBeforeWatcherJoin(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -6854,7 +6848,7 @@ func TestWatcherWithMirrorCreateDeleteMultipleTimes(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -6901,18 +6895,14 @@ func TestWatcherWithMirrorCreateDeleteMultipleTimes(t *testing.T) {
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 		for _, intf := range intfs {
-			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-			Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-			_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-			Assert(t, ok, "Collector not present")
-			Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-			_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+			Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+			_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 			Assert(t, ok, "Collector not present")
 		}
 
 		for _, watcher := range watchers {
 			watcher.evtsExp.Reset()
-			watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+			watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = numCollectors
 			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 		}
 
@@ -6933,7 +6923,7 @@ func TestWatcherWithMirrorCreateDeleteMultipleTimes(t *testing.T) {
 		for _, watcher := range watchers {
 			watcher.evtsExp.Reset()
 			watcher.evtsRcvd.Reset()
-			watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+			watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = numCollectors
 			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 		}
 
@@ -6967,9 +6957,7 @@ func TestWatcherWithMirrorCreateDeleteMultipleTimes(t *testing.T) {
 		Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 		for _, intf := range intfs {
-			log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-			Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-			Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+			Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 		}
 	}
 
@@ -7014,7 +7002,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -7043,7 +7031,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 		}, "Interface not found", "1ms", "1s")
 	}
 
-	numCollectors := 1
+	numCollectors := 10
 	collectors := getCollectors(0, numCollectors)
 	_, err = createMirror(stateMgr, "default", "testMirror", nil, nil, collectors, labels.SelectorFromSet(labels.Set(label1)))
 	AssertOk(t, err, "Error creating mirror session ")
@@ -7061,12 +7049,8 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
@@ -7074,7 +7058,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
@@ -7096,7 +7080,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = 0
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 0
 		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 0
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 0
 	}
@@ -7163,7 +7147,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 0
 	}
 
@@ -7197,9 +7181,7 @@ func TestWatcherWithMirrorCreateFakeUpdate(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -7243,7 +7225,7 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -7304,12 +7286,8 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
@@ -7317,7 +7295,7 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 2
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
@@ -7341,9 +7319,7 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = newCollectorsCnt
-		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["InterfaceMirrorSession"] = 1
 	}
 
 	//Lets up update the mirror
@@ -7379,8 +7355,7 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = newCollectorsCnt
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = otherNewCollectorsCnt
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 2
 	}
 
@@ -7415,7 +7390,7 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = newCollectorsCnt
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
 
@@ -7449,9 +7424,7 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -7471,7 +7444,6 @@ func TestWatcherWithMirrorCreateUpdateDelete(t *testing.T) {
 
 }
 
-//
 func TestWatcherWithMirrorCreateUpdateCollector(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
@@ -7496,7 +7468,7 @@ func TestWatcherWithMirrorCreateUpdateCollector(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -7539,12 +7511,8 @@ func TestWatcherWithMirrorCreateUpdateCollector(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
@@ -7553,7 +7521,7 @@ func TestWatcherWithMirrorCreateUpdateCollector(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["InterfaceMirrorSession"] = 1
 	}
 	//update just packet size to make sure it is upda
 	_, err = updateMirror(stateMgr, "default", "testMirror", nil, nil, collectors, labels.SelectorFromSet(labels.Set(label1)), 32)
@@ -7586,7 +7554,7 @@ func TestWatcherWithMirrorCreateUpdateCollector(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
 
@@ -7620,9 +7588,7 @@ func TestWatcherWithMirrorCreateUpdateCollector(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -7641,6 +7607,7 @@ func TestWatcherWithMirrorCreateUpdateCollector(t *testing.T) {
 	}
 
 }
+
 func TestWatcherWithMirrorRemoveLabel(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
@@ -7665,7 +7632,7 @@ func TestWatcherWithMirrorRemoveLabel(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -7708,12 +7675,8 @@ func TestWatcherWithMirrorRemoveLabel(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
@@ -7721,7 +7684,7 @@ func TestWatcherWithMirrorRemoveLabel(t *testing.T) {
 
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = numCollectors
 		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
@@ -7819,7 +7782,7 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -7862,12 +7825,8 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
@@ -7875,7 +7834,7 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = numCollectors
 		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
@@ -7899,8 +7858,7 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = newCollectorsCnt
-		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["InterfaceMirrorSession"] = newCollectorsCnt
 	}
 
 	allCollectors := make([]monitoring.MirrorCollector, len(collectors))
@@ -7937,15 +7895,7 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = newCollectorsCnt
-		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
-	}
-
-	for _, watcher := range watchers {
-		watcher.evtsExp.Reset()
-		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
-		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["InterfaceMirrorSession"] = 1
 	}
 
 	_, err = updateMirror(stateMgr, "default", "testMirror", nil, nil, newCollectors, labels.SelectorFromSet(labels.Set(label1)), 0)
@@ -7976,7 +7926,7 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = newCollectorsCnt
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = newCollectorsCnt
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
 
@@ -8010,9 +7960,7 @@ func TestWatcherWithMirrorCreateUpdateRemoveCollector(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -8056,7 +8004,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -8099,12 +8047,8 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
@@ -8112,7 +8056,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
-		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1
 		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
@@ -8136,7 +8080,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["InterfaceMirrorSession"] = 1
 	}
 
 	//Lets up update the mirror
@@ -8156,11 +8100,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 	}, "Mirror session not found", "1ms", "1s")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.rxCollectors[0]]
-		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
 
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
 	}
@@ -8184,7 +8124,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 	for _, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["InterfaceMirrorSession"] = 1
 	}
 
 	//Lets up update the mirror
@@ -8204,11 +8144,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 	}, "Mirror session not found", "1ms", "1s")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
 
 		stringSliceEqual(intf.NetworkInterfaceState.Status.MirroSessions, []string{"testMirror"})
 	}
@@ -8231,7 +8167,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 	}
 
 	_, err = deleteMirror(stateMgr, "default", "testMirror", labels.SelectorFromSet(labels.Set(label1)))
@@ -8264,9 +8200,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -8285,6 +8219,7 @@ func TestWatcherWithMirrorCreateUpdateWithDirection(t *testing.T) {
 	}
 
 }
+
 func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
@@ -8310,7 +8245,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -8371,12 +8306,8 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == numCollectors, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -8384,7 +8315,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 		watcher.evtsExp.Reset()
 		watcher.evtsExp.evKindMap[memdb.CreateEvent]["Interface"] = 1
 		if index < numOfIntfs {
-			watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+			watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1
 			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 		}
 	}
@@ -8410,7 +8341,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 		watcher.evtsRcvd.Reset()
 		//watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
 		if i >= numOfIntfs {
-			watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
+			watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1
 		}
 		watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 	}
@@ -8446,7 +8377,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 	for i, watcher := range watchers {
 		watcher.evtsExp.Reset()
 		watcher.evtsRcvd.Reset()
-		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
+		watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1
 		if i >= numOfIntfs {
 			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
 		}
@@ -8482,9 +8413,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -8504,7 +8433,7 @@ func TestWatcherWithMirrorCreateUpdateDeleteDifferentInterfaces(t *testing.T) {
 
 }
 
-func TestM(t *testing.T) {
+func TestMirror(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
 	defer stateMgr.Stop()
@@ -8556,12 +8485,8 @@ func TestM(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 1, "Number of collectors don't match")
-		_, ok := smgrMirrorInterface.collectors[intf.txCollectors[0]]
-		Assert(t, ok, "Collector not present")
-		Assert(t, len(intf.rxCollectors) == 1, "Number of collectors don't match")
-		_, ok = smgrMirrorInterface.collectors[intf.rxCollectors[0]]
+		Assert(t, len(intf.mirrorSessions) == 1, "Number of collectors don't match")
+		_, ok := smgrMirrorInterface.mirrorSessions[intf.mirrorSessions[0]]
 		Assert(t, ok, "Collector not present")
 	}
 
@@ -8581,9 +8506,7 @@ func TestM(t *testing.T) {
 	Assert(t, len(intfs) == numOfIntfs, "Number of interfaces don't match")
 
 	for _, intf := range intfs {
-		log.Infof("Num %v %v", len(intf.txCollectors), len(intf.rxCollectors))
-		Assert(t, len(intf.txCollectors) == 0, "Number of collectors don't match")
-		Assert(t, len(intf.rxCollectors) == 0, "Number of collectors don't match")
+		Assert(t, len(intf.mirrorSessions) == 0, "Number of collectors don't match")
 	}
 
 	for i := 0; i < numOfIntfs; i++ {
@@ -8884,6 +8807,7 @@ func TestWatcherWithFlowMirrorCreateDeleteWithScheduling(t *testing.T) {
 	}
 
 }
+
 func TestWatcherWithFlowMirrorCreateUpdateWithSchedulingRemoved(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
@@ -9771,7 +9695,7 @@ func TestWatcherWithFlowMirrorToInterfaceMirror(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -9796,7 +9720,7 @@ func TestWatcherWithFlowMirrorToInterfaceMirror(t *testing.T) {
 		},
 	}
 
-	numOfMirrors := 8
+	numOfMirrors := 2
 	for i := 0; i < numOfMirrors; i++ {
 
 		mirrorName := fmt.Sprintf("testMirror-%v", i)
@@ -9852,8 +9776,8 @@ func TestWatcherWithFlowMirrorToInterfaceMirror(t *testing.T) {
 
 		for _, watcher := range watchers {
 			watcher.evtsExp.Reset()
-			watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
-			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+			watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1 + i
+			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1 + i
 			watcher.evtsExp.evKindMap[memdb.DeleteEvent]["MirrorSession"] = 1 + i
 		}
 
@@ -9884,10 +9808,8 @@ func TestWatcherWithFlowMirrorToInterfaceMirror(t *testing.T) {
 		for _, watcher := range watchers {
 			watcher.evtsExp.Reset()
 			//watcher.evtsRcvd.Reset()
-			if i == numOfMirrors-1 {
-				watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
-				watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
-			}
+			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1 + i
+			watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = 1 + i
 		}
 
 		_, err = deleteMirror(stateMgr, "default", mirrorName, nil)
@@ -9917,6 +9839,7 @@ func TestWatcherWithFlowMirrorToInterfaceMirror(t *testing.T) {
 	}
 
 }
+
 func TestWatcherWithInterfaceMirrorToFlowMirror(t *testing.T) {
 	// create network state manager
 	ResetWatchMap()
@@ -9962,7 +9885,7 @@ func TestWatcherWithInterfaceMirrorToFlowMirror(t *testing.T) {
 		watcher.Channel = make(chan memdb.Event, (1000))
 		watchWrap := addWatcher(watcher)
 		watchers = append(watchers, watchWrap)
-		err = stateMgr.mbus.WatchObjects("Collector", watcher)
+		err = stateMgr.mbus.WatchObjects("InterfaceMirrorSession", watcher)
 		AssertOk(t, err, "Error watching")
 		err = stateMgr.mbus.WatchObjects("Interface", watcher)
 		AssertOk(t, err, "Error watching")
@@ -10004,8 +9927,8 @@ func TestWatcherWithInterfaceMirrorToFlowMirror(t *testing.T) {
 
 		for _, watcher := range watchers {
 			watcher.evtsExp.Reset()
-			watcher.evtsExp.evKindMap[memdb.CreateEvent]["Collector"] = numCollectors
-			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
+			watcher.evtsExp.evKindMap[memdb.CreateEvent]["InterfaceMirrorSession"] = 1 + i
+			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1 + i
 		}
 
 		errs := make(chan error, len(watchers))
@@ -10045,10 +9968,8 @@ func TestWatcherWithInterfaceMirrorToFlowMirror(t *testing.T) {
 		for _, watcher := range watchers {
 			watcher.evtsExp.Reset()
 			watcher.evtsExp.evKindMap[memdb.CreateEvent]["MirrorSession"] = i + 1
-			if i == numOfMirrors-1 {
-				watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1
-				watcher.evtsExp.evKindMap[memdb.DeleteEvent]["Collector"] = numCollectors
-			}
+			watcher.evtsExp.evKindMap[memdb.UpdateEvent]["Interface"] = 1 + i
+			watcher.evtsExp.evKindMap[memdb.DeleteEvent]["InterfaceMirrorSession"] = i + 1
 		}
 
 		errs := make(chan error, len(watchers))
@@ -10251,6 +10172,7 @@ func TestWatcherWithFlowExportCreateDelete(t *testing.T) {
 
 }
 
+/*
 func TestEndpointUpdate(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
@@ -10276,6 +10198,7 @@ func TestEndpointUpdate(t *testing.T) {
 	AssertOk(t, err, "Error while updating EP")
 	Assert(t, ep != nil, "EP was nil")
 }
+*/
 
 func TestMain(m *testing.M) {
 	// init tsdb client

@@ -15,3 +15,9 @@ message MirrorSession {
     netproto.MirrorSession  MirrorSession  = 3;
 }
 
+message InterfaceMirrorSession {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta        = 1;
+    string              Key         = 2;
+    netproto.InterfaceMirrorSession InterfaceMirrorSession  = 3;
+}

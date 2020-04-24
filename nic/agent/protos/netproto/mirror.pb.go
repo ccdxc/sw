@@ -73,6 +73,32 @@ func (m *MirrorSession) GetStatus() MirrorSessionStatus {
 	return MirrorSessionStatus{}
 }
 
+type InterfaceMirrorSession struct {
+	api.TypeMeta   `protobuf:"bytes,1,opt,name=TypeMeta,embedded=TypeMeta" json:",inline"`
+	api.ObjectMeta `protobuf:"bytes,2,opt,name=ObjectMeta,embedded=ObjectMeta" json:"meta,omitempty"`
+	Spec           InterfaceMirrorSessionSpec   `protobuf:"bytes,3,opt,name=Spec" json:"spec,omitempty"`
+	Status         InterfaceMirrorSessionStatus `protobuf:"bytes,4,opt,name=Status" json:"status,omitempty"`
+}
+
+func (m *InterfaceMirrorSession) Reset()                    { *m = InterfaceMirrorSession{} }
+func (m *InterfaceMirrorSession) String() string            { return proto.CompactTextString(m) }
+func (*InterfaceMirrorSession) ProtoMessage()               {}
+func (*InterfaceMirrorSession) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{1} }
+
+func (m *InterfaceMirrorSession) GetSpec() InterfaceMirrorSessionSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return InterfaceMirrorSessionSpec{}
+}
+
+func (m *InterfaceMirrorSession) GetStatus() InterfaceMirrorSessionStatus {
+	if m != nil {
+		return m.Status
+	}
+	return InterfaceMirrorSessionStatus{}
+}
+
 type MirrorSessionSpec struct {
 	VrfName string `protobuf:"bytes,1,opt,name=VrfName,proto3" json:"vrf-name,omitempty"`
 	// Mirrored packet collectors
@@ -81,12 +107,13 @@ type MirrorSessionSpec struct {
 	MatchRules      []MatchRule `protobuf:"bytes,3,rep,name=MatchRules" json:"match-rules,inline"`
 	PacketSize      uint32      `protobuf:"varint,4,opt,name=PacketSize,proto3" json:"packet-size,omitempty"`
 	MirrorDirection MirrorDir   `protobuf:"varint,5,opt,name=MirrorDirection,proto3,enum=netproto.MirrorDir" json:"mirror-direction,omitempty"`
+	SpanID          uint32      `protobuf:"varint,6,opt,name=SpanID,proto3" json:"span-id,inline"`
 }
 
 func (m *MirrorSessionSpec) Reset()                    { *m = MirrorSessionSpec{} }
 func (m *MirrorSessionSpec) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionSpec) ProtoMessage()               {}
-func (*MirrorSessionSpec) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{1} }
+func (*MirrorSessionSpec) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{2} }
 
 func (m *MirrorSessionSpec) GetVrfName() string {
 	if m != nil {
@@ -123,6 +150,78 @@ func (m *MirrorSessionSpec) GetMirrorDirection() MirrorDir {
 	return MirrorDir_BOTH
 }
 
+func (m *MirrorSessionSpec) GetSpanID() uint32 {
+	if m != nil {
+		return m.SpanID
+	}
+	return 0
+}
+
+type InterfaceMirrorSessionSpec struct {
+	VrfName string `protobuf:"bytes,1,opt,name=VrfName,proto3" json:"vrf-name,omitempty"`
+	// Mirrored packet collectors
+	Collectors      []MirrorCollector `protobuf:"bytes,2,rep,name=Collectors" json:"collectors,inline"`
+	SpanID          uint32            `protobuf:"varint,3,opt,name=SpanID,proto3" json:"span-id,inline"`
+	PacketSize      uint32            `protobuf:"varint,4,opt,name=PacketSize,proto3" json:"packet-size,omitempty"`
+	MirrorDirection MirrorDir         `protobuf:"varint,5,opt,name=MirrorDirection,proto3,enum=netproto.MirrorDir" json:"mirror-direction,omitempty"`
+	Type            string            `protobuf:"bytes,6,opt,name=Type,proto3" json:"type,omitempty"`
+	StripVlanHdr    bool              `protobuf:"varint,7,opt,name=StripVlanHdr,proto3" json:"strip-vlan-hdr,omitempty"`
+}
+
+func (m *InterfaceMirrorSessionSpec) Reset()                    { *m = InterfaceMirrorSessionSpec{} }
+func (m *InterfaceMirrorSessionSpec) String() string            { return proto.CompactTextString(m) }
+func (*InterfaceMirrorSessionSpec) ProtoMessage()               {}
+func (*InterfaceMirrorSessionSpec) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{3} }
+
+func (m *InterfaceMirrorSessionSpec) GetVrfName() string {
+	if m != nil {
+		return m.VrfName
+	}
+	return ""
+}
+
+func (m *InterfaceMirrorSessionSpec) GetCollectors() []MirrorCollector {
+	if m != nil {
+		return m.Collectors
+	}
+	return nil
+}
+
+func (m *InterfaceMirrorSessionSpec) GetSpanID() uint32 {
+	if m != nil {
+		return m.SpanID
+	}
+	return 0
+}
+
+func (m *InterfaceMirrorSessionSpec) GetPacketSize() uint32 {
+	if m != nil {
+		return m.PacketSize
+	}
+	return 0
+}
+
+func (m *InterfaceMirrorSessionSpec) GetMirrorDirection() MirrorDir {
+	if m != nil {
+		return m.MirrorDirection
+	}
+	return MirrorDir_BOTH
+}
+
+func (m *InterfaceMirrorSessionSpec) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *InterfaceMirrorSessionSpec) GetStripVlanHdr() bool {
+	if m != nil {
+		return m.StripVlanHdr
+	}
+	return false
+}
+
 // MirrorSessionStatus captures the sg policy status
 type MirrorSessionStatus struct {
 	MirrorSessionID uint64 `protobuf:"varint,1,opt,name=MirrorSessionID,proto3" json:"id,omitempty"`
@@ -131,9 +230,28 @@ type MirrorSessionStatus struct {
 func (m *MirrorSessionStatus) Reset()                    { *m = MirrorSessionStatus{} }
 func (m *MirrorSessionStatus) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionStatus) ProtoMessage()               {}
-func (*MirrorSessionStatus) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{2} }
+func (*MirrorSessionStatus) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{4} }
 
 func (m *MirrorSessionStatus) GetMirrorSessionID() uint64 {
+	if m != nil {
+		return m.MirrorSessionID
+	}
+	return 0
+}
+
+// InterfaceMirrorSessionStatus captures status
+type InterfaceMirrorSessionStatus struct {
+	MirrorSessionID uint64 `protobuf:"varint,1,opt,name=MirrorSessionID,proto3" json:"id,omitempty"`
+}
+
+func (m *InterfaceMirrorSessionStatus) Reset()         { *m = InterfaceMirrorSessionStatus{} }
+func (m *InterfaceMirrorSessionStatus) String() string { return proto.CompactTextString(m) }
+func (*InterfaceMirrorSessionStatus) ProtoMessage()    {}
+func (*InterfaceMirrorSessionStatus) Descriptor() ([]byte, []int) {
+	return fileDescriptorMirror, []int{5}
+}
+
+func (m *InterfaceMirrorSessionStatus) GetMirrorSessionID() uint64 {
 	if m != nil {
 		return m.MirrorSessionID
 	}
@@ -147,7 +265,7 @@ type MirrorSessionList struct {
 func (m *MirrorSessionList) Reset()                    { *m = MirrorSessionList{} }
 func (m *MirrorSessionList) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionList) ProtoMessage()               {}
-func (*MirrorSessionList) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{3} }
+func (*MirrorSessionList) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{6} }
 
 func (m *MirrorSessionList) GetMirrorSessions() []*MirrorSession {
 	if m != nil {
@@ -165,7 +283,7 @@ type MirrorSessionEvent struct {
 func (m *MirrorSessionEvent) Reset()                    { *m = MirrorSessionEvent{} }
 func (m *MirrorSessionEvent) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionEvent) ProtoMessage()               {}
-func (*MirrorSessionEvent) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{4} }
+func (*MirrorSessionEvent) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{7} }
 
 func (m *MirrorSessionEvent) GetEventType() api.EventType {
 	if m != nil {
@@ -189,11 +307,73 @@ type MirrorSessionEventList struct {
 func (m *MirrorSessionEventList) Reset()                    { *m = MirrorSessionEventList{} }
 func (m *MirrorSessionEventList) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionEventList) ProtoMessage()               {}
-func (*MirrorSessionEventList) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{5} }
+func (*MirrorSessionEventList) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{8} }
 
 func (m *MirrorSessionEventList) GetMirrorSessionEvents() []*MirrorSessionEvent {
 	if m != nil {
 		return m.MirrorSessionEvents
+	}
+	return nil
+}
+
+type InterfaceMirrorSessionList struct {
+	InterfaceMirrorSessions []*InterfaceMirrorSession `protobuf:"bytes,1,rep,name=InterfaceMirrorSessions" json:"InterfaceMirrorSessions,omitempty"`
+}
+
+func (m *InterfaceMirrorSessionList) Reset()                    { *m = InterfaceMirrorSessionList{} }
+func (m *InterfaceMirrorSessionList) String() string            { return proto.CompactTextString(m) }
+func (*InterfaceMirrorSessionList) ProtoMessage()               {}
+func (*InterfaceMirrorSessionList) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{9} }
+
+func (m *InterfaceMirrorSessionList) GetInterfaceMirrorSessions() []*InterfaceMirrorSession {
+	if m != nil {
+		return m.InterfaceMirrorSessions
+	}
+	return nil
+}
+
+// mirror watch event
+type InterfaceMirrorSessionEvent struct {
+	EventType              api.EventType          `protobuf:"varint,1,opt,name=EventType,proto3,enum=api.EventType" json:"event-type,omitempty"`
+	InterfaceMirrorSession InterfaceMirrorSession `protobuf:"bytes,2,opt,name=InterfaceMirrorSession" json:"interface-mirror-session,omitempty"`
+}
+
+func (m *InterfaceMirrorSessionEvent) Reset()         { *m = InterfaceMirrorSessionEvent{} }
+func (m *InterfaceMirrorSessionEvent) String() string { return proto.CompactTextString(m) }
+func (*InterfaceMirrorSessionEvent) ProtoMessage()    {}
+func (*InterfaceMirrorSessionEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptorMirror, []int{10}
+}
+
+func (m *InterfaceMirrorSessionEvent) GetEventType() api.EventType {
+	if m != nil {
+		return m.EventType
+	}
+	return api.EventType_CreateEvent
+}
+
+func (m *InterfaceMirrorSessionEvent) GetInterfaceMirrorSession() InterfaceMirrorSession {
+	if m != nil {
+		return m.InterfaceMirrorSession
+	}
+	return InterfaceMirrorSession{}
+}
+
+// mirror watch events batched
+type InterfaceMirrorSessionEventList struct {
+	InterfaceMirrorSessionEvents []*InterfaceMirrorSessionEvent `protobuf:"bytes,1,rep,name=InterfaceMirrorSessionEvents" json:"InterfaceMirrorSessionEvents,omitempty"`
+}
+
+func (m *InterfaceMirrorSessionEventList) Reset()         { *m = InterfaceMirrorSessionEventList{} }
+func (m *InterfaceMirrorSessionEventList) String() string { return proto.CompactTextString(m) }
+func (*InterfaceMirrorSessionEventList) ProtoMessage()    {}
+func (*InterfaceMirrorSessionEventList) Descriptor() ([]byte, []int) {
+	return fileDescriptorMirror, []int{11}
+}
+
+func (m *InterfaceMirrorSessionEventList) GetInterfaceMirrorSessionEvents() []*InterfaceMirrorSessionEvent {
+	if m != nil {
+		return m.InterfaceMirrorSessionEvents
 	}
 	return nil
 }
@@ -207,7 +387,7 @@ type MirrorExportConfig struct {
 func (m *MirrorExportConfig) Reset()                    { *m = MirrorExportConfig{} }
 func (m *MirrorExportConfig) String() string            { return proto.CompactTextString(m) }
 func (*MirrorExportConfig) ProtoMessage()               {}
-func (*MirrorExportConfig) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{6} }
+func (*MirrorExportConfig) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{12} }
 
 func (m *MirrorExportConfig) GetDestination() string {
 	if m != nil {
@@ -237,7 +417,7 @@ type MirrorCollector struct {
 func (m *MirrorCollector) Reset()                    { *m = MirrorCollector{} }
 func (m *MirrorCollector) String() string            { return proto.CompactTextString(m) }
 func (*MirrorCollector) ProtoMessage()               {}
-func (*MirrorCollector) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{7} }
+func (*MirrorCollector) Descriptor() ([]byte, []int) { return fileDescriptorMirror, []int{13} }
 
 func (m *MirrorCollector) GetExportCfg() MirrorExportConfig {
 	if m != nil {
@@ -269,11 +449,17 @@ func (m *MirrorCollector) GetStripVlanHdr() bool {
 
 func init() {
 	proto.RegisterType((*MirrorSession)(nil), "netproto.MirrorSession")
+	proto.RegisterType((*InterfaceMirrorSession)(nil), "netproto.InterfaceMirrorSession")
 	proto.RegisterType((*MirrorSessionSpec)(nil), "netproto.MirrorSessionSpec")
+	proto.RegisterType((*InterfaceMirrorSessionSpec)(nil), "netproto.InterfaceMirrorSessionSpec")
 	proto.RegisterType((*MirrorSessionStatus)(nil), "netproto.MirrorSessionStatus")
+	proto.RegisterType((*InterfaceMirrorSessionStatus)(nil), "netproto.InterfaceMirrorSessionStatus")
 	proto.RegisterType((*MirrorSessionList)(nil), "netproto.MirrorSessionList")
 	proto.RegisterType((*MirrorSessionEvent)(nil), "netproto.MirrorSessionEvent")
 	proto.RegisterType((*MirrorSessionEventList)(nil), "netproto.MirrorSessionEventList")
+	proto.RegisterType((*InterfaceMirrorSessionList)(nil), "netproto.InterfaceMirrorSessionList")
+	proto.RegisterType((*InterfaceMirrorSessionEvent)(nil), "netproto.InterfaceMirrorSessionEvent")
+	proto.RegisterType((*InterfaceMirrorSessionEventList)(nil), "netproto.InterfaceMirrorSessionEventList")
 	proto.RegisterType((*MirrorExportConfig)(nil), "netproto.MirrorExportConfig")
 	proto.RegisterType((*MirrorCollector)(nil), "netproto.MirrorCollector")
 	proto.RegisterEnum("netproto.MirrorDir", MirrorDir_name, MirrorDir_value)
@@ -608,6 +794,198 @@ var _MirrorSessionApiV2_serviceDesc = grpc.ServiceDesc{
 	Metadata: "mirror.proto",
 }
 
+// Client API for InterfaceMirrorSessionApiV1 service
+
+type InterfaceMirrorSessionApiV1Client interface {
+	WatchInterfaceMirrorSessions(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (InterfaceMirrorSessionApiV1_WatchInterfaceMirrorSessionsClient, error)
+	ListInterfaceMirrorSessions(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*InterfaceMirrorSessionList, error)
+	InterfaceMirrorSessionOperUpdate(ctx context.Context, opts ...grpc.CallOption) (InterfaceMirrorSessionApiV1_InterfaceMirrorSessionOperUpdateClient, error)
+}
+
+type interfaceMirrorSessionApiV1Client struct {
+	cc *grpc.ClientConn
+}
+
+func NewInterfaceMirrorSessionApiV1Client(cc *grpc.ClientConn) InterfaceMirrorSessionApiV1Client {
+	return &interfaceMirrorSessionApiV1Client{cc}
+}
+
+func (c *interfaceMirrorSessionApiV1Client) WatchInterfaceMirrorSessions(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (InterfaceMirrorSessionApiV1_WatchInterfaceMirrorSessionsClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_InterfaceMirrorSessionApiV1_serviceDesc.Streams[0], c.cc, "/netproto.InterfaceMirrorSessionApiV1/WatchInterfaceMirrorSessions", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &interfaceMirrorSessionApiV1WatchInterfaceMirrorSessionsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type InterfaceMirrorSessionApiV1_WatchInterfaceMirrorSessionsClient interface {
+	Recv() (*InterfaceMirrorSessionEventList, error)
+	grpc.ClientStream
+}
+
+type interfaceMirrorSessionApiV1WatchInterfaceMirrorSessionsClient struct {
+	grpc.ClientStream
+}
+
+func (x *interfaceMirrorSessionApiV1WatchInterfaceMirrorSessionsClient) Recv() (*InterfaceMirrorSessionEventList, error) {
+	m := new(InterfaceMirrorSessionEventList)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *interfaceMirrorSessionApiV1Client) ListInterfaceMirrorSessions(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*InterfaceMirrorSessionList, error) {
+	out := new(InterfaceMirrorSessionList)
+	err := grpc.Invoke(ctx, "/netproto.InterfaceMirrorSessionApiV1/ListInterfaceMirrorSessions", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *interfaceMirrorSessionApiV1Client) InterfaceMirrorSessionOperUpdate(ctx context.Context, opts ...grpc.CallOption) (InterfaceMirrorSessionApiV1_InterfaceMirrorSessionOperUpdateClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_InterfaceMirrorSessionApiV1_serviceDesc.Streams[1], c.cc, "/netproto.InterfaceMirrorSessionApiV1/InterfaceMirrorSessionOperUpdate", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &interfaceMirrorSessionApiV1InterfaceMirrorSessionOperUpdateClient{stream}
+	return x, nil
+}
+
+type InterfaceMirrorSessionApiV1_InterfaceMirrorSessionOperUpdateClient interface {
+	Send(*InterfaceMirrorSessionEvent) error
+	CloseAndRecv() (*api.TypeMeta, error)
+	grpc.ClientStream
+}
+
+type interfaceMirrorSessionApiV1InterfaceMirrorSessionOperUpdateClient struct {
+	grpc.ClientStream
+}
+
+func (x *interfaceMirrorSessionApiV1InterfaceMirrorSessionOperUpdateClient) Send(m *InterfaceMirrorSessionEvent) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *interfaceMirrorSessionApiV1InterfaceMirrorSessionOperUpdateClient) CloseAndRecv() (*api.TypeMeta, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(api.TypeMeta)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for InterfaceMirrorSessionApiV1 service
+
+type InterfaceMirrorSessionApiV1Server interface {
+	WatchInterfaceMirrorSessions(*api.ListWatchOptions, InterfaceMirrorSessionApiV1_WatchInterfaceMirrorSessionsServer) error
+	ListInterfaceMirrorSessions(context.Context, *api.ListWatchOptions) (*InterfaceMirrorSessionList, error)
+	InterfaceMirrorSessionOperUpdate(InterfaceMirrorSessionApiV1_InterfaceMirrorSessionOperUpdateServer) error
+}
+
+func RegisterInterfaceMirrorSessionApiV1Server(s *grpc.Server, srv InterfaceMirrorSessionApiV1Server) {
+	s.RegisterService(&_InterfaceMirrorSessionApiV1_serviceDesc, srv)
+}
+
+func _InterfaceMirrorSessionApiV1_WatchInterfaceMirrorSessions_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(InterfaceMirrorSessionApiV1Server).WatchInterfaceMirrorSessions(m, &interfaceMirrorSessionApiV1WatchInterfaceMirrorSessionsServer{stream})
+}
+
+type InterfaceMirrorSessionApiV1_WatchInterfaceMirrorSessionsServer interface {
+	Send(*InterfaceMirrorSessionEventList) error
+	grpc.ServerStream
+}
+
+type interfaceMirrorSessionApiV1WatchInterfaceMirrorSessionsServer struct {
+	grpc.ServerStream
+}
+
+func (x *interfaceMirrorSessionApiV1WatchInterfaceMirrorSessionsServer) Send(m *InterfaceMirrorSessionEventList) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _InterfaceMirrorSessionApiV1_ListInterfaceMirrorSessions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InterfaceMirrorSessionApiV1Server).ListInterfaceMirrorSessions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/netproto.InterfaceMirrorSessionApiV1/ListInterfaceMirrorSessions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InterfaceMirrorSessionApiV1Server).ListInterfaceMirrorSessions(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InterfaceMirrorSessionApiV1_InterfaceMirrorSessionOperUpdate_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(InterfaceMirrorSessionApiV1Server).InterfaceMirrorSessionOperUpdate(&interfaceMirrorSessionApiV1InterfaceMirrorSessionOperUpdateServer{stream})
+}
+
+type InterfaceMirrorSessionApiV1_InterfaceMirrorSessionOperUpdateServer interface {
+	SendAndClose(*api.TypeMeta) error
+	Recv() (*InterfaceMirrorSessionEvent, error)
+	grpc.ServerStream
+}
+
+type interfaceMirrorSessionApiV1InterfaceMirrorSessionOperUpdateServer struct {
+	grpc.ServerStream
+}
+
+func (x *interfaceMirrorSessionApiV1InterfaceMirrorSessionOperUpdateServer) SendAndClose(m *api.TypeMeta) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *interfaceMirrorSessionApiV1InterfaceMirrorSessionOperUpdateServer) Recv() (*InterfaceMirrorSessionEvent, error) {
+	m := new(InterfaceMirrorSessionEvent)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+var _InterfaceMirrorSessionApiV1_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "netproto.InterfaceMirrorSessionApiV1",
+	HandlerType: (*InterfaceMirrorSessionApiV1Server)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListInterfaceMirrorSessions",
+			Handler:    _InterfaceMirrorSessionApiV1_ListInterfaceMirrorSessions_Handler,
+		},
+	},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "WatchInterfaceMirrorSessions",
+			Handler:       _InterfaceMirrorSessionApiV1_WatchInterfaceMirrorSessions_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "InterfaceMirrorSessionOperUpdate",
+			Handler:       _InterfaceMirrorSessionApiV1_InterfaceMirrorSessionOperUpdate_Handler,
+			ClientStreams: true,
+		},
+	},
+	Metadata: "mirror.proto",
+}
+
 func (m *MirrorSession) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -655,6 +1033,56 @@ func (m *MirrorSession) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n4
+	return i, nil
+}
+
+func (m *InterfaceMirrorSession) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InterfaceMirrorSession) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintMirror(dAtA, i, uint64(m.TypeMeta.Size()))
+	n5, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n5
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintMirror(dAtA, i, uint64(m.ObjectMeta.Size()))
+	n6, err := m.ObjectMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n6
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintMirror(dAtA, i, uint64(m.Spec.Size()))
+	n7, err := m.Spec.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
+	dAtA[i] = 0x22
+	i++
+	i = encodeVarintMirror(dAtA, i, uint64(m.Status.Size()))
+	n8, err := m.Status.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
 	return i, nil
 }
 
@@ -713,6 +1141,78 @@ func (m *MirrorSessionSpec) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintMirror(dAtA, i, uint64(m.MirrorDirection))
 	}
+	if m.SpanID != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintMirror(dAtA, i, uint64(m.SpanID))
+	}
+	return i, nil
+}
+
+func (m *InterfaceMirrorSessionSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InterfaceMirrorSessionSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.VrfName) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintMirror(dAtA, i, uint64(len(m.VrfName)))
+		i += copy(dAtA[i:], m.VrfName)
+	}
+	if len(m.Collectors) > 0 {
+		for _, msg := range m.Collectors {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintMirror(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if m.SpanID != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintMirror(dAtA, i, uint64(m.SpanID))
+	}
+	if m.PacketSize != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintMirror(dAtA, i, uint64(m.PacketSize))
+	}
+	if m.MirrorDirection != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintMirror(dAtA, i, uint64(m.MirrorDirection))
+	}
+	if len(m.Type) > 0 {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintMirror(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.StripVlanHdr {
+		dAtA[i] = 0x38
+		i++
+		if m.StripVlanHdr {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
 	return i, nil
 }
 
@@ -727,6 +1227,29 @@ func (m *MirrorSessionStatus) Marshal() (dAtA []byte, err error) {
 }
 
 func (m *MirrorSessionStatus) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.MirrorSessionID != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintMirror(dAtA, i, uint64(m.MirrorSessionID))
+	}
+	return i, nil
+}
+
+func (m *InterfaceMirrorSessionStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InterfaceMirrorSessionStatus) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -793,11 +1316,11 @@ func (m *MirrorSessionEvent) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintMirror(dAtA, i, uint64(m.MirrorSession.Size()))
-		n5, err := m.MirrorSession.MarshalTo(dAtA[i:])
+		n9, err := m.MirrorSession.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n5
+		i += n9
 	}
 	return i, nil
 }
@@ -819,6 +1342,97 @@ func (m *MirrorSessionEventList) MarshalTo(dAtA []byte) (int, error) {
 	_ = l
 	if len(m.MirrorSessionEvents) > 0 {
 		for _, msg := range m.MirrorSessionEvents {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintMirror(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *InterfaceMirrorSessionList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InterfaceMirrorSessionList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.InterfaceMirrorSessions) > 0 {
+		for _, msg := range m.InterfaceMirrorSessions {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintMirror(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *InterfaceMirrorSessionEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InterfaceMirrorSessionEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.EventType != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintMirror(dAtA, i, uint64(m.EventType))
+	}
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintMirror(dAtA, i, uint64(m.InterfaceMirrorSession.Size()))
+	n10, err := m.InterfaceMirrorSession.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n10
+	return i, nil
+}
+
+func (m *InterfaceMirrorSessionEventList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InterfaceMirrorSessionEventList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.InterfaceMirrorSessionEvents) > 0 {
+		for _, msg := range m.InterfaceMirrorSessionEvents {
 			dAtA[i] = 0xa
 			i++
 			i = encodeVarintMirror(dAtA, i, uint64(msg.Size()))
@@ -880,11 +1494,11 @@ func (m *MirrorCollector) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0xa
 	i++
 	i = encodeVarintMirror(dAtA, i, uint64(m.ExportCfg.Size()))
-	n6, err := m.ExportCfg.MarshalTo(dAtA[i:])
+	n11, err := m.ExportCfg.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n6
+	i += n11
 	if len(m.PcapDirName) > 0 {
 		dAtA[i] = 0x12
 		i++
@@ -933,6 +1547,20 @@ func (m *MirrorSession) Size() (n int) {
 	return n
 }
 
+func (m *InterfaceMirrorSession) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovMirror(uint64(l))
+	l = m.ObjectMeta.Size()
+	n += 1 + l + sovMirror(uint64(l))
+	l = m.Spec.Size()
+	n += 1 + l + sovMirror(uint64(l))
+	l = m.Status.Size()
+	n += 1 + l + sovMirror(uint64(l))
+	return n
+}
+
 func (m *MirrorSessionSpec) Size() (n int) {
 	var l int
 	_ = l
@@ -958,10 +1586,54 @@ func (m *MirrorSessionSpec) Size() (n int) {
 	if m.MirrorDirection != 0 {
 		n += 1 + sovMirror(uint64(m.MirrorDirection))
 	}
+	if m.SpanID != 0 {
+		n += 1 + sovMirror(uint64(m.SpanID))
+	}
+	return n
+}
+
+func (m *InterfaceMirrorSessionSpec) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.VrfName)
+	if l > 0 {
+		n += 1 + l + sovMirror(uint64(l))
+	}
+	if len(m.Collectors) > 0 {
+		for _, e := range m.Collectors {
+			l = e.Size()
+			n += 1 + l + sovMirror(uint64(l))
+		}
+	}
+	if m.SpanID != 0 {
+		n += 1 + sovMirror(uint64(m.SpanID))
+	}
+	if m.PacketSize != 0 {
+		n += 1 + sovMirror(uint64(m.PacketSize))
+	}
+	if m.MirrorDirection != 0 {
+		n += 1 + sovMirror(uint64(m.MirrorDirection))
+	}
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovMirror(uint64(l))
+	}
+	if m.StripVlanHdr {
+		n += 2
+	}
 	return n
 }
 
 func (m *MirrorSessionStatus) Size() (n int) {
+	var l int
+	_ = l
+	if m.MirrorSessionID != 0 {
+		n += 1 + sovMirror(uint64(m.MirrorSessionID))
+	}
+	return n
+}
+
+func (m *InterfaceMirrorSessionStatus) Size() (n int) {
 	var l int
 	_ = l
 	if m.MirrorSessionID != 0 {
@@ -1000,6 +1672,41 @@ func (m *MirrorSessionEventList) Size() (n int) {
 	_ = l
 	if len(m.MirrorSessionEvents) > 0 {
 		for _, e := range m.MirrorSessionEvents {
+			l = e.Size()
+			n += 1 + l + sovMirror(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *InterfaceMirrorSessionList) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.InterfaceMirrorSessions) > 0 {
+		for _, e := range m.InterfaceMirrorSessions {
+			l = e.Size()
+			n += 1 + l + sovMirror(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *InterfaceMirrorSessionEvent) Size() (n int) {
+	var l int
+	_ = l
+	if m.EventType != 0 {
+		n += 1 + sovMirror(uint64(m.EventType))
+	}
+	l = m.InterfaceMirrorSession.Size()
+	n += 1 + l + sovMirror(uint64(l))
+	return n
+}
+
+func (m *InterfaceMirrorSessionEventList) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.InterfaceMirrorSessionEvents) > 0 {
+		for _, e := range m.InterfaceMirrorSessionEvents {
 			l = e.Size()
 			n += 1 + l + sovMirror(uint64(l))
 		}
@@ -1080,6 +1787,176 @@ func (m *MirrorSession) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MirrorSession: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ObjectMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Status.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMirror(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMirror
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InterfaceMirrorSession) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMirror
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InterfaceMirrorSession: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InterfaceMirrorSession: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1381,6 +2258,241 @@ func (m *MirrorSessionSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpanID", wireType)
+			}
+			m.SpanID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SpanID |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMirror(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMirror
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InterfaceMirrorSessionSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMirror
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VrfName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VrfName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Collectors", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Collectors = append(m.Collectors, MirrorCollector{})
+			if err := m.Collectors[len(m.Collectors)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpanID", wireType)
+			}
+			m.SpanID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SpanID |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PacketSize", wireType)
+			}
+			m.PacketSize = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PacketSize |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MirrorDirection", wireType)
+			}
+			m.MirrorDirection = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MirrorDirection |= (MirrorDir(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StripVlanHdr", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.StripVlanHdr = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMirror(dAtA[iNdEx:])
@@ -1429,6 +2541,75 @@ func (m *MirrorSessionStatus) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MirrorSessionStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MirrorSessionID", wireType)
+			}
+			m.MirrorSessionID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MirrorSessionID |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMirror(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMirror
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InterfaceMirrorSessionStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMirror
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionStatus: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1711,6 +2892,267 @@ func (m *MirrorSessionEventList) Unmarshal(dAtA []byte) error {
 			}
 			m.MirrorSessionEvents = append(m.MirrorSessionEvents, &MirrorSessionEvent{})
 			if err := m.MirrorSessionEvents[len(m.MirrorSessionEvents)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMirror(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMirror
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InterfaceMirrorSessionList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMirror
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceMirrorSessions", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InterfaceMirrorSessions = append(m.InterfaceMirrorSessions, &InterfaceMirrorSession{})
+			if err := m.InterfaceMirrorSessions[len(m.InterfaceMirrorSessions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMirror(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMirror
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InterfaceMirrorSessionEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMirror
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EventType", wireType)
+			}
+			m.EventType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EventType |= (api.EventType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceMirrorSession", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.InterfaceMirrorSession.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMirror(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthMirror
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InterfaceMirrorSessionEventList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMirror
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionEventList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InterfaceMirrorSessionEventList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InterfaceMirrorSessionEvents", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMirror
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMirror
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InterfaceMirrorSessionEvents = append(m.InterfaceMirrorSessionEvents, &InterfaceMirrorSessionEvent{})
+			if err := m.InterfaceMirrorSessionEvents[len(m.InterfaceMirrorSessionEvents)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2109,73 +3551,89 @@ var (
 func init() { proto.RegisterFile("mirror.proto", fileDescriptorMirror) }
 
 var fileDescriptorMirror = []byte{
-	// 1080 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcf, 0x73, 0x1b, 0x35,
-	0x14, 0xce, 0xda, 0x26, 0x3f, 0xe4, 0xc4, 0x4d, 0x94, 0xb6, 0xb1, 0x4d, 0x88, 0x33, 0x3b, 0x03,
-	0x98, 0x12, 0x7b, 0x53, 0xb7, 0x07, 0x60, 0x86, 0x1f, 0xdd, 0xc6, 0xa4, 0x29, 0x49, 0x1c, 0xec,
-	0x10, 0x0e, 0x1c, 0x18, 0x65, 0xad, 0x38, 0x82, 0xb5, 0x56, 0xb3, 0x92, 0x53, 0x52, 0xa6, 0x27,
-	0x66, 0x72, 0x61, 0xe0, 0x2f, 0xe0, 0xcc, 0xa1, 0x33, 0x5c, 0x38, 0x70, 0xe3, 0x9e, 0x63, 0xff,
-	0x02, 0x0f, 0x93, 0xa3, 0xff, 0x0a, 0x46, 0x6f, 0x77, 0x9d, 0x5d, 0xc7, 0xee, 0x70, 0xe0, 0x26,
-	0x3d, 0x7d, 0xef, 0xd3, 0xa7, 0xa7, 0xf7, 0x69, 0x17, 0xcd, 0x77, 0x99, 0xef, 0x7b, 0x7e, 0x55,
-	0xf8, 0x9e, 0xf2, 0xf0, 0x2c, 0xa7, 0x0a, 0x46, 0xc5, 0xd5, 0x8e, 0xe7, 0x75, 0x5c, 0x6a, 0x11,
-	0xc1, 0x2c, 0xc2, 0xb9, 0xa7, 0x88, 0x62, 0x1e, 0x97, 0x01, 0xae, 0x58, 0xef, 0x30, 0x75, 0xda,
-	0x3b, 0xae, 0x3a, 0x5e, 0xd7, 0x12, 0x94, 0x4b, 0xc2, 0xdb, 0x9e, 0x25, 0x9f, 0x59, 0x67, 0x94,
-	0x33, 0x87, 0x5a, 0x3d, 0xc5, 0x5c, 0xa9, 0x53, 0x3b, 0x94, 0xc7, 0xb3, 0x2d, 0xc6, 0x1d, 0xb7,
-	0xd7, 0xa6, 0x11, 0x4d, 0x25, 0x46, 0xd3, 0xf1, 0x3a, 0x9e, 0x05, 0xe1, 0xe3, 0xde, 0x09, 0xcc,
-	0x60, 0x02, 0xa3, 0x10, 0xfe, 0xf6, 0x84, 0x5d, 0xb5, 0xc6, 0x2e, 0x55, 0x24, 0x84, 0x65, 0xbb,
-	0x44, 0x39, 0xa7, 0xc1, 0xc4, 0xfc, 0x2b, 0x85, 0x16, 0xf6, 0xe0, 0x88, 0x2d, 0x2a, 0x25, 0xf3,
-	0x38, 0xfe, 0x04, 0xcd, 0x1e, 0x9e, 0x0b, 0xba, 0x47, 0x15, 0xc9, 0x1b, 0xeb, 0x46, 0x39, 0x5b,
-	0x5b, 0xa8, 0x12, 0xc1, 0xaa, 0x51, 0xd0, 0x5e, 0xbe, 0xec, 0x97, 0xa6, 0x5e, 0xf5, 0x4b, 0xc6,
-	0xa0, 0x5f, 0x9a, 0xd9, 0x60, 0xdc, 0x65, 0x9c, 0x36, 0x87, 0x39, 0xf8, 0x0b, 0x84, 0x1a, 0xc7,
-	0xdf, 0x51, 0x47, 0x01, 0x43, 0x0a, 0x18, 0x6e, 0x01, 0xc3, 0x75, 0xd8, 0x2e, 0xc6, 0x38, 0x72,
-	0x5a, 0xdb, 0x86, 0xd7, 0x65, 0x8a, 0x76, 0x85, 0x3a, 0x6f, 0xc6, 0xd2, 0xf1, 0x36, 0xca, 0xb4,
-	0x04, 0x75, 0xf2, 0x69, 0xa0, 0x79, 0xb3, 0x1a, 0xd5, 0xbf, 0x9a, 0xd0, 0xac, 0x21, 0xf6, 0x5d,
-	0x4d, 0xa9, 0xe9, 0xa4, 0xa0, 0x4e, 0x8c, 0x0e, 0x08, 0x70, 0x03, 0x4d, 0xb7, 0x14, 0x51, 0x3d,
-	0x99, 0xcf, 0x00, 0xd5, 0x5b, 0x93, 0xa8, 0x00, 0x64, 0xe7, 0x43, 0xb2, 0x45, 0x09, 0xf3, 0x18,
-	0x5d, 0x48, 0x63, 0xfe, 0x96, 0x46, 0x4b, 0x37, 0x44, 0xe0, 0x4d, 0x34, 0x73, 0xe4, 0x9f, 0xec,
-	0x93, 0x2e, 0x85, 0xda, 0xcd, 0xd9, 0x77, 0x07, 0xfd, 0x12, 0x3e, 0xf3, 0x4f, 0x2a, 0x9c, 0x74,
-	0x69, 0x8c, 0x26, 0x82, 0xe1, 0x43, 0x84, 0x1e, 0x7b, 0xae, 0x4b, 0x1d, 0xe5, 0xf9, 0x32, 0x9f,
-	0x5a, 0x4f, 0x97, 0xb3, 0xb5, 0xc2, 0xa8, 0xb8, 0x21, 0xc2, 0x2e, 0x84, 0xc2, 0x96, 0x9c, 0x61,
-	0x52, 0x74, 0x05, 0x31, 0x1e, 0xdc, 0x40, 0x68, 0x4f, 0xdf, 0x72, 0xb3, 0xe7, 0x52, 0x99, 0x4f,
-	0x03, 0xeb, 0x72, 0x8c, 0x35, 0x5a, 0x0b, 0x2e, 0x42, 0x6b, 0x84, 0xa6, 0xa8, 0xf8, 0x1a, 0x3f,
-	0x24, 0xbc, 0xa6, 0xc0, 0x1f, 0x22, 0x74, 0x40, 0x9c, 0xef, 0xa9, 0x6a, 0xb1, 0xe7, 0x14, 0x6a,
-	0xb8, 0x60, 0x17, 0x06, 0xfd, 0xd2, 0x1d, 0x01, 0xd1, 0x8a, 0x64, 0xcf, 0xe3, 0xc7, 0x8b, 0x81,
-	0xb1, 0x44, 0xb7, 0x82, 0x53, 0x6c, 0x31, 0x9f, 0x3a, 0xba, 0xd1, 0xf3, 0x6f, 0xac, 0x1b, 0xe5,
-	0x5c, 0x42, 0x50, 0x04, 0xb0, 0x1f, 0xbe, 0xbc, 0x28, 0xe0, 0x96, 0xf2, 0xeb, 0xbc, 0xd7, 0x2d,
-	0x0f, 0xc3, 0xef, 0x0d, 0xfa, 0xa5, 0x62, 0x60, 0xc5, 0x4a, 0x3b, 0xa2, 0x89, 0xed, 0x37, 0xba,
-	0x83, 0xf9, 0x25, 0x5a, 0x1e, 0x73, 0xaf, 0xf8, 0xa3, 0x48, 0x4b, 0x18, 0xde, 0xd9, 0x82, 0x7b,
-	0xca, 0xd8, 0x8b, 0x83, 0x7e, 0x69, 0x9e, 0xb5, 0x6f, 0x52, 0x0e, 0x81, 0xe6, 0xe1, 0xc8, 0x85,
-	0xef, 0x32, 0xa9, 0xf0, 0xa7, 0x28, 0x97, 0x08, 0xca, 0xbc, 0x01, 0xc5, 0x5e, 0x99, 0xd0, 0x5f,
-	0xcd, 0x11, 0xb8, 0xf9, 0xb7, 0x81, 0x70, 0x22, 0x54, 0x3f, 0xa3, 0x5c, 0xe1, 0xcf, 0xd1, 0x1c,
-	0x0c, 0xb4, 0xad, 0x40, 0x62, 0xae, 0x96, 0x03, 0x13, 0x0d, 0xa3, 0x76, 0x7e, 0xd0, 0x2f, 0xdd,
-	0xa6, 0x7a, 0x5a, 0x51, 0xe7, 0x22, 0x5e, 0xfd, 0xeb, 0x54, 0xfc, 0xed, 0x88, 0xbd, 0x43, 0x43,
-	0x4e, 0x92, 0x67, 0xaf, 0x5f, 0x06, 0xa6, 0xcc, 0x87, 0xc5, 0x96, 0x41, 0x3c, 0x46, 0x9e, 0xe4,
-	0x33, 0x4f, 0xd1, 0xdd, 0x9b, 0xf2, 0xa1, 0x34, 0xfb, 0x23, 0x57, 0x00, 0x2b, 0x51, 0x7d, 0x56,
-	0x27, 0x08, 0x00, 0x50, 0x73, 0x5c, 0xa2, 0xf9, 0xfb, 0xb0, 0x52, 0xf5, 0x1f, 0x84, 0xe7, 0xab,
-	0xc7, 0x1e, 0x3f, 0x61, 0x1d, 0xbc, 0x87, 0xb2, 0x5b, 0x54, 0x2a, 0xc6, 0xe1, 0x0d, 0x0d, 0x6d,
-	0xf7, 0xfe, 0xcb, 0x8b, 0x42, 0xae, 0xa5, 0xfc, 0x5d, 0xca, 0xcb, 0xf7, 0x37, 0x6a, 0x9b, 0x0f,
-	0x3f, 0xd0, 0x1d, 0x74, 0xa7, 0x7d, 0x0d, 0x8c, 0x9d, 0x28, 0x9e, 0x8f, 0x1f, 0xa1, 0x99, 0x6d,
-	0xa2, 0xe8, 0x33, 0x72, 0x0e, 0xa5, 0x9a, 0xb3, 0xdf, 0x1d, 0x4b, 0xb5, 0xd4, 0x09, 0x40, 0x71,
-	0x4b, 0x87, 0x79, 0xe6, 0x2f, 0xa9, 0xa8, 0xcb, 0x86, 0x8e, 0xc4, 0xdf, 0xa0, 0xb9, 0x50, 0xf5,
-	0x49, 0x27, 0x7c, 0x56, 0x6f, 0x94, 0x20, 0x7e, 0x2c, 0xbb, 0x14, 0x1a, 0x73, 0x85, 0x42, 0xb4,
-	0xe2, 0x40, 0x38, 0x71, 0xc9, 0x11, 0x1f, 0x7e, 0x80, 0xb2, 0x07, 0x0e, 0x11, 0x5b, 0xcc, 0x87,
-	0x97, 0x27, 0xd0, 0xbd, 0x34, 0xe8, 0x97, 0x16, 0x84, 0x43, 0x84, 0x36, 0x0c, 0x3c, 0x3f, 0xcd,
-	0x38, 0x0a, 0xbf, 0x83, 0x32, 0xd0, 0x5c, 0x69, 0x40, 0x63, 0xfd, 0x72, 0x8e, 0xb4, 0x11, 0xac,
-	0xe3, 0xcf, 0xd0, 0x7c, 0x4b, 0xf9, 0x4c, 0x1c, 0xb9, 0x84, 0x3f, 0x69, 0xfb, 0xe0, 0xfd, 0x59,
-	0x7b, 0x55, 0xf7, 0x88, 0xd4, 0xf1, 0xca, 0x99, 0x4b, 0x78, 0xe5, 0xb4, 0xed, 0xc7, 0x32, 0x13,
-	0x19, 0xf7, 0xaa, 0x68, 0x6e, 0x68, 0x4f, 0x3c, 0x8b, 0x32, 0x76, 0xe3, 0xf0, 0xc9, 0xe2, 0x14,
-	0xce, 0xa2, 0x99, 0x9d, 0xfd, 0xed, 0x66, 0xbd, 0xd5, 0x5a, 0x34, 0x30, 0x42, 0xd3, 0xf5, 0x60,
-	0x9c, 0xaa, 0xfd, 0x31, 0x6a, 0x89, 0x47, 0x82, 0x1d, 0xdd, 0xc7, 0xbb, 0x68, 0xf9, 0x6b, 0xfd,
-	0x20, 0x25, 0x0d, 0x84, 0x47, 0xbf, 0x2d, 0xc5, 0xf5, 0xd7, 0xb5, 0x96, 0xee, 0x4c, 0x73, 0x6a,
-	0xd3, 0xc0, 0x3b, 0x08, 0xeb, 0xf1, 0xff, 0x40, 0x56, 0xfb, 0x35, 0x3d, 0x46, 0x6f, 0x0d, 0x37,
-	0xc7, 0xeb, 0xbd, 0x03, 0x5b, 0xe8, 0x54, 0x58, 0x6d, 0x08, 0xf8, 0xf4, 0xff, 0x47, 0xd5, 0x4f,
-	0xc7, 0xaa, 0x9e, 0x40, 0x39, 0xe9, 0x73, 0x19, 0xb0, 0xe1, 0xa7, 0x68, 0x25, 0x11, 0x6e, 0x08,
-	0xea, 0x7f, 0x25, 0xda, 0x44, 0x51, 0xfc, 0x5a, 0x77, 0x16, 0x93, 0xff, 0x03, 0xe6, 0x54, 0xd9,
-	0x28, 0xfe, 0x6c, 0xfc, 0xf9, 0x53, 0xe1, 0xc2, 0x18, 0xfd, 0x97, 0xc8, 0xb8, 0xfa, 0x21, 0x48,
-	0x77, 0xa8, 0xc2, 0x19, 0xe1, 0x49, 0x85, 0xa7, 0xdb, 0xd4, 0xa5, 0x8a, 0xe2, 0xb4, 0xe8, 0xa9,
-	0xe2, 0xc7, 0xd6, 0x8f, 0xd7, 0x95, 0xae, 0x1e, 0x52, 0x4e, 0xb8, 0x7a, 0x91, 0x88, 0xe9, 0x46,
-	0x95, 0x82, 0x38, 0xf4, 0x66, 0xf8, 0x85, 0x79, 0x1b, 0xfe, 0x6b, 0x60, 0x3f, 0x2b, 0x7c, 0xa6,
-	0xa4, 0x75, 0x2f, 0x75, 0x54, 0xb3, 0xe7, 0x2f, 0xaf, 0xd6, 0x8c, 0x57, 0x57, 0x6b, 0xc6, 0x3f,
-	0x57, 0x6b, 0xc6, 0x81, 0x71, 0x3c, 0x0d, 0x47, 0x79, 0xf0, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x70, 0xa7, 0x10, 0x7c, 0xcd, 0x09, 0x00, 0x00,
+	// 1332 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x57, 0xcd, 0x4f, 0x1b, 0x47,
+	0x14, 0x67, 0x6d, 0xd7, 0xe0, 0x31, 0x10, 0x18, 0x12, 0x58, 0x1b, 0xca, 0x5a, 0xab, 0x26, 0x75,
+	0x28, 0xb6, 0xc1, 0xc9, 0xa1, 0xad, 0xd4, 0x8f, 0x6c, 0x70, 0x09, 0x29, 0x60, 0x6a, 0x53, 0x5a,
+	0xa5, 0x91, 0xaa, 0x61, 0x3d, 0x36, 0xd3, 0xda, 0xb3, 0xab, 0xdd, 0x31, 0x09, 0xa9, 0x72, 0x6a,
+	0xc5, 0xa5, 0x1f, 0xf7, 0x5e, 0x7a, 0xec, 0x21, 0x52, 0x2f, 0x3d, 0xf4, 0xd6, 0x3b, 0xc7, 0xf4,
+	0x1f, 0xb0, 0x22, 0x8e, 0x56, 0xff, 0x88, 0x6a, 0x67, 0x3f, 0xbc, 0x6b, 0xbc, 0x18, 0xd4, 0x54,
+	0x4a, 0x6f, 0xbb, 0x6f, 0xde, 0xfb, 0xcd, 0x7b, 0xef, 0x37, 0xfb, 0x7b, 0x3b, 0x60, 0xbc, 0x45,
+	0x0c, 0x43, 0x33, 0xf2, 0xba, 0xa1, 0x31, 0x0d, 0x8e, 0x51, 0xcc, 0xf8, 0x53, 0x7a, 0xa1, 0xa1,
+	0x69, 0x8d, 0x26, 0x2e, 0x20, 0x9d, 0x14, 0x10, 0xa5, 0x1a, 0x43, 0x8c, 0x68, 0xd4, 0xb4, 0xfd,
+	0xd2, 0xa5, 0x06, 0x61, 0x07, 0xed, 0xfd, 0xbc, 0xaa, 0xb5, 0x0a, 0x3a, 0xa6, 0x26, 0xa2, 0x35,
+	0xad, 0x60, 0x3e, 0x2a, 0x1c, 0x62, 0x4a, 0x54, 0x5c, 0x68, 0x33, 0xd2, 0x34, 0xad, 0xd0, 0x06,
+	0xa6, 0xfe, 0xe8, 0x02, 0xa1, 0x6a, 0xb3, 0x5d, 0xc3, 0x2e, 0x4c, 0xce, 0x07, 0xd3, 0xd0, 0x1a,
+	0x5a, 0x81, 0x9b, 0xf7, 0xdb, 0x75, 0xfe, 0xc6, 0x5f, 0xf8, 0x93, 0xe3, 0x7e, 0x3d, 0x64, 0x57,
+	0x2b, 0xc7, 0x16, 0x66, 0xc8, 0x71, 0x4b, 0xb6, 0x10, 0x53, 0x0f, 0xec, 0x17, 0xf9, 0x8f, 0x08,
+	0x98, 0xd8, 0xe2, 0x25, 0x56, 0xb1, 0x69, 0x12, 0x8d, 0xc2, 0xf7, 0xc1, 0xd8, 0xee, 0x91, 0x8e,
+	0xb7, 0x30, 0x43, 0xa2, 0x90, 0x11, 0xb2, 0xc9, 0xe2, 0x44, 0x1e, 0xe9, 0x24, 0xef, 0x1a, 0x95,
+	0x99, 0x93, 0x8e, 0x34, 0xf2, 0xbc, 0x23, 0x09, 0xdd, 0x8e, 0x34, 0xba, 0x4c, 0x68, 0x93, 0x50,
+	0x5c, 0xf1, 0x62, 0xe0, 0xc7, 0x00, 0x94, 0xf7, 0xbf, 0xc2, 0x2a, 0xe3, 0x08, 0x11, 0x8e, 0x70,
+	0x85, 0x23, 0xf4, 0xcc, 0x4a, 0xda, 0x87, 0x31, 0x69, 0xe5, 0xb6, 0xac, 0xb5, 0x08, 0xc3, 0x2d,
+	0x9d, 0x1d, 0x55, 0x7c, 0xe1, 0x70, 0x1d, 0xc4, 0xaa, 0x3a, 0x56, 0xc5, 0x28, 0x87, 0x99, 0xcf,
+	0xbb, 0xfd, 0xcf, 0x07, 0x72, 0xb6, 0x5c, 0x94, 0x59, 0x0b, 0xd2, 0x82, 0x33, 0x75, 0xac, 0xfa,
+	0xe0, 0x38, 0x00, 0x2c, 0x83, 0x78, 0x95, 0x21, 0xd6, 0x36, 0xc5, 0x18, 0x87, 0x7a, 0x3d, 0x0c,
+	0x8a, 0x3b, 0x29, 0xa2, 0x03, 0x36, 0x65, 0xf2, 0x77, 0x1f, 0x9c, 0x03, 0x23, 0xff, 0x15, 0x01,
+	0xb3, 0x1b, 0x94, 0x61, 0xa3, 0x8e, 0x54, 0xfc, 0x0a, 0x77, 0x70, 0x27, 0xd0, 0xc1, 0x37, 0x7a,
+	0x65, 0x0f, 0x4e, 0xfe, 0x02, 0xad, 0xfc, 0xbc, 0xaf, 0x95, 0x37, 0x86, 0x62, 0x5e, 0xb4, 0xa7,
+	0x27, 0x51, 0x30, 0x7d, 0x26, 0x1b, 0xb8, 0x02, 0x46, 0xf7, 0x8c, 0xfa, 0x36, 0x6a, 0x61, 0xde,
+	0xcd, 0x84, 0x32, 0xdb, 0xed, 0x48, 0xf0, 0xd0, 0xa8, 0xe7, 0x28, 0x6a, 0x61, 0x1f, 0x8c, 0xeb,
+	0x06, 0x77, 0x01, 0xb8, 0xab, 0x35, 0x9b, 0x58, 0x65, 0x9a, 0x61, 0x8a, 0x91, 0x4c, 0x34, 0x9b,
+	0x2c, 0xa6, 0xfa, 0x09, 0xf7, 0x3c, 0x94, 0x94, 0x93, 0xd8, 0xb4, 0xea, 0x05, 0xb9, 0xa4, 0xf8,
+	0x70, 0x60, 0x19, 0x80, 0x2d, 0xeb, 0xcb, 0xa9, 0xb4, 0x9b, 0xd8, 0x14, 0xa3, 0x1c, 0x75, 0xc6,
+	0x87, 0xea, 0xae, 0xd9, 0xd4, 0x58, 0x39, 0xf2, 0x0f, 0x2d, 0x67, 0x58, 0xfe, 0x1e, 0x60, 0x0f,
+	0x02, 0xbe, 0x03, 0xc0, 0x0e, 0x52, 0xbf, 0xc6, 0xac, 0x4a, 0x9e, 0x60, 0xde, 0xcc, 0x09, 0x25,
+	0xd5, 0xed, 0x48, 0xd7, 0x74, 0x6e, 0xcd, 0x99, 0xe4, 0x89, 0xbf, 0x3c, 0x9f, 0x33, 0x34, 0xc1,
+	0x15, 0xbb, 0x8a, 0x35, 0x62, 0x60, 0xd5, 0x12, 0x0f, 0xf1, 0xb5, 0x8c, 0x90, 0x9d, 0x0c, 0x24,
+	0xe4, 0x3a, 0x28, 0xb7, 0x9f, 0x1d, 0xa7, 0x60, 0x95, 0x19, 0x25, 0xda, 0x6e, 0x65, 0x3d, 0xf3,
+	0xcd, 0x6e, 0x47, 0x4a, 0xdb, 0xf2, 0x96, 0xab, 0xb9, 0x30, 0xbe, 0xfd, 0xfa, 0x77, 0x80, 0x4b,
+	0x20, 0x5e, 0xd5, 0x11, 0xdd, 0x58, 0x13, 0xe3, 0x3c, 0x57, 0x68, 0x1f, 0x11, 0x44, 0x73, 0xa4,
+	0xe6, 0xd6, 0xe7, 0x78, 0xc8, 0xdd, 0x28, 0x48, 0x87, 0x9f, 0xb0, 0x57, 0x86, 0xd3, 0x5e, 0x49,
+	0xd1, 0x61, 0x25, 0xfd, 0xef, 0xe8, 0xba, 0x01, 0x62, 0x96, 0xa4, 0x70, 0xb2, 0x12, 0x76, 0x65,
+	0xec, 0x48, 0xf7, 0xa7, 0xc8, 0xd7, 0xe1, 0x87, 0x60, 0xbc, 0xca, 0x0c, 0xa2, 0xef, 0x35, 0x11,
+	0xbd, 0x57, 0x33, 0xc4, 0xd1, 0x8c, 0x90, 0x1d, 0x53, 0x16, 0xba, 0x1d, 0x49, 0x34, 0x2d, 0x7b,
+	0xee, 0xb0, 0x89, 0x68, 0xee, 0xa0, 0x66, 0xf8, 0x22, 0x03, 0x11, 0xf2, 0x27, 0x60, 0x66, 0xc0,
+	0x07, 0x0f, 0xdf, 0x75, 0xab, 0x76, 0xcc, 0x1b, 0x6b, 0x9c, 0xec, 0x98, 0x32, 0xd5, 0xed, 0x48,
+	0xe3, 0xa4, 0x76, 0x36, 0x79, 0xcf, 0x51, 0x7e, 0x00, 0x16, 0xce, 0x13, 0x93, 0x7f, 0x85, 0xbd,
+	0xdb, 0xa7, 0x32, 0x9b, 0xc4, 0x64, 0xf0, 0x03, 0x30, 0x19, 0x30, 0x9a, 0xa2, 0xc0, 0xcf, 0xd8,
+	0x5c, 0xc8, 0xa0, 0xa8, 0xf4, 0xb9, 0xcb, 0x7f, 0x0a, 0x00, 0x06, 0x4c, 0xa5, 0x43, 0x4c, 0x19,
+	0xfc, 0x08, 0x24, 0xf8, 0x03, 0xa7, 0x42, 0xe0, 0xa4, 0x4f, 0x72, 0x2d, 0xf7, 0xac, 0x8a, 0xd8,
+	0xed, 0x48, 0x57, 0xb1, 0xf5, 0x9a, 0xeb, 0x23, 0xa8, 0x17, 0x0a, 0xbf, 0xec, 0x9b, 0xd3, 0xce,
+	0x5c, 0x08, 0x4b, 0x4f, 0xc9, 0x9c, 0xd8, 0xb3, 0x41, 0x74, 0x8e, 0x8c, 0x69, 0xdb, 0x7d, 0xe0,
+	0x41, 0x3c, 0xf9, 0x00, 0xcc, 0x9e, 0x4d, 0x9f, 0xb7, 0x66, 0xbb, 0x8f, 0x5e, 0xbe, 0xe2, 0xf6,
+	0x67, 0x21, 0x24, 0x01, 0xee, 0x54, 0x19, 0x14, 0x28, 0x3f, 0x0e, 0x93, 0x06, 0xbe, 0xdb, 0x03,
+	0x30, 0x37, 0x78, 0xd5, 0xdd, 0x31, 0x33, 0x6c, 0xde, 0x54, 0xc2, 0x00, 0xe4, 0xbf, 0x05, 0x30,
+	0x3f, 0x78, 0xed, 0xe5, 0x92, 0xf5, 0x9d, 0x10, 0xf6, 0x73, 0xe0, 0xd0, 0x36, 0xb4, 0x06, 0x65,
+	0xc9, 0x11, 0x30, 0x99, 0xb8, 0xeb, 0xb9, 0x50, 0x26, 0x43, 0xf6, 0x92, 0x7f, 0x10, 0x80, 0x74,
+	0x4e, 0xb9, 0xbc, 0xdd, 0x24, 0xec, 0x43, 0x0b, 0xb0, 0x7c, 0x7d, 0x58, 0xbe, 0x36, 0xdd, 0xe7,
+	0x42, 0xc9, 0xbf, 0x7a, 0x5f, 0x48, 0xe9, 0xb1, 0xae, 0x19, 0xec, 0xae, 0x46, 0xeb, 0xa4, 0x01,
+	0xb7, 0x40, 0x72, 0x0d, 0x9b, 0x8c, 0x50, 0xfe, 0x13, 0xec, 0xcc, 0x83, 0xb7, 0x9e, 0x1d, 0xa7,
+	0x26, 0xab, 0xcc, 0xd8, 0xc4, 0x34, 0xbb, 0xba, 0x5c, 0x5c, 0xb9, 0xfd, 0xb6, 0xa5, 0x7f, 0xd7,
+	0x6a, 0x3d, 0x47, 0x5f, 0xfd, 0xfe, 0x78, 0x78, 0x07, 0x8c, 0xae, 0x23, 0x86, 0x1f, 0xa1, 0x23,
+	0xde, 0xeb, 0x84, 0xf2, 0xe6, 0x40, 0xa8, 0xe9, 0x86, 0xed, 0xe4, 0x9f, 0x35, 0x4e, 0x9c, 0xfc,
+	0x63, 0xc4, 0x55, 0x17, 0x6f, 0x54, 0xc0, 0x2f, 0x40, 0xc2, 0xc9, 0xba, 0xde, 0x70, 0xfe, 0xea,
+	0xce, 0x1c, 0x7d, 0x7f, 0x59, 0x8a, 0xe4, 0x10, 0x38, 0x87, 0xb9, 0x35, 0xa7, 0x72, 0x73, 0xe0,
+	0xbc, 0xb8, 0x78, 0xf0, 0x16, 0x48, 0xee, 0xa8, 0x48, 0x5f, 0x23, 0x06, 0x1f, 0x89, 0x76, 0xde,
+	0xd3, 0xdd, 0x8e, 0x34, 0xa1, 0xab, 0x48, 0xb7, 0xe4, 0x9e, 0xcf, 0xc5, 0x8a, 0xdf, 0xcb, 0xd3,
+	0xf7, 0xe8, 0x25, 0xf5, 0x3d, 0x76, 0x59, 0x7d, 0x5f, 0xca, 0x83, 0x84, 0x37, 0x5c, 0xe0, 0x18,
+	0x88, 0x29, 0xe5, 0xdd, 0x7b, 0x53, 0x23, 0x30, 0x09, 0x46, 0x37, 0xb6, 0xd7, 0x2b, 0xa5, 0x6a,
+	0x75, 0x4a, 0x80, 0x00, 0xc4, 0x4b, 0xf6, 0x73, 0xa4, 0xf8, 0x5b, 0xbf, 0x14, 0xde, 0xd1, 0xc9,
+	0xde, 0x2a, 0xdc, 0x04, 0x33, 0x9f, 0x59, 0x7f, 0x3f, 0xc1, 0x8f, 0x12, 0xf6, 0xff, 0xda, 0xa6,
+	0x33, 0xe7, 0x49, 0x8a, 0x75, 0x68, 0xe5, 0x91, 0x15, 0x01, 0x6e, 0x00, 0x68, 0x3d, 0xbf, 0x04,
+	0xb0, 0xe2, 0x4f, 0xd1, 0x01, 0xf9, 0x16, 0x61, 0x65, 0x70, 0xbe, 0xd7, 0xf8, 0x16, 0x56, 0x28,
+	0x5f, 0x2d, 0xeb, 0xfc, 0xee, 0x76, 0xc1, 0xac, 0xef, 0x0f, 0xcc, 0x3a, 0x04, 0x32, 0xec, 0xbe,
+	0x63, 0xa3, 0xc1, 0xfb, 0x60, 0x2e, 0x60, 0x2e, 0xeb, 0xd8, 0xf8, 0x54, 0xaf, 0x21, 0x86, 0xe1,
+	0xb9, 0xaa, 0x9c, 0x0e, 0x5e, 0x47, 0xe4, 0x91, 0xac, 0x90, 0xfe, 0x5e, 0xf8, 0xfd, 0xdb, 0xd4,
+	0xb1, 0xd0, 0x7f, 0x19, 0x8c, 0x35, 0x2d, 0x8d, 0x88, 0x36, 0x30, 0x83, 0x31, 0x5d, 0x33, 0x19,
+	0x8c, 0xd7, 0x70, 0x13, 0x33, 0x0c, 0xa3, 0x7a, 0x9b, 0xa5, 0xdf, 0x2b, 0x7c, 0xd3, 0xeb, 0x74,
+	0x7e, 0x17, 0x53, 0x44, 0xd9, 0xd3, 0x80, 0xcd, 0x3a, 0xa8, 0xa6, 0x8e, 0x54, 0x7c, 0xd6, 0xfc,
+	0x54, 0xbe, 0xca, 0x2f, 0xa6, 0x7c, 0xbf, 0x82, 0x23, 0x6a, 0x66, 0x61, 0x29, 0xb2, 0x57, 0x2c,
+	0xbe, 0x88, 0x86, 0xe9, 0xb4, 0x7d, 0x92, 0x6a, 0x60, 0x81, 0x37, 0x2a, 0x44, 0xe7, 0xc3, 0xfa,
+	0x79, 0xf3, 0x42, 0x2a, 0xe6, 0x71, 0xf5, 0x10, 0xcc, 0x5b, 0xcf, 0x97, 0xdc, 0x64, 0xe8, 0x15,
+	0xcb, 0x61, 0xef, 0x21, 0xc8, 0x0c, 0x5e, 0xf7, 0xd1, 0x78, 0x31, 0xd9, 0x1d, 0xc4, 0xe7, 0x2f,
+	0x16, 0x9f, 0x3f, 0x87, 0x8e, 0xa1, 0xff, 0x96, 0xd8, 0x45, 0x1f, 0xb1, 0xbd, 0xf1, 0xe5, 0xa7,
+	0x78, 0x55, 0x19, 0x3f, 0x39, 0x5d, 0x14, 0x9e, 0x9f, 0x2e, 0x0a, 0x2f, 0x4e, 0x17, 0x85, 0x1d,
+	0x61, 0x3f, 0xce, 0xcb, 0xbc, 0xf5, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x92, 0xf8, 0x58, 0x50,
+	0x71, 0x11, 0x00, 0x00,
 }

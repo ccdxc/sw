@@ -398,6 +398,26 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "InterfaceMirrorSession":
+
+			if _, ok := eh.statusReactor.(InterfaceMirrorSessionStatusReactor); ok {
+				filters = eh.statusReactor.(InterfaceMirrorSessionStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
+			}
+
+			objlist, err := eh.server.ListInterfaceMirrorSessions(context.Background(), nodeID, filters)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		case "MirrorSession":
 
 			if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
@@ -654,6 +674,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Interface).GetObjectMeta())
 
+			case "InterfaceMirrorSession":
+				if _, ok := eh.statusReactor.(InterfaceMirrorSessionStatusReactor); ok {
+					err = eh.statusReactor.(InterfaceMirrorSessionStatusReactor).OnInterfaceMirrorSessionOperUpdate(nodeID,
+						object.Message.(*netproto.InterfaceMirrorSession))
+					if err != nil {
+						log.Errorf("Error updating InterfaceMirrorSession oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.InterfaceMirrorSession).GetObjectMeta())
+
 			case "MirrorSession":
 				if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
 					err = eh.statusReactor.(MirrorSessionStatusReactor).OnMirrorSessionOperUpdate(nodeID,
@@ -797,6 +827,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Interface).GetObjectMeta())
+
+			case "InterfaceMirrorSession":
+				if _, ok := eh.statusReactor.(InterfaceMirrorSessionStatusReactor); ok {
+					err = eh.statusReactor.(InterfaceMirrorSessionStatusReactor).OnInterfaceMirrorSessionOperDelete(nodeID,
+						object.Message.(*netproto.InterfaceMirrorSession))
+					if err != nil {
+						log.Errorf("Error updating InterfaceMirrorSession oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.InterfaceMirrorSession).GetObjectMeta())
 
 			case "MirrorSession":
 				if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
@@ -1365,6 +1405,52 @@ func (eh *AggregateTopic) handleReconcileEvent(aggKey string, ctx context.Contex
 			}
 		}
 
+	case "InterfaceMirrorSession":
+		objlist, err := eh.server.ListInterfaceMirrorSessionsNoFilter(context.Background())
+		if err != nil {
+			log.Errorf("Error getting a list of objects. Err: %v", err)
+			return
+		}
+		for _, obj := range objlist {
+			oldVal := evalFilterFns(obj, evt.OldFlts)
+			newVal := evalFilterFns(obj, evt.NewFlts)
+			// watch filters didn't exist earlier
+			if len(evt.OldFlts) == 0 {
+				if newVal == true {
+					mobj, err := types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return
+					}
+					log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+					addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+				}
+				continue
+			}
+
+			if oldVal == newVal {
+				continue
+			} else if newVal == true {
+				// add the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Adding object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_CreateEvent)
+			} else {
+				// delete the object
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return
+				}
+				log.Infof("Deleting object kind %s %v", obj.GetObjectKind(), obj.GetObjectMeta())
+				addAggObjectEvent(mobj, obj.GetObjectMeta(), api.EventType_DeleteEvent)
+			}
+		}
+
 	case "MirrorSession":
 		objlist, err := eh.server.ListMirrorSessionsNoFilter(context.Background())
 		if err != nil {
@@ -1819,6 +1905,16 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
 			}
 
+		case "InterfaceMirrorSession":
+			if _, ok := eh.statusReactor.(InterfaceMirrorSessionStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(InterfaceMirrorSessionStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
 		case "MirrorSession":
 			if _, ok := eh.statusReactor.(MirrorSessionStatusReactor); ok {
 				watcher.Filters[kind.Kind] = eh.statusReactor.(MirrorSessionStatusReactor).GetAgentWatchFilter(ctx, kind.Group+"."+kind.Kind, &kind.Options)
@@ -2003,6 +2099,21 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 		case "Interface":
 			objlist, err := eh.server.ListInterfaces(context.Background(), nodeID, watcher.Filters[kind])
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
+		case "InterfaceMirrorSession":
+			objlist, err := eh.server.ListInterfaceMirrorSessions(context.Background(), nodeID, watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -2257,6 +2368,17 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 
 				case "Interface":
 					obj, err := InterfaceFromObj(evt.Obj)
+					if err != nil {
+						return err
+					}
+					mobj, err = types.MarshalAny(obj)
+					if err != nil {
+						log.Errorf("Error  marshalling any object. Err: %v", err)
+						return err
+					}
+
+				case "InterfaceMirrorSession":
+					obj, err := InterfaceMirrorSessionFromObj(evt.Obj)
 					if err != nil {
 						return err
 					}

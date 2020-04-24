@@ -21,6 +21,129 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
+// AddInterfaceMirrorSessionAPIRoutes adds InterfaceMirrorSession routes
+func (s *RestServer) AddInterfaceMirrorSessionAPIRoutes(r *mux.Router) {
+
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listInterfaceMirrorSessionHandler))
+
+	r.Methods("GET").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.getInterfaceMirrorSessionHandler))
+
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.postInterfaceMirrorSessionHandler))
+
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.deleteInterfaceMirrorSessionHandler))
+
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.putInterfaceMirrorSessionHandler))
+
+}
+
+func (s *RestServer) listInterfaceMirrorSessionHandler(r *http.Request) (interface{}, error) {
+	o := netproto.InterfaceMirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "InterfaceMirrorSession"},
+	}
+
+	return s.pipelineAPI.HandleInterfaceMirrorSession(types.List, o)
+}
+
+func (s *RestServer) getInterfaceMirrorSessionHandler(r *http.Request) (interface{}, error) {
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	o := netproto.InterfaceMirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "InterfaceMirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+
+	data, err := s.pipelineAPI.HandleInterfaceMirrorSession(types.Get, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return data, nil
+
+}
+
+func (s *RestServer) postInterfaceMirrorSessionHandler(r *http.Request) (interface{}, error) {
+	var o netproto.InterfaceMirrorSession
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+	c, _ := protoTypes.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
+	_, err = s.pipelineAPI.HandleInterfaceMirrorSession(types.Create, o)
+
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
+}
+
+func (s *RestServer) deleteInterfaceMirrorSessionHandler(r *http.Request) (interface{}, error) {
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	o := netproto.InterfaceMirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "InterfaceMirrorSession"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+
+	_, err := s.pipelineAPI.HandleInterfaceMirrorSession(types.Delete, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
+}
+
+func (s *RestServer) putInterfaceMirrorSessionHandler(r *http.Request) (interface{}, error) {
+	var o netproto.InterfaceMirrorSession
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+	c, _ := protoTypes.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
+	_, err = s.pipelineAPI.HandleInterfaceMirrorSession(types.Update, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
+}
+
 // AddMirrorSessionAPIRoutes adds MirrorSession routes
 func (s *RestServer) AddMirrorSessionAPIRoutes(r *mux.Router) {
 
