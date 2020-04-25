@@ -20,6 +20,7 @@ class BgpPeerAfObject(base.ConfigObjectBase):
         self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.BGP_PEER_AF)
         self.GID("BGPPeerAf%d"%self.Id)
         self.PeerAddr = None
+        self.LocalAddr = None
         if hasattr(peerspec, 'interface'):
             # override IPs from testbed json
             self.LocalAddr = utils.GetNodeUnderlayIp(node, peerspec.interface)

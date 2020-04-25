@@ -129,6 +129,7 @@ class TestCase(objects.FrameworkObject):
         self.__retry_enable = False
         self.trigger_engine = None
         self.verif_engine = None
+        self.rxpkts = {}
         self.LockAttributes()
 
         self.GID(tcid)
@@ -214,6 +215,9 @@ class TestCase(objects.FrameworkObject):
         if ret is defs.status.SUCCESS or ret is True:
             logger.info("- Verify Callback Status = Success")
             status =  defs.status.SUCCESS
+        elif ret is defs.status.OVERRIDE:
+            logger.info("- Verify Callback Status = Override")
+            status =  defs.status.OVERRIDE
         else:
             logger.error("- Verify Callback Status = Failure")
             status = defs.status.ERROR

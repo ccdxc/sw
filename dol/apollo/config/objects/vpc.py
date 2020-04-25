@@ -506,12 +506,6 @@ class VpcObjectClient(base.ConfigClientBase):
         # Create Meter Objects
         meter.client.CreateObjects(node)
 
-        # Create Subnet Objects after policy & route
-        subnet.client.CreateObjects(node)
-
-        # Create NAT Port Block Objects
-        nat_pb.client.CreateObjects(node)
-
         # Create BGP Objects
         BGPClient.CreateObjects(node)
         BGPPeerClient.CreateObjects(node)
@@ -520,6 +514,12 @@ class VpcObjectClient(base.ConfigClientBase):
         # Create Metaswitch objects
         evpnipvrf.client.CreateObjects(node)
         evpnipvrfrt.client.CreateObjects(node)
+
+        # Create Subnet Objects after policy & route
+        subnet.client.CreateObjects(node)
+
+        # Create NAT Port Block Objects
+        nat_pb.client.CreateObjects(node)
         return
 
 client = VpcObjectClient()

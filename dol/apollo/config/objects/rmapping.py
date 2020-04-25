@@ -270,6 +270,13 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
         isV4Stack = utils.IsV4Stack(parent.VPC.Stack)
         isV6Stack = utils.IsV6Stack(parent.VPC.Stack)
         for rmap_spec_obj in subnet_spec_obj.rmap:
+            if utils.IsPipelineApulu():
+                if getattr(rmap_spec_obj, 'dual-ecmp', None) == None:
+                    tunnelAllocator = ResmgrClient[node].UnderlayTunAllocator
+                else:    
+                    tunnelAllocator = ResmgrClient[node].UnderlayECMPTunAllocator
+            else:
+                tunnelAllocator = ResmgrClient[node].RemoteMplsVnicTunAllocator
             l2 = getattr(rmap_spec_obj, "l2", False)
             c = 0
             v6c = 0

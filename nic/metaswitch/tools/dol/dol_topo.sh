@@ -1,7 +1,7 @@
 #! /bin/bash
 #set -x
-CUR_DIR=`pwd`
-SW_DIR=`dirname $CUR_DIR`
+NICDIR="${PWD%/nic/*}/nic"
+SW_DIR=`dirname $NICDIR`
 SUBNET=Test_Subnet
 SUBNET1=10.1.1.0/24
 SUBNET2=11.1.1.0/24
@@ -9,6 +9,7 @@ SUBNET3=20.1.1.0/24
 CONTAINER=CTR
 DOL_CFG=/sw/nic/metaswitch/config/dol_ctr
 MIB_PY=/sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py
+PDSAGENT=/sw/nic/apollo/tools/apulu/start-agent-mock.sh
 
 ###################################################
 #
@@ -23,7 +24,7 @@ MIB_PY=/sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.
 ###################################################
 
 RR=0
-AUTO=0
+DOL_RUN=0
 UNDERLAY=0
 
 CMDARGS=$*
@@ -32,13 +33,18 @@ argv=($@)
 for (( j=0; j<argc; j++ )); do
     if [ ${argv[j]} == '--rr' ];then
         RR=1
-    elif [ ${argv[j]} == '--auto' ];then
-        AUTO=1
+    elif [ ${argv[j]} == '--dolrun' ];then
+        DOL_RUN=1
     fi
     if [ ${argv[j]} == '--underlay' ];then
         UNDERLAY=1
     fi
 done
+
+# Pull the pensando/nic container image from the registry
+# and create a container
+# Use custom target instead of docker/shell to skip pull-assets on warmd VM
+make docker/build-runtime-ctr
 
 #Cleanup any stale test containers
 echo "Cleanup pre-existing test containers"
@@ -49,13 +55,18 @@ do
     docker kill $id > /dev/null
 done
 
+INTF_NAME=`ip link show | grep en.*UP | head -n1 | cut -d ":" -f2 | xargs`
+echo "Using interface $INTF_NAME"
+
 #Cleanup mac-vlan interface, if exists
-vconfig rem eno1.3006 > /dev/null
-vconfig add eno1 3006 >/dev/null
-ifconfig eno1.3006 up > /dev/null
-vconfig rem eno1.3007 > /dev/null
-vconfig add eno1 3007 >/dev/null
-ifconfig eno1.3007 up > /dev/null
+ip link del ${INTF_NAME}.3006 > /dev/null
+ip link add link ${INTF_NAME} name ${INTF_NAME}.3006 type vlan id 3006 >/dev/null
+ip link set ${INTF_NAME} up > /dev/null
+ip link set ${INTF_NAME}.3006 up > /dev/null
+ip link del ${INTF_NAME}.3007 > /dev/null
+ip link add link ${INTF_NAME} name ${INTF_NAME}.3007 type vlan id 3007 >/dev/null
+ip link set ${INTF_NAME} up > /dev/null
+ip link set ${INTF_NAME}.3006 up > /dev/null
 
 # delete all existing networks
 echo "Cleanup pre-existing test networks"
@@ -68,9 +79,9 @@ done
 
 #create networks with test subnets as per topology
 echo "Create network: "$SUBNET"1 $SUBNET1"
-docker network create -d bridge "$SUBNET"1 --subnet $SUBNET1 --gateway 10.1.1.254 -o parent=eno1.3007 > /dev/null
+docker network create -d bridge "$SUBNET"1 --subnet $SUBNET1 --gateway 10.1.1.254 -o parent=${INTF_NAME}.3007 > /dev/null
 echo "Create network: "$SUBNET"2 $SUBNET2"
-docker network create -d macvlan --subnet $SUBNET2 --gateway 11.1.1.254 -o parent=eno1.3006 "$SUBNET"2 > /dev/null
+docker network create -d macvlan --subnet $SUBNET2 --gateway 11.1.1.254 -o parent=${INTF_NAME}.3006 "$SUBNET"2 > /dev/null
 
 for i in {1..3}
 do
@@ -78,7 +89,7 @@ do
         echo "Skip CTR3 in Underlay mode"
         continue
     fi
-    docker run -dit --rm -e PYTHONPATH=/sw/nic/third-party/metaswitch/code/comn/tools/mibapi --sysctl net.ipv6.conf.all.disable_ipv6=1 --net="$SUBNET"1 --privileged --name "$CONTAINER"$i -v $SW_DIR:/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic > /dev/null
+    docker run -dit --rm -e PYTHONPATH=/sw/nic/third-party/metaswitch/code/comn/tools/mibapi --sysctl net.ipv6.conf.all.disable_ipv6=1 --net="$SUBNET"1 --privileged --name "$CONTAINER"$i -v $SW_DIR:/sw  -w /sw/nic pensando/nic > /dev/null
     id=$(docker ps --format {{.Names}}| grep "$CONTAINER"$i)
     ip=$(docker exec -it "$CONTAINER"$i ip -o -4 addr list eth0 | awk '{print $4}' | cut -d "/" -f 1)
     printf "Container: $id is started with eth0 $ip "
@@ -107,10 +118,10 @@ if [ $RR == 1 ]; then
     rr=1
 fi
 
-if [ $AUTO == 0 ]; then 
+if [ $DOL_RUN == 0 ]; then 
     echo "start pdsagent in "$CONTAINER"1"
     ret=0
-    docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c 'VPP_IPC_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
+    docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c "VPP_IPC_MOCK_MODE=1 $PDSAGENT --log-dir ${DOL_CFG}1" || ret=$?
     
     if [ $ret -ne 0 ]; then
         echo "failed to start pdsagent in "$CONTAINER"1: $ret"
@@ -136,7 +147,7 @@ do
         docker exec -dit -w "$DOL_CFG"$i -e LD_LIBRARY_PATH=/sw/nic/third-party/metaswitch/output/x86_64/ "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/capri/bin/pegasus' || ret=$?
     else
         echo "start pdsagent in "$CONTAINER"$i in PDS_MOCK_MODE"
-        docker exec -dit -w "$DOL_CFG"$i "$CONTAINER"$i sh -c 'PDS_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
+        docker exec -dit -w "$DOL_CFG"$i "$CONTAINER"$i sh -c "PDS_MOCK_MODE=1 $PDSAGENT --log-dir ${DOL_CFG}$i" || ret=$?
     fi
     if [ $ret -ne 0 ]; then
         echo "failed to start pdsagent in "$CONTAINER"$i: $ret"
@@ -161,8 +172,8 @@ fi
 
 for i in {1..3}
 do
-    if [ $AUTO == 1 ] && [ "$i" = "1" ]; then
-        echo "Skip configuring DUT in AUTO mode"
+    if [ $DOL_RUN == 1 ] && [ "$i" = "1" ]; then
+        echo "Skip configuring DUT in DOL_RUN mode"
         continue
     fi
     if [ $UNDERLAY == 1 ] && [ "$i" = "3" ]; then
@@ -243,4 +254,79 @@ if [ $RR == 0 ]; then
 
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0xc0a8010a rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
+fi
+
+if [ $DOL_RUN == 1 ]; then
+    docker exec -it "$CONTAINER"1 sh -c "sudo ./apollo/tools/rundol.sh --pipeline apulu --topo overlay --feature overlay_networking --sub underlay_trig" || ret=$?
+    if [ $ret -ne 0 ]; then
+        echo "DOL run failed: $ret"
+    else
+        echo "DOL run passed: $ret"
+    fi
+
+    cd $NICDIR && tar -cvzf controlplane_dol_logs.tgz core.* *.log metaswitch/config/dol_ctr*/*.log metaswitch/config/dol_ctr*/core.*
+
+    grep ++++ $NICDIR/pds-agent.log
+    if grep -q "++++ Underlay Pathset.* Num NH 2.*Async reply Success" $NICDIR/pds-agent.log; then
+       echo Underlay ECMP found PASS
+    else
+       echo Underlay ECMP not found FAIL
+       ret=1
+    fi
+    if grep -q "++++ Overlay Pathset.* Num NH 2.*Async reply Success" $NICDIR/pds-agent.log; then
+       echo Overlay ECMP found PASS
+    else
+       echo Overlay ECMP not found FAIL
+       ret=1
+    fi
+    if grep -q "++++ MS Route 128.16.0.0/16.*Async reply Success" $NICDIR/pds-agent.log; then
+       echo Type 5 route installed PASS
+    else
+       echo Type 5 route not installed FAIL
+       ret=1
+    fi
+    if grep -q "++++ BD 1 MAC 00:ee:00:00:00:05.*Async reply Success" $NICDIR/pds-agent.log; then
+       echo Type 2 route installed PASS
+    else
+       echo Type 2 route not installed FAIL
+       ret=1
+    fi
+    exit $ret
+else
+    ret=0
+    grep ++++ $NICDIR/pds-agent.log
+    if grep -q "++++ Underlay Pathset.* Num NH 2.*Async reply Success" $NICDIR/pds-agent.log; then
+       echo Underlay ECMP found PASS
+    else
+       echo Underlay ECMP not found FAIL
+       ret=1
+    fi
+    if [ $RR == 0 ]; then
+        if grep -q "++++ Overlay Pathset.* Num NH 2.*Async reply Success" $NICDIR/pds-agent.log; then
+           echo Overlay ECMP found PASS
+        else
+           echo Overlay ECMP not found FAIL
+           ret=1
+        fi
+    else
+        if grep -q "++++ Overlay Pathset.* Num NH 1.*Async reply Success" $NICDIR/pds-agent.log; then
+           echo Overlay Pathset found PASS
+        else
+           echo Overlay Pathset not found FAIL
+           ret=1
+        fi
+    fi
+    if grep -q "++++ MS Route 128.16.0.0/16.*Async reply Success" $NICDIR/pds-agent.log; then
+       echo Type 5 route installed PASS
+    else
+       echo Type 5 route not installed FAIL
+       ret=1
+    fi
+    if grep -q "++++ BD 1 MAC 00:ee:00:00:00:05.*Async reply Success" $NICDIR/pds-agent.log; then
+       echo Type 2 route installed PASS
+    else
+       echo Type 2 route not installed FAIL
+       ret=1
+    fi
+    exit $ret
 fi

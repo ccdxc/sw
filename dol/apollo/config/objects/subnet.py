@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import time
 import ipaddress
 import itertools
 import copy
@@ -115,13 +116,13 @@ class SubnetObject(base.ConfigObjectBase):
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
-        # Generate VNIC and Remote Mapping configuration
-        vnic.client.GenerateObjects(node, self, spec)
-        rmapping.client.GenerateObjects(node, self, spec)
-
         # Generate Metaswitch Objects configuration
         evpnevi.client.GenerateObjects(node, self, spec)
         evpnevirt.client.GenerateObjects(node, self, spec)
+
+        # Generate VNIC and Remote Mapping configuration
+        vnic.client.GenerateObjects(node, self, spec)
+        rmapping.client.GenerateObjects(node, self, spec)
 
         return
 
@@ -499,12 +500,15 @@ class SubnetObjectClient(base.ConfigClientBase):
 
     def CreateObjects(self, node):
         super().CreateObjects(node)
-        # Create VNIC objects
-        vnic.client.CreateObjects(node)
-        rmapping.client.CreateObjects(node)
         # Create Metaswitch objects
         evpnevi.client.CreateObjects(node)
         evpnevirt.client.CreateObjects(node)
+        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
+            print("Wait to ensure that subnets are active")
+            utils.Sleep(3)
+        # Create VNIC objects
+        vnic.client.CreateObjects(node)
+        rmapping.client.CreateObjects(node)
         return True
 
     def UpdateHostInterfaces(self, node):

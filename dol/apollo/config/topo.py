@@ -18,6 +18,11 @@ class InterfaceTypes(enum.IntEnum):
     LIF = 8
     LOOPBACK = 9
 
+class Ports(enum.IntEnum):
+    HOST=0
+    UPLINK_0 = 1
+    UPLINK_1 = 2
+
 class PortTypes(enum.IntEnum):
     NONE = 0
     HOST = 1

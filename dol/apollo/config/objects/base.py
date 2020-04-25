@@ -553,6 +553,23 @@ class ConfigClientBase(base.ConfigClientBase):
 
     def DeleteObjects(self, node):
         cfgObjects = self.Objs[node].copy().values()
+        for obj in cfgObjects:
+            if obj.IsOriginImplicitlyCreated():
+                implicitly_created.append(obj)
+            elif obj.IsOriginFixed():
+                fixed.append(obj)
+            elif obj.IsOriginDiscovered():
+                discovered.append(obj)
+            else:
+                assert(0)
+
+        logger.info("%s objects: fixed: %d discovered %d implicity_created %d" \
+                %(self.ObjType.name, len(fixed), len(discovered),\
+                len(implicitly_created)))
+        if len(fixed) == 0 and len(implicitly_created) == 0:
+            logger.info(f"Skip Deleting {self.ObjType.name} Objects in {node}")
+            return
+
         logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
         result = list(map(lambda x: x.Delete(), cfgObjects))
         if not all(result):

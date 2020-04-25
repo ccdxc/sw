@@ -15,8 +15,13 @@ export CONFIG_PATH=$PDSPKG_TOPDIR/conf/
 export COVFILE=$PDSPKG_TOPDIR/coverage/sim_bullseye_hal.cov
 export PATH=${PATH}:${BUILD_DIR}/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PDSPKG_TOPDIR/third-party/metaswitch/output/x86_64/
-export PERSISTENT_LOGDIR=$PDSPKG_TOPDIR
-export NON_PERSISTENT_LOGDIR=$PDSPKG_TOPDIR
+if [ -z "$2" ]; then
+    export PERSISTENT_LOGDIR=$PDSPKG_TOPDIR
+    export NON_PERSISTENT_LOGDIR=$PDSPKG_TOPDIR
+else
+    export PERSISTENT_LOGDIR="$2/"
+    export NON_PERSISTENT_LOGDIR="$2/"
+fi
 export LOG_DIR=$NON_PERSISTENT_LOGDIR
 
 export ZMQ_SOC_DIR=$PDSPKG_TOPDIR

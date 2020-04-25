@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.42"
+from "registry.test.pensando.io:5000/pensando/nic:1.41"
 
 user = getenv("USER")
 group = getenv("GROUP_NAME")
@@ -15,7 +15,7 @@ if user == "root"
   run "echo 'cd /usr/src/github.com/pensando/sw/nic' >> /root/.bash_profile"
 
   run "localedef -i en_US -f UTF-8 en_US.UTF-8"
-else
+else 
 if user != ""
   # remove the games group as it conflicts with staff group for mac users
   run "groupdel games"
@@ -55,7 +55,7 @@ end
 
 workdir "/sw"
 
-copy "nic/entrypoint.sh", "/entrypoint.sh"
+copy "entrypoint.sh", "/entrypoint.sh"
 run "chmod +x /entrypoint.sh"
 
 entrypoint "/entrypoint.sh"

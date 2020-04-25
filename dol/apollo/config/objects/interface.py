@@ -24,6 +24,7 @@ from apollo.config.objects.port import client as PortClient
 import interface_pb2 as interface_pb2
 import types_pb2 as types_pb2
 import apollo.config.objects.metaswitch.cp_utils as cp_utils
+import apollo.test.utils.pdsctl as pdsctl
 
 class InterfaceStatus(base.StatusObjectBase):
     def __init__(self):
@@ -340,6 +341,19 @@ class InterfaceObject(base.ConfigObjectBase):
                 self.IfInfo.Network = subnet.GID()
                 return True
         return False
+
+    # TODO: Move this to port object and link interface obj to port obj
+    def LinkDown(self, port):
+        cmd = " debug port -p "
+        cmd += utils.PdsUuid.GetUuidString(self.IfInfo.Port.GetUuid())
+        cmd += " -a down"
+        pdsctl.ExecutePdsctlCommand(cmd, None, False)
+
+    def LinkUp(self, port):
+        cmd = " debug port -p "
+        cmd += utils.PdsUuid.GetUuidString(self.IfInfo.Port.GetUuid())
+        cmd += " -a up"
+        pdsctl.ExecutePdsctlCommand(cmd, None, False)
 
 class HostInterfaceObject(base.ConfigObjectBase):
     def __init__(self, node, lif):

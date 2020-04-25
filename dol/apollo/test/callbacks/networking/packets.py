@@ -784,6 +784,8 @@ def __get_expected_nexthop(cfg):
     return nh
 
 def GetExpectedEgressUplinkPort(testcase, args=None):
+    if testcase.config.devicecfg.IsOverlayRoutingEnabled():
+        return [topo.Ports.UPLINK_0, topo.Ports.UPLINK_1]
     nh = __get_expected_nexthop(testcase.config)
     if nh is None:
         return None

@@ -9,6 +9,8 @@ import time
 import yaml
 from collections import OrderedDict
 import os
+import struct
+import pdb
 
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -361,6 +363,10 @@ def ValidateBatch(batchList, cookie):
                          ObjectTypes.RMAPPING, ObjectTypes.VNIC,
                          ObjectTypes.NEXTHOP, ObjectTypes.SUBNET,
                          ObjectTypes.ROUTE, ObjectTypes.POLICY,
+                         ObjectTypes.BGP, ObjectTypes.BGP_PEER,
+                         ObjectTypes.BGP_PEER_AF, ObjectTypes.BGP_NLRI_PREFIX,
+                         ObjectTypes.BGP_EVPN_EVI, ObjectTypes.BGP_EVPN_EVI_RT,
+                         ObjectTypes.BGP_EVPN_IP_VRF, ObjectTypes.BGP_EVPN_IP_VRF_RT
                        ]
             if oper != 'Delete':
                 # vpc is being read before delete in agent
@@ -418,7 +424,7 @@ def ValidateDelete(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
         respStatus = GetAttrFromResponse(obj, resp, 'ApiStatus')
         for status in respStatus:
             if status != expApiStatus:
-                logger.error(f"Deletion failed for {obj} on {obj.Node}, received {resp} but expected {expApiStatus}")
+                logger.error(f"Deletion failed for {obj} on {obj.Node}, received {status} but expected {expApiStatus}")
                 obj.Show()
                 return False
         SetObjectHwHabitantStatus(obj, 'Delete', expApiStatus)
@@ -481,6 +487,9 @@ def CreateObject(obj):
 
     def RestoreObj(robj):
         node = robj.Node
+        if robj.IsOriginDiscovered():
+            logger.info(f"Skip Recreating discovered object {robj} on {node}")
+            return True
         logger.info(f"[Re]Creating object {robj} on {node}")
         if robj.Duplicate != None:
             #TODO: Ideally a new dependee object should be created first
@@ -590,6 +599,9 @@ def DeleteObject(obj):
 
     def DelObj(dobj):
         node = dobj.Node
+        if dobj.IsOriginDiscovered():
+            logger.info(f"Skip Deleting discovered object {dobj} on {node}")
+            return True
         logger.info(f"Deleting object {dobj} on {node}")
         #TODO: Ideally a new dependee object should be created first
         # and all dependents should be updated to point to the new object

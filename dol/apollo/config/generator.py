@@ -179,6 +179,9 @@ def __read(node):
     # Read all objects
     logger.info("Reading objects from pds-agent for node ", node)
 
+    if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
+        logger.info("Wait 5 seconds for control-plane convergence")
+        utils.Sleep(5)
     failingObjects = []
     # read & validate the objects
     for objtype in APIObjTypes:

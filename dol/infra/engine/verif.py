@@ -278,7 +278,7 @@ class DolVerifEngineObject(VerifEngineObject):
             self.__add_dummy_rx(pcr, step, tc)
         else:
             self.__receive_packets(pcr, step, tc)
-
+        tc.rxpkts = copy.deepcopy(pcr.rxpkts)
         pcr.Compare()
         pcr.ShowResults()
         if pcr.IsMatch() == False:

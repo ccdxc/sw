@@ -708,7 +708,14 @@ e2e-cluster: dind-cluster
 e2e-ui:
 	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g) -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=https://192.168.30.10:443" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} /bin/bash -c "yarn run webdriver-update-ci ; ng e2e --configuration=e2e-ci  --webdriverUpdate=false --suite=all| tee  /import/src/github.com/pensando/sw/e2e-ui.log" 
 
-	
+controlplane-dol-pkg:
+	cd / && find usr/src/github.com/pensando/sw/nic/build/ -not -regex '.*\.\(o\|d\)' > usr/src/github.com/pensando/sw/filelist && find usr/src/github.com/pensando/sw/nic/sdk/third-party -regex '.*\.\(a\|so.*\)' >> usr/src/github.com/pensando/sw/filelist && find usr/src/github.com/pensando/sw/nic/hal/third-party -regex '.*\.\(a\|so.*\)' >> usr/src/github.com/pensando/sw/filelist && find usr/src/github.com/pensando/sw/fake_root_target -regex '.*\.\(a\|so.*\)' >> usr/src/github.com/pensando/sw/filelist && find usr/src/github.com/pensando/sw/nic/buildroot -regex '.*\.\(a\|so.*\)' >> usr/src/github.com/pensando/sw/filelist && tar -czf usr/src/github.com/pensando/sw/build_apulu_x86_ctpl_dol.tar.gz -T usr/src/github.com/pensando/sw/filelist usr/src/github.com/pensando/sw/nic/conf usr/src/github.com/pensando/sw/dol usr/src/github.com/pensando/sw/nic/third-party/metaswitch/output/x86_64/lib* usr/src/github.com/pensando/sw/nic/third-party/metaswitch/code/comn/tools
+
+controlplane-dol-run:
+	# Extract build artifacts and libraries on the Warmd VM
+	cd /import/ && sudo tar -xzf build_apulu_x86_ctpl_dol.tar.gz --strip-components=1
+	# Setup DOL topology and run DOL tests
+	cd nic/metaswitch/tools/dol && sudo ./dol_topo.sh --dolrun
 
 # Target to run venice e2e a dind environment. Uses real HAL as Agent Datapath and starts HAL with model
 e2e-sanities:

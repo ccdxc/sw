@@ -22,6 +22,7 @@ class BgpPeerObject(base.ConfigObjectBase):
         self.GID("BGPPeer%d"%self.Id)
         self.State = getattr(spec, "adminstate", 0)
         self.PeerAddr = None
+        self.LocalAddr = None
         self.RemoteASN = None
         if hasattr(spec, 'interface'):
             # override IPs and RemoteASN from testbed json

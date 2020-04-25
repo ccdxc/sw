@@ -8,7 +8,7 @@ node:
     device:
         mode            : host # bitw (default), host
         stack           : ipv4 # ipv4 (default), ipv6
-        bridging        : false # false (default), true
+        bridging        : true # false (default), true
         learning        : false # false (default), true
         ipaddress       : '100.100.1.1'
         gateway         : None # Taken from resmgr
@@ -24,7 +24,7 @@ node:
             - id : 3
               count : 1
               type  : underlay-ecmp
-              dstaddr : '10.1.1.3'
+              dstaddr : '210.210.3.3'
     uplink:
        - entry:
            id      : uplink0
@@ -60,7 +60,6 @@ node:
           nexthop-group: # Only for read op
             - count : 1
               type : underlay
-
           interface:
             - iid           : 1
               iftype        : l3
@@ -124,8 +123,8 @@ node:
                   afi       : ipv4
                   safi      : unicast
             # bgp evpn peer 3
-            - peeraddr      : 2.2.2.2
-              localaddr     : 1.1.1.1
+            - peeraddr      : 200.200.2.2
+              localaddr     : 100.100.1.1
               adminstate    : 1
               remoteasn     : 100
               sendcomm      : true
@@ -136,13 +135,13 @@ node:
               keepalive     : 30
               password      : test
               bgppeeraf:
-                  peeraddr  : 2.2.2.2
-                  localaddr : 1.1.1.1
+                  peeraddr  : 200.200.2.2
+                  localaddr : 100.100.1.1
                   afi       : l2vpn
                   safi      : evpn
             # bgp evpn peer 4
             - peeraddr      : 10.1.1.3
-              localaddr     : 1.1.1.1
+              localaddr     : 100.100.1.1
               adminstate    : 1
               remoteasn     : 100
               sendcomm      : true
@@ -154,7 +153,7 @@ node:
               password      : test
               bgppeeraf:
                   peeraddr  : 10.1.1.3
-                  localaddr : 1.1.1.1
+                  localaddr : 100.100.1.1
                   afi       : l2vpn
                   safi      : evpn
         # tenant vpc
@@ -165,11 +164,6 @@ node:
             - count     : 2
               v4prefixlen : 24
               v6prefixlen : 64
-              vnic: # Only for read op
-                - count   : 1             # VNICs per subnet
-                  ipcount : 4             # Local IP mapping per vnic
-                  srcguard : false        # true or false (default false)
-                  public  : true
               rmap:                       # Only for read op
                 - count : 4
               evpnevi:
@@ -194,6 +188,12 @@ node:
                   parent-id : 2
                   rttype : import_export
                   rt     : 00:02:00:01:10:00:00:65
+              vnic: # Only for read op
+                - count   : 1             # VNICs per subnet
+                  ipcount : 4             # Local IP mapping per vnic
+                  srcguard : false        # true or false (default false)
+                  public  : true
+                  tagged  : false         # true or false (default true)
           nexthop: # Only for read op
             - type : overlay
               dual-ecmp : true
@@ -201,17 +201,17 @@ node:
           nexthop-group: # Only for read op
             - type : overlay
               count : 2
-              dual-ecmp : True
+              dual-ecmp : true
           routetbl: # Only for read op
             - type: base
               routetype: overlap
               count : 1
               v4base: '128.16.0.0\16'
-              v4prefixlen: 24
-              nv4routes   : 10
+              v4prefixlen: 16
+              nv4routes   : 1
               v6base: '2003::\65'
               v6prefixlen: 120
-              nv6routes   : 10
+              nv6routes   : 0
               v4routes:
               v6routes:
               teptype : overlay-ecmp

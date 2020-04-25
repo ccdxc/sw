@@ -29,6 +29,8 @@ class TriggerEngineObject:
         return
 
     def __resolve_status(self, status1, status2):
+        if status2 is defs.status.OVERRIDE:
+            return defs.status.SUCCESS
         if status1 is defs.status.ERROR or status2 is defs.status.ERROR:
             return defs.status.ERROR
         return defs.status.SUCCESS
