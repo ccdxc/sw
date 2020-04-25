@@ -35,6 +35,7 @@ policy_state::policy_state(sdk::lib::kvstore *kvs) {
                                  sizeof(policy), 16, true, true, true, NULL);
     SDK_ASSERT(policy_slab_ != NULL);
 
+    security_profile_ = NULL;
     security_profile_ht_ =
         ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
                     security_profile::security_profile_key_func_get,

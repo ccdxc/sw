@@ -112,6 +112,7 @@ security_policy_impl::nuke_resources(api_base *api_obj) {
 sdk_ret_t
 security_policy_impl::program_security_policy_(pds_policy_spec_t *spec) {
     sdk_ret_t ret;
+    security_profile *sec_profile;
     rfc::policy_params_t policy_params;
 
     PDS_TRACE_DEBUG("Processing security policy %s", spec->key.str());
@@ -121,7 +122,19 @@ security_policy_impl::program_security_policy_(pds_policy_spec_t *spec) {
         (policy_params.policy.af ==IP_AF_IPV4) ?
             PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY :
             PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY;
-    policy_params.policy.default_action = spec->rule_info->default_action;
+    if (spec->rule_info->default_action.fw_action.action ==
+            SECURITY_RULE_ACTION_NONE) {
+        sec_profile = security_profile_find();
+        if (sec_profile) {
+            policy_params.policy.default_action.fw_action.action =
+                sec_profile->default_fw_action();
+        } else {
+            policy_params.policy.default_action.fw_action.action =
+                SECURITY_RULE_ACTION_DENY;
+        }
+    } else {
+        policy_params.policy.default_action = spec->rule_info->default_action;
+    }
     policy_params.policy.num_rules = spec->rule_info->num_rules;
     policy_params.policy.rules = &spec->rule_info->rules[0];
     policy_params.rfc_tree_root_addr = security_policy_root_addr_;
