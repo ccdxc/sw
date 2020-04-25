@@ -12,6 +12,8 @@ extern "C" {
 namespace sdk {
 namespace marvell {
 
+marvell_cfg_t g_marvell_cfg;
+
 // Get the value to be set in the config register
 // for 1G, Full Duplex
 static inline uint16_t
@@ -158,37 +160,52 @@ marvell_set_pvlan (uint8_t src_port, uint8_t dst_port, bool enable)
     return 0;
 }
 
-// \@brief  Enable the forwarding state of all Marvell ports except
-//          the OOB connected port
+// \@brief  Enable the forwarding state of all Marvell ports given
+//          port mask for 7 ports
 // \@return 0 on success, -1 on failure
 static int
-marvell_ports_enable (void)
+marvell_ports_enable (uint16_t port_mask)
 {
     uint32_t port;
 
     for (port = MARVELL_PORT0; port <= MARVELL_PORT6; port++) {
-        if (port == MARVELL_PORT3) {
-            // keep port 3 connected to OOB port in disabled state
-            continue;
+        if (port_mask & 0x1) {
+            marvell_port_enable(port, MARVELL_PORT_STATE_FORWARDING);
         }
-        marvell_port_enable(port, MARVELL_PORT_STATE_FORWARDING);
+        port_mask = port_mask >> 1;
     }
     return 0;
 }
 
 void
-marvell_switch_init (void)
+marvell_switch_init (marvell_cfg_t *marvell_cfg)
 {
+    memcpy(&g_marvell_cfg, marvell_cfg, sizeof(marvell_cfg_t));
+
     // Force the port that connects to the ASIC to 1G
     cpld_mdio_wr(MARVELL_PORT_CTRL_REG, marvell_port_cfg_1g(), MARVELL_PORT0);
 
-    // If ALOM is present:
-    //     - Enable forwarding state of all ports except the RJ45 port
-    //     - Power up the serdes on the serdes ports
-    if (cpld_reg_rd(CPLD_REGISTER_CTRL) & CPLD_ALOM_PRESENT_BIT) {
-        marvell_ports_enable();
-        marvell_serdes_enable(MARVELL_SERDES_PORT0, true);
-        marvell_serdes_enable(MARVELL_SERDES_PORT1, true);
+    if (marvell_cfg->catalog->is_card_naples25_swm()) {
+        // If ALOM is present:
+        //     - Enable forwarding state of all ports except the RJ45 port
+        //     - Power up the serdes on the serdes ports
+        // Else:
+        //     - Enable forwarding state of all ports
+        //     - Power up the serdes on the serdes ports
+        //     - Power up the PHY on PHY ports
+        if (cpld_reg_rd(CPLD_REGISTER_CTRL) & CPLD_ALOM_PRESENT_BIT) {
+            // bitmask of 7 ports except port3 and port4
+            marvell_ports_enable(0x67);
+            marvell_serdes_enable(MARVELL_SERDES_PORT0, true);
+            marvell_serdes_enable(MARVELL_SERDES_PORT1, true);
+        } else {
+            // bitmask of all 7 ports
+            marvell_ports_enable(0x7F);
+            marvell_serdes_enable(MARVELL_SERDES_PORT0, true);
+            marvell_serdes_enable(MARVELL_SERDES_PORT1, true);
+            marvell_phy_enable(MARVELL_PHY_PORT0, true);
+            marvell_phy_enable(MARVELL_PHY_PORT1, true);
+        }
     }
 
     // block traffic from port 3 to port 5

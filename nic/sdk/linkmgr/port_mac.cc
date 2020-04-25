@@ -480,8 +480,8 @@ mac_cfg_hw (mac_info_t *mac_info)
     case port_speed_t::PORT_SPEED_10G:
         mx[inst_id].mac_mode = MAC_MODE_4x10g;
         mx_api_speed = 10;
-        if (g_linkmgr_cfg.catalog->card_id() ==
-                        sdk::lib::card_id_t::CARD_ID_NAPLES25) {
+        if ((g_linkmgr_cfg.catalog->is_card_naples25()) ||
+                 (g_linkmgr_cfg.catalog->is_card_naples25_swm())) {
             mx[inst_id].tdm[0] = 0;
             mx[inst_id].tdm[1] = 0;
             mx[inst_id].tdm[2] = 0;
@@ -497,8 +497,8 @@ mac_cfg_hw (mac_info_t *mac_info)
     case port_speed_t::PORT_SPEED_25G:
         mx[inst_id].mac_mode = MAC_MODE_4x25g;
         mx_api_speed = 25;
-        if (g_linkmgr_cfg.catalog->card_id() ==
-                            sdk::lib::card_id_t::CARD_ID_NAPLES25) {
+        if ((g_linkmgr_cfg.catalog->is_card_naples25()) ||
+                 (g_linkmgr_cfg.catalog->is_card_naples25_swm())) {
             mx[inst_id].tdm[0] = 0;
             mx[inst_id].tdm[1] = 0;
             mx[inst_id].tdm[2] = 0;

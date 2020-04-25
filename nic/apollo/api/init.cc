@@ -74,10 +74,13 @@ asic_global_config_init (pds_init_params_t *params, asic_cfg_t *asic_cfg)
 static inline sdk_ret_t
 linkmgr_init (catalog *catalog, const char *cfg_path)
 {
-    linkmgr_cfg_t    cfg;
+    linkmgr_cfg_t cfg;
+    marvell_cfg_t marvell_cfg;
 
-    // Initialize the marvell switch
-    sdk::marvell::marvell_switch_init();
+    // initialize the marvell switch
+    memset(&marvell_cfg, 0, sizeof(marvell_cfg_t));
+    marvell_cfg.catalog = catalog;
+    sdk::marvell::marvell_switch_init(&marvell_cfg);
 
     memset(&cfg, 0, sizeof(cfg));
     cfg.platform_type = g_pds_state.platform_type();

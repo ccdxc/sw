@@ -640,7 +640,7 @@ catalog::catalog_board_type_to_sdk_card_id(std::string board_type)
     } else if (board_type.compare("Naples25") == 0) {
         return CARD_ID_NAPLES25;
     } else if (board_type.compare("Naples25 SWM") == 0) {
-        return CARD_ID_NAPLES25;
+        return CARD_ID_NAPLES25_SWM;
     } else {
         return CARD_ID_NAPLES100;
     }
@@ -1118,6 +1118,16 @@ catalog::clock_get_multiplier(uint16_t freq) {
              return catalog_db_.clock_info[idx].clock_multiplier;
     }
     return 0;
+}
+
+bool
+catalog::is_card_naples25(void) {
+    return (card_id() == CARD_ID_NAPLES25);
+}
+
+bool
+catalog::is_card_naples25_swm(void) {
+    return (card_id() == CARD_ID_NAPLES25_SWM);
 }
 
 }    // namespace lib

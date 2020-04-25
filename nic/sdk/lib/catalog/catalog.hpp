@@ -31,7 +31,8 @@ using boost::property_tree::ptree;
 
 typedef enum card_id_e {
     CARD_ID_NAPLES100,
-    CARD_ID_NAPLES25
+    CARD_ID_NAPLES25,
+    CARD_ID_NAPLES25_SWM
 } card_id_t;
 
 typedef enum mac_mode_e {
@@ -215,6 +216,8 @@ public:
     catalog_t *catalog_db(void) { return &catalog_db_; }
     uint64_t cores_mask (void) const { return catalog_db_.cores_mask; }
     card_id_t card_id(void) { return catalog_db_.card_id; }
+    bool is_card_naples25(void);
+    bool is_card_naples25_swm(void);
     uint32_t cpld_id() { return catalog_db_.cpld_id; }
     bool access_mock_mode(void) { return catalog_db_.access_mock_mode; }
     uint32_t max_mpu_per_stage(void) const {
@@ -420,6 +423,7 @@ private:
 using sdk::lib::mac_mode_t;
 using sdk::lib::serdes_info_t;
 using sdk::lib::catalog;
+using sdk::lib::card_id_t;
 
 #define MAC_MODE_1x100g mac_mode_t::MAC_MODE_1x100g
 #define MAC_MODE_1x40g mac_mode_t::MAC_MODE_1x40g

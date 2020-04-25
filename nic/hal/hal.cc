@@ -180,7 +180,8 @@ hal_init (hal_cfg_t *hal_cfg)
     int                tid;
     sdk::lib::catalog  *catalog = NULL;
     hal_ret_t          ret      = HAL_RET_OK;
-    std::string         mpart_json;
+    std::string        mpart_json;
+    marvell_cfg_t      marvell_cfg;
 
     // read the startup device config
     hal_device_cfg_init(hal_cfg);
@@ -235,8 +236,10 @@ hal_init (hal_cfg_t *hal_cfg)
                             "HAL PD layer initialization failure");
     HAL_TRACE_DEBUG("Platform initialization done");
 
-    // Initialize the marvell switch
-    sdk::marvell::marvell_switch_init();
+    // initialize the marvell switch
+    memset(&marvell_cfg, 0, sizeof(marvell_cfg_t));
+    marvell_cfg.catalog = catalog;
+    sdk::marvell::marvell_switch_init(&marvell_cfg);
 
     // nicmgr init
     if (!getenv("DISABLE_NICMGR_HAL_THREAD")) {

@@ -6,6 +6,7 @@
 #define __MARVELL_H__
 
 #include <stdint.h>
+#include "lib/catalog/catalog.hpp"
 
 // -------------------------------------------
 // Marvell switch port connections on Naples25
@@ -39,6 +40,11 @@
 
 namespace sdk {
 namespace marvell {
+
+typedef struct marvell_cfg_s_ {
+    sdk::lib::catalog *catalog;
+} marvell_cfg_t;
+extern marvell_cfg_t g_marvell_cfg;
 
 typedef struct marvell_port_stats_ {
     uint64_t in_good_octets;
@@ -121,11 +127,13 @@ marvell_get_status_flowctrl (uint16_t status, bool *fctrl)
 }
 
 // extern functions
-void marvell_switch_init(void);
+void marvell_switch_init(marvell_cfg_t *marvell_cfg);
 int marvell_get_port_status(uint8_t port, uint16_t *data);
 int marvell_get_port_stats(uint8_t port, marvell_port_stats_t *stats);
 
 }   // namespace marvell
 }   // namespace sdk
+
+using sdk::marvell::marvell_cfg_t;
 
 #endif  /* __MARVELL_H__ */
