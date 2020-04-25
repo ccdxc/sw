@@ -1,7 +1,7 @@
-import {ChangeDetectorRef, Component, Input, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectorRef, Component, Input, ViewEncapsulation, ViewChild} from '@angular/core';
 import {Animations} from '@app/animations';
 import {Utility} from '@app/common/Utility';
-import { TablevieweditAbstract} from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TablevieweditAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import {ControllerService} from '@app/services/controller.service';
 import {ObjstoreService} from '@app/services/generated/objstore.service';
 import {RolloutService} from '@app/services/generated/rollout.service';
@@ -30,6 +30,8 @@ import { RolloutUtil } from '@app/components/admin/systemupgrade/rollouts/Rollou
   encapsulation: ViewEncapsulation.None
 })
 export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, RolloutRollout> {
+  @ViewChild('pastRolloutTable') pastRolloutTable: TablevieweditHTMLComponent;
+
   dataObjects: ReadonlyArray<RolloutRollout>;
   pendingRollouts: RolloutRollout[] = [];
   pastRollouts: RolloutRollout[] = [];
@@ -281,5 +283,13 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     } else {
       return false;
     }
+  }
+
+  // override method
+  getSelectedDataObjects(): any[] {
+    if (this.tabIndex === 0) {
+      return super.getSelectedDataObjects();
+    }
+    return (this.tabIndex === 1 && this.pastRolloutTable && this.pastRolloutTable.table.selection) ? this.pastRolloutTable.table.selection : [];
   }
 }

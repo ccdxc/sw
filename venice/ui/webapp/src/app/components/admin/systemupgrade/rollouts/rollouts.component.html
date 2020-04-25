@@ -21,12 +21,13 @@
     </mat-tab>
     <mat-tab label="PAST {{ (pastRollouts && pastRollouts.length >0)? ' (' +  pastRollouts.length + ')' : '(0)' }}"
              [disabled]="isToDisablePastTab()">
-      <app-tableviewedit fxLayout="column" style="height: 100%"
+      <app-tableviewedit #pastRolloutTable fxLayout="column" style="height: 100%"
                          [data]="pastRollouts"
                          [cols]="cols"
                          [captionTemplate]="captionTemplate_past"
                          [bodyTemplate]="bodyTemplate"
-                         [actionTemplate]="actionTemplatePast">
+                         [actionTemplate]="actionTemplatePast"
+                         [enableCheckbox]="true">
       </app-tableviewedit>
     </mat-tab>
   </mat-tab-group>
@@ -44,8 +45,21 @@
 </ng-template>
 
 <ng-template #captionTemplate_past let-count="count">
-  <app-tableheader title="Rollouts" [total]="pastRollouts.length" [icon]="" width="250px">
+  <app-tableheader title="Rollouts" [total]="pastRollouts.length" fxFlex="auto" fxLayout="row">
+    <ng-container *ngTemplateOutlet="actionButtonsTemplate_past"></ng-container>
   </app-tableheader>
+</ng-template>
+
+<ng-template #actionButtonsTemplate_past>
+  <div fxFlex="none" fxLayoutAlign="start center"
+       *roleGuard="'rolloutrollout_delete'">
+    <!-- TABLE FUNCTION ICONS HERE -->
+    <mat-icon class="global-multi-records-delete-icon"
+              *ngIf="hasSelectedRows() && tabIndex === 1"
+              [matTooltip]="'Delete selected past rollouts'"
+              (click)="onDeleteSelectedRows($event)">delete</mat-icon>
+  </div>
+
 </ng-template>
 
 <!-- TABLE BODY -->
@@ -71,6 +85,7 @@
     </ng-container>
   </div>
 </ng-template>
+
 
 <!-- TABLE ACTION -->
 <ng-template #actionTemplatePending let-rowData>
