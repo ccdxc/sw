@@ -27,7 +27,7 @@ public:
                         const pds::DeviceDeleteRequest *req,
                         pds::DeviceDeleteResponse *proto_rsp) override;
     Status DeviceGet(ServerContext *context,
-                     const types::Empty *empty,
+                     const pds::DeviceGetRequest *proto_req,
                      pds::DeviceGetResponse *proto_rsp) override;
 };
 

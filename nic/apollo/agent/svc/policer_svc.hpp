@@ -13,6 +13,9 @@
 
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/policer.hpp"
+#include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/api/include/pds_policer.hpp"
 
 static inline pds::PolicerDir
 pds_policer_dir_api_spec_to_proto (pds_policer_dir_t dir)
@@ -116,6 +119,259 @@ pds_policer_api_info_to_proto (pds_policer_info_t *api_info, void *ctxt)
     pds_policer_api_spec_to_proto(proto_spec, &api_info->spec);
     pds_policer_api_status_to_proto(proto_status, &api_info->status);
     pds_policer_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
+static inline sdk_ret_t
+pds_svc_policer_create (const pds::PolicerRequest *proto_req,
+                        pds::PolicerResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policer_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, policer creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(api_spec));
+        auto request = proto_req->request(i);
+        pds_policer_proto_to_api_spec(&api_spec, request);
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_policer_create(&api_spec, bctxt);
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
+        }
+    }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_policer_update (const pds::PolicerRequest *proto_req,
+                        pds::PolicerResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_policer_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, policer update failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(api_spec));
+        auto request = proto_req->request(i);
+        pds_policer_proto_to_api_spec(&api_spec, request);
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_policer_update(&api_spec, bctxt);
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_policer_delete (const pds::PolicerDeleteRequest *proto_req,
+                        pds::PolicerDeleteResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_obj_key_t key;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, policer deletion failed");
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_policer_delete(&key, bctxt);
+        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_policer_get (const pds::PolicerGetRequest *proto_req,
+                     pds::PolicerGetResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_obj_key_t key;
+    pds_policer_info_t info = { 0 };
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    if (proto_req->id_size() == 0) {
+        // get all
+        ret = pds_policer_read_all(pds_policer_api_info_to_proto, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_policer_read(&key, &info);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            break;
+        }
+        pds_policer_api_info_to_proto(&info, proto_rsp);
+    }
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_policer_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+{
+    sdk_ret_t ret;
+    google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
+
+    switch (ctxt->cfg) {
+    case CFG_MSG_POLICER_CREATE:
+        {
+            pds::PolicerRequest req;
+            pds::PolicerResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_policer_create(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_POLICER_UPDATE:
+        {
+            pds::PolicerRequest req;
+            pds::PolicerResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_policer_update(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_POLICER_DELETE:
+        {
+            pds::PolicerDeleteRequest req;
+            pds::PolicerDeleteResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_policer_delete(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_POLICER_GET:
+        {
+            pds::PolicerGetRequest req;
+            pds::PolicerGetResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_policer_get(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    return ret;
 }
 
 #endif    //__AGENT_SVC_POLICER_SVC_HPP__

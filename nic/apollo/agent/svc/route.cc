@@ -2,76 +2,13 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
-#include "nic/apollo/api/include/pds_batch.hpp"
-#include "nic/apollo/api/include/pds_route.hpp"
-#include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/route_svc.hpp"
-#include "nic/apollo/agent/hooks.hpp"
-#include "nic/apollo/api/utils.hpp"
-#include <malloc.h>
 
 Status
 RouteSvcImpl::RouteTableCreate(ServerContext *context,
                                const pds::RouteTableRequest *proto_req,
                                pds::RouteTableResponse *proto_rsp) {
-    sdk_ret_t ret;
-    pds_batch_ctxt_t bctxt;
-    bool batched_internally = false;
-    pds_batch_params_t batch_params;
-    pds_route_table_spec_t api_spec;
-
-    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::CANCELLED;
-    }
-
-    // create an internal batch, if this is not part of an existing API batch
-    bctxt = proto_req->batchctxt().batchcookie();
-    if (bctxt == PDS_BATCH_CTXT_INVALID) {
-        batch_params.epoch = core::agent_state::state()->new_epoch();
-        batch_params.async = false;
-        bctxt = pds_batch_start(&batch_params);
-        if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, route table "
-                          "creation failed");
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
-        }
-        batched_internally = true;
-    }
-
-    for (int i = 0; i < proto_req->request_size(); i ++) {
-        memset(&api_spec, 0, sizeof(pds_route_table_spec_t));
-        auto request = proto_req->request(i);
-        ret = pds_route_table_proto_to_api_spec(&api_spec, request);
-        if (unlikely(ret != SDK_RET_OK)) {
-            goto end;
-        }
-        ret = pds_route_table_create(&api_spec, bctxt);
-        // free the routes memory
-        if (api_spec.route_info != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec.route_info);
-            api_spec.route_info = NULL;
-        }
-        if (ret != SDK_RET_OK) {
-            goto end;
-        }
-    }
-
-    if (batched_internally) {
-        // commit the internal batch
-        ret = pds_batch_commit(bctxt);
-    }
-    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::OK;
-
-end:
-
-    if (batched_internally) {
-        // destroy the internal batch
-        pds_batch_destroy(bctxt);
-    }
-    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    pds_svc_route_table_create(proto_req, proto_rsp);
     return Status::OK;
 }
 
@@ -79,64 +16,7 @@ Status
 RouteSvcImpl::RouteTableUpdate(ServerContext *context,
                                const pds::RouteTableRequest *proto_req,
                                pds::RouteTableResponse *proto_rsp) {
-    sdk_ret_t ret;
-    pds_batch_ctxt_t bctxt;
-    bool batched_internally = false;
-    pds_batch_params_t batch_params;
-    pds_route_table_spec_t api_spec;
-
-    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::CANCELLED;
-    }
-
-    // create an internal batch, if this is not part of an existing API batch
-    bctxt = proto_req->batchctxt().batchcookie();
-    if (bctxt == PDS_BATCH_CTXT_INVALID) {
-        batch_params.epoch = core::agent_state::state()->new_epoch();
-        batch_params.async = false;
-        bctxt = pds_batch_start(&batch_params);
-        if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, route table "
-                          "update failed");
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
-        }
-        batched_internally = true;
-    }
-
-    for (int i = 0; i < proto_req->request_size(); i ++) {
-        memset(&api_spec, 0, sizeof(pds_route_table_spec_t));
-        auto request = proto_req->request(i);
-        ret = pds_route_table_proto_to_api_spec(&api_spec, request);
-        if (unlikely(ret != SDK_RET_OK)) {
-            goto end;
-        }
-        ret = pds_route_table_update(&api_spec, bctxt);
-        // free the routes memory
-        if (api_spec.route_info != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, api_spec.route_info);
-            api_spec.route_info = NULL;
-        }
-        if (ret != SDK_RET_OK) {
-            goto end;
-        }
-    }
-
-    if (batched_internally) {
-        // commit the internal batch
-        ret = pds_batch_commit(bctxt);
-    }
-    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::OK;
-
-end:
-
-    if (batched_internally) {
-        // destroy the internal batch
-        pds_batch_destroy(bctxt);
-    }
-    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    pds_svc_route_table_update(proto_req, proto_rsp);
     return Status::OK;
 }
 
@@ -144,54 +24,7 @@ Status
 RouteSvcImpl::RouteTableDelete(ServerContext *context,
                                const pds::RouteTableDeleteRequest *proto_req,
                                pds::RouteTableDeleteResponse *proto_rsp) {
-    sdk_ret_t ret;
-    pds_obj_key_t key;
-    pds_batch_ctxt_t bctxt;
-    bool batched_internally = false;
-    pds_batch_params_t batch_params;
-
-    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
-        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::CANCELLED;
-    }
-
-    // create an internal batch, if this is not part of an existing API batch
-    bctxt = proto_req->batchctxt().batchcookie();
-    if (bctxt == PDS_BATCH_CTXT_INVALID) {
-        batch_params.epoch = core::agent_state::state()->new_epoch();
-        batch_params.async = false;
-        bctxt = pds_batch_start(&batch_params);
-        if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, route table "
-                          "delete failed");
-            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
-        }
-        batched_internally = true;
-    }
-
-    for (int i = 0; i < proto_req->id_size(); i++) {
-        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = pds_route_table_delete(&key, bctxt);
-        if (ret != SDK_RET_OK) {
-            goto end;
-        }
-    }
-
-    if (batched_internally) {
-        // commit the internal batch
-        ret = pds_batch_commit(bctxt);
-    }
-    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
-    return Status::OK;
-
-end:
-
-    if (batched_internally) {
-        // destroy the internal batch
-        pds_batch_destroy(bctxt);
-    }
-    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    pds_svc_route_table_delete(proto_req, proto_rsp);
     return Status::OK;
 }
 
@@ -199,51 +32,7 @@ Status
 RouteSvcImpl::RouteTableGet(ServerContext *context,
                             const pds::RouteTableGetRequest *proto_req,
                             pds::RouteTableGetResponse *proto_rsp) {
-    sdk_ret_t ret;
-    pds_obj_key_t key;
-    pds_route_table_info_t info;
-
-    if (proto_req == NULL) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
-    }
-    for (int i = 0; i < proto_req->id_size(); i++) {
-        memset(&info, 0, sizeof(info));
-        info.spec.route_info =
-            (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                       ROUTE_INFO_SIZE(0));
-        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        // get number of routes
-        ret = pds_route_table_read(&key, &info);
-        if (ret == SDK_RET_OK) {
-            uint32_t num_routes = info.spec.route_info->num_routes;
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
-            info.spec.route_info =
-                (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                          ROUTE_INFO_SIZE(num_routes));
-            info.spec.route_info->num_routes = num_routes;
-            ret = pds_route_table_read(&key, &info);
-        }
-        if (ret != SDK_RET_OK) {
-            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
-            info.spec.route_info = NULL;
-            break;
-        }
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        pds_route_table_api_info_to_proto(&info, proto_rsp);
-        if (info.spec.route_info) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
-            info.spec.route_info = NULL;
-        }
-    }
-
-    if (proto_req->id_size() == 0) {
-        ret = pds_route_table_read_all(pds_route_table_api_info_to_proto, proto_rsp);
-        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    }
-
-    PDS_MEMORY_TRIM();
+    pds_svc_route_table_get(proto_req, proto_rsp);
     return Status::OK;
 }
 
@@ -251,57 +40,7 @@ Status
 RouteSvcImpl::RouteCreate(ServerContext *context,
                           const pds::RouteRequest *proto_req,
                           pds::RouteResponse *proto_rsp) {
-    sdk_ret_t ret;
-    pds_batch_ctxt_t bctxt;
-    bool batched_internally = false;
-    pds_batch_params_t batch_params;
-    pds_route_spec_t api_spec;
-
-    if (proto_req == NULL) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::CANCELLED;
-    }
-
-    // create an internal batch, if this is not part of an existing API batch
-    bctxt = proto_req->batchctxt().batchcookie();
-    if (bctxt == PDS_BATCH_CTXT_INVALID) {
-        batch_params.epoch = core::agent_state::state()->new_epoch();
-        batch_params.async = false;
-        bctxt = pds_batch_start(&batch_params);
-        if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, route "
-                          "creation failed");
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
-        }
-        batched_internally = true;
-    }
-
-    memset(&api_spec, 0, sizeof(pds_route_spec_t));
-    auto request = proto_req->request();
-    ret = pds_route_proto_to_api_spec(&api_spec, request);
-    if (unlikely(ret != SDK_RET_OK)) {
-        goto end;
-    }
-    ret = pds_route_create(&api_spec, bctxt);
-    if (ret != SDK_RET_OK) {
-        goto end;
-    }
-
-    if (batched_internally) {
-        // commit the internal batch
-        ret = pds_batch_commit(bctxt);
-    }
-    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::OK;
-
-end:
-
-    if (batched_internally) {
-        // destroy the internal batch
-        pds_batch_destroy(bctxt);
-    }
-    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    pds_svc_route_create(proto_req, proto_rsp);
     return Status::OK;
 }
 
@@ -309,57 +48,7 @@ Status
 RouteSvcImpl::RouteUpdate(ServerContext *context,
                           const pds::RouteRequest *proto_req,
                           pds::RouteResponse *proto_rsp) {
-    sdk_ret_t ret;
-    pds_batch_ctxt_t bctxt;
-    bool batched_internally = false;
-    pds_batch_params_t batch_params;
-    pds_route_spec_t api_spec;
-
-    if (proto_req == NULL) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::CANCELLED;
-    }
-
-    // create an internal batch, if this is not part of an existing API batch
-    bctxt = proto_req->batchctxt().batchcookie();
-    if (bctxt == PDS_BATCH_CTXT_INVALID) {
-        batch_params.epoch = core::agent_state::state()->new_epoch();
-        batch_params.async = false;
-        bctxt = pds_batch_start(&batch_params);
-        if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, route "
-                          "update failed");
-            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
-        }
-        batched_internally = true;
-    }
-
-    memset(&api_spec, 0, sizeof(pds_route_spec_t));
-    auto request = proto_req->request();
-    ret = pds_route_proto_to_api_spec(&api_spec, request);
-    if (unlikely(ret != SDK_RET_OK)) {
-        goto end;
-    }
-    ret = pds_route_update(&api_spec, bctxt);
-    if (ret != SDK_RET_OK) {
-        goto end;
-    }
-
-    if (batched_internally) {
-        // commit the internal batch
-        ret = pds_batch_commit(bctxt);
-    }
-    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::OK;
-
-end:
-
-    if (batched_internally) {
-        // destroy the internal batch
-        pds_batch_destroy(bctxt);
-    }
-    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    pds_svc_route_update(proto_req, proto_rsp);
     return Status::OK;
 }
 
@@ -367,56 +56,7 @@ Status
 RouteSvcImpl::RouteDelete(ServerContext *context,
                           const pds::RouteDeleteRequest *proto_req,
                           pds::RouteDeleteResponse *proto_rsp) {
-    sdk_ret_t ret;
-    pds_route_key_t key;
-    pds_batch_ctxt_t bctxt;
-    bool batched_internally = false;
-    pds_batch_params_t batch_params;
-
-    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
-        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::CANCELLED;
-    }
-
-    // create an internal batch, if this is not part of an existing API batch
-    bctxt = proto_req->batchctxt().batchcookie();
-    if (bctxt == PDS_BATCH_CTXT_INVALID) {
-        batch_params.epoch = core::agent_state::state()->new_epoch();
-        batch_params.async = false;
-        bctxt = pds_batch_start(&batch_params);
-        if (bctxt == PDS_BATCH_CTXT_INVALID) {
-            PDS_TRACE_ERR("Failed to create a new batch, route "
-                          "delete failed");
-            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
-            return Status::OK;
-        }
-        batched_internally = true;
-    }
-
-    for (int i = 0; i < proto_req->id_size(); i++) {
-        pds_obj_key_proto_to_api_spec(&key.route_id, proto_req->id(i).id());
-        pds_obj_key_proto_to_api_spec(&key.route_table_id,
-                                      proto_req->id(i).routetableid());
-        ret = pds_route_delete(&key, bctxt);
-        if (ret != SDK_RET_OK) {
-            goto end;
-        }
-    }
-
-    if (batched_internally) {
-        // commit the internal batch
-        ret = pds_batch_commit(bctxt);
-    }
-    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
-    return Status::OK;
-
-end:
-
-    if (batched_internally) {
-        // destroy the internal batch
-        pds_batch_destroy(bctxt);
-    }
-    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    pds_svc_route_delete(proto_req, proto_rsp);
     return Status::OK;
 }
 
@@ -424,28 +64,6 @@ Status
 RouteSvcImpl::RouteGet(ServerContext *context,
                        const pds::RouteGetRequest *proto_req,
                        pds::RouteGetResponse *proto_rsp) {
-    sdk_ret_t ret;
-    pds_route_key_t key;
-    pds_route_info_t info;
-
-    if (proto_req == NULL) {
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::OK;
-    }
-    for (int i = 0; i < proto_req->id_size(); i++) {
-        memset(&info, 0, sizeof(info));
-        pds_obj_key_proto_to_api_spec(&key.route_id,
-                                      proto_req->id(i).id());
-        pds_obj_key_proto_to_api_spec(&key.route_table_id,
-                                      proto_req->id(i).routetableid());
-        ret = pds_route_read(&key, &info);
-        if (ret != SDK_RET_OK) {
-            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-            break;
-        }
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        pds_route_api_info_to_proto(&info, proto_rsp);
-    }
-    PDS_MEMORY_TRIM();
+    pds_svc_route_get(proto_req, proto_rsp);
     return Status::OK;
 }

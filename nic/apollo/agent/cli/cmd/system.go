@@ -165,8 +165,7 @@ func dropShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	client := pds.NewDeviceSvcClient(c)
-
-	var req *pds.Empty
+	req := &pds.DeviceGetRequest{}
 
 	// PDS call
 	resp, err := client.DeviceGet(context.Background(), req)

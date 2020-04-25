@@ -465,4 +465,5 @@ pds_svc_vnic_handle_cfg (cfg_ctxt_t *ctxt,
 
     return ret;
 }
+
 #endif    // __AGENT_SVC_VNIC_HPP__

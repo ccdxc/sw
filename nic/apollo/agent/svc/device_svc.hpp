@@ -181,5 +181,72 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+pds_svc_device_create(const pds::DeviceRequest *proto_req,
+                      pds::DeviceResponse *proto_rsp);
+sdk_ret_t
+pds_svc_device_update(const pds::DeviceRequest *proto_req,
+                      pds::DeviceResponse *proto_rsp);
+sdk_ret_t
+pds_svc_device_delete(const pds::DeviceDeleteRequest *proto_req,
+                      pds::DeviceDeleteResponse *proto_rsp);
+sdk_ret_t
+pds_svc_device_get(const pds::DeviceGetRequest *proto_req,
+                   pds::DeviceGetResponse *proto_rsp);
+
+static inline sdk_ret_t
+pds_svc_device_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+{
+    sdk_ret_t ret;
+    google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
+
+    switch (ctxt->cfg) {
+    case CFG_MSG_DEVICE_CREATE:
+        {
+            pds::DeviceRequest req;
+            pds::DeviceResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_device_create(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_DEVICE_UPDATE:
+        {
+            pds::DeviceRequest req;
+            pds::DeviceResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_device_update(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_DEVICE_DELETE:
+        {
+            pds::DeviceDeleteRequest req;
+            pds::DeviceDeleteResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_device_delete(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_DEVICE_GET:
+        {
+            pds::DeviceGetRequest req;
+            pds::DeviceGetResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_device_get(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    return ret;
+}
 
 #endif    //__AGENT_SVC_DEVICE_SVC_HPP__

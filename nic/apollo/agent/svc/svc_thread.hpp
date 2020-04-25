@@ -5,7 +5,12 @@
 #ifndef __SVC_THREAD_HPP__
 #define __SVC_THREAD_HPP__
 
+#include "nic/apollo/api/include/pds_debug.hpp"
+#include "gen/proto/types.pb.h"
+
 #define FD_INVALID (-1)
+
+sdk_ret_t handle_svc_req(int fd, types::ServiceRequestMessage *proto_req, int cmd_fd);
 
 namespace core {
 

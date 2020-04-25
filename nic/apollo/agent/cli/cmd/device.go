@@ -69,9 +69,8 @@ func deviceUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var req *pds.Empty
-
 	client := pds.NewDeviceSvcClient(c)
+	req := &pds.DeviceGetRequest{}
 
 	// PDS call
 	resp, err := client.DeviceGet(context.Background(), req)
@@ -236,8 +235,7 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	client := pds.NewDeviceSvcClient(c)
-
-	var req *pds.Empty
+	req := &pds.DeviceGetRequest{}
 
 	// PDS call
 	resp, err := client.DeviceGet(context.Background(), req)

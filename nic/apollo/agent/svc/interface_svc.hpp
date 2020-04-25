@@ -15,6 +15,9 @@
 #include "nic/apollo/agent/svc/interface.hpp"
 #include "nic/apollo/api/include/pds_lif.hpp"
 #include "nic/apollo/api/internal/pds_if.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/agent/trace.hpp"
+#include "nic/apollo/agent/core/interface.hpp"
 
 static inline types::LifType
 pds_lif_type_to_proto_lif_type (lif_type_t lif_type)
@@ -315,6 +318,310 @@ pds_lif_api_info_to_proto (void *entry, void *ctxt)
 
     pds_lif_api_spec_to_proto_spec(proto_spec, &api_info->spec);
     pds_lif_api_status_to_proto(proto_status, &api_info->status);
+}
+
+static inline sdk_ret_t
+pds_svc_interface_create (const pds::InterfaceRequest *proto_req,
+                          pds::InterfaceResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    Status status = Status::OK;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_if_spec_t *api_spec;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, interface creation "
+                          "failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_if_spec_t *)
+                    core::agent_state::state()->if_slab()->alloc();
+        if (api_spec == NULL) {
+            ret = SDK_RET_OOM;
+            goto end;
+        }
+        auto request = proto_req->request(i);
+        ret = pds_if_proto_to_api_spec(api_spec, request);
+        if (ret != SDK_RET_OK) {
+            core::agent_state::state()->if_slab()->free(api_spec);
+            goto end;
+        }
+        ret = core::interface_create(api_spec, bctxt);
+        if (ret != SDK_RET_OK) {
+            core::agent_state::state()->if_slab()->free(api_spec);
+            goto end;
+        }
+    }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_interface_update (const pds::InterfaceRequest *proto_req,
+                          pds::InterfaceResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    Status status = Status::OK;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_if_spec_t *api_spec;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, interface update "
+                          "failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_if_spec_t *)
+                    core::agent_state::state()->if_slab()->alloc();
+        if (api_spec == NULL) {
+            ret = SDK_RET_OOM;
+            goto end;
+        }
+        auto request = proto_req->request(i);
+        ret = pds_if_proto_to_api_spec(api_spec, request);
+        if (ret != SDK_RET_OK) {
+            core::agent_state::state()->if_slab()->free(api_spec);
+            goto end;
+        }
+        ret = core::interface_update(api_spec, bctxt);
+        if (ret != SDK_RET_OK) {
+            core::agent_state::state()->if_slab()->free(api_spec);
+            goto end;
+        }
+    }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_interface_delete (const pds::InterfaceDeleteRequest *proto_req,
+                          pds::InterfaceDeleteResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, interface delete "
+                          "failed");
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = core::interface_delete(&key, bctxt);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_interface_get (const pds::InterfaceGetRequest *proto_req,
+                       pds::InterfaceGetResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_if_info_t info;
+    pds_obj_key_t key = { 0 };
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = core::interface_get(&key, &info);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            break;
+        }
+        pds_if_api_info_to_proto(&info, proto_rsp);
+    }
+
+    if (proto_req->id_size() == 0) {
+        ret = core::interface_get_all(pds_if_api_info_to_proto, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_lif_get (const pds::LifGetRequest *proto_req,
+                 pds::LifGetResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_obj_key_t key;
+
+    if (proto_req) {
+        for (int i = 0; i < proto_req->id_size(); i ++) {
+            pds_lif_info_t info = { 0 };
+            pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+            ret = pds_lif_read(&key, &info);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            pds_lif_api_info_to_proto(&info, proto_rsp);
+        }
+        if (proto_req->id_size() == 0) {
+            ret = pds_lif_read_all(pds_lif_api_info_to_proto, proto_rsp);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        }
+    }
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_interface_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+{
+    sdk_ret_t ret;
+    google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
+
+    switch (ctxt->cfg) {
+    case CFG_MSG_INTERFACE_CREATE:
+        {
+            pds::InterfaceRequest req;
+            pds::InterfaceResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_interface_create(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_INTERFACE_UPDATE:
+        {
+            pds::InterfaceRequest req;
+            pds::InterfaceResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_interface_update(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_INTERFACE_DELETE:
+        {
+            pds::InterfaceDeleteRequest req;
+            pds::InterfaceDeleteResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_interface_delete(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_INTERFACE_GET:
+        {
+            pds::InterfaceGetRequest req;
+            pds::InterfaceGetResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_interface_get(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_LIF_GET:
+        {
+            pds::LifGetRequest req;
+            pds::LifGetResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_lif_get(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    return ret;
 }
 
 #endif    //__AGENT_SVC_INTERFACE_SVC_HPP__

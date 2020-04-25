@@ -74,6 +74,7 @@
 		Device
 		DeviceRequest
 		DeviceResponse
+		DeviceGetRequest
 		DeviceGetResponse
 		DeviceDeleteRequest
 		DeviceDeleteResponse

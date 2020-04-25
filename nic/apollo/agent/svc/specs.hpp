@@ -468,50 +468,97 @@ proto_mapping_dump_type_to_pds (pds::MappingDumpType type)
     }
 }
 
+const static std::map<std::pair<std::string, types::ServiceRequestOp>, cfg_msg_t>  g_svc_cfg_map =
+{
+    {std::make_pair("pds.VPCRequest", types::SERVICE_OP_CREATE),                   CFG_MSG_VPC_CREATE},
+    {std::make_pair("pds.VPCRequest", types::SERVICE_OP_UPDATE),                   CFG_MSG_VPC_UPDATE},
+    {std::make_pair("pds.VPCDeleteRequest", types::SERVICE_OP_DELETE),             CFG_MSG_VPC_DELETE},
+    {std::make_pair("pds.VPCGetRequest", types::SERVICE_OP_READ),                  CFG_MSG_VPC_GET},
+    {std::make_pair("pds.VPCPeerRequest", types::SERVICE_OP_CREATE),               CFG_MSG_VPC_PEER_CREATE},
+    {std::make_pair("pds.VPCPeerDeleteRequest", types::SERVICE_OP_DELETE),         CFG_MSG_VPC_PEER_DELETE},
+    {std::make_pair("pds.VPCPeerGetRequest", types::SERVICE_OP_READ),              CFG_MSG_VPC_PEER_GET},
+    {std::make_pair("pds.VnicRequest", types::SERVICE_OP_CREATE),                  CFG_MSG_VNIC_CREATE},
+    {std::make_pair("pds.VnicRequest", types::SERVICE_OP_UPDATE),                  CFG_MSG_VNIC_UPDATE},
+    {std::make_pair("pds.VnicDeleteRequest", types::SERVICE_OP_DELETE),            CFG_MSG_VNIC_DELETE},
+    {std::make_pair("pds.VnicGetRequest", types::SERVICE_OP_READ),                 CFG_MSG_VNIC_GET},
+    {std::make_pair("pds.SubnetRequest", types::SERVICE_OP_CREATE),                CFG_MSG_SUBNET_CREATE},
+    {std::make_pair("pds.SubnetRequest", types::SERVICE_OP_UPDATE),                CFG_MSG_SUBNET_UPDATE},
+    {std::make_pair("pds.SubnetDeleteRequest", types::SERVICE_OP_DELETE),          CFG_MSG_SUBNET_DELETE},
+    {std::make_pair("pds.SubnetGetRequest", types::SERVICE_OP_READ),               CFG_MSG_SUBNET_GET},
+    {std::make_pair("pds.SecurityPolicyRequest", types::SERVICE_OP_CREATE),        CFG_MSG_SECURITY_POLICY_CREATE},
+    {std::make_pair("pds.SecurityPolicyRequest", types::SERVICE_OP_UPDATE),        CFG_MSG_SECURITY_POLICY_UPDATE},
+    {std::make_pair("pds.SecurityPolicyDeleteRequest", types::SERVICE_OP_DELETE),  CFG_MSG_SECURITY_POLICY_DELETE},
+    {std::make_pair("pds.SecurityPolicyGetRequest", types::SERVICE_OP_READ),       CFG_MSG_SECURITY_POLICY_GET},
+    {std::make_pair("pds.SecurityRuleRequest", types::SERVICE_OP_CREATE),          CFG_MSG_SECURITY_RULE_CREATE},
+    {std::make_pair("pds.SecurityRuleRequest", types::SERVICE_OP_UPDATE),          CFG_MSG_SECURITY_RULE_UPDATE},
+    {std::make_pair("pds.SecurityRuleDeleteRequest", types::SERVICE_OP_DELETE),    CFG_MSG_SECURITY_RULE_DELETE},
+    {std::make_pair("pds.SecurityRuleGetRequest", types::SERVICE_OP_READ),         CFG_MSG_SECURITY_RULE_GET},
+    {std::make_pair("pds.SecurityProfileRequest", types::SERVICE_OP_CREATE),       CFG_MSG_SECURITY_PROFILE_CREATE},
+    {std::make_pair("pds.SecurityProfileRequest", types::SERVICE_OP_UPDATE),       CFG_MSG_SECURITY_PROFILE_UPDATE},
+    {std::make_pair("pds.SecurityProfileDeleteRequest", types::SERVICE_OP_DELETE), CFG_MSG_SECURITY_PROFILE_DELETE},
+    {std::make_pair("pds.SecurityProfileGetRequest", types::SERVICE_OP_READ),      CFG_MSG_SECURITY_PROFILE_GET},
+    {std::make_pair("pds.PolicerRequest", types::SERVICE_OP_CREATE),               CFG_MSG_POLICER_CREATE},
+    {std::make_pair("pds.PolicerRequest", types::SERVICE_OP_UPDATE),               CFG_MSG_POLICER_UPDATE},
+    {std::make_pair("pds.PolicerDeleteRequest", types::SERVICE_OP_DELETE),         CFG_MSG_POLICER_DELETE},
+    {std::make_pair("pds.PolicerGetRequest", types::SERVICE_OP_READ),              CFG_MSG_POLICER_GET},
+    {std::make_pair("pds.MappingRequest", types::SERVICE_OP_CREATE),               CFG_MSG_MAPPING_CREATE},
+    {std::make_pair("pds.MappingRequest", types::SERVICE_OP_UPDATE),               CFG_MSG_MAPPING_UPDATE},
+    {std::make_pair("pds.MappingDeleteRequest", types::SERVICE_OP_DELETE),         CFG_MSG_MAPPING_DELETE},
+    {std::make_pair("pds.MappingGetRequest", types::SERVICE_OP_READ),              CFG_MSG_MAPPING_GET},
+    {std::make_pair("pds.InterfaceRequest", types::SERVICE_OP_CREATE),             CFG_MSG_INTERFACE_CREATE},
+    {std::make_pair("pds.InterfaceRequest", types::SERVICE_OP_UPDATE),             CFG_MSG_INTERFACE_UPDATE},
+    {std::make_pair("pds.InterfaceDeleteRequest", types::SERVICE_OP_DELETE),       CFG_MSG_INTERFACE_DELETE},
+    {std::make_pair("pds.InterfaceGetRequest", types::SERVICE_OP_READ),            CFG_MSG_INTERFACE_GET},
+    {std::make_pair("pds.LifGetRequest", types::SERVICE_OP_READ),                  CFG_MSG_LIF_GET},
+    {std::make_pair("pds.DHCPPolicyRequest", types::SERVICE_OP_CREATE),            CFG_MSG_DHCP_POLICY_CREATE},
+    {std::make_pair("pds.DHCPPolicyRequest", types::SERVICE_OP_UPDATE),            CFG_MSG_DHCP_POLICY_UPDATE},
+    {std::make_pair("pds.DHCPPolicyDeleteRequest", types::SERVICE_OP_DELETE),      CFG_MSG_DHCP_POLICY_DELETE},
+    {std::make_pair("pds.DHCPPolicyGetRequest", types::SERVICE_OP_READ),           CFG_MSG_DHCP_POLICY_GET},
+    {std::make_pair("pds.NatPortBlockRequest", types::SERVICE_OP_CREATE),          CFG_MSG_NAT_PORT_BLOCK_CREATE},
+    {std::make_pair("pds.NatPortBlockDeleteRequest", types::SERVICE_OP_DELETE),    CFG_MSG_NAT_PORT_BLOCK_DELETE},
+    {std::make_pair("pds.NatPortBlockGetRequest", types::SERVICE_OP_READ),         CFG_MSG_NAT_PORT_BLOCK_GET},
+    {std::make_pair("pds.NexthopRequest", types::SERVICE_OP_CREATE),               CFG_MSG_NEXTHOP_CREATE},
+    {std::make_pair("pds.NexthopRequest", types::SERVICE_OP_UPDATE),               CFG_MSG_NEXTHOP_UPDATE},
+    {std::make_pair("pds.NexthopDeleteRequest", types::SERVICE_OP_DELETE),         CFG_MSG_NEXTHOP_DELETE},
+    {std::make_pair("pds.NexthopGetRequest", types::SERVICE_OP_READ),              CFG_MSG_NEXTHOP_GET},
+    {std::make_pair("pds.NhGroupRequest", types::SERVICE_OP_CREATE),               CFG_MSG_NHGROUP_CREATE},
+    {std::make_pair("pds.NhGroupRequest", types::SERVICE_OP_UPDATE),               CFG_MSG_NHGROUP_UPDATE},
+    {std::make_pair("pds.NhGroupDeleteRequest", types::SERVICE_OP_DELETE),         CFG_MSG_NHGROUP_DELETE},
+    {std::make_pair("pds.NhGroupGetRequest", types::SERVICE_OP_READ),              CFG_MSG_NHGROUP_GET},
+    {std::make_pair("pds.MeterRequest", types::SERVICE_OP_CREATE),                 CFG_MSG_METER_CREATE},
+    {std::make_pair("pds.MeterRequest", types::SERVICE_OP_UPDATE),                 CFG_MSG_METER_UPDATE},
+    {std::make_pair("pds.MeterDeleteRequest", types::SERVICE_OP_DELETE),           CFG_MSG_METER_DELETE},
+    {std::make_pair("pds.MeterGetRequest", types::SERVICE_OP_READ),                CFG_MSG_METER_GET},
+    {std::make_pair("pds.RouteTableRequest", types::SERVICE_OP_CREATE),            CFG_MSG_ROUTE_TABLE_CREATE},
+    {std::make_pair("pds.RouteTableRequest", types::SERVICE_OP_UPDATE),            CFG_MSG_ROUTE_TABLE_UPDATE},
+    {std::make_pair("pds.RouteTableDeleteRequest", types::SERVICE_OP_DELETE),      CFG_MSG_ROUTE_TABLE_DELETE},
+    {std::make_pair("pds.RouteTableGetRequest", types::SERVICE_OP_READ),           CFG_MSG_ROUTE_TABLE_GET},
+    {std::make_pair("pds.RouteRequest", types::SERVICE_OP_CREATE),                 CFG_MSG_ROUTE_CREATE},
+    {std::make_pair("pds.RouteRequest", types::SERVICE_OP_UPDATE),                 CFG_MSG_ROUTE_UPDATE},
+    {std::make_pair("pds.RouteDeleteRequest", types::SERVICE_OP_DELETE),           CFG_MSG_ROUTE_DELETE},
+    {std::make_pair("pds.RouteGetRequest", types::SERVICE_OP_READ),                CFG_MSG_ROUTE_GET},
+    {std::make_pair("pds.SvcMappingRequest", types::SERVICE_OP_CREATE),            CFG_MSG_SVC_MAPPING_CREATE},
+    {std::make_pair("pds.SvcMappingRequest", types::SERVICE_OP_UPDATE),            CFG_MSG_SVC_MAPPING_UPDATE},
+    {std::make_pair("pds.SvcMappingDeleteRequest", types::SERVICE_OP_DELETE),      CFG_MSG_SVC_MAPPING_DELETE},
+    {std::make_pair("pds.SvcMappingGetRequest", types::SERVICE_OP_READ),           CFG_MSG_SVC_MAPPING_GET},
+    {std::make_pair("pds.TunnelRequest", types::SERVICE_OP_CREATE),                CFG_MSG_TUNNEL_CREATE},
+    {std::make_pair("pds.TunnelRequest", types::SERVICE_OP_UPDATE),                CFG_MSG_TUNNEL_UPDATE},
+    {std::make_pair("pds.TunnelDeleteRequest", types::SERVICE_OP_DELETE),          CFG_MSG_TUNNEL_DELETE},
+    {std::make_pair("pds.TunnelGetRequest", types::SERVICE_OP_READ),               CFG_MSG_TUNNEL_GET},
+    {std::make_pair("pds.DeviceRequest", types::SERVICE_OP_CREATE),                CFG_MSG_DEVICE_CREATE},
+    {std::make_pair("pds.DeviceRequest", types::SERVICE_OP_UPDATE),                CFG_MSG_DEVICE_UPDATE},
+    {std::make_pair("pds.DeviceDeleteRequest", types::SERVICE_OP_DELETE),          CFG_MSG_DEVICE_DELETE},
+    {std::make_pair("pds.DeviceGetRequest", types::SERVICE_OP_READ),               CFG_MSG_DEVICE_GET},
+};
+
 static inline cfg_msg_t
 pds_proto_cfg_to_api_cfg (std::string cfg_msg,
                           types::ServiceRequestOp op)
 {
-    if (!cfg_msg.compare("pds.VPCRequest")) {
-        if (op == types::SERVICE_OP_CREATE) {
-            return CFG_MSG_VPC_CREATE;
-        } else if (op == types::SERVICE_OP_UPDATE) {
-            return CFG_MSG_VPC_UPDATE;
-        }
-    } else if (!cfg_msg.compare("pds.VPCDeleteRequest")) {
-        return CFG_MSG_VPC_DELETE;
-    } else if (!cfg_msg.compare("pds.VPCGetRequest")) {
-        return CFG_MSG_VPC_GET;
-    } else if (!cfg_msg.compare("pds.VPCPeerRequest")) {
-        return CFG_MSG_VPC_PEER_CREATE;
-    } else if (!cfg_msg.compare("pds.VPCPeerDeleteRequest")) {
-        return CFG_MSG_VPC_PEER_DELETE;
-    } else if (!cfg_msg.compare("pds.VPCPeerGetRequest")) {
-        return CFG_MSG_VPC_PEER_GET;
-    } else if (!cfg_msg.compare("pds.VnicRequest")) {
-        if (op == types::SERVICE_OP_CREATE) {
-            return CFG_MSG_VNIC_CREATE;
-        } else if (op == types::SERVICE_OP_UPDATE) {
-            return CFG_MSG_VNIC_UPDATE;
-        }
-    } else if (!cfg_msg.compare("pds.VnicDeleteRequest")) {
-        return CFG_MSG_VNIC_DELETE;
-    } else if (!cfg_msg.compare("pds.VnicGetRequest")) {
-        return CFG_MSG_VNIC_GET;
-    } else if (!cfg_msg.compare("pds.SubnetRequest")) {
-        if (op == types::SERVICE_OP_CREATE) {
-            return CFG_MSG_SUBNET_CREATE;
-        } else if (op == types::SERVICE_OP_UPDATE) {
-            return CFG_MSG_SUBNET_UPDATE;
-        }
-    } else if (!cfg_msg.compare("pds.SubnetDeleteRequest")) {
-        return CFG_MSG_SUBNET_DELETE;
-    } else if (!cfg_msg.compare("pds.SubnetGetRequest")) {
-        return CFG_MSG_SUBNET_GET;
-    } else {
-        return CFG_MSG_MAX;
+    auto iter = g_svc_cfg_map.find(std::make_pair(cfg_msg, op));
+    if (iter != g_svc_cfg_map.end()) {
+        return iter->second;
     }
-
     return CFG_MSG_MAX;
 }
 

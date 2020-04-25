@@ -11,8 +11,10 @@
 #ifndef __AGENT_SVC_METER_SVC_HPP__
 #define __AGENT_SVC_METER_SVC_HPP__
 
-#include "nic/apollo/agent/svc/specs.hpp"
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_meter.hpp"
+#include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/meter.hpp"
 
 static inline void
@@ -153,6 +155,275 @@ pds_meter_api_info_to_proto (pds_meter_info_t *api_info, void *ctxt)
     pds_meter_api_spec_to_proto(proto_spec, &api_info->spec);
     pds_meter_api_status_to_proto(proto_status, &api_info->status);
     pds_meter_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
+static inline sdk_ret_t
+pds_svc_meter_create (const pds::MeterRequest *proto_req,
+                      pds::MeterResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    Status status = Status::OK;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_meter_spec_t api_spec;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, meter policy "
+                          "creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        auto request = proto_req->request(i);
+        ret = pds_meter_proto_to_api_spec(&api_spec, request);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+        ret = pds_meter_create(&api_spec, bctxt);
+
+        // free the rules memory
+        if (api_spec.rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec.rules);
+            api_spec.rules = NULL;
+        }
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_meter_update (const pds::MeterRequest *proto_req,
+                      pds::MeterResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_meter_spec_t api_spec;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, mirror policy update "
+                          "failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        auto request = proto_req->request(i);
+        ret = pds_meter_proto_to_api_spec(&api_spec, request);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+        ret = pds_meter_update(&api_spec, bctxt);
+
+        // free the rules memory
+        if (api_spec.rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec.rules);
+            api_spec.rules = NULL;
+        }
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_meter_delete (const pds::MeterDeleteRequest *proto_req,
+                      pds::MeterDeleteResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, mirror policy delete "
+                          "failed");
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_meter_delete(&key, bctxt);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    // destroy the internal batch
+    if (batched_internally) {
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_meter_get (const pds::MeterGetRequest *proto_req,
+                   pds::MeterGetResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_obj_key_t key = { 0 };
+    pds_meter_info_t info;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_meter_read(&key, &info);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            break;
+        }
+        pds_meter_api_info_to_proto(&info, proto_rsp);
+    }
+
+    if (proto_req->id_size() == 0) {
+        ret = pds_meter_read_all(pds_meter_api_info_to_proto, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_meter_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+{
+    sdk_ret_t ret;
+    google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
+
+    switch (ctxt->cfg) {
+    case CFG_MSG_METER_CREATE:
+        {
+            pds::MeterRequest req;
+            pds::MeterResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_meter_create(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_METER_UPDATE:
+        {
+            pds::MeterRequest req;
+            pds::MeterResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_meter_update(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_METER_DELETE:
+        {
+            pds::MeterDeleteRequest req;
+            pds::MeterDeleteResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_meter_delete(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_METER_GET:
+        {
+            pds::MeterGetRequest req;
+            pds::MeterGetResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_meter_get(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    return ret;
 }
 
 #endif    //__AGENT_SVC_METER_SVC_HPP__

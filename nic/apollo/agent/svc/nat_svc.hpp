@@ -11,9 +11,12 @@
 #ifndef __AGENT_SVC_NAT_SVC_HPP__
 #define __AGENT_SVC_NAT_SVC_HPP__
 
+#include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_nat.hpp"
+#include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/nat.hpp"
+#include "nic/apollo/agent/trace.hpp"
 
 static inline sdk_ret_t
 pds_nat_port_block_proto_to_api_spec (pds_nat_port_block_spec_t *api_spec,
@@ -101,6 +104,196 @@ pds_nat_port_block_api_info_to_proto (const pds_nat_port_block_info_t *api_info,
     pds_nat_port_block_api_spec_to_proto(proto_spec, &api_info->spec);
     pds_nat_port_block_api_status_to_proto(proto_status, &api_info->status);
     pds_nat_port_block_api_stats_to_proto(proto_stats, &api_info->stats);
+}
+
+static inline sdk_ret_t
+pds_svc_nat_port_block_create (const pds::NatPortBlockRequest *proto_req,
+                               pds::NatPortBlockResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_nat_port_block_spec_t api_spec;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, NAT port block "
+                          "creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(api_spec));
+        auto request = proto_req->request(i);
+        pds_nat_port_block_proto_to_api_spec(&api_spec, request);
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_nat_port_block_create(&api_spec, bctxt);
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
+        }
+    }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_nat_port_block_delete (const pds::NatPortBlockDeleteRequest *proto_req,
+                               pds::NatPortBlockDeleteResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, NAT port block delete "
+                          "failed");
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_nat_port_block_delete(&key, bctxt);
+        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_nat_port_block_get (const pds::NatPortBlockGetRequest *proto_req,
+                            pds::NatPortBlockGetResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_obj_key_t key = { 0 };
+    pds_nat_port_block_info_t info = { 0 };
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    if (proto_req->id_size() == 0) {
+        // get all
+        ret = pds_nat_port_block_read_all(pds_nat_port_block_api_info_to_proto,
+                                          proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i ++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_nat_port_block_read(&key, &info);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            break;
+        }
+        pds_nat_port_block_api_info_to_proto(&info, proto_rsp);
+    }
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_nat_port_block_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+{
+    sdk_ret_t ret;
+    google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
+
+    switch (ctxt->cfg) {
+    case CFG_MSG_NAT_PORT_BLOCK_CREATE:
+        {
+            pds::NatPortBlockRequest req;
+            pds::NatPortBlockResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_nat_port_block_create(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_NAT_PORT_BLOCK_DELETE:
+        {
+            pds::NatPortBlockDeleteRequest req;
+            pds::NatPortBlockDeleteResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_nat_port_block_delete(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_NAT_PORT_BLOCK_GET:
+        {
+            pds::NatPortBlockGetRequest req;
+            pds::NatPortBlockGetResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_nat_port_block_get(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    return ret;
 }
 
 #endif    //__AGENT_SVC_NAT_SVC_HPP__

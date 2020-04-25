@@ -11,8 +11,12 @@
 #ifndef __AGENT_SVC_DHCP_SVC_HPP__
 #define __AGENT_SVC_DHCP_SVC_HPP__
 
+#include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/api/include/pds_dhcp.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/dhcp.hpp"
+#include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/trace.hpp"
 
 static inline sdk_ret_t
 pds_dhcp_relay_proto_to_api_spec (pds_dhcp_relay_spec_t *api_spec,
@@ -165,6 +169,265 @@ pds_dhcp_policy_api_info_to_proto (const pds_dhcp_policy_info_t *api_info,
         pds_dhcp_proxy_api_stats_to_proto(proto_stats->mutable_proxystats(),
                                           &api_info->stats.proxy_stats);
     }
+}
+
+static inline sdk_ret_t
+pds_svc_dhcp_policy_create(const pds::DHCPPolicyRequest *proto_req,
+                           pds::DHCPPolicyResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_dhcp_policy_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, DHCP policy "
+                          "creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(api_spec));
+        auto request = proto_req->request(i);
+        pds_dhcp_policy_proto_to_api_spec(&api_spec, request);
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_dhcp_policy_create(&api_spec, bctxt);
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
+        }
+    }
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_dhcp_policy_update(const pds::DHCPPolicyRequest *proto_req,
+                           pds::DHCPPolicyResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_dhcp_policy_spec_t api_spec;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, DHCP policy "
+                          "update failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(api_spec));
+        auto request = proto_req->request(i);
+        pds_dhcp_policy_proto_to_api_spec(&api_spec, request);
+        if (!core::agent_state::state()->pds_mock_mode()) {
+            ret = pds_dhcp_policy_update(&api_spec, bctxt);
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_dhcp_policy_delete(const pds::DHCPPolicyDeleteRequest *proto_req,
+                           pds::DHCPPolicyDeleteResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_obj_key_t key;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, DHCP policy "
+                          "deletion failed");
+            proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return SDK_RET_ERR;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_dhcp_policy_delete(&key, bctxt);
+        proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_dhcp_policy_get (const pds::DHCPPolicyGetRequest *proto_req,
+                         pds::DHCPPolicyGetResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    pds_obj_key_t key = { 0 };
+    pds_dhcp_policy_info_t info = { 0 };
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    if (proto_req->id_size() == 0) {
+        // get all
+        ret = pds_dhcp_policy_read_all(pds_dhcp_policy_api_info_to_proto,
+                                       proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i ++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_dhcp_policy_read(&key, &info);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != SDK_RET_OK) {
+            break;
+        }
+        pds_dhcp_policy_api_info_to_proto(&info, proto_rsp);
+    }
+    return ret;
+}
+
+static inline sdk_ret_t
+pds_svc_dhcp_policy_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+{
+    sdk_ret_t ret;
+    google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
+
+    switch (ctxt->cfg) {
+    case CFG_MSG_DHCP_POLICY_CREATE:
+        {
+            pds::DHCPPolicyRequest req;
+            pds::DHCPPolicyResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_dhcp_policy_create(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_DHCP_POLICY_UPDATE:
+        {
+            pds::DHCPPolicyRequest req;
+            pds::DHCPPolicyResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_dhcp_policy_update(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_DHCP_POLICY_DELETE:
+        {
+            pds::DHCPPolicyDeleteRequest req;
+            pds::DHCPPolicyDeleteResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_dhcp_policy_delete(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    case CFG_MSG_DHCP_POLICY_GET:
+        {
+            pds::DHCPPolicyGetRequest req;
+            pds::DHCPPolicyGetResponse rsp;
+
+            any_req->UnpackTo(&req);
+            ret = pds_svc_dhcp_policy_get(&req, &rsp);
+            any_resp->PackFrom(rsp);
+        }
+        break;
+    default:
+        ret = SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    return ret;
 }
 
 #endif    //__AGENT_SVC_DHCP_SVC_HPP__

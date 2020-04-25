@@ -5,6 +5,7 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/svc/device.hpp"
 #include "nic/apollo/agent/svc/device_svc.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/device.hpp"
@@ -16,10 +17,10 @@
 
 #define DEVICE_CONF_FILE "/sysconfig/config0/device.conf"
 
-Status
-DeviceSvcImpl::DeviceCreate(ServerContext *context,
-                            const pds::DeviceRequest *proto_req,
-                            pds::DeviceResponse *proto_rsp) {
+sdk_ret_t
+pds_svc_device_create (const pds::DeviceRequest *proto_req,
+                       pds::DeviceResponse *proto_rsp)
+{
     pds_batch_ctxt_t bctxt;
     sdk_ret_t ret = SDK_RET_OK;
     pds_device_spec_t *api_spec;
@@ -28,12 +29,12 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::CANCELLED;
+        return SDK_RET_INVALID_ARG;
     }
     api_spec = core::agent_state::state()->device();
     if (api_spec == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
-        return Status::OK;
+        return SDK_RET_OOM;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -72,7 +73,7 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
 end:
 
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::OK;
+    return ret;
 }
 
 static inline void
@@ -142,10 +143,10 @@ memory_profile_update (pds::MemoryProfile profile)
     return;
 }
 
-Status
-DeviceSvcImpl::DeviceUpdate(ServerContext *context,
-                            const pds::DeviceRequest *proto_req,
-                            pds::DeviceResponse *proto_rsp) {
+sdk_ret_t
+pds_svc_device_update (const pds::DeviceRequest *proto_req,
+                       pds::DeviceResponse *proto_rsp)
+{
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_device_spec_t api_spec;
@@ -154,7 +155,7 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
-        return Status::CANCELLED;
+        return SDK_RET_INVALID_ARG;
     }
 
     // create an internal batch, if this is not part of an existing API batch
@@ -202,13 +203,13 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
 end:
 
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::OK;
+    return ret;
 }
 
-Status
-DeviceSvcImpl::DeviceDelete(ServerContext *context,
-                            const pds::DeviceDeleteRequest *proto_req,
-                            pds::DeviceDeleteResponse *proto_rsp) {
+sdk_ret_t
+pds_svc_device_delete (const pds::DeviceDeleteRequest *proto_req,
+                       pds::DeviceDeleteResponse *proto_rsp)
+{
     pds_batch_ctxt_t bctxt;
     sdk_ret_t ret = SDK_RET_OK;
     pds_device_spec_t *api_spec;
@@ -251,7 +252,7 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
 end:
 
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    return Status::OK;
+    return ret;
 }
 
 static void
@@ -269,10 +270,10 @@ device_info_fill (pds_device_info_t *info)
     return SDK_RET_OK;
 }
 
-Status
-DeviceSvcImpl::DeviceGet(ServerContext *context,
-                         const types::Empty *empty,
-                         pds::DeviceGetResponse *proto_rsp) {
+sdk_ret_t
+pds_svc_device_get (const pds::DeviceGetRequest *proto_req,
+                    pds::DeviceGetResponse *proto_rsp)
+{
     sdk_ret_t ret = SDK_RET_OK;
     pds_device_spec_t *api_spec = core::agent_state::state()->device();
     pds_device_info_t info;
@@ -291,8 +292,7 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Device object not found");
-        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
-        return Status::OK;
+        return ret;
     }
     pds_device_api_spec_to_proto(
             proto_rsp->mutable_response()->mutable_spec(), &info.spec);
@@ -300,5 +300,37 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
             proto_rsp->mutable_response()->mutable_status(), &info.status);
     pds_device_api_stats_to_proto(
             proto_rsp->mutable_response()->mutable_stats(), &info.stats);
+    return ret;
+}
+
+Status
+DeviceSvcImpl::DeviceCreate(ServerContext *context,
+                            const pds::DeviceRequest *proto_req,
+                            pds::DeviceResponse *proto_rsp) {
+    pds_svc_device_create(proto_req, proto_rsp);
+    return Status::OK;
+}
+
+Status
+DeviceSvcImpl::DeviceUpdate(ServerContext *context,
+                            const pds::DeviceRequest *proto_req,
+                            pds::DeviceResponse *proto_rsp) {
+    pds_svc_device_update(proto_req, proto_rsp);
+    return Status::OK;
+}
+
+Status
+DeviceSvcImpl::DeviceDelete(ServerContext *context,
+                            const pds::DeviceDeleteRequest *proto_req,
+                            pds::DeviceDeleteResponse *proto_rsp) {
+    pds_svc_device_delete(proto_req, proto_rsp);
+    return Status::OK;
+}
+
+Status
+DeviceSvcImpl::DeviceGet(ServerContext *context,
+                         const pds::DeviceGetRequest *proto_req,
+                         pds::DeviceGetResponse *proto_rsp) {
+    pds_svc_device_get(proto_req, proto_rsp);
     return Status::OK;
 }

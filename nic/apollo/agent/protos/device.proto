@@ -14,7 +14,7 @@ import "types.proto";
 service DeviceSvc {
   rpc DeviceCreate (DeviceRequest) returns (DeviceResponse) {}
   rpc DeviceUpdate (DeviceRequest) returns (DeviceResponse) {}
-  rpc DeviceGet (types.Empty) returns (DeviceGetResponse) {}
+  rpc DeviceGet (DeviceGetRequest) returns (DeviceGetResponse) {}
   rpc DeviceDelete (DeviceDeleteRequest) returns (DeviceDeleteResponse) {}
 }
 
@@ -146,6 +146,10 @@ message DeviceRequest {
 message DeviceResponse {
   types.ApiStatus ApiStatus = 1;
   DeviceStatus    Response  = 2;
+}
+
+// device get request
+message DeviceGetRequest {
 }
 
 // device get response
