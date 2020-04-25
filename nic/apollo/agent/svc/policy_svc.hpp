@@ -11,6 +11,7 @@
 #ifndef __AGENT_SVC_POLICY_SVC_HPP__
 #define __AGENT_SVC_POLICY_SVC_HPP__
 
+#include <malloc.h>
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
@@ -18,7 +19,6 @@
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/trace.hpp"
-#include <malloc.h>
 
 static inline fw_action_t
 pds_proto_action_to_rule_action (types::SecurityRuleAction action)
@@ -1064,10 +1064,20 @@ static inline sdk_ret_t
 pds_svc_security_profile_get (const pds::SecurityProfileGetRequest *proto_req,
                               pds::SecurityProfileGetResponse *proto_rsp)
 {
-    // TODO: coming as part of PR 22772
-    PDS_TRACE_ERR("SecurityProfile GET not implemented");
-    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-    return SDK_RET_OK;
+    sdk_ret_t ret;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    // Expected response is a singleton
+    ret = pds_security_profile_read(pds_security_profile_api_info_to_proto,
+                                    proto_rsp);
+
+    PDS_TRACE_ERR("SecurityProfileGET IPC not implemented on VPP side");
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
 }
 
 static inline sdk_ret_t

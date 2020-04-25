@@ -30,10 +30,19 @@ var securityPolicyShowCmd = &cobra.Command{
 	Run:   securityPolicyShowCmdHandler,
 }
 
+var securityProfileShowCmd = &cobra.Command{
+	Use:   "security-profile",
+	Short: "show security profile",
+	Long:  "show security profile",
+	Run:   securityProfileShowCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(securityPolicyShowCmd)
 	securityPolicyShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	securityPolicyShowCmd.Flags().StringVarP(&policyID, "id", "i", "", "Specify ID")
+	showCmd.AddCommand(securityProfileShowCmd)
+	securityProfileShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 }
 
 func securityPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -227,4 +236,98 @@ func printPolicy(resp *pds.SecurityPolicy) {
 
 		fmt.Println(outStr)
 	}
+}
+
+func securityProfileShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewSecurityPolicySvcClient(c)
+
+	var req *pds.SecurityProfileGetRequest
+	// Get profiles - its a singleton
+	req = &pds.SecurityProfileGetRequest{
+		Id: [][]byte{},
+	}
+
+	// PDS call
+	respMsg, err := client.SecurityProfileGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting policy failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	// Print the profiles
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		for _, resp := range respMsg.Response {
+			printProfile(resp)
+		}
+	}
+}
+
+func printProfile(resp *pds.SecurityProfile) {
+	spec := resp.GetSpec()
+	if spec == nil {
+		return
+	}
+
+	outStr := fmt.Sprintf("%-26s : %s\n", "ID",
+		uuid.FromBytesOrNil(spec.GetId()).String())
+
+	outStr += fmt.Sprintf("%-26s : %t\n", "Connection Track Enable",
+		spec.GetConnTrackEn())
+
+	outStr += fmt.Sprintf("%-26s : %s\n", "Default FW Action",
+		strings.Replace(spec.GetDefaultFWAction().String(),
+			"SECURITY_RULE_ACTION_", "", -1))
+
+	outStr += fmt.Sprintf("%-26s : %d\n", "TCP Idle Timeout",
+		spec.GetTCPIdleTimeout())
+	outStr += fmt.Sprintf("%-26s : %d\n", "UDP Idle Timeout",
+		spec.GetUDPIdleTimeout())
+	outStr += fmt.Sprintf("%-26s : %d\n", "ICMP Idle Timeout",
+		spec.GetICMPIdleTimeout())
+	outStr += fmt.Sprintf("%-26s : %d\n", "Other Idle Timeout",
+		spec.GetOtherIdleTimeout())
+
+	outStr += fmt.Sprintf("%-26s : %d\n", "TCP Conn. Setup Timeout",
+		spec.GetTCPCnxnSetupTimeout())
+	outStr += fmt.Sprintf("%-26s : %d\n", "TCP Half Close Timeout",
+		spec.GetTCPHalfCloseTimeout())
+	outStr += fmt.Sprintf("%-26s : %d\n", "TCP Close Timeout",
+		spec.GetTCPCloseTimeout())
+
+	outStr += fmt.Sprintf("%-26s : %d\n", "TCP Drop Timeout",
+		spec.GetTCPDropTimeout())
+	outStr += fmt.Sprintf("%-26s : %d\n", "UDP Drop Timeout",
+		spec.GetUDPDropTimeout())
+	outStr += fmt.Sprintf("%-26s : %d\n", "ICMP Drop Timeout",
+		spec.GetICMPDropTimeout())
+	outStr += fmt.Sprintf("%-26s : %d\n", "Other Drop Timeout",
+		spec.GetOtherDropTimeout())
+
+	fmt.Println(outStr)
+
 }

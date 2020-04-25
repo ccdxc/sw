@@ -232,16 +232,53 @@ pds_security_profile_create (_In_ pds_security_profile_spec_t *spec,
     return pds_security_profile_api_handle(bctxt, API_OP_CREATE, NULL, spec);
 }
 
-sdk_ret_t
-pds_security_profile_read (_In_ pds_obj_key_t *key,
-                           _Out_ pds_security_profile_info_t *info)
+typedef struct pds_security_profile_read_param_s {
+    pds_security_profile_read_cb_t cb;
+    pds_security_profile_info_t *info;
+    void *ctxt;
+} pds_security_profile_read_param_t;
+
+static inline void
+pds_security_profile_ipc_response_hdlr (sdk::ipc::ipc_msg_ptr msg,
+                                        const void *ctxt)
 {
-    if (key == NULL || info == NULL) {
-        return SDK_RET_INVALID_ARG;
+    #if 0
+    // Remove #if after vpp side is done.
+    pds_security_profile_read_param_t *param = (pds_security_profile_read_param_t *)ctxt;
+    pds_security_profile_spec_t *reply = (pds_security_profile_spec_t *)msg->data();
+
+    if (param->info && param->cb && param->ctxt) {
+        memcpy(&param->info->spec, msg->data(), sizeof(pds_security_profile_spec_t));
+        param->cb(param->info, param->ctxt);
     }
-    return SDK_RET_INVALID_OP;
+    #endif
 }
 
+sdk_ret_t
+pds_security_profile_read (_In_ pds_security_profile_read_cb_t cb,
+                           _Out_ void *ctxt)
+{
+    #if 0
+    // Remove #if after VPP side is done.
+    pds_msg_t request;
+    pds_security_profile_info_t info = { 0 };
+    pds_security_profile_read_param_t param;
+
+    param.cb = cb;
+    param.info = &info;
+    param.ctxt = ctxt;
+
+    request.id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
+    request.cfg_msg.obj_id = OBJ_ID_SECURITY_PROFILE;
+
+    if (api::g_pds_state.vpp_ipc_mock() == false) {
+        sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
+            sizeof(pds_msg_t), pds_security_profile_ipc_response_hdlr,
+            &param);
+    }
+    #endif
+    return SDK_RET_INVALID_OP;
+}
 sdk_ret_t
 pds_security_profile_update (_In_ pds_security_profile_spec_t *spec,
                              _In_ pds_batch_ctxt_t bctxt)
