@@ -147,7 +147,7 @@ func initialize() {
 	} else {
 		skipSetup = false
 		//Start IOTA server and do skip setup
-		info, err := cmd.ExecCmd([]string{iotaServerExec}, "", 0, false, true, os.Environ())
+		info, err := cmd.ExecCmd([]string{iotaServerExec, testbed}, "", 0, false, true, os.Environ())
 		if err != nil {
 			fmt.Printf("Failed to start IOTA server %s\n", err)
 		}

@@ -208,6 +208,8 @@ message VcenterConfig {
     uint32 pvlan_start                   = 5;
     
     uint32 pvlan_end                     = 6;
+
+    bool   enable_vmotion_over_mgmt      = 7;
 }
 
 

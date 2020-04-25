@@ -1132,7 +1132,7 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 				Type:        nodeType},
 		}
 
-		if IsHWNode(personality) {
+		if IsHWNode(personality) && node.topoNode.HostOS == "" {
 			node.topoNode.HostOS = tb.Params.Provision.Vars["BmOs"]
 		}
 		if err := tb.preapareNodeParams(nodeType, personality, node); err != nil {
@@ -1233,7 +1233,7 @@ func (tb *TestBed) initNodeState() error {
 			return err
 		}
 
-		if IsHWNode(tnode.Personality) {
+		if IsHWNode(tnode.Personality) && node.topoNode.HostOS == "" {
 			node.topoNode.HostOS = tb.Params.Provision.Vars["BmOs"]
 
 		}

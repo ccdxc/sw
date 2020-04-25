@@ -629,6 +629,7 @@ class Node(object):
             msg.vcenter_config.dc_name = store.GetTestbed().GetVCenterDataCenterName()
             msg.vcenter_config.cluster_name = store.GetTestbed().GetVCenterClusterName()
             msg.vcenter_config.distributed_switch = store.GetTestbed().GetVCenterDVSName()
+            msg.vcenter_config.enable_vmotion_over_mgmt = True
 
         elif self.Role() == topo_pb2.PERSONALITY_VENICE:
             msg.venice_config.control_intf = self.__control_intf

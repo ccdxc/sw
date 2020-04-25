@@ -77,6 +77,7 @@ type TopoMeta struct {
 		} `yaml:"naples-sim"`
 		Vcenter struct {
 			Instances int `yaml:"instances"`
+			Naples    int `yaml:"naples"`
 		} `yaml:"vcenter"`
 	} `yaml:"nodes"`
 	Workload struct {
@@ -129,13 +130,37 @@ func ParseTopology(fileName string) (*Topology, error) {
 		return nil, fmt.Errorf("Unknown model type %v", topoMeta.Model)
 	}
 
+	naplesHwPersonality := iota.PersonalityType_PERSONALITY_NAPLES
+	for i := 0; i < topoMeta.Nodes.Vcenter.Instances; i++ {
+
+		if topoMeta.Nodes.Naples.Instances < topoMeta.Nodes.Vcenter.Naples {
+			return nil, fmt.Errorf("Number of naples %v instances are less compared to vcenter expectation %v",
+				topoMeta.Nodes.Naples.Instances, topoMeta.Nodes.Vcenter.Naples)
+		}
+		node := TopoNode{NodeName: "vcenter-" + fmt.Sprintf("%v", i+1),
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_VCENTER,
+			Personality: iota.PersonalityType_PERSONALITY_VCENTER_NODE,
+			HostOS:      "vcenter",
+		}
+		for j := 0; j < topoMeta.Nodes.Vcenter.Naples; j++ {
+			node.MangedNodes = append(node.MangedNodes,
+				"naples-"+fmt.Sprintf("%v", j+1))
+		}
+
+		naplesHwPersonality = iota.PersonalityType_PERSONALITY_NAPLES_DVS
+		topo.Nodes = append(topo.Nodes, node)
+
+		//only 1 vcenter instance supported
+		break
+	}
+
 	if topoMeta.Nodes.Naples.Instances != 0 {
 		log.Infof("Number of naples instances : %v", topoMeta.Nodes.Naples.Instances)
 		for i := 0; i < topoMeta.Nodes.Naples.Instances; i++ {
 			topo.Nodes = append(topo.Nodes, TopoNode{
 				NodeName:    "naples-" + fmt.Sprintf("%v", i+1),
 				Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
-				Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+				Personality: naplesHwPersonality,
 			})
 		}
 		topo.NaplesImage = topoMeta.Nodes.Naples.Image
@@ -173,14 +198,6 @@ func ParseTopology(fileName string) (*Topology, error) {
 			})
 		}
 		topo.NaplesSimImage = topoMeta.Nodes.NaplesSim.Image
-	}
-
-	for i := 0; i < topoMeta.Nodes.Vcenter.Instances; i++ {
-		topo.Nodes = append(topo.Nodes, TopoNode{
-			NodeName:    "vcenter-" + fmt.Sprintf("%v", i+1),
-			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_VCENTER,
-			Personality: iota.PersonalityType_PERSONALITY_VCENTER_NODE,
-		})
 	}
 
 	for i := 0; i < topoMeta.Nodes.ThirdParty.Instances; i++ {

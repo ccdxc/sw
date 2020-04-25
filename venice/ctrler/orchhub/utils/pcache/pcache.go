@@ -270,6 +270,7 @@ func (p *PCache) writeStateMgr(in interface{}) error {
 			obj.Labels = labels
 			// Object exists and is changed
 			if !reflect.DeepEqual(&currObj.Workload, obj) {
+				obj.ResourceVersion = ""
 				p.Log.Debugf("%s %s statemgr update called", "Workload", meta.GetKey())
 				writeErr = ctrler.Workload().SyncUpdate(obj)
 			}

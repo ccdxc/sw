@@ -9,8 +9,8 @@ import (
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/agent/workload"
 	constants "github.com/pensando/sw/iota/svcs/common"
-	modelconsts "github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
+	modelconsts "github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -128,6 +128,30 @@ func (n *VcenterNode) initVcenter() error {
 			hostSpec.Pnics = append(hostSpec.Pnics, intf)
 		}
 		hostSpecs = append(hostSpecs, hostSpec)
+
+		if n.Node.GetVcenterConfig().EnableVmotionOverMgmt {
+			vNWs := []vmware.NWSpec{
+				{Name: constants.IotaVmotionPortgroup},
+			}
+			vspec := vmware.VswitchSpec{Name: constants.IotaVmotionSwitch}
+
+			err = dc.AddNetworks(n.ClusterName, node.GetNodeInfo().IPAddress, vNWs, vspec)
+			if err != nil {
+				//Ignore as it may be created already.
+				log.Errorf("Error creating vmotion pg %v", err.Error())
+			}
+
+			nwSpec := vmware.KernelNetworkSpec{
+				EnableVmotion: true,
+				Portgroup:     constants.IotaVmotionPortgroup,
+			}
+			err = dc.AddKernelNic(n.ClusterName, node.GetNodeInfo().IPAddress, nwSpec)
+
+			if err != nil {
+				//Ignore as it may be created already.
+				log.Errorf("Error creating vmotion pg %v", err.Error())
+			}
+		}
 	}
 
 	dvsSpec := vmware.DVSwitchSpec{Hosts: hostSpecs,

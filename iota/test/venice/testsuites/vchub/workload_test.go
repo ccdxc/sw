@@ -97,6 +97,7 @@ var _ = Describe("Vc hub workload tests", func() {
 
 		It("tags:sanity=true Vmotion basic test", func() {
 
+			Skip("Skipping basic vmotion test..")
 			workloads := ts.model.Workloads()
 			err := ts.model.TeardownWorkloads(workloads)
 			Expect(err == nil)

@@ -608,20 +608,22 @@ L:
 	tso := true
 	spec := types.HostVirtualNicSpec{
 		Ip: &types.HostIpConfig{
-			Dhcp:       false,
-			IpAddress:  nwspec.IPAddress,
-			SubnetMask: nwspec.Subnet,
+			Dhcp: true,
 		},
-		DistributedVirtualPort: &types.DistributedVirtualSwitchPortConnection{
-			// get this info from port connection info
-		},
+
 		Portgroup:           "",
 		Mtu:                 1500,
 		TsoEnabled:          &tso,
 		NetStackInstanceKey: "defaultTcpipStack",
 	}
+	if nwspec.IPAddress != "" {
+		spec.Ip.Dhcp = false
+		spec.Ip.IpAddress = nwspec.IPAddress
+		spec.Ip.SubnetMask = nwspec.Subnet
+	}
 	objPg, ok := net.(*object.DistributedVirtualPortgroup)
 	if ok {
+		spec.DistributedVirtualPort = &types.DistributedVirtualSwitchPortConnection{}
 		spec.DistributedVirtualPort.PortgroupKey = objPg.Reference().Value
 		pgConfig, err := net.EthernetCardBackingInfo(h.Ctx())
 		if err != nil {
@@ -634,15 +636,11 @@ L:
 			return errors.Wrap(err, "Cannot find DVS PG port confign info")
 		}
 	} else {
-		// standart PG
+		// standard PG
 		portGroupName = nwspec.Portgroup
 		spec.Portgroup = nwspec.Portgroup
 	}
-	if nwspec.EnableVmotion {
-		// use default stack and then enable vmotion on it, this is done so it is easy to debug the
-		// setup. We can enable this later if needed
-		// spec.NetStackInstanceKey = "vmotion"
-	}
+
 	name, err := ns.AddVirtualNic(h.Ctx(), portGroupName, spec)
 	if err != nil {
 		return err

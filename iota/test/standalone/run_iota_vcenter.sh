@@ -4,13 +4,11 @@ set -ex
 
 cd /sw/iota
 
-echo "Processing input json file: /warmd.json"
+/sw/iota/scripts/modify_warmd.sh
 
-cat /warmd.json | jq '.Infra.VCenter | {ID: 100, Name: .IP, Type: "vm", Tag: "vcenter", NodeMgmtIP: .IP, Resource, PvtNetworks, DataNetworks}' > tinstance.json
-cat /warmd.json | jq '.Infra.VCenter | {Provision: {Vars: {ProdVCenter: true, VcenterUsername: .Username, VcenterPassword: .Password, VcenterLicense: .License, Datastore: .Datastore}}}' > tprov.json
+./iota.py --testbed /sw/iota/warmd_vcenter.json $@
+ret=$?
 
-jq --slurpfile vm_inst tinstance.json '.Instances += $vm_inst' /warmd.json > twarmd.json
-jq -s '.[0] * .[1]' twarmd.json tprov.json > /sw/iota/warmd.json
-cat /sw/iota/warmd.json
+cp -v testsuite_*_results.json /testcase_result_export
 
-./iota.py --testbed /sw/iota/warmd.json $@
+exit $ret

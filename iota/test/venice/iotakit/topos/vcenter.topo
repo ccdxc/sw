@@ -8,6 +8,7 @@ nodes:
         instances: 1
     vcenter:
         instances: 1
+        naples: 2
 
 workload: 
   esx: 
