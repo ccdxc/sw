@@ -50,12 +50,13 @@ protected:
 
 static uint32_t k_num_init_rules = 10;
 static uint32_t k_num_rule_add = 1;
+static uint32_t k_num_rule_del = 1;
 
 //----------------------------------------------------------------------------
 // Policy rule test cases implementation
 //----------------------------------------------------------------------------
 static void
-policy_setup(pds_batch_ctxt_t bctxt) {
+policy_setup (pds_batch_ctxt_t bctxt) {
     policy_feeder pol_feeder;
     pds_obj_key_t pol_key = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
 
@@ -66,7 +67,7 @@ policy_setup(pds_batch_ctxt_t bctxt) {
 }
 
 static void
-policy_teardown(pds_batch_ctxt_t bctxt) {
+policy_teardown (pds_batch_ctxt_t bctxt) {
     policy_feeder pol_feeder;
     pds_obj_key_t pol_key = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
 
@@ -132,6 +133,26 @@ policy_add_rules_verify (void)
                 k_num_init_rules + k_num_rule_add);
     SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
     info.spec.rule_info = NULL;
+}
+
+static void
+policy_delete_rules (pds_batch_ctxt_t bctxt)
+{
+    sdk_ret_t ret;
+    pds_policy_rule_key_t key;
+    uint32_t del_rule_count = k_num_rule_del;
+
+    for (uint32_t i = 0; i < del_rule_count; i ++) {
+        key.rule_id = int2pdsobjkey(i + 1);
+        key.policy_id = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
+        ret = pds_policy_rule_delete(&key, bctxt);
+        ASSERT_TRUE(ret == SDK_RET_OK);
+    }
+}
+
+static void
+policy_delete_rules_verify (void)
+{
 }
 
 static void
@@ -238,26 +259,44 @@ TEST_F(policy_rule_test, rule_add_2) {
     batch_commit(bctxt);
 }
 
-#if 0
-/// do policy add and then individual rule(s) add/del in same batch
-TEST_F(policy_rule_test, rule_add_del_1) {
+/// do policy add and then individual rule(s) del in same batch
+TEST_F(policy_rule_test, rule_del_1) {
     pds_batch_ctxt_t bctxt;
 
+    // create route table
     bctxt = batch_start();
     policy_setup(bctxt);
-    policy_add_rules(bctxt, "30.0.0.1/16");
-    // @rsrinkanth, can u make this API generic to take API op, num rules,
-    // policy key etc. ?
-    policy_del_rules(...);
     batch_commit(bctxt);
 
-    policy_add_rules_verify();
+    bctxt = batch_start();
+    policy_delete_rules(bctxt);
+    batch_commit(bctxt);
+
+    // verify delete
+    policy_delete_rules_verify();
 
     bctxt = batch_start();
     policy_teardown(bctxt);
     batch_commit(bctxt);
 }
-#endif
+
+/// add policy and update individual rule(s) in same batch
+TEST_F(policy_rule_test, rule_del_2) {
+    pds_batch_ctxt_t bctxt;
+
+    // create and update route table in one batch
+    bctxt = batch_start();
+    policy_setup(bctxt);
+    policy_delete_rules(bctxt);
+    batch_commit(bctxt);
+
+    // verify delete
+    policy_delete_rules_verify();
+
+    bctxt = batch_start();
+    policy_teardown(bctxt);
+    batch_commit(bctxt);
+}
 
 /// add policy and update individual rule(s) in separate batches
 TEST_F(policy_rule_test, rule_upd_1) {

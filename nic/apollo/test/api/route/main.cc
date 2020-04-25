@@ -243,7 +243,7 @@ TEST_F(route_test, route_add_2) {
     batch_commit(bctxt);
 }
 
-/// do route table add and then individual route(s) add/del in same batch
+/// do route table add and then individual route(s) del in same batch
 TEST_F(route_test, route_del_1) {
     pds_batch_ctxt_t bctxt;
 
