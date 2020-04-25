@@ -150,22 +150,23 @@ route_table_add_routes_verify (void)
 }
 
 void
-route_table_add_del_routes_verify (void)
+route_table_delete_routes (pds_batch_ctxt_t bctxt, std::string base_pfx)
 {
-    pds_route_table_info_t info;
-    pds_obj_key_t key;
     sdk_ret_t ret;
+    pds_route_key_t key;
+    uint32_t route_id = 100;
 
-    memset(&info, 0, sizeof(pds_route_table_info_t));
-    info.spec.route_info =
-        (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                   ROUTE_INFO_SIZE(0));
-    key = int2pdsobjkey(k_route_table_id);
-    ret = pds_route_table_read(&key, &info);
-    ASSERT_TRUE(ret == SDK_RET_OK);
-    ASSERT_TRUE(info.spec.route_info->num_routes ==
-                (k_num_init_routes + k_num_route_add - k_num_route_del));
-    SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
+    for (uint32_t i = 0; i < k_num_route_del; i++) {
+        key.route_id = int2pdsobjkey(i + 1);
+        key.route_table_id = int2pdsobjkey(k_route_table_id);
+        ret = pds_route_delete(&key, bctxt);
+        ASSERT_TRUE(ret == SDK_RET_OK);
+    }
+}
+
+void
+route_table_delete_routes_verify (std::string base_pfx)
+{
 }
 
 void
@@ -242,24 +243,44 @@ TEST_F(route_test, route_add_2) {
     batch_commit(bctxt);
 }
 
-#if 0
 /// do route table add and then individual route(s) add/del in same batch
-TEST_F(route_test, route_add_del_1) {
+TEST_F(route_test, route_del_1) {
     pds_batch_ctxt_t bctxt;
 
+    // create route table
     bctxt = batch_start();
     route_table_setup(bctxt, k_base_v4_pfx);
-    route_table_add_routes(bctxt, k_base_v4_pfx_2);
-    // TODO: need an API for del here @rsrikanth
     batch_commit(bctxt);
 
-    route_table_add_del_routes_verify();
+    bctxt = batch_start();
+    route_table_delete_routes(bctxt, k_base_v4_pfx);
+    batch_commit(bctxt);
+
+    // verify delete
+    route_table_delete_routes_verify(k_base_v4_pfx);
 
     bctxt = batch_start();
     route_table_teardown(bctxt);
     batch_commit(bctxt);
 }
-#endif
+
+/// add route table and update individual route(s) in same batch
+TEST_F(route_test, route_del_2) {
+    pds_batch_ctxt_t bctxt;
+
+    // create and update route table in one batch
+    bctxt = batch_start();
+    route_table_setup(bctxt, k_base_v4_pfx);
+    route_table_delete_routes(bctxt, k_base_v4_pfx);
+    batch_commit(bctxt);
+
+    // verify delete
+    route_table_delete_routes_verify(k_base_v4_pfx);
+
+    bctxt = batch_start();
+    route_table_teardown(bctxt);
+    batch_commit(bctxt);
+}
 
 /// add route table and update individual route(s) in separate batches
 TEST_F(route_test, route_upd_1) {
