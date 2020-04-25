@@ -706,24 +706,6 @@ Eth::factory(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     return eth_devs;
 }
 
-static void *
-create_mnet(void *obj)
-{
-    struct mnet_dev_create_req_t *req = (struct mnet_dev_create_req_t *)obj;
-
-    NIC_LOG_INFO("{}: started mnet thread", req->iface_name);
-
-    int ret = create_mnet(req);
-    if (ret) {
-        NIC_LOG_ERR("{}: Failed to create MNIC device. ret: {}", req->iface_name, ret);
-        free(obj);
-        return NULL;
-    }
-
-    free(obj);
-    return NULL;
-}
-
 struct eth_devspec *
 Eth::ParseConfig(boost::property_tree::ptree::value_type node)
 {
@@ -798,33 +780,16 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
     return eth_spec;
 }
 
-bool
-Eth::LocalDeviceCreateSkip(void) {
-    NIC_LOG_DEBUG("{}: Skipping MNIC device creation", spec->name);
-    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_HOST_MGMT) {
-        WRITE_DEVINFO(DeviceManager::GetInstance()->CfgPath().c_str(),
-                      spec->name.c_str(), dev_resources.regs_mem_addr,
-                      dev_resources.lif_base);
-    }
-    return true;
-}
-
-bool
-Eth::LocalDeviceCreate(void) {
+struct mnet_dev_create_req_t *
+Eth::GetDeviceCreateReq()
+{
     struct mnet_dev_create_req_t *mnet_req = NULL;
-
-#ifndef __aarch64__
-    return LocalDeviceCreateSkip();
-#endif
-
-    NIC_LOG_DEBUG("{}: Creating MNIC device", spec->name);
 
     mnet_req = (struct mnet_dev_create_req_t *)calloc(1, sizeof(*mnet_req));
     if (mnet_req == NULL) {
         NIC_LOG_ERR("{}: Failed to allocate mnet request", spec->name);
-        return false;
+        return NULL;
     }
-
     mnet_req->regs_pa = dev_resources.regs_mem_addr;
     mnet_req->drvcfg_pa = intr_drvcfg_addr(dev_resources.intr_base);
     mnet_req->msixcfg_pa = intr_msixcfg_addr(dev_resources.intr_base);
@@ -835,6 +800,24 @@ Eth::LocalDeviceCreate(void) {
                   "drvcfg_pa: {:#x}, msixcfg_pa: {:#x}, doorbell_pa: {:#x}",
                   mnet_req->iface_name, mnet_req->regs_pa, mnet_req->drvcfg_pa,
                   mnet_req->msixcfg_pa, mnet_req->doorbell_pa);
+    return mnet_req;
+}
+
+void
+Eth::LocalDeviceInitSkip(void)
+{
+    NIC_LOG_DEBUG("{}: Skipping MNIC device creation", spec->name);
+    if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_HOST_MGMT) {
+        WRITE_DEVINFO(DeviceManager::GetInstance()->CfgPath().c_str(),
+                      spec->name.c_str(), dev_resources.regs_mem_addr,
+                      dev_resources.lif_base);
+    }
+}
+
+void
+Eth::LocalDeviceInit()
+{
+    NIC_LOG_DEBUG("{}: Initializing MNIC device", spec->name);
 
     // pba is unused by mnic, but config anyway
     intr_pba_cfg(dev_resources.lif_base, dev_resources.intr_base, spec->intr_count);
@@ -846,35 +829,6 @@ Eth::LocalDeviceCreate(void) {
     // reset device registers to defaults
     intr_reset_dev(dev_resources.intr_base, spec->intr_count, 1);
 
-#define NICMGRD_THREAD_ID_MNET 0
-    sdk::lib::thread *mnet_thread = NULL;
-
-    // sdk::lib::thread::control_cores_mask_set(0xD);
-    if (spec->eth_type == ETH_MNIC_OOB_MGMT) {
-        mnet_thread = sdk::lib::thread::factory(spec->name.c_str(),
-                                                NICMGRD_THREAD_ID_MNET,
-                                                sdk::lib::THREAD_ROLE_CONTROL, 0xD,
-                                                create_mnet,
-                                                sched_get_priority_max(SCHED_FIFO),
-                                                SCHED_FIFO,
-                                                false); // yield
-    } else {
-        mnet_thread = sdk::lib::thread::factory(spec->name.c_str(),
-                                                NICMGRD_THREAD_ID_MNET,
-                                                sdk::lib::THREAD_ROLE_CONTROL,
-                                                0xD, create_mnet,
-                                                sched_get_priority_max(SCHED_OTHER),
-                                                SCHED_OTHER,
-                                                false); // yield
-    }
-    if (mnet_thread == NULL) {
-        NIC_LOG_ERR("{}: Unable to start mnet thread. Exiting!!", spec->name);
-        return false;
-    }
-
-    mnet_thread->start(mnet_req);
-
-    return true;
 }
 
 bool
@@ -2222,17 +2176,6 @@ Eth::PortStatusUpdate(void *obj)
 void
 Eth::HalEventHandler(bool status)
 {
-    if (status) {
-        // Create the MNIC devices
-        if (spec->eth_type == ETH_MNIC_OOB_MGMT || spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
-            spec->eth_type == ETH_MNIC_INBAND_MGMT || spec->eth_type == ETH_MNIC_CPU ||
-            spec->eth_type == ETH_MNIC_LEARN || spec->eth_type == ETH_MNIC_CONTROL) {
-            if (!LocalDeviceCreate()) {
-                NIC_LOG_ERR("{}: Failed to create device", spec->name);
-            }
-        }
-    }
-
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
         eth_lif->HalEventHandler(status);
@@ -2240,27 +2183,6 @@ Eth::HalEventHandler(bool status)
 
     SetFwStatus(status);
 }
-
-void
-Eth::UpgradeHalEventHandler(bool status)
-{
-    if (status) {
-        // Create the MNIC devices
-        if (spec->eth_type == ETH_MNIC_OOB_MGMT || spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
-            spec->eth_type == ETH_MNIC_INBAND_MGMT || spec->eth_type == ETH_MNIC_CPU ||
-            spec->eth_type == ETH_MNIC_LEARN || spec->eth_type == ETH_MNIC_CONTROL) {
-                LocalDeviceCreateSkip();
-        }
-    }
-
-    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
-        EthLif *eth_lif = it->second;
-        eth_lif->HalEventHandler(status);
-    }
-
-    SetFwStatus(status);
-}
-
 
 void
 Eth::DelphiMountEventHandler(bool mounted)
@@ -2437,6 +2359,22 @@ Eth::IsDevLif(uint32_t lif_id)
     }
 
     return true;
+}
+
+bool
+Eth::IsPlatformDev()
+{
+    switch(spec->eth_type) {
+        case ETH_MNIC_OOB_MGMT:
+        case ETH_MNIC_INTERNAL_MGMT:
+        case ETH_MNIC_INBAND_MGMT:
+        case ETH_MNIC_CPU:
+        case ETH_MNIC_LEARN:
+        case ETH_MNIC_CONTROL:
+            return true;
+        default:
+            return false;
+    }
 }
 
 int

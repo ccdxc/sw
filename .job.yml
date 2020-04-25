@@ -538,6 +538,7 @@ dependencies:
       exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/sanity/apulu-networking-scale
       exclude_dirs: ["rdma"]
+    - reference: iota/test/standalone/sanity/swm
   platform/drivers/common:
     - reference: iota/test/standalone/precheckin/linux-rdma
     - reference: iota/test/standalone/precheckin/freebsd-rdma
@@ -564,6 +565,7 @@ dependencies:
     - reference: iota/test/standalone/precheckin/esx
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/precheckin/linux
+    - reference: iota/test/standalone/sanity/swm
   platform/src/lib/nicmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
@@ -572,6 +574,7 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/swm
   platform/src/lib/devapi_iris:
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/standalone/sanity/swm

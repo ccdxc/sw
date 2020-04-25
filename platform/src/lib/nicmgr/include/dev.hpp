@@ -172,7 +172,6 @@ public:
     sdk::lib::thread *Thread(void) { return thread; }
     void SetThread(sdk::lib::thread *thr) { thread = thr; }
     struct ev_loop *ev_loop(void) { return EV_A; }
-    ev_timer heartbeat_timer = {0};
 
     // device mode
     bool IsHostManaged(void) { return fwd_mode == sdk::lib::FORWARDING_MODE_CLASSIC; }
@@ -210,8 +209,7 @@ private:
 
     // hal event handler helper functions
     void DevApiClientInit(void);
-    void OOBCreate(void);
-    void OOBBringup(bool status);
+    void OOBUplinkCreate(void);
     void UplinkInit(void);
     void SwmInit(void);
     void DeviceCreate(bool status);
@@ -222,12 +220,19 @@ private:
     bool CheckAllDevsDisabled(void);
     int SendFWDownEvent(void);
 
-    // heartbeat timer
+    // heartbeat events
     timespec_t hb_last;
-    bool hb_timer_init_done = false;
+    bool hb_init_done = false;
+    bool hb_print_miss = true;
+    ev_timer heartbeat_timer = {0};
+    ev_prepare heartbeat_prepare = {0};
+    ev_check heartbeat_check = {0};
     void HeartbeatStart(void);
     void HeartbeatStop(void);
+    void HeartbeatCheck(void);
     static void HeartbeatEventHandler(EV_P_ ev_timer *w, int events);
+    static void HeartbeatEvPrepareCB(EV_P_ ev_prepare *w, int events);
+    static void HeartbeatEvCheckCB(EV_P_ ev_check *w, int events);
 };
 
 #endif /* __DEV_HPP__ */

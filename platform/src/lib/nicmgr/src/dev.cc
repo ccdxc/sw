@@ -18,6 +18,7 @@
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/platform/misc/include/maclib.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/platform/mnet/include/mnet.h"
 
 #include "logger.hpp"
 
@@ -134,6 +135,7 @@ DeviceManager::DeviceManager(devicemgr_cfg_t *cfg)
     this->hbm_mem_json_file = hbm_mem_json_file;
     this->dev_api = NULL;
     this->upg_state = UNKNOWN_STATE;
+    this->thread = NULL;
 }
 
 void
@@ -213,21 +215,31 @@ void
 DeviceManager::HeartbeatStart() {
     // Heartbeat timer
     NIC_LOG_INFO("Starting Heartbeat timer");
-    if (!hb_timer_init_done) {
+    if (!hb_init_done) {
+        ev_prepare_init(&heartbeat_prepare, DeviceManager::HeartbeatEvPrepareCB);
+        heartbeat_prepare.data = this;
         ev_timer_init(&heartbeat_timer, DeviceManager::HeartbeatEventHandler, 0.0, HEARTBEAT_PERIOD_S);
         heartbeat_timer.data = this;
-        hb_timer_init_done = true;
+        ev_check_init(&heartbeat_check, DeviceManager::HeartbeatEvCheckCB);
+        heartbeat_check.data = this;
+        hb_init_done = true;
     }
+    ev_prepare_start(EV_A_ & heartbeat_prepare);
     ev_timer_start(EV_A_ & heartbeat_timer);
+    ev_check_start(EV_A_ & heartbeat_check);
+
     clock_gettime(CLOCK_MONOTONIC, &hb_last);
+    hb_print_miss = true;
 }
 
 void
 DeviceManager::HeartbeatStop() {
     NIC_LOG_INFO("Stopping Heartbeat timer");
 
-    if (hb_timer_init_done) {
+    if (hb_init_done) {
+        ev_prepare_stop(EV_A_ & heartbeat_prepare);
         ev_timer_stop(EV_A_ & heartbeat_timer);
+        ev_check_stop(EV_A_ & heartbeat_check);
     }
 }
 
@@ -753,8 +765,7 @@ DeviceManager::HalEventHandler(bool status)
 
     if (status && !init_done) {
         DevApiClientInit();
-        OOBCreate();
-        OOBBringup(status);
+        OOBUplinkCreate();
         UplinkInit();
         SwmInit();
         DeviceCreate(status);
@@ -770,8 +781,7 @@ DeviceManager::UpgradeGracefulHalEventHandler(bool status)
 
     if (status && !init_done) {
         DevApiClientInit();
-        OOBCreate();
-        OOBBringup(status);
+        OOBUplinkCreate();
         UplinkInit();
         SwmInit();
         DeviceCreate(status);
@@ -788,7 +798,6 @@ DeviceManager::UpgradeHitlessHalEventHandler(bool status) {
     if (status && !init_done) {
         init_done = true;
         DevApiClientInit();
-        OOBBringup(status);
         DeviceCreate(status);
     }
 
@@ -812,7 +821,7 @@ DeviceManager::DevApiClientInit(void) {
 }
 
 void
-DeviceManager::OOBCreate(void) {
+DeviceManager::OOBUplinkCreate(void) {
     uplink_t *up;
 
     for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
@@ -824,25 +833,8 @@ DeviceManager::OOBCreate(void) {
 }
 
 void
-DeviceManager::OOBBringup(bool status) {
-    Device  *dev;
-    Eth     *eth_dev;
-
-    // OOB bring UP first for NCSI
-    for (auto it = devices.begin(); it != devices.end(); it++) {
-        dev = it->second;
-        if (dev->GetType() == ETH) {
-            eth_dev = (Eth *)dev;
-            if (eth_dev->GetEthType() == ETH_MNIC_OOB_MGMT) {
-                eth_dev->HalEventHandler(status);
-                break;
-            }
-        }
-    }
-}
-
-void
-DeviceManager::UplinkInit(void) {
+DeviceManager::UplinkInit(void)
+{
     uplink_t    *up;
 
     // Create uplinks
@@ -876,10 +868,88 @@ DeviceManager::SwmInit(void) {
     init_done = true;
 }
 
+static void *
+create_mnets(void *obj)
+{
+    vector<struct mnet_dev_create_req_t *> *req_list;
+    req_list = reinterpret_cast<vector<struct mnet_dev_create_req_t *> *>(obj);
+
+    for (auto it = req_list->begin(); it != req_list->end(); it++) {
+        struct mnet_dev_create_req_t *req = *it;
+        NIC_LOG_INFO("{}: Creating mnet", req->iface_name);
+
+        int ret = create_mnet(req);
+        if (ret) {
+            NIC_LOG_ERR("{}: Failed to create mnet device. ret: {}", req->iface_name, ret);
+            free(req);
+            return NULL;
+        }
+        free(req);
+    }
+    free(obj);
+    return NULL;
+}
+
 void
 DeviceManager::DeviceCreate(bool status) {
     Device *dev;
     enum DeviceType type;
+    EthDevType eth_type;
+    vector<struct mnet_dev_create_req_t *> *mnet_list;
+    struct mnet_dev_create_req_t * mnet_req;
+    bool skip_hwinit = false;
+
+#ifndef __aarch64__
+    skip_hwinit = true;
+#endif
+
+    if (status) {
+        /* Create local devices creation thread */
+        mnet_list = new vector<struct mnet_dev_create_req_t *>;
+        for (auto it = devices.begin(); it != devices.end(); it++) {
+            dev = it->second;
+            type = dev->GetType();
+            if (type == ETH) {
+                Eth *eth_dev = (Eth *)dev;
+                eth_type = eth_dev->GetEthType();
+                if (eth_dev->IsPlatformDev()) {
+                    if(skip_hwinit) {
+                        eth_dev->LocalDeviceInitSkip();
+                        continue;
+                    }
+                    eth_dev->LocalDeviceInit();
+                    mnet_req = eth_dev->GetDeviceCreateReq();
+                    if (!mnet_req) {
+                        NIC_LOG_ERR("{}: Skipping MNIC device creation",
+                            eth_dev->GetName());
+                    }
+                    if (eth_type == ETH_MNIC_OOB_MGMT) {
+                        // Always create oob_mnic first
+                        mnet_list->insert(mnet_list->begin(), mnet_req);
+                    } else {
+                        mnet_list->push_back(mnet_req);
+                    }
+                }
+            }
+        }
+        if (!skip_hwinit) {
+#define NICMGRD_THREAD_ID_MNET 0
+            sdk::lib::thread *mnet_thread = NULL;
+            mnet_thread = sdk::lib::thread::factory("MNET Creation Thread",
+                                                    NICMGRD_THREAD_ID_MNET,
+                                                    sdk::lib::THREAD_ROLE_CONTROL,
+                                                    0xD,
+                                                    create_mnets,
+                                                    sched_get_priority_max(SCHED_FIFO),
+                                                    SCHED_FIFO,
+                                                    false); // yield
+            if (mnet_thread == NULL) {
+                NIC_LOG_ERR("Unable to start mnet creation thread. Exiting!!");
+                return;
+            }
+            mnet_thread->start(mnet_list);
+        }
+    }
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         dev = it->second;
@@ -888,9 +958,7 @@ DeviceManager::DeviceCreate(bool status) {
         switch (type) {
         case ETH: {
             Eth *eth_dev = (Eth *)dev;
-            if (eth_dev->GetEthType() != ETH_MNIC_OOB_MGMT) {
-                eth_dev->HalEventHandler(status);
-            }
+            eth_dev->HalEventHandler(status);
             break;
         }
 #ifdef IRIS
@@ -996,21 +1064,42 @@ DeviceManager::HeartbeatEventHandler(EV_P_ ev_timer *w, int events)
         // call thread level heartbeat
         devmgr->Thread()->punch_heartbeat();
     }
-    timespec_t now, hb_delta;
 
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    hb_delta = sdk::timestamp_diff(&now, &devmgr->hb_last);
-    if (hb_delta.tv_sec >= HEARTBEAT_MAX_PERIOD_S) {
-        NIC_LOG_WARN("Missed heartbeat for {} seconds", hb_delta.tv_sec);
-    }
+    devmgr->HeartbeatCheck();
 
-    devmgr->hb_last = now;
+    clock_gettime(CLOCK_MONOTONIC, &devmgr->hb_last);
+    devmgr->hb_print_miss = true;
     for (auto it = devmgr->devices.begin(); it != devmgr->devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH) {
             Eth *eth_dev = (Eth *)dev;
             eth_dev->HeartbeatEventHandler();
         }
+    }
+}
+
+void
+DeviceManager::HeartbeatEvPrepareCB(EV_P_ ev_prepare *w, int events)
+{
+    ((DeviceManager *)w->data)->HeartbeatCheck();
+}
+
+void
+DeviceManager::HeartbeatEvCheckCB(EV_P_ ev_check *w, int events)
+{
+    ((DeviceManager *)w->data)->HeartbeatCheck();
+}
+
+void
+DeviceManager::HeartbeatCheck()
+{
+    timespec_t now, hb_delta;
+
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    hb_delta = sdk::timestamp_diff(&now, &hb_last);
+    if (hb_print_miss && hb_delta.tv_sec >= HEARTBEAT_MAX_PERIOD_S) {
+        NIC_LOG_WARN("Missed heartbeat for {} seconds", hb_delta.tv_sec);
+        hb_print_miss = false;
     }
 }
 

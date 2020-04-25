@@ -159,7 +159,6 @@ public:
     void QuiesceEventHandler(bool quiesce);
     void UpdateQStatus (bool enable);
     void HalEventHandler(bool status);
-    void UpgradeHalEventHandler(bool status);
     void DelphiMountEventHandler(bool mounted);
     status_code_t Reset();
     void PcieResetEventHandler(uint32_t rsttype);
@@ -168,12 +167,16 @@ public:
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
     bool CreateHostDevice();
+    void LocalDeviceInit();
+    void LocalDeviceInitSkip();
+    struct mnet_dev_create_req_t *GetDeviceCreateReq();
     void SetFwStatus(uint8_t fw_status);
     void HeartbeatEventHandler();
 
     bool IsDevQuiesced();
     bool IsDevReset();
     bool IsDevLif(uint32_t lif_id);
+    bool IsPlatformDev();
 
     int SendFWDownEvent();
     void GetEthDevInfo(struct EthDevInfo *dev_info);
@@ -225,10 +228,6 @@ private:
     ev_check devcmd_check = {0};
     ev_timer devcmd_timer = {0};
     ev_timer stats_timer = {0};
-
-    // Device Constructors
-    bool LocalDeviceCreate(void);
-    bool LocalDeviceCreateSkip(void);
 
     bool LoadOprom();
 
