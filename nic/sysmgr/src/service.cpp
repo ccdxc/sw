@@ -218,10 +218,7 @@ void Service::fault(std::string reason)
         FaultLoop::getInstance()->set_fault(reason);
     }
 
-    g_bus->ProcessDied(this->spec->name, pid, reason);
-
-    ServiceLoop::getInstance()->queue_event(
-        ServiceEvent::create(this->spec->name, SERVICE_EVENT_STOP));
+    g_events->ServiceStoppedEvent(this->spec->name);
     
     g_log->info("System in fault mode (%s)", reason.c_str());
     g_bus->SystemFault(reason);
@@ -256,7 +253,6 @@ void Service::on_child(pid_t pid)
     
     if (this->spec->kind != SERVICE_ONESHOT) {
         g_log->info("Service %s %s", this->spec->name.c_str(), reason.c_str());
-        g_events->ServiceStoppedEvent(this->spec->name);
         run_debug(this->pid);
     }
 
@@ -277,6 +273,11 @@ void Service::on_child(pid_t pid)
         this->launch();
         return;
     }
+
+    g_bus->ProcessDied(this->spec->name, pid, reason);
+
+    ServiceLoop::getInstance()->queue_event(
+        ServiceEvent::create(this->spec->name, SERVICE_EVENT_STOP));
 
     this->fault("Process died");
 }
