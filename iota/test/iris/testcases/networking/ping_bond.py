@@ -120,8 +120,8 @@ def Trigger(tc):
         flapTask.join(tc.port_down_time)
         return result
 
-    # wait until the uplink state is brought up
-    flapTask.join(tc.port_down_time)
+    # wait until the background task brings up the uplink
+    flapTask.join()
     # Flap both uplinks
     flapTask = bond_utils.GetSwitchPortFlapTask(tc.nodes, 2, tc.port_down_time)
     flapTask.start()
@@ -134,9 +134,15 @@ def Trigger(tc):
         return result
 
     api.Logger.info("Waiting until {}secs to bring up both uplinks after flap!".format(tc.port_down_time))
-    #join the background task to wait until the port_down_time before the uplinks are made UP
-    flapTask.join(tc.port_down_time)
+    # wait until the background task brings up the uplink
+    flapTask.join()
     time.sleep(tc.failover_delay)
+
+    # Make sure atleast one up link came UP after both uplink flap.
+    result = bond_utils.DetectUpLinkState(tc.nodes, bond_utils.PORT_OPER_STATUS_UP, any)
+    if result != api.types.status.SUCCESS:
+        api.Logger.error("Atleast one uplink on %s is not in UP state."%tc.nodes)
+        return api.types.status.FAILURE
 
     tc.uplink_fail_stage = False
     # Rerun ping test
