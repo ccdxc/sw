@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include <sys/time.h>
+#include <time.h>
 #include <sys/param.h>
 #include <linux/pci_regs.h>
 
@@ -174,10 +174,10 @@ static pcie_health_state_t health_state[PCIEPORT_NPORTS];
 static uint64_t
 get_timestamp(void)
 {
-    struct timeval tv;
+    struct timespec ts;
 
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec * 1000000 + tv.tv_usec;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
 }
 
 static void
