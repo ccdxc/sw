@@ -14,7 +14,7 @@ import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { Utility } from '@common/Utility';
 import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
-import { ClusterDistributedServiceCard, IApiStatus } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, IApiStatus, ClusterDistributedServiceCardID } from '@sdk/v1/models/generated/cluster';
 import { ClusterHost, IClusterHost } from '@sdk/v1/models/generated/cluster/cluster-host.model';
 import { FieldsRequirement } from '@sdk/v1/models/generated/search';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -34,8 +34,8 @@ export enum BuildHostWorkloadMapSourceType {
 // define UIModel for host._ui
 interface DSCInfo {
   text: string;
-  'mac-address': string;
-  isAdmitted: boolean;
+  mac: string;
+  admitted: boolean;
 }
 interface HostUiModel {
   processedSmartNics: DSCInfo[];
@@ -161,7 +161,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
       this.hostWorkloadsTuple = ObjectsRelationsUtility.buildHostWorkloadsMap(myworkloads, hosts);
       this.dataObjects.forEach(host => {
         const hostUiModel: HostUiModel = {
-          processedSmartNics : this.processSmartNics(host),
+          processedSmartNics: this.processSmartNics(host),
           processedWorkloads: this.getHostWorkloads(host)
 
         };
@@ -225,10 +225,16 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     });
   }
 
-  // This func is only working for when
-  // spec.dscs and status.admitted-dscs will only be of length one, and that if status has an entry it's referring to the one in spec.
-  isAdmitted(specValue, statusValue): boolean {
-    return specValue && specValue.length === 1 && statusValue && statusValue.length === 1;
+
+  /**
+   * Find the DSC and compute whether DSC is admitted
+   */
+  isAdmitted(specValue: ClusterDistributedServiceCardID , statusValue: string): boolean {
+    let dsc: ClusterDistributedServiceCard = ObjectsRelationsUtility.getDSCByMACaddress(this.naplesList, statusValue);
+    if (!dsc) {
+      dsc = ObjectsRelationsUtility.getDSCById(this.naplesList, specValue.id);
+    }
+    return ( dsc && dsc.spec.admit === true && dsc.status['admission-phase'] && dsc.status['admission-phase'].toLowerCase() === 'admitted');
   }
 
   displayColumn(rowData, col): any {
@@ -241,37 +247,41 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     }
   }
 
-  processSmartNics(host: ClusterHost) {
+  processSmartNics(host: ClusterHost): DSCInfo[] {
     const fields = 'spec.dscs'.split('.');
-    const value = Utility.getObjectValueByPropertyPath(host, fields);
-    const statusValue = Utility.getObjectValueByPropertyPath(host, 'status.admitted-dscs'.split('.'));
+    const values = Utility.getObjectValueByPropertyPath(host, fields);
+    const statusValues = Utility.getObjectValueByPropertyPath(host, 'status.admitted-dscs'.split('.'));
 
-    // We only have one entry at this point
-    return value.map(v => {
-      if (v.hasOwnProperty('id') && v['id']) {
-        return {
-          text: v['id'],
-          mac: this.nameToMacMap[v['id']] || '',
-          admitted: this.isAdmitted(value, statusValue)
-        };
-      } else if (v.hasOwnProperty('mac-address') && v['mac-address']) {
-        let text = this.macToNameMap[v['mac-address']];
-        if (text == null) {
-          text = v['mac-address'];
+    const dscInfos: DSCInfo[] = [];
+
+    for (let i = 0; values && statusValues && i < values.length; i++) {
+      const value = values[i];
+      const statusValue = statusValues[i];
+        if (value.hasOwnProperty('id') && value['id']) {
+          dscInfos.push({
+            text: value['id'],
+            mac: this.nameToMacMap[value['id']] || '',
+            admitted: this.isAdmitted(value, statusValue)
+          });
+        } else if (value.hasOwnProperty('mac-address') && value['mac-address']) {
+          let text = this.macToNameMap[value['mac-address']];
+          if (text == null) {
+            text = value['mac-address'];
+          }
+          dscInfos.push({
+            text: text,
+            mac: value['mac-address'],
+            admitted: this.isAdmitted(value, statusValue)
+          });
+        } else {
+          dscInfos.push( {
+            text: 'N/A',
+            mac: '',
+            admitted: this.isAdmitted(value, statusValue)
+          });
         }
-        return {
-          text: text,
-          mac: v['mac-address'],
-          admitted: this.isAdmitted(value, statusValue)
-        };
-      } else {
-        return {
-          text: 'N/A',
-          mac: '',
-          admitted: this.isAdmitted(value, statusValue)
-        };
-      }
-    });
+    }
+    return dscInfos;
   }
 
   postNgInit() {
@@ -291,7 +301,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
       this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
     }
     // When workload and hostList are ready, build host-workload map
-    if (this.workloadList  && this.dataObjects && this.dataObjects.length > 0 ) {
+    if (this.workloadList && this.dataObjects && this.dataObjects.length > 0) {
       this.buildHostWorkloadsMap(this.workloadList, this.dataObjects, BuildHostWorkloadMapSourceType.watchHosts);  // host[i] -> workloads[] map
     }
   }
@@ -369,7 +379,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   buildMoreWorkloadTooltip(host: ClusterHost): string {
     const wltips = [];
     const hostUiModel: HostUiModel = host._ui;
-    const workloads = hostUiModel.processedWorkloads ;
+    const workloads = hostUiModel.processedWorkloads;
     for (let i = 0; i < workloads.length; i++) {
       if (i >= this.maxWorkloadsPerRow) {
         const workload = workloads[i];
@@ -403,7 +413,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     const outputs: any[] = [];
     for (let i = 0; data && i < data.length; i++) {
       const hostUiModel: HostUiModel = data[i]._ui;
-      const workloads = hostUiModel.processedWorkloads ;
+      const workloads = hostUiModel.processedWorkloads;
 
       for (let k = 0; k < workloads.length; k++) {
         const recordValue = _.get(workloads[k], ['meta', 'name']);
@@ -452,7 +462,8 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
     const list = selectedRows.filter((rowData: ClusterHost) => {
       const uiData: HostUiModel = rowData._ui as HostUiModel;
-      return uiData.processedWorkloads && uiData.processedWorkloads.length > 0; } );
-     return (list.length === 0);
+      return uiData.processedWorkloads && uiData.processedWorkloads.length > 0;
+    });
+    return (list.length === 0);
   }
 }

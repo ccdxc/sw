@@ -127,7 +127,7 @@ describe('HostsComponent', () => {
       ]
     },
     'status': {
-      'admission-phase': 'ADMITTED',
+      'admission-phase': 'admitted',
       'conditions': [
         {
           'type': 'HEALTHY',
