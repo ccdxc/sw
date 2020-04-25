@@ -408,7 +408,7 @@ helper-containers:
 	@cd tools/docker-files/elasticsearch; docker build -t ${REGISTRY_URL}/elasticsearch-cluster:v0.16 .
 	@cd tools/docker-files/elasticsearch-curator; docker build -t ${REGISTRY_URL}/elasticsearch-curator:v0.3 .
 	@cd tools/docker-files/filebeat; docker build -t ${REGISTRY_URL}/pen-filebeat:v0.2 .
-	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.3 .
+	@cd tools/test-build; docker build -t ${REGISTRY_URL}/pen-test-build:v0.4 .
 
 debug-container:
 	scripts/create-debug-container.sh
@@ -1021,7 +1021,6 @@ gs-venice-release: venice-image
 	cp test/topos/gs/venice-conf.json nic/sim/naples/venice-conf.json
 	cd tools/docker-files/venice/ && docker build -t pensando/venice:${VENICE_RELEASE_TAG} .
 	cd test/topos/gs && tar -cvf venice_sim_addons.tar naples_admit.py start.sh stop.sh testbed.json venice-conf.json authbootstrap_postman_collection.json login_postman_collection.json postman_collection.json customroles_postman_collection.json
-
 
 # After testing venice-release upload the script assets with a command like below
 # cd test/topos/gs && asset-upload venice_sim_addons.tar v0.2 ./venice_sim_addons.tar

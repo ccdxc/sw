@@ -22,8 +22,7 @@ from scapy.all import TCP
 from scapy.all import UDP
 from scapy.all import ICMP
 from scapy.all import GRE
-from iota.test.utils.erspan import ERSPAN_III
-from iota.test.utils.erspan import PlatformSpecific
+from scapy.contrib.erspan import ERSPAN_II, ERSPAN_III, ERSPAN_PlatformSpecific
 from iota.test.utils.flowmon import *
 
 IP_HEADER_LENGTH = 20
@@ -1236,12 +1235,12 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                 if pkt[ERSPAN_III].haslayer(Dot1Q):
                     if tc.collector_vlan_strip[idx] == True and\
                        ((pkt[ERSPAN_III].haslayer(ERSPAN_III) == False and\
-                         pkt[ERSPAN_III].haslayer(ERSPAN) == False) or\
+                         pkt[ERSPAN_III].haslayer(ERSPAN_II) == False) or\
                         (pkt[ERSPAN_III].haslayer(ERSPAN_III) == True and\
                          pkt[ERSPAN_III][ERSPAN_III].haslayer(Dot1Q) ==\
                          False) or\
-                        (pkt[ERSPAN_III].haslayer(ERSPAN) == True and\
-                         pkt[ERSPAN_III][ERSPAN].haslayer(Dot1Q) == False)):
+                        (pkt[ERSPAN_III].haslayer(ERSPAN_II) == True and\
+                         pkt[ERSPAN_III][ERSPAN_II].haslayer(Dot1Q) == False)):
                         api.Logger.error(\
                         "ERROR: Tagged ERSPAN-Type-3 Packet in Vlan-Strip mode")
                         tc.result[c] = api.types.status.FAILURE
@@ -1257,10 +1256,10 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                     dip = int(ipaddress.ip_address(pkt[ERSPAN_III][IP].dst))
 
                     # Extract L4-ports from inner-L4-header
-                    if pkt[ERSPAN_III].haslayer(TCP):
+                    if pkt[ERSPAN_III].haslayer(TCP) and not pkt[ERSPAN_III].haslayer(ICMP):
                         sport = int(pkt[ERSPAN_III][TCP].sport)
                         dport = int(pkt[ERSPAN_III][TCP].dport)
-                    elif pkt[ERSPAN_III].haslayer(UDP):
+                    elif pkt[ERSPAN_III].haslayer(UDP) and not pkt[ERSPAN_III].haslayer(ICMP):
                         sport = int(pkt[ERSPAN_III][UDP].sport)
                         dport = int(pkt[ERSPAN_III][UDP].dport)
                     elif pkt[ERSPAN_III].haslayer(ICMP):
@@ -1270,40 +1269,40 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                     api.Logger.error("ERROR: IP-Header Not Present")
                     tc.result[c] = api.types.status.FAILURE
             elif tc.collector_erspan_type[idx] == 'type_2' and\
-                 pkt.haslayer(ERSPAN):
+                 pkt.haslayer(ERSPAN_II):
                 # Extract Vlan-tag, if present
-                if pkt[ERSPAN].haslayer(Dot1Q):
+                if pkt[ERSPAN_II].haslayer(Dot1Q):
                     if tc.collector_vlan_strip[idx] == True and\
-                       ((pkt[ERSPAN].haslayer(ERSPAN) == False and\
-                         pkt[ERSPAN].haslayer(ERSPAN_III) == False) or\
-                        (pkt[ERSPAN].haslayer(ERSPAN) == True and\
-                         pkt[ERSPAN][ERSPAN].haslayer(Dot1Q) == False) or\
-                        (pkt[ERSPAN].haslayer(ERSPAN_III) == True and\
-                         pkt[ERSPAN][ERSPAN_III].haslayer(Dot1Q) == False)):
+                       ((pkt[ERSPAN_II].haslayer(ERSPAN_II) == False and\
+                         pkt[ERSPAN_II].haslayer(ERSPAN_III) == False) or\
+                        (pkt[ERSPAN_II].haslayer(ERSPAN_II) == True and\
+                         pkt[ERSPAN_II][ERSPAN_II].haslayer(Dot1Q) == False) or\
+                        (pkt[ERSPAN_II].haslayer(ERSPAN_III) == True and\
+                         pkt[ERSPAN_II][ERSPAN_III].haslayer(Dot1Q) == False)):
                         api.Logger.error(\
                         "ERROR: Tagged ERSPAN-Type-2 Packet in Vlan-Strip mode")
                         tc.result[c] = api.types.status.FAILURE
                     tag_etype = DOT1Q_ETYPE
-                    vlan_tag = pkt[ERSPAN][Dot1Q].vlan
+                    vlan_tag = pkt[ERSPAN_II][Dot1Q].vlan
 
-                if pkt[ERSPAN].haslayer(IP):
+                if pkt[ERSPAN_II].haslayer(IP):
                     # Extract IP-Protocol from inner-IP-header
-                    ip_proto = int(pkt[ERSPAN][IP].proto)
+                    ip_proto = int(pkt[ERSPAN_II][IP].proto)
 
                     # Extract IP-addresses from inner-IP-header
-                    sip = int(ipaddress.ip_address(pkt[ERSPAN][IP].src))
-                    dip = int(ipaddress.ip_address(pkt[ERSPAN][IP].dst))
+                    sip = int(ipaddress.ip_address(pkt[ERSPAN_II][IP].src))
+                    dip = int(ipaddress.ip_address(pkt[ERSPAN_II][IP].dst))
 
                     # Extract L4-ports from inner-L4-header
-                    if pkt[ERSPAN].haslayer(TCP):
-                        sport = int(pkt[ERSPAN][TCP].sport)
-                        dport = int(pkt[ERSPAN][TCP].dport)
-                    elif pkt[ERSPAN].haslayer(UDP):
-                        sport = int(pkt[ERSPAN][UDP].sport)
-                        dport = int(pkt[ERSPAN][UDP].dport)
-                    elif pkt[ERSPAN].haslayer(ICMP):
-                        sport = (int(pkt[ERSPAN][ICMP].type) << 8) |\
-                                 int(pkt[ERSPAN][ICMP].code)
+                    if pkt[ERSPAN_II].haslayer(TCP) and not pkt[ERSPAN_II].haslayer(ICMP):
+                        sport = int(pkt[ERSPAN_II][TCP].sport)
+                        dport = int(pkt[ERSPAN_II][TCP].dport)
+                    elif pkt[ERSPAN_II].haslayer(UDP) and not pkt[ERSPAN_II].haslayer(ICMP):
+                        sport = int(pkt[ERSPAN_II][UDP].sport)
+                        dport = int(pkt[ERSPAN_II][UDP].dport)
+                    elif pkt[ERSPAN_II].haslayer(ICMP):
+                        sport = (int(pkt[ERSPAN_II][ICMP].type) << 8) |\
+                                 int(pkt[ERSPAN_II][ICMP].code)
                 elif tc.feature == 'flow-erspan':
                     api.Logger.error("ERROR: IP-Header Not Present")
                     tc.result[c] = api.types.status.FAILURE

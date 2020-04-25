@@ -9,8 +9,8 @@ from scapy.utils import *
 from scapy.utils import rdpcap
 from scapy.utils import wrpcap
 from scapy import packet
-from scapy.all import Dot1Q, ERSPAN
-from iota.test.utils.erspan import ERSPAN_III, PlatformSpecific
+from scapy.all import Dot1Q
+from scapy.contrib.erspan import ERSPAN_II, ERSPAN_III, ERSPAN_PlatformSpecific
 import glob
 import json
 import copy
@@ -411,7 +411,7 @@ def VerifyTimeStamp(pkt):
     g_time = datetime.fromtimestamp(time.clock_gettime(time.CLOCK_REALTIME))
     api.Logger.info("Current Global time {}".format(g_time))
     l_ts = pkt[ERSPAN_III].timestamp
-    u_ts = pkt[PlatformSpecific].timestamp
+    u_ts = pkt[ERSPAN_PlatformSpecific].info2
     pkttime = u_ts << 32 | l_ts
     api.Logger.info("Timestamp from the packet: %s" % (pkttime))
     pkttime /= 1000000000
@@ -444,8 +444,8 @@ def VerifyErspanPackets(pcap_file_name, erspan_type):
 
     for pkt in pkts:
         # Skip non ERSPAN packets.
-        if not (pkt.haslayer(ERSPAN_III) or pkt.haslayer(ERSPAN)):
-            api.Logger.info(f"skipping packet ERSPAN: {pkt.haslayer(ERSPAN)} or ERSPAN_III: {pkt.haslayer(ERSPAN_III)}")
+        if not (pkt.haslayer(ERSPAN_III) or pkt.haslayer(ERSPAN_II)):
+            api.Logger.info(f"skipping packet ERSPAN_II: {pkt.haslayer(ERSPAN_II)} or ERSPAN_III: {pkt.haslayer(ERSPAN_III)}")
             pkt.show()
             continue
         else:
@@ -456,7 +456,7 @@ def VerifyErspanPackets(pcap_file_name, erspan_type):
             pkt.show()
             result = api.types.status.FAILURE
             continue
-        elif erspan_type == ERSPAN_TYPE_2 and not pkt.haslayer(ERSPAN):
+        elif erspan_type == ERSPAN_TYPE_2 and not pkt.haslayer(ERSPAN_II):
             api.Logger.error(f"Expecting {erspan_type} packet, but found")
             pkt.show()
             result = api.types.status.FAILURE

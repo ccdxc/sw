@@ -119,8 +119,8 @@ run "yum install -y #{PACKAGES.join(" ")}"
 # otherwise protobuf.pc will end up in the wrong spot, required for building protobuf-c
 run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 
-# Install go 1.12.9
-run "curl -sSL https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz | tar xz -C /usr/local"
+# Install go 1.13.4
+run "curl -sSL https://dl.google.com/go/go1.13.4.linux-amd64.tar.gz | tar xz -C /usr/local"
 run "go get github.com/golang/protobuf/..."
 
 run "yum install epel-release"
@@ -308,7 +308,7 @@ run "mkdir -p /var/log/snort && \
 run "yum install -y lcov"
 
 run "mkdir -p /opt/trex && cd /opt/trex && \
-	wget --no-cache https://trex-tgn.cisco.com/trex/release/v2.65.tar.gz && tar -xzvf v2.65.tar.gz"
+	wget --no-check-certificate --no-cache https://trex-tgn.cisco.com/trex/release/v2.65.tar.gz && tar -xzvf v2.65.tar.gz"
 
 run "yum install -y wireshark"
 
@@ -322,7 +322,7 @@ workdir "/sw/nic"
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.41"
+tag "pensando/nic:1.42"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 

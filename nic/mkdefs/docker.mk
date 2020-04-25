@@ -6,7 +6,7 @@ SW_DIR:=$(shell dirname ${CUR_DIR})
 CUR_USER:=$(shell whoami)
 CUR_TIME:=$(shell date +%Y-%m-%d_%H.%M.%S)
 CONTAINER_NAME:=${CUR_USER}_${CUR_TIME}
-NIC_CONTAINER_VERSION:=1.41
+NIC_CONTAINER_VERSION:=1.42
 
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 ifeq ($(USER),)

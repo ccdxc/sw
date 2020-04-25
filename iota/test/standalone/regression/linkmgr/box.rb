@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.41"
+from "registry.test.pensando.io:5000/pensando/nic:1.42"
 
 workdir "/sw"
 

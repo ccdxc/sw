@@ -1,5 +1,5 @@
 # This should be executed from <sw> directory
-FROM registry.test.pensando.io:5000/pensando/nic:1.41
+FROM registry.test.pensando.io:5000/pensando/nic:1.42
 LABEL maintainer="Pensando Systems Inc"
 COPY ./nic/apollo/tools/athena/sanity/customer-docker/dev_docker_entrypoint.sh /entrypoint.sh
 ADD  ./sw.tar /

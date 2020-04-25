@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pen-test-build:v0.3"
+from "registry.test.pensando.io:5000/pen-test-build:v0.4"
 
 PACKAGE = "github.com/pensando/sw"
 DIR     = "/go/src/#{PACKAGE}"
