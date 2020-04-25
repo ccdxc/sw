@@ -21,7 +21,6 @@ export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk
 export HAL_LIBRARY_PATH=$HAL_LIBRARY_PATH:$NICMGR_LIBRARY_PATH
 
 # remove logs
-rm -f $PERSISTENT_LOGDIR/hal.log*
 rm -f $NON_PERSISTENT_LOGDIR/hal.log*
 
 ulimit -c unlimited
