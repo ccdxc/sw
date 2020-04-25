@@ -130,10 +130,9 @@
             <ng-container *ngTemplateOutlet="sideNavSettings; "></ng-container>
           </ng-container>
         </mat-sidenav>
-        <mat-sidenav #sidenav class="app-shell-left-sidenav" mode="side" opened="true"
-                     [disableClose]="true" id="app-sidebar"
-                     [ngClass]="[isSideNavExpanded ? '' : 'active', isSideNavShown ? 'shell-animate-in' : 'shell-animate-out']"
-                     *ngIf="isSideNavShown">
+        <mat-sidenav #sidenav class="app-shell-left-sidenav" mode="side" [opened]="isSideNavShown"
+                     id="app-sidebar" [ngClass]="[isSideNavExpanded ? '' : 'active']"
+                     [@openCloseSideNav]="isSideNavExpanded? 'open': 'close'">
           <!-- Side Nav Items -->
           <div id="app-sidebar-container" class="panel-scroll" [scrollTop]="scrollTop"
                (scroll)="onScroll($event)">
@@ -144,51 +143,19 @@
           </div>
         </mat-sidenav>
 
-        <mat-sidenav-content>
-          <app-toolbar #breadcrumbToolbar></app-toolbar>
-          <div class="app-shell-router-outter-div">
-            <app-toaster>
-              <ng-template let-message let-onClose="onClose" pTemplate="message">
-                <div fxLayout="row"
-                     [class]="'app-ptoast-' + message.severity + ' app-ptoast-template'">
-                  <mat-icon *ngIf="message.severity === 'success'" fxFlex="none"
-                            class="app-ptoast-icon">
-                    check_circle
-                  </mat-icon>
-                  <mat-icon *ngIf="message.severity === 'info'" fxFlex="none"
-                            class="app-ptoast-icon">
-                    info
-                  </mat-icon>
-                  <mat-icon *ngIf="message.severity === 'warn'" fxFlex="none"
-                            class="app-ptoast-icon">
-                    warning
-                  </mat-icon>
-                  <mat-icon *ngIf="message.severity === 'error'" fxFlex="none"
-                            class="app-ptoast-icon">
-                    error
-                  </mat-icon>
-                  <div fxFlex fxLayout="column">
-                    <div fxFlex="nogrow" class="ui-toast-summary">{{message.summary}}</div>
-                    <div fxFlex="nogrow" class="ui-toast-detail">{{message.detail}}</div>
-                    <div fxFlex="nogrow" class="app-toast-container"
-                         *ngIf="message.buttons != null && message.buttons.length > 0">
-                      <span *ngFor="let button of message.buttons" class="app-toast-button"
-                            [ngClass]="[button.cssClass != null ? button.cssClass : '', button.computeClass != null ? button.computeClass() : '' ]"
-                            (click)="button.callback($event)">
-                        {{button.text}}
-                      </span>
-                    </div>
-                  </div>
-                  <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
-                    <mat-icon fxFlex="none" class="app-ptoast-close" (click)="onClose($event)">close
-                    </mat-icon>
-                  </div>
-                </div>
-              </ng-template>
-            </app-toaster>
-            <router-outlet></router-outlet>
-          </div>
+        <mat-sidenav-content *ngIf="isSideNavExpanded"
+                             [@openCloseFullMainContent]="isSideNavShown? 'open': 'close'">
+          <ng-container *ngTemplateOutlet="mainContent;"></ng-container>
+        </mat-sidenav-content>
 
+        <mat-sidenav-content *ngIf="!isSideNavExpanded"
+                             [@openClosePartialMainContent]="isSideNavShown? 'open': 'close'">
+          <ng-container *ngTemplateOutlet="mainContent;"></ng-container>
+        </mat-sidenav-content>
+
+        <mat-sidenav-content *ngIf="!isSideNavShown"
+                             [@openCloseMainContent]="isSideNavExpanded? 'open': 'close'">
+          <ng-container *ngTemplateOutlet="mainContent;"></ng-container>
         </mat-sidenav-content>
       </mat-sidenav-container>
 
@@ -214,6 +181,52 @@
     </ng-container>
   </div>
 </div>
+
+<ng-template #mainContent>
+  <app-toolbar #breadcrumbToolbar></app-toolbar>
+  <div class="app-shell-router-outter-div">
+    <app-toaster>
+      <ng-template let-message let-onClose="onClose" pTemplate="message">
+        <div fxLayout="row"
+             [class]="'app-ptoast-' + message.severity + ' app-ptoast-template'">
+          <mat-icon *ngIf="message.severity === 'success'" fxFlex="none"
+                    class="app-ptoast-icon">
+            check_circle
+          </mat-icon>
+          <mat-icon *ngIf="message.severity === 'info'" fxFlex="none"
+                    class="app-ptoast-icon">
+            info
+          </mat-icon>
+          <mat-icon *ngIf="message.severity === 'warn'" fxFlex="none"
+                    class="app-ptoast-icon">
+            warning
+          </mat-icon>
+          <mat-icon *ngIf="message.severity === 'error'" fxFlex="none"
+                    class="app-ptoast-icon">
+            error
+          </mat-icon>
+          <div fxFlex fxLayout="column">
+            <div fxFlex="nogrow" class="ui-toast-summary">{{message.summary}}</div>
+            <div fxFlex="nogrow" class="ui-toast-detail">{{message.detail}}</div>
+            <div fxFlex="nogrow" class="app-toast-container"
+                 *ngIf="message.buttons != null && message.buttons.length > 0">
+              <span *ngFor="let button of message.buttons" class="app-toast-button"
+                    [ngClass]="[button.cssClass != null ? button.cssClass : '', button.computeClass != null ? button.computeClass() : '' ]"
+                    (click)="button.callback($event)">
+                {{button.text}}
+              </span>
+            </div>
+          </div>
+          <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
+            <mat-icon fxFlex="none" class="app-ptoast-close" (click)="onClose($event)">close
+            </mat-icon>
+          </div>
+        </div>
+      </ng-template>
+    </app-toaster>
+    <router-outlet></router-outlet>
+  </div>
+</ng-template>
 
 <p-dialog #versionOp
           class="app-shell-version-dialog"

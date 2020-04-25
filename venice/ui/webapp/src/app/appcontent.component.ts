@@ -1,6 +1,6 @@
 import { OverlayContainer } from '@angular/cdk/overlay';
 import { TemplatePortalDirective } from '@angular/cdk/portal';
-import { AfterViewInit, Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
 import { NavigationEnd, Router } from '@angular/router';
@@ -36,6 +36,7 @@ import { ClusterService } from './services/generated/cluster.service';
 import { SearchService } from './services/generated/search.service';
 import { WorkloadService } from './services/generated/workload.service';
 import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.component';
+import { Animations } from '@app/animations';
 
 export interface GetUserObjRequest {
   success: (resp: { body: IAuthUser | IApiStatus | Error; statusCode: number; }) => void;
@@ -51,6 +52,7 @@ const SIDE_MENU_INFO: string = 'SIDE_MENU_INFO';
   templateUrl: './appcontent.component.html',
   styleUrls: ['./appcontent.component.scss', './appcontent.component.sidenav.scss', './appcontent.component.toast.scss'],
   encapsulation: ViewEncapsulation.None,
+  animations: [Animations],
   providers: []
 })
 export class AppcontentComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit {
@@ -140,6 +142,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     protected workloadService: WorkloadService,
     protected authService: AuthService,
     protected rolloutService: RolloutService,
+    private cdr: ChangeDetectorRef,
     protected router: Router
   ) {
     super(_controllerService, uiconfigsService);
@@ -188,6 +191,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
           this.storeMenuInfo();
         });
     }
+    this.cdr.detectChanges();
   }
 
   onScroll(event) {

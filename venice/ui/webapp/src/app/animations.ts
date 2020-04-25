@@ -9,6 +9,8 @@ import {
 /* Taken from Angular Material expansion panel */
 export const EXPANSION_PANEL_ANIMATION_TIMING = '500ms cubic-bezier(0.4,0.0,0.2,1)';
 export const EXPANSION_PANEL_ANIMATION_TIMING_FAST = '250ms cubic-bezier(0.4,0.0,0.2,1)';
+export const SIDENAV_WIIDTH = '220px';
+export const SIDENAV_WIIDTH_PARTIAL = '80px';
 
 export const Animations = [
   // spinner fading and content entering
@@ -149,5 +151,61 @@ export const Animations = [
       style({ width: '*', visibility: 'visible', overflow: 'hidden' }),
       animate(EXPANSION_PANEL_ANIMATION_TIMING_FAST, style({ width: '0px', visibility: 'hidden' })),
     ]),
+  ]),
+  trigger('openCloseFullMainContent', [
+    state('close',
+      style({
+        'margin-left': '0px'
+      })
+    ),
+    state('open',
+      style({
+        'margin-left': SIDENAV_WIIDTH
+      })
+    ),
+    transition('close => open', animate('250ms ease-in')),
+    transition('open => close', animate('250ms ease-in')),
+  ]),
+  trigger('openClosePartialMainContent', [
+    state('close',
+      style({
+        'margin-left': 0
+      })
+    ),
+    state('open',
+      style({
+        'margin-left': SIDENAV_WIIDTH_PARTIAL
+      })
+    ),
+    transition('close => open', animate('250ms ease-in')),
+    transition('open => close', animate('250ms ease-in')),
+  ]),
+  trigger('openCloseMainContent', [
+    state('close',
+      style({
+        'margin-left': SIDENAV_WIIDTH_PARTIAL
+      })
+    ),
+    state('open',
+      style({
+        'margin-left': SIDENAV_WIIDTH
+      })
+    ),
+    transition('close => open', animate('250ms ease-in')),
+    transition('open => close', animate('250ms ease-in')),
+  ]),
+  trigger('openCloseSideNav', [
+    state('close',
+      style({
+        'max-width': SIDENAV_WIIDTH_PARTIAL
+      })
+    ),
+    state('open',
+      style({
+        'max-width': SIDENAV_WIIDTH
+      })
+    ),
+    transition('close => open', animate('250ms ease-in')),
+    transition('open => close', animate('250ms ease-in')),
   ]),
 ];

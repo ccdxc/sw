@@ -69,7 +69,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   defaultDate: Date = Utility.convertLocalTimeToUTCTime(new Date());
 
   packetFilterOptions = Utility.convertEnumToSelectItem(MonitoringMirrorSessionSpec.propInfo['packet-filters'].enum);
-  collectorTypeOptions = Utility.convertEnumToSelectItem(MonitoringMirrorCollector.propInfo['type'].enum);
+  collectorTypeOptions = Utility.convertEnumToSelectItem(MonitoringMirrorCollector.propInfo['type'].enum).filter(
+    item => item.label && !item.label.endsWith('deprecated'));
   interfaceDirectionOptions = Utility.convertEnumToSelectItem(MonitoringInterfaceMirror.propInfo['direction'].enum);
 
   rules: OrderedItem<any>[] = [];
