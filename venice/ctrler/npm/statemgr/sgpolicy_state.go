@@ -7,6 +7,7 @@ import (
 	"hash/fnv"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -24,6 +25,7 @@ import (
 
 // SgpolicyState security policy state
 type SgpolicyState struct {
+	sync.Mutex
 	NetworkSecurityPolicy *ctkit.NetworkSecurityPolicy `json:"-"` // embedded security policy object
 	groups                map[string]*SecurityGroupState
 	stateMgr              *Statemgr         // pointer to state manager
@@ -148,8 +150,8 @@ func (sgp *SgpolicyState) GetKey() string {
 func (sgp *SgpolicyState) Write() error {
 	var err error
 
-	sgp.NetworkSecurityPolicy.Lock()
-	defer sgp.NetworkSecurityPolicy.Unlock()
+	sgp.Lock()
+	defer sgp.Unlock()
 
 	prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 	newProp := sgp.stateMgr.updatePropogationStatus(sgp.NetworkSecurityPolicy.GenerationID, prop, sgp.NodeVersions)
@@ -247,6 +249,8 @@ func (sm *Statemgr) updateAttachedApps(sgp *security.NetworkSecurityPolicy) erro
 func (sgp *SgpolicyState) initNodeVersions() error {
 	dscs, _ := sgp.stateMgr.ListDistributedServiceCards()
 
+	sgp.Lock()
+	defer sgp.Unlock()
 	// walk all smart nics
 	for _, dsc := range dscs {
 		if sgp.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
@@ -262,8 +266,8 @@ func (sgp *SgpolicyState) initNodeVersions() error {
 // processDSCUpdate sgpolicy update handles for DSC
 func (sgp *SgpolicyState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
 
-	sgp.NetworkSecurityPolicy.Lock()
-	defer sgp.NetworkSecurityPolicy.Unlock()
+	sgp.Lock()
+	defer sgp.Unlock()
 	if sgp.stateMgr.isDscEnforcednMode(dsc) {
 		log.Infof("DSC %v is being tracked for propogation status for policy %s", dsc.Name, sgp.GetKey())
 		sgp.NodeVersions[dsc.Name] = ""
@@ -527,8 +531,8 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 	}
 
 	// lock policy for concurrent modifications
-	policy.NetworkSecurityPolicy.Lock()
-	defer policy.NetworkSecurityPolicy.Unlock()
+	policy.Lock()
+	defer policy.Unlock()
 
 	// update node version
 	policy.NodeVersions[nodeuuid] = generationID

@@ -5,6 +5,7 @@ package statemgr
 import (
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -21,6 +22,7 @@ import (
 
 // FirewallProfileState is a wrapper for fwProfile object
 type FirewallProfileState struct {
+	sync.Mutex
 	FirewallProfile *ctkit.FirewallProfile `json:"-"` // fwProfile object
 	stateMgr        *Statemgr              // pointer to state manager
 	NodeVersions    map[string]string      // Map fpr node -> version
@@ -173,6 +175,8 @@ func (sm *Statemgr) propgatationStatusDifferent(
 func (fps *FirewallProfileState) initNodeVersions() error {
 	dscs, _ := fps.stateMgr.ListDistributedServiceCards()
 
+	fps.Lock()
+	defer fps.Unlock()
 	// walk all smart nics
 	for _, dsc := range dscs {
 		if fps.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
@@ -188,8 +192,8 @@ func (fps *FirewallProfileState) initNodeVersions() error {
 // processDSCUpdate sgpolicy update handles for DSC
 func (fps *FirewallProfileState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
 
-	fps.FirewallProfile.Lock()
-	defer fps.FirewallProfile.Unlock()
+	fps.Lock()
+	defer fps.Unlock()
 	if fps.stateMgr.isDscEnforcednMode(dsc) {
 		log.Infof("DSC %v is being tracked for propogation status for fwprofile %s", dsc.Name, fps.GetKey())
 		fps.NodeVersions[dsc.Name] = ""
@@ -203,8 +207,8 @@ func (fps *FirewallProfileState) processDSCUpdate(dsc *cluster.DistributedServic
 
 // Write writes the object to api server
 func (fps *FirewallProfileState) Write() error {
-	fps.FirewallProfile.Lock()
-	defer fps.FirewallProfile.Unlock()
+	fps.Lock()
+	defer fps.Unlock()
 
 	prop := &fps.FirewallProfile.Status.PropagationStatus
 	newProp := fps.stateMgr.updatePropogationStatus(fps.FirewallProfile.GenerationID, prop, fps.NodeVersions)
@@ -355,8 +359,8 @@ func (sm *Statemgr) UpdateFirewallProfileStatus(nodeuuid, tenant, name, generati
 	}
 
 	// lock policy for concurrent modifications
-	fps.FirewallProfile.Lock()
-	defer fps.FirewallProfile.Unlock()
+	fps.Lock()
+	defer fps.Unlock()
 
 	if fps.NodeVersions == nil {
 		fps.NodeVersions = make(map[string]string)
