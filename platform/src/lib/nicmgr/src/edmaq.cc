@@ -141,7 +141,7 @@ EdmaQ::Reset()
 
     db_addr.lif_id = lif;
     db_addr.q_type = qtype;
-    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_NONE,
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_CLEAR,
                                         ASIC_DB_UPD_INDEX_UPDATE_NONE, false);
 
     db_data = qid << 24;
@@ -244,7 +244,7 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
 
     db_addr.lif_id = lif;
     db_addr.q_type = qtype;
-    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
                                         ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
     PAL_barrier();

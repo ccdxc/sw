@@ -569,7 +569,7 @@ NvmeLif::CmdHandler(void *req,
     //Ring doorbell at the end
     db_addr.lif_id = LifIdGet();
     db_addr.q_type = NVME_QTYPE_ARMQ;
-    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB, ASIC_DB_UPD_INDEX_SET_PINDEX, false);
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET, ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
     db_data = NVME_LIF_LOCAL_DBDATA_SET(NVME_ARMQ_EDMAQ_QID, 0 /*ring*/, edma_ring_head);
 

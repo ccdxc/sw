@@ -354,7 +354,7 @@ AdminQ::PostResponse(struct nicmgr_resp_desc *resp_desc)
     // Ring doorbell to update the PI and run response program
     db_addr.lif_id = lif;
     db_addr.q_type = resp_qtype;
-    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
                                         ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
     resp_db_data = (resp_qid << 24) | (0 << 16) | resp_tail;

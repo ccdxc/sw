@@ -251,7 +251,8 @@ NotifyQ::TxQPost(const void *desc)
 
         db_addr.lif_id = lif_id;
         db_addr.q_type = tx_qtype;
-        db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB, ASIC_DB_UPD_INDEX_SET_PINDEX, false);
+        db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
+                        ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
         tx_head = new_p_index0;
         tx_db_data = ACCEL_LIF_DBDATA_SET(tx_qid, tx_head);

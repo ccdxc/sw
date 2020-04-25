@@ -21,8 +21,8 @@ namespace pd {
 typedef enum asic_db_upd_sched_e {
     ASIC_DB_UPD_SCHED_NONE = 0,
     ASIC_DB_UPD_SCHED_EVAL = 1,
-    ASIC_DB_UPD_SCHED_COSA = 2,
-    ASIC_DB_UPD_SCHED_COSB = 3,
+    ASIC_DB_UPD_SCHED_CLEAR = 2,
+    ASIC_DB_UPD_SCHED_SET = 3,
 } asic_db_upd_sched_t;
 
 /// \brief     doorbell update index bits
@@ -91,8 +91,8 @@ using sdk::asic::pd::asic_db_upd_index_t;
 using sdk::asic::pd::asic_db_upd_sched_t;
 using asic_db_upd_sched_t::ASIC_DB_UPD_SCHED_NONE;
 using asic_db_upd_sched_t::ASIC_DB_UPD_SCHED_EVAL;
-using asic_db_upd_sched_t::ASIC_DB_UPD_SCHED_COSA;
-using asic_db_upd_sched_t::ASIC_DB_UPD_SCHED_COSB;
+using asic_db_upd_sched_t::ASIC_DB_UPD_SCHED_CLEAR;
+using asic_db_upd_sched_t::ASIC_DB_UPD_SCHED_SET;
 using asic_db_upd_index_t::ASIC_DB_UPD_INDEX_UPDATE_NONE;
 using asic_db_upd_index_t::ASIC_DB_UPD_INDEX_SET_CINDEX;
 using asic_db_upd_index_t::ASIC_DB_UPD_INDEX_SET_PINDEX;

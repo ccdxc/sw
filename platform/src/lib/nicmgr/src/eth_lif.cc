@@ -52,12 +52,6 @@ using namespace sdk::platform::utils;
 
 sdk::lib::indexer *EthLif::fltr_allocator = sdk::lib::indexer::factory(4096);
 
-static inline uint8_t
-eth_lif_db_upd (void)
-{
-    return ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
-                                 ASIC_DB_UPD_INDEX_SET_PINDEX, false);
-}
 
 const char *
 EthLif::lif_state_to_str(enum eth_lif_state state)
@@ -3130,7 +3124,8 @@ EthLif::LinkEventHandler(port_status_t *evd)
 
     db_addr.lif_id = hal_lif_info_.lif_id;
     db_addr.q_type = ETH_NOTIFYQ_QTYPE;
-    db_addr.upd = eth_lif_db_upd();
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
+                    ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
     // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
     //     hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
@@ -3178,7 +3173,8 @@ EthLif::XcvrEventHandler(port_status_t *evd)
 
     db_addr.lif_id = hal_lif_info_.lif_id;
     db_addr.q_type = ETH_NOTIFYQ_QTYPE;
-    db_addr.upd = eth_lif_db_upd();
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
+                    ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
     // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
     //     hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
@@ -3233,7 +3229,8 @@ EthLif::SendFWDownEvent()
 
     db_addr.lif_id = hal_lif_info_.lif_id;
     db_addr.q_type = ETH_NOTIFYQ_QTYPE;
-    db_addr.upd = eth_lif_db_upd();
+    db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
+                    ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
     // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
     //     hal_lif_info_.lif_id, notify_block->eid, notify_ring_head, addr);

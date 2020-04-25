@@ -1174,7 +1174,7 @@ AccelLif::accel_lif_identify_action(accel_lif_event_t event)
     rsp->base.hw_index = LifIdGet();
     rsp->base.hw_lif_local_dbaddr =
               sdk::asic::pd::asic_localdb_addr(rsp->base.hw_index, STORAGE_SEQ_QTYPE_SQ,
-                ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB, ASIC_DB_UPD_INDEX_SET_PINDEX, false));
+                ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET, ASIC_DB_UPD_INDEX_SET_PINDEX, false));
     rsp->base.hw_host_prefix = ACCEL_PHYS_ADDR_HOST_SET(1) |
                                ACCEL_PHYS_ADDR_LIF_SET(rsp->base.hw_index);
     rsp->base.hw_host_mask = ACCEL_PHYS_ADDR_HOST_SET(ACCEL_PHYS_ADDR_HOST_MASK) |

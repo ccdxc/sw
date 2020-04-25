@@ -1801,13 +1801,13 @@ ftl_lif_queues_ctl_t::init(const mpu_timestamp_init_cmd_t *cmd)
      */
     if (!db_pndx_inc.db_access.pa()) {
         db_pndx_inc.reset(qtype(),
-                          ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                          ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
                                                 ASIC_DB_UPD_INDEX_INCR_PINDEX,
                                                 false));
     }
     if (!db_sched_clr.db_access.pa()) {
         db_sched_clr.reset(qtype(),
-                           ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
+                           ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_CLEAR,
                                                  ASIC_DB_UPD_INDEX_UPDATE_NONE,
                                                  false));
     }
@@ -2262,13 +2262,13 @@ ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
      */
     if (!db_pndx_inc.db_access.pa()) {
         db_pndx_inc.reset(qtype(),
-                          ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSB,
+                          ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
                                                 ASIC_DB_UPD_INDEX_INCR_PINDEX,
                                                 false));
     }
     if (!db_sched_clr.db_access.pa()) {
         db_sched_clr.reset(qtype(),
-                           ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_COSA,
+                           ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_CLEAR,
                                                  ASIC_DB_UPD_INDEX_UPDATE_NONE,
                                                  false));
     }
