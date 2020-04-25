@@ -189,11 +189,11 @@ rfc_ctxt_destroy (rfc_ctxt_t *rfc_ctxt)
 }
 
 sdk_ret_t
-rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
-               mem_addr_t base_addr, uint32_t mem_size)
+rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_params_t *policy_params)
 {
-    uint8_t     *bits;
-    uint32_t    num_nodes = (policy->num_rules << 1) + 1;
+    uint8_t *bits;
+    policy_t *policy = &policy_params->policy;
+    uint32_t num_nodes = (policy->num_rules << 1) + 1;
 
     memset(rfc_ctxt, 0, sizeof(rfc_ctxt_t));
     rfc_ctxt->policy = policy;
@@ -280,8 +280,10 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
         rfc_ctxt->cbm = rte_bitmap_init(policy->max_rules, bits,
                                         rfc_ctxt->cbm_size);
     }
-    rfc_ctxt->base_addr = base_addr;
-    rfc_ctxt->mem_size = mem_size;
+    rfc_ctxt->base_addr = policy_params->rfc_tree_root_addr;
+    rfc_ctxt->mem_size = policy_params->rfc_mem_size;
+    rfc_ctxt->tag2class_cb = policy_params->tag2class_cb;
+    rfc_ctxt->tag2class_cb_ctxt = policy_params->tag2class_cb_ctxt;
     return SDK_RET_OK;
 
 cleanup:

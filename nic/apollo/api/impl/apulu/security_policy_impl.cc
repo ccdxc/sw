@@ -101,12 +101,32 @@ security_policy_impl::release_resources(api_base *api_obj) {
                  security_policy_impl_db()->security_policy_table_size(security_policy->af());
         security_policy_impl_db()->security_policy_idxr(security_policy->af())->free(policy_block_id);
     }
+    // release any classid values, if we used them
+    if (class_ids_.size()) {
+        for (auto it = class_ids_.cbegin(); it != class_ids_.cend(); ++it) {
+            vpc_impl_db()->release_class_id(*it, false);
+        }
+    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 security_policy_impl::nuke_resources(api_base *api_obj) {
     return this->release_resources(api_obj);
+}
+
+sdk_ret_t
+security_policy_impl::alloc_tag_class_id_cb_(uint32_t tag, uint32_t *class_id,
+                                             void *ctxt)
+{
+    sdk_ret_t ret;
+    security_policy_impl *policy_impl = (security_policy_impl *)ctxt;
+
+    ret = vpc_impl_db()->alloc_class_id(tag, false, class_id);
+    if (ret == SDK_RET_OK) {
+        policy_impl->class_ids_.push_back(*class_id);
+    }
+    return ret;
 }
 
 sdk_ret_t
@@ -140,6 +160,8 @@ security_policy_impl::program_security_policy_(pds_policy_spec_t *spec) {
     policy_params.rfc_tree_root_addr = security_policy_root_addr_;
     policy_params.rfc_mem_size =
         security_policy_impl_db()->security_policy_table_size(spec->rule_info->af);
+    policy_params.tag2class_cb = security_policy_impl::alloc_tag_class_id_cb_;
+    policy_params.tag2class_cb_ctxt = this;
     ret = rfc_policy_create(&policy_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build RFC policy %s table, err %u",

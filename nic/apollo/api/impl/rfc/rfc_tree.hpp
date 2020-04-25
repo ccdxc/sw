@@ -84,28 +84,29 @@ typedef struct rfc_tree_s {
 } rfc_tree_t;
 
 typedef struct rfc_ctxt_s {
-    policy_t      *policy;        ///< user configured policy
+    policy_t      *policy;             ///< user configured policy
     ///< phase 0 information
-    rfc_tree_t    sip_tree;       ///< RFC tree for SIP prefix
-    rfc_tree_t    dip_tree;       ///< RFC tree for DIP prefix
-    rfc_tree_t    stag_tree;      ///< RFC tree for src tags used in the policy
-    rfc_tree_t    dtag_tree;      ///< RFC tree for dst tags used in the policy
-    rfc_tree_t    port_tree;      ///< RFC tree for port
-    rfc_tree_t    proto_port_tree;///< RFC tree for protocol-port
+    rfc_tree_t     sip_tree;           ///< RFC tree for SIP prefix
+    rfc_tree_t     dip_tree;           ///< RFC tree for DIP prefix
+    rfc_tree_t     stag_tree;          ///< RFC tree for src tags used in policy
+    rfc_tree_t     dtag_tree;          ///< RFC tree for dst tags used in policy
+    rfc_tree_t     port_tree;          ///< RFC tree for port
+    rfc_tree_t     proto_port_tree;    ///< RFC tree for protocol-port
     ///< phase 1 information
-    rfc_table_t   p1_table;       ///< phase 1 RFC table
-    rfc_table_t   p2_table;       ///< phase 2 RFC table
-    rte_bitmap    *cbm;           ///< RFC class bitmap instance
-                                  ///< (used as scratch pad)
-    size_t        cbm_size;       ///< size of class-bit-map (CBM)
-    mem_addr_t    base_addr;      ///< base address of the entire RFC block
-    uint32_t      mem_size;       ///< RFC memory block size
+    rfc_table_t    p1_table;           ///< phase 1 RFC table
+    rfc_table_t    p2_table;           ///< phase 2 RFC table
+    rte_bitmap     *cbm;               ///< RFC class bitmap instance
+                                       ///< (used as scratch pad)
+    size_t         cbm_size;           ///< size of class-bit-map (CBM)
+    mem_addr_t     base_addr;          ///< base address of the entire RFC block
+    uint32_t       mem_size;           ///< RFC memory block size
+    tag2class_cb_t tag2class_cb;       ///< class id allocater
+    void           *tag2class_cb_ctxt; ///< opaque ctxt passed to above callback
 } rfc_ctxt_t;
 
 void rfc_ctxt_destroy(rfc_ctxt_t *rfc_ctxt);
 void rfc_table_destroy(rfc_table_t *rfc_table);
-sdk_ret_t rfc_ctxt_init(rfc_ctxt_t *rfc_ctxt, policy_t *policy,
-                        mem_addr_t base_addr, uint32_t mem_size);
+sdk_ret_t rfc_ctxt_init(rfc_ctxt_t *rfc_ctxt, policy_params_t *policy_params);
 void itable_add_address_inodes(uint32_t rule, inode_t *addr_inode,
                                ip_prefix_t *pfx);
 void itable_add_address_range_inodes(uint32_t rule, inode_t *addr_inode,

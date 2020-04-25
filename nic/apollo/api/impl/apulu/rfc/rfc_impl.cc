@@ -259,7 +259,7 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
     }
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->stag_tree,
-              rfc_p0_tag_tree_inode_eq_cb, rfc_compute_class_id_cb,
+              rfc_p0_tag_tree_inode_eq_cb, rfc_compute_tag_class_id_cb,
               SACL_TAG_TREE_MAX_CLASSES);
     if (ret != SDK_RET_OK) {
         return ret;
@@ -274,7 +274,7 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
     }
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->dtag_tree,
-              rfc_p0_tag_tree_inode_eq_cb, rfc_compute_class_id_cb,
+              rfc_p0_tag_tree_inode_eq_cb, rfc_compute_tag_class_id_cb,
               SACL_TAG_TREE_MAX_CLASSES);
     if (ret != SDK_RET_OK) {
         return ret;

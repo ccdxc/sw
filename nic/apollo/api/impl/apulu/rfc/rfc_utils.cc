@@ -134,8 +134,43 @@ rfc_compute_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     rfc_table->cbm_table[class_id].class_id = class_id;
     rfc_table->cbm_table[class_id].cbm = cbm_new;
     rfc_table->cbm_map[cbm_new] = class_id;
-
     return class_id;
+}
+
+uint16_t
+rfc_compute_tag_class_id_cb (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
+                             rte_bitmap *cbm, uint32_t cbm_size, void *ctxt)
+{
+    rule_t *rule;
+    uint8_t *bits;
+    sdk_ret_t ret;
+    rte_bitmap *cbm_new;
+    uint32_t class_id, idx;
+    class_id_cb_ctxt_t *cb_ctxt = (class_id_cb_ctxt_t *)ctxt;
+    inode_t *inode = cb_ctxt->inode;
+
+    if (cb_ctxt->tree->type == RFC_TREE_TYPE_STAG) {
+        rule = &rfc_ctxt->policy->rules[inode->rfc.rule_no];
+        ret = rfc_ctxt->tag2class_cb(rule->attrs.match.l3_match.src_tag,
+                                     &class_id, rfc_ctxt->tag2class_cb_ctxt);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    } else if (cb_ctxt->tree->type == RFC_TREE_TYPE_DTAG) {
+        rule = &rfc_ctxt->policy->rules[inode->rfc.rule_no];
+        ret = rfc_ctxt->tag2class_cb(rule->attrs.match.l3_match.dst_tag,
+                                     &class_id, rfc_ctxt->tag2class_cb_ctxt);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    } else {
+        // unsupported tree type
+        SDK_ASSERT(0);
+    }
+    idx = rfc_table->num_classes++;
+    posix_memalign((void **)&bits, CACHE_LINE_SIZE, cbm_size);
+    cbm_new = rte_bitmap_init(rfc_ctxt->policy->max_rules, bits, cbm_size);
+    rte_bitmap_or(cbm, cbm_new, cbm_new);
+    rfc_table->cbm_table[idx].class_id = (uint16_t)class_id;
+    rfc_table->cbm_table[idx].cbm = cbm_new;
+    rfc_table->cbm_map[cbm_new] = (uint16_t)class_id;
+    return (uint16_t)(class_id & 0xFFFF);
 }
 
 #if 0

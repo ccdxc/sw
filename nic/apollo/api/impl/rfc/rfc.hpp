@@ -24,6 +24,10 @@ typedef struct policy_s {
     rule_t             *rules;         /**< rule list */
 } policy_t;
 
+///< callback to invoke while allocating class id for given tag
+typedef sdk_ret_t (*tag2class_cb_t)(uint32_t tag, uint32_t *class_id,
+                                    void *ctxt);
+
 /**< RFC policy related params for creation of the policy */
 typedef struct policy_params_s {
     /**< policy consisting of rules */
@@ -34,6 +38,10 @@ typedef struct policy_params_s {
      *   detection
      */
     uint32_t rfc_mem_size;
+    /**< class id allocator */
+    tag2class_cb_t tag2class_cb;
+    /**< opaque ctxt passed to above callback */
+    void *tag2class_cb_ctxt;
 } policy_params_t;
 
 /**

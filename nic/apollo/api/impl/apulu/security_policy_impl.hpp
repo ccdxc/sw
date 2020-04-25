@@ -11,6 +11,7 @@
 #ifndef __SECURITY_POLICY_IMPL_HPP__
 #define __SECURITY_POLICY_IMPL_HPP__
 
+#include <list>
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -147,14 +148,22 @@ private:
                                     policy *orig_policy,
                                     api_obj_ctxt_t *obj_ctxt);
 
+    /// \brief callback function to allocate class id for given tag
+    /// \param[in]  tag         tag for which class id needs to be allocated
+    /// \param[out] class_id    class id allocated for this tag
+    /// \param[in]  ctxt        context passed back to the callback
+    static sdk_ret_t alloc_tag_class_id_cb_(uint32_t tag, uint32_t *class_id,
+                                            void *ctxt);
+
     /// \brief      fill the policy status
     /// \param[out] status status
     void fill_status_(pds_policy_status_t *status);
 
 private:
-    //P4 datapath specific state
+    std::list<uint32_t> class_ids_;
+    // P4 datapath specific state
     mem_addr_t  security_policy_root_addr_;    ///< policy root node address
-} __PACK__;
+};
 
  /// \@}
 

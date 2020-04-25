@@ -210,9 +210,7 @@ rfc_policy_create (policy_params_t *policy_params)
     }
 
     ///< allocate memory for all the RFC itree tables
-    ret = rfc_ctxt_init(&rfc_ctxt, &policy_params->policy,
-                        policy_params->rfc_tree_root_addr,
-                        policy_params->rfc_mem_size);
+    ret = rfc_ctxt_init(&rfc_ctxt, policy_params);
     if (ret != SDK_RET_OK) {
         goto cleanup;
     }
