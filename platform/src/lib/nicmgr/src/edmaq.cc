@@ -38,6 +38,10 @@ EdmaQ::EdmaQ(
         throw;
     }
 
+    // clear ring base before lif init to avoid garbage values
+    // and unexpected driver behaviour
+    MEM_CLR(ring_base, 0, (sizeof(struct edma_cmd_desc) * ring_size));
+
     comp_tail = 0;
     exp_color = 1;
     comp_base = pd->nicmgr_mem_alloc((sizeof(struct edma_comp_desc) * ring_size));
@@ -45,6 +49,10 @@ EdmaQ::EdmaQ(
         NIC_LOG_ERR("{}: Failed to allocate edma completion ring!", name);
         throw;
     }
+
+    // clear comp base before lif init to avoid garbage values
+    // and unexpected driver behaviour
+    MEM_CLR(comp_base, 0, (sizeof(struct edma_comp_desc) * ring_size));
 
     NIC_LOG_INFO("{}: edma_ring_base {:#x} edma_comp_base {:#x}",
         name, ring_base, comp_base);
