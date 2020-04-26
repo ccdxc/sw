@@ -314,7 +314,7 @@ def ValidateBatch(batchList, cookie):
         commitStatus = item[3]
 
         if IsDryRun():
-            SetObjectHwHabitantStatus(oper, obj, types_pb2.API_STATUS_OK)
+            SetObjectHwHabitantStatus(obj, oper, types_pb2.API_STATUS_OK)
             return True
 
         is_obj_present = obj.IsHwHabitant()
@@ -623,6 +623,7 @@ def DeleteObject(obj):
         if IsUpdateSupported():
             if dobj.ObjType == ObjectTypes.TUNNEL or\
                dobj.ObjType == ObjectTypes.NEXTHOP or\
+               dobj.ObjType == ObjectTypes.NEXTHOPGROUP or\
                dobj.ObjType == ObjectTypes.INTERFACE:
                 dupObj = dobj.Dup()
                 confClient = EzAccessStore.GetConfigClient(dobj.ObjType)
@@ -630,7 +631,7 @@ def DeleteObject(obj):
                     return False
                 confClient.AddObjToDict(dupObj)
                 TriggerCreate(dupObj)
-                InformDependents(dobj, 'DeleteNotify')
+            InformDependents(dobj, 'DeleteNotify')
         return True
 
     # Delete from bottom to top

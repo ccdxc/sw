@@ -30,8 +30,8 @@ e2e-targets:
        vars:
           BmOs: linux
 
- e2e-scale-linux-bm:
-   commands: ["sh", "-c", "make apulu-networking && ./run_iota.sh --pipeline apulu --testsuite apulu_scale"]
+ e2e-4g-scale-linux-bm:
+   commands: ["sh", "-c", "make apulu-networking && ./run_iota.sh --pipeline apulu --testsuite apulu_scale_4G"]
    owners: ["email:param@pensando.io"]
    area:
    sub-area:

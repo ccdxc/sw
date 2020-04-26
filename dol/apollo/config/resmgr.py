@@ -53,9 +53,14 @@ class Resmgr(base.ConfigObjectBase):
         MAX_ROUTE_TABLE = 128
         MAX_ROUTES_PER_ROUTE_TBL = 63
     elif utils.IsPipelineApulu():
-        MAX_POLICY = 32
-        MAX_ROUTE_TABLE = 8
-        MAX_ROUTES_PER_ROUTE_TBL = 16383
+        # TODO: init based on mem
+        # 32 vnics, 32 subnets, 5 policies per vnic per direction, 1 policy per subnet per direction
+        # ((32 * 5) * 2) + ((32 * 1) * 2) = 384
+        MAX_POLICY = 384 # 384 (8G) and 32 (4G)
+        MAX_RULES_PER_V4_POLICY = 1023
+        MAX_RULES_PER_V6_POLICY = 15
+        MAX_ROUTE_TABLE = 1024 # 1024 (8G) and 8 (4G)
+        MAX_ROUTES_PER_ROUTE_TBL = 16383 # 1023 (8G) and 16383 (4G)
     else:
         MAX_POLICY = 1023
         MAX_ROUTE_TABLE = 1024
@@ -111,6 +116,7 @@ class Resmgr(base.ConfigObjectBase):
 
     LocalMappingIdAllocator = iter(irange(1,128*1024))
     RemoteMappingIdAllocator = iter(irange(1,16*1024*1024))
+    VnicMacAllocator = objects.TemplateFieldObject("macstep/00DD.0000.0001/0000.0000.0001")
 
     def __init__(self, node):
         super().__init__()
@@ -132,7 +138,6 @@ class Resmgr(base.ConfigObjectBase):
         self.V6SecurityPolicyIdAllocator = iter(irange(10001,12048))
         self.SecurityPolicyIdAllocator = iter(irange(1,4*1024*1024))
         self.VirtualRouterMacAllocator = objects.TemplateFieldObject("macstep/00CC.0000.0001/0000.0000.0001")
-        self.VnicMacAllocator = objects.TemplateFieldObject("macstep/00DD.0000.0001/0000.0000.0001")
         self.RemoteMappingMacAllocator = objects.TemplateFieldObject("macstep/00EE.0000.0001/0000.0000.0001")
         self.TepIpAddressAllocator = ipaddress.IPv4Network('172.16.0.0/16').hosts()
         self.TepIpv6AddressAllocator = ipaddress.IPv6Network('ffff::100:0/104').hosts()

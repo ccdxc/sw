@@ -55,7 +55,7 @@ class VnicObject(base.ConfigObjectBase):
             else:
                 self.MACAddr = vmac
         else:
-            self.MACAddr =  ResmgrClient[node].VnicMacAllocator.get()
+            self.MACAddr =  Resmgr.VnicMacAllocator.get()
         self.Dot1Qenabled = getattr(spec, 'tagged', True)
         if self.Dot1Qenabled or utils.IsDol():
             self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
@@ -83,9 +83,16 @@ class VnicObject(base.ConfigObjectBase):
         policerid = getattr(spec, 'txpolicer', 0)
         self.TxPolicer = PolicerClient.GetPolicerObject(node, policerid)
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
-        self.__attachpolicy = getattr(spec, 'policy', False) and utils.IsVnicPolicySupported()
-        # get num of policies [0-5] in rrob order if needed
-        self.__numpolicy = ResmgrClient[node].NumVnicPolicyAllocator.rrnext() if self.__attachpolicy else 0
+        vnicPolicySpec = getattr(spec, 'policy', None)
+        if vnicPolicySpec and utils.IsVnicPolicySupported():
+            count = getattr(vnicPolicySpec, 'count', 'random')
+            if count == 'random':
+                # get num of policies [0-5] in rrob fashion
+                self.__numpolicy = ResmgrClient[node].NumVnicPolicyAllocator.rrnext()
+            else:
+                self.__numpolicy = int(count)
+        else:
+            self.__numpolicy = 0
         self.QinQenabled = False
         self.DeriveOperInfo(node)
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
@@ -127,12 +134,11 @@ class VnicObject(base.ConfigObjectBase):
                 logger.info("- HostIf:%s" % self.SUBNET.HostIfUuid)
         logger.info(f"- IngressPolicer:{self.RxPolicer}")
         logger.info(f"- EgressPolicer:{self.TxPolicer}")
-        if self.__attachpolicy:
-            logger.info(f"- NumSecurityPolicies:{self.__numpolicy}")
-            logger.info(f"- Ing V4 Policies:{self.IngV4SecurityPolicyIds}")
-            logger.info(f"- Ing V6 Policies:{self.IngV6SecurityPolicyIds}")
-            logger.info(f"- Egr V4 Policies:{self.EgV4SecurityPolicyIds}")
-            logger.info(f"- Egr V6 Policies:{self.EgV6SecurityPolicyIds}")
+        logger.info(f"- NumSecurityPolicies:{self.__numpolicy}")
+        logger.info(f"- Ing V4 Policies:{self.IngV4SecurityPolicyIds}")
+        logger.info(f"- Ing V6 Policies:{self.IngV6SecurityPolicyIds}")
+        logger.info(f"- Egr V4 Policies:{self.EgV4SecurityPolicyIds}")
+        logger.info(f"- Egr V6 Policies:{self.EgV6SecurityPolicyIds}")
         logger.info(f"- HasPublicIp:{self.HasPublicIp}")
         if self.VnicType:
             logger.info(f"- VnicType:{self.VnicType}")
@@ -293,6 +299,7 @@ class VnicObject(base.ConfigObjectBase):
         for txmirrorid in self.TxMirror:
             txmirrorobj = mirror.client.GetMirrorObject(node, txmirrorid)
             self.TxMirrorObjs.update({txmirrorid: txmirrorobj})
+        self.Generate_vnic_security_policies()
         super().DeriveOperInfo()
         return
 
@@ -427,12 +434,6 @@ class VnicObjectClient(base.ConfigClientBase):
         else:
             uuid = spec.Id
         return utils.PdsUuid.GetIdfromUUID(uuid)
-
-    def AssociateObjects(self, node):
-        # generate security policies and associate with vnic
-        for vnic in self.Objects(node):
-            vnic.Generate_vnic_security_policies()
-        return
 
     def ValidateLearntMacEntries(self, node, ret, cli_op):
         if utils.IsDryRun(): return True

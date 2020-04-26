@@ -26,7 +26,7 @@ def trigger_techsupport_requests(tc):
     req = api.Trigger_CreateAllParallelCommandsRequest()
     for node in tc.nodes:
         api.Logger.info(f"Collecting techsupport from {node}")
-        api.Trigger_AddNaplesCommand(req, node, TS_SCRIPT)
+        api.Trigger_AddNaplesCommand(req, node, TS_SCRIPT, timeout=300)
     tc.resp = api.Trigger(req)
     return True
 

@@ -17,7 +17,6 @@ from apollo.config.objects.nexthop import client as NhClient
 from apollo.config.objects.nexthop_group import client as NhGroupClient
 from apollo.config.objects.interface import client as InterfaceClient
 from apollo.config.objects.port import client as PortClient
-from apollo.config.objects.vnic import client as VnicClient
 from apollo.config.objects.metaswitch.bgp import client as BGPClient
 from apollo.config.objects.metaswitch.bgp_peer import client as BGPPeerClient
 from apollo.config.objects.metaswitch.bgp_peeraf import client as BGPPeerAfClient
@@ -474,7 +473,6 @@ class VpcObjectClient(base.ConfigClientBase):
             NhGroupClient.AssociateObjects(node)
             tunnel.client.FillUnderlayNhGroups(node)
             route.client.FillNhGroups(node)
-            VnicClient.AssociateObjects(node)
         return
 
     def CreateObjects(self, node):

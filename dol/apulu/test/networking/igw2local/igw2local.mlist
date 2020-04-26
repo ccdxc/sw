@@ -16,23 +16,9 @@ modules:
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
 
     - module:
-        name    : IPV6_UDP_ENCAP
-        spec    : igw2local.testspec
-        enable  : False
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
-
-    # dnat on msft is not working
-    - module:
         name    : IPV4_DNAT
         spec    : igw2local.testspec
         enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
 
-    - module:
-        name    : IPV6_DNAT
-        spec    : igw2local.testspec
-        enable  : False
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING

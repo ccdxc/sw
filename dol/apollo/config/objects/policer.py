@@ -147,6 +147,10 @@ class PolicerObjectClient(base.ConfigClientBase):
         if self.txpolicercount > Resmgr.MAX_POLICER_PER_DIRECTION:
             return False, "Egress policer count has exceeded limit of %d" %\
                                 (Resmgr.MAX_POLICER_PER_DIRECTION)
+        logger.info(f"Generated {self.rxpolicercount} Rx {self.ObjType.name} "
+                    f"Objects in {node}")
+        logger.info(f"Generated {self.txpolicercount} Tx {self.ObjType.name} "
+                    f"Objects in {node}")
         return True, ""
 
 client = PolicerObjectClient()

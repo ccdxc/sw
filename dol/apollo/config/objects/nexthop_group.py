@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import copy
 import pdb
 from collections import defaultdict
 

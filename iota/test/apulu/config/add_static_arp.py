@@ -39,6 +39,8 @@ def __add_static_arp():
 
     for cmd in resp.commands:
         if cmd.exit_code != 0:
+            api.Logger.error("Failed to install static arp entries")
+            api.PrintCommandResults(cmd)
             return api.types.status.FAILURE
 
     return api.types.status.SUCCESS

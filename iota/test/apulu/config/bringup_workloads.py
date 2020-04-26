@@ -71,7 +71,10 @@ def __add_workloads(redirect_port):
         wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
         if redirect_port:
             _add_exposed_ports(wl_msg)
-        api.Logger.info(f"Workload {wl_msg.workload_name} Node {wl_msg.node_name} Intf {wl_msg.interface} IP {wl_msg.ip_prefix} MAC {wl_msg.mac_address}")
+        api.Logger.info(f"Workload {wl_msg.workload_name} "
+                        f"Node {wl_msg.node_name} Intf {wl_msg.interface} "
+                        f"IP {wl_msg.ip_prefix} MAC {wl_msg.mac_address}"
+                        f"VLAN {wl_msg.encap_vlan}")
 
     if len(req.workloads):
         api.Logger.info("Adding %d Workloads" % len(req.workloads))

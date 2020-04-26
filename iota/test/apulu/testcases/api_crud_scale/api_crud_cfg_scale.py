@@ -22,6 +22,7 @@ def TriggerAPIConfig(nodes, objType, objClient, operFn):
         api.Logger.critical(f"Invalid operation {operFn} on {objType}")
         return api.types.status.FAILURE
     for node in nodes:
+        RunMemoryCmds(node)
         api.Logger.info(f"API_CRUD_CFG_SCALE : Oper {operFn} for {objType} in {node}")
         if not cfgFn(node):
             api.Logger.error(f"API_CRUD_CFG_SCALE : Oper {operFn} failed for {objType} in {node}")

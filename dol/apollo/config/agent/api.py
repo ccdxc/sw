@@ -55,7 +55,7 @@ from infra.common.logging import logger
 
 # Connection timeout - 3mins
 MAX_CONNECT_TIMEOUT = 180
-MAX_MSG_LEN = 1024 * 1024 * 10
+MAX_MSG_LEN = 1024 * 1024 * 100
 # RPC Timeout - 20mins
 MAX_GRPC_WAIT = 1200
 MAX_BATCH_SIZE = 64

@@ -1,10 +1,10 @@
 meta:
-    name        : apulu_scale
-    description : Apulu Scale Config Testsuite
+    name        : apulu_scale_4G
+    description : Apulu Scale Config for 4G Testsuite
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
-    os          : [ linux, freebsd ]
+    os          : [ linux ]
 
 packages:
     - iota.test.apulu
@@ -20,8 +20,8 @@ setup:
         - step : config.topology
           args :
              spec :
-                node1 : 2naples_bm_dynamic_scale_node1.cfgyml
-                node2 : 2naples_bm_dynamic_scale_node2.cfgyml
+                node1 : 2naples_bm_dynamic_4G_scale_node1.cfgyml
+                node2 : 2naples_bm_dynamic_4G_scale_node2.cfgyml
         - step : config.bringup_workloads
         - step : config.add_routes
 

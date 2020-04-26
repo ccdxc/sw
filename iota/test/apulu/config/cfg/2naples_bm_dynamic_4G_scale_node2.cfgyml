@@ -20,15 +20,16 @@ device:
     stack       : ipv4 # ipv4 (default), ipv6
     bridging    : false # false (default), true
     learning    : false # false (default), true
-    ipaddress   : '1.0.0.2' # Taken from resmgr
+    ipaddress   : '1.0.0.3' # Taken from resmgr
     gateway     : '1.0.0.1' # Taken from resmgr
-    macaddress  : macaddr/0000.aaaa.aaa1
+    macaddress  : macaddr/0000.bbbb.bbb1
     encap       : vxlan # vxlan or mplsodup
     tunnel      :
         - count : 1023
           type  : underlay
         - count : 1024
           type  : underlay-ecmp
+
 uplink:
     - entry:
         id      : uplink0
@@ -76,12 +77,14 @@ vpc:
           v4prefixlen : 10
           v6prefixlen : 64
           vnic:
-            - count   : 15
-              ipcount : 32            # Local IP mapping per vnic
+            - count   : 1
+              ipcount : 32
               public  : true
-              tagged  : false         # true or false (default true)
-              # usehostif - Inherit subnet's host lif (default true)
-              usehostif: false
+              tagged  : false
+            - count   : 14
+              ipcount : 32
+              public  : true
+              tagged  : true
           rmap:                       # Remote IP mappings per subnet
             - count : 204 #204800
       #nat:
