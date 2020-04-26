@@ -287,17 +287,15 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.DistributedServiceCard) (*clu
 				log.Infof("Generated event, type: %v, msg: %s", evtType, msg)
 			}
 		}
+		refObj.Status.Conditions = updObj.Status.Conditions
 
 		// Ignore the time-stamp provided by NMD and replace it with our own.
 		// This will help mitigating issues due to clock misalignments between Venice and NAPLES
 		// As long as it gets periodic updates, CMD is happy.
 		// If it happens to process an old message by mistake, the next one will correct it.
-		if updHealthCond != nil {
-			updHealthCond.LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
+		if refHealthCond != nil {
+			refHealthCond.LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
 		}
-
-		// Store the update in local cache
-		refObj.Status.Conditions = updObj.Status.Conditions
 	}
 
 	err = s.stateMgr.UpdateSmartNIC(refObj, updateAPIServer, false)

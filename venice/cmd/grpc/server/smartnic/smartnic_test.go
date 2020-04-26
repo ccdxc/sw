@@ -1051,6 +1051,99 @@ func TestUpdateSmartNIC(t *testing.T) {
 	AssertOk(t, err, "Failed to delete nic object %s", nicName)
 }
 
+func TestNaplesTimeDrift(t *testing.T) {
+
+	// Init required components
+	testSetup()
+	defer testTeardown()
+
+	// Verify create nic
+	nicName := "2222.2222.2222"
+	nic := cmd.DistributedServiceCard{
+		TypeMeta:   api.TypeMeta{Kind: "DistributedServiceCard"},
+		ObjectMeta: api.ObjectMeta{Name: nicName},
+		Spec: cmd.DistributedServiceCardSpec{
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "10.1.1.1/24",
+			},
+			MgmtMode:    cmd.DistributedServiceCardSpec_NETWORK.String(),
+			NetworkMode: cmd.DistributedServiceCardSpec_OOB.String(),
+			ID:          nicName,
+		},
+		Status: cmd.DistributedServiceCardStatus{
+			PrimaryMAC:     "2222.2222.2222",
+			AdmissionPhase: "UNKNOWN",
+		},
+	}
+	nicObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Create(context.Background(), &nic)
+	AssertOk(t, err, "Failed to create nic object %s", nicName)
+	verifySmartNICObj(t, nicName, true, cmd.DistributedServiceCardStatus_UNKNOWN.String(), "")
+
+	// Verify SmartNIC object has UNREACHABLE condition
+	f2 := func() (bool, interface{}) {
+
+		meta := api.ObjectMeta{
+			Name: nicName,
+		}
+		nicObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), &meta)
+		if err != nil || nicObj == nil || len(nicObj.Status.Conditions) == 0 ||
+			nicObj.Status.Conditions[0].Type != cmd.DSCCondition_NIC_HEALTH_UNKNOWN.String() ||
+			nicObj.Status.Conditions[0].Status != cmd.ConditionStatus_TRUE.String() {
+			log.Errorf("Failed to validate SmartNIC condition, nicObj: %+v, err: %v",
+				nicObj, err)
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f2, "Failed to verify SmartNIC object has UNREACHABLE condition set",
+		string("10ms"), string("3m"))
+
+	// Duration in past
+	duration, _ := time.ParseDuration("-5m")
+	// Verify update nic
+	nic = cmd.DistributedServiceCard{
+		TypeMeta:   nicObj.TypeMeta,
+		ObjectMeta: nicObj.ObjectMeta,
+		Status: cmd.DistributedServiceCardStatus{
+			AdmissionPhase: nicObj.Status.AdmissionPhase,
+			Conditions: []cmd.DSCCondition{
+				{
+					Type:               cmd.DSCCondition_HEALTHY.String(),
+					Status:             cmd.ConditionStatus_FALSE.String(),
+					LastTransitionTime: time.Now().Add(duration).UTC().Format(time.RFC3339),
+				},
+			},
+		},
+	}
+	nicObj, err = tInfo.smartNICServer.UpdateSmartNIC(&nic)
+	AssertOk(t, err, "Failed to update nic object %s", nicName)
+
+	// Verify SmartNIC object has UNREACHABLE condition
+	f3 := func() (bool, interface{}) {
+
+		meta := api.ObjectMeta{
+			Name: nicName,
+		}
+		nicObj, err := tInfo.apiClient.ClusterV1().DistributedServiceCard().Get(context.Background(), &meta)
+		if err != nil || nicObj == nil || len(nicObj.Status.Conditions) == 0 ||
+			nicObj.Status.Conditions[0].Type != cmd.DSCCondition_HEALTHY.String() &&
+				nicObj.Status.Conditions[0].Status != cmd.ConditionStatus_TRUE.String() {
+			log.Errorf("Failed to validate SmartNIC condition, nicObj: %+v, err: %v",
+				nicObj, err)
+			return false, nil
+		}
+
+		return true, nil
+	}
+	AssertEventually(t, f3, "Failed to verify SmartNIC object has HEALTHY condition set",
+		string("10ms"), string("30s"))
+
+	// delete nic
+	err = deleteSmartNIC(nic.ObjectMeta)
+	AssertOk(t, err, "Failed to delete nic object %s", nicName)
+}
+
 func TestDeleteSmartNIC(t *testing.T) {
 
 	testSetup()
