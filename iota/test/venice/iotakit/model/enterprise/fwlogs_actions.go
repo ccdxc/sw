@@ -354,7 +354,7 @@ func (sm *SysModel) NewFwlogPolicy(name string) *objects.FwlogPolicyCollection {
 					},
 				},
 				Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
-				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String()},
+				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 				Config: &monitoring.SyslogExportConfig{
 					FacilityOverride: monitoring.SyslogFacility_LOG_LOCAL0.String(),
 				},

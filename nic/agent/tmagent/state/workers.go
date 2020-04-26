@@ -14,6 +14,7 @@ type workers struct {
 
 func (w *workers) postWorkItem(wi func()) {
 	w.workItems <- wi
+	metric.addPendingItem()
 }
 
 func doWork(ctx context.Context, workItems <-chan func()) {
@@ -29,6 +30,7 @@ func doWork(ctx context.Context, workItems <-chan func()) {
 			return
 		case wi := <-workItems:
 			wi()
+			metric.subtractPendingItem()
 		}
 	}
 }

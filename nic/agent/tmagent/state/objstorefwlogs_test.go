@@ -12,6 +12,7 @@ import (
 	"net/http"
 	_ "os"
 	_ "os/exec"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -54,7 +55,6 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	l, err := net.Listen("tcp", "127.0.0.1:")
 	AssertOk(t, err, "failed listen")
 	minioServer(l)
-	defer l.Close()
 	url := l.Addr().(*net.TCPAddr).String()
 	// url := "127.0.0.1:19001"
 	// url := "127.0.0.1:9000"
@@ -85,59 +85,165 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
-	defer ps.Close()
 
 	err = ps.FwlogInit(FwlogIpcShm)
 	AssertOk(t, err, "failed to init FwLog")
-
-	err = createFwlogPolicy(ctx, ps)
-	AssertOk(t, err, "failed to create policy")
 
 	testChannel := make(chan TestObject, 10000)
 	err = ps.ObjStoreInit("1", r, time.Duration(1)*time.Second, testChannel)
 	AssertOk(t, err, "failed to init objectstore")
 
-	srcIPStr := "192.168.10.1"
-	srcIP, err := netutils.IPv4ToUint32(srcIPStr)
-	AssertOk(t, err, "failed to convert ip address")
+	t.Run("TestDenyFilter", func(t *testing.T) {
+		err = createFwlogPolicy(ctx, ps, "psmTarget", monitoring.FwlogFilter_FIREWALL_ACTION_DENY)
+		AssertOk(t, err, "failed to create policy")
 
-	destIPStr := "192.168.20.1"
-	destIP, err := netutils.IPv4ToUint32(destIPStr)
-	AssertOk(t, err, "failed to convert ip address")
+		// send logs
+		generateLogs(t, ps, halproto.SecurityAction_SECURITY_RULE_ACTION_DENY, 1)
+		testObject := <-testChannel
+		verifyLog(t, testObject)
 
-	// send logs
-	events := []struct {
-		msgBsd     string
-		msgRfc5424 string
-		fwEvent    *halproto.FWEvent
-	}{
-		{
-			fwEvent: &halproto.FWEvent{
-				SourceVrf:       65,
-				DestVrf:         65,
-				Sipv4:           srcIP,
-				Dipv4:           destIP,
-				Dport:           10000,
-				IpProt:          1,
-				Fwaction:        halproto.SecurityAction_SECURITY_RULE_ACTION_DENY,
-				Direction:       0,
-				Alg:             halproto.ALGName_APP_SVC_TFTP,
-				SessionId:       uint64(1000),
-				ParentSessionId: uint64(1001),
-				RuleId:          uint64(1000),
-				Icmptype:        0,
-				Icmpcode:        0,
-				Icmpid:          0,
-				AppId:           32,
-			},
-		},
-	}
+		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
+		AssertOk(t, err, "failed to create policy")
+	})
 
-	for _, e := range events {
-		ps.ProcessFWEvent(e.fwEvent, time.Now())
-	}
+	t.Run("TestAllowFilter", func(t *testing.T) {
+		err = createFwlogPolicy(ctx, ps, "psmTarget", monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW)
+		AssertOk(t, err, "failed to create policy")
 
-	testObject := <-testChannel
+		// send logs
+		generateLogs(t, ps, halproto.SecurityAction_SECURITY_RULE_ACTION_ALLOW, 1)
+		testObject := <-testChannel
+		verifyLog(t, testObject)
+
+		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
+		AssertOk(t, err, "failed to create policy")
+	})
+
+	t.Run("TestAllFilter", func(t *testing.T) {
+		err = createFwlogPolicy(ctx, ps, "psmTarget", monitoring.FwlogFilter_FIREWALL_ACTION_ALL)
+		AssertOk(t, err, "failed to create policy")
+
+		// send logs
+		generateLogs(t, ps, halproto.SecurityAction_SECURITY_RULE_ACTION_ALLOW, 1)
+		testObject := <-testChannel
+		verifyLog(t, testObject)
+
+		generateLogs(t, ps, halproto.SecurityAction_SECURITY_RULE_ACTION_DENY, 1)
+		testObject = <-testChannel
+		verifyLog(t, testObject)
+
+		generateLogs(t, ps, halproto.SecurityAction_SECURITY_RULE_ACTION_REJECT, 1)
+		testObject = <-testChannel
+		verifyLog(t, testObject)
+
+		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
+		AssertOk(t, err, "failed to create policy")
+	})
+
+	t.Run("TestNoneFilter", func(t *testing.T) {
+		err = createFwlogPolicy(ctx, ps, "psmTarget", monitoring.FwlogFilter_FIREWALL_ACTION_NONE)
+		AssertOk(t, err, "failed to create policy")
+
+		// Since there will be no logs reported on test channel, it should time out.
+		// send logs
+		generateLogs(t, ps, halproto.SecurityAction_SECURITY_RULE_ACTION_ALLOW, 1)
+		timedOut := false
+		select {
+		case <-time.After(time.Second):
+			timedOut = true
+		case <-testChannel:
+			timedOut = false
+		}
+		Assert(t, timedOut, "received log even after None filter")
+
+		generateLogs(t, ps, halproto.SecurityAction_SECURITY_RULE_ACTION_DENY, 1)
+		timedOut = false
+		select {
+		case <-time.After(time.Second):
+			timedOut = true
+		case <-testChannel:
+			timedOut = false
+		}
+		Assert(t, timedOut, "received log even after None filter")
+
+		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
+		AssertOk(t, err, "failed to create policy")
+	})
+
+	// TestObjStoreErrors tests the error scenarios in the object store pipeline
+	t.Run("TestObjStoreErrors", func(t *testing.T) {
+		// Pass nil resolver
+		err = ps.ObjStoreInit("1", nil, time.Duration(1)*time.Second, nil)
+		Assert(t, err != nil, "failed to init objectstore")
+	})
+
+	// TestInternalUntriggeredFunctions tests the functions that are not triggered by the testcases written above
+	t.Run("TestInternalUntriggeredFunctions", func(t *testing.T) {
+		metric.addDrop()
+		Assert(t, metric.fwlogDrops.Value() == 1, "fwlogDrops metric did not update")
+		metric.addSuccess()
+		Assert(t, metric.fwlogSuccess.Value() == 6, "fwlogSuccess metric did not update, current value", metric.fwlogSuccess.Value())
+		metric.addRetries(5)
+		Assert(t, metric.fwlogRetries.Get("5").String() == "1", "fwlogRetries metric did not update")
+	})
+
+	// Close the first ps
+	ps.Close()
+
+	// Init new ps for following tests
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
+
+	ps, err = NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
+	AssertOk(t, err, "failed to create tp agent")
+	Assert(t, ps != nil, "invalid policy state received")
+	defer ps.Close()
+
+	err = ps.FwlogInit(FwlogIpcShm)
+	AssertOk(t, err, "failed to init FwLog")
+
+	err = ps.ObjStoreInit("1", r, time.Duration(1)*time.Second, nil)
+	AssertOk(t, err, "failed to init objectstore")
+
+	// TestInternalUntriggeredFunctions tests the functions that are not triggered by the testcases written above
+	t.Run("TestConnectivityLoss", func(t *testing.T) {
+		// debug.SetGCPercent(-10)
+		err = createFwlogPolicy(ctx, ps, "psmTarget", monitoring.FwlogFilter_FIREWALL_ACTION_ALL)
+		AssertOk(t, err, "failed to create policy")
+		memstats := runtime.MemStats{}
+		runtime.ReadMemStats(&memstats)
+		bHeapAlloc := memstats.HeapAlloc
+		// fmt.Println("HeapStats beofre pushing logs", memstats.HeapAlloc, memstats.HeapInuse)
+		// 100000 logs should not need more then 20 Mb.
+		// 100000 * 200 bytes = 20Mb
+		// 100000 logs will be able to hold 17mins worth of fwlogs at the sustained rate of 100/s
+		numLogs := 100000
+		maxLogLimitPerFile := 6000
+
+		generateLogs(t, ps, halproto.SecurityAction_SECURITY_RULE_ACTION_ALLOW, numLogs)
+
+		// Wait for all the pending items to get ingested into the pipeline
+		// 17: 100000/6000
+		AssertEventually(t, func() (bool, interface{}) {
+			return metric.fwlogPendingItems.Value() == int64(numLogs/maxLogLimitPerFile), nil
+		}, "syslog reconnect failed")
+
+		memstats = runtime.MemStats{}
+		runtime.ReadMemStats(&memstats)
+		aHeapAlloc := memstats.HeapAlloc
+
+		fmt.Println("Used heap", (aHeapAlloc-bHeapAlloc)/1000000)
+		Assert(t, (aHeapAlloc-bHeapAlloc)/1000000 <= 50, "storing %d logs is taking more then 50Mb", numLogs)
+
+		err = deleteFwlogPolicy(ctx, ps, "psmTarget")
+		AssertOk(t, err, "failed to create policy")
+	})
+
+	// done := make(chan bool)
+	// <-done
+}
+
+func verifyLog(t *testing.T, testObject TestObject) {
 	Assert(t, testObject.ObjectName != "", "object name is empty")
 	Assert(t, testObject.BucketName == "default.fwlogs", "bucket name is not correct")
 	Assert(t, testObject.IndexBucketName == "meta-default.fwlogs", "index bucket name is not correct")
@@ -157,27 +263,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 
 	// Check metrics
 	Assert(t, metric.fwlogDrops.Value() == int64(0), "fwlog object got dropped")
-	Assert(t, metric.fwlogSuccess.Value() == int64(1), "fwlog object success metric is 0, expected 1")
-
-	// TestObjStoreErrors tests the error scenarios in the object store pipeline
-	t.Run("TestObjStoreErrors", func(t *testing.T) {
-		// Pass nil resolver
-		err = ps.ObjStoreInit("1", nil, time.Duration(1)*time.Second, nil)
-		Assert(t, err != nil, "failed to init objectstore")
-	})
-
-	// TestInternalUntriggeredFunctions tests the functions that are not triggered by the testcases written above
-	t.Run("TestInternalUntriggeredFunctions", func(t *testing.T) {
-		metric.addDrop()
-		Assert(t, metric.fwlogDrops.Value() == 1, "fwlogDrops metric did not update")
-		metric.addSuccess()
-		Assert(t, metric.fwlogSuccess.Value() == 2, "fwlogSuccess metric did not update")
-		metric.addRetries(5)
-		Assert(t, metric.fwlogRetries.Get("5").String() == "1", "fwlogRetries metric did not update")
-	})
-
-	// done := make(chan bool)
-	// <-done
+	Assert(t, metric.fwlogSuccess.Value() != int64(0), "fwlog object success metric is 0")
 }
 
 func verifyData(t *testing.T, data bytes.Buffer) {
@@ -200,20 +286,66 @@ func verifyData(t *testing.T, data bytes.Buffer) {
 	Assert(t, lines[1][18] == "1", "incorrect count")
 }
 
-func createFwlogPolicy(ctx context.Context, ps *PolicyState) error {
+func createFwlogPolicy(ctx context.Context, ps *PolicyState, name string, filter monitoring.FwlogFilter) error {
 	policy := &tpmprotos.FwlogPolicy{
 		TypeMeta: api.TypeMeta{
 			Kind: "FwlogPolicy",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: "policy2",
+			Name: name,
 		},
 		Spec: monitoring.FwlogPolicySpec{
-			Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
+			Filter: []string{filter.String()},
 			PSMTarget: &monitoring.PSMExportTarget{
 				Enable: true,
 			},
 		},
 	}
 	return ps.CreateFwlogPolicy(ctx, policy)
+}
+
+func deleteFwlogPolicy(ctx context.Context, ps *PolicyState, name string) error {
+	policy := &tpmprotos.FwlogPolicy{
+		TypeMeta: api.TypeMeta{
+			Kind: "FwlogPolicy",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+	}
+	return ps.DeleteFwlogPolicy(ctx, policy)
+}
+
+func generateLogs(t *testing.T, ps *PolicyState, action halproto.SecurityAction, count int) {
+	srcIPStr := "192.168.10.1"
+	srcIP, err := netutils.IPv4ToUint32(srcIPStr)
+	AssertOk(t, err, "failed to convert ip address")
+
+	destIPStr := "192.168.20.1"
+	destIP, err := netutils.IPv4ToUint32(destIPStr)
+	AssertOk(t, err, "failed to convert ip address")
+
+	// send logs
+	for i := 0; i < count; i++ {
+		fwEvent := &halproto.FWEvent{
+			SourceVrf:       65,
+			DestVrf:         65,
+			Sipv4:           srcIP,
+			Dipv4:           destIP,
+			Dport:           10000,
+			IpProt:          1,
+			Fwaction:        action,
+			Direction:       0,
+			Alg:             halproto.ALGName_APP_SVC_TFTP,
+			SessionId:       uint64(1000),
+			ParentSessionId: uint64(1001),
+			RuleId:          uint64(1000),
+			Icmptype:        0,
+			Icmpcode:        0,
+			Icmpid:          0,
+			AppId:           32,
+		}
+
+		ps.ProcessFWEvent(fwEvent, time.Now())
+	}
 }
