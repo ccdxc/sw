@@ -116,6 +116,23 @@ policy_add_rules (pds_batch_ctxt_t bctxt, std::string cidr_str)
 }
 
 static void
+policy_rule_read_verify (void)
+{
+    sdk_ret_t ret;
+    pds_policy_rule_key_t key;
+    pds_policy_rule_info_t info;
+    uint32_t rule_id = 513;
+
+    for (uint32_t i = 0; i < k_num_rule_add; i++) {
+        key.rule_id = int2pdsobjkey(rule_id + i);
+        key.policy_id = int2pdsobjkey(TEST_POLICY_ID_BASE + 1);
+        memset(&info, 0, sizeof(info));
+        ret = pds_policy_rule_read(&key, &info);
+        ASSERT_TRUE(ret == SDK_RET_OK);
+    }
+}
+
+static void
 policy_add_rules_verify (void)
 {
     pds_policy_info_t info;
@@ -133,6 +150,8 @@ policy_add_rules_verify (void)
                 k_num_init_rules + k_num_rule_add);
     SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
     info.spec.rule_info = NULL;
+    // do a GET on all additional rules
+    policy_rule_read_verify();
 }
 
 static void

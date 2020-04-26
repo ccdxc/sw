@@ -470,8 +470,8 @@ route::read(pds_route_info_t *info) {
                                    ROUTE_INFO_SIZE(0));
     ret = pds_route_table_read(&key_.route_table_id, &route_table_info);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to get route table %s size",
-                      key_.route_table_id.str());
+        PDS_TRACE_ERR("Failed to get route table %s size, err %u",
+                      key_.route_table_id.str(), ret);
         goto end;
     }
     num_routes = route_table_info.spec.route_info->num_routes;
@@ -482,8 +482,8 @@ route::read(pds_route_info_t *info) {
     route_table_info.spec.route_info->num_routes = num_routes;
     ret = pds_route_table_read(&key_.route_table_id, &route_table_info);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to read all route table %s routes",
-                      key_.route_table_id.str());
+        PDS_TRACE_ERR("Failed to read all route table %s routes, err %u",
+                      key_.route_table_id.str(), ret);
         goto end;
     }
     // walk the route table and find the route of interest

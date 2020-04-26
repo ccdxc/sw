@@ -543,6 +543,58 @@ policy_rule::add_deps(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+policy_rule::read(pds_policy_rule_info_t *info) {
+    sdk_ret_t ret;
+    uint32_t num_rules;
+    rule_info_t *rule_info;
+    pds_policy_info_t policy_info;
+
+    memset(&policy_info, 0, sizeof(policy_info));
+    // get number of rules
+    policy_info.spec.rule_info =
+        (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                  POLICY_RULE_INFO_SIZE(0));
+    ret = pds_policy_read(&key_.policy_id, &policy_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to get policy %s size, err %u",
+                      key_.policy_id.str(), ret);
+        goto end;
+    }
+    num_rules = policy_info.spec.rule_info->num_rules;
+    SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, policy_info.spec.rule_info);
+    policy_info.spec.rule_info =
+        (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                  POLICY_RULE_INFO_SIZE(num_rules));
+    policy_info.spec.rule_info->num_rules = num_rules;
+    ret = pds_policy_read(&key_.policy_id, &policy_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read all policy %s rules, err %u",
+                      key_.policy_id.str(), ret);
+        goto end;
+    }
+    // walk the route table and find the route of interest
+    rule_info = policy_info.spec.rule_info;
+    for (uint32_t i = 0; i < num_rules; i++) {
+        if (key_.policy_id == rule_info->rules[i].key) {
+            // fill the spec
+            memcpy(&info->spec.key, &key_, sizeof(key_));
+            memcpy(&info->spec.attrs, &rule_info->rules[i].attrs,
+                   sizeof(info->spec.attrs));
+            break;
+        }
+        // continue the search
+    }
+
+end:
+
+    if (policy_info.spec.rule_info) {
+         SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, policy_info.spec.rule_info);
+         policy_info.spec.rule_info = NULL;
+    }
+    return ret;
+}
+
+sdk_ret_t
 policy_rule::add_to_db(void) {
     return policy_rule_db()->insert(this);
 }

@@ -296,6 +296,11 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
+    /// \brief read config
+    /// \param[out] info pointer to the info object
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_policy_rule_info_t *info);
+
     /// \brief compute all the objects depending on this object and add to
     ///        framework's dependency list
     /// \param[in] obj_ctxt transient state associated with this API
@@ -359,7 +364,6 @@ private:
 };
 
 /// \@}
-
 
 }    // namespace api
 

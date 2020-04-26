@@ -78,7 +78,7 @@ static uint32_t k_route_table_id = 1;
 // Route test cases implementation
 //----------------------------------------------------------------------------
 
-void
+static void
 route_spec_fill (pds_route_spec_t *route_spec, uint32_t route_id,
                  ip_prefix_t *ip_pfx)
 {
@@ -91,7 +91,7 @@ route_spec_fill (pds_route_spec_t *route_spec, uint32_t route_id,
     route_spec->attrs.tep = int2pdsobjkey(base_tep_id);
 }
 
-void
+static void
 route_table_setup (pds_batch_ctxt_t bctxt, std::string base_pfx)
 {
     route_table_feeder rt_feeder;
@@ -101,7 +101,7 @@ route_table_setup (pds_batch_ctxt_t bctxt, std::string base_pfx)
     many_create(bctxt, rt_feeder);
 }
 
-void
+static void
 route_table_teardown (pds_batch_ctxt_t bctxt)
 {
     route_table_feeder rt_feeder;
@@ -111,7 +111,7 @@ route_table_teardown (pds_batch_ctxt_t bctxt)
     many_delete(bctxt, rt_feeder);
 }
 
-void
+static void
 route_table_add_routes (pds_batch_ctxt_t bctxt, std::string base_pfx)
 {
     pds_route_spec_t route_spec;
@@ -130,7 +130,7 @@ route_table_add_routes (pds_batch_ctxt_t bctxt, std::string base_pfx)
     }
 }
 
-void
+static void
 route_read_verify (void)
 {
     sdk_ret_t ret;
@@ -147,7 +147,7 @@ route_read_verify (void)
     }
 }
 
-void
+static void
 route_table_add_routes_verify (void)
 {
     pds_route_table_info_t info;
@@ -168,7 +168,7 @@ route_table_add_routes_verify (void)
     route_read_verify();
 }
 
-void
+static void
 route_table_delete_routes (pds_batch_ctxt_t bctxt, std::string base_pfx)
 {
     sdk_ret_t ret;
@@ -183,12 +183,12 @@ route_table_delete_routes (pds_batch_ctxt_t bctxt, std::string base_pfx)
     }
 }
 
-void
+static void
 route_table_delete_routes_verify (std::string base_pfx)
 {
 }
 
-void
+static void
 route_table_update_route (pds_batch_ctxt_t bctxt, std::string base_pfx)
 {
     pds_route_spec_t route_spec;
@@ -202,7 +202,7 @@ route_table_update_route (pds_batch_ctxt_t bctxt, std::string base_pfx)
     ASSERT_TRUE(ret == SDK_RET_OK);
 }
 
-void
+static void
 route_table_update_route_verify (std::string base_pfx)
 {
     pds_route_table_info_t info;

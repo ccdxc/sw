@@ -101,11 +101,13 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy_key,
                     const types::PortRange& sport_range =
                             proto_l4_match.ports().srcportrange();
                     match->l4_match.sport_range.port_lo = sport_range.portlow();
-                    match->l4_match.sport_range.port_hi = sport_range.porthigh();
+                    match->l4_match.sport_range.port_hi =
+                        sport_range.porthigh();
                     if (unlikely(match->l4_match.sport_range.port_lo >
                                  match->l4_match.sport_range.port_hi)) {
-                        PDS_TRACE_ERR("Invalid src port range in security policy {}"
-                                      ", rule {}", policy_key.str(), rule.str());
+                        PDS_TRACE_ERR("Invalid src port range in security "
+                                      "policy {}, rule {}", policy_key.str(),
+                                      rule.str());
                         return SDK_RET_INVALID_ARG;
                     }
                 } else {
@@ -116,11 +118,13 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy_key,
                     const types::PortRange& dport_range =
                             proto_l4_match.ports().dstportrange();
                     match->l4_match.dport_range.port_lo = dport_range.portlow();
-                    match->l4_match.dport_range.port_hi = dport_range.porthigh();
+                    match->l4_match.dport_range.port_hi =
+                        dport_range.porthigh();
                     if (unlikely(match->l4_match.dport_range.port_lo >
                                  match->l4_match.dport_range.port_hi)) {
-                        PDS_TRACE_ERR("Invalid dst port range in security policy {}"
-                                      ", rule {}", policy_key.str(), rule.str());
+                        PDS_TRACE_ERR("Invalid dst port range in security "
+                                      "policy {}, rule {}", policy_key.str(),
+                                      rule.str());
                         return SDK_RET_INVALID_ARG;
                     }
                 } else {
@@ -139,7 +143,8 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy_key,
                 if (typecode.typematch_case() == types::ICMPMatch::kTypeNum) {
                     match->l4_match.type_match_type = MATCH_SPECIFIC;
                     match->l4_match.icmp_type = typecode.typenum();
-                    if (typecode.codematch_case() == types::ICMPMatch::kCodeNum) {
+                    if (typecode.codematch_case() ==
+                            types::ICMPMatch::kCodeNum) {
                         match->l4_match.code_match_type = MATCH_SPECIFIC;
                         match->l4_match.icmp_code = typecode.codenum();
                     } else {
@@ -253,7 +258,8 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
         pds_obj_key_proto_to_api_spec(&api_spec->rule_info->rules[i].key,
                                       proto_spec.rules(i).id());
         ret = pds_policy_rule_attrs_proto_to_api_spec(
-                  &api_spec->rule_info->rules[i].attrs, proto_spec.rules(i).attrs(),
+                  &api_spec->rule_info->rules[i].attrs,
+                  proto_spec.rules(i).attrs(),
                   api_spec->rule_info->rules[i].key, api_spec->key);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed converting policy {} spec, err {}",
@@ -431,7 +437,7 @@ pds_policy_api_status_to_proto (pds::SecurityPolicyStatus *proto_status,
 // populate proto buf stats from policy API stats
 static inline void
 pds_policy_api_stats_to_proto (pds::SecurityPolicyStats *proto_stats,
-                                 const pds_policy_stats_t *api_stats)
+                               const pds_policy_stats_t *api_stats)
 {
 }
 
@@ -439,7 +445,8 @@ pds_policy_api_stats_to_proto (pds::SecurityPolicyStats *proto_stats,
 static inline void
 pds_policy_api_info_to_proto (pds_policy_info_t *api_info, void *ctxt)
 {
-    pds::SecurityPolicyGetResponse *proto_rsp = (pds::SecurityPolicyGetResponse *)ctxt;
+    pds::SecurityPolicyGetResponse *proto_rsp =
+        (pds::SecurityPolicyGetResponse *)ctxt;
     auto policy = proto_rsp->add_response();
     pds::SecurityPolicySpec *proto_spec = policy->mutable_spec();
     pds::SecurityPolicyStatus *proto_status = policy->mutable_status();
@@ -458,7 +465,8 @@ pds_security_rule_api_spec_to_proto (pds::SecurityRuleSpec *proto_spec,
         return SDK_RET_INVALID_ARG;
     }
     proto_spec->set_id(api_spec->key.rule_id.id, PDS_MAX_KEY_LEN);
-    proto_spec->set_securitypolicyid(api_spec->key.policy_id.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_securitypolicyid(api_spec->key.policy_id.id,
+                                     PDS_MAX_KEY_LEN);
     pds_policy_rule_attrs_api_spec_to_proto(proto_spec->mutable_attrs(),
                                             &api_spec->attrs);
     return SDK_RET_OK;
@@ -479,7 +487,8 @@ pds_security_rule_api_stats_to_proto (pds::SecurityRuleStats *proto_stats,
 static inline void
 pds_policy_rule_api_info_to_proto (pds_policy_rule_info_t *api_info, void *ctxt)
 {
-    pds::SecurityRuleGetResponse *proto_rsp = (pds::SecurityRuleGetResponse *)ctxt;
+    pds::SecurityRuleGetResponse *proto_rsp =
+        (pds::SecurityRuleGetResponse *)ctxt;
     auto rule = proto_rsp->add_response();
     pds::SecurityRuleSpec *proto_spec = rule->mutable_spec();
     pds::SecurityRuleStatus *proto_status = rule->mutable_status();
@@ -532,9 +541,11 @@ pds_security_profile_api_stats_to_proto (pds::SecurityProfileStats *proto_stats,
 
 // populate proto buf from security profile API info
 static inline void
-pds_security_profile_api_info_to_proto (const pds_security_profile_info_t *api_info, void *ctxt)
+pds_security_profile_api_info_to_proto (const pds_security_profile_info_t *api_info,
+                                        void *ctxt)
 {
-    pds::SecurityProfileGetResponse *proto_rsp = (pds::SecurityProfileGetResponse *)ctxt;
+    pds::SecurityProfileGetResponse *proto_rsp =
+        (pds::SecurityProfileGetResponse *)ctxt;
     auto profile = proto_rsp->add_response();
     pds::SecurityProfileSpec *proto_spec = profile->mutable_spec();
     pds::SecurityProfileStatus *proto_status = profile->mutable_status();
@@ -809,11 +820,12 @@ pds_svc_security_policy_get (const pds::SecurityPolicyGetRequest *proto_req,
 }
 
 static inline sdk_ret_t
-pds_svc_security_policy_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+pds_svc_security_policy_handle_cfg (cfg_ctxt_t *ctxt,
+                                    google::protobuf::Any *any_resp)
 {
     sdk_ret_t ret;
     google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
-    
+
     switch (ctxt->cfg) {
     case CFG_MSG_SECURITY_POLICY_CREATE:
         {
@@ -1081,11 +1093,12 @@ pds_svc_security_profile_get (const pds::SecurityProfileGetRequest *proto_req,
 }
 
 static inline sdk_ret_t
-pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt,
+                                     google::protobuf::Any *any_resp)
 {
     sdk_ret_t ret;
     google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
-    
+
     switch (ctxt->cfg) {
     case CFG_MSG_SECURITY_POLICY_CREATE:
         {
@@ -1317,7 +1330,7 @@ pds_svc_security_rule_get (const pds::SecurityRuleGetRequest *req,
     pds_policy_rule_key_t key;
     pds_policy_rule_info_t info;
 
-    if (req == NULL) {
+    if ((req == NULL) || (req->id_size() == 0)) {
         rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return SDK_RET_INVALID_ARG;
     }
@@ -1332,18 +1345,19 @@ pds_svc_security_rule_get (const pds::SecurityRuleGetRequest *req,
             break;
         }
         rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
-        //pds_policy_rule_api_info_to_proto(&info, rsp);
+        pds_policy_rule_api_info_to_proto(&info, rsp);
     }
     PDS_MEMORY_TRIM();
     return ret;
 }
 
 static inline sdk_ret_t
-pds_svc_security_rule_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+pds_svc_security_rule_handle_cfg (cfg_ctxt_t *ctxt,
+                                  google::protobuf::Any *any_resp)
 {
     sdk_ret_t ret;
     google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
-    
+
     switch (ctxt->cfg) {
     case CFG_MSG_SECURITY_POLICY_CREATE:
         {
@@ -1393,7 +1407,6 @@ pds_svc_security_rule_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_r
         ret = SDK_RET_INVALID_ARG;
         break;
     }
-
     return ret;
 }
 

@@ -72,11 +72,9 @@ pds_policy_read (_In_ pds_obj_key_t *key, _Out_ pds_policy_info_t *info)
     if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
     }
-
     if ((entry = pds_policy_entry_find(key)) == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-
     return entry->read(info);
 }
 
@@ -124,7 +122,6 @@ pds_policy_read_all (policy_read_cb_t policy_read_cb, void *ctxt)
     args.ctxt = ctxt;
     args.cb = policy_read_cb;
     ret = policy_db()->walk(pds_policy_info_from_entry, &args);
-
     PDS_MEMORY_TRIM();
     return ret;
 }
@@ -180,7 +177,19 @@ sdk_ret_t
 pds_policy_rule_read (_In_ pds_policy_rule_key_t *key,
                       _Out_ pds_policy_rule_info_t *info)
 {
-    return SDK_RET_INVALID_OP;
+    sdk_ret_t ret;
+    policy_rule *entry;
+
+    if ((key == NULL) || (info == NULL)) {
+        return SDK_RET_INVALID_ARG;
+    }
+    entry = policy_rule::build(key);
+    if (entry == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    ret = entry->read(info);
+    policy_rule::soft_delete(entry);
+    return ret;
 }
 
 sdk_ret_t
