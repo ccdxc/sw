@@ -65,12 +65,25 @@ typedef struct pds_device_s {
 
 /// \brief device status
 typedef struct pds_device_status_s {
-    mac_addr_t  fru_mac;      ///< FRU MAC
-    uint8_t     memory_cap;   ///< Memory capacity
-    string      mnfg_date;    ///< FRU Manufacturing date
-    string      product_name; ///< FRU Product name
-    string      serial_num;   ///< FRU Serial Number
-    string      part_num;     ///< FRU Part Number
+    mac_addr_t  fru_mac;           ///< FRU MAC
+    uint8_t     memory_cap;        ///< Memory capacity
+    string      mnfg_date;         ///< FRU Manufacturing date
+    string      product_name;      ///< FRU Product name
+    string      serial_num;        ///< FRU Serial Number
+    string      part_num;          ///< FRU Part Number
+    string      description;       ///< Description
+    string      vendor_id;         ///< Vendor ID
+    string      chip_type;         ///< Chip Type
+    string      hardware_revision; ///< Hardware Revision
+    string      cpu_vendor;        ///< CPU Vendor
+    string      cpu_specification; ///< CPU Specification
+    string      soc_os_version;    ///< SOC OS Version
+    string      soc_disk_size;     ///< SOC Disk Size
+    string      pcie_specification;///< PCIe Specification
+    string      pcie_bus_info;     ///< PCIe Bus Information
+    uint32_t    num_pcie_ports;    ///< Number of PCIe ports
+    uint32_t    num_ports;         ///< Number of NIC ports
+    string      vendor_name;       ///< Vendor Name
 } pds_device_status_t;
 
 /// \brief Drop statistics

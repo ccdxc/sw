@@ -158,7 +158,7 @@ void
 device_entry::fill_status(pds_device_status_t *status) {
     std::string   mac_str;
     std::string   mem_str;
-    std::string   value;
+    std::string   value, svalue;
 
     // fill fru mac in status
     sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_str);
@@ -198,6 +198,26 @@ device_entry::fill_status(pds_device_status_t *status) {
     } else {
         status->product_name = value;
     }
+
+    status->description = std::string("Pensando DSC");
+    status->vendor_id = std::string("1DD8");
+    status->chip_type = std::string("-");
+    sdk::platform::readfrukey(BOARD_PARTNUM_KEY, value);
+    if (value.empty() || value == "") {
+        status->hardware_revision = std::string("-");
+    } else {
+        svalue = value.substr(value.length() - 2, 2);
+        status->hardware_revision = svalue;
+    }
+    status->cpu_vendor = std::string("ARM");
+    status->cpu_specification = std::string("Cortex A72");
+    status->soc_os_version = std::string("-");
+    status->soc_disk_size = std::string("-");
+    status->pcie_specification = std::string("-");
+    status->pcie_bus_info = std::string("-");
+    status->num_pcie_ports = 0;
+    status->num_ports = 2;
+    status->vendor_name = std::string("Pensando Systems Inc");
 }
 
 sdk_ret_t

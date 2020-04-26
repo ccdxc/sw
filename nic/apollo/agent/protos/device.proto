@@ -99,20 +99,66 @@ enum DeviceHealth {
 message DeviceStatus {
   // operaional state of the device
   DeviceState State             = 1;
+
   // System MAC address (can be used to uniquely identify the device in cluster)
   uint64      SystemMACAddress  = 2;
+
   // serial number of the device
   string      SerialNumber      = 3;
+
   // SKU/part numnber
   string      Sku               = 4;
+
   // version of the firmware running
   string      FirmwareVersion   = 5;
+
   // Memory Capacity
   uint32      Memory            = 6;
+
   // Product Name
   string      ProductName       = 7;
+
   // Manufacturing date
   string      ManufacturingDate = 8;
+
+  // Device Description
+  string      Description       = 9;
+
+  // Vendor ID
+  string      VendorID          = 10;
+
+  // Chip Type
+  string      ChipType          = 11;
+
+  // Hardware Revision
+  string      HardwareRevision  = 12;
+
+  // CPU Vendor
+  string      CpuVendor         = 13;
+
+  // CPU Specification
+  string      CpuSpecification  = 14;
+
+  //SOC OS Version
+  string      SocOSVersion      = 15;
+
+  // Soc Disk Size
+  string      SocDiskSize       = 16;
+
+  // PCIe Specification
+  string      PCIeSpecification = 17;
+
+  // PCIe Bus Information
+  string      PCIeBusInfo       = 18;
+
+  // Number of PCIe Ports
+  uint32      NumPCIePorts      = 19;
+
+  // Number of Uplink Ports
+  uint32      NumPorts          = 20;
+
+  // Vendor Name
+  string      VendorName        = 21;
 }
 
 // stats of the device, if any

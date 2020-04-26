@@ -90,6 +90,19 @@ pds_device_api_status_to_proto (pds::DeviceStatus *proto_status,
     proto_status->set_serialnumber(api_status->serial_num);
     proto_status->set_manufacturingdate(api_status->mnfg_date);
     proto_status->set_productname(api_status->product_name);
+    proto_status->set_description(api_status->description);
+    proto_status->set_vendorid(api_status->vendor_id);
+    proto_status->set_chiptype(api_status->chip_type);
+    proto_status->set_hardwarerevision(api_status->hardware_revision);
+    proto_status->set_cpuvendor(api_status->cpu_vendor);
+    proto_status->set_cpuspecification(api_status->cpu_specification);
+    proto_status->set_socosversion(api_status->soc_os_version);
+    proto_status->set_socdisksize(api_status->soc_disk_size);
+    proto_status->set_pciespecification(api_status->pcie_specification);
+    proto_status->set_pciebusinfo(api_status->pcie_bus_info);
+    proto_status->set_numpcieports(api_status->num_pcie_ports);
+    proto_status->set_numports(api_status->num_ports);
+    proto_status->set_vendorname(api_status->vendor_name);
 }
 
 // populate proto buf stats from device API stats
