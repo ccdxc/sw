@@ -2032,6 +2032,7 @@ port::port_mac_sync_ical_timeout (void) {
     switch (port_speed()) {
     case port_speed_t::PORT_SPEED_100G:
     case port_speed_t::PORT_SPEED_40G:
+    case port_speed_t::PORT_SPEED_10G:
         return 500; // msec
     default:
         return 100; // msec
