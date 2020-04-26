@@ -11,6 +11,7 @@
 #ifndef __AGENT_SVC_ROUTE_SVC_HPP__
 #define __AGENT_SVC_ROUTE_SVC_HPP__
 
+#include <malloc.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/agent/core/state.hpp"
@@ -18,7 +19,6 @@
 #include "nic/apollo/agent/svc/route.hpp"
 #include "nic/apollo/agent/hooks.hpp"
 #include "nic/apollo/api/utils.hpp"
-#include <malloc.h>
 
 static inline sdk_ret_t
 pds_route_attrs_proto_to_api_spec (pds_route_attrs_t *route_attrs,

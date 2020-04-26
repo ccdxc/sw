@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <malloc.h>
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -18,7 +19,6 @@
 #include "nic/apollo/api/policy_state.hpp"
 #include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
-#include <malloc.h>
 
 static inline sdk_ret_t
 pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,

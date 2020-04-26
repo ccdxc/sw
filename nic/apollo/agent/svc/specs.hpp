@@ -8,6 +8,7 @@
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/svc/svc_cfg_msg.hpp"
 #include "gen/proto/types.pb.h"
 #include "gen/proto/debug.grpc.pb.h"
 
@@ -428,29 +429,29 @@ pds_af_api_spec_to_proto_spec (uint8_t af)
 }
 
 static inline cmd_msg_t
-pds_proto_cmd_to_api_cmd (types::Command proto_cmd)
+pds_proto_cmd_to_api_cmd (pds::Command proto_cmd)
 {
     switch (proto_cmd) {
-    case types::CMD_MAPPING_DUMP:
+    case pds::CMD_MAPPING_DUMP:
         return CMD_MSG_MAPPING_DUMP;
-    case types::CMD_NACL_DUMP:
+    case pds::CMD_NACL_DUMP:
         return CMD_MSG_NACL_DUMP;
-    case types::CMD_INTR_DUMP:
+    case pds::CMD_INTR_DUMP:
         return CMD_MSG_INTR_DUMP;
-    case types::CMD_INTR_CLEAR:
+    case pds::CMD_INTR_CLEAR:
         return CMD_MSG_INTR_CLEAR;
-    case types::CMD_API_ENGINE_STATS_DUMP:
+    case pds::CMD_API_ENGINE_STATS_DUMP:
         return CMD_MSG_API_ENGINE_STATS_DUMP;
-    case types::CMD_FLOW_DUMP:
+    case pds::CMD_FLOW_DUMP:
         return CMD_MSG_FLOW_DUMP;
-    case types::CMD_STORE_STATS_DUMP:
+    case pds::CMD_STORE_STATS_DUMP:
         return CMD_MSG_STORE_STATS_DUMP;
-    case types::CMD_NAT_PB_DUMP:
+    case pds::CMD_NAT_PB_DUMP:
         return CMD_MSG_NAT_PB_DUMP;
-    case types::CMD_PORT_FSM_DUMP:
+    case pds::CMD_PORT_FSM_DUMP:
         return CMD_MSG_PORT_FSM_DUMP;
     default:
-        return CMD_MSG_MAX;
+        return CMD_MSG_NONE;
     }
 }
 
@@ -468,7 +469,7 @@ proto_mapping_dump_type_to_pds (pds::MappingDumpType type)
     }
 }
 
-const static std::map<std::pair<std::string, types::ServiceRequestOp>, cfg_msg_t>  g_svc_cfg_map =
+const static std::map<std::pair<std::string, types::ServiceRequestOp>, cfg_msg_t>  g_svc_cfg_msg_map =
 {
     {std::make_pair("pds.VPCRequest", types::SERVICE_OP_CREATE),                   CFG_MSG_VPC_CREATE},
     {std::make_pair("pds.VPCRequest", types::SERVICE_OP_UPDATE),                   CFG_MSG_VPC_UPDATE},
@@ -549,43 +550,23 @@ const static std::map<std::pair<std::string, types::ServiceRequestOp>, cfg_msg_t
     {std::make_pair("pds.DeviceRequest", types::SERVICE_OP_UPDATE),                CFG_MSG_DEVICE_UPDATE},
     {std::make_pair("pds.DeviceDeleteRequest", types::SERVICE_OP_DELETE),          CFG_MSG_DEVICE_DELETE},
     {std::make_pair("pds.DeviceGetRequest", types::SERVICE_OP_READ),               CFG_MSG_DEVICE_GET},
+    {std::make_pair("pds.CommandMessage", types::SERVICE_OP_NONE),                 CFG_MSG_COMMAND},
 };
 
 static inline cfg_msg_t
 pds_proto_cfg_to_api_cfg (std::string cfg_msg,
                           types::ServiceRequestOp op)
 {
-    auto iter = g_svc_cfg_map.find(std::make_pair(cfg_msg, op));
-    if (iter != g_svc_cfg_map.end()) {
+    auto iter = g_svc_cfg_msg_map.find(std::make_pair(cfg_msg, op));
+    if (iter != g_svc_cfg_msg_map.end()) {
         return iter->second;
     }
-    return CFG_MSG_MAX;
-}
-
-static inline void
-pds_cfg_proto_to_cfg_ctxt (cfg_ctxt_t *cfg_ctxt,
-                           const types::ConfigMessage *proto_msg)
-{
-    google::protobuf::Any *any_msg;
-    std::string cfg_msg;
-    std::size_t delim_pos;
-
-    cfg_ctxt->req = (void *)&proto_msg->configmsg();
-    any_msg = (google::protobuf::Any *)cfg_ctxt->req;
-    cfg_msg = any_msg->type_url();
-    delim_pos = cfg_msg.find("/");
-    if (delim_pos != std::string::npos) {
-        cfg_msg = cfg_msg.substr(delim_pos + 1);
-        cfg_ctxt->cfg = pds_proto_cfg_to_api_cfg(cfg_msg,
-                                                 proto_msg->configop());
-    } else {
-        cfg_ctxt->cfg = CFG_MSG_MAX;
-    }
+    return CFG_MSG_NONE;
 }
 
 static inline void
 pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
-                           const types::CommandMessage *proto_msg,
+                           const pds::CommandMessage *proto_msg,
                            int fd)
 {
     google::protobuf::Any *any_msg;
@@ -643,27 +624,41 @@ pds_svc_req_proto_to_svc_req_ctxt (svc_req_ctxt_t *svc_req,
                                    types::ServiceRequestMessage *proto_req,
                                    int fd)
 {
-    switch (proto_req->request_case()) {
-    case types::ServiceRequestMessage::kCommand:
-        {
-            cmd_ctxt_t *ctxt = &svc_req->cmd_ctxt;
+    cfg_msg_t cfg_msg;
+    cfg_ctxt_t *cfg_ctxt;
+    cmd_ctxt_t *cmd_ctxt;
+    std::size_t delim_pos;
+    std::string cfg_msg_url;
+    pds::CommandMessage cmd_msg_proto;
+    google::protobuf::Any *any_msg = (google::protobuf::Any *)&proto_req->configmsg();
+
+    // get config message type from type url of any message
+    cfg_msg_url = any_msg->type_url();
+    delim_pos = cfg_msg_url.find("/");
+    if (delim_pos != std::string::npos) {
+        cfg_msg_url = cfg_msg_url.substr(delim_pos + 1);
+        // convert proto message name to cfg_msg_t
+        cfg_msg = pds_proto_cfg_to_api_cfg(cfg_msg_url,
+                                           proto_req->configop());
+        if (cfg_msg == CFG_MSG_COMMAND) {
+            // decrypt command message
             svc_req->type = SVC_REQ_TYPE_CMD;
-            return pds_cmd_proto_to_cmd_ctxt(ctxt,
-                                             &proto_req->command(),
-                                             fd);
-        }
-    case types::ServiceRequestMessage::kConfig:
-        {
-            cfg_ctxt_t *ctxt = &svc_req->cfg_ctxt;
+            cmd_ctxt = &svc_req->cmd_ctxt;
+            // unpack any message to command message
+            any_msg->UnpackTo(&cmd_msg_proto);
+            pds_cmd_proto_to_cmd_ctxt(cmd_ctxt,
+                                      &cmd_msg_proto,
+                                      fd);
+        } else {
+            // decrypt config message
             svc_req->type = SVC_REQ_TYPE_CFG;
-            return pds_cfg_proto_to_cfg_ctxt(ctxt,
-                                             &proto_req->config());
+            cfg_ctxt = &svc_req->cfg_ctxt;
+            cfg_ctxt->cfg = cfg_msg;
+            cfg_ctxt->req = any_msg;
         }
-    default:
-        {
-            svc_req->type = SVC_REQ_TYPE_NONE;
-        }
-        return;
+    } else {
+        cfg_ctxt = &svc_req->cfg_ctxt;
+        cfg_ctxt->cfg = CFG_MSG_NONE;
     }
 }
 

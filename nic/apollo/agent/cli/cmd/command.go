@@ -32,7 +32,7 @@ var AgentTransport Transport
 
 type PrintObject interface {
 	PrintHeader()
-	HandleObject([]byte) bool
+	HandleObject(*types.Any) bool
 }
 
 // function to handle commands over unix domain sockets
@@ -115,17 +115,23 @@ func HandleSvcReqCommandMsg(cmd pds.Command,
 		reqMsg = nil
 	}
 
-	cmdReq := &pds.ServiceRequestMessage{
-		Version: 1,
-		Request: &pds.ServiceRequestMessage_Command{
-			Command: &pds.CommandMessage{
-				Command:    cmd,
-				CommandMsg: reqMsg,
-			},
-		},
+	command := &pds.CommandMessage{
+		Command:    cmd,
+		CommandMsg: reqMsg,
 	}
 
-	// handle config
+	cmdReqMsg, err := types.MarshalAny(command)
+	if err != nil {
+		fmt.Printf("Command failed with %v error\n", err)
+		return nil, err
+	}
+
+	cmdReq := &pds.ServiceRequestMessage{
+		ConfigOp:  pds.ServiceRequestOp_SERVICE_OP_NONE,
+		ConfigMsg: cmdReqMsg,
+	}
+
+	// handle command
 	return HandleCommand(cmdReq)
 }
 
@@ -143,13 +149,8 @@ func HandleSvcReqConfigMsg(op pds.ServiceRequestOp,
 	}
 
 	cmdReq := &pds.ServiceRequestMessage{
-		Version: 1,
-		Request: &pds.ServiceRequestMessage_Config{
-			Config: &pds.ConfigMessage{
-				ConfigOp:  op,
-				ConfigMsg: reqMsg,
-			},
-		},
+		ConfigOp:  op,
+		ConfigMsg: reqMsg,
 	}
 
 	// handle config
@@ -177,11 +178,27 @@ func HandleSvcReqConfigMsg(op pds.ServiceRequestOp,
 }
 
 // function to handle show object command over unix domain sockets
-// param[in] cmd     Command context to be sent
+// param[in] cmd     Command to be sent
 // return    err     Error
-func HandleUdsShowObject(cmdCtxt *pds.ServiceRequestMessage, i PrintObject) error {
+func HandleUdsShowObject(cmd pds.Command, i PrintObject) error {
+	command := &pds.CommandMessage{
+		Command:    cmd,
+		CommandMsg: nil,
+	}
+
+	cmdReqMsg, err := types.MarshalAny(command)
+	if err != nil {
+		fmt.Printf("Command failed with %v error\n", err)
+		return err
+	}
+
+	cmdReq := &pds.ServiceRequestMessage{
+		ConfigOp:  pds.ServiceRequestOp_SERVICE_OP_NONE,
+		ConfigMsg: cmdReqMsg,
+	}
+
 	// marshall cmdCtxt
-	iovec, err := proto.Marshal(cmdCtxt)
+	iovec, err := proto.Marshal(cmdReq)
 	if err != nil {
 		fmt.Printf("Marshall command failed with error %v\n", err)
 		return err
@@ -219,7 +236,21 @@ func HandleUdsShowObject(cmdCtxt *pds.ServiceRequestMessage, i PrintObject) erro
 			return err
 		}
 
-		done := i.HandleObject(resp[:n])
+		// unmarshal response
+		recvResp := resp[:n]
+		cmdResp := &pds.ServiceResponseMessage{}
+		err = proto.Unmarshal(recvResp, cmdResp)
+		if err != nil {
+			fmt.Printf("Command failed with %v error\n", err)
+			return err
+		}
+
+		if cmdResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Command failed with %v error\n", cmdResp.ApiStatus)
+			return err
+		}
+
+		done := i.HandleObject(cmdResp.GetResponse())
 		if done {
 			// Last message
 			return nil

@@ -181,18 +181,14 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-pds_svc_device_create(const pds::DeviceRequest *proto_req,
-                      pds::DeviceResponse *proto_rsp);
-sdk_ret_t
-pds_svc_device_update(const pds::DeviceRequest *proto_req,
-                      pds::DeviceResponse *proto_rsp);
-sdk_ret_t
-pds_svc_device_delete(const pds::DeviceDeleteRequest *proto_req,
-                      pds::DeviceDeleteResponse *proto_rsp);
-sdk_ret_t
-pds_svc_device_get(const pds::DeviceGetRequest *proto_req,
-                   pds::DeviceGetResponse *proto_rsp);
+sdk_ret_t pds_svc_device_create(const pds::DeviceRequest *proto_req,
+                                pds::DeviceResponse *proto_rsp);
+sdk_ret_t pds_svc_device_update(const pds::DeviceRequest *proto_req,
+                                pds::DeviceResponse *proto_rsp);
+sdk_ret_t pds_svc_device_delete(const pds::DeviceDeleteRequest *proto_req,
+                                pds::DeviceDeleteResponse *proto_rsp);
+sdk_ret_t pds_svc_device_get(const pds::DeviceGetRequest *proto_req,
+                             pds::DeviceGetResponse *proto_rsp);
 
 static inline sdk_ret_t
 pds_svc_device_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)

@@ -1,6 +1,12 @@
-//-----------------------------------------------------------------------------
-// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-//-----------------------------------------------------------------------------
+//                                                                                                                                                                              
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// service request message handling
+///
+//----------------------------------------------------------------------------
 
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/nh_svc.hpp"
@@ -153,6 +159,10 @@ pds_handle_cfg (int fd, cfg_ctxt_t *ctxt)
 
     proto_rsp.set_apistatus(sdk_ret_to_api_status(ret));
     iov_data = (char *)SDK_CALLOC(PDS_MEM_ALLOC_CMD_READ_IO, proto_rsp.ByteSizeLong());
+    if (iov_data == NULL) {
+        PDS_TRACE_ERR("Failed to allocate memory for UDS config message {} response", ctxt->cfg);
+        return SDK_RET_OOM;
+    }
     if (proto_rsp.SerializeToArray(iov_data, proto_rsp.ByteSizeLong())) {
         if (send(fd, iov_data, proto_rsp.ByteSizeLong(), 0) < 0) {
             PDS_TRACE_ERR("Send on socket failed. Error {}", errno);
@@ -176,12 +186,16 @@ pds_handle_cmd (int fd, cmd_ctxt_t *ctxt)
 
     proto_rsp.set_apistatus(sdk_ret_to_api_status(ret));
     iov_data = (char *)SDK_CALLOC(PDS_MEM_ALLOC_CMD_READ_IO, proto_rsp.ByteSizeLong());
+    if (iov_data == NULL) {
+        PDS_TRACE_ERR("Failed to allocate memory for UDS command message {} response", ctxt->cmd);
+        return SDK_RET_OOM;
+    }
     if (proto_rsp.SerializeToArray(iov_data, proto_rsp.ByteSizeLong())) {
         if (send(fd, iov_data, proto_rsp.ByteSizeLong(), 0) < 0) {
             PDS_TRACE_ERR("Send on socket failed. Error {}", errno);
         }
     } else {
-        PDS_TRACE_ERR("Serializing config message {} response failed", ctxt->cmd);
+        PDS_TRACE_ERR("Serializing command message {} response failed", ctxt->cmd);
     }
     SDK_FREE(PDS_MEM_ALLOC_CMD_READ_IO, iov_data);
 

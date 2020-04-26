@@ -19,6 +19,8 @@ ftlv4_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
     int *fd = (int *)params->cbdata;
 
     if (hwentry->get_entry_valid()) {
+        types::ServiceResponseMessage proto_rsp;
+        google::protobuf::Any *any_resp = proto_rsp.mutable_response();
         pds::FlowMsg flow_msg = pds::FlowMsg();
         pds::Flow *flow = flow_msg.mutable_flowentry();
         types::IPFlowKey *ipflowkey = flow->mutable_key()->mutable_ipflowkey();
@@ -40,7 +42,9 @@ ftlv4_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
         // flow->set_epoch(hwentry->get_epoch());
 
         flow_msg.set_flowentrycount(1);
-        flow_msg.SerializeToFileDescriptor(*fd);
+        any_resp->PackFrom(flow_msg);
+        proto_rsp.set_apistatus(types::ApiStatus::API_STATUS_OK);
+        proto_rsp.SerializeToFileDescriptor(*fd);
     }
 }
 
@@ -51,6 +55,8 @@ ftlv6_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
     int *fd = (int *)params->cbdata;
 
     if (hwentry->get_entry_valid()) {
+        types::ServiceResponseMessage proto_rsp;
+        google::protobuf::Any *any_resp = proto_rsp.mutable_response();
         pds::FlowMsg flow_msg = pds::FlowMsg();
         pds::Flow *flow = flow_msg.mutable_flowentry();
         types::IPFlowKey *ipflowkey = flow->mutable_key()->mutable_ipflowkey();
@@ -69,7 +75,9 @@ ftlv6_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
         // flow->set_epoch(hwentry->get_epoch());
 
         flow_msg.set_flowentrycount(1);
-        flow_msg.SerializeToFileDescriptor(*fd);
+        any_resp->PackFrom(flow_msg);
+        proto_rsp.set_apistatus(types::ApiStatus::API_STATUS_OK);
+        proto_rsp.SerializeToFileDescriptor(*fd);
     }
 }
 
@@ -77,6 +85,8 @@ ftlv6_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
 static void
 vpp_uds_flow_dump(int fd)
 {
+    types::ServiceResponseMessage proto_rsp;
+    google::protobuf::Any *any_resp = proto_rsp.mutable_response();
     sdk::table::sdk_table_api_params_t params = {0};
     sdk::table::ftl_base *table4 =
         (sdk::table::ftl_base *)pds_flow_get_table4();
@@ -97,7 +107,9 @@ vpp_uds_flow_dump(int fd)
     // Send 0 entries to indicate end of dump
     pds::FlowMsg flow_msg = pds::FlowMsg();
     flow_msg.set_flowentrycount(0);
-    flow_msg.SerializeToFileDescriptor(fd);
+    any_resp->PackFrom(flow_msg);
+    proto_rsp.set_apistatus(types::ApiStatus::API_STATUS_OK);
+    proto_rsp.SerializeToFileDescriptor(fd);
 }
 
 // initializes callbacks for flow dump

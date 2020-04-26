@@ -40,21 +40,6 @@ func init() {
 }
 
 func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
-	// Connect to PDS
-	c, err := utils.CreateNewGRPCClient()
-	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
-		return
-	}
-	defer c.Close()
-
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
-
-	client := pds.NewVPCSvcClient(c)
-
 	req := &pds.VPCGetRequest{}
 	respMsg := &pds.VPCGetResponse{}
 	if cmd != nil && cmd.Flags().Changed("id") {
@@ -79,6 +64,21 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 		err = HandleSvcReqConfigMsg(pds.ServiceRequestOp_SERVICE_OP_READ,
 			req, respMsg)
 	} else {
+		// Connect to PDS
+		c, err := utils.CreateNewGRPCClient()
+		if err != nil {
+			fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+			return
+		}
+		defer c.Close()
+
+		if len(args) > 0 {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+
+		client := pds.NewVPCSvcClient(c)
+
 		respMsg, err = client.VPCGet(context.Background(), req)
 	}
 	if err != nil {

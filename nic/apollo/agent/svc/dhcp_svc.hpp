@@ -172,8 +172,8 @@ pds_dhcp_policy_api_info_to_proto (const pds_dhcp_policy_info_t *api_info,
 }
 
 static inline sdk_ret_t
-pds_svc_dhcp_policy_create(const pds::DHCPPolicyRequest *proto_req,
-                           pds::DHCPPolicyResponse *proto_rsp)
+pds_svc_dhcp_policy_create (const pds::DHCPPolicyRequest *proto_req,
+                            pds::DHCPPolicyResponse *proto_rsp)
 {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
@@ -230,8 +230,8 @@ end:
 }
 
 static inline sdk_ret_t
-pds_svc_dhcp_policy_update(const pds::DHCPPolicyRequest *proto_req,
-                           pds::DHCPPolicyResponse *proto_rsp)
+pds_svc_dhcp_policy_update (const pds::DHCPPolicyRequest *proto_req,
+                            pds::DHCPPolicyResponse *proto_rsp)
 {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
@@ -289,8 +289,8 @@ end:
 }
 
 static inline sdk_ret_t
-pds_svc_dhcp_policy_delete(const pds::DHCPPolicyDeleteRequest *proto_req,
-                           pds::DHCPPolicyDeleteResponse *proto_rsp)
+pds_svc_dhcp_policy_delete (const pds::DHCPPolicyDeleteRequest *proto_req,
+                            pds::DHCPPolicyDeleteResponse *proto_rsp)
 {
     sdk_ret_t ret;
     pds_obj_key_t key;
@@ -349,8 +349,8 @@ pds_svc_dhcp_policy_get (const pds::DHCPPolicyGetRequest *proto_req,
                          pds::DHCPPolicyGetResponse *proto_rsp)
 {
     sdk_ret_t ret;
-    pds_obj_key_t key = { 0 };
-    pds_dhcp_policy_info_t info = { 0 };
+    pds_obj_key_t key;
+    pds_dhcp_policy_info_t info;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);

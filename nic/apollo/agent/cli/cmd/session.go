@@ -11,7 +11,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/gogo/protobuf/types"
+
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
@@ -303,19 +304,10 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 			}
 		}
 	} else {
-		cmdCtxt := &pds.ServiceRequestMessage{
-			Version: 1,
-			Request: &pds.ServiceRequestMessage_Command{
-				Command: &pds.CommandMessage{
-					Command: pds.Command_CMD_FLOW_DUMP,
-				},
-			},
-		}
-
 		flow := myFlowMsg{}
 		msg := pds.FlowMsg{}
 		flow.msg = &msg
-		err := HandleUdsShowObject(cmdCtxt, flow)
+		err := HandleUdsShowObject(pds.Command_CMD_FLOW_DUMP, flow)
 		if err != nil {
 			fmt.Printf("Error %v\n", err)
 		}
@@ -536,8 +528,8 @@ func (flowMsg myFlowMsg) PrintHeader() {
 	flowPrintHeader()
 }
 
-func (flowMsg myFlowMsg) HandleObject(data []byte) (done bool) {
-	err := proto.Unmarshal(data, flowMsg.msg)
+func (flowMsg myFlowMsg) HandleObject(data *types.Any) (done bool) {
+	err := types.UnmarshalAny(data, flowMsg.msg)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		done = true

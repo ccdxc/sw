@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/gogo/protobuf/types"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
@@ -130,8 +130,8 @@ func (natMsg myNatPortBlock) PrintHeader() {
 	printNatPbHeader()
 }
 
-func (natPb myNatPortBlock) HandleObject(data []byte) (done bool) {
-	err := proto.Unmarshal(data, natPb.msg)
+func (natPb myNatPortBlock) HandleObject(data *types.Any) (done bool) {
+	err := types.UnmarshalAny(data, natPb.msg)
 	if err != nil {
 		fmt.Printf("Command failed with %v error\n", err)
 		done = true

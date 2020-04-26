@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include <malloc.h>
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -17,7 +18,6 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/route.hpp"
 #include "nic/apollo/api/utils.hpp"
-#include <malloc.h>
 
 //----------------------------------------------------------------------------
 // route table API implementation entry point

@@ -12,6 +12,8 @@ bool
 vpp_uds_nat_iterate(pds_nat_iterate_params_t *params)
 {
     pds_nat_port_block_export_t *pb = params->pb;
+    types::ServiceResponseMessage proto_rsp;
+    google::protobuf::Any *any_resp = proto_rsp.mutable_response();
 
     pds::NatPortBlock nat_msg = pds::NatPortBlock();
     pds::NatPortBlockSpec *spec = nat_msg.mutable_spec();
@@ -32,7 +34,9 @@ vpp_uds_nat_iterate(pds_nat_iterate_params_t *params)
     spec->mutable_ports()->set_porthigh(pb->end_port);
     stats->set_inusecount(pb->in_use_cnt);
     stats->set_sessioncount(pb->session_cnt);
-    nat_msg.SerializeToFileDescriptor(params->fd);
+    any_resp->PackFrom(nat_msg);
+    proto_rsp.set_apistatus(types::ApiStatus::API_STATUS_OK);
+    proto_rsp.SerializeToFileDescriptor(params->fd);
     return false;
 }
 
@@ -41,6 +45,8 @@ static void
 vpp_uds_nat_dump(int fd)
 {
     pds_nat_port_block_export_t pb;
+    types::ServiceResponseMessage proto_rsp;
+    google::protobuf::Any *any_resp = proto_rsp.mutable_response();
 
     pds_nat_iterate_params_t params;
 
@@ -56,7 +62,9 @@ vpp_uds_nat_dump(int fd)
     pds::NatPortBlockSpec *spec = nat_msg.mutable_spec();
     // Last message
     spec->set_protocol(0);
-    nat_msg.SerializeToFileDescriptor(fd);
+    any_resp->PackFrom(nat_msg);
+    proto_rsp.set_apistatus(types::ApiStatus::API_STATUS_OK);
+    proto_rsp.SerializeToFileDescriptor(fd);
 }
 
 // initializes callbacks for flow dump

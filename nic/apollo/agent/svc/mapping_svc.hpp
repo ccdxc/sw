@@ -11,6 +11,7 @@
 #ifndef __AGENT_SVC_MAPPING_SVC_HPP__
 #define __AGENT_SVC_MAPPING_SVC_HPP__
 
+#include <malloc.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
@@ -22,7 +23,6 @@
 #include "nic/apollo/agent/hooks.hpp"
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/api/utils.hpp"
-#include <malloc.h>
 
 static inline sdk_ret_t
 pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,

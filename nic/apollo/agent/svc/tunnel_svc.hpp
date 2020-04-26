@@ -349,7 +349,7 @@ pds_svc_tunnel_get (const pds::TunnelGetRequest *proto_req,
 {
     sdk_ret_t ret;
     pds_obj_key_t key;
-    pds_tep_info_t info = {0};
+    pds_tep_info_t info;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
