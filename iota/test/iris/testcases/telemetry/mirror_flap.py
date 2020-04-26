@@ -60,12 +60,15 @@ def Setup(tc):
         tc.skip_flap = True
         return api.types.status.SUCCESS
 
+    if api.GetNicMode() in ["classic", "unified"]:
+        api.Logger.info(f"NIC mode: {api.GetNicMode()}, Skipping uplink flap")
+        tc.skip_flap = True
+
     api.Logger.info("All uplink on Nodes are UP!")
     # Bring up inband and reset the active link on bond.
     ret = utils.SetupInbandInterface()
     if ret != api.types.status.SUCCESS:
         return ret
-
     return api.types.status.SUCCESS
 
 def Trigger(tc):
