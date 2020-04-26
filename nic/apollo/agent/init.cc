@@ -255,7 +255,7 @@ logger_init (void)
     logfile = log_file(std::getenv("LOG_DIR"), "./linkmgr.log");
     err_logfile = log_file(std::getenv("PERSISTENT_LOG_DIR"),
                            "/linkmgr_err.log");
-    core::link_trace_init("linkmgr", 0x1, true, err_logfile.c_str(),
+    core::link_trace_init("linkmgr", 0x1, false, err_logfile.c_str(),
                           logfile.c_str(), TRACE_FILE_SIZE_LINK,
                           TRACE_NUM_FILES_LINK, utils::trace_debug);
     return SDK_RET_OK;

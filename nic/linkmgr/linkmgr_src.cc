@@ -158,7 +158,7 @@ linkmgr_logger_init (void)
     logger =
         ::utils::log::factory("linkmgr",
                               sdk::lib::thread::control_cores_mask(),
-                              ::utils::log_mode_sync,
+                              ::utils::log_mode_async,
                               false,
                               persistent.c_str(),
                               non_persistent.c_str(),
