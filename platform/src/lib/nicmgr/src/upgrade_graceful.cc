@@ -133,7 +133,8 @@ upg_link_down_handler (void *cookie)
         NIC_LOG_ERR("UPG_EVENT_QUIESCE event Failed! Cannot continue upgrade FSM");
         return SDK_RET_ERR;
     }
-#ifndef __aarch64__
+//#ifndef __aarch64__
+#if 1
     // TODO : check whether this can be fixed
     return SDK_RET_OK;
 #endif
@@ -178,7 +179,8 @@ upg_host_down_handler (void *cookie)
         NIC_LOG_ERR("UPG_EVENT_DEVICE_RESET event Failed! Cannot continue upgrade FSM");
         return SDK_RET_ERR;
     }
-#ifndef __aarch64__
+//#ifndef __aarch64__
+#if 1
     // TODO : check whether this can be fixed
     return SDK_RET_OK;
 #endif

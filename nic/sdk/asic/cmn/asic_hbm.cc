@@ -62,13 +62,17 @@ asic_reset_hbm_regions (asic_cfg_t *asic_cfg)
 {
     mpartition_region_t *reg;
     mem_addr_t va, pa;
+    bool force_reset =
+        sdk::platform::upgrade_mode_none(asic_cfg->upg_init_mode) ? false : true;
 
     if (!asic_cfg)
         return;
 
-    if (asic_cfg->platform != platform_type_t::PLATFORM_TYPE_HAPS &&
-        asic_cfg->platform != platform_type_t::PLATFORM_TYPE_HW) {
-        return;
+    if (!force_reset) {
+        if (asic_cfg->platform != platform_type_t::PLATFORM_TYPE_HAPS &&
+            asic_cfg->platform != platform_type_t::PLATFORM_TYPE_HW) {
+            return;
+        }
     }
 
     for (int i = 0; i < get_mem_partition()->num_regions(); i++) {

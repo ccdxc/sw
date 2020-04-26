@@ -792,6 +792,7 @@ capri_cfg_init (asic_cfg_t *cfg, asic_cfg_t& capri_cfg)
 
     capri_cfg.completion_func = cfg->completion_func;
     capri_cfg.device_profile = cfg->device_profile;
+    capri_cfg.upg_init_mode = cfg->upg_init_mode;
     return SDK_RET_OK;
 }
 
@@ -800,6 +801,7 @@ asicpd_init (asic_cfg_t *cfg)
 {
     asic_cfg_t capri_cfg;
 
+    cfg->upg_init_mode = upg_mode_t::UPGRADE_MODE_NONE;
     capri_cfg_init(cfg, capri_cfg);
     if (sdk::asic::asic_is_hard_init()) {
         //@@TODO - check and update redundant initializations within
@@ -815,6 +817,7 @@ asicpd_soft_init (asic_cfg_t *cfg)
 {
     asic_cfg_t capri_cfg;
 
+    cfg->upg_init_mode = upg_mode_t::UPGRADE_MODE_NONE;
     capri_cfg_init(cfg, capri_cfg);
     return capri_soft_init(&capri_cfg);
 }

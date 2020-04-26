@@ -269,10 +269,31 @@ dpdk_device::factory(sdk_dpdk_device_params_t *args) {
     return obj;
 }
 
-void
+sdk_ret_t
 dpdk_device::destroy(dpdk_device *dev) {
+    struct rte_device *rte_dev;
+
+    if (!dev) {
+        return SDK_RET_OK;
+    }
+
+    SDK_DPDK_LOG_INFO("Destroying dpdk dev, port %u", dev->portid);
+    if (rte_eth_dev_is_valid_port(dev->portid)) {
+        rte_dev =  rte_eth_devices[dev->portid].device;
+
+        SDK_DPDK_LOG_INFO("Removing RTE device, port %u", dev->portid);
+        if (!rte_dev) {
+            SDK_DPDK_LOG_ERR("RTE Device for port %u not exist", dev->portid);
+            return SDK_RET_ERR;
+        }
+        if (rte_dev_remove(rte_dev) != 0) {
+            SDK_DPDK_LOG_ERR("RTE Device removal port %u failed", dev->portid);
+            return SDK_RET_ERR;
+        }
+    }
     dev->~dpdk_device();
     SDK_FREE(SDK_MEM_ALLOC_LIB_DPDK_DEVICE, dev);
+    return SDK_RET_OK;
 }
 
 char *

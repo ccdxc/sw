@@ -124,6 +124,7 @@ public:
     Device *GetDeviceByLif(uint32_t lif_id);
     void AddDevice(enum DeviceType type, void *dev_spec);
     void RestoreDevice(enum DeviceType type, void *dev_state);
+    sdk_ret_t RemoveDevice(std::string name);
     void DeleteDevices();
 
     // event handlers

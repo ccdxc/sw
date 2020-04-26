@@ -116,6 +116,7 @@ public:
             ev_state_.status = status;
         }
     }
+    void clear_ev_status(void) { ev_state_.status = SDK_RET_OK; }
     bool ev_in_progress(void) { return ev_state_.rsps_pending > 0; }
     void ev_incr_in_progress(void) { ev_state_.rsps_pending++; }
     void ev_decr_in_progress(void) { ev_state_.rsps_pending--; }

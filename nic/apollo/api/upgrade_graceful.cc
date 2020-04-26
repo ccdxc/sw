@@ -106,6 +106,12 @@ upg_ev_hostdev_reset (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_prep_switchover (upg_ev_params_t *params)
 {
+    learn_state *lstate = api::g_pds_state.learn_db();
+    core::stop_learn_thread();
+    // detaching dpdk driver
+    if (lstate->learn_lif()) {
+        return dpdk_device::destroy(lstate->learn_lif());
+    }
     return SDK_RET_OK;
 }
 

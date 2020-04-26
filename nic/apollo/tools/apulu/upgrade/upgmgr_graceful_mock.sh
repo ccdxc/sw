@@ -1,6 +1,8 @@
 #!/bin/bash
-# top level script which will be invoked by upgrade manager before
-# and after every stage of execution
+# top level script which will invoke this if mock/sim mode set
+
+source $PDSPKG_TOPDIR/sdk/upgrade/core/upgmgr_core_base.sh
+upgmgr_parse_inputs $*
 
 echo "In mock/sim, starting commands for $STAGE_NAME"
 
@@ -14,9 +16,11 @@ elif [[ $STAGE_NAME == "UPG_STAGE_PREP_SWITCHOVER" && $STAGE_TYPE == "post" ]]; 
     echo "prepare switchover, skipping"
 
 elif [[ $STAGE_NAME == "UPG_STAGE_SWITCHOVER" && $STAGE_TYPE == "pre" ]]; then
+    upgmgr_set_init_mode "graceful"
     echo "switchover, skipping"
 
 elif [[ $STAGE_NAME == "UPG_STAGE_READY" && $STAGE_TYPE == "post" ]]; then
+    upgmgr_clear_init_mode
     echo "finish, skipping"
 else
     echo "unknown input"

@@ -200,20 +200,22 @@ move_to_nextstage (void)
         fsm_states.timer_stop();
         fsm_states.timer_start();
         send_discovery_event(domain, id);
-        UPG_TRACE_INFO("Sent service discovery event %s", name.c_str());
+        UPG_TRACE_INFO("Sent service discovery event %s, timout %fs",
+                       name.c_str(), fsm_states.timeout());
     } else if (fsm_states.is_serial_event_sequence()) {
         UPG_TRACE_INFO("Moving to next serial stage %s", name.c_str());
         dump(fsm_states);
         if (fsm_states.has_next_svc()) {
             send_ipc_to_next_service();
-            UPG_TRACE_DEBUG("Sent serial event %s", name.c_str());
+            UPG_TRACE_DEBUG("Sent serial event %s, timeout %fs",
+                            name.c_str(), fsm_states.timeout());
         } else {
             UPG_TRACE_ERR("Oops! no service to send request !");
             SDK_ASSERT(0);
         }
     } else if (fsm_states.is_parallel_event_sequence()) {
-        UPG_TRACE_INFO("Moving to next parallel stage %s",
-                          name.c_str());
+        UPG_TRACE_INFO("Moving to next parallel stage %s, timeout %fs",
+                          name.c_str(), fsm_states.timeout());
         dump(fsm_states);
         upg_stage_t id = fsm_states.current_stage();
         fsm_states.timer_stop();
@@ -345,7 +347,7 @@ fsm::set_current_stage(const upg_stage_t stage_id) {
     timeout_ = stage.svc_rsp_timeout();
     timeout_ = double(timeout_ * 1.0) / 1000;
 
-    UPG_TRACE_DEBUG("Stage %s, pending response %u, service sequence %s,"
+    UPG_TRACE_INFO("Stage %s, pending response %u, service sequence %s,"
                    " Timeout %f ",
                    upg_stage2str(current_stage_), pending_response_,
                    svc_sequence_to_str(svc_sequence_).c_str(), timeout_);
@@ -365,15 +367,18 @@ fsm::timer_init(struct ev_loop *ev_loop) {
     ev_timer_init(&timeout_watcher, timeout_cb, timeout_, 0.0);
 }
 
+#if 0
 void
 fsm::timer_set(void) {
     UPG_TRACE("Setting the timer %f", timeout_);
     ev_timer_set(&timeout_watcher, timeout_, 0.0);
 }
+#endif
 
 void
 fsm::timer_start(void) {
     UPG_TRACE("Starting the timer");
+    ev_timer_set(&timeout_watcher, timeout_, 0.0);
     ev_timer_start(loop, &timeout_watcher);
 }
 
@@ -663,7 +668,7 @@ init_fsm_stages (pt::ptree& tree)
                 UPG_TRACE_ERR("Parsing Error !");
                 return SDK_RET_ERR;
             } else {
-                timeout_str = subtree.get<std::string>("rsp_timeout", "5000");
+                timeout_str = subtree.get<std::string>("rsp_timeout", "60000");
                 svc_seq_str = subtree.get<std::string>("svc_sequence", "");
                 evt_seq_str =
                     subtree.get<std::string>("event_sequence", "parallel");
@@ -740,22 +745,22 @@ init_fsm (fsm_init_params_t *params)
     SDK_ASSERT(fsm_stages.find(start_stage) != fsm_stages.end());
     SDK_ASSERT(params != NULL);
 
-    fsm_states.timer_init(params->ev_loop);
     if (UPG_STAGE_NONE != params->entry_stage) {
         std::string stage;
         stage = id_to_stage_name(params->entry_stage);
-
-        UPG_TRACE_INFO("Setting start stage(%s) from Init params",
-                          stage.c_str());
         fsm_states.set_current_stage(params->entry_stage);
+
+        UPG_TRACE_INFO("Setting start stage(%s) from Init params, timeout %fs",
+                          stage.c_str(), fsm_states.timeout());
     } else {
         std::string stage;
         stage = id_to_stage_name(start_stage);
-
-        UPG_TRACE_INFO("Setting start stage(%s) from upgrade json",
-                          stage.c_str());
         fsm_states.set_current_stage(start_stage);
+
+        UPG_TRACE_INFO("Setting start stage(%s) from upgrade json, timeout %fs",
+                          stage.c_str(), fsm_states.timeout());
     }
+    fsm_states.timer_init(params->ev_loop);
     fsm_states.timer_start();
     upg_ipc_init(upg_event_handler);
 

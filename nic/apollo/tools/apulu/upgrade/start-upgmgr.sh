@@ -23,7 +23,7 @@ if [[ -f "$UPGRADE_INIT_MODE_FILE" ]];then
 fi
 
 if [[ $1 == "-n" || -f "$UPGRADE_INIT_MODE_FILE" ]];then
-    exec $PDSPKG_TOPDIR/bin/pdsupgmgr -t $PDSPKG_TOPDIR/tools/ $*
+    exec $PDSPKG_TOPDIR/bin/pdsupgmgr -t $PDSPKG_TOPDIR/tools/
 fi
 
 exit 0

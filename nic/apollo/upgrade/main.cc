@@ -56,7 +56,9 @@ upg_fsm_init(upg_mode_t mode, sdk::ipc::ipc_msg_ptr msg,
     params.upg_mode = mode;
     params.ev_loop = g_upg_event_thread->ev_loop();
     params.fsm_completion_cb = fsm_completion_hdlr;
-    params.msg_in = msg;
+    if (msg) {
+        params.msg_in = msg;
+    }
     params.entry_stage = entry_stage;
     params.fw_pkgname = fw_pkgname;
     params.tools_dir = g_tools_dir;
@@ -92,7 +94,7 @@ upg_event_thread_init (void *ctxt)
     // if it is an graceful upgrade restart, need to continue the stages
     // from previous run
     if (sdk::platform::upgrade_mode_graceful(mode)) {
-        upg_fsm_init(mode, NULL, UPG_STAGE_READY, NULL);
+        upg_fsm_init(mode, NULL, UPG_STAGE_READY, "none");
     } else {
         // register for upgrade request from grpc thread
         sdk::ipc::reg_request_handler(UPG_REQ_MSG_ID_START,
@@ -171,6 +173,7 @@ int
 main (int argc, char **argv)
 {
     int oc;
+    bool dir_given = false;
     struct option longopts[] = {
         { "tools-dir",       required_argument, NULL, 't' },
         { "help",            no_argument,       NULL, 'h' },
@@ -181,6 +184,7 @@ main (int argc, char **argv)
         switch (oc) {
         case 't':
             if (optarg) {
+                dir_given = true;
                 g_tools_dir = std::string(optarg);
             } else {
                 fprintf(stderr, "tools directory is not specified\n");
@@ -195,7 +199,7 @@ main (int argc, char **argv)
             break;
         }
     }
-    if (g_tools_dir.empty()) {
+    if (!dir_given) {
         fprintf(stderr, "tools directory is not specified\n");
         exit(1);
     }

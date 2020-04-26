@@ -96,47 +96,6 @@ capri_get_hbm_region_by_address (uint64_t addr)
 {
     return g_capri_state_pd->mempartition()->region_by_address(addr);
 }
-// for HW platform this is now done during uboot
-void
-asic_reset_hbm_regions (asic_cfg_t *capri_cfg)
-{
-    mpartition_region_t *reg;
-    mem_addr_t va, pa;
-
-    if (!capri_cfg)
-        return;
-
-    if (capri_cfg->platform != platform_type_t::PLATFORM_TYPE_HAPS &&
-        capri_cfg->platform != platform_type_t::PLATFORM_TYPE_HW) {
-        return;
-    }
-
-    for (int i = 0; i < g_capri_state_pd->mempartition()->num_regions(); i++) {
-        reg = g_capri_state_pd->mempartition()->region(i);
-        if (reg->reset) {
-            // Reset only for haps
-            SDK_TRACE_DEBUG("Resetting %s hbm region", reg->mem_reg_name);
-
-            pa = g_capri_state_pd->mempartition()->addr(reg->start_offset);
-            va = (mem_addr_t)sdk::lib::pal_mem_map(pa, reg->size);
-            if (va) {
-                memset((void *)va, 0, reg->size);
-                sdk::lib::pal_mem_unmap((void *)va);
-            } else {
-                uint8_t zeros[1024] = {0};
-                int64_t rem = reg->size;
-                while (rem > 0) {
-                    sdk::asic::asic_mem_write(pa, zeros, (uint64_t)rem >
-                                              sizeof(zeros) ? sizeof(zeros) :
-                                              rem);
-                    pa += sizeof(zeros);
-                    rem -= sizeof(zeros);
-                }
-            }
-            SDK_TRACE_DEBUG("Resetting %s hbm region done", reg->mem_reg_name);
-        }
-    }
-}
 
 static sdk_ret_t
 capri_hbm_llc_cache_init (asic_cfg_t *cfg)

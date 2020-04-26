@@ -240,6 +240,15 @@ is_nicmgr_ready (void)
     return g_thread_store[PDS_THREAD_ID_NICMGR]->ready();
 }
 
+void
+stop_learn_thread (void)
+{
+    PDS_TRACE_INFO("Stopping learn thread");
+    core::g_thread_store[PDS_THREAD_ID_LEARN]->stop();
+    PDS_TRACE_INFO("Waiting learn thread to stop");
+    core::g_thread_store[PDS_THREAD_ID_LEARN]->wait();
+}
+
 sdk_ret_t
 spawn_api_thread (pds_state *state)
 {

@@ -52,17 +52,24 @@ Eth::GetEthDevInfo(struct EthDevInfo *dev_info)
 std::string
 Eth::eth_type_to_str(EthDevType type)
 {
-    switch (type) {
-        CASE(ETH_UNKNOWN);
-        CASE(ETH_HOST);
-        CASE(ETH_HOST_MGMT);
-        CASE(ETH_MNIC_OOB_MGMT);
-        CASE(ETH_MNIC_INTERNAL_MGMT);
-        CASE(ETH_MNIC_INBAND_MGMT);
-        CASE(ETH_MNIC_CPU);
-        CASE(ETH_MNIC_LEARN);
-        CASE(ETH_MNIC_CONTROL);
-    default:
+    if (type == ETH_HOST) {
+        return "host";
+    } else if (type == ETH_HOST_MGMT) {
+        return "host_mgmt";
+    } else if (type == ETH_MNIC_OOB_MGMT) {
+        return "oob_mgmt";
+    } else if (type == ETH_MNIC_INTERNAL_MGMT) {
+        return "internal_mgmt";
+    } else if (type == ETH_MNIC_INBAND_MGMT) {
+        return "inband_mgmt";
+    } else if (type == ETH_MNIC_CPU) {
+        return "cpu";
+    } else if (type == ETH_MNIC_LEARN) {
+        return "learn";
+    } else if (type == ETH_MNIC_CONTROL) {
+        return "control";
+    } else {
+        NIC_LOG_ERR("Unknown ETH dev type: {}", type);
         return "Unknown";
     }
 }
@@ -829,6 +836,20 @@ Eth::LocalDeviceInit()
     // reset device registers to defaults
     intr_reset_dev(dev_resources.intr_base, spec->intr_count, 1);
 
+}
+
+sdk_ret_t
+Eth::RemoveDevice(void)
+{
+#ifdef __aarch64__
+    if (remove_mnet(spec->name.c_str()) != 0) {
+        NIC_LOG_ERR("{}: Unable to remove the device", spec->name);
+        return SDK_RET_ERR;
+    }
+#else
+    NIC_LOG_DEBUG("{}: Skipping device removal", spec->name);
+#endif
+    return SDK_RET_OK;
 }
 
 bool

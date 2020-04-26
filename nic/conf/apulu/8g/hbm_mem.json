@@ -280,6 +280,7 @@
             "kind": "cfgtbl",
             "size": "8M",
             "cache": "p4ig",
+            "reset": true,
             "_comment": "128K * 64B"
         },
         {
@@ -349,6 +350,7 @@
             "kind": "cfgtbl",
             "size": "256M",
             "cache": "p4eg",
+            "reset": true,
             "_comment": "4M * 64B"
         },
         {
@@ -356,6 +358,7 @@
             "kind": "cfgtbl",
             "size": "32M",
             "cache": "p4eg",
+            "reset": true,
             "_comment": "512K * 64B"
         },
         {

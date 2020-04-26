@@ -301,6 +301,13 @@ restore_objs (void)
 
     PDS_TRACE_DEBUG("Retrieving saved objects");
 
+    NICMGR_RESTORE_OBJS(proto_port, nicmgr_upg_restore_uplink_info,
+                        NICMGR_BKUP_OBJ_UPLINKINFO_ID, "uplink");
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Uplink restore failed");
+        return ret;
+    }
+
     NICMGR_RESTORE_OBJS(proto_dev, nicmgr_upg_restore_eth_device_info,
                         NICMGR_BKUP_OBJ_DEVINFO_ID, "ethdev");
 
@@ -309,12 +316,6 @@ restore_objs (void)
         return ret;
     }
 
-    NICMGR_RESTORE_OBJS(proto_port, nicmgr_upg_restore_uplink_info,
-                        NICMGR_BKUP_OBJ_UPLINKINFO_ID, "uplink");
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Uplink restore failed");
-        return ret;
-    }
     return SDK_RET_OK;
 }
 
@@ -388,6 +389,24 @@ nicmgr_upg_ev_repeal_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     return nicmgr_upg_process_response(ret, info);
 }
 
+static void
+nicmgr_upg_ev_prep_switchover_hdlr (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
+{
+    upg_ev_info_s *info = new upg_ev_info_t();
+    sdk_ret_t ret;
+
+    PDS_TRACE_DEBUG("Upgrade nicmgr IPC request prep_switchover");
+    info->msg_in = msg;
+    ret = g_devmgr->RemoveDevice("cpu_mnic0");
+    if (ret == SDK_RET_OK || ret == SDK_RET_ENTRY_NOT_FOUND) {
+        ret = g_devmgr->RemoveDevice("cpu_mnic1");
+    }
+    if (ret == SDK_RET_OK || ret == SDK_RET_ENTRY_NOT_FOUND) {
+        ret = SDK_RET_OK;
+    }
+    nicmgr_upg_process_response(ret, info);
+}
+
 sdk_ret_t
 nicmgr_upg_graceful_init (void)
 {
@@ -404,6 +423,8 @@ nicmgr_upg_graceful_init (void)
                                   nicmgr_upg_ev_hostdev_reset_hdlr, NULL);
     sdk::ipc::reg_request_handler(UPG_MSG_ID_REPEAL,
                                   nicmgr_upg_ev_repeal_hdlr, NULL);
+    sdk::ipc::reg_request_handler(UPG_MSG_ID_PREP_SWITCHOVER,
+                                  nicmgr_upg_ev_prep_switchover_hdlr, NULL);
 
     // register the async handlers to nicmgr library
     nicmgr::upg::upg_ev_init(nicmgr_device_reset_status_cb,
@@ -501,7 +522,7 @@ upg_ev_ready (upg_ev_params_t *params)
 static sdk_ret_t
 upg_ev_prep_switchover (upg_ev_params_t *params)
 {
-    return SDK_RET_OK;
+    return nicmgr_send_ipc(params);
 }
 
 static sdk_ret_t

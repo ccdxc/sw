@@ -1,34 +1,12 @@
 #!/bin/bash
-# called in compat checks to validate the image present or not
-unset HELP FW_PKG_NAME FW_PATH STAGE_NAME RUNNING_IMAGE
-unset STAGE_TYPE STAGE_STATUS
 
-# file to identify the bootup is regular or upgrade
-UPGRADE_INIT_MODE_FILE='/data/upgrade_init_mode'
-UPGRADE_BACKUP_TAR_FILE='/data/pds_upgrade_data.tgz'
+unset FW_PATH RUNNING_IMAGE FW_UPDATE_TOOL SYS_UPDATE_TOOL
 
-function upgmgr_parse_inputs() {
-    while getopts 'hf:s:t:r:' c
-    do
-        case $c in
-            h) HELP=1 ;;
-            f) FW_PKG_NAME=$OPTARG ;;
-            s) STAGE_NAME=$OPTARG ;;
-            t) STAGE_TYPE=$OPTARG ;;
-            r) STAGE_STATUS=$OPTARG ;;
-        esac
-    done
-
-    if [[ -z "$FW_PKG_NAME" || -z "$STAGE_NAME" ||
-            -z "$STAGE_TYPE" || -z "$STAGE_STATUS" ]];then
-        echo "Usage <command> -f <pkg-name> -s <stage-name> -t <pre/post> -r <status>"
-        exit 1
-    fi
-}
+source $PDSPKG_TOPDIR/tools/upgmgr_core_base.sh
 
 function upgmgr_setup() {
-    source /nic/tools/setup_env_hw.sh
     FW_UPDATE_TOOL=$PDSPKG_TOPDIR/tools/fwupdate
+    SYS_UPDATE_TOOL=$PDSPKG_TOPDIR/tools/sysupdate.sh
 
     if [[ -f "$FW_PKG_NAME" ]];then
         FW_PATH=$FW_PKG_NAME
@@ -48,15 +26,15 @@ function upgmgr_setup() {
 }
 
 function upgmgr_pkgcheck() {
-    CC_CHECK_TOOL=${PDSPKG_TOPDIR}/tools/upgmgr_cc_meta.py
+    local CC_CHECK_TOOL=${PDSPKG_TOPDIR}/tools/upgmgr_cc_meta.py
 
     # verify the image
     $FW_UPDATE_TOOL -p $FW_PATH -v
     [[ $? -ne 0 ]] && echo "FW verfication failed!" && exit 1
 
     # extract meta files
-    META_NEW='/tmp/meta_cc_new.json'
-    META_RUNNING='/tmp/meta_cc_running.json'
+    local META_NEW='/tmp/meta_cc_new.json'
+    local META_RUNNING='/tmp/meta_cc_running.json'
     rm -rf $META_NEW $META_RUNNING
 
     # extract meta file from new firmware
@@ -79,21 +57,38 @@ function upgmgr_pkgcheck() {
 }
 
 function upgmgr_backup() {
-    files_must="/update/pcieport_upgdata /update/pciemgr_upgdata "
-    files_must+="/update/pds_upgrade "
-    files_optional="/update/pciemgr_upgrollback "
+    cp /dev/shm/pds_upgrade /update/pds_upgdata
+    local files_must="/update/pcieport_upgdata /update/pciemgr_upgdata "
+    files_must+="/update/pds_upgdata "
+    local files_optional="/update/pciemgr_upgrollback "
     for e in $files_must; do
         if [[ ! -f $e ]]; then
             echo "File $e not present"
             return 1
         fi
     done
-    tar -cvzf $UPGRADE_BACKUP_TAR_FILE $files_must $files_optional
     return 0
 }
 
 function upgmgr_restore() {
-    mkdir -p /update/
-    tar -C / -xvzf $UPGRADE_BACKUP_TAR_FILE
-    return $?
+    # TODO : check graceful upgrade and validate the file existance
+    cp /update/pds_upgdata /dev/shm/pds_upgrade
+}
+
+function wait_for_vpp_exit() {
+# vpp uses mnet uio, and its exis is mandatory for switch_rootfs.sh
+# to succeed in rmmod of this driver
+    local refcnt=`lsmod | grep mnet_uio_pdrv_genirq | awk '{print $3}'`
+    local count=0
+    while [[ $refcnt -gt 1 && $count -lt 5000 ]];do
+        refcnt=`lsmod | grep mnet_uio_pdrv_genirq | awk '{print $3}'`
+        usleep 10
+        count=`expr $count + 1`
+    done
+    if  [[ $count -lt 5000 ]];then
+        return 0
+    else
+        echo "vpp exit, uio driver refcount check exceeded the limit $count"
+        return 1
+    fi
 }

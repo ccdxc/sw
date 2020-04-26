@@ -2,7 +2,7 @@
     "svc": {
         "names": [ "pdsagent", "vpp", "pciemgr" ],
         "event_sequence": "parallel",
-        "rsp_timeout": "1000ms",
+        "rsp_timeout": "60000ms",
         "domain": "A",
         "discovery": "no"
     },
@@ -27,6 +27,9 @@
         "start": {
             "//": "stops external communication channels and",
             "//": "prepare for B bringup",
+            "svc": {
+                "rsp_timeout": "120000"
+            },
             "events": [
                 { "name": "svc_rsp_ok",   "next_stage": "backup" },
                 { "name": "svc_rsp_fail", "next_stage": "repeal" },

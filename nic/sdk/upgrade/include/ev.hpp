@@ -17,6 +17,7 @@
 #define __UPGRADE_EV_HPP__
 
 #include "string.h"
+#include "stdio.h"
 #include "include/sdk/globals.hpp"
 #include "upgrade/include/upgrade.hpp"
 
@@ -68,13 +69,20 @@ upg_stage2event (upg_stage_t stage)
     return (upg_ev_id_t)EV_ID_UPGMGR(stage);
 }
 
-// environment variable setup by the process loader during bringup
+// file setup by the upgrade loader during bringup
 // if it not set, regular boot is assumed
+#define UPGRADE_INIT_MODE_FILE "/data/upgrade_init_mode.txt"
+
 static inline upg_mode_t
 upg_init_mode(void)
 {
-    const char *m = getenv("UPG_INIT_MODE");
+    FILE *fp = fopen(UPGRADE_INIT_MODE_FILE, "r");
     upg_mode_t mode;
+    char buf[32], *m = NULL;
+
+    if (fp) {
+        m = fgets(buf, sizeof(buf), fp);
+    }
 
     if (!m) {
        return upg_mode_t::UPGRADE_MODE_NONE;

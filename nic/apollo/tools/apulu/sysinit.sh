@@ -9,6 +9,17 @@ export PERSISTENT_LOG_DIR='/obfl/'
 
 ulimit -c unlimited
 
+#Clean up any stale files from /update dir when we are doing fresh boot
+#Also clean up /data/upgrade_init_mode.txt to bring up processes in fresh boot
+
+#if we see overlay's lowerdir is /new that means we are starting in upgrade mode
+#if lowerdir=/new is not found then we are in fresh boot mode
+grep "overlay" /proc/mounts | grep -q "lowerdir=/new"
+if [ $? -ne 0 ]; then
+    rm -rf /update/*_upg*
+    rm -rf /data/upgrade_init_mode.txt
+fi
+
 # POST
 if [[ -f $SYSCONFIG/post_disable ]]; then
     echo "Skipping Power On Self Test (POST)"

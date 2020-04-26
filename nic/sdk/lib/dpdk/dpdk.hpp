@@ -86,7 +86,7 @@ private:
 
 public:
     static dpdk_device *factory(sdk_dpdk_device_params_t *args);
-    static void destroy(dpdk_device *dev);
+    static sdk_ret_t destroy(dpdk_device *dev);
     static char * remove_header(dpdk_mbuf *packet, uint16_t len);
     static char * add_header(dpdk_mbuf *packet, uint16_t len);
     static char * append_data(dpdk_mbuf *packet, uint16_t len);

@@ -182,6 +182,7 @@ public:
     void GetEthDevInfo(struct EthDevInfo *dev_info);
     static std::string eth_type_to_str(EthDevType type);
     static EthDevType str_to_eth_type(std::string const &s);
+    sdk_ret_t RemoveDevice(void);
 
 private:
     // Device Spec

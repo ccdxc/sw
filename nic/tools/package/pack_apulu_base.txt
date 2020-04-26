@@ -322,7 +322,8 @@ nic/build/$ARCH/$PIPELINE/lib/libpdsupgsvc.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsupgproto.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/gen/upgrade_graceful.json               /nic/conf/gen/
 nic/build/$ARCH/$PIPELINE/gen/upgrade_hitless.json                /nic/conf/gen/
-nic/apollo/tools/apulu/upgrade/start_upgmgr.sh                    /nic/tools/
+nic/sdk/upgrade/core/upgmgr_core_base.sh                          /nic/tools/
+nic/apollo/tools/apulu/upgrade/start-upgmgr.sh                    /nic/tools/
 nic/apollo/tools/apulu/upgrade/upgmgr_base.sh                     /nic/tools/
 nic/apollo/tools/apulu/upgrade/upgmgr_cc_meta.py                  /nic/tools/
 nic/apollo/tools/apulu/upgrade/upgmgr_graceful.sh                 /nic/tools/

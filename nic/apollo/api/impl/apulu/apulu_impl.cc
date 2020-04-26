@@ -580,11 +580,6 @@ apulu_impl::pipeline_init(void) {
     ret = pipeline_p4_hbm_init(&p4pd_cfg, true);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    // skip the remaining if it is a soft initialization
-    if (sdk::asic::asic_is_soft_init()) {
-        return SDK_RET_OK;
-    }
-
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_program_p4plus_table_mpu_base_pc();
