@@ -300,6 +300,11 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_deps(api_obj_ctxt_t *obj_ctxt) override;
 
+    ///\brief read config
+    ///\param[out] info pointer to the info object
+    ///\return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t read(pds_route_info_t *info);
+
     /// \brief     add given route to the database
     /// \return   SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;

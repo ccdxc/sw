@@ -532,7 +532,8 @@ pds_svc_route_table_get (const pds::RouteTableGetRequest *proto_req,
     }
 
     if (proto_req->id_size() == 0) {
-        ret = pds_route_table_read_all(pds_route_table_api_info_to_proto, proto_rsp);
+        ret = pds_route_table_read_all(pds_route_table_api_info_to_proto,
+                                       proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
 
@@ -541,7 +542,8 @@ pds_svc_route_table_get (const pds::RouteTableGetRequest *proto_req,
 }
 
 static inline sdk_ret_t
-pds_svc_route_table_handle_cfg (cfg_ctxt_t *ctxt, google::protobuf::Any *any_resp)
+pds_svc_route_table_handle_cfg (cfg_ctxt_t *ctxt,
+                                google::protobuf::Any *any_resp)
 {
     sdk_ret_t ret;
     google::protobuf::Any *any_req = (google::protobuf::Any *)ctxt->req;
@@ -776,7 +778,7 @@ pds_svc_route_get (const pds::RouteGetRequest *proto_req,
     pds_route_key_t key;
     pds_route_info_t info;
 
-    if (proto_req == NULL) {
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return SDK_RET_INVALID_ARG;
     }

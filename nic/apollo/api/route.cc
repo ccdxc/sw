@@ -457,6 +457,58 @@ route::add_deps(api_obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+route::read(pds_route_info_t *info) {
+    sdk_ret_t ret;
+    uint32_t num_routes;
+    route_info_t *route_info;
+    pds_route_table_info_t route_table_info;
+
+    memset(&route_table_info, 0, sizeof(route_table_info));
+    // get number of routes
+    route_table_info.spec.route_info =
+        (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                   ROUTE_INFO_SIZE(0));
+    ret = pds_route_table_read(&key_.route_table_id, &route_table_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to get route table %s size",
+                      key_.route_table_id.str());
+        goto end;
+    }
+    num_routes = route_table_info.spec.route_info->num_routes;
+    SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_table_info.spec.route_info);
+    route_table_info.spec.route_info =
+        (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                  ROUTE_INFO_SIZE(num_routes));
+    route_table_info.spec.route_info->num_routes = num_routes;
+    ret = pds_route_table_read(&key_.route_table_id, &route_table_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read all route table %s routes",
+                      key_.route_table_id.str());
+        goto end;
+    }
+    // walk the route table and find the route of interest
+    route_info = route_table_info.spec.route_info;
+    for (uint32_t i = 0; i < num_routes; i++) {
+        if (key_.route_id == route_info->routes[i].key) {
+            // fill the spec
+            memcpy(&info->spec.key, &key_, sizeof(key_));
+            memcpy(&info->spec.attrs, &route_info->routes[i].attrs,
+                   sizeof(info->spec.attrs));
+            break;
+        }
+        // continue the search
+    }
+
+end:
+
+    if (route_table_info.spec.route_info) {
+         SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                  route_table_info.spec.route_info);
+    }
+    return ret;
+}
+
+sdk_ret_t
 route::add_to_db(void) {
     return route_db()->insert(this);
 }

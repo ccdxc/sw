@@ -74,11 +74,9 @@ pds_route_table_read (_In_ pds_obj_key_t *key,
     if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
     }
-
     if ((entry = pds_route_table_find(key)) == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-
     return entry->read(info);
 }
 
@@ -181,7 +179,19 @@ pds_route_create (_In_ pds_route_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 sdk_ret_t
 pds_route_read (_In_ pds_route_key_t *key, _Out_ pds_route_info_t *info)
 {
-    return SDK_RET_INVALID_OP;
+    route *entry;
+    sdk_ret_t ret;
+
+    if ((key == NULL) || (info == NULL)) {
+        return SDK_RET_INVALID_ARG;
+    }
+    entry = route::build(key);
+    if (entry == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
+    ret = entry->read(info);
+    route::soft_delete(entry);
+    return ret;
 }
 
 sdk_ret_t

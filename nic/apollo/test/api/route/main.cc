@@ -131,6 +131,23 @@ route_table_add_routes (pds_batch_ctxt_t bctxt, std::string base_pfx)
 }
 
 void
+route_read_verify (void)
+{
+    sdk_ret_t ret;
+    pds_route_key_t key;
+    pds_route_info_t info;
+    uint32_t route_id = 100;
+
+    for (uint32_t i = 0; i < k_num_route_add; i++) {
+        key.route_id = int2pdsobjkey(route_id + i);
+        key.route_table_id = int2pdsobjkey(k_route_table_id);
+        memset(&info, 0, sizeof(info));
+        ret = pds_route_read(&key, &info);
+        ASSERT_TRUE(ret == SDK_RET_OK);
+    }
+}
+
+void
 route_table_add_routes_verify (void)
 {
     pds_route_table_info_t info;
@@ -147,6 +164,8 @@ route_table_add_routes_verify (void)
     ASSERT_TRUE(info.spec.route_info->num_routes ==
                 (k_num_init_routes + k_num_route_add));
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
+    // do a GET on all additional routes
+    route_read_verify();
 }
 
 void
