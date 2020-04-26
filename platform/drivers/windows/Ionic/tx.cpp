@@ -12,53 +12,116 @@ ionic_txq_nbl_list_push_head(struct txq_nbl_list *list, PNET_BUFFER_LIST nbl)
     list->count++;
 }
 
+NDIS_STATUS
+validate_nbl(struct ionic *ionic,
+	PNET_BUFFER_LIST nbl)
+{
+
+	NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+    NDIS_TCP_LARGE_SEND_OFFLOAD_NET_BUFFER_LIST_INFO mss = {0};
+    NDIS_TCP_IP_CHECKSUM_NET_BUFFER_LIST_INFO csum_info = {0};
+
+    mss.Value = NET_BUFFER_LIST_INFO(nbl, TcpLargeSendNetBufferListInfo);
+
+    csum_info.Value =
+        NET_BUFFER_LIST_INFO(nbl, TcpIpChecksumNetBufferListInfo);
+
+    if (csum_info.Transmit.UdpChecksum) {
+
+        if (csum_info.Transmit.IsIPv4 &&
+            ionic->udpv4_tx_state == NDIS_OFFLOAD_SET_OFF) {
+            status = NDIS_STATUS_INVALID_PACKET;
+			goto exit;
+        } else if (csum_info.Transmit.IsIPv6 &&
+                   ionic->udpv6_tx_state == NDIS_OFFLOAD_SET_OFF) {
+            status = NDIS_STATUS_INVALID_PACKET;
+			goto exit;
+        }
+    }
+
+    if (csum_info.Transmit.TcpChecksum) {
+
+        if (csum_info.Transmit.IsIPv4 &&
+            ionic->tcpv4_tx_state == NDIS_OFFLOAD_SET_OFF) {
+            status = NDIS_STATUS_INVALID_PACKET;
+			goto exit;
+        } else if (csum_info.Transmit.IsIPv6 &&
+                    ionic->tcpv6_tx_state == NDIS_OFFLOAD_SET_OFF) {
+            status = NDIS_STATUS_INVALID_PACKET;
+			goto exit;
+        }
+    }
+
+    if (csum_info.Transmit.IpHeaderChecksum) {
+
+        if (csum_info.Transmit.IsIPv4 &&
+            ionic->ipv4_tx_state == NDIS_OFFLOAD_SET_OFF) {
+            status = NDIS_STATUS_INVALID_PACKET;
+			goto exit;
+        }
+    }
+
+    if (mss.LsoV1Transmit.MSS != 0) {
+        if (mss.Transmit.Type == NDIS_TCP_LARGE_SEND_OFFLOAD_V1_TYPE) {
+            if (ionic->lsov1_state ==
+                NDIS_OFFLOAD_PARAMETERS_LSOV1_DISABLED) {
+				status = NDIS_STATUS_INVALID_PACKET;
+				goto exit;
+            }
+        } else {
+            if (mss.LsoV2Transmit.IPVersion ==
+                    NDIS_TCP_LARGE_SEND_OFFLOAD_IPv4 &&
+                ionic->lsov2ipv4_state ==
+                    NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED) {
+				status = NDIS_STATUS_INVALID_PACKET;
+				goto exit;
+            } else if (mss.LsoV2Transmit.IPVersion ==
+                            NDIS_TCP_LARGE_SEND_OFFLOAD_IPv6 &&
+                        ionic->lsov2ipv6_state ==
+                            NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED) {
+				status = NDIS_STATUS_INVALID_PACKET;
+				goto exit;
+            }
+        }
+    }
+
+exit:
+
+	return status;
+}
+
 void
-ionic_service_pending_nbl_requests(struct ionic *ionic, struct qcq *qcq)
+ionic_service_nbl_requests(struct ionic *ionic, struct qcq *qcq, bool cleanup)
 {
     PNET_BUFFER_LIST nbl;
     NDIS_STATUS status;
     NDIS_TCP_LARGE_SEND_OFFLOAD_NET_BUFFER_LIST_INFO mss = {0};
-    txq_nbl_list completed_list;
-
-    ionic_txq_nbl_list_init(&completed_list);
-
-    DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
-              "%s Enter Service Pending NBL adapter %p\n", __FUNCTION__,
-              ionic));
+    txq_nbl_list failed_list;
 
     BUG_ON(NDIS_CURRENT_IRQL() != DISPATCH_LEVEL);
 
-    NdisDprAcquireSpinLock(&qcq->txq_pending_nbl_lock);
+    ionic_txq_nbl_list_init(&failed_list);
 
-    nbl = ionic_txq_nbl_list_pop_head(&qcq->txq_pending_nbl);
+    NdisDprAcquireSpinLock(&qcq->txq_nbl_lock);
+    nbl = ionic_txq_nbl_list_pop_head(&qcq->txq_nbl_list);
 
     while (nbl) {
 
-        InterlockedDecrement( (LONG *)&qcq->tx_stats->pending_nbl_count);
-
-        DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
-                  "%s Processing nbl %p\n", __FUNCTION__, nbl));
-
-        status = process_nbl(ionic, qcq, nbl, &completed_list);
+		NdisDprReleaseSpinLock(&qcq->txq_nbl_lock);
+		status = process_nbl(ionic, qcq, nbl, &failed_list, cleanup);
+		NdisDprAcquireSpinLock(&qcq->txq_nbl_lock);
 
         if (status == NDIS_STATUS_PENDING) {
-            ionic_txq_nbl_list_push_head(&qcq->txq_pending_nbl, nbl);
-            InterlockedIncrement( (LONG *)&qcq->tx_stats->pending_nbl_count);
-
-            DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
-                      "%s Re-inserting nbl %p\n", __FUNCTION__, nbl));
+            ionic_txq_nbl_list_push_head(&qcq->txq_nbl_list, nbl);
             break;
         }
 
-        nbl = ionic_txq_nbl_list_pop_head(&qcq->txq_pending_nbl);
+        nbl = ionic_txq_nbl_list_pop_head(&qcq->txq_nbl_list);
     }
 
-    ionic_send_complete(ionic, &completed_list, DISPATCH_LEVEL);
+    NdisDprReleaseSpinLock(&qcq->txq_nbl_lock);
 
-    NdisDprReleaseSpinLock(&qcq->txq_pending_nbl_lock);
-
-    DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
-              "%s Exit Service Pending NBL adapter %p\n", __FUNCTION__, ionic));
+	ionic_send_complete(ionic, &failed_list, DISPATCH_LEVEL);
 
     return;
 }
@@ -75,15 +138,17 @@ ionic_service_nb_requests(struct qcq *qcq, bool exiting)
     txq_nbl_list completed_list;
     LIST_ENTRY *list_entry = NULL;
 
+	BUG_ON(NDIS_CURRENT_IRQL() != DISPATCH_LEVEL);
+
     ionic_txq_nbl_list_init(&completed_list);
 
-	NdisAcquireSpinLock( &qcq->txq_nb_lock);
+	NdisDprAcquireSpinLock( &qcq->txq_nb_lock);
 
     while (!IsListEmpty(&qcq->txq_nb_list)) {
 
         list_entry = RemoveHeadList(&qcq->txq_nb_list);
 
-		NdisReleaseSpinLock( &qcq->txq_nb_lock);
+		NdisDprReleaseSpinLock( &qcq->txq_nb_lock);
 
         txq_pkt_private =
             CONTAINING_RECORD(list_entry, struct txq_pkt_private, link);
@@ -98,14 +163,14 @@ ionic_service_nb_requests(struct qcq *qcq, bool exiting)
 										  txq_pkt->packet_orig,
                                           &completed_list,
                                           NDIS_STATUS_SEND_ABORTED);
-			NdisAcquireSpinLock( &qcq->txq_nb_lock);
+			NdisDprAcquireSpinLock( &qcq->txq_nb_lock);
 			continue;
 		}
        
         status = ionic_queue_txq_pkt(ionic, qcq, txq_pkt->packet_orig);
 
         if (status == NDIS_STATUS_PENDING) {
-			NdisAcquireSpinLock( &qcq->txq_nb_lock);
+			NdisDprAcquireSpinLock( &qcq->txq_nb_lock);
             // Insert it back to the head of the list
             InsertHeadList(&qcq->txq_nb_list, &txq_pkt_private->link);
 
@@ -126,10 +191,10 @@ ionic_service_nb_requests(struct qcq *qcq, bool exiting)
 			status = NDIS_STATUS_SUCCESS;
         }
 
-		NdisAcquireSpinLock( &qcq->txq_nb_lock);
+		NdisDprAcquireSpinLock( &qcq->txq_nb_lock);
     }
 
-	NdisReleaseSpinLock( &qcq->txq_nb_lock);
+	NdisDprReleaseSpinLock( &qcq->txq_nb_lock);
 
 	ionic_send_complete(ionic, &completed_list, NDIS_CURRENT_IRQL());
 
@@ -143,7 +208,8 @@ NDIS_STATUS
 process_nbl(struct ionic *ionic,
             struct qcq *qcq,
             PNET_BUFFER_LIST nbl,
-            txq_nbl_list *completed_list)
+            txq_nbl_list *completed_list,
+			bool cleanup)
 {
 
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
@@ -155,7 +221,7 @@ process_nbl(struct ionic *ionic,
     struct txq_pkt *txq_pkt;
 	LONG processed_cnt = 0;
 	struct txq_nbl_private *nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( nbl);
-	bool fail_nbl = FALSE;
+	bool fail_nbl = cleanup;
 
     mss.Value = NET_BUFFER_LIST_INFO(nbl, TcpLargeSendNetBufferListInfo);
 
@@ -347,8 +413,9 @@ ionic_txq_complete_pkt(struct queue *q,
             return_tx_frag(ionic, txq_pkt->tx_frag_elem);
             txq_pkt->tx_frag_elem = NULL;
         }
-        
+#ifdef DBG        
         InterlockedDecrement(&qcq->outstanding_tx_count);
+#endif
 
         if (bProcessPacket) {
 
@@ -651,9 +718,9 @@ ionic_enqueue_txq_lso_pkt(struct qcq *qcq,
     } else {
         ionic_q_post(q, false, ionic_txq_complete_pkt, packet);
     }
-
+#ifdef DBG
     InterlockedIncrement(&qcq->outstanding_tx_count);
-
+#endif
     return;
 }
 
@@ -711,8 +778,9 @@ ionic_enqueue_txq_pkt(struct qcq *qcq,
     }
 
     ionic_q_post(q, true, ionic_txq_complete_pkt, packet);
-
+#ifdef DBG
     InterlockedIncrement(&qcq->outstanding_tx_count);
+#endif
 
     return;
 }
@@ -1187,10 +1255,11 @@ ionic_return_txq_pkt(struct qcq *qcq, struct txq_pkt *txq_pkt)
 {
 
     txq_pkt->next.Next = NULL;
-	
+#ifdef DBG	
     InterlockedIncrement(&qcq->tx_pkts_free_count);
+#endif
 
-	InterlockedPushEntrySList( qcq->tx_pkt_list,
+	InterlockedPushEntrySList( &qcq->tx_pkt_list,
 							   &txq_pkt->next);
     return;
 }
@@ -1280,14 +1349,10 @@ ionic_free_txq_pkts(struct ionic *ionic, struct qcq *qcq)
         NdisFreeMemoryWithTagPriority_internal(
             ionic->adapterhandle, qcq->txq_base, IONIC_TX_MEM_TAG);
         qcq->txq_base = NULL;
+#ifdef DBG
         qcq->tx_pkts_free_count = 0;
+#endif
     }
-
-	if (qcq->tx_pkt_list != NULL) {		
-        NdisFreeMemoryWithTagPriority_internal(
-            ionic->adapterhandle, qcq->tx_pkt_list, IONIC_GENERIC_TAG);
-        qcq->tx_pkt_list = NULL;
-	}
 
     if (qcq->tx_sgl_buffer != NULL) {
         NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, qcq->tx_sgl_buffer,
@@ -1306,11 +1371,13 @@ ionic_get_next_txq_pkt(struct qcq *qcq)
 {
     struct txq_pkt *txq_pkt = NULL;
 
-	txq_pkt = (struct txq_pkt *)InterlockedPopEntrySList( qcq->tx_pkt_list);
+	txq_pkt = (struct txq_pkt *)InterlockedPopEntrySList( &qcq->tx_pkt_list);
 
 	if (txq_pkt != NULL) {
+#ifdef DBG
 		ASSERT( qcq->tx_pkts_free_count > 0);
 		InterlockedDecrement(&qcq->tx_pkts_free_count);
+#endif
 	}
 
     return txq_pkt;
@@ -1329,31 +1396,29 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
                    ULONG send_flags)
 {
     struct ionic *ionic = (struct ionic *)adapter_context;
-    PNET_BUFFER_LIST nbl, next_nbl = NULL, last_nbl = NULL;
-    PNET_BUFFER nb, next_nb;
+    PNET_BUFFER_LIST nbl, next_nbl = NULL;
     BOOLEAN is_dispatch =
         (send_flags & NDIS_SEND_FLAGS_DISPATCH_LEVEL) ? TRUE : FALSE;
     ULONG num_nbls = 0;
-    ULONG nb_ref;
     struct lif *lif;
     struct qcq *qcq;
-    KIRQL old_irql;
     NDIS_STATUS status;
     NDIS_TCP_LARGE_SEND_OFFLOAD_NET_BUFFER_LIST_INFO mss = {0};
-    struct txq_pkt_private *txq_pkt_private;
     ULONG lif_id = 0;
     ULONG filter_id = 0;
-    txq_nbl_list failed_list;
     NDIS_TCP_IP_CHECKSUM_NET_BUFFER_LIST_INFO csum_info = {0};
-    BOOLEAN fail_nbl = FALSE;
     ULONG tx_queue = 0;
-    struct txq_nbl_private *nbl_private = NULL;
+	txq_nbl_list failed_list;
+    PNET_BUFFER nb, next_nb;
+    ULONG nb_ref;
+	struct txq_pkt_private * txq_pkt_private = NULL;
+	struct txq_nbl_private *nbl_private = NULL;
 
     UNREFERENCED_PARAMETER(port_number);
 
     ionic_txq_nbl_list_init(&failed_list);
-
-    filter_id = NET_BUFFER_LIST_RECEIVE_FILTER_ID(pnetlist);
+    
+	filter_id = NET_BUFFER_LIST_RECEIVE_FILTER_ID(pnetlist);
 
     for (nbl = pnetlist; nbl != NULL; nbl = next_nbl, ++num_nbls) {
         next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
@@ -1409,86 +1474,21 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
         return;
     }
 
-    // Validate that if we are asked to perform offload that it is currently
-    // enabled
-    for (nbl = pnetlist; nbl != NULL; nbl = next_nbl, ++num_nbls) {
-        next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
+    DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
+              "%s Send Packets adapter %p num_nbls %d nbl %p\n", __FUNCTION__,
+              ionic, num_nbls, pnetlist));        
 
-        fail_nbl = FALSE;
+    for (nbl = pnetlist; nbl; nbl = next_nbl) {
+       
+        ULONG_PTR hash_val = (ULONG_PTR)NET_BUFFER_LIST_INFO( nbl, NetBufferListHashValue);
 
-        mss.Value = NET_BUFFER_LIST_INFO(nbl, TcpLargeSendNetBufferListInfo);
+		status = validate_nbl( ionic,
+							   nbl);
 
-        csum_info.Value =
-            NET_BUFFER_LIST_INFO(nbl, TcpIpChecksumNetBufferListInfo);
-
-        if (csum_info.Transmit.UdpChecksum) {
-
-            if (csum_info.Transmit.IsIPv4 &&
-                ionic->udpv4_tx_state == NDIS_OFFLOAD_SET_OFF) {
-                fail_nbl = TRUE;
-            } else if (csum_info.Transmit.IsIPv6 &&
-                       ionic->udpv6_tx_state == NDIS_OFFLOAD_SET_OFF) {
-                fail_nbl = TRUE;
-            }
-        }
-
-        if (!fail_nbl && csum_info.Transmit.TcpChecksum) {
-
-            if (csum_info.Transmit.IsIPv4 &&
-                ionic->tcpv4_tx_state == NDIS_OFFLOAD_SET_OFF) {
-                fail_nbl = TRUE;
-            } else if (csum_info.Transmit.IsIPv6 &&
-                       ionic->tcpv6_tx_state == NDIS_OFFLOAD_SET_OFF) {
-                fail_nbl = TRUE;
-            }
-        }
-
-        if (!fail_nbl && csum_info.Transmit.IpHeaderChecksum) {
-
-            if (csum_info.Transmit.IsIPv4 &&
-                ionic->ipv4_tx_state == NDIS_OFFLOAD_SET_OFF) {
-                fail_nbl = TRUE;
-            }
-        }
-
-        if (!fail_nbl && mss.LsoV1Transmit.MSS != 0) {
-            if (mss.Transmit.Type == NDIS_TCP_LARGE_SEND_OFFLOAD_V1_TYPE) {
-                if (ionic->lsov1_state ==
-                    NDIS_OFFLOAD_PARAMETERS_LSOV1_DISABLED) {
-                    fail_nbl = TRUE;
-                }
-            } else {
-                if (mss.LsoV2Transmit.IPVersion ==
-                        NDIS_TCP_LARGE_SEND_OFFLOAD_IPv4 &&
-                    ionic->lsov2ipv4_state ==
-                        NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED) {
-                    fail_nbl = TRUE;
-                } else if (mss.LsoV2Transmit.IPVersion ==
-                               NDIS_TCP_LARGE_SEND_OFFLOAD_IPv6 &&
-                           ionic->lsov2ipv6_state ==
-                               NDIS_OFFLOAD_PARAMETERS_LSOV2_DISABLED) {
-                    fail_nbl = TRUE;
-                }
-            }
-        }
-
-        if (fail_nbl) {
-
-            if (last_nbl == NULL) {
-                pnetlist = next_nbl;
-            } else {
-                NET_BUFFER_LIST_NEXT_NBL(last_nbl) = next_nbl;
-            }
-
-            NET_BUFFER_LIST_NEXT_NBL(nbl) = NULL;
-            NET_BUFFER_LIST_STATUS(nbl) = NDIS_STATUS_INVALID_PARAMETER;
-
-            NdisMSendNetBufferListsComplete(
-                ionic->adapterhandle, nbl,
-                is_dispatch ? NDIS_SEND_COMPLETE_FLAGS_DISPATCH_LEVEL : 0);
-            deref_request(ionic, 1);
-        } else {
-            last_nbl = nbl;
+		if (status != NDIS_STATUS_SUCCESS) {
+			ionic_txq_nbl_list_push_tail( &failed_list, nbl);
+		}
+		else {
 
 			nb_ref = 0;
 			for (nb = NET_BUFFER_LIST_FIRST_NB(nbl); nb; nb = next_nb) {
@@ -1511,125 +1511,44 @@ ionic_send_packets(NDIS_HANDLE adapter_context,
 			NET_BUFFER_LIST_STATUS(nbl) = NDIS_STATUS_SUCCESS;
 
 			DbgTrace((TRACE_COMPONENT_PENDING_LIST, TRACE_LEVEL_VERBOSE,
-				  "%s Adapter %p num_nbs %d nbl %p\n", __FUNCTION__,
-				  ionic, nb_ref, nbl));
-        }
-    }
+					"%s Adapter %p num_nbs %d nbl %p\n", __FUNCTION__,
+					ionic, nb_ref, nbl));
 
-    NDIS_RAISE_IRQL_TO_DISPATCH(&old_irql);
+			nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( nbl);
+			nbl_private->nb_processed_cnt = 0;
 
-    DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
-              "%s Send Packets adapter %p num_nbls %d nbl %p\n", __FUNCTION__,
-              ionic, num_nbls, pnetlist));        
+			tx_queue = hash_val % lif->ntxqs;
 
-    for (nbl = pnetlist; nbl; nbl = next_nbl) {
-       
-        ULONG_PTR val = (ULONG_PTR)NET_BUFFER_LIST_INFO( nbl, NetBufferListHashValue);
-        tx_queue = val % lif->ntxqs;
+			next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
+			NET_BUFFER_LIST_NEXT_NBL(nbl) = NULL;
 
-        nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( nbl);
-		nbl_private->nb_processed_cnt = 0;
+			if (BooleanFlagOn(ionic->ConfigStatus, IONIC_SRIOV_MODE)) {
+				lif_id = NET_BUFFER_LIST_RECEIVE_FILTER_VPORT_ID(nbl);
+				lif = ionic->SriovSwitch.Ports[lif_id].lif;
+			} else {
+				lif_id = NET_BUFFER_LIST_RECEIVE_QUEUE_ID(nbl);
+				lif = ionic->vm_queue[lif_id].lif;
+			}
 
-        next_nbl = NET_BUFFER_LIST_NEXT_NBL(nbl);
-        NET_BUFFER_LIST_NEXT_NBL(nbl) = NULL;
+			qcq = lif->txqcqs[tx_queue].qcq;
 
-        if (BooleanFlagOn(ionic->ConfigStatus, IONIC_SRIOV_MODE)) {
-            lif_id = NET_BUFFER_LIST_RECEIVE_FILTER_VPORT_ID(nbl);
-            lif = ionic->SriovSwitch.Ports[lif_id].lif;
-        } else {
-            lif_id = NET_BUFFER_LIST_RECEIVE_QUEUE_ID(nbl);
-            lif = ionic->vm_queue[lif_id].lif;
-        }
+			NdisAcquireSpinLock(&qcq->txq_nbl_lock);
+			ionic_txq_nbl_list_push_tail(&qcq->txq_nbl_list, nbl);
+			NdisReleaseSpinLock(&qcq->txq_nbl_lock);
 
-        qcq = lif->txqcqs[tx_queue].qcq;
+			KeInsertQueueDpc(&qcq->tx_packet_dpc,
+				NULL,
+				NULL);
+		}
+	}
 
-        NdisDprAcquireSpinLock(&qcq->txq_pending_nbl_lock);
-       
-        if (!ionic_txq_nbl_list_is_empty(&qcq->txq_pending_nbl)) {
-
-            DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
-                      "%s PEND send Packets adapter %p NBL %p\n", __FUNCTION__,
-                      ionic, nbl));
-
-            ionic_txq_nbl_list_push_tail(&qcq->txq_pending_nbl, nbl);
-            InterlockedIncrement( (LONG *)&qcq->tx_stats->pending_nbl_count);
-        } else {
-
-            status = process_nbl(ionic, qcq, nbl, &failed_list);
-
-            if (status == NDIS_STATUS_PENDING) {
-                ionic_txq_nbl_list_push_tail(&qcq->txq_pending_nbl, nbl);
-                InterlockedIncrement( (LONG *)&qcq->tx_stats->pending_nbl_count);
-            }
-        }
-
-        NdisDprReleaseSpinLock(&qcq->txq_pending_nbl_lock);
-    }    
-
-    ionic_send_complete(ionic, &failed_list, DISPATCH_LEVEL);
-
-    NDIS_LOWER_IRQL(old_irql, DISPATCH_LEVEL);
-
-    DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
+	ionic_send_complete(ionic, &failed_list, DISPATCH_LEVEL);
+    
+	DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
               "%s Exit Send Packets adapter %p num_nbls %d\n", __FUNCTION__,
               ionic, num_nbls));
 
     return;
-}
-
-void
-ionic_tx_release_pending(struct ionic *ionic, struct qcq * qcq)
-{
-
-	struct txq_nbl_private *nbl_private;
-    struct txq_nbl_list completed_list;
-    PNET_BUFFER_LIST cur_nbl;
-    PNET_BUFFER cur_nb, next_nb;
-	LONG	processed_cnt = 0;
-
-    ASSERT(ionic != NULL);
-
-    DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
-              "%s Enter clean TXQ adapter %p\n", __FUNCTION__, ionic));
-
-    ionic_txq_nbl_list_init(&completed_list);
-
-    NdisAcquireSpinLock(&qcq->txq_pending_nbl_lock);
-    cur_nbl = ionic_txq_nbl_list_pop_head(&qcq->txq_pending_nbl);
-    while (cur_nbl) {
-
-        InterlockedDecrement( (LONG *)&qcq->tx_stats->pending_nbl_count);
-		nbl_private = (struct txq_nbl_private *)NET_BUFFER_LIST_MINIPORT_RESERVED( cur_nbl);
-
-		for (cur_nb = NET_BUFFER_LIST_FIRST_NB(cur_nbl); cur_nb; cur_nb = next_nb) {
-
-			next_nb = NET_BUFFER_NEXT_NB(cur_nb);
-			
-			if (processed_cnt < nbl_private->nb_processed_cnt) {
-				processed_cnt++;
-				continue;
-			}
-            
-			DbgTrace((TRACE_COMPONENT_PENDING_LIST,
-                        TRACE_LEVEL_VERBOSE, "%s Cleaning nb %p\n",
-                        __FUNCTION__, cur_nb));
-            ionic_txq_complete_failed_pkt(ionic, 
-										  qcq,
-										  cur_nbl,
-										  cur_nb,
-										  &completed_list,
-										  NDIS_STATUS_SEND_ABORTED);
-        }
-        cur_nbl = ionic_txq_nbl_list_pop_head(&qcq->txq_pending_nbl);
-    }
-
-    NdisReleaseSpinLock(&qcq->txq_pending_nbl_lock);
-
-    ionic_send_complete(ionic, &completed_list, NDIS_CURRENT_IRQL());
-
-    DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
-              "%s Exit clean TXQ adapter %p completed count %d\n", __FUNCTION__,
-              ionic, completed_list.count));
 }
 
 ULONG
@@ -1792,19 +1711,10 @@ ionic_alloc_txq_pkts(struct ionic *ionic, struct qcq *qcq)
                   __FUNCTION__,
                   qcq->tx_sgl_buffer, size));
 
-    qcq->tx_pkt_list = (SLIST_HEADER *)NdisAllocateMemoryWithTagPriority_internal(
-        ionic->adapterhandle, sizeof( SLIST_HEADER), IONIC_GENERIC_TAG, NormalPoolPriority);
-
-    if (!qcq->tx_pkt_list) {
-        DbgTrace((
-            TRACE_COMPONENT_INIT, TRACE_LEVEL_ERROR,
-            "%s Failed to alloc txq packet list header adapter %p size %d\n",
-            __FUNCTION__, ionic, size));
-        goto err_alloc_failed;
-    }
-
-	InitializeSListHead( qcq->tx_pkt_list);   
+	InitializeSListHead( &qcq->tx_pkt_list);
+#ifdef DBG
     qcq->tx_pkts_free_count = 0;
+#endif
 
     // No lock is required here since this is in the Init Path
     // And we dont have any race conditions.
@@ -1818,10 +1728,11 @@ ionic_alloc_txq_pkts(struct ionic *ionic, struct qcq *qcq)
         tx_pkt->sg_list = (PSCATTER_GATHER_LIST)(
             ((ULONG_PTR)qcq->tx_sgl_buffer) + (i * ionic->sgl_size_in_bytes));
 
-		InterlockedPushEntrySList( qcq->tx_pkt_list,
+		InterlockedPushEntrySList( &qcq->tx_pkt_list,
 								   &tx_pkt->next);
-
+#ifdef DBG
         qcq->tx_pkts_free_count++;
+#endif
 
 		tx_pkt = (struct txq_pkt *)((char *)tx_pkt + pkt_len);
     }
@@ -1851,7 +1762,7 @@ ionic_tx_fill(struct ionic *ionic, struct qcqst *qcqst)
               "%s Fill the TXQ adapter %p NBuffers %d\n", __FUNCTION__, ionic,
               q->num_descs));
 
-    txq_pkt = (struct txq_pkt *)FirstEntrySList(qcq->tx_pkt_list);
+    txq_pkt = (struct txq_pkt *)FirstEntrySList(&qcq->tx_pkt_list);
     for (i = 0; i < q->num_descs; i++) {
         txq_pkt->q = q;
         txq_pkt = (struct txq_pkt *)txq_pkt->next.Next;
@@ -2189,14 +2100,17 @@ tx_packet_dpc_callback( _KDPC *Dpc,
 	// check there is only 1 instance running
 	if (InterlockedIncrement(&qcq->dpc_exec_cnt) == 1) {
 
+		ionic_service_nbl_requests( qcq->q.lif->ionic, qcq, false);
+
 		ionic_service_nb_requests(qcq, false);
 
 		if(ionic_tx_flush(qcq, IONIC_TX_BUDGET_DEFAULT,
 				false, false) &&
 		   RtlCheckBit(&qcq->q.lif->state, LIF_UP)) {
+
 			KeInsertQueueDpc(Dpc,
-				NULL,
-				NULL);
+					NULL,
+					NULL);
 		}
 	}
 	else {

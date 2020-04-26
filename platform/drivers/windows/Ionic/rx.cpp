@@ -113,18 +113,19 @@ ionic_reset_rxq_pkts(struct lif *lif)
     rxq_pkt = (struct rxq_pkt *)lif->rxq_pkt_base;
 
     /* First, reset the entries in the list */
-	InitializeSListHead(lif->rx_pkts_list);
+	InitializeSListHead(&lif->rx_pkts_list);
+#ifdef DBG
     lif->rx_pkts_free_count = 0;
-
+#endif
     for (unsigned int i = 0; i < lif->rx_pkt_cnt; i++) {
 
         rxq_pkt->next.Next = NULL;
 
-		InterlockedPushEntrySList( lif->rx_pkts_list,
+		InterlockedPushEntrySList( &lif->rx_pkts_list,
 								   &rxq_pkt->next);
 
         rxq_pkt = (struct rxq_pkt *)((char *)rxq_pkt + rxq_pkt_len);
-#if DBG
+#ifdef DBG
         lif->rx_pkts_free_count++;
 #endif
     }
@@ -135,7 +136,7 @@ ionic_release_rxq_pkts(struct lif *lif)
 {
     struct rxq_pkt *rxq_pkt = NULL;
 
-    rxq_pkt = (struct rxq_pkt *)FirstEntrySList(lif->rx_pkts_list);
+    rxq_pkt = (struct rxq_pkt *)FirstEntrySList(&lif->rx_pkts_list);
 
     for (unsigned int i = 0; i < lif->rx_pkt_cnt; i++) {
 
@@ -217,8 +218,10 @@ ionic_alloc_rxq_pkts(struct ionic *ionic, struct lif *lif)
                   __FUNCTION__,
                   lif->rxq_pkt_base, size));
 
-    InitializeSListHead( lif->rx_pkts_list);
+    InitializeSListHead(&lif->rx_pkts_list);
+#ifdef DBG
     lif->rx_pkts_free_count = 0;
+#endif
 
     rxq_pkt = (struct rxq_pkt *)lif->rxq_pkt_base;
 
@@ -226,11 +229,11 @@ ionic_alloc_rxq_pkts(struct ionic *ionic, struct lif *lif)
 
         rxq_pkt->next.Next = NULL;
 
-		InterlockedPushEntrySList( lif->rx_pkts_list,
+		InterlockedPushEntrySList( &lif->rx_pkts_list,
 								   &rxq_pkt->next);
 
         rxq_pkt = (struct rxq_pkt *)((char *)rxq_pkt + rxq_len);
-#if DBG
+#ifdef DBG
         lif->rx_pkts_free_count++;
 #endif
     }
@@ -246,16 +249,16 @@ struct rxq_pkt *
 ionic_get_next_rxq_pkt(struct lif *lif)
 {
     struct rxq_pkt *rxq_pkt = NULL;
-#if DBG
+#ifdef DBG
 	LARGE_INTEGER start = {0,0};
 	start = KeQueryPerformanceCounter( NULL);
 #endif
 
-	rxq_pkt = (struct rxq_pkt *)InterlockedPopEntrySList( lif->rx_pkts_list);
+	rxq_pkt = (struct rxq_pkt *)InterlockedPopEntrySList( &lif->rx_pkts_list);
 
 	if( rxq_pkt != NULL) {
 
-#if DBG
+#ifdef DBG
 		InterlockedAdd64( (LONG64 *)&lif->lif_stats->rx_pool_alloc_time,
 						  (KeQueryPerformanceCounter( NULL).QuadPart - start.QuadPart));
 		InterlockedIncrement( (LONG *)&lif->lif_stats->rx_pool_alloc_cnt);
@@ -271,7 +274,7 @@ ionic_get_next_rxq_pkt(struct lif *lif)
 void
 ionic_return_rxq_pkt(struct lif *lif, struct rxq_pkt *rxq_pkt)
 {
-#if DBG
+#ifdef DBG
 	LARGE_INTEGER start = {0,0};
 	
 	InterlockedIncrement(&lif->rx_pkts_free_count);	
@@ -281,10 +284,10 @@ ionic_return_rxq_pkt(struct lif *lif, struct rxq_pkt *rxq_pkt)
 	rxq_pkt->q = NULL;
     rxq_pkt->next.Next = NULL;
 
-	InterlockedPushEntrySList( lif->rx_pkts_list,
+	InterlockedPushEntrySList( &lif->rx_pkts_list,
 							   &rxq_pkt->next);
 
-#if DBG
+#ifdef DBG
 	InterlockedAdd64( (LONG64 *)&lif->lif_stats->rx_pool_free_time,
 						(KeQueryPerformanceCounter( NULL).QuadPart - start.QuadPart));
 	InterlockedIncrement( (LONG *)&lif->lif_stats->rx_pool_free_cnt);
@@ -870,7 +873,7 @@ ionic_rx_fill(struct qcq *qcq)
         ASSERT(rxq_pkt->packet != NULL);
         ionic_rxq_post(q, ring_doorbell, ionic_rx_clean, rxq_pkt->packet);
     }
-#if DBG
+#ifdef DBG
     InterlockedAdd( (LONG *)&qcq->rx_stats->pool_packet_count,
                       q->lif->rx_pkts_free_count);
     InterlockedIncrement( (LONG *)&qcq->rx_stats->pool_sample_count);
@@ -923,9 +926,9 @@ ionic_rx_napi(struct intr_msg *int_info,
     u32 flags = 0;
     PNET_BUFFER_LIST packets_to_indicate = NULL;
 
-	KeInsertQueueDpc( &lif->txqcqs[qi].qcq->tx_packet_dpc,
-					  NULL,
-					  NULL);
+	KeInsertQueueDpc(&lif->txqcqs[qi].qcq->tx_packet_dpc,
+		NULL,
+		NULL);
 
     NdisDprAcquireSpinLock(&qcq->rx_ring_lock);
 
@@ -946,7 +949,9 @@ ionic_rx_napi(struct intr_msg *int_info,
     NdisDprReleaseSpinLock(&qcq->rx_ring_lock);
 
     if (rx_work_done == 0 && tx_work_done == 0) {
+#ifdef DBG
         InterlockedIncrement64(&int_info->spurious_cnt);
+#endif
         DbgTrace((
             TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
             "%s Found nothing to process on lif %d ******************\n",
@@ -986,6 +991,7 @@ ionic_rq_indicate_bufs(struct lif *lif,
     ULONG flags = NDIS_RECEIVE_FLAGS_DISPATCH_LEVEL;
 
     UNREFERENCED_PARAMETER(qcqst);
+	UNREFERENCED_PARAMETER(qcq);
 
     DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
               "%s Enter Indicate RXQ Pkts adapter %p Count %d\n", __FUNCTION__,
@@ -1003,8 +1009,9 @@ ionic_rq_indicate_bufs(struct lif *lif,
         /* inform ndis about received packets */
         NdisMIndicateReceiveNetBufferLists(
             ionic->adapterhandle, packets_to_indicate, 0, count, flags);
-
+#ifdef DBG
         InterlockedAdd(&qcq->outstanding_rx_count, (LONG)count);
+#endif
     }
 
     DbgTrace((TRACE_COMPONENT_IO, TRACE_LEVEL_VERBOSE,
@@ -1050,9 +1057,9 @@ ionic_return_packet(NDIS_HANDLE adapter_context,
 
             qcq = q_to_qcq(rxq_pkt->q);
             rx_stats = qcq->rx_stats;
-
+#ifdef DBG
             InterlockedDecrement(&qcq->outstanding_rx_count);
-
+#endif
             // Dev stats
             rx_stats->completion_count++;
 
@@ -1430,7 +1437,7 @@ ionic_lif_rxq_pkt_init(struct lif* lif)
     sg_count = lif->rx_pkt_buffer_elementsize / PAGE_SIZE;
     sg_index = 0;
 
-    rxq_pkt = (struct rxq_pkt *)FirstEntrySList(lif->rx_pkts_list);
+    rxq_pkt = (struct rxq_pkt *)FirstEntrySList( &lif->rx_pkts_list);
 
     pSrcElem = &pSGList->Elements[0];
     ullSrcPA = pSrcElem->Address.QuadPart;
@@ -1623,8 +1630,10 @@ ionic_free_rxq_pool( struct lif *lif)
             lif->ionic->adapterhandle, lif->rxq_pkt_base, IONIC_RX_MEM_TAG);
         lif->rxq_pkt_base = NULL;
 
-		InitializeSListHead( lif->rx_pkts_list);
+		InitializeSListHead( &lif->rx_pkts_list);
+#ifdef DBG
         lif->rx_pkts_free_count = 0;
+#endif
     }
 
     if (lif->rx_pkts_nbl_pool != NULL) {

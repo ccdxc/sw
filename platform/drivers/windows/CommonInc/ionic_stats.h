@@ -186,9 +186,6 @@ struct dev_tx_ring_stats {
     __le32      nbl_count;
     __le32      nb_count;
 
-    __le32      pending_nbl_count;
-    __le32      pending_nb_count;
-
     __le32      descriptor_count;
     __le32      descriptor_sample;
     __le32      descriptor_max;

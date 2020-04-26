@@ -39,13 +39,7 @@ IonicPerfCounterCallback(
 			counter_mask = Info->CollectData.CounterMask;
             break;
         case PcwCallbackAddCounter:
-            IoPrint("%s: PcwCallbackAddCounter received\n", __FUNCTION__);
-            break;
-
         case PcwCallbackRemoveCounter:
-            IoPrint("%s: PcwCallbackRemoveCounter received\n", __FUNCTION__);
-            break;
-
         default:
             goto exit;
     }
@@ -74,8 +68,8 @@ IonicPerfCounterCallback(
 
     ndis_status = get_perfmon_stats(NULL, 0, &perfmon_stats, &stats_len, counter_mask);
 
-    if (ndis_status != NDIS_STATUS_SUCCESS) {
-        status = STATUS_UNSUCCESSFUL;
+    if (ndis_status != NDIS_STATUS_SUCCESS ||
+		perfmon_stats == NULL) {
         goto exit;
     }
 

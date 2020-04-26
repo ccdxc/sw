@@ -485,8 +485,9 @@ ionic_msi_handler(PVOID miniport_interrupt_context,
     if (int_tbl == NULL) {
         goto exit;
     }
-
+#ifdef DBG
     InterlockedIncrement64(&int_tbl->isr_cnt);
+#endif
 
 exit:
     *queue_default_interrupt_dpc = TRUE;
@@ -519,8 +520,9 @@ ionic_msi_dpc_handler(NDIS_HANDLE miniport_interrupt_context,
         IoPrint("%s invalid msg_id %d\n", __FUNCTION__, message_id);
         goto exit;
     }
-
+#ifdef DBG
     InterlockedIncrement64(&int_tbl->dpc_cnt);
+#endif
 
     if (int_tbl->lif == NULL || int_tbl->qcq == NULL) {
 		IoPrint("%s unbound msg_id %d\n", __FUNCTION__, message_id);
@@ -623,10 +625,6 @@ ionic_process_sg_list(PDEVICE_OBJECT DeviceObject,
     NdisDprAcquireSpinLock(&qcq->txq_nb_lock);
     InsertTailList(&qcq->txq_nb_list, &txq_pkt_private->link);
     NdisDprReleaseSpinLock(&qcq->txq_nb_lock);
-
-	KeInsertQueueDpc( &qcq->tx_packet_dpc,
-						NULL,
-						NULL);
 
 	return;
 }
@@ -769,6 +767,33 @@ invoke_intr_msgs_rss(struct ionic *ionic, struct lif *lif)
 }
 
 void
+dump_intr_tbl(struct ionic *ionic)
+{
+    struct intr_msg* intr;
+
+    /* don't touch the control interrupt */
+    for (ULONG i = IONIC_CTL_INTR_CNT; i < ionic->intr_msginfo_tbl->MessageCount; ++i) {
+        intr = &ionic->intr_msg_tbl[i];
+		if( intr->inuse) {
+			if( intr->tx_entry) {
+				IoPrint("%s Msg %d TX Core %d\n",
+					__FUNCTION__,
+					i,
+					intr->proc_idx);
+			}
+			else if( intr->rss_entry) {
+				IoPrint("%s Msg %d RSS Core %d\n",
+									__FUNCTION__,
+									i,
+									intr->proc_idx);
+			}
+		}
+    }
+
+	return;
+}
+
+void
 unuse_intr_msgs_rss(struct ionic *ionic, struct lif *lif)
 {
     struct intr_msg* intr;
@@ -779,6 +804,7 @@ unuse_intr_msgs_rss(struct ionic *ionic, struct lif *lif)
 
         if (intr->lif == lif) {
             intr->inuse = false;
+			intr->lif = NULL;
         }
     }
 }
@@ -864,23 +890,20 @@ check_intr_msg_affinity(struct ionic* ionic, ULONG message_id)
 	KeGetCurrentProcessorNumberEx(&proc_numb);
 
     if (int_tbl->lif == NULL || int_tbl->qcq == NULL) {
-        IoPrint("%s not bound - msg %d group %d proc %d affinity %d isr_cnt %llu dpc_cnt %llu\n",
+        IoPrint("%s not bound - msg %d group %d proc %d affinity %d\n",
             __FUNCTION__,
             message_id,
-            proc_numb.Group, proc_numb.Number,
-            int_tbl->affinity,
-            int_tbl->isr_cnt, int_tbl->dpc_cnt);
+            proc_numb.Group, proc_numb.Number);
         return;
     }
 
     if (int_tbl->affinity_policy == IrqPolicySpecifiedProcessors &&
         !(int_tbl->affinity & (1ull << proc_numb.Number))) {
-        IoPrint("%s wrong affinity - msg %d group %d proc %d affinity %d isr_cnt %llu dpc_cnt %llu\n",
+        IoPrint("%s wrong affinity - msg %d group %d proc %d affinity %d\n",
             __FUNCTION__,
             message_id,
             proc_numb.Group, proc_numb.Number,
-            int_tbl->affinity,
-            int_tbl->isr_cnt, int_tbl->dpc_cnt);
+            int_tbl->affinity);
     }
 }
 

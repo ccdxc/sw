@@ -46,7 +46,7 @@ DriverEntry(void* DriverObject, void* RegistryPath)
 
     BOOLEAN bExit = FALSE;
 
-    // DbgBreakPoint();
+    //DbgBreakPoint();
 
     if (bExit) {
         return STATUS_SUCCESS;

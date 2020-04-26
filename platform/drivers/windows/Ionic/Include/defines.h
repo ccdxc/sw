@@ -6,6 +6,7 @@
 
 //#define NO_TRACE								1
 //#define TRACK_MEMORY_BUFFER_ALLOC               1
+//#define TXRX_SEPARATE			1
 
 //
 // Memory allocation tags
@@ -46,6 +47,9 @@
 #ifndef ClearFlag
 #define ClearFlag(_F,_SF)     ((_F) &= ~(_SF))
 #endif
+
+#define CACHE_LINE  128
+#define CACHE_ALIGN __declspec(align(CACHE_LINE))
 
 typedef
 NTSTATUS

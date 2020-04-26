@@ -617,6 +617,9 @@ void
 invoke_intr_msgs_rss(struct ionic *ionic, struct lif *lif);
 
 void
+dump_intr_tbl(struct ionic *ionic);
+
+void
 unuse_intr_msgs_rss(struct ionic *ionic, struct lif *lif);
 
 struct intr_msg*
@@ -738,9 +741,6 @@ ionic_lif_stop(struct lif *lif);
 
 NDIS_STATUS
 ionic_stop(struct ionic *ionic);
-
-void
-ionic_flush(struct ionic *ionic);
 
 NDIS_STATUS
 ionic_lif_open(struct lif *lif,
@@ -1280,7 +1280,7 @@ TagInitialLogEntry( void);
 void ionic_txq_nbl_list_push_head(struct txq_nbl_list *list,
     PNET_BUFFER_LIST nbl);
 
-void ionic_service_pending_nbl_requests(struct ionic *ionic, struct qcq *qcq);
+void ionic_service_nbl_requests(struct ionic *ionic, struct qcq *qcq, bool cleanup);
 
 bool
 ionic_service_nb_requests(struct qcq *qcq, bool exiting);
@@ -1289,7 +1289,8 @@ NDIS_STATUS
 process_nbl(struct ionic *ionic,
     struct qcq *qcq,
     PNET_BUFFER_LIST nbl,
-    txq_nbl_list *completed_list);
+    txq_nbl_list *completed_list,
+	bool cleanup);
 
 bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info,
     void *cb_arg);
@@ -1324,8 +1325,6 @@ void
 ionic_send_packets(NDIS_HANDLE adapter_context,
     PNET_BUFFER_LIST pnetlist,
     NDIS_PORT_NUMBER port_number, ULONG send_flags);
-
-void ionic_tx_release_pending(struct ionic *ionic, struct qcq * qcq);
 
 bool
 ionic_tx_flush(struct qcq *qcq, unsigned int budget, bool cleanup, bool credits);

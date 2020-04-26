@@ -217,9 +217,11 @@ struct intr_msg {
     struct qcq*			qcq;
 
     /* stats */
+#ifdef DBG
     LONG64				isr_cnt;
     LONG64				dpc_cnt;
     LONG64				spurious_cnt;
+#endif
 };
 
 struct intr_sync_ctx {
@@ -243,7 +245,6 @@ struct cq {
 	struct cq_info *tail;
 	struct queue *bound_q;
 	struct intr *bound_intr;
-	u64 compl_count;
 	unsigned int num_descs;
 	unsigned int desc_size;
 	bool done_color;
@@ -269,36 +270,39 @@ struct qcq {
 	};
 
 	unsigned int flags;
-	struct dentry *dentry;
+
 	unsigned int master_slot;
 
 	NDIS_HANDLE tx_pkts_pool;
     struct txq_pkt *txq_base;
 
-	SLIST_HEADER *tx_pkt_list;
-
+#ifdef DBG
     LONG tx_pkts_free_count;
+#endif
 
     void *tx_sgl_buffer;
 	
-	LONG outstanding_rx_count;
-    LONG outstanding_tx_count;
-
-	NDIS_SPIN_LOCK rx_ring_lock;
-
 	NDIS_HANDLE		ring_alloc_handle;
-
-    LIST_ENTRY      txq_nb_list;
-    NDIS_SPIN_LOCK  txq_nb_lock;
-
-    struct txq_nbl_list txq_pending_nbl;
-    NDIS_SPIN_LOCK  txq_pending_nbl_lock;
 
 	/* tx packet processing */
 	KDPC			tx_packet_dpc;
-	LONG			dpc_exec_cnt;
+#ifdef DBG
+	LONG outstanding_rx_count;
+    LONG outstanding_tx_count;
+#endif
 
-	LONG			zero_cnt;
+	// cache aligned elements
+	CACHE_ALIGN LONG dpc_exec_cnt;
+
+	CACHE_ALIGN NDIS_SPIN_LOCK rx_ring_lock;
+
+    CACHE_ALIGN NDIS_SPIN_LOCK  txq_nb_lock;
+    LIST_ENTRY      txq_nb_list;
+
+    CACHE_ALIGN NDIS_SPIN_LOCK  txq_nbl_lock;
+    struct txq_nbl_list txq_nbl_list;
+
+	CACHE_ALIGN SLIST_HEADER	tx_pkt_list; // This was being allocated separately but forcing 128 byte alignment here is the same
 };
 
 struct qcqst {
@@ -363,7 +367,6 @@ struct lif {
 	unsigned int hw_index;
 	unsigned int kern_pid;
 	u64 __iomem *kern_dbpage;
-	NDIS_SPIN_LOCK adminq_lock;		/* lock for AdminQ operations */
 	struct qcq *adminqcq;
 	struct qcq *notifyqcq;
 	struct qcqst *txqcqs;
@@ -399,7 +402,6 @@ struct lif {
 	u32 rss_hash_flags;
 
 	struct rx_filters rx_filters;
-	NDIS_SPIN_LOCK dbid_inuse_lock;	/* lock the dbid bit list */
 	RTL_BITMAP dbid_inuse;
 	unsigned long *dbid_inuse_buffer;
 	unsigned int dbid_count;
@@ -424,9 +426,9 @@ struct lif {
 	NDIS_HANDLE		rx_pkts_nbl_pool;
     struct rxq_pkt *rxq_pkt_base;
 
-	SLIST_HEADER   *rx_pkts_list;
-
+#ifdef DBG
 	LONG			rx_pkts_free_count;
+#endif
 
 	u32				rx_pkt_cnt;
 
@@ -436,6 +438,11 @@ struct lif {
 	NDIS_HANDLE		rx_pkt_buffer_handle;
 	NDIS_HANDLE		rx_pkt_buffer_alloc_handle;
 	void		   *rx_pkt_sgl_buffer;
+
+	// cache aligned elements
+	CACHE_ALIGN SLIST_HEADER   rx_pkts_list;
+	CACHE_ALIGN NDIS_SPIN_LOCK dbid_inuse_lock;	/* lock the dbid bit list */
+	CACHE_ALIGN NDIS_SPIN_LOCK adminq_lock;		/* lock for AdminQ operations */
 };
 
 #define lif_to_txqcq(lif, i)	((lif)->txqcqs[i].qcq)
@@ -463,7 +470,6 @@ struct ionic_dev {
 	u64 __iomem *intr_status;
 	u8 *msix_cfg_base;
 
-	NDIS_SPIN_LOCK cmb_inuse_lock; /* for cmb_inuse */
 	unsigned long *cmb_inuse;
 	dma_addr_t phy_cmb_pages;
 	u32 cmb_npages;
@@ -477,6 +483,8 @@ struct ionic_dev {
 	u32 last_hb;
 
 	struct ionic *ionic;
+
+	CACHE_ALIGN NDIS_SPIN_LOCK cmb_inuse_lock; /* for cmb_inuse */
 };
 
 struct ionic_dev_bar {
@@ -608,7 +616,6 @@ struct ionic {
 	NDIS_HANDLE		adapterhandle;
 	ULONG			ConfigStatus;
 	NDIS_HARDWARE_STATUS	hardware_status;
-	NDIS_SPIN_LOCK	dev_cmd_lock;
 
 	USHORT			numa_node;
 
@@ -719,8 +726,6 @@ struct ionic {
 	struct tx_frag_pool_elem	*tx_frag_pool_head;
 	struct tx_frag_pool_elem	*tx_frag_pool_tail;
 
-	NDIS_SPIN_LOCK				tx_frag_pool_lock;
-
 	ULONG						tx_frag_pool_count;
 
 	PSCATTER_GATHER_LIST		tx_frag_pool_sg_list;
@@ -754,6 +759,10 @@ struct ionic {
 
 	/* Registry parameters specific to this interface */
 	struct registry_entry *registry_config;
+
+	// Cache aligned elements
+	CACHE_ALIGN NDIS_SPIN_LOCK	dev_cmd_lock;
+	CACHE_ALIGN NDIS_SPIN_LOCK	tx_frag_pool_lock;
 };
 
 typedef struct _ADAPTER_CNTRL_EXT

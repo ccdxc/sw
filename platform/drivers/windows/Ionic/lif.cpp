@@ -415,16 +415,6 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
     NdisAllocateSpinLock(&lif->adminq_lock);
 
-	/* Allocate 16 bytes aligned slist header */
-
-	lif->rx_pkts_list = (SLIST_HEADER *)NdisAllocateMemoryWithTagPriority_internal(
-            ionic->adapterhandle, sizeof(SLIST_HEADER), IONIC_GENERIC_TAG,
-            NormalPoolPriority);
-
-    if (lif->rx_pkts_list == NULL) {
-        goto err_out_free_netdev;
-    }
-
     /* allocate lif info */
     lif->info_sz = ALIGN(sizeof(*lif->info), PAGE_SIZE);
     lif->info =
@@ -485,10 +475,6 @@ err_out_free_lif_info:
     lif->info_pa = 0;
 
 err_out_free_netdev:
-	if (lif->rx_pkts_list != NULL) {
-		NdisFreeMemoryWithTagPriority_internal( ionic->adapterhandle, lif->rx_pkts_list, IONIC_GENERIC_TAG);
-		lif->rx_pkts_list = NULL;
-	}
     NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, lif, IONIC_LIF_TAG);
 
     return NULL;
@@ -658,12 +644,12 @@ ionic_qcq_alloc(struct lif *lif,
                   newqcq, sizeof( struct qcq)));
     
     NdisAllocateSpinLock(&newqcq->txq_nb_lock);
-    NdisAllocateSpinLock(&newqcq->txq_pending_nbl_lock);
+    NdisAllocateSpinLock(&newqcq->txq_nbl_lock);
 
     NdisAllocateSpinLock(&newqcq->rx_ring_lock);
 
     InitializeListHead(&newqcq->txq_nb_list);
-    ionic_txq_nbl_list_init(&newqcq->txq_pending_nbl);
+    ionic_txq_nbl_list_init(&newqcq->txq_nbl_list);
 
     newqcq->flags = flags;
 
@@ -797,7 +783,7 @@ err_out:
         }
 
 		NdisFreeSpinLock(&newqcq->txq_nb_lock);
-		NdisFreeSpinLock(&newqcq->txq_pending_nbl_lock);
+		NdisFreeSpinLock(&newqcq->txq_nbl_lock);
 		NdisFreeSpinLock(&newqcq->rx_ring_lock);
 
         NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, newqcq,
@@ -868,7 +854,7 @@ ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 	}
 
 	NdisFreeSpinLock(&qcq->txq_nb_lock);
-	NdisFreeSpinLock(&qcq->txq_pending_nbl_lock);
+	NdisFreeSpinLock(&qcq->txq_nbl_lock);
 	NdisFreeSpinLock(&qcq->rx_ring_lock);
 
     NdisFreeMemoryWithTagPriority_internal(lif->ionic->adapterhandle, qcq,
@@ -1130,12 +1116,6 @@ ionic_lif_free(struct lif *lif)
                                       IONIC_GENERIC_TAG);
 		lif->rss_mapping = NULL;
     }
-
-	if (lif->rx_pkts_list != NULL) {
-		NdisFreeMemoryWithTagPriority_internal( ionic->adapterhandle, lif->rx_pkts_list,
-									 IONIC_GENERIC_TAG);
-		lif->rx_pkts_list = NULL;
-	}
 
     NdisFreeMemoryWithTagPriority_internal(ionic->adapterhandle, lif, IONIC_LIF_TAG);
 
@@ -1974,7 +1954,13 @@ ionic_txrx_alloc(struct lif *lif,
 
 		intr_rx_msg->inuse = true;
 		ionic_intr_affinitize(lif->ionic, lif->rxqcqs[i].qcq->cq.bound_intr->index, intr_rx_msg->id);
+
+		IoPrint("%s Setting rx queue %d to core %d\n",
+								__FUNCTION__,
+								i,
+								intr_rx_msg->proc_idx);
 	
+#ifdef TXRX_SEPARATE
 		/* Set the processor affniity for the tx packet dpc */
 		intr_tx_msg = find_intr_msg(lif->ionic, ANY_NON_RSS_PROCESSOR_CLOSE_INDEX);
 		if (intr_tx_msg == NULL) {
@@ -1989,6 +1975,14 @@ ionic_txrx_alloc(struct lif *lif,
 			intr_tx_msg->tx_entry = true;
 			intr_tx_msg->qcq = lif->txqcqs[i].qcq;
 		}
+#else
+		intr_tx_msg = intr_rx_msg;
+#endif
+
+		IoPrint("%s Setting tx queue %d to core %d\n",
+								__FUNCTION__,
+								i,
+								intr_tx_msg->proc_idx);
 
 		status = KeSetTargetProcessorDpcEx( &lif->txqcqs[i].qcq->tx_packet_dpc,
 											&intr_tx_msg->proc);
@@ -2058,6 +2052,7 @@ ionic_txrx_disable(struct lif *lif)
 {
     unsigned int i;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+	KIRQL curr_irql;
 
     for (i = 0; i < lif->ntxqs; i++) {
         status = ionic_qcq_disable(lif->txqcqs[i].qcq);
@@ -2069,10 +2064,11 @@ ionic_txrx_disable(struct lif *lif)
 		// Flush currently queued or executing DPCs
 		KeFlushQueuedDpcs();
 
+		NDIS_RAISE_IRQL_TO_DISPATCH(&curr_irql);
 		// Call final time to process any remaining items
 		ionic_service_nb_requests(lif->txqcqs[i].qcq, true);
-        
-		ionic_tx_release_pending(lif->ionic, lif->txqcqs[i].qcq);
+        ionic_service_nbl_requests( lif->ionic, lif->txqcqs[i].qcq, true);
+		NDIS_LOWER_IRQL(curr_irql, DISPATCH_LEVEL);
     }
     for (i = 0; i < lif->nrxqs; i++) {
         status = ionic_qcq_disable(lif->rxqcqs[i].qcq);
@@ -2185,40 +2181,6 @@ ionic_stop(struct ionic *ionic)
     }
 
     return status;
-}
-
-static void
-ionic_lif_tx_flush(struct lif *lif)
-{
-    unsigned int i;
-
-    for (i = 0; i < lif->ntxqs; i++) {
-        ionic_service_pending_nbl_requests(lif->ionic, lif->txqcqs[i].qcq);
-    }
-
-    return;
-}
-
-void
-ionic_flush(struct ionic *ionic)
-{
-
-    LIST_ENTRY *cur;
-    struct lif *lif;
-
-    if (!IsListEmpty(&ionic->lifs)) {
-
-        cur = ionic->lifs.Flink;
-
-        do {
-            lif = CONTAINING_RECORD(cur, struct lif, list);
-
-            ionic_lif_tx_flush(lif);
-
-            cur = cur->Flink;
-        } while (cur != &ionic->lifs);
-    }
-    return;
 }
 
 static int

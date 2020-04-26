@@ -1194,8 +1194,7 @@ ionic_watchdog_cb(void *SystemContext,
     UNREFERENCED_PARAMETER(SystemContext);
     UNREFERENCED_PARAMETER(Context1);
     UNREFERENCED_PARAMETER(Context2);
-
-    ionic_flush((struct ionic *)FunctionContext);
+	UNREFERENCED_PARAMETER(FunctionContext);
 
 #ifdef TRACK_MEMORY_BUFFER_ALLOC
     validate_memory();
@@ -2708,7 +2707,9 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
 
 					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
 						(counter_mask & Rx_Pool_Avail_Cnt_MASK) == Rx_Pool_Avail_Cnt_MASK) {
+#ifdef DBG
 						lif_stats->rx_pool_size = lif->rx_pkts_free_count;
+#endif
 					}
 
 					if( counter_mask == IONIC_PERF_MON_ALL_STATS ||
@@ -2778,10 +2779,6 @@ get_perfmon_stats(AdapterCB *cb, ULONG maxlen, struct _PERF_MON_CB **perfmon_sta
 													InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->descriptor_sample,
 																		 0);
 						}
-
-						tx_stats->pending_nbl_count = InterlockedExchange( (LONG *)&lif->txqcqs[ queue_cnt].qcq->tx_stats->pending_nbl_count,
-														0);
-
 					}
 
                     tx_stats = (struct _PERF_MON_TX_QUEUE_STATS *)((char *)tx_stats + sizeof( struct _PERF_MON_TX_QUEUE_STATS));
