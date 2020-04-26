@@ -29,6 +29,7 @@ import (
 const (
 	rolloutName = "e2e_rollout"
 )
+
 type BuildMeta struct {
 	Repo            string
 	Branch          string
@@ -50,7 +51,7 @@ func getLatestBuildVersionInfo(targetBranch string) (string, int, error) {
 	var buildMetas = []*BuildMeta{}
 	err = json.Unmarshal(jsonResponseBytes, &buildMetas)
 	if err != nil {
-		return "", 0, fmt.Errorf("Unable to unmarshal response from jobd [%v]",err)
+		return "", 0, fmt.Errorf("Unable to unmarshal response from jobd [%v]", err)
 	}
 	for _, bm := range buildMetas {
 		if bm.Branch == targetBranch {
@@ -108,7 +109,6 @@ func (sm *SysModel) CreateRolloutObject(bundleType, name, upgradeType string) (*
 		return nil, errors.New("Build Failure. Couldnt get version information")
 	}
 
-
 	return &rollout.Rollout{
 		TypeMeta: api.TypeMeta{
 			Kind: "Rollout",
@@ -130,6 +130,27 @@ func (sm *SysModel) CreateRolloutObject(bundleType, name, upgradeType string) (*
 		},
 	}, nil
 }
+
+//GetClusterVersion returns the running version
+func (sm *SysModel) GetClusterVersion() string {
+
+	restcls, err := sm.VeniceRestClient()
+	if err != nil {
+		log.Errorf("Failed to get rest clients (%+v)", err)
+		return ""
+	}
+	obj := api.ObjectMeta{
+		Name: "version",
+	}
+	vobj, err := restcls[0].ClusterV1().Version().Get(context.Background(), &obj)
+	if err != nil {
+		log.Errorf("Failed to get cluster object (%+v)", err)
+		return ""
+	}
+	log.Debugf("Version Object %+v", vobj)
+	return vobj.Status.BuildVersion
+}
+
 // GetRolloutObject gets rollout instance
 func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 
@@ -150,6 +171,8 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 		fmt.Println()
 	}*/
 
+	clusterVersion := sm.GetClusterVersion()
+
 	bundleLocalFilePath := fmt.Sprintf("%s/src/github.com/pensando/sw/upgrade-bundle/bundle.tar", os.Getenv("GOPATH"))
 
 	versionPrefix, buildNumber, err := getLatestBuildVersionInfo("master")
@@ -159,9 +182,13 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 	}
 	for b := buildNumber; b > 0; b-- {
 		version = versionPrefix + "-" + strconv.Itoa(b)
+		if version == clusterVersion {
+			log.Errorf("Cluster running the same version %s", version)
+			continue
+		}
 		log.Errorf("ts:%s Trying to download bundle.tar, version: %s", time.Now().String(), version)
 		url := fmt.Sprintf("http://pxe.pensando.io/builds/hourly/%s/bundle/bundle.tar", version)
-	jsonUrl := []string{url, "--output", bundleLocalFilePath, "-f" }
+		jsonUrl := []string{url, "--output", bundleLocalFilePath, "-f"}
 
 		fmt.Println(fmt.Sprintf("curl string: %v\n", jsonUrl))
 		out, err := exec.Command("curl", jsonUrl...).CombinedOutput()
@@ -179,7 +206,6 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 	}
 
 	log.Infof("ts:%s Successfully downloaded bundle.tar for version: %s", time.Now().String(), version)
-
 
 	var req labels.Requirement
 	req.Key = "type"
@@ -294,7 +320,7 @@ func (sm *SysModel) UploadBundle(ctx context.Context, bundleType string) (int, e
 		}
 		defer file.Close()
 		if sz, err := io.Copy(part, file); err != nil {
-			log.Infof("io copy failed %+v  %+v", sz,  err)
+			log.Infof("io copy failed %+v  %+v", sz, err)
 			return
 		}
 	}()
@@ -708,15 +734,15 @@ outerLoop:
 		break
 	}
 
-        log.Infof("ts:%s Verify DSC Versions", time.Now().String())
-        snics, err := sm.ListSmartNIC()
-        if err != nil {
-                log.Errorf("Unable to list dsc")
-                return err
-        }
-        for _, snic := range snics {
-                log.Infof("DSC Version : %s", snic.Status.DSCVersion)
-        }
+	log.Infof("ts:%s Verify DSC Versions", time.Now().String())
+	snics, err := sm.ListSmartNIC()
+	if err != nil {
+		log.Errorf("Unable to list dsc")
+		return err
+	}
+	for _, snic := range snics {
+		log.Infof("DSC Version : %s", snic.Status.DSCVersion)
+	}
 
 	// Verify delete on rollout object
 	for numRetries = 0; numRetries < 25; numRetries++ {
