@@ -128,11 +128,6 @@ func (sm *Statemgr) UpdateHost(host *cluster.Host, writeback bool) error {
 		hostObj := host
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
-			if !sm.isLeader() {
-				hostState.dirty = false
-				log.Infof("CMD instance is no longer leader, exiting UpdateHost after %d tries", i)
-				return nil
-			}
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
 			_, err = sm.APIClient().Host().UpdateStatus(ctx, hostObj)
 			if err == nil {

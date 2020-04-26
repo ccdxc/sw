@@ -202,12 +202,6 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, write
 		// so we use lower retries number to avoid overloading ApiServer
 		maxDSCUpdateAPIServerWriteRetries := 2
 		for i := 0; i < maxDSCUpdateAPIServerWriteRetries; i++ {
-			if !sm.isLeader() {
-				ok = true
-				cachedState.dirty = false
-				log.Infof("CMD instance is no longer leader, exiting UpdateSmartNIC after %d tries", i)
-				break
-			}
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
 			if forceSpec {
 				updObj.ResourceVersion = ""
