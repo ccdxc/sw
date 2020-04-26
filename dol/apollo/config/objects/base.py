@@ -553,6 +553,7 @@ class ConfigClientBase(base.ConfigClientBase):
 
     def DeleteObjects(self, node):
         cfgObjects = self.Objs[node].copy().values()
+        fixed, discovered, implicitly_created = [], [], []
         for obj in cfgObjects:
             if obj.IsOriginImplicitlyCreated():
                 implicitly_created.append(obj)
