@@ -987,11 +987,21 @@ var _ = Describe("api crud and bulkedit tests", func() {
 			Expect(grpcClient).ShouldNot(BeNil())
 
 			// List last 10 networks
-			netws, err := grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{From: 31, MaxResults: 20, SortOrder: api.ListWatchOptions_ByCreationTime.String(), ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
-			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
-			Expect(len(netws)).Should(Equal(10))
-			// By(fmt.Sprintf("Got Networks [%+v]", netws))
-			// By(fmt.Sprintf("Saved Networks [%+v]", cfg.networks))
+			netws := []*network.Network{}
+			var err error
+			Eventually(func() bool {
+				netws, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{From: 31, MaxResults: 20, SortOrder: api.ListWatchOptions_ByCreationTime.String(), ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+				if err != nil {
+					By(fmt.Sprintf("got error listing networks (%s)", err))
+					return false
+				}
+				if len(netws) != 10 {
+					By(fmt.Sprintf("Expected %d netws, got %d", 10, len(netws)))
+					return false
+				}
+				return true
+			}, 30, 1).Should(BeTrue(), "Network list call failed")
+
 			for _, n := range netws {
 				found := false
 				for _, n1 := range cfg.networks[30:] {
@@ -1007,8 +1017,6 @@ var _ = Describe("api crud and bulkedit tests", func() {
 			netws, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{From: 11, MaxResults: 7, SortOrder: api.ListWatchOptions_ByCreationTime.String(), ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
 			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
 			Expect(len(netws)).Should(Equal(7))
-			// By(fmt.Sprintf("Got Networks [%+v]", netws))
-			// By(fmt.Sprintf("Saved Networks [%+v]", cfg.networks))
 			for _, n := range netws {
 				found := false
 				for _, n1 := range cfg.networks[10:17] {
@@ -1024,8 +1032,6 @@ var _ = Describe("api crud and bulkedit tests", func() {
 			netws, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{From: 1, MaxResults: 25, SortOrder: api.ListWatchOptions_ByCreationTime.String(), ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
 			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
 			Expect(len(netws)).Should(Equal(25))
-			// By(fmt.Sprintf("Got Networks [%+v]", netws))
-			// By(fmt.Sprintf("Saved Networks [%+v]", cfg.networks))
 			for _, n := range netws {
 				found := false
 				for _, n1 := range cfg.networks[0:25] {
@@ -1042,8 +1048,6 @@ var _ = Describe("api crud and bulkedit tests", func() {
 			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
 			Expect(len(netws)).Should(Equal(len(cfg.networks)))
 
-			// By(fmt.Sprintf("Got Networks [%+v]", netws))
-			// By(fmt.Sprintf("Saved Networks [%+v]", cfg.networks))
 			for _, n := range netws {
 				found := false
 				for _, n1 := range cfg.networks {
