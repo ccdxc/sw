@@ -425,6 +425,10 @@ func (c *IPClient) DoNTPSync() error {
 				cmd = cmd + " -p " + s
 			}
 			runCmd(cmd)
+			// We need this sleep here to ensure that the NTP sync is successfully completed before starting dhclient.
+			// If not, when we power cycle dhclient will get the lease expiry based on the epoch which will cause it to
+			// remove the assigned IP Address
+			time.Sleep(time.Second * 10)
 			return nil
 		}
 	}
