@@ -10,7 +10,7 @@ warmd:
   target:
     # Upload packaged artifacts from runner to VM
     # SSH to VM and execute make target
-    commands: [ "sh", "-c", "go run ../upload/main.go /go/src/github.com/pensando/sw/build_apulu_x86_ctpl_dol.tar.gz /import/build_apulu_x86_ctpl_dol.tar.gz && go run /go/src/github.com/pensando/sw/test/ci_targets/controlplane-dol/controlplane_dol.go" ]
+    commands: [ "sh", "-c", "go run ../upload/main.go /sw/build_apulu_x86_ctpl_dol.tar.gz /import/build_apulu_x86_ctpl_dol.tar.gz && go run /go/src/github.com/pensando/sw/test/ci_targets/controlplane-dol/controlplane_dol.go" ]
     owners: ["email:mukesh@pensando.io","email:vijasrin@pensando.io"]
     area:
     sub-area:
