@@ -48,9 +48,9 @@ def Clear():
 def Show(nodes=[]):
     def __output_lines(name, output):
         lines = output.split('\n')
-        if len(lines): Logger.header(name)
+        if len(lines): api.Logger.header(name)
         for line in lines:
-            Logger.info(line)
+            api.Logger.info(line)
 
     if __dirty:
         Fetch()
@@ -59,9 +59,9 @@ def Show(nodes=[]):
     for node in nodes:
         if node not in __stdout:
             continue
-        Logger.SetNode(node)
+        api.Logger.SetNode(node)
         __output_lines('LEARN STATISTICS', __stdout[node])
-        Logger.SetNode(None)
+        api.Logger.SetNode(None)
 
 def Fetch():
     global __store

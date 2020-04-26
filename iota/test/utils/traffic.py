@@ -288,4 +288,3 @@ def ARPingWorkloads(workload_pairs, update_neighbor=False, send_dad=False, count
 
     resp = api.Trigger(req)
     return cmd_cookies, resp
-

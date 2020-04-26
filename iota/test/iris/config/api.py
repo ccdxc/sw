@@ -10,6 +10,8 @@ def AddOneConfig(config):
     cfgObjects = (json.load(open(config)))
     objects = []
     for object in cfgObjects["objects"]:
+        # add created by venice tag to config object
+        object['meta']['labels'] = { "CreatedBy": "Venice" }
         cfgObject = cfg_main.ConfigObject(object, cfgObjects["object-key"], cfgObjects["rest-endpoint"])
         cfg_main.ObjectConfigStore.AddConfig(cfgObject)
         objects.append(cfgObject)

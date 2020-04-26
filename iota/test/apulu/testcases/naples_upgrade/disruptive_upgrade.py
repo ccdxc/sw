@@ -19,7 +19,7 @@ def PacketTestSetup(tc):
     tc.bg_cmd_cookies = None
     tc.bg_cmd_resp = None
     tc.pktsize = 128
-    tc.interval = "0.2"
+    tc.interval = 0.2
     tc.duration = 100
     tc.background = True
     tc.pktlossverif = False
