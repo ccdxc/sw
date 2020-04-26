@@ -29,6 +29,9 @@ nic/build/$ARCH/$PIPELINE/lib/libisa.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libev.so.4                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcrypto.so.1.1                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcapisa.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liboperd.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liboperd_alerts.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liboperd_alert_defs.so              /nic/lib/
 
 #common
 nic/build/$ARCH/$PIPELINE/lib/libzmq.so                           /nic/lib/libzmq.so.3

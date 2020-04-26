@@ -446,11 +446,11 @@ func (sm *SysModel) StartEventsGenOnNaples(npc *objects.NaplesCollection, rate, 
 	if len(npc.Nodes) > 0 {
 		naples = npc.Nodes[0]
 		naplesName = naples.NodeName()
-		genEvtCmd = fmt.Sprintf("PATH=$PATH:/nic/bin/; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/nic/lib/:/nic/lib64/; export PATH; export LD_LIBRARY_PATH; OPERD_REGIONS=/nic/conf/operd-regions.json /nic/bin/alerts_gen -t 2 -r %s -n %s", rate, count)
+		genEvtCmd = fmt.Sprintf("PATH=$PATH:/nic/bin/; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/nic/lib/:/nic/lib64/; export PATH; export LD_LIBRARY_PATH; OPERD_REGIONS=/nic/conf/operd-regions.json /nic/bin/alerts_gen -t 4 -r %s -n %s", rate, count)
 	} else {
 		naples = npc.FakeNodes[0]
 		naplesName = naples.NodeName()
-		genEvtCmd = fmt.Sprintf("PATH=$PATH:/naples/nic/bin/; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/naples/nic/lib/:/naples/nic/lib64/; export PATH; export LD_LIBRARY_PATH; OPERD_REGIONS=/naples/nic/conf/operd-regions.json /naples/nic/bin/alerts_gen -t 2 -r %s -n %s", rate, count)
+		genEvtCmd = fmt.Sprintf("PATH=$PATH:/naples/nic/bin/; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/naples/nic/lib/:/naples/nic/lib64/; export PATH; export LD_LIBRARY_PATH; OPERD_REGIONS=/naples/nic/conf/operd-regions.json /naples/nic/bin/alerts_gen -t 4 -r %s -n %s", rate, count)
 	}
 
 	_, err := sm.runCommandOnGivenNaples(naples, genEvtCmd)

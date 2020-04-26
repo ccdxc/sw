@@ -1,0 +1,14 @@
+[
+    {
+        "name": "BGP_SESSION_ESTABLISHED",
+        "category": "Network",
+        "severity": "INFO",
+        "description": "BGP session is established"
+    },
+    {
+        "name": "BGP_SESSION_DOWN",
+        "category": "Network",
+        "severity": "INFO",
+        "description": "BGP session is down"
+    }
+]

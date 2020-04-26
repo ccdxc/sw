@@ -13,7 +13,9 @@
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/operd/alerts/alerts.hpp"
 #include "nbase.h"
 #include "nbbstub.h"
 #include "qbnmdef.h"
@@ -137,9 +139,14 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
   AMB_BGP_TRAP_DATA         *trap_data = NULL;
   AMB_LIM_IF_STATUS_CHANGE  *if_trap_data = NULL;
   uint32_t                   if_index = 0;
+  bool                       rr_mode = false;
 
   NBB_TRC_ENTRY("sms_rcv_amb_trap");
 
+  {
+    auto mgmt_ctxt = pds_ms::mgmt_state_t::thread_context();
+    rr_mode = mgmt_ctxt.state()->rr_mode();
+  }
   switch (v_amb_trap->trap_type)
   {
     case AMB_BGP_TRAP_ESTABLISHED:
@@ -155,9 +162,17 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
                                              &remote_ip);
       // ipaddr2str expects v4 addr in host order
       if (remote_ip.af == IP_AF_IPV4) {
-        remote_ip.addr.v4_addr = ntohl (remote_ip.addr.v4_addr);
+        remote_ip.addr.v4_addr = remote_ip.addr.v4_addr;
       }
-      PDS_TRACE_INFO ("BGP session to %s is Established", ipaddr2str(&remote_ip));
+      PDS_TRACE_INFO ("BGP session to %s is Established",
+                       ipaddr2str(&remote_ip));
+      if (!rr_mode) {
+        // Raise an event
+        operd::alerts::operd_alerts_t alert;
+        alert = operd::alerts::BGP_SESSION_ESTABLISHED;
+        operd::alerts::alert_recorder::get()->alert(alert, "Peer %s",
+                                                      ipaddr2str(&remote_ip));
+      }
       break;
 
     case AMB_BGP_TRAP_BACKWARD:
@@ -176,11 +191,19 @@ NBB_VOID sms_rcv_amb_trap(AMB_TRAP *v_amb_trap NBB_CCXT_T NBB_CXT)
                                                  &remote_ip);
           // ipaddr2str expects v4 addr in host order
           if (remote_ip.af == IP_AF_IPV4) {
-              remote_ip.addr.v4_addr = ntohl (remote_ip.addr.v4_addr);
+              remote_ip.addr.v4_addr = remote_ip.addr.v4_addr;
           }
           PDS_TRACE_INFO ("BGP session to %s is Failed, State: %s",
                            ipaddr2str(&remote_ip),
                            ms_bgp_conn_fsm_state_str(trap_data->fsm_state));
+          if (!rr_mode) {
+            // Raise an event
+            operd::alerts::operd_alerts_t alert;
+            alert = operd::alerts::BGP_SESSION_DOWN;
+            operd::alerts::alert_recorder::get()->alert(alert,"Peer %s, State %s",
+                                                      ipaddr2str(&remote_ip), 
+                            ms_bgp_conn_fsm_state_str(trap_data->fsm_state));
+          }
       }
       break;
 

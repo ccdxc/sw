@@ -10,7 +10,7 @@ MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = $(MS_LD_LIBS) \
                   ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
 MODULE_FLAGS	= $(addprefix -D,$(MS_COMPILATION_SWITCH))
-MODULE_SOLIBS   = logger pdsproto thread
+MODULE_SOLIBS   = logger pdsproto thread operd operd_alerts operd_alert_defs
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/gen/mgmt/*.cc)
 MODULE_CLEAN_DIRS  = ${TOPDIR}/nic/metaswitch/stubs/mgmt/gen
