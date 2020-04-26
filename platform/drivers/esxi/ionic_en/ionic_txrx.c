@@ -1455,6 +1455,7 @@ ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
 {
         VMK_ReturnStatus status;
         vmk_uint32 i, attached_rx_ring_idx, num_attached_rings;
+        struct ionic_en_rx_ring *rx_ring;
         struct ionic_en_rx_rss_ring *rx_rss_ring;
         struct ionic_en_uplink_handle *uplink_handle;
 
@@ -1502,6 +1503,9 @@ ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
 rx_ring_err:
         for (; i > 0; i--) {
                 attached_rx_ring_idx = uplink_handle->max_rx_normal_queues + i;
+                rx_ring = &uplink_handle->rx_rings[attached_rx_ring_idx];
+                ionic_qcq_disable(rx_ring->rxqcq);
+                ionic_rx_flush(&rx_ring->rxqcq->cq);
                 ionic_en_rx_ring_deinit(attached_rx_ring_idx,
                                         priv_data);
         }
