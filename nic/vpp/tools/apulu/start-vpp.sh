@@ -28,6 +28,6 @@ do
 done
 if [ $start_vpp == 0 ]; then
     echo "UIO device not created, not starting VPP!!"
-    exit -1
+    exit 1
 fi
 exec $NIC_DIR/bin/vpp -c $HAL_CONFIG_PATH/vpp/vpp_1_worker.conf

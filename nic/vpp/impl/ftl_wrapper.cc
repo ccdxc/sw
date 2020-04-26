@@ -510,7 +510,7 @@ ftl_set_key_lookup_id (flow_hash_entry_t *entry, uint16_t lookup_id)
 void
 ftl_set_entry_flow_miss_hit (flow_hash_entry_t *entry, uint8_t val)
 {
-    ftl_set_entry_flow_miss_hit(entry, val);
+    ftl_set_flow_miss_hit(entry, val);
 }
 
 void

@@ -52,4 +52,4 @@ do
     sleep 1
     counter=$(( $counter - 1 ))
 done
-exit -1
+exit 1

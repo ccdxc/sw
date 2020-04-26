@@ -23,10 +23,14 @@
 #define VPP_CPU_FLAGS_IPV4_2_VALID    APULU_CPU_FLAGS_IPV4_2_VALID
 #define VPP_CPU_FLAGS_IPV6_2_VALID    APULU_CPU_FLAGS_IPV6_2_VALID
 
-#define VPP_CPU_FLAGS_IP_VALID        (VPP_CPU_FLAGS_IPV4_1_VALID |\
-                                       VPP_CPU_FLAGS_IPV6_1_VALID |\
-                                       VPP_CPU_FLAGS_IPV4_2_VALID |\
+#define VPP_CPU_FLAGS_IPV4_VALID      (VPP_CPU_FLAGS_IPV4_1_VALID |     \
+                                       VPP_CPU_FLAGS_IPV4_2_VALID)
+
+#define VPP_CPU_FLAGS_IPV6_VALID      (VPP_CPU_FLAGS_IPV6_1_VALID |     \
                                        VPP_CPU_FLAGS_IPV6_2_VALID)
+
+#define VPP_CPU_FLAGS_IP_VALID        (VPP_CPU_FLAGS_IPV4_VALID |       \
+                                       VPP_CPU_FLAGS_IPV6_VALID)
 
 #define VPP_CPU_FLAGS_RX_PKT          BIT(0)
 #define VPP_CPU_FLAGS_NAPT            BIT(1)

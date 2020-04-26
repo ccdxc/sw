@@ -71,4 +71,4 @@ do
     counter=$(( $counter - 1 ))
 done
 #cat /proc/cpuinfo
-exit -1
+exit 1
