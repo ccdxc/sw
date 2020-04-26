@@ -134,6 +134,13 @@ public:
         return sdk::SDK_RET_INVALID_OP;
     }
 
+    /// \brief restore h/w resources from persistent storage
+    /// \param[in] info pointer to the info object
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t restore_resources(obj_info_t *info) {
+        return SDK_RET_INVALID_OP;
+    }
+
     /// \brief populate the IPC msg with object specific information
     ///        so it can be sent to other components
     /// \param[in] msg         IPC message to be filled in

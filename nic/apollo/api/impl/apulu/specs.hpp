@@ -86,4 +86,98 @@ pds_nh_group_api_info_to_proto (pds_nexthop_group_info_t *api_info,
                                      &api_info->spec);
 }
 
+// build obj key from protobuf spec
+static inline sdk_ret_t
+pds_obj_key_proto_to_api_spec (pds_obj_key_t *api_spec,
+                               const ::std::string& proto_key)
+{
+    if (proto_key.length() > PDS_MAX_KEY_LEN) {
+        return SDK_RET_INVALID_ARG;
+    }
+    // set all the key bytes to 0 1st and hash on the full key can't include
+    // uninitialized memory
+    api_spec->reset();
+    // set the key bytes
+    memcpy(api_spec->id, proto_key.data(),
+           MIN(proto_key.length(), PDS_MAX_KEY_LEN));
+    return SDK_RET_OK;
+}
+
+// build nh API spec from protobuf spec
+static inline void
+pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
+                          const pds::NexthopSpec &proto_spec)
+{
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
+}
+
+// build nh group API spec from protobuf spec
+static inline sdk_ret_t
+pds_nh_group_proto_to_api_spec (pds_nexthop_group_spec_t *api_spec,
+                                const pds::NhGroupSpec &proto_spec)
+{
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
+    api_spec->num_nexthops = proto_spec.members_size();
+
+    switch (proto_spec.type()) {
+    case pds::NEXTHOP_GROUP_TYPE_OVERLAY_ECMP:
+        if (api_spec->num_nexthops > PDS_MAX_OVERLAY_ECMP_TEP) {
+            return SDK_RET_INVALID_ARG;
+        }
+        api_spec->type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+        break;
+
+    case pds::NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP:
+        if (api_spec->num_nexthops > PDS_MAX_ECMP_NEXTHOP) {
+            return SDK_RET_INVALID_ARG;
+        }
+        api_spec->type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+        break;
+
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
+    for (uint32_t i = 0; i < api_spec->num_nexthops; i++) {
+        pds_nh_proto_to_api_spec(&api_spec->nexthops[i],
+                                 proto_spec.members(i));
+    }
+    return SDK_RET_OK;
+}
+
+// populate API status from nh group proto status
+static inline sdk_ret_t
+pds_nh_group_proto_to_api_status (pds_nexthop_group_status_t *api_status,
+                                  const pds::NhGroupStatus &proto_status)
+{
+    pds::NexthopStatus nh_proto_status = proto_status.members(0);
+    api_status->hw_id = proto_status.hwid();
+    api_status->nh_base_idx = nh_proto_status.hwid();
+    return SDK_RET_OK;
+}
+
+// populate API info from nh group proto response
+static inline sdk_ret_t
+pds_nh_group_proto_to_api_info (pds_nexthop_group_info_t *api_info,
+                                pds::NhGroupGetResponse *proto_rsp)
+{
+    pds_nexthop_group_spec_t *api_spec;
+    pds_nexthop_group_status_t *api_status;
+    pds::NhGroupSpec proto_spec;
+    pds::NhGroupStatus proto_status;
+    sdk_ret_t ret;
+
+    SDK_ASSERT(proto_rsp->response_size() == 1);
+    api_spec = &api_info->spec;
+    api_status = &api_info->status;
+    proto_spec = proto_rsp->mutable_response(0)->spec();
+    proto_status = proto_rsp->mutable_response(0)->status();
+    ret = pds_nh_group_proto_to_api_spec(api_spec, proto_spec);
+    if (ret == SDK_RET_OK) {
+        ret = pds_nh_group_proto_to_api_status(api_status, proto_status);
+    } else {
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
+    return ret;
+}
+
 #endif    // __SPECS_IMPL_HPP__

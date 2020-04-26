@@ -21,8 +21,6 @@
 #define PDS_UPGRADE_NICMGR_OBJ_STORE_NAME "pds_upg_nicmgr_objs_info"
 #define PDS_UPGRADE_NICMGR_OBJ_STORE_SIZE (20 * 1024)
 
-#define PDS_PROTO_MSG_OBJ_LEN (sizeof(uint32_t ))
-
 namespace api {
 
 /// \brief upgrade objs meta data. saved in the front of persistent storage.
@@ -58,10 +56,10 @@ typedef struct upg_obj_info_s {
 /// \brief obj tlv. abstraction used to read/write from/at specified location
 /// in persistent storage
 // ...WARNING.. this structure should be preserved across upgrades
-typedef struct obj_tlv_s {
+typedef struct upg_obj_tlv_s {
     uint32_t len;         ///< length of read/write from/to persistent stoarge
     char obj[0];          ///< location in persistent stoarge for read/write
-} obj_tlv_t;
+} upg_obj_tlv_t;
 
 class upg_ctxt {
 public:

@@ -210,6 +210,11 @@ restore_obj (upg_obj_info_t *info)
     api_obj = api_base::factory(api_ctxt);
     SDK_ASSERT(api_obj != NULL);
     ret = api_obj->restore(info);
+    if (ret == SDK_RET_OK) {
+        api_obj->add_to_db();
+    }
+    // todo 1. mark restore stage
+    //      2. set in restore list
     api_ctxt_free(api_ctxt);
     return ret;
 }
@@ -255,9 +260,8 @@ upg_ev_restore (upg_ev_params_t *params)
             // will continue restoring even if something fails
             if (ret != SDK_RET_OK) {
                 PDS_TRACE_ERR("Restore for obj id %u failed, err %u", id, ret);
-            } else {
-                mem += info.size;
             }
+            mem += info.size;
         }   // end while
     }   // end for
     return ret;

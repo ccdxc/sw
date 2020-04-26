@@ -222,18 +222,29 @@ nexthop_group::backup(upg_obj_info_t *upg_info) {
 sdk_ret_t
 nexthop_group::restore(upg_obj_info_t *upg_info) {
     sdk_ret_t ret;
+    api_ctxt_t *api_ctxt;
     pds_nexthop_group_info_t info;
 
     memset(&info, 0, sizeof(pds_nexthop_group_info_t));
     // fetch info from proto buf
     ret = impl_->restore((impl::obj_info_t *)&info, upg_info);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to restore nexthop group");
+        PDS_TRACE_ERR("Failed to restore nexthop group, err %u", ret);
+        return ret;
     }
-    // todo 1. now we have spec(info.spec), init_config() is next
-    //      2. followed by add_to_db()
-    //      3. hw_id restoration
-    //      4. shared memory offset and other stuff
+    // restore PI fields
+    api_ctxt = api::api_ctxt_alloc((obj_id_t)upg_info->obj_id, API_OP_NONE);
+    if (api_ctxt == NULL) {
+        return SDK_RET_OOM;
+    }
+    api_ctxt->api_params->nexthop_group_spec = info.spec;
+    ret = init_config(api_ctxt);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore nexthop group %s, err %u",
+                      info.spec.key.str(), ret);
+        return ret;
+    }
+    api_ctxt_free(api_ctxt);
     return ret;
 }
 

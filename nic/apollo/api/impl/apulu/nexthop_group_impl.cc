@@ -427,10 +427,10 @@ nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     sdk_ret_t ret;
     pds::NhGroupGetResponse proto_msg;;
     pds_nexthop_group_info_t *nh_group_info;
-    obj_tlv_t *tlv;
+    upg_obj_tlv_t *tlv;
     uint32_t obj_size, size_left;
 
-    tlv = (obj_tlv_t *)upg_info->mem;
+    tlv = (upg_obj_tlv_t *)upg_info->mem;
     size_left = upg_info->backup.size_left;
     nh_group_info = (pds_nexthop_group_info_t *)info;
 
@@ -441,10 +441,10 @@ nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
     // convert api info to proto
     pds_nh_group_api_info_to_proto(nh_group_info, (void *)&proto_msg);
     obj_size = proto_msg.ByteSizeLong();
-    if ((obj_size + PDS_PROTO_MSG_OBJ_LEN) > size_left) {
+    if ((obj_size + 4) > size_left) {   // 4 bytes for len
         PDS_TRACE_ERR("Failed to backup nh group %s, bytes needed %u left %u",
                       nh_group_info->spec.key.str(),
-                      obj_size + PDS_PROTO_MSG_OBJ_LEN, size_left);
+                      obj_size + 4, size_left);
         return SDK_RET_OOM;
     }
 
@@ -455,21 +455,87 @@ nexthop_group_impl::backup(obj_info_t *info, upg_obj_info_t *upg_info) {
                       nh_group_info->spec.key.str());
         return SDK_RET_OOM;
     }
-    upg_info->size = obj_size + PDS_PROTO_MSG_OBJ_LEN;
+    upg_info->size = obj_size + 4;
+    return ret;
+}
+
+sdk_ret_t
+nexthop_group_impl::restore_resources(obj_info_t *info) {
+    sdk_ret_t ret;
+    pds_nexthop_group_info_t *nh_group_info;
+    pds_nexthop_group_spec_t *spec;
+    pds_nexthop_group_status_t *status;
+
+    nh_group_info = (pds_nexthop_group_info_t *)info;
+    spec = &nh_group_info->spec;
+    status = &nh_group_info->status;
+
+    // todo set_rsvd_rsc
+    ret = nexthop_group_impl_db()->nhgroup_idxr()->alloc(status->hw_id);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore an entry in ECMP table, ",
+                      "for nexthop group %u, err %u", spec->key.id, ret);
+        return ret;
+    }
+    hw_id_ = status->hw_id;
+    if (spec->type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
+        if (spec->num_nexthops) {
+            ret = nexthop_impl_db()->nh_idxr()->alloc_block(status->nh_base_idx,
+                                                            spec->num_nexthops);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to restore %u entries in "
+                              "NEXTHOP table for nexthop group %u, "
+                              "err %u", spec->num_nexthops,
+                              spec->key.str(), ret);
+                goto error;
+            }
+            nh_base_hw_id_ = status->nh_base_idx;
+        }
+    }
+    return SDK_RET_OK;
+
+error:
+
+    if (hw_id_ != 0xFFFF) {
+        nexthop_group_impl_db()->nhgroup_idxr()->free(hw_id_);
+        hw_id_ = 0xFFFF;
+    }
     return ret;
 }
 
 sdk_ret_t
 nexthop_group_impl::restore(obj_info_t *info, upg_obj_info_t *upg_info) {
     sdk_ret_t ret;
-    uint32_t pbuf_byte_size = 0; // byte read from persistent storage
+    pds::NhGroupGetResponse proto_msg;;
+    pds_nexthop_group_info_t *nh_group_info;
+    upg_obj_tlv_t *tlv;
+    uint32_t obj_size;
 
-    // todo 1. read upg_info.mem for location of obj
-    //      2. de-serialize pbuf
-    //      3. convert pbuf to info
-    //      4. misc
-    upg_info->size = pbuf_byte_size;
-    return SDK_RET_OK;
+    tlv = (upg_obj_tlv_t *)upg_info->mem;
+    nh_group_info = (pds_nexthop_group_info_t *)info;
+    obj_size = tlv->len;
+    // fill up the size, even if it fails later. to try and restore next obj
+    upg_info->size = obj_size;
+    // de-serialize proto msg
+    if (proto_msg.ParseFromArray(tlv->obj, tlv->len) == false) {
+        PDS_TRACE_ERR("Failed to de-serialize nexthop group");
+        return SDK_RET_OOM;
+    }
+    // convert proto msg to nh group info
+    ret = pds_nh_group_proto_to_api_info(nh_group_info, &proto_msg);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to convert nh group proto msg to info, err %u",
+                      ret);
+        return ret;
+    }
+    // now restore hw resources
+    ret = restore_resources((obj_info_t *)nh_group_info);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to restore hw resources for nh group %s",
+                      nh_group_info->spec.key.str());
+        return ret;
+    }
+    return ret;
 }
 
 /// \@}    // end of PDS_NEXTHOP_GROUP_IMPL

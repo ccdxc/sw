@@ -84,6 +84,11 @@ public:
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t nuke_resources(api_base *api_obj) override;
 
+    /// \brief restore h/w resources for this obj from persistent storage
+    /// \param[in] info pointer to the info object
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t restore_resources(obj_info_t *info) override;
+
     /// \brief      program all h/w tables relevant to this object except
     ///             stage 0 table(s), if any
     /// \param[in]  obj_ctxt transient state associated with this API
