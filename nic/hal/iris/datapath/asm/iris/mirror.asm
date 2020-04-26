@@ -70,9 +70,8 @@ erspan_type_iii:
     tblwr.l         d.u.erspan_mirror_d.erspan_type, ERSPAN_TYPE_III
     phvwrpair.c6    p.erspan_t3_vlan, k.span_vlan_tag_vid, \
                         p.erspan_t3_cos, k.span_vlan_tag_pcp
-    add             r5, k.capri_intrinsic_tm_span_session, 1
     bcf             [!c6], erspan_mirror_common
-    phvwr           p.erspan_t3_span_id, r5
+    phvwr           p.erspan_t3_span_id, d.u.erspan_mirror_d.span_id
     seq             c3, d.u.erspan_mirror_d.vlan_strip_en, 1
     bcf             [!c3], erspan_mirror_common
     sne.c3          c6, r0, r0
@@ -87,9 +86,8 @@ erspan_type_ii:
     phvwr           p.erspan_t2_port_id, k.capri_intrinsic_lif
     phvwrpair.c6    p.erspan_t2_vlan, k.span_vlan_tag_vid, \
                         p.erspan_t2_cos, k.span_vlan_tag_pcp
-    add             r5, k.capri_intrinsic_tm_span_session, 1
     bcf             [!c6], erspan_mirror_common
-    phvwr           p.erspan_t2_span_id, r5
+    phvwr           p.erspan_t2_span_id, d.u.erspan_mirror_d.span_id
     seq             c3, d.u.erspan_mirror_d.vlan_strip_en, 1
     bcf             [!c3], erspan_mirror_common
     phvwr.!c3       p.erspan_t2_encap_type, 0x3

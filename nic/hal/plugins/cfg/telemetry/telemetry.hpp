@@ -231,6 +231,7 @@ typedef struct mirror_session_s {
             vrf_id_t  vrf_id;
             uint8_t   type;
             bool      vlan_strip_en;
+            uint32_t  span_id;
         } er_span_dest;
       struct r_span_dest_ {
             vlan_id_t vlan;
@@ -343,19 +344,6 @@ flowmon_acl_ctx_name (vrf_id_t vrf_id, bool mirror_action)
         std::snprintf(name, sizeof(name), "flowmon-rules-collect:%lu", vrf_id);
     }
     return name;
-}
-
-static inline void
-mirrorsession_spec_dump (MirrorSessionSpec& spec)
-{
-    std::string    cfg;
-
-    if (hal::utils::hal_trace_level() < ::utils::trace_debug) {
-        return;
-    }
-    google::protobuf::util::MessageToJsonString(spec, &cfg);
-    HAL_TRACE_DEBUG("MirrorSessionSpec configuration:");
-    HAL_TRACE_DEBUG("{}", cfg.c_str());
 }
 
 static inline void

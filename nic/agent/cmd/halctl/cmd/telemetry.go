@@ -306,27 +306,27 @@ func mirrorDetailShow(respMsg *halproto.MirrorSessionGetResponseMsg) {
 
 func mirrorShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("SID: Mirror session id          HWID: Mirror session hwid\n")
-	fmt.Printf("Snap: Snap length               LTEP: Local Tunnel TEP\n")
-	fmt.Printf("RTEP: Remote Tunnel TEP         ETYPE: ERSPAN Type\n")
-	fmt.Printf("Flags: Vlan-Strip-Enable(VS)\n")
-	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 75)
+	fmt.Printf("SID:   SW session id             HWID:   HW Table entry id\n")
+	fmt.Printf("Snap:  Snap length               LTEP:   Local Tunnel TEP\n")
+	fmt.Printf("RTEP:  Remote Tunnel TEP         ETYPE:  ERSPAN Type\n")
+	fmt.Printf("Flags: Vlan-Strip-Enable(VS)     SpanId: ERSpan session id\n")
+	hdrLine := strings.Repeat("-", 70)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-5s%-5s%-5s%-17s%-17s%-15s%-15s\n",
-		"SID", "HWID", "Snap", "LTEP", "RTEP", "ETYPE", "Flags")
+	fmt.Printf("%-5s%-5s%-7s%-5s%-17s%-17s%-7s%-15s\n",
+		"SID", "HWID", "SpanID", "Snap", "LTEP", "RTEP", "ETYPE", "Flags")
 	fmt.Println(hdrLine)
 }
 
 func mirrorShowOneResp(resp *halproto.MirrorSessionGetResponse) {
 	spec := resp.GetSpec()
-	fmt.Printf("%-5d%-5d%-5d%-17s%-17s%-15s%-15s\n",
+	fmt.Printf("%-5d%-5d%-7d%-5d%-17s%-17s%-7s%-15s\n",
 		spec.GetKeyOrHandle().GetMirrorsessionId(),
 		resp.GetStatus().GetHandle(),
+		spec.GetErspanSpec().GetSpanId(),
 		spec.GetSnaplen(),
 		utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIp()),
 		utils.IPAddrToStr(spec.GetErspanSpec().GetDestIp()),
-		spec.GetErspanSpec().GetType(),
+		strings.Replace(spec.GetErspanSpec().GetType().String(), "ERSPAN_", "", -1),
 		mirrorFlagsToStr(resp))
 }
 

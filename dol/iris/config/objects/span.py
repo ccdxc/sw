@@ -100,6 +100,7 @@ class SpanSessionObject(base.ConfigObjectBase):
                 reqspec.erspan_spec.dest_ip.ip_af = haldefs.common.IP_AF_INET
                 reqspec.erspan_spec.dest_ip.v4_addr = self.erspan_dest.getnum()
                 reqspec.erspan_spec.type = telemetry_pb2.ERSpanType.ERSPAN_TYPE_3
+                reqspec.erspan_spec.span_id = self.id
         else:
             reqspec.key_or_handle.mirrorsession_id = self.id
 

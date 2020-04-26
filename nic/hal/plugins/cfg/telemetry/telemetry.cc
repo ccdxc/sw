@@ -344,9 +344,8 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     auto ms_ht = g_hal_state->mirror_session_ht();
     if_t *id, *dest_if;
 
-    HAL_TRACE_INFO("Create Mirror session ID {}, snaplen {}",
-                   spec.key_or_handle().mirrorsession_id(), spec.snaplen());
-    mirrorsession_spec_dump(spec);
+    hal_api_trace(" API Begin: Mirror Session create ");
+    proto_msg_dump(spec);
 
     // check if mirror session already exists
     sw_id = spec.key_or_handle().mirrorsession_id();
@@ -446,6 +445,7 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         SDK_ASSERT(erspan_type == ERSPAN_TYPE_II || erspan_type == ERSPAN_TYPE_III);
         session->mirror_destination_u.er_span_dest.type = erspan_type;
         session->mirror_destination_u.er_span_dest.vlan_strip_en = erspan.vlan_strip_en();
+        session->mirror_destination_u.er_span_dest.span_id = erspan.span_id();
         session->dest_if = dest_if;
         args.tunnel_if = ift;
         args.dst_if = dest_if;
@@ -535,6 +535,7 @@ mirror_session_fill_rsp (void *entry, void *ctxt)
                           erspan.type, session->sw_id);
         }
         response->mutable_spec()->mutable_erspan_spec()->set_vlan_strip_en(erspan.vlan_strip_en);
+        response->mutable_spec()->mutable_erspan_spec()->set_span_id(erspan.span_id);
         response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
             set_v4_addr(erspan.ip_sa.addr.v4_addr);
         response->mutable_spec()->mutable_erspan_spec()->mutable_src_ip()->\
@@ -622,6 +623,8 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
     hal_ret_t ret;
     mirror_session_id_t sw_id;
     auto ms_ht = g_hal_state->mirror_session_ht();
+
+    hal_api_trace(" API Begin: Mirror Session delete ");
 
     // check if mirror session already exists
     sw_id = req.key_or_handle().mirrorsession_id();

@@ -335,7 +335,7 @@ message ERSpanSpec {
   string          dscp          = 3; // DSCP value to use
   uint32          span_id       = 4; // Span ID to use
   ERSpanType      type          = 5; // ERSpan type
-  bool            vlan_strip_en = 6;
+  bool            vlan_strip_en = 6; // Strip vlan of original packet
 }
 
 // MirrorSessionSpec is the configuration specification for mirror config

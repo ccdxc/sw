@@ -53,7 +53,7 @@ action remote_span(dst_lport, truncate_len, tunnel_rewrite_index, vlan,
 
 action erspan_mirror(dst_lport, truncate_len, vlan_strip_en,
                      tunnel_rewrite_index, span_tm_oq,
-                     erspan_type, gre_seq_en, seq_num) {
+                     erspan_type, gre_seq_en, seq_num, span_id) {
     modify_field(scratch_metadata.flag, gre_seq_en);
     if (scratch_metadata.flag == TRUE) {
         add_header(gre_opt_seq);
@@ -61,7 +61,7 @@ action erspan_mirror(dst_lport, truncate_len, vlan_strip_en,
     }
 
     if (erspan_type == ERSPAN_TYPE_II) {
-        add(erspan_t2.span_id, capri_intrinsic.tm_span_session, 1);
+        modify_field(erspan_t2.span_id, span_id);
         modify_field(erspan_t2.port_id, capri_intrinsic.lif);
         if (span_vlan_tag.valid == TRUE) {
             modify_field(erspan_t2.vlan, span_vlan_tag.vid);
@@ -79,7 +79,7 @@ action erspan_mirror(dst_lport, truncate_len, vlan_strip_en,
     }
 
     if ((erspan_type == 0) or (erspan_type == ERSPAN_TYPE_III)) {
-        add(erspan_t3.span_id, capri_intrinsic.tm_span_session, 1);
+        modify_field(erspan_t3.span_id, span_id);
         modify_field(erspan_t3_opt.port_id, capri_intrinsic.lif);
         if (span_vlan_tag.valid == TRUE) {
             modify_field(erspan_t3.vlan, span_vlan_tag.vid);
