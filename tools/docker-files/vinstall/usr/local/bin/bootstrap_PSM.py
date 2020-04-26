@@ -85,7 +85,7 @@ def is_apigw_running():
     cmd = "docker ps | grep apigw | wc -l"
     output = subprocess.check_output(cmd, shell=True)
     if int(output) > 0:
-        write_log("* venice apigw is already running")
+        write_log("* PSM apigw is already running")
         return True
     else:
         return False
@@ -105,7 +105,7 @@ def is_pencmd_running():
     return False
 
 def check_reachability():
-    for ip in opts.VENICE_IP:
+    for ip in opts.PSM_IP:
         cmd = "ping -c 5 " + ip
         try:
             output = subprocess.check_output(cmd, shell=True) 
@@ -136,7 +136,7 @@ def create_cluster():
         "spec": {
             "auto-admit-dscs": opts.autoadmit,
             "ntp-servers": opts.ntpservers,
-            "quorum-nodes": opts.VENICE_IP
+            "quorum-nodes": opts.PSM_IP
         }
     })
     return curl_send(**ctx)
@@ -233,7 +233,7 @@ def complete_auth_bootstrap():
            "postdata": json.dumps({})}
     return retry(curl_send, opts.timeout, opts.waittime, ctx)
 
-def bootstrap_venice():
+def bootstrap_psm():
     write_log("* creating default tenant")
     if create_tenant() not in ( 200, 409 ):
         return False
@@ -255,7 +255,7 @@ def bootstrap_venice():
         if enable_overlay_routing() not in ( 200, 409 ):
             return False
 
-    write_log("* complete venice bootstraping process")
+    write_log("* complete PSM bootstraping process")
     if complete_auth_bootstrap() not in ( 200, 409 ):
         return False
 
@@ -290,18 +290,18 @@ def clean_exit(status=None):
     sys.exit(status)
 
 
-DEFAULT_LOG_FILE_PATH = "/var/log/pensando/pen-bootstrap-venice.log"
+DEFAULT_LOG_FILE_PATH = "/var/log/pensando/pen-bootstrap-psm.log"
 ERROR_STATUS = 1
 # Parse tha command line argument
 parser = argparse.ArgumentParser()
-parser.add_argument("VENICE_IP", nargs="+", help="List of venice IPs")
-parser.add_argument("-clustername", help="Venice cluster name (Default=cluster)", default="cluster", type=str)
-parser.add_argument("-password", help="Venice gui password (Default=Pensando0$)", default="Pensando0$", type=str)
+parser.add_argument("PSM_IP", nargs="+", help="List of PSM IPs")
+parser.add_argument("-clustername", help="PSM cluster name (Default=cluster)", default="cluster", type=str)
+parser.add_argument("-password", help="PSM gui password (Default=Pensando0$)", default="Pensando0$", type=str)
 parser.add_argument("-domain", help="Domain name for admin user", default="pensando.io", type=str)
 parser.add_argument("-ntpservers", help="NTP servers (multiple needs to be separated by comma (,)", default="0.us.pool.ntp.org,1.us.pool.ntp.org", type=str)
 parser.add_argument("-timeout", help="Total time to retry a transaction in seconds (default=300)", default=300, type=int)
 parser.add_argument("-waittime", help="Total time to wait between each retry in seconds (default=30)", default=30, type=int)
-parser.add_argument("-autoadmit", help="Auto admit DSC once it registers with Venice - 'True' or 'False' (default=True)", default="True", choices=["True", "False"], type=str)
+parser.add_argument("-autoadmit", help="Auto admit DSC once it registers with PSM - 'True' or 'False' (default=True)", default="True", choices=["True", "False"], type=str)
 parser.add_argument("-enablerouting", help="Enable overlay routing on the cluster", action="store_true")
 parser.add_argument("-verbose", "-v", help="Verbose logging", action="count")
 parser.add_argument("-skip_create_cluster", "-s", help="Skip cluster creation step", action="store_true")
@@ -319,8 +319,8 @@ if not log_file_handler:
     clean_exit(ERROR_STATUS)
 print "\n"
 write_log("* all messages printed to the console will also be logged to the file: " + str(opts.output_log))
-write_log("* start venice bootstrapping process")
-write_log("* - list of venice ips: " + str(opts.VENICE_IP))
+write_log("* start PSM bootstrapping process")
+write_log("* - list of PSM ips: " + str(opts.PSM_IP))
 write_log("* - list of ntp servers: " + str(opts.ntpservers))
 write_log("* - using domain name: " + str(opts.domain))
 write_log("* - auto-admit dsc: " + str(opts.autoadmit))
@@ -337,19 +337,19 @@ if not is_pencmd_running():
     clean_exit(ERROR_STATUS)
 
 if not opts.skip_create_cluster and not is_apigw_running():
-    write_log("* creating venice cluster")
+    write_log("* creating PSM cluster")
     if create_cluster() not in ( 200, 409 ):
         print "\n"
         write_log("* error creating cluster")
         write_log("* please correct the error and rerun %s with switch -v" % sys.argv[0])
         clean_exit(ERROR_STATUS)
-if not bootstrap_venice():
+if not bootstrap_psm():
     print "\n"
-    write_log("* venice bootstrap failed")
+    write_log("* PSM bootstrap failed")
     write_log("* please correct the error and rerun %s with switch -v" % sys.argv[0])
     clean_exit(ERROR_STATUS)
 
 print "\n"
-write_log("* venice bootstrap completed successfully")
-write_log("* you may access venice at https://" + opts.VENICE_IP[0])
+write_log("* PSM bootstrap completed successfully")
+write_log("* you may access PSM at https://" + opts.PSM_IP[0])
 clean_exit()
