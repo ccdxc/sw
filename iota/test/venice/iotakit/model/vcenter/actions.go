@@ -299,11 +299,19 @@ func (sm *VcenterSysModel) AddNetworks(spec common.NetworkSpec) error {
 	addNetworkMsg := &iota.NetworksMsg{
 		Switch:           spec.Switch,
 		OrchestratorNode: orch.Name,
-		Network: []*iota.Network{&iota.Network{
+	}
+
+	for _, node := range spec.Nodes {
+		nw := &iota.Network{
 			Cluster: sm.Tb.GetCluster(),
 			Name:    spec.Name,
-			Nodes:   spec.Nodes,
-		}},
+			Node:    node,
+		}
+		switch spec.NwType {
+		case common.VmotionNetworkType:
+			nw.Type = iota.NetworkType_NETWORK_TYPE_VMK_VMOTION
+		}
+		addNetworkMsg.Network = append(addNetworkMsg.Network, nw)
 	}
 
 	switch spec.NwType {

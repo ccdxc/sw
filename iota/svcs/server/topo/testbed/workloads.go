@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -83,6 +84,11 @@ func (n *TestNode) configureWorkload(wload workload.Workload, in *iota.Workload)
 		NetworkName:   in.GetNetworkName(),
 	}
 
+	if spec.IntfType == iota.InterfaceType_INTERFACE_TYPE_DVS_PVLAN.String() {
+		spec.NetworkName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
+		//Update the network name if trying to create a pvlan
+		in.NetworkName = spec.NetworkName
+	}
 	attachedIntf, err := wload.AddInterface(spec)
 	if err != nil {
 		msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())

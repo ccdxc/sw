@@ -67,6 +67,7 @@ class Workload:
             self.cpus = msg.cpus
             self.memory = msg.memory
             self.mgmt_ip = msg.mgmt_ip
+            self.network_name = msg.network_name
             #Logger.info("Workload %s Mgmt IP %s" % (self.workload_name, self.mgmt_ip))
             self.exposed_tcp_ports = []
             self.exposed_udp_ports = []

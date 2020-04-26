@@ -606,6 +606,22 @@ def __bringUpWorkloads(wloads):
 
     return ret
 
+def EnableVmotionOnNetwork(host, network, mac_address):
+    Logger.info("Enabling vmotion on host %s netowrk %s" % (host, network))
+    req = topo_svc.NetworksMsg()
+    req.orchestrator_node = GetOrchestratorNode()
+    nw = req.Network.add()
+    nw.cluster = GetVCenterClusterName()
+    nw.name = network
+    nw.Type = topo_svc.NETWORK_TYPE_VMK_VMOTION
+    nw.node = host
+    nw.mac_address = mac_address
+    resp = __rpc(req, gl_topo_svc_stub.AddNetworks)
+    if IsApiResponseOk(resp):
+        return types.status.SUCCESS
+    return types.status.FAILURE
+
+
 def __configOnlyBringupWorkloads(wloads):
 
     node_wloads = defaultdict(lambda : set())

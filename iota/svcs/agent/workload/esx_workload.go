@@ -489,12 +489,14 @@ func (vm *vmVcenterWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 
 	log.Errorf("Add interface %v %p %p", vm.Name(), vm, vm.vm)
 	relaxSecurity := false
+	if spec.NetworkName == "" {
+		return "", errors.New("Network name not specified")
+	}
+	pgName = spec.NetworkName
 	if spec.IntfType == iota.InterfaceType_INTERFACE_TYPE_DVS_PVLAN.String() {
 
 		private := false
-		pgName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
 		if spec.SecondaryVlan != 0 {
-			pgName = constants.EsxDataNWPrefix + strconv.Itoa(spec.SecondaryVlan)
 			private = true
 		}
 		//Create the port group
@@ -509,6 +511,7 @@ func (vm *vmVcenterWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 			return "", errors.Wrap(err, "Failed to add portgroup to dvs")
 		}
 
+		spec.NetworkName = pgName
 	} else {
 		if spec.NetworkName != "" {
 			//Use network name specified.

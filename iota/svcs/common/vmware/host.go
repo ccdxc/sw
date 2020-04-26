@@ -621,6 +621,9 @@ L:
 		spec.Ip.IpAddress = nwspec.IPAddress
 		spec.Ip.SubnetMask = nwspec.Subnet
 	}
+	if nwspec.MacAddress != "" {
+		spec.Mac = nwspec.MacAddress
+	}
 	objPg, ok := net.(*object.DistributedVirtualPortgroup)
 	if ok {
 		spec.DistributedVirtualPort = &types.DistributedVirtualSwitchPortConnection{}

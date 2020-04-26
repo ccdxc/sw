@@ -40,6 +40,7 @@ type KernelNetworkSpec struct {
 	Portgroup     string
 	IPAddress     string
 	Subnet        string
+	MacAddress    string
 	EnableVmotion bool
 }
 

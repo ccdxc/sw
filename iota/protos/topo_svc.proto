@@ -677,11 +677,13 @@ message Network {
     uint32               vlan      = 3;
 
     //nodes that network has to be on
-    repeated string      nodes     = 4; 
+    string               node     = 4; 
 
     string               cluster   =  5;
 
     bool                 dhcp      =  6;
+
+    string               mac_address =  7;
 }
 
 

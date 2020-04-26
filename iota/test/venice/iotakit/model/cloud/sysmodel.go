@@ -45,7 +45,7 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSe
 	sm.NoSetupDataPathAfterSwitch = true
 
 	//Setup license for overlay routing
-	sm.Licenses = []string{"OverlayRouting"}
+	sm.Licenses = []string{"OverlayRouting", "SubnetSecurityPolicies"}
 
 	sm.sgpolicies = make(map[string]*objects.NetworkSecurityPolicy)
 	sm.CfgModel = enterprise.NewCfgModel(cfgType)
@@ -503,19 +503,18 @@ func (sm *SysModel) TeardownWorkloads(wc *objects.WorkloadCollection) error {
 	return nil
 }
 
-
 //TriggerDeleteAddConfig triggers link flap
 func (sm *SysModel) TriggerDeleteAddConfig(percent int) error {
 
-    err := sm.CleanupAllConfig()
-         if err != nil {
-             return err
-         }
+	err := sm.CleanupAllConfig()
+	if err != nil {
+		return err
+	}
 
-     err = sm.TeardownWorkloads(sm.Workloads())
-         if err != nil {
-             return err
-         }
+	err = sm.TeardownWorkloads(sm.Workloads())
+	if err != nil {
+		return err
+	}
 
-     return sm.SetupDefaultConfig(context.Background(), sm.Scale, sm.ScaleData)
+	return sm.SetupDefaultConfig(context.Background(), sm.Scale, sm.ScaleData)
 }

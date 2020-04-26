@@ -19,6 +19,9 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc
 ipv4_subnet_allocator = {} # network name(config.yaml) --> list of ipv4 addresses
 ipv6_subnet_allocator = {} # network name(config.yaml) --> list of ipv6 addresses
 classic_mac_allocator = resmgr.MacAddressStep("00AA.0000.0001", "0000.0000.0001")
+vmotion_mac_allocator = resmgr.MacAddressStep("00CC.0000.0001", "0000.0000.0001")
+vmotion_ip_allocator = resmgr.IpAddressStep("172.16.0.1", "0.0.0.1")
+
 
 __max_udp_ports = 8
 __max_tcp_ports = 8
@@ -94,9 +97,11 @@ def __get_l2segment_vlan_for_endpoint(ep):
     assert(len(objects) == 1)
     return objects[0].spec.vlan_id
 
+
 def __add_config_worklads(req, target_node = None):
     third_party_workload_count = 0
     ep_objs = netagent_api.QueryConfigs(kind='Endpoint')
+    ep_ref = None
     for ep in ep_objs:
         node_name = getattr(ep.spec, "_node_name", None)
         if not node_name:
@@ -456,6 +461,39 @@ def __add_config_classic_workloads(req, target_node = None):
                wl_msg.workload_image = api.GetWorkloadImageForNode(node)
 '''
 
+def __setup_vmotion_on_hosts():
+    vmotion_workloads = {}
+    ep_objs = netagent_api.QueryConfigs(kind='Endpoint')
+    ep_ref = None
+    for ep in ep_objs:
+        node_name = getattr(ep.spec, "_node_name", None)
+        if not node_name:
+            node_name = ep.spec.node_uuid    
+        l2seg = __get_l2segment_vlan_for_endpoint(ep)
+        if  api.GetNicMode() == 'hostpin_dvs' and not vmotion_workloads.get(node_name, None) and l2seg != 0:
+            ep_ref = copy.deepcopy(ep)
+            ep_ref.spec.mac_address = vmotion_mac_allocator.Alloc().get()
+            ep_ref.spec.ipv4_addresses = [str(vmotion_ip_allocator.Alloc())]
+            ep_ref.meta.name = "vmotion-" + str(node_name)
+            ret = netagent_api.PushConfigObjects([ep_ref], ignore_error=False)
+            if ret != api.types.status.SUCCESS:
+                api.Logger.info("Failed to push vmotion endpoint")
+            vmotion_workloads[node_name] = ep_ref   
+
+    workloads = api.GetWorkloads()
+    hostMap = {}
+    for workload in workloads:
+        if not hostMap.get(workload.node_name, None):
+            if vmotion_workloads[workload.node_name].spec.useg_vlan == workload.encap_vlan:
+                vmotion_workloads[workload.node_name].network_name = workload.network_name
+
+    for host, workload in vmotion_workloads.items():
+        ret = api.EnableVmotionOnNetwork(host, workload.network_name, workload.spec.mac_address)
+        if ret != api.types.status.SUCCESS:
+            return ret
+    return api.types.status.SUCCESS
+
+
 def __add_workloads(target_node = None):
     req = topo_svc.WorkloadMsg()
     if api.GetNicMode() in ['hostpin', 'hostpin_dvs', 'unified']:
@@ -468,6 +506,10 @@ def __add_workloads(target_node = None):
     if len(req.workloads):
         resp = api.AddWorkloads(req, skip_bringup=api.IsConfigOnly())
         if resp is None:
+            sys.exit(1)
+    if api.GetNicMode() == 'hostpin_dvs':
+        ret = __setup_vmotion_on_hosts()
+        if ret != api.types.status.SUCCESS:
             sys.exit(1)
 
 def __recover_workloads(target_node = None):
