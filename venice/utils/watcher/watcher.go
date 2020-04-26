@@ -25,7 +25,7 @@ import (
 
 const (
 	// processEvent is aborted after this timeout and watches re-established
-	defProcessEventTimeout = time.Second
+	defProcessEventTimeout = 5 * time.Second
 )
 
 // KindOptions defines API Server kind and its ListWatchOptions
@@ -269,7 +269,7 @@ func (w *Watcher) processEvent(event *kvstore.WatchEvent) error {
 		w.logger.ErrorLog("method", "processEvent",
 			"msg", fmt.Sprintf("watch event processing timed out for watch event obj kind [%s], objmeta [%v]", event.Object.GetObjectKind(), obj),
 			"err", ctx.Err())
-		recorder.Event(eventtypes.SERVICE_UNRESPONSIVE,
+		recorder.Event(eventtypes.SYSTEM_RESOURCE_USAGE,
 			fmt.Sprintf("module [%s] timed out processing watch events, please check system resources", w.module), event.Object)
 		return ctx.Err()
 	case err := <-c:

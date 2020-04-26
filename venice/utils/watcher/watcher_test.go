@@ -154,9 +154,9 @@ func TestProcessEvent(t *testing.T) {
 	}{
 		{
 			"processEventCb times out",
-			2 * time.Second,
+			9 * time.Second,
 			context.DeadlineExceeded,
-			eventtypes.EventType_name[int32(eventtypes.SERVICE_UNRESPONSIVE)],
+			eventtypes.EventType_name[int32(eventtypes.SYSTEM_RESOURCE_USAGE)],
 		},
 		{
 			"processEventCb successful",
@@ -186,7 +186,7 @@ func TestProcessEvent(t *testing.T) {
 			Key:    obj.MakeKey("auth"),
 			Object: obj,
 		})
-		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, exected error [%v], got [%v]", test.name, test.err, err))
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 		Assert(t, strings.Contains(buf.String(), test.eventlog), "[%s] test failed, expected log [%s] to contain event string [%s]", test.name, buf.String(), test.eventlog)
 		t.Log(buf.String())
 	}
