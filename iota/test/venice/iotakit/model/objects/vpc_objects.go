@@ -135,3 +135,24 @@ func (v *Vpc) UpdateRMAC(rmac string) error {
 
 	return nil
 }
+
+func TenantVPCCollection(tenant string, client objClient.ObjClient, tb *testbed.TestBed) (*VpcObjCollection, error) {
+	vpcs, err := client.ListVPC(tenant)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(vpcs) == 0 {
+		return nil, fmt.Errorf("No VPCs on tenant %s", tenant)
+	}
+	 vpcc := NewVPCCollection(client, tb)
+
+	for _, vrf := range vpcs {
+		if vrf.Spec.Type == "tenant" {
+			vpcc.Objs = append(vpcc.Objs,  &Vpc{Obj: vrf})
+			return vpcc, nil 
+		}
+	}
+
+	return nil, fmt.Errorf("No tenant VPC on %s", tenant)
+}

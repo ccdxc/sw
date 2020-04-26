@@ -2,6 +2,7 @@ package objects
 
 import (
 	"fmt"
+
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/objClient"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
@@ -155,5 +156,18 @@ func (intf *NetworkInterfaceCollection) VerifyNoMirrors(mirrors []string) error 
 		}
 	}
 
+	return nil
+}
+
+func (intf *NetworkInterfaceCollection) AttachNetwork(tenant, nw string) error {
+
+	for _, interf := range intf.Interfaces {
+		interf.Spec.AttachNetwork = nw
+		interf.Spec.AttachTenant = tenant
+		err := intf.Client.UpdateNetworkInterface(interf)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

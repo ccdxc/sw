@@ -118,6 +118,16 @@ func (w *Workload) GetInterface() string {
 	return w.iotaWorkload.Interface
 }
 
+func (w *Workload) GetGatewayIP() string {
+	ip := strings.Split(w.iotaWorkload.IpPrefix, "/")[0]
+	ipAddrBytes := strings.Split(ip, ".")
+	return fmt.Sprintf("%s.%s.%s.1", ipAddrBytes[0], ipAddrBytes[1], ipAddrBytes[2])
+}
+
+func (w *Workload) GetNetworkName() string {
+	return w.iotaWorkload.NetworkName
+}
+
 func NewWorkload(host *Host, w *workload.Workload, wtype iota.WorkloadType, wimage string, switchName, nwName string) *Workload {
 
 	convertMac := func(s string) string {
@@ -241,6 +251,24 @@ func (wpc *WorkloadPairCollection) OnNetwork(network *Network) *WorkloadPairColl
 		}
 	}
 
+	return &newCollection
+}
+
+func (wpc *WorkloadPairCollection) SpecificPair(node1, node2 string, n1, n2 *Network) *WorkloadPairCollection {
+	if wpc.HasError() {
+		return wpc
+	}
+	newCollection := WorkloadPairCollection{}
+
+	for _, pair := range wpc.Pairs {
+		if (pair.First.NaplesUUID() == node1 && pair.Second.NaplesUUID() == node2 &&
+			pair.First.GetNetworkName() == n1.VeniceNetwork.Name && pair.Second.GetNetworkName() == n2.VeniceNetwork.Name) ||
+			(pair.First.NaplesUUID() == node2 && pair.Second.NaplesUUID() == node1 &&
+			pair.First.GetNetworkName() == n2.VeniceNetwork.Name && pair.Second.GetNetworkName() == n1.VeniceNetwork.Name) {
+			newCollection.Pairs = append(newCollection.Pairs, pair)
+			break
+		}
+	}
 	return &newCollection
 }
 
@@ -702,6 +730,44 @@ func WorkloadUpdateDynamicIPs(w *Workload, tb *testbed.TestBed) error {
 		}
 		log.Infof("%v's dynamic IpPrefix: [%v]", w.Name(), ipPrefix[0])
 		w.SetIpPrefix(ipPrefix[0])
+	}
+
+	return WorkloadUpdateDefaultRoute(w, tb)
+}
+
+func WorkloadUpdateDefaultRoute(w *Workload, tb *testbed.TestBed) error {
+	cmds := []*iota.Command{
+		{
+			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
+			Command:    fmt.Sprintf("ip route del default 2>/dev/null; ip route add default via %s", w.GetGatewayIP()),
+			EntityName: w.Name(),
+			NodeName:   w.NodeName(),
+		},
+	}
+
+	trmode := iota.TriggerMode_TRIGGER_PARALLEL
+	if !tb.HasNaplesSim() {
+		trmode = iota.TriggerMode_TRIGGER_NODE_PARALLEL
+	}
+
+	trigMsg := &iota.TriggerMsg{
+		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
+		TriggerMode: trmode,
+		ApiResponse: &iota.IotaAPIResponse{},
+		Commands:    cmds,
+	}
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(tb.Client().Client)
+	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to update default route on workload. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
+	}
+
+	for _, cmdResp := range triggerResp.Commands {
+		if cmdResp.ExitCode != 0 {
+			return fmt.Errorf("Update default route. Resp: %#v", cmdResp)
+		}
 	}
 	return nil
 }

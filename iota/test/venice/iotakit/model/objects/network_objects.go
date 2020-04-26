@@ -187,3 +187,33 @@ func (nw *Network) UpdateIPv4Gateway(gw string) error {
 	spec.IPv4Gateway = gw
 	return nil
 }
+
+func VpcNetworkCollection(tenant, vpc string, n int, client objClient.ObjClient) (*NetworkCollection, error) {
+	nws, err := client.ListNetwork(tenant)
+	if err != nil || n <= 0{
+		return nil, err
+	}
+
+	if len(nws) < n {
+		return nil, fmt.Errorf("Not enough Networks on tenant %s", tenant)
+	}
+
+	var nws_vpc []*network.Network
+	count := 0
+	for _, nw := range nws {
+		if count >= n {
+			break;
+		}
+		if nw.Spec.VirtualRouter == vpc {
+			nws_vpc = append(nws_vpc, nw)
+			count++
+		}
+	}
+
+	if count == 0 {
+		return nil, fmt.Errorf("No Networks on VPC %s", vpc)
+	}
+
+	nwc := NewNetworkCollectionFromNetworks(client, nws_vpc)
+	return nwc, nil
+}
