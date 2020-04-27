@@ -20,8 +20,9 @@
 /// \defgroup PDS_DHCP DHCP API
 /// @{
 
-#define PDS_MAX_DHCP_RELAY        16
-#define PDS_MAX_DHCP_POLICY       128
+#define PDS_MAX_DHCP_RELAY          16
+#define PDS_MAX_DHCP_POLICY         128
+#define PDS_MAX_BOOT_FILENAME_LEN   128
 
 /// \brief DHCP relay spec
 typedef struct pds_dhcp_relay_spec_s {
@@ -40,13 +41,14 @@ typedef struct pds_dhcp_relay_stats_s {
 
 /// \brief DHCP proxy policy spec
 typedef struct pds_dhcp_proxy_spec_s {
-    ip_addr_t        server_ip;                                 ///< server ip
-    uint32_t         mtu;                                       ///< MTU specified to clients
-    ip_addr_t        gateway_ip;                                ///< gateway ip
-    ip_addr_t        dns_server_ip;                             ///< DNS server ip
-    ip_addr_t        ntp_server_ip;                             ///< NTP server ip
-    char             domain_name[PDS_MAX_DOMAIN_NAME_LEN + 1];  ///< domain name
-    uint32_t         lease_timeout;                             ///< DHCP lease timeout
+    ip_addr_t        server_ip;                                     ///< server ip
+    uint32_t         mtu;                                           ///< MTU specified to clients
+    ip_addr_t        gateway_ip;                                    ///< gateway ip
+    ip_addr_t        dns_server_ip;                                 ///< DNS server ip
+    ip_addr_t        ntp_server_ip;                                 ///< NTP server ip
+    char             domain_name[PDS_MAX_DOMAIN_NAME_LEN + 1];      ///< domain name
+    char             boot_filename[PDS_MAX_BOOT_FILENAME_LEN + 1];  ///< initial/pxe boot file name
+    uint32_t         lease_timeout;                                 ///< DHCP lease timeout
 } __PACK__ pds_dhcp_proxy_spec_t;
 
 /// \brief DHCP proxy policy status

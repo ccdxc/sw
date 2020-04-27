@@ -27,6 +27,7 @@ dhcp_policy::dhcp_policy() {
     dns_server_ip_ = {0};
     ntp_server_ip_ = {0};
     memset(domain_name_, '\0', sizeof(domain_name_));
+    memset(boot_filename_, '\0', sizeof(boot_filename_));
     lease_timeout_ = 0;
  
     ht_ctxt_.reset();
@@ -147,6 +148,7 @@ dhcp_policy::init_config(api_ctxt_t *api_ctxt) {
         dns_server_ip_ = dhcp_proxy_spec->dns_server_ip;
         ntp_server_ip_ = dhcp_proxy_spec->ntp_server_ip;
         memcpy(domain_name_, dhcp_proxy_spec->domain_name, sizeof(domain_name_));
+        memcpy(boot_filename_, dhcp_proxy_spec->boot_filename, sizeof(boot_filename_));
         lease_timeout_ = dhcp_proxy_spec->lease_timeout;
     } else if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
         PDS_TRACE_DEBUG("DHCP server IP %s",
@@ -239,6 +241,7 @@ dhcp_policy::fill_spec_(pds_dhcp_policy_spec_t *spec) {
         dhcp_proxy_spec->dns_server_ip = dns_server_ip_;
         dhcp_proxy_spec->ntp_server_ip = ntp_server_ip_;
         memcpy(dhcp_proxy_spec->domain_name, domain_name_, sizeof(domain_name_));
+        memcpy(dhcp_proxy_spec->boot_filename, boot_filename_, sizeof(boot_filename_));
         dhcp_proxy_spec->lease_timeout = lease_timeout_;
     } else if (spec->type == PDS_DHCP_POLICY_TYPE_RELAY) {
         #if 0

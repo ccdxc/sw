@@ -193,8 +193,8 @@ vcn0=interface.InterfaceObject( 100, interface_pb2.IF_TYPE_CONTROL, interface_pb
 tunnel1 = tunnel.TunnelObject( tunnel_id,vpc1_id, tunnel_local_ip, tunnel_remote_ip, None, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid) 
 
 # Create DHCP Policy
-dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip)
-dhcp_policy2 = dhcp.DhcpPolicyObject(2, server_ip=subnet2_v4_router_ip)
+dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip, boot_filename="test")
+dhcp_policy2 = dhcp.DhcpPolicyObject(2, server_ip=subnet2_v4_router_ip, boot_filename="test")
 
 # Create NAT Port Block
 nat_pb1 = nat.NatPbObject(1, vpc1_id, nat_prefix, nat_port_lo, nat_port_hi, "udp")

@@ -199,9 +199,13 @@ public:
     /// \return    NTP server IP 
     const ip_addr_t ntp_server_ip(void) const { return ntp_server_ip_; }
 
-    /// \brief     return ptr to the domain_name of the DHCP policy object
-    /// \return    ptr to domain_name
+    /// \brief     return ptr to the domain name of the DHCP policy object
+    /// \return    ptr to domain name
     const char *domain_name(void) const { return domain_name_; }
+    
+    /// \brief     return ptr to the boot filename of the DHCP policy object
+    /// \return    ptr to boot filename 
+    const char *boot_filename(void) const { return boot_filename_; }
 
     /// \brief     return the lease timeout  of the DHCP policy object
     /// \return    lease timeout
@@ -255,8 +259,12 @@ private:
             /// domain_name
             char domain_name_[PDS_MAX_DOMAIN_NAME_LEN + 1];
 
+            /// boot_filename
+            char boot_filename_[PDS_MAX_BOOT_FILENAME_LEN + 1];
+            
             /// DHCP lease timeout
             uint32_t lease_timeout_;
+            
         };
     };
 

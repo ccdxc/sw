@@ -659,10 +659,21 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
         }
 
         // domain name
-        if(strlen(policy->domain_name())) {
+        if (strlen(policy->domain_name())) {
             buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
                               "option domain-name=%s; ", policy->domain_name());
+        }
+
+        // boot filename
+        if (strlen(policy->boot_filename())) {
+            buf_len = statements_len - index;
+            //index += snprintf((char *)(statements->value + index), buf_len,
+            //                  "option filename=%s; ", policy->boot_filename());
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "if exists user-class and option user-class = \"iPXE\" \{\n"
+                              " option vendor-class-identifier \"HTTPClient\"\;\n"
+                              " filename \"%s\"\;\}", policy->boot_filename());
         }
 
         // mtu

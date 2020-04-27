@@ -47,6 +47,13 @@ pds_dhcp_proxy_proto_to_api_spec (pds_dhcp_proxy_spec_t *api_spec,
                 PDS_MAX_DOMAIN_NAME_LEN);
         api_spec->domain_name[PDS_MAX_DOMAIN_NAME_LEN] = '\0';
     }
+    if (proto_spec.bootfilename().empty()) {
+        api_spec->boot_filename[0] = '\0';
+    } else {
+        strncpy(api_spec->boot_filename, proto_spec.bootfilename().c_str(),
+                PDS_MAX_BOOT_FILENAME_LEN);
+        api_spec->boot_filename[PDS_MAX_BOOT_FILENAME_LEN] = '\0';
+    }
     api_spec->lease_timeout = proto_spec.leasetimeout();
     return SDK_RET_OK;
 }

@@ -1,5 +1,4 @@
 #! /usr/bin/python3
-import pdb
 import utils
 import re
 
@@ -7,7 +6,7 @@ import dhcp_pb2 as dhcp_pb2
 import types_pb2 as types_pb2
 
 class DhcpPolicyObject():
-    def __init__(self, id, server_ip=None, mtu=None, gateway_ip=None, dns_server=None, ntp_server=None, domain_name=None, lease_timeout=None):
+    def __init__(self, id, server_ip=None, mtu=None, gateway_ip=None, dns_server=None, ntp_server=None, domain_name=None, lease_timeout=None, boot_filename=None):
         super().__init__()
         self.id = id
         self.uuid = utils.PdsUuid(self.id)
@@ -18,6 +17,7 @@ class DhcpPolicyObject():
         self.ntp_server = ntp_server
         self.domain_name = domain_name
         self.lease_timeout = lease_timeout
+        self.boot_filename = boot_filename
 
         return
 
@@ -43,6 +43,8 @@ class DhcpPolicyObject():
             spec.ProxySpec.DomainName = self.domain_name
         if self.lease_timeout:
             spec.ProxySpec.LeaseTimeout = self.lease_timeout
+        if self.boot_filename:
+            spec.ProxySpec.BootFileName = self.boot_filename
 
         return grpcmsg
 

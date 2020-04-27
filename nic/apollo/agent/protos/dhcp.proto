@@ -53,8 +53,10 @@ message DHCPProxySpec {
   types.IPAddress NTPServerIP  = 5;
   // client's Fully Qualified Domain Name (FQDN)
   string          DomainName   = 6;
+  // bootfile name for the client to use
+  string          BootFileName = 7;
   // DHCP lease timoeout in seconds
-  uint32          LeaseTimeout = 7 [(gogoproto.moretags) = "default=3600"];
+  uint32          LeaseTimeout = 8 [(gogoproto.moretags) = "default=3600"];
 }
 
 // operational status of a DHCP proxy/suppression policy, if any
