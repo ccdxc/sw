@@ -29,6 +29,7 @@ var (
 	mirrorClient    halapi.MirrorSvcClient
 	subnetClient    halapi.SubnetSvcClient
 	secPolicyClient halapi.SecurityPolicySvcClient
+	ipamClient      halapi.DHCPSvcClient
 )
 
 // Implements InfraAPI that return errors for testing
@@ -75,6 +76,7 @@ func TestMain(m *testing.M) {
 	mirrorClient = halapi.NewMirrorSvcClient(conn)
 	subnetClient = halapi.NewSubnetSvcClient(conn)
 	secPolicyClient = halapi.NewSecurityPolicySvcClient(conn)
+	ipamClient = halapi.NewDHCPSvcClient(conn)
 	code := m.Run()
 	mockHal.Stop()
 	infraAPI.Close()

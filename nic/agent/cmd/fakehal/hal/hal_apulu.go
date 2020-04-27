@@ -241,6 +241,41 @@ func (h Hal) MirrorSessionDelete(ctx context.Context, req *apuluproto.MirrorSess
 	}, nil
 }
 
+// DHCPPolicyCreate stubbed out
+func (h Hal) DHCPPolicyCreate(ctx context.Context, req *apuluproto.DHCPPolicyRequest) (*apuluproto.DHCPPolicyResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got DHCPPolicyCreate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.DHCPPolicyResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// DHCPPolicyUpdate stubbed out
+func (h Hal) DHCPPolicyUpdate(ctx context.Context, req *apuluproto.DHCPPolicyRequest) (*apuluproto.DHCPPolicyResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got DHCPPolicyUpdate Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.DHCPPolicyResponse{
+		ApiStatus: apuluproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
+// DHCPPolicyDelete stubbed out
+func (h Hal) DHCPPolicyDelete(ctx context.Context, req *apuluproto.DHCPPolicyDeleteRequest) (*apuluproto.DHCPPolicyDeleteResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got DHCPPolicyDelete Request:")
+	fmt.Println(string(dat))
+
+	return &apuluproto.DHCPPolicyDeleteResponse{
+		ApiStatus: []apuluproto.ApiStatus{
+			apuluproto.ApiStatus_API_STATUS_OK,
+		},
+	}, nil
+}
+
 // NewFakeHalServer returns a fake hal server on a specified port
 func NewFakeHalServer(listenURL string) *Hal {
 	lis, err := net.Listen("tcp", listenURL)
@@ -257,6 +292,7 @@ func NewFakeHalServer(listenURL string) *Hal {
 	apuluproto.RegisterMirrorSvcServer(f.Srv, &f)
 	apuluproto.RegisterSubnetSvcServer(f.Srv, &f)
 	apuluproto.RegisterSecurityPolicySvcServer(f.Srv, &f)
+	apuluproto.RegisterDHCPSvcServer(f.Srv, &f)
 	go f.Srv.Serve(lis)
 
 	time.Sleep(time.Second * 2)

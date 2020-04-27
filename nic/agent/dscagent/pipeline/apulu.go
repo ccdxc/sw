@@ -1017,10 +1017,27 @@ func (a *ApuluAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPo
 		}
 		policy = existingPolicy
 	}
+	// Perform object validations
+	serverIPToKeys := map[string]int{}
+	for ip, keys := range apulu.DHCPServerIPToUUID {
+		serverIPToKeys[ip] = len(keys.PolicyKeys)
+	}
+	vrf, err := validator.ValidateIPAMPolicy(a.InfraAPI, policy, oper, serverIPToKeys)
+	if err != nil {
+		log.Errorf("Get VRF failed for %s", types.DefaulUnderlaytVrf)
+		return nil, errors.Wrapf(err, "Get vrf failed")
+	}
+
+	vrfuid, err := uuid.FromString(vrf.UUID)
+	if err != nil {
+		log.Errorf("DHCPRelay: %s | could not parse vrf UUID | Err: %v", policy.GetKey(), err)
+		return nil, errors.Wrapf(err, "parse vrf UUID")
+	}
+
 	log.Infof("IPAMPolicy: %s | Op: %s | %s", policy.GetKey(), oper, types.InfoHandleObjBegin)
 	defer log.Infof("IPAMPolicy: %s | Op: %s | %s", policy.GetKey(), oper, types.InfoHandleObjEnd)
 
-	err = apulu.HandleIPAMPolicy(a.InfraAPI, a.DHCPRelayClient, oper, policy)
+	err = apulu.HandleIPAMPolicy(a.InfraAPI, a.DHCPRelayClient, a.SubnetClient, oper, policy, vrfuid.Bytes())
 	if err != nil {
 		log.Error(err)
 		return nil, err

@@ -592,7 +592,7 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 		log.Infof("subnet %s attached to interface uid: %v", nw.GetKey(), intfUid)
 	}
 
-	var ipamuuid []byte
+	var ipamuuids [][]byte
 	if nw.Spec.IPAMPolicy != "" {
 		ipamName = nw.Spec.IPAMPolicy
 	} else {
@@ -601,17 +601,24 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 	}
 
 	if ipamName != "" {
-		policy, err := validator.ValidateIPAMPolicy(infraAPI, nw.Tenant, nw.Namespace, ipamName)
+		policy, err := validator.ValidateIPAMPolicyExists(infraAPI, nw.Tenant, nw.Namespace, ipamName)
 		if err != nil {
 			log.Errorf("Get IPAMPolicy failed for %s | %s", nw.GetKind(), nw.GetKey())
 			return nil, err
 		}
-		ipu, err := uuid.FromString(policy.UUID)
-		if err != nil {
-			log.Errorf("Parse IPAMPolicy UUID failed for %s | %s", nw.GetKind(), nw.GetKey())
-			return nil, err
+		for _, srv := range IPAMPolicyIDToServerIDs[policy.UUID] {
+			ipu, err := uuid.FromString(srv)
+			if err != nil {
+				log.Errorf("Parse IPAMPolicy UUID failed for %s", srv)
+				return nil, err
+			}
+			ipamuuids = append(ipamuuids, ipu.Bytes())
 		}
-		ipamuuid = ipu.Bytes()
+		if len(IPAMPolicyIDToServerIDs[policy.UUID]) == 0 {
+			ipamuuids = [][]byte{[]byte{}}
+		}
+	} else {
+		ipamuuids = [][]byte{[]byte{}}
 	}
 
 	getPolicyUuid := func(names []string) []string {
@@ -664,12 +671,10 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 						},
 					},
 				},
-				V4Prefix: v4Prefix,
-				V6Prefix: v6Prefix,
-				HostIf:   intfUid,
-				DHCPPolicyId: [][]byte{
-					ipamuuid,
-				},
+				V4Prefix:              v4Prefix,
+				V6Prefix:              v6Prefix,
+				HostIf:                intfUid,
+				DHCPPolicyId:          ipamuuids,
 				IngV4SecurityPolicyId: utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies)...),
 				EgV4SecurityPolicyId:  utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies)...),
 			},

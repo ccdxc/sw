@@ -497,3 +497,140 @@ func TestValidateInterfaceMirrorSession(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestValidateIPAMPolicy(t *testing.T) {
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    types.DefaultTenant,
+			Namespace: types.DefaultNamespace,
+			Name:      types.DefaulUnderlaytVrf,
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+	dat, _ := vrf.Marshal()
+
+	if err := infraAPI.Store(vrf.Kind, vrf.GetKey(), dat); err != nil {
+		t.Fatal(err)
+	}
+
+	ipam := netproto.IPAMPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPAM",
+		},
+		Spec: netproto.IPAMPolicySpec{
+			DHCPRelay: &netproto.DHCPRelayPolicy{
+				Servers: []*netproto.DHCPServer{
+					{
+						IPAddress: "192.168.100.101",
+					},
+					{
+						IPAddress: "192.168.100.102",
+					},
+					{
+						IPAddress: "192.168.100.103",
+					},
+					{
+						IPAddress: "192.168.100.104",
+					},
+					{
+						IPAddress: "192.168.100.105",
+					},
+					{
+						IPAddress: "192.168.100.106",
+					},
+				},
+			},
+		},
+	}
+
+	serverIPToKeys := map[string]int{
+		"192.168.100.101": 1,
+		"192.168.100.102": 1,
+		"192.168.100.103": 1,
+		"192.168.100.104": 1,
+		"192.168.100.105": 1,
+		"192.168.100.106": 1,
+		"192.168.100.107": 1,
+		"192.168.100.108": 1,
+		"192.168.100.109": 1,
+		"192.168.100.110": 1,
+		"192.168.100.111": 1,
+		"192.168.100.112": 1,
+		"192.168.100.113": 1,
+		"192.168.100.114": 1,
+		"192.168.100.115": 1,
+		"192.168.100.116": 1,
+	}
+	// Make sure creates do not exceed the max servers per policy
+	_, err := ValidateIPAMPolicy(infraAPI, ipam, types.Create, serverIPToKeys)
+	if err == nil {
+		t.Fatalf("Must return an error. %v", err)
+	}
+	ipam.Spec.DHCPRelay.Servers = []*netproto.DHCPServer{
+		{
+			IPAddress: "192.168.100.117",
+		},
+	}
+	_, err = ValidateIPAMPolicy(infraAPI, ipam, types.Create, serverIPToKeys)
+	if err == nil {
+		t.Fatalf("Must return an error. %v", err)
+	}
+
+	delete(serverIPToKeys, "192.168.100.116")
+	// Make sure create is allowed
+	_, err = ValidateIPAMPolicy(infraAPI, ipam, types.Create, serverIPToKeys)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ipam.Spec.DHCPRelay.Servers = []*netproto.DHCPServer{
+		{
+			IPAddress: "192.168.100.115",
+		},
+	}
+	dat, _ = ipam.Marshal()
+
+	if err := infraAPI.Store(ipam.Kind, ipam.GetKey(), dat); err != nil {
+		t.Fatal(err)
+	}
+	serverIPToKeys["192.168.100.116"] = 1
+	ipam.Spec.DHCPRelay.Servers = []*netproto.DHCPServer{
+		{
+			IPAddress: "192.168.100.115",
+		},
+		{
+			IPAddress: "192.168.100.117",
+		},
+	}
+	_, err = ValidateIPAMPolicy(infraAPI, ipam, types.Update, serverIPToKeys)
+	if err == nil {
+		t.Fatalf("Must return an error. %v", err)
+	}
+
+	ipam.Spec.DHCPRelay.Servers = []*netproto.DHCPServer{
+		{
+			IPAddress: "192.168.100.117",
+		},
+	}
+	_, err = ValidateIPAMPolicy(infraAPI, ipam, types.Update, serverIPToKeys)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	serverIPToKeys["192.168.100.115"] = 2
+	_, err = ValidateIPAMPolicy(infraAPI, ipam, types.Update, serverIPToKeys)
+	if err == nil {
+		t.Fatalf("Must return an error. %v", err)
+	}
+
+	err = infraAPI.Delete(vrf.Kind, vrf.GetKey())
+	if err != nil {
+		t.Fatal(err)
+	}
+}

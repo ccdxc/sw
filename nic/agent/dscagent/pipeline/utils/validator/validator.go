@@ -496,7 +496,7 @@ func ValidateFlowExportPolicy(i types.InfraAPI, netflow netproto.FlowExportPolic
 
 	if len(collectorToKeys)+uniqueCreates > types.MaxCollectors {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), types.ErrMaxCollectorsExceeded))
-		err = errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", netflow.GetKey(), types.ErrMaxCollectorsExceeded)
+		err = errors.Wrapf(types.ErrBadRequest, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), types.ErrMaxCollectorsExceeded)
 		return
 	}
 
@@ -586,8 +586,8 @@ func ValidateProfile(profile netproto.Profile) error {
 	return nil
 }
 
-// ValidateIPAMPolicy validates IPAMPolicy
-func ValidateIPAMPolicy(i types.InfraAPI, tenant, namespace, name string) (ipam netproto.IPAMPolicy, err error) {
+// ValidateIPAMPolicyExists validates IPAMPolicy
+func ValidateIPAMPolicyExists(i types.InfraAPI, tenant, namespace, name string) (ipam netproto.IPAMPolicy, err error) {
 	policy := netproto.IPAMPolicy{
 		TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
 		ObjectMeta: api.ObjectMeta{
@@ -691,4 +691,81 @@ func ValidateNwAttach(i types.InfraAPI, tenant, namespace, name string) (bool, [
 	}
 
 	return false, nil
+}
+
+// ValidateIPAMPolicy performs static field validations on server IP and named reference validation on underlay vp
+func ValidateIPAMPolicy(i types.InfraAPI, policy netproto.IPAMPolicy, oper types.Operation, serverIPToKeys map[string]int) (vrf netproto.Vrf, err error) {
+	// Named reference validations
+	if len(policy.Spec.DHCPRelay.Servers) > types.MaxServerIPPerPolicy {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "IPAMPolicy: %s | Err: %v", policy.GetKey(), types.ErrMaxServerIPPerPolicyExceeded))
+		err = errors.Wrapf(types.ErrBadRequest, "IPAMPolicy: %s | Err: %v", policy.GetKey(), types.ErrMaxServerIPPerPolicyExceeded)
+		return
+	}
+
+	uniqueCreates := 0
+
+	switch oper {
+	case types.Create:
+		// Get the count of unique creates
+		for _, srv := range policy.Spec.DHCPRelay.Servers {
+			if _, ok := serverIPToKeys[srv.IPAddress]; !ok {
+				uniqueCreates++
+			}
+		}
+	case types.Update:
+		// Get the existing policy object and consider valid deletes i.e
+		// objects that would get deleted (ones having single reference). Add the unique
+		// creates to the get the actual increase in server IPs number if any.
+		var existingPolicy netproto.IPAMPolicy
+		dat, errr := i.Read(policy.Kind, policy.GetKey())
+		if errr != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "IPAMPolicy: %s | Err: %v", policy.GetKey(), types.ErrObjNotFound))
+			err = errors.Wrapf(types.ErrBadRequest, "IPAMPolicy: %s | Err: %v", policy.GetKey(), types.ErrObjNotFound)
+			return
+		}
+		err = existingPolicy.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "IPAMPolicy: %s | Err: %v", policy.GetKey(), err))
+			err = errors.Wrapf(types.ErrUnmarshal, "IPAMPolicy: %s | Err: %v", policy.GetKey(), err)
+			return
+		}
+
+		// Track if the server IP needs to deleted
+		deleteKey := map[string]bool{}
+		for _, srv := range existingPolicy.Spec.DHCPRelay.Servers {
+			deleteKey[srv.IPAddress] = false
+			// If referenced by a singular key then could be removed
+			if size, ok := serverIPToKeys[srv.IPAddress]; ok && size == 1 {
+				deleteKey[srv.IPAddress] = true
+			}
+		}
+
+		for _, srv := range policy.Spec.DHCPRelay.Servers {
+			deleteKey[srv.IPAddress] = false
+		}
+
+		for k, del := range deleteKey {
+			if del {
+				uniqueCreates--
+				continue
+			}
+			// For keys that are not to be deleted, check if they are new entries
+			if _, ok := serverIPToKeys[k]; !ok {
+				uniqueCreates++
+			}
+		}
+	case types.Delete:
+	}
+
+	if len(serverIPToKeys)+uniqueCreates > types.MaxDHCPServers {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "IPAMPolicy: %s | Err: %v", policy.GetKey(), types.ErrMaxDHCPServersExceeded))
+		err = errors.Wrapf(types.ErrBadRequest, "IPAMPolicy: %s | Err: %v", policy.GetKey(), types.ErrMaxDHCPServersExceeded)
+		return
+	}
+
+	vrf, err = ValidateVrf(i, types.DefaultTenant, types.DefaultNamespace, types.DefaulUnderlaytVrf)
+	if err != nil {
+		return
+	}
+	return
 }

@@ -208,6 +208,12 @@ const (
 
 	// MaxCollectors is the maximum number of collectors
 	MaxCollectors = 16
+
+	// MaxServerIPPerPolicy is the maximum number of server IPs for a policy
+	MaxServerIPPerPolicy = 5
+
+	// MaxDHCPServers is the maximum number of dhcp servers allowed
+	MaxDHCPServers = 16
 )
 
 // ID Allocation constants and offsets

@@ -148,6 +148,8 @@ const (
 	ErrStorePurgeClose                                   = Error("ErrStorePurgeClose")
 	ErrStorePurgeNuke                                    = Error("ErrStorePurgeNuke")
 	ErrInterfaceUpdateDuringInterfaceMirrorSessionUpdate = Error("ErrInterfaceUpdateDuringInterfaceMirrorSessionUpdate")
+	ErrMaxServerIPPerPolicyExceeded                      = Error("ErrMaxServerIPPerPolicyExceeded")
+	ErrMaxDHCPServersExceeded                            = Error("ErrMaxDHCPServersExceeded")
 )
 
 // Const Info

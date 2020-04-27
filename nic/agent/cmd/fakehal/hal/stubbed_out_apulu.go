@@ -75,3 +75,12 @@ func (h Hal) LifGet(ctx context.Context, req *apuluproto.LifGetRequest) (*apulup
 
 	return nil, nil
 }
+
+// DHCPPolicyGet stubbed out
+func (h Hal) DHCPPolicyGet(ctx context.Context, req *apuluproto.DHCPPolicyGetRequest) (*apuluproto.DHCPPolicyGetResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got DHCPPolicyGet Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
