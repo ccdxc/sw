@@ -464,7 +464,7 @@ static char * flow_age_setup_error_strings[] = {
 #undef _
 };
 
-VLIB_REGISTER_NODE (pds_flow_age_setup_node) = {
+VLIB_REGISTER_NODE(pds_flow_age_setup_node) = {
     .function = pds_flow_age_setup,
     .name = "pds-flow-age-setup",
     .vector_size = sizeof(u32),
@@ -760,27 +760,16 @@ pds_flow_age_process (vlib_main_t *vm,
     pds_flow_main_t *fm = &pds_flow_main;
     f64 now = vlib_time_now(vm);
 
-    // for thread 0 - main thread skip
-    if (!rt->thread_index) {
-        return 0;
-    }
-
-    // If the timers are not yet initialized, then skip
-    if ((vec_len(fm->timer_wheel) != fm->no_threads) ||
-        !fm->timer_wheel[rt->thread_index].timer_interval) {
-       return 0;
-    }
-
     tw_timer_expire_timers_16t_1w_2048sl(&fm->timer_wheel[rt->thread_index],
                                          now);
     return 0;
 }
 
-VLIB_REGISTER_NODE (pds_flow_age_node) = {
+VLIB_REGISTER_NODE(pds_flow_age_node) = {
     .function = pds_flow_age_process,
     .type = VLIB_NODE_TYPE_INPUT,
     .name = "pds-flow-age-process",
-    .state = VLIB_NODE_STATE_POLLING,
+    .state = VLIB_NODE_STATE_DISABLED,
 };
 
 static void
@@ -935,6 +924,7 @@ pds_flow_timer_init (vlib_main_t *vm, vlib_node_runtime_t *rt, vlib_frame_t *f)
 {
     pds_flow_main_t *fm = &pds_flow_main;
     tw_timer_wheel_16t_1w_2048sl_t *tw;
+    vlib_node_t *node = vlib_get_node_by_name(vm, (u8 *) "pds-flow-age-process");
 
     vlib_worker_thread_barrier_sync(vm);
     // we need one timer wheel per worker, nothing for main thread.
@@ -949,17 +939,18 @@ pds_flow_timer_init (vlib_main_t *vm, vlib_node_runtime_t *rt, vlib_frame_t *f)
         tw_timer_wheel_init_16t_1w_2048sl(tw, pds_flow_expired_timers_dispatch,
                                           PDS_FLOW_TIMER_TICK, ~0);
         tw->last_run_time = vlib_time_now(this_vlib_main);
+        vlib_node_set_state(this_vlib_main, node->index, VLIB_NODE_STATE_POLLING);
     }));
-    
+
     vlib_worker_thread_barrier_release(vm);
     return 0;
 }
 
-VLIB_REGISTER_NODE (pds_flow_timer_init_node, static) =
+VLIB_REGISTER_NODE(pds_flow_timer_init_node, static) =
 {
-  .function = pds_flow_timer_init,
-  .type = VLIB_NODE_TYPE_PROCESS,
-  .name = "pds-flow-timer-init",
+    .function = pds_flow_timer_init,
+    .type = VLIB_NODE_TYPE_PROCESS,
+    .name = "pds-flow-timer-init",
 };
 
 static clib_error_t *
