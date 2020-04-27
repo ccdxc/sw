@@ -481,6 +481,15 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "status.incompatible-dscs",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -1433,6 +1442,12 @@
           "format": "int32"
         },
         "discovered-namespaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "incompatible-dscs": {
           "type": "array",
           "items": {
             "type": "string"

@@ -98,11 +98,6 @@
    "Desc": "DSC is healthy"
   },
   {
-   "Name": "DSC_NOT_ADMITTED",
-   "Severity": "warn",
-   "Desc": "Workload provisioned on a host with no admitted DSC"
-  },
-  {
    "Name": "DSC_REJECTED",
    "Severity": "warn",
    "Desc": "DSC admission request was rejected"
@@ -136,11 +131,6 @@
    "Name": "ELECTION_STOPPED",
    "Severity": "warn",
    "Desc": "Leader election stopped"
-  },
-  {
-   "Name": "HOST_DSC_MODE_INCOMPATIBLE",
-   "Severity": "warn",
-   "Desc": "Host and DSC modes are incompatible."
   },
   {
    "Name": "HOST_DSC_SPEC_CONFLICT",
@@ -201,6 +191,16 @@
    "Name": "NODE_UNREACHABLE",
    "Severity": "critical",
    "Desc": "Node is unreachable"
+  },
+  {
+   "Name": "ORCH_DSC_MODE_INCOMPATIBLE",
+   "Severity": "critical",
+   "Desc": "DSC mode is incompatible."
+  },
+  {
+   "Name": "ORCH_DSC_NOT_ADMITTED",
+   "Severity": "warn",
+   "Desc": "Workload provisioned on a host with no admitted DSC"
   },
   {
    "Name": "OTHER_ACTIVE_SESSION_LIMIT_APPROACH",

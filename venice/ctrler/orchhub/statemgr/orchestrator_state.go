@@ -18,8 +18,9 @@ const (
 // OrchestratorState is a wrapper for orchestration object
 type OrchestratorState struct {
 	sync.Mutex
-	Orchestrator *ctkit.Orchestrator
-	stateMgr     *Statemgr
+	Orchestrator     *ctkit.Orchestrator
+	stateMgr         *Statemgr
+	incompatibleDscs map[string]bool
 }
 
 //GetOrchestratorWatchOptions gets options
@@ -83,10 +84,94 @@ func OrchestratorStateFromObj(obj runtime.Object) (*OrchestratorState, error) {
 // NewOrchestratorState create new orchestration state
 func NewOrchestratorState(wrk *ctkit.Orchestrator, stateMgr *Statemgr) (*OrchestratorState, error) {
 	w := &OrchestratorState{
-		Orchestrator: wrk,
-		stateMgr:     stateMgr,
+		Orchestrator:     wrk,
+		stateMgr:         stateMgr,
+		incompatibleDscs: make(map[string]bool),
 	}
+
+	for _, dsc := range wrk.Orchestrator.Status.IncompatibleDSCs {
+		w.incompatibleDscs[dsc] = true
+	}
+
 	wrk.HandlerCtx = w
 
 	return w, nil
+}
+
+// AddIncompatibleDSC adds DSC MAC address to orchestrator incompatible list
+func (o *OrchestratorState) AddIncompatibleDSC(dsc string) error {
+	o.Lock()
+	defer o.Unlock()
+
+	_, ok := o.incompatibleDscs[dsc]
+	if !ok {
+		o.incompatibleDscs[dsc] = true
+		if o.Orchestrator.Status.IncompatibleDSCs == nil {
+			o.Orchestrator.Status.IncompatibleDSCs = []string{}
+		}
+
+		o.Orchestrator.Status.IncompatibleDSCs = append(o.Orchestrator.Status.IncompatibleDSCs, dsc)
+		return o.Orchestrator.Write()
+	}
+
+	return nil
+}
+
+// RemoveIncompatibleDSC removes DSC from orchestrator incompatible list
+func (o *OrchestratorState) RemoveIncompatibleDSC(dsc string) error {
+	o.Lock()
+	defer o.Unlock()
+
+	_, ok := o.incompatibleDscs[dsc]
+	if ok {
+		delete(o.incompatibleDscs, dsc)
+		if o.Orchestrator.Status.IncompatibleDSCs == nil {
+			return nil
+		}
+
+		newList := []string{}
+
+		for d := range o.incompatibleDscs {
+			newList = append(newList, d)
+		}
+
+		o.Orchestrator.Status.IncompatibleDSCs = newList
+		return o.Orchestrator.Write()
+	}
+
+	return nil
+}
+
+// AddIncompatibleDSCToOrch add incompat dsc to orch
+func (sm *Statemgr) AddIncompatibleDSCToOrch(dsc, orch string) error {
+	obj, err := sm.FindObject("Orchestrator", "", "", orch)
+	if err != nil {
+		sm.logger.Errorf("Failed to find object. Err :%v", err)
+		return err
+	}
+
+	oState, err := OrchestratorStateFromObj(obj)
+	if err != nil {
+		return err
+	}
+
+	oState.AddIncompatibleDSC(dsc)
+	return nil
+}
+
+// RemoveIncompatibleDSCFromOrch remove incompat dsc from orch
+func (sm *Statemgr) RemoveIncompatibleDSCFromOrch(dsc, orch string) error {
+	obj, err := sm.FindObject("Orchestrator", "", "", orch)
+	if err != nil {
+		sm.logger.Errorf("Failed to find object. Err :%v", err)
+		return err
+	}
+
+	oState, err := OrchestratorStateFromObj(obj)
+	if err != nil {
+		return err
+	}
+
+	oState.RemoveIncompatibleDSC(dsc)
+	return nil
 }

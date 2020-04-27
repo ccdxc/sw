@@ -244,20 +244,6 @@ func init() {
 		Desc:       "DSC decommissioned from the cluster",
 		SuppressMM: false}
 
-	eventTypes[DSC_NOT_ADMITTED] = &EventTypeAttributes{
-		EType:      DSC_NOT_ADMITTED.String(),
-		Severity:   "warn",
-		Category:   "cluster",
-		Desc:       "Workload provisioned on a host with no admitted DSC",
-		SuppressMM: false}
-
-	eventTypes[HOST_DSC_MODE_INCOMPATIBLE] = &EventTypeAttributes{
-		EType:      HOST_DSC_MODE_INCOMPATIBLE.String(),
-		Severity:   "warn",
-		Category:   "cluster",
-		Desc:       "Host and DSC modes are incompatible.",
-		SuppressMM: false}
-
 	eventTypes[AUTO_GENERATED_TLS_CERT] = &EventTypeAttributes{
 		EType:      AUTO_GENERATED_TLS_CERT.String(),
 		Severity:   "warn",
@@ -578,6 +564,20 @@ func init() {
 		Severity:   "critical",
 		Category:   "",
 		Desc:       "Unsupported orchestrator version",
+		SuppressMM: false}
+
+	eventTypes[ORCH_DSC_NOT_ADMITTED] = &EventTypeAttributes{
+		EType:      ORCH_DSC_NOT_ADMITTED.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "Workload provisioned on a host with no admitted DSC",
+		SuppressMM: false}
+
+	eventTypes[ORCH_DSC_MODE_INCOMPATIBLE] = &EventTypeAttributes{
+		EType:      ORCH_DSC_MODE_INCOMPATIBLE.String(),
+		Severity:   "critical",
+		Category:   "cluster",
+		Desc:       "DSC mode is incompatible.",
 		SuppressMM: false}
 
 	eventTypes[COLLECTOR_REACHABILITY] = &EventTypeAttributes{

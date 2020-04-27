@@ -18,6 +18,10 @@ import (
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
+var (
+	logger log.Logger
+)
+
 func (w *MockInstanceManager) watchOrchestratorConfig() {
 	for {
 		select {
@@ -121,6 +125,9 @@ func TestNetworkWatcher(t *testing.T) {
 		}
 		return true, nil
 	}, "All networks were not received", "1s", "10s")
+
+	err = DeleteNetwork(sm, &np)
+	Assert(t, err == nil, "delete network failed")
 	return
 }
 
@@ -204,6 +211,9 @@ func TestNetworkCreateList(t *testing.T) {
 
 	clusterItems, err := sm.Controller().Cluster().List(context.Background(), &api.ListWatchOptions{})
 	Assert(t, len(clusterItems) == 1, "failed to get cluster config")
+
+	err = sm.Controller().Cluster().Delete(clusterConfig)
+	AssertOk(t, err, "failed to create cluster config")
 
 	return
 }
@@ -385,7 +395,7 @@ func createDistributedServiceCard(stateMgr *Statemgr, tenant, name string, label
 			Tenant:    tenant,
 			Labels:    labels,
 		},
-		Spec:   cluster.DistributedServiceCardSpec{},
+		Spec:   cluster.DistributedServiceCardSpec{DSCProfile: "default"},
 		Status: cluster.DistributedServiceCardStatus{},
 	}
 
@@ -407,6 +417,31 @@ func TestDistributedServiceCardCreateList(t *testing.T) {
 
 	go im.watchOrchestratorConfig()
 	defer im.watchCancel()
+
+	dscProfile := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "default",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "insertion",
+			FlowPolicyMode: "enforced",
+		},
+	}
+
+	// create DSC Profile
+	sm.ctrler.DSCProfile().Create(&dscProfile)
+	AssertEventually(t, func() (bool, interface{}) {
+
+		_, err := sm.FindDSCProfile("", "default")
+		if err == nil {
+			return true, nil
+		}
+		fmt.Printf("Error find ten %v\n", err)
+		return false, nil
+	}, "Profile not foud", "1ms", "1s")
 
 	err = createDistributedServiceCard(sm, "default", "prod-beef", nil)
 	Assert(t, (err == nil), "DistributedServiceCard could not be created")
@@ -533,7 +568,61 @@ func TestOrchestratorCreateList(t *testing.T) {
 	return
 }
 
+func TestUpdateDSCProfile(t *testing.T) {
+	sm, _, err := NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed creating state manager. Err : %v", err)
+		return
+	}
+
+	dscProfile := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "default",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			FwdMode:        "insertion",
+			FlowPolicyMode: "enforced",
+		},
+	}
+
+	// create DSC Profile
+	sm.ctrler.DSCProfile().Create(&dscProfile)
+	AssertEventually(t, func() (bool, interface{}) {
+
+		_, err := sm.FindDSCProfile("", "default")
+		if err == nil {
+			return true, nil
+		}
+		fmt.Printf("Error find ten %v\n", err)
+		return false, nil
+	}, "Profile not foud", "1ms", "1s")
+
+	err = createDistributedServiceCard(sm, "default", "prod-beef", nil)
+	Assert(t, (err == nil), "DistributedServiceCard could not be created")
+
+	dscProfile.Spec.FwdMode = cluster.DSCProfileSpec_TRANSPARENT.String()
+	dscProfile.Spec.FlowPolicyMode = cluster.DSCProfileSpec_BASENET.String()
+	err = sm.ctrler.DSCProfile().Update(&dscProfile)
+	Assert(t, (err == nil), "Failed to update dscprofile")
+
+	dscs, err := sm.ListDSCProfiles()
+	Assert(t, (err == nil), "List DSC profiles failed")
+	Assert(t, len(dscs) == 1, "incorrect number of dscs")
+
+	err = sm.ctrler.DSCProfile().Delete(&dscProfile)
+	Assert(t, (err == nil), "Failed to delete dscprofile")
+}
+
 func TestMain(m *testing.M) {
 	tsdb.Init(context.Background(), &tsdb.Opts{})
+
+	config := log.GetDefaultConfig("orchhub-statemgr-test")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger = log.SetConfig(config)
+
 	os.Exit(m.Run())
 }

@@ -27,6 +27,9 @@ func (sm *Statemgr) GetWorkloadWatchOptions() *api.ListWatchOptions {
 // OnWorkloadCreate creates a workload based on watch event
 func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 	_, err := NewWorkloadState(w, sm)
+	if err != nil {
+		return err
+	}
 
 	// workloads related to vcenter VMs are created by orchhub,
 	// no need to send event when orchhub is creating it.. but on orchhub restart, we might

@@ -10,9 +10,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
-	"github.com/pensando/sw/events/generated/eventtypes"
-	orchutils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
-	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb/objReceiver"
@@ -311,15 +308,6 @@ func (sm *Statemgr) updateDSC(smartNic *ctkit.DistributedServiceCard, nsnic *clu
 }
 
 func (sm *Statemgr) updateDSCRelatedObjects(sns *DistributedServiceCardState, nsnic *cluster.DistributedServiceCard, sgPolicyUpdate bool) {
-	_, ok := sns.DistributedServiceCard.Labels[orchutils.OrchNameKey]
-	if ok {
-		if !sns.isOrchestratorCompatible() {
-			recorder.Event(eventtypes.HOST_DSC_MODE_INCOMPATIBLE,
-				fmt.Sprintf("DSC [%v] mode is incompatible with Host", sns.DistributedServiceCard.Name),
-				nil)
-			return
-		}
-	}
 	if sgPolicyUpdate {
 		// Update SGPolicies
 		policies, _ := sm.ListSgpolicies()

@@ -73,6 +73,7 @@ type migrationTestSuite struct {
 	resolverClient resolver.Interface
 	hub            gosdk.Hub
 	agent          *Dpagent
+	t              *testing.T
 }
 
 func TestMigrationInteg(t *testing.T) {
@@ -80,6 +81,7 @@ func TestMigrationInteg(t *testing.T) {
 
 	SetDefaultIntervals(time.Millisecond*500, time.Second*60)
 	var _ = Suite(sts)
+	sts.t = t
 	TestingT(t)
 }
 

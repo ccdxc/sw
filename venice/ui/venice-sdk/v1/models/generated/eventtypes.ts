@@ -29,7 +29,6 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'DSC_DEADMITTED',
     'DSC_DECOMMISSIONED',
     'DSC_HEALTHY',
-    'DSC_NOT_ADMITTED',
     'DSC_REJECTED',
     'DSC_UNHEALTHY',
     'DSC_UNREACHABLE',
@@ -37,7 +36,6 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'ELECTION_NOTIFICATION_FAILED',
     'ELECTION_STARTED',
     'ELECTION_STOPPED',
-    'HOST_DSC_MODE_INCOMPATIBLE',
     'HOST_DSC_SPEC_CONFLICT',
     'ICMP_ACTIVE_SESSION_LIMIT_APPROACH',
     'ICMP_ACTIVE_SESSION_LIMIT_REACHED',
@@ -50,6 +48,8 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'NODE_HEALTHY',
     'NODE_JOINED',
     'NODE_UNREACHABLE',
+    'ORCH_DSC_MODE_INCOMPATIBLE',
+    'ORCH_DSC_NOT_ADMITTED',
     'OTHER_ACTIVE_SESSION_LIMIT_APPROACH',
     'OTHER_ACTIVE_SESSION_LIMIT_REACHED',
     'PASSWORD_CHANGED',
@@ -196,11 +196,6 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.info,
       "Desc": "DSC is healthy",
   },
-  'DSC_NOT_ADMITTED' : {
-      "Name": "DSC_NOT_ADMITTED",
-      "Severity": EventsEvent_severity.warn,
-      "Desc": "Workload provisioned on a host with no admitted DSC",
-  },
   'DSC_REJECTED' : {
       "Name": "DSC_REJECTED",
       "Severity": EventsEvent_severity.warn,
@@ -235,11 +230,6 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "ELECTION_STOPPED",
       "Severity": EventsEvent_severity.warn,
       "Desc": "Leader election stopped",
-  },
-  'HOST_DSC_MODE_INCOMPATIBLE' : {
-      "Name": "HOST_DSC_MODE_INCOMPATIBLE",
-      "Severity": EventsEvent_severity.warn,
-      "Desc": "Host and DSC modes are incompatible.",
   },
   'HOST_DSC_SPEC_CONFLICT' : {
       "Name": "HOST_DSC_SPEC_CONFLICT",
@@ -300,6 +290,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "NODE_UNREACHABLE",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Node is unreachable",
+  },
+  'ORCH_DSC_MODE_INCOMPATIBLE' : {
+      "Name": "ORCH_DSC_MODE_INCOMPATIBLE",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "DSC mode is incompatible.",
+  },
+  'ORCH_DSC_NOT_ADMITTED' : {
+      "Name": "ORCH_DSC_NOT_ADMITTED",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Workload provisioned on a host with no admitted DSC",
   },
   'OTHER_ACTIVE_SESSION_LIMIT_APPROACH' : {
       "Name": "OTHER_ACTIVE_SESSION_LIMIT_APPROACH",

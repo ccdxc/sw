@@ -179,15 +179,6 @@ enum EventTypes {
                                            (severity)    = INFO,
                                            (desc)        = "DSC decommissioned from the cluster"];
 
-    DSC_NOT_ADMITTED                = 108 [(category)    = Cluster,
-                                           (severity)    = WARN,
-                                           (desc)        = "Workload provisioned on a host with no admitted DSC"];
-
-    HOST_DSC_MODE_INCOMPATIBLE      = 109 [(category)    = Cluster,
-                                           (severity)    = WARN,
-                                           (desc)        = "Host and DSC modes are incompatible."];
-
-
     // ----------------------------- API Gateway events ---------------------- //
     AUTO_GENERATED_TLS_CERT         = 200 [(category)    = Cluster,
                                            (severity)    = WARN,
@@ -382,6 +373,12 @@ enum EventTypes {
     ORCH_UNSUPPORTED_VERSION               = 1008 [(category) = Orchestration,
                                            (severity) = CRITICAL,
                                            (desc)     = "Unsupported orchestrator version"];
+    ORCH_DSC_NOT_ADMITTED                  = 1009 [(category)    = Cluster,
+                                           (severity)    = WARN,
+                                           (desc)        = "Workload provisioned on a host with no admitted DSC"];
+    ORCH_DSC_MODE_INCOMPATIBLE             = 1010 [(category)    = Cluster,
+                                           (severity)    = CRITICAL,
+                                           (desc)        = "DSC mode is incompatible."];
     // ------------------------- Controller events ------------------------- //
     COLLECTOR_REACHABILITY                 = 1101 [(category) = Network,
                                            (severity)         = INFO,

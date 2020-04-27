@@ -15,6 +15,7 @@ export interface IOrchestrationOrchestratorStatus {
     'message'?: string;
     'orch-id'?: number;
     'discovered-namespaces'?: Array<string>;
+    'incompatible-dscs'?: Array<string>;
     '_ui'?: any;
 }
 
@@ -27,6 +28,7 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
     'message': string = null;
     'orch-id': number = null;
     'discovered-namespaces': Array<string> = null;
+    'incompatible-dscs': Array<string> = null;
     public static propInfo: { [prop in keyof IOrchestrationOrchestratorStatus]: PropInfoItem } = {
         'connection-status': {
             enum: OrchestrationOrchestratorStatus_connection_status_uihint,
@@ -47,6 +49,10 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
             type: 'number'
         },
         'discovered-namespaces': {
+            required: false,
+            type: 'Array<string>'
+        },
+        'incompatible-dscs': {
             required: false,
             type: 'Array<string>'
         },
@@ -75,6 +81,7 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
     constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['discovered-namespaces'] = new Array<string>();
+        this['incompatible-dscs'] = new Array<string>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -122,6 +129,13 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
         } else {
             this['discovered-namespaces'] = [];
         }
+        if (values && values['incompatible-dscs'] != null) {
+            this['incompatible-dscs'] = values['incompatible-dscs'];
+        } else if (fillDefaults && OrchestrationOrchestratorStatus.hasDefaultValue('incompatible-dscs')) {
+            this['incompatible-dscs'] = [ OrchestrationOrchestratorStatus.propInfo['incompatible-dscs'].default];
+        } else {
+            this['incompatible-dscs'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -134,6 +148,7 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
                 'message': CustomFormControl(new FormControl(this['message']), OrchestrationOrchestratorStatus.propInfo['message']),
                 'orch-id': CustomFormControl(new FormControl(this['orch-id']), OrchestrationOrchestratorStatus.propInfo['orch-id']),
                 'discovered-namespaces': CustomFormControl(new FormControl(this['discovered-namespaces']), OrchestrationOrchestratorStatus.propInfo['discovered-namespaces']),
+                'incompatible-dscs': CustomFormControl(new FormControl(this['incompatible-dscs']), OrchestrationOrchestratorStatus.propInfo['incompatible-dscs']),
             });
         }
         return this._formGroup;
@@ -150,6 +165,7 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
             this._formGroup.controls['message'].setValue(this['message']);
             this._formGroup.controls['orch-id'].setValue(this['orch-id']);
             this._formGroup.controls['discovered-namespaces'].setValue(this['discovered-namespaces']);
+            this._formGroup.controls['incompatible-dscs'].setValue(this['incompatible-dscs']);
         }
     }
 }

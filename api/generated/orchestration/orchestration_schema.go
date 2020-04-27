@@ -56,6 +56,7 @@ var typesMapOrchestration = map[string]*api.Struct{
 			"connection-status":     api.CLIInfo{Path: "Status.Status", Skip: false, Insert: "", Help: ""},
 			"discovered-namespaces": api.CLIInfo{Path: "Status.DiscoveredNamespaces", Skip: false, Insert: "", Help: ""},
 			"generation-id":         api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"incompatible-dscs":     api.CLIInfo{Path: "Status.IncompatibleDSCs", Skip: false, Insert: "", Help: ""},
 			"kind":                  api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":                api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"login-data":            api.CLIInfo{Path: "Spec.LoginData", Skip: false, Insert: "", Help: ""},
@@ -105,6 +106,8 @@ var typesMapOrchestration = map[string]*api.Struct{
 			"OrchID": api.Field{Name: "OrchID", CLITag: api.CLIInfo{ID: "orch-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "orch-id", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 
 			"DiscoveredNamespaces": api.Field{Name: "DiscoveredNamespaces", CLITag: api.CLIInfo{ID: "discovered-namespaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "discovered-namespaces", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"IncompatibleDSCs": api.Field{Name: "IncompatibleDSCs", CLITag: api.CLIInfo{ID: "incompatible-dscs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "incompatible-dscs", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

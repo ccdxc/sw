@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func (it *migrationTestSuite) createTenant(tenantName string) error {
@@ -88,6 +89,22 @@ func (it *migrationTestSuite) createHost(name, dscMac, ipAddress string) (*clust
 	if err != nil {
 		return nil, err
 	}
+
+	AssertEventually(it.t, func() (bool, interface{}) {
+		opts := &api.ListWatchOptions{}
+		ds, err := it.apiCl.ClusterV1().DistributedServiceCard().List(context.Background(), opts)
+		if err != nil {
+			return false, nil
+		}
+
+		for _, d := range ds {
+			if d.Name == dsc.Name {
+				return true, nil
+			}
+		}
+
+		return false, fmt.Errorf("DSC %v not found", dsc)
+	}, fmt.Sprintf("failed to find DSC"))
 
 	host := cluster.Host{
 		TypeMeta: api.TypeMeta{Kind: "Host"},

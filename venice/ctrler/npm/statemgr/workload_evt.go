@@ -10,12 +10,10 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/events/generated/eventtypes"
-	orchutils "github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -139,41 +137,6 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 				break
 			}
 			log.Errorf("Error finding smart nic for mac add %v", snicMac)
-		}
-	}
-
-	if snic == nil || snic.DistributedServiceCard.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_ADMITTED.String() {
-		recorder.Event(eventtypes.DSC_NOT_ADMITTED,
-			fmt.Sprintf("DSC for host [%v] not admitted.", hsts.Host.Name),
-			nil)
-
-		//DSC may not be processed yet because of parallel processing from APIServer
-		//Fix this once AggWatch is implemented
-		return kvstore.NewKeyNotFoundError(ws.Workload.Spec.HostName, 0)
-	}
-
-	orchNameValue, isHostOrchhubManaged := host.Host.Labels[orchutils.OrchNameKey]
-	if isHostOrchhubManaged {
-		log.Infof("The host [%v] is managed by orchhub.", host.Host.Name)
-
-		if !snic.isOrchestratorCompatible() {
-			recorder.Event(eventtypes.HOST_DSC_MODE_INCOMPATIBLE,
-				fmt.Sprintf("DSC [%v] mode is incompatible with Host", snic.DistributedServiceCard.Name),
-				nil)
-			return nil
-		}
-		if snic.DistributedServiceCard.Labels == nil {
-			snic.DistributedServiceCard.Labels = make(map[string]string)
-		}
-
-		_, ok := snic.DistributedServiceCard.Labels[orchutils.OrchNameKey]
-		if !ok {
-			// Add Orchhub label to the DSC object
-			snic.DistributedServiceCard.Labels[orchutils.OrchNameKey] = orchNameValue
-			err := snic.stateMgr.ctrler.DistributedServiceCard().Update(&snic.DistributedServiceCard.DistributedServiceCard)
-			if err != nil {
-				log.Errorf("Failed to update orchhub label for DSC [%v]. Err : %v", snic.DistributedServiceCard.Name, err)
-			}
 		}
 	}
 

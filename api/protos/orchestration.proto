@@ -72,9 +72,10 @@ message OrchestratorStatus {
         Degraded = 3 [(venice.enumValueStr) = "degraded"]; // Connection partially operational
     }
 
-    string Status                      = 1 [(gogoproto.jsontag) = "connection-status", (venice.check) = "StrEnum(OrchestratorStatus.ConnectionStatus)"];
-    api.Timestamp LastTransitionTime   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-transition-time,omitempty"];
-    string Message                     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "message,omitempty"];
-    int32 OrchID                       = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "orch-id,omitempty"];
+    string Status                        = 1 [(gogoproto.jsontag) = "connection-status", (venice.check) = "StrEnum(OrchestratorStatus.ConnectionStatus)"];
+    api.Timestamp LastTransitionTime     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-transition-time,omitempty"];
+    string Message                       = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "message,omitempty"];
+    int32 OrchID                         = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "orch-id,omitempty"];
     repeated string DiscoveredNamespaces = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "discovered-namespaces,omitempty"];
+    repeated string IncompatibleDSCs     = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "incompatible-dscs,omitempty"];
 }

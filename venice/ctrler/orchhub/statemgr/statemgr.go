@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
@@ -181,6 +182,11 @@ func (s *Statemgr) startWatchers() error {
 		return fmt.Errorf("Error establishing watch on network. Err: %v", err)
 	}
 
+	err = s.ctrler.DSCProfile().Watch(s)
+	if err != nil {
+		return fmt.Errorf("Error establishing watch on DSC Profiles. Err: %v", err)
+	}
+
 	err = s.ctrler.DistributedServiceCard().Watch(s)
 	if err != nil {
 		return fmt.Errorf("Error establishing watch on dsc. Err: %v", err)
@@ -202,4 +208,17 @@ func (s *Statemgr) startWatchers() error {
 	}
 
 	return nil
+}
+
+// FindObject looks up an object in local db
+func (s *Statemgr) FindObject(kind, tenant, ns, name string) (runtime.Object, error) {
+	// form network key
+	ometa := api.ObjectMeta{
+		Tenant:    tenant,
+		Namespace: ns,
+		Name:      name,
+	}
+
+	// find it in db
+	return s.ctrler.FindObject(kind, &ometa)
 }
