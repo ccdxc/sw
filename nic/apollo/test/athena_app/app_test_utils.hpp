@@ -597,6 +597,7 @@ bool app_test_exit(test::athena_app::test_vparam_ref_t vparam);
 bool skip_fte_flow_prog_set(test::athena_app::test_vparam_ref_t vparam);
 
 bool skip_fte_flow_prog(void);
+bool skip_dpdk_init(void);
 void program_prepare_exit(void);
 
 #endif   // __ATHENA_APP_TEST_UTILS_HPP__

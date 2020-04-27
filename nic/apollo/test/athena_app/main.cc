@@ -152,6 +152,14 @@ skip_fte_flow_prog(void)
     return (bool)skip_fte_flow_prog_;
 }
 
+static int skip_dpdk_init_;
+
+bool
+skip_dpdk_init(void)
+{
+    return (bool)skip_dpdk_init_;
+}
+
 void inline
 print_usage (char **argv)
 {
@@ -394,6 +402,7 @@ main (int argc, char **argv)
        { "mode",        required_argument, NULL, 'm' },
        { "policy_json", required_argument, NULL, 'j' },
        { "no-fte-flow-prog", no_argument,  &skip_fte_flow_prog_, 1 },
+       { "skip-dpdk-init", no_argument, &skip_dpdk_init_, 1 },
        { "help",        no_argument,       NULL, 'h' },
        { 0,             0,                 0,     0 }
     };
@@ -592,7 +601,7 @@ main (int argc, char **argv)
         }
     }
 
-    if (hw()) {
+    if (hw() && fte_ath::g_athena_app_mode == ATHENA_APP_MODE_CPP) {
 
         /*
          * On HW, delay until all initializations are done in nicmgr thread before
@@ -678,7 +687,8 @@ main (int argc, char **argv)
     recv_packet();
 #endif /* __x86_64__ */
 
-    if (hw() && (server_init() == PDS_RET_OK)) {
+    if (hw() && (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_CPP) &&
+        (server_init() == PDS_RET_OK)) {
         server_poll();
     } else {
         program_sleep();

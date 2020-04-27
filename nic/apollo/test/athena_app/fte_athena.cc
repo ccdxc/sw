@@ -616,8 +616,8 @@ static void
 signal_handler (int signum)
 {
     if (signum == SIGINT || signum == SIGTERM) {
-        PDS_TRACE_DEBUG("\nSIGNAL %d received..core#:%u\n",
-                        signum, rte_lcore_id());
+        PDS_TRACE_DEBUG("\nSIGNAL %d received..\n",
+                        signum);
         program_prepare_exit();
     }
     if (signum == SIGUSR1) {
@@ -987,16 +987,19 @@ fte_main (void)
     int ret;
     sdk_ret_t sdk_ret;
 
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+    signal(SIGUSR1, signal_handler);
+    signal(SIGUSR2, signal_handler);
+
+    if (skip_dpdk_init())
+        goto skip_dpdk; 
+
     // init EAL
     ret = rte_eal_init(NELEMS(g_eal_args), (char**)g_eal_args);
     if (ret < 0) {
         rte_exit(EXIT_FAILURE, "Invalid EAL arguments\n");
     }
-
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
-    signal(SIGUSR1, signal_handler);
-    signal(SIGUSR2, signal_handler);
 
     if (check_lcore_params() < 0) {
         rte_exit(EXIT_FAILURE, "check_lcore_params failed\n");
@@ -1030,12 +1033,19 @@ fte_main (void)
     fte_threads_started = true;
     rte_eal_mp_remote_launch(fte_launch_one_lcore, NULL, fte_call_master_type);
 
+   
+skip_dpdk:
 #ifndef SIM
      // /var/log/pensando doesn't have sufficient memory
      // Create a /data/flows.log file for flow dump
      // First delete the file, so logs are cleared(new file created) on every reboot
-     remove("/data/flows.log");
-     g_flows_fp = fopen("/data/flows.log", "w+");
+     if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+         remove("/data/flows.log");
+         g_flows_fp = fopen("/data/flows.log", "w+");
+     } else {
+         remove("/data/flows_sec.log");
+         g_flows_fp = fopen("/data/flows_sec.log", "w+");
+     }
 #endif
 
     return ret;

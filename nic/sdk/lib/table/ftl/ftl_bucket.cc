@@ -26,7 +26,7 @@ Bucket::read_(Apictx *ctx, bool force_hwread) {
                           ctx->idstr(), ctx->table_id, ctx->table_index,
                           ctx->entry->get_entry_valid());
         ctx->trace();
-        if (valid_ != ctx->entry->get_entry_valid()) {
+        if (!force_hwread && valid_ != ctx->entry->get_entry_valid()) {
             FTL_TRACE_ERR("SW and HW data are out of sync !!");
             SDK_ASSERT_RETURN(0, SDK_RET_HW_READ_ERR);
         }

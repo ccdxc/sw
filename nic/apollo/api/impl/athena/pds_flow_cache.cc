@@ -417,7 +417,7 @@ pds_flow_cache_entry_iterate (pds_flow_iter_cb_t iter_cb,
     cbdata.iter_cb_arg = iter_cb_arg;
     params.itercb = flow_cache_entry_iterate_cb;
     params.cbdata = &cbdata;
-    params.force_hwread = false;
+    params.force_hwread = true;
     ftl_entry_count = 0;
     return (pds_ret_t)ftl_table->iterate(&params);
 }
