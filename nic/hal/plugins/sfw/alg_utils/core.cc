@@ -632,6 +632,42 @@ void alg_state::cleanup_app_session(app_session_t *app_sess) {
     HAL_TRACE_DEBUG("Cleaned up ALG App session");
 }
 
+void
+alg_state::expected_flows_to_proto_buf(app_session_t *app_sess, EXPECTEDFlows *exp_flows)
+{
+    sdk::lib::dllist_ctxt_t   *lentry, *next;
+
+    SDK_SPINLOCK_LOCK(&app_sess->slock);
+    dllist_for_each_safe(lentry, next, &app_sess->exp_flow_lhead)
+    {
+        l4_alg_status_t *alg_status = dllist_entry(lentry, l4_alg_status_t, exp_flow_lentry);
+        if (alg_status) {
+            auto exp_flow_resp = exp_flows->add_flow();
+            flow_gate_key_to_proto(&alg_status->entry, exp_flow_resp);
+        }
+    }
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
+}
+
+void
+alg_state::active_data_sessions_to_proto_buf(app_session_t *app_sess,
+                                             ACTIVESessions *active_sessions)
+{
+    sdk::lib::dllist_ctxt_t   *lentry, *next;
+
+    SDK_SPINLOCK_LOCK(&app_sess->slock);
+    dllist_for_each_safe(lentry, next, &app_sess->l4_sess_lhead)
+    {
+        l4_alg_status_t *alg_status = dllist_entry(lentry, l4_alg_status_t, l4_sess_lentry);
+        // Take only data session
+        if (alg_status && !alg_status->isCtrl) {
+            auto active_sess_resp = active_sessions->add_active_session();
+            flow_gate_key_to_proto(&alg_status->entry, active_sess_resp);
+        }
+    }
+    SDK_SPINLOCK_UNLOCK(&app_sess->slock);
+}
+
 } //namespace alg_utils
 } //namespace plugins
 } //namespace hal

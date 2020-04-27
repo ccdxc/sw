@@ -1281,6 +1281,11 @@ It has these top-level messages:
 	SessionSpec
 	SessionRequestMsg
 	FlowStatus
+	ALGStatus
+	EXPECTEDFlows
+	ACTIVESessions
+	TCPSegment
+	TCPBuffer
 	TFTPALGInfo
 	RPCALGInfo
 	SIPALGInfo

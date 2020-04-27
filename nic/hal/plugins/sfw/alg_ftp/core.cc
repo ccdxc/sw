@@ -72,11 +72,77 @@ fte::pipeline_action_t alg_ftp_session_get_cb(fte::ctx_t &ctx) {
                       set_num_data_sess(dllist_count(&l4_sess->app_session->l4_sess_lhead)-1);
         sess_resp->mutable_status()->mutable_ftp_info()->\
                       set_num_exp_flows(dllist_count(&l4_sess->app_session->exp_flow_lhead));
+
+        if (l4_sess->tcpbuf[DIR_IFLOW]) {
+            l4_sess->tcpbuf[DIR_IFLOW]->tcp_buff_to_proto(sess_resp->mutable_status()->\
+                                                     mutable_ftp_info()->mutable_iflow_tcp_buf());
+        }
+        if (l4_sess->tcpbuf[DIR_RFLOW]) {
+            l4_sess->tcpbuf[DIR_RFLOW]->tcp_buff_to_proto(sess_resp->mutable_status()->\
+                                                     mutable_ftp_info()->mutable_rflow_tcp_buf());
+        }
+
+        if (info) {
+            sess_resp->mutable_status()->mutable_ftp_info()->set_expected_cmd_type(\
+                    (info->callback == __parse_ftp_rsp) ?
+                    FTPCmdType::FTP_CMD_RESPONSE : FTPCmdType::FTP_CMD_REQUEST);
+        }
+
+        g_ftp_state->expected_flows_to_proto_buf(l4_sess->app_session,
+                sess_resp->mutable_status()->mutable_ftp_info()->mutable_expected_flows());
+
+        g_ftp_state->active_data_sessions_to_proto_buf(l4_sess->app_session,
+                sess_resp->mutable_status()->mutable_ftp_info()->mutable_created_sessions());
+
     } else {
         sess_resp->mutable_status()->mutable_ftp_info()->\
                                set_iscontrol(false);
     }
 
+    return fte::PIPELINE_CONTINUE;
+}
+
+fte::pipeline_action_t
+alg_ftp_sync_session_proc (fte::ctx_t &ctx, l4_alg_status_t *l4_sess)
+{
+    FTPALGInfo       alg_req  = ctx.sess_status()->ftp_info();
+    ftp_info_t      *info     = (ftp_info_t *) l4_sess->info;
+    ftp_callback_t   callback = ((alg_req.expected_cmd_type() == \
+                                FTPCmdType::FTP_CMD_RESPONSE) ? __parse_ftp_rsp : __parse_ftp_req);
+
+    // If any TCP Buff alread exits, free them up and repopulate from the sync
+    if (!l4_sess->tcpbuf[DIR_IFLOW]) {
+        l4_sess->tcpbuf[DIR_IFLOW]->free();
+        l4_sess->tcpbuf[DIR_IFLOW] = NULL;
+    }
+    if (!l4_sess->tcpbuf[DIR_RFLOW]) {
+        l4_sess->tcpbuf[DIR_RFLOW]->free();
+        l4_sess->tcpbuf[DIR_RFLOW] = NULL;
+    }
+
+    if (alg_req.has_iflow_tcp_buf()) {
+        // Setup TCP buffer for IFLOW
+        l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(alg_req.iflow_tcp_buf(), NULL,
+                                                           callback, g_ftp_tcp_buffer_slabs);
+    }
+    if (alg_req.has_rflow_tcp_buf()) {
+        l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(alg_req.rflow_tcp_buf(), NULL,
+                                                           callback, g_ftp_tcp_buffer_slabs);
+    }
+
+    if (info) {
+        info->callback = callback;
+    }
+
+    for (int i = 0; i < alg_req.expected_flows().flow_size(); i++) {
+        add_expected_flow_from_proto(ctx, l4_sess, alg_req.expected_flows().flow(i));
+    }
+    // Add the active sessions also as an expected flow (in the control session), so that
+    // when the data session sync is given to the new node, the expected flow will be
+    // converted to the active flow 
+    for (int i = 0; i < alg_req.created_sessions().active_session_size(); i++) {
+        add_expected_flow_from_proto(ctx, l4_sess, alg_req.created_sessions().active_session(i));
+    }
     return fte::PIPELINE_CONTINUE;
 }
 
@@ -563,6 +629,50 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     HAL_TRACE_DEBUG("Adding expected flow with key: {}", key);
 }
 
+void
+add_expected_flow_from_proto(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
+                             const FlowGateKey &proto_key)
+{
+    l4_alg_status_t *exp_flow = NULL;
+    ftp_info_t      *data_ftp_info = NULL;
+    hal::flow_key_t  key;
+    expected_flow_t  expected_flow;
+    hal_ret_t        ret = HAL_RET_OK;
+
+    memset(&expected_flow, 0, sizeof(expected_flow_t));
+    memset(&key, 0, sizeof(hal::flow_key_t));
+
+    flow_gate_key_from_proto(&expected_flow, proto_key);
+
+    key             = ctx.key();
+    key.dir         = expected_flow.key.dir;
+    key.sip.v4_addr = expected_flow.key.sip;
+    key.dip.v4_addr = expected_flow.key.dip;
+    key.proto       = (types::IPProtocol)expected_flow.key.proto;
+    key.sport       = expected_flow.key.sport;
+    key.dport       = expected_flow.key.dport;
+
+    // Look for whether entry already exists, if exists just overwrite with values
+    ret = g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow,
+                                                 false, 0, true);
+    SDK_ASSERT(exp_flow != NULL);
+
+    if (ret != HAL_RET_ENTRY_EXISTS) {
+        data_ftp_info = (ftp_info_t *) g_ftp_state->alg_info_slab()->alloc();
+        SDK_ASSERT(data_ftp_info != NULL);
+        data_ftp_info->skip_sfw = TRUE;
+        exp_flow->info          = data_ftp_info;
+    }
+
+    exp_flow->entry.handler = expected_flow_handler;
+    exp_flow->isCtrl        = false;
+    exp_flow->alg           = l4_sess->alg;
+    exp_flow->rule_id       = (ctx.session())?ctx.session()->sfw_rule_id:0;
+    exp_flow->idle_timeout  = l4_sess->idle_timeout;
+
+    HAL_TRACE_DEBUG("Adding expected flow with key: {}", key);
+}
+
 /*
  * Walks through list of acceptable responses, updates errors and
  * adds exp_flow for new data sessions to aid opening of pinholes.
@@ -731,7 +841,8 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
                                    (sfw_info_t*)ctx.feature_state(\
                                       FTE_FEATURE_SFW);
 
-    if (hal::g_hal_state->is_flow_aware() || ctx.protobuf_request()) {
+    if ((hal::g_hal_state->is_flow_aware()) ||
+        (ctx.protobuf_request() && !ctx.sync_session_request())) {
         return fte::PIPELINE_CONTINUE;
     }
 
@@ -765,11 +876,15 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             ctx.register_completion_handler(ftp_completion_hdlr);
             ctx.register_feature_session_state(&l4_sess->fte_feature_state);
 
-            if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
-                // Setup TCP buffer for IFLOW
-                l4_sess->tcpbuf[DIR_IFLOW] = tcp_buffer_t::factory(
-                                            htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1, 
-                                            NULL, __parse_ftp_req, g_ftp_tcp_buffer_slabs);
+            if (ctx.sync_session_request()) {
+                alg_ftp_sync_session_proc(ctx, l4_sess);
+            } else {
+                if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
+                    // Setup TCP buffer for IFLOW
+                    l4_sess->tcpbuf[DIR_IFLOW] =
+                        tcp_buffer_t::factory(htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1, 
+                                              NULL, __parse_ftp_req, g_ftp_tcp_buffer_slabs);
+                }
             }
         }
 
@@ -782,6 +897,16 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
         if (l4_sess != NULL && (l4_sess->alg == nwsec::APP_SVC_FTP)) {
             ftp_info = (ftp_info_t *)l4_sess->info;
+
+            if (ctx.sync_session_request()) {
+                alg_ftp_sync_session_proc(ctx, l4_sess);
+
+                if (!ctx.existing_session()) {
+                    ctx.register_completion_handler(ftp_completion_hdlr);
+                }
+                return fte::PIPELINE_CONTINUE;
+            }
+
             if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped() && 
                 !ctx.payload_len()) {
                 // Set up TCP buffer for RFLOW only when we see handshake

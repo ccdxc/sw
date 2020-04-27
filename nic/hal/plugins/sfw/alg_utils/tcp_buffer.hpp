@@ -10,6 +10,8 @@
 #include "nic/fte/fte_ctx.hpp"
 
 using namespace fte;
+using session::TCPBuffer;
+using session::TCPSegment;
 
 namespace hal {
 namespace plugins {
@@ -27,11 +29,15 @@ public:
 
     static tcp_buffer_t *factory(uint32_t seq_start, void *handler_ctx,
                                  data_handler_t handler, tcp_buffer_slab_t slab_info);
+    static tcp_buffer_t *factory (const TCPBuffer &req, void *handler_ctx,
+                                  data_handler_t handler, tcp_buffer_slab_t slab_info);
     void free();
 
     hal_ret_t insert_segment(uint32_t seq, uint8_t *payload, size_t payload_len);
     hal_ret_t insert_segment(fte::ctx_t &ctx, data_handler_t handler);
 
+    hal_ret_t tcp_buff_to_proto(TCPBuffer *rsp);
+    hal_ret_t tcp_buff_from_proto (const TCPBuffer &req);
     tcp_buffer_t(const tcp_buffer_t&) = delete;
     tcp_buffer_t() = delete;
 

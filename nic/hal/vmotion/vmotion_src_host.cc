@@ -33,14 +33,15 @@ src_host_end (vmotion_ep *vmn_ep, MigrationState migration_state, vmotion_thread
         }
 
         if (ep) {
+            if (migration_state == MigrationState::SUCCESS) {
+                vmn_ep->get_vmotion()->migration_done(vmn_ep->get_ep_handle(),
+                                                      MigrationState::SUCCESS);
+            }
+
             // Remove EP Quiesce NACL entry
             if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
                 vmn_ep->get_vmotion()->vmotion_ep_quiesce_program(ep, FALSE);
                 VMOTION_FLAG_RESET_EP_QUIESCE_ADDED(vmn_ep);
-            }
-
-            if (migration_state == MigrationState::SUCCESS) {
-                ep_sessions_delete(ep);
             }
 
             ep->vmotion_state = migration_state;

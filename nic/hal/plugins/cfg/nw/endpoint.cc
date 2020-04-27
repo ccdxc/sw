@@ -3366,10 +3366,98 @@ endpoint_migration_normalization_cfg(ep_t *ep, bool disable)
 }
 
 void
-endpoint_migration_session_age_reset (ep_t *ep)
+endpoint_migration_done_src_host (ep_t *ep, session_t *session, MigrationState mig_state)
+{
+    if (mig_state != MigrationState::SUCCESS) {
+        // Nothing to be done in source host, if vMotion is not success
+        return;
+    }
+
+    // If the session is not deleted, the direction bit has to be flipped, as
+    // the session is moving out.
+    // As the 'direction' bit is part of the key, delete and insert again in the
+    // hash table.
+    if (session->sep_handle == ep->hal_handle) {
+        // 1) If the session is not referenced by another local EP (as DEP), because anyhow this 
+        //    session itself will be deleted (during EP del)
+        // 2) Flip by Direction bit only if it points to Host   
+        if ((session->dep_handle != HAL_HANDLE_INVALID) &&
+            (session->iflow->config.key.dir == FLOW_DIR_FROM_DMA)) {
+            HAL_TRACE_VERBOSE("Update iFlow Dir:{} ", session->iflow->config.key.dir);
+            g_hal_state->session_hal_iflow_ht()->\
+                                 remove_entry(session, &session->hal_iflow_ht_ctxt);
+            session->hal_iflow_ht_ctxt.reset();
+
+            session->iflow->config.key.dir = FLOW_DIR_FROM_UPLINK;
+
+            g_hal_state->session_hal_iflow_ht()->\
+                                 insert(session, &session->hal_iflow_ht_ctxt);
+        }
+    } else if (session->rflow) {
+        // 1) If the session is not referenced by another local EP (as SEP), because anyhow this 
+        //    session itself will be deleted (during EP del)
+        // 2) Flip by Direction bit only if it points to Host   
+        if ((session->sep_handle != HAL_HANDLE_INVALID) &&
+            (session->rflow->config.key.dir == FLOW_DIR_FROM_DMA)) {
+            HAL_TRACE_VERBOSE("Update rFlow Dir:{} ", session->rflow->config.key.dir);
+            g_hal_state->session_hal_rflow_ht()->\
+                                 remove_entry(session, &session->hal_rflow_ht_ctxt);
+            session->hal_rflow_ht_ctxt.reset();
+
+            session->rflow->config.key.dir = FLOW_DIR_FROM_UPLINK;
+
+            g_hal_state->session_hal_rflow_ht()->\
+                                 insert(session, &session->hal_rflow_ht_ctxt);
+        }
+    }
+}
+
+void
+endpoint_migration_done_dst_host (ep_t *ep, session_t *session, MigrationState mig_state)
+{
+    if (session->syncing_session) {
+        // Session was created as part of sync process
+        session->syncing_session = false;
+    } else if (mig_state == MigrationState::SUCCESS) {
+        // Session was already existing in this node, 
+        // Scenario - Earlier it was (Local - Remote) session, because of vMotion, now
+        // it has become (Local - Local) session, so update the direction bit to
+        // HOST
+        if (session->sep_handle == ep->hal_handle) {
+            if (session->iflow->config.key.dir == FLOW_DIR_FROM_UPLINK) {
+                HAL_TRACE_VERBOSE("Update iFlow Dir:{} ", session->iflow->config.key.dir);
+                g_hal_state->session_hal_iflow_ht()->\
+                                     remove_entry(session, &session->hal_iflow_ht_ctxt);
+                session->hal_iflow_ht_ctxt.reset();
+
+                session->iflow->config.key.dir = FLOW_DIR_FROM_DMA;
+
+                g_hal_state->session_hal_iflow_ht()->\
+                                     insert(session, &session->hal_iflow_ht_ctxt);
+            }
+        } else if (session->rflow) {
+            if (session->iflow->config.key.dir == FLOW_DIR_FROM_UPLINK) {
+                HAL_TRACE_VERBOSE("Update rFlow Dir:{} ", session->rflow->config.key.dir);
+                g_hal_state->session_hal_rflow_ht()->\
+                    remove_entry(session, &session->hal_rflow_ht_ctxt);
+                session->hal_rflow_ht_ctxt.reset();
+
+                session->rflow->config.key.dir = FLOW_DIR_FROM_DMA;
+
+                g_hal_state->session_hal_rflow_ht()->\
+                                     insert(session, &session->hal_rflow_ht_ctxt);
+            }
+        }
+    }
+}
+
+void
+endpoint_migration_done (ep_t *ep, MigrationState mig_state)
 {
     hal_handle_id_list_entry_t        *entry = NULL;
     dllist_ctxt_t                     *curr, *next;
+
+    HAL_TRACE_DEBUG("EP:{} State:{} Type:{}", ep->hal_handle, mig_state, ep->vmotion_type);
 
     for (uint8_t fte_id = 0; fte_id < HAL_MAX_DATA_THREAD; fte_id++) {
         dllist_for_each_safe(curr, next, &ep->session_list_head[fte_id]) {
@@ -3377,7 +3465,16 @@ endpoint_migration_session_age_reset (ep_t *ep)
 
             session_t *session = hal::find_session_by_handle(entry->handle_id);
             if (session) {
-                session->syncing_session = false;
+                if (ep->vmotion_type == VMOTION_TYPE_MIGRATE_IN) {
+                    endpoint_migration_done_dst_host(ep, session, mig_state);
+                } else if (ep->vmotion_type == VMOTION_TYPE_MIGRATE_OUT) {
+                    endpoint_migration_done_src_host(ep, session, mig_state);
+
+                    // If vMotion is success, delete the sessions
+                    if (mig_state == MigrationState::SUCCESS) {
+                        ep_sessions_delete(ep);
+                    }
+                }
             }
         }
     }

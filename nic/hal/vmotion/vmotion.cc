@@ -262,8 +262,8 @@ vmotion::vmotion_handle_ep_del(ep_t *ep)
     }
 
     if (ep->vmotion_state == MigrationState::IN_PROGRESS) {
-        // Loop the sessions, and start aging timer
-        endpoint_migration_session_age_reset(ep);
+        // Loop the sessions, and start aging timer if any sync sessions received
+        migration_done(ep->hal_handle, ep->vmotion_state);
     }
 
     run_vmotion(ep, VMOTION_EVT_EP_MV_ABORT);
@@ -453,6 +453,39 @@ vmotion_thread_delay_del_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     // Free up the thread ID
     g_hal_state->get_vmotion()->release_thread_id(thr->thread_id());
+}
+
+struct migration_done_ctx_t {
+    hal_handle_t    ep_handle;
+    MigrationState  mig_state;
+};
+
+static void
+migration_done_in_fte (void *data)
+{
+    migration_done_ctx_t *ctx = reinterpret_cast<migration_done_ctx_t *>(data);
+    ep_t                 *ep = find_ep_by_handle(ctx->ep_handle);
+
+    if (!ep) {
+        HAL_TRACE_ERR("vMotion EP not found:{}", ctx->ep_handle);
+    } else {
+        // Loop the sessions, and start aging timer
+        endpoint_migration_done(ep, ctx->mig_state);
+    }
+
+    HAL_FREE(hal::HAL_MEM_ALLOC_FTE, ctx);
+}
+ 
+void
+vmotion::migration_done(hal_handle_t ep_handle, MigrationState mig_state)
+{
+    struct migration_done_ctx_t *fn_ctx;
+    fn_ctx = (struct migration_done_ctx_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE,
+                                                      sizeof(struct migration_done_ctx_t));
+    fn_ctx->ep_handle = ep_handle;
+    fn_ctx->mig_state = mig_state;
+
+    fte::fte_execute(0, migration_done_in_fte, fn_ctx);
 }
 
 void

@@ -185,6 +185,7 @@ public:
     void          incr_stats(uint32_t vmotion_stats_t::* const p_field) { (stats_.*p_field)++; }
     void          incr_migration_state_stats(MigrationState state); 
     TLSContext*   get_tls_context(void) { return tls_context_; }
+    void          migration_done(hal_handle_t ep_handle, MigrationState mig_state);
     static void   delay_delete_thread(sdk::event_thread::event_thread *thr);
     hal_ret_t     vmotion_ep_quiesce_program(ep_t *ep, bool entry_add);
     hal_ret_t     vmotion_ep_migration_normalization_cfg(ep_t *ep, bool disable);

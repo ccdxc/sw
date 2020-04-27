@@ -248,6 +248,39 @@ message FlowStatus {
   FlowInstance        flow_instance   = 7;    // flow instance (for proxy etc.)
 }
 
+message ALGStatus {
+  types.IPAddress           src_ip          = 1;
+  types.IPAddress           dst_ip          = 2;
+  uint32                    proto           = 3;
+  uint32                    sport           = 4;
+  uint32                    dport           = 5;
+  bool                      iscontrol       = 6;
+}
+
+message EXPECTEDFlows {
+  repeated nwsec.FlowGateKey flow   = 1; 
+}
+
+message ACTIVESessions {
+  repeated nwsec.FlowGateKey active_session   = 1; 
+}
+
+message TCPSegment {
+  uint32              start           = 1;
+  uint32              end             = 2;
+}
+
+// TCPBuffer captures TCP Buffer information used by ALG Apps
+message TCPBuffer {
+  uint32               current_seq     = 1;
+  uint32               end_buff_seq    = 2;
+  uint32               buff_size       = 3;
+  uint32               num_segments    = 4;
+  repeated TCPSegment  segments        = 5;
+  uint32               current_slab    = 6;
+  bytes                payload         = 7;
+}
+
 // TFTPInfo captures the operational status of TFTP ALG session
 message TFTPALGInfo {
   bool                 iscontrol        = 1; // Is this flow control/data TFTP flow
@@ -270,12 +303,23 @@ message SIPALGInfo {
   uint32               parse_error    = 1; // Number of parse errors recorded for this session
 }
 
+// Types of NAT
+enum FTPCmdType {
+  FTP_CMD_REQUEST       = 0;
+  FTP_CMD_RESPONSE      = 1;
+}
+
 // FTPInfo captures the operational status of FTP ALG session
 message FTPALGInfo {
-  bool                 iscontrol      = 1; // Is this flow control/data FTP flow
-  uint32               parse_error    = 2; // Number of parse errors recorded for this session
-  uint32               num_data_sess  = 3; // Number of active data sessions associated with this control session
-  uint32               num_exp_flows  = 4; // Number of expected flows opened by this session
+  bool                 iscontrol         = 1; // Is this flow control/data FTP flow
+  uint32               parse_error       = 2; // Number of parse errors recorded for this session
+  uint32               num_data_sess     = 3; // Number of active data sessions associated with this control session
+  uint32               num_exp_flows     = 4; // Number of expected flows opened by this session
+  TCPBuffer            iflow_tcp_buf     = 5;
+  TCPBuffer            rflow_tcp_buf     = 6;
+  FTPCmdType           expected_cmd_type = 7; 
+  EXPECTEDFlows        expected_flows    = 8; 
+  ACTIVESessions       created_sessions  = 9; 
 }
 
 // RTSPALGInfo captures the operational status of RTSP ALG session

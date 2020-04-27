@@ -203,10 +203,9 @@ struct alg_utils {
    nwsec::ALGName    alg;
 };
 
-void expected_flow_get_fill_rsp(expected_flow_t *flow,
-                                SecurityFlowGateGetResponse *resp) {
-    FlowGateKey *key = resp->mutable_flow_gate_key();
-
+void
+flow_gate_key_to_proto(expected_flow_t *flow, FlowGateKey *key)
+{
     key->mutable_dst_ip()->set_v4_addr(flow->key.dip);
     key->mutable_src_ip()->set_v4_addr(flow->key.sip);
     key->set_src_vrf_id(flow->key.svrf_id);
@@ -217,6 +216,27 @@ void expected_flow_get_fill_rsp(expected_flow_t *flow,
     key->set_direction((flow->key.dir == FLOW_DIR_FROM_UPLINK) ?
                         types::FLOW_DIRECTION_FROM_UPLINK :\
                         types::FLOW_DIRECTION_FROM_HOST);
+}
+
+void
+flow_gate_key_from_proto(expected_flow_t *flow, const FlowGateKey &key)
+{
+    flow->key.dip     = key.dst_ip().v4_addr();
+    flow->key.sip     = key.src_ip().v4_addr();
+    flow->key.svrf_id = key.src_vrf_id();
+    flow->key.dvrf_id = key.dst_vrf_id();
+    flow->key.proto   = key.ip_proto();
+    flow->key.sport   = key.src_port();
+    flow->key.dport   = key.dst_port();
+    flow->key.dir     = (key.direction() == types::FLOW_DIRECTION_FROM_UPLINK
+                                                    ? FLOW_DIR_FROM_UPLINK : FLOW_DIR_FROM_DMA);
+}
+
+void expected_flow_get_fill_rsp(expected_flow_t *flow,
+                                SecurityFlowGateGetResponse *resp) {
+    FlowGateKey *key = resp->mutable_flow_gate_key();
+
+    flow_gate_key_to_proto(flow, key);
 
     resp->set_alg(((struct alg_utils *)flow)->alg);
     resp->set_delete_marked(flow->deleting);

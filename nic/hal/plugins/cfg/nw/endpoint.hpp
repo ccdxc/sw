@@ -271,7 +271,7 @@ hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
 bool endpoint_is_remote(ep_t *ep);
 hal_ret_t endpoint_migration_status_update (ep_t *ep, MigrationState migration_state);
 hal_ret_t endpoint_migration_inp_mac_vlan_pgm(ep_t *ep, bool create);
-void endpoint_migration_session_age_reset(ep_t *ep);
+void endpoint_migration_done (ep_t *ep, MigrationState mig_state);
 hal_ret_t endpoint_migration_normalization_cfg(ep_t *ep, bool disable);
 hal_ret_t endpoint_migration_if_update(ep_t *ep);
 void ep_sessions_delete(ep_t *ep);

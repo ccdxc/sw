@@ -12,6 +12,8 @@ namespace plugins {
 namespace alg_ftp {
 
 using namespace hal::plugins::alg_utils;
+using session::FTPALGInfo;
+using session::FTPCmdType;
 
 /*
  * Externs
@@ -36,6 +38,8 @@ fte::pipeline_action_t alg_ftp_session_get_cb(fte::ctx_t &ctx);
 hal_ret_t alg_ftp_init(hal_cfg_t *hal_cfg);
 void alg_ftp_exit();
 void ftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess);
+void
+add_expected_flow_from_proto (fte::ctx_t &ctx, l4_alg_status_t *l4_sess, const FlowGateKey &proto_key);
 
 }  // namespace alg_ftp
 }  // namespace plugins

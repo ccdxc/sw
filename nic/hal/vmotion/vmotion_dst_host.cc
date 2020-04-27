@@ -32,6 +32,11 @@ dst_host_end (vmotion_ep *vmn_ep)
         if ((vmn_ep->get_migration_state() == MigrationState::SUCCESS) ||
             (vmn_ep->get_migration_state() == MigrationState::FAILED) ||
             (vmn_ep->get_migration_state() == MigrationState::TIMEOUT)) {
+
+            // Loop the sessions, and start aging timer
+            vmn_ep->get_vmotion()->migration_done(vmn_ep->get_ep_handle(),
+                                                  vmn_ep->get_migration_state());
+
             // Remove EP Quiesce NACL entry
             if (VMOTION_FLAG_IS_EP_QUIESCE_ADDED(vmn_ep)) {
                 vmn_ep->get_vmotion()->vmotion_ep_quiesce_program(ep, FALSE);
@@ -43,8 +48,6 @@ dst_host_end (vmotion_ep *vmn_ep)
                 VMOTION_FLAG_RESET_INP_MAC_REMOVED(vmn_ep);
             }
 
-            // Loop the sessions, and start aging timer
-            endpoint_migration_session_age_reset(ep);
             // Send success/failure notification to Net Agent
             endpoint_migration_status_update(ep, vmn_ep->get_migration_state());
         }

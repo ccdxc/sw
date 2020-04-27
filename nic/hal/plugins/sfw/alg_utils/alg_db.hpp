@@ -81,6 +81,8 @@ hal_ret_t walk_expected_flow(nwsec::SecurityFlowGateGetRequest&      req,
 void* update_expected_flow_timer(expected_flow_t *entry, 
                                  uint64_t time_intvl, void *timer_ctxt);
 void* update_expected_flow_timer_ctxt(expected_flow_t *entry, void *timer_ctxt);
+void  flow_gate_key_to_proto(expected_flow_t *flow, FlowGateKey *key);
+void  flow_gate_key_from_proto(expected_flow_t *flow, const FlowGateKey &key);
 
 } // namespace alg_utils
 } // namespace plugins

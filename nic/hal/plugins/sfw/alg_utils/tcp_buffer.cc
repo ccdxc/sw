@@ -45,6 +45,24 @@ tcp_buffer_t::factory (uint32_t seq_start, void *handler_ctx,
 }
 
 //------------------------------------------------------------------------
+// Alloc/Initialize the tcp buffer
+//------------------------------------------------------------------------
+tcp_buffer_t *
+tcp_buffer_t::factory (const TCPBuffer &req, void *handler_ctx, data_handler_t handler,
+                       tcp_buffer_slab_t slab_info)
+{
+    tcp_buffer_t *entry = (tcp_buffer_t *)slab_->alloc();
+
+    memcpy(entry->buff_slabs_, slab_info, sizeof(tcp_buffer_slab_t));
+
+    entry->tcp_buff_from_proto(req);
+    entry->data_handler_ = handler;
+    entry->handler_ctx_  = handler_ctx;
+
+    return entry;
+}
+
+//------------------------------------------------------------------------
 // Free the entry
 //------------------------------------------------------------------------
 void tcp_buffer_t::free ()
@@ -57,6 +75,63 @@ void tcp_buffer_t::free ()
     }
 
     slab_->free(this);
+}
+
+hal_ret_t
+tcp_buffer_t::tcp_buff_to_proto (TCPBuffer *rsp)
+{
+    rsp->set_current_seq(cur_seq_);
+    rsp->set_end_buff_seq(end_buff_seq_);
+    rsp->set_buff_size(buff_size_);
+    rsp->set_num_segments(num_segments_);
+    rsp->set_current_slab(cur_slab_);
+
+    for (int i = 0; i < num_segments_; i++) {
+        auto seg = rsp->add_segments();
+        seg->set_start(segments_[i].start);
+        seg->set_end(segments_[i].end);
+    }
+
+    if (buff_size_) {
+        rsp->set_payload(buff_, buff_size_);
+    }
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+tcp_buffer_t::tcp_buff_from_proto (const TCPBuffer &req)
+{
+    cur_seq_      = req.current_seq();
+    end_buff_seq_ = req.end_buff_seq();
+    buff_size_    = req.buff_size();
+    num_segments_ = req.num_segments();
+    segments_     = NULL;
+    cur_slab_     = req.current_slab();
+
+    if (buff_size_) {
+        buff_ = (uint8_t *)buff_slabs_[cur_slab_]->alloc();
+        if (req.payload().size()) {
+            memcpy(buff_, req.payload().c_str(), buff_size_);
+        }
+    }
+
+    if (num_segments_) {
+        uint32_t segment_sz = sizeof(segment_t) * MAX_SEGMENTS;
+
+        segments_ = (segment_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_TCP_REASSEMBLY_BUFF,
+                                            segment_sz);
+        bzero(segments_, segment_sz);
+
+        for (int i = 0; i < num_segments_; i++) {
+            segments_[i].start = req.segments(i).start();
+            segments_[i].end   = req.segments(i).end();
+        }
+    }
+    HAL_TRACE_DEBUG("Init TCP buffer cur_seq:{} end_seq:{}, sz:{}, seg:{}, slab:{}, psz:{}",
+                    cur_seq_, end_buff_seq_, buff_size_, num_segments_, cur_slab_,
+                    req.payload().size());
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------

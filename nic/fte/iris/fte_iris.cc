@@ -316,6 +316,11 @@ ctx_t::lookup_session()
     }
 
     if (!session_) {
+        if (sync_session_request()) {
+            // Flip back the direction bit as how it was, so that session will be created
+            // with same direction bit as how received in session sync
+            key_.dir = !key_.dir;
+        }
         HAL_TRACE_DEBUG("fte: session not found role:{}", role_);
         return HAL_RET_SESSION_NOT_FOUND;
     }

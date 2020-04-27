@@ -11,6 +11,9 @@
 #include "nic/hal/plugins/sfw/alg_utils/tcp_buffer.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 
+using session::EXPECTEDFlows;
+using session::ACTIVESessions;
+
 namespace hal {
 namespace plugins {
 namespace alg_utils {
@@ -266,6 +269,8 @@ public:
                                 l4_alg_status_t *alg_status);
     l4_alg_status_t *get_next_expflow(app_session_t *app_sess);
     l4_alg_status_t *get_ctrl_l4sess(app_session_t *app_sess);
+    void expected_flows_to_proto_buf(app_session_t *app_sess, EXPECTEDFlows *exp_flows);
+    void active_data_sessions_to_proto_buf(app_session_t *app_sess, ACTIVESessions *active_sessions);
 
 private:
     sdk::wp_rwlock                 rwlock_;                   // Read-write lock to alg_state
