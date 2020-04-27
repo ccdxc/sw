@@ -51,7 +51,11 @@ class VnicObject(base.ConfigObjectBase):
                 self.MACAddr = vmac.get()
             elif vmac == 'usepfmac':
                 # used in IOTA for workload interface
-                self.MACAddr = InterfaceClient.GetHostIf(node, parent.HostIfIdx).GetInterfaceMac()
+                hostif = InterfaceClient.GetHostIf(node, parent.HostIfIdx)
+                if hostif != None:
+                    self.MACAddr = hostif.GetInterfaceMac()
+                else:
+                    self.MACAddr = ResmgrClient[node].VnicMacAllocator.get()
             else:
                 self.MACAddr = vmac
         else:
@@ -463,7 +467,7 @@ class VnicObjectClient(base.ConfigClientBase):
                 logger.error(f"show vnic failed for vnic id {vnic_uuid_str}")
                 return False
             cmdop = op.split("---")
-            logger.info("Num entries returned for vnic show id %s is %s"%(vnic_uuid_str, len(cmdop)))
+            logger.info("Num entries returned for vnic show id %s is %s"%(vnic_uuid_str, (len(cmdop)-1)))
             for vnic_entry in cmdop:
                 yamlOp = utils.LoadYaml(vnic_entry)
                 if not yamlOp:
@@ -530,6 +534,7 @@ class VnicObjectClient(base.ConfigClientBase):
         old_subnet.DeleteChild(vnic)
         new_subnet.AddChild(vnic)
         vnic.SUBNET = new_subnet
+        vnic.Vnid = vnic.SUBNET.Vnid
 
         # Handle node change scenario
         if old_subnet.Node != new_subnet.Node:
@@ -552,7 +557,6 @@ class VnicObjectClient(base.ConfigClientBase):
                 # Destroy rmap entry in new subnet
                 rmap = new_subnet.GetRemoteMappingObjectByIp(lmap.IP)
                 assert(rmap)
-                rmap.Delete()
                 rmap.Destroy()
 
                 # Add rmap entry in old subnet

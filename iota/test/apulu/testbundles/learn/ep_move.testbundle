@@ -6,16 +6,18 @@ meta:
 
 testcases:
     -   name    : Local_To_Remote_Ip
-        testcase: testcases.ep_move.local_to_remote_ip
+        testcase: testcases.learn.local_to_remote_ip
         stress  : True
 
     -   name    : Local_To_Remote_Mac
-        testcase: testcases.ep_move.local_to_remote_mac
+        testcase: testcases.learn.local_to_remote_mac
         ignore  : True
         stress  : True
         iterators :
             type     : nested
-            subnet_mov   : [ inter-subnet-local , inter-subnet-remote, intra-subnet ]
-            mac_mov      : [ same , new ]
-            ip_mov       : [ subset , new, all ]
+            subnet_mov   : [ intra-subnet ]
+            #subnet_mov   : [ inter-subnet-local , inter-subnet-remote, intra-subnet ]
+            mac_mov      : [ same ]
+            #mac_mov      : [ same, new ]
+            ip_mov       : [ all, subset, new ]
 

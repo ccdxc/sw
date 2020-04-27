@@ -153,8 +153,7 @@ class LocalMappingObject(base.ConfigObjectBase):
     def Destroy(self):
         if not super().Destroy():
             return True
-        if not client.RemoveObjFromCache(self):
-            return False
+        client.DeleteObjFromDict(self)
         return True
 
 class LocalMappingObjectClient(base.ConfigClientBase):
@@ -210,7 +209,7 @@ class LocalMappingObjectClient(base.ConfigClientBase):
                 return False
 
             logger.info("Found (%s) LMAP entry for learn IP:%s, VPC:%s MAC:%s, Subnet:%s "%(
-                    len(cmdop), ip_str, vpc_uuid_str, mac_str, utils.List2UuidStr(subnet_uuid)))
+                    (len(cmdop)-1), ip_str, vpc_uuid_str, mac_str, utils.List2UuidStr(subnet_uuid)))
         return True
 
     def ValidateLearnIPInfo(self, node):
@@ -303,10 +302,10 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         self.Objs[target_node].update({lmap.MappingId: lmap})
         self.__epip_objs[target_node].update({(lmap.IP, lmap.VNIC.SUBNET.VPC.UUID.GetUuid()): lmap})
 
-    def RemoveObjFromCache(self, lmap):
-        logger.info(f"Deleting {lmap} from EP IP object cache")
-        del self.__epip_objs[lmap.Node][(lmap.IP, lmap.VNIC.SUBNET.VPC.UUID.GetUuid())]
-        return super().RemoveObjFromCache(lmap)
+    def DeleteObjFromDict(self, obj):
+        self.Objs[obj.Node].pop(obj.MappingId, None)
+        self.__epip_objs[obj.Node].pop((obj.IP, obj.VNIC.SUBNET.VPC.UUID.GetUuid()), None)
+        return
 
     def GetVnicPublicAddresses(self, vnic):
         ipv4_addresses = []

@@ -45,12 +45,31 @@ def ExecuteShowLearnIP(node, lmapping=None, yaml=True):
         api.Logger.error("Failed to execute show learn mac at node %s : %s" %(node, resp))
     return ret, resp
 
+def ExecuteShowLearnStats(node, yaml=True, print_op=False):
+    cmd = "learn statistics"
+    ret, resp = pdsctl.ExecutePdsctlShowCommand(node, cmd, "", yaml, print_op)
+    if ret != True:
+        api.Logger.error("Failed to execute show learn statistics at node %s : %s" %(node, resp))
+    return ret, resp
+
 def DumpLearnMAC(node, vnic=None):
     ExecuteShowLearnMAC(node, vnic, yaml=False)
     return
 
 def DumpLearnIP(node, lmapping=None):
     ExecuteShowLearnIP(node, lmapping, yaml=False)
+    return
+
+def DumpLearnStats(node):
+    ExecuteShowLearnStats(node, False, True)
+    return
+
+def DumpLearnData():
+    for node in api.GetNaplesHostnames():
+        api.Logger.info(f"Dumping Learn MAC and IP data from node {node}")
+        DumpLearnMAC(node)
+        DumpLearnIP(node)
+        DumpLearnStats(node)
     return
 
 def DumpVnicInfo(node):
@@ -233,17 +252,14 @@ def ValidateLearnInfo(node=None):
             if n == remote_node:
                 continue
             if not config_api.GetObjClient('rmapping').\
-                      ValidateLearnIPWithRMapInfo(remote_node, node):
+                      ValidateLearnIPWithRMapInfo(remote_node, n):
                 api.Logger.error("RMap validation failed on node %s" %remote_node)
                 return False
 
     api.Logger.verbose("MAC and IP validation successful")
     return True
 
-def SetWorkloadIntfOperState(vnic, state):
-    wl = config_api.FindWorkloadByVnic(vnic)
-    assert(wl)
-
+def SetWorkloadIntfOperState(wl, state):
     if not api.IsSimulation():
         req = api.Trigger_CreateAllParallelCommandsRequest()
     else:
@@ -257,62 +273,8 @@ def SetWorkloadIntfOperState(vnic, state):
         return False
 
     if state is 'up':
-        add_routes.AddRoutes(vnic)
+        add_routes.AddRoutes(config_api.FindVnicObjectByWorkload(wl))
     return resp.commands[0].exit_code == 0
-
-def LearnEndpoints(node=None, vnic=None):
-    if vnic != None:
-        wload = config_api.FindWorkloadByVnic(vnic)
-        assert(wload)
-        wl_list = [ wload ]
-    else:
-        wl_list = api.GetWorkloads()
-
-    if not api.IsSimulation():
-        req = api.Trigger_CreateAllParallelCommandsRequest()
-    else:
-        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-
-    for wl in wl_list:
-        if node and node != wl.node_name:
-            continue
-        api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
-                               "arping -c 5 -U %s -I %s" % (wl.ip_address, wl.interface))
-        api.Logger.debug("ArPing from %s %s %s %s" % (wl.node_name, wl.workload_name, wl.interface, wl.ip_address))
-        # send arping with secondary IPs too
-        for sec_ip_addr in wl.sec_ip_addresses:
-            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
-                                   "arping -c 5 -U %s -I %s" % (sec_ip_addr, wl.interface))
-            api.Logger.debug("ArPing from %s %s %s %s" % (wl.node_name, wl.workload_name, wl.interface, sec_ip_addr))
-
-    resp = api.Trigger(req)
-    if resp is None:
-        return False
-
-    return True
-
-def SendARPReply(node=None):
-    if not api.IsSimulation():
-        req = api.Trigger_CreateAllParallelCommandsRequest()
-    else:
-        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-
-    for wl in api.GetWorkloads():
-        if node and node != wl.node_name:
-            continue
-        api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
-                               "arping -c 3 -A -s %s -I %s 0.0.0.0" % (wl.ip_address, wl.interface))
-        api.Logger.debug("ArpReply from %s %s %s %s" % (wl.node_name, wl.workload_name, wl.interface, wl.ip_address))
-        # send arping with secondary IPs too
-        for sec_ip_addr in wl.sec_ip_addresses:
-            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name,
-                                   "arping -c 3 -A -s %s -I %s 0.0.0.0" % (sec_ip_addr, wl.interface))
-            api.Logger.debug("ArpReply from %s %s %s %s" % (wl.node_name, wl.workload_name, wl.interface, sec_ip_addr))
-
-    resp = api.Trigger(req)
-    if resp is None:
-        return False
-    return True
 
 def SetDeviceLearnTimeout(val):
     # Enabling Max age for all endpoints
@@ -346,16 +308,15 @@ def ClearLearnStatistics(nodes=[]):
             return ret
     return True
 
-def GetLearnStatistics(nodes=[], print_op=True):
+def GetLearnStatistics(nodes=[]):
     out = {}
     nodes = nodes if nodes else api.GetNaplesHostnames()
     for node in nodes:
-        ret, resp = pdsctl.ExecutePdsctlShowCommand(node, "learn statistics", print_op=print_op)
+        ret, resp = ExecuteShowLearnStats(node, yaml=True)
         if not ret:
-            api.Logger.error("Failed to execute show learn statistics at node %s : %s" %(node, resp))
             return out
         try:
-            stats = yaml.load(resp.split("---")[0])
+            stats = yaml.load(resp.split("---")[0], Loader=yaml.Loader)
         except Exception as e:
             api.Logger.error("Failed to parse show learn statistics at node %s : %s : %s" %(node, resp, e))
             return out

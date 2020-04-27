@@ -169,8 +169,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def Destroy(self):
         if not super().Destroy():
             return False
-        if not client.RemoveObjFromCache(self):
-            return False
+        client.DeleteObjFromDict(self)
         return True
 
 class RemoteMappingObjectClient(base.ConfigClientBase):
@@ -215,7 +214,7 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
             return False
 
         logger.info("Found (%s) RMAP entry for learn VPC:%s IP:%s MAC:%s Subnet:%s "%(
-                len(cmdop), vpc_uuid_str, ip_str, mac_str, utils.List2UuidStr(subnet_uuid)))
+                (len(cmdop)-1), vpc_uuid_str, ip_str, mac_str, utils.List2UuidStr(subnet_uuid)))
         return True
 
     def VerifyLearntIpEntriesWithRemoteMapping(self, node, peer_node, ret, cli_op):
@@ -303,6 +302,11 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
             logger.info(f"Reading {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
             return False
         return True
+
+    def DeleteObjFromDict(self, obj):
+        self.Objs[obj.Node].pop(obj.MappingId, None)
+        self.__rmap_objs[obj.Node].pop((obj.IP, obj.SUBNET.VPC.UUID.GetUuid()), None)
+        return
 
 client = RemoteMappingObjectClient()
 

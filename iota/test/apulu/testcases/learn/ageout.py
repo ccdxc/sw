@@ -3,6 +3,7 @@ import random
 
 import learn_pb2 as learn_pb2
 import iota.harness.api as api
+import iota.test.utils.arping as arp_utils
 import iota.test.apulu.config.api as config_api
 import iota.test.apulu.utils.learn as learn_utils
 import iota.test.apulu.utils.misc as misc_utils
@@ -12,10 +13,10 @@ def Setup(tc):
     # select one of the LearnIP objects from dictionary
     tc.node = random.choice(api.GetNaplesHostnames())
     tc.learn_mac_obj = random.choice(learn_utils.GetLearnMACObjects(tc.node))
+    tc.workload = config_api.FindWorkloadByVnic(tc.learn_mac_obj)
     tc.learn_ip_obj_list = learn_utils.GetLearnIPObjects(tc.node, tc.learn_mac_obj)
-    #if not EzAccessStoreClient[tc.node].ValidateLearnData():
-    #    return api.types.status.FAILURE
     api.Logger.verbose(f"Chosen MAC {tc.learn_mac_obj.MACAddr} and IPs {[obj.IP for obj in tc.learn_ip_obj_list]}")
+    learn_utils.ClearLearnStatistics([ tc.node ])
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -25,7 +26,7 @@ def Trigger(tc):
     retry = 0
     age_max = 0
 
-    ret = learn_utils.SetWorkloadIntfOperState(tc.learn_mac_obj, 'down')
+    ret = learn_utils.SetWorkloadIntfOperState(tc.workload, 'down')
     if not ret:
         api.Logger.error("Failed to bringdown interface for workload %s%s" %(tc.learn_mac_obj.GID(), tc.node))
         return api.types.status.FAILURE
@@ -99,15 +100,22 @@ def Verify(tc):
         return api.types.status.FAILURE
 
     api.Logger.verbose("MAC got flushed after age out")
+    stats = learn_utils.GetLearnStatistics([ tc.node ])
+    if stats[tc.node]['macageouts'] != 1 or stats[tc.node]['ipageouts'] != len(tc.learn_ip_obj_list):
+        api.Logger.error("Ageout statistics not seen as expected")
+        return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def Teardown(tc):
-    ret = learn_utils.SetWorkloadIntfOperState(tc.learn_mac_obj, 'up')
+    ret = learn_utils.SetWorkloadIntfOperState(tc.workload, 'up')
     if not ret:
         api.Logger.error("Failed to bringup interface for workload %s%s" %(tc.learn_mac_obj.GID(), tc.node))
         return api.types.status.FAILURE
-    learn_utils.LearnEndpoints(tc.learn_mac_obj.Node, tc.learn_mac_obj)
+    arp_utils.SendGratArp([tc.workload])
     learn_utils.DumpLearnMAC(tc.node, tc.learn_mac_obj)
-    learn_utils.ValidateLearnInfo(tc.node)
+    misc_utils.Sleep(10) # to let remote mappings for this VNIC, sync in other nodes
+    if not learn_utils.ValidateLearnInfo():
+        api.Logger.error("Learn validation failed")
+        return api.types.status.FAILURE
     api.Logger.verbose("Aged out Endpoints are learnt again")
     return api.types.status.SUCCESS

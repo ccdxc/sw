@@ -158,8 +158,13 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def GetPrecedent(self):
          return self.Precedent
 
+    def PostCreateCallback(self, spec):
+        return True
+
     def Create(self, spec=None):
-        return utils.CreateObject(self)
+        if not utils.CreateObject(self):
+            return False
+        return self.PostCreateCallback(spec)
 
     def Read(self, spec=None):
         if self.IsDirty():
@@ -180,9 +185,8 @@ class ConfigObjectBase(base.ConfigObjectBase):
             logger.error(f"Object {self} still exist in HW can not destroy it")
             return False
 
-        logger.info(f"Destroying object {self} in {self.Node}")
         self.Show()
-
+        logger.info(f"Destroying object {self} in {self.Node}")
         # remove the link from parent
         if self.Parent:
             self.Parent.DeleteChild(self)
@@ -284,6 +288,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
 
     def IsInterim(self):
         return self.Interim
+
+    def VerifyDepsOperSt(self, oper):
+        return True
 
     def SetBaseClassAttr(self):
         logger.error("Method not implemented by class: %s" % self.__class__)
@@ -617,10 +624,3 @@ class ConfigClientBase(base.ConfigClientBase):
             logger.info(f"{oper} {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
             return False
         return True
-
-    def RemoveObjFromCache(self, obj):
-        for key,val in self.Objs[obj.Node].items():
-            if val == obj:
-                del self.Objs[obj.Node][key]
-                return True
-        return False

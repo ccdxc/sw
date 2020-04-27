@@ -6,6 +6,8 @@ import iota.test.apulu.utils.move as move_utils
 import iota.test.apulu.utils.flow as flow_utils
 import iota.test.apulu.config.learn_endpoints as learn
 import iota.test.apulu.utils.learn_stats as stats_utils
+import iota.test.apulu.utils.learn as learn_utils
+import iota.test.apulu.utils.misc as misc_utils
 
 from apollo.config.resmgr import client as ResmgrClient
 from iota.harness.infra.glopts import GlobalOptions
@@ -92,11 +94,11 @@ def Setup(tc):
     tc.mv_ctx[wl]['new_home'] = new_home = __get_new_home(subnet_mov, home, alternatives)
     tc.mv_ctx[wl]['new_subnet'] = new_subnet = __get_new_subnet(subnet_mov, subnet, new_home)
     tc.mv_ctx[wl]['new_mac'] = wl.mac_address if mac_mov == "same" else ResmgrClient[alternatives[0]].VnicMacAllocator.get()
-    tc.mv_ctx[wl]['new_ip_prefix'] = wl.ip_prefix if ip_mov != "all" else f"{new_subnet.AllocIPv4Address()}/{new_subnet.GetV4PrefixLen()}"
+    tc.mv_ctx[wl]['new_ip_prefix'] = wl.ip_prefix if ip_mov != "new" else f"{new_subnet.AllocIPv4Address()}/{new_subnet.GetV4PrefixLen()}"
     tc.mv_ctx[wl]['new_sec_ip_prefixes'] = __get_sec_ip_prefixes(wl, ip_mov, tc.mv_ctx[wl]['new_subnet'])
 
     stats_utils.Clear()
-
+    learn_utils.DumpLearnData()
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -115,17 +117,13 @@ def Trigger(tc):
                     f"with mac {mac}, ip prefixes {ip_prefix_list}")
     return move_utils.MoveEpMACEntry(wl, subnet, mac, ip_prefix_list)
 
-def __validate_move_stats(tc):
+def __validate_move_stats(home, new_home):
 
-    wl = tc.workload
-    ctx = tc.mv_ctx
-    home = ctx[wl]['home']
-    new_home = tc.mv_ctx[wl]['new_home']
     ret = api.types.status.SUCCESS
-
     if GlobalOptions.dryrun:
         return ret
 
+    stats_utils.Fetch()
     ##
     # Old Home L2R move counters
     ##
@@ -148,15 +146,15 @@ def Verify(tc):
     if tc.skip:
         return api.types.status.SUCCESS
 
-    __validate_move_stats(tc)
-
-    cmd_cookies, resp = conn_utils.TriggerConnectivityTestAll(proto="icmp")
-    ret = conn_utils.VerifyConnectivityTest("icmp", cmd_cookies, resp)
+    misc_utils.Sleep(5) # let metaswitch carry this to other side
+    learn_utils.DumpLearnData()
+    ret = __validate_move_stats(tc.mv_ctx[tc.workload]['home'], tc.mv_ctx[tc.workload]['new_home'])
     if ret != api.types.status.SUCCESS:
-        api.Logger.error("Connectivity verification failed.")
         return api.types.status.FAILURE
 
-    return api.types.status.SUCCESS
+    api.Logger.verbose("Move statistics are matching expectation on both nodes")
+    # Validate with traffic after moving
+    return move_utils.ValidateEPMove()
 
 def Teardown(tc):
 
@@ -166,6 +164,7 @@ def Teardown(tc):
     wl = tc.workload
     ctx = tc.mv_ctx
     home = ctx[wl]['home']
+    new_home = ctx[wl]['new_home']
     subnet = ctx[wl]['subnet']
     mac = ctx[wl]['mac']
     ip_prefix_list = [ctx[wl]['ip_prefix']] + ctx[wl]['sec_ip_prefixes']
@@ -173,5 +172,16 @@ def Teardown(tc):
     api.Logger.info(f"Restoring {wl.workload_name} {wl.vnic.SUBNET}({wl.node_name}) => {subnet}({home}) "
                     f"with mac {mac}, ip prefixes {ip_prefix_list}")
     move_utils.MoveEpMACEntry(wl, subnet, mac, ip_prefix_list)
+
+    misc_utils.Sleep(5) # let metaswitch carry it to the other side
+    learn_utils.DumpLearnData()
+    ret = __validate_move_stats(new_home, home)
+    if ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+
+    api.Logger.verbose("Move statistics are matching expectation on both nodes")
+    # Validate with traffic after moving back
+    if move_utils.ValidateEPMove() != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
 
     return flow_utils.clearFlowTable(None)

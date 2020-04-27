@@ -7,6 +7,8 @@ import iota.test.apulu.utils.move as move_utils
 import iota.test.apulu.utils.flow as flow_utils
 import iota.test.apulu.config.learn_endpoints as learn
 import iota.test.apulu.utils.learn_stats as stats_utils
+import iota.test.apulu.utils.learn as learn_utils
+import iota.test.apulu.utils.misc as misc_utils
 
 from apollo.config.resmgr import client as ResmgrClient
 from iota.harness.infra.glopts import GlobalOptions
@@ -30,7 +32,7 @@ def Setup(tc):
 
     # Clear move stats
     stats_utils.Clear()
-
+    learn_utils.DumpLearnData()
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -47,16 +49,13 @@ def Trigger(tc):
                     f"({src_wl.node_name}) => {dst_wl.workload_name}({dst_wl.node_name})")
     return move_utils.MoveEpIPEntry(src_wl, dst_wl, ip_prefixes)
 
-def __validate_move_stats(tc):
+def __validate_move_stats(home, new_home):
 
-    ctx = tc.mv_ctx
-    home = tc.mv_ctx['src_wl'].node_name
-    new_home = tc.mv_ctx['dst_wl'].node_name
     ret = api.types.status.SUCCESS
-
     if GlobalOptions.dryrun:
         return ret
 
+    stats_utils.Fetch()
     ##
     # Old Home L2R move counters
     ##
@@ -79,15 +78,15 @@ def Verify(tc):
     if tc.skip:
         return api.types.status.SUCCESS
 
-    __validate_move_stats(tc)
-
-    cmd_cookies, resp = conn_utils.TriggerConnectivityTestAll(proto="icmp")
-    ret = conn_utils.VerifyConnectivityTest("icmp", cmd_cookies, resp)
+    misc_utils.Sleep(5) # let metaswitch carry this to other side
+    learn_utils.DumpLearnData()
+    ret = __validate_move_stats(tc.mv_ctx['src_wl'].node_name, tc.mv_ctx['dst_wl'].node_name)
     if ret != api.types.status.SUCCESS:
-        api.Logger.error("Connectivity verification failed.")
         return api.types.status.FAILURE
 
-    return api.types.status.SUCCESS
+    api.Logger.verbose("Move statistics are matching expectation on both nodes")
+    # Validate with traffic after moving
+    return move_utils.ValidateEPMove()
 
 def Teardown(tc):
 
@@ -102,5 +101,16 @@ def Teardown(tc):
     api.Logger.info(f"Restoring IP prefixes {ip_prefixes} {src_wl.workload_name}"
                     f"({src_wl.node_name}) => {dst_wl.workload_name}({dst_wl.node_name})")
     move_utils.MoveEpIPEntry(dst_wl, src_wl, ip_prefixes)
+
+    misc_utils.Sleep(5) # let metaswitch carry it to the other side
+    learn_utils.DumpLearnData()
+    ret = __validate_move_stats(dst_wl.node_name, src_wl.node_name)
+    if ret != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+
+    api.Logger.verbose("Move statistics are matching expectation on both nodes")
+    # Validate with traffic after moving back
+    if move_utils.ValidateEPMove() != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
 
     return flow_utils.clearFlowTable(None)

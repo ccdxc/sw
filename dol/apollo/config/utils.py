@@ -485,6 +485,10 @@ def CreateObject(obj):
         logger.info(f"Already restored {obj} on {node}")
         return True
 
+    if not obj.IsOriginFixed():
+        logger.info(f"Skipping creation of non-fixed object {obj} on {node}")
+        return True
+
     def RestoreObj(robj):
         node = robj.Node
         if robj.IsOriginDiscovered():
@@ -595,6 +599,10 @@ def DeleteObject(obj):
     node = obj.Node
     if IsDryRun() and not obj.IsHwHabitant():
         logger.info(f"Already deleted {obj} on {node}")
+        return True
+
+    if not obj.IsOriginFixed():
+        logger.info(f"Skipping deletion of non-fixed object {obj} on {node}")
         return True
 
     def DelObj(dobj):
@@ -1007,7 +1015,7 @@ def RunPdsctlShowCmd(node, cmd, args=None, yaml=True):
         ret, yaml_op = pdsctl.ExecutePdsctlShowCommand(cmd, args, yaml)
     else:
         import iota.test.apulu.utils.pdsctl as pdsctl
-        ret, yaml_op = pdsctl.ExecutePdsctlShowCommand(node, cmd, args, yaml)
+        ret, yaml_op = pdsctl.ExecutePdsctlShowCommand(node, cmd, args, yaml, print_op=False)
     return ret, yaml_op
 
 def GetNodeLoopbackPrefix(node):

@@ -7,6 +7,7 @@ import copy
 import json
 from infra.common.logging import logger
 
+from apollo.config.store import EzAccessStore
 from apollo.config.store import client as EzAccessStoreClient
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
@@ -23,6 +24,7 @@ import apollo.config.objects.route as route
 import apollo.config.objects.metaswitch.evpnevi as evpnevi
 import apollo.config.objects.metaswitch.evpnevirt as evpnevirt
 import apollo.config.utils as utils
+import apollo.test.utils.oper as oper
 
 import subnet_pb2 as subnet_pb2
 
@@ -189,6 +191,10 @@ class SubnetObject(base.ConfigObjectBase):
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
         return
 
+    def PostCreateCallback(self, spec):
+        InterfaceClient.UpdateHostInterfaces(self.Node, [ self ])
+        return True
+
     def UpdateAttributes(self):
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
         if utils.IsDol():
@@ -354,6 +360,23 @@ class SubnetObject(base.ConfigObjectBase):
     def ValidateYamlSpec(self, spec):
         if utils.GetYamlSpecAttr(spec) != self.GetKey():
             return False
+        return True
+
+    def VerifyDepsOperSt(self, op):
+        # validate if all learnt objects are deleted when subnet is deleted
+        if op == 'Delete' and EzAccessStoreClient[self.Node].IsDeviceLearningEnabled():
+            num_learn_mac_in_subnet = oper.GetNumLearnMac(self.Node, self)
+            num_vnic_in_subnet = oper.GetNumVnic(self.Node, self)
+            num_learn_ip_in_subnet = oper.GetNumLearnIp(self.Node, self)
+            total_learn_ip = oper.GetNumLearnIp(self.Node)
+            total_lmappings = oper.GetNumLocalMapping(self.Node)
+            if num_learn_mac_in_subnet != 0 or num_vnic_in_subnet != 0 \
+                or num_learn_ip_in_subnet != 0 or total_lmappings != total_learn_ip:
+                #evaluating total lmapping against total learn ip since, lmapping does not support a query based on subnet
+                logger.error(f"Failed: num_learn_mac_in_subnet:{num_learn_mac_in_subnet} num_vnic_in_subnet:{num_vnic_in_subnet}"
+                             f" num_learn_ip_in_subnet:{num_learn_ip_in_subnet} total_learn_ip:{total_learn_ip} total_lmappings:{total_lmappings}")
+                return False
+        logger.info(f"VerifyDepsOperSt succeeded for obj {self}")
         return True
 
     def GetNaclId(self, direction, af=utils.IP_VERSION_4):

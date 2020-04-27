@@ -7,6 +7,8 @@ import iota.test.apulu.config.api as config_api
 import apollo.config.objects.metaswitch.bgp_peer as bgp_peer
 import iota.test.utils.traffic as traffic_utils
 import iota.test.apulu.utils.flow as flow_utils
+import iota.test.apulu.utils.connectivity as conn_utils
+import iota.test.utils.arping as arp_utils
 from iota.test.apulu.utils.portflap import *
 from iota.test.apulu.utils.hostflap import *
 
@@ -82,4 +84,14 @@ def Teardown(tc):
         rs = config_api.RestoreObjects('Delete', tc.selected_objs)
         if rs is False:
             api.Logger.error(f"Teardown failed to restore objs from Delete operation: {rs}")
+        h2h_test = getattr(tc.args, "h2h_test", False)
+        if h2h_test:
+            if not arp_utils.SendGratArp(api.GetWorkloads()):
+                api.Logger.error(f"Teardown failed to send ARP to all workloads")
+            else:
+                api.Logger.info("Running overlay connectivity test")
+                cmd_cookies, resp = conn_utils.TriggerConnectivityTestAll(proto="icmp")
+                ret = conn_utils.VerifyConnectivityTest("icmp", cmd_cookies, resp)
+                if ret != api.types.status.SUCCESS:
+                    api.Logger.error("Connectivity verification failed.")
     return api.types.status.SUCCESS

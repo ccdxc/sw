@@ -27,7 +27,10 @@ class Endpoint:
         self.ip_addresses = ip_addresses
         self.node_name = vnic_inst.Node
         self.has_public_ip = vnic_inst.HasPublicIp
-        self.interface = GetObjClient('interface').GetHostIf(vnic_inst.Node, vnic_inst.SUBNET.HostIfIdx).GetInterfaceName()
+        if api.GlobalOptions.dryrun:
+            self.interface = 'dryrun'
+        else:
+            self.interface = GetObjClient('interface').GetHostIf(vnic_inst.Node, vnic_inst.SUBNET.HostIfIdx).GetInterfaceName()
         self.vnic = vnic_inst
 
 class VnicRoute:
@@ -243,14 +246,14 @@ def ProcessObjectsByOperation(oper, select_objs):
         if not getattr(obj, 'Read')():
             api.Logger.error(f"{oper} failed for object: {obj}")
             res = api.types.status.FAILURE
+        if oper == 'Delete':
+            if not getattr(obj, 'VerifyDepsOperSt')(oper):
+                api.Logger.error(f"Dependent object oper state not as expected after {oper} on {obj}")
+                res = api.types.status.FAILURE
     return res
 
 def FindVnicObjectByWorkload(wl):
-    vnics = vnic.client.Objects(wl.node_name)
-    for vnic_ in vnics:
-        if vnic_.MACAddr.get() == wl.mac_address:
-            return vnic_
-    return None
+    return wl.vnic
 
 def __getLocalMappingObjectByWorkload(workload):
     lmapping_ = []

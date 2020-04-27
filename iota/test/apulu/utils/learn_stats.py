@@ -4,28 +4,13 @@ import enum
 import iota.harness.api as api
 import iota.test.apulu.utils.learn as learn_utils
 import iota.test.apulu.utils.pdsctl as pdsctl
+import learn_pb2 as learn_pb2
+
 
 __nodes = api.GetNaplesHostnames()
 __dirty = True
 __stdout = {}
 __store = {}
-
-class LearnEventType(enum.IntEnum):
-    LEARN_EVENT_NONE              = 0
-    LEARN_EVENT_NEW_LOCAL         = 1
-    LEARN_EVENT_NEW_REMOTE        = 2
-    LEARN_EVENT_L2L_MOVE          = 3
-    LEARN_EVENT_R2L_MOVE          = 4
-    LEARN_EVENT_L2R_MOVE          = 5
-    LEARN_EVENT_R2R_MOVE          = 6
-    LEARN_EVENT_DELETE            = 7
-
-class LearnApiOpType(enum.IntEnum):
-    LEARN_API_OP_NONE             = 0
-    LEARN_API_OP_CREATE           = 1
-    LEARN_API_OP_DELETE           = 2
-    LEARN_API_OP_UPDATE           = 3
-
 
 def __eventtype_list_to_dict(obj, event_name):
     obj[event_name] = { e['eventtype'] : e['count'] for e in obj[event_name] }
@@ -70,7 +55,7 @@ def Fetch():
     __store = learn_utils.GetLearnStatistics(__nodes)
     __normalize_stats()
     for node in __nodes:
-        _, resp = pdsctl.ExecutePdsctlCommand(node, "show learn statistics", yaml=False)
+        _, resp = pdsctl.ExecutePdsctlCommand(node, "show learn statistics", yaml=False, print_op=False)
         __stdout[node] = resp
     __dirty = False
 
@@ -79,120 +64,120 @@ def Fetch():
 #
 def GetNewLocalMacLearnEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['maclearnevents'][LearnEventType.LEARN_EVENT_NEW_LOCAL]
+    return __store[node]['maclearnevents'][learn_pb2.LEARN_EVENT_NEW_LOCAL]
 
 def GetNewRemoteMacLearnEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['maclearnevents'][LearnEventType.LEARN_EVENT_NEW_REMOTE]
+    return __store[node]['maclearnevents'][learn_pb2.LEARN_EVENT_NEW_REMOTE]
 
 def GetL2LMacMoveEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['maclearnevents'][LearnEventType.LEARN_EVENT_L2L_MOVE]
+    return __store[node]['maclearnevents'][learn_pb2.LEARN_EVENT_L2L_MOVE]
 
 def GetR2LMacMoveEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['maclearnevents'][LearnEventType.LEARN_EVENT_R2L_MOVE]
+    return __store[node]['maclearnevents'][learn_pb2.LEARN_EVENT_R2L_MOVE]
 
 def GetL2RMacMoveEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['maclearnevents'][LearnEventType.LEARN_EVENT_L2R_MOVE]
+    return __store[node]['maclearnevents'][learn_pb2.LEARN_EVENT_L2R_MOVE]
 
 def GetR2RMacMoveEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['maclearnevents'][LearnEventType.LEARN_EVENT_R2R_MOVE]
+    return __store[node]['maclearnevents'][learn_pb2.LEARN_EVENT_R2R_MOVE]
 
 def GetRemoteMacDeleteEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['maclearnevents'][LearnEventType.LEARN_EVENT_DELETE]
+    return __store[node]['maclearnevents'][learn_pb2.LEARN_EVENT_DELETE]
 
 #
 # IP learn and move counters
 #
 def GetNewLocalIpLearnEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['iplearnevents'][LearnEventType.LEARN_EVENT_NEW_LOCAL]
+    return __store[node]['iplearnevents'][learn_pb2.LEARN_EVENT_NEW_LOCAL]
 
 def GetNewRemoteIpLearnEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['iplearnevents'][LearnEventType.LEARN_EVENT_NEW_REMOTE]
+    return __store[node]['iplearnevents'][learn_pb2.LEARN_EVENT_NEW_REMOTE]
 
 def GetL2LIpMoveEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['iplearnevents'][LearnEventType.LEARN_EVENT_L2L_MOVE]
+    return __store[node]['iplearnevents'][learn_pb2.LEARN_EVENT_L2L_MOVE]
 
 def GetR2LIpMoveEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['iplearnevents'][LearnEventType.LEARN_EVENT_R2L_MOVE]
+    return __store[node]['iplearnevents'][learn_pb2.LEARN_EVENT_R2L_MOVE]
 
 def GetL2RIpMoveEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['iplearnevents'][LearnEventType.LEARN_EVENT_L2R_MOVE]
+    return __store[node]['iplearnevents'][learn_pb2.LEARN_EVENT_L2R_MOVE]
 
 def GetR2RIpMoveEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['iplearnevents'][LearnEventType.LEARN_EVENT_R2R_MOVE]
+    return __store[node]['iplearnevents'][learn_pb2.LEARN_EVENT_R2R_MOVE]
 
 def GetRemoteIpDeleteEventCount(node):
     if __dirty: Fetch()
-    return __store[node]['iplearnevents'][LearnEventType.LEARN_EVENT_DELETE]
+    return __store[node]['iplearnevents'][learn_pb2.LEARN_EVENT_DELETE]
 
 #
 # VNIC API
 #
 def GetVnicCreateApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['vnicops'][LearnApiOpType.LEARN_API_OP_CREATE]
+    return __store[node]['vnicops'][learn_pb2.LEARN_API_OP_CREATE]
 
 def GetVnicDeleteApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['vnicops'][LearnApiOpType.LEARN_API_OP_DELETE]
+    return __store[node]['vnicops'][learn_pb2.LEARN_API_OP_DELETE]
 
 def GetVnicUpdateApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['vnicops'][LearnApiOpType.LEARN_API_OP_UPDATE]
+    return __store[node]['vnicops'][learn_pb2.LEARN_API_OP_UPDATE]
 
 #
 # Local IP mapping API
 #
 def GetLocalIpMappingCreateEventApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['locall3mappings'][LearnApiOpType.LEARN_API_OP_CREATE]
+    return __store[node]['locall3mappings'][learn_pb2.LEARN_API_OP_CREATE]
 
 def GetLocalIpMappingDeleteEventApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['locall3mappings'][LearnApiOpType.LEARN_API_OP_DELETE]
+    return __store[node]['locall3mappings'][learn_pb2.LEARN_API_OP_DELETE]
 
 def GetLocalIpMappingUpdateApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['locall3mappings'][LearnApiOpType.LEARN_API_OP_UPDATE]
+    return __store[node]['locall3mappings'][learn_pb2.LEARN_API_OP_UPDATE]
 
 #
 # Remote MAC mapping API
 #
 def GetRemoteMacMappingCreateApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['remotel2mappings'][LearnApiOpType.LEARN_API_OP_CREATE]
+    return __store[node]['remotel2mappings'][learn_pb2.LEARN_API_OP_CREATE]
 
 def GetRemoteMacMappingDeleteApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['remotel2mappings'][LearnApiOpType.LEARN_API_OP_DELETE]
+    return __store[node]['remotel2mappings'][learn_pb2.LEARN_API_OP_DELETE]
 
 def GetRemoteMacMappingUpdateApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['remotel2mappings'][LearnApiOpType.LEARN_API_OP_UPDATE]
+    return __store[node]['remotel2mappings'][learn_pb2.LEARN_API_OP_UPDATE]
 
 #
 # Remote IP mapping API
 #
 def GetRemoteIpMappingCreateApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['remotel3mappings'][LearnApiOpType.LEARN_API_OP_CREATE]
+    return __store[node]['remotel3mappings'][learn_pb2.LEARN_API_OP_CREATE]
 
 def GetRemoteIpMappingDeleteApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['remotel3mappings'][LearnApiOpType.LEARN_API_OP_DELETE]
+    return __store[node]['remotel3mappings'][learn_pb2.LEARN_API_OP_DELETE]
 
 def GetRemoteIpMappingUpdateApiCount(node):
     if __dirty: Fetch()
-    return __store[node]['remotel3mappings'][LearnApiOpType.LEARN_API_OP_UPDATE]
+    return __store[node]['remotel3mappings'][learn_pb2.LEARN_API_OP_UPDATE]
 

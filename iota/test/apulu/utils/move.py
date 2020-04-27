@@ -1,14 +1,13 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.harness.infra.store as store
-
 import iota.test.apulu.config.api as config_api
 import iota.test.apulu.config.bringup_workloads as wl_api
 import iota.test.utils.arping as arp
 import iota.test.apollo.config.utils as utils
-
 import iota.harness.infra.utils.parser as parser
-
+import iota.test.apulu.utils.connectivity as conn_utils
+import iota.test.apulu.utils.learn as learn_utils
 import infra.common.objects as objects
 
 lmap_client   = config_api.GetObjClient('lmapping')
@@ -162,7 +161,6 @@ def MoveEpMACEntry(workload, target_subnet, ep_mac_addr, ep_ip_prefixes):
 
     # Update vnic information from target subnet
     vnic_client.ChangeMacAddr(vnic, objects.TemplateFieldObject(f"macaddr/{ep_mac_addr}"))
-    vnic.Vnid = target_subnet.Vnid
 
     # Move vnic to target subnet
     vnic_client.ChangeSubnet(vnic, target_subnet)
@@ -179,7 +177,10 @@ def MoveEpMACEntry(workload, target_subnet, ep_mac_addr, ep_ip_prefixes):
     workload.ip_address = __ip_from_prefix(ep_ip_prefixes[0])
     workload.sec_ip_prefixes = ep_ip_prefixes[1:]
     workload.sec_ip_addresses = [ __ip_from_prefix(prefix) for prefix in ep_ip_prefixes[1:] ]
-    workload.parent_interface = intf_client.GetHostIf(target_subnet.Node, target_subnet.HostIfIdx).GetInterfaceName()
+    if api.GlobalOptions.dryrun:
+        workload.parent_interface = 'dryrun'
+    else:
+        workload.parent_interface = intf_client.GetHostIf(target_subnet.Node, target_subnet.HostIfIdx).GetInterfaceName()
     workload.interface = workload.parent_interface
     workload.mac_address = vnic.MACAddr.get()
     workload.vlan = vnic.VlanId
@@ -194,7 +195,7 @@ def MoveEpMACEntry(workload, target_subnet, ep_mac_addr, ep_ip_prefixes):
     __add_routes(workload)
 
     # Send Grat ARP
-    arp.SendGratArp(workload)
+    arp.SendGratArp([workload])
 
     return api.types.status.SUCCESS
 
@@ -229,6 +230,19 @@ def MoveEpIPEntry(src_workload, dst_workload, ep_ip_prefixes):
         return ret
 
     # Send Grat ARP
-    arp.SendGratArp(dst_workload)
+    arp.SendGratArp([dst_workload])
 
     return ret
+
+def ValidateEPMove():
+    if not learn_utils.ValidateLearnInfo():
+        return api.types.status.FAILURE
+
+    api.Logger.info("Running h2h connectivity test")
+    cmd_cookies, resp = conn_utils.TriggerConnectivityTestAll(proto="icmp")
+    ret = conn_utils.VerifyConnectivityTest("icmp", cmd_cookies, resp)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Connectivity verification failed.")
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS

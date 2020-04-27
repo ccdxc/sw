@@ -9,7 +9,7 @@ testcases:
         testcase: testcases.api_crud.underlay_ping
         stress  : True
         args    :
-            type: remote_only
+            h2h_test : True
         iterators :
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
@@ -23,8 +23,6 @@ testcases:
     -   name    : API_CRUD_For_Update_Ping_Traffic
         testcase: testcases.api_crud.underlay_ping
         stress  : True
-        args    :
-            type: remote_only
         iterators :
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
@@ -38,7 +36,6 @@ testcases:
         testcase: testcases.api_crud.underlay_ping
         stress  : True
         args    :
-            type: remote_only
             ping_count: 200
             ping_interval: 0.1
         iterators :
@@ -52,8 +49,6 @@ testcases:
     -   name    : 2_Object_Idempotency_Ping_Traffic
         testcase: testcases.api_crud.underlay_ping
         stress  : True
-        args    :
-            type: remote_only
         iterators :
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
@@ -64,8 +59,6 @@ testcases:
     -   name    : 3_Object_Idempotency_Ping_Traffic
         testcase: testcases.api_crud.underlay_ping
         stress  : True
-        args    :
-            type: remote_only
         iterators :
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
