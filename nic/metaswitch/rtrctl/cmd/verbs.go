@@ -21,7 +21,16 @@ var showCmd = &cobra.Command{
 	Long:  "Show commands",
 }
 
+// clearCmd represents the clear command
+var clearCmd = &cobra.Command{
+	Use:   "clear",
+	Short: "Clear commands",
+	Long:  "Clear commands",
+}
+
 func init() {
 	rootCmd.AddCommand(showCmd)
-	impl.RegisterNodes(&impl.CLIParams{GRPCPort: pegasusGRPCDefaultPort}, showCmd)
+	rootCmd.AddCommand(clearCmd)
+	impl.RegisterShowNodes(&impl.CLIParams{GRPCPort: pegasusGRPCDefaultPort}, showCmd)
+	impl.RegisterClearNodes(&impl.CLIParams{GRPCPort: pegasusGRPCDefaultPort}, clearCmd)
 }

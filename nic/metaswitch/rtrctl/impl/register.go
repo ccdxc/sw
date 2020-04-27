@@ -11,8 +11,24 @@ type CLIParams struct {
 
 var cliParams *CLIParams
 
-// RegisterNodes registers all the CLI nodes
-func RegisterNodes(params *CLIParams, base *cobra.Command) {
+// RegisterClearNodes registers all the CLI nodes
+func RegisterClearNodes(params *CLIParams, base *cobra.Command) {
+	cliParams = params
+
+	//bgp commands
+	base.AddCommand(bgpClearCmd)
+	bgpClearCmd.PersistentFlags().StringVarP(&laddr, "local-addr", "l", "", "Local Address IP")
+	bgpClearCmd.PersistentFlags().StringVarP(&paddr, "peer-addr", "p", "", "Peer Address IP")
+	bgpClearCmd.PersistentFlags().StringVarP(&option, "option", "o", "", "Option can be either hard or refresh_in or refresh_out or refresh_both")
+	bgpClearCmd.PersistentFlags().StringVarP(&afi, "afi", "a", "", "AFI can be ipv4 or l2vpn")
+	bgpClearCmd.PersistentFlags().StringVarP(&safi, "safi", "s", "", "SAFI can be unicast or evpn")
+	bgpClearCmd.MarkFlagRequired("local-addr")
+	bgpClearCmd.MarkFlagRequired("peer-addr")
+	bgpClearCmd.MarkFlagRequired("option")
+}
+
+// RegisterShowNodes registers all the CLI nodes
+func RegisterShowNodes(params *CLIParams, base *cobra.Command) {
 	cliParams = params
 
 	//bgp commands

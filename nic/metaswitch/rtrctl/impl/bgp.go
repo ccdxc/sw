@@ -15,7 +15,16 @@ import (
 
 	types "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/nic/metaswitch/rtrctl/utils"
+	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 )
+
+var bgpClearCmd = &cobra.Command{
+	Use:   "bgp",
+	Short: "clear BGP related information",
+	Long:  "clear BGP related information",
+	Args:  bgpClearCmdHandlerValidator,
+	RunE:  bgpClearCmdHandler,
+}
 
 var bgpShowCmd = &cobra.Command{
 	Use:   "bgp",
@@ -603,5 +612,133 @@ func bgpRouteMapShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	return nil
+}
+
+var (
+	option string
+	laddr  string
+	paddr  string
+	afi    string
+	safi   string
+)
+
+func bgpClearCmdHandlerValidator(cmd *cobra.Command, args []string) (err error) {
+	if vldtor.IPAddr(laddr) != nil {
+		err = fmt.Errorf("Invalid local address %v", laddr)
+		return
+	}
+	if vldtor.IPAddr(paddr) != nil {
+		err = fmt.Errorf("Invalid peer address %v", paddr)
+		return
+	}
+	if !(option == "hard" || option == "refresh_in" || option == "refresh_out" || option == "refresh_both") {
+		err = fmt.Errorf("Invalid option value passed %v. Option can be hard or refresh_in or refresh_out or refresh_both", option)
+		return
+	}
+	if len(afi) != 0 && !(afi == "ipv4" || afi == "l2vpn") {
+		err = fmt.Errorf("AFI can only be either ipv4 or l2vpn")
+		return
+	}
+	if len(safi) != 0 && !(safi == "unicast" || safi == "evpn") {
+		err = fmt.Errorf("SAFI can only be either unicast or evpn")
+		return
+	}
+	if (len(afi) != 0 && len(safi) == 0) || (len(afi) == 0 && len(safi) != 0) {
+		err = fmt.Errorf("AFI and SAFI have to be provided together")
+		return
+	}
+	return nil
+}
+
+func bgpClearCmdHandler(cmd *cobra.Command, args []string) error {
+	c, err := utils.CreateNewGRPCClient(cliParams.GRPCPort)
+	if err != nil {
+		return errors.New("Could not connect to the PDS. Is PDS Running?")
+	}
+	defer c.Close()
+	client := types.NewBGPSvcClient(c)
+
+	lip := utils.IPAddrStrToPdsIPAddr(laddr)
+	pip := utils.IPAddrStrToPdsIPAddr(paddr)
+
+	var opt types.BGPClearRouteOptions
+	var af types.BGPAfi
+	var saf types.BGPSafi
+
+	switch option {
+	case "hard":
+		opt = types.BGPClearRouteOptions_BGP_CLEAR_ROUTE_HARD
+	case "refresh_in":
+		opt = types.BGPClearRouteOptions_BGP_CLEAR_ROUTE_REFRESH_IN
+	case "refresh_out":
+		opt = types.BGPClearRouteOptions_BGP_CLEAR_ROUTE_REFRESH_OUT
+	case "refresh_both":
+		opt = types.BGPClearRouteOptions_BGP_CLEAR_ROUTE_REFRESH_BOTH
+	}
+
+	af = types.BGPAfi_BGP_AFI_NONE
+	switch afi {
+	case "ipv4":
+		af = types.BGPAfi_BGP_AFI_IPV4
+	case "l2vpn":
+		af = types.BGPAfi_BGP_AFI_L2VPN
+	}
+
+	saf = types.BGPSafi_BGP_SAFI_NONE
+	switch safi {
+	case "unicast":
+		saf = types.BGPSafi_BGP_SAFI_UNICAST
+	case "evpn":
+		saf = types.BGPSafi_BGP_SAFI_EVPN
+	}
+	if af == types.BGPAfi_BGP_AFI_NONE {
+		req := &types.BGPClearRouteRequest{
+			Option: opt,
+			PeerOrPeeraf: &types.BGPClearRouteRequest_Peer{
+				Peer: &types.BGPPeerKeyHandle{
+					IdOrKey: &types.BGPPeerKeyHandle_Key{
+						Key: &types.BGPPeerKey{
+							LocalAddr: lip,
+							PeerAddr:  pip,
+						},
+					},
+				},
+			},
+		}
+		respMsg, err := client.BGPClearRoute(context.Background(), req)
+		if err != nil {
+			return errors.New("BGP ClearRoute failed")
+		}
+
+		if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+			fmt.Println(respMsg.ApiStatus)
+			return errors.New("Operation failed with error")
+		}
+	} else {
+		req := &types.BGPClearRouteRequest{
+			Option: opt,
+			PeerOrPeeraf: &types.BGPClearRouteRequest_PeerAf{
+				PeerAf: &types.BGPPeerAfKeyHandle{
+					IdOrKey: &types.BGPPeerAfKeyHandle_Key{
+						Key: &types.BGPPeerAfKey{
+							LocalAddr: lip,
+							PeerAddr:  pip,
+							Afi:       af,
+							Safi:      saf,
+						},
+					},
+				},
+			},
+		}
+		respMsg, err := client.BGPClearRoute(context.Background(), req)
+		if err != nil {
+			return errors.New("BGP ClearRoute failed")
+		}
+
+		if respMsg.ApiStatus != types.ApiStatus_API_STATUS_OK {
+			return errors.New("Operation failed with error")
+		}
+	}
 	return nil
 }
