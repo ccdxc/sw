@@ -134,6 +134,7 @@
             <span fxFlex="none" fxLayout="row">
               <span class="newmirrorsession-stripvlan-label">Strip VLAN</span>
               <p-inputSwitch class="newmirrorsession-stripvlan-toggle" appendTo="body"
+                             [appErrorTooltip]="'Remove VLAN info from mirror packets'"
                              formControlName="strip-vlan-hdr"></p-inputSwitch>
             </span>
             <mat-icon fxFlex="nogrow" class="global-trash-button newmirrorsession-delete"
