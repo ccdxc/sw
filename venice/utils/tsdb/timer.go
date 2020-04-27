@@ -23,22 +23,27 @@ import (
 func establishConn() bool {
 	for {
 		var err error
-		rpckitOpts := make([]rpckit.Option, 0)
-		if global.opts.ResolverClient != nil {
-			rpckitOpts = append(rpckitOpts, rpckit.WithBalancer(balancer.New(global.opts.ResolverClient)))
-		}
-		rpckitOpts = append(rpckitOpts, rpckit.WithLoggerEnabled(false))
 
-		if global.opts.Collector != "" {
-			if global.rpcClient != nil {
-				global.rpcClient.Close()
-				global.rpcClient = nil
+		if global.opts.ResolverClient != nil {
+			rpckitOpts := make([]rpckit.Option, 0)
+
+			bl := balancer.New(global.opts.ResolverClient)
+			rpckitOpts = append(rpckitOpts, rpckit.WithBalancer(bl))
+			rpckitOpts = append(rpckitOpts, rpckit.WithLoggerEnabled(false))
+
+			if global.opts.Collector != "" {
+				if global.rpcClient != nil {
+					global.rpcClient.Close()
+					global.rpcClient = nil
+				}
+				global.rpcClient, err = rpckit.NewRPCClient(global.opts.ClientName, global.opts.Collector, rpckitOpts...)
+				if err == nil {
+					break
+				}
+
+				bl.Close()
+				log.Errorf("[%s]error establishing the connection to %s, %s", global.opts.ClientName, global.opts.Collector, err)
 			}
-			global.rpcClient, err = rpckit.NewRPCClient(global.opts.ClientName, global.opts.Collector, rpckitOpts...)
-			if err == nil {
-				break
-			}
-			log.Errorf("[%s]error establishing the connection to %s, %s", global.opts.ClientName, global.opts.Collector, err)
 		}
 
 		select {

@@ -3,11 +3,16 @@
 package services
 
 import (
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
+	"github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/nodemetrics"
+	mr "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -24,16 +29,28 @@ func TestMetricsService(t *testing.T) {
 	dbName = tmock.DbName
 	nodemetrics.SetMinimumFrequency(testSendInterval)
 
-	ms := NewMetricsService("testNode", "testCluster", nil) // no resolver
-	Assert(t, !ms.IsRunning(), "MS should not be running before Start() is called")
-
-	srv, err := rpckit.NewRPCServer("fake-collector", ":0", rpckit.WithLoggerEnabled(true))
+	srv, err := rpckit.NewRPCServer(globals.Collector, ":0", rpckit.WithLoggerEnabled(true))
 	AssertOk(t, err, "Error creating collector server")
 	collector := &tmock.Collector{}
 	metric.RegisterMetricApiServer(srv.GrpcServer, collector)
 	srv.Start()
+	v := strings.Split(srv.GetListenURL(), ":")
+	mc := mr.New()
 
-	ms.(*metricsService).tsdbOpts.Collector = srv.GetListenURL()
+	mc.AddServiceInstance(&types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Collector,
+		},
+		Service: globals.Collector,
+		URL:     "localhost:" + v[len(v)-1],
+	})
+
+	ms := NewMetricsService("testNode", "testCluster", mc) // no resolver
+	Assert(t, !ms.IsRunning(), "MS should not be running before Start() is called")
+
 	err = ms.Start()
 	AssertOk(t, err, "Error starting metrics service")
 	Assert(t, ms.IsRunning(), "MS should be running after Start() is called")

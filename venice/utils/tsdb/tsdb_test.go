@@ -8,8 +8,13 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/globals"
+	mr "github.com/pensando/sw/venice/utils/resolver/mock"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
@@ -27,7 +32,6 @@ const (
 
 type testSuite struct {
 	rpcServer    *rpckit.RPCServer
-	rpcClient    *rpckit.RPCClient
 	context      context.Context
 	cancelFunc   context.CancelFunc
 	metricServer *mock.Collector
@@ -57,29 +61,38 @@ type endpointMetric struct {
 }
 
 func Setup(startLocalServer bool) error {
-	s, err := rpckit.NewRPCServer("fake-collector", ":0", rpckit.WithLoggerEnabled(false))
+	s, err := rpckit.NewRPCServer(globals.Collector, ":0", rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		return fmt.Errorf("failed to start grpc server: %v", err)
 	}
 	metricServer := &mock.Collector{}
 	metric.RegisterMetricApiServer(s.GrpcServer, metricServer)
 	s.Start()
-	rpcClient, err := rpckit.NewRPCClient("collector-client", s.GetListenURL(), rpckit.WithLoggerEnabled(false))
-	if err != nil {
-		return fmt.Errorf("fail to dial: %v", err)
-	}
 	nctx, cancel := context.WithCancel(context.Background())
 	ts = &testSuite{
 		rpcServer:    s,
-		rpcClient:    rpcClient,
 		context:      nctx,
 		cancelFunc:   cancel,
 		metricServer: metricServer,
 	}
 
+	v := strings.Split(s.GetListenURL(), ":")
+	mc := mr.New()
+	mc.AddServiceInstance(&types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Collector,
+		},
+		Service: globals.Collector,
+		URL:     "localhost:" + v[len(v)-1],
+	})
+
 	options := &Opts{
 		ClientName:       "tsdb-test",
-		Collector:        ts.rpcServer.GetListenURL(),
+		ResolverClient:   mc,
+		Collector:        globals.Collector,
 		SendInterval:     testSendInterval,
 		DBName:           "objMetrics",
 		LocalPort:        0,
@@ -1102,7 +1115,6 @@ func TestVeniceObjPerf(t *testing.T) {
 func TearDown() {
 	ts.cancelFunc()
 	ts.rpcServer.Stop()
-	ts.rpcClient.Close()
 }
 
 func httpGet(t *testing.T, url string, toIf interface{}) {
