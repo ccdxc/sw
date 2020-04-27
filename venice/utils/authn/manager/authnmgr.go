@@ -110,3 +110,12 @@ func (authnmgr *AuthenticationManager) ValidateToken(token string) (*auth.User, 
 func (authnmgr *AuthenticationManager) GetAuthGetter() AuthGetter {
 	return authnmgr.AuthGetter
 }
+
+// ParseErrors returns a list of errors from aggregate error returned by Authenticate call
+func (authnmgr *AuthenticationManager) ParseErrors(err error) []error {
+	aggregate, ok := err.(k8serrors.Aggregate)
+	if !ok {
+		return []error{err}
+	}
+	return aggregate.Errors()
+}

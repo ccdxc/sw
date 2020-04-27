@@ -32,11 +32,9 @@ func TestStopStart(t *testing.T) {
 	// create user "test2"
 	MustCreateTestUser(apicl, "test2", testPassword, tenant)
 	defer DeleteUser(apicl, "test2", tenant)
-	// check AuthGetter should still get "test2"
-	AssertEventually(t, func() (bool, interface{}) {
-		user, ok := authGetter.GetUser("test2", tenant)
-		return ok && user.Name == "test2" && user.Tenant == tenant, nil
-	}, fmt.Sprintf("[%v] user not found", "test2"))
+	// check AuthGetter should not get "test2"
+	_, ok := authGetter.GetUser("test2", tenant)
+	Assert(t, !ok, "test2 user should not be in authgetter cache")
 	// start the watcher again
 	authGetter.Start()
 	AssertEventually(t, func() (bool, interface{}) {

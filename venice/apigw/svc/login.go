@@ -36,6 +36,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/audit"
 	"github.com/pensando/sw/venice/utils/authn/manager"
+	passwdauth "github.com/pensando/sw/venice/utils/authn/password"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -124,79 +125,105 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 	s.authnMgr = authnMgr
 	// create PermissionGetter
 	s.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, s.rslvr)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			b := balancer.New(s.rslvr)
+			client, err := apiclient.NewGrpcAPIClient(globals.APIGw, s.apiserver, s.logger, rpckit.WithBalancer(b))
+			if err == nil {
+				defer func() {
+					go func() {
+						<-ctx.Done()
+						if cerr := client.Close(); cerr != nil {
+							s.logger.ErrorLog("msg", "Failed to close conn on Done()", "addr", s.apiserver, "err", cerr)
+						}
+					}()
+				}()
+				router := mux.NewRouter()
+				router.Path(login.LoginURLPath).Methods("POST").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					body, err := ioutil.ReadAll(http.MaxBytesReader(w, req.Body, maxRequestBytes))
+					if err != nil {
+						s.logger.Errorf("failed to read body from login request: %v", err)
+						s.httpErrorHandler(w, req, fmt.Sprintf("Failed to read body from login request: %s", err.Error()), http.StatusRequestEntityTooLarge)
+						return
+					}
 
-	router := mux.NewRouter()
-	router.Path(login.LoginURLPath).Methods("POST").HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		body, err := ioutil.ReadAll(http.MaxBytesReader(w, req.Body, maxRequestBytes))
-		if err != nil {
-			s.logger.Errorf("failed to read body from login request: %v", err)
-			s.httpErrorHandler(w, req, fmt.Sprintf("Failed to read body from login request: %s", err.Error()), http.StatusRequestEntityTooLarge)
-			return
-		}
+					cred := &auth.PasswordCredential{}
+					if err := json.Unmarshal(body, cred); err != nil {
+						s.logger.Errorf("failed to unmarshal credentials from request body: %v", err)
+						s.httpErrorHandler(w, req, fmt.Sprintf("Failed to unmarshal credentials from request body: %s", err.Error()), http.StatusBadRequest)
+						return
+					}
 
-		cred := &auth.PasswordCredential{}
-		if err := json.Unmarshal(body, cred); err != nil {
-			s.logger.Errorf("failed to unmarshal credentials from request body: %v", err)
-			s.httpErrorHandler(w, req, fmt.Sprintf("Failed to unmarshal credentials from request body: %s", err.Error()), http.StatusBadRequest)
-			return
-		}
+					// authenticate user
+					user, err := s.login(ctx, cred)
+					defer func() {
+						if err != nil {
+							objRef := &auth.User{}
+							objRef.Defaults("all")
+							objRef.Tenant = cred.Tenant
+							objRef.Name = cred.Username
+							recorder.Event(eventtypes.LOGIN_FAILED, fmt.Sprintf("Unsuccessful login attempt by user [%s|%s] connecting from client IPs [%v]", cred.Tenant, cred.Username, getClientIPs(req)), objRef)
+						}
+					}()
+					switch err {
+					case ErrInternal:
+						s.httpErrorHandler(w, req, err.Error(), http.StatusInternalServerError)
+						return
+					case context.DeadlineExceeded, passwdauth.ErrAPIServerClientNotInitialized, passwdauth.ErrAPIServerUnavailable: // thrown when API server is unreachable because cluster lost its quorum
+						s.httpErrorHandler(w, req, err.Error(), http.StatusServiceUnavailable)
+						return
+					case nil:
+						// do nothing
+					default:
+						s.httpErrorHandler(w, req, "Invalid username/password", http.StatusUnauthorized)
+						return
+					}
 
-		// authenticate user
-		user, err := s.login(ctx, cred)
-		defer func() {
-			if err != nil {
-				objRef := &auth.User{}
-				objRef.Defaults("all")
-				objRef.Tenant = cred.Tenant
-				objRef.Name = cred.Username
-				recorder.Event(eventtypes.LOGIN_FAILED, fmt.Sprintf("Unsuccessful login attempt by user [%s|%s] connecting from client IPs [%v]", cred.Tenant, cred.Username, getClientIPs(req)), objRef)
+					// update user, create CSRF and session token
+					user, sessionToken, csrfToken, exp, err := s.postLogin(ctx, client, user, cred.Password)
+					switch err {
+					case ErrUsernameConflict:
+						s.httpErrorHandler(w, req, fmt.Sprintf("%s|%s %s", user.Tenant, user.Name, err.Error()), http.StatusConflict)
+						return
+					case context.DeadlineExceeded: // thrown when API server is unreachable because cluster lost its quorum
+						s.httpErrorHandler(w, req, err.Error(), http.StatusServiceUnavailable)
+						return
+					case nil:
+						// do nothing
+					default:
+						s.httpErrorHandler(w, req, err.Error(), http.StatusInternalServerError)
+						return
+					}
+					// remove user password
+					user.Spec.Password = ""
+					extReqID := getExternalRequestID(req)
+					s.audit(user, getClientIPs(req), req.RequestURI, extReqID)
+					w.Header().Set(apigw.GrpcMDCsrfHeader, csrfToken)
+					// set cookie
+					http.SetCookie(w, createCookie(sessionToken, exp))
+					w.WriteHeader(http.StatusOK)
+					if err := json.NewEncoder(w).Encode(user); err != nil {
+						s.logger.Errorf("failed to send user json: %v", err)
+						return
+					}
+					s.logger.Infof("user [%s|%s] successfully authenticated", user.Tenant, user.Name)
+				})
+				m.Handle(login.LoginURLPath, router)
+				s.logger.InfoLog("msg", "registered service loginV1")
+				return
 			}
-		}()
-		switch err {
-		case ErrInternal:
-			s.httpErrorHandler(w, req, err.Error(), http.StatusInternalServerError)
-			return
-		case context.DeadlineExceeded: // thrown when API server is unreachable because cluster lost its quorum
-			s.httpErrorHandler(w, req, err.Error(), http.StatusServiceUnavailable)
-			return
-		case nil:
-			// do nothing
-		default:
-			s.httpErrorHandler(w, req, "Invalid username/password", http.StatusUnauthorized)
-			return
+			s.logger.ErrorLog("msg", fmt.Sprintf("failed to register login service, error connecting to gRPC server [%s]: %v", s.apiserver, err))
+			b.Close()
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(5 * time.Second):
+			}
 		}
-
-		// update user, create CSRF and session token
-		user, sessionToken, csrfToken, exp, err := s.postLogin(ctx, user, cred.Password)
-		switch err {
-		case ErrUsernameConflict:
-			s.httpErrorHandler(w, req, fmt.Sprintf("%s|%s %s", user.Tenant, user.Name, err.Error()), http.StatusConflict)
-			return
-		case context.DeadlineExceeded: // thrown when API server is unreachable because cluster lost its quorum
-			s.httpErrorHandler(w, req, err.Error(), http.StatusServiceUnavailable)
-			return
-		case nil:
-			// do nothing
-		default:
-			s.httpErrorHandler(w, req, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		// remove user password
-		user.Spec.Password = ""
-		extReqID := getExternalRequestID(req)
-		s.audit(user, getClientIPs(req), req.RequestURI, extReqID)
-		w.Header().Set(apigw.GrpcMDCsrfHeader, csrfToken)
-		// set cookie
-		http.SetCookie(w, createCookie(sessionToken, exp))
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(user); err != nil {
-			s.logger.Errorf("failed to send user json: %v", err)
-			return
-		}
-		s.logger.Infof("user [%s|%s] successfully authenticated", user.Tenant, user.Name)
-	})
-	m.Handle(login.LoginURLPath, router)
+	}()
 	return nil
 }
 
@@ -212,8 +239,13 @@ func (s *loginV1GwService) login(ctx context.Context, in *auth.PasswordCredentia
 	user, ok, err := s.authnMgr.Authenticate(in)
 	if err != nil {
 		s.logger.Errorf("failed to authenticate user [%s|%s]:  err: %v", in.Tenant, in.Username, err)
-		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
-			err = context.DeadlineExceeded
+		errs := s.authnMgr.ParseErrors(err) //authentication manager returns aggregated errors from all auth modules in case all of them fail
+		for _, aErr := range errs {
+			switch aErr { // we want to return service unavailable status code for any of these errors
+			case context.DeadlineExceeded, passwdauth.ErrAPIServerUnavailable, passwdauth.ErrAPIServerClientNotInitialized:
+				err = aErr
+				return nil, err
+			}
 		}
 		return nil, err
 	}
@@ -224,10 +256,10 @@ func (s *loginV1GwService) login(ctx context.Context, in *auth.PasswordCredentia
 	return user, nil
 }
 
-func (s *loginV1GwService) postLogin(ctx context.Context, in *auth.User, password string) (*auth.User, string, string, time.Time, error) {
+func (s *loginV1GwService) postLogin(ctx context.Context, apicl apiclient.Services, in *auth.User, password string) (*auth.User, string, string, time.Time, error) {
 	var exp time.Time
 	// updates user status with role info. Needs to be called before creating jwt
-	user, err := s.updateUserStatus(in, password)
+	user, err := s.updateUserStatus(apicl, in, password)
 	if err != nil {
 		s.logger.Errorf("Error updating status for user [%s|%s], Err: %v", in.Tenant, in.Name, err)
 		if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
@@ -254,7 +286,7 @@ func (s *loginV1GwService) postLogin(ctx context.Context, in *auth.User, passwor
 
 // updateUserStatus updates user object with status(user groups, last successful login, authenticators used) in API server.
 // User role information is not saved in API server
-func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*auth.User, error) {
+func (s *loginV1GwService) updateUserStatus(apicl apiclient.Services, user *auth.User, password string) (*auth.User, error) {
 	m, err := types.TimestampProto(time.Now())
 	if err != nil {
 		return nil, err
@@ -262,20 +294,6 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 	user.Status.LastLogin = &api.Timestamp{
 		Timestamp: *m,
 	}
-	b := balancer.New(s.rslvr)
-	defer b.Close()
-	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		apicl, err := apiclient.NewGrpcAPIClient(globals.APIGw, s.apiserver, s.logger, rpckit.WithBalancer(b))
-		if err != nil {
-			return nil, err
-		}
-		return apicl, nil
-	}, 200*time.Millisecond, 10)
-	if err != nil {
-		return nil, err
-	}
-	apicl := result.(apiclient.Services)
-	defer apicl.Close()
 	var storedUser *auth.User
 	if storedUser, err = apicl.AuthV1().User().Get(context.Background(), user.GetObjectMeta()); err != nil {
 		status := apierrors.FromError(err)

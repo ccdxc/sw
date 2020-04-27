@@ -28,6 +28,7 @@ const (
 // test user
 var (
 	user             *auth.User
+	policy           *auth.AuthenticationPolicy
 	apicl            apiclient.Services
 	apiSrv           apiserver.Server
 	apiSrvAddr       string
@@ -59,17 +60,15 @@ func setup() {
 	if err != nil {
 		panic("Error creating api client")
 	}
-	// Create Tenant
-	MustCreateTenant(apicl, "default")
 
-	//create test user
-	user = MustCreateTestUser(apicl, testUser, testPassword, "default")
-
-	//for tests in passwordhasher_test.go
+	// for tests in hasher_test.go
 	cachePasswordHash()
 }
 
 func shutdown() {
+	if apicl != nil {
+		apicl.Close()
+	}
 	//stop api server
 	apiSrv.Stop()
 }
@@ -86,17 +85,27 @@ func cachePasswordHash() {
 	testPasswordHash = passwdhash
 }
 
-func TestAuthenticate(t *testing.T) {
-	policy, err := CreateAuthenticationPolicyWithOrder(apicl, &auth.Local{}, &auth.Ldap{}, &auth.Radius{}, []string{auth.Authenticators_LOCAL.String()}, "144h")
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
+func setupAuth() {
+	// Create Tenant
+	MustCreateTenant(apicl, "default")
+	//create test user
+	user = MustCreateTestUser(apicl, testUser, testPassword, "default")
+	// create auth policy
+	policy = MustCreateAuthenticationPolicy(apicl, &auth.Local{}, nil, nil)
+}
 
-	defer DeleteAuthenticationPolicy(apicl)
+func cleanupAuth() {
+	MustDeleteAuthenticationPolicy(apicl)
+	MustDeleteUser(apicl, testUser, "default")
+	MustDeleteTenant(apicl, "default")
+}
+
+func TestAuthenticate(t *testing.T) {
+	setupAuth()
+	defer cleanupAuth()
 
 	// create password authenticator
-	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal(), logger)
+	authenticator := NewPasswordAuthenticator(apicl, policy.Spec.Authenticators.GetLocal(), logger)
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
@@ -107,16 +116,11 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func TestIncorrectPasswordAuthentication(t *testing.T) {
-	policy, err := CreateAuthenticationPolicyWithOrder(apicl, &auth.Local{}, &auth.Ldap{}, &auth.Radius{}, []string{auth.Authenticators_LOCAL.String()}, "144h")
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-
-	defer DeleteAuthenticationPolicy(apicl)
+	setupAuth()
+	defer cleanupAuth()
 
 	// create password authenticator
-	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal(), logger)
+	authenticator := NewPasswordAuthenticator(apicl, policy.Spec.Authenticators.GetLocal(), logger)
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: "wrongpassword"})
@@ -127,16 +131,11 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 }
 
 func TestIncorrectUserAuthentication(t *testing.T) {
-	policy, err := CreateAuthenticationPolicyWithOrder(apicl, &auth.Local{}, &auth.Ldap{}, &auth.Radius{}, []string{auth.Authenticators_LOCAL.String()}, "144h")
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-
-	defer DeleteAuthenticationPolicy(apicl)
+	setupAuth()
+	defer cleanupAuth()
 
 	// create password authenticator
-	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal(), logger)
+	authenticator := NewPasswordAuthenticator(apicl, policy.Spec.Authenticators.GetLocal(), logger)
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: "test1", Tenant: "default", Password: "password"})
@@ -145,4 +144,30 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 	Assert(t, autheduser == nil, "User returned while authenticating with incorrect username")
 	Assert(t, err != nil, "No error returned for incorrect username")
 	Assert(t, err == ErrInvalidCredential, "Incorrect error type returned")
+}
+
+func TestAPIServerDown(t *testing.T) {
+	setupAuth()
+	defer cleanupAuth()
+
+	// create password authenticator
+	authenticator := NewPasswordAuthenticator(nil, policy.Spec.Authenticators.GetLocal(), logger)
+
+	// authenticate
+	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
+
+	Assert(t, !ok, "Successful local user authentication")
+	Assert(t, autheduser == nil, "User returned while authenticating with un-initialized API client")
+	Assert(t, err == ErrAPIServerClientNotInitialized, "Incorrect error type returned")
+	// stop API server
+	apiSrv.Stop()
+	defer setup()
+	// create password authenticator
+	authenticator = NewPasswordAuthenticator(apicl, policy.Spec.Authenticators.GetLocal(), logger)
+	// authenticate
+	autheduser, ok, err = authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
+
+	Assert(t, !ok, "Successful local user authentication")
+	Assert(t, autheduser == nil, "User returned while authenticating when API server is down")
+	Assert(t, err == ErrAPIServerUnavailable, "Incorrect error type returned")
 }
