@@ -18,8 +18,8 @@ static inline void
 power_event_cb (system_power_t *power)
 {
     PDS_HMON_TRACE_VERBOSE("Power of pin is %dW, pout1 is %dW, "
-                           "pout2 is %dW", power->pin/1000000,
-                           power->pout1/1000000, power->pout2/1000000);
+                           "pout2 is %dW", power->pin,
+                           power->pout1, power->pout2);
     sdk::metrics::metrics_update(g_pds_state.power_metrics_handle(),
                                  *(sdk::metrics::key_t *)uuid_from_objid(0).id,
                                  (uint64_t *)power);
@@ -102,8 +102,8 @@ temperature_event_cb (system_temperature_t *temperature,
 {
     PDS_HMON_TRACE_VERBOSE("Die temperature is %dC, local temperature is "
                            "%dC, HBM temperature is %dC",
-                           temperature->dietemp/1000,
-                           temperature->localtemp/1000, temperature->hbmtemp);
+                           temperature->dietemp,
+                           temperature->localtemp, temperature->hbmtemp);
     asic_temperature_metrics_update(temperature);
     port_temperature_metrics_update(temperature);
 }
