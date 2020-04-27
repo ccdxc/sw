@@ -213,6 +213,45 @@ rfc_p1_table_entry_pack (uint32_t running_id, void *actiondata,
     case 50:
         action_data->action_u.rfc_p1_rfc_action_p1.id50 = cid;
         break;
+    case 51:
+        action_data->action_u.rfc_p1_rfc_action_p1.id51 = cid;
+        break;
+    case 52:
+        action_data->action_u.rfc_p1_rfc_action_p1.id52 = cid;
+        break;
+    case 53:
+        action_data->action_u.rfc_p1_rfc_action_p1.id53 = cid;
+        break;
+    case 54:
+        action_data->action_u.rfc_p1_rfc_action_p1.id54 = cid;
+        break;
+    case 55:
+        action_data->action_u.rfc_p1_rfc_action_p1.id55 = cid;
+        break;
+    case 56:
+        action_data->action_u.rfc_p1_rfc_action_p1.id56 = cid;
+        break;
+    case 57:
+        action_data->action_u.rfc_p1_rfc_action_p1.id57 = cid;
+        break;
+    case 58:
+        action_data->action_u.rfc_p1_rfc_action_p1.id58 = cid;
+        break;
+    case 59:
+        action_data->action_u.rfc_p1_rfc_action_p1.id59 = cid;
+        break;
+    case 60:
+        action_data->action_u.rfc_p1_rfc_action_p1.id60 = cid;
+        break;
+    case 61:
+        action_data->action_u.rfc_p1_rfc_action_p1.id61 = cid;
+        break;
+    case 62:
+        action_data->action_u.rfc_p1_rfc_action_p1.id62 = cid;
+        break;
+    case 63:
+        action_data->action_u.rfc_p1_rfc_action_p1.id63 = cid;
+        break;
     default:
         PDS_TRACE_ERR("Invalid entry number %u while packing RFC P1 table",
                       entry_num);
@@ -394,6 +433,45 @@ rfc_p2_table_entry_pack (uint32_t running_id, void *actiondata,
             break;
         case 50:
             action_data->action_u.rfc_p2_rfc_action_p2.id50 = cid;
+            break;
+        case 51:
+            action_data->action_u.rfc_p2_rfc_action_p2.id51 = cid;
+            break;
+        case 52:
+            action_data->action_u.rfc_p2_rfc_action_p2.id52 = cid;
+            break;
+        case 53:
+            action_data->action_u.rfc_p2_rfc_action_p2.id53 = cid;
+            break;
+        case 54:
+            action_data->action_u.rfc_p2_rfc_action_p2.id54 = cid;
+            break;
+        case 55:
+            action_data->action_u.rfc_p2_rfc_action_p2.id55 = cid;
+            break;
+        case 56:
+            action_data->action_u.rfc_p2_rfc_action_p2.id56 = cid;
+            break;
+        case 57:
+            action_data->action_u.rfc_p2_rfc_action_p2.id57 = cid;
+            break;
+        case 58:
+            action_data->action_u.rfc_p2_rfc_action_p2.id58 = cid;
+            break;
+        case 59:
+            action_data->action_u.rfc_p2_rfc_action_p2.id59 = cid;
+            break;
+        case 60:
+            action_data->action_u.rfc_p2_rfc_action_p2.id60 = cid;
+            break;
+        case 61:
+            action_data->action_u.rfc_p2_rfc_action_p2.id61 = cid;
+            break;
+        case 62:
+            action_data->action_u.rfc_p2_rfc_action_p2.id62 = cid;
+            break;
+        case 63:
+            action_data->action_u.rfc_p2_rfc_action_p2.id63 = cid;
             break;
         default:
         PDS_TRACE_ERR("Invalid entry number %u while packing RFC P2 table",

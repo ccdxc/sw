@@ -107,7 +107,7 @@ node:
                         action      : random             # random action (allow / deny)
                         v4base      : '99.0.0.0\16'
                         v4prefixlen : 24
-                        nv4prefixes : 1023
+                        nv4prefixes : 255
                         v6base      : 'e1ba:e1ba:e1ba::\65'
                         v6prefixlen : 120
                         nv6prefixes : 15
@@ -126,7 +126,7 @@ node:
                         action      : random
                         v4base      : '33.0.0.0\8'
                         v4prefixlen : 24
-                        nv4prefixes : 1023
+                        nv4prefixes : 255
                         v6base      : 'e1ba:bade:e1ba::\48'
                         v6prefixlen : 80
                         nv6prefixes : 15

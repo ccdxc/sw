@@ -1,10 +1,10 @@
-#define SACL_TAG_CLASSID_WIDTH            7         // width in bits
+#define SACL_TAG_CLASSID_WIDTH            9         // width in bits
 #define SACL_SPORT_CLASSID_WIDTH          7         // width in bits
 #define SACL_PROTO_DPORT_CLASSID_WIDTH    8         // width in bits
-#define SACL_DIP_CLASSID_WIDTH            10        // width in bits
-#define SACL_SIP_CLASSID_WIDTH            10        // width in bits
-#define SACL_P1_CLASSID_WIDTH             10        // width in bits
-#define SACL_P2_CLASSID_WIDTH             10        // width in bits
+#define SACL_DIP_CLASSID_WIDTH            8         // width in bits
+#define SACL_SIP_CLASSID_WIDTH            8         // width in bits
+#define SACL_P1_CLASSID_WIDTH             8         // width in bits
+#define SACL_P2_CLASSID_WIDTH             8         // width in bits
 #define SACL_P3_ENTRY_WIDTH               11        // width in bits
 
 #define SACL_TAG_TREE_MAX_CLASSES         (1<<SACL_TAG_CLASSID_WIDTH)
@@ -40,45 +40,45 @@
                                                     // +(256*3)+(1024*1)
 
 #define SACL_CACHE_LINE_SIZE              64
-#define SACL_P1_ENTRIES_PER_CACHE_LINE    51        // 51 entries of 10 bits
-#define SACL_P2_ENTRIES_PER_CACHE_LINE    51        // 51 entries of 10 bits
+#define SACL_P1_ENTRIES_PER_CACHE_LINE    64        // 64 entries of 8 bits
+#define SACL_P2_ENTRIES_PER_CACHE_LINE    64        // 64 entries of 8 bits
 #define SACL_P3_ENTRIES_PER_CACHE_LINE    46        // 46 entries of 11 bits
 
-#define SACL_P1_1_TABLE_NUM_ENTRIES       (1 << 17) // (2^10 * 2^7)
-#define SACL_P1_1_TABLE_SIZE              164544    // round64((1<<17)*(64/51))
+#define SACL_P1_1_TABLE_NUM_ENTRIES       (1 << 15) // SIP:SPORT (2^8 * 2^7)
+#define SACL_P1_1_TABLE_SIZE              32768     // round64((1<<15)*(64/64))
 
-#define SACL_P2_1_TABLE_NUM_ENTRIES       (1 << 18) // (2^10 * 2^8)
-#define SACL_P2_1_TABLE_SIZE              329024    // round64((1<<18)*(64/51))
+#define SACL_P2_1_TABLE_NUM_ENTRIES       (1 << 16) // DIP:PROTO_DPORT (2^8 * 2^8)
+#define SACL_P2_1_TABLE_SIZE              65536     // round64((1<<16)*(64/64))
 
-#define SACL_P3_1_TABLE_NUM_ENTRIES       (1 << 20) // (2^10 * 2^10)
-#define SACL_P3_1_TABLE_SIZE              1458944   // round64((1<<20)*(64/46))
+#define SACL_P3_1_TABLE_NUM_ENTRIES       (1 << 16) // P1:P2 (2^8 * 2^8)
+#define SACL_P3_1_TABLE_SIZE              91200     // round64((1<<16)*(64/46))
 
-#define SACL_P1_2_TABLE_NUM_ENTRIES       (1 << 17) // (2^10 * 2^7)
-#define SACL_P1_2_TABLE_SIZE              164544    // round64((1<<17)*(64/51))
+#define SACL_P1_2_TABLE_NUM_ENTRIES       (1 << 17) // STAG:DIP (2^9 * 2^8)
+#define SACL_P1_2_TABLE_SIZE              131072    // round64((1<<17)*(64/64))
 
-#define SACL_P2_2_TABLE_NUM_ENTRIES       (1 << 15) // (2^7 * 2^8)
-#define SACL_P2_2_TABLE_SIZE              41152     // round64((1<<15)*(64/51))
+#define SACL_P2_2_TABLE_NUM_ENTRIES       (1 << 15) // SPORT:DPORT (2^7 * 2^8)
+#define SACL_P2_2_TABLE_SIZE              32768     // round64((1<<15)*(64/64))
 
-#define SACL_P3_2_TABLE_NUM_ENTRIES       (1 << 20) // (2^10 * 2^10)
-#define SACL_P3_2_TABLE_SIZE              1458944   // round64((1<<20)*(64/46))
+#define SACL_P3_2_TABLE_NUM_ENTRIES       (1 << 16) // P1:P2 (2^8 * 2^8)
+#define SACL_P3_2_TABLE_SIZE              91200     // round64((1<<16)*(64/46))
 
-#define SACL_P1_3_TABLE_NUM_ENTRIES       (1 << 17) // (2^10 * 2^7)
-#define SACL_P1_3_TABLE_SIZE              164544    // round64((1<<17)*(64/51))
+#define SACL_P1_3_TABLE_NUM_ENTRIES       (1 << 17) // SIP:DTAG (2^8 * 2^9)
+#define SACL_P1_3_TABLE_SIZE              131072    // round64((1<<17)*(64/64))
 
-#define SACL_P2_3_TABLE_NUM_ENTRIES       (1 << 15) // (2^7 * 2^8)
-#define SACL_P2_3_TABLE_SIZE              41152     // round64((1<<15)*(64/51))
+#define SACL_P2_3_TABLE_NUM_ENTRIES       (1 << 15) // SPORT:DPORT (2^7 * 2^8)
+#define SACL_P2_3_TABLE_SIZE              32768     // round64((1<<15)*(64/64))
 
-#define SACL_P3_3_TABLE_NUM_ENTRIES       (1 << 20) // (2^10 * 2^10)
-#define SACL_P3_3_TABLE_SIZE              1458944   // round64((1<<20)*(64/46))
+#define SACL_P3_3_TABLE_NUM_ENTRIES       (1 << 16) // P1:P2 (2^8 * 2^8)
+#define SACL_P3_3_TABLE_SIZE              91200     // round64((1<<16)*(64/46))
 
-#define SACL_P1_4_TABLE_NUM_ENTRIES       (1 << 14) // (2^7 * 2^7)
-#define SACL_P1_4_TABLE_SIZE              20608     // round64((1<<14)*(64/51))
+#define SACL_P1_4_TABLE_NUM_ENTRIES       (1 << 16) // STAG:SPORT (2^9 * 2^7)
+#define SACL_P1_4_TABLE_SIZE              65536     // round64((1<<16)*(64/64))
 
-#define SACL_P2_4_TABLE_NUM_ENTRIES       (1 << 15) // (2^7 * 2^8)
-#define SACL_P2_4_TABLE_SIZE              41152     // round64((1<<15)*(64/51))
+#define SACL_P2_4_TABLE_NUM_ENTRIES       (1 << 17) // DTAG:DPORT (2^9 * 2^8)
+#define SACL_P2_4_TABLE_SIZE              131072    // round64((1<<17)*(64/64))
 
-#define SACL_P3_4_TABLE_NUM_ENTRIES       (1 << 20) // (2^10 * 2^10)
-#define SACL_P3_4_TABLE_SIZE              1458944   // round64((1<<20)*(64/46))
+#define SACL_P3_4_TABLE_NUM_ENTRIES       (1 << 16) // P1:P2 (2^8 * 2^8)
+#define SACL_P3_4_TABLE_SIZE              91200     // round64((1<<16)*(64/46))
 
 #define SACL_SPORT_TABLE_OFFSET         0
 #define SACL_PROTO_DPORT_TABLE_OFFSET   (SACL_SPORT_TABLE_SIZE)

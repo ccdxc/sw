@@ -107,7 +107,7 @@ node:
                         action      : random
                         v4base      : '55.0.0.0\16'
                         v4prefixlen : 24
-                        nv4prefixes : 1022
+                        nv4prefixes : 254
                         v6base      : 'bade:bade:bade::\64'
                         v6prefixlen : 96
                         nv6prefixes : 14

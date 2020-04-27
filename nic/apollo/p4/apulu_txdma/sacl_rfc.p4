@@ -1,83 +1,100 @@
 
-action rfc_action_p1(pad,id50,
-                         id49, id48, id47, id46, id45, id44, id43, id42, id41, id40,
-                         id39, id38, id37, id36, id35, id34, id33, id32, id31, id30,
-                         id29, id28, id27, id26, id25, id24, id23, id22, id21, id20,
-                         id19, id18, id17, id16, id15, id14, id13, id12, id11, id10,
-                         id09, id08, id07, id06, id05, id04, id03, id02, id01, id00
+action rfc_action_p1(id63, id62, id61, id60, id59, id58, id57, id56,
+                     id55, id54, id53, id52, id51, id50, id49, id48,
+                     id47, id46, id45, id44, id43, id42, id41, id40,
+                     id39, id38, id37, id36, id35, id34, id33, id32,
+                     id31, id30, id29, id28, id27, id26, id25, id24,
+                     id23, id22, id21, id20, id19, id18, id17, id16,
+                     id15, id14, id13, id12, id11, id10, id09, id08,
+                     id07, id06, id05, id04, id03, id02, id01, id00
                     )
 {
-    modify_field(scratch_metadata.field10, id00);
-    modify_field(scratch_metadata.field10, id01);
-    modify_field(scratch_metadata.field10, id02);
-    modify_field(scratch_metadata.field10, id03);
-    modify_field(scratch_metadata.field10, id04);
-    modify_field(scratch_metadata.field10, id05);
-    modify_field(scratch_metadata.field10, id06);
-    modify_field(scratch_metadata.field10, id07);
-    modify_field(scratch_metadata.field10, id08);
-    modify_field(scratch_metadata.field10, id09);
-    modify_field(scratch_metadata.field10, id10);
-    modify_field(scratch_metadata.field10, id11);
-    modify_field(scratch_metadata.field10, id12);
-    modify_field(scratch_metadata.field10, id13);
-    modify_field(scratch_metadata.field10, id14);
-    modify_field(scratch_metadata.field10, id15);
-    modify_field(scratch_metadata.field10, id16);
-    modify_field(scratch_metadata.field10, id17);
-    modify_field(scratch_metadata.field10, id18);
-    modify_field(scratch_metadata.field10, id19);
-    modify_field(scratch_metadata.field10, id20);
-    modify_field(scratch_metadata.field10, id21);
-    modify_field(scratch_metadata.field10, id22);
-    modify_field(scratch_metadata.field10, id23);
-    modify_field(scratch_metadata.field10, id24);
-    modify_field(scratch_metadata.field10, id25);
-    modify_field(scratch_metadata.field10, id26);
-    modify_field(scratch_metadata.field10, id27);
-    modify_field(scratch_metadata.field10, id28);
-    modify_field(scratch_metadata.field10, id29);
-    modify_field(scratch_metadata.field10, id30);
-    modify_field(scratch_metadata.field10, id31);
-    modify_field(scratch_metadata.field10, id32);
-    modify_field(scratch_metadata.field10, id33);
-    modify_field(scratch_metadata.field10, id34);
-    modify_field(scratch_metadata.field10, id35);
-    modify_field(scratch_metadata.field10, id36);
-    modify_field(scratch_metadata.field10, id37);
-    modify_field(scratch_metadata.field10, id38);
-    modify_field(scratch_metadata.field10, id39);
-    modify_field(scratch_metadata.field10, id40);
-    modify_field(scratch_metadata.field10, id41);
-    modify_field(scratch_metadata.field10, id42);
-    modify_field(scratch_metadata.field10, id43);
-    modify_field(scratch_metadata.field10, id44);
-    modify_field(scratch_metadata.field10, id45);
-    modify_field(scratch_metadata.field10, id46);
-    modify_field(scratch_metadata.field10, id47);
-    modify_field(scratch_metadata.field10, id48);
-    modify_field(scratch_metadata.field10, id49);
-    modify_field(scratch_metadata.field10, id50);
-    modify_field(scratch_metadata.field2,  pad);
+    modify_field(scratch_metadata.field8, id00);
+    modify_field(scratch_metadata.field8, id01);
+    modify_field(scratch_metadata.field8, id02);
+    modify_field(scratch_metadata.field8, id03);
+    modify_field(scratch_metadata.field8, id04);
+    modify_field(scratch_metadata.field8, id05);
+    modify_field(scratch_metadata.field8, id06);
+    modify_field(scratch_metadata.field8, id07);
+    modify_field(scratch_metadata.field8, id08);
+    modify_field(scratch_metadata.field8, id09);
+    modify_field(scratch_metadata.field8, id10);
+    modify_field(scratch_metadata.field8, id11);
+    modify_field(scratch_metadata.field8, id12);
+    modify_field(scratch_metadata.field8, id13);
+    modify_field(scratch_metadata.field8, id14);
+    modify_field(scratch_metadata.field8, id15);
+    modify_field(scratch_metadata.field8, id16);
+    modify_field(scratch_metadata.field8, id17);
+    modify_field(scratch_metadata.field8, id18);
+    modify_field(scratch_metadata.field8, id19);
+    modify_field(scratch_metadata.field8, id20);
+    modify_field(scratch_metadata.field8, id21);
+    modify_field(scratch_metadata.field8, id22);
+    modify_field(scratch_metadata.field8, id23);
+    modify_field(scratch_metadata.field8, id24);
+    modify_field(scratch_metadata.field8, id25);
+    modify_field(scratch_metadata.field8, id26);
+    modify_field(scratch_metadata.field8, id27);
+    modify_field(scratch_metadata.field8, id28);
+    modify_field(scratch_metadata.field8, id29);
+    modify_field(scratch_metadata.field8, id30);
+    modify_field(scratch_metadata.field8, id31);
+    modify_field(scratch_metadata.field8, id32);
+    modify_field(scratch_metadata.field8, id33);
+    modify_field(scratch_metadata.field8, id34);
+    modify_field(scratch_metadata.field8, id35);
+    modify_field(scratch_metadata.field8, id36);
+    modify_field(scratch_metadata.field8, id37);
+    modify_field(scratch_metadata.field8, id38);
+    modify_field(scratch_metadata.field8, id39);
+    modify_field(scratch_metadata.field8, id40);
+    modify_field(scratch_metadata.field8, id41);
+    modify_field(scratch_metadata.field8, id42);
+    modify_field(scratch_metadata.field8, id43);
+    modify_field(scratch_metadata.field8, id44);
+    modify_field(scratch_metadata.field8, id45);
+    modify_field(scratch_metadata.field8, id46);
+    modify_field(scratch_metadata.field8, id47);
+    modify_field(scratch_metadata.field8, id48);
+    modify_field(scratch_metadata.field8, id49);
+    modify_field(scratch_metadata.field8, id50);
+    modify_field(scratch_metadata.field8, id51);
+    modify_field(scratch_metadata.field8, id52);
+    modify_field(scratch_metadata.field8, id53);
+    modify_field(scratch_metadata.field8, id54);
+    modify_field(scratch_metadata.field8, id55);
+    modify_field(scratch_metadata.field8, id56);
+    modify_field(scratch_metadata.field8, id57);
+    modify_field(scratch_metadata.field8, id58);
+    modify_field(scratch_metadata.field8, id59);
+    modify_field(scratch_metadata.field8, id60);
+    modify_field(scratch_metadata.field8, id61);
+    modify_field(scratch_metadata.field8, id62);
+    modify_field(scratch_metadata.field8, id63);
 
     /* Get the P1 classid by indexing into the classid array */
-    modify_field(scratch_metadata.field10,id00>>(txdma_control.rfc_index%51)*10);
+    modify_field(scratch_metadata.field8, (id00 >> ((txdma_control.rfc_index %
+                 SACL_P1_ENTRIES_PER_CACHE_LINE)*SACL_P1_CLASSID_WIDTH)));
 
     // Write the P1 classid to PHV
-    modify_field(txdma_control.rfc_p1_classid, scratch_metadata.field10);
+    modify_field(txdma_control.rfc_p1_classid, scratch_metadata.field8);
 
     // Initialize the correct table base and index based on the recirc count
     if ((txdma_control.recirc_count & 0x1) == 0) {
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_1_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.dip_classid0 << 8)|
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.dip_classid0 <<
+                                                SACL_PROTO_DPORT_CLASSID_WIDTH)|
                                                 rx_to_tx_hdr.dport_classid0);
     } else {
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_3_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sport_classid0 << 8)|
+        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sport_classid0 <<
+                                                SACL_PROTO_DPORT_CLASSID_WIDTH)|
                                                 rx_to_tx_hdr.dport_classid0);
     }
 
@@ -88,7 +105,9 @@ action rfc_action_p1(pad,id50,
     modify_field(txdma_control.rfc_table_addr,              // P2 Lookup Addr =
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
-                 (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+                 (((scratch_metadata.field20) /
+                  SACL_P2_ENTRIES_PER_CACHE_LINE) *
+                  SACL_CACHE_LINE_SIZE));                   // Index Bytes
 }
 
 @pragma stage 2
@@ -103,69 +122,84 @@ table rfc_p1 {
     }
 }
 
-action rfc_action_p2(pad,id50,
-                         id49, id48, id47, id46, id45, id44, id43, id42, id41, id40,
-                         id39, id38, id37, id36, id35, id34, id33, id32, id31, id30,
-                         id29, id28, id27, id26, id25, id24, id23, id22, id21, id20,
-                         id19, id18, id17, id16, id15, id14, id13, id12, id11, id10,
-                         id09, id08, id07, id06, id05, id04, id03, id02, id01, id00
+action rfc_action_p2(id63, id62, id61, id60, id59, id58, id57, id56,
+                     id55, id54, id53, id52, id51, id50, id49, id48,
+                     id47, id46, id45, id44, id43, id42, id41, id40,
+                     id39, id38, id37, id36, id35, id34, id33, id32,
+                     id31, id30, id29, id28, id27, id26, id25, id24,
+                     id23, id22, id21, id20, id19, id18, id17, id16,
+                     id15, id14, id13, id12, id11, id10, id09, id08,
+                     id07, id06, id05, id04, id03, id02, id01, id00
                     )
 {
-    modify_field(scratch_metadata.field10, id00);
-    modify_field(scratch_metadata.field10, id01);
-    modify_field(scratch_metadata.field10, id02);
-    modify_field(scratch_metadata.field10, id03);
-    modify_field(scratch_metadata.field10, id04);
-    modify_field(scratch_metadata.field10, id05);
-    modify_field(scratch_metadata.field10, id06);
-    modify_field(scratch_metadata.field10, id07);
-    modify_field(scratch_metadata.field10, id08);
-    modify_field(scratch_metadata.field10, id09);
-    modify_field(scratch_metadata.field10, id10);
-    modify_field(scratch_metadata.field10, id11);
-    modify_field(scratch_metadata.field10, id12);
-    modify_field(scratch_metadata.field10, id13);
-    modify_field(scratch_metadata.field10, id14);
-    modify_field(scratch_metadata.field10, id15);
-    modify_field(scratch_metadata.field10, id16);
-    modify_field(scratch_metadata.field10, id17);
-    modify_field(scratch_metadata.field10, id18);
-    modify_field(scratch_metadata.field10, id19);
-    modify_field(scratch_metadata.field10, id20);
-    modify_field(scratch_metadata.field10, id21);
-    modify_field(scratch_metadata.field10, id22);
-    modify_field(scratch_metadata.field10, id23);
-    modify_field(scratch_metadata.field10, id24);
-    modify_field(scratch_metadata.field10, id25);
-    modify_field(scratch_metadata.field10, id26);
-    modify_field(scratch_metadata.field10, id27);
-    modify_field(scratch_metadata.field10, id28);
-    modify_field(scratch_metadata.field10, id29);
-    modify_field(scratch_metadata.field10, id30);
-    modify_field(scratch_metadata.field10, id31);
-    modify_field(scratch_metadata.field10, id32);
-    modify_field(scratch_metadata.field10, id33);
-    modify_field(scratch_metadata.field10, id34);
-    modify_field(scratch_metadata.field10, id35);
-    modify_field(scratch_metadata.field10, id36);
-    modify_field(scratch_metadata.field10, id37);
-    modify_field(scratch_metadata.field10, id38);
-    modify_field(scratch_metadata.field10, id39);
-    modify_field(scratch_metadata.field10, id40);
-    modify_field(scratch_metadata.field10, id41);
-    modify_field(scratch_metadata.field10, id42);
-    modify_field(scratch_metadata.field10, id43);
-    modify_field(scratch_metadata.field10, id44);
-    modify_field(scratch_metadata.field10, id45);
-    modify_field(scratch_metadata.field10, id46);
-    modify_field(scratch_metadata.field10, id47);
-    modify_field(scratch_metadata.field10, id48);
-    modify_field(scratch_metadata.field10, id49);
-    modify_field(scratch_metadata.field10, id50);
-    modify_field(scratch_metadata.field2,  pad);
+    modify_field(scratch_metadata.field8, id00);
+    modify_field(scratch_metadata.field8, id01);
+    modify_field(scratch_metadata.field8, id02);
+    modify_field(scratch_metadata.field8, id03);
+    modify_field(scratch_metadata.field8, id04);
+    modify_field(scratch_metadata.field8, id05);
+    modify_field(scratch_metadata.field8, id06);
+    modify_field(scratch_metadata.field8, id07);
+    modify_field(scratch_metadata.field8, id08);
+    modify_field(scratch_metadata.field8, id09);
+    modify_field(scratch_metadata.field8, id10);
+    modify_field(scratch_metadata.field8, id11);
+    modify_field(scratch_metadata.field8, id12);
+    modify_field(scratch_metadata.field8, id13);
+    modify_field(scratch_metadata.field8, id14);
+    modify_field(scratch_metadata.field8, id15);
+    modify_field(scratch_metadata.field8, id16);
+    modify_field(scratch_metadata.field8, id17);
+    modify_field(scratch_metadata.field8, id18);
+    modify_field(scratch_metadata.field8, id19);
+    modify_field(scratch_metadata.field8, id20);
+    modify_field(scratch_metadata.field8, id21);
+    modify_field(scratch_metadata.field8, id22);
+    modify_field(scratch_metadata.field8, id23);
+    modify_field(scratch_metadata.field8, id24);
+    modify_field(scratch_metadata.field8, id25);
+    modify_field(scratch_metadata.field8, id26);
+    modify_field(scratch_metadata.field8, id27);
+    modify_field(scratch_metadata.field8, id28);
+    modify_field(scratch_metadata.field8, id29);
+    modify_field(scratch_metadata.field8, id30);
+    modify_field(scratch_metadata.field8, id31);
+    modify_field(scratch_metadata.field8, id32);
+    modify_field(scratch_metadata.field8, id33);
+    modify_field(scratch_metadata.field8, id34);
+    modify_field(scratch_metadata.field8, id35);
+    modify_field(scratch_metadata.field8, id36);
+    modify_field(scratch_metadata.field8, id37);
+    modify_field(scratch_metadata.field8, id38);
+    modify_field(scratch_metadata.field8, id39);
+    modify_field(scratch_metadata.field8, id40);
+    modify_field(scratch_metadata.field8, id41);
+    modify_field(scratch_metadata.field8, id42);
+    modify_field(scratch_metadata.field8, id43);
+    modify_field(scratch_metadata.field8, id44);
+    modify_field(scratch_metadata.field8, id45);
+    modify_field(scratch_metadata.field8, id46);
+    modify_field(scratch_metadata.field8, id47);
+    modify_field(scratch_metadata.field8, id48);
+    modify_field(scratch_metadata.field8, id49);
+    modify_field(scratch_metadata.field8, id50);
+    modify_field(scratch_metadata.field8, id51);
+    modify_field(scratch_metadata.field8, id52);
+    modify_field(scratch_metadata.field8, id53);
+    modify_field(scratch_metadata.field8, id54);
+    modify_field(scratch_metadata.field8, id55);
+    modify_field(scratch_metadata.field8, id56);
+    modify_field(scratch_metadata.field8, id57);
+    modify_field(scratch_metadata.field8, id58);
+    modify_field(scratch_metadata.field8, id59);
+    modify_field(scratch_metadata.field8, id60);
+    modify_field(scratch_metadata.field8, id61);
+    modify_field(scratch_metadata.field8, id62);
+    modify_field(scratch_metadata.field8, id63);
 
     /* Get the P2 classid by indexing into the classid array */
-    modify_field(scratch_metadata.field10,id00>>(txdma_control.rfc_index%51)*10);
+    modify_field(scratch_metadata.field8, (id00 >> ((txdma_control.rfc_index %
+                 SACL_P2_ENTRIES_PER_CACHE_LINE)*SACL_P2_CLASSID_WIDTH)));
 
     // Initialize the correct table base based on the recirc count
     if ((txdma_control.recirc_count & 0x1) == 0) {
@@ -177,8 +211,9 @@ action rfc_action_p2(pad,id50,
     }
 
     // P3 table index
-    modify_field(scratch_metadata.field20, (txdma_control.rfc_p1_classid << 10)|
-                                            scratch_metadata.field10);
+    modify_field(scratch_metadata.field20, ((txdma_control.rfc_p1_classid <<
+                                            SACL_P2_CLASSID_WIDTH) |
+                                            scratch_metadata.field8));
     // Write P3 table index to PHV
     modify_field(txdma_control.rfc_index, scratch_metadata.field20);
 
@@ -186,7 +221,9 @@ action rfc_action_p2(pad,id50,
     modify_field(txdma_control.rfc_table_addr,              // P3 Lookup Addr =
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
-                 (((scratch_metadata.field20) / 46) * 64)); // Index Bytes
+                 (((scratch_metadata.field20) /
+                  SACL_P3_ENTRIES_PER_CACHE_LINE) *
+                  SACL_CACHE_LINE_SIZE));                   // Index Bytes
 }
 
 @pragma stage 3
@@ -310,8 +347,10 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
     modify_field(scratch_metadata.field6,  pad);
 
     /* Get the P3 result by indexing into the classid array */
-    modify_field(scratch_metadata.field10,pr00>>(txdma_control.rfc_index%46)*10);
-    modify_field(scratch_metadata.field1,res00>>(txdma_control.rfc_index%46)*1);
+    modify_field(scratch_metadata.field10,pr00>>(txdma_control.rfc_index%
+                 SACL_P3_ENTRIES_PER_CACHE_LINE)*SACL_P3_ENTRY_WIDTH);
+    modify_field(scratch_metadata.field1,res00>>(txdma_control.rfc_index%
+                 SACL_P3_ENTRIES_PER_CACHE_LINE)*SACL_P3_ENTRY_WIDTH);
 
     // If the priority of the current result is higher than whats in the PHV
     if (txdma_control.rule_priority > scratch_metadata.field10) {
@@ -327,14 +366,16 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
         // P1 table base
         modify_field(scratch_metadata.field40, SACL_P1_2_TABLE_OFFSET);
         // P1 table index
-        modify_field(scratch_metadata.field20, (txdma_control.stag_classid << 10)|
-                                                rx_to_tx_hdr.dip_classid0);
+        modify_field(scratch_metadata.field20, ((txdma_control.stag_classid <<
+                                                SACL_DIP_CLASSID_WIDTH) |
+                                                rx_to_tx_hdr.dip_classid0));
     } else {
         // P1 table base
         modify_field(scratch_metadata.field40, SACL_P1_4_TABLE_OFFSET);
         // P1 table index
-        modify_field(scratch_metadata.field20, (txdma_control.stag_classid << 7)|
-                                                rx_to_tx_hdr.sport_classid0);
+        modify_field(scratch_metadata.field20, ((txdma_control.stag_classid <<
+                                                SACL_SPORT_CLASSID_WIDTH) |
+                                                rx_to_tx_hdr.sport_classid0));
     }
 
     // Write P1 table index to PHV
@@ -344,7 +385,9 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
     modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
-                 (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+                 (((scratch_metadata.field20) /
+                  SACL_P1_ENTRIES_PER_CACHE_LINE) *
+                  SACL_CACHE_LINE_SIZE));                   // Index Bytes
 }
 
 @pragma stage 4
@@ -359,86 +402,103 @@ table rfc_p3 {
     }
 }
 
-action rfc_action_p1_1(pad, id50,
-                         id49, id48, id47, id46, id45, id44, id43, id42, id41, id40,
-                         id39, id38, id37, id36, id35, id34, id33, id32, id31, id30,
-                         id29, id28, id27, id26, id25, id24, id23, id22, id21, id20,
-                         id19, id18, id17, id16, id15, id14, id13, id12, id11, id10,
-                         id09, id08, id07, id06, id05, id04, id03, id02, id01, id00
+action rfc_action_p1_1(id63, id62, id61, id60, id59, id58, id57, id56,
+                       id55, id54, id53, id52, id51, id50, id49, id48,
+                       id47, id46, id45, id44, id43, id42, id41, id40,
+                       id39, id38, id37, id36, id35, id34, id33, id32,
+                       id31, id30, id29, id28, id27, id26, id25, id24,
+                       id23, id22, id21, id20, id19, id18, id17, id16,
+                       id15, id14, id13, id12, id11, id10, id09, id08,
+                       id07, id06, id05, id04, id03, id02, id01, id00
                       )
 {
-    modify_field(scratch_metadata.field10, id00);
-    modify_field(scratch_metadata.field10, id01);
-    modify_field(scratch_metadata.field10, id02);
-    modify_field(scratch_metadata.field10, id03);
-    modify_field(scratch_metadata.field10, id04);
-    modify_field(scratch_metadata.field10, id05);
-    modify_field(scratch_metadata.field10, id06);
-    modify_field(scratch_metadata.field10, id07);
-    modify_field(scratch_metadata.field10, id08);
-    modify_field(scratch_metadata.field10, id09);
-    modify_field(scratch_metadata.field10, id10);
-    modify_field(scratch_metadata.field10, id11);
-    modify_field(scratch_metadata.field10, id12);
-    modify_field(scratch_metadata.field10, id13);
-    modify_field(scratch_metadata.field10, id14);
-    modify_field(scratch_metadata.field10, id15);
-    modify_field(scratch_metadata.field10, id16);
-    modify_field(scratch_metadata.field10, id17);
-    modify_field(scratch_metadata.field10, id18);
-    modify_field(scratch_metadata.field10, id19);
-    modify_field(scratch_metadata.field10, id20);
-    modify_field(scratch_metadata.field10, id21);
-    modify_field(scratch_metadata.field10, id22);
-    modify_field(scratch_metadata.field10, id23);
-    modify_field(scratch_metadata.field10, id24);
-    modify_field(scratch_metadata.field10, id25);
-    modify_field(scratch_metadata.field10, id26);
-    modify_field(scratch_metadata.field10, id27);
-    modify_field(scratch_metadata.field10, id28);
-    modify_field(scratch_metadata.field10, id29);
-    modify_field(scratch_metadata.field10, id30);
-    modify_field(scratch_metadata.field10, id31);
-    modify_field(scratch_metadata.field10, id32);
-    modify_field(scratch_metadata.field10, id33);
-    modify_field(scratch_metadata.field10, id34);
-    modify_field(scratch_metadata.field10, id35);
-    modify_field(scratch_metadata.field10, id36);
-    modify_field(scratch_metadata.field10, id37);
-    modify_field(scratch_metadata.field10, id38);
-    modify_field(scratch_metadata.field10, id39);
-    modify_field(scratch_metadata.field10, id40);
-    modify_field(scratch_metadata.field10, id41);
-    modify_field(scratch_metadata.field10, id42);
-    modify_field(scratch_metadata.field10, id43);
-    modify_field(scratch_metadata.field10, id44);
-    modify_field(scratch_metadata.field10, id45);
-    modify_field(scratch_metadata.field10, id46);
-    modify_field(scratch_metadata.field10, id47);
-    modify_field(scratch_metadata.field10, id48);
-    modify_field(scratch_metadata.field10, id49);
-    modify_field(scratch_metadata.field10, id50);
-    modify_field(scratch_metadata.field2,  pad);
+    modify_field(scratch_metadata.field8, id00);
+    modify_field(scratch_metadata.field8, id01);
+    modify_field(scratch_metadata.field8, id02);
+    modify_field(scratch_metadata.field8, id03);
+    modify_field(scratch_metadata.field8, id04);
+    modify_field(scratch_metadata.field8, id05);
+    modify_field(scratch_metadata.field8, id06);
+    modify_field(scratch_metadata.field8, id07);
+    modify_field(scratch_metadata.field8, id08);
+    modify_field(scratch_metadata.field8, id09);
+    modify_field(scratch_metadata.field8, id10);
+    modify_field(scratch_metadata.field8, id11);
+    modify_field(scratch_metadata.field8, id12);
+    modify_field(scratch_metadata.field8, id13);
+    modify_field(scratch_metadata.field8, id14);
+    modify_field(scratch_metadata.field8, id15);
+    modify_field(scratch_metadata.field8, id16);
+    modify_field(scratch_metadata.field8, id17);
+    modify_field(scratch_metadata.field8, id18);
+    modify_field(scratch_metadata.field8, id19);
+    modify_field(scratch_metadata.field8, id20);
+    modify_field(scratch_metadata.field8, id21);
+    modify_field(scratch_metadata.field8, id22);
+    modify_field(scratch_metadata.field8, id23);
+    modify_field(scratch_metadata.field8, id24);
+    modify_field(scratch_metadata.field8, id25);
+    modify_field(scratch_metadata.field8, id26);
+    modify_field(scratch_metadata.field8, id27);
+    modify_field(scratch_metadata.field8, id28);
+    modify_field(scratch_metadata.field8, id29);
+    modify_field(scratch_metadata.field8, id30);
+    modify_field(scratch_metadata.field8, id31);
+    modify_field(scratch_metadata.field8, id32);
+    modify_field(scratch_metadata.field8, id33);
+    modify_field(scratch_metadata.field8, id34);
+    modify_field(scratch_metadata.field8, id35);
+    modify_field(scratch_metadata.field8, id36);
+    modify_field(scratch_metadata.field8, id37);
+    modify_field(scratch_metadata.field8, id38);
+    modify_field(scratch_metadata.field8, id39);
+    modify_field(scratch_metadata.field8, id40);
+    modify_field(scratch_metadata.field8, id41);
+    modify_field(scratch_metadata.field8, id42);
+    modify_field(scratch_metadata.field8, id43);
+    modify_field(scratch_metadata.field8, id44);
+    modify_field(scratch_metadata.field8, id45);
+    modify_field(scratch_metadata.field8, id46);
+    modify_field(scratch_metadata.field8, id47);
+    modify_field(scratch_metadata.field8, id48);
+    modify_field(scratch_metadata.field8, id49);
+    modify_field(scratch_metadata.field8, id50);
+    modify_field(scratch_metadata.field8, id51);
+    modify_field(scratch_metadata.field8, id52);
+    modify_field(scratch_metadata.field8, id53);
+    modify_field(scratch_metadata.field8, id54);
+    modify_field(scratch_metadata.field8, id55);
+    modify_field(scratch_metadata.field8, id56);
+    modify_field(scratch_metadata.field8, id57);
+    modify_field(scratch_metadata.field8, id58);
+    modify_field(scratch_metadata.field8, id59);
+    modify_field(scratch_metadata.field8, id60);
+    modify_field(scratch_metadata.field8, id61);
+    modify_field(scratch_metadata.field8, id62);
+    modify_field(scratch_metadata.field8, id63);
 
     /* Get the P1 classid by indexing into the classid array */
-    modify_field(scratch_metadata.field10,id00>>(txdma_control.rfc_index%51)*10);
+    modify_field(scratch_metadata.field8, (id00 >> ((txdma_control.rfc_index %
+                 SACL_P1_ENTRIES_PER_CACHE_LINE)*SACL_P1_CLASSID_WIDTH)));
 
     // Write the P1 classid to PHV
-    modify_field(txdma_control.rfc_p1_classid, scratch_metadata.field10);
+    modify_field(txdma_control.rfc_p1_classid, scratch_metadata.field8);
 
     // Initialize the correct table base and index based on the recirc count
     if ((txdma_control.recirc_count & 0x1) == 0) {
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_2_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sport_classid0 << 8)|
-                                                rx_to_tx_hdr.dport_classid0);
+        modify_field(scratch_metadata.field20, ((rx_to_tx_hdr.sport_classid0 <<
+                                                 SACL_PROTO_DPORT_CLASSID_WIDTH) |
+                                                 rx_to_tx_hdr.dport_classid0));
     } else {
         // P2 table base
         modify_field(scratch_metadata.field40, SACL_P2_4_TABLE_OFFSET);
         // P2 table index
-        modify_field(scratch_metadata.field20, (txdma_control.dtag_classid << 8)|
-                                                rx_to_tx_hdr.dport_classid0);
+        modify_field(scratch_metadata.field20, ((txdma_control.dtag_classid <<
+                                                 SACL_PROTO_DPORT_CLASSID_WIDTH) |
+                                                 rx_to_tx_hdr.dport_classid0));
     }
 
     // Write P2 table index to PHV
@@ -448,7 +508,9 @@ action rfc_action_p1_1(pad, id50,
     modify_field(txdma_control.rfc_table_addr,              // P2 Lookup Addr =
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
-                 (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+                 (((scratch_metadata.field20) /
+                  SACL_P2_ENTRIES_PER_CACHE_LINE) *
+                  SACL_CACHE_LINE_SIZE));                   // Index Bytes
 }
 
 @pragma stage 5
@@ -463,69 +525,84 @@ table rfc_p1_1 {
     }
 }
 
-action rfc_action_p2_1(pad, id50,
-                         id49, id48, id47, id46, id45, id44, id43, id42, id41, id40,
-                         id39, id38, id37, id36, id35, id34, id33, id32, id31, id30,
-                         id29, id28, id27, id26, id25, id24, id23, id22, id21, id20,
-                         id19, id18, id17, id16, id15, id14, id13, id12, id11, id10,
-                         id09, id08, id07, id06, id05, id04, id03, id02, id01, id00
+action rfc_action_p2_1(id63, id62, id61, id60, id59, id58, id57, id56,
+                       id55, id54, id53, id52, id51, id50, id49, id48,
+                       id47, id46, id45, id44, id43, id42, id41, id40,
+                       id39, id38, id37, id36, id35, id34, id33, id32,
+                       id31, id30, id29, id28, id27, id26, id25, id24,
+                       id23, id22, id21, id20, id19, id18, id17, id16,
+                       id15, id14, id13, id12, id11, id10, id09, id08,
+                       id07, id06, id05, id04, id03, id02, id01, id00
                       )
 {
-    modify_field(scratch_metadata.field10, id00);
-    modify_field(scratch_metadata.field10, id01);
-    modify_field(scratch_metadata.field10, id02);
-    modify_field(scratch_metadata.field10, id03);
-    modify_field(scratch_metadata.field10, id04);
-    modify_field(scratch_metadata.field10, id05);
-    modify_field(scratch_metadata.field10, id06);
-    modify_field(scratch_metadata.field10, id07);
-    modify_field(scratch_metadata.field10, id08);
-    modify_field(scratch_metadata.field10, id09);
-    modify_field(scratch_metadata.field10, id10);
-    modify_field(scratch_metadata.field10, id11);
-    modify_field(scratch_metadata.field10, id12);
-    modify_field(scratch_metadata.field10, id13);
-    modify_field(scratch_metadata.field10, id14);
-    modify_field(scratch_metadata.field10, id15);
-    modify_field(scratch_metadata.field10, id16);
-    modify_field(scratch_metadata.field10, id17);
-    modify_field(scratch_metadata.field10, id18);
-    modify_field(scratch_metadata.field10, id19);
-    modify_field(scratch_metadata.field10, id20);
-    modify_field(scratch_metadata.field10, id21);
-    modify_field(scratch_metadata.field10, id22);
-    modify_field(scratch_metadata.field10, id23);
-    modify_field(scratch_metadata.field10, id24);
-    modify_field(scratch_metadata.field10, id25);
-    modify_field(scratch_metadata.field10, id26);
-    modify_field(scratch_metadata.field10, id27);
-    modify_field(scratch_metadata.field10, id28);
-    modify_field(scratch_metadata.field10, id29);
-    modify_field(scratch_metadata.field10, id30);
-    modify_field(scratch_metadata.field10, id31);
-    modify_field(scratch_metadata.field10, id32);
-    modify_field(scratch_metadata.field10, id33);
-    modify_field(scratch_metadata.field10, id34);
-    modify_field(scratch_metadata.field10, id35);
-    modify_field(scratch_metadata.field10, id36);
-    modify_field(scratch_metadata.field10, id37);
-    modify_field(scratch_metadata.field10, id38);
-    modify_field(scratch_metadata.field10, id39);
-    modify_field(scratch_metadata.field10, id40);
-    modify_field(scratch_metadata.field10, id41);
-    modify_field(scratch_metadata.field10, id42);
-    modify_field(scratch_metadata.field10, id43);
-    modify_field(scratch_metadata.field10, id44);
-    modify_field(scratch_metadata.field10, id45);
-    modify_field(scratch_metadata.field10, id46);
-    modify_field(scratch_metadata.field10, id47);
-    modify_field(scratch_metadata.field10, id48);
-    modify_field(scratch_metadata.field10, id49);
-    modify_field(scratch_metadata.field10, id50);
-    modify_field(scratch_metadata.field2,  pad);
+    modify_field(scratch_metadata.field8, id00);
+    modify_field(scratch_metadata.field8, id01);
+    modify_field(scratch_metadata.field8, id02);
+    modify_field(scratch_metadata.field8, id03);
+    modify_field(scratch_metadata.field8, id04);
+    modify_field(scratch_metadata.field8, id05);
+    modify_field(scratch_metadata.field8, id06);
+    modify_field(scratch_metadata.field8, id07);
+    modify_field(scratch_metadata.field8, id08);
+    modify_field(scratch_metadata.field8, id09);
+    modify_field(scratch_metadata.field8, id10);
+    modify_field(scratch_metadata.field8, id11);
+    modify_field(scratch_metadata.field8, id12);
+    modify_field(scratch_metadata.field8, id13);
+    modify_field(scratch_metadata.field8, id14);
+    modify_field(scratch_metadata.field8, id15);
+    modify_field(scratch_metadata.field8, id16);
+    modify_field(scratch_metadata.field8, id17);
+    modify_field(scratch_metadata.field8, id18);
+    modify_field(scratch_metadata.field8, id19);
+    modify_field(scratch_metadata.field8, id20);
+    modify_field(scratch_metadata.field8, id21);
+    modify_field(scratch_metadata.field8, id22);
+    modify_field(scratch_metadata.field8, id23);
+    modify_field(scratch_metadata.field8, id24);
+    modify_field(scratch_metadata.field8, id25);
+    modify_field(scratch_metadata.field8, id26);
+    modify_field(scratch_metadata.field8, id27);
+    modify_field(scratch_metadata.field8, id28);
+    modify_field(scratch_metadata.field8, id29);
+    modify_field(scratch_metadata.field8, id30);
+    modify_field(scratch_metadata.field8, id31);
+    modify_field(scratch_metadata.field8, id32);
+    modify_field(scratch_metadata.field8, id33);
+    modify_field(scratch_metadata.field8, id34);
+    modify_field(scratch_metadata.field8, id35);
+    modify_field(scratch_metadata.field8, id36);
+    modify_field(scratch_metadata.field8, id37);
+    modify_field(scratch_metadata.field8, id38);
+    modify_field(scratch_metadata.field8, id39);
+    modify_field(scratch_metadata.field8, id40);
+    modify_field(scratch_metadata.field8, id41);
+    modify_field(scratch_metadata.field8, id42);
+    modify_field(scratch_metadata.field8, id43);
+    modify_field(scratch_metadata.field8, id44);
+    modify_field(scratch_metadata.field8, id45);
+    modify_field(scratch_metadata.field8, id46);
+    modify_field(scratch_metadata.field8, id47);
+    modify_field(scratch_metadata.field8, id48);
+    modify_field(scratch_metadata.field8, id49);
+    modify_field(scratch_metadata.field8, id50);
+    modify_field(scratch_metadata.field8, id51);
+    modify_field(scratch_metadata.field8, id52);
+    modify_field(scratch_metadata.field8, id53);
+    modify_field(scratch_metadata.field8, id54);
+    modify_field(scratch_metadata.field8, id55);
+    modify_field(scratch_metadata.field8, id56);
+    modify_field(scratch_metadata.field8, id57);
+    modify_field(scratch_metadata.field8, id58);
+    modify_field(scratch_metadata.field8, id59);
+    modify_field(scratch_metadata.field8, id60);
+    modify_field(scratch_metadata.field8, id61);
+    modify_field(scratch_metadata.field8, id62);
+    modify_field(scratch_metadata.field8, id63);
 
     /* Get the P2 classid by indexing into the classid array */
-    modify_field(scratch_metadata.field10,id00>>(txdma_control.rfc_index%51)*10);
+    modify_field(scratch_metadata.field8, (id00 >> ((txdma_control.rfc_index %
+                 SACL_P2_ENTRIES_PER_CACHE_LINE)*SACL_P2_CLASSID_WIDTH)));
 
     // Initialize the correct table base based on the recirc count
     if ((txdma_control.recirc_count & 0x1) == 0) {
@@ -537,8 +614,10 @@ action rfc_action_p2_1(pad, id50,
     }
 
     // P3 table index
-    modify_field(scratch_metadata.field20, (txdma_control.rfc_p1_classid << 10)|
-                                            scratch_metadata.field10);
+    modify_field(scratch_metadata.field20, ((txdma_control.rfc_p1_classid <<
+                                            SACL_P2_CLASSID_WIDTH) |
+                                            scratch_metadata.field8));
+
     // Write P3 table index to PHV
     modify_field(txdma_control.rfc_index, scratch_metadata.field20);
 
@@ -546,7 +625,9 @@ action rfc_action_p2_1(pad, id50,
     modify_field(txdma_control.rfc_table_addr,              // P3 Lookup Addr =
                  rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                  scratch_metadata.field40 +                 // Table Base +
-                 (((scratch_metadata.field20) / 46) * 64)); // Index Bytes
+                 (((scratch_metadata.field20) /
+                  SACL_P3_ENTRIES_PER_CACHE_LINE) *
+                  SACL_CACHE_LINE_SIZE));                   // Index Bytes
 }
 
 @pragma stage 6
@@ -669,8 +750,12 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
     modify_field(scratch_metadata.field1, res45);
     modify_field(scratch_metadata.field6,  pad);
 
-    modify_field(scratch_metadata.field10,pr00>>(txdma_control.rfc_index%46)*10);
-    modify_field(scratch_metadata.field1,res00>>(txdma_control.rfc_index%46)*1);
+    /* Get the P3 result by indexing into the classid array */
+    /* Get the P3 result by indexing into the classid array */
+    modify_field(scratch_metadata.field10,pr00>>(txdma_control.rfc_index%
+                 SACL_P3_ENTRIES_PER_CACHE_LINE)*SACL_P3_ENTRY_WIDTH);
+    modify_field(scratch_metadata.field1,res00>>(txdma_control.rfc_index%
+                 SACL_P3_ENTRIES_PER_CACHE_LINE)*SACL_P3_ENTRY_WIDTH);
 
     // If the priority of the current result is higher than whats in the PHV
     if (txdma_control.rule_priority > scratch_metadata.field10) {
@@ -686,14 +771,16 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
             // P1 table base
             modify_field(scratch_metadata.field40, SACL_P1_3_TABLE_OFFSET);
             // P1 table index
-            modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid0 << 7)|
-                                                    txdma_control.dtag_classid);
+            modify_field(scratch_metadata.field20, ((rx_to_tx_hdr.sip_classid0 <<
+                                                     SACL_TAG_CLASSID_WIDTH) |
+                                                    txdma_control.dtag_classid));
         } else {
             // P1 table base
             modify_field(scratch_metadata.field40, SACL_P1_1_TABLE_OFFSET);
             // P1 table index
-            modify_field(scratch_metadata.field20, (rx_to_tx_hdr.sip_classid0 << 7)|
-                                                    rx_to_tx_hdr.sport_classid0);
+            modify_field(scratch_metadata.field20, ((rx_to_tx_hdr.sip_classid0 <<
+                                                     SACL_SPORT_CLASSID_WIDTH) |
+                                                    rx_to_tx_hdr.sport_classid0));
         }
 
         // Write P1 table index to PHV
@@ -703,7 +790,9 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
         modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
                      rx_to_tx_hdr.sacl_base_addr0 +             // Region Base +
                      scratch_metadata.field40 +                 // Table Base +
-                     (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+                     (((scratch_metadata.field20) /
+                      SACL_P1_ENTRIES_PER_CACHE_LINE) *
+                      SACL_CACHE_LINE_SIZE));                   // Index Bytes
     } else {
         modify_field(txdma_predicate.rfc_enable, FALSE);
     }

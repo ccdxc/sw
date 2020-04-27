@@ -110,10 +110,11 @@ action read_pktdesc1(remote_ip,
 
     // Setup for RFC lookup
     if (sacl_base_addr0 != 0) {
-        // Initialize the first P1 table index = (sip_classid0 << 7) | sport_classid0
-        modify_field(scratch_metadata.field20, (scratch_metadata.field10 << 7)|
+        // Initialize the first P1 table index
+        // = (sip_classid0 << SACL_SPORT_CLASSID_WIDTH) | sport_classid0
+        modify_field(scratch_metadata.field20, (scratch_metadata.field10 <<
+                                                SACL_SPORT_CLASSID_WIDTH) |
                                                 scratch_metadata.field8);
-
         // Write P1 table index to PHV
         modify_field(txdma_control.rfc_index, scratch_metadata.field20);
 
@@ -121,7 +122,9 @@ action read_pktdesc1(remote_ip,
         modify_field(txdma_control.rfc_table_addr,              // P1 Lookup Addr =
                      sacl_base_addr0 +                          // Region Base +
                      SACL_P1_1_TABLE_OFFSET +                   // Table Base +
-                     (((scratch_metadata.field20) / 51) * 64)); // Index Bytes
+                     (((scratch_metadata.field20) /             // Index Bytes
+                       SACL_P1_ENTRIES_PER_CACHE_LINE) *
+                      SACL_CACHE_LINE_SIZE));
 
         modify_field(txdma_predicate.rfc_enable, TRUE);
     }
