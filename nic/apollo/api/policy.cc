@@ -554,6 +554,11 @@ policy_rule::read(pds_policy_rule_info_t *info) {
     policy_info.spec.rule_info =
         (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                   POLICY_RULE_INFO_SIZE(0));
+    if (unlikely(policy_info.spec.rule_info == NULL)) {
+        PDS_TRACE_ERR("Failed to allocate policy %s memory for "
+                      "rule %s read", key_.policy_id, key_.rule_id.str());
+        return SDK_RET_OOM;
+    }
     ret = pds_policy_read(&key_.policy_id, &policy_info);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to get policy %s size, err %u",
@@ -565,6 +570,11 @@ policy_rule::read(pds_policy_rule_info_t *info) {
     policy_info.spec.rule_info =
         (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                   POLICY_RULE_INFO_SIZE(num_rules));
+    if (policy_info.spec.rule_info == NULL) {
+        PDS_TRACE_ERR("Failed to allocate policy %s memory for "
+                      "rule %s read", key_.policy_id, key_.rule_id.str());
+        return SDK_RET_OOM;
+    }
     policy_info.spec.rule_info->num_rules = num_rules;
     ret = pds_policy_read(&key_.policy_id, &policy_info);
     if (ret != SDK_RET_OK) {
