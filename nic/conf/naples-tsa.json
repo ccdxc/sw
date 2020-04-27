@@ -84,12 +84,67 @@
 				{
                                         "Name" : "Show Agent Mirror Sessions",
                                         "Method" : 0,
-                                        "Command" : "curl  localhost:9007/api/mirror/sessions/ | jq ."
+                                        "Command" : "curl localhost:9007/api/mirror/sessions/ | jq ."
                                 },
 				{
                                         "Name" : "Show Agent Telmetry FlowExports",
                                         "Method" : 0,
-                                        "Command" : "curl  localhost:9007/api/mirror/sessions/ | jq ."
+                                        "Command" : "curl localhost:9007/api/telemetry/flowexports/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Mode",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/mode/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Security Policies",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/security/policies/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Apps",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/apps/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Vrfs",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/vrfs/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Networks",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/networks/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Interfaces",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/interfaces/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Tunnels",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/tunnels/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Profiles",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/profiles/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Endpoints",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/endpoints/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Collectors",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/collectors/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Agent Debug goroutine",
+                                        "Method" : 0,
+					"Command" : "curl localhost:9007/api/debug/goroutine?debug=1"
                                 },
                                 {
                                         "Name" : "Show Session Count",
