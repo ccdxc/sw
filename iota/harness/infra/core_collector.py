@@ -20,8 +20,8 @@ class CoreCollector(object):
         self.testbed = testbed
         self.username = username
         self.password = password
-        self.scpPfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "%password
-        self.sshPfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "%password
+        self.scpPfx = "sshpass -p %s scp -o ConnectTimeout=60 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "%password
+        self.sshPfx = "sshpass -p %s ssh -o ConnectTimeout=60 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "%password
         if destDir == "/":
             raise ValueError("destDir cannot be / directory")
         if destDir == "":
