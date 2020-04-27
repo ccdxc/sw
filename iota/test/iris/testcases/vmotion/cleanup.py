@@ -68,7 +68,9 @@ def Setup(tc):
         '''
         add all nodes in the topo
         '''
-        node_list = api.GetNodes()
+        nodes = api.GetNodes()
+        for node in nodes:
+            node_list.append(node.Name())
     tc.uuidMap  = api.GetNaplesNodeUuidMap()
     for node in node_list:
         (wls,new_node) = getWorkloadsToRemove(tc, node)

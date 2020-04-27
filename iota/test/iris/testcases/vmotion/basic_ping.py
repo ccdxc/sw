@@ -147,6 +147,14 @@ def triggerVmotion(tc, wl, node):
     api.Trigger_WorkloadMoveAddRequest(req, [wl], node)
     tc.resp = api.TriggerMove(req)
 
+def triggerVmotions(tc, wls, node):
+    for wl in wls:
+        api.Logger.info("triggering vmotion for workload %s to node %s" %(wl.workload_name, node))
+    req = api.Trigger_WorkloadMoveRequest()
+    api.Trigger_WorkloadMoveAddRequest(req, wls, node)
+    tc.resp = api.TriggerMove(req)
+
+
 def getWorkloads(tc, type):
     if type == 'naples':
         if not len(tc.Nodes):
@@ -172,8 +180,9 @@ def update_move_info(tc, workloads, factor_l2seg, new_node):
     wire_encap   = []
     for wl in workloads:
         #import pdb; pdb.set_trace()
-        if (factor_l2seg and wl.uplink_vlan in wire_encap):
-            continue
+        if tc.num_moves <= 2:
+            if (factor_l2seg and wl.uplink_vlan in wire_encap):
+                continue
         move_info = MoveInfo()
         move_info.new_node = new_node
         move_info.wl       = wl
@@ -209,16 +218,19 @@ def create_move_info(tc, dsc_to_dsc):
 
 def do_vmotion(tc, dsc_to_dsc):
     vm_threads = []
+    wls        = []
 
     for wl_info in tc.move_info:
-        if (api.IsNaplesNode(wl_info.wl.node_name)):
-            wl_info.sess_info_before = vm_utils.get_session_info(tc, wl_info.wl)
-            vm_utils.get_sessions_info(tc, wl_info.old_node)
         api.Logger.info("moving wl {} from node {} to node {}".format(wl_info.wl.workload_name, wl_info.old_node, wl_info.new_node))
-        vm_thread = threading.Thread(target=triggerVmotion,args=(tc, wl_info.wl, wl_info.new_node, ))
-        vm_threads.append(vm_thread)
-        vm_thread.start()
+        wls.append(wl_info.wl)
+
+    vm_thread = threading.Thread(target=triggerVmotions,args=(tc, wls, wl_info.new_node, ))
+    vm_threads.append(vm_thread)
+    vm_thread.start()
+
+    for wl_info in tc.move_info: 
         vm_utils.create_ep_info(tc, wl_info.wl, wl_info.new_node, "START", wl_info.old_node)
+    
     # wait for vmotion thread to complete, meaning vmotion is done on vcenter
     for vm_thread in vm_threads:
         vm_thread.join()
@@ -281,6 +293,7 @@ def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
+    new_node = ''
     for wl_info in tc.move_info:
         wl_info.sess_info_after = vm_utils.get_session_info(tc, wl_info.wl)
 
@@ -290,8 +303,10 @@ def Verify(tc):
         vm_utils.get_sessions_info(tc, wl_info.new_node)
         if (wl_info.sess_info_before): 
             ret2 = vm_utils.verify_session_info(tc, wl_info)
-    
+        new_node = wl_info.new_node 
     if ret1 != api.types.status.SUCCESS or ret2 != api.types.status.SUCCESS:
+        return api.types.status.FAILURE
+    if vm_utils.verify_dbg_vmotion(tc, new_node) != api.types.status.SUCCESS:
         return api.types.status.FAILURE
     return api.types.status.SUCCESS
 

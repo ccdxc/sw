@@ -4,6 +4,7 @@ import time
 import copy
 import ipaddress
 import threading
+import re
 import iota.test.iris.config.netagent.api as agent_api
 import iota.harness.api as api
 import yaml
@@ -110,7 +111,6 @@ def build_dict(session, sess_dict):
     sess_dict[sess_r_key] = sess_r_data
 
 def compare_session_info(sess_before_dict, sess_after_dict, detailed=False):
-    #import pdb; pdb.set_trace()
     ret = api.types.status.SUCCESS
     for flow_key,flow_data in sess_before_dict.items():
         (sip, dip, proto, sport, dport) = flow_key
@@ -259,14 +259,14 @@ def increase_timeout():
         return api.types.status.FAILURE
 
     for object in store_profile_objects:
-        object.spec.timeouts.session_idle = "240s"
-        object.spec.timeouts.tcp = "300s"
-        object.spec.timeouts.udp = "300s"
+        object.spec.timeouts.session_idle = "360s"
+        object.spec.timeouts.tcp = "360s"
+        object.spec.timeouts.udp = "360s"
         object.spec.timeouts.icmp = "120s"
-        object.spec.timeouts.tcp_half_close = "120s"
-        object.spec.timeouts.tcp_close = "120s"
+        object.spec.timeouts.tcp_half_close = "360s"
+        object.spec.timeouts.tcp_close = "360s"
         object.spec.timeouts.tcp_connection_setup = "60s"
-        object.spec.timeouts.tcp_drop = "180s"
+        object.spec.timeouts.tcp_drop = "360s"
         object.spec.timeouts.udp_drop = "60s"
         object.spec.timeouts.icmp_drop = "300s"
 
@@ -274,3 +274,58 @@ def increase_timeout():
     agent_api.UpdateConfigObjects(store_profile_objects)
     return api.types.status.SUCCESS
 
+
+def vm_process_dbg_out(f):
+    ret_dict = dict()
+    found_pattern = False
+    header_skipped = False
+    lines = f.splitlines()
+    for line in lines:
+        m = re.search('EndPoint.*useg-vlan.*MigrationState',line)
+        if m:
+            found_pattern = True
+            continue
+        if found_pattern:
+            if not header_skipped:
+                header_skipped = True
+                continue
+            else:
+                m2=re.search('(.*)\s+[ \t](\d+)[ \t].*(\d)',line)
+                if not m2:
+                    break
+                mac = m2.group(1).rstrip()
+                useg_vlan = m2.group(2)
+                mig_state = m2.group(3)
+                ret_dict[mac] = {"useg_vlan":useg_vlan,"mig_state":mig_state}
+    return ret_dict
+
+def process_dbg_vmotion_output(tc, f):
+    ret = api.types.status.SUCCESS
+    ep_vm_dict = vm_process_dbg_out(f)
+    for moved_ep in tc.move_info:
+        mac_addr = moved_ep.wl.mac_address
+        if mac_addr in ep_vm_dict.keys():
+            api.Logger.info("mac_addr {} moved per vm dbg cmd".format(mac_addr))
+        else:
+            api.Logger.info("mac_addr {} not found in vm dbg cmd".format(mac_addr))
+            ret = api.types.status.FAILURE
+    return ret 
+ 
+def verify_dbg_vmotion(tc, node):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd_cookie = "hal debug vmotion"
+    api.Trigger_AddNaplesCommand(req, node, "/nic/bin/halctl debug vmotion")
+    tc.cmd_cookies.append(cmd_cookie)
+    trig_resp = api.Trigger(req)
+    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    cookie_idx = 0
+    for cmd in tc.resp.commands:
+        #api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
+        #api.PrintCommandResults(cmd)
+        if tc.cmd_cookies[cookie_idx].find("hal debug vmotion") != -1 and cmd.stdout == '':
+           api.Logger.info("hal show session returned no sessions")
+           return None
+        else:
+           ret = process_dbg_vmotion_output(tc, cmd.stdout)
+           return ret

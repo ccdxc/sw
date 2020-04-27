@@ -10,7 +10,7 @@ import iota.test.utils.ping as ping
 import iota.test.iris.testcases.vmotion.arping as arping
 import iota.test.iris.testcases.vmotion.vm_utils as vm_utils 
 
-__fuz_run_time = "120s"
+__fuz_run_time = "20s"
 
 def copy_fuz(tc):
     tc.fuz_exec = {}
@@ -82,7 +82,7 @@ def start_fuz(tc, fuz_run_time = __fuz_run_time):
         api.Logger.info("Starting Fuz test from %s num-sessions %d port %d" % (cmd_descr, num_sessions, port))
 
         serverCmd = tc.fuz_exec[server.workload_name]  + " -port " + str(port)
-        clientCmd = tc.fuz_exec[client.workload_name]  + " -conns " + str(num_sessions) + " -duration " + str(__fuz_run_time) + " -attempts 1 -read-timeout 100 -talk " + server.ip_address + ":" + str(port)
+        clientCmd = tc.fuz_exec[client.workload_name]  + " -conns " + str(num_sessions) + " -duration " + str(__fuz_run_time) + " -attempts 1 -read-timeout 20 -talk " + server.ip_address + ":" + str(port)
 
         api.Logger.info("Server command %s" %serverCmd)
         api.Logger.info("Client command %s" %clientCmd)
