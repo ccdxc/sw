@@ -20,9 +20,10 @@
     </p-listbox>
     <div fxLayout="row" fxLayoutAlign="end center">
       <div fxFlexFill></div>
-      <button fxFlex="100px" [disabled]="selectedOption==null"
+      <button fxFlex="100px" [disabled]=" selectedOption==null  "
+              *ngIf="!disableDSCProfilerSetterSaveButton"
               class="global-button-primary  dscprofilesetter-plist-label-editor-button dscprofilesetter-plist-label-editor-save"
-              [ngClass]="selectedOption != null? '' : 'global-button-disabled'"
+              [ngClass]="selectedOption != null  ? '' : 'global-button-disabled'"
               (click)="onSave($event)">SAVE
       </button>
       <button fxFlex="100px"

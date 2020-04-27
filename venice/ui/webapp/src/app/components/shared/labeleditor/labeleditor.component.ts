@@ -54,6 +54,7 @@ export class LabeleditorComponent implements OnInit, OnChanges {
   // inLabelEditMode is contolling the dialog popup
   @Input() inLabelEditMode: boolean;
 
+
   // get edited meta.labels as an array format
   @Output() arrayValue = new EventEmitter();
   // get edited meta.labels as an obj format
@@ -63,9 +64,18 @@ export class LabeleditorComponent implements OnInit, OnChanges {
   // cancel handler
   @Output() cancelEmitter: EventEmitter<object> = new EventEmitter<object>();
 
+  @Input() saveLabelsOperationDone: boolean ;
+
+  //  VS-1553, we want to disable save button when UI emits a call to update records. It works along with this.saveDSCProfileOperationDone
+  disableSaveButton: boolean = false;
+
   formValidated: boolean = true;
 
   constructor() {
+  }
+
+  getClassName(): string {
+    return this.constructor.name;
   }
 
   /**
@@ -250,6 +260,11 @@ export class LabeleditorComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
+
+    if (this.saveLabelsOperationDone != null && this.saveLabelsOperationDone !== undefined  ) {
+      this.disableSaveButton = false;
+    }
+
     // the passed object(s) have changed. We need to process them again.
     if (this.objects.length === 0 || !this.objects[0]) {
       if (!this.models) {
@@ -329,6 +344,7 @@ export class LabeleditorComponent implements OnInit, OnChanges {
   save() {
     // save fields, the saveEmitter will handle the http call
     this.updateObjects();
+    this.disableSaveButton = true; // disable [save] button to prevent user from clicking it multiple times
     this.saveEmitter.emit(this.updatedObjects);
   }
 
@@ -338,6 +354,7 @@ export class LabeleditorComponent implements OnInit, OnChanges {
   cancel() {
     // reset fields
     this.init();
+    this.disableSaveButton = false;  // enable [save] button
     this.cancelEmitter.emit();
   }
 

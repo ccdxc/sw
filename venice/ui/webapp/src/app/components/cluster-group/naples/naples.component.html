@@ -98,6 +98,7 @@
                            (saveEmitter)="handleEditSave($event)"
                            (cancelEmitter)="handleEditCancel($event)"
                            [objects]="this.tableContainer.selectedDataObjects"
+                           [saveLabelsOperationDone]="saveLabelsOperationDone"
                            [nameKey]="'spec.id'">
           </app-labeleditor>
           <!-- DSC PROFILE EDITOR -->
@@ -108,7 +109,8 @@
           <app-dscprofilesetter [inEditMode]="inProfileAssigningMode"
                                 [selections]="dscprofileOptions"
                                 (saveEmitter)="handleSetDSCProfileSave($event)"
-                                (cancelEmitter)="handleSetDSCProfileCancel($event)">
+                                (cancelEmitter)="handleSetDSCProfileCancel($event)"
+                                [saveDSCProfileOperationDone]="saveDSCProfileOperationDone">
           </app-dscprofilesetter>
 
         </div>

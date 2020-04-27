@@ -2,10 +2,11 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewEncapsu
 import { FormArray } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
-import { DSCWorkloadsTuple, HandleWatchItemResult, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
+import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { Utility, VeniceObjectCache } from '@app/common/Utility';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { CustomExportMap, TableCol } from '@app/components/shared/tableviewedit';
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -19,20 +20,17 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchUtil } from '@components/search/SearchUtil';
 import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode, ClusterDistributedServiceCardStatus_admission_phase, IClusterDistributedServiceCard, ClusterDSCProfile } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode, ClusterDistributedServiceCardStatus_admission_phase, ClusterDSCProfile, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
-import { FieldsRequirement, ISearchSearchResponse, SearchSearchRequest, SearchSearchRequest_mode, SearchSearchResponse } from '@sdk/v1/models/generated/search';
-import { IWorkloadAutoMsgWorkloadWatchHelper, WorkloadWorkload, WorkloadWorkloadList } from '@sdk/v1/models/generated/workload';
+import { FieldsRequirement, ISearchSearchResponse, SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { IBulkeditBulkEditItem, IStagingBulkEditAction } from '@sdk/v1/models/generated/staging';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import * as _ from 'lodash';
+import { SelectItem } from 'primeng/api';
 import { forkJoin, Observable, Subscription } from 'rxjs';
-import { debounceTime, switchMap } from 'rxjs/operators';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesCondition, NaplesConditionValues } from '.';
-import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { SelectItem } from 'primeng/api';
-import { IStagingBulkEditAction, IBulkeditBulkEditItem, StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 
 interface ChartData {
   // macs or ids of the dsc
@@ -206,6 +204,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   selectedDSCProfiles: SelectItem;
   dscprofiles: ReadonlyArray<ClusterDSCProfile> = [];
 
+  saveDSCProfileOperationDone: boolean;
+  saveLabelsOperationDone: boolean;
+
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
@@ -215,6 +216,10 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     protected uiconfigsService: UIConfigsService
   ) {
     super(controllerService, cdr, uiconfigsService);
+  }
+
+  getClassName(): string {
+    return this.constructor.name;
   }
 
   deleteRecord(object: ClusterDistributedServiceCard): Observable<{ body: IClusterDistributedServiceCard | IApiStatus | Error; statusCode: number; }> {
@@ -996,6 +1001,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       let successCount: number = 0;
       let failCount: number = 0;
       const errors: string[] = [];
+      this.saveLabelsOperationDone = true;
       for (let i = 0; i < results.length; i++) {
         if (results[i]['statusCode'] === 200) {
           successCount += 1;
@@ -1017,6 +1023,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       error => {
         this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
         this.inProfileAssigningMode = false;
+        this.saveLabelsOperationDone = true;
       }
     );
   }
@@ -1030,11 +1037,18 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   onBulkEditSuccess(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string) {
+    this.setSavebuttonState(true);
     this.onForkJoinSuccess();
+  }
+
+  private setSavebuttonState(flag: boolean ) {
+    this.saveDSCProfileOperationDone = flag;
+    this.saveLabelsOperationDone = flag;
   }
 
   onBulkEditFailure(error: Error, veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string, ) {
      // A DSC used to have "InsertionFWProfile" profile. If user change it to "default" profile. Sever will reject, we restore data here
+     this.setSavebuttonState(true);
      this.dataObjects = Utility.getLodash().cloneDeepWith(this.dataObjectsBackUp);
   }
 
@@ -1299,6 +1313,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     const failureMsg: string = 'Failed to udpate DSCs profile';
     const stagingBulkEditAction = this.buildBulkEditDSCProfilePayload(updatedDSCs);
     if (stagingBulkEditAction) {
+      this.saveDSCProfileOperationDone = null;
       this.bulkEditHelper(updatedDSCs, stagingBulkEditAction, successMsg, failureMsg);
     } else {
       this._controllerService.invokeInfoToaster('No update neccessary', 'All selected DSCs are assigned ' + this.selectedDSCProfiles.value + ' DSC profile already.');
@@ -1311,6 +1326,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     const successMsg: string = 'updated ' + updatedDSCs.length + ' DSCs labels ';
     const failureMsg: string = 'Failed to udpate DSC labels';
     const stagingBulkEditAction = this.buildBulkEditLabelsPayload(updatedDSCs);
+    this.saveLabelsOperationDone = null;
     this.bulkEditHelper(updatedDSCs, stagingBulkEditAction, successMsg, failureMsg);
   }
 
@@ -1332,6 +1348,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     }
     const summary = 'Distributed Services Card update profile';
     const objectType = 'DSC';
+    this.saveLabelsOperationDone = null;
     this.handleForkJoin(observables, summary, objectType);
   }
 }

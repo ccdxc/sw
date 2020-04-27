@@ -66,10 +66,10 @@
 
   <div *ngIf="metadata?.extendable" fxLayout="row" fxLayoutAlign="end center">
     <div fxFlexFill></div>
-    <button [disabled]="!formValidated" fxFlex="100px"
-            [ngClass]="formValidated ? '' : 'global-button-disabled'"
+    <button [disabled]="!formValidated || disableSaveButton" fxFlex="100px"
+            [ngClass]="formValidated  || disableSaveButton ? '' : 'global-button-disabled'"
             class="global-button-primary label-editor-button label-editor-save"
-            *ngIf="metadata.save"
+            *ngIf="metadata.save && !disableSaveButton"
             (click)="save()">
       {{metadata.saveTxt ? metadata.saveTxt : 'SAVE'}}
     </button>
