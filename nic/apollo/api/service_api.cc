@@ -74,7 +74,6 @@ pds_svc_mapping_read (pds_obj_key_t *key, pds_svc_mapping_info_t *info)
     if (key == NULL || info == NULL) {
         return SDK_RET_INVALID_ARG;
     }
-
     rv = svc_mapping_db()->skey(key, &skey);
     if (rv != SDK_RET_OK) {
         return SDK_RET_ENTRY_NOT_FOUND;
@@ -85,8 +84,9 @@ pds_svc_mapping_read (pds_obj_key_t *key, pds_svc_mapping_info_t *info)
     }
     memset(info, 0, sizeof(pds_svc_mapping_info_t));
     info->spec.key = *key;
-
-    return entry->read(key, info);
+    rv = entry->read(key, info);
+    svc_mapping::soft_delete(entry);
+    return rv;
 }
 
 typedef struct svc_mapping_read_all_args_s {

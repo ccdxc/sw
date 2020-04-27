@@ -180,6 +180,7 @@ pds_local_mapping_read (pds_obj_key_t *key,
     if (rv == SDK_RET_OK) {
         pds_mapping_spec_to_local_spec(&local_info->spec, &info.spec);
     }
+    mapping_entry::soft_delete(entry);
     return rv;
 }
 
@@ -195,19 +196,18 @@ pds_remote_mapping_read (pds_obj_key_t *key,
     if ((key == NULL) || (remote_info == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
-
     rv = mapping_db()->skey(key, &skey);
     if (rv != SDK_RET_OK) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     entry = mapping_entry::build(&skey);
-
     memset(&info, 0, sizeof(pds_mapping_info_t));
     info.spec.key = *key;
     rv = entry->read(key, &info);
     if (rv == SDK_RET_OK) {
         pds_mapping_spec_to_remote_spec(&remote_info->spec, &info.spec);
     }
+    mapping_entry::soft_delete(entry);
     return rv;
 }
 
