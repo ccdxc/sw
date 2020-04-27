@@ -24,6 +24,13 @@ namespace elba {
 #define ELBA_P4PLUS_NUM_STAGES       8
 #define ELBA_P4PLUS_SXDMA_NUM_STAGES 4
 
+#define ELBA_OK (0)
+#define ELBA_FAIL (-1)
+
+sdk_ret_t elba_table_rw_init(asic_cfg_t *elba_cfg);
+sdk_ret_t elba_table_rw_soft_init(asic_cfg_t *elba_cfg);
+sdk_ret_t elba_p4plus_table_rw_init(void);
+
 typedef struct pf_tcam_l2_ {
     uint16_t eth_type;
     uint8_t  payload[6];
@@ -113,10 +120,6 @@ typedef enum pf_tcam_key_fld_pos {
     PF_TCAM_FLD_MAX_FIELDS
 } pf_tcam_key_fld_pos_t;
 
-
-
-sdk_ret_t elba_table_rw_init(asic_cfg_t *elba_cfg);
-sdk_ret_t elba_p4plus_table_rw_init(void);
 
 void elba_table_rw_cleanup(void);
 
@@ -249,6 +252,7 @@ sdk_ret_t elba_pf_l2_multi_dest_tcam_entry_write(uint8_t index, uint8_t *mac_da,
                                                  uint8_t vlan_op,
                                                  uint16_t vlan_id);
 
+void elba_table_csr_cache_inval_init(void);
 void elba_program_p4plus_table_mpu_pc(int tableid, int stage_tbl_id, int stage);
 uint64_t elba_get_p4plus_table_mpu_pc(int tableid);
 

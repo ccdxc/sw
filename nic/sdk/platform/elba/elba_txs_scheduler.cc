@@ -290,12 +290,12 @@ elba_txs_scheduler_tx_alloc (elba_txs_sched_lif_params_t *tx_params,
 
     if (*alloc_units > 0) {
         //Allocate consecutive alloc_unit num of entries in sched table.
-        *alloc_offset = g_elba_state_pd->txs_scheduler_map_idxr()->Alloc(*alloc_units);
+        *alloc_offset =
+            g_elba_state_pd->txs_scheduler_map_idxr()->Alloc(*alloc_units);
         if (*alloc_offset < 0) {
             ret = SDK_RET_NO_RESOURCE;
         }
     }
-
     return ret;
 }
 

@@ -22,7 +22,6 @@ using sdk::platform::utils::mpartition_region_t;
 #define    JUMBO_FRAME_SIZE             9216
 #define    ETH_FRAME_SIZE               1536
 
-void asic_reset_hbm_regions(asic_cfg_t *cfg);
 mpartition_region_t *get_mem_region(char *name);
 uint64_t get_mem_base(void);
 uint64_t get_mem_offset(const char *reg_name);

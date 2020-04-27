@@ -491,18 +491,17 @@ program_oq (tm_port_t port, tm_q_t oq, qos_class_t *qos_class)
     q_node_params.parent_node = parent_node;
     switch(qos_class->sched.type) {
         case QOS_SCHED_TYPE_DWRR:
-            q_node_params.sched_type = sdk::platform::elba::TM_SCHED_TYPE_DWRR;
+            q_node_params.sched_type = TM_SCHED_TYPE_DWRR;
             q_node_params.dwrr.weight = qos_class->sched.dwrr.bw;
             break;
         case QOS_SCHED_TYPE_STRICT:
-            q_node_params.sched_type = sdk::platform::elba::TM_SCHED_TYPE_STRICT;
+            q_node_params.sched_type = TM_SCHED_TYPE_STRICT;
             q_node_params.strict.rate = qos_class->sched.strict.bps;
             break;
     }
 
     // Update the oq config
-    sdk_ret = elba_tm_scheduler_map_update(port,
-                                           sdk::platform::elba::TM_QUEUE_NODE_TYPE_LEVEL_1,
+    sdk_ret = elba_tm_scheduler_map_update(port, TM_QUEUE_NODE_TYPE_LEVEL_1,
                                            oq, &q_node_params);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -515,28 +514,28 @@ program_oq (tm_port_t port, tm_q_t oq, qos_class_t *qos_class)
 static hal_ret_t
 qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
 {
+#if 0
     hal_ret_t             ret = HAL_RET_OK;
     sdk_ret_t             sdk_ret;
-    sdk::platform::elba::tm_uplink_iq_params_t iq_params;
     tm_port_t             port;
     qos_class_t           *qos_class = pd_qos_class->pi_qos_class;
     tm_q_t                iq;
+    tm_uplink_q_params_t  q_params = { 0 };
 
     iq = pd_qos_class->uplink.iq;
     if (!elba_tm_q_valid(iq)) {
         return HAL_RET_OK;
     }
 
-    memset(&iq_params, 0, sizeof(iq_params));
-
-    iq_params.mtu = qos_class->mtu;
-    iq_params.xoff_threshold = qos_class->pause.xoff_threshold;
-    iq_params.xon_threshold = qos_class->pause.xon_threshold;
+    q_params.iq = iq;
+    q_params.mtu = qos_class->mtu;
+    q_params.xoff_threshold = qos_class->pause.xoff_threshold;
+    q_params.xon_threshold = qos_class->pause.xon_threshold;
     SDK_ASSERT(elba_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX]));
-    iq_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
+    q_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        sdk_ret = sdk::platform::elba::elba_tm_uplink_iq_no_drop_update(
+        sdk_ret = elba_tm_uplink_iq_no_drop_update(
                                     port, iq, qos_class->no_drop);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
@@ -545,7 +544,7 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
                           qos_class->key, port, ret);
             return ret;
         }
-        sdk_ret = elba_tm_uplink_iq_params_update(port, iq, &iq_params);
+        sdk_ret = elba_tm_uplink_q_params_update(port, &q_params);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the iq params for "
@@ -555,6 +554,9 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
         }
     }
     return HAL_RET_OK;
+#else
+    return HAL_RET_OK;
+#endif
 }
 
 /**
@@ -606,7 +608,6 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     bool                       has_dscp = false;
     tm_q_t                     iq;
     uint32_t                   dot1q_pcp = 0;
-    sdk::platform::elba::tm_uplink_input_dscp_map_t dscp_map = {0};
 
     iq = pd_qos_class->uplink.iq;
     if (!elba_tm_q_valid(iq)) {
@@ -615,21 +616,13 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     has_pcp = cmap_type_pcp(qos_class->cmap.type);
     has_dscp = cmap_type_dscp(qos_class->cmap.type);
 
-    SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) == sizeof(dscp_map.ip_dscp));
-
-    memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
-               sizeof(qos_class->cmap.ip_dscp));
     if (has_pcp) {
         dot1q_pcp = qos_class->cmap.dot1q_pcp;
     } else {
         dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
     }
-    dscp_map.dot1q_pcp = dot1q_pcp;
     for (port = TM_UPLINK_PORT_BEGIN; port < TM_UPLINK_PORT_END; port++) {
-        sdk_ret = sdk::platform::elba::elba_tm_uplink_input_map_update(
-                                               port,
-                                               dot1q_pcp,
-                                               iq);
+        sdk_ret = elba_tm_uplink_input_map_update(port, dot1q_pcp, iq);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the uplink map for "
@@ -638,7 +631,8 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
             return ret;
         }
         if (has_dscp) {
-            sdk_ret = elba_tm_uplink_input_dscp_map_update(port, &dscp_map);
+            sdk_ret = elba_tm_uplink_input_dscp_map_update(port, dot1q_pcp,
+                                                           qos_class->cmap.ip_dscp);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error programming the uplink dscp map for "
@@ -659,7 +653,6 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
     sdk_ret_t                  sdk_ret;
     tm_port_t                  port;
     qos_class_t                *default_qos_class = NULL;
-    sdk::platform::elba::tm_uplink_input_dscp_map_t dscp_map = {0};
     uint32_t                   default_qos_class_dot1q_pcp = 0;
     tm_q_t                     default_qos_class_iq = 0;
 
@@ -671,13 +664,9 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
         default_qos_class_iq = default_qos_class->pd->uplink.iq;
     }
 
-    SDK_ASSERT(cnt_ip_dscp == SDK_ARRAY_SIZE(dscp_map.ip_dscp));
-    memcpy(dscp_map.ip_dscp, ip_dscp_vals, sizeof(dscp_map.ip_dscp));
-    dscp_map.dot1q_pcp = default_qos_class_dot1q_pcp;
-
     for (port = TM_UPLINK_PORT_BEGIN; port < TM_UPLINK_PORT_END; port++) {
         if (dot1q_remove) {
-            sdk_ret = sdk::platform::elba::elba_tm_uplink_input_map_update(port, dot1q_pcp,
+            sdk_ret = elba_tm_uplink_input_map_update(port, dot1q_pcp,
                                                       default_qos_class_iq);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
@@ -687,8 +676,9 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
                 return ret;
             }
         }
-
-        sdk_ret = elba_tm_uplink_input_dscp_map_update(port, &dscp_map);
+        sdk_ret = elba_tm_uplink_input_dscp_map_update(port,
+                                                       default_qos_class_dot1q_pcp,
+                                                       ip_dscp_vals);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming the uplink dscp map "
@@ -747,9 +737,9 @@ qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
         if (dot1q_pcp == qos_class->pause.pfc_cos) {
             update_default_class_pfc = true;
             // get what is currently programmed
-            sdk_ret = sdk::platform::elba::elba_tm_get_uplink_oq_xoff_map(0, // port
-                                                                          0, // oq
-                                                                          &xoff_value);
+            sdk_ret = elba_tm_get_uplink_oq_xoff_map(0, // port
+                                                     0, // oq
+                                                     &xoff_value);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error getting uplink_oq_xoff_map for "
@@ -767,9 +757,9 @@ qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         // deprogrm xoff2oq mapping - 1-to-1 by default for oqs 2 through 7
-        sdk_ret = sdk::platform::elba::elba_tm_uplink_oq_update(port,
-                                                                pd_qos_class->dest_oq,
-                                                                pd_qos_class->dest_oq);
+        sdk_ret = elba_tm_uplink_oq_update(port,
+                                           pd_qos_class->dest_oq,
+                                           pd_qos_class->dest_oq);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming xoff2oq map for "
@@ -781,8 +771,7 @@ qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
         if(reset_pfc_xoff) {
             xoff_cos_bitmap = 0;
             // get what is currently programmed
-            sdk_ret = sdk::platform::elba::elba_tm_get_uplink_mac_xoff(port,
-                                                                       &xoff_cos_bitmap);
+            sdk_ret = elba_tm_get_uplink_mac_xoff(port, &xoff_cos_bitmap);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error getting mac xoff for port {} ret {}",
@@ -798,7 +787,7 @@ qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
             }
         }
 
-        sdk_ret = sdk::platform::elba::elba_tm_set_uplink_mac_xoff(port,
+        sdk_ret = elba_tm_set_uplink_mac_xoff(port,
                                                reset_all_xoff,
                                                set_all_xoff,
                                                reset_pfc_xoff,
@@ -813,9 +802,9 @@ qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
         }
 
         if(update_default_class_pfc) {
-            sdk_ret = sdk::platform::elba::elba_tm_uplink_oq_update(port,
-                                                                    0,  // dest_oq of 0 for default class
-                                                                    0); // pfc-cos
+            sdk_ret = elba_tm_uplink_oq_update(port,
+                                               0,  // dest_oq of 0 for default class
+                                               0); // pfc-cos
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error programming xoff2oq map for "
@@ -823,12 +812,12 @@ qos_class_pd_deprogram_uplink_xoff (pd_qos_class_t *pd_qos_class)
                               qos_class->key, port, ret);
             }
 
-            sdk_ret = sdk::platform::elba::elba_tm_set_uplink_mac_xoff(port,
-                                                   reset_all_xoff,
-                                                   set_all_xoff,
-                                                   true,    // reset pfc-xoff
-                                                   set_pfc_xoff,
-                                                   (1 << xoff_value));
+            sdk_ret = elba_tm_set_uplink_mac_xoff(port,
+                                                  reset_all_xoff,
+                                                  set_all_xoff,
+                                                  true,    // reset pfc-xoff
+                                                  set_pfc_xoff,
+                                                  (1 << xoff_value));
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error programming mac xoff for "
@@ -907,9 +896,9 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
              * Now if that PFC-COS value is used by some other user-defined class,
              * remap oq0 to a new unused PFC-COS value
              */
-            sdk_ret = sdk::platform::elba::elba_tm_get_uplink_oq_xoff_map(0, // port
-                                                                          0, // oq
-                                                                          &xoff_val_pgm);
+            sdk_ret = elba_tm_get_uplink_oq_xoff_map(0, // port
+                                                     0, // oq
+                                                     &xoff_val_pgm);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error getting uplink_oq_xoff_map for "
@@ -923,8 +912,8 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
 
         if (update_default_class_pfc) {
             // get what is currently programmed
-            sdk_ret = sdk::platform::elba::elba_tm_get_uplink_mac_xoff(0,
-                                                                       &xoff_cos_bitmap0);
+            sdk_ret = elba_tm_get_uplink_mac_xoff(0,
+                                                  &xoff_cos_bitmap0);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error getting mac xoff for port 0 ret {}", ret);
@@ -945,9 +934,8 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
     }
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        sdk_ret = sdk::platform::elba::elba_tm_uplink_oq_update(port,
-                                                                pd_qos_class->dest_oq,
-                                                                qos_class->pause.pfc_cos);
+        sdk_ret = elba_tm_uplink_oq_update(port, pd_qos_class->dest_oq,
+                                           qos_class->pause.pfc_cos);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming xoff2oq map for "
@@ -959,8 +947,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
         if(reset_pfc_xoff) {
             xoff_cos_bitmap = 0;
             // get what is currently programmed
-            sdk_ret = sdk::platform::elba::elba_tm_get_uplink_mac_xoff(port,
-                                                                       &xoff_cos_bitmap);
+            sdk_ret = elba_tm_get_uplink_mac_xoff(port, &xoff_cos_bitmap);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error getting mac xoff for port {} ret {}",
@@ -976,12 +963,12 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
             }
         }
 
-        sdk_ret = sdk::platform::elba::elba_tm_set_uplink_mac_xoff(port,
-                                               reset_all_xoff,
-                                               set_all_xoff,
-                                               reset_pfc_xoff,
-                                               set_pfc_xoff,
-                                               (1 << qos_class->pause.pfc_cos));
+        sdk_ret = elba_tm_set_uplink_mac_xoff(port,
+                                              reset_all_xoff,
+                                              set_all_xoff,
+                                              reset_pfc_xoff,
+                                              set_pfc_xoff,
+                                              (1 << qos_class->pause.pfc_cos));
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming mac xoff for "
@@ -991,21 +978,21 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
         }
 
         if(update_default_class_pfc) {
-            sdk_ret = sdk::platform::elba::elba_tm_uplink_oq_update(port,
-                                                                    0,  // dest_oq of 0 for default class
-                                                                    xoff_val); // pfc-cos
+            sdk_ret = elba_tm_uplink_oq_update(port,
+                                               0,  // dest_oq of 0 for default class
+                                               xoff_val); // pfc-cos
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error programming xoff2oq map for "
                               "Qos-class {} on port {} ret {}",
                               qos_class->key, port, ret);
             }
-            sdk_ret = sdk::platform::elba::elba_tm_set_uplink_mac_xoff(port,
-                                                   reset_all_xoff,
-                                                   set_all_xoff,
-                                                   reset_pfc_xoff,
-                                                   set_pfc_xoff,
-                                                   (1 << xoff_val));
+            sdk_ret = elba_tm_set_uplink_mac_xoff(port,
+                                                  reset_all_xoff,
+                                                  set_all_xoff,
+                                                  reset_pfc_xoff,
+                                                  set_pfc_xoff,
+                                                  (1 << xoff_val));
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error programming mac xoff for port {} ret {}",
@@ -1139,13 +1126,13 @@ qos_class_pd_sched_pgm_oq (tm_port_t port,
 {
     hal_ret_t ret     = HAL_RET_OK;
     sdk_ret_t sdk_ret = SDK_RET_OK;
-    sdk::platform::elba::pb_sched_node_input_info_t input_info;
+    pb_sched_node_input_info_t input_info;
 
     if (!elba_tm_q_valid(oq)) {
         return HAL_RET_OK;
     }
 
-    memset(&input_info, 0, sizeof(sdk::platform::elba::pb_sched_node_input_info_t));
+    memset(&input_info, 0, sizeof(pb_sched_node_input_info_t));
 
     switch(qos_class->sched.type) {
     case QOS_SCHED_TYPE_DWRR:
@@ -1302,15 +1289,9 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     bool                       has_dscp = false;
     tm_q_t                     iq;
     uint32_t                   dot1q_pcp = 0;
-    sdk::platform::elba::tm_uplink_input_dscp_map_t dscp_map = {0};
 
     has_pcp = cmap_type_pcp(qos_class->cmap.type);
     has_dscp = cmap_type_dscp(qos_class->cmap.type);
-
-    SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
-               sizeof(dscp_map.ip_dscp));
-    memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
-           sizeof(qos_class->cmap.ip_dscp));
 
     if (has_pcp) {
         dot1q_pcp = qos_class->cmap.dot1q_pcp;
@@ -1332,12 +1313,8 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     if (!elba_tm_q_valid(iq)) {
         return HAL_RET_OK;
     }
-
-    // program the default COS for dscp map
-    dscp_map.dot1q_pcp = QOS_COS_DEFAULT;
-
     for (port = TM_UPLINK_PORT_BEGIN; port < TM_UPLINK_PORT_END; port++) {
-        sdk_ret = sdk::platform::elba::elba_tm_uplink_input_map_update(
+        sdk_ret = elba_tm_uplink_input_map_update(
                                                port,
                                                dot1q_pcp,
                                                iq);
@@ -1350,7 +1327,9 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
         }
 
         if (has_dscp) {
-            sdk_ret = elba_tm_uplink_input_dscp_map_update(port, &dscp_map);
+            // program the default COS for dscp map
+            sdk_ret = elba_tm_uplink_input_dscp_map_update(port,
+                               QOS_COS_DEFAULT, qos_class->cmap.ip_dscp);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error deprogramming the uplink dscp map for "
@@ -1588,7 +1567,7 @@ pd_qos_class_init_tc_to_iq_map (pd_func_args_t *pd_func_args)
 
         for (tm_port = TM_UPLINK_PORT_BEGIN;
                             tm_port <= TM_UPLINK_PORT_END; tm_port++) {
-            sdk_ret = sdk::platform::elba::elba_tm_uplink_input_map_update(tm_port,
+            sdk_ret = elba_tm_uplink_input_map_update(tm_port,
                                                        dot1q_pcp,
                                                        iq);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1675,9 +1654,9 @@ pd_qos_class_get_all_tc_pfc_cos_bitmap()
          * read xoff2oq for oq0 and get the PFC-COS value
          */
 
-        sdk_ret = sdk::platform::elba::elba_tm_get_uplink_oq_xoff_map(0, // port
-                                                                      0, // oq
-                                                                      &xoff_val);
+        sdk_ret = elba_tm_get_uplink_oq_xoff_map(0, // port
+                                                 0, // oq
+                                                 &xoff_val);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error getting uplink_oq_xoff_map for "
@@ -1709,9 +1688,9 @@ pd_qos_class_get_all_tc_pfc_cos_bitmap()
 
         // program the xoff2oq map as well
         for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-            sdk_ret = sdk::platform::elba::elba_tm_uplink_oq_update(port,
-                                                                    0,  // dest_oq of 0 for default class
-                                                                    xoff_val); // pfc-cos
+            sdk_ret = elba_tm_uplink_oq_update(port,
+                                               0,  // dest_oq of 0 for default class
+                                               xoff_val); // pfc-cos
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Error programming xoff2oq map for "
@@ -1768,12 +1747,12 @@ pd_qos_class_set_global_pause_type (pd_func_args_t *pd_func_args)
 
     for (tm_port = TM_UPLINK_PORT_BEGIN;
                         tm_port <= TM_UPLINK_PORT_END; tm_port++) {
-        sdk_ret = sdk::platform::elba::elba_tm_set_uplink_mac_xoff(tm_port,
-                                               reset_all_xoff,
-                                               set_all_xoff,
-                                               reset_pfc_xoff,
-                                               set_pfc_xoff,
-                                               pfc_cos_bitmap);
+        sdk_ret = elba_tm_set_uplink_mac_xoff(tm_port,
+                                              reset_all_xoff,
+                                              set_all_xoff,
+                                              reset_pfc_xoff,
+                                              set_pfc_xoff,
+                                              pfc_cos_bitmap);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error setting global pause type {} "
@@ -1889,7 +1868,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
 
     if (mgmt_port) {
         // program the ethertype to cam_type and set cam_enable to compare ethertype
-        sdk_ret = sdk::platform::elba::elba_tm_uplink_set_cam_type(TM_PORT_NCSI,
+        sdk_ret = elba_tm_uplink_set_cam_type(TM_PORT_NCSI,
                                                QOS_SWM_CAM_ENTRY, etype);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
@@ -1899,7 +1878,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
         }
     } else {
         // program the dmac to cam_da and set cam_enable to compare DA
-        sdk_ret = sdk::platform::elba::elba_tm_uplink_set_cam_da(swm_uplink_port,
+        sdk_ret = elba_tm_uplink_set_cam_da(swm_uplink_port,
                                              QOS_SWM_CAM_ENTRY, dmac);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
@@ -1916,7 +1895,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
      */
 
     // program cam_cos to drive SWM_CAM_COS/ SWM_CAM_NCSI_COS
-    sdk_ret = sdk::platform::elba::elba_tm_uplink_set_cam_cos(swm_uplink_port,
+    sdk_ret = elba_tm_uplink_set_cam_cos(swm_uplink_port,
                                          QOS_SWM_CAM_ENTRY, cos);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -1926,7 +1905,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
     }
 
     // program tc_to_q mapping based on SWM_CAM_COS/ SWM_CAM_NCSI_COS
-    sdk_ret = sdk::platform::elba::elba_tm_uplink_input_map_update(swm_uplink_port,
+    sdk_ret = elba_tm_uplink_input_map_update(swm_uplink_port,
                                                tc,          // cos
                                                tc_to_iq);   // iq
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1938,7 +1917,7 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
     }
 
     // program iq_to_p4_oq map for BMC UC queue/ NCSI queue
-    sdk_ret = sdk::platform::elba::elba_tm_set_uplink_iq_to_p4_oq_map(swm_uplink_port,
+    sdk_ret = elba_tm_set_uplink_iq_to_p4_oq_map(swm_uplink_port,
                                                   uplink_iq,
                                                   p4_oq);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1960,9 +1939,9 @@ pd_qos_program_uplink_for_swm (uint32_t swm_uplink_port, uint64_t dmac, bool pro
         // TODO: look for user-defined classes and skip defaulting those queues
 
         // program iq_to_p4_oq map for BMC MC/BC queue
-        sdk_ret = sdk::platform::elba::elba_tm_set_uplink_iq_to_p4_oq_map(swm_uplink_port,
-                                                      iq,
-                                                      default_p4_oq);
+        sdk_ret = elba_tm_set_uplink_iq_to_p4_oq_map(swm_uplink_port,
+                                                     iq,
+                                                     default_p4_oq);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming uplink_iq_to_p4_oq_map for iq {} "

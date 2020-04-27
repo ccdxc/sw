@@ -20,10 +20,12 @@ namespace elba {
 // 2K * 8K scheduler
 #define ELBA_TXS_SCHEDULER_MAP_MAX_ENTRIES      2048
 #define ELBA_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY 8192
+
 // Timer definitions
 #define ELBA_TIMER_WHEEL_DEPTH                  4096
 #define ELBA_TIMER_NUM_KEY_PER_CACHE_LINE       16
 #define ELBA_TIMER_NUM_DATA_PER_CACHE_LINE      12
+
 // This needs to be a power of 2
 #define ELBA_TIMER_NUM_KEY_CACHE_LINES          1024
 
@@ -34,9 +36,6 @@ namespace elba {
 
 #define ELBA_TIMER_HBM_KEY_SPACE \
         (ELBA_TIMER_NUM_KEY_CACHE_LINES * 64)
-
-#define ELBA_TIMER_HBM_SPACE \
-        (ELBA_TIMER_HBM_KEY_SPACE + ELBA_TIMER_HBM_DATA_SPACE)
 
 #define ELBA_MAX_TIMERS \
         (ELBA_TIMER_NUM_KEY_CACHE_LINES * ELBA_TIMER_NUM_KEY_PER_CACHE_LINE * \

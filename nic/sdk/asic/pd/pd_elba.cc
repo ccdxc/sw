@@ -700,12 +700,6 @@ elba_cfg_init (asic_cfg_t *cfg, asic_cfg_t& elba_cfg)
     return SDK_RET_OK;
 }
 
-static sdk_ret_t
-elba_soft_init (asic_cfg_t *cfg)
-{
-    return SDK_RET_INVALID_OP;
-}
-
 sdk_ret_t
 asicpd_init (asic_cfg_t *cfg)
 {

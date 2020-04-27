@@ -29,7 +29,6 @@ using sdk::platform::utils::mpartition_region_t;
 #define MEM_REGION_RSS_INDIR_TABLE_NAME "rss_indir_table"
 #define MEM_REGION_MCAST_REPL_NAME "mcast_repl"
 
-void asic_reset_hbm_regions(asic_cfg_t *cfg);
 mpartition_region_t *capri_get_mem_region(char *name);
 uint64_t capri_get_mem_base(void);
 uint64_t capri_get_mem_offset(const char *reg_name);

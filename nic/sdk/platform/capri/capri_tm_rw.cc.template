@@ -576,9 +576,7 @@ capri_tm_is_valid_port (uint32_t port)
 }
 
 sdk_ret_t
-capri_tm_uplink_set_cam_type (tm_port_t port,
-                              uint32_t  entry,
-                              uint32_t  etype)
+capri_tm_uplink_set_cam_type (tm_port_t port, uint32_t  entry, uint32_t  etype)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -631,9 +629,7 @@ capri_tm_uplink_set_cam_type (tm_port_t port,
 }
 
 sdk_ret_t
-capri_tm_uplink_set_cam_da (tm_port_t port,
-                            uint32_t  entry,
-                            uint64_t  dmac)
+capri_tm_uplink_set_cam_da (tm_port_t port, uint32_t  entry, uint64_t  dmac)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -686,9 +682,7 @@ capri_tm_uplink_set_cam_da (tm_port_t port,
 }
 
 sdk_ret_t
-capri_tm_uplink_set_cam_cos (tm_port_t port,
-                             uint32_t  entry,
-                             uint32_t  cos)
+capri_tm_uplink_set_cam_cos (tm_port_t port, uint32_t  entry, uint32_t  cos)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -733,9 +727,7 @@ capri_tm_uplink_set_cam_cos (tm_port_t port,
 }
 
 sdk_ret_t
-capri_tm_set_uplink_iq_to_p4_oq_map (tm_port_t  port,
-                                     tm_q_t     iq,
-                                     tm_q_t     p4_q)
+capri_tm_set_uplink_iq_to_p4_oq_map (tm_port_t  port, tm_q_t iq, tm_q_t p4_q)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -778,13 +770,10 @@ capri_tm_set_uplink_iq_to_p4_oq_map (tm_port_t  port,
 }
 
 sdk_ret_t
-capri_tm_uplink_iq_no_drop_update (tm_port_t port,
-                                   tm_q_t iq,
-                                   bool no_drop)
+capri_tm_uplink_iq_no_drop_update (tm_port_t port, tm_q_t iq, bool no_drop)
 {
     if (!capri_tm_port_is_uplink_port(port)) {
-        SDK_TRACE_ERR("%u is not a valid TM uplink port",
-                      port);
+        SDK_TRACE_ERR("%u is not a valid TM uplink port", port);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
@@ -825,8 +814,7 @@ capri_tm_uplink_iq_no_drop_update (tm_port_t port,
 }
 
 sdk_ret_t
-capri_tm_uplink_q_params_update (tm_port_t port,
-                                 tm_uplink_q_params_t *q_params)
+capri_tm_uplink_q_params_update (tm_port_t port, tm_uplink_q_params_t *q_params)
 {
     tm_q_t iq = q_params->iq;
 
@@ -982,13 +970,10 @@ capri_tm_uplink_q_params_update (tm_port_t port,
 }
 
 sdk_ret_t
-capri_tm_uplink_input_map_update (tm_port_t port,
-                                 uint32_t dot1q_pcp,
-                                 tm_q_t iq)
+capri_tm_uplink_input_map_update (tm_port_t port, uint32_t dot1q_pcp, tm_q_t iq)
 {
     if (!capri_tm_port_is_uplink_port(port)) {
-        SDK_TRACE_ERR("%u is not a valid TM uplink port",
-                      port);
+        SDK_TRACE_ERR("%u is not a valid TM uplink port", port);
         return sdk::SDK_RET_INVALID_ARG;
     }
     stringstream data;
@@ -1092,8 +1077,7 @@ capri_tm_uplink_input_dscp_map_update (tm_port_t port, uint32_t tc,
  * @brief  get the PFC-COS mask for incoming pause frames
  */
 sdk_ret_t
-capri_tm_get_uplink_mac_xoff (tm_port_t port,
-                              uint32_t *xoff_cos_bitmap)
+capri_tm_get_uplink_mac_xoff (tm_port_t port, uint32_t *xoff_cos_bitmap)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -1190,7 +1174,7 @@ capri_tm_set_uplink_mac_xoff (tm_port_t port,
  * @brief get OQ to xoff_cos map
  */
 sdk_ret_t
-capri_tm_get_uplink_oq_xoff_map(tm_port_t port, tm_q_t oq, uint32_t *xoff_cos)
+capri_tm_get_uplink_oq_xoff_map (tm_port_t port, tm_q_t oq, uint32_t *xoff_cos)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -1230,7 +1214,7 @@ capri_tm_get_uplink_oq_xoff_map(tm_port_t port, tm_q_t oq, uint32_t *xoff_cos)
  * @param[in] xoff_cos  cos value of the incoming PFC
  */
 sdk_ret_t
-capri_tm_uplink_oq_update(tm_port_t port, tm_q_t oq, uint32_t xoff_cos)
+capri_tm_uplink_oq_update (tm_port_t port, tm_q_t oq, uint32_t xoff_cos)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -4612,8 +4596,7 @@ capri_tm_soft_init (sdk::lib::catalog* catalog,
     ret = capri_tm_init_qos_profile(tm_cfg_profile, catalog,
                                     qos_profile);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("Error initing qos profile. ret: %d",
-                      ret);
+        SDK_TRACE_ERR("Error initing qos profile. ret: %d", ret);
         return ret;
     }
 
@@ -4624,17 +4607,19 @@ capri_tm_soft_init (sdk::lib::catalog* catalog,
                     tm_cfg_profile->num_active_uplink_ports,
                     tm_cfg_profile->hbm_fifo_size,
                     tm_cfg_profile->hbm_fifo_base);
+
     for (unsigned port_type = 0; port_type < NUM_TM_PORT_TYPES; port_type++) {
         if (tm_cfg_profile->num_qs[port_type] >
             capri_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type)) {
             SDK_TRACE_ERR("Error cfg-profile port_type %u num_qs %u "
-                          "supported %u",
-                          (tm_port_type_e)port_type, tm_cfg_profile->num_qs[port_type],
+                          "supported %u", (tm_port_type_e)port_type,
+                          tm_cfg_profile->num_qs[port_type],
                           capri_tm_get_num_iqs_for_port_type((tm_port_type_e)port_type));
             return sdk::SDK_RET_INVALID_ARG;
         }
         SDK_TRACE_DEBUG("cfg-profile port_type %u num_qs %u jumbo_mtu %u ",
-                        (tm_port_type_e)port_type, tm_cfg_profile->num_qs[port_type],
+                        (tm_port_type_e)port_type,
+                        tm_cfg_profile->num_qs[port_type],
                         tm_cfg_profile->jumbo_mtu[port_type]);
     }
 

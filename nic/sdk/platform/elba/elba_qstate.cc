@@ -269,14 +269,14 @@ sdk_ret_t
 elba_read_qstate (uint64_t q_addr, uint8_t *buf, uint32_t q_size)
 {
     // TBD-ELBA-REBASE: hal to sdk Missing Function compared to Capri
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 elba_write_qstate (uint64_t q_addr, const uint8_t *buf, uint32_t q_size)
 {
     // TBD-ELBA-REBASE: hal to sdk Missing Function compared to Capri
-    return SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

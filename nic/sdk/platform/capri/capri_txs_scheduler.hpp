@@ -21,14 +21,13 @@ namespace capri {
 
 #define NUM_MAX_COSES 16
 
-#define CAPRI_TXS_MAX_TABLE_ENTRIES 2048
+#define CAPRI_TXS_MAX_TABLE_ENTRIES             2048
 // 2K * 8K scheduler
-#define CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES 2048
+#define CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES     2048
 #define CAPRI_TXS_SCHEDULER_NUM_QUEUES_PER_ENTRY 8192
 
 // Timer definitions
 #define CAPRI_TIMER_WHEEL_DEPTH         4096
-
 #define CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE    16
 #define CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE   12
 
@@ -40,16 +39,12 @@ namespace capri {
 #define CAPRI_TIMER_HBM_DATA_SPACE \
     (CAPRI_TIMER_NUM_KEY_CACHE_LINES * CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * 64)
 
-#define CAPRI_TIMER_HBM_KEY_SPACE \
-    (CAPRI_TIMER_NUM_KEY_CACHE_LINES * 64)
-
 #define CAPRI_TIMER_HBM_SPACE \
     (CAPRI_TIMER_HBM_KEY_SPACE + CAPRI_TIMER_HBM_DATA_SPACE)
 
 #define CAPRI_MAX_TIMERS \
     (CAPRI_TIMER_NUM_KEY_CACHE_LINES * CAPRI_TIMER_NUM_KEY_PER_CACHE_LINE * \
      CAPRI_TIMER_NUM_DATA_PER_CACHE_LINE)
-
 
 /* (lif,queue,cos) mapping params in scheduler table */
 typedef struct capri_txs_sched_lif_params_s_ {
@@ -116,11 +111,9 @@ typedef struct capri_txs_scheduler_stats_s {
     capri_txs_scheduler_cos_stats_t cos_stats[NUM_MAX_COSES];
 } capri_txs_scheduler_stats_t;
 
-sdk_ret_t
-capri_txs_scheduler_stats_get(capri_txs_scheduler_stats_t *scheduler_stats);
+sdk_ret_t capri_txs_scheduler_stats_get(capri_txs_scheduler_stats_t *scheduler_stats);
 
-uint32_t
-capri_get_coreclk_freq(platform_type_t platform_type);
+uint32_t capri_get_coreclk_freq(platform_type_t platform_type);
 
 }    // namespace capri
 }    // namespace platform
@@ -130,4 +123,4 @@ using sdk::platform::capri::capri_txs_sched_lif_params_t;
 using sdk::platform::capri::capri_txs_policer_lif_params_t;
 using sdk::platform::capri::capri_txs_scheduler_stats_t;
 
-#endif
+#endif  // __CAPRI_TXS_SCHEDULER_HPP__

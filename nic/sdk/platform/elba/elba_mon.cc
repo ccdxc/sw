@@ -56,7 +56,7 @@ print_master_err_regs (void)
 sdk_ret_t
 elba_unravel_hbm_intrs (bool *iscattrip, bool *iseccerr, bool logging)
 {
-    return SDK_RET_INVALID_OP; // TBD-ELBA-REBASE: Missing function in elba
+    return SDK_RET_OK; // TBD-ELBA-REBASE: Missing function in elba
 }
 
 pen_adjust_perf_status_t

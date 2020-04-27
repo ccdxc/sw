@@ -4,6 +4,8 @@
 #include "asic/cmn/asic_common.hpp"
 #include "platform/elba/elba_common.hpp"
 #include "lib/p4/p4_api.hpp"
+#include "lib/pal/pal.hpp"
+#include "platform/pal/include/pal.h"
 #include "platform/elba/elba_tbl_rw.hpp"
 #include "platform/elba/csrint/csr_init.hpp"
 #include "platform/elba/elba_hbm_rw.hpp"
@@ -34,6 +36,17 @@ namespace elba {
 
 #define ELBA_CALLOC  calloc
 #define ELBA_FREE    free
+
+/* Cache invalidate register address and memory mapped addresses */
+#define CSR_CACHE_INVAL_INGRESS_REG_ADDR 0x25002ec  /* TBD-ELBA-REBASE */
+#define CSR_CACHE_INVAL_EGRESS_REG_ADDR  0x2d002ec
+#define CSR_CACHE_INVAL_TXDMA_REG_ADDR   0x45002ec
+#define CSR_CACHE_INVAL_RXDMA_REG_ADDR   0x4d002ec
+
+static uint32_t *csr_cache_inval_ingress_va;
+static uint32_t *csr_cache_inval_egress_va;
+static uint32_t *csr_cache_inval_txdma_va;
+static uint32_t *csr_cache_inval_rxdma_va;
 
 typedef int elba_error_t;
 
@@ -211,6 +224,15 @@ elba_program_hbm_table_base_addr (int tableid, int stage_tableid,
     }
 #endif
 
+    sdk_ret_t ret;
+
+    ret = sdk::asic::pd::asicpd_set_hbm_table_base_addr(tableid, stage_tableid,
+                                                        tablename,
+                                                        stage, pipe);
+    if (ret != SDK_RET_OK) {
+        return;
+    }
+
     assert(stage_tableid < 16);
     start_offset = get_mem_addr(tablename);
     SDK_TRACE_DEBUG("===HBM Tbl Name: %s, Stage: %d, StageTblID: %u, "
@@ -258,7 +280,18 @@ elba_program_p4plus_table_mpu_pc(int tableid, int stage_tbl_id, int stage)
 uint64_t
 elba_get_p4plus_table_mpu_pc(int tableid)
 {
-    return 0; // TBD-ELBA-REBASE:: Missing function from capri
+    uint32_t lcl_tableid;
+
+    if ((uint32_t)tableid >= p4pd_rxdma_tableid_min_get() &&
+        (uint32_t)tableid < p4pd_rxdma_tableid_max_get()) {
+        lcl_tableid = tableid - p4pd_rxdma_tableid_min_get();
+        return elba_table_rxdma_asm_base[lcl_tableid];
+    } else if ((uint32_t)tableid >= p4pd_txdma_tableid_min_get() &&
+               (uint32_t)tableid < p4pd_txdma_tableid_max_get()) {
+        lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
+        return elba_table_txdma_asm_base[lcl_tableid];
+    }
+    return 0;
 }
 
 static void
@@ -716,6 +749,44 @@ elba_p4plus_shadow_init (void)
     return SDK_RET_OK;
 }
 
+void
+elba_table_csr_cache_inval_init (void)
+{
+    csr_cache_inval_ingress_va =
+        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_INGRESS_REG_ADDR,
+                                          0x4);
+    csr_cache_inval_egress_va =
+        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_EGRESS_REG_ADDR, 0x4);
+    csr_cache_inval_txdma_va =
+        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_TXDMA_REG_ADDR, 0x4);
+    csr_cache_inval_rxdma_va =
+        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_RXDMA_REG_ADDR, 0x4);
+    SDK_TRACE_DEBUG("CSR cache inval ing 0x%llx, egr 0x%llx, txdma 0x%llx, rxdma 0x%llx",
+                    (mem_addr_t)csr_cache_inval_ingress_va,
+                    (mem_addr_t)csr_cache_inval_egress_va,
+                    (mem_addr_t)csr_cache_inval_txdma_va,
+                    (mem_addr_t)csr_cache_inval_rxdma_va);
+}
+
+sdk_ret_t
+elba_table_rw_soft_init (asic_cfg_t *elba_cfg)
+{
+    int ret;
+    /* Initialize the CSR cache invalidate memories */
+    elba_table_csr_cache_inval_init();
+
+    ret = elba_p4_shadow_init();
+    if (ret != ELBA_OK) {
+        return SDK_RET_ERR;
+    }
+
+    ret = elba_p4plus_shadow_init();
+    if (ret != ELBA_OK) {
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 elba_table_rw_init (asic_cfg_t *elba_cfg)
 {
@@ -723,6 +794,9 @@ elba_table_rw_init (asic_cfg_t *elba_cfg)
     // Before making this call, it is expected that
     // in HAL init sequence, p4pd_init() needs to be called before this
     // Create shadow memory and init to zero
+
+    /* Initialize the CSR cache invalidate memories */
+    elba_table_csr_cache_inval_init();
 
     ret = elba_p4_shadow_init();
     if (ret != SDK_RET_OK) {
@@ -733,7 +807,6 @@ elba_table_rw_init (asic_cfg_t *elba_cfg)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    sdk::platform::elba::csr_init();
 
     // Initialize stage id registers for p4p
     elba_p4p_stage_id_init();
@@ -756,7 +829,7 @@ elba_p4plus_table_rw_init (void)
 {
     // in HAL init sequence, p4pd_init() needs to be called before this
     elba_p4plus_shadow_init();
-    sdk::platform::elba::csr_init();
+    csr_init();
 
     return (SDK_RET_OK);
 }

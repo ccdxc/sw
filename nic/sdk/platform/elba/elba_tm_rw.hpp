@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include "include/sdk/base.hpp"
 #include "include/sdk/qos.hpp"
+#include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/elba/elba_p4.hpp"
 #include "nic/sdk/asic/port.hpp"
@@ -117,19 +118,6 @@ SDK_DEFINE_ENUM(tm_port_type_e, TM_PORT_TYPES)
 SDK_DEFINE_ENUM(tm_hbm_fifo_type_e, TM_HBM_FIFO_TYPES)
 #undef TM_HBM_FIFO_TYPES
 
-typedef struct qos_profile_s {
-    bool sw_init_enable;
-    bool sw_cfg_write_enable;
-    uint32_t jumbo_mtu;
-    uint32_t num_uplink_qs;
-    uint32_t num_p4ig_qs;
-    uint32_t num_p4eg_qs;
-    uint32_t num_dma_qs;
-    uint32_t num_p4_high_perf_qs;
-    int32_t  p4_high_perf_qs[2];
-} qos_profile_t;
-
-
 static inline bool
 elba_tm_q_valid (tm_q_t tm_q)
 {
@@ -150,19 +138,14 @@ typedef struct tm_uplink_iq_params_s {
     tm_q_t   p4_q;
 } __PACK__ tm_uplink_iq_params_t;
 
-sdk_ret_t elba_tm_uplink_iq_params_update(tm_port_t port, tm_q_t iq,
-                                          tm_uplink_iq_params_t *iq_params);
+sdk_ret_t elba_tm_uplink_q_params_update(tm_port_t port,
+                                         tm_uplink_q_params_t *q_params);
 
 sdk_ret_t elba_tm_uplink_input_map_update(tm_port_t port, uint32_t dot1q_pcp,
                                           tm_q_t iq);
 
-typedef struct tm_uplink_input_dscp_map_s {
-    bool        ip_dscp[ELBA_TM_MAX_DSCP_VALS];
-    uint32_t    dot1q_pcp;
-} tm_uplink_input_dscp_map_t;
-
-sdk_ret_t elba_tm_uplink_input_dscp_map_update(tm_port_t port,
-                                               tm_uplink_input_dscp_map_t *dscp_map);
+sdk_ret_t elba_tm_uplink_input_dscp_map_update(tm_port_t port, uint32_t tc,
+                                               bool *ip_dscp);
 
 sdk_ret_t elba_tm_uplink_oq_update(tm_port_t port, tm_q_t oq,
                                    uint32_t xoff_cos);
@@ -233,8 +216,16 @@ sdk_ret_t elba_tm_asic_init(void);
  *
  * @return sdk_ret_t: Status of the operation
  */
-sdk_ret_t elba_tm_init(sdk::lib::catalog* catalog);
+sdk_ret_t elba_tm_init(sdk::lib::catalog* catalog,
+                       sdk::lib::qos_profile_t *qos_profile);
 
+/** elba_tm_soft_init
+ * API to initialize the PBC block for just reading the registers
+ *
+ * @return sdk_ret_t: Status of the operation
+ */
+sdk_ret_t elba_tm_soft_init(sdk::lib::catalog* catalog,
+                            sdk::lib::qos_profile_t *qos_profile);
 
 sdk_ret_t elba_pf_init(void);
 

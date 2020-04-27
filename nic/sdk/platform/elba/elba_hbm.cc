@@ -86,30 +86,6 @@ get_hbm_region_by_address (uint64_t addr)
     return g_elba_state_pd->mempartition()->region_by_address(addr);
 }
 
-// for HW platform this is now done during uboot
-void
-asic_reset_hbm_regions (asic_cfg_t *elba_cfg)
-{
-    mpartition_region_t *reg;
-
-    if (elba_cfg && (elba_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS ||
-                    elba_cfg->platform == platform_type_t::PLATFORM_TYPE_HW)) {
-        for (int i = 0; i < g_elba_state_pd->mempartition()->num_regions(); i++) {
-            reg = g_elba_state_pd->mempartition()->region(i);
-            if (reg->reset) {
-                if (elba_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS) {
-                    // Reset only for haps
-                    SDK_TRACE_DEBUG("Resetting %s hbm region", reg->mem_reg_name);
-                    sdk::asic::asic_mem_write(g_elba_state_pd->mempartition()->addr(reg->start_offset),
-                                              NULL, reg->size);
-                } else if (elba_cfg->platform ==
-                           platform_type_t::PLATFORM_TYPE_HW) {
-                }
-            }   // if reg->reset
-        }   // for loop
-    }      // platform == HAPS or HW
-}
-
 static sdk_ret_t
 elba_hbm_llc_cache_init (asic_cfg_t *cfg)
 {

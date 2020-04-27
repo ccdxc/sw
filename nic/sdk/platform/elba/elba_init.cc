@@ -1,6 +1,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 #include <boost/algorithm/string/predicate.hpp>
 #include "asic/asic.hpp"
+#include "asic/cmn/asic_init.hpp"
 #include "asic/cmn/asic_cfg.hpp"
 #include "platform/elba/elba_tm_rw.hpp"
 #include "platform/elba/elba_txs_scheduler.hpp"
@@ -30,6 +31,8 @@
 #include "third-party/asic/elba/model/elb_prd/elb_prd_csr.h"
 #include "third-party/asic/elba/model/utils/elb_csr_py_if.h"
 #include "third-party/asic/elba/verif/apis/elb_txs_api.h"
+
+using namespace sdk::asic;
 
 namespace sdk {
 namespace platform {
@@ -91,79 +94,6 @@ elba_pgm_init (void)
     return SDK_RET_OK;
 }
 
-static sdk_ret_t
-elba_asm_init (asic_cfg_t *cfg)
-{
-#if 0   /* TBD-ELBA-REBASE: */
-    int iret = 0;
-    uint64_t base_addr;
-    std::string full_path;
-    uint32_t num_symbols = 0;
-    sdk::p4::p4_param_info_t *symbols = NULL;
-
-    for (uint8_t i = 0; i < cfg->num_asm_cfgs; i++) {
-        full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
-            "/" + cfg->asm_cfg[i].path;
-        SDK_TRACE_DEBUG("Loading ASM binaries from dir %s", full_path.c_str());
-
-        // Check if directory is present
-        if (access(full_path.c_str(), R_OK) < 0) {
-                SDK_TRACE_ERR("%s not_present/no_read_permissions",
-                    full_path.c_str());
-                return SDK_RET_ERR;
-        }
-
-        symbols = NULL;
-        if(cfg->asm_cfg[i].symbols_func) {
-            num_symbols = cfg->asm_cfg[i].symbols_func((void **)&symbols,
-                                                       cfg->platform);
-        }
-
-        base_addr = get_mem_addr(cfg->asm_cfg[i].base_addr.c_str());
-        SDK_TRACE_DEBUG("base addr 0x%llx", base_addr);
-        iret = sdk::p4::p4_load_mpu_programs(cfg->asm_cfg[i].name.c_str(),
-                                             (char *)full_path.c_str(),
-                                             base_addr, symbols, num_symbols,
-                                             cfg->asm_cfg[i].sort_func);
-
-        if(symbols)
-            SDK_FREE(SDK_MEM_ALLOC_PD, symbols);
-
-        if (iret != 0) {
-            SDK_TRACE_ERR("Failed to load program %s", full_path);
-            return SDK_RET_ERR;
-        }
-   }
-#endif
-
-   return SDK_RET_OK;
-}
-
-static sdk_ret_t
-elba_hbm_regions_init (asic_cfg_t *cfg)
-{
-    sdk_ret_t ret = SDK_RET_OK;
-
-    ret = elba_asm_init(cfg);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    ret = elba_pgm_init();
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    ret = elba_timer_hbm_init();
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    // reset all the HBM regions that are marked for reset
-    asic_reset_hbm_regions(cfg);
-
-    return ret;
-}
 
 static sdk_ret_t
 elba_cache_init (asic_cfg_t *cfg)
@@ -450,7 +380,7 @@ elba_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((cfg != NULL), SDK_RET_INVALID_ARG, "Invalid cfg");
     SDK_TRACE_DEBUG("Initializing Elba");
 
-    ret = sdk::platform::elba::elba_state_pd_init(cfg);
+    ret = elba_state_pd_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "elba_state_pd_init failure, err : %d", ret);
 
@@ -458,9 +388,13 @@ elba_init (asic_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "elba_table_rw_init failure, err : %d", ret);
 
-    ret = elba_hbm_regions_init(cfg);
+    ret = sdk::asic::asic_hbm_regions_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba HBM region init failure, err : %d", ret);
+
+    ret = elba_timer_hbm_init();
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "Elba HBM timer init failure, err : %d", ret);
 
     ret = elba_block_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
@@ -495,11 +429,14 @@ elba_init (asic_cfg_t *cfg)
                                 "PXB/PCIE init failure, err : %d", ret);
     }
 
-#if 1 /*TODO_ELBA*/
-    ret = elba_tm_init(cfg->catalog);
+#if 0 /* TBD-ELBA-REBASE */
+    ret = elba_tm_init(cfg->catalog,
+                       &cfg->device_profile->qos_profile);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Elba TM init failure, err : %d", ret);
-#else
+#endif
+
+#if 0 /* TBD-ELBA-REBASE */
     ret = elba_pf_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
         "Error intializing pbc ret %d", ret);
