@@ -28,20 +28,35 @@ message RSpanSpec {
   types.Encap Encap     = 2;
 }
 
+// types of ERSPAN sessions differ in the encap
+enum ERSpanType {
+  ERSPAN_TYPE_NONE = 0;
+  // Type 1 ERSPAN
+  ERSPAN_TYPE_1    = 1;
+  // Type 2 ERSPAN
+  ERSPAN_TYPE_2    = 2;
+  // Type 3 ERSPAN
+  ERSPAN_TYPE_3    = 3;
+}
+
 // ERSpanSpec is the configuration specification for ERSPAN
 // NOTE: source IP used in the ERSPAN packet is either
 //       1. subnet VR IP in case DstIP is in a VPC of type VPC_TYPE_TENANT
-//       2. local TEP (MyTEP) IP in case DstIP is in VPC  of type VPC_TYPE_UNDERLAY
+//       2. local TEP (MyTEP) IP in case DstIP is in VPC  of type
+//          VPC_TYPE_UNDERLAY
 message ERSpanSpec {
+  // type of the ERSPAN session
+  // NOTE: only TYPE 3 is supported currently
+  ERSpanType          Type     = 1;
   // VPC id
-  bytes               VPCId    = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes               VPCId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
   oneof erspandst {
       // tunnel (aka. TEP) as the ERSPAN destination
-      bytes           TunnelId = 2;
+      bytes           TunnelId = 3;
       // local/remote mapping as the ERSPAN destination
-      MappingKey      Mapping  = 3;
+      MappingKey      Mapping  = 4;
       // Destination IP address to be used for ERSPAN
-      types.IPAddress DstIP    = 4;
+      types.IPAddress DstIP    = 5;
   }
   // DSCP value to use in the packet
   uint32              Dscp     = 6;
