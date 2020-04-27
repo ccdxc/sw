@@ -251,9 +251,20 @@ export class UIConfigsService implements OnDestroy {
       );
     });
     this.subscriptions.push(sub);
+    // Attempt on load, and refetch if user signs out/in
+    const sub1 = this.licenseService.GetLicense().subscribe(
+      (response) => {
+        // Setting the property will trigger updates to features
+        this.licenseObj = response.body as IClusterLicense;
+      },
+      (error) => {
+        this.licenseObj = null;
+      }
+    );
+    this.subscriptions.push(sub1);
     sub = this.controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
       // TODO: switch to watch once it's added
-      const sub1 = this.licenseService.GetLicense().subscribe(
+      const sub2 = this.licenseService.GetLicense().subscribe(
         (response) => {
           // Setting the property will trigger updates to features
           this.licenseObj = response.body as IClusterLicense;
@@ -262,7 +273,7 @@ export class UIConfigsService implements OnDestroy {
           this.licenseObj = null;
         }
       );
-      this.subscriptions.push(sub1);
+      this.subscriptions.push(sub2);
     });
     this.subscriptions.push(sub);
   }
@@ -279,8 +290,9 @@ export class UIConfigsService implements OnDestroy {
     this.features = {};
 
     // First check backend flags
-    if (this._licenseObj != null) {
-      this._licenseObj.status.features.forEach(elem => {
+    if (this._licenseObj != null && this._licenseObj.spec != null && this._licenseObj.spec.features != null) {
+      // TODO: Use status instead of spec once it is populated
+      this._licenseObj.spec.features.forEach(elem => {
         if (Features[elem['feature-key']] == null) {
           console.error('Unrecognized backend feature flag ' + elem['feature-key']);
         }

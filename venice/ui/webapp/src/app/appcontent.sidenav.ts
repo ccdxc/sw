@@ -268,6 +268,7 @@ export const sideNavMenu: SideNavItem[] = [
         UIRolePermissions.orchestrationorchestrator_read
       ]
     },
+    featureGuard: Features.enterprise,
     link: ['/controller'],
     children: [
       {
