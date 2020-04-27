@@ -123,7 +123,7 @@ typedef struct aacs_info_s {
 
 typedef struct catalog_clock_info_s {
     uint16_t      clock_freq;           // Asic Clock freq
-    uint32_t      clock_multiplier;     // Multiplier based on the clock frequency
+    uint64_t      clock_multiplier;     // Multiplier based on the clock frequency
 } catalog_clock_info_t;
 
 typedef struct catalog_pcie_portspec_s {
@@ -331,7 +331,7 @@ public:
                                    uint32_t cable_type);
 
     uint32_t num_clock_info(void) const { return catalog_db_.num_clock_info; }
-    uint32_t clock_get_multiplier(uint16_t freq);
+    uint64_t clock_get_multiplier(uint16_t freq);
 
 private:
     catalog_t    catalog_db_;   // whole catalog database

@@ -424,7 +424,7 @@ catalog::populate_clock_info (ptree &prop_tree)
     for (ptree::value_type &clock_info : prop_tree.get_child("clock_info")) {
          if (num_freq < MAX_CLOCK_FREQ) {
              catalog_db_.clock_info[num_freq].clock_freq = clock_info.second.get<uint16_t>("freq", 0);
-             catalog_db_.clock_info[num_freq].clock_multiplier = clock_info.second.get<uint32_t>("multiplier", 0);
+             catalog_db_.clock_info[num_freq].clock_multiplier = clock_info.second.get<uint64_t>("multiplier", 0);
              num_freq += 1;
           }
     }
@@ -1111,7 +1111,7 @@ catalog::tm_port_to_ifindex(uint32_t tm_port) {
     return ifindex;
 }
 
-uint32_t
+uint64_t
 catalog::clock_get_multiplier(uint16_t freq) {
     for (uint8_t idx=0; idx<MAX_CLOCK_FREQ; idx++) {
          if (freq == catalog_db_.clock_info[idx].clock_freq)
