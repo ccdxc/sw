@@ -1023,7 +1023,7 @@ func ifUpdateMirrorCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func ifShowCmdHandler(cmd *cobra.Command, args []string) {
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		ifDetailShowCmdHandler(cmd, args)
 		return
 	}
@@ -1046,7 +1046,7 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	var req *halproto.InterfaceGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific if
 		req = &halproto.InterfaceGetRequest{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{

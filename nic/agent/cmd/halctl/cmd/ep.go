@@ -151,7 +151,7 @@ func epShowBriefCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func epShowCmdHandler(cmd *cobra.Command, args []string) {
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		if len(args) > 0 {
 			fmt.Printf("Invalid argument\n")
 			return

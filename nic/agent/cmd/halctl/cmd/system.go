@@ -311,11 +311,11 @@ func systemModeShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		fmt.Println(string(b))
-	} else if cmd.Flags().Changed("json") {
+	} else if cmd != nil && cmd.Flags().Changed("json") {
 		respType := reflect.ValueOf(resp)
 		j, _ := json.Marshal(respType.Interface())
 		fmt.Println(string(j))
@@ -352,7 +352,7 @@ func systemInbMgmtShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		fmt.Println(string(b))
