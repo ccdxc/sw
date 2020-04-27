@@ -861,7 +861,8 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceUpdate(ctkitNetif *ctkit.Networ
 	}
 
 	//Update labels only if changed.
-	if !reflect.DeepEqual(ctkitNetif.Labels, nctkitNetif.Labels) {
+	if interfaceMirroringAllowed(ctkitNetif.NetworkInterface.Spec.Type) &&
+		!reflect.DeepEqual(ctkitNetif.Labels, nctkitNetif.Labels) {
 		sma.clearLabelMap(currIntf)
 		ctkitNetif.ObjectMeta = nctkitNetif.ObjectMeta
 		sma.updateLabelMap(currIntf)
