@@ -69,6 +69,8 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'CONFIG_FAIL',
   ],
   network: [
+    'BGP_SESSION_DOWN',
+    'BGP_SESSION_ESTABLISHED',
     'COLLECTOR_REACHABILITY',
     'LINK_DOWN',
     'LINK_UP',
@@ -375,6 +377,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "CONFIG_FAIL",
       "Severity": EventsEvent_severity.warn,
       "Desc": "Configuration failed",
+  },
+  'BGP_SESSION_DOWN' : {
+      "Name": "BGP_SESSION_DOWN",
+      "Severity": EventsEvent_severity.info,
+      "Desc": "BGP session is down",
+  },
+  'BGP_SESSION_ESTABLISHED' : {
+      "Name": "BGP_SESSION_ESTABLISHED",
+      "Severity": EventsEvent_severity.info,
+      "Desc": "BGP session is established",
   },
   'COLLECTOR_REACHABILITY' : {
       "Name": "COLLECTOR_REACHABILITY",

@@ -587,6 +587,20 @@ func init() {
 		Desc:       "Controller reachability from DSC",
 		SuppressMM: true}
 
+	eventTypes[BGP_SESSION_ESTABLISHED] = &EventTypeAttributes{
+		EType:      BGP_SESSION_ESTABLISHED.String(),
+		Severity:   "info",
+		Category:   "network",
+		Desc:       "BGP session is established",
+		SuppressMM: true}
+
+	eventTypes[BGP_SESSION_DOWN] = &EventTypeAttributes{
+		EType:      BGP_SESSION_DOWN.String(),
+		Severity:   "info",
+		Category:   "network",
+		Desc:       "BGP session is down",
+		SuppressMM: true}
+
 }
 
 func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {

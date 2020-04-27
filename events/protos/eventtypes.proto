@@ -384,4 +384,13 @@ enum EventTypes {
                                            (severity)         = INFO,
                                            (desc)             = "Controller reachability from DSC",
                                            (suppress_mm)      = true];
+    // ------------------------- Control Plane events ------------------------- //
+    BGP_SESSION_ESTABLISHED               = 1201 [(category) = Network,
+                                           (severity)         = INFO,
+                                           (desc)             = "BGP session is established",
+                                           (suppress_mm)      = true];
+    BGP_SESSION_DOWN                      = 1202 [(category) = Network,
+                                           (severity)         = INFO,
+                                           (desc)             = "BGP session is down",
+                                           (suppress_mm)      = true];
 }

@@ -282,6 +282,16 @@
  ],
  "network": [
   {
+   "Name": "BGP_SESSION_DOWN",
+   "Severity": "info",
+   "Desc": "BGP session is down"
+  },
+  {
+   "Name": "BGP_SESSION_ESTABLISHED",
+   "Severity": "info",
+   "Desc": "BGP session is established"
+  },
+  {
    "Name": "COLLECTOR_REACHABILITY",
    "Severity": "info",
    "Desc": "Controller reachability from DSC"
