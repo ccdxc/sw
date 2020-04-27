@@ -252,6 +252,28 @@ e2e-targets:
        vars:
           BmOs: linux
  
+ # two bare-metal instances of SLES 15 SP 1
+ 2sles15sp1:
+   commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   clusters:
+     - image: build-16
+       count: 2
+       resources:
+         servers:
+           - type: hpe
+           - type: server-a
+           - type: server-d
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+
  # single bare-metal instance of Ubuntu 18.04
  ubuntu1804:
    commands: [ "cat /warmd.json && sleep 30000000"]

@@ -83,6 +83,7 @@ dhcp_disable() {
             echo "IPV6INIT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$i
             echo "IPV6ADDR=IPv6-IP-Address" >> /etc/sysconfig/network-scripts/ifcfg-$i
             echo "IPV6_DEFAULTGW=IPv6-IP-Gateway-Address" >> /etc/sysconfig/network-scripts/ifcfg-$i
+            echo "NM_CONTROLLED=no" >> /etc/sysconfig/network-scripts/ifcfg-$i
         done
         # Global enable IPV6
         echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
