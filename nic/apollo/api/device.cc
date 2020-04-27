@@ -202,7 +202,7 @@ device_entry::fill_status(pds_device_status_t *status) {
 
     status->description = std::string("Pensando DSC");
     status->vendor_id = std::string("1DD8");
-    status->chip_type = sdk::platform::asic_type_t::SDK_ASIC_TYPE_CAPRI;
+    status->chip_type = api::g_pds_state.catalogue()->asic_type(0);
     sdk::platform::readfrukey(BOARD_PARTNUM_KEY, value);
     if (value.empty() || value == "") {
         status->hardware_revision = std::string("-");
@@ -219,6 +219,8 @@ device_entry::fill_status(pds_device_status_t *status) {
     status->num_pcie_ports = 0;
     status->num_ports = 2;
     status->vendor_name = std::string("Pensando Systems Inc");
+    status->pxe_version = std::string("1.0");
+    status->uefi_version = std::string("2.4");
 }
 
 sdk_ret_t

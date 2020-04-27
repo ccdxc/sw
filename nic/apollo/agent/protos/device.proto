@@ -159,6 +159,12 @@ message DeviceStatus {
 
   // Vendor Name
   string      VendorName        = 21;
+
+  // PXE Version
+  string      PXEVersion        = 22;
+
+  // UEFI Version
+  string      UEFIVersion       = 23;
 }
 
 // stats of the device, if any
