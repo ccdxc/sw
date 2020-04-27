@@ -65,19 +65,19 @@ func (e *eventsHooks) operations(ctx context.Context, in interface{}) (context.C
 }
 
 // userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
-func (e *eventsHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (e *eventsHooks) userContext(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	e.logger.DebugLog("msg", "APIGw userContext pre-call hook called")
 	switch in.(type) {
 	// check read authorization for sg policy included in policy search request
 	case *api.ListWatchOptions, *events.GetEventRequest:
 	default:
-		return ctx, in, true, errors.New("invalid input type")
+		return ctx, in, out, true, errors.New("invalid input type")
 	}
 	nctx, err := newContextWithUserPerms(ctx, e.permissionGetter, e.logger)
 	if err != nil {
-		return ctx, in, true, err
+		return ctx, in, out, true, err
 	}
-	return nctx, in, false, nil
+	return nctx, in, out, false, nil
 }
 
 func (e *eventsHooks) registerEventsHooks(svc apigw.APIGatewayService) error {

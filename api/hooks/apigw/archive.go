@@ -76,10 +76,10 @@ func (a *archiveHooks) operationsPreAuthzHook(ctx context.Context, in interface{
 }
 
 // cancelPreCallHook implements CancelArchiveRequest action
-func (a *archiveHooks) cancelPreCallHook(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *archiveHooks) cancelPreCallHook(ctx context.Context, in interface{}, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	obj, ok := in.(*monitoring.CancelArchiveRequest)
 	if !ok {
-		return ctx, nil, true, errors.New("invalid input type")
+		return ctx, nil, nil, true, errors.New("invalid input type")
 	}
 	archiveGetter := a.archiveGetter
 	if archiveGetter == nil {
@@ -87,7 +87,7 @@ func (a *archiveHooks) cancelPreCallHook(ctx context.Context, in interface{}) (c
 	}
 	req, err := archiveGetter.GetArchiveRequest(&obj.ObjectMeta)
 	if err != nil {
-		return ctx, nil, true, err
+		return ctx, nil, nil, true, err
 	}
 	a.logger.DebugLog("method", "cancelPreCallHook", "msg", fmt.Sprintf("request UUID %s", req.UUID))
 	clGetter := a.clientGetter
@@ -95,21 +95,21 @@ func (a *archiveHooks) cancelPreCallHook(ctx context.Context, in interface{}) (c
 		clGetter, err = archive.NewClientGetter(globals.APIGw, req.Spec.Type, a.rslvr, a.logger)
 		if err != nil {
 			a.logger.ErrorLog("method", "cancelPreCallHook", "msg", fmt.Sprintf("unable to instantiate ClientGetter to cancel archiverequest [%#v]", *obj), "error", err)
-			return ctx, nil, true, err
+			return ctx, nil, nil, true, err
 		}
 	}
 	archiveCl, err := clGetter.GetClient()
 	if err != nil {
 		a.logger.ErrorLog("method", "cancelPreCallHook", "msg", "failed to get archive client", "error", err)
-		return ctx, nil, true, err
+		return ctx, nil, nil, true, err
 	}
 	defer archiveCl.Close()
 	resp, err := archiveCl.CancelRequest(ctx, req)
 	if err != nil {
 		a.logger.ErrorLog("method", "cancelPreCallHook", "msg", fmt.Sprintf("rpc call CancelRequest failed for archive request [%#v] with name [%s]", *req, req.Name), "error", err)
-		return ctx, nil, true, err
+		return ctx, nil, nil, true, err
 	}
-	return ctx, resp, true, nil
+	return ctx, resp, out, true, nil
 }
 
 func (a *archiveHooks) registerCancelPreCallHook(svc apigw.APIGatewayService) error {

@@ -70,54 +70,54 @@ func (h *browserHooks) addOperations(ctx context.Context, i interface{}) (contex
 	return nctx, i, nil
 }
 
-func (h *browserHooks) referencesPreCallHook(ctx context.Context, i interface{}) (context.Context, interface{}, bool, error) {
+func (h *browserHooks) referencesPreCallHook(ctx context.Context, i, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	h.logger.InfoLog("msg", "received references PreCallHook callback", "obj", i)
 	in, ok := i.(*browser.BrowseRequest)
 	if !ok {
-		return ctx, i, true, errors.New("invalid input")
+		return ctx, i, out, true, errors.New("invalid input")
 	}
 
 	in.QueryType = browser.QueryType_Dependencies.String()
 	uri, err := h.getURI(ctx)
 	if err != nil {
-		return ctx, in, true, err
+		return ctx, in, out, true, err
 	}
 	sch := runtime.GetDefaultScheme()
 	in.URI = sch.GetKey(uri)
 	if in.URI == "" {
 		h.logger.ErrorLog("msg", "could not map URI to key", "URI", uri)
-		return ctx, i, false, errors.New("unknown URI path")
+		return ctx, i, out, false, errors.New("unknown URI path")
 	}
-	return ctx, in, false, nil
+	return ctx, in, out, false, nil
 }
 
-func (h *browserHooks) refereesPreCallHook(ctx context.Context, i interface{}) (context.Context, interface{}, bool, error) {
+func (h *browserHooks) refereesPreCallHook(ctx context.Context, i, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	h.logger.InfoLog("msg", "received referees PreCallHook callback", "obj", i)
 	in, ok := i.(*browser.BrowseRequest)
 	if !ok {
-		return ctx, i, true, errors.New("invalid input")
+		return ctx, i, out, true, errors.New("invalid input")
 	}
 
 	in.QueryType = browser.QueryType_DependedBy.String()
 	uri, err := h.getURI(ctx)
 	if err != nil {
-		return ctx, in, true, err
+		return ctx, in, out, true, err
 	}
 	sch := runtime.GetDefaultScheme()
 	in.URI = sch.GetKey(uri)
 	if in.URI == "" {
 		h.logger.ErrorLog("msg", "could not map URI to key", "URI", uri)
-		return ctx, i, false, errors.New("unknown URI path")
+		return ctx, i, out, false, errors.New("unknown URI path")
 	}
-	return ctx, i, false, nil
+	return ctx, i, out, false, nil
 }
 
-func (h *browserHooks) queryPreCallHook(ctx context.Context, i interface{}) (context.Context, interface{}, bool, error) {
+func (h *browserHooks) queryPreCallHook(ctx context.Context, i, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	h.logger.InfoLog("msg", "received query PreCallHook callback", "obj", i)
 	reqList, ok := i.(*browser.BrowseRequestList)
 
 	if !ok {
-		return ctx, i, true, errors.New("invalid input")
+		return ctx, i, out, true, errors.New("invalid input")
 	}
 
 	for ix, br := range reqList.RequestList {
@@ -126,11 +126,11 @@ func (h *browserHooks) queryPreCallHook(ctx context.Context, i interface{}) (con
 		br.URI = sch.GetKey(uri)
 		if br.URI == "" {
 			h.logger.ErrorLog("msg", "could not map URI to key", "URI", uri)
-			return ctx, i, false, errors.New("unknown URI path")
+			return ctx, i, out, false, errors.New("unknown URI path")
 		}
 		reqList.RequestList[ix] = br
 	}
-	return ctx, i, false, nil
+	return ctx, i, out, false, nil
 }
 
 func registerBrowserHooks(svc apigw.APIGatewayService, l log.Logger) error {

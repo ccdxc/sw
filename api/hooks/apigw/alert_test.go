@@ -59,7 +59,7 @@ func TestAlertHooks(t *testing.T) {
 
 	ah := &alertHooks{logger: log.GetNewLogger(log.GetDefaultConfig("TestAPIGwAlertHooks"))}
 	for _, test := range tests {
-		newCtx, out, skipBackendCall, err := ah.addUserInfoToContext(test.ctx, test.in)
+		newCtx, out, _, skipBackendCall, err := ah.addUserInfoToContext(test.ctx, test.in, nil)
 		Assert(t, reflect.DeepEqual(test.err, err), "tc {%s}: resolveAlert hook failed, err: %v", test.name, err)
 		Assert(t, reflect.DeepEqual(test.in, out), "tc {%s}: config object should not change, expected: %v, got: %v", test.name, test.in, out)
 		Assert(t, test.skipBackendCall == skipBackendCall, "tc {%s}: expected skipBackend: %v, got: %v", test.name, test.skipBackendCall, skipBackendCall)

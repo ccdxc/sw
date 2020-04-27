@@ -127,7 +127,7 @@ func TestWorkloadUserContextHook(t *testing.T) {
 	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testUserRole}, []*auth.RoleBinding{testUserRoleBinding}, nil, nil)
 	for _, test := range tests {
 		nctx := apigwpkg.NewContextWithUser(context.TODO(), test.user)
-		nctx, out, skipCall, err := r.userContext(nctx, test.in)
+		nctx, out, _, skipCall, err := r.userContext(nctx, test.in, nil)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		if !test.err {
 			Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))
@@ -213,7 +213,7 @@ func TestWorkloadInterfaceValidation(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestAPIGwWorkloadHooks")
 	r.logger = log.GetNewLogger(logConfig)
 	for i, tc := range tests {
-		_, _, _, err := r.validateInterfaces(context.Background(), tc.in)
+		_, _, _, _, err := r.validateInterfaces(context.Background(), tc.in, nil)
 		if !tc.expErr {
 			AssertOk(t, err, "tc %d failed", i)
 		} else {
@@ -221,7 +221,7 @@ func TestWorkloadInterfaceValidation(t *testing.T) {
 		}
 	}
 	// Test passing in bad type errs
-	_, _, _, err := r.validateInterfaces(context.Background(), workload.WorkloadSpec{})
+	_, _, _, _, err := r.validateInterfaces(context.Background(), workload.WorkloadSpec{}, nil)
 	Assert(t, err != nil, "Expected error when passing in bad type")
 
 }

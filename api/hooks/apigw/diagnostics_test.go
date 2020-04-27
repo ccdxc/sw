@@ -246,7 +246,7 @@ func TestDebugPreCallHook(t *testing.T) {
 			rslvr.AddServiceInstance(test.svcInstance)
 		}
 		r.rslvr = rslvr
-		_, out, ok, err := r.DebugPreCallHook(ctx, test.in)
+		_, out, _, ok, err := r.DebugPreCallHook(ctx, test.in, nil)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("[%s] test failed, expected object [%v], got [%v]", test.name, test.out, out))

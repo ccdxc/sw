@@ -119,19 +119,19 @@ func (s *stagingHooks) addOwnerPreAuthzHook(ctx context.Context, in interface{})
 }
 
 // userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
-func (s *stagingHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (s *stagingHooks) userContext(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	s.logger.DebugLog("msg", "APIGw userContext pre-call hook called for staging buffer commit")
 	switch in.(type) {
 	case *staging.CommitAction:
 	case *staging.Buffer:
 	default:
-		return ctx, in, true, errors.New("invalid input type")
+		return ctx, in, out, true, errors.New("invalid input type")
 	}
 	nctx, err := newContextWithUserPerms(ctx, s.permissionGetter, s.logger)
 	if err != nil {
-		return ctx, in, true, err
+		return ctx, in, out, true, err
 	}
-	return nctx, in, false, nil
+	return nctx, in, out, false, nil
 }
 
 // bulkedit is a pre-authz helper function that processes the bulkedit request. It converts the bulkedit objects

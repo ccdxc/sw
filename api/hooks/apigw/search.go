@@ -57,12 +57,12 @@ func (e *searchHooks) operations(ctx context.Context, in interface{}) (context.C
 }
 
 // userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context and to add user tenant to search scope if none is specified in search request
-func (e *searchHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (e *searchHooks) userContext(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	e.logger.DebugLog("msg", "APIGw userContext pre-call hook called")
 	user, ok := apigwpkg.UserFromContext(ctx)
 	if !ok || user == nil {
 		e.logger.Errorf("no user present in context passed to userContext pre-call hook")
-		return ctx, in, true, apigwpkg.ErrNoUserInContext
+		return ctx, in, out, true, apigwpkg.ErrNoUserInContext
 	}
 	switch obj := in.(type) {
 	// check read authorization for sg policy included in policy search request
@@ -76,14 +76,14 @@ func (e *searchHooks) userContext(ctx context.Context, in interface{}) (context.
 			obj.Tenants = append(obj.Tenants, user.Tenant)
 		}
 	default:
-		return ctx, in, true, errors.New("invalid input type")
+		return ctx, in, out, true, errors.New("invalid input type")
 	}
 	nctx, err := newContextWithUserPerms(ctx, e.permissionGetter, e.logger)
 	if err != nil {
 		e.logger.Errorf("error creating outgoing context with user permissions for user [%s|%s]: %v", user.Tenant, user.Name, err)
-		return ctx, in, true, err
+		return ctx, in, out, true, err
 	}
-	return nctx, in, false, nil
+	return nctx, in, out, false, nil
 }
 
 func (e *searchHooks) registerSearchHooks(svc apigw.APIGatewayService) error {

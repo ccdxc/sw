@@ -241,7 +241,7 @@ func PrintOperations(operations []Operation) string {
 					ownerTenant = owner.Tenant
 					ownerName = owner.Name
 				}
-				message = message + fmt.Sprintf("resource(tenant: %v, group: %v, kind: %v, namespace: %v, name: %v, owner: %v|%v), action: %v; ",
+				message = message + fmt.Sprintf("resource(tenant: %v, group: %v, kind: %v, namespace: %v, name: %v, owner: %v|%v), action: %v, id: %v; ",
 					res.GetTenant(),
 					res.GetGroup(),
 					res.GetKind(),
@@ -249,7 +249,8 @@ func PrintOperations(operations []Operation) string {
 					res.GetName(),
 					ownerTenant,
 					ownerName,
-					oper.GetAction())
+					oper.GetAction(),
+					oper.GetID())
 			}
 		}
 	}

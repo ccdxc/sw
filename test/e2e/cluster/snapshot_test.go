@@ -7,6 +7,7 @@ import (
 	"io"
 	"reflect"
 	"strings"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,6 +21,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/security"
 	testutils "github.com/pensando/sw/test/utils"
@@ -246,7 +248,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 					}
 					return fmt.Errorf("no audit logs for [%s|%s] successful snapshot save", globals.DefaultTenant, ts.tu.User)
 				}, 30, 1).Should(BeNil())
-
+				By(fmt.Sprintf("ts: %v +++snapshot audit log query succeeded", time.Now()))
 				wrbuf, len, err := downloadSnapshot(lctx, name)
 				Expect(err).To(BeNil())
 
@@ -257,6 +259,61 @@ var _ = Describe("Config SnapShot and restore", func() {
 
 				len, err = uploadFile(lctx, "snapshots", "mirror-snapshot", metadata, wrbuf.Bytes())
 				By(fmt.Sprintf("Wrote [mirror-snapshot] [%d] (%s)", len, err))
+				// check audit log for snapshot save
+				query = &search.SearchRequest{
+					Query: &search.SearchQuery{
+						Kinds: []string{auth.Permission_AuditEvent.String()},
+						Fields: &fields.Selector{
+							Requirements: []*fields.Requirement{
+								{
+									Key:      "action",
+									Operator: "equals",
+									Values:   []string{strings.Title("create")},
+								},
+								{
+									Key:      "outcome",
+									Operator: "equals",
+									Values:   []string{audit.Outcome_Success.String()},
+								},
+								{
+									Key:      "resource.kind",
+									Operator: "equals",
+									Values:   []string{string(objstore.KindObject)},
+								},
+								{
+									Key:      "resource.name",
+									Operator: "equals",
+									Values:   []string{"mirror-snapshot"},
+								},
+							},
+						},
+					},
+					From:       0,
+					MaxResults: 50,
+					Aggregate:  true,
+				}
+				Eventually(func() error {
+					resp := testutils.AuditSearchResponse{}
+					err := ts.tu.Search(ts.loggedInCtx, query, &resp)
+					if err != nil {
+						return err
+					}
+					if resp.ActualHits == 0 {
+						return fmt.Errorf("no audit logs for [%s|%s] successful snapshot upload", globals.DefaultTenant, ts.tu.User)
+					}
+					events := resp.AggregatedEntries.Tenants[globals.DefaultTenant].Categories[globals.Kind2Category("AuditEvent")].Kinds[auth.Permission_AuditEvent.String()].Entries
+					for _, event := range events {
+						if (event.Object.Action == "create") &&
+							(event.Object.Outcome == audit.Outcome_Success.String()) &&
+							(event.Object.User.Name == ts.tu.User) &&
+							(event.Object.User.Tenant == globals.DefaultTenant) &&
+							(event.Object.Resource.Name == "mirror-snapshot") {
+							return nil
+						}
+					}
+					return fmt.Errorf("no audit logs for [%s|%s] successful snapshot upload", globals.DefaultTenant, ts.tu.User)
+				}, 30, 1).Should(BeNil())
+				By(fmt.Sprintf("ts: %v +++snapshot upload audit log query succeeded", time.Now()))
 
 				for i := 0; i < statemgr.MaxMirrorSessions; i++ {
 					ms.Name = fmt.Sprintf("max-mirror-%d", i+1)

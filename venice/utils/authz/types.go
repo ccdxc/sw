@@ -3,6 +3,8 @@ package authz
 import (
 	"fmt"
 
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/bookstore"
 	"github.com/pensando/sw/api/generated/staging"
@@ -28,6 +30,7 @@ type operation struct {
 	resource    Resource
 	action      string
 	auditAction string
+	id          string
 }
 
 func (op *operation) GetResource() Resource {
@@ -42,12 +45,17 @@ func (op *operation) GetAuditAction() string {
 	return op.auditAction
 }
 
+func (op *operation) GetID() string {
+	return op.id
+}
+
 // NewOperation returns an instance of Operation
 func NewOperation(resource Resource, action string) Operation {
 	return &operation{
 		resource:    resource,
 		action:      action,
 		auditAction: action,
+		id:          uuid.NewV4().String(),
 	}
 }
 
@@ -75,6 +83,7 @@ func NewAPIServerOperation(resource Resource, action apiintf.APIOperType, auditA
 		resource:    resource,
 		action:      pAction,
 		auditAction: auditAction,
+		id:          uuid.NewV4().String(),
 	}
 }
 
@@ -84,6 +93,17 @@ func NewAuditOperation(resource Resource, action, auditAction string) Operation 
 		resource:    resource,
 		action:      action,
 		auditAction: auditAction,
+		id:          uuid.NewV4().String(),
+	}
+}
+
+// NewOperationWithID creates an operation with a given ID
+func NewOperationWithID(resource Resource, action, auditAction, id string) Operation {
+	return &operation{
+		resource:    resource,
+		action:      action,
+		auditAction: auditAction,
+		id:          id,
 	}
 }
 

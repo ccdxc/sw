@@ -180,54 +180,54 @@ func (a *authHooks) privilegeEscalationCheck(ctx context.Context, in interface{}
 }
 
 // userCreateCheck pre-call hook prevents creation of local user if local auth is disabled
-func (a *authHooks) userCreateCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *authHooks) userCreateCheck(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw userCreateCheck hook called")
 	obj, ok := in.(*auth.User)
 	if !ok {
-		return ctx, in, true, errors.New("invalid input type")
+		return ctx, in, out, true, errors.New("invalid input type")
 	}
 	if obj.Spec.Type == auth.UserSpec_External.String() {
-		return ctx, in, true, errors.New("cannot create External user type")
+		return ctx, in, out, true, errors.New("cannot create External user type")
 	}
 	// check if authentication policy exists
 	policy, err := a.authGetter.GetAuthenticationPolicy()
 	if err != nil {
 		a.logger.Errorf("AuthenticationPolicy not found, user [%s] cannot be created, Err: %v", obj.Name, err)
-		return ctx, in, true, err
+		return ctx, in, out, true, err
 	}
 	// check if local auth is enabled
 	for _, authenticator := range policy.Spec.Authenticators.AuthenticatorOrder {
 		if authenticator == auth.Authenticators_LOCAL.String() {
-			return ctx, in, false, nil
+			return ctx, in, out, false, nil
 		}
 	}
-	return ctx, in, true, errors.New("local authentication not enabled")
+	return ctx, in, out, true, errors.New("local authentication not enabled")
 }
 
 // userUpdateCheck pre-call hook fails is password is specified in update operation
-func (a *authHooks) userUpdateCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *authHooks) userUpdateCheck(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw userUpdateCheck hook called")
 	obj, ok := in.(*auth.User)
 	if !ok {
-		return ctx, in, true, errors.New("invalid input type")
+		return ctx, in, out, true, errors.New("invalid input type")
 	}
 	if obj.Spec.Password != "" {
-		return ctx, in, true, errors.New("user update with non-empty password not allowed")
+		return ctx, in, out, true, errors.New("user update with non-empty password not allowed")
 	}
-	return ctx, in, false, nil
+	return ctx, in, out, false, nil
 }
 
 // ldapConnectionCheck pre-call hook checks if connection succeeds to LDAP
-func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *authHooks) ldapConnectionCheck(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw ldapConnectionCheck hook called")
 	obj, ok := in.(*auth.AuthenticationPolicy)
 	if !ok {
-		return ctx, in, true, errors.New("invalid input type")
+		return ctx, in, out, true, errors.New("invalid input type")
 	}
 	obj.Status.LdapServers = nil
 	config := obj.Spec.Authenticators.Ldap
 	if config == nil {
-		return ctx, in, true, &api.Status{
+		return ctx, in, out, true, &api.Status{
 			TypeMeta: api.TypeMeta{Kind: "Status"},
 			Message:  []string{"ldap authenticator config not defined"},
 			Code:     int32(codes.InvalidArgument),
@@ -235,7 +235,7 @@ func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (co
 		}
 	}
 	if len(config.Domains) == 0 {
-		return ctx, in, true, &api.Status{
+		return ctx, in, out, true, &api.Status{
 			TypeMeta: api.TypeMeta{Kind: "Status"},
 			Message:  []string{"ldap domain not defined"},
 			Code:     int32(codes.InvalidArgument),
@@ -243,7 +243,7 @@ func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (co
 		}
 	}
 	if len(config.Domains) > 1 {
-		return ctx, in, true, &api.Status{
+		return ctx, in, out, true, &api.Status{
 			TypeMeta: api.TypeMeta{Kind: "Status"},
 			Message:  []string{"only one ldap domain is supported"},
 			Code:     int32(codes.InvalidArgument),
@@ -252,7 +252,7 @@ func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (co
 	}
 	for _, domain := range config.Domains {
 		if len(domain.Servers) == 0 {
-			return ctx, in, true, &api.Status{
+			return ctx, in, out, true, &api.Status{
 				TypeMeta: api.TypeMeta{Kind: "Status"},
 				Message:  []string{"ldap server not defined"},
 				Code:     int32(codes.InvalidArgument),
@@ -286,20 +286,20 @@ func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (co
 			}
 		}
 	}
-	return ctx, obj, true, nil
+	return ctx, obj, out, true, nil
 }
 
 // ldapBindCheck pre-call hook checks if bind on LDAP connection succeeds
-func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *authHooks) ldapBindCheck(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw ldapBindCheck hook called")
 	obj, ok := in.(*auth.AuthenticationPolicy)
 	if !ok {
-		return ctx, in, true, errors.New("invalid input type")
+		return ctx, in, out, true, errors.New("invalid input type")
 	}
 	obj.Status.LdapServers = nil
 	config := obj.Spec.Authenticators.Ldap
 	if config == nil {
-		return ctx, in, true, &api.Status{
+		return ctx, in, out, true, &api.Status{
 			TypeMeta: api.TypeMeta{Kind: "Status"},
 			Message:  []string{"ldap authenticator config not defined"},
 			Code:     int32(codes.InvalidArgument),
@@ -307,7 +307,7 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 		}
 	}
 	if len(config.Domains) == 0 {
-		return ctx, in, true, &api.Status{
+		return ctx, in, out, true, &api.Status{
 			TypeMeta: api.TypeMeta{Kind: "Status"},
 			Message:  []string{"ldap domain not defined"},
 			Code:     int32(codes.InvalidArgument),
@@ -315,7 +315,7 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 		}
 	}
 	if len(config.Domains) > 1 {
-		return ctx, in, true, &api.Status{
+		return ctx, in, out, true, &api.Status{
 			TypeMeta: api.TypeMeta{Kind: "Status"},
 			Message:  []string{"only one ldap domain is supported"},
 			Code:     int32(codes.InvalidArgument),
@@ -324,7 +324,7 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 	}
 	for _, domain := range config.Domains {
 		if len(domain.Servers) == 0 {
-			return ctx, in, true, &api.Status{
+			return ctx, in, out, true, &api.Status{
 				TypeMeta: api.TypeMeta{Kind: "Status"},
 				Message:  []string{"ldap server not defined"},
 				Code:     int32(codes.InvalidArgument),
@@ -357,32 +357,32 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 			}
 		}
 	}
-	return ctx, obj, true, nil
+	return ctx, obj, out, true, nil
 }
 
 // userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
-func (a *authHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *authHooks) userContext(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw userContext pre-call hook called for role binding create/update")
 	switch in.(type) {
 	case *auth.RoleBinding:
 	default:
-		return ctx, in, true, errors.New("invalid input type")
+		return ctx, in, out, true, errors.New("invalid input type")
 	}
 	// we ignore the error if there are no user or perms to set. It could be the case when auth has not been bootstrapped and user is creating role binding
 	nctx, _ := newContextWithUserPerms(ctx, a.permissionGetter, a.logger)
-	return nctx, in, false, nil
+	return nctx, in, out, false, nil
 }
 
 // isAuthorizedPreCallHook is to check authorization information
-func (a *authHooks) isAuthorizedPreCallHook(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *authHooks) isAuthorizedPreCallHook(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("method", "isAuthorizedPreCallHook", "msg", "Pre-call hook called for IsAuthorized user action")
 	obj, ok := in.(*auth.SubjectAccessReviewRequest)
 	if !ok {
-		return ctx, nil, true, errors.New("invalid input type")
+		return ctx, nil, out, true, errors.New("invalid input type")
 	}
 	user, ok := a.authGetter.GetUser(obj.Name, obj.Tenant)
 	if !ok {
-		return ctx, nil, true, errors.New("user not found")
+		return ctx, nil, out, true, errors.New("user not found")
 	}
 	user.Status.AccessReview = []*auth.OperationStatus{}
 	user.Status.Roles = []string{}
@@ -419,24 +419,24 @@ func (a *authHooks) isAuthorizedPreCallHook(ctx context.Context, in interface{})
 	for _, role := range roles {
 		user.Status.Roles = append(user.Status.Roles, role.Name)
 	}
-	return ctx, user, true, nil
+	return ctx, user, out, true, nil
 }
 
-func (a *authHooks) adminRoleBindingPreCallHook(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *authHooks) adminRoleBindingPreCallHook(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("method", "adminRoleBindingPreCallHook", "msg", "Pre-call hook called for AdminRoleBinding update")
 	obj, ok := in.(*auth.RoleBinding)
 	if !ok {
-		return ctx, nil, true, errors.New("invalid input type")
+		return ctx, nil, out, true, errors.New("invalid input type")
 	}
 	if obj.Name == globals.AdminRoleBinding {
 		// super admin role binding should have at least one user or group
 		if obj.Tenant == globals.DefaultTenant {
 			if len(obj.Spec.Users) == 0 && len(obj.Spec.UserGroups) == 0 {
-				return ctx, in, true, errSuperAdminRoleBindingNoSubject
+				return ctx, in, out, true, errSuperAdminRoleBindingNoSubject
 			}
 		}
 	}
-	return ctx, in, false, nil
+	return ctx, in, out, false, nil
 }
 
 // rolePreAuthZHook is to populate resource tenant in permissions

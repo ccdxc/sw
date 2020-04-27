@@ -90,7 +90,7 @@ func TestStagingUserContext(t *testing.T) {
 	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testNetworkAdminRole}, []*auth.RoleBinding{testNetworkAdminRoleBinding}, nil, nil)
 	for _, test := range tests {
 		nctx := apigwpkg.NewContextWithUser(context.TODO(), test.user)
-		_, out, skipCall, err := r.userContext(nctx, test.in)
+		_, out, _, skipCall, err := r.userContext(nctx, test.in, nil)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out),
@@ -562,9 +562,9 @@ func TestStagingBulkEdit(t *testing.T) {
 
 	AssertOk(t, err, "ApiGw BulkEdit hook failed")
 	Assert(t, len(rcvdOps) == 3, "Expected number of operations doesn't match!")
-	Assert(t, reflect.DeepEqual(expectedOp0, rcvdOps[0]), "Create operation comparison failed")
-	Assert(t, reflect.DeepEqual(expectedOp1, rcvdOps[1]), "Update operation comparison failed")
-	Assert(t, reflect.DeepEqual(expectedOp2, rcvdOps[2]), "Delete operation comparison failed")
+	Assert(t, AreOperationsEqual([]authz.Operation{expectedOp0}, []authz.Operation{rcvdOps[0]}), "Create operation comparison failed")
+	Assert(t, AreOperationsEqual([]authz.Operation{expectedOp1}, []authz.Operation{rcvdOps[1]}), "Update operation comparison failed")
+	Assert(t, AreOperationsEqual([]authz.Operation{expectedOp2}, []authz.Operation{rcvdOps[2]}), "Delete operation comparison failed")
 
 	// Negative test cases
 	// 1. Send a wrong request type

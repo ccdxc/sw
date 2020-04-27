@@ -310,7 +310,7 @@ func TestEventsUserContextHook(t *testing.T) {
 	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testUserRole}, []*auth.RoleBinding{testUserRoleBinding}, nil, nil)
 	for _, test := range tests {
 		nctx := apigwpkg.NewContextWithUser(context.TODO(), test.user)
-		nctx, out, skipCall, err := r.userContext(nctx, test.in)
+		nctx, out, _, skipCall, err := r.userContext(nctx, test.in, nil)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))
 		perms, _, _ := authzgrpcctx.PermsFromOutgoingContext(nctx)

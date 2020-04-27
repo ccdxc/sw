@@ -408,7 +408,7 @@ func TestUserCreateCheck(t *testing.T) {
 	r.logger = l
 	for _, test := range tests {
 		r.authGetter = test.authGetter
-		_, _, skipCall, err := r.userCreateCheck(context.TODO(), test.in)
+		_, _, _, skipCall, err := r.userCreateCheck(context.TODO(), test.in, nil)
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("expected skipCall [%v], got [%v], [%s] test failed", test.skipCall, skipCall, test.name))
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("expected err [%v], got [%v], %s] test failed", test.err, err, test.name))
 	}
@@ -444,7 +444,7 @@ func TestUserUpdateCheck(t *testing.T) {
 	r := &authHooks{}
 	r.logger = l
 	for _, test := range tests {
-		_, _, skipCall, err := r.userUpdateCheck(context.TODO(), test.in)
+		_, _, _, skipCall, err := r.userUpdateCheck(context.TODO(), test.in, nil)
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("expected skipCall [%v], got [%v], [%s] test failed", test.skipCall, skipCall, test.name))
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("expected err [%v], got [%v], %s] test failed", test.err, err, test.name))
 	}
@@ -778,7 +778,7 @@ func TestLdapConnectionCheck(t *testing.T) {
 	r.logger = l
 	for _, test := range tests {
 		r.ldapChecker = test.connChecker
-		_, out, skipCall, err := r.ldapConnectionCheck(context.TODO(), test.in)
+		_, out, _, skipCall, err := r.ldapConnectionCheck(context.TODO(), test.in, nil)
 		Assert(t, skipCall, fmt.Sprintf("[%s] test failed, expected skipCall to be true", test.name))
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
 		if err == nil {
@@ -1048,7 +1048,7 @@ func TestLdapBindCheck(t *testing.T) {
 	r.logger = l
 	for _, test := range tests {
 		r.ldapChecker = test.connChecker
-		_, out, skipCall, err := r.ldapBindCheck(context.TODO(), test.in)
+		_, out, _, skipCall, err := r.ldapBindCheck(context.TODO(), test.in, nil)
 		Assert(t, skipCall, fmt.Sprintf("[%s] test failed, expected skipCall to be true", test.name))
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
 		if err == nil {
@@ -1375,7 +1375,7 @@ func TestAuthUserContext(t *testing.T) {
 	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testNetworkAdminRole}, []*auth.RoleBinding{testNetworkAdminRoleBinding}, nil, nil)
 	for _, test := range tests {
 		nctx := apigwpkg.NewContextWithUser(context.TODO(), test.user)
-		_, out, skipCall, err := r.userContext(nctx, test.in)
+		_, out, _, skipCall, err := r.userContext(nctx, test.in, nil)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out),
@@ -1636,7 +1636,7 @@ func TestIsAuthorizedPreCallHook(t *testing.T) {
 	r.authorizer = authzmgr.NewAlwaysAllowAuthorizer()
 	for _, test := range tests {
 		ctx := context.TODO()
-		_, out, ok, err := r.isAuthorizedPreCallHook(ctx, test.in)
+		_, out, _, ok, err := r.isAuthorizedPreCallHook(ctx, test.in, nil)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("[%s] test failed, expected object [%v], got [%v]", test.name, test.out, out))
@@ -1717,7 +1717,7 @@ func TestAdminRoleBindingPreCallHook(t *testing.T) {
 	r.logger = l
 	for _, test := range tests {
 		ctx := context.TODO()
-		_, out, ok, err := r.adminRoleBindingPreCallHook(ctx, test.in)
+		_, out, _, ok, err := r.adminRoleBindingPreCallHook(ctx, test.in, nil)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("[%s] test failed, expected object [%v], got [%v]", test.name, test.out, out))

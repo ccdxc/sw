@@ -124,7 +124,7 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 	r.logger = l
 	for _, test := range tests {
 		r.bootstrapper = test.bootstrapper
-		_, _, skipCall, err := r.setAuthBootstrapFlag(context.TODO(), nil)
+		_, _, _, skipCall, err := r.setAuthBootstrapFlag(context.TODO(), nil, nil)
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed, expected skipCall [%v], got [%v]", test.name, test.skipCall, skipCall))
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
 	}
@@ -259,7 +259,7 @@ func TestHostsUserContextHook(t *testing.T) {
 	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testUserRole}, []*auth.RoleBinding{testUserRoleBinding}, nil, nil)
 	for _, test := range tests {
 		nctx := apigwpkg.NewContextWithUser(context.TODO(), test.user)
-		nctx, out, skipCall, err := r.userContext(nctx, test.in)
+		nctx, out, _, skipCall, err := r.userContext(nctx, test.in, nil)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		if !test.err {
 			Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))

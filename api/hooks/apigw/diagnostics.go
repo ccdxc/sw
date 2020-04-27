@@ -26,10 +26,10 @@ type diagnosticsHooks struct {
 }
 
 // DebugPreCallHook implements Debug action for module object
-func (d *diagnosticsHooks) DebugPreCallHook(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (d *diagnosticsHooks) DebugPreCallHook(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	obj, ok := in.(*diagapi.DiagnosticsRequest)
 	if !ok {
-		return ctx, nil, true, errors.New("invalid input type")
+		return ctx, nil, out, true, errors.New("invalid input type")
 	}
 	var err error
 	clGetter := d.clientGetter
@@ -37,22 +37,22 @@ func (d *diagnosticsHooks) DebugPreCallHook(ctx context.Context, in interface{})
 		clGetter, err = diagnostics.NewClientGetter(globals.APIGw, obj, diagnostics.NewRouter(d.rslvr, d.moduleGetter, d.logger), d.diagSvc, d.rslvr)
 		if err != nil {
 			d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("unable to instantiate ClientGetter to process diagnostics request [%#v]", *obj), "error", err)
-			return ctx, nil, true, err
+			return ctx, nil, out, true, err
 
 		}
 	}
 	diagCl, err := clGetter.GetClient()
 	if err != nil {
 		d.logger.ErrorLog("method", "DebugPreCallHook", "msg", "failed to get diagnostics client", "error", err)
-		return ctx, nil, true, err
+		return ctx, nil, out, true, err
 	}
 	defer diagCl.Close()
 	resp, err := diagCl.Debug(ctx, obj)
 	if err != nil {
 		d.logger.ErrorLog("method", "DebugPreCallHook", "msg", fmt.Sprintf("rpc call Debug failed for diagnostics request [%#v] for module obj [%s]", *obj, obj.Name), "error", err)
-		return ctx, nil, true, err
+		return ctx, nil, out, true, err
 	}
-	return ctx, resp, true, nil
+	return ctx, resp, out, true, nil
 }
 
 func (d *diagnosticsHooks) registerDebugPreCallHook(svc apigw.APIGatewayService) error {

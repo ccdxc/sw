@@ -14,13 +14,13 @@ type bookstoreHooks struct {
 	logger log.Logger
 }
 
-func (b *bookstoreHooks) preCallHook(ctx context.Context, i interface{}) (context.Context, interface{}, bool, error) {
+func (b *bookstoreHooks) preCallHook(ctx context.Context, i, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	b.logger.InfoLog("msg", "received PreCallHook callback", "obj", i)
 	in := i.(*bookstore.Order)
 	if in.Spec.Id == "order-reject" {
-		return ctx, in, false, errors.New("order not allowed")
+		return ctx, in, out, false, errors.New("order not allowed")
 	}
-	return ctx, in, false, nil
+	return ctx, in, out, false, nil
 }
 
 func (b *bookstoreHooks) postCallHook(ctx context.Context, i interface{}) (context.Context, interface{}, error) {

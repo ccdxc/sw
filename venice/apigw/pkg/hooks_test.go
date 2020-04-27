@@ -38,13 +38,13 @@ func (t *testHooks) preAuthZHook(ctx context.Context, in interface{}) (context.C
 	return t.retAuthzCtx, t.retObj, t.retErr
 }
 
-func (t *testHooks) preCallHook(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (t *testHooks) preCallHook(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	t.preCallCnt++
 	skip := false
 	if t.skipCallFn != nil {
 		skip = t.skipCallFn()
 	}
-	return ctx, t.retObj, skip, t.retErr
+	return ctx, t.retObj, out, skip, t.retErr
 }
 
 func (t *testHooks) postCallHook(ctx context.Context, in interface{}) (context.Context, interface{}, error) {

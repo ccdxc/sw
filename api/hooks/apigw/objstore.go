@@ -1,7 +1,11 @@
 package impl
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
 	"github.com/pkg/errors"
 
@@ -98,63 +102,151 @@ func (b *objstoreHooks) addObjDownloadFileByPrefixOps(ctx context.Context, in in
 }
 
 // userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
-func (b *objstoreHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (b *objstoreHooks) userContext(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	b.logger.DebugLog("msg", "APIGw userContext pre-call hook called for Objstore userContext")
 	nctx, err := newContextWithUserPerms(ctx, b.permissionGetter, b.logger)
 	if err != nil {
-		return ctx, in, true, err
+		return ctx, in, out, true, err
 	}
-	return nctx, in, false, nil
+	return nctx, in, out, false, nil
 }
 
-func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
-	gw := apigwpkg.MustGetAPIGateway()
-	grpcaddr := gw.GetAPIServerAddr(globals.APIServer)
-	r := objstoreHooks{logger: l, permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver())}
+// uploadPreCallHook wraps http.ResponseWriter in objectWriter to capture the response and marshal it into objstore.Object
+func (b *objstoreHooks) uploadPreCallHook(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
+	nctx := ctx
+	switch obj := out.(type) {
+	case http.ResponseWriter:
+		nout := &objectWriter{
+			ResponseWriter: obj,
+			body:           new(bytes.Buffer),
+		}
+		return nctx, in, nout, false, nil
+	default:
+		b.logger.ErrorLog("method", "uploadPreCallHook", "msg", fmt.Sprintf("invalid input type: %#v", out))
+		return ctx, in, out, true, errors.New("invalid input type")
+	}
+}
 
+// uploadPostCallHook modifies operation to include uploaded filename captured from the response so that filename is captured in audit logs
+func (b *objstoreHooks) uploadPostCallHook(ctx context.Context, out interface{}) (context.Context, interface{}, error) {
+	nctx := ctx
+	switch objw := out.(type) {
+	case *objectWriter:
+		obj, err := objw.GetObject()
+		if err != nil {
+			b.logger.InfoLog("method", "uploadPostCallHook", "msg", "unable to extract object from response", "error", err)
+			return ctx, out, nil
+		}
+		var nOps []authz.Operation
+		operations, _ := apigwpkg.OperationsFromContext(ctx)
+		for _, op := range operations {
+			if op.GetResource().GetKind() == string(objstore.KindObject) {
+				resource := op.GetResource()
+				nOp := authz.NewOperationWithID(authz.NewResource(resource.GetTenant(), resource.GetGroup(), resource.GetKind(), resource.GetNamespace(), obj.Name),
+					op.GetAction(), op.GetAuditAction(), op.GetID())
+				nOps = append(nOps, nOp)
+			} else {
+				nOps = append(nOps, op)
+			}
+		}
+		nctx = apigwpkg.NewContextWithOperations(ctx, nOps...)
+	default:
+		b.logger.ErrorLog("method", "uploadPostCallHook", "msg", fmt.Sprintf("invalid input type: %#v", out))
+		return ctx, out, errors.New("invalid input type")
+	}
+	return nctx, out, nil
+}
+
+func (b *objstoreHooks) registerObjstoreHooks(svc apigw.APIGatewayService) error {
 	prof, err := svc.GetProxyServiceProfile("/uploads/images")
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthZHook(r.addObjUploadImageOps)
-	prof.AddPreCallHook(r.userContext)
+	prof.AddPreAuthZHook(b.addObjUploadImageOps)
+	prof.AddPreCallHook(b.userContext)
+	prof.AddPreCallHook(b.uploadPreCallHook)
+	prof.AddPostCallHook(b.uploadPostCallHook)
 	prof.SetAuditLevel(audit.Level_Basic.String())
 
 	prof, err = svc.GetProxyServiceProfile("/uploads/snapshots")
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthZHook(r.addObjUploadSnapshotsOps)
-	prof.AddPreCallHook(r.userContext)
+	prof.AddPreAuthZHook(b.addObjUploadSnapshotsOps)
+	prof.AddPreCallHook(b.userContext)
+	prof.AddPreCallHook(b.uploadPreCallHook)
+	prof.AddPostCallHook(b.uploadPostCallHook)
 	prof.SetAuditLevel(audit.Level_Basic.String())
 
 	prof, err = svc.GetServiceProfile("DownloadFile")
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthZHook(r.addObjDownloadOps)
+	prof.AddPreAuthZHook(b.addObjDownloadOps)
 	prof.SetAuditLevel(audit.Level_Basic.String())
 
 	prof, err = svc.GetServiceProfile("DownloadFileByPrefix")
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthZHook(r.addObjDownloadFileByPrefixOps)
+	prof.AddPreAuthZHook(b.addObjDownloadFileByPrefixOps)
 	prof, err = svc.GetCrudServiceProfile("Object", apiintf.ListOper)
 	if err != nil {
 		return err
 	}
-	prof.AddPreCallHook(r.userContext)
+	prof.AddPreCallHook(b.userContext)
 
 	prof, err = svc.GetCrudServiceProfile("Object", apiintf.WatchOper)
 	if err != nil {
 		return err
 	}
-	prof.AddPreCallHook(r.userContext)
+	prof.AddPreCallHook(b.userContext)
 	return nil
+}
+
+func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
+	gw := apigwpkg.MustGetAPIGateway()
+	grpcaddr := gw.GetAPIServerAddr(globals.APIServer)
+	r := objstoreHooks{logger: l, permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver())}
+	return r.registerObjstoreHooks(svc)
 }
 
 func init() {
 	gw := apigwpkg.MustGetAPIGateway()
 	gw.RegisterHooksCb("objstore.ObjstoreV1", registerObjstoreHooks)
+}
+
+// objectWriter is a wrapper around http.ResponseWriter to capture the response and marshal it into objstore.Object to determine name of the uploaded file
+type objectWriter struct {
+	http.ResponseWriter
+	body        *bytes.Buffer
+	wroteHeader bool
+	statusCode  int
+}
+
+func (ow *objectWriter) WriteHeader(code int) {
+	ow.ResponseWriter.WriteHeader(code)
+	if ow.wroteHeader {
+		return
+	}
+	ow.statusCode = code
+	ow.wroteHeader = true
+}
+
+func (ow *objectWriter) Write(buf []byte) (int, error) {
+	if ow.wroteHeader && ow.body != nil {
+		ow.body.Write(buf)
+	}
+	return ow.ResponseWriter.Write(buf)
+}
+
+func (ow *objectWriter) GetObject() (*objstore.Object, error) {
+	if ow.statusCode == 200 && ow.body != nil {
+		obj := &objstore.Object{}
+		if err := json.Unmarshal(ow.body.Bytes(), obj); err != nil {
+			return nil, err
+		}
+		return obj, nil
+	}
+	return nil, errors.New("unable to get object from response")
 }

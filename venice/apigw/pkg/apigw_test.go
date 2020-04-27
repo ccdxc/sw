@@ -1254,14 +1254,13 @@ func TestAudit(t *testing.T) {
 	a := singletonAPIGw
 	a.runstate.running = true
 	a.runstate.addr = &mockAddr{}
-	eventMap := make(map[authz.Operation]string)
 	for _, test := range tests {
 		buf := &bytes.Buffer{}
 		logConfig := log.GetDefaultConfig("TestApiGw")
 		l := log.GetNewLogger(logConfig).SetOutput(buf)
 		a.logger = l
 		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
-		err := a.audit(test.ctx, test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, test.reqURI, eventMap)
+		err := a.audit(test.ctx, test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, test.reqURI)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 		bufStr := buf.String()
 		bufStr = strings.Replace(bufStr, "\\", "", -1)
@@ -1361,14 +1360,13 @@ func TestAuditErrorTruncation(t *testing.T) {
 	a := singletonAPIGw
 	a.runstate.running = true
 	a.runstate.addr = &mockAddr{}
-	eventMap := make(map[authz.Operation]string)
 	for _, test := range tests {
 		buf := &bytes.Buffer{}
 		logConfig := log.GetDefaultConfig("TestApiGw")
 		l := log.GetNewLogger(logConfig).SetOutput(buf)
 		a.logger = l
 		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
-		err := a.audit(context.TODO(), user, sgPolicy, nil, ops, audit.Level_Response, audit.Stage_RequestProcessing, audit.Outcome_Failure, test.err, nil, "/configs/security/v1/tenant/testTenant/networksecuritypolicies", eventMap)
+		err := a.audit(context.TODO(), user, sgPolicy, nil, ops, audit.Level_Response, audit.Stage_RequestProcessing, audit.Outcome_Failure, test.err, nil, "/configs/security/v1/tenant/testTenant/networksecuritypolicies")
 		AssertOk(t, err, "unexpected error logging audit event")
 		bufStr := buf.String()
 		bufStr = strings.Replace(bufStr, "\\", "", -1)
@@ -1586,14 +1584,13 @@ func TestBulkEditAudit(t *testing.T) {
 	a := singletonAPIGw
 	a.runstate.running = true
 	a.runstate.addr = &mockAddr{}
-	eventMap := make(map[authz.Operation]string)
 	for _, test := range tests {
 		buf := &bytes.Buffer{}
 		logConfig := log.GetDefaultConfig("TestApiGw")
 		l := log.GetNewLogger(logConfig).SetOutput(buf)
 		a.logger = l
 		a.auditor = auditmgr.NewLogAuditor(context.TODO(), l)
-		err := a.audit(test.ctx, test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, test.reqURI, eventMap)
+		err := a.audit(test.ctx, test.user, test.reqObj, test.respObj, test.ops, test.level, test.stage, test.outcome, test.apierr, nil, test.reqURI)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 		bufStr := buf.String()
 		bufStr = strings.Replace(bufStr, "\\", "", -1)

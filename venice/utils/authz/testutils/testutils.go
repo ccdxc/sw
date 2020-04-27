@@ -24,5 +24,21 @@ func sortOperations(operations []authz.Operation) {
 func AreOperationsEqual(expected []authz.Operation, returned []authz.Operation) bool {
 	sortOperations(expected)
 	sortOperations(returned)
-	return reflect.DeepEqual(expected, returned)
+	if len(expected) != len(returned) {
+		return false
+	}
+	for i := 0; i < len(expected); i++ {
+		if expected[i] == returned[i] {
+			continue
+		}
+		if expected[i] == nil || returned[i] == nil {
+			return false
+		}
+		if !(expected[i].GetAuditAction() == returned[i].GetAuditAction() &&
+			expected[i].GetAction() == returned[i].GetAction() &&
+			reflect.DeepEqual(expected[i].GetResource(), returned[i].GetResource())) {
+			return false
+		}
+	}
+	return true
 }

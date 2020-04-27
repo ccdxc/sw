@@ -16,21 +16,21 @@ type alertHooks struct {
 }
 
 // adds user info to the context; user info will be used to update the alert resolved and acknowledged status.
-func (a *alertHooks) addUserInfoToContext(ctx context.Context, i interface{}) (context.Context, interface{}, bool, error) {
+func (a *alertHooks) addUserInfoToContext(ctx context.Context, i, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw addUserInfoToContext hook called")
 	user, ok := apigwpkg.UserFromContext(ctx)
 	if !ok {
 		a.logger.Errorf("No user present in context passed to alert resolve operation in alert hook")
-		return ctx, i, true, apigwpkg.ErrNoUserInContext
+		return ctx, i, out, true, apigwpkg.ErrNoUserInContext
 	}
 
 	newCtxWithUser, err := authzgrpcctx.NewOutgoingContextWithUserPerms(ctx, user, false, []auth.Permission{})
 	if err != nil {
 		a.logger.Errorf("failed to get new context with user info, err: %v", err)
-		return ctx, i, true, err
+		return ctx, i, out, true, err
 	}
 
-	return newCtxWithUser, i, false, nil
+	return newCtxWithUser, i, out, false, nil
 }
 
 // register alert hooks

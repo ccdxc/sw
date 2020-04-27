@@ -36,7 +36,7 @@ func TestBrowserPreCallHooks_EmptyURI(t *testing.T) {
 	}
 	sch.AddPaths(paths)
 
-	_, _, _, err := h.refereesPreCallHook(ctx, req)
+	_, _, _, _, err := h.refereesPreCallHook(ctx, req, nil)
 	Assert(t, err != nil, "getURI expected to fail, but passed", nil)
 }
 
@@ -57,7 +57,7 @@ func TestBrowserPreCallHooks_NoURIMap(t *testing.T) {
 	}
 	sch.AddPaths(paths)
 
-	_, _, _, err := h.refereesPreCallHook(ctx, req)
+	_, _, _, _, err := h.refereesPreCallHook(ctx, req, nil)
 	Assert(t, err != nil, "getURI expected to fail, but passed", nil)
 }
 
@@ -93,7 +93,7 @@ func TestBrowserPreCallHooks(t *testing.T) {
 	}
 	sch.AddPaths(paths)
 
-	ctx, reti, skip, err := h.refereesPreCallHook(ctx, req)
+	ctx, reti, _, skip, err := h.refereesPreCallHook(ctx, req, nil)
 	ret := reti.(*browser.BrowseRequest)
 	Assert(t, skip == false, "expecting false for skip", nil)
 	AssertOk(t, err, "expecting to succeed got(%s)", err)
@@ -103,7 +103,7 @@ func TestBrowserPreCallHooks(t *testing.T) {
 
 	req1 := &browser.BrowseRequest{}
 	req1.Defaults("v1")
-	ctx, reti, skip, err = h.referencesPreCallHook(ctx, req)
+	ctx, reti, _, skip, err = h.referencesPreCallHook(ctx, req, nil)
 	ret = reti.(*browser.BrowseRequest)
 	Assert(t, skip == false, "expecting false for skip", nil)
 	AssertOk(t, err, "expecting to succeed got(%s)", err)
@@ -115,7 +115,7 @@ func TestBrowserPreCallHooks(t *testing.T) {
 	reqObj := browser.BrowseRequestObject{}
 	reqObj.URI = "/configs/testgrp/v1/testobj/testname"
 	queryList.RequestList = append(queryList.RequestList, reqObj)
-	ctx, reti, skip, err = h.queryPreCallHook(ctx, queryList)
+	ctx, reti, _, skip, err = h.queryPreCallHook(ctx, queryList, nil)
 	requestList := reti.(*browser.BrowseRequestList).GetRequestList()
 	Assert(t, skip == false, "expecting false for skip", nil)
 	AssertOk(t, err, "expecting to succeed got(%s)", err)

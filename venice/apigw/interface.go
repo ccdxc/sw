@@ -108,9 +108,10 @@ type PreAuthZHook func(ctx context.Context, in interface{}) (retCtx context.Cont
 
 // PreCallHook is called before the backend call
 //  the hooks can modify the input object and return it as ret.
+//  output object is non-nil only for http reverse proxy use case where it is set to http.ResponseWriter
 //  skipCall: when set to true by any one of the hooks, skips making an invocation to the backend
 //  err: a non-nil error from a hook will terminate the API call.
-type PreCallHook func(ctx context.Context, in interface{}) (retCtx context.Context, retIn interface{}, skipCall bool, err error)
+type PreCallHook func(ctx context.Context, in, out interface{}) (retCtx context.Context, retIn, retOut interface{}, skipCall bool, err error)
 
 // PostCallHook is called after the backend call. The object passed into the hook fn is the response
 //  object. The hook can modify the response which is then returned as response.

@@ -40,16 +40,16 @@ func (a *clusterHooks) authBootstrap(ctx context.Context, i interface{}) (contex
 }
 
 // setAuthBootstrapFlag is a pre-call hook to check if cluster has actually been bootstrapped before setting the flag
-func (a *clusterHooks) setAuthBootstrapFlag(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *clusterHooks) setAuthBootstrapFlag(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw setAuthBootstrapFlag PreCallHook called")
 	ok, err := a.bootstrapper.IsBootstrapped(globals.DefaultTenant, bootstrapper.Auth)
 	if err != nil {
-		return ctx, in, true, err
+		return ctx, in, out, true, err
 	}
 	if !ok {
-		return ctx, in, true, errors.New("cluster is not bootstrapped")
+		return ctx, in, out, true, errors.New("cluster is not bootstrapped")
 	}
-	return ctx, in, false, nil
+	return ctx, in, out, false, nil
 }
 
 func (a *clusterHooks) registerSetAuthBootstrapFlagHook(svc apigw.APIGatewayService) error {
@@ -90,19 +90,19 @@ func (a *clusterHooks) checkFFBootstrap(ctx context.Context, in interface{}) (co
 }
 
 // userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
-func (a *clusterHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+func (a *clusterHooks) userContext(ctx context.Context, in, out interface{}) (context.Context, interface{}, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw userContext pre-call hook called")
 	switch in.(type) {
 	// check read authorization for sg policy included in policy search request
 	case *cluster.Host:
 	default:
-		return ctx, in, true, errors.New("invalid input type")
+		return ctx, in, out, true, errors.New("invalid input type")
 	}
 	nctx, err := newContextWithUserPerms(ctx, a.permissionGetter, a.logger)
 	if err != nil {
-		return ctx, in, true, err
+		return ctx, in, out, true, err
 	}
-	return nctx, in, false, nil
+	return nctx, in, out, false, nil
 }
 
 func (a *clusterHooks) snapshotPostCallHook(ctx context.Context, out interface{}) (retCtx context.Context, retOut interface{}, err error) {
@@ -124,8 +124,8 @@ func (a *clusterHooks) snapshotPostCallHook(ctx context.Context, out interface{}
 	for _, op := range operations {
 		if op.GetResource().GetKind() == string(cluster.KindConfigurationSnapshot) {
 			resource := op.GetResource()
-			nOp := authz.NewAuditOperation(authz.NewResource(resource.GetTenant(), resource.GetGroup(), resource.GetKind(), resource.GetNamespace(), filename),
-				op.GetAction(), op.GetAuditAction())
+			nOp := authz.NewOperationWithID(authz.NewResource(resource.GetTenant(), resource.GetGroup(), resource.GetKind(), resource.GetNamespace(), filename),
+				op.GetAction(), op.GetAuditAction(), op.GetID())
 			nOps = append(nOps, nOp)
 		} else {
 			nOps = append(nOps, op)
