@@ -21,6 +21,9 @@ while [[ "$#" > 0 ]]; do
     esac; shift;
 done
 
+os_str=`awk -F= '/^NAME/{print $2}' /etc/os-release`
+os_version=`awk -F= '$1=="VERSION_ID" { print $2 ;}' /etc/os-release | sed -e 's/\([678]\)\../\1/'`
+
 rm -f /root/.ssh/known_hosts
 chown vm:vm /pensando
 ifs=""
@@ -67,8 +70,6 @@ function init_host() {
 
 dhcp_disable() {
     # Check if it is centos
-    os_str=`awk -F= '/^NAME/{print $2}' /etc/os-release`
-    os_version=`awk -F= '$1=="VERSION_ID" { print $2 ;}' /etc/os-release | sed -e 's/\([678]\)\../\1/'`
     if [[ $os_str == *"Ubuntu"* ]]; then
         echo "Ubuntu: No need to disable DHCP on Naples IFs"
     elif [[ $os_str == *"CentOS"* || $os_str == *"Red Hat"* ]]; then
@@ -202,6 +203,10 @@ else
 
         if [[ ! -z ${driver_img+x} ]] ;
         then
+            if [[ $os_str == *"Red Hat"* ]]; 
+            then
+                 /naples/setup_rhel.sh register	
+            fi
             rmmod ionic 2> /dev/null || rc=$?
 
             cd /naples/
@@ -211,6 +216,11 @@ else
             cd ${dir_name}
             ./setup_libs.sh
             ./build.sh
+    	    
+            if [[ $os_str == *"Red Hat"* ]]; 
+            then
+                 /naples/setup_rhel.sh unregister	
+            fi
         fi
 
         init_host

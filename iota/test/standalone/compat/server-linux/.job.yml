@@ -40,7 +40,7 @@ e2e-targets:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-9
+     - image: build-22
        count: 1
        resources:
          servers:
@@ -53,7 +53,7 @@ e2e-targets:
           BmOs: linux
 
  compat-DELL-R6525-linux:
-   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
    owners: ["email:dbarsky@pensando.io"]
    area:
    sub-area:
@@ -63,7 +63,7 @@ e2e-targets:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-9
+     - image: build-23
        count: 1
        resources:
          servers:
@@ -86,7 +86,7 @@ e2e-targets:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-9
+     - image: build-23
        count: 1
        resources:
          servers:
@@ -97,7 +97,10 @@ e2e-targets:
        password: vm
        vars:
           BmOs: linux
-
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+ 
 # compat-HPE-DL325-linux:
 #   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility --skip-switch-init"]
 #   owners: ["email:dbarsky@pensando.io"]
@@ -109,7 +112,7 @@ e2e-targets:
 #     - build-iris-arm
 #     - build-iota
 #   clusters:
-#     - image: build-9
+#     - image: build-22
 #       count: 1
 #       resources:
 #         servers:
@@ -132,7 +135,7 @@ e2e-targets:
      - build-iris-arm
      - build-iota
    clusters:
-     - image: build-9
+     - image: build-22
        count: 1
        resources:
          servers:

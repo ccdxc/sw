@@ -830,6 +830,8 @@ class HostManagement(EntityManagement):
         if GlobalOptions.skip_driver_install:
             nodeinit_args += " --skip-install"
 
+        if self.GetNodeOs() == "linux":
+            setup_rhel_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', self.__host_os, 'setup_rhel.sh')
         node_init_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', self.__host_os, 'nodeinit.sh')
         pre_node_init_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', self.__host_os, 'pre-nodeinit.sh')
         post_node_init_script = os.path.join(GlobalOptions.wsdir, 'iota', 'scripts', self.__host_os, 'post-nodeinit.sh')
@@ -874,7 +876,8 @@ class HostManagement(EntityManagement):
             self.CopyIN(target_nvmeof_script, HOST_NAPLES_DIR)
             self.CopyIN(host_nvme_fio_script, HOST_NAPLES_DIR)
             self.CopyIN(os.path.join(GlobalOptions.wsdir, driver_pkg), HOST_NAPLES_DIR)
-
+            if self.GetNodeOs() == "linux":
+                self.CopyIN(setup_rhel_script, HOST_NAPLES_DIR)
             nodeinit_args = ""
             #Run with not mgmt first
             if gold_fw or not GlobalOptions.no_mgmt:

@@ -18,8 +18,10 @@ def waitforssh(ipaddr, port=22):
         ret = sock.connect_ex(('%s' % ipaddr, port))
         sock.settimeout(10)
         if ret == 0:
+            api.Logger.info("Host is up after PXE Install! {}".format(ipaddr))
             return True
-        time.sleep(10)
+        time.sleep(20)
+        print(".")
     api.Logger.error("Host IP {} did not come up".format(ipaddr))
     return False
 
@@ -70,7 +72,7 @@ def Trigger(tc):
 
         # Boot from PXE to intall an OS
         api.Logger.info(f"Starting PXE Install Loop # {install} on {tc.test_node_name}")
-        cmd = "ipmitool -I lanplus -H %s -U %s -P %s chassis bootdev pxe" %\
+        cmd = "ipmitool -I lanplus -H %s -U %s -P %s chassis bootdev pxe options=efiboot" %\
               (tc.cimc_ip_address, tc.cimc_username, tc.cimc_password)
         subprocess.check_call(cmd, shell=True)
         time.sleep(5)
@@ -86,25 +88,9 @@ def Trigger(tc):
         if not waitforssh(host_ipaddr):
             raise OfflineTestbedException
 
-        # check touched file is not present, to ensure this is a new OS instance
-        req = api.Trigger_CreateExecuteCommandsRequest()
-        api.Trigger_AddHostCommand(req, tc.test_node_name, "ls /naples/oldfs")
-        resp = api.Trigger(req)
-
-        if api.IsApiResponseOk(resp) is not True:
-            api.Logger.error(f"Failed to run command on host {tc.test_node_name}")
-            return api.types.status.FAILURE
-
-        cmd = resp.commands.pop()
-        if cmd.exit_code == 0:
-            api.Logger.error(f"Old file is present in FS after PXE install")
-            return api.types.status.FAILURE
-
-        api.Logger.info("PXE boot completed! Host is up.")
-
         # Boot from HDD to run the test
         api.Logger.info(f"Setting Boot Order to HDD and rebooting {tc.test_node_name}")
-        cmd = "ipmitool -I lanplus -H %s -U %s -P %s chassis bootdev disk" %\
+        cmd = "ipmitool -I lanplus -H %s -U %s -P %s chassis bootdev disk options=efiboot" %\
               (tc.cimc_ip_address, tc.cimc_username, tc.cimc_password)
         subprocess.check_call(cmd, shell=True)
         time.sleep(5)
@@ -132,6 +118,22 @@ def Trigger(tc):
             raise OfflineTestbedException
         api.Logger.info(f"PXE install iteration #{install} - SUCCESS")
         hw_config.ReAddWorkloads(tc.test_node)
+
+        # check touched file is not present, to ensure this is a new OS instance
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        api.Trigger_AddHostCommand(req, tc.test_node_name, "ls /naples/oldfs")
+        resp = api.Trigger(req)
+
+        if api.IsApiResponseOk(resp) is not True:
+            api.Logger.error(f"Failed to run command on host {tc.test_node_name}")
+            return api.types.status.FAILURE
+
+        cmd = resp.commands.pop()
+        if cmd.exit_code == 0:
+            api.Logger.error(f"Old file is present in FS after PXE install")
+            return api.types.status.FAILURE
+
+        api.Logger.info("PXE boot completed! Host is up.")
 
     return api.types.status.SUCCESS
 
