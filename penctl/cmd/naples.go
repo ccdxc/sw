@@ -136,12 +136,6 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if managedBy == "host" {
-		fmt.Println("Changes applied. A reboot is required for the changes to take effect")
-		return nil
-	}
-
-	fmt.Println("Changes applied. A reboot may be required for the changes to take effect. Verify that 'penctl show dsc' command says REBOOT_PENDING, prior to performing a reboot.")
 	return nil
 }
 
