@@ -5,21 +5,24 @@ IMAGE_DIR=$(pwd)/obj/images
 
 mkdir -p $IMAGE_DIR
 
-if [ ! -f nic.tgz ]; then
-    echo "nic.tgz file not found, please run \"make package\" first"
+NIC_TAR_NAME=nic_${ARCH}_${PIPELINE}_${ASIC}
+echo "release: NIC_TAR_NAME=$NIC_TAR_NAME, ARCH=$ARCH, PIPELINE=$PIPELINE, ASIC=$ASIC"
+
+if [ ! -f ${NIC_TAR_NAME}.tgz ]; then
+    echo "${NIC_TAR_NAME}.tgz file not found, please run \"make package\" first"
     exit 1
 fi
 
 case "$1" in
     'apulu-venice')
         echo "Proceeding to build docker image for apulu-venice pipeline"
-        ln -f nic_venice.tgz sim/naples/nic.tgz
+        ln -f ${NIC_TAR_NAME}_venice.tgz sim/naples/nic.tgz
         cd sim/naples
         SUPPORT_FILES="README Vagrantfile naples_vm_bringup.py"
         ;;
     *)
         echo "Proceeding to build docker image for iris pipeline"
-        ln -f nic.tgz sim/naples
+        ln -f ${NIC_TAR_NAME}.tgz sim/naples/nic.tgz
         #ln -f debug.tgz sim/naples
         cd sim/naples
         SUPPORT_FILES="README Vagrantfile naples_vm_bringup.py"

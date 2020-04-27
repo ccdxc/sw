@@ -83,6 +83,7 @@ if args.target == 'sim':
     objcopy_bin = 'objcopy'
     strip_bin   = 'strip'
     arch = 'x86_64'
+    tar_name = 'nic' + '_' + arch + '_' + args.pipeline + '_' + asic
     output_dir  = pwd + '/fake_root_target/x86_64'
     if args.pipeline == 'apollo':
         files.append('nic/tools/package/pack_apollo.txt')
@@ -94,7 +95,7 @@ if args.target == 'sim':
     elif args.pipeline == 'apulu-venice':
         files.append('nic/tools/package/pack_apulu_base.txt')
         files.append('nic/tools/package/pack_apulu_venice.txt')
-        tar_name = 'nic_venice'
+        tar_name = 'nic_' + arch + '_apulu_' + asic + '_' + 'venice'
         args.pipeline = 'apulu'
     elif args.pipeline == 'gft':
         files.append('nic/tools/package/pack_gft.txt')
