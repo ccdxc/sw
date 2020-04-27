@@ -3072,7 +3072,7 @@ EthLif::LinkEventHandler(port_status_t *evd)
 
     // drop the event if the lif is not initialized
     if (!IsLifInitialized()) {
-        NIC_LOG_INFO("{}: {} + {} => {}", hal_lif_info_.name, lif_state_to_str(state),
+        NIC_LOG_INFO("{}: {} + {} => {} dropping event", hal_lif_info_.name, lif_state_to_str(state),
                      (evd->status == IONIC_PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
                      lif_state_to_str(state));
         return;
@@ -3088,6 +3088,10 @@ EthLif::LinkEventHandler(port_status_t *evd)
     if (state == LIF_STATE_UP && next_state == LIF_STATE_DOWN)
         ++lif_status->link_down_count;
     WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct ionic_lif_status), 0);
+
+    NIC_FUNC_DEBUG("{}: state: {} eid: {} link status: {} link speed: {} linkdn cnt: {}",
+                     hal_lif_info_.name, lif_state_to_str(state), lif_status->eid,
+                     lif_status->link_status, lif_status->link_speed, lif_status->link_down_count);
 
     // Update host lif status
     if (host_lif_status_addr != 0) {
@@ -3127,8 +3131,8 @@ EthLif::LinkEventHandler(port_status_t *evd)
     db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
                     ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
-    // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
-    //     hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
+    NIC_FUNC_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
+         hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
     notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
     PAL_barrier();
 
@@ -3147,10 +3151,13 @@ EthLif::XcvrEventHandler(port_status_t *evd)
 
     // drop the event if the lif is not initialized
     if (state != LIF_STATE_INIT && state != LIF_STATE_UP && state != LIF_STATE_DOWN) {
-        NIC_LOG_INFO("{}: {} + XCVR_EVENT => {}", hal_lif_info_.name, lif_state_to_str(state),
+        NIC_LOG_INFO("{}: {} + XCVR_EVENT => {} dropping event", hal_lif_info_.name, lif_state_to_str(state),
                      lif_state_to_str(state));
         return;
     }
+
+    NIC_LOG_INFO("{}: {} + XCVR_EVENT => {}", hal_lif_info_.name, lif_state_to_str(state),
+                     lif_state_to_str(state));
 
     if (notify_enabled == 0) {
         return;
@@ -3176,8 +3183,8 @@ EthLif::XcvrEventHandler(port_status_t *evd)
     db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
                     ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
-    // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
-    //     hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
+    NIC_FUNC_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
+         hal_lif_info_.lif_id, lif_status->eid, notify_ring_head, addr);
     notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
     PAL_barrier();
 
@@ -3201,6 +3208,10 @@ EthLif::SendFWDownEvent()
     lif_status->link_speed = 0;
     ++lif_status->eid;
     WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct ionic_lif_status), 0);
+
+    NIC_FUNC_DEBUG("{}: state: {} eid: {} link status: {} link speed: {}",
+                     hal_lif_info_.name, lif_state_to_str(state), lif_status->eid,
+                     lif_status->link_status, lif_status->link_speed);
 
     // Update host lif status
     if (host_lif_status_addr != 0) {
@@ -3232,16 +3243,16 @@ EthLif::SendFWDownEvent()
     db_addr.upd = ASIC_DB_ADDR_UPD_FILL(ASIC_DB_UPD_SCHED_SET,
                     ASIC_DB_UPD_INDEX_SET_PINDEX, false);
 
-    // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
-    //     hal_lif_info_.lif_id, notify_block->eid, notify_ring_head, addr);
     notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
     PAL_barrier();
 
     db_data = (ETH_NOTIFYQ_QID << 24) | notify_ring_head;
     sdk::asic::pd::asic_ring_db(&db_addr, db_data);
 
-    // FIXME: Wait for completion
+    NIC_FUNC_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
+         hal_lif_info_.lif_id, msg.eid, notify_ring_head, addr);
 
+    // FIXME: Wait for completion
     NIC_LOG_INFO("{}: {} + {} => {}", hal_lif_info_.name,
                  lif_state_to_str(state), "RESET",
                  lif_state_to_str(state));

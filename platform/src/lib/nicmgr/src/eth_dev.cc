@@ -2231,7 +2231,7 @@ Eth::LinkEventHandler(port_status_t *evd)
         ++port_status->link_down_count;
     port_status->status = evd->status;
     port_status->fec_type = evd->fec_type;
-    NIC_LOG_DEBUG("Link Event id: {} speed: {} status: {} fec_type: {}",
+    NIC_LOG_DEBUG("Link Port id: {} speed: {} status: {} fec_type: {}",
                   port_status->id, port_status->speed,
                   port_status->status == IONIC_PORT_OPER_STATUS_UP ? "UP" : "DOWN",
                   port_status->fec_type);
@@ -2253,6 +2253,9 @@ Eth::XcvrEventHandler(port_status_t *evd)
     port_status->speed = evd->speed;
     port_status->status = evd->status;
     memcpy(&port_status->xcvr, &evd->xcvr, sizeof(struct ionic_xcvr_status));
+    NIC_LOG_DEBUG("XCVR Port id: {} speed: {} status: {}",
+                  port_status->id, port_status->speed,
+                  port_status->status == IONIC_PORT_OPER_STATUS_UP ? "UP" : "DOWN");
 
     PortStatusUpdate(this);
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
