@@ -9,30 +9,32 @@ import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.config.netagent.hw_push_config as cfg_api
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 
+WINDOWS_CMD_TIMEOUT = 300
+
 feature_cmd_map = {
     "tx_ring_size"       :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_tx_ring_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tx_ring_size, "reloadCmd" : True },
-            "windows"  : { "cmd" : cmd_builder.win_tx_ring_size },
+            "windows"  : { "cmd" : cmd_builder.win_tx_ring_size,  "timeout" : WINDOWS_CMD_TIMEOUT },
         },
     "rx_ring_size"       :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_rx_ring_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_ring_size, "reloadCmd" : True },
-            "windows"  : { "cmd" : cmd_builder.win_rx_ring_size },
+            "windows"  : { "cmd" : cmd_builder.win_rx_ring_size,  "timeout" : WINDOWS_CMD_TIMEOUT },
         },
     "tx_queue_size"      :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_queue_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tx_queue_size, "reloadCmd" : True },
-            "windows"  : { "cmd" : cmd_builder.win_num_que },
+            "windows"  : { "cmd" : cmd_builder.win_num_que,  "timeout" : WINDOWS_CMD_TIMEOUT },
         },
     "rx_queue_size"      :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_queue_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_queue_size, "reloadCmd" : True },
-            "windows"  : { "cmd" : cmd_builder.win_num_que },
+            "windows"  : { "cmd" : cmd_builder.win_num_que,  "timeout" : WINDOWS_CMD_TIMEOUT },
         },
     "rx_sg_size"      :
         {
@@ -44,19 +46,19 @@ feature_cmd_map = {
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_tx_checksum },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tx_checksum },
-            "windows"  : { "cmd" : cmd_builder.win_tx_checksum },
+            "windows"  : { "cmd" : cmd_builder.win_tx_checksum,  "timeout" : WINDOWS_CMD_TIMEOUT },
         },
     "rx_check_sum"       :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_rx_checksum },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_checksum },
-            "windows"  : { "cmd" : cmd_builder.win_rx_checksum },
+            "windows"  : { "cmd" : cmd_builder.win_rx_checksum,  "timeout" : WINDOWS_CMD_TIMEOUT },
         },
     "tso_offload"        :
         {
             "linux"    : { "cmd" : cmd_builder.ethtool_tso_offload },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tso_offload },
-            "windows"  : { "cmd" : cmd_builder.win_tso_offload },
+            "windows"  : { "cmd" : cmd_builder.win_tso_offload,  "timeout" : WINDOWS_CMD_TIMEOUT },
         },
     "lro_offload"        :
         {
@@ -103,7 +105,7 @@ feature_cmd_map = {
         {
             "linux"    : { "cmd" : cmd_builder.ip_link_mtu_cmd },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ip_link_mtu_cmd },
-            "windows"  : { "cmd" : cmd_builder.win_mtu_cmd },
+            "windows"  : { "cmd" : cmd_builder.win_mtu_cmd,  "timeout" : WINDOWS_CMD_TIMEOUT },
         },
     "rx_vlan"            :
         {
@@ -164,11 +166,14 @@ def setup_features(tc):
                 continue
             os_type =  api.GetNodeOs(n)
             callback = cmdBuilderDict[os_type]["cmd"]
+            timeout = cmdBuilderDict[os_type].get("timeout")
+            if not timeout:
+                timeout = api.DEFAULT_COMMAND_TIMEOUT
             cmds = callback(n, intf, feature_value)
             if not isinstance(cmds, list):
                 cmds = [cmds]
             for cmd in cmds:
-                api.Trigger_AddCommand(req, n, wl.workload_name, cmd)
+                api.Trigger_AddCommand(req, n, wl.workload_name, cmd, timeout = timeout)
             if cmdBuilderDict[os_type].get("reloadCmd"):
                 #Driver reload, just break as no need to setup for each interface.
                 if reloadDone:

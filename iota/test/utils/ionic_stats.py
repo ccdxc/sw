@@ -117,6 +117,38 @@ def getLinuxStats(node, intf, pat1):
     
     return stats_map
 
+def getWindowsStats(node, intf, pat1):
+    name = host.GetWindowsIntName(node.node_name, intf)
+    cmd = "/mnt/c/Windows/Temp/drivers-windows/IonicConfig.exe DevStats -n '%s' | grep -e %s |" \
+           " cut -d ':' -f 2" % (name, pat1)
+    
+    req = api.Trigger_CreateExecuteCommandsRequest(serial=True)
+    api.Trigger_AddHostCommand(req, node.node_name, cmd)
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to run: %s on host: %s intf: %s" 
+                         %(cmd, node.node_name, intf))
+        return None
+
+    cmd = resp.commands[0]
+    if cmd.exit_code != 0:
+        api.Logger.error(
+            "Failed to run: %s for host: %s, stderr: %s"
+            %(cmd, node.node_name, cmd.stderr))
+        api.PrintCommandResults(cmd)
+        return None
+
+    if cmd.stdout == "":
+        api.Logger.error("Output is empty for: %s on host: %s intf: %s" 
+                         %(cmd, node.node_name, intf))
+        api.PrintCommandResults(cmd)
+        return None
+    
+    stats_map = cmd.stdout.splitlines()
+    stats_map = list(map(int,stats_map))
+    
+    return stats_map
+
 def getTxNoCsumStats(node, intf):
     if not node.IsNaples():
         return None
@@ -169,7 +201,9 @@ def getTSOIPv4Stats(node, intf):
         return getBsdStats(node, intf, 'txq[0-9]*.\.tso_ipv4')
     elif api.GetNodeOs(node.node_name) == host.OS_TYPE_LINUX:
         return getLinuxStats(node, intf, 'tx_tso') 
-           
+    elif api.GetNodeOs(node.node_name) == host.OS_TYPE_WINDOWS:
+        return getWindowsStats(node, intf, 'tx_[0-9]*_tso_packets') 
+               
     return None
 
 def getTSOIPv6Stats(node, intf):
@@ -180,7 +214,9 @@ def getTSOIPv6Stats(node, intf):
         return getBsdStats(node, intf, 'txq[0-9]*.\.tso_ipv6')
     elif api.GetNodeOs(node.node_name) == host.OS_TYPE_LINUX:
         return getLinuxStats(node, intf, 'tx_tso')
-    
+    elif api.GetNodeOs(node.node_name) == host.OS_TYPE_WINDOWS:
+        return getWindowsStats(node, intf, 'tx_[0-9]*_tso_packets') 
+     
     return None
 
 def getLROStats(node, intf):
