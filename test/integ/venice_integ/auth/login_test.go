@@ -371,6 +371,23 @@ func TestAuthPolicy(t *testing.T) {
 		},
 	})
 	Assert(t, err != nil, "cannot mis-configure auth policy")
+	// remove ldap config
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = restcl.AuthV1().AuthenticationPolicy().Update(ctx, &auth.AuthenticationPolicy{
+			TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+			ObjectMeta: api.ObjectMeta{
+				Name: "AuthenticationPolicy3",
+			},
+			Spec: auth.AuthenticationPolicySpec{
+				Authenticators: auth.Authenticators{
+					Local:              &auth.Local{},
+					AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
+				},
+				TokenExpiry: "24h",
+			},
+		})
+		return err == nil, nil
+	}, "unable to update auth policy to remove ldap config")
 	// test validation of auth policy
 	tests := []struct {
 		name   string
@@ -378,7 +395,7 @@ func TestAuthPolicy(t *testing.T) {
 		errStr string
 	}{
 		{
-			name: "secret longer than 1024 bytes",
+			name: "radius secret longer than 1024 bytes",
 			policy: &auth.AuthenticationPolicy{
 				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
 				ObjectMeta: api.ObjectMeta{
@@ -410,11 +427,128 @@ func TestAuthPolicy(t *testing.T) {
 			},
 			errStr: "radius secret cannot be longer than 1024 bytes",
 		},
+		{
+			name: "empty radius secret",
+			policy: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{Domains: []*auth.LdapDomain{
+							{
+								Servers:      []*auth.LdapServer{{Url: getADConfig().URL}},
+								BaseDN:       getADConfig().BaseDN,
+								BindDN:       getADConfig().BindDN,
+								BindPassword: getADConfig().BindPassword,
+								AttributeMapping: &auth.LdapAttributeMapping{
+									User:             getADConfig().UserAttribute,
+									UserObjectClass:  getADConfig().UserObjectClassAttribute,
+									Group:            getADConfig().GroupAttribute,
+									GroupObjectClass: getADConfig().GroupObjectClassAttribute,
+								},
+							},
+						},
+						},
+						Radius:             &auth.Radius{Domains: []*auth.RadiusDomain{{NasID: getACSConfig().NasID, Servers: []*auth.RadiusServer{{Url: getACSConfig().URL}}}}},
+						Local:              &auth.Local{},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errStr: "radius secret cannot be empty",
+		},
+		{
+			name: "empty ldap bind password",
+			policy: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{Domains: []*auth.LdapDomain{
+							{
+								Servers:      []*auth.LdapServer{{Url: getADConfig().URL}},
+								BaseDN:       getADConfig().BaseDN,
+								BindDN:       getADConfig().BindDN,
+								BindPassword: "",
+								AttributeMapping: &auth.LdapAttributeMapping{
+									User:             getADConfig().UserAttribute,
+									UserObjectClass:  getADConfig().UserObjectClassAttribute,
+									Group:            getADConfig().GroupAttribute,
+									GroupObjectClass: getADConfig().GroupObjectClassAttribute,
+								},
+							},
+						},
+						},
+						Local:              &auth.Local{},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errStr: "bind password not defined",
+		},
+		{
+			name: "skip ldap validation if ldap not in auth order",
+			policy: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{Domains: []*auth.LdapDomain{
+							{
+								Servers:      []*auth.LdapServer{{Url: getADConfig().URL}},
+								BaseDN:       getADConfig().BaseDN,
+								BindDN:       getADConfig().BindDN,
+								BindPassword: "",
+								AttributeMapping: &auth.LdapAttributeMapping{
+									User:             getADConfig().UserAttribute,
+									UserObjectClass:  getADConfig().UserObjectClassAttribute,
+									Group:            getADConfig().GroupAttribute,
+									GroupObjectClass: getADConfig().GroupObjectClassAttribute,
+								},
+							},
+						},
+						},
+						Local:              &auth.Local{},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errStr: "",
+		},
+		{
+			name: "skip radius validation if radius not in auth order",
+			policy: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name: "AuthenticationPolicy",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Radius:             &auth.Radius{Domains: []*auth.RadiusDomain{{NasID: getACSConfig().NasID, Servers: []*auth.RadiusServer{{Url: getACSConfig().URL}}}}},
+						Local:              &auth.Local{},
+						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
+					},
+					TokenExpiry: "24h",
+				},
+			},
+			errStr: "",
+		},
 	}
 	for _, test := range tests {
 		_, err := restcl.AuthV1().AuthenticationPolicy().Update(ctx, test.policy)
 		if err != nil {
 			Assert(t, strings.Contains(err.Error(), test.errStr), fmt.Sprintf("[%s] test failed, error string [%v] not contained in [%v]", test.name, test.errStr, err))
+		} else {
+			Assert(t, test.errStr == "", fmt.Sprintf("expected error string: %s", test.errStr))
 		}
 	}
 }

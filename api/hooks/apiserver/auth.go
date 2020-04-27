@@ -311,7 +311,11 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 func (s *authHooks) validateBindPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(auth.AuthenticationPolicy)
 	if !ok {
-		return i, true, errInvalidInputType
+		return i, true, &api.Status{
+			TypeMeta: api.TypeMeta{Kind: "Status"},
+			Message:  []string{"invalid input type"},
+			Code:     int32(codes.Internal),
+		}
 	}
 	authenticatorOrder := r.Spec.Authenticators.GetAuthenticatorOrder()
 	for _, authenticatorType := range authenticatorOrder {
@@ -319,7 +323,11 @@ func (s *authHooks) validateBindPassword(ctx context.Context, kv kvstore.Interfa
 		case auth.Authenticators_LDAP.String():
 			config := r.Spec.Authenticators.GetLdap()
 			if config != nil && len(config.Domains) == 1 && config.Domains[0].BindPassword == "" {
-				return i, true, errors.New("bind password not defined")
+				return i, true, &api.Status{
+					TypeMeta: api.TypeMeta{Kind: "Status"},
+					Message:  []string{"bind password not defined"},
+					Code:     int32(codes.InvalidArgument),
+				}
 			}
 		default:
 		}
@@ -331,7 +339,11 @@ func (s *authHooks) validateBindPassword(ctx context.Context, kv kvstore.Interfa
 func (s *authHooks) validateRadiusSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(auth.AuthenticationPolicy)
 	if !ok {
-		return i, true, errInvalidInputType
+		return i, true, &api.Status{
+			TypeMeta: api.TypeMeta{Kind: "Status"},
+			Message:  []string{"invalid input type"},
+			Code:     int32(codes.Internal),
+		}
 	}
 	authenticatorOrder := r.Spec.Authenticators.GetAuthenticatorOrder()
 	for _, authenticatorType := range authenticatorOrder {
@@ -341,10 +353,18 @@ func (s *authHooks) validateRadiusSecret(ctx context.Context, kv kvstore.Interfa
 			if config != nil && len(config.Domains) == 1 {
 				for _, srv := range config.Domains[0].Servers {
 					if srv.Secret == "" {
-						return i, true, errors.New("radius secret cannot be empty")
+						return i, true, &api.Status{
+							TypeMeta: api.TypeMeta{Kind: "Status"},
+							Message:  []string{"radius secret cannot be empty"},
+							Code:     int32(codes.InvalidArgument),
+						}
 					}
 					if len(srv.Secret) > 1024 {
-						return i, true, errors.New("radius secret cannot be longer than 1024 bytes")
+						return i, true, &api.Status{
+							TypeMeta: api.TypeMeta{Kind: "Status"},
+							Message:  []string{"radius secret cannot be longer than 1024 bytes"},
+							Code:     int32(codes.InvalidArgument),
+						}
 					}
 				}
 			}
@@ -470,6 +490,18 @@ func (s *authHooks) populateSecretsInAuthPolicy(ctx context.Context, kv kvstore.
 			policyObj.Name = r.Name
 			policyObj.Namespace = r.Namespace
 			policyObj.Labels = r.Labels
+			// validate ldap bind password
+			_, _, err = s.validateBindPassword(ctx, kv, txn, key, oper, dryRun, *policyObj)
+			if err != nil {
+				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "validation of ldap bind password failed", "error", err)
+				return policyObj, err
+			}
+			// validate radius secret
+			_, _, err = s.validateRadiusSecret(ctx, kv, txn, key, oper, dryRun, *policyObj)
+			if err != nil {
+				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "validation of radius secret failed", "error", err)
+				return policyObj, err
+			}
 			// encrypt token secret as it is stored as secret
 			if err := policyObj.ApplyStorageTransformer(ctx, true); err != nil {
 				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error encrypting auth policy secret fields", "err", err)

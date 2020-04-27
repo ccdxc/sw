@@ -570,7 +570,11 @@ func TestValidateBindPassword(t *testing.T) {
 					TokenExpiry: "24h",
 				},
 			},
-			err: errors.New("bind password not defined"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"bind password not defined"},
+				Code:     int32(codes.InvalidArgument),
+			},
 		},
 		{
 			name: "no authenticator configs",
@@ -593,7 +597,11 @@ func TestValidateBindPassword(t *testing.T) {
 			in: struct {
 				Test string
 			}{"testing"},
-			err: errInvalidInputType,
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"invalid input type"},
+				Code:     int32(codes.Internal),
+			},
 		},
 	}
 	r := authHooks{}
@@ -627,7 +635,11 @@ func TestValidateRadiusSecret(t *testing.T) {
 					TokenExpiry: "24h",
 				},
 			},
-			err: errors.New("radius secret cannot be longer than 1024 bytes"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"radius secret cannot be longer than 1024 bytes"},
+				Code:     int32(codes.InvalidArgument),
+			},
 		},
 		{
 			name: "missing secret",
@@ -645,7 +657,11 @@ func TestValidateRadiusSecret(t *testing.T) {
 					TokenExpiry: "24h",
 				},
 			},
-			err: errors.New("radius secret cannot be empty"),
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"radius secret cannot be empty"},
+				Code:     int32(codes.InvalidArgument),
+			},
 		},
 		{
 			name: "no authenticator configs",
@@ -668,7 +684,11 @@ func TestValidateRadiusSecret(t *testing.T) {
 			in: struct {
 				Test string
 			}{"testing"},
-			err: errInvalidInputType,
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"invalid input type"},
+				Code:     int32(codes.Internal),
+			},
 		},
 	}
 	r := authHooks{}
@@ -883,6 +903,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{
 								{},
@@ -936,6 +957,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{
 								{
@@ -966,6 +988,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{
 								{
@@ -1021,6 +1044,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{
 								{
@@ -1051,6 +1075,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{{}},
 						},
@@ -1102,6 +1127,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{
 								{
@@ -1132,6 +1158,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{{}},
 						},
@@ -1154,6 +1181,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{
 								{
@@ -1182,6 +1210,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{
 								{
@@ -1211,6 +1240,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				ObjectMeta: api.ObjectMeta{},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{{}},
 						},
@@ -1235,6 +1265,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{
 								{
@@ -1263,6 +1294,7 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_RADIUS.String()},
 						Ldap: &auth.Ldap{
 							Domains: []*auth.LdapDomain{
 								{
@@ -1310,6 +1342,127 @@ func TestPopulateSecretsInAuthPolicy(t *testing.T) {
 			existing: nil,
 			result:   true,
 			err:      kvstore.NewKeyNotFoundError("", 0),
+		},
+		{
+			name: "update auth policy with empty radius secret",
+			oper: apiintf.UpdateOper,
+			in: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_RADIUS.String()},
+						Radius: &auth.Radius{
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812"},
+										{Url: "192.168.10.12:1812"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			existing: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Radius: &auth.Radius{
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812"},
+										{Url: "192.168.10.12:1812"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			result: true,
+			out: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_RADIUS.String()},
+						Radius: &auth.Radius{
+							Domains: []*auth.RadiusDomain{
+								{
+									Servers: []*auth.RadiusServer{
+										{Url: "192.168.10.11:1812"},
+										{Url: "192.168.10.12:1812"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"radius secret cannot be empty"},
+				Code:     int32(codes.InvalidArgument),
+			},
+		},
+		{
+			name: "update auth policy without ldap bind password",
+			oper: apiintf.UpdateOper,
+			in: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String()},
+						Ldap: &auth.Ldap{
+							Domains: []*auth.LdapDomain{
+								{},
+							},
+						},
+					},
+				},
+			},
+			existing: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							Domains: []*auth.LdapDomain{
+								{},
+							},
+						},
+					},
+				},
+			},
+			result: true,
+			out: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String()},
+						Ldap: &auth.Ldap{
+							Domains: []*auth.LdapDomain{
+								{},
+							},
+						},
+					},
+				},
+			},
+			err: &api.Status{
+				TypeMeta: api.TypeMeta{Kind: "Status"},
+				Message:  []string{"bind password not defined"},
+				Code:     int32(codes.InvalidArgument),
+			},
 		},
 	}
 
