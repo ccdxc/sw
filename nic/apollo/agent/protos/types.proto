@@ -29,6 +29,13 @@ enum ApiStatus {
                                         // specific type of object
 }
 
+// Asic Types
+enum AsicType {
+  ASIC_TYPE_NONE       = 0;
+  ASIC_TYPE_CAPRI      = 1;
+  ASIC_TYPE_ELBA       = 2;
+}
+
 // IP address families
 enum IPAF {
   IP_AF_NONE  = 0;

@@ -13,6 +13,7 @@
 
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
+#include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 
 #define PDS_DROP_REASON_MAX        64    ///< Maximum packet drop reasons
@@ -73,7 +74,7 @@ typedef struct pds_device_status_s {
     string      part_num;          ///< FRU Part Number
     string      description;       ///< Description
     string      vendor_id;         ///< Vendor ID
-    string      chip_type;         ///< Chip Type
+    sdk::platform::asic_type_t chip_type; ///< Chip Type
     string      hardware_revision; ///< Hardware Revision
     string      cpu_vendor;        ///< CPU Vendor
     string      cpu_specification; ///< CPU Specification

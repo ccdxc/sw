@@ -128,7 +128,7 @@ message DeviceStatus {
   string      VendorID          = 10;
 
   // Chip Type
-  string      ChipType          = 11;
+  types.AsicType ChipType       = 11;
 
   // Hardware Revision
   string      HardwareRevision  = 12;

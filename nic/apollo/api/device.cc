@@ -10,6 +10,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
+#include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
@@ -201,7 +202,7 @@ device_entry::fill_status(pds_device_status_t *status) {
 
     status->description = std::string("Pensando DSC");
     status->vendor_id = std::string("1DD8");
-    status->chip_type = std::string("-");
+    status->chip_type = sdk::platform::asic_type_t::SDK_ASIC_TYPE_CAPRI;
     sdk::platform::readfrukey(BOARD_PARTNUM_KEY, value);
     if (value.empty() || value == "") {
         status->hardware_revision = std::string("-");

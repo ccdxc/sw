@@ -92,7 +92,17 @@ pds_device_api_status_to_proto (pds::DeviceStatus *proto_status,
     proto_status->set_productname(api_status->product_name);
     proto_status->set_description(api_status->description);
     proto_status->set_vendorid(api_status->vendor_id);
-    proto_status->set_chiptype(api_status->chip_type);
+    switch (api_status->chip_type) {
+    case sdk::platform::asic_type_t::SDK_ASIC_TYPE_CAPRI:
+        proto_status->set_chiptype(types::ASIC_TYPE_CAPRI);
+        break;
+    case sdk::platform::asic_type_t::SDK_ASIC_TYPE_ELBA:
+        proto_status->set_chiptype(types::ASIC_TYPE_ELBA);
+        break;
+    default:
+        proto_status->set_chiptype(types::ASIC_TYPE_NONE);
+        break;
+    }
     proto_status->set_hardwarerevision(api_status->hardware_revision);
     proto_status->set_cpuvendor(api_status->cpu_vendor);
     proto_status->set_cpuspecification(api_status->cpu_specification);
