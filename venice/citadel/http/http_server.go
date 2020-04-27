@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"expvar"
 	"fmt"
 	"io/ioutil"
@@ -15,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pensando/sw/venice/globals"
 
 	"github.com/pensando/sw/venice/citadel/data"
 
@@ -129,7 +130,7 @@ func unknownAction(w http.ResponseWriter, r *http.Request) {
 func (hsrv *HTTPServer) createdbReqHandler(r *http.Request) (interface{}, error) {
 	database := r.URL.Query().Get("db")
 	if database == "" {
-		return nil, fmt.Errorf("invalid db")
+		database = globals.DefaultTenant
 	}
 
 	retention := uint64(0)
@@ -182,7 +183,7 @@ func (hsrv *HTTPServer) deletedbReqHandler(r *http.Request) (interface{}, error)
 func (hsrv *HTTPServer) createcqReqHandler(r *http.Request) (interface{}, error) {
 	database := r.URL.Query().Get("db")
 	if database == "" {
-		return nil, fmt.Errorf("empty db for database name")
+		database = globals.DefaultTenant
 	}
 	cq := r.URL.Query().Get("cq")
 	if cq == "" {
@@ -219,7 +220,7 @@ func (hsrv *HTTPServer) createcqReqHandler(r *http.Request) (interface{}, error)
 func (hsrv *HTTPServer) readcqReqHandler(r *http.Request) (interface{}, error) {
 	database := r.URL.Query().Get("db")
 	if database == "" {
-		return nil, fmt.Errorf("empty db for database name")
+		database = globals.DefaultTenant
 	}
 	replicaID := r.URL.Query().Get("replica")
 	result, err := hsrv.broker.GetContinuousQuery(context.Background(), database, replicaID)
@@ -240,7 +241,7 @@ func (hsrv *HTTPServer) readcqReqHandler(r *http.Request) (interface{}, error) {
 func (hsrv *HTTPServer) deletecqReqHandler(r *http.Request) (interface{}, error) {
 	database := r.URL.Query().Get("db")
 	if database == "" {
-		return nil, fmt.Errorf("empty db for database name")
+		database = globals.DefaultTenant
 	}
 	cq := r.URL.Query().Get("cq")
 	if cq == "" {
@@ -262,7 +263,7 @@ func (hsrv *HTTPServer) deletecqReqHandler(r *http.Request) (interface{}, error)
 func (hsrv *HTTPServer) createrpReqHandler(r *http.Request) (interface{}, error) {
 	database := r.URL.Query().Get("db")
 	if database == "" {
-		return nil, fmt.Errorf("empty db for database name")
+		database = globals.DefaultTenant
 	}
 	retentionName := r.URL.Query().Get("rp")
 	if retentionName == "" {
@@ -290,7 +291,7 @@ func (hsrv *HTTPServer) createrpReqHandler(r *http.Request) (interface{}, error)
 func (hsrv *HTTPServer) readrpReqHandler(r *http.Request) (interface{}, error) {
 	database := r.URL.Query().Get("db")
 	if database == "" {
-		return nil, errors.New("empty db for database name")
+		database = globals.DefaultTenant
 	}
 	result, err := hsrv.broker.GetRetentionPolicy(context.Background(), database)
 	if err != nil {
@@ -305,7 +306,7 @@ func (hsrv *HTTPServer) readrpReqHandler(r *http.Request) (interface{}, error) {
 func (hsrv *HTTPServer) deleterpReqHandler(r *http.Request) (interface{}, error) {
 	database := r.URL.Query().Get("db")
 	if database == "" {
-		return nil, errors.New("empty db for database name")
+		database = globals.DefaultTenant
 	}
 	retentionName := r.URL.Query().Get("rp")
 	if retentionName == "" {
@@ -365,6 +366,9 @@ func (hsrv *HTTPServer) queryReqHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	database := r.FormValue("db")
+	if database == "" {
+		database = globals.DefaultTenant
+	}
 
 	// execute the query
 	result, err := hsrv.broker.ExecuteQuery(context.Background(), database, qp)
@@ -410,6 +414,9 @@ func (hsrv *HTTPServer) queryShardReqHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	database := r.FormValue("db")
+	if database == "" {
+		database = globals.DefaultTenant
+	}
 
 	shard := strings.TrimSpace(r.FormValue("shard"))
 	if shard != "" {
@@ -462,6 +469,9 @@ func (hsrv *HTTPServer) queryReplicaReqHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 	database := r.FormValue("db")
+	if database == "" {
+		database = globals.DefaultTenant
+	}
 
 	shard := strings.TrimSpace(r.FormValue("shard"))
 	if shard != "" {
@@ -524,6 +534,9 @@ func (hsrv *HTTPServer) showReqHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	database := r.FormValue("db")
+	if database == "" {
+		database = globals.DefaultTenant
+	}
 
 	// execute the query
 	result, err := hsrv.broker.ExecuteShowCmd(context.Background(), database, qp)
