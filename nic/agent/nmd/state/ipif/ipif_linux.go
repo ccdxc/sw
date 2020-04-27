@@ -301,6 +301,9 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	d.RenewCancel = renewCancel
 	d.RenewCtx = renewCtx
 
+	// Should the IP information be updated to NMD
+	mustUpdateIP := false
+
 	// Start renewal routine
 	// Kick off a renewal process.
 	go d.startRenewLoop(d.AckPacket, mgmtLink)
@@ -310,6 +313,7 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 	// Update the state to done if valid venice IPs are found
 	log.Infof("VENICE IPS: %v", d.VeniceIPs)
 	if len(d.VeniceIPs) > 0 {
+		mustUpdateIP = true
 		d.CurState = dhcpDone.String()
 		var veniceIPs []string
 		for veniceIP := range d.VeniceIPs {
@@ -318,53 +322,57 @@ func (d *DHCPState) updateDHCPState(ack dhcp4.Packet, mgmtLink netlink.Link) (er
 		d.nmd.SetVeniceIPs(veniceIPs)
 	}
 
-	if len(d.InterfaceIPs) > 0 {
-		interfaceIPs := make(map[uint32]*cluster.IPConfig)
-		for _, interfaceIP := range d.InterfaceIPs {
-			interfaceIPs[uint32(interfaceIP.IfID)] = &cluster.IPConfig{
-				IPAddress: interfaceIP.IPAddress.String() + "/" + strconv.Itoa(int(interfaceIP.PrefixLen)),
-				DefaultGW: interfaceIP.GwIP.String(),
+	if mustUpdateIP {
+		if len(d.InterfaceIPs) > 0 {
+			interfaceIPs := make(map[uint32]*cluster.IPConfig)
+			for _, interfaceIP := range d.InterfaceIPs {
+				interfaceIPs[uint32(interfaceIP.IfID)] = &cluster.IPConfig{
+					IPAddress: interfaceIP.IPAddress.String() + "/" + strconv.Itoa(int(interfaceIP.PrefixLen)),
+					DefaultGW: interfaceIP.GwIP.String(),
+				}
 			}
+			d.nmd.SetInterfaceIPs(interfaceIPs)
 		}
-		d.nmd.SetInterfaceIPs(interfaceIPs)
-	}
 
-	if d.Hostname != "" {
-		d.nmd.SetDSCID(d.Hostname)
-	}
-
-	// Assign IP Address here
-	addr := &netlink.Addr{
-		IPNet: &d.IPNet,
-	}
-
-	if err := netlink.AddrAdd(mgmtLink, addr); err != nil {
-		// Make this a non error TODO
-		if !strings.Contains(err.Error(), "file exists") {
-			log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", addr, mgmtLink.Attrs().Name, err)
-			return err
-
+		if d.Hostname != "" {
+			d.nmd.SetDSCID(d.Hostname)
 		}
-		log.Infof("IP Address %v already present on interface %v. Err: %v", addr, mgmtLink.Attrs().Name, err)
-	}
-	ipCfg := &cluster.IPConfig{
-		IPAddress: addr.String(),
-	}
-	curIPConfig := d.nmd.GetIPConfig()
-	if curIPConfig != nil && curIPConfig.IPAddress != ipCfg.IPAddress {
-		log.Infof("IP Address for Naples got updated. Pushing the new configs to processes.")
-		d.nmd.PersistState(true)
-	}
 
-	log.Infof("IPConfig during DHCP: %v", ipCfg)
-	d.nmd.SetIPConfig(ipCfg)
-	d.nmd.SetMgmtInterface(mgmtLink.Attrs().Name)
-	d.nmd.SetNetworkMode(mgmtLink.Attrs().Name)
+		// Assign IP Address here
+		addr := &netlink.Addr{
+			IPNet: &d.IPNet,
+		}
 
-	// Set the interface IPs
-	// Note: This is a temporary code. This config needs to handled by the netagent
-	d.setInterfaceIPs()
-	d.setStaticRoutes()
+		if err := netlink.AddrAdd(mgmtLink, addr); err != nil {
+			// Make this a non error TODO
+			if !strings.Contains(err.Error(), "file exists") {
+				log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", addr, mgmtLink.Attrs().Name, err)
+				return err
+
+			}
+			log.Infof("IP Address %v already present on interface %v. Err: %v", addr, mgmtLink.Attrs().Name, err)
+		}
+		ipCfg := &cluster.IPConfig{
+			IPAddress: addr.String(),
+		}
+		curIPConfig := d.nmd.GetIPConfig()
+		if curIPConfig != nil && curIPConfig.IPAddress != ipCfg.IPAddress {
+			log.Infof("IP Address for Naples got updated. Pushing the new configs to processes.")
+			d.nmd.PersistState(true)
+		}
+
+		log.Infof("IPConfig during DHCP: %v", ipCfg)
+		d.nmd.SetIPConfig(ipCfg)
+		d.nmd.SetMgmtInterface(mgmtLink.Attrs().Name)
+		d.nmd.SetNetworkMode(mgmtLink.Attrs().Name)
+
+		// Set the interface IPs
+		// Note: This is a temporary code. This config needs to handled by the netagent
+		d.setInterfaceIPs()
+		d.setStaticRoutes()
+	} else {
+		log.Errorf("No Venice co-ordinates received from spec or DHCP response. Skipping updating the IP address for interface %v", mgmtLink.Attrs().Name)
+	}
 
 	if d.CurState == missingVendorAttributes.String() {
 		log.Errorf("Failed to find Venice IPs in option 241 when trying DHCP on %v", mgmtLink.Attrs().Name)

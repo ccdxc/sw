@@ -522,14 +522,14 @@ func TestDHCPEmptyVendorAttributes(t *testing.T) {
 	// Ensure the IP Assigned on the interface is indeed the YIADDR
 	ipAddr, err := netlink.AddrList(ipClient.primaryIntf, netlink.FAMILY_V4)
 	AssertOk(t, err, "Must be able to look up IP Address for mock interface")
-	var found bool
+	found := false
 	for _, a := range ipAddr {
 		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
 			found = true
 			break
 		}
 	}
-	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+	AssertEquals(t, false, found, "The interface IP Address should be empty as no vendor attributes are available")
 }
 
 func TestDHCPMalformedVendorAttributesOption43And60(t *testing.T) {
@@ -560,14 +560,14 @@ func TestDHCPMalformedVendorAttributesOption43And60(t *testing.T) {
 	// Ensure the IP Assigned on the interface is indeed the YIADDR
 	ipAddr, err := netlink.AddrList(ipClient.primaryIntf, netlink.FAMILY_V4)
 	AssertOk(t, err, "Must be able to look up IP Address for mock interface")
-	var found bool
+	found := false
 	for _, a := range ipAddr {
 		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
 			found = true
 			break
 		}
 	}
-	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+	AssertEquals(t, false, found, "The interface IP address must be empty for malformed option 43 and 60")
 }
 
 func TestDHCPMalformedVendorAttributes(t *testing.T) {
@@ -598,14 +598,14 @@ func TestDHCPMalformedVendorAttributes(t *testing.T) {
 	// Ensure the IP Assigned on the interface is indeed the YIADDR
 	ipAddr, err := netlink.AddrList(ipClient.primaryIntf, netlink.FAMILY_V4)
 	AssertOk(t, err, "Must be able to look up IP Address for mock interface")
-	var found bool
+	found := false
 	for _, a := range ipAddr {
 		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
 			found = true
 			break
 		}
 	}
-	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+	AssertEquals(t, false, found, "The interface IP address must be empty for malformed vendor attributes")
 }
 
 func TestDHCPMalformedVendorAttributesDSCInterfaceIPs(t *testing.T) {
