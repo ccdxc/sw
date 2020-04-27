@@ -39,7 +39,6 @@
 #include "nic/sdk/lib/table/ftl/ftl_base.hpp"
 #include "nic/apollo/fte/fte.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
-#include "nic/apollo/api/include/athena/pds_flow_session.h"
 #include "gen/p4gen/p4/include/ftl.h"
 
 namespace fte {

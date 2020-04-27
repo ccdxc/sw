@@ -8,8 +8,8 @@
 ///
 //----------------------------------------------------------------------------
 // 
+#include "nic/apollo/agent/athena/trace.hpp"
 #include "app_test_utils.hpp"
-#include "trace.hpp"
 #include "athena_app_server.hpp"
 #include "fte_athena.hpp"
 #include "zmq_wait.h"

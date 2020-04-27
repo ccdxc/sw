@@ -23,6 +23,7 @@
 #include "nic/sdk/asic/port.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
+#include "nic/apollo/agent/athena/trace.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/athena/pds_init.h"
@@ -33,7 +34,6 @@
 #include <gtest/gtest.h>
 #include "nic/sdk/lib/utils/time_profile.hpp"
 #endif
-#include "trace.hpp"
 #include "app_test_utils.hpp"
 #include "fte_athena.hpp"
 #include "athena_app_server.hpp"
