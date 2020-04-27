@@ -121,19 +121,15 @@ def Trigger(tc):
         if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
             intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf)
             intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
+            cmd = "/mnt/c/Windows/System32/tcpdump.exe"
         else:
             intfVal = intf
-            
-        cmd = "tcpdump -l -i " + intfVal + tcpdump_flags_extra + " -tne ether host " + tc.random_mac
-        
-        if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " ;sleep 10 \""
+            cmd = "tcpdump"
+
+        cmd += " -l -i " + intfVal + tcpdump_flags_extra + " -tne ether host " + tc.random_mac
         __PR_AddCommand(intf, tc, req, cmd, True)
 
-    if api.GetNodeOs(tc.naples_node) == "windows":
-        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 10; ping -n 5 " + tc.target_IP + ";sleep 10 \" "
-    else:
-        cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
+    cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
     api.Trigger_AddHostCommand(req, tc.peer_node, cmd)
     trig_resp = api.Trigger(req)
 
@@ -166,11 +162,11 @@ def Trigger(tc):
         # A lif must have its PR flag when it is an interface lif and tc.args.mode is 'promiscuous'
         if tc.args.mode == "promiscuous":
             if intf_lif and lif_pr_flag != True:
-                api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(lif_obj['spec']))
+                api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
                 result = api.types.status.FAILURE
         else:
             if lif_pr_flag == True:
-                api.Logger.error("halctl PR flag set for non-promiscuous mode LIF [%s]" %(lif_obj['spec']))
+                api.Logger.error("halctl PR flag set for non-promiscuous mode LIF [%s]" %(lif_obj['spec']['name']))
                 result = api.types.status.FAILURE
 
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)

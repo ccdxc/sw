@@ -101,6 +101,9 @@ def GetIPAddress(node, interface):
         cmd = "ip -4 addr show " + interface + " | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}' "
     elif api.GetNodeOs(node) == "freebsd":
         cmd = "ifconfig " + interface +  " | grep inet | awk '{print $2}'"
+    elif api.GetNodeOs(node) == "windows":
+        cmd = "ip -4 address show " + interface + " | grep inet | awk '{print $2}' |  cut -d/ -f 1 "
+ 
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
     return resp.commands[0].stdout.strip("\n")

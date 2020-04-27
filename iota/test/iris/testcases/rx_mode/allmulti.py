@@ -37,7 +37,7 @@ def Setup(tc):
     if api.GetNodeOs(tc.naples_node) != "linux" and tc.args.mode == "enable_allmulti":
         api.Logger.info("Skipping testcase because allmulti cannot be set")
         tc.skip = True
-        return api.types.status.SUCCESS
+        return api.types.status.IGNORED
 
     tc.expect_pkt = {}
     tc.on_host = {}
@@ -144,20 +144,14 @@ def Trigger(tc):
         if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
             intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf)
             intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
+            cmd = "/mnt/c/Windows/System32/tcpdump.exe"
         else:
             intfVal = intf
-
-        cmd = "tcpdump -l -i " + intfVal  + " -ptne  host " + tc.target_multicast_IP
-        if api.GetNodeOs(tc.naples_node) == "windows" and intf in tc.host_intfs:
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + ";sleep 10 \""
+            cmd = "tcpdump"
+        cmd += " -l -i " + intfVal  + " -ptne  host " + tc.target_multicast_IP
         __PR_AddCommand(intf, tc, req, cmd, True)
 
-
-    if api.GetNodeOs(tc.naples_node) == "windows":
-        cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 10; ping -n 5 -S " + tc.peer_workloads[0].ip_address + " " + tc.target_multicast_IP + ";sleep 10 \" "
-    else:
-        cmd = "sleep 1; ping -c 5 -I " + tc.peer_workloads[0].ip_address + " " + tc.target_multicast_IP + ";sleep 1"
-
+    cmd = "sleep 1; ping -c 5 -I " + tc.peer_workloads[0].ip_address + " " + tc.target_multicast_IP + ";sleep 1"
     api.Trigger_AddHostCommand(req, tc.peer_node, cmd)
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
@@ -191,10 +185,10 @@ def Trigger(tc):
         # A lif must have its AM flag set when it is an interface lif and tc.args.mode is 'enable_allmulti'
         if intf_lif == True:
             if tc.args.mode == "enable_allmulti" and lif_am_flag != True:
-                api.Logger.error("halctl AM flag not set for allmulti mode interface [%s]" %(lif_obj['spec']))
+                api.Logger.error("halctl AM flag not set for allmulti mode interface [%s]" %(lif_obj['spec']['name']))
                 result = api.types.status.FAILURE
             elif tc.args.mode == "disable_allmulti" and lif_am_flag == True:
-                api.Logger.error("halctl AM flag set for no-allmulti mode interface [%s]" %(lif_obj['spec']))
+                api.Logger.error("halctl AM flag set for no-allmulti mode interface [%s]" %(lif_obj['spec']['name']))
                 result = api.types.status.FAILURE
 
         else:

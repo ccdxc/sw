@@ -81,8 +81,6 @@ def Setup(tc):
     if  host_utils.AddStaticARP(tc.peer_node, tc.peer_workloads[0].interface, tc.target_IP, tc.random_mac) != api.types.status.SUCCESS:
         api.Logger.error("Failed to add Static ARP entry on %s" %(tc.peer_node))
         return api.types.status.FAILURE
-    else:
-        api.Logger.info("Added Random_Ip = %s Random_MAC = %s on %s" %(tc.target_IP, tc.random_mac, tc.peer_workloads[0].interface))
     return api.types.status.SUCCESS
 
 
@@ -108,12 +106,12 @@ def Trigger(tc):
         if api.GetNodeOs(tc.naples_node) == "windows" and intf1 in tc.host_intfs:
             intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf1)
             intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
+            cmd = "/mnt/c/Windows/System32/tcpdump.exe"
         else:
             intfVal = intf1
-            
-        cmd = "tcpdump -l -i " + intfVal + " -tne ether host " + tc.random_mac
-        if api.GetNodeOs(tc.naples_node) == "windows":
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " ;sleep 10 \""
+            cmd = "tcpdump"
+
+        cmd += " -l -i " + intfVal + " -tne ether host " + tc.random_mac
         __PR_AddCommand(intf1, tc, req, cmd, True)
 
         # Run tcpdump in non-promiscuous mode on all other interfaces
@@ -122,20 +120,16 @@ def Trigger(tc):
                 if api.GetNodeOs(tc.naples_node) == "windows" and intf2 in tc.host_intfs:
                     intfGuid = ionic_utils.winIntfGuid(tc.naples_node, intf2)
                     intfVal = str(ionic_utils.winTcpDumpIdx(tc.naples_node, intfGuid))
+                    cmd = "/mnt/c/Windows/System32/tcpdump.exe"
                 else:
                     intfVal = intf2
-                
-                cmd = "tcpdump -l -i " + intfVal + " -ptne ether host " + tc.random_mac
-                if api.GetNodeOs(tc.naples_node) == "windows" and intf2 in tc.host_intfs:
-                    cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" " + cmd + " ;sleep 10 \""
+                    cmd = "tcpdump"
+
+                cmd += " -l -i " + intfVal + " -ptne ether host " + tc.random_mac
                 __PR_AddCommand(intf2, tc, req, cmd, True)
 
 
-        if api.GetNodeOs(tc.naples_node) == "windows":
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe  \" sleep 10; ping -n 5 " + tc.target_IP + ";sleep 10 \" "
-        else:
-            cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
-
+        cmd = "sleep 1; ping -c 5 " + tc.target_IP + ";sleep 1"
         api.Trigger_AddHostCommand(req, tc.peer_node, cmd)
         cmds_terminated = False
         trig_resp = api.Trigger(req)
@@ -151,23 +145,18 @@ def Trigger(tc):
         for lif_obj in lif_obj_docs:
             if lif_obj == None:
                 break
-            if api.GetNodeOs(tc.naples_node) == "windows":
+            if api.GetNodeOs(tc.naples_node) == "windows" and intf1 in tc.host_intfs:
                 halIntfName = ionic_utils.winHalIntfName(tc.naples_node, intf1)
             else:
                 halIntfName = intf1
-                
             if lif_obj['spec']['name'].startswith(halIntfName):
                 if lif_obj['spec']['packetfilter']['receivepromiscuous'] != True:
                     api.Logger.error("halctl PR flag not set for promiscuous mode interface [%s]" %(intf1))
                     result = api.types.status.FAILURE
-                else:
-                    api.Logger.info("halctl PR flag set for promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
             else:
                 if lif_obj['spec']['packetfilter']['receivepromiscuous'] == True:
-                    api.Logger.error("halctl PR flag set for non-promiscuous mode interface [%s]" %(lif_obj['spec']))
+                    api.Logger.error("halctl PR flag set for non-promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
                     result = api.types.status.FAILURE
-                else:
-                    api.Logger.info("halctl PR flag clear for non-promiscuous mode interface [%s]" %(lif_obj['spec']['name']))
 
         term_resp = api.Trigger_TerminateAllCommands(trig_resp)
         resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
@@ -179,8 +168,7 @@ def Trigger(tc):
         # Parse tcpdump stdout of promiscuous mode interface
         found = resp.commands[0].stdout.find(pattern)
         if tc.expect_pkt[intf1] and found == -1:
-            api.Logger.error("Interface [%s] did not receive Unknown Unicast packet in promiscuous mode IP(%s) MAC(%s)" 
-                             %(intf1, tc.target_IP, tc.random_mac))
+            api.Logger.error("Interface [%s] did not receive Unknown Unicast packet in promiscuous mode" %(intf1))
             api.PrintCommandResults(resp.commands[0])
             result = api.types.status.FAILURE
         elif not tc.expect_pkt[intf1] and found > 0:
