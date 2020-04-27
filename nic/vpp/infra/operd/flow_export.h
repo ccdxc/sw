@@ -11,14 +11,7 @@
 extern "C" {
 #endif
 
-void pds_operd_export_flow_ip4(uint32_t sip,
-                               uint32_t dip,
-                               uint8_t ip_proto,
-                               uint16_t src_port,
-                               uint16_t dst_port,
-                               uint16_t lookup_id,
-                               uint8_t add,
-                               uint8_t allow);
+void pds_operd_export_flow_ip4(void *flow);
 
 void pds_operd_export_flow_ip6(uint8_t *sip,
                                uint8_t *dip,

@@ -83,7 +83,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
                      u16 *next0, u16 *next1, u32 *counter)
 {
     session_track_actiondata_t track_actiondata = {0};
-    struct session_info_entry_t actiondata;
+    static struct session_info_entry_t actiondata = {0};
     pds_flow_main_t *fm = &pds_flow_main;
     pds_flow_rewrite_flags_t *rewrite_flags;
     pds_flow_hw_ctx_t *ctx0, *ctx1;
@@ -94,22 +94,29 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         goto skip_prog0;
     }
     
-    clib_memset(&actiondata, 0, sizeof(actiondata));
+    //clib_memset(&actiondata, 0, sizeof(actiondata));
     if (pds_is_flow_napt_en(b0)) {
         actiondata.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
         actiondata.rx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx_rflow;
+        actiondata.tx_xlate_id2 = 0;
+        actiondata.rx_xlate_id2 = 0;
     } else if (pds_is_flow_svc_map_en(b0)) {
         /* Service mapping case (pip, port --> vip, port) */
         actiondata.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
+        actiondata.tx_xlate_id2 = 0;
+        actiondata.rx_xlate_id2 = 0;
+        actiondata.rx_xlate_id = 0;
     } else if (vnet_buffer2(b0)->pds_nat_data.xlate_idx) {
         /* static nat */
         actiondata.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
         actiondata.rx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx + 1;
+        actiondata.tx_xlate_id2 = 0;
+        actiondata.rx_xlate_id2 = 0;
     }
     if (vnet_buffer2(b0)->pds_nat_data.xlate_idx2) {
         // Twice NAT
@@ -165,22 +172,29 @@ skip_prog0:
                   VPP_CPU_FLAGS_FLOW_SES_EXIST)) {
         goto skip_prog1;
     }
-    clib_memset(&actiondata, 0, sizeof(actiondata));
+    //clib_memset(&actiondata, 0, sizeof(actiondata));
     if (pds_is_flow_napt_en(b1)) {
         actiondata.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.rx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx_rflow;
+        actiondata.tx_xlate_id2 = 0;
+        actiondata.rx_xlate_id2 = 0;
     } else if (pds_is_flow_svc_map_en(b1)) {
         /* Service mapping case (pip, port --> vip, port) */
         actiondata.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
+        actiondata.rx_xlate_id = 0;
+        actiondata.tx_xlate_id2 = 0;
+        actiondata.rx_xlate_id2 = 0;
     } else if (vnet_buffer2(b1)->pds_nat_data.xlate_idx) {
         /* static nat */
         actiondata.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.rx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx + 1;
+        actiondata.tx_xlate_id2 = 0;
+        actiondata.rx_xlate_id2 = 0;
     }
     if (vnet_buffer2(b1)->pds_nat_data.xlate_idx2) {
         // Twice NAT
@@ -241,7 +255,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
                      u16 *next, u32 *counter)
 {
     session_track_actiondata_t track_actiondata = {0};
-    struct session_info_entry_t actiondata;
+    static struct session_info_entry_t actiondata = {0};
     pds_flow_main_t *fm = &pds_flow_main;
     pds_flow_rewrite_flags_t *rewrite_flags;
     pds_flow_hw_ctx_t *ctx;
@@ -251,22 +265,29 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
                   VPP_CPU_FLAGS_FLOW_SES_EXIST)) {
         goto skip_prog;
     }
-    clib_memset(&actiondata, 0, sizeof(actiondata));
+    //clib_memset(&actiondata, 0, sizeof(actiondata));
     if (pds_is_flow_napt_en(b)) {
         actiondata.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.rx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx_rflow;
+        actiondata.tx_xlate_id2 = 0;
+        actiondata.rx_xlate_id2 = 0;
     } else if (pds_is_flow_svc_map_en(b)) {
         /* Service mapping case (pip, port --> vip, port) */
         actiondata.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
+        actiondata.rx_xlate_id = 0;
+        actiondata.tx_xlate_id2 = 0;
+        actiondata.rx_xlate_id2 = 0;
     } else if (vnet_buffer2(b)->pds_nat_data.xlate_idx) {
         /* static nat */
         actiondata.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.rx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx + 1;
+        actiondata.tx_xlate_id2 = 0;
+        actiondata.rx_xlate_id2 = 0;
     }
     if (vnet_buffer2(b)->pds_nat_data.xlate_idx2) {
         // Twice NAT

@@ -17,6 +17,7 @@
 #include <pd_utils.h>
 #include <ftl_wrapper.h>
 #include <session.h>
+#include "nic/operd/decoders/vpp/flow_decoder.h"
 
 extern uint64_t pds_session_get_timestamp(uint32_t ses);
 
@@ -56,6 +57,7 @@ ftlv4_insert (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
               uint8_t update)
 {
     sdk_table_api_params_t params = {0};
+    operd_flow_t flow;
 
     if (get_skip_ftl_program()) {
         return 0;
@@ -78,12 +80,17 @@ ftlv4_insert (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
     }
 
     if (log) {
-        pds_operd_export_flow_ip4(entry->get_key_metadata_ipv4_src(),
-                                  entry->get_key_metadata_ipv4_dst(),
-                                  entry->get_key_metadata_proto(),
-                                  entry->get_key_metadata_sport(),
-                                  entry->get_key_metadata_dport(),
-                                  ftlv4_get_key_lookup_id(entry), 1, 1);
+        flow.type = OPERD_FLOW_TYPE_IP4;
+        flow.action = OPERD_FLOW_ACTION_ALLOW;
+        flow.op = OPERD_FLOW_OPERATION_ADD;
+        flow.v4.src = entry->get_key_metadata_ipv4_src();
+        flow.v4.dst = entry->get_key_metadata_ipv4_dst();
+        flow.v4.proto = entry->get_key_metadata_proto();
+        flow.v4.sport = entry->get_key_metadata_sport();
+        flow.v4.dport = entry->get_key_metadata_dport();
+        flow.v4.lookup_id = ftlv4_get_key_lookup_id(entry);
+
+        pds_operd_export_flow_ip4(&flow);
     }
 
 done:
@@ -126,6 +133,7 @@ ftlv4_remove (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
               uint8_t log)
 {
     sdk_table_api_params_t params = {0};
+    operd_flow_t flow;
 
     if (get_skip_ftl_program()) {
         return 0;
@@ -141,12 +149,19 @@ ftlv4_remove (ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
         return -1;
     }
     if (log) {
-        pds_operd_export_flow_ip4(entry->get_key_metadata_ipv4_src(),
-                                  entry->get_key_metadata_ipv4_dst(),
-                                  entry->get_key_metadata_proto(),
-                                  entry->get_key_metadata_sport(),
-                                  entry->get_key_metadata_dport(),
-                                  ftlv4_get_key_lookup_id(entry), 0, 1);
+        
+        flow.type = OPERD_FLOW_TYPE_IP4;
+        flow.action = OPERD_FLOW_ACTION_ALLOW;
+        flow.op = OPERD_FLOW_OPERATION_DEL;
+        flow.v4.src = entry->get_key_metadata_ipv4_src();
+        flow.v4.dst = entry->get_key_metadata_ipv4_dst();
+        flow.v4.proto = entry->get_key_metadata_proto();
+        flow.v4.sport = entry->get_key_metadata_sport();
+        flow.v4.dport = entry->get_key_metadata_dport();
+        flow.v4.lookup_id = ftlv4_get_key_lookup_id(entry);
+
+        pds_operd_export_flow_ip4(&flow);
+
     }
     return 0;
 }

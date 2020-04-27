@@ -13,34 +13,19 @@
 static sdk::operd::producer_ptr g_operd_producer = NULL;
 
 void
-pds_operd_export_flow_ip4 (uint32_t sip,
-                           uint32_t dip,
-                           uint8_t ip_proto,
-                           uint16_t src_port,
-                           uint16_t dst_port,
-                           uint16_t lookup_id,
-                           uint8_t add,
-                           uint8_t allow)
+pds_operd_export_flow_ip4 (void *flow)
 {
-    operd_flow_t flow;
 
     if (unlikely(!g_operd_producer)) {
         g_operd_producer =
             sdk::operd::producer::create(PDS_OPERD_PRODUCER_NAME);
         SDK_ASSERT(g_operd_producer);
     }
-
-    flow.type = OPERD_FLOW_TYPE_IP4;
-    flow.action = allow ? OPERD_FLOW_ACTION_ALLOW : OPERD_FLOW_ACTION_DENY;
-    flow.op = add ? OPERD_FLOW_OPERATION_ADD : OPERD_FLOW_OPERATION_DEL;
-    flow.v4.src = sip;
-    flow.v4.dst = dip;
-    flow.v4.proto = ip_proto;
-    flow.v4.sport = src_port;
-    flow.v4.dport = dst_port;
-    flow.v4.lookup_id = lookup_id;
-
-    g_operd_producer->write(OPERD_DECODER_VPP, sdk::operd::INFO, &flow, sizeof(flow));
+    
+    g_operd_producer->write(OPERD_DECODER_VPP,
+                            sdk::operd::INFO, 
+                            (operd_flow_t *)flow, 
+                            sizeof(*(operd_flow_t *)flow));
     return;
 }
 
