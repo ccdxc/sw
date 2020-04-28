@@ -46,7 +46,7 @@ extern LONG				port_count;
 
 extern ULONG			RxBudget;
 
-extern ULONG            DriverFlags;
+extern ULONG            StateFlags;
 
 extern KEVENT           perfmon_event;
 

@@ -6,7 +6,6 @@
 
 //#define NO_TRACE								1
 //#define TRACK_MEMORY_BUFFER_ALLOC               1
-//#define TXRX_SEPARATE			1
 
 //
 // Memory allocation tags
@@ -74,6 +73,7 @@ NTSTATUS
 #define REG_TRACE_COMPONENT				L"TraceComponent"
 #define REG_TRACE_FLAGS					L"TraceFlags"
 #define REG_TRACE_BUFFER_LENGTH			L"TraceBufferLength"
+#define REG_STATE_FLAGS					L"StateFlags"
 
 #define REG_RX_BUDGET					L"RxBudget"
 
@@ -140,7 +140,10 @@ NTSTATUS
 #define IONIC_ADMINQ_LENGTH				16	/* must be a power of two */
 #define IONIC_NOTIFYQ_LENGTH			64	/* must be a power of two */
 
-#define IONIC_TX_FRAG_POOL_COUNT		1024
+#define IONIC_TX_FRAG_MIN               0
+#define IONIC_TX_FRAG_MAX               1024
+#define IONIC_TX_FRAG_DEFAULT           128
+#define IONIC_TX_FRAG_PAGES             3
 
 #define IONIC_ONE_SEC_WAIT              10000000
 
@@ -157,6 +160,12 @@ NTSTATUS
 #define ANY_NON_RSS_PROCESSOR_CLOSE_INDEX	(INVALID_PROCESSOR_INDEX - 3)
 
 #define IONIC_1Q_TAG					0x0081
+
+//
+// State flags
+//
+
+#define IONIC_STATE_FLAG_TXRX_DIFF_CORE			0x00000001
 
 //
 // Flow control options
@@ -195,6 +204,14 @@ NTSTATUS
 #define IONIC_MIN_RX_POOL_FACTOR            1
 #define IONIC_MAX_RX_POOL_FACTOR            10
 #define IONIC_DEFAULT_RX_POOL_FACTOR        4
+
+//
+// NumRSSQueues
+//
+
+#define IONIC_MIN_NUM_RSS_QUEUES			0 // auto select
+#define IONIC_MAX_NUM_RSS_QUEUES			32
+#define IONIC_DEFAULT_NUM_RSS_QUEUES		4
 
 //
 // Minimum Rx packet size
@@ -339,7 +356,7 @@ NTSTATUS
 #define IONIC_DEFAULT_MTU		9212
 
 #define IONIC_MAX_RX_DESC		16384
-#define IONIC_MAX_TX_DESC		8192
+#define IONIC_MAX_TX_DESC		65536
 #define IONIC_MIN_TXRX_DESC		16
 #define IONIC_DEF_TXRX_DESC		4096
 #define IONIC_LIFS_MAX			1024

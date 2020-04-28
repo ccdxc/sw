@@ -12,7 +12,7 @@ PDRIVER_OBJECT IonicDriverObject;
 
 NDIS_HANDLE IonicDriver = NULL;
 
-ULONG DriverFlags = 0;
+ULONG StateFlags = 0;
 
 unsigned int devcmd_timeout = 30;
 

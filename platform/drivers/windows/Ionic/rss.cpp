@@ -484,9 +484,7 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
     ULONG q_reuse_idx = 0;
     NDIS_STATUS status;
     struct intr_msg* intr_msg;
-#ifdef TXRX_SEPARATE
 	struct intr_msg* intr_tx_msg;
-#endif
     PPROCESSOR_NUMBER proc;
     RTL_BITMAP proc_used;
     char buffer[BITS_TO_LONGS(INTR_CTRL_REGS_MAX)] = { 0 };
@@ -533,48 +531,48 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
             lif->rss_ind_tbl[i] = (u8)q_idx;
             proc_to_q_map[proc_idx] = (u8)q_idx;
 
-#ifdef TXRX_SEPARATE
-			// Is this entry occuppied by a tx queue?
-			intr_msg = is_tx_entry(lif->ionic, proc_idx);
-			if( intr_msg != NULL) {
+			if( BooleanFlagOn( StateFlags, IONIC_STATE_FLAG_TXRX_DIFF_CORE)) {
+				// Is this entry occuppied by a tx queue?
+				intr_msg = is_tx_entry(lif->ionic, proc_idx);
+				if( intr_msg != NULL) {
 
-				// Free up this entry and push the tx entry to another slot
-				intr_tx_msg = find_intr_msg(lif->ionic, ANY_NON_RSS_PROCESSOR_CLOSE_INDEX);
-				if (intr_tx_msg == NULL) {
-					intr_tx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+					// Free up this entry and push the tx entry to another slot
+					intr_tx_msg = find_intr_msg(lif->ionic, ANY_NON_RSS_PROCESSOR_CLOSE_INDEX);
 					if (intr_tx_msg == NULL) {
-						// Nothing to move it to so leave where it is
-						intr_tx_msg = intr_msg;
+						intr_tx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+						if (intr_tx_msg == NULL) {
+							// Nothing to move it to so leave where it is
+							intr_tx_msg = intr_msg;
+						}
 					}
-				}
 
-				if( intr_tx_msg != intr_msg) {
+					if( intr_tx_msg != intr_msg) {
 
-					intr_tx_msg->inuse = true;
-					intr_tx_msg->tx_entry = true;
-					intr_tx_msg->qcq = intr_msg->qcq;
-					intr_tx_msg->lif = NULL;
+						intr_tx_msg->inuse = true;
+						intr_tx_msg->tx_entry = true;
+						intr_tx_msg->qcq = intr_msg->qcq;
+						intr_tx_msg->lif = NULL;
 
-					intr_msg->inuse = false;
-					intr_msg->tx_entry = false;
-					intr_msg->qcq = NULL;
+						intr_msg->inuse = false;
+						intr_msg->tx_entry = false;
+						intr_msg->qcq = NULL;
 
-					IoPrint("%s Shifting tx entry from Proc %d to proc %d\n",
-										__FUNCTION__,
-										intr_msg->proc_idx,
-										intr_tx_msg->proc_idx);
-
-					status = KeSetTargetProcessorDpcEx( &intr_tx_msg->qcq->tx_packet_dpc,
-														&intr_tx_msg->proc);
-					if (status != STATUS_SUCCESS) {
-						IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+						IoPrint("%s Shifting tx entry from Proc %d to proc %d\n",
 											__FUNCTION__,
-											status);
-						ASSERT(FALSE);
+											intr_msg->proc_idx,
+											intr_tx_msg->proc_idx);
+
+						status = KeSetTargetProcessorDpcEx( &intr_tx_msg->qcq->tx_packet_dpc,
+															&intr_tx_msg->proc);
+						if (status != STATUS_SUCCESS) {
+							IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+												__FUNCTION__,
+												status);
+							ASSERT(FALSE);
+						}
 					}
 				}
 			}
-#endif
 
             // find a message with matching cpu affinity
             intr_msg = find_intr_msg(lif->ionic, proc_idx);
@@ -600,22 +598,21 @@ map_rss_cpu_ind_tbl(struct lif *lif, PPROCESSOR_NUMBER proc_array, ULONG tbl_len
             NdisMSynchronizeWithInterruptEx(lif->ionic->intr_obj,
                                             intr_msg->id, sync_intr_msg, &ctx);
 
-#ifndef TXRX_SEPARATE
-			IoPrint("%s Moving tx queue %d to core %d\n",
-								__FUNCTION__,
-								q_idx,
-								intr_msg->proc_idx);
-
-			status = KeSetTargetProcessorDpcEx( &lif->txqcqs[q_idx].qcq->tx_packet_dpc,
-												&intr_msg->proc);
-			if (status != STATUS_SUCCESS) {
-				IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+			if( !BooleanFlagOn( StateFlags, IONIC_STATE_FLAG_TXRX_DIFF_CORE)) {
+				IoPrint("%s Moving tx queue %d to core %d\n",
 									__FUNCTION__,
-									status);
-				ASSERT(FALSE);
-			}
-#endif
+									q_idx,
+									intr_msg->proc_idx);
 
+				status = KeSetTargetProcessorDpcEx( &lif->txqcqs[q_idx].qcq->tx_packet_dpc,
+													&intr_msg->proc);
+				if (status != STATUS_SUCCESS) {
+					IoPrint("%s KeSetTargetProcessorDpcEx() failed status %08lX\n",
+										__FUNCTION__,
+										status);
+					ASSERT(FALSE);
+				}
+			}
             q_idx++;
             RtlSetBit(&proc_used, proc_idx);
         }

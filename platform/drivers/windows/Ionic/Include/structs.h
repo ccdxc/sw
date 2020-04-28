@@ -724,7 +724,6 @@ struct ionic {
 	struct tx_frag_pool_elem	*tx_frag_pool;
 	
 	struct tx_frag_pool_elem	*tx_frag_pool_head;
-	struct tx_frag_pool_elem	*tx_frag_pool_tail;
 
 	ULONG						tx_frag_pool_count;
 
@@ -824,5 +823,7 @@ struct registry_entry {
 	ULONG		default_value;
 
 	ULONG		current_value;
+
+	NDIS_PARAMETER_TYPE		param_type;
 
 };

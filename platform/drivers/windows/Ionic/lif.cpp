@@ -1960,24 +1960,25 @@ ionic_txrx_alloc(struct lif *lif,
 								i,
 								intr_rx_msg->proc_idx);
 	
-#ifdef TXRX_SEPARATE
-		/* Set the processor affniity for the tx packet dpc */
-		intr_tx_msg = find_intr_msg(lif->ionic, ANY_NON_RSS_PROCESSOR_CLOSE_INDEX);
-		if (intr_tx_msg == NULL) {
-			intr_tx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+		if( BooleanFlagOn( StateFlags, IONIC_STATE_FLAG_TXRX_DIFF_CORE)) {
+			/* Set the processor affniity for the tx packet dpc */
+			intr_tx_msg = find_intr_msg(lif->ionic, ANY_NON_RSS_PROCESSOR_CLOSE_INDEX);
 			if (intr_tx_msg == NULL) {
-				intr_tx_msg = intr_rx_msg;
+				intr_tx_msg = find_intr_msg(lif->ionic, ANY_PROCESSOR_INDEX);
+				if (intr_tx_msg == NULL) {
+					intr_tx_msg = intr_rx_msg;
+				}
+			}
+
+			if( intr_tx_msg != intr_rx_msg) {
+				intr_tx_msg->inuse = true;
+				intr_tx_msg->tx_entry = true;
+				intr_tx_msg->qcq = lif->txqcqs[i].qcq;
 			}
 		}
-
-		if( intr_tx_msg != intr_rx_msg) {
-			intr_tx_msg->inuse = true;
-			intr_tx_msg->tx_entry = true;
-			intr_tx_msg->qcq = lif->txqcqs[i].qcq;
+		else {
+			intr_tx_msg = intr_rx_msg;
 		}
-#else
-		intr_tx_msg = intr_rx_msg;
-#endif
 
 		IoPrint("%s Setting tx queue %d to core %d\n",
 								__FUNCTION__,

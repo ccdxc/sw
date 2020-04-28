@@ -156,6 +156,7 @@ struct dev_tx_ring_stats {
 	__le64		no_descs;
 	__le64		doorbell_count;
 	__le64		comp_count;
+	__le64		defrag_count;
 
 	__le64		directed_bytes;
 	__le64		directed_packets;

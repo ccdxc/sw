@@ -259,6 +259,9 @@ AllocateSharedMemorySpecifyNuma( struct ionic *ionic,
 char *
 ionic_dev_asic_name(u8 asic_type);
 
+ULONG
+prev_power_of_2( ULONG value);
+
 bool 
 is_power_of_2(unsigned int n);
 

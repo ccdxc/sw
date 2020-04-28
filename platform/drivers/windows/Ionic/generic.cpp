@@ -139,6 +139,18 @@ ReadRegParameters(struct ionic *Adapter)
         }
     }
 
+
+    Adapter->tx_frag_pool_count = IONIC_TX_FRAG_DEFAULT;
+
+    NdisInitUnicodeString(&uniKeyWord, ionic_registry[IONIC_REG_TXFRAG].name);
+    NdisReadConfiguration(&ntStatus, &pParameters, hConfig, &uniKeyWord, NdisParameterInteger);
+
+    if (ntStatus == NDIS_STATUS_SUCCESS) {
+        Adapter->tx_frag_pool_count = pParameters->ParameterData.IntegerData;
+        Adapter->registry_config[IONIC_REG_TXFRAG].current_value = pParameters->ParameterData.IntegerData;
+    }
+
+
 	NdisInitUnicodeString( &uniKeyWord,
 						   ionic_registry[ IONIC_REG_RXPOOL].name);
     
@@ -191,7 +203,14 @@ ReadRegParameters(struct ionic *Adapter)
             Adapter->ntx_buffers > IONIC_MAX_TX_DESC) {
             Adapter->ntx_buffers = IONIC_DEF_TXRX_DESC;
         }
-		Adapter->registry_config[ IONIC_REG_TXBUFFERS].current_value = pParameters->ParameterData.IntegerData;
+
+		// Be sure a power of 2
+		if( !is_power_of_2(Adapter->ntx_buffers)) {
+			Adapter->ntx_buffers = prev_power_of_2( Adapter->ntx_buffers);
+		}
+
+		// Save the value we will use in this case, there is no other stat to show the used value
+		Adapter->registry_config[ IONIC_REG_TXBUFFERS].current_value = Adapter->ntx_buffers;
 
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s Number TX Buffers %d\n", __FUNCTION__,
@@ -212,7 +231,13 @@ ReadRegParameters(struct ionic *Adapter)
             Adapter->nrx_buffers > IONIC_MAX_RX_DESC) {
             Adapter->nrx_buffers = IONIC_DEF_TXRX_DESC;
         }
-		Adapter->registry_config[ IONIC_REG_RXBUFFERS].current_value = pParameters->ParameterData.IntegerData;
+
+		// Be sure a power of 2
+		if( !is_power_of_2(Adapter->nrx_buffers)) {
+			Adapter->nrx_buffers = prev_power_of_2( Adapter->nrx_buffers);
+		}
+
+		Adapter->registry_config[ IONIC_REG_RXBUFFERS].current_value = Adapter->nrx_buffers;
 
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s Number RX Buffers %d\n", __FUNCTION__,
@@ -743,31 +768,27 @@ ReadRssConfig(struct ionic *Adapter, NDIS_HANDLE Config)
     NdisReadConfiguration(&ntStatus, &pParameters, Config,
                           &uniKeyword, NdisParameterInteger);
 
-	// If the registry setting is 0, then this is a fresh installation so update the current value 
-	// to be the nearby core count/2
-	if (pParameters->ParameterData.IntegerData == 0) {
-		Adapter->registry_config[ IONIC_REG_RSSQUEUES].current_value = get_rss_queue_cnt( Adapter);
-		UpdateRegistryKeyword( Adapter,
-							   IONIC_REG_RSSQUEUES);
-		NdisReadConfiguration(&ntStatus, &pParameters, Config,
-                          &uniKeyword, NdisParameterInteger);
-	}
-
-    if (ntStatus == NDIS_STATUS_SUCCESS) {
+	if (ntStatus == NDIS_STATUS_SUCCESS) {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s NumRSSQueues keyword status %08lX Value %08lX\n",
                   __FUNCTION__, ntStatus,
                   pParameters->ParameterData.IntegerData));
-		Adapter->registry_config[ IONIC_REG_RSSQUEUES].current_value = pParameters->ParameterData.IntegerData;
+
+		if (pParameters->ParameterData.IntegerData == 0) { // Auto select
+			Adapter->registry_config[ IONIC_REG_RSSQUEUES].current_value = get_rss_queue_cnt( Adapter);
+		}
+		else {	
+			Adapter->registry_config[ IONIC_REG_RSSQUEUES].current_value = pParameters->ParameterData.IntegerData;
+			if( Adapter->registry_config[ IONIC_REG_RSSQUEUES].current_value > IONIC_MAX_NUM_RSS_QUEUES) {
+				Adapter->registry_config[ IONIC_REG_RSSQUEUES].current_value = IONIC_DEFAULT_NUM_RSS_QUEUES;
+			}
+		}
+
+		Adapter->num_rss_queues = Adapter->registry_config[ IONIC_REG_RSSQUEUES].current_value;
     } else {
         DbgTrace((TRACE_COMPONENT_INIT, TRACE_LEVEL_VERBOSE,
                   "%s NumRSSQueues keyword status %08lX\n", __FUNCTION__,
                   ntStatus));
-    }
-
-    if (ntStatus == NDIS_STATUS_SUCCESS &&
-        pParameters->ParameterData.IntegerData != 0) {
-        Adapter->num_rss_queues = pParameters->ParameterData.IntegerData;
     }
 
     return;
@@ -783,6 +804,8 @@ UpdateRegistryKeyword(struct ionic *ionic,
     NDIS_CONFIGURATION_PARAMETER stConfigParam;
     NDIS_HANDLE hConfig = NULL;
 	NDIS_STRING keyword_name;
+	NDIS_STRING keyword_value;
+	WCHAR		value[16];
 
     //
     // Open a handle to the configuration space in the registry for the miniport
@@ -811,8 +834,22 @@ UpdateRegistryKeyword(struct ionic *ionic,
 	NdisInitUnicodeString( &keyword_name,
 						   ionic_registry[ keyword_index].name);
     
-	stConfigParam.ParameterType = NdisParameterInteger;
-    stConfigParam.ParameterData.IntegerData = ionic->registry_config[ keyword_index].current_value;
+	stConfigParam.ParameterType = ionic->registry_config[ keyword_index].param_type;
+
+	switch( stConfigParam.ParameterType) {
+		case NdisParameterInteger: {
+			stConfigParam.ParameterData.IntegerData = ionic->registry_config[ keyword_index].current_value;
+			break;
+		}
+
+		case NdisParameterString: {
+			swprintf_s( value, 16, L"%d", ionic->registry_config[ keyword_index].current_value);
+			NdisInitUnicodeString( &keyword_value,
+								   value);
+			stConfigParam.ParameterData.StringData = keyword_value;
+			break;
+		}
+	}
 
     NdisWriteConfiguration(&status, hConfig, &keyword_name, &stConfigParam);
 
@@ -941,6 +978,24 @@ ionic_dev_asic_name(u8 asic_type)
     default:
         return "Unknown";
     }
+}
+
+ULONG
+prev_power_of_2( ULONG value)
+{
+    ULONG rnd_nmb = value; 
+
+    rnd_nmb--;
+    rnd_nmb |= rnd_nmb >> 1;
+    rnd_nmb |= rnd_nmb >> 2;
+    rnd_nmb |= rnd_nmb >> 4;
+    rnd_nmb |= rnd_nmb >> 8;
+    rnd_nmb |= rnd_nmb >> 16;
+    rnd_nmb++; // next power of 2
+
+    rnd_nmb = rnd_nmb >> 1; // previous power of 2
+
+    return rnd_nmb;
 }
 
 bool
@@ -1888,6 +1943,15 @@ ReadConfigParams()
                   "%s Failed to open config space Status %08lX\n", __FUNCTION__,
                   ndisStatus));
         goto cleanup;
+    }
+
+    NdisInitUnicodeString(&uniValue, REG_STATE_FLAGS);
+
+    NdisReadConfiguration(&ndisStatus, &pConfigParam, hConfig, &uniValue,
+                          NdisParameterInteger);
+
+    if (ndisStatus == NDIS_STATUS_SUCCESS) {
+        StateFlags = pConfigParam->ParameterData.IntegerData;
     }
 
     NdisInitUnicodeString(&uniValue, REG_TRACE_FLAGS);

@@ -279,6 +279,7 @@ ionic_init(struct ionic *ionic)
 {
     struct ionic_dev *idev = &ionic->idev;
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
+
     NDIS_SHARED_MEMORY_PARAMETERS stParams;
     ULONG ulSGListNumElements = 0;
     PSCATTER_GATHER_LIST pSGListBuffer = NULL;
@@ -295,139 +296,158 @@ ionic_init(struct ionic *ionic)
 
     // Alloc our tx fragmention pool
 
-    buffer_len =
-        (3 * PAGE_SIZE) *
-        IONIC_TX_FRAG_POOL_COUNT; // So we can handle IONIC_TX_FRAG_POOL_COUNT
-                                  // mtu sized tx buffers
-
-    NdisZeroMemory(&stParams, sizeof(NDIS_SHARED_MEMORY_PARAMETERS));
-
-    stParams.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
-    stParams.Header.Revision = NDIS_SHARED_MEMORY_PARAMETERS_REVISION_2;
-    stParams.Header.Size = NDIS_SIZEOF_SHARED_MEMORY_PARAMETERS_REVISION_2;
-
-    stParams.Flags = 0; // NDIS_SHARED_MEM_PARAMETERS_CONTIGOUS;
-
-    stParams.Usage = NdisSharedMemoryUsageXmit;
-
-    stParams.PreferredNode = ionic->numa_node; //MM_ANY_NODE_OK;
-
-    stParams.Length = buffer_len;
-
-    ulSGListNumElements = BYTES_TO_PAGES(stParams.Length);
-
-    ulSGListSize = sizeof(SCATTER_GATHER_LIST) +
-                   (sizeof(SCATTER_GATHER_ELEMENT) * ulSGListNumElements);
-    pSGListBuffer = (PSCATTER_GATHER_LIST)NdisAllocateMemoryWithTagPriority_internal(
-        ionic->adapterhandle, ulSGListSize, IONIC_SG_LIST_TAG,
-        NormalPoolPriority);
-
-    if (pSGListBuffer == NULL) {
-        status = NDIS_STATUS_RESOURCES;
-        goto exit;
-    }
-
-    NdisZeroMemory(pSGListBuffer, ulSGListSize);
-
-    DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
-                  "%s Allocated 0x%p len %08lX\n",
-                  __FUNCTION__,
-                  pSGListBuffer, ulSGListSize));
-
-    pSGListBuffer->NumberOfElements = ulSGListNumElements;
-    stParams.SGListBufferLength = ulSGListSize;
-    stParams.SGListBuffer = pSGListBuffer;
-
-    status = NdisAllocateSharedMemory(ionic->adapterhandle, &stParams,
-                                      &ionic->tx_frag_pool_handle);
-
-    if (status != NDIS_STATUS_SUCCESS) {
-        ASSERT(FALSE);
-        status = NDIS_STATUS_RESOURCES;
-        goto exit;
-    }
-
-    frag_buffer_len =
-        (sizeof(struct tx_frag_pool_elem) + sizeof(SCATTER_GATHER_LIST) +
-         (sizeof(SCATTER_GATHER_ELEMENT) * 3)) *
-        IONIC_TX_FRAG_POOL_COUNT;
-
-    ionic->tx_frag_pool =
-        (struct tx_frag_pool_elem *)NdisAllocateMemoryWithTagPriority_internal(
-            ionic->adapterhandle, frag_buffer_len, IONIC_FRAG_POOL_TAG,
-            NormalPoolPriority);
-
-    if (ionic->tx_frag_pool == NULL) {
-        status = NDIS_STATUS_RESOURCES;
-        goto exit;
-    }
-
-    NdisZeroMemory(ionic->tx_frag_pool, frag_buffer_len);
-
-    DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
-                  "%s Allocated 0x%p len %08lX\n",
-                  __FUNCTION__,
-                  ionic->tx_frag_pool, frag_buffer_len));
-
-	ASSERT( pSGListBuffer->NumberOfElements == 1);
-
-    curr_phys_addr = pSGListBuffer->Elements[curr_sg_ind].Address.QuadPart;
-    curr_phys_len = pSGListBuffer->Elements[curr_sg_ind].Length;
-    curr_va = (char *)stParams.VirtualAddress;
-    curr_elem = ionic->tx_frag_pool;
-
-    // Init the pool
-    while (elem_cnt < IONIC_TX_FRAG_POOL_COUNT) {
-
-        curr_elem->buffer = (void *)curr_va;
-        curr_elem->length = 3 * PAGE_SIZE;
-        curr_elem->tx_frag_list = (PSCATTER_GATHER_LIST)(
-            (char *)curr_elem + sizeof(struct tx_frag_pool_elem));
-
-        curr_elem->tx_frag_list->NumberOfElements = 3;
-
-        for (u32 i = 0; i < 3; i++) {
-            curr_elem->tx_frag_list->Elements[i].Address.QuadPart =
-                curr_phys_addr;
-            curr_elem->tx_frag_list->Elements[i].Length = PAGE_SIZE;
-
-            curr_phys_len -= PAGE_SIZE;
-
-            if (curr_phys_len == 0) {
-                curr_sg_ind++;
-                curr_phys_addr =
-                    pSGListBuffer->Elements[curr_sg_ind].Address.QuadPart;
-                curr_phys_len = pSGListBuffer->Elements[curr_sg_ind].Length;
-            } else {
-                curr_phys_addr += PAGE_SIZE;
-            }
-        }
-
-        curr_va += (3 * PAGE_SIZE);
-        elem_cnt++;
-        if (elem_cnt == IONIC_TX_FRAG_POOL_COUNT) {
-            break;
-        }
-
-        next_elem =
-            (struct tx_frag_pool_elem *)((char *)curr_elem +
-                                         (sizeof(struct tx_frag_pool_elem) +
-                                          sizeof(SCATTER_GATHER_LIST) +
-                                          (sizeof(SCATTER_GATHER_ELEMENT) *
-                                           3)));
-
-        curr_elem->next = next_elem;
-        curr_elem = next_elem;
-    }
-
-    ionic->tx_frag_pool_head = ionic->tx_frag_pool;
-    ionic->tx_frag_pool_tail = curr_elem;
-
-    ionic->tx_frag_pool_sg_list = pSGListBuffer;
-
     NdisAllocateSpinLock(&ionic->tx_frag_pool_lock);
 
-    ionic->tx_frag_pool_count = IONIC_TX_FRAG_POOL_COUNT;
+    if (ionic->tx_frag_pool_count != 0) {
+
+        buffer_len =
+            (IONIC_TX_FRAG_PAGES * PAGE_SIZE) *
+            ionic->tx_frag_pool_count; // So we can handle ionic->tx_frag_pool_count
+                                      // mtu sized tx buffers
+
+        NdisZeroMemory(&stParams, sizeof(NDIS_SHARED_MEMORY_PARAMETERS));
+
+        stParams.Header.Type = NDIS_OBJECT_TYPE_DEFAULT;
+        stParams.Header.Revision = NDIS_SHARED_MEMORY_PARAMETERS_REVISION_2;
+        stParams.Header.Size = NDIS_SIZEOF_SHARED_MEMORY_PARAMETERS_REVISION_2;
+
+        stParams.Flags = 0; // NDIS_SHARED_MEM_PARAMETERS_CONTIGOUS;
+
+        stParams.Usage = NdisSharedMemoryUsageXmit;
+
+        stParams.PreferredNode = ionic->numa_node; //MM_ANY_NODE_OK;
+
+        stParams.Length = buffer_len;
+
+        ulSGListNumElements = BYTES_TO_PAGES(stParams.Length);
+
+        ulSGListSize = sizeof(SCATTER_GATHER_LIST) +
+                       (sizeof(SCATTER_GATHER_ELEMENT) * ulSGListNumElements);
+        pSGListBuffer = (PSCATTER_GATHER_LIST)NdisAllocateMemoryWithTagPriority_internal(
+            ionic->adapterhandle, ulSGListSize, IONIC_SG_LIST_TAG,
+            NormalPoolPriority);
+
+        if (pSGListBuffer == NULL) {
+            status = NDIS_STATUS_RESOURCES;
+            goto exit;
+        }
+
+        NdisZeroMemory(pSGListBuffer, ulSGListSize);
+
+        DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
+                      "%s Allocated 0x%p len %08lX (pSGListBuffer)\n",
+                      __FUNCTION__,
+                      pSGListBuffer, ulSGListSize));
+
+        pSGListBuffer->NumberOfElements = ulSGListNumElements;
+        stParams.SGListBufferLength = ulSGListSize;
+        stParams.SGListBuffer = pSGListBuffer;
+
+        status = NdisAllocateSharedMemory(ionic->adapterhandle, &stParams,
+                                          &ionic->tx_frag_pool_handle);
+
+        if (status != NDIS_STATUS_SUCCESS) {
+            //ASSERT(FALSE);
+            //status = NDIS_STATUS_RESOURCES;
+
+            DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
+                      "%s Allocate tx_frag_pool_handle on preferred node %u failed %#lx\n",
+                      __FUNCTION__, stParams.PreferredNode, status));
+
+            stParams.PreferredNode = MM_ANY_NODE_OK;
+            status = NdisAllocateSharedMemory(ionic->adapterhandle, &stParams,
+                                              &ionic->tx_frag_pool_handle);
+            if (status != NDIS_STATUS_SUCCESS) {
+                DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
+                          "%s Allocate tx_frag_pool_handle on any node failed %#lx\n",
+                          __FUNCTION__, status));
+                goto exit;
+            }
+
+            DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
+                      "%s Allocate tx_frag_pool_handle on any node succeeded\n",
+                      __FUNCTION__));
+        }
+
+        DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
+                      "%s Allocated tx_frag_pool_handle\n", __FUNCTION__));
+
+        frag_buffer_len =
+            (sizeof(struct tx_frag_pool_elem) + sizeof(SCATTER_GATHER_LIST) +
+             (sizeof(SCATTER_GATHER_ELEMENT) * IONIC_TX_FRAG_PAGES)) *
+            ionic->tx_frag_pool_count;
+
+        ionic->tx_frag_pool =
+            (struct tx_frag_pool_elem *)NdisAllocateMemoryWithTagPriority_internal(
+                ionic->adapterhandle, frag_buffer_len, IONIC_FRAG_POOL_TAG,
+                NormalPoolPriority);
+
+        if (ionic->tx_frag_pool == NULL) {
+            status = NDIS_STATUS_RESOURCES;
+            goto exit;
+        }
+
+        NdisZeroMemory(ionic->tx_frag_pool, frag_buffer_len);
+
+        DbgTrace((TRACE_COMPONENT_MEMORY, TRACE_LEVEL_VERBOSE,
+                      "%s Allocated 0x%p len %08lX (tx_frag_pool)\n",
+                      __FUNCTION__,
+                      ionic->tx_frag_pool, frag_buffer_len));
+
+            ASSERT( pSGListBuffer->NumberOfElements == 1);
+
+        curr_phys_addr = pSGListBuffer->Elements[curr_sg_ind].Address.QuadPart;
+        curr_phys_len = pSGListBuffer->Elements[curr_sg_ind].Length;
+        curr_va = (char *)stParams.VirtualAddress;
+        curr_elem = ionic->tx_frag_pool;
+
+        // Init the pool
+        while (elem_cnt < ionic->tx_frag_pool_count) {
+
+            curr_elem->buffer = (void *)curr_va;
+            curr_elem->length = IONIC_TX_FRAG_PAGES * PAGE_SIZE;
+            curr_elem->tx_frag_list = (PSCATTER_GATHER_LIST)(
+                (char *)curr_elem + sizeof(struct tx_frag_pool_elem));
+
+            curr_elem->tx_frag_list->NumberOfElements = IONIC_TX_FRAG_PAGES;
+
+            for (u32 i = 0; i < IONIC_TX_FRAG_PAGES; i++) {
+                curr_elem->tx_frag_list->Elements[i].Address.QuadPart =
+                    curr_phys_addr;
+                curr_elem->tx_frag_list->Elements[i].Length = PAGE_SIZE;
+
+                curr_phys_len -= PAGE_SIZE;
+
+                if (curr_phys_len == 0) {
+                    curr_sg_ind++;
+                    curr_phys_addr =
+                        pSGListBuffer->Elements[curr_sg_ind].Address.QuadPart;
+                    curr_phys_len = pSGListBuffer->Elements[curr_sg_ind].Length;
+                } else {
+                    curr_phys_addr += PAGE_SIZE;
+                }
+            }
+
+            curr_va += (IONIC_TX_FRAG_PAGES * PAGE_SIZE);
+            elem_cnt++;
+            if (elem_cnt == ionic->tx_frag_pool_count) {
+                break;
+            }
+
+            next_elem =
+                (struct tx_frag_pool_elem *)((char *)curr_elem +
+                                             (sizeof(struct tx_frag_pool_elem) +
+                                              sizeof(SCATTER_GATHER_LIST) +
+                                              (sizeof(SCATTER_GATHER_ELEMENT) *
+                                               IONIC_TX_FRAG_PAGES)));
+
+            curr_elem->next = next_elem;
+            curr_elem = next_elem;
+        }
+
+        ionic->tx_frag_pool_head = ionic->tx_frag_pool;
+        ionic->tx_frag_pool_sg_list = pSGListBuffer;
+    }
 
     // Init the idev
 
@@ -538,10 +558,10 @@ get_tx_frag(struct ionic *ionic)
 
     NdisAcquireSpinLock(&ionic->tx_frag_pool_lock);
 
-    if (ionic->tx_frag_pool_count > 0) {
-        elem = ionic->tx_frag_pool_head;
-        ionic->tx_frag_pool_head = ionic->tx_frag_pool_head->next;
-        ionic->tx_frag_pool_count--;
+    elem = ionic->tx_frag_pool_head;
+    if (elem != NULL) {
+        ionic->tx_frag_pool_head = elem->next;
+        elem->next = NULL;
     }
 
     NdisReleaseSpinLock(&ionic->tx_frag_pool_lock);
@@ -553,17 +573,15 @@ void
 return_tx_frag(struct ionic *ionic, struct tx_frag_pool_elem *elem)
 {
 
-    elem->tx_frag_list->NumberOfElements = 3;
-    elem->tx_frag_list->Elements[0].Length = PAGE_SIZE;
-    elem->tx_frag_list->Elements[1].Length = PAGE_SIZE;
-    elem->tx_frag_list->Elements[2].Length = PAGE_SIZE;
+    elem->tx_frag_list->NumberOfElements = IONIC_TX_FRAG_PAGES;
+    for (int i = 0; i < IONIC_TX_FRAG_PAGES; ++i) {
+        elem->tx_frag_list->Elements[i].Length = PAGE_SIZE;
+    }
 
     NdisAcquireSpinLock(&ionic->tx_frag_pool_lock);
 
-    ionic->tx_frag_pool_tail->next = elem;
-    elem->next = NULL;
-    ionic->tx_frag_pool_tail = elem;
-    ionic->tx_frag_pool_count++;
+    elem->next = ionic->tx_frag_pool_head;
+    ionic->tx_frag_pool_head = elem;
 
     NdisReleaseSpinLock(&ionic->tx_frag_pool_lock);
 

@@ -179,8 +179,8 @@ HKR, "Interrupt Management\MessageSignaledInterruptProperties", MessageNumberLim
 HKR, Ndi\params\*TransmitBuffers,               ParamDesc,              0, %TransmitBuffers%
 HKR, Ndi\params\*TransmitBuffers,               default,                0, "4096"
 HKR, Ndi\params\*TransmitBuffers,               min,                    0, "16"
-HKR, Ndi\params\*TransmitBuffers,               max,                    0, "8192"
-HKR, Ndi\params\*TransmitBuffers,               step,                   0, "4"
+HKR, Ndi\params\*TransmitBuffers,               max,                    0, "65536"
+HKR, Ndi\params\*TransmitBuffers,               step,                   0, "2"
 HKR, Ndi\params\*TransmitBuffers,               Base,                   0, "10"
 HKR, Ndi\params\*TransmitBuffers,               type,                   0, "dword"
 
@@ -189,7 +189,7 @@ HKR, Ndi\params\*ReceiveBuffers,                ParamDesc,              0, %Rece
 HKR, Ndi\params\*ReceiveBuffers,                default,                0, "4096"
 HKR, Ndi\params\*ReceiveBuffers,                min,                    0, "16"
 HKR, Ndi\params\*ReceiveBuffers,                max,                    0, "16384"
-HKR, Ndi\params\*ReceiveBuffers,                step,                   0, "4"
+HKR, Ndi\params\*ReceiveBuffers,                step,                   0, "2"
 HKR, Ndi\params\*ReceiveBuffers,                Base,                   0, "10"
 HKR, Ndi\params\*ReceiveBuffers,                type,                   0, "dword"
 
@@ -303,6 +303,15 @@ HKR, Ndi\params\RxPoolSize,                     step,                   0, "1"
 HKR, Ndi\params\RxPoolSize,                     Base,                   0, "1"
 HKR, Ndi\params\RxPoolSize,                     type,                   0, "DWORD"
 
+; TxDefrag Pool Size
+HKR, Ndi\params\TxDefragPoolSize,               ParamDesc,              0, %TxDefragPoolSize%
+HKR, Ndi\params\TxDefragPoolSize,               default,                0, "128"
+HKR, Ndi\params\TxDefragPoolSize,               min,                    0, "0"
+HKR, Ndi\params\TxDefragPoolSize,               max,                    0, "1024"
+HKR, Ndi\params\TxDefragPoolSize,               step,                   0, "1"
+HKR, Ndi\params\TxDefragPoolSize,               Base,                   0, "10"
+HKR, Ndi\params\TxDefragPoolSize,               type,                   0, "DWORD"
+
 ; *InterruptModeration
 HKR, NDI\Params\*InterruptModeration,			ParamDesc,				0, %InterruptModeration%
 HKR, NDI\Params\*InterruptModeration,			Type,					0, "enum"
@@ -363,11 +372,17 @@ HKR,Ndi\Params\EnablePME\Enum,                  "0",                    0, %Disa
 HKR, Ndi\Params\*NumRssQueues,                   ParamDesc,              0, %NumRssQueues%
 HKR, Ndi\Params\*NumRssQueues,                   default,                0, "0"
 HKR, Ndi\Params\*NumRssQueues,                   type,                   0, "enum"
+HKR, Ndi\Params\*NumRssQueues\Enum,              "0",                    0, %AutoSelect%
 HKR, Ndi\Params\*NumRssQueues\Enum,              "1",                    0, %1queue%
 HKR, Ndi\Params\*NumRssQueues\Enum,              "2",                    0, %2queues%
 HKR, Ndi\Params\*NumRssQueues\Enum,              "4",                    0, %4queues%
+HKR, Ndi\Params\*NumRssQueues\Enum,              "6",                    0, %6queues%
 HKR, Ndi\Params\*NumRssQueues\Enum,              "8",                    0, %8queues%
+HKR, Ndi\Params\*NumRssQueues\Enum,              "10",                   0, %10queues%
+HKR, Ndi\Params\*NumRssQueues\Enum,              "12",                   0, %12queues%
 HKR, Ndi\Params\*NumRssQueues\Enum,              "16",                   0, %16queues%
+HKR, Ndi\Params\*NumRssQueues\Enum,              "18",                   0, %18queues%
+HKR, Ndi\Params\*NumRssQueues\Enum,              "24",                   0, %24queues%
 HKR, Ndi\Params\*NumRssQueues\Enum,              "32",                   0, %32queues%
 
 ; *RSS
@@ -381,7 +396,7 @@ HKR, Ndi\Params\*RSS\Enum,                       "1",                    0, %Ena
 ProviderString               = "Pensando Systems"
 ManufacturerName             = "Pensando Systems"
 DeviceDesc-2p.40/100         = "Pensando DSC 2p 40/100G Services Adapter"
-DeviceDesc-2p.10/25          = "Pensando DSC 2p 10/25G Services" Adapter"
+DeviceDesc-2p.10/25          = "Pensando DSC 2p 10/25G Services Adapter"
 DeviceDesc-2p.10/25-1        = "Pensando DSP DSC-25 10/25G 2p SFP28 Card"
 DeviceDesc-2p.40/100-m       = "Pensando DSC 2p Management Interface"
 DeviceDesc-2p.10/25-m        = "Pensando DSC 2p Management Interface"
@@ -401,11 +416,18 @@ RSS                          = "Receive Side Scaling"
 VlanId                       = "VLAN ID"
 
 NumRssQueues                 = "Maximum Number of RSS Queues"
+AutoSelect					 = "Auto Select"
 1queue                       = "1 Queue"
 2queues                      = "2 Queues"
 4queues                      = "4 Queues"
+6queues                      = "6 Queues"
 8queues                      = "8 Queues"
+10queues                     = "10 Queues"
+12queues                     = "12 Queues"
 16queues                     = "16 Queues"
+18queues                     = "18 Queues"
+20queues                     = "20 Queues"
+24queues                     = "24 Queues"
 32queues                     = "32 Queues"
 
 TransmitBuffers              = "Transmit Buffers"
@@ -439,6 +461,8 @@ InterruptModeration			 = "Interrupt Moderation"
 RxIntModTimeout				 = "Rx Interrupt Moderation Timeout"
 
 RxPoolSize                   = "Rx Pool Size"
+
+TxDefragPoolSize             = "Tx Defragmentation Pool Size"
 
 TxFlushMode                  = "Tx Flush Mode"
 TxModeDPC                    = "Tx Flush in DPC"

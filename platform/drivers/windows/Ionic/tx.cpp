@@ -950,6 +950,8 @@ ionic_queue_txq_pkt(struct ionic *ionic,
                       __FUNCTION__, IONIC_TX_MAX_SG_ELEMS + 1, packet_len,
                       sg_element_count));
 
+            tx_stats->defrag_count++;
+
             status = copy_buffer(ionic, packet, &txq_pkt->tx_frag_elem);
 
             if (status != NDIS_STATUS_SUCCESS) {
