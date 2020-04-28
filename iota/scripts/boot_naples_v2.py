@@ -31,9 +31,13 @@ parser.add_argument('--testbed', dest='testbed', required = True,
 parser.add_argument('--instance-name', dest='instance_name', required = True,
                     default=None, help='instance id.')
 parser.add_argument('--naples', dest='naples_type', required = True,
-                    default="", help='Naples type : capri/equinix')
+                    default="", help='Naples type : capri')
 
 # Optional parameters
+parser.add_argument("--pipeline", dest="pipeline", default="iris",
+                    help="Pipeline")
+parser.add_argument("--image-build", dest="image_build", default=None,
+                    help="Optional tag for image")
 parser.add_argument('--wsdir', dest='wsdir', default='/sw',
                     help='Workspace folder')
 parser.add_argument('--mac-hint', dest='mac_hint',
@@ -1259,7 +1263,13 @@ class PenOrchestrator:
     def __load_image_manifest(self):
         self.__img_manifest = jparser.JsonParse(GlobalOptions.image_manifest)
         self.__driver_images = list(filter(lambda x: x.OS == self.__node_os, self.__img_manifest.Drivers))[0]
-        self.__fw_images = list(filter(lambda x: x.naples_type == GlobalOptions.naples_type, self.__img_manifest.Firmwares))[0]
+        naples_fw_img_spec = list(filter(lambda x: x.naples_type == GlobalOptions.naples_type, self.__img_manifest.Firmwares))[0]
+        # Build tag based on pipeline and optional image_build
+        tag = GlobalOptions.pipeline
+        if GlobalOptions.image_build:
+            tag += "-" + GlobalOptions.image_build
+        self.__fw_images = list(filter(lambda x: x.tag == tag, naples_fw_img_spec.Images))[0]
+
         if self.__driver_images is None or self.__fw_images is None:
             sys.stderr.write("Unable to load image manifest")
             sys.exit(1)

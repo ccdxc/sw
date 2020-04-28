@@ -10,8 +10,10 @@ packages:
     - iota.test.apulu
     - iota.test.common
 
-images:
-    naples: nic/naples_fw_venice.tar
+image_manifest:
+    spec        : images/latest.json
+    naples      : capri
+    build       : equinix
 
 setup:
     topology: test/apulu/topologies/classic_baremetal/container_centos.topology

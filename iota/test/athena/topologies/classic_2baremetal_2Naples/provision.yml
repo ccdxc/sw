@@ -1,0 +1,19 @@
+meta:
+    name: SingleNIC
+    description: Single NIC Baremetal Provision Scheme
+
+nodes:
+    - node: node1
+      name: node1
+      nics:
+        fwimage:
+          pipeine : athena
+          image   : latest
+
+    - node: node2
+      name: node2
+      nics:
+        fwimage:
+          pipeine : iris
+          image   : 1.3.2-E-3
+

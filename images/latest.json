@@ -32,20 +32,39 @@
     }
   ],
   "Firmwares": [
-      {
+    {
         "naples_type" : "capri",
-        "image": "nic/naples_fw.tar",
-        "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
-        "gold_fw_latest_ver": "1.3.1-E-19",
-        "gold_fw_old_ver": "1.3.1-E-17"
-      },
-      {
-        "naples_type" : "equinix",
-        "image": "nic/naples_fw_venice.tar",
-        "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
-        "gold_fw_latest_ver": "1.3.1-E-19",
-        "gold_fw_old_ver": "1.3.1-E-17"
-      }
+        "Images" : [
+          {
+            "tag" : "iris",
+            "image": "nic/naples_fw.tar",
+            "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
+            "gold_fw_latest_ver": "1.3.1-E-19",
+            "gold_fw_old_ver": "1.3.1-E-17"
+          },
+          {
+            "tag" : "athena",
+            "image": "nic/naples_fw.tar",
+            "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
+            "gold_fw_latest_ver": "1.3.1-E-19",
+            "gold_fw_old_ver": "1.3.1-E-17"
+          },
+          {
+            "tag" : "apulu",
+            "image": "nic/naples_fw.tar",
+            "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
+            "gold_fw_latest_ver": "1.3.1-E-19",
+            "gold_fw_old_ver": "1.3.1-E-17"
+          },
+          {
+            "tag" : "apulu-equinix",
+            "image": "nic/naples_fw_venice.tar",
+            "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
+            "gold_fw_latest_ver": "1.3.1-E-19",
+            "gold_fw_old_ver": "1.3.1-E-17"
+          }
+        ]
+    }
   ],
   "PenCtl" : [
     {

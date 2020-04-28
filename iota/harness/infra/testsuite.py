@@ -242,10 +242,18 @@ class TestSuite:
         naples_type = 'capri'
         if hasattr(self.__spec, 'image_manifest') and hasattr(self.__spec.image_manifest, 'naples'): 
             naples_type = self.__spec.image_manifest.naples 
+        setattr(images, 'naples_type', naples_type)
 
-        fw_images = list(filter(lambda x: x.naples_type == naples_type, image_info.Firmwares))
-        if fw_images:
-            setattr(images, 'naples', fw_images[0].image)
+        image_tag = GlobalOptions.pipeline
+        if hasattr(self.__spec, 'image_manifest') and hasattr(self.__spec.image_manifest, 'build'): 
+            setattr(images, 'build', self.__spec.image_manifest.build)
+            image_tag += "-" + images.build
+
+        all_fw_images = list(filter(lambda x: x.naples_type == naples_type, image_info.Firmwares))
+        if all_fw_images and len(all_fw_images) == 1:
+            fw_images = list(filter(lambda x: x.tag == image_tag, all_fw_images[0].Images))
+            if fw_images and len(fw_images) == 1:
+                setattr(images, 'naples', fw_images[0].image)
 
         # Derive venice-image
         venice = False

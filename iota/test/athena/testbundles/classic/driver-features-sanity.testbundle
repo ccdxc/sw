@@ -1,0 +1,10 @@
+meta:
+    name    : ionicdrv
+    os      : [ linux, freebsd, windows ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 120
+
+testcases:
+    -   name    : IntfNames
+        testcase: testcases.drivers.intf_names
+        enable  : True

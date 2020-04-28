@@ -369,6 +369,7 @@ class _Testbed:
         naples_host_only = kwargs.get('naples_host_only', False)
         firmware_reimage_only = kwargs.get('firmware_reimage_only', False)
         driver_reimage_only = kwargs.get('driver_reimage_only', False)
+        images = self.curr_ts.GetImages()
 
         #if [n for n in self.__tbspec.Instances if n.NodeOs in ["linux","freebsd"]]:
         #    self.__verifyImagePath()
@@ -411,7 +412,11 @@ class _Testbed:
 
                 cmd.extend(["--testbed", GlobalOptions.testbed_json])
                 cmd.extend(["--instance-name", instance.Name])
-                cmd.extend(["--naples", GlobalOptions.naples_type])
+                cmd.extend(["--naples", images.naples_type])
+                if hasattr(images, "build"):
+                    cmd.extend(["--image-build", images.build])
+                cmd.extend(["--pipeline", GlobalOptions.pipeline])
+                # cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
                 nics = getattr(instance, "Nics", None)
                 if nics != None and len(nics) != 0:
                     for nic in nics:

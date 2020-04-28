@@ -9,8 +9,9 @@ meta:
 packages:
     - iota.test.apulu
 
-images:
-    naples: nic/naples_fw.tar
+image_manifest:
+    spec        : images/latest.json
+    naples      : capri
 
 setup:
     topology: test/apulu/topologies/classic_baremetal/classic_baremetal.topology

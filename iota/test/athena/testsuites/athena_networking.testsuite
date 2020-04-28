@@ -1,0 +1,55 @@
+meta:
+    name        : networking
+    description : Athena Base Testsuite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    os          : [ linux, freebsd, esx ]
+
+packages:
+    - iota.test.athena
+    - iota.test.common
+
+image_manifest:
+    spec        : images/latest.json
+    naples      : capri
+    provision   : test/athena/topologies/classic_2baremetal_2Naples/provision.yml
+
+setup:
+    topology: test/athena/topologies/classic_2baremetal_2Naples/classic_baremetal.topology
+    config  :
+        #- step : utils.naples_workloads
+        #- step : verif.config.verify_oob
+        #- step : config.set_max_mtu
+        #- step : config.bringup_workloads
+        #- step : utils.naples_upgrade.install
+        #  args :
+        #     naples_upgr_pkgs : ["naples_fw_venice.tar"]
+        #- step : config.add_routes
+        #- step : config.learn_endpoints
+
+common:
+    verifs:
+        #-   step    : verif.utils.verify_links
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+    debugs:
+        #-   step    : verif.utils.collect_techsupport
+
+    setup:
+        #-   step    : verif.utils.link_flap
+        #-   step    : verif.utils.del_add_config
+
+testbundles:
+    precheckin:
+        - classic/driver-features-sanity.testbundle
+
+    sanity:
+        # Relative paths from iota/test/athena/testbundles/
+
+    regression:
+        # Relative paths from iota/test/athena/testbundles/
+
+teardown:
+    #-   step    : verif.utils.collect_techsupport
+    #-    step    : config.clean_netagent

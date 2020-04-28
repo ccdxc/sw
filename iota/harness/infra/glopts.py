@@ -82,8 +82,6 @@ parser.add_argument('--netagent', dest='netagent', action='store_true',
                     help='Use REST queries to netagent instead of GRPC',
                     default=False)
 
-parser.add_argument('--naples-type', dest='naples_type', default="capri",
-                    help='Naples type to run')
 parser.add_argument('--compat', dest='compat_test', action='store_true', 
                     help='Run driver/Fw compatibility test', default=False)
 parser.add_argument('--driver-version', dest='driver_version', default='latest', 

@@ -26,13 +26,18 @@
       "pkg_file_type" : "VIB"
     }
   ],
-  "Firmwares": [
+  "Firmwares": [ 
     {
-      "naples_type" : "capri",
-      "image": "images/1.1.1-E-15/naples_fw.tar",
-      "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
-      "gold_fw_latest_ver": "1.3.1-E-19",
-      "gold_fw_old_ver": "1.3.1-E-17"
+        "naples_type" : "capri",
+        "Images" : [
+            {
+                "tag" : "iris",
+                "image": "images/1.1.1-E-15/naples_fw.tar",
+                "gold_fw_img": "platform/goldfw/naples/naples_fw.tar",
+                "gold_fw_old_ver": "1.3.1-E-17",
+                "gold_fw_latest_ver": "1.3.1-E-19" 
+            }
+        ]
     }
   ],
   "PenCtl" : [
