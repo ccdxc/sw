@@ -27,6 +27,7 @@
   <ItemGroup>
     <ClInclude Include="Config.h" />
     <ClInclude Include="NetCfg.h" />
+    <ClInclude Include="version.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -95,13 +96,26 @@
     <LinkIncremental>false</LinkIncremental>
     <TargetName>IonicConfig</TargetName>
   </PropertyGroup>
+  <PropertyGroup>
+    <IonicConfigVersionExt>.</IonicConfigVersionExt>
+    <IonicConfigVersionExt Condition="'$(IONIC_VERSION_EXT)' != ''">$(IONIC_VERSION_EXT)</IonicConfigVersionExt>
+    <IonicConfigVerMaj>1</IonicConfigVerMaj>
+    <IonicConfigVerMaj Condition="'$(IONIC_VERSION_MAJOR)' != ''">$(IONIC_VERSION_MAJOR)</IonicConfigVerMaj>
+    <IonicConfigVerMin>0</IonicConfigVerMin>
+    <IonicConfigVerMin Condition="'$(IONIC_VERSION_MINOR)' != ''">$(IONIC_VERSION_MINOR)</IonicConfigVerMin>
+    <IonicConfigVerSP>0</IonicConfigVerSP>
+    <IonicConfigVerSP Condition="'$(IONIC_VERSION_SP)' != ''">$(IONIC_VERSION_SP)</IonicConfigVerSP>
+    <IonicConfigVerBuild>27</IonicConfigVerBuild>
+    <IonicConfigVerBuild Condition="'$(IONIC_VERSION_BUILD)' != ''">$(IONIC_VERSION_BUILD)</IonicConfigVerBuild>
+  </PropertyGroup>
+  
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;IONIC_VERSIONINFO_EXTENSION=$(IonicConfigVersionExt);IONIC_MAJOR_TOOL_VERSION=$(IonicConfigVerMaj);IONIC_MINOR_TOOL_VERSION=$(IonicConfigVerMin);IONIC_SP_TOOL_VERSION=$(IonicConfigVerSP);IONIC_BUILD_TOOL_VERSION=$(IonicConfigVerBuild);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -115,7 +129,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;IONIC_VERSIONINFO_EXTENSION=$(IonicConfigVersionExt);IONIC_MAJOR_TOOL_VERSION=$(IonicConfigVerMaj);IONIC_MINOR_TOOL_VERSION=$(IonicConfigVerMin);IONIC_SP_TOOL_VERSION=$(IonicConfigVerSP);IONIC_BUILD_TOOL_VERSION=$(IonicConfigVerBuild);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\CommonInc;$(ProgramW6432)\boost\boost_1_72_0</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -135,7 +149,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;IONIC_VERSIONINFO_EXTENSION=$(IonicConfigVersionExt);IONIC_MAJOR_TOOL_VERSION=$(IonicConfigVerMaj);IONIC_MINOR_TOOL_VERSION=$(IonicConfigVerMin);IONIC_SP_TOOL_VERSION=$(IonicConfigVerSP);IONIC_BUILD_TOOL_VERSION=$(IonicConfigVerBuild);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -153,7 +167,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;IONIC_VERSIONINFO_EXTENSION=$(IonicConfigVersionExt);IONIC_MAJOR_TOOL_VERSION=$(IonicConfigVerMaj);IONIC_MINOR_TOOL_VERSION=$(IonicConfigVerMin);IONIC_SP_TOOL_VERSION=$(IonicConfigVerSP);IONIC_BUILD_TOOL_VERSION=$(IonicConfigVerBuild);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\CommonInc;$(ProgramW6432)\boost\boost_1_72_0</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

@@ -1,6 +1,7 @@
 #include "Config.h"
 #include "NetCfg.h"
 
+
 int
 _cdecl
 wmain(int argc, wchar_t* argv[])
@@ -175,10 +176,6 @@ CmdUsage()
     return cmd;
 }
 
-//
-// -Version
-//
-
 static
 po::options_description
 CmdVersionOpts(bool hidden)
@@ -187,6 +184,8 @@ CmdVersionOpts(bool hidden)
 
     return opts;
 }
+
+#include "version.h"
 
 static
 int
@@ -197,7 +196,13 @@ CmdVersionRun(command_info& info)
         return info.status;
     }
 
-    std::cout << "IonicConfig.exe version " << "TODO (from build)" << std::endl;
+    std::string VerStr = IONICCONFIG_VERSION_STRING IONICCONFIG_VERSION_EXTENSION;
+
+    std::cout << std::endl;
+    std::cout << "Name:\t\t" << IONICCONFIG_TOOL_NAME << std::endl;
+    std::cout << "Description:\t" << IONICCONFIG_PRODUCT_NAME << std::endl;
+    std::cout << "Version:\t" << VerStr << std::endl;
+    std::cout << std::endl;
 
     return 0;
 }
