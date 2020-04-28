@@ -12,7 +12,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v6"
 
 	"github.com/pensando/sw/venice/globals"
 

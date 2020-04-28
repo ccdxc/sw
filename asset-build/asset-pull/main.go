@@ -9,7 +9,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v6"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 

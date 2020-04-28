@@ -1,7 +1,7 @@
 // +build plan9 solaris
 
 /*
- * Minio Cloud Storage, (C) 2016, 2017, 2018 Minio, Inc.
+ * MinIO Cloud Storage, (C) 2016, 2017, 2018 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 package cmd
 
 import (
-	"context"
 	"io"
 	"os"
 	"path"
@@ -80,13 +79,13 @@ func readDirN(dirPath string, count int) (entries []string, err error) {
 				st, err = os.Stat(path.Join(dirPath, fi.Name()))
 				if err != nil {
 					reqInfo := (&logger.ReqInfo{}).AppendTags("path", path.Join(dirPath, fi.Name()))
-					ctx := logger.SetReqInfo(context.Background(), reqInfo)
+					ctx := logger.SetReqInfo(GlobalContext, reqInfo)
 					logger.LogIf(ctx, err)
 					continue
 				}
 				// Append to entries if symbolic link exists and is valid.
 				if st.IsDir() {
-					entries = append(entries, fi.Name()+slashSeparator)
+					entries = append(entries, fi.Name()+SlashSeparator)
 				} else if st.Mode().IsRegular() {
 					entries = append(entries, fi.Name())
 				}
@@ -96,8 +95,8 @@ func readDirN(dirPath string, count int) (entries []string, err error) {
 				continue
 			}
 			if fi.Mode().IsDir() {
-				// Append "/" instead of "\" so that sorting is achieved as expected.
-				entries = append(entries, fi.Name()+slashSeparator)
+				// Append SlashSeparator instead of "\" so that sorting is achieved as expected.
+				entries = append(entries, fi.Name()+SlashSeparator)
 			} else if fi.Mode().IsRegular() {
 				entries = append(entries, fi.Name())
 			}

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v6"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 

@@ -1,5 +1,5 @@
 /*
- * Minio Cloud Storage, (C) 2018 Minio, Inc.
+ * MinIO Cloud Storage, (C) 2018, 2019 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io"
-	"io/ioutil"
-	gohttp "net/http"
+	"net/http"
+	"strings"
+
+	xhttp "github.com/minio/minio/cmd/http"
 )
 
 // Target implements logger.Target and sends the json
@@ -36,7 +37,12 @@ type Target struct {
 
 	// HTTP(s) endpoint
 	endpoint string
-	client   gohttp.Client
+	// Authorization token for `endpoint`
+	authToken string
+	// User-Agent to be set on each log to `endpoint`
+	userAgent string
+	logKind   string
+	client    http.Client
 }
 
 func (h *Target) startHTTPLogger() {
@@ -49,39 +55,96 @@ func (h *Target) startHTTPLogger() {
 				continue
 			}
 
-			req, err := gohttp.NewRequest("POST", h.endpoint, bytes.NewBuffer(logJSON))
-			req.Header.Set("Content-Type", "application/json")
-
-			resp, err := h.client.Do(req)
+			req, err := http.NewRequest(http.MethodPost, h.endpoint, bytes.NewReader(logJSON))
 			if err != nil {
 				continue
 			}
-			if resp.Body != nil {
-				buf := make([]byte, 512)
-				io.CopyBuffer(ioutil.Discard, resp.Body, buf)
-				resp.Body.Close()
+			req.Header.Set(xhttp.ContentType, "application/json")
+
+			// Set user-agent to indicate MinIO release
+			// version to the configured log endpoint
+			req.Header.Set("User-Agent", h.userAgent)
+
+			if h.authToken != "" {
+				req.Header.Set("Authorization", h.authToken)
 			}
+
+			resp, err := h.client.Do(req)
+			if err != nil {
+				h.client.CloseIdleConnections()
+				continue
+			}
+
+			// Drain any response.
+			xhttp.DrainBody(resp.Body)
 		}
 	}()
 }
 
+// Option is a function type that accepts a pointer Target
+type Option func(*Target)
+
+// WithEndpoint adds a new endpoint
+func WithEndpoint(endpoint string) Option {
+	return func(t *Target) {
+		t.endpoint = endpoint
+	}
+}
+
+// WithLogKind adds a log type for this target
+func WithLogKind(logKind string) Option {
+	return func(t *Target) {
+		t.logKind = strings.ToUpper(logKind)
+	}
+}
+
+// WithUserAgent adds a custom user-agent sent to the target.
+func WithUserAgent(userAgent string) Option {
+	return func(t *Target) {
+		t.userAgent = userAgent
+	}
+}
+
+// WithAuthToken adds a new authorization header to be sent to target.
+func WithAuthToken(authToken string) Option {
+	return func(t *Target) {
+		t.authToken = authToken
+	}
+}
+
+// WithTransport adds a custom transport with custom timeouts and tuning.
+func WithTransport(transport *http.Transport) Option {
+	return func(t *Target) {
+		t.client = http.Client{
+			Transport: transport,
+		}
+	}
+}
+
 // New initializes a new logger target which
 // sends log over http to the specified endpoint
-func New(endpoint string, transport *gohttp.Transport) *Target {
-	h := Target{
-		endpoint: endpoint,
-		client: gohttp.Client{
-			Transport: transport,
-		},
+func New(opts ...Option) *Target {
+	h := &Target{
 		logCh: make(chan interface{}, 10000),
 	}
 
+	// Loop through each option
+	for _, opt := range opts {
+		// Call the option giving the instantiated
+		// *Target as the argument
+		opt(h)
+	}
+
 	h.startHTTPLogger()
-	return &h
+	return h
 }
 
 // Send log message 'e' to http target.
-func (h *Target) Send(entry interface{}) error {
+func (h *Target) Send(entry interface{}, errKind string) error {
+	if h.logKind != errKind && h.logKind != "ALL" {
+		return nil
+	}
+
 	select {
 	case h.logCh <- entry:
 	default:

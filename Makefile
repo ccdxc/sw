@@ -1038,5 +1038,16 @@ gs-venice-release: venice-image
 	cd tools/docker-files/venice/ && docker build -t pensando/venice:${VENICE_RELEASE_TAG} .
 	cd test/topos/gs && tar -cvf venice_sim_addons.tar naples_admit.py start.sh stop.sh testbed.json venice-conf.json authbootstrap_postman_collection.json login_postman_collection.json postman_collection.json customroles_postman_collection.json
 
+dep:
+	dep ensure
+	# copy the changed repos
+	@rm -rf vendor/github.com/minio/minio-go
+	@tar xvf venice/utils/copiedrepos/minio-go/minio-go.tar 
+	@cp -r minio-go vendor/github.com/minio/.
+	@rm -rf minio-go
+	@tar xvf venice/utils/copiedrepos/xxhash/xxhash.tar
+	@cp -r xxhash vendor/github.com/cespare/.
+	@rm -rf xxhash
+
 # After testing venice-release upload the script assets with a command like below
 # cd test/topos/gs && asset-upload venice_sim_addons.tar v0.2 ./venice_sim_addons.tar

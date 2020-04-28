@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v6"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"

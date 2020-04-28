@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	minioclient "github.com/minio/minio-go"
+	minioclient "github.com/minio/minio-go/v6"
 	minio "github.com/minio/minio/cmd"
 	"github.com/pkg/errors"
 

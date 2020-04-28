@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v6"
 )
 
 // Client is the object store handle

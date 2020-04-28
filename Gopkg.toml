@@ -27,12 +27,20 @@ required = ["github.com/GeertJohan/go.rice",
             "layeh.com/radius/cmd/radius-dict-gen",
             "github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc",
             "github.com/cheggaaa/pb",
-	    "github.com/mgechev/revive"]
+	    "github.com/mgechev/revive",
+	    "gopkg.in/ini.v1",
+	    "github.com/eclipse/paho.mqtt.golang"]
 
 # Hash contents of docker repo is different on CI machines. Since this is used only by some test targets, it is
 # safe to add it to noverify list, which will ensure that dep check will not compare vendor tree has for this constraint.
 # Make sure we don't add anything else (imported by venice/agent or any production go code) to noverify, unless absolutely needed.
-noverify = ["github.com/docker/docker", "github.com/vmware/govmomi"]
+noverify = ["github.com/docker/docker", "github.com/vmware/govmomi", "github.com/minio/minio-go", "gopkg.in/ini.v1", "github.com/eclipse/paho.mqtt.golang", "github.com/cespare/xxhash"]
+
+ignored = ["github.com/minio/minio-go/*", "github.com/cespare/xxhash/*"]
+
+[[constraint]]
+  name = "github.com/eclipse/paho.mqtt.golang"
+  version = "1.2.0"
 
 [[constraint]]
   branch = "master"
@@ -110,10 +118,6 @@ noverify = ["github.com/docker/docker", "github.com/vmware/govmomi"]
   branch = "master"
   name = "github.com/grandcat/zeroconf"
 
-[[constraint]]
-  name = "github.com/minio/minio-go"
-  version = "6.0.6"
-
 [[override]]
   name = "github.com/hpcloud/tail"
   revision = "000912af8de2d2b9d184786b4cf4c3542b7884e5"
@@ -172,7 +176,7 @@ noverify = ["github.com/docker/docker", "github.com/vmware/govmomi"]
 
 [[constraint]]
   name = "golang.org/x/net"
-  branch = "release-branch.go1.11"
+  branch = "master"
 
 [[constraint]]
   branch = "master"
@@ -306,7 +310,7 @@ noverify = ["github.com/docker/docker", "github.com/vmware/govmomi"]
 
 [[constraint]]
   name = "github.com/minio/minio"
-  version = "RELEASE.2018-12-06T01-27-43Z"
+  version = "RELEASE.2020-04-23T00-58-49Z"
 
 [[constraint]]
   name = "github.com/docker/docker"
@@ -314,7 +318,7 @@ noverify = ["github.com/docker/docker", "github.com/vmware/govmomi"]
 
 [[constraint]]
   name = "github.com/shirou/gopsutil"
-  version = "2.18.7"
+  version = "2.20.3"
 
 [[constraint]]
   name = "github.com/gorilla/websocket"

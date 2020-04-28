@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	minioclient "github.com/minio/minio-go"
+	minioclient "github.com/minio/minio-go/v6"
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/venice/vos"

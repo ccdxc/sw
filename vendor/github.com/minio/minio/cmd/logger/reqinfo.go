@@ -1,5 +1,5 @@
 /*
- * Minio Cloud Storage, (C) 2018 Minio, Inc.
+ * MinIO Cloud Storage, (C) 2018 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ type KeyVal struct {
 // ReqInfo stores the request info.
 type ReqInfo struct {
 	RemoteHost   string   // Client Host/IP
+	Host         string   // Node Host/IP
 	UserAgent    string   // User Agent
 	DeploymentID string   // x-minio-deployment-id
 	RequestID    string   // x-amz-request-id

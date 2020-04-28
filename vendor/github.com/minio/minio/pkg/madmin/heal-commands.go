@@ -1,5 +1,5 @@
 /*
- * Minio Cloud Storage, (C) 2017, 2018 Minio, Inc.
+ * MinIO Cloud Storage, (C) 2017, 2018 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 package madmin
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -26,10 +27,22 @@ import (
 	"time"
 )
 
+// HealScanMode represents the type of healing scan
+type HealScanMode int
+
+const (
+	// HealNormalScan checks if parts are present and not outdated
+	HealNormalScan HealScanMode = iota
+	// HealDeepScan checks for parts bitrot checksums
+	HealDeepScan
+)
+
 // HealOpts - collection of options for a heal sequence
 type HealOpts struct {
-	Recursive bool `json:"recursive"`
-	DryRun    bool `json:"dryRun"`
+	Recursive bool         `json:"recursive"`
+	DryRun    bool         `json:"dryRun"`
+	Remove    bool         `json:"remove"`
+	ScanMode  HealScanMode `json:"scanMode"`
 }
 
 // HealStartSuccess - holds information about a successfully started
@@ -69,10 +82,11 @@ const (
 
 // Drive state constants
 const (
-	DriveStateOk      string = "ok"
-	DriveStateOffline        = "offline"
-	DriveStateCorrupt        = "corrupt"
-	DriveStateMissing        = "missing"
+	DriveStateOk          string = "ok"
+	DriveStateOffline            = "offline"
+	DriveStateCorrupt            = "corrupt"
+	DriveStateMissing            = "missing"
+	DriveStateUnformatted        = "unformatted" // only returned by disk
 )
 
 // HealDriveInfo - struct for an individual drive info item.
@@ -183,8 +197,8 @@ func (hri *HealResultItem) GetOnlineCounts() (b, a int) {
 // forceStart and forceStop are mutually exclusive, you can either
 // set one of them to 'true'. If both are set 'forceStart' will be
 // honored.
-func (adm *AdminClient) Heal(bucket, prefix string, healOpts HealOpts,
-	clientToken string, forceStart, forceStop bool) (
+func (adm *AdminClient) Heal(ctx context.Context, bucket, prefix string,
+	healOpts HealOpts, clientToken string, forceStart, forceStop bool) (
 	healStart HealStartSuccess, healTaskStatus HealTaskStatus, err error) {
 
 	if forceStart && forceStop {
@@ -196,7 +210,7 @@ func (adm *AdminClient) Heal(bucket, prefix string, healOpts HealOpts,
 		return healStart, healTaskStatus, err
 	}
 
-	path := fmt.Sprintf("/v1/heal/%s", bucket)
+	path := fmt.Sprintf(adminAPIPrefix+"/heal/%s", bucket)
 	if bucket != "" && prefix != "" {
 		path += "/" + prefix
 	}
@@ -215,11 +229,12 @@ func (adm *AdminClient) Heal(bucket, prefix string, healOpts HealOpts,
 		queryVals.Set("forceStop", "true")
 	}
 
-	resp, err := adm.executeMethod("POST", requestData{
-		relPath:     path,
-		content:     body,
-		queryValues: queryVals,
-	})
+	resp, err := adm.executeMethod(ctx,
+		http.MethodPost, requestData{
+			relPath:     path,
+			content:     body,
+			queryValues: queryVals,
+		})
 	defer closeResponse(resp)
 	if err != nil {
 		return healStart, healTaskStatus, err
@@ -256,4 +271,41 @@ func (adm *AdminClient) Heal(bucket, prefix string, healOpts HealOpts,
 		return healStart, healTaskStatus, errResp
 	}
 	return healStart, healTaskStatus, nil
+}
+
+// BgHealState represents the status of the background heal
+type BgHealState struct {
+	ScannedItemsCount int64
+	LastHealActivity  time.Time
+	NextHealRound     time.Time
+}
+
+// BackgroundHealStatus returns the background heal status of the
+// current server or cluster.
+func (adm *AdminClient) BackgroundHealStatus(ctx context.Context) (BgHealState, error) {
+	// Execute POST request to background heal status api
+	resp, err := adm.executeMethod(ctx,
+		http.MethodPost,
+		requestData{relPath: adminAPIPrefix + "/background-heal/status"})
+	if err != nil {
+		return BgHealState{}, err
+	}
+	defer closeResponse(resp)
+
+	if resp.StatusCode != http.StatusOK {
+		return BgHealState{}, httpRespToErrorResponse(resp)
+	}
+
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return BgHealState{}, err
+	}
+
+	var healState BgHealState
+
+	err = json.Unmarshal(respBytes, &healState)
+	if err != nil {
+		return BgHealState{}, err
+	}
+	return healState, nil
 }

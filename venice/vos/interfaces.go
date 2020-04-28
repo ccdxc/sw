@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	minioclient "github.com/minio/minio-go"
+	minioclient "github.com/minio/minio-go/v6"
 
 	"github.com/pensando/sw/api/generated/objstore"
 )

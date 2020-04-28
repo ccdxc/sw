@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	minioclient "github.com/minio/minio-go"
+	minioclient "github.com/minio/minio-go/v6"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/venice/utils/watchstream"

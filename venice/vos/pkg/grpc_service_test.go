@@ -10,8 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/minio/minio-go"
-	minioclient "github.com/minio/minio-go"
+	minioclient "github.com/minio/minio-go/v6"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 
@@ -682,7 +681,7 @@ func TestListFwlogObjects(t *testing.T) {
 		h, _, _ := t1.Clock()
 		key := "aaa.bbb.ccc.ddd" + "/2006/1/2/" + strconv.Itoa(h) + "/" +
 			t1.Format(timeFormat) + "_" + t1.Add(time.Minute).Format(timeFormat) + ".csv.gz"
-		fb.PutObject("default"+fwlogsBucketName, key, nil, 0, minio.PutObjectOptions{})
+		fb.PutObject("default"+fwlogsBucketName, key, nil, 0, minioclient.PutObjectOptions{})
 		t1 = t1.Add(time.Minute)
 	}
 

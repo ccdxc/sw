@@ -17,18 +17,22 @@
 package lsync
 
 import (
+	"context"
 	"sync/atomic"
 	"time"
 )
 
 // A LMutex is a mutual exclusion lock with timeouts.
 type LMutex struct {
-	state int64
+	id     string
+	source string
+	state  int64
+	ctx    context.Context
 }
 
 // NewLMutex - initializes a new lsync mutex.
-func NewLMutex() *LMutex {
-	return &LMutex{}
+func NewLMutex(ctx context.Context) *LMutex {
+	return &LMutex{ctx: ctx}
 }
 
 // Lock holds a lock on lm.
@@ -36,28 +40,35 @@ func NewLMutex() *LMutex {
 // If the lock is already in use, the calling go routine
 // blocks until the mutex is available.
 func (lm *LMutex) Lock() {
-	lm.lockLoop(time.Duration(1<<63 - 1))
+	lm.lockLoop(lm.id, lm.source, time.Duration(1<<63-1))
 }
 
 // GetLock tries to get a write lock on lm before the timeout occurs.
-func (lm *LMutex) GetLock(timeout time.Duration) (locked bool) {
-	return lm.lockLoop(timeout)
+func (lm *LMutex) GetLock(id, source string, timeout time.Duration) (locked bool) {
+	return lm.lockLoop(id, source, timeout)
 }
 
 // lockLoop will acquire either a read or a write lock
 //
 // The call will block until the lock is granted using a built-in
 // timing randomized back-off algorithm to try again until successful
-func (lm *LMutex) lockLoop(timeout time.Duration) bool {
+func (lm *LMutex) lockLoop(id, source string, timeout time.Duration) bool {
 	doneCh, start := make(chan struct{}), time.Now().UTC()
 	defer close(doneCh)
 
 	// We timed out on the previous lock, incrementally wait
 	// for a longer back-off time and try again afterwards.
 	for range newRetryTimerSimple(doneCh) {
+		select {
+		case <-lm.ctx.Done():
+			break
+		default:
+		}
 
 		// Try to acquire the lock.
 		if atomic.CompareAndSwapInt64(&lm.state, NOLOCKS, WRITELOCK) {
+			lm.id = id
+			lm.source = source
 			return true
 		} else if time.Now().UTC().Sub(start) >= timeout { // Are we past the timeout?
 			break

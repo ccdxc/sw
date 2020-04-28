@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/go-martini/martini"
-	minioclient "github.com/minio/minio-go"
+	minioclient "github.com/minio/minio-go/v6"
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api/generated/objstore"

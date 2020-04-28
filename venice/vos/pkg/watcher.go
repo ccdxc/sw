@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/minio/minio-go"
+	minio "github.com/minio/minio-go/v6"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/objstore"

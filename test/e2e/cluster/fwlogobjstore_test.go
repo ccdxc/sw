@@ -475,11 +475,15 @@ func compareAndVerifyLogLineInCsvAndElastic(csvLine []string, elasticMap map[str
 
 	sport, err := strconv.ParseUint(csvLine[5], 10, 64)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(float64(sport) == elasticMap["source-port"].(float64)).Should(BeTrue())
+	if _, ok := elasticMap["source-port"]; ok {
+		Expect(float64(sport) == elasticMap["source-port"].(float64)).Should(BeTrue())
+	}
 
 	dport, err := strconv.ParseUint(csvLine[6], 10, 64)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(float64(dport) == elasticMap["destination-port"].(float64)).Should(BeTrue())
+	if _, ok := elasticMap["destination-port"]; ok {
+		Expect(float64(dport) == elasticMap["destination-port"].(float64)).Should(BeTrue())
+	}
 
 	Expect(csvLine[7] == elasticMap["protocol"].(string)).Should(BeTrue())
 	Expect(csvLine[8] == elasticMap["action"].(string)).Should(BeTrue())
