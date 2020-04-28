@@ -31,7 +31,7 @@ const (
 	timeFormat            = "2006-01-02T15:04:05"
 	bucketPrefix          = "fwlogs"
 	numLogTransmitWorkers = 10
-	workItemBufferSize    = 1000
+	workItemBufferSize    = 50
 	connectErr            = "connect:" // copied from vos
 	fwLogMetaVersion      = "v1"
 	fwlogsBucketName      = "fwlogs"
