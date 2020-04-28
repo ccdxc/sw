@@ -3188,6 +3188,7 @@
     "github.com/docker/docker/client",
     "github.com/docker/go-connections/nat",
     "github.com/eclipse/paho.mqtt.golang",
+    "github.com/fatih/color",
     "github.com/fatih/structs",
     "github.com/fsnotify/fsnotify",
     "github.com/ghodss/yaml",
