@@ -129,7 +129,7 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 				// naples_type should come from topology or testbed
 				cmd += fmt.Sprintf(" --naples capri")
 				if filepath.Base(req.NaplesImage) != "naples_fw.tar" {
-					cmd += fmt.Sprintf(" --build apulu-equinix")
+					cmd += fmt.Sprintf(" --pipeline apulu --image-build equinix")
 				}
 				cmd += fmt.Sprintf(" --mode hostpin")
 				if node.MgmtIntf != "" {
