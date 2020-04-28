@@ -288,6 +288,15 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.DistributedServiceCard) (*clu
 			}
 		}
 		refObj.Status.Conditions = updObj.Status.Conditions
+		//reset versionMismatch & AdmissionPhaseReason if the nic is running the right version
+		if refObj.Status.VersionMismatch {
+			status, veniceVersion := s.versionChecker.CheckNICVersionForAdmission(refObj.Status.GetDSCSku(), refObj.Status.GetDSCVersion())
+			if status != utils2.RequestRolloutNaples {
+				log.Infof("ForceRollout: Version is compatible. Reset NIC Status fields. NIC version %s Cluster Version %s", refObj.Status.GetDSCVersion(), veniceVersion)
+				refObj.Status.VersionMismatch = false
+				refObj.Status.AdmissionPhaseReason = ""
+			}
+		}
 
 		// Ignore the time-stamp provided by NMD and replace it with our own.
 		// This will help mitigating issues due to clock misalignments between Venice and NAPLES

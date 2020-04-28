@@ -28,6 +28,10 @@ type SmartNICState struct {
 
 func (sm *Statemgr) performForceRollout(smartNIC *cluster.DistributedServiceCard) {
 	buildVersion := sm.writer.GetClusterVersion()
+	if buildVersion == "" {
+		log.Errorf("ForceRollout: Build Version is empty")
+		return
+	}
 	log.Infof("ForceRollout: Build Version %s", buildVersion)
 
 	// smartNICRollout Object does not exist. Create it
