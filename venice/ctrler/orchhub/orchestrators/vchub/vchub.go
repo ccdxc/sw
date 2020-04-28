@@ -12,8 +12,10 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/orchestration"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
@@ -245,8 +247,7 @@ func (v *VCHub) Destroy(delete bool) {
 		v.Wg.Wait()
 		v.probe.ClearState()
 
-		opts := api.ListWatchOptions{}
-		v.DeleteHosts(&opts)
+		v.DeleteHosts()
 	}
 	v.Log.Infof("VCHub Destroyed")
 }
@@ -332,6 +333,20 @@ func (v *VCHub) Sync() {
 // Debug returns debug info
 func (v *VCHub) Debug(action string, params map[string]string) (interface{}, error) {
 	return v.debugHandler(action, params)
+}
+
+// Reconnect is called when a ctkit watcher client reconnects to apiserver
+// Attempt to write any pending objects in the pcache
+func (v *VCHub) Reconnect(kind string) {
+	v.Log.Infof("Reconnect called for %s", kind)
+	switch kind {
+	case string(workload.KindWorkload):
+		v.pCache.RevalidateKind(string(workload.KindWorkload))
+	case string(cluster.KindHost):
+		v.pCache.RevalidateKind(string(cluster.KindHost))
+		// Also trigger workloads in case they were relying on a host that just got written
+		v.pCache.RevalidateKind(string(workload.KindWorkload))
+	}
 }
 
 // ListPensandoHosts List only Pensando Hosts from vCenter

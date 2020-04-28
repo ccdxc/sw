@@ -161,3 +161,8 @@ func (sm *SmRouteTable) OnRouteTableDelete(obj *ctkit.RouteTable) error {
 	return sm.sm.mbus.DeleteObjectWithReferences(obj.MakeKey(string(apiclient.GroupNetwork)),
 		convertRouteTable(vr), references(obj))
 }
+
+// OnRouteTableReconnect is called when ctkit reconnects to apiserver
+func (sm *SmRouteTable) OnRouteTableReconnect() {
+	return
+}

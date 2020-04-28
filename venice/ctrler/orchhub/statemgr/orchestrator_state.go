@@ -64,6 +64,11 @@ func (sm *Statemgr) OnOrchestratorDelete(w *ctkit.Orchestrator) error {
 	return err
 }
 
+// OnOrchestratorReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnOrchestratorReconnect() {
+	return
+}
+
 // OrchestratorStateFromObj converts from memdb object to orchestration state
 func OrchestratorStateFromObj(obj runtime.Object) (*OrchestratorState, error) {
 	switch obj.(type) {

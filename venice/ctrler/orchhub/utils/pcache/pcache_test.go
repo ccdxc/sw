@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/globals"
@@ -24,7 +25,7 @@ var (
 
 func newStateManager() (*statemgr.Statemgr, error) {
 	tsdb.Init(context.Background(), &tsdb.Opts{})
-	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, nil, logger, nil)
+	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, nil, logger, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -105,6 +106,9 @@ func TestPcache(t *testing.T) {
 	entryWorkload := pCache.GetWorkload(expMeta)
 	AssertEquals(t, entryWorkload, entry, "Get from pcache returned different values")
 	AssertEquals(t, "val1", entryWorkload.Labels[key1], "Workload not in pcache")
+	entryWorkload = pCache.GetWorkloadByName(expMeta.Name)
+	AssertEquals(t, entryWorkload, entry, "Get from pcache returned different values")
+	AssertEquals(t, "val1", entryWorkload.Labels[key1], "Workload not in pcache")
 
 	// Debug should return value in cache
 	debugInfoResp, err := pCache.Debug(map[string]string{"kind": "Workload"})
@@ -182,5 +186,35 @@ func TestPcache(t *testing.T) {
 	err = pCache.Delete("Workload", expWorkload)
 	AssertOk(t, err, "Failed to delete from statemgr")
 	_, err = stateMgr.Controller().Workload().Find(expMeta)
+	Assert(t, err != nil, "Item still in stateMgr")
+
+	// Test host functions
+
+	expMeta = &api.ObjectMeta{
+		Name: "host1",
+	}
+	expHost := &cluster.Host{
+		TypeMeta: api.TypeMeta{
+			Kind:       "Host",
+			APIVersion: "v1",
+		},
+		ObjectMeta: *expMeta,
+	}
+	err = pCache.Set("Host", expHost)
+	AssertOk(t, err, "Failed to write host")
+
+	retHost := pCache.GetHost(expMeta)
+	AssertEquals(t, expHost, retHost, "Get from pcache returned different values")
+
+	retHost = pCache.GetHostByName(expMeta.Name)
+	AssertEquals(t, expHost, retHost, "Get from pcache returned different values")
+
+	retHosts := pCache.ListHosts(context.Background())
+	AssertEquals(t, 1, len(retHosts), "Number of hosts did not match")
+	AssertEquals(t, expHost, retHosts[expHost.GetKey()], "Get from pcache returned different values")
+
+	err = pCache.Delete("Host", expHost)
+	AssertOk(t, err, "Failed to delete from statemgr")
+	_, err = stateMgr.Controller().Host().Find(expMeta)
 	Assert(t, err != nil, "Item still in stateMgr")
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
@@ -55,10 +56,7 @@ func (v *VCHub) sync() bool {
 		v.Log.Errorf("Failed to get network list. Err : %v", err)
 	}
 
-	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
-	if err != nil {
-		v.Log.Errorf("Failed to get host list. Err : %v", err)
-	}
+	hosts := v.pCache.ListHosts(v.Ctx)
 
 	workloads, err := v.StateMgr.Controller().Workload().List(v.Ctx, &opts)
 	if err != nil {
@@ -144,7 +142,7 @@ func (v *VCHub) syncNewHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, vmkMap m
 				},
 			},
 		}
-		v.Log.Debugf("Process config change for host %s", host.Reference().Value)
+		v.Log.Infof("Process config change for host %s", host.Reference().Value)
 		// check if host is added to PenDVS is not needed here, handleHost() will check it and
 		// delete the host and associated workloads (including vmk workload)
 		vmkMap[v.createVmkWorkloadName(dc.Reference().Value, host.Reference().Value)] = true
@@ -152,7 +150,7 @@ func (v *VCHub) syncNewHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, vmkMap m
 	}
 }
 
-func (v *VCHub) syncStaleHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host) {
+func (v *VCHub) syncStaleHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts map[string]*cluster.Host) {
 	v.Log.Infof("Syncing stale hosts on DC %s============", dc.Name)
 	vcHostMap := map[string]bool{}
 	for _, vcHost := range vcHosts {
@@ -173,8 +171,8 @@ func (v *VCHub) syncStaleHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts 
 			wlName := createVmkWorkloadNameFromHostName(host.Name)
 			v.deleteWorkloadByName(wlName)
 
-			v.Log.Debugf("Deleting stale host %s", host.Name)
-			v.deleteHost(&host.Host)
+			v.Log.Infof("Deleting stale host %s", host.Name)
+			v.deleteHost(host)
 		}
 	}
 }
@@ -189,7 +187,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 			v.Log.Debugf("Skipping dvs %s", dvs.Name)
 			continue
 		}
-		v.Log.Debugf("Processing dvs %s", dvs.Name)
+		v.Log.Infof("Processing dvs %s", dvs.Name)
 
 		penDVS := penDC.GetPenDVS(dvs.Name)
 

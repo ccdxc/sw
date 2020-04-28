@@ -2,13 +2,13 @@ package vchub
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -47,15 +47,11 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	meta := &api.ObjectMeta{
 		Name: v.createHostName(m.DcID, m.Key),
 	}
-	var existingHost, hostObj *cluster.Host
-	ctkitHost, err := v.StateMgr.Controller().Host().Find(meta)
-	if err != nil {
-		existingHost = nil
-	} else {
-		existingHost = &ctkitHost.Host
-	}
+	existingHost := v.pCache.GetHost(meta)
+	var hostObj *cluster.Host
 
 	if existingHost == nil {
+		v.Log.Debugf("This is a new host - %s", meta.Name)
 		hostObj = &cluster.Host{
 			TypeMeta: api.TypeMeta{
 				Kind:       "Host",
@@ -64,6 +60,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 			ObjectMeta: *meta,
 		}
 	} else {
+		// Copying to prevent modifying of ctkit state
 		temp := ref.DeepCopy(*existingHost).(cluster.Host)
 		hostObj = &temp
 	}
@@ -78,6 +75,13 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		return
 	}
 
+	if hostObj.Labels == nil {
+		hostObj.Labels = map[string]string{}
+	}
+
+	utils.AddOrchNameLabel(hostObj.Labels, v.OrchConfig.Name)
+	utils.AddOrchNamespaceLabel(hostObj.Labels, m.DcName)
+
 	var hConfig *types.HostConfigInfo
 	var dispName string
 	for _, prop := range m.Changes {
@@ -85,31 +89,24 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		case defs.HostPropConfig:
 			propConfig, _ := prop.Val.(types.HostConfigInfo)
 			hConfig = &propConfig
+			v.processHostConfig(prop, m.DcID, m.DcName, hostObj)
 		case defs.HostPropName:
 			dispName = prop.Val.(string)
 			// Try to update vmkworkloadname incase we did not get the name info
 			// during create
 			penDC.addHostNameKey(dispName, m.Key)
 			v.updateVmkWorkloadLabels(hostObj.Name, m.DcName, dispName)
+			addNameLabel(hostObj.Labels, dispName)
 		default:
 			v.Log.Errorf("host prop change %s - not handled", prop.Name)
 		}
 	}
-	// TODO: check if name changed - need to find and delete old Name2Key entry
-	// Name of a host cannot change easily (used for DNS resolution etc), not
-	// handled rightnow
-	if hConfig == nil {
-		// cover the case where config was received first followed by name property
-		if dispName != "" && existingHost != nil {
-			if existingHost.Labels == nil {
-				existingHost.Labels = make(map[string]string)
-			}
-			v.Log.Infof("Adding display-name label %s on host %s", dispName, existingHost.Name)
-			addNameLabel(existingHost.Labels, dispName)
-			v.StateMgr.Controller().Host().SyncUpdate(existingHost)
-		}
-		v.Log.Debugf("No Config change for the host")
-		return
+
+	if existingHost != nil && len(hostObj.Spec.DSCs) == 0 {
+		// host was removed from Pen-DVS, cleanup any workloads on it and
+		// delete the host
+		v.Log.Errorf("Removing host %s and all workloads on it", hostObj.Name)
+		v.hostRemovedFromDVS(existingHost)
 	}
 
 	if dispName == "" {
@@ -117,24 +114,57 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		dispName, _ = penDC.findHostNameByKey(m.Key)
 	}
 
+	if existingHost == nil {
+		v.Log.Infof("Creating host %s", hostObj.Name)
+		// Check if there are any stale hosts with the same DSC
+		v.fixStaleHost(hostObj)
+		v.pCache.Set(string(cluster.KindHost), hostObj)
+		v.pCache.RevalidateKind(string(workload.KindWorkload))
+	}
+
+	penDVS, _ := v.penDVSForVcHost(m.DcName, hConfig)
+
+	v.syncHostVmkNics(penDC, penDVS, dispName, m.Key, hConfig)
+
+	if existingHost != nil {
+		v.Log.Infof("Updating host %s", hostObj.Name)
+		v.pCache.Set(string(cluster.KindHost), hostObj)
+		// Revalidate kind call is not needed here.
+		// Only thing that can be updated in a host is the labels
+		// once it is written
+	}
+}
+
+func (v *VCHub) validateHost(in interface{}) (bool, bool) {
+	obj, ok := in.(*cluster.Host)
+	if !ok {
+		return false, false
+	}
+	if len(obj.Spec.DSCs) == 0 {
+		v.Log.Errorf("host %s has no DSC", obj.GetObjectMeta().Name)
+		return false, false
+	}
+	return true, true
+}
+
+func (v *VCHub) processHostConfig(prop types.PropertyChange, dcID string, dcName string, hostObj *cluster.Host) {
+	propConfig, _ := prop.Val.(types.HostConfigInfo)
+	hConfig := &propConfig
+
+	hostObj.Spec.DSCs = []cluster.DistributedServiceCardID{}
+
+	penDVS, pNicsUsed := v.penDVSForVcHost(dcName, hConfig)
+	if penDVS == nil {
+		// This host in not on pen-dvs, ignore it
+		v.Log.Infof("Host %s is not added to pensando DVS", hostObj.Name)
+		return
+	}
+
 	nwInfo := hConfig.Network
 	if nwInfo == nil {
 		v.Log.Errorf("Missing hConfig.Network")
 		return
 	}
-
-	penDVS, pNicsUsed := v.penDVSForVcHost(m.DcName, hConfig)
-	if penDVS == nil {
-		// This host in not on pen-dvs, ignore it
-		v.Log.Infof("Host %s is not added to pensando DVS", m.Key)
-		if existingHost != nil {
-			// host was removed from Pen-DVS, cleanup any workloads on it and
-			// delete the host
-			v.hostRemovedFromDVS(existingHost)
-		}
-		return
-	}
-
 	var DSCs []cluster.DistributedServiceCardID
 	// sort pnics based on MAC address to find/use correct
 	// MAC for DSC idenitification. the management MAC is numerically highest MAC addr
@@ -169,23 +199,12 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	}
 
 	if len(DSCs) == 0 {
-		// Not a pensando host
-		v.Log.Infof("Host %s is ignored - not a Pensando host", m.Key)
-		if existingHost != nil {
-			// host was removed from Pen-DVS, cleanup any workloads on it and
-			// delete the host
-			v.hostRemovedFromDVS(existingHost)
-		}
+		v.Log.Infof("Host %s is ignored - not a Pensando host", hostObj.Name)
 		return
 	}
 
 	if !naplesPnicUsed {
-		v.Log.Infof("Host %s is ignored - Naples Pnic is not connected to Pensando DVS", m.Key)
-		if existingHost != nil {
-			// host was removed from Pen-DVS, cleanup any workloads on it and
-			// delete the host
-			v.hostRemovedFromDVS(existingHost)
-		}
+		v.Log.Infof("Host %s is ignored - Naples Pnic is not connected to Pensando DVS", hostObj.Name)
 		return
 	}
 
@@ -196,53 +215,6 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		return DSCs[i].MACAddress < DSCs[j].MACAddress
 	})
 	hostObj.Spec.DSCs = DSCs
-
-	if hostObj.Labels == nil {
-		hostObj.Labels = make(map[string]string)
-	}
-	if existingHost == nil {
-		utils.AddOrchNameLabel(hostObj.Labels, v.OrchConfig.Name)
-		if hostObj.Labels == nil {
-			hostObj.Labels = make(map[string]string)
-		}
-		if dispName == "" {
-			v.Log.Infof("Host %s is created without name property", hostObj.Name)
-		}
-	}
-	if dispName != "" {
-		addNameLabel(hostObj.Labels, dispName)
-	}
-	utils.AddOrchNamespaceLabel(hostObj.Labels, penDC.Name)
-
-	if existingHost == nil {
-		v.Log.Infof("Creating host %s", hostObj.Name)
-		err := v.StateMgr.Controller().Host().SyncCreate(hostObj)
-		if err != nil {
-			err = v.fixStaleHost(hostObj)
-		}
-		if err == nil {
-			v.pCache.RevalidateKind(workloadKind)
-		} else {
-			v.Log.Infof("Host create failed for %s - %s", hostObj.Name, err)
-		}
-	}
-
-	v.syncHostVmkNics(penDC, penDVS, dispName, m.Key, hConfig)
-
-	// If different, write to apiserver
-	if reflect.DeepEqual(hostObj, existingHost) {
-		// Nothing to do
-		v.Log.Debugf("host event ignored - nothing changed")
-		return
-	}
-
-	if existingHost != nil {
-		v.Log.Infof("Updating host %s", hostObj.Name)
-		v.StateMgr.Controller().Host().SyncUpdate(hostObj)
-		// Revalidate kind call is not needed here.
-		// Only thing that can be updated in a host is the labels
-		// once it is written
-	}
 }
 
 func (v *VCHub) fixStaleHost(host *cluster.Host) error {
@@ -252,12 +224,7 @@ func (v *VCHub) fixStaleHost(host *cluster.Host) error {
 	// TODO: If host was moved from one VCenter to another, we can just check if it has
 	// some VC association and do the same?? (linked VC case)
 	// List hosts
-	opts := api.ListWatchOptions{}
-	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
-	if err != nil {
-		v.Log.Errorf("fixStaleHost Failed to get host list. Err : %v", err)
-		return err
-	}
+	hosts := v.pCache.ListHosts(v.Ctx)
 	var hostFound *cluster.Host
 searchHosts:
 	for _, eh := range hosts {
@@ -266,13 +233,14 @@ searchHosts:
 				continue
 			}
 			if dsc.MACAddress == host.Spec.DSCs[i].MACAddress {
-				hostFound = &eh.Host
+				hostFound = eh
 				break searchHosts
 			}
 		}
 	}
 	if hostFound == nil {
-		return fmt.Errorf("No duplicate Host entry found")
+		v.Log.Infof("No duplicate host found")
+		return nil
 	}
 	var vcID string
 	ok := false
@@ -280,16 +248,20 @@ searchHosts:
 		vcID, ok = hostFound.Labels[utils.OrchNameKey]
 	}
 	if !ok {
-		return fmt.Errorf("Duplicate Host %s is being used by non-VC application", hostFound.Name)
+		err := fmt.Errorf("Duplicate Host %s is being used by non-VC application", hostFound.Name)
+		v.Log.Infof("%s", err)
+		return err
 	}
 
 	if !utils.IsObjForOrch(hostFound.Labels, v.VcID, "") {
 		// host found, but not used by this VC
 		v.Log.Infof("Deleting host that belonged to another VC %s", vcID)
+	} else if hostFound.Name == host.Name {
+		// Host we found matches our state. Nothing to do.
+		return nil
 	}
 	v.deleteHost(hostFound)
-	err = v.StateMgr.Controller().Host().SyncCreate(host)
-	return err
+	return nil
 }
 
 func (v *VCHub) hostRemovedFromDVS(host *cluster.Host) {
@@ -340,19 +312,17 @@ func (v *VCHub) deleteHostFromDc(obj *cluster.Host, penDC *PenDC) {
 		}
 	}
 	v.Log.Infof("Deleting host %s", obj.Name)
-	// Delete from apiserver
+	// Delete from apiserver, but not from pcache so that we still have
+	// display name in case it is re-added to dvs
 	if err := v.StateMgr.Controller().Host().Delete(obj); err != nil {
 		v.Log.Errorf("Could not delete host from Venice %s", obj.Name)
 	}
 }
 
 // DeleteHosts deletes all host objects from API server for this VCHub instance
-func (v *VCHub) DeleteHosts(opts *api.ListWatchOptions) {
+func (v *VCHub) DeleteHosts() {
 	// List hosts
-	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, opts)
-	if err != nil {
-		v.Log.Errorf("Failed to get host list. Err : %v", err)
-	}
+	hosts := v.pCache.ListHosts(v.Ctx)
 	for _, host := range hosts {
 		if !utils.IsObjForOrch(host.Labels, v.VcID, "") {
 			// Filter out hosts not for this Orch
@@ -360,23 +330,12 @@ func (v *VCHub) DeleteHosts(opts *api.ListWatchOptions) {
 			continue
 		}
 		// Delete host
-		v.deleteHost(&host.Host)
+		v.deleteHost(host)
 	}
-}
-
-func (v *VCHub) findHost(hostName string) *cluster.Host {
-	meta := &api.ObjectMeta{
-		Name: hostName,
-	}
-	ctkitHost, err := v.StateMgr.Controller().Host().Find(meta)
-	if err != nil {
-		return nil
-	}
-	return &ctkitHost.Host
 }
 
 func (v *VCHub) getDCNameForHost(hostName string) string {
-	hostObj := v.findHost(hostName)
+	hostObj := v.pCache.GetHostByName(hostName)
 	if hostObj == nil {
 		v.Log.Errorf("Host %s not found", hostName)
 		return ""

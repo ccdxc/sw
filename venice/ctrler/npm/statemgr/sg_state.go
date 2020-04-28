@@ -260,3 +260,8 @@ func (sm *Statemgr) OnSecurityGroupDelete(sgo *ctkit.SecurityGroup) error {
 	return sm.mbus.DeleteObjectWithReferences(sg.SecurityGroup.MakeKey("security"),
 		sg.SecurityGroup, references(sg.SecurityGroup))
 }
+
+// OnSecurityGroupReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnSecurityGroupReconnect() {
+	return
+}

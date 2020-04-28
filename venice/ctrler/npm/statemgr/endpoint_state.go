@@ -259,6 +259,11 @@ func (sm *Statemgr) OnEndpointOperDelete(nodeID string, objinfo *netproto.Endpoi
 	return nil
 }
 
+// OnEndpointReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnEndpointReconnect() {
+	return
+}
+
 // FindEndpoint finds endpoint by name
 func (sm *Statemgr) FindEndpoint(tenant, name string) (*EndpointState, error) {
 	// find the object

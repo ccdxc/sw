@@ -30,3 +30,8 @@ func (sm *Statemgr) OnModuleCreate(obj *ctkit.Module) error {
 func (sm *Statemgr) OnModuleDelete(obj *ctkit.Module) error {
 	return nil
 }
+
+// OnModuleReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnModuleReconnect() {
+	return
+}

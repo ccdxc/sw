@@ -1032,6 +1032,11 @@ func (smm *SmMirrorSessionInterface) OnMirrorSessionDelete(obj *ctkit.MirrorSess
 	return smm.deleteInterfaceMirror(ms)
 }
 
+// OnMirrorSessionReconnect is called when ctkit reconnects to apiserver
+func (smm *SmMirrorSessionInterface) OnMirrorSessionReconnect() {
+	return
+}
+
 //GetMirrorSessionWatchOptions Get watch options
 func (smm *SmMirrorSessionInterface) GetMirrorSessionWatchOptions() *api.ListWatchOptions {
 	opts := &api.ListWatchOptions{}

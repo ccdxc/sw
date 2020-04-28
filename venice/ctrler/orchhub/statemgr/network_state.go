@@ -58,6 +58,11 @@ func (sm *Statemgr) OnNetworkDelete(w *ctkit.Network) error {
 	return nil
 }
 
+// OnNetworkReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnNetworkReconnect() {
+	return
+}
+
 // NetworkStateFromObj conerts from memdb object to network state
 func NetworkStateFromObj(obj runtime.Object) (*NetworkState, error) {
 	switch obj.(type) {

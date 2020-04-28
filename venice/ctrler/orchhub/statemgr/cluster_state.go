@@ -41,6 +41,11 @@ func (sm *Statemgr) OnClusterDelete(nh *ctkit.Cluster) error {
 	return nil
 }
 
+// OnClusterReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnClusterReconnect() {
+	return
+}
+
 // NewClusterState create new network state
 func NewClusterState(Cluster *ctkit.Cluster, stateMgr *Statemgr) (*ClusterState, error) {
 	w := &ClusterState{

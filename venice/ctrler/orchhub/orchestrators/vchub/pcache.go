@@ -2,6 +2,8 @@ package vchub
 
 import (
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/globals"
 )
@@ -25,7 +27,8 @@ type workloadVnics struct {
 
 func (v *VCHub) setupPCache() {
 	pCache := pcache.NewPCache(v.StateMgr, v.Log)
-	pCache.SetValidator(workloadKind, v.validateWorkload)
+	pCache.SetValidator(string(workload.KindWorkload), v.validateWorkload)
+	pCache.SetValidator(string(cluster.KindHost), v.validateHost)
 	pCache.SetValidator(workloadVnicKind, validateWorkloadVnics)
 	v.pCache = pCache
 }

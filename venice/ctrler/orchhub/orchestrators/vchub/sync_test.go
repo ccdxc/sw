@@ -312,6 +312,7 @@ func TestVCSyncHost(t *testing.T) {
 	utils.AddOrchNamespaceLabel(staleHost.Labels, dc1.Obj.Name)
 	// replace stale host with same mac but different VC by this one
 	vchub.fixStaleHost(&staleHost)
+	vchub.pCache.Set("Host", &staleHost)
 
 	// Stale host that will have a stale workload referring to it
 	staleHost3 := createHostObj(

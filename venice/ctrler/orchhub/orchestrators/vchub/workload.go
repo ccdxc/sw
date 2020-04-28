@@ -61,8 +61,6 @@ Object is timed out (but not in statemgr yet):
 	- Last sync call fails. Do nothing, reaction event to time out will call finish migration
 */
 
-const workloadKind = "Workload"
-
 var (
 	// shorthand names for migration stages and status
 	stageMigrationNone           = workload.WorkloadMigrationStatus_MIGRATION_NONE.String()
@@ -85,7 +83,7 @@ func (v *VCHub) handleWorkloadEvent(evtType kvstore.WatchEventType, obj *workloa
 		// Read current state of object in case we already processed it (during sync)
 		// TODO: read from statemgr instead of pcache
 		wl := v.pCache.GetWorkloadByName(obj.Name)
-		v.Log.Infof("pcache version of object %v", obj)
+		v.Log.Infof("pcache version of object %v", wl)
 		if wl == nil || wl.Status.MigrationStatus == nil {
 			return
 		}
@@ -154,7 +152,7 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 		v.Log.Debugf("This is a new workload - %s", meta.Name)
 		workloadObj = &workload.Workload{
 			TypeMeta: api.TypeMeta{
-				Kind:       workloadKind,
+				Kind:       string(workload.KindWorkload),
 				APIVersion: "v1",
 			},
 			ObjectMeta: *meta,
@@ -166,12 +164,7 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 		workloadObj = &temp
 	}
 
-	// AFTER START MIGRATION - PCACHE HAS object with old host in spec.
-	// migrating object is never pushed
-	// when object in pcache  has correct interfaces AND correct host, we call finish migration
-	// Delete object in pcache (pcache delete only)
-
-	// During resync?
+	// During migration, existingWorkload will have destination host.
 
 	// Only trust this if we are migrating
 	// Otherwise, host might be old (VMotion timeout)
@@ -310,7 +303,7 @@ func (v *VCHub) handleVM(m defs.VCEventMsg) {
 
 	v.syncUsegs(m.DcID, m.DcName, m.Key, existingWorkload, workloadObj)
 	// TODO: pcache debug logs not showing up in debug mode
-	v.pCache.Set(workloadKind, workloadObj)
+	v.pCache.Set(string(workload.KindWorkload), workloadObj)
 }
 
 func (v *VCHub) isVMotionAcrossDC(workloadObj *workload.Workload) bool {
@@ -371,7 +364,7 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 		return
 	}
 	// Check new host
-	if v.findHost(hostName) == nil {
+	if v.pCache.GetHostByName(hostName) == nil {
 		v.Log.Infof("Ignore VMotion Event for VM %s - to non-pensando host %s", m.VMKey, hostName)
 		// Workload delete will happen as part of WL watch when vMotion is complete
 		return
@@ -384,7 +377,7 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 		v.Log.Infof("Ignore VMotionStart Event for VM %s - same host %s", m.VMKey, curHostName)
 		return
 	}
-	if curHostName == "" || v.findHost(curHostName) == nil {
+	if curHostName == "" || v.pCache.GetHostByName(hostName) == nil {
 		// VMs coming from non-pensando hosts requires special flow state handling
 		v.Log.Infof("VMotionStart Event for VM %s from non-pensando host %s", m.VMKey, curHostName)
 		// This will be new WL creation, which will happen when we receive WL watch with new host and
@@ -422,6 +415,8 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 			return
 		}
 	}
+	// Delete copy in pcache if it exists
+	v.pCache.DeletePcache(string(workload.KindWorkload), workloadObj)
 }
 
 func (v *VCHub) migrateFromNonPensandoHost(wlObj *workload.Workload, destDc *PenDC, hostName string) {
@@ -552,6 +547,7 @@ func (v *VCHub) resyncWorkload(wlObj *workload.Workload) {
 
 	m = v.convertWorkloadToEvent(dc.dcRef.Value, dc.Name, vm)
 	v.handleVM(m)
+	v.probe.ResyncVMTags(vm.Self.Value)
 }
 
 func (v *VCHub) convertWorkloadToEvent(dcID, dcName string, vm mo.VirtualMachine) defs.VCEventMsg {
@@ -786,7 +782,7 @@ func (v *VCHub) deleteWorkload(workloadObj *workload.Workload) {
 			v.releaseInterface(dcName, &inf, workloadObj, true)
 		}
 	}
-	v.pCache.Delete(workloadKind, workloadObj)
+	v.pCache.Delete(string(workload.KindWorkload), workloadObj)
 	return
 }
 
@@ -1239,7 +1235,7 @@ func (v *VCHub) getVmkWorkload(penDC *PenDC, wlName, hostName string) *workload.
 		}
 		workloadObj = &workload.Workload{
 			TypeMeta: api.TypeMeta{
-				Kind:       workloadKind,
+				Kind:       string(workload.KindWorkload),
 				APIVersion: "v1",
 			},
 			ObjectMeta: *meta,
@@ -1331,7 +1327,7 @@ func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, dispName, hKey str
 	// Use host key as name for vmkworkload.. makes it easier to handle host updates/deletes
 	v.addWorkloadLabels(workloadObj, dispName, penDC.Name)
 	v.Log.Infof("Create/Update vmkWorkload %s", wlName)
-	v.pCache.Set(workloadKind, workloadObj)
+	v.pCache.Set(string(workload.KindWorkload), workloadObj)
 }
 
 func (v *VCHub) addWorkloadLabels(workloadObj *workload.Workload, name, dcName string) {

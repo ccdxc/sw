@@ -555,6 +555,20 @@ func (t *tagsProbe) fetchTags() {
 	}
 }
 
+// ResyncVMTags resends tag events to the probeCh for the given vm
+func (t *tagsProbe) ResyncVMTags(vmID string) {
+	t.vmTagMapLock.Lock()
+	oldTags, ok := t.vmTagMap[vmID]
+	t.vmTagMapLock.Unlock()
+	if !ok {
+		return
+	}
+	tagObj := tags.AttachedTags{
+		TagIDs: oldTags.Items(),
+	}
+	t.generateTagEvent(vmID, tagObj)
+}
+
 func (t *tagsProbe) processTags(tags []tags.AttachedTags) {
 	// For each object generate its diff
 	for _, tagObj := range tags {
@@ -576,105 +590,116 @@ func (t *tagsProbe) processTags(tags []tags.AttachedTags) {
 		}
 		t.vmTagMapLock.Unlock()
 		if writeTags {
-			t.vmTagMap[vm] = NewDeltaStrSet(tagObj.TagIDs)
-
-			workWg := sync.WaitGroup{}
-			var tagEntries []defs.TagEntry
-			jobs := make(chan int, 100)
-			res := make(chan []defs.TagEntry, 100)
-			workerFn := func() {
-				defer workWg.Done()
-				if t.ClientCtx.Err() != nil {
-					return
-				}
-				var entries []defs.TagEntry
-				for j := range jobs {
-					id := tagObj.TagIDs[j]
-
-					t.tagMapLock.RLock()
-					tagEntry, ok := t.tagMap[id]
-					if !ok {
-						// Could be new tag
-						t.tagMapLock.RUnlock()
-
-						// No locks should be held when calling fetch tagInfo
-						t.fetchSingleTagInfo(id)
-
-						// Try re-reading
-						t.tagMapLock.RLock()
-						tagEntry, ok = t.tagMap[id]
-						if !ok {
-							// Skip since we failed to get info about this tag
-							t.Log.Errorf("Failed to get info about tag ID %s, skipping", id)
-							t.tagMapLock.RUnlock()
-							// Don't mark the tag as written
-							t.vmTagMap[vm].RemoveSingle(id)
-							continue
-						}
-					}
-					tagName := tagEntry.TagName
-					catID := tagEntry.CatID
-					catName, ok := t.catMap[catID]
-					t.tagMapLock.RUnlock()
-					if !ok {
-						// Skip since we failed to get info about this category
-						t.Log.Errorf("Failed to get info about cat ID %s for tag %s ID %s, skipping", catID, tagName, id)
-						t.vmTagMap[vm].RemoveSingle(id)
-						continue
-					}
-
-					entry := defs.TagEntry{
-						Name:     tagName,
-						Category: catName,
-					}
-					entries = append(entries, entry)
-				}
-				res <- entries
-			}
-
-			for w := 1; w <= 20; w++ {
-				workWg.Add(1)
-				go workerFn()
-			}
-
-			for j := 0; j < len(tagObj.TagIDs); j++ {
-				jobs <- j
-			}
-			close(jobs)
-
-			workWg.Wait()
-
-			read := true
-			for read {
-				select {
-				case entry := <-res:
-					tagEntries = append(tagEntries, entry...)
-				default:
-					read = false
-				}
-			}
-
-			m := defs.Probe2StoreMsg{
-				MsgType: defs.VCEvent,
-				Val: defs.VCEventMsg{
-					VcObject: defs.VirtualMachine,
-					Key:      vm,
-					Changes: []types.PropertyChange{
-						{
-							Name: string(defs.VMPropTag),
-							Op:   "set",
-							Val:  defs.TagMsg{Tags: tagEntries},
-						},
-					},
-					Originator: t.VcID,
-				},
-			}
-			t.Log.Debugf("Sending tag message to store, key: %s, changes: %v", vm, tagEntries)
-			if t.outbox != nil {
-				t.outbox <- m
-			}
+			t.generateTagEvent(vm, tagObj)
 		}
 	}
+}
+
+func (t *tagsProbe) generateTagEvent(vm string, tagObj tags.AttachedTags) {
+	t.vmTagMapLock.Lock()
+	t.vmTagMap[vm] = NewDeltaStrSet(tagObj.TagIDs)
+	t.vmTagMapLock.Unlock()
+
+	workWg := sync.WaitGroup{}
+	var tagEntries []defs.TagEntry
+	jobs := make(chan int, 100)
+	res := make(chan []defs.TagEntry, 100)
+	workerFn := func() {
+		defer workWg.Done()
+		if t.ClientCtx.Err() != nil {
+			return
+		}
+		var entries []defs.TagEntry
+		for j := range jobs {
+			id := tagObj.TagIDs[j]
+
+			t.tagMapLock.RLock()
+			tagEntry, ok := t.tagMap[id]
+			if !ok {
+				// Could be new tag
+				t.tagMapLock.RUnlock()
+
+				// No locks should be held when calling fetch tagInfo
+				t.fetchSingleTagInfo(id)
+
+				// Try re-reading
+				t.tagMapLock.RLock()
+				tagEntry, ok = t.tagMap[id]
+				if !ok {
+					// Skip since we failed to get info about this tag
+					t.Log.Errorf("Failed to get info about tag ID %s, skipping", id)
+					t.tagMapLock.RUnlock()
+					// Don't mark the tag as written
+					t.vmTagMapLock.Lock()
+					t.vmTagMap[vm].RemoveSingle(id)
+					t.vmTagMapLock.Unlock()
+					continue
+				}
+			}
+			tagName := tagEntry.TagName
+			catID := tagEntry.CatID
+			catName, ok := t.catMap[catID]
+			t.tagMapLock.RUnlock()
+			if !ok {
+				// Skip since we failed to get info about this category
+				t.Log.Errorf("Failed to get info about cat ID %s for tag %s ID %s, skipping", catID, tagName, id)
+				t.vmTagMapLock.Lock()
+				t.vmTagMap[vm].RemoveSingle(id)
+				t.vmTagMapLock.Unlock()
+				continue
+			}
+
+			entry := defs.TagEntry{
+				Name:     tagName,
+				Category: catName,
+			}
+			entries = append(entries, entry)
+		}
+		res <- entries
+	}
+
+	for w := 1; w <= 20; w++ {
+		workWg.Add(1)
+		go workerFn()
+	}
+
+	for j := 0; j < len(tagObj.TagIDs); j++ {
+		jobs <- j
+	}
+	close(jobs)
+
+	workWg.Wait()
+
+	read := true
+	for read {
+		select {
+		case entry := <-res:
+			tagEntries = append(tagEntries, entry...)
+		default:
+			read = false
+		}
+	}
+
+	m := defs.Probe2StoreMsg{
+		MsgType: defs.VCEvent,
+		Val: defs.VCEventMsg{
+			VcObject: defs.VirtualMachine,
+			Key:      vm,
+			Changes: []types.PropertyChange{
+				{
+					Name: string(defs.VMPropTag),
+					Op:   "set",
+					Val:  defs.TagMsg{Tags: tagEntries},
+				},
+			},
+			Originator: t.VcID,
+		},
+	}
+	t.Log.Debugf("Sending tag message to store, key: %s, changes: %v", vm, tagEntries)
+	if t.outbox != nil {
+		t.outbox <- m
+	}
+
 }
 
 func (t *tagsProbe) retry(fn func() (interface{}, error), operName string, delay time.Duration, count int) (interface{}, error) {

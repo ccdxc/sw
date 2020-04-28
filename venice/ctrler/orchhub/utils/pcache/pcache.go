@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
@@ -40,6 +41,15 @@ import (
 const (
 	// PCacheRetryInterval is the cadence of retry for pcache retries
 	PCacheRetryInterval = 10 * time.Second
+
+	// WorkloadKind is the pcache key for workloads
+	WorkloadKind = "Workload"
+
+	// HostKind is the pcache key for hosts
+	HostKind = "Host"
+
+	// How many times to try to rewrite an object before putting in cache
+	writeRetries = 3
 )
 
 type kindEntry struct {
@@ -84,7 +94,7 @@ func (p *PCache) SetValidator(kind string, validator ValidatorFn) {
 
 // GetWorkload Retrieves a workload
 func (p *PCache) GetWorkload(meta *api.ObjectMeta) *workload.Workload {
-	obj := p.Get("Workload", meta)
+	obj := p.Get(WorkloadKind, meta)
 	if obj == nil {
 		return nil
 	}
@@ -108,6 +118,63 @@ func (p *PCache) GetWorkloadByName(wlName string) *workload.Workload {
 		Namespace: globals.DefaultNamespace,
 	}
 	return p.GetWorkload(meta)
+}
+
+// GetHost Retrieves a host
+func (p *PCache) GetHost(meta *api.ObjectMeta) *cluster.Host {
+	obj := p.Get(HostKind, meta)
+	if obj == nil {
+		return nil
+	}
+	switch ret := obj.(type) {
+	case *ctkit.Host:
+		return &ret.Host
+	case *cluster.Host:
+		return ret
+	default:
+		p.Log.Errorf("host returned wasn't the expected type %v", ret)
+	}
+	return nil
+}
+
+// GetHostByName Retrieves a host
+func (p *PCache) GetHostByName(hostName string) *cluster.Host {
+	meta := &api.ObjectMeta{
+		Name: hostName,
+		// TODO: Don't use default tenant
+	}
+	return p.GetHost(meta)
+}
+
+// ListHosts gets all hosts in pcache + statemgr
+func (p *PCache) ListHosts(ctx context.Context) map[string]*cluster.Host {
+	p.RLock()
+	kindMap := p.kinds[HostKind]
+	p.RUnlock()
+	items := map[string]*cluster.Host{}
+
+	if kindMap != nil {
+		kindMap.Lock()
+		for key, entry := range kindMap.entries {
+			items[key] = entry.(*cluster.Host)
+		}
+		kindMap.Unlock()
+	}
+
+	ctkitHosts, err := p.stateMgr.Controller().Host().List(ctx, &api.ListWatchOptions{})
+	if err != nil {
+		p.Log.Errorf("Failed to get hosts in statemgr")
+		return items
+	}
+
+	for _, obj := range ctkitHosts {
+		key := obj.GetKey()
+		if _, ok := items[key]; !ok {
+			items[key] = &obj.Host
+		}
+	}
+
+	return items
 }
 
 // Get retrieves the object from either the PCache (apiserver object) or from statemgr (ctkit object)
@@ -197,7 +264,7 @@ func (p *PCache) IsValid(kind string, meta *api.ObjectMeta) bool {
 
 // Set adds the object to stateMgr if the object is valid and changed, and stores it in the cache otherwise
 func (p *PCache) Set(kind string, in interface{}) error {
-	p.Log.Debugf("Set called for kind : %v and Object : %v", kind, in)
+	p.Log.Infof("Set called for kind : %v and Object : %v", kind, in)
 
 	// Get entries for the kind
 	p.RLock()
@@ -219,15 +286,14 @@ func (p *PCache) Set(kind string, in interface{}) error {
 	return p.validateAndPush(kindMap, in, validateFn)
 }
 
-// Delete deletes the given object from pcache and from statemgr
-func (p *PCache) Delete(kind string, in interface{}) error {
-	// Deletes from cache and statemgr
+// DeletePcache deletes the given object from pcache only
+func (p *PCache) DeletePcache(kind string, in interface{}) error {
 	obj, err := runtime.GetObjectMeta(in)
 	if err != nil {
 		return fmt.Errorf(("Object is not an apiserver object"))
 	}
 	key := obj.GetKey()
-	p.Log.Debugf("delete for %s %s", kind, key)
+	p.Log.Debugf("delete pcache for %s %s", kind, key)
 
 	// Get entries for the kind
 	p.RLock()
@@ -240,6 +306,23 @@ func (p *PCache) Delete(kind string, in interface{}) error {
 			delete(kindMap.entries, key)
 			p.Log.Debugf("%s %s deleted from cache", kind, key)
 		}
+	}
+	return nil
+}
+
+// Delete deletes the given object from pcache and from statemgr
+func (p *PCache) Delete(kind string, in interface{}) error {
+	// Deletes from cache and statemgr
+	obj, err := runtime.GetObjectMeta(in)
+	key := obj.GetKey()
+	if err != nil {
+		return fmt.Errorf(("Object is not an apiserver object"))
+	}
+	p.Log.Debugf("delete for %s %s", kind, key)
+
+	err = p.DeletePcache(kind, in)
+	if err != nil {
+		return err
 	}
 
 	p.Log.Debugf("%s %s attempting to delete from statemgr", kind, key)
@@ -270,19 +353,55 @@ func (p *PCache) writeStateMgr(in interface{}) error {
 			obj.Labels = labels
 			// Object exists and is changed
 			if !reflect.DeepEqual(&currObj.Workload, obj) {
-				obj.ResourceVersion = ""
-				p.Log.Debugf("%s %s statemgr update called", "Workload", meta.GetKey())
-				writeErr = ctrler.Workload().SyncUpdate(obj)
+				for i := 0; i < writeRetries; i++ {
+					// CAS check is needed in case user adds labels to an object
+					obj.ResourceVersion = currObj.ResourceVersion
+					p.Log.Debugf("%s %s statemgr update called", WorkloadKind, meta.GetKey())
+					writeErr = ctrler.Workload().SyncUpdate(obj)
+					if writeErr == nil {
+						break
+					}
+				}
 			}
 		} else {
-			p.Log.Debugf("%s %s statemgr create called", "Workload", meta.GetKey())
+			p.Log.Debugf("%s %s statemgr create called", WorkloadKind, meta.GetKey())
 			writeErr = ctrler.Workload().SyncCreate(obj)
 		}
-		p.Log.Debugf("%s %s write to statemgr returned %v", "Workload", meta.GetKey(), writeErr)
+		p.Log.Debugf("%s %s write to statemgr returned %v", WorkloadKind, meta.GetKey(), writeErr)
+		return writeErr
+	case *cluster.Host:
+		var writeErr error
+		meta := obj.GetObjectMeta()
+		if currObj, err := ctrler.Host().Find(meta); err == nil {
+			// Merge user labels
+			labels := map[string]string{}
+			for k, v := range currObj.Labels {
+				if !strings.HasPrefix(k, globals.SystemLabelPrefix) {
+					// Only take user labels from existing object
+					labels[k] = v
+				}
+			}
+			for k, v := range obj.Labels {
+				if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+					// Only take system labels from new object
+					labels[k] = v
+				}
+			}
+			obj.Labels = labels
+			// Object exists and is changed
+			if !reflect.DeepEqual(&currObj.Host, obj) {
+				p.Log.Debugf("%s %s statemgr update called", HostKind, meta.GetKey())
+				writeErr = ctrler.Host().SyncUpdate(obj)
+			}
+		} else {
+			p.Log.Debugf("%s %s statemgr create called", HostKind, meta.GetKey())
+			writeErr = ctrler.Host().SyncCreate(obj)
+		}
+		p.Log.Debugf("%s %s write to statemgr returned %v", HostKind, meta.GetKey(), writeErr)
 		return writeErr
 	}
 	// Unsupported object, we only write it to cache
-	p.Log.Errorf("writeStatemgr called on unsupported object %+v", in)
+	p.Log.Debugf("writeStatemgr called on unsupported object %+v", in)
 	return fmt.Errorf("Unsupported object")
 }
 
@@ -294,9 +413,19 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 		meta := obj.GetObjectMeta()
 		if _, err := ctrler.Workload().Find(meta); err == nil {
 			// Object exists
-			p.Log.Debugf("%s %s deleting from statemgr", "Workload", meta.GetKey())
+			p.Log.Debugf("%s %s deleting from statemgr", WorkloadKind, meta.GetKey())
 			writeErr = ctrler.Workload().Delete(obj)
-			p.Log.Debugf("%s %s deleting from statemgr returned %v", "Workload", meta.GetKey(), writeErr)
+			p.Log.Debugf("%s %s deleting from statemgr returned %v", WorkloadKind, meta.GetKey(), writeErr)
+		}
+		return writeErr
+	case *cluster.Host:
+		var writeErr error
+		meta := obj.GetObjectMeta()
+		if _, err := ctrler.Host().Find(meta); err == nil {
+			// Object exists
+			p.Log.Debugf("%s %s deleting from statemgr", HostKind, meta.GetKey())
+			writeErr = ctrler.Host().Delete(obj)
+			p.Log.Debugf("%s %s deleting from statemgr returned %v", HostKind, meta.GetKey(), writeErr)
 		}
 		return writeErr
 	}

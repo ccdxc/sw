@@ -74,6 +74,7 @@ type UserHandler interface {
 	OnUserUpdate(oldObj *User, newObj *auth.User) error
 	OnUserDelete(obj *User) error
 	GetUserWatchOptions() *api.ListWatchOptions
+	OnUserReconnect()
 }
 
 // OnUserCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetUserWatchOptions() *api.ListWatchOptions {
 	log.Info("GetUserWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnUserReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnUserReconnect() {
+	log.Info("OnUserReconnect is not implemented")
+	return
 }
 
 // handleUserEvent handles User events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runUserWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffUser(apicl)
+				userHandler.OnUserReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -1071,6 +1079,7 @@ type AuthenticationPolicyHandler interface {
 	OnAuthenticationPolicyUpdate(oldObj *AuthenticationPolicy, newObj *auth.AuthenticationPolicy) error
 	OnAuthenticationPolicyDelete(obj *AuthenticationPolicy) error
 	GetAuthenticationPolicyWatchOptions() *api.ListWatchOptions
+	OnAuthenticationPolicyReconnect()
 }
 
 // OnAuthenticationPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -1096,6 +1105,12 @@ func (ctrler CtrlDefReactor) GetAuthenticationPolicyWatchOptions() *api.ListWatc
 	log.Info("GetAuthenticationPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnAuthenticationPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAuthenticationPolicyReconnect() {
+	log.Info("OnAuthenticationPolicyReconnect is not implemented")
+	return
 }
 
 // handleAuthenticationPolicyEvent handles AuthenticationPolicy events from watcher
@@ -1580,6 +1595,7 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffAuthenticationPolicy(apicl)
+				authenticationpolicyHandler.OnAuthenticationPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -2068,6 +2084,7 @@ type RoleHandler interface {
 	OnRoleUpdate(oldObj *Role, newObj *auth.Role) error
 	OnRoleDelete(obj *Role) error
 	GetRoleWatchOptions() *api.ListWatchOptions
+	OnRoleReconnect()
 }
 
 // OnRoleCreate is a dummy handler used in init if no one registers the handler
@@ -2093,6 +2110,12 @@ func (ctrler CtrlDefReactor) GetRoleWatchOptions() *api.ListWatchOptions {
 	log.Info("GetRoleWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnRoleReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoleReconnect() {
+	log.Info("OnRoleReconnect is not implemented")
+	return
 }
 
 // handleRoleEvent handles Role events from watcher
@@ -2577,6 +2600,7 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffRole(apicl)
+				roleHandler.OnRoleReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -2893,6 +2917,7 @@ type RoleBindingHandler interface {
 	OnRoleBindingUpdate(oldObj *RoleBinding, newObj *auth.RoleBinding) error
 	OnRoleBindingDelete(obj *RoleBinding) error
 	GetRoleBindingWatchOptions() *api.ListWatchOptions
+	OnRoleBindingReconnect()
 }
 
 // OnRoleBindingCreate is a dummy handler used in init if no one registers the handler
@@ -2918,6 +2943,12 @@ func (ctrler CtrlDefReactor) GetRoleBindingWatchOptions() *api.ListWatchOptions 
 	log.Info("GetRoleBindingWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnRoleBindingReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoleBindingReconnect() {
+	log.Info("OnRoleBindingReconnect is not implemented")
+	return
 }
 
 // handleRoleBindingEvent handles RoleBinding events from watcher
@@ -3402,6 +3433,7 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffRoleBinding(apicl)
+				rolebindingHandler.OnRoleBindingReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -3718,6 +3750,7 @@ type UserPreferenceHandler interface {
 	OnUserPreferenceUpdate(oldObj *UserPreference, newObj *auth.UserPreference) error
 	OnUserPreferenceDelete(obj *UserPreference) error
 	GetUserPreferenceWatchOptions() *api.ListWatchOptions
+	OnUserPreferenceReconnect()
 }
 
 // OnUserPreferenceCreate is a dummy handler used in init if no one registers the handler
@@ -3743,6 +3776,12 @@ func (ctrler CtrlDefReactor) GetUserPreferenceWatchOptions() *api.ListWatchOptio
 	log.Info("GetUserPreferenceWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnUserPreferenceReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnUserPreferenceReconnect() {
+	log.Info("OnUserPreferenceReconnect is not implemented")
+	return
 }
 
 // handleUserPreferenceEvent handles UserPreference events from watcher
@@ -4227,6 +4266,7 @@ func (ct *ctrlerCtx) runUserPreferenceWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffUserPreference(apicl)
+				userpreferenceHandler.OnUserPreferenceReconnect()
 
 				// handle api server watch events
 			innerLoop:

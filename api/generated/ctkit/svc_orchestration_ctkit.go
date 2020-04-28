@@ -74,6 +74,7 @@ type OrchestratorHandler interface {
 	OnOrchestratorUpdate(oldObj *Orchestrator, newObj *orchestration.Orchestrator) error
 	OnOrchestratorDelete(obj *Orchestrator) error
 	GetOrchestratorWatchOptions() *api.ListWatchOptions
+	OnOrchestratorReconnect()
 }
 
 // OnOrchestratorCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetOrchestratorWatchOptions() *api.ListWatchOptions
 	log.Info("GetOrchestratorWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnOrchestratorReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnOrchestratorReconnect() {
+	log.Info("OnOrchestratorReconnect is not implemented")
+	return
 }
 
 // handleOrchestratorEvent handles Orchestrator events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runOrchestratorWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffOrchestrator(apicl)
+				orchestratorHandler.OnOrchestratorReconnect()
 
 				// handle api server watch events
 			innerLoop:

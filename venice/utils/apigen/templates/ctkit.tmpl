@@ -77,6 +77,7 @@ type {{.}}Handler interface {
 	On{{.}}Update(oldObj *{{.}}, newObj *{{$pkgname}}.{{.}}) error
 	On{{.}}Delete(obj *{{.}}) error
 	Get{{.}}WatchOptions() *api.ListWatchOptions
+	On{{.}}Reconnect()
 }
 
 // On{{.}}Create is a dummy handler used in init if no one registers the handler
@@ -102,6 +103,12 @@ func (ctrler CtrlDefReactor) Get{{.}}WatchOptions() *api.ListWatchOptions {
 	log.Info("Get{{.}}WatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// On{{.}}Reconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) On{{.}}Reconnect() {
+	log.Info("On{{.}}Reconnect is not implemented")
+	return
 }
 
 
@@ -591,6 +598,7 @@ func (ct *ctrlerCtx) run{{.}}Watcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diff{{.}}(apicl)
+				{{ToLower .}}Handler.On{{.}}Reconnect()
 
 				// handle api server watch events
 			innerLoop:

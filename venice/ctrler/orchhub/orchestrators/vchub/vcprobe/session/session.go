@@ -155,7 +155,7 @@ func (s *Session) ClearSessionWithLock() {
 }
 
 func (s *Session) clearSession() {
-	s.logger.Debug("Clearing session")
+	s.logger.Infof("Clearing session")
 	s.SessionReady = false
 	if s.client != nil {
 		// Using background context since it's likely that
@@ -286,13 +286,13 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 
 			for {
 				select {
-				case <-s.ClientCtx.Done():
+				case <-ctx.Done():
 					return
 				case <-time.After(tagCheckDelay):
 					if s.CheckTagSession {
 						// Re-authenticate tag session
 						s.clientLock.Lock()
-						err := s.tagClient.Login(s.ClientCtx, s.vcURL.User)
+						err := s.tagClient.Login(ctx, s.vcURL.User)
 						if err != nil {
 							s.logger.Errorf("Tags client failed to login, %s", err)
 							evt := ConnectionState{
@@ -331,7 +331,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 					} else if active {
 						count = retryCount
 						s.CheckSession = false
-						s.logger.Debugf("Connection status is active, setting check session back to false")
+						s.logger.Infof("Connection status is active, setting check session back to false")
 					} else {
 						count--
 						s.logger.Infof("Session is not active.. retrying, attempts left %d", count)

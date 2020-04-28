@@ -54,6 +54,7 @@ type TagsProbeInf interface {
 	StartWatch()
 	SetupBaseTags() bool
 	GetPensandoTagsOnObjects(refs []types.ManagedObjectReference) (map[string]KindTagMapEntry, error)
+	ResyncVMTags(string)
 
 	// Write methods
 	TagObjsAsManaged(refs []types.ManagedObjectReference) error
@@ -321,27 +322,30 @@ func (v *VCProbe) StartWatchForDC(dcName, dcID string) {
 	}
 
 	v.tryForever(func() bool {
-		v.Log.Debugf("Host watch Started on DC %s", dcName)
+		v.Log.Infof("Host watch Started on DC %s", dcName)
 		v.startWatch(ctx, defs.HostSystem, []string{"config", "name"}, v.vcEventHandlerForDC(dcID, dcName), &ref)
 		if ctx.Err() != nil {
+			v.Log.Infof("Host watch exiting on DC %s", dcName)
 			return false
 		}
 		return true
 	})
 
 	v.tryForever(func() bool {
-		v.Log.Debugf("VM watch Started on DC %s", dcName)
+		v.Log.Infof("VM watch Started on DC %s", dcName)
 		v.startWatch(ctx, defs.VirtualMachine, vmProps, v.vcEventHandlerForDC(dcID, dcName), &ref)
 		if ctx.Err() != nil {
+			v.Log.Infof("VM watch exiting on DC %s", dcName)
 			return false
 		}
 		return true
 	})
 
 	v.tryForever(func() bool {
-		v.Log.Debugf("PG watch Started")
+		v.Log.Infof("PG watch Started")
 		v.startWatch(ctx, defs.DistributedVirtualPortgroup, []string{"config"}, v.vcEventHandlerForDC(dcID, dcName), &ref)
 		if ctx.Err() != nil {
+			v.Log.Infof("PG watch exiting on DC %s", dcName)
 			return false
 		}
 		return true
@@ -351,6 +355,7 @@ func (v *VCProbe) StartWatchForDC(dcName, dcID string) {
 		v.Log.Debugf("DVS watch started")
 		v.startWatch(ctx, defs.VmwareDistributedVirtualSwitch, []string{"name", "config"}, v.vcEventHandlerForDC(dcID, dcName), &ref)
 		if ctx.Err() != nil {
+			v.Log.Infof("DVS watch exiting on DC %s", dcName)
 			return false
 		}
 		return true
@@ -626,7 +631,7 @@ func (v *VCProbe) withRetry(fn func() (interface{}, error), count int) (interfac
 func (v *VCProbe) initEventTracker(ref types.ManagedObjectReference) {
 	v.EventTrackerLock.Lock()
 	defer v.EventTrackerLock.Unlock()
-	v.Log.Debugf("Start Event Receiver for %s", ref.Value)
+	v.Log.Infof("Start Event Receiver for %s", ref.Value)
 	v.LastEvent[ref.Value] = 0
 }
 

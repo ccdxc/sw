@@ -143,6 +143,11 @@ func (sm *Statemgr) OnHostDelete(host *ctkit.Host) error {
 	return nil
 }
 
+// OnHostReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnHostReconnect() {
+	return
+}
+
 // FindHost finds a host
 func (sm *Statemgr) FindHost(tenant, name string) (*HostState, error) {
 	// find the object

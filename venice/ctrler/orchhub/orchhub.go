@@ -64,13 +64,14 @@ func NewOrchCtrler(opts Opts) (*OrchCtrler, error) {
 	}
 
 	instanceMgrCh := make(chan *kvstore.WatchEvent, configWatcherQueueLen)
-	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, opts.Resolver, opts.Logger, instanceMgrCh)
+	ctkitReconnectCh := make(chan string, configWatcherQueueLen)
+	stateMgr, err := statemgr.NewStatemgr(globals.APIServer, opts.Resolver, opts.Logger, instanceMgrCh, ctkitReconnectCh)
 	if err != nil {
 		opts.Logger.Errorf("Failed to create state manager. Err: %v", err)
 		return nil, err
 	}
 
-	instance, err := instanceManager.NewInstanceManager(stateMgr, opts.VcList, opts.Logger, instanceMgrCh, opts.VCHubOpts)
+	instance, err := instanceManager.NewInstanceManager(stateMgr, opts.VcList, opts.Logger, instanceMgrCh, ctkitReconnectCh, opts.VCHubOpts)
 	if instance == nil || err != nil {
 		opts.Logger.Errorf("Failed to create instance manager. Err : %v", err)
 	}

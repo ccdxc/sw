@@ -213,6 +213,11 @@ func (sma *SmVirtualRouter) OnVirtualRouterDelete(obj *ctkit.VirtualRouter) erro
 		convertVirtualRouter(vr), references(obj))
 }
 
+// OnVirtualRouterReconnect is called when ctkit reconnects to apiserver
+func (sma *SmVirtualRouter) OnVirtualRouterReconnect() {
+	return
+}
+
 // Default Statemanager implememtation
 
 // GetVirtualRouterWatchOptions gets options
@@ -285,4 +290,9 @@ func (sm *Statemgr) OnVirtualRouterDelete(obj *ctkit.VirtualRouter) error {
 	}
 	log.Info("OnVirtualRouterDelete: found virtual router: ", vr.VirtualRouter.Spec)
 	return nil
+}
+
+// OnVirtualRouterReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnVirtualRouterReconnect() {
+	return
 }

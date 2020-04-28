@@ -74,6 +74,7 @@ type EndpointHandler interface {
 	OnEndpointUpdate(oldObj *Endpoint, newObj *workload.Endpoint) error
 	OnEndpointDelete(obj *Endpoint) error
 	GetEndpointWatchOptions() *api.ListWatchOptions
+	OnEndpointReconnect()
 }
 
 // OnEndpointCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetEndpointWatchOptions() *api.ListWatchOptions {
 	log.Info("GetEndpointWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnEndpointReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnEndpointReconnect() {
+	log.Info("OnEndpointReconnect is not implemented")
+	return
 }
 
 // handleEndpointEvent handles Endpoint events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runEndpointWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffEndpoint(apicl)
+				endpointHandler.OnEndpointReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -899,6 +907,7 @@ type WorkloadHandler interface {
 	OnWorkloadUpdate(oldObj *Workload, newObj *workload.Workload) error
 	OnWorkloadDelete(obj *Workload) error
 	GetWorkloadWatchOptions() *api.ListWatchOptions
+	OnWorkloadReconnect()
 }
 
 // OnWorkloadCreate is a dummy handler used in init if no one registers the handler
@@ -924,6 +933,12 @@ func (ctrler CtrlDefReactor) GetWorkloadWatchOptions() *api.ListWatchOptions {
 	log.Info("GetWorkloadWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnWorkloadReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnWorkloadReconnect() {
+	log.Info("OnWorkloadReconnect is not implemented")
+	return
 }
 
 // handleWorkloadEvent handles Workload events from watcher
@@ -1408,6 +1423,7 @@ func (ct *ctrlerCtx) runWorkloadWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffWorkload(apicl)
+				workloadHandler.OnWorkloadReconnect()
 
 				// handle api server watch events
 			innerLoop:

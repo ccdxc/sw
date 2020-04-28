@@ -210,3 +210,8 @@ func (sma *SmRoute) OnRoutingConfigDelete(obj *ctkit.RoutingConfig) error {
 	}
 	return nil
 }
+
+// OnRoutingConfigReconnect is called when ctkit reconnects to apiserver
+func (sma *SmRoute) OnRoutingConfigReconnect() {
+	return
+}

@@ -183,6 +183,11 @@ func (sm *Statemgr) OnDSCProfileDelete(dscProfile *ctkit.DSCProfile) error {
 	return dps.PushObj.DeleteObjectWithReferences(dscProfile.MakeKey("cluster"), convertDSCProfile(dps), references(dscProfile))
 }
 
+// OnDSCProfileReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnDSCProfileReconnect() {
+	return
+}
+
 // FindDSCProfile finds a dscProfile
 func (sm *Statemgr) FindDSCProfile(tenant, name string) (*DSCProfileState, error) {
 	// find the object

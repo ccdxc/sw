@@ -323,6 +323,11 @@ func (sm *Statemgr) FindApp(tenant, name string) (*AppState, error) {
 	return AppStateFromObj(obj)
 }
 
+// OnAppReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnAppReconnect() {
+	return
+}
+
 // ListApps lists all apps
 func (sm *Statemgr) ListApps() ([]*AppState, error) {
 	objs := sm.ListObjects("App")

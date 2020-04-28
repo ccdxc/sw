@@ -118,12 +118,11 @@ func (v *VCHub) RemovePenDC(dcName string) {
 		v.deleteWorkload(&workload.Workload)
 	}
 
-	hosts, err := v.StateMgr.Controller().Host().List(v.Ctx, &opts)
-	if err != nil {
-		v.Log.Errorf("Failed to get host list for DC %v. Err : %v", dcName, err)
-	}
+	hosts := v.pCache.ListHosts(v.Ctx)
 	for _, host := range hosts {
-		v.deleteHostFromDc(&host.Host, existingDC)
+		if utils.IsObjForOrch(host.Labels, v.OrchConfig.Name, dcName) {
+			v.deleteHostFromDc(host, existingDC)
+		}
 	}
 
 	// Delete entries in map

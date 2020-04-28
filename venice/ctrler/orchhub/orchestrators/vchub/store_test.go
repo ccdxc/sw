@@ -11,6 +11,8 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
@@ -94,7 +96,8 @@ func runStoreTC(t *testing.T, testCases []storeTC) {
 			DcMap:        map[string]*PenDC{},
 			DcID2NameMap: map[string]string{},
 		}
-		pCache.SetValidator("Workload", vchub.validateWorkload)
+		pCache.SetValidator(string(workload.KindWorkload), vchub.validateWorkload)
+		pCache.SetValidator(string(cluster.KindHost), vchub.validateHost)
 		pCache.SetValidator(workloadVnicKind, validateWorkloadVnics)
 
 		vchub.StateMgr.SetAPIClient(nil)

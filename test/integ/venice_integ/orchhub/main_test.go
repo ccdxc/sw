@@ -255,21 +255,23 @@ func deleteNetwork(name string) error {
 	return err
 }
 
+func deleteAllNetworks() error {
+	networks, err := tinfo.apicl.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{})
+	if err != nil {
+		tinfo.l.Errorf("Failed to list networks, %s", err)
+		return err
+	}
+	for _, n := range networks {
+		_, err = tinfo.apicl.NetworkV1().Network().Delete(context.Background(), n.GetObjectMeta())
+		tinfo.l.Errorf("Failed to delete %s, err %s", n.Name, err)
+	}
+	return nil
+}
+
 func cleanup() error {
 	// Delete all networks, orch config, teardown sim
 	opts := &api.ListWatchOptions{}
-	nws, err := tinfo.apicl.NetworkV1().Network().List(context.Background(), opts)
-	if err == nil {
-		logger.Errorf("%s", err)
-		return err
-	}
-	for _, nw := range nws {
-		err := deleteNetwork(nw.Name)
-		if err == nil {
-			logger.Errorf("%s", err)
-			return err
-		}
-	}
+	deleteAllNetworks()
 
 	orchs, err := tinfo.apicl.OrchestratorV1().Orchestrator().List(context.Background(), opts)
 	if err == nil {

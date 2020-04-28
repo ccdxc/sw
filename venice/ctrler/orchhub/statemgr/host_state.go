@@ -165,6 +165,13 @@ func (sm *Statemgr) OnHostDelete(nh *ctkit.Host) error {
 	return nil
 }
 
+// OnHostReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnHostReconnect() {
+	sm.logger.Infof("Sending host reconnect event")
+	sm.ctkitReconnectCh <- string(cluster.KindHost)
+	return
+}
+
 // NewHostState create new network state
 func NewHostState(host *ctkit.Host, stateMgr *Statemgr) (*HostState, error) {
 	w := &HostState{

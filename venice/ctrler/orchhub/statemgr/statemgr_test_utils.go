@@ -37,8 +37,9 @@ func NewMockStateManager() (*Statemgr, *MockInstanceManager, error) {
 		tsdb.Init(context.Background(), &tsdb.Opts{})
 	}
 	instanceMgrCh := make(chan *kvstore.WatchEvent, 64)
+	ctkitReconnectCh := make(chan string, 64)
 
-	stateMgr, err := NewStatemgr(globals.APIServer, nil, log.GetNewLogger(log.GetDefaultConfig("orhhub-test")), instanceMgrCh)
+	stateMgr, err := NewStatemgr(globals.APIServer, nil, log.GetNewLogger(log.GetDefaultConfig("orhhub-test")), instanceMgrCh, ctkitReconnectCh)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -28,6 +28,8 @@ type Orchestrator interface {
 	Debug(action string, params map[string]string) (interface{}, error)
 	UpdateConfig(*orchestration.Orchestrator)
 	Sync()
+	// Kind indicates which kind apiclient was reconnected in ctkit
+	Reconnect(kind string)
 }
 
 type syncFlag struct {
@@ -52,7 +54,9 @@ type InstanceManager struct {
 	watchCancel       context.CancelFunc
 	stopFlag          syncFlag
 	instanceManagerCh chan *kvstore.WatchEvent
+	ctkitReconnectCh  chan string
 	logger            log.Logger
+	orchMapLock       sync.RWMutex
 	orchestratorMap   map[string]Orchestrator
 	stateMgr          *statemgr.Statemgr
 	vcenterList       string
@@ -81,7 +85,7 @@ func (w *InstanceManager) stop() {
 }
 
 // NewInstanceManager creates a new watcher
-func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger log.Logger, instanceManagerCh chan *kvstore.WatchEvent, vcHubOpts []vchub.Option) (*InstanceManager, error) {
+func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger log.Logger, instanceManagerCh chan *kvstore.WatchEvent, ctkitReconnectCh chan string, vcHubOpts []vchub.Option) (*InstanceManager, error) {
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
 	instance := &InstanceManager{
@@ -95,6 +99,7 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger 
 		orchestratorMap:   make(map[string]Orchestrator),
 		stateMgr:          stateMgr,
 		instanceManagerCh: instanceManagerCh,
+		ctkitReconnectCh:  ctkitReconnectCh,
 		vcHubOpts:         vcHubOpts,
 	}
 
@@ -104,6 +109,7 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger 
 		if !ok {
 			return nil, fmt.Errorf("key is a required param")
 		}
+		instance.orchMapLock.RLock()
 		orch, ok := instance.orchestratorMap[key]
 		if !ok {
 			// Try with default key format
@@ -119,8 +125,10 @@ func NewInstanceManager(stateMgr *statemgr.Statemgr, vcenterList string, logger 
 			for k := range instance.orchestratorMap {
 				options = append(options, k)
 			}
+			instance.orchMapLock.RUnlock()
 			return nil, fmt.Errorf("No instance with the given key %s was found. Known keys: %v", key, options)
 		}
+		instance.orchMapLock.RUnlock()
 
 		return orch.Debug(action, params)
 	}
@@ -153,6 +161,15 @@ func (w *InstanceManager) watchOrchestratorConfig() {
 			if ok {
 				orchConfig := evt.Object.(*orchestration.Orchestrator)
 				w.handleConfigEvent(evt.Type, orchConfig)
+			}
+		case kind, ok := <-w.ctkitReconnectCh:
+			if ok {
+				w.orchMapLock.RLock()
+				for key, orch := range w.orchestratorMap {
+					w.logger.Infof("sending reconnect event to %s", key)
+					orch.Reconnect(kind)
+				}
+				w.orchMapLock.RUnlock()
 			}
 		}
 	}
@@ -229,6 +246,8 @@ func (w *InstanceManager) createOrch(config *orchestration.Orchestrator) {
 	case orchestration.OrchestratorSpec_VCenter.String():
 		// If vCenter, call launch VCHub
 		vchubInst := vchub.LaunchVCHub(w.stateMgr, config, w.logger, w.vcHubOpts...)
+		w.orchMapLock.Lock()
+		defer w.orchMapLock.Unlock()
 		w.orchestratorMap[config.GetKey()] = vchubInst
 	}
 }
@@ -244,6 +263,8 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 		}
 		w.createOrch(config)
 	case kvstore.Updated:
+		w.orchMapLock.RLock()
+		defer w.orchMapLock.RUnlock()
 		orchInst, ok := w.orchestratorMap[config.GetKey()]
 		if !ok {
 			w.createOrch(config)
@@ -251,6 +272,8 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 		}
 		orchInst.UpdateConfig(config)
 	case kvstore.Deleted:
+		w.orchMapLock.RLock()
+		defer w.orchMapLock.RUnlock()
 		w.logger.Infof("Config item deleted. %v", config)
 		orchInst, ok := w.orchestratorMap[config.GetKey()]
 		if !ok {
@@ -278,9 +301,11 @@ func (w *InstanceManager) periodicSync() {
 			if !inProgress {
 				w.logger.Info("periodic sync running")
 				inProgress = true
+				w.orchMapLock.RLock()
 				for _, v := range w.orchestratorMap {
 					v.Sync()
 				}
+				w.orchMapLock.RUnlock()
 				inProgress = false
 			}
 		}

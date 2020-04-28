@@ -74,6 +74,7 @@ type RolloutHandler interface {
 	OnRolloutUpdate(oldObj *Rollout, newObj *rollout.Rollout) error
 	OnRolloutDelete(obj *Rollout) error
 	GetRolloutWatchOptions() *api.ListWatchOptions
+	OnRolloutReconnect()
 }
 
 // OnRolloutCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetRolloutWatchOptions() *api.ListWatchOptions {
 	log.Info("GetRolloutWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnRolloutReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRolloutReconnect() {
+	log.Info("OnRolloutReconnect is not implemented")
+	return
 }
 
 // handleRolloutEvent handles Rollout events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffRollout(apicl)
+				rolloutHandler.OnRolloutReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -1128,6 +1136,7 @@ type RolloutActionHandler interface {
 	OnRolloutActionUpdate(oldObj *RolloutAction, newObj *rollout.RolloutAction) error
 	OnRolloutActionDelete(obj *RolloutAction) error
 	GetRolloutActionWatchOptions() *api.ListWatchOptions
+	OnRolloutActionReconnect()
 }
 
 // OnRolloutActionCreate is a dummy handler used in init if no one registers the handler
@@ -1153,6 +1162,12 @@ func (ctrler CtrlDefReactor) GetRolloutActionWatchOptions() *api.ListWatchOption
 	log.Info("GetRolloutActionWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnRolloutActionReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRolloutActionReconnect() {
+	log.Info("OnRolloutActionReconnect is not implemented")
+	return
 }
 
 // handleRolloutActionEvent handles RolloutAction events from watcher
@@ -1637,6 +1652,7 @@ func (ct *ctrlerCtx) runRolloutActionWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffRolloutAction(apicl)
+				rolloutactionHandler.OnRolloutActionReconnect()
 
 				// handle api server watch events
 			innerLoop:

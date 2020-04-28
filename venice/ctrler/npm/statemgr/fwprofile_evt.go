@@ -317,6 +317,11 @@ func (sm *Statemgr) OnFirewallProfileDelete(fwProfile *ctkit.FirewallProfile) er
 		convertFirewallProfile(fps), references(fwProfile))
 }
 
+// OnFirewallProfileReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnFirewallProfileReconnect() {
+	return
+}
+
 // FindFirewallProfile finds a fwProfile
 func (sm *Statemgr) FindFirewallProfile(tenant, name string) (*FirewallProfileState, error) {
 	// find the object

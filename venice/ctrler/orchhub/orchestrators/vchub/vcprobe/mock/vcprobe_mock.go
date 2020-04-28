@@ -73,6 +73,16 @@ func (mr *MockTagsProbeInfMockRecorder) GetPensandoTagsOnObjects(refs interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPensandoTagsOnObjects", reflect.TypeOf((*MockTagsProbeInf)(nil).GetPensandoTagsOnObjects), refs)
 }
 
+// ResyncVMTags mocks base method
+func (m *MockTagsProbeInf) ResyncVMTags(arg0 string) {
+	m.ctrl.Call(m, "ResyncVMTags", arg0)
+}
+
+// ResyncVMTags indicates an expected call of ResyncVMTags
+func (mr *MockTagsProbeInfMockRecorder) ResyncVMTags(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResyncVMTags", reflect.TypeOf((*MockTagsProbeInf)(nil).ResyncVMTags), arg0)
+}
+
 // TagObjsAsManaged mocks base method
 func (m *MockTagsProbeInf) TagObjsAsManaged(refs []types.ManagedObjectReference) error {
 	ret := m.ctrl.Call(m, "TagObjsAsManaged", refs)
@@ -571,6 +581,16 @@ func (m *MockProbeInf) GetPensandoTagsOnObjects(refs []types.ManagedObjectRefere
 // GetPensandoTagsOnObjects indicates an expected call of GetPensandoTagsOnObjects
 func (mr *MockProbeInfMockRecorder) GetPensandoTagsOnObjects(refs interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPensandoTagsOnObjects", reflect.TypeOf((*MockProbeInf)(nil).GetPensandoTagsOnObjects), refs)
+}
+
+// ResyncVMTags mocks base method
+func (m *MockProbeInf) ResyncVMTags(arg0 string) {
+	m.ctrl.Call(m, "ResyncVMTags", arg0)
+}
+
+// ResyncVMTags indicates an expected call of ResyncVMTags
+func (mr *MockProbeInfMockRecorder) ResyncVMTags(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResyncVMTags", reflect.TypeOf((*MockProbeInf)(nil).ResyncVMTags), arg0)
 }
 
 // TagObjsAsManaged mocks base method

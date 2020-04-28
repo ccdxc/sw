@@ -186,3 +186,8 @@ func (sma *SmIPAM) OnIPAMPolicyDelete(obj *ctkit.IPAMPolicy) error {
 	// delete it from the DB
 	return sma.sm.DeleteObject(convertIPAMPolicy(policy))
 }
+
+// OnIPAMPolicyReconnect is called when ctkit reconnects to apiserver
+func (sma *SmIPAM) OnIPAMPolicyReconnect() {
+	return
+}

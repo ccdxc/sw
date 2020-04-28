@@ -74,6 +74,7 @@ type BufferHandler interface {
 	OnBufferUpdate(oldObj *Buffer, newObj *staging.Buffer) error
 	OnBufferDelete(obj *Buffer) error
 	GetBufferWatchOptions() *api.ListWatchOptions
+	OnBufferReconnect()
 }
 
 // OnBufferCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetBufferWatchOptions() *api.ListWatchOptions {
 	log.Info("GetBufferWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnBufferReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBufferReconnect() {
+	log.Info("OnBufferReconnect is not implemented")
+	return
 }
 
 // handleBufferEvent handles Buffer events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runBufferWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffBuffer(apicl)
+				bufferHandler.OnBufferReconnect()
 
 				// handle api server watch events
 			innerLoop:

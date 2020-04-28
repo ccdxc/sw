@@ -74,6 +74,7 @@ type ModuleHandler interface {
 	OnModuleUpdate(oldObj *Module, newObj *diagnostics.Module) error
 	OnModuleDelete(obj *Module) error
 	GetModuleWatchOptions() *api.ListWatchOptions
+	OnModuleReconnect()
 }
 
 // OnModuleCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetModuleWatchOptions() *api.ListWatchOptions {
 	log.Info("GetModuleWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnModuleReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnModuleReconnect() {
+	log.Info("OnModuleReconnect is not implemented")
+	return
 }
 
 // handleModuleEvent handles Module events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runModuleWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffModule(apicl)
+				moduleHandler.OnModuleReconnect()
 
 				// handle api server watch events
 			innerLoop:

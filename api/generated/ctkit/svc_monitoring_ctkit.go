@@ -74,6 +74,7 @@ type EventPolicyHandler interface {
 	OnEventPolicyUpdate(oldObj *EventPolicy, newObj *monitoring.EventPolicy) error
 	OnEventPolicyDelete(obj *EventPolicy) error
 	GetEventPolicyWatchOptions() *api.ListWatchOptions
+	OnEventPolicyReconnect()
 }
 
 // OnEventPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetEventPolicyWatchOptions() *api.ListWatchOptions 
 	log.Info("GetEventPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnEventPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnEventPolicyReconnect() {
+	log.Info("OnEventPolicyReconnect is not implemented")
+	return
 }
 
 // handleEventPolicyEvent handles EventPolicy events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffEventPolicy(apicl)
+				eventpolicyHandler.OnEventPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -899,6 +907,7 @@ type FwlogPolicyHandler interface {
 	OnFwlogPolicyUpdate(oldObj *FwlogPolicy, newObj *monitoring.FwlogPolicy) error
 	OnFwlogPolicyDelete(obj *FwlogPolicy) error
 	GetFwlogPolicyWatchOptions() *api.ListWatchOptions
+	OnFwlogPolicyReconnect()
 }
 
 // OnFwlogPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -924,6 +933,12 @@ func (ctrler CtrlDefReactor) GetFwlogPolicyWatchOptions() *api.ListWatchOptions 
 	log.Info("GetFwlogPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnFwlogPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFwlogPolicyReconnect() {
+	log.Info("OnFwlogPolicyReconnect is not implemented")
+	return
 }
 
 // handleFwlogPolicyEvent handles FwlogPolicy events from watcher
@@ -1408,6 +1423,7 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffFwlogPolicy(apicl)
+				fwlogpolicyHandler.OnFwlogPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -1724,6 +1740,7 @@ type FlowExportPolicyHandler interface {
 	OnFlowExportPolicyUpdate(oldObj *FlowExportPolicy, newObj *monitoring.FlowExportPolicy) error
 	OnFlowExportPolicyDelete(obj *FlowExportPolicy) error
 	GetFlowExportPolicyWatchOptions() *api.ListWatchOptions
+	OnFlowExportPolicyReconnect()
 }
 
 // OnFlowExportPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -1749,6 +1766,12 @@ func (ctrler CtrlDefReactor) GetFlowExportPolicyWatchOptions() *api.ListWatchOpt
 	log.Info("GetFlowExportPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnFlowExportPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFlowExportPolicyReconnect() {
+	log.Info("OnFlowExportPolicyReconnect is not implemented")
+	return
 }
 
 // handleFlowExportPolicyEvent handles FlowExportPolicy events from watcher
@@ -2233,6 +2256,7 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffFlowExportPolicy(apicl)
+				flowexportpolicyHandler.OnFlowExportPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -2549,6 +2573,7 @@ type AlertHandler interface {
 	OnAlertUpdate(oldObj *Alert, newObj *monitoring.Alert) error
 	OnAlertDelete(obj *Alert) error
 	GetAlertWatchOptions() *api.ListWatchOptions
+	OnAlertReconnect()
 }
 
 // OnAlertCreate is a dummy handler used in init if no one registers the handler
@@ -2574,6 +2599,12 @@ func (ctrler CtrlDefReactor) GetAlertWatchOptions() *api.ListWatchOptions {
 	log.Info("GetAlertWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnAlertReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertReconnect() {
+	log.Info("OnAlertReconnect is not implemented")
+	return
 }
 
 // handleAlertEvent handles Alert events from watcher
@@ -3058,6 +3089,7 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffAlert(apicl)
+				alertHandler.OnAlertReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -3374,6 +3406,7 @@ type AlertPolicyHandler interface {
 	OnAlertPolicyUpdate(oldObj *AlertPolicy, newObj *monitoring.AlertPolicy) error
 	OnAlertPolicyDelete(obj *AlertPolicy) error
 	GetAlertPolicyWatchOptions() *api.ListWatchOptions
+	OnAlertPolicyReconnect()
 }
 
 // OnAlertPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -3399,6 +3432,12 @@ func (ctrler CtrlDefReactor) GetAlertPolicyWatchOptions() *api.ListWatchOptions 
 	log.Info("GetAlertPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnAlertPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertPolicyReconnect() {
+	log.Info("OnAlertPolicyReconnect is not implemented")
+	return
 }
 
 // handleAlertPolicyEvent handles AlertPolicy events from watcher
@@ -3883,6 +3922,7 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffAlertPolicy(apicl)
+				alertpolicyHandler.OnAlertPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -4199,6 +4239,7 @@ type StatsAlertPolicyHandler interface {
 	OnStatsAlertPolicyUpdate(oldObj *StatsAlertPolicy, newObj *monitoring.StatsAlertPolicy) error
 	OnStatsAlertPolicyDelete(obj *StatsAlertPolicy) error
 	GetStatsAlertPolicyWatchOptions() *api.ListWatchOptions
+	OnStatsAlertPolicyReconnect()
 }
 
 // OnStatsAlertPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -4224,6 +4265,12 @@ func (ctrler CtrlDefReactor) GetStatsAlertPolicyWatchOptions() *api.ListWatchOpt
 	log.Info("GetStatsAlertPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnStatsAlertPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnStatsAlertPolicyReconnect() {
+	log.Info("OnStatsAlertPolicyReconnect is not implemented")
+	return
 }
 
 // handleStatsAlertPolicyEvent handles StatsAlertPolicy events from watcher
@@ -4708,6 +4755,7 @@ func (ct *ctrlerCtx) runStatsAlertPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffStatsAlertPolicy(apicl)
+				statsalertpolicyHandler.OnStatsAlertPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -5024,6 +5072,7 @@ type AlertDestinationHandler interface {
 	OnAlertDestinationUpdate(oldObj *AlertDestination, newObj *monitoring.AlertDestination) error
 	OnAlertDestinationDelete(obj *AlertDestination) error
 	GetAlertDestinationWatchOptions() *api.ListWatchOptions
+	OnAlertDestinationReconnect()
 }
 
 // OnAlertDestinationCreate is a dummy handler used in init if no one registers the handler
@@ -5049,6 +5098,12 @@ func (ctrler CtrlDefReactor) GetAlertDestinationWatchOptions() *api.ListWatchOpt
 	log.Info("GetAlertDestinationWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnAlertDestinationReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAlertDestinationReconnect() {
+	log.Info("OnAlertDestinationReconnect is not implemented")
+	return
 }
 
 // handleAlertDestinationEvent handles AlertDestination events from watcher
@@ -5533,6 +5588,7 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffAlertDestination(apicl)
+				alertdestinationHandler.OnAlertDestinationReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -5849,6 +5905,7 @@ type MirrorSessionHandler interface {
 	OnMirrorSessionUpdate(oldObj *MirrorSession, newObj *monitoring.MirrorSession) error
 	OnMirrorSessionDelete(obj *MirrorSession) error
 	GetMirrorSessionWatchOptions() *api.ListWatchOptions
+	OnMirrorSessionReconnect()
 }
 
 // OnMirrorSessionCreate is a dummy handler used in init if no one registers the handler
@@ -5874,6 +5931,12 @@ func (ctrler CtrlDefReactor) GetMirrorSessionWatchOptions() *api.ListWatchOption
 	log.Info("GetMirrorSessionWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnMirrorSessionReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnMirrorSessionReconnect() {
+	log.Info("OnMirrorSessionReconnect is not implemented")
+	return
 }
 
 // handleMirrorSessionEvent handles MirrorSession events from watcher
@@ -6358,6 +6421,7 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffMirrorSession(apicl)
+				mirrorsessionHandler.OnMirrorSessionReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -6674,6 +6738,7 @@ type TroubleshootingSessionHandler interface {
 	OnTroubleshootingSessionUpdate(oldObj *TroubleshootingSession, newObj *monitoring.TroubleshootingSession) error
 	OnTroubleshootingSessionDelete(obj *TroubleshootingSession) error
 	GetTroubleshootingSessionWatchOptions() *api.ListWatchOptions
+	OnTroubleshootingSessionReconnect()
 }
 
 // OnTroubleshootingSessionCreate is a dummy handler used in init if no one registers the handler
@@ -6699,6 +6764,12 @@ func (ctrler CtrlDefReactor) GetTroubleshootingSessionWatchOptions() *api.ListWa
 	log.Info("GetTroubleshootingSessionWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnTroubleshootingSessionReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTroubleshootingSessionReconnect() {
+	log.Info("OnTroubleshootingSessionReconnect is not implemented")
+	return
 }
 
 // handleTroubleshootingSessionEvent handles TroubleshootingSession events from watcher
@@ -7183,6 +7254,7 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffTroubleshootingSession(apicl)
+				troubleshootingsessionHandler.OnTroubleshootingSessionReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -7499,6 +7571,7 @@ type TechSupportRequestHandler interface {
 	OnTechSupportRequestUpdate(oldObj *TechSupportRequest, newObj *monitoring.TechSupportRequest) error
 	OnTechSupportRequestDelete(obj *TechSupportRequest) error
 	GetTechSupportRequestWatchOptions() *api.ListWatchOptions
+	OnTechSupportRequestReconnect()
 }
 
 // OnTechSupportRequestCreate is a dummy handler used in init if no one registers the handler
@@ -7524,6 +7597,12 @@ func (ctrler CtrlDefReactor) GetTechSupportRequestWatchOptions() *api.ListWatchO
 	log.Info("GetTechSupportRequestWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnTechSupportRequestReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTechSupportRequestReconnect() {
+	log.Info("OnTechSupportRequestReconnect is not implemented")
+	return
 }
 
 // handleTechSupportRequestEvent handles TechSupportRequest events from watcher
@@ -8008,6 +8087,7 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffTechSupportRequest(apicl)
+				techsupportrequestHandler.OnTechSupportRequestReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -8324,6 +8404,7 @@ type ArchiveRequestHandler interface {
 	OnArchiveRequestUpdate(oldObj *ArchiveRequest, newObj *monitoring.ArchiveRequest) error
 	OnArchiveRequestDelete(obj *ArchiveRequest) error
 	GetArchiveRequestWatchOptions() *api.ListWatchOptions
+	OnArchiveRequestReconnect()
 }
 
 // OnArchiveRequestCreate is a dummy handler used in init if no one registers the handler
@@ -8349,6 +8430,12 @@ func (ctrler CtrlDefReactor) GetArchiveRequestWatchOptions() *api.ListWatchOptio
 	log.Info("GetArchiveRequestWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnArchiveRequestReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnArchiveRequestReconnect() {
+	log.Info("OnArchiveRequestReconnect is not implemented")
+	return
 }
 
 // handleArchiveRequestEvent handles ArchiveRequest events from watcher
@@ -8833,6 +8920,7 @@ func (ct *ctrlerCtx) runArchiveRequestWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffArchiveRequest(apicl)
+				archiverequestHandler.OnArchiveRequestReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -9207,6 +9295,7 @@ type AuditPolicyHandler interface {
 	OnAuditPolicyUpdate(oldObj *AuditPolicy, newObj *monitoring.AuditPolicy) error
 	OnAuditPolicyDelete(obj *AuditPolicy) error
 	GetAuditPolicyWatchOptions() *api.ListWatchOptions
+	OnAuditPolicyReconnect()
 }
 
 // OnAuditPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -9232,6 +9321,12 @@ func (ctrler CtrlDefReactor) GetAuditPolicyWatchOptions() *api.ListWatchOptions 
 	log.Info("GetAuditPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnAuditPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAuditPolicyReconnect() {
+	log.Info("OnAuditPolicyReconnect is not implemented")
+	return
 }
 
 // handleAuditPolicyEvent handles AuditPolicy events from watcher
@@ -9716,6 +9811,7 @@ func (ct *ctrlerCtx) runAuditPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffAuditPolicy(apicl)
+				auditpolicyHandler.OnAuditPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:

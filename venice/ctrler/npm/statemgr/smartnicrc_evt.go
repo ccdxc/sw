@@ -95,3 +95,8 @@ func (dscMgr *DSCMgrRc) OnDistributedServiceCardDelete(smartNic *ctkit.Distribut
 	return dscMgr.sm.deleteDscRelatedObjects(smartNic, hs, false)
 
 }
+
+// OnDistributedServiceCardReconnect is called when ctkit reconnects to apiserver
+func (dscMgr *DSCMgrRc) OnDistributedServiceCardReconnect() {
+	return
+}

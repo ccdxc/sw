@@ -74,6 +74,7 @@ type BucketHandler interface {
 	OnBucketUpdate(oldObj *Bucket, newObj *objstore.Bucket) error
 	OnBucketDelete(obj *Bucket) error
 	GetBucketWatchOptions() *api.ListWatchOptions
+	OnBucketReconnect()
 }
 
 // OnBucketCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetBucketWatchOptions() *api.ListWatchOptions {
 	log.Info("GetBucketWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnBucketReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBucketReconnect() {
+	log.Info("OnBucketReconnect is not implemented")
+	return
 }
 
 // handleBucketEvent handles Bucket events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runBucketWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffBucket(apicl)
+				bucketHandler.OnBucketReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -899,6 +907,7 @@ type ObjectHandler interface {
 	OnObjectUpdate(oldObj *Object, newObj *objstore.Object) error
 	OnObjectDelete(obj *Object) error
 	GetObjectWatchOptions() *api.ListWatchOptions
+	OnObjectReconnect()
 }
 
 // OnObjectCreate is a dummy handler used in init if no one registers the handler
@@ -924,6 +933,12 @@ func (ctrler CtrlDefReactor) GetObjectWatchOptions() *api.ListWatchOptions {
 	log.Info("GetObjectWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnObjectReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnObjectReconnect() {
+	log.Info("OnObjectReconnect is not implemented")
+	return
 }
 
 // handleObjectEvent handles Object events from watcher
@@ -1408,6 +1423,7 @@ func (ct *ctrlerCtx) runObjectWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffObject(apicl)
+				objectHandler.OnObjectReconnect()
 
 				// handle api server watch events
 			innerLoop:

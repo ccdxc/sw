@@ -561,6 +561,11 @@ func (sm *Statemgr) OnNetworkDelete(nto *ctkit.Network) error {
 	return err
 }
 
+// OnNetworkReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnNetworkReconnect() {
+	return
+}
+
 func (sm *Statemgr) checkRejectedNetworks() {
 	sm.networkKindLock.Lock()
 	defer sm.networkKindLock.Unlock()

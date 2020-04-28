@@ -74,6 +74,7 @@ type ClusterHandler interface {
 	OnClusterUpdate(oldObj *Cluster, newObj *cluster.Cluster) error
 	OnClusterDelete(obj *Cluster) error
 	GetClusterWatchOptions() *api.ListWatchOptions
+	OnClusterReconnect()
 }
 
 // OnClusterCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetClusterWatchOptions() *api.ListWatchOptions {
 	log.Info("GetClusterWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnClusterReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnClusterReconnect() {
+	log.Info("OnClusterReconnect is not implemented")
+	return
 }
 
 // handleClusterEvent handles Cluster events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffCluster(apicl)
+				clusterHandler.OnClusterReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -1014,6 +1022,7 @@ type NodeHandler interface {
 	OnNodeUpdate(oldObj *Node, newObj *cluster.Node) error
 	OnNodeDelete(obj *Node) error
 	GetNodeWatchOptions() *api.ListWatchOptions
+	OnNodeReconnect()
 }
 
 // OnNodeCreate is a dummy handler used in init if no one registers the handler
@@ -1039,6 +1048,12 @@ func (ctrler CtrlDefReactor) GetNodeWatchOptions() *api.ListWatchOptions {
 	log.Info("GetNodeWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnNodeReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNodeReconnect() {
+	log.Info("OnNodeReconnect is not implemented")
+	return
 }
 
 // handleNodeEvent handles Node events from watcher
@@ -1523,6 +1538,7 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffNode(apicl)
+				nodeHandler.OnNodeReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -1839,6 +1855,7 @@ type HostHandler interface {
 	OnHostUpdate(oldObj *Host, newObj *cluster.Host) error
 	OnHostDelete(obj *Host) error
 	GetHostWatchOptions() *api.ListWatchOptions
+	OnHostReconnect()
 }
 
 // OnHostCreate is a dummy handler used in init if no one registers the handler
@@ -1864,6 +1881,12 @@ func (ctrler CtrlDefReactor) GetHostWatchOptions() *api.ListWatchOptions {
 	log.Info("GetHostWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnHostReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnHostReconnect() {
+	log.Info("OnHostReconnect is not implemented")
+	return
 }
 
 // handleHostEvent handles Host events from watcher
@@ -2348,6 +2371,7 @@ func (ct *ctrlerCtx) runHostWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffHost(apicl)
+				hostHandler.OnHostReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -2664,6 +2688,7 @@ type DistributedServiceCardHandler interface {
 	OnDistributedServiceCardUpdate(oldObj *DistributedServiceCard, newObj *cluster.DistributedServiceCard) error
 	OnDistributedServiceCardDelete(obj *DistributedServiceCard) error
 	GetDistributedServiceCardWatchOptions() *api.ListWatchOptions
+	OnDistributedServiceCardReconnect()
 }
 
 // OnDistributedServiceCardCreate is a dummy handler used in init if no one registers the handler
@@ -2689,6 +2714,12 @@ func (ctrler CtrlDefReactor) GetDistributedServiceCardWatchOptions() *api.ListWa
 	log.Info("GetDistributedServiceCardWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnDistributedServiceCardReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnDistributedServiceCardReconnect() {
+	log.Info("OnDistributedServiceCardReconnect is not implemented")
+	return
 }
 
 // handleDistributedServiceCardEvent handles DistributedServiceCard events from watcher
@@ -3173,6 +3204,7 @@ func (ct *ctrlerCtx) runDistributedServiceCardWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffDistributedServiceCard(apicl)
+				distributedservicecardHandler.OnDistributedServiceCardReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -3489,6 +3521,7 @@ type TenantHandler interface {
 	OnTenantUpdate(oldObj *Tenant, newObj *cluster.Tenant) error
 	OnTenantDelete(obj *Tenant) error
 	GetTenantWatchOptions() *api.ListWatchOptions
+	OnTenantReconnect()
 }
 
 // OnTenantCreate is a dummy handler used in init if no one registers the handler
@@ -3514,6 +3547,12 @@ func (ctrler CtrlDefReactor) GetTenantWatchOptions() *api.ListWatchOptions {
 	log.Info("GetTenantWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnTenantReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTenantReconnect() {
+	log.Info("OnTenantReconnect is not implemented")
+	return
 }
 
 // handleTenantEvent handles Tenant events from watcher
@@ -3998,6 +4037,7 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffTenant(apicl)
+				tenantHandler.OnTenantReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -4314,6 +4354,7 @@ type VersionHandler interface {
 	OnVersionUpdate(oldObj *Version, newObj *cluster.Version) error
 	OnVersionDelete(obj *Version) error
 	GetVersionWatchOptions() *api.ListWatchOptions
+	OnVersionReconnect()
 }
 
 // OnVersionCreate is a dummy handler used in init if no one registers the handler
@@ -4339,6 +4380,12 @@ func (ctrler CtrlDefReactor) GetVersionWatchOptions() *api.ListWatchOptions {
 	log.Info("GetVersionWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnVersionReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnVersionReconnect() {
+	log.Info("OnVersionReconnect is not implemented")
+	return
 }
 
 // handleVersionEvent handles Version events from watcher
@@ -4823,6 +4870,7 @@ func (ct *ctrlerCtx) runVersionWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffVersion(apicl)
+				versionHandler.OnVersionReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -5139,6 +5187,7 @@ type ConfigurationSnapshotHandler interface {
 	OnConfigurationSnapshotUpdate(oldObj *ConfigurationSnapshot, newObj *cluster.ConfigurationSnapshot) error
 	OnConfigurationSnapshotDelete(obj *ConfigurationSnapshot) error
 	GetConfigurationSnapshotWatchOptions() *api.ListWatchOptions
+	OnConfigurationSnapshotReconnect()
 }
 
 // OnConfigurationSnapshotCreate is a dummy handler used in init if no one registers the handler
@@ -5164,6 +5213,12 @@ func (ctrler CtrlDefReactor) GetConfigurationSnapshotWatchOptions() *api.ListWat
 	log.Info("GetConfigurationSnapshotWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnConfigurationSnapshotReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnConfigurationSnapshotReconnect() {
+	log.Info("OnConfigurationSnapshotReconnect is not implemented")
+	return
 }
 
 // handleConfigurationSnapshotEvent handles ConfigurationSnapshot events from watcher
@@ -5648,6 +5703,7 @@ func (ct *ctrlerCtx) runConfigurationSnapshotWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffConfigurationSnapshot(apicl)
+				configurationsnapshotHandler.OnConfigurationSnapshotReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -6022,6 +6078,7 @@ type SnapshotRestoreHandler interface {
 	OnSnapshotRestoreUpdate(oldObj *SnapshotRestore, newObj *cluster.SnapshotRestore) error
 	OnSnapshotRestoreDelete(obj *SnapshotRestore) error
 	GetSnapshotRestoreWatchOptions() *api.ListWatchOptions
+	OnSnapshotRestoreReconnect()
 }
 
 // OnSnapshotRestoreCreate is a dummy handler used in init if no one registers the handler
@@ -6047,6 +6104,12 @@ func (ctrler CtrlDefReactor) GetSnapshotRestoreWatchOptions() *api.ListWatchOpti
 	log.Info("GetSnapshotRestoreWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnSnapshotRestoreReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnSnapshotRestoreReconnect() {
+	log.Info("OnSnapshotRestoreReconnect is not implemented")
+	return
 }
 
 // handleSnapshotRestoreEvent handles SnapshotRestore events from watcher
@@ -6531,6 +6594,7 @@ func (ct *ctrlerCtx) runSnapshotRestoreWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffSnapshotRestore(apicl)
+				snapshotrestoreHandler.OnSnapshotRestoreReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -6905,6 +6969,7 @@ type LicenseHandler interface {
 	OnLicenseUpdate(oldObj *License, newObj *cluster.License) error
 	OnLicenseDelete(obj *License) error
 	GetLicenseWatchOptions() *api.ListWatchOptions
+	OnLicenseReconnect()
 }
 
 // OnLicenseCreate is a dummy handler used in init if no one registers the handler
@@ -6930,6 +6995,12 @@ func (ctrler CtrlDefReactor) GetLicenseWatchOptions() *api.ListWatchOptions {
 	log.Info("GetLicenseWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnLicenseReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnLicenseReconnect() {
+	log.Info("OnLicenseReconnect is not implemented")
+	return
 }
 
 // handleLicenseEvent handles License events from watcher
@@ -7414,6 +7485,7 @@ func (ct *ctrlerCtx) runLicenseWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffLicense(apicl)
+				licenseHandler.OnLicenseReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -7730,6 +7802,7 @@ type DSCProfileHandler interface {
 	OnDSCProfileUpdate(oldObj *DSCProfile, newObj *cluster.DSCProfile) error
 	OnDSCProfileDelete(obj *DSCProfile) error
 	GetDSCProfileWatchOptions() *api.ListWatchOptions
+	OnDSCProfileReconnect()
 }
 
 // OnDSCProfileCreate is a dummy handler used in init if no one registers the handler
@@ -7755,6 +7828,12 @@ func (ctrler CtrlDefReactor) GetDSCProfileWatchOptions() *api.ListWatchOptions {
 	log.Info("GetDSCProfileWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnDSCProfileReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnDSCProfileReconnect() {
+	log.Info("OnDSCProfileReconnect is not implemented")
+	return
 }
 
 // handleDSCProfileEvent handles DSCProfile events from watcher
@@ -8239,6 +8318,7 @@ func (ct *ctrlerCtx) runDSCProfileWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffDSCProfile(apicl)
+				dscprofileHandler.OnDSCProfileReconnect()
 
 				// handle api server watch events
 			innerLoop:

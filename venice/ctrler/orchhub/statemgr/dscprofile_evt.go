@@ -129,6 +129,11 @@ func (sm *Statemgr) OnDSCProfileDelete(dscProfile *ctkit.DSCProfile) error {
 	return nil
 }
 
+// OnDSCProfileReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnDSCProfileReconnect() {
+	return
+}
+
 // FindDSCProfile finds a dscProfile
 func (sm *Statemgr) FindDSCProfile(tenant, name string) (*DSCProfileState, error) {
 	// find the object

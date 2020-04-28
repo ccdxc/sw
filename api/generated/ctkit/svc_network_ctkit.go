@@ -74,6 +74,7 @@ type NetworkHandler interface {
 	OnNetworkUpdate(oldObj *Network, newObj *network.Network) error
 	OnNetworkDelete(obj *Network) error
 	GetNetworkWatchOptions() *api.ListWatchOptions
+	OnNetworkReconnect()
 }
 
 // OnNetworkCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetNetworkWatchOptions() *api.ListWatchOptions {
 	log.Info("GetNetworkWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnNetworkReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkReconnect() {
+	log.Info("OnNetworkReconnect is not implemented")
+	return
 }
 
 // handleNetworkEvent handles Network events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runNetworkWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffNetwork(apicl)
+				networkHandler.OnNetworkReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -899,6 +907,7 @@ type ServiceHandler interface {
 	OnServiceUpdate(oldObj *Service, newObj *network.Service) error
 	OnServiceDelete(obj *Service) error
 	GetServiceWatchOptions() *api.ListWatchOptions
+	OnServiceReconnect()
 }
 
 // OnServiceCreate is a dummy handler used in init if no one registers the handler
@@ -924,6 +933,12 @@ func (ctrler CtrlDefReactor) GetServiceWatchOptions() *api.ListWatchOptions {
 	log.Info("GetServiceWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnServiceReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnServiceReconnect() {
+	log.Info("OnServiceReconnect is not implemented")
+	return
 }
 
 // handleServiceEvent handles Service events from watcher
@@ -1408,6 +1423,7 @@ func (ct *ctrlerCtx) runServiceWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffService(apicl)
+				serviceHandler.OnServiceReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -1724,6 +1740,7 @@ type LbPolicyHandler interface {
 	OnLbPolicyUpdate(oldObj *LbPolicy, newObj *network.LbPolicy) error
 	OnLbPolicyDelete(obj *LbPolicy) error
 	GetLbPolicyWatchOptions() *api.ListWatchOptions
+	OnLbPolicyReconnect()
 }
 
 // OnLbPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -1749,6 +1766,12 @@ func (ctrler CtrlDefReactor) GetLbPolicyWatchOptions() *api.ListWatchOptions {
 	log.Info("GetLbPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnLbPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnLbPolicyReconnect() {
+	log.Info("OnLbPolicyReconnect is not implemented")
+	return
 }
 
 // handleLbPolicyEvent handles LbPolicy events from watcher
@@ -2233,6 +2256,7 @@ func (ct *ctrlerCtx) runLbPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffLbPolicy(apicl)
+				lbpolicyHandler.OnLbPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -2549,6 +2573,7 @@ type VirtualRouterHandler interface {
 	OnVirtualRouterUpdate(oldObj *VirtualRouter, newObj *network.VirtualRouter) error
 	OnVirtualRouterDelete(obj *VirtualRouter) error
 	GetVirtualRouterWatchOptions() *api.ListWatchOptions
+	OnVirtualRouterReconnect()
 }
 
 // OnVirtualRouterCreate is a dummy handler used in init if no one registers the handler
@@ -2574,6 +2599,12 @@ func (ctrler CtrlDefReactor) GetVirtualRouterWatchOptions() *api.ListWatchOption
 	log.Info("GetVirtualRouterWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnVirtualRouterReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnVirtualRouterReconnect() {
+	log.Info("OnVirtualRouterReconnect is not implemented")
+	return
 }
 
 // handleVirtualRouterEvent handles VirtualRouter events from watcher
@@ -3058,6 +3089,7 @@ func (ct *ctrlerCtx) runVirtualRouterWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffVirtualRouter(apicl)
+				virtualrouterHandler.OnVirtualRouterReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -3374,6 +3406,7 @@ type NetworkInterfaceHandler interface {
 	OnNetworkInterfaceUpdate(oldObj *NetworkInterface, newObj *network.NetworkInterface) error
 	OnNetworkInterfaceDelete(obj *NetworkInterface) error
 	GetNetworkInterfaceWatchOptions() *api.ListWatchOptions
+	OnNetworkInterfaceReconnect()
 }
 
 // OnNetworkInterfaceCreate is a dummy handler used in init if no one registers the handler
@@ -3399,6 +3432,12 @@ func (ctrler CtrlDefReactor) GetNetworkInterfaceWatchOptions() *api.ListWatchOpt
 	log.Info("GetNetworkInterfaceWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnNetworkInterfaceReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkInterfaceReconnect() {
+	log.Info("OnNetworkInterfaceReconnect is not implemented")
+	return
 }
 
 // handleNetworkInterfaceEvent handles NetworkInterface events from watcher
@@ -3883,6 +3922,7 @@ func (ct *ctrlerCtx) runNetworkInterfaceWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffNetworkInterface(apicl)
+				networkinterfaceHandler.OnNetworkInterfaceReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -4199,6 +4239,7 @@ type IPAMPolicyHandler interface {
 	OnIPAMPolicyUpdate(oldObj *IPAMPolicy, newObj *network.IPAMPolicy) error
 	OnIPAMPolicyDelete(obj *IPAMPolicy) error
 	GetIPAMPolicyWatchOptions() *api.ListWatchOptions
+	OnIPAMPolicyReconnect()
 }
 
 // OnIPAMPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -4224,6 +4265,12 @@ func (ctrler CtrlDefReactor) GetIPAMPolicyWatchOptions() *api.ListWatchOptions {
 	log.Info("GetIPAMPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnIPAMPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnIPAMPolicyReconnect() {
+	log.Info("OnIPAMPolicyReconnect is not implemented")
+	return
 }
 
 // handleIPAMPolicyEvent handles IPAMPolicy events from watcher
@@ -4708,6 +4755,7 @@ func (ct *ctrlerCtx) runIPAMPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffIPAMPolicy(apicl)
+				ipampolicyHandler.OnIPAMPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -5024,6 +5072,7 @@ type RoutingConfigHandler interface {
 	OnRoutingConfigUpdate(oldObj *RoutingConfig, newObj *network.RoutingConfig) error
 	OnRoutingConfigDelete(obj *RoutingConfig) error
 	GetRoutingConfigWatchOptions() *api.ListWatchOptions
+	OnRoutingConfigReconnect()
 }
 
 // OnRoutingConfigCreate is a dummy handler used in init if no one registers the handler
@@ -5049,6 +5098,12 @@ func (ctrler CtrlDefReactor) GetRoutingConfigWatchOptions() *api.ListWatchOption
 	log.Info("GetRoutingConfigWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnRoutingConfigReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRoutingConfigReconnect() {
+	log.Info("OnRoutingConfigReconnect is not implemented")
+	return
 }
 
 // handleRoutingConfigEvent handles RoutingConfig events from watcher
@@ -5533,6 +5588,7 @@ func (ct *ctrlerCtx) runRoutingConfigWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffRoutingConfig(apicl)
+				routingconfigHandler.OnRoutingConfigReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -5849,6 +5905,7 @@ type RouteTableHandler interface {
 	OnRouteTableUpdate(oldObj *RouteTable, newObj *network.RouteTable) error
 	OnRouteTableDelete(obj *RouteTable) error
 	GetRouteTableWatchOptions() *api.ListWatchOptions
+	OnRouteTableReconnect()
 }
 
 // OnRouteTableCreate is a dummy handler used in init if no one registers the handler
@@ -5874,6 +5931,12 @@ func (ctrler CtrlDefReactor) GetRouteTableWatchOptions() *api.ListWatchOptions {
 	log.Info("GetRouteTableWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnRouteTableReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnRouteTableReconnect() {
+	log.Info("OnRouteTableReconnect is not implemented")
+	return
 }
 
 // handleRouteTableEvent handles RouteTable events from watcher
@@ -6358,6 +6421,7 @@ func (ct *ctrlerCtx) runRouteTableWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffRouteTable(apicl)
+				routetableHandler.OnRouteTableReconnect()
 
 				// handle api server watch events
 			innerLoop:

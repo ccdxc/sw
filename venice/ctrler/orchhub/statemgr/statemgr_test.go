@@ -128,6 +128,9 @@ func TestNetworkWatcher(t *testing.T) {
 
 	err = DeleteNetwork(sm, &np)
 	Assert(t, err == nil, "delete network failed")
+
+	// Increase test coverage
+	sm.OnNetworkReconnect()
 	return
 }
 
@@ -292,6 +295,13 @@ func TestWorkloadCreateList(t *testing.T) {
 	nw, err = sm.ctrler.Workload().List(context.Background(), &opts)
 	Assert(t, len(nw) == 1, "expected 1, got %v Workloads", len(nw))
 
+	sm.OnWorkloadReconnect()
+	select {
+	case kind := <-sm.ctkitReconnectCh:
+		AssertEquals(t, "Workload", kind, "Wrong kind sent over channel")
+	default:
+		t.Fatalf("Channel had no event")
+	}
 	return
 }
 
@@ -380,6 +390,14 @@ func TestHostCreateList(t *testing.T) {
 
 	nw, err = sm.ctrler.Host().List(context.Background(), &opts)
 	Assert(t, len(nw) == 1, "expected 1, got %v Hosts", len(nw))
+
+	sm.OnHostReconnect()
+	select {
+	case kind := <-sm.ctkitReconnectCh:
+		AssertEquals(t, "Host", kind, "Wrong kind sent over channel")
+	default:
+		t.Fatalf("Channel had no event")
+	}
 
 	return
 }
@@ -484,6 +502,9 @@ func TestDistributedServiceCardCreateList(t *testing.T) {
 	nw, err = sm.ctrler.DistributedServiceCard().List(context.Background(), &opts)
 	Assert(t, len(nw) == 1, "expected 1, got %v DistributedServiceCards", len(nw))
 
+	// Increase test coverage
+	sm.OnDistributedServiceCardReconnect()
+
 	return
 }
 
@@ -564,6 +585,9 @@ func TestOrchestratorCreateList(t *testing.T) {
 
 	_, err = sm.GetProbeChannel(nw[0].GetName())
 	AssertOk(t, err, "Failed to get probe channel")
+
+	// Increase test coverage
+	sm.OnDistributedServiceCardReconnect()
 
 	return
 }

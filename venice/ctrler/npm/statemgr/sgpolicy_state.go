@@ -514,6 +514,11 @@ func (sm *Statemgr) OnNetworkSecurityPolicyDelete(sgpo *ctkit.NetworkSecurityPol
 		convertNetworkSecurityPolicy(sgp), references(sgpo))
 }
 
+// OnNetworkSecurityPolicyReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnNetworkSecurityPolicyReconnect() {
+	return
+}
+
 // UpdateSgpolicyStatus updates the status of an sg policy
 func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID string) {
 	policy, err := sm.FindSgpolicy(tenant, name)

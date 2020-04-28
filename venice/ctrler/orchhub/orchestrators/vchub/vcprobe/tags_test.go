@@ -171,6 +171,13 @@ func TestTags(t *testing.T) {
 	expMap[vm3.Self.Value] = []string{"default:tagZone11"}
 	th.verifyTags(expMap)
 
+	// resyncVMtags should trigger all events again
+	th.tp.ResyncVMTags(vm1.Self.Value)
+	expMap = map[string][]string{
+		vm1.Self.Value: []string{"default:tagZone11", "default:tagZone3"},
+	}
+	th.verifyTags(expMap)
+
 	// Check tag removal basic
 	th.detachTag("tagZone11", vm3)
 	expMap = map[string][]string{

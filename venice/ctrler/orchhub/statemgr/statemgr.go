@@ -26,12 +26,13 @@ type Statemgr struct {
 	logger            log.Logger
 	ctrler            ctkit.Controller
 	instanceManagerCh chan *kvstore.WatchEvent
+	ctkitReconnectCh  chan string // Emits the kind that reconnected
 	probeChMutex      sync.RWMutex
 	probeCh           map[string]chan *kvstore.WatchEvent
 }
 
 // NewStatemgr creates a new state mgr
-func NewStatemgr(apiSrvURL string, resolver resolver.Interface, logger log.Logger, instanceManagerCh chan *kvstore.WatchEvent) (*Statemgr, error) {
+func NewStatemgr(apiSrvURL string, resolver resolver.Interface, logger log.Logger, instanceManagerCh chan *kvstore.WatchEvent, ctkitReconnectCh chan string) (*Statemgr, error) {
 	var apicl apiclient.Services
 	var err error
 	if resolver != nil {
@@ -55,6 +56,7 @@ func NewStatemgr(apiSrvURL string, resolver resolver.Interface, logger log.Logge
 		logger:            logger,
 		ctrler:            ctrler,
 		instanceManagerCh: instanceManagerCh,
+		ctkitReconnectCh:  ctkitReconnectCh,
 		probeCh:           make(map[string]chan *kvstore.WatchEvent),
 	}
 
@@ -171,11 +173,15 @@ func (s *Statemgr) startWatchers() error {
 	// are present in the local cache when the Watch for that object is setup.
 	// We setup Watch for the orchestrator at the end so that the probes created by
 	// the orchestrator has all the objects for reconciliation.
-
 	err := s.ctrler.Cluster().Watch(s)
 	if err != nil {
 		return fmt.Errorf("Error establishing watch on cluster. Err: %v", err)
 	}
+
+	// err = s.ctrler.SnapshotRestore().Watch(s)
+	// if err != nil {
+	// 	return fmt.Errorf("Error establishing watch on orchestrator. Err: %v", err)
+	// }
 
 	err = s.ctrler.Network().Watch(s)
 	if err != nil {

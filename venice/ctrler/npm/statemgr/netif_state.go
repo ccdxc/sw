@@ -264,6 +264,11 @@ func (sm *Statemgr) OnNetworkInterfaceDelete(obj *ctkit.NetworkInterface) error 
 	return nil
 }
 
+// OnNetworkInterfaceReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnNetworkInterfaceReconnect() {
+	return
+}
+
 type labelInterfaces struct {
 	label map[string]string
 	intfs map[string]*NetworkInterfaceState
@@ -902,6 +907,11 @@ func (sma *SmNetworkInterface) OnNetworkInterfaceDelete(ctkitNetif *ctkit.Networ
 	ifcfg.pushObject.RemoveAllObjReceivers()
 	return ifcfg.pushObject.DeleteObjectWithReferences(ctkitNetif.MakeKey(string(apiclient.GroupNetwork)),
 		convertNetworkInterfaceObject(ifcfg), references(ctkitNetif))
+}
+
+// OnNetworkInterfaceReconnect is called when ctkit reconnects to apiserver
+func (sma *SmNetworkInterface) OnNetworkInterfaceReconnect() {
+	return
 }
 
 // GetNetworkInterfaceWatchOptions is a dummy handler used in init if no one registers the handler

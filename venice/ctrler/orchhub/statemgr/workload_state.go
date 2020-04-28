@@ -66,6 +66,13 @@ func (sm *Statemgr) OnWorkloadDelete(w *ctkit.Workload) error {
 	return err
 }
 
+// OnWorkloadReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnWorkloadReconnect() {
+	sm.logger.Infof("Sending workload reconnect event")
+	sm.ctkitReconnectCh <- string(workload.KindWorkload)
+	return
+}
+
 // WorkloadStateFromObj converts from memdb object to workload state
 func WorkloadStateFromObj(obj runtime.Object) (*WorkloadState, error) {
 	switch obj.(type) {

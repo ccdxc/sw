@@ -3,17 +3,25 @@ package orchhub
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
+	"github.com/pensando/sw/venice/globals"
+	conv "github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 )
 
 func TestOrchestrationConnectionStatus(t *testing.T) {
@@ -296,5 +304,134 @@ func TestNetworks(t *testing.T) {
 		}
 		return true, nil
 	}, "Failed to find PG", "1s", "30s")
+
+}
+
+func TestAPIServerRestart(t *testing.T) {
+	testParams := &testutils.TestParams{
+		TestHostName: "127.0.0.1:8989",
+		TestUser:     "user",
+		TestPassword: "pass",
+
+		TestDCName:             "PenTestDC",
+		TestDVSName:            vchub.CreateDVSName("PenTestDC"),
+		TestPGNameBase:         defs.DefaultPGPrefix,
+		TestMaxPorts:           4096,
+		TestNumStandalonePorts: 512,
+		TestNumPVLANPair:       5,
+		StartPVLAN:             500,
+		TestNumPG:              5,
+		TestNumPortsPerPG:      20,
+		TestOrchName:           "test-orchestrator",
+	}
+	// Create host 1
+	// Disconnect from apiserver
+	// Create host 2, workload 1 on host1
+	// Bring up APIserver
+	// Workload 1 and host 1, 2 should now exist in apiserver
+
+	vcInfo := tinfo.vcConfig
+
+	if vcInfo.useRealVC {
+		t.Skip("Real VC is not supported for this test")
+	}
+
+	// bring up sim
+	vcSim, err := startVCSim(vcInfo.uri, vcInfo.user, vcInfo.pass)
+	AssertOk(t, err, "Failed to create vcsim")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	probe := createProbe(ctx, vcInfo.uri, vcInfo.user, vcInfo.pass)
+	AssertEventually(t, func() (bool, interface{}) {
+		if !probe.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	defer func() {
+		logger.Infof("----- Teardown ----")
+		cancel()
+		probe.Wg.Wait()
+		cleanup()
+		if vcSim != nil {
+			go func() {
+				vcSim.Destroy()
+			}()
+		}
+	}()
+
+	dcName := testParams.TestDCName
+	dc1, err := vcSim.AddDC(dcName)
+	AssertOk(t, err, "failed dc create")
+
+	// Create DVS
+	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(testParams, "add")
+	dvsCreateSpec := testutils.GenDVSCreateSpec(testParams, pvlanConfigSpecArray)
+
+	err = probe.AddPenDVS(dcName, dvsCreateSpec, nil, 3)
+	dvsName := vchub.CreateDVSName(testParams.TestDCName)
+	dvs, ok := dc1.GetDVS(dvsName)
+	Assert(t, ok, "failed dvs create")
+
+	hostSystem1, err := dc1.AddHost("host1")
+	AssertOk(t, err, "failed host1 create")
+	err = dvs.AddHost(hostSystem1)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac := net.HardwareAddr{}
+	pNicMac = append(pNicMac, globals.PensandoOUI[0], globals.PensandoOUI[1], globals.PensandoOUI[2])
+	pNicMac = append(pNicMac, 0xaa, 0x00, 0x00)
+	// Make it Pensando host
+	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
+
+	// Trigger vchub
+	_, err = createOrchConfig("vc1", vcInfo.uri, vcInfo.user, vcInfo.pass, dcName)
+	AssertOk(t, err, "Error creating orch config")
+
+	// Take down apiserver
+	tinfo.apiServer.Stop()
+
+	tinfo.l.Infof("API Server shutdown")
+
+	// Create new host while apiserver is down
+	hostSystem2, err := dc1.AddHost("host2")
+	AssertOk(t, err, "failed host2 create")
+	err = dvs.AddHost(hostSystem2)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac2 := net.HardwareAddr{}
+	pNicMac2 = append(pNicMac2, globals.PensandoOUI[0], globals.PensandoOUI[1], globals.PensandoOUI[2])
+	pNicMac2 = append(pNicMac2, 0xaa, 0x00, 0x11)
+	// Make it Pensando host
+	err = hostSystem2.AddNic("vmnic0", conv.MacString(pNicMac2))
+
+	// Reconnect apiserver
+	tinfo.apiServer, tinfo.apiServerAddr, err = serviceutils.StartAPIServer(":0", "OrchhubIntegTest", tinfo.l)
+	AssertOk(t, err, "Failed to start apiserver")
+
+	tinfo.updateResolver(globals.APIServer, tinfo.apiServerAddr)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		apicl, err := apiclient.NewGrpcAPIClient("OrchhubIntegTest", tinfo.apiServerAddr, tinfo.l)
+		if err != nil {
+			tinfo.l.Errorf("cannot create grpc client, Err: %v", err)
+			return false, err
+		}
+		tinfo.apicl = apicl
+		return true, nil
+	}, "Failed to create apicl", "15s", "3m")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		hosts, err := tinfo.apicl.ClusterV1().Host().List(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(hosts) != 2 {
+			return false, fmt.Errorf("Found %d hosts, expected 2", len(hosts))
+		}
+
+		return true, nil
+	}, "Failed to find workloads and hosts", "5s", "30s")
 
 }

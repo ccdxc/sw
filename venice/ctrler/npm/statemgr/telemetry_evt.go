@@ -231,6 +231,11 @@ func (smm *SmFlowExportPolicyInterface) OnFlowExportPolicyDelete(obj *ctkit.Flow
 		convertFlowExportPolicy(&obj.FlowExportPolicy), references(&obj.FlowExportPolicy))
 }
 
+// OnFlowExportPolicyReconnect is called when ctkit reconnects to apiserver
+func (smm *SmFlowExportPolicyInterface) OnFlowExportPolicyReconnect() {
+	return
+}
+
 //GetFlowExportPolicyWatchOptions Get watch options
 func (smm *SmFlowExportPolicyInterface) GetFlowExportPolicyWatchOptions() *api.ListWatchOptions {
 	opts := &api.ListWatchOptions{}

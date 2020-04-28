@@ -139,6 +139,11 @@ func (sm *Statemgr) OnDistributedServiceCardDelete(dsc *ctkit.DistributedService
 	return err
 }
 
+// OnDistributedServiceCardReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnDistributedServiceCardReconnect() {
+	return
+}
+
 // NewDSCState create new DSC state
 func NewDSCState(dsc *ctkit.DistributedServiceCard, stateMgr *Statemgr) (*DistributedServiceCardState, error) {
 	w := &DistributedServiceCardState{

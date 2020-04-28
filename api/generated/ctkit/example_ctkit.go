@@ -74,6 +74,7 @@ type OrderHandler interface {
 	OnOrderUpdate(oldObj *Order, newObj *bookstore.Order) error
 	OnOrderDelete(obj *Order) error
 	GetOrderWatchOptions() *api.ListWatchOptions
+	OnOrderReconnect()
 }
 
 // OnOrderCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetOrderWatchOptions() *api.ListWatchOptions {
 	log.Info("GetOrderWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnOrderReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnOrderReconnect() {
+	log.Info("OnOrderReconnect is not implemented")
+	return
 }
 
 // handleOrderEvent handles Order events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runOrderWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffOrder(apicl)
+				orderHandler.OnOrderReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -1014,6 +1022,7 @@ type BookHandler interface {
 	OnBookUpdate(oldObj *Book, newObj *bookstore.Book) error
 	OnBookDelete(obj *Book) error
 	GetBookWatchOptions() *api.ListWatchOptions
+	OnBookReconnect()
 }
 
 // OnBookCreate is a dummy handler used in init if no one registers the handler
@@ -1039,6 +1048,12 @@ func (ctrler CtrlDefReactor) GetBookWatchOptions() *api.ListWatchOptions {
 	log.Info("GetBookWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnBookReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnBookReconnect() {
+	log.Info("OnBookReconnect is not implemented")
+	return
 }
 
 // handleBookEvent handles Book events from watcher
@@ -1523,6 +1538,7 @@ func (ct *ctrlerCtx) runBookWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffBook(apicl)
+				bookHandler.OnBookReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -1897,6 +1913,7 @@ type PublisherHandler interface {
 	OnPublisherUpdate(oldObj *Publisher, newObj *bookstore.Publisher) error
 	OnPublisherDelete(obj *Publisher) error
 	GetPublisherWatchOptions() *api.ListWatchOptions
+	OnPublisherReconnect()
 }
 
 // OnPublisherCreate is a dummy handler used in init if no one registers the handler
@@ -1922,6 +1939,12 @@ func (ctrler CtrlDefReactor) GetPublisherWatchOptions() *api.ListWatchOptions {
 	log.Info("GetPublisherWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnPublisherReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnPublisherReconnect() {
+	log.Info("OnPublisherReconnect is not implemented")
+	return
 }
 
 // handlePublisherEvent handles Publisher events from watcher
@@ -2406,6 +2429,7 @@ func (ct *ctrlerCtx) runPublisherWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffPublisher(apicl)
+				publisherHandler.OnPublisherReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -2722,6 +2746,7 @@ type StoreHandler interface {
 	OnStoreUpdate(oldObj *Store, newObj *bookstore.Store) error
 	OnStoreDelete(obj *Store) error
 	GetStoreWatchOptions() *api.ListWatchOptions
+	OnStoreReconnect()
 }
 
 // OnStoreCreate is a dummy handler used in init if no one registers the handler
@@ -2747,6 +2772,12 @@ func (ctrler CtrlDefReactor) GetStoreWatchOptions() *api.ListWatchOptions {
 	log.Info("GetStoreWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnStoreReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnStoreReconnect() {
+	log.Info("OnStoreReconnect is not implemented")
+	return
 }
 
 // handleStoreEvent handles Store events from watcher
@@ -3231,6 +3262,7 @@ func (ct *ctrlerCtx) runStoreWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffStore(apicl)
+				storeHandler.OnStoreReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -3605,6 +3637,7 @@ type CouponHandler interface {
 	OnCouponUpdate(oldObj *Coupon, newObj *bookstore.Coupon) error
 	OnCouponDelete(obj *Coupon) error
 	GetCouponWatchOptions() *api.ListWatchOptions
+	OnCouponReconnect()
 }
 
 // OnCouponCreate is a dummy handler used in init if no one registers the handler
@@ -3630,6 +3663,12 @@ func (ctrler CtrlDefReactor) GetCouponWatchOptions() *api.ListWatchOptions {
 	log.Info("GetCouponWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnCouponReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCouponReconnect() {
+	log.Info("OnCouponReconnect is not implemented")
+	return
 }
 
 // handleCouponEvent handles Coupon events from watcher
@@ -4114,6 +4153,7 @@ func (ct *ctrlerCtx) runCouponWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffCoupon(apicl)
+				couponHandler.OnCouponReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -4430,6 +4470,7 @@ type CustomerHandler interface {
 	OnCustomerUpdate(oldObj *Customer, newObj *bookstore.Customer) error
 	OnCustomerDelete(obj *Customer) error
 	GetCustomerWatchOptions() *api.ListWatchOptions
+	OnCustomerReconnect()
 }
 
 // OnCustomerCreate is a dummy handler used in init if no one registers the handler
@@ -4455,6 +4496,12 @@ func (ctrler CtrlDefReactor) GetCustomerWatchOptions() *api.ListWatchOptions {
 	log.Info("GetCustomerWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnCustomerReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCustomerReconnect() {
+	log.Info("OnCustomerReconnect is not implemented")
+	return
 }
 
 // handleCustomerEvent handles Customer events from watcher
@@ -4939,6 +4986,7 @@ func (ct *ctrlerCtx) runCustomerWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffCustomer(apicl)
+				customerHandler.OnCustomerReconnect()
 
 				// handle api server watch events
 			innerLoop:

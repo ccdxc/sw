@@ -99,6 +99,11 @@ func (sm *Statemgr) OnTenantDelete(tn *ctkit.Tenant) error {
 		convertTenant(ts), references(tn))
 }
 
+// OnTenantReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnTenantReconnect() {
+	return
+}
+
 // FindTenant finds a tenant
 func (sm *Statemgr) FindTenant(tenant string) (*TenantState, error) {
 	// find the object

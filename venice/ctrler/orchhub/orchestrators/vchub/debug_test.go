@@ -34,7 +34,7 @@ func TestDebug(t *testing.T) {
 	AssertOk(t, err, "Failed to create vcsim")
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
-	_, err = dc1.AddHost("host1")
+	host, err := dc1.AddHost("host1")
 	AssertOk(t, err, "Failed to create host")
 	vm, err := dc1.AddVM("vm1", "host1", nil)
 	AssertOk(t, err, "Failed to create vm")
@@ -95,7 +95,7 @@ func TestDebug(t *testing.T) {
 	testDebug(DebugUseg, params, `{"PG":{"#Pen-PG-n1-primary":2,"#Pen-PG-n1-secondary":3},"Hosts":{}}`)
 
 	params = map[string]string{}
-	debugString := `{"Workload":{"default/default/` + vchub.createHostName(defaultTestParams.TestDCName, vm.Summary.Vm.Value) + `":{"kind":"Workload","api-version":"v1","meta":{"name":"` + vchub.createHostName(defaultTestParams.TestDCName, vm.Summary.Vm.Value) + `","tenant":"default","namespace":"default","generation-id":"","labels":{"io.pensando.namespace":"","io.pensando.orch-name":"127.0.0.1:8989","io.pensando.vcenter.display-name":"vm1"},"creation-time":"","mod-time":""},"spec":{"host-name":"` + vchub.createHostName(defaultTestParams.TestDCName, vm.Runtime.Host.Value) + `"},"status":{"propagation-status":{"generation-id":"","updated":0,"pending":0,"min-version":"","status":"","pending-dscs":null}}}}}`
+	debugString := `{"Host":{"//` + vchub.createHostName(defaultTestParams.TestDCName, host.Obj.Self.Value) + `":{"kind":"Host","api-version":"v1","meta":{"name":"` + vchub.createHostName(defaultTestParams.TestDCName, host.Obj.Self.Value) + `","generation-id":"","labels":{"io.pensando.namespace":"PenTestDC","io.pensando.orch-name":"127.0.0.1:8989","io.pensando.vcenter.display-name":"host1"},"creation-time":"","mod-time":""},"spec":{},"status":{}}},` + `"Workload":{"default/default/` + vchub.createHostName(defaultTestParams.TestDCName, vm.Summary.Vm.Value) + `":{"kind":"Workload","api-version":"v1","meta":{"name":"` + vchub.createHostName(defaultTestParams.TestDCName, vm.Summary.Vm.Value) + `","tenant":"default","namespace":"default","generation-id":"","labels":{"io.pensando.namespace":"","io.pensando.orch-name":"127.0.0.1:8989","io.pensando.vcenter.display-name":"vm1"},"creation-time":"","mod-time":""},"spec":{"host-name":"` + vchub.createHostName(defaultTestParams.TestDCName, vm.Runtime.Host.Value) + `"},"status":{"propagation-status":{"generation-id":"","updated":0,"pending":0,"min-version":"","status":"","pending-dscs":null}}}}}`
 
 	testDebug(DebugCache, params, debugString)
 	params = map[string]string{}

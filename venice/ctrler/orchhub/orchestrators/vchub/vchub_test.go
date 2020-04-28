@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
+	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
@@ -2466,6 +2467,160 @@ func TestVCHubStalePG(t *testing.T) {
 		}
 		return true, nil
 	}, "Failed to get wl")
+
+}
+
+func TestVCHubAPIServerReconnect(t *testing.T) {
+	// Objects pending in pcache should get written once reconnected
+	logger := setupLogger("vchub_test_apiserver_reconnect")
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	var vchub *VCHub
+	var s *sim.VcSim
+	var err error
+	var vcp *mock.ProbeMock
+
+	defer func() {
+		logger.Infof("Tearing Down")
+		if vchub != nil {
+			vchub.Destroy(false)
+		}
+
+		cancel()
+		vcp.Wg.Wait()
+
+		if s != nil {
+			s.Destroy()
+		}
+	}()
+	// VChub comes up with PG in use on vcenter
+	// Create network comes after
+	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	dc1, err := s.AddDC(defaultTestParams.TestDCName)
+	AssertOk(t, err, "failed dc create")
+
+	vcp = createProbe(ctx, defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		if !vcp.IsSessionReady() {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	// Create DVS
+	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
+	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
+
+	err = vcp.AddPenDVS(defaultTestParams.TestDCName, dvsCreateSpec, nil, retryCount)
+	dvsName := CreateDVSName(defaultTestParams.TestDCName)
+	dvs, ok := dc1.GetDVS(dvsName)
+	Assert(t, ok, "failed dvs create")
+
+	hostSystem1, err := dc1.AddHost("host1")
+	AssertOk(t, err, "failed host1 create")
+	err = dvs.AddHost(hostSystem1)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac := append(createPenPnicBase(), 0xaa, 0x00, 0x00)
+	// Make it Pensando host
+	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
+
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+	orchConfig.Spec.ManageNamespaces = []string{utils.ManageAllDcs}
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	// Create host and workload before starting vchub
+
+	orchInfo1 := []*network.OrchestratorInfo{
+		{
+			Name:      orchConfig.Name,
+			Namespace: defaultTestParams.TestDCName,
+		},
+	}
+	smmock.CreateNetwork(sm, "default", "pg1", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
+
+	spec := testutils.GenPGConfigSpec(CreatePGName("pg1"), 2, 3)
+	err = vcp.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec, nil, retryCount)
+	AssertOk(t, err, "failed to create pg")
+	pg, err := vcp.GetPenPG(dc1.Obj.Name, CreatePGName("pg1"), retryCount)
+	AssertOk(t, err, "failed to get pg")
+
+	// Create VM on this PG
+	_, err = dc1.AddVM("vm1", "host1", []sim.VNIC{
+		sim.VNIC{
+			MacAddress:   "aa:aa:bb:bb:dd:dd",
+			PortgroupKey: pg.Reference().Value,
+			PortKey:      "11",
+		},
+	})
+
+	// WithMockProbe uses a probe interceptor to handle issues with vcsim
+	apiServerConnected := false
+	apiSrvConnValidator := func(v *VCHub) {
+		workloadFn := func(in interface{}) (bool, bool) {
+			if !apiServerConnected {
+				return false, false
+			}
+			return v.validateWorkload(in)
+		}
+		v.pCache.SetValidator(string(workload.KindWorkload), workloadFn)
+
+		hostFn := func(in interface{}) (bool, bool) {
+			if !apiServerConnected {
+				return false, false
+			}
+			return v.validateHost(in)
+		}
+		v.pCache.SetValidator(string(cluster.KindHost), hostFn)
+	}
+
+	vchub = LaunchVCHub(sm, orchConfig, logger, WithMockProbe, apiSrvConnValidator)
+
+	// Wait for it to come up
+	AssertEventually(t, func() (bool, interface{}) {
+		return vchub.IsSyncDone(), nil
+	}, "VCHub sync never finished")
+
+	wl, err := sm.Controller().Workload().List(context.Background(), &api.ListWatchOptions{})
+	AssertEquals(t, 0, len(wl), "shouldn't have found any workloads")
+
+	hosts, err := sm.Controller().Host().List(context.Background(), &api.ListWatchOptions{})
+	AssertEquals(t, 0, len(hosts), "shouldn't have found any hosts")
+
+	apiServerConnected = true
+	vchub.Reconnect(string(cluster.KindHost))
+
+	AssertEventually(t, func() (bool, interface{}) {
+		wl, err := sm.Controller().Workload().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(wl) != 1 {
+			return false, fmt.Errorf("Found %d workloads", len(wl))
+		}
+
+		hosts, err := sm.Controller().Host().List(context.Background(), &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(hosts) != 1 {
+			return false, fmt.Errorf("Found %d hosts", len(wl))
+		}
+
+		return true, nil
+	}, "Failed to get wl and host")
 
 }
 

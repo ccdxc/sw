@@ -316,6 +316,11 @@ func (sm *Statemgr) OnWorkloadDelete(w *ctkit.Workload) error {
 	return ws.deleteEndpoints()
 }
 
+// OnWorkloadReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnWorkloadReconnect() {
+	return
+}
+
 // createNetwork creates a network for workload's external vlan
 func (ws *WorkloadState) createNetwork(netName string, extVlan uint32) error {
 	// acquire a lock per network

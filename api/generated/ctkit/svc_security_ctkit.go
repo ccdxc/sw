@@ -74,6 +74,7 @@ type SecurityGroupHandler interface {
 	OnSecurityGroupUpdate(oldObj *SecurityGroup, newObj *security.SecurityGroup) error
 	OnSecurityGroupDelete(obj *SecurityGroup) error
 	GetSecurityGroupWatchOptions() *api.ListWatchOptions
+	OnSecurityGroupReconnect()
 }
 
 // OnSecurityGroupCreate is a dummy handler used in init if no one registers the handler
@@ -99,6 +100,12 @@ func (ctrler CtrlDefReactor) GetSecurityGroupWatchOptions() *api.ListWatchOption
 	log.Info("GetSecurityGroupWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnSecurityGroupReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnSecurityGroupReconnect() {
+	log.Info("OnSecurityGroupReconnect is not implemented")
+	return
 }
 
 // handleSecurityGroupEvent handles SecurityGroup events from watcher
@@ -583,6 +590,7 @@ func (ct *ctrlerCtx) runSecurityGroupWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffSecurityGroup(apicl)
+				securitygroupHandler.OnSecurityGroupReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -899,6 +907,7 @@ type NetworkSecurityPolicyHandler interface {
 	OnNetworkSecurityPolicyUpdate(oldObj *NetworkSecurityPolicy, newObj *security.NetworkSecurityPolicy) error
 	OnNetworkSecurityPolicyDelete(obj *NetworkSecurityPolicy) error
 	GetNetworkSecurityPolicyWatchOptions() *api.ListWatchOptions
+	OnNetworkSecurityPolicyReconnect()
 }
 
 // OnNetworkSecurityPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -924,6 +933,12 @@ func (ctrler CtrlDefReactor) GetNetworkSecurityPolicyWatchOptions() *api.ListWat
 	log.Info("GetNetworkSecurityPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnNetworkSecurityPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnNetworkSecurityPolicyReconnect() {
+	log.Info("OnNetworkSecurityPolicyReconnect is not implemented")
+	return
 }
 
 // handleNetworkSecurityPolicyEvent handles NetworkSecurityPolicy events from watcher
@@ -1408,6 +1423,7 @@ func (ct *ctrlerCtx) runNetworkSecurityPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffNetworkSecurityPolicy(apicl)
+				networksecuritypolicyHandler.OnNetworkSecurityPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -1724,6 +1740,7 @@ type AppHandler interface {
 	OnAppUpdate(oldObj *App, newObj *security.App) error
 	OnAppDelete(obj *App) error
 	GetAppWatchOptions() *api.ListWatchOptions
+	OnAppReconnect()
 }
 
 // OnAppCreate is a dummy handler used in init if no one registers the handler
@@ -1749,6 +1766,12 @@ func (ctrler CtrlDefReactor) GetAppWatchOptions() *api.ListWatchOptions {
 	log.Info("GetAppWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnAppReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnAppReconnect() {
+	log.Info("OnAppReconnect is not implemented")
+	return
 }
 
 // handleAppEvent handles App events from watcher
@@ -2233,6 +2256,7 @@ func (ct *ctrlerCtx) runAppWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffApp(apicl)
+				appHandler.OnAppReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -2549,6 +2573,7 @@ type FirewallProfileHandler interface {
 	OnFirewallProfileUpdate(oldObj *FirewallProfile, newObj *security.FirewallProfile) error
 	OnFirewallProfileDelete(obj *FirewallProfile) error
 	GetFirewallProfileWatchOptions() *api.ListWatchOptions
+	OnFirewallProfileReconnect()
 }
 
 // OnFirewallProfileCreate is a dummy handler used in init if no one registers the handler
@@ -2574,6 +2599,12 @@ func (ctrler CtrlDefReactor) GetFirewallProfileWatchOptions() *api.ListWatchOpti
 	log.Info("GetFirewallProfileWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnFirewallProfileReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnFirewallProfileReconnect() {
+	log.Info("OnFirewallProfileReconnect is not implemented")
+	return
 }
 
 // handleFirewallProfileEvent handles FirewallProfile events from watcher
@@ -3058,6 +3089,7 @@ func (ct *ctrlerCtx) runFirewallProfileWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffFirewallProfile(apicl)
+				firewallprofileHandler.OnFirewallProfileReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -3374,6 +3406,7 @@ type CertificateHandler interface {
 	OnCertificateUpdate(oldObj *Certificate, newObj *security.Certificate) error
 	OnCertificateDelete(obj *Certificate) error
 	GetCertificateWatchOptions() *api.ListWatchOptions
+	OnCertificateReconnect()
 }
 
 // OnCertificateCreate is a dummy handler used in init if no one registers the handler
@@ -3399,6 +3432,12 @@ func (ctrler CtrlDefReactor) GetCertificateWatchOptions() *api.ListWatchOptions 
 	log.Info("GetCertificateWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnCertificateReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnCertificateReconnect() {
+	log.Info("OnCertificateReconnect is not implemented")
+	return
 }
 
 // handleCertificateEvent handles Certificate events from watcher
@@ -3883,6 +3922,7 @@ func (ct *ctrlerCtx) runCertificateWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffCertificate(apicl)
+				certificateHandler.OnCertificateReconnect()
 
 				// handle api server watch events
 			innerLoop:
@@ -4199,6 +4239,7 @@ type TrafficEncryptionPolicyHandler interface {
 	OnTrafficEncryptionPolicyUpdate(oldObj *TrafficEncryptionPolicy, newObj *security.TrafficEncryptionPolicy) error
 	OnTrafficEncryptionPolicyDelete(obj *TrafficEncryptionPolicy) error
 	GetTrafficEncryptionPolicyWatchOptions() *api.ListWatchOptions
+	OnTrafficEncryptionPolicyReconnect()
 }
 
 // OnTrafficEncryptionPolicyCreate is a dummy handler used in init if no one registers the handler
@@ -4224,6 +4265,12 @@ func (ctrler CtrlDefReactor) GetTrafficEncryptionPolicyWatchOptions() *api.ListW
 	log.Info("GetTrafficEncryptionPolicyWatchOptions is not implemented")
 	opts := &api.ListWatchOptions{}
 	return opts
+}
+
+// OnTrafficEncryptionPolicyReconnect is a dummy handler used in init if no one registers the handler
+func (ctrler CtrlDefReactor) OnTrafficEncryptionPolicyReconnect() {
+	log.Info("OnTrafficEncryptionPolicyReconnect is not implemented")
+	return
 }
 
 // handleTrafficEncryptionPolicyEvent handles TrafficEncryptionPolicy events from watcher
@@ -4708,6 +4755,7 @@ func (ct *ctrlerCtx) runTrafficEncryptionPolicyWatcher() {
 				// perform a diff with API server and local cache
 				time.Sleep(time.Millisecond * 100)
 				ct.diffTrafficEncryptionPolicy(apicl)
+				trafficencryptionpolicyHandler.OnTrafficEncryptionPolicyReconnect()
 
 				// handle api server watch events
 			innerLoop:

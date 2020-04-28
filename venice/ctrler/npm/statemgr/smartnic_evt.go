@@ -456,6 +456,11 @@ func (sm *Statemgr) deleteDscRelatedObjects(smartNic *ctkit.DistributedServiceCa
 	return nil
 }
 
+// OnDistributedServiceCardReconnect is called when ctkit reconnects to apiserver
+func (sm *Statemgr) OnDistributedServiceCardReconnect() {
+	return
+}
+
 // FindDistributedServiceCard finds a smartNic
 func (sm *Statemgr) FindDistributedServiceCard(tenant, name string) (*DistributedServiceCardState, error) {
 	// find the object
