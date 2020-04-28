@@ -38,7 +38,7 @@
     _(TO_PROXY_SERVER, "dhcp-proxy-to-server")              \
     _(TO_RELAY_SERVER, "dhcp-relay-to-server")              \
     _(TO_RELAY_CLIENT, "dhcp-relay-to-client")              \
-    _(DROP, "error-drop")                                   \
+    _(DROP, "pds-error-drop")                               \
 
 // client tx node related defines
 #define foreach_dhcp_relay_client_tx_counter                \
@@ -46,7 +46,7 @@
 
 #define foreach_dhcp_relay_client_tx_next                   \
     _(INTF_OUT, "interface-tx")                             \
-    _(DROP, "error-drop")                                   \
+    _(DROP, "pds-error-drop")                               \
 
 // to server node related defines
 #define foreach_dhcp_relay_to_server_counter                \
@@ -58,7 +58,7 @@
 
 #define foreach_dhcp_relay_to_server_next                   \
     _(LINUX_INJECT, "pds-ip4-linux-inject")                 \
-    _(DROP, "error-drop")                                   \
+    _(DROP, "pds-error-drop")                               \
 
 // to client node related defines
 #define foreach_dhcp_relay_to_client_counter                \
@@ -70,7 +70,7 @@
 
 #define foreach_dhcp_relay_to_client_next                   \
     _(CLIENT_TX, "pds-dhcp-relay-client-tx")                \
-    _(DROP, "error-drop")                                   \
+    _(DROP, "pds-error-drop")                               \
 
 // classify node related defines
 typedef enum {

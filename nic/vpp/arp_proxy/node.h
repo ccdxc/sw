@@ -19,7 +19,7 @@
 
 #define foreach_arp_proxy_next                              \
     _(EXIT, "pds-vnic-tx")                                  \
-    _(DROP, "error-drop")
+    _(DROP, "pds-error-drop")
 
 typedef enum
 {

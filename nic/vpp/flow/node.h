@@ -39,7 +39,7 @@
         _(AGE_FLOW, "pds-flow-age-setup" )                          \
         _(IP4_NAT, "pds-nat44" )                                    \
         _(ICMP_VRIP, "ip4-icmp-echo-request")                       \
-        _(DROP, "error-drop")                                       \
+        _(DROP, "pds-error-drop")                                   \
 
 #define foreach_flow_classify_counter                               \
         _(IP4_FLOW, "IPv4 flow packets" )                           \
@@ -61,7 +61,7 @@
         _(FWD_FLOW, "pds-fwd-flow" )                                \
         _(SESSION_PROG, "pds-session-program")                      \
         _(NAT_DROP, "pds-nat44-error")                              \
-        _(DROP, "error-drop")                                       \
+        _(DROP, "pds-error-drop")                                   \
 
 #define foreach_flow_prog_counter                                   \
         _(FLOW_SUCCESS, "Flow programming success" )                \
@@ -71,7 +71,7 @@
 
 #define foreach_fwd_flow_next                                       \
         _(INTF_OUT, "interface-tx" )                                \
-        _(DROP, "error-drop")                                       \
+        _(DROP, "pds-error-drop")                                   \
 
 #define foreach_fwd_flow_counter                                    \
         _(REWRITE_SUCCESS, "Rewrite success" )                      \
@@ -81,7 +81,7 @@
         _(FWD_FLOW, "pds-fwd-flow" )                                \
         _(AGE_FLOW, "pds-flow-age-setup" )                          \
         _(NAT_DROP, "pds-nat44-error")                              \
-        _(DROP, "error-drop")                                       \
+        _(DROP, "pds-error-drop")                                   \
 
 #define foreach_session_prog_counter                                \
         _(SESSION_SUCCESS, "Session programming success" )          \
@@ -90,7 +90,7 @@
 #define foreach_flow_age_setup_next                                 \
         _(FWD_FLOW, "pds-fwd-flow" )                                \
         _(SEND_PACKET, "pds-vnic-l2-rewrite" )                      \
-        _(DROP, "error-drop")                                       \
+        _(DROP, "pds-error-drop")                                   \
 
 #define foreach_flow_age_setup_counter                              \
         _(SYN, "SYN packet processed" )                             \

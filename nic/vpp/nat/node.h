@@ -12,7 +12,7 @@
 
 #define foreach_nat_next                                \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )       \
-        _(DROP, "error-drop")                           \
+        _(DROP, "pds-error-drop")                       \
 
 typedef enum
 {

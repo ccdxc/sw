@@ -17,8 +17,9 @@ VLIB_PLUGIN_REGISTER () = {
 static pds_infra_main_t infra_main;
 static vlib_node_registration_t pds_ip4_linux_inject_node;
 static vlib_node_registration_t pds_p4cpu_hdr_lookup_node;
-static vlib_node_registration_t pds_vnic_tx_node,
-                                pds_vnic_l2_rewrite_node;
+static vlib_node_registration_t pds_vnic_tx_node;
+static vlib_node_registration_t pds_vnic_l2_rewrite_node;
+static vlib_node_registration_t pds_error_drop_node;
 
 // ipc init routine
 extern int pds_vpp_ipc_init(void);
@@ -593,7 +594,7 @@ format_pds_vnic_l2_rewrite_trace (u8 *s, va_list *args)
     return s;
 }
 
-VLIB_REGISTER_NODE (pds_vnic_l2_rewrite_node, static) = {
+VLIB_REGISTER_NODE(pds_vnic_l2_rewrite_node, static) = {
     .function = pds_vnic_l2_rewrite,
     .name = "pds-vnic-l2-rewrite",
 
@@ -687,7 +688,7 @@ format_pds_vnic_tx_trace (u8 *s, va_list *args)
     return s;
 }
 
-VLIB_REGISTER_NODE (pds_vnic_tx_node, static) = {
+VLIB_REGISTER_NODE(pds_vnic_tx_node, static) = {
     .function = pds_vnic_tx,
     .name = "pds-vnic-tx",
 
@@ -705,6 +706,213 @@ VLIB_REGISTER_NODE (pds_vnic_tx_node, static) = {
     .format_trace = format_pds_vnic_tx_trace,
 };
 
+always_inline void
+pds_drop_trace (vlib_main_t *vm,
+                vlib_frame_t *f)
+{
+    u32 *from;
+    u32 n_left = f->n_vectors;
+    vlib_buffer_t *b0, *p1;
+    u32 bi0;
+    i16 save_current_data;
+    u16 save_current_length;
+    pds_infra_main_t *im = &infra_main;
+
+    from = vlib_frame_vector_args(f);
+    clib_spinlock_lock_if_init(&im->packet_dump_lock);
+    if (PREDICT_FALSE(im->packet_dump_fd == NULL)) {
+        im->packet_dump_fd = fopen(im->packet_dump_path, "a+");
+        if (NULL == im->packet_dump_fd) {
+            clib_spinlock_unlock_if_init(&im->packet_dump_lock);
+            return;
+        }
+    }
+    clib_spinlock_unlock_if_init(&im->packet_dump_lock);
+
+    while (n_left > 0) {
+        if (PREDICT_TRUE (n_left > 1)) {
+            p1 = vlib_get_buffer(vm, from[1]);
+            vlib_prefetch_buffer_header(p1, LOAD);
+        }
+
+        bi0 = from[0];
+        b0 = vlib_get_buffer(vm, bi0);
+        from++;
+        n_left--;
+
+        // save current offsets
+        save_current_data = b0->current_data;
+        save_current_length = b0->current_length;
+        // rewind the buffer to start of packet
+        if (b0->current_data > 0) {
+            vlib_buffer_advance(b0, (word) - b0->current_data);
+        }
+        u32 n = vlib_buffer_length_in_chain(vm, b0);
+        i32 n_left = clib_min(im->packet_dump_len, n);
+        vlib_buffer_t *b = b0;
+        clib_spinlock_lock_if_init(&im->packet_dump_lock);
+        while (1) {
+            u32 copy_length = clib_min((u32) n_left, b->current_length);
+            char *pak = (char *) (b->data + b->current_data);
+            for (int i = 0; i < copy_length; i++) {
+                (void)fprintf(im->packet_dump_fd, "%02x ", pak[i]);
+            }
+            n_left -= b->current_length;
+            if (n_left <= 0) {
+                break;
+            }
+            ASSERT (b->flags & VLIB_BUFFER_NEXT_PRESENT);
+            b = vlib_get_buffer(vm, b->next_buffer);
+        }
+        (void)fprintf(im->packet_dump_fd, "\n");
+        clib_spinlock_unlock_if_init(&im->packet_dump_lock);
+        // restore old data offsets
+        b0->current_data = save_current_data;
+        b0->current_length = save_current_length;
+    }
+    fflush(im->packet_dump_fd);
+    return;
+}
+
+always_inline uword
+interface_drop (vlib_main_t *vm,
+                vlib_node_runtime_t *node,
+                vlib_frame_t *frame)
+{
+    u32 *from, n_left, thread_index, *sw_if_index;
+    vlib_buffer_t *bufs[VLIB_FRAME_SIZE], **b;
+    u32 sw_if_indices[VLIB_FRAME_SIZE];
+    vlib_simple_counter_main_t *cm;
+    u16 nexts[VLIB_FRAME_SIZE];
+    vnet_main_t *vnm;
+
+    vnm = vnet_get_main ();
+    thread_index = vm->thread_index;
+    from = vlib_frame_vector_args (frame);
+    n_left = frame->n_vectors;
+    b = bufs;
+    sw_if_index = sw_if_indices;
+
+    vlib_get_buffers (vm, from, bufs, n_left);
+
+    // all going to drop regardless, this is just a counting exercise
+    clib_memset(nexts, 0, sizeof (nexts));
+
+    cm = vec_elt_at_index(vnm->interface_main.sw_if_counters,
+                          VNET_INTERFACE_COUNTER_DROP);
+
+    // collect the array of interfaces first
+    while (n_left >= 4) {
+        if (n_left >= 12) {
+            // prefetch 8 ahead - there's not much going on in each iteration
+            vlib_prefetch_buffer_header (b[4], LOAD);
+            vlib_prefetch_buffer_header (b[5], LOAD);
+            vlib_prefetch_buffer_header (b[6], LOAD);
+            vlib_prefetch_buffer_header (b[7], LOAD);
+        }
+        sw_if_index[0] = vnet_buffer (b[0])->sw_if_index[VLIB_RX];
+        sw_if_index[1] = vnet_buffer (b[1])->sw_if_index[VLIB_RX];
+        sw_if_index[2] = vnet_buffer (b[2])->sw_if_index[VLIB_RX];
+        sw_if_index[3] = vnet_buffer (b[3])->sw_if_index[VLIB_RX];
+
+        sw_if_index += 4;
+        n_left -= 4;
+        b += 4;
+    }
+    while (n_left) {
+        sw_if_index[0] = vnet_buffer (b[0])->sw_if_index[VLIB_RX];
+
+        sw_if_index += 1;
+        n_left -= 1;
+        b += 1;
+    }
+
+    // count against them in blocks
+    n_left = frame->n_vectors;
+
+    while (n_left) {
+        vnet_sw_interface_t *sw_if0;
+        u16 off, count;
+
+        off = frame->n_vectors - n_left;
+
+        sw_if_index = sw_if_indices + off;
+
+        count = clib_count_equal_u32 (sw_if_index, n_left);
+        n_left -= count;
+
+        vlib_increment_simple_counter (cm, thread_index, sw_if_index[0], count);
+
+        // increment super-interface drop/punt counters for
+        // sub-interfaces.
+        sw_if0 = vnet_get_sw_interface (vnm, sw_if_index[0]);
+        if (sw_if0->sup_sw_if_index != sw_if_index[0])
+            vlib_increment_simple_counter
+                (cm, thread_index, sw_if0->sup_sw_if_index, count);
+    }
+
+    vlib_buffer_enqueue_to_next(vm, node, from, nexts, frame->n_vectors);
+
+    return frame->n_vectors;
+}
+
+static uword
+pds_error_drop (vlib_main_t *vm,
+                vlib_node_runtime_t *node,
+                vlib_frame_t *frame)
+{
+    pds_infra_main_t *im = &infra_main;
+
+    if (PREDICT_FALSE(im->packet_dump_en)) { 
+        (void)pds_drop_trace(vm, frame);
+    }
+
+    return interface_drop(vm, node, frame);
+}
+
+VLIB_REGISTER_NODE(pds_error_drop_node, static) = {
+    .function = pds_error_drop,
+    .name = "pds-error-drop",
+    .vector_size = sizeof(u32),  // takes a vector of packets
+    .n_next_nodes = 1,
+    .next_nodes = {
+        [0] = "drop",
+    },
+};
+
+void
+pds_packet_dump_en_dis (bool enable, char *file, u16 size)
+{
+    pds_infra_main_t *im = &infra_main;
+
+    if (im->packet_dump_fd) {
+        fclose(im->packet_dump_fd);
+        im->packet_dump_fd = NULL;
+    }
+
+    if (file) {
+        strncpy(im->packet_dump_path, file, MAX_FILE_PATH-1);
+    } else {
+        im->packet_dump_path[0] = 0;
+    }
+
+    im->packet_dump_len = size;
+    im->packet_dump_en = enable;
+}
+
+void
+pds_packet_dump_show (vlib_main_t *vm)
+{
+    pds_infra_main_t *im = &infra_main;
+
+    vlib_cli_output(vm, "Dump Enable : %s",
+                    im->packet_dump_en ? "True" : "False");
+    vlib_cli_output(vm, "File : %s",
+                    im->packet_dump_path[0] ? im->packet_dump_path : \
+                    "Not configured");
+    vlib_cli_output(vm, "File Descriptor : %d", im->packet_dump_fd);
+    vlib_cli_output(vm, "Dump Length : %u", im->packet_dump_len);
+}
 
 /* Don't change this function name as all other plugin
  * inits have to run after this init. So all other plugins
@@ -719,9 +927,11 @@ pds_infra_init (vlib_main_t * vm)
     clib_memset(&infra_main, 0, sizeof(pds_infra_main_t));
     vec_validate_init_empty(infra_main.ip4_linux_inject_fds,
                             (no_threads - 1), -1);
+    infra_main.packet_dump_en = false;
+    infra_main.packet_dump_len = DEAFULT_PACKET_DUMP_SIZE;
+    clib_spinlock_init(&(infra_main.packet_dump_lock));
 
     ret = pds_vpp_ipc_init();
-
     if (ret != 0) {
         ASSERT(0);
     }

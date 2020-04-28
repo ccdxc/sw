@@ -88,7 +88,8 @@ pds_fwd_flow (vlib_main_t * vm, vlib_node_runtime_t * node,
 
     PDS_PACKET_LOOP_START {
         if (PREDICT_FALSE(g_dis_reinject)) {
-            vlib_node_t *node = vlib_get_node_by_name(vm, (u8 *) "error-drop");
+            vlib_node_t *node = vlib_get_node_by_name(vm,
+                                                      (u8 *) "pds-error-drop");
             to_frame = vlib_get_frame_to_node(vm, node->index);
             to_frame->n_vectors = from_frame->n_vectors;
             vlib_put_frame_to_node(vm, node->index, to_frame);

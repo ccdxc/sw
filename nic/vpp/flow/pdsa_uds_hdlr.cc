@@ -48,11 +48,12 @@ ftlv4_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
     }
 }
 
-static void
+void
 ftlv6_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
 {
     flow_hash_entry_t *hwentry = (flow_hash_entry_t *) params->entry;
     int *fd = (int *)params->cbdata;
+    uint8_t src[16], dst[16];
 
     if (hwentry->get_entry_valid()) {
         types::ServiceResponseMessage proto_rsp;
@@ -65,9 +66,11 @@ ftlv6_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
         ipflowkey->mutable_l4info()->mutable_tcpudpinfo()->set_dstport(hwentry->get_key_metadata_dport());
         ipflowkey->set_ipprotocol(hwentry->get_key_metadata_proto());
         ipflowkey->mutable_srcip()->set_af(types::IPAF::IP_AF_INET6);
-        hwentry->get_key_metadata_src((uint8_t *)ipflowkey->mutable_srcip());
+        hwentry->get_key_metadata_src(src);
+        ipflowkey->mutable_srcip()->set_v6addr((const char *)src);
         ipflowkey->mutable_dstip()->set_af(types::IPAF::IP_AF_INET6);
-        hwentry->get_key_metadata_dst((uint8_t *)ipflowkey->mutable_dstip());
+        hwentry->get_key_metadata_dst(dst);
+        ipflowkey->mutable_dstip()->set_v6addr((const char *)dst);
 
         flow->set_sessionidx(hwentry->get_session_index());
         flow->set_flowrole(hwentry->get_flow_role());
@@ -90,8 +93,8 @@ vpp_uds_flow_dump(int fd)
     sdk::table::sdk_table_api_params_t params = {0};
     sdk::table::ftl_base *table4 =
         (sdk::table::ftl_base *)pds_flow_get_table4();
-    sdk::table::ftl_base *table6 =
-        (sdk::table::ftl_base *)pds_flow_get_table6_or_l2();
+    //sdk::table::ftl_base *table6 =
+        //(sdk::table::ftl_base *)pds_flow_get_table6_or_l2();
 
     // Iterate over v4 table and then v6
     params.itercb = ftlv4_entry_iter_cb;
@@ -99,10 +102,11 @@ vpp_uds_flow_dump(int fd)
     params.force_hwread = false;
     table4->iterate(&params);
 
-    params.itercb = ftlv6_entry_iter_cb;
-    params.cbdata = &fd;
-    params.force_hwread = false;
-    table6->iterate(&params);
+    // disable this until v6/l2 packet corruption is solved
+    //params.itercb = ftlv6_entry_iter_cb;
+    //params.cbdata = &fd;
+    //params.force_hwread = false;
+    //table6->iterate(&params);
 
     // Send 0 entries to indicate end of dump
     pds::FlowMsg flow_msg = pds::FlowMsg();

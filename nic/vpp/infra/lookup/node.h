@@ -11,18 +11,38 @@
 #include <nic/p4/common/defines.h>
 #include <pkt.h>
 
-#define foreach_p4cpu_hdr_lookup_next                   \
-        _(DROP, "error-drop")                           \
+#define MAX_FILE_PATH                    64
+#define DEAFULT_PACKET_DUMP_SIZE        512
 
-#define foreach_ip4_linux_inject_counter                \
-    _(TX, "Injected IPv4 packet to Linux" )             \
-    _(SOCK_ERR, "Socket create error" )                 \
-    _(SEND_ERR, "Socket send error" )                   \
+#define foreach_p4cpu_hdr_lookup_next                       \
+        _(DROP, "pds-error-drop")                           \
 
-#define foreach_p4cpu_hdr_lookup_counter                \
-        _(SUCESS, "Lookup success")                     \
-        _(FAILURE, "Lookup failed")                     \
-        _(CONGESTION, "Thread hand-off congestion")     \
+#define foreach_vnic_l2_rewrite_next                        \
+    _(TX_OUT, "pds-vnic-tx")                                \
+    _(UNKNOWN, "pds-error-drop")                            \
+
+#define foreach_vnic_tx_next                                \
+    _(INTF_OUT, "interface-tx" )                            \
+    _(DROP, "pds-error-drop")                               \
+
+#define foreach_ip4_linux_inject_counter                    \
+    _(TX, "Injected IPv4 packet to Linux" )                 \
+    _(SOCK_ERR, "Socket create error" )                     \
+    _(SEND_ERR, "Socket send error" )                       \
+
+#define foreach_p4cpu_hdr_lookup_counter                    \
+    _(SUCESS, "Lookup success")                             \
+    _(FAILURE, "Lookup failed")                             \
+    _(CONGESTION, "Thread hand-off congestion")             \
+
+#define foreach_vnic_l2_rewrite_counter                     \
+    _(TX_OUT, "Added l2 headers")                           \
+    _(VNIC_NOT_FOUND, "VNIC not found")                     \
+    _(SUBNET_NOT_FOUND, "Subnet not found")                 \
+
+#define foreach_vnic_tx_counter                             \
+    _(SUCCESS, "Sent to tx interface")                      \
+    _(FAILED, "Failed to send to tx interface")             \
 
 typedef struct ip4_linux_inject_trace_s {
     int error;
@@ -54,16 +74,12 @@ typedef enum
 
 typedef struct pds_infra_main_s {
     int *ip4_linux_inject_fds;  // raw socket fd pool to inject packets to linux
+    bool packet_dump_en; // packet dump to file enabled or not
+    u16 packet_dump_len;
+    char packet_dump_path[MAX_FILE_PATH];
+    FILE *packet_dump_fd;
+    clib_spinlock_t packet_dump_lock;
 } pds_infra_main_t;
-
-#define foreach_vnic_l2_rewrite_next                        \
-    _(TX_OUT, "pds-vnic-tx")                                \
-    _(UNKNOWN, "error-drop")                                \
-
-#define foreach_vnic_l2_rewrite_counter                     \
-    _(TX_OUT, "Added l2 headers")                           \
-    _(VNIC_NOT_FOUND, "VNIC not found")                     \
-    _(SUBNET_NOT_FOUND, "Subnet not found")                 \
 
 typedef enum
 {
@@ -85,14 +101,6 @@ typedef struct vnic_l2_rewrite_trace_s {
     u8 packet_data[64];
 } vnic_l2_rewrite_trace_t;
 
-#define foreach_vnic_tx_next                                \
-    _(INTF_OUT, "interface-tx" )                            \
-    _(DROP, "error-drop")                                   \
-
-#define foreach_vnic_tx_counter                             \
-    _(SUCCESS, "Sent to tx interface")                      \
-    _(FAILED, "Failed to send to tx interface")             \
-
 typedef enum
 {
 #define _(n,s) VNIC_TX_NEXT_##n,
@@ -112,5 +120,8 @@ typedef enum
 typedef struct vnic_tx_trace_s {
     u16 vnic_nh_hw_id;
 } vnic_tx_trace_t;
+
+void pds_packet_dump_en_dis(bool enable, char *file, u16 size);
+void pds_packet_dump_show(vlib_main_t *vm);
 
 #endif    // __VPP_INFRA_LOOKUP_NODE_H__

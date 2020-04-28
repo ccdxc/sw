@@ -1067,7 +1067,7 @@ pak_done:
             *next0 = *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 2;
         } else {
-            *next0 = *next1 = FLOW_CLASSIFY_NEXT_L2_FLOW_PROG;
+            *next0 = *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_L2_FLOW] += 2;
         }
         return;
@@ -1088,7 +1088,7 @@ pak_done:
             *next0 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 1;
         } else {
-            *next0 = FLOW_CLASSIFY_NEXT_L2_FLOW_PROG;
+            *next0 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_L2_FLOW] += 1;
         }
     }
@@ -1108,7 +1108,7 @@ pak_done:
             *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 1;
         } else {
-            *next1 = FLOW_CLASSIFY_NEXT_L2_FLOW_PROG;
+            *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_L2_FLOW] += 1;
         }
     }
@@ -1203,7 +1203,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         *next = FLOW_CLASSIFY_NEXT_DROP;
         counter[FLOW_CLASSIFY_COUNTER_IP6_FLOW] += 1;
     } else {
-        *next = FLOW_CLASSIFY_NEXT_L2_FLOW_PROG;
+        *next = FLOW_CLASSIFY_NEXT_DROP;
         counter[FLOW_CLASSIFY_COUNTER_L2_FLOW] += 1;
     }
 

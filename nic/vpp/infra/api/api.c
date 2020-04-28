@@ -66,7 +66,7 @@ pds_infra_api_init (vlib_main_t * vm)
                 sizeof(pds_infra_nacl_handoff_t) * (MAX_NACL_ID+1));
     lookup_node = vlib_get_node_by_name(vm, (u8 *) "pds-p4cpu-hdr-lookup");
     am->drop_node_idx = vlib_node_add_named_next(vm, lookup_node->index,
-                                                 "error-drop");
+                                                 "pds-error-drop");
 
     return NULL;
 }
