@@ -1166,6 +1166,10 @@ ionic_start_xmit(vmk_PktHandle *pkt,
                               &ctx,
                               &is_linearize_needed);
 
+        if (VMK_UNLIKELY(ndescs >= q->num_descs)) {
+                goto err_out_drop;
+        }
+
         if (VMK_UNLIKELY(!ionic_q_has_space(q, ndescs))) {
                 /* Might race with ionic_tx_clean, check again */
                 vmk_CPUMemFenceReadWrite();
