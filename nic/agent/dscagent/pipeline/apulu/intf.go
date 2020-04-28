@@ -144,7 +144,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 				log.Errorf("Network: %s could not convert | Err: %s", nw.GetKey(), err)
 				return errors.Wrapf(types.ErrDatapathHandling, "Network: %s could not Convert | Err: %s", nw.GetKey(), err)
 			}
-			updsubnet.Request[0].HostIf = uid
+			updsubnet.Request[0].HostIf[0] = uid
 			resp, err := subnetcl.SubnetUpdate(context.TODO(), updsubnet)
 			if err != nil {
 				log.Errorf("Network: %s update failed | Err: %v", nw.GetKey(), err)

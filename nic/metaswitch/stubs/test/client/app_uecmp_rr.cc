@@ -610,7 +610,7 @@ static void create_subnet_proto_grpc (bool second=false) {
     if (g_node_id == 2) {
     // TODO: Host IfIndex needs to refer to an actual LIF Index in HAL
     //       Else failure in non-mock PDS mode.
-    proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
+    proto_spec->add_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
                            PDS_MAX_KEY_LEN);
     }
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
@@ -647,7 +647,7 @@ static void upd_subnet_if_proto_grpc (bool del = false) {
     if (g_node_id == 2 && !del) {
     // TODO: Host IfIndex needs to refer to an actual LIF Index in HAL
     //       Else failure in non-mock PDS mode.
-    proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
+    proto_spec->add_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
                            PDS_MAX_KEY_LEN);
     }
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
@@ -940,7 +940,7 @@ int main(int argc, char** argv)
     if (argc == 2 && !strcmp(argv[1], "underlay")) {
         cout << "Underlay only test" << std::endl;
         underlay_only = true;
-    } 
+    }
 
     if (argc == 1 || underlay_only) {
         // Send protos to grpc server
@@ -981,7 +981,7 @@ int main(int argc, char** argv)
             create_bgp_peer_af_proto_grpc(false, true);
             sleep (5);
         }
-        if (underlay_only)  { 
+        if (underlay_only)  {
             printf ("Testapp Config Init is successful!\n");
             return 0;
         }
@@ -1068,7 +1068,7 @@ int main(int argc, char** argv)
                 // Second underlay peer
                 create_bgp_peer_proto_grpc(false, true);
                 create_bgp_peer_af_proto_grpc(false, true);
-            } 
+            }
             return 0;
         } else if (!strcmp(argv[1], "bgp-opeer-del")) {
             // Overlay peer

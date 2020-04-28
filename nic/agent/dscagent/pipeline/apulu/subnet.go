@@ -673,7 +673,7 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 				},
 				V4Prefix:              v4Prefix,
 				V6Prefix:              v6Prefix,
-				HostIf:                intfUid,
+				HostIf:                [][]byte{intfUid},
 				DHCPPolicyId:          ipamuuids,
 				IngV4SecurityPolicyId: utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies)...),
 				EgV4SecurityPolicyId:  utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies)...),

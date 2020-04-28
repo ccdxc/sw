@@ -124,7 +124,7 @@ func printSubnet(subnet *pds.Subnet) {
 	}
 
 	if len(spec.GetHostIf()) > 0 {
-		lifName = lifGetNameFromKey(spec.GetHostIf())
+		lifName = lifGetNameFromKey(spec.GetHostIf()[0])
 	}
 
 	if numIterations != 0 {

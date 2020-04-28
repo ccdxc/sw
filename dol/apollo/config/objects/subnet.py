@@ -249,7 +249,7 @@ class SubnetObject(base.ConfigObjectBase):
         utils.GetRpcEncap(self.Node, self.Vnid, self.Vnid, spec.FabricEncap)
         if utils.IsPipelineApulu():
             if self.HostIfUuid:
-                spec.HostIf = self.HostIfUuid.GetUuid()
+                spec.HostIf.append(self.HostIfUuid.GetUuid())
         return
 
     def PopulateAgentJson(self):
@@ -353,7 +353,7 @@ class SubnetObject(base.ConfigObjectBase):
             return False
         if utils.IsPipelineApulu():
             if self.HostIfUuid:
-                if spec.HostIf != self.HostIfUuid.GetUuid():
+                if spec.HostIf[0] != self.HostIfUuid.GetUuid():
                     return False
         return True
 
