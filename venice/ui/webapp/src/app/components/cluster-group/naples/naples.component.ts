@@ -1056,8 +1056,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   // The save emitter from labeleditor returns the updated objects here.
   // We use forkjoin to update all the naples.
   handleEditSave(updatedNaples: ClusterDistributedServiceCard[]) {
-    this.updateDSCLabelsWithForkjoin(updatedNaples);
-    // this.updateDSCLabelsWithBulkEdit(updatedNaples);  // USE this for bulkedit when backend is ready
+    // this.updateDSCLabelsWithForkjoin(updatedNaples);
+    this.updateDSCLabelsWithBulkEdit(updatedNaples);  // USE this for bulkedit when backend is ready
   }
 
   handleEditCancel($event) {

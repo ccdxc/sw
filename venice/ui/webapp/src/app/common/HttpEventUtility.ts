@@ -115,7 +115,7 @@ export class HttpEventUtility<T> {
             if (this.useResVer && obj != null && obj.meta != null && obj.meta['resource-version'] != null) {
               const resVer = parseInt(obj.meta['resource-version'], 10);
               // Get resVer of object in cache
-              const cacheObj: any = this.dataArray[this.dataMapping[objName]];
+              const cacheObj: any = this.dataArray[this.getIndex(objName)];
               let curResVer = 0;
               if (cacheObj.meta != null && cacheObj.meta['resource-version'] != null) {
                 curResVer = parseInt(cacheObj.meta['resource-version'], 10);
