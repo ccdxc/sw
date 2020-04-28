@@ -115,6 +115,11 @@ testcases:
             num_iperf_cps: 1
             iperf_cps : [2]
 
+    -   name    : Rdma_Qstate
+        testcase: testcases.qos.rdma_qstate
+        args    :
+            type: remote_only
+
     -   name    : QoS_Switch_Config_Pfc_Pcp
         testcase: testcases.qos.qos_switch_config
         args    :
@@ -140,6 +145,11 @@ testcases:
             rdma_cps : [1]
             num_iperf_cps: 1
             iperf_cps : [2]
+
+    -   name    : Rdma_Qstate
+        testcase: testcases.qos.rdma_qstate
+        args    :
+            type: remote_only
 
     -   name    : Qos_Traffic_Test_Pfc_TC0_TC3_Pcp
         testcase: testcases.qos.qos_traffic_test

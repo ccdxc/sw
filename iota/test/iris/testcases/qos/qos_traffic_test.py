@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.test.iris.testcases.qos.qos_utils as qos
 import re
+import iota.test.utils.naples_host as host
 
 def Setup(tc):
  
@@ -118,6 +119,28 @@ def Trigger(tc):
     if num_rdma_cps != 0:
         rdma_cp = rdma_cps[num_rdma_cps-1]
         qos.TriggerTrafficTest(req, tc, ws, wc, 1, rdma_cp, False)
+
+    # print the next_qpid
+    for w in [w1, w2]:
+        if not w.IsNaples():
+            continue
+
+        if tc.os == host.OS_TYPE_BSD:
+            api.Logger.info("{}".format(w.interface))
+            cmd = 'sysctl dev.' + host.GetNaplesSysctl(w.interface) + '.rdma.info.next_qpid'
+        elif tc.os == host.OS_TYPE_LINUX:
+            pci = host.GetNaplesPci(w.node_name, w.interface)
+            if pci is None:
+                continue
+            cmd = 'grep next_qpid /sys/kernel/debug/ionic/' + pci + '/lif0/rdma/info'
+        else:
+            continue
+
+        api.Trigger_AddCommand(req,
+                               w.node_name,
+                               w.workload_name,
+                               cmd)
+        tc.cmd_cookies.append(cmd)
 
     # Sleep for a while for all the tests to complete
     cmd = 'sleep 5'

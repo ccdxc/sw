@@ -84,6 +84,16 @@ def Trigger(tc):
                            timeout=60)
     tc.cmd_cookies.append(cmd)
 
+    # dump rdma qstate
+    for w in [tc.w1, tc.w2]:
+        if not w.IsNaples():
+            continue
+        cmd = '/nic/bin/halctl show lif | grep host | grep -v host-management'
+        api.Trigger_AddNaplesCommand(req,
+                                     w.node_name,
+                                     cmd)
+        tc.cmd_cookies.append(cmd)
+
     #Show drops command for QOS testing
     cmd = '/nic/bin/halctl show system statistics drop | grep -i "occupancy"'
     if tc.w1.IsNaples():
@@ -164,6 +174,16 @@ def Verify(tc):
             qos.QosSetDropsForDev(cmd.stdout, dev, node_name)
         if "QoS sysctl get" in tc.cmd_cookies[cookie_idx]:
             qos.QosSetTestsuiteAttrs(cmd.stdout)
+        if "show lif" in tc.cmd_cookies[cookie_idx]:
+            lif_list = []
+            lines = cmd.stdout.split('\n')
+            for line in lines:
+                api.Logger.info("{}".format(line))
+                if len(line) == 0:
+                    continue
+                lif = line.split(' ')[0]
+                lif_list.append(lif)
+            api.SetTestsuiteAttr("lifs", lif_list)
 
         cookie_idx += 1
 
