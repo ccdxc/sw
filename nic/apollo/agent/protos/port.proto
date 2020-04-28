@@ -315,11 +315,17 @@ message PortLinkStatus {
 }
 
 message PortXcvrStatus {
-  int32         Port      = 1;
-  PortXcvrState State     = 2;
-  PortXcvrPid   Pid       = 3;
-  MediaType     MediaType = 4;
-  bytes         XcvrSprom = 5;
+  int32         Port          = 1;
+  PortXcvrState State         = 2;
+  PortXcvrPid   Pid           = 3;
+  MediaType     MediaType     = 4;
+  bytes         XcvrSprom     = 5;
+  string        VendorName    = 6;
+  string        VendorOUI     = 7;
+  uint32        EncodingType  = 8;
+  string        SerialNumber  = 9;
+  string        PartNumber    = 10;
+  string        Revision      = 11;
 }
 
 message PortStatus {
