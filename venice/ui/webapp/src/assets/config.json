@@ -1,7 +1,8 @@
 {
   "enabled-features" : [
     "apiCapture",
-    "dataCache"
+    "dataCache",
+    "fwlogs"
   ],
   "disabled-features": [],
   "condition-thresholds": {
