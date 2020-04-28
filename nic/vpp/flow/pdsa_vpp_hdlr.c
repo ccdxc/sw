@@ -5,6 +5,7 @@
 #include <system.h>
 #include "node.h"
 #include "pdsa_hdlr.h"
+#include "pdsa_uds_hdlr.h"
 
 void
 pds_flow_cfg_set (uint8_t con_track_en,

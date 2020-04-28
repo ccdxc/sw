@@ -4,6 +4,7 @@
 // C++ routines for interacting with the metrics library
 
 #include <nic/sdk/lib/metrics/metrics.hpp>
+#include <nic/apollo/api/utils.hpp>
 #include "pdsa_hdlr.h"
 
 
@@ -27,5 +28,7 @@ pdsa_flow_stats_init (void)
 void
 pdsa_flow_stats_publish (void *metrics_hdl, uint64_t *counter)
 {
-    sdk::metrics::metrics_update(metrics_hdl, FLOW_STATS_KEY, counter);
+    sdk::metrics::metrics_update(metrics_hdl,
+                                 *(sdk::metrics::key_t *)
+                                 api::uuid_from_objid(0).id, counter);
 }

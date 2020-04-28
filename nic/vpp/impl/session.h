@@ -12,6 +12,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+
 typedef struct session_info_s {
     uint64_t timestamp;
     uint32_t iflow_tcp_seq_num;
@@ -21,6 +22,13 @@ typedef struct session_info_s {
     uint32_t rflow_tcp_ack_num;
     uint16_t rflow_tcp_win_size;
 } session_info_t;
+
+typedef struct pds_session_stats {
+    uint64_t iflow_bytes_count;
+    uint64_t iflow_packets_count;
+    uint64_t rflow_bytes_count;
+    uint64_t rflow_packets_count;
+} pds_session_stats_t;
 
 void set_skip_session_program(int val);
 
@@ -48,8 +56,19 @@ int session_track_program(uint32_t ses_id, void *action);
 
 void pds_session_get_info(uint32_t session_id, session_info_t *session_info);
 
+int pds_session_stats_read(uint32_t session_id, pds_session_stats_t *stats);
+
+int pds_session_stats_clear(uint32_t session_id);
+
+uint64_t pds_session_get_timestamp(uint32_t ses);
+
+bool pds_session_get_xlate_ids(uint32_t ses, uint16_t *rx_xlate_id,
+                               uint16_t *tx_xlate_id, uint16_t *rx_xlate_id2,
+                               uint16_t *tx_xlate_id2);
+
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif    // __VPP_IMPL_SESSION_H__
+#endif  // __VPP_IMPL_SESSION_H__

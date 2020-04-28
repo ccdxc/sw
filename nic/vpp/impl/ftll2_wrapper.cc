@@ -24,10 +24,9 @@ typedef struct ftll2_cache_s {
 thread_local ftll2_cache_t g_l2_flow_cache;
 
 int
-ftll2_remove (ftll2 *obj, flow_hash_entry_t *entry, uint32_t hash, 
-              uint8_t log)
+ftll2_remove (ftll2 *obj, flow_hash_entry_t *entry, uint32_t hash)
 {
-    return ftl_remove(obj, entry, hash, log);
+    return ftl_remove(obj, entry, hash);
 }
 
 int
@@ -66,7 +65,7 @@ ftll2_get_with_handle(ftl *obj, uint32_t index, bool primary)
 int
 ftll2_remove_cached_entry(ftl *obj)
 {
-    return ftll2_remove(obj, &g_l2_flow_cache.last_read_flow, 0, 0);
+    return ftll2_remove(obj, &g_l2_flow_cache.last_read_flow, 0);
 }
 
 int
@@ -207,7 +206,6 @@ ftll2_cache_program_index (ftll2 *obj, uint16_t id, uint32_t *pindex,
     return ftl_insert(obj, g_l2_flow_cache.flow + id,
                       g_l2_flow_cache.hash[id],
                       pindex, sindex,
-                      g_l2_flow_cache.flags[id].log,
                       g_l2_flow_cache.flags[id].update);
 }
 
@@ -215,8 +213,7 @@ int
 ftll2_cache_delete_index (ftll2 *obj, uint16_t id)
 {
     return ftll2_remove(obj, g_l2_flow_cache.flow + id,
-                        g_l2_flow_cache.hash[id],
-                        g_l2_flow_cache.flags[id].log);
+                        g_l2_flow_cache.hash[id]);
 }
 
 void
@@ -278,7 +275,6 @@ ftll2_cache_batch_flush (ftll2 *obj, int *status)
        status[i] = ftl_insert(obj, g_l2_flow_cache.flow + i,
                               g_l2_flow_cache.hash[i],
                               &pindex, &sindex,
-                              g_l2_flow_cache.flags[i].log,
                               g_l2_flow_cache.flags[i].update);
     }
 }

@@ -18,8 +18,7 @@
 #include <ftl_wrapper.h>
 #include <ftl_utils.hpp>
 #include <session.h>
-
-extern uint64_t pds_session_get_timestamp(uint32_t ses);
+#include <pds_table.h>
 
 using namespace sdk;
 using namespace sdk::table;
@@ -176,10 +175,9 @@ ftl_create (void *key2str, void *appdata2str)
 }
 
 int
-ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash, 
-            uint32_t *pindex, uint32_t *sindex, uint8_t log,
-            uint8_t update)
-{ 
+ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
+            uint32_t *pindex, uint32_t *sindex, uint8_t update)
+{
     sdk_table_api_params_t params = {0};
 
     if (get_skip_ftl_program()) {
@@ -198,28 +196,9 @@ ftl_insert (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
         }
         goto done;
     }
- 
+
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
-    }
-
-    if (log) {
-        // TODO: avoid memcpy, instead get pointer
-        uint8_t src[16], dst[16];
-        entry->get_key_metadata_src(src);
-        entry->get_key_metadata_dst(dst);
-        if (entry->get_key_metadata_ktype() == KEY_TYPE_IPV6) {
-            pds_operd_export_flow_ip6(src, dst,
-                                      entry->get_key_metadata_proto(),
-                                      entry->get_key_metadata_dport(),
-                                      entry->get_key_metadata_sport(),
-                                      ftl_get_lookup_id(entry), 1, 1);
-        } else {
-            // Key type MAC
-            pds_operd_export_flow_l2(src, dst,
-                                     entry->get_key_metadata_dport(),
-                                     ftl_get_lookup_id(entry), 1, 1);
-        }
     }
 
 done:
@@ -258,8 +237,7 @@ ftl_move_cb (base_table_entry_t *entry, handle_t old_handle,
 }
 
 int
-ftl_remove (ftl *obj, flow_hash_entry_t *entry, uint32_t hash, 
-            uint8_t log)
+ftl_remove (ftl *obj, flow_hash_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
@@ -276,26 +254,107 @@ ftl_remove (ftl *obj, flow_hash_entry_t *entry, uint32_t hash,
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
     }
-    
-    if (log) {
-        // TODO: avoid memcpy, instead get pointer
-        uint8_t src[16], dst[16];
-        entry->get_key_metadata_src(src);
-        entry->get_key_metadata_dst(dst);
-        if (entry->get_key_metadata_ktype() == KEY_TYPE_IPV6) {
-            pds_operd_export_flow_ip6(src, dst,
-                                      entry->get_key_metadata_proto(),
-                                      entry->get_key_metadata_dport(),
-                                      entry->get_key_metadata_sport(),
-                                      ftl_get_lookup_id(entry), 0, 1);
-        } else {
-            // Key type MAC
-            pds_operd_export_flow_l2(src, dst,
-                                     entry->get_key_metadata_dport(),
-                                     ftl_get_lookup_id(entry), 0, 1);
+
+    return 0;
+}
+
+int
+ftl_remove_with_handle(ftl *obj, uint32_t index, bool primary)
+{
+    sdk_table_api_params_t params = {0};
+    flow_hash_entry_t entry;
+
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
+
+    if (primary) {
+        params.handle.pindex(index);
+    } else {
+        params.handle.sindex(index);
+    }
+    params.entry = &entry;
+
+    if (SDK_RET_OK != obj->get_with_handle(&params)) {
+        return -1;
+    }
+
+    if (!ftl_remove(obj, &entry, 0)) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int
+ftl_export_with_entry(flow_hash_entry_t *entry, uint8_t reason)
+{
+    pds_session_stats_t session_stats;
+    uint32_t session_idx = entry->get_session_index();
+    uint8_t src[16], dst[16];
+    uint8_t logtype;
+
+    session_idx = entry->get_session_index();
+
+    if (FLOW_EXPORT_REASON_ADD != reason) {
+        // don't read stats in add path. they would be zero anyway
+        if (0 != pds_session_stats_read(session_idx, &session_stats)) {
+            return -1;
         }
     }
+
+    switch(reason) {
+    case FLOW_EXPORT_REASON_ADD: logtype = OPERD_FLOW_LOGTYPE_ADD; break;
+    case FLOW_EXPORT_REASON_DEL: logtype = OPERD_FLOW_LOGTYPE_DEL; break;
+    default:
+    case FLOW_EXPORT_REASON_ACTIVE: logtype = OPERD_FLOW_LOGTYPE_ACTIVE; break;
+    }
+
+    // TODO: avoid memcpy, instead get pointer
+    entry->get_key_metadata_src(src);
+    entry->get_key_metadata_dst(dst);
+    if (entry->get_key_metadata_ktype() == KEY_TYPE_IPV6) {
+        pds_operd_export_flow_ip6(src, dst,
+                                  entry->get_key_metadata_proto(),
+                                  entry->get_key_metadata_dport(),
+                                  entry->get_key_metadata_sport(),
+                                  ftl_get_lookup_id(entry),
+                                  (operd_flow_stats_t *)&session_stats,
+                                  session_idx, logtype, 1);
+    } else {
+        // Key type MAC
+        pds_operd_export_flow_l2(src, dst,
+                                 entry->get_key_metadata_dport(),
+                                 ftl_get_lookup_id(entry),
+                                 (operd_flow_stats_t *)&session_stats,
+                                 session_idx, logtype, 1);
+    }
+
     return 0;
+}
+
+int
+ftl_export_with_handle (ftl *obj, uint32_t index, bool primary, uint8_t reason)
+{
+    sdk_table_api_params_t params = {0};
+    flow_hash_entry_t entry;
+
+    if (get_skip_ftl_program()) {
+        return 0;
+    }
+
+    if (primary) {
+        params.handle.pindex(index);
+    } else {
+        params.handle.sindex(index);
+    }
+    params.entry = &entry;
+
+    if (SDK_RET_OK != obj->get_with_handle(&params)) {
+        return -1;
+    }
+
+    return ftl_export_with_entry(&entry, reason);
 }
 
 int

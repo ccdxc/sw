@@ -4,17 +4,18 @@
 
 #include <vlib/vlib.h>
 #include <vnet/buffer.h>
+#include <vnet/tcp/tcp_packet.h>
 #include <session.h>
 #include <mapping.h>
 #include <system.h>
 #include <feature.h>
 #include <pkt.h>
+#include <vnic.h>
 #include <nic/vpp/infra/api/intf.h>
 #include "utils.h"
 #include "node.h"
 #include "pdsa_hdlr.h"
 #include "pdsa_uds_hdlr.h"
-#include <vnet/tcp/tcp_packet.h>
 
 typedef void (flow_expiration_handler) (u32 ses_id);
 
@@ -513,13 +514,65 @@ pds_flow_age_session_expired (pds_flow_hw_ctx_t *session, u64 cur_time,
 }
 
 void
+pds_flow_start_keep_alive (pds_flow_hw_ctx_t *session)
+{
+    // TODO: start tcp keep-alive to both ends
+    return;
+}
+
+always_inline uint8_t
+pds_flow_get_ctr_idx (uint8_t proto, bool isv4)
+{
+    switch(proto) {
+    case IP_PROTOCOL_TCP:
+        if (isv4) {
+            return FLOW_TYPE_COUNTER_TCPV4;
+        } else {
+            return FLOW_TYPE_COUNTER_TCPV6;
+        }
+    case IP_PROTOCOL_UDP:
+        if (isv4) {
+            return FLOW_TYPE_COUNTER_UDPV4;
+        } else {
+            return FLOW_TYPE_COUNTER_UDPV6;
+        }
+    case IP_PROTOCOL_ICMP:
+        if (isv4) {
+            return FLOW_TYPE_COUNTER_ICMPV4;
+        } else {
+            return FLOW_TYPE_COUNTER_ICMPV6;
+        }
+    default:
+        if (isv4) {
+            return FLOW_TYPE_COUNTER_OTHERV4;
+        } else {
+            return FLOW_TYPE_COUNTER_OTHERV6;
+        }
+    }
+    // TODO: what about L2?
+    return 0;
+}
+
+void
 pds_flow_delete_session (u32 ses_id)
 {
     pds_flow_hw_ctx_t *session = pds_flow_get_hw_ctx(ses_id);
+    pds_flow_main_t *fm = &pds_flow_main;
+    int flow_log_enabled = 0;
+    uint8_t ctr_idx;
 
+    pds_vnic_flow_log_en_get(session->vnic_id, &flow_log_enabled);
     // Delete both iflow and rflow
     if (session->v4) {
         ftlv4 *table4 = (ftlv4 *)pds_flow_get_table4();
+        if (flow_log_enabled) {
+            ftlv4_export_with_handle(table4, session->iflow.table_id,
+                                     session->iflow.primary,
+                                     session->rflow.table_id,
+                                     session->rflow.primary,
+                                     FLOW_EXPORT_REASON_DEL,
+                                     session->host_origin);
+        }
         session = pds_flow_get_hw_ctx_lock(ses_id);
         if (PREDICT_FALSE(ftlv4_get_with_handle(table4, session->iflow.table_id,
                                                 session->iflow.primary) != 0)) {
@@ -541,6 +594,11 @@ pds_flow_delete_session (u32 ses_id)
         }
     } else {
         ftl *table = (ftl *)pds_flow_get_table6_or_l2();
+        if (flow_log_enabled) {
+            ftl_export_with_handle(table, session->iflow.table_id,
+                                   session->iflow.primary,
+                                   FLOW_EXPORT_REASON_DEL);
+        }
         session = pds_flow_get_hw_ctx_lock(ses_id);
         if (PREDICT_FALSE(ftlv6_get_with_handle(table, session->iflow.table_id,
                                                 session->iflow.primary) != 0)) {
@@ -562,7 +620,11 @@ pds_flow_delete_session (u32 ses_id)
         }
     }
 
+    pds_vnic_active_sessions_decrement(session->vnic_id);
+    ctr_idx = pds_flow_get_ctr_idx(session->proto, session->v4);
+    clib_atomic_fetch_add(&fm->stats.counter[ctr_idx], -1);
     pds_session_id_dealloc(ses_id);
+    pds_session_stats_clear(ses_id);
     return;
 
 end:

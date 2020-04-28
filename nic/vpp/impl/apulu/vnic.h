@@ -58,6 +58,31 @@ pds_vnic_subnet_get (u16 vnic_id, u16 *subnet_hw_id)
     return 0;
 }
 
+always_inline int
+pds_vnic_flow_log_en_get (u16 vnic_id, int *enable)
+{
+    pds_impl_db_vnic_entry_t *vnic_info = NULL;
+
+    vnic_info = pds_impl_db_vnic_get(vnic_id);
+    if (PREDICT_FALSE(vnic_info == NULL)) {
+        return -1;
+    }
+    *enable = vnic_info->flow_log_en;
+    return 0;
+}
+
+always_inline int
+pds_vnic_active_sessions_decrement (uint16_t vnic_id) {
+    pds_impl_db_vnic_entry_t *vnic_info = NULL;
+
+    vnic_info = pds_impl_db_vnic_get(vnic_id);
+    if (PREDICT_FALSE(vnic_info == NULL)) {
+        return -1;
+    }
+    vnic_info->active_ses_count--;
+    return 0;
+}
+
 always_inline void
 pds_vnic_add_tx_hdrs (vlib_buffer_t *b, u16 vnic_nh_hw_id)
 {

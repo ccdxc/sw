@@ -25,6 +25,9 @@ print_flow (int fd, char *data, uint64_t data_length)
     case pds::FLOW_LOG_TYPE_CLOSE:
         dprintf(fd, "Delete, ");
         break;
+    case pds::FLOW_LOG_TYPE_ACTIVE:
+        dprintf(fd, "Active, ");
+        break;
     default:
         assert(0);
     }

@@ -21,14 +21,15 @@
 #include <ftl_wrapper.h>
 #include "pdsa_hdlr.h"
 
-#define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
-#define PDS_FLOW_SESSION_POOL_COUNT_MAX VLIB_FRAME_SIZE
-#define DISPLAY_BUF_SIZE (1*1024*1024)
-#define PDS_FLOW_TIMER_TICK             0.1
-#define PDS_FLOW_SEC_TO_TIMER_TICK(X)   (X * 10)
-#define PDS_FLOW_STATS_PUBLISH_INTERVAL (60)
-#define TCP_KEEP_ALIVE_RETRY_COUNT_MAX  3
-#define TCP_KEEP_ALIVE_TIMEOUT          60 // in seconds
+#define MAX_FLOWS_PER_FRAME                (VLIB_FRAME_SIZE * 2)
+#define PDS_FLOW_SESSION_POOL_COUNT_MAX    VLIB_FRAME_SIZE
+#define DISPLAY_BUF_SIZE                   (1*1024*1024)
+#define PDS_FLOW_TIMER_TICK                0.1
+#define PDS_FLOW_SEC_TO_TIMER_TICK(X)      (X * 10)
+#define PDS_FLOW_STATS_PUBLISH_INTERVAL    (60)
+#define PDS_FLOW_DEFAULT_MONITOR_INTERVAL  (300)
+#define TCP_KEEP_ALIVE_RETRY_COUNT_MAX      3
+#define TCP_KEEP_ALIVE_TIMEOUT              60 // in seconds
 
 #define foreach_flow_classify_next                                  \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
@@ -230,7 +231,7 @@ typedef enum {
     PDS_FLOW_N_TIMERS,
 } pds_flow_timer;
 
-typedef CLIB_PACKED(struct pds_flow_index_s_ {
+typedef CLIB_PACKED(union pds_flow_index_s_ {
     u8 index[3];
     struct {
         u32 table_id : 23;
@@ -240,6 +241,7 @@ typedef CLIB_PACKED(struct pds_flow_index_s_ {
 
 // Store iflow and rflow index for each allocated session
 typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
+    u32 is_in_use : 1;
     u32 proto : 2; // enum pds_flow_protocol
     u32 v4 : 1; // v4 or v6 table
     u32 flow_state : 3; // enum pds_flow_state
@@ -254,9 +256,11 @@ typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
     volatile u8 lock;
     u8 packet_type : 2;
     u8 iflow_rx : 1; // true if iflow is towards the host
-    // make 4 byte aligned.
-    u8 reserved_1 : 5;
-    u16 reserved_2;
+    u8 host_origin : 1;
+    u8 monitor_seen : 1; // 1 if monitor process has seen flow
+    u8 reserved_1 : 3;
+    u16 vnic_id : 7;
+    u16 reserved_2 : 9;
 }) pds_flow_hw_ctx_t;
 
 typedef struct pds_flow_session_id_thr_local_pool_s {
@@ -299,6 +303,7 @@ typedef struct pds_flow_main_s {
     // per worker worker timer wheel
     tw_timer_wheel_16t_1w_2048sl_t *timer_wheel;
     u32 max_sessions;
+    u32 monitor_interval;
     u8 no_threads;
     u8 con_track_en;
     u8 *packet_types;
@@ -520,7 +525,8 @@ always_inline pds_flow_protocol pds_flow_trans_proto(u8 proto)
 always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
                                         u32 i_sindex, u32 r_pindex,
                                         u32 r_sindex, pds_flow_protocol proto,
-                                        bool v4)
+                                        uint8_t vnic_id, bool v4,
+                                        bool host_origin)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
@@ -543,6 +549,9 @@ always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
     }
     data->proto = proto;
     data->v4 = v4;
+    data->is_in_use = 1;
+    data->vnic_id = vnic_id;
+    data->host_origin = host_origin;
     //pds_flow_prog_unlock();
     return;
 }

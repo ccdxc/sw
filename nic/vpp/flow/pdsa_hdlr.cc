@@ -20,39 +20,39 @@ int
 clear_flow_entry (pds_flow_key_t *key)
 {
     int ret;
-    ipv4_flow_hash_entry_t v4entry;
+    ipv4_flow_hash_entry_t iv4entry, rv4entry;
     flow_hash_entry_t entry;
 
     if (key->src_ip.af == IP_AF_IPV4) {
         // Clear both ingress and egress flows
         ftlv4 *table4 = (ftlv4 *)pds_flow_get_table4();
-        v4entry.clear();
-        ftlv4_set_key(&v4entry, key->src_ip.addr.v4_addr, 
-                      key->dst_ip.addr.v4_addr, key->proto, 
+        iv4entry.clear();
+        ftlv4_set_key(&iv4entry, key->src_ip.addr.v4_addr,
+                      key->dst_ip.addr.v4_addr, key->proto,
                       key->sport, key->dport, key->lookup_id);
-        ret = ftlv4_remove(table4, &v4entry, 0, 0);
-        
+        ret = ftlv4_remove(table4, &iv4entry, 0);
+
         // For the reverse flow, just swap src and dst addr and port
-        v4entry.clear();
-        ftlv4_set_key(&v4entry, key->dst_ip.addr.v4_addr,
+        rv4entry.clear();
+        ftlv4_set_key(&rv4entry, key->dst_ip.addr.v4_addr,
                       key->src_ip.addr.v4_addr, key->proto,
                       key->sport, key->dport, key->lookup_id);
-        ret = ftlv4_remove(table4, &v4entry, 0, 0);
+        ret = ftlv4_remove(table4, &rv4entry, 0);
     } else {
         // Clear both ingress and egress flows
         ftlv6 *table6 = (ftlv6 *)pds_flow_get_table6_or_l2();
         entry.clear();
-        ftlv6_set_key(&entry, key->src_ip.addr.v6_addr.addr8, 
-                      key->dst_ip.addr.v6_addr.addr8, key->proto, 
+        ftlv6_set_key(&entry, key->src_ip.addr.v6_addr.addr8,
+                      key->dst_ip.addr.v6_addr.addr8, key->proto,
                       key->sport, key->dport, key->lookup_id);
-        ret = ftlv6_remove(table6, &entry, 0, 0);
+        ret = ftlv6_remove(table6, &entry, 0);
 
         // For the reverse flow, just swap src and dst addr and ports
         entry.clear();
         ftlv6_set_key(&entry, key->dst_ip.addr.v6_addr.addr8,
                       key->src_ip.addr.v6_addr.addr8, key->proto,
                       key->sport, key->dport, key->lookup_id);
-        ret = ftlv6_remove(table6, &entry, 0, 0);
+        ret = ftlv6_remove(table6, &entry, 0);
     }
     return ret;
 }

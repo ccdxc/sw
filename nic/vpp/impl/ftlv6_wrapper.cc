@@ -65,14 +65,13 @@ ftlv6_get_with_handle(ftl *obj, uint32_t index, bool primary)
 int 
 ftlv6_remove_cached_entry(ftl *obj)
 {
-    return ftl_remove(obj, &g_ip6_flow_cache.last_read_flow, 0, 0);
+    return ftl_remove(obj, &g_ip6_flow_cache.last_read_flow, 0);
 }
 
 int
-ftlv6_remove (ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash, 
-              uint8_t log)
+ftlv6_remove (ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
 {
-    return ftl_remove(obj, entry, hash, log);
+    return ftl_remove(obj, entry, hash);
 }
 
 int
@@ -212,18 +211,25 @@ ftlv6_cache_program_index (ftlv6 *obj, uint16_t id, uint32_t *pindex,
                            uint32_t *sindex)
 {
     return ftl_insert(obj, g_ip6_flow_cache.flow + id,
-                      g_ip6_flow_cache.hash[id],
-                      pindex, sindex,
-                      g_ip6_flow_cache.flags[id].log,
+                      g_ip6_flow_cache.hash[id], pindex, sindex,
                       g_ip6_flow_cache.flags[id].update);
+}
+
+int
+ftlv6_cache_log_session(uint16_t iid, uint16_t rid, uint8_t reason)
+{
+    if (!g_ip6_flow_cache.flags[iid].log) {
+        return 0;
+    }
+    // rid not logged, since it's iid reversed
+    return ftl_export_with_entry(g_ip6_flow_cache.flow + iid, reason);
 }
 
 int
 ftlv6_cache_delete_index (ftlv6 *obj, uint16_t id)
 {
     return ftlv6_remove(obj, g_ip6_flow_cache.flow + id,
-                        g_ip6_flow_cache.hash[id],
-                        g_ip6_flow_cache.flags[id].log);
+                        g_ip6_flow_cache.hash[id]);
 }
 
 void
@@ -287,6 +293,7 @@ ftlv6_cache_get_counter_index (int id)
     return g_ip6_flow_cache.flags[id].ctr_idx;
 }
 
+/*
 void
 ftlv6_get_last_read_session_info (uint8_t *sip, uint8_t *dip, uint16_t *sport,
                                   uint16_t *dport, uint16_t *lkp_id)
@@ -313,5 +320,6 @@ ftlv6_cache_batch_flush (ftlv6 *obj, int *status)
                               g_ip6_flow_cache.flags[i].update);
     }
 }
+*/
 
 }

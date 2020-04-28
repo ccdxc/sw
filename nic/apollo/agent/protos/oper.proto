@@ -138,31 +138,27 @@ message FlowLog {
   types.FlowKey            Key          = 4;
   // flow action taken
   types.SecurityRuleAction FlowAction   = 5;
-  // source NAT action, if any
-  types.NatAction          SrcNATAction = 6;
-  // destination NAT action, if any
-  types.NatAction          DstNATAction = 7;
   // NAT-ed source IP after the rewrite, if any
-  types.IPAddress          SrcNATIP     = 8;
+  types.IPAddress          SrcNATIP     = 6;
   // source NAT port, if any
-  uint32                   SrcNATPort   = 9;
+  uint32                   SrcNATPort   = 7;
   // NAT-ed destination IP after the rewrite, if any
-  types.IPAddress          DstNATIP     = 10;
+  types.IPAddress          DstNATIP     = 8;
   // destination NAT port, if any
-  uint32                   DstNATPort   = 11;
+  uint32                   DstNATPort   = 9;
   // type of the security policy rule that matched the packet
-  SecurityPolicyType       PolicyType   = 12;
+  SecurityPolicyType       PolicyType   = 10;
   // SessionId identifies unique id assigned for the the flow pair
   // for the lifetime of the session
-  uint64                   SessionId    = 13;
+  uint64                   SessionId    = 11;
   // initiator flow octet count
-  uint64                   IflowBytes   = 14;
+  uint64                   IflowBytes   = 12;
   // initator flow packet count
-  uint64                   IflowPackets = 15;
+  uint64                   IflowPackets = 13;
   // responder flow octet count
-  uint64                   RflowBytes   = 16;
+  uint64                   RflowBytes   = 14;
   // responder flow packet count
-  uint64                   RflowPackets = 17;
+  uint64                   RflowPackets = 15;
 }
 
 enum AlertSeverity {

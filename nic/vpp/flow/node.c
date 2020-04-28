@@ -13,6 +13,8 @@
 #include <nic/vpp/infra/utils.h>
 #include <nic/vpp/impl/nh.h>
 
+extern void pds_flow_monitor_init(void);
+
 pds_flow_main_t pds_flow_main;
 
 vlib_node_registration_t pds_fwd_flow_node,
@@ -538,6 +540,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         pds_flow_extract_nexthop_info(p0, 1, 1);
         ftlv4_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
                                  pds_get_flow_log_en(p0));
+        ftlv4_cache_set_host_origin(pds_is_rx_pkt(p0));
 
         if (pds_is_flow_napt_en(p0)) {
             // NAPT - both port and ip are changed
@@ -682,12 +685,13 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 always_inline void
 pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
 {
-    int i, size = ftlv4_cache_get_count();
+    int i, ret, size = ftlv4_cache_get_count();
     u32 i_pindex, i_sindex, r_pindex, r_sindex;
     ftlv4 *table = pds_flow_prog_get_table4();
-    int ret;
+    vlib_buffer_t *p0;
     pds_flow_main_t *fm = &pds_flow_main;
     uint8_t ctr_idx;
+    uint64_t ses_ctr[FLOW_TYPE_COUNTER_LAST] = {0};
 
     for (i = 0; i < size; i+=2) {
         uint32_t session_id = ftlv4_cache_get_session_index(i);
@@ -700,15 +704,17 @@ pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
         if (PREDICT_FALSE(ret != 0)) {
             goto err_rflow;
         }
-        ctr_idx = ftlv4_cache_get_counter_index(i);
-        clib_atomic_fetch_add(&fm->stats.counter[ctr_idx], 1);
+        ses_ctr[ftlv4_cache_get_counter_index(i)]++;
+        p0 = b[i/2];
         pds_session_set_data(session_id, i_pindex,
                              i_sindex, r_pindex,
                              r_sindex,
                              pds_flow_trans_proto(ftlv4_cache_get_proto(i)),
-                             true);
+                             vnet_buffer2(p0)->pds_nat_data.vnic_id,
+                             true, pds_is_rx_pkt(p0));
         counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
         next[i/2] = pds_flow_prog_get_next_node();
+        ftlv4_cache_log_session(i, i+1, FLOW_EXPORT_REASON_ADD);
         continue;
 
     err_rflow:
@@ -721,7 +727,7 @@ pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
     err_iflow:
         counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
         if (ftlv4_cache_get_napt_flag(i)) {
-            vlib_buffer_t *p0 = b[i/2];
+            p0 = b[i/2];
             int offset0 = pds_flow_prog_get_nat_drop_next_offset(p0);
             vlib_buffer_advance(p0, offset0);
             next[i/2] = FLOW_PROG_NEXT_NAT_DROP;
@@ -732,17 +738,26 @@ pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
             pds_session_id_dealloc(session_id);
         }
     }
+    // accumulate all v4 counters atomically
+    for (ctr_idx = FLOW_TYPE_COUNTER_TCPV4;
+         ctr_idx <= FLOW_TYPE_COUNTER_OTHERV4; ctr_idx++) {
+        if (ses_ctr[ctr_idx]) {
+            clib_atomic_fetch_add(&fm->stats.counter[ctr_idx],
+                                  ses_ctr[ctr_idx]);
+        }
+    }
 }
 
 always_inline void
-pds_flow_program_hw_ip6_or_l2 (u16 *next, u32 *counter)
+pds_flow_program_hw_ip6_or_l2 (vlib_buffer_t **b, u16 *next, u32 *counter)
 {
-    int i, size = ftlv6_cache_get_count();
+    int i, ret, size = ftlv6_cache_get_count();
     ftlv6 *table = pds_flow_prog_get_table6_or_l2();
     u32 i_pindex, i_sindex, r_pindex, r_sindex;
-    int ret;
+    vlib_buffer_t *p0;
     pds_flow_main_t *fm = &pds_flow_main;
     uint8_t ctr_idx;
+    uint64_t ses_ctr[FLOW_TYPE_COUNTER_LAST] = {0};
 
     for (i = 0; i < size; i+=2) {
         uint32_t session_id = ftlv6_cache_get_session_index(i);
@@ -755,15 +770,17 @@ pds_flow_program_hw_ip6_or_l2 (u16 *next, u32 *counter)
         if (PREDICT_FALSE(ret != 0)) {
             goto err_rflow;
         }
-        ctr_idx = ftlv6_cache_get_counter_index(i);
-        clib_atomic_fetch_add(&fm->stats.counter[ctr_idx], 1);
+        ses_ctr[ftlv4_cache_get_counter_index(i)]++;
+        p0 = b[i/2];
         pds_session_set_data(session_id, i_pindex,
                              i_sindex, r_pindex,
                              r_sindex,
                              pds_flow_trans_proto(ftlv6_cache_get_proto(i)),
-                             false);
+                             vnet_buffer2(p0)->pds_nat_data.vnic_id,
+                             false, pds_is_rx_pkt(p0));
         counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
         next[i/2] = pds_flow_prog_get_next_node();
+        ftlv6_cache_log_session(i, i+1, FLOW_EXPORT_REASON_ADD);
         continue;
 
     err_rflow:
@@ -778,6 +795,14 @@ pds_flow_program_hw_ip6_or_l2 (u16 *next, u32 *counter)
         next[i/2] = FLOW_PROG_NEXT_DROP;
         if (session_id) {
             pds_session_id_dealloc(session_id);
+        }
+    }
+    // accumulate all v6 and l2 counters atomically
+    for (ctr_idx = FLOW_TYPE_COUNTER_TCPV6;
+         ctr_idx <= FLOW_TYPE_COUNTER_L2; ctr_idx++) {
+        if (ses_ctr[ctr_idx]) {
+            clib_atomic_fetch_add(&fm->stats.counter[ctr_idx],
+                                  ses_ctr[ctr_idx]);
         }
     }
 }
@@ -853,7 +878,8 @@ pds_flow_prog (vlib_main_t *vm,
         pds_flow_program_hw_ip4(PDS_PACKET_BUFFER_ARR, PDS_PACKET_NEXT_NODE_ARR,
                                 counter);
     } else {
-        pds_flow_program_hw_ip6_or_l2(PDS_PACKET_NEXT_NODE_ARR, counter);
+        pds_flow_program_hw_ip6_or_l2(PDS_PACKET_BUFFER_ARR,
+                                      PDS_PACKET_NEXT_NODE_ARR, counter);
     }
     vlib_buffer_enqueue_to_next(vm, node,
                                 PDS_PACKET_BUFFER_INDEX_PTR(0),
@@ -1254,6 +1280,7 @@ pds_flow_init (vlib_main_t * vm)
 
     pdsa_flow_hdlr_init();
     pds_flow_dump_init();
+    pds_flow_monitor_init();
 
     pds_flow_pipeline_init(vm);
     pds_packet_type_flags_build();

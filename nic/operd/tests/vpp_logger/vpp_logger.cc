@@ -14,7 +14,7 @@ main (int argc, const char *argv[])
 
     flow.type = OPERD_FLOW_TYPE_IP4;
     flow.action = OPERD_FLOW_ACTION_ALLOW;
-    flow.op = OPERD_FLOW_OPERATION_ADD;
+    flow.logtype = OPERD_FLOW_LOGTYPE_ADD;
     flow.v4.src = 0x01010101;
     flow.v4.dst = 0x02020202;
     flow.v4.proto = 6;

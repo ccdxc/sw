@@ -35,6 +35,7 @@ typedef struct flow_flags_s {
     uint8_t log : 1;
     uint8_t update : 1;
     uint8_t napt : 1;
+    uint8_t host_origin : 1;
     uint8_t ctr_idx : 4;
 } flow_flags_t;
 
@@ -57,11 +58,14 @@ void ftl_dump_stats(ftl *obj, char *buf, int max_len);
 ftl * ftl_create(void *key2str, void *appdata2str);
 
 int ftl_insert(ftl *obj, flow_entry *entry, uint32_t hash, uint32_t *pindex, 
-               uint32_t *sindex, uint8_t log, uint8_t update);
+               uint32_t *sindex, uint8_t update);
 
-int ftl_remove(ftl *obj, flow_entry *entry, uint32_t hash, uint8_t log);
+int ftl_remove(ftl *obj, flow_entry *entry, uint32_t hash);
 
 int ftl_remove_with_handle(ftl *obj, uint32_t index, bool primary);
+
+int ftl_export_with_handle(ftl *obj, uint32_t index, bool primary,
+                           uint8_t reason);
 
 int ftl_clear(ftl *obj, bool clear_global_state, bool clear_thread_local_state);
 
@@ -273,7 +277,7 @@ void ftll2_set_key(flow_entry *entry,
                    uint16_t ether_type,
                    uint16_t lookup_id);
 
-int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash, uint8_t log);
+int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash);
 
 int ftlv4_remove_cached_entry(ftlv4 *obj);
 
@@ -282,7 +286,30 @@ int ftlv4_get_with_handle(ftlv4 *obj, uint32_t index, bool primary);
 void ftlv4_get_last_read_session_info (uint32_t *sip, uint32_t *dip, uint16_t *sport,
                                        uint16_t *dport, uint16_t *lkp_id);
 
-int ftlv6_remove(ftlv6 *obj, flow_entry *entry, uint32_t hash, uint8_t log);
+enum flow_export_reason_e {
+    FLOW_EXPORT_REASON_ADD,
+    FLOW_EXPORT_REASON_DEL,
+    FLOW_EXPORT_REASON_ACTIVE,
+};
+
+int ftlv4_export_with_handle(ftlv4 *obj, uint32_t iflow_index,
+                             bool iflow_primary, uint32_t rflow_index,
+                             bool rflow_primary, uint8_t reason,
+                             bool host_origin);
+
+int ftlv4_export_with_entry(v4_flow_entry *iv4entry,
+                            v4_flow_entry *rv4entry,
+                            uint8_t reason, bool host_origin);
+
+int ftlv4_cache_log_session(uint16_t iid, uint16_t rid, uint8_t reason);
+
+void ftlv4_cache_set_host_origin(uint8_t host_origin);
+
+int ftlv6_cache_log_session(uint16_t iid, uint16_t rid, uint8_t reason);
+
+int ftl_export_with_entry(flow_entry *entry, uint8_t reason);
+
+int ftlv6_remove(ftlv6 *obj, flow_entry *entry, uint32_t hash);
 
 int ftlv6_remove_cached_entry(ftlv6 *obj);
 

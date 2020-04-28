@@ -28,7 +28,7 @@ vpp_decoder (uint8_t encoder, const char *data, size_t data_length,
     const operd_flow_t *flow = (operd_flow_t *)data;
     pds::FlowLog flowLog;
     size_t len;
-    
+
     assert(sizeof(*flow) == data_length);
 
     switch (flow->action) {
@@ -42,17 +42,26 @@ vpp_decoder (uint8_t encoder, const char *data, size_t data_length,
         assert(0);
     }
 
-    switch (flow->op) {
-    case OPERD_FLOW_OPERATION_ADD:
+    switch (flow->logtype) {
+    case OPERD_FLOW_LOGTYPE_ADD:
         flowLog.set_logtype(::pds::FLOW_LOG_TYPE_OPEN);
         break;
-    case OPERD_FLOW_OPERATION_DEL:
+    case OPERD_FLOW_LOGTYPE_DEL:
         flowLog.set_logtype(::pds::FLOW_LOG_TYPE_CLOSE);
+        break;
+    case OPERD_FLOW_LOGTYPE_ACTIVE:
+        flowLog.set_logtype(::pds::FLOW_LOG_TYPE_ACTIVE);
         break;
     default:
         assert(0);
     }
-    
+
+    flowLog.set_sessionid(flow->session_id);
+    flowLog.set_iflowbytes(flow->stats.iflow_bytes_count);
+    flowLog.set_iflowpackets(flow->stats.iflow_packets_count);
+    flowLog.set_rflowbytes(flow->stats.rflow_bytes_count);
+    flowLog.set_rflowpackets(flow->stats.rflow_packets_count);
+
     switch (flow->type) {
     case OPERD_FLOW_TYPE_IP4:
     {
@@ -63,7 +72,7 @@ vpp_decoder (uint8_t encoder, const char *data, size_t data_length,
         flowKey->set_allocated_ipflowkey(ipKey);
 
         ipKey->set_vpcid(&flow->v4.lookup_id, sizeof(flow->v4.lookup_id));
-        
+
         types::IPAddress *srcIp = new types::IPAddress();
         srcIp->set_af(types::IP_AF_INET);
         srcIp->set_v4addr(flow->v4.src);
@@ -73,17 +82,33 @@ vpp_decoder (uint8_t encoder, const char *data, size_t data_length,
         dstIp->set_af(types::IP_AF_INET);
         dstIp->set_v4addr(flow->v4.dst);
         ipKey->set_allocated_dstip(dstIp);
-        
+
         ipKey->set_ipprotocol(flow->v4.proto);
 
         types::FlowL4Info *l4Info = new types::FlowL4Info();
         ipKey->set_allocated_l4info(l4Info);
-        
+
         types::FlowL4Info::TCPUDPInfo *tcpUdpInfo =
             new types::FlowL4Info::TCPUDPInfo();
         l4Info->set_allocated_tcpudpinfo(tcpUdpInfo);
         tcpUdpInfo->set_srcport(flow->v4.sport);
         tcpUdpInfo->set_dstport(flow->v4.dport);
+
+        if (flow->nat_data.src_nat_addr) {
+            types::IPAddress *srcNatIp = new types::IPAddress();
+            srcNatIp->set_af(types::IP_AF_INET);
+            srcNatIp->set_v4addr(flow->nat_data.src_nat_addr);
+            flowLog.set_allocated_srcnatip(srcNatIp);
+            flowLog.set_srcnatport(flow->nat_data.src_nat_port);
+        }
+
+        if (flow->nat_data.dst_nat_addr) {
+            types::IPAddress *dstNatIp = new types::IPAddress();
+            dstNatIp->set_af(types::IP_AF_INET);
+            dstNatIp->set_v4addr(flow->nat_data.dst_nat_addr);
+            flowLog.set_allocated_dstnatip(dstNatIp);
+            flowLog.set_dstnatport(flow->nat_data.dst_nat_port);
+        }
     }
     break;
     case OPERD_FLOW_TYPE_IP6:
@@ -95,7 +120,7 @@ vpp_decoder (uint8_t encoder, const char *data, size_t data_length,
         flowKey->set_allocated_ipflowkey(ipKey);
 
         ipKey->set_vpcid(&flow->v6.lookup_id, sizeof(flow->v6.lookup_id));
-        
+
         types::IPAddress *srcIp = new types::IPAddress();
         srcIp->set_af(types::IP_AF_INET6);
         srcIp->set_v6addr(&flow->v6.src, IP6_ADDR8_LEN);
@@ -105,12 +130,12 @@ vpp_decoder (uint8_t encoder, const char *data, size_t data_length,
         dstIp->set_af(types::IP_AF_INET6);
         dstIp->set_v6addr(flow->v6.dst, IP6_ADDR8_LEN);
         ipKey->set_allocated_dstip(dstIp);
-        
+
         ipKey->set_ipprotocol(flow->v6.proto);
 
         types::FlowL4Info *l4Info = new types::FlowL4Info();
         ipKey->set_allocated_l4info(l4Info);
-        
+
         types::FlowL4Info::TCPUDPInfo *tcpUdpInfo =
             new types::FlowL4Info::TCPUDPInfo();
         l4Info->set_allocated_tcpudpinfo(tcpUdpInfo);

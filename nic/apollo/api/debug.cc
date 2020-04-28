@@ -18,6 +18,7 @@
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/core/core.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/vpp/flow/pdsa_hdlr.h"
 
 using sdk::utils::in_mem_fsm_logger;
@@ -331,7 +332,9 @@ pds_flow_summary_get (pds_flow_stats_summary_t *flow_stats)
             return SDK_RET_ERR;
         }
     }
-    counters = sdk::metrics::metrics_read(vpp_stats_handle, FLOW_STATS_KEY);
+    counters = sdk::metrics::metrics_read(vpp_stats_handle,
+                                          *(sdk::metrics::key_t *)
+                                          api::uuid_from_objid(0).id);
     for (int i = 0; i < FLOW_STATS_MAX; i++) {
         flow_stats->value[i] = counters[i].second;
     }

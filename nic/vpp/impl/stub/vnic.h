@@ -2,8 +2,8 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
 
-#ifndef __IMPL_STUB_IMPL_H__
-#define __IMPL_STUB_IMPL_H__
+#ifndef __IMPL_STUB_IMPL_VNIC_H__
+#define __IMPL_STUB_IMPL_VNIC_H__
 
 #include <nic/vpp/infra/utils.h>
 
@@ -30,7 +30,18 @@ pds_vnic_subnet_get (u16 vnic_id, u16 *subnet_hw_id)
     return -1;
 }
 
+always_inline int
+pds_vnic_flow_log_en_get (u16 vnic_id, int *enable)
+{
+    return -1;
+}
+
+always_inline int
+pds_vnic_active_sessions_decrement (uint16_t vnic_id) {
+    return -1;
+}
+
 #ifdef __cplusplus
 }
 #endif
-#endif    // __IMPL_STUB_IMPL_H__
+#endif    // __IMPL_STUB_IMPL_VNIC_H__
