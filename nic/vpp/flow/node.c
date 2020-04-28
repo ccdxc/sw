@@ -490,9 +490,8 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         r_dst_ip = src_ip = clib_net_to_host_u32(ip40->src_address.as_u32);
         r_src_ip = dst_ip = clib_net_to_host_u32(ip40->dst_address.as_u32);
         protocol = ip40->protocol;
-        if (!flow_exists) {
-            lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
-        } else {
+        lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
+        if (PREDICT_FALSE(flow_exists && (ses->ingress_bd != 0))) {
             lkp_id = ses->ingress_bd;
         }
 
@@ -531,7 +530,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                             protocol, sport, dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_flow_role(TCP_FLOW_INITIATOR);
-        ftlv4_cache_set_epoch( 0xff);
+        ftlv4_cache_set_epoch(pds_get_flow_epoch(p0));
         if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
             pds_flow_handle_l2l(p0, flow_exists, &miss_hit, session_id);
         }
@@ -569,7 +568,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                             protocol, r_sport, r_dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_flow_role(TCP_FLOW_RESPONDER);
-        ftlv4_cache_set_epoch(0xff);
+        ftlv4_cache_set_epoch(pds_get_flow_epoch(p0));
         ftlv4_cache_set_flow_miss_hit(miss_hit);
         ftlv4_cache_set_update_flag(flow_exists);
         pds_flow_extract_nexthop_info(p0, 1, 0);
@@ -655,7 +654,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         }
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_flow_role(TCP_FLOW_INITIATOR);
-        ftlv6_cache_set_epoch(0xff);
+        ftlv6_cache_set_epoch(pds_get_flow_epoch(p0));
         if (PREDICT_FALSE(pds_is_flow_l2l(p0))) {
             pds_flow_handle_l2l(p0, flow_exists, &miss_hit, session_id);
         }
@@ -673,7 +672,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         }
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_flow_role(TCP_FLOW_RESPONDER);
-        ftlv6_cache_set_epoch(0xff);
+        ftlv6_cache_set_epoch(pds_get_flow_epoch(p0));
         ftlv6_cache_set_flow_miss_hit(miss_hit);
         ftlv6_cache_set_update_flag(flow_exists);
         ftlv6_cache_set_hash_log(0, pds_get_flow_log_en(p0));
@@ -735,7 +734,13 @@ pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
             next[i/2] = FLOW_PROG_NEXT_DROP;
         }
         if (session_id) {
-            pds_session_id_dealloc(session_id);
+            vlib_buffer_t *p0 = b[i/2];
+            if (pds_is_flow_session_present(p0)) {
+                // flow update failed - so clear the flow
+                pds_flow_delete_session(session_id);
+            } else {
+                pds_session_id_dealloc(session_id);
+            }
         }
     }
     // accumulate all v4 counters atomically
@@ -794,7 +799,13 @@ pds_flow_program_hw_ip6_or_l2 (vlib_buffer_t **b, u16 *next, u32 *counter)
         counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
         next[i/2] = FLOW_PROG_NEXT_DROP;
         if (session_id) {
-            pds_session_id_dealloc(session_id);
+            vlib_buffer_t *p0 = b[i/2];
+            if (pds_is_flow_session_present(p0)) {
+                // flow update failed - so clear the flow
+                pds_flow_delete_session(session_id);
+            } else {
+                pds_session_id_dealloc(session_id);
+            }
         }
     }
     // accumulate all v6 and l2 counters atomically

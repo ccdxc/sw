@@ -559,9 +559,11 @@ pds_flow_delete_session (u32 ses_id)
     pds_flow_hw_ctx_t *session = pds_flow_get_hw_ctx(ses_id);
     pds_flow_main_t *fm = &pds_flow_main;
     int flow_log_enabled = 0;
+    int thread = vlib_get_thread_index();
     uint8_t ctr_idx;
 
     pds_vnic_flow_log_en_get(session->vnic_id, &flow_log_enabled);
+    FLOW_AGE_TIMER_STOP(&fm->timer_wheel[thread], session->timer_hdl);
     // Delete both iflow and rflow
     if (session->v4) {
         ftlv4 *table4 = (ftlv4 *)pds_flow_get_table4();

@@ -69,9 +69,15 @@ typedef struct p4_rx_cpu_hdr_s {
     union {
         uint8_t flags2;
         struct {
+#if __BYTE_ORDER == __BIG_ENDIAN
             uint8_t  pad                    : 5;
             uint8_t  local_mapping_ip_type  : 2;
             uint8_t  defunct_flow           : 1;
+#else
+            uint8_t  defunct_flow           : 1;
+            uint8_t  local_mapping_ip_type  : 2;
+            uint8_t  pad                    : 5;
+#endif
         };
     };
     uint8_t  epoch;

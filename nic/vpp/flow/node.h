@@ -557,6 +557,7 @@ always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
 }
 
 extern void pds_flow_expired_timers_dispatch(u32 * expired_timers);
+extern void pds_flow_delete_session(u32 session_id);
 
 always_inline void pds_session_id_flush(void)
 {

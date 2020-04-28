@@ -98,6 +98,19 @@ pds_is_flow_svc_map_en (vlib_buffer_t *p0)
                      VPP_CPU_FLAGS_NAT_SVC_MAP);
 }
 
+always_inline bool
+pds_is_flow_session_present (vlib_buffer_t *p0)
+{
+    return BIT_ISSET(vnet_buffer(p0)->pds_flow_data.flags,
+                     VPP_CPU_FLAGS_FLOW_SES_EXIST);
+}
+
+always_inline u8
+pds_get_flow_epoch (vlib_buffer_t *p0)
+{
+    return vnet_buffer(p0)->pds_flow_data.epoch;
+}
+
 always_inline u16
 pds_get_cpu_flags_from_hdr (p4_rx_cpu_hdr_t *hdr)
 {

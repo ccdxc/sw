@@ -89,8 +89,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
     pds_flow_hw_ctx_t *ctx0, *ctx1;
     bool ses_track_en;
 
-    if (BIT_ISSET(vnet_buffer(b0)->pds_flow_data.flags,
-                  VPP_CPU_FLAGS_FLOW_SES_EXIST)) {
+    if (pds_is_flow_session_present(b0)) {
         goto skip_prog0;
     }
     
@@ -168,8 +167,7 @@ skip_prog0:
         vlib_buffer_advance(b0, pds_session_get_advance_offset());
     }
 
-    if (BIT_ISSET(vnet_buffer(b1)->pds_flow_data.flags,
-                  VPP_CPU_FLAGS_FLOW_SES_EXIST)) {
+    if (pds_is_flow_session_present(b1)) {
         goto skip_prog1;
     }
     //clib_memset(&actiondata, 0, sizeof(actiondata));
@@ -261,8 +259,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     pds_flow_hw_ctx_t *ctx;
     bool ses_track_en;
 
-    if (BIT_ISSET(vnet_buffer(b)->pds_flow_data.flags,
-                  VPP_CPU_FLAGS_FLOW_SES_EXIST)) {
+    if (pds_is_flow_session_present(b)) {
         goto skip_prog;
     }
     //clib_memset(&actiondata, 0, sizeof(actiondata));
@@ -913,6 +910,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         BIT_SET(vnet_buffer(p0)->pds_flow_data.flags,
                 pds_get_cpu_flags_from_vnic(vnic0));
         vnet_buffer(p0)->pds_flow_data.tcp_flags = hdr0->tcp_flags;
+        vnet_buffer(p0)->pds_flow_data.epoch = hdr0->epoch;
         nexthop = hdr0->nexthop_id;
         if ((!hdr0->mapping_hit || hdr0->rx_packet) && !hdr0->drop) {
             vnet_buffer(p0)->pds_flow_data.nexthop = nexthop |
@@ -931,7 +929,8 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         vnet_buffer2(p0)->pds_nat_data.vnic_id = hdr0->vnic_id;
 
         // If it's a TCP SYN packet, it should always go to FLOW_PROG node
-        if (hdr0->tcp_flags && !(hdr0->tcp_flags & TCP_FLAG_SYN)) {
+        if (PREDICT_TRUE(!hdr0->defunct_flow) && hdr0->tcp_flags &&
+            !(hdr0->tcp_flags & TCP_FLAG_SYN)) {
             // IF flow ageing is not supported or session is not present, all other 
             // TCP packets can be dropped
             if (!pds_flow_age_supported() || (PREDICT_FALSE(0 == hdr0->session_id))) {
@@ -982,6 +981,7 @@ next_pak:
         BIT_SET(vnet_buffer(p1)->pds_flow_data.flags,
                 pds_get_cpu_flags_from_vnic(vnic1));
         vnet_buffer(p1)->pds_flow_data.tcp_flags = hdr1->tcp_flags;
+        vnet_buffer(p1)->pds_flow_data.epoch = hdr1->epoch;
         nexthop = hdr1->nexthop_id;
         if ((!hdr1->mapping_hit || hdr1->rx_packet) && !hdr1->drop) {
             vnet_buffer(p1)->pds_flow_data.nexthop = nexthop |
@@ -1000,7 +1000,8 @@ next_pak:
         vnet_buffer2(p1)->pds_nat_data.vnic_id = hdr1->vnic_id;
 
         // If it's a TCP SYN packet, it should always go to FLOW_PROG node
-        if (hdr1->tcp_flags && !(hdr1->tcp_flags & TCP_FLAG_SYN)) {
+        if (PREDICT_TRUE(!hdr1->defunct_flow) && hdr1->tcp_flags &&
+            !(hdr1->tcp_flags & TCP_FLAG_SYN)) {
             // IF flow ageing is not supported or session is not present, all other
             // TCP packets can be dropped
             if (!pds_flow_age_supported() || (PREDICT_FALSE(0 == hdr1->session_id))) {
@@ -1139,6 +1140,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     BIT_SET(vnet_buffer(p)->pds_flow_data.flags,
             pds_get_cpu_flags_from_vnic(vnic));
     vnet_buffer(p)->pds_flow_data.tcp_flags = hdr->tcp_flags;
+    vnet_buffer(p)->pds_flow_data.epoch = hdr->epoch;
     nexthop = hdr->nexthop_id;
     if ((!hdr->mapping_hit || hdr->rx_packet) && !hdr->drop) {
         vnet_buffer(p)->pds_flow_data.nexthop = nexthop |
@@ -1156,7 +1158,8 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer2(p)->pds_nat_data.vnic_id = hdr->vnic_id;
 
     // If it's a TCP SYN packet, it should always go to FLOW_PROG node
-    if (hdr->tcp_flags && !(hdr->tcp_flags & TCP_FLAG_SYN)) { 
+    if (PREDICT_TRUE(!hdr->defunct_flow) && hdr->tcp_flags &&
+        !(hdr->tcp_flags & TCP_FLAG_SYN)) { 
         // IF flow ageing is not supported or session is not present, all other TCP
         // packets can be dropped
         if (!pds_flow_age_supported() || (PREDICT_FALSE(0 == hdr->session_id))) {

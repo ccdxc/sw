@@ -69,6 +69,18 @@ pds_is_flow_svc_map_en (vlib_buffer_t *p0)
     return false;
 }
 
+always_inline bool
+pds_is_flow_session_present (vlib_buffer_t *p0)
+{
+    return false;
+}
+
+always_inline u8
+pds_get_flow_epoch (vlib_buffer_t *p0)
+{
+    return 0xff;
+}
+
 __clib_unused static u8 *
 format_pds_p4_rx_cpu_hdr (u8 * s, va_list * args)
 {
