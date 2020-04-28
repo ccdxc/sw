@@ -561,7 +561,7 @@ DumpPortStats(void *Stats)
     printf("\tRx pri-5 pause:\t\t%I64u\n", port_stats->rx_pripause_5_1us_count);
     printf("\tRx pri-6 pause:\t\t%I64u\n", port_stats->rx_pripause_6_1us_count);
     printf("\tRx pri-7 pause:\t\t%I64u\n", port_stats->rx_pripause_7_1us_count);
-    printf("\tRx standard pause:\t%I64u\n", port_stats->rx_pause_1us_count);
+    printf("\tRx pause 1us  :\t\t%I64u\n", port_stats->rx_pause_1us_count);
 
     printf("\tFrames truncated:\t%I64u\n", port_stats->frames_tx_truncated);
 
