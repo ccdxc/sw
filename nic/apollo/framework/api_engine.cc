@@ -179,6 +179,29 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
         }
         ret = api_obj->add_to_db();
         SDK_ASSERT(ret == SDK_RET_OK);
+    } else if (api_obj->in_restore_list()) {
+        // it is a restored object which is already in db
+        // reset this flag only when config is accepted
+        // assert in case if this obj was already in dirty list
+        // as we are not expecting any modification in same batch
+        SDK_ASSERT(api_obj->in_dirty_list() == false);
+        octxt = api_obj_ctxt_alloc_();
+        octxt->api_op = API_OP_CREATE;
+        octxt->obj_id = api_ctxt->obj_id;
+        octxt->api_params = api_ctxt->api_params;
+        // add it to dirty object list
+        add_to_dirty_list_(api_obj, octxt);
+        // initialize the object with the given config
+        ret = api_obj->init_config(api_ctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_API_PREPROCESS_CREATE_COUNTER_INC(init_cfg_err, 1);
+            PDS_TRACE_ERR("Config initialization failed for restored obj id %u, "
+                          "api op %u, err %u",
+                          api_ctxt->obj_id, api_ctxt->api_op, ret);
+            return ret;
+        }
+        PDS_TRACE_VERBOSE("restored api obj %p, api op %u, obj id %u",
+                          api_obj, api_ctxt->api_op, api_ctxt->obj_id);
     } else {
         // this could be XXX-DEL-ADD/ADD-XXX-DEL-XXX-ADD kind of scenario in
         // same batch, as we don't expect to see ADD-XXX-ADD (unless we want
@@ -783,6 +806,8 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
                                        api_obj, obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         del_from_dirty_list_(it, api_obj);
+        // config is accepted, clear restore flag
+        api_obj->clear_in_restore_list();
         if (api_base::stateless(obj_ctxt->obj_id)) {
             // destroy this object as it is not needed anymore
             PDS_TRACE_VERBOSE("Doing soft delete of stateless obj %s",
@@ -950,6 +975,13 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
         if (obj_ctxt->hw_dirty) {
             api_obj->cleanup_config(obj_ctxt);
             obj_ctxt->hw_dirty = 0;
+        }
+        // todo contemplate checking restore list, clear this object from
+        //      dirty list and prevent cleanup, for now log a message
+        if (api_obj->in_restore_list()) {
+            PDS_TRACE_ERR("Restored object %s id %u is being rolled back "
+                          "resources will be released",
+                          api_obj->key2str().c_str(), obj_ctxt->obj_id);
         }
         if (api_obj->rsvd_rsc()) {
             api_obj->release_resources();

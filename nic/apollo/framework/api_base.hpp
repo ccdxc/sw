@@ -251,6 +251,15 @@ public:
     /// \brief clear the dependent object bit on this object
     void clear_in_deps_list(void) { in_aol_ = 0; }
 
+    /// \brief mark the object as restored from persistent storage
+    void set_in_restore_list(void) { in_rol_ = 1; }
+
+    /// \brief returns true if the object is in restore list
+    bool in_restore_list(void) const { return in_rol_ ? true : false; }
+
+    /// \brief clear the restored object bit on this object
+    void clear_in_restore_list(void) { in_rol_ = 0; }
+
     /// \brief return true if object is 'stateless' given an object id
     /// \param[in] obj_id    object id
     static bool stateless(obj_id_t obj_id);
@@ -294,6 +303,7 @@ protected:
     api_base() {
         in_dol_ = 0;
         in_aol_ = 0;
+        in_rol_   = 0;
         rsvd_rsc_ = 0;
     };
 
@@ -304,6 +314,7 @@ protected:
     uint8_t in_dol_:1;       ///< true if object is in the dirty list
     uint8_t in_aol_:1;       ///< true if object is in affected object list
     uint8_t rsvd_rsc_:1;     ///< true if resources are reserved
+    uint8_t in_rol_:1;       ///< true if object is in restore list
 } __PACK__;
 
 /// \brief    find and return cloned version of the given object

@@ -77,6 +77,13 @@ nexthop_group_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
     sdk_ret_t ret;
     pds_nexthop_group_spec_t *spec;
 
+    // if this object is restored from persistent storage
+    // resources are reserved already
+    // use in_restore_list() instead.????
+    if (api_obj->rsvd_rsc()) {
+        return SDK_RET_OK;
+    }
+
     spec = &obj_ctxt->api_params->nexthop_group_spec;
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
@@ -470,7 +477,6 @@ nexthop_group_impl::restore_resources(obj_info_t *info) {
     spec = &nh_group_info->spec;
     status = &nh_group_info->status;
 
-    // todo set_rsvd_rsc
     ret = nexthop_group_impl_db()->nhgroup_idxr()->alloc(status->hw_id);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to restore an entry in ECMP table, ",

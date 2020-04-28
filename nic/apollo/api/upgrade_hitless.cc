@@ -212,9 +212,10 @@ restore_obj (upg_obj_info_t *info)
     ret = api_obj->restore(info);
     if (ret == SDK_RET_OK) {
         api_obj->add_to_db();
+        // this will prevent resource 'reservation' during config replay
+        api_obj->set_rsvd_rsc();
+        api_obj->set_in_restore_list();
     }
-    // todo 1. mark restore stage
-    //      2. set in restore list
     api_ctxt_free(api_ctxt);
     return ret;
 }
