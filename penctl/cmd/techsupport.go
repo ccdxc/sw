@@ -37,7 +37,7 @@ func init() {
 
 	showTechCmd.Flags().StringVarP(&tarFile, "tarball", "b", "", "Name of tarball to create (without .tar.gz)")
 	showTechCmd.Flags().StringVarP(&tarFileDir, "odir", "", "", "Directory to create the tech-support in")
-	showTechCmd.Flags().BoolVarP(&skipCores, "skip-core", "", false, "Skip the collection of core files")
+	showTechCmd.Flags().BoolVarP(&skipCores, "skip-core", "s", false, "Skip the collection of core files")
 
 	showTechCmd.Flags().MarkHidden("odir")
 }

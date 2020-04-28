@@ -14,13 +14,16 @@ Show Object and Information
 ### Options
 
 ```
-  -h, --help   help for show
+  -h, --help      help for show
+  -t, --tabular   display in table format
 ```
 
 ### Options inherited from parent commands
 
 ```
   -a, --authtoken string   path to file containing authorization token
+      --compat-1.1         run in 1.1 firmware compatibility mode
+      --dsc-url string     set url for Distributed Service Card
   -j, --json               display in json format (default true)
       --verbose            display penctl debug log
   -v, --version            display version of penctl
@@ -45,4 +48,5 @@ Show Object and Information
 * [penctl show system](penctl_show_system.md)	 - show system information
 * [penctl show system-memory-usage](penctl_show_system-memory-usage.md)	 - Show free/used memory on Distributed Service Card (in MB)
 * [penctl show time](penctl_show_time.md)	 - Show system clock time from Distributed Service Card
+* [penctl show version](penctl_show_version.md)	 - Get all Naples Information
 

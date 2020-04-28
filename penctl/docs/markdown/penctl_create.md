@@ -21,6 +21,8 @@ Create Object
 
 ```
   -a, --authtoken string   path to file containing authorization token
+      --compat-1.1         run in 1.1 firmware compatibility mode
+      --dsc-url string     set url for Distributed Service Card
   -j, --json               display in json format (default true)
       --verbose            display penctl debug log
   -v, --version            display version of penctl
@@ -29,6 +31,5 @@ Create Object
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
-* [penctl create dsc-profile](penctl_create_dsc-profile.md)	 - Distributed Service Card profile object
 * [penctl create qos-class](penctl_create_qos-class.md)	 - qos-class object
 

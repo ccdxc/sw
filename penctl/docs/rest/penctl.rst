@@ -25,6 +25,8 @@ Options
 ::
 
   -a, --authtoken string   path to file containing authorization token
+      --compat-1.1         run in 1.1 firmware compatibility mode
+      --dsc-url string     set url for Distributed Service Card
   -h, --help               help for penctl
   -j, --json               display in json format (default true)
       --verbose            display penctl debug log

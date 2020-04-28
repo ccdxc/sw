@@ -19,7 +19,7 @@ penctl system tech-support [flags]
 
 ```
   -h, --help             help for tech-support
-      --skip-cores       Skip the collection of core files
+  -s, --skip-core        Skip the collection of core files
   -b, --tarball string   Name of tarball to create (without .tar.gz)
 ```
 
@@ -27,6 +27,8 @@ penctl system tech-support [flags]
 
 ```
   -a, --authtoken string   path to file containing authorization token
+      --compat-1.1         run in 1.1 firmware compatibility mode
+      --dsc-url string     set url for Distributed Service Card
   -j, --json               display in json format (default true)
       --verbose            display penctl debug log
   -v, --version            display version of penctl

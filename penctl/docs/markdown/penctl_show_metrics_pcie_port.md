@@ -32,6 +32,25 @@ markerpollmax : marker poll count (max).
 axipendpolllast : axipend poll count (last).
 axipendpollmax : axipend poll count (max).
 faults : link faults.
+link_dn2up_int : link_dn2up_int.
+link_up2dn_int : link_up2dn_int.
+sec_bus_rst_int : sec_bus_rst_int.
+rst_up2dn_int : rst_up2dn_int.
+rst_dn2up_int : rst_dn2up_int.
+portgate_open2close_int : portgate_open2close_int.
+ltssm_st_changed_int : ltssm_st_changed_int.
+sec_busnum_changed_int : sec_busnum_changed_int.
+rc_pme_int : rc_pme_int.
+rc_aerr_int : rc_aerr_int.
+rc_serr_int : rc_serr_int. 
+rc_hpe_int : rc_hpe_int.
+rc_eq_req_int : rc_eq_req_int.
+rc_dpc_int : rc_dpc_int.
+pm_turnoff_int : pm_turnoff_int.
+txbfr_overflow_int : txbfr_overflow_int.
+rxtlp_err_int : rxtlp_err_int.
+tl_flr_req_int : tl_flr_req_int.
+rc_legacy_intpin_changed_int : rc_legacy_intpin_changed_int.
 
 
 ---------------------------------
@@ -51,7 +70,10 @@ penctl show metrics pcie port [flags]
 
 ```
   -a, --authtoken string   path to file containing authorization token
+      --compat-1.1         run in 1.1 firmware compatibility mode
+      --dsc-url string     set url for Distributed Service Card
   -j, --json               display in json format (default true)
+  -t, --tabular            display in table format
       --verbose            display penctl debug log
   -v, --version            display version of penctl
   -y, --yaml               display in yaml format
