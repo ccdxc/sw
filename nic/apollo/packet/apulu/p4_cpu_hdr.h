@@ -74,7 +74,8 @@ typedef struct p4_rx_cpu_hdr_s {
             uint8_t  defunct_flow           : 1;
         };
     };
-    uint8_t epoch;
+    uint8_t  epoch;
+    uint16_t sacl_priority;
 } __attribute__ ((packed)) p4_rx_cpu_hdr_t;
 
 // Meta sent to P4 for tx packet

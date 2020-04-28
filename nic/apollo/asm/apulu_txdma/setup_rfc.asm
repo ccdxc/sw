@@ -12,7 +12,7 @@ struct setup_rfc_k_    k;
 
 setup_rfc:
     // Is the current combination done?
-    seq              c1, k.txdma_control_recirc_count[0:0], r0
+    seq              c1, k.txdma_control_recirc_count_s4_e11[0:0], r0
     // No. Stop.
     nop.c1.e
     nop

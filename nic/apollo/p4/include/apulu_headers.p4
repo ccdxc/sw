@@ -36,6 +36,7 @@ header_type apulu_txdma_to_p4e_header_t {
         snat_type       : 2;
         dnat_en         : 1;
         dnat_idx        : 13;
+        sacl_priority   : 16;
     }
 }
 
@@ -86,6 +87,8 @@ header_type apulu_p4_to_arm_header_t {
         pad                     : 5;
 
         epoch                   : 8;
+
+        sacl_priority           : 16;
     }
 }
 

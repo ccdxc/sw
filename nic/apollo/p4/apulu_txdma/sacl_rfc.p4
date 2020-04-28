@@ -353,9 +353,9 @@ action rfc_action_p3(pad,pr45, res45, pr44, res44,
                  SACL_P3_ENTRIES_PER_CACHE_LINE)*SACL_P3_ENTRY_WIDTH);
 
     // If the priority of the current result is higher than whats in the PHV
-    if (txdma_control.rule_priority > scratch_metadata.field10) {
+    if (txdma_to_p4e.sacl_priority > scratch_metadata.field10) {
         // Then overwrite the result in the PHV with the current one
-        modify_field(txdma_control.rule_priority, scratch_metadata.field10);
+        modify_field(txdma_to_p4e.sacl_priority, scratch_metadata.field10);
         modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
         modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
         modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);
@@ -758,9 +758,9 @@ action rfc_action_p3_1(pad,pr45, res45, pr44, res44,
                  SACL_P3_ENTRIES_PER_CACHE_LINE)*SACL_P3_ENTRY_WIDTH);
 
     // If the priority of the current result is higher than whats in the PHV
-    if (txdma_control.rule_priority > scratch_metadata.field10) {
+    if (txdma_to_p4e.sacl_priority > scratch_metadata.field10) {
         // Then overwrite the result in the PHV with the current one
-        modify_field(txdma_control.rule_priority, scratch_metadata.field10);
+        modify_field(txdma_to_p4e.sacl_priority, scratch_metadata.field10);
         modify_field(txdma_to_p4e.drop, scratch_metadata.field1);
         modify_field(txdma_to_p4e.sacl_action, scratch_metadata.field1);
         modify_field(txdma_to_p4e.sacl_root_num, txdma_control.root_count);

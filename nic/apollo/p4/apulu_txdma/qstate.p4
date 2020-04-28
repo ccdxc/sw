@@ -127,6 +127,7 @@ action read_pktdesc1(remote_ip,
                       SACL_CACHE_LINE_SIZE));
 
         modify_field(txdma_predicate.rfc_enable, TRUE);
+        modify_field(txdma_to_p4e.sacl_priority, SACL_PRIORITY_INVALID);
     }
 }
 
