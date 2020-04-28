@@ -16,7 +16,6 @@ import (
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -25,6 +24,12 @@ type flowExpHooks struct {
 	svc    apiserver.Service
 	logger log.Logger
 }
+
+const (
+	veniceMaxCollectorsPerPolicy    = 2
+	veniceMaxUniquePolicyCollectors = 4
+	veniceMaxPolicySessions         = 8
+)
 
 func (r *flowExpHooks) validateFlowExportPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	policy, ok := i.(monitoring.FlowExportPolicy)
@@ -66,8 +71,8 @@ func (r *flowExpHooks) validateFlowExportPolicy(ctx context.Context, kv kvstore.
 
 	switch oper {
 	case apiintf.CreateOper:
-		if len(policyList.Items) >= tpm.MaxNumExportPolicy {
-			return nil, false, fmt.Errorf("can't configure more than %v FlowExportPolicy", tpm.MaxNumExportPolicy)
+		if len(policyList.Items) >= veniceMaxPolicySessions {
+			return nil, false, fmt.Errorf("can't configure more than %v FlowExportPolicy", veniceMaxPolicySessions)
 		}
 	}
 
@@ -187,8 +192,8 @@ func flowexportPolicyValidator(p *monitoring.FlowExportPolicy) error {
 		return fmt.Errorf("no targets configured")
 	}
 
-	if len(spec.Exports) > tpm.MaxNumCollectorsPerPolicy {
-		return fmt.Errorf("cannot configure more than %d targets", tpm.MaxNumCollectorsPerPolicy)
+	if len(spec.Exports) > veniceMaxCollectorsPerPolicy {
+		return fmt.Errorf("cannot configure more than %d targets", veniceMaxCollectorsPerPolicy)
 	}
 
 	feTargets := map[string]bool{}
@@ -311,9 +316,9 @@ func globalFlowExportValidator(newfp *monitoring.FlowExportPolicy, policyList *m
 				existingCfg.Destination, existingCfg.Transport, col.Transport)
 		}
 	}
-	if len(expConfig) > tpm.MaxUniqueNumCollectors {
+	if len(expConfig) > veniceMaxUniquePolicyCollectors {
 		return fmt.Errorf("invalid %v unique collectors, can't configure more than %v unique collectors",
-			len(expConfig), tpm.MaxUniqueNumCollectors)
+			len(expConfig), veniceMaxUniquePolicyCollectors)
 	}
 	return nil
 }

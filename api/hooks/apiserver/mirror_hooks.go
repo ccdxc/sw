@@ -11,7 +11,6 @@ import (
 	"github.com/pensando/sw/api/generated/monitoring"
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -24,8 +23,10 @@ type mirrorSessionHooks struct {
 
 const (
 	// Finalize these parameters once we decide how to store the packets captured by Venice
-	veniceMaxPacketSize           = 2048
-	veniceMaxCollectorsPerSession = 2
+	veniceMaxPacketSize             = 2048
+	veniceMaxCollectorsPerSession   = 2
+	veniceMaxUniqueMirrorCollectors = 4
+	veniceMaxMirrorSessions         = 8
 )
 
 func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
@@ -193,8 +194,8 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 
 	switch oper {
 	case apiintf.CreateOper:
-		if len(mirrors.Items) >= statemgr.MaxMirrorSessions {
-			return nil, false, fmt.Errorf("can't configure more than %v mirror policy", statemgr.MaxMirrorSessions)
+		if len(mirrors.Items) >= veniceMaxMirrorSessions {
+			return nil, false, fmt.Errorf("can't configure more than %v mirror policy", veniceMaxMirrorSessions)
 		}
 	}
 
@@ -250,9 +251,9 @@ func globalMirrorSessionValidator(ms *monitoring.MirrorSession, mirrors *monitor
 			}
 		}
 	}
-	if len(expConfig) > statemgr.MaxUniqueCollectors {
+	if len(expConfig) > veniceMaxUniqueMirrorCollectors {
 		return fmt.Errorf("invalid %v unique collectors, can't configure more than %v unique collectors",
-			len(expConfig), statemgr.MaxUniqueCollectors)
+			len(expConfig), veniceMaxUniqueMirrorCollectors)
 	}
 	return nil
 }
