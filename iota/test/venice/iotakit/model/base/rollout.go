@@ -134,6 +134,13 @@ func (sm *SysModel) CreateRolloutObject(bundleType, name, upgradeType string) (*
 //GetClusterVersion returns the running version
 func (sm *SysModel) GetClusterVersion() string {
 
+	bkCtx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancelFunc()
+	ctx, err := sm.VeniceLoggedInCtx(bkCtx)
+	if err != nil {
+		log.Errorf("Failed to get login context (%+v)", err)
+		return ""
+	}
 	restcls, err := sm.VeniceRestClient()
 	if err != nil {
 		log.Errorf("Failed to get rest clients (%+v)", err)
@@ -142,12 +149,12 @@ func (sm *SysModel) GetClusterVersion() string {
 	obj := api.ObjectMeta{
 		Name: "version",
 	}
-	vobj, err := restcls[0].ClusterV1().Version().Get(context.Background(), &obj)
+	vobj, err := restcls[0].ClusterV1().Version().Get(ctx, &obj)
 	if err != nil {
 		log.Errorf("Failed to get cluster object (%+v)", err)
 		return ""
 	}
-	log.Debugf("Version Object %+v", vobj)
+	log.Infof("Version Object %+v", vobj)
 	return vobj.Status.BuildVersion
 }
 
@@ -186,7 +193,7 @@ func (sm *SysModel) GetRolloutObject(scaleData bool) (*rollout.Rollout, error) {
 			log.Errorf("Cluster running the same version %s", version)
 			continue
 		}
-		log.Errorf("ts:%s Trying to download bundle.tar, version: %s", time.Now().String(), version)
+		log.Errorf("ts:%s Trying to download bundle.tar, version: %s clusterVersion %s", time.Now().String(), version, clusterVersion)
 		url := fmt.Sprintf("http://pxe.pensando.io/builds/hourly/%s/bundle/bundle.tar", version)
 		jsonUrl := []string{url, "--output", bundleLocalFilePath, "-f"}
 
