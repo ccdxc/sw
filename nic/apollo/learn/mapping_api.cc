@@ -92,17 +92,17 @@ static sdk_ret_t
 create_learn_ctxt (pds_mapping_key_t *mkey, learn_ctxt_t *ctxt, api_op_t op)
 {
     sdk_ret_t ret;
-    ep_mac_key_t *mac_key;
-    ep_ip_key_t *ip_key;
+    ep_mac_key_t *mac_key = &ctxt->mac_key;
+    ep_ip_key_t *ip_key = &ctxt->ip_key;;
+    pds_obj_key_t vnic_key;
+    vnic_entry *vnic;
 
     ctxt->api_ctxt.mkey = mkey;
     if (mkey->type == PDS_MAPPING_TYPE_L2) {
-        mac_key = &ctxt->mac_key;
         MAC_ADDR_COPY(&mac_key->mac_addr, &mkey->mac_addr);
         mac_key->subnet = mkey->subnet;
         ctxt->mac_entry = learn_db()->ep_mac_db()->find(mac_key);
     } else if (mkey->type == PDS_MAPPING_TYPE_L3) {
-        ip_key = &ctxt->ip_key;
         ip_key->ip_addr = mkey->ip_addr;
         ip_key->vpc = mkey->vpc;
         ctxt->ip_entry = learn_db()->ep_ip_db()->find(ip_key);
@@ -113,6 +113,15 @@ create_learn_ctxt (pds_mapping_key_t *mkey, learn_ctxt_t *ctxt, api_op_t op)
         SDK_ASSERT(false);
     }
     ctxt->api_ctxt.op = op;
+
+    // if local entry exists, save ifindex needed for notifications
+    if (ctxt->mac_entry) {
+        vnic_key = api::uuid_from_objid(ctxt->mac_entry->vnic_obj_id());
+        vnic = vnic_db()->find(&vnic_key);
+        if (vnic != nullptr) {
+            ctxt->ifindex = api::objid_from_uuid(vnic->host_if());
+        }
+    }
 
     // find out learn type and move if any
     ret = detect_learn_type(ctxt);
@@ -165,6 +174,8 @@ process_mapping_api (mapping_key_spec_t key_spec, api_op_t op,
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to process %s",
                       ctxt.log_str(ctxt.api_ctxt.mkey->type));
+    } else {
+        PDS_TRACE_INFO("Processed %s", ctxt.log_str(ctxt.api_ctxt.mkey->type));
     }
     return ret;
 }

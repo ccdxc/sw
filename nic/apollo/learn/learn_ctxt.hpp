@@ -14,9 +14,11 @@
 #include <vector>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/core/event.hpp"
 #include "nic/apollo/framework/api_msg.hpp"
 #include "nic/apollo/learn/ep_mac_entry.hpp"
 #include "nic/apollo/learn/ep_ip_entry.hpp"
+#include "nic/apollo/learn/ep_utils.hpp"
 #include "nic/apollo/learn/learn.hpp"
 #include "nic/apollo/learn/learn_impl_base.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
@@ -40,6 +42,7 @@ typedef struct learn_entry_s {
 } learn_entry_t;
 
 typedef std::vector<learn_entry_t> learn_entry_list_t;
+typedef std::vector<event_t> event_list_t;
 
 /// \brief context specific to learn packets
 typedef struct learn_pkt_ctxt_s {
@@ -67,10 +70,17 @@ typedef struct batch_counters_s {
     uint32_t remote_ip_map [OP_MAX];
 } batch_counters_t;
 
-/// \brief per batch context common across all pkts or APIs
+/// \context common across a batch of packets or APIs
 typedef struct learn_batch_ctxt_s {
     learn_entry_list_t      del_objs;           ///< deleted entries
     batch_counters_t        counters;           ///< batch counters
+    event_list_t            bcast_events;       ///< event to broadcast
+
+    void reset(void) {
+        del_objs.clear();
+        memset(&counters, 0, sizeof(counters));
+        bcast_events.clear();
+    }
 } learn_batch_ctxt_t;
 
 typedef enum {
@@ -89,7 +99,8 @@ typedef struct learn_ctxt_s {
     ep_learn_type_t         ip_learn_type;      ///< IP learn type
     learn_ctx_type_t        ctxt_type;          ///< learn source
     pds_batch_ctxt_t        bctxt;              ///< API batch context
-    learn_batch_ctxt_t      *lbctxt;            ///< API batch context
+    learn_batch_ctxt_t      *lbctxt;            ///< context common to API batch
+    pds_ifindex_t           ifindex;            ///< ifindex of local vnic
     union {
         learn_pkt_ctxt_t    pkt_ctxt;           ///< learn pkt context
         learn_api_ctxt_t    api_ctxt;           ///< mapping API context
@@ -255,6 +266,79 @@ update_batch_counters(learn_batch_ctxt_t *lbctxt, bool ok)
             LEARN_COUNTER_ADD(local_ip_map_err[i], ctrs->local_ip_map[i]);
             LEARN_COUNTER_ADD(remote_ip_map_err[i], ctrs->remote_ip_map[i]);
         }
+    }
+}
+
+static inline void
+add_mac_to_event_list (learn_ctxt_t *ctxt, event_id_t learn_event)
+{
+    event_t event;
+    core::learn_event_info_t *info = &event.learn;
+
+    event.event_id = learn_event;
+    info->subnet = ctxt->mac_key.subnet;
+    MAC_ADDR_COPY(info->mac_addr, ctxt->mac_key.mac_addr);
+    info->ifindex = ctxt->ifindex;
+    info->vpc = { 0 };
+    info->ip_addr = { 0 };
+    ctxt->lbctxt->bcast_events.push_back(event);
+}
+
+static inline void
+add_ip_to_event_list (const ep_ip_key_t *ip_key, learn_ctxt_t *ctxt,
+                      event_id_t learn_event)
+{
+    event_t event;
+    core::learn_event_info_t *info = &event.learn;
+    const ep_mac_key_t *mac_key;
+
+    SDK_ASSERT(ctxt->mac_entry);
+    event.event_id = learn_event;
+    mac_key = ctxt->mac_entry->key();
+    info->subnet = mac_key->subnet;
+    MAC_ADDR_COPY(info->mac_addr, mac_key->mac_addr);
+    info->ifindex = ctxt->ifindex;
+    info->vpc = ip_key->vpc;
+    info->ip_addr = ip_key->ip_addr;
+    ctxt->lbctxt->bcast_events.push_back(event);
+}
+
+static inline void
+add_ip_to_event_list (learn_ctxt_t *ctxt, event_id_t learn_event)
+{
+    add_ip_to_event_list(&ctxt->ip_key, ctxt, learn_event);
+}
+
+// for remote delete events, we have only mapping key
+static inline void
+add_del_event_to_list (learn_ctxt_t *ctxt)
+{
+    event_t event;
+    core::learn_event_info_t *info = &event.learn;
+    pds_mapping_key_t *mkey = ctxt->api_ctxt.mkey;
+
+    memset(&event, 0, sizeof(event));
+    if (mkey->type == PDS_MAPPING_TYPE_L2) {
+        event.event_id = EVENT_ID_MAC_DELETE;
+        info->subnet = mkey->subnet;
+        MAC_ADDR_COPY(info->mac_addr, mkey->mac_addr);
+    } else {
+        event.event_id = EVENT_ID_IP_DELETE;
+        info->vpc = mkey->vpc;
+        info->ip_addr = mkey->ip_addr;
+    }
+    ctxt->lbctxt->bcast_events.push_back(event);
+}
+
+static inline void
+broadcast_events (learn_batch_ctxt_t *lbctxt)
+{
+    event_list_t *events = &lbctxt->bcast_events;
+    event_t *event;
+
+    for (auto it = events->begin(); it != events->end(); ++it) {
+        event = &(*it);
+        broadcast_learn_event(event);
     }
 }
 

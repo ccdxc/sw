@@ -31,6 +31,12 @@ typedef enum event_id_e {
     EVENT_ID_IP_LEARN           = (PDS_IPC_EVENT_ID_HAL_MIN + 8),
     EVENT_ID_MAC_AGE            = (PDS_IPC_EVENT_ID_HAL_MIN + 9),
     EVENT_ID_IP_AGE             = (PDS_IPC_EVENT_ID_HAL_MIN + 10),
+    EVENT_ID_IP_DELETE          = (PDS_IPC_EVENT_ID_HAL_MIN + 11),
+    EVENT_ID_MAC_DELETE         = (PDS_IPC_EVENT_ID_HAL_MIN + 12),
+    EVENT_ID_MAC_MOVE_L2R       = (PDS_IPC_EVENT_ID_HAL_MIN + 13),
+    EVENT_ID_IP_MOVE_L2R        = (PDS_IPC_EVENT_ID_HAL_MIN + 14),
+    EVENT_ID_MAC_MOVE_R2L       = (PDS_IPC_EVENT_ID_HAL_MIN + 15),
+    EVENT_ID_IP_MOVE_R2L        = (PDS_IPC_EVENT_ID_HAL_MIN + 16),
 } event_id_t;
 
 namespace core {

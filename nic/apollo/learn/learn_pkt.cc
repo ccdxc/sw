@@ -221,6 +221,9 @@ extract_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
     ctxt->mac_entry = ep_mac_db()->find(&ctxt->mac_key);
     ctxt->mac_learn_type = detect_learn_type(ctxt, PDS_MAPPING_TYPE_L2);
 
+    // construct ifindex
+    ctxt->ifindex = LIF_IFINDEX(impl->lif);
+
     // extract IP address if present and populate ep->ip_key
     if (!extract_ip_learn_info(pkt_data, ctxt)) {
         ctxt->ip_learn_type = LEARN_TYPE_INVALID;
@@ -229,6 +232,7 @@ extract_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
 
     ctxt->ip_entry = ep_ip_db()->find(&ctxt->ip_key);
     ctxt->ip_learn_type = detect_learn_type(ctxt, PDS_MAPPING_TYPE_L3);
+
     return SDK_RET_OK;
 }
 
@@ -315,9 +319,11 @@ update_ep_mac (learn_ctxt_t *ctxt)
         ctxt->mac_entry->add_to_db();
         // start MAC aging timer
         mac_aging_timer_restart(ctxt->mac_entry);
-        broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
-        if (ctxt->mac_learn_type == LEARN_TYPE_NEW_LOCAL) {
-            broadcast_mac_event(EVENT_ID_MAC_LEARN, ctxt->mac_entry);
+
+        // for R2L we broadcast both new learn and r2l messages
+        add_mac_to_event_list(ctxt, EVENT_ID_MAC_LEARN);
+        if (ctxt->mac_learn_type == LEARN_TYPE_MOVE_R2L) {
+            add_mac_to_event_list(ctxt, EVENT_ID_IP_MOVE_R2L);
         }
         break;
     case LEARN_TYPE_MOVE_L2L:
@@ -346,7 +352,12 @@ update_ep_ip (learn_ctxt_t *ctxt)
         ctxt->ip_entry->set_state(EP_STATE_CREATED);
         ctxt->ip_entry->add_to_db();
         ctxt->mac_entry->add_ip(ctxt->ip_entry);
-        broadcast_ip_event(EVENT_ID_IP_LEARN, ctxt->ip_entry);
+
+        // for R2L we broadcast both new learn and r2l messages
+        add_ip_to_event_list(ctxt, EVENT_ID_IP_LEARN);
+        if (ctxt->ip_learn_type == LEARN_TYPE_MOVE_R2L) {
+            add_ip_to_event_list(ctxt, EVENT_ID_IP_MOVE_R2L);
+        }
         break;
     case LEARN_TYPE_MOVE_L2L:
         old_ip_entry = ctxt->pkt_ctxt.old_ip_entry;
@@ -512,6 +523,9 @@ process_learn_pkt (void *mbuf)
         goto error;
     }
     update_batch_counters(&lbctxt, true);
+
+    // broadcast learn events
+    broadcast_events(&lbctxt);
 
     // reinject the packet to p4 if needed
     if (reinject_pkt_to_p4(mbuf, &ctxt) == SDK_RET_OK) {

@@ -139,7 +139,7 @@ process_new_local_mac (learn_ctxt_t *ctxt)
     spec.fabric_encap.type = PDS_ENCAP_TYPE_NONE;
     spec.vnic_encap = impl->encap;
     MAC_ADDR_COPY(spec.mac_addr, ctxt->mac_key.mac_addr);
-    spec.host_if = api::uuid_from_objid(LIF_IFINDEX(impl->lif));
+    spec.host_if = api::uuid_from_objid(ctxt->ifindex);
 
     PDS_TRACE_DEBUG("Creating VNIC %s for EP %s", spec.key.str(), ctxt->str());
     return vnic_create(ctxt, &spec);
@@ -259,8 +259,8 @@ process_new_remote_mac_ip (learn_ctxt_t *ctxt)
 
 // structure to pass batch context to walk callback and get return status
 typedef struct cb_args_s {
-    sdk_ret_t         ret;
-    pds_batch_ctxt_t  bctxt;
+    sdk_ret_t     ret;
+    learn_ctxt_t  *ctxt;
 } cb_args_t;
 
 static bool l2r_mac_move_cb (void *entry, void *cb_args)
@@ -270,11 +270,15 @@ static bool l2r_mac_move_cb (void *entry, void *cb_args)
     cb_args_t *args = (cb_args_t *)cb_args;
 
     send_arp_probe(ip_entry);
-    args->ret = delete_local_ip_mapping(ip_entry, args->bctxt);
+    args->ret = delete_local_ip_mapping(ip_entry, args->ctxt->bctxt);
     if (args->ret != SDK_RET_OK) {
         //stop iterating
         return true;
     }
+
+    // these are local deletes, send ageout event
+    // IP address information is not in the context, send it explicitly
+    add_ip_to_event_list(ip_entry->key(), args->ctxt, EVENT_ID_IP_AGE);
     return false;
 }
 
@@ -296,12 +300,12 @@ process_l2r_move_mac (learn_ctxt_t *ctxt)
 
     // send ARP probes and delete all IP mappings associated with this MAC
     // need to do this before deleting the VNIC
-    cb_args.bctxt = ctxt->bctxt;
+    cb_args.ctxt = ctxt;
     mac_entry->walk_ip_list(l2r_mac_move_cb, &cb_args);
     ret = cb_args.ret;
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to process IP mappings associated with %s EP %s "
-                      "error code %s", ctxt->str(),
+                      "error code %u", ctxt->str(),
                       mac_entry->key2str().c_str(), ret);
         return ret;
     }
@@ -326,6 +330,10 @@ process_l2r_move_mac (learn_ctxt_t *ctxt)
 
     // add MAC entry to delete list
     add_to_delete_list(mac_entry, &ctxt->lbctxt->del_objs);
+
+    // add to broadcast event list
+    add_mac_to_event_list(ctxt, EVENT_ID_MAC_MOVE_L2R);
+
     return SDK_RET_OK;
 }
 
@@ -347,6 +355,10 @@ process_l2r_move_ip (learn_ctxt_t *ctxt)
     // add ip entry to delete list
     add_to_delete_list(ctxt->ip_entry, ctxt->mac_entry,
                        &ctxt->lbctxt->del_objs);
+
+    // add to broadcast event list
+    add_ip_to_event_list(ctxt, EVENT_ID_IP_MOVE_L2R);
+
     return SDK_RET_OK;
 }
 
@@ -368,7 +380,13 @@ process_r2r_move_mac_ip (learn_ctxt_t *ctxt)
 static inline sdk_ret_t
 process_delete_mac (learn_ctxt_t *ctxt)
 {
-    return remote_mapping_delete(ctxt, ctxt->api_ctxt.mkey);
+    sdk_ret_t ret;
+
+    ret = remote_mapping_delete(ctxt, ctxt->api_ctxt.mkey);
+    if (ret == SDK_RET_OK) {
+        add_del_event_to_list(ctxt);
+    }
+    return ret;
 }
 
 // caller ensures key type is L3
@@ -386,7 +404,8 @@ ip_mapping_key_to_vnic (pds_mapping_key_t *key)
     }
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read remote mapping for key (%s, %s) with err "
-                      "code %u", key->vpc.str(), ipaddr2str(&key->ip_addr));
+                      "code %u", key->vpc.str(), ipaddr2str(&key->ip_addr),
+                      ret);
         return nullptr;
     }
     MAC_ADDR_COPY(&mac_key.mac_addr, &info.spec.vnic_mac);
@@ -402,6 +421,7 @@ ip_mapping_key_to_vnic (pds_mapping_key_t *key)
 static sdk_ret_t
 process_delete_ip (learn_ctxt_t *ctxt)
 {
+    sdk_ret_t ret;
     pds_mapping_key_t *mkey = ctxt->api_ctxt.mkey;
 
     // if the MAC associated with this IP is local, API caller may be deleting
@@ -415,7 +435,11 @@ process_delete_ip (learn_ctxt_t *ctxt)
     if (vnic) {
         send_arp_probe(vnic, mkey->ip_addr.addr.v4_addr);
     }
-    return remote_mapping_delete(ctxt, mkey);
+    ret = remote_mapping_delete(ctxt, mkey);
+    if (ret == SDK_RET_OK) {
+        add_del_event_to_list(ctxt);
+    }
+    return ret;
 }
 
 static inline void

@@ -178,7 +178,8 @@ process_api_batch (api::api_msg_t *api_msg)
         return ret;
     }
 
-    // batch commit succeeded, clean up state for deleted objects
+    // batch commit succeeded, send events, clean up state for deleted objects
+    broadcast_events(&lbctxt);
     ret = process_deleted_objects(&lbctxt.del_objs);
     return ret;
 }
@@ -199,13 +200,13 @@ process_api_batch (api::api_msg_t *api_msg)
 
     // process each API in the batch individually
     for (auto it = apis->begin(); it != apis->end(); ++it) {
-        lbctxt.del_objs.clear();
-        memset(&lbctxt.counters, 0, sizeof(lbctxt.counters));
+        lbctxt.reset();
         ret = process_api(*it, PDS_BATCH_CTXT_INVALID, &lbctxt);
         update_batch_counters(&lbctxt, ret == SDK_RET_OK);
         if (ret != SDK_RET_OK) {
             return ret;
         }
+        broadcast_events(&lbctxt);
         ret = process_deleted_objects(&lbctxt.del_objs);
         if (unlikely(ret != SDK_RET_OK)) {
             return ret;

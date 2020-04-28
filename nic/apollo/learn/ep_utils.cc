@@ -139,6 +139,51 @@ delete_ep (ep_mac_entry *mac_entry)
     return delete_mac_entry(mac_entry);
 }
 
+static void
+fill_learn_event (event_t *event, event_id_t learn_event,
+                  pds_obj_key_t *vnic_key, ep_ip_entry *ip_entry)
+{
+    vnic_entry *vnic;
+    core::learn_event_info_t *info = &event->learn;
+
+    vnic = vnic_db()->find(vnic_key);
+    if (unlikely(vnic == nullptr)) {
+        PDS_TRACE_ERR("Failed to broadcast learn event %u for VNIC %s, IP %s",
+                      learn_event, vnic_key->str(), ip_entry ?
+                      ipaddr2str(&ip_entry->key()->ip_addr) : "null");
+        return;
+    }
+    event->event_id = learn_event;
+    info->subnet = vnic->subnet();
+    info->ifindex = api::objid_from_uuid(vnic->host_if());
+    MAC_ADDR_COPY(info->mac_addr, vnic->mac());
+    if (ip_entry) {
+        info->vpc = ip_entry->key()->vpc;
+        info->ip_addr = ip_entry->key()->ip_addr;
+    } else {
+        info->vpc = { 0 };
+        info->ip_addr = { 0 };
+    }
+}
+
+static void
+fill_mac_event (event_t *event, event_id_t learn_event, ep_mac_entry *mac_entry)
+{
+    pds_obj_key_t vnic_key;
+
+    vnic_key = api::uuid_from_objid(mac_entry->vnic_obj_id());
+    fill_learn_event(event, learn_event, &vnic_key, nullptr);
+}
+
+static void
+fill_ip_event (event_t *event, event_id_t learn_event, ep_ip_entry *ip_entry)
+{
+    pds_obj_key_t vnic_key;
+
+    vnic_key = api::uuid_from_objid(ip_entry->vnic_obj_id());
+    fill_learn_event(event, learn_event, &vnic_key, ip_entry);
+}
+
 sdk_ret_t
 mac_ageout (ep_mac_entry *mac_entry)
 {
@@ -264,51 +309,6 @@ send_arp_probe (ep_ip_entry *ip_entry)
         return;
     }
     send_arp_probe(vnic, ip_addr->addr.v4_addr);
-}
-
-static void
-fill_learn_event (event_t *event, event_id_t learn_event,
-                  pds_obj_key_t *vnic_key, ep_ip_entry *ip_entry)
-{
-    vnic_entry *vnic;
-    core::learn_event_info_t *info = &event->learn;
-
-    vnic = vnic_db()->find(vnic_key);
-    if (unlikely(vnic == nullptr)) {
-        PDS_TRACE_ERR("Failed to broadcast learn event %u for VNIC %s, IP %s",
-                      learn_event, vnic_key->str(), ip_entry ?
-                      ipaddr2str(&ip_entry->key()->ip_addr) : "null");
-        return;
-    }
-    event->event_id = learn_event;
-    info->subnet = vnic->subnet();
-    info->ifindex = api::objid_from_uuid(vnic->host_if());
-    MAC_ADDR_COPY(info->mac_addr, vnic->mac());
-    if (ip_entry) {
-        info->vpc = ip_entry->key()->vpc;
-        info->ip_addr = ip_entry->key()->ip_addr;
-    } else {
-        info->vpc = { 0 };
-        info->ip_addr = { 0 };
-    }
-}
-
-void
-fill_mac_event (event_t *event, event_id_t learn_event, ep_mac_entry *mac_entry)
-{
-    pds_obj_key_t vnic_key;
-
-    vnic_key = api::uuid_from_objid(mac_entry->vnic_obj_id());
-    fill_learn_event(event, learn_event, &vnic_key, nullptr);
-}
-
-void
-fill_ip_event (event_t *event, event_id_t learn_event, ep_ip_entry *ip_entry)
-{
-    pds_obj_key_t vnic_key;
-
-    vnic_key = api::uuid_from_objid(ip_entry->vnic_obj_id());
-    fill_learn_event(event, learn_event, &vnic_key, ip_entry);
 }
 
 }    // namespace learn
