@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
@@ -124,31 +125,30 @@ func (sm *Statemgr) UpdateNode(node *cluster.Node, writeback bool) error {
 	}
 
 	if writeback || nodeState.dirty {
-		nodeObj := node
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
+			if !sm.isLeader() {
+				ok = true
+				nodeState.dirty = false
+				log.Infof("CMD instance is no longer leader, exiting UpdateNode after %d tries", i)
+				break
+			}
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
-			_, err = sm.APIClient().Node().Update(ctx, nodeObj)
+			_, err = sm.APIClient().Node().UpdateStatus(ctx, node)
 			if err == nil {
 				ok = true
 				nodeState.dirty = false
-				log.Infof("Updated Node object in ApiServer: %+v", nodeObj)
 				cancel()
+				log.Infof("Updated Node object in ApiServer: %+v", node)
 				break
 			}
-			log.Errorf("Error updating Node object %+v: %v", nodeObj.ObjectMeta, err)
-			// Write error -- fetch updated Spec + Meta and retry
-			updObj, err := sm.APIClient().Node().Get(ctx, &nodeObj.ObjectMeta)
-			if err == nil {
-				// retain Status as that's what we are trying to update
-				updObj.Status = nodeObj.Status
-				nodeObj = updObj
-			}
+			log.Errorf("Error updating Node object %+v: %v", node.ObjectMeta, err)
 			cancel()
+			time.Sleep(apiClientRetryInterval)
 		}
 		if !ok {
 			nodeState.dirty = true
-			log.Errorf("Error updating Node object %+v in ApiServer, retries exhausted", nodeObj.ObjectMeta)
+			log.Errorf("Error updating Node object %+v in ApiServer, retries exhausted", node.ObjectMeta)
 		}
 	}
 
