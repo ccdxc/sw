@@ -1071,6 +1071,7 @@ sdk_ret_t
 api_engine::batch_abort_(void) {
     sdk_ret_t                     ret = SDK_RET_OK;
     dirty_obj_list_t::iterator    next_it;
+    dep_obj_list_t::iterator     aol_next_it;
     api_obj_ctxt_t                *octxt;
 
     PDS_API_ABORT_COUNTER_INC(abort, 1);
@@ -1081,6 +1082,7 @@ api_engine::batch_abort_(void) {
     batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
 
     PDS_TRACE_INFO("Starting config rollback stage");
+    // rollback objects in dirty list
     for (auto it = batch_ctxt_.dol.begin(), next_it = it;
          it != batch_ctxt_.dol.end(); it = next_it) {
         next_it++;
@@ -1089,6 +1091,16 @@ api_engine::batch_abort_(void) {
         api_obj_ctxt_free_(octxt);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
+
+    // rollback objects in dependent list
+    for (auto it = batch_ctxt_.aol.begin(), aol_next_it = it;
+         it != batch_ctxt_.aol.end(); it = aol_next_it) {
+        aol_next_it++;
+        octxt = batch_ctxt_.aom[*it];
+        del_from_deps_list_(it, *it);
+        api_obj_ctxt_free_(octxt);
+    }
+
     PDS_TRACE_INFO("Finished config rollback stage");
 
     // end the table mgmt. lib transaction
