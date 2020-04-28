@@ -168,6 +168,11 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 				OpStatus: opStatus,
 			},
 		}
+		if opSpec.Op == rolloutproto.VeniceOp_VeniceRunVersion && utils.IsRunningOnVeniceAppl() == false {
+			//Wait long enough for services to comeup after leadership change
+			log.Infof(" Waiting long enough (4mins) for services to comeup")
+			time.Sleep(serviceSyncDelaySeconds)
+		}
 		log.Infof(" Writing venice rollout status :%#v ", s)
 		r.statusWriter.WriteStatus(context.TODO(), &s)
 	}
