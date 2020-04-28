@@ -164,7 +164,6 @@ policy::init_config_(policy *policy) {
 
     memcpy(&key_, &key, sizeof(key_));
     af_ = policy->af();
-    dir_ = policy->dir();
     num_rules_ = policy->num_rules();
     return SDK_RET_OK;
 }
@@ -204,52 +203,50 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
     policy_upd_ctxt_t *upd_ctxt = (policy_upd_ctxt_t *)ctxt;
 
     subnet = (subnet_entry *)api_framework_obj((api_base *)api_obj);
-    if (upd_ctxt->policy_obj->dir() == RULE_DIR_INGRESS) {
-        if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
-            for (uint8_t i = 0; i < subnet->num_ing_v4_policy(); i++) {
-                if (subnet->ing_v4_policy(i) ==
-                        upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
-                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
-                                        OBJ_ID_SUBNET, (api_base *)api_obj,
-                                        upd_ctxt->upd_bmap);
-                    goto end;
-                }
+    if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
+        // check if any ingress IPv4 policy matches
+        for (uint8_t i = 0; i < subnet->num_ing_v4_policy(); i++) {
+            if (subnet->ing_v4_policy(i) ==
+                    upd_ctxt->policy_obj->key()) {
+                api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                    OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                    OBJ_ID_SUBNET, (api_base *)api_obj,
+                                    upd_ctxt->upd_bmap);
+                goto end;
             }
-        } else {
-            for (uint8_t i = 0; i < subnet->num_ing_v6_policy(); i++) {
-                if (subnet->ing_v6_policy(i) ==
-                        upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
-                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
-                                        OBJ_ID_SUBNET, (api_base *)api_obj,
-                                        upd_ctxt->upd_bmap);
-                    goto end;
-                }
+        }
+        // check if any egress IPv4 policy matches
+        for (uint8_t i = 0; i < subnet->num_egr_v4_policy(); i++) {
+            if (subnet->egr_v4_policy(i) ==
+                    upd_ctxt->policy_obj->key()) {
+                api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                    OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                    OBJ_ID_SUBNET, (api_base *)api_obj,
+                                    upd_ctxt->upd_bmap);
+                goto end;
             }
         }
     } else {
-        if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
-            for (uint8_t i = 0; i < subnet->num_egr_v4_policy(); i++) {
-                if (subnet->egr_v4_policy(i) ==
-                        upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
-                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
-                                        OBJ_ID_SUBNET, (api_base *)api_obj,
-                                        upd_ctxt->upd_bmap);
-                    goto end;
-                }
+        // check if any ingress IPv6 policy matches
+        for (uint8_t i = 0; i < subnet->num_ing_v6_policy(); i++) {
+            if (subnet->ing_v6_policy(i) ==
+                    upd_ctxt->policy_obj->key()) {
+                api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                    OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                    OBJ_ID_SUBNET, (api_base *)api_obj,
+                                    upd_ctxt->upd_bmap);
+                goto end;
             }
-        } else {
-            for (uint8_t i = 0; i < subnet->num_egr_v6_policy(); i++) {
-                if (subnet->egr_v6_policy(i) ==
-                        upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
-                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
-                                        OBJ_ID_SUBNET, (api_base *)api_obj,
-                                        upd_ctxt->upd_bmap);
-                    goto end;
-                }
+        }
+        // check if any egress IPv6 policy matches
+        for (uint8_t i = 0; i < subnet->num_egr_v6_policy(); i++) {
+            if (subnet->egr_v6_policy(i) ==
+                    upd_ctxt->policy_obj->key()) {
+                api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                    OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                    OBJ_ID_SUBNET, (api_base *)api_obj,
+                                    upd_ctxt->upd_bmap);
+                goto end;
             }
         }
     }
@@ -259,59 +256,56 @@ end:
     return false;
 }
 
-// TODO: looks like this needs to be revisited since dir_ is not set anywhere
 static bool
 vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
     vnic_entry *vnic;
     policy_upd_ctxt_t *upd_ctxt = (policy_upd_ctxt_t *)ctxt;
 
     vnic = (vnic_entry *)api_framework_obj((api_base *)api_obj);
-    if (upd_ctxt->policy_obj->dir() == RULE_DIR_INGRESS) {
-        if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
-            for (uint8_t i = 0; i < vnic->num_ing_v4_policy(); i++) {
-                if (vnic->ing_v4_policy(i) ==
-                        upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
-                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
-                                        OBJ_ID_VNIC, (api_base *)api_obj,
-                                        upd_ctxt->upd_bmap);
-                    goto end;
-                }
+    if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
+        // check if any ingress IPv4 policy matches
+        for (uint8_t i = 0; i < vnic->num_ing_v4_policy(); i++) {
+            if (vnic->ing_v4_policy(i) ==
+                    upd_ctxt->policy_obj->key()) {
+                api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                    OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                    OBJ_ID_VNIC, (api_base *)api_obj,
+                                    upd_ctxt->upd_bmap);
+                goto end;
             }
-        } else {
-            for (uint8_t i = 0; i < vnic->num_ing_v6_policy(); i++) {
-                if (vnic->ing_v6_policy(i) ==
-                        upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
-                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
-                                        OBJ_ID_VNIC, (api_base *)api_obj,
-                                        upd_ctxt->upd_bmap);
-                    goto end;
-                }
+        }
+        // check if any egress IPv4 policy matches
+        for (uint8_t i = 0; i < vnic->num_egr_v4_policy(); i++) {
+            if (vnic->egr_v4_policy(i) ==
+                    upd_ctxt->policy_obj->key()) {
+                api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                    OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                    OBJ_ID_VNIC, (api_base *)api_obj,
+                                    upd_ctxt->upd_bmap);
+                goto end;
             }
         }
     } else {
-        if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
-            for (uint8_t i = 0; i < vnic->num_egr_v4_policy(); i++) {
-                if (vnic->egr_v4_policy(i) ==
-                        upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
-                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
-                                        OBJ_ID_VNIC, (api_base *)api_obj,
-                                        upd_ctxt->upd_bmap);
-                    goto end;
-                }
+        // check if any ingress IPv6 policy matches
+        for (uint8_t i = 0; i < vnic->num_ing_v6_policy(); i++) {
+            if (vnic->ing_v6_policy(i) ==
+                    upd_ctxt->policy_obj->key()) {
+                api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                    OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                    OBJ_ID_VNIC, (api_base *)api_obj,
+                                    upd_ctxt->upd_bmap);
+                goto end;
             }
-        } else {
-            for (uint8_t i = 0; i < vnic->num_egr_v6_policy(); i++) {
-                if (vnic->egr_v6_policy(i) ==
-                        upd_ctxt->policy_obj->key()) {
-                    api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
-                                        OBJ_ID_POLICY, upd_ctxt->policy_obj,
-                                        OBJ_ID_VNIC, (api_base *)api_obj,
-                                        upd_ctxt->upd_bmap);
-                    goto end;
-                }
+        }
+        // check if any egress IPv6 policy matches
+        for (uint8_t i = 0; i < vnic->num_egr_v6_policy(); i++) {
+            if (vnic->egr_v6_policy(i) ==
+                    upd_ctxt->policy_obj->key()) {
+                api_obj_add_to_deps(upd_ctxt->obj_ctxt->api_op,
+                                    OBJ_ID_POLICY, upd_ctxt->policy_obj,
+                                    OBJ_ID_VNIC, (api_base *)api_obj,
+                                    upd_ctxt->upd_bmap);
+                goto end;
             }
         }
     }

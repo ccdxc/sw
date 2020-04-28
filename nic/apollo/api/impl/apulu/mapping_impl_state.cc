@@ -332,7 +332,8 @@ remote_l3_mapping_dump_cb (sdk_table_api_params_t *params)
     private_ip.af = (mapping_key->p4e_i2e_mapping_lkp_type == KEY_TYPE_IPV6) ?
                     IP_AF_IPV6 : IP_AF_IPV4;
     if (private_ip.af == IP_AF_IPV4) {
-        private_ip.addr.v4_addr = *(uint32_t *)mapping_key->p4e_i2e_mapping_lkp_addr;
+        private_ip.addr.v4_addr =
+            *(uint32_t *)mapping_key->p4e_i2e_mapping_lkp_addr;
     } else {
         sdk::lib::memrev(private_ip.addr.v6_addr.addr8,
                          mapping_key->p4e_i2e_mapping_lkp_addr,

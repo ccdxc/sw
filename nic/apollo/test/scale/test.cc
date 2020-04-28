@@ -1517,8 +1517,9 @@ create_device_cfg (ip_addr_t *ipaddr, uint64_t macaddr, ip_addr_t *gwip)
 
 #define TESTAPP_POLICY_PRIORITY_STEP 4
 sdk_ret_t
-create_security_policy (uint32_t num_vpcs, uint32_t num_subnets, uint32_t num_policies,
-                        uint32_t num_rules, uint32_t ip_af, bool ingress)
+create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
+                        uint32_t num_policies, uint32_t num_rules,
+                        uint32_t ip_af, bool ingress)
 {
     sdk_ret_t            rv;
     pds_policy_spec_t    policy;

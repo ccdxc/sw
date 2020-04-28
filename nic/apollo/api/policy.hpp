@@ -204,10 +204,6 @@ public:
     /// \return    the number of rules in the policy
     uint32_t num_rules(void) const { return num_rules_; }
 
-    /// \brief     return the policy enforcement direction
-    /// \return    RULE_DIR_INGRESS or RULE_DIR_EGRESS
-    rule_dir_t dir(void) const { return dir_; }
-
     /// \brief     return impl instance of this security policy object
     /// \return    impl instance of the rout table object
     impl_base *impl(void) { return impl_; }
@@ -237,8 +233,6 @@ private:
 private:
     pds_obj_key_t    key_;        ///< security policy key
     uint8_t          af_;         ///< IP address family of this policy
-    rule_dir_t       dir_;        ///< traffic direction in which this policy
-                                  ///< is applied on
     uint32_t         num_rules_;  ///< number of rules in this policy
 
     /// operational state
