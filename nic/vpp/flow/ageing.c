@@ -232,7 +232,7 @@ pds_flow_age_setup_rst_x1 (u32 session_id0, u16 thread)
     ctx0->timer_hdl = tw_timer_start_16t_1w_2048sl(&fm->timer_wheel[thread],
                                                    session_id0,
                                                    PDS_FLOW_CLOSE_TIMER,
-                                                   fm->tcp_half_close_timeout);
+                                                   fm->tcp_close_timeout);
     return;
 }
 
