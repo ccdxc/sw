@@ -25,7 +25,6 @@ var _ = Describe("Vc hub workload tests", func() {
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 
@@ -35,11 +34,12 @@ var _ = Describe("Vc hub workload tests", func() {
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
+		ts.model.AfterTestCommon()
 	})
 
 	Context("Bring up teardown workloads", func() {
 
-		It("tags:sanity=true Bring up workload and test traffic", func() {
+		It("Bring up workload and test traffic", func() {
 
 			workloads := ts.model.Workloads()
 			err := ts.model.TeardownWorkloads(workloads)
@@ -95,7 +95,7 @@ var _ = Describe("Vc hub workload tests", func() {
 			return
 		}
 
-		It("tags:sanity=true Vmotion basic test", func() {
+		It("Vmotion basic test", func() {
 
 			Skip("Skipping basic vmotion test..")
 			workloads := ts.model.Workloads()
@@ -154,7 +154,7 @@ var _ = Describe("Vc hub workload tests", func() {
 			Expect(terr == nil)
 		})
 
-		It("tags:sanity=true Bring up 8 local and remote workloads and test traffic", func() {
+		It("Bring up 8 local and remote workloads and test traffic", func() {
 
 			// Create a vmk interface for vmotion, use one of the available network for vmotion traffic
 			nc := ts.model.Networks("")

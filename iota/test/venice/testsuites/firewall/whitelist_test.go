@@ -24,7 +24,6 @@ var _ = Describe("firewall whitelist tests", func() {
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 
@@ -34,16 +33,17 @@ var _ = Describe("firewall whitelist tests", func() {
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
+		ts.model.AfterTestCommon()
 	})
-	Context("tags:type=basic;datapath=true;duration=short basic whitelist tests", func() {
-		It("tags:sanity=true Should not ping between any workload without permit rules", func() {
+	Context("basic whitelist tests", func() {
+		It("Should not ping between any workload without permit rules", func() {
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 			Eventually(func() error {
 				return ts.model.PingFails(workloadPairs)
 			}).Should(Succeed())
 		})
 
-		It("tags:sanity=true Should allow TCP connections with specific permit rules", func() {
+		It("Should allow TCP connections with specific permit rules", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
@@ -127,7 +127,7 @@ var _ = Describe("firewall whitelist tests", func() {
 			}).Should(Succeed())
 		})
 	})
-	Context("tags:type=basic;datapath=true;duration=long basic whitelist tests", func() {
+	Context("basic whitelist tests", func() {
 		It("Should be able to update policy and verify it takes effect", func() {
 			const maxRules = 5000
 			const numIter = 10
@@ -163,8 +163,6 @@ var _ = Describe("firewall whitelist tests", func() {
 				// change the boundary port
 				boundaryPort = rand.Intn(maxRules) + startPort
 
-				// increment task count for each iteration
-				ts.tb.AddTaskResult("", nil)
 			}
 		})
 	})

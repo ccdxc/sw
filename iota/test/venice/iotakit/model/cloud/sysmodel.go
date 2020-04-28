@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"sort"
 	"time"
 
@@ -35,6 +36,8 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSe
 	if err != nil {
 		return err
 	}
+
+	sm.RandomTrigger = sm.RunRandomTrigger
 
 	sm.AutoDiscovery = true
 	if os.Getenv("NO_AUTO_DISCOVERY") != "" {
@@ -517,4 +520,85 @@ func (sm *SysModel) TriggerDeleteAddConfig(percent int) error {
 	}
 
 	return sm.SetupDefaultConfig(context.Background(), sm.Scale, sm.ScaleData)
+}
+
+func (sm *SysModel) CollectLogs() error {
+
+	// create logs directory if it doesnt exists
+	cmdStr := fmt.Sprintf("mkdir -p %s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
+	cmd := exec.Command("bash", "-c", cmdStr)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Errorf("creating log directory failed with: %s\n", err)
+	}
+
+	if sm.Tb.IsMockMode() {
+		// create a tar.gz from all log files
+		cmdStr := fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
+		cmd = exec.Command("bash", "-c", cmdStr)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("tar command out:\n%s\n", string(out))
+			log.Errorf("Collecting server log files failed with: %s.\n", err)
+		} else {
+			log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
+		}
+
+		return nil
+	}
+
+	// walk all venice nodes
+	trig := sm.Tb.NewTrigger()
+	for _, node := range sm.Tb.Nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+			entity := node.NodeName + "_venice"
+			trig.AddCommand(fmt.Sprintf("mkdir -p /pensando/iota/entities/%s", entity), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("journalctl -a > /var/log/pensando/iotajournalctl"), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("uptime > /var/log/pensando/uptime"), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("tar -cvf  /pensando/iota/entities/%s/%s.tar /var/log/pensando/* /var/log/dmesg* /etc/pensando/ /var/lib/pensando/pki/ /var/lib/pensando/events/", entity, entity), entity, node.NodeName)
+		}
+	}
+
+	// trigger commands
+	_, err = trig.Run()
+	if err != nil {
+		log.Errorf("Failed to setup venice node. Err: %v", err)
+		return fmt.Errorf("Error triggering commands on venice nodes: %v", err)
+	}
+
+	for _, node := range sm.Tb.Nodes {
+		switch node.Personality {
+		case iota.PersonalityType_PERSONALITY_VENICE:
+			sm.Tb.CopyFromVenice(node.NodeName, []string{fmt.Sprintf("%s_venice.tar", node.NodeName)}, "logs")
+		}
+	}
+
+	// create a tar.gz from all log files
+	cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz *.tar* ../*.log && popd", os.Getenv("GOPATH"))
+	cmd = exec.Command("bash", "-c", cmdStr)
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("tar command out:\n%s\n", string(out))
+		log.Errorf("Collecting log files failed with: %s. trying to collect server logs\n", err)
+		cmdStr = fmt.Sprintf("pushd %s/src/github.com/pensando/sw/iota/logs && tar cvzf venice-iota.tgz ../*.log && popd", os.Getenv("GOPATH"))
+		cmd = exec.Command("bash", "-c", cmdStr)
+		out, err = cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("tar command out:\n%s\n", string(out))
+			log.Errorf("Collecting server log files failed with: %s.\n", err)
+		}
+	}
+
+	log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
+	return nil
+}
+
+// AfterTestCommon common handling after each test
+func (sm *SysModel) AfterTestCommon() error {
+
+	if err := sm.VerifySystemHealth(false); err != nil {
+		sm.CollectLogs()
+		sm.ModelExit()
+	}
+	return nil
 }

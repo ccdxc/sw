@@ -28,7 +28,7 @@ var _ = Describe("VPC", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
 	Context("VPC tests", func() {

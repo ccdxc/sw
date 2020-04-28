@@ -259,16 +259,15 @@ var _ = Describe("firewall policy model tests", func() {
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
-
 		// delete test policy if its left over. we can ignore the error here
 		ts.model.NetworkSecurityPolicy("test-policy").Delete()
 		ts.model.DefaultNetworkSecurityPolicy().Delete()
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
+		ts.model.AfterTestCommon()
 	})
-	Context("tags:type=extensive;datapath=true;duration=long  policy model tests", func() {
+	Context("policy model tests", func() {
 		It("Should be able to verify whitelist policies", func() {
 			if !ts.tb.IsMockMode() && os.Getenv("REGRESSION") == "" {
 				Skip("Skipping policy model tests on PR tests")
@@ -293,7 +292,6 @@ var _ = Describe("firewall policy model tests", func() {
 									}
 								}
 								whitelistResult[fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port)] = err
-								ts.tb.AddTaskResult(fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port), err)
 							}
 						} else {
 							err := testWhitelistPolicy(fromIP, toIP, proto, "")
@@ -306,7 +304,6 @@ var _ = Describe("firewall policy model tests", func() {
 								}
 							}
 							whitelistResult[fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto)] = err
-							ts.tb.AddTaskResult(fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 
 						}
 					}
@@ -357,7 +354,6 @@ var _ = Describe("firewall policy model tests", func() {
 									}
 								}
 								blacklistResult[fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port)] = err
-								ts.tb.AddTaskResult(fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port), err)
 							}
 						} else {
 							err := testBlacklistPolicy(fromIP, toIP, proto, "")
@@ -371,7 +367,6 @@ var _ = Describe("firewall policy model tests", func() {
 								}
 							}
 							blacklistResult[fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto)] = err
-							ts.tb.AddTaskResult(fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 
 						}
 					}

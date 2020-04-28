@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/rollout"
@@ -39,13 +40,16 @@ type SysModelInterface interface {
 	ActionIntf
 	ConfigIntf
 	ObjectIntf
-	TriggerIntf
+	common.TriggerIntf
+	ginkgo.Reporter
 
 	ForEachHost(fn objects.HostIteratorFn) error
 	ForEachNaples(fn objects.NaplesIteratorFn) error
 	ForEachVeniceNode(fn objects.VeniceNodeIteratorFn) error
 	ForEachFakeNaples(fn objects.NaplesIteratorFn) error
 
+	AfterTestCommon() error
+	PrintResult()
 	Testbed() *testbed.TestBed
 	//deleteWorkload(wr *objects.Workload) error
 	//findWorkload(name string) *objects.Workload
@@ -66,18 +70,6 @@ type ActionIntf interface {
 	WorkloadActionIntf
 	NodeActionIntf
 	NaplesActionIntf
-}
-
-//TriggerIntf some trigger that testcase could use to run
-type TriggerIntf interface {
-	TriggerNaplesUpgrade(int) error
-	TriggerSnapshotRestore(int) error
-	TriggerHostReboot(int) error
-	TriggerVeniceReboot(int) error
-	TriggerVenicePartition(int) error
-	TriggerDeleteAddConfig(int) error
-	TriggerLinkFlap(percent int) error
-	RunRandomTrigger(percent int) error
 }
 
 type ClusterActionIntf interface {

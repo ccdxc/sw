@@ -17,13 +17,13 @@ var _ = Describe("events tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 	})
 
-	Context("tags:type=basic;datapath=true;duration=short Basic events tests", func() {
-		It("tags:sanity=true Link flap should trigger an event from hal/linkmgr", func() {
+	Context("Basic events tests", func() {
+		It("Link flap should trigger an event from hal/linkmgr", func() {
 			// get a random naples and flap the port
 			npc := ts.model.Naples()
 			nc := npc.Any(1)
@@ -48,7 +48,7 @@ var _ = Describe("events tests", func() {
 				return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
 			}).Should(Succeed())
 		})
-		It("tags:sanity=true Events generation on sim", func() {
+		It("Events generation on sim", func() {
 			// get a random naples
 			npc := ts.model.Naples()
 			nc := npc.Any(1)

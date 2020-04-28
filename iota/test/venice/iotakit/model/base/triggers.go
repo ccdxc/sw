@@ -11,8 +11,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-type triggerFunc func(int) error
-
 //TriggerNaplesUpgrade trigger naples upgrade
 func (sm *SysModel) TriggerNaplesUpgrade(percent int) error {
 
@@ -145,6 +143,8 @@ func (sm *SysModel) TriggerDeleteAddConfig(percent int) error {
 	return sm.SetupDefaultConfig(context.Background(), sm.Scale, sm.ScaleData)
 
 }
+
+type triggerFunc func(int) error
 
 //RunRandomTrigger runs a random trigger
 func (sm *SysModel) RunRandomTrigger(percent int) error {

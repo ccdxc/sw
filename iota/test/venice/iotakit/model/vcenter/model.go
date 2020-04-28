@@ -12,9 +12,11 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	cfgModel "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/enterprise"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
+	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -154,6 +156,18 @@ func (sm *VcenterSysModel) SetupWorkloads(scale bool) error {
 	log.Infof("Skipping setup of workloads on vcenter model")
 	return nil
 }
+
+func (sm *VcenterSysModel) Init(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup bool) error {
+	err := sm.SysModel.Init(tb, cfgType, skipSetup)
+	if err != nil {
+		return err
+	}
+
+	sm.RunVerifySystemHealth = sm.VerifySystemHealth
+	return nil
+
+}
+
 func (sm *VcenterSysModel) setupInsertionMode() error {
 
 	cfgClient := sm.ConfigClient()
@@ -471,4 +485,14 @@ func (sm *VcenterSysModel) Networks(tenant string) *objects.NetworkCollection {
 	}
 
 	return &snc
+}
+
+// AfterTestCommon common handling after each test
+func (sm *VcenterSysModel) AfterTestCommon() error {
+
+	if err := sm.VerifySystemHealth(false); err != nil {
+		sm.CollectLogs()
+		sm.ModelExit()
+	}
+	return nil
 }

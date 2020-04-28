@@ -3,15 +3,16 @@ package equinix_test
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var _ = Describe("Interface tests", func() {
@@ -22,7 +23,7 @@ var _ = Describe("Interface tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
 	Context("Interfaces", func() {

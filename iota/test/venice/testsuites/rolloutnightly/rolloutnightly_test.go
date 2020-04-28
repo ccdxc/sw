@@ -25,12 +25,11 @@ var _ = Describe("rollout nightly tests", func() {
 		})
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
 			ts.model.RunNaplesCommand(nc, "rm /data/upgrade_to_same_firmware_allowed")
 			return nil
 		})
-
+		ts.model.AfterTestCommon()
 	})
 
 	Context("Iota Rollout Nightly tests", func() {

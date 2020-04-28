@@ -34,7 +34,7 @@ var _ = Describe("Datapath", func() {
 		naples = ts.model.Naples().Names()
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
 	Context("Datapath Tests", func() {

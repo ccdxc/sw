@@ -1993,10 +1993,14 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 		cmd = append(cmd, "--id")
 		cmd = append(cmd, name)
 		cmdResp, _, rerr := wload.RunCommand(cmd, "", 0, 0, false, false)
+
 		if rerr != nil || cmdResp.ExitCode != 0 || cmdResp.Stderr != "" {
 			msg := fmt.Sprintf("Error running mode switch command on %v : %v %v", name, cmdResp.Stdout, cmdResp.Stderr)
 			naples.logger.Println(msg)
-			return errors.New(msg)
+			if err := naples.checkNaplesModeSwitch(wload); err != nil {
+				return errors.New(msg)
+			}
+			naples.logger.Print("Naples admission success even though penctl failed")
 		}
 
 		naples.logger.Println("Mode switch complete on : ", name)
@@ -2269,6 +2273,49 @@ func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err erro
 		NodeInfo: simConfig}, nil
 }
 
+func (naples *naplesMultiSimNode) checkNaplesModeSwitch(wl Workload.Workload) error {
+
+	var err error
+	cmd := []string{"curl", naplesStatusURL}
+	cmdResp, _, rerr := wl.RunCommand(cmd, "", 0, 0, false, false)
+	if rerr != nil || cmdResp.ExitCode != 0 {
+		rerr = errors.New("Error getting naples status")
+		if cmdResp != nil {
+			msg := fmt.Sprintf("Error getting naples status %v", cmdResp.Stderr)
+			naples.logger.Println(msg)
+		} else {
+			msg := fmt.Sprintf("Error getting naples status with error %v", rerr)
+			naples.logger.Println(msg)
+		}
+		return rerr
+	}
+
+	var statusJSON map[string]interface{}
+	err = json.Unmarshal([]byte(cmdResp.Stdout), &statusJSON)
+	if err != nil {
+		return errors.Wrap(err, "Error unmarshalling naples  status")
+	}
+
+	status, ok := statusJSON["status"].(map[string]interface{})
+	if !ok {
+		return errors.Wrap(err, "Status not present in Naples status ")
+	}
+
+	if controllers, ok := status["controllers"]; !ok || controllers == nil || len(controllers.([]interface{})) == 0 {
+		msg := fmt.Sprintf("Naples %v not admitted \n", wl.Name())
+		naples.logger.Println(msg)
+		return errors.New(msg)
+	}
+
+	if state, ok := status["transition-phase"]; !ok || (state != "VENICE_REGISTRATION_DONE" && state != "VENICE_UNREACHABLE") {
+		msg := fmt.Sprintf("Naples %v not admitted \n", wl.Name())
+		naples.logger.Println(msg)
+		return errors.New(msg)
+	}
+
+	return nil
+}
+
 // Make sure all containers are admitted
 func (naples *naplesMultiSimNode) checkAdmitted() error {
 
@@ -2290,41 +2337,7 @@ func (naples *naplesMultiSimNode) checkAdmitted() error {
 		if wl.workload.Type() == Workload.WorkloadTypeContainer {
 			wl := wl
 			go func(wl iotaWorkload) {
-				cmd := []string{"curl", naplesStatusURL}
-				cmdResp, _, rerr := wl.workload.RunCommand(cmd, "", 0, 0, false, false)
-				if rerr != nil || cmdResp.ExitCode != 0 {
-					if cmdResp != nil {
-						msg := fmt.Sprintf("Error getting naples status %v", cmdResp.Stderr)
-						naples.logger.Println(msg)
-					} else {
-						msg := fmt.Sprintf("Error getting naples status with error %v", rerr)
-						naples.logger.Println(msg)
-					}
-					err = rerr
-					waitCh <- err
-					return
-				}
-
-				var statusJSON map[string]interface{}
-				err = json.Unmarshal([]byte(cmdResp.Stdout), &statusJSON)
-				if err != nil {
-					waitCh <- errors.Wrap(err, "Error unmarshalling naples  status")
-					return
-				}
-
-				status, ok := statusJSON["status"].(map[string]interface{})
-				if !ok {
-					waitCh <- errors.Wrap(err, "Status not present in Naples status ")
-					return
-				}
-
-				if status["phase"] != "REBOOT_PENDING" {
-					msg := fmt.Sprintf("Naples %v not admitted \n", wl.name)
-					naples.logger.Println(msg)
-					//waitCh <- errors.New(msg)
-					//return
-				}
-
+				err = naples.checkNaplesModeSwitch(wl.workload)
 				waitCh <- nil
 			}(wl)
 

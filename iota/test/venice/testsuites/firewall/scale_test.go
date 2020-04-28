@@ -29,10 +29,10 @@ var _ = Describe("firewall scale tests", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			return nil
 		})
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
-	Context("tags:type=basic;datapath=true;duration=long Scale TCP connections tests", func() {
+	Context("Scale TCP connections tests", func() {
 		It("Should establish bulk TCP session between allowed workloads in scale config", func() {
 			log.Infof("scaleData = %v hasNaples = %v", ts.scaleData, ts.tb.HasNaplesSim())
 			if !ts.scaleData || ts.tb.HasNaplesSim() {

@@ -110,7 +110,7 @@ func VerifyMirrorSessionTraffic(veniceCollector *objects.VeniceNodeCollection, w
 	return
 }
 
-var _ = Describe("mirror tests", func() {
+var _ = Describe("Flow mirror tests", func() {
 	var startTime time.Time
 	BeforeEach(func() {
 		// verify cluster is in good health
@@ -120,12 +120,12 @@ var _ = Describe("mirror tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
+		ts.model.AfterTestCommon()
 	})
 	Context("Flow Mirror tests", func() {
-		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror packets to collector and check TCPDUMP", func() {
+		It("Mirror packets to collector and check TCPDUMP", func() {
 			if ts.tb.HasNaplesSim() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
@@ -185,7 +185,7 @@ var _ = Describe("mirror tests", func() {
 		})
 	})
 	Context("Flow Mirror tests : scale", func() {
-		It("tags:sanity=false tags:type=basic;datapath=true;duration=short Mirror packets to collector and check TCPDUMP at scale", func() {
+		It("Mirror packets to collector and check TCPDUMP at scale", func() {
 			if ts.tb.HasNaplesSim() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
@@ -231,7 +231,7 @@ var _ = Describe("mirror tests", func() {
 	})
 	/*
 		Context("Scale mirror test with upgrade", func() {
-			It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror packets to collector and check TCPDUMP at scale with upgrade", func() {
+			It("Mirror packets to collector and check TCPDUMP at scale with upgrade", func() {
 				if ts.tb.HasNaplesSim() {
 					Skip("Disabling on naples sim till traffic issue is debugged")
 				}

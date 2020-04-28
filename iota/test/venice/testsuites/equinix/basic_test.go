@@ -8,6 +8,7 @@ import (
 )
 
 var _ = Describe("Equinix Bring up", func() {
+
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
@@ -15,7 +16,7 @@ var _ = Describe("Equinix Bring up", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())

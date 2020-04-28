@@ -153,7 +153,7 @@ func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool, 
 		cmd = append(cmd, "-ginkgo.failFast")
 	}
 	if suite.runRandomTrigger {
-		cmd = append(cmd, " -rand-trigger")
+		env = append(env, "RANDOM_TRIGGER=1")
 	}
 
 	fmt.Printf("Test command %v\n", strings.Join(cmd, " "))

@@ -114,7 +114,7 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSe
 	if os.Getenv("NO_AUTO_DISCOVERY") != "" {
 		sm.AutoDiscovery = false
 	}
-
+	sm.RandomTrigger = sm.RunRandomTrigger
 	sm.sgpolicies = make(map[string]*objects.NetworkSecurityPolicy)
 	sm.fwlogpolicies = make(map[string]*objects.FwlogPolicy)
 	sm.msessions = make(map[string]*objects.MirrorSession)

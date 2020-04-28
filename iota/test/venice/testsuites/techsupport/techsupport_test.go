@@ -2,6 +2,7 @@ package techsupport_test
 
 import (
 	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pensando/sw/api"
@@ -16,7 +17,7 @@ var _ = Describe("techsupport tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
 	Context("Iota Techsupport tests", func() {

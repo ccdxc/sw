@@ -3,6 +3,8 @@
 package enterprise
 
 import (
+	"context"
+	"math/rand"
 	"time"
 )
 
@@ -47,4 +49,40 @@ func (sm *SysModel) VerifySystemHealth(collectLogOnErr bool) error {
 	}
 
 	return nil
+}
+
+//TriggerDeleteAddConfig triggers link flap
+func (sm *SysModel) TriggerDeleteAddConfig(percent int) error {
+
+	err := sm.CleanupAllConfig()
+	if err != nil {
+		return err
+	}
+
+	err = sm.TeardownWorkloads(sm.Workloads())
+	if err != nil {
+		return err
+	}
+
+	return sm.SetupDefaultConfig(context.Background(), sm.Scale, sm.ScaleData)
+
+}
+
+type triggerFunc func(int) error
+
+//RunRandomTrigger runs a random trigger
+func (sm *SysModel) RunRandomTrigger(percent int) error {
+
+	triggers := []triggerFunc{
+		sm.TriggerDeleteAddConfig,
+		sm.TriggerSnapshotRestore,
+		sm.TriggerHostReboot,
+		sm.TriggerVeniceReboot,
+		sm.TriggerVenicePartition,
+		sm.TriggerLinkFlap,
+		sm.TriggerNaplesUpgrade,
+	}
+
+	index := rand.Intn(len(triggers))
+	return triggers[index](percent)
 }

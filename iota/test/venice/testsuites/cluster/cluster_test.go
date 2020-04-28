@@ -38,12 +38,12 @@ var _ = Describe("venice cluster tests", func() {
 		configSnapShot = ss
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 		name := string(configSnapShot[strings.LastIndex(configSnapShot, "/")+1:])
 		Expect(ts.model.VeniceNodeRestoreConfig(ts.model.VeniceNodes(), name)).Should(Succeed())
 	})
 
-	Context("tags:type=basic;datapath=true;duration=long Basic cluster tests", func() {
+	Context("Basic cluster tests", func() {
 
 		startPortFlap := func() {
 			sc, err := ts.model.SwitchPorts().SelectByPercentage(100)
@@ -62,7 +62,7 @@ var _ = Describe("venice cluster tests", func() {
 
 		}
 
-		It("tags:sanity=true should be able to save and restore configuration", func() {
+		It("should be able to save and restore configuration", func() {
 			Expect(ts.model.VeniceNodeCreateSnapshotConfig(ts.model.VeniceNodes())).Should(Succeed())
 			ss, err := ts.model.VeniceNodeTakeSnapshot(ts.model.VeniceNodes())
 			Expect(err).To(BeNil())
@@ -147,7 +147,7 @@ var _ = Describe("venice cluster tests", func() {
 
 		})
 
-		It("tags:sanity=true Venice Leader shutdown should not affect the cluster", func() {
+		It("Venice Leader shutdown should not affect the cluster", func() {
 
 			naples := ts.model.Naples()
 			leader := ts.model.VeniceNodes().Leader()
@@ -474,7 +474,7 @@ var _ = Describe("venice cluster tests", func() {
 			//Only the one where Venice nodes are disconnected from the cluster, but naples reacbable
 			//  If Venice nodes are connected but naples node disconnected, they are not valid today as
 			// there are some singleton services which may not be reachable.
-			It("tags:sanity=true Venice Leader disconnected from cluster but reachable from naples", func() {
+			It("Venice Leader disconnected from cluster but reachable from naples", func() {
 
 				leader := ts.model.VeniceNodes().Leader()
 				err := ts.model.DisconnectVeniceNodesFromCluster(leader, nil)

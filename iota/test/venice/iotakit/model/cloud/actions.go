@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"strings"
 	"time"
@@ -96,11 +97,6 @@ func (sm *SysModel) VerifyNaplesStatus() error {
 
 	return nil
 
-}
-func (sm *SysModel) CollectLogs() error {
-	//sm.SysModel.CollectLogs()
-	log.Infof("Collecting logs disabled until penctl issue is fixed.")
-	return nil
 }
 
 // VerifySystemHealth checks all aspects of system, like cluster, workload, policies etc
@@ -535,4 +531,23 @@ func (sm *SysModel) getNaplesUplinkPort(naples *objects.Naples, fake bool) (erro
 	}
 
 	return fmt.Errorf("Uplink port not found on %v", naplesName), ""
+}
+
+type triggerFunc func(int) error
+
+//RunRandomTrigger runs a random trigger
+func (sm *SysModel) RunRandomTrigger(percent int) error {
+
+	triggers := []triggerFunc{
+		sm.TriggerDeleteAddConfig,
+		sm.TriggerSnapshotRestore,
+		sm.TriggerHostReboot,
+		sm.TriggerVeniceReboot,
+		sm.TriggerVenicePartition,
+		sm.TriggerLinkFlap,
+		//sm.TriggerNaplesUpgrade,
+	}
+
+	index := rand.Intn(len(triggers))
+	return triggers[index](percent)
 }

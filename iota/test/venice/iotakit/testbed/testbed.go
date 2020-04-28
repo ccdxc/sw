@@ -12,13 +12,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
-	"text/tabwriter"
 	"time"
-
-	"github.com/onsi/ginkgo"
 
 	expect "github.com/pensando/goexpect"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -232,22 +228,19 @@ type naplesData struct {
 
 // TestBed is the state of the testbed
 type TestBed struct {
-	Topo                 Topology                   // testbed topology
-	Params               Params                     // testbed params - provided by warmd
-	Nodes                []*TestNode                // nodes in the testbed
-	mockMode             bool                       // mock iota server and venice node for testing purposes
-	mockIota             *mockIotaServer            // mock iota server
-	skipSetup            bool                       // skip setting up the cluster
-	skipConfigSetup      bool                       // skip config setup
-	hasNaplesSim         bool                       // has Naples sim nodes in the topology
-	hasNaplesHW          bool                       // testbed has Naples HW in the topology
-	allocatedVlans       []uint32                   // VLANs allocated for this testbed
-	unallocatedInstances []*InstanceParams          // currently unallocated instances
-	testResult           map[string]bool            // test result
-	taskResult           map[string]error           // sub task result
-	caseResult           map[string]*TestCaseResult // test case result counts
-	DataSwitches         []*iota.DataSwitch         // data switches associated to this testbed
-	naplesDataMap        map[string]naplesData      //naples name data map
+	Topo                 Topology              // testbed topology
+	Params               Params                // testbed params - provided by warmd
+	Nodes                []*TestNode           // nodes in the testbed
+	mockMode             bool                  // mock iota server and venice node for testing purposes
+	mockIota             *mockIotaServer       // mock iota server
+	skipSetup            bool                  // skip setting up the cluster
+	skipConfigSetup      bool                  // skip config setup
+	hasNaplesSim         bool                  // has Naples sim nodes in the topology
+	hasNaplesHW          bool                  // testbed has Naples HW in the topology
+	allocatedVlans       []uint32              // VLANs allocated for this testbed
+	unallocatedInstances []*InstanceParams     // currently unallocated instances
+	DataSwitches         []*iota.DataSwitch    // data switches associated to this testbed
+	naplesDataMap        map[string]naplesData //naples name data map
 	dcName               string
 	clusterName          string
 	warmdJsonFile        string // warmd json file
@@ -340,9 +333,6 @@ func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, e
 		Topo:          *topo,
 		Params:        params,
 		Nodes:         make([]*TestNode, len(topo.Nodes)),
-		testResult:    make(map[string]bool),
-		taskResult:    make(map[string]error),
-		caseResult:    make(map[string]*TestCaseResult),
 		warmdJsonFile: paramsFile,
 	}
 
@@ -1593,7 +1583,7 @@ func (tb *TestBed) setupTestBed() error {
 		// add switch port
 		for _, nic := range node.instParams.Nics {
 			for _, port := range nic.Ports {
-				if port.Name == naplesOutband {
+				if port.Name == naplesOutband || port.SwitchIP == "" {
 					continue
 				}
 				// create switch if it doesnt exist
@@ -2088,154 +2078,6 @@ func (sm *SysModel) SetupConfig(ctx context.Context) error {
 
 }
 
-*/
-
-// AfterTestCommon common handling after each test
-func (tb *TestBed) AfterTestCommon() error {
-	testInfo := ginkgo.CurrentGinkgoTestDescription()
-	if testInfo.Failed && os.Getenv("STOP_ON_ERROR") != "" {
-		fmt.Printf("\n------------------ Test Failed exiting--------------------\n")
-		os.Exit(1)
-	} else if testInfo.Failed {
-		tb.AddTaskResult("", fmt.Errorf("test failed"))
-	} else {
-		tb.AddTaskResult("", nil)
-	}
-
-	// remember the result
-	tb.testResult[strings.Join(testInfo.ComponentTexts, "\t")] = testInfo.Failed
-
-	return nil
-}
-
-// AddTaskResult adds a sub task result to summary
-func (tb *TestBed) AddTaskResult(taskName string, err error) {
-	testInfo := ginkgo.CurrentGinkgoTestDescription()
-	if err != nil && os.Getenv("STOP_ON_ERROR") != "" {
-		fmt.Printf("\n ------ %v |%v ------\n", strings.Join(testInfo.ComponentTexts, "|"), taskName)
-		fmt.Printf("\n------------------ Test Failed exiting--------------------\n")
-		os.Exit(1)
-	}
-
-	// remember the result
-	testName := strings.Join(testInfo.ComponentTexts, "\t")
-	tb.taskResult[fmt.Sprintf("%s\t%s", testName, taskName)] = err
-	if tb.caseResult[testName] == nil {
-		tb.caseResult[testName] = &TestCaseResult{}
-	}
-	if err == nil {
-		tb.caseResult[testName].passCount++
-	} else {
-		tb.caseResult[testName].failCount++
-	}
-
-	tb.caseResult[testName].duration += testInfo.Duration
-}
-
-// PrintResult prints test result summary
-func (tb *TestBed) PrintResult() {
-	fmt.Printf("==================================================================\n")
-	fmt.Printf("                Cases \n")
-	fmt.Printf("==================================================================\n")
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.AlignRight|tabwriter.Debug)
-
-	tcr := []string{}
-	for k := range tb.caseResult {
-		tcr = append(tcr, k)
-	}
-	sort.Strings(tcr)
-
-	fmt.Fprintf(w, "Id\t Test Bundle\t Group\t Case\t Pass\t Fail\t Time\n")
-	for i, key := range tcr {
-		res := tb.caseResult[key]
-		fmt.Fprintf(w, "%d\t %s\t    %d\t    %d\t    %v\n", i+1, key, res.passCount, res.failCount, res.duration)
-	}
-	w.Flush()
-
-	// print test results
-	fmt.Printf("\n\n\n")
-	fmt.Printf("==================================================================\n")
-	fmt.Printf("                Test Results\n")
-	fmt.Printf("==================================================================\n")
-
-	w = tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.AlignRight|tabwriter.Debug)
-
-	tcr = []string{}
-	for k := range tb.testResult {
-		tcr = append(tcr, k)
-	}
-	sort.Strings(tcr)
-
-	for i, key := range tcr {
-		failed := tb.testResult[key]
-
-		if !failed {
-			fmt.Fprintf(w, "%d\t %s\t         PASS\n", i+1, key)
-		} else {
-			fmt.Fprintf(w, "%d\t %s\t         FAIL\n", i+1, key)
-		}
-	}
-	w.Flush()
-	fmt.Print("==================================================================\n")
-}
-
-/*
-// Cleanup cleans up the testbed
-func (sm *SysModel) Cleanup() error {
-	// collect all log files
-	sm.CollectLogs()
-	return nil
-}
-
-func NewSysModel(model ModelType, tb *TestBed) (SysModelInterface, error) {
-
-	switch model {
-	case DefaultModel:
-		return NewDefaultSysModel(tb, enterprise.GsCfgType)
-	case VcenterModel:
-		return NewVcenterSysModel(tb, enterprise.VcenterCfgType)
-	}
-
-	return nil, errors.New("Model not defined")
-}
-
-// InitSuite initializes test suite
-func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, SysModelInterface, error) {
-	// create testbed
-
-	// setup test params
-	if scale {
-		gomega.SetDefaultEventuallyTimeout(time.Minute * 30)
-		gomega.SetDefaultEventuallyPollingInterval(time.Second * 30)
-	} else {
-		gomega.SetDefaultEventuallyTimeout(time.Minute * 6)
-		gomega.SetDefaultEventuallyPollingInterval(time.Second * 10)
-	}
-
-	tb, err := NewTestBed(topoName, paramsFile)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// create sysmodel
-	model, err := NewSysModel(tb.Topo.Model, tb)
-	if err != nil {
-		tb.CollectLogs()
-		return nil, nil, err
-	}
-
-	// setup default config for the sysmodel
-	ctx, cancel := context.WithTimeout(context.TODO(), 60*time.Minute)
-	defer cancel()
-	err = model.SetupDefaultConfig(ctx, scale, scaleData)
-	if err != nil {
-		model.CollectLogs()
-		return nil, nil, err
-	}
-
-	return tb, model, nil
-}
 */
 
 // CollectLogs collects all logs files from the testbed

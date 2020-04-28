@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/iota/test/venice/iotakit/model"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/utils/log"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 var testbedParams = flag.String("testbed", "/warmd.json", "testbed params file (i.e warmd.json)")
@@ -21,13 +22,13 @@ var topoName = flag.String("topo", "3Venice_3NaplesSim", "topology name")
 var debugFlag = flag.Bool("debug", false, "set log level to debug")
 var scaleFlag = flag.Bool("scale", false, "enable scale configuration")
 var scaleDataFlag = flag.Bool("scale-data", false, "enable datapath scale")
-var runRandomTrigger = flag.Bool("rand-trigger", false, "run random trigger between tests")
 
 // TestSuite : mirror test suite
 type TestSuite struct {
 	tb        *testbed.TestBed        // testbed
 	model     model.SysModelInterface // system model
 	scaleData bool                    // configuration if connections would need to scale
+	stress    uint64                  // stress
 }
 
 var ts *TestSuite
@@ -45,32 +46,36 @@ func TestIotaMirrorTest(t *testing.T) {
 		log.Warnf("Skipping Iota tests outside warmd environment")
 		return
 	}
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Iota Mirror E2E Suite")
-}
-
-// BeforeSuite runs before the test suite and sets up the testbed
-var _ = BeforeSuite(func() {
 	tb, model, err := model.InitSuite(*topoName, *testbedParams, *scaleFlag, *scaleDataFlag)
-	Expect(err).ShouldNot(HaveOccurred())
 
-	// verify cluster, workload are in good health
-	Eventually(func() error {
-		return model.VerifySystemHealth(true)
-	}).Should(Succeed())
+	Assert(t, err == nil, "Init suite failed")
 
 	// test suite
 	ts = &TestSuite{
 		tb:        tb,
 		model:     model,
 		scaleData: *scaleDataFlag,
+		//stress:    *stressFlag,
 	}
+
+	RegisterFailHandler(Fail)
+	RunSpecsWithCustomReporters(t, "Iota Mirror tests", []Reporter{model})
+}
+
+// BeforeSuite runs before the test suite and sets up the testbed
+var _ = BeforeSuite(func() {
+
+	// verify cluster, workload are in good health
+	Eventually(func() error {
+		return ts.model.VerifySystemHealth(true)
+	}).Should(Succeed())
+
 })
 
 // AfterSuite handles cleanup after test suite completes
 var _ = AfterSuite(func() {
 	if ts != nil && ts.tb != nil {
 		ts.model.Cleanup()
-		ts.tb.PrintResult()
+		ts.model.PrintResult()
 	}
 })

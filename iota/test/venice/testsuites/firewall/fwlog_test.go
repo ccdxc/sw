@@ -21,7 +21,6 @@ var _ = Describe("fwlog tests", func() {
 	})
 
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 
@@ -36,10 +35,11 @@ var _ = Describe("fwlog tests", func() {
 		Eventually(func() error {
 			return ts.model.VerifyPolicyStatus(ts.model.DefaultNetworkSecurityPolicy())
 		}).Should(Succeed())
+		ts.model.AfterTestCommon()
 	})
 
-	Context("tags:type=basic;datapath=true;duration=short verify fwlog on traffic ", func() {
-		It("tags:sanity=true should log ICMP allow in fwlog", func() {
+	Context("verify fwlog on traffic ", func() {
+		It("should log ICMP allow in fwlog", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -72,7 +72,7 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("tags:sanity=true should log TCP/8000 allow in fwlog", func() {
+		It("should log TCP/8000 allow in fwlog", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
@@ -172,7 +172,7 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("tags:sanity=true should log TCP/8100 deny in fwlog", func() {
+		It("should log TCP/8100 deny in fwlog", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}

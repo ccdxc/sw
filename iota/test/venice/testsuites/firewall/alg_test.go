@@ -22,7 +22,6 @@ var _ = Describe("firewall ALG tests", func() {
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 
@@ -32,9 +31,10 @@ var _ = Describe("firewall ALG tests", func() {
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
+		ts.model.AfterTestCommon()
 	})
-	Context("tags:type=basic;datapath=true;duration=short  ALG tests", func() {
-		It("tags:sanity=true Should be able to FTP get with FTP ALG policy", func() {
+	Context("ALG tests", func() {
+		It("Should be able to FTP get with FTP ALG policy", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling FTP ALG test on naples sim till traffic issue is debugged")
 			}

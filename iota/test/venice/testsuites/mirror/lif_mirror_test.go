@@ -13,26 +13,22 @@ import (
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 )
 
-var _ = Describe("Lif mirror tests", func() {
+var _ = Describe("Interface mirror tests", func() {
 	var startTime time.Time
 	dataPathEnabled := true
 	BeforeEach(func() {
 		startTime = time.Now().UTC()
-		if *runRandomTrigger {
-			err := ts.model.RunRandomTrigger(100)
-			Expect(err).Should(Succeed())
-		}
 		// verify cluster is in good health
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
+		ts.model.AfterTestCommon()
 	})
-	Context("Lif mirror tests", func() {
+	Context("Uplink mirror tests", func() {
 
 		runDataPath := func(workloadPairs *objects.WorkloadPairCollection,
 			veniceCollector *objects.VeniceNodeCollection) error {
@@ -83,7 +79,7 @@ var _ = Describe("Lif mirror tests", func() {
 			return fmt.Errorf("Collector still found packets..")
 		}
 
-		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror all uplink traffic to collector", func() {
+		It("Mirror all uplink traffic to collector", func() {
 			veniceCollector := ts.model.VeniceNodes().Leader()
 
 			intfCollection := ts.model.NetworkInterfaces().Uplinks()
@@ -132,7 +128,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(intfCollection.AddLabel(nil).Commit()).ShouldNot(HaveOccurred())
 		})
 
-		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror uplink with change in collector", func() {
+		It("Mirror uplink with change in collector", func() {
 			veniceCollector := ts.model.VeniceNodes().Leader()
 			otherVeniceCollector := ts.model.VeniceNodes().NonLeaders().Any(1)
 
@@ -185,7 +181,7 @@ var _ = Describe("Lif mirror tests", func() {
 
 		})
 
-		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror uplink with change in mirror session", func() {
+		It("Mirror uplink with change in mirror session", func() {
 			veniceCollector := ts.model.VeniceNodes().Leader()
 			otherVeniceCollector := ts.model.VeniceNodes().NonLeaders().Any(1)
 
@@ -241,7 +237,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(intfCollection.AddLabel(nil).Commit()).ShouldNot(HaveOccurred())
 		})
 
-		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror uplink with interface label added later", func() {
+		It("Mirror uplink with interface label added later", func() {
 			veniceCollector := ts.model.VeniceNodes().Leader()
 
 			intfCollection := ts.model.NetworkInterfaces().Uplinks()
@@ -283,7 +279,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Delete()).Should(Succeed())
 		})
 
-		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror uplink with interface label removed later", func() {
+		It("Mirror uplink with interface label removed later", func() {
 			veniceCollector := ts.model.VeniceNodes().Leader()
 
 			intfCollection := ts.model.NetworkInterfaces().Uplinks()
@@ -338,7 +334,7 @@ var _ = Describe("Lif mirror tests", func() {
 
 		})
 
-		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Mirror uplink with add/delete collector", func() {
+		It("Mirror uplink with add/delete collector", func() {
 			veniceCollector := ts.model.VeniceNodes().Leader()
 			otherVeniceCollector := ts.model.VeniceNodes().NonLeaders().Any(1)
 
@@ -400,7 +396,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(msc.Delete()).Should(Succeed())
 		})
 
-		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Multiple Mirror session for the same interfaces", func() {
+		It("Multiple Mirror session for the same interfaces", func() {
 			veniceCollector := ts.model.VeniceNodes().Leader()
 			otherVeniceCollector := ts.model.VeniceNodes().NonLeaders().Any(1)
 
@@ -478,7 +474,7 @@ var _ = Describe("Lif mirror tests", func() {
 			Expect(intfCollection.AddLabel(nil).Commit()).ShouldNot(HaveOccurred())
 		})
 
-		It("tags:sanity=true tags:type=basic;datapath=true;duration=short Multiple Mirror session for the same interfaces del/add labels", func() {
+		It("Multiple Mirror session for the same interfaces del/add labels", func() {
 			veniceCollector := ts.model.VeniceNodes().Leader()
 			otherVeniceCollector := ts.model.VeniceNodes().NonLeaders().Any(1)
 

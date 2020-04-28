@@ -1,8 +1,10 @@
 package basenet
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
@@ -152,4 +154,50 @@ func (sm *SysModel) VerifyClusterStatus() error {
 		}
 	}
 	return nil
+}
+
+// AfterTestCommon common handling after each test
+func (sm *SysModel) AfterTestCommon() error {
+
+	if err := sm.VerifySystemHealth(false); err != nil {
+		sm.CollectLogs()
+		sm.ModelExit()
+	}
+	return nil
+}
+
+//TriggerDeleteAddConfig triggers link flap
+func (sm *SysModel) TriggerDeleteAddConfig(percent int) error {
+
+	err := sm.CleanupAllConfig()
+	if err != nil {
+		return err
+	}
+
+	err = sm.TeardownWorkloads(sm.Workloads())
+	if err != nil {
+		return err
+	}
+
+	return sm.SetupDefaultConfig(context.Background(), sm.Scale, sm.ScaleData)
+
+}
+
+type triggerFunc func(int) error
+
+//RunRandomTrigger runs a random trigger
+func (sm *SysModel) RunRandomTrigger(percent int) error {
+
+	triggers := []triggerFunc{
+		sm.TriggerDeleteAddConfig,
+		sm.TriggerSnapshotRestore,
+		sm.TriggerHostReboot,
+		sm.TriggerVeniceReboot,
+		sm.TriggerVenicePartition,
+		sm.TriggerLinkFlap,
+		sm.TriggerNaplesUpgrade,
+	}
+
+	index := rand.Intn(len(triggers))
+	return triggers[index](percent)
 }

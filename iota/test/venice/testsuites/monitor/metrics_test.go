@@ -28,12 +28,12 @@ var _ = Describe("metrics test", func() {
 		startTime = time.Now().UTC()
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
+		ts.model.AfterTestCommon()
 	})
 
-	Context("tags:type=basic;datapath=true;duration=short Verify flowdropmetrics ", func() {
-		It("tags:sanity=true Flow drops should increament", func() {
+	Context("Verify flowdropmetrics ", func() {
+		It("Flow drops should increament", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling flow drop stats on naples sim")
 			}
@@ -70,14 +70,14 @@ var _ = Describe("metrics test", func() {
 		})
 	})
 
-	Context("tags:type=basic;datapath=true;duration=short Verify basic metrics ", func() {
-		It("tags:sanity=true Check metrics fields", checkMetricsFields)
+	Context("Verify basic metrics ", func() {
+		It("Check metrics fields", checkMetricsFields)
 
-		It("tags:sanity=true Check CQ metrics fields", checkCQMetricsFields)
+		It("Check CQ metrics fields", checkCQMetricsFields)
 
-		It("tags:sanity=true Check cluster metrics", checkClusterMetrics)
+		It("Check cluster metrics", checkClusterMetrics)
 
-		It("tags:sanity=true Reloading venice nodes", func() {
+		It("Reloading venice nodes", func() {
 			// get node collection and init telemetry client
 			vnc := ts.model.VeniceNodes()
 			err := vnc.InitTelemetryClient()
@@ -96,11 +96,11 @@ var _ = Describe("metrics test", func() {
 			})
 		})
 
-		It("tags:sanity=true Check metrics fields after reloading nodes", checkMetricsFields)
+		It("Check metrics fields after reloading nodes", checkMetricsFields)
 
-		It("tags:sanity=true Check CQ metrics fields after reloading nodes", checkCQMetricsFields)
+		It("Check CQ metrics fields after reloading nodes", checkCQMetricsFields)
 
-		It("tags:sanity=true Check cluster metrics after reloading nodes", checkClusterMetrics)
+		It("Check cluster metrics after reloading nodes", checkClusterMetrics)
 	})
 })
 

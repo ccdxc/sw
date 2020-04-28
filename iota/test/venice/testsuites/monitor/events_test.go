@@ -18,13 +18,13 @@ var _ = Describe("events tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
+		ts.model.AfterTestCommon()
 	})
 
-	Context("tags:type=basic;datapath=true;duration=short Basic events tests", func() {
-		It("tags:sanity=true nevtsproxy should be running all the naples nodes", func() {
+	Context("Basic events tests", func() {
+		It("nevtsproxy should be running all the naples nodes", func() {
 			ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
 				out, err := ts.model.RunNaplesCommand(nc, "ps aux | grep [n]evtsproxy")
 				Expect(err).ShouldNot(HaveOccurred())
@@ -34,7 +34,7 @@ var _ = Describe("events tests", func() {
 			})
 		})
 
-		It("tags:sanity=true Link flap should trigger an event from hal/linkmgr", func() {
+		It("Link flap should trigger an event from hal/linkmgr", func() {
 			Skip("link flap cannot be run on NAPLES sim")
 			if ts.tb.HasNaplesSim() {
 				Skip("link flap cannot be run on NAPLES sim")

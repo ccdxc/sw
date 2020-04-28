@@ -31,7 +31,7 @@ func NewVcenterSysModel(tb *testbed.TestBed, cfgType cfgModel.CfgType, skipSetup
 
 	vsm := &vcenter.VcenterSysModel{SysModel: enterprise.SysModel{SysModel: base.SysModel{Type: common.VcenterModel}}}
 
-	if err := vsm.SysModel.Init(tb, cfgType, skipSetup); err != nil {
+	if err := vsm.Init(tb, cfgType, skipSetup); err != nil {
 		vsm.CollectLogs()
 		return nil, err
 	}

@@ -38,6 +38,8 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSe
 		sm.AutoDiscovery = false
 	}
 
+	sm.RandomTrigger = sm.RunRandomTrigger
+	sm.RunVerifySystemHealth = sm.VerifySystemHealth
 	sm.NoModeSwitchReboot = true
 	sm.NoSetupDataPathAfterSwitch = true
 

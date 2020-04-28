@@ -25,12 +25,12 @@ var _ = Describe("metrics test", func() {
 		startTime = time.Now().UTC()
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 	})
 
-	Context("tags:type=basic;datapath=true;duration=short Verify basic metrics ", func() {
-		It("tags:sanity=true Check metrics fields", checkMetricsFields)
+	Context("Verify basic metrics ", func() {
+		It("Check metrics fields", checkMetricsFields)
 
 		It("tags:sanity=true Check CQ metrics fields", checkCQMetricsFields)
 
@@ -53,7 +53,7 @@ var _ = Describe("metrics test", func() {
 			})
 		})
 
-		It("tags:sanity=true Check metrics fields after reloading nodes", checkMetricsFields)
+		It("Check metrics fields after reloading nodes", checkMetricsFields)
 
 		It("tags:sanity=true Check CQ metrics fields after reloading nodes", checkCQMetricsFields)
 

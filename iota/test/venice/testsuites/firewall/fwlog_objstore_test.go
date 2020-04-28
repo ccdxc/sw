@@ -27,7 +27,6 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 	})
 
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 
@@ -41,6 +40,7 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 		Eventually(func() error {
 			return ts.model.VerifyPolicyStatus(ts.model.DefaultNetworkSecurityPolicy())
 		}).Should(Succeed())
+		ts.model.AfterTestCommon()
 	})
 
 	// TODO: Checking exact losg needs much more backend work before tests can be written for it.
@@ -48,8 +48,8 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 	// ObjectStore's client interface would have to get extended to included SQL queries.
 	// For now, just checking that number of objects in the bucket are increasing when logs are getting uploaded
 	// to the bucket.
-	Context("tags:type=basic;datapath=true;duration=short;store=verify fwlog on traffic in objectstore and elastic", func() {
-		It("tags:sanity=true should push fwlog to objectstore", func() {
+	Context("verify fwlog on traffic in objectstore and elastic", func() {
+		It("should push fwlog to objectstore", func() {
 			if !ts.tb.HasNaplesHW() || os.Getenv("REGRESSION") == "" {
 				Skip("runs only on hardware naples and in regression")
 			}
@@ -57,7 +57,7 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 			pushLogsAndVerify()
 		})
 
-		It("tags:sanity=true venice isolate APIServer node, should not affect reporting of fwlogs", func() {
+		It("venice isolate APIServer node, should not affect reporting of fwlogs", func() {
 			if !ts.tb.HasNaplesHW() || os.Getenv("REGRESSION") == "" {
 				Skip("runs only on hardware naples and in regression")
 			}
@@ -89,7 +89,7 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 			pushLogsAndVerify()
 		})
 
-		It("tags:sanity=true venice isolate nodes in a loop, should not affect reporting of fwlogs", func() {
+		It("venice isolate nodes in a loop, should not affect reporting of fwlogs", func() {
 			Skip("reenable this test after testing")
 			if !ts.tb.HasNaplesHW() || os.Getenv("REGRESSION") == "" {
 				Skip("runs only on hardware naples and in regression")
@@ -124,7 +124,7 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 			})
 		})
 
-		It("tags:sanity=true reloading venice nodes should not affect fwlogs", func() {
+		It("reloading venice nodes should not affect fwlogs", func() {
 			if !ts.tb.HasNaplesHW() || os.Getenv("REGRESSION") == "" {
 				Skip("runs only on hardware naples and in regression")
 			}

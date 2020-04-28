@@ -19,10 +19,10 @@ var _ = Describe("smartnic tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
-	Context("tags:type=basic;datapath=true;duration=long  Basic smartnic tests", func() {
+	Context("Basic smartnic tests", func() {
 		It("Should be able to reload hosts and smartnic should come back up", func() {
 			Skip("Disable  till we debug forwarding issues with reload")
 

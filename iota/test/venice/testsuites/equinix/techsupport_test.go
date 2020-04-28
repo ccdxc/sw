@@ -37,7 +37,7 @@ var _ = Describe("TechSupport", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
 	SetDefaultConsistentlyDuration(3 * time.Second)

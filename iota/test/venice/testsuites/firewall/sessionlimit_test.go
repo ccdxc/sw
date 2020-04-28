@@ -99,7 +99,7 @@ func VerifyDetectAppHalConfig(fwp *objects.FirewallProfileCollection, enable boo
 }
 
 func SaveSettings() *objects.FirewallProfileCollection {
-    fwp := ts.model.NewFirewallProfile("default")
+	fwp := ts.model.NewFirewallProfile("default")
 	if fwp.Commit() != nil {
 		log.Errorf("Firewall programming failed for default")
 		return nil
@@ -109,10 +109,10 @@ func SaveSettings() *objects.FirewallProfileCollection {
 
 func RestoreSettings(fwp *objects.FirewallProfileCollection) error {
 	if len(fwp.Profiles) < 1 {
-        return fmt.Errorf("Invalid FirwallProfile config len : %d", len(fwp.Profiles))
-    }
+		return fmt.Errorf("Invalid FirwallProfile config len : %d", len(fwp.Profiles))
+	}
 	if fwp.Commit() != nil {
-        return fmt.Errorf("Firewall programming failed to restore settings")
+		return fmt.Errorf("Firewall programming failed to restore settings")
 	}
 	return nil
 }
@@ -171,10 +171,9 @@ func VerifyActiveSessions(fwp *objects.FirewallProfileCollection, timestr string
 	return nil
 }*/
 
-
 var _ = Describe("session limit tests", func() {
 	var (
-		fwp *objects.FirewallProfileCollection
+		fwp        *objects.FirewallProfileCollection
 		defaultFwp *objects.FirewallProfileCollection
 	)
 	BeforeEach(func() {
@@ -196,11 +195,11 @@ var _ = Describe("session limit tests", func() {
 		Eventually(func() error {
 			return VerifyFirewallPropagation(defaultFwp)
 		}).Should(Succeed())
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
-	Context("tags:type=basic;datapath=true;duration=short enable disable session limit config test", func() {
-		It("tags:sanity=true Should be able to enable and disable session limits", func() {
+	Context("enable disable session limit config test", func() {
+		It("Should be able to enable and disable session limits", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
@@ -219,7 +218,7 @@ var _ = Describe("session limit tests", func() {
 			}).Should(Succeed())
 		})
 
-		It("tags:sanity=true Should enable all session limit and verify on hal", func() {
+		It("Should enable all session limit and verify on hal", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
@@ -241,7 +240,7 @@ var _ = Describe("session limit tests", func() {
 
 		})
 
-		It("tags:sanity=true Verify default firewallprofile have detect-app to false", func(){
+		It("Verify default firewallprofile have detect-app to false", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
@@ -250,7 +249,7 @@ var _ = Describe("session limit tests", func() {
 			Expect(VerifyDetectAppHalConfig(fwp, testMode)).ShouldNot(HaveOccurred())
 		})
 
-		It("tags:sanity=true Should enable detect-app and verify on hal", func(){
+		It("Should enable detect-app and verify on hal", func() {
 			Skip("Disable test until hal functionality is in place")
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")

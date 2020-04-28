@@ -453,7 +453,7 @@ func (wc *WorkloadCollection) AllocateHostInterfaces(tb *testbed.TestBed) error 
 	for _, wrk := range Workloads {
 		hostAlloc, _ := hostIntfMap[wrk.iotaWorkload.NodeName+wrk.GetNaplesUUID()]
 		wrk.iotaWorkload.ParentInterface = hostAlloc.intfs[hostAlloc.curIndex%len(hostAlloc.intfs)]
-		log.Infof("Alloc host intf %v %v", wrk.iotaWorkload.WorkloadName, wrk.iotaWorkload.ParentInterface)
+		//log.Infof("Alloc host intf %v %v", wrk.iotaWorkload.WorkloadName, wrk.iotaWorkload.ParentInterface)
 		hostAlloc.curIndex++
 	}
 	return nil

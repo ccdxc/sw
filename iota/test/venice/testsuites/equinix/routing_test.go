@@ -3,11 +3,12 @@ package equinix_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -26,7 +27,7 @@ var _ = Describe("Routing Config Tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
 	Context("Routing tests", func() {

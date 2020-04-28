@@ -77,7 +77,7 @@ var _ = Describe("IPAM Tests", func() {
 		// delete Custom IPAM policy
 		deleteIPAMPolicy(customIpam, tenant)
 
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
 	Context("IPAM Tests", func() {

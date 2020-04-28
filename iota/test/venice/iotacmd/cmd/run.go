@@ -13,6 +13,7 @@ func init() {
 	runCommand.PersistentFlags().BoolVar(&stopOnError, "stop-on-error", false, "stops on error")
 	runCommand.PersistentFlags().StringVar(&suite, "suite", "", "suite to run")
 	runCommand.PersistentFlags().StringVar(&focus, "focus", "", "Focus test")
+	runCommand.PersistentFlags().BoolVar(&randomTrigger, "random-trigger", false, "run random trigger")
 }
 
 var runCommand = &cobra.Command{
@@ -27,7 +28,7 @@ func runCommandAction(cmd *cobra.Command, args []string) {
 	os.Setenv("JOB_ID", "1")
 
 	st := testsuite{name: suite, path: suiteDirectory + "/" + suite, focus: focus,
-		scaleData: scale}
+		scaleData: scale, runRandomTrigger: randomTrigger}
 
 	err := st.run(skipSetup, skipInstall, false, false, "")
 	if err != nil {

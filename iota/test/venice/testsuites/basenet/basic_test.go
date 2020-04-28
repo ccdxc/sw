@@ -21,11 +21,6 @@ var _ = Describe("Basnet Sanity", func() {
 	var dscFlowawareProfile *objects.DscProfile
 	var dscEnforcedProfile *objects.DscProfile
 	BeforeEach(func() {
-
-		if *runRandomTrigger {
-			err := ts.model.RunRandomTrigger(100)
-			Expect(err).Should(Succeed())
-		}
 		// verify cluster is in good health
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()
@@ -55,7 +50,7 @@ var _ = Describe("Basnet Sanity", func() {
 		dscInsertionProfile.Delete()
 		dscFlowawareProfile.Delete()
 		dscEnforcedProfile.Delete()
-		ts.tb.AfterTestCommon()
+		ts.model.AfterTestCommon()
 	})
 
 	Context("Basenet Tests", func() {
