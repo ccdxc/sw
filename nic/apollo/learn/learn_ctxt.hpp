@@ -279,7 +279,7 @@ add_mac_to_event_list (learn_ctxt_t *ctxt, event_id_t learn_event)
     info->subnet = ctxt->mac_key.subnet;
     MAC_ADDR_COPY(info->mac_addr, ctxt->mac_key.mac_addr);
     info->ifindex = ctxt->ifindex;
-    info->vpc = { 0 };
+    info->vpc.reset();
     info->ip_addr = { 0 };
     ctxt->lbctxt->bcast_events.push_back(event);
 }

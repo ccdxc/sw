@@ -148,7 +148,7 @@ fill_learn_event (event_t *event, event_id_t learn_event,
 
     vnic = vnic_db()->find(vnic_key);
     if (unlikely(vnic == nullptr)) {
-        PDS_TRACE_ERR("Failed to broadcast learn event %u for VNIC %s, IP %s",
+        PDS_TRACE_ERR("Failed to broadcast learn event %u for vnic %s, IP %s",
                       learn_event, vnic_key->str(), ip_entry ?
                       ipaddr2str(&ip_entry->key()->ip_addr) : "null");
         return;

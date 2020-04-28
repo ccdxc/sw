@@ -323,7 +323,7 @@ update_ep_mac (learn_ctxt_t *ctxt)
         // for R2L we broadcast both new learn and r2l messages
         add_mac_to_event_list(ctxt, EVENT_ID_MAC_LEARN);
         if (ctxt->mac_learn_type == LEARN_TYPE_MOVE_R2L) {
-            add_mac_to_event_list(ctxt, EVENT_ID_IP_MOVE_R2L);
+            add_mac_to_event_list(ctxt, EVENT_ID_MAC_MOVE_R2L);
         }
         break;
     case LEARN_TYPE_MOVE_L2L:
