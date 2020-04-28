@@ -175,7 +175,7 @@ export class FwlogsComponent extends TableviewAbstract<IFwlogFwLog, FwlogFwLog> 
       if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringfwlogpolicy_read)) {
         buttons.push({
           cssClass: 'global-button-primary fwlogs-button',
-          text: 'FIREWALL LOG POLICIES',
+          text: 'FIREWALL LOG EXPORT POLICIES',
           callback: () => { this.controllerService.navigate(['/monitoring', 'fwlogs', 'fwlogpolicies']); }
         });
       }

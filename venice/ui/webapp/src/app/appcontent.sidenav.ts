@@ -67,6 +67,7 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'app-l-side-nav-cluster-networkinterfaces'
         },
         roleGuard: UIRolePermissions.networknetworkinterface_read,
+        featureGuard: Features.enterprise,
         link: ['/cluster/', 'networkinterfaces']
       },
       {
@@ -85,6 +86,7 @@ export const sideNavMenu: SideNavItem[] = [
       cssClass: 'app-l-side-nav-workload',
     },
     roleGuard: UIRolePermissions.workloadworkload_read,
+    featureGuard: Features.enterprise,
     link: ['/workload']
   },
   {
@@ -210,7 +212,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-monitoring-fwlogs'
         },
-        featureGuard: Features.fwlogs,
+        featureGuard: Features.enterprise,
         roleGuard: UIRolePermissions.fwlog_read,
         link: ['/monitoring', 'fwlogs']
       }
@@ -237,6 +239,7 @@ export const sideNavMenu: SideNavItem[] = [
           cssClass: 'app-l-side-nav-monitoring-flowexport'
         },
         roleGuard: UIRolePermissions.monitoringflowexportpolicy_read,
+        featureGuard: Features.enterprise,
         link: ['/troubleshoot', 'flowexport']
       },
       {

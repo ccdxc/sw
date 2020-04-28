@@ -1,4 +1,4 @@
-<app-pagebody [icon]="bodyIcon" header="Firewall Log Policies">
+<app-pagebody [icon]="bodyIcon" header="Firewall Log Export Policies">
   <app-tableviewedit fxLayout="column" class="fwlogpolicies-widget"
                      [creatingMode]="creatingMode"
                      [showRowExpand]="showRowExpand"
@@ -16,7 +16,8 @@
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Firewall Log Policies" [total]="count" [icon]="headerIcon" fxFlex="auto"
+  <app-tableheader title="Firewall Log Export Policies" [total]="count" [icon]="headerIcon"
+                   fxFlex="auto"
                    fxLayout="row" [tableMenuItems]="tableMenuItems"
                    [enableColumnSelect]="true" [cols]="cols"
                    (columnSelectChange)="onColumnSelectChange($event)">

@@ -96,7 +96,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringfwlogpolicy_create)) {
       buttons = [{
         cssClass: 'global-button-primary fwlogpolicies-button fwlogpolicies-button-ADD',
-        text: 'ADD FIREWALL LOG POLICY',
+        text: 'ADD FIREWALL LOG EXPORT POLICY',
         genTooltip: () => this.getTooltip(),
         computeClass: () => this.shouldEnableButtons && this.maxNewTargets > 0 ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
@@ -106,12 +106,12 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
       buttons: buttons,
       breadcrumb: [
         { label: 'Firewall Logs', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs' },
-        { label: 'Firewall Log Policies', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs/fwlogpolicies' }
+        { label: 'Firewall Log Export Policies', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs/fwlogpolicies' }
       ]
     });
   }
   getTooltip(): string {
-    return this.maxNewTargets === 0 ? 'Cannot exceed 8 total targets across firewall log policies' : '';
+    return this.maxNewTargets === 0 ? 'Cannot exceed 8 total targets across firewall log export policies' : '';
   }
 
   getFwlogPolicies() {
@@ -144,11 +144,11 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   }
 
   generateDeleteConfirmMsg(object: IMonitoringFwlogPolicy) {
-    return 'Are you sure you want to delete firewall log policy ' + object.meta.name;
+    return 'Are you sure you want to delete firewall log export policy ' + object.meta.name;
   }
 
   generateDeleteSuccessMsg(object: MonitoringFwlogPolicy) {
-    return 'Deleted firewall log policy ' + object.meta.name;
+    return 'Deleted firewall log export policy ' + object.meta.name;
   }
 
   computeTargets(): number {

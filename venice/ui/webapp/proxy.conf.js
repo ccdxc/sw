@@ -8,6 +8,8 @@
 // const URL = "10.7.100.53:10001"; // Jay
 // const URL = "10.7.100.44:10001"; // Rishabh's vm
 // const URL = "10.7.100.24:10001";  // Barun
+// const URL = "10.30.8.2"  // It is Venice for cloud and has cluster.license object  (admin/Systest-1$ to login)
+
 
 // Since 2019-12-20, all above 192.xxx servers are not avaible. 
 // const URL =  "10.8.100.11"  // QA admin/Pensando0$
