@@ -669,21 +669,23 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
         // boot filename
         if (strlen(policy->boot_filename())) {
             buf_len = statements_len - index;
-            //index += snprintf((char *)(statements->value + index), buf_len,
-            //                  "option filename=%s; ", policy->boot_filename());
             index += snprintf((char *)(statements->value + index), buf_len,
-                              "if exists user-class and option user-class = \"iPXE\" \{\n"
-                              " option vendor-class-identifier \"HTTPClient\"\;\n"
-                              " filename \"%s\"\;\}", policy->boot_filename());
+                              "if exists user-class and option user-class = \"iPXE\" {\n"
+                              " option vendor-class-identifier \"HTTPClient\";\n"
+                              " filename \"%s\";}", policy->boot_filename());
         }
 
         // mtu
         if (policy->mtu()) {
-            char mtu[11];
-            snprintf(mtu, sizeof(mtu), "%u", policy->mtu());
+            uint16_t mtu = policy->mtu();
+            uint8_t *mtu_ptr = (uint8_t *)&mtu;
+
             buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
-                              "option interface-mtu=%s; ", mtu);
+                              "option interface-mtu=%x:%x; ",
+                              (uint32_t)mtu_ptr[1],
+                              (uint32_t)mtu_ptr[0]
+                              );
         }
 
         // lease timeout
