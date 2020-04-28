@@ -126,7 +126,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
       return (opts.data._ui.processedWorkloads) ? opts.data._ui.processedWorkloads.map(wkld => wkld.meta.name).join(', ') : '';
     },
     'spec.dscs': (opts): string => {
-      return opts.data._ui.processedSmartNics.map(psn => psn.mac).join(', ');
+      return opts.data._ui.processedSmartNics.map(psn => (psn.text) ? (psn.text) : psn.mac).join(', ');
     }
   };
 
