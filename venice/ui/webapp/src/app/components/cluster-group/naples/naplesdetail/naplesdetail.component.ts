@@ -835,7 +835,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     }
 
     // Cluster average
-    if (this.clusterAvgData.series[0].values.length !== 0) {
+    if (this.clusterAvgData && this.clusterAvgData.series && this.clusterAvgData.series.length > 0 &&
+        this.clusterAvgData.series[0].values.length !== 0) {
       const index = MetricsUtility.findFieldIndex(this.clusterAvgData.series[0].columns, fieldName);
       heroCard.thirdStat.numericValue = Math.round(this.clusterAvgData.series[0].values[0][index]);
       heroCard.thirdStat.value = Math.round(this.clusterAvgData.series[0].values[0][index]) + '%';
