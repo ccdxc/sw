@@ -88,7 +88,7 @@ erspan_common:
     phvwri          p.{gre_0_C...gre_0_proto}, GRE_PROTO_ERSPAN_T3
 
     // erspan
-    phvwrpair        p.erspan_version, 0x2, p.erspan_bso, 0
+    phvwrpair       p.erspan_version, 0x2, p.erspan_bso, 0
     seq             c1, k.ctag_1_valid, TRUE
     phvwrpair.c1    p.erspan_vlan, k.ctag_1_vid, p.erspan_cos, k.ctag_1_pcp
     phvwr           p.erspan_span_id, d.u.erspan_d.span_id

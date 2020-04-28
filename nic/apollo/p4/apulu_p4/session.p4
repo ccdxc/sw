@@ -1,8 +1,8 @@
 /*****************************************************************************/
 /* Session                                                                   */
 /*****************************************************************************/
-action session_info(tx_policer_id, tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
-                    rx_policer_id, rx_rewrite_flags, rx_xlate_id, rx_xlate_id2,
+action session_info(tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
+                    rx_rewrite_flags, rx_xlate_id, rx_xlate_id2,
                     meter_id, timestamp, session_tracking_en, drop) {
     subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
              offset_metadata.l2_1);
@@ -49,7 +49,6 @@ action session_info(tx_policer_id, tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
     }
 
     if (p4e_i2e.rx_packet == FALSE) {
-        modify_field(rewrite_metadata.policer_id, tx_policer_id);
         modify_field(rewrite_metadata.flags, tx_rewrite_flags);
         if (tx_xlate_id != 0) {
             modify_field(rewrite_metadata.xlate_id, tx_xlate_id);
@@ -65,7 +64,6 @@ action session_info(tx_policer_id, tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
             modify_field(control_metadata.apply_nat2, TRUE);
         }
     } else {
-        modify_field(rewrite_metadata.policer_id, rx_policer_id);
         modify_field(rewrite_metadata.flags, rx_rewrite_flags);
         if (rx_xlate_id != 0) {
             modify_field(rewrite_metadata.xlate_id, rx_xlate_id);

@@ -4,7 +4,7 @@
 action vnic_policer_tx(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
                        color_aware, rsvd, axi_wr_pend, burst, rate, tbkt) {
     if ((entry_valid == TRUE) and ((tbkt >> 39) == 1)) {
-        ingress_drop(P4I_DROP_VNIC_POLICER_TX);
+        egress_drop(P4E_DROP_VNIC_POLICER_TX);
     }
 
     modify_field(scratch_metadata.policer_valid, entry_valid);
@@ -24,18 +24,12 @@ action vnic_policer_tx(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
 @pragma policer_table two_color
 table vnic_policer_tx {
     reads {
-        vnic_metadata.vnic_id   : exact;
+        p4e_i2e.tx_policer_id   : exact;
     }
     actions {
         vnic_policer_tx;
     }
     size : VNIC_TABLE_SIZE;
-}
-
-control tx_policers {
-    if (control_metadata.rx_packet == FALSE) {
-        apply(vnic_policer_tx);
-    }
 }
 
 /******************************************************************************/
@@ -64,7 +58,7 @@ action vnic_policer_rx(entry_valid, pkt_rate, rlimit_en, rlimit_prof,
 @pragma policer_table two_color
 table vnic_policer_rx {
     reads {
-        p4e_i2e.vnic_id : exact;
+        vnic_metadata.rx_policer_id : exact;
     }
     actions {
         vnic_policer_rx;
@@ -107,10 +101,9 @@ table copp {
     size : COPP_TABLE_SIZE;
 }
 
-control rx_policers {
-    if (control_metadata.rx_packet == TRUE) {
-        apply(vnic_policer_rx);
-    }
+control policers {
+    apply(vnic_policer_rx);
+    apply(vnic_policer_tx);
     if (control_metadata.copp_policer_valid == TRUE) {
         apply(copp);
     }

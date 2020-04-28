@@ -19,6 +19,7 @@ vnic_info:
     phvwr.c1        p.ingress_recirc_defunct_flow, TRUE
     seq             c1, k.control_metadata_rx_packet, TRUE
     phvwr.c1        p.p4i_i2e_mirror_session, d.vnic_info_d.rx_mirror_session
+    phvwr.!c1       p.p4i_i2e_tx_policer_id, d.vnic_info_d.tx_policer_id
     phvwr.e         p.p4i_i2e_meter_enabled, d.vnic_info_d.meter_enabled
     phvwr.!c1       p.p4i_i2e_mirror_session, d.vnic_info_d.tx_mirror_session
 

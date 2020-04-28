@@ -221,7 +221,6 @@ device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
     const char idrop[][PDS_MAX_DROP_NAME_LEN] = {
         "vni_invalid",
         "nacl",
-        "vnic_policer_tx",
         "mac_ip_binding_fail",
         "tagged_pkt_from_vnic",
     };
@@ -252,6 +251,7 @@ device_impl::fill_egr_drop_stats_(pds_device_drop_stats_t *egr_drop_stats) {
         "session_hit",
         "nexthop_invalid",
         "vnic_policer_rx",
+        "vnic_policer_tx",
         "tcp_out_of_window",
         "tcp_win_zero",
         "tcp_unexpected_pkt",

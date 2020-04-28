@@ -31,6 +31,7 @@
 #define BD_TABLE_SIZE                                       2048
 #define COPP_TABLE_SIZE                                     1024
 #define METER_TABLE_SIZE                                    2048
+#define POLICER_TABLE_SIZE                                  1024
 
 #define VNIC_INFO_TABLE_SIZE                                1024
 #define VNIC_INFO_RXDMA_TABLE_SIZE                          4096

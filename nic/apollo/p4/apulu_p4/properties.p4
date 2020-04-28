@@ -195,7 +195,11 @@ table vni_otcam {
     size : VNI_OTCAM_TABLE_SIZE;
 }
 
-action vnic_info(epoch, meter_enabled, rx_mirror_session, tx_mirror_session) {
+/******************************************************************************/
+/* VNIC info (Ingress)                                                        */
+/******************************************************************************/
+action vnic_info(epoch, meter_enabled, rx_mirror_session, tx_mirror_session,
+                 tx_policer_id) {
     modify_field(p4i_to_arm.epoch, epoch);
     if ((control_metadata.flow_done == TRUE) and
         (control_metadata.flow_miss == FALSE) and
@@ -208,6 +212,7 @@ action vnic_info(epoch, meter_enabled, rx_mirror_session, tx_mirror_session) {
     if (control_metadata.rx_packet == TRUE) {
         modify_field(p4i_i2e.mirror_session, rx_mirror_session);
     } else {
+        modify_field(p4i_i2e.tx_policer_id, tx_policer_id);
         modify_field(p4i_i2e.mirror_session, tx_mirror_session);
     }
 }
@@ -305,7 +310,27 @@ table bd {
     size : BD_TABLE_SIZE;
 }
 
+/******************************************************************************/
+/* Rx VNIC info (Egress)                                                      */
+/******************************************************************************/
+action rx_vnic_info(rx_policer_id) {
+    modify_field(vnic_metadata.rx_policer_id, rx_policer_id);
+}
+
+@pragma stage 3
+@pragma index_table
+table rx_vnic {
+    reads {
+        vnic_metadata.rx_vnic_id    : exact;
+    }
+    actions {
+        rx_vnic_info;
+    }
+    size : VNIC_TABLE_SIZE;
+}
+
 control output_properties {
     apply(vpc);
     apply(bd);
+    apply(rx_vnic);
 }

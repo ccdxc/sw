@@ -23,10 +23,10 @@ session_info:
     sub             r7, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1
     phvwr           p.capri_p4_intrinsic_packet_len, r7
     bcf             [c1],session_info_error
-    phvwrpair       p.control_metadata_rx_packet, \
-                        k.p4e_i2e_rx_packet, \
-                        p.control_metadata_update_checksum, \
-                        k.p4e_i2e_update_checksum
+    phvwrpair        p.control_metadata_update_checksum, \
+                        k.p4e_i2e_update_checksum, \
+                        p.control_metadata_rx_packet, \
+                        k.p4e_i2e_rx_packet
 
     seq             c1, k.egress_recirc_valid, FALSE
     bcf             [!c1|!c7], session_info_common
@@ -47,7 +47,6 @@ session_info_common:
     nop
 session_rx:
     phvwr           p.rewrite_metadata_flags, d.session_info_d.rx_rewrite_flags
-    phvwr           p.rewrite_metadata_policer_id, d.session_info_d.rx_policer_id
     seq             c1, d.session_info_d.rx_xlate_id, r0
     cmov            r1, c1, k.p4e_i2e_xlate_id, d.session_info_d.rx_xlate_id
     sne             c1, r1, r0
@@ -60,7 +59,6 @@ session_rx:
 
 session_tx:
     phvwr           p.rewrite_metadata_flags, d.session_info_d.tx_rewrite_flags
-    phvwr           p.rewrite_metadata_policer_id, d.session_info_d.tx_policer_id
     seq             c1, d.session_info_d.tx_xlate_id, r0
     cmov            r1, c1, k.p4e_i2e_xlate_id, d.session_info_d.tx_xlate_id
     sne             c1, r1, r0

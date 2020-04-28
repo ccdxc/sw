@@ -11,16 +11,16 @@ header_type apulu_i2e_metadata_t {
         mapping_lkp_id      : 16;
         nexthop_id          : 16;
         xlate_id            : 16;
-        pad0                : 1;
-        skip_stats_update   : 1;
         meter_enabled       : 1;
         rx_packet           : 1;
         nexthop_type        : 2;
         mapping_bypass      : 1;
         update_checksum     : 1;
-        pad1                : 6;
         copp_policer_id     : 10;
-        pad2                : 8;
+        pad0                : 8;
         mirror_session      : 8;
+        pad1                : 5;
+        skip_stats_update   : 1;
+        tx_policer_id       : 10;
     }
 }

@@ -70,9 +70,8 @@ vxlan_encap:
                         d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}
     seq             c1, k.rewrite_metadata_flags[TX_REWRITE_VNI_BITS], \
                         TX_REWRITE_VNI_FROM_TUNNEL
-    or              r6, k.rewrite_metadata_vni_s8_e23, \
-                        k.rewrite_metadata_vni_s0_e7, 16
-    cmov            r7, c1, k.rewrite_metadata_tunnel_vni, r6
+    cmov            r7, c1, k.rewrite_metadata_tunnel_vni, \
+                        k.rewrite_metadata_vni
     or              r7, r7, 0x8, 48
     or              r7, r0, r7, 8
     phvwr           p.{vxlan_0_flags,vxlan_0_reserved,vxlan_0_vni, \

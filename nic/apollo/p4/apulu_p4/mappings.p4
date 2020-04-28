@@ -217,10 +217,10 @@ control local_mapping {
 /******************************************************************************/
 /* All mappings (local and remote)                                            */
 /******************************************************************************/
-@pragma capi appdatafields is_local nexthop_valid nexthop_type nexthop_id egress_bd_id dmaci
+@pragma capi appdatafields is_local nexthop_valid nexthop_type nexthop_id egress_bd_id dmaci rx_vnic_id
 @pragma capi hwfields_access_api
 action mapping_info(entry_valid, is_local, pad11, nexthop_valid,
-                    nexthop_type, nexthop_id, egress_bd_id, dmaci,
+                    nexthop_type, nexthop_id, egress_bd_id, dmaci, rx_vnic_id,
                     hash1, hint1, hash2, hint2, hash3, hint3,
                     hash4, hint4, hash5, hint5, hash6, hint6,
                     hash7, hint7, hash8, hint8, more_hashes, more_hints) {
@@ -248,6 +248,7 @@ action mapping_info(entry_valid, is_local, pad11, nexthop_valid,
         modify_field(vnic_metadata.egress_bd_id, egress_bd_id);
         modify_field(rewrite_metadata.dmaci, dmaci);
         modify_field(scratch_metadata.flag, nexthop_valid);
+        modify_field(vnic_metadata.rx_vnic_id, rx_vnic_id);
         if (nexthop_valid == TRUE) {
             if (p4e_to_arm.valid == TRUE) {
                 if (p4e_i2e.rx_packet == 0) {

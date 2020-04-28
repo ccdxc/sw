@@ -52,7 +52,6 @@ control ingress {
     flow_lookup();
     nacl();
     offloads();
-    tx_policers();
     ingress_stats();
     ingress_inter_pipe();
 }
@@ -69,7 +68,7 @@ control egress {
         session_lookup();
         output_properties();
         nat();
-        rx_policers();
+        policers();
         meter_stats();
     }
     nexthops();

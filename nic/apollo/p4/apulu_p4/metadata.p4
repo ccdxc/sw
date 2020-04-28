@@ -40,6 +40,8 @@ header_type vnic_metadata_t {
         vpc_id          : 16;
         binding_id      : 16;
         vrmac           : 48;
+        rx_policer_id   : 10;
+        rx_vnic_id      : 16;
     }
 }
 
@@ -88,7 +90,6 @@ header_type rewrite_metadata_t {
         flags               : 16;
         xlate_id            : 16;
         xlate_id2           : 16;
-        policer_id          : 16;
         dmaci               : 48;
         device_ipv4_addr    : 32;
         device_ipv6_addr    : 128;

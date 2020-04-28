@@ -31,24 +31,24 @@
 #define P4I_DROP_REASON_MIN             0
 #define P4I_DROP_VNI_INVALID            0
 #define P4I_DROP_NACL                   1
-#define P4I_DROP_VNIC_POLICER_TX        2
-#define P4I_DROP_MAC_IP_BINDING_FAIL    3
-#define P4I_DROP_TAGGED_PKT_FROM_VNIC   4
-#define P4I_DROP_REASON_MAX             4
+#define P4I_DROP_MAC_IP_BINDING_FAIL    2
+#define P4I_DROP_TAGGED_PKT_FROM_VNIC   3
+#define P4I_DROP_REASON_MAX             3
 
 #define P4E_DROP_REASON_MIN                         0
 #define P4E_DROP_SESSION_INVALID                    0
 #define P4E_DROP_SESSION_HIT                        1
 #define P4E_DROP_NEXTHOP_INVALID                    2
 #define P4E_DROP_VNIC_POLICER_RX                    3
-#define P4E_DROP_TCP_OUT_OF_WINDOW                  4
-#define P4E_DROP_TCP_WIN_ZERO                       5
-#define P4E_DROP_TCP_UNEXPECTED_PKT                 6
-#define P4E_DROP_TCP_NON_RST_PKT_AFTER_RST          7
-#define P4E_DROP_TCP_RST_WITH_INVALID_ACK_NUM       8
-#define P4E_DROP_TCP_INVALID_RESPONDER_FIRST_PKT    9
-#define P4E_DROP_TCP_DATA_AFTER_FIN                 10
-#define P4E_DROP_COPP                               11
+#define P4E_DROP_VNIC_POLICER_TX                    4
+#define P4E_DROP_TCP_OUT_OF_WINDOW                  5
+#define P4E_DROP_TCP_WIN_ZERO                       6
+#define P4E_DROP_TCP_UNEXPECTED_PKT                 7
+#define P4E_DROP_TCP_NON_RST_PKT_AFTER_RST          8
+#define P4E_DROP_TCP_RST_WITH_INVALID_ACK_NUM       9
+#define P4E_DROP_TCP_INVALID_RESPONDER_FIRST_PKT    10
+#define P4E_DROP_TCP_DATA_AFTER_FIN                 11
+#define P4E_DROP_COPP                               12
 #define P4E_DROP_REASON_MAX                         P4E_DROP_COPP
 
 /*****************************************************************************/
@@ -298,7 +298,7 @@
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define APULU_P4I_TO_RXDMA_HDR_SZ       52
-#define APULU_I2E_HDR_SZ                40
+#define APULU_I2E_HDR_SZ                41
 #define APULU_P4_TO_ARM_HDR_SZ          44
 #define APULU_ARM_TO_P4_HDR_SZ          7
 
