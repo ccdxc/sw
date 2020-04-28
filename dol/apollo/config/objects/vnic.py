@@ -111,6 +111,7 @@ class VnicObject(base.ConfigObjectBase):
         for service_ip in service_ips:
             self.ServiceIPs.append(service_ip.replace('\\', '/'))
         self.Movable = getattr(spec, 'movable', False)
+        self.DhcpEnabled = getattr(spec, 'dhcpenabled', False)
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION

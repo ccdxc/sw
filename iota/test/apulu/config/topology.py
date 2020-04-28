@@ -16,6 +16,7 @@ from apollo.config.store import Init as EzAccessStoreInit
 import infra.common.objects as objects
 import apollo.config.utils as utils
 import iota.test.apulu.config.api as config_api
+import iota.test.apulu.utils.learn as learn_utils
 
 def __generate_rmappings_from_lmappings():
     nodes = api.GetNaplesHostnames()
@@ -121,4 +122,13 @@ def Main(args):
     # Update static NextHop objects with the mac-addresses of the peer's interfaces
     # This is temporary until the dynamic underlay NH stitching support comes in soon.
     __update_nexthops_from_uplink_info()
+
+    for node in api.GetNaplesHostnames():
+        storeClient = EzAccessStoreClient[node]
+        if storeClient.IsDeviceLearningEnabled():
+            if not learn_utils.SetDeviceLearnTimeout(storeClient.GetDevice().LearnAgeTimeout):
+                return api.types.status.FAILURE
+            if not learn_utils.ClearLearnData():
+                return api.types.status.FAILURE
+
     return api.types.status.SUCCESS

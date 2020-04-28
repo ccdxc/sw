@@ -124,6 +124,9 @@ def AddWorkloads(req, running=True):
         __gl_workloads[wl.workload_name] = wl
     return
 
+def GetWorkloadByName(wl_name):
+    return __gl_workloads.get(wl_name, None)
+
 def GetWorkloads(node = None):
     global __gl_workloads
     if node == None:

@@ -5,6 +5,8 @@ import iota.harness.api as api
 import iota.harness.infra.resmgr as resmgr
 
 import iota.test.apulu.config.api as config_api
+import iota.test.apulu.utils.dhcp as dhcp_utils
+import iota.test.utils.arping as arp_utils
 
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
@@ -13,6 +15,14 @@ __max_tcp_ports = 1
 
 portUdpAllocator = resmgr.TestbedPortAllocator(205)
 portTcpAllocator = resmgr.TestbedPortAllocator(4500)
+
+def __publish_workloads(workloads=[]):
+    workloads = workloads if workloads else api.GetWorkloads()
+    wl_list = list(filter(lambda x: x.vnic.IsOriginDiscovered() and not x.vnic.DhcpEnabled, workloads))
+    if not arp_utils.SendGratArp(wl_list):
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
 
 def __add_secondary_ip_to_workloads(workloads=[]):
     if not api.IsSimulation():
@@ -57,8 +67,9 @@ def __add_workloads(redirect_port):
         # Make the workload_name unique across nodes by appending node-name
         wl_msg.workload_name = ep.name + ep.node_name
         wl_msg.node_name = ep.node_name
-        wl_msg.ip_prefix = ep.ip_addresses[0]
-        wl_msg.sec_ip_prefix.extend(ep.ip_addresses[1:])
+        if not ep.vnic.DhcpEnabled:
+            wl_msg.ip_prefix = ep.ip_addresses[0]
+            wl_msg.sec_ip_prefix.extend(ep.ip_addresses[1:])
         # wl_msg.ipv6_prefix = ep.ip_addresses[1]
         wl_msg.mac_address = ep.macaddr
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_NONE
@@ -82,11 +93,26 @@ def __add_workloads(redirect_port):
         if resp is None:
             sys.exit(1)
 
+        dhcp_wl_list = []
         for ep in config_api.GetEndpoints():
             workload_name = ep.name + ep.node_name
-            for wl in api.GetWorkloads():
-                if wl.workload_name == workload_name:
-                    wl.vnic = ep.vnic
+            wl = api.GetWorkloadByName(workload_name)
+            if wl is None:
+                sys.exit(1)
+            wl.vnic = ep.vnic
+            if wl.vnic.DhcpEnabled:
+                dhcp_wl_list.append(wl)
+                wl.ip_prefix = ep.ip_addresses[0]
+                wl.ip_address = wl.ip_prefix.split('/')[0]
+                wl.sec_ip_prefixes = []
+                wl.sec_ip_addresses = []
+                for secip in ep.ip_addresses[1:]:
+                    wl.sec_ip_prefixes.append(secip)
+                    wl.sec_ip_addresses.append(secip.split('/')[0])
+
+        if len(dhcp_wl_list):
+            if not dhcp_utils.AcquireIPFromDhcp(dhcp_wl_list):
+                sys.exit(1)
 
 def __delete_classic_workloads(target_node = None, workloads = None):
 
@@ -161,6 +187,7 @@ def Main(args):
         redirect_port = False
     __add_workloads(redirect_port)
     __add_secondary_ip_to_workloads()
+    __publish_workloads()
     return api.types.status.SUCCESS
 
 if __name__ == '__main__':

@@ -164,6 +164,7 @@ vpc:
               remoteroutes :
                     - '10.0.0.0\8'
               ipcount      : 1
+              dhcpenabled  : true
 
         - id               : 2
           count            : 1
@@ -191,6 +192,7 @@ vpc:
               remoteroutes :
                     - '10.0.0.0\8'
               ipcount      : 1
+              dhcpenabled  : true
 
         - id               : 3
           count            : 1
@@ -218,6 +220,7 @@ vpc:
               remoteroutes :
                     - '10.0.0.0\8'
               ipcount      : 1
+              dhcpenabled  : true
 
         - id               : 4
           count            : 1
