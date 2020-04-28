@@ -207,20 +207,42 @@ error:
 
 sdk_ret_t
 vnic_impl::release_resources(api_base *api_obj) {
+    sdk_ret_t ret;
+    subnet_entry *subnet;
+    pds_obj_key_t subnet_key;
     sdk_table_api_params_t tparams;
+    mapping_swkey_t mapping_key = { 0 };
     vnic_entry *vnic = (vnic_entry *)api_obj;
+    local_mapping_swkey_t local_mapping_key = { 0 };
 
-    memset(&tparams, 0, sizeof(tparams));
+    // lookup the vnic's subnet
+    subnet_key = vnic->subnet();
+    subnet = subnet_find(&subnet_key);
+
     // release the reserved LOCAL_MAPPING table entry
     if (local_mapping_hdl_.valid()) {
-        tparams.handle = local_mapping_hdl_;
-        mapping_impl_db()->local_mapping_tbl()->release(&tparams);
+        local_mapping_key.key_metadata_local_mapping_lkp_type = KEY_TYPE_MAC;
+        local_mapping_key.key_metadata_local_mapping_lkp_id =
+            ((subnet_impl *)subnet->impl())->hw_id();
+        sdk::lib::memrev(local_mapping_key.key_metadata_local_mapping_lkp_addr,
+                         vnic->mac(), ETH_ADDR_LEN);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL,
+                                       0, local_mapping_hdl_);
+        ret = mapping_impl_db()->local_mapping_tbl()->release(&tparams);
+        SDK_ASSERT(ret == SDK_RET_OK);
     }
 
     // release the reserved MAPPING table entry
     if (mapping_hdl_.valid()) {
-        tparams.handle = mapping_hdl_;
-        mapping_impl_db()->mapping_tbl()->release(&tparams);
+        mapping_key.p4e_i2e_mapping_lkp_type = KEY_TYPE_MAC;
+        mapping_key.p4e_i2e_mapping_lkp_id =
+            ((subnet_impl *)subnet->impl())->hw_id();
+        sdk::lib::memrev(mapping_key.p4e_i2e_mapping_lkp_addr,
+                         vnic->mac(), ETH_ADDR_LEN);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
+                                       0, mapping_hdl_);
+        ret = mapping_impl_db()->mapping_tbl()->release(&tparams);
+        SDK_ASSERT(ret == SDK_RET_OK);
     }
 
     // release the NEXTHOP table entry

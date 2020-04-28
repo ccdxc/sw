@@ -179,7 +179,8 @@ system_mac_init (void)
         // for non h/w platforms, set system MAC to default
         MAC_UINT64_TO_ADDR(mac_addr, PENSANDO_NIC_MAC);
         api::g_pds_state.set_system_mac(mac_addr);
-        PDS_TRACE_ERR("system mac 0x%06lx", MAC_TO_UINT64(api::g_pds_state.system_mac()));
+        PDS_TRACE_INFO("system mac 0x%06lx",
+                       MAC_TO_UINT64(api::g_pds_state.system_mac()));
     }
 }
 
@@ -196,13 +197,14 @@ catalog_init (pds_init_params_t *params)
             api::g_pds_state.cfg_path() + params->pipeline,
         "", api::g_pds_state.platform_type()));
     mem_str = api::g_pds_state.catalogue()->memory_capacity_str();
-    PDS_TRACE_DEBUG("Memory capacity of the system %s", mem_str.c_str());
+    PDS_TRACE_INFO("Memory capacity of the system %s", mem_str.c_str());
 
-    // On Vomero, Uboot gives Linux 6G on boot up, so only 2G is left for Datapath.
-    // Load 4G HBM profile on systems with 2G data path memory
+    // on Vomero, uboot gives Linux 6G on boot up, so only 2G is left
+    // for datapath, load 4G HBM profile on systems with 2G data path memory
     if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
         datapath_mem = pal_mem_get_phys_totalsize();
-        PDS_TRACE_DEBUG("Datapath Memory:  %llu(0x%llx) Bytes", datapath_mem, datapath_mem);
+        PDS_TRACE_DEBUG("Datapath memory  %llu(0x%llx) bytes",
+                        datapath_mem, datapath_mem);
         if (datapath_mem == 0x80000000) { //2G
             mem_str = "4g";
             PDS_TRACE_DEBUG("Loading 4G HBM profile");
