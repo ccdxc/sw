@@ -219,11 +219,15 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	tInfo.updateResolver(globals.EvtsProxy, evtsProxyURL)
 
 	// create API server client
-	apiCl, err := apicache.NewGrpcUpstream("spyglass-integ-test", tInfo.apiServerAddr, tInfo.l)
-	if err != nil {
-		return fmt.Errorf("failed to create gRPC client, err: %v", err)
-	}
-	tInfo.apiClient = apiCl
+	// recreate apiclient
+	AssertEventually(t, func() (bool, interface{}) {
+		apiCl, err := apicache.NewGrpcUpstream("spyglass-integ-test", tInfo.apiServerAddr, tInfo.l)
+		if err != nil {
+			return false, err
+		}
+		tInfo.apiClient = apiCl
+		return true, nil
+	}, "failed to create gRPC client", "1s", "2m")
 
 	// setup auth
 	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
