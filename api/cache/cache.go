@@ -216,6 +216,13 @@ func (r *snapshotReader) Read(p []byte) (n int, err error) {
 			}
 			if len(robjs) > 0 {
 				log.Debugf("Prefix is [%v]  of [%d] objects", prefix, len(robjs))
+			} else {
+				if apiutils.IsGroupExampleType(grp) {
+					// Skip example type objects if there aren't any
+					log.Infof("Skipping kind [%s][%s] since there are no objects of this kind", grp, kind)
+					r.curType++
+					continue
+				}
 			}
 
 			r.curObjs = robjs

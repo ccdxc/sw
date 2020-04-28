@@ -322,3 +322,11 @@ func GetNewRelationsMapper(s *runtime.Scheme) *ObjRelMapper {
 	ret.init(s, gen.ObjRelations)
 	return ret
 }
+
+// IsGroupExampleType returns true if the input group is of an internal example type, like "bookstore"
+func IsGroupExampleType(group string) bool {
+	if group == "bookstore" {
+		return true
+	}
+	return false
+}
