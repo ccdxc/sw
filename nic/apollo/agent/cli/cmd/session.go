@@ -54,6 +54,13 @@ var flowShowCmd = &cobra.Command{
 	Run:   flowShowCmdHandler,
 }
 
+var flowStatsShowCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "show flow statistics",
+	Long:  "show flow statistics",
+	Run:   flowStatsShowCmdHandler,
+}
+
 var sessionShowCmd = &cobra.Command{
 	Use:   "session",
 	Short: "show session information",
@@ -98,6 +105,9 @@ func init() {
 	flowShowCmd.Flags().Uint32Var(&flowDstPort, "dstport", 0, "Specify flow dst port")
 	flowShowCmd.Flags().Uint32Var(&flowIPProto, "ipproto", 0, "Specify flow IP proto")
 	flowShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+
+	flowShowCmd.AddCommand(flowStatsShowCmd)
+	flowStatsShowCmd.Flags().Bool("yaml", true, "Output in yaml")
 
 	clearCmd.AddCommand(sessionClearCmd)
 	sessionClearCmd.Flags().Uint32Var(&sessionVpcID, "vpcid", 0, "Specify VPC ID (default is 0)")
@@ -367,14 +377,35 @@ func flowPrintHeader() {
 
 func flowPrintEntry(flow *pds.Flow) {
 	key := flow.GetKey().GetIPFlowKey()
-	fmt.Printf("%-6d%-40s%-40s%-8d%-8d%-8d%-5d%-11d%-5d\n",
-		flow.GetVpc(),
-		utils.IPAddrToStr(key.GetSrcIP()),
-		utils.IPAddrToStr(key.GetDstIP()),
+	fmt.Printf("%-6d%-40s%-40s",
+	flow.GetVpc(),
+	utils.IPAddrToStr(key.GetSrcIP()),
+	utils.IPAddrToStr(key.GetDstIP()));
+	ipproto := key.GetIPProtocol();
+	if ((ipproto == 6) || (ipproto == 17)) {
+		fmt.Printf("%-8d%-8d",
 		key.GetL4Info().GetTcpUdpInfo().GetSrcPort(),
-		key.GetL4Info().GetTcpUdpInfo().GetDstPort(),
-		key.GetIPProtocol(), flow.GetFlowRole(),
-		flow.GetSessionIdx(), flow.GetEpoch())
+		key.GetL4Info().GetTcpUdpInfo().GetDstPort());
+		if (ipproto == 6) {
+			fmt.Printf("%-8s", "TCP");
+		} else {
+			fmt.Printf("%-8s", "UDP");
+		}
+	} else {
+		fmt.Printf("%-8s%-8s", "-", "-");
+		if (ipproto == 1) {
+			fmt.Printf("%-8s", "ICMP");
+		} else {
+			fmt.Printf("%-8d", ipproto);
+		}
+	}
+	role := flow.GetFlowRole();
+	if (role == 0) {
+		fmt.Printf("I    ");
+	} else {
+		fmt.Printf("R    ");
+	}
+	fmt.Printf("%-11d%-5d\n", flow.GetSessionIdx(), flow.GetEpoch())
 }
 
 func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -521,6 +552,60 @@ func sessionStatsPrintEntry(resp *pds.SessionStatsGetResponse) {
 			stats.GetResponderFlowPkts(),
 			stats.GetResponderFlowBytes())
 	}
+}
+
+func flowStatsShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	yamlOutput := (cmd != nil) && cmd.Flags().Changed("yaml")
+	client := pds.NewDebugSvcClient(c)
+
+	var empty *pds.Empty
+
+	// PDS call
+	respMsg, err := client.FlowStatsSummaryGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Getting flow statistics failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	if yamlOutput {
+		respType := reflect.ValueOf(respMsg)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+		fmt.Println("---")
+	} else {
+		flowStatsPrint(respMsg)
+	}
+}
+
+func flowStatsPrint(resp *pds.FlowStatsSummaryResponse) {
+	fmt.Printf("%-30s: %d\n", "TCP over IPv4 Sessions", resp.GetNumTCPv4Sessions());
+	fmt.Printf("%-30s: %d\n", "UDP over IPv4 Sessions", resp.GetNumUDPv4Sessions());
+	fmt.Printf("%-30s: %d\n", "ICMP over IPv4 Sessions", resp.GetNumICMPv4Sessions());
+	fmt.Printf("%-30s: %d\n", "Other IPv4 Sessions", resp.GetNumOtherIPv4Sessions());
+	fmt.Printf("%-30s: %d\n", "TCP over IPv6 Sessions", resp.GetNumTCPv6Sessions());
+	fmt.Printf("%-30s: %d\n", "UDP over IPv6 Sessions", resp.GetNumUDPv6Sessions());
+	fmt.Printf("%-30s: %d\n", "ICMP over IPv6 Sessions", resp.GetNumICMPv6Sessions());
+	fmt.Printf("%-30s: %d\n", "Other IPv6 Sessions", resp.GetNumOtherIPv6Sessions());
+	fmt.Printf("%-30s: %d\n", "L2 Sessions", resp.GetNumL2Sessions());
+	fmt.Printf("%-30s: %d\n", "Session Errors", resp.GetNumSessionErrors());
 }
 
 // PrintObject interface
