@@ -202,6 +202,11 @@ gopkglist: gopkgsinstall
 netagent-build:
 	$(MAKE) -C nic/agent/dscagent
 
+# orchestrator-sim builds orchestrator simulator
+orchestrator-sim:
+	$(MAKE) -C venice/ctrler/orchhub/cmd/orch-sim/
+
+
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
 build: gopkglist netagent-build
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
