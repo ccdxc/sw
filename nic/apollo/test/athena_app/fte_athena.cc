@@ -299,9 +299,9 @@ fte_rx_loop (pollers_qid_vec_t *qid_vec)
             if (nb_rx == 0) {
                 continue;
             }
-            PDS_TRACE_DEBUG("Core #%u received %d pkt(s) from "
-                            "port:%u queue:%u \n",
-                            lcore_id, nb_rx, portid, queueid);
+            PDS_TRACE_VERBOSE("Core #%u received %d pkt(s) from "
+                              "port:%u queue:%u \n",
+                              lcore_id, nb_rx, portid, queueid);
             for (i = 0; !fte_threads_done && (i < nb_rx); i++) {
                 auto m = pkts_burst[i];
 #ifdef DEBUG

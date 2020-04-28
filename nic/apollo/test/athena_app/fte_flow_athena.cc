@@ -81,6 +81,7 @@ uint32_t g_session_rewrite_index = 1;
 // H2S specific fields
 uint32_t g_h2s_vlan = 0x0002;
 uint16_t g_h2s_vnic_id = 0x0001;
+uint8_t  idx = 0;
 
 // H2S Session info rewrite
 mac_addr_t substrate_smac = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
@@ -476,6 +477,9 @@ fte_flow_h2s_rewrite_mplsoudp (struct rte_mbuf *m, uint16_t ip_offset, uint16_t 
     ip4h->src_addr = rte_cpu_to_be_32(rewrite_underlay->substrate_sip);
     ip4h->dst_addr = rte_cpu_to_be_32(rewrite_underlay->substrate_dip);
     pkt_start += sizeof(h2s_ip_encap_hdr);
+  
+    /*Temporary fix to change values of UDP SPORT */ 
+    h2s_udp_encap_hdr[1] = idx++;
 
     memcpy(pkt_start, h2s_udp_encap_hdr, sizeof(h2s_udp_encap_hdr));
     udph = (struct udp_hdr *)pkt_start;
