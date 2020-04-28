@@ -3749,6 +3749,8 @@ func TestFlowMirrorCreateDelete(t *testing.T) {
 	err = createTenant(t, stateMgr, "default")
 	AssertOk(t, err, "Error creating the tenant")
 
+	numCollectors := 4
+	collectors := getCollectors(0, numCollectors)
 	matchRules := []monitoring.MatchRule{
 		{
 			Src: &monitoring.MatchSelector{
@@ -3764,7 +3766,7 @@ func TestFlowMirrorCreateDelete(t *testing.T) {
 			},
 		},
 	}
-	_, err = createMirror(stateMgr, "default", "testMirror", nil, matchRules, nil, nil)
+	_, err = createMirror(stateMgr, "default", "testMirror", nil, matchRules, collectors, nil)
 	AssertOk(t, err, "Error creating mirror session ")
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -8563,6 +8565,9 @@ func TestWatcherWithFlowMirrorCreateDelete(t *testing.T) {
 	matchRules := []monitoring.MatchRule{
 		{
 			Src: &monitoring.MatchSelector{
+				IPAddresses: []string{"192.168.100.1"},
+			},
+			Dst: &monitoring.MatchSelector{
 				IPAddresses: []string{"192.168.100.1"},
 			},
 			AppProtoSel: &monitoring.AppProtoSelector{

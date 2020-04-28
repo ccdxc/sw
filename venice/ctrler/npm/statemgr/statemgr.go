@@ -40,6 +40,7 @@ type updatable interface {
 // dscUpdateIntf
 type dscUpdateIntf interface {
 	processDSCUpdate(dsc *cluster.DistributedServiceCard) error
+	isMarkedForDelete() bool
 	GetKey() string
 }
 
@@ -344,17 +345,15 @@ func (sm *Statemgr) registerForDscUpdate(object dscUpdateIntf) {
 	sm.dscUpdateNotifObjects[object.GetKey()] = object
 }
 
-func (sm *Statemgr) unRegisterForDscUpdate(object dscUpdateIntf) {
-	sm.Lock()
-	defer sm.Unlock()
-	delete(sm.dscUpdateNotifObjects, object.GetKey())
-}
-
 func (sm *Statemgr) sendDscUpdateNotification(dsc *cluster.DistributedServiceCard) {
 	sm.Lock()
 	defer sm.Unlock()
 	for _, obj := range sm.dscUpdateNotifObjects {
-		obj.processDSCUpdate(dsc)
+		if obj.isMarkedForDelete() {
+			delete(sm.dscUpdateNotifObjects, obj.GetKey())
+		} else {
+			obj.processDSCUpdate(dsc)
+		}
 	}
 }
 

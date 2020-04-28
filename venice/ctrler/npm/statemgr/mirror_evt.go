@@ -473,20 +473,6 @@ func (smm *SmMirrorSessionInterface) deleteMirrorSession(ms *MirrorSessionState)
 	return nil
 }
 
-//getMirrorSession get mirror session
-func (smm *SmMirrorSessionInterface) getMirrorSession(name string) (*MirrorSessionState, error) {
-	smm.Lock()
-	defer smm.Unlock()
-
-	ms, ok := smm.mirrorSessions[name]
-
-	if ok {
-		return nil, fmt.Errorf("Did not find mirror session %v", name)
-	}
-
-	return ms, nil
-}
-
 func (smm *SmMirrorSessionInterface) getAllInterfaceMirrorSessions() []*interfaceMirrorSelector {
 
 	intfMirrors := []*interfaceMirrorSelector{}

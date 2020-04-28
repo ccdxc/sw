@@ -5,7 +5,6 @@ package statemgr
 import (
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -22,10 +21,10 @@ import (
 
 // FirewallProfileState is a wrapper for fwProfile object
 type FirewallProfileState struct {
-	sync.Mutex
 	FirewallProfile *ctkit.FirewallProfile `json:"-"` // fwProfile object
 	stateMgr        *Statemgr              // pointer to state manager
 	NodeVersions    map[string]string      // Map fpr node -> version
+	markedForDelete bool
 }
 
 // FirewallProfileStateFromObj conerts from memdb object to fwProfile state
@@ -175,8 +174,6 @@ func (sm *Statemgr) propgatationStatusDifferent(
 func (fps *FirewallProfileState) initNodeVersions() error {
 	dscs, _ := fps.stateMgr.ListDistributedServiceCards()
 
-	fps.Lock()
-	defer fps.Unlock()
 	// walk all smart nics
 	for _, dsc := range dscs {
 		if fps.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
@@ -189,11 +186,15 @@ func (fps *FirewallProfileState) initNodeVersions() error {
 	return nil
 }
 
+func (fps *FirewallProfileState) isMarkedForDelete() bool {
+	return fps.markedForDelete
+}
+
 // processDSCUpdate sgpolicy update handles for DSC
 func (fps *FirewallProfileState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
 
-	fps.Lock()
-	defer fps.Unlock()
+	fps.FirewallProfile.Lock()
+	defer fps.FirewallProfile.Unlock()
 	if fps.stateMgr.isDscEnforcednMode(dsc) {
 		log.Infof("DSC %v is being tracked for propogation status for fwprofile %s", dsc.Name, fps.GetKey())
 		fps.NodeVersions[dsc.Name] = ""
@@ -207,8 +208,8 @@ func (fps *FirewallProfileState) processDSCUpdate(dsc *cluster.DistributedServic
 
 // Write writes the object to api server
 func (fps *FirewallProfileState) Write() error {
-	fps.Lock()
-	defer fps.Unlock()
+	fps.FirewallProfile.Lock()
+	defer fps.FirewallProfile.Unlock()
 
 	prop := &fps.FirewallProfile.Status.PropagationStatus
 	newProp := fps.stateMgr.updatePropogationStatus(fps.FirewallProfile.GenerationID, prop, fps.NodeVersions)
@@ -310,8 +311,11 @@ func (sm *Statemgr) OnFirewallProfileDelete(fwProfile *ctkit.FirewallProfile) er
 
 	log.Infof("Deleting fwProfile: %+v", fwProfile)
 
-	//unsubscribe for dsc update
-	sm.unRegisterForDscUpdate(fps)
+	//Mark fo delete will make sure DSC updates are not received
+	// If we try to unregister, we will be waiting for sm.lock to update DSC notif list
+	// But, sm.lock could be held by DSC update thread, which in turn might be waiting to
+	// update current object.
+	fps.markedForDelete = true
 	// delete the object
 	return sm.mbus.DeleteObjectWithReferences(fwProfile.MakeKey("security"),
 		convertFirewallProfile(fps), references(fwProfile))
@@ -364,8 +368,8 @@ func (sm *Statemgr) UpdateFirewallProfileStatus(nodeuuid, tenant, name, generati
 	}
 
 	// lock policy for concurrent modifications
-	fps.Lock()
-	defer fps.Unlock()
+	fps.FirewallProfile.Lock()
+	defer fps.FirewallProfile.Unlock()
 
 	if fps.NodeVersions == nil {
 		fps.NodeVersions = make(map[string]string)

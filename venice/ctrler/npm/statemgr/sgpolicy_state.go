@@ -7,7 +7,6 @@ import (
 	"hash/fnv"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -25,12 +24,12 @@ import (
 
 // SgpolicyState security policy state
 type SgpolicyState struct {
-	sync.Mutex
 	NetworkSecurityPolicy *ctkit.NetworkSecurityPolicy `json:"-"` // embedded security policy object
 	groups                map[string]*SecurityGroupState
 	stateMgr              *Statemgr         // pointer to state manager
 	NodeVersions          map[string]string // Map for node -> version
 	ruleStats             []security.SGRuleStatus
+	markedForDelete       bool
 }
 
 func versionToInt(v string) int {
@@ -150,8 +149,8 @@ func (sgp *SgpolicyState) GetKey() string {
 func (sgp *SgpolicyState) Write() error {
 	var err error
 
-	sgp.Lock()
-	defer sgp.Unlock()
+	sgp.NetworkSecurityPolicy.Lock()
+	defer sgp.NetworkSecurityPolicy.Unlock()
 
 	prop := &sgp.NetworkSecurityPolicy.Status.PropagationStatus
 	newProp := sgp.stateMgr.updatePropogationStatus(sgp.NetworkSecurityPolicy.GenerationID, prop, sgp.NodeVersions)
@@ -182,6 +181,7 @@ func (sgp *SgpolicyState) Delete() error {
 	//	}
 	//}
 
+	sgp.markedForDelete = true
 	return nil
 }
 
@@ -249,8 +249,6 @@ func (sm *Statemgr) updateAttachedApps(sgp *security.NetworkSecurityPolicy) erro
 func (sgp *SgpolicyState) initNodeVersions() error {
 	dscs, _ := sgp.stateMgr.ListDistributedServiceCards()
 
-	sgp.Lock()
-	defer sgp.Unlock()
 	// walk all smart nics
 	for _, dsc := range dscs {
 		if sgp.stateMgr.isDscEnforcednMode(&dsc.DistributedServiceCard.DistributedServiceCard) {
@@ -263,11 +261,15 @@ func (sgp *SgpolicyState) initNodeVersions() error {
 	return nil
 }
 
+func (sgp *SgpolicyState) isMarkedForDelete() bool {
+	return sgp.markedForDelete
+}
+
 // processDSCUpdate sgpolicy update handles for DSC
 func (sgp *SgpolicyState) processDSCUpdate(dsc *cluster.DistributedServiceCard) error {
 
-	sgp.Lock()
-	defer sgp.Unlock()
+	sgp.NetworkSecurityPolicy.Lock()
+	defer sgp.NetworkSecurityPolicy.Unlock()
 	if sgp.stateMgr.isDscEnforcednMode(dsc) {
 		log.Infof("DSC %v is being tracked for propogation status for policy %s", dsc.Name, sgp.GetKey())
 		sgp.NodeVersions[dsc.Name] = ""
@@ -505,8 +507,11 @@ func (sm *Statemgr) OnNetworkSecurityPolicyDelete(sgpo *ctkit.NetworkSecurityPol
 		return err
 	}
 
-	//unsubscribe for dsc update
-	sm.unRegisterForDscUpdate(sgp)
+	//Mark fo delete will make sure DSC updates are not received
+	// If we try to unregister, we will be waiting for sm.lock to update DSC notif list
+	// But, sm.lock could be held by DSC update thread, which in turn might be waiting to
+	// update current object.  mark for delete will avoid deadlock
+	sgp.markedForDelete = true
 
 	// delete it from the DB
 	log.Infof("Sending delete to mbus for %#v", sgpo.NetworkSecurityPolicy.ObjectMeta)
@@ -536,8 +541,8 @@ func (sm *Statemgr) UpdateSgpolicyStatus(nodeuuid, tenant, name, generationID st
 	}
 
 	// lock policy for concurrent modifications
-	policy.Lock()
-	defer policy.Unlock()
+	policy.NetworkSecurityPolicy.Lock()
+	defer policy.NetworkSecurityPolicy.Unlock()
 
 	// update node version
 	policy.NodeVersions[nodeuuid] = generationID
