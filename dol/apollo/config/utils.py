@@ -684,6 +684,17 @@ def GetNextSubnet(ip):
 def GetPreviousSubnet(ip):
     return __get_subnet(ip, prev=True)
 
+def GetRandomPrefix(pfx):
+    """
+        return random prefix within the subnet of pfx
+    """
+    pfxLen = pfx.prefixlen
+    maxPfxLen = pfx.max_prefixlen
+    newPfxLen = random.randint(pfxLen, maxPfxLen)
+    newPfxAddr = pfx.network_address + random.getrandbits(maxPfxLen - pfxLen)
+    newPfxStr = f"{str(newPfxAddr)}/{newPfxLen}"
+    return ipaddress.ip_network(newPfxStr, False)
+
 def GetTunnelType(e):
     if e == 'internet-gateway':
         return tunnel_pb2.TUNNEL_TYPE_IGW

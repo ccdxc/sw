@@ -48,6 +48,8 @@ class Resmgr(base.ConfigObjectBase):
     MAX_HOST_INTERFACES = 8 if utils.IsPipelineApulu() else 2
     # Apulu supports 8 lif for now and therefore cfg cannot have more than 8 subnets
     MAX_SUBNET = MAX_HOST_INTERFACES if utils.IsPipelineApulu() else 64
+    MAX_RULES_PER_V4_POLICY = 1023
+    MAX_RULES_PER_V6_POLICY = 15
     if utils.IsPipelineArtemis():
         MAX_POLICY = 1023
         MAX_ROUTE_TABLE = 128
@@ -57,8 +59,7 @@ class Resmgr(base.ConfigObjectBase):
         # 32 vnics, 32 subnets, 5 policies per vnic per direction, 1 policy per subnet per direction
         # ((32 * 5) * 2) + ((32 * 1) * 2) = 384
         MAX_POLICY = 384 # 384 (8G) and 32 (4G)
-        MAX_RULES_PER_V4_POLICY = 1023
-        MAX_RULES_PER_V6_POLICY = 15
+        MAX_RULES_PER_V4_POLICY = 256
         MAX_ROUTE_TABLE = 1024 # 1024 (8G) and 8 (4G)
         MAX_ROUTES_PER_ROUTE_TBL = 16383 # 1023 (8G) and 16383 (4G)
     else:

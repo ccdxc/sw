@@ -423,24 +423,38 @@ class PolicyObjectClient(base.ConfigClientBase):
         return self.GetObjectByKey(node, policyid)
 
     def IsValidConfig(self, node):
-        v4count = sum(list(map(lambda x: len(x), self.__v4ingressobjs[node].values())))
-        v4count += sum(list(map(lambda x: len(x), self.__v4egressobjs[node].values())))
+        v4count = 0
+        v6count = 0
+        policies = self.Objects(node)
+        for policy in policies:
+            numRules = len(policy.rules)
+            if policy.IsV4():
+                v4count += 1
+                if numRules > Resmgr.MAX_RULES_PER_V4_POLICY:
+                    return False, f"{policy}'s rules count {numRules} exceeds "\
+                                  f"allowed limit of "\
+                                  f"{Resmgr.MAX_RULES_PER_V4_POLICY} in {node}"
+            else:
+                v6count += 1
+                if numRules > Resmgr.MAX_RULES_PER_V6_POLICY:
+                    return False, f"{policy}'s rules count {numRules} exceeds "\
+                                  f"allowed limit of "\
+                                  f"{Resmgr.MAX_RULES_PER_V6_POLICY} in {node}"
+
         if  v4count > self.Maxlimit:
             return False, f"V4 Security Policy count {v4count} "\
                           f"exceeds allowed limit of {self.Maxlimit} in {node}"
         elif v4count != 0 and not self.__supported:
             return False, f"IPv4 {self.ObjType.name} is unsupported "\
                           f"- {v4count} found in {node}"
-        logger.info(f"Generated {v4count} IPv4 {self.ObjType.name} "\
-                    f"Objects in {node}")
-        v6count = sum(list(map(lambda x: len(x), self.__v6ingressobjs[node].values())))
-        v6count += sum(list(map(lambda x: len(x), self.__v6egressobjs[node].values())))
         if  v6count > self.Maxlimit:
             return False, f"V6 Security Policy count {v6count} "\
                           f"exceeds allowed limit of {self.Maxlimit} in {node}"
         elif v6count != 0 and not self.__v6supported:
             return False, f"IPv6 {self.ObjType.name} is unsupported "\
                           f"- {v6count} found in {node}"
+        logger.info(f"Generated {v4count} IPv4 {self.ObjType.name} "\
+                    f"Objects in {node}")
         logger.info(f"Generated {v6count} IPv6 {self.ObjType.name} "\
                     f"Objects in {node}")
         return True, ""
@@ -540,12 +554,12 @@ class PolicyObjectClient(base.ConfigClientBase):
 
     def Generate_Allow_All_Rules(self, spfx, dpfx, priority=RulePriority.MAX):
         rules = []
-        #pdb.set_trace()
         # allow all ports
         l4AllPorts = L4MatchObject(True,\
                  sportlow=utils.L4PORT_MIN, sporthigh=utils.L4PORT_MAX,\
                  dportlow=utils.L4PORT_MIN, dporthigh=utils.L4PORT_MAX,\
                 )
+        # TODO: Add wildcards for all
         # allow icmp reply
         l4IcmpReply = L4MatchObject(True, icmptype=0, icmpcode=0)
         # allow icmp request
@@ -568,24 +582,49 @@ class PolicyObjectClient(base.ConfigClientBase):
         # Netagent expects a valid IP address, so if we're in netagent mode,
         # use the subnet prefix, otherwise, default values
         if policyobj.AddrFamily == 'IPV4':
+            count = Resmgr.MAX_RULES_PER_V4_POLICY
             if not GlobalOptions.netagent:
                 pfx = utils.IPV4_DEFAULT_ROUTE
             else:
                 pfx = ipaddress.ip_network(subnetpfx[1])
         else:
+            count = Resmgr.MAX_RULES_PER_V6_POLICY
             if not GlobalOptions.netagent:
                 pfx = utils.IPV6_DEFAULT_ROUTE
             else:
                 pfx = ipaddress.ip_network(subnetpfx[0])
         policyobj.rules = self.Generate_Allow_All_Rules(pfx, pfx)
 
+    def GetRandomRules(self, sPfx, dPfx, count):
+        # TODO: randomize proto once wildcard support for ICMP is in
+        proto = SupportedIPProtos.TCP
+        l4AllPorts = L4MatchObject(True,
+                                   sportlow=utils.L4PORT_MIN,
+                                   sporthigh=utils.L4PORT_MAX,
+                                   dportlow=utils.L4PORT_MIN,
+                                   dporthigh=utils.L4PORT_MAX)
+        rules = []
+        for i in range(count):
+            priority = random.randint(RulePriority.MIN+1, RulePriority.MAX)
+            l3match = L3MatchObject(True, proto,
+                                    srcpfx=utils.GetRandomPrefix(sPfx),
+                                    dstpfx=utils.GetRandomPrefix(dPfx))
+            rule = RuleObject(l3match, l4AllPorts, priority)
+            rules.append(rule)
+        return rules
+
     def Generate_random_rules_from_nacl(self, naclobj, subnetpfx, af):
         # TODO: randomize - Add allow all with default pfx & low prio for now
         if af == utils.IP_VERSION_6:
             pfx = utils.IPV6_DEFAULT_ROUTE
+            count = Resmgr.MAX_RULES_PER_V6_POLICY
         else:
             pfx = utils.IPV4_DEFAULT_ROUTE
-        return self.Generate_Allow_All_Rules(pfx, pfx)
+            count = Resmgr.MAX_RULES_PER_V4_POLICY
+        # TODO: randomize action & priority for DOL
+        defRules = self.Generate_Allow_All_Rules(pfx, pfx)
+        randRules = self.GetRandomRules(pfx, pfx, count-len(defRules))
+        return defRules + randRules
 
     def GenerateVnicPolicies(self, numPolicy, subnet, direction, is_v6=False):
         if not self.__supported:
