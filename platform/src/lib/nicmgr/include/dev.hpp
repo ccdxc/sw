@@ -219,7 +219,7 @@ private:
     // upgrade helper functions
     bool IsDataPathQuiesced(void);
     bool CheckAllDevsDisabled(void);
-    int SendFWDownEvent(void);
+    int SendDeviceReset(void);
 
     // heartbeat events
     timespec_t hb_last;

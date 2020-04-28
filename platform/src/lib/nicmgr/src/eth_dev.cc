@@ -212,6 +212,7 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P) {
     this->dev_api = dev_api;
     this->spec = (struct eth_devspec *)dev_spec;
     this->pd = pd_client;
+    this->is_device_upgrade = false;
     this->loop = loop;
     this->active_lif_set.clear();
     this->host_port_info_addr = 0;
@@ -229,6 +230,7 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info,
     this->spec = dev_info->eth_spec;
     this->pd = pd_client;
     this->dev_resources = *(dev_info->eth_res);
+    this->is_device_upgrade = false;
     this->loop = loop;
     this->active_lif_set.clear();
     this->host_port_info_addr = 0;
@@ -2340,6 +2342,12 @@ Eth::Reset()
         active_lif_set.erase(it->first);
     }
 
+    // set fw status to down if in upgrade process
+    if (is_device_upgrade && !active_lif_set.size()) {
+        SetFwStatus(0);
+        is_device_upgrade = false;
+    }
+
     NIC_LOG_DEBUG("{}: active_lif_cnt: {}", spec->name, active_lif_set.size());
 
     return (IONIC_RC_SUCCESS);
@@ -2402,16 +2410,17 @@ Eth::IsPlatformDev()
 }
 
 int
-Eth::SendFWDownEvent()
-{
-    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
-        EthLif *eth_lif = it->second;
-        NIC_LOG_DEBUG("{}: DBG: setting fw_state to 0", spec->name);
-        eth_lif->SendFWDownEvent();
-    }
+Eth::SendDeviceReset(void) {
+    EthLif *eth_lif;
 
-    // TODO: Wait for device reset before doing this!
-    SetFwStatus(0);
+    // set device in upgrade process
+    this->is_device_upgrade = true;
+
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        eth_lif = it->second;
+        NIC_LOG_DEBUG("{}: sending device Reset", spec->name);
+        eth_lif->SendDeviceReset();
+    }
 
     return 0;
 }
@@ -2441,7 +2450,7 @@ Eth::SetHalClient(devapi *dapi)
 void
 Eth::SetFwStatus(uint8_t fw_status)
 {
-    NIC_LOG_INFO("{}: fw_status {}", spec->name, fw_status);
+    NIC_LOG_INFO("{}: Setting fw_status to {}", spec->name, fw_status);
 
     regs->info.fw_status = fw_status;
 #ifndef __aarch64__

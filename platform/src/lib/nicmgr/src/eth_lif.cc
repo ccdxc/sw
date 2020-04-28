@@ -3195,8 +3195,11 @@ EthLif::XcvrEventHandler(port_status_t *evd)
 }
 
 void
-EthLif::SendFWDownEvent()
-{
+EthLif::SendDeviceReset(void) {
+    uint64_t addr;
+    uint64_t db_data;
+    asic_db_addr_t db_addr = { 0 };
+
     if (!IsLifInitialized()) {
         NIC_LOG_WARN("{}: state: {} Cannot send RESET event when lif is not initialized!",
                      hal_lif_info_.name, lif_state_to_str(state));
@@ -3222,10 +3225,6 @@ EthLif::SendFWDownEvent()
     if (notify_enabled == 0) {
         return;
     }
-
-    uint64_t addr;
-    uint64_t db_data;
-    asic_db_addr_t db_addr = { 0 };
 
     // Send the link event notification
     struct ionic_reset_event msg = {

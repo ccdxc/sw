@@ -178,7 +178,7 @@ public:
     bool IsDevLif(uint32_t lif_id);
     bool IsPlatformDev();
 
-    int SendFWDownEvent();
+    int SendDeviceReset(void);
     void GetEthDevInfo(struct EthDevInfo *dev_info);
     static std::string eth_type_to_str(EthDevType type);
     static EthDevType str_to_eth_type(std::string const &s);
@@ -229,6 +229,8 @@ private:
     ev_check devcmd_check = {0};
     ev_timer devcmd_timer = {0};
     ev_timer stats_timer = {0};
+    // upgrade status
+    bool is_device_upgrade;
 
     bool LoadOprom();
 

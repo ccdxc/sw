@@ -1223,7 +1223,7 @@ DeviceManager::HandleUpgradeEvent(UpgradeEvent event)
                     upgrade_state_to_str(upg_state));
                 break;
             }
-            SendFWDownEvent();
+            SendDeviceReset();
             break;
         default:
             break;
@@ -1235,16 +1235,19 @@ DeviceManager::HandleUpgradeEvent(UpgradeEvent event)
 bool
 DeviceManager::IsDataPathQuiesced()
 {
+    bool is_allDevQuiesced = true;
+
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH) {
             Eth *eth_dev = (Eth *) dev;
-            if (!eth_dev->IsDevQuiesced())
-                return false;
+            if (!eth_dev->IsDevQuiesced()) {
+                is_allDevQuiesced = false;
+            }
         }
     }
 
-    return true;
+    return is_allDevQuiesced;
 }
 
 sdk_ret_t
@@ -1270,26 +1273,28 @@ DeviceManager::RemoveDevice(std::string name)
 bool
 DeviceManager::CheckAllDevsDisabled()
 {
+    bool is_allDevReset = true;
+
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH) {
             Eth *eth_dev = (Eth *) dev;
-            if (!eth_dev->IsDevReset())
-                return false;
+            if (!eth_dev->IsDevReset()) {
+                is_allDevReset = false;
+            }
         }
     }
 
-    return true;
+    return is_allDevReset;
 }
 
 int
-DeviceManager::SendFWDownEvent()
-{
+DeviceManager::SendDeviceReset(void) {
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH) {
             Eth *eth_dev = (Eth *) dev;
-            eth_dev->SendFWDownEvent();
+            eth_dev->SendDeviceReset();
         }
     }
 

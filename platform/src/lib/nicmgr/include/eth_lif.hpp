@@ -130,7 +130,7 @@ class EthLif
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
     void DelphiMountEventHandler(bool mounted);
-    void SendFWDownEvent();
+    void SendDeviceReset(void);
     void HalEventHandler(bool status);
 
     void SetHalClient(devapi *dev_api);
