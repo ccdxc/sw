@@ -1573,7 +1573,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                         rule->attrs.match.l3_match.ip_proto = 17;    // UDP
                         rule->attrs.match.l4_match.sport_range.port_lo = 100;
                         rule->attrs.match.l4_match.sport_range.port_hi = 10000;
-                        if (idx < (num_rules - 3)) {
+                        if (idx < (num_rules - 4)) {
                             if (policy.rule_info->af == IP_AF_IPV4) {
                                 if (ingress) {
                                     rule->attrs.match.l3_match.src_match_type = IP_MATCH_PREFIX;
@@ -1627,19 +1627,19 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                                 dport_base + step - 1;
                             dport_base += step;
                             idx++;
-                        } else if (idx < (num_rules - 2)) {
+                        } else if (idx < (num_rules - 3)) {
                             // catch-all policy within the vpc for UDP traffic
                             rule->attrs.match.l4_match.dport_range.port_lo = 100;
                             rule->attrs.match.l4_match.dport_range.port_hi = 20000;
                             idx++;
-                        } else if (idx < (num_rules - 1)) {
+                        } else if (idx < (num_rules - 2)) {
                             // catch-all policy within the vpc for TCP traffic
                             rule->attrs.match.l3_match.proto_match_type = MATCH_SPECIFIC;
                             rule->attrs.match.l3_match.ip_proto = 6;
                             rule->attrs.match.l4_match.dport_range.port_lo = 0;
                             rule->attrs.match.l4_match.dport_range.port_hi = 65535;
                             idx++;
-                        } else {
+                        } else if (idx < (num_rules - 1)) {
                             // catch-all policy for LPM routes + UDP
                             if (policy.rule_info->af == IP_AF_IPV4) {
                                 if (ingress) {
@@ -1682,6 +1682,18 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                             }
                             rule->attrs.match.l4_match.dport_range.port_lo = 1000;
                             rule->attrs.match.l4_match.dport_range.port_hi = 20000;
+                            idx++;
+                        } else if (apulu()) {
+                            // make last rule a tag based rule
+                            if (ingress) {
+                                rule->attrs.match.l3_match.src_match_type = IP_MATCH_TAG;
+                                rule->attrs.match.l3_match.dst_match_type = IP_MATCH_NONE;
+                                rule->attrs.match.l3_match.src_tag = 1;
+                            } else {
+                                rule->attrs.match.l3_match.src_match_type = IP_MATCH_NONE;
+                                rule->attrs.match.l3_match.dst_match_type = IP_MATCH_TAG;
+                                rule->attrs.match.l3_match.dst_tag = 2;
+                            }
                             done = true;
                             break;
                         }

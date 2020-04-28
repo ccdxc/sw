@@ -35,13 +35,13 @@ rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
         rule_str+=
             "src " + string(ippfx2str(&rule->attrs.match.l3_match.src_ip_pfx)) + ", ";
     } else if (rule->attrs.match.l3_match.src_match_type == IP_MATCH_TAG) {
-        rule_str+= "src " + std::to_string(rule->attrs.match.l3_match.src_tag) + ", ";
+        rule_str+= "stag " + std::to_string(rule->attrs.match.l3_match.src_tag) + ", ";
     }
     if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_PREFIX) {
         rule_str+=
             "dst " + string(ippfx2str(&rule->attrs.match.l3_match.dst_ip_pfx)) + ", ";
     } else if (rule->attrs.match.l3_match.dst_match_type == IP_MATCH_TAG) {
-        rule_str+= "dst " + std::to_string(rule->attrs.match.l3_match.dst_tag) + ", ";
+        rule_str+= "dtag " + std::to_string(rule->attrs.match.l3_match.dst_tag) + ", ";
     }
     if (rule->attrs.match.l3_match.proto_match_type == MATCH_SPECIFIC) {
         if (rule->attrs.match.l3_match.ip_proto == IP_PROTO_ICMP) {
