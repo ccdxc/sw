@@ -12,8 +12,7 @@
             }, 
             "spec": {
                 "type": "UPLINK_ETH",
-                "TxCollectors": ["lif-collector"],
-                "RxCollectors": ["lif-collector"]
+                "mirror-sessions": ["lif-collector"]
             }
         },
         {
@@ -28,8 +27,7 @@
             }, 
             "spec": {
                 "type": "UPLINK_ETH",
-                "TxCollectors": ["lif-collector"],
-                "RxCollectors": ["lif-collector"]
+                "mirror-sessions": ["lif-collector"]
             }
         }
     ], 

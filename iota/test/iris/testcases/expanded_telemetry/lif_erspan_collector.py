@@ -165,7 +165,7 @@ def Trigger(tc):
         #
         # Set up Collector in the remote node
         #
-        if newObjects[0].kind == 'Collector':
+        if newObjects[0].kind == 'InterfaceMirrorSession':
             tc.lif_collector_objects = newObjects
             agent_api.RemoveConfigObjects(tc.lif_collector_objects)
         elif newObjects[0].kind == 'Interface':
@@ -178,7 +178,11 @@ def Trigger(tc):
         #
         if i == 0:
             colObjects = tc.lif_collector_objects
-            ret = eutils.generateLifCollectorConfig(tc, colObjects)
+            if tc.iterators.session == 'single':
+                ret = eutils.generateLifCollectorConfig(tc, colObjects)
+            else:
+                ret = eutils.generateLifCollectorConfigForMultiMirrorSession(tc,
+                             colObjects)
             if ret != api.types.status.SUCCESS:
                 api.Logger.error("Unable to identify Collector Workload")
                 tc.error = True

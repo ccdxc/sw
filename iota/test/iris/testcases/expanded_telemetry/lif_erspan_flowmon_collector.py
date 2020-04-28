@@ -211,7 +211,7 @@ def Trigger(tc):
                 #
                 # Set up Collector in the remote node
                 #
-                if newObjects[0].kind == 'Collector':
+                if newObjects[0].kind == 'InterfaceMirrorSession':
                     tc.lif_collector_objects = newObjects
                     agent_api.RemoveConfigObjects(tc.lif_collector_objects)
                 elif newObjects[0].kind == 'Interface':

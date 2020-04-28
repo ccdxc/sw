@@ -211,7 +211,7 @@ def Trigger(tc):
                 #
                 # Set up Collector in the remote node
                 #
-                if newObjects[0].kind == 'Collector':
+                if newObjects[0].kind == 'InterfaceMirrorSession':
                     tc.lif_collector_objects = newObjects
                     agent_api.RemoveConfigObjects(tc.lif_collector_objects)
                 elif newObjects[0].kind == 'Interface':
@@ -221,20 +221,19 @@ def Trigger(tc):
             #
             # Push Collector object, if applicable
             #
-            if tc.collection == 'distinct':
-                colObjects = tc.lif_collector_objects
-                ret = eutils.generateLifCollectorConfig(tc, colObjects)
-                if ret != api.types.status.SUCCESS:
-                    api.Logger.error("Unable to identify Collector Workload")
-                    tc.error = True
-                    return api.types.status.FAILURE
+            colObjects = tc.lif_collector_objects
+            ret = eutils.generateLifCollectorConfig(tc, colObjects)
+            if ret != api.types.status.SUCCESS:
+                api.Logger.error("Unable to identify Collector Workload")
+                tc.error = True
+                return api.types.status.FAILURE
 
-                ret = agent_api.PushConfigObjects(colObjects, 
-                                                  [tc.naples.node_name])
-                if ret != api.types.status.SUCCESS:
-                    api.Logger.error("Unable to push collector objects")
-                    tc.error = True
-                    return api.types.status.FAILURE
+            ret = agent_api.PushConfigObjects(colObjects, 
+                                              [tc.naples.node_name])
+            if ret != api.types.status.SUCCESS:
+                api.Logger.error("Unable to push collector objects")
+                tc.error = True
+                return api.types.status.FAILURE
 
             #
             # Push Mirror Config to Naples
@@ -242,9 +241,8 @@ def Trigger(tc):
             ret = agent_api.PushConfigObjects(newMirrorObjects,
                                               [tc.naples.node_name])
             if ret != api.types.status.SUCCESS:
-                if tc.collection == 'distinct':
-                    agent_api.DeleteConfigObjects(tc.lif_collector_objects, 
-                                                  [tc.naples.node_name])
+                agent_api.DeleteConfigObjects(tc.lif_collector_objects, 
+                                              [tc.naples.node_name])
                 api.Logger.error("Unable to push mirror objects")
                 tc.error = True
                 return api.types.status.FAILURE
@@ -253,33 +251,22 @@ def Trigger(tc):
             # Update Interface objects
             #
             ifObjects = tc.interface_objects
-            if tc.collection == 'distinct':
-                ret = eutils.generateLifInterfaceConfig(tc, ifObjects, 
-                                                       tc.lif_collector_objects)
-                if ret != api.types.status.SUCCESS:
-                    agent_api.DeleteConfigObjects(tc.lif_collector_objects, 
-                                                  [tc.naples.node_name])
-                    agent_api.DeleteConfigObjects(newMirrorObjects, 
-                                                  [tc.naples.node_name])
-                    api.Logger.error("Unable to identify Uplink/LIF Interfaces")
-                    tc.error = True
-                    return api.types.status.FAILURE
-            else:
-                ret = eutils.generateLifInterfaceConfigUsingMirrorConfig(tc,
-                                                    ifObjects, newMirrorObjects)
-                if ret != api.types.status.SUCCESS:
-                    agent_api.DeleteConfigObjects(newMirrorObjects, 
-                                                  [tc.naples.node_name])
-                    api.Logger.error("Unable to identify Uplink/LIF Interfaces")
-                    tc.error = True
-                    return api.types.status.FAILURE
+            ret = eutils.generateLifInterfaceConfig(tc, ifObjects, 
+                                                   tc.lif_collector_objects)
+            if ret != api.types.status.SUCCESS:
+                agent_api.DeleteConfigObjects(tc.lif_collector_objects, 
+                                              [tc.naples.node_name])
+                agent_api.DeleteConfigObjects(newMirrorObjects, 
+                                              [tc.naples.node_name])
+                api.Logger.error("Unable to identify Uplink/LIF Interfaces")
+                tc.error = True
+                return api.types.status.FAILURE
 
             ret = agent_api.UpdateConfigObjects(ifObjects, 
                                                [tc.naples.node_name])
             if ret != api.types.status.SUCCESS:
-                if tc.collection == 'distinct':
-                    agent_api.DeleteConfigObjects(tc.lif_collector_objects, 
-                                                  [tc.naples.node_name])
+                agent_api.DeleteConfigObjects(tc.lif_collector_objects, 
+                                              [tc.naples.node_name])
                 agent_api.DeleteConfigObjects(newMirrorObjects, 
                                               [tc.naples.node_name])
                 api.Logger.error("Unable to update interface objects")
@@ -383,17 +370,12 @@ def Trigger(tc):
                 resp_tcpdump_flow_erspan, term_resp_tcpdump_flow_erspan)
 
             # Delete the objects
-            if tc.collection == 'distinct':
-                eutils.deGenerateLifInterfaceConfig(tc, tc.interface_objects, 
-                                                    tc.lif_collector_objects)
-            else:
-                eutils.deGenerateLifInterfaceConfigUsingMirrorConfig(tc, 
-                                         tc.interface_objects, newMirrorObjects)
+            eutils.deGenerateLifInterfaceConfig(tc, tc.interface_objects, 
+                                                tc.lif_collector_objects)
             agent_api.UpdateConfigObjects(tc.interface_objects,
                                          [tc.naples.node_name])
-            if tc.collection == 'distinct':
-                agent_api.DeleteConfigObjects(tc.lif_collector_objects, 
-                                              [tc.naples.node_name])
+            agent_api.DeleteConfigObjects(tc.lif_collector_objects, 
+                                          [tc.naples.node_name])
             agent_api.DeleteConfigObjects(newMirrorObjects, 
                                           [tc.naples.node_name])
 

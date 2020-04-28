@@ -2,7 +2,7 @@
     "objects": [
         {
             "status": {}, 
-            "kind": "Collector", 
+            "kind": "InterfaceMirrorSession", 
             "meta": {
                 "creation-time": "1970-01-01T00:00:00Z", 
                 "mod-time": "1970-01-01T00:00:00Z", 
@@ -12,13 +12,20 @@
             }, 
             "spec": {
                 "packet-size": 128,
-                "destination": "192.168.100.101",
-                "type": "erspan_type_3",
-                "strip-vlan-hdr": false
+                "mirror-direction": 0,
+                "collectors": [
+                    {
+                        "export-config": {
+                            "destination": "192.168.100.101"
+                        },
+                        "type": "erspan_type_3",
+                        "strip-vlan-hdr": false
+                    }
+                ]
             }
         }
     ], 
     "type": "netagent", 
-    "rest-endpoint": "api/collectors/", 
+    "rest-endpoint": "api/mirror/interface-sessions/", 
     "object-key": "meta.tenant/meta.namespace/meta.name"
 }

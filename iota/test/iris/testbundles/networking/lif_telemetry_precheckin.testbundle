@@ -19,6 +19,7 @@ testcases:
             pktsize   : [128]
             peer      : [remote]
             collector : [remote]
+            session   : [single, multiple]
             vlan      : [native, tag]
             iftype    : [uplink]
             direction : [ingress, egress, both]
@@ -30,4 +31,5 @@ testcases:
             type      : precheckin
             ps_2263   : [bypass]
             ps_2790   : [bypass]
+            pkt_count : [bypass]
 

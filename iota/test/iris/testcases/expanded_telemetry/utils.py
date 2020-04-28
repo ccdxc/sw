@@ -49,6 +49,10 @@ IPFIX_HEADER_LEN = 16
 ERSPAN_COLLECTOR_MAX_IN_ESX = 2
 FLOWMON_COLLECTOR_MAX       = 4
 
+MIRROR_DIR_BOTH    = 0
+MIRROR_DIR_INGRESS = 1
+MIRROR_DIR_EGRESS  = 2
+
 #
 # Add a Command in the context of a Workload
 #
@@ -520,6 +524,40 @@ def establishCollectorWorkloadInClassicMode(tc, template_collector_ip):
 # Superimpose template-collector-config with Workload-IP-attributes
 #
 def generateLifCollectorConfig(tc, colObjects):
+    i = 0
+    for obj in colObjects:
+        obj.meta.name = "lif-collector-{}".format(i)
+        obj.spec.packet_size = tc.iterators.pktsize
+
+        if tc.iterators.direction == 'ingress':
+            obj.spec.mirror_direction = MIRROR_DIR_INGRESS
+        elif tc.iterators.direction == 'egress':
+            obj.spec.mirror_direction = MIRROR_DIR_EGRESS
+        elif tc.iterators.direction == 'both':
+            obj.spec.mirror_direction = MIRROR_DIR_BOTH
+
+        for c in range(0, len(tc.lif_collector)):
+            idx = tc.lif_collector_idx[c]
+            if c != 0:
+                tmp = copy.deepcopy(obj.spec.collectors[0])
+                obj.spec.collectors.append(tmp)
+            obj.spec.collectors[c].export_config.destination = \
+                                   tc.collector_ip_address[idx]
+            if tc.collector_erspan_type[idx] == 'type_2':
+                obj.spec.collectors[c].type = 'erspan_type_2'
+            elif tc.collector_erspan_type[idx] == 'type_3':
+                obj.spec.collectors[c].type = 'erspan_type_3'
+            obj.spec.collectors[c].strip_vlan_hdr = tc.collector_vlan_strip[idx]
+
+        i += 1
+
+    return api.types.status.SUCCESS
+
+#
+# Superimpose template-collector-config with Workload-IP-attributes
+# Multiple InterfaceMirrorSessions case
+#
+def generateLifCollectorConfigForMultiMirrorSession(tc, colObjects):
     for c in range(0, len(tc.lif_collector)):
         idx = tc.lif_collector_idx[c]
         if c != 0:
@@ -527,13 +565,21 @@ def generateLifCollectorConfig(tc, colObjects):
             colObjects.append(tmp)
         colObjects[c].meta.name = "lif-collector-{}".format(c)
         colObjects[c].spec.packet_size = tc.iterators.pktsize
-        colObjects[c].spec.destination = tc.collector_ip_address[idx]
+        if tc.iterators.direction == 'ingress':
+            colObjects[c].spec.mirror_direction = MIRROR_DIR_INGRESS
+        elif tc.iterators.direction == 'egress':
+            colObjects[c].spec.mirror_direction = MIRROR_DIR_EGRESS
+        elif tc.iterators.direction == 'both':
+            colObjects[c].spec.mirror_direction = MIRROR_DIR_BOTH
 
+        colObjects[c].spec.collectors[0].export_config.destination = \
+                                         tc.collector_ip_address[idx]
         if tc.collector_erspan_type[idx] == 'type_2':
-            colObjects[c].spec.type = 'erspan_type_2'
+            colObjects[c].spec.collectors[0].type = 'erspan_type_2'
         elif tc.collector_erspan_type[idx] == 'type_3':
-            colObjects[c].spec.type = 'erspan_type_3'
-        colObjects[c].spec.strip_vlan_hdr = tc.collector_vlan_strip[idx]
+            colObjects[c].spec.collectors[0].type = 'erspan_type_3'
+        colObjects[c].spec.collectors[0].strip_vlan_hdr = \
+                                         tc.collector_vlan_strip[idx]
 
     return api.types.status.SUCCESS
 
@@ -602,63 +648,14 @@ def generateLifInterfaceConfig(tc, ifObjects, colObjects):
     i = 0
     for obj in ifObjects:
         obj.meta.name = tc.if_name[i]
-        if tc.iterators.direction == 'ingress':
-            obj.spec.TxCollectors.pop()
-        elif tc.iterators.direction == 'egress':
-            obj.spec.RxCollectors.pop()
 
         for c in range(0, len(colObjects)):
-            if tc.iterators.direction == 'ingress' or\
-               tc.iterators.direction == 'both':
-                if c != 0:
-                    tmp = copy.deepcopy(obj.spec.RxCollectors[0])
-                    obj.spec.RxCollectors.append(tmp)
-                obj.spec.RxCollectors[c] = colObjects[c].meta.name
+            if c != 0:
+                tmp = copy.deepcopy(obj.spec.mirror_sessions[0])
+                obj.spec.mirror_sessions.append(tmp)
+            obj.spec.mirror_sessions[c] = "default/default/{}"\
+                     .format(colObjects[c].meta.name)
 
-            if tc.iterators.direction == 'egress' or\
-               tc.iterators.direction == 'both':
-                if c != 0:
-                    tmp = copy.deepcopy(obj.spec.TxCollectors[0])
-                    obj.spec.TxCollectors.append(tmp)
-                obj.spec.TxCollectors[c] = colObjects[c].meta.name
-        i += 1
-
-    return api.types.status.SUCCESS
-
-#
-# Superimpose template-if-config with Netagent-objects' IfNames
-#
-def generateLifInterfaceConfigUsingMirrorConfig(tc, ifObjects, mirrorObjects):
-    result = getIfNames(tc, ifObjects)
-    if result != api.types.status.SUCCESS:
-        return result
-
-    i = 0
-    for obj in ifObjects:
-        obj.meta.name = tc.if_name[i]
-        if tc.iterators.direction == 'ingress':
-            obj.spec.TxCollectors.pop()
-        elif tc.iterators.direction == 'egress':
-            obj.spec.RxCollectors.pop()
-
-        for c in range(0, len(mirrorObjects[0].spec.collectors)):
-            if tc.iterators.direction == 'ingress' or\
-               tc.iterators.direction == 'both':
-                if c != 0:
-                    tmp = copy.deepcopy(obj.spec.RxCollectors[0])
-                    obj.spec.RxCollectors.append(tmp)
-                obj.spec.RxCollectors[c] = "{}--{}"\
-                .format(mirrorObjects[0].meta.name, 
-                mirrorObjects[0].spec.collectors[c].export_config.destination)
-
-            if tc.iterators.direction == 'egress' or\
-               tc.iterators.direction == 'both':
-                if c != 0:
-                    tmp = copy.deepcopy(obj.spec.TxCollectors[0])
-                    obj.spec.TxCollectors.append(tmp)
-                obj.spec.TxCollectors[c] = "{}--{}"\
-                .format(mirrorObjects[0].meta.name, 
-                mirrorObjects[0].spec.collectors[c].export_config.destination)
         i += 1
 
     return api.types.status.SUCCESS
@@ -668,28 +665,8 @@ def generateLifInterfaceConfigUsingMirrorConfig(tc, ifObjects, mirrorObjects):
 #
 def deGenerateLifInterfaceConfig(tc, ifObjects, colObjects):
     for obj in ifObjects:
-        if tc.iterators.direction == 'ingress' or\
-           tc.iterators.direction == 'both':
-            for c in range(0, len(colObjects)):
-                obj.spec.RxCollectors.pop()
-        if tc.iterators.direction == 'egress' or\
-           tc.iterators.direction == 'both':
-            for c in range(0, len(colObjects)):
-                obj.spec.TxCollectors.pop()
-
-#
-# Superimpose template-if-config with Mirror-references removal
-#
-def deGenerateLifInterfaceConfigUsingMirrorConfig(tc, ifObjects, mirrorObjects):
-    for obj in ifObjects:
-        if tc.iterators.direction == 'ingress' or\
-           tc.iterators.direction == 'both':
-            for c in range(0, len(mirrorObjects[0].spec.collectors)):
-                obj.spec.RxCollectors.pop()
-        if tc.iterators.direction == 'egress' or\
-           tc.iterators.direction == 'both':
-            for c in range(0, len(mirrorObjects[0].spec.collectors)):
-                obj.spec.TxCollectors.pop()
+        for c in range(0, len(colObjects)):
+            obj.spec.mirror_sessions.pop()
 
 #
 # Superimpose template-mirror-config with Workload-IP-attributes
@@ -1256,13 +1233,16 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                     dip = int(ipaddress.ip_address(pkt[ERSPAN_III][IP].dst))
 
                     # Extract L4-ports from inner-L4-header
-                    if pkt[ERSPAN_III].haslayer(TCP) and not pkt[ERSPAN_III].haslayer(ICMP):
+                    if ip_proto == IP_PROTO_TCP and\
+                       pkt[ERSPAN_III].haslayer(TCP):
                         sport = int(pkt[ERSPAN_III][TCP].sport)
                         dport = int(pkt[ERSPAN_III][TCP].dport)
-                    elif pkt[ERSPAN_III].haslayer(UDP) and not pkt[ERSPAN_III].haslayer(ICMP):
+                    elif ip_proto == IP_PROTO_UDP and\
+                         pkt[ERSPAN_III].haslayer(UDP):
                         sport = int(pkt[ERSPAN_III][UDP].sport)
                         dport = int(pkt[ERSPAN_III][UDP].dport)
-                    elif pkt[ERSPAN_III].haslayer(ICMP):
+                    elif ip_proto == IP_PROTO_ICMP and\
+                         pkt[ERSPAN_III].haslayer(ICMP):
                         sport = (int(pkt[ERSPAN_III][ICMP].type) << 8) |\
                                      int(pkt[ERSPAN_III][ICMP].code)
                 elif tc.feature == 'flow-erspan':
@@ -1294,13 +1274,16 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                     dip = int(ipaddress.ip_address(pkt[ERSPAN_II][IP].dst))
 
                     # Extract L4-ports from inner-L4-header
-                    if pkt[ERSPAN_II].haslayer(TCP) and not pkt[ERSPAN_II].haslayer(ICMP):
+                    if ip_proto == IP_PROTO_TCP and\
+                       pkt[ERSPAN_II].haslayer(TCP):
                         sport = int(pkt[ERSPAN_II][TCP].sport)
                         dport = int(pkt[ERSPAN_II][TCP].dport)
-                    elif pkt[ERSPAN_II].haslayer(UDP) and not pkt[ERSPAN_II].haslayer(ICMP):
+                    elif ip_proto == IP_PROTO_UDP and\
+                         pkt[ERSPAN_II].haslayer(UDP):
                         sport = int(pkt[ERSPAN_II][UDP].sport)
                         dport = int(pkt[ERSPAN_II][UDP].dport)
-                    elif pkt[ERSPAN_II].haslayer(ICMP):
+                    elif ip_proto == IP_PROTO_ICMP and\
+                         pkt[ERSPAN_II].haslayer(ICMP):
                         sport = (int(pkt[ERSPAN_II][ICMP].type) << 8) |\
                                  int(pkt[ERSPAN_II][ICMP].code)
                 elif tc.feature == 'flow-erspan':
@@ -1345,7 +1328,7 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                             tc.tcp_erspan_pkts_expected,
                             tc.collector_ip_address[idx]))
                     pkt_count_error = True
-                    if tc.args.type == 'regression':
+                    if tc.args.pkt_count == 'check':
                         tc.result[c] = api.types.status.FAILURE
 
         #
@@ -1360,7 +1343,8 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                         tc.udp_erspan_pkts_expected,
                         tc.collector_ip_address[idx]))
                 pkt_count_error = True
-                if tc.args.type == 'regression':
+                if tc.args.pkt_count == 'check' or\
+                   api.GetNodeOs(tc.naples_peer.node_name) != 'esx':
                     tc.result[c] = api.types.status.FAILURE
 
         #
@@ -1375,8 +1359,15 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
                         tc.icmp_erspan_pkts_expected,
                         tc.collector_ip_address[idx]))
                 pkt_count_error = True
-                if tc.args.type == 'regression':
+                if tc.args.pkt_count == 'check' or\
+                   api.GetNodeOs(tc.naples_peer.node_name) != 'esx':
                     tc.result[c] = api.types.status.FAILURE
+
+        if tc.collector_tcp_pkts[c] == 0 and tc.collector_udp_pkts[c] == 0 and\
+           tc.collector_icmp_pkts[c] == 0:
+            api.Logger.error("ERROR: No ERSPAN packets to {}"\
+                             .format(tc.collector_ip_address[idx]))
+            result = api.types.status.FAILURE
 
         # For failed cases, print pkts for debug
         if tc.result[c] == api.types.status.FAILURE or\
