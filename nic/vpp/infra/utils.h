@@ -14,4 +14,18 @@ typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
 #define BIT_SET(flags, pos)     ((flags) |= (pos))
 #define BIT_ISSET(flags, pos)   ((flags) & (pos))
 
+static inline void
+pds_host_to_net_u24 (uint8_t *data)
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    // swap bytes
+    if (data[0] != data[2]) {
+        data[0] ^= data[2];
+        data[2] ^= data[0];
+        data[0] ^= data[2];
+    }
+#endif
+    return;
+}
+
 #endif    // __VPP_INFRA_UTILS_H__

@@ -539,6 +539,7 @@ pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
             // BD VNID takes 3 bytes and vnicid takes 2 bytes
             o->data[len++] = PDS_DHCP_OPT_82_CIRC_ID_LEN;
             clib_memcpy(&o->data[len], &l2_vni, 3);  // l2 vnid
+            pds_host_to_net_u24((u8 *) &o->data[len]);
             len += 3;
             u16 *vnic_id = (u16 *) & o->data[len];
             *vnic_id = vnet_buffer(b)->pds_dhcp_data.vnic_id;  // vnic id
@@ -573,6 +574,7 @@ pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
             o->data[len++] = PDS_DHCP_OPT_82_VSS_LEN;
             o->data[len++] = 0x01;    // vss type 1
             clib_memcpy(&o->data[len], &l3_vni, 3);  // l3 vnid or vrf
+            pds_host_to_net_u24((u8 *) &o->data[len]);
             len += 3;
             clib_memset(&o->data[len], 0x0, 4);
             len+= sizeof(u32);
