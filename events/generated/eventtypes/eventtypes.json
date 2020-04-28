@@ -283,7 +283,7 @@
  "network": [
   {
    "Name": "BGP_SESSION_DOWN",
-   "Severity": "info",
+   "Severity": "warn",
    "Desc": "BGP session is down"
   },
   {

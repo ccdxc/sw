@@ -8,7 +8,7 @@
     {
         "name": "BGP_SESSION_DOWN",
         "category": "Network",
-        "severity": "INFO",
+        "severity": "WARN",
         "description": "BGP session is down"
     }
 ]

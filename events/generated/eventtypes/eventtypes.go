@@ -596,7 +596,7 @@ func init() {
 
 	eventTypes[BGP_SESSION_DOWN] = &EventTypeAttributes{
 		EType:      BGP_SESSION_DOWN.String(),
-		Severity:   "info",
+		Severity:   "warn",
 		Category:   "network",
 		Desc:       "BGP session is down",
 		SuppressMM: true}

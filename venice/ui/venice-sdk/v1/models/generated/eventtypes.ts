@@ -380,7 +380,7 @@ export const eventTypes: { [name: string]: EventType } = {
   },
   'BGP_SESSION_DOWN' : {
       "Name": "BGP_SESSION_DOWN",
-      "Severity": EventsEvent_severity.info,
+      "Severity": EventsEvent_severity.warn,
       "Desc": "BGP session is down",
   },
   'BGP_SESSION_ESTABLISHED' : {

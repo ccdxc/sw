@@ -390,7 +390,7 @@ enum EventTypes {
                                            (desc)             = "BGP session is established",
                                            (suppress_mm)      = true];
     BGP_SESSION_DOWN                      = 1202 [(category) = Network,
-                                           (severity)         = INFO,
+                                           (severity)         = WARN,
                                            (desc)             = "BGP session is down",
                                            (suppress_mm)      = true];
 }
