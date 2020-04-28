@@ -48,23 +48,25 @@ as this *won't* guarantee the correct version of dep binary.
 Also make sure that `which dep` always points to the one in `$GOPATH/bin`
 
 #### Adding newer dependencies
-- `dep ensure -add github.com/foo/bar`
+- Run `dep ensure -add github.com/foo/bar`
+- Run `make dep`
 - import github.com/foo/bar in your code.
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
 #### Updating existing dependencies
 - Update the semver in `Gopkg.toml`
-- Run `dep ensure`
+- Run `make dep`
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
 #### Removing dependencies
 - Remove the imports from source.
-- Run `dep ensure`
+- Run `make dep`
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
 #### Working with pensando forks.
 - Submit a PR for the upstream fork and get it merged.
 - Run `dep ensure -update github.com/pensando/foo`
+- Run `make dep`
 - Commit `Gopkg.lock`, vendored code and `Gopkg.toml`
 
 #### Semantic versioning cheatsheet
