@@ -146,6 +146,16 @@
                                         "Method" : 0,
 					"Command" : "curl localhost:9007/api/debug/goroutine?debug=1"
                                 },
+				{
+                                        "Name" : "Show DSCConfig Object",
+                                        "Method" : 0,
+                                        "Command" : "curl localhost:9008/api/v1/naples/ | jq ."
+                                },
+				{
+                                        "Name" : "Show Venice DSC Object as seen by NMD",
+                                        "Method" : 0,
+                                        "Command" : "curl localhost:9008/api/v1/naples/info/ | jq ."
+                                },
                                 {
                                         "Name" : "Show Session Count",
                                         "Method" : 0,
