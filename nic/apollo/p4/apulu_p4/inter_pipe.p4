@@ -67,17 +67,19 @@ action ingress_to_rxdma() {
                    APULU_CPU_FLAGS_IPV6_1_VALID);
         }
     }
-    if (ethernet_2.valid == TRUE) {
-        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-               APULU_CPU_FLAGS_ETH_2_VALID);
-    }
-    if (ipv4_2.valid == TRUE) {
-        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-               APULU_CPU_FLAGS_IPV4_2_VALID);
-    } else {
-        if (ipv6_2.valid == TRUE) {
+    if (control_metadata.tunneled_packet == TRUE) {
+        if (ethernet_2.valid == TRUE) {
             bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-                   APULU_CPU_FLAGS_IPV6_2_VALID);
+                   APULU_CPU_FLAGS_ETH_2_VALID);
+        }
+        if (ipv4_2.valid == TRUE) {
+            bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                   APULU_CPU_FLAGS_IPV4_2_VALID);
+        } else {
+            if (ipv6_2.valid == TRUE) {
+                bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                       APULU_CPU_FLAGS_IPV6_2_VALID);
+            }
         }
     }
     modify_field(p4i_to_arm.flags, scratch_metadata.cpu_flags);
