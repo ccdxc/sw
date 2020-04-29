@@ -6,7 +6,6 @@ import evpn_pb2
 import types_pb2
 import socket
 import struct
-import defines
 
 stub = None
 channel = None
@@ -46,7 +45,7 @@ def create_req():
     if not autord:
         req_msg.RD = rd_str
     req_msg.RTType = rttype
-    resp = stub.EvpnEviCreate(req)
+    resp = stub.EvpnEviCreate(req)     
     process_response(req, resp)
     return
 
@@ -60,7 +59,7 @@ def update_req():
     if not autord:
         req_msg.RD = rd_str
     req_msg.RTType = rttype
-    resp = stub.EvpnEviUpdate(req)
+    resp = stub.EvpnEviUpdate(req)     
     process_response(req, resp)
     return
 
@@ -68,13 +67,13 @@ def get_req():
     req = evpn_pb2.EvpnEviGetRequest()
     req_msg = req.Request.add()
     req_msg.Key.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    resp =  stub.EvpnEviGet(req)
+    resp =  stub.EvpnEviGet(req)     
     process_response(req, resp)
     return
 
 def get_all_req():
     req = evpn_pb2.EvpnEviGetRequest()
-    resp =  stub.EvpnEviGet(req)
+    resp =  stub.EvpnEviGet(req)     
     process_response(req, resp)
     return
 
@@ -82,14 +81,14 @@ def delete_req():
     req = evpn_pb2.EvpnEviDeleteRequest()
     req_msg = req.Request.add()
     req_msg.Key.SubnetId = subnetid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
-    resp = stub.EvpnEviDelete(req)
+    resp = stub.EvpnEviDelete(req)     
     process_response(req, resp)
     return
 
 def init():
     global channel
     global stub
-    server = 'localhost:'+ str(defines.AGENT_GRPC_PORT)
+    server = 'localhost:50054'
     channel = grpc.insecure_channel(server)
     stub = evpn_pb2.EvpnSvcStub(channel)
     return

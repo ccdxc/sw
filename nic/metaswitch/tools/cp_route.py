@@ -7,7 +7,6 @@ import types_pb2
 import common_pb2
 import socket
 import struct
-import defines
 
 stub = None
 channel = None
@@ -26,7 +25,7 @@ def process_response(req_msg, resp_msg):
             print ("Dest Addr: %s"  % long2ip(socket.ntohl(spec.DestAddr.V4Addr)))
             print ("Prefix Len: %d"% spec.PrefixLen)
             print ("Nexthop Addr: %s"  % long2ip(socket.ntohl(spec.NextHopAddr.V4Addr)))
-            print ("State : %d"%spec.State)
+            print ("State : %d"%spec.State) 
             print ("Override: %d"%spec.Override)
             print ("AdminDist: %d"%spec.AdminDist)
     elif "CPRouteGetResponse" in resp_msg.DESCRIPTOR.name:
@@ -48,7 +47,7 @@ def process_response(req_msg, resp_msg):
 
 def ip2long(ip):
     packedIP = socket.inet_aton(ip)
-    return struct.unpack("!L", packedIP)[0]
+    return struct.unpack("!L", packedIP)[0] 
 def long2ip(addr):
     return socket.inet_ntoa(struct.pack('!L', addr))
 
@@ -64,7 +63,7 @@ def create_req():
     req_msg.State = state
     req_msg.Override = override
     req_msg.AdminDist = admindist
-    resp = stub.CPStaticRouteCreate(req)
+    resp = stub.CPStaticRouteCreate(req)     
     process_response(req, resp)
     return
 
@@ -80,7 +79,7 @@ def update_req():
     req_msg.State = state
     req_msg.Override = override
     req_msg.AdminDist = admindist
-    resp = stub.CPStaticRouteUpdate(req)
+    resp = stub.CPStaticRouteUpdate(req)     
     process_response(req, resp)
     return
 
@@ -92,13 +91,13 @@ def get_req():
     req_msg.NextHopAddr.Af = 1
     req_msg.NextHopAddr.V4Addr = nhaddr
     req_msg.PrefixLen = prefixlen
-    resp =  stub.CPStaticRouteGet(req)
+    resp =  stub.CPStaticRouteGet(req)     
     process_response(req, resp)
     return
 
 def get_all_req():
     req = cp_route_pb2.CPStaticRouteRequest()
-    resp =  stub.CPStaticRouteGet(req)
+    resp =  stub.CPStaticRouteGet(req)     
     process_response(req, resp)
     return
 
@@ -116,14 +115,14 @@ def delete_req():
     req_msg.NextHopAddr.Af = 1
     req_msg.NextHopAddr.V4Addr = nhaddr
     req_msg.PrefixLen = prefixlen
-    resp = stub.CPStaticRouteDelete(req)
+    resp = stub.CPStaticRouteDelete(req)     
     process_response(req, resp)
     return
 
 def init():
     global channel
     global stub
-    server = 'localhost:' + str(defines.AGENT_GRPC_PORT)
+    server = 'localhost:50054'
     channel = grpc.insecure_channel(server)
     stub = cp_route_pb2.CPRouteSvcStub(channel)
     return

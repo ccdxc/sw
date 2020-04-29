@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	pdsGRPCDefaultPort    = "11357"
+	pdsGRPCDefaultPort    = "50054"
 	pdsGRPCDefaultBaseURL = "localhost"
 )
 

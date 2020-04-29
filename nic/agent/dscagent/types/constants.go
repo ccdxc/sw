@@ -139,10 +139,10 @@ const (
 	HalGRPCDefaultBaseURL = "127.0.0.1"
 
 	// HalGRPCDefaultPort is the default port for HAL
-	HalGRPCDefaultPort = "11357"
+	HalGRPCDefaultPort = "50054"
 
 	// HalGRPCDefaultURL is the default HAL gRPC URL
-	HalGRPCDefaultURL = "127.0.0.1:11357"
+	HalGRPCDefaultURL = "127.0.0.1:50054"
 
 	// HalGRPCWaitTimeout is the timeout for which agent will wait for HAL to be up
 	HalGRPCWaitTimeout = time.Minute * 10

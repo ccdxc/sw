@@ -979,7 +979,7 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:11357",
+    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:50054",
             grpc::InsecureChannelCredentials());
     g_device_stub_  = DeviceSvc::NewStub (channel);
     g_if_stub_      = IfSvc::NewStub (channel);

@@ -119,7 +119,7 @@ class ApolloAgentClient:
         try:
             port = os.environ['AGENT_GRPC_PORT']
         except:
-            port = '11357'
+            port = '9999'
         return port;
 
     def __get_agent_ip(self):

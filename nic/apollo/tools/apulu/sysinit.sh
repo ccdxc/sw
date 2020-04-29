@@ -31,7 +31,7 @@ fi
 cd /
 ifconfig lo up
 
-sysctl -w net.ipv4.ip_local_reserved_ports=11357,11358,9007,9008,11359,11360
+sysctl -w net.ipv4.ip_local_reserved_ports=50054,51512,9007,9008,11359,11360
 
 # load kernel modules for mnics
 insmod $PDSPKG_TOPDIR/bin/ionic_mnic.ko &> $NON_PERSISTENT_LOGDIR/ionic_mnic_load.log

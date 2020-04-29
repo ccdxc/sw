@@ -101,7 +101,7 @@ main (int argc, char **argv)
                 print_usage(argv);
                 exit(1);
             }
-            g_svc_endpoint_ = g_svc_endpoint_ + ":11357";
+            g_svc_endpoint_ = g_svc_endpoint_ + ":50054";
             break;
 
         default:

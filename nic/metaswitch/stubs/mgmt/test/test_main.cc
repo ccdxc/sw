@@ -158,7 +158,7 @@ class Client {
 };
 
 int main(int argc, char** argv) {
-    Client client(grpc::CreateChannel("localhost:11357",
+    Client client(grpc::CreateChannel("localhost:50054",
             grpc::InsecureChannelCredentials()));
 
 
