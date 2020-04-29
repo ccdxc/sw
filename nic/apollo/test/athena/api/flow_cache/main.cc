@@ -9,9 +9,11 @@
 ///
 //----------------------------------------------------------------------------
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/test/api/utils/base.hpp"
 #include "nic/apollo/api/include/athena/pds_init.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/test/api/utils/base.hpp"
+#include "nic/apollo/test/athena/api/include/trace.hpp"
 #include "ftl_p4pd_mock.hpp"
 #include "ftltest_utils.hpp"
 
@@ -21,6 +23,8 @@ sdk_ret_t pds_flow_cache_create(void);
 void pds_flow_cache_delete(void);
 void pds_flow_cache_set_core_id(uint32_t core_id);
 }
+
+sdk_logger::trace_cb_t g_trace_cb;
 
 namespace test {
 namespace api {
@@ -115,6 +119,8 @@ TEST_F(flow_cache_test, flow_cache_crud) {
     SDK_ASSERT(pds_flow_cache_entry_delete(&key) == PDS_RET_OK);
     SDK_ASSERT(pds_flow_cache_entry_read(&key, &info) == PDS_RET_ENTRY_NOT_FOUND);
 
+    SDK_ASSERT(pds_flow_cache_entry_read(NULL, &info) == PDS_RET_INVALID_ARG);
+
     SDK_ASSERT(pds_flow_cache_entry_iterate(dump_flow, &iter_cb_arg) ==
                PDS_RET_OK);
 
@@ -131,5 +137,6 @@ TEST_F(flow_cache_test, flow_cache_crud) {
 int
 main (int argc, char **argv)
 {
+    register_trace_cb(sdk_test_logger);
     return api_test_program_run(argc, argv);
 }

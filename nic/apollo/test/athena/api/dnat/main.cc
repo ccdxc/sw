@@ -9,8 +9,10 @@
 ///
 //----------------------------------------------------------------------------
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/test/api/utils/base.hpp"
 #include "nic/apollo/api/include/athena/pds_dnat.h"
+#include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/test/api/utils/base.hpp"
+#include "nic/apollo/test/athena/api/include/trace.hpp"
 #include "ftl_p4pd_mock.hpp"
 
 extern "C" {
@@ -19,6 +21,8 @@ sdk_ret_t pds_dnat_map_create(void);
 sdk_ret_t pds_dnat_map_delete(void);
 void pds_dnat_map_set_core_id(uint32_t core_id);
 }
+
+sdk_logger::trace_cb_t g_trace_cb;
 
 namespace test {
 namespace api {
@@ -157,6 +161,8 @@ TEST_F(dnat_test, dnat_crud) {
     SDK_ASSERT(pds_dnat_map_entry_read(&key, &info) == PDS_RET_OK);
     SDK_ASSERT(info.spec.data.addr_type == IP_AF_IPV6);
     SDK_ASSERT(memcmp(info.spec.data.addr, &v6_addr_1, IP6_ADDR8_LEN) == 0);
+
+    SDK_ASSERT(pds_dnat_map_entry_create(NULL) == PDS_RET_INVALID_ARG);
 }
 
 /// @}
@@ -168,5 +174,6 @@ TEST_F(dnat_test, dnat_crud) {
 int
 main (int argc, char **argv)
 {
+    register_trace_cb(sdk_test_logger);
     return api_test_program_run(argc, argv);
 }

@@ -92,24 +92,24 @@ pds_dnat_map_entry_create (pds_dnat_mapping_spec_t *spec)
     uint16_t vnic_id;
 
     if (!spec) {
-        //PDS_TRACE_ERR("spec is null");
+        PDS_TRACE_ERR("spec is null");
         return PDS_RET_INVALID_ARG;
     }
     vnic_id = spec->key.vnic_id;
     if (spec->key.vnic_id == 0 ||
         spec->key.vnic_id > PDS_VNIC_ID_MAX) {
-        //PDS_TRACE_ERR("Vnic id %u invalid", vnic_id);
+        PDS_TRACE_ERR("Vnic id %u invalid", vnic_id);
         return PDS_RET_INVALID_ARG;
     }
     if (spec->key.key_type != IP_AF_IPV4 &&
         spec->key.key_type != IP_AF_IPV6) {
-        //PDS_TRACE_ERR("Key type %u invalid", spec->key.key_type);
+        PDS_TRACE_ERR("Key type %u invalid", spec->key.key_type);
         return PDS_RET_INVALID_ARG;
     }
     if (spec->data.addr_type != IP_AF_IPV4 &&
         spec->data.addr_type != IP_AF_IPV6) {
-        //PDS_TRACE_ERR("Address type %u invalid in data",
-        //              spec->data.addr_type);
+        PDS_TRACE_ERR("Address type %u invalid in data",
+                      spec->data.addr_type);
         return PDS_RET_INVALID_ARG;
     }
 
