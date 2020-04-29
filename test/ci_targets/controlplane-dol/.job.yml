@@ -6,7 +6,7 @@ image:
   work_dir: "/go/src/github.com/pensando/sw/test/ci_targets/controlplane-dol"
 
 
-warmd:
+e2e-targets:
   target:
     # Upload packaged artifacts from runner to VM
     # SSH to VM and execute make target
@@ -17,19 +17,19 @@ warmd:
     feature:
     build-dependencies:
       - build-apulu-x86-controlplane-dol
-  repo_dir: "/import/src/github.com/pensando/sw"
-  create:
-    image: build-150
-    count: 1
-    resources:
-      cpus: 4
-      memory: 64
+    repo_dir: "/import/src/github.com/pensando/sw"
+    clusters:
+      - image: build-150
+        count: 1
+        resources:
+          cpus: 4
+          memory: 64
 
-  provision:
-    username: vm
-    password: vm
-    # additional vars to pass to ansible.
-    vars:
+    provision:
+      username: vm
+      password: vm
+      # additional vars to pass to ansible.
+      vars:
 
 logfiles:
   - /go/src/github.com/pensando/sw/test/ci_targets/controlplane-dol/controlplane_dol_logs.tgz

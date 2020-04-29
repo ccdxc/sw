@@ -11,24 +11,3 @@ targets:
 image:
   bind_dir: "/sw"
   work_dir: "/sw/platform"
-
-#warmd:
-#  target:
-#    commands: [ "sh", "-c", "cd /sw && make e2e-turin && test/bin/e2e-turin  test --topo-file 2_naples_qemu_node.yaml" ]
-#    owners: ["email:neel@pensando.io"]
-#    area:
-#    sub-area:
-#    feature:
-#  create:
-#    image: build-38
-#    count: 2
-#    resources:
-#      cpus: 8
-#      memory: 16
-#      pvt-networks:
-#            - data
-#            - control
-#
-#  provision:
-#    username: vm
-#    password: vm

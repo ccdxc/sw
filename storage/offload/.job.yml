@@ -78,23 +78,23 @@ image:
   work_dir: "/sw/storage/offload"
 
 
-warmd:
+e2e-targets:
   target:
     commands: [ "sh", "-c", "cd /sw/test/ci_targets/offload_klm && go run offload_klm.go" ]
     owners: ["email:mohan@pensando.io"]
     area:
     sub-area:
     feature:
-  repo_dir: "/tmp/git/pensando/sw"
-  create:
-    image: build-105
-    count: 1
-    resources:
-      cpus: 4
-      memory: 8
+    repo_dir: "/tmp/git/pensando/sw"
+    clusters:
+      - image: build-105
+        count: 1
+        resources:
+          cpus: 4
+          memory: 8
 
-  provision:
-    username: vm
-    password: vm
-   # additional vars to pass to ansible.
-    vars:
+    provision:
+      username: vm
+      password: vm
+      # additional vars to pass to ansible.
+      vars:

@@ -1,13 +1,10 @@
 ---
 version: 2.0
-targets:
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw/test/ci_targets/e2e"
 
-
-warmd:
-  #  TODO This needs to be ported to IOTA
+e2e-targets:
   target:
     commands: [ "sh", "-c", "go run ../upload/main.go /sw/bin/venice.tgz /import/src/github.com/pensando/sw/bin/venice.tgz  && go run e2e.go" ]
     owners: ["email:enrico@pensando.io"]
@@ -16,19 +13,19 @@ warmd:
     feature:
     build-dependencies:
       - build-venice-image
-  repo_dir: "/import/src/github.com/pensando/sw"
-  create:
-    image: build-150
-    count: 1
-    resources:
-      cpus: 16
-      memory: 32
+    repo_dir: "/import/src/github.com/pensando/sw"
+    clusters:
+      - image: build-150
+        count: 1
+        resources:
+          cpus: 16
+          memory: 32
 
-  provision:
-    username: vm
-    password: vm
-    # additional vars to pass to ansible.
-    vars:
+    provision:
+      username: vm
+      password: vm
+      # additional vars to pass to ansible.
+      vars:
 
 logfiles:
   - /go/src/github.com/pensando/sw/test/ci_targets/e2e/clusterlogs.tgz

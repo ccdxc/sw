@@ -1,23 +1,29 @@
 ---
-targets:
+version: 2.0
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw/test/ci_targets/e2esanities"
 
-warmd:
-  target: [ "go", "run", "e2esanities.go" ]
-  create:
-    image: build-30
-    count: 1
-    resources:
-      cpus: 16
-      memory: 32
+e2e-targets:
+  target:
+    commands: [ "go", "run", "e2esanities.go" ]
+    owners: ["email:enrico@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    repo_dir: "/go/src/github.com/pensando/sw"
+    clusters:
+      - image: build-9
+        count: 1
+        resources:
+          cpus: 16
+          memory: 32
 
-  provision:
-    username: vm
-    password: vm
-    # additional vars to pass to ansible.
-    vars:
+    provision:
+      username: vm
+      password: vm
+      # additional vars to pass to ansible.
+      vars:
 
 logfiles:
   - /go/src/github.com/pensando/sw/test/ci_targets/e2esanities/clusterlogs.tgz

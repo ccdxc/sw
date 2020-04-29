@@ -11,30 +11,5 @@ image:
   bind_dir: "/go/src/github.com/pensando/sw"
   work_dir: "/go/src/github.com/pensando/sw"
 
-
-#warmd:
-#  target:
-#    commands: ["make ws-tools && make pull-assets && ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz && mkdir -p /usr/src && ln -s /go/src/github.com /usr/src/ && tar -zxf /sw/build_iris_x86.tar.gz -C / && python2 nic/tools/package/package.py --pipeline iris --target sim --no-strip && cd nic && ./tools/release.sh && cd .. && make -C iota && cat /warmd.json && make -C iota/test/venice"]
-#    owners: ["email:enrico@pensando.io"]
-#    build-dependencies:
-#      - build-iris-x86
-#      - build-venice-image
-#  create:
-#    image: build-112
-#    count: 6
-#    resources:
-#      cpus  : 8
-#      memory: 20
-#      pvt-networks:
-#            - control
-#      data-networks:
-#            - data-1
-#            - data-2
-#  provision:
-#    username: vm
-#    password: vm
-#    # additional vars to pass to ansible.
-#    vars:
-#
 logfiles:
   - /go/src/github.com/pensando/sw/iota/logs/venice-iota.tgz
