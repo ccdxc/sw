@@ -836,7 +836,7 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
         vmk_PktHandle *last_one;
         uint64_t burst_cnt, max_burst;
-        vmk_Bool xmit_more = VMK_FALSE;
+        vmk_Bool is_last_pkt = VMK_FALSE;
 
         VMK_PKTLIST_ITER_STACK_DEF(iter);
         vmk_PktListIterStart(iter, pkt_list);
@@ -873,12 +873,12 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
                 VMK_ASSERT(pkt);
                 VMK_ASSERT(vmk_PktQueueIDGet(pkt) == vmk_qid);
 
-                xmit_more = (last_one == pkt || burst_cnt == max_burst);
-                burst_cnt = (burst_cnt + 1) % max_burst;
+                is_last_pkt = (last_one == pkt || ++burst_cnt == max_burst);
+                burst_cnt %= max_burst;
                 status = ionic_start_xmit(pkt,
                                           uplink_handle,
                                           tx_ring,
-                                          xmit_more);
+                                          is_last_pkt);
                 if (status == VMK_BUSY) {
                         status = vmk_PktListIterInsertPktBefore(iter, pkt);
                         VMK_ASSERT(status == VMK_OK);
