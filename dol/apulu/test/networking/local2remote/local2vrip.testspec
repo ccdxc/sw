@@ -3,6 +3,7 @@ selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 1
     flow: filter://any
+    vnic: filter://any
 
 packets:
     - packet:

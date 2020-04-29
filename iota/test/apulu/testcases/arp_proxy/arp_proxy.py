@@ -20,8 +20,11 @@ def __verifyErrorsCmd(resp, wl_type, sent_probes):
 
     arp_node = 'pds-arp-proxy'
     tups = resp.split()
-    reason_index = tups.index(arp_node) + 1 if arp_node in tups else 0
-    recvd_probes = tups[tups.index(arp_node) - 1] if arp_node in tups else 0
+    indexPosList = [ index for index, value in enumerate(tups) if value == arp_node ]
+
+    recvd_probes = 0
+    for indx in indexPosList:
+        recvd_probes += int(tups[indx - 1])
 
     if sent_probes > int(recvd_probes):
         api.Logger.error(f"received {recvd_probes} and expected {sent_probes}")
@@ -29,17 +32,22 @@ def __verifyErrorsCmd(resp, wl_type, sent_probes):
 
     if wl_type == 'self':
         reason = ['Duplicate', 'address', 'detection', 'drops']
-        for val in reason:
-            if int(reason_index) >= len(tups):
-                api.Logger.error(f"expected {val}, index out of range, {reason_index}")
-                ret = api.types.status.FAILURE
-                break
-            else:
-                if val != tups[int(reason_index)]:
-                    api.Logger.error(f"received {tups[reason_index]} and expected {val}")
-                    ret = api.types.status.FAILURE
-            reason_index = int(reason_index) + 1
+        count = 0
+        for c in indexPosList:
+            index = c + 1
+            for val in reason:
+                if val != tups[index]:
+                    match = False
+                    break
+                else:
+                    match = True
+                index += 1
+            if match:
+                count += int(tups[int(c) - 1])
 
+        if count != sent_probes:
+            api.Logger.error(f"tuples: {tups} received less packets, expected {sent_probes} and recvd {count}")
+            ret = api.types.status.FAILURE
     return ret
 
 def __verifyVPPCtlErrors(wl_type=None, sent_probes=None):

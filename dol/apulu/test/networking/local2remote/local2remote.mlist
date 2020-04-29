@@ -88,6 +88,7 @@ modules:
             - proto: ICMP
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - vnic : filter://Dot1Qenabled=False
 
     - module:
         name    : L3_IPV4_VRIP_ICMP_ECHO_QTAG
@@ -96,6 +97,7 @@ modules:
             - proto: ICMP
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - vnic : filter://Dot1Qenabled=True
 
     - module:
         name    : L2_IPV4_VRIP_TCP_QTAG

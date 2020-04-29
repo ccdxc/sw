@@ -44,6 +44,7 @@ testbundles:
         # Relative paths from iota/test/apulu/testbundles/
         - networking/underlay_direct.testbundle
         - networking/networking.testbundle
+        - arp_proxy.testbundle
         - h2vrip.testbundle
         - classic/ethtool.testbundle
         #- policy/policy.testbundle

@@ -4,6 +4,7 @@ selectors:
     maxlimits: 1
     flow: filter://AddrFamily=IPV4
     route: filter://any
+    vnic : filter://any
 
 packets:
     - packet:
@@ -33,6 +34,7 @@ packets:
         id          : TO_HOST_PKT
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_ARP
+        encaps      : callback://networking/packets/GetEncapForARP
         headers     :
             eth:
                 src   : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
