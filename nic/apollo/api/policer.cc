@@ -187,6 +187,7 @@ policer_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_POLICER, this);
 }
 
+#if 0
 static bool
 vnic_upd_walk_cb_ (void *api_obj, void *ctxt)
 {
@@ -203,6 +204,7 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt)
     }
     return false;
 }
+#endif
 
 sdk_ret_t
 policer_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {

@@ -346,14 +346,13 @@ private:
 
 private:
     pds_obj_key_t key_;                        ///< vnic key
-    char hostname_[PDS_MAX_HOST_NAME_LEN + 1]; ///< hostname of this workload
     pds_obj_key_t subnet_;                     ///< subnet of this vnic
     pds_obj_key_t v4_meter_;                   ///< IPv4 metering policy
     pds_obj_key_t v6_meter_;                   ///< IPv6 metering policy
     pds_encap_t   vnic_encap_;                 ///< vnic's vlan encap
     pds_encap_t   fabric_encap_;               ///< fabric encap information
-    bool          binding_checks_en_;          ///< TRUE if IP/MAC binding checks
-                                               ///< are enabled
+    /// TRUE if IP/MAC binding checks are enabled
+    bool          binding_checks_en_;
     bool          switch_vnic_;                ///< TRUE if this is switch vnic
     mac_addr_t    mac_;                        ///< MAC address of this vnic
     pds_obj_key_t host_if_;                    ///< PF/VF this vnic is behind
@@ -377,6 +376,9 @@ private:
     pds_obj_key_t rx_policer_;           ///< ingress policer index
     bool          primary_;              ///< primary vnic
     bool          meter_en_;             ///< true if metering is enabled
+    /// hostname of this workload
+    char          hostname_[PDS_MAX_HOST_NAME_LEN + 1];
+
     ht_ctxt_t     ht_ctxt_;              ///< hash table context
     impl_base     *impl_;                ///< impl object instance
 

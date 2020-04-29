@@ -82,14 +82,14 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Tags
-	if cmd == nil && cmd.Flags().Changed("yaml") {
+	if cmd == nil || cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
-	} else if cmd == nil && cmd.Flags().Changed("summary") {
+	} else if cmd.Flags().Changed("summary") {
 		printTagSummary(len(respMsg.Response))
 	}
 }
