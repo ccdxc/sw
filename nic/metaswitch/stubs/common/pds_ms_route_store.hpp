@@ -44,7 +44,7 @@ public:
     void print_debug_str(void) override {};
     void add_upd_route(pds_route_t &route);
     const pds_route_t* get_route(ip_prefix_t &pfx);
-    void del_route(ip_prefix_t &pfx);
+    bool del_route(ip_prefix_t &pfx);
     int num_routes(void) { return (route_index_.size()); }
     route_info_t *routes(void) { return routes_; }
 

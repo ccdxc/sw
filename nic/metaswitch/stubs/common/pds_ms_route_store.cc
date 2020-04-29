@@ -84,7 +84,7 @@ void route_table_obj_t::add_upd_route(pds_route_t &route)
     return;
 }
 
-void route_table_obj_t::del_route(ip_prefix_t &pfx)
+bool route_table_obj_t::del_route(ip_prefix_t &pfx)
 {
     const auto it = route_index_.find(pfx);
     if (it != route_index_.end()) {
@@ -100,8 +100,9 @@ void route_table_obj_t::del_route(ip_prefix_t &pfx)
         route_index_[routes_->routes[idx].attrs.prefix] = idx;
         // Delete the route from the map
         route_index_.erase(pfx);
+        return true;
     }
-    return;
+    return false;
 }
 
 const pds_route_t* route_table_obj_t::get_route(ip_prefix_t &pfx)

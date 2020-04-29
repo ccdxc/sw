@@ -55,9 +55,10 @@ private:
                                                 rttable_key);
     void populate_route_id(ATG_ROPI_ROUTE_ID* route_id);
     bool parse_ips_info_(ATG_ROPI_UPDATE_ROUTE* route_add_upd);
-    void make_pds_rttable_spec_(pds_route_table_spec_t &rttbl,
+    bool make_pds_rttable_spec_(pds_route_table_spec_t &rttbl,
                                 const pds_obj_key_t& rttable_key);
     pds_obj_key_t make_pds_rttable_key_(state_t*);
+    void overlay_route_del_(void);
     sdk_ret_t underlay_route_add_upd_(void);
     sdk_ret_t underlay_route_del_(void);
 };

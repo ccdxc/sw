@@ -762,7 +762,7 @@ static void create_evpn_ip_vrf_proto_grpc () {
     }
 }
 
-static void create_evpn_ip_vrf_rt_proto_grpc () {
+static void create_evpn_ip_vrf_rt_proto_grpc (bool different=false) {
     EvpnIpVrfRtRequest request;
     EvpnIpVrfRtResponse response;
     ClientContext   context;
@@ -771,8 +771,13 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
     auto proto_spec = request.add_request();
     proto_spec->set_id (pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_vpcid (pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    if (different) {
+    NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xd9};
+    proto_spec->set_rt(rt,8);
+    } else {
     NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
     proto_spec->set_rt(rt,8);
+    }
     proto_spec->set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
 
     printf ("Pushing EVPN IP VRF RT proto...\n");
@@ -953,6 +958,19 @@ static void delete_destip_track (ip_addr_t& ip) {
         exit(1);
     }
 }
+
+static void configure_overlay (bool different=false)
+{
+    create_vpc_proto_grpc();
+    create_evpn_ip_vrf_proto_grpc();
+    create_evpn_ip_vrf_rt_proto_grpc(different);
+    create_subnet_proto_grpc();
+    create_evpn_evi_proto_grpc();
+    if (g_test_conf_.manual_rt) {
+        create_evpn_evi_rt_proto_grpc();
+    }
+}
+
 int main(int argc, char** argv)
 {
     // parse json config file
@@ -1038,14 +1056,7 @@ int main(int argc, char** argv)
         create_bgp_peer_proto_grpc(true, true);
         create_bgp_peer_af_proto_grpc(true, true );
         if (g_node_id != 3) {
-        create_vpc_proto_grpc();
-        create_evpn_ip_vrf_proto_grpc();
-        create_evpn_ip_vrf_rt_proto_grpc();
-        create_subnet_proto_grpc();
-        create_evpn_evi_proto_grpc();
-        if (g_test_conf_.manual_rt) {
-            create_evpn_evi_rt_proto_grpc();
-        }
+            configure_overlay();
         }
         if (g_node_id == 2) {
             sleep(5);
@@ -1080,7 +1091,7 @@ int main(int argc, char** argv)
             return 0;
         } else if (!strcmp(argv[1], "subnet-create")) {
             create_subnet_proto_grpc();
-            if (argc < 3 || (!strcmp(argv[2], "no-evi-create"))) {
+            if (argc < 3 || (strcmp(argv[2], "no-evi-create"))) {
                 create_evpn_evi_proto_grpc();
                 if (g_test_conf_.manual_rt) {
                     create_evpn_evi_rt_proto_grpc();
@@ -1200,8 +1211,13 @@ int main(int argc, char** argv)
                     delete_destip_track (ip);
                 }
                 ++ip.addr.v4_addr;
-
             }
+            return 0;
+        } else if (!strcmp(argv[1], "mac-move")) {
+            create_l2f_test_mac_ip_proto_grpc();
+            return 0;
+        } else if (!strcmp(argv[1], "config-overlay")) {
+            configure_overlay();
             return 0;
         }
     }

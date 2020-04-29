@@ -97,6 +97,27 @@ l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
     NBB_DESTROY_THREAD_CONTEXT
 }
 
+static void
+local_mac_ip_del_ (ms_bd_id_t bd_id, mac_addr_t mac, const ip_addr_t& ip)
+{
+    NBB_CREATE_THREAD_CONTEXT
+    NBS_ENTER_SHARED_CONTEXT(l2f_proc_id);
+    NBS_GET_SHARED_DATA();
+
+    ATG_MAI_MAC_IP_ID mac_ip_id = {0};
+    mac_ip_id.bd_id.bd_type = ATG_L2_BRIDGE_DOMAIN_EVPN;
+    mac_ip_id.bd_id.bd_id = bd_id;
+    memcpy(mac_ip_id.mac_address, mac, ETH_ADDR_LEN);
+    if (!ip_addr_is_zero(&ip)) {
+        pds_ms::pds_to_ms_ipaddr(ip, &mac_ip_id.ip_address);
+    }
+    l2f::l2f_cc_is_mac_delete(mac_ip_id);
+
+    NBS_RELEASE_SHARED_DATA();
+    NBS_EXIT_SHARED_CONTEXT();
+    NBB_DESTROY_THREAD_CONTEXT
+}
+
 void
 l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac)
@@ -126,23 +147,7 @@ l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
         PDS_TRACE_DEBUG("Received MAC-IP remove for Subnet %s BD %d IP %s MAC %s",
                         subnet_key.str(), bd_id, ipaddr2str(&ip), macaddr2str(mac));
     }
-
-    NBB_CREATE_THREAD_CONTEXT
-    NBS_ENTER_SHARED_CONTEXT(l2f_proc_id);
-    NBS_GET_SHARED_DATA();
-
-    ATG_MAI_MAC_IP_ID mac_ip_id = {0};
-    mac_ip_id.bd_id.bd_type = ATG_L2_BRIDGE_DOMAIN_EVPN;
-    mac_ip_id.bd_id.bd_id = bd_id;
-    memcpy(mac_ip_id.mac_address, mac, ETH_ADDR_LEN);
-    if (!ip_addr_is_zero(&ip)) {
-        pds_ms::pds_to_ms_ipaddr(ip, &mac_ip_id.ip_address);
-    }
-    l2f::l2f_cc_is_mac_delete(mac_ip_id);
-
-    NBS_RELEASE_SHARED_DATA();
-    NBS_EXIT_SHARED_CONTEXT();
-    NBB_DESTROY_THREAD_CONTEXT
+    local_mac_ip_del_(bd_id, mac, ip);
 }
 
 #define BDPI_GET_FIRST_LBL_INTF(ips, list_ptr) \
@@ -307,6 +312,11 @@ NBB_BYTE l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) 
     // async HAL response since the MAC store is accessed for MAI IP updates
     // from Metaswitch which can happen in parallel
     //----------------------------------------------------------------------
+
+    // Clean up local MAC from MS store so that any subsequent
+    // move is not ignored
+    ip_addr_t zero_ip = {0};
+    local_mac_ip_del_(ips_info_.bd_id, ips_info_.mac_address, zero_ip);
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = state_t::thread_context();
@@ -512,6 +522,11 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
     PDS_TRACE_INFO("L2F MAC IP ADD BD %d IP %s MAC %s",
                    ips_info_.bd_id, ipaddr2str(&ips_info_.ip_address),
                    macaddr2str(ips_info_.mac_address));
+
+    // Clean up local MAC,IP from MS store so that any subsequent
+    // move is not ignored
+    local_mac_ip_del_(ips_info_.bd_id, ips_info_.mac_address,
+                      ips_info_.ip_address);
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = state_t::thread_context();
