@@ -15,13 +15,6 @@ import (
 // CreateOrchestratorFlags specifies flags for Orchestrator create operation
 var CreateOrchestratorFlags = []gen.CliFlag{
 	{
-		ID:     "login-data",
-		Type:   "StringSlice",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "manage-namespaces",
 		Type:   "StringSlice",
 		Help:   "",

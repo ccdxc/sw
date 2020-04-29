@@ -939,7 +939,7 @@ func (ws *WorkloadState) trackMigration() {
 				ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_FAILED.String()
 				log.Errorf("Workload [%v] migration aborted.", ws.Workload.Name)
 				recorder.Event(eventtypes.MIGRATION_FAILED,
-					fmt.Sprintf("Worklaod [%v] migration failed", ws.Workload.Name),
+					fmt.Sprintf("Workload [%v] migration failed", ws.Workload.Name),
 					nil)
 			} else if ws.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_STARTED.String() {
 				// In case of timeout move the EPs to the new HOST
@@ -949,7 +949,7 @@ func (ws *WorkloadState) trackMigration() {
 				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
 				ws.Workload.Write()
 				recorder.Event(eventtypes.MIGRATION_TIMED_OUT,
-					fmt.Sprintf("Worklaod [%v] migration timed out", ws.Workload.Name),
+					fmt.Sprintf("Workload [%v] migration timed out", ws.Workload.Name),
 					nil)
 			}
 
@@ -971,7 +971,7 @@ func (ws *WorkloadState) trackMigration() {
 				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
 				ws.Workload.Write()
 				recorder.Event(eventtypes.MIGRATION_FAILED,
-					fmt.Sprintf("Worklaod [%v] migration failed", ws.Workload.Name),
+					fmt.Sprintf("Workload [%v] migration failed", ws.Workload.Name),
 					nil)
 				return
 			}

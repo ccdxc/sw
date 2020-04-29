@@ -646,7 +646,7 @@ func TestMigrationOnCreateWithMigrationStageFinalSync(t *testing.T) {
 			return true, nil
 		}
 
-		log.Errorf("Worklaod found is [%v]", wrFound)
+		log.Errorf("Workload found is [%v]", wrFound)
 		return false, nil
 	}, fmt.Sprintf("Workload not in expected status [%v]", workload.WorkloadMigrationStatus_TIMED_OUT.String()), "1s", "20s")
 }
@@ -741,7 +741,7 @@ func TestMigrationStartTimeoutLastSync(t *testing.T) {
 			return true, nil
 		}
 
-		log.Errorf("Worklaod found is [%v]", wrFound)
+		log.Errorf("Workload found is [%v]", wrFound)
 		return false, nil
 	}, fmt.Sprintf("Workload not in expected status [%v]", workload.WorkloadMigrationStatus_TIMED_OUT.String()), "1s", "20s")
 
@@ -763,7 +763,7 @@ func TestMigrationStartTimeoutLastSync(t *testing.T) {
 			return true, nil
 		}
 
-		log.Errorf("Worklaod found is [%v]", wrFound)
+		log.Errorf("Workload found is [%v]", wrFound)
 		return false, nil
 	}, fmt.Sprintf("Workload not in expected status [%v]", workload.WorkloadMigrationStatus_TIMED_OUT.String()), "1s", "20s")
 }
@@ -858,7 +858,7 @@ func TestMigrationStartTimeoutAbort(t *testing.T) {
 			return true, nil
 		}
 
-		log.Errorf("Worklaod found is [%v]", wrFound)
+		log.Errorf("Workload found is [%v]", wrFound)
 		return false, nil
 	}, fmt.Sprintf("Workload not in expected status [%v]", workload.WorkloadMigrationStatus_TIMED_OUT.String()), "1s", "20s")
 
@@ -880,7 +880,7 @@ func TestMigrationStartTimeoutAbort(t *testing.T) {
 			return true, nil
 		}
 
-		log.Errorf("Worklaod found is [%v]", wrFound)
+		log.Errorf("Workload found is [%v]", wrFound)
 		return false, nil
 	}, fmt.Sprintf("Workload not in expected status [%v]", workload.WorkloadMigrationStatus_TIMED_OUT.String()), "1s", "20s")
 }

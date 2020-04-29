@@ -1486,12 +1486,6 @@
           "$ref": "#/definitions/monitoringExternalCred",
           "description": "Credentials for the orchestrator."
         },
-        "login-data": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "manage-namespaces": {
           "type": "array",
           "items": {

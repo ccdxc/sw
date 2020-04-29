@@ -49,10 +49,9 @@ message OrchestratorSpec {
     string URI = 2 [(gogoproto.jsontag) = "uri", (venice.check) = "StrLen(1,-1)"]; 
     // Credentials for the orchestrator
     monitoring.ExternalCred Credentials = 3 [(gogoproto.jsontag) = "credentials,omitempty"];
-    map<string, string>  LoginData = 4 [(gogoproto.jsontag) = "login-data,omitempty"];
 
     // Namespaces that will be managed by this orchestrator. "all_namespaces" will manage all namespaces.
-    repeated string ManageNamespaces = 5 [(gogoproto.nullable) = true,
+    repeated string ManageNamespaces = 4 [(gogoproto.nullable) = true,
                              (gogoproto.jsontag) = "manage-namespaces,omitempty"];
 }
 
