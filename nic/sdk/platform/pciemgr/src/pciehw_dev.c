@@ -146,7 +146,7 @@ pciehdev_finalize(const int port)
     /* add a bridge to complete this topology */
     if (pi->root == NULL) {
         pciehdev_t *pbrdn;
-        const int memtun_en = port == 0 && pi->memtun_br == 0;
+        const int memtun_en = pi->memtun_br == 0;
         pi->root = pciehdev_bridgeup_new();
         pi->root->port = port;
         pbrdn = pciehdev_bridgedn_new(port, memtun_en);
@@ -242,7 +242,7 @@ pciehdev_add(pciehdev_t *pdev)
         pi->root = pciehdev_bridgeup_new();
         pi->root->port = port;
     }
-    memtun_en = port == 0 && pi->memtun_br == 0;
+    memtun_en = pi->memtun_br == 0;
     pbrdn = pciehdev_bridgedn_new(port, memtun_en);
     pbrdn->port = port;
     pciehdev_addchild(pi->root, pbrdn);
