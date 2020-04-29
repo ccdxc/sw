@@ -289,7 +289,7 @@ static inline sdk_ret_t
 pds_svc_vpc_delete (const pds::VPCDeleteRequest *proto_req,
                     pds::VPCDeleteResponse *proto_rsp)
 {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_batch_ctxt_t bctxt;
     pds_obj_key_t key = { 0 };
     pds_vpc_info_t info = { 0 };
@@ -317,20 +317,16 @@ pds_svc_vpc_delete (const pds::VPCDeleteRequest *proto_req,
 
     for (int i = 0; i < proto_req->id_size(); i++) {
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
-        ret = pds_vpc_read(&key, &info);
-        if (ret != SDK_RET_OK) {
-            goto end;
-        }
-        // underlay VPC is always sent to control-plane
-        if (core::agent_state::state()->device()->overlay_routing_en ||
-           (info.spec.type == PDS_VPC_TYPE_UNDERLAY)) {
-            // call the metaswitch api
-            ret = pds_ms::vpc_delete(&info.spec, bctxt);
-        } else if (!core::agent_state::state()->pds_mock_mode()) {
-            ret = pds_vpc_delete(&key, bctxt);
-        }
-        if (ret != SDK_RET_OK) {
-            goto end;
+        ret = pds_ms::vpc_delete(key, bctxt);
+        if (ret == SDK_RET_ENTRY_NOT_FOUND) {
+            // If VPC is not found in control plane then it might be a
+            // tenant VPC in non overlay-routing case
+            if (!core::agent_state::state()->pds_mock_mode()) {
+                ret = pds_vpc_delete(&key, bctxt);
+            }
+            if (ret != SDK_RET_OK) {
+                goto end;
+            }
         }
     }
 

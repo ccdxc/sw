@@ -91,7 +91,7 @@ public:
             subnet_spec.key = subnet_uuid;
             pds_ms::subnet_delete(subnet_spec.key, 0);
         }
-        pds_ms::vpc_delete(&vpc_spec, 0);
+        pds_ms::vpc_delete(vpc_spec.key, 0);
         // TODO Fix - currently VPC delete is not calling HAL stub VRF delete
        auto state_ctxt = pds_ms::state_t::thread_context(); 
        auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);

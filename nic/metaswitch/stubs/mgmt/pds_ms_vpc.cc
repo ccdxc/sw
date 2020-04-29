@@ -358,14 +358,10 @@ static bool vpc_has_subnets (const pds_obj_key_t& vpc_uuid)
 }
 
 sdk_ret_t
-vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
+vpc_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
-    if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
-        PDS_TRACE_ERR ("Underlay VPC %s deletion not allowed",
-                       spec->key.str());
-        return SDK_RET_INVALID_OP;
-    }
+    pds_vpc_spec_t *spec;
 
     // lock to allow only one grpc thread processing at a time
     std::lock_guard<std::mutex> lck(pds_ms::mgmt_state_t::grpc_lock());
@@ -375,8 +371,23 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 
         ms_vrf_id_t vrf_id;
         mib_idx_t   rtm_index;
-        std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key, true);
+        std::tie(vrf_id, rtm_index) = vpc_uuid_2_idx_fetch(key, true);
+        {
+            auto state_ctxt = state_t::thread_context();
+            auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
+            if (vpc_obj == nullptr) {
+                PDS_TRACE_ERR ("VPC %s VRF %d entry not found", key.str(),
+                                                                vrf_id);
+                return SDK_RET_ENTRY_NOT_FOUND;
+            }
+            spec = &vpc_obj->properties().vpc_spec;
+        }
 
+        if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
+            PDS_TRACE_ERR ("Underlay VPC %s deletion not allowed",
+                           spec->key.str());
+            return SDK_RET_INVALID_OP;
+        }
         if (vpc_has_subnets(spec->key)) {
             PDS_TRACE_ERR ("Cannot delete VPC %s that has subnets attached to it",
                            spec->key.str());

@@ -8,7 +8,7 @@
 namespace pds_ms {
 
 sdk_ret_t vpc_create(pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt);
-sdk_ret_t vpc_delete(pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt);
+sdk_ret_t vpc_delete (pds_obj_key_t &key, pds_batch_ctxt_t bctxt);
 sdk_ret_t vpc_update(pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt);
 
 };
