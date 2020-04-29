@@ -86,6 +86,7 @@ typedef struct pds_flow_info_s {
 
 /// \brief Flow iterate callback arg
 typedef struct pds_flow_iter_cb_arg_s {
+    bool               force_read;
     pds_flow_key_t     flow_key;
     pds_flow_data_t    flow_appdata;
 } pds_flow_iter_cb_arg_t;
