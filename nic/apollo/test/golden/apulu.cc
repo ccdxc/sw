@@ -1312,7 +1312,16 @@ vnic_init (void)
     uint16_t tbl_id = P4TBL_ID_VNIC;
 
     memset(&data, 0, sizeof(data));
+    vnic_info->epoch = EPOCH;
+    entry_write(tbl_id, g_vnic_id, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
+    vnic_info->epoch = EPOCH;
+    entry_write(tbl_id, g_vnic_id1, 0, 0, &data, false, 0);
+
+    memset(&data, 0, sizeof(data));
     vnic_info->tx_mirror_session = (1 << g_mirror_id1) | (1 << g_mirror_id2);
+    vnic_info->epoch = EPOCH;
     entry_write(tbl_id, g_vnic_id11, 0, 0, &data, false, 0);
 
     memset(&data, 0, sizeof(data));

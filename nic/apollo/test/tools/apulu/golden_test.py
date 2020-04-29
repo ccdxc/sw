@@ -166,8 +166,8 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
 opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', \
         ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0x8736b9e0), \
         l2_1_offset=0x11, l3_1_offset=0x23, l4_2_offset=0x37, \
-        payload_offset=0x4b, lif=ntohs(0x1), nexthop_id=ntohs(0x1ef), \
-        nexthop_type='Tunnel', vpc_id=ntohs(0x2ec), vnic_id=ntohs(0x2fe), \
+        payload_offset=0x4b, lif=ntohs(0x1), epoch=0x55, \
+        nexthop_type='Nexthop', vpc_id=ntohs(0x2ec), vnic_id=ntohs(0x2fe), \
         tcp_flags=0x2, mapping_hit=1) / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
@@ -219,7 +219,7 @@ opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', flow_hit=1, \
         ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0X6032bd96), \
         l2_1_offset=0x11, l3_1_offset=0x23, l4_2_offset=0x37, \
         payload_offset=0x4b, lif=ntohs(0x1), session_id=ntohl(0x55e51), \
-        tcp_flags=0x1, nexthop_id=ntohs(0x1ef), nexthop_type='Tunnel', \
+        tcp_flags=0x1, nexthop_type='Nexthop', epoch=0x55, \
         vpc_id=ntohs(0x2ec), vnic_id=ntohs(0x2ee), mapping_hit=1) / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
@@ -322,7 +322,7 @@ opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', epoch=0x56, \
         ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0xcb82801f), \
         l2_1_offset=0x1f, l3_1_offset=0x31, l4_2_offset=0x45, flow_hit=1, \
         payload_offset=0x59, lif=ntohs(0x1), session_id=ntohl(0x55e51), \
-        nexthop_id=ntohs(0x1ef), nexthop_type='Tunnel', vpc_id=ntohs(0x2ec), \
+        nexthop_type='Nexthop', vpc_id=ntohs(0x2ec), \
         vnic_id=ntohs(0x20c), tcp_flags=0x2, mapping_hit=1, defunct_flow=1) / \
         ipkt
 dump_pkt(ipkt, 'g_snd_pkt12')

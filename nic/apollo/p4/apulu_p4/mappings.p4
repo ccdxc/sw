@@ -249,18 +249,13 @@ action mapping_info(entry_valid, is_local, pad11, nexthop_valid,
         modify_field(rewrite_metadata.dmaci, dmaci);
         modify_field(scratch_metadata.flag, nexthop_valid);
         modify_field(vnic_metadata.rx_vnic_id, rx_vnic_id);
-        if (nexthop_valid == TRUE) {
-            if (p4e_to_arm.valid == TRUE) {
-                if (p4e_i2e.rx_packet == 0) {
-                    modify_field(p4e_to_arm.nexthop_type, nexthop_type);
-                    modify_field(p4e_to_arm.nexthop_id, nexthop_id);
-                } else {
-                    modify_field(p4e_to_arm.nexthop_type, txdma_to_p4e.nexthop_type);
-                    modify_field(p4e_to_arm.nexthop_id, txdma_to_p4e.nexthop_id);
-                }
-                modify_field(p4e_to_arm.mapping_hit, TRUE);
-                modify_field(p4e_to_arm.is_local, is_local);
-            } else {
+        if (p4e_to_arm.valid == TRUE) {
+            modify_field(p4e_to_arm.nexthop_type, txdma_to_p4e.nexthop_type);
+            modify_field(p4e_to_arm.nexthop_id, txdma_to_p4e.nexthop_id);
+            modify_field(p4e_to_arm.mapping_hit, TRUE);
+            modify_field(p4e_to_arm.is_local, is_local);
+        } else {
+            if (nexthop_valid == TRUE) {
                 modify_field(rewrite_metadata.nexthop_type, nexthop_type);
                 modify_field(p4e_i2e.nexthop_id, nexthop_id);
             }
