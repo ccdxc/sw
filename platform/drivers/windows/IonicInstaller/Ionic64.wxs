@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:difxapp="http://schemas.microsoft.com/wix/DifxAppExtension">
-  <Product Id="b4d5c79e-967b-446a-94a3-5fb6add40028" Name="Pensando Ionic Driver" Language="1033" Version="$(env.IONIC_VERSION_MAJOR).$(env.IONIC_VERSION_MINOR).$(env.IONIC_VERSION_SP).$(env.IONIC_VERSION_BUILD)" Manufacturer="Pensando Systems" UpgradeCode="a13e47d8-4da5-4249-8a4d-d060deaeb27f">
+  <Product Id="*" Name="Pensando Ionic Driver" Language="1033" Version="$(env.IONIC_VERSION_MAJOR).$(env.IONIC_VERSION_MINOR).$(env.IONIC_VERSION_SP).$(env.IONIC_VERSION_BUILD)" Manufacturer="Pensando Systems" UpgradeCode="a13e47d8-4da5-4249-8a4d-d060deaeb27f">
     <Package Id="*" Keywords="Installer" Comments="Copyright (c) Pensando Systems All rights reserved." Description="Pensando Ionic NDIS miniport driver" InstallerVersion="200" Languages="1033" Compressed="yes" InstallScope="perMachine" />
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of Pensando Ionic Driver is already installed." />
+    <MajorUpgrade Schedule="afterInstallValidate" AllowDowngrades="no" DowngradeErrorMessage="A newer version of Pensando Ionic Driver is already installed." AllowSameVersionUpgrades="no" />
+
     <Media Id="1" Cabinet="PensandoIonicMiniport.cab" EmbedCab="yes" />
         <Feature Id="Complete" Title="Ionic Driver Complete Package" Description="Pensando Ionic Driver and Tools Installation Package" Display="expand" Level="1" ConfigurableDirectory="INSTALLDIR" AllowAdvertise="no" Absent="disallow">
           <Feature Id="MainDrivers" Title="Ionic Driver" Description="Ionic NDIS miniport driver" Level="1" Absent="disallow" AllowAdvertise="no">
             <ComponentRef Id="IonicDriverPackage" />
+            <ComponentRef Id="PerfCountersManifest" />
           </Feature>
           <Feature Id="CommandLineTools" Title="Ionic Driver Tools" Description="Ionic Driver Tools: IonicConfig.exe, Penctl.exe" Level="1" AllowAdvertise="no">
             <ComponentRef Id="IonicConfig" />
             <ComponentRef Id="Penctl" />
             <ComponentRef Id="PensandooToolsCmd" />
             <ComponentRef Id="ProgramMenuDir" />
-            <ComponentRef Id="PerfCountersManifest" />
           </Feature>
        </Feature>
   </Product>
