@@ -283,6 +283,8 @@ def start_single_pcap_capture(tc):
         #return api.types.status.FAILURE
 
 def stop_single_pcap_capture(tc):
+    if not getattr(tc,"pcap_trigger",None):
+        return api.types.status.SUCCESS
     api.Trigger_TerminateAllCommands(tc.pcap_trigger)
     nodes = api.GetWorkloadNodeHostnames()
     tc_dir = tc.GetLogsDir()
