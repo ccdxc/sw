@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -38,7 +39,11 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 		// new workload or, nothing to process
 		return nil
 	}
-	err = sm.SendProbeEvent(&w.Workload, kvstore.Created, "")
+	orchKey, ok := w.Labels[utils.OrchNameKey]
+	if !ok {
+		sm.logger.Errorf("Could not extract orch key from workload label, %v ", w.ObjectMeta)
+	}
+	err = sm.SendProbeEvent(&w.Workload, kvstore.Created, orchKey)
 	return err
 }
 
@@ -54,7 +59,11 @@ func (sm *Statemgr) OnWorkloadUpdate(w *ctkit.Workload, nw *workload.Workload) e
 		newState = nw.Status.MigrationStatus.Status
 	}
 	if currState != newState {
-		err = sm.SendProbeEvent(nw, kvstore.Updated, "")
+		orchKey, ok := nw.Labels[utils.OrchNameKey]
+		if !ok {
+			sm.logger.Errorf("Could not extract orch key from workload label, %v ", nw.ObjectMeta)
+		}
+		err = sm.SendProbeEvent(nw, kvstore.Updated, orchKey)
 	}
 	return err
 }

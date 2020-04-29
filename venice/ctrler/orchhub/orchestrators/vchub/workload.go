@@ -404,7 +404,14 @@ func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
 	// Start migration action will copy information from spec to status and install new
 	// config into the spec
 	// Old VnicInfo is retained as vMotion can be aborted.
-	_, err := v.StateMgr.Controller().Workload().SyncStartMigration(&wlCopy)
+	// Attempt 3 times
+	var err error
+	for i := 0; i < 3; i++ {
+		_, err = v.StateMgr.Controller().Workload().SyncStartMigration(&wlCopy)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		evtMsg := fmt.Sprintf("Could not start migration on workload %s - %s", wlName, err)
 		recorder.Event(eventtypes.MIGRATION_FAILED, evtMsg, &wlCopy)
@@ -451,7 +458,13 @@ func (v *VCHub) handleVMotionFailed(m defs.VMotionFailedMsg) {
 		v.Log.Infof("Cancel vMotion for %s to host %s", wlName, hostName)
 		// Free the useg vlans allocated on the new host
 		v.releaseNewUsegs(wlObj)
-		_, err := v.StateMgr.Controller().Workload().SyncAbortMigration(wlObj)
+		var err error
+		for i := 0; i < 3; i++ {
+			_, err = v.StateMgr.Controller().Workload().SyncAbortMigration(wlObj)
+			if err == nil {
+				break
+			}
+		}
 		if err != nil {
 			evtMsg := fmt.Sprintf("Could not cancel migration on workload %s - %s", wlObj.Name, err)
 			recorder.Event(eventtypes.MIGRATION_FAILED, evtMsg, wlObj)
@@ -614,7 +627,13 @@ func (v *VCHub) finalSyncMigration(wlObj *workload.Workload) {
 		// This should never happen, go ahead and continue doing other things
 	}
 
-	_, err := v.StateMgr.Controller().Workload().SyncFinalSyncMigration(wlObj)
+	var err error
+	for i := 0; i < 3; i++ {
+		_, err = v.StateMgr.Controller().Workload().SyncFinalSyncMigration(wlObj)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		// This call can fail if workload has been set to timeout. If so, we do nothing.
 		v.Log.Errorf("Could not complete final sync migration on workload %s - %s", wlName, err)
@@ -628,7 +647,13 @@ func (v *VCHub) finishMigration(wlObj *workload.Workload) {
 		v.Log.Errorf("Failed to relase old useg values during vMotion for %s - %s", wlObj.Name, err)
 		// This should never happen, go ahead and finish migration
 	}
-	_, err := v.StateMgr.Controller().Workload().SyncFinishMigration(wlObj)
+	var err error
+	for i := 0; i < 3; i++ {
+		_, err = v.StateMgr.Controller().Workload().SyncFinishMigration(wlObj)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		evtMsg := fmt.Sprintf("Could not complete migration on workload %s - %s", wlObj.Name, err)
 		recorder.Event(eventtypes.MIGRATION_FAILED, evtMsg, wlObj)

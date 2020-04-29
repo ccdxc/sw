@@ -134,6 +134,44 @@ func TestNetworkWatcher(t *testing.T) {
 	return
 }
 
+func TestClusterCreateList(t *testing.T) {
+
+	sm, im, err := NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed creating state manager. Err : %v", err)
+		return
+	}
+
+	if im == nil {
+		t.Fatalf("Failed to create instance manger.")
+		return
+	}
+
+	go im.watchOrchestratorConfig()
+	defer im.watchCancel()
+
+	clusterConfig := &cluster.Cluster{
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Cluster",
+		},
+		Spec: cluster.ClusterSpec{
+			AutoAdmitDSCs: true,
+		},
+	}
+
+	err = sm.Controller().Cluster().Create(clusterConfig)
+	AssertOk(t, err, "failed to create cluster config")
+
+	err = sm.Controller().Cluster().Update(clusterConfig)
+	AssertOk(t, err, "failed to create cluster config")
+
+	// Increase test coverage
+	sm.OnClusterReconnect()
+}
+
 func TestNetworkCreateList(t *testing.T) {
 	sm, im, err := NewMockStateManager()
 	if err != nil {
