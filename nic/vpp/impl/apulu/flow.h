@@ -483,6 +483,9 @@ pds_flow_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
         tx1->flow_lkp_id =
             clib_host_to_net_u16(ses1->ingress_bd);
     }
+    tx0->skip_stats_update = vnet_buffer(b0)->pds_flow_data.skip_session_stats_update;
+    tx1->skip_stats_update = vnet_buffer(b1)->pds_flow_data.skip_session_stats_update;
+
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
     tx1->lif_flags = clib_host_to_net_u16(tx1->lif_flags);
 }
@@ -512,6 +515,7 @@ pds_flow_add_tx_hdrs_x1 (vlib_buffer_t *b0)
         tx0->flow_lkp_id =
             clib_host_to_net_u16(ses->ingress_bd);
     }
+    tx0->skip_stats_update = vnet_buffer(b0)->pds_flow_data.skip_session_stats_update;
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
 }
 

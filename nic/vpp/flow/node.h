@@ -29,7 +29,7 @@
 #define PDS_FLOW_STATS_PUBLISH_INTERVAL    (60)
 #define PDS_FLOW_DEFAULT_MONITOR_INTERVAL  (300)
 #define TCP_KEEP_ALIVE_RETRY_COUNT_MAX      3
-#define TCP_KEEP_ALIVE_TIMEOUT              60 // in seconds
+#define TCP_KEEP_ALIVE_TIMEOUT              1 // in seconds
 
 #define foreach_flow_classify_next                                  \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \

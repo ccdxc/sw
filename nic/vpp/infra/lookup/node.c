@@ -4,6 +4,7 @@
 
 #include <vnet/plugin/plugin.h>
 #include <vnet/ip/ip4_packet.h>
+#include <nic/vpp/infra/api/intf.h>
 #include <init.h>
 #include <api.h>
 #include <vnic.h>
@@ -617,6 +618,7 @@ pds_vnic_tx_internal (vlib_main_t *vm, vlib_buffer_t *p, u16 *next, u32 *counter
 {
     u16 vnic_nh_hw_id;
     vlib_node_runtime_t *node;
+    static u32 cpu_mnic_if_index = ~0;
 
     vnic_nh_hw_id = vnet_buffer(p)->pds_tx_data.vnic_nh_hw_id;
     if (PREDICT_FALSE(vnic_nh_hw_id == 0)) {
@@ -624,6 +626,10 @@ pds_vnic_tx_internal (vlib_main_t *vm, vlib_buffer_t *p, u16 *next, u32 *counter
         counter[VNIC_TX_COUNTER_FAILED]++;
     } else {
         pds_vnic_add_tx_hdrs(p, vnic_nh_hw_id);
+        if (PREDICT_FALSE(((u32) ~0) == cpu_mnic_if_index)) {
+            cpu_mnic_if_index = pds_infra_get_sw_ifindex_by_name((u8*)"cpu_mnic0");
+        }
+        vnet_buffer(p)->sw_if_index[VLIB_TX] = cpu_mnic_if_index;
         *next = VNIC_TX_NEXT_INTF_OUT;
         counter[VNIC_TX_COUNTER_SUCCESS]++;
     }

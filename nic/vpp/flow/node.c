@@ -1227,7 +1227,7 @@ pds_packet_type_flags_build (void)
     vec_elt(fm->packet_types, PDS_FLOW_L2L_INTER_SUBNET) = PDS_PKT_TYPE_L2L;
     vec_elt(fm->packet_types, PDS_FLOW_L2L_INTRA_SUBNET) = PDS_PKT_TYPE_L2L;
     vec_elt(fm->packet_types, PDS_FLOW_L2R_INTER_SUBNET) = PDS_PKT_TYPE_L2R;
-    vec_elt(fm->packet_types, PDS_FLOW_L2R_INTER_SUBNET) = PDS_PKT_TYPE_L2R;
+    vec_elt(fm->packet_types, PDS_FLOW_L2R_INTRA_SUBNET) = PDS_PKT_TYPE_L2R;
     vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_EN) = PDS_PKT_TYPE_N;
     vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT) =
                                                         PDS_PKT_TYPE_N;
@@ -1309,9 +1309,14 @@ pds_flow_init (vlib_main_t * vm)
          * be filled when sending the packet 
          * */
         h.ip4_hdr.ip_version_and_header_length = 0x45;
+        // Length = length of IP heaer + length of TCP header because TCP
+        // keepalive doesn't carry any data
+        h.ip4_hdr.length = clib_host_to_net_u16(0x28);
         h.ip4_hdr.protocol = IP_PROTOCOL_TCP;
         h.ip4_hdr.ttl = 255;        
-        h.tcp_hdr.flags |= TCP_FLAG_BIT_ACK;
+        h.tcp_hdr.flags = 1 << TCP_FLAG_BIT_ACK;
+        // TCP header is 5 32-bit words as there are no options
+        h.tcp_hdr.data_offset_and_reserved = 0x5 << 4;
 
         vlib_packet_template_init
             (vm, &fm->tcp_keepalive_packet_template,

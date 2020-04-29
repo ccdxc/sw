@@ -122,7 +122,7 @@ pds_impl_db_subnet_set (uint8_t pfx_len,
     // conversion required in packet path
     vnid = vnid << 8;
     subnet_info->vnid = clib_host_to_net_u32(vnid);
-    subnet_info->vpc_id = clib_host_to_net_u32(vpc_id);
+    subnet_info->vpc_id = vpc_id;
     return 0;
 }
 
