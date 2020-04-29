@@ -130,21 +130,23 @@ itable_add_proto_port_inodes (uint32_t rule, inode_t *proto_port_inode,
                               rule_l3_match_t *l3Match,
                               rule_l4_match_t *l4Match)
 {
+    uint8_t proto_low, proto_hi;
+
     if (l3Match->proto_match_type == MATCH_SPECIFIC) {
-        proto_port_inode->key32 = (l3Match->ip_proto << 24) |
-                                   l4Match->dport_range.port_lo;
+        proto_low = proto_hi = l3Match->ip_proto;
     } else {
-        proto_port_inode->key32 = 0;
+        proto_low = 0;
+        proto_hi = 255;
     }
 
+    proto_port_inode->key32 = (proto_low << 24)|(l4Match->dport_range.port_lo);
     proto_port_inode->rfc.class_id = 0;
     proto_port_inode->rfc.rule_no = rule;
     proto_port_inode->rfc.start = TRUE;
     proto_port_inode->rfc.pad = 0;
 
     proto_port_inode++;
-    proto_port_inode->key32 = (l3Match->ip_proto << 24) |
-                              (l4Match->dport_range.port_hi + 1);
+    proto_port_inode->key32 = (proto_hi << 24)|(l4Match->dport_range.port_hi + 1);
     proto_port_inode->rfc.class_id = 0;
     proto_port_inode->rfc.rule_no = rule;
     proto_port_inode->rfc.start = FALSE;
