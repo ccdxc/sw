@@ -33,6 +33,7 @@ func init() {
 	showCmd.AddCommand(policerShowCmd)
 	policerShowCmd.Flags().StringVarP(&policerID, "id", "i", "", "Specify policer ID")
 	policerShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+	policerShowCmd.Flags().Bool("summary", false, "Display number of objects")
 }
 
 func policerShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -83,13 +84,20 @@ func policerShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printPolicerSummary(len(respMsg.Response))
 	} else {
 		// Print policer
 		printPolicerHeader()
 		for _, resp := range respMsg.Response {
 			printPolicer(resp)
 		}
+		printPolicerSummary(len(respMsg.Response))
 	}
+}
+
+func printPolicerSummary(count int) {
+	fmt.Printf("\nNo. of policer objects : %d\n\n", count)
 }
 
 func printPolicerHeader() {

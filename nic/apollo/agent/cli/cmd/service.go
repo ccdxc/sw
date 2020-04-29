@@ -32,6 +32,7 @@ var serviceShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(serviceShowCmd)
 	serviceShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	serviceShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	serviceShowCmd.Flags().StringVarP(&svcID, "id", "i", "", "Specify VPC ID")
 }
 
@@ -75,7 +76,7 @@ func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Print Nexthops
+	// Print service-mappings
 	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
@@ -83,12 +84,19 @@ func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printServiceSummary(len(respMsg.Response))
 	} else {
 		printServiceHeader()
 		for _, resp := range respMsg.Response {
 			printService(resp)
 		}
+		printServiceSummary(len(respMsg.Response))
 	}
+}
+
+func printServiceSummary(count int) {
+	fmt.Printf("\nNo. of service-mappings : %d\n\n", count)
 }
 
 func printServiceHeader() {

@@ -31,6 +31,7 @@ var tagShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(tagShowCmd)
 	tagShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	tagShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	tagShowCmd.Flags().StringVarP(&tagID, "id", "i", "", "Specify tag policy ID")
 }
 
@@ -81,12 +82,18 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Tags
-	if cmd == nil || cmd.Flags().Changed("yaml") {
+	if cmd == nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd == nil && cmd.Flags().Changed("summary") {
+		printTagSummary(len(respMsg.Response))
 	}
+}
+
+func printTagSummary(count int) {
+	fmt.Printf("\nNo. of tags : %d\n\n", count)
 }

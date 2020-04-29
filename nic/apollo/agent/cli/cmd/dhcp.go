@@ -53,10 +53,12 @@ func init() {
 	showCmd.AddCommand(dhcpShowCmd)
 	dhcpShowCmd.AddCommand(dhcpProxyShowCmd)
 	dhcpProxyShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	dhcpProxyShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	dhcpProxyShowCmd.Flags().StringVarP(&DHCP_ID, "id", "i", "", "Specify DHCP Policy ID")
 
 	dhcpShowCmd.AddCommand(dhcpRelayShowCmd)
 	dhcpRelayShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	dhcpRelayShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	dhcpRelayShowCmd.Flags().StringVarP(&DHCP_ID, "id", "i", "", "Specify DHCP Policy ID")
 }
 
@@ -109,11 +111,14 @@ func dhcpRelayShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printDHCPRelaySummary(len(respMsg.Response))
 	} else {
 		printDHCPRelayHeader()
 		for _, resp := range respMsg.Response {
 			printDHCPRelay(resp)
 		}
+		printDHCPRelaySummary(len(respMsg.Response))
 	}
 }
 func dhcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -165,12 +170,19 @@ func dhcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printDHCPProxySummary(len(respMsg.Response))
 	} else {
 		printDHCPProxyHeader()
 		for _, resp := range respMsg.Response {
 			printDHCPProxy(resp)
 		}
+		printDHCPProxySummary(len(respMsg.Response))
 	}
+}
+
+func printDHCPProxySummary(count int) {
+	fmt.Printf("\nNo. of DHCP proxy policies : %d\n\n", count)
 }
 
 func printDHCPProxyHeader() {
@@ -212,6 +224,10 @@ func printDHCPProxy(dhcp *pds.DHCPPolicy) {
 		return
 	}
 	fmt.Println(outStr)
+}
+
+func printDHCPRelaySummary(count int) {
+	fmt.Printf("\nNo. of DHCP relay policies : %d\n\n", count)
 }
 
 func printDHCPRelayHeader() {

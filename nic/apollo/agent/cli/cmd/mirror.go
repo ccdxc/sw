@@ -32,6 +32,7 @@ var mirrorSessionShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(mirrorSessionShowCmd)
 	mirrorSessionShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	mirrorSessionShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	mirrorSessionShowCmd.Flags().StringVarP(&mirrorsessionID, "id", "i", "", "Specify Mirror session ID")
 }
 
@@ -84,6 +85,8 @@ func mirrorSessionShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printMirrorSessionSummary(len(respMsg.Response))
 	} else {
 		printMirrorSessionRspanHeader()
 		for _, resp := range respMsg.Response {
@@ -93,7 +96,12 @@ func mirrorSessionShowCmdHandler(cmd *cobra.Command, args []string) {
 		for _, resp := range respMsg.Response {
 			printErspanMirrorSession(resp)
 		}
+		printMirrorSessionSummary(len(respMsg.Response))
 	}
+}
+
+func printMirrorSessionSummary(count int) {
+	fmt.Printf("\nNo. of mirror objects : %d\n\n", count)
 }
 
 func printMirrorSessionRspanHeader() {

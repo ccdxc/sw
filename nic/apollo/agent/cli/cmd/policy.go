@@ -40,9 +40,11 @@ var securityProfileShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(securityPolicyShowCmd)
 	securityPolicyShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	securityPolicyShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	securityPolicyShowCmd.Flags().StringVarP(&policyID, "id", "i", "", "Specify ID")
 	showCmd.AddCommand(securityProfileShowCmd)
 	securityProfileShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	securityProfileShowCmd.Flags().Bool("summary", false, "Display number of objects")
 }
 
 func securityPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -94,11 +96,18 @@ func securityPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printPolicySummary(len(respMsg.Response))
 	} else {
 		for _, resp := range respMsg.Response {
 			printPolicy(resp)
 		}
+		printPolicySummary(len(respMsg.Response))
 	}
+}
+
+func printPolicySummary(count int) {
+	fmt.Printf("\nNo. of security policies : %d\n\n", count)
 }
 
 func printPolicyRuleHeader() {
@@ -280,11 +289,18 @@ func securityProfileShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printProfileSummary(len(respMsg.Response))
 	} else {
 		for _, resp := range respMsg.Response {
 			printProfile(resp)
 		}
+		printProfileSummary(len(respMsg.Response))
 	}
+}
+
+func printProfileSummary(count int) {
+	fmt.Printf("\nNo. of security profiles : %d\n\n", count)
 }
 
 func printProfile(resp *pds.SecurityProfile) {

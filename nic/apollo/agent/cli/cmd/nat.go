@@ -41,6 +41,7 @@ func init() {
 	showCmd.AddCommand(natShowCmd)
 	natShowCmd.Flags().StringVarP(&natPbId, "id", "i", "", "Specify NAT Port Block ID")
 	natShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+	natShowCmd.Flags().Bool("summary", false, "Display number of objects")
 }
 
 func natShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -85,13 +86,20 @@ func natShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		natPbPrintSummary(len(respMsg.Response))
 	} else {
 		// Print NAT Port Blocks
 		printNatPbHeader()
 		for _, resp := range respMsg.Response {
 			printNatPb(resp)
 		}
+		natPbPrintSummary(len(respMsg.Response))
 	}
+}
+
+func natPbPrintSummary(count int) {
+	fmt.Printf("\nNo. of NAT port blocks : %d\n\n", count)
 }
 
 func printNatPbHeader() {
@@ -128,6 +136,10 @@ func printNatPb(nat *pds.NatPortBlock) {
 // PrintObject interface
 func (natMsg myNatPortBlock) PrintHeader() {
 	printNatPbHeader()
+}
+
+func (natMsg myNatPortBlock) PrintSummary(count int) {
+	natPbPrintSummary(count)
 }
 
 func (natPb myNatPortBlock) HandleObject(data *types.Any) (done bool) {

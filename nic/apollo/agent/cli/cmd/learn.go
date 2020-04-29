@@ -84,11 +84,13 @@ func init() {
 	learnMACShowCmd.Flags().StringVar(&subnetId, "subnet", "0", "Specify Subnet ID")
 	learnMACShowCmd.Flags().StringVar(&epMAC, "mac", "0", "Specify MAC address")
 	learnMACShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	learnMACShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	learnShowCmd.AddCommand(learnIPShowCmd)
 	learnIPShowCmd.Flags().StringVar(&vpcId, "vpc", "0", "Specify VPC ID")
 	learnIPShowCmd.Flags().StringVar(&epIP, "ip", "0", "Specify IP address")
 	learnIPShowCmd.Flags().StringVar(&subnetId, "subnet", "0", "Specify Subnet ID")
 	learnIPShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	learnIPShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	learnShowCmd.AddCommand(learnStatsShowCmd)
 	learnStatsShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	// Clear commands
@@ -163,8 +165,11 @@ func learnMACShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printLearnMACSummary(len(resp.Response))
 	} else {
 		printLearnMAC(resp, detail)
+		printLearnMACSummary(len(resp.Response))
 	}
 }
 
@@ -235,8 +240,11 @@ func learnIPShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printLearnIPSummary(len(resp.Response))
 	} else {
 		printLearnIP(resp)
+		printLearnIPSummary(len(resp.Response))
 	}
 }
 
@@ -477,23 +485,23 @@ func LearnEventTypeToStr(eventType pds.LearnEventType) string {
 
 	switch eventType {
 	case pds.LearnEventType_LEARN_EVENT_NEW_LOCAL:
-		eventStr = "New local learn";
+		eventStr = "New local learn"
 	case pds.LearnEventType_LEARN_EVENT_NEW_REMOTE:
-		eventStr = "New remote learn";
+		eventStr = "New remote learn"
 	case pds.LearnEventType_LEARN_EVENT_L2L_MOVE:
-		eventStr = "Local to local move";
+		eventStr = "Local to local move"
 	case pds.LearnEventType_LEARN_EVENT_R2L_MOVE:
-		eventStr = "Remote to local move";
+		eventStr = "Remote to local move"
 	case pds.LearnEventType_LEARN_EVENT_L2R_MOVE:
-		eventStr = "Local to remote move";
+		eventStr = "Local to remote move"
 	case pds.LearnEventType_LEARN_EVENT_R2R_MOVE:
-		eventStr = "Remote to remote move";
+		eventStr = "Remote to remote move"
 	case pds.LearnEventType_LEARN_EVENT_DELETE:
-		eventStr = "Remote delete";
+		eventStr = "Remote delete"
 	default:
 		eventStr = "Unknown"
 	}
-	return eventStr;
+	return eventStr
 }
 
 func LearnApiOpTypeToStr(opType pds.LearnApiOpType) string {
@@ -501,15 +509,19 @@ func LearnApiOpTypeToStr(opType pds.LearnApiOpType) string {
 
 	switch opType {
 	case pds.LearnApiOpType_LEARN_API_OP_CREATE:
-		opStr = "Create";
+		opStr = "Create"
 	case pds.LearnApiOpType_LEARN_API_OP_DELETE:
-		opStr = "Delete";
+		opStr = "Delete"
 	case pds.LearnApiOpType_LEARN_API_OP_UPDATE:
-		opStr = "Update";
+		opStr = "Update"
 	default:
-		opStr = "Unknown";
+		opStr = "Unknown"
 	}
-	return opStr;
+	return opStr
+}
+
+func printLearnMACSummary(count int) {
+	fmt.Printf("\nNo. of learnt endpoint MAC information : %d\n\n", count)
 }
 
 func printLearnMACHeader() {
@@ -543,6 +555,10 @@ func printLearnMAC(resp *pds.LearnMACGetResponse, detail bool) {
 			}
 		}
 	}
+}
+
+func printLearnIPSummary(count int) {
+	fmt.Printf("\nNo. of learnt endpoint IP information : %d\n\n", count)
 }
 
 func printLearnIPHeader() {
@@ -581,11 +597,11 @@ func printLearnEventStats(levents []*pds.LearnEvents, header string, err bool) {
 	}
 	for _, levent := range levents {
 		if levent.GetEventType() == pds.LearnEventType_LEARN_EVENT_NONE {
-			continue;
+			continue
 		}
 		fmt.Printf("	# %-30s: %-20d\n",
-				   LearnEventTypeToStr(levent.GetEventType()) + errStr,
-				   levent.GetCount())
+			LearnEventTypeToStr(levent.GetEventType())+errStr,
+			levent.GetCount())
 	}
 }
 
@@ -602,8 +618,8 @@ func printLearnApiStats(ops []*pds.LearnApiOps, header string, err bool) {
 	}
 	for _, op := range ops {
 		fmt.Printf("	# %-30s: %-20d\n",
-		LearnApiOpTypeToStr(op.GetApiOpType()) + errStr,
-		op.GetCount())
+			LearnApiOpTypeToStr(op.GetApiOpType())+errStr,
+			op.GetCount())
 	}
 }
 func printLearnStats(resp *pds.LearnStatsGetResponse) {
@@ -648,12 +664,12 @@ func printLearnStats(resp *pds.LearnStatsGetResponse) {
 			valErr.GetCount())
 	}
 
-	printLearnApiStats(stats.GetVnicOps(), "VNIC API", false);
-	printLearnApiStats(stats.GetVnicOpErrors(), "VNIC API errors", true);
-	printLearnApiStats(stats.GetRemoteL2Mappings(), "Remote MAC mapping API", false);
-	printLearnApiStats(stats.GetRemoteL2MappingErrors(), "Remote MAC mapping API errors", true);
-	printLearnApiStats(stats.GetLocalL3Mappings(), "Local IP mapping API", false);
-	printLearnApiStats(stats.GetLocalL3MappingErrors(), "Local IP mapping API errors", true);
-	printLearnApiStats(stats.GetRemoteL3Mappings(), "Remote IP mapping API", false);
-	printLearnApiStats(stats.GetRemoteL3MappingErrors(), "Remote IP mapping API errors", true);
+	printLearnApiStats(stats.GetVnicOps(), "VNIC API", false)
+	printLearnApiStats(stats.GetVnicOpErrors(), "VNIC API errors", true)
+	printLearnApiStats(stats.GetRemoteL2Mappings(), "Remote MAC mapping API", false)
+	printLearnApiStats(stats.GetRemoteL2MappingErrors(), "Remote MAC mapping API errors", true)
+	printLearnApiStats(stats.GetLocalL3Mappings(), "Local IP mapping API", false)
+	printLearnApiStats(stats.GetLocalL3MappingErrors(), "Local IP mapping API errors", true)
+	printLearnApiStats(stats.GetRemoteL3Mappings(), "Remote IP mapping API", false)
+	printLearnApiStats(stats.GetRemoteL3MappingErrors(), "Remote IP mapping API errors", true)
 }

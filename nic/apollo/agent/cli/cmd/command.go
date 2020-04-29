@@ -33,6 +33,7 @@ var AgentTransport Transport
 type PrintObject interface {
 	PrintHeader()
 	HandleObject(*types.Any) bool
+	PrintSummary(int)
 }
 
 // function to handle commands over unix domain sockets
@@ -226,6 +227,7 @@ func HandleUdsShowObject(cmd pds.Command, i PrintObject) error {
 		return err
 	}
 
+	count := 0
 	i.PrintHeader()
 	// read from the socket until the no more entries are received
 	resp := make([]byte, 256)
@@ -253,9 +255,12 @@ func HandleUdsShowObject(cmd pds.Command, i PrintObject) error {
 		done := i.HandleObject(cmdResp.GetResponse())
 		if done {
 			// Last message
-			return nil
+			break
 		}
+
+		count += 1
 	}
+	i.PrintSummary(count)
 	return nil
 }
 

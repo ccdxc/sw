@@ -32,6 +32,7 @@ var routeShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(routeShowCmd)
 	routeShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	routeShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	routeShowCmd.Flags().StringVarP(&routeID, "route-id", "i", "", "Specify Route ID")
 }
 
@@ -84,12 +85,19 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printRouteSummary(len(respMsg.Response))
 	} else {
 		printRouteHeader()
 		for _, resp := range respMsg.Response {
 			printRoute(resp)
 		}
+		printRouteSummary(len(respMsg.Response))
 	}
+}
+
+func printRouteSummary(count int) {
+	fmt.Printf("\nNo. of routes : %d\n\n", count)
 }
 
 func printRouteHeader() {

@@ -32,6 +32,7 @@ var tunnelShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(tunnelShowCmd)
 	tunnelShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	tunnelShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	tunnelShowCmd.Flags().StringVarP(&tunnelID, "id", "i", "", "Specify Tunnel ID")
 }
 
@@ -84,12 +85,19 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printTunnelSummary(len(respMsg.Response))
 	} else {
 		printTunnelHeader()
 		for _, resp := range respMsg.Response {
 			printTunnel(resp)
 		}
+		printTunnelSummary(len(respMsg.Response))
 	}
+}
+
+func printTunnelSummary(count int) {
+	fmt.Printf("\nNo. of tunnels : %d\n\n", count)
 }
 
 func printTunnelHeader() {

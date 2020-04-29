@@ -39,6 +39,7 @@ var vnicShowStatisticsCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(vnicShowCmd)
 	vnicShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	vnicShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	vnicShowCmd.Flags().StringVarP(&vnicID, "id", "i", "", "Specify vnic ID")
 
 	vnicShowCmd.AddCommand(vnicShowStatisticsCmd)
@@ -95,12 +96,19 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printVnicSummary(len(respMsg.Response))
 	} else {
 		printVnicHeader()
 		for _, resp := range respMsg.Response {
 			printVnic(resp)
 		}
+		printVnicSummary(len(respMsg.Response))
 	}
+}
+
+func printVnicSummary(count int) {
+	fmt.Printf("\nNo. of vnics : %d\n\n", count)
 }
 
 func printVnicHeader() {
@@ -202,7 +210,7 @@ func vnicShowStatisticsCmdHandler(cmd *cobra.Command, args []string) {
 				uuid.FromBytesOrNil(spec.GetId()).String(),
 				stats.GetTxBytes(), stats.GetTxPackets(),
 				stats.GetRxBytes(), stats.GetRxPackets(),
-                stats.GetActiveSessions())
+				stats.GetActiveSessions())
 		}
 	}
 }

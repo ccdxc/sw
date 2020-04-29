@@ -41,11 +41,13 @@ var nhGroupShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(nhShowCmd)
 	nhShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	nhShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	nhShowCmd.Flags().StringVar(&nhType, "type", "overlay", "Specify nexthop type (overlay, underlay or ip)")
 	nhShowCmd.Flags().StringVarP(&nhID, "id", "i", "", "Specify nexthop ID")
 
 	showCmd.AddCommand(nhGroupShowCmd)
 	nhGroupShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	nhGroupShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	nhGroupShowCmd.Flags().StringVar(&nhType, "type", "overlay-ecmp", "Specify nexthop-group type (overlay-ecmp or underlay-ecmp)")
 	nhGroupShowCmd.Flags().StringVarP(&nhID, "id", "i", "", "Specify nexthop group ID")
 }
@@ -110,11 +112,14 @@ func nhGroupShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printNhGroupSummary(len(respMsg.Response))
 	} else {
 		printNhGroupHeader(nhType)
 		for _, resp := range respMsg.Response {
 			printNhGroup(resp)
 		}
+		printNhGroupSummary(len(respMsg.Response))
 	}
 }
 
@@ -164,6 +169,10 @@ func printNhGroupHeader(nh string) {
 	case "overlay-ecmp":
 		printNhGroupOverlayHeader()
 	}
+}
+
+func printNhGroupSummary(count int) {
+	fmt.Printf("\nNo. of nexthop groups : %d\n\n", count)
 }
 
 func printNhGroup(resp *pds.NhGroup) {
@@ -274,6 +283,8 @@ func nhShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printNexthopSummary(len(respMsg.Response))
 	} else {
 		first := true
 		for _, resp := range respMsg.Response {
@@ -283,6 +294,7 @@ func nhShowCmdHandler(cmd *cobra.Command, args []string) {
 			}
 			printNexthop(resp)
 		}
+		printNexthopSummary(len(respMsg.Response))
 	}
 }
 
@@ -310,6 +322,10 @@ func nhTypeToPdsNhType(nh string) pds.NexthopType {
 	default:
 		return pds.NexthopType_NEXTHOP_TYPE_NONE
 	}
+}
+
+func printNexthopSummary(count int) {
+	fmt.Printf("\nNo. of nexthops : %d\n\n", count)
 }
 
 func printNexthopIPHeader() {

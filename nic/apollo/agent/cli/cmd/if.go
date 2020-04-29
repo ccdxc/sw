@@ -43,8 +43,10 @@ func init() {
 	showCmd.AddCommand(ifShowCmd)
 	lifShowCmd.Flags().StringVar(&lifID, "id", "", "Specify Lif ID")
 	lifShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+	lifShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	ifShowCmd.Flags().StringVar(&ifID, "id", "", "Specify interface ID")
 	ifShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+	ifShowCmd.Flags().Bool("summary", false, "Display number of objects")
 }
 
 func ifShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -93,12 +95,19 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printIfSummary(len(respMsg.Response))
 	} else {
 		printIfHeader()
 		for _, resp := range respMsg.Response {
 			printIf(resp)
 		}
+		printIfSummary(len(respMsg.Response))
 	}
+}
+
+func printIfSummary(count int) {
+	fmt.Printf("\nNo. of ifs : %d\n\n", count)
 }
 
 func printIfHeader() {
@@ -219,12 +228,19 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printLifSummary(len(respMsg.Response))
 	} else {
 		printLifHeader()
 		for _, resp := range respMsg.Response {
 			printLif(resp)
 		}
+		printLifSummary(len(respMsg.Response))
 	}
+}
+
+func printLifSummary(count int) {
+	fmt.Printf("\nNo. of lifs : %d\n\n", count)
 }
 
 func printLifHeader() {

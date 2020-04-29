@@ -32,6 +32,7 @@ var subnetShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(subnetShowCmd)
 	subnetShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	subnetShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	subnetShowCmd.Flags().StringVarP(&subnetID, "id", "i", "", "Specify Subnet ID")
 }
 
@@ -84,12 +85,19 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printSubnetSummary(len(respMsg.Response))
 	} else {
 		printSubnetHeader()
 		for _, resp := range respMsg.Response {
 			printSubnet(resp)
 		}
+		printSubnetSummary(len(respMsg.Response))
 	}
+}
+
+func printSubnetSummary(count int) {
+	fmt.Printf("\nNo. of subnets : %d\n\n", count)
 }
 
 func printSubnetHeader() {

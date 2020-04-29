@@ -34,6 +34,7 @@ var vpcShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(vpcShowCmd)
 	vpcShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	vpcShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	vpcShowCmd.Flags().StringVarP(&transport, "transport", "t", "grpc",
 		"Specify PDS agent transport (uds | grpc)")
 	vpcShowCmd.Flags().StringVarP(&ID, "id", "i", "", "Specify VPC ID")
@@ -99,12 +100,19 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printVPCSummary(len(respMsg.Response))
 	} else {
 		printVPCHeader()
 		for _, resp := range respMsg.Response {
 			printVPC(resp)
 		}
+		printVPCSummary(len(respMsg.Response))
 	}
+}
+
+func printVPCSummary(count int) {
+	fmt.Printf("\nNo. of vpc : %d\n\n", count)
 }
 
 func printVPCHeader() {

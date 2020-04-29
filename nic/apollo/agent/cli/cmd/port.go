@@ -111,9 +111,11 @@ func init() {
 	portShowCmd.AddCommand(portStatusShowCmd)
 	portStatusShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
 	portStatusShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+	portStatusShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	portShowCmd.AddCommand(portShowXcvrCmd)
 	portShowXcvrCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
 	portShowXcvrCmd.Flags().Bool("yaml", true, "Output in yaml")
+	portShowXcvrCmd.Flags().Bool("summary", false, "Display number of objects")
 	portShowCmd.AddCommand(portInternalShowCmd)
 	portInternalShowCmd.PersistentFlags().StringVarP(&portID, "port", "p", "", "Specify port number. eg 1 to 7 for internal ports")
 	portInternalShowCmd.AddCommand(portInternalStatsCmd)
@@ -406,13 +408,20 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		printPortStatusSummary(len(respMsg.Response))
 	} else {
 		printPortStatusHeader()
 		// Print Ports
 		for _, resp := range respMsg.Response {
 			printPortStatus(resp)
 		}
+		printPortStatusSummary(len(respMsg.Response))
 	}
+}
+
+func printPortStatusSummary(count int) {
+	fmt.Printf("\nNo. of ports : %d\n\n", count)
 }
 
 func printPortStatusHeader() {
@@ -420,11 +429,11 @@ func printPortStatusHeader() {
 	fmt.Println("MAC-Info: MAC ID/MAC Channel/Num lanes")
 	fmt.Println("FEC-Type: FC - FireCode, RS - ReedSolomon")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-10s%-10s"+"%-6s%-7s%-7s%-10s%-12s"+"%-15s%-12s%-20s%-10s\n",
+	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-10s%-10s"+"%-6s%-7s%-7s%-10s%-12s"+"%-18s%-12s%-20s%-10s\n",
 		"Id", "Name", "IfIndex", "Speed", "MAC-Info", "FEC", "AutoNeg",
 		"MTU", "Pause", "Pause", "Debounce", "State",
 		"Transceiver", "NumLinkDown", "LinkSM", "Loopback")
-	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-10s%-10s"+"%-6s%-7s%-7s%-10s%-12s"+"%-15s%-12s%-20s%-10s\n",
+	fmt.Printf("%-40s%-10s%-12s%-7s%-10s%-10s%-10s"+"%-6s%-7s%-7s%-10s%-12s"+"%-18s%-12s%-20s%-10s\n",
 		"", "", "", "", "", "Cfg/Oper", "Cfg/Oper",
 		"", "Type", "Tx/Rx", "(msecs)", "Admin/Oper",
 		"", "", "", "")
@@ -502,7 +511,7 @@ func printPortStatus(resp *pds.Port) {
 	outStr += fmt.Sprintf("%2s/%-7s%-6d%-7s%2s/%-4s",
 		utils.BoolToString(spec.GetAutoNegEn()), utils.BoolToString(linkStatus.GetAutoNegEn()),
 		mtu, pauseStr, utils.BoolToString(spec.GetTxPauseEn()), utils.BoolToString(spec.GetRxPauseEn()))
-	outStr += fmt.Sprintf("%-10d%4s/%-7s%-15s%-12d%-20s%-10s",
+	outStr += fmt.Sprintf("%-10d%4s/%-7s%-18s%-12d%-20s%-10s",
 		debounce, adminStateStr, operStatusStr, xcvrStr, stats.GetNumLinkDown(),
 		fsmStr, loopbackModeStr)
 	fmt.Printf(outStr + "\n")
@@ -676,6 +685,10 @@ func printPortStats(resp *pds.Port) {
 	}
 }
 
+func portXcvrShowSummary(count int) {
+	fmt.Printf("\nNo. of ports : %d\n\n", count)
+}
+
 func portXcvrShowResp(resp *pds.Port) {
 	status := resp.GetStatus()
 	if status == nil {
@@ -796,10 +809,13 @@ func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		portXcvrShowSummary(len(respMsg.Response))
 	} else {
 		for _, resp := range respMsg.Response {
 			portXcvrShowResp(resp)
 		}
+		portXcvrShowSummary(len(respMsg.Response))
 	}
 }
 

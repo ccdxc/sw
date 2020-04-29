@@ -40,6 +40,7 @@ var meterStatsShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(meterShowCmd)
 	meterShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	meterShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	meterShowCmd.Flags().StringVarP(&meterID, "id", "i", "", "Specify meter policy ID")
 
 	meterShowCmd.AddCommand(meterStatsShowCmd)
@@ -172,12 +173,18 @@ func meterShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Meter
-	if cmd == nil || cmd.Flags().Changed("yaml") {
+	if cmd == nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
 			fmt.Println(string(b))
 			fmt.Println("---")
 		}
+	} else if cmd != nil && cmd.Flags().Changed("summary") {
+		meterPrintSummary(len(respMsg.Response))
 	}
+}
+
+func meterPrintSummary(count int) {
+	fmt.Printf("\nNo. of meter objects : %d\n\n", count)
 }

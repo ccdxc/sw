@@ -96,6 +96,7 @@ func init() {
 	sessionShowCmd.Flags().Uint32Var(&sessionDstPort, "dstport", 0, "Specify session dst port")
 	sessionShowCmd.Flags().Uint32Var(&sessionIPProto, "ipproto", 0, "Specify session IP proto")
 	sessionShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+	sessionShowCmd.Flags().Bool("summary", false, "Display number of objects")
 
 	showCmd.AddCommand(flowShowCmd)
 	flowShowCmd.Flags().Uint32Var(&flowVpcID, "vpcid", 0, "Specify VPC ID (default is 0)")
@@ -105,6 +106,7 @@ func init() {
 	flowShowCmd.Flags().Uint32Var(&flowDstPort, "dstport", 0, "Specify flow dst port")
 	flowShowCmd.Flags().Uint32Var(&flowIPProto, "ipproto", 0, "Specify flow IP proto")
 	flowShowCmd.Flags().Bool("yaml", true, "Output in yaml")
+	flowShowCmd.Flags().Bool("summary", false, "Display number of objects")
 
 	flowShowCmd.AddCommand(flowStatsShowCmd)
 	flowStatsShowCmd.Flags().Bool("yaml", true, "Output in yaml")
@@ -258,6 +260,7 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 	// for one
 	filter := cmd != nil && cmd.Flags().Changed("srcip")
 	yamlOutput := cmd != nil && cmd.Flags().Changed("yaml")
+	summaryOutput := cmd != nil && cmd.Flags().Changed("summary")
 
 	// If a filter is specified, use GRPC, otherwise use UDS to get the flow
 	// data
@@ -285,6 +288,8 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 			flowPrintHeader()
 		}
 
+		count := 0
+
 		for {
 			respMsg, err := stream.Recv()
 			if err == io.EOF {
@@ -307,12 +312,14 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 						b, _ := yaml.Marshal(respType.Interface())
 						fmt.Println(string(b))
 						fmt.Println("---")
-					} else {
+					} else if !summaryOutput {
 						flowPrintEntry(flow)
 					}
 				}
 			}
+			count += len(respMsg.Flow)
 		}
+		flowPrintSummary(count)
 	} else {
 		flow := myFlowMsg{}
 		msg := pds.FlowMsg{}
@@ -366,6 +373,10 @@ func flowMatchFilter(cmd *cobra.Command, flow *pds.Flow) bool {
 	return true
 }
 
+func flowPrintSummary(count int) {
+	fmt.Printf("\nNo. of flows : %d\n\n", count)
+}
+
 func flowPrintHeader() {
 	hdrLine := strings.Repeat("-", 131)
 	fmt.Println(hdrLine)
@@ -378,32 +389,32 @@ func flowPrintHeader() {
 func flowPrintEntry(flow *pds.Flow) {
 	key := flow.GetKey().GetIPFlowKey()
 	fmt.Printf("%-6d%-40s%-40s",
-	flow.GetVpc(),
-	utils.IPAddrToStr(key.GetSrcIP()),
-	utils.IPAddrToStr(key.GetDstIP()));
-	ipproto := key.GetIPProtocol();
-	if ((ipproto == 6) || (ipproto == 17)) {
+		flow.GetVpc(),
+		utils.IPAddrToStr(key.GetSrcIP()),
+		utils.IPAddrToStr(key.GetDstIP()))
+	ipproto := key.GetIPProtocol()
+	if (ipproto == 6) || (ipproto == 17) {
 		fmt.Printf("%-8d%-8d",
-		key.GetL4Info().GetTcpUdpInfo().GetSrcPort(),
-		key.GetL4Info().GetTcpUdpInfo().GetDstPort());
-		if (ipproto == 6) {
-			fmt.Printf("%-8s", "TCP");
+			key.GetL4Info().GetTcpUdpInfo().GetSrcPort(),
+			key.GetL4Info().GetTcpUdpInfo().GetDstPort())
+		if ipproto == 6 {
+			fmt.Printf("%-8s", "TCP")
 		} else {
-			fmt.Printf("%-8s", "UDP");
+			fmt.Printf("%-8s", "UDP")
 		}
 	} else {
-		fmt.Printf("%-8s%-8s", "-", "-");
-		if (ipproto == 1) {
-			fmt.Printf("%-8s", "ICMP");
+		fmt.Printf("%-8s%-8s", "-", "-")
+		if ipproto == 1 {
+			fmt.Printf("%-8s", "ICMP")
 		} else {
-			fmt.Printf("%-8d", ipproto);
+			fmt.Printf("%-8d", ipproto)
 		}
 	}
-	role := flow.GetFlowRole();
-	if (role == 0) {
-		fmt.Printf("I    ");
+	role := flow.GetFlowRole()
+	if role == 0 {
+		fmt.Printf("I    ")
 	} else {
-		fmt.Printf("R    ");
+		fmt.Printf("R    ")
 	}
 	fmt.Printf("%-11d%-5d\n", flow.GetSessionIdx(), flow.GetEpoch())
 }
@@ -427,6 +438,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	var empty *pds.Empty
 
 	yamlOutput := (cmd != nil) && cmd.Flags().Changed("yaml")
+	summaryOutput := (cmd != nil) && cmd.Flags().Changed("summary")
 
 	// PDS call
 	stream, err := client.SessionGet(context.Background(), empty)
@@ -438,6 +450,8 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	if yamlOutput == false {
 		sessionPrintHeader()
 	}
+
+	count := 0
 
 	for {
 		respMsg, err := stream.Recv()
@@ -459,11 +473,18 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 				b, _ := yaml.Marshal(respType.Interface())
 				fmt.Println(string(b))
 				fmt.Println("---")
-			} else {
+			} else if !summaryOutput {
 				sessionPrintEntry(session)
 			}
 		}
+		count += len(respMsg.Session)
 	}
+
+	sessionPrintSummary(count)
+}
+
+func sessionPrintSummary(count int) {
+	fmt.Printf("\nNo. of sessions : %d\n\n", count)
 }
 
 func sessionPrintHeader() {
@@ -596,16 +617,16 @@ func flowStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func flowStatsPrint(resp *pds.FlowStatsSummaryResponse) {
-	fmt.Printf("%-30s: %d\n", "TCP over IPv4 Sessions", resp.GetNumTCPv4Sessions());
-	fmt.Printf("%-30s: %d\n", "UDP over IPv4 Sessions", resp.GetNumUDPv4Sessions());
-	fmt.Printf("%-30s: %d\n", "ICMP over IPv4 Sessions", resp.GetNumICMPv4Sessions());
-	fmt.Printf("%-30s: %d\n", "Other IPv4 Sessions", resp.GetNumOtherIPv4Sessions());
-	fmt.Printf("%-30s: %d\n", "TCP over IPv6 Sessions", resp.GetNumTCPv6Sessions());
-	fmt.Printf("%-30s: %d\n", "UDP over IPv6 Sessions", resp.GetNumUDPv6Sessions());
-	fmt.Printf("%-30s: %d\n", "ICMP over IPv6 Sessions", resp.GetNumICMPv6Sessions());
-	fmt.Printf("%-30s: %d\n", "Other IPv6 Sessions", resp.GetNumOtherIPv6Sessions());
-	fmt.Printf("%-30s: %d\n", "L2 Sessions", resp.GetNumL2Sessions());
-	fmt.Printf("%-30s: %d\n", "Session Errors", resp.GetNumSessionErrors());
+	fmt.Printf("%-30s: %d\n", "TCP over IPv4 Sessions", resp.GetNumTCPv4Sessions())
+	fmt.Printf("%-30s: %d\n", "UDP over IPv4 Sessions", resp.GetNumUDPv4Sessions())
+	fmt.Printf("%-30s: %d\n", "ICMP over IPv4 Sessions", resp.GetNumICMPv4Sessions())
+	fmt.Printf("%-30s: %d\n", "Other IPv4 Sessions", resp.GetNumOtherIPv4Sessions())
+	fmt.Printf("%-30s: %d\n", "TCP over IPv6 Sessions", resp.GetNumTCPv6Sessions())
+	fmt.Printf("%-30s: %d\n", "UDP over IPv6 Sessions", resp.GetNumUDPv6Sessions())
+	fmt.Printf("%-30s: %d\n", "ICMP over IPv6 Sessions", resp.GetNumICMPv6Sessions())
+	fmt.Printf("%-30s: %d\n", "Other IPv6 Sessions", resp.GetNumOtherIPv6Sessions())
+	fmt.Printf("%-30s: %d\n", "L2 Sessions", resp.GetNumL2Sessions())
+	fmt.Printf("%-30s: %d\n", "Session Errors", resp.GetNumSessionErrors())
 }
 
 // PrintObject interface
@@ -613,6 +634,12 @@ func (flowMsg myFlowMsg) PrintHeader() {
 	flowPrintHeader()
 }
 
+// PrintObject interface
+func (flowMsg myFlowMsg) PrintSummary(count int) {
+	flowPrintSummary(count)
+}
+
+// PrintObject interface
 func (flowMsg myFlowMsg) HandleObject(data *types.Any) (done bool) {
 	err := types.UnmarshalAny(data, flowMsg.msg)
 	if err != nil {
