@@ -10,6 +10,8 @@ import (
 
 	. "gopkg.in/check.v1"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
@@ -575,15 +577,6 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 
 	c.Assert(err, IsNil)
 
-	// verify that agents should not have recived
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			p := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
-			profiles, _ := ag.dscAgent.PipelineAPI.HandleSecurityProfile(agentTypes.List, p)
-			return len(profiles) == 0, nil
-		}, "Sg not found on agent", "10ms", it.pollTimeout())
-	}
-
 	//Check whetheer we have receivers
 
 	for _, ag := range it.agents {
@@ -591,14 +584,12 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 		c.Assert(err, IsNil)
 		Assert(c, ok, "DSC not added")
 	}
-
-	//Now add all receivers
-
-	// verify that agents should not have recived
+	// verify that agents have received
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
 			p := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
-			profiles, _ := ag.dscAgent.PipelineAPI.HandleSecurityProfile(agentTypes.List, p)
+			profiles, err := ag.dscAgent.PipelineAPI.HandleSecurityProfile(agentTypes.List, p)
+			logrus.Infof("profiles : %v err:%v", profiles, err)
 			return len(profiles) == 1, nil
 		}, "Sg not found on agent", "10ms", it.pollTimeout())
 	}
