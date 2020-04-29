@@ -1460,7 +1460,7 @@ func (a *ApuluAPI) ReplayConfigs() error {
 }
 
 // PurgeConfigs unimplemented
-func (a *ApuluAPI) PurgeConfigs() error {
+func (a *ApuluAPI) PurgeConfigs(deleteDB bool) error {
 	// Apps, SGPolicies, Endpoints, Networks, RoutingConfig, Interface, Device
 	rt := netproto.RouteTable{TypeMeta: api.TypeMeta{Kind: "RouteTable"}}
 	rts, _ := a.HandleRouteTable(types.List, rt)

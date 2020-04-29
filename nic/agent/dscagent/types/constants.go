@@ -34,6 +34,13 @@ var AllKinds = []string{"App", "NetworkSecurityPolicy", "Vrf", "Network", "Endpo
 // IPAddressKind captures the type of IPAddress options, Singleton, Hyphen separated range or CIDR
 type IPAddressKind int
 
+// Const Kind Levels
+const (
+	BaseNetLevel   = 0
+	FlowAwareLevel = 1
+	EnforcedLevel  = 2
+)
+
 // Const Opers
 const (
 	Get = iota

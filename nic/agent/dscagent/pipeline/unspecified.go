@@ -1500,7 +1500,7 @@ func (i *FakeAgentAPI) ReplayConfigs() error {
 }
 
 // PurgeConfigs deletes all configs on Naples Decommission
-func (i *FakeAgentAPI) PurgeConfigs() error {
+func (i *FakeAgentAPI) PurgeConfigs(deleteDB bool) error {
 	return nil
 }
 

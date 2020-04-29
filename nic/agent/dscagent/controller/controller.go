@@ -194,7 +194,7 @@ func (c *API) HandleVeniceCoordinates(obj types.DistributedServiceCardStatus) er
 		}
 		c.InfraAPI.StoreConfig(obj)
 
-		if err := c.PipelineAPI.PurgeConfigs(); err != nil {
+		if err := c.PipelineAPI.PurgeConfigs(true); err != nil {
 			log.Error(err)
 		}
 	}

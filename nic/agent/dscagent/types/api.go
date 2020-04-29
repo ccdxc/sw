@@ -129,7 +129,7 @@ type PipelineAPI interface {
 	ReplayConfigs() error
 
 	// PurgeConfigs deletes all stored config. This is called whenever DSC is decommissioned
-	PurgeConfigs() error
+	PurgeConfigs(bool) error
 
 	// GetWatchOptions returns aggregate watch options on per kind. Currently this is used to get only local EPs
 	GetWatchOptions(ctx context.Context, kind string) api.ListWatchOptions

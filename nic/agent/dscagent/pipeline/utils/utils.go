@@ -501,3 +501,35 @@ func ConvertVeniceToLocalInterfaceName(veniceInterfaceName, dscId, dscName strin
 	}
 	return interfaceName, false
 }
+
+// IsSafeProfileMove checks if the given profile move is safe (forward) or needs a config purge (backward)
+func IsSafeProfileMove(fromProfile netproto.Profile, toProfile netproto.Profile) bool {
+	var fromProfileLevel, toProfileLevel int
+	// Cover base cases
+	if strings.ToLower(fromProfile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_INSERTION.String()) {
+		return false
+	} else if strings.ToLower(toProfile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_INSERTION.String()) {
+		return true
+	} else {
+		switch strings.ToLower(toProfile.Spec.PolicyMode) {
+		case strings.ToLower(netproto.ProfileSpec_ENFORCED.String()):
+			toProfileLevel = types.EnforcedLevel
+		case strings.ToLower(netproto.ProfileSpec_FLOWAWARE.String()):
+			toProfileLevel = types.FlowAwareLevel
+		case strings.ToLower(netproto.ProfileSpec_BASENET.String()):
+		default:
+			toProfileLevel = types.BaseNetLevel
+		}
+		switch strings.ToLower(fromProfile.Spec.PolicyMode) {
+		case strings.ToLower(netproto.ProfileSpec_BASENET.String()):
+			fromProfileLevel = types.BaseNetLevel
+		case strings.ToLower(netproto.ProfileSpec_FLOWAWARE.String()):
+			fromProfileLevel = types.FlowAwareLevel
+		case strings.ToLower(netproto.ProfileSpec_ENFORCED.String()):
+		default:
+			fromProfileLevel = types.EnforcedLevel
+		}
+	}
+
+	return (fromProfileLevel < toProfileLevel)
+}

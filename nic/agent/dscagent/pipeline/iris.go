@@ -365,6 +365,11 @@ func (i *IrisAPI) HandleNetwork(oper types.Operation, network netproto.Network) 
 	i.Lock()
 	defer i.Unlock()
 
+	networks, err = handleNetwork(i, oper, network)
+	return
+}
+
+func handleNetwork(i *IrisAPI, oper types.Operation, network netproto.Network) (networks []netproto.Network, err error) {
 	err = utils.ValidateMeta(oper, network.Kind, network.ObjectMeta)
 	if err != nil {
 		log.Error(err)
@@ -478,6 +483,11 @@ func (i *IrisAPI) HandleEndpoint(oper types.Operation, endpoint netproto.Endpoin
 	i.Lock()
 	defer i.Unlock()
 
+	endpoints, err = handleEndpoint(i, oper, endpoint)
+	return
+}
+
+func handleEndpoint(i *IrisAPI, oper types.Operation, endpoint netproto.Endpoint) (endpoints []netproto.Endpoint, err error) {
 	err = utils.ValidateMeta(oper, endpoint.Kind, endpoint.ObjectMeta)
 	if err != nil {
 		log.Error(err)
@@ -826,6 +836,11 @@ func (i *IrisAPI) HandleApp(oper types.Operation, app netproto.App) (apps []netp
 	i.Lock()
 	defer i.Unlock()
 
+	apps, err = handleApp(i, oper, app)
+	return
+}
+
+func handleApp(i *IrisAPI, oper types.Operation, app netproto.App) (apps []netproto.App, err error) {
 	apps, err = common.HandleApp(i.InfraAPI, oper, app)
 	if err != nil {
 		return
@@ -888,6 +903,12 @@ func (i *IrisAPI) HandleApp(oper types.Operation, app netproto.App) (apps []netp
 func (i *IrisAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netproto.NetworkSecurityPolicy) (netSecPolicies []netproto.NetworkSecurityPolicy, err error) {
 	i.Lock()
 	defer i.Unlock()
+
+	netSecPolicies, err = handleNetworkSecurityPolicy(i, oper, nsp)
+	return
+}
+
+func handleNetworkSecurityPolicy(i *IrisAPI, oper types.Operation, nsp netproto.NetworkSecurityPolicy) (netSecPolicies []netproto.NetworkSecurityPolicy, err error) {
 	err = utils.ValidateMeta(oper, nsp.Kind, nsp.ObjectMeta)
 	if err != nil {
 		log.Error(err)
@@ -1010,6 +1031,11 @@ func (i *IrisAPI) HandleSecurityProfile(oper types.Operation, profile netproto.S
 	i.Lock()
 	defer i.Unlock()
 
+	profiles, err = handleSecurityProfile(i, oper, profile)
+	return
+}
+
+func handleSecurityProfile(i *IrisAPI, oper types.Operation, profile netproto.SecurityProfile) (profiles []netproto.SecurityProfile, err error) {
 	err = utils.ValidateMeta(oper, profile.Kind, profile.ObjectMeta)
 	if err != nil {
 		log.Error(err)
@@ -1485,12 +1511,18 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 	i.Lock()
 	defer i.Unlock()
 
+	profiles, err = handleProfile(i, oper, profile)
+	return
+}
+
+func handleProfile(i *IrisAPI, oper types.Operation, profile netproto.Profile) (profiles []netproto.Profile, err error) {
 	err = utils.ValidateMeta(oper, profile.Kind, profile.ObjectMeta)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
+	var existingProfile netproto.Profile
 	// Handle Get and LIST. This doesn't need any pipeline specific APIs
 	switch oper {
 	case types.Get:
@@ -1535,7 +1567,6 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 	case types.Create:
 	case types.Update:
 		// Get to ensure that the object exists
-		var existingProfile netproto.Profile
 		dat, err := i.InfraAPI.Read(profile.Kind, profile.GetKey())
 		if err != nil {
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
@@ -1554,7 +1585,6 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 		}
 
 	case types.Delete:
-		var existingProfile netproto.Profile
 		dat, err := i.InfraAPI.Read(profile.Kind, profile.GetKey())
 		if err != nil {
 			log.Infof("Controller API: %s | Err: %s", types.InfoIgnoreDelete, err)
@@ -1583,19 +1613,41 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 		log.Error(err)
 		return nil, err
 	}
-	// Take a lock to ensure a single HAL API is active at any given point
-	if err := iris.HandleProfile(i.InfraAPI, i.SystemClient, oper, profile); err != nil {
-		log.Error(err)
-		return nil, err
+
+	var kinds *[]string
+	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_INSERTION.String()) {
+		kinds = &types.InsertionKinds
+	} else {
+		switch strings.ToLower(profile.Spec.PolicyMode) {
+		case strings.ToLower(netproto.ProfileSpec_ENFORCED.String()):
+			kinds = &types.EnforcedKinds
+		case strings.ToLower(netproto.ProfileSpec_FLOWAWARE.String()):
+			kinds = &types.FlowAwareKinds
+		case strings.ToLower(netproto.ProfileSpec_BASENET.String()):
+			kinds = &types.BaseNetKinds
+		default:
+			log.Error("Unknown Profile CREATE/UPDATE received")
+			return
+		}
 	}
 
-	if strings.ToLower(profile.Spec.FwdMode) == strings.ToLower(netproto.ProfileSpec_INSERTION.String()) {
-		i.startDynamicWatch(types.InsertionKinds)
-	} else if strings.ToLower(profile.Spec.PolicyMode) == strings.ToLower(netproto.ProfileSpec_FLOWAWARE.String()) {
-		i.startDynamicWatch(types.FlowAwareKinds)
-	} else if strings.ToLower(profile.Spec.PolicyMode) == strings.ToLower(netproto.ProfileSpec_ENFORCED.String()) {
-		i.startDynamicWatch(types.EnforcedKinds)
+	// Profile changes to restricted profiles warrant a purge of all configs. Clean up the watches first to prevent
+	// updates on objects after they are purged. Also, take a lock to ensure a single HAL API is active at any given point.
+	if utils.IsSafeProfileMove(existingProfile, profile) != true {
+		i.startDynamicWatch(*kinds)
+		purgeConfigs(i, false)
+		if err := iris.HandleProfile(i.InfraAPI, i.SystemClient, types.Create, profile); err != nil {
+			log.Error(err)
+			return nil, err
+		}
+	} else {
+		if err := iris.HandleProfile(i.InfraAPI, i.SystemClient, oper, profile); err != nil {
+			log.Error(err)
+			return nil, err
+		}
+		i.startDynamicWatch(*kinds)
 	}
+
 	return
 }
 
@@ -1604,6 +1656,11 @@ func (i *IrisAPI) HandleCollector(oper types.Operation, col netproto.Collector) 
 	i.Lock()
 	defer i.Unlock()
 
+	cols, err = handleCollector(i, oper, col)
+	return
+}
+
+func handleCollector(i *IrisAPI, oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
 	err = utils.ValidateMeta(oper, col.Kind, col.ObjectMeta)
 	if err != nil {
 		log.Error(err)
@@ -1730,6 +1787,10 @@ func (i *IrisAPI) HandleRouteTable(oper types.Operation, routetableObj netproto.
 
 // ReplayConfigs replays last known configs from boltDB
 func (i *IrisAPI) ReplayConfigs() error {
+	// TODO: Ideally we would love to have all these objects in a data structure that would provide some sort of relationship modeling.
+	// This would help in replaying all configs and purging an object and all its dependents cleanly. This could come in handy when
+	// changing profiles too (specially moving to more restrictive profiles).
+
 	// Purge/Replay/Reconcile interfaces first. Since this gets used in subsequent configs.
 	intfKind := netproto.Interface{
 		TypeMeta: api.TypeMeta{Kind: "Interface"},
@@ -1793,9 +1854,6 @@ func (i *IrisAPI) ReplayConfigs() error {
 	}
 	endpoints, _ := i.HandleEndpoint(types.List, epKind)
 	for _, ep := range endpoints {
-		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", ep.Kind, ep.GetKey())
-		i.InfraAPI.Delete(ep.Kind, ep.GetKey())
-
 		creator, ok := ep.ObjectMeta.Labels["CreatedBy"]
 		if ok && creator == "Venice" {
 			log.Infof("Replaying persisted Network Object: %v", ep.GetKey())
@@ -1829,9 +1887,6 @@ func (i *IrisAPI) ReplayConfigs() error {
 	}
 	policies, _ := i.HandleNetworkSecurityPolicy(types.List, nspKind)
 	for _, policy := range policies {
-		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", policy.Kind, policy.GetKey())
-		i.InfraAPI.Delete(policy.Kind, policy.GetKey())
-
 		creator, ok := policy.ObjectMeta.Labels["CreatedBy"]
 		if ok && creator == "Venice" {
 			log.Infof("Replaying persisted NetworkSecurityPolicy Object: %v", policy.GetKey())
@@ -1909,7 +1964,15 @@ func (i *IrisAPI) ReplayConfigs() error {
 }
 
 // PurgeConfigs deletes all configs on Naples Decommission
-func (i *IrisAPI) PurgeConfigs() error {
+func (i *IrisAPI) PurgeConfigs(deleteDB bool) error {
+	i.Lock()
+	defer i.Unlock()
+
+	err := purgeConfigs(i, deleteDB)
+	return err
+}
+
+func purgeConfigs(i *IrisAPI, deleteDB bool) error {
 	// SGPolicies, Apps, Endpoints,  Networks
 	log.Info("Starting Decomission workflow")
 
@@ -1919,65 +1982,86 @@ func (i *IrisAPI) PurgeConfigs() error {
 	e := netproto.Endpoint{TypeMeta: api.TypeMeta{Kind: "Endpoint"}}
 	n := netproto.Network{TypeMeta: api.TypeMeta{Kind: "Network"}}
 	c := netproto.Collector{TypeMeta: api.TypeMeta{Kind: "Collector"}}
+	secprof := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
 	p := netproto.Profile{TypeMeta: api.TypeMeta{Kind: "Profile"}}
 
+	policies, _ := handleNetworkSecurityPolicy(i, types.List, s)
+	apps, _ := handleApp(i, types.List, a)
+	endpoints, _ := handleEndpoint(i, types.List, e)
+	networks, _ := handleNetwork(i, types.List, n)
+	cols, _ := handleCollector(i, types.List, c)
+	sp, _ := handleSecurityProfile(i, types.List, secprof)
+	profiles, _ := handleProfile(i, types.List, p)
+
 	// Clean up the DB
-	i.InfraAPI.Purge()
+	if deleteDB {
+		i.InfraAPI.Purge()
+	}
 
 	log.Info("Stores purged. Ensured state consistency")
 
-	policies, _ := i.HandleNetworkSecurityPolicy(types.List, s)
 	for _, policy := range policies {
-		if _, err := i.HandleNetworkSecurityPolicy(types.Delete, policy); err != nil {
+		if _, err := handleNetworkSecurityPolicy(i, types.Delete, policy); err != nil {
 			log.Errorf("Failed to purge the NetworkSecurityPolicy. Err: %v", err)
 		}
-	}
-
-	apps, _ := i.HandleApp(types.List, a)
-	for _, app := range apps {
-		if _, err := i.HandleApp(types.Delete, app); err != nil {
-			log.Errorf("Failed to purge the App. Err: %v", err)
+		if deleteDB != true {
+			i.InfraAPI.Delete(policy.Kind, policy.GetKey())
 		}
 	}
 
-	endpoints, _ := i.HandleEndpoint(types.List, e)
+	for _, app := range apps {
+		if _, err := handleApp(i, types.Delete, app); err != nil {
+			log.Errorf("Failed to purge the App. Err: %v", err)
+		}
+		if deleteDB != true {
+			i.InfraAPI.Delete(app.Kind, app.GetKey())
+		}
+	}
+
 	for _, endpoint := range endpoints {
 		if strings.Contains(endpoint.Name, "_internal") {
 			continue
 		}
-		if _, err := i.HandleEndpoint(types.Delete, endpoint); err != nil {
+		if _, err := handleEndpoint(i, types.Delete, endpoint); err != nil {
 			log.Errorf("Failed to purge the Endpoint. Err: %v", err)
+		}
+		if deleteDB != true {
+			i.InfraAPI.Delete(endpoint.Kind, endpoint.GetKey())
 		}
 	}
 
-	networks, _ := i.HandleNetwork(types.List, n)
 	for _, network := range networks {
 		if strings.Contains(network.Name, "_internal") {
 			continue
 		}
-		if _, err := i.HandleNetwork(types.Delete, network); err != nil {
+		if _, err := handleNetwork(i, types.Delete, network); err != nil {
 			log.Errorf("Failed to purge the Network. Err: %v", err)
 		}
+		if deleteDB != true {
+			i.InfraAPI.Delete(network.Kind, network.GetKey())
+		}
 	}
 
-	cols, _ := i.HandleCollector(types.List, c)
 	for _, col := range cols {
-		if _, err := i.HandleCollector(types.Delete, col); err != nil {
+		if _, err := handleCollector(i, types.Delete, col); err != nil {
 			log.Errorf("Failed to purge the Collector. Err: %v", err)
 		}
-	}
-
-	secprof := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
-	sp, _ := i.HandleSecurityProfile(types.List, secprof)
-	for _, secProfile := range sp {
-		if _, err := i.HandleSecurityProfile(types.Delete, secProfile); err != nil {
-			log.Errorf("Failed to purge the secProfile. Err: %v", err)
+		if deleteDB != true {
+			i.InfraAPI.Delete(col.Kind, col.GetKey())
 		}
 	}
 
-	profiles, _ := i.HandleProfile(types.List, p)
+	for _, secProfile := range sp {
+		if _, err := handleSecurityProfile(i, types.Delete, secProfile); err != nil {
+			log.Errorf("Failed to purge the secProfile. Err: %v", err)
+		}
+		if deleteDB != true {
+			i.InfraAPI.Delete(secProfile.Kind, secProfile.GetKey())
+		}
+	}
+
 	for _, profile := range profiles {
-		if _, err := i.HandleProfile(types.Delete, profile); err != nil {
+		if _, err := handleProfile(i, types.Delete, profile); err != nil {
 			log.Errorf("Failed to purge the Profiles. Err: %v", err)
 		}
 	}
