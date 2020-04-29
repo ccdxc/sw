@@ -89,7 +89,7 @@ char const * g_eal_args[] = {"fte",
 #define FTE_MAX_CORES 4 // Max Cores
 #define FTE_MAX_TXDSCR 256 // Max TX Descriptors
 #ifdef __aarch64__ 
-#define FTE_MAX_RXDSCR 512 // Max RX Descriptors
+#define FTE_MAX_RXDSCR 2048 // Max RX Descriptors
 #else
 #define FTE_MAX_RXDSCR 256 // Max RX Descriptors
 #endif
