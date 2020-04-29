@@ -380,10 +380,13 @@ enum EventTypes {
                                            (severity)    = CRITICAL,
                                            (desc)        = "DSC mode is incompatible."];
     // ------------------------- Controller events ------------------------- //
-    COLLECTOR_REACHABILITY                 = 1101 [(category) = Network,
+    COLLECTOR_REACHABLE                    = 1101 [(category) = Network,
                                            (severity)         = INFO,
-                                           (desc)             = "Controller reachability from DSC",
+                                           (desc)             = "Collector reachable from DSC",
                                            (suppress_mm)      = true];
+    COLLECTOR_UNREACHABLE                  = 1102 [(category) = Network,
+                                           (severity) 	      = WARN,
+                                           (desc)     	      = "Collector not reachable from DSC"];
     // ------------------------- Control Plane events ------------------------- //
     BGP_SESSION_ESTABLISHED               = 1201 [(category) = Network,
                                            (severity)         = INFO,

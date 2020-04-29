@@ -69,9 +69,10 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'CONFIG_FAIL',
   ],
   network: [
+    'COLLECTOR_REACHABLE',
+    'COLLECTOR_UNREACHABLE',
     'BGP_SESSION_DOWN',
     'BGP_SESSION_ESTABLISHED',
-    'COLLECTOR_REACHABILITY',
     'LINK_DOWN',
     'LINK_UP',
   ],
@@ -378,6 +379,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.warn,
       "Desc": "Configuration failed",
   },
+  'COLLECTOR_REACHABLE' : {
+      "Name": "COLLECTOR_REACHABLE",
+      "Severity": EventsEvent_severity.info,
+      "Desc": "Collector reachable from DSC",
+  },
+  'COLLECTOR_UNREACHABLE' : {
+      "Name": "COLLECTOR_UNREACHABLE",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Collector not reachable from DSC",
+  },
   'BGP_SESSION_DOWN' : {
       "Name": "BGP_SESSION_DOWN",
       "Severity": EventsEvent_severity.warn,
@@ -387,11 +398,6 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "BGP_SESSION_ESTABLISHED",
       "Severity": EventsEvent_severity.info,
       "Desc": "BGP session is established",
-  },
-  'COLLECTOR_REACHABILITY' : {
-      "Name": "COLLECTOR_REACHABILITY",
-      "Severity": EventsEvent_severity.info,
-      "Desc": "Controller reachability from DSC",
   },
   'LINK_DOWN' : {
       "Name": "LINK_DOWN",

@@ -282,6 +282,16 @@
  ],
  "network": [
   {
+   "Name": "COLLECTOR_REACHABLE",
+   "Severity": "info",
+   "Desc": "Collector reachable from DSC"
+  },
+  {
+   "Name": "COLLECTOR_UNREACHABLE",
+   "Severity": "warn",
+   "Desc": "Collector not reachable from DSC"
+  },
+  {
    "Name": "BGP_SESSION_DOWN",
    "Severity": "warn",
    "Desc": "BGP session is down"
@@ -290,11 +300,6 @@
    "Name": "BGP_SESSION_ESTABLISHED",
    "Severity": "info",
    "Desc": "BGP session is established"
-  },
-  {
-   "Name": "COLLECTOR_REACHABILITY",
-   "Severity": "info",
-   "Desc": "Controller reachability from DSC"
   },
   {
    "Name": "LINK_DOWN",

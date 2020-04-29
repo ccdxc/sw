@@ -580,12 +580,19 @@ func init() {
 		Desc:       "DSC mode is incompatible.",
 		SuppressMM: false}
 
-	eventTypes[COLLECTOR_REACHABILITY] = &EventTypeAttributes{
-		EType:      COLLECTOR_REACHABILITY.String(),
+	eventTypes[COLLECTOR_REACHABLE] = &EventTypeAttributes{
+		EType:      COLLECTOR_REACHABLE.String(),
 		Severity:   "info",
 		Category:   "network",
-		Desc:       "Controller reachability from DSC",
+		Desc:       "Collector reachable from DSC",
 		SuppressMM: true}
+
+	eventTypes[COLLECTOR_UNREACHABLE] = &EventTypeAttributes{
+		EType:      COLLECTOR_UNREACHABLE.String(),
+		Severity:   "warn",
+		Category:   "network",
+		Desc:       "Collector not reachable from DSC",
+		SuppressMM: false}
 
 	eventTypes[BGP_SESSION_ESTABLISHED] = &EventTypeAttributes{
 		EType:      BGP_SESSION_ESTABLISHED.String(),
