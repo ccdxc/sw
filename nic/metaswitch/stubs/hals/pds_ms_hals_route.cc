@@ -9,6 +9,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_destip_track.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_tbl_idx.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_utils.hpp"
 #include "nic/apollo/api/internal/pds_route.hpp"
@@ -134,7 +135,80 @@ pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(const pds_obj_key_t&
     return bctxt_guard_;
 }
 
+static ms_hw_tbl_id_t
+lookup_indirect_ps_and_map_destip_ (state_t* state,
+                                    ms_ps_id_t indirect_pathset,
+                                    const ip_addr_t& destip_track) {
+
+    auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
+    if (indirect_ps_obj == nullptr) {
+        PDS_TRACE_DEBUG("Set new indirect pathset %d -> blackhole",
+                        indirect_pathset);
+        std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr
+            (new indirect_ps_obj_t());
+
+        indirect_ps_obj = indirect_ps_obj_uptr.get();
+        state->indirect_ps_store().add_upd(indirect_pathset,
+                                           std::move(indirect_ps_obj_uptr));
+    } else if (!ip_addr_is_zero(&(indirect_ps_obj->destip()))) {
+        // Assert there is only 1 TEP referring to each indirect Pathset
+        if (!ip_addr_is_equal (&(indirect_ps_obj->destip()), &destip_track)) {
+            PDS_TRACE_ERR("Attempt to stitch DestIP %s to MS indirect pathset %d"
+                          " that is already stitched to DestIP %s",
+                          ipaddr2str(&destip_track), indirect_pathset,
+                          ipaddr2str(&(indirect_ps_obj->destip())));
+            SDK_ASSERT(0);
+        }
+        SDK_ASSERT(!(indirect_ps_obj->is_ms_evpn_tep_ip()));
+        return indirect_ps_obj->direct_ps_dpcorr();
+    }
+    PDS_TRACE_DEBUG("Stitch DestIP %s to indirect pathset %d direct pathset %d",
+                    ipaddr2str(&destip_track), indirect_pathset,
+                    indirect_ps_obj->direct_ps_dpcorr());
+    indirect_ps_obj->set_destip(destip_track);
+    return indirect_ps_obj->direct_ps_dpcorr();
+}
+
 sdk_ret_t hals_route_t::underlay_route_add_upd_() {
+    bool tracked = false;
+    ip_addr_t destip_track;
+    obj_id_t pds_obj_id;
+
+    {
+        auto state_ctxt = state_t::thread_context();
+        auto state = state_ctxt.state();
+
+        auto it_internal = state->destip_track_internalip_store().find(ips_info_.pfx);
+        if (it_internal != state->destip_track_internalip_store().end()) {
+            auto destip_track_obj = 
+                state->destip_track_store().get(it_internal->second);
+            destip_track = destip_track_obj->destip();
+            pds_obj_id = destip_track_obj->pds_obj_id();
+            tracked = true;
+
+            // Add back ref from the indirect pathset to the route
+            auto nhgroup_id = 
+                lookup_indirect_ps_and_map_destip_(state, ips_info_.pathset_id,
+                                                   destip_track);
+            ips_info_.ecmp_id = nhgroup_id;
+        }
+    }
+
+    if (ips_info_.ecmp_id == PDS_MS_ECMP_INVALID_INDEX) {
+        return SDK_RET_OK;
+    }
+    if (tracked) {
+        return destip_track_reachability_change(destip_track, ips_info_.ecmp_id,
+                                                pds_obj_id);
+    }
+
+    if (mgmt_state_t::thread_context().state()->overlay_routing_en()) {
+        // No underlay route programming to HAL in overlay routing mode
+        return SDK_RET_OK;
+    }
+
+    // TODO temporary until non-overlay TEP also starts using the new
+    // DestIP track
     pds_route_spec_t route_spec = {0};
     auto& route_attrs = route_spec.attrs;
     route_attrs.prefix = ips_info_.pfx;
@@ -144,6 +218,14 @@ sdk_ret_t hals_route_t::underlay_route_add_upd_() {
 }
 
 sdk_ret_t hals_route_t::underlay_route_del_() {
+    // TODO: HAL objects associated with tracked Dest IPs need to be
+    // black-holed when the underlay reachability is lost ??
+    // We can also reach here when tracking is stopped in which case
+    // the destip would have been deleted in which case there
+    // is nothing to update - so need to differentiate these
+    if (mgmt_state_t::thread_context().state()->overlay_routing_en()) {
+        return SDK_RET_OK;
+    }
     return api::pds_underlay_route_delete(&ips_info_.pfx);
 }
 
@@ -159,15 +241,6 @@ NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_i
                         ippfx2str(&ips_info_.pfx));
         auto state_ctxt = pds_ms::state_t::thread_context();
         state_ctxt.state()->add_ignored_prefix(ips_info_.pfx);
-        return rc;
-    }
-
-    if (ips_info_.ecmp_id == PDS_MS_ECMP_INVALID_INDEX) {
-        // Can happen when the L2F UpdateRoutersMAC from EVPN is delayed
-        // because of which PSM cannot fetch ARP MAC from NAR stub
-        // and the ROPI route update comes with black-holed pathset
-        PDS_TRACE_DEBUG("Ignore prefix route %s with black-holed pathset %d",
-                        ippfx2str(&ips_info_.pfx), ips_info_.pathset_id);
         return rc;
     }
 
@@ -191,6 +264,15 @@ NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_i
         // async batch mode when HAL API thread starts supporting
         // TEP stitching natively.
         return underlay_route_add_upd_();
+    }
+
+    if (ips_info_.ecmp_id == PDS_MS_ECMP_INVALID_INDEX) {
+        // Can happen when the L2F UpdateRoutersMAC from EVPN is delayed
+        // because of which PSM cannot fetch ARP MAC from NAR stub
+        // and the ROPI route update comes with black-holed pathset
+        PDS_TRACE_DEBUG("Ignore prefix route %s with black-holed pathset %d",
+                        ippfx2str(&ips_info_.pfx), ips_info_.pathset_id);
+        return rc;
     }
 
     // Alloc new cookie and cache IPS

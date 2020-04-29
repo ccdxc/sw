@@ -28,6 +28,7 @@ state_t::state_t(void)
     pathset_slab_init (slabs_, PDS_MS_PATHSET_SLAB_ID);
     ecmp_idx_guard_slab_init (slabs_, PDS_MS_ECMP_IDX_GUARD_SLAB_ID);
     indirect_ps_slab_init(slabs_, PDS_MS_INDIRECT_PS_SLAB_ID);
+    destip_track_slab_init(slabs_, PDS_MS_DESTIP_TRACK_SLAB_ID);
 
     slabs_[PDS_MS_COOKIE_SLAB_ID].
         reset(sdk::lib::slab::factory("PDS-MS-COOKIE",
@@ -45,6 +46,13 @@ state_t::state_t(void)
     ecmp_idx_gen_ = sdk::lib::rte_indexer::factory(0xFFFF-1,
                                                    /* skip zero */
                                                    true, true);
+    // Index generator for internal IP used to create static routes
+    // for tracking destination IP
+    // Using 16 bit max index - 65535 internal IP
+    destip_track_internal_idx_gen_ =
+        sdk::lib::rte_indexer::factory(0xFFFF-1,
+                                       /* skip zero */
+                                       true, true);
 }
 
 bool

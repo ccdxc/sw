@@ -43,22 +43,23 @@ static ms_hw_tbl_id_t lookup_indirect_ps_and_map_tep_ip_(state_t* state,
     auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
     SDK_ASSERT (indirect_ps_obj != nullptr);
 
-    if (!ip_addr_is_zero(&(indirect_ps_obj->tep_ip))) {
+    if (!ip_addr_is_zero(&(indirect_ps_obj->destip()))) {
         // Assert there is only 1 TEP referring to each indirect Pathset
-        if (!ip_addr_is_equal (&(indirect_ps_obj->tep_ip), &tep_ip)) {
+        if (!ip_addr_is_equal (&(indirect_ps_obj->destip()), &tep_ip)) {
             PDS_TRACE_ERR("Attempt to stitch TEP %s to MS indirect pathset %d"
-                          " that is already stitched to TEP %s",
+                          " that is already stitched to DestIP %s",
                           ipaddr2str(&tep_ip), indirect_pathset,
-                          ipaddr2str(&(indirect_ps_obj->tep_ip)));
+                          ipaddr2str(&(indirect_ps_obj->destip())));
             SDK_ASSERT(0);
         }
-        return indirect_ps_obj->direct_ps_dpcorr;
+        SDK_ASSERT(indirect_ps_obj->is_ms_evpn_tep_ip());
+        return indirect_ps_obj->direct_ps_dpcorr();
     }
     PDS_TRACE_DEBUG("Stitch TEP %s to indirect pathset %d direct pathset %d",
                     ipaddr2str(&tep_ip), indirect_pathset,
-                    indirect_ps_obj->direct_ps_dpcorr);
-    indirect_ps_obj->tep_ip = tep_ip;
-    return indirect_ps_obj->direct_ps_dpcorr;
+                    indirect_ps_obj->direct_ps_dpcorr());
+    indirect_ps_obj->set_ms_evpn_tepip(tep_ip);
+    return indirect_ps_obj->direct_ps_dpcorr();
 }
 
 static void unmap_indirect_ps_2_tep_ip_(state_t* state,
@@ -68,8 +69,7 @@ static void unmap_indirect_ps_2_tep_ip_(state_t* state,
     if (indirect_ps_obj == nullptr) {
         return;
     }
-    ip_addr_t zero_ip = {0};
-    indirect_ps_obj->tep_ip = zero_ip;
+    indirect_ps_obj->reset_destip();
 }
 
 void li_vxlan_tnl::parse_ips_info_(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_upd_ips) {

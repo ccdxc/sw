@@ -16,6 +16,8 @@ service CPTestSvc
 {
   rpc CPL2fTestCreate (CPL2fTestCreateSpec) returns (CPL2fTestResponse) {}
   rpc CPL2fTestDelete (CPL2fTestDeleteSpec) returns (CPL2fTestResponse) {}
+  rpc CPDestIPTrackTestCreate (CPDestIPTrackTestCreateSpec) returns (CPDestIPTrackTestResponse) {}
+  rpc CPDestIPTrackTestDelete (CPDestIPTrackTestDeleteSpec) returns (CPDestIPTrackTestResponse) {}
 }
 
 message CPL2fTestCreateSpec {
@@ -38,5 +40,25 @@ message CPL2fTestDeleteSpec {
 }
 
 message CPL2fTestResponse {
+    types.ApiStatus ApiStatus = 1;
+}
+
+
+message CPDestIPTrackTestCreateSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    ActionFn: "destip_track_start"
+  };
+    types.IPAddress DestIP   = 1;
+    uint32          PDSObjId    = 2;
+}
+
+message CPDestIPTrackTestDeleteSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    ActionFn: "destip_track_stop"
+  };
+    types.IPAddress DestIP   = 1;
+}
+
+message CPDestIPTrackTestResponse {
     types.ApiStatus ApiStatus = 1;
 }

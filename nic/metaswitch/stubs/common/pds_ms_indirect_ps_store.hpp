@@ -14,18 +14,36 @@
 namespace pds_ms {
 
 // Indirect Pathset (Cascaded mode) that points to direct pathsets
-// Used for underlay nexthops that are used by VXLAN Tunnels
-// Holds back-ref from indirect pathset to TEP
+// In cascaded mode, MS creates unique Indirect pathset for each
+// destination IP that its tracking
+// This object holds the back-ref to the destination IP that this
+// indirect pathset is tracking
 class indirect_ps_obj_t : public slab_obj_t<indirect_ps_obj_t>,
                              public base_obj_t {
 public:
     indirect_ps_obj_t();
-    indirect_ps_obj_t(ms_hw_tbl_id_t direct_ps_dpcorr_);
-    indirect_ps_obj_t(const ip_addr_t& tep);
+    indirect_ps_obj_t(ms_hw_tbl_id_t direct_ps_dpcorr);
 
-public:
-    ms_hw_tbl_id_t direct_ps_dpcorr = 0; // direct pathset DP correlator
-    ip_addr_t  tep_ip;       // TEP IP
+    ms_hw_tbl_id_t direct_ps_dpcorr() {return direct_ps_dpcorr_;}
+    ip_addr_t& destip() {return destip_;}
+    bool is_ms_evpn_tep_ip() {return ms_evpn_tep_ip_;}
+
+    void set_ms_evpn_tepip(const ip_addr_t& destip) {
+        destip_ = destip; ms_evpn_tep_ip_ = true;
+    }
+    void set_destip(const ip_addr_t& destip) {
+        destip_ = destip; ms_evpn_tep_ip_ = false;
+    }
+    void set_direct_ps_dpcorr(ms_hw_tbl_id_t direct_ps_dpcorr) {
+        direct_ps_dpcorr_ = direct_ps_dpcorr;
+    }
+
+    void reset_destip(void);
+private:
+    ms_hw_tbl_id_t direct_ps_dpcorr_ = 0; // direct pathset DP correlator
+    ip_addr_t  destip_;       // Dest IP that this Pathset tracks
+    bool  ms_evpn_tep_ip_ = true; // Is the IP being tracked a TEP IP
+                                  // created from MS EVPN
 };
 
 class indirect_ps_store_t : public obj_store_t <ms_ps_id_t, indirect_ps_obj_t> {

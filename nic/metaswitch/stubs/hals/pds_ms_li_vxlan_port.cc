@@ -67,12 +67,13 @@ void li_vxlan_port::fetch_store_info_(pds_ms::state_t* state) {
     } else {
         if (store_info_.vxp_if_obj != nullptr) {
             auto& vxp_prop = store_info_.vxp_if_obj->vxlan_port_properties();
-            SDK_ASSERT(IPADDR_EQ(&indirect_ps_obj->tep_ip, &vxp_prop.tep_ip));
+            SDK_ASSERT(IPADDR_EQ(&indirect_ps_obj->destip(), &vxp_prop.tep_ip));
         } else {
             auto& tep_prop = store_info_.tep_obj->properties();
-            SDK_ASSERT(IPADDR_EQ(&indirect_ps_obj->tep_ip, &tep_prop.tep_ip));
+            SDK_ASSERT(IPADDR_EQ(&indirect_ps_obj->destip(), &tep_prop.tep_ip));
         }
-        store_info_.ms_upathset_dpcorr = indirect_ps_obj->direct_ps_dpcorr;
+        SDK_ASSERT(indirect_ps_obj->is_ms_evpn_tep_ip());
+        store_info_.ms_upathset_dpcorr = indirect_ps_obj->direct_ps_dpcorr();
     }
 }
 

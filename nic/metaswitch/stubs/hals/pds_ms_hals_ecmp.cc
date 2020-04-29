@@ -11,6 +11,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_destip_track.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/apollo/learn/learn_api.hpp"
 #include <hals_c_includes.hpp>
@@ -80,7 +81,7 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
             NBB_CORR_GET_VALUE(ips_info_.direct_ps_dpcorr, next_hop->next_hop_properties.
                                indirect_next_hop_properties.
                                lower_level_dp_correlator);
-            PDS_TRACE_DEBUG("MS Cascaded Pathset %d Copy lower level DP Correlator %d",
+            PDS_TRACE_DEBUG("Indirect Pathset %d Copy lower level DP Correlator %d",
                              ips_info_.pathset_id, ips_info_.direct_ps_dpcorr);
         }
         if (next_hop->next_hop_properties.destination_type ==
@@ -97,12 +98,28 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
             }
         }
     }
-    ips_info_.num_added_nh =
-        NTL_OFF_LIST_GET_LEN(add_upd_ecmp_ips,
-                             &add_upd_ecmp_ips->added_next_hop_objects);
-    ips_info_.num_deleted_nh =
-        NTL_OFF_LIST_GET_LEN(add_upd_ecmp_ips,
-                             &add_upd_ecmp_ips->deleted_next_hop_objects);
+    ips_info_.num_added_nh = NTL_OFF_LIST_GET_LEN(add_upd_ecmp_ips,
+                                                    &add_upd_ecmp_ips->added_next_hop_objects);
+    ips_info_.num_deleted_nh = 0;
+    auto del_list_p = &add_upd_ecmp_ips->deleted_next_hop_objects;
+
+    for (auto next_hop = NHPI_GET_FIRST_NH(add_upd_ecmp_ips, del_list_p);
+         next_hop != NULL;
+         next_hop = NHPI_GET_NEXT_NH(add_upd_ecmp_ips, del_list_p, next_hop)) {
+        if (next_hop->next_hop_properties.destination_type !=
+            ATG_NHPI_NEXT_HOP_DEST_BH) {
+            ++ips_info_.num_deleted_nh;
+        }
+    }
+    PDS_TRACE_INFO("Pathset %d Received actual Num Deleted nh %d",
+                   ips_info_.pathset_id,
+                   NTL_OFF_LIST_GET_LEN(add_upd_ecmp_ips,
+                                        &add_upd_ecmp_ips->deleted_next_hop_objects));
+    PDS_TRACE_INFO("Pathset %d - Total NH %d Num add NH %d non-blackholed Deleted nh %d",
+                   ips_info_.pathset_id,
+                   ips_info_.nexthops.size(),
+                   ips_info_.num_added_nh,
+                   ips_info_.num_deleted_nh);
     return process;
 }
 
@@ -343,7 +360,7 @@ static void send_ips_response_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips,
 
 // Update the indirect PS to direct PS mapping
 // Return TEP using this indirect PS if any
-static ip_addr_t indirect_ps_lookup_and_update_ (state_t* state,
+static std::pair<ip_addr_t,bool> indirect_ps_lookup_and_update_ (state_t* state,
                                                     ms_ps_id_t indirect_pathset,
                                                     ms_hw_tbl_id_t direct_ps_dpcorr) {
     ip_addr_t zero_ip = {0};
@@ -355,14 +372,15 @@ static ip_addr_t indirect_ps_lookup_and_update_ (state_t* state,
             (new indirect_ps_obj_t(direct_ps_dpcorr));
         state->indirect_ps_store().add_upd(indirect_pathset,
                                            std::move(indirect_ps_obj_uptr));
-        return zero_ip;
+        return std::pair<ip_addr_t,bool> (zero_ip,true);
     }
-    if (indirect_ps_obj->direct_ps_dpcorr != direct_ps_dpcorr) {
+    if (indirect_ps_obj->direct_ps_dpcorr() != direct_ps_dpcorr) {
         PDS_TRACE_DEBUG("Set indirect pathset %d -> direct pathset %d",
                         indirect_pathset, direct_ps_dpcorr);
-        indirect_ps_obj->direct_ps_dpcorr = direct_ps_dpcorr;
+        indirect_ps_obj->set_direct_ps_dpcorr(direct_ps_dpcorr);
     }
-    return indirect_ps_obj->tep_ip;
+    return std::pair<ip_addr_t,bool> (indirect_ps_obj->destip(),
+                                      indirect_ps_obj->is_ms_evpn_tep_ip());
 }
 
 NBB_BYTE hals_ecmp_t::handle_indirect_ps_update_
@@ -373,12 +391,20 @@ NBB_BYTE hals_ecmp_t::handle_indirect_ps_update_
     // Check if this is an Indirect Pathset that is referenced by
     // existing VXLAN Tunnels (TEPs)
     auto state_ctxt = pds_ms::state_t::thread_context();
-    auto tep_ip = indirect_ps_lookup_and_update_(state_ctxt.state(),
-                                                    ips_info_.pathset_id,
-                                                    ips_info_.direct_ps_dpcorr);
-    if (ip_addr_is_zero(&tep_ip)) {
+    auto destip_pair = indirect_ps_lookup_and_update_(state_ctxt.state(),
+                                                       ips_info_.pathset_id,
+                                                       ips_info_.direct_ps_dpcorr);
+    auto destip = destip_pair.first;
+    if (ip_addr_is_zero(&destip)) {
         return rc;
     }
+    if (!destip_pair.second) {
+        // Indirect pathset is NOT tracking a MS EVPN TEP IP
+        auto destip_track_obj = state_ctxt.state()->destip_track_store().get(destip);
+        return destip_track_reachability_change(destip, ips_info_.direct_ps_dpcorr,
+                                                destip_track_obj->pds_obj_id());
+    }
+    auto& tep_ip = destip_pair.first;
     PDS_TRACE_DEBUG("Found TEP %s stitched to Indirect Pathset %d",
                     ipaddr2str(&tep_ip), ips_info_.pathset_id);
 

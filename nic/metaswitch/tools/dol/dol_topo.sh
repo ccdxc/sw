@@ -198,63 +198,16 @@ if [ $UNDERLAY == 1 ]; then
 fi
 
 echo "Originate EVPN Type 5 route from "$CONTAINER"2"
-# Create an connected L3 interface subnet in Tenant VRF to act as nexthop for the prefix so that the Prefix gets advertised to EVPN
-#docker exec -it "$CONTAINER"2 python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limGenIrbInterfaceTable \
-#                                     limEntEntityIndex=1 \
-#                                     limGenIrbInterfaceBdType=limBridgeDomainEvpn \
-#                                     limGenIrbInterfaceBdId=1 \
-#                                     limGenIrbInterfaceRowStatus=rowCreateAndGo \
-#                                     limGenIrbInterfaceMacAddr="0x00 0x11 0x22 0x33 0x44 0x55" \
-#                                     limGenIrbInterfaceAdminStatus=adminStatusUp
-#
-#docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limInterfaceCfgTable \
-#                                     limEntEntityIndex=1 \
-#                                     limInterfaceCfgIfIndex=1073823745 \
-#                                     limInterfaceCfgIpv6Enabled=triStateFalse \
-#                                     limInterfaceCfgRowStatus=rowCreateAndGo \
-#                                     limInterfaceCfgBindVrfName=0x32"
-#
-#docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limL3InterfaceAddressTable \
-#                                     limEntEntityIndex=1 \
-#                                     limL3InterfaceAddressIfIndex=1073823745 \
-#                                     limL3InterfaceAddressIPAddrType=inetwkAddrTypeIpv4 \
-#                                     limL3InterfaceAddressIPAddress=192.168.1.254 \
-#                                     limL3InterfaceAddressRowStatus=rowCreateAndGo \
-#                                     limL3InterfaceAddressAdminStatus=adminStatusUp \
-#                                     limL3InterfaceAddressPrefixLen=24"
 
 docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
-#docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0xc0a8010a rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
+
 docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0x0c00000f rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
+
 if [ $RR == 0 ]; then
     echo "Originate EVPN Type 5 route from "$CONTAINER"3"
-    # Create an connected L3 interface subnet in Tenant VRF to act as nexthop for the prefix so that the Prefix gets advertised to EVPN
-#    docker exec -it "$CONTAINER"3 python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limGenIrbInterfaceTable \
-#                                         limEntEntityIndex=1 \
-#                                         limGenIrbInterfaceBdType=limBridgeDomainEvpn \
-#                                         limGenIrbInterfaceBdId=1 \
-#                                         limGenIrbInterfaceRowStatus=rowCreateAndGo \
-#                                         limGenIrbInterfaceMacAddr="0x00 0x11 0x22 0x33 0x44 0x55" \
-#                                         limGenIrbInterfaceAdminStatus=adminStatusUp
-#
-#    docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limInterfaceCfgTable \
-#                                         limEntEntityIndex=1 \
-#                                         limInterfaceCfgIfIndex=1073823745 \
-#                                         limInterfaceCfgIpv6Enabled=triStateFalse \
-#                                         limInterfaceCfgRowStatus=rowCreateAndGo \
-#                                         limInterfaceCfgBindVrfName=0x32"
-#
-#    docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limL3InterfaceAddressTable \
-#                                         limEntEntityIndex=1 \
-#                                         limL3InterfaceAddressIfIndex=1073823745 \
-#                                         limL3InterfaceAddressIPAddrType=inetwkAddrTypeIpv4 \
-#                                         limL3InterfaceAddressIPAddress=192.168.1.254 \
-#                                         limL3InterfaceAddressRowStatus=rowCreateAndGo \
-#                                         limL3InterfaceAddressAdminStatus=adminStatusUp \
-#                                         limL3InterfaceAddressPrefixLen=24"
 
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
-#    docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0xc0a8010a rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
+
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0x0c00000e rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
 fi
 
@@ -266,7 +219,7 @@ if [ $DOL_RUN == 1 ]; then
         echo "DOL run passed: $ret"
     fi
 
-    cd $NICDIR && tar -cvzf controlplane_dol_logs.tgz core.* *.log metaswitch/config/dol_ctr*/*.log metaswitch/config/dol_ctr*/core.*
+    cd $NICDIR && tar -cvzf controlplane_dol_logs.tgz core* *.log metaswitch/config/dol_ctr*/*.log metaswitch/config/dol_ctr*/core*
 
     grep ++++ $NICDIR/pds-agent.log
     if grep -q "++++ Underlay Pathset.* Num NH 2.*Async reply Success" $NICDIR/pds-agent.log; then
@@ -295,40 +248,82 @@ if [ $DOL_RUN == 1 ]; then
     fi
     exit $ret
 else
+    sleep 5
     ret=0
-    grep ++++ $NICDIR/pds-agent.log
-    if grep -q "++++ Underlay Pathset.* Num NH 2.*Async reply Success" $NICDIR/pds-agent.log; then
+    DUTDIR=$NICDIR/metaswitch/config/dol_ctr1
+    grep ++++ $DUTDIR/pds-agent.log
+    if grep -q "++++ Underlay Pathset.* Num NH 2.*Async reply Success" $DUTDIR/pds-agent.log; then
        echo Underlay ECMP found PASS
     else
        echo Underlay ECMP not found FAIL
        ret=1
     fi
     if [ $RR == 0 ]; then
-        if grep -q "++++ Overlay Pathset.* Num NH 2.*Async reply Success" $NICDIR/pds-agent.log; then
+        if grep -q "++++ Overlay Pathset.* Num NH 2.*Async reply Success" $DUTDIR/pds-agent.log; then
            echo Overlay ECMP found PASS
         else
            echo Overlay ECMP not found FAIL
            ret=1
         fi
     else
-        if grep -q "++++ Overlay Pathset.* Num NH 1.*Async reply Success" $NICDIR/pds-agent.log; then
+        if grep -q "++++ Overlay Pathset.* Num NH 1.*Async reply Success" $DUTDIR/pds-agent.log; then
            echo Overlay Pathset found PASS
         else
            echo Overlay Pathset not found FAIL
            ret=1
         fi
     fi
-    if grep -q "++++ MS Route 128.16.0.0/16.*Async reply Success" $NICDIR/pds-agent.log; then
+    if grep -q "++++ MS Route 128.16.0.0/16.*Async reply Success" $DUTDIR/pds-agent.log; then
        echo Type 5 route installed PASS
     else
        echo Type 5 route not installed FAIL
        ret=1
     fi
-    if grep -q "++++ BD 1 MAC 00:ee:00:00:00:05.*Async reply Success" $NICDIR/pds-agent.log; then
-       echo Type 2 route installed PASS
+    if [ $RR == 1 ]; then
+        if grep -q "++++ BD 1 MAC 00:12:23:45:67:08.*Async reply Success" $DUTDIR/pds-agent.log; then
+           echo Type 2 route installed PASS
+        else
+           echo Type 2 route not installed FAIL
+           ret=1
+        fi
     else
-       echo Type 2 route not installed FAIL
-       ret=1
+        if grep -q "++++ BD 1 MAC 00:ee:00:00:00:05.*Async reply Success" $DUTDIR/pds-agent.log; then
+           echo Type 2 route installed PASS
+        else
+           echo Type 2 route not installed FAIL
+           ret=1
+        fi
     fi
     exit $ret
 fi
+
+
+
+# Older way to create Type 5
+#Create an connected L3 interface subnet in Tenant VRF to act as nexthop for the prefix so that the Prefix gets advertised to EVPN
+#docker exec -it "$CONTAINER"2 python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limGenIrbInterfaceTable \
+#                                     limEntEntityIndex=1 \
+#                                     limGenIrbInterfaceBdType=limBridgeDomainEvpn \
+#                                     limGenIrbInterfaceBdId=1 \
+#                                     limGenIrbInterfaceRowStatus=rowCreateAndGo \
+#                                     limGenIrbInterfaceMacAddr="0x00 0x11 0x22 0x33 0x44 0x55" \
+#                                     limGenIrbInterfaceAdminStatus=adminStatusUp
+#
+#docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limInterfaceCfgTable \
+#                                     limEntEntityIndex=1 \
+#                                     limInterfaceCfgIfIndex=1073823745 \
+#                                     limInterfaceCfgIpv6Enabled=triStateFalse \
+#                                     limInterfaceCfgRowStatus=rowCreateAndGo \
+#                                     limInterfaceCfgBindVrfName=0x32"
+#
+#docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost limL3InterfaceAddressTable \
+#                                     limEntEntityIndex=1 \
+#                                     limL3InterfaceAddressIfIndex=1073823745 \
+#                                     limL3InterfaceAddressIPAddrType=inetwkAddrTypeIpv4 \
+#                                     limL3InterfaceAddressIPAddress=192.168.1.254 \
+#                                     limL3InterfaceAddressRowStatus=rowCreateAndGo \
+#                                     limL3InterfaceAddressAdminStatus=adminStatusUp \
+#                                     limL3InterfaceAddressPrefixLen=24"
+
+#docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0xc0a8010a rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
+

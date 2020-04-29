@@ -2,6 +2,7 @@
 // Purpose: Helper APIs for metaswitch L2F stub programming 
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_destip_track.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
 #include "l2f_mgmt_if.h"
 #include <iostream>
@@ -111,4 +112,5 @@ l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec *req, CPL2fTestResponse *re
 
     return types::ApiStatus::API_STATUS_OK;
 }
+
 } // end namespace pds_ms

@@ -161,12 +161,6 @@ process_vpc_update (ms_vrf_id_t    vrf_id,
     return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
-static bool overlay_routing_enabled_()
-{
-    auto mgmt_ctxt = mgmt_state_t::thread_context();
-    return mgmt_ctxt.state()->overlay_routing_en();
-}
-
 static types::ApiStatus
 process_underlay_vpc_create ()
 {
@@ -185,10 +179,26 @@ process_underlay_vpc_create ()
     // is available the stop-gap solution is to push underlay routes to
     // HAL API thread and have it stitch the TEPs to the Underlay NH groups.
     // This requires even default RTM component to join the FTM component.
-    if (!overlay_routing_enabled_()) { 
+ 
+#if 0    // TODO: Temporarily disabling the overlay routing check to support
+    // requirement to stitch the Mirror Collector's underlay tunnel IP
+    // to the underlay nexthops.
+    // Until MS provides a solution for statically requesting NH Groups for any
+    // configurable IP address, the workaround is to enable FTM for underlay
+    // as well. 
+    // This enables NH Group programming to hardware for underlay routes
+    // received via BGP and also pushes this underlay route <-> NHGroup
+    // mapping to HAL which can use to stitch the underlay NH Group
+    // to the Mirror collector IP. 
+ 
+    if (!mgmt_state_t::thread_context().state()->overlay_routing_enabled()) { 
         PDS_TRACE_DEBUG("Overlay Routing disabled, enable underlay routes to HAL");
         pds_ms_rtm_ftm_join(&conf, PDS_MS_RTM_DEF_ENT_INDEX);
     }
+#else
+    PDS_TRACE_DEBUG("Enable underlay routes to HAL");
+    pds_ms_rtm_ftm_join(&conf, PDS_MS_RTM_DEF_ENT_INDEX);
+#endif
     pds_ms_ft_stub_create (&conf);    // FT stub
     pds_ms_rtm_ft_stub_join (&conf, PDS_MS_RTM_DEF_ENT_INDEX);
 

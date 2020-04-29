@@ -293,7 +293,7 @@ jobs:
   venice/ui:
     labels: ["hourly"]
   test/ci_targets/controlplane-dol:
-    labels: ["precommit"]
+    labels: ["precommit", "daily"]
 
 dependencies:
   api:
@@ -305,10 +305,12 @@ dependencies:
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: iota/test/standalone/sanity/apulu-networking
     - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: test/ci_targets/controlplane-dol
 #  dol/artemis:
 #    - reference: nic/apollo/tools/artemis/sanity/base
   dol/apulu:
     - reference: nic/apollo/tools/apulu/sanity/base
+    - reference: test/ci_targets/controlplane-dol
   dol/test/networking:
     - reference: nic
   events:

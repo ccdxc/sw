@@ -29,16 +29,16 @@ static void set_zero_ip(ip_addr_t& ip_addr) {
 }
 
 indirect_ps_obj_t::indirect_ps_obj_t() {
-    set_zero_ip(tep_ip);
+    set_zero_ip(destip_);
 }
 
-indirect_ps_obj_t::indirect_ps_obj_t(ms_hw_tbl_id_t direct_ps_dpcorr_)
-     : direct_ps_dpcorr (direct_ps_dpcorr_) {
-    set_zero_ip(tep_ip);
+indirect_ps_obj_t::indirect_ps_obj_t(ms_hw_tbl_id_t direct_ps_dpcorr)
+     : direct_ps_dpcorr_ (direct_ps_dpcorr) {
+    set_zero_ip(destip_);
 }
 
-indirect_ps_obj_t::indirect_ps_obj_t(const ip_addr_t& tep) {
-    tep_ip = tep;
+void indirect_ps_obj_t::reset_destip(void) {
+    set_zero_ip(destip_);
 }
 
 } // End namespace
