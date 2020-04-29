@@ -1,6 +1,6 @@
 meta:
-    name        : apulu_scale_4G
-    description : Apulu Scale Config for 4G Testsuite
+    name        : apulu_sdn_pds_scale_8G
+    description : Apulu SDN PDS Scale 8G Testsuite
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
@@ -14,29 +14,25 @@ image_manifest:
     naples      : capri
 
 setup:
-    topology: test/apulu/topologies/classic_baremetal/classic_baremetal.topology
-    config  :
+    topology : test/apulu/topologies/classic_baremetal/classic_baremetal.topology
+    config   :
         - step : verif.config.verify_oob
         - step : config.set_max_mtu
         - step : config.topology
           args :
              spec :
-                node1 : 2naples_bm_dynamic_4G_scale_node1.cfgyml
-                node2 : 2naples_bm_dynamic_4G_scale_node2.cfgyml
+                node1 : 2naples_bm_dynamic_8G_scale_node1.cfgyml
+                node2 : 2naples_bm_dynamic_8G_scale_node2.cfgyml
         - step : config.bringup_workloads
         - step : config.add_routes
 
 common:
     verifs:
-        #-   step    : verif.utils.verify_links
-        #-   step    : verif.utils.verify_cores
-        #-   step    : verif.utils.verify_topology_health
+
     debugs:
-        -   step    : verif.utils.collect_techsupport
+        - step : verif.utils.collect_techsupport
 
     setup:
-        #-   step    : verif.utils.link_flap
-        #-   step    : verif.utils.del_add_config
 
 testbundles:
     sanity:
@@ -47,4 +43,4 @@ testbundles:
         # Relative paths from iota/test/apulu/testbundles/
 
 teardown:
-    - step      : verif.utils.collect_techsupport
+    - step : verif.utils.collect_techsupport

@@ -210,9 +210,9 @@ jobs:
     labels: ["2xhourly"]
   iota/test/standalone/sanity/windows:
     labels: ["daily"]
-  iota/test/standalone/sanity/apulu-networking:
-    labels: ["2xhourly"]
-  iota/test/standalone/sanity/apulu-networking-scale:
+  iota/test/standalone/sanity/apulu-core:
+    labels: ["daily"]
+  iota/test/standalone/sanity/apulu-sdn-pds:
     labels: ["daily"]
   iota/test/standalone/regression/esx:
     labels: ["daily"]
@@ -303,8 +303,8 @@ dependencies:
     - reference: iota/test/venice
   dol/apollo:
     - reference: nic/apollo/tools/apulu/sanity/base
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
     - reference: test/ci_targets/controlplane-dol
 #  dol/artemis:
 #    - reference: nic/apollo/tools/artemis/sanity/base
@@ -334,11 +334,11 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux
     - reference: iota/test/venice
   iota/test/apollo:
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
   iota/test/apulu:
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
   iota/test/iris:
     - reference: iota/test/standalone/precheckin/freebsd
       exclude_dirs: ["testcases/server","testcases/rdma","testbundles/rdma"]
@@ -379,8 +379,8 @@ dependencies:
   nic/apollo:
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: nic/apollo/tools/athena/sanity/base
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
     - reference: test/ci_targets/cloud-e2e
   nic/apollo/tools/dev-docker:
     - reference: nic/apollo/tools/apulu/sanity/customer-docker
@@ -406,14 +406,14 @@ dependencies:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
   nic/conf:
     - reference: iota/test/standalone/precheckin/linux
   nic/conf/apulu:
     - reference: nic/apollo/tools/apulu/sanity/base
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
   nic/debug_cli:
     - reference: iota/test/standalone/precheckin/linux
   nic/delphi:
@@ -432,7 +432,6 @@ dependencies:
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
-#   - reference: iota/test/standalone/sanity/apulu-networking
   nic/linkmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/esx
@@ -440,8 +439,8 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux
   nic/metaswitch:
     - reference: nic/apollo/tools/apulu/sanity/base
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
     - reference: test/ci_targets/cloud-e2e
     - reference: test/ci_targets/controlplane-dol
   nic/p4-hlir:
@@ -470,8 +469,8 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: nic/apollo/tools/athena/sanity/base
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
   nic/sysmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/precheckin/linux
@@ -482,8 +481,8 @@ dependencies:
     - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
   nic/tools:
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
     - reference: iota/test/standalone/precheckin/esx
     - reference: iota/test/standalone/precheckin/freebsd
     - reference: iota/test/standalone/precheckin/linux
@@ -503,12 +502,8 @@ dependencies:
     - reference: iota/test/standalone/precheckin/esx
   nic/vpp:
     - reference: nic/apollo/tools/apulu/sanity/base
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
-#  nic/conf/apollo:
-#    - reference: nic/apollo/tools/apollo/sanity/base
-#  nic/conf/artemis:
-#    - reference: nic/apollo/tools/artemis/sanity/base
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
   nic/conf/athena:
     - reference: nic/apollo/tools/athena/sanity/base
   nic/debug_cli/apollo:
@@ -536,9 +531,9 @@ dependencies:
     - reference: iota/test/standalone/precheckin/linux-rdma
     - reference: iota/test/standalone/precheckin/esx
       exclude_dirs: ["rdma"]
-    - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-core
       exclude_dirs: ["rdma"]
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
       exclude_dirs: ["rdma"]
     - reference: iota/test/standalone/sanity/swm
   platform/drivers/common:
@@ -546,9 +541,9 @@ dependencies:
     - reference: iota/test/standalone/precheckin/freebsd-rdma
     - reference: iota/test/standalone/precheckin/esx
       exclude_dirs: ["rdma"]
-    - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-core
       exclude_dirs: ["rdma"]
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
       exclude_dirs: ["rdma"]
   platform/src/app/asicerrord:
     - reference: iota/test/standalone/precheckin/linux
@@ -574,8 +569,8 @@ dependencies:
     - reference: nic/apollo/tools/apulu/sanity/base
     - reference: nic/apollo/tools/athena/sanity/base
     - reference: iota/test/standalone/precheckin/linux
-    - reference: iota/test/standalone/sanity/apulu-networking
-    - reference: iota/test/standalone/sanity/apulu-networking-scale
+    - reference: iota/test/standalone/sanity/apulu-core
+    - reference: iota/test/standalone/sanity/apulu-sdn-pds
     - reference: iota/test/standalone/sanity/swm
   platform/src/lib/devapi_iris:
     - reference: iota/test/standalone/precheckin/linux

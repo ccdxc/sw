@@ -1,6 +1,6 @@
 meta:
-    name        : learn
-    description : Equinix Learn Testsuite
+    name        : apulu_sdn_dsc_learn
+    description : Apulu SDN DSC Learn Testsuite
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
@@ -16,9 +16,8 @@ image_manifest:
     build       : equinix
 
 setup:
-    topology: test/apulu/topologies/classic_baremetal/container_centos.topology
-    config  :
-        #- step : utils.naples_workloads
+    topology : test/apulu/topologies/classic_baremetal/container_centos.topology
+    config   :
         - step : verif.config.verify_oob
         - step : config.set_max_mtu
         - step : config.topology
@@ -32,20 +31,15 @@ setup:
 
 common:
     verifs:
-        #-   step    : verif.utils.verify_links
-        #-   step    : verif.utils.verify_cores
-        #-   step    : verif.utils.verify_topology_health
+
     debugs:
-        -   step    : verif.utils.collect_techsupport
+        - step : verif.utils.collect_techsupport
 
     setup:
-        #-   step    : verif.utils.link_flap
-        #-   step    : verif.utils.del_add_config
 
 testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
-        #- networking/underlay.testbundle
         - networking/h2h.testbundle
         - learn/aging.testbundle
         - learn/ep_move.testbundle
@@ -55,5 +49,4 @@ testbundles:
         # Relative paths from iota/test/apulu/testbundles/
 
 teardown:
-    -   step    : verif.utils.collect_techsupport
-    #-    step    : config.clean_netagent
+    - step : verif.utils.collect_techsupport

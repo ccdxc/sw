@@ -41,7 +41,7 @@ end
 
 workdir "/sw"
 
-copy "iota/test/standalone/sanity/apulu-networking-scale/entrypoint.sh", "/entrypoint.sh"
+copy "iota/test/standalone/sanity/apulu-sdn-pds/entrypoint.sh", "/entrypoint.sh"
 run "chmod +x /entrypoint.sh"
 
 entrypoint "/entrypoint.sh"

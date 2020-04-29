@@ -1,10 +1,10 @@
 meta:
-    name        : apulu_networking
-    description : Apulu Networking Testsuite
+    name        : apulu_sdn_pds_e2e
+    description : Apulu SDN PDS E2E Testsuite
     mode        : hardware
     cfgmode     : netagent
     nicmode     : classic
-    os          : [ linux, freebsd ]
+    os          : [ linux ]
 
 packages:
     - iota.test.apulu
@@ -14,9 +14,8 @@ image_manifest:
     naples      : capri
 
 setup:
-    topology: test/apulu/topologies/classic_baremetal/container_centos.topology
-    config  :
-        #- step : utils.naples_workloads
+    topology : test/apulu/topologies/classic_baremetal/container_centos.topology
+    config   :
         - step : verif.config.verify_oob
         - step : config.set_max_mtu
         - step : config.topology
@@ -29,15 +28,11 @@ setup:
 
 common:
     verifs:
-        #-   step    : verif.utils.verify_links
-        #-   step    : verif.utils.verify_cores
-        #-   step    : verif.utils.verify_topology_health
+
     debugs:
-        -   step    : verif.utils.collect_techsupport
+        - step : verif.utils.collect_techsupport
 
     setup:
-        #-   step    : verif.utils.link_flap
-        #-   step    : verif.utils.del_add_config
 
 testbundles:
     sanity:
@@ -46,13 +41,7 @@ testbundles:
         - networking/networking.testbundle
         - arp_proxy.testbundle
         - h2vrip.testbundle
-        - classic/ethtool.testbundle
-        #- policy/policy.testbundle
         - api_crud/api_crud.testbundle
-        - mtu/mtu.testbundle
-        - vlanoffload/vlanoffload.testbundle
-        - classic/driver-features-sanity.testbundle
-        - reboot/reboot.testbundle
         - p4ctl/p4ctl.testbundle
         - techsupport/techsupport.testbundle
 
@@ -60,4 +49,4 @@ testbundles:
         # Relative paths from iota/test/apulu/testbundles/
 
 teardown:
-    -   step    : verif.utils.collect_techsupport
+    - step : verif.utils.collect_techsupport
