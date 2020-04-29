@@ -148,7 +148,7 @@ void InitNcsiMgr()
 
 int main(int argc, char* argv[])
 {
-    uint32_t cpld_cntl_reg;
+    int32_t cpld_cntl_reg;
     ncsimgr = new NcsiMgr();
     grpc_ipc_svc = make_shared<grpc_ipc>();
     Logger logger_obj;
@@ -177,8 +177,13 @@ int main(int argc, char* argv[])
      * in order to receive NCSI packet from BMC */
     if (!strcmp(iface_name, "oob_mnic0")) {
         cpld_cntl_reg = cpld_reg_rd(CPLD_REGISTER_CTRL);
+        if (cpld_cntl_reg == -1) {
+            SDK_TRACE_INFO("Error reading CPLD control reg for ALOM presence."
+                    "Exiting ncsid app !");
+            return 0;
+        }
         if (! (cpld_cntl_reg & ALOM_PRESENT)) {
-            SDK_TRACE_INFO("ALOM is not present. NCSI cannot funtion without ALOM."
+            SDK_TRACE_INFO("ALOM is not present. NCSI cannot function without ALOM."
                     "Exiting ncsid app !");
             return 0;
         }

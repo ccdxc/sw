@@ -6,6 +6,10 @@
 
 #define MAXFILENAME 128
 
+// Lock failure retry
+#define RETRY_LIMIT    4
+#define RETRY_DELAY    (10 * 1000)    // 10 msec
+
 typedef struct {
     int fd;
     int in_use;
@@ -35,6 +39,8 @@ pal_get_lock_fd(const pal_lock_id_t lock_id)
 static pal_lock_ret_t
 pal_lock(const pal_lock_id_t lock_id, const short l_type)
 {
+    int ret;
+    int try = 1;
     struct flock lock = {
         .l_type = l_type,
         .l_whence = SEEK_SET,
@@ -44,7 +50,13 @@ pal_lock(const pal_lock_id_t lock_id, const short l_type)
     int fd = pal_get_lock_fd(lock_id);
     assert(fd >= 0);
 
-    if (fcntl(fd, F_SETLKW, &lock) == -1) {
+    do {
+        ret = fcntl(fd, F_SETLKW, &lock);
+        if (ret < 0)
+            usleep(RETRY_DELAY);
+    } while ((ret < 0) && (++try <= RETRY_LIMIT));
+
+    if (ret == -1) {
         return LCK_FAIL;
     } else {
         return LCK_SUCCESS;
@@ -54,6 +66,8 @@ pal_lock(const pal_lock_id_t lock_id, const short l_type)
 static pal_lock_ret_t
 pal_unlock(const pal_lock_id_t lock_id)
 {
+    int ret;
+    int try = 1;
     struct flock lock = {
         .l_type = F_UNLCK,
         .l_whence = SEEK_SET,
@@ -61,10 +75,15 @@ pal_unlock(const pal_lock_id_t lock_id)
         .l_len = 0,
     };
     int fd = locks[lock_id].fd;
-
     assert(fd >= 0);
 
-    if (fcntl(fd, F_SETLKW, &lock) == -1) {
+    do {
+        ret = fcntl(fd, F_SETLKW, &lock);
+        if (ret < 0)
+            usleep(RETRY_DELAY);
+    } while ((ret < 0) && (++try <= RETRY_LIMIT));
+
+    if (ret == -1) {
         return LCK_FAIL;
     } else {
         return LCK_SUCCESS;
