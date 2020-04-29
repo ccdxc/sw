@@ -542,11 +542,21 @@ func (ct *ctrlerCtx) runNetworkWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "NetworkWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffNetwork(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffNetwork(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -1375,11 +1385,21 @@ func (ct *ctrlerCtx) runServiceWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "ServiceWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffService(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffService(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -2208,11 +2228,21 @@ func (ct *ctrlerCtx) runLbPolicyWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "LbPolicyWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffLbPolicy(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffLbPolicy(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -3041,11 +3071,21 @@ func (ct *ctrlerCtx) runVirtualRouterWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "VirtualRouterWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffVirtualRouter(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffVirtualRouter(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -3874,11 +3914,21 @@ func (ct *ctrlerCtx) runNetworkInterfaceWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "NetworkInterfaceWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffNetworkInterface(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffNetworkInterface(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -4707,11 +4757,21 @@ func (ct *ctrlerCtx) runIPAMPolicyWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "IPAMPolicyWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffIPAMPolicy(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffIPAMPolicy(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -5540,11 +5600,21 @@ func (ct *ctrlerCtx) runRoutingConfigWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "RoutingConfigWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffRoutingConfig(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffRoutingConfig(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -6373,11 +6443,21 @@ func (ct *ctrlerCtx) runRouteTableWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "RouteTableWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffRouteTable(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffRouteTable(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group

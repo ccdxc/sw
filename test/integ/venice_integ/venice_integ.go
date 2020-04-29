@@ -968,6 +968,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	// Set feature flags to initialized
 	featureflags.SetInitialized()
 
+	// start CMD server
+	it.launchCMDServer()
+
 	// create a controller
 	ctrler, err := npm.NewNetctrler(integTestNpmURL, integTestNpmRESTURL, globals.APIServer, rc, logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, check.IsNil)
@@ -977,9 +980,6 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	tsCtrler, err := tsm.NewTsCtrler(integTestTsmURL, integTestTsmRestURL, globals.APIServer, rc)
 	c.Assert(err, check.IsNil)
 	it.tsCtrler = tsCtrler
-
-	// start CMD server
-	it.launchCMDServer()
 
 	// run citadel
 	it.startCitadel()

@@ -542,11 +542,21 @@ func (ct *ctrlerCtx) runSecurityGroupWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "SecurityGroupWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffSecurityGroup(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffSecurityGroup(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -1375,11 +1385,21 @@ func (ct *ctrlerCtx) runNetworkSecurityPolicyWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "NetworkSecurityPolicyWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffNetworkSecurityPolicy(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffNetworkSecurityPolicy(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -2208,11 +2228,21 @@ func (ct *ctrlerCtx) runAppWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "AppWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffApp(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffApp(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -3041,11 +3071,21 @@ func (ct *ctrlerCtx) runFirewallProfileWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "FirewallProfileWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffFirewallProfile(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffFirewallProfile(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -3874,11 +3914,21 @@ func (ct *ctrlerCtx) runCertificateWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "CertificateWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffCertificate(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffCertificate(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
@@ -4707,11 +4757,21 @@ func (ct *ctrlerCtx) runTrafficEncryptionPolicyWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "TrafficEncryptionPolicyWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffTrafficEncryptionPolicy(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffTrafficEncryptionPolicy(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group

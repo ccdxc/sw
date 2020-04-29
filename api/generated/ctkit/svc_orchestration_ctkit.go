@@ -542,11 +542,21 @@ func (ct *ctrlerCtx) runOrchestratorWatcher() {
 	ct.watchCancel[kind] = cancel
 	ct.Unlock()
 	logger := ct.logger.WithContext("submodule", "OrchestratorWatcher")
+	for {
+		if ctx.Err() != nil {
+			return
+		}
 
-	// create a grpc client
-	apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
-	if err == nil {
-		ct.diffOrchestrator(apiclt)
+		apiclt, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		// create a grpc client
+		if err == nil {
+			// Upon successful connection perform the diff, and start watch goroutine
+			ct.diffOrchestrator(apiclt)
+			break
+		}
+
+		logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+		time.Sleep(time.Second)
 	}
 
 	// setup wait group
