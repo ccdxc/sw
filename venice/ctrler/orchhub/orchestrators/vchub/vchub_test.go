@@ -2439,9 +2439,7 @@ func TestVCHubStalePG(t *testing.T) {
 			PortKey:      "11",
 		},
 	})
-	// if err != nil {
-	// 	t.Skipf("Skipping test since VM could not be added, %s", err)
-	// }
+	AssertOk(t, err, "Failed to add vm")
 
 	// Add network, workload should appear
 	orchInfo1 := []*network.OrchestratorInfo{

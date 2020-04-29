@@ -160,7 +160,9 @@ func (s *Session) clearSession() {
 	if s.client != nil {
 		// Using background context since it's likely that
 		// VCHub's context has been cancelled
-		err := s.client.Logout(context.Background())
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		err := s.client.Logout(ctx)
 		if err != nil {
 			s.logger.Errorf("Received err while logging out %s", err)
 		}
@@ -168,7 +170,9 @@ func (s *Session) clearSession() {
 	if s.tagClient != nil {
 		// Using background context since it's likely that
 		// VCHub's context has been cancelled
-		err := s.tagClient.Logout(context.Background())
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		err := s.tagClient.Logout(ctx)
 		if err != nil {
 			s.logger.Errorf("Received err while logging tag client out %s", err)
 		}

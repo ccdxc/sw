@@ -103,11 +103,15 @@ func NewVcSim(config Config) (*VcSim, error) {
 
 // Destroy tears down the simulator
 func (v *VcSim) Destroy() {
-	for _, dir := range v.dirs {
-		_ = os.RemoveAll(dir)
+	fn := func() (interface{}, error) {
+		for _, dir := range v.dirs {
+			_ = os.RemoveAll(dir)
+		}
+		v.Server.CloseClientConnections()
+		v.Server.Close()
+		return nil, nil
 	}
-	v.Server.CloseClientConnections()
-	v.Server.Close()
+	withTimeout(fn, 10*time.Second)
 }
 
 // GetURL returns the url the simulator is running on
@@ -476,27 +480,20 @@ func (v *Datacenter) AddVMWithSpec(name string, hostName string, spec types.Virt
 	}
 
 	// CreateVM call can potentially hit a deadlock inside vcsim
-	doneCh := make(chan error, 1)
-	go func() {
+	fn := func() (interface{}, error) {
 		task, err := folders.VmFolder.CreateVM(ctx, spec, pool, hostObj)
-		if err != nil {
-			doneCh <- err
-		}
-		err = task.Wait(ctx)
-		if err != nil {
-			doneCh <- err
-		}
-
-		doneCh <- nil
-	}()
-
-	select {
-	case err := <-doneCh:
 		if err != nil {
 			return nil, err
 		}
-	case <-time.After(10 * time.Second):
-		return nil, fmt.Errorf("VCSim timed out, may be in a deadlock")
+		err = task.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	_, err = withTimeout(fn, 10*time.Second)
+	if err != nil {
+		return nil, err
 	}
 
 	vms := simulator.Map.All("VirtualMachine")
@@ -510,14 +507,35 @@ func (v *Datacenter) AddVMWithSpec(name string, hostName string, spec types.Virt
 	return nil, fmt.Errorf("VM create was successful but couldn't be found in inventory")
 }
 
+func withTimeout(fn func() (interface{}, error), timeout time.Duration) (interface{}, error) {
+	doneCh := make(chan bool, 1)
+	var ret interface{}
+	var err error
+	go func() {
+		ret, err = fn()
+		doneCh <- true
+	}()
+	select {
+	case <-doneCh:
+		return ret, err
+	case <-time.After(10 * time.Second):
+		return ret, fmt.Errorf("Oper failed: This is a known intermittent failure in external package -  VcSim")
+	}
+}
+
 // DeleteVM removes the VM from the inventory
 func (v *Datacenter) DeleteVM(vm *simulator.VirtualMachine) error {
 	vmObj := object.NewVirtualMachine(v.client, vm.Reference())
-	task, err := vmObj.Destroy(context.Background())
-	if err != nil {
-		return err
+	fn := func() (interface{}, error) {
+		task, err := vmObj.Destroy(context.Background())
+		if err != nil {
+			return nil, err
+		}
+		err = task.Wait(context.Background())
+
+		return nil, err
 	}
-	err = task.Wait(context.Background())
+	_, err := withTimeout(fn, 10*time.Second)
 	return err
 }
 

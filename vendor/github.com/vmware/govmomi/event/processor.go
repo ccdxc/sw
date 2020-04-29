@@ -19,6 +19,7 @@ package event
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/view"
@@ -79,7 +80,11 @@ func (p *eventProcessor) addObject(ctx context.Context, obj types.ManagedObjectR
 
 func (p *eventProcessor) destroy() {
 	for _, info := range p.tailers {
-		_ = info.collector.Destroy(context.Background())
+		go func(tailer *tailInfo) {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			_ = tailer.collector.Destroy(ctx)
+		}(info)
 	}
 }
 
@@ -116,7 +121,11 @@ func (p *eventProcessor) run(ctx context.Context, tail bool) error {
 	}
 
 	defer func() {
-		_ = list.Destroy(context.Background())
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			_ = list.Destroy(ctx)
+		}()
 	}()
 
 	ref := list.Reference()

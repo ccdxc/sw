@@ -18,6 +18,7 @@ package property
 
 import (
 	"context"
+	"time"
 
 	"github.com/vmware/govmomi/vim25/methods"
 	"github.com/vmware/govmomi/vim25/soap"
@@ -91,10 +92,14 @@ func WaitForUpdates(ctx context.Context, c *Collector, filter *WaitFilter, f fun
 		return err
 	}
 
-	// Attempt to destroy the collector using the background context, as the
+	// Attempt to destroy the collector using a different context
 	// specified context may have timed out or have been canceled.
 	defer func() {
-		_ = p.Destroy(context.Background())
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			_ = p.Destroy(ctx)
+		}()
 	}()
 
 	err = p.CreateFilter(ctx, filter.CreateFilter)
@@ -111,7 +116,9 @@ func WaitForUpdates(ctx context.Context, c *Collector, filter *WaitFilter, f fun
 		res, err := methods.WaitForUpdatesEx(ctx, p.roundTripper, &req)
 		if err != nil {
 			if ctx.Err() == context.Canceled {
-				werr := p.CancelWaitForUpdates(context.Background())
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer cancel()
+				werr := p.CancelWaitForUpdates(ctx)
 				return werr
 			}
 			return err
