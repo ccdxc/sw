@@ -1266,6 +1266,7 @@ mapping_impl::fill_public_ip_mapping_key_data_(
     mapping_data->nexthop_id = vnic_impl_obj->nh_idx();
     mapping_data->egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
     sdk::lib::memrev(mapping_data->dmaci, vnic->mac(), ETH_ADDR_LEN);
+    mapping_data->rx_vnic_id = vnic_impl_obj->hw_id();
     PDS_IMPL_FILL_TABLE_API_PARAMS(mapping_tbl_params, mapping_key,
                                    NULL, mapping_data,
                                    MAPPING_MAPPING_INFO_ID,
@@ -1355,6 +1356,7 @@ mapping_impl::fill_local_overlay_ip_mapping_key_data_(
     mapping_data->nexthop_id = vnic_impl_obj->nh_idx();
     mapping_data->egress_bd_id = ((subnet_impl *)subnet->impl())->hw_id();
     sdk::lib::memrev(mapping_data->dmaci, vnic->mac(), ETH_ADDR_LEN);
+    mapping_data->rx_vnic_id = vnic_impl_obj->hw_id();
     PDS_IMPL_FILL_TABLE_API_PARAMS(mapping_tbl_params, mapping_key,
                                    NULL, mapping_data,
                                    MAPPING_MAPPING_INFO_ID, mapping_hdl);

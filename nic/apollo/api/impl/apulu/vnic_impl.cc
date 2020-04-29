@@ -25,6 +25,7 @@
 #include "nic/apollo/api/impl/apulu/route_impl.hpp"
 #include "nic/apollo/api/impl/apulu/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
+#include "nic/apollo/api/impl/apulu/policer_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/p4/include/apulu_table_sizes.h"
@@ -35,6 +36,7 @@
 #define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
 #define rxdma_vnic_info               action_u.vnic_info_rxdma_vnic_info_rxdma
 #define ing_vnic_info                 action_u.vnic_vnic_info
+#define egr_vnic_info                 action_u.rx_vnic_rx_vnic_info
 #define nexthop_info                  action_u.nexthop_nexthop_info
 
 // compute next vnic epoch given current epoch
@@ -140,8 +142,9 @@ vnic_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
             }
             if (lif->state() != sdk::types::LIF_STATE_UP) {
                 PDS_TRACE_ERR("Failed to reserve resources for vnic %s, host "
-                              "lif %s is not up, current state %u", spec->key.str(),
-                              spec->host_if.str(), lif->state());
+                              "lif %s is not up, current state %u",
+                              spec->key.str(), spec->host_if.str(),
+                              lif->state());
                 return SDK_RET_RETRY;
             }
             hw_id_ = lif->vnic_hw_id();
@@ -404,8 +407,8 @@ vnic_impl::populate_rxdma_vnic_info_policy_root_(
 // four entries are consumed for each vnic
 //------------------------------------------------------------------------------
 sdk_ret_t
-vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
-                              subnet_entry *subnet) {
+vnic_impl::program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
+                                    subnet_entry *subnet) {
     uint32_t i;
     sdk_ret_t ret;
     policy *sec_policy;
@@ -628,9 +631,11 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     pds_obj_key_t vpc_key;
     pds_vnic_spec_t *spec;
     p4pd_error_t p4pd_ret;
-    vnic_actiondata_t vnic_data = { 0 };
     nexthop_info_entry_t nh_data;
+    vnic_actiondata_t vnic_data = { 0 };
+    policer_entry *rx_policer, *tx_policer;
     binding_info_entry_t ip_mac_binding_data;
+    rx_vnic_actiondata_t rx_vnic_data = { 0 };
     meter_stats_actiondata_t meter_stats_data = { 0 };
     vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
     vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
@@ -649,6 +654,30 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     if (unlikely(vpc == NULL)) {
         PDS_TRACE_ERR("Failed to find vpc %s", vpc_key.str());
         return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    // get the Tx policer, if configured
+    if (spec->tx_policer != k_pds_obj_key_invalid) {
+        tx_policer = policer_db()->find(&spec->tx_policer);
+        if (unlikely(tx_policer == NULL)) {
+            PDS_TRACE_ERR("Failed to find vnic %s tx policer %s",
+                          spec->key.str(), spec->tx_policer.str());
+            return sdk::SDK_RET_INVALID_ARG;
+        }
+    } else {
+        tx_policer = NULL;
+    }
+
+    // get the Rx policer, if configured
+    if (spec->rx_policer != k_pds_obj_key_invalid) {
+        rx_policer = policer_db()->find(&spec->rx_policer);
+        if (unlikely(rx_policer == NULL)) {
+            PDS_TRACE_ERR("Failed to find vnic %s rx policer %s",
+                          spec->key.str(), spec->rx_policer.str());
+            return sdk::SDK_RET_INVALID_ARG;
+        }
+    } else {
+        rx_policer = NULL;
     }
 
     // initialize tx stats table for this vnic
@@ -701,10 +730,32 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vnic_data.ing_vnic_info.meter_enabled = spec->meter_en;
     vnic_data.ing_vnic_info.rx_mirror_session = spec->rx_mirror_session_bmap;
     vnic_data.ing_vnic_info.tx_mirror_session = spec->tx_mirror_session_bmap;
+    if (tx_policer) {
+         vnic_data.ing_vnic_info.tx_policer_id =
+             ((policer_impl *)(tx_policer->impl()))->hw_id();
+    } else {
+         vnic_data.ing_vnic_info.tx_policer_id = PDS_IMPL_RSVD_POLICER_HW_ID;
+    }
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC, hw_id_,
                                        NULL, NULL, &vnic_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program vnic %s ingress VNIC table "
+                      "entry at %u", spec->key.str(), hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    // program vnic table entry in the egress pipeline
+    rx_vnic_data.action_id = RX_VNIC_RX_VNIC_INFO_ID;
+    if (rx_policer) {
+        rx_vnic_data.egr_vnic_info.rx_policer_id =
+            ((policer_impl *)(rx_policer->impl()))->hw_id();
+    } else {
+        rx_vnic_data.egr_vnic_info.rx_policer_id = PDS_IMPL_RSVD_POLICER_HW_ID;
+    }
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_RX_VNIC, hw_id_,
+                                       NULL, NULL, &rx_vnic_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program vnic %s egres RX_VNIC table "
                       "entry at %u", spec->key.str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
@@ -742,7 +793,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
 
     // program vnic info tables (in rxdma and txdma pipes)
-    ret = program_vnic_info_((vnic_entry *)api_obj, vpc, subnet);
+    ret = program_rxdma_vnic_info_((vnic_entry *)api_obj, vpc, subnet);
     return ret;
 }
 
@@ -810,7 +861,7 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         subnet = subnet_find(&spec->subnet);
         vpc_key = subnet->vpc();
         vpc = vpc_find(&vpc_key);
-        ret = program_vnic_info_((vnic_entry *)curr_obj, vpc, subnet);
+        ret = program_rxdma_vnic_info_((vnic_entry *)curr_obj, vpc, subnet);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update rxdma VNIC_INFO table for "
                           "vnic %s, err %u", spec->key.str(), ret);
@@ -937,6 +988,7 @@ vnic_impl::add_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
     mapping_data.egress_bd_id =
         ((subnet_impl *)subnet->impl())->hw_id();
     sdk::lib::memrev(mapping_data.dmaci, spec->mac_addr, ETH_ADDR_LEN);
+    mapping_data.rx_vnic_id = hw_id_;
 
     // program MAPPING table entry
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, &mapping_data,
@@ -1172,7 +1224,7 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         subnet = subnet_find(&subnet_key);
         vpc_key = subnet->vpc();
         vpc = vpc_find(&vpc_key);
-        ret = program_vnic_info_((vnic_entry *)api_obj, vpc, subnet);
+        ret = program_rxdma_vnic_info_((vnic_entry *)api_obj, vpc, subnet);
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
 
         // update the epoch

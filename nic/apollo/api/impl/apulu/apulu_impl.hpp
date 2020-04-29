@@ -62,6 +62,9 @@
 // max policer token per interval
 #define PDS_POLICER_MAX_TOKENS_PER_INTERVAL    ((1ull << 39) -1 )
 
+// reserve the 0th entry in the policer tables
+#define PDS_IMPL_RSVD_POLICER_HW_ID             0
+
 // various lif types in the datapath
 #define P4_LIF_TYPE_HOST                        0  // host data (i.e non-mgmt) lifs
 #define P4_LIF_TYPE_ARM_DPDK                    1  // dpdk s/w datapath lifs

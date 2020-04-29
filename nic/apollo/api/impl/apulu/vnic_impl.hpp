@@ -236,8 +236,8 @@ private:
     /// \param[in]  vpc       vpc of the vnic
     /// \param[in]  subnet    subnet of the vnic
     /// \return     #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
-                                 subnet_entry *subnet);
+    sdk_ret_t program_rxdma_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
+                                       subnet_entry *subnet);
 
     /// \brief     add an entry to LOCAL_MAPPING table
     /// \param[in] epoch epoch being activated
