@@ -26,8 +26,11 @@ func NewDscProfileInsertion(client objClient.ObjClient, name string) *DscProfile
 				Tenant:    "",
 			},
 			Spec: cluster.DSCProfileSpec{
-				FwdMode:        "INSERTION",
-				FlowPolicyMode: "ENFORCED",
+				Features: cluster.FeatureSet{
+					InterVMServices: true,
+					Firewall:        true,
+					FlowAware:       true,
+				},
 			},
 		},
 	}
@@ -46,8 +49,11 @@ func NewDscProfileFlowAware(client objClient.ObjClient, name string) *DscProfile
 				Tenant:    "",
 			},
 			Spec: cluster.DSCProfileSpec{
-				FwdMode:        "TRANSPARENT",
-				FlowPolicyMode: "FLOWAWARE",
+				Features: cluster.FeatureSet{
+					InterVMServices: false,
+					Firewall:        false,
+					FlowAware:       true,
+				},
 			},
 		},
 	}
@@ -66,8 +72,11 @@ func NewDscProfileEnforced(client objClient.ObjClient, name string) *DscProfile 
 				Tenant:    "",
 			},
 			Spec: cluster.DSCProfileSpec{
-				FwdMode:        "TRANSPARENT",
-				FlowPolicyMode: "ENFORCED",
+				Features: cluster.FeatureSet{
+					InterVMServices: false,
+					Firewall:        true,
+					FlowAware:       true,
+				},
 			},
 		},
 	}
@@ -86,8 +95,11 @@ func NewDscProfileBasenet(client objClient.ObjClient, name string) *DscProfile {
 				Tenant:    "",
 			},
 			Spec: cluster.DSCProfileSpec{
-				FwdMode:        "TRANSPARENT",
-				FlowPolicyMode: "BASENET",
+				Features: cluster.FeatureSet{
+					InterVMServices: false,
+					Firewall:        false,
+					FlowAware:       false,
+				},
 			},
 		},
 	}

@@ -337,6 +337,7 @@ func (s *sclusterDscprofileBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sc
 
 		"cluster.DSCProfileSpec":    apisrvpkg.NewMessage("cluster.DSCProfileSpec"),
 		"cluster.DSCProfileStatus":  apisrvpkg.NewMessage("cluster.DSCProfileStatus"),
+		"cluster.FeatureSet":        apisrvpkg.NewMessage("cluster.FeatureSet"),
 		"cluster.PropagationStatus": apisrvpkg.NewMessage("cluster.PropagationStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),

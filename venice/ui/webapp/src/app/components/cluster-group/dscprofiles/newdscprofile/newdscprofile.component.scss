@@ -14,16 +14,6 @@ $dary-grey: #a9a9a9;
   }
 }
 
-.new-dsc-profile-row-plist-B {
-  width: 100%;
-  justify-content: space-evenly;
-
-}
-
-.new-dsc-profile-container .new-dsc-profile-row-plist-B .ui-listbox {
-  width: 25em;
-}
-
 .new-dsc-profile-select-label {
   @include primary-font();
 }
@@ -41,18 +31,6 @@ $dary-grey: #a9a9a9;
   }
 }
 
-.fwdModeText,
-.polModeText {
-  font-weight: normal;
-  font-size: 12px;
-  pointer-events: none;
-  margin-bottom: .25em;
-  margin-left: .25em;
-  margin-top: .25em;
-  color: #898989;
-  line-height: 1;
-}
-
 fieldset {
   border: 1px solid $dary-grey;
   padding: 5px;
@@ -63,6 +41,14 @@ fieldset {
     @include primary-font(15px);
     color: #676763;
     margin-bottom: 0px;
-    width: 127px;
+    width: auto;
   }
+}
+
+.new-dsc-profile-feature-label {
+  margin-left: 20px;
+}
+
+.new-dsc-profile-feature--toggle {
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
 }

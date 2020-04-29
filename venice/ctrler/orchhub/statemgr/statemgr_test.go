@@ -482,8 +482,11 @@ func TestDistributedServiceCardCreateList(t *testing.T) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "insertion",
-			FlowPolicyMode: "enforced",
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				FlowAware:       true,
+				Firewall:        true,
+			},
 		},
 	}
 
@@ -645,8 +648,11 @@ func TestUpdateDSCProfile(t *testing.T) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "insertion",
-			FlowPolicyMode: "enforced",
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				FlowAware:       true,
+				Firewall:        true,
+			},
 		},
 	}
 
@@ -665,8 +671,9 @@ func TestUpdateDSCProfile(t *testing.T) {
 	err = createDistributedServiceCard(sm, "default", "prod-beef", nil)
 	Assert(t, (err == nil), "DistributedServiceCard could not be created")
 
-	dscProfile.Spec.FwdMode = cluster.DSCProfileSpec_TRANSPARENT.String()
-	dscProfile.Spec.FlowPolicyMode = cluster.DSCProfileSpec_BASENET.String()
+	dscProfile.Spec.Features.InterVMServices = true
+	dscProfile.Spec.Features.FlowAware = true
+	dscProfile.Spec.Features.Firewall = true
 	err = sm.ctrler.DSCProfile().Update(&dscProfile)
 	Assert(t, (err == nil), "Failed to update dscprofile")
 

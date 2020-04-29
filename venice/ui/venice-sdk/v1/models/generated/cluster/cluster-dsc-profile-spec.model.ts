@@ -7,12 +7,10 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
-import { ClusterDSCProfileSpec_fwd_mode,  ClusterDSCProfileSpec_fwd_mode_uihint  } from './enums';
-import { ClusterDSCProfileSpec_policy_mode,  ClusterDSCProfileSpec_policy_mode_uihint  } from './enums';
+import { ClusterFeatureSet, IClusterFeatureSet } from './cluster-feature-set.model';
 
 export interface IClusterDSCProfileSpec {
-    'fwd-mode': ClusterDSCProfileSpec_fwd_mode;
-    'policy-mode': ClusterDSCProfileSpec_policy_mode;
+    'feature-set'?: IClusterFeatureSet;
     '_ui'?: any;
 }
 
@@ -20,20 +18,11 @@ export interface IClusterDSCProfileSpec {
 export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfileSpec {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
-    'fwd-mode': ClusterDSCProfileSpec_fwd_mode = null;
-    'policy-mode': ClusterDSCProfileSpec_policy_mode = null;
+    'feature-set': ClusterFeatureSet = null;
     public static propInfo: { [prop in keyof IClusterDSCProfileSpec]: PropInfoItem } = {
-        'fwd-mode': {
-            enum: ClusterDSCProfileSpec_fwd_mode_uihint,
-            default: 'transparent',
-            required: true,
-            type: 'string'
-        },
-        'policy-mode': {
-            enum: ClusterDSCProfileSpec_policy_mode_uihint,
-            default: 'basenet',
-            required: true,
-            type: 'string'
+        'feature-set': {
+            required: false,
+            type: 'object'
         },
     }
 
@@ -59,6 +48,7 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
+        this['feature-set'] = new ClusterFeatureSet();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -71,19 +61,10 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
         if (values && values['_ui']) {
             this['_ui'] = values['_ui']
         }
-        if (values && values['fwd-mode'] != null) {
-            this['fwd-mode'] = values['fwd-mode'];
-        } else if (fillDefaults && ClusterDSCProfileSpec.hasDefaultValue('fwd-mode')) {
-            this['fwd-mode'] = <ClusterDSCProfileSpec_fwd_mode>  ClusterDSCProfileSpec.propInfo['fwd-mode'].default;
+        if (values) {
+            this['feature-set'].setValues(values['feature-set'], fillDefaults);
         } else {
-            this['fwd-mode'] = null
-        }
-        if (values && values['policy-mode'] != null) {
-            this['policy-mode'] = values['policy-mode'];
-        } else if (fillDefaults && ClusterDSCProfileSpec.hasDefaultValue('policy-mode')) {
-            this['policy-mode'] = <ClusterDSCProfileSpec_policy_mode>  ClusterDSCProfileSpec.propInfo['policy-mode'].default;
-        } else {
-            this['policy-mode'] = null
+            this['feature-set'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,8 +73,12 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'fwd-mode': CustomFormControl(new FormControl(this['fwd-mode'], [required, enumValidator(ClusterDSCProfileSpec_fwd_mode), ]), ClusterDSCProfileSpec.propInfo['fwd-mode']),
-                'policy-mode': CustomFormControl(new FormControl(this['policy-mode'], [required, enumValidator(ClusterDSCProfileSpec_policy_mode), ]), ClusterDSCProfileSpec.propInfo['policy-mode']),
+                'feature-set': CustomFormGroup(this['feature-set'].$formGroup, ClusterDSCProfileSpec.propInfo['feature-set'].required),
+            });
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('feature-set') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('feature-set').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -105,8 +90,7 @@ export class ClusterDSCProfileSpec extends BaseModel implements IClusterDSCProfi
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['fwd-mode'].setValue(this['fwd-mode']);
-            this._formGroup.controls['policy-mode'].setValue(this['policy-mode']);
+            this['feature-set'].setFormGroupValuesToBeModelValues();
         }
     }
 }

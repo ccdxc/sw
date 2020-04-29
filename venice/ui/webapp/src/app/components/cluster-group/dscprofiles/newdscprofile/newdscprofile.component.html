@@ -8,7 +8,7 @@
         <ng-container *ngTemplateOutlet="metaName"></ng-container>
         <div fxFlex="10px"></div>
         <ng-container>
-          <ng-container *ngTemplateOutlet="FWPolicyMode"></ng-container>
+          <ng-container *ngTemplateOutlet="feature_set"></ng-container>
         </ng-container>
       </div>
     </div>
@@ -30,37 +30,27 @@
   </div>
 </ng-template>
 
-<ng-template #FWPolicyMode>
-  <fieldset>
+<ng-template #feature_set>
+  <fieldset [formGroup]="newObject.$formGroup">
     <legend>
-      Configure DSC Mode
+      Configure DSC Profile
     </legend>
-    <div fxFlex="100" fxLayout="row">
-      <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row">
-        <div fxFlex="nogrow" class="fwdModeText">Forwarding Mode</div>
-        <div class="newdscprofile-plist-div">
-          <p-listbox #nodesListbox [options]="fwdModeOptions"
-                     *ngIf="fwdModeOptions && fwdModeOptions.length>0"
-                     [(ngModel)]="selectedFwdMode" checkbox="true" optionLabel="label"
-                     [listStyle]="{'height':'100px'}"
-                     (onChange)="setPolicyModeOptions($event)">
-          </p-listbox>
+    <div fxFlex="100" fxLayout="row" formGroupName="spec">
+      <span formGroupName="feature-set">
+        <div *ngFor="let k of getObjectKeys(newObject.spec['feature-set']) let i=index"
+             class="new-dsc-profile-feature-loop">
+          <ng-container>
+            <mat-slide-toggle
+                              [formControl]="newObject.$formGroup.get(['spec', 'feature-set', k])"
+                              fxFlex='30px'
+                              class="new-dsc-profile-feature--toggle">
+            </mat-slide-toggle>
+            <div class="new-dsc-profile-feature-label">{{k}} </div>
+          </ng-container>
         </div>
-      </div>
-
-      <div fxFlex="50" fxLayout="column" class="new-dsc-profile-row"
-           *ngIf="policyModeOptions && policyModeOptions.length > 0">
-        <div fxFlex="nogrow" class="polModeText">Policy Mode</div>
-        <div class="newdscprofile-plist-div">
-          <p-listbox #nodesListbox [options]="policyModeOptions"
-                     *ngIf="policyModeOptions && policyModeOptions.length>0"
-                     [(ngModel)]="selectedPolicyMode" checkbox="true" optionLabel="label"
-                     [listStyle]="{'height':'100px'}">
-          </p-listbox>
-        </div>
-      </div>
-
+      </span>
     </div>
+
   </fieldset>
 </ng-template>
 

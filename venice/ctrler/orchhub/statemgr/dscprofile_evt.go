@@ -75,7 +75,7 @@ func (sm *Statemgr) OnDSCProfileCreate(dscProfile *ctkit.DSCProfile) error {
 }
 
 func (dps *DSCProfileState) isOrchestrationCompatible() bool {
-	return dps.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() && dps.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_ENFORCED.String()
+	return dps.DSCProfile.Spec.Features.InterVMServices
 }
 
 // OnDSCProfileUpdate handles update event

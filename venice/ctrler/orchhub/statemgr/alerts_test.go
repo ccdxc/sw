@@ -37,8 +37,11 @@ func createProfilesOrch(stateMgr *Statemgr, t *testing.T) {
 			Name: TransparentProfile,
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        cluster.DSCProfileSpec_TRANSPARENT.String(),
-			FlowPolicyMode: cluster.DSCProfileSpec_BASENET.String(),
+			Features: cluster.FeatureSet{
+				InterVMServices: false,
+				FlowAware:       false,
+				Firewall:        false,
+			},
 		},
 	}
 	err := stateMgr.ctrler.DSCProfile().Create(&dscprof)
@@ -58,8 +61,11 @@ func createProfilesOrch(stateMgr *Statemgr, t *testing.T) {
 			Name: InsertionProfile,
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        cluster.DSCProfileSpec_INSERTION.String(),
-			FlowPolicyMode: cluster.DSCProfileSpec_ENFORCED.String(),
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				FlowAware:       true,
+				Firewall:        true,
+			},
 		},
 	}
 	err = stateMgr.ctrler.DSCProfile().Create(&dscprof)

@@ -268,8 +268,11 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "INSERTION",
-			FlowPolicyMode: "ENFORCED",
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				FlowAware:       true,
+				Firewall:        true,
+			},
 		},
 	}
 

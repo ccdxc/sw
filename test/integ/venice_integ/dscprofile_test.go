@@ -28,8 +28,11 @@ func (it *veniceIntegSuite) TestDSCProfileCRUD(c *C) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "TRANSPARENT",
-			FlowPolicyMode: "BASENET",
+			Features: cluster.FeatureSet{
+				InterVMServices: false,
+				FlowAware:       false,
+				Firewall:        false,
+			},
 		},
 	}
 
@@ -40,8 +43,9 @@ func (it *veniceIntegSuite) TestDSCProfileCRUD(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "TestDSCProfile")
 		log.Infof("Profile found")
-		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_BASENET.String() {
+		if obj.DSCProfile.DSCProfile.Spec.Features.InterVMServices == false &&
+			obj.DSCProfile.DSCProfile.Spec.Features.FlowAware == false &&
+			obj.DSCProfile.DSCProfile.Spec.Features.Firewall == false {
 			log.Infof("Profile matched")
 
 			return (nerr == nil), true
@@ -49,15 +53,16 @@ func (it *veniceIntegSuite) TestDSCProfileCRUD(c *C) {
 		return false, false
 	}, "Profile not found")
 
-	// change conn track and session timeout
-	dscProfile.Spec.FlowPolicyMode = cluster.DSCProfileSpec_FLOWAWARE.String()
+	dscProfile.Spec.Features.FlowAware = true
 	_, err = it.restClient.ClusterV1().DSCProfile().Update(ctx, &dscProfile)
 	AssertOk(c, err, "Error updating dscprofile")
 
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "TestDSCProfile")
-		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOWAWARE.String() {
+
+		if obj.DSCProfile.DSCProfile.Spec.Features.InterVMServices == false &&
+			obj.DSCProfile.DSCProfile.Spec.Features.FlowAware == true &&
+			obj.DSCProfile.DSCProfile.Spec.Features.Firewall == false {
 			return (nerr == nil), nil
 		}
 		return false, false
@@ -94,8 +99,11 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "TRANSPARENT",
-			FlowPolicyMode: "BASENET",
+			Features: cluster.FeatureSet{
+				InterVMServices: false,
+				FlowAware:       false,
+				Firewall:        false,
+			},
 		},
 	}
 	// create Profile
@@ -106,10 +114,10 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "NewProfileLNS")
 		log.Infof("Profile found")
-		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_BASENET.String() {
-			log.Infof("Profile matched")
 
+		if obj.DSCProfile.DSCProfile.Spec.Features.InterVMServices == false &&
+			obj.DSCProfile.DSCProfile.Spec.Features.FlowAware == false &&
+			obj.DSCProfile.DSCProfile.Spec.Features.Firewall == false {
 			return (nerr == nil), true
 		}
 		return false, false
@@ -168,7 +176,7 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 	log.Infof("Profile Updated Successfully")
 
 	//UPDATE THE PROFILE to TB =======> TFlowaware
-	dscProfile.Spec.FlowPolicyMode = "FLOWAWARE"
+	dscProfile.Spec.Features.FlowAware = true
 	_, err = it.restClient.ClusterV1().DSCProfile().Update(ctx, &dscProfile)
 	//Verify DSCProfile status in APIServer
 	AssertEventually(c, func() (bool, interface{}) {
@@ -177,7 +185,7 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 			return false, false
 		}
 		log.Infof("Profile found")
-		log.Infof("profile statsu:%v", obj.Status)
+		log.Infof("profile status:%v", obj.Status)
 
 		if obj.Status.PropagationStatus.GenerationID != obj.GenerationID {
 			log.Infof("gen Id did not match")
@@ -200,8 +208,11 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "INSERTION",
-			FlowPolicyMode: "ENFORCED",
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				FlowAware:       true,
+				Firewall:        true,
+			},
 		},
 	}
 
@@ -210,8 +221,10 @@ func (it *veniceIntegSuite) TestDistributedServiceCardUpdate(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "insertion.enforced1")
 		log.Infof("Profile found")
-		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_ENFORCED.String() {
+
+		if obj.DSCProfile.DSCProfile.Spec.Features.InterVMServices == true &&
+			obj.DSCProfile.DSCProfile.Spec.Features.FlowAware == true &&
+			obj.DSCProfile.DSCProfile.Spec.Features.Firewall == true {
 			log.Infof("Profile matched")
 
 			return (nerr == nil), true
@@ -285,8 +298,11 @@ func (it *veniceIntegSuite) TestDistributedServiceCardXXXFail(c *C) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "TRANSPARENT",
-			FlowPolicyMode: "FLOWAWARE",
+			Features: cluster.FeatureSet{
+				InterVMServices: false,
+				FlowAware:       true,
+				Firewall:        false,
+			},
 		},
 	}
 	_, err = it.restClient.ClusterV1().DSCProfile().Create(ctx, &transparentFlowaware)
@@ -295,10 +311,11 @@ func (it *veniceIntegSuite) TestDistributedServiceCardXXXFail(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "transparent.flowaware")
 		log.Infof("Profile found")
-		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOWAWARE.String() {
-			log.Infof("Profile matched")
 
+		if obj.DSCProfile.DSCProfile.Spec.Features.InterVMServices == false &&
+			obj.DSCProfile.DSCProfile.Spec.Features.FlowAware == true &&
+			obj.DSCProfile.DSCProfile.Spec.Features.Firewall == false {
+			log.Infof("Profile matched")
 			return (nerr == nil), true
 		}
 		return false, false
@@ -313,8 +330,11 @@ func (it *veniceIntegSuite) TestDistributedServiceCardXXXFail(c *C) {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "INSERTION",
-			FlowPolicyMode: "ENFORCED",
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				FlowAware:       true,
+				Firewall:        true,
+			},
 		},
 	}
 
@@ -324,10 +344,11 @@ func (it *veniceIntegSuite) TestDistributedServiceCardXXXFail(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		obj, nerr := it.ctrler.StateMgr.FindDSCProfile("", "insertion.enforced")
 		log.Infof("Profile found")
-		if obj.DSCProfile.DSCProfile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() &&
-			obj.DSCProfile.DSCProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_ENFORCED.String() {
-			log.Infof("Profile matched")
 
+		if obj.DSCProfile.DSCProfile.Spec.Features.InterVMServices == true &&
+			obj.DSCProfile.DSCProfile.Spec.Features.FlowAware == true &&
+			obj.DSCProfile.DSCProfile.Spec.Features.Firewall == true {
+			log.Infof("Profile matched")
 			return (nerr == nil), true
 		}
 		return false, false
@@ -412,5 +433,4 @@ func (it *veniceIntegSuite) TestDistributedServiceCardXXXFail(c *C) {
 	// DELETE PROFILES
 	/*_, err = it.restClient.ClusterV1().DSCProfile().Delete(ctx, &dscProfile.ObjectMeta)
 	AssertOk(c, err, "Error deleting dscprofile")*/
-
 }

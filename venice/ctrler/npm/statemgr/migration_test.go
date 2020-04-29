@@ -419,8 +419,11 @@ func setupTopo(stateMgr *Statemgr, sourceHost, destHost string, t *testing.T) {
 			Name: InsertionProfile,
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        cluster.DSCProfileSpec_INSERTION.String(),
-			FlowPolicyMode: cluster.DSCProfileSpec_ENFORCED.String(),
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				Firewall:        true,
+				FlowAware:       true,
+			},
 		},
 	}
 
@@ -441,8 +444,11 @@ func setupTopo(stateMgr *Statemgr, sourceHost, destHost string, t *testing.T) {
 			Name: TransparentProfile,
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        cluster.DSCProfileSpec_TRANSPARENT.String(),
-			FlowPolicyMode: cluster.DSCProfileSpec_BASENET.String(),
+			Features: cluster.FeatureSet{
+				InterVMServices: false,
+				Firewall:        false,
+				FlowAware:       false,
+			},
 		},
 	}
 	err = stateMgr.ctrler.DSCProfile().Create(&dscprof)

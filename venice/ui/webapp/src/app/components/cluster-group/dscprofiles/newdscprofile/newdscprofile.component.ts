@@ -7,8 +7,9 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { ClusterDSCProfile, ClusterDSCProfileSpec, IClusterDSCProfile } from '@sdk/v1/models/generated/cluster';
+import { ClusterDSCProfile, ClusterDSCProfileSpec, IClusterDSCProfile, ClusterFeatureSet } from '@sdk/v1/models/generated/cluster';
 import { SelectItem } from 'primeng/primeng';
+import { PropInfoItem } from '@sdk/v1/models/generated/basemodel/base-model';
 
 
 @Component({
@@ -21,11 +22,6 @@ import { SelectItem } from 'primeng/primeng';
 export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, ClusterDSCProfile> implements OnInit, AfterViewInit, OnDestroy {
   @Input() existingObjects: ClusterDSCProfile[] = [];
 
-  fwdModeOptions: SelectItem[] = Utility.convertEnumToSelectItem(ClusterDSCProfileSpec.propInfo['fwd-mode'].enum);
-  policyModeOptions: SelectItem[];
-
-  selectedFwdMode: SelectItem;
-  selectedPolicyMode: SelectItem;
   validationErrorMessage: string;
 
   constructor(protected _controllerService: ControllerService,
@@ -48,22 +44,13 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
     return this.constructor.name;
   }
   postNgInit(): void {
-
-  }
-
-  // method to update the policy mode options to match what is currently supported
-  setPolicyModeOptions(selectedFwdMode: SelectItem) {
-    if (selectedFwdMode.value.label === 'Insertion') {
-      this.policyModeOptions = [
-        { label: 'Enforced', value: 'enforced' }
-      ];
-    } else {
-      this.policyModeOptions = [
-        { label: 'BaseNet', value: 'basenet' },
-        { label: 'FlowAware', value: 'flowaware'}
-      ];
+    if (!this.isInline) {
+      // When creating a new DSC profile, pre-populate all feature-set keys to true. Thus, user has to do the least amount of work.
+      const keys = this.getObjectKeys(this.newObject.spec['feature-set']);
+      keys.forEach(key => this.newObject.$formGroup.get(['spec', 'feature-set', key]).setValue(true) );
     }
   }
+
 
   setCustomValidation() {
     this.newObject.$formGroup.get(['meta', 'name']).setValidators([
@@ -107,8 +94,6 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
    */
   getObjectValues(): IClusterDSCProfile {
     const dscProfile: ClusterDSCProfile = this.newObject.getFormGroupValues();
-    dscProfile.spec['fwd-mode'] = this.selectedFwdMode.value;
-    dscProfile.spec['policy-mode'] = this.selectedPolicyMode.value;
     return dscProfile;
   }
 
@@ -133,15 +118,6 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
       this.validationErrorMessage = 'Error: Name field is not valid.';
       return false;
     }
-    if (!this.selectedFwdMode) {
-      this.validationErrorMessage = 'Error: Please specify forwarding mode.';
-      return false;
-    }
-    if (!this.selectedPolicyMode) {
-      this.validationErrorMessage = 'Error: Please specify policy mode.';
-      return false;
-    }
-
     return true;
   }
 

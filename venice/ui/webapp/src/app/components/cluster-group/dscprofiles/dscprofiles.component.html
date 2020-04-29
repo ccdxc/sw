@@ -29,7 +29,8 @@
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
   <div fxFlex fxLayout="column">
-    <div *ngIf="selectedDSCProfile && !isRowExpanded()" fxFlex="auto" fxLayout="row"
+    <div *ngIf="selectedDSCProfile && !isRowExpanded() && !creatingMode " fxFlex="auto"
+         fxLayout="row"
          class="dscprofiles-detail-container">
       <ng-container *ngTemplateOutlet="selectedDSCProfileDetail;"></ng-container>
     </div>
@@ -87,6 +88,20 @@
       <div class="dscprofile-dsc-div-utilization"
            [matTooltip]="'Assigned to ' + ((rowData._ui.associatedDSCS && rowData._ui.associatedDSCS.length) ? rowData._ui.associatedDSCS.length : 0 ) + ' DSCs'">
         {{rowData._ui['associatedDSCSPercentile'] | percent}} </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'spec.feature-set'">
+      <div *ngFor="let k of getObjectKeys(rowData.spec['feature-set']) let i=index"
+           class="dscprofile-dsc-div">
+        <ng-container>
+          <div>{{k}}
+            <mat-icon *ngIf="rowData.spec['feature-set'][k]" fxFlex="nogrow"
+                      [inline]="true" class="global-alert-warning-icon dscprofiles-row-icon">
+              check_circle</mat-icon>
+            <mat-icon *ngIf="!(rowData.spec['feature-set'][k])" fxFlex="nogrow"
+                      class="global-alert-info-icon dscprofiles-row-icon">hightlight_off</mat-icon>
+          </div>
+        </ng-container>
+      </div>
     </ng-container>
 
     <ng-container *ngSwitchDefault>
@@ -165,45 +180,37 @@
           </div>
         </div>
       </div>
-
+      <!--  The following is feature set -->
       <div fxFlex fxLayout="row">
         <div fxFlex fxLayout="column">
           <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-key">FWD Mode:</a>
-            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
-              {{this.selectedDSCProfile.spec['fwd-mode']}}
-            </a>
+            <a fxFlex fxLayoutAlign="start Start" class="dscprofiles-detail-key">FeatureSet:</a>
+            <div fxFlex fxLayoutAlign="start start" fxLayout="column">
+              <div *ngFor="let k of getObjectKeys(this.selectedDSCProfile.spec['feature-set']) let i=index"
+                   class="dscprofile-dsc-div">
+                <ng-container>
+                  <div>
+                    {{k}}
+                    <mat-icon *ngIf="this.selectedDSCProfile.spec['feature-set'][k]" fxFlex="nogrow"
+                              [inline]="true"
+                              class="global-alert-warning-icon dscprofiles-row-icon">check_circle
+                    </mat-icon>
+                    <mat-icon *ngIf="!(this.selectedDSCProfile.spec['feature-set'][k])"
+                              fxFlex="nogrow" [inline]="true"
+                              class="global-alert-info-icon dscprofiles-row-icon">hightlight_off
+                    </mat-icon>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
           </div>
         </div>
         <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-key">Policy Mode:</a>
-            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
-              {{this.selectedDSCProfile.spec['policy-mode']}}
-            </a>
-          </div>
+          <!-- leave it empty purposely -->
         </div>
       </div>
 
-      <!--  <div fxFlex fxLayout="row">
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center"
-               class="dscprofiles-detail-key">Updated DSC Count:</a>
-            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
-              {{this.selectedDSCProfile.status['propagation-status'].updated}}
-            </a>
-          </div>
-        </div>
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-key">Pending DSC Count:</a>
-            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
-              {{this.selectedDSCProfile.status['propagation-status'].pending}}
-            </a>
-          </div>
-        </div>
-      </div> -->
+
 
       <div class="dscprofiles-detail-header" fxFlex fxLayout="row">
         <br /> <a fxFlex fxLayoutAlign="start center">Status</a>

@@ -12,6 +12,7 @@ import { ClusterDSCProfile, IApiStatus, IClusterDSCProfile, ClusterDistributedSe
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { Observable } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
+import { ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 
 
 interface DSCMacName {
@@ -80,8 +81,7 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
     { field: 'meta.name', header: 'Name', class: 'dscprofiles-column-dscprofile-name', sortable: true, width: 15 },
     { field: 'spec.dscs', header: 'DSCs', class: 'dscprofiles-column-dscs', sortable: false, width: 20 },
     { field: 'utilization', header: 'Utilization', class: 'dscprofiles-column-utilization', sortable: false, width: 5 },
-    { field: 'spec.fwd-mode', header: 'FWD Mode', class: 'dscprofiles-column-fwd-mode', sortable: true, width: 10 },
-    { field: 'spec.policy-mode', header: 'Policy Mode', class: 'dscprofiles-column-policy-mode', sortable: true, width: 10 },
+    { field: 'spec.feature-set', header: 'Feature Set', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
     { field: 'status.propagation-status.updated', header: 'Update DSC', class: 'dscprofiles-column-status-updated', sortable: true, width: 5 },
     { field: 'status.propagation-status.pending-dscs', header: 'Pending DSC', class: 'dscprofiles-column-status-pendig', sortable: true, width: 20 },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'dscprofiles-column-date', sortable: true, width: '180px' },
@@ -186,6 +186,7 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
         this.processOneDSCProfile(dscProfile);
       }
       this.updateSelectedDSCProfile();
+      this.dataObjects = Utility.getLodash().cloneDeep(this.dataObjects);
     }
   }
 
@@ -229,10 +230,15 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
   deleteRecord(object: ClusterDSCProfile): Observable<{ body: IClusterDSCProfile | IApiStatus | Error, statusCode: number; }> {
     return this.clusterService.DeleteDSCProfile(object.meta.name);
   }
+
   generateDeleteConfirmMsg(object: ClusterDSCProfile): string {
     return 'Are you sure you want to delete DSC Profile ' + object.meta.name;
   }
+
   generateDeleteSuccessMsg(object: ClusterDSCProfile): string {
+    if ( this.selectedDSCProfile  &&  this.selectedDSCProfile.meta.name === object.meta.name ) {
+      this.selectedDSCProfile = null;
+    }
     return 'Deleted DSC Profile ' + object.meta.name;
   }
 

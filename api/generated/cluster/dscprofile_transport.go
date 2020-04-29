@@ -119,6 +119,40 @@ func DecodeGrpcRespDSCProfileStatus(ctx context.Context, response interface{}) (
 	return response, nil
 }
 
+func encodeHTTPFeatureSet(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFeatureSet(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FeatureSet
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFeatureSet encodes GRPC request
+func EncodeGrpcReqFeatureSet(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FeatureSet)
+	return req, nil
+}
+
+// DecodeGrpcReqFeatureSet decodes GRPC request
+func DecodeGrpcReqFeatureSet(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FeatureSet)
+	return req, nil
+}
+
+// EncodeGrpcRespFeatureSet encodes GRC response
+func EncodeGrpcRespFeatureSet(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFeatureSet decodes GRPC response
+func DecodeGrpcRespFeatureSet(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPPropagationStatus(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

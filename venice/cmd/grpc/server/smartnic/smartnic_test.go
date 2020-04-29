@@ -1974,8 +1974,11 @@ func testSetup() {
 			Name: globals.DefaultDSCProfile,
 		},
 		Spec: cmd.DSCProfileSpec{
-			FwdMode:        "TRANSPARENT",
-			FlowPolicyMode: "BASENET",
+			Features: cmd.FeatureSet{
+				InterVMServices: true,
+				Firewall:        true,
+				FlowAware:       true,
+			},
 		},
 	}
 

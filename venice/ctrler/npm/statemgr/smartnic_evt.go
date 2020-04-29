@@ -5,7 +5,6 @@ package statemgr
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -62,11 +61,8 @@ func (sns *DistributedServiceCardState) isOrchestratorCompatible() bool {
 		return false
 	}
 
-	if dscProfileState.DSCProfile.Spec.FwdMode != cluster.DSCProfileSpec_INSERTION.String() || dscProfileState.DSCProfile.Spec.FlowPolicyMode != cluster.DSCProfileSpec_ENFORCED.String() {
-		return false
-	}
+	return dscProfileState.DSCProfile.Spec.Features.InterVMServices
 
-	return true
 }
 
 //GetDistributedServiceCardWatchOptions gets options
@@ -559,5 +555,5 @@ func (sm *Statemgr) isDscEnforcednMode(nsnic *cluster.DistributedServiceCard) bo
 		return false
 	}
 
-	return strings.ToLower(profileState.DSCProfile.DSCProfile.Spec.FlowPolicyMode) == strings.ToLower(cluster.DSCProfileSpec_ENFORCED.String())
+	return profileState.DSCProfile.DSCProfile.Spec.Features.Firewall == true
 }

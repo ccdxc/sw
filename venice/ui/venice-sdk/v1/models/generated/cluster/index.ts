@@ -62,6 +62,7 @@ export * from './cluster-distributed-service-card-list.model';
 export * from './cluster-distributed-service-card-spec.model';
 export * from './cluster-distributed-service-card-status.model';
 export * from './cluster-feature.model';
+export * from './cluster-feature-set.model';
 export * from './cluster-feature-status.model';
 export * from './cluster-host.model';
 export * from './cluster-host-list.model';

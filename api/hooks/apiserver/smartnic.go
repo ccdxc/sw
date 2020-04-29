@@ -168,10 +168,8 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 		if err != nil {
 			return i, false, fmt.Errorf("unable to find the new profile")
 		}
-		if oldprofname != "" && nwManaged && admitted { // validate update of profile only if the NIC is admitted and not decomissioned
-
-			errStr := fmt.Sprintf("Profile old :  %v %v  new: %v %v ", oldProfile.Spec.FwdMode, oldProfile.Spec.FlowPolicyMode, updProfile.Spec.FwdMode, updProfile.Spec.FlowPolicyMode)
-
+		if oldprofname != "" && admitted { // validate update of profile only if the NIC is admitted and not decomissioned
+			errStr := fmt.Sprintf("Profile old :  %v  new: %v", oldProfile.Spec.Features, updProfile.Spec.Features)
 			cl.logger.Errorf(errStr)
 			err = verifyAllowedProfile(oldProfile, updProfile)
 			if err != nil {
@@ -229,29 +227,24 @@ func getFieldSelector(nic string) string {
 }
 
 func verifyAllowedProfile(oldProfile, newProfile cluster.DSCProfile) error {
-	if oldProfile.Spec.FwdMode == newProfile.Spec.FwdMode &&
-		oldProfile.Spec.FlowPolicyMode == newProfile.Spec.FlowPolicyMode {
+	if oldProfile.Spec.Features == newProfile.Spec.Features {
 		//Same mode transistion
 		return nil
 	}
 
-	if oldProfile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() {
-		return fmt.Errorf("reboot required cant move any profile")
+	if oldProfile.Spec.Features.InterVMServices == true {
+		return fmt.Errorf("Cannot disable InterVMServices  featureset without decomission/reboot. Check documentation for backward transitions")
 	}
 
-	if oldProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() {
-		if newProfile.Spec.FwdMode == cluster.DSCProfileSpec_TRANSPARENT.String() {
-			if oldProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_FLOWAWARE.String() {
-				if newProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_BASENET.String() {
-					return fmt.Errorf("Unable to move from %s to %s while in fwdMode:%s", oldProfile.Spec.FlowPolicyMode, newProfile.Spec.FlowPolicyMode, newProfile.Spec.FwdMode)
-				}
-			} else if oldProfile.Spec.FlowPolicyMode == cluster.DSCProfileSpec_ENFORCED.String() {
-				return fmt.Errorf("Unable to move from %s to %s while in fwdMode:%s", oldProfile.Spec.FlowPolicyMode, newProfile.Spec.FlowPolicyMode, newProfile.Spec.FwdMode)
-			}
-		} else {
-			if newProfile.Spec.FlowPolicyMode != cluster.DSCProfileSpec_ENFORCED.String() {
-				return fmt.Errorf("Not valid. Move allowed from Tranparent to Insertion Enforced only")
-			}
+	//OldProfile is in Transparent mode
+	if oldProfile.Spec.Features.Firewall == true {
+		if newProfile.Spec.Features.Firewall == false {
+			return fmt.Errorf("Cannot disable Firewall featureset without decomission/reboot. Check documentation for backward transitions")
+		}
+	}
+	if oldProfile.Spec.Features.FlowAware == true {
+		if newProfile.Spec.Features.FlowAware == false {
+			return fmt.Errorf("Cannot disable Flowaware featureset without decomission/reboot. Check documentation for backward transitions")
 		}
 	}
 	return nil

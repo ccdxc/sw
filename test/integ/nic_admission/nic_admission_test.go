@@ -1271,8 +1271,11 @@ func Setup(m *testing.M) {
 			Name: globals.DefaultDSCProfile,
 		},
 		Spec: pencluster.DSCProfileSpec{
-			FwdMode:        "TRANSPARENT",
-			FlowPolicyMode: "BASENET",
+			Features: pencluster.FeatureSet{
+				InterVMServices: false,
+				FlowAware:       false,
+				Firewall:        false,
+			},
 		},
 	}
 

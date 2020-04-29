@@ -21,8 +21,8 @@ func (cl *clusterHooks) DSCProfilePreCommitHook(ctx context.Context, kvs kvstore
 	}
 	err := checkValidProfile(updDSCProfile)
 	if err != nil {
-		cl.logger.Errorf("Unsupported DSCProfile: FwdMode:%s, FlowPolicyMode:%s", updDSCProfile.Spec.FwdMode, updDSCProfile.Spec.FlowPolicyMode)
-		return i, false, fmt.Errorf("Unsupported DSCProfile: FwdMode:%s, FlowPolicyMode:%s", updDSCProfile.Spec.FwdMode, updDSCProfile.Spec.FlowPolicyMode)
+		cl.logger.Error(err)
+		return i, false, fmt.Errorf("Error DSCProfile: %v", err)
 	}
 	if oper == apiintf.CreateOper {
 		return i, true, nil
@@ -57,11 +57,18 @@ func (cl *clusterHooks) DSCProfilePreCommitHook(ctx context.Context, kvs kvstore
 }
 
 func checkValidProfile(profile cluster.DSCProfile) error {
-	if profile.Spec.FwdMode == cluster.DSCProfileSpec_INSERTION.String() {
-		if profile.Spec.FlowPolicyMode != cluster.DSCProfileSpec_ENFORCED.String() {
-			return fmt.Errorf(" fwdMode:%s flowpolicy mode:%s is not supported", profile.Spec.FwdMode, profile.Spec.FlowPolicyMode)
+	interVMServices := profile.Spec.Features.InterVMServices
+	flowAware := profile.Spec.Features.FlowAware
+	fireWall := profile.Spec.Features.Firewall
+	if interVMServices {
+		if flowAware != true || fireWall != true {
+			return fmt.Errorf("InterVMServices should be enabled along with flowaware and firewall features enabled")
+		}
+	} else {
+		if (fireWall == true) && (flowAware == false) {
+			return fmt.Errorf("Enable flowAware in order to enable fireWall feature")
+
 		}
 	}
 	return nil
-
 }

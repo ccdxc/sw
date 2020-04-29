@@ -15,15 +15,22 @@ import (
 // CreateDSCProfileFlags specifies flags for DSCProfile create operation
 var CreateDSCProfileFlags = []gen.CliFlag{
 	{
-		ID:     "fwd-mode",
-		Type:   "String",
+		ID:     "Firewall",
+		Type:   "Bool",
 		Help:   "",
 		Skip:   false,
 		Insert: "",
 	},
 	{
-		ID:     "policy-mode",
-		Type:   "String",
+		ID:     "FlowAware",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "InterVMServices",
+		Type:   "Bool",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

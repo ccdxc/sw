@@ -90,14 +90,29 @@ func NewDSCProfileState(dscProfile *ctkit.DSCProfile, stateMgr *Statemgr) (*DSCP
 func convertDSCProfile(dps *DSCProfileState) *netproto.Profile {
 	// build sg message
 	creationTime, _ := types.TimestampProto(time.Now())
+	interVMServices := dps.DSCProfile.Spec.Features.InterVMServices
+	fireWall := dps.DSCProfile.Spec.Features.Firewall
+	flowAware := dps.DSCProfile.Spec.Features.FlowAware
+
 	fwp := netproto.Profile{
 		TypeMeta:   api.TypeMeta{Kind: "Profile"},
 		ObjectMeta: agentObjectMeta(dps.DSCProfile.ObjectMeta),
-		Spec: netproto.ProfileSpec{
-			PolicyMode: dps.DSCProfile.Spec.FlowPolicyMode,
-			FwdMode:    dps.DSCProfile.Spec.FwdMode,
-		},
+		Spec:       netproto.ProfileSpec{},
 	}
+	if interVMServices == true {
+		fwp.Spec.FwdMode = netproto.ProfileSpec_INSERTION.String()
+	} else {
+		fwp.Spec.FwdMode = netproto.ProfileSpec_TRANSPARENT.String()
+	}
+
+	if fireWall == true {
+		fwp.Spec.PolicyMode = netproto.ProfileSpec_ENFORCED.String()
+	} else if flowAware == true {
+		fwp.Spec.PolicyMode = netproto.ProfileSpec_FLOWAWARE.String()
+	} else {
+		fwp.Spec.PolicyMode = netproto.ProfileSpec_BASENET.String()
+	}
+
 	fwp.CreationTime = api.Timestamp{Timestamp: *creationTime}
 	fwp.ObjectMeta.Tenant = "default"
 	fwp.ObjectMeta.Namespace = "default"

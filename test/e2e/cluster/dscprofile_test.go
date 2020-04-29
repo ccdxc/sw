@@ -46,8 +46,11 @@ func (dscTg *dscProfileTestGroup) testProfileCreateDelete() {
 			Name: "dscProfile1",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "TRANSPARENT",
-			FlowPolicyMode: "BASENET",
+			Features: cluster.FeatureSet{
+				InterVMServices: false,
+				FlowAware:       false,
+				Firewall:        false,
+			},
 		},
 	}
 
@@ -74,8 +77,12 @@ func (dscTg *dscProfileTestGroup) testDSCUpdateWithSameProfile() {
 			Name: "insertion.enforced",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "INSERTION",
-			FlowPolicyMode: "ENFORCED",
+
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				FlowAware:       true,
+				Firewall:        true,
+			},
 		},
 	}
 

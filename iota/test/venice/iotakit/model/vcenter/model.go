@@ -179,8 +179,11 @@ func (sm *VcenterSysModel) setupInsertionMode() error {
 			Tenant:    "",
 		},
 		Spec: cluster.DSCProfileSpec{
-			FwdMode:        "INSERTION",
-			FlowPolicyMode: "ENFORCED",
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				Firewall:        true,
+				FlowAware:       true,
+			},
 		},
 	}
 	cfgClient.CreateDscProfile(&dscProfile)

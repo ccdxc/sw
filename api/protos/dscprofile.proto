@@ -25,28 +25,21 @@ message PropagationStatus {
     repeated string PendingNaples = 6 [(gogoproto.jsontag) = "pending-dscs"];
 }
 
+message FeatureSet {
+    // ui-hint: InterVMServices
+    bool InterVMServices  = 1; //Enables InterVMSerives in DSC
+
+    // ui-hint: FlowAware 
+    bool FlowAware        = 2; //Enables DSC to FlowAware
+
+    // ui-hint: Firewall
+    bool Firewall         = 3; //Enables Firewall feature in DSC
+}
+
 
 // ProfileSpec - Spec applicable to DSC
 message DSCProfileSpec {
-    enum Fwd_Mode 
-    {
-       // ui-hint: Transparent
-       TRANSPARENT = 0; //Transparent Packet forwarding mode
-       // ui-hint: Insertion
-       INSERTION   = 1; //MicroSeg mode where DSC attracts traffic
-    }
-    enum FlowPolicy_Mode
-    {
-       // ui-hint: BaseNet
-       BASENET   = 0; // Basic networking mode.
-       // ui-hint: FlowAware
-       FLOWAWARE = 1; // Flows are learnt in this mode
-       // ui-hint: Enforced
-       ENFORCED  = 2; // Flows are learnt and policy enforced
-    }
-    string FwdMode    = 1 [(venice.check) = "StrEnum(DSCProfileSpec.Fwd_Mode)",
-                             (gogoproto.nullable) = true, (gogoproto.jsontag) = "fwd-mode"];
-    string FlowPolicyMode = 2 [(venice.check) = "StrEnum(DSCProfileSpec.FlowPolicy_Mode)",(gogoproto.nullable) = true, (gogoproto.jsontag)= "policy-mode"];
+    FeatureSet Features = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "feature-set"];
 }
 
 message DSCProfileStatus {
