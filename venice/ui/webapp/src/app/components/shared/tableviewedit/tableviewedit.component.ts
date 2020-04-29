@@ -680,10 +680,18 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
       accept: () => {
         const allSuccessSummary = 'Delete';
         const partialSuccessSummary = 'Partially delete';
-        const msg = 'Marked selected ' + selectedDataObjects.length + ' deleted.';
-        this.invokeDeleteMultipleRecords(allSuccessSummary, partialSuccessSummary, msg);
+        const successMsg = 'Successfully deleted  ' + selectedDataObjects.length + ' records.';
+        const failureMsg = 'Failed to delete ' + selectedDataObjects.length + ' records.';
+        // this.invokeDeleteMultipleRecords(allSuccessSummary, partialSuccessSummary, successMsg); // user forljoin
+        this.invokeDeleteMultipleRecordsBulkedit(successMsg, failureMsg);  // use bulkedit
       }
     });
+  }
+
+  invokeDeleteMultipleRecordsBulkedit(successMsg: string, failureMsg: string) {
+    const selectedDataObjects = this.getSelectedDataObjects();
+    const stagingBulkEditAction = this.buildBulkEditDeletePayload(selectedDataObjects);
+    this.bulkEditHelper(selectedDataObjects, stagingBulkEditAction, successMsg, failureMsg);
   }
 
   /**
@@ -790,11 +798,30 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
    * @param buffername
    */
   buildBulkEditLabelsPayload(veniceObjects: any[], buffername: string = ''): IStagingBulkEditAction {
+    return this.buildBulkEditPayloadHelper(veniceObjects, 'update', buffername);
+  }
+
+  /**
+   * This API build bulkedit delete payload
+   * @param veniceObjects
+   * @param buffername
+   */
+  buildBulkEditDeletePayload(veniceObjects: any[], buffername: string = ''): IStagingBulkEditAction {
+    return this.buildBulkEditPayloadHelper(veniceObjects, 'delete', buffername);
+  }
+
+  /**
+   * This is a key helper function to build bulkedit payload
+   * @param veniceObjects
+   * @param method
+   * @param buffername
+   */
+  buildBulkEditPayloadHelper(veniceObjects: any[], method: string,  buffername: string = ''): IStagingBulkEditAction {
     const stagingBulkEditAction: IStagingBulkEditAction = Utility.buildStagingBulkEditAction(buffername);
     stagingBulkEditAction.spec.items = [];
 
     for (const vObject of veniceObjects) {
-      const bulkeditBulkEditItem: IBulkeditBulkEditItem = this.buildBulkEditItemFromVeniceObject(vObject, 'update');
+      const bulkeditBulkEditItem: IBulkeditBulkEditItem = this.buildBulkEditItemFromVeniceObject(vObject, method);
       stagingBulkEditAction.spec.items.push(bulkeditBulkEditItem);
     }
     return stagingBulkEditAction;

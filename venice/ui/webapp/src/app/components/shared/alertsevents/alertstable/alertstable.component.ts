@@ -20,6 +20,7 @@ import { Animations } from '@app/animations';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { TimeRangeComponent } from '../../timerange/timerange.component';
 import { ValidationErrors } from '@angular/forms';
+import { IStagingBulkEditAction, IBulkeditBulkEditItem } from '@sdk/v1/models/generated/staging';
 
 @Component({
   selector: 'app-alertstable',
@@ -80,8 +81,8 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   alertsSelectedTimeRange: TimeRange;
   alertsTimeConstraints: string = '';
 
-   // Will hold mapping from severity types to counts
-   alertNumbers: { [severity in MonitoringAlertStatus_severity]: number } = {
+  // Will hold mapping from severity types to counts
+  alertNumbers: { [severity in MonitoringAlertStatus_severity]: number } = {
     'info': 0,
     'warn': 0,
     'critical': 0,
@@ -123,12 +124,12 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   }
 
   getSearchedAlert() {
-    const searchedAlertSubscription  = this.monitoringService.GetAlert(this.searchedAlert).subscribe(
+    const searchedAlertSubscription = this.monitoringService.GetAlert(this.searchedAlert).subscribe(
       response => {
         this.selectedAlert = response.body as MonitoringAlert;
       },
       (error) => {
-         // User may tweak browser url and make invalid alert name in the url, we will catch and throw error.
+        // User may tweak browser url and make invalid alert name in the url, we will catch and throw error.
         this.selectedAlert = null;
         this.controllerService.invokeRESTErrorToaster('Failed to fetch alert ' + this.searchedAlert, error);
       }
@@ -165,10 +166,10 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     this.subscriptions.push(this.alertSubscription);
   }
 
-    /**
-   * Submits an HTTP request to mark the alert as resolved
-   * @param alert Alert to resolve
-   */
+  /**
+ * Submits an HTTP request to mark the alert as resolved
+ * @param alert Alert to resolve
+ */
   resolveAlert(alert: MonitoringAlert, $event) {
     const summary = 'Alert Resolved';
     const msg = 'Marked alert as resolved';
@@ -216,9 +217,9 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     return this.showBatchIconHelper(MonitoringAlertSpec_state.resolved, true);
   }
 
-    /**
-   * This api serves html template
-   */
+  /**
+ * This api serves html template
+ */
   showBatchAcknowLedgeIcon(): boolean {
     // we want selected alerts all NOT in ACKNOWLEDGED state
     return this.showBatchIconHelper(MonitoringAlertSpec_state.acknowledged, true);
@@ -232,15 +233,52 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     return this.showBatchIconHelper(MonitoringAlertSpec_state.open, true);
   }
 
-    /**
-   * This api serves html template
-   */
+
+  invokeUpdateAlerts(newState: MonitoringAlertSpec_state, summary: string, successMsg: string) {
+   // this.updateAlertOneByOne(newState, summary, msg);
+   const failureMsg: string = 'Failed to update alerts';
+   this.updateAlertBulkEdit (newState, successMsg, failureMsg );
+  }
+
+  updateAlertOneByOne(newState: MonitoringAlertSpec_state, summary: string, msg: string) {
+    const observables = this.buildObservaleList(newState);
+    this.updateAlertListForkJoin(observables, summary, msg);
+  }
+
+  updateAlertBulkEdit(newState: MonitoringAlertSpec_state, summary: string, msg: string) {
+
+    const alerts = this.tableContainer.selectedDataObjects;
+    const successMsg: string = 'Updated ' + alerts.length + ' alerts';
+    const failureMsg: string = 'Failed to update alerts';
+    const stagingBulkEditAction = this.buildBulkEditDSCProfilePayload(alerts, newState);
+    this.bulkEditHelper(alerts, stagingBulkEditAction, successMsg, failureMsg);
+  }
+
+  buildBulkEditDSCProfilePayload(updateAlerts: MonitoringAlert[], newState: MonitoringAlertSpec_state, buffername: string = ''): IStagingBulkEditAction {
+
+    const stagingBulkEditAction: IStagingBulkEditAction = Utility.buildStagingBulkEditAction(buffername);
+    stagingBulkEditAction.spec.items = [];
+
+    for (const alert of updateAlerts) {
+      alert.spec.state = newState;
+      const obj = {
+        uri: '',
+        method: 'update',
+        object: alert.getModelValues()
+      };
+      stagingBulkEditAction.spec.items.push(obj as IBulkeditBulkEditItem);
+    }
+    return (stagingBulkEditAction.spec.items.length > 0) ? stagingBulkEditAction : null;
+  }
+
+  /**
+ * This api serves html template
+ */
   resolveSelectedAlerts() {
     const summary = 'Alerts Resolved';
     const msg = 'Marked selected alerts as resolved';
     const newState = MonitoringAlertSpec_state.resolved;
-    const observables = this.buildObservaleList(newState);
-    this.updateAlertList(observables, summary, msg);
+    this.invokeUpdateAlerts(newState, summary, msg);
   }
 
   /**
@@ -250,8 +288,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     const summary = 'Alerts Acknowledged';
     const msg = 'Marked selected alerts as acknowledged';
     const newState = MonitoringAlertSpec_state.acknowledged;
-    const observables = this.buildObservaleList(newState);
-    this.updateAlertList(observables, summary, msg);
+    this.invokeUpdateAlerts(newState, summary, msg);
   }
 
   /**
@@ -261,14 +298,13 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     const summary = 'Alerts Opened';
     const msg = 'Marked selected alerts as open';
     const newState = MonitoringAlertSpec_state.open;
-    const observables = this.buildObservaleList(newState);
-    this.updateAlertList(observables, summary, msg);
+    this.invokeUpdateAlerts(newState, summary, msg);
   }
 
-    /**
-   * This API serves html template.
-   * It will filter events displayed in table
-   */
+  /**
+ * This API serves html template.
+ * It will filter events displayed in table
+ */
   onAlertNumberClick(severityType: string) {
     if (this.currentAlertSeverityFilter === severityType) {
       this.currentAlertSeverityFilter = null;
@@ -305,10 +341,10 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
   }
 
-    /**
-   * Submits an HTTP request to update the state of the alert
-   * @param alert Alert to resolve
-   */
+  /**
+ * Submits an HTTP request to update the state of the alert
+ * @param alert Alert to resolve
+ */
   updateAlertState(alert: MonitoringAlert, newState: MonitoringAlertSpec_state, summary: string, msg: string) {
     // Create copy so that when we modify it doesn't change the view
     const observable = this.buildUpdateAlertStateObservable(alert, newState);
@@ -365,23 +401,23 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     return true;
   }
 
-  updateAlertList(observables: Observable<any>[], summary: string, msg: string) {
+  updateAlertListForkJoin(observables: Observable<any>[], summary: string, msg: string) {
     if (observables.length <= 0) {
       return;
     }
     forkJoin(observables).subscribe(
       (results) => {
-      const isAllOK = Utility.isForkjoinResultAllOK(results);
-      if (isAllOK) {
-        this._controllerService.invokeSuccessToaster(summary, msg);
-        this.tableContainer.selectedDataObjects = []; // clear this.tableContainer.selectedDataObjects
-        this.invokeTimeRangeValidator();
-      } else {
-        const error = Utility.joinErrors(results);
-        this._controllerService.invokeRESTErrorToaster(summary, error);
-      }
-    },
-    this._controllerService.restErrorHandler(summary + ' Failed')
+        const isAllOK = Utility.isForkjoinResultAllOK(results);
+        if (isAllOK) {
+          this._controllerService.invokeSuccessToaster(summary, msg);
+          this.tableContainer.selectedDataObjects = []; // clear this.tableContainer.selectedDataObjects
+          this.invokeTimeRangeValidator();
+        } else {
+          const error = Utility.joinErrors(results);
+          this._controllerService.invokeRESTErrorToaster(summary, error);
+        }
+      },
+      this._controllerService.restErrorHandler(summary + ' Failed')
 
     );
   }
@@ -405,11 +441,11 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
       fieldSelectorOptions.push(this.alertsTimeConstraints);
     }
 
-    this.alertQuery['field-selector']  = fieldSelectorOptions.join(',');
+    this.alertQuery['field-selector'] = fieldSelectorOptions.join(',');
   }
 
   selectAlert($event) {
-    if ( this.selectedAlert && $event.rowData.meta.name === this.selectedAlert.meta.name ) {
+    if (this.selectedAlert && $event.rowData.meta.name === this.selectedAlert.meta.name) {
       this.selectedAlert = null;
     } else {
       this.selectedAlert = $event.rowData;
