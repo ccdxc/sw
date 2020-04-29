@@ -498,7 +498,19 @@ func createNetworkInterface(stateMgr *Statemgr, intfName string, dsc string, lab
 	}
 
 	// create sg
-	err := stateMgr.ctrler.NetworkInterface().Create(&nr)
+	//err := stateMgr.ctrler.NetworkInterface().Create(&nr)
+
+	err := stateMgr.OnInterfaceCreateReq(dsc, &netproto.Interface{
+		TypeMeta:   api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: nr.ObjectMeta,
+		Status: netproto.InterfaceStatus{
+			DSC:   dsc,
+			DSCID: dsc,
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "UPLINK_ETH",
+		},
+	})
 
 	return &nr, err
 }
@@ -516,8 +528,31 @@ func updateNetworkInterface(stateMgr *Statemgr, intfName string, dsc string, lab
 		Status: network.NetworkInterfaceStatus{DSC: dsc},
 	}
 
+	//Fake update
+	err := stateMgr.OnInterfaceUpdateReq(dsc, &netproto.Interface{
+		TypeMeta:   api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: nr.ObjectMeta,
+		Status: netproto.InterfaceStatus{
+			DSC:   dsc,
+			DSCID: dsc,
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "UPLINK_ETH",
+		},
+	})
+
 	// create sg
-	err := stateMgr.ctrler.NetworkInterface().Update(&nr)
+	err = stateMgr.OnInterfaceCreateReq(dsc, &netproto.Interface{
+		TypeMeta:   api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: nr.ObjectMeta,
+		Status: netproto.InterfaceStatus{
+			DSC:   dsc,
+			DSCID: dsc,
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: "UPLINK_ETH",
+		},
+	})
 
 	return &nr, err
 }

@@ -1017,12 +1017,11 @@ func (sm *SysModel) AfterTestCommon() error {
 	var err error
 	retries := 30
 	for i := 0; i < retries; i++ {
-		if err = sm.RunVerifySystemHealth(false); err == nil {
+		if err = sm.RunVerifySystemHealth(true); err == nil {
 			return nil
 		}
 		time.Sleep(1 * time.Second)
 	}
-	sm.CollectLogs()
 	fmt.Printf("%s%sSystem not in good health, stopping running tests %s\n", redColor, boldStyle, defaultStyle)
 	sm.PrintResult()
 	fmt.Printf("%s%sStopped running tests as system not in good state%s\n", redColor, boldStyle, defaultStyle)
