@@ -2,7 +2,7 @@
 
 # MAX_RETRIES guards the maximum time we wait for HAL to come up. It waits for 2**(MAX_RETRIES) - 1 seconds
 MAX_RETRIES=11
-HAL_GRPC_PORT="${HAL_GRPC_PORT:-50054}"
+HAL_GRPC_PORT="${HAL_GRPC_PORT:-11357}"
 HAL_SERVER="localhost:$HAL_GRPC_PORT"
 HAL_UP=-1
 

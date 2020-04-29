@@ -6,6 +6,7 @@ import evpn_pb2
 import types_pb2
 import socket
 import struct
+import defines
 
 stub = None
 channel = None
@@ -38,7 +39,7 @@ def create_req():
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.RT = rt_str
     req_msg.RTType = rttype
-    resp = stub.EvpnIpVrfRtCreate(req)     
+    resp = stub.EvpnIpVrfRtCreate(req)
     process_response(req, resp)
     return
 
@@ -49,7 +50,7 @@ def update_req():
     req_msg.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.RT = rt_str
     req_msg.RTType = rttype
-    resp = stub.EvpnIpVrfRtUpdate(req)     
+    resp = stub.EvpnIpVrfRtUpdate(req)
     process_response(req, resp)
     return
 
@@ -58,13 +59,13 @@ def get_req():
     req_msg = req.Request.add()
     req_msg.Key.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.Key.RT = rt_str
-    resp =  stub.EvpnIpVrfRtGet(req)     
+    resp =  stub.EvpnIpVrfRtGet(req)
     process_response(req, resp)
     return
 
 def get_all_req():
     req = evpn_pb2.EvpnIpVrfRtGetRequest()
-    resp =  stub.EvpnIpVrfRtGet(req)     
+    resp =  stub.EvpnIpVrfRtGet(req)
     process_response(req, resp)
     return
 
@@ -73,14 +74,14 @@ def delete_req():
     req_msg = req.Request.add()
     req_msg.Key.VPCId = vpcid+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(0)+chr(64)
     req_msg.Key.RT = rt_str
-    resp = stub.EvpnIpVrfRtDelete(req)     
+    resp = stub.EvpnIpVrfRtDelete(req)
     process_response(req, resp)
     return
 
 def init():
     global channel
     global stub
-    server = 'localhost:50054'
+    server = 'localhost:' + str(defines.AGENT_GRPC_PORT)
     channel = grpc.insecure_channel(server)
     stub = evpn_pb2.EvpnSvcStub(channel)
     return

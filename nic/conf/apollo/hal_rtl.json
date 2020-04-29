@@ -1,7 +1,7 @@
 {
   "mode": "rtl",
   "sw" : {
-    "grpc_port": "50054",
+    "grpc_port": "11357",
     "feature_set": "apollo",
     "control_cores_mask": "0x1",
     "data_cores_mask": "0xE"

@@ -6,6 +6,7 @@ import bgp_pb2
 import types_pb2
 import socket
 import struct
+import defines
 
 stub = None
 channel = None
@@ -51,21 +52,21 @@ def process_response(req_msg, resp_msg):
 
 def get_nlri():
     req = bgp_pb2.BGPNLRIPrefixGetRequest()
-    resp =  stub.BGPNLRIPrefixGet(req)     
+    resp =  stub.BGPNLRIPrefixGet(req)
     process_response(req, resp)
     return
 
 def init():
     global channel
     global stub
-    server = 'localhost:50054'
+    server = 'localhost:' + str(defines.AGENT_GRPC_PORT)
     channel = grpc.insecure_channel(server)
     stub = bgp_pb2.BGPSvcStub(channel)
     return
 
 def ip2long(ip):
     packedIP = socket.inet_aton(ip)
-    return struct.unpack("!L", packedIP)[0] 
+    return struct.unpack("!L", packedIP)[0]
 
 def long2ip(addr):
     return socket.inet_ntoa(struct.pack('!L', addr))

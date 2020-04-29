@@ -17,9 +17,9 @@
 namespace {
 
 /// grpc port for pds agent
-#define PDS_GRPC_PORT_API                 50054 //11357
+#define PDS_GRPC_PORT_API                 11357
 /// grpc port for upgrade manager
-#define PDS_GRPC_PORT_UPGMGR              51512 //11358
+#define PDS_GRPC_PORT_UPGMGR              11358
 /// grpc port for operd
 #define PDS_GRPC_PORT_OPERD               11359
 /// grpc port for operd default plugin

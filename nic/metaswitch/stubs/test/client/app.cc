@@ -604,7 +604,7 @@ int main(int argc, char** argv)
         cout << "Config file not found! Check CONFIG_PATH env var\n";
         exit(1);
     }
-    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:50054",
+    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:11357",
                                                            grpc::InsecureChannelCredentials());
     g_device_stub_  = DeviceSvc::NewStub (channel);
     g_if_stub_      = IfSvc::NewStub (channel);
