@@ -57,6 +57,9 @@ static_assert(sizeof(union ionic_dev_regs) == 4096);
 static_assert(sizeof(union ionic_dev_info_regs) == 2048);
 static_assert(sizeof(union ionic_dev_cmd_regs) == 2048);
 static_assert(sizeof(struct ionic_lif_stats) == 1024);
+static_assert(sizeof(struct ionic_port_pb_stats) <= 2048);
+static_assert(offsetof(struct ionic_port_info, pb_stats) == 2048);
+static_assert(sizeof(struct ionic_port_info) <= 4096);
 
 static_assert(sizeof(struct ionic_admin_cmd) == 64);
 static_assert(sizeof(struct ionic_admin_comp) == 16);

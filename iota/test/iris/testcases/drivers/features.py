@@ -135,7 +135,7 @@ def Trigger(tc):
         iperf_client_cmd = iperf.ClientCmd(server_ip, port, time=duration,
                                  proto=proto, jsonOut=True, ipproto=ipproto,
                                  pktsize=pktsize, client_ip=client_ip, naples = is_naples_cmd)
-        api.Trigger_AddCommand(cli_req, cli.node_name, cli.workload_name, iperf_client_cmd)
+        api.Trigger_AddCommand(cli_req, cli.node_name, cli.workload_name, iperf_client_cmd, timeout = 60)
 
     srv_resp = api.Trigger(srv_req)
     # Wait for iperf server to start.
