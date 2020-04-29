@@ -92,28 +92,39 @@ func main() {
 		log.Fatalf("Failed to start finder, err: %v", err)
 	}
 
-	startIndexer := func(opts ...indexer.Option) {
+	startIndexer := func(idxer indexer.Interface) {
 		for {
-			idxer, err := indexer.NewIndexer(ctx,
-				*apiServerAddr,
-				rslr,
-				cache,
-				logger,
-				opts...,
-			)
-
-			if err != nil || idxer == nil {
-				log.Fatalf("Failed to create indexer, err: %v", err)
-			}
-			err = idxer.Start()
+			err := idxer.Start()
 			if err != nil {
 				log.Errorf("Indexer failed with err, err: %v", err)
 			}
 		}
 	}
+
 	// Create the indexers
-	go startIndexer(indexer.WithDisableVOSWatcher())
-	go startIndexer(indexer.WithDisableAPIServerWatcher())
+	idxerConfig, err := indexer.NewIndexer(ctx,
+		*apiServerAddr,
+		rslr,
+		cache,
+		logger,
+		indexer.WithDisableVOSWatcher())
+	if err != nil || idxerConfig == nil {
+		log.Fatalf("Failed to create config indexer, err: %v", err)
+	}
+
+	idxerFwlogs, err := indexer.NewIndexer(ctx,
+		*apiServerAddr,
+		rslr,
+		cache,
+		logger,
+		indexer.WithDisableAPIServerWatcher())
+	if err != nil || idxerFwlogs == nil {
+		log.Fatalf("Failed to create fwlogs indexer, err: %v", err)
+	}
+
+	// Start the indexers
+	go startIndexer(idxerConfig)
+	go startIndexer(idxerFwlogs)
 
 	router := mux.NewRouter()
 
@@ -130,6 +141,7 @@ func main() {
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+	router.Methods("GET", "POST").Subrouter().Handle("/debug/config", indexer.HandleDebugConfig(idxerFwlogs))
 
 	go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%s", globals.SpyglassRESTPort), router)
 

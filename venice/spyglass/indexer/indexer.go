@@ -62,6 +62,8 @@ const (
 	// Remove data for last 30 minutes. It will free up ~5.2Gb assuming the
 	// data is generated at the rate of 20CPS per DSC.
 	numFwLogObjectsToDelete = 30000
+	enableFwlogIndexing     = int32(1)
+	disableFwlogIndexing    = int32(0)
 )
 
 // Option fills the optional params for Indexer
@@ -156,6 +158,7 @@ type Indexer struct {
 	// Vos disk update watcher
 	vosDiskUpdateWatcher    vosinternalprotos.ObjstoreInternalService_WatchDiskThresholdUpdatesClient
 	numFwLogObjectsToDelete int
+	indexFwlogs             int32 // Its an int for doing atomic operation on it.
 
 	// Whether or not to watch VOS objects
 	watchVos       bool
@@ -236,6 +239,7 @@ func NewIndexer(ctx context.Context,
 		watchAPIServer:              true,
 		numFwLogObjectsToDelete:     numFwLogObjectsToDelete,
 		lastProcessedFwLogObjectKey: map[string]string{},
+		indexFwlogs:                 enableFwlogIndexing,
 	}
 
 	for _, opt := range opts {

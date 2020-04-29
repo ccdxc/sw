@@ -36,6 +36,9 @@ const (
 	fwLogMetaVersion      = "v1"
 	fwlogsBucketName      = "fwlogs"
 	fwLogCSVVersion       = "v1"
+	newFlowsKey           = "newFlows"
+	deletedFlowsKey       = "deletedFlows"
+	shortLivedFlowsKey    = "shotLivedFlows"
 )
 
 // TestObject is used for testing
@@ -73,6 +76,8 @@ type singleLog struct {
 type vrfBufferedLogs struct {
 	bufferedLogs []interface{}
 	index        map[string]string
+	trends       map[string]interface{}
+	sessionIDs   map[string]struct{}
 
 	// StartTs & EndTs represent the timestamp of the first log and the last log in a window
 	startTs time.Time
@@ -87,6 +92,8 @@ func newVrfBufferedLogs() *vrfBufferedLogs {
 	return &vrfBufferedLogs{
 		bufferedLogs: []interface{}{},
 		index:        map[string]string{},
+		trends:       map[string]interface{}{},
+		sessionIDs:   map[string]struct{}{},
 	}
 }
 
@@ -139,6 +146,7 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 			w.postWorkItem(transmitLogs(ctx,
 				c, vrf, perVrfBufferedLogs[vrf].bufferedLogs,
 				perVrfBufferedLogs[vrf].index,
+				perVrfBufferedLogs[vrf].trends,
 				len(perVrfBufferedLogs[vrf].bufferedLogs),
 				perVrfBufferedLogs[vrf].startTs,
 				perVrfBufferedLogs[vrf].endTs,
@@ -146,9 +154,7 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 		}
 
 		// If client has not been initialized yet then drop the collected logs and move on.
-		perVrfBufferedLogs[vrf].bufferedLogs = []interface{}{}
-		perVrfBufferedLogs[vrf].index = map[string]string{}
-		perVrfBufferedLogs[vrf].lastReportedTs = time.Now()
+		resetPvbl(perVrfBufferedLogs[vrf])
 	}
 
 	// Logs will get transmitted to the object store when:
@@ -210,6 +216,7 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 			}
 			pvbl.bufferedLogs = append(pvbl.bufferedLogs, l.log)
 			populateIndex(pvbl.index, l)
+			populateTrends(pvbl, l)
 
 			pvbl.endTs = l.ts
 			pvbl.prevTs = pvbl.endTs
@@ -228,7 +235,11 @@ func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan sing
 }
 
 func transmitLogs(ctx context.Context,
-	c objstore.Client, vrf uint64, logs interface{}, index map[string]string, numLogs int, startTs time.Time, endTs time.Time,
+	c objstore.Client, vrf uint64,
+	logs interface{},
+	index map[string]string,
+	trends map[string]interface{},
+	numLogs int, startTs time.Time, endTs time.Time,
 	testChannel chan<- TestObject, nodeUUID string, ff fileFormat, zip bool) func() {
 	return func() {
 		// TODO: this can be optimized. Bucket name should be calcualted only once per hour.
@@ -273,6 +284,7 @@ func transmitLogs(ctx context.Context,
 		meta["csvversion"] = fwLogCSVVersion
 		meta["metaversion"] = fwLogMetaVersion
 		meta["creation-Time"] = time.Now().Format(time.RFC3339Nano)
+		populateMetaWithTrends(meta, trends)
 
 		// Send the file on to the channel for testing
 		if testChannel != nil {
@@ -429,6 +441,17 @@ func getTenantNameFromSourceVrf(vrf uint64) string {
 	return "default"
 }
 
+func populateMetaWithTrends(meta map[string]string, trends map[string]interface{}) {
+	for k, v := range trends {
+		switch v.(type) {
+		case string:
+			meta[k] = v.(string)
+		case uint32:
+			meta[k] = strconv.FormatUint(uint64(v.(uint32)), 10)
+		}
+	}
+}
+
 func populateIndex(index map[string]string, l singleLog) {
 	var src, dest string
 	if temp, ok := l.log.(map[string]string); ok {
@@ -457,4 +480,46 @@ func populateIndex(index map[string]string, l singleLog) {
 	} else {
 		index[dest] = "1"
 	}
+}
+
+func populateTrends(pvbl *vrfBufferedLogs, l singleLog) {
+	trends := pvbl.trends
+	sessionIDs := pvbl.sessionIDs
+	if temp, ok := l.log.([]string); ok {
+		switch temp[12] {
+		case "flow_create":
+			// Increment new flow counter
+			if old, ok := trends[newFlowsKey].(uint32); ok {
+				trends[newFlowsKey] = old + 1
+			} else {
+				trends[newFlowsKey] = uint32(1)
+			}
+			sessionIDs[temp[11]] = struct{}{}
+		case "flow_delete":
+			// Increment deleted flow counter
+			if old, ok := trends[deletedFlowsKey].(uint32); ok {
+				trends[deletedFlowsKey] = old + 1
+			} else {
+				trends[deletedFlowsKey] = uint32(1)
+			}
+			// Increment short lived flow counter.
+			// Short lived flows are the one that get created & deleted within
+			// the 1 min buffering interval
+			if _, ok := sessionIDs[temp[11]]; ok {
+				if old, ok := trends[shortLivedFlowsKey].(uint32); ok {
+					trends[shortLivedFlowsKey] = old + 1
+				} else {
+					trends[shortLivedFlowsKey] = uint32(1)
+				}
+			}
+		}
+	}
+}
+
+func resetPvbl(pvbl *vrfBufferedLogs) {
+	pvbl.bufferedLogs = []interface{}{}
+	pvbl.index = map[string]string{}
+	pvbl.trends = map[string]interface{}{}
+	pvbl.sessionIDs = map[string]struct{}{}
+	pvbl.lastReportedTs = time.Now()
 }

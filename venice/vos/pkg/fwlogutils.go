@@ -60,6 +60,7 @@ loop:
 				continue
 			}
 			lObj := &objstore.Object{}
+			lObj.ObjectMeta.Name = mobj.Key
 			updateObjectMeta(&stat, &lObj.ObjectMeta)
 			mStartTs, err := time.Parse(timeFormat, lObj.ObjectMeta.Labels["Startts"])
 			if err != nil {
@@ -76,7 +77,6 @@ loop:
 			if (mStartTs.After(startTs) || mStartTs.Equal(startTs)) &&
 				(mEndTs.Before(endTs) || mEndTs.Equal(endTs)) {
 				lObj.TypeMeta = api.TypeMeta{Kind: "Object"}
-				lObj.ObjectMeta = api.ObjectMeta{Name: mobj.Key}
 				lObj.Spec = objstore.ObjectSpec{ContentType: stat.ContentType}
 				lObj.Status = objstore.ObjectStatus{
 					Size_:  stat.Size,

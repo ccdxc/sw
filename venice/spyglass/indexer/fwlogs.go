@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -42,6 +43,10 @@ type FwLogObjectV1 struct {
 }
 
 func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout int, processWorkers *workers, pushWorkers *workers) error {
+	if atomic.LoadInt32(&idr.indexFwlogs) == disableFwlogIndexing {
+		return nil
+	}
+
 	handleEvent := func() {
 		// timeformat for parsing startts and endts from object meta.
 		// This time format is used by tmagent

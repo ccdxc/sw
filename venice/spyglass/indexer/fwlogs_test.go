@@ -7,6 +7,7 @@ import (
 	"expvar"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -87,8 +88,10 @@ func SkipTestAppendOnlyWriter(t *testing.T) {
 		verifyLastProcessedObjectKeys(ctx, t, r, logger)
 	})
 
-	// done := make(chan bool)
-	// <-done
+	// TestDebuhRESTHandle
+	t.Run("TestDebugRESTHandle", func(t *testing.T) {
+		verifyDebugRESTHandle(ctx, t, r, logger)
+	})
 }
 
 func setupSpyglass(ctx context.Context, t *testing.T,
@@ -108,13 +111,14 @@ func setupSpyglass(ctx context.Context, t *testing.T,
 		AssertOk(t, err, "failed to add indexer")
 		Assert(t, idxer != nil, "failed to create indexer")
 
+		router := mux.NewRouter()
+		router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
+		router.Methods("GET", "POST").Subrouter().Handle("/debug/config", indexer.HandleDebugConfig(idxer))
+		go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%s", globals.SpyglassRESTPort), router)
+
 		err = idxer.Start()
 		AssertOk(t, err, "failed to start indexer")
 	}(r)
-
-	router := mux.NewRouter()
-	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
-	go http.ListenAndServe(fmt.Sprintf("127.0.0.1:%s", globals.SpyglassRESTPort), router)
 }
 
 func setupKibana(t *testing.T, elasticURL string) {
@@ -288,6 +292,44 @@ func verifyLastProcessedObjectKeys(ctx context.Context, t *testing.T, r resolver
 	lpk, ok := data.(map[string]string)
 	Assert(t, ok, "error in casting lastProcessedObjectKeys")
 	Assert(t, len(lpk) > 0, "corrupted data in lastProcessedObjectKeys object")
+}
+
+func verifyDebugRESTHandle(ctx context.Context, t *testing.T, r resolver.Interface, logger log.Logger) {
+	time.Sleep(time.Second * 5)
+	uri := strings.TrimSpace(fmt.Sprintf("http://127.0.0.1:%s", globals.SpyglassRESTPort) + "/debug/config")
+
+	getHelper := func(toMatch bool) {
+		resp, err := http.Get(uri)
+		AssertOk(t, err, "error is getting /debug/config")
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		AssertOk(t, err, "error is reading response of /debug/config")
+		config := map[string]interface{}{}
+		err = json.Unmarshal(body, &config)
+		AssertOk(t, err, "error is unmarshaling response of /debug/config")
+		v, ok := config["disableFwlogIndex"]
+		Assert(t, ok, "disableFwlogIndex is not present in /debug/config resposnse, response:", config)
+		Assert(t, v == toMatch, "incorrect value of disableFwlogIndex, expected", toMatch)
+	}
+
+	// Veirfy that indexing is enabled
+	getHelper(true)
+
+	reqBody, err := json.Marshal(map[string]interface{}{
+		"disableFwlogIndex": false,
+	})
+	AssertOk(t, err, "error is marshaling POST request for /debug/config")
+	req, err := http.NewRequest("POST", uri, bytes.NewBuffer(reqBody))
+	AssertOk(t, err, "error is creating POST request for /debug/config")
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	AssertOk(t, err, "error is POSTing request for /debug/config")
+	defer resp.Body.Close()
+	Assert(t, resp.Status == "200 OK", "incorrect response status")
+
+	// Veirfy that indexing is disabled
+	getHelper(false)
 }
 
 func setupTmAgent(ctx context.Context, t *testing.T, r resolver.Interface) {

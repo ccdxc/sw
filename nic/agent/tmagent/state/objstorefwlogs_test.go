@@ -249,7 +249,7 @@ func verifyLog(t *testing.T, testObject TestObject) {
 	Assert(t, testObject.IndexBucketName == "meta-default.fwlogs", "index bucket name is not correct")
 	verifyData(t, testObject.Data)
 	Assert(t, testObject.Index != "", "index is empty")
-	Assert(t, len(testObject.Meta) == 7, "object meta is empty %s", testObject.Meta)
+	Assert(t, len(testObject.Meta) != 0, "object meta is empty %s", testObject.Meta)
 	Assert(t, testObject.Meta["startts"] != "", "object meta's startts is empty")
 	Assert(t, testObject.Meta["endts"] != "", "object meta's endts is empty")
 	Assert(t, testObject.Meta["logcount"] == "1",
