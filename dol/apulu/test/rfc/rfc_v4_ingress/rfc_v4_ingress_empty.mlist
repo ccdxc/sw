@@ -1,0 +1,52 @@
+# Apulu RFC IPv4 Ingress modules list for empty policy
+feature:
+    id          : rfc
+    sub         : ipv4_ingress_empty
+    package     : test.rfc
+    module      : rfc
+    runorder    : 21000
+    enable      : True
+    ignore      : True
+
+modules:
+
+    - module         :
+        name         : EMPTY_ALLOW
+        spec         : rfc_ingress.testspec
+        iterate      :
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=allow
+              proto  : TCP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=allow
+              proto  : UDP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=allow
+              proto  : ICMP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=allow
+              proto  : ESP
+
+    - module         :
+        name         : EMPTY_DENY
+        spec         : rfc_ingress.testspec
+        iterate      :
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=deny
+              proto  : TCP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=deny
+              proto  : UDP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=deny
+              proto  : ICMP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=deny
+              proto  : ESP
+
+    - module         :
+        name         : EMPTY_NONE
+        spec         : rfc_ingress.testspec
+        iterate      :
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=none
+              proto  : TCP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=none
+              proto  : UDP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=none
+              proto  : ICMP
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty,OverlapType=none,DefaultFwAction=none
+              proto  : ESP
+
+       

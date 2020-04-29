@@ -829,6 +829,14 @@ def GetRpcDirection(direction):
          return types_pb2.RULE_DIR_EGRESS
     return types_pb2.RULE_DIR_NONE
 
+def GetRpcSecurityRuleAction(action):
+    if action == "allow":
+        return types_pb2.SECURITY_RULE_ACTION_ALLOW
+    elif action == "deny":
+        return types_pb2.SECURITY_RULE_ACTION_DENY
+    else:
+        return types_pb2.SECURITY_RULE_ACTION_NONE
+
 def GetPortIDfromInterface(interfaceid):
     return topo.INTF2PORT_TBL.get(interfaceid, topo.PortTypes.NONE)
 

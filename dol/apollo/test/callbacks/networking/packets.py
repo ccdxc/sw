@@ -45,13 +45,17 @@ def __get_proto_from_policy_rule(rule):
         return "TCP"
     return utils.GetIPProtoName(l3match.Proto)
 
-def __get_packet_template_from_policy_impl(rule, policy):
-    protocol = __get_proto_from_policy_rule(rule)
+def __get_packet_template_from_policy_impl(rule, policy, protocol=None):
+    protocol = protocol if protocol else __get_proto_from_policy_rule(rule)
     template = 'ETH_%s_%s' % (policy.AddrFamily, protocol)
     return infra_api.GetPacketTemplate(template)
 
 def GetPacketTemplateFromPolicy(testcase, packet, args=None):
-    return __get_packet_template_from_policy_impl(testcase.config.tc_rule, testcase.config.policy)
+    iterelem = testcase.module.iterator.Get()
+    protocol = getattr(iterelem, "proto", None) if iterelem else None
+    return __get_packet_template_from_policy_impl(testcase.config.tc_rule,
+                                                  testcase.config.policy,
+                                                  protocol=protocol)
 
 def __get_host_from_pfx_impl(pfx, af):
     """
