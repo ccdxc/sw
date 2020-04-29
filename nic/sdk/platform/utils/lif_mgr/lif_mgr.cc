@@ -11,6 +11,9 @@ namespace sdk {
 namespace platform {
 namespace utils {
 
+uint8_t lif_mgr::num_instances_ = 0;
+sdk_spinlock_t lif_mgr::slock_;
+
 //-----------------------------------------------------------------------------
 // Factory method to instantiate the class
 //-----------------------------------------------------------------------------
@@ -561,10 +564,21 @@ end:
 sdk_ret_t
 lif_mgr::lifs_reset (uint32_t start_lif, uint32_t end_lif)
 {
+    bool lock = false;
+    if (num_instances_) {
+        lock = true;
+    }
+        
+    if (lock) {
+        LIF_MGR_API_START_LOCK();
+    }
     for (uint32_t lif_id = start_lif; lif_id <= end_lif; lif_id++) {
         asicpd_reset_qstate_map(lif_id);
     }
 
+    if (lock) {
+        LIF_MGR_API_END_UNLOCK();
+    }
     return SDK_RET_OK;
 }
 

@@ -25,7 +25,8 @@ private:
     lif_map_t lifs_;
     alloc_size_map_t allocation_sizes_; // Track mem alloc. for free
     class mpartition *mp_;
-    sdk_spinlock_t slock_;
+    static sdk_spinlock_t slock_;
+    static uint8_t num_instances_;
 
 private:
     sdk_ret_t init_(uint32_t num_lifs, mpartition *mp, const char *kHBMLabel);
@@ -41,10 +42,16 @@ public:
         hbm_base_ = 0;
         indexer_ = NULL;
         hbm_indexer_ = NULL;
-        SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+        if (!num_instances_) {
+            SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+        }
+        num_instances_++;
     }
     ~lif_mgr() {
-        SDK_SPINLOCK_DESTROY(&slock_);
+        num_instances_--;
+        if (!num_instances_) {
+            SDK_SPINLOCK_DESTROY(&slock_);
+        }
     }
 
     sdk_ret_t alloc_id(uint32_t *idx, uint32_t count);
