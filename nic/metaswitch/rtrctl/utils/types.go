@@ -78,7 +78,7 @@ func (n *NLRIPrefix) String() string {
 
 // String returns a user friendly string
 func (n *NLRIPrefix) AttrString() string {
-	if n == nil {
+	if n == nil || n.Prefix == nil {
 		return fmt.Sprintf("")
 	}
 	return fmt.Sprintf("%v", n.Prefix.attrString())

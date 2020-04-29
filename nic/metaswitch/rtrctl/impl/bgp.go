@@ -421,8 +421,7 @@ func bgpNlriShowCmdHandler(cmd *cobra.Command, _afisafi string, args []string) e
 				nlri.RouteSource, nlri.PathOrigId, nlri.FlapStatsFlapcnt,
 				nlri.FlapStatsSupprsd, nlri.IsActive, nlri.Stale, nlri.FlapStartTime,
 				nlri.ReasonNotBest, nlri.EcmpRoute, nlri.PeerAddr, nlri.ExtComm)
-			attrString := nlri.Prefix.AttrString()
-			if attrString != "" {
+			if nlri.Prefix != nil && nlri.Prefix.AttrString() != "" {
 				fmt.Println(nlri.Prefix.AttrString())
 			}
 		}

@@ -480,7 +480,6 @@ static void create_vpc_proto_grpc () {
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(200);
 
-
     printf ("Pushing VPC proto...\n");
     ret_status = g_vpc_stub_->VPCCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
