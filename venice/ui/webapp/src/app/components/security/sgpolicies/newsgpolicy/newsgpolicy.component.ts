@@ -284,6 +284,15 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
       const formValues = r.data.rule.getFormGroupValues();
       if (r.data.selectedProtoAppOption === this.PROTO_PORTS_OPTION) {
         formValues['apps'] = null;
+        // trim protocol value vs-1569
+        if (formValues['proto-ports'] && formValues['proto-ports'].length > 0) {
+          for (let i = 0; i < formValues['proto-ports'].length; i++) {
+            const item = formValues['proto-ports'][i];
+            if (item.protocol) {
+              item.protocol = item.protocol.trim();
+            }
+          }
+        }
       } else {
         formValues['proto-ports'] = null;
       }
