@@ -47,6 +47,6 @@ class SubnetObject():
         if self.v4routetableid:
             spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.v4routetableid)
         if self.hostifuuid:
-            spec.HostIf = self.hostifuuid.GetUuid()
+            spec.HostIf.append(self.hostifuuid.GetUuid())
         return grpcmsg
 

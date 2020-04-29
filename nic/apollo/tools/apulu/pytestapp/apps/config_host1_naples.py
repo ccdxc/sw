@@ -103,10 +103,25 @@ vcn_vnic_mac='fe:ff:0b:01:01:02'
 vcn_route_prefix1='11.1.2.0/24'
 vcn_route_table_id=100
 
+
+# PXE attributes
+pxe_vnic_id = 99
+pxe_subnet_id = 99
+pxe_subnet_pfx='10.1.0.0/24'
+# The host_if_idx is an encoding for PF
+pxe_host_if_idx='0x80000047'
+pxe_fabric_encap=205
+pxe_v4_router_ip=ipaddress.IPv4Address('10.1.0.1')
+pxe_virt_router_mac='00:66:01:00:00:01'
+pxe_local_vnic_mac='00:ae:cd:00:0a:f8'
+pxe_remote_vnic_mac='00:ae:cd:00:1c:80'
+pxe_local_host_ip=ipaddress.IPv4Address('10.1.0.2')
+pxe_remote_host_ip=ipaddress.IPv4Address('10.1.0.3')
+
 # Subnet object inputs
 ipv4_subnet1='2.1.0.0/24'
-# The host_if_idx is an encoding for PF1
-subnet1_host_if_idx='0x80000047'
+# The host_if_idx is an encoding for PF
+subnet1_host_if_idx='0x80000048'
 subnet1_fabric_encap=202
 subnet1_v4_router_ip=ipaddress.IPv4Address('2.1.0.1')
 subnet1_virt_router_mac='00:55:01:00:00:01'
@@ -115,15 +130,15 @@ subnet1_route_table_id=1
 subnet1_gw_ip_addr=ipaddress.IPv4Address('2.1.0.1')
 
 # VNIC and mapping (local and remote) table objects 
-subnet1_local_vnic_mac='00:ae:cd:00:08:11'
-subnet1_remote_vnic_mac='00:ae:cd:00:00:0a'
+subnet1_local_vnic_mac='00:ae:cd:00:0a:f9'
+subnet1_remote_vnic_mac='00:ae:cd:00:1c:81'
 subnet1_local_host_ip=ipaddress.IPv4Address('2.1.0.2')
 subnet1_remote_host_ip=ipaddress.IPv4Address('2.1.0.3')
 
 # Subnet object inputs
 ipv4_subnet2='3.1.0.0/24'
-# The host_if_idx is an encoding for PF1
-subnet2_host_if_idx='0x80000048'
+# The host_if_idx is an encoding for PF
+subnet2_host_if_idx='0x80000049'
 subnet2_fabric_encap=203
 subnet2_v4_router_ip=ipaddress.IPv4Address('3.1.0.1')
 subnet2_virt_router_mac='00:55:02:00:00:01'
@@ -193,8 +208,9 @@ vcn0=interface.InterfaceObject( 100, interface_pb2.IF_TYPE_CONTROL, interface_pb
 tunnel1 = tunnel.TunnelObject( tunnel_id,vpc1_id, tunnel_local_ip, tunnel_remote_ip, None, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid) 
 
 # Create DHCP Policy
-dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip, mtu=9000, gateway_ip=subnet1_v4_router_ip, dns_server=subnet1_v4_router_ip, ntp_server=subnet1_v4_router_ip, domain_name="test.com", boot_filename="test1")
-dhcp_policy2 = dhcp.DhcpPolicyObject(2, server_ip=subnet2_v4_router_ip, mtu=9000, gateway_ip=subnet2_v4_router_ip, dns_server=subnet2_v4_router_ip, ntp_server=subnet2_v4_router_ip, domain_name="test.com", boot_filename="test2")
+dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip, mtu=9000, gateway_ip=subnet1_v4_router_ip, dns_server=subnet1_v4_router_ip, ntp_server=subnet1_v4_router_ip, domain_name="test.com")
+dhcp_policy2 = dhcp.DhcpPolicyObject(2, server_ip=subnet2_v4_router_ip, mtu=9000, gateway_ip=subnet2_v4_router_ip, dns_server=subnet2_v4_router_ip, ntp_server=subnet2_v4_router_ip, domain_name="test.com")
+dhcp_policy3 = dhcp.DhcpPolicyObject(3, server_ip=pxe_v4_router_ip, boot_filename="http://10.1.0.3/kickstart/install_http_rhel77.ipxe")
 
 # Create NAT Port Block
 nat_pb1 = nat.NatPbObject(1, vpc1_id, nat_prefix, nat_port_lo, nat_port_hi, "udp")
@@ -211,6 +227,9 @@ subnet2 = subnet.SubnetObject( 2, vpc1_id, ipaddress.IPv4Network(ipv4_subnet2), 
 # VCN subnet
 vcn_subnet = subnet.SubnetObject( vcn_subnet_id, vcn_vpc_id, ipaddress.IPv4Network(vcn_subnet_pfx), vcn_host_if_idx, vcn_v4_router_ip, vcn_virt_router_mac, 0, 'VXLAN', vcn_subnet_encap, node_uuid=node_uuid )
 
+# Temporary: Create subnet for pxe in tenent VPC 1 with tenant subnet1 encap
+pxe_subnet = subnet.SubnetObject( pxe_subnet_id, vpc1_id, ipaddress.IPv4Network(pxe_subnet_pfx), pxe_host_if_idx, pxe_v4_router_ip, pxe_virt_router_mac, 0, 'VXLAN', pxe_fabric_encap, node_uuid=node_uuid, dhcp_policy_id=3 )
+
 
 # Create VNIC object
 # id, subnetid, vpcid, macaddr, hostifindex, sourceguard=False, fabricencap='NONE', fabricencapid=1, rxmirrorid = [], txmirrorid = []
@@ -220,6 +239,9 @@ vnic2 = vnic.VnicObject(2, 2, subnet2_local_vnic_mac, subnet2_host_if_idx, False
 # Create VCN VNIC object
 vcn_vnic = vnic.VnicObject(vcn_vnic_id, vcn_subnet_id, vcn_vnic_mac, vcn_host_if_idx, False, 'VXLAN', vcn_subnet_encap, node_uuid=node_uuid )
 
+# Create PXE VNIC, temporarily in the temp pxe subnet (finally should be in VCN subnet)
+pxe_vnic = vnic.VnicObject(pxe_vnic_id, pxe_subnet_id, pxe_local_vnic_mac, pxe_host_if_idx, False, 'VXLAN', pxe_fabric_encap, node_uuid=node_uuid )
+
 
 # Create Mapping Objects 1 for local vnic and another for remote IP
 # self, key_type, macaddr, ip, vpcid, subnetid, tunnelid, encaptype, encapslotid, nexthopgroupid, publicip, providerip, vnicid = 0
@@ -228,6 +250,8 @@ map1 = mapping.MappingObject( 1, 'l3', vcn_vnic_mac, vcn_intf_ip, vcn_vpc_id, su
 map2 = mapping.MappingObject( 2, 'l3', subnet1_local_vnic_mac, subnet1_local_host_ip, vpc1_id, subnetid=1, vnicid=1 )
 map3 = mapping.MappingObject( 3, 'l3', subnet1_remote_vnic_mac, subnet1_remote_host_ip, vpc1_id, subnetid=1, tunnelid=1 )
 map4 = mapping.MappingObject( 4, 'l3', subnet2_local_vnic_mac, subnet2_local_host_ip, vpc1_id, subnetid=2, vnicid=2, public_ip=subnet2_local_vnic_public_ip )
+map5 = mapping.MappingObject( 5, 'l3', pxe_local_vnic_mac, pxe_local_host_ip, vpc1_id, subnetid=pxe_subnet_id, vnicid=pxe_vnic_id )
+map6 = mapping.MappingObject( 6, 'l3', pxe_remote_vnic_mac, pxe_remote_host_ip, vpc1_id, subnetid=pxe_subnet_id, tunnelid=1 )
 
 # Create service mapping
 svc_map1 = service_mapping.SvcMappingObject(1, vpc1_id, subnet2_backend_ip, subnet2_backend_port, subnet2_vip, subnet2_service_port)
@@ -264,18 +288,23 @@ api.client.Create(api.ObjectTypes.NAT, [nat_pb2.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.NAT, [nat_pb3.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.DHCP_POLICY, [dhcp_policy1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.DHCP_POLICY, [dhcp_policy2.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.DHCP_POLICY, [dhcp_policy3.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.SUBNET, [vcn_subnet.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.ROUTE, [subnet1_route_table.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.SUBNET, [subnet1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.SUBNET, [subnet2.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.SUBNET, [pxe_subnet.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.VNIC, [vcn_vnic.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.VNIC, [vnic1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.VNIC, [vnic2.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.VNIC, [pxe_vnic.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.MAPPING, [map1.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.MAPPING, [map2.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.MAPPING, [map3.GetGrpcCreateMessage()])
 api.client.Create(api.ObjectTypes.MAPPING, [map4.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.MAPPING, [map5.GetGrpcCreateMessage()])
+api.client.Create(api.ObjectTypes.MAPPING, [map6.GetGrpcCreateMessage()])
 
 api.client.Create(api.ObjectTypes.SVC_MAPPING, [svc_map1.GetGrpcCreateMessage()])
 
