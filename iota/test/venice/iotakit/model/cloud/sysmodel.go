@@ -592,13 +592,3 @@ func (sm *SysModel) CollectLogs() error {
 	log.Infof("created %s/src/github.com/pensando/sw/iota/logs/venice-iota.tgz", os.Getenv("GOPATH"))
 	return nil
 }
-
-// AfterTestCommon common handling after each test
-func (sm *SysModel) AfterTestCommon() error {
-
-	if err := sm.VerifySystemHealth(false); err != nil {
-		sm.CollectLogs()
-		sm.ModelExit()
-	}
-	return nil
-}

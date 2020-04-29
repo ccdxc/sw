@@ -28,7 +28,7 @@ func runCommandAction(cmd *cobra.Command, args []string) {
 	os.Setenv("JOB_ID", "1")
 
 	st := testsuite{name: suite, path: suiteDirectory + "/" + suite, focus: focus,
-		scaleData: scale, runRandomTrigger: randomTrigger}
+		scaleData: scale, runRandomTrigger: randomTrigger, stopOnError: stopOnError}
 
 	err := st.run(skipSetup, skipInstall, false, false, "")
 	if err != nil {

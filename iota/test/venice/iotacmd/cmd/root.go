@@ -174,10 +174,6 @@ func initialize() {
 			errorExit("error setting up default config", err)
 		}
 
-		err = setupModel.SetupDefaultConfig(context2.TODO(), scale, scale)
-		if err != nil {
-			errorExit("error setting up default config", err)
-		}
 		//if SKIP install not set, make sure we do skip now
 		os.Setenv("SKIP_INSTALL", "1")
 		os.Setenv("SKIP_SETUP", "1")

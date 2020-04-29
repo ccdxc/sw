@@ -486,13 +486,3 @@ func (sm *VcenterSysModel) Networks(tenant string) *objects.NetworkCollection {
 
 	return &snc
 }
-
-// AfterTestCommon common handling after each test
-func (sm *VcenterSysModel) AfterTestCommon() error {
-
-	if err := sm.VerifySystemHealth(false); err != nil {
-		sm.CollectLogs()
-		sm.ModelExit()
-	}
-	return nil
-}

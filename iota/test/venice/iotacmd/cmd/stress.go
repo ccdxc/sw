@@ -149,7 +149,7 @@ func (suite testsuite) run(skipSetup, skipInstall, skipConfig, rebootOnly bool, 
 		cmd = append(cmd, " -scale")
 	}
 
-	if stopOnError {
+	if suite.stopOnError {
 		cmd = append(cmd, "-ginkgo.failFast")
 	}
 	if suite.runRandomTrigger {

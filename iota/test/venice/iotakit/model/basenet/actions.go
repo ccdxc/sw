@@ -156,16 +156,6 @@ func (sm *SysModel) VerifyClusterStatus() error {
 	return nil
 }
 
-// AfterTestCommon common handling after each test
-func (sm *SysModel) AfterTestCommon() error {
-
-	if err := sm.VerifySystemHealth(false); err != nil {
-		sm.CollectLogs()
-		sm.ModelExit()
-	}
-	return nil
-}
-
 //TriggerDeleteAddConfig triggers link flap
 func (sm *SysModel) TriggerDeleteAddConfig(percent int) error {
 
