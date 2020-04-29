@@ -320,7 +320,7 @@ pds_init (pds_init_params_t *params)
     sdk::platform::upg_mode_t upg_mode;
 
     sdk::lib::device_profile_t device_profile = { 0 };
-    device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
+    device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}, 2, {0, 1}};
 
     sdk::lib::logger::init(params->trace_cb);
 

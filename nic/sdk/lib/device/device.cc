@@ -131,6 +131,16 @@ device::populate_qos_profile(std::string qos_profile_name) {
         qos_profile->p4_high_perf_qs[i++] =
                 p4_high_perf_q.second.get_value<int32_t>();
     }
+
+    // read the oob uplink qs info
+    i = 0;
+    qos_profile->num_oob_uplink_qs = prop_tree.get<uint32_t>(
+                                        "qos.num_oob_uplink_qs", 2);
+    for (ptree::value_type &oob_uplink_q :
+            prop_tree.get_child("qos.oob_uplink_qs")) {
+        qos_profile->oob_uplink_qs[i++] =
+            oob_uplink_q.second.get_value<int32_t>();
+    }
     return SDK_RET_OK;
 }
 
@@ -243,7 +253,7 @@ device::populate_device_defaults_(void)
     device_db_.mgmt_if_mac = 0;
     device_db_.mgmt_vlan = 0;
     device_db_.device_profile.qos_profile =
-                            {9216, 8, 25, 27, 16, 2, {0, 24}};
+        {9216, 8, 25, 27, 16, 2, {0, 24}, 2, {0, 5}};
 }
 
 bool

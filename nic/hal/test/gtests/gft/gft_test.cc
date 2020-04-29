@@ -1510,7 +1510,7 @@ TEST_F(gft_test, test1) {
 
     cfg.completion_func = NULL;
     sdk::lib::device_profile_t device_profile = {0};
-    device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}};
+    device_profile.qos_profile = {9216, 8, 25, 27, 16, 2, {0, 24}, 2, {0, 5}};
     cfg.device_profile = &device_profile;
 
     ret = sdk::asic::pd::asicpd_init(&cfg);

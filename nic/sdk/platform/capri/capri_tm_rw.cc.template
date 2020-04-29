@@ -47,6 +47,8 @@ typedef struct capri_tm_cfg_profile_s {
     bool     sw_cfg_write_enabled;
     tm_q_t   *p4_high_perf_qs;
     uint32_t num_p4_high_perf_qs;
+    tm_q_t   *oob_uplink_qs;
+    uint32_t num_oob_uplink_qs;
 } capri_tm_cfg_profile_t;
 
 typedef struct capri_tm_port_asic_profile_s {
@@ -1946,10 +1948,8 @@ alloc_cells (tm_port_type_e port_type, uint32_t *pbc_cell_chunks,
 
     num_qs = tm_cfg_profile()->num_qs[port_type];
     if (port_type == TM_PORT_TYPE_UPLINK) {
-        //num_qs =
-        //  1 + (tm_cfg_profile()->num_qs[port_type] * tm_cfg_profile()->num_active_uplink_ports);
         num_qs =
-            CAPRI_TM_NUM_BMC_QUEUES +
+            tm_cfg_profile()->num_oob_uplink_qs +
                 (tm_cfg_profile()->num_qs[port_type] * tm_cfg_profile()->num_active_uplink_ports);
     }
 
@@ -2152,13 +2152,14 @@ capri_tm_alloc_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
 }
 
 static bool
-iq_disabled (tm_port_t port, uint32_t iq)
+iq_disabled (tm_port_t port, tm_q_t iq)
 {
     tm_port_type_e port_type;
     bool disabled = false;
     uint32_t max_iqs;
     uint32_t num_iqs;
-    uint32_t disabled_iq_start, disabled_iq_end;
+    uint32_t queue;
+    tm_q_t disabled_iq_start, disabled_iq_end;
 
     port_type = capri_tm_get_port_type(port);
     num_iqs = tm_cfg_profile()->num_qs[port_type];
@@ -2166,20 +2167,21 @@ iq_disabled (tm_port_t port, uint32_t iq)
     switch(port_type) {
         case TM_PORT_TYPE_UPLINK:
             if (port == CAPRI_TM_PORT_NCSI) {
-                // On the BMC port, only one pg is supported
-                //num_iqs = 1;
                 // On the BMC port, two PGs are supported
-                num_iqs = CAPRI_TM_NUM_BMC_QUEUES;
+                num_iqs = tm_cfg_profile()->num_oob_uplink_qs;
 
-                if ( (iq != QOS_QUEUE_DEFAULT) && (iq != QOS_SWM_CAM_NCSI_COS) ) {
-                    disabled = true;
+                disabled = true;
+                for (queue = 0; queue < num_iqs; ++queue) {
+                    if (iq == tm_cfg_profile()->oob_uplink_qs[queue]) {
+                        disabled = false;
+                        break;
+                    }
                 }
                 break;
-
             } else if (!is_active_uplink_port(port)) {
                 disabled = true;
             }
-            if (iq >= num_iqs) {
+            if (iq >= (int)num_iqs) {
                 disabled = true;
             }
             break;
@@ -2194,7 +2196,7 @@ iq_disabled (tm_port_t port, uint32_t iq)
             }
             break;
         case TM_PORT_TYPE_DMA:
-            if (iq >= num_iqs) {
+            if (iq >= (int)num_iqs) {
                 disabled = true;
             }
             break;
@@ -4495,6 +4497,7 @@ capri_tm_init_qos_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
     uint32_t num_p4eg_qs   = qos_profile->num_p4eg_qs;
     uint32_t num_dma_qs    = qos_profile->num_dma_qs;
     uint32_t num_p4_high_perf_qs = qos_profile->num_p4_high_perf_qs;
+    uint32_t num_oob_uplink_qs = qos_profile->num_oob_uplink_qs;
 
     if (num_uplink_qs == 0) {
         SDK_TRACE_ERR("Invalid qos profile");
@@ -4539,6 +4542,16 @@ capri_tm_init_qos_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
 
         memcpy(tm_cfg_profile->p4_high_perf_qs, qos_profile->p4_high_perf_qs,
                tm_cfg_profile->num_p4_high_perf_qs * sizeof(tm_q_t));
+    }
+
+    tm_cfg_profile->num_oob_uplink_qs = num_oob_uplink_qs;
+    if (tm_cfg_profile->num_oob_uplink_qs) {
+        tm_cfg_profile->oob_uplink_qs =
+            (tm_q_t *)SDK_MALLOC(sdk::SDK_MEM_ALLOC_PD,
+                                 tm_cfg_profile->num_oob_uplink_qs * sizeof(tm_q_t));
+
+        memcpy(tm_cfg_profile->oob_uplink_qs, qos_profile->oob_uplink_qs,
+               tm_cfg_profile->num_oob_uplink_qs * sizeof(tm_q_t));
     }
 
     if ((tm_cfg_profile->num_qs[TM_PORT_TYPE_UPLINK] *

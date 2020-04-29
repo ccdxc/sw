@@ -68,6 +68,8 @@ typedef struct qos_profile_s {
     uint32_t num_dma_qs;
     uint32_t num_p4_high_perf_qs;
     int32_t  p4_high_perf_qs[2];
+    uint32_t num_oob_uplink_qs;
+    int32_t  oob_uplink_qs[2];
 } qos_profile_t;
 
 typedef struct device_profile_s {

@@ -7,6 +7,8 @@
         "num_p4eg_qs" : "27",
         "num_dma_qs" : "16",
         "num_p4_high_perf_qs" : "2",
-        "p4_high_perf_qs" : ["0", "24" ]
+        "p4_high_perf_qs" : ["0", "24" ],
+        "num_oob_uplink_qs" : "2",
+        "oob_uplink_qs" : ["0", "5" ]
     }
 }
