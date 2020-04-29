@@ -33,6 +33,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
   $SERVICE_CLUSTER \
   $ALLOW_PRIVILEGED \
   $RUNTIME_CONFIG \
+  --enable-garbage-collector=false \
   $ENABLE_ADMISSION_CONTROLLERS \
   $ADVERTISE_ADDR_VAR
 

@@ -20,6 +20,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
   --node-monitor-grace-period 10s \
   --node-monitor-period 2s\
   --use-service-account-credentials=true \
+  --enable-garbage-collector=false \
   $KUBECONFIG_FILE \
   $SERVICE_ACCOUNT_KEYFILE
 
