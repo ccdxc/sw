@@ -38,6 +38,7 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSe
 	}
 
 	sm.RandomTrigger = sm.RunRandomTrigger
+	sm.RunVerifySystemHealth = sm.VerifySystemHealth
 
 	sm.AutoDiscovery = true
 	if os.Getenv("NO_AUTO_DISCOVERY") != "" {

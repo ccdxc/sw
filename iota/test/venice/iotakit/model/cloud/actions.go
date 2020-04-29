@@ -111,20 +111,6 @@ func (sm *SysModel) VerifySystemHealth(collectLogOnErr bool) error {
 		return err
 	}
 
-	/*
-		// verify workload status is good
-		if sm.Tb.HasNaplesHW() {
-			err = sm.VerifyWorkloadStatus(sm.Workloads())
-			if err != nil {
-				if collectLogOnErr {
-					sm.CollectLogs()
-				}
-				return err
-			}
-		} */
-
-	//Verify Config is in sync
-
 	for i := 0; i < numRetries; i++ {
 		var done bool
 		done, err = sm.IsConfigPushComplete()
