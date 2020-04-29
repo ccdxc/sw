@@ -1490,6 +1490,7 @@ class PenOrchestrator:
 
         if GlobalOptions.only_init == True:
             # Case 3: Only INIT option.
+            naples_inst.Connect()
             self.__host.Init(driver_pkg = self.__driver_images.drivers_pkg, cleanup = True)
             return
 
