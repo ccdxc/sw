@@ -28,9 +28,6 @@ native_ipv4_packet:
   phvwr         p.flow_lkp_metadata_pkt_type, r7
 
 native_ipv4_packet_common:
-  add           r6, k.ipv4_ihl, k.tcp_dataOffset
-  sub           r7, k.ipv4_totalLen, r6, 2
-
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.ipv4_srcAddr
 
@@ -39,9 +36,7 @@ native_ipv4_packet_common:
                 p.{flow_lkp_metadata_lkp_dstMacAddr,flow_lkp_metadata_ip_ttl}, \
                     r1
 
-  or            r7, r7[15:0], k.ipv4_flags, 17
-  phvwrpair     p.{flow_lkp_metadata_ipv4_flags,flow_info_metadata_flow_role,\
-                    l4_metadata_tcp_data_len}, r7, \
+  phvwrpair     p.flow_lkp_metadata_ipv4_flags, k.ipv4_flags, \
                     p.flow_lkp_metadata_ipv4_hlen, k.ipv4_ihl
 
   bbeq          k.esp_valid, TRUE, native_ipv4_esp_packet
@@ -73,9 +68,6 @@ native_ipv6_packet:
 
 native_ipv6_packet_common:
   phvwr         p.{tunnel_metadata_tunnel_type,tunnel_metadata_tunnel_vni}, r0
-  sub           r7, k.ipv6_payloadLen, k.tcp_dataOffset, 2
-  phvwr         p.l4_metadata_tcp_data_len, r7
-
   seq           c1, k.roce_bth_valid, TRUE
   cmov          r1, c1, r0, k.udp_srcPort
   or            r1, r1, k.udp_dstPort, 16

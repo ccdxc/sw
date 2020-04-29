@@ -11,12 +11,50 @@ struct phv_                         p;
 %%
 
 input_properties_mac_vlan:
-    bbne            k.p4plus_to_p4_valid, TRUE, input_properties_mac_vlan_common
-    seq             c2, k.p4plus_to_p4_update_ip_len, TRUE
+    bbne            k.p4plus_to_p4_valid, TRUE, input_properties_mac_vlan_tcp
+    phvwr           p.control_metadata_src_lif, k.capri_intrinsic_lif
+
+    bbne            k.p4plus_to_p4_update_ip_len, TRUE, input_properties_mac_vlan_tcp
     phvwr           p.flow_lkp_metadata_lkp_inst, k.p4plus_to_p4_lkp_inst
     sub             r1, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l4_2
     sub             r1, r1, k.tcp_dataOffset, 2
-    phvwr.c2        p.l4_metadata_tcp_data_len, r1
+    b               input_properties_mac_vlan_common
+    phvwr           p.l4_metadata_tcp_data_len, r1
+
+input_properties_mac_vlan_tcp:
+    bbne            k.tcp_valid, TRUE, input_properties_mac_vlan_common
+    crestore        [c5-c2], k.{inner_ipv4_valid,inner_ipv6_valid, \
+                        ipv4_valid,ipv6_valid}, 0xF
+    .brbegin
+    bcpri           [c5-c2], [0,1,2,3]
+    nop
+    .brcase 0
+    // c2
+    sub             r7, k.ipv6_payloadLen, k.tcp_dataOffset, 2
+    b               input_properties_mac_vlan_common
+    phvwr           p.l4_metadata_tcp_data_len, r7
+    .brcase 1
+    // c3
+    add             r6, k.ipv4_ihl, k.tcp_dataOffset
+    sub             r7, k.ipv4_totalLen, r6, 2
+    b               input_properties_mac_vlan_common
+    phvwr           p.l4_metadata_tcp_data_len, r7
+    .brcase 2
+    // c4
+    sub             r6, k.inner_ipv6_payloadLen, k.tcp_dataOffset, 2
+    b               input_properties_mac_vlan_common
+    phvwr           p.l4_metadata_tcp_data_len, r6
+    .brcase 3
+    // c5
+    add             r6, k.inner_ipv4_ihl, k.tcp_dataOffset
+    sub             r7, k.inner_ipv4_totalLen, r6, 2
+    b               input_properties_mac_vlan_common
+    phvwr           p.l4_metadata_tcp_data_len, r7
+    .brcase 4
+    // none
+    b               input_properties_mac_vlan_common
+    nop
+    .brend
 
 input_properties_mac_vlan_common:
     seq             c2, k.recirc_header_valid, TRUE
@@ -26,10 +64,6 @@ input_properties_mac_vlan_common:
     sub             r1, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1
     seq             c2, k.p4plus_to_p4_insert_vlan_tag, TRUE
     add.c2          r1, r1, 4
-
-    or              r2, k.capri_intrinsic_lif_s3_e10, \
-                        k.capri_intrinsic_lif_s0_e2, 8
-    phvwr           p.control_metadata_src_lif, r2
 
     // if table lookup is miss, return
     nop.!c1.e
@@ -57,12 +91,9 @@ input_properties_mac_vlan_common:
                         r1, p.flow_lkp_metadata_lkp_vrf, \
                         d.input_properties_mac_vlan_d.vrf
 
-    or              r1, k.capri_intrinsic_lif_s3_e10, \
-                        k.capri_intrinsic_lif_s0_e2, 8
     or              r2, d.input_properties_mac_vlan_d.mirror_on_drop_session_id, \
                         d.input_properties_mac_vlan_d.mirror_on_drop_en, 8
-    phvwrpair       p.control_metadata_src_lif, r1, \
-                        p.{control_metadata_mirror_on_drop_en, \
+    phvwr           p.{control_metadata_mirror_on_drop_en, \
                         control_metadata_mirror_on_drop_session_id}, r2
 
     phvwr           p.capri_intrinsic_tm_replicate_ptr, \

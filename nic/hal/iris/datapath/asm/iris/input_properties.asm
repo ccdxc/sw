@@ -39,8 +39,8 @@ input_properties:
     or              r1, d.{input_properties_d.mseg_bm_bc_repls, \
                         input_properties_d.mseg_bm_mc_repls}, \
                         d.{input_properties_d.mdest_flow_miss_action,\
-                        input_properties_d.if_label_check_en, \
-                        input_properties_d.if_label_check_fail_drop}, 3
+                        input_properties_d.if_label_check_en}, 4
+    or              r1, r1, d.input_properties_d.if_label_check_fail_drop, 3
     phvwrm          p.{control_metadata_mdest_flow_miss_action, \
                         control_metadata_if_label_check_en, \
                         control_metadata_if_label_check_fail_drop,\

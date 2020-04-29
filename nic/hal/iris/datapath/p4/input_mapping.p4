@@ -22,8 +22,6 @@ action tunneled_ipv4_packet() {
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     modify_field(l3_metadata.ip_option_seen, l3_metadata.inner_ip_option_seen);
     modify_field(l3_metadata.ip_frag, l3_metadata.inner_ip_frag);
-    modify_field(l4_metadata.tcp_data_len,
-                 (inner_ipv4.totalLen - ((inner_ipv4.ihl + tcp.dataOffset) * 4)));
     if (roce_bth.valid == TRUE) {
         modify_field(flow_lkp_metadata.lkp_sport, 0);
     }
@@ -49,8 +47,6 @@ action tunneled_ipv6_packet() {
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv6.hopLimit);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     modify_field(l3_metadata.ip_option_seen, l3_metadata.inner_ip_option_seen);
-    modify_field(l4_metadata.tcp_data_len,
-                 (inner_ipv6.payloadLen - (tcp.dataOffset) * 4));
     if (roce_bth.valid == TRUE) {
         modify_field(flow_lkp_metadata.lkp_sport, 0);
     }
@@ -89,8 +85,6 @@ action native_ipv4_packet() {
     modify_field(flow_lkp_metadata.ip_ttl, ipv4.ttl);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
-    modify_field(l4_metadata.tcp_data_len,
-                 (ipv4.totalLen - ((ipv4.ihl + tcp.dataOffset) * 4)));
     if (esp.valid == TRUE) {
         modify_field(flow_lkp_metadata.lkp_proto, IP_PROTO_IPSEC_ESP);
     } else {
@@ -124,8 +118,6 @@ action native_ipv6_packet() {
     modify_field(flow_lkp_metadata.ip_ttl, ipv6.hopLimit);
     modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
     modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
-    modify_field(l4_metadata.tcp_data_len,
-                 (ipv6.payloadLen - (tcp.dataOffset) * 4));
     if (l3_metadata.ipv6_ulp == IP_PROTO_UDP) {
         if (roce_bth.valid == TRUE) {
             modify_field(flow_lkp_metadata.lkp_sport, 0);
@@ -359,10 +351,30 @@ action input_properties_mac_vlan(vrf, dir, mdest_flow_miss_action,
 action adjust_lkp_fields() {
     if (p4plus_to_p4.valid == TRUE) {
         modify_field(flow_lkp_metadata.lkp_inst, p4plus_to_p4.lkp_inst);
-        if (p4plus_to_p4.update_ip_len == 1) {
-            modify_field(l4_metadata.tcp_data_len,
-                         (capri_p4_intrinsic.frame_size -
-                          (offset_metadata.l4_2 + (tcp.dataOffset * 4))));
+    }
+    if (p4plus_to_p4.update_ip_len == 1) {
+        modify_field(l4_metadata.tcp_data_len,
+                     (capri_p4_intrinsic.frame_size -
+                      (offset_metadata.l4_2 + (tcp.dataOffset * 4))));
+    } else {
+        if (tcp.valid == TRUE) {
+            if (inner_ipv4.valid == TRUE) {
+                modify_field(l4_metadata.tcp_data_len,
+                    (inner_ipv4.totalLen -
+                     ((inner_ipv4.ihl + tcp.dataOffset) * 4)));
+            }
+            if (inner_ipv6.valid == TRUE) {
+                modify_field(l4_metadata.tcp_data_len,
+                    (inner_ipv6.payloadLen - (tcp.dataOffset) * 4));
+            }
+            if (ipv4.valid == TRUE) {
+                modify_field(l4_metadata.tcp_data_len,
+                    (ipv4.totalLen - ((ipv4.ihl + tcp.dataOffset) * 4)));
+            }
+            if (ipv6.valid == TRUE) {
+                modify_field(l4_metadata.tcp_data_len,
+                    (ipv6.payloadLen - (tcp.dataOffset) * 4));
+            }
         }
     }
     if (recirc_header.valid == TRUE) {

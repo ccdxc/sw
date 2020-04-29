@@ -28,10 +28,6 @@ tunneled_ipv4_packet:
   phvwr         p.flow_lkp_metadata_pkt_type, r7
 
 tunneled_ipv4_packet_common:
-  add           r6, k.inner_ipv4_ihl, k.tcp_dataOffset
-  sub           r7, k.inner_ipv4_totalLen, r6, 2
-  phvwr         p.l4_metadata_tcp_data_len, r7
-
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV4
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.inner_ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.inner_ipv4_srcAddr
@@ -66,9 +62,6 @@ tunneled_ipv6_packet:
   phvwr         p.flow_lkp_metadata_pkt_type, r7
 
 tunneled_ipv6_packet_common:
-  sub           r6, k.inner_ipv6_payloadLen, k.tcp_dataOffset, 2
-  phvwr         p.l4_metadata_tcp_data_len, r6
-
   phvwr         p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
   phvwr         p.flow_lkp_metadata_lkp_type, FLOW_KEY_LOOKUP_TYPE_IPV6
 
