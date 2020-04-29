@@ -976,6 +976,7 @@ TEST_F(vnic_test, DISABLED_vnic_update_hostif) {
     vnic_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
 
+#if 0
 /// \brief update tx policer
 TEST_F(vnic_test, vnic_update_tx_policer) {
     if (!apulu()) return;
@@ -1025,6 +1026,7 @@ TEST_F(vnic_test, vnic_update_rx_policer) {
     vnic_delete(feeder);
     vnic_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
 }
+#endif
 
 /// \brief update primary flag
 TEST_F(vnic_test, vnic_update_primary) {

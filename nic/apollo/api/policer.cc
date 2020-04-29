@@ -206,12 +206,15 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt)
 
 sdk_ret_t
 policer_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
+#if 0
     policer_update_ctxt_t upd_ctxt = { 0 };
 
     upd_ctxt.policer = this;
     upd_ctxt.obj_ctxt = obj_ctxt;
     upd_ctxt.upd_bmap = PDS_VNIC_UPD_POLICER;
     return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
+#endif
+    return SDK_RET_OK;
 }
 
 

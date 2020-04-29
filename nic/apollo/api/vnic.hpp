@@ -33,8 +33,9 @@ class vnic_state;
 // route table is not an attr inside the vnic object, however
 // a route table change on subnet can affect vnic's programming
 #define PDS_VNIC_UPD_ROUTE_TABLE         0x80
-#define PDS_VNIC_UPD_POLICER             0x100
-#define PDS_VNIC_UPD_MIRROR              0x200
+#define PDS_VNIC_UPD_TX_POLICER          0x100
+#define PDS_VNIC_UPD_RX_POLICER          0x200
+#define PDS_VNIC_UPD_MIRROR              0x400
 
 /// \defgroup PDS_VNIC_ENTRY - vnic functionality
 /// \ingroup PDS_VNIC

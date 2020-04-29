@@ -816,6 +816,8 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     p4pd_error_t p4pd_ret;
     vnic_actiondata_t vnic_data;
     nexthop_info_entry_t nh_data;
+    rx_vnic_actiondata_t rx_vnic_data;
+    policer_entry *rx_policer, *tx_policer;
     vnic_entry *vnic = (vnic_entry *)curr_obj;
 
     memset(&nh_data, 0, nh_data.entry_size());
@@ -871,15 +873,59 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 
     // if mirror sessions or metering enable/disable config changed, update
     // ingress VNIC table entry
-    if (obj_ctxt->upd_bmap & PDS_VNIC_UPD_METER_EN) {
+    if ((obj_ctxt->upd_bmap & PDS_VNIC_UPD_METER_EN) ||
+        (obj_ctxt->upd_bmap & PDS_VNIC_UPD_TX_POLICER)) {
         // do read-modify-update of the VNIC table entry
-        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC, hw_id_,
-                                          NULL, NULL, &vnic_data);
-        vnic_data.ing_vnic_info.meter_enabled = spec->meter_en;
+        p4pd_global_entry_read(P4TBL_ID_VNIC, hw_id_, NULL, NULL, &vnic_data);
+        // take care of meter update
+        if (obj_ctxt->upd_bmap & PDS_VNIC_UPD_METER_EN) {
+            vnic_data.ing_vnic_info.meter_enabled = spec->meter_en;
+        }
+        // take care of tx policer update
+        if (obj_ctxt->upd_bmap & PDS_VNIC_UPD_TX_POLICER) {
+            if (spec->tx_policer != k_pds_obj_key_invalid) {
+                tx_policer = policer_db()->find(&spec->tx_policer);
+                if (unlikely(tx_policer == NULL)) {
+                    PDS_TRACE_ERR("Failed to find vnic %s tx policer %s",
+                                  spec->key.str(), spec->tx_policer.str());
+                    return sdk::SDK_RET_INVALID_ARG;
+                }
+                vnic_data.ing_vnic_info.tx_policer_id =
+                    ((policer_impl *)(tx_policer->impl()))->hw_id();
+            } else {
+                vnic_data.ing_vnic_info.tx_policer_id =
+                    PDS_IMPL_RSVD_POLICER_HW_ID;
+            }
+        }
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC, hw_id_,
                                            NULL, NULL, &vnic_data);
         if (p4pd_ret != P4PD_SUCCESS) {
             PDS_TRACE_ERR("Failed to program vnic %s ingress VNIC table "
+                          "entry at %u", spec->key.str(), hw_id_);
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
+    }
+    // update RX_VNIC table in egress pipe if rx policer changed
+    if (obj_ctxt->upd_bmap & PDS_VNIC_UPD_RX_POLICER) {
+        p4pd_global_entry_read(P4TBL_ID_VNIC, hw_id_,
+                               NULL, NULL, &rx_vnic_data);
+        if (spec->rx_policer != k_pds_obj_key_invalid) {
+            rx_policer = policer_db()->find(&spec->rx_policer);
+            if (unlikely(rx_policer == NULL)) {
+                PDS_TRACE_ERR("Failed to find vnic %s rx policer %s",
+                              spec->key.str(), spec->rx_policer.str());
+                return sdk::SDK_RET_INVALID_ARG;
+            }
+            rx_vnic_data.egr_vnic_info.rx_policer_id =
+                ((policer_impl *)(rx_policer->impl()))->hw_id();
+        } else {
+            rx_vnic_data.egr_vnic_info.rx_policer_id =
+                PDS_IMPL_RSVD_POLICER_HW_ID;
+        }
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_RX_VNIC, hw_id_,
+                                           NULL, NULL, &rx_vnic_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program vnic %s egres RX_VNIC table "
                           "entry at %u", spec->key.str(), hw_id_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }

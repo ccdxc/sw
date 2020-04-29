@@ -264,9 +264,11 @@ vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     if (host_if_ != spec->host_if) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_HOST_IFINDEX;
     }
-    if ((rx_policer_ != spec->rx_policer) ||
-        (tx_policer_ != spec->tx_policer)) {
-        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_POLICER;
+    if (tx_policer_ != spec->tx_policer) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_TX_POLICER;
+    }
+    if (rx_policer_ != spec->rx_policer) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_RX_POLICER;
     }
     if (meter_en_ != spec->meter_en) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_METER_EN;
