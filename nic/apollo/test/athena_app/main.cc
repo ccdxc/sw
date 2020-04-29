@@ -378,6 +378,9 @@ program_prepare_exit(void)
     server_poll_stop();
 }
 
+
+#define POLICY_JSON_FILE    "/data/policy.json"
+
 int
 main (int argc, char **argv)
 {
@@ -389,6 +392,7 @@ main (int argc, char **argv)
     string       policy_json_file;
     boost::property_tree::ptree pt;
     bool         success = true;
+    struct stat  st;
 #ifdef __x86_64__
     int          gtest_ret;
 #endif
@@ -552,7 +556,12 @@ main (int argc, char **argv)
     if (fte_ath::g_athena_app_mode != ATHENA_APP_MODE_NO_DPDK) {
         // parse policy json file
         if (policy_json_file.empty()) {
-            policy_json_file = cfg_path + "/" + pipeline + "/policy.json";
+            if (!stat(POLICY_JSON_FILE, &st)) {
+                policy_json_file = std::string(POLICY_JSON_FILE);
+            }
+            else {
+                policy_json_file = cfg_path + "/" + pipeline + "/policy.json";
+            }
         }
         if (fte_ath::parse_flow_cache_policy_cfg(
                 policy_json_file.c_str()) != SDK_RET_OK) {
