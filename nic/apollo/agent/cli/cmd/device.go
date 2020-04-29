@@ -75,7 +75,7 @@ func deviceUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.DeviceGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Device failed. %v\n", err)
+		fmt.Printf("Getting Device failed, err %v\n", err)
 		return
 	}
 
@@ -84,7 +84,7 @@ func deviceUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	var updateSpec *pds.DeviceSpec
 	if cmd.Flags().Changed("memory-profile") {
 		if isValidMemoryProfile(memoryProfile) == false {
-			fmt.Printf("Invalid memory profile specified. Must be one of default, p1 & p2\n")
+			fmt.Printf("Invalid memory profile specified, only \"default\" is supported\n")
 			return
 		}
 		updateSpec = &pds.DeviceSpec{
@@ -101,7 +101,7 @@ func deviceUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	} else if cmd.Flags().Changed("device-profile") {
 		if isValidDeviceProfile(deviceProfile) == false {
-			fmt.Printf("Invalid device profile specified. Must be one of default, 2pf, 3pf, 4pf, 5pf, 6pf, 7pf & 8pf\n")
+			fmt.Printf("Invalid device profile specified, must be one of default, 2pf, 3pf, 4pf, 5pf, 6pf, 7pf & 8pf\n")
 			return
 		}
 		updateSpec = &pds.DeviceSpec{
@@ -118,7 +118,7 @@ func deviceUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	} else if cmd.Flags().Changed("learn-age-timeout") {
 		if deviceTimeout < 30 || deviceTimeout > 86400 {
-			fmt.Printf("Invalid learning age timeout specified. Valid range 30-86400")
+			fmt.Printf("Invalid learning age timeout specified, valid range 30-86400")
 			return
 		}
 		updateSpec = &pds.DeviceSpec{
@@ -141,7 +141,7 @@ func deviceUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	updateResp, updateErr := client.DeviceUpdate(context.Background(), updateReq)
 	if updateErr != nil {
-		fmt.Printf("Device update failed. %v\n", updateErr)
+		fmt.Printf("Device update failed, err %v\n", updateErr)
 	}
 
 	if updateResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
@@ -224,7 +224,7 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS Running?\n")
 		return
 	}
 	defer c.Close()
@@ -240,7 +240,7 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.DeviceGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Device failed. %v\n", err)
+		fmt.Printf("Getting Device failed, err %v\n", err)
 		return
 	}
 
@@ -311,26 +311,24 @@ func printDeviceDetail(resp *pds.DeviceGetResponse) {
 		fmt.Println("-")
 		return
 	}
-
-	outStr := fmt.Sprintf("%-26s : %s\n", "IP Address", utils.IPAddrToStr(spec.GetIPAddr()))
-	outStr += fmt.Sprintf("%-26s : %s\n", "MAC Address", utils.MactoStr(spec.GetMACAddr()))
-	outStr += fmt.Sprintf("%-26s : %s\n", "Gateway IP", utils.IPAddrToStr(spec.GetGatewayIP()))
-	outStr += fmt.Sprintf("%-26s : %s\n", "Memory Profile",
+	fmt.Printf("%-26s : %s\n", "IP Address", utils.IPAddrToStr(spec.GetIPAddr()))
+	fmt.Printf("%-26s : %s\n", "MAC Address", utils.MactoStr(spec.GetMACAddr()))
+	fmt.Printf("%-26s : %s\n", "Gateway IP", utils.IPAddrToStr(spec.GetGatewayIP()))
+	fmt.Printf("%-26s : %s\n", "Memory Profile",
 		strings.Replace(spec.GetMemoryProfile().String(), "MEMORY_PROFILE_", "", -1))
-	outStr += fmt.Sprintf("%-26s : %s\n", "Device Profile",
+	fmt.Printf("%-26s : %s\n", "Device Profile",
 		strings.Replace(spec.GetDeviceProfile().String(), "DEVICE_PROFILE_", "", -1))
-	outStr += fmt.Sprintf("%-26s : %t\n", "Bridging Enabled", spec.GetBridgingEn())
-	outStr += fmt.Sprintf("%-26s : %t\n", "Learning Enabled", spec.GetLearningEn())
-	outStr += fmt.Sprintf("%-26s : %d\n", "Learn Age Timeout (sec)", spec.GetLearnAgeTimeout())
-	outStr += fmt.Sprintf("%-26s : %s\n", "Device Oper Mode",
+	fmt.Printf("%-26s : %t\n", "Bridging Enabled", spec.GetBridgingEn())
+	fmt.Printf("%-26s : %t\n", "Learning Enabled", spec.GetLearningEn())
+	fmt.Printf("%-26s : %d\n", "Learn Age Timeout (sec)", spec.GetLearnAgeTimeout())
+	fmt.Printf("%-26s : %s\n", "Device Oper Mode",
 		strings.Replace(spec.GetDevOperMode().String(), "DEVICE_OPER_MODE_", "", -1))
-	outStr += fmt.Sprintf("%-26s : %t\n", "Overlay Routing Enabled", spec.GetOverlayRoutingEn())
-	outStr += fmt.Sprintf("%-26s : %s\n", "FRU MAC Address", utils.MactoStr(status.GetSystemMACAddress()))
-	outStr += fmt.Sprintf("%-26s : %dG\n", "Memory", status.GetMemory())
-	outStr += fmt.Sprintf("%-26s : %s\n", "Manufacturing Date", status.GetManufacturingDate())
-	outStr += fmt.Sprintf("%-26s : %s\n", "Product Name", status.GetProductName())
-	outStr += fmt.Sprintf("%-26s : %s\n", "Serial Number", status.GetSerialNumber())
-	outStr += fmt.Sprintf("%-26s : %s\n", "Part Number", status.GetSku())
-
-	fmt.Printf(outStr)
+	fmt.Printf("%-26s : %t\n", "Overlay Routing Enabled", spec.GetOverlayRoutingEn())
+	fmt.Printf("%-26s : %s\n", "FRU MAC Address", utils.MactoStr(status.GetSystemMACAddress()))
+	fmt.Printf("%-26s : %dG\n", "Memory", status.GetMemory())
+	fmt.Printf("%-26s : %s\n", "Manufacturing Date", status.GetManufacturingDate())
+	fmt.Printf("%-26s : %s\n", "Product Name", status.GetProductName())
+	fmt.Printf("%-26s : %s\n", "Serial Number", status.GetSerialNumber())
+	fmt.Printf("%-26s : %s\n", "Part Number", status.GetSku())
+	fmt.Printf("%-26s : %d\n", "IP Mapping Priority", spec.GetIPMappingPriority())
 }

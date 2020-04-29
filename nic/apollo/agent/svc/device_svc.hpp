@@ -77,6 +77,7 @@ pds_device_api_spec_to_proto (pds::DeviceSpec *proto_spec,
         proto_spec->set_memoryprofile(pds::MEMORY_PROFILE_DEFAULT);
         break;
     }
+    proto_spec->set_ipmappingpriority(api_spec->ip_mapping_priority);
 }
 
 // populate proto buf status from device API status
@@ -203,6 +204,7 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
         api_spec->memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
         break;
     }
+    api_spec->ip_mapping_priority = proto_spec.ipmappingpriority();
     return SDK_RET_OK;
 }
 

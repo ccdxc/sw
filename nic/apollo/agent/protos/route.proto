@@ -44,14 +44,15 @@ message RouteAttrs {
   types.IPPrefix      Prefix         = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // priority of the route
   // NOTE:
-  // 1. priority value must be non-zero
-  // 2. lower the numerical value, higher the priority
-  // 3. a route table MUST have either all the routes with priority set or no
+  // 1. lower the numerical value, higher the priority in the datapath
+  // 2. a route table MUST have either all the routes with priority set or no
   //    priority set on all the routes
+  // 3. if multiple routes have same priority, route with longest prefix length
+  //    will take effect
   // 4. if no priority value is set (i.e. 0) then route priority is computed as
   //    128 - <prefix length>, so longer prefixes will have higher precedence
   //    over shorter ones giving regular LPM semantics
-  uint32              Priority       = 2 [(gogoproto.moretags) = "meta:range:1-65535"];
+  uint32              Priority       = 2 [(gogoproto.moretags) = "meta:range:0-65535"];
   // route either points to a Nexthop ID or peer-VPC in case of VPC peering
   oneof nh {
       // TODO: this should be obsoleted in apollo, TunnelId should be used

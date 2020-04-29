@@ -399,7 +399,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
         return sdk::SDK_RET_OOM;
     }
     rtable->af = spec->route_info->af;
-    rtable->pbr_enabled = spec->route_info->priority_en;
+    rtable->priority_en = spec->route_info->priority_en;
     rtable->default_nhid = 0;
     PDS_IMPL_NH_VAL_SET_NH_INFO(rtable->default_nhid, NEXTHOP_TYPE_NEXTHOP,
                                 PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
@@ -416,7 +416,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
         // if user specified priority explicitly, use it or else use prefix
         // length to compute the priority (to provide longest prefix matching
         // semantics)
-        if (rtable->pbr_enabled) {
+        if (rtable->priority_en) {
             rtable->routes[i].prio = route_spec->attrs.prio;
         } else {
             rtable->routes[i].prio = 128 - route_spec->attrs.prefix.len;

@@ -51,17 +51,36 @@ typedef enum pds_memory_profile_e {
 
 /// \brief device specification
 typedef struct pds_device_s {
-    ip_addr_t              device_ip_addr;     ///< device IP address
-    mac_addr_t             device_mac_addr;    ///< device MAC address
-    ip_addr_t              gateway_ip_addr;    ///< gateway IP address
-    bool                   bridging_en;        ///< enable or disable L2 functionality
-    bool                   learning_en;        ///< enable or disable L2/IP learning
-    uint32_t               learn_age_timeout;  ///< MAC, IP aging timeout (in seconds)  for learnt entries
-    bool                   overlay_routing_en; ///< enable or disable control plane stack
-                                               ///  for overlay routing
-    pds_device_profile_t   device_profile;     ///< device profile
-    pds_memory_profile_t   memory_profile;     ///< memory profile
-    pds_device_oper_mode_t dev_oper_mode;      ///< device operational mode
+    /// device IP address
+    ip_addr_t              device_ip_addr;
+    /// device MAC address
+    mac_addr_t             device_mac_addr;
+    /// gateway IP address
+    ip_addr_t              gateway_ip_addr;
+    /// enable or disable forwarding based on L2 entries
+    bool                   bridging_en;
+    /// enable or disable L2/IP learning
+    bool                   learning_en;
+    /// MAC, IP aging timeout (in seconds) for learnt entries
+    uint32_t               learn_age_timeout;
+    /// enable or disable evpn for overlay routing/bridging
+    bool                   overlay_routing_en;
+    /// device profile
+    pds_device_profile_t   device_profile;
+    /// memory profile
+    pds_memory_profile_t   memory_profile;
+    /// device operational mode
+    pds_device_oper_mode_t dev_oper_mode;
+    /// priority of IP mapping entries (this priority, if configured, will be
+    /// used to break the tie in case both LPM/prefix and a mapping entry are
+    /// hit in the datapath (i.e., /32 IP mapping entry is also in some LPM
+    ///prefix)
+    /// NOTE:
+    /// 1. by default IP mapping always takes precedence over LPM hit and
+    ///    default value of this attribute is 0 (lower the numerical value,
+    ///    the higher the priority, hence 0 is the highest priority)
+    /// 2. valid priority value range is 0 (highest) to 65535 (lowest)
+    uint32_t               ip_mapping_priority;
 } __PACK__ pds_device_spec_t;
 
 /// \brief device status
