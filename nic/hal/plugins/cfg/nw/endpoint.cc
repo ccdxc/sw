@@ -3469,14 +3469,14 @@ endpoint_migration_done (ep_t *ep, MigrationState mig_state)
                     endpoint_migration_done_dst_host(ep, session, mig_state);
                 } else if (ep->vmotion_type == VMOTION_TYPE_MIGRATE_OUT) {
                     endpoint_migration_done_src_host(ep, session, mig_state);
-
-                    // If vMotion is success, delete the sessions
-                    if (mig_state == MigrationState::SUCCESS) {
-                        ep_sessions_delete(ep);
-                    }
                 }
             }
         }
+    }
+
+    // If vMotion is success, delete the sessions in the old node
+    if ((ep->vmotion_type == VMOTION_TYPE_MIGRATE_OUT) && (mig_state == MigrationState::SUCCESS)) {
+        ep_sessions_delete(ep);
     }
 }
 
