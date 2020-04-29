@@ -848,24 +848,8 @@ class HostManagement(EntityManagement):
             self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
             self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
             self.CopyIN(node_init_script, HOST_NAPLES_DIR)
-            if os.path.exists(pre_node_init_script):
-                print("running pre-nodeinit.sh script to gather debug info")
-                try:
-                    self.CopyIN(pre_node_init_script, HOST_NAPLES_DIR)
-                    self.RunSshCmd("sudo %s/pre-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
-                except:
-                    print("failed to run pre-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
-            try:
-                print('running nodeinit.sh cleanup with args: {0}'.format(nodeinit_args))
-                self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
-            finally:
-                if os.path.exists(post_node_init_script):
-                    print("running post-nodeinit.sh script to gather debug info")
-                    try:
-                        self.CopyIN(post_node_init_script, HOST_NAPLES_DIR)
-                        self.RunSshCmd("sudo %s/post-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
-                    except:
-                        print("failed to run post-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
+            print('running nodeinit.sh cleanup with args: {0}'.format(nodeinit_args))
+            self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
 
         if GlobalOptions.skip_driver_install:
             print('user requested to skip driver install')
@@ -885,51 +869,19 @@ class HostManagement(EntityManagement):
             nodeinit_args = ""
             #Run with not mgmt first
             if gold_fw or not GlobalOptions.no_mgmt:
-                if os.path.exists(pre_node_init_script):
-                    print("running pre-nodeinit.sh script to gather debug info")
-                    try:
-                        self.CopyIN(pre_node_init_script, HOST_NAPLES_DIR)
-                        self.RunSshCmd("sudo %s/pre-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
-                    except:
-                        print("failed to run pre-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
-                try:
-                    print('running nodeinit.sh with args: {0}'.format(nodeinit_args))
-                    self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt --image %s" % (HOST_NAPLES_DIR, os.path.basename(driver_pkg)))
-                    #mgmtIPCmd = "sudo python5  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, self.__host_os)
-                    #output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
-                    #print("Command output ", output)
-                    #mnic_ip = ipaddress.ip_address(output.split("\n")[0])
-                    #own_ip = str(mnic_ip + 1)
-                    #nodeinit_args = " --own_ip " + own_ip + " --trg_ip " + str(mnic_ip)
-                    nodeinit_args = " --own_ip " + self.GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + self.GetPrimaryIntNicMgmtIp()
-                finally:
-                    if os.path.exists(post_node_init_script):
-                        print("running post-nodeinit.sh script to gather debug info")
-                        try:
-                            self.CopyIN(post_node_init_script, HOST_NAPLES_DIR)
-                            self.RunSshCmd("sudo %s/post-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
-                        except:
-                            print("failed to run post-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
+                print('running nodeinit.sh with args: {0}'.format(nodeinit_args))
+                self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt --image %s" % (HOST_NAPLES_DIR, os.path.basename(driver_pkg)))
+                #mgmtIPCmd = "sudo python5  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, self.__host_os)
+                #output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
+                #print("Command output ", output)
+                #mnic_ip = ipaddress.ip_address(output.split("\n")[0])
+                #own_ip = str(mnic_ip + 1)
+                #nodeinit_args = " --own_ip " + own_ip + " --trg_ip " + str(mnic_ip)
+                nodeinit_args = " --own_ip " + self.GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + self.GetPrimaryIntNicMgmtIp()
             else:
                 nodeinit_args += " --no-mgmt" + " --image " + os.path.basename(driver_pkg)
-            if os.path.exists(pre_node_init_script):
-                print("running pre-nodeinit.sh script to gather debug info")
-                try:
-                    self.CopyIN(pre_node_init_script, HOST_NAPLES_DIR)
-                    self.RunSshCmd("sudo %s/pre-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
-                except:
-                    print("failed to run pre-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
-            try:
-                print('running nodeinit.sh with args: {0}'.format(nodeinit_args))
-                self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
-            finally:
-                if os.path.exists(post_node_init_script):
-                    print("running post-nodeinit.sh script to gather debug info")
-                    try:
-                        self.CopyIN(post_node_init_script, HOST_NAPLES_DIR)
-                        self.RunSshCmd("sudo %s/post-nodeinit.sh" % (HOST_NAPLES_DIR), ignore_failure=True)
-                    except:
-                        print("failed to run post-nodeinit.sh script. error was: {0}".format(traceback.format_exc()))
+            print('running nodeinit.sh with args: {0}'.format(nodeinit_args))
+            self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
         return
 
     @_exceptionWrapper(_errCodes.HOST_COPY_FAILED, "Host Init Failed")
