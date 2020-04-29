@@ -45,8 +45,14 @@ class L4MatchObject:
         self.SportHigh = sporthigh
         self.DportLow = dportlow
         self.DportHigh = dporthigh
-        self.IcmpType = icmptype
-        self.IcmpCode = icmpcode
+        if icmptype == 'any':
+            self.IcmpType = types_pb2.MATCH_ANY
+        else:
+            self.IcmpType = icmptype
+        if icmpcode == 'any':
+            self.IcmpCode = types_pb2.MATCH_ANY
+        else:
+            self.IcmpCode = icmpcode
 
     def Show(self):
         if self.valid:
@@ -272,7 +278,12 @@ class PolicyObject(base.ConfigObjectBase):
         l3match = rule.L3Match
         if l3match and l3match.valid:
             proto = l3match.Proto
-            specrule.Attrs.Match.L3Match.ProtoNum = proto
+
+            if proto == utils.L3PROTO_MAX:
+                specrule.Attrs.Match.L3Match.ProtoWildcard = types_pb2.MATCH_ANY
+            else:
+                specrule.Attrs.Match.L3Match.ProtoNum = proto
+
             if l3match.SrcIPLow and l3match.SrcIPHigh:
                 utils.GetRpcIPRange(l3match.SrcIPLow, l3match.SrcIPHigh, specrule.Attrs.Match.L3Match.SrcRange)
             if l3match.DstIPLow and l3match.DstIPHigh:
@@ -288,8 +299,15 @@ class PolicyObject(base.ConfigObjectBase):
         l4match = rule.L4Match
         if l4match and l4match.valid:
             if utils.IsICMPProtocol(proto):
-                specrule.Attrs.Match.L4Match.TypeCode.TypeNum = l4match.IcmpType
-                specrule.Attrs.Match.L4Match.TypeCode.CodeNum = l4match.IcmpCode
+                if l4match.IcmpType == types_pb2.MATCH_ANY:
+                    specrule.Attrs.Match.L4Match.TypeCode.TypeWildcard = types_pb2.MATCH_ANY
+                else:
+                    specrule.Attrs.Match.L4Match.TypeCode.TypeNum = l4match.IcmpType
+
+                if l4match.IcmpCode == types_pb2.MATCH_ANY:
+                    specrule.Attrs.Match.L4Match.TypeCode.CodeWildcard = types_pb2.MATCH_ANY
+                else:
+                    specrule.Attrs.Match.L4Match.TypeCode.CodeNum = l4match.IcmpCode
             else:
                 specrule.Attrs.Match.L4Match.Ports.SrcPortRange.PortLow = l4match.SportLow
                 specrule.Attrs.Match.L4Match.Ports.SrcPortRange.PortHigh = l4match.SportHigh
@@ -709,10 +727,10 @@ class PolicyObjectClient(base.ConfigClientBase):
         self.__v6epolicyiter[node][vpcid] = None
 
         def __get_l4_rule(af, rulespec):
-            sportlow = getattr(rulespec, 'sportlow', utils.L4PORT_MIN)
-            dportlow = getattr(rulespec, 'dportlow', utils.L4PORT_MIN)
-            sporthigh = getattr(rulespec, 'sporthigh', utils.L4PORT_MAX)
-            dporthigh = getattr(rulespec, 'dporthigh', utils.L4PORT_MAX)
+            sportlow = getattr(rulespec, 'sportlow', None)
+            dportlow = getattr(rulespec, 'dportlow', None)
+            sporthigh = getattr(rulespec, 'sporthigh', None)
+            dporthigh = getattr(rulespec, 'dporthigh', None)
             icmptype = getattr(rulespec, 'icmptype', utils.ICMPTYPE_MIN)
             icmpcode = getattr(rulespec, 'icmpcode', utils.ICMPCODE_MIN)
             l4match = any([sportlow, sporthigh, dportlow, dporthigh, icmptype, icmpcode])
@@ -722,9 +740,12 @@ class PolicyObjectClient(base.ConfigClientBase):
         def __get_l3_proto_from_rule(af, rulespec):
             proto = getattr(rulespec, 'protocol', utils.L3PROTO_MIN)
             if proto:
-                if proto == "icmp" and af == utils.IP_VERSION_6:
-                    proto = "ipv6-" + proto
-                proto = utils.GetIPProtoByName(proto)
+                if proto != "any":
+                    if proto == "icmp" and af == utils.IP_VERSION_6:
+                        proto = "ipv6-" + proto
+                    proto = utils.GetIPProtoByName(proto)
+                else:
+                    proto = utils.L3PROTO_MAX
             return proto
 
         def __get_l3_match_type(rulespec, attr):
@@ -800,6 +821,8 @@ class PolicyObjectClient(base.ConfigClientBase):
                 return False
 
             def __is_proto_supported(proto):
+                if proto == utils.L3PROTO_MAX:
+                    return True
                 if utils.IsICMPProtocol(proto):
                     if utils.IsPipelineApollo():
                         # Apollo does NOT support icmp proto

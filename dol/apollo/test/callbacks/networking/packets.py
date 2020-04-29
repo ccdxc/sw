@@ -43,7 +43,11 @@ def __get_proto_from_policy_rule(rule):
     l3match = rule.L3Match
     if not l3match.valid:
         return "TCP"
-    return utils.GetIPProtoName(l3match.Proto)
+    get_rand_l3_proto = False
+    if l3match.Proto == utils.L3PROTO_MAX:
+        get_rand_l3_proto = True
+
+    return utils.GetIPProtoName(l3match.Proto, get_rand_l3_proto)
 
 def __get_packet_template_from_policy_impl(rule, policy, protocol=None):
     protocol = protocol if protocol else __get_proto_from_policy_rule(rule)
@@ -261,7 +265,8 @@ def __get_valid_icmptype(icmptype):
 
 def __get_icmp_values_from_rule(rule, pos=None, isIcmpCode=False):
     l4matchobj = rule.L4Match if rule else None
-    if l4matchobj is None or l4matchobj.valid == False:
+    if l4matchobj is None or l4matchobj.valid == False or \
+       l4matchobj.IcmpType == types_pb2.MATCH_ANY:
         return __get_random_icmptype_in_range()
     if isIcmpCode:
         val = l4matchobj.IcmpCode
@@ -309,7 +314,7 @@ def __is_matching_dst_ip(dst_ip, l3matchobj):
     return __is_matching_ip(l3matchobj.DstType, dst_ip, l3matchobj.DstPrefix, l3matchobj.DstIPLow, l3matchobj.DstIPHigh, l3matchobj.DstTag)
 
 def __is_matching_proto(proto1, proto2):
-    if proto2 == 0:
+    if proto2 == 0 or proto2 == utils.L3PROTO_MAX:
         # wildcard
         return True
     return proto1 == proto2
@@ -324,10 +329,12 @@ def __is_matching_dport(dport, l4matchobj):
     return __is_matching_L4port(dport, l4matchobj.DportLow, l4matchobj.DportHigh)
 
 def __is_matching_icmptype(icmptype, l4matchobj):
-    return icmptype == l4matchobj.IcmpType
+    return ((icmptype == l4matchobj.IcmpType) or
+            (l4matchobj.IcmpType == types_pb2.MATCH_ANY))
 
 def __is_matching_icmpcode(icmpcode, l4matchobj):
-    return icmpcode == l4matchobj.IcmpCode
+    return ((icmpcode == l4matchobj.IcmpCode) or
+            (l4matchobj.IcmpCode == types_pb2.MATCH_ANY))
 
 def __is_l3_match(packet_tuples, l3matchobj):
     if not l3matchobj.valid:

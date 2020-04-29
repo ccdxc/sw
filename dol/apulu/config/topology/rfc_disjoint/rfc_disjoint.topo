@@ -101,6 +101,14 @@ node:
                     rule:
                       - protocol: icmp
                         priority: 'MINPRIO'
+                        action  : random       # picks random choice of allow/deny
+                        v4pfx: '99.88.77.66\32'
+                        v6pfx: 'e1ba:aced:a11:face:b00c::bace\128'
+                        icmptype : any
+                        icmpcode : any
+
+                      - protocol: icmp
+                        priority: 'MINPRIO'
                         action  : allow
                         v4pfx: '0.0.0.0\0'
                         v6pfx: '0::0\0'
@@ -111,6 +119,12 @@ node:
                     policytype : user_specific # all values are specific
                     direction  : bidir
                     rule:
+                      - protocol: any
+                        priority: 'MINPRIO'
+                        action  : random       # picks random choice of allow/deny
+                        v4pfx: '99.88.77.64\32'
+                        v6pfx: 'e1ba:aced:a11:face:b00c::babe\128'
+
                       - protocol: tcp
                         priority: 'MAXPRIO'
                         action  : allow

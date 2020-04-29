@@ -18,6 +18,13 @@ modules:
             - policy : filter://AddrFamily=IPV4,OverlapType=proto
 
     - module:
+        name    : OVERLAP_ANY
+        spec    : rfc_egress.testspec
+        ignore  : True
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=wildcard
+
+    - module:
         name    : OVERLAP_FIRST
         spec    : rfc_egress.testspec
         args    :

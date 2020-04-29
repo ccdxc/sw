@@ -250,3 +250,32 @@ node:
                         sporthigh: 40
                         dportlow: 15
                         dporthigh: 40
+
+                  - type : specific
+                    policytype : stateless
+                    overlaptype : wildcard          # some attributes are wildcard
+                    direction  : bidir
+                    rule:
+                      - protocol: any
+                        priority: 'MINPRIO'
+                        action  : allow
+                        v4pfx: '10.20.30.1\32'
+                        v6pfx: 'e1ba:aced:a11:face:b00c::bace\128'
+
+                      - protocol: tcp
+                        priority: 'MINPRIO+1'
+                        action  : deny
+                        v4pfx: '10.20.0.0\16'
+                        v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                      - protocol: any
+                        priority: 'MINPRIO'
+                        action  : deny
+                        v4pfx: '10.30.30.1\32'
+                        v6pfx: 'e1ba:aced:a11:face:b11c::bace\128'
+
+                      - protocol: udp
+                        priority: 'MINPRIO+1'
+                        action  : allow
+                        v4pfx: '10.30.0.0\16'
+                        v6pfx: 'e1ba:aced:a11:face:b11c::0\80'

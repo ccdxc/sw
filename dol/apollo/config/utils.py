@@ -27,6 +27,7 @@ IP_VERSION_6 = 6
 IP_VERSION_4 = 4
 
 L3PROTO_MIN = 0
+L3PROTO_MAX = 256
 
 L4PORT_MIN = 0
 L4PORT_MAX = 65535
@@ -657,10 +658,17 @@ def GetIPProtoByName(protoname):
     """
     return socket.getprotobyname(protoname)
 
-def GetIPProtoName(proto):
+def GetIPProtoName(proto, get_rand_l3_proto=False):
     """
         returns IP Protocol name for the given protocol number
     """
+    if proto == L3PROTO_MAX:
+        # get any random l3 proto
+        if get_rand_l3_proto:
+            l3_proto = ['ICMP', 'TCP', 'UDP']
+            return random.choice(l3_proto)
+        else:
+            return 'any'
     return IPPROTO_TO_NAME_TBL[proto]
 
 def IsICMPProtocol(proto):
