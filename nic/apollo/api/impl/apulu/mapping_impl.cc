@@ -951,17 +951,21 @@ sdk_ret_t
 mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
     sdk_ret_t ret;
     vpc_impl *vpc;
+    subnet_impl *subnet;
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams = { 0 };
     local_mapping_swkey_t local_mapping_key;
     rxdma_mapping_swkey_t rxdma_mapping_key;
     mapping_entry *mapping = (mapping_entry *)api_obj;
 
-    // TODO: for memhash tables, we need to fill key and handle for release()
-    //       API to work because key itself wasn't written to the table when
-    //       an entry was reserved
+    if (mapping->skey().type == PDS_MAPPING_TYPE_L3) {
+        vpc = (vpc_impl *)vpc_find(&mapping->skey().vpc)->impl();
+    } else {
+        subnet = (subnet_impl *)(subnet_find(&mapping->skey().subnet)->impl());
+    }
+
     if (local_mapping_overlay_ip_hdl_.valid()) {
-        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc_hw_id_,
+        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
                                              &mapping->skey().ip_addr);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL,
                                        0, local_mapping_overlay_ip_hdl_);
@@ -970,10 +974,10 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
     }
     if (mapping_hdl_.valid()) {
         if (mapping->skey().type == PDS_MAPPING_TYPE_L3) {
-            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_,
+            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
                                            &mapping->skey().ip_addr);
         } else {
-            PDS_IMPL_FILL_L2_MAPPING_SWKEY(&mapping_key, subnet_hw_id_,
+            PDS_IMPL_FILL_L2_MAPPING_SWKEY(&mapping_key, subnet->hw_id(),
                                            mapping->skey().mac_addr)
         }
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
@@ -982,7 +986,7 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     if (local_mapping_public_ip_hdl_.valid()) {
-        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc_hw_id_,
+        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
                                              &mapping->public_ip());
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
                                        NULL, 0, local_mapping_public_ip_hdl_);
@@ -990,7 +994,7 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     if (mapping_public_ip_hdl_.valid()) {
-        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc_hw_id_,
+        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
                                        &mapping->public_ip());
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL,
                                        0, mapping_public_ip_hdl_);
@@ -1033,7 +1037,6 @@ mapping_impl::release_local_mapping_resources_(api_base *api_obj) {
     }
     // release any class ids allocated for this mapping
     if (num_class_id_ && (mapping->skey().type == PDS_MAPPING_TYPE_L3)) {
-        vpc = (vpc_impl *)vpc_find(&mapping->skey().vpc)->impl();
         for (uint32_t i = 0; i < num_class_id_; i++) {
             ret = vpc->release_class_id(class_id_[i], true);
             if (unlikely(ret != SDK_RET_OK)) {
@@ -1051,24 +1054,44 @@ sdk_ret_t
 mapping_impl::release_remote_mapping_resources_(api_base *api_obj) {
     sdk_ret_t ret;
     vpc_impl *vpc;
+    subnet_impl *subnet;
+    mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams = { 0 };
+    rxdma_mapping_swkey_t rxdma_mapping_key;
     mapping_entry *mapping = (mapping_entry *)api_obj;
 
+    if (mapping->skey().type == PDS_MAPPING_TYPE_L3) {
+        vpc = (vpc_impl *)vpc_find(&mapping->skey().vpc)->impl();
+    } else {
+        subnet = (subnet_impl *)(subnet_find(&mapping->skey().subnet)->impl());
+    }
     if (mapping_hdl_.valid()) {
-        tparams.handle = mapping_hdl_;
-        mapping_impl_db()->mapping_tbl()->release(&tparams);
+        if (mapping->skey().type == PDS_MAPPING_TYPE_L3) {
+            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+                                           &mapping->skey().ip_addr);
+        } else {
+            PDS_IMPL_FILL_L2_MAPPING_SWKEY(&mapping_key, subnet->hw_id(),
+                                           mapping->skey().mac_addr)
+        }
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
+                                       mapping_hdl_);
+        ret = mapping_impl_db()->mapping_tbl()->release(&tparams);
+        SDK_ASSERT(ret == SDK_RET_OK);
     }
     if (rxdma_mapping_tag_idx_ != PDS_IMPL_RSVD_TAG_HW_ID) {
         mapping_impl_db()->mapping_tag_idxr()->free(rxdma_mapping_tag_idx_);
     }
     if (rxdma_mapping_hdl_.valid()) {
-        tparams.handle = rxdma_mapping_hdl_;
-        mapping_impl_db()->rxdma_mapping_tbl()->release(&tparams);
+        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
+                                           &mapping->skey().ip_addr);
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                       NULL, NULL, 0, rxdma_mapping_hdl_);
+        ret = mapping_impl_db()->rxdma_mapping_tbl()->release(&tparams);
+        SDK_ASSERT(ret == SDK_RET_OK);
     }
 
     // release any class ids allocated for this mapping
     if (num_class_id_ && (mapping->skey().type == PDS_MAPPING_TYPE_L3)) {
-        vpc = (vpc_impl *)vpc_find(&mapping->skey().vpc)->impl();
         for (uint32_t i = 0; i < num_class_id_; i++) {
             ret = vpc->release_class_id(class_id_[i], false);
             if (unlikely(ret != SDK_RET_OK)) {
