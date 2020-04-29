@@ -57,7 +57,7 @@ func TestIotaTechsupportTest(t *testing.T) {
 		tb:        tb,
 		model:     model,
 		scaleData: *scaleDataFlag,
-		//stress:    *stressFlag,
+		stress:    *stressFlag,
 	}
 
 	RegisterFailHandler(Fail)

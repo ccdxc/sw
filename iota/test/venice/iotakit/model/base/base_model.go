@@ -97,7 +97,7 @@ type SysModel struct {
 }
 
 // Init init sys model
-func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSetup bool) error {
+func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, reinit bool) error {
 	sm.Tb = tb
 	sm.NaplesHosts = make(map[string]*objects.Host)
 	sm.ThirdPartyHosts = make(map[string]*objects.Host)
@@ -110,12 +110,14 @@ func (sm *SysModel) Init(tb *testbed.TestBed, cfgType enterprise.CfgType, skipSe
 	sm.FakeHosts = make(map[string]*objects.Host)
 	sm.WorkloadsObjs = make(map[string]*objects.Workload)
 
-	sm.testResult = make(map[string]bool)
-	sm.taskResult = make(map[string]error)
-	sm.caseResult = make(map[string]*TestCaseResult)
-	sm.bundleResult = make(map[string]*TestBundleResult)
+	if !reinit {
+		sm.testResult = make(map[string]bool)
+		sm.taskResult = make(map[string]error)
+		sm.caseResult = make(map[string]*TestCaseResult)
+		sm.bundleResult = make(map[string]*TestBundleResult)
+	}
 
-	sm.SkipSetup = os.Getenv("SKIP_SETUP") != "" || skipSetup
+	sm.SkipSetup = os.Getenv("SKIP_SETUP") != "" || reinit
 	sm.RandomTrigger = sm.RunRandomTrigger
 	sm.RunVerifySystemHealth = sm.VerifySystemHealth
 
@@ -1012,13 +1014,19 @@ func (sm *SysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData boo
 // AfterTestCommon common handling after each test
 func (sm *SysModel) AfterTestCommon() error {
 
-	if err := sm.RunVerifySystemHealth(false); err != nil {
-		sm.CollectLogs()
-		fmt.Printf("%s%sSystem not in good health, stopping running tests %s\n", redColor, boldStyle, defaultStyle)
-		sm.PrintResult()
-		fmt.Printf("%s%sStopped running tests as system not in good state%s\n", redColor, boldStyle, defaultStyle)
-		os.Exit(1)
+	var err error
+	retries := 30
+	for i := 0; i < retries; i++ {
+		if err = sm.RunVerifySystemHealth(false); err == nil {
+			return nil
+		}
+		time.Sleep(1 * time.Second)
 	}
+	sm.CollectLogs()
+	fmt.Printf("%s%sSystem not in good health, stopping running tests %s\n", redColor, boldStyle, defaultStyle)
+	sm.PrintResult()
+	fmt.Printf("%s%sStopped running tests as system not in good state%s\n", redColor, boldStyle, defaultStyle)
+	os.Exit(1)
 	return nil
 }
 

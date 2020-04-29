@@ -311,16 +311,16 @@ func (npc *NaplesCollection) Admit() error {
 //IsAdmitted returns true if all snics are admitted
 func (npc *NaplesCollection) IsAdmitted() (bool, error) {
 
+	admitted := true
 	for _, naples := range npc.Nodes {
 		for _, inst := range naples.Instances {
 			dsc := inst.Dsc
-			log.Infof("Admitting naples %v", dsc.Status.PrimaryMAC)
 			snic, err := npc.Client.GetSmartNICByName(dsc.Name)
 			if err != nil || snic.Status.AdmissionPhase != "admitted" {
+				admitted = false
 				log.Infof("Snic not admitted  %v", snic)
 				msg := fmt.Sprintf("Snic not admitted %v %v %v", snic, dsc.Name, err)
 				log.Infof(msg)
-				return false, fmt.Errorf(msg)
 			}
 		}
 	}
@@ -330,11 +330,15 @@ func (npc *NaplesCollection) IsAdmitted() (bool, error) {
 			dsc := inst.Dsc
 			snic, err := npc.Client.GetSmartNICByName(dsc.Name)
 			if err != nil || !snic.Spec.Admit {
+				admitted = false
 				msg := fmt.Sprintf("Snic not admitted %v %v %v", snic, dsc.Name, err)
 				log.Infof(msg)
-				return false, fmt.Errorf(msg)
 			}
 		}
+	}
+
+	if !admitted {
+		return false, nil
 	}
 
 	return true, nil
