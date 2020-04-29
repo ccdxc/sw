@@ -226,7 +226,7 @@ def Trigger(tc):
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                     (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
 
-    api.Logger.info("Starting ib_send_bw multi_sge test from %s" % (tc.cmd_descr))
+    api.Logger.info("Starting %s test from %s" % (tc.iterators.command, tc.cmd_descr))
 
     # Enable rdma sniffer and start tcpdump on Naples Hosts
     if tc.tcpdump == True:
@@ -298,8 +298,8 @@ def Trigger(tc):
     # starts listening. So sleep for a few seconds before trying to start the client
     cmd = 'sleep 2'
     api.Trigger_AddCommand(req,
-                           w1.node_name,
-                           w1.workload_name,
+                           w2.node_name,
+                           w2.workload_name,
                            cmd)
 
     #==============================================================
@@ -372,6 +372,17 @@ def Trigger(tc):
         api.Trigger_AddCommand(req,
                                w1.node_name,
                                w1.workload_name,
+                               cmd, timeout = (bkg_timeout+5))
+
+    # try to kill lingering processes
+    for w in [w1, w2]:
+        if not w.IsNaples():
+            continue
+
+        cmd = 'killall ' + tc.iterators.command
+        api.Trigger_AddCommand(req,
+                               w.node_name,
+                               w.workload_name,
                                cmd, timeout = (bkg_timeout+5))
 
     # print the next_qpid
@@ -452,9 +463,14 @@ def Verify(tc):
     w1            = tc.w[0]
     w2            = tc.w[1]
 
-    api.Logger.info("multi_sge results for %s" % (tc.cmd_descr))
+    api.Logger.info("%s results for %s" % (tc.iterators.command, tc.cmd_descr))
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
+
+        if "killall" in cmd.command:
+            # Don't check return codes from killall
+            continue
+
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             result = api.types.status.FAILURE
 
@@ -508,9 +524,13 @@ def Verify(tc):
                             w2w1_ack_first_msn = msn
                         elif (msn > w2w1_ack_last_msn):
                             w2w1_ack_last_msn = msn
-            api.Logger.info("w1w2_send_count {}, w1w2_ack_first_msn {}, w1w2_ack_last_msn {}, w2w1_send_count {}, w2w1_ack_first_msn {} w2w1_ack_last_msn {}".format(w1w2_send_count,w1w2_ack_first_msn,w1w2_ack_last_msn,w2w1_send_count,w2w1_ack_first_msn,w2w1_ack_last_msn))
-            if ((w1w2_send_count != 5) or (w1w2_ack_last_msn-w1w2_ack_first_msn+1 != 5) or (w2w1_send_count != 5) or (w2w1_ack_last_msn-w2w1_ack_first_msn+1 != 5)):
-                api.Logger.info("ERROR: Mismatch in send or ack count.")
+            api.Logger.info("w1w2_send_count {} w1w2_ack_first_msn {} w1w2_ack_last_msn {}".format(w1w2_send_count,w1w2_ack_first_msn,w1w2_ack_last_msn))
+            api.Logger.info("w2w1_send_count {} w2w1_ack_first_msn {} w2w1_ack_last_msn {}".format(w2w1_send_count,w2w1_ack_first_msn,w2w1_ack_last_msn))
+            if (w1w2_send_count != 5) or \
+               (w1w2_ack_last_msn-w1w2_ack_first_msn+1 != 5) or \
+               (w2w1_send_count != 5) or \
+               (w2w1_ack_last_msn-w2w1_ack_first_msn+1 != 5):
+                api.Logger.info("ERROR: Mismatch in send or ack count")
                 result = api.types.status.FAILURE
                 break
 

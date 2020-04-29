@@ -49,7 +49,7 @@ def get_owner(filename):
         stdout = result.stdout.decode('utf-8')
         # Use the name of the creator of the file as the owner.
         owner_full_name = stdout.split('\n')[-2]
-        owner = owner_full_name.split(' ')[0]
+        owner = owner_full_name.strip().replace(' ', '_')
         gl_owner_db[filename] = owner
     except:
         owner = "NA"

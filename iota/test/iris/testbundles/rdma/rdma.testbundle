@@ -12,21 +12,25 @@ testcases:
         testcase: testcases.rdma.build_rdma
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Insmod_Rdma
         testcase: testcases.rdma.insmod_rdma
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Show_Gid
         testcase: testcases.rdma.show_gid
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Intf_Mtu
         testcase: testcases.rdma.intf_mtu
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : QoS_Switch_Config
         testcase: testcases.qos.qos_switch_config
@@ -35,6 +39,7 @@ testcases:
             intf_qos: False
             pause_enable: True
             pause_type: 0
+            timeout: 300
 
     #=======================================
     # Ping Pong
@@ -43,11 +48,13 @@ testcases:
         testcase: testcases.rdma.rc_pingpong
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Ud_PingPong
         testcase: testcases.rdma.ud_pingpong
         args    :
             type: remote_only
+            timeout: 300
 
     #=======================================
     # Send
@@ -64,6 +71,7 @@ testcases:
             command  : ['ib_send_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_SendBw_BiDir_Cm_Tcpdump
         testcase: testcases.rdma.rdma_perftest
@@ -77,6 +85,7 @@ testcases:
             tcpdump  : ['yes']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_SendBw_Sweep
         testcase: testcases.rdma.rdma_perftest
@@ -89,6 +98,7 @@ testcases:
             command  : ['ib_send_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_SendBw_SQ_Drain
         testcase: testcases.rdma.rdma_perftest
@@ -103,6 +113,7 @@ testcases:
             async_event_stats : ['yes']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_SendBw_BiDir_Check_Bw
         testcase: testcases.rdma.rdma_perftest
@@ -116,6 +127,7 @@ testcases:
             check_bw : ['yes']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_SendLat_Only
         testcase: testcases.rdma.rdma_perftest
@@ -125,6 +137,7 @@ testcases:
             command  : ['ib_send_lat']
         args    :
             type: remote_only
+            timeout: 300
 
     #=======================================
     # Reset
@@ -133,6 +146,7 @@ testcases:
         testcase: testcases.rdma.rdma_reset
         args    :
             type: remote_only
+            timeout: 300
 
     #=======================================
     # Write
@@ -149,6 +163,7 @@ testcases:
             command  : ['ib_write_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_WriteBw_Sweep
         testcase: testcases.rdma.rdma_perftest
@@ -160,7 +175,7 @@ testcases:
             command  : ['ib_write_bw']
         args    :
             type: remote_only
-
+            timeout: 300
 
     -   name    : Rc_WriteBw_SQ_Drain
         testcase: testcases.rdma.rdma_perftest
@@ -175,6 +190,7 @@ testcases:
             async_event_stats : ['yes']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_WriteLat_Only
         testcase: testcases.rdma.rdma_perftest
@@ -185,6 +201,7 @@ testcases:
             command  : ['ib_write_lat']
         args    :
             type: remote_only
+            timeout: 300
 
     #=======================================
     # Read
@@ -201,6 +218,7 @@ testcases:
             command  : ['ib_read_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_ReadBw_Sweep
         testcase: testcases.rdma.rdma_perftest
@@ -212,6 +230,7 @@ testcases:
             command  : ['ib_read_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_ReadBw_SQ_Drain
         testcase: testcases.rdma.rdma_perftest
@@ -226,6 +245,7 @@ testcases:
             async_event_stats : ['yes']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_ReadLat_Only
         testcase: testcases.rdma.rdma_perftest
@@ -236,6 +256,7 @@ testcases:
             command  : ['ib_read_lat']
         args    :
             type: remote_only
+            timeout: 300
 
     #=======================================
     # Vlan
@@ -250,6 +271,7 @@ testcases:
             test     : ['send','write','read']
         args    :
             type: remote_only
+            timeout: 300
 
     #=======================================
     # Atomic
@@ -265,6 +287,7 @@ testcases:
             command  : ['ib_atomic_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     #=======================================
     # Multi SGE test, Multiple QPs, All Msgs
@@ -280,6 +303,7 @@ testcases:
             command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     #=======================================
     # UD
@@ -295,6 +319,8 @@ testcases:
             mtu      : [4096]
             transport: ['UD']
             command  : ['ib_send_bw']
+        args    :
+            timeout: 300
 
     -   name    : UD_RDMACM
         testcase: testcases.rdma.rdma_perftest
@@ -306,6 +332,8 @@ testcases:
             mtu      : [4096]
             transport: ['UD']
             command  : ['ib_send_bw']
+        args    :
+            timeout: 300
 
     #=======================================
     # RPing
@@ -315,6 +343,7 @@ testcases:
         stress  : True
         args    :
             type: remote_only
+            timeout: 300
         iterators :
             type    : nested
             pktsize : [23, 65535]
@@ -328,6 +357,7 @@ testcases:
         stress  : True
         args    :
             type: remote_only
+            timeout: 300
         iterators :
             type    : nested
             server_inv: ['yes', 'no']
@@ -339,6 +369,7 @@ testcases:
         stress  : True
         args    :
             type: remote_only
+            timeout: 300
         iterators :
             type    : nested
             server_inv: ['yes', 'no']
@@ -350,6 +381,7 @@ testcases:
         stress  : True
         args    :
             type: remote_only
+            timeout: 300
         iterators :
             type    : nested
             server_inv: ['yes', 'no']
@@ -362,6 +394,7 @@ testcases:
         stress  : True
         args    :
             type: remote_only
+            timeout: 300
         iterators :
             type    : nested
             fr      : ['yes']
@@ -373,6 +406,7 @@ testcases:
         stress  : True
         args    :
             type: remote_only
+            timeout: 300
         iterators :
             type    : nested
             bw      : ['yes']
@@ -386,6 +420,7 @@ testcases:
         stress  : True
         args    :
             type: remote_only
+            timeout: 300
         iterators :
             type    : nested
             wlat    : ['yes']
@@ -398,6 +433,7 @@ testcases:
         stress  : True
         args    :
             type: remote_only
+            timeout: 300
         iterators :
             type    : nested
             rlat    : ['yes']
@@ -421,6 +457,7 @@ testcases:
             command  : ['ib_send_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_SendBw_SQ_Drain
         testcase: testcases.rdma.rdma_perftest
@@ -437,6 +474,7 @@ testcases:
             async_event_stats : ['yes']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_WriteBw_Sweep
         testcase: testcases.rdma.rdma_perftest
@@ -450,6 +488,7 @@ testcases:
             command  : ['ib_write_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_WriteBw_SQ_Drain
         testcase: testcases.rdma.rdma_perftest
@@ -466,6 +505,7 @@ testcases:
             async_event_stats : ['yes']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_ReadBw_Sweep
         testcase: testcases.rdma.rdma_perftest
@@ -479,6 +519,7 @@ testcases:
             command  : ['ib_read_bw']
         args    :
             type: remote_only
+            timeout: 300
 
     -   name    : Rc_ReadBw_SQ_Drain
         testcase: testcases.rdma.rdma_perftest
@@ -495,6 +536,7 @@ testcases:
             async_event_stats : ['yes']
         args    :
             type: remote_only
+            timeout: 300
 
     #=======================================
     # Teardown
@@ -506,9 +548,10 @@ testcases:
             intf_qos: False
             pause_enable: False
             pause_type: 0
+            timeout: 300
 
     -   name    : Rmmod_Rdma
         testcase: testcases.rdma.rmmod_rdma
         args    :
             type: remote_only
-
+            timeout: 300
