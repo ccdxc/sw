@@ -307,6 +307,64 @@ xcvr_parse_length (int port, uint8_t *data)
     }
 }
 
+static inline string
+xcvr_info_get_ascii (const uint8_t *xcvr_info, uint32_t first, uint32_t last)
+{
+    std::string str;
+    uint32_t val, reg;
+
+    while (first <= last && xcvr_info[last] == ' ')
+        last--;
+    for (reg = first; reg <= last; reg++) {
+        val = xcvr_info[reg];
+        str.append(1u, putchar(((val >= 32) && (val <= 126)) ? val : '_'));
+    }
+    return str;
+}
+
+static inline string
+xcvr_info_get_vendor_name (const uint8_t *xcvr_info) 
+{
+    return xcvr_info_get_ascii(xcvr_info, 20, 35);
+}
+
+static inline string
+xcvr_info_get_vendor_oui (const uint8_t *xcvr_info) 
+{
+    char oui[32];
+    string oui_str;
+
+    std::sprintf(oui, "%02x:%02x:%02x", xcvr_info[37], xcvr_info[38], xcvr_info[39]);
+    oui_str = oui;
+
+    return oui_str;
+}
+
+static inline string
+xcvr_info_get_vendor_serial_number (const uint8_t *xcvr_info) 
+{
+    return xcvr_info_get_ascii(xcvr_info, 68, 83);
+}
+
+static inline string
+xcvr_info_get_vendor_part_number (const uint8_t *xcvr_info) 
+{
+    return xcvr_info_get_ascii(xcvr_info, 40, 55);
+}
+
+static inline string
+xcvr_info_get_vendor_revision (uint32_t phy_port, const uint8_t *xcvr_info) 
+{
+    sdk::types::xcvr_type_t xtype;
+
+    xtype = xcvr_type(phy_port - 1);
+    if (xtype == xcvr_type_t::XCVR_TYPE_QSFP ||
+        xtype == xcvr_type_t::XCVR_TYPE_QSFP28) {
+        return xcvr_info_get_ascii(xcvr_info, 56, 57);
+    } else {
+        return xcvr_info_get_ascii(xcvr_info, 56, 59);
+    }
+}
 } // namespace platform
 } // namespace sdk
 #endif
