@@ -8,9 +8,10 @@ import utils
 import re
 
 class VnicObject():
-    def __init__(self, id, subnetid, macaddr, hostifindex, sourceguard=False, fabricencap='VXLAN', fabricencapid=1, rxmirrorid = [], txmirrorid = [], node_uuid=None):
+    def __init__(self, id, subnetid, macaddr, hostifindex, sourceguard=False, fabricencap='VXLAN', fabricencapid=1, rxmirrorid = [], txmirrorid = [], node_uuid=None, primary=False):
         self.id       = id
         self.uuid     = utils.PdsUuid(self.id)
+        self.primary  = primary
         self.macaddr  = macaddr
         self.subnetid = subnetid
         self.fabricencap = fabricencap
@@ -29,6 +30,7 @@ class VnicObject():
         grpcmsg = vnic_pb2.VnicRequest()
         spec = grpcmsg.Request.add()
         spec.Id = utils.PdsUuid.GetUUIDfromId(self.id)
+        spec.Primary = self.primary
         spec.SubnetId = utils.PdsUuid.GetUUIDfromId(self.subnetid)
         spec.MACAddress = utils.getmac2num(self.macaddr)
         spec.SourceGuardEnable = self.sourceguard

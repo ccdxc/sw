@@ -31,6 +31,7 @@ vnic_entry::vnic_entry() {
     binding_checks_en_ = false;
     host_if_ = k_pds_obj_key_invalid;
     meter_en_ = false;
+    primary_ = false;
     ht_ctxt_.reset();
     impl_ = NULL;
 }
@@ -120,6 +121,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;
 
     memcpy(&key_, &spec->key, sizeof(pds_obj_key_t));
+    memcpy(&hostname_, &spec->hostname, sizeof(hostname_));
     subnet_ = spec->subnet;
     v4_meter_ = spec->v4_meter;
     v6_meter_ = spec->v6_meter;
@@ -178,6 +180,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
             return SDK_RET_INVALID_ARG;
         }
     }
+    primary_ = spec->primary;
     meter_en_ = spec->meter_en;
     return SDK_RET_OK;
 }
@@ -311,7 +314,9 @@ vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
     }
 
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
+    memcpy(&spec->hostname, &hostname_, sizeof(hostname_));
     spec->subnet = subnet_;
+    spec->primary = primary_;
     spec->fabric_encap = fabric_encap_;
     spec->vnic_encap = vnic_encap_;
     spec->v4_meter = v4_meter_;

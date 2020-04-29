@@ -208,6 +208,10 @@ public:
     /// \return    impl instance of the vnic object
     impl_base *impl(void) { return impl_; }
 
+    /// \brief     return host name
+    /// \return    host name
+    char *hostname(void) { return hostname_; }
+
     /// \brief     return subnet of this vnic
     /// \return    key of the subnet this vnic belongs to
     pds_obj_key_t subnet(void) { return subnet_; }
@@ -314,6 +318,10 @@ public:
         return egr_v6_policy_[n];
     }
 
+    /// \brief     return whether vnic is primary or not
+    /// \return    true if vnic is marked primary or else false
+    bool primary(void) const { return primary_; }
+
     /// \brief     return whether metering is enabled or not
     /// \return    true if metering is enabled or else false
     bool meter_en(void) const { return meter_en_; }
@@ -336,17 +344,18 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_obj_key_t key_;                  ///< vnic key
-    pds_obj_key_t subnet_;               ///< subnet of this vnic
-    pds_obj_key_t v4_meter_;             ///< IPv4 metering policy
-    pds_obj_key_t v6_meter_;             ///< IPv6 metering policy
-    pds_encap_t   vnic_encap_;           ///< vnic's vlan encap
-    pds_encap_t   fabric_encap_;         ///< fabric encap information
-    bool          binding_checks_en_;    ///< TRUE if IP/MAC binding checks
-                                         ///< are enabled
-    bool          switch_vnic_;          ///< TRUE if this is switch vnic
-    mac_addr_t    mac_;                  ///< MAC address of this vnic
-    pds_obj_key_t host_if_;              ///< PF/VF this vnic is behind
+    pds_obj_key_t key_;                        ///< vnic key
+    char hostname_[PDS_MAX_HOST_NAME_LEN + 1]; ///< hostname of this workload
+    pds_obj_key_t subnet_;                     ///< subnet of this vnic
+    pds_obj_key_t v4_meter_;                   ///< IPv4 metering policy
+    pds_obj_key_t v6_meter_;                   ///< IPv6 metering policy
+    pds_encap_t   vnic_encap_;                 ///< vnic's vlan encap
+    pds_encap_t   fabric_encap_;               ///< fabric encap information
+    bool          binding_checks_en_;          ///< TRUE if IP/MAC binding checks
+                                               ///< are enabled
+    bool          switch_vnic_;                ///< TRUE if this is switch vnic
+    mac_addr_t    mac_;                        ///< MAC address of this vnic
+    pds_obj_key_t host_if_;                    ///< PF/VF this vnic is behind
     /// number of ingress IPv4 policies
     uint8_t       num_ing_v4_policy_;
     /// ingress IPv4 policies
@@ -365,6 +374,7 @@ private:
     pds_obj_key_t egr_v6_policy_[PDS_MAX_VNIC_POLICY];
     pds_obj_key_t tx_policer_;           ///< egress policer index
     pds_obj_key_t rx_policer_;           ///< ingress policer index
+    bool          primary_;              ///< primary vnic
     bool          meter_en_;             ///< true if metering is enabled
     ht_ctxt_t     ht_ctxt_;              ///< hash table context
     impl_base     *impl_;                ///< impl object instance

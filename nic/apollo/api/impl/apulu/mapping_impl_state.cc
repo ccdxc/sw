@@ -541,6 +541,8 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
     unsigned char *bytes = NULL;
     ipv4_prefix_t v4_prefix = {0};
     ipv4_addr_t v4_mask = {0};
+    vnic_entry *vnic = NULL;
+    bool vnic_primary = false;
 
     if (spec->skey.ip_addr.af != IP_AF_IPV4) {
         // No V6 support for now
@@ -560,6 +562,13 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
             return SDK_RET_ERR;
         }
     }
+
+    vnic = vnic_find(&spec->vnic);
+    if (!vnic) {
+        PDS_TRACE_ERR("Failed to find  vnic %s", spec->vnic.str());
+        return SDK_RET_ERR;
+    }
+    vnic_primary = vnic->primary();
 
     ret = dhcpctl_new_object(&host, *dhcp_connection, "host");
     if (ret != ISC_R_SUCCESS) {
@@ -626,7 +635,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
                           (uint32_t)bytes[1], (uint32_t)bytes[0]);
 
         // gateway ip
-        if (policy->gateway_ip().addr.v4_addr) {
+        if (vnic_primary && policy->gateway_ip().addr.v4_addr) {
             ip = policy->gateway_ip().addr.v4_addr;
             bytes = (unsigned char *)&ip;
             buf_len = statements_len - index;
@@ -663,10 +672,17 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
         if (strlen(policy->domain_name())) {
             buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
-                              "option domain-name=%s; ", policy->domain_name());
+                              "option domain-name=\"%s\"; ", policy->domain_name());
         }
 
-        // boot filename
+        // host name
+        if (vnic_primary && strlen(vnic->hostname())) {
+            buf_len = statements_len - index;
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "option host-name=\"%s\"; ", vnic->hostname());
+        }
+
+        // boot file name
         if (strlen(policy->boot_filename())) {
             buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
