@@ -202,6 +202,7 @@ for input_file in files:
             continue
 
         items = line.split()
+        items[0] = items[0].replace("asic/capri", "asic/" + asic)
         items[0] = items[0].replace("aarch64/iris", "aarch64/iris" + '/' + asic)
         items[0] = items[0].replace("x86_64/iris", "x86_64/iris" + '/' + asic)
         items[0] = items[0].replace("nic/build/$ARCH/$PIPELINE", "nic/build/" + arch + '/' + args.pipeline + '/' + asic)
