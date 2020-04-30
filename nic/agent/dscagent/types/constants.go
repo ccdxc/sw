@@ -221,6 +221,9 @@ const (
 
 	// MaxDHCPServers is the maximum number of dhcp servers allowed
 	MaxDHCPServers = 16
+
+	// MaxRulesPerSecurityPolicy is the maximum number of rules allowed per security policy
+	MaxRulesPerSecurityPolicy = 1023
 )
 
 // ID Allocation constants and offsets

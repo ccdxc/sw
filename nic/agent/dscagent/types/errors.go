@@ -150,6 +150,7 @@ const (
 	ErrInterfaceUpdateDuringInterfaceMirrorSessionUpdate = Error("ErrInterfaceUpdateDuringInterfaceMirrorSessionUpdate")
 	ErrMaxServerIPPerPolicyExceeded                      = Error("ErrMaxServerIPPerPolicyExceeded")
 	ErrMaxDHCPServersExceeded                            = Error("ErrMaxDHCPServersExceeded")
+	ErrMaxRulesPerSecurityPolicyExceeded                 = Error("ErrMaxRulesPerSecurityPolicyExceeded")
 )
 
 // Const Info
