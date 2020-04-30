@@ -81,6 +81,11 @@ action ingress_to_rxdma() {
                        APULU_CPU_FLAGS_IPV6_2_VALID);
             }
         }
+    } else {
+        if (udp_1.valid == FALSE) {
+            modify_field(offset_metadata.l4_1, offset_metadata.l4_2);
+            modify_field(offset_metadata.l4_2, 0);
+        }
     }
     modify_field(p4i_to_arm.flags, scratch_metadata.cpu_flags);
 

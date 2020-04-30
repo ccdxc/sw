@@ -61,15 +61,22 @@ ingress_to_rxdma:
                         APULU_CPU_FLAGS_VLAN_VALID_BIT_POS
     or              r1, r1, k.ipv4_1_valid, \
                         APULU_CPU_FLAGS_IPV4_1_VALID_BIT_POS
-    bbne            k.control_metadata_tunneled_packet, TRUE, ingress_to_rxdma2
+    bbne            k.control_metadata_tunneled_packet, TRUE, \
+                        ingress_to_rxdma_native
     or              r1, r1, k.ipv6_1_valid, \
                         APULU_CPU_FLAGS_IPV6_1_VALID_BIT_POS
     or              r1, r1, k.ethernet_2_valid, \
                         APULU_CPU_FLAGS_ETH_2_VALID_BIT_POS
     or              r1, r1, k.ipv4_2_valid, \
                         APULU_CPU_FLAGS_IPV4_2_VALID_BIT_POS
+    b               ingress_to_rxdma2
     or              r1, r1, k.ipv6_2_valid, \
                         APULU_CPU_FLAGS_IPV6_2_VALID_BIT_POS
+ingress_to_rxdma_native:
+    seq             c1, k.udp_1_valid, FALSE
+    phvwr.c1        p.offset_metadata_l4_1, k.offset_metadata_l4_2
+    phvwr.c1        p.offset_metadata_l4_2, 0
+
 ingress_to_rxdma2:
     phvwr           p.p4i_to_arm_flags, r1
     phvwr           p.p4i_to_arm_packet_len, k.{capri_p4_intrinsic_packet_len}.hx
