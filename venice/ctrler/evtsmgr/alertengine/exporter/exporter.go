@@ -211,7 +211,7 @@ func (e *AlertExporter) updateAlertDestination(destName string, numNotifications
 		return fmt.Errorf("could not update alert destination")
 	}
 
-	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+	ad, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		aDest := e.memDb.GetAlertDestination(destName)
 		if aDest != nil {
 			ad, err := e.configWatcher.APIClient().MonitoringV1().AlertDestination().Get(ctx, aDest.GetObjectMeta()) // get the alert destination
@@ -219,17 +219,23 @@ func (e *AlertExporter) updateAlertDestination(destName string, numNotifications
 				return nil, err
 			}
 
-			ad.Status.TotalNotificationsSent += int32(numNotificationsSent)
-			ad, err = e.configWatcher.APIClient().MonitoringV1().AlertDestination().Update(ctx, ad)
-			if err != nil {
-				return nil, err
-			}
-
-			return nil, nil
+			return ad, nil
 		}
 
-		return nil, fmt.Errorf("could not update alert destination, failed to find dest obj from mem DB")
-	}, 60*time.Millisecond, maxRetry)
+		return nil, fmt.Errorf("could not get alert destination object from memdb %s", destName)
+	}, 3*time.Second, maxRetry)
+
+	if err != nil {
+		return err
+	}
+
+	aDest := ad.(*monitoring.AlertDestination)
+	aDest.Status.TotalNotificationsSent += int32(numNotificationsSent)
+
+	_, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		_, err := e.configWatcher.APIClient().MonitoringV1().AlertDestination().Update(ctx, aDest)
+		return nil, err
+	}, 3*time.Second, maxRetry)
 
 	return err
 }
