@@ -116,6 +116,10 @@ private:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t fill_spec_(pds_device_spec_t *spec);
 
+    /// \brief      populate operational status of device object
+    /// \param[out] status operational status
+    void fill_status_(pds_device_status_t *spec);
+
     /// \brief      populate ingress drop stats with hardware information
     /// \param[out] ing_drop_stats Ingress drop statistics
     /// \return     Number of stats entries

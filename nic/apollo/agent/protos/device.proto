@@ -175,6 +175,9 @@ message DeviceStatus {
 
   // UEFI Version
   string      UEFIVersion       = 23;
+
+  // number of host interfaces
+  uint32      NumHostIf         = 24;
 }
 
 // stats of the device, if any

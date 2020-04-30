@@ -106,6 +106,7 @@ typedef struct pds_device_status_s {
     string      vendor_name;       ///< Vendor Name
     string      pxe_version;       ///< PXE Version
     string      uefi_version;      ///< UEFI Version
+    uint32_t    num_host_if;       ///< number of host interfaces
 } pds_device_status_t;
 
 /// \brief Drop statistics

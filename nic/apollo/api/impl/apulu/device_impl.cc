@@ -16,6 +16,7 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/device.hpp"
+#include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/device_impl.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
@@ -211,6 +212,11 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
     return SDK_RET_OK;
 }
 
+void
+device_impl::fill_status_(pds_device_status_t *status) {
+    status->num_host_if = lif_impl_db()->num_host_lif();
+}
+
 uint32_t
 device_impl::fill_ing_drop_stats_(pds_device_drop_stats_t *ing_drop_stats) {
     p4pd_error_t pd_err = P4PD_SUCCESS;
@@ -288,6 +294,7 @@ device_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     if (unlikely(rv != SDK_RET_OK)) {
         return rv;
     }
+    fill_status_(&dinfo->status);
     // TODO: rename ing_drop_stats_count and egr_drop_stats_count to
     //       num_ing_drop_stats and num_egr_drop_stats respectively
     dinfo->stats.ing_drop_stats_count =

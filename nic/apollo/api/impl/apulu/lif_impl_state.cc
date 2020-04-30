@@ -46,6 +46,7 @@ lif_impl_state::lif_impl_state(pds_state *state) {
             tinfo.tabledepth, tinfo.actiondata_struct_size,
             false, true, NULL);
     SDK_ASSERT(tx_rate_limiter_tbl_ != NULL);
+    num_host_lifs_ = 0;
 }
 
 lif_impl_state::~lif_impl_state() {

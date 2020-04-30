@@ -56,8 +56,18 @@ public:
                           impl->key_.str(), impl->id_, ret);
             return ret;
         }
-        return lif_id_ht_->insert_with_key(&impl->id_, impl,
-                                           &impl->id_ht_ctxt_);
+        ret = lif_id_ht_->insert_with_key(&impl->id_, impl, &impl->id_ht_ctxt_);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to insert lif %s, id %u to lif db, err %u",
+                          impl->key_.str(), impl->id_, ret);
+            lif_ht_->remove(&impl->key_);
+            return ret;
+        }
+        // bookkeeping for host lifs
+        if (impl->type_ == sdk::platform::LIF_TYPE_HOST) {
+            num_host_lifs_++;
+        }
+        return SDK_RET_OK;
     }
 
     /// \brief     remove the given instance of lif object from db
@@ -65,6 +75,10 @@ public:
     /// \return    pointer to the removed lif instance or NULL,
     ///            if not found
     lif_impl *remove(lif_impl *impl) {
+        // bookkeeping for host lifs
+        if (impl->type_ == sdk::platform::LIF_TYPE_HOST) {
+            num_host_lifs_--;
+        }
         lif_ht_->remove(&impl->key_);
         return (lif_impl *)(lif_id_ht_->remove(&impl->id_));
     }
@@ -126,6 +140,10 @@ public:
         return lif_ht_->walk(walk_cb, ctxt);
     }
 
+    /// \brief return the number of host lifs in the database
+    /// \return numner of host lifs
+    uint32_t num_host_lif(void) const { return num_host_lifs_; }
+
 private:
     directmap *tx_rate_limiter_tbl(void) { return tx_rate_limiter_tbl_; }
 
@@ -161,6 +179,7 @@ private:
     friend class lif_impl;    // lif_impl class is friend of lif_impl_state
 
 private:
+    uint32_t num_host_lifs_;
     ht *lif_ht_;
     ht *lif_id_ht_;
     directmap *tx_rate_limiter_tbl_;

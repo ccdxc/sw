@@ -200,16 +200,16 @@ private:
     sdk_ret_t create_control_lif_(pds_lif_spec_t *spec);
 
 private:
-    ///< name of the lif
-    pds_obj_key_t    key_;            //< lif key
+    pds_obj_key_t    key_;            ///< lif key
     pds_lif_id_t     id_;             ///< (s/w & h/w) internal lif id
     pds_ifindex_t    pinned_if_idx_;  ///< pinnned if index, if any
     lif_type_t       type_;           ///< type of the lif
     /// name of the lif, if any
     char             name_[SDK_MAX_NAME_LEN];
     mac_addr_t       mac_;            ///< MAC address of lif
-    uint32_t         tx_sched_offset_;      ///< tx scheduler entry offset
-    uint32_t         tx_sched_num_entries_; ///< number of tx scheduler entries used
+    uint32_t         tx_sched_offset_;///< tx scheduler entry offset
+    /// number of tx scheduler entries used
+    uint32_t         tx_sched_num_entries_;
 
     /// operational state
     // TODO: we can have state per pipeline in this class
@@ -222,7 +222,7 @@ private:
     bool             init_done_;      ///< TRUE if lif init is done
     ht_ctxt_t        ht_ctxt_;        ///< hash table context
     ht_ctxt_t        id_ht_ctxt_;     ///< id based hash table context
-    ///< lif_impl_state is friend of lif_impl
+    /// lif_impl_state is friend of lif_impl
     friend class lif_impl_state;
 } __PACK__;
 
