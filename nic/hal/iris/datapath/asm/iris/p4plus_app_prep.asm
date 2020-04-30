@@ -86,6 +86,7 @@ p4plus_app_classic_nic_native_ipv6_udp:
   phvwr.f     p.p4_to_p4plus_classic_nic_pkt_type, CLASSIC_NIC_PKT_TYPE_IPV6_UDP
 
 p4plus_app_classic_nic_tunneled:
+  phvwr       p.p4_to_p4plus_classic_nic_encap_pkt, TRUE
   bcf         [c1], p4plus_app_classic_nic_tunneled_ipv4_tcp
   phvwr       p.p4_to_p4plus_classic_nic_inner_ip_valid, TRUE
   bcf         [c2], p4plus_app_classic_nic_tunneled_ipv6_tcp

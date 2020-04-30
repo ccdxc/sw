@@ -104,7 +104,9 @@ header_type p4_to_p4plus_classic_nic_header_t {
         vlan_pcp            : 3;
         vlan_dei            : 1;
         vlan_vid            : 12;
-        packet_len          : 16;
+        encap_pkt           : 1;
+        rss_override        : 1;
+        packet_len          : 14;
         csum                : 16;
         csum_ip_bad         : 1;
         csum_ip_ok          : 1;

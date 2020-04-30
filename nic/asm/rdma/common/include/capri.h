@@ -49,7 +49,7 @@
 #define CAPRI_APP_DATA_PAYLOAD_LEN k.{rdma_bth_payload_len_sbit0_ebit5...rdma_bth_payload_len_sbit6_ebit13}
 
 #define CAPRI_APP_DATA_ROCE_OPT_TS_VALID k.{rdma_bth_roce_opt_ts_valid}
-#define CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO k.{rdma_bth_roce_opt_ts_value_sbit0_ebit15...rdma_bth_roce_opt_ts_echo_sbit16_ebit31}
+#define CAPRI_APP_DATA_ROCE_OPT_TS_VALUE_AND_ECHO k.{rdma_bth_roce_opt_ts_value_sbit0_ebit7...rdma_bth_roce_opt_ts_echo_sbit16_ebit31}
 #define CAPRI_APP_DATA_ROCE_OPT_MSS k.{rdma_bth_roce_opt_mss}
 
 #define CAPRI_RECIRC_REASON_NONE                    0

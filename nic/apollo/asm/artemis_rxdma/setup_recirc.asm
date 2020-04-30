@@ -59,7 +59,7 @@ pass1:
 
     /* Setup root for TAG Lookup on LPM1 */
     phvwr            p.lpm_metadata_lpm1_base_addr, k.{p4_to_rxdma_tag_root_sbit0_ebit7...\
-                                                       p4_to_rxdma_tag_root_sbit16_ebit39}
+                                                       p4_to_rxdma_tag_root_sbit32_ebit39}
 
     /* Setup key for METER Lookup on LPM1 */
     phvwr            p.lpm_metadata_lpm2_key[127:0], k.{rx_to_tx_hdr_remote_ip_sbit0_ebit15...rx_to_tx_hdr_remote_ip_sbit96_ebit127}

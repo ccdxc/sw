@@ -21,7 +21,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 //create_qp params    
 #define K_CQP_PD k.{rdma_aq_feedback_cqp_pd_sbit0_ebit7...rdma_aq_feedback_cqp_pd_sbit16_ebit31}
 #define K_CQP_RQ_MAP_COUNT k.{rdma_aq_feedback_cqp_rq_map_count_sbit0_ebit7...rdma_aq_feedback_cqp_rq_map_count_sbit24_ebit31}
-#define K_CQP_RQ_DMA_ADDR k.{rdma_aq_feedback_cqp_rq_dma_addr_sbit0_ebit15...rdma_aq_feedback_cqp_rq_dma_addr_sbit56_ebit63}
+#define K_CQP_RQ_DMA_ADDR k.{rdma_aq_feedback_cqp_rq_dma_addr_sbit0_ebit7...rdma_aq_feedback_cqp_rq_dma_addr_sbit56_ebit63}
 #define K_CQP_RQ_CMB k.{rdma_aq_feedback_cqp_rq_cmb}
 #define K_CQP_RQ_SPEC k.{rdma_aq_feedback_cqp_rq_spec}
 #define K_CQP_RQ_CQ_ID k.{rdma_aq_feedback_cqp_rq_cq_id_sbit0_ebit7...rdma_aq_feedback_cqp_rq_cq_id_sbit16_ebit23}
@@ -55,7 +55,7 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_MQP_PMTU_LOG2 k.{rdma_aq_feedback_mqp_pmtu_log2_sbit0_ebit1...rdma_aq_feedback_mqp_pmtu_log2_sbit2_ebit4}    
 #define K_MQP_PMTU_VALID k.{rdma_aq_feedback_mqp_pmtu_valid}
 #define K_MQP_RQ_ID k.{rdma_aq_feedback_mqp_rq_id_sbit0_ebit6...rdma_aq_feedback_mqp_rq_id_sbit23_ebit23}
-#define K_MQP_RQ_PSN k.{rdma_aq_feedback_mqp_rq_psn_sbit0_ebit15...rdma_aq_feedback_mqp_rq_psn_sbit16_ebit23}
+#define K_MQP_RQ_PSN k.{rdma_aq_feedback_mqp_rq_psn_sbit0_ebit7...rdma_aq_feedback_mqp_rq_psn_sbit8_ebit23}
 #define K_SQD_ASYNC_NOTIFY_EN k.{rdma_aq_feedback_mqp_sqd_async_notify_en}
 #define K_ACCESS_FLAGS_VALID k.{rdma_aq_feedback_mqp_access_flags_valid}
 #define K_ACCESS_FLAGS k.{rdma_aq_feedback_mqp_access_flags}

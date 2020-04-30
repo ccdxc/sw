@@ -79,6 +79,7 @@ action f_p4plus_app_classic_nic_prep() {
     modify_field(p4_to_p4plus_classic_nic.l2_pkt_type, flow_lkp_metadata.pkt_type);
     if ((inner_ethernet.valid == TRUE) or (inner_ipv4.valid == TRUE) or
         (inner_ipv6.valid == TRUE)) {
+        modify_field(p4_to_p4plus_classic_nic.encap_pkt, TRUE);
         add_header(p4_to_p4plus_classic_nic_inner_ip);
         if (inner_ipv4.valid == TRUE) {
             if (inner_udp.valid == TRUE) {

@@ -137,6 +137,7 @@ egress_to_rxdma_rss_ipv4_udp:
 
     // tunneled packet
 egress_to_rxdma_rss2:
+    phvwr           p.p4e_to_p4plus_classic_nic_encap_pkt, TRUE
     bbeq            k.ipv4_2_valid, TRUE, egress_to_rxdma_rss2_ipv4
     phvwr           p.{p4e_to_p4plus_classic_nic_ip2_valid, \
                         p4e_to_p4plus_classic_nic_ip_valid, \

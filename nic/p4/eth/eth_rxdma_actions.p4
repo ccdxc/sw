@@ -63,6 +63,8 @@ action eth_rx_app_header(PARAMS_ETH_RX_QSTATE_NOPC)
     modify_field(p4_to_p4plus_scratch.vlan_dei, p4_to_p4plus.vlan_dei);
     modify_field(p4_to_p4plus_scratch.vlan_vid, p4_to_p4plus.vlan_vid);
     modify_field(p4_to_p4plus_scratch.vlan_valid, p4_to_p4plus.vlan_valid);
+    modify_field(p4_to_p4plus_scratch.encap_pkt, p4_to_p4plus.encap_pkt);
+    modify_field(p4_to_p4plus_scratch.rss_override, p4_to_p4plus.rss_override);
     modify_field(p4_to_p4plus_scratch.packet_len, p4_to_p4plus.packet_len);
     modify_field(p4_to_p4plus_scratch.csum, p4_to_p4plus.csum);
     modify_field(p4_to_p4plus_scratch.csum_ip_bad, p4_to_p4plus.csum_ip_bad);

@@ -6,10 +6,10 @@
 #include "ingress.h"
 #include "capri-macros.h"
 #include "virtio_defines.h"
-
+#include "INGRESS_common_p4plus_stage0_app_header_table_k.h"
 
 struct phv_                 p;
-struct common_p4plus_stage0_app_header_table_k  k;
+struct common_p4plus_stage0_app_header_table_k_ k;
 struct common_p4plus_stage0_app_header_table_d  d;
 
 #define D(field)    d.{u.read_virtq_rx_qstate_d.##field}
@@ -28,9 +28,8 @@ virtio_rx_read_qstate_start:
     phvwri      p.virtio_s2s_t0_phv_rx_intr_assert_data, 0x01000000
 
     phvwr       p.to_s2_qid, K(p4_rxdma_intr_qid)
-    phvwr       p.to_s2_lif, K(p4_intr_global_lif_sbit0_ebit2...p4_intr_global_lif_sbit3_ebit10)
-    phvwr       p.to_s1_qstate_addr, \
-                K(p4_rxdma_intr_qstate_addr_sbit0_ebit1...p4_rxdma_intr_qstate_addr_sbit2_ebit33)
+    phvwr       p.to_s2_lif, K(p4_intr_global_lif)
+    phvwr       p.to_s1_qstate_addr, K(p4_rxdma_intr_qstate_addr)
 
     phvwr       p.to_s2_rx_virtq_avail_addr, D(rx_virtq_avail_addr).dx
     phvwr       p.to_s3_rx_virtq_desc_addr, D(rx_virtq_desc_addr).dx

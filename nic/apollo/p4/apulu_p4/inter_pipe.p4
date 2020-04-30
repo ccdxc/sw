@@ -200,6 +200,7 @@ action egress_to_rxdma() {
 
     // RSS
     if (ethernet_2.valid == TRUE) {
+        modify_field(p4e_to_p4plus_classic_nic.encap_pkt, TRUE);
         add_header(p4e_to_p4plus_classic_nic_ip2);
         if (ipv4_2.valid == TRUE) {
             if (tcp.valid == TRUE) {
