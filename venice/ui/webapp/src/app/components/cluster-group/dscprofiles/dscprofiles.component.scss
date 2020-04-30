@@ -28,6 +28,7 @@ $vertical-gutter: 5px;
 
 .dscprofiles-detail-value {
   @include primary-font();
+  text-align: left;
 }
 
 .dscprofiles-detail-close {
@@ -45,4 +46,12 @@ $vertical-gutter: 5px;
 .dscprofiles-summary-panel-content-value-warning {
   color: #dd3b09 !important;
   cursor: pointer;
+}
+
+.dscprofiles-row-icon {
+  color: #98a2b3 !important;
+}
+
+.dscprofiles-selected-row {
+  background-color: #f2eeea !important;
 }

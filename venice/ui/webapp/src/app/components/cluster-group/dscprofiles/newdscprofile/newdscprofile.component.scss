@@ -52,3 +52,18 @@ fieldset {
 .new-dsc-profile-feature--toggle {
   @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
 }
+
+.new-dsc-profile-feature-listbox {
+  margin-left: initial;
+}
+
+.new-dsc-profile-feature-description {
+  min-width: 342px;
+  max-width: 342px;
+  margin-top: 10px;
+  white-space: initial;
+}
+
+.new-dsc-profile-row {
+  width: 342px;
+}

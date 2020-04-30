@@ -4,12 +4,16 @@
 
     <div fxFlex="auto" fxLayout="row" class="new-dsc-profile-content">
       <div fxFlex="nogrow" fxLayout="column">
-
-        <ng-container *ngTemplateOutlet="metaName"></ng-container>
-        <div fxFlex="10px"></div>
-        <ng-container>
-          <ng-container *ngTemplateOutlet="feature_set"></ng-container>
-        </ng-container>
+        <div fxLayout="column" fxLayoutAlign="start center" class="new-dsc-profile-form">
+          <ng-container *ngTemplateOutlet="metaName"></ng-container>
+          <div fxFlex="10px"></div>
+          <!-- <ng-container>
+          <ng-container *ngTemplateOutlet="feature_options"></ng-container>
+        </ng-container> -->
+          <ng-container>
+            <ng-container *ngTemplateOutlet="feature_set"></ng-container>
+          </ng-container>
+        </div>
       </div>
     </div>
   </div>
@@ -18,19 +22,34 @@
 <ng-template #metaName>
   <div fxFlex="nogrow" fxLayout="row" class="new-dsc-profile-row"
        [formGroup]="newObject.$formGroup">
-    <div formGroupName="meta">
+    <div formGroupName="meta" fxLayoutAlign="start center">
       <span [ngClass]="{
         'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
       }">
         <input fxFlex="342px" formControlName="name" class="new-dsc-profile-name" appErrorTooltip
                spellcheck="false"
-               type="text" pInputText appFloatLabel="Unique DSP Profile Name...">
+               type="text" pInputText appFloatLabel="Unique DSC Profile Name...">
       </span>
     </div>
   </div>
 </ng-template>
 
 <ng-template #feature_set>
+  <div fxLayout="column" fxLayoutAlign="center start">
+    <div class="new-dsc-profile-feature-listbox">
+      <p-listbox #nodesListbox [options]="options" styleClass="new-dsc-profile-row"
+                 *ngIf="options && options.length>0" [(ngModel)]="selectedFeatureSet"
+                 optionLabel="label"
+                 [listStyle]="{'height':'125px'}">
+      </p-listbox>
+    </div>
+    <div class="new-dsc-profile-feature-description">
+      {{this.selectedFeatureSet? this.selectedFeatureSet.value.description : 'Please select an option for DSC profile Feature Set.'}}
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #feature_options>
   <fieldset [formGroup]="newObject.$formGroup">
     <legend>
       Configure DSC Profile
@@ -40,8 +59,7 @@
         <div *ngFor="let k of getObjectKeys(newObject.spec['feature-set']) let i=index"
              class="new-dsc-profile-feature-loop">
           <ng-container>
-            <mat-slide-toggle
-                              [formControl]="newObject.$formGroup.get(['spec', 'feature-set', k])"
+            <mat-slide-toggle [formControl]="newObject.$formGroup.get(['spec', 'feature-set', k])"
                               fxFlex='30px'
                               class="new-dsc-profile-feature--toggle">
             </mat-slide-toggle>

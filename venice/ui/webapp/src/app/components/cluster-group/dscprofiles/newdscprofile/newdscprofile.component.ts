@@ -7,7 +7,7 @@ import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { ClusterDSCProfile, ClusterDSCProfileSpec, IClusterDSCProfile, ClusterFeatureSet } from '@sdk/v1/models/generated/cluster';
+import { ClusterDSCProfile, ClusterDSCProfileSpec, IClusterDSCProfile, IClusterFeature } from '@sdk/v1/models/generated/cluster';
 import { SelectItem } from 'primeng/primeng';
 import { PropInfoItem } from '@sdk/v1/models/generated/basemodel/base-model';
 
@@ -21,6 +21,7 @@ import { PropInfoItem } from '@sdk/v1/models/generated/basemodel/base-model';
 })
 export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, ClusterDSCProfile> implements OnInit, AfterViewInit, OnDestroy {
   @Input() existingObjects: ClusterDSCProfile[] = [];
+  @Input() options: SelectItem [] = [];
 
   validationErrorMessage: string;
 
@@ -31,6 +32,7 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
     super(_controllerService, uiconfigsService, ClusterDSCProfile);
   }
 
+  selectedFeatureSet: SelectItem;
 
   generateCreateSuccessMsg(object: IClusterDSCProfile) {
     return 'Created DSC Profile ' + object.meta.name;
@@ -94,6 +96,13 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
    */
   getObjectValues(): IClusterDSCProfile {
     const dscProfile: ClusterDSCProfile = this.newObject.getFormGroupValues();
+    // const option = this.options.find( (item: SelectItem) => item.label === this.selectedFeatureSet.label);
+    if (this.selectedFeatureSet) {
+      const keys = this.getObjectKeys(dscProfile.spec['feature-set']) ;
+      keys.forEach(key => {
+        dscProfile.spec['feature-set'][key] = this.selectedFeatureSet.value[key];
+      });
+    }
     return dscProfile;
   }
 
@@ -116,6 +125,10 @@ export class NewdscprofileComponent extends CreationForm<IClusterDSCProfile, Clu
     }
     if (!this.newObject.$formGroup.valid) {
       this.validationErrorMessage = 'Error: Name field is not valid.';
+      return false;
+    }
+    if (!this.selectedFeatureSet) {
+      this.validationErrorMessage = 'Error: Please select a Feature Set';
       return false;
     }
     return true;

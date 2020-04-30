@@ -13,6 +13,7 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 import { Observable } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
+import { SelectItem } from 'primeng/api';
 
 
 interface DSCMacName {
@@ -23,6 +24,8 @@ interface DSCProfileUiModel {
   associatedDSCS: ClusterDistributedServiceCard[];
   associatedDSCSPercentile: Number;
   pendingDSCNames?: DSCMacName[];
+  featureset: string;
+  description: string;
 }
 
 /**
@@ -81,15 +84,24 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
     { field: 'meta.name', header: 'Name', class: 'dscprofiles-column-dscprofile-name', sortable: true, width: 15 },
     { field: 'spec.dscs', header: 'DSCs', class: 'dscprofiles-column-dscs', sortable: false, width: 20 },
     { field: 'utilization', header: 'Utilization', class: 'dscprofiles-column-utilization', sortable: false, width: 5 },
-    { field: 'spec.feature-set', header: 'Feature Set', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
+    // { field: 'spec.feature-set', header: 'Feature Set', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
+    { field: 'Feature', header: 'Feature Set', class: 'dscprofiles-column-feature-set', sortable: true, width: 20 },
     { field: 'status.propagation-status.updated', header: 'Update DSC', class: 'dscprofiles-column-status-updated', sortable: true, width: 5 },
     { field: 'status.propagation-status.pending-dscs', header: 'Pending DSC', class: 'dscprofiles-column-status-pendig', sortable: true, width: 20 },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'dscprofiles-column-date', sortable: true, width: '180px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'dscprofiles-column-date', sortable: true, width: '180px' },
   ];
 
+
   macToNameMap: { [key: string]: string } = {};
   viewPendingNaples: boolean;
+
+  options: SelectItem[] = [
+    { label: 'HPF', value: { InterVMServices: false,  FlowAware : false, Firewall: false, description: 'The High-Performance Forwarding (HPF) Feature Set enables a higher number of connections per second to be established through the card. The only feature supported, besides the ones of a typical NIC is interface-based ERSPAN.' } },
+    { label: 'Flow Aware', value: { InterVMServices: false,  FlowAware : true, Firewall: false, description: 'The Flow Aware Feature Set includes features that require a DSC to keep track of individual flows. Examples include flow-based ERSPAN, flow statistics, NetFlow/IPFIX.' } },
+    { label: 'Firewall', value: { InterVMServices: false,  FlowAware : true, Firewall: true, description: 'The Firewall Feature Set includes the capability of enforcing security policies, where a security policy specifies flows whose packets shall be forwarded or dropped by DSCs. The Firewall Feature Set includes also all the features of the Flow Aware feature set.' } },
+    { label: 'Inter-VM Services', value: { InterVMServices: true,  FlowAware : true, Firewall: true, description: 'The Inter-VM Services Feature Set includes features of the Flow Aware and Firewall Features Set applied also to traffic among workloads (e.g., Virtual Machines) in execution on the same host. As an example, this Feature Set is required when implementing micro-segmentation.'}}
+  ];
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -155,6 +167,9 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
         }
         this.dataObjects  = response.data;
         this.handleDataReady(); // process DSCProfile. Note: At this this moment, this.selectedObj may not be available
+        if (this.selectedDSCProfile) {
+          this.selectedDSCProfile = null;  // clear out detail panel
+        }
       },
       this._controllerService.webSocketErrorHandler('Failed to get DSC Profile')
     );
@@ -214,9 +229,37 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
     const dscProfileUiModel: DSCProfileUiModel = {
       associatedDSCS: dscsnames,
       associatedDSCSPercentile: (dscsnames.length / this.naplesList.length),
-      pendingDSCNames: pendingDSCNames
+      pendingDSCNames: pendingDSCNames,
+      featureset: this.getFeatureName(dscProfile),
+      description: this.getFeatureDescription(dscProfile)
     };
     dscProfile._ui = dscProfileUiModel;
+  }
+  getFeatureDescription(dscProfile: ClusterDSCProfile): string {
+    const item = this.getFeaturesetHelper(dscProfile);
+    return (item) ? item.value.description : '';
+  }
+
+  getFeatureName(dscProfile: ClusterDSCProfile): string {
+    const item = this.getFeaturesetHelper(dscProfile);
+    return (item) ? item.label : '';
+  }
+
+  getFeaturesetHelper(dscProfile: ClusterDSCProfile): SelectItem {
+    const theOne = this.options.find((item: SelectItem) => {
+      const keys  = this.getObjectKeys(dscProfile.spec['feature-set']);
+      let matched = true;
+      for (let i = 0; i < keys.length; i ++) {
+        const key  = keys[i];
+        const modelValue = (dscProfile.spec['feature-set'][key]) ? dscProfile.spec['feature-set'][key] : false;
+        if (item.value[key] !== modelValue) {
+          matched = false;
+          break;
+        }
+      }
+      return matched;
+    });
+    return theOne;
   }
 
   getNaplesName(mac: string): string {
@@ -305,10 +348,20 @@ export class DscprofilesComponent extends TablevieweditAbstract<IClusterDSCProfi
   }
 
   selectDSCProfile(event) {
+    const $ = Utility.getJQuery();
     if (this.selectedDSCProfile && event.rowData === this.selectedDSCProfile) {
       this.selectedDSCProfile = null;
+      if (event.event && event.event.currentTarget) {
+        $(event.event.currentTarget).removeClass('dscprofiles-selected-row ');
+        }
     } else {
       this.selectedDSCProfile = event.rowData;
+      if (event.event && event.event.currentTarget) {
+      if ($('.dscprofiles-selected-row')) {
+        $('.dscprofiles-selected-row').removeClass('dscprofiles-selected-row ');
+      }
+      $(event.event.currentTarget).addClass('dscprofiles-selected-row');
+      }
     }
   }
 

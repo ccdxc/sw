@@ -48,7 +48,7 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newdscprofile (formClose)="creationFormClose()" fxFlex="grow"
+  <app-newdscprofile (formClose)="creationFormClose()" fxFlex="grow" [options]="options"
                      [existingObjects]='dataObjects'>
   </app-newdscprofile>
 </ng-template>
@@ -87,8 +87,9 @@
     <ng-container *ngSwitchCase="'utilization'">
       <div class="dscprofile-dsc-div-utilization"
            [matTooltip]="'Assigned to ' + ((rowData._ui.associatedDSCS && rowData._ui.associatedDSCS.length) ? rowData._ui.associatedDSCS.length : 0 ) + ' DSCs'">
-        {{rowData._ui['associatedDSCSPercentile'] | percent}} </div>
+        {{rowData._ui['associatedDSCSPercentile'] |  percent:'1.2-3'}} </div>
     </ng-container>
+    <!-- comment it out per decision make 2020-04-27. showing feature-set instead of feature combination
     <ng-container *ngSwitchCase="'spec.feature-set'">
       <div *ngFor="let k of getObjectKeys(rowData.spec['feature-set']) let i=index"
            class="dscprofile-dsc-div">
@@ -102,6 +103,11 @@
           </div>
         </ng-container>
       </div>
+    </ng-container> -->
+    <ng-container *ngSwitchCase="'Feature'">
+      <div class="dscprofile-dsc-div-featureset"
+           [matTooltip]="rowData._ui.description">
+        {{rowData._ui.featureset}} </div>
     </ng-container>
 
     <ng-container *ngSwitchDefault>
@@ -131,7 +137,7 @@
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newdscprofile [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
-                     (formClose)="closeRowExpand()"
+                     (formClose)="closeRowExpand()" [options]="options"
                      fxFlex="none"></app-newdscprofile>
 </ng-template>
 
@@ -180,8 +186,26 @@
           </div>
         </div>
       </div>
-      <!--  The following is feature set -->
       <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-key">Feature set:</a>
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-value">
+              {{ this.selectedDSCProfile._ui.featureset}}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row" fxLayoutAlign="start start">
+            <a fxFlex fxLayoutAlign="start center" class="dscprofiles-detail-key">Description:</a>
+            <a fxFlex fxLayoutAlign="start start" class="dscprofiles-detail-value">
+              {{ this.selectedDSCProfile._ui.description}}
+            </a>
+          </div>
+        </div>
+      </div>
+      <!--  The following is feature combination. comment it out 2020-04-27 -->
+      <!--  <div fxFlex fxLayout="row">
         <div fxFlex fxLayout="column">
           <div fxLayout="row">
             <a fxFlex fxLayoutAlign="start Start" class="dscprofiles-detail-key">FeatureSet:</a>
@@ -206,9 +230,9 @@
           </div>
         </div>
         <div fxFlex fxLayout="column">
-          <!-- leave it empty purposely -->
+          leave it empty purposely 
         </div>
-      </div>
+      </div> -->
 
 
 
