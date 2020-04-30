@@ -43,7 +43,7 @@
                 <span fxFlex="nogrow" *ngIf="radioValues.length < 2"
                       (click)="addDSC()">+ ADD</span>
                 <mat-icon fxFlex="nogrow" [style.color]="'#767676'" [style.cursor]="'pointer'"
-                          *ngIf="radioValues.length > 1"
+                          *ngIf="radioValues.length > 1 && (!isInline || (isInline && originalDSCcount === 1 && index === 1))"
                           (click)="removeDSC(index)">delete</mat-icon>
               </div>
             </div>
@@ -126,6 +126,7 @@
 
           <mat-radio-group fxFlex="nogrow" class="newhost-attach-radio" fxLayout="start center"
                            fxLayoutAlign="start center" fxLayoutGap="10px"
+                           [disabled]="isInline && (index !== 1 || originalDSCcount === 2)"
                            (change)="onRadioButtonChange($event, index)">
 
             <mat-radio-button fxFlex="nogrow" color="primary" fxLayoutAlign="start center"

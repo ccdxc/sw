@@ -78,6 +78,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
   newHostForm: FormGroup;
   smartNICIDs: any;
   smartNICIDOptions: string[] = [];
+  originalDSCcount: number = 0;
 
   // This property keep track of user input selection (ID or MAC)
   radioValues: string[] = [];
@@ -119,6 +120,13 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
     if (this.isInline) {
       // disable name field
       this.newObject.$formGroup.get(['meta', 'name']).disable();
+      this.originalDSCcount = smartNICIDs.controls.length;
+
+      for (let i = 0; i < this.originalDSCcount; i++) {
+        const formGroup = smartNICIDs.controls[i];
+        formGroup.get(['id']).disable();
+        formGroup.get(['mac-address']).disable();
+      }
     }
 
     this.smartNICIDs = (<any>this.newHostForm.get(['spec', 'dscs'])).controls;
@@ -278,13 +286,13 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
 
         // if "id" field is not empty or has invalid input, return false
         if (!Utility.isEmpty(this.newHostForm.get(['spec', 'dscs', i, 'id']).value)
-          && !this.newHostForm.get(['spec', 'dscs', i, this.radioValues[i]]).valid) {
+          && this.newHostForm.get(['spec', 'dscs', i, this.radioValues[i]]).invalid) {
           this.createButtonTooltip = 'Input id field is not valid in box ' + (i + 1);
           return false;
         }
         // if "mac" field is not empty and has invalid input, return false
         if (!Utility.isEmpty(this.newHostForm.get(['spec', 'dscs', i, 'id']).value)
-          && !this.newHostForm.get(['spec', 'dscs', i, 'mac-address']).valid) {
+          && this.newHostForm.get(['spec', 'dscs', i, 'mac-address']).invalid) {
           this.createButtonTooltip = 'Box ' + (i + 1) + ' ' + NewhostComponent.MACADDRESS_MESSAGE;
           return false;
         }
@@ -297,6 +305,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
       this.createButtonTooltip = 'Input data is not valid';
       return false;
     }
+    this.createButtonTooltip = '';
     return true;
   }
 
@@ -350,8 +359,14 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
    * We make up the JSON object
    */
   updateObject(newObject: IClusterHost, oldObject: IClusterHost): Observable<{ body: IClusterHost | IApiStatus | Error; statusCode: number; }> {
-    const host: IClusterHost = this.clearOtherRadios();
-    return this._clusterService.UpdateHost(oldObject.meta.name, host);
+    // const host: IClusterHost = this.clearOtherRadios();
+    if (newObject && newObject.spec && newObject.spec.dscs && newObject.spec.dscs.length > 0 &&
+        newObject.spec.dscs[0]) {
+      if (oldObject && oldObject.spec && oldObject.spec.dscs) {
+        oldObject.spec.dscs.push(newObject.spec.dscs[0]);
+      }
+    }
+    return this._clusterService.UpdateHost(oldObject.meta.name, oldObject);
   }
 
   generateCreateSuccessMsg(object: IClusterHost): string {
@@ -472,7 +487,9 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
         if (control && Utility.isEmpty(control.value)) {
           return `${this.radioValues[j]} field is empty`;
         }
-        if (!this.newHostForm.get(['spec', 'dscs', i, 'mac-address']).valid) {
+        if (this.radioValues[i] === 'mac-address' &&
+          (!this.newHostForm.get(['spec', 'dscs', i, 'mac-address']).valid) &&
+          (!this.newHostForm.get(['spec', 'dscs', i, 'mac-address']).disabled)) {
           return NewhostComponent.MACADDRESS_MESSAGE;
         }
       }
