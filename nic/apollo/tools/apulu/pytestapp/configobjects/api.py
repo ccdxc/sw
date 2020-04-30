@@ -108,14 +108,18 @@ class ApolloAgentClientRequest:
         return
 
 class ApolloAgentClient:
-    def __init__(self):
+    def __init__(self, ip, port):
         self.__channel = None
         self.__stubs = [None] * ObjectTypes.MAX
+        self.__ip = ip
+        self.__port = port
         self.__connect()
         self.__create_stubs()
         return
 
     def __get_agent_port(self):
+        if self.__port:
+            return self.__port
         try:
             port = os.environ['AGENT_GRPC_PORT']
         except:
@@ -123,6 +127,8 @@ class ApolloAgentClient:
         return port;
 
     def __get_agent_ip(self):
+        if self.__ip:
+            return self.__ip
         try:
             agentip = os.environ['AGENT_GRPC_IP']
         except:
@@ -204,6 +210,12 @@ class ApolloAgentClient:
         return self.__stubs[objtype].Rpc(ApiOps.COMMIT, [ obj ])
 
 client = None
-def Init():
+client_node = {}
+def Init(node="node1", ip=None, port=None):
     global client
-    client = ApolloAgentClient()
+    global client_node
+    if node == "node1":
+        client = ApolloAgentClient(ip, port)
+        client_node[node] = client
+    else:
+        client_node[node] = ApolloAgentClient(ip, port)

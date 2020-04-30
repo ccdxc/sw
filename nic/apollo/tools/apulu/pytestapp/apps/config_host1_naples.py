@@ -37,17 +37,29 @@ import ipaddress
 # Parse argument
 parser = argparse.ArgumentParser()
 parser.add_argument("naples_ip", help="naples ip address")
-parser.add_argument("--grpc_port", help="naples grpc port (default=50054)", default=50054, type=str)
+parser.add_argument("--remote", help="remote naples ip address", default=None)
+parser.add_argument("--grpc_port", help="naples grpc port (default=50054)", default="50054", type=str)
 args = parser.parse_args()
 naplesip = args.naples_ip
+remote_naplesip = args.remote
 naplesport = args.grpc_port
 os.environ['AGENT_GRPC_IP'] = naplesip
 os.environ['AGENT_GRPC_PORT'] = naplesport
 
+# Init GRPC
+api.Init("node1", naplesip, naplesport)
+if args.remote:
+    api.Init("node2", remote_naplesip, naplesport)
+
 #Variables
 
 # node uuid
-node_uuid=node.NodeObject().GetNodeMac()
+node_obj=node.NodeObject()
+remote_node_obj=None
+if args.remote:
+    remote_node_obj=node.NodeObject("node2")
+
+node_uuid=node_obj.GetNodeMac()
 
 # Device object inputs
 local_tep_ip='13.13.13.13'
@@ -91,7 +103,7 @@ tunnel_vnid=0
 vcn_vnic_id = 100
 vcn_subnet_id = 100
 vcn_subnet_pfx='11.0.0.0/8'
-vcn_host_if_idx='0x80000046'
+vcn_host_if_idx=node_obj.GetVcnIntfIfIndex()
 vcn_intf_prefix='11.1.1.2/8'
 vcn_intf_ip=ipaddress.IPv4Address('11.1.1.2')
 vcn_v4_router_ip=ipaddress.IPv4Address('11.1.1.1')
@@ -109,19 +121,34 @@ pxe_vnic_id = 99
 pxe_subnet_id = 99
 pxe_subnet_pfx='10.1.0.0/24'
 # The host_if_idx is an encoding for PF
-pxe_host_if_idx='0x80000047'
 pxe_fabric_encap=205
 pxe_v4_router_ip=ipaddress.IPv4Address('10.1.0.1')
 pxe_virt_router_mac='00:66:01:00:00:01'
-pxe_local_vnic_mac='00:ae:cd:00:0a:f8'
-pxe_remote_vnic_mac='00:ae:cd:00:1c:80'
+pxe_intf="enp20s0"
+pxe_remote_intf="enp20s0"
+if pxe_intf:
+    pxe_host_if_idx=node_obj.GetIntfIfIndex(pxe_intf)
+    pxe_local_vnic_mac=node_obj.GetIntfMac(pxe_intf)
+    if not pxe_local_vnic_mac:
+        print(f"Unable to get mac for node1 intf {pxe_intf}!")
+        sys.exit()
+    if not remote_node_obj:
+        print("Need --remote option!")
+        sys.exit()
+    pxe_remote_vnic_mac=remote_node_obj.GetIntfMac(pxe_remote_intf)
+    if not pxe_remote_vnic_mac:
+        print(f"Unable to get mac for node2 intf {pxe_remote_intf}!")
+        sys.exit()
+else:
+    pxe_host_if_idx='0x80000047'
+    pxe_local_vnic_mac='00:ae:cd:00:0a:f8'
+    pxe_remote_vnic_mac='00:ae:cd:00:1c:80'
 pxe_local_host_ip=ipaddress.IPv4Address('10.1.0.2')
 pxe_remote_host_ip=ipaddress.IPv4Address('10.1.0.3')
 
 # Subnet object inputs
 ipv4_subnet1='2.1.0.0/24'
 # The host_if_idx is an encoding for PF
-subnet1_host_if_idx='0x80000048'
 subnet1_fabric_encap=202
 subnet1_v4_router_ip=ipaddress.IPv4Address('2.1.0.1')
 subnet1_virt_router_mac='00:55:01:00:00:01'
@@ -129,25 +156,58 @@ subnet1_route_prefix1='64.0.0.0/24'
 subnet1_route_table_id=1
 subnet1_gw_ip_addr=ipaddress.IPv4Address('2.1.0.1')
 
-# VNIC and mapping (local and remote) table objects 
-subnet1_local_vnic_mac='00:ae:cd:00:0a:f9'
-subnet1_remote_vnic_mac='00:ae:cd:00:1c:81'
+# VNIC and mapping (local and remote) table objects
+subnet1_intf="enp21s0"
+subnet1_remote_intf="enp21s0"
+if subnet1_intf:
+    subnet1_host_if_idx=node_obj.GetIntfIfIndex(subnet1_intf)
+    subnet1_local_vnic_mac=node_obj.GetIntfMac(subnet1_intf)
+    if not subnet1_local_vnic_mac:
+        print(f"Unable to get mac for node1 intf {subnet1_intf}!")
+        sys.exit()
+    if not remote_node_obj:
+        print("Need --remote option!")
+        sys.exit()
+    subnet1_remote_vnic_mac=remote_node_obj.GetIntfMac(subnet1_remote_intf)
+    if not subnet1_remote_vnic_mac:
+        print(f"Unable to get mac for node2 intf {subnet1_remote_intf}!")
+        sys.exit()
+else:
+    subnet1_host_if_idx='0x80000048'
+    subnet1_local_vnic_mac='00:ae:cd:00:08:11'
+    subnet1_remote_vnic_mac='00:ae:cd:00:00:0a'
 subnet1_local_host_ip=ipaddress.IPv4Address('2.1.0.2')
 subnet1_remote_host_ip=ipaddress.IPv4Address('2.1.0.3')
 
 # Subnet object inputs
 ipv4_subnet2='3.1.0.0/24'
 # The host_if_idx is an encoding for PF
-subnet2_host_if_idx='0x80000049'
 subnet2_fabric_encap=203
 subnet2_v4_router_ip=ipaddress.IPv4Address('3.1.0.1')
 subnet2_virt_router_mac='00:55:02:00:00:01'
 subnet2_route_prefix1='64.0.0.0/24'
 subnet2_route_table_id=2
 
-# VNIC and mapping (local and remote) table objects 
-subnet2_local_vnic_mac='00:ae:cd:00:08:12'
-subnet2_remote_vnic_mac='00:ae:cd:00:00:0b'
+# VNIC and mapping (local and remote) table objects
+subnet2_intf="enp22s0"
+subnet2_remote_intf="enp22s0"
+if subnet2_intf:
+    subnet2_host_if_idx=node_obj.GetIntfIfIndex(subnet2_intf)
+    subnet2_local_vnic_mac=node_obj.GetIntfMac(subnet2_intf)
+    if not subnet2_local_vnic_mac:
+        print(f"Unable to get mac for node1 intf {subnet2_intf}!")
+        sys.exit()
+    if not remote_node_obj:
+        print("Need --remote option!")
+        sys.exit()
+    subnet2_remote_vnic_mac=remote_node_obj.GetIntfMac(subnet2_remote_intf)
+    if not subnet2_remote_vnic_mac:
+        print(f"Unable to get mac for node2 intf {subnet2_remote_intf}!")
+        sys.exit()
+else:
+    subnet2_host_if_idx='0x80000049'
+    subnet2_local_vnic_mac='00:ae:cd:00:08:12'
+    subnet2_remote_vnic_mac='00:ae:cd:00:00:0b'
 subnet2_local_host_ip=ipaddress.IPv4Address('3.1.0.2')
 subnet2_local_vnic_public_ip=ipaddress.IPv4Address('50.0.0.100')
 subnet2_backend_ip=subnet2_local_vnic_public_ip
@@ -161,8 +221,6 @@ nat_port_lo=10000
 nat_port_hi=20000
 
 # Initialize objects.
-
-api.Init()
 
 batch1=batch.BatchObject()
 
