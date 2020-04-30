@@ -46,6 +46,8 @@ naplesport = args.grpc_port
 os.environ['AGENT_GRPC_IP'] = naplesip
 os.environ['AGENT_GRPC_PORT'] = naplesport
 
+use_device_macs=True
+
 # Init GRPC
 api.Init("node1", naplesip, naplesport)
 if args.remote:
@@ -124,23 +126,21 @@ pxe_subnet_pfx='10.1.0.0/24'
 pxe_fabric_encap=205
 pxe_v4_router_ip=ipaddress.IPv4Address('10.1.0.1')
 pxe_virt_router_mac='00:66:01:00:00:01'
-pxe_intf="enp20s0"
-pxe_remote_intf="enp20s0"
-if pxe_intf:
-    pxe_host_if_idx=node_obj.GetIntfIfIndex(pxe_intf)
-    pxe_local_vnic_mac=node_obj.GetIntfMac(pxe_intf)
+pxe_host_if_idx='0x80000047'
+pxe_remote_host_if_idx='0x80000047'
+if use_device_macs:
+    pxe_local_vnic_mac=node_obj.GetIntfMacByIfIndex(pxe_host_if_idx)
     if not pxe_local_vnic_mac:
-        print(f"Unable to get mac for node1 intf {pxe_intf}!")
+        print(f"Unable to get mac for node1 intf {pxe_host_if_idx}!")
         sys.exit()
     if not remote_node_obj:
         print("Need --remote option!")
         sys.exit()
-    pxe_remote_vnic_mac=remote_node_obj.GetIntfMac(pxe_remote_intf)
+    pxe_remote_vnic_mac=remote_node_obj.GetIntfMacByIfIndex(pxe_remote_host_if_idx)
     if not pxe_remote_vnic_mac:
-        print(f"Unable to get mac for node2 intf {pxe_remote_intf}!")
+        print(f"Unable to get mac for node2 intf {pxe_remote_host_if_idx}!")
         sys.exit()
 else:
-    pxe_host_if_idx='0x80000047'
     pxe_local_vnic_mac='00:ae:cd:00:0a:f8'
     pxe_remote_vnic_mac='00:ae:cd:00:1c:80'
 pxe_local_host_ip=ipaddress.IPv4Address('10.1.0.2')
@@ -157,23 +157,21 @@ subnet1_route_table_id=1
 subnet1_gw_ip_addr=ipaddress.IPv4Address('2.1.0.1')
 
 # VNIC and mapping (local and remote) table objects
-subnet1_intf="enp21s0"
-subnet1_remote_intf="enp21s0"
-if subnet1_intf:
-    subnet1_host_if_idx=node_obj.GetIntfIfIndex(subnet1_intf)
-    subnet1_local_vnic_mac=node_obj.GetIntfMac(subnet1_intf)
+subnet1_host_if_idx='0x80000048'
+subnet1_remote_host_if_idx='0x80000048'
+if use_device_macs:
+    subnet1_local_vnic_mac=node_obj.GetIntfMacByIfIndex(subnet1_host_if_idx)
     if not subnet1_local_vnic_mac:
-        print(f"Unable to get mac for node1 intf {subnet1_intf}!")
+        print(f"Unable to get mac for node1 intf {subnet1_host_if_idx}!")
         sys.exit()
     if not remote_node_obj:
         print("Need --remote option!")
         sys.exit()
-    subnet1_remote_vnic_mac=remote_node_obj.GetIntfMac(subnet1_remote_intf)
+    subnet1_remote_vnic_mac=remote_node_obj.GetIntfMacByIfIndex(subnet1_remote_host_if_idx)
     if not subnet1_remote_vnic_mac:
-        print(f"Unable to get mac for node2 intf {subnet1_remote_intf}!")
+        print(f"Unable to get mac for node2 intf {subnet1_remote_host_if_idx}!")
         sys.exit()
 else:
-    subnet1_host_if_idx='0x80000048'
     subnet1_local_vnic_mac='00:ae:cd:00:08:11'
     subnet1_remote_vnic_mac='00:ae:cd:00:00:0a'
 subnet1_local_host_ip=ipaddress.IPv4Address('2.1.0.2')
@@ -189,23 +187,21 @@ subnet2_route_prefix1='64.0.0.0/24'
 subnet2_route_table_id=2
 
 # VNIC and mapping (local and remote) table objects
-subnet2_intf="enp22s0"
-subnet2_remote_intf="enp22s0"
-if subnet2_intf:
-    subnet2_host_if_idx=node_obj.GetIntfIfIndex(subnet2_intf)
-    subnet2_local_vnic_mac=node_obj.GetIntfMac(subnet2_intf)
+subnet2_host_if_idx='0x80000049'
+subnet2_remote_host_if_idx='0x80000049'
+if use_device_macs:
+    subnet2_local_vnic_mac=node_obj.GetIntfMacByIfIndex(subnet2_host_if_idx)
     if not subnet2_local_vnic_mac:
-        print(f"Unable to get mac for node1 intf {subnet2_intf}!")
+        print(f"Unable to get mac for node1 intf {subnet2_host_if_idx}!")
         sys.exit()
     if not remote_node_obj:
         print("Need --remote option!")
         sys.exit()
-    subnet2_remote_vnic_mac=remote_node_obj.GetIntfMac(subnet2_remote_intf)
+    subnet2_remote_vnic_mac=remote_node_obj.GetIntfMacByIfIndex(subnet2_remote_host_if_idx)
     if not subnet2_remote_vnic_mac:
-        print(f"Unable to get mac for node2 intf {subnet2_remote_intf}!")
+        print(f"Unable to get mac for node2 intf {subnet2_remote_host_if_idx}!")
         sys.exit()
 else:
-    subnet2_host_if_idx='0x80000049'
     subnet2_local_vnic_mac='00:ae:cd:00:08:12'
     subnet2_remote_vnic_mac='00:ae:cd:00:00:0b'
 subnet2_local_host_ip=ipaddress.IPv4Address('3.1.0.2')

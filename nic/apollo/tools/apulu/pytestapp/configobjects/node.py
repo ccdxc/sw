@@ -18,6 +18,7 @@ class NodeObject():
         self.vcn_intf_mac_address = None
         self.vcn_intf_if_index = None
         self.intf_mac_address = {}
+        self.intf_mac_address_by_if_index = {}
         self.intf_if_index = {}
 
         # save ctrl0 mac
@@ -27,6 +28,7 @@ class NodeObject():
                 self.vcn_intf_if_index = hex(resp.Status.IfIndex)
             elif resp.Spec.Type == types_pb2.LIF_TYPE_HOST:
                 self.intf_mac_address[resp.Status.Name] = utils.getnum2mac(resp.Spec.MacAddress)
+                self.intf_mac_address_by_if_index[hex(resp.Status.IfIndex)] = utils.getnum2mac(resp.Spec.MacAddress)
                 self.intf_if_index[resp.Status.Name] = hex(resp.Status.IfIndex)
         return
 
@@ -43,6 +45,11 @@ class NodeObject():
         if not intf_name in self.intf_mac_address:
             return None
         return self.intf_mac_address[intf_name]
+
+    def GetIntfMacByIfIndex(self, if_index):
+        if not if_index in self.intf_mac_address_by_if_index:
+            return None
+        return self.intf_mac_address_by_if_index[if_index]
 
     def GetIntfIfIndex(self, intf_name):
         if not intf_name in self.intf_if_index:
