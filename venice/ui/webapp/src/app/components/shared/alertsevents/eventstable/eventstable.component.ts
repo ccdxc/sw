@@ -85,6 +85,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
   // system for our search criteria
   eventLimit: number = 1000;
 
+
   // All columns are set as not sortable as it isn't currently supported
   // TODO: Support sorting columns
   cols: TableCol[] = [
@@ -578,6 +579,10 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
           });
         }
         this.eventsLoading = false;
+        this.dataObjects = [...this.dataObjects]; // VS-1576. Force table re-render
+      },
+      (error) => {
+         this.controllerService.invokeRESTErrorToaster('Error', error);
       }
     );
   }

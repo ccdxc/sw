@@ -24,7 +24,7 @@
     <app-tableviewedit style="height: 100%" fxLayout="column" [data]="dataObjects"
                        [showRowExpand]="showRowExpand"
                        [cols]="cols" [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
-                       [dataKey]="'meta.name'" [sortOrder]="-1"
+                       [dataKey]="'meta.name'" [sortOrder]="-1" [tableLoading]="eventsLoading"
                        [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
                        [createTemplate]="createTemplate" [creatingMode]="creatingMode"
                        (rowClick)="selectEvent($event)">
