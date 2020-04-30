@@ -31,6 +31,8 @@ enum IfType {
   IF_TYPE_LOOPBACK  = 4;
   // inband management/control interface
   IF_TYPE_CONTROL   = 5;
+  // host visible interface/device (PF or VF)
+  IF_TYPE_HOST      = 6;
 }
 
 // IfStatus status reflects the operational status of Interface
@@ -41,59 +43,59 @@ enum IfStatus {
 }
 
 message LldpIfStats {
-    uint32 TxCount        = 1; // transmitted pkts
-    uint32 RxCount        = 2; // received pkts
-    uint32 RxDiscarded    = 3; // rx discarded pkts
-    uint32 RxUnrecognized = 4; // rx unrecognized pkts
-    uint32 AgeoutCount    = 5; // count of entry aged out
-    uint32 InsertCount    = 6; // count of inserts
-    uint32 DeleteCount    = 7; // count of deletes
+  uint32 TxCount        = 1; // transmitted pkts
+  uint32 RxCount        = 2; // received pkts
+  uint32 RxDiscarded    = 3; // rx discarded pkts
+  uint32 RxUnrecognized = 4; // rx unrecognized pkts
+  uint32 AgeoutCount    = 5; // count of entry aged out
+  uint32 InsertCount    = 6; // count of inserts
+  uint32 DeleteCount    = 7; // count of deletes
 }
 
 // LLDP chassis/port Identifier key type
 enum LldpIdType {
-    LLDPID_SUBTYPE_NONE    = 0;  //"unknown"
-    LLDPID_SUBTYPE_IFNAME  = 1;  //"ifname"
-    LLDPID_SUBTYPE_IFALIAS = 2;  //"ifalias",
-    LLDPID_SUBTYPE_LOCAL   = 3;  //"local"
-    LLDPID_SUBTYPE_MAC     = 4;  //"mac"
-    LLDPID_SUBTYPE_IP      = 5;  //"ip"
-    LLDPID_SUBTYPE_PORT    = 6;  //"portnum"
-    LLDPID_SUBTYPE_CHASSIS = 7;  //"chasiss-str"
+  LLDPID_SUBTYPE_NONE    = 0;  //"unknown"
+  LLDPID_SUBTYPE_IFNAME  = 1;  //"ifname"
+  LLDPID_SUBTYPE_IFALIAS = 2;  //"ifalias",
+  LLDPID_SUBTYPE_LOCAL   = 3;  //"local"
+  LLDPID_SUBTYPE_MAC     = 4;  //"mac"
+  LLDPID_SUBTYPE_IP      = 5;  //"ip"
+  LLDPID_SUBTYPE_PORT    = 6;  //"portnum"
+  LLDPID_SUBTYPE_CHASSIS = 7;  //"chasiss-str"
 }
 
 // Protocol used for LLDP
 enum LldpProtoMode {
-    LLDP_MODE_NONE  = 0;
-    LLDP_MODE_LLDP  = 1;
-    LLDP_MODE_CDPV1 = 2;
-    LLDP_MODE_CDPV2 = 3;
-    LLDP_MODE_EDP   = 4;
-    LLDP_MODE_FDP   = 5;
-    LLDP_MODE_SONMP = 6;    
+  LLDP_MODE_NONE  = 0;
+  LLDP_MODE_LLDP  = 1;
+  LLDP_MODE_CDPV1 = 2;
+  LLDP_MODE_CDPV2 = 3;
+  LLDP_MODE_EDP   = 4;
+  LLDP_MODE_FDP   = 5;
+  LLDP_MODE_SONMP = 6;
 }
 
 // Key-type and value for Identified
 message LldpId {
-    LldpIdType Type  = 1;
-    bytes      Value = 2;
+  LldpIdType Type  = 1;
+  bytes      Value = 2;
 }
 
 // Capabilities on the interfce
 enum LldpCapType {
-    LLDP_CAPTYPE_OTHER     = 0;
-    LLDP_CAPTYPE_REPEATER  = 1;
-    LLDP_CAPTYPE_BRIDGE    = 2;
-    LLDP_CAPTYPE_ROUTER    = 3;
-    LLDP_CAPTYPE_WLAN      = 4;
-    LLDP_CAPTYPE_TELEPHONE = 5;
-    LLDP_CAPTYPE_DOCSIS    = 6; 
-    LLDP_CAPTYPE_STATION   = 7;
+  LLDP_CAPTYPE_OTHER     = 0;
+  LLDP_CAPTYPE_REPEATER  = 1;
+  LLDP_CAPTYPE_BRIDGE    = 2;
+  LLDP_CAPTYPE_ROUTER    = 3;
+  LLDP_CAPTYPE_WLAN      = 4;
+  LLDP_CAPTYPE_TELEPHONE = 5;
+  LLDP_CAPTYPE_DOCSIS    = 6;
+  LLDP_CAPTYPE_STATION   = 7;
 }
 
 message LldpChassisCapabilitySpec {
-    LldpCapType CapType    = 1; // Capability type
-    bool        CapEnabled = 2; // Enabled/disabled
+  LldpCapType CapType    = 1; // Capability type
+  bool        CapEnabled = 2; // Enabled/disabled
 }
 
 message LldpIfChassisSpec {
@@ -176,6 +178,14 @@ message ControlIfSpec {
   types.IPAddress   Gateway    = 3;
 }
 
+// HostIfSpec represents a host visisble device (e.g. eth interface)
+// NOTE: host interfaces can't be created or deleted via the API, they are
+//       created during bringup of DSC; only policies (for example, (mirror
+//       policy) can be applied on such interfaces and they can't be brought
+//       down or up as they are host devices and DSC has no control over them
+message HostIfSpec {
+}
+
 // InterfaceSpec is used to add or update of an interface
 message InterfaceSpec {
   // unique interface id
@@ -194,11 +204,12 @@ message InterfaceSpec {
     L3IfSpec       L3IfSpec        = 6 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_L3}"];
     LoopbackIfSpec LoopbackIfSpec  = 7 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_LOOPBACK"];
     ControlIfSpec  ControlIfSpec   = 8 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_CONTROL"];
+    HostIfSpec     HostIfSpec      = 9 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_HOST"];
   }
   // Tx/egress mirror session id list, if any
-  repeated bytes TxMirrorSessionId = 9;
+  repeated bytes TxMirrorSessionId = 10;
   // Rx/ingress mirror session id list, if any
-  repeated bytes RxMirrorSessionId = 10;
+  repeated bytes RxMirrorSessionId = 11;
 }
 
 // operational status of uplink interface
@@ -213,6 +224,16 @@ message LoopbackIfStatus {
   string name = 1;
 }
 
+// operational status of host interfaces
+message HostIfStatus {
+  // host interface can have one or more lifs behind it
+  repeated bytes LifId = 1;
+  // MAC address of this interface
+  uint64   MacAddress  = 2;
+  // operational status of this interface
+  IfStatus Status      = 3;
+}
+
 // operational status of an interface, if any
 message InterfaceStatus {
   // encoded interface index of this interface
@@ -224,6 +245,8 @@ message InterfaceStatus {
     UplinkIfStatus   UplinkIfStatus   = 3;
     // loopback interface specific status
     LoopbackIfStatus LoopbackIfStatus = 4;
+    // host interface specific status
+    HostIfStatus     HostIfStatus     = 5;
   }
 }
 
@@ -301,19 +324,17 @@ message InterfaceDeleteResponse {
 }
 
 /// Lif (Logical interface) object represents a device (eth/storage etc.)
+/// NOTE: Lif objects are internal and host devices can have multiple lifs
+///       behind them
 message LifSpec {
   // unique key of the lif
-  bytes         Id                 = 1;
+  bytes         Id                = 1;
   // type of the lif device
-  types.LifType Type               = 2;
+  types.LifType Type              = 2;
   // MAC address of the lif, if any
-  uint64        MacAddress         = 3;
+  uint64        MacAddress        = 3;
   // pinned uplink interface, if applicable for this device
-  bytes         PinnedInterface    = 4;
-  // Tx/egress mirror session id list, if any
-  repeated bytes TxMirrorSessionId = 5;
-  // Rx/ingress mirror session id list, if any
-  repeated bytes RxMirrorSessionId = 6;
+  bytes         PinnedInterface   = 4;
 }
 
 message LifStatus {

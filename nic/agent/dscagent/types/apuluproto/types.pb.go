@@ -147,9 +147,11 @@
 		L3IfSpec
 		LoopbackIfSpec
 		ControlIfSpec
+		HostIfSpec
 		InterfaceSpec
 		UplinkIfStatus
 		LoopbackIfStatus
+		HostIfStatus
 		InterfaceStatus
 		UplinkIfStats
 		UplinkPCStats

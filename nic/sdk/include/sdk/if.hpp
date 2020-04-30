@@ -25,6 +25,7 @@ enum {
     IF_TYPE_LIF        = 8,
     IF_TYPE_LOOPBACK   = 9,
     IF_TYPE_CONTROL    = 10,
+    IF_TYPE_HOST       = 11,
 };
 
 #define IFINDEX_INVALID                          0x0
@@ -62,6 +63,7 @@ enum {
 #define LIF_IFINDEX(if_id_)        ((uint32_t)(IF_TYPE_LIF << IF_TYPE_SHIFT) | (if_id_))
 #define LOOPBACK_IFINDEX(if_id_)   ((IF_TYPE_LOOPBACK << IF_TYPE_SHIFT) | (if_id_))
 #define CONTROL_IFINDEX(if_id_)    ((IF_TYPE_CONTROL << IF_TYPE_SHIFT) | (if_id_))
+#define HOST_IFINDEX(if_id_)       ((IF_TYPE_HOST << IF_TYPE_SHIFT) | (if_id_))
 
 #define IFINDEX_TO_IFTYPE(ifindex_)         \
             ((ifindex_ >> IF_TYPE_SHIFT) & IF_TYPE_MASK)
@@ -85,6 +87,7 @@ enum {
 
 #define LIF_IFINDEX_TO_LIF_ID(ifindex_)    \
             (ifindex_ & LIF_IF_LIF_ID_MASK)
+
 #define LOOPBACK_IFINDEX_TO_LOOPBACK_IF_ID(ifindex_)    \
             (ifindex_ & LOOPBACK_IF_ID_MASK)
 
@@ -113,6 +116,8 @@ ifindex_to_type_str (uint32_t ifindex) {
         return "Loopback";
 	case IF_TYPE_CONTROL:
 		return "Control";
+    case IF_TYPE_HOST:
+        return "Host";
     case IF_TYPE_NONE:
     default:
         return "None";
