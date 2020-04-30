@@ -124,8 +124,10 @@ func deleteNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.S
 
 func convertNetworkSecurityPolicy(infraAPI types.InfraAPI, nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) (*halapi.SecurityPolicyRequest, error) {
 	fwRules := convertHALFirewallRules(nsp, ruleIDToAppMapping)
+	var priority uint32
 	for _, rule := range fwRules {
-		rule.Attrs.Priority = uint32(infraAPI.AllocateID(types.SecurityRulePriority, 0))
+		priority += 1
+		rule.Attrs.Priority = priority
 	}
 	uid, err := uuid.FromString(nsp.UUID)
 	if err != nil {

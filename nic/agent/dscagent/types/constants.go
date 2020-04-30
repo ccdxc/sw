@@ -255,8 +255,6 @@ const (
 	// SecurityProfileID captures kind for ID allocation for SecurityProfile
 	SecurityProfileID = "securityProfileID"
 
-	// SecurityRulePriority captures the priority of a security rule
-	SecurityRulePriority = "securityRulePriority"
 	// DSCProfileID captures kind for ID allocation for DSCProfile
 	DSCProfileID = "dscProfileID"
 
