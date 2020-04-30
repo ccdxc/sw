@@ -1,0 +1,603 @@
+{
+  "FileName": "pciemgr.proto",
+  "Package": "pciemgr",
+  "Prefix": "pciemgr",
+  "Messages": [
+    {
+      "Name": "PcieMgrMetrics",
+      "Description": "Key index - pcie port",
+      "DisplayName": "PCIe Manager information",
+      "Fields": [
+        {
+          "Name": "NotIntr",
+          "DisplayName": "not_intr",
+          "Description": "notify total intrs",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotSpurious",
+          "DisplayName": "not_spurious",
+          "Description": "notify spurious intrs",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotCnt",
+          "DisplayName": "not_cnt",
+          "Description": "notify total txns",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotMax",
+          "DisplayName": "not_max",
+          "Description": "notify max txns per intr",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotCfgrd",
+          "DisplayName": "not_cfgrd",
+          "Description": "notify config reads",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotCfgwr",
+          "DisplayName": "not_cfgwr",
+          "Description": "notify config writes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotMemrd",
+          "DisplayName": "not_memrd",
+          "Description": "notify memory reads",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotMemwr",
+          "DisplayName": "not_memwr",
+          "Description": "notify memory writes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotIord",
+          "DisplayName": "not_iord",
+          "Description": "notify io reads",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotIowr",
+          "DisplayName": "not_iowr",
+          "Description": "notify io writes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotUnknown",
+          "DisplayName": "not_unknown",
+          "Description": "notify unknown type",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotRsrv0",
+          "DisplayName": "not_rsrv0",
+          "Description": "notify rsrv0",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotRsrv1",
+          "DisplayName": "not_rsrv1",
+          "Description": "notify rsrv1",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotMsg",
+          "DisplayName": "not_msg",
+          "Description": "notify pcie message",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotUnsupported",
+          "DisplayName": "not_unsupported",
+          "Description": "notify unsupported",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotPmv",
+          "DisplayName": "not_pmv",
+          "Description": "notify pgm model violation",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotDbpmv",
+          "DisplayName": "not_dbpmv",
+          "Description": "notify doorbell pmv",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotAtomic",
+          "DisplayName": "not_atomic",
+          "Description": "notify atomic trans",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotPmtmiss",
+          "DisplayName": "not_pmtmiss",
+          "Description": "notify PMT miss",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotPmrmiss",
+          "DisplayName": "not_pmrmiss",
+          "Description": "notify PMR miss",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotPrtmiss",
+          "DisplayName": "not_prtmiss",
+          "Description": "notify PRT miss",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotBdf2Vfidmiss",
+          "DisplayName": "not_bdf2vfidmiss",
+          "Description": "notify bdf2vfid table miss",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotPrtoor",
+          "DisplayName": "not_prtoor",
+          "Description": "notify PRT out-of-range",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotVfidoor",
+          "DisplayName": "not_vfidoor",
+          "Description": "notify vfid out-of-range",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotBdfoor",
+          "DisplayName": "not_bdfoor",
+          "Description": "notify bdf out-of-range",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotPmrind",
+          "DisplayName": "not_pmrind",
+          "Description": "notify PMR force indirect",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotPrtind",
+          "DisplayName": "not_prtind",
+          "Description": "notify PRT force indirect",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotPmrecc",
+          "DisplayName": "not_pmrecc",
+          "Description": "notify PMR ECC error",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NotPrtecc",
+          "DisplayName": "not_prtecc",
+          "Description": "notify PRT ECC error",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IndIntr",
+          "DisplayName": "ind_intr",
+          "Description": "indirect total intrs",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IndSpurious",
+          "DisplayName": "ind_spurious",
+          "Description": "indirect spurious intrs",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IndCfgrd",
+          "DisplayName": "ind_cfgrd",
+          "Description": "indirect config reads",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IndCfgwr",
+          "DisplayName": "ind_cfgwr",
+          "Description": "indirect config writes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IndMemrd",
+          "DisplayName": "ind_memrd",
+          "Description": "indirect memory reads",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IndMemwr",
+          "DisplayName": "ind_memwr",
+          "Description": "indirect memory writes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IndIord",
+          "DisplayName": "ind_iord",
+          "Description": "indirect io reads",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IndIowr",
+          "DisplayName": "ind_iowr",
+          "Description": "indirect io writes",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IndUnknown",
+          "DisplayName": "ind_unknown",
+          "Description": "indirect unknown type",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Healthlog",
+          "DisplayName": "healthlog",
+          "Description": "health log events",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerPciePort"
+    },
+    {
+      "Name": "PciePortMetrics",
+      "Description": "Key index - pcie port",
+      "DisplayName": "PCIe port information",
+      "Fields": [
+        {
+          "Name": "IntrTotal",
+          "DisplayName": "intr_total",
+          "Description": "total port intrs",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IntrPolled",
+          "DisplayName": "intr_polled",
+          "Description": "total port intrs polled",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IntrPerstn",
+          "DisplayName": "intr_perstn",
+          "Description": "pcie out of reset",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IntrLtssmstEarly",
+          "DisplayName": "intr_ltssmst_early",
+          "Description": "link train before linkup",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IntrLtssmst",
+          "DisplayName": "intr_ltssmst",
+          "Description": "link train after  linkup",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IntrLinkup2Dn",
+          "DisplayName": "intr_linkup2dn",
+          "Description": "link down",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IntrLinkdn2Up",
+          "DisplayName": "intr_linkdn2up",
+          "Description": "link up",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IntrRstup2Dn",
+          "DisplayName": "intr_rstup2dn",
+          "Description": "mac up",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IntrRstdn2Up",
+          "DisplayName": "intr_rstdn2up",
+          "Description": "mac down",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "IntrSecbus",
+          "DisplayName": "intr_secbus",
+          "Description": "secondary bus set",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Linkup",
+          "DisplayName": "linkup",
+          "Description": "link is up",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Hostup",
+          "DisplayName": "hostup",
+          "Description": "host is up (secbus)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Phypolllast",
+          "DisplayName": "phypolllast",
+          "Description": "phy poll count (last)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Phypollmax",
+          "DisplayName": "phypollmax",
+          "Description": "phy poll count (max)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Phypollperstn",
+          "DisplayName": "phypollperstn",
+          "Description": "phy poll lost perstn",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Phypollfail",
+          "DisplayName": "phypollfail",
+          "Description": "phy poll failed",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Gatepolllast",
+          "DisplayName": "gatepolllast",
+          "Description": "gate poll count (last)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Gatepollmax",
+          "DisplayName": "gatepollmax",
+          "Description": "gate poll count (max)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Markerpolllast",
+          "DisplayName": "markerpolllast",
+          "Description": "marker poll count (last)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Markerpollmax",
+          "DisplayName": "markerpollmax",
+          "Description": "marker poll count (max)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Axipendpolllast",
+          "DisplayName": "axipendpolllast",
+          "Description": "axipend poll count (last)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Axipendpollmax",
+          "DisplayName": "axipendpollmax",
+          "Description": "axipend poll count (max)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Faults",
+          "DisplayName": "faults",
+          "Description": "link faults",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "Powerdown",
+          "DisplayName": "powerdown",
+          "Description": "powerdown count",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "LinkDn2UpInt",
+          "DisplayName": "link_dn2up_int",
+          "Description": "link_dn2up_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "LinkUp2DnInt",
+          "DisplayName": "link_up2dn_int",
+          "Description": "link_up2dn_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SecBusRstInt",
+          "DisplayName": "sec_bus_rst_int",
+          "Description": "sec_bus_rst_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RstUp2DnInt",
+          "DisplayName": "rst_up2dn_int",
+          "Description": "rst_up2dn_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RstDn2UpInt",
+          "DisplayName": "rst_dn2up_int",
+          "Description": "rst_dn2up_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PortgateOpen2CloseInt",
+          "DisplayName": "portgate_open2close_int",
+          "Description": "portgate_open2close_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "LtssmStChangedInt",
+          "DisplayName": "ltssm_st_changed_int",
+          "Description": "ltssm_st_changed_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SecBusnumChangedInt",
+          "DisplayName": "sec_busnum_changed_int",
+          "Description": "sec_busnum_changed_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RcPmeInt",
+          "DisplayName": "rc_pme_int",
+          "Description": "rc_pme_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RcAerrInt",
+          "DisplayName": "rc_aerr_int",
+          "Description": "rc_aerr_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RcSerrInt",
+          "DisplayName": "rc_serr_int",
+          "Description": "rc_serr_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RcHpeInt",
+          "DisplayName": "rc_hpe_int",
+          "Description": "rc_hpe_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RcEqReqInt",
+          "DisplayName": "rc_eq_req_int",
+          "Description": "rc_eq_req_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RcDpcInt",
+          "DisplayName": "rc_dpc_int",
+          "Description": "rc_dpc_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PmTurnoffInt",
+          "DisplayName": "pm_turnoff_int",
+          "Description": "pm_turnoff_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxbfrOverflowInt",
+          "DisplayName": "txbfr_overflow_int",
+          "Description": "txbfr_overflow_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxtlpErrInt",
+          "DisplayName": "rxtlp_err_int",
+          "Description": "rxtlp_err_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TlFlrReqInt",
+          "DisplayName": "tl_flr_req_int",
+          "Description": "tl_flr_req_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RcLegacyIntpinChangedInt",
+          "DisplayName": "rc_legacy_intpin_changed_int",
+          "Description": "rc_legacy_intpin_changed_int",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ],
+      "Tags": [
+        "Level7"
+      ],
+      "Scope": "PerPciePort"
+    }
+  ]
+}

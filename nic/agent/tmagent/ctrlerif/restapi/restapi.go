@@ -35,17 +35,19 @@ import (
 
 // RestServer is the REST api server
 type RestServer struct {
+	sync.Mutex
 	ctx           context.Context
 	cancel        context.CancelFunc
 	metricsCancel context.CancelFunc
 	wg            sync.WaitGroup
-	TpAgent       types.CtrlerIntf       // telemetry policy agent
-	listenURL     string                 // URL where http server is listening
-	listener      net.Listener           // socket listener
-	httpServer    *http.Server           // HTTP server
-	keyTranslator *ntranslate.Translator // key to objMeta translator
-	gensrv        *genapi.RestServer     // generated rest server
-	datapath      string                 // datapath mode
+	TpAgent       types.CtrlerIntf          // telemetry policy agent
+	listenURL     string                    // URL where http server is listening
+	listener      net.Listener              // socket listener
+	httpServer    *http.Server              // HTTP server
+	keyTranslator *ntranslate.Translator    // key to objMeta translator
+	gensrv        *genapi.RestServer        // generated rest server
+	datapath      string                    // datapath mode
+	stats         map[string]map[string]int // stats
 }
 
 // Response captures the HTTP Response sent by Agent REST Server
@@ -83,6 +85,7 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 		cancel:    cancel,
 		TpAgent:   tpAgent,
 		datapath:  datapath,
+		stats:     map[string]map[string]int{},
 	}
 	// if no URL was specified, just return (used during unit/integ tests)
 	if listenURL == "" {
@@ -150,6 +153,12 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 	return srv, nil
 }
 
+func (s *RestServer) incrStats(k string, m string) {
+	s.Lock()
+	s.stats[k][m]++
+	s.Unlock()
+}
+
 // getTagsFromMeta returns tags to store in Venice TSDB
 func (s *RestServer) getTagsFromMeta(meta *api.ObjectMeta) map[string]string {
 	return map[string]string{
@@ -193,6 +202,7 @@ func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Cl
 		}
 
 		tsdbObj[kind] = obj
+		s.stats[kind] = map[string]int{}
 	}
 
 	srvURL := "localhost:50054"
@@ -235,6 +245,7 @@ func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Cl
 
 				// skip if hal is down
 				if checkHalStatus() != true {
+					log.Errorf("hal is down")
 					continue
 				}
 
@@ -244,19 +255,23 @@ func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Cl
 					mi, err := s.gensrv.GetPointsFuncList[kind]()
 					if err != nil {
 						log.Errorf("failed to get %s metrics, %s", kind, err)
+						s.incrStats(kind, "readError")
 						continue
 					}
 
 					// skip empty entry
 					if len(mi) == 0 {
+						s.incrStats(kind, "noPoints")
 						continue
 					}
 
 					if err := obj.Points(mi, ts); err != nil {
+						s.incrStats(kind, "tsdbError")
 						log.Errorf("failed to add <%s> metrics to tsdb, %s", kind, err)
 						continue
 					}
 
+					s.incrStats(kind, "rxPoints")
 				}
 
 			case <-metricsCtx.Done():
@@ -284,6 +299,22 @@ func (s *RestServer) GetListenURL() string {
 	return ""
 }
 
+// GetStats return debug stats
+func (s *RestServer) GetStats() map[string]map[string]int {
+	res := map[string]map[string]int{}
+
+	s.Lock()
+	for k, v := range s.stats {
+		res[k] = map[string]int{}
+		for t, s := range v {
+			res[k][t] = s
+		}
+	}
+	s.Unlock()
+
+	return res
+}
+
 // SetNodeUUID sets node UUID of the naples in REST server
 func (s *RestServer) SetNodeUUID(uuid string) {
 	s.gensrv.SetNodeUUID(uuid)
@@ -308,8 +339,12 @@ func (s *RestServer) Stop() error {
 
 // Debug handler
 func (s *RestServer) Debug(r *http.Request) (interface{}, error) {
+	dbg := map[string]interface{}{}
 	if s.TpAgent != nil {
-		return s.TpAgent.Debug(r)
+		if d, err := s.TpAgent.Debug(r); err == nil {
+			dbg["tpagent"] = d
+		}
 	}
-	return nil, nil
+	dbg["stats"] = s.GetStats()
+	return dbg, nil
 }

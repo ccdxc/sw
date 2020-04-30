@@ -15,6 +15,8 @@ var DscMetricsList = []string{
 	"LifMetrics",
 	"RuleMetrics",
 	"SessionSummaryMetrics",
+	"PcieMgrMetrics",
+	"PciePortMetrics",
 }
 
 // CloudDscMetricsList is the list of metrics saved in Venice for cloud pipeline, last updated: 03/11/2020

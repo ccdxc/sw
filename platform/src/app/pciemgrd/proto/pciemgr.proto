@@ -39,6 +39,7 @@ message PciePortMetrics {
         DisplayName: "PCIe port information",
         Description: "Key index - pcie port",
         Scope: PerPciePort
+        Tags: [ Level7 ]
     };
     option (venice.penctlCmd) = {
         Cmd:     "port",
@@ -68,6 +69,7 @@ message PciePortMetrics {
             "axipendpolllast : axipend poll count (last).\\n"
             "axipendpollmax : axipend poll count (max).\\n"
             "faults : link faults.\\n"
+            "powerdown: powerdown count .\\n"
             "link_dn2up_int : link_dn2up_int.\\n"
             "link_up2dn_int : link_up2dn_int.\\n"
             "sec_bus_rst_int : sec_bus_rst_int.\\n"
@@ -91,55 +93,55 @@ message PciePortMetrics {
     };
     uint32 Key = 1;				// key is port number 0-7
 
-    delphi.Counter intr_total = 2;		// total port intrs
-    delphi.Counter intr_polled = 3;		// total port intrs polled
-    delphi.Counter intr_perstn = 4;		// pcie out of reset
-    delphi.Counter intr_ltssmst_early = 5;	// link train before linkup
-    delphi.Counter intr_ltssmst = 6;		// link train after  linkup
-    delphi.Counter intr_linkup2dn = 7;		// link down
-    delphi.Counter intr_linkdn2up = 8;		// link up
-    delphi.Counter intr_rstup2dn = 9;		// mac up
-    delphi.Counter intr_rstdn2up = 10;		// mac down
-    delphi.Counter intr_secbus = 11;		// secondary bus set
+    delphi.Counter intr_total         = 2 [(venice.metricsField) = {DisplayName: "intr_total" Description: "total port intrs"}];		// total port intrs
+    delphi.Counter intr_polled        = 3 [(venice.metricsField) = {DisplayName: "intr_polled" Description: "total port intrs polled"}];		// total port intrs polled
+    delphi.Counter intr_perstn        = 4 [(venice.metricsField) = {DisplayName: "intr_perstn" Description: "pcie out of reset"}];		// pcie out of reset
+    delphi.Counter intr_ltssmst_early = 5 [(venice.metricsField) = {DisplayName: "intr_ltssmst_early" Description: "link train before linkup"}];	// link train before linkup
+    delphi.Counter intr_ltssmst       = 6 [(venice.metricsField) = {DisplayName: "intr_ltssmst" Description: "link train after  linkup"}];		// link train after  linkup
+    delphi.Counter intr_linkup2dn     = 7 [(venice.metricsField) = {DisplayName: "intr_linkup2dn" Description: "link down"}];		// link down
+    delphi.Counter intr_linkdn2up     = 8 [(venice.metricsField) = {DisplayName: "intr_linkdn2up" Description: "link up"}];		// link up
+    delphi.Counter intr_rstup2dn      = 9 [(venice.metricsField) = {DisplayName: "intr_rstup2dn" Description: "mac up"}];		// mac up
+    delphi.Counter intr_rstdn2up      = 10 [(venice.metricsField) = {DisplayName: "intr_rstdn2up" Description: "mac down"}];		// mac down
+    delphi.Counter intr_secbus        = 11 [(venice.metricsField) = {DisplayName: "intr_secbus" Description: "secondary bus set"}];		// secondary bus set
     //
     // skip some spares to next group
     //
-    delphi.Counter linkup = 14;			// link is up
-    delphi.Counter hostup = 15;			// host is up (secbus)
-    delphi.Counter phypolllast = 16;		// phy poll count (last)
-    delphi.Counter phypollmax = 17;		// phy poll count (max)
-    delphi.Counter phypollperstn = 18;		// phy poll lost perstn
-    delphi.Counter phypollfail = 19;		// phy poll failed
-    delphi.Counter gatepolllast = 20;		// gate poll count (last)
-    delphi.Counter gatepollmax = 21;		// gate poll count (max)
-    delphi.Counter markerpolllast = 22;		// marker poll count (last)
-    delphi.Counter markerpollmax = 23;		// marker poll count (max)
-    delphi.Counter axipendpolllast = 24;	// axipend poll count (last)
-    delphi.Counter axipendpollmax = 25;		// axipend poll count (max)
-    delphi.Counter faults = 26;			// link faults
-    delphi.Counter powerdown = 27;		// powerdown count
+    delphi.Counter linkup          = 14 [(venice.metricsField) = {DisplayName: "linkup" Description: "link is up"}];			// link is up
+    delphi.Counter hostup          = 15 [(venice.metricsField) = {DisplayName: "hostup" Description: "host is up (secbus)"}];			// host is up (secbus)
+    delphi.Counter phypolllast     = 16 [(venice.metricsField) = {DisplayName: "phypolllast" Description: "phy poll count (last)"}];		// phy poll count (last)
+    delphi.Counter phypollmax      = 17 [(venice.metricsField) = {DisplayName: "phypollmax" Description: "phy poll count (max)"}];		// phy poll count (max)
+    delphi.Counter phypollperstn   = 18 [(venice.metricsField) = {DisplayName: "phypollperstn" Description: "phy poll lost perstn"}];		// phy poll lost perstn
+    delphi.Counter phypollfail     = 19 [(venice.metricsField) = {DisplayName: "phypollfail" Description: "phy poll failed"}];		// phy poll failed
+    delphi.Counter gatepolllast    = 20 [(venice.metricsField) = {DisplayName: "gatepolllast" Description: "gate poll count (last)"}];		// gate poll count (last)
+    delphi.Counter gatepollmax     = 21 [(venice.metricsField) = {DisplayName: "gatepollmax" Description: "gate poll count (max)"}];		// gate poll count (max)
+    delphi.Counter markerpolllast  = 22 [(venice.metricsField) = {DisplayName: "markerpolllast" Description: "marker poll count (last)"}];		// marker poll count (last)
+    delphi.Counter markerpollmax   = 23 [(venice.metricsField) = {DisplayName: "markerpollmax" Description: "marker poll count (max)"}];		// marker poll count (max)
+    delphi.Counter axipendpolllast = 24 [(venice.metricsField) = {DisplayName: "axipendpolllast" Description: "axipend poll count (last)"}];	// axipend poll count (last)
+    delphi.Counter axipendpollmax  = 25 [(venice.metricsField) = {DisplayName: "axipendpollmax" Description: "axipend poll count (max)"}];		// axipend poll count (max)
+    delphi.Counter faults          = 26 [(venice.metricsField) = {DisplayName: "faults" Description: "link faults"}];			// link faults
+    delphi.Counter powerdown       = 27 [(venice.metricsField) = {DisplayName: "powerdown" Description: "powerdown count"}];		// powerdown count
     //
     // skip some spares to next group
     //
-    delphi.Counter link_dn2up_int = 30;
-    delphi.Counter link_up2dn_int = 31;
-    delphi.Counter sec_bus_rst_int = 32;
-    delphi.Counter rst_up2dn_int = 33;
-    delphi.Counter rst_dn2up_int = 34;
-    delphi.Counter portgate_open2close_int = 35;
-    delphi.Counter ltssm_st_changed_int = 36;
-    delphi.Counter sec_busnum_changed_int = 37;
-    delphi.Counter rc_pme_int = 38;
-    delphi.Counter rc_aerr_int = 39;
-    delphi.Counter rc_serr_int = 40;
-    delphi.Counter rc_hpe_int = 41;
-    delphi.Counter rc_eq_req_int = 42;
-    delphi.Counter rc_dpc_int = 43;
-    delphi.Counter pm_turnoff_int = 44;
-    delphi.Counter txbfr_overflow_int = 45;
-    delphi.Counter rxtlp_err_int = 46;
-    delphi.Counter tl_flr_req_int = 47;
-    delphi.Counter rc_legacy_intpin_changed_int = 48;
+    delphi.Counter link_dn2up_int          = 30 [(venice.metricsField) = {DisplayName: "link_dn2up_int" Description: "link_dn2up_int"}];
+    delphi.Counter link_up2dn_int          = 31 [(venice.metricsField) = {DisplayName: "link_up2dn_int" Description: "link_up2dn_int"}];
+    delphi.Counter sec_bus_rst_int         = 32 [(venice.metricsField) = {DisplayName: "sec_bus_rst_int" Description: "sec_bus_rst_int"}];
+    delphi.Counter rst_up2dn_int           = 33 [(venice.metricsField) = {DisplayName: "rst_up2dn_int" Description: "rst_up2dn_int"}];
+    delphi.Counter rst_dn2up_int           = 34 [(venice.metricsField) = {DisplayName: "rst_dn2up_int" Description: "rst_dn2up_int"}];
+    delphi.Counter portgate_open2close_int = 35 [(venice.metricsField) = {DisplayName: "portgate_open2close_int" Description: "portgate_open2close_int"}];
+    delphi.Counter ltssm_st_changed_int    = 36 [(venice.metricsField) = {DisplayName: "ltssm_st_changed_int" Description: "ltssm_st_changed_int"}];
+    delphi.Counter sec_busnum_changed_int  = 37 [(venice.metricsField) = {DisplayName: "sec_busnum_changed_int" Description: "sec_busnum_changed_int"}];
+    delphi.Counter rc_pme_int              = 38 [(venice.metricsField) = {DisplayName: "rc_pme_int" Description: "rc_pme_int"}];
+    delphi.Counter rc_aerr_int             = 39 [(venice.metricsField) = {DisplayName: "rc_aerr_int" Description: "rc_aerr_int"}];
+    delphi.Counter rc_serr_int             = 40 [(venice.metricsField) = {DisplayName: "rc_serr_int" Description: "rc_serr_int"}];
+    delphi.Counter rc_hpe_int              = 41 [(venice.metricsField) = {DisplayName: "rc_hpe_int" Description: "rc_hpe_int"}];
+    delphi.Counter rc_eq_req_int           = 42 [(venice.metricsField) = {DisplayName: "rc_eq_req_int" Description: "rc_eq_req_int"}];
+    delphi.Counter rc_dpc_int              = 43 [(venice.metricsField) = {DisplayName: "rc_dpc_int" Description: "rc_dpc_int"}];
+    delphi.Counter pm_turnoff_int          = 44 [(venice.metricsField) = {DisplayName: "pm_turnoff_int" Description: "pm_turnoff_int"}];
+    delphi.Counter txbfr_overflow_int      = 45 [(venice.metricsField) = {DisplayName: "txbfr_overflow_int" Description: "txbfr_overflow_int"}];
+    delphi.Counter rxtlp_err_int           = 46 [(venice.metricsField) = {DisplayName: "rxtlp_err_int" Description: "rxtlp_err_int"}];
+    delphi.Counter tl_flr_req_int          = 47 [(venice.metricsField) = {DisplayName: "tl_flr_req_int" Description: "tl_flr_req_int"}];
+    delphi.Counter rc_legacy_intpin_changed_int = 48 [(venice.metricsField) = {DisplayName: "rc_legacy_intpin_changed_int" Description: "rc_legacy_intpin_changed_int"}];
 }
 
 message PcieMgrMetrics {
@@ -147,6 +149,7 @@ message PcieMgrMetrics {
         DisplayName: "PCIe Manager information",
         Description: "Key index - pcie port",
         Scope: PerPciePort
+        Tags: [ Level7 ]
     };
     option (venice.penctlCmd) = {
         Cmd:     "pciemgr",
@@ -196,52 +199,54 @@ message PcieMgrMetrics {
     };
     uint32 Key = 1;				// key is port number 0-7
 
-    delphi.Counter not_intr = 2;		// notify total intrs
-    delphi.Counter not_spurious = 3;		// notify spurious intrs
-    delphi.Counter not_cnt = 4;			// notify total txns
-    delphi.Counter not_max = 5;			// notify max txns per intr
-    delphi.Counter not_cfgrd = 6;		// notify config reads
-    delphi.Counter not_cfgwr = 7;		// notify config writes
-    delphi.Counter not_memrd = 8;		// notify memory reads
-    delphi.Counter not_memwr = 9;		// notify memory writes
-    delphi.Counter not_iord = 10;		// notify io reads
-    delphi.Counter not_iowr = 11;		// notify io writes
-    delphi.Counter not_unknown = 13;		// notify unknown type
+    delphi.Counter not_intr     = 2 [(venice.metricsField) = {DisplayName: "not_intr" Description: "notify total intrs"}];		// notify total intrs
+    delphi.Counter not_spurious = 3 [(venice.metricsField) = {DisplayName: "not_spurious" Description: "notify spurious intrs"}];		// notify spurious intrs
+    delphi.Counter not_cnt      = 4 [(venice.metricsField) = {DisplayName: "not_cnt" Description: "notify total txns"}];			// notify total txns
+    delphi.Counter not_max      = 5 [(venice.metricsField) = {DisplayName: "not_max" Description: "notify max txns per intr"}];			// notify max txns per intr
+    delphi.Counter not_cfgrd    = 6 [(venice.metricsField) = {DisplayName: "not_cfgrd" Description: "notify config reads"}];		// notify config reads
+    delphi.Counter not_cfgwr    = 7 [(venice.metricsField) = {DisplayName: "not_cfgwr" Description: "notify config writes"}];		// notify config writes
+    delphi.Counter not_memrd    = 8 [(venice.metricsField) = {DisplayName: "not_memrd" Description: "notify memory reads"}];		// notify memory reads
+    delphi.Counter not_memwr    = 9 [(venice.metricsField) = {DisplayName: "not_memwr" Description: "notify memory writes"}];		// notify memory writes
+    delphi.Counter not_iord     = 10 [(venice.metricsField) = {DisplayName: "not_iord" Description: "notify io reads"}];		// notify io reads
+    delphi.Counter not_iowr     = 11 [(venice.metricsField) = {DisplayName: "not_iowr" Description: "notify io writes"}];		// notify io writes
+    delphi.Counter not_unknown  = 13 [(venice.metricsField) = {DisplayName: "not_unknown" Description: "notify unknown type"}];		// notify unknown type
+
     //
     // skip some spares to next group
     //
-    delphi.Counter not_rsrv0 = 17;		// notify rsrv0
-    delphi.Counter not_rsrv1 = 18;		// notify rsrv1
-    delphi.Counter not_msg = 19;		// notify pcie message
-    delphi.Counter not_unsupported = 20;	// notify unsupported
-    delphi.Counter not_pmv = 21;		// notify pgm model violation
-    delphi.Counter not_dbpmv = 22;		// notify doorbell pmv
-    delphi.Counter not_atomic = 23;		// notify atomic trans
-    delphi.Counter not_pmtmiss = 24;		// notify PMT miss
-    delphi.Counter not_pmrmiss = 25;		// notify PMR miss
-    delphi.Counter not_prtmiss = 26;		// notify PRT miss
-    delphi.Counter not_bdf2vfidmiss = 27;	// notify bdf2vfid table miss
-    delphi.Counter not_prtoor = 28;		// notify PRT out-of-range
-    delphi.Counter not_vfidoor = 29;		// notify vfid out-of-range
-    delphi.Counter not_bdfoor = 30;		// notify bdf out-of-range
-    delphi.Counter not_pmrind = 31;		// notify PMR force indirect
-    delphi.Counter not_prtind = 32;		// notify PRT force indirect
-    delphi.Counter not_pmrecc = 33;		// notify PMR ECC error
-    delphi.Counter not_prtecc = 34;		// notify PRT ECC error
+    delphi.Counter not_rsrv0        = 17 [(venice.metricsField) = {DisplayName: "not_rsrv0" Description: "notify rsrv0"}];		// notify rsrv0
+    delphi.Counter not_rsrv1        = 18 [(venice.metricsField) = {DisplayName: "not_rsrv1" Description: "notify rsrv1"}];		// notify rsrv1
+    delphi.Counter not_msg          = 19 [(venice.metricsField) = {DisplayName: "not_msg" Description: "notify pcie message"}];		// notify pcie message
+    delphi.Counter not_unsupported  = 20 [(venice.metricsField) = {DisplayName: "not_unsupported" Description: "notify unsupported"}];	// notify unsupported
+    delphi.Counter not_pmv          = 21 [(venice.metricsField) = {DisplayName: "not_pmv" Description: "notify pgm model violation"}];		// notify pgm model violation
+    delphi.Counter not_dbpmv        = 22 [(venice.metricsField) = {DisplayName: "not_dbpmv" Description: "notify doorbell pmv"}];		// notify doorbell pmv
+    delphi.Counter not_atomic       = 23 [(venice.metricsField) = {DisplayName: "not_atomic" Description: "notify atomic trans"}];		// notify atomic trans
+    delphi.Counter not_pmtmiss      = 24 [(venice.metricsField) = {DisplayName: "not_pmtmiss" Description: "notify PMT miss"}];		// notify PMT miss
+    delphi.Counter not_pmrmiss      = 25 [(venice.metricsField) = {DisplayName: "not_pmrmiss" Description: "notify PMR miss"}];		// notify PMR miss
+    delphi.Counter not_prtmiss      = 26 [(venice.metricsField) = {DisplayName: "not_prtmiss" Description: "notify PRT miss"}];		// notify PRT miss
+    delphi.Counter not_bdf2vfidmiss = 27 [(venice.metricsField) = {DisplayName: "not_bdf2vfidmiss" Description: "notify bdf2vfid table miss"}];	// notify bdf2vfid table miss
+    delphi.Counter not_prtoor       = 28 [(venice.metricsField) = {DisplayName: "not_prtoor" Description: "notify PRT out-of-range"}];		// notify PRT out-of-range
+    delphi.Counter not_vfidoor      = 29 [(venice.metricsField) = {DisplayName: "not_vfidoor" Description: "notify vfid out-of-range"}];		// notify vfid out-of-range
+    delphi.Counter not_bdfoor       = 30 [(venice.metricsField) = {DisplayName: "not_bdfoor" Description: "notify bdf out-of-range"}];		// notify bdf out-of-range
+    delphi.Counter not_pmrind       = 31 [(venice.metricsField) = {DisplayName: "not_pmrind" Description: "notify PMR force indirect"}];		// notify PMR force indirect
+    delphi.Counter not_prtind       = 32 [(venice.metricsField) = {DisplayName: "not_prtind" Description: "notify PRT force indirect"}];		// notify PRT force indirect
+    delphi.Counter not_pmrecc       = 33 [(venice.metricsField) = {DisplayName: "not_pmrecc" Description: "notify PMR ECC error"}];		// notify PMR ECC error
+    delphi.Counter not_prtecc       = 34 [(venice.metricsField) = {DisplayName: "not_prtecc" Description: "notify PRT ECC error"}];		// notify PRT ECC error
     //
     // skip some spares to next group
     //
-    delphi.Counter ind_intr = 37;		// indirect total intrs
-    delphi.Counter ind_spurious = 38;		// indirect spurious intrs
-    delphi.Counter ind_cfgrd = 39;		// indirect config reads
-    delphi.Counter ind_cfgwr = 40;		// indirect config writes
-    delphi.Counter ind_memrd = 41;		// indirect memory reads
-    delphi.Counter ind_memwr = 42;		// indirect memory writes
-    delphi.Counter ind_iord = 43;		// indirect io reads
-    delphi.Counter ind_iowr = 44;		// indirect io writes
-    delphi.Counter ind_unknown = 45;		// indirect unknown type
+    delphi.Counter ind_intr     = 37 [(venice.metricsField) = {DisplayName: "ind_intr" Description: "indirect total intrs"}];		// indirect total intrs
+    delphi.Counter ind_spurious = 38 [(venice.metricsField) = {DisplayName: "ind_spurious" Description: "indirect spurious intrs"}];		// indirect spurious intrs
+    delphi.Counter ind_cfgrd    = 39 [(venice.metricsField) = {DisplayName: "ind_cfgrd" Description: "indirect config reads"}];		// indirect config reads
+    delphi.Counter ind_cfgwr    = 40 [(venice.metricsField) = {DisplayName: "ind_cfgwr" Description: "indirect config writes"}];		// indirect config writes
+    delphi.Counter ind_memrd    = 41 [(venice.metricsField) = {DisplayName: "ind_memrd" Description: "indirect memory reads"}];		// indirect memory reads
+    delphi.Counter ind_memwr    = 42 [(venice.metricsField) = {DisplayName: "ind_memwr" Description: "indirect memory writes"}];		// indirect memory writes
+    delphi.Counter ind_iord     = 43 [(venice.metricsField) = {DisplayName: "ind_iord" Description: "indirect io reads"}];		// indirect io reads
+    delphi.Counter ind_iowr     = 44 [(venice.metricsField) = {DisplayName: "ind_iowr" Description: "indirect io writes"}];		// indirect io writes
+    delphi.Counter ind_unknown  = 45 [(venice.metricsField) = {DisplayName: "ind_unknown" Description: "indirect unknown type"}];		// indirect unknown type
+
     //
     // skip some spares to next group
     //
-    delphi.Counter healthlog = 50;		// health log events
+    delphi.Counter healthlog = 50 [(venice.metricsField) = {DisplayName: "healthlog" Description: "health log events"}];		// health log events
 }

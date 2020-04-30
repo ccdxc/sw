@@ -1,14 +1,15 @@
 # Generate metrics manifest.
 # Each path where protos for metrics exist is listed below as a tuple of prefix and the path seperated by a :
 METRICS_PATHS =\
-	nicmgr:nic/proto/nicmgr \
-	linkmgr:nic/proto/linkmgr \
-	dropstats:nic/proto/dropstats \
-	ftestats:nic/proto/ftestats \
-	rulestats:nic/proto/rulestats \
-	flowstats:nic/proto/flowstats \
-	sysmond:nic/proto/sysmond \
-	nmdmetrics:nic/agent/protos/nmd/nmdmetrics
+	nicmgr:nic/proto/nicmgr                         \
+	linkmgr:nic/proto/linkmgr                       \
+	dropstats:nic/proto/dropstats                   \
+	ftestats:nic/proto/ftestats                     \
+	rulestats:nic/proto/rulestats                   \
+	flowstats:nic/proto/flowstats                   \
+	sysmond:nic/proto/sysmond                       \
+	nmdmetrics:nic/agent/protos/nmd/nmdmetrics      \
+	pciemgr:platform/src/app/pciemgrd/proto
 
 # all generated files are in the generated/<prefix> path
 all:
