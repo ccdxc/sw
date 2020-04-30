@@ -59,7 +59,7 @@ func fteStatsClearCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -92,7 +92,7 @@ func fteStatsClearCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.FteStatsClear(context.Background(), req)
 	if err != nil {
-		fmt.Printf("FTE stats get failed. %v\n", err)
+		fmt.Printf("FTE stats get failed, err %v\n", err)
 		return
 	}
 
@@ -108,7 +108,7 @@ func fteStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -141,7 +141,7 @@ func fteStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.FteStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("FTE stats get failed. %v\n", err)
+		fmt.Printf("FTE stats get failed, err %v\n", err)
 		return
 	}
 

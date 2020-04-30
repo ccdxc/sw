@@ -31,7 +31,7 @@ func init() {
 func interruptClearCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the sysmon. Is sysmon Running?\n")
+		fmt.Printf("Could not connect to the sysmon, is sysmon running?\n")
 		return
 	}
 	defer c.Close()
@@ -51,7 +51,7 @@ func interruptClearCmdHandler(cmd *cobra.Command, args []string) {
 func interruptShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the sysmon. Is sysmon Running?\n")
+		fmt.Printf("Could not connect to the sysmon, is sysmon running?\n")
 		return
 	}
 	defer c.Close()

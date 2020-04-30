@@ -40,7 +40,7 @@ func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -67,7 +67,7 @@ func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.SvcMappingGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting service-mapping failed. %v\n", err)
+		fmt.Printf("Getting service-mapping failed, err %v\n", err)
 		return
 	}
 

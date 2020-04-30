@@ -39,7 +39,7 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -50,7 +50,7 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if cmd != nil && cmd.Flags().Changed("yaml") == false {
-		fmt.Printf("Only yaml output is supported. Use --yaml flag\n")
+		fmt.Printf("Only yaml output is supported, use --yaml flag\n")
 		return
 	}
 
@@ -72,7 +72,7 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.TagGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Tag failed. %v\n", err)
+		fmt.Printf("Getting Tag failed, err %v\n", err)
 		return
 	}
 

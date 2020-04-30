@@ -109,7 +109,7 @@ func learnMACShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -149,7 +149,7 @@ func learnMACShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.LearnMACGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting MAC information failed. %v\n", err)
+		fmt.Printf("Getting MAC information failed, err %v\n", err)
 		return
 	}
 
@@ -177,7 +177,7 @@ func learnIPShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -224,7 +224,7 @@ func learnIPShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.LearnIPGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting IP information failed. %v\n", err)
+		fmt.Printf("Getting IP information failed, err %v\n", err)
 		return
 	}
 
@@ -252,7 +252,7 @@ func learnStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -268,7 +268,7 @@ func learnStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.LearnStatsGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting statistics failed. %v\n", err)
+		fmt.Printf("Getting statistics failed, err %v\n", err)
 		return
 	}
 
@@ -291,7 +291,7 @@ func learnMACClearCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -329,7 +329,7 @@ func learnMACClearCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.LearnMACClear(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Clear learnt MAC(s) failed. %v\n", err)
+		fmt.Printf("Clear learnt MAC(s) failed, err %v\n", err)
 		return
 	}
 
@@ -344,7 +344,7 @@ func learnIPClearCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -382,7 +382,7 @@ func learnIPClearCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.LearnIPClear(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Clearing learnt IP(s) failed. %v\n", err)
+		fmt.Printf("Clearing learnt IP(s) failed, err %v\n", err)
 		return
 	}
 
@@ -397,7 +397,7 @@ func learnStatsClearCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -413,7 +413,7 @@ func learnStatsClearCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	_, err = client.LearnStatsClear(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Clearing statistics failed. %v\n", err)
+		fmt.Printf("Clearing statistics failed, err %v\n", err)
 		return
 	}
 	fmt.Printf("Clearing statistics succeeded\n")

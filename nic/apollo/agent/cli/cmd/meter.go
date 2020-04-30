@@ -53,7 +53,7 @@ func meterShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -72,14 +72,14 @@ func meterShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 	if n != 2 {
 		n, _ = fmt.Sscanf(statsID, "%d", &statsIDLow)
 		if n != 1 {
-			fmt.Printf("Invalid meter statistics index provided. Refer to help string\n")
+			fmt.Printf("Invalid meter statistics index provided, refer to help string\n")
 			return
 		}
 		statsIDHigh = statsIDLow
 	}
 
 	if statsIDLow > statsIDHigh {
-		fmt.Printf("Invalid meter statistics index provided. Refer to help string")
+		fmt.Printf("Invalid meter statistics index provided, refer to help string")
 		return
 	}
 
@@ -91,7 +91,7 @@ func meterShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.MeterStatsGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting meter statistics failed. %v\n", err)
+		fmt.Printf("Getting meter statistics failed, err %v\n", err)
 		return
 	}
 
@@ -130,7 +130,7 @@ func meterShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -143,7 +143,7 @@ func meterShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewMeterSvcClient(c)
 
 	if cmd != nil && cmd.Flags().Changed("yaml") == false {
-		fmt.Printf("Only yaml output is supported. Use --yaml flag\n")
+		fmt.Printf("Only yaml output is supported, use --yaml flag\n")
 		return
 	}
 
@@ -163,7 +163,7 @@ func meterShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.MeterGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting meter failed. %v\n", err)
+		fmt.Printf("Getting meter failed, err %v\n", err)
 		return
 	}
 

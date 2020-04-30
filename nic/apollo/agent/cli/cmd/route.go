@@ -40,7 +40,7 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -68,7 +68,7 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.RouteTableGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Route failed. %v\n", err)
+		fmt.Printf("Getting Route failed, err %v\n", err)
 		return
 	}
 

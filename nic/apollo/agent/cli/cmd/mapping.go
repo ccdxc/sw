@@ -150,7 +150,7 @@ func localMappingHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -195,7 +195,7 @@ func localMappingHandler(cmd *cobra.Command, args []string) {
 	// PDS Call
 	respMsg, err := client.MappingGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting mapping failed. %v\n", err)
+		fmt.Printf("Getting mapping failed, err %v\n", err)
 		return
 	}
 
@@ -316,7 +316,7 @@ func remoteMappingHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -361,7 +361,7 @@ func remoteMappingHandler(cmd *cobra.Command, args []string) {
 	// PDS Call
 	respMsg, err := client.MappingGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting mapping failed. %v\n", err)
+		fmt.Printf("Getting mapping failed, err %v\n", err)
 		return
 	}
 

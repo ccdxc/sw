@@ -51,7 +51,7 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -79,7 +79,7 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.VnicGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Vnic failed. %v\n", err)
+		fmt.Printf("Getting Vnic failed, err %v\n", err)
 		return
 	}
 
@@ -151,7 +151,7 @@ func vnicShowStatisticsCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -179,7 +179,7 @@ func vnicShowStatisticsCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.VnicGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Vnic failed. %v\n", err)
+		fmt.Printf("Getting Vnic failed, err %v\n", err)
 		return
 	}
 

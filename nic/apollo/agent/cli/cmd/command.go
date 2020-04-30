@@ -272,7 +272,7 @@ func GetAgentTransport(cmd *cobra.Command) (Transport, error) {
 			return AGENT_TRANSPORT_GRPC, nil
 		} else {
 			return AGENT_TRANSPORT_NONE,
-				errors.New("Transport specified is invalid. Refer help string")
+				errors.New("Transport specified is invalid, refer help string")
 		}
 	} else {
 		val, present := os.LookupEnv("PDS_AGENT_TRANSPORT")

@@ -66,7 +66,7 @@ func dhcpRelayShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -94,7 +94,7 @@ func dhcpRelayShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.DHCPPolicyGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting DHCP policy failed. %v\n", err)
+		fmt.Printf("Getting DHCP policy failed, err %v\n", err)
 		return
 	}
 
@@ -125,7 +125,7 @@ func dhcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -153,7 +153,7 @@ func dhcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.DHCPPolicyGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting DHCP policy failed. %v\n", err)
+		fmt.Printf("Getting DHCP policy failed, err %v\n", err)
 		return
 	}
 

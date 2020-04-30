@@ -132,7 +132,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -182,7 +182,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.SessionClear(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Clearing sessions failed. %v\n", err)
+		fmt.Printf("Clearing sessions failed, err %v\n", err)
 		return
 	}
 
@@ -198,7 +198,7 @@ func flowClearCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -231,7 +231,7 @@ func flowClearCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.FlowClear(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Clearing flows failed. %v\n", err)
+		fmt.Printf("Clearing flows failed, err %v\n", err)
 		return
 	}
 
@@ -268,7 +268,7 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 		// Connect to PDS
 		c, err := utils.CreateNewGRPCClient()
 		if err != nil {
-			fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+			fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 			return
 		}
 		defer c.Close()
@@ -280,7 +280,7 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 		// PDS call
 		stream, err := client.FlowGet(context.Background(), empty)
 		if err != nil {
-			fmt.Printf("Getting flows failed. %v\n", err)
+			fmt.Printf("Getting flows failed, err %v\n", err)
 			return
 		}
 
@@ -296,7 +296,7 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 				break
 			}
 			if err != nil {
-				fmt.Printf("Getting flow stream failure. %v\n", err)
+				fmt.Printf("Getting flow stream failure, err %v\n", err)
 				return
 			}
 
@@ -423,7 +423,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -443,7 +443,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	stream, err := client.SessionGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Getting sessions failed. %v\n", err)
+		fmt.Printf("Getting sessions failed, err %v\n", err)
 		return
 	}
 
@@ -459,7 +459,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 			break
 		}
 		if err != nil {
-			fmt.Printf("Getting session stream failure. %v\n", err)
+			fmt.Printf("Getting session stream failure, err %v\n", err)
 		}
 
 		if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
@@ -497,7 +497,7 @@ func sessionShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -517,14 +517,14 @@ func sessionShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 	if n != 2 {
 		n, _ = fmt.Sscanf(sessionStatsID, "%d", &statsIDLow)
 		if n != 1 {
-			fmt.Printf("Invalid session statistics index provided. Refer to help string\n")
+			fmt.Printf("Invalid session statistics index provided, refer to help string\n")
 			return
 		}
 		statsIDHigh = statsIDLow
 	}
 
 	if statsIDLow > statsIDHigh {
-		fmt.Printf("Invalid session statistics index provided. Refer to help string")
+		fmt.Printf("Invalid session statistics index provided, refer to help string")
 		return
 	}
 
@@ -536,7 +536,7 @@ func sessionShowStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.SessionStatsGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting session statistics failed. %v\n", err)
+		fmt.Printf("Getting session statistics failed, err %v\n", err)
 		return
 	}
 
@@ -579,7 +579,7 @@ func flowStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -597,7 +597,7 @@ func flowStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.FlowStatsSummaryGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Getting flow statistics failed. %v\n", err)
+		fmt.Printf("Getting flow statistics failed, err %v\n", err)
 		return
 	}
 

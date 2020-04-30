@@ -135,7 +135,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -149,7 +149,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		cmd.Flags().Changed("auto-neg") == false &&
 		cmd.Flags().Changed("speed") == false &&
 		cmd.Flags().Changed("fec-type") == false {
-		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+		fmt.Printf("Command arguments not provided correctly, refer to help string for guidance\n")
 		return
 	}
 
@@ -166,7 +166,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	if cmd.Flags().Changed("fec-type") == true {
 		if isFecTypeValid(portFecType) == false {
-			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			fmt.Printf("Command arguments not provided correctly, refer to help string for guidance\n")
 			return
 		}
 		fecType = inputToFecType(portFecType)
@@ -178,14 +178,14 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		} else if strings.Compare(portAutoNeg, "enable") == 0 {
 			autoNeg = true
 		} else {
-			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			fmt.Printf("Command arguments not provided correctly, refer to help string for guidance\n")
 			return
 		}
 	}
 
 	if cmd.Flags().Changed("admin-state") == true {
 		if isAdminStateValid(portAdminState) == false {
-			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			fmt.Printf("Command arguments not provided correctly, refer to help string for guidance\n")
 			return
 		}
 		adminState = inputToAdminState(portAdminState)
@@ -193,7 +193,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	if cmd.Flags().Changed("speed") == true {
 		if isSpeedValid(strings.ToUpper(portSpeed)) == false {
-			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+			fmt.Printf("Command arguments not provided correctly, refer to help string for guidance\n")
 			return
 		}
 		speed = inputToSpeed(strings.ToUpper(portSpeed))
@@ -207,7 +207,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	getRespMsg, err := client.PortGet(context.Background(), getReq)
 	if err != nil {
-		fmt.Printf("Getting Port failed. %v\n", err)
+		fmt.Printf("Getting Port failed, err %v\n", err)
 		return
 	}
 
@@ -258,7 +258,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.PortUpdate(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Update Port failed. %v\n", err)
+		fmt.Printf("Update Port failed, err %v\n", err)
 		return
 	}
 
@@ -364,7 +364,7 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -392,7 +392,7 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.PortGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Port failed. %v\n", err)
+		fmt.Printf("Getting Port failed, err %v\n", err)
 		return
 	}
 
@@ -521,7 +521,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -549,7 +549,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.PortGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Port failed. %v\n", err)
+		fmt.Printf("Getting Port failed, err %v\n", err)
 		return
 	}
 
@@ -765,7 +765,7 @@ func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -793,7 +793,7 @@ func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.PortGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Port failed. %v\n", err)
+		fmt.Printf("Getting Port failed, err %v\n", err)
 		return
 	}
 
@@ -823,7 +823,7 @@ func portInternalCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -845,7 +845,7 @@ func portInternalCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd != nil && cmd.Flags().Changed("port") {
 		intPortNum, err = strconv.ParseUint(portID, 10, 8)
 		if (err != nil) || (intPortNum < 1) || (intPortNum > 7) {
-			fmt.Printf("Invalid argument. port number must be between 1 - 7 for internal ports\n")
+			fmt.Printf("Invalid argument, port number must be between 1 - 7 for internal ports\n")
 			return
 		}
 		// Get port info for specified port
@@ -864,7 +864,7 @@ func portInternalCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.InternalPortGet(context.Background(), reqMsg)
 	if err != nil {
-		fmt.Printf("Getting Internal port status failed. %v\n", err)
+		fmt.Printf("Getting Internal port status failed, err %v\n", err)
 		return
 	}
 
@@ -900,7 +900,7 @@ func portInternalStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -914,7 +914,7 @@ func portInternalStatsCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd != nil && cmd.Flags().Changed("port") {
 		intPortNum, err = strconv.ParseUint(portID, 10, 8)
 		if (err != nil) || (intPortNum < 1) || (intPortNum > 7) {
-			fmt.Printf("Invalid argument. port number must be between 1 - 7 for internal ports\n")
+			fmt.Printf("Invalid argument, port number must be between 1 - 7 for internal ports\n")
 			return
 		}
 		// Get port info for specified port
@@ -933,7 +933,7 @@ func portInternalStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.InternalPortGet(context.Background(), reqMsg)
 	if err != nil {
-		fmt.Printf("Getting Internal port status failed. %v\n", err)
+		fmt.Printf("Getting Internal port status failed, err %v\n", err)
 		return
 	}
 
@@ -956,7 +956,7 @@ func portShowFsmCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()

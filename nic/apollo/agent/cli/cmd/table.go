@@ -48,7 +48,7 @@ func naclShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -75,7 +75,7 @@ func tableStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -92,7 +92,7 @@ func tableStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.TableStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Table statistics get failed. %v\n", err)
+		fmt.Printf("Table statistics get failed, err %v\n", err)
 		return
 	}
 

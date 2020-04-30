@@ -154,7 +154,7 @@ func dropShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -170,7 +170,7 @@ func dropShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.DeviceGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting drop statistics failed. %v\n", err)
+		fmt.Printf("Getting drop statistics failed, err %v\n", err)
 		return
 	}
 
@@ -222,7 +222,7 @@ func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -239,7 +239,7 @@ func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.QueueCreditsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Queue credits get failed. %v\n", err)
+		fmt.Printf("Queue credits get failed, err %v\n", err)
 		return
 	}
 
@@ -297,7 +297,7 @@ func memoryDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -314,7 +314,7 @@ func memoryDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	_, err = client.MemoryTrim(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Memory trim failed. %v\n", err)
+		fmt.Printf("Memory trim failed, err %v\n", err)
 		return
 	}
 
@@ -325,7 +325,7 @@ func systemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -342,7 +342,7 @@ func systemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.PbStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("PB statistics get failed. %v\n", err)
+		fmt.Printf("PB statistics get failed, err %v\n", err)
 		return
 	}
 
@@ -535,7 +535,7 @@ func pbShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -552,7 +552,7 @@ func pbShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.PbStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("PB statistics get failed. %v\n", err)
+		fmt.Printf("PB statistics get failed, err %v\n", err)
 		return
 	}
 
@@ -826,7 +826,7 @@ func llcShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -843,7 +843,7 @@ func llcShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.LlcStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("LLC get failed. %v\n", err)
+		fmt.Printf("LLC get failed, err %v\n", err)
 		return
 	}
 
@@ -885,7 +885,7 @@ func llcSetupCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -927,7 +927,7 @@ func llcSetupCmdHandler(cmd *cobra.Command, args []string) {
 			return
 		}
 	} else {
-		fmt.Printf("Command needs an argument. Refer to help string.\n")
+		fmt.Printf("Command needs an argument, refer to help string.\n")
 		return
 	}
 
@@ -938,7 +938,7 @@ func llcSetupCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.LlcSetup(context.Background(), req)
 	if err != nil {
-		fmt.Printf("LLC setup failed. %v\n", err)
+		fmt.Printf("LLC setup failed, err %v\n", err)
 		return
 	}
 
@@ -960,7 +960,7 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -986,7 +986,7 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 		// HAL call
 		resp, err := client.TraceUpdate(context.Background(), traceReq)
 		if err != nil {
-			fmt.Printf("Set trace level failed. %v\n", err)
+			fmt.Printf("Set trace level failed, err %v\n", err)
 			return
 		}
 
@@ -1003,13 +1003,13 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 		// PDS call
 		_, err := client.TraceFlush(context.Background(), empty)
 		if err != nil {
-			fmt.Printf("Flush logs failed. %v\n", err)
+			fmt.Printf("Flush logs failed, err %v\n", err)
 			return
 		}
 
 		fmt.Printf("Flush logs succeeded\n")
 	} else {
-		fmt.Printf("Argument required. Use --help for valid arguments\n")
+		fmt.Printf("Argument required, use --help for valid arguments\n")
 		return
 	}
 
@@ -1057,7 +1057,7 @@ func systemShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -1104,7 +1104,7 @@ func systemPowerShow(client pds.DebugSvcClient, yamlOutput bool) {
 	// PDS call
 	resp, err := client.SystemPowerGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("System power get failed. %v\n", err)
+		fmt.Printf("System power get failed, err %v\n", err)
 		return
 	}
 
@@ -1139,7 +1139,7 @@ func systemTemperatureShow(client pds.DebugSvcClient, yamlOutput bool) {
 	// PDS call
 	resp, err := client.SystemTemperatureGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("System temperature get failed. %v\n", err)
+		fmt.Printf("System temperature get failed, err %v\n", err)
 		return
 	}
 
@@ -1172,7 +1172,7 @@ func systemDebugCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -1202,7 +1202,7 @@ func systemClockFrequencySet(client pds.DebugSvcClient) {
 	// PDS call
 	resp, err := client.ClockFrequencyUpdate(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Clock-frequency update failed. %v\n", err)
+		fmt.Printf("Clock-frequency update failed, err %v\n", err)
 		return
 	}
 
@@ -1223,7 +1223,7 @@ func systemArmClockFrequencySet(client pds.DebugSvcClient) {
 	// PDS call
 	resp, err := client.ClockFrequencyUpdate(context.Background(), req)
 	if err != nil {
-		fmt.Printf("ARM Clock-frequency update failed. %v\n", err)
+		fmt.Printf("ARM Clock-frequency update failed, err %v\n", err)
 		return
 	}
 
@@ -1232,7 +1232,7 @@ func systemArmClockFrequencySet(client pds.DebugSvcClient) {
 		return
 	}
 
-	fmt.Printf("ARM Clock-frequency set to %dMhz. Please reboot for changes to take effect\n", armClockFreq)
+	fmt.Printf("ARM Clock-frequency set to %dMhz, please reboot for changes to take effect\n", armClockFreq)
 }
 
 // InputQueueInfo defines the input queue details
@@ -1426,7 +1426,7 @@ func pbDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	defer c.Close()
 	if err != nil {
-		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		fmt.Printf("Could not connect to the HAL, is HAL running?\n")
 		os.Exit(1)
 	}
 
@@ -1437,7 +1437,7 @@ func pbDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.PbStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("PB statistics get failed. %v\n", err)
+		fmt.Printf("PB statistics get failed, err %v\n", err)
 		return
 	}
 

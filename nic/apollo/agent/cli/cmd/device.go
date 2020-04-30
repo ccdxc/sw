@@ -52,7 +52,7 @@ func deviceUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -65,7 +65,7 @@ func deviceUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("memory-profile") == false &&
 		cmd.Flags().Changed("device-profile") == false &&
 		cmd.Flags().Changed("learn-age-timeout") == false {
-		fmt.Printf("No arguments specified. Refer to help string\n")
+		fmt.Printf("No arguments specified, refer to help string\n")
 		return
 	}
 
@@ -224,7 +224,7 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS, is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()

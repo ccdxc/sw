@@ -38,7 +38,7 @@ func init() {
 func memShowCmdHandler(cmd *cobra.Command, args []string) {
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		os.Exit(1)
 	}
 	defer c.Close()
@@ -83,7 +83,7 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 		var empty *pds.Empty
 		resp, err := client.SlabGet(context.Background(), empty)
 		if err != nil {
-			fmt.Printf("Getting slab failed. %v\n", err)
+			fmt.Printf("Getting slab failed, err %v\n", err)
 		} else {
 			if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 				fmt.Printf("Get slab operation failed with %v error\n", resp.ApiStatus)
@@ -119,7 +119,7 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 			// PDS call
 			resp, err := client.MemTrackGet(context.Background(), req)
 			if err != nil {
-				fmt.Printf("Getting mtrack failed. %v\n", err)
+				fmt.Printf("Getting mtrack failed, err %v\n", err)
 			} else {
 				if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
 					fmt.Printf("Get mtrack operation failed with %v error\n", resp.ApiStatus)
@@ -147,7 +147,7 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Heap Memory Stats:\n")
 		resp, err := client.HeapGet(context.Background(), empty)
 		if err != nil {
-			fmt.Printf("Getting heap failed. %v\n", err)
+			fmt.Printf("Getting heap failed, err %v\n", err)
 		} else {
 			// Print mtrack
 			if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {

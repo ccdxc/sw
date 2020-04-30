@@ -48,7 +48,7 @@ func natShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 
@@ -70,7 +70,7 @@ func natShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.NatPortBlockGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting NAT port block failed. %v\n", err)
+		fmt.Printf("Getting NAT port block failed, err %v\n", err)
 		return
 	}
 

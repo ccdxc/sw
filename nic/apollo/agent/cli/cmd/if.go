@@ -53,7 +53,7 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -79,7 +79,7 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	respMsg, err := client.InterfaceGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Get Lif failed. %v\n", err)
+		fmt.Printf("Get Lif failed, err %v\n", err)
 		return
 	}
 
@@ -186,7 +186,7 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 		return
 	}
 	defer c.Close()
@@ -212,7 +212,7 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	respMsg, err := client.LifGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Get Lif failed. %v\n", err)
+		fmt.Printf("Get Lif failed, err %v\n", err)
 		return
 	}
 

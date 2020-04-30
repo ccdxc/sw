@@ -68,7 +68,7 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 		// Connect to PDS
 		c, err := utils.CreateNewGRPCClient()
 		if err != nil {
-			fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+			fmt.Printf("Could not connect to the PDS, is PDS running?\n")
 			return
 		}
 		defer c.Close()
@@ -83,7 +83,7 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 		respMsg, err = client.VPCGet(context.Background(), req)
 	}
 	if err != nil {
-		fmt.Printf("Getting VPC failed. %v\n", err)
+		fmt.Printf("Getting VPC failed, err %v\n", err)
 		return
 	}
 
