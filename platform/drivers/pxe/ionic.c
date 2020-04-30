@@ -293,6 +293,19 @@ static int ionic_probe(struct pci_device *pci)
 	struct net_device *netdev; // network device information.
 	struct ionic *ionic;	   // ionic device information.
 	int errorcode;
+	uint32_t rom_base_addr;
+
+	// Return if no opt ROM configured for this dev
+	pci_read_config_dword ( pci, PCI_ROM_ADDRESS, &rom_base_addr);
+	if (!rom_base_addr) {
+		pci_write_config_dword(pci, PCI_ROM_ADDRESS, 0xfffff800);
+		pci_read_config_dword(pci, PCI_ROM_ADDRESS, &rom_base_addr);
+		pci_write_config_dword(pci, PCI_ROM_ADDRESS, 0);
+		if (!rom_base_addr) {
+			DBG("%s :: opt rom disabled. dev %p\n", __FUNCTION__, pci);
+			return -ENODEV;
+		}
+	}
 
 	// Allocate and initialise net device
 	netdev = alloc_etherdev(sizeof(*ionic));

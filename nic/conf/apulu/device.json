@@ -107,8 +107,7 @@
             "qos_group" : "DEFAULT",
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0,
-                "oprom": "uefi"
+                "num_vfs" : 0
             }
         },
         {
@@ -122,8 +121,7 @@
             "intr_count" : 64,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0,
-                "oprom": "uefi"
+                "num_vfs" : 0
             }
         },
         {
@@ -137,8 +135,7 @@
             "intr_count" : 64,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0,
-                "oprom": "uefi"
+                "num_vfs" : 0
             }
         },
         {
@@ -152,8 +149,7 @@
             "intr_count" : 64,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0,
-                "oprom": "uefi"
+                "num_vfs" : 0
             }
         },
         {
@@ -167,8 +163,7 @@
             "intr_count" : 64,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0,
-                "oprom": "uefi"
+                "num_vfs" : 0
             }
         },
         {
@@ -182,8 +177,7 @@
             "intr_count" : 64,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0,
-                "oprom": "uefi"
+                "num_vfs" : 0
             }
         },
         {
@@ -197,8 +191,7 @@
             "intr_count" : 64,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0,
-                "oprom": "uefi"
+                "num_vfs" : 0
             }
         }
     ]
