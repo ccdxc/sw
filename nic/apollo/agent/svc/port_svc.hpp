@@ -332,6 +332,7 @@ pds_port_status_to_proto (pds::PortStatus *status,
                           const sdk::linkmgr::port_args_t *port_info)
 {
     auto link_status = status->mutable_linkstatus();
+    const uint8_t *xcvr_sprom;
 
     status->set_ifindex(port_info->port_num);
     status->set_fsmstate(pds_fsmstate_to_proto(port_info->link_sm));
@@ -378,20 +379,27 @@ pds_port_status_to_proto (pds::PortStatus *status,
                                                       (port_info->fec_type));
 
     if (port_info->port_type != port_type_t::PORT_TYPE_MGMT) {
-        const uint8_t *xcvr_info;
         auto xcvr_status = status->mutable_xcvrstatus();
-        xcvr_info = port_info->xcvr_event_info.xcvr_sprom;
+        xcvr_sprom = port_info->xcvr_event_info.xcvr_sprom;
         xcvr_status->set_port(port_info->xcvr_event_info.phy_port);
-        xcvr_status->set_state(pds::PortXcvrState(port_info->xcvr_event_info.state));
+        xcvr_status->set_state(pds::PortXcvrState(
+                         port_info->xcvr_event_info.state));
         xcvr_status->set_pid(pds::PortXcvrPid(port_info->xcvr_event_info.pid));
-        xcvr_status->set_mediatype(pds::MediaType(port_info->xcvr_event_info.cable_type));
-        xcvr_status->set_xcvrsprom(&port_info->xcvr_event_info.xcvr_sprom, XCVR_SPROM_SIZE);
-        xcvr_status->set_vendorname(sdk::platform::xcvr_info_get_vendor_name(xcvr_info));
-        xcvr_status->set_vendoroui(sdk::platform::xcvr_info_get_vendor_oui(xcvr_info));
-        xcvr_status->set_serialnumber(sdk::platform::xcvr_info_get_vendor_serial_number(xcvr_info));
-        xcvr_status->set_partnumber(sdk::platform::xcvr_info_get_vendor_part_number(xcvr_info));
-        xcvr_status->set_revision(sdk::platform::xcvr_info_get_vendor_revision(port_info->xcvr_event_info.phy_port,
-                                                                               xcvr_info));
+        xcvr_status->set_mediatype(pds::MediaType(
+                         port_info->xcvr_event_info.cable_type));
+        xcvr_status->set_xcvrsprom(&port_info->xcvr_event_info.xcvr_sprom,
+                                   XCVR_SPROM_SIZE);
+        xcvr_status->set_vendorname(sdk::platform::xcvr_vendor_name(
+                                        xcvr_sprom));
+        xcvr_status->set_vendoroui(sdk::platform::xcvr_vendor_oui(
+                                       xcvr_sprom));
+        xcvr_status->set_serialnumber(
+            sdk::platform::xcvr_vendor_serial_number(xcvr_sprom));
+        xcvr_status->set_partnumber(
+            sdk::platform::xcvr_vendor_part_number(xcvr_sprom));
+        xcvr_status->set_revision(
+            sdk::platform::xcvr_vendor_revision(
+                port_info->xcvr_event_info.phy_port, xcvr_sprom));
     }
 }
 

@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/platform/sensor/sensor.hpp"
+#include "nic/operd/alerts/alerts.hpp"
 
 namespace api {
 
@@ -104,6 +105,20 @@ temperature_event_cb (system_temperature_t *temperature,
                            "%dC, HBM temperature is %dC",
                            temperature->dietemp,
                            temperature->localtemp, temperature->hbmtemp);
+    switch (hbm_event) {
+    case sysmon_hbm_threshold_event_t::SYSMON_HBM_TEMP_ABOVE_THRESHOLD:
+        operd::alerts::alert_recorder::get()->alert(
+            operd::alerts::MEM_TEMP_ABOVE_THRESHOLD,
+            "Memory temperature above threshold");
+        break;
+    case sysmon_hbm_threshold_event_t::SYSMON_HBM_TEMP_BELOW_THRESHOLD:
+        operd::alerts::alert_recorder::get()->alert(
+            operd::alerts::MEM_TEMP_BELOW_THRESHOLD,
+            "Memory temperature below threshold");
+        break;
+    default:
+        break;
+    }
     asic_temperature_metrics_update(temperature);
     port_temperature_metrics_update(temperature);
 }
@@ -136,6 +151,21 @@ interrupt_event_cb (const intr_reg_t *reg, const intr_field_t *field)
 
     // post processing of interrupts
     impl_base::asic_impl()->process_interrupts(reg, field);
+}
+
+void
+cattrip_event_cb (void)
+{
+    operd::alerts::alert_recorder::get()->alert(operd::alerts::NAPLES_CATTRIP,
+                                                "Naples CATTRIP");
+}
+
+void
+memory_event_cb (system_memory_t *system_memory)
+{
+    sdk::metrics::metrics_update(g_pds_state.memory_metrics_handle(),
+                                 *(sdk::metrics::key_t *)uuid_from_objid(0).id,
+                                 (uint64_t *)system_memory);
 }
 
 }    // namespace api

@@ -58,7 +58,7 @@ typedef struct system_power {
     int pin;
     int pout1;
     int pout2;
-} system_power_t;
+} __attribute__((packed)) system_power_t;
 
 typedef struct system_voltage {
     int vin;

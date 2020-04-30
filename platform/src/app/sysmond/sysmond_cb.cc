@@ -48,10 +48,9 @@ temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature,
 }
 
 void
-memory_event_cb (uint64_t total_mem, uint64_t available_mem,
-                 uint64_t free_mem)
+memory_event_cb (system_memory_t *system_memory)
 {
-    delphi_memory_event_cb(total_mem, available_mem, free_mem);
+    delphi_memory_event_cb(system_memory);
 }
 
 void

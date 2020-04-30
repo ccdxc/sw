@@ -150,8 +150,10 @@ sysmon_init (void)
     intr_cfg_t intr_cfg;
 
     memset(&sysmon_cfg, 0, sizeof(sysmon_cfg_t));
+    sysmon_cfg.cattrip_event_cb = cattrip_event_cb;
     sysmon_cfg.power_event_cb = power_event_cb;
     sysmon_cfg.temp_event_cb = temperature_event_cb;
+    sysmon_cfg.memory_event_cb = memory_event_cb;
     sysmon_cfg.catalog = api::g_pds_state.catalogue();
 
     // init the sysmon lib

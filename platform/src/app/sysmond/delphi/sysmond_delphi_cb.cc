@@ -93,14 +93,13 @@ delphi_temp_event_cb (sdk::platform::sensor::system_temperature_t *temperature)
 }
 
 void
-delphi_memory_event_cb (uint64_t total_mem, uint64_t available_mem,
-                 uint64_t free_mem)
+delphi_memory_event_cb (system_memory_t *system_memory)
 {
     uint64_t key = 0;
 
-    asicmemory.totalmemory = total_mem;
-    asicmemory.availablememory = available_mem;
-    asicmemory.freememory = free_mem;
+    asicmemory.totalmemory = system_memory->total_mem;
+    asicmemory.availablememory = system_memory->available_mem;
+    asicmemory.freememory = system_memory->free_mem;
 
     //Publish Delphi object
     delphi::objects::AsicMemoryMetrics::Publish(key, &asicmemory);

@@ -28,5 +28,23 @@
         "category": "Network",
         "severity": "INFO",
         "description": "Port link is down"
+    },
+    {
+        "name": "MEM_TEMP_ABOVE_THRESHOLD",
+        "category": "System",
+        "severity": "CRITICAL",
+        "description": "DSC memory temperature is above the critical threshold. System performance may be degraded"
+    },
+    {
+        "name": "MEM_TEMP_BELOW_THRESHOLD",
+        "category": "System",
+        "severity": "INFO",
+        "description": "DSC memory temperature has fallen below the critical threshold"
+    },
+    {
+        "name": "NAPLES_CATTRIP",
+        "category": "System",
+        "severity": "CRITICAL",
+        "description": "DSC temperature crossed the fatal threshold and will reset"
     }
 ]

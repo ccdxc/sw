@@ -18,8 +18,7 @@ void liveness_event_cb(void);
 void power_event_cb(sdk::platform::sensor::system_power_t *power);
 void temp_event_cb(sdk::platform::sensor::system_temperature_t *temperature,
                    sysmon_hbm_threshold_event_t hbm_event);
-void memory_event_cb(uint64_t total_mem, uint64_t available_mem,
-                     uint64_t free_mem);
+void memory_event_cb(system_memory_t *system_memoty);
 void pciehealth_event_cb (sysmon_pciehealth_severity_t sev, const char *reason);
 void panic_event_cb(void);
 void postdiag_event_cb(void);

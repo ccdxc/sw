@@ -295,9 +295,7 @@ void
 checkmemory(void)
 {
     static int runtimecounter;
-    static uint64_t total_mem = 0;
-    static uint64_t available_mem = 0;
-    static uint64_t free_mem = 0;
+    static system_memory_t system_memory = { 0 };
 
     if (++runtimecounter < 6) {
         return;
@@ -310,11 +308,11 @@ checkmemory(void)
     }
 
     //monitor the available curr_memory
-    monitorfreememory(&total_mem, &available_mem, &free_mem);
+    monitorfreememory(&system_memory.total_mem, &system_memory.available_mem,
+                      &system_memory.free_mem);
     if (g_sysmon_cfg.memory_event_cb) {
-        g_sysmon_cfg.memory_event_cb(total_mem, available_mem, free_mem);
+        g_sysmon_cfg.memory_event_cb(&system_memory);
     }
-
 }
 
 // MONFUNC(checkmemory);

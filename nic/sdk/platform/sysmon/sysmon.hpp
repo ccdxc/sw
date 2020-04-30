@@ -34,6 +34,12 @@ typedef struct systemled_s {
     pal_led_color_t color;
 } systemled_t;
 
+typedef struct system_memory_s {
+    uint64_t total_mem;
+    uint64_t available_mem;
+    uint64_t free_mem;
+} __attribute__((packed)) system_memory_t;
+
 // callbacks
 typedef void (*frequency_change_event_cb_t)(uint32_t frequency);
 typedef void (*cattrip_event_cb_t)(void);
@@ -41,8 +47,7 @@ typedef void (*power_event_cb_t)(sdk::platform::sensor::system_power_t *power);
 typedef void (*temp_event_cb_t)(
         sdk::platform::sensor::system_temperature_t *temperature,
         sysmon_hbm_threshold_event_t hbm_event);
-typedef void (*memory_event_cb_t)(
-        uint64_t total_mem, uint64_t available_mem, uint64_t free_mem);
+typedef void (*memory_event_cb_t)(system_memory_t *system_memory);
 typedef void (*panic_event_cb_t)(void);
 typedef void (*postdiag_event_cb_t)(void);
 typedef void (*liveness_event_cb_t)(void);

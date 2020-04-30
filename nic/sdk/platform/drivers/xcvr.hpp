@@ -27,6 +27,28 @@ namespace platform {
 #define AN_FEC_REQ_25GB_RSFEC 0x2
 #define AN_FEC_REQ_25GB_FCFEC 0x4
 
+#define XCVR_SPROM_LEN_SMFKM_OFFSET           14
+#define XCVR_SPROM_LEN_OM3_QSFP_OFFSET        15
+#define XCVR_SPROM_LEN_OM2_OFFSET             16
+#define XCVR_SPROM_LEN_OM1_OFFSET             17
+#define XCVR_SPROM_LEN_DAC_OFFSET             18
+#define XCVR_SPROM_LEN_OM3_SFP_OFFSET         19
+#define XCVR_SPROM_VENDOR_NAME_START_OFFSET   20
+#define XCVR_SPROM_VENDOR_NAME_END_OFFSET     35
+#define XCVR_SPROM_OUI_OFFSET1                37
+#define XCVR_SPROM_OUI_OFFSET2                38
+#define XCVR_SPROM_OUI_OFFSET3                39
+#define XCVR_SPROM_VENDOR_PART_START_OFFSET   40
+#define XCVR_SPROM_VENDOR_PART_END_OFFSET     55
+#define XCVR_SPROM_VENDOR_REV_START_OFFSET    56
+#define XCVR_SPROM_VENDOR_REV_QSFP_END_OFFSET 57
+#define XCVR_SPROM_VENDOR_REV_SFP_END_OFFSET  59
+#define XCVR_SPROM_VENDOR_SERIAL_START_OFFSET 68
+#define XCVR_SPROM_VENDOR_SERIAL_END_OFFSET   83
+
+#define ASCII_VALID_START_VALUE 32     // SPACE character
+#define ASCII_VALID_END_VALUE   126    // ~ character
+
 using sdk::linkmgr::xcvr_event_notify_t;
 using sdk::linkmgr::port_args_t;
 using sdk::types::xcvr_type_t;
@@ -289,13 +311,13 @@ xcvr_parse_length (int port, uint8_t *data)
     xcvr_t *xcvr = &g_xcvr[port];
 
     xcvr->length_om3 = 0;
-    xcvr->length_smfkm = data[14];
-    xcvr->length_om2 = data[16];
-    xcvr->length_om1 = data[17];
-    xcvr->length_dac = data[18];
+    xcvr->length_smfkm = data[XCVR_SPROM_LEN_SMFKM_OFFSET];
+    xcvr->length_om2 = data[XCVR_SPROM_LEN_OM2_OFFSET];
+    xcvr->length_om1 = data[XCVR_SPROM_LEN_OM1_OFFSET];
+    xcvr->length_dac = data[XCVR_SPROM_LEN_DAC_OFFSET];
 
     if (xcvr_type(port) == xcvr_type_t::XCVR_TYPE_SFP) {
-        xcvr->length_om3 = data[19];
+        xcvr->length_om3 = data[XCVR_SPROM_LEN_OM3_SFP_OFFSET];
 
 		// convert from units of 10m to meters
         xcvr->length_om1 *= 10;
@@ -303,68 +325,80 @@ xcvr_parse_length (int port, uint8_t *data)
         xcvr->length_om3 *= 10;
     } else {
 		// convert from units of 2m to meters
-        xcvr->length_om3 = data[15] * 2;
+        xcvr->length_om3 = data[XCVR_SPROM_LEN_OM3_QSFP_OFFSET] * 2;
     }
 }
 
 static inline string
-xcvr_info_get_ascii (const uint8_t *xcvr_info, uint32_t first, uint32_t last)
+xcvr_extract_ascii (const uint8_t *xcvr_sprom, uint32_t first, uint32_t last)
 {
     std::string str;
     uint32_t val, reg;
 
-    while (first <= last && xcvr_info[last] == ' ')
+    while (first <= last && xcvr_sprom[last] == ' ')
         last--;
     for (reg = first; reg <= last; reg++) {
-        val = xcvr_info[reg];
-        str.append(1u, putchar(((val >= 32) && (val <= 126)) ? val : '_'));
+        val = xcvr_sprom[reg];
+        str.append(1u, putchar(((val >= ASCII_VALID_START_VALUE) &&
+                   (val <= ASCII_VALID_END_VALUE)) ? val : '_'));
     }
     return str;
 }
 
 static inline string
-xcvr_info_get_vendor_name (const uint8_t *xcvr_info) 
+xcvr_vendor_name (const uint8_t *xcvr_sprom)
 {
-    return xcvr_info_get_ascii(xcvr_info, 20, 35);
+    return xcvr_extract_ascii(xcvr_sprom, XCVR_SPROM_VENDOR_NAME_START_OFFSET,
+                              XCVR_SPROM_VENDOR_NAME_END_OFFSET);
 }
 
 static inline string
-xcvr_info_get_vendor_oui (const uint8_t *xcvr_info) 
+xcvr_vendor_oui (const uint8_t *xcvr_sprom)
 {
     char oui[32];
     string oui_str;
 
-    std::sprintf(oui, "%02x:%02x:%02x", xcvr_info[37], xcvr_info[38], xcvr_info[39]);
+    std::snprintf(oui, 32, "%02x:%02x:%02x", xcvr_sprom[XCVR_SPROM_OUI_OFFSET1],
+                  xcvr_sprom[XCVR_SPROM_OUI_OFFSET2],
+                  xcvr_sprom[XCVR_SPROM_OUI_OFFSET3]);
     oui_str = oui;
-
     return oui_str;
 }
 
 static inline string
-xcvr_info_get_vendor_serial_number (const uint8_t *xcvr_info) 
+xcvr_vendor_serial_number (const uint8_t *xcvr_sprom)
 {
-    return xcvr_info_get_ascii(xcvr_info, 68, 83);
+    return xcvr_extract_ascii(xcvr_sprom,
+                              XCVR_SPROM_VENDOR_SERIAL_START_OFFSET,
+                              XCVR_SPROM_VENDOR_SERIAL_END_OFFSET);
 }
 
 static inline string
-xcvr_info_get_vendor_part_number (const uint8_t *xcvr_info) 
+xcvr_vendor_part_number (const uint8_t *xcvr_sprom)
 {
-    return xcvr_info_get_ascii(xcvr_info, 40, 55);
+    return xcvr_extract_ascii(xcvr_sprom, XCVR_SPROM_VENDOR_PART_START_OFFSET,
+                              XCVR_SPROM_VENDOR_PART_END_OFFSET);
 }
 
 static inline string
-xcvr_info_get_vendor_revision (uint32_t phy_port, const uint8_t *xcvr_info) 
+xcvr_vendor_revision (uint32_t phy_port, const uint8_t *xcvr_sprom)
 {
     sdk::types::xcvr_type_t xtype;
 
     xtype = xcvr_type(phy_port - 1);
     if (xtype == xcvr_type_t::XCVR_TYPE_QSFP ||
         xtype == xcvr_type_t::XCVR_TYPE_QSFP28) {
-        return xcvr_info_get_ascii(xcvr_info, 56, 57);
+        return xcvr_extract_ascii(xcvr_sprom,
+                                  XCVR_SPROM_VENDOR_REV_START_OFFSET,
+                                  XCVR_SPROM_VENDOR_REV_QSFP_END_OFFSET);
     } else {
-        return xcvr_info_get_ascii(xcvr_info, 56, 59);
+        return xcvr_extract_ascii(xcvr_sprom,
+                                  XCVR_SPROM_VENDOR_REV_START_OFFSET,
+                                  XCVR_SPROM_VENDOR_REV_SFP_END_OFFSET);
     }
 }
+
 } // namespace platform
 } // namespace sdk
+
 #endif
