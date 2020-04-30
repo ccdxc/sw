@@ -167,7 +167,6 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 			log.Infof("Updating Subnet [%v/%v] with Interface binding - [%s]", intf.Spec.VrfName, intf.Spec.Network, uid)
 			if err = updateSubnet(intf.Spec.VrfName, intf.Spec.Network, uid.Bytes()); err != nil {
 				return errors.Wrapf(types.ErrDatapathHandling, "Interface: %s updating new subnet| Err: %s", oldIntf.GetKey(), err)
-				return err
 			}
 		}
 	}

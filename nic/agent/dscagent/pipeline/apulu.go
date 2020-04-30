@@ -607,6 +607,40 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 				lbip := apuluutils.ConvertIPAddress(cfg.LoopbackIP)
 				apulu.HandleDevice(types.Update, a.DeviceSvcClient, lbip)
 			}
+			var vrf netproto.Vrf
+			vrf, err = validator.ValidateVrf(a.InfraAPI, types.DefaultTenant, types.DefaultNamespace, types.DefaulUnderlaytVrf)
+			if err != nil {
+				log.Errorf("Get VRF failed for %s", types.DefaulUnderlaytVrf)
+				return
+			}
+
+			vrfuid, errr := uuid.FromString(vrf.UUID)
+			if errr != nil {
+				log.Errorf("Interface: | could not parse vrf UUID %s | Err: %v", vrf.UUID, err)
+				err = errr
+				return
+			}
+
+			var dat [][]byte
+			dat, err = a.InfraAPI.List("IPAMPolicy")
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrBadRequest, "IPAMPolicy: | Err: %v", types.ErrObjNotFound))
+				return
+			}
+
+			for _, o := range dat {
+				var policy netproto.IPAMPolicy
+				err := proto.Unmarshal(o, &policy)
+				if err != nil {
+					log.Error(errors.Wrapf(types.ErrUnmarshal, "IPAMPolicy: %s | Err: %v", policy.GetKey(), err))
+					continue
+				}
+				log.Infof("IPAMPolicy: %s | Op: %s | %s", policy.GetKey(), types.Update, types.InfoHandleObjBegin)
+
+				if err = apulu.HandleIPAMPolicy(a.InfraAPI, a.DHCPRelayClient, a.SubnetClient, types.Update, policy, vrfuid.Bytes()); err != nil {
+					log.Error(err)
+				}
+			}
 		}
 	}
 	return
