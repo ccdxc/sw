@@ -923,10 +923,15 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
             vnet_buffer(p0)->pds_flow_data.nexthop = hdr0->drop << 18;
         }
         vnet_buffer(p0)->l2_hdr_offset = hdr0->l2_offset;
-        vnet_buffer(p0)->l3_hdr_offset =
-                hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
-        vnet_buffer(p0)->l4_hdr_offset =
-                hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
+        if (BIT_ISSET(hdr0->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
+            vnet_buffer(p0)->l3_hdr_offset =
+                    hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
+            vnet_buffer(p0)->l4_hdr_offset =
+                    hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
+        } else {
+            vnet_buffer(p0)->l3_hdr_offset = hdr0->l3_offset;
+            vnet_buffer(p0)->l4_hdr_offset = hdr0->l4_offset;
+        }
         vnet_buffer(p0)->pds_flow_data.l2_inner_offset = hdr0->l2_inner_offset;
         vnet_buffer(p0)->pds_flow_data.lif = hdr0->lif;
         vnet_buffer2(p0)->pds_nat_data.vpc_id = hdr0->vpc_id;
@@ -994,10 +999,15 @@ next_pak:
             vnet_buffer(p1)->pds_flow_data.nexthop = hdr1->drop << 18;
         }
         vnet_buffer(p1)->l2_hdr_offset = hdr1->l2_offset;
-        vnet_buffer(p1)->l3_hdr_offset =
-                hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
-        vnet_buffer(p1)->l4_hdr_offset =
-                hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
+        if (BIT_ISSET(hdr1->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
+            vnet_buffer(p1)->l3_hdr_offset =
+                    hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
+            vnet_buffer(p1)->l4_hdr_offset =
+                    hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
+        } else {
+            vnet_buffer(p1)->l3_hdr_offset = hdr1->l3_offset;
+            vnet_buffer(p1)->l4_hdr_offset = hdr1->l4_offset;
+        }
         vnet_buffer(p1)->pds_flow_data.l2_inner_offset = hdr1->l2_inner_offset;
         vnet_buffer(p1)->pds_flow_data.lif = hdr1->lif;
         vnet_buffer2(p1)->pds_nat_data.vpc_id = hdr1->vpc_id;
@@ -1153,10 +1163,15 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         vnet_buffer(p)->pds_flow_data.nexthop = hdr->drop << 18;
     }
     vnet_buffer(p)->l2_hdr_offset = hdr->l2_offset;
-    vnet_buffer(p)->l3_hdr_offset =
-            hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
-    vnet_buffer(p)->l4_hdr_offset =
-            hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
+    if (BIT_ISSET(hdr->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
+        vnet_buffer(p)->l3_hdr_offset =
+                hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
+        vnet_buffer(p)->l4_hdr_offset =
+                hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
+    } else {
+        vnet_buffer(p)->l3_hdr_offset = hdr->l3_offset;
+        vnet_buffer(p)->l4_hdr_offset = hdr->l4_offset;
+    }
     vnet_buffer(p)->pds_flow_data.lif = hdr->lif;
     vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
     vnet_buffer2(p)->pds_nat_data.vnic_id = hdr->vnic_id;

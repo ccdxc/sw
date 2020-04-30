@@ -5,15 +5,15 @@
 export PYTESTAPPROOT=/home/vsampath/pytest
 export PYTHONPATH=${PYTESTAPPROOT}/configobjects:${PYTESTAPPROOT}/proto
 
-mkdir ${PYTESTAPPROOT}
-mkdir ${PYTESTAPPROOT}/apps
-mkdir ${PYTESTAPPROOT}/configobjects
-mkdir ${PYTESTAPPROOT}/proto
-mkdir ${PYTESTAPPROOT}/proto/meta
+mkdir -p ${PYTESTAPPROOT}
+mkdir -p ${PYTESTAPPROOT}/apps
+mkdir -p ${PYTESTAPPROOT}/configobjects
+mkdir -p ${PYTESTAPPROOT}/proto
+mkdir -p ${PYTESTAPPROOT}/proto/meta
 
 # in your workspace
-cp build/aarch64/apulu/gen/proto/* ${PYTESTAPPROOT}/proto/
-cp build/aarch64/apulu/gen/proto/meta/* ${PYTESTAPPROOT}/proto/meta/
+cp build/aarch64/apulu/capri/gen/proto/* ${PYTESTAPPROOT}/proto/
+cp build/aarch64/apulu/capri/gen/proto/meta/* ${PYTESTAPPROOT}/proto/meta/
 cp apollo/tools/apulu/pytestapp/configobjects/* ${PYTESTAPPROOT}/configobjects/
 cp apollo/tools/apulu/pytestapp/apps/* ${PYTESTAPPROOT}/apps/
  
