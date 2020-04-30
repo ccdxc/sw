@@ -156,7 +156,7 @@ struct scratch_metadata_t {
 	bit<1> flag;
 	bit<32> ipv4_src;
 	bit<18> flow_hash;
-	bit<19> flow_hint;
+	bit<20> flow_hint;
 	bit<18> l2_flow_hash;
 	bit<17> l2_flow_hint;
 	bit<8> class_id;

@@ -51,28 +51,28 @@ control dnat_lookup(inout cap_phv_intr_global_h capri_intrinsic,
 	 //    metadata.cntrl.dnat_ohash_lkp = TRUE;
             if ((hint1 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash1 == hardware_hash[31:14])) {
 	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<19>)hint1;
+	      metadata.scratch.flow_hint = (bit<20>)hint1;
 	    }
             if ((hint2 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash2 == hardware_hash[31:14])) {
 	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<19>)hint2;
+	      metadata.scratch.flow_hint = (bit<20>)hint2;
 	    }
             if ((hint3 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash3 == hardware_hash[31:14])) {
 	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<19>)hint3;
+	      metadata.scratch.flow_hint = (bit<20>)hint3;
 	    }
             if ((hint4 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash4 == hardware_hash[31:14])) {
 	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<19>)hint4;
+	      metadata.scratch.flow_hint = (bit<20>)hint4;
 	    }
             if ((hint5 != 0 ) && (metadata.scratch.hint_valid == FALSE) && (hash5 == hardware_hash[31:14])) {
 	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<19>)hint5;
+	      metadata.scratch.flow_hint = (bit<20>)hint5;
 	    }
 	    metadata.scratch.flag = more_hashes;
             if ((more_hashes == 1) && (metadata.scratch.hint_valid == FALSE)) {
 	      metadata.scratch.hint_valid = TRUE;
-	      metadata.scratch.flow_hint = (bit<19>)more_hints;
+	      metadata.scratch.flow_hint = (bit<20>)more_hints;
 	    }
 	    
 	    if( metadata.scratch.hint_valid == TRUE) {

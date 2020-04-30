@@ -216,12 +216,25 @@ control key_init(inout cap_phv_intr_global_h intr_global,
       
   }
 
+
+  @name(".err_handler_init_config_a")
+  action err_handler_init_config_a() {
+    intr_p4.setValid();
+    intr_global.drop = 1;
+    if (intr_global.tm_oq != TM_P4_RECIRC_QUEUE) {
+      intr_global.tm_iq = intr_global.tm_oq;
+    }
+    
+  }
+    
+
     
  @name(".init_config") table init_config {
    actions  = {
      init_config_a;
    }
    default_action = init_config_a;
+   error_action = err_handler_init_config_a;
    stage = 0;
    
  }

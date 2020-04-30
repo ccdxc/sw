@@ -333,14 +333,17 @@ state parse_txdma_gso {
     tcpCsum_1.update_len(l4_1_hdr_offset, l4_1_len); // l4_len should be OHI since capri target requires it
     tcpCsum_1.validate(hdr.l4_u.tcp.checksum);
     
-    pensParser.capture_payload_offset(true);
+    //    pensParser.capture_payload_offset(true);
     tcp_counter = ((bit<8>)(hdr.l4_u.tcp.dataOffset) << 2) - 20;
     //need to define which options are needed for NVme
+    transition accept;
+    /*
     transition select(tcp_counter) {
       0               : accept;
       0x80 &&& 0x80 : parse_tcp_option_error;
       default         : parse_tcp_options_blob;
     }
+    */
   }
 
 

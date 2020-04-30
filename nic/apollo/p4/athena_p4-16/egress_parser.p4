@@ -209,14 +209,16 @@ parser AthenaEgressParser(packet_in packet,
     metadata.l4.l4_sport_1 = hdr.l4_u.tcp.srcPort;
     metadata.l4.l4_dport_1 = hdr.l4_u.tcp.dstPort;
     
-    pensParser.capture_payload_offset(true);
+//    pensParser.capture_payload_offset(true);
     tcp_counter = ((bit<8>)(hdr.l4_u.tcp.dataOffset) << 2) - 20;
     //need to define which options are needed for NVme
-    transition select(tcp_counter) {
+    transition accept;
+    /*    transition select(tcp_counter) {
       0               : accept;
       0x80 &&& 0x80 : parse_tcp_option_error;
       default         : parse_tcp_options_blob;
     }
+    */
   }
 
 
