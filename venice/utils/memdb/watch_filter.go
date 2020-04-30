@@ -226,7 +226,7 @@ func (wdb *dscWatcherDB) addDSCWatcherInfoWatchOptions(kind string, options api.
 			newFilterGrp, err := wdb.md.addWFltGrp(kind, options, info.watchers)
 			if err == nil {
 				info.filterGroup = newFilterGrp
-				wdb.md.delWFltGrp(kind, info.watchOptions, info.watchers)
+				wdb.md.delWFltGrp(kind, info.watchOptions, info.watchers, true)
 				info.watchOptions = options
 				return oldFilterFuncs, newFilterGrp.filters, nil
 			}
@@ -268,12 +268,15 @@ func (wdb *dscWatcherDB) delDSCWatcherInfo(kind string, watcher chan Event) {
 			if w == watcher {
 				if info.filterGroup != nil {
 
-					fgrp, err := wdb.md.delWFltGrp(kind, info.watchOptions, []chan Event{w})
+					fgrp, err := wdb.md.delWFltGrp(kind, info.watchOptions, []chan Event{w}, false)
 					if err != nil {
 						log.Error("delDSCWatcherInfo, delWatcherFromWFilterGroup returned error: ", err)
 					}
 					err = nil
 					info.filterGroup = fgrp
+					if fgrp == nil {
+						info.watchOptions = api.ListWatchOptions{}
+					}
 				}
 				info.watchers = append(info.watchers[:i], info.watchers[i+1:]...)
 				/*
@@ -306,7 +309,8 @@ func (wdb *dscWatcherDB) clearWatchOptions(kind string) []FilterFn {
 		}
 
 		oldFilterFuncs := info.filterGroup.filters
-		_, err := wdb.md.delWFltGrp(kind, info.watchOptions, info.watchers)
+		log.Infof("clearWatchOptions for kind: %s | info: %v", kind, info)
+		_, err := wdb.md.delWFltGrp(kind, info.watchOptions, info.watchers, true)
 		if err != nil {
 			log.Errorf("delWFltGrp for kind: %s returned err: %s", kind, err)
 		}
@@ -407,9 +411,9 @@ func (md *Memdb) addWFltGrp(kind string, watchOptions api.ListWatchOptions, watc
 	return fgrp.addWFilterGroup(kind, watchOptions, watchers)
 }
 
-func (md *Memdb) delWFltGrp(kind string, watchOptions api.ListWatchOptions, watchers []chan Event) (*WFilterGroup, error) {
+func (md *Memdb) delWFltGrp(kind string, watchOptions api.ListWatchOptions, watchers []chan Event, clear bool) (*WFilterGroup, error) {
 	if grp, ok := md.filterGroups[kind]; ok {
-		return grp.delWatcherFromWFilterGroup(watchOptions, watchers)
+		return grp.delWatcherFromWFilterGroup(watchOptions, watchers, clear)
 	}
 	return nil, errors.New("kind not registered yet")
 }
@@ -460,7 +464,7 @@ func (md *Memdb) removeWatcherFromList(fgrp *WFilterGroup, watcher chan Event) e
 
 // DelWatcherFromWFilterGroup deletes a watcher from the list of watchers of a kind with the given watchoptions
 // if the list of watchers becomes 0, the group is deleted
-func (fs *watcherFilterSet) delWatcherFromWFilterGroup(watchOptions api.ListWatchOptions, watchers []chan Event) (*WFilterGroup, error) {
+func (fs *watcherFilterSet) delWatcherFromWFilterGroup(watchOptions api.ListWatchOptions, watchers []chan Event, clear bool) (*WFilterGroup, error) {
 	var err error
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
@@ -481,13 +485,14 @@ func (fs *watcherFilterSet) delWatcherFromWFilterGroup(watchOptions api.ListWatc
 				return grp, err
 			}
 		}
-		/*
+
+		if clear == true {
 			if len(grp.watchers) == 0 {
 				// no more watchers in the group, delete it
 				delete(fs.filterGrp, optsStr)
 				return nil, nil
 			}
-		*/
+		}
 		return grp, nil
 	}
 	err = errors.New("Filter group doesn't exist")

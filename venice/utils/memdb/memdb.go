@@ -236,7 +236,7 @@ type dscWatcherDBInterface interface {
 
 type watchFiltersetInterface interface {
 	addWFilterGroup(kind string, watchOptions api.ListWatchOptions, watchers []chan Event) (*WFilterGroup, error)
-	delWatcherFromWFilterGroup(watchOptions api.ListWatchOptions, watchers []chan Event) (*WFilterGroup, error)
+	delWatcherFromWFilterGroup(watchOptions api.ListWatchOptions, watchers []chan Event, clear bool) (*WFilterGroup, error)
 	watchEvent(ev Event)
 	dump() string
 }

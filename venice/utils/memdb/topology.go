@@ -25,6 +25,7 @@ const (
 	updateVrf
 	updateIPAM
 	updateSgPolicy
+	updateTenant
 )
 
 var order = []string{"SecurityProfile", "IPAMPolicy", "RouteTable", "Vrf", "NetworkSecurityPolicy", "Network"}
@@ -45,6 +46,7 @@ type topoInterface interface {
 type refCntInterface interface {
 	addRefCnt(dsc, kind, tenant, name string)
 	delRefCnt(dsc, kind, tenant, name string)
+	getRefCnt(dsc, kind, tenant, name string) int
 	getWatchOptions(dsc, kind string) (api.ListWatchOptions, bool)
 	dump()
 }
@@ -62,7 +64,6 @@ type topoMgr struct {
 	topoTriggerMap map[string]map[string]topoFunc
 	topology       map[string]topoInterface
 	refCounts      refCntInterface
-	tenantRefCnt   map[string]int
 }
 
 type topoRefs struct {
@@ -83,9 +84,16 @@ func newTopoRefCnt() refCntInterface {
 }
 
 func (tr *topoRefCnt) addRefCnt(dsc, kind, tenant, name string) {
-	key1 := dsc + "%" + kind
-	key2 := tenant + "%" + name
-
+	var key1, key2 string
+	key1 = dsc + "%" + kind
+	switch kind {
+	case "IPAMPolicy", "NetworkSecurityPolicy":
+		key2 = tenant + "%" + name
+	case "Tenant":
+		key2 = tenant
+	default:
+		return
+	}
 	if a, ok := tr.refs[key1]; ok {
 		a[key2]++
 	} else {
@@ -96,9 +104,16 @@ func (tr *topoRefCnt) addRefCnt(dsc, kind, tenant, name string) {
 }
 
 func (tr *topoRefCnt) delRefCnt(dsc, kind, tenant, name string) {
-	key1 := dsc + "%" + kind
-	key2 := tenant + "%" + name
-
+	var key1, key2 string
+	key1 = dsc + "%" + kind
+	switch kind {
+	case "IPAMPolicy", "NetworkSecurityPolicy":
+		key2 = tenant + "%" + name
+	case "Tenant":
+		key2 = tenant
+	default:
+		return
+	}
 	if a, ok := tr.refs[key1]; ok {
 		if _, ok := a[key2]; ok {
 			a[key2]--
@@ -109,36 +124,82 @@ func (tr *topoRefCnt) delRefCnt(dsc, kind, tenant, name string) {
 	}
 }
 
+func (tr *topoRefCnt) getRefCnt(dsc, kind, tenant, name string) int {
+	var key1, key2 string
+	key1 = dsc + "%" + kind
+	switch kind {
+	case "IPAMPolicy", "NetworkSecurityPolicy":
+		key2 = tenant + "%" + name
+	case "Tenant":
+		key2 = tenant
+	default:
+		return 0
+	}
+
+	if a, ok := tr.refs[key1]; ok {
+		if _, ok := a[key2]; ok {
+			return a[key2]
+		}
+	}
+
+	return 0
+
+}
+
 func (tr *topoRefCnt) getWatchOptions(dsc, kind string) (api.ListWatchOptions, bool) {
 	ret := api.ListWatchOptions{}
-
 	key1 := dsc + "%" + kind
-	str := ""
-	tenant := ""
-	if a, ok := tr.refs[key1]; ok {
-		first := true
-		cnt := len(a)
-		for key := range a {
+	switch kind {
+	case "IPAMPolicy", "NetworkSecurityPolicy":
+		str := ""
+		tenant := ""
+		if a, ok := tr.refs[key1]; ok {
+			first := true
+			cnt := len(a)
+			for key := range a {
 
-			keys := strings.Split(key, "%")
-			if first == true {
-				tenant = keys[0]
-				first = false
+				keys := strings.Split(key, "%")
+				if first == true {
+					tenant = keys[0]
+					first = false
+				}
+				str += keys[1]
+				cnt--
+				if cnt != 0 {
+					str += ","
+				}
 			}
-			str += keys[1]
+		}
+
+		if str != "" {
+			fieldSelStr := fmt.Sprintf("tenant=%s,name in (%s)", tenant, str)
+			ret.FieldSelector = fieldSelStr
+			return ret, false
+		}
+	case "Tenant":
+		str := ""
+		tenMap := map[string]struct{}{}
+		if a, ok := tr.refs[key1]; ok {
+			for key := range a {
+				if _, ok1 := tenMap[key]; !ok1 {
+					tenMap[key] = struct{}{}
+				}
+			}
+		}
+		cnt := len(tenMap)
+		for t := range tenMap {
 			cnt--
+			str += t
 			if cnt != 0 {
 				str += ","
 			}
 		}
+		if str != "" {
+			fieldSelStr := fmt.Sprintf("tenant in (%s)", str)
+			ret.FieldSelector = fieldSelStr
+			return ret, false
+		}
 	}
-
-	if str != "" {
-		fieldSelStr := fmt.Sprintf("tenant=%s,name in (%s)", tenant, str)
-		ret.FieldSelector = fieldSelStr
-		return ret, false
-	}
-
 	return ret, true
 }
 
@@ -238,113 +299,44 @@ func (tn *topoNode) delBackRef(key, ref, refKind string) {
 
 func (tn *topoNode) evalWatchOptions(dsc, kind, key, tenant, ns string, mod uint) kindWatchOptions {
 	ret := kindWatchOptions{}
-	log.Infof("Received for dsc: %s | kind: %s | key: %s | mod %dƒ", dsc, kind, key, mod)
+	log.Infof("Received for dsc: %s | kind: %s | key: %s | mod %x", dsc, kind, key, mod)
 	switch kind {
 	case "Interface":
-		if r, ok := tn.topo[key]; ok {
-			// update the watchoptions for ipampolicy, Vrf, network
-			if nw, ok := r.refs["Network"]; ok && len(nw) != 0 {
-				k1 := getKey(tenant, ns, nw[0])
-				node := tn.tm.topology["Network"]
-				rr := node.getRefs(k1)
-				if rr == nil {
-					log.Errorf("topo references not found for key: %s", k1)
-					tn.tm.dump()
-					return ret
-				}
-				fwRefs := rr.refs
-				if fwRefs == nil {
-					log.Errorf("forward topo references not found for key: %s", k1)
-					tn.tm.dump()
-					return ret
-				}
+		// update the watchoptions for ipampolicy, Vrf, network
 
-				if _, ok := fwRefs["Vrf"]; ok {
-					opts := api.ListWatchOptions{}
-					opts.Tenant = tenant
-					ret["Vrf"] = opts
-				}
-
-				if ipamRef, ok := fwRefs["IPAMPolicy"]; ok && len(ipamRef) != 0 {
-					opts, _ := tn.tm.refCounts.getWatchOptions(dsc, "IPAMPolicy")
-					ret["IPAMPolicy"] = opts
-				} else {
-					// if an IPAM policy is not configured at the network level, pick the default
-					// configured for the vrf
-					if vrfRef, ok := fwRefs["Vrf"]; ok && len(vrfRef) != 0 {
-						k2 := getKey(tenant, ns, vrfRef[0])
-						node1 := tn.tm.topology["Vrf"]
-						rr1 := node1.getRefs(k2)
-						if rr1 != nil {
-							fwRefs1 := rr1.refs
-							if fwRefs1 != nil {
-								if ipamDefRef, ok := fwRefs1["IPAMPolicy"]; ok && len(ipamDefRef) != 0 {
-									opts, _ := tn.tm.refCounts.getWatchOptions(dsc, "IPAMPolicy")
-									ret["IPAMPolicy"] = opts
-								}
-							}
-						}
-
-					}
-				}
-
-				if sgRef, ok := fwRefs["NetworkSecurityPolicy"]; ok && len(sgRef) != 0 {
-					opts, _ := tn.tm.refCounts.getWatchOptions(dsc, "NetworkSecurityPolicy")
-					ret["NetworkSecurityPolicy"] = opts
-				}
-
-				opts := api.ListWatchOptions{}
-				opts.Tenant = tenant
+		if mod&updateTenant == updateTenant {
+			opts, clear := tn.tm.refCounts.getWatchOptions(dsc, "Tenant")
+			if clear == false {
+				ret["Vrf"] = opts
 				ret["Network"] = opts
 				ret["RouteTable"] = opts
 				ret["SecurityProfile"] = opts
 			}
 		}
-	case "Network":
-		if r, ok := tn.topo[key]; ok {
-			strs := strings.Split(key, "/")
-			if mod&updateSgPolicy == updateSgPolicy {
-				opts, _ := tn.tm.refCounts.getWatchOptions(dsc, "NetworkSecurityPolicy")
+
+		if mod&updateIPAM == updateIPAM {
+			opts, clear := tn.tm.refCounts.getWatchOptions(dsc, "IPAMPolicy")
+			if clear == false {
+				ret["IPAMPolicy"] = opts
+			}
+		}
+
+		if mod&updateSgPolicy == updateSgPolicy {
+			opts, clear := tn.tm.refCounts.getWatchOptions(dsc, "NetworkSecurityPolicy")
+			if clear == false {
 				ret["NetworkSecurityPolicy"] = opts
 			}
+		}
 
-			if mod&updateIPAM == updateIPAM {
-				fwRef := r.refs
-				if fwRef != nil {
-					if ipam, ok := fwRef["IPAMPolicy"]; ok && len(ipam) != 0 {
-						opts, _ := tn.tm.refCounts.getWatchOptions(dsc, "IPAMPolicy")
-						ret["IPAMPolicy"] = opts
-					} else {
-						// if an IPAM policy is not configured at the network level, pick the default
-						// configured for the vrf
-						if vrfRef, ok := fwRef["Vrf"]; ok && len(vrfRef) != 0 {
-							k2 := getKey(strs[0], strs[1], vrfRef[0])
-							node1 := tn.tm.topology["Vrf"]
-							rr1 := node1.getRefs(k2)
-							if rr1 != nil {
-								fwRefs1 := rr1.refs
-								if fwRefs1 != nil {
-									if ipamDefRef, ok := fwRefs1["IPAMPolicy"]; ok && len(ipamDefRef) != 0 {
-										tn.tm.refCounts.addRefCnt(dsc, "IPAMPolicy", strs[0], ipamDefRef[0])
-										opts, _ := tn.tm.refCounts.getWatchOptions(dsc, "IPAMPolicy")
-										ret["IPAMPolicy"] = opts
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+	case "Network":
+		if mod&updateSgPolicy == updateSgPolicy {
+			opts, _ := tn.tm.refCounts.getWatchOptions(dsc, "NetworkSecurityPolicy")
+			ret["NetworkSecurityPolicy"] = opts
+		}
 
-			/*
-				if mod&updateVrf == updateVrf {
-					opts := api.ListWatchOptions{}
-					opts.Tenant = strs[0]
-					ret["Vrf"] = opts
-					ret["RouteTable"] = opts
-					ret["SecurityProfile"] = opts
-				}
-			*/
+		if mod&updateIPAM == updateIPAM {
+			opts, _ := tn.tm.refCounts.getWatchOptions(dsc, "IPAMPolicy")
+			ret["IPAMPolicy"] = opts
 		}
 	case "Vrf":
 		opts, clear := tn.tm.refCounts.getWatchOptions(dsc, "IPAMPolicy")
@@ -363,8 +355,23 @@ func getKey(tenant, ns, name string) string {
 	return memdbKey(&ometa)
 }
 
-func (tn *topoNode) updateRefCounts(key, dsc, tenant, ns string, add bool) {
+func (tn *topoNode) updateRefCounts(key, dsc, tenant, ns string, add bool) (mod uint) {
 	log.Infof("Received for key: %s | dsc: %s | tenat: %s | ns: %s | add: %v", key, dsc, tenant, ns, add)
+
+	if add == true {
+		tn.tm.refCounts.addRefCnt(dsc, "Tenant", tenant, "")
+		if tn.tm.refCounts.getRefCnt(dsc, "Tenant", tenant, "") == 1 {
+			// this tenant got added for the first time
+			mod |= updateTenant
+		}
+	} else {
+		tn.tm.refCounts.delRefCnt(dsc, "Tenant", tenant, "")
+		if tn.tm.refCounts.getRefCnt(dsc, "Tenant", tenant, "") == 0 {
+			// No more references to this tenant on this dsc
+			mod |= updateTenant
+		}
+	}
+
 	node := tn.tm.topology["Network"]
 	rr := node.getRefs(key)
 	if rr == nil {
@@ -382,8 +389,16 @@ func (tn *topoNode) updateRefCounts(key, dsc, tenant, ns string, add bool) {
 	if ipamRef, ok := fwRefs["IPAMPolicy"]; ok {
 		if add {
 			tn.tm.refCounts.addRefCnt(dsc, "IPAMPolicy", tenant, ipamRef[0])
+			if tn.tm.refCounts.getRefCnt(dsc, "IPAMPolicy", tenant, ipamRef[0]) == 1 {
+				// first reference to this ipam on this dsc
+				mod |= updateIPAM
+			}
 		} else {
 			tn.tm.refCounts.delRefCnt(dsc, "IPAMPolicy", tenant, ipamRef[0])
+			if tn.tm.refCounts.getRefCnt(dsc, "IPAMPolicy", tenant, ipamRef[0]) == 0 {
+				// last reference to this ipam on this dsc
+				mod |= updateIPAM
+			}
 		}
 	} else {
 		if vrfRef, ok := fwRefs["Vrf"]; ok {
@@ -396,8 +411,14 @@ func (tn *topoNode) updateRefCounts(key, dsc, tenant, ns string, add bool) {
 					if ipamDefRef, ok := fwRefs1["IPAMPolicy"]; ok {
 						if add {
 							tn.tm.refCounts.addRefCnt(dsc, "IPAMPolicy", tenant, ipamDefRef[0])
+							if tn.tm.refCounts.getRefCnt(dsc, "IPAMPolicy", tenant, ipamDefRef[0]) == 1 {
+								mod |= updateIPAM
+							}
 						} else {
 							tn.tm.refCounts.delRefCnt(dsc, "IPAMPolicy", tenant, ipamDefRef[0])
+							if tn.tm.refCounts.getRefCnt(dsc, "IPAMPolicy", tenant, ipamDefRef[0]) == 0 {
+								mod |= updateIPAM
+							}
 						}
 					}
 				}
@@ -410,12 +431,19 @@ func (tn *topoNode) updateRefCounts(key, dsc, tenant, ns string, add bool) {
 		for _, sgRef := range sgRefs {
 			if add {
 				tn.tm.refCounts.addRefCnt(dsc, "NetworkSecurityPolicy", tenant, sgRef)
+				if tn.tm.refCounts.getRefCnt(dsc, "NetworkSecurityPolicy", tenant, sgRef) == 1 {
+					mod |= updateSgPolicy
+				}
 			} else {
 				tn.tm.refCounts.delRefCnt(dsc, "NetworkSecurityPolicy", tenant, sgRef)
+				if tn.tm.refCounts.getRefCnt(dsc, "NetworkSecurityPolicy", tenant, sgRef) == 0 {
+					mod |= updateSgPolicy
+				}
 			}
 		}
 	}
 	tn.tm.refCounts.dump()
+	return
 }
 
 func (tn *topoNode) updateWatchOptions(dsc string, opts kindWatchOptions) {
@@ -487,9 +515,8 @@ func (tn *topoNode) addNode(obj Object) {
 
 			// trigger an update to watchoptions of the effected kinds
 			dsc := nwIf.Status.DSC
-			tn.tm.tenantRefCnt[dsc+tenant]++
-			tn.updateRefCounts(k1, dsc, tenant, obj.GetObjectMeta().Namespace, true)
-			opts := tn.evalWatchOptions(dsc, kind, key, tenant, obj.GetObjectMeta().Namespace, updateVrf|updateIPAM|updateSgPolicy)
+			mod := tn.updateRefCounts(k1, dsc, tenant, obj.GetObjectMeta().Namespace, true)
+			opts := tn.evalWatchOptions(dsc, kind, key, tenant, obj.GetObjectMeta().Namespace, mod)
 			log.Infof("New watchoptions after topo update: %v", opts)
 			tn.updateWatchOptions(dsc, opts)
 		}
@@ -555,11 +582,21 @@ func (tn *topoNode) deleteNode(obj Object, evalOpts bool) {
 
 			dsc := nwIf.Status.DSC
 			// decrement the refcnt
-			tn.updateRefCounts(k1, dsc, tenant, obj.GetObjectMeta().Namespace, false)
-			tn.tm.tenantRefCnt[dsc+tenant]--
-			if tn.tm.tenantRefCnt[dsc+tenant] == 0 {
+			mod := tn.updateRefCounts(k1, dsc, tenant, obj.GetObjectMeta().Namespace, false)
+			if mod != 0 {
+				modFlags := map[string]uint{}
+				for _, s := range order {
+					switch s {
+					case "SecurityProfile", "RouteTable", "Vrf", "Network":
+						modFlags[s] = updateTenant
+					case "IPAMPolicy":
+						modFlags[s] = updateIPAM
+					case "NetworkSecurityPolicy":
+						modFlags[s] = updateSgPolicy
+					}
+				}
 				// trigger an update to watchoptions of the effected kinds
-				opts := tn.evalWatchOptions(dsc, kind, key, tenant, obj.GetObjectMeta().Namespace, updateVrf|updateIPAM|updateSgPolicy)
+				opts := tn.evalWatchOptions(dsc, kind, key, tenant, obj.GetObjectMeta().Namespace, mod)
 				log.Infof("New watchoptions after topo update: %v", opts)
 				l := len(order)
 				for a := l; a > 0; a-- {
@@ -569,10 +606,12 @@ func (tn *topoNode) deleteNode(obj Object, evalOpts bool) {
 						if err == nil {
 							tn.md.sendReconcileEvent(dsc, kind, oldFilters, newFilters)
 						}
-					} else {
+					} else if mod&modFlags[kind] == modFlags[kind] {
 						oldFilters := tn.md.clearWatchOptions(dsc, kind)
 						if len(oldFilters) != 0 {
 							tn.md.sendReconcileEvent(dsc, kind, oldFilters, nil)
+						} else {
+							log.Infof("oldFilters empty for dsc: %s | kind: %s", dsc, kind)
 						}
 					}
 				}
@@ -648,6 +687,7 @@ func (tn *topoNode) updateNode(old, new Object) {
 		oldVrf := oldObj.Spec.VrfName
 		newVrf := newObj.Spec.VrfName
 
+		log.Infof("Old nw spec: %v | new spec: %v", oldObj.Spec, newObj.Spec)
 		topoRefs := tn.topo[key]
 
 		if topoRefs == nil {
@@ -660,12 +700,19 @@ func (tn *topoNode) updateNode(old, new Object) {
 
 		if backRefs != nil {
 			if nwRef, ok := backRefs["Interface"]; ok && len(nwRef) != 0 {
+				log.Infof("interface refs for nw: %s | refs: %v", key, nwRef)
 				// walk all the interfaces attached to this network
 				for _, nwIf := range nwRef {
 					od := tn.md.getObjectDBByType("Interface")
+					log.Infof("Looking up %s", nwIf)
 					od.Lock()
 					nwIfObj := od.getObject(nwIf)
 					od.Unlock()
+					if nwIfObj == nil {
+						log.Errorf("Failed to lookup nwif: %s | back ref for nw: %s, backrefs: %v", nwIf, key, backRefs)
+						tn.tm.dump()
+						continue
+					}
 					obj1 := nwIfObj.Object()
 					obj2 := obj1.(*netproto.Interface)
 					dsc := obj2.Status.DSC
@@ -674,6 +721,8 @@ func (tn *topoNode) updateNode(old, new Object) {
 						log.Errorf("DSC field is status emtpty for %s | spec: %v | status: %v", nwIf, obj2.Spec, obj2.Status)
 						continue
 					}
+					log.Infof("Need to update options for DSC: %s", dsc)
+
 					updateMap[dsc] = struct{}{}
 				}
 			}
@@ -753,13 +802,14 @@ func (tn *topoNode) updateNode(old, new Object) {
 
 		// update all the dscs with the new options
 		for dsc := range updateMap {
-			if newIPAM != "" {
-				tn.tm.refCounts.addRefCnt(dsc, "IPAMPolicy", oldObj.Tenant, newIPAM)
+			if mod&updateIPAM == updateIPAM {
+				if newIPAM != "" {
+					tn.tm.refCounts.addRefCnt(dsc, "IPAMPolicy", oldObj.Tenant, newIPAM)
+				}
+				if oldIPAM != "" {
+					tn.tm.refCounts.delRefCnt(dsc, "IPAMPolicy", oldObj.Tenant, oldIPAM)
+				}
 			}
-			if oldIPAM != "" {
-				tn.tm.refCounts.delRefCnt(dsc, "IPAMPolicy", oldObj.Tenant, oldIPAM)
-			}
-
 			for _, a := range delSg {
 				tn.tm.refCounts.delRefCnt(dsc, "NetworkSecurityPolicy", oldObj.Tenant, a)
 			}
@@ -768,19 +818,23 @@ func (tn *topoNode) updateNode(old, new Object) {
 			}
 			tn.tm.refCounts.dump()
 			opts := tn.evalWatchOptions(dsc, "Network", key, "", "", mod)
-			log.Infof("New watchoptions after topo update: %v", opts)
+			log.Infof("New watchoptions for DSC: %s | opts: %v", dsc, opts)
 
 			if len(opts) != 0 {
 				tn.updateWatchOptions(dsc, opts)
-
 			}
 
+			nwUpdateSent := false
 			// IPAM has been updated
 			if mod&updateIPAM == updateIPAM {
 				if _, ok := opts["IPAMPolicy"]; !ok {
 					// clear the watch options
 					oldFlt := tn.tm.md.clearWatchOptions(dsc, "IPAMPolicy")
 					if oldFlt != nil {
+						// before IPAM is deleted, netagent expects the nw update event
+						// this will result in nw update being sent twice, which netagent can handle cleanly
+						tn.tm.md.watchEventControllerFilter(newObj, updateEvent)
+						nwUpdateSent = true
 						tn.tm.md.sendReconcileEvent(dsc, "IPAMPolicy", oldFlt, nil)
 					}
 				}
@@ -792,6 +846,11 @@ func (tn *topoNode) updateNode(old, new Object) {
 					// clear the watch options
 					oldFlt := tn.tm.md.clearWatchOptions(dsc, "NetworkSecurityPolicy")
 					if oldFlt != nil {
+						if nwUpdateSent == false {
+							// before sgPolicy is deleted, netagent expects the nw update event
+							// this will result in nw update being sent twice, which netagent can handle cleanly
+							tn.tm.md.watchEventControllerFilter(newObj, updateEvent)
+						}
 						tn.tm.md.sendReconcileEvent(dsc, "NetworkSecurityPolicy", oldFlt, nil)
 					}
 				}
@@ -807,6 +866,7 @@ func (tn *topoNode) updateNode(old, new Object) {
 		key := getKey(oldObj.Tenant, oldObj.Namespace, oldObj.Name)
 		topoRefs := tn.topo[key]
 
+		log.Infof("Update VPC old spec: %v | new spec: %v", oldObj.Spec, newObj.Spec)
 		if topoRefs == nil {
 			return
 		}
@@ -839,6 +899,9 @@ func (tn *topoNode) updateNode(old, new Object) {
 			} else {
 				oldFlt := tn.tm.md.clearWatchOptions(dsc, "IPAMPolicy")
 				if oldFlt != nil {
+					// before IPAM is deleted, netagent expects the vpc update event
+					// this will result in vpc update being sent twice, which netagent can handle cleanly
+					tn.tm.md.watchEventControllerFilter(newObj, updateEvent)
 					tn.tm.md.sendReconcileEvent(dsc, "IPAMPolicy", oldFlt, nil)
 				}
 			}
@@ -847,6 +910,7 @@ func (tn *topoNode) updateNode(old, new Object) {
 }
 
 func (tn *topoNode) vrfIPAMUpdate(nw, tenant, oldIPAM, newIPAM string, m map[string]string) {
+	log.Infof("vrfIPAMUpdate nw: %s | tenant: %s | oldipam: %s | newipam: %s", nw, tenant, oldIPAM, newIPAM)
 	node := tn.tm.topology["Network"]
 	rr := node.getRefs(nw)
 	if rr != nil {
@@ -860,12 +924,19 @@ func (tn *topoNode) vrfIPAMUpdate(nw, tenant, oldIPAM, newIPAM string, m map[str
 		br := rr.backRefs
 		if br != nil {
 			if nwIfRef, ok := br["Interface"]; ok && len(nwIfRef) != 0 {
+				log.Infof("vrfIPAMUpdate interface refs: %v", nwIfRef)
 				// loop through all the interfaces attached to this network
 				for _, i := range nwIfRef {
 					od := tn.md.getObjectDBByType("Interface")
+					log.Infof("Looking up: %s", i)
 					od.Lock()
 					nwIfObj := od.getObject(i)
 					od.Unlock()
+					if nwIfObj == nil {
+						log.Errorf("Failed to lookup interface: %s | nw: %s | backrefs: %v", i, nw, br)
+						tn.tm.dump()
+						continue
+					}
 					obj1 := nwIfObj.Object()
 					obj2 := obj1.(*netproto.Interface)
 					dsc := obj2.Status.DSC
@@ -881,6 +952,7 @@ func (tn *topoNode) vrfIPAMUpdate(nw, tenant, oldIPAM, newIPAM string, m map[str
 						if newIPAM != "" {
 							tn.tm.refCounts.addRefCnt(dsc, "IPAMPolicy", tenant, newIPAM)
 						}
+						log.Infof("Need update IPAM options for DSC: %s", dsc)
 						m[dsc] = tenant
 					}
 				}
@@ -983,7 +1055,6 @@ func newTopoMgr(md *Memdb) topoMgrInterface {
 		topoKinds:      []string{"Interface", "Network", "Vrf", "IPAMPolicy", "NetworkSecurityPolicy"},
 		topoTriggerMap: make(map[string]map[string]topoFunc),
 		topology:       make(map[string]topoInterface),
-		tenantRefCnt:   make(map[string]int),
 	}
 	mgr.refCounts = newTopoRefCnt()
 

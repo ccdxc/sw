@@ -28,6 +28,13 @@ var _ = Describe("Trigger Tests", func() {
 			}).Should(Succeed())
 		})
 
+		It("Delete Add config", func() {
+			Expect(ts.model.TriggerDeleteAddConfig(100)).Should(Succeed())
+			Eventually(func() error {
+				return ts.model.VerifyClusterStatus()
+			}).Should(Succeed())
+		})
+
 		It("Host Reboot", func() {
 			Expect(ts.model.TriggerHostReboot(100)).Should(Succeed())
 			Eventually(func() error {
@@ -47,13 +54,6 @@ var _ = Describe("Trigger Tests", func() {
 
 		It("Venice Paritition", func() {
 			Expect(ts.model.TriggerVenicePartition(100)).Should(Succeed())
-			Eventually(func() error {
-				return ts.model.VerifyClusterStatus()
-			}).Should(Succeed())
-		})
-
-		It("Delete Add config", func() {
-			Expect(ts.model.TriggerDeleteAddConfig(100)).Should(Succeed())
 			Eventually(func() error {
 				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
