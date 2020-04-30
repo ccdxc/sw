@@ -10,11 +10,12 @@
           <Feature Id="MainDrivers" Title="Ionic Driver" Description="Ionic NDIS miniport driver" Level="1" Absent="disallow" AllowAdvertise="no">
             <ComponentRef Id="IonicDriverPackage" />
             <ComponentRef Id="PerfCountersManifest" />
+            <ComponentRef Id="SetMgmtIfIPs"/>
           </Feature>
           <Feature Id="CommandLineTools" Title="Ionic Driver Tools" Description="Ionic Driver Tools: IonicConfig.exe, Penctl.exe" Level="1" AllowAdvertise="no">
             <ComponentRef Id="IonicConfig" />
             <ComponentRef Id="Penctl" />
-            <ComponentRef Id="PensandooToolsCmd" />
+            <ComponentRef Id="PensandoToolsCmd" />
             <ComponentRef Id="ProgramMenuDir" />
           </Feature>
        </Feature>
@@ -25,10 +26,10 @@
             <Directory Id="ProgramFiles64Folder">
                 <Directory Id="Pensando" Name="Pensando Systems">
                     <Directory Id="INSTALLDIR" Name="Pensando Driver Tools">
-                        <Component Id="PensandooToolsCmd">
+                        <Component Id="PensandoToolsCmd">
                           <File Id="PensandoToolsCmdBAT" Source="BuildFiles\PensandoToolsCmd.bat" KeyPath="yes">
-                            <Shortcut Id="DesktopPensandooToolsCmd" Directory="DesktopFolder" Name="PensandooToolsCmd" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="Cmd.ico" IconIndex="0" />
-                            <Shortcut Id="StartMenuPensandooToolsCmd" Directory="ProgramMenuDir" Name="PensandooToolsCmd" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="Cmd.ico" IconIndex="0" />
+                            <Shortcut Id="DesktopPensandoToolsCmd" Directory="DesktopFolder" Name="PensandoToolsCmd" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="Cmd.ico" IconIndex="0" />
+                            <Shortcut Id="StartMenuPensandoToolsCmd" Directory="ProgramMenuDir" Name="PensandoToolsCmd" WorkingDirectory="INSTALLDIR" Advertise="yes" Icon="Cmd.ico" IconIndex="0" />
                           </File>
                           <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes" />
                         </Component>
@@ -40,6 +41,9 @@
                         </Component>
                         <Component Id="PerfCountersManifest">
                           <File Id="PerfCountersManFile" Name="perf_counters.man" Source="$(var.Ionic.ProjectDir)" KeyPath="yes" />
+                        </Component>
+                        <Component Id="SetMgmtIfIPs">
+                          <File Id="SetMgmtIfIPsScript" Source="BuildFiles\setdsc.ps1" KeyPath="yes" />
                         </Component>
                       <Directory Id="Ionic64" Name="Ionic64">
                             <Component Id="IonicDriverPackage" Guid="B0F10226-F3CD-4C3B-814E-BBB95B763360">
@@ -84,9 +88,11 @@
   
       <CustomAction Id="RegisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;lodctr /M:perf_counters.man&quot;" Return="check" />
       <CustomAction Id="UnregisterPerfCounters" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="cmd.exe /c &quot;unlodctr /M:perf_counters.man&quot;" Return="check" />
+      <CustomAction Id="SetMgmtIterfaces" Directory="INSTALLDIR" Execute="deferred" Impersonate="no" ExeCommand="powershell.exe -file setdsc.ps1" Return="check" />
 
       <InstallExecuteSequence>
         <Custom Action="RegisterPerfCounters" After="InstallFiles">NOT Installed</Custom>
+        <Custom Action="SetMgmtIterfaces" After="InstallFiles">NOT Installed</Custom>
         <Custom Action="UnregisterPerfCounters" Before="RemoveFiles">(REMOVE~="ALL") AND (NOT UPGRADINGPRODUCTCODE)</Custom>
       </InstallExecuteSequence>
   </Fragment>
