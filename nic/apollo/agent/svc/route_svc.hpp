@@ -510,12 +510,14 @@ pds_svc_route_table_get (const pds::RouteTableGetRequest *proto_req,
         ret = pds_route_table_read(&key, &info);
         if (ret == SDK_RET_OK) {
             uint32_t num_routes = info.spec.route_info->num_routes;
-            SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
-            info.spec.route_info =
-                (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
-                                          ROUTE_INFO_SIZE(num_routes));
-            info.spec.route_info->num_routes = num_routes;
-            ret = pds_route_table_read(&key, &info);
+            if (num_routes) {
+                SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, info.spec.route_info);
+                info.spec.route_info =
+                    (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                              ROUTE_INFO_SIZE(num_routes));
+                info.spec.route_info->num_routes = num_routes;
+                ret = pds_route_table_read(&key, &info);
+            }
         }
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));

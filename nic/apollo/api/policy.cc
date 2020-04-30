@@ -362,14 +362,11 @@ policy::fill_spec_(pds_policy_spec_t *spec) {
     if (spec->rule_info) {
         uint32_t num_rules = spec->rule_info->num_rules;
         spec->rule_info->af = af_;
-        if (!num_rules) {
-            // set num rules and return
-            spec->rule_info->num_rules = num_rules_;
-        } else if (num_rules < num_rules_) {
+        if (num_rules < num_rules_) {
             // buffer is smaller, read all rules and copy over the
             // requested number allocate memory for reading all the rules
             rule_info_t *rule_info =
-                (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                (rule_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                           POLICY_RULE_INFO_SIZE(num_rules_));
             rule_info->num_rules = num_rules_;
             // retrieve all rules
@@ -379,8 +376,11 @@ policy::fill_spec_(pds_policy_spec_t *spec) {
                 return ret;
             }
             // copy over requested number of rules
-            memcpy(spec->rule_info, rule_info, POLICY_RULE_INFO_SIZE(num_rules));
-            spec->rule_info->num_rules = num_rules;
+            memcpy(spec->rule_info, rule_info,
+                   POLICY_RULE_INFO_SIZE(num_rules));
+            if (num_rules) {
+                spec->rule_info->num_rules = num_rules;
+            }
             // free allocated memory
             SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rule_info);
         } else {

@@ -789,12 +789,14 @@ pds_svc_security_policy_get (const pds::SecurityPolicyGetRequest *proto_req,
         ret = pds_policy_read(&key, &info);
         if (ret == SDK_RET_OK) {
             uint32_t num_rules = info.spec.rule_info->num_rules;
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
-            info.spec.rule_info =
-                (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
-                                          POLICY_RULE_INFO_SIZE(num_rules));
-            info.spec.rule_info->num_rules = num_rules;
-            ret = pds_policy_read(&key, &info);
+            if (num_rules) {
+                SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, info.spec.rule_info);
+                info.spec.rule_info =
+                    (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                              POLICY_RULE_INFO_SIZE(num_rules));
+                info.spec.rule_info->num_rules = num_rules;
+                ret = pds_policy_read(&key, &info);
+            }
         }
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));

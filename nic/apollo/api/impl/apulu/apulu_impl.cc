@@ -759,7 +759,8 @@ apulu_impl::upgrade_switchover(void) {
             return SDK_RET_ERR;
         }
         PAL_barrier();
-        sdk::asic::pd::asicpd_p4plus_invalidate_cache(it->addr, it->size, P4PLUS_CACHE_INVALIDATE_BOTH);
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(it->addr, it->size,
+                                                      P4PLUS_CACHE_INVALIDATE_BOTH);
     }
 
     // update rss config

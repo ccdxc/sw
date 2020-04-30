@@ -289,9 +289,9 @@ static inline sdk_ret_t
 pds_svc_vpc_delete (const pds::VPCDeleteRequest *proto_req,
                     pds::VPCDeleteResponse *proto_rsp)
 {
-    sdk_ret_t ret = SDK_RET_OK;
-    pds_batch_ctxt_t bctxt;
     pds_obj_key_t key;
+    pds_batch_ctxt_t bctxt;
+    sdk_ret_t ret = SDK_RET_OK;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 

@@ -274,14 +274,11 @@ route_table::fill_spec_(pds_route_table_spec_t *spec) {
     if (spec->route_info) {
         uint32_t num_routes = spec->route_info->num_routes;
         spec->route_info->af = af_;
-        if (!num_routes) {
-            // set num routes and return
-            spec->route_info->num_routes = num_routes_;
-        } else if (num_routes < num_routes_) {
+        if (num_routes < num_routes_) {
             // buffer is smaller, read all routes and copy over the
             // requested number allocate memory for reading all the routes
             route_info_t *route_info =
-                (route_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                (route_info_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                                            ROUTE_INFO_SIZE(num_routes_));
             route_info->num_routes = num_routes_;
             // retrieve all routes
@@ -292,7 +289,9 @@ route_table::fill_spec_(pds_route_table_spec_t *spec) {
             }
             // copy over requested number of routes
             memcpy(spec->route_info, route_info, ROUTE_INFO_SIZE(num_routes));
-            spec->route_info->num_routes = num_routes;
+            if (num_routes) {
+                spec->route_info->num_routes = num_routes;
+            }
             // free allocated memory
             SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, route_info);
         } else {
