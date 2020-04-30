@@ -154,22 +154,32 @@ func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRo
 	log.Infof("Updating status %+v of DSCRollout %v", newStatus, snicState.DSCRollout.Name)
 	if snicState.ros == nil {
 		log.Infof("ROS State is null")
+		rolloutState, disruptiveOp, version := true, false, ""
+		smartnicState, err := snicState.GetSmartNICState(snicState.Tenant, snicState.Name)
+		if err != nil {
+			log.Errorf("Error GetSmartNICState for {%+v}. Err: %v", snicState.Name, err)
+			return
+		}
 		for _, s := range newStatus.OpStatus {
-			smartnicState, err := snicState.GetSmartNICState(snicState.Tenant, snicState.Name)
-			if err != nil {
-				log.Errorf("Error GetSmartNICState for {%+v}. Err: %v", snicState.Name, err)
-				continue
-			}
-			if s.OpStatus == opStatusSuccess && s.Op == protos.DSCOp_DSCDisruptiveUpgrade {
-				snicState.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, fmt.Sprintf("Force Rollout to version(%s) successful", s.Version), smartnicState.DistributedServiceCard)
+			version = s.Version
+			if s.Op == protos.DSCOp_DSCDisruptiveUpgrade {
+				disruptiveOp = true
 			}
 			if s.OpStatus != opStatusSuccess {
-				snicState.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_FAILED, fmt.Sprintf("Force Rollout to version(%s) failed", s.Version), smartnicState.DistributedServiceCard)
+				rolloutState = false
 			}
-			if s.Op == protos.DSCOp_DSCDisruptiveUpgrade && snicState.Statemgr.writer.CheckRolloutInProgress() == false {
-				log.Infof("Received status disruptive upgrade. Delete DSCRollout Object")
-				snicState.Statemgr.DeleteDSCRolloutState(snicState.DSCRollout)
+		}
+
+		if disruptiveOp && version != "" {
+			if rolloutState {
+				snicState.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_SUCCESS, fmt.Sprintf("Force Rollout to version(%s) successful", version), smartnicState.DistributedServiceCard)
+			} else {
+				snicState.Statemgr.evtsRecorder.Event(eventtypes.ROLLOUT_FAILED, fmt.Sprintf("Force Rollout to version(%s) failed", version), smartnicState.DistributedServiceCard)
 			}
+		}
+		if disruptiveOp && snicState.Statemgr.writer.CheckRolloutInProgress() == false {
+			log.Infof("Received status disruptive upgrade. Delete DSCRollout Object")
+			snicState.Statemgr.DeleteDSCRolloutState(snicState.DSCRollout)
 		}
 		return
 	}
