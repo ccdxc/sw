@@ -206,7 +206,7 @@ func cliPreRunInit(cmd *cobra.Command, args []string) error {
 	// compat11 is only for legacy firmware (1.1)
 	// if URL starts with http://, the TLS config is ignored
 	if !compat11 {
-		naplesURL = "https://" + strings.TrimPrefix(naplesURL, "http://")
+		naplesURL = "https://" + stripURLScheme(naplesURL)
 	}
 
 	return nil

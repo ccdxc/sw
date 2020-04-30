@@ -43,7 +43,7 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 				naplesURL = "http://169.254." + strconv.Itoa(int(bus)) + ".1"
 
 				// check if naples is reachable
-				naplesIP = strings.TrimPrefix(naplesURL, "http://")
+				naplesIP = stripURLScheme(naplesURL)
 				revProxyPort = globals.AgentProxyPort
 				naplesURL += ":" + revProxyPort + "/"
 				if isNaplesReachable() == nil {
@@ -55,7 +55,7 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 		// also needed for backwards compatibility.
 		naplesURL = "http://169.254.0.1"
 	}
-	naplesIP = strings.TrimPrefix(naplesURL, "http://")
+	naplesIP = stripURLScheme(naplesURL)
 	revProxyPort = globals.AgentProxyPort
 	naplesURL += ":" + revProxyPort + "/"
 

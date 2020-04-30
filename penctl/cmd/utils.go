@@ -33,3 +33,12 @@ func naplesExecCmd(v interface{}) error {
 	}
 	return nil
 }
+
+func stripURLScheme(url string) string {
+	if strings.HasPrefix(url, "https://") {
+		return strings.TrimPrefix(url, "https://")
+	} else if strings.HasPrefix(url, "http://") {
+		return strings.TrimPrefix(url, "http://")
+	}
+	return url
+}
