@@ -20,6 +20,7 @@
 #include "nic/apollo/framework/api_params.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/sdk/platform/drivers/ionic_base.h"
 
 namespace api {
 
@@ -219,8 +220,8 @@ device_entry::fill_status(pds_device_status_t *status) {
     status->num_pcie_ports = 0;
     status->num_ports = 2;
     status->vendor_name = std::string("Pensando Systems Inc");
-    status->pxe_version = std::string("1.0");
-    status->uefi_version = std::string("2.4");
+    status->pxe_version = IPXE_VERSION_CODE;
+    status->uefi_version = UEFI_VERSION_CODE;
 }
 
 sdk_ret_t

@@ -171,10 +171,10 @@ message DeviceStatus {
   string      VendorName        = 21;
 
   // PXE Version
-  string      PXEVersion        = 22;
+  float       PXEVersion        = 22;
 
   // UEFI Version
-  string      UEFIVersion       = 23;
+  float       UEFIVersion       = 23;
 
   // number of host interfaces
   uint32      NumHostIf         = 24;

@@ -104,8 +104,8 @@ typedef struct pds_device_status_s {
     uint32_t    num_pcie_ports;    ///< Number of PCIe ports
     uint32_t    num_ports;         ///< Number of NIC ports
     string      vendor_name;       ///< Vendor Name
-    string      pxe_version;       ///< PXE Version
-    string      uefi_version;      ///< UEFI Version
+    float       pxe_version;       ///< PXE Version
+    float       uefi_version;      ///< UEFI Version
     uint32_t    num_host_if;       ///< number of host interfaces
 } pds_device_status_t;
 

@@ -35,6 +35,8 @@ FILE_LICENCE(GPL2_OR_LATER_OR_UBDL);
 #include <ipxe/malloc.h>
 #include <ipxe/pci.h>
 
+#include "ionic_base.h"
+
 /* Supply these for ionic_if.h */
 #define BIT(n)                  (1 << n)
 #define BIT_ULL(nr)             (1ULL << (nr))
@@ -70,12 +72,6 @@ typedef enum
 
 #define ALIGN(x, a) __ALIGN_MASK(x, (typeof(x))(a)-1)
 #define __ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
-
-#define DRV_VERSION "1.0"
-#define IPXE_VERSION_CODE 1
-#define IPXE_OS_DIST_STR "iPXE"
-#define IPXE_KERNEL_VERSION_STR "iPXE"
-
 
 #define IONIC_MAX_MTU 5000
 

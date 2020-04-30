@@ -4,7 +4,7 @@
 TOP = ../../..
 IPXEGENDIR = $(TOP)/platform/gen/ipxe
 EFI_PCI_IPXE = $(TOP)/platform/drivers/pxe/efi_pci.c
-IONIC_IPXE = $(wildcard $(TOP)/platform/drivers/pxe/*.c) $(wildcard $(TOP)/platform/drivers/pxe/*.h)
+IONIC_IPXE = $(wildcard $(TOP)/platform/drivers/pxe/*.c) $(wildcard $(TOP)/platform/drivers/pxe/*.h) $(TOP)/nic/sdk/platform/drivers/ionic_base.h
 IONIC_COMMON = $(wildcard $(TOP)/platform/drivers/common/*.h)
 IONIC_SRC = $(IONIC_IPXE) $(IONIC_COMMON)
 IPXE_TAR = ipxe-1cdf56f.tar.gz
