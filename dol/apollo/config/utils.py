@@ -367,11 +367,9 @@ def ValidateBatch(batchList, cookie):
                          ObjectTypes.BGP, ObjectTypes.BGP_PEER,
                          ObjectTypes.BGP_PEER_AF, ObjectTypes.BGP_NLRI_PREFIX,
                          ObjectTypes.BGP_EVPN_EVI, ObjectTypes.BGP_EVPN_EVI_RT,
-                         ObjectTypes.BGP_EVPN_IP_VRF, ObjectTypes.BGP_EVPN_IP_VRF_RT
+                         ObjectTypes.BGP_EVPN_IP_VRF, ObjectTypes.BGP_EVPN_IP_VRF_RT,
+                         ObjectTypes.VPC
                        ]
-            if oper != 'Delete':
-                # vpc is being read before delete in agent
-                noDBObjs.append(ObjectTypes.VPC)
             if obj.ObjType in noDBObjs:
                 # TODO: @amrita, For these objects,
                 # Validate on operStatus should be done against API_STATUS_OK
