@@ -104,9 +104,6 @@ mac_addr_t ep_smac = {0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0};
 mac_addr_t ep_dmac = {0x00, 0x00, 0x00, 0x40, 0x08, 0x01};
 uint16_t  vnic_vlan = 0x01;
 
-// Flow dump vars
-pds_flow_key_t dump_flow_key;
-
 // Headers used for Packet Rewrite
 // Hardcoded based on rewrite table entries
 uint8_t h2s_l2vlan_encap_hdr[] = {
@@ -138,24 +135,6 @@ uint8_t s2h_l2vlan_encap_hdr[] = {
     0xF1, 0xD0, 0xD1, 0xD0, 0x81, 0x00, 0x00, 0x01,
     0x08, 0x00
 };
-
-
-#if 0
-static void
-fte_flow_dump (void)
-{
-    pds_flow_info_t flow_info;
-
-    if (pds_flow_cache_entry_read(&dump_flow_key, &flow_info) != PDS_RET_OK) {
-        PDS_TRACE_DEBUG("pds_flow_cache_entry_read failed.\n");
-        return;
-    }
-
-    // TODO: Dump the values
-    PDS_TRACE_DEBUG("pds_flow_cache_entry_read success.\n");
-    return;
-}
-#endif
 
 sdk_ret_t
 fte_session_indexer_init (void)
@@ -252,6 +231,94 @@ fte_nmt_get_rewrite_id (uint16_t vnic_id, uint32_t local_ip,
     }
 
     return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+static void
+fte_nat_csum_adj_h2s_v4 (struct ipv4_hdr *iph, uint32_t new_ipaddr)
+{
+    uint8_t *oip, *nip, *ipcsum, *l4csum;
+    uint16_t oip_sum0, oip_sum1;
+    uint16_t nip_sum0, nip_sum1;
+    uint32_t tmp_ipcsum = 0, tmp_l4csum = 0;
+    uint8_t ip_hlen = 0, l4csum_adj = 0;
+    uint8_t ip_proto;
+    struct tcp_hdr *tcph;
+    struct udp_hdr *udph;
+
+    ipcsum = (uint8_t *) &(iph->hdr_checksum);
+    tmp_ipcsum = ((ipcsum[0] << 8) + ipcsum[1]);
+    tmp_ipcsum = ~tmp_ipcsum;
+
+    // oip is in BE form
+    oip = (uint8_t *) &(iph->src_addr);
+    oip_sum0 = ((oip[0] << 8) + oip[1]);
+    oip += 2;
+    oip_sum1 = ((oip[0] << 8) + oip[1]);
+
+    // nip is in LE form
+    nip = (uint8_t *) &new_ipaddr; 
+    nip_sum0 = ((nip[1] << 8) + nip[0]);
+    nip += 2;
+    nip_sum1 = ((nip[1] << 8) + nip[0]);
+
+    // IP csum adjustment
+    tmp_ipcsum -= oip_sum0;
+    tmp_ipcsum -= oip_sum1;
+    tmp_ipcsum &= 0xffff;
+
+    tmp_ipcsum += nip_sum0;
+    tmp_ipcsum += nip_sum1;
+    if (tmp_ipcsum & 0x10000) {
+        tmp_ipcsum++;
+        tmp_ipcsum &= 0xffff;
+    }
+
+    tmp_ipcsum = (~tmp_ipcsum & 0xffff);
+    ipcsum[0] = (tmp_ipcsum >> 8);
+    ipcsum[1] = (tmp_ipcsum & 0xff);
+
+    ip_proto = iph->next_proto_id;
+    if ((ip_proto != IP_PROTOCOL_TCP) &&
+        (ip_proto != IP_PROTOCOL_UDP)) {
+        return;
+    }
+
+    ip_hlen = ((iph->version_ihl & IPV4_HDR_IHL_MASK) *
+               IPV4_IHL_MULTIPLIER);
+    tcph = (struct tcp_hdr *)((uint8_t *)iph + ip_hlen);
+    if (ip_proto == IP_PROTOCOL_TCP) {
+        l4csum = (uint8_t *) &(tcph->cksum);
+        l4csum_adj = 1;
+    } else {
+        udph = (struct udp_hdr *)tcph;
+        if (udph->dgram_cksum) {
+            l4csum = (uint8_t *) &(udph->dgram_cksum);
+            l4csum_adj = 1;
+        }
+    }
+
+    // TCP/UDP csum adjustment
+    if (l4csum_adj) {
+        tmp_l4csum = ((l4csum[0] << 8) + l4csum[1]);
+        tmp_l4csum = ~tmp_l4csum;
+
+        tmp_l4csum -= oip_sum0;
+        tmp_l4csum -= oip_sum1;
+        tmp_l4csum &= 0xffff;
+
+        tmp_l4csum += nip_sum0;
+        tmp_l4csum += nip_sum1;
+        if (tmp_l4csum & 0x10000) {
+            tmp_l4csum++;
+            tmp_l4csum &= 0xffff;
+        }
+
+        tmp_l4csum = (~tmp_l4csum & 0xffff);
+        l4csum[0] = (tmp_l4csum >> 8);
+        l4csum[1] = (tmp_l4csum & 0xff);
+    }
+
+    return;        
 }
 
 static sdk_ret_t
@@ -420,9 +487,6 @@ fte_flow_extract_prog_args (struct rte_mbuf *m, pds_flow_spec_t *spec,
         }
     }
 
-    // TODO: To be reomved. Debug purpose
-    memcpy(&dump_flow_key, &(spec->key), sizeof(pds_flow_key_t));
-
     return SDK_RET_OK;
 }
 
@@ -446,6 +510,7 @@ fte_flow_h2s_rewrite_mplsoudp (struct rte_mbuf *m, uint16_t ip_offset, uint16_t 
         ip4h = rte_pktmbuf_mtod_offset(m, struct ipv4_hdr *, ip_offset);
         if (fte_nmt_get_nat_ip(vnic_id, rte_be_to_cpu_32(ip4h->src_addr),
                                &nat_ip) == SDK_RET_OK) {
+            fte_nat_csum_adj_h2s_v4(ip4h, nat_ip);
             ip4h->src_addr = rte_cpu_to_be_32(nat_ip);
         }
     }
