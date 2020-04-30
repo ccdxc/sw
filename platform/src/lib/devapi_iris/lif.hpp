@@ -9,7 +9,7 @@
 
 namespace iris {
 
-#define MAX_FILTERS 32
+#define MAX_FILTERS 64
 #if 0
 #define MAX_FILTERS_CLASSIC 32
 #define MAX_FILTERS_SMART   4096
