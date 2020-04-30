@@ -10,36 +10,96 @@ queue_name: baremetal
 e2e-targets:
   # baremetal + baremetal Esx test cases
  
-        # e2e-linux-bm-eth-RHEL76:
-        #   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
-        #   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-        #   owners: ["email:dbarsky@pensando.io"]
-        #   area:
-        #   sub-area:
-        #   feature:
-        #   max-duration: 24h
-        #   build-dependencies:
-        #     - build-iris-arm
-        #     - build-iota
-        #   clusters:
-        #     - image: build-9
-        #       count: 2
-        #       resources:
-        #         # Freebsd works with only server-d
-        #         servers:
-        #           - type: server-a
-        #           - type: hpe
-        #         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-        #         nic-type: naples
-        #   provision:
-        #       username: vm
-        #       password: vm
-        #       vars:
-        #          BmOs: linux
-        #          VmOs: linux
-        #          EsxUsername: root
-        #          EsxPassword: Pen0trl!
-        #
+ e2e-linux-bm-eth-RHEL76:
+   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-9
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ e2e-linux-bm-eth-RHEL77:
+   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-28
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ e2e-linux-bm-eth-RHEL78:
+   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-29
+       count: 2
+       resources:
+         # Freebsd works with only server-d
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
  e2e-linux-bm-eth-RHEL80:
    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
    owners: ["email:dbarsky@pensando.io"]
@@ -96,122 +156,93 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
 
-          # e2e-linux-bm-eth-Ubuntu1804:
-          #   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
-          #   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-          #   owners: ["email:dbarsky@pensando.io"]
-          #   area:
-          #   sub-area:
-          #   feature:
-          #   max-duration: 24h
-          #   build-dependencies:
-          #     - build-iris-arm
-          #     - build-iota
-          #   clusters:
-          #     - image: build-17
-          #       count: 2
-          #       resources:
-          #         servers:
-          #           - type: server-a
-          #           - type: hpe
-          #         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-          #         nic-type: naples
-          #   provision:
-          #       username: vm
-          #       password: vm
-          #       vars:
-          #          BmOs: linux
-          #          VmOs: linux
-          #          EsxUsername: root
-          #          EsxPassword: Pen0trl!
-          # 
-          # e2e-linux-bm-eth-SLES12SP4:
-          #   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
-          #   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-          #   owners: ["email:dbarsky@pensando.io"]
-          #   area:
-          #   sub-area:
-          #   feature:
-          #   max-duration: 24h
-          #   build-dependencies:
-          #     - build-iris-arm
-          #     - build-iota
-          #   clusters:
-          #     - image: build-20
-          #       count: 2
-          #       resources:
-          #         servers:
-          #           - type: server-a
-          #           - type: hpe
-          #         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-          #         nic-type: naples
-          #   provision:
-          #       username: vm
-          #       password: vm
-          #       vars:
-          #          BmOs: linux
-          #          VmOs: linux
-          #          EsxUsername: root
-          #          EsxPassword: Pen0trl!
-          # 
-          # e2e-linux-bm-eth-SLES12SP5:
-          #   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
-          #   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-          #   owners: ["email:dbarsky@pensando.io"]
-          #   area:
-          #   sub-area:
-          #   feature:
-          #   max-duration: 24h
-          #   build-dependencies:
-          #     - build-iris-arm
-          #     - build-iota
-          #   clusters:
-          #     - image: build-21
-          #       count: 2
-          #       resources:
-          #         servers:
-          #           - type: server-a
-          #           - type: hpe
-          #         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-          #         nic-type: naples
-          #   provision:
-          #       username: vm
-          #       password: vm
-          #       vars:
-          #          BmOs: linux
-          #          VmOs: linux
-          #          EsxUsername: root
-          #          EsxPassword: Pen0trl!
+ e2e-linux-bm-eth-SLES12SP4:
+   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-20
+       count: 2
+       resources:
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
  
-          # e2e-linux-bm-eth-SLES15:
-          #   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
-          #   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
-          #   owners: ["email:dbarsky@pensando.io"]
-          #   area:
-          #   sub-area:
-          #   feature:
-          #   max-duration: 24h
-          #   build-dependencies:
-          #     - build-iris-arm
-          #     - build-iota
-          #   clusters:
-          #     - image: build-15
-          #       count: 2
-          #       resources:
-          #         servers:
-          #           - type: server-a
-          #           - type: hpe
-          #         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-          #         nic-type: naples
-          #   provision:
-          #       username: vm
-          #       password: vm
-          #       vars:
-          #          BmOs: linux
-          #          VmOs: linux
-          #          EsxUsername: root
-          #          EsxPassword: Pen0trl!
-          # 
+ e2e-linux-bm-eth-SLES12SP5:
+   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-21
+       count: 2
+       resources:
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ e2e-linux-bm-eth-SLES15:
+   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
+   #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-15
+       count: 2
+       resources:
+         servers:
+           - type: server-a
+           - type: hpe
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+ 
  e2e-linux-bm-eth-SLES15SP1:
    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite transparent_basenet"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]

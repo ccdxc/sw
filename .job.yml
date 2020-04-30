@@ -234,6 +234,8 @@ jobs:
 #    labels: ["compat-linux"]
 #  iota/test/standalone/compat/server-esx:
 #    labels: ["compat-esx"]
+#  iota/test/standalone/os_coverage/linux:
+#    labels: ["daily"]
   iota/test/standalone/cnic_swm:
     labels: ["2xhourly"]
   iota/test/standalone/sanity/swm:
