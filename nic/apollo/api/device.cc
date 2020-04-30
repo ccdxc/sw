@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
+#include "nic/sdk/asic/asic.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/impl.hpp"
@@ -201,8 +202,11 @@ device_entry::fill_status(pds_device_status_t *status) {
         status->product_name = value;
     }
 
-    status->description = std::string("Pensando DSC");
-    status->vendor_id = std::string("1DD8");
+    status->description = DSC_DESCRIPTION;
+    status->vendor_name = DSC_VENDOR_NAME;
+    status->vendor_id = DSC_VENDOR_ID;
+    status->cpu_vendor = DSC_CPU_VENDOR;
+    status->cpu_specification = DSC_CPU_SPECIFICATION;
     status->chip_type = api::g_pds_state.catalogue()->asic_type(0);
     sdk::platform::readfrukey(BOARD_PARTNUM_KEY, value);
     if (value.empty() || value == "") {
@@ -211,15 +215,13 @@ device_entry::fill_status(pds_device_status_t *status) {
         svalue = value.substr(value.length() - 2, 2);
         status->hardware_revision = svalue;
     }
-    status->cpu_vendor = std::string("ARM");
-    status->cpu_specification = std::string("Cortex A72");
-    status->soc_os_version = std::string("-");
-    status->soc_disk_size = std::string("-");
     status->pcie_specification = std::string("-");
     status->pcie_bus_info = std::string("-");
-    status->num_pcie_ports = 0;
-    status->num_ports = 2;
-    status->vendor_name = std::string("Pensando Systems Inc");
+    status->fw_version = std::string("-");
+    status->soc_os_version = std::string("-");
+    status->soc_disk_size = std::string("-");
+    status->num_pcie_ports = api::g_pds_state.catalogue()->pcie_nportspecs();
+    status->num_ports = api::g_pds_state.catalogue()->num_fp_ports();
     status->pxe_version = IPXE_VERSION_CODE;
     status->uefi_version = UEFI_VERSION_CODE;
 }

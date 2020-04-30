@@ -97,6 +97,7 @@ typedef struct pds_device_status_s {
     string      hardware_revision; ///< Hardware Revision
     string      cpu_vendor;        ///< CPU Vendor
     string      cpu_specification; ///< CPU Specification
+    string      fw_version;        ///< Firmware Version
     string      soc_os_version;    ///< SOC OS Version
     string      soc_disk_size;     ///< SOC Disk Size
     string      pcie_specification;///< PCIe Specification

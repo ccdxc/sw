@@ -16,6 +16,12 @@
 namespace sdk {
 namespace asic {
 
+#define DSC_DESCRIPTION       "Pensando DSC"
+#define DSC_VENDOR_NAME       "Pensando Systems Inc"
+#define DSC_VENDOR_ID         "1DD8"
+#define DSC_CPU_VENDOR        "ARM"
+#define DSC_CPU_SPECIFICATION "Cortex A72"
+
 #define SDK_ASIC_PGM_CFG_MAX        3
 #define SDK_ASIC_ASM_CFG_MAX        3
 
