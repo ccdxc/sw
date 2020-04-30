@@ -8,7 +8,7 @@
 
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/sdk/linkmgr/linkmgr.hpp"
-#include "nic/sdk/include/sdk/fd.hpp"
+#include "nic/sdk/include/sdk/uds.hpp"
 #include "nic/sdk/lib/metrics/metrics.hpp"
 #include "nic/sdk/platform/asicerror/interrupts.hpp"
 #include "nic/apollo/core/trace.hpp"

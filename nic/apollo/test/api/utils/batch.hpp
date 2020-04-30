@@ -31,7 +31,7 @@ batch_start (void)
         bctxt = pds_batch_start(&batch_params);
         SDK_ASSERT(bctxt != PDS_BATCH_CTXT_INVALID);
     } else {
-        bctxt = batch_start_grpc(epoch);
+        bctxt = batch_start_impl(epoch);
         SDK_ASSERT(bctxt != PDS_BATCH_CTXT_INVALID);
     }
 #else
@@ -48,7 +48,7 @@ batch_commit (pds_batch_ctxt_t bctxt)
     if (!agent_mode()) {
         SDK_ASSERT(pds_batch_commit(bctxt) == SDK_RET_OK);
     } else {
-        SDK_ASSERT(batch_commit_grpc(bctxt) == SDK_RET_OK);
+        SDK_ASSERT(batch_commit_impl(bctxt) == SDK_RET_OK);
     }
 #else
     SDK_ASSERT(pds_batch_commit(bctxt) == SDK_RET_OK);
@@ -62,7 +62,7 @@ batch_commit_fail (pds_batch_ctxt_t bctxt)
     if (!agent_mode()) {
         SDK_ASSERT(pds_batch_commit(bctxt) != SDK_RET_OK);
     } else {
-        SDK_ASSERT(batch_commit_grpc(bctxt) != SDK_RET_OK);
+        SDK_ASSERT(batch_commit_impl(bctxt) != SDK_RET_OK);
     }
 #else
     SDK_ASSERT(pds_batch_commit(bctxt) != SDK_RET_OK);

@@ -19,6 +19,7 @@
 #include "nic/apollo/agent/svc/device_svc.hpp"
 #include "nic/apollo/agent/svc/policy_svc.hpp"
 #include "nic/apollo/agent/svc/subnet_svc.hpp"
+#include "nic/apollo/agent/svc/tunnel_svc.hpp"
 #include "nic/apollo/agent/svc/svc_thread.hpp"
 #include "nic/apollo/agent/svc/mapping_svc.hpp"
 #include "nic/apollo/agent/svc/policer_svc.hpp"
@@ -153,7 +154,14 @@ pds_handle_cfg (int fd, cfg_ctxt_t *ctxt)
     case CFG_MSG_DEVICE_GET:
         ret = pds_svc_device_handle_cfg(ctxt, any_resp);
         break;
+    case CFG_MSG_TUNNEL_CREATE:
+    case CFG_MSG_TUNNEL_UPDATE:
+    case CFG_MSG_TUNNEL_DELETE:
+    case CFG_MSG_TUNNEL_GET:
+        ret = pds_svc_tunnel_handle_cfg(ctxt, any_resp);
+        break;
     default:
+        PDS_TRACE_ERR("Unsupport config message {}", ctxt->cfg);
         return SDK_RET_INVALID_ARG;
     }
 

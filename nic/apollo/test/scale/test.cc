@@ -1746,6 +1746,7 @@ create_l3_intfs (uint32_t num_if)
     uint64_t l3if_mac = 0x00AAAAAAA0ULL;
     pds_if_spec_t pds_if;
     pds_ifindex_t eth_ifindex;
+    uint32_t vnid = 1;
 
     for (uint32_t i = 1; i <= num_if; i++) {
         pds_if.key = test::int2pdsobjkey(i);
@@ -1756,6 +1757,8 @@ create_l3_intfs (uint32_t num_if)
         pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr =
             (g_test_params.tep_pfx.addr.addr.v4_addr | 0x01200000) + i;
         pds_if.l3_if_info.ip_prefix.len = 30;
+        pds_if.l3_if_info.encap.type = PDS_ENCAP_TYPE_VXLAN;
+        pds_if.l3_if_info.encap.val.vnid = vnid++;
         eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, i,
                                   ETH_IF_DEFAULT_CHILD_PORT);
         pds_if.l3_if_info.port = test::uuid_from_objid(eth_ifindex);
@@ -1915,6 +1918,7 @@ create_objects (void)
     ret = create_device_cfg(&g_test_params.device_ip, g_test_params.device_mac,
                             &g_test_params.device_gw_ip);
     if (ret != SDK_RET_OK) {
+        printf("Create device failed\n");
         return ret;
     }
 

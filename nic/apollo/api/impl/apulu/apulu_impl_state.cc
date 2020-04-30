@@ -100,9 +100,9 @@ nacl_dump_header (int fd)
                 "NhV - ARM to P4 Nexthop Valid  LMM - Local mapping miss\n"
                 "KT  - Key type\n");
     dprintf(fd, "%s\n", std::string(190, '-').c_str());
-    dprintf(fd, "%-4s%-5s%-6s%-3s%-3s%-3s%-3s%-3s%-4s%-4s"
+    dprintf(fd, "%-4s%-8s%-6s%-3s%-3s%-3s%-3s%-3s%-4s%-4s"
             "%-18s%-6s%-40s%-40s%-6s%-6s%-7s%-4s%-10s%-5s%-7s\n",
-            "Idx", "Type", "Lif", "LE",
+            "Idx", "LifType", "Lif", "LE",
             "FM", "RP", "TP", "KT", "NhV", "LMM",
             "DMAC", "Proto", "SIP", "DIP", "SPort", "DPort",
             "VnicID", "Act", "Nexthop", "Data", "CoPPIdx");
@@ -127,10 +127,10 @@ apulu_impl_state::nacl_dump(int fd) {
                 // print the key fields
                 dprintf(fd, "%-4u", i);
                 if (mask.control_metadata_lif_type_mask) {
-                    dprintf(fd, "%-5u",
+                    dprintf(fd, "%-8u",
                             key.control_metadata_lif_type);
                 } else {
-                    dprintf(fd, "%-5s", "*");
+                    dprintf(fd, "%-8s", "*");
                 }
                 if (mask.capri_intrinsic_lif_mask) {
                     dprintf(fd, "%-6u", key.capri_intrinsic_lif);
@@ -240,28 +240,28 @@ apulu_impl_state::nacl_dump(int fd) {
                     dprintf(fd, "%-6s", "*");
                 }
                 if (mask.vnic_metadata_vnic_id_mask) {
-                    dprintf(fd, "%-6u", key.vnic_metadata_vnic_id);
+                    dprintf(fd, "%-7u", key.vnic_metadata_vnic_id);
                 } else {
-                    dprintf(fd, "%-6s", "*");
+                    dprintf(fd, "%-7s", "*");
                 }
                 // print the data fields
                 if (data.action_id == NACL_NACL_PERMIT_ID) {
-                    dprintf(fd, "%-3s", "P");
+                    dprintf(fd, "%-4s", "P");
                 } else if (data.action_id == NACL_NACL_REDIRECT_ID) {
-                    dprintf(fd, "%-3s", "R");
-                    dprintf(fd, "%-2u/%-6u %-4s %-7u",
+                    dprintf(fd, "%-4s", "R");
+                    dprintf(fd, "%-2u/%-7u%-5s%-7u",
                             data.action_u.nacl_nacl_redirect.nexthop_type,
                             data.action_u.nacl_nacl_redirect.nexthop_id, "-",
                             data.action_u.nacl_nacl_redirect.copp_policer_id);
                 } else if (data.action_id == NACL_NACL_REDIRECT_TO_ARM_ID) {
-                    dprintf(fd, "%-3s", "AR");
-                    dprintf(fd, "%-2u/%-6u %-4u %-7u",
+                    dprintf(fd, "%-4s", "AR");
+                    dprintf(fd, "%-2u/%-7u%-5u%-7u",
                             data.action_u.nacl_nacl_redirect_to_arm.nexthop_type,
                             data.action_u.nacl_nacl_redirect_to_arm.nexthop_id,
                             data.action_u.nacl_nacl_redirect_to_arm.data,
                             data.action_u.nacl_nacl_redirect_to_arm.copp_policer_id);
                 } else {
-                    dprintf(fd, "%-3s", "D");
+                    dprintf(fd, "%-4s%-10s%-5s%-7s", "D", "-", "-", "-");
                 }
                 dprintf(fd, "\n");
             } else {

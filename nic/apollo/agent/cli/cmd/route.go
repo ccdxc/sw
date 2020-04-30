@@ -101,10 +101,11 @@ func printRouteSummary(count int) {
 }
 
 func printRouteHeader() {
-	hdrLine := strings.Repeat("-", 112)
+	hdrLine := strings.Repeat("-", 117)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-20s%-12s%-40s\n",
-		"ID", "Prefix", "NextHopType", "NextHop")
+	fmt.Printf("%-40s%-9s%-20s%-8s%-40s\n%-40s%-9s%-20s%-8s%-40s\n",
+		"ID", "Priority", "Prefix", "NextHop", "NextHop",
+		"", "Enabled", "", "Type", "")
 	fmt.Println(hdrLine)
 }
 
@@ -112,52 +113,58 @@ func printRoute(rt *pds.RouteTable) {
 	spec := rt.GetSpec()
 	routes := spec.GetRoutes()
 	first := true
+	priorityEn := spec.GetPriorityEn()
+	priorityStr := "N"
+	if priorityEn {
+		priorityStr = "Y"
+	}
 
-	fmt.Printf("%-40s", uuid.FromBytesOrNil(spec.GetId()).String())
+	fmt.Printf("%-40s%-9s", uuid.FromBytesOrNil(spec.GetId()).String(),
+		priorityStr)
 
 	for _, route := range routes {
 		if first != true {
-			fmt.Printf("%-40s", "")
+			fmt.Printf("%-40s%-9s", "", "")
 		}
 		switch route.GetAttrs().GetNh().(type) {
 		case *pds.RouteAttrs_NextHop:
-			fmt.Printf("%-20s%-12s%-40s\n",
+			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"IP",
 				utils.IPAddrToStr(route.GetAttrs().GetNextHop()))
 			first = false
 		case *pds.RouteAttrs_NexthopId:
-			fmt.Printf("%-20s%-12s%-40s\n",
+			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"ID",
 				uuid.FromBytesOrNil(route.GetAttrs().GetNexthopId()).String())
 			first = false
 		case *pds.RouteAttrs_NexthopGroupId:
-			fmt.Printf("%-20s%-12s%-40s\n",
+			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"ECMP",
 				uuid.FromBytesOrNil(route.GetAttrs().GetNexthopGroupId()).String())
 			first = false
 		case *pds.RouteAttrs_VPCId:
-			fmt.Printf("%-20s%-12s%-40s\n",
+			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"VPC",
 				uuid.FromBytesOrNil(route.GetAttrs().GetVPCId()).String())
 			first = false
 		case *pds.RouteAttrs_TunnelId:
-			fmt.Printf("%-20s%-12s%-40s\n",
+			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"TEP",
 				uuid.FromBytesOrNil(route.GetAttrs().GetTunnelId()).String())
 			first = false
 		case *pds.RouteAttrs_VnicId:
-			fmt.Printf("%-20s%-12s%-40s\n",
+			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"VNIC",
 				uuid.FromBytesOrNil(route.GetAttrs().GetVnicId()).String())
 			first = false
 		default:
-			fmt.Printf("%-20s%-12s%-40s\n",
+			fmt.Printf("%-20s%-8s%-40s\n",
 				utils.IPPrefixToStr(route.GetAttrs().GetPrefix()),
 				"-", "-")
 			first = false

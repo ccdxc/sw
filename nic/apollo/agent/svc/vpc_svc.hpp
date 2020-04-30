@@ -291,8 +291,7 @@ pds_svc_vpc_delete (const pds::VPCDeleteRequest *proto_req,
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_batch_ctxt_t bctxt;
-    pds_obj_key_t key = { 0 };
-    pds_vpc_info_t info = { 0 };
+    pds_obj_key_t key;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -353,7 +352,7 @@ pds_svc_vpc_get (const pds::VPCGetRequest *proto_req,
 {
     sdk_ret_t ret;
     pds_obj_key_t key;
-    pds_vpc_info_t info = { 0 };
+    pds_vpc_info_t info;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -551,7 +550,7 @@ pds_svc_vpc_peer_get (const pds::VPCPeerGetRequest *proto_req,
 {
     sdk_ret_t ret;
     pds_obj_key_t key;
-    pds_vpc_peer_info_t info = { 0 };
+    pds_vpc_peer_info_t info;
 
     PDS_TRACE_VERBOSE("VPCPeer Get Received")
 

@@ -13,13 +13,14 @@
 #include <sys/un.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "nic/sdk/include/sdk/fd.hpp"
+#include "nic/sdk/include/sdk/uds.hpp"
 
 #define FD_RECV_SOCKET_PATH             "/tmp/fd_recv_sock"
 
 void
 fd_send_test (void)
 {
+    char iov_data = '*'; 
     int sock_fd, send_fd = STDOUT_FILENO;
     struct sockaddr_un sock_addr;
 
@@ -38,7 +39,7 @@ fd_send_test (void)
         return;
     }
 
-    if (fd_send(sock_fd, send_fd)) {
+    if (uds_send(sock_fd, send_fd, &iov_data, 1)) {
         printf("Send fd failed\n");
         return;
     }

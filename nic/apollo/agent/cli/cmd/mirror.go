@@ -24,8 +24,8 @@ var (
 
 var mirrorSessionShowCmd = &cobra.Command{
 	Use:   "mirror",
-	Short: "show  Mirror session information",
-	Long:  "show Mirror session object information",
+	Short: "show mirror session information",
+	Long:  "show mirror session object information",
 	Run:   mirrorSessionShowCmdHandler,
 }
 

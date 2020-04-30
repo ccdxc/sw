@@ -1,23 +1,17 @@
-//------------------------------------------------------------------------------
-// Copyright (c) 2019 Pensando Systems, Inc.
-//------------------------------------------------------------------------------
+//
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// uds test app
+///
+//----------------------------------------------------------------------------
 
 #include <iostream>
 #include <math.h>
 #include "nic/apollo/agent/test/client/app.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
-
-static int g_epoch = 1;
-static pds_batch_ctxt_t g_bctxt = PDS_BATCH_CTXT_INVALID;
-
-static inline bool
-pds_batching_enabled (void)
-{
-    if (getenv("BATCHING_DISABLED")) {
-        return FALSE;
-    }
-    return TRUE;
-}
 
 sdk_ret_t
 create_route_table (pds_route_table_spec_t *route_table)
@@ -27,19 +21,6 @@ create_route_table (pds_route_table_spec_t *route_table)
     ret = create_route_table_impl(route_table);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "create route table failed!, ret %u", ret);
-    // Batching: push leftover objects
-    ret = create_route_table_impl(NULL);
-    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "create route table failed!, ret %u", ret);
-    if (pds_batching_enabled()) {
-        ret = batch_commit_impl(g_bctxt);
-        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "Batch commit failed!, ret %u", ret);
-        g_bctxt = batch_start_impl(g_epoch++);
-        SDK_ASSERT_TRACE_RETURN((g_bctxt != PDS_BATCH_CTXT_INVALID),
-                                SDK_RET_ERR,
-                                "Batch start failed!");
-    }
     return ret;
 }
 
@@ -182,9 +163,6 @@ create_policy (pds_policy_spec_t *policy)
     ret = create_policy_impl(policy);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "create policy failed!, ret %u", ret);
-    ret = create_policy_impl(NULL);
-    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "create policy failed!, ret %u", ret);
     return ret;
 }
 
@@ -195,37 +173,18 @@ create_mirror_session (pds_mirror_session_spec_t *ms)
     ret = create_mirror_session_impl(ms);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "create mirror failed!, ret %u", ret);
-    // push leftover objects
-    ret = create_mirror_session_impl(NULL);
-    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "create mirror failed!, ret %u", ret);
     return ret;
 }
 
 sdk_ret_t
 create_objects_init (test_params_t *test_params)
 {
-    if (pds_batching_enabled()) {
-        g_bctxt = batch_start_impl(g_epoch++);
-        SDK_ASSERT_TRACE_RETURN((g_bctxt != PDS_BATCH_CTXT_INVALID),
-                                SDK_RET_ERR,
-                                "Batch start failed!");
-    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 create_objects_end (void)
 {
-    sdk_ret_t ret;
-
-    if (pds_batching_enabled()) {
-        // TODO: hack until hooks is cleaned up
-        (void)batch_start_impl(PDS_EPOCH_INVALID);
-        ret = batch_commit_impl(g_bctxt);
-        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "Batch commit failed!, ret %u", ret);
-    }
     return SDK_RET_OK;
 }
 

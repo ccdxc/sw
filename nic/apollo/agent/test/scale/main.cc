@@ -123,13 +123,19 @@ main (int argc, char **argv)
     system(cmd.c_str());
 
     // init app
-    test_app_init();
+    if (test_app_init() != SDK_RET_OK) {
+        fprintf(stderr, "Test app init failed!\n");
+        exit(1);
+    }
 
     // push configs
     if (test_app_push_configs() != SDK_RET_OK) {
         fprintf(stderr, "Config push failed!\n");
         exit(1);
     }
+
+    // deinit app
+    test_app_deinit();
 
     return 0;
 }

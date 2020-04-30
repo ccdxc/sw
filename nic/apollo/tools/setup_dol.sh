@@ -132,7 +132,7 @@ function finish () {
     ${PDSPKG_TOPDIR}/tools/print-cores.sh
     remove_stale_files
 }
-trap finish EXIT
+#trap finish EXIT
 
 function setup () {
     # Cleanup of previous run if required

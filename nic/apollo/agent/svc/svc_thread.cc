@@ -4,7 +4,7 @@
 
 #include <cerrno>
 #include <sys/un.h>
-#include "nic/sdk/include/sdk/fd.hpp"
+#include "nic/sdk/include/sdk/uds.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/agent/core/core.hpp"
@@ -16,7 +16,7 @@
 #include "gen/proto/types.pb.h"
 
 #define SVC_SERVER_SOCKET_PATH          "/var/run/pds_svc_server_sock"
-#define CMD_IOVEC_DATA_LEN              (256)
+#define CMD_IOVEC_DATA_LEN              (1024 * 1024)
 
 #define UPG_EV_PDS_AGENT_NAME "pdsagent"
 
@@ -27,13 +27,16 @@ static thread_local sdk::event_thread::io_t cmd_accept_io;
 static void
 svc_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
 {
-    char iov_data[CMD_IOVEC_DATA_LEN];
+    char *iov_data;
     types::ServiceRequestMessage proto_req;
     int cmd_fd, bytes_read;
 
+    // allocate memory to read from socket
+    iov_data = (char *)SDK_CALLOC(PDS_MEM_ALLOC_CMD_READ_IO, CMD_IOVEC_DATA_LEN);
     // read from existing connection
-    if ((bytes_read = fd_recv(fd, &cmd_fd, &iov_data, CMD_IOVEC_DATA_LEN)) < 0) {
-        PDS_TRACE_ERR("Receive fd failed");
+    if ((bytes_read = uds_recv(fd, &cmd_fd, iov_data, CMD_IOVEC_DATA_LEN)) < 0) {
+        PDS_TRACE_ERR("Read from unix domain socket failed");
+        return;
     }
     // execute command
     if (bytes_read > 0) {
@@ -42,13 +45,16 @@ svc_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
             // handle cmd
             handle_svc_req(fd, &proto_req, cmd_fd);
         } else {
-            PDS_TRACE_ERR("Parse service request message from socket failed");
+            PDS_TRACE_ERR("Parse service request message from socket failed, "
+                          "bytes_read {}", bytes_read);
         }
         // close fd
         if (cmd_fd >= 0) {
             close(cmd_fd);
         }
     }
+    // free iov data
+    SDK_FREE(PDS_MEM_ALLOC_CMD_READ_IO, iov_data);
     // close connection
     close(fd);
     // stop the watcher

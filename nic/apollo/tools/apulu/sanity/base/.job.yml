@@ -83,6 +83,15 @@ targets:
     build-dependencies:
     - build-apulu-x86
 
+  apulu/pds_uds_testapp:
+    commands: ["make", "PIPELINE=apulu", "jobd/apulu/pds_uds_testapp"]
+    owners: ["email:srikanth@pensando.io" ]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apulu-x86
+
   apulu/valgrind:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtests-valgrind"]
     owners: ["email:sai@pensando.io"]

@@ -118,7 +118,7 @@ pds::InterfaceRequest         g_if_req;
 #define APP_GRPC_BATCH_COUNT    5000
 
 sdk_ret_t
-create_route_table_grpc (pds_route_table_spec_t *spec)
+create_route_table_impl (pds_route_table_spec_t *spec)
 {
     ClientContext       context;
     RouteTableResponse  response;
@@ -140,7 +140,7 @@ create_route_table_grpc (pds_route_table_spec_t *spec)
 }
 
 sdk_ret_t
-create_policy_grpc (pds_policy_spec_t *spec)
+create_policy_impl (pds_policy_spec_t *spec)
 {
     ClientContext             context;
     SecurityPolicyResponse    response;
@@ -165,7 +165,7 @@ create_policy_grpc (pds_policy_spec_t *spec)
 }
 
 sdk_ret_t
-create_local_mapping_grpc (pds_local_mapping_spec_t *spec)
+create_local_mapping_impl (pds_local_mapping_spec_t *spec)
 {
     ClientContext   context;
     MappingResponse response;
@@ -187,7 +187,7 @@ create_local_mapping_grpc (pds_local_mapping_spec_t *spec)
 }
 
 sdk_ret_t
-create_remote_mapping_grpc (pds_remote_mapping_spec_t *spec)
+create_remote_mapping_impl (pds_remote_mapping_spec_t *spec)
 {
     ClientContext   context;
     MappingResponse response;
@@ -209,7 +209,7 @@ create_remote_mapping_grpc (pds_remote_mapping_spec_t *spec)
 }
 
 sdk_ret_t
-create_vnic_grpc (pds_vnic_spec_t *spec)
+create_vnic_impl (pds_vnic_spec_t *spec)
 {
     ClientContext   context;
     VnicResponse    response;
@@ -232,7 +232,7 @@ create_vnic_grpc (pds_vnic_spec_t *spec)
 }
 
 sdk_ret_t
-create_subnet_grpc (pds_subnet_spec_t *spec)
+create_subnet_impl (pds_subnet_spec_t *spec)
 {
     ClientContext   context;
     SubnetResponse  response;
@@ -254,7 +254,7 @@ create_subnet_grpc (pds_subnet_spec_t *spec)
 }
 
 sdk_ret_t
-create_nat_port_block_grpc (pds_nat_port_block_spec_t *spec)
+create_nat_port_block_impl (pds_nat_port_block_spec_t *spec)
 {
     ClientContext           context;
     NatPortBlockResponse    response;
@@ -278,7 +278,7 @@ create_nat_port_block_grpc (pds_nat_port_block_spec_t *spec)
 }
 
 sdk_ret_t
-create_vpc_grpc (pds_vpc_spec_t *spec)
+create_vpc_impl (pds_vpc_spec_t *spec)
 {
     ClientContext   context;
     VPCResponse     response;
@@ -303,7 +303,7 @@ create_vpc_grpc (pds_vpc_spec_t *spec)
 }
 
 sdk_ret_t
-create_dhcp_policy_grpc (pds_dhcp_policy_spec_t *spec)
+create_dhcp_policy_impl (pds_dhcp_policy_spec_t *spec)
 {
     ClientContext       context;
     DHCPPolicyResponse  response;
@@ -328,7 +328,7 @@ create_dhcp_policy_grpc (pds_dhcp_policy_spec_t *spec)
 }
 
 sdk_ret_t
-update_vpc_grpc (pds_vpc_spec_t *vpc)
+update_vpc_impl (pds_vpc_spec_t *vpc)
 {
     ClientContext   context;
     VPCResponse     response;
@@ -352,7 +352,7 @@ update_vpc_grpc (pds_vpc_spec_t *vpc)
 }
 
 sdk_ret_t
-delete_vpc_grpc (pds_obj_key_t *key)
+delete_vpc_impl (pds_obj_key_t *key)
 {
     ClientContext   context;
     VPCDeleteResponse     response;
@@ -382,7 +382,7 @@ delete_vpc_grpc (pds_obj_key_t *key)
 }
 
 sdk_ret_t
-read_vpc_grpc (pds_obj_key_t *key, pds_vpc_info_t *info)
+read_vpc_impl (pds_obj_key_t *key, pds_vpc_info_t *info)
 {
     ClientContext   context;
     VPCGetResponse  response;
@@ -414,7 +414,7 @@ read_vpc_grpc (pds_obj_key_t *key, pds_vpc_info_t *info)
 }
 
 sdk_ret_t
-create_l3_intf_grpc (pds_if_spec_t *spec)
+create_l3_intf_impl (pds_if_spec_t *spec)
 {
     ClientContext     context;
     InterfaceResponse response;
@@ -437,7 +437,7 @@ create_l3_intf_grpc (pds_if_spec_t *spec)
 }
 
 sdk_ret_t
-create_vpc_peer_grpc (pds_vpc_peer_spec_t *spec)
+create_vpc_peer_impl (pds_vpc_peer_spec_t *spec)
 {
     ClientContext   context;
     VPCPeerResponse response;
@@ -460,7 +460,7 @@ create_vpc_peer_grpc (pds_vpc_peer_spec_t *spec)
 }
 
 sdk_ret_t
-create_tag_grpc (pds_tag_spec_t *spec)
+create_tag_impl (pds_tag_spec_t *spec)
 {
     ClientContext context;
     TagResponse   response;
@@ -482,7 +482,7 @@ create_tag_grpc (pds_tag_spec_t *spec)
 }
 
 sdk_ret_t
-create_meter_grpc (pds_meter_spec_t *spec)
+create_meter_impl (pds_meter_spec_t *spec)
 {
     ClientContext context;
     MeterResponse response;
@@ -504,7 +504,7 @@ create_meter_grpc (pds_meter_spec_t *spec)
 }
 
 sdk_ret_t
-create_policer_grpc (pds_policer_spec_t *spec)
+create_policer_impl (pds_policer_spec_t *spec)
 {
     ClientContext   context;
     PolicerResponse response;
@@ -528,7 +528,7 @@ create_policer_grpc (pds_policer_spec_t *spec)
 }
 
 sdk_ret_t
-create_nexthop_grpc (pds_nexthop_spec_t *spec)
+create_nexthop_impl (pds_nexthop_spec_t *spec)
 {
     ClientContext   context;
     NexthopResponse response;
@@ -552,7 +552,7 @@ create_nexthop_grpc (pds_nexthop_spec_t *spec)
 }
 
 sdk_ret_t
-create_nexthop_group_grpc (pds_nexthop_group_spec_t *spec)
+create_nexthop_group_impl (pds_nexthop_group_spec_t *spec)
 {
     ClientContext   context;
     NhGroupResponse response;
@@ -576,7 +576,7 @@ create_nexthop_group_grpc (pds_nexthop_group_spec_t *spec)
 }
 
 sdk_ret_t
-create_tunnel_grpc (uint32_t id, pds_tep_spec_t *spec)
+create_tunnel_impl (uint32_t id, pds_tep_spec_t *spec)
 {
     ClientContext   context;
     TunnelResponse  response;
@@ -600,7 +600,7 @@ create_tunnel_grpc (uint32_t id, pds_tep_spec_t *spec)
 }
 
 sdk_ret_t
-create_device_grpc (pds_device_spec_t *spec)
+create_device_impl (pds_device_spec_t *spec)
 {
     DeviceRequest   request;
     ClientContext   context;
@@ -620,7 +620,7 @@ create_device_grpc (pds_device_spec_t *spec)
 }
 
 sdk_ret_t
-create_mirror_session_grpc (pds_mirror_session_spec_t *spec)
+create_mirror_session_impl (pds_mirror_session_spec_t *spec)
 {
     ClientContext            context;
     MirrorSessionResponse    response;
@@ -644,7 +644,7 @@ create_mirror_session_grpc (pds_mirror_session_spec_t *spec)
 }
 
 sdk_ret_t
-create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
+create_svc_mapping_impl (pds_svc_mapping_spec_t *spec)
 {
     // avinash/srikanth .. please check this path
     ClientContext         context;
@@ -669,7 +669,7 @@ create_svc_mapping_grpc (pds_svc_mapping_spec_t *spec)
 }
 
 pds_batch_ctxt_t
-batch_start_grpc (int epoch)
+batch_start_impl (int epoch)
 {
     BatchSpec           spec;
     ClientContext       start_context;
@@ -690,7 +690,7 @@ batch_start_grpc (int epoch)
 }
 
 sdk_ret_t
-batch_commit_grpc (pds_batch_ctxt_t bctxt)
+batch_commit_impl (pds_batch_ctxt_t bctxt)
 {
     ClientContext       commit_context;
     BatchCtxt           batch_context;
@@ -707,7 +707,7 @@ batch_commit_grpc (pds_batch_ctxt_t bctxt)
     return SDK_RET_OK;
 }
 
-void
+sdk_ret_t
 test_app_init (void)
 {
     grpc_init();
@@ -736,5 +736,10 @@ test_app_init (void)
     g_dhcp_stub_ = pds::DHCPSvc::NewStub(channel);
     g_svc_mapping_stub_ = pds::Svc::NewStub(channel);
 
-    return;
+    return SDK_RET_OK;
+}
+
+void
+test_app_deinit (void)
+{
 }

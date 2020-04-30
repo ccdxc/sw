@@ -472,6 +472,10 @@ jobd/apulu/pds_scale_test_mock: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/scale/apulu/run_scale_test_mock.sh
 	${NICDIR}/apollo/test/scale/apulu/runtestapp.sh
 
+.PHONY: jobd/apulu/pds_uds_testapp
+jobd/apulu/pds_uds_testapp: ${JOBD_PREREQS}
+	${NICDIR}/apollo/test/scale/apulu/runudstestapp.sh
+
 .PHONY: jobd/apulu/gtest_1
 jobd/apulu/gtest_1: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --apulu_gtest

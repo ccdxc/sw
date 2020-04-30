@@ -832,8 +832,8 @@ pds_svc_security_policy_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityPolicyRequest req;
             pds::SecurityPolicyResponse rsp;
 
-            ret = pds_svc_security_policy_create(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_policy_create(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -843,8 +843,8 @@ pds_svc_security_policy_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityPolicyRequest req;
             pds::SecurityPolicyResponse rsp;
 
-            ret = pds_svc_security_policy_update(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_policy_update(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -854,8 +854,8 @@ pds_svc_security_policy_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityPolicyDeleteRequest req;
             pds::SecurityPolicyDeleteResponse rsp;
 
-            ret = pds_svc_security_policy_delete(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_policy_delete(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -865,8 +865,8 @@ pds_svc_security_policy_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityPolicyGetRequest req;
             pds::SecurityPolicyGetResponse rsp;
 
-            ret = pds_svc_security_policy_get(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_policy_get(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -1105,8 +1105,8 @@ pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityProfileRequest req;
             pds::SecurityProfileResponse rsp;
 
-            ret = pds_svc_security_profile_create(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_profile_create(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -1116,8 +1116,8 @@ pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityProfileRequest req;
             pds::SecurityProfileResponse rsp;
 
-            ret = pds_svc_security_profile_update(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_profile_update(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -1127,8 +1127,8 @@ pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityProfileDeleteRequest req;
             pds::SecurityProfileDeleteResponse rsp;
 
-            ret = pds_svc_security_profile_delete(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_profile_delete(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -1138,8 +1138,8 @@ pds_svc_security_profile_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityProfileGetRequest req;
             pds::SecurityProfileGetResponse rsp;
 
-            ret = pds_svc_security_profile_get(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_profile_get(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -1364,8 +1364,8 @@ pds_svc_security_rule_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityRuleRequest req;
             pds::SecurityRuleResponse rsp;
 
-            ret = pds_svc_security_rule_create(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_rule_create(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -1375,8 +1375,8 @@ pds_svc_security_rule_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityRuleRequest req;
             pds::SecurityRuleResponse rsp;
 
-            ret = pds_svc_security_rule_update(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_rule_update(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -1386,8 +1386,8 @@ pds_svc_security_rule_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityRuleDeleteRequest req;
             pds::SecurityRuleDeleteResponse rsp;
 
-            ret = pds_svc_security_rule_delete(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_rule_delete(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;
@@ -1397,8 +1397,8 @@ pds_svc_security_rule_handle_cfg (cfg_ctxt_t *ctxt,
             pds::SecurityRuleGetRequest req;
             pds::SecurityRuleGetResponse rsp;
 
-            ret = pds_svc_security_rule_get(&req, &rsp);
             any_req->UnpackTo(&req);
+            ret = pds_svc_security_rule_get(&req, &rsp);
             any_resp->PackFrom(rsp);
         }
         break;

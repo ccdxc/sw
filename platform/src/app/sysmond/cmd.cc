@@ -4,7 +4,7 @@
 
 #include <cerrno>
 #include <sys/un.h>
-#include "nic/sdk/include/sdk/fd.hpp"
+#include "nic/sdk/include/sdk/uds.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
@@ -42,7 +42,7 @@ cmd_server_read_cb (sdk::event_thread::io_t *io, int fd, int events)
     int cmd_fd,bytes_read;
 
     // read from existing connection
-    if ((bytes_read = fd_recv(fd, &cmd_fd, &iov_data, CMD_IOVEC_DATA_LEN)) < 0) {
+    if ((bytes_read = uds_recv(fd, &cmd_fd, &iov_data, CMD_IOVEC_DATA_LEN)) < 0) {
         TRACE_ERR(GetAsicErrLogger(), "Receive fd failed");
     }
     // execute command

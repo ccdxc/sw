@@ -24,7 +24,7 @@ var (
 
 var policerShowCmd = &cobra.Command{
 	Use:   "policer",
-	Short: "show  policer information",
+	Short: "show policer information",
 	Long:  "show policer object information",
 	Run:   policerShowCmdHandler,
 }
