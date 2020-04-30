@@ -297,6 +297,16 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     // });
   }
 
+  getContentClass(): string {
+    if (this.isSideNavExpanded && this.isSideNavShown) {
+      return 'menufullopened';
+    }
+    if (this.isSideNavShown) {
+      return 'menupartialopened';
+    }
+    return 'menuclosed';
+  }
+
   redirectHome() {
     if (!this.isUINavigationBlocked) {
       this.uiconfigsService.navigateToHomepage();

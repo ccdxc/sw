@@ -1,25 +1,15 @@
-<div fxFlex="auto" fxLayout="column" class=newsecurityapp-container>
-  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
-  <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center">
+<div fxFlex="auto" fxLayout="column" class="newsecurityapp-container">
+  <app-inlinebuttons class="newsecurityapp" *ngIf="isInline"
+                     [saveButtonClass]="computeInlineButtonClass()" [saveTooltip]="getTooltip()"
+                     (saveFunc)="savePolicy()" (cancelFunc)="cancelObject()">
+  </app-inlinebuttons>
+  <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
+       [class]="isInline? 'newsecurityapp-editform-inline' : ''">
     <div fxFlex="none" fxLayout="row" fxLayoutAlign="center">
       <ng-container *ngTemplateOutlet="newSecurityAppContent"></ng-container>
     </div>
   </div>
 </div>
-<ng-template #inlineButtons>
-  <div *ngIf="isInline" class="newsecurityapp-buttoncontainer" fxFlex="nogrow" fxLayout="row"
-       fxLayoutAlign="end start">
-    <div fxFlex="nogrow" class="button-container" [matTooltip]="getTooltip()"
-         matTooltipClass="newsecurityapp-save-tooltip">
-      <span (click)="savePolicy()" class="global-button-primary newsecurityapp-save"
-            [ngClass]="isFormValid() ? '' : 'global-button-disabled'">SAVE</span>
-    </div>
-    <div fxFlex="nogrow" class="button-container" [matTooltip]="getTooltip()">
-      <span (click)="cancelObject()"
-            class="global-button-neutral newsecurityapp-cancel">CANCEL</span>
-    </div>
-  </div>
-</ng-template>
 
 <ng-template #newSecurityAppContent>
   <div fxFlex fxLayout="row" fxLayoutAlign="start stretch"

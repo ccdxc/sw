@@ -70,6 +70,19 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     const dnsMaxMsgLen: AbstractControl = this.securityForm.get(['spec', 'alg', 'dns', 'max-message-length']);
     this.addFieldValidator(dnsMaxMsgLen, minValueValidator(1));
     this.addFieldValidator(dnsMaxMsgLen, maxValueValidator(8129));
+    if (this.isInline) {
+      const allTargets = this.securityForm.get(['spec', 'proto-ports']) as FormArray;
+      allTargets.controls.forEach((formGroup: FormGroup) => {
+        const ctrl2: AbstractControl = formGroup.get(['protocol']);
+        this.addFieldValidator(ctrl2, this.isProtocolFieldValid());
+        const protocol: string = ctrl2.value;
+        const ctrl: AbstractControl = formGroup.get(['ports']);
+        this.addFieldValidator(ctrl, this.isPortsFieldValid());
+        if (protocol !== 'tcp' && protocol !== 'udp') {
+          ctrl.disable();
+        }
+      });
+    }
   }
 
   setCustomValidation() {

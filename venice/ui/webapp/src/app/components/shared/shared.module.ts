@@ -22,6 +22,7 @@ import { WhitespaceTrimDirective } from '@app/components/shared/directives/white
 import { FieldselectorComponent } from './fieldselector/fieldselector.component';
 import { HerocardComponent } from './herocard/herocard.component';
 import { WidgetsModule } from 'web-app-framework';
+import { InlineButtonsComponent } from './form/layout/inlinebuttons.component';
 import { SorticonComponent } from './sorticon/sorticon.component';
 import { BasecardComponent } from './basecard/basecard.component';
 import { LinegraphComponent } from './linegraph/linegraph.component';
@@ -78,6 +79,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     WhitespaceTrimDirective,
     FieldselectorComponent,
     HerocardComponent,
+    InlineButtonsComponent,
     SorticonComponent,
     BasecardComponent,
     LinegraphComponent,
@@ -121,6 +123,7 @@ import { ExportLogsComponent } from './exportlogs/exportlogs.component';
     WhitespaceTrimDirective,
     FieldselectorComponent,
     HerocardComponent,
+    InlineButtonsComponent,
     SorticonComponent,
     BasecardComponent,
     LinegraphComponent,

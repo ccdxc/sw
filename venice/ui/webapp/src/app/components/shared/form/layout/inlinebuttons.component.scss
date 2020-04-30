@@ -1,0 +1,25 @@
+@import 'src/global-mixins';
+
+app-inlinebuttons {
+  position: relative;
+}
+
+.form-inlinebuttons-container {
+  width: 100%;
+  margin-top: 5px;
+  padding-right: 5px;
+  position: absolute;
+
+  .form-inlinebuttons-savebutton,
+  .form-inlinebuttons-cancelbutton {
+    font-size: 16px;
+    display: inline-block;
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 0px 10px 5px 10px;
+  }
+
+  .button-container {
+    margin-top: 5px;
+  }
+}

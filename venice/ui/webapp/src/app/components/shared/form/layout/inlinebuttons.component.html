@@ -1,0 +1,14 @@
+<div class="form-inlinebuttons-container" fxLayout="row" fxLayoutAlign="end start">
+  <div fxFlex="nogrow" class="button-container" [matTooltip]="saveTooltip"
+       [matTooltipClass]="'form-inlinebuttons-tooltip'">
+    <span (click)="save()" [ngClass]="['global-button-primary', saveButtonClass ?
+        saveButtonClass : '', 'form-inlinebuttons-savebutton']">SAVE
+    </span>
+  </div>
+  <div fxFlex="nogrow" class="button-container">
+    <span (click)="cancel()"
+          [ngClass]="['global-button-neutral', 'form-inlinebuttons-cancelbutton']">
+      CANCEL
+    </span>
+  </div>
+</div>

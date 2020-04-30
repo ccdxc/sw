@@ -9,58 +9,10 @@ $dary-grey: #a9a9a9;
   padding-right: 10px;
 }
 
-
-.newVcenter-buttoncontainer {
-  .button-container {
-    margin-top: 5px;
-  }
-
-  // when screen is big enough, move buttons down
-  @media only screen and (min-width: 950px) {
-    .button-container {
-      position: relative;
-      max-height: 0px;
-    }
-  }
-
-  .newVcenter-save,
-  .newVcenter-cancel {
-    font-size: 16px;
-    display: inline-block;
-    padding: 4px 10px;
-    line-height: 25px;
-    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-    border-width: 0px;
-
-    &:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-  }
-}
-
 .newVcenter-save-tooltip {
   position: relative;
   top: 0px;
   font-size: 10px;
-}
-
-// when screen is big enough
-@media only screen and (min-width: 950px) {
-  .newVcenter-save-tooltip {
-    position: relative;
-    top: 30px;
-  }
-}
-
-
-.newVcenter-buttoncontainer,
-.newVcenter-container {
-  background: white;
-
-  &:hover {
-    background: white;
-  }
 }
 
 .newVcenter-input {
@@ -143,3 +95,5 @@ $dary-grey: #a9a9a9;
     }
   }
 }
+
+@include adjust-inlinebuttons-boundry(960, newVcenter-editform-inline);

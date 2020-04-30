@@ -1,6 +1,10 @@
 <div fxFlex="auto" fxLayout="column" class="new-network-container">
-  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
-  <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center">
+  <app-inlinebuttons class="new-network" *ngIf="isInline"
+                     [saveButtonClass]="computeInlineButtonClass()" [saveTooltip]="getTooltip()"
+                     (saveFunc)="saveObject()" (cancelFunc)="cancelObject()">
+  </app-inlinebuttons>
+  <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
+       [class]="isInline? 'new-network-editform-inline' : ''">
     <div fxFlex="none" fxLayout="row" fxLayoutAlign="center" class="new-network-content">
       <ng-container *ngTemplateOutlet="singleMode"></ng-container>
     </div>
@@ -68,21 +72,5 @@
         </div>
       </div>
     </fieldset>
-  </div>
-</ng-template>
-
-<ng-template #inlineButtons>
-  <div *ngIf="isInline" fxLayout="row" fxLayoutAlign="end center"
-       class="new-network-button-container">
-    <div fxFlex="nogrow" class="button-container" [matTooltip]="getTooltip()"
-         matTooltipClass="new-network-save-tooltip">
-      <span (click)="saveObject()"
-            class="global-button-primary global-button-padding new-network-save"
-            [ngClass]="computeInlineButtonClass()">SAVE</span>
-    </div>
-    <div fxFlex="nogrow" class="button-container">
-      <span (click)="cancelObject()"
-            class="global-button-neutral global-button-padding new-network-cancel">CANCEL</span>
-    </div>
   </div>
 </ng-template>

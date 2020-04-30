@@ -154,7 +154,7 @@ describe('NewworkloadComponent', () => {
     );
     fixture.detectChanges();
     workload.spec.interfaces[0]['mac-address'] = '2222.2222.2222';
-    tu.sendClick(tu.getElemByCss('.new-workload-save'));
+    tu.sendClick(tu.getElemByCss('.new-workload .form-inlinebuttons-savebutton'));
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[1];
     const expVal = TrimUIFields(new WorkloadWorkload(workload).getModelValues());

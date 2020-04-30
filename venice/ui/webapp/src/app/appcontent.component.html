@@ -143,18 +143,7 @@
           </div>
         </mat-sidenav>
 
-        <mat-sidenav-content *ngIf="isSideNavExpanded"
-                             [@openCloseFullMainContent]="isSideNavShown? 'open': 'close'">
-          <ng-container *ngTemplateOutlet="mainContent;"></ng-container>
-        </mat-sidenav-content>
-
-        <mat-sidenav-content *ngIf="!isSideNavExpanded"
-                             [@openClosePartialMainContent]="isSideNavShown? 'open': 'close'">
-          <ng-container *ngTemplateOutlet="mainContent;"></ng-container>
-        </mat-sidenav-content>
-
-        <mat-sidenav-content *ngIf="!isSideNavShown"
-                             [@openCloseMainContent]="isSideNavExpanded? 'open': 'close'">
+        <mat-sidenav-content>
           <ng-container *ngTemplateOutlet="mainContent;"></ng-container>
         </mat-sidenav-content>
       </mat-sidenav-container>
@@ -184,7 +173,7 @@
 
 <ng-template #mainContent>
   <app-toolbar #breadcrumbToolbar></app-toolbar>
-  <div class="app-shell-router-outter-div">
+  <div [class]="'app-shell-router-outter-div ' + getContentClass()">
     <app-toaster>
       <ng-template let-message let-onClose="onClose" pTemplate="message">
         <div fxLayout="row"

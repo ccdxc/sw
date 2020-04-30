@@ -1,9 +1,10 @@
 <div fxFlex="auto" fxLayout="column">
-  <div *ngIf="isInline">
-    <ng-container *ngTemplateOutlet="editButtonContainer;">
-    </ng-container>
-  </div>
-  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newVcenter-container">
+  <app-inlinebuttons class="newVcenter" *ngIf="isInline"
+                     [saveButtonClass]="computeInlineButtonClass()" [saveTooltip]="getTooltip()"
+                     (saveFunc)="saveObject()" (cancelFunc)="cancelObject()">
+  </app-inlinebuttons>
+  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start"
+       [class]="isInline? 'newVcenter-editform-inline' : ''">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex="none" fxLayout="row" fxLayoutAlign="center" class="newVcenter-content">
       <ng-container *ngTemplateOutlet="singleMode;"></ng-container>
@@ -116,22 +117,6 @@
           </div>
         </div>
       </fieldset>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #editButtonContainer>
-  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="end center">
-    <div class="newVcenter-buttoncontainer">
-      <div fxFlex="nogrow" class="button-container" [matTooltip]="getTooltip()"
-           matTooltipClass="newVcenter-save-tooltip">
-        <button [disabled]="!isFormValid()" (click)="saveObject()"
-                class="global-button-primary newVcenter-save">SAVE</button>
-      </div>
-      <div fxFlex="nogrow" class="button-container">
-        <button (click)="cancelObject()"
-                class="global-button-neutral newVcenter-cancel">CANCEL</button>
-      </div>
     </div>
   </div>
 </ng-template>

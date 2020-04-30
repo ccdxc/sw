@@ -9,7 +9,7 @@ $dary-grey: #a9a9a9;
 }
 
 .new-workload-container {
-  padding: 20px;
+  padding: 10px;
 
   .new-workload-groups {
     width: 630px;
@@ -119,27 +119,14 @@ $dary-grey: #a9a9a9;
     @include primary-font(12px, #b2b3b4, 300);
   }
 
-  .new-workload-button-container {
-    margin-top: 1.5 * $vertical-gutter;
-    place-content: flex-end;
-    align-items: flex-start;
+  .new-workload .form-inlinebuttons-container {
+    padding-right: 25px;
+    margin-top: 0px;
+  }
 
-    // when screen is big enough, move buttons down
-    @media only screen and (min-width: 1240px) {
-      .button-container {
-        position: relative;
-        max-height: 0px;
-      }
-    }
-
-    .new-workload-save,
-    .new-workload-cancel {
-      cursor: pointer;
-      font-size: 16px;
-      display: inline-block;
-      padding: 4px 10px;
-      line-height: 25px;
-      margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-    }
+  .new-workload-editform-inline {
+    padding-top: 10px;
   }
 }
+
+@include adjust-inlinebuttons-boundry(1240, new-workload-editform-inline)

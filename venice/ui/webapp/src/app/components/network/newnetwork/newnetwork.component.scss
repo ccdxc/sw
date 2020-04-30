@@ -80,34 +80,4 @@ $dary-grey: #a9a9a9;
       margin-left: 5px;
     }
   }
-
-  .new-network-button-container {
-    margin-top: 1.5 * $vertical-gutter;
-
-    .button-container {
-      position: relative;
-      max-height: 0px;
-    }
-
-    .new-network-save,
-    .new-network-cancel {
-      cursor: pointer;
-      font-size: 16px;
-      display: inline-block;
-      padding: 4px 10px;
-      line-height: 25px;
-      margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-
-      &:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-      }
-    }
-  }
-}
-
-.new-network-save-tooltip {
-  position: relative;
-  top: 30px;
-  font-size: 10px;
 }

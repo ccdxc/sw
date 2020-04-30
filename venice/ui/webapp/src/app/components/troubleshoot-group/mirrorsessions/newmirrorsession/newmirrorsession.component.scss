@@ -4,25 +4,16 @@ $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 $dary-grey: #a9a9a9;
 
-.newMirrorSession-container {
+.newmirrorsession-container {
   margin: 10px;
+
+  .newmirrorsession-editform-inline {
+    margin-top: 35px;
+  }
 
   .newmirrorsession-row {
     min-width: 625px;
     margin: 0px auto;
-  }
-
-  .newmirrorsession-inline-buttoncontainer {
-    margin: 5px 0px;
-
-    .newmirrorsession-inline-save,
-    .newmirrorsession-inline-cancel {
-      font-size: 16px;
-      display: inline-block;
-      padding: 4px 10px;
-      line-height: 25px;
-      margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-    }
   }
 
   .newmirrorsession-select-panel {

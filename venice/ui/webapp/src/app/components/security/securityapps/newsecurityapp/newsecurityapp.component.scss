@@ -104,39 +104,10 @@ $form-width: 450px;
   }
 }
 
-
-.newsecurityapp-save,
-.newsecurityapp-cancel {
-  font-size: 16px;
-  display: inline-block;
-  padding: 4px 10px;
-  line-height: 25px;
-  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-}
-
-
-.newsecurityapp-buttoncontainer {
-  margin-top: $vertical-gutter;
-
-  .button-container {
-    margin-top: 5px;
-  }
-}
-
 .newsecurityapp-button {
   padding-left: 10px;
   padding-right: 10px;
   cursor: pointer;
 }
 
-@media only screen and (min-width: 1024px) {
-  .newsecurityapp-buttoncontainer .button-container {
-    position: relative;
-    max-height: 0px;
-  }
-
-  .newsecurityapp-save-tooltip {
-    position: relative;
-    top: 30px;
-  }
-}
+@include adjust-inlinebuttons-boundry(1024, newsecurityapp-editform-inline);

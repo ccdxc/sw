@@ -356,10 +356,26 @@
       left: 0.5em;
     }
   }
-
-
 }
 
-$sidenavWidth: 220px;
+$sidenavWidthNum: 220;
+$sidenavWidth: #{$sidenavWidthNum}px;
+$sidenavPartialWidthNum: 80;
+$sidenavPartialWidth: #{$sidenavPartialWidthNum}px;
+
+@mixin adjust-inlinebuttons-boundry-screensize ($maxWidth, $mainContentClass, $formClass) {
+  @media only screen and (max-width: $maxWidth) {
+    .#{$mainContentClass} .#{$formClass} {
+      margin-top: 35px;
+    }
+  }
+}
+
+@mixin adjust-inlinebuttons-boundry($maxWidth, $formClass) {
+  @include adjust-inlinebuttons-boundry-screensize(#{$maxWidth}px, menufullopened, $formClass);
+  @include adjust-inlinebuttons-boundry-screensize(#{$maxWidth - $sidenavWidthNum + $sidenavPartialWidthNum}px, menupartialopened, $formClass);
+  @include adjust-inlinebuttons-boundry-screensize(#{$maxWidth - $sidenavWidthNum}px, menuclosed, $formClass);
+}
+
 $backgroundGradient: linear-gradient(to bottom, rgba(245, 242, 235, 1), rgba(245, 242, 235, 0.5));
 $topbarGradient: linear-gradient(to right, rgba(213, 213, 213, 1), rgba(213, 213, 213, 0));

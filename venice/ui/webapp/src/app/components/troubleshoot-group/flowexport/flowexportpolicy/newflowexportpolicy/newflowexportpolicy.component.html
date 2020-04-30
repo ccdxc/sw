@@ -1,7 +1,10 @@
 <div fxFlex="auto" fxLayout="column" class="new-flow-export-container">
-  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
-  <div fxFlex="5px"></div>
-  <div fxFlex="auto" fxLayout="row wrap">
+  <app-inlinebuttons class="new-workload" *ngIf="isInline"
+                     [saveButtonClass]="computeInlineButtonClass()" [saveTooltip]="getTooltip()"
+                     (saveFunc)="saveObject()" (cancelFunc)="cancelObject()">
+  </app-inlinebuttons>
+  <div fxFlex="auto" fxLayout="row wrap"
+       [class]="isInline? 'new-flow-export-editform-inline' : ''">
     <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
          class="new-flow-export-row">
       <ng-container *ngTemplateOutlet="metaSpec"></ng-container>
@@ -26,24 +29,6 @@
     </div>
   </div>
 </div>
-
-<ng-template #inlineButtons>
-  <div *ngIf="isInline" class="flow-export-policy-button-container"
-       fxFlex="nogrow"
-       fxLayout="row" fxLayoutAlign="end">
-    <div fxFlex="auto" fxLayoutAlign="end center">
-      <div fxFlex="nogrow" [matTooltip]="getTooltip()">
-        <span (click)="saveObject()"
-              class="global-button-primary new-flow-export-inline-save"
-              [ngClass]="computeInlineButtonClass()">SAVE</span>
-      </div>
-      <div fxFlex="nogrow">
-        <span (click)="cancelObject()"
-              class="global-button-neutral global-button-padding new-flow-export-inline-cancel">CANCEL</span>
-      </div>
-    </div>
-  </div>
-</ng-template>
 
 <ng-template #metaSpec>
   <div class="meta-spec-form-group">

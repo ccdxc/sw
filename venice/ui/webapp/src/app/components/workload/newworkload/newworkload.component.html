@@ -1,6 +1,12 @@
 <div fxFlex="auto" fxLayout="column" class="new-workload-container">
-  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
-  <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center">
+  <app-inlinebuttons class="new-workload" *ngIf="isInline"
+                     [saveButtonClass]="computeInlineButtonClass()"
+                     [saveTooltip]="getTooltip()"
+                     (saveFunc)="editSaveObject()"
+                     (cancelFunc)="editCancelObject()">
+  </app-inlinebuttons>
+  <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
+       [class]="isInline? 'new-workload-editform-inline' : ''">
     <ng-container *ngTemplateOutlet="metaHostname"></ng-container>
     <ng-container *ngTemplateOutlet="match_rules"></ng-container>
   </div>
@@ -31,20 +37,6 @@
           </ng-template>
         </p-dropdown>
       </span>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #inlineButtons>
-  <div *ngIf="isInline" class="new-workload-button-container">
-    <div fxFlex="nogrow" class="button-container">
-      <span (click)="editSaveObject()" [matTooltip]="getTooltip()"
-            class="global-button-primary global-button-padding new-workload-save"
-            [ngClass]="computeInlineButtonClass()">SAVE</span>
-    </div>
-    <div fxFlex="nogrow" class="button-container">
-      <span (click)="editCancelObject()"
-            class="global-button-neutral global-button-padding new-workload-cancel">CANCEL</span>
     </div>
   </div>
 </ng-template>
