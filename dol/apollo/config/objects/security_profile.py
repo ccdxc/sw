@@ -151,6 +151,15 @@ class SecurityProfileObject(base.ConfigObjectBase):
         grpcmsg = types_pb2.Empty()
         return grpcmsg
 
+    def UpdateDefaultFWAction(self, spec=None):
+        if hasattr(spec, "DefaultFWAction"):
+            action = getattr(spec, "DefaultFWAction", None)
+            logger.info(f"Updating security profile default FW action -> {action}")
+            self.DefaultFWAction = utils.GetRpcSecurityRuleAction(action)
+            self.Show()
+            return utils.UpdateObject(self)
+        return True
+
 class SecurityProfileObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.SECURITY_PROFILE, Resmgr.MAX_SECURITY_PROFILE)

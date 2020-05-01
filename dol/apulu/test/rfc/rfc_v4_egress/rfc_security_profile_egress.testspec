@@ -1,0 +1,193 @@
+# RFC Test Spec for local2igw
+selectors:
+    root: ref://store/templates/id=POLICY
+    maxlimits: 1
+    policy: filter://Direction=egress,Level=subnet
+
+packets:
+    - packet:
+        id          : FROM_HOST_PKT # Input packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromPolicy
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:00:00:00:00:02
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromPolicy
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/localmapping/IP
+                dst     : callback://networking/packets/GetUsableHostFromPolicy
+                hlim    : 64
+            tcp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+                flags   : syn
+            udp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+            icmp:
+                type    : callback://networking/packets/GetUsableICMPTypeFromPolicy
+                code    : callback://networking/packets/GetUsableICMPCodeFromPolicy
+            icmpv6:
+                type    : callback://networking/packets/GetUsableICMPTypeFromPolicy
+                code    : callback://networking/packets/GetUsableICMPCodeFromPolicy
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet
+        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : callback://networking/packets/GetUplinkPortMac
+                dst     : callback://networking/packets/GetUnderlayRemoteMac
+            outeripv4:
+                src     : ref://testcase/config/devicecfg/IP
+                dst     : callback://networking/packets/GetTunnelIPFromRoute
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            vxlan:
+                vni     : ref://testcase/config/route/VPC/Vnid
+            eth:
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=L2N
+                dst     : ref://testcase/config/route/TUNNEL/MACAddr
+            ipv4:
+                src     : callback://networking/packets/GetIPFromLocalMapping
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=L2N,ipkt=FROM_HOST_PKT
+            ipv6:
+                src     : callback://networking/packets/GetIPFromLocalMapping
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=FROM_HOST_PKT/size
+           data : ref://testcase/packets/id=FROM_HOST_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
+
+
+session:
+    - step:
+        trigger              :
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC1
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect               :
+            delay            : 1
+            packets          :
+                - packet     :
+                    object   : callback://networking/packets/GetExpectedCPSPacket/ipkt=FROM_HOST_PKT,epkt_pass=TO_SWITCH_PKT
+                    port     : callback://networking/packets/GetExpectedEgressUplinkPort
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC2
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
+    - step:
+        trigger              :
+            configs          :
+                - object     : ref://testcase/config/securityprofile
+                  method     : UpdateDefaultFWAction
+                  fields     :
+                     DefaultFWAction : deny
+            delay            : 1
+        expect               :
+            # configs          :
+            #     - object     : ref://testcase/config/securityprofile
+            #       method     : Read
+
+    - step:
+        trigger              :
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC1
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect               :
+            delay            : 1
+
+            packets          :
+                - packet     :
+                    object   : callback://networking/packets/GetExpectedCPSPacket/ipkt=FROM_HOST_PKT,epkt_pass=TO_SWITCH_PKT
+                    port     : callback://networking/packets/GetExpectedEgressUplinkPort
+
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC2
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
+    - step:
+        trigger              :
+            configs          :
+                - object     : ref://testcase/config/securityprofile
+                  method     : UpdateDefaultFWAction
+                  fields     :
+                     DefaultFWAction : none
+            delay            : 1
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC1
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect               :
+            # configs          :
+            #     - object     : ref://testcase/config/securityprofile
+            #       method     : Read
+
+    - step:
+        trigger              :
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC1
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect               :
+            delay            : 1
+            packets          :
+                - packet     :
+                    object   : callback://networking/packets/GetExpectedCPSPacket/ipkt=FROM_HOST_PKT,epkt_pass=TO_SWITCH_PKT
+                    port     : callback://networking/packets/GetExpectedEgressUplinkPort
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC2
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
+    - step:
+        trigger              :
+            configs          :
+                - object     : ref://testcase/config/securityprofile
+                  method     : UpdateDefaultFWAction
+                  fields     :
+                     DefaultFWAction : allow
+            delay            : 1
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC1
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect               :
+            # configs          :
+            #     - object     : ref://testcase/config/securityprofile
+            #       method     : Read

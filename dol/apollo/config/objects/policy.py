@@ -17,6 +17,7 @@ from infra.common.glopts  import GlobalOptions
 import apollo.config.agent.api as api
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
+from apollo.config.objects.security_profile import client as SecurityProfileClient
 
 import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
@@ -67,6 +68,50 @@ class L4MatchObject:
         else:
             logger.info("    No L4Match")
 
+    def ValidateSpec(self, spec=None):
+        default = lambda x,y: True
+        def __validate_ports(l4match, spec):
+            if spec.Ports.SrcPortRange.PortLow != l4match.SportLow or \
+               spec.Ports.SrcPortRange.PortHigh != l4match.SportHigh:
+                return False
+            if spec.Ports.DstPortRange.PortLow != l4match.DportLow or \
+               spec.Ports.DstPortRange.PortHigh != l4match.DportHigh:
+                return False
+            return True
+
+        def __validate_type_code(l4match, spec):
+            def __validate_type_num(l4match, spec):
+                return False if spec.TypeCode.TypeNum != l4match.IcmpType else True
+
+            def __validate_type_wildcard(l4match, spec):
+                return False if spec.TypeCode.TypeWildcard != l4match.IcmpType else True
+
+            def __validate_code_num(l4match, spec):
+                return False if spec.TypeCode.CodeNum != l4match.IcmpCode else True
+
+            def __validate_code_wildcard(l4match, spec):
+                return False if spec.TypeCode.CodeWildcard != l4match.IcmpCode else True
+
+            typematch_switcher = {
+                "TypeNum"      : __validate_type_num,
+                "TypeWildcard" : __validate_type_wildcard
+            }
+            codematch_switcher = {
+                "CodeNum"      : __validate_code_num,
+                "CodeWildcard" : __validate_code_wildcard
+            }
+            if not typematch_switcher.get(spec.TypeCode.WhichOneof("typematch"), default)(l4match, spec):
+                return False
+            if not codematch_switcher.get(spec.TypeCode.WhichOneof("codematch"), default)(l4match, spec):
+                return False
+            return True
+
+        l4info_switcher = {
+            "Ports"    : __validate_ports,
+            "TypeCode" : __validate_type_code
+        }
+        return l4info_switcher.get(spec.WhichOneof("l4info"), default)(self, spec)
+
 class L3MatchObject:
     def __init__(self, valid=False, proto=utils.L3PROTO_MIN,\
                  srcpfx=None, dstpfx=None,\
@@ -115,6 +160,64 @@ class L3MatchObject:
                         %(__get_tag_id(self.SrcTag), __get_tag_id(self.DstTag)))
         else:
             logger.info("    No L3Match")
+
+    def ValidateSpec(self, spec):
+        def __validate_src_range(l3match, spec):
+            srcrange = types_pb2.AddressRange()
+            utils.GetRpcIPRange(l3match.SrcIPLow, l3match.SrcIPHigh, srcrange)
+            return False if spec.SrcRange != srcrange else True
+
+        def __validate_src_prefix(l3match, spec):
+            srcprefix = types_pb2.IPPrefix()
+            utils.GetRpcIPPrefix(l3match.SrcPrefix, srcprefix)
+            return False if spec.SrcPrefix != srcprefix else True
+
+        def __validate_src_tag(l3match, spec):
+            return False if spec.SrcTag != l3match.SrcTag.TagId else True
+
+        def __validate_dst_range(l3match, spec):
+            dstrange = types_pb2.AddressRange()
+            utils.GetRpcIPRange(l3match.DstIPLow, l3match.DstIPHigh, dstrange)
+            return False if spec.DstRange != dstrange else True
+
+        def __validate_dst_prefix(l3match, spec):
+            dstprefix = types_pb2.IPPrefix()
+            utils.GetRpcIPPrefix(l3match.DstPrefix, dstprefix)
+            return False if spec.DstPrefix != dstprefix else True
+
+        def __validate_dst_tag(l3match, spec):
+            return False if spec.DstTag != l3match.DstTag.TagId else True
+
+        def __validate_proto_num(l3match, spec):
+            return False if spec.ProtoNum != self.Proto else True
+
+        def __validate_proto_wildcard(l3match, spec):
+            # TODO : This doesnt look correct
+            return False if spec.ProtoWildcard != self.Proto else True
+
+        protomatch_switcher = {
+            "ProtoNum"      : __validate_proto_num,
+            "ProtoWildcard" : __validate_proto_wildcard
+        }
+        srcmatch_switcher = {
+            "SrcPrefix"     : __validate_src_prefix,
+            "SrcRange"      : __validate_src_range,
+            "SrcTag"        : __validate_src_tag
+        }
+        dstmatch_switcher = {
+            "DstPrefix"     : __validate_dst_prefix,
+            "DstRange"      : __validate_dst_range,
+            "DstTag"        : __validate_dst_tag
+        }
+        default = lambda x,y: True
+
+        if not protomatch_switcher.get(spec.WhichOneof("protomatch"), default)(self, spec):
+            return False
+        if not srcmatch_switcher.get(spec.WhichOneof("srcmatch"), default)(self, spec):
+            return False
+        if not dstmatch_switcher.get(spec.WhichOneof("dstmatch"), default)(self, spec):
+            return False
+        return True
 
 AppIdx=1
 
@@ -204,6 +307,27 @@ class RuleObject:
 
         return ret
 
+    def ValidateSpec(self, spec):
+        if spec.Attrs.Stateful != self.Stateful:
+            return False
+        if spec.Attrs.Priority != self.Priority:
+            return False
+        if spec.Attrs.Action != self.Action:
+            return False
+
+        if spec.Attrs.Match.L3Match and not self.L3Match:
+            return False
+        if self.L3Match and not self.L3Match.ValidateSpec(spec.Attrs.Match.L3Match):
+            return False
+
+        if spec.Attrs.Match.L4Match and not self.L4Match:
+            return False
+        if self.L4Match and not self.L4Match.ValidateSpec(spec.Attrs.Match.L4Match):
+            return False
+
+        return True
+
+
 class PolicyObject(base.ConfigObjectBase):
     def __init__(self, node, vpcid, af, direction, rules, policytype, overlaptype, level='subnet',
                  defaultfwaction='allow'):
@@ -227,7 +351,7 @@ class PolicyObject(base.ConfigObjectBase):
         self.rules = copy.deepcopy(rules)
         self.DeriveOperInfo()
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
-        self.DefaultFwAction = defaultfwaction
+        self.DefaultFWAction = defaultfwaction
         self.Show()
         return
 
@@ -242,7 +366,7 @@ class PolicyObject(base.ConfigObjectBase):
         logger.info("- Direction:%s|AF:%s" % (self.Direction, self.AddrFamily))
         logger.info("- PolicyType:%s" % self.PolicyType)
         logger.info("- OverlapType:%s" % self.OverlapType)
-        logger.info("- DefaultFwAction:%s" % self.DefaultFwAction)
+        logger.info("- DefaultFwAction:%s" % self.DefaultFWAction)
         logger.info("- Number of rules:%d" % len(self.rules))
         for rule in self.rules:
             rule.Show()
@@ -322,7 +446,7 @@ class PolicyObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
         spec.AddrFamily = utils.GetRpcIPAddrFamily(self.AddrFamily)
-        spec.DefaultFWAction = utils.GetRpcSecurityRuleAction(self.DefaultFwAction)
+        spec.DefaultFWAction = utils.GetRpcSecurityRuleAction(self.DefaultFWAction)
         for rule in self.rules:
             self.FillRuleSpec(spec, rule)
         return
@@ -357,6 +481,12 @@ class PolicyObject(base.ConfigObjectBase):
             return False
         # if spec.DefaultFWAction != utils.GetRpcSecurityRuleAction(self.DefaultFwAction):
         #     return False
+        if len(spec.Rules) != len(self.rules):
+            return False
+        for rrule,erule in zip(spec.Rules,self.rules):
+            if not erule.ValidateSpec(rrule):
+                logger.error(f"Validation failed for {self.GID()}")
+                #return False
         return True
 
     def __get_random_rule(self):
@@ -410,6 +540,8 @@ class PolicyObject(base.ConfigObjectBase):
         obj.hostport = EzAccessStoreClient[self.Node].GetHostPort()
         obj.switchport = EzAccessStoreClient[self.Node].GetSwitchPort()
         obj.devicecfg = EzAccessStoreClient[self.Node].GetDevice()
+        obj.securityprofile = SecurityProfileClient.GetObjectByKey(self.Node, 0)
+
         # select a random rule for this testcase
         if utils.IsPipelineApollo():
             # TODO: move apollo also to random rule

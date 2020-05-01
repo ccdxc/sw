@@ -414,8 +414,21 @@ def __get_packet_tuples(pkt):
     logger.info("Retrieved Packet Tuples ", packet_tuples)
     return packet_tuples
 
-def __get_final_result(tc_rule, match_rule):
-    final_result = match_rule.Action if match_rule else types_pb2.SECURITY_RULE_ACTION_DENY
+def __get_final_result(tc_rule, match_rule, testcase):
+    policy = testcase.config.policy
+    securityprofile = testcase.config.securityprofile
+    if match_rule:
+        final_result = match_rule.Action
+        logger.info(f"Matching to rule action: {final_result}")
+    elif policy.DefaultFWAction != "none":
+        final_result = utils.GetRpcSecurityRuleAction(policy.DefaultFWAction)
+        logger.info(f"Matching to policy default action: {final_result}")
+    elif securityprofile.DefaultFWAction != types_pb2.SECURITY_RULE_ACTION_NONE:
+        final_result = securityprofile.DefaultFWAction
+        logger.info(f"Matching to security profile default action: {final_result}")
+    else:
+        final_result = types_pb2.SECURITY_RULE_ACTION_DENY
+        logger.info(f"Matching to default action: {final_result}")
     logger.info("TestCase rule for packet ")
     if tc_rule == None:
         logger.info("No Rule ")
@@ -424,8 +437,6 @@ def __get_final_result(tc_rule, match_rule):
     if match_rule:
         logger.info("Final matching rule for packet")
         match_rule.Show()
-    else:
-        logger.info("No rule matching the packet - so DENY")
     return final_result
 
 def __get_matching_rule(policies, pkt):
@@ -466,7 +477,7 @@ def GetExpectedCPSPacket(testcase, args):
     policies = __get_security_policies_from_lmapping(testcase.config.localmapping, policy.Direction)
     pkt = testcase.packets.Get(args.ipkt).GetScapyPacket()
     match_rule = __get_matching_rule(policies, pkt)
-    final_result = __get_final_result(tc_rule, match_rule)
+    final_result = __get_final_result(tc_rule, match_rule, testcase)
     if final_result == types_pb2.SECURITY_RULE_ACTION_DENY:
         logger.info("GetExpectedCPSPacket: packet denied")
         return None

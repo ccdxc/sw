@@ -1,0 +1,195 @@
+# RFC Test Spec for ingress cases
+selectors:
+    root: ref://store/templates/id=POLICY
+    maxlimits: 1
+    policy: filter://Direction=ingress,Level=subnet
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base Packet from internet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromPolicy
+        headers     :
+            ipv4:
+                src     : callback://networking/packets/GetUsableHostFromPolicy
+                dst     : ref://testcase/config/localmapping/IP
+                ttl     : 64
+            ipv6:
+                src     : callback://networking/packets/GetUsableHostFromPolicy
+                dst     : ref://testcase/config/localmapping/IP
+                hlim    : 64
+            tcp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+                flags   : syn
+            udp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : FROM_SWITCH_PKT # Input packet from network
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
+        headers     :
+            outereth:
+                src     : callback://networking/packets/GetUnderlayRemoteMac
+                dst     : callback://networking/packets/GetUplinkPortMac
+            outeripv4:
+                src     : callback://networking/packets/GetTunnelIPFromRoute
+                dst     : ref://testcase/config/devicecfg/IP
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            vxlan:
+                vni     : ref://testcase/config/route/VPC/Vnid
+            eth:
+                src     : ref://testcase/config/route/TUNNEL/MACAddr
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            ipv4:
+                dst     : callback://networking/packets/GetIPFromLocalMapping
+            ipv6:
+                dst     : callback://networking/packets/GetIPFromLocalMapping
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet to host
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetHostPacketEncapFromVnic
+        headers     :
+            eth:
+                src     : callback://networking/packets/GetPacketSrcMacFromMapping/Fwdmode=N2L
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+            ipv4:
+                ttl     : callback://networking/packets/GetPacketTtl/Fwdmode=N2L,ipkt=FROM_SWITCH_PKT
+
+buffers                 :
+    - buffer            :
+        id              : BUF1  # Input Buffer
+        template        : ref://factory/templates/id=ETH_BUFFER
+        fields          :
+            bind        : True
+            size        : 1518
+            data        : None
+
+    - buffer            :
+        id              : BUF2  # Expected Buffer
+        template        : ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind        : False
+            size        : ref://testcase/packets/id=TO_HOST_PKT/size
+            data        : ref://testcase/packets/id=TO_HOST_PKT/rawbytes
+
+descriptors             :
+    - descriptor        :
+        id              : DESC1 # Input Descriptor
+        template        : ref://factory/templates/id=DESCR_ETH_RX
+        fields          :
+            _buf        : ref://testcase/buffers/id=BUF1
+            addr        : ref://testcase/buffers/id=BUF1/addr
+            len         : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor        :
+        id              : DESC2 # Expected Descriptor
+        template        : ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields          :
+            _buf        : ref://testcase/buffers/id=BUF2
+            len         : ref://testcase/buffers/id=BUF2/size
+
+session:
+    - step                   :
+        trigger              :
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC1
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+            packets          :
+                - packet     :
+                    object   : ref://testcase/packets/id=FROM_SWITCH_PKT
+                    port     : ref://testcase/config/switchport
+        expect               :
+            delay            : 1
+            descriptors      :
+                - descriptor :
+                    negtest  : callback://networking/packets/IsCPSPacketExpected/ipkt=TO_HOST_PKT,epkt_pass=TO_HOST_PKT
+                    object   : ref://testcase/descriptors/id=DESC2
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+    - step                   :
+        trigger              :
+            configs          :
+                - object     : ref://testcase/config/securityprofile
+                  method     : UpdateDefaultFWAction
+                  fields     :
+                     DefaultFWAction : deny
+            delay            : 1
+        expect               :
+            # configs          :
+            #     - object     : ref://testcase/config/securityprofile
+            #       method     : Read
+
+    - step                   :
+        trigger              :
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC1
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+            packets          :
+                - packet     :
+                    object   : ref://testcase/packets/id=FROM_SWITCH_PKT
+                    port     : ref://testcase/config/switchport
+        expect               :
+            delay            : 1
+            descriptors      :
+                - descriptor :
+                    negtest  : callback://networking/packets/IsCPSPacketExpected/ipkt=TO_HOST_PKT,epkt_pass=TO_HOST_PKT
+                    object   : ref://testcase/descriptors/id=DESC2
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+    - step                   :
+        trigger              :
+            configs          :
+                - object     : ref://testcase/config/securityprofile
+                  method     : UpdateDefaultFWAction
+                  fields     :
+                     DefaultFWAction : none
+            delay            : 1
+        expect               :
+            # configs          :
+            #     - object     : ref://testcase/config/securityprofile
+            #       method     : Read
+
+    - step                   :
+        trigger              :
+            descriptors      :
+                - descriptor :
+                    object   : ref://testcase/descriptors/id=DESC1
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+            packets          :
+                - packet     :
+                    object   : ref://testcase/packets/id=FROM_SWITCH_PKT
+                    port     : ref://testcase/config/switchport
+        expect               :
+            delay            : 1
+            descriptors      :
+                - descriptor :
+                    negtest  : callback://networking/packets/IsCPSPacketExpected/ipkt=TO_HOST_PKT,epkt_pass=TO_HOST_PKT
+                    object   : ref://testcase/descriptors/id=DESC2
+                    ring     : callback://networking/packets/GetRingFromMapping/type=local,qid=RX
+
+    - step                   :
+        trigger              :
+            configs          :
+                - object     : ref://testcase/config/securityprofile
+                  method     : UpdateDefaultFWAction
+                  fields     :
+                     DefaultFWAction : allow
+            delay            : 1
+        expect               :
+            # configs          :
+            #     - object     : ref://testcase/config/securityprofile
+            #       method     : Read
+
+
