@@ -251,4 +251,11 @@ pds_dnat_map_entry_delete (pds_dnat_mapping_key_t *key)
     return (pds_ret_t)ret;
 }
 
+pds_ret_t
+pds_dnat_map_table_clear(void)
+{
+    sdk_table_api_params_t      params = {0};
+    return (pds_ret_t)g_dnat_mapping_tbl->clear(TRUE, FALSE, &params);
+}
+
 }

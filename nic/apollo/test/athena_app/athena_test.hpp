@@ -3,6 +3,8 @@
 
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_session_rewrite.h"
+#include "nic/apollo/api/include/athena/pds_dnat.h"
+#include "nic/apollo/api/include/athena/pds_vnic.h"
 
 extern uint32_t num_flows_added;
 extern uint32_t attempted_flows;

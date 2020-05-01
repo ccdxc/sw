@@ -102,6 +102,10 @@ pds_ret_t pds_vlan_to_vnic_map_update(pds_vlan_to_vnic_map_spec_t *spec);
 /// \remark    A valid vlan id should be passed
 pds_ret_t pds_vlan_to_vnic_map_delete(pds_vlan_to_vnic_map_key_t *key);
 
+/// \brief     clear the VLAN to VNIC mapping table
+/// \return    #SDK_RET_OK on success, failure status code on error
+pds_ret_t pds_vlan_to_vnic_map_table_clear(void);
+
 /// \brief     create mpls label to vnic map entry
 /// \param[in] spec mpls label to vnic map specification
 /// \return    #SDK_RET_OK on success, failure status code on error
@@ -127,6 +131,10 @@ pds_ret_t pds_mpls_label_to_vnic_map_update(pds_mpls_label_to_vnic_map_spec_t *s
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid mpls label should be passed
 pds_ret_t pds_mpls_label_to_vnic_map_delete(pds_mpls_label_to_vnic_map_key_t *key);
+
+/// \brief     clear the destination slot ID to VNIC mapping table
+/// \return    #SDK_RET_OK on success, failure status code on error
+pds_ret_t pds_mpls_label_to_vnic_map_table_clear(void);
 
 /// @}
 

@@ -505,4 +505,11 @@ pds_flow_cache_stats_get (int32_t core_id, pds_flow_stats_t *stats)
     return PDS_RET_OK;
 }
 
+pds_ret_t
+pds_flow_cache_table_clear(void)
+{
+    sdk_table_api_params_t      params = {0};
+    return (pds_ret_t)ftl_table->clear(TRUE, FALSE, &params);
+}
+
 }

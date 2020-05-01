@@ -405,6 +405,64 @@ disable_int_mnic_csum_offload(void)
 }
 
 
+pds_ret_t
+profile_p4_table_clear(const char * fn_name, pds_ret_t (*fn_ptr)(void))
+{
+    pds_ret_t    ret;
+    struct timespec t1, t2, t_diff;
+
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    ret = fn_ptr();
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+
+    if (ret == PDS_RET_OK) {
+        if (t2.tv_nsec < t1.tv_nsec) {
+            t_diff.tv_nsec = 1000000000ULL - t1.tv_nsec + t2.tv_nsec;
+            t_diff.tv_sec = t2.tv_sec - t1.tv_sec - 1;
+        }
+        else {
+            t_diff.tv_nsec = t2.tv_nsec - t1.tv_nsec;
+            t_diff.tv_sec = t2.tv_sec - t1.tv_sec;
+        }
+        printf("%s took: %lds:%luns\n",
+                fn_name, t_diff.tv_sec, t_diff.tv_nsec);
+    }
+    return ret;
+}
+
+
+void
+p4_tables_clear(void)
+{
+    pds_ret_t    ret;
+    
+    ret = profile_p4_table_clear("pds_flow_cache_table_clear",
+            pds_flow_cache_table_clear);
+    if (ret != PDS_RET_OK) {
+        printf("Failed to clear table: profile_p4_table_clear\n");
+    }
+
+    ret = profile_p4_table_clear("pds_dnat_map_table_clear",
+            pds_dnat_map_table_clear);
+    if (ret != PDS_RET_OK) {
+        printf("Failed to clear table: pds_dnat_map_table_clear\n");
+    }
+
+    ret = profile_p4_table_clear("pds_vlan_to_vnic_map_table_clear",
+            pds_vlan_to_vnic_map_table_clear);
+    if (ret != PDS_RET_OK) {
+        printf("Failed to clear table: pds_vlan_to_vnic_map_table_clear\n");
+    }
+
+    ret = profile_p4_table_clear("pds_mpls_label_to_vnic_map_table_clear",
+            pds_mpls_label_to_vnic_map_table_clear);
+    if (ret != PDS_RET_OK) {
+        printf("Failed to clear table: pds_mpls_label_to_vnic_map_table_clear\n");
+    }
+
+}
+
+
 #define POLICY_JSON_FILE    "/data/policy.json"
 
 int
@@ -657,8 +715,15 @@ main (int argc, char **argv)
 
     if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_CPP ||
         fte_ath::g_athena_app_mode == ATHENA_APP_MODE_L2_FWD ||
-        fte_ath::g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT)
+        fte_ath::g_athena_app_mode == ATHENA_APP_MODE_SOFT_INIT) {
+
+#ifndef __x86_64__
+        /* Clear tables on real H/W only */
+        p4_tables_clear();
+#endif
+
         fte_ath::fte_init();
+    }
 
     printf("Initialization done ...\n");
 

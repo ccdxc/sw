@@ -115,6 +115,23 @@ pds_vlan_to_vnic_map_delete (pds_vlan_to_vnic_map_key_t *key)
     return PDS_RET_OK;
 }
 
+pds_ret_t
+pds_vlan_to_vnic_map_table_clear(void)
+{
+    p4pd_error_t                p4pdret;
+    p4pd_table_properties_t     tinfo;
+
+    p4pdret = p4pd_table_properties_get(P4TBL_ID_VLAN_TO_VNIC, &tinfo);
+    if (p4pdret == P4PD_SUCCESS) {
+        memset((void*)tinfo.base_mem_va, 0,
+                (tinfo.tabledepth * tinfo.hbm_layout.entry_width));
+    }
+    else {
+        return PDS_RET_HW_PROGRAM_ERR;
+    }
+    return PDS_RET_OK;
+}
+
 uint64_t
 static inline pds_mpls_label_to_hw_id(uint32_t mpls_label)
 {
@@ -236,6 +253,23 @@ pds_mpls_label_to_vnic_map_delete (pds_mpls_label_to_vnic_map_key_t *key)
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to clear mpls label to vnic table at index %u",
                       mpls_label);
+        return PDS_RET_HW_PROGRAM_ERR;
+    }
+    return PDS_RET_OK;
+}
+
+pds_ret_t
+pds_mpls_label_to_vnic_map_table_clear(void)
+{
+    p4pd_error_t                p4pdret;
+    p4pd_table_properties_t     tinfo;
+
+    p4pdret = p4pd_table_properties_get(P4TBL_ID_MPLS_LABEL_TO_VNIC, &tinfo);
+    if (p4pdret == P4PD_SUCCESS) {
+        memset((void*)tinfo.base_mem_va, 0,
+                (tinfo.tabledepth * tinfo.hbm_layout.entry_width));
+    }
+    else {
         return PDS_RET_HW_PROGRAM_ERR;
     }
     return PDS_RET_OK;

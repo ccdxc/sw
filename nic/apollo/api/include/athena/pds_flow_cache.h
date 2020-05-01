@@ -174,6 +174,10 @@ pds_ret_t pds_flow_cache_entry_iterate(pds_flow_iter_cb_t iter_cb,
 ///            for every data core of the application
 pds_ret_t pds_flow_cache_stats_get(int32_t core_id, pds_flow_stats_t *stats);
 
+/// \brief     clear the flow cache table
+/// \return    #SDK_RET_OK on success, failure status code on error
+pds_ret_t pds_flow_cache_table_clear(void);
+
 /// @}
 
 #ifdef __cplusplus

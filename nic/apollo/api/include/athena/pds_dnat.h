@@ -72,6 +72,10 @@ pds_ret_t pds_dnat_map_entry_update(pds_dnat_mapping_spec_t *spec);
 /// \remark    A valid IP address and vnic id should be passed
 pds_ret_t pds_dnat_map_entry_delete(pds_dnat_mapping_key_t *key);
 
+/// \brief     clear the DNAT mapping table
+/// \return    #SDK_RET_OK on success, failure status code on error
+pds_ret_t pds_dnat_map_table_clear(void);
+
 /// @}
 
 #ifdef __cplusplus
