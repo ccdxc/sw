@@ -40,6 +40,7 @@ func init() {
 	showCmd.AddCommand(vnicShowCmd)
 	vnicShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	vnicShowCmd.Flags().Bool("summary", false, "Display number of objects")
+	vnicShowCmd.Flags().Bool("detail", false, "Display detailed outputdt")
 	vnicShowCmd.Flags().StringVarP(&vnicID, "id", "i", "", "Specify vnic ID")
 
 	vnicShowCmd.AddCommand(vnicShowStatisticsCmd)
@@ -98,6 +99,11 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	} else if cmd != nil && cmd.Flags().Changed("summary") {
 		printVnicSummary(len(respMsg.Response))
+	} else if cmd != nil && cmd.Flags().Changed("detail") {
+		for _, resp := range respMsg.Response {
+			printVnicDetail(resp)
+		}
+		printVnicSummary(len(respMsg.Response))
 	} else {
 		printVnicHeader()
 		for _, resp := range respMsg.Response {
@@ -112,11 +118,11 @@ func printVnicSummary(count int) {
 }
 
 func printVnicHeader() {
-	hdrLine := strings.Repeat("-", 195)
+	hdrLine := strings.Repeat("-", 159)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-40s%-14s%-20s%-10s%-14s%-18s%-18s%-11s%-10s\n",
+	fmt.Printf("%-40s%-40s%-14s%-20s%-10s%-14s%-11s%-10s\n",
 		"VnicID", "SubnetID", "VnicEncap", "MAC", "SrcGuard", "FabricEncap",
-		"RxMirrorSessionID", "TxMirrorSessionID", "SwitchVnic", "HostIf")
+		"SwitchVnic", "HostIf")
 	fmt.Println(hdrLine)
 }
 
@@ -124,27 +130,66 @@ func printVnic(vnic *pds.Vnic) {
 	spec := vnic.GetSpec()
 	fabricEncapStr := utils.EncapToString(spec.GetFabricEncap())
 	vnicEncapStr := utils.EncapToString(spec.GetVnicEncap())
-	txMirrorSessionStr := "-"
-	if len(spec.GetTxMirrorSessionId()) != 0 {
-		txMirrorSessionStr = strings.Replace(strings.Trim(
-			fmt.Sprint(spec.GetTxMirrorSessionId()), "[]"), " ", ",", -1)
-	}
-	rxMirrorSessionStr := "-"
-	if len(spec.GetRxMirrorSessionId()) != 0 {
-		rxMirrorSessionStr = strings.Replace(strings.Trim(
-			fmt.Sprint(spec.GetRxMirrorSessionId()), "[]"), " ", ",", -1)
-	}
 	lifName := "-"
 	if len(spec.GetHostIf()) > 0 {
 		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
 
-	fmt.Printf("%-40s%-40s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-10s\n",
+	fmt.Printf("%-40s%-40s%-14s%-20s%-10t%-14s%-11t%-10s\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
 		uuid.FromBytesOrNil(spec.GetSubnetId()).String(), vnicEncapStr,
 		utils.MactoStr(spec.GetMACAddress()), spec.GetSourceGuardEnable(),
-		fabricEncapStr, rxMirrorSessionStr, txMirrorSessionStr,
-		spec.GetSwitchVnic(), lifName)
+		fabricEncapStr, spec.GetSwitchVnic(), lifName)
+}
+
+func printVnicDetail(vnic *pds.Vnic) {
+	spec := vnic.GetSpec()
+	if spec == nil {
+		fmt.Printf("-")
+		return
+	}
+
+	fabricEncapStr := utils.EncapToString(spec.GetFabricEncap())
+	vnicEncapStr := utils.EncapToString(spec.GetVnicEncap())
+
+	txMirrorSessionStr := "-"
+	if len(spec.GetTxMirrorSessionId()) != 0 {
+		txMirrorSessionStr = strings.Replace(strings.Trim(
+			fmt.Sprint(spec.GetTxMirrorSessionId()), "[]"), " ", ",", -1)
+	}
+
+	rxMirrorSessionStr := "-"
+	if len(spec.GetRxMirrorSessionId()) != 0 {
+		rxMirrorSessionStr = strings.Replace(strings.Trim(
+			fmt.Sprint(spec.GetRxMirrorSessionId()), "[]"), " ", ",", -1)
+	}
+
+	lifName := "-"
+	if len(spec.GetHostIf()) > 0 {
+		lifName = lifGetNameFromKey(spec.GetHostIf())
+	}
+
+	srcGuardStr := "Disabled"
+	if spec.GetSourceGuardEnable() {
+		srcGuardStr = "Enabled"
+	}
+
+	fmt.Printf("%-30s : %s\n", "Vnic ID",
+		uuid.FromBytesOrNil(spec.GetId()).String())
+	fmt.Printf("%-30s : %s\n", "Subnet ID",
+		uuid.FromBytesOrNil(spec.GetSubnetId()).String())
+	fmt.Printf("%-30s : %s\n", "Vnic Encap", vnicEncapStr)
+	fmt.Printf("%-30s : %s\n", "MAC address",
+		utils.MactoStr(spec.GetMACAddress()))
+	fmt.Printf("%-30s : %s\n", "Source Guard", srcGuardStr)
+	fmt.Printf("%-30s : %s\n", "Fabric Encap", fabricEncapStr)
+	fmt.Printf("%-30s : %s\n", "Rx Mirror Session", rxMirrorSessionStr)
+	fmt.Printf("%-30s : %s\n", "Tx Mirror Session", txMirrorSessionStr)
+	fmt.Printf("%-30s : %t\n", "Switch Vnic", spec.GetSwitchVnic())
+	fmt.Printf("%-30s : %s\n", "Host Interface", lifName)
+
+	lineStr := strings.Repeat("-", 60)
+	fmt.Println(lineStr)
 }
 
 func vnicShowStatisticsCmdHandler(cmd *cobra.Command, args []string) {
