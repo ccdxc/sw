@@ -1,0 +1,45 @@
+#!/bin/bash
+
+if [ -n "$1" ]; then
+    ASIC=$1
+    echo Command line ASIC=$ASIC
+else
+    ASIC=${ASIC}
+    echo Env ASIC=$ASIC
+fi
+
+if [ -n "$2" ]; then
+    PIPELINE=$2
+    echo Command line PIPELINE=$PIPELINE
+else
+    PIPELINE=${PIPELINE}
+    echo Env PIPELINE=$PIPELINE
+fi
+
+if [[ -z "$ASIC" || -z $PIPELINE ]]; then
+    echo "Not all variables are defined: ASIC=$ASIC, PIPELINE=$PIPELINE"
+    exit 1
+fi
+
+ARCH=x86_64
+TOOLS_DIR=`dirname $0`
+ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
+NIC_DIR=`dirname $ABS_TOOLS_DIR`
+BLD_DIR=$NIC_DIR/build/${ARCH}/${PIPELINE}/${ASIC}
+OLD_DIR=$NIC_DIR/build/${ARCH}/${PIPELINE}/
+echo "Settings: ASIC=$ASIC, PIPELINE=$PIPELINE, ARCH=$ARCH"
+echo "BLD_DIR=$BLD_DIR"
+
+if [ ! -d $BLD_DIR ]; then
+    echo "$BLD_DIR doesn't exist"
+    exit 1
+fi
+
+cd $NIC_DIR/build/${ARCH}/${PIPELINE}
+for dir in ${ASIC}/*/;
+do 
+    dir=${dir%*/} 
+    echo "ln -snf $dir $(basename $dir)"
+    ln -snf $dir $(basename $dir)
+done
+
