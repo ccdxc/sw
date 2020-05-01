@@ -16,7 +16,7 @@ cp build/aarch64/apulu/capri/gen/proto/* ${PYTESTAPPROOT}/proto/
 cp build/aarch64/apulu/capri/gen/proto/meta/* ${PYTESTAPPROOT}/proto/meta/
 cp apollo/tools/apulu/pytestapp/configobjects/* ${PYTESTAPPROOT}/configobjects/
 cp apollo/tools/apulu/pytestapp/apps/* ${PYTESTAPPROOT}/apps/
- 
+
 
 
 # Load ionic driver on node1 and node2 host
@@ -27,8 +27,8 @@ cd ${PYTESTAPPROOT}
 export OOB_NODE1=192.168.71.46
 export OOB_NODE2=192.168.68.41
 
-python3 apps/config_host1_naples.py $OOB_NODE1 --remote $OOB_NODE2
-python3 apps/config_host2_naples.py $OOB_NODE2 --remote $OOB_NODE1
+python3 apps/config_host1_naples.py $OOB_NODE1 --grpc_port 11357
+python3 apps/config_host2_naples.py $OOB_NODE2 --grpc_port 11357
 
 
 ====================================================================

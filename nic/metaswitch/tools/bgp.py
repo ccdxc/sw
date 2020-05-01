@@ -6,6 +6,7 @@ import bgp_pb2
 import types_pb2
 import socket
 import struct
+import defines
 
 stub = None
 channel = None
@@ -32,7 +33,7 @@ def create_bgp():
     req_msg.LocalASN = asn
     req_msg.RouterId = routerid;
     req_msg.ClusterId = clusterid;
-    resp = stub.BGPCreate(req)     
+    resp = stub.BGPCreate(req)
     process_response(req, resp)
     return
 
@@ -51,28 +52,28 @@ def get_bgp():
     req = bgp_pb2.BGPGetRequest()
     req_msg = req.Request
     req_msg.Id = uuid
-    resp =  stub.BGPGet(req)     
+    resp =  stub.BGPGet(req)
     process_response(req, resp)
     return
 
 def get_bgp_all():
     req = bgp_pb2.BGPGetRequest()
-    resp =  stub.BGPGet(req)     
+    resp =  stub.BGPGet(req)
     process_response(req, resp)
-    return 
+    return
 
 def delete_bgp():
     req = bgp_pb2.BGPDeleteRequest()
     req_msg = req.Request
     req_msg.Id = uuid
-    resp = stub.BGPDelete(req)     
+    resp = stub.BGPDelete(req)
     process_response(req, resp)
     return
 
 def init():
     global channel
     global stub
-    server = 'localhost:50054'
+    server = 'localhost:' + str(defines.AGENT_GRPC_PORT)
     channel = grpc.insecure_channel(server)
     stub = bgp_pb2.BGPSvcStub(channel)
     return
@@ -83,9 +84,9 @@ def print_help():
     print ("opt  : 1: create\t2: update\t3: delete\t4: get")
     print ("empty get does get-all")
     return
-   
+
 def read_args():
-    global uuid 
+    global uuid
     global asn
     global routerid
     global clusterid
@@ -119,7 +120,7 @@ if __name__ == '__main__':
         elif opt == 4:
             if  args == 1:
                 get_bgp_all()
-            else:    
+            else:
                 get_bgp()
         else:
             print_help()

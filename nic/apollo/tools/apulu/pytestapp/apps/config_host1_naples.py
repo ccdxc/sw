@@ -38,7 +38,7 @@ import ipaddress
 parser = argparse.ArgumentParser()
 parser.add_argument("naples_ip", help="naples ip address")
 parser.add_argument("--remote", help="remote naples ip address", default=None)
-parser.add_argument("--grpc_port", help="naples grpc port (default=50054)", default="50054", type=str)
+parser.add_argument("--grpc_port", help="naples grpc port (default=11357)", default="11357", type=str)
 args = parser.parse_args()
 naplesip = args.naples_ip
 remote_naplesip = args.remote
@@ -226,7 +226,7 @@ device1=device.DeviceObject(ipaddress.IPv4Address(local_tep_ip), None, None)
 
 security_profile1=policy.SecurityProfileObject(1, 60, 60, 30)
 
-# Create VPC object 
+# Create VPC object
 # id, v4prefix, type = vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue
 vpc1=vpc.VpcObject(vpc1_id, type=vpc_pb2.VPC_TYPE_TENANT, encaptype=types_pb2.ENCAP_TYPE_VXLAN, encapvalue=vpc1_vxlan_encap )
 
@@ -259,7 +259,7 @@ vcn0=interface.InterfaceObject( 100, interface_pb2.IF_TYPE_CONTROL, interface_pb
 
 # Create Tunnel Objects ..
 # id, vpcid, localip, remoteip, macaddr, encaptype, vnid, nhid
-tunnel1 = tunnel.TunnelObject( tunnel_id,vpc1_id, tunnel_local_ip, tunnel_remote_ip, None, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid) 
+tunnel1 = tunnel.TunnelObject( tunnel_id,vpc1_id, tunnel_local_ip, tunnel_remote_ip, None, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid)
 
 # Create DHCP Policy
 dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip, mtu=9000, gateway_ip=subnet1_v4_router_ip, dns_server=subnet1_v4_router_ip, ntp_server=subnet1_v4_router_ip, domain_name="test.com")

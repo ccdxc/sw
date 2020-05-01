@@ -6,6 +6,7 @@ import bgp_pb2
 import types_pb2
 import socket
 import struct
+import defines
 
 stub = None
 channel = None
@@ -26,7 +27,7 @@ def clear():
         req.Peer.Key.PeerAddr.V4Addr = paddr
         req.Peer.Key.LocalAddr.Af = 1
         req.Peer.Key.LocalAddr.V4Addr = laddr
-    elif key == 2:    
+    elif key == 2:
         req.PeerAf.Key.PeerAddr.Af = 1
         req.PeerAf.Key.PeerAddr.V4Addr = paddr
         req.PeerAf.Key.LocalAddr.Af = 1
@@ -40,7 +41,7 @@ def clear():
 def init():
     global channel
     global stub
-    server = 'localhost:50054'
+    server = 'localhost:' + str(defines.AGENT_GRPC_PORT)
     channel = grpc.insecure_channel(server)
     stub = bgp_pb2.BGPSvcStub(channel)
     return
@@ -60,7 +61,7 @@ def read_args():
     global paddr
     global afi
     global safi
-    
+
     laddr=0
     paddr=0
     afi=1
@@ -80,7 +81,7 @@ def read_args():
 
 def ip2long(ip):
     packedIP = socket.inet_aton(ip)
-    return struct.unpack("!L", packedIP)[0] 
+    return struct.unpack("!L", packedIP)[0]
 
 def long2ip(addr):
     return socket.inet_ntoa(struct.pack('!L', addr))

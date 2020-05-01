@@ -20,5 +20,5 @@ var clearCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(clearCmd)
-	impl.RegisterClearNodes(&impl.CLIParams{GRPCPort: types.HalGRPCDefaultPort}, clearCmd)
+	impl.RegisterClearNodes(&impl.CLIParams{GRPCPort: types.PDSGRPCDefaultPort}, clearCmd)
 }

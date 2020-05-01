@@ -6,6 +6,7 @@ import bgp_pb2
 import types_pb2
 import socket
 import struct
+import defines
 
 stub = None
 channel = None
@@ -51,7 +52,7 @@ def create_peer():
     req_msg.SendComm = 2;
     req_msg.SendExtComm = 2;
     req_msg.Password = "test"
-    resp = stub.BGPPeerCreate(req)     
+    resp = stub.BGPPeerCreate(req)
     process_response(req, resp)
     return
 
@@ -82,32 +83,32 @@ def get_peer():
     req_msg.Key.PeerAddr.V4Addr = paddr
     req_msg.Key.LocalAddr.Af = 1
     req_msg.Key.LocalAddr.V4Addr = laddr
-    resp =  stub.BGPPeerGet(req)     
+    resp =  stub.BGPPeerGet(req)
     process_response(req, resp)
     return
 
 def get_all_peer():
     req = bgp_pb2.BGPPeerGetRequest()
-    resp =  stub.BGPPeerGet(req)     
+    resp =  stub.BGPPeerGet(req)
     process_response(req, resp)
     return
 
 def delete_peer():
     req = bgp_pb2.BGPPeerDeleteRequest()
     req_msg = req.Request.add()
-    #req_msg.Id = uuid 
+    #req_msg.Id = uuid
     req_msg.Key.PeerAddr.Af = 1
     req_msg.Key.PeerAddr.V4Addr = paddr
     req_msg.Key.LocalAddr.Af = 1
     req_msg.Key.LocalAddr.V4Addr = laddr
-    resp = stub.BGPPeerDelete(req)     
+    resp = stub.BGPPeerDelete(req)
     process_response(req, resp)
     return
 
 def init():
     global channel
     global stub
-    server = 'localhost:50054'
+    server = 'localhost:' + str(defines.AGENT_GRPC_PORT)
     channel = grpc.insecure_channel(server)
     stub = bgp_pb2.BGPSvcStub(channel)
     return
@@ -125,7 +126,7 @@ def read_args():
     global laddr
     global paddr
     global admin
-    
+
     laddr=0;
     paddr=0;
     opt = int (sys.argv[1])
@@ -141,7 +142,7 @@ def read_args():
 
 def ip2long(ip):
     packedIP = socket.inet_aton(ip)
-    return struct.unpack("!L", packedIP)[0] 
+    return struct.unpack("!L", packedIP)[0]
 
 def long2ip(addr):
     return socket.inet_ntoa(struct.pack('!L', addr))

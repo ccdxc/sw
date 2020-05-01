@@ -84,12 +84,12 @@ func waitForHAL(portEnvVar string, defaultPort string) (rpcClient *grpc.ClientCo
 }
 
 // IsHalUp checks if HAL is up given its URL
-func IsHalUp() bool {
+func IsHalUp(URL string) bool {
 	var rpcClient *rpckit.RPCClient
 
-	rpcClient, err := rpckit.NewRPCClient(types.Netagent, types.HalGRPCDefaultURL, rpckit.WithTLSProvider(nil))
+	rpcClient, err := rpckit.NewRPCClient(types.Netagent, URL, rpckit.WithTLSProvider(nil))
 	if err != nil || rpcClient == nil {
-		log.Errorf("Failed to connect to HAL URL %s | Err %s", types.HalGRPCDefaultURL, err)
+		log.Errorf("Failed to connect to HAL URL %s | Err %s", URL, err)
 		return false
 	}
 	defer rpcClient.ClientConn.Close()

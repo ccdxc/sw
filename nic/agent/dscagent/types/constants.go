@@ -145,11 +145,11 @@ const (
 	// HalGRPCDefaultBaseURL is the default endpoint for HAL Svc
 	HalGRPCDefaultBaseURL = "127.0.0.1"
 
-	// HalGRPCDefaultPort is the default port for HAL
+	// HalGRPCDefaultPort is the default port for HAL. This is used for Enterprise Pipeline
 	HalGRPCDefaultPort = "50054"
 
-	// HalGRPCDefaultURL is the default HAL gRPC URL
-	HalGRPCDefaultURL = "127.0.0.1:50054"
+	// PDSGRPCDefaultPort is the default port for PDSAgent. This is used for Cloud Pipeline
+	PDSGRPCDefaultPort = "11357"
 
 	// HalGRPCWaitTimeout is the timeout for which agent will wait for HAL to be up
 	HalGRPCWaitTimeout = time.Minute * 10

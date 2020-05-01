@@ -20,5 +20,5 @@ var showCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(showCmd)
-	impl.RegisterShowNodes(&impl.CLIParams{GRPCPort: types.HalGRPCDefaultPort}, showCmd)
+	impl.RegisterShowNodes(&impl.CLIParams{GRPCPort: types.PDSGRPCDefaultPort}, showCmd)
 }

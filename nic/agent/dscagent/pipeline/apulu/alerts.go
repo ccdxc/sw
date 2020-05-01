@@ -114,7 +114,8 @@ func HandleAlerts(evtsDispatcher events.Dispatcher, client halapi.OperSvcClient)
 		for {
 			select {
 			case <-ticker.C:
-				if utils.IsHalUp() == false {
+				pdsAgentURL := fmt.Sprintf("127.0.0.1:%s", types.PDSGRPCDefaultPort)
+				if utils.IsHalUp(pdsAgentURL) == false {
 					// HAL is not up yet, skip querying
 					continue
 				}

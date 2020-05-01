@@ -4,6 +4,7 @@ package apulu
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
@@ -154,8 +155,9 @@ func HandleMetrics(infraAPI types.InfraAPI, client halapi.OperSvcClient) error {
 		for {
 			select {
 			case <-ticker.C:
-				log.Infof("Querying Interface metrics")
-				if utils.IsHalUp() == false {
+				log.Info("Querying Interface metrics")
+				pdsAgentURL := fmt.Sprintf("127.0.0.1:%s", types.PDSGRPCDefaultPort)
+				if utils.IsHalUp(pdsAgentURL) == false {
 					// HAL is not up, skip querying
 					continue
 				}

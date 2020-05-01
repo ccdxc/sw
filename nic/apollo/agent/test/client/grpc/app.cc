@@ -712,7 +712,7 @@ test_app_init (void)
 {
     grpc_init();
     if (g_svc_endpoint_.empty()) {
-        g_svc_endpoint_ = std::string("localhost:50054");
+        g_svc_endpoint_ = std::string("localhost:11357");
     }
     std::shared_ptr<Channel> channel =
         grpc::CreateChannel(g_svc_endpoint_,
