@@ -1343,6 +1343,8 @@ DumpTxPacket( void *packet, MDL *Mdl);
 NDIS_STATUS
 copy_buffer(struct ionic *ionic,
 	NET_BUFFER *packet,
+	ULONG data_len,
+	ULONG data_offset,
 	struct tx_frag_pool_elem **frag);
 
 void

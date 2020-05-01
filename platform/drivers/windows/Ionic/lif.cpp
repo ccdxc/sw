@@ -1054,7 +1054,8 @@ err_out_free_dbid:
 
 err_out_dma:
 	ionic_lif_reset(lif);
-	deinit_dma( lif->ionic);
+    // XXX problems with upgrade
+	//deinit_dma( lif->ionic);
 
     return status;
 }

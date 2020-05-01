@@ -104,6 +104,7 @@ ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *cb_arg)
              "%s Notifyq EVENT_OPCODE_RESET eid=%lld reset_code=%d state=%d\n",
              __FUNCTION__, eid, comp->reset.reset_code, comp->reset.state));
 
+        RtlSetBit(&lif->state, LIF_RESET_NEEDED);
         RtlSetBit(&lif->state, LIF_LINK_CHECK_NEEDED);
 
         break;

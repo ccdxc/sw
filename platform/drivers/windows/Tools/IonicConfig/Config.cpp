@@ -243,6 +243,8 @@ DumpTxRingStats(const char *id, struct dev_tx_ring_stats *tx_stats)
     printf("\t\t\ttx%s_doorbell:\t%I64u\n", id, tx_stats->doorbell_count);
     printf("\t\t\ttx%s_comp:\t%I64u\n", id, tx_stats->comp_count);
     printf("\t\t\ttx%s_defrag:\t%I64u\n", id, tx_stats->defrag_count);
+    printf("\t\t\ttx%s_tso_defrag:\t%I64u\n", id, tx_stats->tso_defrag_count);
+    printf("\t\t\ttx%s_tso_fail:\t%I64u\n", id, tx_stats->tso_fail_count);
     printf("\t\t\ttx%s_ucast_bytes:\t%I64u\n", id, tx_stats->directed_bytes);
     printf("\t\t\ttx%s_ucast_packets:\t%I64u\n", id, tx_stats->directed_packets);
     printf("\t\t\ttx%s_bcast_bytes:\t%I64u\n", id, tx_stats->bcast_bytes);
@@ -378,6 +380,8 @@ DumpDevStats(void *Stats)
                 tx_total.doorbell_count += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].doorbell_count;
                 tx_total.comp_count += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].comp_count;
                 tx_total.defrag_count += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].defrag_count;
+                tx_total.tso_defrag_count += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].tso_defrag_count;
+                tx_total.tso_fail_count += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].tso_fail_count;
                 tx_total.directed_bytes += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].directed_bytes;
                 tx_total.directed_packets += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].directed_packets;
                 tx_total.bcast_bytes += dev_stats->lif_stats[ulLifCount].tx_ring[ulTxCnt].bcast_bytes;

@@ -409,15 +409,16 @@ ionic_txq_complete_pkt(struct queue *q,
             bProcessPacket = TRUE;
         }
 
-        if (txq_pkt->tx_frag_elem != NULL) {
-            return_tx_frag(ionic, txq_pkt->tx_frag_elem);
-            txq_pkt->tx_frag_elem = NULL;
-        }
 #ifdef DBG        
         InterlockedDecrement(&qcq->outstanding_tx_count);
 #endif
 
         if (bProcessPacket) {
+
+			if (txq_pkt->tx_frag_elem != NULL) {
+				return_tx_frag(ionic, txq_pkt->tx_frag_elem);
+				txq_pkt->tx_frag_elem = NULL;
+			}
 
             InterlockedIncrement( (LONG *)&qcq->tx_stats->nb_count);
 
@@ -845,6 +846,10 @@ ionic_queue_txq_pkt(struct ionic *ionic,
     ULONG segment_len = 0;
     ULONG len = 0;
     ULONG segment_len_acc = 0;
+	void *q_head = NULL;
+	struct tx_frag_pool_elem *frag_elem = NULL;
+	struct tx_frag_pool_elem *last_frag_elem = NULL;
+	ULONG	tso_data_offset = 0;
 
     static BOOLEAN bdumpdescr = FALSE;
 
@@ -952,7 +957,11 @@ ionic_queue_txq_pkt(struct ionic *ionic,
 
             tx_stats->defrag_count++;
 
-            status = copy_buffer(ionic, packet, &txq_pkt->tx_frag_elem);
+            status = copy_buffer(ionic, 
+								 packet, 
+								 packet_len,  
+								 NET_BUFFER_CURRENT_MDL_OFFSET(packet),
+								 &txq_pkt->tx_frag_elem);
 
             if (status != NDIS_STATUS_SUCCESS) {
                 DbgTrace((TRACE_COMPONENT_IO_FRAG, TRACE_LEVEL_ERROR,
@@ -1044,6 +1053,8 @@ ionic_queue_txq_pkt(struct ionic *ionic,
 
     pCurrentMdl = (PMDL)NET_BUFFER_CURRENT_MDL(packet);
 
+	tso_data_offset = NET_BUFFER_CURRENT_MDL_OFFSET(packet);
+
     ulCurrentLen = pCurrentMdl->ByteCount - data_offset;
     ulHdrLen = ulCurrentLen;
 
@@ -1066,6 +1077,8 @@ ionic_queue_txq_pkt(struct ionic *ionic,
     segment_len_acc = 0;
 
     ulDescCnt = 0;
+
+	q_head = (void *)qcq->q.head;
 
     while (sg_element_count != 0) {
 
@@ -1116,18 +1129,76 @@ ionic_queue_txq_pkt(struct ionic *ionic,
             break;
         }
 
+		if( sge_count > IONIC_TX_MAX_SG_ELEMS + 1) {
+
+            status = copy_buffer(ionic, 
+								 packet, 
+								 segment_len_acc, 
+								 tso_data_offset,
+								 &frag_elem);
+
+            if (status != NDIS_STATUS_SUCCESS) {
+                DbgTrace((TRACE_COMPONENT_IO_FRAG, TRACE_LEVEL_ERROR,
+                          "%s Failed to copy tso buffer status %08lX\n",
+                          __FUNCTION__, status));
+
+				status = NDIS_STATUS_INVALID_PACKET;
+				break;
+            }
+
+			if (last_frag_elem == NULL) {
+				txq_pkt->tx_frag_elem = frag_elem;
+			}
+			else {
+				last_frag_elem->tso_next_elem = frag_elem;
+			}
+
+			frag_elem->tso_next_elem = NULL;
+			last_frag_elem = frag_elem;
+
+			if( frag_elem->tx_frag_list->NumberOfElements == 1) {
+				sg_len = 0;
+			}
+			else {
+				sg_len = segment_len_acc - PAGE_SIZE; // The first sg element describes 1 page worth of data, the rest
+													  // is in the other 2 sg elements
+			}
+
+            tx_stats->tso_defrag_count++;
+
+			DbgTrace((TRACE_COMPONENT_TX_LSO, TRACE_LEVEL_VERBOSE,
+					  "TSO Fragment Descriptor %d sg cnt %d phys addr %I64X len %08lX add'd sg "
+					  "len %08lX Remain %08lX\n",
+					  ulDescCnt, 
+					  frag_elem->tx_frag_list->NumberOfElements, 
+					  frag_elem->tx_frag_list->Elements[ 0].Address.QuadPart, 
+					  segment_len_acc,
+					  sg_len, 
+					  ulRemainingLen));
+
+			ionic_enqueue_txq_lso_pkt(qcq, packet, frag_elem->tx_frag_list->Elements[ 0].Address.QuadPart, 
+									  &frag_elem->tx_frag_list->Elements[ 0], 
+									  frag_elem->tx_frag_list->NumberOfElements, 
+									  sg_len, segment_len_acc, ulHdrLen,
+									  mss.LsoV2Transmit.MSS, false, vlan_tag,
+									  vlan_tag_insert, bStart, bDone, bdumpdescr);
+		}
+		else {
+
+			DbgTrace((TRACE_COMPONENT_TX_LSO, TRACE_LEVEL_VERBOSE,
+					  "Descriptor %d sg cnt %d phys addr %I64X len %08lX add'd sg "
+					  "len %08lX Remain %08lX\n",
+					  ulDescCnt, sge_count, ullCurrentPhysAddr, segment_len_acc,
+					  sg_len, ulRemainingLen));
+
+			ionic_enqueue_txq_lso_pkt(qcq, packet, ullCurrentPhysAddr, sge,
+									  sge_count, sg_len, segment_len_acc, ulHdrLen,
+									  mss.LsoV2Transmit.MSS, false, vlan_tag,
+									  vlan_tag_insert, bStart, bDone, bdumpdescr);
+		}
+
         txq_pkt_private->bytes_processed += segment_len_acc;
-
-        DbgTrace((TRACE_COMPONENT_TX_LSO, TRACE_LEVEL_VERBOSE,
-                  "Descriptor %d sg cnt %d phys addr %I64X len %08lX add'd sg "
-                  "len %08lX Remain %08lX\n",
-                  ulDescCnt, sge_count, ullCurrentPhysAddr, segment_len_acc,
-                  sg_len, ulRemainingLen));
-
-        ionic_enqueue_txq_lso_pkt(qcq, packet, ullCurrentPhysAddr, sge,
-                                  sge_count, sg_len, segment_len_acc, ulHdrLen,
-                                  mss.LsoV2Transmit.MSS, false, vlan_tag,
-                                  vlan_tag_insert, bStart, bDone, bdumpdescr);
+		tso_data_offset += segment_len_acc;
 
         ulDescCnt++;
 
@@ -1180,6 +1251,21 @@ ionic_queue_txq_pkt(struct ionic *ionic,
 
 		tx_stats->last_tso_sz = packet_len;
     }
+	else {
+
+		// Reset the head pointer if we've processed any descriptors
+		if( ulDescCnt != 0) {
+			qcq->q.head = (struct desc_info *)q_head;
+		}
+
+		// Return any fragments we may have used for this request
+		if (txq_pkt->tx_frag_elem != NULL) {
+			return_tx_frag( ionic, txq_pkt->tx_frag_elem);
+			txq_pkt->tx_frag_elem = NULL;
+		}
+
+        tx_stats->tso_fail_count++;
+	}
 
     DbgTrace((TRACE_COMPONENT_TX_LSO, TRACE_LEVEL_VERBOSE,
               "%s Processing packet %p complete status %08lX\n", __FUNCTION__,
@@ -1818,11 +1904,12 @@ DumpTxPacket(void *packet, MDL *Mdl)
 NDIS_STATUS
 copy_buffer(struct ionic *ionic,
             NET_BUFFER *packet,
+			ULONG length,
+			ULONG offset,
             struct tx_frag_pool_elem **frag)
 {
 
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
-    ULONG packet_len = 0;
     char *curr_target = NULL;
     char *curr_src = NULL;
     void *source_va = NULL;
@@ -1831,11 +1918,8 @@ copy_buffer(struct ionic *ionic,
     PMDL curr_mdl = NULL;
     ULONG mdl_len = 0;
     struct tx_frag_pool_elem *frag_elem = NULL;
-    ULONG data_offset = 0;
 
-    packet_len = NET_BUFFER_DATA_LENGTH(packet);
-
-    if (packet_len > (3 * PAGE_SIZE)) {
+    if (length > (3 * PAGE_SIZE)) {
         status = NDIS_STATUS_RESOURCES;
         goto cleanup;
     }
@@ -1846,8 +1930,6 @@ copy_buffer(struct ionic *ionic,
         status = NDIS_STATUS_RESOURCES;
         goto cleanup;
     }
-
-    data_offset = (UINT)NET_BUFFER_CURRENT_MDL_OFFSET(packet);
 
     curr_mdl = packet->CurrentMdl;
     curr_target = (char *)frag_elem->buffer;
@@ -1863,10 +1945,10 @@ copy_buffer(struct ionic *ionic,
     mdl_len = curr_mdl->ByteCount;
 
     // Get to the start of the data
-    while (data_offset != 0) {
-        if (mdl_len >= data_offset) {
-            curr_src += data_offset;
-            mdl_len -= data_offset;
+    while (offset != 0) {
+        if (mdl_len >= offset) {
+            curr_src += offset;
+            mdl_len -= offset;
 
             if (mdl_len == 0) {
                 curr_mdl = curr_mdl->Next;
@@ -1876,7 +1958,7 @@ copy_buffer(struct ionic *ionic,
             break;
         }
 
-        data_offset -= mdl_len;
+        offset -= mdl_len;
 
         curr_mdl = curr_mdl->Next;
 
@@ -1891,7 +1973,7 @@ copy_buffer(struct ionic *ionic,
         mdl_len = curr_mdl->ByteCount;
     }
 
-    while (copied_len < packet_len) {
+    while (copied_len < length) {
 
         if (source_va == NULL) {
 
@@ -1907,7 +1989,7 @@ copy_buffer(struct ionic *ionic,
             mdl_len = curr_mdl->ByteCount;
         }
 
-        copy_len = packet_len - copied_len;
+        copy_len = length - copied_len;
 
         if (copy_len > mdl_len) {
             copy_len = mdl_len;
@@ -1917,8 +1999,7 @@ copy_buffer(struct ionic *ionic,
 
         copied_len += copy_len;
 
-        if (copied_len == packet_len) {
-            ASSERT(curr_mdl->Next == NULL);
+        if (copied_len == length) {
             break;
         }
 
@@ -1935,18 +2016,18 @@ copy_buffer(struct ionic *ionic,
     }
 
     // Update the lengths of the sg elements we are returning
-    if (packet_len <= PAGE_SIZE) {
-        frag_elem->tx_frag_list->Elements[0].Length = packet_len;
+    if (length <= PAGE_SIZE) {
+        frag_elem->tx_frag_list->Elements[0].Length = length;
         frag_elem->tx_frag_list->NumberOfElements = 1;
-    } else if (packet_len <= (2 * PAGE_SIZE)) {
+    } else if (length <= (2 * PAGE_SIZE)) {
         ASSERT(frag_elem->tx_frag_list->Elements[0].Length == PAGE_SIZE);
-        frag_elem->tx_frag_list->Elements[1].Length = (packet_len - PAGE_SIZE);
+        frag_elem->tx_frag_list->Elements[1].Length = (length - PAGE_SIZE);
         frag_elem->tx_frag_list->NumberOfElements = 2;
     } else {
         ASSERT(frag_elem->tx_frag_list->Elements[0].Length == PAGE_SIZE);
         ASSERT(frag_elem->tx_frag_list->Elements[1].Length == PAGE_SIZE);
         frag_elem->tx_frag_list->Elements[2].Length =
-            (packet_len - (2 * PAGE_SIZE));
+            (length - (2 * PAGE_SIZE));
         frag_elem->tx_frag_list->NumberOfElements = 3;
     }
 

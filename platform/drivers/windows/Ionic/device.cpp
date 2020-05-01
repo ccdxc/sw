@@ -572,18 +572,28 @@ get_tx_frag(struct ionic *ionic)
 void
 return_tx_frag(struct ionic *ionic, struct tx_frag_pool_elem *elem)
 {
+	struct tx_frag_pool_elem *next_elem = NULL;
 
-    elem->tx_frag_list->NumberOfElements = IONIC_TX_FRAG_PAGES;
-    for (int i = 0; i < IONIC_TX_FRAG_PAGES; ++i) {
-        elem->tx_frag_list->Elements[i].Length = PAGE_SIZE;
-    }
+	while( elem != NULL) {
 
-    NdisAcquireSpinLock(&ionic->tx_frag_pool_lock);
+		next_elem = elem->tso_next_elem;
 
-    elem->next = ionic->tx_frag_pool_head;
-    ionic->tx_frag_pool_head = elem;
+		elem->tso_next_elem = NULL;
 
-    NdisReleaseSpinLock(&ionic->tx_frag_pool_lock);
+		elem->tx_frag_list->NumberOfElements = IONIC_TX_FRAG_PAGES;
+		for (int i = 0; i < IONIC_TX_FRAG_PAGES; ++i) {
+			elem->tx_frag_list->Elements[i].Length = PAGE_SIZE;
+		}
+
+		NdisAcquireSpinLock(&ionic->tx_frag_pool_lock);
+
+		elem->next = ionic->tx_frag_pool_head;
+		ionic->tx_frag_pool_head = elem;
+
+		NdisReleaseSpinLock(&ionic->tx_frag_pool_lock);
+
+		elem = next_elem;
+	}
 
     return;
 }

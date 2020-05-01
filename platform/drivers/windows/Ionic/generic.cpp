@@ -1623,6 +1623,17 @@ ionic_link_status_check(struct lif *lif, u16 link_status)
         goto cleanup;
     }
     set_event = TRUE;
+    NDIS_WAIT_FOR_MUTEX(&ionic->LinkCheckMutex);
+
+    DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
+        "%s Start LIF_INIT %u LIF_UP %u CHECK %u RESET %u fwsts %#x lnsts %#x\n",
+        __FUNCTION__,
+        RtlCheckBit(&lif->state, LIF_INITED),
+        RtlCheckBit(&lif->state, LIF_UP),
+        RtlCheckBit(&lif->state, LIF_LINK_CHECK_NEEDED),
+        RtlCheckBit(&lif->state, LIF_RESET_NEEDED),
+        ionic->idev.dev_info_regs->fw_status,
+        lif->info->status.link_status));
 
     // first clear the bit, then check the status
 
@@ -1633,9 +1644,17 @@ ionic_link_status_check(struct lif *lif, u16 link_status)
     }
 
     // check fw running status
-    fw_status = ionic->idev.dev_info_regs->fw_status;
-    fw_run = (fw_status != 0xff) && (fw_status & IONIC_FW_STS_F_RUNNING);
+
+    if (RtlCheckBit(&lif->state, LIF_RESET_NEEDED)) {
+        RtlClearBit(&lif->state, LIF_RESET_NEEDED);
+        fw_status = 0;
+        fw_run = 0;
+    } else  {
+        fw_status = ionic->idev.dev_info_regs->fw_status;
+        fw_run = (fw_status != 0xff) && (fw_status & IONIC_FW_STS_F_RUNNING);
+    }
     fw_change = fw_run != (bool)RtlCheckBit(&lif->state, LIF_INITED);
+
 
     // check link status, force down if fw is down
     link_up = fw_run && link_status == PORT_OPER_STATUS_UP;
@@ -1654,6 +1673,7 @@ ionic_link_status_check(struct lif *lif, u16 link_status)
         DbgTrace((TRACE_COMPONENT_LINK, TRACE_LEVEL_VERBOSE,
             "%s Firmware down\n", __FUNCTION__));
         ionic_lif_deinit(lif);
+        ionic_reset(ionic);
     }
 
     // lif was not initted, and fw has come up
@@ -1680,6 +1700,7 @@ ionic_link_status_check(struct lif *lif, u16 link_status)
 
 cleanup:
     if (set_event) {
+        NDIS_RELEASE_MUTEX(&ionic->LinkCheckMutex);
         KeSetEvent(&lif->state_change, 0, FALSE);
     }
 

@@ -40,6 +40,8 @@ struct tx_frag_pool_elem {
 
 	struct tx_frag_pool_elem *next;
 
+	struct tx_frag_pool_elem *tso_next_elem;
+
 	void	   *buffer;
 
 	ULONG		length;
@@ -346,6 +348,7 @@ enum lif_state_flags {
 	LIF_INITED,
 	LIF_SW_DEBUG_STATS,
 	LIF_UP,
+	LIF_RESET_NEEDED,
 	LIF_LINK_CHECK_NEEDED,
 	LIF_QUEUE_RESET,
 	LIF_F_FW_READY,
@@ -626,6 +629,7 @@ struct ionic {
 	
 	NDIS_HANDLE		WatchDogTimer;
 	NDIS_HANDLE		LinkCheckTimer;
+	NDIS_MUTEX      LinkCheckMutex;
 
 	ULONG			sgl_size_in_bytes;
 	ULONG			max_sgl_elements;

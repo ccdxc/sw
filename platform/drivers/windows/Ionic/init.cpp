@@ -574,6 +574,8 @@ InitializeEx(NDIS_HANDLE AdapterHandle,
         goto err_out_stop_ionic;
     }
 
+    NDIS_INIT_MUTEX(&adapter->LinkCheckMutex);
+
     NDIS_TIMER_CHARACTERISTICS stTimer;
     stTimer.Header.Revision = NDIS_TIMER_CHARACTERISTICS_REVISION_1;
     stTimer.Header.Size = NDIS_SIZEOF_TIMER_CHARACTERISTICS_REVISION_1;
