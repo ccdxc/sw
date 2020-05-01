@@ -57,6 +57,20 @@ ingress_to_rxdma:
                         p4plus_to_p4_valid, \
                         capri_txdma_intrinsic_valid}, 0x3B0
 
+    add             r6, r0, k.offset_metadata_payload_offset
+    bbeq            k.p4plus_to_p4_insert_vlan_tag, FALSE, \
+                        ingress_to_rxdma_vlan_insert_done
+    add             r7, r0, k.{offset_metadata_l3_1, \
+                        offset_metadata_l4_1, \
+                        offset_metadata_l2_2, \
+                        offset_metadata_l3_2, \
+                        offset_metadata_l4_2}
+    addi            r1, r0, 0x04040404
+    addui           r1, r1, 0x04
+    add             r7, r7, r1
+    add             r6, r6, 4
+
+ingress_to_rxdma_vlan_insert_done:
     or              r1, r0, k.ctag_1_valid, \
                         APULU_CPU_FLAGS_VLAN_VALID_BIT_POS
     or              r1, r1, k.ipv4_1_valid, \
@@ -74,8 +88,9 @@ ingress_to_rxdma:
                         APULU_CPU_FLAGS_IPV6_2_VALID_BIT_POS
 ingress_to_rxdma_native:
     seq             c1, k.udp_1_valid, FALSE
-    phvwr.c1        p.offset_metadata_l4_1, k.offset_metadata_l4_2
-    phvwr.c1        p.offset_metadata_l4_2, 0
+    xor.c1          r7, r7, r7[31:24], 24
+    or.c1           r7, r7, r7[7:0], 24
+    xor.c1          r7, r7, r7[7:0]
 
 ingress_to_rxdma2:
     phvwr           p.p4i_to_arm_flags, r1
@@ -84,9 +99,15 @@ ingress_to_rxdma2:
     phvwr           p.p4i_to_arm_vnic_id, k.{vnic_metadata_vnic_id}.hx
     phvwr           p.p4i_to_arm_ingress_bd_id, k.{vnic_metadata_bd_id}.hx
     phvwr           p.p4i_to_arm_vpc_id, k.{vnic_metadata_vpc_id}.hx
-    phvwr           p.p4i_to_arm_payload_offset, k.offset_metadata_payload_offset
     phvwr           p.p4i_to_arm_lif, k.{capri_intrinsic_lif}.hx
     phvwr           p.p4i_to_arm_mapping_xlate_id, k.{p4i_i2e_xlate_id}.hx
+
+    phvwr           p.p4i_to_arm_payload_offset, r6
+    phvwr           p.offset_metadata_l3_1, r7[39:32]
+    phvwr           p.offset_metadata_l4_1, r7[31:24]
+    phvwr           p.offset_metadata_l2_2, r7[23:16]
+    phvwr           p.offset_metadata_l3_2, r7[15:8]
+    phvwr           p.offset_metadata_l4_2, r7[7:0]
 
     phvwr           p.p4i_to_rxdma_apulu_p4plus, TRUE
     seq             c1, k.key_metadata_ktype, KEY_TYPE_IPV6

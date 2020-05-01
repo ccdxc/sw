@@ -44,12 +44,16 @@ action ingress_to_rxdma() {
     modify_field(p4i_to_arm.vpc_id, vnic_metadata.vpc_id);
 
     modify_field(offset_metadata.l2_1, offset_metadata.l2_1);
-    modify_field(offset_metadata.l2_2, offset_metadata.l2_2);
-    modify_field(offset_metadata.l3_1, offset_metadata.l3_1);
-    modify_field(offset_metadata.l3_2, offset_metadata.l3_2);
-    modify_field(offset_metadata.l4_1, offset_metadata.l4_1);
-    modify_field(offset_metadata.l4_2, offset_metadata.l4_2);
-    modify_field(p4i_to_arm.payload_offset, offset_metadata.payload_offset);
+    if (p4plus_to_p4.insert_vlan_tag == TRUE) {
+        add(offset_metadata.l3_1, offset_metadata.l3_1, 4);
+        add(offset_metadata.l4_1, offset_metadata.l4_1, 4);
+        add(offset_metadata.l2_2, offset_metadata.l2_2, 4);
+        add(offset_metadata.l3_2, offset_metadata.l3_2, 4);
+        add(offset_metadata.l4_2, offset_metadata.l4_2, 4);
+        add(p4i_to_arm.payload_offset, offset_metadata.payload_offset, 4);
+    } else {
+        modify_field(p4i_to_arm.payload_offset, offset_metadata.payload_offset);
+    }
     modify_field(p4i_to_arm.lif, capri_intrinsic.lif);
     modify_field(p4i_to_arm.mapping_xlate_id, p4i_i2e.xlate_id);
 
