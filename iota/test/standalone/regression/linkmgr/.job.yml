@@ -23,17 +23,8 @@ targets:
     build-dependencies:
      - build-iris-arm
 
-#  linkmgr-25:
-#    commands: ["sh", "-c", "make linkmgr-25"]
-#    owners: ["email:avinash@pensando.io"]
-#    area:
-#    sub-area:
-#    feature:
-#    build-dependencies:
-#     - build-iris-arm
-
-  linkmgr-100-vomero:
-    commands: ["sh", "-c", "make linkmgr-100-vomero"]
+  linkmgr-25:
+    commands: ["sh", "-c", "make linkmgr-25"]
     owners: ["email:avinash@pensando.io"]
     area:
     sub-area:
@@ -41,12 +32,21 @@ targets:
     build-dependencies:
      - build-iris-arm
 
-
-       #  linkmgr-25Gb-apulu:
-       #    commands: ["sh", "-c", "make linkmgr-25Gb-apulu"]
-       #    owners: ["email:allenbh@pensando.io","email:avinash@pensando.io"]
-       #    area:
-       #    sub-area:
-       #    feature:
-       #    build-dependencies:
-       #     - build-apulu-arm
+#  linkmgr-100-vomero:
+#    commands: ["sh", "-c", "make linkmgr-100-vomero"]
+#    owners: ["email:avinash@pensando.io"]
+#    area:
+#    sub-area:
+#    feature:
+#    build-dependencies:
+#     - build-iris-arm
+#
+#
+#  linkmgr-25Gb-apulu:
+#    commands: ["sh", "-c", "make linkmgr-25Gb-apulu"]
+#    owners: ["email:allenbh@pensando.io","email:avinash@pensando.io"]
+#    area:
+#    sub-area:
+#    feature:
+#    build-dependencies:
+#     - build-apulu-arm
