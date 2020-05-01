@@ -19,6 +19,11 @@ def Setup(tc):
         api.Logger.info("Not implemented for %s" % tc.os)
         return api.types.status.IGNORED
 
+    pairs = api.GetLocalWorkloadPairs()
+    if not pairs:
+        api.Logger.error("No workloads found")
+        return api.types.status.FAILURE
+
     return api.types.status.SUCCESS
 
 

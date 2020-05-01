@@ -3,7 +3,7 @@ meta:
     description : Athena Base Testsuite
     mode        : hardware
     cfgmode     : netagent
-    nicmode     : classic
+    nicmode     : bitw
     os          : [ linux, freebsd, esx ]
 
 packages:
@@ -18,7 +18,7 @@ image_manifest:
 setup:
     topology: test/athena/topologies/classic_2baremetal_2Naples/classic_baremetal.topology
     config  :
-        #- step : utils.naples_workloads
+        - step : utils.naples_workloads
         #- step : verif.config.verify_oob
         #- step : config.set_max_mtu
         #- step : config.bringup_workloads
