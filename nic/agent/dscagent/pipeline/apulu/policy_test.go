@@ -13,6 +13,49 @@ import (
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
+func TestRuleL3MatchExpansion(t *testing.T) {
+	var mappings sync.Map
+	nsp := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNetworkSecurityPolicy",
+			UUID:      uuid.NewV4().String(),
+		},
+		Spec: netproto.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.1.1.0/24"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"10.1.1.0/24"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Port:     "1-65535",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "1-65535",
+								Protocol: "udp",
+							},
+							{
+								Protocol: "icmp",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	err := HandleNetworkSecurityPolicy(infraAPI, secPolicyClient, types.Create, nsp, &mappings)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 func TestRuleLimit(t *testing.T) {
 	var mappings sync.Map
 	t.Parallel()

@@ -17,12 +17,13 @@ import (
 
 // ############# Hal conversion Routines  ##############
 
-func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) []*halapi.SecurityRuleInfo {
+func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) ([]*halapi.SecurityRuleInfo, error) {
 	var fwRules []*halapi.SecurityRuleInfo
 	for idx, r := range nsp.Spec.Rules {
 		ruleMatches, err := buildHALRuleMatches(r.Src, r.Dst, ruleIDToAppMapping, &idx)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
+			return nil, err
 		}
 		for _, match := range ruleMatches {
 			rule := &halapi.SecurityRuleInfo{
@@ -35,7 +36,7 @@ func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapp
 			fwRules = append(fwRules, rule)
 		}
 	}
-	return fwRules
+	return fwRules, nil
 }
 
 func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Map, ruleID *int) ([]*halapi.RuleMatch, error) {
@@ -127,9 +128,13 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 			},
 		}
 
-		for _, ruleL3Match := range ruleL3MatchComb {
-			ruleL3Match.Protomatch = &halapi.RuleL3Match_ProtoNum{
-				ProtoNum: halProtocol,
+		for _, ruleL3 := range ruleL3MatchComb {
+			ruleL3Match := &halapi.RuleL3Match{
+				Protomatch: &halapi.RuleL3Match_ProtoNum{
+					ProtoNum: halProtocol,
+				},
+				Srcmatch: ruleL3.Srcmatch,
+				Dstmatch: ruleL3.Dstmatch,
 			}
 			ruleMatch := &halapi.RuleMatch{
 				L3Match: ruleL3Match,
@@ -175,9 +180,13 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				}
 			}
 
-			for _, ruleL3Match := range ruleL3MatchComb {
-				ruleL3Match.Protomatch = &halapi.RuleL3Match_ProtoNum{
-					ProtoNum: halProtocol,
+			for _, ruleL3 := range ruleL3MatchComb {
+				ruleL3Match := &halapi.RuleL3Match{
+					Protomatch: &halapi.RuleL3Match_ProtoNum{
+						ProtoNum: halProtocol,
+					},
+					Srcmatch: ruleL3.Srcmatch,
+					Dstmatch: ruleL3.Dstmatch,
 				}
 				ruleMatch := &halapi.RuleMatch{
 					L3Match: ruleL3Match,
@@ -223,9 +232,13 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				}
 			}
 
-			for _, ruleL3Match := range ruleL3MatchComb {
-				ruleL3Match.Protomatch = &halapi.RuleL3Match_ProtoNum{
-					ProtoNum: halProtocol,
+			for _, ruleL3 := range ruleL3MatchComb {
+				ruleL3Match := &halapi.RuleL3Match{
+					Protomatch: &halapi.RuleL3Match_ProtoNum{
+						ProtoNum: halProtocol,
+					},
+					Srcmatch: ruleL3.Srcmatch,
+					Dstmatch: ruleL3.Dstmatch,
 				}
 				ruleMatch := &halapi.RuleMatch{
 					L3Match: ruleL3Match,
@@ -284,9 +297,13 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 					}
 				}
 
-				for _, ruleL3Match := range ruleL3MatchComb {
-					ruleL3Match.Protomatch = &halapi.RuleL3Match_ProtoNum{
-						ProtoNum: halProtocol,
+				for _, ruleL3 := range ruleL3MatchComb {
+					ruleL3Match := &halapi.RuleL3Match{
+						Protomatch: &halapi.RuleL3Match_ProtoNum{
+							ProtoNum: halProtocol,
+						},
+						Srcmatch: ruleL3.Srcmatch,
+						Dstmatch: ruleL3.Dstmatch,
 					}
 					ruleMatch := &halapi.RuleMatch{
 						L3Match: ruleL3Match,
