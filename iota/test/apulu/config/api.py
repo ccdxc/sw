@@ -11,6 +11,7 @@ import apollo.config.utils as utils
 import apollo.config.topo as topo
 import vpc_pb2 as vpc_pb2
 import iota.harness.api as api
+import vpc_pb2 as vpc_pb2
 
 WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1
 WORKLOAD_PAIR_TYPE_REMOTE_ONLY   = 2
@@ -30,6 +31,8 @@ class Endpoint:
         self.has_public_ip = vnic_inst.HasPublicIp
         if api.GlobalOptions.dryrun:
             self.interface = 'dryrun'
+        elif vnic_inst.SUBNET.VPC.Type == vpc_pb2.VPC_TYPE_CONTROL:
+            self.interface = 'control'
         else:
             self.interface = GetObjClient('interface').GetHostIf(vnic_inst.Node, vnic_inst.SUBNET.HostIfIdx).GetInterfaceName()
         self.vnic = vnic_inst
@@ -55,9 +58,10 @@ def GetEndpoints():
     for node in naplesHosts:
         vnics = vnic.client.Objects(node)
         for vnic_inst in vnics:
-            vnic_addresses = lmapping.client.GetVnicAddresses(vnic_inst)
-            ep = Endpoint(vnic_inst, vnic_addresses)
-            eps.append(ep)
+            if vnic_inst.SUBNET.VPC.Type == vpc_pb2.VPC_TYPE_TENANT:
+                vnic_addresses = lmapping.client.GetVnicAddresses(vnic_inst)
+                ep = Endpoint(vnic_inst, vnic_addresses)
+                eps.append(ep)
 
     return eps
 
@@ -149,6 +153,8 @@ def __getWorkloadPairsBy(wl_pair_type, wl_pair_scope = WORKLOAD_PAIR_SCOPE_INTRA
     for vnic1 in vnics:
         for vnic2 in vnics:
             if vnic1 == vnic2:
+                continue
+            if vnic1.SUBNET.VPC.Type != vpc_pb2.VPC_TYPE_TENANT or vnic2.SUBNET.VPC.Type != vpc_pb2.VPC_TYPE_TENANT:
                 continue
             if wl_pair_scope == WORKLOAD_PAIR_SCOPE_INTRA_SUBNET and not __vnics_in_same_segment(vnic1, vnic2):
                 continue
@@ -371,3 +377,35 @@ def GetVpcNatPortBlocks(wl, addr_type):
 
 def GetAllNatPortBlocks():
     return nat_pb.client.GetAllNatPortBlocks()
+
+
+def __getControlEPPairsBy(vnic_pair_type):
+    ep_pairs = []
+    naplesHosts = api.GetNaplesHostnames()
+    vnics = []
+    for node in naplesHosts:
+        vnics.extend(vnic.client.Objects(node))
+
+    for vnic1 in vnics:
+        for vnic2 in vnics:
+            if vnic1 == vnic2:
+                continue
+            if vnic1.SUBNET.VPC.Type != vpc_pb2.VPC_TYPE_CONTROL or vnic2.SUBNET.VPC.Type != vpc_pb2.VPC_TYPE_CONTROL:
+                continue
+            if vnic_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY and vnic1.Node != vnic2.Node:
+                continue
+            elif vnic_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY and\
+                    vnic1.Node == vnic2.Node:
+                continue
+
+            vnic_addresses1 = lmapping.client.GetVnicIPs(vnic1)
+            ep1 = Endpoint(vnic1, vnic_addresses1)
+            vnic_addresses2 = lmapping.client.GetVnicIPs(vnic2)
+            ep2 = Endpoint(vnic2, vnic_addresses2)
+
+            ep_pairs.append((ep1, ep2))
+
+    return ep_pairs
+
+def GetControlEPPairs(pair_type = WORKLOAD_PAIR_TYPE_REMOTE_ONLY):
+    return __getControlEPPairsBy(vnic_pair_type=pair_type)

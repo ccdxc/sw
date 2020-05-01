@@ -104,7 +104,8 @@ class ObjectTypes(enum.IntEnum):
     STATIC_ROUTE = 29
     OPER = 30
     SECURITY_PROFILE = 31
-    MAX = 32
+    DHCP_PROXY = 32
+    MAX = 33
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -384,6 +385,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'Meter')
         self.__stubs[ObjectTypes.DHCP_RELAY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
                                                       self.__channel, 'DHCPPolicy')
+        self.__stubs[ObjectTypes.DHCP_PROXY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
+                                                      self.__channel, 'DHCPPolicy')
         self.__stubs[ObjectTypes.NAT] = ClientStub(nat_pb2_grpc.NatSvcStub,
                                                       self.__channel, 'NatPortBlock')
         self.__stubs[ObjectTypes.POLICER] = ClientStub(policer_pb2_grpc.PolicerSvcStub,
@@ -424,6 +427,7 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.VPC] = ClientModule(vpc_pb2, 'VPC')
         self.__msgreqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')
         self.__msgreqs[ObjectTypes.DHCP_RELAY] = ClientModule(dhcp_pb2, 'DHCPPolicy')
+        self.__msgreqs[ObjectTypes.DHCP_PROXY] = ClientModule(dhcp_pb2, 'DHCPPolicy')
         self.__msgreqs[ObjectTypes.NAT] = ClientModule(nat_pb2, 'NatPortBlock')
         self.__msgreqs[ObjectTypes.POLICER] = ClientModule(policer_pb2, 'Policer')
         self.__msgreqs[ObjectTypes.BGP] = ClientModule(bgp_pb2, 'BGP')

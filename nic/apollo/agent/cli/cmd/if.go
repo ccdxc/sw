@@ -146,6 +146,9 @@ func printIf(intf *pds.Interface) {
 		ipPrefix = utils.IPPrefixToStr(spec.GetL3IfSpec().GetPrefix())
 		mac = utils.MactoStr(spec.GetL3IfSpec().GetMACAddress())
 		encap = utils.EncapToString(spec.GetL3IfSpec().GetEncap())
+	case pds.IfType_IF_TYPE_CONTROL:
+		ipPrefix = utils.IPPrefixToStr(spec.GetControlIfSpec().GetPrefix())
+		mac = utils.MactoStr(spec.GetControlIfSpec().GetMACAddress())
 	}
 	fmt.Printf("0x%-12x%-14s%-11s%-11s%-40s%-6s%-40s%-18s%-14s%-20s\n",
 		ifIndex, ifStr, adminState, operState, portNum, lifId,

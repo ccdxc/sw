@@ -26,6 +26,7 @@ from apollo.config.objects.vpc import client as VpcClient
 from apollo.config.objects.meter import client as MeterClient
 from apollo.config.objects.mirror import client as MirrorClient
 from apollo.config.objects.dhcprelay import client as DHCPRelayClient
+from apollo.config.objects.dhcpproxy import client as DHCPProxyClient
 from apollo.config.objects.nat_pb import client as NATPbClient
 from apollo.config.objects.policer import client as PolicerClient
 from apollo.config.objects.metaswitch.bgp import client as BGPClient
@@ -62,6 +63,7 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.METER.name.lower()] = MeterClient
     ObjectInfo[APIObjTypes.TAG.name.lower()] = TagClient
     ObjectInfo[APIObjTypes.DHCP_RELAY.name.lower()] = DHCPRelayClient
+    ObjectInfo[APIObjTypes.DHCP_PROXY.name.lower()] = DHCPProxyClient
     ObjectInfo[APIObjTypes.NAT.name.lower()] = NATPbClient
     ObjectInfo[APIObjTypes.POLICER.name.lower()] = PolicerClient
     ObjectInfo[APIObjTypes.BGP.name.lower()] = BGPClient

@@ -29,6 +29,7 @@ const (
 	ifTypeL3          = 7
 	ifTypeLif         = 8
 	ifTypeLoopback    = 9
+	ifTypeControl     = 10
 	ifTypeShift       = 28
 	ifSlotShift       = 24
 	ifParentPortShift = 16
@@ -632,6 +633,8 @@ func ifIndexToIfType(ifindex uint32) string {
 		return "L3"
 	case ifTypeLif:
 		return "Lif"
+	case ifTypeControl:
+		return "Control"
 	}
 	return "None"
 }
@@ -651,7 +654,7 @@ func ifIndexToPortIdStr(ifIndex uint32) string {
 		slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
 		parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
 		return ifTypeStr + slotStr + ifNameDelimiter + parentPortStr
-	case ifTypeEthPC, ifTypeTunnel, ifTypeL3, ifTypeLif, ifTypeLoopback:
+	case ifTypeEthPC, ifTypeTunnel, ifTypeL3, ifTypeLif, ifTypeLoopback, ifTypeControl:
 		return ifTypeStr + strconv.FormatUint(uint64(ifIndexToID(ifIndex)), 10)
 	}
 	return "-"

@@ -121,6 +121,15 @@ vpc:
           macaddress : macaddr/0000.aaaa.aaa1
           encap      : vxlan
           nhid       : 1
+      dhcppolicy:
+        - id               : 10
+          serverip         : '2.1.0.1'
+          ntpserver        : '2.1.0.5'
+          routers          : '2.1.0.1'
+          dnsserver        : '2.1.0.1'
+          domainname       : "pensando.io"
+          filename         : "test"
+          interfacemtu     : 9000
       subnet:
         - id               : 1
           count            : 1
@@ -130,6 +139,7 @@ vpc:
           fabricencapvalue : 202
           v4routerip       : '2.1.0.1'
           vroutermac       : macaddr/0055.0100.0001
+          dhcppolicy       : 10
           vnic:
             - id        : 1
               count     : 1             # 1 untagged VNIC
@@ -216,6 +226,62 @@ vpc:
         prefixlen : 32
         addrtype : PUBLIC_AND_SERVICE
         protocol : tcp,udp,icmp
+
+    - id               : 51
+      stack            : ipv4 # dual, ipv4 , ipv6
+      count            : 1
+      type             : control
+      fabricencap      : vxlan # vxlan or mplsodup
+      fabricencapvalue : 11
+      interface:
+        - iid           : 51
+          iftype        : control
+          ifadminstatus : UP
+          ipprefix      : '11.1.1.2\24'
+          gateway       : '11.1.1.1'
+          macaddress    : macaddr/feff.0b01.0102
+      subnet:
+        - id               : 51
+          count            : 1
+          v4prefixlen      : 10
+          v4prefix         : '11.0.0.0\8'
+          hostifidx        : 0x80000046
+          fabricencap      : vxlan # vxlan or mplsodup
+          fabricencapvalue : 12
+          v4routerip       : '11.1.1.1'
+          vroutermac       : macaddr/0066.0100.0001
+          vnic:
+            - id        : 51
+              count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/feff.0b01.0102
+              hostifidx : 0x80000046
+              ipcount : 1             # Local IP mapping per vnic
+              lmap    :
+                - id       : 51
+                  count    : 1
+                  keytype  : l3
+                  lmacaddr : macaddr/feff.0b01.0102
+                  lipaddr  : '11.1.1.2'
+              srcguard: false         # true or false (default false)
+              public  : false
+              tagged  : false         # true or false (default true)
+      nexthop:
+        - id         : 51
+          type       : overlay
+          count      : 1
+          tunnelid   : 1
+          origin     : discovered
+      routetbl:
+             - type: specific
+               routetype: disjoint
+               v4routes:
+                   - '11.1.2.0\24'
+               teptype : underlay
+      policy:
+        - type       : specific
+          policytype : default
+          direction  : bidir
+
 
 # ECMP:
 # Object types and order of creation of objects for different kinds of ECMP.

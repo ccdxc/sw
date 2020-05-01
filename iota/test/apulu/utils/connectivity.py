@@ -4,6 +4,7 @@ import iota.test.utils.traffic as traffic_utils
 import iota.test.apulu.config.api as config_api
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.subnet as subnet
+import vpc_pb2 as vpc_pb2
 
 def TriggerConnectivityTestAll(proto="icmp", af="ipv4", pktsize=128, sec_ip_test_type="all"):
     wl_pairs = []
@@ -123,6 +124,8 @@ def ConnectivityVRIPTest(proto='icmp', af='ipv4', pktsize=64,
 
     if scope == config_api.WORKLOAD_PAIR_SCOPE_INTRA_SUBNET:
         for vnic1 in vnics:
+            if vnic1.SUBNET.VPC.Type == vpc_pb2.VPC_TYPE_CONTROL:
+                continue
             wl = config_api.FindWorkloadByVnic(vnic1)
             assert(wl)
             dest_ip = vnic1.SUBNET.GetIPv4VRIP()
@@ -134,9 +137,13 @@ def ConnectivityVRIPTest(proto='icmp', af='ipv4', pktsize=64,
             sent_probes.update({wl.node_name: cur_cnt + probe_count})
     else:
         for vnic1 in vnics:
+            if vnic1.SUBNET.VPC.Type == vpc_pb2.VPC_TYPE_CONTROL:
+                continue
             wl = config_api.FindWorkloadByVnic(vnic1)
             assert(wl)
             for subnet1 in subnets:
+                if subnet1.VPC.Type == vpc_pb2.VPC_TYPE_CONTROL:
+                    continue
                 if subnet1.Node != vnic1.Node:
                     continue
                 if scope == config_api.WORKLOAD_PAIR_SCOPE_INTER_SUBNET and (vnic1.SUBNET.GID() == subnet1.GID()):

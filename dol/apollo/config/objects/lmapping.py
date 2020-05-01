@@ -294,6 +294,14 @@ class LocalMappingObjectClient(base.ConfigClientBase):
             ipv4_addresses.append(mapping.IP + "/" + v4pfxlen)
         return ipv4_addresses
 
+    def GetVnicIPs(self, vnic):
+        ipv4_addresses = []
+        for mapping in self.Objects(vnic.Node):
+            if mapping.IsV6() or (mapping.VNIC.GID() != vnic.GID()):
+                continue
+            ipv4_addresses.append(mapping.IP)
+        return ipv4_addresses
+
     def ChangeNode(self, lmap, target_node):
         logger.info(f"Changing node for {lmap}  {lmap.Node} => {target_node}")
         del self.Objs[lmap.Node][lmap.MappingId]

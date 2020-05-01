@@ -13,6 +13,7 @@ from apollo.config.store import client as EzAccessStoreClient
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
 from apollo.config.objects.dhcprelay import client as DHCPRelayClient
+from apollo.config.objects.dhcpproxy import client as DHCPProxyClient
 from apollo.config.objects.nexthop import client as NhClient
 from apollo.config.objects.nexthop_group import client as NhGroupClient
 from apollo.config.objects.interface import client as InterfaceClient
@@ -70,6 +71,13 @@ class VpcObject(base.ConfigObjectBase):
             self.__max_svc_mapping_shared_count = 1
             self.__svc_mapping_shared_count = 0
             self.SvcMappingIPAddr  = {}
+        elif spec.type == 'control':
+            self.Type = vpc_pb2.VPC_TYPE_CONTROL
+            self.IPPrefix[0] = ResmgrClient[node].GetVpcIPv6Prefix(self.VPCId)
+            if hasattr(spec, "v4prefix"):
+                self.IPPrefix[1] = ipaddress.ip_network(spec.v4prefix.replace('\\', '/'))
+            else:
+                self.IPPrefix[1] = ResmgrClient[node].GetVpcIPv4Prefix(self.VPCId)
         else:
             self.Type = vpc_pb2.VPC_TYPE_TENANT
             self.IPPrefix[0] = ResmgrClient[node].GetVpcIPv6Prefix(self.VPCId)
@@ -88,7 +96,13 @@ class VpcObject(base.ConfigObjectBase):
             self.PfxSel = 1
         else:
             self.PfxSel = 0
-        self.Vnid = next(ResmgrClient[node].VpcVxlanIdAllocator)
+        if getattr(spec, 'fabricencap', None) != None:
+            self.FabricEncap = utils.GetEncapType(spec.fabricencap)
+        if getattr(spec, 'fabricencapvalue', None) != None:
+            self.Vnid = spec.fabricencapvalue
+        else:
+            self.Vnid = next(ResmgrClient[node].VxlanIdAllocator)
+
         self.VirtualRouterMACAddr = ResmgrClient[node].VirtualRouterMacAllocator.get()
         self.Tos = 0 # to start with
         self.Mutable = utils.IsUpdateSupported()
@@ -124,7 +138,7 @@ class VpcObject(base.ConfigObjectBase):
 
         # Generate Tunnel configuration
         if hasattr(spec, "tunnel"):
-            tunnel.client.GenerateObjects(node, self, spec.tunnel)
+            tunnel.client.GenerateObjects(node, EzAccessStoreClient[node].GetDevice(), spec.tunnel)
 
         # Generate Tag configuration.
         if hasattr(spec, 'tagtbl'):
@@ -133,6 +147,10 @@ class VpcObject(base.ConfigObjectBase):
         # Generate Policy configuration.
         if hasattr(spec, 'policy'):
             policy.client.GenerateObjects(node, self, spec)
+
+        # Generate DHCP Policy configuration.
+        if hasattr(spec, 'dhcppolicy'):
+           DHCPProxyClient.GenerateObjects(node, self, spec)
 
         # Generate Route configuration.
         if hasattr(spec, 'routetbl'):
@@ -484,6 +502,9 @@ class VpcObjectClient(base.ConfigClientBase):
 
         # Create DHCP Relay Objects
         DHCPRelayClient.CreateObjects(node)
+
+        # Create DHCP Relay Objects
+        DHCPProxyClient.CreateObjects(node)
 
         # Create Nexthop object
         NhClient.CreateObjects(node)

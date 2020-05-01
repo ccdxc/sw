@@ -17,6 +17,7 @@ class InterfaceTypes(enum.IntEnum):
     L3 = 7
     LIF = 8
     LOOPBACK = 9
+    CONTROL = 10
 
 class Ports(enum.IntEnum):
     HOST=0
@@ -38,7 +39,8 @@ MODE2INTF_TBL = { 'host' : InterfaceTypes.ETH,
                   'switch': InterfaceTypes.UPLINK,
                   'uplink': InterfaceTypes.UPLINK,
                   'l3': InterfaceTypes.L3,
-                  'loopback': InterfaceTypes.LOOPBACK }
+                  'loopback': InterfaceTypes.LOOPBACK,
+                  'control': InterfaceTypes.CONTROL}
 
 ETH_IF_PARENT_PORT_SHIFT = 16
 ETH_IF_PARENT_PORT_MASK = 0xFF

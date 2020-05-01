@@ -51,6 +51,7 @@ proto_admin_state_to_pds_admin_state (pds::IfStatus state)
     switch (state) {
     case pds::IF_STATUS_DOWN:
         return PDS_IF_STATE_DOWN;
+    case pds::IF_STATUS_UP:
         return PDS_IF_STATE_UP;
     default:
         return PDS_IF_STATE_NONE;

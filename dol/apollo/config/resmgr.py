@@ -37,7 +37,7 @@ class Resmgr(base.ConfigObjectBase):
     #TODO: read from PDS header files / naples mem & init
     MAX_OPER = 1
     MAX_DEVICE = 1
-    MAX_INTERFACE = 3
+    MAX_INTERFACE = 4
     MAX_TUNNEL = 2048 if utils.IsPipelineApulu() else 1023
     MAX_NEXTHOP = 4095
     MAX_NEXTHOPGROUP = 2048
@@ -75,6 +75,7 @@ class Resmgr(base.ConfigObjectBase):
     MAX_UNDERLAY_NHS = 2
     MAX_OVERLAY_NHS = 8
     MAX_DHCP_RELAY = 16
+    MAX_DHCP_PROXY = 16
     MAX_NAT_PB = 1024
     MAX_BGP_SESSIONS = 5
     MAX_BGP_PEER_AF_SESSIONS = 5
@@ -152,7 +153,7 @@ class Resmgr(base.ConfigObjectBase):
         self.VxlanIdAllocator = iter(irange(80001, 81024))
         self.MirrorSessionIdAllocator = iter(irange(1, 8))
         self.PortIdAllocator = iter(irange(1, 4))
-        self.DhcpIdAllocator = iter(irange(1, 16))
+        self.DhcpIdAllocator = iter(irange(1, 32))
         self.NatPoolIdAllocator = iter(irange(1, 1000))
         self.PolicerIdAllocator = iter(irange(1, 2048))
         self.EvpnEviIdAllocator = iter(irange(1, 50))
@@ -371,6 +372,11 @@ class Resmgr(base.ConfigObjectBase):
         objs = EzAccessStoreClient[self.Node].GetDhcpRelayObjects()
         if len(objs) != 0:
             self.DhcpRelayAllocator = utils.rrobiniter(objs)
+
+    def CreateDHCPProxyAllocator(self):
+        objs = EzAccessStoreClient[self.Node].GetDhcpProxyObjects()
+        if len(objs) != 0:
+            self.DhcpProxyAllocator = utils.rrobiniter(objs)
 
     # Create subnets from base prefix
     # - base is a prefix in the form of '10.0.0.0/16'

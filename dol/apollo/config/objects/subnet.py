@@ -7,6 +7,7 @@ import copy
 import json
 from infra.common.logging import logger
 
+from infra.common.glopts  import GlobalOptions
 from apollo.config.store import EzAccessStore
 from apollo.config.store import client as EzAccessStoreClient
 from apollo.config.resmgr import client as ResmgrClient
@@ -16,6 +17,7 @@ from apollo.config.agent.api import ObjectTypes as ObjectTypes
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 from apollo.config.objects.dhcprelay import client as DHCPRelayClient
+from apollo.config.objects.dhcpproxy import client as DHCPProxyClient
 from apollo.config.objects.interface import client as InterfaceClient
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.rmapping as rmapping
@@ -104,7 +106,10 @@ class SubnetObject(base.ConfigObjectBase):
             node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid=node_uuid) if self.HostIfIdx else None
         # TODO: randomize maybe?
-        self.DHCPPolicyIds = list(map(lambda x: x.Id, DHCPRelayClient.Objects(node)))
+        if GlobalOptions.netagent:
+            self.DHCPPolicyIds = list(map(lambda x: x.Id, DHCPRelayClient.Objects(node)))
+        else:
+            self.DHCPPolicyIds = getattr(spec, 'dhcppolicy', None)
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         if self.IpV6Valid:
@@ -244,8 +249,12 @@ class SubnetObject(base.ConfigObjectBase):
             spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.POLICY))
         for policyid in self.EgV6SecurityPolicyIds:
             spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.POLICY))
-        for policyid in self.DHCPPolicyIds:
-            spec.DHCPPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.DHCP_RELAY))
+        if GlobalOptions.netagent:
+            for policyid in self.DHCPPolicyIds:
+                spec.DHCPPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.DHCP_RELAY))
+        else:
+            if self.DHCPPolicyIds != None:
+                spec.DHCPPolicyId.append(utils.PdsUuid.GetUUIDfromId(self.DHCPPolicyIds, ObjectTypes.DHCP_PROXY))
         utils.GetRpcEncap(self.Node, self.Vnid, self.Vnid, spec.FabricEncap)
         if utils.IsPipelineApulu():
             if self.HostIfUuid:

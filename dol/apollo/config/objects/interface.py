@@ -97,6 +97,26 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             self.port_num = getattr(spec, 'port', -1)
             self.encap = getattr(spec, 'encap', None)
             self.macaddr = getattr(spec, 'MACAddr', None)
+        elif (iftype == topo.InterfaceTypes.CONTROL):
+            if (hasattr(spec, 'vpcid')):
+                self.VpcId = spec.vpcid
+                self.VrfName = f'Vpc{spec.vpcid}'
+            self.ip_prefix = None
+            # We'll use the one in the cfgyml.
+            if hasattr(ifspec, 'ipprefix'):
+                self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
+                self.if_ip_prefix = ipaddress.ip_interface(ifspec.ipprefix.replace('\\', '/'))
+            else:
+                self.ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
+                self.if_ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
+            self.gateway = None
+            if hasattr(ifspec, 'gateway'):
+                self.gateway = ipaddress.IPv4Address(ifspec.gateway)
+            if utils.IsDol():
+                node_uuid = None
+            else:
+                node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
+            self.macaddr = getattr(spec, 'MACAddr', None) 
         elif (iftype == topo.InterfaceTypes.LOOPBACK):
             # If loopback ip exists in testbed json, use that,
             # else use from cfgyaml
@@ -108,13 +128,13 @@ class InterfaceInfoObject(base.ConfigObjectBase):
 
     def Show(self):
         if (self.__type == topo.InterfaceTypes.UPLINK):
-            res = str("port num : %d" % int(self.port_num))
+            res = f"port num : {self.port_num}"
         elif (self.__type == topo.InterfaceTypes.UPLINKPC):
-            res = str("port_bmap: %s" % self.port_bmap)
+            res = f"port_bmap: {self.port_bmap}"
         elif (self.__type == topo.InterfaceTypes.L3):
-            res = str("VPC:%s|ip:%s|port: %s|encap:%s|mac:%s"% \
-                    (self.VrfName, self.ip_prefix, self.Port, self.encap, \
-                    self.macaddr.get()))
+            res = f"VPC: {self.VrfName} ip: {self.ip_prefix} port: {self.Port} encap: {self.encap} mac: {self.macaddr.get()}"
+        elif (self.__type == topo.InterfaceTypes.CONTROL):
+            res = f"VPC:{self.VrfName} ip:{self.ip_prefix} mac:{self.macaddr.get()}"
         elif (self.__type == topo.InterfaceTypes.LOOPBACK):
             res = f"ip:{self.ip_prefix}"
         else:
@@ -268,6 +288,14 @@ class InterfaceObject(base.ConfigObjectBase):
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
             utils.GetRpcIfIPPrefix(self.IfInfo.if_ip_prefix, spec.L3IfSpec.Prefix)
 
+        if self.Type == topo.InterfaceTypes.CONTROL:
+            spec.Type = interface_pb2.IF_TYPE_CONTROL
+            utils.GetRpcIfIPPrefix(self.IfInfo.if_ip_prefix, spec.ControlIfSpec.Prefix)
+            spec.ControlIfSpec.MACAddress = self.IfInfo.macaddr.getnum()
+            if self.IfInfo.gateway:
+                spec.ControlIfSpec.Gateway.Af = types_pb2.IP_AF_INET
+                spec.ControlIfSpec.Gateway.V4Addr = int(self.IfInfo.gateway)
+
         if self.Type == topo.InterfaceTypes.LOOPBACK:
             spec.Type = interface_pb2.IF_TYPE_LOOPBACK
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.LoopbackIfSpec.Prefix)
@@ -315,6 +343,9 @@ class InterfaceObject(base.ConfigObjectBase):
             return False
         if spec.AdminStatus != interface_pb2.IF_STATUS_UP:
             return False
+        if self.Type == topo.InterfaceTypes.CONTROL:
+            if spec.Type != interface_pb2.IF_TYPE_CONTROL:
+                return False
         if self.Type == topo.InterfaceTypes.L3:
             if spec.Type != interface_pb2.IF_TYPE_L3:
                 return False
@@ -393,6 +424,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.INTERFACE, Resmgr.MAX_INTERFACE)
         self.__uplinkl3ifs = defaultdict(dict)
         self.__loopback_if = defaultdict(dict)
+        self.__control_if = defaultdict(dict)
         self.__uplinkl3ifs_iter = defaultdict(dict)
         self.__hostifs = defaultdict(dict)
         self.__hostifs_iter = defaultdict(dict)
@@ -541,12 +573,32 @@ class InterfaceObjectClient(base.ConfigClientBase):
             self.Objs[node].update({ifobj.InterfaceId: ifobj})
             self.__loopback_if[node] = ifobj
 
+    def __generate_control_interfaces(self, node, parent, iflist):
+        spec = InterfaceSpec_()
+        spec.mode = 'control'
+        spec.id = 0
+        for ifspec in iflist:
+            if ifspec.iftype != 'control':
+                continue
+            rdata = None
+            spec.id = 'ctrl0'
+            if (hasattr(ifspec, 'macaddress')):
+                spec.MACAddr = ifspec.macaddress
+            else:
+                spec.MACAddr = ResmgrClient[node].DeviceMacAllocator.get()
+            spec.vpcid = parent.VPCId
+            spec.status = ifspec.ifadminstatus
+            ifobj = InterfaceObject(spec, ifspec, node=node, spec_json=rdata)
+            self.Objs[node].update({ifobj.InterfaceId: ifobj})
+            self.__control_if[node] = ifobj
+
     def GenerateObjects(self, node, parent, topospec):
         if not utils.IsL3InterfaceSupported():
             return
         iflist = getattr(topospec, 'interface', [])
         self.__generate_l3_uplink_interfaces(node, parent, iflist)
         self.__generate_loopback_interfaces(node, parent, iflist)
+        self.__generate_control_interfaces(node, parent, iflist)
         return
 
     def AddObjToDict(self, obj):
@@ -610,6 +662,15 @@ class InterfaceObjectClient(base.ConfigClientBase):
                     lo_obj.Show()
                     msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), [lo_obj]))
                     api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
+
+                # create control interface
+                ctrl_obj = self.__control_if[node]
+                if ctrl_obj:
+                    logger.info(f"Creating 1 Control {self.ObjType.name} {ctrl_obj} Objects in {node}")
+                    ctrl_obj.Show()
+                    msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), [ctrl_obj]))
+                    api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
+
         else:
             obj = self.__loopback_if[node]
             obj.Show()
@@ -633,6 +694,15 @@ class InterfaceObjectClient(base.ConfigClientBase):
         resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
         return resp
 
+    def GetNumHwObjects(self, node):
+        count = len(self.Objects(node))
+        # TODO can be improved, if object has a reference to gen object
+        for obj in self.Objects(node):
+            if (obj.HwHabitant == False) or (obj.Type == topo.InterfaceTypes.CONTROL):
+                count = count - 1
+        logger.info(f"GetNumHwObjects returned {count} for {self.ObjType.name} in {node}")
+        return count
+
     def ReadObjects(self, node):
         logger.info(f"Reading {self.ObjType.name} Objects from {node}")
         msg = self.GetGrpcReadAllMessage(node)
@@ -653,7 +723,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             for resp in obj.Response:
                 key = self.GetKeyfromSpec(resp.Spec)
                 inf = self.GetInterfaceObject(node, key)
-                if inf is not None:
+                if inf is not None and inf.Type != topo.InterfaceTypes.CONTROL:
                     numObjs += 1
                     if not utils.ValidateObject(inf, resp):
                         logger.error("INTERFACE validation failed for ", resp.Spec)

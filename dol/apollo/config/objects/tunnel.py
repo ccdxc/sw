@@ -34,7 +34,6 @@ class TunnelObject(base.ConfigObjectBase):
             self.Id = next(ResmgrClient[node].TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id, self.ObjType)
-        # TODO: Tunnel gets generated from VPC / DEVICE. Fix this
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
         if utils.IsDol() and self.DEVICE.OverlayRoutingEn:
