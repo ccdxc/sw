@@ -29,6 +29,21 @@ func (n *VcenterNode) cleanUpVcenter() error {
 		return err
 	}
 
+	// Disconnect all Host from managedNodes
+	for _, node := range n.managedNodes {
+
+		// Handling case where host was PXE-booted
+		log.Infof("Attempting to disconnect host from current vCenter %v", node.GetNodeInfo().IPAddress)
+		err = vc.DisconnectHost(node.GetNodeInfo().IPAddress)
+		if err == nil {
+			log.Infof("Removing node from vcenter %s", node.GetNodeInfo().IPAddress)
+		} else {
+			log.Warnf("Failed to disconnect host from vcenter %v %v", node.GetNodeInfo().IPAddress, err.Error())
+			// Continue on failure - assuming host is not connected
+		}
+		time.Sleep(2 * time.Second) // Give an interval
+	}
+
 	dvsSpec := vmware.DVSwitchSpec{Name: n.DistributedSwitch}
 
 	dc, err := vc.SetupDataCenter(n.DCName)

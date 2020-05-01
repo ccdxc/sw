@@ -455,9 +455,9 @@ func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.Client
 		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_VCENTER {
 			n.SetDC(node.DcName)
 			n.SetSwitch(node.Switch)
+			n.SetupNode()
 		}
 		cnodes = append(cnodes, n)
-
 	}
 
 	//First try to clean up nodes
