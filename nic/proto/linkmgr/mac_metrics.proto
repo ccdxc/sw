@@ -106,6 +106,10 @@ message MacMetrics {
     delphi.Counter      rx_pripause_7_1us_count = 88 [(venice.metricsField) = {DisplayName: "Rx Pri7Pause1US Count" Description: "Receive Pri#7 Pause 1US Count"}];
     delphi.Counter      rx_pause_1us_count      = 89 [(venice.metricsField) = {DisplayName: "Rx Pause1US Count" Description: "Receive Standard Pause 1US Count"}];
     delphi.Counter      frames_tx_truncated     = 90 [(venice.metricsField) = {DisplayName: "Tx Truncated Frames" Description: "Frames Truncated"}];
+    delphi.Counter      tx_pps                  = 91 [(venice.metricsField) = {DisplayName: "Tx PPS" Description: "Transmit BW Packets per second"}];
+    delphi.Counter      tx_bytesps              = 92 [(venice.metricsField) = {DisplayName: "Tx BPS" Description: "Transmit BW Bytes per second"}];
+    delphi.Counter      rx_pps                  = 93 [(venice.metricsField) = {DisplayName: "Rx PPS" Description: "Receive BW Packets per second"}];
+    delphi.Counter      rx_bytesps              = 94 [(venice.metricsField) = {DisplayName: "Rx BPS" Description: "Receive BW Bytes per second"}];
 }
 
 message MgmtMacMetrics {
@@ -148,4 +152,8 @@ message MgmtMacMetrics {
     delphi.Counter      frames_tx_multicast     = 31 [(venice.metricsField) = {DisplayName: "Tx Multicast Frames" Description: "Frames Transmitted with Multicast Address"}];
     delphi.Counter      frames_tx_broadcast     = 32 [(venice.metricsField) = {DisplayName: "Tx Broadcast Frames" Description: "Frames Transmitted with Broadcast Address"}];
     delphi.Counter      frames_tx_pause         = 33 [(venice.metricsField) = {DisplayName: "Tx Pause Frames" Description: "Frames Transmitted of type PAUSE"}];
+    delphi.Counter      tx_pps                  = 34 [(venice.metricsField) = {DisplayName: "Tx PPS" Description: "Transmit BW Packets per second"}];
+    delphi.Counter      tx_bytesps              = 35 [(venice.metricsField) = {DisplayName: "Tx BPS" Description: "Transmit BW Bytes per second"}];
+    delphi.Counter      rx_pps                  = 36 [(venice.metricsField) = {DisplayName: "Rx PPS" Description: "Receive BW Packets per second"}];
+    delphi.Counter      rx_bytesps              = 37 [(venice.metricsField) = {DisplayName: "Rx BPS" Description: "Receive BW Bytes per second"}];
 }

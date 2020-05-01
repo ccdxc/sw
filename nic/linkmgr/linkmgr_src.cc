@@ -21,6 +21,7 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/include/hal_cfg_db.hpp"
+#include "nic/hal/src/stats/stats.hpp"
 
 using hal::cfg_op_ctxt_t;
 using hal::dhl_entry_t;
@@ -1181,9 +1182,9 @@ port_disable (uint32_t port_num)
 }
 
 static void
-port_led_blink (uint32_t key, port_args_t *port_args) {
+port_led_blink (uint32_t key, port_args_t *port_args, delphi::objects::MacMetricsPtr &mac_metrics_old) {
     pal_led_color_t blink = LED_COLOR_NONE;
-    delphi::objects::MacMetricsPtr mac_metrics_old;
+    // delphi::objects::MacMetricsPtr mac_metrics_old;
     int phy_port = sdk::lib::catalog::logical_port_to_phy_port(key);
 
     mac_metrics_old = delphi::objects::MacMetrics::Find(key);
@@ -1211,7 +1212,7 @@ port_led_blink (uint32_t key, port_args_t *port_args) {
         }
 
         // release memory
-        delphi::objects::MacMetrics::Release(mac_metrics_old);
+        // delphi::objects::MacMetrics::Release(mac_metrics_old);
     }
 }
 
@@ -1219,6 +1220,12 @@ static void
 port_mgmt_metrics_update (uint32_t port_num, port_args_t *port_args)
 {
     delphi::objects::mgmtmacmetrics_t mgmt_mac_metrics;
+    delphi::objects::MgmtMacMetricsPtr mac_metrics_old;
+    uint64_t tx_pkts = 0, curr_tx_pkts = 0, tx_bytes = 0, curr_tx_bytes = 0,
+             rx_pkts = 0, curr_rx_pkts = 0, rx_bytes = 0, curr_rx_bytes = 0;
+    float interval = (float)HAL_STATS_COLLECTION_INTVL/TIME_MSECS_PER_SEC;
+
+    mac_metrics_old = delphi::objects::MgmtMacMetrics::Find(port_num);
 
     mgmt_mac_metrics.frames_rx_ok = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_OK];
     mgmt_mac_metrics.frames_rx_all = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_ALL];
@@ -1253,13 +1260,46 @@ port_mgmt_metrics_update (uint32_t port_num, port_args_t *port_args)
     mgmt_mac_metrics.frames_tx_broadcast = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_BROADCAST];
     mgmt_mac_metrics.frames_tx_pause = port_args->stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_PAUSE];
 
+    // Calculate BW
+    if (mac_metrics_old != nullptr) {
+        tx_pkts = mac_metrics_old->frames_tx_all()->Get();
+        tx_bytes = mac_metrics_old->octets_tx_total()->Get();
+        rx_pkts = mac_metrics_old->frames_rx_all()->Get();
+        rx_bytes = mac_metrics_old->octets_rx_all()->Get();
+    }
+
+    curr_tx_pkts = mgmt_mac_metrics.frames_tx_all;
+    curr_tx_bytes = mgmt_mac_metrics.octets_tx_total;
+    curr_rx_pkts = mgmt_mac_metrics.frames_rx_all;
+    curr_rx_bytes = mgmt_mac_metrics.octets_rx_all;
+
+    mgmt_mac_metrics.tx_pps = BW(tx_pkts, curr_tx_pkts, interval);
+    mgmt_mac_metrics.tx_bytesps = BW(tx_bytes, curr_tx_bytes, interval);
+    mgmt_mac_metrics.rx_pps = BW(rx_pkts, curr_rx_pkts, interval);
+    mgmt_mac_metrics.rx_bytesps = BW(rx_bytes, curr_rx_bytes, interval);
+
+#if 0
+    HAL_TRACE_DEBUG("Mgmt Mac BW port: {} intervaL {} : tx_pps: {}, tx_bytesps: {}, rx_pps: {}, rx_bytesps: {}",
+                    port_num, interval,
+                    mgmt_mac_metrics.tx_pps, mgmt_mac_metrics.tx_bytesps, 
+                    mgmt_mac_metrics.rx_pps, mgmt_mac_metrics.rx_bytesps);
+#endif
+
     delphi::objects::MgmtMacMetrics::Publish(port_num, &mgmt_mac_metrics);
+
+    // release memory
+    if (mac_metrics_old != nullptr) {
+        delphi::objects::MgmtMacMetrics::Release(mac_metrics_old);
+    }
 }
 
 static void
-port_uplink_metrics_update (uint32_t port_num, port_args_t *port_args)
+port_uplink_metrics_update (uint32_t port_num, port_args_t *port_args, delphi::objects::MacMetricsPtr &mac_metrics_old)
 {
     delphi::objects::macmetrics_t mac_metrics;
+    uint64_t tx_pkts = 0, curr_tx_pkts = 0, tx_bytes = 0, curr_tx_bytes = 0,
+             rx_pkts = 0, curr_rx_pkts = 0, rx_bytes = 0, curr_rx_bytes = 0;
+    float interval = (float)HAL_STATS_COLLECTION_INTVL/TIME_MSECS_PER_SEC;
 
     mac_metrics.frames_rx_ok = port_args->stats_data[port::MacStatsType::FRAMES_RX_OK];
     mac_metrics.frames_rx_all = port_args->stats_data[port::MacStatsType::FRAMES_RX_ALL];
@@ -1351,6 +1391,31 @@ port_uplink_metrics_update (uint32_t port_num, port_args_t *port_args)
     mac_metrics.rx_pause_1us_count = port_args->stats_data[port::MacStatsType::RX_PAUSE_1US_COUNT];
     mac_metrics.frames_tx_truncated = port_args->stats_data[port::MacStatsType::FRAMES_TX_TRUNCATED];
 
+    // Calculate BW
+    if (mac_metrics_old != nullptr) {
+        tx_pkts = mac_metrics_old->frames_tx_all()->Get();
+        tx_bytes = mac_metrics_old->octets_tx_total()->Get();
+        rx_pkts = mac_metrics_old->frames_rx_all()->Get();
+        rx_bytes = mac_metrics_old->octets_rx_all()->Get();
+    }
+
+    curr_tx_pkts = mac_metrics.frames_tx_all;
+    curr_tx_bytes = mac_metrics.octets_tx_total;
+    curr_rx_pkts = mac_metrics.frames_rx_all;
+    curr_rx_bytes = mac_metrics.octets_rx_all;
+
+    mac_metrics.tx_pps = BW(tx_pkts, curr_tx_pkts, interval);
+    mac_metrics.tx_bytesps = BW(tx_bytes, curr_tx_bytes, interval);
+    mac_metrics.rx_pps = BW(rx_pkts, curr_rx_pkts, interval);
+    mac_metrics.rx_bytesps = BW(rx_bytes, curr_rx_bytes, interval);
+
+#if 0
+    HAL_TRACE_DEBUG("Mac BW port: {} : tx_pps: {}, tx_bytesps: {}, rx_pps: {}, rx_bytesps: {}",
+                    port_num,
+                    mac_metrics.tx_pps, mac_metrics.tx_bytesps, 
+                    mac_metrics.rx_pps, mac_metrics.rx_bytesps);
+#endif
+
     delphi::objects::MacMetrics::Publish(port_num, &mac_metrics);
 }
 
@@ -1360,6 +1425,7 @@ port_metrics_update_helper (port_args_t *port_args,
                             hal_ret_t   hal_ret)
 {
     port_t *pi_p   = NULL;
+    delphi::objects::MacMetricsPtr mac_metrics_old;
 
     if (hal_ret != HAL_RET_OK) {
         return;
@@ -1369,12 +1435,17 @@ port_metrics_update_helper (port_args_t *port_args,
     if (pi_p == NULL) {
         return;
     }
-    port_led_blink(pi_p->port_num, port_args);
+    port_led_blink(pi_p->port_num, port_args, mac_metrics_old);
 
     if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
         port_mgmt_metrics_update (pi_p->port_num, port_args);
     } else {
-        port_uplink_metrics_update (pi_p->port_num, port_args);
+        port_uplink_metrics_update (pi_p->port_num, port_args, mac_metrics_old);
+    }
+
+    if (mac_metrics_old != nullptr) {
+        // release memory
+        delphi::objects::MacMetrics::Release(mac_metrics_old);
     }
 }
 

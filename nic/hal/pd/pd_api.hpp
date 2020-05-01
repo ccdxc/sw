@@ -502,6 +502,11 @@ pd_lif_mem_free_args_init (pd_lif_mem_free_args_t *args)
     return;
 }
 
+typedef struct pd_lif_compute_bw_args_s {
+    uint32_t lif_id;
+    uint32_t interval;
+} pd_lif_compute_bw_args_t;
+
 // if apis
 
 typedef struct pd_if_create_args_s {
@@ -706,6 +711,11 @@ typedef struct pd_if_nwsec_update_args_s {
     if_t            *intf;
     nwsec_profile_t *nwsec_prof;
 } __PACK__ pd_if_nwsec_update_args_t;
+
+typedef struct pd_if_compute_bw_args_s {
+    if_t     *hal_if;
+    uint32_t interval;
+} pd_if_compute_bw_args_t;
 
 static inline void
 pd_if_nwsec_update_args_init (pd_if_nwsec_update_args_t *args)
@@ -3370,8 +3380,10 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT,       348, "PD_FUNC_ID_QOS_SWM_QUEUE_DEINIT")  \
     ENTRY(PD_FUNC_ID_IF_INP_MAC_VLAN_PGM,        349, "PD_FUNC_ID_IF_INP_MAC_VLAN_PGM") \
     ENTRY(PD_FUNC_ID_IF_INP_PROP_PGM,            350, "PD_FUNC_ID_IF_INP_PROP_PGM") \
-    ENTRY(PD_FUNC_ID_LIF_SCHED_DATA,            351, "PD_FUNC_ID_LIF_SCHED_DATA")  \
-    ENTRY(PD_FUNC_ID_MAX,                        352, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_LIF_SCHED_DATA,             351, "PD_FUNC_ID_LIF_SCHED_DATA")  \
+    ENTRY(PD_FUNC_ID_LIF_COMPUTE_BW,             352, "PD_FUNC_ID_LIF_COMPUTE_BW") \
+    ENTRY(PD_FUNC_ID_IF_COMPUTE_BW,              353, "PD_FUNC_ID_IF_COMPUTE_BW") \
+    ENTRY(PD_FUNC_ID_MAX,                        354, "pd_func_id_max")
 
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
@@ -3441,6 +3453,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_lif_stats_get);
         PD_UNION_ARGS_FIELD(pd_lif_sched_control);
         PD_UNION_ARGS_FIELD(pd_lif_sched_get);
+        PD_UNION_ARGS_FIELD(pd_lif_compute_bw);
 
 
         // if calls
@@ -3455,6 +3468,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_if_restore);
         PD_UNION_ARGS_FIELD(pd_if_inp_mac_vlan_pgm);
         PD_UNION_ARGS_FIELD(pd_if_inp_prop_pgm);
+        PD_UNION_ARGS_FIELD(pd_if_compute_bw);
 
         // ep calls
         PD_UNION_ARGS_FIELD(pd_ep_create);
@@ -3889,6 +3903,8 @@ PD_FUNCP_TYPEDEF(pd_lif_get);
 PD_FUNCP_TYPEDEF(pd_lif_stats_get);
 PD_FUNCP_TYPEDEF(pd_lif_sched_control);
 PD_FUNCP_TYPEDEF(pd_lif_sched_get);
+PD_FUNCP_TYPEDEF(pd_lif_compute_bw);
+PD_FUNCP_TYPEDEF(pd_if_compute_bw);
 
 
 // if calls

@@ -281,6 +281,11 @@ DEFINE_ENUM_TO_STR(hal_ret_t, HAL_RET_ENTRIES)
 
 #undef HAL_RET_ENTRIES
 
+#define BW(x, curr_x, interval)     \
+    ((x == curr_x) ? 0 :            \
+    (((curr_x > x) ? (curr_x - x) : ((UINT64_MAX-x) + curr_x)) / interval))
+
+
 #define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
 #define ntohll(x) ((1==ntohl(1)) ? (x) : ((uint64_t)ntohl((x) & 0xFFFFFFFF) << 32) | ntohl((x) >> 32))
 

@@ -128,6 +128,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_LIF_STATS_GET, pd_lif_stats_get);
     PD_FUNC_LOAD(PD_FUNC_ID_LIF_SCHED_DATA, pd_lif_sched_get);
     PD_FUNC_LOAD(PD_FUNC_ID_LIF_SCHED_CONTROL, pd_lif_sched_control);
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_COMPUTE_BW, pd_lif_compute_bw);
 
     // if pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_IF_CREATE, pd_if_create);
@@ -141,6 +142,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_IF_RESTORE, pd_if_restore);
     PD_FUNC_LOAD(PD_FUNC_ID_IF_INP_MAC_VLAN_PGM, pd_if_inp_mac_vlan_pgm);
     PD_FUNC_LOAD(PD_FUNC_ID_IF_INP_PROP_PGM, pd_if_inp_prop_pgm);
+    PD_FUNC_LOAD(PD_FUNC_ID_IF_COMPUTE_BW, pd_if_compute_bw);
 
     // ep pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_EP_CREATE, pd_ep_create);

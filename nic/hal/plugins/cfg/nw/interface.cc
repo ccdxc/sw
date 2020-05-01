@@ -296,6 +296,50 @@ find_if_by_handle (hal_handle_t handle)
 #endif
 }
 
+hal_ret_t
+if_compute_bw (uint32_t interval)
+{
+    struct bw_cb_t {
+        uint32_t interval;
+    } ctxt = {};
+
+    // Take read lock
+    hal_handle_cfg_db_lock(true, true);
+
+    auto walk_cb = [](void *ht_entry, void *ctxt) {
+        hal_ret_t ret = HAL_RET_OK;
+        hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+        bw_cb_t *ctx = (bw_cb_t *)ctxt;
+        if_t *hal_if = NULL;
+        pd::pd_func_args_t pd_func_args = {0};
+        pd::pd_if_compute_bw_args_t bw_args = {0};
+
+        hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+        if (hal_if->if_type != intf::IF_TYPE_UPLINK) {
+            return false;
+        }
+
+        bw_args.hal_if = hal_if;
+        bw_args.interval = ctx->interval;
+        pd_func_args.pd_if_compute_bw = &bw_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_COMPUTE_BW,
+                              &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to compute bw for if {}. err: {}",
+                      hal_if->if_id, ret);
+        }
+        return false;
+    };
+
+    ctxt.interval = interval;
+    g_hal_state->if_id_ht()->walk(walk_cb, &ctxt);
+
+    // Release read lock
+    hal_handle_cfg_db_lock(true, false);
+
+    return HAL_RET_OK;
+}
+
 if_t *
 find_tnnlif_by_dst_ip (IfTunnelEncapType encap_type, ip_addr_t *ip)
 {

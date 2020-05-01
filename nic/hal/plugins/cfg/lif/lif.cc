@@ -2659,6 +2659,51 @@ lif_disable_tx_scheduler (void)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+lif_compute_bw (uint32_t interval)
+{
+    struct bw_cb_t {
+        uint32_t interval;
+    } ctxt = {};
+
+    // Take read lock
+    hal_handle_cfg_db_lock(true, true);
+
+    auto walk_cb = [](void *ht_entry, void *ctxt) {
+        hal_ret_t ret = HAL_RET_OK;
+        hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+        bw_cb_t *ctx = (bw_cb_t *)ctxt;
+        lif_t *lif = (lif_t *)hal_handle_get_obj(entry->handle_id);
+        pd::pd_func_args_t           pd_func_args = {0};
+        pd::pd_lif_compute_bw_args_t bw_args = {0};
+
+        if (lif->type == types::LIF_TYPE_SWM ||
+            lif->type == types::LIF_TYPE_NONE ||
+            lif->type == types::LIF_TYPE_MNIC_CPU) {
+            return false;
+        }
+
+        bw_args.lif_id = lif->lif_id;
+        bw_args.interval = ctx->interval;
+        pd_func_args.pd_lif_compute_bw = &bw_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_COMPUTE_BW,
+                              &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to compute bw for lif {}. err: {}",
+                      lif->lif_id, ret);
+        }
+        return false;
+    };
+
+    ctxt.interval = interval;
+    g_hal_state->lif_id_ht()->walk(walk_cb, &ctxt);
+
+    // Release read lock
+    hal_handle_cfg_db_lock(true, false);
+
+    return HAL_RET_OK;
+}
+
 //-----------------------------------------------------------------------------
 // adds filter into lif list
 //-----------------------------------------------------------------------------

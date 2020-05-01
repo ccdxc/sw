@@ -332,6 +332,16 @@
 #define LIF_STATS_TX_OPCODE_CSUM_HW_OFFSET          664
 #define LIF_STATS_TX_OPCODE_CSUM_TSO_OFFSET         672
 
+// For BW Calculation
+#define LIF_STATS_TX_PKTS_OFFSET                    704
+#define LIF_STATS_TX_BYTES_OFFSET                   712
+#define LIF_STATS_RX_PKTS_OFFSET                    720
+#define LIF_STATS_RX_BYTES_OFFSET                   728
+#define LIF_STATS_TX_PPS_OFFSET                     736
+#define LIF_STATS_TX_BPS_OFFSET                     744
+#define LIF_STATS_RX_PPS_OFFSET                     752
+#define LIF_STATS_RX_BPS_OFFSET                     760
+
 #define LIF_STATS_RDMA_REQ_STAT(i) \
         ((i - LIF_STATS_REQ_DEBUG_ERR_START_OFFSET) / 8)
 

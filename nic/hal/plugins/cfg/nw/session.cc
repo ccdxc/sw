@@ -10,6 +10,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 #include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
@@ -3583,6 +3584,11 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     // Repin inband enics, if bond mode changed
     ret = hal_if_repin_inb_enics();
+
+    // Compute BW on lifs
+    ret = lif_compute_bw(1 /* secs */);
+    // Compute BW on uplinks
+    // ret = if_compute_bw(1 /* secs */);
 
    if (!g_mpu_prog_gen_done) {
         sret = sdk::p4::p4_dump_program_info(hal::g_hal_cfg.cfg_path.c_str());

@@ -343,6 +343,8 @@ message LifTxStats {
   uint64           multicast_bytes_ok       = 10;
   uint64           broadcast_bytes_ok       = 11;
   uint64           tso                      = 12;
+  uint64           pps                      = 13;
+  uint64           bytesps                  = 14;
 }
 
 message LifRxStats {
@@ -371,6 +373,8 @@ message LifRxStats {
   uint64           frames_1518              = 23;
   uint64           frames_to_max            = 24;
   qos.PolicerStats policer_stats            = 25;    // Policer stats
+  uint64           pps                      = 26;
+  uint64           bytesps                  = 27;
 }
 
 message DataLifStats {
@@ -600,6 +604,10 @@ message UplinkResponseInfo {
     uint32      uplink_idx      = 3;    // Unique id for every Uplink/Uplink PC. Used to maintain l2seg membership
     uint32      num_l2segs      = 4;    // number of l2segs configured on this uplink
     uint32      hw_port_num     = 5;    // hw port number. aka tm_oport.
+    uint64      tx_pps          = 6;
+    uint64      tx_bytesps      = 7;
+    uint64      rx_pps          = 8;
+    uint64      rx_bytesps      = 9;
 }
 
 // Enic <-> L2seg membership info

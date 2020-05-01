@@ -3,6 +3,7 @@
 #include "nic/hal/pd/iris/lif/lif_pd.hpp"
 #include "nic/hal/pd/iris/nw/enicif_pd.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
+#include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
@@ -919,21 +920,8 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
     rx_stats->set_broadcast_bytes_ok(lif_metrics.rx_broadcast_bytes);
     rx_stats->set_drops(lif_metrics.rx_queue_empty_drops +
                         lif_metrics.rx_queue_disabled_drops);
-#if 0
-    rx_stats->set_frames_ok(lif_metrics.);
-    rx_stats->set_bytes_ok(lif_metrics.);
-    rx_stats->set_no_bufs(lif_metrics.);
-    rx_stats->set_errors(lif_metrics.);
-    rx_stats->set_rss(lif_metrics.);
-    rx_stats->set_crc_errors(lif_metrics.);
-    rx_stats->set_frames_64(lif_metrics.);
-    rx_stats->set_frames_127(lif_metrics.);
-    rx_stats->set_frames_255(lif_metrics.);
-    rx_stats->set_frames_511(lif_metrics.);
-    rx_stats->set_frames_1024(lif_metrics.);
-    rx_stats->set_frames_1518(lif_metrics.);
-    rx_stats->set_frames_to_max(lif_metrics.);
-#endif
+    rx_stats->set_pps(lif_metrics.rx_pps);
+    rx_stats->set_bytesps(lif_metrics.rx_bytesps);
     tx_stats->set_unicast_frames_ok(lif_metrics.tx_unicast_packets);
     tx_stats->set_multicast_frames_ok(lif_metrics.tx_multicast_packets);
     tx_stats->set_broadcast_frames_ok(lif_metrics.tx_broadcast_packets);
@@ -943,10 +931,8 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
     tx_stats->set_unicast_bytes_ok(lif_metrics.tx_unicast_bytes);
     tx_stats->set_multicast_bytes_ok(lif_metrics.tx_multicast_bytes);
     tx_stats->set_broadcast_bytes_ok(lif_metrics.tx_broadcast_bytes);
-#if 0
-    tx_stats->set_drops(lif_metrics.tx_queue_empty_drops +
-                        lif_metrics.tx_queue_disabled_drops);
-#endif
+    tx_stats->set_pps(lif_metrics.tx_pps);
+    tx_stats->set_bytesps(lif_metrics.tx_bytesps);
 
     HAL_TRACE_VERBOSE("lif: hw_id: {}, Rx: Uc: {}, Mc: {}, Bc: {}, "
                     "Bytes: Uc: {}, Mc: {}, Bc: {}, Drops: {}",
@@ -978,6 +964,108 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
                     lif_metrics.tx_drop_broadcast_bytes);
 
     return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_lif_compute_bw (pd_func_args_t *pd_func_args)
+{
+    pd_lif_compute_bw_args_t *args = pd_func_args->pd_lif_compute_bw;
+    sdk_ret_t ret = SDK_RET_OK;
+    delphi::objects::lifmetrics_t lif_metrics = {0};
+    sdk::types::mem_addr_t stats_mem_addr, bw_stats_mem_addr;
+    uint64_t tx_pkts, curr_tx_pkts, tx_bytes, curr_tx_bytes,
+             rx_pkts, curr_rx_pkts, rx_bytes, curr_rx_bytes;
+    uint32_t lif_id = args->lif_id;
+    uint32_t interval = args->interval;
+
+    stats_mem_addr = asicpd_get_mem_addr(ASIC_HBM_REG_LIF_STATS);
+
+    stats_mem_addr += lif_id << LIF_STATS_SIZE_SHIFT;
+
+    ret = sdk::asic::asic_mem_read(stats_mem_addr, (uint8_t *)&lif_metrics,
+                                   sizeof(delphi::objects::lifmetrics_t));
+    if (ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats for lif {}, ret {}",
+                      lif_id, ret);
+        return hal_sdk_ret_to_hal_ret(ret);
+    }
+
+    tx_pkts  = lif_metrics.tx_pkts;
+    tx_bytes = lif_metrics.tx_bytes;
+    rx_pkts  = lif_metrics.rx_pkts;
+    rx_bytes = lif_metrics.rx_bytes;
+
+    curr_tx_pkts = lif_metrics.tx_unicast_packets + 
+                    lif_metrics.tx_multicast_packets +
+                    lif_metrics.tx_broadcast_packets +
+                    lif_metrics.tx_drop_unicast_packets +
+                    lif_metrics.tx_drop_multicast_packets +
+                    lif_metrics.tx_drop_broadcast_packets +
+                    lif_metrics.tx_rdma_ucast_packets +
+                    lif_metrics.tx_rdma_mcast_packets +
+                    lif_metrics.tx_rdma_cnp_packets;
+
+    curr_tx_bytes = lif_metrics.tx_unicast_bytes + 
+                    lif_metrics.tx_multicast_bytes +
+                    lif_metrics.tx_broadcast_bytes +
+                    lif_metrics.tx_drop_unicast_bytes +
+                    lif_metrics.tx_drop_multicast_bytes +
+                    lif_metrics.tx_drop_broadcast_bytes +
+                    lif_metrics.tx_rdma_ucast_bytes +
+                    lif_metrics.tx_rdma_mcast_bytes;
+
+    curr_rx_pkts = lif_metrics.rx_unicast_packets + 
+                    lif_metrics.rx_multicast_packets +
+                    lif_metrics.rx_broadcast_packets +
+                    lif_metrics.rx_drop_unicast_packets +
+                    lif_metrics.rx_drop_multicast_packets +
+                    lif_metrics.rx_drop_broadcast_packets +
+                    lif_metrics.rx_rdma_ucast_packets +
+                    lif_metrics.rx_rdma_mcast_packets +
+                    lif_metrics.rx_rdma_cnp_packets +
+                    lif_metrics.rx_rdma_ecn_packets;
+
+    curr_rx_bytes = lif_metrics.rx_unicast_bytes + 
+                    lif_metrics.rx_multicast_bytes +
+                    lif_metrics.rx_broadcast_bytes +
+                    lif_metrics.rx_drop_unicast_bytes +
+                    lif_metrics.rx_drop_multicast_bytes +
+                    lif_metrics.rx_drop_broadcast_bytes +
+                    lif_metrics.rx_rdma_ucast_bytes +
+                    lif_metrics.rx_rdma_mcast_bytes;
+    
+    lif_metrics.tx_pps = BW(tx_pkts, curr_tx_pkts, interval);
+    lif_metrics.tx_bytesps = BW(tx_bytes, curr_tx_bytes, interval);
+    lif_metrics.rx_pps = BW(rx_pkts, curr_rx_pkts, interval);
+    lif_metrics.rx_bytesps = BW(rx_bytes, curr_rx_bytes, interval);
+    lif_metrics.tx_pkts = curr_tx_pkts;
+    lif_metrics.tx_bytes = curr_tx_bytes;
+    lif_metrics.rx_pkts = curr_rx_pkts;
+    lif_metrics.rx_bytes = curr_rx_bytes;
+
+    bw_stats_mem_addr = stats_mem_addr + LIF_STATS_TX_PKTS_OFFSET;
+
+    ret = sdk::asic::asic_mem_write(bw_stats_mem_addr, 
+                                    (uint8_t *)&(lif_metrics.tx_pkts),
+                                    8 * 8); // 8 fields
+    if (ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Error writing BW stats for lif {}, ret {}",
+                      lif_id, ret);
+        return hal_sdk_ret_to_hal_ret(ret);
+    }
+
+#if 0
+    HAL_TRACE_DEBUG("Computed BW lif: {}, interval: {}, "
+                    "TX PPS: {}, BPS: {}, PKTS: {}, BYTES: {}, "
+                    "RX PPS: {}, BPS: {}, PKTS: {}, BYTES: {}",
+                    lif_id, interval, 
+                    lif_metrics.tx_pps, lif_metrics.tx_bytesps, 
+                    lif_metrics.tx_pkts, lif_metrics.tx_bytes,
+                    lif_metrics.rx_pps, lif_metrics.rx_bytesps, 
+                    lif_metrics.rx_pkts, lif_metrics.rx_bytes);
+#endif
+
+    return hal_sdk_ret_to_hal_ret(ret);
 }
 
 typedef struct lif_pd_rx_policer_stats_s {

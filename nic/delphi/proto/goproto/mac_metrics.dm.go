@@ -191,6 +191,14 @@ type MacMetrics struct {
 
 	FramesTxTruncated metrics.Counter
 
+	TxPps metrics.Counter
+
+	TxBytesps metrics.Counter
+
+	RxPps metrics.Counter
+
+	RxBytesps metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -380,6 +388,14 @@ func (mtr *MacMetrics) Size() int {
 	sz += mtr.RxPause_1UsCount.Size()
 
 	sz += mtr.FramesTxTruncated.Size()
+
+	sz += mtr.TxPps.Size()
+
+	sz += mtr.TxBytesps.Size()
+
+	sz += mtr.RxPps.Size()
+
+	sz += mtr.RxBytesps.Size()
 
 	return sz
 }
@@ -656,6 +672,18 @@ func (mtr *MacMetrics) Unmarshal() error {
 
 	mtr.FramesTxTruncated = mtr.metrics.GetCounter(offset)
 	offset += mtr.FramesTxTruncated.Size()
+
+	mtr.TxPps = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxPps.Size()
+
+	mtr.TxBytesps = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxBytesps.Size()
+
+	mtr.RxPps = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxPps.Size()
+
+	mtr.RxBytesps = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxBytesps.Size()
 
 	return nil
 }
@@ -1108,6 +1136,26 @@ func (mtr *MacMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.FramesTxTruncated.Size()
+
+	if fldName == "TxPps" {
+		return offset
+	}
+	offset += mtr.TxPps.Size()
+
+	if fldName == "TxBytesps" {
+		return offset
+	}
+	offset += mtr.TxBytesps.Size()
+
+	if fldName == "RxPps" {
+		return offset
+	}
+	offset += mtr.RxPps.Size()
+
+	if fldName == "RxBytesps" {
+		return offset
+	}
+	offset += mtr.RxBytesps.Size()
 
 	return offset
 }
@@ -1646,6 +1694,30 @@ func (mtr *MacMetrics) SetFramesTxTruncated(val metrics.Counter) error {
 	return nil
 }
 
+// SetTxPps sets cunter in shared memory
+func (mtr *MacMetrics) SetTxPps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxPps"))
+	return nil
+}
+
+// SetTxBytesps sets cunter in shared memory
+func (mtr *MacMetrics) SetTxBytesps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxBytesps"))
+	return nil
+}
+
+// SetRxPps sets cunter in shared memory
+func (mtr *MacMetrics) SetRxPps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxPps"))
+	return nil
+}
+
+// SetRxBytesps sets cunter in shared memory
+func (mtr *MacMetrics) SetRxBytesps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxBytesps"))
+	return nil
+}
+
 // MacMetricsIterator is the iterator object
 type MacMetricsIterator struct {
 	iter gometrics.MetricsIterator
@@ -1790,6 +1862,14 @@ type MgmtMacMetrics struct {
 
 	FramesTxPause metrics.Counter
 
+	TxPps metrics.Counter
+
+	TxBytesps metrics.Counter
+
+	RxPps metrics.Counter
+
+	RxBytesps metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -1865,6 +1945,14 @@ func (mtr *MgmtMacMetrics) Size() int {
 	sz += mtr.FramesTxBroadcast.Size()
 
 	sz += mtr.FramesTxPause.Size()
+
+	sz += mtr.TxPps.Size()
+
+	sz += mtr.TxBytesps.Size()
+
+	sz += mtr.RxPps.Size()
+
+	sz += mtr.RxBytesps.Size()
 
 	return sz
 }
@@ -1970,6 +2058,18 @@ func (mtr *MgmtMacMetrics) Unmarshal() error {
 
 	mtr.FramesTxPause = mtr.metrics.GetCounter(offset)
 	offset += mtr.FramesTxPause.Size()
+
+	mtr.TxPps = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxPps.Size()
+
+	mtr.TxBytesps = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxBytesps.Size()
+
+	mtr.RxPps = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxPps.Size()
+
+	mtr.RxBytesps = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxBytesps.Size()
 
 	return nil
 }
@@ -2137,6 +2237,26 @@ func (mtr *MgmtMacMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.FramesTxPause.Size()
+
+	if fldName == "TxPps" {
+		return offset
+	}
+	offset += mtr.TxPps.Size()
+
+	if fldName == "TxBytesps" {
+		return offset
+	}
+	offset += mtr.TxBytesps.Size()
+
+	if fldName == "RxPps" {
+		return offset
+	}
+	offset += mtr.RxPps.Size()
+
+	if fldName == "RxBytesps" {
+		return offset
+	}
+	offset += mtr.RxBytesps.Size()
 
 	return offset
 }
@@ -2330,6 +2450,30 @@ func (mtr *MgmtMacMetrics) SetFramesTxBroadcast(val metrics.Counter) error {
 // SetFramesTxPause sets cunter in shared memory
 func (mtr *MgmtMacMetrics) SetFramesTxPause(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FramesTxPause"))
+	return nil
+}
+
+// SetTxPps sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetTxPps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxPps"))
+	return nil
+}
+
+// SetTxBytesps sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetTxBytesps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxBytesps"))
+	return nil
+}
+
+// SetRxPps sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetRxPps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxPps"))
+	return nil
+}
+
+// SetRxBytesps sets cunter in shared memory
+func (mtr *MgmtMacMetrics) SetRxBytesps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxBytesps"))
 	return nil
 }
 

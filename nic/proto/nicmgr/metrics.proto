@@ -115,14 +115,14 @@ message LifMetrics {
     delphi.Counter rsvd40                         = 88 [json_name="-"];
     delphi.Counter rsvd41                         = 89 [json_name="-"];
 
-    delphi.Counter rsvd42                         = 90 [json_name="-"];
-    delphi.Counter rsvd43                         = 91 [json_name="-"];
-    delphi.Counter rsvd44                         = 92 [json_name="-"];
-    delphi.Counter rsvd45                         = 93 [json_name="-"];
-    delphi.Counter rsvd46                         = 94 [json_name="-"];
-    delphi.Counter rsvd47                         = 95 [json_name="-"];
-    delphi.Counter rsvd48                         = 96 [json_name="-"];
-    delphi.Counter rsvd49                         = 97 [json_name="-"];
+    delphi.Counter tx_pkts                        = 90 [json_name="-"];
+    delphi.Counter tx_bytes                       = 91 [json_name="-"];
+    delphi.Counter rx_pkts                        = 92 [json_name="-"];
+    delphi.Counter rx_bytes                       = 93 [json_name="-"];
+    delphi.Counter tx_pps                         = 94 [json_name="-"];
+    delphi.Counter tx_bytesps                     = 95 [json_name="-"];
+    delphi.Counter rx_pps                         = 96 [json_name="-"];
+    delphi.Counter rx_bytesps                     = 97 [json_name="-"];
 
     delphi.Counter rdma_req_rx_pkt_seq_err         = 98 [json_name="-"];
     delphi.Counter rdma_req_rx_rnr_retry_err       = 99 [json_name="-"];

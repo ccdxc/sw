@@ -189,21 +189,21 @@ type LifMetrics struct {
 
 	Rsvd41 metrics.Counter `structs:"-"`
 
-	Rsvd42 metrics.Counter `structs:"-"`
+	TxPkts metrics.Counter `structs:"-"`
 
-	Rsvd43 metrics.Counter `structs:"-"`
+	TxBytes metrics.Counter `structs:"-"`
 
-	Rsvd44 metrics.Counter `structs:"-"`
+	RxPkts metrics.Counter `structs:"-"`
 
-	Rsvd45 metrics.Counter `structs:"-"`
+	RxBytes metrics.Counter `structs:"-"`
 
-	Rsvd46 metrics.Counter `structs:"-"`
+	TxPps metrics.Counter `structs:"-"`
 
-	Rsvd47 metrics.Counter `structs:"-"`
+	TxBytesps metrics.Counter `structs:"-"`
 
-	Rsvd48 metrics.Counter `structs:"-"`
+	RxPps metrics.Counter `structs:"-"`
 
-	Rsvd49 metrics.Counter `structs:"-"`
+	RxBytesps metrics.Counter `structs:"-"`
 
 	RdmaReqRxPktSeqErr metrics.Counter `structs:"-"`
 
@@ -457,21 +457,21 @@ func (mtr *LifMetrics) Size() int {
 
 	sz += mtr.Rsvd41.Size()
 
-	sz += mtr.Rsvd42.Size()
+	sz += mtr.TxPkts.Size()
 
-	sz += mtr.Rsvd43.Size()
+	sz += mtr.TxBytes.Size()
 
-	sz += mtr.Rsvd44.Size()
+	sz += mtr.RxPkts.Size()
 
-	sz += mtr.Rsvd45.Size()
+	sz += mtr.RxBytes.Size()
 
-	sz += mtr.Rsvd46.Size()
+	sz += mtr.TxPps.Size()
 
-	sz += mtr.Rsvd47.Size()
+	sz += mtr.TxBytesps.Size()
 
-	sz += mtr.Rsvd48.Size()
+	sz += mtr.RxPps.Size()
 
-	sz += mtr.Rsvd49.Size()
+	sz += mtr.RxBytesps.Size()
 
 	sz += mtr.RdmaReqRxPktSeqErr.Size()
 
@@ -810,29 +810,29 @@ func (mtr *LifMetrics) Unmarshal() error {
 	mtr.Rsvd41 = mtr.metrics.GetCounter(offset)
 	offset += mtr.Rsvd41.Size()
 
-	mtr.Rsvd42 = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rsvd42.Size()
+	mtr.TxPkts = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxPkts.Size()
 
-	mtr.Rsvd43 = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rsvd43.Size()
+	mtr.TxBytes = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxBytes.Size()
 
-	mtr.Rsvd44 = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rsvd44.Size()
+	mtr.RxPkts = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxPkts.Size()
 
-	mtr.Rsvd45 = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rsvd45.Size()
+	mtr.RxBytes = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxBytes.Size()
 
-	mtr.Rsvd46 = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rsvd46.Size()
+	mtr.TxPps = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxPps.Size()
 
-	mtr.Rsvd47 = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rsvd47.Size()
+	mtr.TxBytesps = mtr.metrics.GetCounter(offset)
+	offset += mtr.TxBytesps.Size()
 
-	mtr.Rsvd48 = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rsvd48.Size()
+	mtr.RxPps = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxPps.Size()
 
-	mtr.Rsvd49 = mtr.metrics.GetCounter(offset)
-	offset += mtr.Rsvd49.Size()
+	mtr.RxBytesps = mtr.metrics.GetCounter(offset)
+	offset += mtr.RxBytesps.Size()
 
 	mtr.RdmaReqRxPktSeqErr = mtr.metrics.GetCounter(offset)
 	offset += mtr.RdmaReqRxPktSeqErr.Size()
@@ -1377,45 +1377,45 @@ func (mtr *LifMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.Rsvd41.Size()
 
-	if fldName == "Rsvd42" {
+	if fldName == "TxPkts" {
 		return offset
 	}
-	offset += mtr.Rsvd42.Size()
+	offset += mtr.TxPkts.Size()
 
-	if fldName == "Rsvd43" {
+	if fldName == "TxBytes" {
 		return offset
 	}
-	offset += mtr.Rsvd43.Size()
+	offset += mtr.TxBytes.Size()
 
-	if fldName == "Rsvd44" {
+	if fldName == "RxPkts" {
 		return offset
 	}
-	offset += mtr.Rsvd44.Size()
+	offset += mtr.RxPkts.Size()
 
-	if fldName == "Rsvd45" {
+	if fldName == "RxBytes" {
 		return offset
 	}
-	offset += mtr.Rsvd45.Size()
+	offset += mtr.RxBytes.Size()
 
-	if fldName == "Rsvd46" {
+	if fldName == "TxPps" {
 		return offset
 	}
-	offset += mtr.Rsvd46.Size()
+	offset += mtr.TxPps.Size()
 
-	if fldName == "Rsvd47" {
+	if fldName == "TxBytesps" {
 		return offset
 	}
-	offset += mtr.Rsvd47.Size()
+	offset += mtr.TxBytesps.Size()
 
-	if fldName == "Rsvd48" {
+	if fldName == "RxPps" {
 		return offset
 	}
-	offset += mtr.Rsvd48.Size()
+	offset += mtr.RxPps.Size()
 
-	if fldName == "Rsvd49" {
+	if fldName == "RxBytesps" {
 		return offset
 	}
-	offset += mtr.Rsvd49.Size()
+	offset += mtr.RxBytesps.Size()
 
 	if fldName == "RdmaReqRxPktSeqErr" {
 		return offset
@@ -2108,51 +2108,51 @@ func (mtr *LifMetrics) SetRsvd41(val metrics.Counter) error {
 	return nil
 }
 
-// SetRsvd42 sets cunter in shared memory
-func (mtr *LifMetrics) SetRsvd42(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd42"))
+// SetTxPkts sets cunter in shared memory
+func (mtr *LifMetrics) SetTxPkts(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxPkts"))
 	return nil
 }
 
-// SetRsvd43 sets cunter in shared memory
-func (mtr *LifMetrics) SetRsvd43(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd43"))
+// SetTxBytes sets cunter in shared memory
+func (mtr *LifMetrics) SetTxBytes(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxBytes"))
 	return nil
 }
 
-// SetRsvd44 sets cunter in shared memory
-func (mtr *LifMetrics) SetRsvd44(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd44"))
+// SetRxPkts sets cunter in shared memory
+func (mtr *LifMetrics) SetRxPkts(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxPkts"))
 	return nil
 }
 
-// SetRsvd45 sets cunter in shared memory
-func (mtr *LifMetrics) SetRsvd45(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd45"))
+// SetRxBytes sets cunter in shared memory
+func (mtr *LifMetrics) SetRxBytes(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxBytes"))
 	return nil
 }
 
-// SetRsvd46 sets cunter in shared memory
-func (mtr *LifMetrics) SetRsvd46(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd46"))
+// SetTxPps sets cunter in shared memory
+func (mtr *LifMetrics) SetTxPps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxPps"))
 	return nil
 }
 
-// SetRsvd47 sets cunter in shared memory
-func (mtr *LifMetrics) SetRsvd47(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd47"))
+// SetTxBytesps sets cunter in shared memory
+func (mtr *LifMetrics) SetTxBytesps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TxBytesps"))
 	return nil
 }
 
-// SetRsvd48 sets cunter in shared memory
-func (mtr *LifMetrics) SetRsvd48(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd48"))
+// SetRxPps sets cunter in shared memory
+func (mtr *LifMetrics) SetRxPps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxPps"))
 	return nil
 }
 
-// SetRsvd49 sets cunter in shared memory
-func (mtr *LifMetrics) SetRsvd49(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("Rsvd49"))
+// SetRxBytesps sets cunter in shared memory
+func (mtr *LifMetrics) SetRxBytesps(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("RxBytesps"))
 	return nil
 }
 

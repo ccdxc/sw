@@ -253,6 +253,7 @@ hal_ret_t lif_bcast_filter_install(lif_t *lif);
 hal_ret_t lif_bcast_filter_uninstall(lif_t *lif);
 hal_ret_t lif_mcast_filter_install(lif_t *lif);
 hal_ret_t lif_mcast_filter_uninstall(lif_t *lif);
+hal_ret_t lif_compute_bw(uint32_t interval);
 
 }    // namespace hal
 

@@ -7,6 +7,11 @@
 #include "asic/pd/pd.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_pd.hpp"
+#include "gen/proto/nicmgr/metrics.delphi.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
+#include "nic/sdk/asic/cmn/asic_hbm.hpp"
+#include "nic/linkmgr/linkmgr_src.hpp"
 
 using namespace sdk::asic::pd;
 
@@ -172,11 +177,60 @@ pd_uplinkif_get (pd_if_get_args_t *args)
     if_t                    *hal_if = args->hal_if;
     pd_uplinkif_t           *uplinkif_pd = (pd_uplinkif_t *)hal_if->pd_if;
     InterfaceGetResponse    *rsp = args->rsp;
+    uint32_t                log_port;
+    delphi::objects::MacMetricsPtr mac_metrics;
+    delphi::objects::MgmtMacMetricsPtr mgmt_mac_metrics;
+#if 0
+    sdk_ret_t               sret;
+    delphi::objects::lifmetrics_t lif_metrics = {0};
+
+    sdk::types::mem_addr_t stats_mem_addr =
+        asicpd_get_mem_addr(ASIC_HBM_REG_LIF_STATS);
+
+    stats_mem_addr += uplinkif_pd->hw_lif_id << LIF_STATS_SIZE_SHIFT;
+
+    sret = sdk::asic::asic_mem_read(stats_mem_addr, (uint8_t *)&lif_metrics,
+                                    sizeof(delphi::objects::lifmetrics_t));
+    if (sret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats for hw-id {}, ret {}",
+                      uplinkif_pd->hw_lif_id, ret);
+        return hal_sdk_ret_to_hal_ret(sret);
+    }
+#endif
+
+    log_port = g_hal_state->catalog()->ifindex_to_logical_port(args->hal_if->fp_port_num);
+
 
     auto up_info = rsp->mutable_status()->mutable_uplink_info();
     up_info->set_uplink_lport_id(uplinkif_pd->upif_lport_id);
     up_info->set_hw_lif_id(uplinkif_pd->hw_lif_id);
     up_info->set_uplink_idx(uplinkif_pd->up_ifpc_id);
+#if 0
+    up_info->set_tx_pps(lif_metrics.tx_pps);
+    up_info->set_tx_bytesps(lif_metrics.tx_bytesps);
+    up_info->set_rx_pps(lif_metrics.rx_pps);
+    up_info->set_rx_bytesps(lif_metrics.rx_bytesps);
+#endif
+    
+    if (args->hal_if->is_oob_management) {
+        mgmt_mac_metrics = delphi::objects::MgmtMacMetrics::Find(log_port);
+        if (mgmt_mac_metrics != nullptr) {
+            up_info->set_tx_pps(mgmt_mac_metrics->tx_pps()->Get());
+            up_info->set_tx_bytesps(mgmt_mac_metrics->tx_bytesps()->Get());
+            up_info->set_rx_pps(mgmt_mac_metrics->rx_pps()->Get());
+            up_info->set_rx_bytesps(mgmt_mac_metrics->rx_bytesps()->Get());
+            delphi::objects::MgmtMacMetrics::Release(mgmt_mac_metrics);
+        }
+    } else {
+        mac_metrics = delphi::objects::MacMetrics::Find(log_port);
+        if (mac_metrics != nullptr) {
+            up_info->set_tx_pps(mac_metrics->tx_pps()->Get());
+            up_info->set_tx_bytesps(mac_metrics->tx_bytesps()->Get());
+            up_info->set_rx_pps(mac_metrics->rx_pps()->Get());
+            up_info->set_rx_bytesps(mac_metrics->rx_bytesps()->Get());
+            delphi::objects::MacMetrics::Release(mac_metrics);
+        }
+    }
 
     return ret;
 }
@@ -609,6 +663,95 @@ end:
     return 0;
 }
 
+hal_ret_t
+pd_if_compute_bw (pd_func_args_t *pd_func_args)
+{
+    pd_if_compute_bw_args_t *args = pd_func_args->pd_if_compute_bw;
+    sdk_ret_t ret = SDK_RET_OK;
+    hal_ret_t hret = HAL_RET_OK;
+    delphi::objects::lifmetrics_t lif_metrics = {0};
+    sdk::types::mem_addr_t stats_mem_addr, bw_stats_mem_addr;
+    uint64_t tx_pkts, curr_tx_pkts, tx_bytes, curr_tx_bytes,
+             rx_pkts, curr_rx_pkts, rx_bytes, curr_rx_bytes;
+    pd_uplinkif_t *uplinkif_pd = (pd_uplinkif_t *)args->hal_if->pd_if;
+    uint32_t lif_id = uplinkif_pd->hw_lif_id;
+    uint32_t interval = args->interval;
+    uint32_t log_port;
+    uint64_t stats_data[89]; // MAX_MAC_STATS
+    port_args_t port_args = {0};
 
+    stats_mem_addr = asicpd_get_mem_addr(ASIC_HBM_REG_LIF_STATS);
+
+    stats_mem_addr += lif_id << LIF_STATS_SIZE_SHIFT;
+
+    ret = sdk::asic::asic_mem_read(stats_mem_addr, (uint8_t *)&lif_metrics,
+                                   sizeof(delphi::objects::lifmetrics_t));
+    if (ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats for lif {}, ret {}",
+                      lif_id, ret);
+        return hal_sdk_ret_to_hal_ret(ret);
+    }
+
+    tx_pkts  = lif_metrics.tx_pkts;
+    tx_bytes = lif_metrics.tx_bytes;
+    rx_pkts  = lif_metrics.rx_pkts;
+    rx_bytes = lif_metrics.rx_bytes;
+
+    log_port = g_hal_state->catalog()->ifindex_to_logical_port(args->hal_if->fp_port_num);
+    port_args.port_num = log_port;
+    port_args.stats_data = stats_data;
+    hret = linkmgr::port_get(&port_args);
+    if (hret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to port get. log_port: {}, ret: {}",
+                      log_port, ret);
+        goto end;
+    }
+
+    if (args->hal_if->is_oob_management) {
+        curr_tx_pkts = port_args.stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_TX_ALL];
+        curr_tx_bytes = port_args.stats_data[port::MgmtMacStatsType::MGMT_MAC_OCTETS_TX_TOTAL];
+        curr_rx_pkts = port_args.stats_data[port::MgmtMacStatsType::MGMT_MAC_FRAMES_RX_ALL];
+        curr_rx_bytes = port_args.stats_data[port::MgmtMacStatsType::MGMT_MAC_OCTETS_RX_ALL];
+    } else {
+        curr_tx_pkts = port_args.stats_data[port::MacStatsType::FRAMES_TX_ALL];
+        curr_tx_bytes = port_args.stats_data[port::MacStatsType::OCTETS_TX_TOTAL];
+        curr_rx_pkts = port_args.stats_data[port::MacStatsType::FRAMES_RX_ALL];
+        curr_rx_bytes = port_args.stats_data[port::MacStatsType::OCTETS_RX_ALL];
+    }
+
+    lif_metrics.tx_pps = BW(tx_pkts, curr_tx_pkts, interval);
+    lif_metrics.tx_bytesps = BW(tx_bytes, curr_tx_bytes, interval);
+    lif_metrics.rx_pps = BW(rx_pkts, curr_rx_pkts, interval);
+    lif_metrics.rx_bytesps = BW(rx_bytes, curr_rx_bytes, interval);
+    lif_metrics.tx_pkts = curr_tx_pkts;
+    lif_metrics.tx_bytes = curr_tx_bytes;
+    lif_metrics.rx_pkts = curr_rx_pkts;
+    lif_metrics.rx_bytes = curr_rx_bytes;
+
+    bw_stats_mem_addr = stats_mem_addr + LIF_STATS_TX_PKTS_OFFSET;
+
+    ret = sdk::asic::asic_mem_write(bw_stats_mem_addr, 
+                                    (uint8_t *)&(lif_metrics.tx_pkts),
+                                    8 * 8); // 8 fields
+    if (ret != SDK_RET_OK) {
+        HAL_TRACE_ERR("Error writing BW stats for lif {}, ret {}",
+                      lif_id, ret);
+        return hal_sdk_ret_to_hal_ret(ret);
+    }
+
+#if 0
+    HAL_TRACE_DEBUG("Computed BW lif: {}, interval: {}, "
+                    "TX PPS: {}, BPS: {}, PKTS: {}, BYTES: {}, "
+                    "RX PPS: {}, BPS: {}, PKTS: {}, BYTES: {}",
+                    lif_id, interval, 
+                    lif_metrics.tx_pps, lif_metrics.tx_bytesps, 
+                    lif_metrics.tx_pkts, lif_metrics.tx_bytes,
+                    lif_metrics.rx_pps, lif_metrics.rx_bytesps, 
+                    lif_metrics.rx_pkts, lif_metrics.rx_bytes);
+#endif
+
+end:
+    return hret;
+}
 }    // namespace pd
 }    // namespace hal
