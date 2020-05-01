@@ -5,13 +5,17 @@ import { SearchExpression } from '@app/components/search/index.ts';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
+import { StagingService } from '@app/services/generated/staging.service';
 import { IAuthUser } from '@sdk/v1/models/generated/auth';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase, ClusterDSCCondition, ClusterDSCCondition_status, ClusterDSCCondition_type, ClusterNode, ClusterNodeCondition_status, ClusterNodeCondition_type, ClusterLicense } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase, ClusterDSCCondition, ClusterDSCCondition_status, ClusterDSCCondition_type, ClusterLicense, ClusterNode, ClusterNodeCondition_status, ClusterNodeCondition_type } from '@sdk/v1/models/generated/cluster';
 import { FieldsRequirement_operator, IFieldsSelector, MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
+import { NetworkNetworkInterface, NetworkNetworkInterfaceSpec_type } from '@sdk/v1/models/generated/network';
 import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
 import { SearchSearchRequest, SearchSearchRequest_mode } from '@sdk/v1/models/generated/search';
-import { StagingBuffer, StagingCommitAction, IStagingBulkEditAction, StagingBulkEditAction } from '@sdk/v1/models/generated/staging';
+import { IStagingBulkEditAction, StagingBuffer, StagingBulkEditAction, StagingCommitAction } from '@sdk/v1/models/generated/staging';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { TrimDefaultsAndEmptyFields as sdkTrimDefaultsAndEmptyFields, TrimUIFields as sdkTrimUIFields } from '@sdk/v1/utils/utility';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import * as moment from 'moment';
@@ -23,9 +27,6 @@ import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { UIConfigsService } from '../services/uiconfigs.service';
-import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
-import { StagingService } from '@app/services/generated/staging.service';
-import { NetworkNetworkInterface, NetworkNetworkInterfaceSpec_type } from '@sdk/v1/models/generated/network';
 
 /**
  * VeniceObjectCacheStore is for data-cache.
@@ -1827,6 +1828,25 @@ export class Utility {
     };
     helperFunc(request);
     return request;
+  }
+
+  /**
+   * This api wraps SDK utility.ts TrimDefaultsAndEmptyFields()
+   * @param request
+   * @param model
+   * @param previousVal
+   * @param trimDefaults
+   */
+  public static trimDefaultsAndEmptyFieldsByModel(request: any, model, previousVal = null, trimDefaults = true) {
+    return sdkTrimDefaultsAndEmptyFields(request, model, previousVal, trimDefaults );
+  }
+
+  /**
+   * This api wraps SDK utility.ts TrimUIModel()
+   * @param request
+   */
+  public static trimUIFields(request: any) {
+    return  sdkTrimUIFields(request);
   }
 
   public static generateDeleteConfirmMsg(objectType: string, name: string): string {

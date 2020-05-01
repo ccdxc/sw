@@ -1,27 +1,26 @@
 import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, IterableDiffer, OnChanges, OnDestroy, OnInit, Output, Renderer2, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
+import { StagingService } from '@app/services/generated/staging.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
-import { IApiStatus, FieldsRequirement, SearchTextRequirement } from '@sdk/v1/models/generated/search';
+import { FieldsRequirement, IApiStatus, SearchTextRequirement } from '@sdk/v1/models/generated/search';
+import { IBulkeditBulkEditItem, IStagingBulkEditAction, StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import { LazyLoadEvent } from 'primeng/primeng';
 import { Table } from 'primeng/table';
 import { forkJoin, Observable, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { TabcontentInterface } from 'web-app-framework';
-import { RowClickEvent, TableCol, CustomExportMap } from '.';
+import { CustomExportMap, RowClickEvent, TableCol } from '.';
+import { AdvancedSearchComponent, LocalSearchRequest } from '../advanced-search/advanced-search.component';
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { TableMenuItem } from '../tableheader/tableheader.component';
 import { TableUtility } from './tableutility';
-import { LocalSearchRequest, AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
-import { SafeStylePipe } from '../Pipes/SafeStyle.pipe';
-import { AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
-import { StagingBuffer, StagingCommitAction, IStagingBulkEditAction, IBulkeditBulkEditItem } from '@sdk/v1/models/generated/staging';
-import { StagingService } from '@app/services/generated/staging.service';
-import { switchMap } from 'rxjs/operators';
 
 /**
  * Table view edit component provides an easy way for other pages
@@ -785,9 +784,23 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
     const obj = {
       uri: uri,
       method: method,
-      object: (vObject.getModelValues) ? vObject.getModelValues() : vObject
+      object: this.trimObjectForBulkeditItem(vObject, vObject, null, true)
     };
     return obj as IBulkeditBulkEditItem;
+  }
+
+  /**
+   * This is a helper API used in buildBulkEditItemFromVeniceObject()
+   * It is override-able. For example, Networkinterface, DSC components can override this API to customize how to construct bulkedit item
+   * For example: We can not trim DSC object, but we have to trim NetworkInterface. (see VS-1584)
+   *
+   * @param vObject
+   * @param model - a class instance. eg new Networkinterface()
+   * @param previousVal
+   * @param trimDefaults
+   */
+  trimObjectForBulkeditItem(vObject: any, model, previousVal = null, trimDefaults = true ): any {
+    return vObject;
   }
 
   /**

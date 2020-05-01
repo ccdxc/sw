@@ -20,9 +20,8 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { IApiStatus, INetworkNetworkInterface, NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 import { FieldsRequirement } from '@sdk/v1/models/generated/search';
-import { IBulkeditBulkEditItem, IStagingBulkEditAction, StagingBuffer } from '@sdk/v1/models/generated/staging';
+import { IStagingBulkEditAction } from '@sdk/v1/models/generated/staging';
 import { forkJoin, Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
 
 /**
  * NetworkinterfacesComponent is linked to DSC object.
@@ -280,8 +279,7 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   }
 
   handleEditSave(networkinterfaces: NetworkNetworkInterface[]) {
-    this.updateWithForkjoin(networkinterfaces);
-    // this.bulkeditLabels(networkinterfaces);  // Use bulkedit when backend is ready
+    this.bulkeditLabels(networkinterfaces);  // Use bulkedit when backend is ready
   }
 
   handleEditCancel($event) {
@@ -289,13 +287,32 @@ export class NetworkinterfacesComponent extends TablevieweditAbstract<INetworkNe
   }
 
 
-
+  /**
+   * Invoke changing meta.lablels using bulkedit API
+   * @param networkinterfaces
+   */
   bulkeditLabels(networkinterfaces: NetworkNetworkInterface[]) {
 
-    const successMsg: string = 'updated ' + networkinterfaces.length + ' network interface labels';
+    const successMsg: string = 'Updated ' + networkinterfaces.length + ' network interface labels';
     const failureMsg: string = 'Failed to update network interface labels';
     const stagingBulkEditAction = this.buildBulkEditLabelsPayload(networkinterfaces);
     this.bulkEditHelper(networkinterfaces, stagingBulkEditAction, successMsg, failureMsg );
+  }
+
+  /**
+   * Override super's API.
+   * VS-1584
+   * networkinterface.spe.pause may be as "pause":{"type":null,"tx-pause-enabled":null,"rx-pause-enabled":null}. We have to trim it before invoking bulkedit
+   * Otherwise, backend will trim it to be "pause":{}" in bulkedit response json. Subsequent commit-buffer call will fail
+   *
+   * @param vObject
+   * @param model
+   * @param previousVal
+   * @param trimDefaults
+   */
+  trimObjectForBulkeditItem(vObject: any, model, previousVal = null, trimDefaults = true ): any {
+    const body = (vObject.hasOwnProperty('getModelValue')) ? vObject.getModelValues() : vObject;
+    return Utility.trimDefaultsAndEmptyFieldsByModel( body, vObject, previousVal, trimDefaults);
   }
 
   updateWithForkjoin(networkinterfaces: NetworkNetworkInterface[]) {
