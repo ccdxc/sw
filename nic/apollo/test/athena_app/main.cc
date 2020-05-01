@@ -398,6 +398,12 @@ program_prepare_exit(void)
     server_poll_stop();
 }
 
+static inline void
+disable_int_mnic_csum_offload(void)
+{
+    system("ethtool -K int_mnic0 tx off rx off");
+}
+
 
 #define POLICY_JSON_FILE    "/data/policy.json"
 
@@ -640,6 +646,8 @@ main (int argc, char **argv)
         printf("Waiting for 60 seconds...\n");
         sleep(60);
     }
+    /* FIXME: For now disable CSUM offload for internal MNIC intf until Sorrento supports partial CSUM */
+    disable_int_mnic_csum_offload();
 
     if (fte_ath::g_athena_app_mode == ATHENA_APP_MODE_NO_DPDK) {
         printf("mode: ATHENA_APP_MODE_NO_DPDK. Wait forever...\n");
