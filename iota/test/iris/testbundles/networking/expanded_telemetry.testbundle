@@ -30,6 +30,7 @@ testcases:
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [check]
+            timeout   : 57600
 
     -   name          : FlowErspanInbandCollector
         testcase      : testcases.expanded_telemetry.flow_erspan_collector
@@ -49,6 +50,7 @@ testcases:
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [check]
+            timeout   : 57600
 
     -   name          : FlowMonInbandCollector
         testcase      : testcases.expanded_telemetry.flowmon_collector
@@ -69,6 +71,7 @@ testcases:
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [check]
+            timeout   : 57600
 
     -   name          : FlowErspanFlowMonInbandCollector
         testcase      : testcases.expanded_telemetry.flow_erspan_flowmon_collector
@@ -89,6 +92,7 @@ testcases:
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [check]
+            timeout   : 57600
 
     -   name          : LifErspanFlowMonInbandCollector
         testcase      : testcases.expanded_telemetry.lif_erspan_flowmon_collector
@@ -111,6 +115,7 @@ testcases:
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [check]
+            timeout   : 57600
 
     -   name          : LifFlowErspanInbandCollector
         testcase      : testcases.expanded_telemetry.lif_flow_erspan_collector
@@ -132,6 +137,7 @@ testcases:
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [check]
+            timeout   : 57600
 
     -   name          : LifFlowErspanFlowMonInbandCollector
         testcase      : testcases.expanded_telemetry.lif_flow_erspan_flowmon_collector
@@ -154,4 +160,5 @@ testcases:
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [check]
+            timeout   : 57600
 

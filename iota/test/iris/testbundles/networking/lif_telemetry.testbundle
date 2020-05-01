@@ -32,4 +32,5 @@ testcases:
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [bypass]
+            timeout   : 7200
 

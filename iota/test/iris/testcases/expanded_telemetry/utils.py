@@ -219,6 +219,7 @@ def updateVlanStripOption(tc, c):
 def establishCollectorSecondaryIPs(tc):
     tc.collector_ip_address = []
     tc.collector_seq_num = []
+    tc.collector_tstmp = []
     tc.collector_ipfix_records = []
     tc.collector_ipfix_pkts = []
     tc.collector_ipfix_template_pkts = []
@@ -233,6 +234,7 @@ def establishCollectorSecondaryIPs(tc):
     for c in range(0, len(tc.collector)):
         tc.collector_ip_address.append(tc.collector[c].ip_address)
         tc.collector_seq_num.append(0)
+        tc.collector_tstmp.append(0)
         tc.collector_ipfix_records.append(0)
         tc.collector_ipfix_pkts.append(0)
         tc.collector_ipfix_template_pkts.append(0)
@@ -285,6 +287,7 @@ def establishCollectorSecondaryIPs(tc):
     c = 0
     while c < tc.sec_ip_count:
         tc.collector_seq_num.append(0)
+        tc.collector_tstmp.append(0)
         tc.collector_ipfix_records.append(0)
         tc.collector_ipfix_pkts.append(0)
         tc.collector_ipfix_template_pkts.append(0)
@@ -1208,6 +1211,22 @@ def validateErspanPackets(tc, lif_flow_collector, lif_flow_collector_idx):
             dport = 0
             if tc.collector_erspan_type[idx] == 'type_3' and\
                pkt.haslayer(ERSPAN_III):
+
+                # Extract Timestamp and Validate
+                if pkt[ERSPAN_III].haslayer(ERSPAN_PlatformSpecific) == False:
+                    api.Logger.error("ERROR: PlatformSpecific Hdr Not Present")
+                    tc.result[c] = api.types.status.FAILURE
+                else:
+                    tstmp_msb = pkt[ERSPAN_III][ERSPAN_PlatformSpecific].info2
+                    tstmp_lsb = pkt[ERSPAN_III].timestamp
+                    tstmp = (tstmp_msb << 32) | tstmp_lsb
+                    if utils.VerifyTimeStamp(pkt) != api.types.status.SUCCESS\
+                       or (pkt_count > 1 and tstmp <= tc.collector_tstmp[c]):
+                        api.Logger.error("ERROR: TSTMP curr {} TSTMP last {}"\
+                        .format(tstmp, tc.collector_tstmp[c]))
+                        tc.result[c] = api.types.status.FAILURE
+                    tc.collector_tstmp[c] = tstmp
+
                 # Extract Vlan-tag, if present
                 if pkt[ERSPAN_III].haslayer(Dot1Q):
                     if tc.collector_vlan_strip[idx] == True and\
@@ -1439,6 +1458,7 @@ def validateIpFixPackets(tc):
         # Parse pkts in pcap file
         pkt_count = 0
         seq_num_error = False
+        telemetry_error = False
         for pkt in pkts:
             #
             # Occasionally, pkts are appended to pcap file, the following
@@ -1507,12 +1527,50 @@ def validateIpFixPackets(tc):
                     if res != api.types.status.SUCCESS:
                         tc.result[c] = api.types.status.FAILURE
 
+                    # Extract Telemetry-data
+                    permit_packets = int(pkt[Ipfix].records[0][i].
+                                         permit_packets)
+                    permit_bytes = int(pkt[Ipfix].records[0][i].permit_bytes)
+                    delta_permit_packets = int(pkt[Ipfix].records[0][i].
+                                               delta_permit_packets)
+                    delta_permit_bytes = int(pkt[Ipfix].records[0][i].
+                                             delta_permit_bytes)
+                    drop_packets = int(pkt[Ipfix].records[0][i].drop_packets)
+                    drop_bytes = int(pkt[Ipfix].records[0][i].drop_bytes)
+                    delta_drop_packets = int(pkt[Ipfix].records[0][i].
+                                             delta_drop_packets)
+                    delta_drop_bytes = int(pkt[Ipfix].records[0][i].
+                                           delta_drop_bytes)
+
+                    # Some Basic Validation on Telemetry-data
+                    if (delta_permit_packets != 0 and\
+                        delta_permit_bytes == 0) or\
+                       (delta_permit_packets == 0 and\
+                        delta_permit_bytes != 0) or\
+                        drop_packets != 0 or drop_bytes != 0 or\
+                        delta_drop_packets != 0 or delta_drop_bytes != 0:
+                        api.Logger.error("ERROR: #{}: ip_proto {}\
+                            delta_pkts {} delta_bytes {} drops {}\
+                            d_bytes {} delta_drops {} delta_d_bytes {}"\
+                            .format((i>>1), ip_proto, delta_permit_packets,
+                            delta_permit_bytes, drop_packets, drop_bytes,
+                            delta_drop_packets, delta_drop_bytes))
+                        tc.result[c] = api.types.status.FAILURE
+
+                    if permit_packets == 0 or permit_bytes == 0:
+                        api.Logger.error("ERROR: [IGNORE] #{}: ip_proto {}\
+                            pkts {} bytes {}"\
+                            .format((i>>1), ip_proto, permit_packets,
+                            permit_bytes))
+                        telemetry_error = True
+                        #tc.result[c] = api.types.status.FAILURE
+
                     total_len -= record_len
                     i += 2
 
         # For failed cases, print pkts for debug
         if tc.result[c] == api.types.status.FAILURE or seq_num_error == True\
-           or tc.collector_ipfix_pkts[c] == 0:
+           or telemetry_error == True or tc.collector_ipfix_pkts[c] == 0:
             if tc.result[c] == api.types.status.FAILURE:
                 result = api.types.status.FAILURE
             for pkt in pkts:
