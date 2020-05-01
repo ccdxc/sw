@@ -316,6 +316,9 @@ nic/sdk/third-party/dhcp-server-pkg/$ARCH/lib/libisccfg.so.163    /usr/lib/
 nic/tools/lldp/S60lldpd                                          /nic/tools/start-lldpd.sh
 nic/conf/apulu/lldpd.conf                                        /etc/lldpd.d/lldpd.conf
 
+# sshd boot up config tuning
+nic/conf/apulu/sshd_boot_config                                  /nic/conf/
+
 # upgrade
 nic/build/$ARCH/$PIPELINE/lib/libupgrade_core.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libupgrade_ev.so                    /nic/lib/
