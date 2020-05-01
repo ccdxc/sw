@@ -8,7 +8,8 @@ import apollo.config.objects.vnic as vnic
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.nat_pb as nat_pb
 import apollo.config.utils as utils
-
+import apollo.config.topo as topo
+import vpc_pb2 as vpc_pb2
 import iota.harness.api as api
 
 WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1
@@ -215,6 +216,14 @@ def __getObjects(objtype):
     for node in naplesHosts:
         if objtype == 'nexthop':
             objs.extend(objClient.GetUnderlayNexthops(node))
+        elif objtype == 'vpc':
+            vpcobjs = objClient.Objects(node, True)
+            # metaswitch does not allow deletion of Underlay VPC, hence skip it
+            objs.extend(list(filter(lambda x: x.Type != vpc_pb2.VPC_TYPE_UNDERLAY, vpcobjs)))
+            return objs
+        elif objtype == 'interface':
+            interfaceobjs = objClient.Objects(node, True)
+            objs.extend(list(filter(lambda x: x.Type != topo.InterfaceTypes.LOOPBACK, interfaceobjs)))
         else:
             objs.extend(objClient.Objects(node, True))
     return objs
@@ -242,8 +251,11 @@ def ProcessObjectsByOperation(oper, select_objs):
     if oper is None or oper not in supported_ops:
         return res
     for obj in select_objs:
-        getattr(obj, oper)()
-        if not getattr(obj, 'Read')():
+        if getattr(obj, oper)():
+            if not getattr(obj, 'Read')():
+                api.Logger.error(f"read after {oper} failed for object: {obj}")
+                res = api.types.status.FAILURE
+        else:
             api.Logger.error(f"{oper} failed for object: {obj}")
             res = api.types.status.FAILURE
         if oper == 'Delete':

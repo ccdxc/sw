@@ -9,8 +9,6 @@ import time
 import yaml
 from collections import OrderedDict
 import os
-import struct
-import pdb
 
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -308,80 +306,71 @@ def SetObjectHwHabitantStatus(obj, oper, status):
     return
 
 def ValidateBatch(batchList, cookie):
-    for item in batchList:
-        oper = item[0]
-        obj = item[1]
-        operStatus = item[2]
-        commitStatus = item[3]
+    item = batchList[0]
+    oper = item[0]
+    obj = item[1]
+    operStatus = item[2]
+    commitStatus = item[3]
 
-        if IsDryRun():
-            SetObjectHwHabitantStatus(obj, oper, types_pb2.API_STATUS_OK)
-            return True
-
-        is_obj_present = obj.IsHwHabitant()
-
-        logger.info(f"ValidateBatch: operation {oper} for {obj} on {obj.Node} "
-                    f"obj_present {is_obj_present}, cookie {cookie}")
-        expApiStatus = types_pb2.API_STATUS_OK
-        if is_obj_present == True:
-            if oper == 'Create':
-                expApiStatus = types_pb2.API_STATUS_EXISTS_ALREADY
-                operResp = ValidateCreate(obj, operStatus, expApiStatus)
-            elif oper == 'Update' or oper == 'Delete':
-                expApiStatus = types_pb2.API_STATUS_OK
-                if oper == 'Delete':
-                    operResp = ValidateDelete(obj, operStatus, expApiStatus)
-                else:
-                    operResp = ValidateUpdate(obj, operStatus, expApiStatus)
-        else:
-            if oper == 'Create':
-                expApiStatus = types_pb2.API_STATUS_OK
-                operResp = ValidateCreate(obj, operStatus, expApiStatus)
-            elif oper == 'Update' or oper == 'Delete':
-                expApiStatus = types_pb2.API_STATUS_NOT_FOUND
-                if oper == 'Delete':
-                    operResp = ValidateDelete(obj, operStatus, expApiStatus)
-                else:
-                    operResp = ValidateUpdate(obj, operStatus, expApiStatus)
-
-        logger.info(f"ValidateBatch: recvd {operStatus}, {commitStatus} "
-                    f"Expected {expApiStatus}")
-
-        # setting HwHabitant for an object only if operation succeeds
-        # TODO: @amrita, hwhabitant gets set based on expected status
-        # instead of actual status, please check & fix
-        SetObjectHwHabitantStatus(obj, oper, expApiStatus)
-
-        # if batch is created internally
-        if cookie == INVALID_BATCH_COOKIE:
-            logger.info(f"ValidateBatch: internal batch result {operResp}")
-            return operResp
-        else:
-            commitResp = (expApiStatus == commitStatus)
-            # objects which don't do DB lookup in pdsagent
-            noDBObjs = [
-                         ObjectTypes.DEVICE, ObjectTypes.LMAPPING,
-                         ObjectTypes.RMAPPING, ObjectTypes.VNIC,
-                         ObjectTypes.NEXTHOP, ObjectTypes.SUBNET,
-                         ObjectTypes.ROUTE, ObjectTypes.POLICY,
-                         ObjectTypes.BGP, ObjectTypes.BGP_PEER,
-                         ObjectTypes.BGP_PEER_AF, ObjectTypes.BGP_NLRI_PREFIX,
-                         ObjectTypes.BGP_EVPN_EVI, ObjectTypes.BGP_EVPN_EVI_RT,
-                         ObjectTypes.BGP_EVPN_IP_VRF, ObjectTypes.BGP_EVPN_IP_VRF_RT,
-                         ObjectTypes.VPC
-                       ]
-            if obj.ObjType in noDBObjs:
-                # TODO: @amrita, For these objects,
-                # Validate on operStatus should be done against API_STATUS_OK
-                logger.info(f"ValidateBatch: batch result {commitResp}")
-                return commitResp
-            else:
-                # TODO: @amrita, agent dbs are now removed for all objects. Please check & fix
-                # all stateful objects are validated in agent db currently, hence
-                # return operation status. Once agent db is removed then change it to batch commit status
-                logger.info(f"ValidateBatch: int batch result {operResp}")
-                return operResp
+    if IsDryRun():
+        SetObjectHwHabitantStatus(obj, oper, types_pb2.API_STATUS_OK)
         return True
+
+    is_obj_present = obj.IsHwHabitant()
+
+    logger.info(f"ValidateBatch: operation {oper} for {obj} on {obj.Node} "
+                f"obj_present {is_obj_present}, cookie {cookie}")
+
+    expApiStatus = types_pb2.API_STATUS_OK
+    if is_obj_present == True:
+        if oper == 'Create':
+            expApiStatus = types_pb2.API_STATUS_EXISTS_ALREADY
+        elif oper == 'Update' or oper == 'Delete':
+            expApiStatus = types_pb2.API_STATUS_OK
+    else:
+        if oper == 'Create':
+            expApiStatus = types_pb2.API_STATUS_OK
+        elif oper == 'Update' or oper == 'Delete':
+            expApiStatus = types_pb2.API_STATUS_NOT_FOUND
+
+    logger.info(f"ValidateBatch: recvd {operStatus}, {commitStatus} "
+            f"Expected {expApiStatus}")
+
+    commitResp = (expApiStatus == commitStatus)
+
+    def __validateOperation(oper, operStatus, expApiStatus):
+        operResp = False
+        if oper == 'Create':
+            operResp = ValidateCreate(obj, operStatus, expApiStatus)
+        elif oper == 'Delete':
+            operResp = ValidateDelete(obj, operStatus, expApiStatus)
+        elif oper == 'Update':
+            operResp = ValidateUpdate(obj, operStatus, expApiStatus)
+        return operResp
+
+    # if batch is created internally
+    if cookie == INVALID_BATCH_COOKIE:
+        operResp = __validateOperation(oper, operStatus, expApiStatus)
+        if operResp:
+            SetObjectHwHabitantStatus(obj, oper, expApiStatus)
+        logger.info(f"ValidateBatch: internal batch result {operResp}")
+        return operResp
+
+    # objects which do lookup in pdsagent
+    dBObjs = [ ObjectTypes.INTERFACE ]
+    if obj.ObjType not in dBObjs:
+        # validate operStatus against types_pb2.API_STATUS_OK
+        expApiStatus = types_pb2.API_STATUS_OK
+        operResp = __validateOperation(oper, operStatus, expApiStatus)
+    else:
+        operResp = __validateOperation(oper, operStatus, expApiStatus)
+        # validate commitStatus against types_pb2.API_STATUS_OK
+        commitResp = (commitStatus == types_pb2.API_STATUS_OK)
+
+    if operResp and commitResp:
+        SetObjectHwHabitantStatus(obj, oper, commitStatus)
+    logger.info(f"ValidateBatch: batch result {operResp} and {commitResp}")
+    return (operResp and commitResp)
 
 def ValidateCreate(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
     if IsDryRun():
@@ -393,7 +382,6 @@ def ValidateCreate(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
             logger.error(f"[Re]Creation failed for {obj} on {obj.Node}, received resp {resp.ApiStatus} and expected resp {expApiStatus}")
             obj.Show()
             return False
-        SetObjectHwHabitantStatus(obj, 'Create', expApiStatus)
     return True
 
 def ValidateRead(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
@@ -426,7 +414,6 @@ def ValidateDelete(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
                 logger.error(f"Deletion failed for {obj} on {obj.Node}, received {status} but expected {expApiStatus}")
                 obj.Show()
                 return False
-        SetObjectHwHabitantStatus(obj, 'Delete', expApiStatus)
     return True
 
 def ValidateUpdate(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
@@ -434,7 +421,6 @@ def ValidateUpdate(obj, resps, expApiStatus = types_pb2.API_STATUS_OK):
     for resp in resps:
         if ValidateGrpcResponse(resp, expApiStatus):
             if expApiStatus == types_pb2.API_STATUS_OK:
-                SetObjectHwHabitantStatus(obj, 'Update', expApiStatus)
                 InformDependents(obj, 'UpdateNotify')
         else:
             logger.error(f"Update failed for {obj} on {obj.Node}, received {resp.ApiStatus}, expected {expApiStatus}")

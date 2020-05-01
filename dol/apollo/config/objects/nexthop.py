@@ -397,7 +397,6 @@ class NexthopObjectClient(base.ConfigClientBase):
         if not all(result):
             logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
             return False
-        list(map(lambda x: x.SetHwHabitant(False), cfgObjects))
         return True
 
     def RestoreObjects(self, node):
@@ -411,7 +410,6 @@ class NexthopObjectClient(base.ConfigClientBase):
         if not all(result):
             logger.info(f"Restoring {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
             return False
-        list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
         return True
 
     def UpdateObjects(self, node):

@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import ipaddress
 import json
+import copy
 
 from infra.common.logging import logger
 
@@ -158,15 +159,23 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
             obj = DhcpRelayObject(node, vpcid, serverip, agentip)
             self.Objs[node].update({obj.Id: obj})
 
-        dhcprelaySpec = EzAccessStore.GetDHCPRelayInfo()
+        dhcprelaySpec = None
+        if topospec:
+            dhcprelaySpec = getattr(topospec, 'dhcprelay', None)
+
         if not dhcprelaySpec:
-            if topospec:
-                dhcprelaySpec = getattr(topospec, 'dhcprelay', None)
-            if not dhcprelaySpec:
+            tbSpec = EzAccessStore.GetTestbedSpec()
+            dhcprelaySpec = getattr(tbSpec, 'DHCPRelay', None)
+            if dhcprelaySpec:
+                for obj in dhcprelaySpec:
+                    attrb = copy.copy(vars(obj))
+                    for key, val in attrb.items():
+                        setattr(obj, key.lower(), val)
+            else:
                 return
 
-        for dhcpobj in dhcprelaySpec:
-            __add_dhcp_relay_config(node, dhcpobj)
+        for dhcp_relay_spec_obj in dhcprelaySpec:
+            __add_dhcp_relay_config(node, dhcp_relay_spec_obj)
         EzAccessStoreClient[node].SetDhcpRelayObjects(self.Objects(node))
         ResmgrClient[node].CreateDHCPRelayAllocator()
         return

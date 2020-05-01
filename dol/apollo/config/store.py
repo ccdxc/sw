@@ -11,7 +11,7 @@ class EzAccessStore:
     specs = ConfigStore.specs
     dutNode = 1
     configClientDict = dict()
-    dhcprelayConfig = None
+    testbedSpec = None
 
 # Class members
     def __init__(self, node):
@@ -194,12 +194,12 @@ class EzAccessStore:
         return nhgs
 
     @staticmethod
-    def SetDHCPRelayInfo(configobj):
-        EzAccessStore.dhcprelayConfig = configobj
+    def SetTestbedSpec(tbspec):
+        EzAccessStore.testbedSpec = tbspec
 
     @staticmethod
-    def GetDHCPRelayInfo():
-        return EzAccessStore.dhcprelayConfig
+    def GetTestbedSpec():
+        return EzAccessStore.testbedSpec
 
     def GetDhcpRelayObjects(self):
         return self.dhcprelayObjs.GetAllInList()

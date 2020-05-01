@@ -578,12 +578,11 @@ class ConfigClientBase(base.ConfigClientBase):
             logger.info(f"Skip Deleting {self.ObjType.name} Objects in {node}")
             return
 
-        logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
-        result = list(map(lambda x: x.Delete(), cfgObjects))
+        logger.info(f"Deleting {len(fixed)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.Delete(), fixed))
         if not all(result):
-            logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            logger.info(f"Deleting {len(fixed)} {self.ObjType.name} Objects FAILED in {node}")
             return False
-        list(map(lambda x: x.SetHwHabitant(False), cfgObjects))
         return True
 
     def RestoreObjects(self, node):
@@ -594,7 +593,6 @@ class ConfigClientBase(base.ConfigClientBase):
         if not all(result):
             logger.info(f"Restoring {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
             return False
-        list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
         return True
 
     def UpdateObjects(self, node):

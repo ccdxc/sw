@@ -103,14 +103,8 @@ class _Testbed:
     def GetCurrentTestsuite(self):
         return self.curr_ts
 
-    def GetDHCPRelayInfo(self):
-        dhcprelay = getattr(self.__tbspec, 'DHCPRelay', None)
-        if dhcprelay:
-            for obj in dhcprelay:
-                attrb = copy.copy(vars(obj))
-                for key, val in attrb.items():
-                    setattr(obj, key.lower(), val)
-        return dhcprelay
+    def GetTestbedSpec(self):
+        return self.__tbspec
 
     def GetProvisionUsername(self):
         return self.__tbspec.Provision.Username

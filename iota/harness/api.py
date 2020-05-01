@@ -412,8 +412,8 @@ def Testbed_GetVlanCount():
 def Testbed_GetVlanBase():
     return store.GetTestbed().GetVlanBase()
 
-def GetDHCPRelayInfo():
-    return store.GetTestbed().GetDHCPRelayInfo()
+def GetTestbedSpec():
+    return store.GetTestbed().GetTestbedSpec()
 
 def Abort():
     return store.GetTestbed().GetCurrentTestsuite().Abort()
@@ -795,7 +795,7 @@ def TriggerMove(req):
                         wl.node_name = move_resp.dst_node_name
                     break
         else:
-            Logger.error("Workload move failed") 
+            Logger.error("Workload move failed")
             result = types.status.FAILURE
     return result
 

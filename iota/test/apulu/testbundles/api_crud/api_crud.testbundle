@@ -5,7 +5,7 @@ meta:
     nics    : [ pensando ]
 
 testcases:
-    -   name    : API_CRUD_For_Delete_Ping_Traffic
+    -   name    : Delete_And_Ping
         testcase: testcases.api_crud.ping
         stress  : True
         args    :
@@ -18,10 +18,10 @@ testcases:
             # TODO: nh-group
             # route object excluded from local2remote tests, because no hit
             #objtype : [ device, vpc, subnet, vnic, tunnel, lmapping, rmapping, nexthop, interface ]
-            objtype : [ device, subnet, vnic, tunnel, lmapping, rmapping, nexthop ]
+            objtype : [ device, vpc, subnet, vnic, tunnel, lmapping, rmapping, nexthop ]
             oper    : [ [delete] ]
 
-    -   name    : API_CRUD_For_Update_Ping_Traffic
+    -   name    : Update_And_Ping
         testcase: testcases.api_crud.ping
         stress  : True
         args    :
@@ -35,7 +35,20 @@ testcases:
             objtype : [ device, vpc, subnet, vnic, tunnel, nexthop, interface]
             oper    : [ [update] ]
 
-    -   name    : 1_Object_Idempotency_Ping_Traffic
+    -   name    : Create_Create_And_Ping
+        testcase: testcases.api_crud.ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            #ipaf   : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            # TODO: nh-group
+            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
+            oper    : [ [create, create] ]
+
+    -   name    : Delete_Update_And_Ping
         testcase: testcases.api_crud.ping
         stress  : True
         args    :
@@ -46,10 +59,10 @@ testcases:
             ipaf    : [ ipv4 ]
             # TODO: nh-group
             #objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
-            objtype : [ device, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
-            oper    : [ [create, create], [delete, read, update, read] ]
+            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
+            oper    : [ [delete, read, update, read] ]
 
-    -   name    : 2_Object_Idempotency_Ping_Traffic
+    -   name    : Delete_Delete_And_Ping
         testcase: testcases.api_crud.ping
         stress  : True
         args    :
@@ -59,10 +72,10 @@ testcases:
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
             #objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
-            objtype : [ device, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
+            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
             oper    : [ [delete, delete] ]
 
-    -   name    : 3_Object_Idempotency_Ping_Traffic
+    -   name    : Update_Create_And_Ping
         testcase: testcases.api_crud.ping
         stress  : True
         args    :
@@ -71,8 +84,6 @@ testcases:
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
-            #objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
-            #objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, lmapping, rmapping ]
-            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel ]
+            objtype : [ device, vpc, subnet, vnic, nexthop, tunnel, interface, lmapping, rmapping ]
             oper    : [ [update, create] ]
 

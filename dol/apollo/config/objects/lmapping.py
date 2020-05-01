@@ -255,7 +255,7 @@ class LocalMappingObjectClient(base.ConfigClientBase):
                 c = c + 1
                 if c < lmap_count and hasLocalMap:
                     lmap_spec = vnic_spec_obj.lmap[c]
-                else: 
+                else:
                     v4c = v4c + 1
         return
 
