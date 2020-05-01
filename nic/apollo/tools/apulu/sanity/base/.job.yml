@@ -93,13 +93,14 @@ targets:
     - build-apulu-x86
 
   apulu/valgrind:
-    commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtests-valgrind"]
+    # build-apulu-valgrind runs valgrind gtests and creates the file
+    commands: ["sh", "-c", "while [ ! -f /tmp/apulu_gtests_valgrind.done ]; do sleep 60; done"]
     owners: ["email:sai@pensando.io"]
     area:
     sub-area:
     feature:
     build-dependencies:
-    - build-apulu-x86
+    - build-apulu-valgrind
 
   metaswitch/hals_test:
     commands: ["make", "PIPELINE=apulu", "jobd/apulu/metaswitch_hals_test"]

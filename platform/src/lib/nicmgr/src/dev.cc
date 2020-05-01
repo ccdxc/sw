@@ -668,9 +668,11 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 void
 DeviceManager::DeleteDevices()
 {
-    for (auto it = devices.begin(); it != devices.end(); it++) {
+    auto it = devices.begin();
+
+    while (it != devices.end()) {
         delete it->second;
-        devices.erase(it);
+        devices.erase(it++);
     }
 }
 

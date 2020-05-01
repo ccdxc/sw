@@ -89,7 +89,7 @@ private:
     std::map<uint32_t, sub_callback_t> sub_cbs_;
     // the fields below are used for serialized delivery
     bool serializing_enabled_;
-    bool message_in_flight_;
+    bool message_in_flight_ = false;
     // hold queues are used to serialize messages
     std::queue<ipc_msg_ptr> hold_queue_;
     // deliver queue is used to actually deliver held messages to

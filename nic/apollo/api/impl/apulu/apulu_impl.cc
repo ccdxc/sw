@@ -181,14 +181,16 @@ apulu_impl::factory(pipeline_cfg_t *pipeline_cfg) {
 void
 apulu_impl::destroy(apulu_impl *impl) {
     int i;
-    sdk_table_api_params_t       tparams = { 0 };
+    sdk_table_api_params_t tparams;
 
     // remove drop stats table entries
     for (i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
+        memset(&tparams, 0, sizeof(sdk_table_api_params_t));
         tparams.handle = apulu_impl_db()->egr_drop_stats_tbl_hdls_[i];
         apulu_impl_db()->egress_drop_stats_tbl()->remove(&tparams);
     }
     for (i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
+        memset(&tparams, 0, sizeof(sdk_table_api_params_t));
         tparams.handle = apulu_impl_db()->ing_drop_stats_tbl_hdls_[i];
         apulu_impl_db()->ingress_drop_stats_tbl()->remove(&tparams);
     }

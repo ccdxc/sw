@@ -52,6 +52,7 @@ builds:
     artifacts:
       - /sw/build_artemis_x86.tar.gz
   build-apulu-x86:
+    # build-apulu-valgrind also builds apulu binaries. Update it incase this cmd changes
     commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=apulu package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_apulu_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build /usr/src/github.com/pensando/sw/nic/third-party/metaswitch/output/x86_64/lib*"]
     owners: ["email:jainvipin@pensando.io"]
     artifacts:
@@ -158,6 +159,16 @@ builds:
     artifacts:
       - /sw/build_apulu_x86_ctpl_dol.tar.gz
 
+  # apulu valgrind tests take ~30G memory
+  # build VM have ~32G and regular VMs have ~20G
+  # moving the test to sw/.job.yml to run this in buld VM
+  build-apulu-valgrind:
+    # TODO remove building apulu binaries once multi-level build dependency is supported
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=apulu package && make PIPELINE=apulu jobd/apulu/gtests-valgrind && touch /tmp/apulu_gtests_valgrind.done"]
+    owners: ["email:sai@pensando.io"]
+    artifacts:
+      - /tmp/apulu_gtests_valgrind.done
+
 targets:
   submodules:
     commands: ["sh", "-c", "TOP=/sw ./scripts/check-submodules.sh"]
@@ -171,6 +182,7 @@ targets:
     area:
     sub-area:
     feature:
+
 image:
   bind_dir: "/sw"
   work_dir: "/sw"
