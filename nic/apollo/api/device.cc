@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "sys/utsname.h"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/include/sdk/platform.hpp"
@@ -162,6 +163,7 @@ device_entry::fill_status(pds_device_status_t *status) {
     std::string   mac_str;
     std::string   mem_str;
     std::string   value, svalue;
+    struct utsname ubuf;
 
     // fill fru mac in status
     sdk::platform::readfrukey(BOARD_MACADDRESS_KEY, mac_str);
@@ -218,7 +220,11 @@ device_entry::fill_status(pds_device_status_t *status) {
     status->pcie_specification = std::string("-");
     status->pcie_bus_info = std::string("-");
     status->fw_version = std::string("-");
-    status->soc_os_version = std::string("-");
+    if (uname(&ubuf)) {
+        status->soc_os_version = std::string("-");
+    } else {
+        status->soc_os_version = std::string(ubuf.release);
+    }
     status->soc_disk_size = std::string("-");
     status->num_pcie_ports = api::g_pds_state.catalogue()->pcie_nportspecs();
     status->num_ports = api::g_pds_state.catalogue()->num_fp_ports();
