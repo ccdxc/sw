@@ -1,4 +1,4 @@
-from "registry.test.pensando.io:5000/pensando/nic:1.40"
+from "registry.test.pensando.io:5000/pensando/nic:1.42"
 
 user = getenv("USER")
 group = getenv("GROUP_NAME")
