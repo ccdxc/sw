@@ -165,9 +165,9 @@ if (!([string]::IsNullOrWhiteSpace($VerStr))) {
     $VerStrSP = $VerStrL.Split(".")[2]
     $VerStrBuild = $VerStrL.Split(".")[3]
     $VerStrExt = $VerStrR1
-    if ([string]::IsNullOrWhiteSpace($VerStrR2)) {
+    if (![string]::IsNullOrWhiteSpace($VerStrR2)) {
         $VerStrExt += "."+$VerStrR2
-        if ([string]::IsNullOrWhiteSpace($VerStrR3)) {
+        if (![string]::IsNullOrWhiteSpace($VerStrR3)) {
             $VerStrExt += "."+$VerStrR3
         }
     }
