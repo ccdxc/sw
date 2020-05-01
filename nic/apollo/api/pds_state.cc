@@ -15,6 +15,9 @@ namespace api {
 /**< (singleton) instance of all PDS state in one place */
 pds_state g_pds_state;
 
+#define FIRMWARE_VERSION_FILE "/nic/etc/VERSION.json"
+#define FIRMWARE_VERSION_KEY  "sw.version"
+
 /**
  * @defgroup PDS_STATE - Internal state
  * @{
@@ -46,8 +49,7 @@ pds_state::~pds_state() {
 }
 
 sdk_ret_t
-pds_state::parse_global_config_(string pipeline, string cfg_file)
-{
+pds_state::parse_global_config_(string pipeline, string cfg_file) {
     ptree     pt;
 
     cfg_file = cfg_path_ + pipeline + "/" + cfg_file;
@@ -73,6 +75,33 @@ pds_state::parse_global_config_(string pipeline, string cfg_file)
         } else if (mode == "mock") {
             platform_type_ = platform_type_t::PLATFORM_TYPE_MOCK;
         }
+    } catch (std::exception const& e) {
+        std::cerr << e.what() << std::endl;
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+pds_state::parse_firmware_version_(void) {
+    ptree       pt;
+    std::string version_file;
+
+    firmware_version_str_ = std::string("-");
+    version_file = FIRMWARE_VERSION_FILE;
+
+    // make sure version file exists
+    if (access(version_file.c_str(), R_OK) < 0) {
+        fprintf(stderr, "Version file %s doesn't exist or not accessible\n",
+                version_file.c_str());
+        return SDK_RET_ERR;
+    }
+
+    // parse the config now
+    std::ifstream json_cfg(version_file.c_str());
+    read_json(json_cfg, pt);
+    try {
+        firmware_version_str_ = pt.get<std::string>(FIRMWARE_VERSION_KEY);
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
         return sdk::SDK_RET_INVALID_ARG;
@@ -127,6 +156,9 @@ pds_state::init(string pipeline, string cfg_file) {
     state_[PDS_STATE_LEARN] = new learn_state();
     state_[PDS_STATE_ROUTE] = new route_state();
     state_[PDS_STATE_POLICY_RULE] = new policy_rule_state();
+
+    // parse VERSION.json
+    parse_firmware_version_();
 
     // initialize the metrics
     port_metrics_hndl_ = sdk::metrics::create(&port_schema);

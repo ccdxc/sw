@@ -140,6 +140,7 @@ public:
     }
     string memory_profile_string(void) { return memory_profile_str_; }
     string device_profile_string(void) { return device_profile_str_; }
+    string firmware_version(void) { return firmware_version_str_; }
     sdk::lib::kvstore *kvstore(void) const { return kvstore_; }
     void *port_metrics_handle(void) const { return port_metrics_hndl_; }
     void *mgmt_port_metrics_handle(void) const { return mgmt_port_metrics_hndl_; }
@@ -257,6 +258,7 @@ public:
 
 private:
     sdk_ret_t parse_global_config_(string pipeline, string cfg_file);
+    sdk_ret_t parse_firmware_version_();
 
 private:
     string                  cfg_path_;
@@ -269,6 +271,7 @@ private:
     pds_device_profile_t    device_profile_;
     string                  memory_profile_str_;
     string                  device_profile_str_;
+    string                  firmware_version_str_;
     // TODO: remove this after we phase out apollo/artemis tests
     bool                    vpp_ipc_mock_;
     program_info            *pginfo_;

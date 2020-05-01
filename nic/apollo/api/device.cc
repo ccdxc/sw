@@ -219,7 +219,7 @@ device_entry::fill_status(pds_device_status_t *status) {
     }
     status->pcie_specification = std::string("-");
     status->pcie_bus_info = std::string("-");
-    status->fw_version = std::string("-");
+    status->fw_version = api::g_pds_state.firmware_version();
     if (uname(&ubuf)) {
         status->soc_os_version = std::string("-");
     } else {
