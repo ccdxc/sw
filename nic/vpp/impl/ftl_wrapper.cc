@@ -604,4 +604,22 @@ ftlv4_set_entry_flow_miss_hit (ipv4_flow_hash_entry_t *entry, uint8_t val)
     ftlv4_set_flow_miss_hit(entry, val);
 }
 
+uint8_t
+ftlv4_get_entry_epoch (ipv4_flow_hash_entry_t *entry)
+{
+    return ftlv4_get_epoch(entry);
+}
+
+uint8_t
+ftlv4_get_entry_nexthop_type (ipv4_flow_hash_entry_t *entry)
+{
+    return ftlv4_get_nexthop_type(entry);
+}
+
+uint16_t
+ftlv4_get_entry_nexthop_id (ipv4_flow_hash_entry_t *entry)
+{
+    return ftlv4_get_nexthop_id(entry);
+}
+
 }

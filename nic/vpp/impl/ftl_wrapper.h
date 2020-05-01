@@ -39,6 +39,19 @@ typedef struct flow_flags_s {
     uint8_t ctr_idx : 4;
 } flow_flags_t;
 
+typedef struct v4_flow_info_s {
+    uint32_t key_metadata_ipv4_src;
+    uint32_t key_metadata_ipv4_dst;
+    uint16_t key_metadata_flow_lkp_id;
+    uint16_t key_metadata_dport;
+    uint16_t key_metadata_sport;
+    uint8_t key_metadata_proto;
+    uint8_t epoch;
+    uint32_t session_index;
+    uint8_t nexthop_type;
+    uint16_t nexthop_id;
+} v4_flow_info_t;
+
 // Prototypes
 
 void ftl_reg_session_update_cb(session_update_cb cb);
@@ -103,6 +116,12 @@ void ftlv4_set_key_lookup_id(v4_flow_entry *entry, uint16_t lookup_id);
 
 uint16_t ftlv4_get_key_lookup_id(v4_flow_entry *entry);
 
+uint8_t ftlv4_get_entry_epoch(v4_flow_entry *entry);
+
+uint8_t ftlv4_get_entry_nexthop_type(v4_flow_entry *entry);
+
+uint16_t ftlv4_get_entry_nexthop_id(v4_flow_entry *entry);
+
 void ftlv4_set_entry_flow_miss_hit(v4_flow_entry *entry, uint8_t val);
 
 ftlv4 * ftlv4_create(void *key2str,
@@ -116,6 +135,14 @@ int ftlv4_dump_hw_entry(ftlv4 *obj, uint32_t src, uint32_t dst,
                         uint8_t ip_proto, uint16_t sport,
                         uint16_t dport, uint16_t lookup_id,
                         char *buf, int max_len);
+
+int ftlv4_dump_entry_with_handle(ftlv4 *obj, uint32_t index, bool primary,
+                                 v4_flow_info_t *flow_info);
+
+int ftlv4_read_session_index(ftlv4 *obj, uint32_t src, uint32_t dst,
+                             uint8_t ip_proto, uint16_t sport,
+                             uint16_t dport, uint16_t lookup_id,
+                             uint32_t *ses_id);
 
 void ftlv4_init_stats_cache(void);
 
@@ -190,6 +217,11 @@ int ftlv6_dump_hw_entry(ftlv6 *obj, uint8_t *src, uint8_t *dst,
                         uint8_t ip_proto, uint16_t sport,
                         uint16_t dport, uint16_t lookup_id,
                         char *buf, int max_len);
+
+int ftlv6_read_session_index(ftlv6 *obj, uint8_t *src, uint8_t *dst,
+                             uint8_t ip_proto, uint16_t sport,
+                             uint16_t dport, uint16_t lookup_id,
+                             uint32_t *ses_id);
 
 void ftlv6_init_stats_cache(void);
 

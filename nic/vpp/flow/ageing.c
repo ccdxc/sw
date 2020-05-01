@@ -645,7 +645,7 @@ pds_flow_send_keep_alive_helper (pds_flow_hw_ctx_t *session,
     u32 bi;
     u32 ses_id = session - fm->session_index_pool + 1;
     vlib_main_t *vm = vlib_get_main();
-    session_info_t info;
+    session_track_info_t info;
     u32 sip, dip;
     u16 sport, dport, lkp_id;
     u32 *to_next = NULL;
@@ -707,7 +707,7 @@ pds_flow_send_keep_alive_helper (pds_flow_hw_ctx_t *session,
     }
 #endif 
 
-    pds_session_get_info(ses_id, &info);
+    pds_session_track_get_info(ses_id, &info);
 
     if (iflow) {
         h->tcp_hdr.seq_number = clib_host_to_net_u32(info.iflow_tcp_seq_num - 1);

@@ -190,6 +190,31 @@ ftlv4_read_with_handle (ftlv4 *obj, uint32_t index, bool primary,
     return ret;
 }
 
+int
+ftlv4_dump_entry_with_handle (ftlv4 *obj, uint32_t index, bool primary,
+                              v4_flow_info_t *flow_info)
+{
+    sdk::sdk_ret_t ret;
+    ipv4_flow_hash_entry_t entry;
+
+    ret = ftlv4_read_with_handle(obj, index, primary, entry);
+    if (ret != SDK_RET_OK) {
+        return -1;
+    }
+
+    flow_info->key_metadata_ipv4_src = entry.key_metadata_ipv4_src;
+    flow_info->key_metadata_ipv4_dst = entry.key_metadata_ipv4_dst;
+    flow_info->key_metadata_flow_lkp_id = ftlv4_get_key_lookup_id(&entry);
+    flow_info->key_metadata_dport = entry.key_metadata_dport;
+    flow_info->key_metadata_sport = entry.key_metadata_sport;
+    flow_info->key_metadata_proto = entry.key_metadata_proto;
+    flow_info->epoch = ftlv4_get_entry_epoch(&entry);
+    flow_info->session_index = entry.session_index;
+    flow_info->nexthop_type = ftlv4_get_entry_nexthop_type(&entry);
+    flow_info->nexthop_id = ftlv4_get_entry_nexthop_id(&entry);
+    return 0;
+}
+
 static inline int
 ftlv4_read_snat_info (uint32_t session_id, bool host_origin,
                       const operd_flow_key_v4_t &flow_key,
@@ -440,29 +465,59 @@ end:
     return retcode;
 }
 
+static int
+ftlv4_read_hw_entry (ftlv4 *obj, uint32_t src, uint32_t dst,
+                     uint8_t ip_proto, uint16_t sport,
+                     uint16_t dport, uint16_t lookup_id,
+                     ipv4_flow_hash_entry_t *entry)
+{
+    sdk_ret_t ret;
+    sdk_table_api_params_t params = {0};
+    int retcode = 0;
+
+    entry->clear();
+    ftlv4_set_key(entry, src, dst, ip_proto, sport, dport, lookup_id);
+    params.entry = entry;
+
+    ret = obj->get(&params);
+    if (ret != SDK_RET_OK) {
+        retcode = -1;
+    }
+
+    return retcode;
+}
+
+int
+ftlv4_read_session_index (ftlv4 *obj, uint32_t src, uint32_t dst,
+                          uint8_t ip_proto, uint16_t sport,
+                          uint16_t dport, uint16_t lookup_id,
+                          uint32_t *ses_id)
+{
+    int retcode = 0;
+    ipv4_flow_hash_entry_t entry;
+
+    retcode = ftlv4_read_hw_entry(obj, src, dst, ip_proto, sport, dport, lookup_id,
+                                  &entry);
+    if (retcode != -1) {
+        *ses_id = entry.session_index;
+    }
+    return retcode;
+}
+
 int
 ftlv4_dump_hw_entry (ftlv4 *obj, uint32_t src, uint32_t dst,
                      uint8_t ip_proto, uint16_t sport,
                      uint16_t dport, uint16_t lookup_id,
                      char *buf, int max_len)
 {
-    sdk_ret_t ret;
-    sdk_table_api_params_t params = {0};
     int retcode = 0;
     ipv4_flow_hash_entry_t entry;
 
-    entry.clear();
-    ftlv4_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id);
-    params.entry = &entry;
-
-    ret = obj->get(&params);
-    if (ret != SDK_RET_OK) {
-        retcode = -1;
-        goto done;
+    retcode = ftlv4_read_hw_entry(obj, src, dst, ip_proto, sport, dport, lookup_id,
+                                  &entry);
+    if (retcode != -1) {
+        entry.tostr(buf, max_len);
     }
-    entry.tostr(buf, max_len);
-
-done:
     return retcode;
 }
 

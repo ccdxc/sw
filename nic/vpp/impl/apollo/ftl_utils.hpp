@@ -60,4 +60,23 @@ ftl_set_flow_miss_hit(flow_hash_entry_t *entry, uint8_t val)
 {
     return;
 }
+
+uint8_t
+ftlv4_get_epoch(ipv4_flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
+uint8_t
+ftlv4_get_nexthop_type(ipv4_flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
+uint16_t
+ftlv4_get_nexthop_id(ipv4_flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
 #endif  // __VPP_IMPL_APOLLO_FTL_UTILS_H__

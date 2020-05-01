@@ -111,29 +111,63 @@ ftlv6_dump_hw_entries (ftlv6 *obj, char *logfile, uint8_t detail)
     return ftl_dump_hw_entries(obj, logfile, detail, true);
 }
 
+static int
+ftlv6_read_hw_entry (ftlv6 *obj, uint8_t *src, uint8_t *dst,
+                     uint8_t ip_proto, uint16_t sport,
+                     uint16_t dport, uint16_t lookup_id,
+                     flow_hash_entry_t *entry)
+{
+    sdk_ret_t ret;
+    sdk_table_api_params_t params = {0};
+    int retcode = 0;
+
+    entry->clear();
+    ftlv6_set_key(entry, src, dst, ip_proto, sport, dport, lookup_id);
+    params.entry = entry;
+
+    ret = obj->get(&params);
+    if (ret != SDK_RET_OK) {
+        retcode = -1;
+    }
+
+    return retcode;
+}
+
+int
+ftlv6_read_session_index (ftlv6 *obj, uint8_t *src, uint8_t *dst,
+                          uint8_t ip_proto, uint16_t sport,
+                          uint16_t dport, uint16_t lookup_id,
+                          uint32_t *ses_id)
+{
+    int retcode = 0;
+    flow_hash_entry_t entry;
+
+    retcode = ftlv6_read_hw_entry(obj, src, dst, ip_proto, sport, dport,
+                                  lookup_id, &entry);
+
+    if (retcode != -1) {
+        *ses_id = entry.session_index;
+    }
+
+    return retcode;
+}
+
 int
 ftlv6_dump_hw_entry (ftlv6 *obj, uint8_t *src, uint8_t *dst,
                      uint8_t ip_proto, uint16_t sport,
                      uint16_t dport, uint16_t lookup_id,
                      char *buf, int max_len)
 {
-    sdk_ret_t ret;
-    sdk_table_api_params_t params = {0};
     int retcode = 0;
     flow_hash_entry_t entry;
 
-    entry.clear();
-    ftlv6_set_key(&entry, src, dst, ip_proto, sport, dport, lookup_id);
-    params.entry = &entry;
+    retcode = ftlv6_read_hw_entry(obj, src, dst, ip_proto, sport, dport,
+                                  lookup_id, &entry);
 
-    ret = obj->get(&params);
-    if (ret != SDK_RET_OK) {
-        retcode = -1;
-        goto done;
+    if (retcode != -1) {
+        entry.tostr(buf, max_len);
     }
-    entry.tostr(buf, max_len);
-
-done:
+    
     return retcode;
 }
 

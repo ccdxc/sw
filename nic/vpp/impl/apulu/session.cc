@@ -125,6 +125,38 @@ void
 pds_session_get_info (uint32_t session_id, session_info_t *info)
 {
     p4pd_error_t p4pd_ret;
+    session_swkey_t key;
+    session_actiondata_t ses_data;
+
+    key.p4e_i2e_session_id = session_id;
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_SESSION, key.p4e_i2e_session_id,
+                                      NULL, NULL, &ses_data);
+    assert(p4pd_ret == P4PD_SUCCESS);
+
+    info->tx_rewrite_flags =
+        ses_data.action_u.session_session_info.tx_rewrite_flags;
+    info->tx_xlate_id =
+        ses_data.action_u.session_session_info.tx_xlate_id;
+    info->tx_xlate_id2 =
+        ses_data.action_u.session_session_info.tx_xlate_id2;
+    info->rx_rewrite_flags =
+        ses_data.action_u.session_session_info.rx_rewrite_flags;
+    info->rx_xlate_id =
+        ses_data.action_u.session_session_info.rx_xlate_id;
+    info->rx_xlate_id2 =
+        ses_data.action_u.session_session_info.rx_xlate_id2;
+    info->meter_id =
+        ses_data.action_u.session_session_info.meter_id;
+    memcpy(&info->timestamp, ses_data.action_u.session_session_info.timestamp,
+           sizeof(info->timestamp));
+    info->session_tracking_en =
+        ses_data.action_u.session_session_info.session_tracking_en;
+}
+
+void
+pds_session_track_get_info (uint32_t session_id, session_track_info_t *info)
+{
+    p4pd_error_t p4pd_ret;
     session_track_swkey_t key;
     session_track_actiondata_t ses_data;
 
@@ -133,19 +165,37 @@ pds_session_get_info (uint32_t session_id, session_info_t *info)
                                       NULL, NULL, &ses_data);
     assert(p4pd_ret == P4PD_SUCCESS);
 
+    info->iflow_tcp_state = 
+        ses_data.action_u.session_track_session_track_info.iflow_tcp_state;
     info->iflow_tcp_seq_num =
         ses_data.action_u.session_track_session_track_info.iflow_tcp_seq_num;
     info->iflow_tcp_ack_num =
         ses_data.action_u.session_track_session_track_info.iflow_tcp_ack_num;
     info->iflow_tcp_win_size =
         ses_data.action_u.session_track_session_track_info.iflow_tcp_win_size;
+    info->iflow_tcp_win_scale = 
+        ses_data.action_u.session_track_session_track_info.iflow_tcp_win_scale;
+    info->iflow_tcp_mss =
+        ses_data.action_u.session_track_session_track_info.iflow_tcp_mss;
+    info->iflow_tcp_exceptions =
+        ses_data.action_u.session_track_session_track_info.iflow_tcp_exceptions;
+    info->iflow_tcp_win_scale_option_sent = 
+        ses_data.action_u.session_track_session_track_info.iflow_tcp_win_scale_option_sent;
+    info->rflow_tcp_state =
+        ses_data.action_u.session_track_session_track_info.rflow_tcp_state;
     info->rflow_tcp_seq_num =
         ses_data.action_u.session_track_session_track_info.rflow_tcp_seq_num;
     info->rflow_tcp_ack_num =
         ses_data.action_u.session_track_session_track_info.rflow_tcp_ack_num;
     info->rflow_tcp_win_size =
         ses_data.action_u.session_track_session_track_info.rflow_tcp_win_size;
-
+    info->rflow_tcp_win_scale =
+        ses_data.action_u.session_track_session_track_info.rflow_tcp_win_scale;
+    info->rflow_tcp_mss =
+        ses_data.action_u.session_track_session_track_info.rflow_tcp_mss;
+    info->rflow_tcp_exceptions =
+        ses_data.action_u.session_track_session_track_info.rflow_tcp_exceptions;
+    
     return;
 }
 

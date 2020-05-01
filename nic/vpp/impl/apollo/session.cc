@@ -43,6 +43,12 @@ pds_session_get_info (uint32_t session_id, session_info_t *info)
     return;
 }
 
+void
+pds_session_track_get_info (uint32_t session_id, session_track_info_t *info)
+{
+    return;
+}
+
 bool
 pds_session_get_xlate_ids (uint32_t ses, uint16_t *rx_xlate_id,
                            uint16_t *tx_xlate_id,
