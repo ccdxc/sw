@@ -700,14 +700,34 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
             buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
                               "option interface-mtu=%x:%x; ",
-                              (uint32_t)mtu_ptr[1],
-                              (uint32_t)mtu_ptr[0]
-                              );
+                              (uint32_t)mtu_ptr[1], (uint32_t)mtu_ptr[0]);
         }
 
         // lease timeout
         if (policy->lease_timeout()) {
-            // TBD
+            uint32_t lease_timeout = policy->lease_timeout();
+            uint8_t *lease_timeout_ptr = (uint8_t *)&lease_timeout;
+
+            // default lease time
+            buf_len = statements_len - index;
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "default-lease-time=%x:%x:%x:%x; ",
+                              (uint32_t)lease_timeout_ptr[3], (uint32_t)lease_timeout_ptr[2],
+                              (uint32_t)lease_timeout_ptr[1], (uint32_t)lease_timeout_ptr[0]);
+
+            // max lease time
+            buf_len = statements_len - index;
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "max-lease-time=%x:%x%x:%x; ",
+                              (uint32_t)lease_timeout_ptr[3], (uint32_t)lease_timeout_ptr[2],
+                              (uint32_t)lease_timeout_ptr[1], (uint32_t)lease_timeout_ptr[0]);
+
+            // min lease time
+            buf_len = statements_len - index;
+            index += snprintf((char *)(statements->value + index), buf_len,
+                              "min-lease-time=%x:%x:%x:%x; ",
+                              (uint32_t)lease_timeout_ptr[3], (uint32_t)lease_timeout_ptr[2],
+                              (uint32_t)lease_timeout_ptr[1], (uint32_t)lease_timeout_ptr[0]);
         }
         dhcpctl_set_value(host, statements, "statements");
     }

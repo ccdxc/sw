@@ -262,9 +262,9 @@ vcn0=interface.InterfaceObject( 100, interface_pb2.IF_TYPE_CONTROL, interface_pb
 tunnel1 = tunnel.TunnelObject( tunnel_id,vpc1_id, tunnel_local_ip, tunnel_remote_ip, None, tunnel_pb2.TUNNEL_TYPE_NONE, types_pb2.ENCAP_TYPE_VXLAN, tunnel_vnid)
 
 # Create DHCP Policy
-dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip, mtu=9000, gateway_ip=subnet1_v4_router_ip, dns_server=subnet1_v4_router_ip, ntp_server=subnet1_v4_router_ip, domain_name="test.com")
-dhcp_policy2 = dhcp.DhcpPolicyObject(2, server_ip=subnet2_v4_router_ip, mtu=9000, gateway_ip=subnet2_v4_router_ip, dns_server=subnet2_v4_router_ip, ntp_server=subnet2_v4_router_ip, domain_name="test.com")
-dhcp_policy3 = dhcp.DhcpPolicyObject(3, server_ip=pxe_v4_router_ip, boot_filename="http://10.1.0.3/kickstart/install_http_rhel77.ipxe")
+dhcp_policy1 = dhcp.DhcpPolicyObject(1, server_ip=subnet1_v4_router_ip, mtu=9000, gateway_ip=subnet1_v4_router_ip, dns_server=subnet1_v4_router_ip, ntp_server=subnet1_v4_router_ip, domain_name="test.com", lease_timeout=3600 )
+dhcp_policy2 = dhcp.DhcpPolicyObject(2, server_ip=subnet2_v4_router_ip, mtu=9000, gateway_ip=subnet2_v4_router_ip, dns_server=subnet2_v4_router_ip, ntp_server=subnet2_v4_router_ip, domain_name="test.com", lease_timeout=3600 )
+dhcp_policy3 = dhcp.DhcpPolicyObject(3, server_ip=pxe_v4_router_ip, boot_filename="http://10.1.0.3/kickstart/install_http_rhel77.ipxe" )
 
 # Create NAT Port Block
 nat_pb1 = nat.NatPbObject(1, vpc1_id, nat_prefix, nat_port_lo, nat_port_hi, "udp")
@@ -273,8 +273,8 @@ nat_pb3 = nat.NatPbObject(3, vpc1_id, nat_prefix, 0, 0, "icmp")
 
 # Create Subnets
 # id, vpcid, v4prefix, v6prefix, hostifindex, v4virtualrouterip, v6virtualrouterip, virtualroutermac, v4routetableid, v6routetableid, ingv4securitypolicyid, egrv4securitypolicyid, ingv6securitypolicyid, egrv6securitypolicyid, fabricencap='VXLAN', fabricencapid=1
-subnet1_route1=route.RouteObject(ipaddress.IPv4Network(subnet1_route_prefix1), "tunnel", tunnel_id, "napt")
-subnet1_route_table=route.RouteTableObject(subnet1_route_table_id, types_pb2.IP_AF_INET, [subnet1_route1])
+subnet1_route1=route.RouteObject(ipaddress.IPv4Network(subnet1_route_prefix1), "tunnel", tunnel_id, "napt" )
+subnet1_route_table=route.RouteTableObject(subnet1_route_table_id, types_pb2.IP_AF_INET, [subnet1_route1] )
 subnet1 = subnet.SubnetObject( 1, vpc1_id, ipaddress.IPv4Network(ipv4_subnet1), subnet1_host_if_idx, subnet1_v4_router_ip, subnet1_virt_router_mac, subnet1_route_table_id, 'VXLAN', subnet1_fabric_encap, node_uuid=node_uuid, dhcp_policy_id=1 )
 subnet2 = subnet.SubnetObject( 2, vpc1_id, ipaddress.IPv4Network(ipv4_subnet2), subnet2_host_if_idx, subnet2_v4_router_ip, subnet2_virt_router_mac, subnet1_route_table_id, 'VXLAN', subnet2_fabric_encap, node_uuid=node_uuid, dhcp_policy_id=2 )
 
