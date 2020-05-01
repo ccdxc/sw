@@ -263,8 +263,8 @@ session_ctx_t::init(void)
             return PDS_RET_ERR;
         }
     }
-    //PDS_TRACE_DEBUG("Session context init session depth %u cache depth %u",
-    //                session_prop.tabledepth, cache_prop.tabledepth);
+    PDS_TRACE_DEBUG("Session context init session depth %u cache depth %u",
+                    session_prop.tabledepth, cache_prop.tabledepth);
 #ifdef FLOW_SESSION_CTX_MODE_HBM
     uint64_t hbm_paddr = api::g_pds_state.mempartition()->start_addr(
                                           FLOW_SESSION_CTX_HBM_HANDLE);
@@ -343,6 +343,17 @@ pds_flow_session_ctx_set(uint32_t session_id,
     if (session_ctx.cache_id_validate(cache_id)) {
         ctx_entry_t *ctx = session_ctx.ctx_entry_lock(session_id);
         if (ctx) {
+            if (ctx->valid &&
+                ((ctx_entry_cache_id_get(ctx) != cache_id) ||
+                 (ctx->primary != primary))) {
+
+                /*
+                 * Return a unique error code (PDS_RET_NOOP) to allow caller
+                 * to differentiate from flow cache case of "entry exists".
+                 */
+                session_ctx.ctx_entry_unlock(session_id);
+                return PDS_RET_NOOP;
+            }
             ctx_entry_cache_id_set(ctx, cache_id);
             ctx->primary = primary;
             ctx->valid = true;

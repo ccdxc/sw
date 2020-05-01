@@ -702,10 +702,12 @@ setup_flows(void)
         return ret;
     }
 
+#ifdef NAT_1_TO_1
     ret = athena_gtest_setup_flows_nat();
     if (ret != SDK_RET_OK) {
         return ret;
     }
+#endif
 
     return ret;
 }
@@ -810,8 +812,10 @@ TEST(athena_gtest, sim)
     /* ICMP Flow tests */
     ASSERT_TRUE(athena_gtest_test_flows_icmp() == SDK_RET_OK);
 
+#ifdef NAT_1_TO_1
     /* NAT Flow tests */
     ASSERT_TRUE(athena_gtest_test_flows_nat() == SDK_RET_OK);
+#endif
 
     iterate_dump_flows();
 

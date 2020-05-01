@@ -14,6 +14,8 @@ session_populate_random 333 209
 session_aging_test
 session_populate_random
 session_aging_test
+session_and_cache_populate tcp {vnic 1 2} {sip 192.168.1.1 10} {dip 198.168.1.1 10} {sport 2000 2} {dport 4000 2}
+session_aging_test
 session_aging_metrics_show
 session_aging_fini
 session_aging_expiry_log_set FALSE

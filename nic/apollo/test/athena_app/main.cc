@@ -762,6 +762,13 @@ skip_fte_flow_prog_set(test_vparam_ref_t vparam)
     return true;
 }
 
+bool
+flow_cache_dump(test_vparam_ref_t vparam)
+{
+    return fte_ath::fte_dump_flows(vparam.expected_str().c_str(),
+                                   false) == PDS_RET_OK;
+}
+
 #ifdef __x86_64__
 TEST(athena_app_gtest, sim)
 {

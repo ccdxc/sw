@@ -12,6 +12,12 @@ namespace fte_ath {
 extern uint32_t g_session_index;
 extern uint32_t g_session_rewrite_index;
 sdk_ret_t
+fte_session_index_alloc (uint32_t *sess_id);
+
+sdk_ret_t
+fte_session_index_free (uint32_t sess_id);
+
+sdk_ret_t
 fte_vlan_to_vnic_map (uint16_t vlan_id, uint16_t vnic_id);
 
 sdk_ret_t

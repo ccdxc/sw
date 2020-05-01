@@ -18,6 +18,7 @@ namespace athena_app {
 
 #define ATHENA_APP_CMD_STR_BYTES    64
 #define ATHENA_APP_SCRIPT_STR_BYTES 128
+#define ATHENA_APP_FNAME_STR_BYTES  128
 
 /*
  * Ensure termination of a string char array
@@ -82,6 +83,20 @@ typedef struct {
     char            dir[ATHENA_APP_SCRIPT_STR_BYTES];
     char            name[ATHENA_APP_SCRIPT_STR_BYTES];
 } server_script_exec_t;
+
+/*
+ * Server flow cache dump request message
+ */
+typedef struct {
+    server_req_t    cmd;
+    char            fname[ATHENA_APP_FNAME_STR_BYTES];
+    uint32_t        append;
+} flow_cache_dump_t;
+
+/*
+ * Server flow stats dump request message
+ */
+typedef flow_cache_dump_t   flow_stats_dump_t;
 
 int  server_init(void); 
 void server_fini(void);

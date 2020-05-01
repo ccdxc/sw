@@ -191,6 +191,7 @@ main(int argc,
     status = client_init();
     CMD_STATUS_CHECK(status, cmd_script_exec_req_check());
     CMD_STATUS_CHECK(status, cmd_flow_stats_dump_req_check());
+    CMD_STATUS_CHECK(status, cmd_flow_cache_dump_req_check());
 
     client_fini();
     return status == 0 ? 0 : 1;

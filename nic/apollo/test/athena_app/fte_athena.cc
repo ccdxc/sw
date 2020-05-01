@@ -158,9 +158,29 @@ static bool fte_threads_started;
 static bool fte_threads_done;
 
 // File to dump flows on HW
-#ifndef SIM
 static FILE *g_flows_fp;
-#endif
+static FILE *g_stats_fp;
+
+// Cache dump to either a designated file or to PDS log
+#define CACHE_DUMP_LOG(args...)                     \
+    do {                                            \
+        if (g_flows_fp) {                           \
+            fprintf(g_flows_fp, args);              \
+            fflush(g_flows_fp);                     \
+        } else {                                    \
+            PDS_TRACE_DEBUG(args);                  \
+        }                                           \
+    } while (false)                                 \
+
+// Stats dump to a designated file (if any) as well as to PDS log
+#define STATS_DUMP_LOG(args...)                     \
+    do {                                            \
+        PDS_TRACE_DEBUG(args);                      \
+        if (g_stats_fp) {                           \
+            fprintf(g_stats_fp, args);              \
+            fflush(g_stats_fp);                     \
+        }                                           \
+    } while (false)                                 \
 
 // Send burst of packets on an output interface 
 static inline void
@@ -389,7 +409,6 @@ _init_pollers_client (void)
     }
 }
 
-#ifdef SIM
 void
 dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
 {
@@ -397,7 +416,7 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
     pds_flow_data_t *data = &iter_cb_arg->flow_appdata;
 
     if (key->key_type == KEY_TYPE_IPV6) {
-        PDS_TRACE_DEBUG("SrcIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
+        CACHE_DUMP_LOG("SrcIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
                         "DstIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
                         "Dport:%u Sport:%u Proto:%u "
                         "Ktype:%u VNICID:%u "
@@ -414,7 +433,7 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
                         key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
                         data->index, (uint8_t)data->index_type);
     } else {
-        PDS_TRACE_DEBUG("SrcIP:%d.%d.%d.%d "
+        CACHE_DUMP_LOG("SrcIP:%d.%d.%d.%d "
                         "DstIP:%d.%d.%d.%d "
                         "Dport:%u Sport:%u Proto:%u "
                         "Ktype:%u VNICID:%u "
@@ -427,65 +446,94 @@ dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
     }
     return;
 }
-#else
-void
-dump_single_flow(pds_flow_iter_cb_arg_t *iter_cb_arg)
-{
-    pds_flow_key_t *key = &iter_cb_arg->flow_key;
-    pds_flow_data_t *data = &iter_cb_arg->flow_appdata;
 
-    if (key->key_type == KEY_TYPE_IPV6) {
-        fprintf(g_flows_fp, "SrcIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
-                        "DstIP:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
-                        "Dport:%u Sport:%u Proto:%u "
-                        "Ktype:%u VNICID:%u "
-                        "index:%u index_type:%u\n",
-                        key->ip_saddr[0], key->ip_saddr[1], key->ip_saddr[2], key->ip_saddr[3],
-                        key->ip_saddr[4], key->ip_saddr[5], key->ip_saddr[6], key->ip_saddr[7],
-                        key->ip_saddr[8], key->ip_saddr[9], key->ip_saddr[10], key->ip_saddr[11],
-                        key->ip_saddr[12], key->ip_saddr[13], key->ip_saddr[14], key->ip_saddr[15],
-                        key->ip_daddr[0], key->ip_daddr[1], key->ip_daddr[2], key->ip_daddr[3],
-                        key->ip_daddr[4], key->ip_daddr[5], key->ip_daddr[6], key->ip_daddr[7],
-                        key->ip_daddr[8], key->ip_daddr[9], key->ip_daddr[10], key->ip_daddr[11],
-                        key->ip_daddr[12], key->ip_daddr[13], key->ip_daddr[14], key->ip_daddr[15],
-                        key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
-                        key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
-                        data->index, (uint8_t)data->index_type);
-        fflush(g_flows_fp);
-    } else {
-        fprintf(g_flows_fp, "SrcIP:%d.%d.%d.%d "
-                        "DstIP:%d.%d.%d.%d "
-                        "Dport:%u Sport:%u Proto:%u "
-                        "Ktype:%u VNICID:%u "
-                        "index:%u index_type:%u\n",
-                        key->ip_saddr[3], key->ip_saddr[2], key->ip_saddr[1], key->ip_saddr[0],
-                        key->ip_daddr[3], key->ip_daddr[2], key->ip_daddr[1], key->ip_daddr[0],
-                        key->l4.tcp_udp.dport, key->l4.tcp_udp.sport,
-                        key->ip_proto, (uint8_t)key->key_type, key->vnic_id,
-                        data->index, (uint8_t)data->index_type);
-        fflush(g_flows_fp);
-    }
-    return;
-}
+static void
+flows_fp_init(FILE **fp,
+              bool append = false)
+{
+#ifndef SIM
+     // /var/log/pensando doesn't have sufficient memory
+     // Create a /data/flows.log file for flow dump
+     // Note: w+ mode automatically truncates the file if it exists.
+     const char *mode = append ? "a+" : "w+";
+     if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
+         *fp = fopen("/data/flows.log", mode);
+     } else {
+         *fp = fopen("/data/flows_sec.log", mode);
+     }
 #endif
+}
 
-void
-dump_flows(void)
+static pds_ret_t
+switch_to_file(const char *fname,
+               FILE **fp,
+               bool append)
+{
+    /*
+     * Switch file handle to argument file name if given;
+     * otherwise, keep the same handle
+     */
+    if (fname) {
+        const char *mode = append ? "a+" : "w+";
+
+        if (*fp) {
+            fclose(*fp);
+        }
+        *fp = fopen(fname, mode);
+        if (!(*fp)) {
+            PDS_TRACE_ERR("Failed to open file %s", fname);
+            return PDS_RET_ERR;
+        }
+    }
+    return PDS_RET_OK;
+}
+
+static void
+revert_from_file(const char *fname,
+                 FILE **fp,
+                 void (*revert_fn)(FILE **fp, bool append))
+{
+    /*
+     * If file handle had been switched to fname,
+     * close the handle and revert it back to the previous file
+     * using the argument revert_fn if given.
+     */
+    if (fname) {
+        if (*fp) {
+            fclose(*fp);
+            *fp = nullptr;
+        }
+        if (revert_fn) {
+            (*revert_fn)(fp, true);
+        }
+    }
+}
+
+pds_ret_t
+fte_dump_flows(const char *fname,
+               bool append)
 {
     pds_flow_iter_cb_arg_t iter_cb_arg = { 0 };
+    pds_ret_t ret = PDS_RET_OK;
 
     PDS_TRACE_DEBUG("\nPrinting Flow cache flows\n");
 #ifndef SIM
     iter_cb_arg.force_read = true;
 #endif
-    pds_flow_cache_entry_iterate(dump_single_flow, &iter_cb_arg);
+    ret = switch_to_file(fname, &g_flows_fp, append);
+    if (ret == PDS_RET_OK) {
+        pds_flow_cache_entry_iterate(dump_single_flow, &iter_cb_arg);
+    }
+
+    revert_from_file(fname, &g_flows_fp, flows_fp_init);
+    return ret;
 }
 
 static void
 dump_stats (pds_flow_stats_t *stats)
 {
-    PDS_TRACE_DEBUG("\nPrinting Flow cache statistics\n");
-    PDS_TRACE_DEBUG("Insert %lu, Insert_fail_dupl %lu, Insert_fail %lu, "
+    STATS_DUMP_LOG("\nPrinting Flow cache statistics\n");
+    STATS_DUMP_LOG("Insert %lu, Insert_fail_dupl %lu, Insert_fail %lu, "
                     "Insert_fail_recirc %lu\n"
                     "Remove %lu, Remove_not_found %lu, Remove_fail %lu\n"
                     "Update %lu, Update_fail %lu\n"
@@ -516,7 +564,7 @@ dump_stats (pds_flow_stats_t *stats)
                     stats->table_read,
                     stats->table_write);
     for (int i= 0; i < PDS_FLOW_TABLE_MAX_RECIRC; i++) {
-         PDS_TRACE_DEBUG("Tbl_lvl %u, Tbl_insert %lu, Tbl_remove %lu\n",
+         STATS_DUMP_LOG("Tbl_lvl %u, Tbl_insert %lu, Tbl_remove %lu\n",
                          i, stats->table_insert_lvl[i],
                          stats->table_remove_lvl[i]);
     }
@@ -559,12 +607,24 @@ pds_ret_t
 fte_dump_flows(zmq_msg_t *rx_msg,
                zmq_msg_t *tx_msg)
 {
-    dump_flows();
+    pds_ret_t ret;
+    if (rx_msg) {
+        test::athena_app::flow_cache_dump_t *req;
 
-    if (tx_msg) {
         SERVER_RSP_INIT(tx_msg, rsp, test::athena_app::server_rsp_t);
+        req = (test::athena_app::flow_cache_dump_t *)zmq_msg_data(rx_msg);
+        rsp->status = test::athena_app::server_msg_size_check(rx_msg,
+                                                              sizeof(*req));
+        if (rsp->status == PDS_RET_OK) {
+            ATHENA_APP_MSG_STR_TERM(req->fname);
+            rsp->status = fte_dump_flows(req->fname, req->append);
+        }
+        ret = (pds_ret_t)rsp->status;
+
+    } else {
+        ret = fte_dump_flows(nullptr, false);
     }
-    return PDS_RET_OK;
+    return ret;
 }
 
 void
@@ -617,21 +677,36 @@ fte_dump_flow_stats(zmq_msg_t *rx_msg,
     struct rte_eth_stats  stats = {0};
     int                   ret = 0;
     uint16_t              nb_ports = 0, nb_rx_queue = 0;
+    test::athena_app::flow_stats_dump_t *req = nullptr;
+
+    if (rx_msg) {
+        SERVER_RSP_INIT(tx_msg, rsp, test::athena_app::server_rsp_t);
+        req = (test::athena_app::flow_stats_dump_t *)zmq_msg_data(rx_msg);
+        rsp->status = test::athena_app::server_msg_size_check(rx_msg,
+                                                              sizeof(*req));
+        if (rsp->status == PDS_RET_OK) {
+            ATHENA_APP_MSG_STR_TERM(req->fname);
+            rsp->status = switch_to_file(req->fname, &g_stats_fp, req->append);
+        }
+        if (rsp->status != PDS_RET_OK) {
+            goto done;
+        }
+    }
 
     nb_ports = rte_eth_dev_count_avail();
-    PDS_TRACE_DEBUG("\n Printing Interface Stats \n");
+    STATS_DUMP_LOG("\n Printing Interface Stats \n");
     for (uint16_t i = 0; i <nb_ports ; i++) {
         calc_print_time_delta(&etime[i], &stime[i], i);                 
         ret = rte_eth_stats_get(i, &stats);
         if (ret == 0) {
-            PDS_TRACE_DEBUG("\n Port %d: I/O/IE/OE/IM/RNB: "
+            STATS_DUMP_LOG("\n Port %d: I/O/IE/OE/IM/RNB: "
                             "%lu/%lu/%lu/%lu/%lu/%lu \n",
                    i, stats.ipackets, stats.opackets, 
                    stats.ierrors, stats.oerrors, 
                    stats.imissed, stats.rx_nombuf);
             nb_rx_queue = get_port_n_rx_queues(i);
             for (uint16_t j = 0; j < nb_rx_queue; j ++) {
-                PDS_TRACE_DEBUG("\n Port %d, Queue %d: "
+                STATS_DUMP_LOG("\n Port %d, Queue %d: "
                                "I/O/ERRORS: %lu/%lu/%lu \n",
                    i, j, stats.q_ipackets[j], stats.q_opackets[j], 
                    stats.q_errors[j]);
@@ -651,8 +726,9 @@ fte_dump_flow_stats(zmq_msg_t *rx_msg,
     }
     dump_stats(&g_flow_stats);
 
-    if (tx_msg) {
-        SERVER_RSP_INIT(tx_msg, rsp, test::athena_app::server_rsp_t);
+done:
+    if (req) {
+        revert_from_file(req->fname, &g_stats_fp, nullptr);
     }
     return PDS_RET_OK;
 }
@@ -1080,18 +1156,7 @@ fte_main (void)
 
    
 skip_dpdk:
-#ifndef SIM
-     // /var/log/pensando doesn't have sufficient memory
-     // Create a /data/flows.log file for flow dump
-     // First delete the file, so logs are cleared(new file created) on every reboot
-     if (g_athena_app_mode == ATHENA_APP_MODE_CPP) {
-         remove("/data/flows.log");
-         g_flows_fp = fopen("/data/flows.log", "w+");
-     } else {
-         remove("/data/flows_sec.log");
-         g_flows_fp = fopen("/data/flows_sec.log", "w+");
-     }
-#endif
+    flows_fp_init(&g_flows_fp);
 
     return ret;
 }

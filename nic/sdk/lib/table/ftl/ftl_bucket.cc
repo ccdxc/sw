@@ -348,6 +348,11 @@ Bucket::remove_(Apictx *ctx) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
+    // Some API user may reference the returned data to drive the next action.
+    // Done here to ensure it gets the data from the final recursion.
+    if (ctx->params->entry) {
+        ctx->params->entry->copy_data(ctx->entry);
+    }
     ret = find_(ctx);
     if (ret != SDK_RET_OK) {
         FTL_TRACE_ERR("%s: failed to find match. Ctx:[%s], ret:%d",

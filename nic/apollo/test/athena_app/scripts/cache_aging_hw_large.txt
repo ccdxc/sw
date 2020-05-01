@@ -1,0 +1,27 @@
+#Note that the test infra knows the true size of the session table
+#so it's fine to specify larger size parameters here. The infra will
+#automatically reduce it to the actual table size as needed.
+
+skip_fte_flow_prog_set TRUE
+session_table_clear_full 8388608
+
+session_aging_init
+
+session_aging_normal_tmo_set 6
+session_aging_accel_tmo_set 2
+
+session_and_cache_populate tcp {vnic 1 2} {sip 192.168.1.1 100} {dip 198.168.1.1 100} {sport 2000 10} {dport 4000 10}
+session_aging_test
+
+#switch to accelerated aging
+session_aging_accel_control true
+
+session_and_cache_populate udp {vnic 1 2} {sip 222.100.1.1 128} {dip 111.110.1.1 128} {sport 8000 10} {dport 9000 10}
+session_aging_test
+
+session_aging_metrics_show
+session_aging_accel_control FALSE
+session_aging_fini
+
+skip_fte_flow_prog_set false
+

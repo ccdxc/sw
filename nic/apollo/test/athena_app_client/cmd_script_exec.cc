@@ -11,18 +11,18 @@
 #include "athena_app_client.hpp"
 
 DEFINE_string(script_dir, "",
-              "server script directory");
+              "Naples script directory");
 DEFINE_string(script_name, "",
-              "server script file name");
+              "Naples script file name");
 DEFINE_bool(script_exec, false,
-            "execute the specified script_dir/script_name on server");
+            "execute the specified script_dir/script_name on Naples");
 
 static int
 cmd_script_exec_rsp_check(zmq_msg_t *rx_msg)
 {
     if (server_msg_size_check(rx_msg, sizeof(server_rsp_t)) == 0) {
         SERVER_RSP_GET(rx_msg, rsp, server_rsp_t);
-        CLIENT_LOG_INFO("Completed server script: %s, status: %s\n",
+        CLIENT_LOG_INFO("Completed Naples script: %s, status: %s\n",
                         FLAGS_script_name.c_str(),
                         rsp->status == 0 ? "SUCCESS" : "FAILURE");
         return rsp->status;

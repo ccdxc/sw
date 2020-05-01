@@ -25,6 +25,9 @@
 using namespace sdk;
 using namespace sdk::table;
 
+#define IS_INDEX_TYPE_SESSION(type)         \
+    ((pds_flow_spec_index_type_t)(type) == PDS_FLOW_SPEC_INDEX_SESSION)
+    
 extern "C" {
 
 static ftl_base *ftl_table;
@@ -170,7 +173,7 @@ pds_flow_cache_entry_create (pds_flow_spec_t *spec)
     ftlv6_set_index_type(&entry, index_type);
     params.entry = &entry;
     ret = ftl_table->insert(&params);
-    if (ret == SDK_RET_OK) {
+    if ((ret == SDK_RET_OK) && IS_INDEX_TYPE_SESSION(index_type)) {
         //PDS_TRACE_VERBOSE("session_ctx create session_id %u pindex %u "
         //                  "sindex %u", index, params.handle.pindex(),
         //                  params.handle.sindex());
@@ -223,7 +226,9 @@ pds_flow_cache_entry_update (pds_flow_spec_t *spec)
     sdk_table_api_params_t params = { 0 };
     flow_hash_entry_t entry;
     uint32_t index;
+    uint32_t old_index;
     pds_flow_spec_index_type_t index_type;
+    pds_flow_spec_index_type_t old_type;
 
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
@@ -246,18 +251,30 @@ pds_flow_cache_entry_update (pds_flow_spec_t *spec)
     if ((ret = flow_cache_entry_setup_key(&entry, &spec->key))
              != SDK_RET_OK)
          return (pds_ret_t)ret;
+    params.entry = &entry;
+    if ((ret = ftl_table->get(&params)) != SDK_RET_OK)
+        return (pds_ret_t)ret;
+
+    old_index = ftlv6_get_index(&entry);
+    old_type = (pds_flow_spec_index_type_t)ftlv6_get_index_type(&entry);
     ftlv6_set_index(&entry, index);
     ftlv6_set_index_type(&entry, index_type);
-    params.entry = &entry;
     ret = ftl_table->update(&params);
     if (ret == SDK_RET_OK) {
         //PDS_TRACE_VERBOSE("session_ctx update session_id %u pindex %u "
         //                  "sindex %u", index, params.handle.pindex(),
         //                  params.handle.sindex());
-        ret = (sdk_ret_t)
-              pds_flow_session_ctx_set(index, params.handle.pindex(),
-                                       params.handle.sindex(),
-                                       params.handle.pvalid());
+        if ((index != old_index) || (index_type != old_type)) {
+            if (IS_INDEX_TYPE_SESSION(old_type)) {
+                pds_flow_session_ctx_clr(old_index);
+            }
+            if (IS_INDEX_TYPE_SESSION(index_type)) {
+                ret = (sdk_ret_t)
+                      pds_flow_session_ctx_set(index, params.handle.pindex(),
+                                               params.handle.sindex(),
+                                               params.handle.pvalid());
+            }
+        }
     }
     return (pds_ret_t) ret;
 }
@@ -269,13 +286,15 @@ ftl_table_entry_move (base_table_entry_t *base_entry,
                       bool move_complete)
 {
     flow_hash_entry_t *entry = (flow_hash_entry_t *)base_entry;
-    uint32_t session_id = entry->get_idx();
-    uint32_t cache_id;
+    if (IS_INDEX_TYPE_SESSION(entry->get_idx_type())) {
+        uint32_t session_id = entry->get_idx();
+        uint32_t cache_id;
 
-    cache_id = new_handle.pvalid() ? 
-               new_handle.pindex() : new_handle.sindex();
-    pds_flow_session_ctx_move(session_id, cache_id, 
-                              new_handle.pvalid(), move_complete);
+        cache_id = new_handle.pvalid() ? 
+                   new_handle.pindex() : new_handle.sindex();
+        pds_flow_session_ctx_move(session_id, cache_id, 
+                                  new_handle.pvalid(), move_complete);
+    }
 }
 
 pds_ret_t
@@ -303,7 +322,9 @@ pds_flow_cache_entry_delete (pds_flow_key_t *key)
     params.movecb = ftl_table_entry_move;
     ret = ftl_table->remove(&params);
     if (ret == SDK_RET_OK) {
-        pds_flow_session_ctx_clr(entry.get_idx());
+        if (IS_INDEX_TYPE_SESSION(entry.get_idx_type())) {
+            pds_flow_session_ctx_clr(entry.get_idx());
+        }
     }
     return (pds_ret_t) ret;
 }
@@ -319,6 +340,9 @@ pds_flow_cache_entry_delete_by_flow_info (pds_flow_info_t *info)
 
     if (!info) {
         PDS_TRACE_ERR("flow info is null");
+        return PDS_RET_INVALID_ARG;
+    }
+    if (!IS_INDEX_TYPE_SESSION(info->spec.data.index_type)) {
         return PDS_RET_INVALID_ARG;
     }
     ret = pds_flow_session_ctx_get_clr(info->spec.data.index,
@@ -346,8 +370,15 @@ pds_flow_cache_entry_delete_by_flow_info (pds_flow_info_t *info)
                       cache_id);
         return ret;
     }
-    params.hash_valid = true;
-    params.hash_32b = cache_id;
+
+    /*
+     * Must clear hash_valid back to false here so the remove() method
+     * can recalculate the correct hash for the acquired flow key.
+     * (It was the get_with_handle() method that would have gone thru a
+     * default genhash path regardless of whether or not there was
+     * a key and it would have left params.hash_valid as true).
+     */
+    params.hash_valid = false;
     params.movecb = ftl_table_entry_move;
     return (pds_ret_t) ftl_table->remove(&params);
 }

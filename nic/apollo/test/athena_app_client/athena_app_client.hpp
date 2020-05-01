@@ -38,6 +38,7 @@ int client_req_rsp(zmq_msg_t *tx_msg,
 
 int cmd_script_exec_req_check(void);
 int cmd_flow_stats_dump_req_check(void);
+int cmd_flow_cache_dump_req_check(void);
 
 #define CMD_STATUS_CHECK(status, cmd_fn)                    \
     if ((status) == 0) {                                    \

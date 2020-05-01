@@ -464,19 +464,12 @@ lif_init(void)
                 if (mpu_timestamp_ctl() && (ret == PDS_RET_OK)) {
                     ret = mpu_timestamp_ctl()->start(&devcmd_qinit);
                 }
-#if 0
-                /*
-                 * Keep aging disabled by default for now and let testing
-                 * take smaller steps first using dynamic enablement
-                 * from scripts.
-                 */
                 if (session_scanners() && (ret == PDS_RET_OK)) {
                     ret = session_scanners()->start(&devcmd_qinit);
                 }
                 if (conntrack_scanners() && (ret == PDS_RET_OK)) {
                     ret = conntrack_scanners()->start(&devcmd_qinit);
                 }
-#endif
             }
             devcmd_qinit.owner_pre_unlock();
         }

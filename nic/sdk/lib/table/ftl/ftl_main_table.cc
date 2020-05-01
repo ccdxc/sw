@@ -146,7 +146,11 @@ main_table::insert_(Apictx *ctx) {
         //         make before break for any downstream changes.
         ret = buckets_[ctx->table_index].write_(ctx);
 
-        ctx->params->handle.pindex(ctx->table_index);
+        // Note: Do not set handle.pindex() here! The correct index, pindex
+        // or sindex as the case may be, was already correctly set by the final
+        // recursion into buckets insert above, and that would be the value
+        // we want to return in handle.
+        //ctx->params->handle.pindex(ctx->table_index);
     } else {
         FTL_TRACE_ERR("main_table: insert failed: ret:%d", ret);
     }
@@ -173,11 +177,6 @@ __label__ done;
     lock_(ctx);
 
     SDK_ASSERT(ctx->bucket->read_(ctx) == SDK_RET_OK);
-
-    // Some caller may reference the returned data to drive the next action.
-    if (ctx->params->entry) {
-        ctx->params->entry->copy_data(ctx->entry);
-    }
 
     auto ret = buckets_[ctx->table_index].remove_(ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket remove r:%d", ret);
@@ -250,7 +249,11 @@ __label__ done;
     FTL_RET_CHECK_AND_GOTO(ret, done, "find r:%d", ret);
 
     ret = match_ctx->bucket->update_(match_ctx);
-    ctx->params->handle.pindex(ctx->table_index);
+
+    // Note: Do not set handle.pindex() here! The correct index, pindex
+    // or sindex as the case may be, was already correctly set by buckets
+    // update above, and that would be the value we want to return in handle.a
+    //ctx->params->handle.pindex(ctx->table_index);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket update r:%d", ret);
 
 done:

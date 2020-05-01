@@ -562,7 +562,7 @@ private:
 
     void age_tmo_cb_init(age_tmo_cb_t *age_tmo_cb,
                          const mem_access_t& access,
-                         bool cb_select);
+                         uint32_t accel_scale_factor);
     void age_tmo_cb_set(const char *which,
                         age_tmo_cb_t *age_tmo_cb,
                         const mem_access_t& access,

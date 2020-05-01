@@ -10,6 +10,7 @@
 
 #include "app_test_utils.hpp"
 #include "script_parser.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 
 namespace test {
 namespace athena_app {
@@ -130,12 +131,30 @@ script_parser_t::parse_num(uint32_t *ret_num)
     const char      *sptr;
     char            *eptr;
     u_long          n;
+    ipv4_addr_t     ipv4_addr;
 
     token_consume_set();
     sptr = token.c_str();
+
+    /*
+     * Include support for IPv4 address conversion (dot notation)
+     */
     n = strtoul(sptr, &eptr, 0);
     *ret_num = n;
-    return (n != 0) || (sptr != eptr);
+    if ((n == 0) && ((sptr == eptr))) {
+        return false;
+    }
+
+    if (*eptr != '.') {
+        return true;
+    }
+
+    if (str2ipv4addr(sptr, &ipv4_addr) < 0) {
+        return false;
+    }
+
+    *ret_num = ipv4_addr;
+    return true;
 }
 
 /*

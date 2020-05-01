@@ -24,6 +24,8 @@ void fte_session_indexer_destroy(void);
 sdk_ret_t fte_flow_prog(struct rte_mbuf *m);
 void fte_thread_init(unsigned int core_id);
 sdk_ret_t fte_flows_init(void);
+pds_ret_t fte_dump_flows(const char *fname,
+                         bool append);
 pds_ret_t fte_dump_flows(zmq_msg_t *rx_msg = nullptr,
                          zmq_msg_t *tx_msg = nullptr);
 pds_ret_t fte_dump_flow_stats(zmq_msg_t *rx_msg = nullptr,

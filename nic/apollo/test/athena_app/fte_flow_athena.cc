@@ -154,13 +154,13 @@ fte_session_indexer_destroy (void)
     rte_indexer::destroy(g_session_indexer);
 }
 
-static inline sdk_ret_t
+sdk_ret_t
 fte_session_index_alloc (uint32_t *sess_id)
 {
     return g_session_indexer->alloc(sess_id);
 }
 
-static inline sdk_ret_t
+sdk_ret_t
 fte_session_index_free (uint32_t sess_id)
 {
     return g_session_indexer->free(sess_id);

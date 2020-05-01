@@ -641,9 +641,9 @@ FtlLif::FtlLif(FtlDev& ftl_dev,
     normal_age_access_.reset(cmb_age_tmo_addr, sizeof(age_tmo_cb_t));
     accel_age_access_.reset(cmb_age_tmo_addr + sizeof(age_tmo_cb_t),
                             sizeof(age_tmo_cb_t));
-    age_tmo_cb_init(&normal_age_tmo_cb, normal_age_access(), true);
-    age_tmo_cb_init(&accel_age_tmo_cb, accel_age_access(), false);
-
+    age_tmo_cb_init(&normal_age_tmo_cb, normal_age_access(), 0);
+    age_tmo_cb_init(&accel_age_tmo_cb, accel_age_access(),
+                    SCANNER_ACCEL_TMO_SCALE_FACTOR_DFLT);
     ftl_lif_state_machine(FTL_LIF_EV_CREATE, devcmd_ctx);
 }
 
@@ -1386,7 +1386,7 @@ FtlLif::ftl_lif_state_machine(ftl_lif_event_t event,
 void
 FtlLif::age_tmo_cb_init(age_tmo_cb_t *age_tmo_cb,
                         const mem_access_t& access,
-                        bool cb_select)
+                        uint32_t accel_scale_factor)
 {
     memset(age_tmo_cb, 0, sizeof(*age_tmo_cb));
 
@@ -1394,19 +1394,40 @@ FtlLif::age_tmo_cb_init(age_tmo_cb_t *age_tmo_cb,
      * Timeout values are stored in big endian to make it
      * convenient for MPU code to load them with bit truncation.
      */
-    age_tmo_cb->tcp_syn_tmo = htonl(SCANNER_TCP_SYN_TMO_DFLT);
-    age_tmo_cb->tcp_est_tmo = htonl(SCANNER_TCP_EST_TMO_DFLT);
-    age_tmo_cb->tcp_fin_tmo = htonl(SCANNER_TCP_FIN_TMO_DFLT);
-    age_tmo_cb->tcp_timewait_tmo = htonl(SCANNER_TCP_TIMEWAIT_TMO_DFLT);
-    age_tmo_cb->tcp_rst_tmo = htonl(SCANNER_TCP_RST_TMO_DFLT);
-    age_tmo_cb->udp_tmo = htonl(SCANNER_UDP_TMO_DFLT);
-    age_tmo_cb->udp_est_tmo = htonl(SCANNER_UDP_EST_TMO_DFLT);
-    age_tmo_cb->icmp_tmo = htonl(SCANNER_ICMP_TMO_DFLT);
-    age_tmo_cb->others_tmo = htonl(SCANNER_OTHERS_TMO_DFLT);
-    age_tmo_cb->session_tmo = htonl(SCANNER_SESSION_TMO_DFLT);
+    if (accel_scale_factor) {
+
+#define ACCEL_SCALE(tmo_val)    \
+        std::max((uint32_t)tmo_val / accel_scale_factor, (uint32_t)1)
+        
+        age_tmo_cb->tcp_syn_tmo = htonl(ACCEL_SCALE(SCANNER_TCP_SYN_TMO_DFLT));
+        age_tmo_cb->tcp_est_tmo = htonl(ACCEL_SCALE(SCANNER_TCP_EST_TMO_DFLT));
+        age_tmo_cb->tcp_fin_tmo = htonl(ACCEL_SCALE(SCANNER_TCP_FIN_TMO_DFLT));
+        age_tmo_cb->tcp_timewait_tmo = htonl(ACCEL_SCALE(SCANNER_TCP_TIMEWAIT_TMO_DFLT));
+        age_tmo_cb->tcp_rst_tmo = htonl(ACCEL_SCALE(SCANNER_TCP_RST_TMO_DFLT));
+        age_tmo_cb->udp_tmo = htonl(ACCEL_SCALE(SCANNER_UDP_TMO_DFLT));
+        age_tmo_cb->udp_est_tmo = htonl(ACCEL_SCALE(SCANNER_UDP_EST_TMO_DFLT));
+        age_tmo_cb->icmp_tmo = htonl(ACCEL_SCALE(SCANNER_ICMP_TMO_DFLT));
+        age_tmo_cb->others_tmo = htonl(ACCEL_SCALE(SCANNER_OTHERS_TMO_DFLT));
+        age_tmo_cb->session_tmo = htonl(ACCEL_SCALE(SCANNER_SESSION_TMO_DFLT));
+    } else {
+        age_tmo_cb->tcp_syn_tmo = htonl(SCANNER_TCP_SYN_TMO_DFLT);
+        age_tmo_cb->tcp_est_tmo = htonl(SCANNER_TCP_EST_TMO_DFLT);
+        age_tmo_cb->tcp_fin_tmo = htonl(SCANNER_TCP_FIN_TMO_DFLT);
+        age_tmo_cb->tcp_timewait_tmo = htonl(SCANNER_TCP_TIMEWAIT_TMO_DFLT);
+        age_tmo_cb->tcp_rst_tmo = htonl(SCANNER_TCP_RST_TMO_DFLT);
+        age_tmo_cb->udp_tmo = htonl(SCANNER_UDP_TMO_DFLT);
+        age_tmo_cb->udp_est_tmo = htonl(SCANNER_UDP_EST_TMO_DFLT);
+        age_tmo_cb->icmp_tmo = htonl(SCANNER_ICMP_TMO_DFLT);
+        age_tmo_cb->others_tmo = htonl(SCANNER_OTHERS_TMO_DFLT);
+        age_tmo_cb->session_tmo = htonl(SCANNER_SESSION_TMO_DFLT);
+
+        /*
+         * Default is to select normal timeouts
+         */
+        age_tmo_cb->cb_select = true;
+    }
 
     age_tmo_cb->cb_activate = SCANNER_AGE_TMO_CB_ACTIVATE;
-    age_tmo_cb->cb_select = cb_select;
     access.small_write(0, (uint8_t *)age_tmo_cb, sizeof(*age_tmo_cb));
 }
 

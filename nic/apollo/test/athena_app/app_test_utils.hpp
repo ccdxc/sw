@@ -23,6 +23,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <netinet/in.h>
 #include "nic/sdk/third-party/zmq/include/zmq.h"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/test/api/utils/base.hpp"
@@ -83,6 +84,8 @@ public:
                         bool suppress_err_log = false) const;
     pds_ret_t  flowstate(pds_flow_state_t *ret_flowstate,
                          bool suppress_err_log = false) const;
+    pds_ret_t  proto(uint32_t *ret_proto,
+                     bool suppress_err_log = false) const;
     pds_ret_t  tuple(std::vector<test_param_t> *ret_tuple,
                      bool suppress_err_log = false) const;
 
@@ -124,6 +127,9 @@ public:
     pds_ret_t flowstate(uint32_t idx,
                         pds_flow_state_t *ret_flowstate,
                         bool suppress_err_log = false) const;
+    pds_ret_t proto(uint32_t idx,
+                    uint32_t *ret_proto,
+                    bool suppress_err_log = false) const;
     pds_ret_t tuple(uint32_t idx,
                     test_param_tuple_t *ret_tuple,
                     bool suppress_err_log = false) const;
@@ -160,6 +166,7 @@ public:
     pds_flow_type_t flowtype(uint32_t idx);
     pds_flow_state_t flowstate(uint32_t idx);
 
+    uint32_t size(void) { return tuple.size(); }
     bool zero_failures(void)
     { 
         if (fail_count) {
@@ -292,7 +299,8 @@ public:
                counters.over_age        +
                counters.create_add      +
                counters.create_erase    +
-               counters.empty_check;
+               counters.empty_check     +
+               counters.delete_errors;
     }
 
     friend class aging_tolerance_t;
@@ -307,6 +315,7 @@ private:
         uint32_t                create_add;
         uint32_t                create_erase;
         uint32_t                empty_check;
+        uint32_t                delete_errors;
     } counters;
 };
 
@@ -333,6 +342,7 @@ public:
         tolerance_secs(0),
         over_age_min_(UINT32_MAX),
         over_age_max_(0),
+        using_fte_indices_(false),
         create_count_(0),
         erase_count_(0),
         expiry_count_(0) {}
@@ -352,6 +362,8 @@ public:
 
     uint32_t curr_max_tmo(void) const { return curr_tmo->max_tmo_get(); }
     void expiry_count_inc(void) { expiry_count_++; }
+    void delete_errors_inc(void) { failures.counters.delete_errors++; }
+    uint32_t delete_errors(void) { return failures.counters.delete_errors; }
     uint32_t create_count(void) { return create_count_; }
     uint32_t expiry_count(void) { return expiry_count_; }
     uint32_t over_age_min(void)
@@ -359,6 +371,8 @@ public:
         return over_age_min_ == UINT32_MAX ? 0 : over_age_min_;
     }
     uint32_t over_age_max(void) { return over_age_max_; }
+    void using_fte_indices(bool yesno) { using_fte_indices_ = yesno; }
+    bool using_fte_indices(void) { return using_fte_indices_; }
 
     bool create_map_with_ids(void)
     {
@@ -389,11 +403,54 @@ private:
     uint32_t                    over_age_min_;
     uint32_t                    over_age_max_;
     tolerance_fail_count_t      failures;
+    bool                        using_fte_indices_;
 
     id_map_t                    create_id_map;
     uint32_t                    create_count_;
     uint32_t                    erase_count_;
     uint32_t                    expiry_count_;
+};
+
+/**
+ * Flow Key field helper
+ */
+class flow_key_field_t
+{
+public:
+    flow_key_field_t()
+    {
+        reset(0, 1);
+    }
+
+    void reset(uint32_t value,
+               uint32_t count)
+    {
+        value_ = value;
+        count_ = count ? count : 1;
+        save_value_ = value_;
+        save_count_ = count;
+    }
+
+    uint32_t count(void) { return count_; }
+    uint32_t value(void) { return value_; }
+    void next_value(void)
+    {
+        SDK_ASSERT(count_);
+        ++value_;
+        --count_;
+    }
+
+    void restart(void)
+    {
+        value_ = save_value_;
+        count_ = save_count_;
+    }
+
+private:
+    uint32_t                    value_;
+    uint32_t                    count_;
+    uint32_t                    save_value_;
+    uint32_t                    save_count_;
 };
 
 /**
@@ -595,6 +652,7 @@ conntrack_timestamp2secs(uint32_t conntrack_ts)
 #define APP_TEST_EXIT_FN_STR    APP_TEST_NAME2STR(app_test_exit)
 bool app_test_exit(test::athena_app::test_vparam_ref_t vparam);
 bool skip_fte_flow_prog_set(test::athena_app::test_vparam_ref_t vparam);
+bool flow_cache_dump(test::athena_app::test_vparam_ref_t vparam);
 
 bool skip_fte_flow_prog(void);
 bool skip_dpdk_init(void);

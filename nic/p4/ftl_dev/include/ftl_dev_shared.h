@@ -129,6 +129,11 @@
 #define SCANNER_SESSION_TMO_DFLT                (300)
 
 /*
+ * Default accelerated inactivity timeout scale factor
+ */
+#define SCANNER_ACCEL_TMO_SCALE_FACTOR_DFLT     10  // 1/10 of normal timeout
+ 
+/*
  * MPU code uses smaller bit widths to store various inactivity timeout
  * values in its k-vec, necessitating the following caps:
  */

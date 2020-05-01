@@ -64,6 +64,16 @@ const static std::map<string,pds_flow_state_t> flowstate2num_map =
     {"REMOVED",         REMOVED},
 };
 
+const static std::map<string,uint32_t> proto2num_map =
+{
+    {"tcp",             IPPROTO_TCP},
+    {"TCP",             IPPROTO_TCP},
+    {"udp",             IPPROTO_UDP},
+    {"UDP",             IPPROTO_UDP},
+    {"icmp",            IPPROTO_ICMP},
+    {"ICMP",            IPPROTO_ICMP},
+};
+
 static const bool *
 truefalse2hool_find(const std::string& token)
 {
@@ -89,6 +99,16 @@ flowstate2num_find(const std::string& token)
 {
     auto iter = flowstate2num_map.find(token);
     if (iter != flowstate2num_map.end()) {
+        return &iter->second;
+    }
+    return nullptr;
+}
+
+static const uint32_t *
+proto2num_find(const std::string& token)
+{
+    auto iter = proto2num_map.find(token);
+    if (iter != proto2num_map.end()) {
         return &iter->second;
     }
     return nullptr;
@@ -237,6 +257,35 @@ test_param_t::flowstate(pds_flow_state_t *ret_flowstate,
     return PDS_RET_OK;
 }
 
+pds_ret_t
+test_param_t::proto(uint32_t *ret_proto,
+                    bool suppress_err_log) const
+{
+    *ret_proto = IPPROTO_TCP;
+    switch (type) {
+
+    case TOKEN_TYPE_STR: {
+        const uint32_t *find_val = proto2num_find(str_);
+        if (!find_val) {
+            if (!suppress_err_log) {
+                TEST_LOG_ERR("Unsupported protocol type %s\n", str_.c_str());
+            }
+            return PDS_RET_ERR;
+        }
+        *ret_proto = *find_val;
+        break;
+    }
+
+    default:
+        if (!suppress_err_log) {
+            TEST_LOG_ERR("Protocol type token not found\n");
+        }
+        return PDS_RET_ERR;
+
+    }
+    return PDS_RET_OK;
+}
+
 pds_ret_t 
 test_param_t::tuple(test_param_tuple_t *ret_tuple,
                     bool suppress_err_log) const
@@ -320,6 +369,23 @@ test_vparam_t::flowstate(uint32_t idx,
     *ret_flowstate = UNESTABLISHED;
     if (!suppress_err_log) {
         TEST_LOG_ERR("Flow state token not found at index %u\n", idx);
+    }
+    return PDS_RET_ERR;
+}
+
+pds_ret_t
+test_vparam_t::proto(uint32_t idx,
+                     uint32_t *ret_proto,
+                     bool suppress_err_log) const
+{
+    if (idx < vparam.size()) {
+        const test_param_t& param = vparam.at(idx);
+        return param.proto(ret_proto);
+    }
+
+    *ret_proto = IPPROTO_TCP;
+    if (!suppress_err_log) {
+        TEST_LOG_ERR("Protocol type token not found at index %u\n", idx);
     }
     return PDS_RET_ERR;
 }
@@ -786,6 +852,7 @@ aging_tolerance_t::reset(uint32_t ids_max)
     num_ids_max = ids_max;
     over_age_min_ = UINT32_MAX;
     over_age_max_ = 0;
+    using_fte_indices_ = false;
     create_count_ = 0;
     erase_count_ = 0;
     expiry_count_ = 0;

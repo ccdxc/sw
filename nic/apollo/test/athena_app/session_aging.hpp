@@ -26,6 +26,7 @@ bool session_table_clear_full(test_vparam_ref_t vparam);
 bool session_populate_simple(test_vparam_ref_t vparam);
 bool session_populate_random(test_vparam_ref_t vparam);
 bool session_populate_full(test_vparam_ref_t vparam);
+bool session_and_cache_populate(test_vparam_ref_t vparam);
 bool session_aging_test(test_vparam_ref_t vparam);
 bool session_aging_normal_tmo_set(test_vparam_ref_t vparam);
 bool session_aging_accel_tmo_set(test_vparam_ref_t vparam);
@@ -41,6 +42,7 @@ bool session_aging_metrics_show(test_vparam_ref_t vparam);
     APP_TEST_NAME2FN_MAP_ENTRY(session_populate_simple),            \
     APP_TEST_NAME2FN_MAP_ENTRY(session_populate_random),            \
     APP_TEST_NAME2FN_MAP_ENTRY(session_populate_full),              \
+    APP_TEST_NAME2FN_MAP_ENTRY(session_and_cache_populate),         \
     APP_TEST_NAME2FN_MAP_ENTRY(session_aging_test),                 \
     APP_TEST_NAME2FN_MAP_ENTRY(session_aging_expiry_log_set),       \
     APP_TEST_NAME2FN_MAP_ENTRY(session_aging_normal_tmo_set),       \
