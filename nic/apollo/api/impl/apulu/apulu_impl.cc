@@ -537,6 +537,9 @@ apulu_impl::table_init_(void) {
     addr -= ((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION, addr);
 
+    // HACK: default priority
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_MAPPING, 0xF);
+
     return SDK_RET_OK;
 }
 

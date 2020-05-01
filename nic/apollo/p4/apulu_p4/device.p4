@@ -17,6 +17,8 @@ action p4i_device_info(device_mac_addr1, device_mac_addr2,
     modify_field(scratch_metadata.mac, device_mac_addr2);
     modify_field(scratch_metadata.ipv4_addr, device_ipv4_addr);
     modify_field(scratch_metadata.ipv6_addr, device_ipv6_addr);
+    modify_field(p4i_i2e.nexthop_type, NEXTHOP_TYPE_NEXTHOP);
+    modify_field(p4i_i2e.priority, -1);
 
     if (((ethernet_1.dstAddr == device_mac_addr1) or
         (ethernet_1.dstAddr == device_mac_addr2)) and

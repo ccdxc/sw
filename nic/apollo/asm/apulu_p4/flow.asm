@@ -61,7 +61,7 @@ label_flow_hit:
     phvwr.c1        p.p4i_i2e_nexthop_type, d.flow_hash_d.nexthop_type
     seq             c1, d.flow_hash_d.nexthop_type, NEXTHOP_TYPE_VPC
     phvwr.c1        p.p4i_i2e_mapping_lkp_id, d.flow_hash_d.nexthop_id
-    phvwr.!c1       p.p4i_i2e_mapping_bypass, TRUE
+    phvwr.!c1       p.p4i_i2e_priority, d.flow_hash_d.priority
     phvwr.!c1       p.p4i_i2e_nexthop_id, d.flow_hash_d.nexthop_id
 label_flow_hit_nexthop_done:
     phvwr           p.p4i_i2e_session_id, d.flow_hash_d.session_index

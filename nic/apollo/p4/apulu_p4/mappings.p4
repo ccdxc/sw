@@ -224,11 +224,12 @@ action mapping_info(entry_valid, is_local, pad11, nexthop_valid,
                     hash1, hint1, hash2, hint2, hash3, hint3,
                     hash4, hint4, hash5, hint5, hash6, hint6,
                     hash7, hint7, hash8, hint8, more_hashes, more_hints) {
+    modify_field(rewrite_metadata.nexthop_type, p4e_i2e.nexthop_type);
+
     if (p4e_i2e.nexthop_type == NEXTHOP_TYPE_VPC) {
         modify_field(p4e_i2e.vpc_id, p4e_i2e.mapping_lkp_id);
     }
     if (p4e_i2e.mapping_bypass == TRUE) {
-        modify_field(rewrite_metadata.nexthop_type, p4e_i2e.nexthop_type);
         modify_field(egress_recirc.mapping_done, TRUE);
         modify_field(control_metadata.mapping_done, TRUE);
         // return
@@ -255,7 +256,8 @@ action mapping_info(entry_valid, is_local, pad11, nexthop_valid,
             modify_field(p4e_to_arm.mapping_hit, TRUE);
             modify_field(p4e_to_arm.is_local, is_local);
         } else {
-            if (nexthop_valid == TRUE) {
+            if ((nexthop_valid == TRUE) and
+                (scratch_metadata.priority <= p4e_i2e.priority)) {
                 modify_field(rewrite_metadata.nexthop_type, nexthop_type);
                 modify_field(p4e_i2e.nexthop_id, nexthop_id);
             }

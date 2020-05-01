@@ -1,12 +1,13 @@
 /*****************************************************************************/
 /* Policy (IPv6 and non-IP)                                                  */
 /*****************************************************************************/
-@pragma capi appdatafields epoch session_index flow_role nexthop_valid nexthop_type nexthop_id
+@pragma capi appdatafields epoch session_index flow_role nexthop_valid nexthop_type nexthop_id priority
 @pragma capi hwfields_access_api
 action flow_hash(epoch, session_index,
                  hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
                  more_hashes, more_hints, force_flow_miss, flow_role,
-                 nexthop_valid, nexthop_type, nexthop_id, entry_valid) {
+                 nexthop_valid, nexthop_type, nexthop_id, entry_valid,
+                 priority) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -32,7 +33,7 @@ action flow_hash(epoch, session_index,
                 if (nexthop_type == NEXTHOP_TYPE_VPC) {
                     modify_field(p4i_i2e.mapping_lkp_id, nexthop_id);
                 } else {
-                    modify_field(p4i_i2e.mapping_bypass, TRUE);
+                    modify_field(p4i_i2e.priority, priority);
                     modify_field(p4i_i2e.nexthop_id, nexthop_id);
                 }
             }
@@ -142,12 +143,12 @@ table flow_ohash {
 /*****************************************************************************/
 /* Policy (IPv4)                                                             */
 /*****************************************************************************/
-@pragma capi appdatafields epoch session_index flow_role nexthop_valid nexthop_type nexthop_id
+@pragma capi appdatafields epoch session_index flow_role nexthop_valid nexthop_type nexthop_id priority
 @pragma capi hwfields_access_api
 action ipv4_flow_hash(epoch, session_index, nexthop_type,
                       hash1, hint1, hash2, hint2, more_hashes, more_hints,
                       force_flow_miss, flow_role, nexthop_valid, nexthop_id,
-                      entry_valid) {
+                      entry_valid, priority) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -173,7 +174,7 @@ action ipv4_flow_hash(epoch, session_index, nexthop_type,
                 if (nexthop_type == NEXTHOP_TYPE_VPC) {
                     modify_field(p4i_i2e.mapping_lkp_id, nexthop_id);
                 } else {
-                    modify_field(p4i_i2e.mapping_bypass, TRUE);
+                    modify_field(p4i_i2e.priority, priority);
                     modify_field(p4i_i2e.nexthop_id, nexthop_id);
                 }
             }

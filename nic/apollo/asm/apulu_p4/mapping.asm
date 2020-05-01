@@ -91,6 +91,7 @@ mapping_hit:
     bbeq            k.p4e_to_arm_valid, TRUE, mapping_hit_arm
     phvwr           p.control_metadata_mapping_done, TRUE
     seq             c7, d.mapping_info_d.nexthop_valid, TRUE
+    sle.c7          c7, r5, k.p4e_i2e_priority
     phvwr.c7        p.rewrite_metadata_nexthop_type, \
                         d.mapping_info_d.nexthop_type
     nop.e
