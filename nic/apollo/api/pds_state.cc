@@ -15,8 +15,10 @@ namespace api {
 /**< (singleton) instance of all PDS state in one place */
 pds_state g_pds_state;
 
-#define FIRMWARE_VERSION_FILE "/nic/etc/VERSION.json"
-#define FIRMWARE_VERSION_KEY  "sw.version"
+#define FIRMWARE_VERSION_FILE    "/nic/etc/VERSION.json"
+#define FIRMWARE_VERSION_KEY     "sw.version"
+#define FIRMWARE_DESCRIPTION_KEY "sw.pipeline"
+#define FIRMWARE_BUILD_TIME_KEY  "sw.build_time"
 
 /**
  * @defgroup PDS_STATE - Internal state
@@ -83,11 +85,14 @@ pds_state::parse_global_config_(string pipeline, string cfg_file) {
 }
 
 sdk_ret_t
-pds_state::parse_firmware_version_(void) {
+pds_state::parse_firmware_version_file_(void) {
     ptree       pt;
     std::string version_file;
 
     firmware_version_str_ = std::string("-");
+    firmware_description_str_ = std::string("-");
+    firmware_build_time_str_ = std::string("-");
+
     version_file = FIRMWARE_VERSION_FILE;
 
     // make sure version file exists
@@ -102,6 +107,8 @@ pds_state::parse_firmware_version_(void) {
     read_json(json_cfg, pt);
     try {
         firmware_version_str_ = pt.get<std::string>(FIRMWARE_VERSION_KEY);
+        firmware_description_str_ = pt.get<std::string>(FIRMWARE_DESCRIPTION_KEY);
+        firmware_build_time_str_ = pt.get<std::string>(FIRMWARE_BUILD_TIME_KEY);
     } catch (std::exception const& e) {
         std::cerr << e.what() << std::endl;
         return sdk::SDK_RET_INVALID_ARG;
@@ -158,7 +165,7 @@ pds_state::init(string pipeline, string cfg_file) {
     state_[PDS_STATE_POLICY_RULE] = new policy_rule_state();
 
     // parse VERSION.json
-    parse_firmware_version_();
+    parse_firmware_version_file_();
 
     // initialize the metrics
     port_metrics_hndl_ = sdk::metrics::create(&port_schema);

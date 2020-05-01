@@ -108,76 +108,82 @@ enum DeviceHealth {
 // operational status of the device, if any
 message DeviceStatus {
   // operaional state of the device
-  DeviceState State             = 1;
+  DeviceState State                 = 1;
 
   // System MAC address (can be used to uniquely identify the device in cluster)
-  uint64      SystemMACAddress  = 2;
+  uint64      SystemMACAddress      = 2;
 
   // serial number of the device
-  string      SerialNumber      = 3;
+  string      SerialNumber          = 3;
 
   // SKU/part numnber
-  string      Sku               = 4;
+  string      Sku                   = 4;
 
   // version of the firmware running
-  string      FirmwareVersion   = 5;
+  string      FirmwareVersion       = 5;
 
   // Memory Capacity
-  uint32      Memory            = 6;
+  uint32      Memory                = 6;
 
   // Product Name
-  string      ProductName       = 7;
+  string      ProductName           = 7;
 
   // Manufacturing date
-  string      ManufacturingDate = 8;
+  string      ManufacturingDate     = 8;
 
   // Device Description
-  string      Description       = 9;
+  string      Description           = 9;
 
   // Vendor ID
-  string      VendorID          = 10;
+  string      VendorID              = 10;
 
   // Chip Type
-  types.AsicType ChipType       = 11;
+  types.AsicType ChipType           = 11;
 
   // Hardware Revision
-  string      HardwareRevision  = 12;
+  string      HardwareRevision      = 12;
 
   // CPU Vendor
-  string      CpuVendor         = 13;
+  string      CpuVendor             = 13;
 
   // CPU Specification
-  string      CpuSpecification  = 14;
+  string      CpuSpecification      = 14;
 
   //SOC OS Version
-  string      SocOSVersion      = 15;
+  string      SocOSVersion          = 15;
 
   // Soc Disk Size
-  string      SocDiskSize       = 16;
+  string      SocDiskSize           = 16;
 
   // PCIe Specification
-  string      PCIeSpecification = 17;
+  string      PCIeSpecification     = 17;
 
   // PCIe Bus Information
-  string      PCIeBusInfo       = 18;
+  string      PCIeBusInfo           = 18;
 
   // Number of PCIe Ports
-  uint32      NumPCIePorts      = 19;
+  uint32      NumPCIePorts          = 19;
 
   // Number of Uplink Ports
-  uint32      NumPorts          = 20;
+  uint32      NumPorts              = 20;
 
   // Vendor Name
-  string      VendorName        = 21;
+  string      VendorName            = 21;
 
   // PXE Version
-  float       PXEVersion        = 22;
+  float       PXEVersion            = 22;
 
   // UEFI Version
-  float       UEFIVersion       = 23;
+  float       UEFIVersion           = 23;
 
   // number of host interfaces
-  uint32      NumHostIf         = 24;
+  uint32      NumHostIf             = 24;
+
+  // version of the firmware running
+  string      FirmwareDescription   = 26;
+
+  // version of the firmware running
+  string      FirmwareBuildTime     = 27;
 }
 
 // stats of the device, if any

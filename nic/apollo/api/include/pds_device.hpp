@@ -108,6 +108,8 @@ typedef struct pds_device_status_s {
     float       pxe_version;       ///< PXE Version
     float       uefi_version;      ///< UEFI Version
     uint32_t    num_host_if;       ///< number of host interfaces
+    string      fw_description;    ///< Firmware Description
+    string      fw_build_time;     ///< Firmware Build Time
 } pds_device_status_t;
 
 /// \brief Drop statistics

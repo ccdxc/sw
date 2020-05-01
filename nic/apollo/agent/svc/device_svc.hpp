@@ -118,6 +118,8 @@ pds_device_api_status_to_proto (pds::DeviceStatus *proto_status,
     proto_status->set_pxeversion(api_status->pxe_version);
     proto_status->set_uefiversion(api_status->uefi_version);
     proto_status->set_numhostif(api_status->num_host_if);
+    proto_status->set_firmwaredescription(api_status->fw_description);
+    proto_status->set_firmwarebuildtime(api_status->fw_build_time);
 }
 
 // populate proto buf stats from device API stats
