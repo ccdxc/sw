@@ -579,7 +579,7 @@ policy_rule::read(pds_policy_rule_info_t *info) {
     // walk the route table and find the route of interest
     rule_info = policy_info.spec.rule_info;
     for (uint32_t i = 0; i < num_rules; i++) {
-        if (key_.policy_id == rule_info->rules[i].key) {
+        if (key_.rule_id == rule_info->rules[i].key) {
             // fill the spec
             memcpy(&info->spec.key, &key_, sizeof(key_));
             memcpy(&info->spec.attrs, &rule_info->rules[i].attrs,

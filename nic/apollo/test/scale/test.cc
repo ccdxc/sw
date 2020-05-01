@@ -41,6 +41,7 @@ uint32_t tep_id = 0;
 #define HOST_LIF_ID_MAX        78
 
 #define POLICY_ID_BASE         1
+#define RULE_ID_BASE           (0x1 << 15)
 #define ROUTE_TABLE_ID_BASE    4096
 #define SVC_TAG_NEXT(tag_)     ((tag_)++ % 255)
 
@@ -1524,6 +1525,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     sdk_ret_t            rv;
     pds_policy_spec_t    policy;
     static uint32_t      policy_id = POLICY_ID_BASE, num_pfx;
+    static uint32_t      rule_id = RULE_ID_BASE;
     rule_t               *rule;
     uint32_t             num_sub_rules = 10;
     uint16_t             step = 4;
@@ -1556,6 +1558,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     uint16_t dport_base = 1024;
                     for (uint32_t l = 0; l < num_sub_rules; l++) {
                         rule = &policy.rule_info->rules[idx];
+                        rule->key = test::int2pdsobjkey(rule_id++);
                         if (priority_step == TESTAPP_POLICY_PRIORITY_STEP) {
                             priority = idx + (priority_step - 1);
                         }
