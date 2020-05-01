@@ -83,7 +83,7 @@
             "lif_count" : 1,
             "rxq_count" : 16,
             "txq_count" : 16,
-            "eq_count" : 1,
+            "eq_count" : 0,
             "adminq_count" : 16,
             "intr_count" : 64,
             "qos_group" : "DEFAULT",
@@ -103,7 +103,7 @@
             "lif_count" : 1,
             "rxq_count" : 16,
             "txq_count" : 16,
-            "eq_count" : 1,
+            "eq_count" : 0,
             "adminq_count" : 16,
             "intr_count" : 64,
             "pcie" : {
@@ -122,7 +122,7 @@
             "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
-            "eq_count" : 1,
+            "eq_count" : 0,
             "adminq_count" : 1,
             "intr_count" : 4,
             "pcie" : {
