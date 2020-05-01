@@ -36,6 +36,9 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 #ifdef IONIC_DEBUG
         vmk_uint32 mtu = 0;
 #endif
+        if (vmk_PktIsInnerOffload(pkt)) {
+                ionic_en_warn("rcv encap packet");
+        }
 
         if (comp->status) {
                 ionic_rx_recycle(q, desc_info, pkt);
@@ -119,7 +122,12 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                     (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_BAD)) {
                        stats->csum_err++;
                 } else {
-                        vmk_PktSetCsumVfd(pkt);
+                        if (vmk_PktIsInnerOffload(pkt)) {
+                                vmk_PktSetEncapCsumVfd(pkt);
+                                stats->encap++;
+                        } else {
+                                vmk_PktSetCsumVfd(pkt);
+                        }
                         // FIXME: This driver does not use CHECKSUM_COMPLETE
                         stats->csum_complete++;
                 }
@@ -546,13 +554,13 @@ static void ionic_tx_tso_post(struct queue *q, struct ionic_txq_desc *desc,
                               vmk_PktHandle *pkt,
                               dma_addr_t addr, u8 nsge, u16 len,
                               unsigned int hdrlen, unsigned int mss,
-                              bool outer_csum,
+                              bool is_encap,
                               u16 vlan_tci, bool has_vlan,
                               bool start, bool done)
 {
         u8 flags = 0;
         flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
-        flags |= outer_csum ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
+        flags |= is_encap ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
         flags |= start ? IONIC_TXQ_DESC_FLAG_TSO_SOT : 0;
         flags |= done ? IONIC_TXQ_DESC_FLAG_TSO_EOT : 0;
 
@@ -603,7 +611,7 @@ ionic_tx_tso(struct queue *q,
         unsigned int seglen;
         unsigned int len;
         unsigned int offset = 0;
-        bool outer_csum = vmk_PktIsMustOuterCsum(pkt);
+        bool is_encap = ctx->is_encap;
         bool has_vlan;
         bool start, done;
         u64 total_pkts = 0;
@@ -645,7 +653,7 @@ ionic_tx_tso(struct queue *q,
                 ionic_tx_tso_post(q, desc, pkt,
                                   desc_addr, desc_nsge, desc_len,
                                   hdrlen, mss,
-                                  outer_csum,
+                                  is_encap,
                                   vlan_tci, has_vlan,
                                   start, done);
                 total_pkts++;
@@ -683,7 +691,7 @@ ionic_tx_tso(struct queue *q,
                                 ionic_tx_tso_post(q, desc, pkt,
                                                 desc_addr, desc_nsge, desc_len,
                                                 hdrlen, mss,
-                                                outer_csum,
+                                                is_encap,
                                                 vlan_tci, has_vlan,
                                                 start, done);
                                 total_pkts++;
@@ -707,7 +715,7 @@ ionic_tx_tso(struct queue *q,
                                 ionic_tx_tso_post(q, desc, pkt,
                                                 desc_addr, desc_nsge, desc_len,
                                                 hdrlen, mss,
-                                                outer_csum,
+                                                is_encap,
                                                 vlan_tci, has_vlan,
                                                 start, done);
                                 total_pkts++;
@@ -769,8 +777,9 @@ ionic_tx_calc_csum(struct queue *q,
         flags |= IONIC_TXQ_DESC_FLAG_CSUM_L3;
         flags |= IONIC_TXQ_DESC_FLAG_CSUM_L4;
 
-        if (ctx->is_encap)
+        if (ctx->is_encap) {
                 flags |= IONIC_TXQ_DESC_FLAG_ENCAP;
+        }
 
         desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_HW,
                                         flags, ctx->nr_frags - 1, addr);
@@ -810,8 +819,9 @@ ionic_tx_calc_no_csum(struct queue *q,
                 desc->vlan_tci = 0;
         }
 
-        if (ctx->is_encap)
+        if (ctx->is_encap) {
                 flags |= IONIC_TXQ_DESC_FLAG_ENCAP;
+        }
 
         desc->cmd = encode_txq_desc_cmd( IONIC_TXQ_DESC_OPCODE_CSUM_NONE,
                                 flags,
@@ -930,6 +940,7 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
         VMK_ReturnStatus status = VMK_OK;
         vmk_PktHeaderEntry *l3_hdr_entry = NULL, *l4_hdr_entry = NULL;
 
+        // Check if it's an encap packet
         ctx->is_encap = vmk_PktIsInnerOffload(pkt);
 
         if (ctx->offload_flags & (IONIC_TX_TSO | IONIC_TX_CSO)) {
@@ -989,7 +1000,7 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
                if (VMK_UNLIKELY(l4_hdr_entry->nextHdrOffset >
                                 IONIC_MAX_TX_BUF_SIZE)) {
                         ionic_en_err("Drop over-sized TSO header, size: %d",
-                                  l4_hdr_entry->nextHdrOffset);
+                                     l4_hdr_entry->nextHdrOffset);
                         return status;
                 }
         } else if (ctx->offload_flags & IONIC_TX_CSO) {
@@ -1001,7 +1012,7 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
                 if (VMK_UNLIKELY(l4_hdr_entry->offset + ctx->csum_offset >
                                  IONIC_MAX_CSUM_OFFSET)) {
                         ionic_en_err("Drop over-sized CSO header, size: %d",
-                                  l4_hdr_entry->offset + ctx->csum_offset);
+                                     l4_hdr_entry->offset + ctx->csum_offset);
                         return status;
                 }
         }
@@ -1213,6 +1224,10 @@ ionic_start_xmit(vmk_PktHandle *pkt,
                 ionic_en_err("ionic_tx() failed, status: %s",
                           vmk_StatusToString(status));
                 goto err_out_drop;
+        }
+
+        if (ctx.is_encap) {
+                stats->encap++;
         }
 
         return VMK_OK;

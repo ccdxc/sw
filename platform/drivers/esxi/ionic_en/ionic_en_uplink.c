@@ -94,6 +94,21 @@ static vmk_UplinkCoalesceParamsOps ionic_en_uplink_coal_params_ops = {
         .setParams            = ionic_en_uplink_coal_params_set,
 };
 
+#if VSPHERE_VER >= VSPHERE_VERS(2017)
+#define IONIC_EN_UPLINK_GENEVE_OFFLOAD_FLAGS                   \
+                (VMK_UPLINK_GENEVE_FLAG_INNER_IPV4_CSO |       \
+                 VMK_UPLINK_GENEVE_FLAG_INNER_IPV4_TSO |       \
+                 VMK_UPLINK_GENEVE_FLAG_INNER_IPV6_CSO |       \
+                 VMK_UPLINK_GENEVE_FLAG_INNER_IPV6_TSO)
+#else
+#define IONIC_EN_UPLINK_GENEVE_OFFLOAD_FLAGS 0
+#endif
+
+vmk_UplinkGeneveOffloadParams ionic_en_uplink_geneve_offload_params = {
+        .portUpdate      = NULL,
+        .maxHeaderOffset = 0,
+        .flags           = IONIC_EN_UPLINK_GENEVE_OFFLOAD_FLAGS,
+};
 
 static VMK_ReturnStatus
 ionic_en_priv_stats_len_get(vmk_AddrCookie driver_data,
@@ -131,12 +146,12 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
                 stat_buf += vmk_Sprintf((char *) stat_buf,
                                         "\n    %s[%d]: packets=%lu, bytes=%lu,"
                                         " alloc_err=%lu, csum_err=%lu,"
-                                        " csum_complete=%lu, no_csum=%lu",
+                                        " csum_complete=%lu, no_csum=%lu, encap=%lu",
                                         "rx_queue", i, rx_stats->pkts,
                                         rx_stats->bytes, rx_stats->alloc_err,
                                         rx_stats->csum_err,
                                         rx_stats->csum_complete,
-                                        rx_stats->no_csum);
+                                        rx_stats->no_csum, rx_stats->encap);
         }
 
         for (i = 0; i < lif->ntxqcqs; i++) {
@@ -145,13 +160,13 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
                                         "\n    %s[%d]: packets=%lu, bytes=%lu,"
                                         " tso=%lu, csum=%lu, no_csum=%lu,"
                                         " linearize=%lu, frags=%lu, wake=%lu,"
-                                        " stop=%lu, clean=%lu, busy=%lu",
+                                        " stop=%lu, clean=%lu, busy=%lu, encap=%lu",
                                         "tx_queue", i, tx_stats->pkts,
                                         tx_stats->bytes, tx_stats->tso,
                                         tx_stats->csum, tx_stats->no_csum,
                                         tx_stats->linearize, tx_stats->frags,
                                         tx_stats->wake, tx_stats->stop,
-                                        tx_stats->clean, tx_stats->busy);
+                                        tx_stats->clean, tx_stats->busy, tx_stats->encap);
         }
 
         stat_buf += vmk_Sprintf((char *) stat_buf,
@@ -1344,6 +1359,15 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                                    (void *)&ionic_en_dyn_rss_ops);
         VMK_ASSERT(status == VMK_OK);
 
+
+        /* TODO: We need to have a hw_features flag to indicate whether or not
+           geneve is supported. For now, we assume we support geneve all the time
+           Also, we need another flag to tell if NIC support dedicated RX queue
+           for operations, administration and management packets. */
+        status = vmk_UplinkCapRegister(uplink,
+                                       VMK_UPLINK_CAP_GENEVE_OFFLOAD,
+                                       &ionic_en_uplink_geneve_offload_params);
+        VMK_ASSERT(status == VMK_OK);
 
         return status;
 }

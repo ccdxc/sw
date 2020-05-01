@@ -21,9 +21,9 @@ struct tx_stats {
         u64 wake;
         u64 no_csum;
         u64 csum;
-        u64 crc32_csum;
         u64 tso;
         u64 frags;
+        u64 encap;
         u64 tx_queue_waken;
         u64 busy;
 };
@@ -36,6 +36,7 @@ struct rx_stats {
         u64 csum_err;
         u64 csum_complete;
         u64 no_csum;
+        u64 encap;
 };
 
 #define QCQ_F_INITED            BIT(0)
