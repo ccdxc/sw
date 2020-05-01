@@ -1507,6 +1507,9 @@ static void ionic_tx_timeout_work(struct work_struct *ws)
 {
 	struct ionic_lif *lif = container_of(ws, struct ionic_lif, tx_timeout_work);
 
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return;
+
 	// TODO: queue specific reset
 	rtnl_lock();
 	ionic_reset_queues(lif);
@@ -2784,6 +2787,10 @@ static void ionic_lif_handle_fw_down(struct ionic_lif *lif)
 	set_bit(IONIC_LIF_F_FW_RESET, lif->state);
 	dev_info(ionic->dev, "FW Down: Stopping LIFs\n");
 
+	/* put off the next watchdog */
+	mod_timer(&ionic->watchdog_timer,
+		  round_jiffies(jiffies + ionic->watchdog_period));
+
 	if (test_bit(IONIC_LIF_F_UP, lif->state)) {
 		dev_info(ionic->dev, "Surprise FW stop, stopping netdev\n");
 		rtnl_lock();
@@ -2792,6 +2799,7 @@ static void ionic_lif_handle_fw_down(struct ionic_lif *lif)
 	}
 
 	ionic_lifs_deinit(ionic);
+	ionic_reset(ionic);
 	ionic_qcqs_free(lif);
 
 	dev_info(ionic->dev, "FW Down: LIFs stopped\n");

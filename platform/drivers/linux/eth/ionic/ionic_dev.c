@@ -23,6 +23,10 @@ static void ionic_watchdog_cb(struct timer_list *t)
 		  round_jiffies(jiffies + ionic->watchdog_period));
 
 	hb = ionic_heartbeat_check(ionic);
+	dev_dbg(ionic->dev, "%s: hb %d %lu fw %d running %d UP %d\n",
+		__func__, hb, ionic->idev.last_hb_time,
+		ionic->idev.last_fw_status, netif_running(lif->netdev),
+		test_bit(IONIC_LIF_F_UP, lif->state));
 
 	/* check link if we're waiting for link to come back up */
 	if (hb >= 0 && lif && netif_running(lif->netdev) &&
