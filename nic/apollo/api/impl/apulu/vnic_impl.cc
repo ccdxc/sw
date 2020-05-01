@@ -34,6 +34,7 @@
 
 #define vnic_tx_stats_action          action_u.vnic_tx_stats_vnic_tx_stats
 #define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
+#define meter_stats_action            action_u.meter_stats_meter_stats
 #define rxdma_vnic_info               action_u.vnic_info_rxdma_vnic_info_rxdma
 #define ing_vnic_info                 action_u.vnic_vnic_info
 #define egr_vnic_info                 action_u.rx_vnic_rx_vnic_info
@@ -716,11 +717,11 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
     meter_stats_data.action_id = METER_STATS_METER_STATS_ID;
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_METER_STATS,
-                                       hw_id_ << 1, NULL, NULL,
-                                       &meter_stats_data);
+                                       (METER_TABLE_SIZE >> 1) + hw_id_,
+                                       NULL, NULL, &meter_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program vnic %s METER_STATS table entry at %u",
-                      spec->key.str(), (hw_id_ << 1));
+                      spec->key.str(), (METER_TABLE_SIZE >> 1) + hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -1319,10 +1320,11 @@ vnic_impl::fill_vpp_stats_(pds_vnic_stats_t *stats) {
 
 sdk_ret_t
 vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
-    p4pd_error_t p4pd_ret;
     sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
     vnic_tx_stats_actiondata_t tx_stats = { 0 };
     vnic_rx_stats_actiondata_t rx_stats = { 0 };
+    meter_stats_actiondata_t meter_stats = { 0 };
 
     // read P4TBL_ID_VNIC_TX_STATS table
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VNIC_TX_STATS, hw_id_, NULL,
@@ -1343,6 +1345,27 @@ vnic_impl::fill_stats_(pds_vnic_stats_t *stats) {
     }
     stats->rx_pkts  = *(uint64_t *)rx_stats.vnic_rx_stats_action.in_packets;
     stats->rx_bytes = *(uint64_t *)rx_stats.vnic_rx_stats_action.in_bytes;
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_METER_STATS, hw_id_, NULL, NULL,
+                                      &meter_stats);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read METER_STATS table entry at index %u",
+                      hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    stats->meter_tx_pkts = *(uint64_t *)meter_stats.meter_stats_action.in_packets;
+    stats->meter_tx_bytes = *(uint64_t *)meter_stats.meter_stats_action.in_bytes;
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_METER_STATS,
+                                      (METER_TABLE_SIZE >> 1) + hw_id_,
+                                      NULL, NULL, &meter_stats);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read METER_STATS table entry at index %u",
+                      (METER_TABLE_SIZE >> 1) + hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    stats->meter_rx_pkts = *(uint64_t *)meter_stats.meter_stats_action.in_packets;
+    stats->meter_rx_bytes = *(uint64_t *)meter_stats.meter_stats_action.in_bytes;
 
     if (g_pds_state.vpp_ipc_mock() == false) {
         ret = fill_vpp_stats_(stats);

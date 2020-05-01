@@ -94,6 +94,10 @@ typedef struct pds_vnic_stats_s {
     uint64_t tx_pkts;         ///< transmit packet count
     uint64_t tx_bytes;        ///< transmit bytes
     uint64_t active_sessions; ///< current active sessions
+    uint64_t meter_rx_pkts;   ///< meter received packet count
+    uint64_t meter_rx_bytes;  ///< meter received bytes
+    uint64_t meter_tx_pkts;   ///< meter transmit packet count
+    uint64_t meter_tx_bytes;  ///< meter transmit bytes
 } pds_vnic_stats_t;
 
 /// \brief VNIC information

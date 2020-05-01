@@ -239,9 +239,9 @@ func printPolicy(resp *pds.SecurityPolicy) {
 			outStr += fmt.Sprintf("%-13s%-13s%-13s",
 				srcLowHighStr, dstLowHighStr, "-")
 		case *pds.RuleL4Match_TypeCode:
-			outStr += fmt.Sprintf("%-13s%-13s%6d/-%6d", "-", "-",
-				l4Match.GetTypeCode().GetTypeNum(),
+			icmpStr := fmt.Sprintf("%d/%d", l4Match.GetTypeCode().GetTypeNum(),
 				l4Match.GetTypeCode().GetCodeNum())
+			outStr += fmt.Sprintf("%-13s%-13s%-13s", "-", "-", icmpStr)
 		default:
 			outStr += fmt.Sprintf("%-13s%-13s%-13s", "-", "-", "-")
 		}

@@ -103,6 +103,14 @@ message VnicStats {
   uint64 RxPackets      = 4;
   // number of active sessions on the vnic
   uint64 ActiveSessions = 5;
+  // meter statistics transmitted packets
+  uint64 MeterTxPackets = 6;
+  // meter statistics transmitted bytes
+  uint64 MeterTxBytes   = 7;
+  // meter statistics received packets
+  uint64 MeterRxPackets = 8;
+  // meter statistics received bytes
+  uint64 MeterRxBytes   = 9;
 }
 
 // vnic object
