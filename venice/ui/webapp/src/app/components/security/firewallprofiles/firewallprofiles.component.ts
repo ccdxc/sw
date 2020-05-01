@@ -186,7 +186,7 @@ export class FirewallprofilesComponent  extends TablevieweditAbstract<ISecurityF
           }
         }
       },
-      this._controllerService.webSocketErrorHandler('Failed to get NAPLES info')
+      this._controllerService.webSocketErrorHandler('Failed to get DSCs info')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }

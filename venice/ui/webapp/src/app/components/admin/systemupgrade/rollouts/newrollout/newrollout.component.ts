@@ -37,7 +37,7 @@ export class RolloutOrder {
 /**
  * Description:
 
-  When Naples are assigned labels we can specify a sequence for the rollout to progress in.
+  When DSCs are assigned labels we can specify a sequence for the rollout to progress in.
   This means that the 1st order group will be updated before the 2nd and so on.
   The UI allows the user to select DSCs for group with the help of label selectors.
 
@@ -52,7 +52,7 @@ export class RolloutOrder {
   When we see that a matched NIC already has order(s) in the map, we show the info icon to notify the user.
 
  * Key functions:
-  onInit() -> fetch all Naples
+  onInit() -> fetch all DSCs
   setSpecOrderConstrains() - generates the order constraints
   buildRollout() - built the rollout object based on the form
   saveRollout() - call the rollout create api with the built rollout object
@@ -631,7 +631,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   /**
    * Build rollout JSON.
    * according to RolloutUtil.getRolloutNaplesVeniceType() rules
-   * sample working rollout ( upgrade some Naples)
+   * sample working rollout ( upgrade some DSCs)
    * {"kind":"rollout","api-version":null,"meta":{"name":"jeff-vs529-3"},"spec":{"version":"0.11.0-55","scheduled-start-time":"2019-06-25T22:56:21.145Z","strategy":"LINEAR","max-parallel":2,"max-nic-failures-before-abort":1,"order-constraints":[{"requirements":[{"key":"number","operator":"equals","values":["1"]}]}],"dscs-only":false,"dsc-must-match-constraint":true,"upgrade-type":"Disruptive"}}
    */
   buildRollout(): IRolloutRollout {
@@ -679,14 +679,14 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       const orderConstraints = [];
       const orders = this.getOrderConstraints();
       for (let ix = 0; ix < orders.length; ix++) {
-        const labelsSelectorCriteria = this.convertFormArrayToSearchExpression(orders[ix].value); // Some Naples will be updated.
+        const labelsSelectorCriteria = this.convertFormArrayToSearchExpression(orders[ix].value); // Some DSCs will be updated.
         const requirements = labelsSelectorCriteria;
         const obj = { 'requirements': requirements };
         orderConstraints.push(obj);
       }
       rollout.spec['order-constraints'] = orderConstraints;
     } else {
-      rollout.spec['order-constraints'] = []; // All Naples will be updated.
+      rollout.spec['order-constraints'] = []; // All DSCs will be updated.
     }
   }
 

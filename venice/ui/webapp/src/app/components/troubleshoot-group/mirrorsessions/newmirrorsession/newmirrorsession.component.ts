@@ -616,19 +616,32 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
     const op = rule.operator;
     const val = rule.values;
     let matches = [];
-    if (this.matchMap[key] && val.length > 0) {
+    if (!this.matchMap[key]) {
+      return [];
+    }
+    const keys = Object.keys(this.matchMap[key]);
+    if (keys.length === 0) {
+      return [];
+    }
+    if (op === 'in') {
+      if (!val || val.length === 0) {
+        return [];
+      }
       val.forEach((item: string) => {
         if (this.matchMap[key][item]) {
           matches = matches.concat(this.matchMap[key][item]);
         }
       });
+      return [...Array.from(new Set(matches).values())];
     }
-    matches = [...Array.from(new Set(matches).values())];
 
-    if (op === 'in') {
-      return matches;
-    }
-    return [...this.allNIList].filter(i => !matches.includes(i));
+    // op === not_in
+    keys.forEach((item: string) => {
+      if (!val.includes(item) && this.matchMap[key][item]) {
+        matches = matches.concat(this.matchMap[key][item]);
+      }
+    });
+    return [...Array.from(new Set(matches).values())];
   }
 
   getNILabels() {
@@ -672,7 +685,9 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   buildLabelInformation(networkInterfaces: NetworkNetworkInterface[]) {
     if (networkInterfaces.length) {
       networkInterfaces.forEach((item: NetworkNetworkInterface) => {
-        if (item.meta && item.meta.labels && item.spec.type === NetworkNetworkInterfaceSpec_type['uplink-eth']) {
+        if (item.meta && item.meta.labels &&
+            item.spec.type === NetworkNetworkInterfaceSpec_type['uplink-eth'] &&
+            !Utility.isInterfaceInValid(item)) {
           for (const key of Object.keys(item.meta.labels)) {
             if (this.matchMap[key] == null) {
               this.matchMap[key] = new Map<string, any>();
@@ -682,8 +697,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
             }
             this.matchMap[key][item.meta.labels[key]].push(item.meta.name);
           }
+          this.allNIList.push(item.meta.name);
         }
-        this.allNIList.push(item.meta.name);
       });
     }
   }

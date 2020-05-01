@@ -311,7 +311,7 @@ describe('NaplesdetailComponent', () => {
     expect(getOverlayText().nativeElement.textContent).toContain('3333.3333.0002 does not exist');
     let buttons = getOverlayButtons();
     expect(buttons.length).toBe(2);
-    expect(buttons[0].nativeElement.textContent).toContain('NAPLES OVERVIEW');
+    expect(buttons[0].nativeElement.textContent).toContain('DSCs OVERVIEW');
     expect(buttons[1].nativeElement.textContent).toContain('HOMEPAGE');
 
     // Add object
@@ -345,7 +345,7 @@ describe('NaplesdetailComponent', () => {
     expect(getOverlayText().nativeElement.textContent).toContain('3333.3333.0002 has been deleted');
     buttons = getOverlayButtons();
     expect(buttons.length).toBe(2);
-    expect(buttons[0].nativeElement.textContent).toContain('NAPLES OVERVIEW');
+    expect(buttons[0].nativeElement.textContent).toContain('DSCs OVERVIEW');
     expect(buttons[1].nativeElement.textContent).toContain('HOMEPAGE');
 
     // Clicking homepage button

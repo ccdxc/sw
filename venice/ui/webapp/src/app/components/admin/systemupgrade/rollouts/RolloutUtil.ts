@@ -23,7 +23,7 @@ export class RolloutUtil {
    * DSC only :
    *    "dscs-only": true,
    *    if (dsc-must-match-constraint== true) {
-   *         Naples listed in [order-constraints] will be updated
+   *         DSCs listed in [order-constraints] will be updated
    *    } else {
    *        update all naples
    *    }
@@ -31,7 +31,7 @@ export class RolloutUtil {
    * Both PSM and DSC :
    *   "dscs-only": false,
    *    if (dsc-must-match-constraint== true) {
-   *         Naples listed in [order-constraints] will be updated
+   *         DSCs listed in [order-constraints] will be updated
    *    } else {
    *        update all naples
    *    }

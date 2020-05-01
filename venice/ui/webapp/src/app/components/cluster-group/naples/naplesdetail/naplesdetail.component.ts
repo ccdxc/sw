@@ -614,7 +614,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           this.getThisDSCNetworkInterfaces();
         }
       },
-      this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
+      this._controllerService.webSocketErrorHandler('Failed to get DSCs')
     );
     this.subscriptions.push(subscription);
   }

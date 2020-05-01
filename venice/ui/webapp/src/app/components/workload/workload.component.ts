@@ -238,7 +238,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
       response => {
         this.naplesEventUtility.processEvents(response);
       },
-      this._controllerService.webSocketErrorHandler('Failed to get Naples')
+      this._controllerService.webSocketErrorHandler('Failed to get DSCs')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }

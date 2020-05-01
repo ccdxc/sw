@@ -204,7 +204,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
             this.getNaples();
           }, 3000);
         } else {
-          this._controllerService.webSocketErrorToaster('Failed to get Naples', error);
+          this._controllerService.webSocketErrorToaster('Failed to get DSCs', error);
         }
       },
       () => {

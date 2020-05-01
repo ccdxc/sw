@@ -268,7 +268,7 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
       this.createButtonTooltip = 'Please pick either id or mac-address';
       return false;
     }
-    // checks that the ADD NAPLES BY field is filled out
+    // checks that the ADD DSCs BY field is filled out
     for (let i = 0; i < this.radioValues.length; i++) {
       if (this.radioValues[i] !== '') {
         // both id and mac-address are empty

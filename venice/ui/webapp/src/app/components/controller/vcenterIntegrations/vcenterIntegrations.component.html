@@ -51,6 +51,9 @@
     <ng-container *ngSwitchCase="'status.last-connected'">
       {{rowData.status['last-connected'] | PrettyDate }}
     </ng-container>
+    <ng-container *ngSwitchCase="'spec.uri'">
+      <a [href]="'https://' + rowData.spec.uri" target="_blank">{{ rowData.spec.uri }}</a>
+    </ng-container>
     <ng-container *ngSwitchCase="'spec.manage-namespaces'">
       <div class="ellipsisText" [title]="rowData._ui.associatedDatacenters.join(', ')">
         {{ rowData._ui.associatedDatacenters.join(', ') }}

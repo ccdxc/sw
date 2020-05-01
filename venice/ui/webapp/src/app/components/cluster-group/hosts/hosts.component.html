@@ -68,9 +68,9 @@
     <ng-container *ngSwitchCase="'meta.name'">
       <div class="ellipsisText">
         <span [title]="rowData.meta.name">{{rowData.meta.name}}</span>
-        <span [title]="rowData.meta.labels['io.pensando.orch-name']"
-              *ngIf="rowData.meta.labels && rowData.meta.labels['io.pensando.orch-name']">
-          ({{rowData.meta.labels['io.pensando.orch-name']}})
+        <span [title]="rowData.meta.labels['io.pensando.vcenter.display-name']"
+              *ngIf="rowData.meta.labels && rowData.meta.labels['io.pensando.vcenter.display-name']">
+          ({{rowData.meta.labels['io.pensando.vcenter.display-name']}})
         </span>
       </div>
     </ng-container>
