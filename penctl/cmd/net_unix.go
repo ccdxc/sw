@@ -21,7 +21,9 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	if mockMode {
 		return nil
 	}
-	if val, ok := os.LookupEnv("DSC_URL"); ok {
+	if len(dscURL) > 0 {
+		naplesURL = dscURL
+	} else if val, ok := os.LookupEnv("DSC_URL"); ok {
 		for strings.HasSuffix(val, "/") {
 			val = val[:len(val)-1]
 		}
