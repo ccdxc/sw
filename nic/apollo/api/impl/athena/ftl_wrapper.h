@@ -87,7 +87,7 @@ ftlv6_get_index_type (flow_hash_entry_t *entry)
 static inline uint16_t
 ftlv6_get_key_vnic_id (flow_hash_entry_t *entry)
 {
-#ifndef P4_16
+#ifdef P4_14
     uint16_t vnic_id = 0;
 
     // ftl generated code misses out on msb
@@ -199,7 +199,7 @@ dnat_get_key_ip (dnat_entry_t *entry, uint8_t *ipaddr)
 static inline uint16_t
 dnat_get_key_vnic_id (dnat_entry_t *entry)
 {
-#ifndef P4_16 
+#ifdef P4_14 
     uint16_t vnic_id = 0;
 
     // ftl generated code misses out on msb

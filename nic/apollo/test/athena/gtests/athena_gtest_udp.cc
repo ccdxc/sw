@@ -258,7 +258,7 @@ static uint8_t g_snd_pkt_ipv4_udp_h2s[] = {
     0x78, 0x79
 };
 
-#ifdef P4_16
+#ifndef P4_14
 /*
  * Host to Switch UDP flow: Expected Packet
  */
@@ -479,7 +479,7 @@ static uint8_t g_snd_pkt_ipv6_udp_h2s[] = {
     0x75, 0x76, 0x77, 0x7A, 0x78, 0x79
 };
 
-#ifdef P4_16
+#ifndef P4_14
 
 /*
  * Host to Switch IPv6 UDP flow: Expected Packet
@@ -590,7 +590,7 @@ athena_gtest_test_flows_udp(void)
     sdk_ret_t           ret = SDK_RET_OK;
     uint32_t             mask_start_pos = 38;
 
-#ifdef P4_16
+#ifndef P4_14
     ret = send_packet_wmask("UDP-IPv4: h2s pkt", g_snd_pkt_ipv4_udp_h2s,
             sizeof(g_snd_pkt_ipv4_udp_h2s), g_h_port,
 			    g_rcv_pkt_ipv4_udp_h2s, sizeof(g_rcv_pkt_ipv4_udp_h2s), g_s_port, mask_start_pos);
@@ -648,7 +648,7 @@ athena_gtest_test_flows_udp(void)
         return ret;
     }
 
-#ifdef P4_16
+#ifndef P4_14
     ret = send_packet_wmask("UDP-IPv6: h2s pkt", g_snd_pkt_ipv6_udp_h2s,
             sizeof(g_snd_pkt_ipv6_udp_h2s), g_h_port,
 			    g_rcv_pkt_ipv6_udp_h2s, sizeof(g_rcv_pkt_ipv6_udp_h2s), g_s_port, mask_start_pos);

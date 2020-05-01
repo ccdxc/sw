@@ -120,7 +120,7 @@ static inline pds_mpls_label_to_hw_id(uint32_t mpls_label)
 {
     mpls_label_to_vnic_swkey_t  swkey;
     uint64_t    hw_idx;
-#ifdef P4_16
+#ifndef P4_14
     swkey.control_metadata_mpls_label_b20_b12 = (mpls_label >> 12);
     swkey.control_metadata_mpls_label_b11_b4 = ((mpls_label >> 4) & 0x00ff );
     swkey.control_metadata_mpls_label_b3_b0 = (mpls_label & 0x000f);

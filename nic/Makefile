@@ -5,7 +5,11 @@ export PIPELINE     ?= iris
 export PLATFORM     ?= sim
 export ASIC         ?= capri
 export FWTYPE       ?= full
-export P4VER        ?= P4_14
+ifeq ($(PIPELINE),athena)
+    export P4VER        ?= P4_16
+else
+    export P4VER        ?= P4_14
+endif
 export TOPDIR       := ${realpath ${CURDIR}/../}
 export NICDIR       := ${TOPDIR}/nic
 export IOTADIR      := ${TOPDIR}/iota

@@ -209,7 +209,7 @@ static uint8_t g_snd_pkt_ipv4_tcp_h2s[] = {
  * Host to Switch TCP flow: Expected Packet
  */
 
-#ifdef P4_16
+#ifndef P4_14
 
 static uint8_t g_rcv_pkt_ipv4_tcp_h2s[] = {
     0x00, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x00, 0x01,
@@ -396,7 +396,7 @@ static uint8_t g_snd_pkt_ipv6_tcp_h2s[] = {
 /*
  * Host to Switch IPv6 TCP flow: Expected Packet
  */
-#ifdef P4_16
+#ifndef P4_14
 
 static uint8_t g_rcv_pkt_ipv6_tcp_h2s[] {
     0x00, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x00, 0x01,
@@ -504,7 +504,7 @@ athena_gtest_test_flows_tcp(void)
     sdk_ret_t           ret = SDK_RET_OK;
     uint32_t             mask_start_pos = 38;
 
-#ifdef P4_16
+#ifndef P4_14
     ret = send_packet_wmask("TCP-IPv4: h2s pkt", g_snd_pkt_ipv4_tcp_h2s,
             sizeof(g_snd_pkt_ipv4_tcp_h2s), g_h_port,
 			    g_rcv_pkt_ipv4_tcp_h2s, sizeof(g_rcv_pkt_ipv4_tcp_h2s), g_s_port, mask_start_pos);
@@ -549,7 +549,7 @@ athena_gtest_test_flows_tcp(void)
         return ret;
     }
 
-#ifdef P4_16
+#ifndef P4_14
     ret = send_packet_wmask("TCP-IPv6: h2s pkt", g_snd_pkt_ipv6_tcp_h2s,
             sizeof(g_snd_pkt_ipv6_tcp_h2s), g_h_port,
 			    g_rcv_pkt_ipv6_tcp_h2s, sizeof(g_rcv_pkt_ipv6_tcp_h2s), g_s_port, mask_start_pos);
