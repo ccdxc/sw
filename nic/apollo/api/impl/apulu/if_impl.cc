@@ -420,6 +420,7 @@ if_impl::activate_update_(pds_epoch_t epoch, if_entry *intf,
         return SDK_RET_OK;
     } else if (spec->type == PDS_IF_TYPE_CONTROL) {
         ret = activate_control_if_(intf, spec);
+        return ret;
     }
     SDK_ASSERT_RETURN((spec->type == PDS_IF_TYPE_L3), SDK_RET_INVALID_ARG);
     return program_l3_if_(intf, spec);
