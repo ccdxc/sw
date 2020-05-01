@@ -48,6 +48,10 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt);
 
+    /// \brief return the number of host lifs in the database
+    /// \return numner of host lifs
+    uint32_t num_host_lif(void) const;
+
 private:
     void *lif_impl_state_;
 };

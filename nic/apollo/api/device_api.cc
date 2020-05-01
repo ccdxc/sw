@@ -53,11 +53,9 @@ pds_device_read (_Out_ pds_device_info_t *info)
     if (info == NULL) {
         return SDK_RET_INVALID_ARG;
     }
-
     if ((entry = pds_device_find()) == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-
     return entry->read(info);
 }
 

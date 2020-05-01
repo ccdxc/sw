@@ -56,6 +56,14 @@ lif_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
     return SDK_RET_OK;
 }
 
+uint32_t
+lif_state::num_host_lif(void) const {
+    if (lif_impl_state_) {
+        return ((api::impl::lif_impl_state *)lif_impl_state_)->num_host_lif();
+    }
+    return 0;
+}
+
 /// \@}    // end of PDS_LIF_STATE
 
 }    // namespace api

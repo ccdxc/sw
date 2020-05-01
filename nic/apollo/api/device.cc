@@ -224,6 +224,7 @@ device_entry::fill_status(pds_device_status_t *status) {
     status->num_ports = api::g_pds_state.catalogue()->num_fp_ports();
     status->pxe_version = IPXE_VERSION_CODE;
     status->uefi_version = UEFI_VERSION_CODE;
+    status->num_host_if = lif_db()->num_host_lif();
 }
 
 sdk_ret_t
