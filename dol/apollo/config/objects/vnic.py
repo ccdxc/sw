@@ -62,7 +62,10 @@ class VnicObject(base.ConfigObjectBase):
             self.MACAddr =  Resmgr.VnicMacAllocator.get()
         self.Dot1Qenabled = getattr(spec, 'tagged', True)
         if self.Dot1Qenabled or utils.IsDol():
-            self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
+            if (hasattr(spec, 'vnicencapvalue')):
+                self.VlanId = spec.vnicencapvalue
+            else:
+                self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
         else:
             self.VlanId = 0
         self.MplsSlot = next(ResmgrClient[node].VnicMplsSlotIdAllocator)

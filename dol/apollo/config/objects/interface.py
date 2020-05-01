@@ -670,6 +670,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
                     ctrl_obj.Show()
                     msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), [ctrl_obj]))
                     api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
+                    list(map(lambda x: x.SetHwHabitant(True), [ctrl_obj]))
 
         else:
             obj = self.__loopback_if[node]
@@ -694,15 +695,6 @@ class InterfaceObjectClient(base.ConfigClientBase):
         resp = api.client[node].GetHttp(api.ObjectTypes.INTERFACE)
         return resp
 
-    def GetNumHwObjects(self, node):
-        count = len(self.Objects(node))
-        # TODO can be improved, if object has a reference to gen object
-        for obj in self.Objects(node):
-            if (obj.HwHabitant == False) or (obj.Type == topo.InterfaceTypes.CONTROL):
-                count = count - 1
-        logger.info(f"GetNumHwObjects returned {count} for {self.ObjType.name} in {node}")
-        return count
-
     def ReadObjects(self, node):
         logger.info(f"Reading {self.ObjType.name} Objects from {node}")
         msg = self.GetGrpcReadAllMessage(node)
@@ -723,7 +715,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             for resp in obj.Response:
                 key = self.GetKeyfromSpec(resp.Spec)
                 inf = self.GetInterfaceObject(node, key)
-                if inf is not None and inf.Type != topo.InterfaceTypes.CONTROL:
+                if inf is not None:
                     numObjs += 1
                     if not utils.ValidateObject(inf, resp):
                         logger.error("INTERFACE validation failed for ", resp.Spec)

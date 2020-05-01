@@ -1,8 +1,6 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
-import json
-import types_pb2
 from infra.common.logging import logger
 
 from apollo.config.store import client as EzAccessStoreClient

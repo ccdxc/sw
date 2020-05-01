@@ -72,7 +72,10 @@ def __add_workloads(redirect_port):
             wl_msg.sec_ip_prefix.extend(ep.ip_addresses[1:])
         # wl_msg.ipv6_prefix = ep.ip_addresses[1]
         wl_msg.mac_address = ep.macaddr
-        wl_msg.interface_type = topo_svc.INTERFACE_TYPE_NONE
+        if ep.vlan != 0:
+            wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+        else:
+            wl_msg.interface_type = topo_svc.INTERFACE_TYPE_NONE
         wl_msg.encap_vlan = ep.vlan
         interface = ep.interface
         if interface != None: wl_msg.interface = interface

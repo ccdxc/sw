@@ -7,7 +7,6 @@ import copy
 import json
 from infra.common.logging import logger
 
-from infra.common.glopts  import GlobalOptions
 from apollo.config.store import EzAccessStore
 from apollo.config.store import client as EzAccessStoreClient
 from apollo.config.resmgr import client as ResmgrClient
@@ -106,7 +105,7 @@ class SubnetObject(base.ConfigObjectBase):
             node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid=node_uuid) if self.HostIfIdx else None
         # TODO: randomize maybe?
-        if GlobalOptions.netagent:
+        if utils.IsNetAgentMode():
             self.DHCPPolicyIds = list(map(lambda x: x.Id, DHCPRelayClient.Objects(node)))
         else:
             self.DHCPPolicyIds = getattr(spec, 'dhcppolicy', None)
@@ -249,7 +248,7 @@ class SubnetObject(base.ConfigObjectBase):
             spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.POLICY))
         for policyid in self.EgV6SecurityPolicyIds:
             spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.POLICY))
-        if GlobalOptions.netagent:
+        if utils.IsNetAgentMode():
             for policyid in self.DHCPPolicyIds:
                 spec.DHCPPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.DHCP_RELAY))
         else:
