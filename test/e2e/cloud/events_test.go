@@ -3,8 +3,8 @@ package cloud
 import (
 	"context"
 	"fmt"
-	"time"
 	"strings"
+	"time"
 
 	es "github.com/olivere/elastic"
 	. "github.com/onsi/ginkgo"
