@@ -18,7 +18,7 @@ VLIB_PLUGIN_REGISTER () = {
 static pds_infra_main_t infra_main;
 static vlib_node_registration_t pds_ip4_linux_inject_node;
 static vlib_node_registration_t pds_p4cpu_hdr_lookup_node;
-static vlib_node_registration_t pds_vnic_tx_node;
+static vlib_node_registration_t pds_nh_tx_node;
 static vlib_node_registration_t pds_vnic_l2_rewrite_node;
 static vlib_node_registration_t pds_error_drop_node;
 
@@ -503,32 +503,29 @@ pds_vnic_l2_rewrite_internal (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
     // Ethernet
     u16 vnic_id;
-    ethernet_header_t *eth0;
-    u8 *src_mac, *dst_mac;
-    u8 vnic_not_found, subnet_not_found;
-
-    vlib_buffer_advance(p, - sizeof (ethernet_header_t));
-    eth0 = vlib_buffer_get_current(p);
+    u8 *eth0;
+    u8 *rewrite;
+    u16 nh_id;
+    word rewrite_len;
 
     // extract vnic and subnet info
     vnic_id = vnet_buffer(p)->pds_tx_data.vnic_id;
-    if (0 != pds_vnic_l2_rewrite_info_get(vnic_id, &src_mac, &dst_mac,
-             &vnic_not_found, &subnet_not_found)) {
-        if (vnic_not_found) {
-            *next = VNIC_L2_REWRITE_NEXT_UNKNOWN;
-            counter[VNIC_L2_REWRITE_COUNTER_VNIC_NOT_FOUND] += 1;
-            return;
-        }
-        if (subnet_not_found){
-            *next = VNIC_L2_REWRITE_NEXT_UNKNOWN;
-            counter[VNIC_L2_REWRITE_COUNTER_SUBNET_NOT_FOUND] += 1;
-            return;
-        }
+    rewrite = pds_vnic_l2_rewrite_info_get(vnic_id, &nh_id);
+    if (!rewrite) {
+        *next = VNIC_L2_REWRITE_NEXT_UNKNOWN;
+        counter[VNIC_L2_REWRITE_COUNTER_VNIC_NOT_FOUND] += 1;
+        return;
     }
 
-    eth0->type =  clib_net_to_host_u16(ETHERNET_TYPE_IP4);
-    clib_memcpy(&eth0->dst_address, dst_mac, ETH_ADDR_LEN);
-    clib_memcpy(&eth0->src_address, src_mac, ETH_ADDR_LEN);
+    rewrite_len = vec_len(rewrite);
+    vlib_buffer_advance(p, (-rewrite_len));
+    eth0 = vlib_buffer_get_current(p);
+    clib_memcpy(eth0, rewrite, rewrite_len);
+    if (vnet_buffer(p)->pds_tx_data.ether_type != 0) {
+        u16 *eth_type = (u16 *) (rewrite + rewrite_len - sizeof(u16));
+        *eth_type = clib_net_to_host_u16(vnet_buffer(p)->pds_tx_data.ether_type);
+    }
+    vnet_buffer(p)->pds_tx_data.nh_id = nh_id;
     *next = VNIC_L2_REWRITE_NEXT_TX_OUT;
     counter[VNIC_L2_REWRITE_COUNTER_TX_OUT] += 1;
 
@@ -574,7 +571,6 @@ pds_vnic_l2_rewrite (vlib_main_t *vm,
 #undef _
 
     return from_frame->n_vectors;
-
 }
 
 static char * pds_vnic_l2_rewrite_error_strings[] = {
@@ -614,102 +610,102 @@ VLIB_REGISTER_NODE(pds_vnic_l2_rewrite_node, static) = {
 };
 
 always_inline void
-pds_vnic_tx_internal (vlib_main_t *vm, vlib_buffer_t *p, u16 *next, u32 *counter)
+pds_nh_tx_internal (vlib_main_t *vm, vlib_buffer_t *p, u16 *next, u32 *counter)
 {
-    u16 vnic_nh_hw_id;
+    u16 nh_id;
     vlib_node_runtime_t *node;
     static u32 cpu_mnic_if_index = ~0;
 
-    vnic_nh_hw_id = vnet_buffer(p)->pds_tx_data.vnic_nh_hw_id;
-    if (PREDICT_FALSE(vnic_nh_hw_id == 0)) {
-        *next = VNIC_TX_NEXT_DROP;
-        counter[VNIC_TX_COUNTER_FAILED]++;
+    nh_id = vnet_buffer(p)->pds_tx_data.nh_id;
+    if (PREDICT_FALSE(nh_id == 0)) {
+        *next = NH_TX_NEXT_DROP;
+        counter[NH_TX_COUNTER_FAILED]++;
     } else {
-        pds_vnic_add_tx_hdrs(p, vnic_nh_hw_id);
+        pds_nh_add_tx_hdrs(p, nh_id);
         if (PREDICT_FALSE(((u32) ~0) == cpu_mnic_if_index)) {
             cpu_mnic_if_index = pds_infra_get_sw_ifindex_by_name((u8*)"cpu_mnic0");
         }
         vnet_buffer(p)->sw_if_index[VLIB_TX] = cpu_mnic_if_index;
-        *next = VNIC_TX_NEXT_INTF_OUT;
-        counter[VNIC_TX_COUNTER_SUCCESS]++;
+        *next = NH_TX_NEXT_INTF_OUT;
+        counter[NH_TX_COUNTER_SUCCESS]++;
     }
 
-    node = vlib_node_get_runtime(vm, pds_vnic_tx_node.index);
+    node = vlib_node_get_runtime(vm, pds_nh_tx_node.index);
     if (node->flags & VLIB_NODE_FLAG_TRACE) {
-        vnic_tx_trace_t *t0;
+        nh_tx_trace_t *t0;
         if (p->flags & VLIB_BUFFER_IS_TRACED) {
             t0 = vlib_add_trace(vm, node, p, sizeof(t0[0]));
-            t0->vnic_nh_hw_id = vnic_nh_hw_id;
+            t0->nh_id = nh_id;
         }
     }
 }
 
 static uword
-pds_vnic_tx (vlib_main_t *vm,
-             vlib_node_runtime_t *node,
-             vlib_frame_t *from_frame)
+pds_nh_tx (vlib_main_t *vm,
+           vlib_node_runtime_t *node,
+           vlib_frame_t *from_frame)
 {
-    u32 counter[VNIC_TX_COUNTER_LAST] = {0};
+    u32 counter[NH_TX_COUNTER_LAST] = {0};
 
     PDS_PACKET_LOOP_START {
 
         PDS_PACKET_DUAL_LOOP_START(READ, WRITE) {
-            pds_vnic_tx_internal(vm, PDS_PACKET_BUFFER(0),
-                                 PDS_PACKET_NEXT_NODE_PTR(0), counter);
-            pds_vnic_tx_internal(vm, PDS_PACKET_BUFFER(1),
-                                 PDS_PACKET_NEXT_NODE_PTR(1), counter);
+            pds_nh_tx_internal(vm, PDS_PACKET_BUFFER(0),
+                               PDS_PACKET_NEXT_NODE_PTR(0), counter);
+            pds_nh_tx_internal(vm, PDS_PACKET_BUFFER(1),
+                               PDS_PACKET_NEXT_NODE_PTR(1), counter);
         } PDS_PACKET_DUAL_LOOP_END;
 
         PDS_PACKET_SINGLE_LOOP_START {
-            pds_vnic_tx_internal(vm, PDS_PACKET_BUFFER(0),
-                                 PDS_PACKET_NEXT_NODE_PTR(0), counter);
+            pds_nh_tx_internal(vm, PDS_PACKET_BUFFER(0),
+                               PDS_PACKET_NEXT_NODE_PTR(0), counter);
         } PDS_PACKET_SINGLE_LOOP_END;
 
     } PDS_PACKET_LOOP_END;
 
-#define _(n, s)                                                 \
-    vlib_node_increment_counter (vm, pds_vnic_tx_node.index,    \
-                                 VNIC_TX_COUNTER_##n,           \
-                                 counter[VNIC_TX_COUNTER_##n]);
-    foreach_vnic_tx_counter
+#define _(n, s)                                                     \
+    vlib_node_increment_counter(vm, pds_nh_tx_node.index,           \
+                                NH_TX_COUNTER_##n,                  \
+                                counter[NH_TX_COUNTER_##n]);
+    foreach_nh_tx_counter
 #undef _
 
     return from_frame->n_vectors;
 }
 
-static char * pds_vnic_tx_error_strings[] = {
+static char * pds_nh_tx_error_strings[] = {
 #define _(n,s) s,
-    foreach_vnic_tx_counter
+    foreach_nh_tx_counter
 #undef _
 };
 
 static u8 *
-format_pds_vnic_tx_trace (u8 *s, va_list *args)
+format_pds_nh_tx_trace (u8 *s, va_list *args)
 {
-    CLIB_UNUSED (vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
-    CLIB_UNUSED (vlib_node_t * node) = va_arg(*args, vlib_node_t *);
-    vnic_tx_trace_t *t = va_arg(*args, vnic_tx_trace_t *);
+    CLIB_UNUSED(vlib_main_t * vm) = va_arg(*args, vlib_main_t *);
+    CLIB_UNUSED(vlib_node_t * node) = va_arg(*args, vlib_node_t *);
+    nh_tx_trace_t *t = va_arg(*args, nh_tx_trace_t *);
 
-    s = format (s, "Nexthop id %d", t->vnic_nh_hw_id);
+    s = format(s, "Nexthop id %d", t->nh_id);
     return s;
 }
 
-VLIB_REGISTER_NODE(pds_vnic_tx_node, static) = {
-    .function = pds_vnic_tx,
-    .name = "pds-vnic-tx",
+VLIB_REGISTER_NODE(pds_nh_tx_node, static) = {
+    .function = pds_nh_tx,
+    .name = "pds-nexthop-tx",
 
     .vector_size = sizeof(u32),  // takes a vector of packets
 
-    .n_errors = VNIC_TX_COUNTER_LAST,
-    .error_strings = pds_vnic_tx_error_strings,
-    .n_next_nodes = VNIC_TX_N_NEXT,
+    .n_errors = NH_TX_COUNTER_LAST,
+    .error_strings = pds_nh_tx_error_strings,
+    .n_next_nodes = NH_TX_N_NEXT,
     .next_nodes = {
-#define _(s,n) [VNIC_TX_NEXT_##s] = n,
-    foreach_vnic_tx_next
+#define _(s,n) [NH_TX_NEXT_##s] = n,
+    foreach_nh_tx_next
 #undef _
     },
 
-    .format_trace = format_pds_vnic_tx_trace,
+    .format_trace = format_pds_nh_tx_trace,
 };
 
 always_inline void

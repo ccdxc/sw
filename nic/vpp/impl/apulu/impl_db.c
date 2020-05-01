@@ -16,6 +16,7 @@ pds_impl_db_ctx_t impl_db_ctx;
     pool_get(impl_db_ctx.obj##_pool_base, obj##_info);          \
     offset = obj##_info - impl_db_ctx.obj##_pool_base;          \
     vec_elt(impl_db_ctx.obj##_pool_idx, hw_id) = offset;        \
+    clib_memset(obj##_info, 0, sizeof(*obj##_info));            \
     } else {                                                    \
     obj##_info =  pool_elt_at_index(impl_db_ctx.obj##_pool_base,\
                                     offset);                    \
@@ -75,6 +76,15 @@ pds_impl_db_vnic_set (uint8_t *mac,
                       uint16_t nh_hw_id,
                       uint16_t host_lif_hw_id)
 {
+    ethernet_header_t *eth = NULL;
+    ethernet_vlan_header_t *vlan = NULL;
+    pds_impl_db_subnet_entry_t *subnet_info = NULL;
+
+    subnet_info = pds_impl_db_subnet_get(subnet_hw_id);
+    if(subnet_info == NULL) {
+        return -1;
+    }
+
     POOL_IMPL_DB_ADD(vnic, vnic_hw_id);
 
     clib_memcpy(vnic_info->mac, mac, ETH_ADDR_LEN);
@@ -98,10 +108,44 @@ pds_impl_db_vnic_set (uint8_t *mac,
     }
     vnic_info->nh_hw_id = nh_hw_id;
     vnic_info->host_lif_hw_id = host_lif_hw_id;
+
+    vec_free(vnic_info->rewrite);
+    vec_validate(vnic_info->rewrite, vnic_info->l2_encap_len - 1);
+    eth = (ethernet_header_t *) vnic_info->rewrite;
+
+    clib_memcpy(eth->src_address, subnet_info->mac, ETH_ADDR_LEN);
+    clib_memcpy(eth->dst_address, mac, ETH_ADDR_LEN);
+    eth->type = clib_host_to_net_u16(ETHERNET_TYPE_IP4); // default
+    if (dot1q) {
+        eth->type = clib_host_to_net_u16(ETHERNET_TYPE_VLAN);
+        vlan = (ethernet_vlan_header_t *) (eth + 1);
+        vlan->priority_cfi_and_id = clib_host_to_net_u16(vlan_id);
+        vlan->type = clib_host_to_net_u16(ETHERNET_TYPE_IP4); // default
+    }
     return 0;
 }
 
-IMPL_DB_ENTRY_DEL(uint16_t, vnic);
+int
+pds_impl_db_vnic_del (uint16_t hw_id)
+{
+    u16 offset;
+    pds_impl_db_vnic_entry_t *vnic_info = NULL;
+
+    if (hw_id >= vec_len(impl_db_ctx.vnic_pool_idx)) {
+        return -1;
+    }
+    offset = vec_elt(impl_db_ctx.vnic_pool_idx, hw_id);
+    if (offset == 0xffff) {
+        return -1;
+    }
+
+    vnic_info = pool_elt_at_index(impl_db_ctx.vnic_pool_base, offset);
+    vec_free(vnic_info->rewrite);
+    pool_put_index(impl_db_ctx.vnic_pool_base, offset);
+    vec_elt(impl_db_ctx.vnic_pool_idx, hw_id) = 0xffff;
+    return 0;
+}
+
 IMPL_DB_ENTRY_GET(uint16_t, vnic);
 IMPL_DB_INIT(vnic, PDS_VPP_MAX_VNIC, 0xffff);
 

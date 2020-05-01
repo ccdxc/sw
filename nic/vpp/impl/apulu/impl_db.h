@@ -37,6 +37,7 @@ typedef struct {
     u16 vlan_id;                    // vlan id if encap type is != no vlan
     u16 nh_hw_id;                   // nexthop id
     u16 host_lif_hw_id;             // host lif id
+    u8 *rewrite;
 } pds_impl_db_vnic_entry_t;
 
 typedef struct {

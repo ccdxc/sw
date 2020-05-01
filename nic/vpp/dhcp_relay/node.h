@@ -40,14 +40,6 @@
     _(TO_RELAY_CLIENT, "dhcp-relay-to-client")              \
     _(DROP, "pds-error-drop")                               \
 
-// client tx node related defines
-#define foreach_dhcp_relay_client_tx_counter                \
-    _(TX, "Sent on host interface")                         \
-
-#define foreach_dhcp_relay_client_tx_next                   \
-    _(INTF_OUT, "interface-tx")                             \
-    _(DROP, "pds-error-drop")                               \
-
 // to server node related defines
 #define foreach_dhcp_relay_to_server_counter                \
     _(TX, "Sent to DHCP server")                            \
@@ -69,7 +61,7 @@
     _(INVALID_SERVER, "Matching DHCP server Not found")     \
 
 #define foreach_dhcp_relay_to_client_next                   \
-    _(CLIENT_TX, "pds-dhcp-relay-client-tx")                \
+    _(CLIENT_TX, "pds-vnic-l2-rewrite")                     \
     _(DROP, "pds-error-drop")                               \
 
 // classify node related defines
@@ -90,25 +82,6 @@ typedef enum {
 typedef struct dhcp_relay_clfy_trace_s {
     uint16_t lif;
 } dhcp_relay_clfy_trace_t;
-
-// client tx node related defines
-typedef enum {
-#define _(n,s) DHCP_RELAY_CLIENT_TX_COUNTER_##n,
-    foreach_dhcp_relay_client_tx_counter
-#undef _
-    DHCP_RELAY_CLIENT_TX_COUNTER_LAST,
-} dhcp_relay_client_tx_counter_t;
-
-typedef enum {
-#define _(n,s) PDS_DHCP_RELAY_CLIENT_TX_NEXT_##n,
-    foreach_dhcp_relay_client_tx_next
-#undef _
-    PDS_DHCP_RELAY_CLIENT_TX_N_NEXT,
-} dhcp_relay_client_tx_next_t;
-
-typedef struct dhcp_relay_client_tx_trace_s {
-    mac_addr_t client_mac;
-} dhcp_relay_client_tx_trace_t;
 
 // relay to server node related defines
 typedef enum {

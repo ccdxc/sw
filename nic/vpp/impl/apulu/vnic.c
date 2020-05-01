@@ -49,7 +49,7 @@ pds_dst_vnic_info_get (uint16_t lkp_id, uint32_t addr, uint16_t *vnic_id,
 }
 
 int
-pds_src_vnic_info_get (uint16_t lkp_id, uint32_t addr, mac_addr_t mac_addr,
+pds_src_vnic_info_get (uint16_t lkp_id, uint32_t addr, uint8_t **rewrite,
                        uint16_t *host_lif_hw_id)
 {
     pds_impl_db_vnic_entry_t *vnic;
@@ -72,7 +72,7 @@ pds_src_vnic_info_get (uint16_t lkp_id, uint32_t addr, mac_addr_t mac_addr,
         return -1;
     }
 
-    memcpy(mac_addr, vnic->mac, ETH_ADDR_LEN);
+    *rewrite = vnic->rewrite;
     *host_lif_hw_id = vnic->host_lif_hw_id;
     return 0;
 }

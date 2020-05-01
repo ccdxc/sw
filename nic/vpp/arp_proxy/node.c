@@ -76,7 +76,7 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
         counter[ARP_PROXY_COUNTER_VNIC_MISSING]++;
         goto error;
     }
-    vnet_buffer(p0)->pds_tx_data.vnic_nh_hw_id = vnic_nh_hw_id;
+    vnet_buffer(p0)->pds_tx_data.nh_id = vnic_nh_hw_id;
 
     arp = (ethernet_arp_header_t*) (vlib_buffer_get_current(p0) + offset);
     dst = clib_net_to_host_u32(arp->ip4_over_ethernet[1].ip4.data_u32);

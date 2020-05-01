@@ -19,7 +19,6 @@ VLIB_PLUGIN_REGISTER () = {
 
 static CLIB_UNUSED(vlib_node_registration_t pds_dhcp_relay_uplink_clfy_node);
 static CLIB_UNUSED(vlib_node_registration_t pds_dhcp_relay_host_clfy_node);
-static vlib_node_registration_t pds_dhcp_relay_client_tx_node;
 static vlib_node_registration_t dhcp_relay_to_server_node;
 static vlib_node_registration_t dhcp_relay_to_client_node;
 
@@ -347,166 +346,6 @@ VLIB_REGISTER_NODE(pds_dhcp_relay_uplink_clfy_node, static) = {
     .format_trace = format_pds_dhcp_relay_clfy_trace,
 };
 
-// client header node
-static u8 *
-format_pds_dhcp_relay_client_tx_trace (u8 * s, va_list * args)
-{
-    CLIB_UNUSED (vlib_main_t * vm) = va_arg (*args, vlib_main_t *);
-    CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
-    dhcp_relay_client_tx_trace_t *t = va_arg (*args, dhcp_relay_client_tx_trace_t *);
-
-    s = format (s, "Client mac  %U", format_ethernet_address, t->client_mac);
-    return s;
-}
-
-always_inline void
-pds_dhcp_relay_client_tx_trace_add (vlib_main_t *vm,
-                                    vlib_node_runtime_t *node,
-                                    vlib_frame_t *from_frame)
-{
-    PDS_PACKET_TRACE_LOOP_START {
-        PDS_PACKET_TRACE_DUAL_LOOP_START {
-            vlib_buffer_t *b0, *b1;
-            dhcp_relay_client_tx_trace_t *t0, *t1;
-
-            b0 = PDS_PACKET_BUFFER(0);
-            b1 = PDS_PACKET_BUFFER(1);
-
-            if (b0->flags & VLIB_BUFFER_IS_TRACED) {
-                t0 = vlib_add_trace(vm, node, b0, sizeof (t0[0]));
-                //TODO fill client mac
-            }
-            if (b1->flags & VLIB_BUFFER_IS_TRACED) {
-                t1 = vlib_add_trace(vm, node, b1, sizeof (t1[0]));
-                //TODO fill client mac
-            }
-        } PDS_PACKET_TRACE_DUAL_LOOP_END;
-        PDS_PACKET_TRACE_SINGLE_LOOP_START {
-            vlib_buffer_t *b0;
-            dhcp_relay_client_tx_trace_t *t0;
-
-            b0 = PDS_PACKET_BUFFER(0);
-
-            if (b0->flags & VLIB_BUFFER_IS_TRACED) {
-                t0 = vlib_add_trace(vm, node, b0, sizeof (t0[0]));
-                //TODO fill client mac
-            }
-        } PDS_PACKET_TRACE_SINGLE_LOOP_END;
-    } PDS_PACKET_TRACE_LOOP_END;
-}
-
-always_inline int
-pds_dhcp_relay_client_tx_buffer_advance_offset (vlib_buffer_t *b)
-{
-    return (VPP_ARM_TO_P4_HDR_SZ);
-}
-
-always_inline void
-pds_dhcp_relay_client_tx_fill_next (u16 *next, u32 *counter, bool error)
-{
-    if (!error) {
-        *next = PDS_DHCP_RELAY_CLIENT_TX_NEXT_INTF_OUT;
-        counter[DHCP_RELAY_CLIENT_TX_COUNTER_TX]++;
-    } else {
-        *next = PDS_DHCP_RELAY_CLIENT_TX_NEXT_DROP;
-    }
-
-    return;
-}
-
-always_inline void
-pds_dhcp_relay_client_tx_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
-                             u16 *next0, u16 *next1, u32 *counter)
-{
-    bool error0, error1;
-    vlib_buffer_advance(p0, -(pds_dhcp_relay_client_tx_buffer_advance_offset(p0)));
-    vlib_buffer_advance(p1, -(pds_dhcp_relay_client_tx_buffer_advance_offset(p1)));
-
-    // TODO need to fill all the p4 tx header fileds
-
-    pds_dhcp_relay_client_fill_tx_hdr_x2(p0, p1, &error0, &error1);
-
-    pds_dhcp_relay_client_tx_fill_next(next0, counter, error0);
-    pds_dhcp_relay_client_tx_fill_next(next1, counter, error1);
-
-    return;
-}
-
-always_inline void
-pds_dhcp_relay_client_tx_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
-{
-    bool error;
-    vlib_buffer_advance(p, -(pds_dhcp_relay_client_tx_buffer_advance_offset(p)));
-
-    // TODO need to fill all the p4 tx header fileds
-    pds_dhcp_relay_client_fill_tx_hdr_x1(p, &error);
-
-    pds_dhcp_relay_client_tx_fill_next(next, counter, error);
-
-    return;
-}
-
-static uword
-pds_dhcp_relay_client_tx (vlib_main_t * vm,
-                           vlib_node_runtime_t * node,
-                           vlib_frame_t * from_frame)
-{
-    /*add corresponding p4 hdr details for packet towards client*/
-    u32 counter[DHCP_RELAY_CLIENT_TX_COUNTER_LAST] = {0};
-
-    PDS_PACKET_LOOP_START {
-        PDS_PACKET_DUAL_LOOP_START(WRITE, WRITE) {
-            pds_dhcp_relay_client_tx_x2(PDS_PACKET_BUFFER(0),
-                                         PDS_PACKET_BUFFER(1),
-                                         PDS_PACKET_NEXT_NODE_PTR(0),
-                                         PDS_PACKET_NEXT_NODE_PTR(1),
-                                         counter);
-        } PDS_PACKET_DUAL_LOOP_END;
-        PDS_PACKET_SINGLE_LOOP_START {
-            pds_dhcp_relay_client_tx_x1(PDS_PACKET_BUFFER(0),
-                                         PDS_PACKET_NEXT_NODE_PTR(0),
-                                         counter);
-        } PDS_PACKET_SINGLE_LOOP_END;
-    } PDS_PACKET_LOOP_END;
-
-#define _(n, s) \
-    vlib_node_increment_counter (vm, pds_dhcp_relay_client_tx_node.index,   \
-                                 DHCP_RELAY_CLIENT_TX_COUNTER_##n,          \
-                                 counter[DHCP_RELAY_CLIENT_TX_COUNTER_##n]);
-    foreach_dhcp_relay_client_tx_counter
-#undef _
-
-    if (node->flags & VLIB_NODE_FLAG_TRACE) {
-        pds_dhcp_relay_client_tx_trace_add(vm, node, from_frame);
-    }
-
-    return from_frame->n_vectors;
-}
-
-static char * pds_dhcp_relay_client_tx_error_strings[] = {
-#define _(n,s) s,
-    foreach_dhcp_relay_client_tx_counter
-#undef _
-};
-
-VLIB_REGISTER_NODE (pds_dhcp_relay_client_tx_node, static) = {
-    .function = pds_dhcp_relay_client_tx,
-    .name = "pds-dhcp-relay-client-tx",
-    /* Takes a vector of packets. */
-    .vector_size = sizeof (u32),
-
-    .n_errors = DHCP_RELAY_CLIENT_TX_COUNTER_LAST,
-    .error_strings = pds_dhcp_relay_client_tx_error_strings,
-    .n_next_nodes = PDS_DHCP_RELAY_CLIENT_TX_N_NEXT,
-    .next_nodes = {
-#define _(s,n) [PDS_DHCP_RELAY_CLIENT_TX_NEXT_##s] = n,
-        foreach_dhcp_relay_client_tx_next
-#undef _
-    },
-
-    .format_trace = format_pds_dhcp_relay_client_tx_trace,
-};
-
 int
 pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
 {
@@ -602,25 +441,16 @@ pds_dhcp_client_tx_callback (vlib_main_t * vm, vlib_buffer_t *b)
     ip4_header_t *ip0;
     u32 vrip=0, old0, new0;
     ip_csum_t sum0;
-    u16 vnic_id, subnet_hw_id;
-    u8 *vrmac;
-
-    ethernet_header_t *eth0;
+    u16 vnic_id;
 
     ip0 = vlib_buffer_get_current(b);
     u0 = (udp_header_t *)(ip0 + 1);
 
-    vlib_buffer_advance(b, - sizeof (ethernet_header_t));
-    eth0 = vlib_buffer_get_current(b);
-
     // extract vnic and subnet info
     vnic_id = vnet_buffer(b)->pds_dhcp_data.vnic_id;
-    if (0 != pds_vnic_subnet_get(vnic_id, &subnet_hw_id)) {
-        return -1;
-    }
-    if (0 != pds_impl_db_vr_ip_mac_get(subnet_hw_id, &vrip, &vrmac)) {
-        return -2;
-    }
+    vnet_buffer(b)->pds_tx_data.ether_type = 0;
+    vnet_buffer(b)->pds_tx_data.vnic_id = vnic_id;
+    vnet_buffer(b)->pds_tx_data.nh_id = 0;
 
     // set dest port
     u0->checksum = 0;
@@ -644,10 +474,6 @@ pds_dhcp_client_tx_callback (vlib_main_t * vm, vlib_buffer_t *b)
                           src_address /* offset of changed member */ );
     ip0->checksum = ip_csum_fold(sum0);
 
-    // eth header filling
-    eth0->type =  clib_net_to_host_u16(ETHERNET_TYPE_IP4);
-    clib_memcpy(eth0->src_address, vrmac, ETH_ADDR_LEN);
-    clib_memset(eth0->dst_address, 0xff, ETH_ADDR_LEN);
     return 0;
 }
 
@@ -1101,7 +927,7 @@ pds_dhcp_relay_init_cb (bool external_server)
         pds_dhcp_set_internal_proxy_server();
     }
 
-    dhcp_register_client_next_node_tx(vm, (u8 *) "pds-dhcp-relay-client-tx");
+    dhcp_register_client_next_node_tx(vm, (u8 *) "pds-vnic-l2-rewrite");
     dhcp_register_custom_options_cb(&pds_dhcp_options_callback);
     dhcp_register_custom_client_hdr_cb(&pds_dhcp_client_tx_callback);
     dhcp_register_extract_circ_id_cb(&pds_dhcp_extract_circ_id_callback);

@@ -18,7 +18,7 @@
     _(DAD_DROP, "Duplicate address detection drops")        \
 
 #define foreach_arp_proxy_next                              \
-    _(EXIT, "pds-vnic-tx")                                  \
+    _(EXIT, "pds-nexthop-tx")                                  \
     _(DROP, "pds-error-drop")
 
 typedef enum

@@ -15,6 +15,11 @@
 extern "C" {
 #endif
 
+int pds_dst_vnic_info_get(uint16_t lkp_id, uint32_t addr, uint16_t *vnic_id,
+                          uint16_t *vnic_nh_hw_id);
+int pds_src_vnic_info_get(uint16_t lkp_id, uint32_t addr, uint8_t **rewrite,
+                          uint16_t *host_lif_hw_id);
+
 static inline int
 pds_ingress_bd_id_get (void *hdr)
 {
@@ -84,7 +89,7 @@ pds_vnic_active_sessions_decrement (uint16_t vnic_id) {
 }
 
 always_inline void
-pds_vnic_add_tx_hdrs (vlib_buffer_t *b, u16 vnic_nh_hw_id)
+pds_nh_add_tx_hdrs (vlib_buffer_t *b, u16 nh_id)
 {
     p4_tx_cpu_hdr_t *tx;
 
@@ -92,31 +97,24 @@ pds_vnic_add_tx_hdrs (vlib_buffer_t *b, u16 vnic_nh_hw_id)
     tx->lif_flags = 0;
     tx->nexthop_valid = 1;
     tx->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    tx->nexthop_id = clib_host_to_net_u16(vnic_nh_hw_id);
+    tx->nexthop_id = clib_host_to_net_u16(nh_id);
     tx->lif_flags = clib_host_to_net_u16(tx->lif_flags);
 }
 
-always_inline int
-pds_vnic_l2_rewrite_info_get (u16 vnic_id, u8 **src_mac, u8 **dst_mac,
-                              u8 *vnic_not_found, u8 *subnet_not_found)
+always_inline u8 *
+pds_vnic_l2_rewrite_info_get (u16 vnic_id, u16 *nh_id)
 {
     pds_impl_db_vnic_entry_t *vnic_info = NULL;
-    pds_impl_db_subnet_entry_t *subnet_info = NULL;
 
     vnic_info = pds_impl_db_vnic_get(vnic_id);
     if(vnic_info == NULL) {
-        *vnic_not_found = 1;
-        return -1;
+        return NULL;
     }
-    subnet_info = pds_impl_db_subnet_get(vnic_info->subnet_hw_id);
-    if(subnet_info == NULL) {
-        *subnet_not_found = 1;
-        return -1;
-    }
-    *src_mac = subnet_info->mac;
-    *dst_mac = vnic_info->mac;
-    return 0;
+
+    *nh_id = vnic_info->nh_hw_id;
+    return vnic_info->rewrite;
 }
+
 #ifdef __cplusplus
 }
 #endif

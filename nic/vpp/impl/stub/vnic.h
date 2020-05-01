@@ -12,16 +12,15 @@ extern "C" {
 #endif
 
 always_inline void
-pds_vnic_add_tx_hdrs (vlib_buffer_t *b, u16 vnic_nh_hw_id)
+pds_nh_add_tx_hdrs (vlib_buffer_t *b, u16 vnic_nh_hw_id)
 {
 }
 
-always_inline int
-pds_vnic_l2_rewrite_info_get (u16 vnic_id, u8 **src_mac, u8 **dst_mac,
-                              u8 *vnic_not_found, u8 *subnet_not_found)
+always_inline u8*
+pds_vnic_l2_rewrite_info_get (u16 vnic_id, u16 *nh_id)
 {
-    *vnic_not_found = *subnet_not_found = 1;
-    return -1;
+    *nh_id = 0;
+    return NULL;
 }
 
 always_inline int
@@ -39,6 +38,20 @@ pds_vnic_flow_log_en_get (u16 vnic_id, int *enable)
 always_inline int
 pds_vnic_active_sessions_decrement (uint16_t vnic_id) {
     return -1;
+}
+
+static inline int
+pds_dst_vnic_info_get (uint16_t lkp_id, uint32_t addr, uint16_t *vnic_id,
+                       uint16_t *vnic_nh_hw_id)
+{
+    return 0;
+}
+
+static inline int
+pds_src_vnic_info_get (uint16_t lkp_id, uint32_t addr, uint8_t **rewrite,
+                       uint16_t *host_lif_hw_id)
+{
+    return 0;
 }
 
 #ifdef __cplusplus

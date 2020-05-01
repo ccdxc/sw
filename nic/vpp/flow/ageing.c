@@ -733,7 +733,7 @@ pds_flow_send_keep_alive_helper (pds_flow_hw_ctx_t *session,
         }
 
         vnet_buffer(b)->pds_tx_data.vnic_id = vnic_id;
-        vnet_buffer(b)->pds_tx_data.vnic_nh_hw_id = vnic_nh_hw_id;
+        vnet_buffer(b)->pds_tx_data.nh_id = vnic_nh_hw_id;
 
         static vlib_node_t *vnic_node = NULL;
         if (!vnic_node) {
@@ -745,21 +745,25 @@ pds_flow_send_keep_alive_helper (pds_flow_hw_ctx_t *session,
         to_frame->n_vectors++;
         vlib_put_frame_to_node(vm, vnic_node->index, to_frame);
     } else {
+        u8 *rewrite = NULL;
         ethernet_header_t *eth0;
-        mac_addr_t mac;
         u16 host_lif_hw_id = 0;
+        word rewrite_len;
 
         // Get the VNIC to which the packet belongs
-        int ret = pds_src_vnic_info_get(lkp_id, sip, mac, &host_lif_hw_id);
-        if (PREDICT_FALSE(ret == -1)) {
+        int ret = pds_src_vnic_info_get(lkp_id, sip, &rewrite, &host_lif_hw_id);
+        if (PREDICT_FALSE((ret == -1) || !rewrite)) {
             return -1;
         }
 
         // Add the ethernet header
-        vlib_buffer_advance(b, - sizeof (ethernet_header_t));
+        rewrite_len = vec_len(rewrite);
+        vlib_buffer_advance(b, (-rewrite_len));
         eth0 = vlib_buffer_get_current(b);
-        // Src MAC will be VNIC mac and dst mac is dummy
-        clib_memcpy(&eth0->src_address, mac, ETH_ADDR_LEN);
+        // vnic rewrite has dest as vnic mac and VR mac as smac
+        clib_memcpy(eth0, rewrite, rewrite_len);
+        // reverse macs as we are making this packet coming from host
+        clib_memswap(eth0->src_address, eth0->dst_address, ETH_ADDR_LEN);
         eth0->type = clib_host_to_net_u16(ETHERNET_TYPE_IP4);
 
         if (PREDICT_FALSE(((u32) ~0) == cpu_mnic_if_index)) {

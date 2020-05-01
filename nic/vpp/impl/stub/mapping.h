@@ -44,20 +44,6 @@ pds_dst_mac_get (uint16_t vpc_id, uint16_t bd_id, mac_addr_t mac_addr,
     return 0;
 }
 
-static inline int
-pds_dst_vnic_info_get (uint16_t lkp_id, uint32_t addr, uint16_t *vnic_id,
-                       uint16_t *vnic_nh_hw_id)
-{
-    return 0;
-}
-
-static inline int
-pds_src_vnic_info_get (uint16_t lkp_id, uint32_t addr, mac_addr_t mac_addr,
-                       uint16_t *host_lif_hw_id)
-{
-    return 0;
-}
-
 #ifdef __cplusplus
 }
 #endif

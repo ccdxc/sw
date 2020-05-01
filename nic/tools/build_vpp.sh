@@ -230,8 +230,8 @@ build_dpdk_aarch64() {
 build_vpp_aarch64() {
     build_dpdk_aarch64
     echo "Building VPP - aarch64, check $VPP_DIR/vpp_build_aarch64.log"
-    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR wipe_vpp &> vpp_clean_aarch64.log"
-    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR all &> vpp_build_aarch64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_SDK_DIR/dpdk/build wipe_vpp &> vpp_clean_aarch64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_SDK_DIR/dpdk/build all &> vpp_build_aarch64.log"
     if [[ $? -ne 0 ]]; then
         echo "VPP - aarch64 build Failed"
         exit 1;
@@ -265,8 +265,8 @@ build_dpdk_x86_64() {
 build_vpp_x86_64() {
     build_dpdk_x86_64
     echo "Building VPP - x86_64, check $VPP_DIR/vpp_build_x86_64.log"
-    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR wipe_vpp &> vpp_clean_x86_64.log"
-    docker_root "cd $DOCKER_VPP_DIR && make V=1 -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR all &> vpp_build_x86_64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_SDK_DIR/dpdk/build wipe_vpp &> vpp_clean_x86_64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make V=1 -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_SDK_DIR/dpdk/build all &> vpp_build_x86_64.log"
     if [[ $? -ne 0 ]]; then
         echo "VPP - x86_64 build Failed"
         exit 1;

@@ -18,10 +18,10 @@
         _(DROP, "pds-error-drop")                           \
 
 #define foreach_vnic_l2_rewrite_next                        \
-    _(TX_OUT, "pds-vnic-tx")                                \
+    _(TX_OUT, "pds-nexthop-tx")                                  \
     _(UNKNOWN, "pds-error-drop")                            \
 
-#define foreach_vnic_tx_next                                \
+#define foreach_nh_tx_next                                  \
     _(INTF_OUT, "interface-tx" )                            \
     _(DROP, "pds-error-drop")                               \
 
@@ -38,9 +38,8 @@
 #define foreach_vnic_l2_rewrite_counter                     \
     _(TX_OUT, "Added l2 headers")                           \
     _(VNIC_NOT_FOUND, "VNIC not found")                     \
-    _(SUBNET_NOT_FOUND, "Subnet not found")                 \
 
-#define foreach_vnic_tx_counter                             \
+#define foreach_nh_tx_counter                               \
     _(SUCCESS, "Sent to tx interface")                      \
     _(FAILED, "Failed to send to tx interface")             \
 
@@ -103,23 +102,23 @@ typedef struct vnic_l2_rewrite_trace_s {
 
 typedef enum
 {
-#define _(n,s) VNIC_TX_NEXT_##n,
-    foreach_vnic_tx_next
+#define _(n,s) NH_TX_NEXT_##n,
+    foreach_nh_tx_next
 #undef _
-    VNIC_TX_N_NEXT,
-} vnic_tx_next_t;
+    NH_TX_N_NEXT,
+} nh_tx_next_t;
 
 typedef enum
 {
-#define _(n,s) VNIC_TX_COUNTER_##n,
-    foreach_vnic_tx_counter
+#define _(n,s) NH_TX_COUNTER_##n,
+    foreach_nh_tx_counter
 #undef _
-    VNIC_TX_COUNTER_LAST,
-} vnic_tx_counter_t;
+    NH_TX_COUNTER_LAST,
+} nh_tx_counter_t;
 
-typedef struct vnic_tx_trace_s {
-    u16 vnic_nh_hw_id;
-} vnic_tx_trace_t;
+typedef struct nh_tx_trace_s {
+    u16 nh_id;
+} nh_tx_trace_t;
 
 void pds_packet_dump_en_dis(bool enable, char *file, u16 size);
 void pds_packet_dump_show(vlib_main_t *vm);

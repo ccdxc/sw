@@ -860,7 +860,8 @@ pds_flow_vr_ip_ping (p4_rx_cpu_hdr_t *hdr, vlib_buffer_t *vlib, u16 nh_hw_id,
             if (protocol == IP_PROTOCOL_ICMP) {
                 if (PREDICT_TRUE(icmp0->type == ICMP4_echo_request)) {
                     vnet_buffer(vlib)->pds_tx_data.vnic_id = hdr->vnic_id;
-                    vnet_buffer(vlib)->pds_tx_data.vnic_nh_hw_id = nh_hw_id;
+                    vnet_buffer(vlib)->pds_tx_data.nh_id = nh_hw_id;
+                    vnet_buffer(vlib)->pds_tx_data.ether_type = 0;
                     vnet_buffer(vlib)->sw_if_index[VLIB_TX] =
                         vnet_buffer(vlib)->sw_if_index[VLIB_RX];
                     *next = FLOW_CLASSIFY_NEXT_ICMP_VRIP;
