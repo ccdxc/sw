@@ -24,6 +24,11 @@ testcases:
         testcase: testcases.drivers.intf_names
         enable  : True
 
+    -   name    : LifTriggers
+        testcase: testcases.drivers.lif_flap
+        enable  : True
+        ignore  : True
+
     #XXX maybe needs a larger mtu to make this work?
     #-   name    : TxSG
     #    testcase: testcases.drivers.txsg
