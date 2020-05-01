@@ -36,6 +36,7 @@ namespace impl {
 
 const char *k_dhcp_ctl_ip = "127.0.0.1";
 const int k_dhcp_ctl_port = 7911;
+const uint32_t dhcpctl_statements_attr_len = 1600;
 
 /// \defgroup PDS_MAPPING_IMPL_STATE - mapping database functionality
 /// \ingroup PDS_MAPPING
@@ -536,13 +537,13 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
     dhcp_policy *policy;
     uint32_t ip = 0;
     uint32_t index = 0;
-    uint32_t statements_len = 600;
     uint32_t buf_len = 0;
     unsigned char *bytes = NULL;
     ipv4_prefix_t v4_prefix = {0};
     ipv4_addr_t v4_mask = {0};
     vnic_entry *vnic = NULL;
     bool vnic_primary = false;
+    uint32_t statements_len = dhcpctl_statements_attr_len;
 
     if (spec->skey.ip_addr.af != IP_AF_IPV4) {
         // No V6 support for now
@@ -630,7 +631,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
         buf_len = statements_len - index;
 
         index += snprintf((char *)(statements->value + index), buf_len,
-                          "option subnet-mask %u.%u.%u.%u;",
+                          "option subnet-mask %u.%u.%u.%u; ",
                           (uint32_t)bytes[3], (uint32_t)bytes[2],
                           (uint32_t)bytes[1], (uint32_t)bytes[0]);
 
