@@ -7408,7 +7408,7 @@
                         "started-at": "2020-04-13T06:18:01.317076289Z"
                     }
                 },
-                "url": "/configs/monitoring/v1/tenant/default/flowExportPolicy"
+                "url": "/configs/monitoring/v1/tenant/default/MirrorSession"
             }
         },
         "flowexportpolicy": {

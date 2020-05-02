@@ -62,11 +62,11 @@
     <ng-container *ngSwitchCase="'meta.creation-time'">
       {{rowData.meta['creation-time'] | PrettyDate }}
     </ng-container>
-    <ng-container *ngSwitchCase="'spec.dscs'">
+    <ng-container *ngSwitchCase="'DSCs'">
       <div *ngFor="let w of rowData._ui.associatedDSCS let i=index" class="dscprofile-dsc-div">
         <ng-container *roleGuard="'clusterDistributedservicecard_read'">
           <a *ngIf="i < maxDSCsPerRow" routerLink="/cluster/dscs/{{w.meta.name}}"
-             [matTooltip]="'Jump to DSC page'">{{w?.spec.id}}</a>
+             [matTooltip]="'This DSC is admitted in PSM and assigned this profile. Click to go to DSC detail page'">{{w?.spec.id}}</a>
           <a *ngIf="i === maxDSCsPerRow" routerLink="/cluster/dscs"
              [matTooltip]="buildMoreDSCsTooltip(rowData)">
             ... {{rowData._ui.associatedDSCS.length - maxDSCsPerRow}} more</a>
@@ -77,11 +77,34 @@
       <div *ngFor="let w of rowData._ui.pendingDSCNames let i=index" class="dscprofile-dsc-div">
         <ng-container *roleGuard="'clusterDistributedservicecard_read'">
           <a *ngIf="i < maxDSCsPerRow" routerLink="/cluster/dscs/{{w.mac}}"
-             [matTooltip]="'Jump to DSC page'">{{w.name}}</a>
+             [matTooltip]="'Profile is not propagated to this DSC. Click to go to DSC detail page'">{{w.name}}</a>
           <a *ngIf="i === maxDSCsPerRow" routerLink="/cluster/dscs"
              [matTooltip]="buildMorePendingDSCsTooltip(rowData)">
             ... {{rowData._ui.pendingDSCNames.length - maxDSCsPerRow}} more</a>
         </ng-container>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'Propagation'">
+      <div class="dscprofiles-summary-panel-content-value dscprofiles-summary-panel-content-value-warning"
+           *ngIf="rowData?.status['propagation-status']['generation-id'] != rowData?.meta['generation-id']">
+        DSC profile not propagated</div>
+      <div
+           class="dscprofiles-summary-panel-content-value  dscprofiles-summary-panel-content-value-warning dscprofiles-summary-panel-content-value-link"
+           *ngIf="rowData?.status['propagation-status']['generation-id'] == rowData?.meta['generation-id'] && rowData?.status['propagation-status'].pending>0 "
+           (click)="viewPendingNaplesList()"
+           [matTooltip]="viewPendingNaples && rowData.meta.name === selectedDSCProfile.meta.name ? 'Click to hide list of pending DSCs' : 'Click to view list of pending DSCs'">
+        {{rowData.status['propagation-status'].pending}} Out Of
+        {{rowData.status['propagation-status'].pending + rowData.status['propagation-status'].updated }}
+        Pending
+      </div>
+      <div class="dscprofiles-summary-panel-content-value"
+           *ngIf="!(rowData?.status['propagation-status'].updated==0 && rowData?.status['propagation-status'].pending==0 ) &&rowData?.status['propagation-status']['generation-id'] == rowData?.meta['generation-id'] && rowData?.status['propagation-status'].pending==0">
+        Complete
+      </div>
+      <div class="dscprofiles-summary-panel-content-value"
+           [matTooltip]="'No DSC is using this profile'"
+           *ngIf="rowData?.status['propagation-status'].updated==0 && rowData?.status['propagation-status'].pending==0 && rowData?.status['propagation-status']['generation-id'] == rowData?.meta['generation-id'] && rowData?.status['propagation-status'].pending==0">
+        N/A
       </div>
     </ng-container>
     <ng-container *ngSwitchCase="'utilization'">
@@ -105,8 +128,7 @@
       </div>
     </ng-container> -->
     <ng-container *ngSwitchCase="'Feature'">
-      <div class="dscprofile-dsc-div-featureset"
-           [matTooltip]="rowData._ui.description">
+      <div class="dscprofile-dsc-div-featureset" [matTooltip]="rowData._ui.description">
         {{rowData._ui.featureset}} </div>
     </ng-container>
 
@@ -137,8 +159,8 @@
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
   <app-newdscprofile [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
-                     (formClose)="closeRowExpand()" [options]="options"
-                     fxFlex="none"></app-newdscprofile>
+                     (formClose)="closeRowExpand()"
+                     [options]="options" fxFlex="none"></app-newdscprofile>
 </ng-template>
 
 <ng-template #selectedDSCProfileDetail>
@@ -251,14 +273,19 @@
                    class="dscprofiles-summary-panel-content-value  dscprofiles-summary-panel-content-value-warning dscprofiles-summary-panel-content-value-link"
                    *ngIf="selectedDSCProfile?.status['propagation-status']['generation-id'] == selectedDSCProfile?.meta['generation-id'] && selectedDSCProfile?.status['propagation-status'].pending>0"
                    (click)="viewPendingNaplesList()"
-                   [matTooltip]="viewPendingNaples ? 'Click to hide Pending Distributed Services Card List' : 'Click to view Pending Distributed Services Cards List'">
+                   [matTooltip]="viewPendingNaples ? 'Click to hide pending DSCs' : 'Click to view pending DSCs'">
                 {{selectedDSCProfile.status['propagation-status'].pending}} Out Of
                 {{selectedDSCProfile.status['propagation-status'].pending + selectedDSCProfile.status['propagation-status'].updated }}
                 Pending
               </div>
               <div class="dscprofiles-summary-panel-content-value"
-                   *ngIf="selectedDSCProfile?.status['propagation-status']['generation-id'] == selectedDSCProfile?.meta['generation-id'] && selectedDSCProfile?.status['propagation-status'].pending==0">
+                   *ngIf="!(selectedDSCProfile?.status['propagation-status'].updated==0 && selectedDSCProfile?.status['propagation-status'].pending==0 ) &&selectedDSCProfile?.status['propagation-status']['generation-id'] == selectedDSCProfile?.meta['generation-id'] && selectedDSCProfile?.status['propagation-status'].pending==0">
                 Complete
+              </div>
+              <div class="dscprofiles-summary-panel-content-value"
+                   [matTooltip]="'No DSC is using this profile'"
+                   *ngIf="selectedDSCProfile?.status['propagation-status'].updated==0 && selectedDSCProfile?.status['propagation-status'].pending==0 && selectedDSCProfile?.status['propagation-status']['generation-id'] == selectedDSCProfile?.meta['generation-id'] && selectedDSCProfile?.status['propagation-status'].pending==0">
+                N/A
               </div>
 
             </a>
