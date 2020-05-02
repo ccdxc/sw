@@ -43,6 +43,7 @@ markerpollmax : marker poll count (max).
 axipendpolllast : axipend poll count (last).
 axipendpollmax : axipend poll count (max).
 faults : link faults.
+powerdown: powerdown count .
 link\_dn2up\_int : link\_dn2up\_int.
 link\_up2dn\_int : link\_up2dn\_int.
 sec\_bus\_rst\_int : sec\_bus\_rst\_int.
@@ -62,6 +63,51 @@ txbfr\_overflow\_int : txbfr\_overflow\_int.
 rxtlp\_err\_int : rxtlp\_err\_int.
 tl\_flr\_req\_int : tl\_flr\_req\_int.
 rc\_legacy\_intpin\_changed\_int : rc\_legacy\_intpin\_changed\_int.
+
+.PP
+IntrTotal   : total port intrs
+IntrPolled  : total port intrs polled
+IntrPerstn  : pcie out of reset
+IntrLtssmstEarly    : link train before linkup
+IntrLtssmst : link train after  linkup
+IntrLinkup2Dn   : link down
+IntrLinkdn2Up   : link up
+IntrRstup2Dn    : mac up
+IntrRstdn2Up    : mac down
+IntrSecbus  : secondary bus set
+Linkup  : link is up
+Hostup  : host is up (secbus)
+Phypolllast : phy poll count (last)
+Phypollmax  : phy poll count (max)
+Phypollperstn   : phy poll lost perstn
+Phypollfail : phy poll failed
+Gatepolllast    : gate poll count (last)
+Gatepollmax : gate poll count (max)
+Markerpolllast  : marker poll count (last)
+Markerpollmax   : marker poll count (max)
+Axipendpolllast : axipend poll count (last)
+Axipendpollmax  : axipend poll count (max)
+Faults  : link faults
+Powerdown   : powerdown count
+LinkDn2UpInt    : link\_dn2up\_int
+LinkUp2DnInt    : link\_up2dn\_int
+SecBusRstInt    : sec\_bus\_rst\_int
+RstUp2DnInt : rst\_up2dn\_int
+RstDn2UpInt : rst\_dn2up\_int
+PortgateOpen2CloseInt   : portgate\_open2close\_int
+LtssmStChangedInt   : ltssm\_st\_changed\_int
+SecBusnumChangedInt : sec\_busnum\_changed\_int
+RcPmeInt    : rc\_pme\_int
+RcAerrInt   : rc\_aerr\_int
+RcSerrInt   : rc\_serr\_int
+RcHpeInt    : rc\_hpe\_int
+RcEqReqInt  : rc\_eq\_req\_int
+RcDpcInt    : rc\_dpc\_int
+PmTurnoffInt    : pm\_turnoff\_int
+TxbfrOverflowInt    : txbfr\_overflow\_int
+RxtlpErrInt : rxtlp\_err\_int
+TlFlrReqInt : tl\_flr\_req\_int
+RcLegacyIntpinChangedInt    : rc\_legacy\_intpin\_changed\_int
 
 .ti 0
 \l'\n(.lu'

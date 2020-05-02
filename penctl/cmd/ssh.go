@@ -140,11 +140,7 @@ func disableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 		return errors.New("Unable to stop sshd")
 	}
-	v = &nmd.DistributedServiceCardCmdExecute{
-		Executable: "penrmsshdfiles",
-		Opts:       strings.Join([]string{""}, ""),
-	}
-	return naplesExecCmd(v)
+	return nil
 }
 
 func enableSSHConfigCmdHandler(cmd *cobra.Command, args []string) error {

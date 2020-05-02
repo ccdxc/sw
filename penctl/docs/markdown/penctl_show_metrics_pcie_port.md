@@ -32,6 +32,7 @@ markerpollmax : marker poll count (max).
 axipendpolllast : axipend poll count (last).
 axipendpollmax : axipend poll count (max).
 faults : link faults.
+powerdown: powerdown count .
 link_dn2up_int : link_dn2up_int.
 link_up2dn_int : link_up2dn_int.
 sec_bus_rst_int : sec_bus_rst_int.
@@ -52,6 +53,49 @@ rxtlp_err_int : rxtlp_err_int.
 tl_flr_req_int : tl_flr_req_int.
 rc_legacy_intpin_changed_int : rc_legacy_intpin_changed_int.
 
+IntrTotal	: total port intrs
+IntrPolled	: total port intrs polled
+IntrPerstn	: pcie out of reset
+IntrLtssmstEarly	: link train before linkup
+IntrLtssmst	: link train after  linkup
+IntrLinkup2Dn	: link down
+IntrLinkdn2Up	: link up
+IntrRstup2Dn	: mac up
+IntrRstdn2Up	: mac down
+IntrSecbus	: secondary bus set
+Linkup	: link is up
+Hostup	: host is up (secbus)
+Phypolllast	: phy poll count (last)
+Phypollmax	: phy poll count (max)
+Phypollperstn	: phy poll lost perstn
+Phypollfail	: phy poll failed
+Gatepolllast	: gate poll count (last)
+Gatepollmax	: gate poll count (max)
+Markerpolllast	: marker poll count (last)
+Markerpollmax	: marker poll count (max)
+Axipendpolllast	: axipend poll count (last)
+Axipendpollmax	: axipend poll count (max)
+Faults	: link faults
+Powerdown	: powerdown count
+LinkDn2UpInt	: link_dn2up_int
+LinkUp2DnInt	: link_up2dn_int
+SecBusRstInt	: sec_bus_rst_int
+RstUp2DnInt	: rst_up2dn_int
+RstDn2UpInt	: rst_dn2up_int
+PortgateOpen2CloseInt	: portgate_open2close_int
+LtssmStChangedInt	: ltssm_st_changed_int
+SecBusnumChangedInt	: sec_busnum_changed_int
+RcPmeInt	: rc_pme_int
+RcAerrInt	: rc_aerr_int
+RcSerrInt	: rc_serr_int
+RcHpeInt	: rc_hpe_int
+RcEqReqInt	: rc_eq_req_int
+RcDpcInt	: rc_dpc_int
+PmTurnoffInt	: pm_turnoff_int
+TxbfrOverflowInt	: txbfr_overflow_int
+RxtlpErrInt	: rxtlp_err_int
+TlFlrReqInt	: tl_flr_req_int
+RcLegacyIntpinChangedInt	: rc_legacy_intpin_changed_int
 
 ---------------------------------
 
