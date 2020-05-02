@@ -414,17 +414,6 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		}
 	}
 
-	evrtresp, err := msc.EvpnEviRtCreate(ctx, &rtAddReq)
-	if err != nil {
-		log.Errorf("failed to create EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
-		return err
-	}
-	if evrtresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-		log.Errorf("failed to create EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
-		return err
-	}
-	log.Infof("subnet update [%v/%v] RT create  got response [%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus)
-
 	evrtdelresp, err := msc.EvpnEviRtDelete(ctx, &rtDelReq)
 	if err != nil {
 		log.Errorf("failed to delete EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
@@ -435,6 +424,17 @@ func updateSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 		return err
 	}
 	log.Infof("subnet update [%v/%v] delete RT got response [%v] for ", nw.Tenant, nw.Name, evrtdelresp.ApiStatus)
+
+	evrtresp, err := msc.EvpnEviRtCreate(ctx, &rtAddReq)
+	if err != nil {
+		log.Errorf("failed to create EVI RTs for subnet [%v/%v](%s)", nw.Tenant, nw.Name, err)
+		return err
+	}
+	if evrtresp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
+		log.Errorf("failed to create EVI RTs for subnet [%v/%v] (%v)", nw.Tenant, nw.Name, evrtresp.ApiStatus)
+		return err
+	}
+	log.Infof("subnet update [%v/%v] RT create  got response [%v] for ", nw.Tenant, nw.Name, evrtresp.ApiStatus)
 
 	dat, _ := nw.Marshal()
 

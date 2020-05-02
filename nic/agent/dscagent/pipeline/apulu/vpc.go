@@ -425,6 +425,17 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 		}
 	}
 
+	eVrfRTDResp, err := msc.EvpnIpVrfRtDelete(ctx, &rtDelReq)
+	if err != nil {
+		log.Infof("EVPN VRF RT Delete received resp (%v)[%+v]", err, eVrfRTDResp)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting  EVPN VRF RT| Err: %v", vrf.GetKey(), err)
+	}
+	if eVrfRTDResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
+		log.Infof("EVPN VRF RT Delete received resp (%v)[%v]", err, eVrfRTDResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %s", vrf.GetKey(), eVrfRTDResp.ApiStatus)
+	}
+	log.Infof("VRF RT Delete: %s: got response [%v]", vrf.Name, eVrfRTDResp.ApiStatus)
+
 	eVrfRTResp, err := msc.EvpnIpVrfRtCreate(ctx, &rtAddReq)
 	if err != nil {
 		log.Infof("EVPN VRF RT Spec Create received resp (%v)[%+v]", err, eVrfRTResp)
@@ -435,17 +446,6 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s  Configuring EVPN VRF RT  | Status: %s", vrf.GetKey(), eVrfRTResp.ApiStatus)
 	}
 	log.Infof("VRF RT Config: %s: got response [%v]", vrf.Name, eVrfRTResp.ApiStatus)
-
-	eVrfRTDResp, err := msc.EvpnIpVrfRtDelete(ctx, &rtDelReq)
-	if err != nil {
-		log.Infof("EVPN VRF RT Delete received resp (%v)[%+v]", err, eVrfRTDResp)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting  EVPN VRF RT| Err: %v", vrf.GetKey(), err)
-	}
-	if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
-		log.Infof("EVPN VRF RT Delete received resp (%v)[%v]", err, eVrfRTDResp.ApiStatus)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "Vrf: %s Deleting EVPN VRF RT | Status: %s", vrf.GetKey(), eVrfRTDResp.ApiStatus)
-	}
-	log.Infof("VRF RT Delete: %s: got response [%v]", vrf.Name, eVrfRTDResp.ApiStatus)
 
 	// Update Subnet if ipam policy or RouterMAC has changed for vrf and subnet was not using self's ipam policy
 	if curVrf.Spec.IPAMPolicy != vrf.Spec.IPAMPolicy ||
