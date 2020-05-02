@@ -98,18 +98,18 @@ echo "Copy artifacts..."
 mkdir -p /sw/output/bundle
 mkdir -p /sw/output/apulu-bundle
 cp /sw/build_iris_sim.tar.gz /sw/output
-cp /sw/bin/venice_apidoc.pdf /sw/output
+cp /sw/bin/venice_apidoc.pdf /sw/output/psm_apidoc.pdf
 ls -al bin/
-mv bin/venice.tgz /sw/output
+mv bin/venice.tgz /sw/output/psm.tgz
 ls -al /sw/output
-tar -ztvf /sw/output/venice.tgz
-mv tools/docker-files/ova/output/venice.ova /sw/output
-mv tools/docker-files/ova/output/venice.qcow2 /sw/output
-mv tools/docker-files/ova/output-apulu/venice.ova /sw/output/venice.apulu.ova
-mv tools/docker-files/ova/output-apulu/venice.qcow2 /sw/output/venice.apulu.qcow2
+tar -ztvf /sw/output/psm.tgz
+mv tools/docker-files/ova/output/venice.ova /sw/output/psm.ova
+mv tools/docker-files/ova/output/venice.qcow2 /sw/output/psm.qcow2
+mv tools/docker-files/ova/output-apulu/venice.ova /sw/output/psm.apulu.ova
+mv tools/docker-files/ova/output-apulu/venice.qcow2 /sw/output/psm.apulu.qcow2
 mv bin/bundle/bundle.tar /sw/output/bundle/
 mv apulu-bundle/bundle.tar /sw/output/apulu-bundle/
-mv bin/venice.apulu.tgz /sw/output
+mv bin/venice.apulu.tgz /sw/output/psm.apulu.tgz
 mv bin/pen-install.iso /sw/output/
 
 mkdir -p /sw/output/pxe/tftpboot/pxelinux.cfg
@@ -118,10 +118,10 @@ mv bin/pxe/tftpboot/vmlinuz0 /sw/output/pxe/tftpboot/
 mv bin/pxe/tftpboot/pxelinux.0 /sw/output/pxe/tftpboot/
 mv bin/pxe/tftpboot/pxelinux.cfg/default /sw/output/pxe/tftpboot/pxelinux.cfg/
 
-mkdir -p /sw/output/venice-install
-mv bin/venice-install/initrd0.img /sw/output/venice-install
-mv bin/venice-install/squashfs.img /sw/output/venice-install
-mv tools/docker-files/vinstall/PEN-VERSION /sw/output/venice-install
+mkdir -p /sw/output/psm-install
+mv bin/venice-install/initrd0.img /sw/output/psm-install
+mv bin/venice-install/squashfs.img /sw/output/psm-install
+mv tools/docker-files/vinstall/PEN-VERSION /sw/output/psm-install
 
 cd /sw/output
 find . -type f -print0 | while IFS= read -r -d $'\0' file;
