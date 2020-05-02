@@ -354,13 +354,8 @@ session_ctrl_update (SessionCtrlSpec& spec)
 hal_ret_t
 flush_logs (FlushLogsResponse *rsp)
 {
-    if (utils::hal_logger()) {
-        utils::hal_logger()->flush();
-        rsp->set_api_status(types::API_STATUS_OK);
-    } else {
-        rsp->set_api_status(types::API_STATUS_ERR);
-    }
-
+    utils::hal_trace_flush();
+    rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
 }
 

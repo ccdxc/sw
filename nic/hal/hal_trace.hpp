@@ -74,6 +74,17 @@ hal_link_trace_level (void)
     return ::utils::trace_none;
 }
 
+static inline void
+hal_trace_flush (void)
+{
+    if (hal_logger()) {
+        hal_logger()->flush();
+    }
+    if (hal_link_logger()) {
+        hal_link_logger()->flush();
+    }
+}
+
 }    // utils
 }    // hal
 
