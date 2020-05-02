@@ -175,10 +175,11 @@ ftll2_cache_set_key (uint8_t *src,
 void
 ftll2_cache_set_nexthop (uint32_t nhid,
                          uint32_t nhtype,
-                         uint8_t nh_valid)
+                         uint8_t nh_valid,
+                         uint8_t priority)
 {
    ftl_set_entry_nexthop(g_l2_flow_cache.flow + g_l2_flow_cache.count, nhid, nhtype, 
-                         nh_valid);
+                         nh_valid, priority);
 }
 
 void

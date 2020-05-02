@@ -24,6 +24,34 @@
 #define PDS_FLOW_UPLINK0_LIF_ID     0x0
 #define PDS_FLOW_UPLINK1_LIF_ID     0x1
 
+#define PDS_FLOW_NH_ID_BITS            0b1111111111111
+#define PDS_FLOW_NH_ID_BIT_POS         0
+#define PDS_FLOW_NH_ID_GET(nh_entry)                                    \
+    (((nh_entry) >> PDS_FLOW_NH_ID_BIT_POS) & PDS_FLOW_NH_ID_BITS)
+#define PDS_FLOW_NH_ID_SET(nh_entry, val)                               \
+    (nh_entry = nh_entry | (val << PDS_FLOW_NH_ID_BIT_POS))
+
+#define PDS_FLOW_NH_TYPE_BITS            0b11
+#define PDS_FLOW_NH_TYPE_BIT_POS         13
+#define PDS_FLOW_NH_TYPE_GET(nh_entry)                                  \
+    (((nh_entry) >> PDS_FLOW_NH_TYPE_BIT_POS) & PDS_FLOW_NH_TYPE_BITS)
+#define PDS_FLOW_NH_TYPE_SET(nh_entry, val)                             \
+    (nh_entry = nh_entry | (val << PDS_FLOW_NH_TYPE_BIT_POS))
+
+#define PDS_FLOW_NH_DROP_BITS            0b1
+#define PDS_FLOW_NH_DROP_BIT_POS         15
+#define PDS_FLOW_NH_DROP_GET(nh_entry)                                  \
+    (((nh_entry) >> PDS_FLOW_NH_DROP_BIT_POS) & PDS_FLOW_NH_DROP_BITS)
+#define PDS_FLOW_NH_DROP_SET(nh_entry, val)                             \
+    (nh_entry = nh_entry | (val << PDS_FLOW_NH_DROP_BIT_POS))
+
+#define PDS_FLOW_NH_PRIO_BITS            0b111111
+#define PDS_FLOW_NH_PRIO_BIT_POS         16
+#define PDS_FLOW_NH_PRIO_GET(nh_entry)                                  \
+    (((nh_entry) >> PDS_FLOW_NH_PRIO_BIT_POS) & PDS_FLOW_NH_PRIO_BITS)
+#define PDS_FLOW_NH_PRIO_SET(nh_entry, val)                             \
+    (nh_entry = nh_entry | (val << PDS_FLOW_NH_PRIO_BIT_POS))
+
 #define session_tx_rewrite_flags actiondata.tx_rewrite_flags
 #define session_rx_rewrite_flags actiondata.rx_rewrite_flags
 
@@ -580,11 +608,14 @@ pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
     pds_flow_main_t *fm = &pds_flow_main;
 
     // check if drop bit is set and program nh as drop
-    if (PREDICT_FALSE(vnet_buffer(p0)->pds_flow_data.nexthop >> 18)) {
+    if (PREDICT_FALSE(PDS_FLOW_NH_DROP_GET(vnet_buffer(p0)->pds_flow_data.nexthop))) {
+        nexthop = vnet_buffer(p0)->pds_flow_data.nexthop;
         if (is_ip4) {
-            ftlv4_cache_set_nexthop(fm->drop_nexthop, NEXTHOP_TYPE_NEXTHOP, 1);
+            ftlv4_cache_set_nexthop(fm->drop_nexthop, NEXTHOP_TYPE_NEXTHOP, 1,
+                                    PDS_FLOW_NH_PRIO_GET(nexthop));
         } else {
-            ftlv6_cache_set_nexthop(fm->drop_nexthop, NEXTHOP_TYPE_NEXTHOP, 1);
+            ftlv6_cache_set_nexthop(fm->drop_nexthop, NEXTHOP_TYPE_NEXTHOP, 1,
+                                    PDS_FLOW_NH_PRIO_GET(nexthop));
         }
         return;
     }
@@ -607,23 +638,28 @@ pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
             if (pds_is_flow_napt_en(p0)) {
                 vnic0 = pds_impl_db_vnic_get(vnet_buffer2(p0)->pds_nat_data.vnic_id);
                 if (vnic0) {
-                    nexthop = vnic0->nh_hw_id | NEXTHOP_TYPE_NEXTHOP << 16;
+                    PDS_FLOW_NH_ID_SET(nexthop, vnic0->nh_hw_id);
+                    PDS_FLOW_NH_TYPE_SET(nexthop, NEXTHOP_TYPE_NEXTHOP);
                 }
             }
         }
     }
 
     if (is_ip4) {
-        if (nexthop & 0xffff) {
-            ftlv4_cache_set_nexthop(nexthop & 0xffff, ((nexthop >> 16) & 0x3), 1);
+        if (PDS_FLOW_NH_ID_GET(nexthop)) {
+            ftlv4_cache_set_nexthop(PDS_FLOW_NH_ID_GET(nexthop),
+                                    PDS_FLOW_NH_TYPE_GET(nexthop),
+                                    1, PDS_FLOW_NH_PRIO_GET(nexthop));
         } else {
-            ftlv4_cache_set_nexthop(0, 0, 0);
+            ftlv4_cache_set_nexthop(0, 0, 0, 0);
         }
     } else {
         if (nexthop & 0xffff) {
-            ftlv6_cache_set_nexthop(nexthop & 0xffff, ((nexthop >> 16) & 0x3), 1);
+            ftlv6_cache_set_nexthop(PDS_FLOW_NH_ID_GET(nexthop),
+                                    PDS_FLOW_NH_TYPE_GET(nexthop),
+                                    1, PDS_FLOW_NH_PRIO_GET(nexthop));
         } else {
-            ftlv6_cache_set_nexthop(0, 0, 0);
+            ftlv6_cache_set_nexthop(0, 0, 0, 0);
         }
     }
 }
@@ -918,10 +954,12 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         vnet_buffer(p0)->pds_flow_data.epoch = hdr0->epoch;
         nexthop = hdr0->nexthop_id;
         if ((!hdr0->mapping_hit || hdr0->rx_packet) && !hdr0->drop) {
-            vnet_buffer(p0)->pds_flow_data.nexthop = nexthop |
-                                                     (hdr0->nexthop_type << 16);
+            PDS_FLOW_NH_TYPE_SET(nexthop, hdr0->nexthop_type);
+            PDS_FLOW_NH_PRIO_SET(nexthop, hdr0->route_priority);
+            vnet_buffer(p0)->pds_flow_data.nexthop = nexthop;
         } else {
-            vnet_buffer(p0)->pds_flow_data.nexthop = hdr0->drop << 18;
+            PDS_FLOW_NH_DROP_SET(nexthop, hdr0->drop);
+            vnet_buffer(p0)->pds_flow_data.nexthop = nexthop;
         }
         vnet_buffer(p0)->l2_hdr_offset = hdr0->l2_offset;
         if (BIT_ISSET(hdr0->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
@@ -951,8 +989,6 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
             }
             // If ageing is supported, all TCP packets excpet SYN should go to 
             // AGE_FLOW node
-            vnet_buffer(p0)->pds_flow_data.nexthop = nexthop |
-                                                     (hdr0->nexthop_type << 16);
             vlib_buffer_advance(p0, (APULU_P4_TO_ARM_HDR_SZ -
                                      APULU_ARM_TO_P4_HDR_SZ));
             *next0 = FLOW_CLASSIFY_NEXT_AGE_FLOW;
@@ -994,10 +1030,12 @@ next_pak:
         vnet_buffer(p1)->pds_flow_data.epoch = hdr1->epoch;
         nexthop = hdr1->nexthop_id;
         if ((!hdr1->mapping_hit || hdr1->rx_packet) && !hdr1->drop) {
-            vnet_buffer(p1)->pds_flow_data.nexthop = nexthop |
-                                                (hdr1->nexthop_type << 16);
+            PDS_FLOW_NH_TYPE_SET(nexthop, hdr1->nexthop_type);
+            PDS_FLOW_NH_PRIO_SET(nexthop, hdr1->route_priority);
+            vnet_buffer(p1)->pds_flow_data.nexthop = nexthop;
         } else {
-            vnet_buffer(p1)->pds_flow_data.nexthop = hdr1->drop << 18;
+            PDS_FLOW_NH_DROP_SET(nexthop, hdr1->drop);
+            vnet_buffer(p1)->pds_flow_data.nexthop = nexthop;
         }
         vnet_buffer(p1)->l2_hdr_offset = hdr1->l2_offset;
         if (BIT_ISSET(hdr1->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
@@ -1027,8 +1065,6 @@ next_pak:
             }
             // If ageing is supported, all TCP packets excpet SYN should go to
             // AGE_FLOW node
-            vnet_buffer(p1)->pds_flow_data.nexthop = nexthop |
-                                                     (hdr1->nexthop_type << 16);
             vlib_buffer_advance(p1, (APULU_P4_TO_ARM_HDR_SZ -
                                      APULU_ARM_TO_P4_HDR_SZ));
             *next1 = FLOW_CLASSIFY_NEXT_AGE_FLOW;
@@ -1158,10 +1194,12 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer(p)->pds_flow_data.epoch = hdr->epoch;
     nexthop = hdr->nexthop_id;
     if ((!hdr->mapping_hit || hdr->rx_packet) && !hdr->drop) {
-        vnet_buffer(p)->pds_flow_data.nexthop = nexthop |
-                                                (hdr->nexthop_type << 16);
+        PDS_FLOW_NH_TYPE_SET(nexthop, hdr->nexthop_type);
+        PDS_FLOW_NH_PRIO_SET(nexthop, hdr->route_priority);
+        vnet_buffer(p)->pds_flow_data.nexthop = nexthop;
     } else {
-        vnet_buffer(p)->pds_flow_data.nexthop = hdr->drop << 18;
+        PDS_FLOW_NH_DROP_SET(nexthop, hdr->drop);
+        vnet_buffer(p)->pds_flow_data.nexthop = nexthop;
     }
     vnet_buffer(p)->l2_hdr_offset = hdr->l2_offset;
     if (BIT_ISSET(hdr->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
@@ -1189,8 +1227,6 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         }
         // If ageing is supported, all TCP packets except SYN should go to AGE_FLOW 
         // node
-        vnet_buffer(p)->pds_flow_data.nexthop = nexthop |
-                                                (hdr->nexthop_type << 16);
         vlib_buffer_advance(p, (APULU_P4_TO_ARM_HDR_SZ -
                                 APULU_ARM_TO_P4_HDR_SZ));
         *next = FLOW_CLASSIFY_NEXT_AGE_FLOW;

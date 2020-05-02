@@ -783,7 +783,8 @@ pds_flow_session_info_show (vlib_main_t *vm, u32 ses_id, u8 detail)
                     "BDId", "SrcAddr", "DstAddr", "SrcPort",
                     "DstPort", "IPProto", "Role", "SessionIdx", "Epoch");
     if (detail) {
-        vlib_cli_output(vm, "%-4s%-10s%-6s", "", "NhType", "NhId");
+        vlib_cli_output(vm, "%-4s%-10s%-10s%-6s%-10s", "", "NhValid", "NhType",
+                        "NhId", "NhPriority");
     }
     vlib_cli_output(vm, "%s", delimiter);
     if (session->v4) {
@@ -808,10 +809,12 @@ pds_flow_session_info_show (vlib_main_t *vm, u32 ses_id, u8 detail)
                             flow_info.session_index,
                             flow_info.epoch);
             if (detail) {
-                vlib_cli_output(vm, "%-4s%-10d%-6d\n",
+                vlib_cli_output(vm, "%-4s%-10d%-10d%-6d%-10d\n",
                                 "",
+                                flow_info.nexthop_valid,
                                 flow_info.nexthop_type,
-                                flow_info.nexthop_id);
+                                flow_info.nexthop_id,
+                                flow_info.nexthop_priority);
             }
         }
 
@@ -836,10 +839,12 @@ pds_flow_session_info_show (vlib_main_t *vm, u32 ses_id, u8 detail)
                             flow_info.session_index,
                             flow_info.epoch);
             if (detail) {
-                vlib_cli_output(vm, "%-4s%-10d%-6d\n",
+                vlib_cli_output(vm, "%-4s%-10d%-10d%-6d%-10d\n",
                                 "",
+                                flow_info.nexthop_valid,
                                 flow_info.nexthop_type,
-                                flow_info.nexthop_id);
+                                flow_info.nexthop_id,
+                                flow_info.nexthop_priority);
             }
         }
     }

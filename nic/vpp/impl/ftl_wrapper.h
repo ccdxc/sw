@@ -48,8 +48,10 @@ typedef struct v4_flow_info_s {
     uint8_t key_metadata_proto;
     uint8_t epoch;
     uint32_t session_index;
+    uint8_t nexthop_valid;
     uint8_t nexthop_type;
     uint16_t nexthop_id;
+    uint8_t nexthop_priority;
 } v4_flow_info_t;
 
 // Prototypes
@@ -107,10 +109,11 @@ void ftl_set_key_lookup_id(flow_entry *entry, uint16_t lookup_id);
 void ftl_set_entry_flow_miss_hit(flow_entry *entry, uint8_t val);
 
 void ftl_set_entry_nexthop(flow_entry *entry, uint32_t nhid, uint32_t nhtype,
-                           uint8_t nhvalid);
+                           uint8_t nhvalid, uint8_t priority);
 
 void ftlv4_set_entry_nexthop(v4_flow_entry *entry, uint32_t nhid,
-                             uint32_t nhtype, uint8_t nhvalid);
+                             uint32_t nhtype, uint8_t nhvalid,
+                             uint8_t priority);
 
 void ftlv4_set_key_lookup_id(v4_flow_entry *entry, uint16_t lookup_id);
 
@@ -118,9 +121,13 @@ uint16_t ftlv4_get_key_lookup_id(v4_flow_entry *entry);
 
 uint8_t ftlv4_get_entry_epoch(v4_flow_entry *entry);
 
+uint8_t ftlv4_get_entry_nexthop_valid(v4_flow_entry *entry);
+
 uint8_t ftlv4_get_entry_nexthop_type(v4_flow_entry *entry);
 
 uint16_t ftlv4_get_entry_nexthop_id(v4_flow_entry *entry);
+
+uint8_t ftlv4_get_entry_nexthop_priority(v4_flow_entry *entry);
 
 void ftlv4_set_entry_flow_miss_hit(v4_flow_entry *entry, uint8_t val);
 
@@ -170,7 +177,8 @@ void ftlv4_cache_set_key(
 void ftlv4_cache_set_nexthop(
              uint32_t nhid,
              uint32_t nhtype,
-             uint8_t nh_valid);
+             uint8_t nh_valid,
+             uint8_t priority);
 
 int ftlv4_cache_get_count(void);
 
@@ -254,7 +262,8 @@ void ftll2_cache_set_counter_index(uint8_t ctr_idx);
 
 void ftlv6_cache_set_nexthop(uint32_t nhid,
                              uint32_t nhtype,
-                             uint8_t nh_valid);
+                             uint8_t nh_valid,
+                             uint8_t priority);
 
 int ftlv6_cache_get_count(void);
 

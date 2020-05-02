@@ -210,8 +210,10 @@ ftlv4_dump_entry_with_handle (ftlv4 *obj, uint32_t index, bool primary,
     flow_info->key_metadata_proto = entry.key_metadata_proto;
     flow_info->epoch = ftlv4_get_entry_epoch(&entry);
     flow_info->session_index = entry.session_index;
+    flow_info->nexthop_valid = ftlv4_get_entry_nexthop_valid(&entry);
     flow_info->nexthop_type = ftlv4_get_entry_nexthop_type(&entry);
     flow_info->nexthop_id = ftlv4_get_entry_nexthop_id(&entry);
+    flow_info->nexthop_priority = ftlv4_get_entry_nexthop_priority(&entry);
     return 0;
 }
 
@@ -683,10 +685,11 @@ ftlv4_cache_set_key (uint32_t sip,
 void
 ftlv4_cache_set_nexthop (uint32_t nhid,
                          uint32_t nhtype,
-                         uint8_t nh_valid)
+                         uint8_t nh_valid,
+                         uint8_t priority)
 {
    ftlv4_set_entry_nexthop(g_ip4_flow_cache.ip4_flow + g_ip4_flow_cache.count,
-                           nhid, nhtype, nh_valid);
+                           nhid, nhtype, nh_valid, priority);
 }
 
 int

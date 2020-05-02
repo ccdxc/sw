@@ -9,7 +9,8 @@ void
 ftlv4_set_nexthop(ipv4_flow_hash_entry_t *entry,
                   uint32_t nexthop,
                   uint32_t nexthop_type,
-                  uint8_t nexthop_valid)
+                  uint8_t nexthop_valid,
+                  uint8_t priority)
 {
     return;
 }
@@ -18,7 +19,8 @@ void
 ftl_set_nexthop(flow_hash_entry_t *entry,
                 uint32_t nexthop,
                 uint32_t nexthop_type,
-                uint8_t nexthop_valid)
+                uint8_t nexthop_valid,
+                uint8_t priority)
 {
     return;
 }
@@ -68,6 +70,12 @@ ftlv4_get_epoch(ipv4_flow_hash_entry_t *entry)
 }
 
 uint8_t
+ftlv4_get_nexthop_valid(ipv4_flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
+uint8_t
 ftlv4_get_nexthop_type(ipv4_flow_hash_entry_t *entry)
 {
     return 0;
@@ -75,6 +83,12 @@ ftlv4_get_nexthop_type(ipv4_flow_hash_entry_t *entry)
 
 uint16_t
 ftlv4_get_nexthop_id(ipv4_flow_hash_entry_t *entry)
+{
+    return 0;
+}
+
+uint8_t
+ftlv4_get_nexthop_priority(ipv4_flow_hash_entry_t *entry)
 {
     return 0;
 }
