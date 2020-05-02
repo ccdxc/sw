@@ -11,8 +11,12 @@
 #ifndef __TEST_UTILS_WORKFLOW_HPP__
 #define __TEST_UTILS_WORKFLOW_HPP__
 
+#include "nic/sdk/upgrade/include/ev.hpp"
 #include "nic/apollo/test/api/utils/api_base.hpp"
 #include "nic/apollo/test/api/utils/batch.hpp"
+#include "nic/apollo/api/internal/upgrade_ev.hpp"
+
+using namespace api;
 
 namespace test {
 namespace api {
@@ -710,6 +714,46 @@ inline void workflow_neg_8(feeder_T& feeder1, feeder_T& feeder2) {
 
     ret = many_read<feeder_T>(feeder1, sdk::SDK_RET_ENTRY_NOT_FOUND);
     WF_TRACE_ERR((ret == SDK_RET_OK), "WF_N8 cleanup - read set1 failed");
+}
+
+/// \brief WF_U_1
+/// [ Create Set1 ] - Read - Backup - [ Delete Set1 ] -
+/// Restore - [ Create Set1 ] - Read_Compare
+/// Create set1 in a batch, Read and Save the obj info
+/// Delete set1, restore the saved obj info. Create set1 again
+/// Read obj info and comapre it with restored obj
+template <typename feeder_T>
+inline void workflow_u1(feeder_T& feeder1)
+{
+    sdk_ret_t ret;
+    upg_mode_t mode;
+
+    mode = upg_mode_t::UPGRADE_MODE_HITLESS;
+    // trigger
+    pds_batch_ctxt_t bctxt = batch_start();
+    many_create<feeder_T>(bctxt, feeder1);
+    batch_commit(bctxt);
+    many_read<feeder_T>(feeder1);
+
+    // bakcup the objs
+    ret = upg_obj_backup(mode);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_U1 batch1 - upg backup failed");
+
+    bctxt = batch_start();
+    many_delete<feeder_T>(bctxt, feeder1);
+    batch_commit(bctxt);
+
+    // restore the objs
+    ret = upg_obj_restore(mode);
+    WF_TRACE_ERR((ret == SDK_RET_OK), "WF_U1 batch1 - upg restore failed");
+
+    // config replay
+    bctxt = batch_start();
+    many_create<feeder_T>(bctxt, feeder1);
+    batch_commit(bctxt);
+
+    // compare read values with stashed during backup
+    many_read_cmp<feeder_T>(feeder1);
 }
 
 /// @}

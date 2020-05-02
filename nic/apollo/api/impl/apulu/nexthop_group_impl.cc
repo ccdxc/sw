@@ -521,7 +521,7 @@ nexthop_group_impl::restore(obj_info_t *info, upg_obj_info_t *upg_info) {
     nh_group_info = (pds_nexthop_group_info_t *)info;
     obj_size = tlv->len;
     // fill up the size, even if it fails later. to try and restore next obj
-    upg_info->size = obj_size;
+    upg_info->size = obj_size + 4;  // 4 bytes for length
     // de-serialize proto msg
     if (proto_msg.ParseFromArray(tlv->obj, tlv->len) == false) {
         PDS_TRACE_ERR("Failed to de-serialize nexthop group");

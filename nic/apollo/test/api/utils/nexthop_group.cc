@@ -61,18 +61,21 @@ void
 nexthop_group_feeder::init(pds_nexthop_group_type_t type,
                            uint8_t num_nexthops,
                            pds_obj_key_t key,
-                           uint32_t num_objs) {
+                           uint32_t num_objs,
+                           bool stash) {
     memset(&spec, 0, sizeof(pds_nexthop_group_spec_t));
     spec.type = type;
     spec.key = key;
     spec.num_nexthops = num_nexthops;
     nh_groups_fill(&spec);
     num_obj = num_objs;
+    stash_ = stash;
 }
 
 nexthop_group_feeder::nexthop_group_feeder(const nexthop_group_feeder& feeder) {
     memcpy(&this->spec, &feeder.spec, sizeof(pds_nexthop_group_spec_t));
     num_obj = feeder.num_obj;
+    stash_ = feeder.stash();
 }
 
 void
@@ -158,6 +161,7 @@ bool
 nexthop_group_feeder::status_compare(
     const pds_nexthop_group_status_t *status1,
     const pds_nexthop_group_status_t *status2) const {
+    return (!memcmp(status1, status2, sizeof(pds_nexthop_group_status_t)));
     return true;
 }
 

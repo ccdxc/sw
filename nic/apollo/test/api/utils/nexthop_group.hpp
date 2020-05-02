@@ -20,6 +20,7 @@ static constexpr uint16_t k_max_groups = PDS_MAX_NEXTHOP_GROUP - 1;
 class nexthop_group_feeder : public feeder {
 public:
     pds_nexthop_group_spec_t spec;
+    vector<pds_nexthop_group_info_t *> vec;
 
     // Constructor
     nexthop_group_feeder() { };
@@ -29,7 +30,8 @@ public:
     void init(pds_nexthop_group_type_t type,
               uint8_t num_nexthops,
               pds_obj_key_t key = int2pdsobjkey(1),
-              uint32_t num_obj = k_max_groups);
+              uint32_t num_obj = k_max_groups,
+              bool stash_ = false);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -66,6 +68,12 @@ operator<<(std::ostream& os, const pds_nexthop_group_status_t *status) {
 }
 
 inline std::ostream&
+operator<<(std::ostream& os, const pds_nexthop_group_stats_t *stats) {
+    os << " ";
+    return os;
+}
+
+inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_group_info_t *obj) {
     os << " NH group info =>"
        << &obj->spec
@@ -85,6 +93,7 @@ operator<<(std::ostream& os, const nexthop_group_feeder& obj) {
 // CRUD prototypes
 API_CREATE(nexthop_group);
 API_READ(nexthop_group);
+API_READ_CMP(nexthop_group);
 API_UPDATE(nexthop_group);
 API_DELETE(nexthop_group);
 

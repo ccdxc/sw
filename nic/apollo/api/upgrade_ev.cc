@@ -262,6 +262,52 @@ obj_restore_graceful (void)
     return ret;
 }
 
+// used in gtest upgrade workflow
+sdk_ret_t
+obj_backup_hitless (void)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    std::list<api::upg_ev_hitless_t> hitless_list;
+
+    hitless_list = api::g_upg_state->ev_threads_hdlr_hitless();
+    std::list<api::upg_ev_hitless_t>::iterator it = hitless_list.begin();
+    for (; it != hitless_list.end(); ++it) {
+        if (!it->backup_hdlr) {
+            continue;
+        }
+        ret = it->backup_hdlr(NULL);
+        if (ret != SDK_RET_OK) {
+            break;
+        }
+    }
+    return ret;
+}
+
+// used in gtest upgrade workflow
+sdk_ret_t
+obj_backup_graceful (void)
+{
+    // TODO
+    return SDK_RET_OK;
+}
+
+
+// used in gtest upgrade workflow
+sdk_ret_t
+upg_obj_backup (upg_mode_t mode)
+{
+    sdk_ret_t ret;
+
+    if (upgrade_mode_hitless(mode)) {
+        ret = obj_backup_hitless();
+    } else if (upgrade_mode_graceful(mode)) {
+        ret = obj_backup_graceful();
+    } else {
+        ret = SDK_RET_OK;
+    }
+    return ret;
+}
+
 sdk_ret_t
 upg_obj_restore (upg_mode_t mode)
 {

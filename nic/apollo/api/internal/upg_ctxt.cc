@@ -18,7 +18,7 @@
 namespace api {
 
 // this is for the header information pointing to each object types
-#define PDS_UPGRADE_STORE_OBJ_OFFSET (16 * sizeof(upg_obj_stash_meta_t))
+#define PDS_UPGRADE_STORE_OBJ_OFFSET (OBJ_ID_MAX * sizeof(upg_obj_stash_meta_t))
 
 sdk_ret_t
 upg_ctxt::init(const char *obj_store_name, size_t obj_store_size,

@@ -149,9 +149,7 @@ upg_ev_backup (upg_ev_params_t *params)
     // get and initialize a segment from shread memory for write
     ret = g_upg_state->api_upg_ctx()->init(PDS_UPGRADE_API_OBJ_STORE_NAME,
                                            PDS_UPGRADE_API_OBJ_STORE_SIZE, true);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
+    SDK_ASSERT(ret == SDK_RET_OK);
     // set the backup status to true. will set to false if there is a failure
     g_upg_state->set_backup_status(true);
     hdr = (upg_obj_stash_meta_t *)g_upg_state->api_upg_ctx()->mem();
@@ -252,6 +250,7 @@ upg_ev_restore (upg_ev_params_t *params)
         if (!obj_count) {
             continue;
         }
+        memset(&info, 0, sizeof(upg_obj_info_t));
         // initialize the mem reference for each unique obj
         mem = (char *)hdr + hdr[id].offset;
         while (obj_count--) {

@@ -434,6 +434,16 @@ TEST_F(nh_group_test, nh_group_workflow_neg_8) {
     workflow_neg_8<nexthop_group_feeder>(feeder1, feeder2);
 }
 
+/// \brief Nexthop group WF_U_1
+///// \ref WF_U_1
+TEST_F(nh_group_test, nh_group_workflow_u1) {
+    nexthop_group_feeder feeder1;
+
+    feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
+                 int2pdsobjkey(1), k_num_groups, 1);
+    workflow_u1<nexthop_group_feeder>(feeder1);
+}
+
 /// @}
 
 }    // namespace api

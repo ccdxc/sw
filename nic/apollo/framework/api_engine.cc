@@ -976,7 +976,7 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
             api_obj->cleanup_config(obj_ctxt);
             obj_ctxt->hw_dirty = 0;
         }
-        // todo contemplate checking restore list, clear this object from
+        // TODO contemplate checking restore list, clear this object from
         //      dirty list and prevent cleanup, for now log a message
         if (api_obj->in_restore_list()) {
             PDS_TRACE_ERR("Restored object %s id %u is being rolled back "

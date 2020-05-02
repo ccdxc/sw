@@ -12,6 +12,7 @@
 #define __TEST_API_UTILS_API_BASE_HPP__
 
 #include <iostream>
+#include <vector>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/test/api/utils/base.hpp"
 #ifdef AGENT_MODE
@@ -28,7 +29,9 @@ namespace api {
 /// \brief Compare the config with values read from hardware
 /// Compares both key and spec
 template <typename feeder_T, typename info_T>
-sdk_ret_t api_info_compare(feeder_T& feeder, info_T *info) {
+sdk_ret_t api_info_compare(feeder_T& feeder, info_T *info,
+                           info_T *bkup_info = NULL) {
+
     if (!feeder.key_compare(&info->spec.key)) {
         cerr << "key compare failed" << endl;
         cerr << "\t" << feeder << endl << "\t" << info;
@@ -39,6 +42,14 @@ sdk_ret_t api_info_compare(feeder_T& feeder, info_T *info) {
         cerr << "spec compare failed" << endl;
         cerr << "\t" << feeder << endl << "\t" << info;
         return sdk::SDK_RET_ERR;
+    }
+
+    if (bkup_info) {
+        if (!feeder.status_compare(&info->status, &bkup_info->status)) {
+            std::cout << "status compare failed; " << feeder << bkup_info
+                      << info << std::endl;
+            return sdk::SDK_RET_ERR;
+        }
     }
     cout << "info compare success" << endl;
     cout << "\t" << feeder << endl << "\t" << info;
@@ -84,21 +95,55 @@ read(_api_str##_feeder& feeder) {                                            \
 
 /// \brief Invokes the PDS read apis for test objects
 /// Also it compares the config values with values read from hardware
+/// only if current method is read
 #define API_READ(_api_str)                                                   \
 inline sdk_ret_t                                                             \
 read(_api_str##_feeder& feeder) {                                            \
     sdk_ret_t rv;                                                            \
     pds_obj_key_t key;                                                       \
-    pds_##_api_str##_info_t info;                                            \
+    pds_##_api_str##_info_t *info;                                           \
                                                                              \
     memset(&key, 0, sizeof(key));                                            \
     feeder.key_build(&key);                                                  \
-    memset(&info, 0, sizeof(info));                                          \
-    if ((rv = pds_##_api_str##_read(&key, &info)) != SDK_RET_OK)             \
+    info = new (pds_##_api_str##_info_t);                                    \
+    memset(info, 0, sizeof(pds_##_api_str##_info_t));                        \
+    if ((rv = pds_##_api_str##_read(&key, info)) != SDK_RET_OK)              \
         return rv;                                                           \
                                                                              \
-    return (api_info_compare<_api_str##_feeder, pds_##_api_str##_info_t>(    \
-                feeder, &info));                                             \
+    if (feeder.stash()) {                                                    \
+        feeder.vec.push_back(info);                                          \
+        return rv;                                                           \
+    }                                                                        \
+    rv = api_info_compare<_api_str##_feeder, pds_##_api_str##_info_t>(       \
+             feeder, info);                                                  \
+    delete(info);                                                            \
+    return rv;                                                               \
+}
+
+/// \brief invokes the PDS read apis for test objects
+/// also it compares the config values with values previously
+/// stashed in peristent storage during backup
+#define API_READ_CMP(_api_str)                                               \
+inline sdk_ret_t                                                             \
+read_cmp(_api_str##_feeder& feeder) {                                        \
+    sdk_ret_t rv;                                                            \
+    pds_obj_key_t key;                                                       \
+    pds_##_api_str##_info_t info;                                            \
+    pds_##_api_str##_info_t *bkup_info;                                      \
+                                                                             \
+    memset(&key, 0, sizeof(key));                                            \
+    feeder.key_build(&key);                                                  \
+    memset(&info, 0, sizeof(pds_##_api_str##_info_t));                       \
+                                                                             \
+    if ((rv = pds_##_api_str##_read(&key, &info)) != sdk::SDK_RET_OK)        \
+        return rv;                                                           \
+                                                                             \
+    bkup_info  = feeder.vec.front();                                         \
+    rv = (api_info_compare<_api_str##_feeder, pds_##_api_str##_info_t>(      \
+              feeder, &info, bkup_info));                                    \
+    delete(bkup_info );                                                      \
+    feeder.vec.erase(feeder.vec.begin());                                    \
+    return rv;                                                               \
 }
 
 /// \brief Invokes the PDS read apis for test objects
@@ -256,6 +301,25 @@ sdk_ret_t many_read(feeder_T& feeder, sdk_ret_t exp_result = SDK_RET_OK) {
             cerr << "\t" << tmp << endl;
             return SDK_RET_ERR;
         }
+    }
+    if (feeder.stash()) {
+        feeder.vec = tmp.vec;
+    }
+    return SDK_RET_OK;
+}
+
+/// \brief invokes the read apis for all the config objects
+///  and compares the read info values with info stashed in persistent storage
+template <typename feeder_T>
+sdk_ret_t many_read_cmp(feeder_T& feeder,
+                        sdk::sdk_ret_t expected_result = sdk::SDK_RET_OK) {
+    if (feeder.read_unsupported())
+        return SDK_RET_OK;
+
+    feeder_T tmp = feeder;
+    tmp.vec = feeder.vec;
+    for (tmp.iter_init(); tmp.iter_more(); tmp.iter_next()) {
+        SDK_ASSERT(read_cmp(tmp) == expected_result);
     }
     return SDK_RET_OK;
 }

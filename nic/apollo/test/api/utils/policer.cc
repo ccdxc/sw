@@ -75,6 +75,12 @@ policer_feeder::spec_compare(const pds_policer_spec_t *spec) const {
     return true;
 }
 
+bool
+policer_feeder::status_compare(const pds_policer_status_t *status1,
+                               const pds_policer_status_t *status2) const {
+    return true;
+}
+
 //----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------
