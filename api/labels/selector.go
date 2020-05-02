@@ -108,7 +108,7 @@ func (r *Requirement) Matches(ls Labels) bool {
 		return r.hasValue(ls.Get(r.Key))
 	case strings.ToLower(Operator_notEquals.String()), strings.ToLower(Operator_notIn.String()):
 		if !ls.Has(r.Key) {
-			return true
+			return false
 		}
 		return !r.hasValue(ls.Get(r.Key))
 	default:

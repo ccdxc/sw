@@ -595,7 +595,7 @@ func TestTechSupportNodeSelector(t *testing.T) {
 			selector: makeNodeSelectorSpec([]*labels.Requirement{
 				labels.MustGetRequirement("star", labels.Operator_notEquals, []string{"true"}),
 			}),
-			nodeMatch: map[string]bool{"blue-node": true, "green-node": true, "red-node": true},
+			nodeMatch: map[string]bool{"star": false},
 		},
 	}
 
