@@ -337,7 +337,7 @@ func convertRuleAction(action string) halapi.SecurityRuleAction {
 		return halapi.SecurityRuleAction_SECURITY_RULE_ACTION_DENY
 	default:
 		log.Errorf("invalid policy action %v specified.", action)
-		return halapi.SecurityRuleAction_SECURITY_RULE_ACTION_NONE
+		return halapi.SecurityRuleAction_SECURITY_RULE_ACTION_DENY
 	}
 }
 

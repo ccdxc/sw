@@ -146,7 +146,7 @@ func convertNetworkSecurityPolicy(infraAPI types.InfraAPI, nsp netproto.NetworkS
 			{
 				Id:              uid.Bytes(),
 				AddrFamily:      halapi.IPAF_IP_AF_INET,
-				DefaultFWAction: halapi.SecurityRuleAction_SECURITY_RULE_ACTION_ALLOW,
+				DefaultFWAction: halapi.SecurityRuleAction_SECURITY_RULE_ACTION_DENY,
 				Rules:           fwRules,
 			},
 		},

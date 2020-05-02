@@ -208,7 +208,7 @@ func convertSecurityProfile(profile netproto.SecurityProfile) *halapi.SecurityPr
 		Request: []*halapi.SecurityProfileSpec{
 			{
 				Id:                  []byte{1},
-				DefaultFWAction:     halapi.SecurityRuleAction_SECURITY_RULE_ACTION_ALLOW,
+				DefaultFWAction:     halapi.SecurityRuleAction_SECURITY_RULE_ACTION_DENY,
 				TCPIdleTimeout:      tcpIdleTimeout,
 				UDPIdleTimeout:      udpIdleTimeout,
 				ICMPIdleTimeout:     icmpIdleTimeout,
