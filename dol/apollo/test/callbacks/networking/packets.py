@@ -423,6 +423,9 @@ def __get_final_result(tc_rule, match_rule, testcase):
     elif policy.DefaultFWAction != "none":
         final_result = utils.GetRpcSecurityRuleAction(policy.DefaultFWAction)
         logger.info(f"Matching to policy default action: {final_result}")
+    elif not securityprofile:
+        final_result = types_pb2.SECURITY_RULE_ACTION_DENY
+        logger.info(f"security profile not configured, Matching to action: {final_result}")
     elif securityprofile.DefaultFWAction != types_pb2.SECURITY_RULE_ACTION_NONE:
         final_result = securityprofile.DefaultFWAction
         logger.info(f"Matching to security profile default action: {final_result}")

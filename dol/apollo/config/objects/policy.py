@@ -540,7 +540,7 @@ class PolicyObject(base.ConfigObjectBase):
         obj.hostport = EzAccessStoreClient[self.Node].GetHostPort()
         obj.switchport = EzAccessStoreClient[self.Node].GetSwitchPort()
         obj.devicecfg = EzAccessStoreClient[self.Node].GetDevice()
-        obj.securityprofile = SecurityProfileClient.GetObjectByKey(self.Node, 0)
+        obj.securityprofile = EzAccessStoreClient[self.Node].GetSecurityProfile()
 
         # select a random rule for this testcase
         if utils.IsPipelineApollo():

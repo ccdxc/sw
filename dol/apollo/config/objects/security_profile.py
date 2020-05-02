@@ -4,6 +4,7 @@ from infra.common.logging import logger
 import infra.common.objects as objects
 
 from apollo.config.resmgr import Resmgr
+from apollo.config.store import client as EzAccessStoreClient
 
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
@@ -173,6 +174,7 @@ class SecurityProfileObjectClient(base.ConfigClientBase):
         if (hasattr(topospec, 'security_profile')):
             obj = SecurityProfileObject(node, topospec.security_profile)
             self.Objs[node].update({0: obj})
+            EzAccessStoreClient[node].SetSecurityProfile(obj)
         return
 
     def GetGrpcReadAllMessage(self, node):

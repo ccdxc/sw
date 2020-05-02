@@ -29,6 +29,7 @@ class EzAccessStore:
         self.underlay_vpc = None
         self.hostport = None
         self.switchport = None
+        self.securityprofile = None
         self.dutNode = 1
         self.underlay_ips = []
         return
@@ -74,6 +75,12 @@ class EzAccessStore:
             return self.underlay_vpc.VPCId
         else:
             return -1
+
+    def SetSecurityProfile(self, obj):
+        self.securityprofile = obj
+
+    def GetSecurityProfile(self):
+        return self.securityprofile
 
     def GetProviderIPAddr(self, count):
         if self.underlay_vpc:
