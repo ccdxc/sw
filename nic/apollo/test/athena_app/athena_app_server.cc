@@ -25,6 +25,7 @@ const static map<string,server_msg_proc_fn_t>  cmd2fn_map =
     {"script_exec",             script_exec_msg_process},
     {"flow_stats_dump",         fte_ath::fte_dump_flow_stats},
     {"flow_cache_dump",         fte_ath::fte_dump_flows},
+    {"session_info_dump",       fte_ath::fte_dump_sessions},
 };
 
 static inline server_msg_proc_fn_t

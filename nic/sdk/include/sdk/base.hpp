@@ -216,7 +216,8 @@ do {                                                       \
     ENTRY(SDK_RET_OBJ_CLONE_ERR,              21,   "object clone failure")    \
     ENTRY(SDK_RET_IN_PROGRESS,                22,   "operation in progress")   \
     ENTRY(SDK_RET_UPG_CRITICAL,               23,   "upgrade critcal failure") \
-    ENTRY(SDK_RET_MAX,                        24,   "max return value")        \
+    ENTRY(SDK_RET_MAPPING_CONFLICT,           24,   "resource mapping conflict")\
+    ENTRY(SDK_RET_MAX,                        25,   "max return value")        \
     ENTRY(SDK_RET_ERR,                        255,  "catch all generic error")
 
 SDK_DEFINE_ENUM(sdk_ret_t, SDK_RET_ENTRIES)
@@ -256,6 +257,7 @@ using sdk::SDK_RET_HW_PROGRAM_ERR;
 using sdk::SDK_RET_HW_SW_OO_SYNC;
 using sdk::SDK_RET_IN_PROGRESS;
 using sdk::SDK_RET_NOOP;
+using sdk::SDK_RET_MAPPING_CONFLICT;
 using sdk::sdk_status_t;
 
 #endif    // __SDK_BASE_HPP__

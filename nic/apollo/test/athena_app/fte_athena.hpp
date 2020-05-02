@@ -30,6 +30,12 @@ pds_ret_t fte_dump_flows(zmq_msg_t *rx_msg = nullptr,
                          zmq_msg_t *tx_msg = nullptr);
 pds_ret_t fte_dump_flow_stats(zmq_msg_t *rx_msg = nullptr,
                               zmq_msg_t *tx_msg = nullptr);
+pds_ret_t fte_dump_sessions(const char *fname,
+                            bool append,
+                            uint32_t start_idx = 0,
+                            uint32_t count = 0);
+pds_ret_t fte_dump_sessions(zmq_msg_t *rx_msg,
+                            zmq_msg_t *tx_msg);
 
 #define MAX_LINE_SZ 128
 static inline void pkt_hex_dump_trace(const char *label, char *buf, uint16_t len)

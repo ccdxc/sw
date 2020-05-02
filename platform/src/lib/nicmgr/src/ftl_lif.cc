@@ -2230,6 +2230,10 @@ ftl_lif_queues_ctl_t::metrics_get(lif_attr_metrics_t *metrics)
 
                 qstate_access->small_read(0, (uint8_t *)&qstate, sizeof(qstate));
                 metrics->mpu_timestamp.total_num_updates += qstate.num_updates;
+                metrics->mpu_timestamp.session_timestamp = 
+                         scanner_session_timestamp(lif.mpu_timestamp());
+                metrics->mpu_timestamp.conntrack_timestamp =
+                         scanner_conntrack_timestamp(lif.mpu_timestamp());
                 break;
             }
 

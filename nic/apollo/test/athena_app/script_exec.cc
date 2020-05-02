@@ -24,6 +24,7 @@ const static map<string,test_fn_t>  name2fn_map =
     COMBINED_AGING_NAME2FN_MAP
     APP_TEST_NAME2FN_MAP_ENTRY(skip_fte_flow_prog_set),
     APP_TEST_NAME2FN_MAP_ENTRY(flow_cache_dump),
+    APP_TEST_NAME2FN_MAP_ENTRY(session_info_dump),
     APP_TEST_NAME2FN_MAP_ENTRY(APP_TEST_EXIT_FN),
 };
 

@@ -613,6 +613,10 @@ aging_metrics_t::show(bool latest) const
                       "\n----------------------\n");
         TEST_LOG_INFO("total_num_updates       : %" PRIu64 "\n", 
                       curr.mpu_timestamp.total_num_updates);
+        TEST_LOG_INFO("session_timestamp       : %" PRIu64 "\n", 
+                      curr.mpu_timestamp.session_timestamp);
+        TEST_LOG_INFO("conntrack_timestamp     : %" PRIu64 "\n", 
+                      curr.mpu_timestamp.conntrack_timestamp);
         break;
 
     default:

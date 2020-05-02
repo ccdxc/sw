@@ -98,6 +98,17 @@ typedef struct {
  */
 typedef flow_cache_dump_t   flow_stats_dump_t;
 
+/*
+ * Server session info dump request message
+ */
+typedef struct {
+    server_req_t    cmd;
+    char            fname[ATHENA_APP_FNAME_STR_BYTES];
+    uint32_t        append;
+    uint32_t        start_idx;
+    uint32_t        count;
+} session_info_dump_t;
+
 int  server_init(void); 
 void server_fini(void);
 void server_poll(void);

@@ -442,9 +442,10 @@
 #define MPU_SESSION_TIMESTAMP_SELECT MPU_SESSION_TIMESTAMP_MSB:MPU_SESSION_TIMESTAMP_LSB
 
 #define SCANNER_TS_CALC(_timestamp_data)                                        \
-    sub         r_timestamp, r_timestamp[MPU_SESSION_TIMESTAMP_SELECT],         \
-                _timestamp_data;                                                \
-    and         r_timestamp, r_timestamp, MPU_SESSION_TIMESTAMP_MASK;           \
+    add         r_timestamp, r_timestamp[MPU_SESSION_TIMESTAMP_SELECT], r0;     \
+    slt         c1, r_timestamp, _timestamp_data;                               \
+    add.c1      r_timestamp, r_timestamp, 1, MPU_SESSION_TIMESTAMP_BITS;        \
+    sub         r_timestamp, r_timestamp, _timestamp_data;                      \
     divi        r_timestamp, r_timestamp, 100;                                  \
 
 #define SESSION_EXPIRY_CHECK_e(_exp_bit, _base_tmo)                             \

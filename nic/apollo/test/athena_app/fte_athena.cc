@@ -53,6 +53,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/api/impl/athena/pds_flow_session_ctx.hpp"
 #include "app_test_utils.hpp"
 #include "fte_athena.hpp"
 #include "athena_app_server.hpp"
@@ -172,13 +173,22 @@ static FILE *g_stats_fp;
         }                                           \
     } while (false)                                 \
 
-// Stats dump to a designated file (if any) as well as to PDS log
+// Stats dump to a designated file (if any) as well as to PDS log.
+// File is always closed at end of dump so no need to do intermediate flush.
 #define STATS_DUMP_LOG(args...)                     \
     do {                                            \
         PDS_TRACE_DEBUG(args);                      \
         if (g_stats_fp) {                           \
             fprintf(g_stats_fp, args);              \
-            fflush(g_stats_fp);                     \
+        }                                           \
+    } while (false)                                 \
+
+// Session info dump to a designated file.
+// File is always closed at end of dump so no need to do intermediate flush.
+#define SESSION_DUMP_LOG(args...)                   \
+    do {                                            \
+        if (fp) {                                   \
+            fprintf(fp, args);                      \
         }                                           \
     } while (false)                                 \
 
@@ -625,6 +635,108 @@ fte_dump_flows(zmq_msg_t *rx_msg,
         ret = fte_dump_flows(nullptr, false);
     }
     return ret;
+}
+
+static void
+dump_session_info(FILE *fp,
+                  const pds_flow_session_key_t *key,
+                  const pds_flow_session_info_t *info)
+
+{
+    const pds_flow_session_flow_data_t *h2s = &info->spec.data.host_to_switch_flow_info;
+    const pds_flow_session_flow_data_t *s2h = &info->spec.data.switch_to_host_flow_info;
+    uint32_t cache_id = 0;
+    bool primary = false;
+
+    pds_flow_session_ctx_get(key->session_info_id, &cache_id, &primary);
+
+    SESSION_DUMP_LOG("ID:%u dir:0x%x cacheID:%u primary:%u timestamp:%u\n",
+                     key->session_info_id, key->direction, cache_id,
+                     primary, info->status.timestamp);
+    SESSION_DUMP_LOG("  conntrackID:%u skipLog:%u "
+                     "hostMac:%02x:%02x:%02x:%02x:%02x:%02x\n",
+                     info->spec.data.conntrack_id, info->spec.data.skip_flow_log,
+                     info->spec.data.host_mac[0], info->spec.data.host_mac[1],
+                     info->spec.data.host_mac[2], info->spec.data.host_mac[3],
+                     info->spec.data.host_mac[4], info->spec.data.host_mac[5]);
+    SESSION_DUMP_LOG("    H2S epVnic:%u epVnicID:%u epMap:%u epMapID:%u "
+                     "polBw1:%u polBw2:%u statsID:%u latID:%u plenID:%u "
+                     "tcpFl:0x%x rwID:%u stMask:0x%x egAct:%u\n",
+                     h2s->epoch_vnic, h2s->epoch_vnic_id, h2s->epoch_mapping,
+                     h2s->epoch_mapping_id, h2s->policer_bw1_id,
+                     h2s->policer_bw2_id, h2s->vnic_stats_id,
+                     h2s->vnic_histogram_latency_id, h2s->vnic_histogram_packet_len_id,
+                     h2s->tcp_flags_bitmap, h2s->rewrite_id,
+                     h2s->allowed_flow_state_bitmask, (unsigned)h2s->egress_action);
+    SESSION_DUMP_LOG("    S2H epVnic:%u epVnicID:%u epMap:%u epMapID:%u "
+                     "polBw1:%u polBw2:%u statsID:%u latID:%u plenID:%u "
+                     "tcpFl:0x%x rwID:%u stMask:0x%x egAct:%u\n",
+                     s2h->epoch_vnic, s2h->epoch_vnic_id, s2h->epoch_mapping,
+                     s2h->epoch_mapping_id, s2h->policer_bw1_id,
+                     s2h->policer_bw2_id, s2h->vnic_stats_id,
+                     s2h->vnic_histogram_latency_id, s2h->vnic_histogram_packet_len_id,
+                     s2h->tcp_flags_bitmap, s2h->rewrite_id,
+                     s2h->allowed_flow_state_bitmask, (unsigned)s2h->egress_action);
+}
+
+pds_ret_t
+fte_dump_sessions(const char *fname,
+                  bool append,
+                  uint32_t start_idx,
+                  uint32_t count)
+{
+    pds_ret_t ret = PDS_RET_OK;
+    FILE *fp = nullptr;
+
+    PDS_TRACE_DEBUG("\nPrinting Session info entries\n");
+    ret = switch_to_file(fname, &fp, append);
+    if ((ret == PDS_RET_OK) && fp) {
+        pds_flow_session_key_t  key = {0};
+        pds_flow_session_info_t info = {0};
+
+        if (start_idx == 0) {
+            start_idx = 1;
+        }
+        if (count == 0) {
+            count = PDS_FLOW_SESSION_INFO_ID_MAX;
+        }
+        key.direction = HOST_TO_SWITCH | SWITCH_TO_HOST;
+        key.session_info_id = start_idx;
+        while (count && (key.session_info_id < PDS_FLOW_SESSION_INFO_ID_MAX)) {
+            ret = pds_flow_session_info_read(&key, &info);
+
+            // entry not found means session was not installed
+            if (ret != PDS_RET_ENTRY_NOT_FOUND) {
+                if (ret != PDS_RET_OK) {
+                    break;
+                }
+                dump_session_info(fp, &key, &info);
+            }
+            key.session_info_id++;
+            count--;
+        }
+    }
+
+    revert_from_file(fname, &fp, nullptr);
+    return (ret == PDS_RET_ENTRY_NOT_FOUND) ? PDS_RET_OK : ret;
+}
+
+pds_ret_t
+fte_dump_sessions(zmq_msg_t *rx_msg,
+                  zmq_msg_t *tx_msg)
+{
+    test::athena_app::session_info_dump_t *req;
+
+    SERVER_RSP_INIT(tx_msg, rsp, test::athena_app::server_rsp_t);
+    req = (test::athena_app::session_info_dump_t *)zmq_msg_data(rx_msg);
+    rsp->status = test::athena_app::server_msg_size_check(rx_msg,
+                                                          sizeof(*req));
+    if (rsp->status == PDS_RET_OK) {
+        ATHENA_APP_MSG_STR_TERM(req->fname);
+        rsp->status = fte_dump_sessions(req->fname, req->append,
+                                        req->start_idx, req->count);
+    }
+    return (pds_ret_t)rsp->status;
 }
 
 void

@@ -348,11 +348,11 @@ pds_flow_session_ctx_set(uint32_t session_id,
                  (ctx->primary != primary))) {
 
                 /*
-                 * Return a unique error code (PDS_RET_NOOP) to allow caller
-                 * to differentiate from flow cache case of "entry exists".
+                 * Return a unique error code to allow caller to
+                 * differentiate from flow cache case of "entry exists".
                  */
                 session_ctx.ctx_entry_unlock(session_id);
-                return PDS_RET_NOOP;
+                return PDS_RET_MAPPING_CONFLICT;
             }
             ctx_entry_cache_id_set(ctx, cache_id);
             ctx->primary = primary;

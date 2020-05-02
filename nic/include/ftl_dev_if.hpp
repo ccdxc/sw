@@ -381,6 +381,8 @@ typedef struct {
 
 typedef struct {
     uint64_t   total_num_updates;
+    uint64_t   session_timestamp;
+    uint64_t   conntrack_timestamp;
 } lif_attr_mpu_timestamp_metrics_t;
 
 typedef union {

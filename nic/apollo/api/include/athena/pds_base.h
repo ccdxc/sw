@@ -66,7 +66,8 @@
     ENTRY(PDS_RET_OBJ_CLONE_ERR,              21,   "object clone failure")    \
     ENTRY(PDS_RET_IN_PROGRESS,                22,   "operation in progress")   \
     ENTRY(PDS_RET_UPG_CRITICAL,               23,   "upgrade critcal failure") \
-    ENTRY(PDS_RET_MAX,                        24,   "max return value")        \
+    ENTRY(PDS_RET_MAPPING_CONFLICT,           24,   "resource mapping conflict")\
+    ENTRY(PDS_RET_MAX,                        25,   "max return value")        \
     ENTRY(PDS_RET_ERR,                        255,  "catch all generic error") 
 
 PDS_DEFINE_ENUM(pds_ret_t, PDS_RET_ENTRIES)
