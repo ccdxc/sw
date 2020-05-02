@@ -19,9 +19,9 @@ rfc_p3:
     /* Action = r7 & SACL_P3_ENTRY_ACTION_MASK */
     and        r2, r7, SACL_P3_ENTRY_ACTION_MASK
     /* Is Priority higher (numerically less) than that in PHV? */
-    slt        c1, r1, k.txdma_to_p4e_sacl_priority
+    slt        c1, r1, k.txdma_control_rule_priority
     /* If so, update PHV with new priority and action */
-    phvwr.c1   p.txdma_to_p4e_sacl_priority, r1
+    phvwr.c1   p.txdma_control_rule_priority, r1
     phvwr.c1   p.txdma_to_p4e_drop, r2
     phvwr.c1   p.txdma_to_p4e_sacl_action, r2
     phvwr.c1   p.txdma_to_p4e_sacl_root_num, k.txdma_control_recirc_count[3:1]

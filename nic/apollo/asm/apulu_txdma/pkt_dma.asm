@@ -52,7 +52,7 @@ pkt_dma:
                                  capri_intr_tm_iport, \
                                  capri_txdma_intr_txdma_rsv,
                                  txdma_to_p4e_meter_en,
-                                 txdma_to_p4e_sacl_priority)
+                                 txdma_to_p4e_route_priority)
 
     // 2) DMA command for payload
     // mem2pkt has an implicit fence. all subsequent dma is blocked

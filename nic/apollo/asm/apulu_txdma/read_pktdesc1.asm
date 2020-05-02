@@ -73,7 +73,7 @@ read_pktdesc1:
     /* Enable RFC lookups */
     phvwr.e    p.txdma_predicate_rfc_enable, TRUE
     /* Initialize rule priority to invalid */
-    phvwr      p.txdma_to_p4e_sacl_priority, SACL_PRIORITY_INVALID
+    phvwr      p.txdma_control_rule_priority, SACL_PRIORITY_INVALID
 
 
 /*****************************************************************************/

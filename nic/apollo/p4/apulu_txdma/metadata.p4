@@ -32,7 +32,8 @@ header_type txdma_control_metadata_t {
         stag_count          : 4;
         dtag_count          : 4;
         root_count          : 4;
-        pad0                : 4;
+        rule_priority       : 11;
+        pad0                : 1;
     }
 }
 

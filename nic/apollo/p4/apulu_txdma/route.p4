@@ -26,6 +26,8 @@ action route_res_handler() {
         modify_field(txdma_control.dnat_en, FALSE); // Disable DNAT lookup
         modify_field(txdma_to_p4e.nexthop_type,\
                      scratch_metadata.field32 >> ROUTE_RESULT_NHTYPE_SHIFT);
+        modify_field(txdma_to_p4e.route_priority,\
+                     scratch_metadata.field32 >> ROUTE_RESULT_PRIORITY_SHIFT);
         modify_field(txdma_to_p4e.nexthop_id,\
                      scratch_metadata.field32 >> ROUTE_RESULT_NEXTHOP_SHIFT);
     }

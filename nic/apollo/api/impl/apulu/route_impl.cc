@@ -43,10 +43,10 @@
 #define PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val_, type_, prio_, nh_id_)           \
             (nh_val_) |= (((type_ << ROUTE_RESULT_NHTYPE_SHIFT)              \
                                    & ROUTE_RESULT_NHTYPE_MASK) |             \
+                          ((prio_ << ROUTE_RESULT_PRIORITY_SHIFT)            \
+                                    & ROUTE_RESULT_PRIORITY_MASK) |          \
                           ((nh_id_ << ROUTE_RESULT_NEXTHOP_SHIFT)            \
-                                    & ROUTE_RESULT_NEXTHOP_MASK) |           \
-                          (((prio_) << ROUTE_RESULT_PRIORITY_SHIFT)          \
-                                    & ROUTE_RESULT_PRIORITY_MASK));
+                                    & ROUTE_RESULT_NEXTHOP_MASK));
 
 namespace api {
 namespace impl {

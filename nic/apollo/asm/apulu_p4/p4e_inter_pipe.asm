@@ -61,7 +61,7 @@ egress_to_rxdma_arm:
     phvwr           p.{p4e_to_arm_snat_type,p4e_to_arm_dnat_en}, \
                         k.{txdma_to_p4e_snat_type,txdma_to_p4e_dnat_en}
     phvwr           p.p4e_to_arm_dnat_id, k.{txdma_to_p4e_dnat_idx}.hx
-    phvwr           p.p4e_to_arm_sacl_priority, k.{txdma_to_p4e_sacl_priority}.hx
+    phvwr           p.p4e_to_arm_route_priority, k.{txdma_to_p4e_route_priority}.hx
 
 egress_to_rxdma_common:
     phvwr           p.p4e_to_p4plus_classic_nic_packet_len, r6

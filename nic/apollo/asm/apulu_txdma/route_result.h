@@ -16,6 +16,8 @@ route_result_handler:
     phvwr.c1        p.txdma_control_dnat_en, FALSE
     phvwr.c1        p.txdma_to_p4e_nexthop_type, res_reg[ROUTE_RESULT_NHTYPE_END_BIT:\
                                                          ROUTE_RESULT_NHTYPE_START_BIT]
+    phvwr.c1        p.txdma_to_p4e_route_priority, res_reg[ROUTE_RESULT_PRIORITY_END_BIT:\
+                                                           ROUTE_RESULT_PRIORITY_START_BIT]
     phvwr.c1        p.txdma_to_p4e_nexthop_id, res_reg[ROUTE_RESULT_NEXTHOP_END_BIT:\
                                                        ROUTE_RESULT_NEXTHOP_START_BIT]
     // Else Enable DNAT Lookup and copy DNAT ID to txdma control metadata

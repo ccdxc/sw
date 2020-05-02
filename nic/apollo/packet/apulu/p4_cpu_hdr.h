@@ -81,7 +81,7 @@ typedef struct p4_rx_cpu_hdr_s {
         };
     };
     uint8_t  epoch;
-    uint16_t sacl_priority;
+    uint16_t route_priority;
 } __attribute__ ((packed)) p4_rx_cpu_hdr_t;
 
 // Meta sent to P4 for tx packet

@@ -175,7 +175,7 @@ action egress_to_rxdma() {
         modify_field(p4e_to_arm.snat_type, txdma_to_p4e.snat_type);
         modify_field(p4e_to_arm.dnat_en, txdma_to_p4e.dnat_en);
         modify_field(p4e_to_arm.dnat_id, txdma_to_p4e.dnat_idx);
-        modify_field(p4e_to_arm.sacl_priority, txdma_to_p4e.sacl_priority);
+        modify_field(p4e_to_arm.route_priority, txdma_to_p4e.route_priority);
     } else {
         if (control_metadata.rx_packet == TRUE) {
             modify_field(capri_intrinsic.tm_span_session,
