@@ -46,6 +46,10 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	if mockMode {
 		return nil
 	}
+	revProxyPort = globals.AgentProxyPort
+	if val, ok := os.LookupEnv("DSC_PORT"); ok {
+		revProxyPort = val
+	}
 	if len(dscURL) > 0 {
 		naplesURL = dscURL
 	} else if val, ok := os.LookupEnv("DSC_URL"); ok {
@@ -67,7 +71,6 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 			naplesURL = "http://169.254." + bus + ".1"
 			// check if naples is reachable
 			naplesIP = stripURLScheme(naplesURL)
-			revProxyPort = globals.AgentProxyPort
 			naplesURL += ":" + revProxyPort + "/"
 			if isNaplesReachable() == nil {
 				return nil
@@ -78,7 +81,6 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 		naplesURL = "http://169.254.0.1"
 	}
 	naplesIP = stripURLScheme(naplesURL)
-	revProxyPort = globals.AgentProxyPort
 	naplesURL += ":" + revProxyPort + "/"
 
 	return isNaplesReachable()
