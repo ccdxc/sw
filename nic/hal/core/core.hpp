@@ -53,6 +53,7 @@ enum {
     HAL_TIMER_ID_MIN                      = 1,
     HAL_TIMER_ID_HEARTBEAT                = HAL_TIMER_ID_MIN,
     HAL_TIMER_ID_STATS,
+    HAL_TIMER_ID_STATS_DELPHI_PUBLISH,
     HAL_TIMER_ID_INFRA_MAX                = 16,
 };
 extern bool gl_super_user;

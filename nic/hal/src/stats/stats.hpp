@@ -14,6 +14,7 @@ namespace hal {
 #define IONIC_PORT_PB_STATS_REPORT_SIZE   (1024)
 
 #define HAL_STATS_COLLECTION_INTVL            ((1 * TIME_MSECS_PER_SEC) / 2)  // 500 msec
+#define HAL_STATS_DELPHI_PUBLISH_INTVL        ((1 * TIME_MSECS_PER_SEC))      // 1 sec
 #define HAL_STATS_START_INTVL                 (120 * TIME_MSECS_PER_SEC)      // 2 minutes
 //system stats collection interval is 20 secs;
 //the stats is collected in same timer_cb as period stats, hence

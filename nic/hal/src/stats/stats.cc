@@ -19,6 +19,7 @@ using sdk::lib::slab;
 namespace hal {
 
 static thread_local void *t_stats_timer;
+static thread_local void *t_delphi_pub_timer;
 
 static void
 hal_update_drop_stats (SystemResponse *rsp) {
@@ -231,8 +232,8 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
         HAL_TRACE_ERR("Error in updating qos periodic stats, ret {}", ret);
     }
 
-    // linkmgr mac stats
-    ret = linkmgr::port_metrics_update();
+    // linkmgr populate mac stats
+    ret = linkmgr::mac_stats_update();
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Error in updating port metrics, ret {}", ret);
     }
@@ -276,6 +277,20 @@ stats_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     }
 }
 
+//------------------------------------------------------------------------------
+// callback invoked by the HAL periodic thread for stats collection
+//------------------------------------------------------------------------------
+static void
+delphi_pub_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    hal_ret_t ret;
+
+    ret = linkmgr::port_metrics_update();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error in updating port metrics, ret {}", ret);
+    }
+}
+
 static void
 hal_global_stats_init (void)
 {
@@ -298,7 +313,18 @@ stats_timer_start (void *timer, uint32_t timer_id, void *ctxt)
     HAL_TRACE_DEBUG("Started periodic stats timer with {} ms interval",
                     HAL_STATS_COLLECTION_INTVL);
 
-    hal_global_stats_init ();
+    t_delphi_pub_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_STATS_DELPHI_PUBLISH,
+                                                  HAL_STATS_DELPHI_PUBLISH_INTVL,
+                                                  (void *)0,    // ctxt
+                                                  delphi_pub_timer_cb, true);
+    if (!t_delphi_pub_timer) {
+        HAL_TRACE_ERR("Failed to start periodic stats delphi pub timer");
+        return;
+    }
+    HAL_TRACE_DEBUG("Started periodic stats delphi pub timer with {} ms interval",
+                    HAL_STATS_DELPHI_PUBLISH_INTVL);
+
+    hal_global_stats_init();
 }
 
 //------------------------------------------------------------------------------

@@ -1053,7 +1053,9 @@ port_get_ht_cb (void *ht_entry, void *ctxt)
     port_ht_cb_ctxt_t *ht_cb_ctxt = (port_ht_cb_ctxt_t*) ctxt;
 
     // Invoke svc cb
-    ht_cb_ctxt->cb(&port_args, ht_cb_ctxt->ctxt, hal_ret);
+    if (ht_cb_ctxt->cb != NULL) {
+        ht_cb_ctxt->cb(&port_args, ht_cb_ctxt->ctxt, hal_ret);
+    }
 
     // Always return false here, so that we walk through all hash table
     // entries.
@@ -1223,7 +1225,7 @@ port_mgmt_metrics_update (uint32_t port_num, port_args_t *port_args)
     delphi::objects::MgmtMacMetricsPtr mac_metrics_old;
     uint64_t tx_pkts = 0, curr_tx_pkts = 0, tx_bytes = 0, curr_tx_bytes = 0,
              rx_pkts = 0, curr_rx_pkts = 0, rx_bytes = 0, curr_rx_bytes = 0;
-    float interval = (float)HAL_STATS_COLLECTION_INTVL/TIME_MSECS_PER_SEC;
+    float interval = (float)HAL_STATS_DELPHI_PUBLISH_INTVL/TIME_MSECS_PER_SEC;
 
     mac_metrics_old = delphi::objects::MgmtMacMetrics::Find(port_num);
 
@@ -1299,7 +1301,7 @@ port_uplink_metrics_update (uint32_t port_num, port_args_t *port_args, delphi::o
     delphi::objects::macmetrics_t mac_metrics;
     uint64_t tx_pkts = 0, curr_tx_pkts = 0, tx_bytes = 0, curr_tx_bytes = 0,
              rx_pkts = 0, curr_rx_pkts = 0, rx_bytes = 0, curr_rx_bytes = 0;
-    float interval = (float)HAL_STATS_COLLECTION_INTVL/TIME_MSECS_PER_SEC;
+    float interval = (float)HAL_STATS_DELPHI_PUBLISH_INTVL/TIME_MSECS_PER_SEC;
 
     mac_metrics.frames_rx_ok = port_args->stats_data[port::MacStatsType::FRAMES_RX_OK];
     mac_metrics.frames_rx_all = port_args->stats_data[port::MacStatsType::FRAMES_RX_ALL];
@@ -1453,6 +1455,12 @@ hal_ret_t
 port_metrics_update (void)
 {
     return port_get_all(port_metrics_update_helper, NULL);
+}
+
+hal_ret_t
+mac_stats_update (void)
+{
+    return port_get_all(NULL, NULL);
 }
 
 hal_ret_t

@@ -34,6 +34,7 @@ hal_ret_t port_disable(uint32_t port_num = 0);
 void port_event_notify(port_event_info_t *port_event_info);
 void xcvr_event_notify(xcvr_event_info_t *xcvr_event_info);
 hal_ret_t port_metrics_update(void);
+hal_ret_t mac_stats_update(void);
 
 }    // namespace linkmgr
 
