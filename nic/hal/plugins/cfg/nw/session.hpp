@@ -164,7 +164,6 @@ enum {
 // alternate flow key structure
 typedef struct flow_key_s {
     uint8_t              flow_type:4;    // one of the flow types defined above
-    uint8_t              dir:1;
     vrf_id_t             svrf_id;    // src vrf id
     vrf_id_t             dvrf_id;    // dst vrf id
     uint32_t             lkpvrf;     // Flow lookup vrf
@@ -224,6 +223,7 @@ typedef struct flow_cfg_s {
     uint16_t                  nat_type:3;          // type of NAT
     uint16_t                  is_ing_proxy_mirror:1; // Is ing mirror a proxy
     uint16_t                  is_eg_proxy_mirror:1; // Is eg mirror a proxy
+    uint16_t                  dir:1;               // Flow direction
     ip_addr_t                 nat_sip;             // source NAT IP, if any
     ip_addr_t                 nat_dip;             // destination NAT IP, if any
     uint16_t                  nat_sport;           // NAT source port

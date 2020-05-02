@@ -161,23 +161,24 @@ lookup_expected_flow(const hal::flow_key_t &ikey, bool exact_match)
         goto end;
     }
 
+#if 0
     //Mask DIR, SPORT and do lookup (Active FTP)
     lookup_key.dir = 0;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&lookup_key))) {
         HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard dir key={}", lookup_key);
         goto end;
     }
+#endif
 
-    // Mask SIP, DIR, SPORT and do lookup (RPC/Passive FTP)
+    // Mask SIP, SPORT and do lookup (RPC/Passive FTP)
     lookup_key.sip = 0;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&lookup_key))) {
-        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard sip/sport/dir key={}", lookup_key);
+        HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard sip/sport key={}", lookup_key);
         goto end;
     }
 
-    // Mask DIR only and do lookup (RTSP)
+    // Do lookup (RTSP)
     lookup_key = key;
-    lookup_key.dir = 0;
     if ((entry = (expected_flow_t *)expected_flow_ht()->lookup((void *)&lookup_key))) {
         HAL_TRACE_DEBUG("ALG::lookup_expected_flow wildcard dir key={}", lookup_key);
         goto end;
@@ -213,9 +214,6 @@ flow_gate_key_to_proto(expected_flow_t *flow, FlowGateKey *key)
     key->set_ip_proto((types::IPProtocol)flow->key.proto);
     key->set_src_port(flow->key.sport);
     key->set_dst_port(flow->key.dport);
-    key->set_direction((flow->key.dir == FLOW_DIR_FROM_UPLINK) ?
-                        types::FLOW_DIRECTION_FROM_UPLINK :\
-                        types::FLOW_DIRECTION_FROM_HOST);
 }
 
 void
@@ -228,8 +226,6 @@ flow_gate_key_from_proto(expected_flow_t *flow, const FlowGateKey &key)
     flow->key.proto   = key.ip_proto();
     flow->key.sport   = key.src_port();
     flow->key.dport   = key.dst_port();
-    flow->key.dir     = (key.direction() == types::FLOW_DIRECTION_FROM_UPLINK
-                                                    ? FLOW_DIR_FROM_UPLINK : FLOW_DIR_FROM_DMA);
 }
 
 void expected_flow_get_fill_rsp(expected_flow_t *flow,
@@ -264,8 +260,7 @@ hal_ret_t walk_expected_flow(SecurityFlowGateGetRequest&      req,
 }
 
 std::ostream& operator<<(std::ostream& os, const exp_flow_key_t val) {
-    os << "{dir=" << val.dir;
-    os << " ,svrf_id=" << val.svrf_id;
+    os << "{svrf_id=" << val.svrf_id;
     os << " ,dvrf_id=" << val.dvrf_id;
     os << " ,sip=" << ipv4addr2str(val.sip);
     os << " ,dip=" << ipv4addr2str(val.dip);

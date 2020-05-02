@@ -268,7 +268,6 @@ add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
     rtsp_session_t *rtsp_sess = (rtsp_session_t *)app_sess->oper;
 
     // TODO (goli) - revisit - may be we need to preserve the flow direction
-    key.dir = 0;
     key.svrf_id = rtsp_sess->sess_key.vrf_id;
     key.dvrf_id = rtsp_sess->sess_key.vrf_id;
     key.flow_type = spec->client_ip.af == IP_AF_IPV6 ?

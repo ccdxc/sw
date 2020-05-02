@@ -835,9 +835,6 @@ proxy_flow_config(proxy::ProxyFlowConfigRequest& req,
     tid = req.spec().vrf_key_handle().vrf_id();
     extract_flow_key_from_spec(tid, &flow_key, req.flow_key());
 
-    // ignore direction for the flow.
-    flow_key.dir = 0;
-
     if(req.proxy_en()) {
         ret = proxy_flow_enable(req.spec().proxy_type(),
                                 flow_key,

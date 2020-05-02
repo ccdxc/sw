@@ -187,8 +187,6 @@ flowkey2str (const flow_key_t& key)
     buf = key_str[key_str_next++ & 0x3];
     fmt::ArrayWriter out(buf, 400);
 
-    out.write("{{dir={}, ", key.dir);
-
     if ( key.svrf_id == key.dvrf_id) {
         out.write("svrf={}, ", key.svrf_id);
     } else {
@@ -686,7 +684,7 @@ flow_state_to_connection_track_response(flow_state_t *flow, ConnTrackInfo *conn_
 static void
 flow_to_flow_resp(flow_t *flow, FlowSpec *spec, FlowStatus *status)
 {
-    status->set_flow_direction((flow->config.key.dir == FLOW_DIR_FROM_UPLINK) ?
+    status->set_flow_direction((flow->config.dir == FLOW_DIR_FROM_UPLINK) ?
                                types::FLOW_DIRECTION_FROM_UPLINK : types::FLOW_DIRECTION_FROM_HOST);
     status->set_flow_instance((flow->pgm_attrs.lkp_inst == 0) ?
                                session::FLOW_INSTANCE_PRIMARY : session::FLOW_INSTANCE_SECONDARY);
@@ -2918,7 +2916,7 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
         sep = find_ep_by_l2_key(flow->config.l2_info.l2seg_id, flow->config.l2_info.smac);
         dep = find_ep_by_l2_key(flow->config.l2_info.l2seg_id, flow->config.l2_info.dmac);
         if (sep == NULL) {
-            if (key.dir == FLOW_DIR_FROM_DMA || dep == NULL) {
+            if (dep == NULL) {
                 HAL_TRACE_ERR("Couldnt get SEP/DEP from session :{}", key);
                 return 0;
             }
@@ -2939,7 +2937,7 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
         }
     }
 
-    if (key.dir == FLOW_DIR_FROM_UPLINK) {
+    if (flow->config.dir == FLOW_DIR_FROM_UPLINK) {
         cpu_header->src_lif = HAL_LIF_CPU;
         if (flow->pgm_attrs.use_vrf) {
             pd::pd_vrf_get_fromcpu_vlanid_args_t args;
@@ -4717,7 +4715,6 @@ hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
     extract_flow_key_from_spec(req.flow_key().src_vrf_id(), &args.key, req.flow_key());
 
     HAL_TRACE_DEBUG("Flow key: {}", args.key);
-    args.key.dir = (req.flow_direction() == types::FLOW_DIRECTION_FROM_UPLINK)?FLOW_DIR_FROM_UPLINK:FLOW_DIR_FROM_DMA;
     args.hw_vrf_id = req.hardware_vrf_id();
     args.lkp_inst = req.flow_instance();
     args.rsp = rsp->add_response();

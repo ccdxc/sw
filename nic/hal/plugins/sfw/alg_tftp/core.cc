@@ -208,7 +208,7 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
              * Add an expected flow here for control session
              */
             ret = g_tftp_state->alloc_and_insert_exp_flow(l4_sess->app_session,
-                                                         key, &exp_flow);
+                                                           key, &exp_flow);
             SDK_ASSERT(ret == HAL_RET_OK);
             exp_flow->entry.handler = expected_flow_handler;
             exp_flow->alg = nwsec::APP_SVC_TFTP;

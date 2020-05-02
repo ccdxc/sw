@@ -264,9 +264,8 @@ app_redir_proxyrcb_proxyccb_create(fte::ctx_t& ctx)
      * our CBs for setting its redirect configurations).
      */
     if (ctx.pkt() && (ctx.role() ==  hal::FLOW_ROLE_INITIATOR)) {
-        const flow_key_t& flow_key = ctx.key();
 
-        if (flow_key.dir == hal::FLOW_DIR_FROM_DMA) {
+        if (ctx.direction() == hal::FLOW_DIR_FROM_DMA) {
 
             /*
              * initiator host-to-network: SYN, ACK
@@ -467,7 +466,6 @@ app_redir_flow_key_build_from_redir_hdr(fte::ctx_t& ctx,
 {
     flow_key_t      flow_key = {0};
 
-    flow_key.dir = dir;
     flow_key.svrf_id = flow_key.dvrf_id = ntohs(app_hdr.proxy.vrf);
     if (app_hdr.proxy.af == AF_INET) {
         flow_key.flow_type = hal::FLOW_TYPE_V4;
@@ -499,7 +497,6 @@ app_redir_flow_key_build_from_proxyrcb(fte::ctx_t& ctx,
 {
     flow_key_t      flow_key = {0};
 
-    flow_key.dir = proxyrcb.dir;
     flow_key.svrf_id = flow_key.dvrf_id = ntohs(proxyrcb.vrf);
     if (proxyrcb.af == AF_INET) {
         flow_key.flow_type = hal::FLOW_TYPE_V4;
@@ -897,7 +894,6 @@ app_redir_proxy_flow_info_get(fte::ctx_t& ctx,
              * Ignore direction - always set to 0 for flow_info lookup.
              */
             rev_flow_key = ctx.get_key(redir_ctx.chain_rev_role());
-            rev_flow_key.dir = 0;
 
             /*
              * lkpvrf is present in flow_key_t but the proxy_flow gRPC infra
@@ -1039,7 +1035,6 @@ app_redir_proxy_flow_info_update(fte::ctx_t& ctx,
      * Ignore direction - always set to 0 for flow_info lookup.
      */
     flow_key = ctx.key();
-    flow_key.dir = 0;
 
     /*
      * lkpvrf is present in flow_key_t but the proxy_flow gRPC infra

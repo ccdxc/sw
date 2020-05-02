@@ -236,7 +236,6 @@ app_redir_proxyrcb_flow_key_build(proxyrcb_t& proxyrcb,
            ((flow_key.flow_type == hal::FLOW_TYPE_V4) ||
             (flow_key.flow_type == hal::FLOW_TYPE_V6)));
 
-    proxyrcb.dir = flow_key.dir;
     proxyrcb.vrf = htons(flow_key.svrf_id);
     proxyrcb.ip_proto = IPPROTO_TCP;
     proxyrcb.sport = htons(flow_key.sport);

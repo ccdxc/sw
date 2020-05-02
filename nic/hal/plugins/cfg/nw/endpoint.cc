@@ -3382,13 +3382,13 @@ endpoint_migration_done_src_host (ep_t *ep, session_t *session, MigrationState m
         //    session itself will be deleted (during EP del)
         // 2) Flip by Direction bit only if it points to Host   
         if ((session->dep_handle != HAL_HANDLE_INVALID) &&
-            (session->iflow->config.key.dir == FLOW_DIR_FROM_DMA)) {
-            HAL_TRACE_VERBOSE("Update iFlow Dir:{} ", session->iflow->config.key.dir);
+            (session->iflow->config.dir == FLOW_DIR_FROM_DMA)) {
+            HAL_TRACE_VERBOSE("Update iFlow Dir:{} ", session->iflow->config.dir);
             g_hal_state->session_hal_iflow_ht()->\
                                  remove_entry(session, &session->hal_iflow_ht_ctxt);
             session->hal_iflow_ht_ctxt.reset();
 
-            session->iflow->config.key.dir = FLOW_DIR_FROM_UPLINK;
+            session->iflow->config.dir = FLOW_DIR_FROM_UPLINK;
 
             g_hal_state->session_hal_iflow_ht()->\
                                  insert(session, &session->hal_iflow_ht_ctxt);
@@ -3398,13 +3398,13 @@ endpoint_migration_done_src_host (ep_t *ep, session_t *session, MigrationState m
         //    session itself will be deleted (during EP del)
         // 2) Flip by Direction bit only if it points to Host   
         if ((session->sep_handle != HAL_HANDLE_INVALID) &&
-            (session->rflow->config.key.dir == FLOW_DIR_FROM_DMA)) {
-            HAL_TRACE_VERBOSE("Update rFlow Dir:{} ", session->rflow->config.key.dir);
+            (session->rflow->config.dir == FLOW_DIR_FROM_DMA)) {
+            HAL_TRACE_VERBOSE("Update rFlow Dir:{} ", session->rflow->config.dir);
             g_hal_state->session_hal_rflow_ht()->\
                                  remove_entry(session, &session->hal_rflow_ht_ctxt);
             session->hal_rflow_ht_ctxt.reset();
 
-            session->rflow->config.key.dir = FLOW_DIR_FROM_UPLINK;
+            session->rflow->config.dir = FLOW_DIR_FROM_UPLINK;
 
             g_hal_state->session_hal_rflow_ht()->\
                                  insert(session, &session->hal_rflow_ht_ctxt);
@@ -3424,25 +3424,25 @@ endpoint_migration_done_dst_host (ep_t *ep, session_t *session, MigrationState m
         // it has become (Local - Local) session, so update the direction bit to
         // HOST
         if (session->sep_handle == ep->hal_handle) {
-            if (session->iflow->config.key.dir == FLOW_DIR_FROM_UPLINK) {
-                HAL_TRACE_VERBOSE("Update iFlow Dir:{} ", session->iflow->config.key.dir);
+            if (session->iflow->config.dir == FLOW_DIR_FROM_UPLINK) {
+                HAL_TRACE_VERBOSE("Update iFlow Dir:{} ", session->iflow->config.dir);
                 g_hal_state->session_hal_iflow_ht()->\
                                      remove_entry(session, &session->hal_iflow_ht_ctxt);
                 session->hal_iflow_ht_ctxt.reset();
 
-                session->iflow->config.key.dir = FLOW_DIR_FROM_DMA;
+                session->iflow->config.dir = FLOW_DIR_FROM_DMA;
 
                 g_hal_state->session_hal_iflow_ht()->\
                                      insert(session, &session->hal_iflow_ht_ctxt);
             }
         } else if (session->rflow) {
-            if (session->iflow->config.key.dir == FLOW_DIR_FROM_UPLINK) {
-                HAL_TRACE_VERBOSE("Update rFlow Dir:{} ", session->rflow->config.key.dir);
+            if (session->iflow->config.dir == FLOW_DIR_FROM_UPLINK) {
+                HAL_TRACE_VERBOSE("Update rFlow Dir:{} ", session->rflow->config.dir);
                 g_hal_state->session_hal_rflow_ht()->\
                     remove_entry(session, &session->hal_rflow_ht_ctxt);
                 session->hal_rflow_ht_ctxt.reset();
 
-                session->rflow->config.key.dir = FLOW_DIR_FROM_DMA;
+                session->rflow->config.dir = FLOW_DIR_FROM_DMA;
 
                 g_hal_state->session_hal_rflow_ht()->\
                                      insert(session, &session->hal_rflow_ht_ctxt);

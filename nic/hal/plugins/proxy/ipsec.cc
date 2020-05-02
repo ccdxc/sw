@@ -554,9 +554,6 @@ ipsec_exec(fte::ctx_t& ctx)
         return ipsec_exec_pkt(ctx);
     }
 
-    // Ignore direction. Always set it to 0
-    flow_key.dir = 0;
-
     // get the flow info for the tcp proxy service
     pfi = proxy_get_flow_info(types::PROXY_TYPE_IPSEC,
                               flow_key);

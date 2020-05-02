@@ -593,7 +593,6 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
      */
     memset(&key, 0, sizeof(hal::flow_key_t));
     key = ctx.key();
-    key.dir = 0;
     key.sport = info->sport;
     key.dport = info->dport;
     key.sip = info->sip;
@@ -645,7 +644,6 @@ add_expected_flow_from_proto(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     flow_gate_key_from_proto(&expected_flow, proto_key);
 
     key             = ctx.key();
-    key.dir         = expected_flow.key.dir;
     key.sip.v4_addr = expected_flow.key.sip;
     key.dip.v4_addr = expected_flow.key.dip;
     key.proto       = (types::IPProtocol)expected_flow.key.proto;

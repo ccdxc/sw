@@ -25,7 +25,6 @@ namespace alg_utils {
 
 #define FTE_MAX_EXPECTED_FLOWS 524288
 #define SET_EXP_FLOW_KEY(key, hal_key) {   \
-     key.dir = hal_key.dir;              \
      key.svrf_id = hal_key.svrf_id;      \
      key.dvrf_id = hal_key.dvrf_id;      \
      key.sip = hal_key.sip.v4_addr;      \
@@ -43,7 +42,6 @@ typedef struct expected_flow_s expected_flow_t;
 typedef hal_ret_t (*expected_flow_handler_t)(fte::ctx_t& ctx, expected_flow_t* entry);
 
 typedef struct exp_flow_key_ {
-    uint8_t      dir;
     vrf_id_t     svrf_id;
     vrf_id_t     dvrf_id;
     ipv4_addr_t  sip;

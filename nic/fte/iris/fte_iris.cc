@@ -58,7 +58,7 @@ ctx_t::extract_flow_key()
 
     SDK_ASSERT_RETURN(cpu_rxhdr_ != NULL && pkt_ != NULL, HAL_RET_INVALID_ARG);
 
-    key_.dir = cpu_rxhdr_->lkp_dir;
+    direction_ = (hal::flow_direction_t)cpu_rxhdr_->lkp_dir;
     key_.lkpvrf = cpu_rxhdr_->lkp_vrf;
     HAL_TRACE_DEBUG("Lkp vrf: {}", key_.lkpvrf);
     args.flow_lkupid = cpu_rxhdr_->lkp_vrf;
@@ -307,20 +307,7 @@ hal_ret_t
 ctx_t::lookup_session()
 {
     session_ = hal::session_lookup(key_, &role_);
-
-    if ((sync_session_request()) && (!session_)) {
-        // In case of Session Sync for vMotions, direction bit will be reverse in the old
-        // host. Flip the direction bit and lookup the session 
-        key_.dir = !key_.dir;
-        session_ = hal::session_lookup(key_, &role_);
-    }
-
     if (!session_) {
-        if (sync_session_request()) {
-            // Flip back the direction bit as how it was, so that session will be created
-            // with same direction bit as how received in session sync
-            key_.dir = !key_.dir;
-        }
         HAL_TRACE_DEBUG("fte: session not found role:{}", role_);
         return HAL_RET_SESSION_NOT_FOUND;
     }
@@ -358,6 +345,7 @@ ctx_t::create_session()
     HAL_TRACE_DEBUG("Key: {}", key_);
     for (int i = 0; i < MAX_STAGES; i++) {
         iflow_[i]->set_key(key_);
+        iflow_[i]->set_direction(direction_);
         iflow_[i]->set_l2_info(l2_info);
     }
 
@@ -396,7 +384,7 @@ ctx_t::create_session()
     }
 
     if (valid_rflow_) {
-        rkey_.dir = (dep_ && (dep_->ep_flags & EP_FLAGS_LOCAL)) ?
+        rdirection_ = (dep_ && (dep_->ep_flags & EP_FLAGS_LOCAL)) ?
             hal::FLOW_DIR_FROM_DMA : hal::FLOW_DIR_FROM_UPLINK;
         if (cpu_rxhdr_ != NULL) {
             ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
@@ -405,6 +393,7 @@ ctx_t::create_session()
         }
         for (int i = 0; i < MAX_STAGES; i++) {
             rflow_[i]->set_key(rkey_);
+            rflow_[i]->set_direction(rdirection_);
             rflow_[i]->set_l2_info(l2_info);
         }
     }
@@ -436,7 +425,7 @@ static inline void fw_log(ipc_logger *logger, fwlog::FWEvent ev)
 //------------------------------------------------------------------------------
 inline void
 ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
-                  fte_flow_log_info_t *log) {
+                  fte_flow_log_info_t *log, hal::flow_direction_t direction) {
     timespec_t      ctime;
     int64_t         ctime_ns;
 
@@ -457,7 +446,7 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
         t_fwlg.set_icmpid(key.icmp_id);
     }
 
-    t_fwlg.set_direction((key.dir == hal::FLOW_DIR_FROM_UPLINK) ?
+    t_fwlg.set_direction((direction == hal::FLOW_DIR_FROM_UPLINK) ?
                          types::FLOW_DIRECTION_FROM_UPLINK :\
                          types::FLOW_DIRECTION_FROM_HOST);
     clock_gettime(CLOCK_REALTIME, &ctime);
@@ -802,9 +791,9 @@ end:
  
             /* Add flow logging only for initiator flows */
             uint8_t istage = 0;
-            add_flow_logging(key_, session_handle, &iflow_log_[istage]);
+            add_flow_logging(key_, session_handle, &iflow_log_[istage], direction_);
             if (++istage <= istage_)
-                add_flow_logging(key_, session_handle, &iflow_log_[istage]);
+                add_flow_logging(key_, session_handle, &iflow_log_[istage], direction_);
         }
     }
 
@@ -877,12 +866,13 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
             if (header.valid_flds.dvrf_id)
                 rkey_.svrf_id = key_.dvrf_id;
         }
-        rkey_.dir = (dep_ && dep_->ep_flags & EP_FLAGS_LOCAL) ?
+        rdirection_ = (dep_ && dep_->ep_flags & EP_FLAGS_LOCAL) ?
             hal::FLOW_DIR_FROM_DMA : hal::FLOW_DIR_FROM_UPLINK;
 
         // update rflow key
         for (int i = 0; i < MAX_STAGES; i++) {
             rflow_[i]->set_key(rkey_);
+            rflow_[i]->set_direction(rdirection_);
         }
     }
 

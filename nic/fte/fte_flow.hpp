@@ -48,6 +48,21 @@ public:
         return valid_.action;
     };
 
+    hal_ret_t set_direction(hal::flow_direction_t direction) {
+        if (direction_ == direction) {
+            return HAL_RET_ENTRY_EXISTS;
+        }
+        direction_ = direction;
+        valid_.direction = true;
+        return HAL_RET_OK;
+    }
+    hal::flow_direction_t direction() const {
+        return direction_;
+    };
+    bool valid_direction() const {
+        return valid_.direction;
+    };
+
     hal_ret_t set_flow_state(const flow_state_t& flow_state) {
         flow_state_ = flow_state;
         valid_.flow_state = true;
@@ -302,12 +317,14 @@ private:
         uint16_t aging_info:1;
         uint16_t l2_info:1;
         uint16_t sfw_info:1;
+        uint16_t direction:1;
      } valid_;
 
     hal::flow_key_t           key_;                 // flow's key
     hal::flow_pgm_attrs_t     attrs_;               // Restored flow attrs
     hal::flow_key_t           l2_info_;             // flow's l2 info
 
+    hal::flow_direction_t     direction_;           // flow's direction
     session::FlowAction       action_;              // firwall action
     flow_state_t              flow_state_;          // connection tracking
     fwding_info_t             fwding_;              // Fwding info

@@ -299,7 +299,6 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
      * If Naples is used for firewall, the clients could be
      * from outside or inside
      */
-    key.dir   = 0;
     key.sport = 0;
     key.dip = rpc_info->ip;
     key.dport = rpc_info->dport;

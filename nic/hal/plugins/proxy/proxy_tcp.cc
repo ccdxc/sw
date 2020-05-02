@@ -747,9 +747,6 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     proxy_flow_info_t*      pfi = NULL;
     flow_key_t              flow_key = ctx.key();
 
-    // Ignore direction. Always set it to 0
-    flow_key.dir = 0;
-
     // no need to enable proxy if both src and dest are local
     if(is_local_ep(ctx.sif()) && is_local_ep(ctx.dif())) {
         HAL_TRACE_VERBOSE("tcp-proxy: skipping proxy when both src/dest are local");
@@ -982,9 +979,6 @@ tcp_exec_trigger_connection(fte::ctx_t& ctx)
         HAL_TRACE_VERBOSE("protobuf request. ignoring.");
         return fte::PIPELINE_CONTINUE;
     }
-
-    // Ignore direction for lookup. Always set it to 0
-    flow_key.dir = 0;
 
     // get the flow info for the tcp proxy service
     pfi = tcp_proxy_get_flow_info(flow_key);

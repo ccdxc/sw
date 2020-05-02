@@ -583,9 +583,9 @@ public:
 
 
     // direction of the current pkt
-    hal::flow_direction_t direction() const { return (hal::flow_direction_t)(key().dir); }
+    hal::flow_direction_t direction() const { return direction_; }
     // direction of the currnet flow being processed
-    hal::flow_direction_t flow_direction() const { return (hal::flow_direction_t)(get_key().dir); }
+    hal::flow_direction_t flow_direction() const { return rdirection_; }
 
 
     // Following are valid only for packets punted to ARM
@@ -764,7 +764,7 @@ public:
         }
     }
     inline void add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl,
-                          fte_flow_log_info_t *fwlog);
+                          fte_flow_log_info_t *fwlog, hal::flow_direction_t direction);
     void set_ipc_logging_disable(bool val) { ipc_logging_disable_ = val; }
     bool ipc_logging_disable(void) { return ipc_logging_disable_; }
     bool is_flow_swapped(void) { return is_flow_swapped_; }
@@ -856,6 +856,8 @@ private:
     uint16_t              payload_len_;
     uint64_t              featureid_bitmap_;
     hal::nwsec_profile_t *nwsec_prof_;
+    hal::flow_direction_t direction_;
+    hal::flow_direction_t rdirection_;
 
     void init_ctxt_from_session(hal::session_t *session);
     hal_ret_t init_flows(flow_t iflow[], flow_t rflow[]);

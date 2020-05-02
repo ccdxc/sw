@@ -724,7 +724,7 @@ ctx_t::is_proxy_flow()
 
     // In the case of pkts from uplink, stage 0 flow is proxy flow and
     // in the case of pkts from host, stage 1 flow is the proxy flow
-    return (flow[stage()]->key().dir == hal::FLOW_DIR_FROM_UPLINK) ?
+    return (flow[stage()]->direction() == hal::FLOW_DIR_FROM_UPLINK) ?
                                 stage() == 0 : stage() != 0;
 }
 

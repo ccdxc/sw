@@ -108,7 +108,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 // Add IPC based flow logging 
 //------------------------------------------------------------------------------
 void ctx_t::add_flow_logging(hal::flow_key_t key, hal_handle_t sess_hdl,
-                          fte_flow_log_info_t *fwlog) 
+                          fte_flow_log_info_t *fwlog, hal::flow_direction_t direction) 
 {
 
 }

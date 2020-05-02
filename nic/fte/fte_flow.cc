@@ -474,6 +474,7 @@ hal_ret_t flow_t::to_config(hal::flow_cfg_t &config, hal::flow_pgm_attrs_t &attr
     hal_ret_t ret;
 
     config.key = key_;
+    config.dir = direction_; 
     memcpy(config.l2_info.smac, l2_info_.smac, sizeof(config.l2_info.smac));
     memcpy(config.l2_info.dmac, l2_info_.dmac, sizeof(config.l2_info.dmac));
     config.l2_info.l2seg_id = l2_info_.l2seg_id;
@@ -630,6 +631,9 @@ void flow_t::from_config(const hal::flow_cfg_t &flow_cfg,
 
     key_ = flow_cfg.key;
     valid_.key = 1;
+
+    direction_ = (hal::flow_direction_t)flow_cfg.dir;
+    valid_.direction = 1;
  
     l2_info_.l2seg_id = flow_cfg.l2_info.l2seg_id;
     memcpy(l2_info_.smac, flow_cfg.l2_info.smac, sizeof(l2_info_.smac));

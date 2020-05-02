@@ -344,7 +344,8 @@ end:
 }
 
 hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
-                      hal::flow_key_t key, l4_alg_status_t **expected_flow,
+                      hal::flow_key_t key, 
+                      l4_alg_status_t **expected_flow,
                       bool enable_timer, uint32_t time_intvl,
                       bool find_existing) {
     exp_flow_timer_cb_t   *timer_ctxt = NULL;
