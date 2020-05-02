@@ -26,7 +26,8 @@ pds_route_attrs_proto_to_api_spec (pds_route_attrs_t *route_attrs,
 {
     ippfx_proto_spec_to_api_spec(&route_attrs->prefix,
                                  proto_route_attrs.prefix());
-    route_attrs->prio = proto_route_attrs.priority();
+    route_attrs->class_priority = proto_route_attrs.classpriority();
+    route_attrs->priority = proto_route_attrs.priority();
     switch (proto_route_attrs.nh_case()) {
     case pds::RouteAttrs::kNextHop:
     case pds::RouteAttrs::kTunnelId:
@@ -140,7 +141,8 @@ pds_route_attrs_api_spec_to_proto (pds::RouteAttrs *proto_route_attrs,
 {
     ippfx_api_spec_to_proto_spec(proto_route_attrs->mutable_prefix(),
                                  &route_attrs->prefix);
-    proto_route_attrs->set_priority(route_attrs->prio);
+    proto_route_attrs->set_classpriority(route_attrs->class_priority);
+    proto_route_attrs->set_priority(route_attrs->priority);
     switch (route_attrs->nh_type) {
     case PDS_NH_TYPE_OVERLAY:
         proto_route_attrs->set_tunnelid(route_attrs->tep.id,

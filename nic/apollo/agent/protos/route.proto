@@ -39,10 +39,22 @@ message NATAction {
 }
 
 // route attributes
+//
+// routes can be classified into various classes (e.g. service routes, static
+// routes, Internet routes etc.) and within each class of routes, they can
+// have priority instead of standard longest prefix semantics
+// route class priority can be used to pick higher priority routes among all
+// route matches and it can also be used to configure some routes (or class of
+// routes) with priority higher than the IP mappings as well in case both
+// route table and mapping table get a hit for a given packet
 message RouteAttrs {
   // IP prefix
   types.IPPrefix      Prefix         = 1 [(gogoproto.moretags) = "meta:mandatory"];
-  // priority of the route
+  // priority of the route class this route belongs to
+  // NOTE: ClassPriority attribute is used only when PriorityEn is set to true
+  //       on the corresponding routing table
+  uint32              ClassPriority  = 2 [(gogoproto.moretags) = "meta:range:0-63"];
+  // priority of the route within the class
   // NOTE:
   // 1. lower the numerical value, higher the priority in the datapath
   // 2. a route table MUST have either all the routes with priority set or no
@@ -52,31 +64,33 @@ message RouteAttrs {
   // 4. if no priority value is set (i.e. 0) then route priority is computed as
   //    128 - <prefix length>, so longer prefixes will have higher precedence
   //    over shorter ones giving regular LPM semantics
-  uint32              Priority       = 2 [(gogoproto.moretags) = "meta:range:0-65535"];
+  // 5. Priority attribute on the route is used only when PriorityEn is set to
+  //    true on the corresponding routing table
+  uint32              Priority       = 3 [(gogoproto.moretags) = "meta:range:0-1023"];
   // route either points to a Nexthop ID or peer-VPC in case of VPC peering
   oneof nh {
       // TODO: this should be obsoleted in apollo, TunnelId should be used
-      types.IPAddress NextHop        = 3;
+      types.IPAddress NextHop        = 4;
       // nexthop for this route
-      bytes           NexthopId      = 4;
+      bytes           NexthopId      = 5;
       // ECMP nexthop for this route
-      bytes           NexthopGroupId = 5;
+      bytes           NexthopGroupId = 6;
       // peer VPC in case of VPC peering
-      bytes           VPCId          = 6;
+      bytes           VPCId          = 7;
       // Tunnel this prefix is pointing to
-      bytes           TunnelId       = 7;
+      bytes           TunnelId       = 8;
       // vnic this prefix is pointing to
-      bytes           VnicId         = 8;
+      bytes           VnicId         = 9;
   }
   // if NATAction is set, source and/or destination NAT will be performed on
   // the packet and if destination NAT is performed, another route lookup
   // will be done in the same route table with the post-NAT destination IP
   // address being rewritten
-  NATAction           NatAction      = 9;
+  NATAction           NatAction      = 10;
   // if MeterEn is true, when traffic from a vnic hits the route and
   // metering is enabled on that vnic, such traffic is accounted (bytes &
   // packets) against the vnic
-  bool                MeterEn        = 10;
+  bool                MeterEn        = 11;
 }
 
 // route configuration information

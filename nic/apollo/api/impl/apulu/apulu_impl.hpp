@@ -25,6 +25,9 @@
 // system wide blackhole nexthop
 #define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID    0
 
+// system drop route's class priority must be the lowest priority
+#define PDS_IMPL_SYSTEM_DROP_ROUTE_CLASS_PRIO 63
+
 // reserved VNIC h/w id
 #define PDS_IMPL_RSVD_VNIC_HW_ID               0
 

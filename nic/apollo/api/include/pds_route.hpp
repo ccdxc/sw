@@ -29,15 +29,26 @@
 
 typedef struct pds_route_attrs_s {
     ip_prefix_t                 prefix;   ///< prefix
+    /// priority of the route class this route belongs to
     /// NOTE:
-    /// 1. priority value must be non-zero
+    /// 1. priority_class is used only when priority_en is set to true on the
+    /// corresponding route table
+    /// 2. priority_class value must be between 0 and 63
+    uint8_t                     class_priority;
+    /// NOTE:
+    /// 1. priority value must be between 0 and 1023
     /// 2. lower the numerical value, higher the priority
     /// 3. a route table MUST have either all the routes with priority set or no
     ///    priority set on all the routes
-    /// 4. if no priority value is set (i.e. 0) then route priority is computed
+    /// 4. if multiple routes have same priority, route with longest prefix
+    ///    length will take effect
+    /// 5. if no priority value is set (i.e. 0) then route priority is computed
     ///    as 128 - <prefix length>, so longer prefixes will have higher
     ///    precedence over shorter ones giving regular LPM semantics
-    uint32_t                    prio;     ///< priority of the route
+    /// 6. priority attribute on the route is used only when priority_en is set
+    ///    to true on the corresponding routing table
+    uint32_t                    priority; ///< priority of the route
+                                          ///< within the class
     pds_nh_type_t               nh_type;  ///< nexthop type
     union {
         /// PDS_NH_TYPE_OVERLAY specific data

@@ -75,16 +75,18 @@ message DeviceSpec {
   // NOTE: when operational mode is modified, it will take affect only after
   //       next reboot of NAPLES/DSC
   bool            OverlayRoutingEn =  10 [(gogoproto.moretags) = "meta:mandatory"];
-  /// priority of IP mapping entries (this priority, if configured, will be
-  /// used to break the tie in case both LPM/prefix and a mapping entry are
-  /// hit in the datapath (i.e., /32 IP mapping entry is also in some LPM
-  ///prefix)
-  /// NOTE:
-  /// 1. by default IP mapping always takes precedence over LPM hit and
-  ///    default value of this attribute is 0 (lower the numerical value,
-  ///    the higher the priority, hence 0 is the highest priority)
-  /// 2. valid priority value range is 0 to 1022
-  uint32          IPMappingPriority = 11 [(gogoproto.moretags) = "meta:range:0-65535"];
+  // priority of IP mapping entries (this priority, if configured, will be
+  // used to break the tie in case both LPM/prefix and a mapping entry are
+  // hit in the datapath (i.e., /32 IP mapping entry is also in some LPM
+  //prefix)
+  // NOTE:
+  // 1. by default IP mapping always takes precedence over LPM hit and
+  //    default value of this attribute is 0 (lower the numerical value,
+  //    the higher the priority, hence 0 is the highest priority)
+  // 2. valid priority value range is 0 to 1023
+  // 3. if mapping and route are both hit and both have same priority,
+  //    mapping result will take precedence over route (even if it is /32 route)
+  uint32          IPMappingPriority = 11 [(gogoproto.moretags) = "meta:range:0-1023"];
 }
 
 // device operational status

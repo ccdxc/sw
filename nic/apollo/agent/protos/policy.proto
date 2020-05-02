@@ -59,9 +59,11 @@ message SecurityPolicySpec {
   types.IPAF                AddrFamily      = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // DefaultFWAction is the action taken by the firewall when SG policies are
   // configured on vnic but no rule is hit. Similarly, when NACLs are configured
-  // on a subnet and no rule is hit, this action is taken by the firewall
-  // if this attribute is not set, by default "allow" action is assumed
-  types.SecurityRuleAction  DefaultFWAction = 3 [(gogoproto.moretags) = "meta:default=SECURITY_RULE_ACTION_ALLOW"];
+  // on a subnet and no rule is hit, this action is taken by the firewall.
+  // if this attribute is not set, by default "deny" action is assumed
+  // NOTE: when no policy is configured on subnet and vnic, this knob doesn't
+  //       apply and traffic is allowed in that case
+  types.SecurityRuleAction  DefaultFWAction = 3 [(gogoproto.moretags) = "meta:default=SECURITY_RULE_ACTION_DENY"];
   // list of security rules
   repeated SecurityRuleInfo Rules           = 4 [(gogoproto.moretags) = "meta:mandatory"];
 }

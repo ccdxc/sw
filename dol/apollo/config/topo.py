@@ -56,7 +56,7 @@ def EthIfIdx2Port(ethifindex):
     return ((ethifindex >> ETH_IF_PARENT_PORT_SHIFT) & ETH_IF_PARENT_PORT_MASK)
 
 DEFAULT_ROUTE_PRIORITY = 0
-MIN_ROUTE_PRIORITY = 65535
+MIN_ROUTE_PRIORITY = 1023
 MAX_ROUTE_PRIORITY = 1
 
 class NhType(enum.IntEnum):

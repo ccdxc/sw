@@ -40,11 +40,13 @@
         (nh_val_) &= ~(ROUTE_RESULT_DNAT_EN_MASK|ROUTE_RESULT_DNAT_IDX_MASK);\
     }                                                                        \
 }
-#define PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val_, type_, nh_id_)                  \
+#define PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val_, type_, prio_, nh_id_)           \
             (nh_val_) |= (((type_ << ROUTE_RESULT_NHTYPE_SHIFT)              \
                                    & ROUTE_RESULT_NHTYPE_MASK) |             \
                           ((nh_id_ << ROUTE_RESULT_NEXTHOP_SHIFT)            \
-                                    & ROUTE_RESULT_NEXTHOP_MASK));
+                                    & ROUTE_RESULT_NEXTHOP_MASK) |           \
+                          (((prio_) << ROUTE_RESULT_PRIORITY_SHIFT)          \
+                                    & ROUTE_RESULT_PRIORITY_MASK));
 
 namespace api {
 namespace impl {
@@ -306,6 +308,16 @@ route_table_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
 
     for (uint32_t i = 0; i < spec->route_info->num_routes; i++) {
         route_spec = &spec->route_info->routes[i];
+        if ((spec->route_info->priority_en) &&
+            ((route_spec->attrs.class_priority > 63) ||
+             (route_spec->attrs.priority > 1023))) {
+            PDS_TRACE_ERR("route table %s has route %s with invalid class "
+                          "priority %u or priority %u", spec->key.str(),
+                          ippfx2str(&route_spec->attrs.prefix),
+                          route_spec->attrs.class_priority,
+                          route_spec->attrs.priority);
+            return SDK_RET_INVALID_ARG;
+        }
         if ((route_spec->attrs.nat.dst_nat_ip.af == IP_AF_IPV4) ||
             (route_spec->attrs.nat.dst_nat_ip.af == IP_AF_IPV6)) {
             num_dnat_entries_++;
@@ -402,6 +414,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
     rtable->priority_en = spec->route_info->priority_en;
     rtable->default_nhid = 0;
     PDS_IMPL_NH_VAL_SET_NH_INFO(rtable->default_nhid, NEXTHOP_TYPE_NEXTHOP,
+                                PDS_IMPL_SYSTEM_DROP_ROUTE_CLASS_PRIO,
                                 PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
     if (rtable->af == IP_AF_IPV4) {
         rtable->max_routes = route_table_impl_db()->v4_max_routes();
@@ -417,7 +430,9 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
         // length to compute the priority (to provide longest prefix matching
         // semantics)
         if (rtable->priority_en) {
-            rtable->routes[i].prio = route_spec->attrs.prio;
+            rtable->routes[i].prio =
+                (route_spec->attrs.class_priority << 10) |
+                route_spec->attrs.priority;
         } else {
             rtable->routes[i].prio = 128 - route_spec->attrs.prefix.len;
         }
@@ -496,11 +511,9 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                 ret = SDK_RET_HW_PROGRAM_ERR;
                 goto cleanup;
             }
-
-            PDS_TRACE_DEBUG("Programmed NAT2 table at %u for IP %s",
-                            (dnat_base_idx_ + dnat_idx) * 2,
-                            ipaddr2str(&route_spec->attrs.nat.dst_nat_ip));
-
+            PDS_TRACE_VERBOSE("Programmed NAT2 table at %u for IP %s",
+                              (dnat_base_idx_ + dnat_idx) * 2,
+                              ipaddr2str(&route_spec->attrs.nat.dst_nat_ip));
             // program reverse entry in nat2 table
             if (route_spec->attrs.prefix.addr.af == IP_AF_IPV4) {
                 memcpy(nat2_data.action_u.nat2_nat2_rewrite.ip,
@@ -521,10 +534,9 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                 ret = SDK_RET_HW_PROGRAM_ERR;
                 goto cleanup;
             }
-
-            PDS_TRACE_DEBUG("Programmed NAT2 table at %u for IP %s",
-                            (dnat_base_idx_ + dnat_idx) * 2 + 1,
-                            ipaddr2str(&route_spec->attrs.prefix.addr));
+            PDS_TRACE_VERBOSE("Programmed NAT2 table at %u for IP %s",
+                              (dnat_base_idx_ + dnat_idx) * 2 + 1,
+                              ipaddr2str(&route_spec->attrs.prefix.addr));
             dnat_idx++;
             continue;
         } else {
@@ -534,6 +546,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
         switch (route_spec->attrs.nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_NEXTHOP,
+                                        route_spec->attrs.class_priority,
                                         PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
             rtable->routes[i].nhid = nh_val;
             PDS_TRACE_DEBUG("Processing route table %s, route %s -> blackhole "
@@ -554,6 +567,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                 goto cleanup;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_TUNNEL,
+                                        route_spec->attrs.class_priority,
                                         ((tep_impl *)(tep->impl()))->hw_id1());
             rtable->routes[i].nhid = nh_val;
             PDS_TRACE_DEBUG("Processing route table %s, route %s prio %u -> "
@@ -576,6 +590,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                 goto cleanup;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_ECMP,
+                                        route_spec->attrs.class_priority,
                 ((nexthop_group_impl *)nh_group->impl())->hw_id());
             rtable->routes[i].nhid = nh_val;
             PDS_TRACE_DEBUG("Processing route table %s, route %s -> "
@@ -596,6 +611,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                 goto cleanup;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_VPC,
+                                        route_spec->attrs.class_priority,
                                         ((vpc_impl *)vpc->impl())->hw_id());
             rtable->routes[i].nhid = nh_val;
             PDS_TRACE_DEBUG("Processing route table %s, route %s -> vpc %s, "
@@ -615,6 +631,7 @@ route_table_impl::program_route_table_(pds_route_table_spec_t *spec) {
                  break;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_NEXTHOP,
+                                        route_spec->attrs.class_priority,
                                         ((vnic_impl *)vnic->impl())->nh_idx());
             rtable->routes[i].nhid = nh_val;
             PDS_TRACE_DEBUG("Processing route table %s, route %s -> vnic %s, "
