@@ -4285,7 +4285,7 @@ func TestMemdbCtrlWatchTopo(t *testing.T) {
 	}
 
 	md.SetWatchFilterFlags(wFlags)
-
+	md.EnableSelctivePush("Interface")
 	watchers := []Watcher{}
 	for i := 0; i < 2; i++ {
 		w := Watcher{}
@@ -4630,7 +4630,7 @@ func TestMemdbCtrlWatchTopo(t *testing.T) {
 	}
 
 	//for _, ni := range nwif {
-	err = md.AddObject(nwif[0])
+	_, err = md.AddPushObject(nwif[0].GetObjectMeta().GetKey(), nwif[0], nil, nil)
 	AssertOk(t, err, "nwif add failed")
 	//}
 	fmt.Println(md.topoHandler.dump())
@@ -4649,7 +4649,7 @@ func TestMemdbCtrlWatchTopo(t *testing.T) {
 		}
 	}
 
-	err = md.UpdateObject(nwif[1])
+	_, err = md.AddPushObject(nwif[1].GetObjectMeta().GetKey(), nwif[1], nil, nil)
 	AssertOk(t, err, "nwif update failed")
 
 	fmt.Println(md.topoHandler.dump())
@@ -4706,7 +4706,7 @@ func TestMemdbCtrlWatchTopo(t *testing.T) {
 	}
 
 	// detach the network
-	err = md.UpdateObject(nwif[2])
+	_, err = md.AddPushObject(nwif[2].GetObjectMeta().GetKey(), nwif[2], nil, nil)
 	AssertOk(t, err, "nwif update failed")
 
 	fmt.Println(md.topoHandler.dump())
@@ -4751,6 +4751,7 @@ func TestMemdbCtrlWatchVrfUpdate(t *testing.T) {
 	}
 
 	md.SetWatchFilterFlags(wFlags)
+	md.EnableSelctivePush("Interface")
 
 	watchers := []Watcher{}
 	for i := 0; i < 3; i++ {
@@ -4930,7 +4931,7 @@ func TestMemdbCtrlWatchVrfUpdate(t *testing.T) {
 	}
 
 	for _, i := range nwIf {
-		err = md.AddObject(i)
+		_, err = md.AddPushObject(i.GetObjectMeta().GetKey(), i, nil, nil)
 		AssertOk(t, err, "nwIf add failed")
 	}
 
@@ -4990,6 +4991,7 @@ func TestMemdbCtrlWatchNwUpdate(t *testing.T) {
 	}
 
 	md.SetWatchFilterFlags(wFlags)
+	md.EnableSelctivePush("Interface")
 
 	watchers := []Watcher{}
 	for i := 0; i < 3; i++ {
@@ -5206,7 +5208,7 @@ func TestMemdbCtrlWatchNwUpdate(t *testing.T) {
 	}
 
 	for _, i := range nwIf {
-		err = md.AddObject(i)
+		_, err = md.AddPushObject(i.GetObjectMeta().GetKey(), i, nil, nil)
 		AssertOk(t, err, "nwIf add failed")
 	}
 

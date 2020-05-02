@@ -220,6 +220,7 @@ type objDBInterface interface {
 	setObject(key string, obj objIntf)
 	deleteObject(key string)
 	dbType() objDBType
+	dumpObjects()
 	Lock()
 	Unlock()
 }
@@ -242,9 +243,9 @@ type watchFiltersetInterface interface {
 }
 
 type topoMgrInterface interface {
-	handleAddEvent(obj Object)
-	handleUpdateEvent(old, new Object)
-	handleDeleteEvent(obj Object)
+	handleAddEvent(obj Object, key string)
+	handleUpdateEvent(old, new Object, key string)
+	handleDeleteEvent(obj Object, key string)
 	dump() string
 }
 
@@ -679,6 +680,12 @@ func (od *Objdb) getObject(key string) objIntf {
 	return obj
 }
 
+func (od *Objdb) dumpObjects() {
+	for key, obj := range od.objects {
+		log.Infof("Key: %s | objmeta: %v", key, obj.Object().GetObjectMeta())
+	}
+}
+
 func (od *Objdb) setObject(key string, obj objIntf) {
 	od.objects[key] = obj.(*objState)
 }
@@ -703,6 +710,12 @@ func (od *pushObjDB) getObject(key string) objIntf {
 		return nil
 	}
 	return obj
+}
+
+func (od *pushObjDB) dumpObjects() {
+	for key, obj := range od.objects {
+		log.Infof("Key: %s | objmeta: %v", key, obj.Object().GetObjectMeta())
+	}
 }
 
 func (md *Memdb) getPObjectDBByType(kind string) objDBInterface {
@@ -742,7 +755,7 @@ func (md *Memdb) addObject(od objDBInterface, key string, obj objIntf, refs map[
 		obj.Lock()
 		obj.resolved()
 		obj.Unlock()
-		md.topoHandler.handleAddEvent(obj.Object())
+		md.topoHandler.handleAddEvent(obj.Object(), key)
 		od.watchEvent(md, obj, CreateEvent)
 		md.dbAddResolver.trigger(key, obj.Object())
 	} else {
@@ -801,9 +814,9 @@ func (md *Memdb) updateObject(od objDBInterface, key string, obj objIntf, refs m
 		ostate.Unlock()
 
 		if event == CreateEvent {
-			md.topoHandler.handleAddEvent(obj.Object())
+			md.topoHandler.handleAddEvent(obj.Object(), key)
 		} else {
-			md.topoHandler.handleUpdateEvent(old, obj.Object())
+			md.topoHandler.handleUpdateEvent(old, obj.Object(), key)
 		}
 
 		od.watchEvent(md, ostate, event)
@@ -918,7 +931,7 @@ func (md *Memdb) deleteObject(od objDBInterface, key string, obj objIntf, refs m
 		od.Lock()
 		od.deleteObject(key)
 		od.Unlock()
-		md.topoHandler.handleDeleteEvent(obj.Object())
+		md.topoHandler.handleDeleteEvent(obj.Object(), key)
 		od.watchEvent(md, existingObj, DeleteEvent)
 		md.dbDelResolver.trigger(key, obj.Object())
 	} else {

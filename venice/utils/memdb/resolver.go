@@ -145,10 +145,10 @@ func (r *addResolver) trigger(key string, obj Object) error {
 						if r.resolvedCheck(referrerObj.Key(), referrerObj.Object()) {
 							log.Infof("Object key %v resolved\n", referrerObj.Key())
 							if referrerObj.isUpdateUnResolved() {
-								r.md.topoHandler.handleUpdateEvent(nil, referrerObj.Object())
+								r.md.topoHandler.handleUpdateEvent(nil, referrerObj.Object(), key)
 								objDB.watchEvent(r.md, referrerObj, UpdateEvent)
 							} else {
-								r.md.topoHandler.handleAddEvent(referrerObj.Object())
+								r.md.topoHandler.handleAddEvent(referrerObj.Object(), key)
 								objDB.watchEvent(r.md, referrerObj, CreateEvent)
 							}
 							referrerObj.resolved()
@@ -220,7 +220,7 @@ func (r *deleteResolver) trigger(key string, obj Object) error {
 							inFlightObjects = append(inFlightObjects, transitQueue{key: referenceObj.Key(),
 								obj: referenceObj.Object()})
 							log.Infof("Object key %v resolved\n", referenceObj.Key())
-							r.md.topoHandler.handleDeleteEvent(referenceObj.Object())
+							r.md.topoHandler.handleDeleteEvent(referenceObj.Object(), key)
 							objDB.deleteObject(getRefKey(reference))
 							objDB.watchEvent(r.md, referenceObj, DeleteEvent)
 							for _, pobj := range referenceObj.getAndClearPending() {
