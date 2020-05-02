@@ -130,6 +130,22 @@ vpc:
           domainname       : "pensando.io"
           filename         : "test"
           interfacemtu     : 9000
+        - id               : 11
+          serverip         : '64.0.0.1'
+          ntpserver        : '64.0.0.5'
+          routers          : '64.0.0.1'
+          dnsserver        : '64.0.0.1'
+          domainname       : "pensando.io"
+          filename         : "test"
+          interfacemtu     : 9000
+        - id               : 12
+          serverip         : '10.0.200.1'
+          ntpserver        : '10.0.200.5'
+          routers          : '10.0.200.1'
+          dnsserver        : '10.0.200.1'
+          domainname       : "pensando.io"
+          filename         : "test"
+          interfacemtu     : 9000
       subnet:
         - id               : 1
           count            : 1
@@ -140,7 +156,7 @@ vpc:
           fabricencapvalue : 202
           v4routerip       : '2.1.0.1'
           vroutermac       : macaddr/0055.0100.0001
-          dhcppolicy       : 10 
+          dhcppolicy       : 10
           vnic:
             - id        : 1
               count     : 1             # 1 untagged VNIC
@@ -189,6 +205,7 @@ vpc:
           fabricencapvalue : 60001
           v4routerip       : '64.0.0.1'
           vroutermac       : macaddr/0055.0100.0002
+          dhcppolicy       : 11
           vnic:
             - id        : 100
               count     : 1             # 1 untagged VNIC
@@ -219,6 +236,7 @@ vpc:
           fabricencapvalue : 60002
           v4routerip       : '10.0.200.1'
           vroutermac       : macaddr/0055.0100.0003
+          dhcppolicy       : 12
           vnic:
             - id        : 101
               count     : 1             # 1 untagged VNIC

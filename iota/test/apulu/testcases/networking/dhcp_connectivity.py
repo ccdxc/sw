@@ -28,7 +28,7 @@ def verify_dhcp_ips():
 
     for workload, cmd in zip(workloads.keys(), resp.commands):
         if workload.ip_address not in cmd.stdout:
-            api.Logger.error( "DHCP didn't fetch expected address, expected: %s", workload.ipaddress)
+            api.Logger.error( "DHCP didn't fetch expected address, expected: %s", workload.ip_address)
             api.PrintCommandResults(cmd)
             return api.types.status.FAILURE
 

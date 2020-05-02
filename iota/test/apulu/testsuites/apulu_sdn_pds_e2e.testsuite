@@ -42,6 +42,7 @@ testbundles:
         - arp_proxy.testbundle
         - h2vrip.testbundle
         - api_crud/api_crud.testbundle
+        - api_crud/dhcp_crud.testbundle
         - p4ctl/p4ctl.testbundle
         - techsupport/techsupport.testbundle
 

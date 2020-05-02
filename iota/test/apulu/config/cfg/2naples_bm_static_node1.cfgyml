@@ -130,6 +130,16 @@ vpc:
           domainname       : "pensando.io"
           filename         : "test"
           interfacemtu     : 9000
+          lease_timeout    : 3600
+        - id               : 11
+          serverip         : '3.1.0.1'
+          ntpserver        : '3.1.0.5'
+          routers          : '3.1.0.1'
+          dnsserver        : '3.1.0.1'
+          domainname       : "pensando.io"
+          filename         : "test"
+          interfacemtu     : 9000
+          lease_timeout    : 3600
       subnet:
         - id               : 1
           count            : 1
@@ -175,6 +185,7 @@ vpc:
           fabricencapvalue : 302
           v4routerip       : '3.1.0.1'
           vroutermac       : macaddr/0055.0100.0002
+          dhcppolicy       : 11
           vnic:
             - id        : 2
               count     : 1             # 1 untagged VNIC
