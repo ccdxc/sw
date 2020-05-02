@@ -10,10 +10,10 @@ MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
 #                  $(wildcard ${MODULE_SRC_DIR}/impl/${PIPELINE}/*.cc)
 #endif
 MODULE_PIPELINE = athena
-MODULE_INCS     = ${SDKDIR}/dpdk/build/include/
+MODULE_INCS     = ${BLD_OUT_DIR}/pen_dpdk_submake/include ${MODULE_DIR}/${PIPELINE}
 MODULE_SOLIBS   = ${NIC_FTL_LIBS} pdsapi_impl
 MODULE_FLAGS    = -O3
 MODULE_DEFS     = -DRTE_FORCE_INTRINSICS
-MODULE_PREREQS  = dpdk.submake
-MODULE_LDLIBS   = dpdk
+MODULE_PREREQS  = pen_dpdk.submake
+MODULE_LDLIBS   = dpdk numa
 include ${MKDEFS}/post.mk

@@ -107,7 +107,12 @@ typedef struct learn_counters_s {
 #define LEARN_PKT_POLL_INTERVAL_MSEC            50
 
 /// \brief packet receive parameters
+#ifdef DPDK_SIM
+#define LEARN_LIF_PKT_BUF_SZ                    10240
+#else
 #define LEARN_LIF_PKT_BUF_SZ                    2048
+#endif
+
 #define LEARN_LIF_RECV_BURST_SZ                 32
 #define LEARN_LIF_RX_DESC_COUNT                 512
 #define LEARN_LIF_TX_DESC_COUNT                 256

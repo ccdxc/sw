@@ -13,7 +13,7 @@ CXX = g++
 CPPFLAGS  += -march=native
 endif
 
-INC_DIRS = -I. -I$(TOPDIR) -I$(TOPDIR)/nic/sdk -I$(TOPDIR)/nic/sdk/dpdk/build/include/ \
+INC_DIRS = -I. -I$(TOPDIR) -I$(TOPDIR)/nic/sdk -I$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC}/out/pen_dpdk_submake/include/ \
 		-I$(TOPDIR)/nic/build/$(ARCH)/athena/${ASIC} -I$(TOPDIR)/nic/hal/third-party/spdlog/include \
 		-I$(TOPDIR)/nic/sdk/third-party/googletest-release-1.8.0/googletest/include \
                 -I$(TOPDIR)/nic/sdk/third-party/boost/include \

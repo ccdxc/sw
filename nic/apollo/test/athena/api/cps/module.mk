@@ -20,7 +20,7 @@ ifeq ($(ARCH), x86_64)
 MODULE_FLAGS  += -march=native
 endif
 MODULE_DEFS     = -DRTE_FORCE_INTRINSICS
-MODULE_PREREQS  = dpdk.submake
+MODULE_PREREQS  = pen_dpdk.submake
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
                    ${NIC_CAPSIM_LDLIBS} ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                    AAPL edit ncurses dpdk lmdb zmq

@@ -16,9 +16,6 @@
 [submodule "nic/buildroot"]
 	path = nic/buildroot
 	url = git@github.com:/pensando/buildroot
-[submodule "nic/sdk/dpdk"]
-	path = nic/sdk/dpdk
-	url = git@github.com:/pensando/dpdk
 [submodule "platform/src/third-party/rdma/qperf"]
 	path = platform/src/third-party/rdma/qperf
 	url = git@github.com:pensando/qperf.git
@@ -34,3 +31,7 @@
 [submodule "nic/third-party/metaswitch"]
 	path = nic/third-party/metaswitch
 	url = git@github.com:pensando/metaswitch.git
+[submodule "nic/sdk/pen-dpdk"]
+	path = nic/sdk/pen-dpdk
+	url = git@github.com:/pensando/pen-dpdk.git
+

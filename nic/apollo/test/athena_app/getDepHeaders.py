@@ -113,6 +113,7 @@ class Parser ( ):
 
             if (arch != None):
                 self.prefixes.append("nic/build/{0}/athena/{1}".format(arch, asic))
+                self.prefixes.append("nic/build/{0}/athena/{1}/out/pen_dpdk_submake/include".format(arch, asic))
         else:
             self.prefixes = prefixes
         print "prefixes are {0}".format(self.prefixes) 

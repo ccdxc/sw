@@ -2,6 +2,7 @@
 
 export ARCH     ?= x86_64
 export FWTYPE   ?= full
+export ASIC     ?= capri
 export TOPDIR   := ${realpath ${CURDIR}}
 export SDKDIR   := ${TOPDIR}
 export BLDTOP   := ${TOPDIR}

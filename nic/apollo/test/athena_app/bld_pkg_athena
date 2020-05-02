@@ -93,7 +93,7 @@ def copy_includes (dest, arch):
     """
     copytree("hal/third-party/spdlog/include", 
              "{0}/nic/hal/third-party/spdlog/include".format(dest))
-    copytree("sdk/dpdk/build/include", 
+    copytree("build/{0}/athena/{1}/out/pen_dpdk_submake/include".format(arch, asic), 
              "{0}/nic/sdk/dpdk/build/include".format(dest))
     #nic/include and nic/sdk/include have some dead symlinks
     try:

@@ -74,7 +74,7 @@ get_repo() {
 pwd | grep -q "\/sw\/nic$" || { echo Please run from "sw/nic" directory; exit -1; }
 
 VPP_REPO="git@github.com:pensando/vpp"
-DPDK_REPO="git@github.com:pensando/dpdk"
+DPDK_REPO="git@github.com:pensando/pen-dpdk"
 
 while getopts 'v:d:a:sh' opt
 do
@@ -101,11 +101,12 @@ done
 
 TOPDIR=$(dirname `pwd`)
 SDK_DIR=${TOPDIR}/nic/sdk
-DPDK_DIR=${SDK_DIR}/dpdk
+DPDK_DIR=${SDK_DIR}/pen-dpdk/dpdk
 VPP_DIR=${SDK_DIR}/third-party/vpp
 DOCKER_TOPDIR=/usr/src/github.com/pensando/sw
 DOCKER_SDK_DIR=${DOCKER_TOPDIR}/nic/sdk
-DOCKER_DPDK_DIR=${DOCKER_SDK_DIR}/dpdk
+PATCH_DPDK_DIR=${DOCKER_TOPDIR}/nic/sdk/lib/dpdk/patch
+DOCKER_DPDK_DIR=${DOCKER_SDK_DIR}/pen-dpdk/dpdk
 DOCKER_VPP_DIR=${DOCKER_SDK_DIR}/third-party/vpp
 DOCKER_VPP_PKG_DIR=${DOCKER_SDK_DIR}/third-party/vpp-pkg
 DOCKER_NUMAROOT=${DOCKER_SDK_DIR}/third-party/libnuma
@@ -219,7 +220,11 @@ copy_assets() {
 build_dpdk_aarch64() {
     echo "Building DPDK - aarch64, check $DPDK_DIR/dpdk_build_aarch64.log"
     docker_exec "rm -rf $DOCKER_DPDK_DIR/build"
-    docker_exec "cd $DOCKER_DPDK_DIR && make -j8 -f REPOmakefile config T=arm64-armv8a-linuxapp-gcc && make -j8 V=1 -f REPOmakefile CROSS=${TOOLCHAIN_PREFIX}- CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=\"-isystem ${DOCKER_NUMAROOT}/include -fPIC\" EXTRA_LDFLAGS=\"-L${DOCKER_NUMAROOT}/aarch64/lib -lnuma\" &> dpdk_build_aarch64.log"
+    docker_root "cd $DOCKER_SDK_DIR/pen-dpdk && patch -p0 -i $PATCH_DPDK_DIR/sim_code_no_prefix_pendpdk.patch &> dpdk_build_aarch64_patch.log"
+    docker_exec "cd $DOCKER_DPDK_DIR && make -j8 config T=arm64-naples-linuxapp-gcc && make -j8 V=1 CROSS=${TOOLCHAIN_PREFIX}- CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=\"-isystem ${DOCKER_NUMAROOT}/include -fPIC\" EXTRA_LDFLAGS=\"-L${DOCKER_NUMAROOT}/aarch64/lib -lnuma\" &> dpdk_build_aarch64.log"
+    docker_root "cd $DOCKER_SDK_DIR/pen-dpdk && patch -p0 -R < $PATCH_DPDK_DIR/sim_code_no_prefix_pendpdk.patch &>> dpdk_build_aarch64_patch.log"
+    docker_exec "cd $DOCKER_TOPDIR/nic && make ARCH=aarch64 PLATFORM=hw pen_dpdk.submake clean &> dpdk_build_aarch64_submake.log"
+    docker_exec "cd $DOCKER_TOPDIR/nic && make ARCH=aarch64 PLATFORM=hw pen_dpdk.submake &> dpdk_build_aarch64_submake.log"
     if [[ $? -ne 0 ]]; then
         echo "DPDK - aarch64 build Failed"
         exit 1;
@@ -230,13 +235,15 @@ build_dpdk_aarch64() {
 build_vpp_aarch64() {
     build_dpdk_aarch64
     echo "Building VPP - aarch64, check $VPP_DIR/vpp_build_aarch64.log"
-    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_SDK_DIR/dpdk/build wipe_vpp &> vpp_clean_aarch64.log"
-    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_SDK_DIR/dpdk/build all &> vpp_build_aarch64.log"
+    docker_root "cd $DOCKER_SDK_DIR/pen-dpdk && patch -p0 -i $PATCH_DPDK_DIR/sim_code_no_prefix_pendpdk.patch &> vpp_build_aarch64_patch.log"
+    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_DPDK_DIR/build wipe_vpp &> vpp_clean_aarch64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=aarch64 PLATFORM=hw RELEASE=1 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_DPDK_DIR/build all &> vpp_build_aarch64.log"
     if [[ $? -ne 0 ]]; then
         echo "VPP - aarch64 build Failed"
         exit 1;
     fi
     echo "VPP - aarch64 build success"
+    docker_root "cd $DOCKER_SDK_DIR/pen-dpdk && patch -p0 -R < $PATCH_DPDK_DIR/sim_code_no_prefix_pendpdk.patch &>> vpp_build_aarch64_patch.log"
 }
 
 build_sdk_x86_64() {
@@ -253,8 +260,12 @@ build_sdk_x86_64() {
 
 build_dpdk_x86_64() {
     docker_exec "rm -rf $DOCKER_DPDK_DIR/build"
-    echo "Building DPDK - x86_64, check $DPDK_DIR/dpdk_build_x86_64.log"
     build_sdk_x86_64
+    echo "Building DPDK - x86_64, check $DPDK_DIR/dpdk_build_x86_64.log"
+    docker_root "cd $DOCKER_SDK_DIR/pen-dpdk && patch -p0 -i $PATCH_DPDK_DIR/sim_code_no_prefix_pendpdk.patch &> dpdk_build_x86_64_patch.log"
+    docker_exec "cd $DOCKER_DPDK_DIR && make -j8 config T=x86_64-default-linuxapp-gcc && make V=1 -j8 CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=\"-I ${DOCKER_NUMAROOT}/include -I ${DOCKER_SDK_DIR} -DDPDK_SIM -g -fPIC -O0 -Wno-error -L ${DOCKER_NUMAROOT}/x86_64/lib\" EXTRA_LDFLAGS=\"-L${DOCKER_NUMAROOT}/x86_64/lib -L/sdk/build/x86_64/lib/ -lnuma -ldpdksim -lsdkpal -llogger\" &> dpdk_build_x86_64.log"
+    docker_root "cd $DOCKER_SDK_DIR/pen-dpdk && patch -p0 -R < $PATCH_DPDK_DIR/sim_code_no_prefix_pendpdk.patch &>> dpdk_build_x86_64_patch.log"
+    docker_exec "cd $DOCKER_TOPDIR/nic && make ARCH=x86_64 libdpdksim.lib && make ARCH=x86_64 pen_dpdk.submake &> dpdk_build_x86_64.log"
     if [[ $? -ne 0 ]]; then
         echo "DPDK - x86_64 build Failed"
         exit 1;
@@ -265,8 +276,8 @@ build_dpdk_x86_64() {
 build_vpp_x86_64() {
     build_dpdk_x86_64
     echo "Building VPP - x86_64, check $VPP_DIR/vpp_build_x86_64.log"
-    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_SDK_DIR/dpdk/build wipe_vpp &> vpp_clean_x86_64.log"
-    docker_root "cd $DOCKER_VPP_DIR && make V=1 -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_SDK_DIR/dpdk/build all &> vpp_build_x86_64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_DPDK_DIR/build wipe_vpp &> vpp_clean_x86_64.log"
+    docker_root "cd $DOCKER_VPP_DIR && make V=1 -f Makefile ARCH=x86_64 SDKDIR=$DOCKER_SDK_DIR DPDK_PATH=$DOCKER_DPDK_DIR/build all &> vpp_build_x86_64.log"
     if [[ $? -ne 0 ]]; then
         echo "VPP - x86_64 build Failed"
         exit 1;

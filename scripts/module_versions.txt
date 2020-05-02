@@ -1,6 +1,6 @@
 nic/p4-hlir 3bba50bbdbb469d1bdc6883e0377446a09a7ef4c
 nic/debug_cli/click_repl e22ca25b6b98aee2d9eebdf5e03afb3932ccbca3
-nic/sdk/dpdk 5991848017a7db895305934af29ff93cb0d170b0
+nic/sdk/pen-dpdk 3ca396f2c2c44ab92fc1217a7a3db032f57fc52a
 nic/third-party/libconfig 86c4ff2ad4b0d31eac84cbc65ebfffbafc2d1535
 nic/third-party/metaswitch eccaa5444eaa7cbf4ea997ddccd4ec51847f65b6
 nic/third-party/odp 18fbde70ea1c1360cb3292655377771c9c1c32f9

@@ -1,0 +1,521 @@
+diff --git dpdk-19.02-rc3/config/common_armv8a_linuxapp dpdk-19.02-rc3/config/common_armv8a_linuxapp
+index ad88a37..7de0f74 100644
+--- dpdk-19.02-rc3/config/common_armv8a_linuxapp
++++ dpdk-19.02-rc3/config/common_armv8a_linuxapp
+@@ -15,7 +15,7 @@ CONFIG_RTE_FORCE_INTRINSICS=y
+ # Maximum available cache line size in arm64 implementations.
+ # Setting to maximum available cache line size in generic config
+ # to address minimum DMA alignment across all arm64 implementations.
+-CONFIG_RTE_CACHE_LINE_SIZE=128
++CONFIG_RTE_CACHE_LINE_SIZE=64
+ 
+ CONFIG_RTE_USE_C11_MEM_MODEL=y
+ 
+diff --git dpdk-19.02-rc3/config/defconfig_x86_64-default-linuxapp-gcc dpdk-19.02-rc3/config/defconfig_x86_64-default-linuxapp-gcc
+new file mode 100644
+index 0000000..5baa440
+--- /dev/null
++++ dpdk-19.02-rc3/config/defconfig_x86_64-default-linuxapp-gcc
+@@ -0,0 +1,14 @@
++# SPDX-License-Identifier: BSD-3-Clause
++# Copyright(c) 2019 Pensando
++
++#include "common_linuxapp"
++
++CONFIG_RTE_MACHINE="default"
++
++CONFIG_RTE_ARCH="x86_64"
++CONFIG_RTE_ARCH_X86_64=y
++CONFIG_RTE_ARCH_X86=y
++CONFIG_RTE_ARCH_64=y
++
++CONFIG_RTE_TOOLCHAIN="gcc"
++CONFIG_RTE_TOOLCHAIN_GCC=y
+diff --git dpdk-19.02-rc3/drivers/net/ionic/Makefile dpdk-19.02-rc3/drivers/net/ionic/Makefile
+index 06fd3b9..c28056a 100644
+--- dpdk-19.02-rc3/drivers/net/ionic/Makefile
++++ dpdk-19.02-rc3/drivers/net/ionic/Makefile
+@@ -49,7 +49,11 @@ endif
+ LDLIBS += -lrte_eal -lrte_mbuf -lrte_mempool -lrte_ring
+ LDLIBS += -lrte_ethdev -lrte_net -lrte_kvargs -lrte_hash
+ ifeq ($(CONFIG_RTE_ARCH_X86),y)
++ifeq ($(DPDK_SIM_BLD),y)
++LDLIBS += -lrte_bus_vdev
++else
+ LDLIBS += -lrte_bus_pci
++endif
+ else ifneq ($(filter y,$(CONFIG_RTE_ARCH_ARM) $(CONFIG_RTE_ARCH_ARM64)),)
+ LDLIBS += -lrte_bus_vdev
+ endif
+@@ -66,7 +70,11 @@ SRCS-$(CONFIG_RTE_LIBRTE_IONIC_PMD) += ionic_lif.c
+ SRCS-$(CONFIG_RTE_LIBRTE_IONIC_PMD) += ionic_main.c
+ SRCS-$(CONFIG_RTE_LIBRTE_IONIC_INC_VECTOR) += ionic_rxtx_vec.c
+ ifeq ($(CONFIG_RTE_ARCH_X86),y)
++ifeq ($(DPDK_SIM_BLD),y)
++SRCS-$(CONFIG_RTE_LIBRTE_IONIC_PMD) += ionic_dev_vdev.c
++else
+ SRCS-$(CONFIG_RTE_LIBRTE_IONIC_PMD) += ionic_dev_pci.c
++endif
+ else ifneq ($(filter y,$(CONFIG_RTE_ARCH_ARM) $(CONFIG_RTE_ARCH_ARM64)),)
+ SRCS-$(CONFIG_RTE_LIBRTE_IONIC_PMD) += ionic_dev_vdev.c
+ endif
+diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_dev.c dpdk-19.02-rc3/drivers/net/ionic/ionic_dev.c
+index cf8d630..2b7c8f0 100644
+--- dpdk-19.02-rc3/drivers/net/ionic/ionic_dev.c
++++ dpdk-19.02-rc3/drivers/net/ionic/ionic_dev.c
+@@ -400,7 +400,8 @@ ionic_q_sg_map(struct ionic_queue *q, void *base, rte_iova_t base_pa)
+ void
+ ionic_q_flush(struct ionic_queue *q)
+ {
+-	writeq(IONIC_DBELL_QID(q->hw_index) | q->head_idx, q->db);
++	DPDK_SIM_WRITE_DB(q);
++    writeq(IONIC_DBELL_QID(q->hw_index) | q->head_idx, q->db);
+ }
+ 
+ void
+@@ -471,6 +472,11 @@ ionic_adminq_cb(struct ionic_queue *q,
+ 	struct ionic_admin_comp *cq_desc_base = q->bound_cq->base;
+ 	struct ionic_admin_comp *cq_desc = &cq_desc_base[cq_desc_index];
+ 
++    if (!ctx)
++        return;
++
++    DPDK_SIM_DESC_OP(struct ionic_admin_comp, q->bound_cq, cq_desc_index, cq_desc, 1)
++
+ 	if (unlikely(cq_desc->comp_index != q_desc_index)) {
+ 		IONIC_WARN_ON(cq_desc->comp_index != q_desc_index);
+ 		return;
+@@ -510,7 +516,9 @@ ionic_adminq_post(struct ionic_lif *lif, struct ionic_admin_ctx *ctx)
+ 	q_desc = &q_desc_base[adminq->head_idx];
+ 
+ 	memcpy(q_desc, &ctx->cmd, sizeof(ctx->cmd));
+-
++    
++    DPDK_SIM_DESC_OP(struct ionic_admin_cmd, adminq, adminq->head_idx, q_desc, 0)
++        
+ 	ionic_q_post(adminq, true, ionic_adminq_cb, ctx);
+ 
+ err_out:
+diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_dev_vdev.c dpdk-19.02-rc3/drivers/net/ionic/ionic_dev_vdev.c
+index c7b3f8d..69ab140 100644
+--- dpdk-19.02-rc3/drivers/net/ionic/ionic_dev_vdev.c
++++ dpdk-19.02-rc3/drivers/net/ionic/ionic_dev_vdev.c
+@@ -43,7 +43,6 @@
+ #include "ionic_ethdev.h"
+ #include "ionic_rxtx.h"
+ 
+-#define IONIC_UIO_DEVNAME   "mnet"
+ #define IONIC_MNET_UNK      "mnet_unknown"
+ 
+ #define IONIC_MAX_NAME_LEN  20
+@@ -130,7 +129,7 @@ uio_scan_mnet_devices(void)
+ 			if (mnet_idx > IONIC_MAX_MNET_SCAN)
+ 				break;
+ 
+-			snprintf(mnet_devname, IONIC_MAX_NAME_LEN, "mnet%d", mnet_idx);
++			snprintf(mnet_devname, IONIC_MAX_NAME_LEN, "cpu_mnic%d", mnet_idx);
+ 
+ 			uio_num = uio_get_uionum_for_devname(mnet_devname);
+ 
+diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_ethdev.c dpdk-19.02-rc3/drivers/net/ionic/ionic_ethdev.c
+index 15c1285..ed373b7 100644
+--- dpdk-19.02-rc3/drivers/net/ionic/ionic_ethdev.c
++++ dpdk-19.02-rc3/drivers/net/ionic/ionic_ethdev.c
+@@ -325,7 +325,7 @@ ionic_dev_link_update(struct rte_eth_dev *eth_dev,
+ 			break;
+ 		}
+ 	}
+-
++    DPDK_SIM_FILL_LINK_STATE(link);
+ 	return rte_eth_linkstatus_set(eth_dev, &link);
+ }
+ 
+@@ -998,7 +998,7 @@ eth_ionic_dev_init(struct rte_eth_dev *eth_dev, void *init_params)
+ 	if (rte_eal_process_type() != RTE_PROC_PRIMARY)
+ 		return 0;
+ 
+-#ifdef RTE_ARCH_X86
++#if defined RTE_ARCH_X86 && !defined DPDK_SIM
+ 	rte_eth_copy_pci_info(eth_dev, RTE_ETH_DEV_TO_PCI(eth_dev));
+ #endif
+ 
+@@ -1110,6 +1110,8 @@ eth_ionic_dev_probe(void *bus_dev, struct rte_device *rte_dev,
+ 		adapter->bars.bar[i].len = bars->bar[i].len;
+ 	}
+ 	adapter->bars.num_bars = bars->num_bars;
++    
++    DPDK_SIM_ADAPTOR_INIT(adapter)
+ 
+ 	/* Discover ionic dev resources */
+ 
+diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_lif.c dpdk-19.02-rc3/drivers/net/ionic/ionic_lif.c
+index 3293cd1..d9af2a6 100644
+--- dpdk-19.02-rc3/drivers/net/ionic/ionic_lif.c
++++ dpdk-19.02-rc3/drivers/net/ionic/ionic_lif.c
+@@ -102,6 +102,7 @@ ionic_lif_get_abs_stats(struct ionic_lif *lif, struct rte_eth_stats *stats)
+ 		return;
+ 	}
+ 
++    DPDK_SIM_MEM_OP(lif->info, lif->info_pa, lif->info_sz, 1)
+ 	/* RX */
+ 
+ 	stats->ipackets = ls->rx_ucast_packets +
+@@ -238,6 +239,8 @@ ionic_lif_get_hw_stats(struct ionic_lif *lif, struct ionic_lif_stats *stats)
+ 	uint64_t *lif_stats64 = (uint64_t *)&lif->info->stats;
+ 	uint64_t *lif_stats64_base = (uint64_t *)&lif->lif_stats_base;
+ 
++    DPDK_SIM_MEM_OP(lif->info, lif->info_pa, lif->info_sz, 1)
++        
+ 	for (i = 0; i < count; i++)
+ 		stats64[i] = lif_stats64[i] - lif_stats64_base[i];
+ }
+@@ -699,6 +702,8 @@ ionic_qcq_alloc(struct ionic_lif *lif, uint8_t type,
+ 	new->base_pa = new->base_z->iova;
+ 	new->total_size = total_size;
+ 
++    DPDK_SIM_DESC_ALLOC(new->base_pa, new->base_z->addr, total_size)
++        
+ 	q_base = new->base;
+ 	q_base_pa = new->base_pa;
+ 
+@@ -936,7 +941,8 @@ ionic_lif_alloc(struct ionic_lif *lif)
+ 
+ 	lif->info = lif->info_z->addr;
+ 	lif->info_pa = lif->info_z->iova;
+-
++    DPDK_SIM_DESC_ALLOC(lif->info_pa, lif->info_z->addr, lif->info_sz)
++        
+ 	return 0;
+ }
+ 
+@@ -993,10 +999,20 @@ ionic_lif_rss_config(struct ionic_lif *lif,
+ 		for (i = 0; i < lif->adapter->ident.lif.eth.rss_ind_tbl_sz; i++)
+ 			lif->rss_ind_tbl[i] = indir[i];
+ 
++    DPDK_SIM_DESC_ALLOC(lif->rss_ind_tbl_pa, lif->rss_ind_tbl,          \
++                        sizeof(*lif->rss_ind_tbl) *                     \
++                        lif->adapter->ident.lif.eth.rss_ind_tbl_sz);
++    
+ 	memcpy(ctx.cmd.lif_setattr.rss.key, lif->rss_hash_key,
+ 	       IONIC_RSS_HASH_KEY_SIZE);
+-
+-	return ionic_adminq_post_wait(lif, &ctx);
++    
++    ctx.cmd.lif_setattr.rss.addr = lif->rss_ind_tbl_pa;
++    
++    // TODO: Do the same for RSS key
++    DPDK_SIM_MEM_OP(lif->rss_ind_tbl, lif->rss_ind_tbl_pa,
++        sizeof(*lif->rss_ind_tbl) * lif->adapter->ident.lif.eth.rss_ind_tbl_sz, 0);
++	
++    return ionic_adminq_post_wait(lif, &ctx);
+ }
+ 
+ static int
+@@ -1092,6 +1108,8 @@ ionic_adminq_service(struct ionic_cq *cq, uint32_t cq_desc_index,
+ 	struct ionic_admin_comp *cq_desc_base = cq->base;
+ 	struct ionic_admin_comp *cq_desc = &cq_desc_base[cq_desc_index];
+ 
++    DPDK_SIM_DESC_OP(struct ionic_admin_comp, cq, cq_desc_index, cq_desc, 1)
++
+ 	if (!color_match(cq_desc->color, cq->done_color))
+ 		return false;
+ 
+@@ -1124,6 +1142,8 @@ ionic_link_status_check(struct ionic_lif *lif)
+ 	if (!lif->info)
+ 		return;
+ 
++    DPDK_SIM_MEM_OP(lif->info, lif->info_pa, lif->info_sz, 1)
++        
+ 	link_up = (lif->info->status.link_status == IONIC_PORT_OPER_STATUS_UP);
+ 
+ 	if ((link_up  && adapter->link_up) ||
+diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_main.c dpdk-19.02-rc3/drivers/net/ionic/ionic_main.c
+index 02a06d3..a34c36d 100644
+--- dpdk-19.02-rc3/drivers/net/ionic/ionic_main.c
++++ dpdk-19.02-rc3/drivers/net/ionic/ionic_main.c
+@@ -5,7 +5,7 @@
+ #include <rte_malloc.h>
+ #include <rte_ethdev_driver.h>
+ 
+-#ifndef RTE_ARCH_X86
++#if !defined RTE_ARCH_X86 || defined DPDK_SIM
+ #include <rte_bus_vdev.h>
+ #endif
+ 
+@@ -215,7 +215,7 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
+ 		if (done) {
+ 			ionic_drv_print(DEBUG, "DEVCMD %d done "
+ 					"took %ld msecs\n",
+-					idev->dev_cmd->cmd.cmd.opcode,
++					ioread8(&idev->dev_cmd->cmd.cmd.opcode),
+ 					elapsed_msec);
+ 			return 0;
+ 		}
+@@ -226,7 +226,7 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
+ 	} while (elapsed_msec < max_wait_msec);
+ 
+ 	ionic_drv_print(DEBUG, "DEVCMD %d timeout after %ld msecs\n",
+-			idev->dev_cmd->cmd.cmd.opcode,
++			ioread8(&idev->dev_cmd->cmd.cmd.opcode),
+ 			elapsed_msec);
+ 
+ 	return -ETIMEDOUT;
+@@ -370,7 +370,7 @@ ionic_memzone_reserve(const char *name, uint32_t len, int socket_id)
+ 	return mz;
+ }
+ 
+-#ifdef RTE_ARCH_X86
++#if defined RTE_ARCH_X86 && !defined DPDK_SIM
+ #define GET_BUS_DEVICE_NAME(bus) ((struct rte_pci_device *)bus)->device.name
+ #else
+ #define GET_BUS_DEVICE_NAME(bus) rte_vdev_device_name(bus)
+@@ -406,6 +406,8 @@ ionic_port_init(struct ionic_adapter *adapter)
+ 	idev->port_info = idev->port_info_z->addr;
+ 	idev->port_info_pa = idev->port_info_z->iova;
+ 
++    DPDK_SIM_DESC_ALLOC(idev->port_info_pa, idev->port_info_z->addr, idev->port_info_sz)
++
+ 	nwords = min(ARRAY_SIZE(ident->port.config.words),
+ 			ARRAY_SIZE(idev->dev_cmd->data));
+ 
+diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_osdep.h dpdk-19.02-rc3/drivers/net/ionic/ionic_osdep.h
+index e163498..49acf59 100644
+--- dpdk-19.02-rc3/drivers/net/ionic/ionic_osdep.h
++++ dpdk-19.02-rc3/drivers/net/ionic/ionic_osdep.h
+@@ -19,6 +19,7 @@
+ #include <rte_memory.h>
+ 
+ #include "ionic_logs.h"
++#include "ionic_sim.h"
+ 
+ #define ASSERT(x) if(!(x)) rte_panic("IONIC: x")
+ 
+@@ -101,10 +102,18 @@ static inline uint16_t ilog2(uint32_t n) {
+ #define rte_tcp_hdr             tcp_hdr
+ #endif
+ 
++#ifdef DPDK_SIM
++#define ioread8(reg)        dpdk_sim_read((uint64_t)reg, 1)
++#define ioread32(reg)       dpdk_sim_read((uint64_t)reg, 4)
++#define iowrite8(value, reg)    dpdk_sim_write(value, (uint64_t)reg, 1)
++#define iowrite32(value, reg)   dpdk_sim_write(value, (uint64_t)reg, 4)
++#define writeq(value, reg)  dpdk_sim_write(value, (uint64_t)reg, 8)
++#else
+ #define ioread8(reg)		rte_read8(reg)
+ #define ioread32(reg)		rte_read32(reg)
+ #define iowrite8(value, reg)	rte_write8(value, reg)
+ #define iowrite32(value, reg)	rte_write32(value, reg)
+ #define writeq(value, reg)	rte_write64(value, reg)
++#endif
+ 
+ #endif
+diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c
+index 4365bae..e71f229 100644
+--- dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c
++++ dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c
+@@ -106,6 +106,8 @@ ionic_tx_flush(struct ionic_qcq *txq)
+ 	struct ionic_txq_comp *cq_desc;
+ 
+ 	cq_desc = &cq_desc_base[cq->tail_idx];
++	
++    DPDK_SIM_DESC_OP(struct ionic_txq_comp, cq, cq->tail_idx, cq_desc, 1)
+ 
+ 	while (color_match(cq_desc->color, cq->done_color)) {
+ 
+@@ -137,7 +139,8 @@ ionic_tx_flush(struct ionic_qcq *txq)
+ 				if (txq->offloads & DEV_TX_OFFLOAD_MBUF_FAST_FREE)
+ 					rte_mempool_put(txm->pool, txm);
+ 				else
+-					rte_pktmbuf_free_seg(txm);
++					rte_pktmbuf_free_seg(txm);					
++				DPDK_SIM_TX_DONE(txm);
+ 				txm = txm->next;
+ 			}
+ 		}
+@@ -234,6 +237,8 @@ ionic_dev_tx_queue_setup(struct rte_eth_dev *eth_dev, uint16_t tx_queue_id,
+ 
+ 	eth_dev->data->tx_queues[tx_queue_id] = txq;
+ 
++    DPDK_SIM_MBUF_INIT(nb_desc);
++
+ 	return 0;
+ }
+ 
+@@ -500,7 +505,7 @@ ionic_tx(struct ionic_queue *q, struct rte_mbuf *txm, uint64_t offloads)
+ 			(ol_flags & PKT_TX_OUTER_IPV6))) {
+ 		flags |= IONIC_TXQ_DESC_FLAG_ENCAP;
+ 	}
+-
++	DPDK_SIM_TX(txm, addr)
+ 	desc->cmd = encode_txq_desc_cmd(opcode, flags, txm->nb_segs - 1, addr);
+ 	desc->len = txm->data_len;
+ 	// desc->hword1 = 0;
+@@ -525,6 +530,8 @@ ionic_tx(struct ionic_queue *q, struct rte_mbuf *txm, uint64_t offloads)
+ 	start_cycles = rte_get_tsc_cycles();
+ #endif
+ 
++    DPDK_SIM_DESC_OP(struct ionic_txq_desc, q, q->head_idx, desc, 0)
++
+ 	ionic_q_post(q, false, NULL, txm);
+ 
+ #ifdef IONIC_CODE_PERF
+@@ -770,6 +777,8 @@ ionic_dev_rx_queue_setup(struct rte_eth_dev *eth_dev,
+ 
+ 	eth_dev->data->rx_queues[rx_queue_id] = rxq;
+ 
++    DPDK_SIM_MBUF_INIT(nb_desc);
++
+ 	return 0;
+ }
+ 
+@@ -837,12 +846,15 @@ ionic_rx_clean(struct ionic_queue *q,
+ 	rxm->pkt_len = cq_desc->len;
+ 	rxm->data_len = RTE_MIN(buf_size, cq_desc->len);
+ 	rxm->nb_segs = cq_desc->num_sg_elems + 1;
++	
++	DPDK_SIM_RX(rxm)
+ 
+ 	if (unlikely(cq_desc->num_sg_elems > 0)) {
+ 		left = cq_desc->len - rxm->data_len;
+ 		rxm_seg = rxm->next;
+ 		while (rxm_seg && left) {
+ 			rxm_seg->data_len = RTE_MIN(buf_size, left);
++			DPDK_SIM_RX(rxm_seg)
+ 			left -= rxm_seg->data_len;
+ 			rxm_seg = rxm_seg->next;
+ 		}
+@@ -983,6 +995,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
+ 			prev_rxm_seg = rxm;
+ 			sg_desc = &sg_desc_base[q->head_idx];
+ 			elem = sg_desc->elems;
++
++            DPDK_SIM_RX_FILL(struct ionic_rxq_desc, q, q->head_idx, desc, rxm_bulk[i])
++
+ 			for (j = 0; j < nsegs - 1 && j < IONIC_RX_MAX_SG_ELEMS; j++) {
+ 				struct rte_mbuf *rxm_seg;
+ 				rte_iova_t data_iova;
+@@ -998,7 +1013,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
+ 				elem->addr = dma_addr;
+ 				elem->len = buf_size;
+ 				size += buf_size;
+-				elem++;
++                //revisit later : bmital
++                //DPDK_SIM_RX_FILL(struct ionic_rxq_desc, q, q->head_idx, elem, rxm_seg)
++                elem++;
+ 				rxm_seg->next = NULL;
+ 				prev_rxm_seg->next = rxm_seg;
+ 				prev_rxm_seg = rxm_seg;
+@@ -1080,6 +1097,8 @@ ionic_rxq_service(struct ionic_cq *cq, uint32_t work_to_do,
+ 	uint32_t work_done = 0;
+ 
+ 	cq_desc = &cq_desc_base[cq->tail_idx];
++	
++	DPDK_SIM_DESC_OP(struct ionic_rxq_comp, cq, cq->tail_idx, cq_desc, 1)
+ 	while (color_match(cq_desc->pkt_type_color, cq->done_color)) {
+ 
+ 		if ((cq->tail_idx & 0x3) == 0)
+diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_sim.h dpdk-19.02-rc3/drivers/net/ionic/ionic_sim.h
+new file mode 100644
+index 0000000..851e6fa
+--- /dev/null
++++ dpdk-19.02-rc3/drivers/net/ionic/ionic_sim.h
+@@ -0,0 +1,99 @@
++/* SPDX-License-Identifier: GPL-2.0
++ * Copyright(c) 2019 Pensando
++ */
++
++#ifndef _IONIC_SIM_H_
++#define _IONIC_SIM_H_
++
++#ifdef DPDK_SIM
++#include "lib/dpdk/sim/sim.hpp"
++#include <rte_bus_vdev.h>
++
++#define DPDK_SIM_ADAPTOR_INIT(adapter) { \
++	for (int i = 0; i < IONIC_BARS_MAX; i++)  \
++		adapter->bars.bar[i].vaddr = (void *)dpdk_sim_get_bar_addr(rte_vdev_device_name(adapter->bus_dev)); \
++	dpdk_sim_init(); \
++}
++
++#define DPDK_SIM_WRITE_DB(q) { \
++	dpdk_sim_write_doorbell(rte_vdev_device_name(q->lif->adapter->bus_dev), \
++                                q->hw_type, IONIC_DBELL_QID(q->hw_index) | q->head_idx); \
++	return; \
++}
++
++#define DPDK_SIM_DESC_OP(q_type, q, q_index, q_desc, read) { \
++	q_type *q_pbase = (q_type *)q->base_pa; \
++	if (read) { \
++		dpdk_sim_read_mem(q_desc, (uint64_t)&q_pbase[q_index], sizeof(*q_desc)); \
++	} else { \
++		dpdk_sim_write_mem(q_desc, (uint64_t)&q_pbase[q_index], sizeof(*q_desc)); \
++	} \
++}
++
++#define DPDK_SIM_RX_FILL(q_type, q, q_index, q_desc, mbuf) { \
++	uint64_t addr; \
++	q_type *q_pbase = (q_type *)q->base_pa;  \
++	dpdk_sim_write_mem((void *)q_desc, (uint64_t)&q_pbase[q_index], sizeof(*q_desc)); \
++	addr = dpdk_sim_mbuf_alloc((char *)mbuf->buf_addr, len + RTE_PKTMBUF_HEADROOM); \
++	dpdk_sim_write(addr, (uint64_t)&q_pbase[q_index].addr, sizeof(q_desc->addr)); \
++	/* ionic_init_print(ERR, "Fill pkt addr %lx, len %u, hwaddr %lx \n", \
++			    (long)mbuf->buf_addr, len, (long)addr); */ \
++}
++
++#define DPDK_SIM_TX(txm, addr) { \
++	void *maddr = txm->buf_addr + txm->data_off; \
++	addr = dpdk_sim_mbuf_alloc((char *)txm->buf_addr,  txm->data_len + RTE_PKTMBUF_HEADROOM); \
++	/* ionic_init_print(ERR, "Transmit pkt addr %lx, offset %u, len %u, hwaddr %lx\n",  \
++			    (long)txm->buf_addr, txm->data_off, txm->data_len, addr); */ \
++	dpdk_sim_write_mem(maddr, (uint64_t)addr, txm->data_len); \
++}
++
++#define DPDK_SIM_RX(rxm) {  \
++	/* ionic_init_print(ERR, "Recieved pkt addr %lx, offset %u, len %u\n", \
++		    (long)rxm->buf_addr, rxm->data_off, rxm->data_len); */ \
++	dpdk_sim_mbuf_read((char *)rxm->buf_addr, rxm->data_off, rxm->data_len); \
++}
++
++
++#define DPDK_SIM_TX_DONE(txm) { \
++	/* ionic_init_print(ERR, "Tx done pkt addr %lx, offset %u, len %u\n", \
++			(long)txm->buf_addr, txm->data_off, txm->data_len); */ \
++	dpdk_sim_mbuf_free((char *)txm->buf_addr); \
++}
++
++#define DPDK_SIM_DESC_ALLOC(dst, src, size) { \
++	dst = dpdk_sim_desc_alloc(src, size); \
++}
++
++#define DPDK_SIM_FILL_LINK_STATE(_link) {         \
++	_link.link_status = ETH_LINK_UP;          \
++	_link.link_duplex = ETH_LINK_FULL_DUPLEX; \
++	_link.link_speed = ETH_SPEED_NUM_NONE;    \
++}
++
++#define DPDK_SIM_MBUF_INIT(ndescs) dpdk_sim_mbuf_init(ndescs)
++
++#define DPDK_SIM_MEM_OP(src_dst, pa_addr, size, read) { \
++    if (read) { \
++        dpdk_sim_read_mem(src_dst, (uint64_t)pa_addr, size); \
++    } else { \
++        dpdk_sim_write_mem(src_dst, (uint64_t)pa_addr, size); \
++    } \
++}
++
++#else
++#define DPDK_SIM_ADAPTOR_INIT(adaptor) { }
++#define DPDK_SIM_WRITE_DB(q) { }
++#define DPDK_SIM_DESC_OP(q_type, q, q_index, q_desc, read) { }
++#define DPDK_SIM_RX_FILL(q_type, q, q_index, q_desc, mbuf) { }
++#define DPDK_SIM_TX(txm, addr) { }
++#define DPDK_SIM_RX(rxm) { }
++#define DPDK_SIM_TX_DONE(txm) { }
++#define DPDK_SIM_DESC_ALLOC(dst, src, size) { }
++#define DPDK_SIM_FILL_LINK_STATE(_link) { }
++#define DPDK_SIM_MBUF_INIT(ndescs) { }
++#define DPDK_SIM_MEM_OP(src_dst, pa_addr, size, read) { } 
++
++#endif /* DPDK_SIM */
++
++#endif /* _IONIC_SIM_H_ */
