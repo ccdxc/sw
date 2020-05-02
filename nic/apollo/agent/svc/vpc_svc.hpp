@@ -289,9 +289,9 @@ static inline sdk_ret_t
 pds_svc_vpc_delete (const pds::VPCDeleteRequest *proto_req,
                     pds::VPCDeleteResponse *proto_rsp)
 {
-    pds_obj_key_t key;
+    sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    sdk_ret_t ret = SDK_RET_OK;
+    pds_obj_key_t key;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -318,8 +318,12 @@ pds_svc_vpc_delete (const pds::VPCDeleteRequest *proto_req,
         pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_ms::vpc_delete(key, bctxt);
         if (ret == SDK_RET_ENTRY_NOT_FOUND) {
-            // If VPC is not found in control plane then it might be a
-            // tenant VPC in non overlay-routing case
+            if (core::agent_state::state()->device()->overlay_routing_en) {
+                // no need to call the pds API in overlay-routing mode
+                goto end;
+            }
+            // if VPC is not found in control plane then it might be a
+            // tenant VPC in non overlay-routing mode
             if (!core::agent_state::state()->pds_mock_mode()) {
                 ret = pds_vpc_delete(&key, bctxt);
             }
