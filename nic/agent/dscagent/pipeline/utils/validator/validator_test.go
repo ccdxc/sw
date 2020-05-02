@@ -634,3 +634,73 @@ func TestValidateIPAMPolicy(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestValidateNetworkSecurityPolicy(t *testing.T) {
+	vrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+	dat, _ := vrf.Marshal()
+
+	if err := infraAPI.Store(vrf.Kind, vrf.GetKey(), dat); err != nil {
+		t.Fatal(err)
+	}
+	nsp := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testNetworkSecurityPolicy",
+		},
+		Spec: netproto.NetworkSecurityPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0", "192.168.1.1", "172.16.0.0/24"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+						ProtoPorts: []*netproto.ProtoPort{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+							{
+								Port:     "443",
+								Protocol: "icmp",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	if _, _, err := ValidateNetworkSecurityPolicy(infraAPI, nsp); err == nil {
+		t.Fatalf("Expected failure. Got %v", err)
+	}
+	nsp.Spec.Rules[0].Dst.ProtoPorts = []*netproto.ProtoPort{
+		{
+			Port:     "80",
+			Protocol: "tcp",
+		},
+		{
+			Port:     "",
+			Protocol: "icmp",
+		},
+	}
+	if _, _, err := ValidateNetworkSecurityPolicy(infraAPI, nsp); err != nil {
+		t.Fatal(err)
+	}
+	if err := infraAPI.Delete(vrf.Kind, vrf.GetKey()); err != nil {
+		t.Fatal(err)
+	}
+}

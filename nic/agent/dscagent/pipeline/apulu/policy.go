@@ -123,16 +123,7 @@ func deleteNetworkSecurityPolicyHandler(infraAPI types.InfraAPI, client halapi.S
 }
 
 func convertNetworkSecurityPolicy(infraAPI types.InfraAPI, nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) (*halapi.SecurityPolicyRequest, error) {
-	fwRules, err := convertHALFirewallRules(nsp, ruleIDToAppMapping)
-	// TODO: Move the below validations to pipeline specific validations
-	if err != nil {
-		log.Errorf("Policy conversion failed: %s | Err: %v", nsp.GetKey(), err)
-		return nil, err
-	}
-	if len(fwRules) > types.MaxRulesPerSecurityPolicy {
-		log.Error(errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v %v", nsp.GetKey(), types.ErrMaxRulesPerSecurityPolicyExceeded, len(fwRules)))
-		return nil, errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrMaxRulesPerSecurityPolicyExceeded)
-	}
+	fwRules := convertHALFirewallRules(nsp, ruleIDToAppMapping)
 	for idx, rule := range fwRules {
 		rule.Attrs.Priority = uint32(idx)
 	}

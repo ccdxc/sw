@@ -246,6 +246,22 @@ func ValidateNetworkSecurityPolicy(i types.InfraAPI, nsp netproto.NetworkSecurit
 
 			ruleIDAppMapping.Store(idx, &app)
 		}
+		if r.Src != nil {
+			for _, p := range r.Src.ProtoPorts {
+				if p.Protocol == "icmp" && p.Port != "" {
+					log.Error(errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrICMPConfiguredWithPort))
+					return vrf, nil, errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrICMPConfiguredWithPort)
+				}
+			}
+		}
+		if r.Dst != nil {
+			for _, p := range r.Dst.ProtoPorts {
+				if p.Protocol == "icmp" && p.Port != "" {
+					log.Error(errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrICMPConfiguredWithPort))
+					return vrf, nil, errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrICMPConfiguredWithPort)
+				}
+			}
+		}
 	}
 
 	return vrf, &ruleIDAppMapping, nil

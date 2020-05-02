@@ -42,8 +42,9 @@ func unsupportedApp(app netproto.App) bool {
 	return false
 }
 
-// ValidateNetworkSecurityPolicyApp validates network security policy and generates rule id to app mapping
-func ValidateNetworkSecurityPolicyApp(i types.InfraAPI, nsp netproto.NetworkSecurityPolicy) (err error) {
+// ValidateNetworkSecurityPolicy validates network security policy for apulu pipeline
+func ValidateNetworkSecurityPolicy(i types.InfraAPI, nsp netproto.NetworkSecurityPolicy) (err error) {
+	var pdsRules int
 	for _, r := range nsp.Spec.Rules {
 		var dat []byte
 		if len(r.AppName) > 0 {
@@ -74,6 +75,31 @@ func ValidateNetworkSecurityPolicyApp(i types.InfraAPI, nsp netproto.NetworkSecu
 				return errors.Wrapf(types.ErrBadRequest, "App: %s | Err: %v", r.AppName, types.ErrUnsupportedApp)
 			}
 		}
+		srcAddresses := 1
+		dstAddresses := 1
+		srcProtoPorts := 1
+		dstProtoPorts := 1
+		if r.Src != nil {
+			if len(r.Src.Addresses) > 0 {
+				srcAddresses = len(r.Src.Addresses)
+			}
+			if len(r.Src.ProtoPorts) > 0 {
+				srcProtoPorts = len(r.Src.ProtoPorts)
+			}
+		}
+		if r.Dst != nil {
+			if len(r.Dst.Addresses) > 0 {
+				dstAddresses = len(r.Dst.Addresses)
+			}
+			if len(r.Dst.ProtoPorts) > 0 {
+				dstProtoPorts = len(r.Dst.ProtoPorts)
+			}
+		}
+		pdsRules += srcAddresses * dstAddresses * srcProtoPorts * dstProtoPorts
+	}
+	if pdsRules > types.MaxRulesPerSecurityPolicy {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v %v", nsp.GetKey(), types.ErrMaxRulesPerSecurityPolicyExceeded, pdsRules))
+		return errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrMaxRulesPerSecurityPolicyExceeded)
 	}
 	return
 }

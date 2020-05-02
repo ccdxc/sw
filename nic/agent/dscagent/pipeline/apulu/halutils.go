@@ -17,13 +17,12 @@ import (
 
 // ############# Hal conversion Routines  ##############
 
-func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) ([]*halapi.SecurityRuleInfo, error) {
+func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapping *sync.Map) []*halapi.SecurityRuleInfo {
 	var fwRules []*halapi.SecurityRuleInfo
 	for idx, r := range nsp.Spec.Rules {
 		ruleMatches, err := buildHALRuleMatches(r.Src, r.Dst, ruleIDToAppMapping, &idx)
 		if err != nil {
 			log.Errorf("Could not convert match criteria Err: %v", err)
-			return nil, err
 		}
 		for _, match := range ruleMatches {
 			rule := &halapi.SecurityRuleInfo{
@@ -36,7 +35,7 @@ func convertHALFirewallRules(nsp netproto.NetworkSecurityPolicy, ruleIDToAppMapp
 			fwRules = append(fwRules, rule)
 		}
 	}
-	return fwRules, nil
+	return fwRules
 }
 
 func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Map, ruleID *int) ([]*halapi.RuleMatch, error) {
@@ -151,11 +150,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				log.Errorf("Could not parse protocol/port information from %v. Err: %v", protoPort, err)
 				return nil, err
 			}
-			// Ensure that port is not specified with icmp protocol
-			if protocol == "icmp" && len(matchInfo) != 0 {
-				log.Errorf("specifying port with icmp protocol is invalid")
-				return nil, fmt.Errorf("specifying port with icmp protocol is invalid")
-			}
 
 			halProtocol, err := convertAppProtocol(protocol)
 			if err != nil {
@@ -202,11 +196,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 			if err != nil {
 				log.Errorf("Could not parse protocol/port information from %v. Err: %v", protoPort, err)
 				return nil, err
-			}
-			// Ensure that port is not specified with icmp protocol
-			if protocol == "icmp" && len(matchInfo) != 0 {
-				log.Errorf("specifying port with icmp protocol is invalid")
-				return nil, fmt.Errorf("specifying port with icmp protocol is invalid")
 			}
 
 			halProtocol, err := convertAppProtocol(protocol)
@@ -261,11 +250,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				if err != nil {
 					log.Errorf("Could not parse destination protocol/port information from %v. Err: %v", dProtoPort, err)
 					return nil, err
-				}
-				// Ensure that port is not specified with icmp protocol
-				if protocol == "icmp" && len(dstMatchInfo) != 0 {
-					log.Errorf("specifying port with icmp protocol is invalid")
-					return nil, fmt.Errorf("specifying port with icmp protocol is invalid")
 				}
 				halProtocol, err := convertAppProtocol(protocol)
 				if err != nil {

@@ -703,7 +703,7 @@ func (a *ApuluAPI) HandleApp(oper types.Operation, app netproto.App) (apps []net
 					if err != nil {
 						break
 					}
-					if err := apuluValidator.ValidateNetworkSecurityPolicyApp(a.InfraAPI, nsp); err != nil {
+					if err := apuluValidator.ValidateNetworkSecurityPolicy(a.InfraAPI, nsp); err != nil {
 						break
 					}
 					if err := apulu.HandleNetworkSecurityPolicy(a.InfraAPI, a.SecurityPolicySvcClient, oper, nsp, ruleIDToAppMapping); err == nil {
@@ -818,7 +818,7 @@ func (a *ApuluAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netprot
 		return nil, err
 	}
 
-	if err := apuluValidator.ValidateNetworkSecurityPolicyApp(a.InfraAPI, nsp); err != nil {
+	if err := apuluValidator.ValidateNetworkSecurityPolicy(a.InfraAPI, nsp); err != nil {
 		log.Error(err)
 		return nil, err
 	}

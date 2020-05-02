@@ -147,11 +147,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				return nil, err
 			}
 
-			// Ensure that port is not specified with icmp protocol
-			if protocol == "icmp" && len(matchInfo) != 0 {
-				log.Errorf("specifying port with icmp protocol is invalid")
-				return nil, fmt.Errorf("specifying port with icmp protocol is invalid")
-			}
 			// Handle TCP/UDP proto/ports here.
 			if protocol != "icmp" {
 				portRange, err := convertHalPort(matchInfo)
@@ -192,13 +187,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 			if err != nil {
 				log.Errorf("Could not parse protocol/port information from %v. Err: %v", protoPort, err)
 				return nil, err
-			}
-
-			// Ensure that port is not specified with icmp protocol
-
-			if protocol == "icmp" && len(srcMatchInfo) != 0 {
-				log.Errorf("specifying port with icmp protocol is invalid")
-				return nil, fmt.Errorf("specifying port with icmp protocol is invalid")
 			}
 
 			// Handle TCP/UDP proto/ports here.
@@ -247,13 +235,6 @@ func buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Ma
 				if err != nil {
 					log.Errorf("Could not parse destination protocol/port information from %v. Err: %v", dProtoPort, err)
 					return nil, err
-				}
-
-				// Ensure that port is not specified with icmp protocol
-
-				if protocol == "icmp" && len(dstMatchInfo) != 0 {
-					log.Errorf("specifying port with icmp protocol is invalid")
-					return nil, fmt.Errorf("specifying port with icmp protocol is invalid")
 				}
 
 				// Handle TCP/UDP proto/ports here.
