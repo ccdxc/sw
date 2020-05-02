@@ -16,7 +16,7 @@
 #include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "gen/proto/debug.pb.h"
 
-#define GRPC_API_PORT    50054
+#define GRPC_API_PORT    11357
 
 using grpc::Server;
 using grpc::ServerBuilder;

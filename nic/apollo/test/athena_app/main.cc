@@ -21,8 +21,6 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/port.hpp"
-#include "nic/sdk/lib/thread/thread.hpp"
-#include "nic/sdk/lib/event_thread/event_thread.hpp"
 #include "nic/apollo/agent/athena/trace.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"

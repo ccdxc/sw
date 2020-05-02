@@ -29,8 +29,6 @@ std::string g_grpc_server_addr;
 static sdk::event_thread::event_thread *g_svc_server_thread;
 static sdk::event_thread::event_thread *g_grpc_reg_thread;
 
-#define GRPC_API_PORT    50054
-
 extern "C" {
 //------------------------------------------------------------------------------
 // spawn command server thread
