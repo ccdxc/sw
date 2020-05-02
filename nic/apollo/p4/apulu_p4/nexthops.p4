@@ -132,7 +132,8 @@ action ipv4_vxlan_encap(dmac, smac) {
     subtract(udp_0.len, scratch_metadata.ip_totallen, 20);
 
     modify_field(vxlan_0.flags, 0x8);
-    if (TX_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL)) {
+    if (TX_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL) or
+        (rewrite_metadata.tunnel_vni != 0)) {
         modify_field(vxlan_0.vni, rewrite_metadata.tunnel_vni);
     } else {
         modify_field(vxlan_0.vni, rewrite_metadata.vni);
@@ -178,7 +179,8 @@ action ipv6_vxlan_encap(dmac, smac) {
     modify_field(udp_0.len, scratch_metadata.ip_totallen);
 
     modify_field(vxlan_0.flags, 0x8);
-    if (TX_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL)) {
+    if (TX_REWRITE(rewrite_metadata.flags, VNI, FROM_TUNNEL) or
+        (rewrite_metadata.tunnel_vni != 0)) {
         modify_field(vxlan_0.vni, rewrite_metadata.tunnel_vni);
     } else {
         modify_field(vxlan_0.vni, rewrite_metadata.vni);
