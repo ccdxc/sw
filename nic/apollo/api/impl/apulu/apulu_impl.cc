@@ -16,7 +16,7 @@
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
-
+#include "nic/sdk/asic/asic.hpp"
 #include "nic/sdk/platform/ring/ring.hpp"
 #include "nic/sdk/platform/pal/include/pal_mem.h"
 #include "nic/apollo/core/trace.hpp"
@@ -804,7 +804,8 @@ apulu_impl::upgrade_backup(void) {
 
 sdk_ret_t
 apulu_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
-                                  uint8_t action_id, void *actiondata) {
+                                 uint8_t action_id, void *actiondata) {
+    sdk_ret_t    ret;
     uint32_t     len;
     uint8_t      packed_bytes[CACHE_LINE_SIZE];
     uint8_t      *packed_entry = packed_bytes;
@@ -821,13 +822,18 @@ apulu_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
     }
     p4pd_p4plus_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
     p4pd_p4plus_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
-    return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
-                          ASIC_WRITE_MODE_WRITE_THRU);
+    ret = asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
+                         ASIC_WRITE_MODE_WRITE_THRU);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, CACHE_LINE_SIZE,
+                                                  P4PLUS_CACHE_INVALIDATE_RXDMA);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 apulu_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
-                                  uint8_t action_id, void *actiondata) {
+                                 uint8_t action_id, void *actiondata) {
+    sdk_ret_t    ret;
     uint32_t     len;
     uint8_t      packed_bytes[CACHE_LINE_SIZE];
     uint8_t      *packed_entry = packed_bytes;
@@ -844,8 +850,12 @@ apulu_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
     }
     p4pd_p4plus_txdma_raw_table_hwentry_query(tableid, action_id, &len);
     p4pd_p4plus_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
-    return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
-                          ASIC_WRITE_MODE_WRITE_THRU);
+    ret = asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
+                         ASIC_WRITE_MODE_WRITE_THRU);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr, CACHE_LINE_SIZE,
+                                                  P4PLUS_CACHE_INVALIDATE_TXDMA);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
