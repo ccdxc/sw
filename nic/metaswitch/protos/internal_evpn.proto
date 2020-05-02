@@ -213,6 +213,8 @@ message EvpnIpVrfSpec {
 
   // Internal only
   string VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", IsInternalField: true}];
+  // VPC VR Mac
+  bytes RouterMAC = 1001 [(venice.pdsaFields) = {Field:"routers_mac", IsInternalField: true}];
 }
 
 // operational status of EVPN IP VRF, if any

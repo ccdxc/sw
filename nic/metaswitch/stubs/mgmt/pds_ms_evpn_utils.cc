@@ -356,6 +356,9 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
     if (uuid == vpc_uuid) {
         // Venice case
         // spec uuid is same as vpcuuid
+        ms_idx_t        vrf_id;
+        pds_vpc_spec_t  *spec;
+        { // start of mgmt state context
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(vpc_uuid);
 
@@ -367,7 +370,8 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
         } 
         if (uuid_obj->obj_type() == uuid_obj_type_t::VPC) {
             auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
-            std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
+            vrf_id = vpc_uuid_obj->ms_id();
+            std::string vrf_name = std::to_string (vrf_id);
             req.set_vrfname(vrf_name);
             PDS_TRACE_DEBUG("EVPN IP VRF request: %s vrf-id: %d, vrf-name:%s",
                             uuid.str(), vpc_uuid_obj->ms_id(), vrf_name.c_str());
@@ -376,6 +380,19 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
                          "VPC reference").  append(uuid.str()),
                          SDK_RET_INVALID_ARG);
         }
+        } // end of mgmt state context
+        { // start of state context
+            auto state_ctxt = state_t::thread_context();
+            auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
+            if (vpc_obj == nullptr) {
+                throw Error (std::string("VPC store lookup failed for VRF-ID "
+                             ).append(std::to_string (vrf_id)),
+                             SDK_RET_ENTRY_NOT_FOUND);
+            }
+            spec = &vpc_obj->properties().vpc_spec;
+            req.set_routermac(std::string(
+                reinterpret_cast< char const* >(spec->vr_mac), ETH_ADDR_LEN));
+        } // end of state context
     } else {
         // Non Venice case
         // TODO: spec uuid doesnt match with subnet uuid. need to key-map
