@@ -156,25 +156,8 @@ var _ = Describe("Vc hub workload tests", func() {
 
 		It("Bring up 8 local and remote workloads and test traffic", func() {
 
-			// Create a vmk interface for vmotion, use one of the available network for vmotion traffic
-			nc := ts.model.Networks("")
-			Expect(len(nc.Subnets()) > 0)
-			vmotionNet := nc.Subnets()[0].Name
-
-			log.Infof("Create vmk interface for vmotion using network %s on hosts %v", vmotionNet,
-				ts.model.Hosts().Names())
-			networkSpec := common.NetworkSpec{
-				Name:   vmotionNet,
-				Switch: "",
-				Nodes:  ts.model.Hosts().Names(),
-				NwType: common.VmotionNetworkType,
-			}
-
-			err := ts.model.AddNetworks(networkSpec)
-			Expect(err == nil)
-
 			workloads := ts.model.Workloads()
-			err = ts.model.TeardownWorkloads(workloads)
+			err := ts.model.TeardownWorkloads(workloads)
 			Expect(err == nil)
 
 			// verify workload status is good, Put all check w.r.t to venice here.
@@ -213,25 +196,6 @@ var _ = Describe("Vc hub workload tests", func() {
 				return ts.model.VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
-			// Create a vmk interface for vmotion, use one of the available network for vmotion traffic
-			//			nc := ts.model.Networks("")
-			//			Expect(len(nc.Subnets()) > 0)
-			//			vmotionNet := nc.Subnets()[0].Name
-			//
-			//			log.Infof("Create vmk interface for vmotion using network %s on hosts %v", vmotionNet,
-			//				ts.model.Hosts().Names())
-			//			networkSpec := common.NetworkSpec {
-			//				Name: vmotionNet,
-			//				Switch: "",
-			//				Nodes: ts.model.Hosts().Names(),
-			//				NwType: common.VmotionNetworkType,
-			//			}
-			//
-			//			err = ts.model.AddNetworks(networkSpec)
-			//			Expect(err == nil)
-			// Run traffic between one local pair and one remote pair (same workload)
-			// vmotion the work-load so local pair becomes remote and remote pair becomes
-			// local
 			wlp2 := objects.NewWorkloadPairCollection(workloads.Client, workloads.Testbed)
 			lp := localPairs.Pairs[0]
 			wlp2.Pairs = append(wlp2.Pairs, lp)

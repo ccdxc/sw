@@ -3,6 +3,7 @@ package testbed
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -414,10 +415,35 @@ func (n *VcenterNode) AddNetworks(ctx context.Context, networkMsg *iota.Networks
 						EnableVmotion: true,
 						Portgroup:     nw.Name,
 					}
+
 					if !nw.Dhcp {
-						nwSpec.IPAddress = modelconsts.VmotionSubnet + "." + strings.Split(mn.GetNodeInfo().IPAddress, ".")[3]
+
+						ipAddr := ""
+						if ip := net.ParseIP(mn.GetNodeInfo().IPAddress); ip == nil {
+							addresses, err := net.LookupIP(mn.GetNodeInfo().IPAddress)
+							if err != nil {
+								networkMsg.ApiResponse.ErrorMsg = errors.Wrap(err, "lookup IP failed").Error()
+								networkMsg.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+								return networkMsg, nil
+							}
+							for _, addr := range addresses {
+								if err := net.ParseIP(addr.String()); err == nil {
+									ipAddr = addr.String()
+									break
+								}
+							}
+						} else {
+							ipAddr = mn.GetNodeInfo().IPAddress
+						}
+						if ipAddr == "" {
+							networkMsg.ApiResponse.ErrorMsg = "Not able to retrieve ip addresss for " + mn.GetNodeInfo().IPAddress
+							networkMsg.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+							return networkMsg, nil
+						}
+						nwSpec.IPAddress = modelconsts.VmotionSubnet + "." + strings.Split(ipAddr, ".")[3]
 						nwSpec.Subnet = "255.255.255.0"
 					}
+
 					if nw.MacAddress != "" {
 						nwSpec.MacAddress = nw.MacAddress
 					}

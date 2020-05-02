@@ -14,6 +14,7 @@ import (
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	cfgModel "github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/enterprise/base"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/enterprise"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
@@ -201,6 +202,27 @@ func (sm *VcenterSysModel) setupInsertionMode() error {
 	return nil
 }
 
+func (sm *VcenterSysModel) setupVmotionNetwork() error {
+
+	nc := sm.Networks("")
+	if len(nc.Subnets()) < 1 {
+		return fmt.Errorf("Insufficient networks to enable vmotion")
+	}
+
+	vmotionNet := nc.Subnets()[0].Name
+
+	log.Infof("Create vmk interface for vmotion using network %s on hosts %v", vmotionNet,
+		sm.Hosts().Names())
+	networkSpec := common.NetworkSpec{
+		Name:   vmotionNet,
+		Switch: "",
+		Nodes:  sm.Hosts().Names(),
+		NwType: common.VmotionNetworkType,
+	}
+
+	return sm.AddNetworks(networkSpec)
+}
+
 // SetupDefaultConfig sets up a default config for the system
 func (sm *VcenterSysModel) SetupDefaultConfig(ctx context.Context, scale, scaleData bool) error {
 	sm.Scale = scale
@@ -236,6 +258,11 @@ L:
 			time.Sleep(2 * time.Second)
 		}
 	}
+
+	if err := sm.setupVmotionNetwork(); err != nil {
+		return fmt.Errorf("Setting up vmotion network %v", err.Error())
+	}
+
 	//objects.NewOrchestrator(
 	if err := sm.SetupDefaultCommon(ctx, scale, scaleData); err != nil {
 		return err

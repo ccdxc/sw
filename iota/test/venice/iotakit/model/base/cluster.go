@@ -1362,16 +1362,15 @@ func (sm *SysModel) CollectLogs() error {
 
 	// trigger commands
 	_, err = trig.Run()
-	if err != nil {
-		log.Errorf("Failed to setup venice node. Err: %v", err)
-		return fmt.Errorf("Error triggering commands on venice nodes: %v", err)
-	}
-
-	for _, node := range sm.Tb.Nodes {
-		switch node.Personality {
-		case iota.PersonalityType_PERSONALITY_VENICE:
-			sm.Tb.CopyFromVenice(node.NodeName, []string{fmt.Sprintf("%s_venice.tar", node.NodeName)}, "logs")
+	if err == nil {
+		for _, node := range sm.Tb.Nodes {
+			switch node.Personality {
+			case iota.PersonalityType_PERSONALITY_VENICE:
+				sm.Tb.CopyFromVenice(node.NodeName, []string{fmt.Sprintf("%s_venice.tar", node.NodeName)}, "logs")
+			}
 		}
+	} else {
+		log.Errorf("Failed to run commands on venice node. Err: %v", err)
 	}
 
 	// get token ao authenticate to agent
