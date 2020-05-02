@@ -9,13 +9,14 @@ import (
 	"time"
 
 	apierrors "github.com/pensando/sw/api/errors"
+	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/log"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
-
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/test/utils"
@@ -27,6 +28,7 @@ import (
 type securityTestGroup struct {
 	suite           *TestSuite
 	authAgentClient *netutils.HTTPClient
+	securityRestIf  security.SecurityV1NetworkSecurityPolicyInterface
 }
 
 // instantiate test suite
@@ -42,10 +44,52 @@ func (stg *securityTestGroup) setupTest() {
 		stg.authAgentClient, err = utils.GetNodeAuthTokenHTTPClient(ctx, ts.tu.APIGwAddr, []string{"*"})
 		return err
 	}, 30, 5).Should(BeNil(), "Failed to get node auth token")
+	snIf := ts.tu.APIClient.ClusterV1().DistributedServiceCard()
+	validateCluster()
+	validateNICHealth(context.Background(), snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
+	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+	restSvc, err := apiclient.NewRestAPIClient(apiGwAddr)
+	if err == nil {
+		By("Creating NetworkSecurityPolicy Client ------")
+		stg.securityRestIf = restSvc.SecurityV1().NetworkSecurityPolicy()
+	}
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(stg.securityRestIf).ShouldNot(Equal(nil))
+	ctx := ts.tu.MustGetLoggedInContext(context.Background())
+	s, err := stg.securityRestIf.List(ctx, &api.ListWatchOptions{})
+	// delete the sg policy
+	Expect(err).ShouldNot(HaveOccurred())
+	Eventually(func() bool {
+		By("Deleting Security Policy ------")
+		for _, i := range s {
+			_, err := stg.securityRestIf.Delete(ctx, i.GetObjectMeta())
+			if err != nil {
+				return false
+			}
+		}
+		return true
+	}, 30, 5).Should(BeTrue(), fmt.Sprintf("Failed to delete security policy before testing process"))
 }
 
 // teardownTest cleans up test suite
 func (stg *securityTestGroup) teardownTest() {
+	ctx := ts.tu.MustGetLoggedInContext(context.Background())
+	s, err := stg.securityRestIf.List(ctx, &api.ListWatchOptions{})
+	// delete the sg policy
+	Expect(err).ShouldNot(HaveOccurred())
+	Eventually(func() bool {
+		By("Deleting Security Policy ------")
+		for _, i := range s {
+			_, err := stg.securityRestIf.Delete(ctx, i.GetObjectMeta())
+			if err != nil {
+				return false
+			}
+		}
+		return true
+	}, 30, 5).Should(BeTrue(), fmt.Sprintf("Failed to delete security policy after testing process"))
+	snIf := ts.tu.APIClient.ClusterV1().DistributedServiceCard()
+	validateCluster()
+	validateNICHealth(context.Background(), snIf, ts.tu.NumNaplesHosts, cmd.ConditionStatus_TRUE)
 }
 
 // getSGPolicies() returns the list of SG Policies as read from the agent REST interface
@@ -150,13 +194,14 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 	}
 
 	// create sg policy
-	resp, err := stg.suite.restSvc.SecurityV1().NetworkSecurityPolicy().Create(stg.suite.loggedInCtx, &sg)
+	ctx := ts.tu.MustGetLoggedInContext(context.Background())
+	resp, err := stg.securityRestIf.Create(ctx, &sg)
 	apiErr := apierrors.FromError(err)
 	log.Errorf("%v", apiErr)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify we can read the policy back
-	rsg, err := stg.suite.restSvc.SecurityV1().NetworkSecurityPolicy().Get(stg.suite.loggedInCtx, &sg.ObjectMeta)
+	rsg, err := stg.securityRestIf.Get(ctx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(rsg.Spec).Should(Equal(resp.Spec))
 
@@ -177,7 +222,7 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 	}, 30, 1).Should(BeTrue(), "Failed to get sg policies on netagent")
 
 	// delete the sg policy
-	_, err = stg.suite.restSvc.SecurityV1().NetworkSecurityPolicy().Delete(stg.suite.loggedInCtx, &sg.ObjectMeta)
+	_, err = stg.securityRestIf.Delete(ctx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify policy is gone from the agents
@@ -211,13 +256,23 @@ func (stg *securityTestGroup) testSecurityGroupCreateDelete() {
 			WorkloadSelector: labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}),
 		},
 	}
+	var securityGroupRestIf security.SecurityV1SecurityGroupInterface
+	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+	restSvc, err := apiclient.NewRestAPIClient(apiGwAddr)
+	if err == nil {
+		By("Creating SecurityGroup Client ------")
+		securityGroupRestIf = restSvc.SecurityV1().SecurityGroup()
+	}
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(stg.securityRestIf).ShouldNot(Equal(nil))
 
+	ctx := ts.tu.MustGetLoggedInContext(context.Background())
 	// create sg policy
-	resp, err := stg.suite.restSvc.SecurityV1().SecurityGroup().Create(stg.suite.loggedInCtx, &sg)
+	resp, err := securityGroupRestIf.Create(ctx, &sg)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify we can read the policy back
-	rsg, err := stg.suite.restSvc.SecurityV1().SecurityGroup().Get(stg.suite.loggedInCtx, &sg.ObjectMeta)
+	rsg, err := securityGroupRestIf.Get(ctx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(rsg).Should(Equal(resp))
 
@@ -239,7 +294,7 @@ func (stg *securityTestGroup) testSecurityGroupCreateDelete() {
 
 	// delete the sg policy
 	Eventually(func() error {
-		_, err = stg.suite.restSvc.SecurityV1().SecurityGroup().Delete(stg.suite.loggedInCtx, &sg.ObjectMeta)
+		_, err = securityGroupRestIf.Delete(ctx, &sg.ObjectMeta)
 		return err
 	}, 30, 1).ShouldNot(HaveOccurred())
 
