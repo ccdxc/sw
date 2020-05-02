@@ -68,8 +68,8 @@ control egress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
 	   metadata.cntrl.conntrack_index_valid = TRUE;
 	 }
 	 
-	 metadata.cntrl.l2_session_index = hdr.p4i_to_p4e_header.l2_index;
-	 metadata.cntrl.l2_session_index_valid = TRUE;
+	 //	 metadata.cntrl.l2_session_index = hdr.p4i_to_p4e_header.l2_index;
+	 //metadata.cntrl.l2_session_index_valid = TRUE;
 	
        }
      }
@@ -82,7 +82,7 @@ control egress_inter_pipe(inout cap_phv_intr_global_h capri_intrinsic,
             p4i_to_p4e_state_a;
         }
 	  default_action = p4i_to_p4e_state_a;
-	stage = 0;
+	stage = 1;
     }  
 
   

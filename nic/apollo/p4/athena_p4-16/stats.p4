@@ -156,6 +156,14 @@ control p4i_statistics(inout cap_phv_intr_global_h capri_intrinsic,
 	    return;
 	  } else {	  
 
+	    capri_intrinsic.drop = 1;
+	    if(ipv4HdrCsum_1.get_validate_status() == 0) {
+		rx_substrate_csum_err = rx_substrate_csum_err + 1;
+	    } else {
+	      rx_user_csum_err = rx_user_csum_err + 1;	
+	    }
+	    
+	    /*
 	    if(hdr.ip_1.ipv4.isValid()) {
 	      if(ipv4HdrCsum_1.get_validate_status() == 0) {
 		rx_substrate_csum_err = rx_substrate_csum_err + 1;
@@ -188,7 +196,9 @@ control p4i_statistics(inout cap_phv_intr_global_h capri_intrinsic,
 		  capri_intrinsic.drop = 1;
 		}
 	      }
+	    
 	    }
+	    */
 	  }
 	} 
       }
@@ -197,12 +207,12 @@ control p4i_statistics(inout cap_phv_intr_global_h capri_intrinsic,
 
     @name(".p4i_stats") table p4i_stats {
         key = {
-	  metadata.cntrl.stats_id : exact;
+	  metadata.cntrl.stats_id : table_index;
         }
         actions = {
             p4i_stats_a;
         }
-        size = 2;
+        size = 1;
         placement = HBM;
         default_action = p4i_stats_a;
         stage = 5;

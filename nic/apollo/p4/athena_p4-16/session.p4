@@ -56,7 +56,7 @@ control session_info_lookup(inout cap_phv_intr_global_h intr_global,
 
 						       ) {
       if(valid_flag == TRUE) {
-	timestamp = intr_global.timestamp[47:30];
+	timestamp = intr_global.timestamp[40:23];
 	__unlock();
 	metadata.cntrl.skip_flow_log = skip_flow_log;
 	if(conntrack_id != 0) {
