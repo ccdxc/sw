@@ -100,21 +100,21 @@ ms_bgp_conn_fsm_state_str (NBB_ULONG fsm_state)
     switch (fsm_state)
     {
         case QBNM_CONN_IDLE:
-            return "conn_idle";
+            return "Idle";
         case QBNM_CONN_CONNECT:
-            return "conn_connect";
+            return "Connect";
         case QBNM_CONN_ACTIVE:
-            return "conn_active";
+            return "Active";
         case QBNM_CONN_OPEN_PEND:
-            return "conn_open_pending";
+            return "OpenPending";
         case QBNM_CONN_OPEN_SENT:
-            return "conn_open_sent";
+            return "OpenSent";
         case QBNM_CONN_OPEN_CONFIRM:
-            return "conn_open_confirm";
+            return "OpenConfirm";
         case QBNM_CONN_ESTABLISHED:
-            return "conn_established";
+            return "Established";
     }
-    return "invalid_state";
+    return "Invalid";
 }
 
 /**PROC+**********************************************************************/
