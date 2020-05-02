@@ -37,6 +37,20 @@ func NewNetworkSecurityPolicyCollection(policy *NetworkSecurityPolicy, client ob
 	}
 }
 
+func (spc *NetworkSecurityPolicyCollection) Add (nspc *NetworkSecurityPolicyCollection) {
+	if spc == nil || nspc == nil {
+		return
+	}
+	if spc.err != nil || nspc.err != nil {
+		return
+	}
+	for _, pol := range nspc.Policies {
+		spc.Policies = append(spc.Policies, pol)
+	}
+	nspc.Policies = nil
+}
+
+
 // Delete deletes all policies in the collection
 func (spc *NetworkSecurityPolicyCollection) Delete() error {
 	if spc == nil {

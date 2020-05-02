@@ -237,6 +237,23 @@ func (wpc *WorkloadPairCollection) WithinNetwork() *WorkloadPairCollection {
 	return &newCollection
 }
 
+//AcrossNetwork filters workload pairs to different subnet
+func (wpc *WorkloadPairCollection) AcrossNetwork(workload *Workload) *WorkloadPairCollection {
+	if wpc.HasError() {
+		return wpc
+	}
+	newCollection := WorkloadPairCollection {}
+
+	for _, pair := range wpc.Pairs {
+		if pair.First.iotaWorkload.NetworkName == workload.iotaWorkload.NetworkName &&
+		pair.First.iotaWorkload.UplinkVlan == workload.iotaWorkload.UplinkVlan &&
+		pair.Second.iotaWorkload.NetworkName != workload.iotaWorkload.NetworkName {
+			newCollection.Pairs =  append(newCollection.Pairs, pair)
+		}
+	}
+	return &newCollection
+}
+
 // OnNetwork workloads on particular network
 func (wpc *WorkloadPairCollection) OnNetwork(network *Network) *WorkloadPairCollection {
 	if wpc.HasError() {

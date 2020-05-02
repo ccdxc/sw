@@ -289,6 +289,361 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 	return nil
 }
 
+var _ = Describe("multiple policies", func() {
+	var startTime time.Time
+	BeforeEach(func() {
+		// verify cluster is in good health
+		startTime = time.Now().UTC()
+
+		Eventually(func() error {
+			return ts.model.VerifyClusterStatus()
+		}).Should(Succeed())
+
+		// delete the default allow policy
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
+	})
+	AfterEach(func() {
+		ts.model.AfterTestCommon()
+		//Expect No Service is stopped
+		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
+		nwc, err := getNetworkCollection()
+		Expect(err).Should(Succeed())
+
+		//Now attach ingress and egres
+		nwc.SetIngressSecurityPolicy(nil)
+		nwc.SetEgressSecurityPolicy(nil)
+
+		// Delete the policies. we can ignore the error here
+		ts.model.NetworkSecurityPolicy("p1").Delete()
+		ts.model.NetworkSecurityPolicy("p2").Delete()
+		ts.model.NetworkSecurityPolicy("p3").Delete()
+		ts.model.NetworkSecurityPolicy("p4").Delete()
+		ts.model.DefaultNetworkSecurityPolicy().Delete()
+
+		// recreate default allow policy
+		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
+	})
+	Context("user-provider policy tests", func() {
+		It("Allow TCP, Deny UDP, Same subnet", func() {
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+
+			selNetwork, err := getNetworkCollection()
+			Expect(err).Should(Succeed())
+			networkA := selNetwork.Subnets()[0]
+
+			//Workloadpair in SubnetA
+			workloadPairWithinNetwork := ts.model.WorkloadPairs().OnNetwork(networkA).Any(1)
+
+			//Add Rules to deny UDP and allow all other traffic
+			ingress_policy := ts.model.NewNetworkSecurityPolicy("p1").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			ingress_policy.Add(ts.model.NewNetworkSecurityPolicy("p2").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "17", "9100", "DENY"))
+
+			egress_policy := ts.model.NewNetworkSecurityPolicy("p3").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			egress_policy.Add(ts.model.NewNetworkSecurityPolicy("p4").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "17", "9100", "DENY"))
+
+			ingress_policy.SetTenant(selNetwork.GetTenant())
+			egress_policy.SetTenant(selNetwork.GetTenant())
+			Expect(ingress_policy.Commit()).Should(Succeed())
+			Expect(egress_policy.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(ingress_policy)
+			selNetwork.SetEgressSecurityPolicy(egress_policy)
+
+			// Verify if policies are successfully applied
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(ingress_policy)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(egress_policy)
+			}).Should(Succeed())
+
+			//Skipping data path checks till validation of wildcard fix
+			return
+
+			//Verify UDP session fails
+			Eventually(func() error {
+				return ts.model.UDPSessionFails(workloadPairWithinNetwork, 9100)
+			}).Should(Succeed())
+
+			// verify TCP connections
+			Eventually(func() error {
+				return ts.model.TCPSession(workloadPairWithinNetwork, 80)
+			}).Should(Succeed())
+
+			// verify TCP connections in reverse direction
+			Eventually(func() error {
+				return ts.model.TCPSession(workloadPairWithinNetwork.ReversePairs(), 80)
+			}).Should(Succeed())
+		})
+		It("Allow TCP, Deny UDP, Across subnets", func() {
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+
+			selNetwork, err := getNetworkCollection()
+			Expect(err).Should(Succeed())
+			networkA := selNetwork.Subnets()[0]
+
+			//Workloadpair in SubnetA
+			workloadPairWithinNetwork := ts.model.WorkloadPairs().OnNetwork(networkA).Any(1)
+
+			//Workloadpair across SubnetA, SubnetB
+			workloadPairAcrossNetwork := ts.model.WorkloadPairs().AcrossNetwork(
+				workloadPairWithinNetwork.Pairs[0].First).Any(1)
+
+			//Add Rules between SubnetA and SubnetB (Deny UDP 9100)
+			ingress_policy := ts.model.NewNetworkSecurityPolicy("p1").AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork, "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			ingress_policy.Add(ts.model.NewNetworkSecurityPolicy("p2").AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork, "workload-subnet", "workload-subnet", "17", "9100", "DENY"))
+
+			egress_policy := ts.model.NewNetworkSecurityPolicy("p3").AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			egress_policy.Add(ts.model.NewNetworkSecurityPolicy("p4").AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "17", "9100", "DENY"))
+
+			ingress_policy.SetTenant(selNetwork.GetTenant())
+			egress_policy.SetTenant(selNetwork.GetTenant())
+			Expect(ingress_policy.Commit()).Should(Succeed())
+			Expect(egress_policy.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(ingress_policy)
+			selNetwork.SetEgressSecurityPolicy(egress_policy)
+
+			// Verify if policies are successfully applied
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(ingress_policy)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(egress_policy)
+			}).Should(Succeed())
+
+			//Skipping data path checks till validation of wildcard fix
+			return
+
+			//Verify UDP 9100 session fails
+			Eventually(func() error {
+				return ts.model.UDPSessionFails(workloadPairAcrossNetwork, 9100)
+			}).Should(Succeed())
+
+			//Verify UDP 9200 session succeeds
+			Eventually(func() error {
+				return ts.model.UDPSession(workloadPairAcrossNetwork, 9200)
+			}).Should(Succeed())
+		})
+		It ("Provider AllowAll, User DenyAll, Samesubnet", func() {
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+
+			selNetwork, err := getNetworkCollection()
+			Expect(err).Should(Succeed())
+			networkA := selNetwork.Subnets()[0]
+
+			//Workloadpair in SubnetA
+			workloadPairWithinNetwork := ts.model.WorkloadPairs().OnNetwork(networkA).Any(1)
+
+			//Add Provider (allow-all) rule and User (deny-all) rule
+			ingress_policy := ts.model.NewNetworkSecurityPolicy("p1").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			ingress_policy.Add(ts.model.NewNetworkSecurityPolicy("p2").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "DENY"))
+
+			egress_policy := ts.model.NewNetworkSecurityPolicy("p3").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			egress_policy.Add(ts.model.NewNetworkSecurityPolicy("p4").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "DENY"))
+
+
+			ingress_policy.SetTenant(selNetwork.GetTenant())
+			egress_policy.SetTenant(selNetwork.GetTenant())
+			Expect(ingress_policy.Commit()).Should(Succeed())
+			Expect(egress_policy.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(ingress_policy)
+			selNetwork.SetEgressSecurityPolicy(egress_policy)
+
+			// Verify if policy successfully applied
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(ingress_policy)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(egress_policy)
+			}).Should(Succeed())
+
+			//Skipping data path checks till validation of wildcard fix
+			return
+
+			//Verify Ping fails
+			Eventually(func() error {
+				return ts.model.PingFails(workloadPairWithinNetwork)
+			}).Should(Succeed())
+
+			// verify TCP connections in forward direction fail
+			Eventually(func() error {
+				return ts.model.TCPSessionFails(workloadPairWithinNetwork, 80)
+			}).Should(Succeed())
+
+			// verify TCP connections in reverse direction fail
+			Eventually(func() error {
+				return ts.model.TCPSessionFails(workloadPairWithinNetwork.ReversePairs(), 80)
+			}).Should(Succeed())
+		})
+		It ("Provider AllowAll, User DenyAll, across Subnets", func() {
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+
+			selNetwork, err := getNetworkCollection()
+			Expect(err).Should(Succeed())
+			networkA := selNetwork.Subnets()[0]
+
+			//Workloadpair in SubnetA
+			workloadPairWithinNetwork := ts.model.WorkloadPairs().OnNetwork(networkA).Any(1)
+			//Workloadpair across SubnetA, SubnetB
+			workloadPairAcrossNetwork := ts.model.WorkloadPairs().AcrossNetwork(
+				workloadPairWithinNetwork.Pairs[0].First).Any(1)
+
+			//Add Provider (allow-all) rule and User (deny-all) rule
+			ingress_policy := ts.model.NewNetworkSecurityPolicy("p1").AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork, "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			ingress_policy.Add(ts.model.NewNetworkSecurityPolicy("p2").AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork, "any", "any", "any", "any", "DENY"))
+
+			egress_policy := ts.model.NewNetworkSecurityPolicy("p3").AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			egress_policy.Add(ts.model.NewNetworkSecurityPolicy("p4").AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork, "any", "any", "any", "any", "DENY"))
+
+
+			ingress_policy.SetTenant(selNetwork.GetTenant())
+			egress_policy.SetTenant(selNetwork.GetTenant())
+			Expect(ingress_policy.Commit()).Should(Succeed())
+			Expect(egress_policy.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(ingress_policy)
+			selNetwork.SetEgressSecurityPolicy(egress_policy)
+
+			// Verify if policy successfully applied
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(ingress_policy)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(egress_policy)
+			}).Should(Succeed())
+
+			//Skipping data path checks till validation of wildcard fix
+			return
+
+			//Verify Ping fails for across subnet
+			Eventually(func() error {
+				return ts.model.PingFails(workloadPairAcrossNetwork)
+			}).Should(Succeed())
+			log.Infof("")
+
+			// verify TCP connection fails between workload pairs in different network
+			Eventually(func() error {
+				return ts.model.TCPSessionFails(workloadPairAcrossNetwork, 80)
+			}).Should(Succeed())
+
+			// verify TCP connection (reverse) fails between workload pairs in different network
+			Eventually(func() error {
+				return ts.model.TCPSessionFails(workloadPairAcrossNetwork.ReversePairs(), 80)
+			}).Should(Succeed())
+		})
+		It("User allow TCP/SSH ingress, Allowall egress", func() {
+			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
+			if !ts.tb.HasNaplesHW() {
+				Skip("Disabling on naples sim till traffic issue is debugged")
+			}
+
+			selNetwork, err := getNetworkCollection()
+			Expect(err).Should(Succeed())
+			networkA := selNetwork.Subnets()[0]
+
+			//Workloadpair in SubnetA
+			workloadPairWithinNetwork := ts.model.WorkloadPairs().OnNetwork(networkA).Any(1)
+			//Workloadpair across SubnetA, SubnetB
+			workloadPairAcrossNetwork := ts.model.WorkloadPairs().AcrossNetwork(
+				workloadPairWithinNetwork.Pairs[0].First).Any(1)
+
+			// Ingress. Provider Allow B->A, A->A, User Allow all TCP (80/443)
+			ingress_policy := ts.model.NewNetworkSecurityPolicy("p1").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			ingress_policy.AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork, "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			pol1 := ts.model.NewNetworkSecurityPolicy("p2").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "6", "80", "PERMIT")
+			pol1.AddRuleForWorkloadCombo(workloadPairAcrossNetwork, "any", "any", "6", "443", "PERMIT")
+			ingress_policy.Add(pol1)
+
+			// Egress. Provider Allow A->B A<->A, User Allow all
+			egress_policy := ts.model.NewNetworkSecurityPolicy("p3").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			egress_policy.AddRuleForWorkloadCombo(
+				workloadPairAcrossNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
+			pol2 := ts.model.NewNetworkSecurityPolicy("p4").AddRuleForWorkloadCombo(
+				workloadPairWithinNetwork, "any", "any", "any", "any", "PERMIT")
+			egress_policy.Add(pol2)
+
+
+			ingress_policy.SetTenant(selNetwork.GetTenant())
+			egress_policy.SetTenant(selNetwork.GetTenant())
+			Expect(ingress_policy.Commit()).Should(Succeed())
+			Expect(egress_policy.Commit()).Should(Succeed())
+			selNetwork.SetIngressSecurityPolicy(ingress_policy)
+			selNetwork.SetEgressSecurityPolicy(egress_policy)
+
+			// Verify if policies are successfully applied
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(ingress_policy)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.VerifyPolicyStatus(egress_policy)
+			}).Should(Succeed())
+
+			//Skipping data path checks till validation of wildcard fix
+			return
+
+			// verify TCP connection succeeds A<->A
+			Eventually(func() error {
+				return ts.model.TCPSession(workloadPairWithinNetwork, 80)
+			}).Should(Succeed())
+
+			// verify TCP connection (reverse) succeeds A<->A
+			Eventually(func() error {
+				return ts.model.TCPSession(workloadPairWithinNetwork.ReversePairs(), 80)
+			}).Should(Succeed())
+
+			// verify TCP connection succeeds from A->B
+			Eventually(func() error {
+				return ts.model.TCPSession(workloadPairAcrossNetwork, 80)
+			}).Should(Succeed())
+
+			// verify TCP connection succeeds from B->A
+			Eventually(func() error {
+				return ts.model.TCPSession(workloadPairAcrossNetwork.ReversePairs(), 80)
+			}).Should(Succeed())
+
+			//Verify Ping fails for both within subnet and across subnet
+			Eventually(func() error {
+				return ts.model.PingFails(workloadPairWithinNetwork)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return ts.model.PingFails(workloadPairAcrossNetwork)
+			}).Should(Succeed())
+		})
+	})
+})
+
 var _ = Describe("firewall policy model tests", func() {
 	var startTime time.Time
 	BeforeEach(func() {
