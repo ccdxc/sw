@@ -300,11 +300,8 @@ pds_policy_rule_attrs_api_spec_to_proto (pds::SecurityRuleAttrs *proto_spec,
     proto_spec->set_priority(api_spec->priority);
     switch (api_spec->match.l3_match.src_match_type) {
     case IP_MATCH_PREFIX:
-        if ((api_spec->match.l3_match.src_ip_pfx.len) &&
-            ((api_spec->match.l3_match.src_ip_pfx.addr.af ==
-                  IP_AF_IPV4) ||
-             (api_spec->match.l3_match.src_ip_pfx.addr.af ==
-                  IP_AF_IPV6))) {
+        if ((api_spec->match.l3_match.src_ip_pfx.addr.af == IP_AF_IPV4) ||
+            (api_spec->match.l3_match.src_ip_pfx.addr.af == IP_AF_IPV6)) {
             ippfx_api_spec_to_proto_spec(
                 proto_spec->mutable_match()->mutable_l3match()->mutable_srcprefix(),
                 &api_spec->match.l3_match.src_ip_pfx);
@@ -325,11 +322,8 @@ pds_policy_rule_attrs_api_spec_to_proto (pds::SecurityRuleAttrs *proto_spec,
 
     switch (api_spec->match.l3_match.dst_match_type) {
     case IP_MATCH_PREFIX:
-        if ((api_spec->match.l3_match.dst_ip_pfx.len) &&
-            ((api_spec->match.l3_match.dst_ip_pfx.addr.af ==
-                  IP_AF_IPV4) ||
-             (api_spec->match.l3_match.dst_ip_pfx.addr.af ==
-                  IP_AF_IPV6))) {
+        if ((api_spec->match.l3_match.dst_ip_pfx.addr.af == IP_AF_IPV4) ||
+            (api_spec->match.l3_match.dst_ip_pfx.addr.af == IP_AF_IPV6)) {
             ippfx_api_spec_to_proto_spec(
                 proto_spec->mutable_match()->mutable_l3match()->mutable_dstprefix(),
                 &api_spec->match.l3_match.dst_ip_pfx);

@@ -145,7 +145,8 @@ security_policy_impl::program_security_policy_(pds_policy_spec_t *spec) {
     if (spec->rule_info->default_action.fw_action.action ==
             SECURITY_RULE_ACTION_NONE) {
         sec_profile = security_profile_find();
-        if (sec_profile) {
+        if (sec_profile &&
+            sec_profile->default_fw_action() != SECURITY_RULE_ACTION_NONE) {
             policy_params.policy.default_action.fw_action.action =
                 sec_profile->default_fw_action();
         } else {

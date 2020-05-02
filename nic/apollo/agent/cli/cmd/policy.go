@@ -5,7 +5,6 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"reflect"
@@ -125,14 +124,14 @@ func printPolicySummary(count int) {
 }
 
 func printPolicyRuleHeader() {
-	hdrLine := strings.Repeat("-", 215)
+	hdrLine := strings.Repeat("-", 202)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-10s%-48s%-48s%-13s%-13s%-13s%-10s%-10s%-10s\n",
-		"Rule ID", "Protocol", "      Source", "    Destination",
-		"Source Port", "Dest Port", "ICMP", "Priority", "Stateful", "Action")
-	fmt.Printf("%-40s%-10s%-48s%-48s%-13s%-13s%-13s%-10s%-10s%-10s\n",
-		"", "", "Prefix | Range | Tag", "Prefix | Range | Tag",
-		"Low-High", "Low-High", "Type/Code", "", "", "")
+	fmt.Printf("%-40s%-8s%-48s%-48s%-12s%-12s%-8s%-10s%-10s%-6s\n",
+		"RuleID", "IPProto", "    Source", "  Destination",
+		"SrcPort", "DestPort", "ICMP", "Priority", "Stateful", "Action")
+	fmt.Printf("%-40s%-8s%-48s%-48s%-12s%-12s%-8s%-10s%-10s%-6s\n",
+		"", "", "Prefix|Range|Tag", "Prefix|Range|Tag",
+		"Range", "Range", "T/C", "", "", "")
 	fmt.Println(hdrLine)
 }
 
@@ -148,116 +147,103 @@ func printPolicy(resp *pds.SecurityPolicy) {
 	printPolicyRuleHeader()
 
 	for _, rule := range spec.Rules {
-		outStr := ""
-		ipRangeStr := ""
-		ipv6SrcRangeStr := "" // To be printed in second line
-		ipv6DstRangeStr := "" // To be printed in second line
-
-		emptyByte := make([]byte, len(rule.GetId()))
-		if !bytes.Contains(rule.GetId(), emptyByte) {
-			outStr += fmt.Sprintf("%-40s", uuid.FromBytesOrNil(rule.GetId()).String())
-		} else {
-			outStr += fmt.Sprintf("%-40s", "-")
-		}
-
-		// L3 info:
-		// Print Protocol
-		// Print Source (Prefix or Range or Tag)
-		// Print Destination (Prefix or Range or Tag)
+		srcIPStr := "-"
+		dstIPStr := "-"
+		srcPortStr := "-"
+		dstPortStr := "-"
+		protoStr := "-"
+		icmpStr := "-"
+		actionStr := "-"
+		needSecondLine := false
 
 		l3Match := rule.GetAttrs().GetMatch().GetL3Match()
-		outStr += fmt.Sprintf("%-10d", l3Match.GetProtoNum())
+		switch l3Match.GetProtomatch().(type) {
+		case *pds.RuleL3Match_ProtoNum:
+			protoStr = fmt.Sprint(l3Match.GetProtoNum())
+		case *pds.RuleL3Match_ProtoWildcard:
+			protoStr = "*"
+		}
 
 		switch l3Match.GetSrcmatch().(type) {
 		case *pds.RuleL3Match_SrcPrefix:
-			outStr += fmt.Sprintf("%-48s", utils.IPPrefixToStr(l3Match.GetSrcPrefix()))
+			srcIPStr = utils.IPPrefixToStr(l3Match.GetSrcPrefix())
 		case *pds.RuleL3Match_SrcRange:
-
-			switch l3Match.GetSrcRange().GetRange().(type) {
-			case *pds.AddressRange_IPv4Range:
-				ipRange := l3Match.GetSrcRange().GetIPv4Range()
-				ipRangeStr = fmt.Sprintf("%s - %s",
-					utils.IPAddrToStr(ipRange.GetLow()),
-					utils.IPAddrToStr(ipRange.GetHigh()))
-			case *pds.AddressRange_IPv6Range:
-				ipRange := l3Match.GetSrcRange().GetIPv6Range()
-				ipRangeStr = fmt.Sprintf("%s -",
-					utils.IPAddrToStr(ipRange.GetLow()))
-				ipv6SrcRangeStr = fmt.Sprintf(" %s",
-					utils.IPAddrToStr(ipRange.GetHigh()))
-			default:
-				ipRangeStr = "-"
-			}
-			outStr += fmt.Sprintf("%-48s", ipRangeStr)
-
+			srcIPStr = utils.IPRangeToStr(l3Match.GetSrcRange())
 		case *pds.RuleL3Match_SrcTag:
-			outStr += fmt.Sprintf("%-48d", l3Match.GetSrcTag())
-		default:
-			outStr += fmt.Sprintf("%-48s", "-")
+			srcIPStr = fmt.Sprint(l3Match.GetSrcTag())
 		}
 
 		switch l3Match.GetDstmatch().(type) {
 		case *pds.RuleL3Match_DstPrefix:
-			outStr += fmt.Sprintf("%-48s", utils.IPPrefixToStr(l3Match.GetDstPrefix()))
+			dstIPStr = utils.IPPrefixToStr(l3Match.GetDstPrefix())
 		case *pds.RuleL3Match_DstRange:
-			switch l3Match.GetDstRange().GetRange().(type) {
-			case *pds.AddressRange_IPv4Range:
-				ipRange := l3Match.GetDstRange().GetIPv4Range()
-				ipRangeStr = fmt.Sprintf("%s - %s",
-					utils.IPAddrToStr(ipRange.GetLow()),
-					utils.IPAddrToStr(ipRange.GetHigh()))
-			case *pds.AddressRange_IPv6Range:
-				ipRange := l3Match.GetDstRange().GetIPv6Range()
-				ipRangeStr = fmt.Sprintf("%s -",
-					utils.IPAddrToStr(ipRange.GetLow()))
-				ipv6DstRangeStr = fmt.Sprintf(" %s",
-					utils.IPAddrToStr(ipRange.GetHigh()))
-			default:
-				ipRangeStr = "-"
-			}
-			outStr += fmt.Sprintf("%-48s", ipRangeStr)
+			dstIPStr = utils.IPRangeToStr(l3Match.GetDstRange())
 		case *pds.RuleL3Match_DstTag:
-			outStr += fmt.Sprintf("%-48d", l3Match.GetDstTag())
-		default:
-			outStr += fmt.Sprintf("%-48s", "-")
+			dstIPStr = fmt.Sprint(l3Match.GetDstTag())
 		}
 
-		// L4 info:
-		// Print Source Port: Low to High
-		// Print Dest Port: Low to High
-		// Print ICMP info
 		l4Match := rule.GetAttrs().GetMatch().GetL4Match()
-
 		switch l4Match.GetL4Info().(type) {
 		case *pds.RuleL4Match_Ports:
 			srcPortRange := l4Match.GetPorts().GetSrcPortRange()
 			dstPortRange := l4Match.GetPorts().GetDstPortRange()
-			srcLowHighStr := fmt.Sprintf("%d-%d",
+			srcPortStr = fmt.Sprintf("%d-%d",
 				srcPortRange.GetPortLow(), srcPortRange.GetPortHigh())
-			dstLowHighStr := fmt.Sprintf("%d-%d",
+			dstPortStr = fmt.Sprintf("%d-%d",
 				dstPortRange.GetPortLow(), dstPortRange.GetPortHigh())
-			outStr += fmt.Sprintf("%-13s%-13s%-13s",
-				srcLowHighStr, dstLowHighStr, "-")
 		case *pds.RuleL4Match_TypeCode:
-			icmpStr := fmt.Sprintf("%d/%d", l4Match.GetTypeCode().GetTypeNum(),
-				l4Match.GetTypeCode().GetCodeNum())
-			outStr += fmt.Sprintf("%-13s%-13s%-13s", "-", "-", icmpStr)
+			icmp := l4Match.GetTypeCode()
+			typeStr := ""
+			codeStr := ""
+			switch icmp.GetTypematch().(type) {
+			case *pds.ICMPMatch_TypeNum:
+				typeStr = fmt.Sprint(icmp.GetTypeNum())
+			case *pds.ICMPMatch_TypeWildcard:
+				typeStr = "*"
+			}
+			switch icmp.GetCodematch().(type) {
+			case *pds.ICMPMatch_CodeNum:
+				codeStr = fmt.Sprint(icmp.GetCodeNum())
+			case *pds.ICMPMatch_CodeWildcard:
+				codeStr = "*"
+			}
+			icmpStr = fmt.Sprintf("%s/%s", typeStr, codeStr)
+		}
+
+		if len(srcIPStr) > 47 || len(dstIPStr) > 47 {
+			needSecondLine = true
+		}
+
+		actionStr = rule.GetAttrs().GetAction().String()
+		switch actionStr {
+		case "SECURITY_RULE_ACTION_ALLOW":
+			actionStr = "A"
+		case "SECURITY_RULE_ACTION_DENY":
+			actionStr = "D"
 		default:
-			outStr += fmt.Sprintf("%-13s%-13s%-13s", "-", "-", "-")
+			actionStr = "-"
 		}
 
-		outStr += fmt.Sprintf("%-10d", rule.GetAttrs().GetPriority())
-		outStr += fmt.Sprintf("%-10s", utils.BoolToString(rule.GetAttrs().GetStateful()))
-		outStr += fmt.Sprintf("%-10s",
-			strings.ToLower(strings.Replace(rule.GetAttrs().GetAction().String(), "SECURITY_RULE_ACTION_", "", -1)))
-
-		// Display the overhang of IPv6 Src/Dst Range in the second line
-		if ipv6SrcRangeStr != "" || ipv6DstRangeStr != "" {
-			outStr += fmt.Sprintf("\n%-40s%-10s%-48s%-48s",
-				"", "", ipv6SrcRangeStr, ipv6DstRangeStr)
+		if needSecondLine {
+			srcStrs := strings.Split(srcIPStr, "-")
+			dstStrs := strings.Split(dstIPStr, "-")
+			fmt.Printf("%-40s%-8s%-48s%-48s%-12s%-12s%-8s%-10d%-10s%-6s\n",
+				uuid.FromBytesOrNil(rule.GetId()).String(),
+				protoStr, srcStrs[0]+"-", dstStrs[0]+"-",
+				srcPortStr, dstPortStr, icmpStr,
+				rule.GetAttrs().GetPriority(),
+				utils.BoolToString(rule.GetAttrs().GetStateful()),
+				actionStr)
+			fmt.Printf("%-40s%-8s%-48s%-48s%-50s\n",
+				"", "", srcStrs[1], dstStrs[1], "")
+		} else {
+			fmt.Printf("%-40s%-8s%-48s%-48s%-12s%-12s%-8s%-10d%-10s%-6s\n",
+				uuid.FromBytesOrNil(rule.GetId()).String(),
+				protoStr, srcIPStr, dstIPStr, srcPortStr, dstPortStr,
+				icmpStr, rule.GetAttrs().GetPriority(),
+				utils.BoolToString(rule.GetAttrs().GetStateful()),
+				actionStr)
 		}
-
-		fmt.Println(outStr)
 	}
 }
 
@@ -459,16 +445,16 @@ func printRule(resp *pds.SecurityRule) {
 		case *pds.AddressRange_IPv4Range:
 			fmt.Printf("%-30s : %s\n", "Source Match Type", "Range")
 			ipRange := l3Match.GetSrcRange().GetIPv4Range()
-			fmt.Printf("%-30s : %d\n", "Source Range Low",
+			fmt.Printf("%-30s : %s\n", "Source Range Low",
 				utils.IPAddrToStr(ipRange.GetLow()))
-			fmt.Printf("%-30s : %d\n", "Source Range High",
+			fmt.Printf("%-30s : %s\n", "Source Range High",
 				utils.IPAddrToStr(ipRange.GetHigh()))
 		case *pds.AddressRange_IPv6Range:
 			fmt.Printf("%-30s : %s\n", "Source Match Type", "Range")
 			ipRange := l3Match.GetSrcRange().GetIPv6Range()
-			fmt.Printf("%-30s : %d\n", "Source Range Low",
+			fmt.Printf("%-30s : %s\n", "Source Range Low",
 				utils.IPAddrToStr(ipRange.GetLow()))
-			fmt.Printf("%-30s : %d\n", "Source Range High",
+			fmt.Printf("%-30s : %s\n", "Source Range High",
 				utils.IPAddrToStr(ipRange.GetHigh()))
 		default:
 			fmt.Printf("%-30s : %s\n", "Source Match Type", "Range")
@@ -493,16 +479,16 @@ func printRule(resp *pds.SecurityRule) {
 		case *pds.AddressRange_IPv4Range:
 			fmt.Printf("%-30s : %s\n", "Destination Match Type", "Range")
 			ipRange := l3Match.GetDstRange().GetIPv4Range()
-			fmt.Printf("%-30s : %d\n", "Destination Range Low",
+			fmt.Printf("%-30s : %s\n", "Destination Range Low",
 				utils.IPAddrToStr(ipRange.GetLow()))
-			fmt.Printf("%-30s : %d\n", "Destination Range High",
+			fmt.Printf("%-30s : %s\n", "Destination Range High",
 				utils.IPAddrToStr(ipRange.GetHigh()))
 		case *pds.AddressRange_IPv6Range:
 			fmt.Printf("%-30s : %s\n", "Destination Match Type", "Range")
 			ipRange := l3Match.GetDstRange().GetIPv6Range()
-			fmt.Printf("%-30s : %d\n", "Destination Range Low",
+			fmt.Printf("%-30s : %s\n", "Destination Range Low",
 				utils.IPAddrToStr(ipRange.GetLow()))
-			fmt.Printf("%-30s : %d\n", "Destination Range High",
+			fmt.Printf("%-30s : %s\n", "Destination Range High",
 				utils.IPAddrToStr(ipRange.GetHigh()))
 		default:
 			fmt.Printf("%-30s : %s\n", "Destination Match Type", "Range")

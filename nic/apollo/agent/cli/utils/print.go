@@ -60,6 +60,25 @@ func IPAddrToStr(ipAddr *pds.IPAddress) string {
 
 }
 
+func IPRangeToStr(ipRange *pds.AddressRange) string {
+	if ipRange == nil {
+		return "-"
+	}
+	ipv4Range := ipRange.GetIPv4Range()
+	ipv6Range := ipRange.GetIPv6Range()
+	if ipv4Range != nil {
+		return fmt.Sprintf("%s-%s",
+			IPAddrToStr(ipv4Range.GetLow()),
+			IPAddrToStr(ipv4Range.GetHigh()))
+	}
+	if ipv6Range != nil {
+		return fmt.Sprintf("%s-%s",
+			IPAddrToStr(ipv6Range.GetLow()),
+			IPAddrToStr(ipv6Range.GetHigh()))
+	}
+	return "-"
+}
+
 // Uint32IPAddrtoStr converts uint32 IP to string
 func Uint32IPAddrtoStr(addr uint32) string {
 	ip := make(net.IP, 4)

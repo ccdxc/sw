@@ -92,17 +92,18 @@ typedef uint16_t (*rfc_compute_class_id_cb_t)(rfc_ctxt_t *rfc_ctxt,
 sdk_ret_t
 rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
 {
-    rule_t      *rule;
-    uint32_t    rule_num = 0;
-    policy_t    *policy = rfc_ctxt->policy;
-    itable_t    *sip_itable = &rfc_ctxt->sip_tree.itable;
-    itable_t    *dip_itable = &rfc_ctxt->dip_tree.itable;
-    itable_t    *port_itable = &rfc_ctxt->port_tree.itable;
-    itable_t    *proto_port_itable = &rfc_ctxt->proto_port_tree.itable;
-    itable_t    *stag_itable = &rfc_ctxt->stag_tree.itable;
-    itable_t    *dtag_itable = &rfc_ctxt->dtag_tree.itable;
-    inode_t     *sip_inode, *dip_inode, *port_inode, *proto_port_inode;
-    inode_t     *stag_inode, *dtag_inode;
+    rule_l4_match_t l4_match;
+    rule_t          *rule;
+    uint32_t        rule_num = 0;
+    policy_t        *policy = rfc_ctxt->policy;
+    itable_t        *sip_itable = &rfc_ctxt->sip_tree.itable;
+    itable_t        *dip_itable = &rfc_ctxt->dip_tree.itable;
+    itable_t        *port_itable = &rfc_ctxt->port_tree.itable;
+    itable_t        *proto_port_itable = &rfc_ctxt->proto_port_tree.itable;
+    itable_t        *stag_itable = &rfc_ctxt->stag_tree.itable;
+    itable_t        *dtag_itable = &rfc_ctxt->dtag_tree.itable;
+    inode_t         *sip_inode, *dip_inode, *port_inode, *proto_port_inode;
+    inode_t         *stag_inode, *dtag_inode;
 
     /** walk the policy and start building tables */
     sip_inode = &sip_itable->nodes[0];
@@ -113,6 +114,7 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     proto_port_inode = &proto_port_itable->nodes[0];
     for (rule_num = 0; rule_num < policy->num_rules; rule_num++) {
         rule = &policy->rules[rule_num];
+        l4_match = rule->attrs.match.l4_match;
         rfc_policy_rule_dump(policy, rule_num);
 
         // handle source IP match conditions
@@ -155,23 +157,23 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
             dip_inode += 2;
         }
 
-        if (rule->attrs.match.l3_match.proto_match_type != MATCH_SPECIFIC) {
-            itable_update_l4_any(&rule->attrs.match.l4_match);
+        if (rule->attrs.match.l3_match.proto_match_type == MATCH_ANY) {
+            itable_update_l4_any(&l4_match);
         } else if (rule->attrs.match.l3_match.ip_proto == IP_PROTO_ICMP) {
-            itable_update_icmp_type_code(&rule->attrs.match.l4_match);
+            itable_update_icmp_type_code(&l4_match);
         } else if ((rule->attrs.match.l3_match.ip_proto != IP_PROTO_TCP) &&
                    (rule->attrs.match.l3_match.ip_proto != IP_PROTO_UDP)){
-            itable_update_l4_any(&rule->attrs.match.l4_match);
+            itable_update_l4_any(&l4_match);
         }
 
         // handle source port match condition
         port_inode = itable_add_port_inodes(rule_num, port_inode,
-                                            &rule->attrs.match.l4_match);
+                                            &l4_match);
 
         // handle protocol and destination port match condition
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
                                      &rule->attrs.match.l3_match,
-                                     &rule->attrs.match.l4_match);
+                                     &l4_match);
         proto_port_inode += 2;
     }
     sip_itable->num_nodes = sip_inode - &sip_itable->nodes[0];
