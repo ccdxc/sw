@@ -19,8 +19,16 @@ import (
 )
 
 var (
-	routeID string
+	routeID      string
+	routeTableID string
 )
+
+var routeTableShowCmd = &cobra.Command{
+	Use:   "route-table",
+	Short: "show Route Table information",
+	Long:  "show Route Table object information",
+	Run:   routeTableShowCmdHandler,
+}
 
 var routeShowCmd = &cobra.Command{
 	Use:   "route",
@@ -32,11 +40,16 @@ var routeShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(routeShowCmd)
 	routeShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	routeShowCmd.Flags().Bool("summary", false, "Display number of objects")
 	routeShowCmd.Flags().StringVarP(&routeID, "route-id", "i", "", "Specify Route ID")
+	routeShowCmd.Flags().StringVarP(&routeTableID, "route-table-id", "t", "", "Specify Route Table ID")
+
+	showCmd.AddCommand(routeTableShowCmd)
+	routeTableShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	routeTableShowCmd.Flags().Bool("summary", false, "Display number of objects")
+	routeTableShowCmd.Flags().StringVarP(&routeTableID, "id", "i", "", "Specify Route Table ID")
 }
 
-func routeShowCmdHandler(cmd *cobra.Command, args []string) {
+func routeTableShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -53,10 +66,10 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewRouteSvcClient(c)
 
 	var req *pds.RouteTableGetRequest
+
 	if cmd != nil && cmd.Flags().Changed("id") {
-		// Get specific Route
 		req = &pds.RouteTableGetRequest{
-			Id: [][]byte{uuid.FromStringOrNil(routeID).Bytes()},
+			Id: [][]byte{uuid.FromStringOrNil(routeTableID).Bytes()},
 		}
 	} else {
 		// Get all Routes
@@ -86,21 +99,21 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Println("---")
 		}
 	} else if cmd != nil && cmd.Flags().Changed("summary") {
-		printRouteSummary(len(respMsg.Response))
+		printRouteTableSummary(len(respMsg.Response))
 	} else {
-		printRouteHeader()
+		printRouteTableHeader()
 		for _, resp := range respMsg.Response {
-			printRoute(resp)
+			printRouteTable(resp)
 		}
-		printRouteSummary(len(respMsg.Response))
+		printRouteTableSummary(len(respMsg.Response))
 	}
 }
 
-func printRouteSummary(count int) {
-	fmt.Printf("\nNo. of routes : %d\n\n", count)
+func printRouteTableSummary(count int) {
+	fmt.Printf("\nNo. of route tables : %d\n\n", count)
 }
 
-func printRouteHeader() {
+func printRouteTableHeader() {
 	hdrLine := strings.Repeat("-", 117)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-40s%-9s%-20s%-8s%-40s\n%-40s%-9s%-20s%-8s%-40s\n",
@@ -109,7 +122,7 @@ func printRouteHeader() {
 	fmt.Println(hdrLine)
 }
 
-func printRoute(rt *pds.RouteTable) {
+func printRouteTable(rt *pds.RouteTable) {
 	spec := rt.GetSpec()
 	routes := spec.GetRoutes()
 	first := true
@@ -170,4 +183,115 @@ func printRoute(rt *pds.RouteTable) {
 			first = false
 		}
 	}
+}
+
+func routeShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS, is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	if cmd != nil && (!cmd.Flags().Changed("route-table-id") || !cmd.Flags().Changed("route-id")) {
+		fmt.Printf("Command arguments not provided, route-id and route-table-id are required for this CLI\n")
+		return
+	}
+
+	client := pds.NewRouteSvcClient(c)
+
+	var req *pds.RouteGetRequest
+	req = &pds.RouteGetRequest{
+		Id: []*pds.RouteId{
+			&pds.RouteId{
+				Id:           uuid.FromStringOrNil(routeID).Bytes(),
+				RouteTableId: uuid.FromStringOrNil(routeTableID).Bytes(),
+			},
+		},
+	}
+
+	// PDS call
+	respMsg, err := client.RouteGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting Route failed, err %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	// Print Routes
+	if cmd != nil && cmd.Flags().Changed("yaml") {
+		for _, resp := range respMsg.Response {
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			fmt.Println(string(b))
+			fmt.Println("---")
+		}
+	} else {
+		for _, resp := range respMsg.Response {
+			printRoute(resp)
+		}
+	}
+}
+
+func printRoute(route *pds.Route) {
+	spec := route.GetSpec()
+	if spec == nil {
+		return
+	}
+
+	attr := spec.GetAttrs()
+	if attr == nil {
+		return
+	}
+
+	fmt.Printf("%-30s : %s\n", "Route Id", uuid.FromBytesOrNil(spec.GetId()).String())
+	fmt.Printf("%-30s : %s\n", "Route Table Id", uuid.FromBytesOrNil(spec.GetRouteTableId()).String())
+	fmt.Printf("%-30s : %s\n", "Prefix", utils.IPPrefixToStr(attr.GetPrefix()))
+	fmt.Printf("%-30s : %d\n", "Priority", attr.GetPriority())
+
+	switch spec.GetAttrs().GetNh().(type) {
+	case *pds.RouteAttrs_NextHop:
+
+		fmt.Printf("%-30s : %s\n", "Nexthop Type", "IP address")
+		fmt.Printf("%-30s : %s\n", "Nexthop",
+			utils.IPAddrToStr(attr.GetNextHop()))
+	case *pds.RouteAttrs_NexthopId:
+		fmt.Printf("%-30s : %s\n", "Nexthop Type", "Nexthop ID")
+		fmt.Printf("%-30s : %s\n", "Nexthop",
+			uuid.FromBytesOrNil(attr.GetNexthopId()).String())
+	case *pds.RouteAttrs_NexthopGroupId:
+		fmt.Printf("%-30s : %s\n", "Nexthop Type", "ECMP")
+		fmt.Printf("%-30s : %s\n", "Nexthop",
+			uuid.FromBytesOrNil(attr.GetNexthopGroupId()).String())
+	case *pds.RouteAttrs_VPCId:
+		fmt.Printf("%-30s : %s\n", "Nexthop Type", "VPC")
+		fmt.Printf("%-30s : %s\n", "Nexthop",
+			uuid.FromBytesOrNil(attr.GetVPCId()).String())
+	case *pds.RouteAttrs_TunnelId:
+		fmt.Printf("%-30s : %s\n", "Nexthop Type", "TEP")
+		fmt.Printf("%-30s : %s\n", "Nexthop",
+			uuid.FromBytesOrNil(attr.GetTunnelId()).String())
+	case *pds.RouteAttrs_VnicId:
+		fmt.Printf("%-30s : %s\n", "Nexthop Type", "VNIC")
+		fmt.Printf("%-30s : %s\n", "Nexthop",
+			uuid.FromBytesOrNil(attr.GetVnicId()).String())
+	default:
+		fmt.Printf("%-30s : %s\n", "Nexthop Type", "-")
+		fmt.Printf("%-30s : %s\n", "Nexthop", "-")
+	}
+	fmt.Printf("%-30s : %s\n", "Source NAT Action",
+		strings.Replace(attr.GetNatAction().GetSrcNatAction().String(), "NAT_ACTION_", "", -1))
+	fmt.Printf("%-30s : %s\n", "Destination NAT IP",
+		utils.IPAddrToStr(attr.GetNatAction().GetDstNatIP()))
+	fmt.Printf("%-30s : %t\n", "Meter Enable", attr.GetMeterEn())
 }

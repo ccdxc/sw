@@ -238,8 +238,8 @@ class SubnetObject(base.ConfigObjectBase):
         if self.IpV6Valid:
             spec.IPv6VirtualRouterIP = self.VirtualRouterIPAddr[0].packed
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
-        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId, ObjectTypes.ROUTE)
-        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId, ObjectTypes.ROUTE)
+        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId, ObjectTypes.ROUTE_TABLE)
+        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId, ObjectTypes.ROUTE_TABLE)
         for policyid in self.IngV4SecurityPolicyIds:
             spec.IngV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid, ObjectTypes.POLICY))
         for policyid in self.IngV6SecurityPolicyIds:
@@ -345,9 +345,9 @@ class SubnetObject(base.ConfigObjectBase):
             return False
         if spec.VirtualRouterMac != self.VirtualRouterMACAddr.getnum():
             return False
-        if spec.V4RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId, ObjectTypes.ROUTE):
+        if spec.V4RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId, ObjectTypes.ROUTE_TABLE):
             return False
-        if spec.V6RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId, ObjectTypes.ROUTE):
+        if spec.V6RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId, ObjectTypes.ROUTE_TABLE):
             return False
         if spec.IngV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV4SecurityPolicyIds[0], ObjectTypes.POLICY):
             return False
@@ -418,7 +418,7 @@ class SubnetObject(base.ConfigObjectBase):
             logger.info(" - Skipping notification as %s already deleted" % self)
             return
         logger.info(" - Linking %s to %s " % (cObj, self))
-        if cObj.ObjType == api.ObjectTypes.ROUTE:
+        if cObj.ObjType == api.ObjectTypes.ROUTE_TABLE:
             if cObj.IsV4():
                 self.V4RouteTableId = cObj.RouteTblId
             elif cObj.IsV6():
@@ -456,7 +456,7 @@ class SubnetObject(base.ConfigObjectBase):
             logger.info(" - Skipping notification as %s already deleted" % self)
             return
         logger.info(" - Unlinking %s from %s " % (dObj, self))
-        if dObj.ObjType == api.ObjectTypes.ROUTE:
+        if dObj.ObjType == api.ObjectTypes.ROUTE_TABLE:
             if self.V4RouteTableId == dObj.RouteTblId:
                 self.V4RouteTableId = 0
             elif self.V6RouteTableId == dObj.RouteTblId:
