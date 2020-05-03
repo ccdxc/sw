@@ -289,7 +289,8 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 	return nil
 }
 
-var _ = Describe("multiple policies", func() {
+// 	Skip("Disabling multi-polcy tests till support is available")
+var _ = PDescribe("multiple policies", func() {
 	var startTime time.Time
 	BeforeEach(func() {
 		// verify cluster is in good health
