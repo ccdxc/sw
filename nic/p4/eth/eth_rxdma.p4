@@ -85,7 +85,9 @@ header_type eth_rx_qstate_d {
         lg2_sg_desc_sz : 4;
         sg_max_elems : 4;
 
-        __pad256 : 24;
+        encap_offload : 1;
+        rsvd_features : 7;
+        __pad256 : 16;
 
         ring_base : 64;
         cq_ring_base : 64;

@@ -53,7 +53,11 @@ eth_rx_app_header:
 #endif
 
   // Packet type information
-  phvwr           p.cq_desc_pkt_type, k.p4_to_p4plus_pkt_type
+  and             r7, k.p4_to_p4plus_encap_pkt, d.encap_offload
+  sne             c7, r7, 0
+  or.c7           r7, k.p4_to_p4plus_pkt_type, CLASSIC_NIC_PKT_TYPE_ENCAP_BIT
+  phvwr.c7        p.cq_desc_pkt_type, r7
+  phvwr.!c7       p.cq_desc_pkt_type, k.p4_to_p4plus_pkt_type
 
   // L2/Complete checksum offload
   sne             c1, k.p4_to_p4plus_pkt_type, PKT_TYPE_NON_IP

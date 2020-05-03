@@ -1,0 +1,105 @@
+# Feature Test Modules List
+feature:
+    id          : classic
+    sub         : pkt_type
+    package     : test.classic
+    module      : classic
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4
+        spec    : pkt_type.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
+              segment   : filter://native=True
+
+    - module:
+        name    : IPV4_TCP
+        spec    : pkt_type.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
+              segment   : filter://native=True
+
+    - module:
+        name    : IPV4_UDP
+        spec    : pkt_type.testspec
+        iterate :
+            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment   : filter://native=False
+            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
+              segment   : filter://native=True
+
+    - module:
+        name    : IPV6
+        spec    : pkt_type.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=CLASSIC
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=ICMPV6,label=CLASSIC
+              segment   : filter://native=True
+
+    - module:
+        name    : IPV6_TCP
+        spec    : pkt_type.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=TCP,label=CLASSIC
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=TCP,label=CLASSIC
+              segment   : filter://native=True
+
+    - module:
+        name    : IPV6_UDP
+        spec    : pkt_type.testspec
+        iterate :
+            - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
+              segment   : filter://native=False
+            - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
+              segment   : filter://native=True
+
+#    - module:
+#        name    : VXLAN_IPV4
+#        spec    : pkt_type_vxlan.testspec
+#        iterate :
+#            - flow      : filter://type=IPV4,proto=ICMP,label=CLASSIC
+#              segment   : filter://native=False
+#
+#    - module:
+#        name    : VXLAN_IPV4_TCP
+#        spec    : pkt_type_vxlan.testspec
+#        iterate :
+#            - flow      : filter://type=IPV4,proto=TCP,label=CLASSIC
+#              segment   : filter://native=False
+#
+#    - module:
+#        name    : VXLAN_IPV4_UDP
+#        spec    : pkt_type_vxlan.testspec
+#        iterate :
+#            - flow      : filter://type=IPV4,proto=UDP,label=CLASSIC
+#              segment   : filter://native=False
+#
+#    - module:
+#        name    : VXLAN_IPV6
+#        spec    : pkt_type_vxlan.testspec
+#        iterate :
+#            - flow      : filter://type=IPV6,proto=ICMPV6,label=CLASSIC
+#              segment   : filter://native=False
+#
+#    - module:
+#        name    : VXLAN_IPV6_TCP
+#        spec    : pkt_type_vxlan.testspec
+#        iterate :
+#            - flow      : filter://type=IPV6,proto=TCP,label=CLASSIC
+#              segment   : filter://native=False
+#
+#    - module:
+#        name    : VXLAN_IPV6_UDP
+#        spec    : pkt_type_vxlan.testspec
+#        iterate :
+#            - flow      : filter://type=IPV6,proto=UDP,label=CLASSIC
+#              segment   : filter://native=False

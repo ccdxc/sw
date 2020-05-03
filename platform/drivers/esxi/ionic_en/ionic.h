@@ -94,6 +94,7 @@ extern struct ionic_driver ionic_driver;
 extern unsigned int vlan_tx_insert;
 extern unsigned int vlan_rx_strip;
 extern vmk_uint32 log_level;
+extern unsigned int geneve_offload;
 
 struct ionic_admin_ctx;
 

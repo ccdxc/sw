@@ -234,13 +234,14 @@
 /*****************************************************************************/
 /* Classic NIC header flags                                                  */
 /*****************************************************************************/
-#define CLASSIC_NIC_PKT_TYPE_NON_IP     0x000
-#define CLASSIC_NIC_PKT_TYPE_IPV4       0x001
-#define CLASSIC_NIC_PKT_TYPE_IPV4_TCP   0x003
-#define CLASSIC_NIC_PKT_TYPE_IPV4_UDP   0x005
-#define CLASSIC_NIC_PKT_TYPE_IPV6       0x008
-#define CLASSIC_NIC_PKT_TYPE_IPV6_TCP   0x018
-#define CLASSIC_NIC_PKT_TYPE_IPV6_UDP   0x028
+#define CLASSIC_NIC_PKT_TYPE_NON_IP     0x00
+#define CLASSIC_NIC_PKT_TYPE_IPV4       0x01
+#define CLASSIC_NIC_PKT_TYPE_IPV4_TCP   0x03
+#define CLASSIC_NIC_PKT_TYPE_IPV4_UDP   0x05
+#define CLASSIC_NIC_PKT_TYPE_IPV6       0x08
+#define CLASSIC_NIC_PKT_TYPE_IPV6_TCP   0x18
+#define CLASSIC_NIC_PKT_TYPE_IPV6_UDP   0x28
+#define CLASSIC_NIC_PKT_TYPE_ENCAP_BIT  0x40
 
 /*****************************************************************************/
 /* RDMA stats headers, shared by rdma lifs, describes layout of lif stats    */

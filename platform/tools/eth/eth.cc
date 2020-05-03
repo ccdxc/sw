@@ -128,13 +128,15 @@ print_eth_rx_qstate(eth_rx_qstate_t *rx)
            "lg2_desc_sz=%#x\n"          "lg2_cq_desc_sz=%#x\n"
            "lg2_sg_desc_sz=%#x\n"       "sg_max_elems=%#x\n"
            "ring_base=%#lx\n"           "cq_ring_base=%#lx\n"
-           "sg_ring_base=%#lx\n"        "intr_index_or_eq_addr=%#lx\n",
+           "sg_ring_base=%#lx\n"        "intr_index_or_eq_addr=%#lx\n"
+           "encap_offload=%#x\n",
            rx->comp_index,              rx->sta.color,
            rx->sta.armed,               rx->sta.rsvd,
            rx->lg2_desc_sz,             rx->lg2_cq_desc_sz,
            rx->lg2_sg_desc_sz,          rx->sg_max_elems,
            rx->ring_base,               rx->cq_ring_base,
-           rx->sg_ring_base,            rx->intr_index_or_eq_addr);
+           rx->sg_ring_base,            rx->intr_index_or_eq_addr,
+           rx->features.encap_offload);
 }
 
 void

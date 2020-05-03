@@ -173,10 +173,10 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
                                 "\n Number of RSS queues=%d, "
                                 "ntxq_descs=%d, nrxq_descs=%d, "
                                 "log_level=%d, vlan_tx_insert=%d, "
-                                "vlan_rx_strip=%d",
+                                "vlan_rx_strip=%d, geneve_offload=%d",
                                 uplink_handle->DRSS, ntxq_descs, nrxq_descs,
                                 log_level, vlan_tx_insert,
-                                vlan_rx_strip);
+                                vlan_rx_strip, geneve_offload);
 
         vmk_SemaUnlock(&uplink_handle->stats_binary_sema);
 
@@ -1359,15 +1359,14 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                                    (void *)&ionic_en_dyn_rss_ops);
         VMK_ASSERT(status == VMK_OK);
 
-
-        /* TODO: We need to have a hw_features flag to indicate whether or not
-           geneve is supported. For now, we assume we support geneve all the time
-           Also, we need another flag to tell if NIC support dedicated RX queue
-           for operations, administration and management packets. */
-        status = vmk_UplinkCapRegister(uplink,
-                                       VMK_UPLINK_CAP_GENEVE_OFFLOAD,
-                                       &ionic_en_uplink_geneve_offload_params);
-        VMK_ASSERT(status == VMK_OK);
+        if ((uplink_handle->hw_features & IONIC_ETH_HW_RX_CSUM_GENEVE) &&
+            (uplink_handle->hw_features & IONIC_ETH_HW_TX_CSUM_GENEVE) &&
+            (uplink_handle->hw_features & IONIC_ETH_HW_TSO_GENEVE)) {
+                status = vmk_UplinkCapRegister(uplink,
+                                               VMK_UPLINK_CAP_GENEVE_OFFLOAD,
+                                               &ionic_en_uplink_geneve_offload_params);
+                VMK_ASSERT(status == VMK_OK);
+        }
 
         return status;
 }

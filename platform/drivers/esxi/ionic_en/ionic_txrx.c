@@ -32,6 +32,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         struct qcq *qcq = q_to_qcq(q);
         struct rx_stats *stats = q_to_rx_stats(q);
         dma_addr_t dma_addr;
+        vmk_Bool is_encap = VMK_FALSE;
         vmk_PktRssType hash_type = VMK_PKT_RSS_TYPE_NONE;
 #ifdef IONIC_DEBUG
         vmk_uint32 mtu = 0;
@@ -122,7 +123,20 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                     (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_BAD)) {
                        stats->csum_err++;
                 } else {
-                        if (vmk_PktIsInnerOffload(pkt)) {
+                        if (uplink_handle->hw_features & IONIC_ETH_HW_RX_CSUM_GENEVE) {
+                                switch (comp->pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK) {
+                                case IONIC_PKT_TYPE_ENCAP_NON_IP:
+                                case IONIC_PKT_TYPE_ENCAP_IPV4:
+                                case IONIC_PKT_TYPE_ENCAP_IPV4_TCP:
+                                case IONIC_PKT_TYPE_ENCAP_IPV4_UDP:
+                                case IONIC_PKT_TYPE_ENCAP_IPV6:
+                                case IONIC_PKT_TYPE_ENCAP_IPV6_TCP:
+                                case IONIC_PKT_TYPE_ENCAP_IPV6_UDP:
+                                        is_encap = VMK_TRUE;
+                                }
+                        }
+                        
+                        if (is_encap) {
                                 vmk_PktSetEncapCsumVfd(pkt);
                                 stats->encap++;
                         } else {

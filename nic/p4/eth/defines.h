@@ -153,7 +153,8 @@
     comp_index, \
     /* sta */ color, armed, rsvd_sta, \
     lg2_desc_sz, lg2_cq_desc_sz, lg2_sg_desc_sz, sg_max_elems, \
-    __pad256, ring_base, cq_ring_base, sg_ring_base, intr_index_or_eq_addr
+    encap_offload, rsvd_features, __pad256, \
+    ring_base, cq_ring_base, sg_ring_base, intr_index_or_eq_addr
 
 #define PARAMS_ETH_RX_QSTATE \
     PARAMS_QSTATE_INTRINSIC_PC, \
@@ -169,6 +170,8 @@
     modify_field(eth_rx_qstate.lg2_cq_desc_sz, lg2_cq_desc_sz); \
     modify_field(eth_rx_qstate.lg2_sg_desc_sz, lg2_sg_desc_sz); \
     modify_field(eth_rx_qstate.sg_max_elems, sg_max_elems); \
+    modify_field(eth_rx_qstate.encap_offload, encap_offload); \
+    modify_field(eth_rx_qstate.rsvd_features, rsvd_features); \
     modify_field(eth_rx_qstate.__pad256, __pad256); \
     modify_field(eth_rx_qstate.ring_base, ring_base); \
     modify_field(eth_rx_qstate.cq_ring_base, cq_ring_base); \

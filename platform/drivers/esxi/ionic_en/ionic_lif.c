@@ -2185,12 +2185,12 @@ ionic_get_features(struct lif *lif)
 			 lif->index,
 			.attr = IONIC_LIF_ATTR_FEATURES,
 			.features = IONIC_ETH_HW_VLAN_RX_FILTER
-				| IONIC_ETH_HW_TX_SG
-				| IONIC_ETH_HW_TX_CSUM
-				| IONIC_ETH_HW_RX_CSUM
-				| IONIC_ETH_HW_TSO
-				| IONIC_ETH_HW_TSO_IPV6
-				| IONIC_ETH_HW_TSO_ECN,
+                                | IONIC_ETH_HW_TX_SG
+                                | IONIC_ETH_HW_TX_CSUM
+                                | IONIC_ETH_HW_RX_CSUM
+                                | IONIC_ETH_HW_TSO
+                                | IONIC_ETH_HW_TSO_IPV6
+                                | IONIC_ETH_HW_TSO_ECN,
 		},
 	};
 
@@ -2204,6 +2204,12 @@ ionic_get_features(struct lif *lif)
         
         if (vlan_rx_strip) {
                 ctx.cmd.lif_setattr.features |= IONIC_ETH_HW_VLAN_RX_STRIP;
+        }
+
+        if (!lif->uplink_handle->is_mgmt_nic && geneve_offload) {
+                ctx.cmd.lif_setattr.features |= IONIC_ETH_HW_RX_CSUM_GENEVE
+                                             | IONIC_ETH_HW_TX_CSUM_GENEVE
+                                             | IONIC_ETH_HW_TSO_GENEVE;
         }
 
      	status = ionic_completion_create(ionic_driver.module_id,
@@ -2262,6 +2268,12 @@ ionic_get_features(struct lif *lif)
 		ionic_en_dbg("feature IONIC_ETH_HW_TSO_UDP\n");
 	if (lif->hw_features & IONIC_ETH_HW_TSO_UDP_CSUM)
 		ionic_en_dbg("feature IONIC_ETH_HW_TSO_UDP_CSUM\n");
+	if (lif->hw_features & IONIC_ETH_HW_RX_CSUM_GENEVE)
+		ionic_en_dbg("feature IONIC_ETH_HW_RX_CSUM_GENEVE\n");
+	if (lif->hw_features & IONIC_ETH_HW_TX_CSUM_GENEVE)
+		ionic_en_dbg("feature IONIC_ETH_HW_TX_CSUM_GENEVE\n");
+	if (lif->hw_features & IONIC_ETH_HW_TSO_GENEVE)
+		ionic_en_dbg("feature IONIC_ETH_HW_TSO_GENEVE\n");
 
 	lif->uplink_handle->hw_features = lif->hw_features;
 	return status;

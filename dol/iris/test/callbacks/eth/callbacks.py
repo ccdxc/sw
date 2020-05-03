@@ -8,6 +8,7 @@ from scapy.utils import checksum
 from scapy.layers.l2 import Ether, Dot1Q
 from scapy.layers.inet import ICMP, TCP, UDP, IP
 from scapy.layers.inet6 import in6_chksum, IPv6
+from scapy.contrib.geneve import GENEVE
 
 import iris.config.hal.defs as haldefs
 from factory.objects.eth.descriptor import *
@@ -27,27 +28,31 @@ RssType2Enum = {
     LifRssType.Value("RSS_TYPE_IPV6"): RSS.IPV6,
     LifRssType.Value("RSS_TYPE_IPV6") + LifRssType.Value("RSS_TYPE_IPV6_TCP"): RSS.IPV6_TCP,
     LifRssType.Value("RSS_TYPE_IPV6") + LifRssType.Value("RSS_TYPE_IPV6_UDP"): RSS.IPV6_UDP,
+    
 }
 
 def GetRxPktType(tc, obj, args=None):
     pkt = tc.packets.db['PKT2'].spktobj.spkt
     lif = tc.config.dst.endpoint.intf.lif
     flags = []
+    encap_type = 0
+    if pkt.haslayer(GENEVE):
+        pkt = pkt[GENEVE].payload
     if pkt.haslayer(IP):
         if pkt.haslayer(TCP):
-            return LifRssType.Value("RSS_TYPE_IPV4") + LifRssType.Value("RSS_TYPE_IPV4_TCP")
+            return encap_type + LifRssType.Value("RSS_TYPE_IPV4") + LifRssType.Value("RSS_TYPE_IPV4_TCP")
         elif pkt.haslayer(UDP):
-            return LifRssType.Value("RSS_TYPE_IPV4") + LifRssType.Value("RSS_TYPE_IPV4_UDP")
+            return encap_type + LifRssType.Value("RSS_TYPE_IPV4") + LifRssType.Value("RSS_TYPE_IPV4_UDP")
         else:
-            return LifRssType.Value("RSS_TYPE_IPV4")
+            return encap_type + LifRssType.Value("RSS_TYPE_IPV4")
     elif pkt.haslayer(IPv6):
         if pkt.haslayer(TCP):
-            return LifRssType.Value("RSS_TYPE_IPV6") + LifRssType.Value("RSS_TYPE_IPV6_TCP")
+            return encap_type + LifRssType.Value("RSS_TYPE_IPV6") + LifRssType.Value("RSS_TYPE_IPV6_TCP")
         elif pkt.haslayer(UDP):
-            return LifRssType.Value("RSS_TYPE_IPV6") + LifRssType.Value("RSS_TYPE_IPV6_UDP")
+            return encap_type + LifRssType.Value("RSS_TYPE_IPV6") + LifRssType.Value("RSS_TYPE_IPV6_UDP")
         else:
-            return LifRssType.Value("RSS_TYPE_IPV6")
-    return LifRssType.Value("RSS_TYPE_NONE")
+            return encap_type + LifRssType.Value("RSS_TYPE_IPV6")
+    return encap_type + LifRssType.Value("RSS_TYPE_NONE")
 
 
 def GetRxRssTypeNum(tc, obj, args=None):

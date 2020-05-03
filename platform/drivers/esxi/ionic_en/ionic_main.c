@@ -20,6 +20,8 @@ unsigned int devcmd_timeout = 50;
 vmk_uint32 log_level = IONIC_LOG_LEVEL_INFO;
 unsigned int vlan_tx_insert = 0;
 unsigned int vlan_rx_strip = 0;
+unsigned int geneve_offload = 1;
+
 
 VMK_MODPARAM(ntxq_descs,
              uint,
@@ -44,6 +46,10 @@ VMK_MODPARAM(vlan_tx_insert,
 VMK_MODPARAM(vlan_rx_strip,
              uint,
              "0 - Disable, 1 - Enable. Default(Disabled)");
+
+VMK_MODPARAM(geneve_offload,
+             uint,
+             "0 - Disable, 1 - Enable. Default(Enabled)");
 
 
 static VMK_ReturnStatus

@@ -1773,6 +1773,14 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     qstate.sta.color = 1;
 
+    if (features & (
+        IONIC_ETH_HW_RX_CSUM_GENEVE
+        | IONIC_ETH_HW_TX_CSUM_GENEVE
+        | IONIC_ETH_HW_TSO_GENEVE))
+    {
+        qstate.features.encap_offload = 1;
+    }
+
     if (spec->host_dev) {
         qstate.q.cfg.host_queue = 1;
         if (cmd->flags & IONIC_QINIT_F_CMB)
@@ -2039,7 +2047,8 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG(
         "{}: wanted "
-        "vlan_strip {} vlan_insert {} rx_csum {} tx_csum {} rx_hash {} tx_sg {} rx_sg {}",
+        "vlan_strip {} vlan_insert {} rx_csum {} tx_csum {} rx_hash {} tx_sg {} rx_sg {}"
+        "rx_csum_geneve {} tx_csum_geneve {} tso_geneve {}",
         hal_lif_info_.name,
         (cmd->features & IONIC_ETH_HW_VLAN_RX_STRIP) ? 1 : 0,
         (cmd->features & IONIC_ETH_HW_VLAN_TX_TAG) ? 1 : 0,
@@ -2047,7 +2056,9 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
         (cmd->features & IONIC_ETH_HW_TX_CSUM) ? 1 : 0,
         (cmd->features & IONIC_ETH_HW_RX_HASH) ? 1 : 0,
         (cmd->features & IONIC_ETH_HW_TX_SG) ? 1 : 0,
-        (cmd->features & IONIC_ETH_HW_RX_SG) ? 1 : 0);
+        (cmd->features & IONIC_ETH_HW_RX_CSUM_GENEVE) ? 1 : 0,
+        (cmd->features & IONIC_ETH_HW_TX_CSUM_GENEVE) ? 1 : 0,
+        (cmd->features & IONIC_ETH_HW_TSO_GENEVE) ? 1 : 0);
 
     if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
@@ -2066,7 +2077,12 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
                       IONIC_ETH_HW_TX_SG |
                       IONIC_ETH_HW_RX_SG |
                       IONIC_ETH_HW_TSO |
-                      IONIC_ETH_HW_TSO_IPV6);
+                      IONIC_ETH_HW_TSO_IPV6 |
+                      IONIC_ETH_HW_RX_CSUM_GENEVE |
+                      IONIC_ETH_HW_TX_CSUM_GENEVE |
+                      IONIC_ETH_HW_TSO_GENEVE);
+
+    this->features = (cmd->features & comp->features);
 
     bool vlan_strip = cmd->features & comp->features & IONIC_ETH_HW_VLAN_RX_STRIP;
     bool vlan_insert = cmd->features & comp->features & IONIC_ETH_HW_VLAN_TX_TAG;
@@ -2080,6 +2096,41 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_INFO("{}: vlan_strip {} vlan_insert {}", hal_lif_info_.name, vlan_strip, vlan_insert);
 
     NIC_LOG_DEBUG("{}: supported {}", hal_lif_info_.name, comp->features);
+
+    return UpdateQFeatures();
+}
+
+status_code_t
+EthLif::UpdateQFeatures()
+{
+    uint64_t addr, off;
+    eth_rx_features_t features;
+
+    for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id,
+                    ETH_HW_QTYPE_RX, qid);
+        off = offsetof(eth_rx_qstate_t, features);
+        if (addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
+                hal_lif_info_.name, qid);
+            return (IONIC_RC_ERROR);
+        }
+        READ_MEM(addr + off, (uint8_t *)&features, sizeof(features), 0);
+        if (this->features & (
+            IONIC_ETH_HW_RX_CSUM_GENEVE
+            | IONIC_ETH_HW_TX_CSUM_GENEVE
+            | IONIC_ETH_HW_TSO_GENEVE))
+        {
+            features.encap_offload = 1;
+        } else {
+            features.encap_offload = 0;
+        }
+        WRITE_MEM(addr + off, (uint8_t *)&features, sizeof(features), 0);
+        PAL_barrier();
+        sdk::asic::pd::asicpd_p4plus_invalidate_cache(addr,
+            sizeof(eth_rx_qstate_t),
+            P4PLUS_CACHE_INVALIDATE_BOTH);
+    }
 
     return (IONIC_RC_SUCCESS);
 }

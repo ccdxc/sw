@@ -184,6 +184,8 @@ class EthLif
     uint64_t fw_buf_addr;
     uint32_t fw_buf_size;
     uint8_t *fw_buf;
+    // Features
+    uint64_t features;
     // RSS config
     uint16_t rss_type;
     uint8_t rss_key[RSS_HASH_KEY_SIZE];  // 40B
@@ -254,6 +256,8 @@ class EthLif
     void FreeUpMacVlanFilters();
     bool IsLifTypeCpu(void);
     bool IsLifInitialized();
+
+    status_code_t UpdateQFeatures();
 
     void Create();
 

@@ -93,6 +93,11 @@ typedef struct eth_rx_sta {
     uint8_t     color:1;
 } eth_rx_sta_t;
 
+typedef struct eth_rx_features {
+    uint8_t     rsvd:7;
+    uint8_t     encap_offload:1;
+} eth_rx_features_t;
+
 typedef struct eth_rx_qstate {
     eth_qstate_common_t q;
 
@@ -106,7 +111,8 @@ typedef struct eth_rx_qstate {
     uint8_t     sg_max_elems : 4;
     uint8_t     lg2_sg_desc_sz : 4;
 
-    uint8_t     __pad256[3];
+    eth_rx_features_t features;
+    uint8_t     __pad256[2];
 
     uint64_t    ring_base;
     uint64_t    cq_ring_base;
