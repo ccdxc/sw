@@ -146,6 +146,14 @@ vpc:
           domainname       : "pensando.io"
           filename         : "test"
           interfacemtu     : 9000
+        - id               : 13
+          serverip         : '9.0.0.1'
+          ntpserver        : '9.0.0.5'
+          routers          : '9.0.0.1'
+          dnsserver        : '9.0.0.1'
+          domainname       : "pensando.io"
+          filename         : "test"
+          interfacemtu     : 9000
       subnet:
         - id               : 1
           count            : 1
@@ -173,6 +181,7 @@ vpc:
               tagged  : false         # true or false (default true)
               remoteroutes :
                     - '3.1.0.0\24'
+                    - '9.0.0.0\24'
                     - '10.0.200.0\24'
                     - '64.0.0.0\24'
           rmap:                       # Remote IP mappings per subnet
@@ -194,6 +203,43 @@ vpc:
               keytype  : l3
               rmacaddr : macaddr/00ae.cd00.0812
               ripaddr  : '3.1.0.2'
+              tunnelid : 1
+        - id               : 3
+          count            : 1
+          v4prefixlen      : 24
+          v4prefix         : '9.0.0.0\24'
+          fabricencap      : vxlan # vxlan or mplsodup
+          fabricencapvalue : 902
+          v4routerip       : '9.0.0.1'
+          vroutermac       : macaddr/0055.0100.0004
+          dhcppolicy       : 13
+          vnic:
+            - id        : 3
+              count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.000d
+              ipcount : 1             # Local IP mapping per vnic
+              lmap    :
+                - id       : 2
+                  count    : 1
+                  keytype  : l3
+                  lmacaddr : macaddr/00ae.cd00.000d
+                  lipaddr  : '9.0.0.3'
+              srcguard: false         # true or false (default false)
+              public  : false
+              tagged  : true         # true or false (default true)
+              vnicencapvalue : 999
+              vnictype : "local"
+              remoteroutes :
+                    - '3.1.0.0\24'
+                    - '2.1.0.0\24'
+                    - '10.0.200.0\24'
+                    - '64.0.0.0\24'
+          rmap:                       # Remote IP mappings per subnet
+            - id       : 4
+              count    : 1
+              keytype  : l3
+              rmacaddr : macaddr/00ae.cd00.0813
+              ripaddr  : '9.0.0.2'
               tunnelid : 1
         # For node1 this is an igw route, for node2 a local vnic
         - id               : 100
@@ -226,6 +272,7 @@ vpc:
                     - '12.12.12.0\24'
                     - '3.1.0.0\24'
                     - '2.1.0.0\24'
+                    - '9.0.0.0\24'
                     - '10.0.200.0\24'
         # For node1 this is a service route (twice NAT), for node2 a local vnic
         - id               : 101
@@ -256,6 +303,7 @@ vpc:
                     - '10.1.0.0\16'
                     - '2.1.0.0\24'
                     - '3.1.0.0\24'
+                    - '9.0.0.0\24'
                     - '64.0.0.0\24'
       nexthop:
         - id         : 3

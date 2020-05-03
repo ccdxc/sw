@@ -7,6 +7,8 @@ import iota.test.utils.naples_workload as naples_workload
 import iota.test.utils.traffic as traffic_utils
 import random
 import time
+import iota.protos.pygen.topo_svc_pb2 as topo_svc
+
 
 __RANDOM_MTU = -1
 __MIN_MTU_FREEBSD = 72
@@ -28,6 +30,10 @@ def verifyMTUchange(tc):
         if node_name != w.node_name:
             api.Logger.verbose("MTU filter : verifyMTUchange skipping peer node ", w.node_name, w.interface, configured_mtu, expected_mtu)
             continue
+        # TODO: Maybe revisit this. Ignore 802.1q vlan workloads for now.
+        if w.interface_type == topo_svc.INTERFACE_TYPE_VSS:
+           api.Logger.verbose("MTU filter : verifyMTUchange skipping vlan workload", w.workload_name, w.node_name, w.interface)
+           continue
         if configured_mtu != expected_mtu:
             api.Logger.critical("MTU filter : verifyMTUchange failed for ", w.interface, configured_mtu, expected_mtu)
             naples_workload.debug_dump_interface_info(w)
@@ -44,6 +50,10 @@ def changeWorkloadIntfMTU(new_mtu, node_name=None):
             if node_name != w.node_name:
                 api.Logger.debug("MTU filter : changeWorkloadIntfMTU skipping peer node ", w.node_name, w.interface, new_mtu)
                 continue
+        # TODO: Maybe revisit this. Ignore 802.1q vlan workloads for now.
+        if w.interface_type == topo_svc.INTERFACE_TYPE_VSS:
+           api.Logger.debug("MTU filter : changeWorkloadIntfMTU skipping vlan workload", w.workload_name, w.node_name, w.interface)
+           continue
         cmd = naples_workload.setInterfaceMTU(w, new_mtu)
         if cmd.exit_code != 0:
             api.Logger.critical("MTU filter : changeWorkloadIntfMTU failed for ", w.node_name, w.interface, new_mtu)
@@ -97,6 +107,10 @@ def initPeerNode(naples_node, new_mtu=__MAX_MTU):
         if naples_node == w.node_name:
             api.Logger.debug("MTU filter : initPeerNode skipping naples node ", w.node_name, w.interface, new_mtu)
             continue
+        # TODO: Maybe revisit this. Ignore 802.1q vlan workloads for now.
+        if w.interface_type == topo_svc.INTERFACE_TYPE_VSS:
+           api.Logger.verbose("MTU filter : verifyMTUchange skipping vlan workload", w.workload_name, w.node_name, w.interface)
+           continue
         cmd = naples_workload.setInterfaceMTU(w, new_mtu)
         if cmd.exit_code != 0:
             api.Logger.critical("MTU filter : initPeerNode failed for ", w.node_name, w.interface, new_mtu)

@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.utils.naples_host as host
+import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
 def Setup(tc):
     tc.nodes = api.GetNaplesHostnames()
@@ -19,8 +20,12 @@ def Trigger(tc):
 
     # set interrupt coalescing value
     for wl in tc.workloads:
-        api.Logger.info("Set Interrupt Coalescing on %s:%s to %d" % \
-                                                  (wl.node_name, wl.interface, \
+        # TODO: Maybe revisit this. Ignore 802.1q vlan workloads for now.
+        if wl.interface_type == topo_svc.INTERFACE_TYPE_VSS:
+           api.Logger.info("Set Interrupt Coalescing: Skipping vlan workload")
+           continue
+        api.Logger.info("Set Interrupt Coalescing on %s:%s:%s to %d" % \
+                                                  (wl.node_name, wl.workload_name, wl.interface, \
                                                    tc.iterators.coales_interval))
         if tc.os == 'linux':
             api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, \
@@ -76,6 +81,10 @@ def Verify(tc):
     # get the current coalescing value from FW/Driver
     api.Logger.info("Retrieve coalescing value from interfaces")
     for wl in tc.workloads:
+        # TODO: Maybe revisit this. Ignore 802.1q vlan workloads for now.
+        if wl.interface_type == topo_svc.INTERFACE_TYPE_VSS:
+           api.Logger.info("Verify: Skipping vlan workload")
+           continue
         if tc.os == 'linux':
             api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, \
                                    "ethtool -c %s" % wl.interface)

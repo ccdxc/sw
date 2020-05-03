@@ -243,7 +243,13 @@ def PingCmdBuilder(src_wl, dest_ip, proto='icmp', af='ipv4',
         ping_base_cmd = __get_ping_base_cmd(src_wl, af, pktsize, 3, 0.2, False)
         cmd = __ping_addr_substitution(ping_base_cmd, dest_addr)
     elif proto in ['tcp', 'udp']:
-        dest_port = api.AllocateUdpPort() if proto == 'udp' else api.AllocateTcpPort()
+        if proto == 'udp':
+           dest_port = api.AllocateUdpPort()
+           # Skip over 'geneve' reserved port 6081
+           if dest_port == 6081:
+               dest_port = api.AllocateUdpPort()
+        else:
+           dest_port = api.AllocateTcpPort()
         cmd = GetHping3Cmd(proto, src_wl, dest_ip, dest_port)
 
     return cmd

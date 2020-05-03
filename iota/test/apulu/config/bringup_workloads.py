@@ -86,10 +86,9 @@ def __add_workloads(redirect_port):
         if redirect_port:
             _add_exposed_ports(wl_msg)
         api.Logger.info(f"Workload {wl_msg.workload_name} "
-                        f"Node {wl_msg.node_name} Intf {wl_msg.interface} "
-                        f"IP {wl_msg.ip_prefix} MAC {wl_msg.mac_address}"
+                        f"Node {wl_msg.node_name} Intf {wl_msg.interface} Parent-Intf {wl_msg.parent_interface} "
+                        f"IP {wl_msg.ip_prefix} MAC {wl_msg.mac_address} "
                         f"VLAN {wl_msg.encap_vlan}")
-
     if len(req.workloads):
         api.Logger.info("Adding %d Workloads" % len(req.workloads))
         resp = api.AddWorkloads(req, skip_bringup=api.IsConfigOnly())
@@ -102,6 +101,7 @@ def __add_workloads(redirect_port):
             wl = api.GetWorkloadByName(workload_name)
             if wl is None:
                 sys.exit(1)
+
             wl.vnic = ep.vnic
             if wl.vnic.DhcpEnabled:
                 dhcp_wl_list.append(wl)
@@ -159,9 +159,10 @@ def __readd_classic_workloads(target_node = None, workloads = []):
         wl_msg.node_name = wl.node_name
         wl_msg.pinned_port = wl.pinned_port
         wl_msg.interface_type = wl.interface_type
-        interface = wl.interface
+        # Interface to be set to parent intf in vlan case, same as workloads created first time
+        interface = wl.parent_interface
         if interface != None: wl_msg.interface = interface
-        wl_msg.parent_interface = wl_msg.interface
+        wl_msg.parent_interface = wl.parent_interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
         wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)

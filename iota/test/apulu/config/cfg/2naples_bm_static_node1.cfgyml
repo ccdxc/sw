@@ -140,6 +140,15 @@ vpc:
           filename         : "test"
           interfacemtu     : 9000
           lease_timeout    : 3600
+        - id               : 12
+          serverip         : '9.0.0.1'
+          ntpserver        : '9.0.0.5'
+          routers          : '9.0.0.1'
+          dnsserver        : '9.0.0.1'
+          domainname       : "pensando.io"
+          filename         : "test"
+          interfacemtu     : 9000
+          lease_timeout    : 3600
       subnet:
         - id               : 1
           count            : 1
@@ -170,6 +179,7 @@ vpc:
               remoteroutes :
                     - '64.0.0.0\24'
                     - '3.1.0.0\24'
+                    - '9.0.0.0\24'
           rmap:                       # Remote IP mappings per subnet
             - id       : 2
               count    : 1
@@ -208,6 +218,45 @@ vpc:
               remoteroutes :
                     - '64.0.0.0\24'
                     - '2.1.0.0\24'
+                    - '9.0.0.0\24'
+        - id               : 3
+          count            : 1
+          v4prefixlen      : 24
+          v4prefix         : '9.0.0.0\24'
+          fabricencap      : vxlan # vxlan or mplsodup
+          fabricencapvalue : 902
+          v4routerip       : '9.0.0.1'
+          vroutermac       : macaddr/0055.0100.0003
+          dhcppolicy       : 12
+          vnic:
+            - id        : 3
+              count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.0813
+              ipcount : 1             # Local IP mapping per vnic
+              lmap    :
+                - id       : 3
+                  count    : 1
+                  keytype  : l3
+                  lmacaddr : macaddr/00ae.cd00.0813
+                  lipaddr  : '9.0.0.2'
+              srcguard: false         # true or false (default false)
+              public  : false
+              tagged  : true         # true or false (default true)
+              vnicencapvalue : 999
+              vnictype : "local"
+              serviceips :
+                    - '64.0.0.80'
+              remoteroutes :
+                    - '2.1.0.0\24'
+                    - '3.1.0.0\24'
+                    - '64.0.0.0\24'
+          rmap:                       # Remote IP mappings per subnet
+            - id       : 3
+              count    : 1
+              keytype  : l3
+              rmacaddr : macaddr/00ae.cd00.000d
+              ripaddr  : '9.0.0.3'
+              tunnelid : 1
       nexthop:
         - id         : 3
           type       : overlay

@@ -207,16 +207,22 @@ pds_dhcp_relay_clfy_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     p4_rx_cpu_hdr_t *hdr1 = vlib_buffer_get_current(p1);
 
     vnet_buffer (p0)->l2_hdr_offset = hdr0->l2_offset;
-    vnet_buffer (p0)->l3_hdr_offset =
-         hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
-    vnet_buffer (p0)->l4_hdr_offset =
-        hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
+    if (BIT_ISSET(hdr0->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
+        vnet_buffer(p0)->l3_hdr_offset = hdr0->l3_inner_offset;
+        vnet_buffer(p0)->l4_hdr_offset = hdr0->l4_inner_offset;
+    } else {
+        vnet_buffer(p0)->l3_hdr_offset = hdr0->l3_offset;
+        vnet_buffer(p0)->l4_hdr_offset = hdr0->l4_offset;
+    }
 
     vnet_buffer (p1)->l2_hdr_offset = hdr1->l2_offset;
-    vnet_buffer (p1)->l3_hdr_offset =
-         hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
-    vnet_buffer (p1)->l4_hdr_offset =
-        hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
+    if (BIT_ISSET(hdr1->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
+        vnet_buffer(p1)->l3_hdr_offset = hdr1->l3_inner_offset;
+        vnet_buffer(p1)->l4_hdr_offset = hdr1->l4_inner_offset;
+    } else {
+        vnet_buffer(p1)->l3_hdr_offset = hdr1->l3_offset;
+        vnet_buffer(p1)->l4_hdr_offset = hdr1->l4_offset;
+    }
 
     pds_dhcp_relay_fill_data(p0, hdr0);
     pds_dhcp_relay_fill_data(p1, hdr1);
@@ -236,10 +242,13 @@ pds_dhcp_relay_clfy_x1 (vlib_buffer_t *p, u16 *next, u32 *counter, u8 host)
     p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
 
     vnet_buffer (p)->l2_hdr_offset = hdr->l2_offset;
-    vnet_buffer (p)->l3_hdr_offset =
-         hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
-    vnet_buffer (p)->l4_hdr_offset =
-        hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
+    if (BIT_ISSET(hdr->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
+        vnet_buffer(p)->l3_hdr_offset = hdr->l3_inner_offset;
+        vnet_buffer(p)->l4_hdr_offset = hdr->l4_inner_offset;
+    } else {
+        vnet_buffer(p)->l3_hdr_offset = hdr->l3_offset;
+        vnet_buffer(p)->l4_hdr_offset = hdr->l4_offset;
+    }
 
     pds_dhcp_relay_fill_data(p, hdr);
 

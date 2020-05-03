@@ -8,7 +8,7 @@ testcases:
         testcase: testcases.mtu.mtu
         stress  : True
         disable : False
-        ignore  : False
+        ignore  : True
         iterators :
             type    : simple
             #XXX want to test 9100, but vpp panic with pkt size > 5000

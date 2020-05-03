@@ -2,6 +2,7 @@
 import iota.harness.api as api
 import iota.test.utils.debug as debug_utils
 import iota.test.utils.host as host_utils
+import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
 # Testing ethtool priv flags
 #
@@ -154,6 +155,9 @@ def Trigger(tc):
     ret = api.types.status.SUCCESS
 
     for wl in workloads:
+        # TODO: Maybe revisit this. Ignore 802.1q vlan workloads for now.
+        if wl.interface_type == topo_svc.INTERFACE_TYPE_VSS:
+           continue
         ret = __checkDebugStatsDefault(wl)
         if ret == api.types.status.SUCCESS:
             ret = __checkDebugStatsOn(wl)

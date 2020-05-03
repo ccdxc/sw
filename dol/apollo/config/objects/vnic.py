@@ -166,7 +166,7 @@ class VnicObject(base.ConfigObjectBase):
 
     def UpdateAttributes(self):
         if self.Dot1Qenabled:
-            self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
+            self.VlanId = next(ResmgrClient[self.Node].VnicVlanIdAllocator)
         self.UseHostIf = not(self.UseHostIf)
         return
 
