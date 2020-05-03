@@ -1084,7 +1084,7 @@ def DownloadAssets(release_version):
     req.parent_dir = os.path.join(GetTopDir(), 'images')
     return __rpc(req, gl_topo_svc_stub.DownloadAssets)
 
-def ReInstallImage(fw_version=None, dr_version=None):
+def ReInstallImage(fw_version=None, dr_version=None, devices={}):
     """
     """
     # FIXME: Eventually, this will invoke gl_topo_svc_stub.InstallImage
@@ -1096,7 +1096,7 @@ def ReInstallImage(fw_version=None, dr_version=None):
             'DriverVersion'   : dr_version,
             'TestCaseName'    : 'test'
     }
-    return store.GetTestbed().ReImageTestbed(json.dumps(req))
+    return store.GetTestbed().ReImageTestbed(json.dumps(req), devices)
 
 def RunSubTestCase(tc, sub_testcase, parallel=False):
     testcase = loader.Import(sub_testcase, tc.GetPackage())

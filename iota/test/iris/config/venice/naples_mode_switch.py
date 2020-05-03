@@ -6,7 +6,7 @@ import iota.harness.api as api
 import iota.test.iris.testcases.penctl.common as common
 
 
-def __get_mgmt_nw()
+def __get_mgmt_nw():
     if os.environ.get("JOB_ID") is not None:
         return "inband"
     return "oob"

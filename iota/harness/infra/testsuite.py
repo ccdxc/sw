@@ -90,6 +90,7 @@ class TestSuite:
         self.__skip = self.__apply_skip_filters()
         self.__ignoreList = getattr(spec.meta, "ignore_list", [])
         self.__images = self.__load_image_manifest()
+        self.__alt_pipelines = getattr(self.__spec.meta,"alt_pipelines",[])
         return
 
     def Abort(self):
@@ -155,6 +156,9 @@ class TestSuite:
 
     def SetNicMode(self, mode):
         self.__spec.meta.nicmode = mode
+
+    def GetAltPipelines(self):
+        return self.__alt_pipelines
 
     def GetVerifs(self):
         return self.__verifs
@@ -498,6 +502,52 @@ class TestSuite:
                 # raise OfflineTestbedException
         return result
 
+    def __getNodeByName(self, nodeName):
+        node = [node for node in store.GetTopology().GetNodes() if node._Node__name == nodeName]
+        if node == []:
+            return None
+        return node[0]
+
+    def UpdateAltPipelines(self):
+        pipelines = self.GetAltPipelines()
+        if not pipelines:
+            Logger.debug("no alt pipelines found")
+            return
+        nwarmd = "{0}/iota/warmd.json".format(api.GetTopDir())
+        with open(GlobalOptions.testbed_json, "r") as warmdFile:
+            updated = False
+            alreadyDownloaded = []
+            warmd = json.load(warmdFile)
+            for pl in pipelines:
+                Logger.debug("checking pipeline info for {0}".format(pl))
+                topoNode = self.__getNodeByName(pl.node)
+                if not topoNode:
+                    Logger.warn("failed to find node {0} in topology node list".format(node.name))
+                    continue
+                instId = topoNode.GetNodeInfo()["InstanceID"]
+                for node in warmd['Instances']:
+                    if instId == node.get('ID',None):
+                        if len(node.get('Nics',[])) > pl.nic_number:
+                            nic = node['Nics'][pl.nic_number]
+                            updated = True
+                            nic['version'] = pl.version
+                            if pl.version not in alreadyDownloaded:
+                                api.DownloadAssets(pl.version)
+                                alreadyDownloaded.append(pl.version)
+                            Logger.info("upgrading node/nic {0}/{1}".format(topoNode.MgmtIpAddress(),pl.nic_number))
+                            devices = {instId : { "nics":[pl.nic_number], "nodeName":pl.node} }
+                            Logger.debug("writing updated warmd.json to {0}".format(nwarmd))
+                            with open(nwarmd,'w') as outfile:
+                                json.dump(warmd,outfile,indent=4)
+                            resp = api.ReInstallImage(fw_version=pl.version, dr_version=pl.version, devices=devices)
+                            if resp != api.types.status.SUCCESS:
+                                Logger.error(f"Failed to install images on the node/nic {0}/{1}".format(topoNode.MgmtIpAddress(),pl.nic_number))
+                            break
+                        else:
+                            raise Exception("user requested invalid nic number: {0} (starting at 0). node has {1} nics".format(pl.nic_number, len(node.get('Nics',[])) ))
+                else:
+                    Logger.warn("failed to find node {0} / id {1} in warmd".format(topoNode.MgmtIpAddress(),instId))
+
     def writeTestResults(self):
         filename = "testsuite_{0}_results.json".format(self.Name())
         try:
@@ -570,6 +620,8 @@ class TestSuite:
         if status != types.status.SUCCESS:
             self.__timer.Stop()
             return status
+
+        self.UpdateAltPipelines()
 
         self.result = self.__execute_testbundles()
         self.__update_stats()

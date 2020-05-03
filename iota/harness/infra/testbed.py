@@ -363,12 +363,17 @@ class _Testbed:
         naples_host_only = kwargs.get('naples_host_only', False)
         firmware_reimage_only = kwargs.get('firmware_reimage_only', False)
         driver_reimage_only = kwargs.get('driver_reimage_only', False)
+        devices = kwargs.get('devices', {})
         images = self.curr_ts.GetImages()
 
         #if [n for n in self.__tbspec.Instances if n.NodeOs in ["linux","freebsd"]]:
         #    self.__verifyImagePath()
 
         for instance in self.__tbspec.Instances:
+            if devices:
+                if instance.ID not in devices:
+                    Logger.debug("skipping recover testbed for device {0}".format(instance))
+                    continue
             cmd = ["timeout", "2400"]
 
             instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", "")
@@ -548,12 +553,14 @@ class _Testbed:
 
         return types.status.SUCCESS
 
-    def ReImageTestbed(self, req_json):
+    def ReImageTestbed(self, req_json, devices={}):
         """
         Build a new image-manifest file for initializing Naples and Driver
         """
         # Generate new image manifest file
         Logger.info("Building new image-manifest {}".format(req_json))
+        if devices:
+            nodeNames = [val['nodeName'] for key,val in devices.items()]
 
         reimg_req = parser.ParseJsonStream(req_json)
 
@@ -597,10 +604,15 @@ class _Testbed:
             # Call API to reimage testbed : restrict for naples nodes only
             GlobalOptions.only_reboot = False
             GlobalOptions.skip_firmware_upgrade = False
+            if devices:
+                store.GetTopology().SaveNodes(nodeNames)
             self.__recover_testbed(manifest_file,
                                    driver_reimage_only=reimage_driver and not reimage_firmware,
                                    firmware_reimage_only=reimage_firmware and not reimage_driver,
-                                   naples_host_only=True)
+                                   naples_host_only=True,
+                                   devices=devices)
+            if devices:
+                store.GetTopology().RestoreNodes(nodeNames)
         return types.status.SUCCESS
 
     def InitForTestsuite(self, ts=None):

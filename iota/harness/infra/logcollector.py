@@ -105,8 +105,6 @@ def CollectLogs():
                 node.password = getattr(node,"_Node__vmPassword","vm")
             node.ip = node._Node__ip_address
     except:
-        msg = traceback.format_exc()
-        Logger.debug(msg)
         msg = 'topo not setup yet, gathering node info from testbed json file'
         Logger.debug(msg)
         print(msg)
