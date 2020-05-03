@@ -296,6 +296,10 @@ NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_i
         (add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_LOCAL_ADDRESS)) {
         PDS_TRACE_DEBUG("Ignore connected prefix %s route add",
                         ippfx2str(&ips_info_.pfx));
+        // If overlay BGP peering is formed before subnet is configured locally
+        // the GW IP address would have been advertised as Type 2 from remote DSC
+        // and installed as a /32 route. Delete this route when it is identified
+        // as a connected IP.
         overlay_route_del_();
         return rc;
     }

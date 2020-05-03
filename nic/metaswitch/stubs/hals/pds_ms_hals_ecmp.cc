@@ -41,6 +41,174 @@ namespace pds_ms {
        (ATG_NHPI_APPENDED_NEXT_HOP*) \
             NTL_OFF_LIST_TRAVERSE((ips), (list_ptr), cur_obj)
 
+static void
+count_nh_in_ps_ (ATG_NHPI_APPENDED_NEXT_HOP* next_hop,
+                 uint32_t (&nh_count) [PDS_MS_NH_DEST_MAX])
+{
+    switch (next_hop->next_hop_properties.destination_type) {
+    case ATG_NHPI_NEXT_HOP_DEST_PORT:
+        ++nh_count[PDS_MS_NH_DEST_PORT];
+        break;
+    case ATG_NHPI_NEXT_HOP_DEST_NH:
+        ++nh_count[PDS_MS_NH_DEST_NH];
+        break;
+    case ATG_NHPI_NEXT_HOP_DEST_BH:
+        ++nh_count[PDS_MS_NH_DEST_BH];
+        break;
+    }
+}
+
+static void
+iterate_nh_in_pathset_ (ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips,
+                        NTL_OFFSET* list_p,
+                        uint32_t (&nh_count) [PDS_MS_NH_DEST_MAX],
+                        std::function
+                        <void(ATG_NHPI_APPENDED_NEXT_HOP*,
+                              uint32_t (&nh_count) [PDS_MS_NH_DEST_MAX])> hdlr)
+{ 
+    for (auto next_hop = NHPI_GET_FIRST_NH(add_upd_ecmp_ips, list_p);
+         next_hop != NULL;
+         next_hop = NHPI_GET_NEXT_NH(add_upd_ecmp_ips, list_p, next_hop)) {
+
+        hdlr(next_hop, nh_count);
+    }
+}
+
+static void
+log_nh_count_ (ms_ps_id_t ps, const char* str,
+               uint32_t (&nh_count) [PDS_MS_NH_DEST_MAX])
+{
+    PDS_TRACE_INFO("Pathset %d %s DestPort %d DestNH %d Blackhole %d",
+                   ps, str, nh_count[PDS_MS_NH_DEST_PORT],
+                   nh_count[PDS_MS_NH_DEST_NH],
+                   nh_count[PDS_MS_NH_DEST_BH]);
+}
+
+static const char* psstr_(hals_ecmp_t::ps_type_e ps_type){
+    switch(ps_type) {
+    case hals_ecmp_t::ps_type_e::DIRECT:
+        return "Direct";
+    case hals_ecmp_t::ps_type_e::INDIRECT:
+        return "Indirect";
+    case hals_ecmp_t::ps_type_e::OVERLAY:
+        return "Overlay";
+    case hals_ecmp_t::ps_type_e::UNKNOWN:
+        return "Unknown";
+    }
+    return "Unknown";
+}
+
+void hals_ecmp_t::calculate_op_() {
+    if (ips_info_.nh_count[PDS_MS_NH_DEST_NH] > 1) {
+        PDS_TRACE_DEBUG("Ignore %s Pathset %d pointing to multiple direct PS",
+                        psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+        op_ = op_type_e::IGNORE;
+        return;
+    }
+    if (ips_info_.nh_count[PDS_MS_NH_DEST_BH] > 1) {
+        PDS_TRACE_DEBUG("Ignore %s Pathset %d pointing to multiple blackhole",
+                        psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+        op_ = op_type_e::IGNORE;
+        return;
+    }
+    pds_ms_nh_type_t nh_type;
+    switch (ips_info_.ps_type) {
+    case ps_type_e::DIRECT:
+       nh_type = PDS_MS_NH_DEST_PORT;
+       break;
+    case ps_type_e::INDIRECT:
+       nh_type = PDS_MS_NH_DEST_NH;
+       break;
+    case ps_type_e::OVERLAY:
+       nh_type = PDS_MS_NH_DEST_PORT;
+       break;
+    case ps_type_e::UNKNOWN:
+       SDK_ASSERT(0);
+    }
+
+    // Broad categories - 
+    // Valid NH added
+    // BH added
+    // Valid NH deleted
+    // BH deleted - cannot happen without valid NH add
+
+    if (ips_info_.nh_add_count[nh_type] > 0) {
+        // Valid NH added
+        // Rule out - BH add
+        SDK_ASSERT(ips_info_.nh_add_count[PDS_MS_NH_DEST_BH] == 0);
+
+        if (ips_info_.nh_del_count[nh_type] ==
+            ips_info_.nh_add_count[nh_type]) {
+            // Num added == Num deleted -> replace
+            PDS_TRACE_DEBUG("%s Pathset %d update, Replace",
+                            psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+            op_ = op_type_e::UPDATE_REPLACE;
+            return;
+        }
+
+        if (ips_info_.nh_add_count[nh_type] ==
+            ips_info_.nh_count[nh_type]) {
+            // Num added == Num final -> create 
+            if (ips_info_.nh_del_count[PDS_MS_NH_DEST_BH] > 0) {
+                PDS_TRACE_DEBUG("%s Pathset %d create, BH -> New",
+                                psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+                op_ = op_type_e::BH_TO_VALID;
+                return;
+            }
+            PDS_TRACE_DEBUG("%s Pathset %d create, New",
+                            psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+            op_ = op_type_e::CREATE;
+            return;
+        } else {
+            PDS_TRACE_DEBUG("%s Pathset %d create, 1 -> 2",
+                            psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+            op_ = op_type_e::UPDATE_ADD;
+            return;
+        }
+    }
+    if (ips_info_.nh_add_count[PDS_MS_NH_DEST_BH] > 0) {
+        // BH added
+        // Rule out - Valid NH add
+        SDK_ASSERT(ips_info_.nh_add_count[nh_type] == 0);
+
+        if (ips_info_.nh_del_count[nh_type] > 0) {
+            // With valid NH del
+            if (ips_info_.nh_count[nh_type] == 0) {
+                PDS_TRACE_DEBUG("%s Pathset %d delete, Old -> BH",
+                                psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+                op_ = op_type_e::VALID_TO_BH;
+                return;
+            }
+            // Blackhole added but still valid NH left 
+            // 2 -> 1 , BH
+            PDS_TRACE_DEBUG("%s Pathset %d update, Unchng,Old -> Unchng,BH",
+                            psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+            op_ = op_type_e::UPDATE_DEL;
+            return;
+        }
+        // Without valid NH del - new BH
+        PDS_TRACE_DEBUG("%s Pathset %d ignore, BH",
+                        psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+        op_ = op_type_e::IGNORE;
+        return;
+    }
+    if (ips_info_.nh_del_count[nh_type] > 0) {
+        // Valid NH del without BH
+        if (ips_info_.nh_count[nh_type] > 0) {
+            // 2 -> 1
+            PDS_TRACE_DEBUG("%s Pathset %d update, 2 -> 1",
+                            psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+            op_ = op_type_e::UPDATE_DEL;
+            return;
+        }
+        // -> 0 cannot happen unless there is blackhole
+        SDK_ASSERT(0);
+    }
+    PDS_TRACE_DEBUG("%s Pathset %d ignore",
+                    psstr_(ips_info_.ps_type), ips_info_.pathset_id);
+    op_ = op_type_e::IGNORE;
+    return;
+}
 
 bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
 
@@ -50,12 +218,35 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
     NBB_CORR_GET_VALUE (ips_info_.pathset_id, add_upd_ecmp_ips->pathset_id);
 
     bool process = true;
-    ATG_NHPI_APPENDED_NEXT_HOP appended_next_hop;
-    auto list_p = &add_upd_ecmp_ips->next_hop_objects;
+    if (add_upd_ecmp_ips->cascaded == ATG_YES) {
+        ips_info_.ps_type = ps_type_e::DIRECT;
+    } else {
+        ips_info_.ps_type = ps_type_e::UNKNOWN;
+    }
 
-    for (auto next_hop = NHPI_GET_FIRST_NH(add_upd_ecmp_ips, list_p);
-         next_hop != NULL;
-         next_hop = NHPI_GET_NEXT_NH(add_upd_ecmp_ips, list_p, next_hop)) {
+    // Count added nexthops
+    auto list_p = &add_upd_ecmp_ips->added_next_hop_objects;
+    iterate_nh_in_pathset_(add_upd_ecmp_ips, list_p, ips_info_.nh_add_count,
+                           count_nh_in_ps_);
+
+    // Count deleted nexthops
+    list_p = &add_upd_ecmp_ips->deleted_next_hop_objects;
+    iterate_nh_in_pathset_(add_upd_ecmp_ips, list_p, ips_info_.nh_del_count,
+                           count_nh_in_ps_);
+
+    // Current nexthops
+    list_p = &add_upd_ecmp_ips->next_hop_objects;
+    auto l_ips_info_ = &ips_info_;
+    iterate_nh_in_pathset_(add_upd_ecmp_ips, list_p, ips_info_.nh_count,
+                           [add_upd_ecmp_ips, l_ips_info_]
+                           (ATG_NHPI_APPENDED_NEXT_HOP* next_hop,
+                            uint32_t (&nh_count) [PDS_MS_NH_DEST_MAX]) -> void {
+
+        auto& ips_info_ = *l_ips_info_;
+        count_nh_in_ps_(next_hop, nh_count);
+
+        ATG_NHPI_APPENDED_NEXT_HOP appended_next_hop;
+
         if (next_hop->next_hop_properties.destination_type !=
             ATG_NHPI_NEXT_HOP_DEST_PORT) {
             // Indirect or Blackhole Pathset -
@@ -69,8 +260,6 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
                                 appended_next_hop.total_length,
                                 (NBB_VOID *)&appended_next_hop,
                                 NULL);
-            // Skip processing Indirect or Blackhole NH
-            process = false;
         }
         if (next_hop->next_hop_properties.destination_type ==
             ATG_NHPI_NEXT_HOP_DEST_NH) {
@@ -81,45 +270,29 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
             NBB_CORR_GET_VALUE(ips_info_.direct_ps_dpcorr, next_hop->next_hop_properties.
                                indirect_next_hop_properties.
                                lower_level_dp_correlator);
+            ips_info_.ps_type = ps_type_e::INDIRECT;
             PDS_TRACE_DEBUG("Indirect Pathset %d Copy lower level DP Correlator %d",
                              ips_info_.pathset_id, ips_info_.direct_ps_dpcorr);
         }
         if (next_hop->next_hop_properties.destination_type ==
             ATG_NHPI_NEXT_HOP_DEST_PORT) {
-            // Direct Pathset
+            // Direct or Overlay Pathset
             ATG_NHPI_NEIGHBOR_PROPERTIES& prop =
                 next_hop->next_hop_properties.direct_next_hop_properties.neighbor;
             ips_info_.nexthops.emplace_back(prop.neighbor_l3_if_index,
                                             prop.neighbor_id.mac_address);
             if (ms_ifindex_to_pds_type(prop.neighbor_l3_if_index) == IF_TYPE_L3) {
-                ips_info_.pds_nhgroup_type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+                ips_info_.ps_type = ps_type_e::DIRECT;
             } else {
-                ips_info_.pds_nhgroup_type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+                ips_info_.ps_type = ps_type_e::OVERLAY;
             }
         }
-    }
-    ips_info_.num_added_nh = NTL_OFF_LIST_GET_LEN(add_upd_ecmp_ips,
-                                                    &add_upd_ecmp_ips->added_next_hop_objects);
-    ips_info_.num_deleted_nh = 0;
-    auto del_list_p = &add_upd_ecmp_ips->deleted_next_hop_objects;
+    });
 
-    for (auto next_hop = NHPI_GET_FIRST_NH(add_upd_ecmp_ips, del_list_p);
-         next_hop != NULL;
-         next_hop = NHPI_GET_NEXT_NH(add_upd_ecmp_ips, del_list_p, next_hop)) {
-        if (next_hop->next_hop_properties.destination_type !=
-            ATG_NHPI_NEXT_HOP_DEST_BH) {
-            ++ips_info_.num_deleted_nh;
-        }
-    }
-    PDS_TRACE_INFO("Pathset %d Received actual Num Deleted nh %d",
-                   ips_info_.pathset_id,
-                   NTL_OFF_LIST_GET_LEN(add_upd_ecmp_ips,
-                                        &add_upd_ecmp_ips->deleted_next_hop_objects));
-    PDS_TRACE_INFO("Pathset %d - Total NH %d Num add NH %d non-blackholed Deleted nh %d",
-                   ips_info_.pathset_id,
-                   ips_info_.nexthops.size(),
-                   ips_info_.num_added_nh,
-                   ips_info_.num_deleted_nh);
+    log_nh_count_(ips_info_.pathset_id, "Current", ips_info_.nh_count);
+    log_nh_count_(ips_info_.pathset_id, "Added", ips_info_.nh_add_count);
+    log_nh_count_(ips_info_.pathset_id, "Deleted", ips_info_.nh_del_count);
+
     return process;
 }
 
@@ -131,7 +304,7 @@ void hals_ecmp_t::fetch_store_info_(state_t* state) {
 pds_obj_key_t hals_ecmp_t::make_pds_nhgroup_key_(void) {
     ms_hw_tbl_id_t idx;
     bool underlay = false;
-    if (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
+    if (ips_info_.ps_type == ps_type_e::DIRECT) {
         idx = ips_info_.pathset_id;
         underlay = true;
     } else {
@@ -146,23 +319,23 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
                                  (pds_nexthop_group_spec_t& nhgroup_spec,
                                   state_t::context_t& state_ctxt) {
     int i = 0, num_repeats = 0;
-    if (op_create_) {
+    if (op_ == op_type_e::CREATE) {
         num_repeats = 1;
     } else {
-        if (ips_info_.num_added_nh == 0) {
+        if (op_ == op_type_e::UPDATE_DEL) {
             // The only removal allowed is when the number of nexthops in the Group
             // gets cut by half due to a link failure.
             // In this case the remaining set of nexthops need to repeated twice
-            PDS_TRACE_DEBUG("MS ECMP %ld Update with removal %d - setting repeat to 2",
-                            ips_info_.pathset_id, ips_info_.num_deleted_nh);
+            PDS_TRACE_DEBUG("MS ECMP %ld Update with removal - setting repeat to 2",
+                            ips_info_.pathset_id);
             num_repeats = 2;
         } else {
             // NH Group Update to add NH entries assumes recovery from the
             // optimized NH removal case above where the actual number of
             // NH entries in the group was never reduced in the datapath.
             // Reclaim the removed NH entries in the NH Group.
-            PDS_TRACE_DEBUG("MS ECMP %ld Update with addition %d - setting repeat to 1",
-                            ips_info_.pathset_id, ips_info_.num_added_nh);
+            PDS_TRACE_DEBUG("MS ECMP %ld Update with addition - setting repeat to 1",
+                            ips_info_.pathset_id);
             num_repeats = 1;
         }
     }
@@ -230,7 +403,7 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
                             vxp_prop.ifindex, macaddr2str(nh.mac_addr.m_mac));
         }
         nhgroup_spec.nexthops[i].tep = vxp_prop.hal_tep_idx;
-        PDS_TRACE_DEBUG("Add Type5 TEP %s VNI %d Idx 0x%x UUID %s to Overlay NHGroup %s",
+        PDS_TRACE_DEBUG("Add Type5 TEP %s VNI %d Idx %s UUID %s to Overlay NHGroup %s",
                         ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
                         vxp_prop.hal_tep_idx.str(),
                         nhgroup_spec.nexthops[i].tep.str(),
@@ -243,10 +416,11 @@ pds_nexthop_group_spec_t hals_ecmp_t::make_pds_nhgroup_spec_(state_t::context_t&
                                                              state_ctxt) {
     pds_nexthop_group_spec_t nhgroup_spec = {0};
     nhgroup_spec.key = make_pds_nhgroup_key_();
-    nhgroup_spec.type = ips_info_.pds_nhgroup_type;
-    if (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
+    if (ips_info_.ps_type == ps_type_e::DIRECT) {
+        nhgroup_spec.type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
         make_pds_underlay_nhgroup_spec_(nhgroup_spec, state_ctxt);
     } else {
+        nhgroup_spec.type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
         make_pds_overlay_nhgroup_spec_(nhgroup_spec, state_ctxt);
     }
     return nhgroup_spec;
@@ -268,7 +442,7 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(state_t::context_t&
     }
     bctxt_guard_.set(store_info_.bctxt);
 
-    if (op_delete_) { // Delete
+    if (op_ == op_type_e::DELETE) { // Delete
         auto nhgroup_key = make_pds_nhgroup_key_();
         if (!PDS_MOCK_MODE()) {
             ret = pds_nexthop_group_delete(&nhgroup_key, store_info_.bctxt);
@@ -280,7 +454,7 @@ pds_batch_ctxt_guard_t hals_ecmp_t::make_batch_pds_spec_(state_t::context_t&
 
     } else { // Add or update
         auto nhgroup_spec = make_pds_nhgroup_spec_(state_ctxt);
-        if (op_create_) {
+        if (op_ == op_type_e::CREATE) {
             if (!PDS_MOCK_MODE()) {
                 ret = pds_nexthop_group_create(&nhgroup_spec, store_info_.bctxt);
             }
@@ -358,46 +532,30 @@ static void send_ips_response_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips,
     NBB_DESTROY_THREAD_CONTEXT
 }
 
-// Update the indirect PS to direct PS mapping
-// Return TEP using this indirect PS if any
-static std::pair<ip_addr_t,bool> indirect_ps_lookup_and_update_ (state_t* state,
-                                                    ms_ps_id_t indirect_pathset,
-                                                    ms_hw_tbl_id_t direct_ps_dpcorr) {
-    ip_addr_t zero_ip = {0};
-    auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
-    if (indirect_ps_obj == nullptr) {
-        PDS_TRACE_DEBUG("Set new indirect pathset %d -> direct pathset %d",
-                        indirect_pathset, direct_ps_dpcorr);
-        std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr
-            (new indirect_ps_obj_t(direct_ps_dpcorr));
-        state->indirect_ps_store().add_upd(indirect_pathset,
-                                           std::move(indirect_ps_obj_uptr));
-        return std::pair<ip_addr_t,bool> (zero_ip,true);
-    }
-    if (indirect_ps_obj->direct_ps_dpcorr() != direct_ps_dpcorr) {
-        PDS_TRACE_DEBUG("Set indirect pathset %d -> direct pathset %d",
-                        indirect_pathset, direct_ps_dpcorr);
-        indirect_ps_obj->set_direct_ps_dpcorr(direct_ps_dpcorr);
-    }
-    return std::pair<ip_addr_t,bool> (indirect_ps_obj->destip(),
-                                      indirect_ps_obj->is_ms_evpn_tep_ip());
-}
-
 NBB_BYTE hals_ecmp_t::handle_indirect_ps_update_
                             (ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
     NBB_BYTE rc = ATG_OK;
+
+    if (op_ == op_type_e::VALID_TO_BH) {
+        op_ = op_type_e::UPDATE_DEL;
+    }
+    if (op_ == op_type_e::BH_TO_VALID) {
+        op_ = op_type_e::UPDATE_ADD;
+    }
 
     // Received Pathset with Non-direct nextxhops.
     // Check if this is an Indirect Pathset that is referenced by
     // existing VXLAN Tunnels (TEPs)
     auto state_ctxt = pds_ms::state_t::thread_context();
-    auto destip_pair = indirect_ps_lookup_and_update_(state_ctxt.state(),
-                                                       ips_info_.pathset_id,
-                                                       ips_info_.direct_ps_dpcorr);
+    auto destip_pair =
+        state_indirect_ps_lookup_and_map_dpcorr(state_ctxt.state(),
+                                                ips_info_.pathset_id,
+                                                ips_info_.direct_ps_dpcorr);
     auto destip = destip_pair.first;
     if (ip_addr_is_zero(&destip)) {
         return rc;
     }
+
     if (!destip_pair.second) {
         // Indirect pathset is NOT tracking a MS EVPN TEP IP
         auto destip_track_obj = state_ctxt.state()->destip_track_store().get(destip);
@@ -414,36 +572,19 @@ NBB_BYTE hals_ecmp_t::handle_indirect_ps_update_
         // Nothing to do
         return rc;
     }
-    // This is an indirect pathset that is referenced by Tunnels
-    if (ips_info_.direct_ps_dpcorr == PDS_MS_ECMP_INVALID_INDEX) {
-        // The indirect pathset has lost its underlying direct pathset.
-        // It is soon either going to be deleted or updated with a
-        // new direct nexthop.
-        // Update the store for any Tunnels that refer to this
-        // indirect pathset. In case any Type 5 Tunnel gets created
-        // at this point we do not want it to pick up the stale underlying
-        // pathset. But do not disturb the dataplane since Metaswitch
-        // intermittently updates the indirect pathset with black-hole
-        // nexthops when switching direct next-hops upon link down
-        PDS_TRACE_DEBUG("MS Indirect Pathset %d TEP %s black-holed",
-                        ips_info_.pathset_id,
-                        ipaddr2str(&tep_obj->properties().tep_ip));
-        return rc;
-    }
-
     li_vxlan_tnl tnl;
     // Alloc new cookie to capture async info
     cookie_uptr_.reset (new cookie_t);
     auto direct_ps_dpcorr = ips_info_.direct_ps_dpcorr;
     auto l_pathset_id = ips_info_.pathset_id;
-    PDS_TRACE_DEBUG("MS Underlay Pathset %d update for TEP %s New DP Corr %d",
+    PDS_TRACE_DEBUG("Indirect Pathset %d update for TEP %s New DP Corr %d",
                     ips_info_.pathset_id,
                     ipaddr2str(&tep_obj->properties().tep_ip),
                     direct_ps_dpcorr);
 
     cookie_uptr_->send_ips_reply =
-        [add_upd_ecmp_ips, l_pathset_id, tep_ip,
-        direct_ps_dpcorr] (bool pds_status, bool ips_mock) -> void {
+        [add_upd_ecmp_ips, l_pathset_id, tep_ip, direct_ps_dpcorr]
+        (bool pds_status, bool ips_mock) -> void {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             //-----------------------------------------------------------------
@@ -465,25 +606,60 @@ NBB_BYTE hals_ecmp_t::handle_indirect_ps_update_
 NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
     NBB_BYTE rc = ATG_OK;
 
-    if (!parse_ips_info_(add_upd_ecmp_ips)) {
+    parse_ips_info_(add_upd_ecmp_ips);
+    
+    if (ips_info_.ps_type == ps_type_e::UNKNOWN) {
+        if (ips_info_.nh_del_count[PDS_MS_NH_DEST_NH] > 0) {
+            ips_info_.ps_type = ps_type_e::INDIRECT;
+        } else if (ips_info_.nh_del_count[PDS_MS_NH_DEST_PORT] > 0) {
+            if (mgmt_state_t::thread_context().state()->
+                overlay_routing_en()) {
+                // Cacscaded mode - cascaded flag is not set - should be overlay
+                ips_info_.ps_type = ps_type_e::OVERLAY;
+            } else {
+                // Squashed mode
+                ips_info_.ps_type = ps_type_e::DIRECT;
+            }
+        } else {
+            PDS_TRACE_DEBUG("Ignore pathset %d containing unknown nexthops",
+                            ips_info_.pathset_id);
+            return rc;
+        }
+    }
+   
+    calculate_op_();
+    if (op_ == op_type_e::IGNORE) {
+        return rc;
+    }
+
+    if (ips_info_.ps_type == ps_type_e::INDIRECT) {
         return handle_indirect_ps_update_(add_upd_ecmp_ips);
     }
 
     // Direct Pathset - can be underlay or overlay
-    if (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
-        auto num_nexthops = ips_info_.nexthops.size();
+    if (ips_info_.ps_type == ps_type_e::DIRECT) {
+        if (op_ == op_type_e::VALID_TO_BH) {
+            PDS_TRACE_DEBUG("Pathset %d treating Valid -> BH as Delete for"
+                            " Underlay Direct", ips_info_.pathset_id);
+            op_ = op_type_e::DELETE;
+        } else if (op_ == op_type_e::BH_TO_VALID) {
+            PDS_TRACE_DEBUG("Pathset %d treating BH -> Valid as Create for"
+                            " Underlay Direct", ips_info_.pathset_id);
+            op_ = op_type_e::CREATE;
+        }
 
-        if ((ips_info_.num_added_nh == num_nexthops) &&
-            (ips_info_.num_deleted_nh == 0)) {
-            op_create_ = true;
+        auto num_nexthops = ips_info_.nh_count[PDS_MS_NH_DEST_PORT];
+        if (op_ == op_type_e::CREATE) {
             PDS_TRACE_DEBUG ("MS Underlay ECMP %ld: Create IPS Num nexthops %ld",
                              ips_info_.pathset_id, num_nexthops);
         } else {
-            if (ips_info_.num_added_nh == 0) {
+            if (op_ == op_type_e::UPDATE_DEL) {
                 // NH Group Update with NH removal
                 // Optimization to quickly update ECMP Group in-place in case of
                 // link failure without waiting for BGP keep-alive timeout.
-                auto prev_num_nexthops = (num_nexthops + ips_info_.num_deleted_nh);
+                auto prev_num_nexthops =
+                    (num_nexthops + ips_info_.nh_del_count[PDS_MS_NH_DEST_PORT]
+                     - ips_info_.nh_add_count[PDS_MS_NH_DEST_PORT]);
 
                 // Only removal of exactly half the nexthops is supported for an
                 // NH Group update. Since we cannot change the actual number of
@@ -500,9 +676,11 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                                   num_nexthops, prev_num_nexthops);
                     return rc;
                 }
-                PDS_TRACE_DEBUG ("MS Underlay ECMP %ld update - NH Removal"
-                                 " (optimization)", ips_info_.pathset_id);
-            } else {
+                PDS_TRACE_DEBUG ("MS Underlay ECMP %ld NH Removal"
+                                 " optimization %d -> %d",
+                                 ips_info_.pathset_id, prev_num_nexthops,
+                                 num_nexthops);
+            } else if (op_ == op_type_e::UPDATE_ADD) {
                 // Adding new Nexthops to an existing NH Group is not supported.
                 // But the corner case of recovery from the link failure
                 // optimization above before BGP timeout needs to be handled
@@ -512,12 +690,16 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
                 // TODO - assuming that since the total number of NH entries
                 // in the ECMP Group never changed reclaim the unused entries
                 // now.
-                PDS_TRACE_DEBUG ("MS Underlay ECMP %ld update - NH Add %d"
-                                 " Total NH %d (receovery from optimization)",
-                                 ips_info_.pathset_id,
-                                 ips_info_.num_added_nh, num_nexthops);
-                PDS_TRACE_INFO("Nexthop update with in-place NH add"
-                               " - recovery from optimized case !!!");
+                auto num_nexthops = ips_info_.nh_count[PDS_MS_NH_DEST_PORT];
+                auto prev_num_nexthops =
+                    (num_nexthops - ips_info_.nh_add_count[PDS_MS_NH_DEST_PORT]
+                     + ips_info_.nh_del_count[PDS_MS_NH_DEST_PORT]);
+                PDS_TRACE_INFO ("MS Underlay ECMP %ld receovery from"
+                                "optimization %d -> %d", prev_num_nexthops,
+                                num_nexthops);
+            } else if (op_ == op_type_e::DELETE) {
+                PDS_TRACE_DEBUG("Pathset %d Treat as Delete",
+                                ips_info_.pathset_id);
             }
         }
     }
@@ -529,20 +711,28 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
 
-        if (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
+        if (ips_info_.ps_type == ps_type_e::OVERLAY) {
             fetch_store_info_(state_ctxt.state());
+
+            // If op is not create then there should be a valid
+            // store obj retrieved
+            SDK_ASSERT(op_ == op_type_e::CREATE ||
+                       store_info_.pathset_obj != nullptr);
+
             if (likely(store_info_.pathset_obj == nullptr)) {
-                op_create_ = true;
-                pathset_obj_uptr_t pathset_obj_uptr(new pathset_obj_t(ips_info_.pathset_id));
+                pathset_obj_uptr_t pathset_obj_uptr
+                    (new pathset_obj_t(ips_info_.pathset_id));
                 store_info_.pathset_obj = pathset_obj_uptr.get();
+
                 // Cache the new object in the cookie to revisit asynchronously
                 // when the PDS API response is received
                 cookie_uptr_->objs.push_back(std::move(pathset_obj_uptr));
+
                 PDS_TRACE_DEBUG ("MS Overlay ECMP %ld: Create IPS Num nexthops %ld",
                                  ips_info_.pathset_id, ips_info_.nexthops.size());
             } else {
                 // TODO: Handle Overlay ECMP Update if needed after checking with MS
-                PDS_TRACE_ERR ("MS Overlay ECMP %ld: Update IPS Num nexthops %ld"
+                PDS_TRACE_ERR ("Overlay Pathset %ld: Update IPS Num nexthops %ld"
                                " NOT SUPPORTED",
                                ips_info_.pathset_id, ips_info_.nexthops.size());
                 return rc;
@@ -555,11 +745,13 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    auto l_overlay = (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_OVERLAY_ECMP);
+    auto l_overlay = (ips_info_.ps_type == ps_type_e::OVERLAY);
     auto pathset_id = ips_info_.pathset_id;
     auto l_num_nh = ips_info_.nexthops.size();
+    auto l_op = op_;
+
     cookie_uptr_->send_ips_reply =
-        [add_upd_ecmp_ips, pathset_id, l_overlay, l_num_nh]
+        [add_upd_ecmp_ips, pathset_id, l_overlay, l_num_nh, l_op]
         (bool pds_status, bool ips_mock) -> void {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -570,7 +762,14 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
             if (pds_status) {
                 if (!l_overlay) {
                     // HAL Key (DP correlator) is the MS pathset ID itself
-                    dp_corr = pathset_id;
+                    if (l_op == op_type_e::DELETE) {
+                        // TODO: MS yet to confirm that change in
+                        // Direct DP Corr will be propagated upto the
+                        // Indirect PS
+                        dp_corr = PDS_MS_ECMP_INVALID_INDEX;
+                    } else {
+                        dp_corr = pathset_id;
+                    }
                 } else {
                     // Enter thread-safe context to access/modify global state
                     auto state_ctxt = pds_ms::state_t::thread_context();
@@ -614,7 +813,7 @@ NBB_BYTE hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_
 
 void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
-    op_delete_ = true;
+    op_ = op_type_e::DELETE;
     bool l_underlay = true;
 
     // MS Stub Integration APIs do not support Async callback for deletes.
@@ -641,11 +840,11 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
                                             get(ips_info_.pathset_id);
         if (store_info_.pathset_obj != nullptr) {
             l_underlay = false;
-            ips_info_.pds_nhgroup_type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
+            ips_info_.ps_type = ps_type_e::OVERLAY;
             PDS_TRACE_DEBUG ("MS Overlay ECMP %ld: Delete IPS",
                              ips_info_.pathset_id);
         } else {
-            ips_info_.pds_nhgroup_type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
+            ips_info_.ps_type = ps_type_e::DIRECT;
             PDS_TRACE_DEBUG ("MS Underlay ECMP %ld: Delete IPS",
                              ips_info_.pathset_id);
         }

@@ -55,6 +55,7 @@ private:
 
     pds_ms::hals_l3_integ_subcomp_t hal_is;
     bool op_create_ = false;
+    bool prev_bh_ = false;
     std::vector<uint32_t> ms_iflist;
     NBB_SAVED_CONTEXT saved_context;
 };

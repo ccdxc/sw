@@ -234,6 +234,20 @@ TEST_F(pds_ms_hals_test, underlay_ecmp_test) {
     test_input->trigger_update();
     test_output->validate();
 
+    // Valid -> BH
+    std::cout << "=== Valid -> BH test ===" << std::endl;
+    underlay_ecmp_input->set_bh();
+    test_output->expect_delete();
+    test_input->trigger_update();
+    test_output->validate();
+
+    // BH -> Valid
+    std::cout << "=== BH -> Valid test ===" << std::endl;
+    underlay_ecmp_input->reset_bh();
+    test_output->expect_create();
+    test_input->trigger_update();
+    test_output->validate();
+
     // Delete
     std::cout << "=== NH Delete test ===" << std::endl;
     test_output->expect_delete();
@@ -474,7 +488,6 @@ TEST(pds_ms_destip_track_test, crud_test) {
     ASSERT_EQ(state_ctxt.state()->destip_track_internalip_store().size(),
               (uint32_t) 0);
     }
-
 }
 
 //----------------------------------------------------------------------------

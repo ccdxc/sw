@@ -32,11 +32,6 @@ indirect_ps_obj_t::indirect_ps_obj_t() {
     set_zero_ip(destip_);
 }
 
-indirect_ps_obj_t::indirect_ps_obj_t(ms_hw_tbl_id_t direct_ps_dpcorr)
-     : direct_ps_dpcorr_ (direct_ps_dpcorr) {
-    set_zero_ip(destip_);
-}
-
 void indirect_ps_obj_t::reset_destip(void) {
     set_zero_ip(destip_);
 }

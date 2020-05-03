@@ -1010,9 +1010,11 @@ int main(int argc, char** argv)
             create_device_proto_grpc(underlay_only ? false : true);
             create_underlay_vpc_proto_grpc();
         }
-        // Create loopback intf for TEP IP on PDSA
-        // Create dummy interface in Pegasus as well to use as Nexthop for Static default route
-        create_intf_proto_grpc(true /*loopback*/);
+        if (!underlay_only) {
+            // Create loopback intf for TEP IP on PDSA
+            // Create dummy interface in Pegasus as well to use as Nexthop for Static default route
+            create_intf_proto_grpc(true /*loopback*/);
+        }
         if (g_node_id == 2) {
             // On C2, Delete the RTM redistribute rule to advertise specific TEP IP to DUT
             // Instead BGP default originate is setup on C2 to simulate default route
@@ -1129,10 +1131,19 @@ int main(int argc, char** argv)
             // Overlay peer
             delete_bgp_peer_proto_grpc(true);
             return 0;
+        } else if (!strcmp(argv[1], "bgp-opeer-del2")) {
+            // Overlay peer
+            delete_bgp_peer_proto_grpc(true, true);
+            return 0;
         } else if (!strcmp(argv[1], "bgp-opeer-create")) {
             // Overlay peer
             create_bgp_peer_proto_grpc(true);
             create_bgp_peer_af_proto_grpc(true);
+            return 0;
+        } else if (!strcmp(argv[1], "bgp-opeer-creat2e")) {
+            // Overlay peer
+            create_bgp_peer_proto_grpc(true, true);
+            create_bgp_peer_af_proto_grpc(true, true);
             return 0;
         } else if (!strcmp(argv[1], "mac-ip-del")) {
             // MAC-IP
@@ -1179,7 +1190,7 @@ int main(int argc, char** argv)
         } else if (!strcmp(argv[1], "del-destip-track1")) {
             ip_addr_t ip = {0};
             ip.af = IP_AF_IPV4;
-            ip.addr.v4_addr = 0x0b000001;
+            ip.addr.v4_addr = 0x0e000001;
             delete_destip_track (ip);
             ++ip.addr.v4_addr;
             return 0;
@@ -1191,6 +1202,12 @@ int main(int argc, char** argv)
                 delete_destip_track (ip);
                 ++ip.addr.v4_addr;
             }
+            return 0;
+        } else if (!strcmp(argv[1], "create-destip-track1")) {
+            ip_addr_t ip = {0};
+            ip.af = IP_AF_IPV4;
+            ip.addr.v4_addr = 0x0e000001;
+            create_destip_track (ip);
             return 0;
         } else if (!strcmp(argv[1], "create-destip-track-all")) {
             ip_addr_t ip = {0};
@@ -1204,7 +1221,7 @@ int main(int argc, char** argv)
         } else if (!strcmp(argv[1], "mix-destip-track-all")) {
             ip_addr_t ip = {0};
             ip.af = IP_AF_IPV4;
-            ip.addr.v4_addr = 0x0d000001;
+            ip.addr.v4_addr = 0x0f000001;
             for (int i=0; i<1000; ++i) {
                 create_destip_track (ip);
                 if (i%4 == 0) {

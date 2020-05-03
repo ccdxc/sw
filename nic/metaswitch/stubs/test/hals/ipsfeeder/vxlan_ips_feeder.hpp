@@ -46,9 +46,10 @@ public:
     }
     
     void add_indirect_ps(void) {
+        auto indirect_ps_obj = new pds_ms::indirect_ps_obj_t();
+        indirect_ps_obj->set_direct_ps_dpcorr(unh_dp_idx);
         pds_ms::state_t::thread_context().state()->
-            indirect_ps_store().add_upd(indirect_pathset,
-                                         new pds_ms::indirect_ps_obj_t(unh_dp_idx));
+            indirect_ps_store().add_upd(indirect_pathset, indirect_ps_obj);
         indirect_ps_list.push_back(indirect_pathset);
     }
     void trigger_create(void) override {

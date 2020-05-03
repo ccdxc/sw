@@ -27,12 +27,15 @@ public:
     uint32_t                pathset_id;
     std::vector<nhinfo_t>   nexthops;
     std::vector<nhinfo_t>   deleted_nexthops;
+    bool bh = false; // blackhole
 
    // These inputs are used to generate feeder inputs 
    // as well as output verifications 
    virtual void init(std::vector<nhinfo_t>&& nhs) {
        nexthops = std::move(nhs);
    }
+   void set_bh(void) { bh = true; }
+   void reset_bh(void) { bh = false; }
    void modify(void) override {
        // Move second half of nexthops to deleted list
        auto end = nexthops.size()/2;

@@ -48,16 +48,41 @@ void underlay_ecmp_ips_feeder_t::fill_add_update_sz_array(
 
     static_assert(OFL_ATG_NHPI_ADD_UPDATE_ECMP == 5);
     size_array[0] = NBB_ALIGN_OFFSET(sizeof(ATG_NHPI_ADD_UPDATE_ECMP));
+    bool reset_bh = false;
+    if (bh) {
+        std::cout << "To blackhole" << std::endl;
+    }
+    if (!bh && prev_bh_) {
+        std::cout << "Recovering from blackhole" << std::endl;
+        reset_bh = true;
+    }
     // Total remaining nexthops
-    size_array[1] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP),
-                                           nexthops.size());
+    if (bh) {
+        // 1 BH
+        size_array[1] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP), 1);
+    } else {
+        size_array[1] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP),
+                                               nexthops.size());
+    }
     // Deleted  nexthops
-    size_array[3] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP),
-                                           deleted_nexthops.size());
+    if (bh) {
+        // All existing nexthops are deleted
+        size_array[3] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP),
+                                               nexthops.size());
+    } else if (reset_bh) {
+        // 1 BH deleted
+        size_array[3] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP), 1);
+    } else {
+        size_array[3] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP),
+                                               deleted_nexthops.size());
+    }
     // Added nexthops - can only happen in the create case and is same as total nexthops
-    if (op_create_) {
+    if (op_create_ || reset_bh) {
         size_array[2] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP),
                                                nexthops.size());
+    } else if (bh) {
+        // 1 BH
+        size_array[2] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP), 1);
     } else {
         size_array[2] = NTL_OFF_LIST_CALC_SIZE(sizeof(ATG_NHPI_APPENDED_NEXT_HOP),
                                                0);
@@ -74,56 +99,124 @@ underlay_ecmp_ips_feeder_t::generate_add_upd_ips(void) {
     auto add_update_ips = (ATG_NHPI_ADD_UPDATE_ECMP*) calloc(1, ctrl_size+100);
     // generate_ips_header (add_upd); 
     NBB_CORR_PUT_VALUE(add_update_ips->pathset_id, pathset_id);
+    add_update_ips->cascaded = ATG_YES;
 
+    bool reset_bh = false;
+    if (bh) {
+        std::cout << "To blackhole" << std::endl;
+    }
+    if (!bh && prev_bh_) {
+        std::cout << "Recovering from blackhole" << std::endl;
+        reset_bh = true;
+    }
     NTL_OFF_INIT_STRUCT(add_update_ips,
                         size_array,
                         off_atg_nhpi_add_update_ecmp);
-    for (auto& nh: nexthops) {
+    if (bh) {
         ATG_NHPI_APPENDED_NEXT_HOP appended_next_hop = {0};
         appended_next_hop.total_length = sizeof(ATG_NHPI_APPENDED_NEXT_HOP);
         NBB_CORR_INIT(appended_next_hop.dp_correlator);
         ATG_NHPI_NEXT_HOP_PROPERTIES nh_prop = {0};
-        nh_prop.destination_type = ATG_NHPI_NEXT_HOP_DEST_PORT;
-        nh_prop.direct_next_hop_properties.neighbor.neighbor_l3_if_index 
-            = nh.l3_ifindex;
-        memcpy (nh_prop.direct_next_hop_properties.neighbor.neighbor_id.mac_address,
-                nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
+        nh_prop.destination_type = ATG_NHPI_NEXT_HOP_DEST_BH;
         appended_next_hop.next_hop_properties = nh_prop;
-        if (op_create_) {
+        // Add BH to both current and added
+        NTL_OFF_LIST_APPEND(add_update_ips,
+                            &add_update_ips->next_hop_objects,
+                            appended_next_hop.total_length,
+                            (NBB_VOID *)&appended_next_hop,
+                            NULL);
+        NTL_OFF_LIST_APPEND(add_update_ips,
+                            &add_update_ips->added_next_hop_objects,
+                            appended_next_hop.total_length,
+                            (NBB_VOID *)&appended_next_hop,
+                            NULL);
+    } else {
+        for (auto& nh: nexthops) {
+            ATG_NHPI_APPENDED_NEXT_HOP appended_next_hop = {0};
+            appended_next_hop.total_length = sizeof(ATG_NHPI_APPENDED_NEXT_HOP);
+            NBB_CORR_INIT(appended_next_hop.dp_correlator);
+            ATG_NHPI_NEXT_HOP_PROPERTIES nh_prop = {0};
+            nh_prop.destination_type = ATG_NHPI_NEXT_HOP_DEST_PORT;
+            nh_prop.direct_next_hop_properties.neighbor.neighbor_l3_if_index 
+                = nh.l3_ifindex;
+            memcpy (nh_prop.direct_next_hop_properties.neighbor.neighbor_id.mac_address,
+                    nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
+            appended_next_hop.next_hop_properties = nh_prop;
+            if (op_create_ || reset_bh) {
+                NTL_OFF_LIST_APPEND(add_update_ips,
+                                    &add_update_ips->next_hop_objects,
+                                    appended_next_hop.total_length,
+                                    (NBB_VOID *)&appended_next_hop,
+                                    NULL);
+                NTL_OFF_LIST_APPEND(add_update_ips,
+                                    &add_update_ips->added_next_hop_objects,
+                                    appended_next_hop.total_length,
+                                    (NBB_VOID *)&appended_next_hop,
+                                    NULL);
+            } else {
+                NTL_OFF_LIST_APPEND(add_update_ips,
+                                    &add_update_ips->next_hop_objects,
+                                    appended_next_hop.total_length,
+                                    (NBB_VOID *)&appended_next_hop,
+                                    NULL);
+            }
+        }
+    }
+    if (bh) {
+        for (auto& nh: nexthops) {
+            ATG_NHPI_APPENDED_NEXT_HOP appended_next_hop = {0};
+            appended_next_hop.total_length = sizeof(ATG_NHPI_APPENDED_NEXT_HOP);
+            NBB_CORR_INIT(appended_next_hop.dp_correlator);
+            ATG_NHPI_NEXT_HOP_PROPERTIES nh_prop = {0};
+            nh_prop.destination_type = ATG_NHPI_NEXT_HOP_DEST_PORT;
+            nh_prop.direct_next_hop_properties.neighbor.neighbor_l3_if_index 
+                = nh.l3_ifindex;
+            memcpy (nh_prop.direct_next_hop_properties.neighbor.neighbor_id.mac_address,
+                    nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
+            appended_next_hop.next_hop_properties = nh_prop;
             NTL_OFF_LIST_APPEND(add_update_ips,
-                                &add_update_ips->next_hop_objects,
-                                appended_next_hop.total_length,
-                                (NBB_VOID *)&appended_next_hop,
-                                NULL);
-            NTL_OFF_LIST_APPEND(add_update_ips,
-                                &add_update_ips->added_next_hop_objects,
-                                appended_next_hop.total_length,
-                                (NBB_VOID *)&appended_next_hop,
-                                NULL);
-        } else {
-            NTL_OFF_LIST_APPEND(add_update_ips,
-                                &add_update_ips->next_hop_objects,
+                                &add_update_ips->deleted_next_hop_objects,
                                 appended_next_hop.total_length,
                                 (NBB_VOID *)&appended_next_hop,
                                 NULL);
         }
     }
-    for (auto& nh: deleted_nexthops) {
+    else if (reset_bh) {
         ATG_NHPI_APPENDED_NEXT_HOP appended_next_hop = {0};
         appended_next_hop.total_length = sizeof(ATG_NHPI_APPENDED_NEXT_HOP);
         NBB_CORR_INIT(appended_next_hop.dp_correlator);
         ATG_NHPI_NEXT_HOP_PROPERTIES nh_prop = {0};
-        nh_prop.destination_type = ATG_NHPI_NEXT_HOP_DEST_PORT;
-        nh_prop.direct_next_hop_properties.neighbor.neighbor_l3_if_index 
-            = nh.l3_ifindex;
-        memcpy (nh_prop.direct_next_hop_properties.neighbor.neighbor_id.mac_address,
-                nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
+        nh_prop.destination_type = ATG_NHPI_NEXT_HOP_DEST_BH;
         appended_next_hop.next_hop_properties = nh_prop;
+        // Add BH to deleted
         NTL_OFF_LIST_APPEND(add_update_ips,
                             &add_update_ips->deleted_next_hop_objects,
                             appended_next_hop.total_length,
                             (NBB_VOID *)&appended_next_hop,
                             NULL);
+    } else {
+        for (auto& nh: deleted_nexthops) {
+            ATG_NHPI_APPENDED_NEXT_HOP appended_next_hop = {0};
+            appended_next_hop.total_length = sizeof(ATG_NHPI_APPENDED_NEXT_HOP);
+            NBB_CORR_INIT(appended_next_hop.dp_correlator);
+            ATG_NHPI_NEXT_HOP_PROPERTIES nh_prop = {0};
+            nh_prop.destination_type = ATG_NHPI_NEXT_HOP_DEST_PORT;
+            nh_prop.direct_next_hop_properties.neighbor.neighbor_l3_if_index 
+                = nh.l3_ifindex;
+            memcpy (nh_prop.direct_next_hop_properties.neighbor.neighbor_id.mac_address,
+                    nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
+            appended_next_hop.next_hop_properties = nh_prop;
+            NTL_OFF_LIST_APPEND(add_update_ips,
+                                &add_update_ips->deleted_next_hop_objects,
+                                appended_next_hop.total_length,
+                                (NBB_VOID *)&appended_next_hop,
+                                NULL);
+        }
+    }
+    if (bh) {
+        prev_bh_ = true;
+    } else {
+        prev_bh_ = false;
     }
     return add_update_ips;
 }

@@ -155,10 +155,10 @@ public:
     }
 
     sdk_ret_t destip_track_internal_idx_alloc(uint32_t* index) {
-        return ecmp_idx_gen_->alloc(index);
+        return destip_track_internal_idx_gen_->alloc(index);
     }
     sdk_ret_t destip_track_internal_idx_free(uint32_t index) {
-        return ecmp_idx_gen_->free(index);
+        return destip_track_internal_idx_gen_->free(index);
     }
 
 private:
@@ -208,6 +208,19 @@ using pathset_obj_uptr_t = std::unique_ptr<pathset_obj_t>;
 void state_store_commit_objs (state_t::context_t& state_ctxt,
                               std::vector<base_obj_uptr_t>& objs);
 
-}
+
+ms_hw_tbl_id_t
+state_lookup_indirect_ps_and_map_ip (state_t* state,
+                                     ms_ps_id_t indirect_pathset,
+                                     const ip_addr_t& ip,
+                                     bool ms_evpn_tep_ip);
+void
+state_unmap_indirect_ps_from_ip (state_t* state, ms_ps_id_t indirect_pathset);
+
+std::pair<ip_addr_t,bool>
+state_indirect_ps_lookup_and_map_dpcorr (state_t* state,
+                                         ms_ps_id_t indirect_pathset,
+                                         ms_hw_tbl_id_t direct_ps_dpcorr);
+} // End namespace
 
 #endif
