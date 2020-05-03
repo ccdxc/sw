@@ -99,6 +99,14 @@ type PciePortMetrics struct {
 
 	RcLegacyIntpinChangedInt metrics.Counter
 
+	PpsdSbeInterrupt metrics.Counter
+
+	PpsdDbeInterrupt metrics.Counter
+
+	SbusErrInterrupt metrics.Counter
+
+	PoweronRetries metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -196,6 +204,14 @@ func (mtr *PciePortMetrics) Size() int {
 	sz += mtr.TlFlrReqInt.Size()
 
 	sz += mtr.RcLegacyIntpinChangedInt.Size()
+
+	sz += mtr.PpsdSbeInterrupt.Size()
+
+	sz += mtr.PpsdDbeInterrupt.Size()
+
+	sz += mtr.SbusErrInterrupt.Size()
+
+	sz += mtr.PoweronRetries.Size()
 
 	return sz
 }
@@ -334,6 +350,18 @@ func (mtr *PciePortMetrics) Unmarshal() error {
 
 	mtr.RcLegacyIntpinChangedInt = mtr.metrics.GetCounter(offset)
 	offset += mtr.RcLegacyIntpinChangedInt.Size()
+
+	mtr.PpsdSbeInterrupt = mtr.metrics.GetCounter(offset)
+	offset += mtr.PpsdSbeInterrupt.Size()
+
+	mtr.PpsdDbeInterrupt = mtr.metrics.GetCounter(offset)
+	offset += mtr.PpsdDbeInterrupt.Size()
+
+	mtr.SbusErrInterrupt = mtr.metrics.GetCounter(offset)
+	offset += mtr.SbusErrInterrupt.Size()
+
+	mtr.PoweronRetries = mtr.metrics.GetCounter(offset)
+	offset += mtr.PoweronRetries.Size()
 
 	return nil
 }
@@ -556,6 +584,26 @@ func (mtr *PciePortMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.RcLegacyIntpinChangedInt.Size()
+
+	if fldName == "PpsdSbeInterrupt" {
+		return offset
+	}
+	offset += mtr.PpsdSbeInterrupt.Size()
+
+	if fldName == "PpsdDbeInterrupt" {
+		return offset
+	}
+	offset += mtr.PpsdDbeInterrupt.Size()
+
+	if fldName == "SbusErrInterrupt" {
+		return offset
+	}
+	offset += mtr.SbusErrInterrupt.Size()
+
+	if fldName == "PoweronRetries" {
+		return offset
+	}
+	offset += mtr.PoweronRetries.Size()
 
 	return offset
 }
@@ -815,6 +863,30 @@ func (mtr *PciePortMetrics) SetTlFlrReqInt(val metrics.Counter) error {
 // SetRcLegacyIntpinChangedInt sets cunter in shared memory
 func (mtr *PciePortMetrics) SetRcLegacyIntpinChangedInt(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RcLegacyIntpinChangedInt"))
+	return nil
+}
+
+// SetPpsdSbeInterrupt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetPpsdSbeInterrupt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PpsdSbeInterrupt"))
+	return nil
+}
+
+// SetPpsdDbeInterrupt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetPpsdDbeInterrupt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PpsdDbeInterrupt"))
+	return nil
+}
+
+// SetSbusErrInterrupt sets cunter in shared memory
+func (mtr *PciePortMetrics) SetSbusErrInterrupt(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SbusErrInterrupt"))
+	return nil
+}
+
+// SetPoweronRetries sets cunter in shared memory
+func (mtr *PciePortMetrics) SetPoweronRetries(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("PoweronRetries"))
 	return nil
 }
 

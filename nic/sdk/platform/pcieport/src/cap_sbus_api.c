@@ -161,6 +161,8 @@ unsigned int cap_pp_sbus_read(int chip_id, int rcvr_addr, int data_addr) {
   return rd_data;
 }
 
+#ifdef ASIC_ORIG
+
 //----------------------------------------
 // Uploads spico firmware directly into imem rather than via sbus comands.
 // Firmware is passed in as a system verilog string.
@@ -343,6 +345,77 @@ void upload_sbus_master_firmware(int chip_id, int sbus_ring_ms, int device_addr,
    //   if (`SBUS_MASTER_PATH.spico.spico_main.spico_state != 'h12 ) 
    //     $display( "ERROR: %0t spico processor failured to initialize", $time );
 }
+
+#else // ASIC_ORIG
+static void
+upload_ms_sbus_fw(const int device_addr, void *ctx)
+{
+}
+
+static void
+upload_pp_sbus_fw(const int device_addr, void *rom_info)
+{
+    const int chip_id = 0;
+    unsigned int sbus_data;
+    void *ctx = romfile_open(rom_info);
+
+    if (ctx == NULL) {
+        SW_PRINT("romfile_open failed\n");
+        return;
+    }
+
+    // SerDes16_Spec: Table 67
+
+    // Place SerDes in Reset and disable SPICO
+    cap_pp_sbus_write(chip_id, device_addr, 0x7, 0x11);
+    // Remove SerDes Reset
+    cap_pp_sbus_write(chip_id, device_addr, 0x7, 0x10);
+    // Set starting IMEM override
+    cap_pp_sbus_write(chip_id, device_addr, 0x0, 0xc0000000);
+
+    // Burst Load the ROM code
+    while (romfile_read(ctx, &sbus_data)) {
+        cap_pp_sbus_write(chip_id, device_addr, 0xa, sbus_data);
+    }
+    // do a read to flush all the write
+    cap_pp_sbus_read(chip_id, 1, 0xff);
+
+    romfile_close(ctx);
+
+    // SerDes16_Spec: Table 67
+    cap_pp_sbus_write(chip_id, device_addr, 0xa, 0xc0000000); // Pad with 0's
+    cap_pp_sbus_write(chip_id, device_addr, 0xa, 0xc0000000); // Pad with 0's
+    cap_pp_sbus_write(chip_id, device_addr, 0xa, 0xc0000000); // Pad with 0's
+
+    cap_pp_sbus_write(chip_id, device_addr, 0x0, 0x0); // IMEM override off
+    cap_pp_sbus_write(chip_id, device_addr, 0xb, 0xc0000); // Turn ECC on
+    cap_pp_sbus_write(chip_id, device_addr, 0x7, 0x2); // Turn SPICO Enable on
+    // Enable core and hw interrupts
+    cap_pp_sbus_write(chip_id, device_addr, 0x8, 0x0);
+
+    // do a read to flush all the write
+    cap_pp_sbus_read(chip_id, 1, 0xff);
+    SW_PRINT("PCIE:SBUS:Done with load .. flushed \n");
+
+    SW_PRINT("NWL/PCIE:SBUS:Is sleep enough? \n");
+    SLEEP(1000);
+}
+
+void
+upload_sbus_master_firmware(int chip_id,
+                            int sbus_ring_ms,
+                            int device_addr,
+                            void *rom_info)
+{
+    SW_PRINT("NWL/PCIE:SBUS:Upload SBUS \n");
+
+    if (sbus_ring_ms) {
+        upload_ms_sbus_fw(device_addr, rom_info);
+    } else {
+        upload_pp_sbus_fw(device_addr, rom_info);
+    }
+}
+#endif // ASIC_ORIG
 
 //----------------------------------------
 // Issue a spico interrupt and wait for it to complete

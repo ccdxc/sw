@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018,2020, Pensando Systems Inc.
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #include "cap_sw_glue.h"
@@ -13,39 +14,119 @@
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
-#define SBUS_ROM_MAGIC 0x53554253
-
-struct sbus_hdr {
-    uint32_t magic;
-    uint32_t nwords;
-};
-
-struct rom_ctx_s {
-    const uint8_t *buf;
-    int nwords;
-    int shift;
-};
-
-// 00000000_11111111_22222222_33333333_44444444
-// 98765432_10......     9876_543210..
-//            987654_3210....       98_76543210
-int
-romfile_read(void *ctx, unsigned int *datap)
+static uint64_t
+pp_pcsd_interrupt_addr(const int lane)
 {
-    struct rom_ctx_s *p = (struct rom_ctx_s *)ctx;
-    int s2 = p->shift * 2;
+    return PP_(CFG_PP_PCSD_INTERRUPT) + lane * 4;
+}
 
-    if (!p->nwords) {
-        return 0;
+static uint16_t
+pciesd_poll_interrupt_in_progress(const uint16_t want)
+{
+    const int maxpolls = 100;
+    uint16_t inprog;
+    int polls = 0;
+
+    /* check once, if not done immediately then poll loop */
+    inprog = pal_reg_rd32(PP_(STA_PP_PCSD_INTERRUPT_IN_PROGRESS));
+    while (inprog != want && ++polls < maxpolls) {
+        usleep(1000);
+        inprog = pal_reg_rd32(PP_(STA_PP_PCSD_INTERRUPT_IN_PROGRESS));
     }
-    --p->nwords;
-    *datap = (((uint32_t)p->buf[p->shift] & (0xff >> s2)) << (2 + s2)) |
-              (p->buf[p->shift + 1] >> (6 - s2));
-    p->shift = (p->shift + 1) & 0x3;
-    if (p->shift == 0) {
-        p->buf += 5;
+
+    if (inprog != want) {
+        pciesys_loginfo("interrupt timeout (want 0x%04x, got 0x%04x)\n",
+                        want, inprog);
+        /* continue */
     }
-    return 1;
+
+    return inprog;
+}
+
+void
+pciesd_core_interrupt(const uint16_t lanemask,
+                      const uint16_t code,
+                      const uint16_t data,
+                      laneinfo_t *dataout)
+{
+    const uint32_t codedata = ((uint32_t)data << 16) | code;
+
+    /* set up interrupt code/data */
+    for (int i = 0; i < 16; i++) {
+        const uint16_t lanebit = 1 << i;
+
+        if (lanemask & lanebit) {
+            pal_reg_wr32(pp_pcsd_interrupt_addr(i), codedata);
+        }
+    }
+
+    /* issue interrupt request */
+    pal_reg_wr32(PP_(CFG_PP_PCSD_INTERRUPT_REQUEST), lanemask);
+
+    /* wait for interrupt-in-progress */
+    pciesd_poll_interrupt_in_progress(lanemask);
+
+    /* clear interrupt request */
+    pal_reg_wr32(PP_(CFG_PP_PCSD_INTERRUPT_REQUEST), 0);
+
+    /* wait for interrupt-complete */
+    pciesd_poll_interrupt_in_progress(0);
+
+    /* read interrupt response data */
+    pal_reg_rd32w(PP_(STA_PP_PCSD_INTERRUPT_DATA_OUT), dataout->w, 8);
+}
+
+static void
+pcie_sta_pp_sd_core_status(laneinfo_t *li)
+{
+    pal_reg_rd32w(PP_(STA_PP_SD_CORE_STATUS), li->w, 8);
+}
+
+/*
+ * Read core status and figure out which pcie serdes lanes of lanemask
+ * have the "ready" bit set.  See the Avago serdes documentation.
+ */
+uint16_t
+pciesd_lanes_ready(const uint16_t lanemask)
+{
+    laneinfo_t st;
+    uint16_t lanes_ready = 0;
+
+    pcie_sta_pp_sd_core_status(&st);
+    for (int i = 0; i < 16; i++) {
+        const uint16_t lanebit = 1 << i;
+
+        if (lanemask & lanebit) {
+            if (st.lane[i] & (1 << 5)) {
+                lanes_ready |= lanebit;
+            }
+        }
+    }
+    return lanes_ready;
+}
+
+static uint16_t
+pcieport_serdes_crc_check(const uint16_t lanemask)
+{
+    laneinfo_t result;
+    uint16_t lanepass;
+    int i;
+
+    pciesys_sbus_lock();
+    pciesd_core_interrupt(lanemask, 0x3c, 0, &result);
+    pciesys_sbus_unlock();
+
+    lanepass = 0;
+    for (i = 0; i < 16; i++) {
+        const uint16_t lanebit = 1 << i;
+
+        if (lanemask & lanebit) {
+            if (result.lane[i] == 0) {
+                lanepass |= lanebit;
+            }
+        }
+    }
+    return lanepass;
 }
 
 void *
@@ -72,15 +153,59 @@ pcieport_serdes_fw_gen(void)
     return gen;
 }
 
+#define SERDESFW_GEN(mac) \
+    mac(0x1094_2347) \
+    mac(0x10AA_2347)
+
+static uint8_t *
+serdes_lookup(const char *name)
+{
+    /* generate extern declaration of serdesfw symbol */
+#define ext_decl(n) \
+    extern uint8_t sbus_pcie_rom_ ## n ## _start[];
+    SERDESFW_GEN(ext_decl);
+
+    /* generate serdesfw table */
+    static struct serdes_entry {
+        const char *name;
+        uint8_t *start;
+    } serdes_table[] = {
+#define serdes_table_ent(n) \
+        { #n, sbus_pcie_rom_ ## n ## _start },
+        SERDESFW_GEN(serdes_table_ent)
+        { NULL, 0 }
+    };
+    struct serdes_entry *ent;
+
+    /* search serdesfw table for "name" */
+    for (ent = serdes_table; ent->name; ent++) {
+        if (strcmp(name, ent->name) == 0) {
+            return ent->start;
+        }
+    }
+    return NULL;
+}
+
 int
 pcieport_serdes_init(void)
 {
     extern uint8_t sbus_pcie_rom_start[];
-    const struct sbus_hdr *hdr;
+    const char *s = getenv("PCIE_SERDESFW");
+    const struct sbus_hdr {
+        uint32_t magic;
+        uint32_t nwords;
+    } *hdr;
     struct rom_ctx_s ctx;
     int r, gen;
 
-    hdr = (struct sbus_hdr *)sbus_pcie_rom_start;
+    if (s == NULL) {
+        hdr = (struct sbus_hdr *)sbus_pcie_rom_start;
+    } else if ((hdr = (struct sbus_hdr *)serdes_lookup(s)) != 0) {
+        pciesys_loginfo("$PCIE_SERDESFW selects %s\n", s);
+    } else {
+        pciesys_loginfo("$PCIE_SERDESFW bad value: %s (using default)\n", s);
+        hdr = (struct sbus_hdr *)sbus_pcie_rom_start;
+    }
     pciesys_loginfo("pcie sbus ROM @ %p", hdr);
     if (hdr->magic != SBUS_ROM_MAGIC) {
         pciesys_loginfo(", bad magic got 0x%x want 0x%x\n",
@@ -89,15 +214,25 @@ pcieport_serdes_init(void)
     }
     pciesys_loginfo(", good magic.  %d words\n", hdr->nwords);
 
-    ctx.buf = (uint8_t *)(hdr + 1);
+    ctx.buf = (uint32_t *)(hdr + 1);
     ctx.nwords = hdr->nwords;
-    ctx.shift = 0;
 
     gen = pcieport_serdes_fw_gen();
     pal_reg_trace("================ cap_pcie_serdes_setup start\n");
     pciesys_sbus_lock();
     r = cap_pcie_serdes_setup(0, 0, gen == 1, &ctx);
     pciesys_sbus_unlock();
+
+    /* verify crc */
+    if (r >= 0) {
+        const uint16_t lanemask = 0xffff;
+        uint16_t lanepass = pcieport_serdes_crc_check(lanemask);
+        if (lanepass != lanemask) {
+            pciesys_logerror("serdes_init crc failed: "
+                             "want 0x%04x got 0x%04x\n", lanemask, lanepass);
+            r = -1;
+        }
+    }
     pal_reg_trace("================ cap_pcie_serdes_setup end %d\n", r);
     return r;
 }

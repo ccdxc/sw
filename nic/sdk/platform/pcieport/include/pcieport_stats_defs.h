@@ -53,4 +53,11 @@ PCIEPORT_STATS_DEF(rxtlp_err_int)
 PCIEPORT_STATS_DEF(tl_flr_req_int)
 PCIEPORT_STATS_DEF(rc_legacy_intpin_changed_int)
 
+#define pp_intreg_stats ppsd_sbe_interrupt
+PCIEPORT_STATS_DEF(ppsd_sbe_interrupt)
+PCIEPORT_STATS_DEF(ppsd_dbe_interrupt)
+PCIEPORT_STATS_DEF(sbus_err_interrupt)
+
+PCIEPORT_STATS_DEF(poweron_retries)
+
 #undef PCIEPORT_STATS_DEF

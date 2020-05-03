@@ -14,6 +14,7 @@ extern "C" {
 
 #include "pcieport_events.h"
 #include "pcieport_stats.h"
+#include "serdes.h"
 
 #define PCIEPORT_VERSION        1
 #define PCIEPORT_NPORTS         8

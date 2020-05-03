@@ -188,17 +188,32 @@ pcieport_mac_intr_ack(const int port)
     pcieport_ack_int_pp_intreg(port);
 }
 
+static void
+pcieport_int_stats(u_int32_t intreg, u_int64_t *stats)
+{
+    while (intreg) {
+        u_int32_t bit = ffs(intreg) - 1;
+        intreg &= ~(1 << bit);
+        stats[bit]++;
+    }
+}
+
 /*
  * Update int_mac stats to count each instance of these interrupts.
  */
 static void
-pcieport_int_mac_stats(u_int32_t int_mac, u_int64_t *stats)
+pcieport_int_mac_stats(pcieport_t *p, u_int32_t int_mac)
 {
-    while (int_mac) {
-        u_int32_t bit = ffs(int_mac) - 1;
-        int_mac &= ~(1 << bit);
-        stats[bit]++;
-    }
+    pcieport_int_stats(int_mac, &p->stats.int_mac_stats);
+}
+
+/*
+ * Update pp_intreg stats to count each instance of these interrupts.
+ */
+static void
+pcieport_pp_intreg_stats(pcieport_t *p, u_int32_t pp_intreg)
+{
+    pcieport_int_stats(pp_intreg & 0x7, &p->stats.pp_intreg_stats);
 }
 
 /*
@@ -228,7 +243,7 @@ pcieport_handle_mac_intr(pcieport_t *p)
 #endif
     if (int_mac == 0) return -1;
 
-    pcieport_int_mac_stats(int_mac, &p->stats.int_mac_stats);
+    pcieport_int_mac_stats(p, int_mac);
 
     /*
      * Snapshot current status here *before* ack'ing int_mac intrs.
@@ -326,13 +341,24 @@ pcieport_intr_inherit(pcieport_t *p)
 static void
 pcieport_poweron(pcieport_t *p)
 {
-    int r;
+    const int maxtries = 3;
+    int r, tries;
 
 #ifdef __aarch64__
     pciesys_loginfo("port%d: poweron\n", p->port);
 #endif
-    r = pcieport_config_powerup(p);
-    if (r) pciesys_logwarn("%d: poweron config failed: %d\n", p->port, r);
+
+    r = -1;
+    for (tries = 0; tries < maxtries && r < 0; tries++) {
+        r = pcieport_config_powerup(p);
+    }
+    if (r < 0) {
+        pcieport_fault(p, "poweron config failed: %d", r);
+    } else if (tries > 1) {
+        pciesys_logwarn("port%d: poweron config success on try %d\n",
+                        p->port, tries);
+        p->stats.poweron_retries++;
+    }
 }
 
 /*
@@ -350,7 +376,7 @@ pcieport_poweron(pcieport_t *p)
 static int
 pcieport_handle_pp_intr(pcieport_t *p)
 {
-    u_int32_t int_pp;
+    u_int32_t int_pp, pp_intreg_errs;
 
     int_pp = pal_reg_rd32(PP_(INT_PP_INTREG));
 #ifndef __aarch64__
@@ -369,6 +395,18 @@ pcieport_handle_pp_intr(pcieport_t *p)
         sim_int_pp = 0; /* cancel after first time */
     }
 #endif
+
+    /*
+     * Ack and process any error intrs.
+     * We don't want to ack any port intrs that are not for our port.
+     * We'll process them when/if we process the other port(s).
+     */
+    pp_intreg_errs = int_pp & 0x7;
+    if (pp_intreg_errs) {
+        /* write-1-to-clear acknowledge the interrupt */
+        pal_reg_wr32(PP_(INT_PP_INTREG), pp_intreg_errs);
+        pcieport_pp_intreg_stats(p, pp_intreg_errs);
+    }
 
     if (int_pp & PP_INTREG_PERSTN(p->port)) {
 #ifdef __aarch64__

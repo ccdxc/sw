@@ -14,7 +14,7 @@ iota 1.0.3
 host_tools 1.0.35
 pensando_firmware 1.0.25
 delphi_lib 1.0.9
-buildroot cb54fd20259392f9edec37ce9d908fcdf292c5f9
+buildroot be16efb74acdde6784ee657d72ee17f4723271a2
 platform_drivers 1.0.2
 venice_base_iso  0.0.10
 venice_web_app_framework 0.0.12

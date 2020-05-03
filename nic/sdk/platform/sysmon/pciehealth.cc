@@ -106,8 +106,8 @@
 
 typedef struct pcie_health_info_s {
     uint64_t tstamp;            // time this was gathered
-    uint64_t faults;            // portstats faults
-    uint64_t phypollfail;       // portstats phypollfail
+    uint64_t warn_stats;        // portstats sum for warning
+    uint64_t error_stats;       // portstats sum for error
     uint64_t intr_ltssmst;      // portstats ltssm_state_changed
     pcieportst_t portst;        // pcieport state
     uint32_t macup;             // port macup counter
@@ -275,8 +275,11 @@ gather_health_info(const int port)
     }
 
     nhi->portst = p->state;
-    nhi->faults = p->stats.faults;
-    nhi->phypollfail = p->stats.phypollfail;
+    nhi->warn_stats = (p->stats.sbus_err_interrupt +
+                       p->stats.ppsd_sbe_interrupt +
+                       p->stats.poweron_retries);
+    nhi->error_stats = (p->stats.faults +
+                        p->stats.ppsd_dbe_interrupt);
     nhi->intr_ltssmst = p->stats.intr_ltssmst;
     nhi->macup = p->macup;
     // tx fc credits sample
@@ -325,14 +328,14 @@ process_health_info(const int port)
 #define same_session(nhi, lhi) \
     (nhi->macup == lhi->macup)
 
-    // faults stat
-    if (nhi->faults > lhi->faults) {
-        set_error(hs, "faults %" PRIu64, nhi->faults);
+    // error stats
+    if (nhi->error_stats > lhi->error_stats) {
+        set_error(hs, "error_stats %" PRIu64, nhi->error_stats);
         goto want_log;
     }
-    // phypollfail stat
-    if (nhi->phypollfail > lhi->phypollfail) {
-        set_error(hs, "phypollfail %" PRIu64, nhi->phypollfail);
+    // warn stats
+    if (nhi->warn_stats > lhi->warn_stats) {
+        set_warn(hs, "warn_stats %" PRIu64, nhi->warn_stats);
         goto want_log;
     }
     // core_initiated_recovery events

@@ -16,13 +16,16 @@ with open(src_path, 'r') as f:
     rom_in = f.read().splitlines()
 
 l = len(rom_in)
-rom_out = bytearray(struct.pack("<II", SBUS_ROM_MAGIC, l))
+nw = (l + 2) / 3
+rom_out = bytearray(struct.pack("<II", SBUS_ROM_MAGIC, nw))
 
-for i in range(0, l, 4):
-    sz = min(l - i, 4)
-    b = [0] + [int(rom_in[i + j], 16) for j in range(sz)] + [0] * (5 - sz)
-    rom_out += bytearray([((b[j] & (0xff >> (8 - 2 * j))) << 8 - (2 * j)) |
-                           (b[j + 1] >> (2 + 2 * j)) for j in range(5)])
+for i in range(0, l, 3):
+    n = min(l - i, 3)
+    h = rom_in[i:i+n]
+    rom_out += bytearray(struct.pack("<I",
+                                     (n << 30) |
+                                     sum([int(h[j], 16) << (j * 10)
+                                          for j in range(n)])))
 
 with open(dst_path, 'wb') as f:
     f.write(rom_out)

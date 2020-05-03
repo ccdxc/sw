@@ -50,7 +50,7 @@ message PciePortMetrics {
             "intr_polled : total port intrs polled.\\n"
             "intr_perstn : pcie out of reset.\\n"
             "intr_ltssmst_early : link train before linkup.\\n"
-            "intr_ltssmst : link train after  linkup.\\n"
+            "intr_ltssmst : link train after linkup.\\n"
             "intr_linkup2dn : link down.\\n"
             "intr_linkdn2up : link up.\\n"
             "intr_rstup2dn : mac up.\\n"
@@ -69,7 +69,7 @@ message PciePortMetrics {
             "axipendpolllast : axipend poll count (last).\\n"
             "axipendpollmax : axipend poll count (max).\\n"
             "faults : link faults.\\n"
-            "powerdown: powerdown count .\\n"
+            "powerdown: powerdown count.\\n"
             "link_dn2up_int : link_dn2up_int.\\n"
             "link_up2dn_int : link_up2dn_int.\\n"
             "sec_bus_rst_int : sec_bus_rst_int.\\n"
@@ -88,7 +88,11 @@ message PciePortMetrics {
             "txbfr_overflow_int : txbfr_overflow_int.\\n"
             "rxtlp_err_int : rxtlp_err_int.\\n"
             "tl_flr_req_int : tl_flr_req_int.\\n"
-            "rc_legacy_intpin_changed_int : rc_legacy_intpin_changed_int.\\n",
+            "rc_legacy_intpin_changed_int : rc_legacy_intpin_changed_int.\\n"
+            "ppsd_sbe_interrupt : ppsd_sbe_interrupt.\\n"
+            "ppsd_dbe_interrupt : ppsd_dbe_interrupt.\\n"
+            "sbus_err_interrupt : sbus_err_interrupt.\\n"
+            "poweron_retries : poweron_retries.\\n",
         RootCmd: "pcie"
     };
     uint32 Key = 1;				// key is port number 0-7
@@ -142,6 +146,13 @@ message PciePortMetrics {
     delphi.Counter rxtlp_err_int           = 46 [(venice.metricsField) = {DisplayName: "rxtlp_err_int" Description: "rxtlp_err_int"}];
     delphi.Counter tl_flr_req_int          = 47 [(venice.metricsField) = {DisplayName: "tl_flr_req_int" Description: "tl_flr_req_int"}];
     delphi.Counter rc_legacy_intpin_changed_int = 48 [(venice.metricsField) = {DisplayName: "rc_legacy_intpin_changed_int" Description: "rc_legacy_intpin_changed_int"}];
+    //
+    // skip some spares to next group
+    //
+    delphi.Counter ppsd_sbe_interrupt = 50 [(venice.metricsField) = {DisplayName: "ppsd_sbe_interrupt" Description: "ppsd_sbe_interrupt"}];
+    delphi.Counter ppsd_dbe_interrupt = 51 [(venice.metricsField) = {DisplayName: "ppsd_dbe_interrupt" Description: "ppsd_dbe_interrupt"}];
+    delphi.Counter sbus_err_interrupt = 52 [(venice.metricsField) = {DisplayName: "sbus_err_interrupt" Description: "sbus_err_interrupt"}];
+    delphi.Counter poweron_retries = 53 [(venice.metricsField) = {DisplayName: "poweron_retries" Description: "poweron_retries"}];
 }
 
 message PcieMgrMetrics {

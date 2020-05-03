@@ -9,7 +9,6 @@
 #include <getopt.h>
 #include <cinttypes>
 #include <signal.h>
-#include <sys/time.h>
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
@@ -28,15 +27,6 @@
 
 #define ENTRY_MASK(e)   ((e) & 0xf)
 #define ENTRY_INC(e)    ENTRY_MASK((e) + 1)
-
-static u_int64_t
-gettimestamp(void)
-{
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec * 1000000 + tv.tv_usec;
-}
 
 static u_int64_t
 ind_info_addr(const int port)

@@ -26,8 +26,27 @@
 #define SLEEP(t) usleep(t)
 #define sleep(t) usleep(t)
 
+#define SBUS_ROM_MAGIC 0x53554253
+
+struct rom_ctx_s {
+    const uint32_t *buf;
+    int nwords;
+};
+
+static inline int
+romfile_read(void *ctx, unsigned int *datap)
+{
+    struct rom_ctx_s *p = (struct rom_ctx_s *)ctx;
+
+    if (!p->nwords) {
+        return 0;
+    }
+    *datap = *p->buf++;
+    p->nwords--;
+    return 1;
+}
+
 void *romfile_open(void *rom_info);
-int romfile_read(void *ctx, unsigned int *datap);
 void romfile_close(void *ctx);
 
 static inline int sknobs_get_value(const char *name, int defval)

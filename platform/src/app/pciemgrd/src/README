@@ -11,6 +11,7 @@ PCIEPORT_INIT_TRACE     <NULL>      1
 PCIEPORT_HOST_CLOCK     1           0|1
 PCIEPORT_SERDES_FW_GEN  4           1|2|3|4
 PCIE_SERDES_INIT_ALWAYS 0           0|1
+PCIE_SERDESFW           <NULL>      0x1094_2347|0x10A9_2347
 PCIE_SRIS               0           0|1
 PCIE_STRICT_CRS         1           0|1
 PCIE_COMPLIANCE         0           0|1
@@ -34,6 +35,7 @@ pcie-poweron-%d         <none>
 pcie_port               0           0-7
 pcie_cap_gen            4           1-4
 pcie_cap_width          16          1|2|4|8|16
+pcie_clock_freq         <core-clk>  833333333|416666666|0
 pcie_lanemask           0xffff      <mask>
 pcie_host_clock         1           0|1
 pcie_sris               0           0|1
@@ -174,6 +176,13 @@ pcie_cap_gen
 pcie_cap_width
     The physical port xW width.
 
+pcie_clock_freq
+    The value of the core clock frequency, in Hz, used to derive
+    pp_port_c_cfg_c_port_mac.tl_clock_freq.  The value stored in tl_clock_freq
+    is pcie_clock_freq/1000000.  For example, if pcie_clock_freq=833333333
+    then tl_clock_freq=833.  If pcie_clock_freq=0 then tl_clock_freq is
+    left unchanged from the hw default (830).
+
 pcie_lanemask
     The lanemask for PCS reset in PP_CFG_PP_PCS_RESET_N.
 
@@ -229,8 +238,8 @@ pcie_poweron_regio
 pciemgrd options
 ----------------------------------------------------------------
 Usage: pciemgrd [-dFi][-b <first_bus_num>] \
-		[-I <inherit-mode>][-p port-spec][-P gen<G>x<W>][-R <reboot>] \
-		[-V subvendorid][-D subdeviceid]
+                [-I <inherit-mode>][-p port-spec][-P gen<G>x<W>][-R <reboot>] \
+                [-V subvendorid][-D subdeviceid]
 
     -b <first_bus_num> set first bus used to <first_bus_num>
     -d                 daemon mode

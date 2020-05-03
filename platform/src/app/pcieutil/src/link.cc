@@ -8,7 +8,6 @@
 #include <string.h>
 #include <getopt.h>
 #include <cinttypes>
-#include <sys/time.h>
 
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
@@ -57,15 +56,6 @@ ltssm_str(const unsigned int ltssm)
     const int nstrs = sizeof(ltssm_strs) / sizeof(ltssm_strs[0]);
     if (ltssm >= nstrs) return "unknown";
     return ltssm_strs[ltssm];
-}
-
-static u_int64_t
-gettimestamp(void)
-{
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec * 1000000 + tv.tv_usec;
 }
 
 u_int32_t
