@@ -90,7 +90,7 @@ func (cl *CloudCfg) PopulateConfig(params *base.ConfigParams) error {
 	} else {
 		cl.Cfg.NumOfTenants = 1
 		cl.Cfg.NumOfVRFsPerTenant = 1
-		cl.Cfg.NumOfSubnetsPerVpc = 8
+		cl.Cfg.NumOfSubnetsPerVpc = 6 // keeping to 6 as there are 6 PFs on naples
 		cl.Cfg.NumOfIPAMPsPerTenant = 1
 		cl.Cfg.NumUnderlayRoutingConfigs = 1 // Same as other AS number
 		cl.Cfg.NumUnderlayNeighbors = 1      //TOR AS nubr

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -257,6 +258,83 @@ func (sm *SysModel) CheckNaplesForErrors() {
 	if match == false {
 		log.Infof("No DPDK ERRORs")
 	}
+}
+
+func (sm *SysModel) dataPathPingTest(naples1, naples2 string, nw1, nw2 *objects.Network, pass bool) error {
+
+	logStr := fmt.Sprintf("ping between %v-%v and %v-%v", naples1, nw1.VeniceNetwork.Name, naples2, nw2.VeniceNetwork.Name)
+	wpc := sm.WorkloadPairs().SpecificPair(naples1, naples2, nw1, nw2)
+	if len(wpc.Pairs) == 0 {
+		log.Infof("No workload combination to %v", logStr)
+		return fmt.Errorf("No workload combination to %v", logStr)
+	}
+
+	for i := 0; i < 10; i++ {
+		if pass {
+			if err := sm.PingPairs(wpc); err == nil {
+				break
+			}
+		} else {
+			if err := sm.PingFails(wpc); err == nil {
+				break
+			}
+		}
+	}
+	return nil
+}
+
+func (sm *SysModel) VerifyDataPath() error {
+
+	// L3 ping doesn't work if there are no default routes installed on workload interfaces.
+	// default routes will be install ed as part of dynamic ip get
+	if os.Getenv("DYNAMIC_IP") != "" {
+		log.Infof("Verifying data path..")
+
+		sn, err := objects.DefaultNetworkCollection(sm.ConfigClient())
+		if err != nil {
+			return fmt.Errorf("Failed to get network collection: %v", err)
+		}
+		if len(sn.Subnets()) < 2 {
+			return fmt.Errorf("Not enough subnets to ping")
+		}
+
+		allWc := sm.Workloads()
+
+		wfilter := objects.WorkloadFilter{}
+		wfilter.SetNaplesCollection(sm.Naples())
+		wfilter.SetNetworkCollection(sn.Any(1))
+		wc := allWc.Filter(&wfilter)
+
+		// L2 remote ping
+		if err := sm.PingPairs(wc.RemotePairsWithinNetwork()); err != nil {
+			return fmt.Errorf("L2 remote ping failed: %v", err)
+		}
+
+		wfilter = objects.WorkloadFilter{}
+		wfilter.SetNaplesCollection(sm.Naples())
+		wfilter.SetNetworkCollection(sn.Pop(1))
+		wc1 := allWc.Filter(&wfilter)
+
+		wfilter = objects.WorkloadFilter{}
+		wfilter.SetNaplesCollection(sm.Naples())
+		wfilter.SetNetworkCollection(sn.Pop(1))
+		wc2 := allWc.Filter(&wfilter)
+
+		subnetWorkloads := wc1.MeshPairsWithOther(wc2)
+
+		// L3 local ping
+		if err := sm.PingPairs(subnetWorkloads.LocalPairs()); err != nil {
+			return fmt.Errorf("L3 local ping failed: %v", err)
+		}
+
+		// L3 Remote with Local Subnet Ping
+		if err := sm.PingPairs(subnetWorkloads.RemotePairs()); err != nil {
+			return fmt.Errorf("L3 remote ping failed: %v", err)
+		}
+
+	}
+	return nil
+
 }
 
 // VerifyClusterStatus verifies venice cluster status

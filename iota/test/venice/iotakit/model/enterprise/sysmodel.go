@@ -259,8 +259,8 @@ func (sm *SysModel) GetWorkloadsForScale(hosts []*objects.Host, policyCollection
 			}
 		}
 	}
-	addActionWorkloads("PERMIT")
-	addActionWorkloads("DENY")
+	addActionWorkloads("permit")
+	addActionWorkloads("deny")
 
 	for hostName, wloads := range workloadHostMap {
 		host, _ := hostMap[hostName]
@@ -335,6 +335,8 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *objects.Host) (*objects.WorkloadColl
 	for _, wload := range wloadsToCreate {
 		sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(h, wload, info.WorkloadType, info.WorkloadImage, "", "")
 		wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
+		//Enterprise supports only single naples
+		sm.WorkloadsObjs[wload.Name].SetNaplesUUID(h.VeniceHost.Spec.DSCs[0].MACAddress)
 	}
 
 	return wc, nil

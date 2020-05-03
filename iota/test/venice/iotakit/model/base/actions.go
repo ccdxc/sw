@@ -363,3 +363,8 @@ func (sm *SysModel) ListNetworkInterfacesByFilter(filter string) (*objects.Netwo
 
 	return intfc, nil
 }
+
+func (sm *SysModel) VerifyDataPath() error {
+	log.Infof("Base actions does not implement data path verification")
+	return nil
+}

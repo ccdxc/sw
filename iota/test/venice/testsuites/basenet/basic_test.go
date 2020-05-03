@@ -131,11 +131,7 @@ var _ = Describe("Basnet Sanity", func() {
 
 				Expect(ts.model.Naples().Decommission()).Should(Succeed())
 				Eventually(func() error {
-					admit, _ := ts.model.Naples().IsAdmitted()
-					if !admit {
-						return nil
-					}
-					return fmt.Errorf("Naples still admitted")
+					return ts.model.Naples().IsNotAdmitted()
 				}).Should(Succeed())
 
 				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
@@ -146,11 +142,7 @@ var _ = Describe("Basnet Sanity", func() {
 				}).Should(Succeed())
 
 				Eventually(func() error {
-					admit, err := ts.model.Naples().IsAdmitted()
-					if err == nil && admit {
-						return nil
-					}
-					return fmt.Errorf("Naples not admitted")
+					return ts.model.Naples().IsAdmitted()
 				}).Should(Succeed())
 
 				Eventually(func() error {
@@ -179,11 +171,7 @@ var _ = Describe("Basnet Sanity", func() {
 
 				Expect(ts.model.Naples().Decommission()).Should(Succeed())
 				Eventually(func() error {
-					admit, _ := ts.model.Naples().IsAdmitted()
-					if !admit {
-						return nil
-					}
-					return fmt.Errorf("Naples still admitted")
+					return ts.model.Naples().IsNotAdmitted()
 				}).Should(Succeed())
 
 				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
@@ -194,11 +182,7 @@ var _ = Describe("Basnet Sanity", func() {
 				}).Should(Succeed())
 
 				Eventually(func() error {
-					admit, err := ts.model.Naples().IsAdmitted()
-					if err == nil && admit {
-						return nil
-					}
-					return fmt.Errorf("Naples not admitted")
+					return ts.model.Naples().IsAdmitted()
 				}).Should(Succeed())
 
 				//Ping should work as expected
@@ -252,11 +236,7 @@ var _ = Describe("Basnet Sanity", func() {
 
 				Expect(ts.model.Naples().Decommission()).Should(Succeed())
 				Eventually(func() error {
-					admit, _ := ts.model.Naples().IsAdmitted()
-					if !admit {
-						return nil
-					}
-					return fmt.Errorf("Naples still admitted")
+					return ts.model.Naples().IsNotAdmitted()
 				}).Should(Succeed())
 				workloads = ts.model.Workloads()
 				Expect(ts.model.TeardownWorkloads(workloads)).Should(Succeed())
@@ -269,11 +249,7 @@ var _ = Describe("Basnet Sanity", func() {
 				}).Should(Succeed())
 
 				Eventually(func() error {
-					admit, err := ts.model.Naples().IsAdmitted()
-					if err == nil && admit {
-						return nil
-					}
-					return fmt.Errorf("Naples not admitted")
+					return ts.model.Naples().IsAdmitted()
 				}).Should(Succeed())
 
 				ts.model, err = model.ReinitSysModel(ts.model, common.BaseNetModel)
@@ -325,11 +301,7 @@ var _ = Describe("Basnet Sanity", func() {
 
 				Expect(ts.model.Naples().Decommission()).Should(Succeed())
 				Eventually(func() error {
-					admit, _ := ts.model.Naples().IsAdmitted()
-					if !admit {
-						return nil
-					}
-					return fmt.Errorf("Naples still admitted")
+					return ts.model.Naples().IsNotAdmitted()
 				}).Should(Succeed())
 
 				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
@@ -340,11 +312,7 @@ var _ = Describe("Basnet Sanity", func() {
 				}).Should(Succeed())
 
 				Eventually(func() error {
-					admit, err := ts.model.Naples().IsAdmitted()
-					if err == nil && admit {
-						return nil
-					}
-					return fmt.Errorf("Naples not admitted")
+					return ts.model.Naples().IsAdmitted()
 				}).Should(Succeed())
 
 				//Ping should work as expected
@@ -417,11 +385,7 @@ var _ = Describe("Basnet Sanity", func() {
 
 				Expect(ts.model.Naples().Decommission()).Should(Succeed())
 				Eventually(func() error {
-					admit, _ := ts.model.Naples().IsAdmitted()
-					if !admit {
-						return nil
-					}
-					return fmt.Errorf("Naples still admitted")
+					return ts.model.Naples().IsNotAdmitted()
 				}).Should(Succeed())
 
 				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
@@ -442,11 +406,7 @@ var _ = Describe("Basnet Sanity", func() {
 				}).Should(Succeed())
 
 				Eventually(func() error {
-					admit, err := ts.model.Naples().IsAdmitted()
-					if err == nil && admit {
-						return nil
-					}
-					return fmt.Errorf("Naples not admitted")
+					return ts.model.Naples().IsAdmitted()
 				}).Should(Succeed())
 
 				Eventually(func() error {

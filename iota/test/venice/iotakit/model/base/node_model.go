@@ -111,8 +111,15 @@ func (sm *SysModel) findWorkload(name string) *objects.Workload {
 //BringUpNewWorkloads brings up new workload on the host
 func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects.NetworkCollection, count int) *objects.WorkloadCollection {
 
+	type workloadIntfo struct {
+		wload *workload.Workload
+		uuid  string
+	}
+
 	wc := &objects.WorkloadCollection{}
-	newWloads := []*workload.Workload{}
+
+	newWloads := []workloadIntfo{}
+
 	hosts := []*objects.Host{}
 	for _, host := range hc.Hosts {
 		hostWorkloads := 0
@@ -134,7 +141,7 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 				}
 				if nw.VeniceNetwork.Spec.VlanID == vlan {
 					log.Infof("Workload being added to sm  on host %+v %+v %+v", host.VeniceHost.Name, wload.Name, vlan)
-					newWloads = append(newWloads, wload)
+					newWloads = append(newWloads, workloadIntfo{wload: wload, uuid: host.VeniceHost.Spec.DSCs[0].MACAddress})
 					hosts = append(hosts, host)
 					hostWorkloads++
 					if hostWorkloads == count {
@@ -156,7 +163,7 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 	subnets := snc.Subnets()
 	for i, wload := range newWloads {
 		for _, subnet := range subnets {
-			if subnet.VeniceNetwork.Spec.VlanID == wload.Spec.Interfaces[0].ExternalVlan {
+			if subnet.VeniceNetwork.Spec.VlanID == wload.wload.Spec.Interfaces[0].ExternalVlan {
 				os := hosts[i].Naples.GetTestNode().GetNodeOs()
 				info, ok := sm.Tb.Topo.WkldInfo[os]
 				if !ok {
@@ -165,9 +172,10 @@ func (sm *SysModel) BringUpNewWorkloads(hc *objects.HostCollection, snc *objects
 					wc.SetError(err)
 					return wc
 				}
-				sm.WorkloadsObjs[wload.Name] = objects.NewWorkload(hosts[i], wload, info.WorkloadType,
+				sm.WorkloadsObjs[wload.wload.Name] = objects.NewWorkload(hosts[i], wload.wload, info.WorkloadType,
 					info.WorkloadImage, sm.Tb.GetSwitch(), subnet.Name)
-				wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.Name])
+				sm.WorkloadsObjs[wload.wload.Name].SetNaplesUUID(wload.uuid)
+				wc.Workloads = append(wc.Workloads, sm.WorkloadsObjs[wload.wload.Name])
 			}
 		}
 	}

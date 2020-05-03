@@ -227,20 +227,27 @@ class Node(object):
                     if not ip_read:
                         raise
                 except:
-                        self.__console_hdl = Console(self.__nic_console_ip, self.__nic_console_port, disable_log=True)
-                        output = self.__console_hdl.RunCmdGetOp("ifconfig " + self.__nic_mgmt_intf)
-                        ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-                        x = re.findall(ifconfig_regexp, str(output))
-                        if len(x) > 0:
-                            Logger.info("Read management IP %s %s" % (self.__name, x[0]))
-                            self.__nic_mgmt_ip = x[0]
+                    for i in range(5):
+                        try:
+                            self.__console_hdl = Console(self.__nic_console_ip, self.__nic_console_port, disable_log=True)
+                            break
+                        except:
+                            continue
+                    if self.__console_hdl == None:
+                        raise Exception("Error reading from console")
+                    output = self.__console_hdl.RunCmdGetOp("ifconfig " + self.__nic_mgmt_intf)
+                    ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+                    x = re.findall(ifconfig_regexp, str(output))
+                    if len(x) > 0:
+                        Logger.info("Read management IP %s %s" % (self.__name, x[0]))
+                        self.__nic_mgmt_ip = x[0]
 
-                        output = self.__console_hdl.RunCmdGetOp("ip link | grep oob_mnic0 -A 1 | grep ether")
-                        mac_regexp = '(?:[0-9a-fA-F]:?){12}'
-                        x = re.findall(mac_regexp.encode(), output)
-                        if len(x) > 0:
-                            self.__mac = x[0].decode('utf-8')
-                            Logger.info("Read oob mac %s %s" % (self.__name, x[0]))
+                    output = self.__console_hdl.RunCmdGetOp("ip link | grep oob_mnic0 -A 1 | grep ether")
+                    mac_regexp = '(?:[0-9a-fA-F]:?){12}'
+                    x = re.findall(mac_regexp.encode(), output)
+                    if len(x) > 0:
+                        self.__mac = x[0].decode('utf-8')
+                        Logger.info("Read oob mac %s %s" % (self.__name, x[0]))
             else:
                 Logger.info("Skipping management IP read as no console info %s" % self.__name)
 

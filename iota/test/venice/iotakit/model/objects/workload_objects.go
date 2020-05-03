@@ -281,9 +281,88 @@ func (wpc *WorkloadPairCollection) SpecificPair(node1, node2 string, n1, n2 *Net
 		if (pair.First.NaplesUUID() == node1 && pair.Second.NaplesUUID() == node2 &&
 			pair.First.GetNetworkName() == n1.VeniceNetwork.Name && pair.Second.GetNetworkName() == n2.VeniceNetwork.Name) ||
 			(pair.First.NaplesUUID() == node2 && pair.Second.NaplesUUID() == node1 &&
-			pair.First.GetNetworkName() == n2.VeniceNetwork.Name && pair.Second.GetNetworkName() == n1.VeniceNetwork.Name) {
+				pair.First.GetNetworkName() == n2.VeniceNetwork.Name && pair.Second.GetNetworkName() == n1.VeniceNetwork.Name) {
 			newCollection.Pairs = append(newCollection.Pairs, pair)
 			break
+		}
+	}
+	return &newCollection
+}
+
+type FilterOpType int
+
+const (
+	//DefaultModel for GS
+	FilterOpAny FilterOpType = 0
+	FilterOpAnd FilterOpType = 0
+)
+
+type WorkloadFilter struct {
+	op      FilterOpType
+	naples  *NaplesCollection
+	network *NetworkCollection
+}
+
+func (filter *WorkloadFilter) SetNaplesCollection(naples *NaplesCollection) {
+	filter.naples = naples
+}
+
+func (filter *WorkloadFilter) SetNetworkCollection(network *NetworkCollection) {
+	filter.network = network
+}
+
+func (filter *WorkloadFilter) SetOp(op FilterOpType) {
+	filter.op = op
+}
+
+func (filter *WorkloadFilter) naplesMatched(w *Workload) bool {
+	if filter.naples == nil {
+		return true
+	}
+	matched := false
+L:
+	for _, n := range filter.naples.Nodes {
+		for _, naples := range n.Instances {
+			if naples.Dsc.Status.PrimaryMAC == w.GetNaplesUUID() {
+				matched = true
+				break L
+			}
+		}
+	}
+
+	return matched
+}
+
+func (filter *WorkloadFilter) networkMatched(w *Workload) bool {
+	if filter.network == nil {
+		return true
+	}
+	matched := false
+L:
+	for _, n := range filter.network.Subnets() {
+		if n.VeniceNetwork.Name == w.GetNetworkName() {
+			matched = true
+			break L
+		}
+	}
+
+	return matched
+}
+
+func (filter *WorkloadFilter) matched(w *Workload) bool {
+	return filter.networkMatched(w) && filter.naplesMatched(w)
+}
+
+//Filter based
+func (wpc *WorkloadCollection) Filter(filter *WorkloadFilter) *WorkloadCollection {
+	if wpc.HasError() {
+		return wpc
+	}
+	newCollection := WorkloadCollection{}
+
+	for _, w := range wpc.Workloads {
+		if filter.matched(w) {
+			newCollection.Workloads = append(newCollection.Workloads, w)
 		}
 	}
 	return &newCollection
@@ -373,17 +452,17 @@ func (wpc *WorkloadPairCollection) policyHelper(policyCollection *NetworkSecurit
 
 // Permit get allowed Workloads with proto
 func (wpc *WorkloadPairCollection) Permit(policyCollection *NetworkSecurityPolicyCollection, proto string) *WorkloadPairCollection {
-	return wpc.policyHelper(policyCollection, "PERMIT", proto)
+	return wpc.policyHelper(policyCollection, "permit", proto)
 }
 
 // Deny get Denied Workloads with proto
 func (wpc *WorkloadPairCollection) Deny(policyCollection *NetworkSecurityPolicyCollection, proto string) *WorkloadPairCollection {
-	return wpc.policyHelper(policyCollection, "DENY", proto)
+	return wpc.policyHelper(policyCollection, "deny", proto)
 }
 
 // Reject get rejected Workloads with proto
 func (wpc *WorkloadPairCollection) Reject(policyCollection *NetworkSecurityPolicyCollection, proto string) *WorkloadPairCollection {
-	return wpc.policyHelper(policyCollection, "REJECT", proto)
+	return wpc.policyHelper(policyCollection, "reject", proto)
 }
 
 // ExcludeWorkloads excludes some Workloads from collection
@@ -435,6 +514,44 @@ func (wpc *WorkloadPairCollection) ReversePairs() *WorkloadPairCollection {
 			Second: pair.First,
 		}
 		newWpc.Pairs = append(newWpc.Pairs, &newPair)
+	}
+
+	return &newWpc
+}
+
+// LocalPairs returns all workloads which are on same naples
+func (wpc *WorkloadPairCollection) LocalPairs() *WorkloadPairCollection {
+	if wpc.err != nil || len(wpc.Pairs) < 1 {
+		return wpc
+	}
+	newWpc := WorkloadPairCollection{Pairs: []*WorkloadPair{}}
+	for _, pair := range wpc.Pairs {
+		if pair.First.NaplesUUID() == pair.Second.NaplesUUID() {
+			newPair := WorkloadPair{
+				Second: pair.Second,
+				First:  pair.First,
+			}
+			newWpc.Pairs = append(newWpc.Pairs, &newPair)
+		}
+	}
+
+	return &newWpc
+}
+
+// RemotePairs returns all workloads which are on different naples
+func (wpc *WorkloadPairCollection) RemotePairs() *WorkloadPairCollection {
+	if wpc.err != nil || len(wpc.Pairs) < 1 {
+		return wpc
+	}
+	newWpc := WorkloadPairCollection{Pairs: []*WorkloadPair{}}
+	for _, pair := range wpc.Pairs {
+		if pair.First.NaplesUUID() != pair.Second.NaplesUUID() {
+			newPair := WorkloadPair{
+				Second: pair.Second,
+				First:  pair.First,
+			}
+			newWpc.Pairs = append(newWpc.Pairs, &newPair)
+		}
 	}
 
 	return &newWpc

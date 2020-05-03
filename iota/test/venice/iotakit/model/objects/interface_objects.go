@@ -171,3 +171,28 @@ func (intf *NetworkInterfaceCollection) AttachNetwork(tenant, nw string) error {
 	}
 	return nil
 }
+
+func (intf *NetworkInterfaceCollection) GetTenant() string {
+	return intf.Interfaces[0].Spec.AttachTenant
+}
+
+func GetNetworkInterfaceBySubnet(naples, subnet string, client objClient.ObjClient, tb *testbed.TestBed) (*NetworkInterfaceCollection, error) {
+
+	filter := fmt.Sprintf("spec.type=host-pf,spec.attach-network=%v,status.dsc=%v", subnet, naples)
+	intfs, err := client.ListNetowrkInterfacesByFilter(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(intfs) == 0 {
+		err = fmt.Errorf("no host-pf on %v attached to subnet %v", naples, subnet)
+		return nil, err
+	}
+
+	intfc := NewInterfaceCollection(client, tb)
+	for _, wf := range intfs {
+		intfc.Interfaces = append(intfc.Interfaces, wf)
+	}
+
+	return intfc, nil
+}

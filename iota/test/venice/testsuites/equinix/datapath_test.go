@@ -12,8 +12,9 @@ import (
 var _ = Describe("Datapath", func() {
 
 	var tenant string = "customer0"
-	var nwc *objects.NetworkCollection
+	var sn *objects.NetworkCollection
 	var naples []string
+	var allWc *objects.WorkloadCollection
 
 	BeforeEach(func() {
 		// verify cluster is in good health
@@ -21,17 +22,16 @@ var _ = Describe("Datapath", func() {
 			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 
-		// get default tenant VRF
-		vpcc, err := objects.TenantVPCCollection(tenant, ts.model.ConfigClient(), ts.model.Testbed())
-		Expect(err).Should(Succeed())
-		vpcName := vpcc.Objs[0].Obj.Name
-
-		// get network from vpc
-		nwc, err = GetNetworkCollectionFromVPC(vpcName, tenant)
-		Expect(err).Should(Succeed())
+		// get networks
+		var err error
+		sn, err = objects.DefaultNetworkCollection(ts.model.ConfigClient())
+		if err != nil {
+			return
+		}
 
 		// get naples info
 		naples = ts.model.Naples().Names()
+		allWc = ts.model.Workloads()
 	})
 	AfterEach(func() {
 		ts.model.AfterTestCommon()
@@ -45,9 +45,14 @@ var _ = Describe("Datapath", func() {
 				Skip("Ping test cases are enabled only for HW naples")
 			}
 
-			// Ping pair DSC1-S1 vs DSC2-S1 should succeed
-			sn := nwc.Any(1)
-			Expect(dataPathPingTest(naples[0], naples[1], sn.Subnets()[0], sn.Subnets()[0], true)).Should(Succeed())
+			wfilter := objects.WorkloadFilter{}
+			wfilter.SetNaplesCollection(ts.model.Naples())
+			wfilter.SetNetworkCollection(sn.Any(1))
+			wc := allWc.Filter(&wfilter)
+
+			// L2 remote ping
+			Expect(ts.model.PingPairs(wc.RemotePairsWithinNetwork())).Should(Succeed())
+
 		})
 
 		It("L3 Local Ping", func() {
@@ -56,9 +61,21 @@ var _ = Describe("Datapath", func() {
 				Skip("Ping test cases are enabled only for HW naples")
 			}
 
-			// Ping pair DSC1-S1 vs DSC1-S2 should succeed
-			sn := nwc.Any(2)
-			Expect(dataPathPingTest(naples[0], naples[0], sn.Subnets()[0], sn.Subnets()[1], true)).Should(Succeed())
+			wfilter := objects.WorkloadFilter{}
+			wfilter.SetNaplesCollection(ts.model.Naples())
+			wfilter.SetNetworkCollection(sn.Pop(1))
+			wc1 := allWc.Filter(&wfilter)
+
+			wfilter = objects.WorkloadFilter{}
+			wfilter.SetNaplesCollection(ts.model.Naples())
+			wfilter.SetNetworkCollection(sn.Pop(1))
+			wc2 := allWc.Filter(&wfilter)
+
+			subnetWorkloads := wc1.MeshPairsWithOther(wc2)
+
+			// L3 local ping
+			Expect(ts.model.PingPairs(subnetWorkloads.LocalPairs()))
+
 		})
 
 		It("L3 Remote with Local Subnet Ping", func() {
@@ -67,27 +84,37 @@ var _ = Describe("Datapath", func() {
 				Skip("Ping test cases are enabled only for HW naples")
 			}
 
-			// Ping pair DSC1-S2 vs DSC2-S1 should succeed
-			sn := nwc.Any(2)
-			Expect(dataPathPingTest(naples[0], naples[1], sn.Subnets()[0], sn.Subnets()[1], true)).Should(Succeed())
+			wfilter := objects.WorkloadFilter{}
+			wfilter.SetNaplesCollection(ts.model.Naples())
+			wfilter.SetNetworkCollection(sn.Pop(1))
+			wc1 := allWc.Filter(&wfilter)
+
+			wfilter = objects.WorkloadFilter{}
+			wfilter.SetNaplesCollection(ts.model.Naples())
+			wfilter.SetNetworkCollection(sn.Pop(1))
+			wc2 := allWc.Filter(&wfilter)
+
+			subnetWorkloads := wc1.MeshPairsWithOther(wc2)
+
+			// L3 local ping
+			Expect(ts.model.PingPairs(subnetWorkloads.RemotePairs()))
 
 		})
 
 		It("L3 Remote with non-local Subnet ping", func() {
 
+			//TODO: this test should be modified to remove ref from topology
 			if !ts.tb.HasNaplesHW() {
 				Skip("Ping test cases are enabled only for HW naples")
 			}
 
-			sn := nwc.Any(2)
-			naples := ts.model.Naples().Names()
-
 			// DSC1: get host-pf attached with network S1
-			dscIntf1, err := getSubnetHostPfNetworkIntfOnNaples(naples[0], sn.Subnets()[0].Name)
+			dscIntf1, err := objects.GetNetworkInterfaceBySubnet(naples[0], sn.Subnets()[0].Name, ts.model.ConfigClient(), ts.model.Testbed())
 			Expect(err).Should(Succeed())
 
 			// DSC2: get host-pf attached with network S2
-			dscIntf2, err := getSubnetHostPfNetworkIntfOnNaples(naples[1], sn.Subnets()[1].Name)
+
+			dscIntf2, err := objects.GetNetworkInterfaceBySubnet(naples[1], sn.Subnets()[1].Name, ts.model.ConfigClient(), ts.model.Testbed())
 			Expect(err).Should(Succeed())
 
 			// detach network interfaces
@@ -114,21 +141,6 @@ var _ = Describe("Datapath", func() {
 		})
 	})
 })
-
-func getSubnetHostPfNetworkIntfOnNaples(naples, subnet string) (*objects.NetworkInterfaceCollection, error) {
-
-	filter := fmt.Sprintf("spec.type=host-pf,spec.attach-network=%v,status.dsc=%v", subnet, naples)
-	hostNwIntfs, err := ts.model.ListNetworkInterfacesByFilter(filter)
-	if err != nil {
-		return nil, err
-	}
-	if len(hostNwIntfs.Interfaces) == 0 {
-		err = fmt.Errorf("no host-pf on %v attached to subnet %v", naples, subnet)
-		log.Errorf("%v", err)
-		return nil, err
-	}
-	return hostNwIntfs, nil
-}
 
 func dataPathPingTest(naples1, naples2 string, nw1, nw2 *objects.Network, pass bool) error {
 

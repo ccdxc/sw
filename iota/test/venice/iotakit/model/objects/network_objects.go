@@ -71,6 +71,27 @@ func (snc *NetworkCollection) Any(num int) *NetworkCollection {
 	return &newSnc
 }
 
+// Pop returns popped element and removes from currnet collection
+func (snc *NetworkCollection) Pop(num int) *NetworkCollection {
+	if snc.HasError() || len(snc.subnets) <= num {
+		return snc
+	}
+
+	newSnc := NetworkCollection{subnets: []*Network{}, CollectionCommon: snc.CollectionCommon}
+	tmpArry := make([]*Network, len(snc.subnets))
+	copy(tmpArry, snc.subnets)
+	for i := 0; i < num; i++ {
+		idx := rand.Intn(len(tmpArry))
+		sn := tmpArry[idx]
+		tmpArry = append(tmpArry[:idx], tmpArry[idx+1:]...)
+		newSnc.subnets = append(newSnc.subnets, sn)
+	}
+
+	snc.subnets = snc.subnets[num:]
+
+	return &newSnc
+}
+
 // Commit writes the VPC config to venice
 func (nwc *NetworkCollection) Commit() error {
 	if nwc.HasError() {
@@ -190,7 +211,7 @@ func (nw *Network) UpdateIPv4Gateway(gw string) error {
 
 func VpcNetworkCollection(tenant, vpc string, n int, client objClient.ObjClient) (*NetworkCollection, error) {
 	nws, err := client.ListNetwork(tenant)
-	if err != nil || n <= 0{
+	if err != nil || n <= 0 {
 		return nil, err
 	}
 
@@ -202,7 +223,7 @@ func VpcNetworkCollection(tenant, vpc string, n int, client objClient.ObjClient)
 	count := 0
 	for _, nw := range nws {
 		if count >= n {
-			break;
+			break
 		}
 		if nw.Spec.VirtualRouter == vpc {
 			nws_vpc = append(nws_vpc, nw)
@@ -212,6 +233,49 @@ func VpcNetworkCollection(tenant, vpc string, n int, client objClient.ObjClient)
 
 	if count == 0 {
 		return nil, fmt.Errorf("No Networks on VPC %s", vpc)
+	}
+
+	nwc := NewNetworkCollectionFromNetworks(client, nws_vpc)
+	return nwc, nil
+}
+
+// returns the subnet collection of default config
+func DefaultNetworkCollection(client objClient.ObjClient) (*NetworkCollection, error) {
+	ten, err := client.ListTenant()
+	if err != nil {
+		return nil, err
+	}
+	if len(ten) == 0 {
+		return nil, fmt.Errorf("No tenants to get network collection")
+	}
+
+	vpcs, err := client.ListVPC(ten[0].Name)
+	if err != nil {
+		return nil, err
+	}
+	if len(vpcs) == 0 {
+		return nil, fmt.Errorf("No VPCs on tenant %V to get network collection", ten[0].Name)
+	}
+
+	vpc := ""
+	for _, v := range vpcs {
+		// stop at the first tenant VPC
+		if v.Spec.Type == "tenant" {
+			vpc = v.Name
+			break
+		}
+	}
+
+	nws, err := client.ListNetwork(ten[0].Name)
+	if err != nil {
+		return nil, err
+	}
+
+	var nws_vpc []*network.Network
+	for _, nw := range nws {
+		if nw.Spec.VirtualRouter == vpc {
+			nws_vpc = append(nws_vpc, nw)
+		}
 	}
 
 	nwc := NewNetworkCollectionFromNetworks(client, nws_vpc)

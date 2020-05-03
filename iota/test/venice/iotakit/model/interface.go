@@ -89,6 +89,7 @@ type ClusterActionIntf interface {
 
 	VerifyPolicyStatus(spc *objects.NetworkSecurityPolicyCollection) error
 	VerifySystemHealth(collectLogOnErr bool) error
+	VerifyDataPath() error
 	VerifyClusterStatus() error
 	FindFwlogForWorkloadPairsFromObjStore(tenantName,
 		protocol string, port uint32, fwaction string, wpc *objects.WorkloadPairCollection) error

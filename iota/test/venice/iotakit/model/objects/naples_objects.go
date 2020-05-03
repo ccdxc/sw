@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 
@@ -151,6 +152,27 @@ func (npc *NaplesCollection) Any(num int) *NaplesCollection {
 		tmpArry = append(tmpArry[:idx], tmpArry[idx+1:]...)
 		newNpc.Nodes = append(newNpc.Nodes, sn)
 	}
+
+	return newNpc
+}
+
+// Pop returns popped element and removes from currnet collection
+func (npc *NaplesCollection) Pop(num int) *NaplesCollection {
+	if npc.HasError() || len(npc.Nodes) <= num {
+		return npc
+	}
+
+	newNpc := &NaplesCollection{Nodes: []*Naples{}}
+	tmpArry := make([]*Naples, len(npc.Nodes))
+	copy(tmpArry, npc.Nodes)
+	for i := 0; i < num; i++ {
+		idx := rand.Intn(len(tmpArry))
+		sn := tmpArry[idx]
+		tmpArry = append(tmpArry[:idx], tmpArry[idx+1:]...)
+		newNpc.Nodes = append(newNpc.Nodes, sn)
+	}
+
+	npc.Nodes = npc.Nodes[num:]
 
 	return newNpc
 }
@@ -309,7 +331,7 @@ func (npc *NaplesCollection) Admit() error {
 }
 
 //IsAdmitted returns true if all snics are admitted
-func (npc *NaplesCollection) IsAdmitted() (bool, error) {
+func (npc *NaplesCollection) IsAdmitted() error {
 
 	admitted := true
 	for _, naples := range npc.Nodes {
@@ -338,10 +360,47 @@ func (npc *NaplesCollection) IsAdmitted() (bool, error) {
 	}
 
 	if !admitted {
-		return false, nil
+		return errors.New("Some naples are not admitted")
 	}
 
-	return true, nil
+	return nil
+}
+
+//IsNotAdmitted returns true if all snics are admitted
+func (npc *NaplesCollection) IsNotAdmitted() error {
+
+	admitted := false
+	for _, naples := range npc.Nodes {
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			snic, err := npc.Client.GetSmartNICByName(dsc.Name)
+			if err == nil && snic.Status.AdmissionPhase == "admitted" {
+				admitted = true
+				log.Infof("DSC admitted  %v", snic)
+				msg := fmt.Sprintf("DSC admitted %v %v %v", snic, dsc.Name, err)
+				log.Infof(msg)
+			}
+		}
+	}
+
+	for _, naples := range npc.FakeNodes {
+		for _, inst := range naples.Instances {
+			dsc := inst.Dsc
+			snic, err := npc.Client.GetSmartNICByName(dsc.Name)
+			if err == nil && snic.Status.AdmissionPhase == "admitted" {
+				admitted = true
+				log.Infof("DSC admitted  %v", snic)
+				msg := fmt.Sprintf("DSC admitted %v %v %v", snic, dsc.Name, err)
+				log.Infof(msg)
+			}
+		}
+	}
+
+	if admitted {
+		return errors.New("Some naples are still admitted")
+	}
+
+	return nil
 }
 
 //Delete deletes smartnic
