@@ -642,7 +642,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
             buf_len = statements_len - index;
 
             index += snprintf((char *)(statements->value + index), buf_len,
-                              "option routers=%u:%u:%u:%u; ",
+                              "option routers=%x:%x:%x:%x; ",
                               (uint32_t)bytes[3], (uint32_t)bytes[2],
                               (uint32_t)bytes[1], (uint32_t)bytes[0]);
         }
@@ -653,7 +653,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
             bytes = (unsigned char *)&ip;
             buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
-                              "option domain-name-servers=%u:%u:%u:%u; ",
+                              "option domain-name-servers=%x:%x:%x:%x; ",
                               (uint32_t)bytes[3], (uint32_t)bytes[2],
                               (uint32_t)bytes[1], (uint32_t)bytes[0]);
         }
@@ -664,7 +664,7 @@ do_insert_dhcp_binding (dhcpctl_handle *dhcp_connection,
             bytes = (unsigned char *)&ip;
             buf_len = statements_len - index;
             index += snprintf((char *)(statements->value + index), buf_len,
-                              "option ntp-servers=%u:%u:%u:%u; ",
+                              "option ntp-servers=%x:%x:%x:%x; ",
                               (uint32_t)bytes[3], (uint32_t)bytes[2],
                               (uint32_t)bytes[1], (uint32_t)bytes[0]);
         }
