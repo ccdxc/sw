@@ -74,7 +74,7 @@ public:
     sdk_ret_t add_mac(mac_t mac, bool re_add = false);
     sdk_ret_t del_mac(mac_t mac, bool update_db = true, bool add_failure = false);
 
-    sdk_ret_t add_vlan(vlan_t vlan);
+    sdk_ret_t add_vlan(vlan_t vlan, bool replay_from_db);
     sdk_ret_t del_vlan(vlan_t vlan, bool update_db = true, bool add_failure = false);
 
     sdk_ret_t add_macvlan(mac_t mac, vlan_t vlan);
@@ -99,8 +99,11 @@ public:
     sdk_ret_t upd_rdma_sniff(bool rdma_sniff);
 
     void remove_macfilters(bool skip_native_mac, bool update_d);
-    void remove_vlanfilters(bool skip_native_vlan = false);
+    void remove_vlanfilters(bool skip_native_vlan,
+                            bool update_db);
     void remove_macvlanfilters(void);
+    void add_vlanfilters(bool skip_native_vlan = false);
+    void add_macfilters(bool skip_native_mac = false);
 
     // Get APIs
     devapi_lif *get_lif(void);

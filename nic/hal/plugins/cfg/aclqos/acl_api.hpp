@@ -56,6 +56,7 @@ hal_ret_t acl_uninstall_ncsi_redirect(void);
 
 // Micro seg init
 hal_ret_t hal_acl_micro_seg_init(void);
+hal_ret_t hal_acl_micro_seg_deinit(void);
 }    // namespace hal
 
 #endif    // __ACL_API_HPP__

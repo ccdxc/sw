@@ -375,6 +375,8 @@ uint32_t acl_restore_cb(void *obj, uint32_t len);
 namespace aclqos {
 hal_ret_t hal_eplearn_acl_config_init(void);
 hal_ret_t hal_smart_nic_acl_config_init(void);
+hal_ret_t hal_eplearn_acl_config_deinit(void);
+hal_ret_t hal_smart_nic_acl_config_deinit(void);
 }
 
 }    // namespace hal

@@ -775,12 +775,70 @@ micro_seg_status_update(MicroSegSpec &req,
     return HAL_RET_OK;
 }
 
+hal_ret_t
+system_mseg_enf_to_transp (const SysSpec *spec)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    // Remove host enics from mgmt prom list
+    ret = enicif_update_host_prom(false);
+
+    // Remove Learn ACLs
+    ret = hal_acl_micro_seg_deinit();
+
+    // Stop FTE processing packets
+    fte::fte_set_quiesce(0 /* FTE ID */, true);
+
+    // Clear sessions
+    hal::session_delete_all();
+
+    // TODO: Clean up vmotion
+
+    // Change mode in hal
+    hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
+    hal::g_hal_state->set_policy_mode(spec->policy_mode());
+
+    // Disable micro seg in nicmgr. Will create transp config
+    hal::svc::micro_seg_mode_notify(sys::MICRO_SEG_DISABLE);
+
+    // Add host enics in mseg/WL prom list
+    ret = enicif_update_host_prom(true);
+
+    return ret;
+}
+
+hal_ret_t
+system_mseg_enf_to_transp_enf_flaware (const SysSpec *spec)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ret = system_mseg_enf_to_transp(spec);
+
+    // Start FTE process packets
+    fte::fte_set_quiesce(0 /* FTE ID */, false);
+
+    // Make host traffic WL traffic
+    ret = hal::plugins::sfw::
+        sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
+
+    return ret;
+}
+
+hal_ret_t
+system_mseg_enf_to_transp_bnet (const SysSpec *spec)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ret = system_mseg_enf_to_transp(spec);
+
+    return ret;
+}
+
 #define IS_MODE(fwd_mode, fwd_mode_val, policy_mode, policy_mode_val) \
     ((fwd_mode == fwd_mode_val) && (policy_mode == policy_mode_val))
-
-/*
- * Handle system mode changes (fwd & policy)
- */
+//------------------------------------------------------------------------------
+//  Handle system mode changes (fwd & policy)
+//------------------------------------------------------------------------------
 hal_ret_t
 system_handle_fwd_policy_updates(const SysSpec *spec,
                                  SysSpecResponse *rsp)
@@ -943,6 +1001,38 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
     if (IS_MODE(hal::g_hal_state->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
                 hal::g_hal_state->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
 
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                    spec->policy_mode(), sys::POLICY_MODE_BASE_NET)) {
+            // Stop FTE processing packets
+            fte::fte_set_quiesce(0 /* FTE ID */, true);
+
+            // Change l4 profile to not send packets to FTE
+            ret = hal::plugins::sfw::
+                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,
+                                                    false);
+
+            // Clear sessions
+            hal::session_delete_all();
+            
+            // Update policy
+            hal::g_hal_state->set_policy_mode(spec->policy_mode());
+        }
+
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                    spec->policy_mode(), sys::POLICY_MODE_FLOW_AWARE)) {
+            // Stop FTE processing packets
+            fte::fte_set_quiesce(0 /* FTE ID */, true);
+
+            // Clear sessions
+            hal::session_delete_all();
+
+            // Start FTE processing packets
+            fte::fte_set_quiesce(0, false);
+
+            // Update policy
+            hal::g_hal_state->set_policy_mode(spec->policy_mode());
+        }
+
         if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_MICROSEG,
                     spec->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
 
@@ -983,6 +1073,26 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Unable to sched for ports flap. err {}", ret);
             }
+        }
+    }
+
+    // (Microseg, Enforce) => ...
+    if (IS_MODE(hal::g_hal_state->fwd_mode(), sys::FWD_MODE_MICROSEG,
+                hal::g_hal_state->policy_mode(), sys::POLICY_MODE_ENFORCE)) {
+
+        // (Microseg, Enforce) => (Transparent, Enforce) ||
+        //                        (Transparent, Flowaware)
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                    spec->policy_mode(), sys::POLICY_MODE_ENFORCE) ||
+            IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                    spec->policy_mode(), sys::POLICY_MODE_FLOW_AWARE)) {
+            ret = system_mseg_enf_to_transp_enf_flaware(spec);
+        }
+
+        // (Microseg, Enforce) => (Transparent, Basenet)
+        if (IS_MODE(spec->fwd_mode(), sys::FWD_MODE_TRANSPARENT,
+                    spec->policy_mode(), sys::POLICY_MODE_BASE_NET)) {
+            ret = system_mseg_enf_to_transp_bnet(spec);
         }
     }
 

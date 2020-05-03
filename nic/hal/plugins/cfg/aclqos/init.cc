@@ -122,8 +122,8 @@ end:
 }
 
 hal_ret_t
-hal_nic_acl_create(uint32_t acl_id, uint32_t priority,
-                   bool ip_frag, acl::AclAction acl_action)
+hal_acl_create (uint32_t acl_id, uint32_t priority,
+                bool ip_frag, acl::AclAction acl_action)
 {
     hal_ret_t     ret;
     AclSpec       spec;
@@ -167,15 +167,32 @@ hal_nic_acl_create(uint32_t acl_id, uint32_t priority,
     return ret;
 }
 
+hal_ret_t
+hal_acl_delete (uint32_t acl_id)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    AclDeleteRequest    req;
+    AclDeleteResponse   rsp;
+
+    req.mutable_key_or_handle()->set_acl_id(acl_id);
+    ret = hal::acl_delete(req, &rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to delete acl: {}", acl_id);
+    }
+
+    return ret;
+}
+
+
 //------------------------------------------------------------------------------
 // install smart-nic mode specific ACLs
 //------------------------------------------------------------------------------
 hal_ret_t
 hal_smart_nic_acl_config_init (void)
 {
-    hal_ret_t     ret;
+    hal_ret_t ret;
 
-    ret = hal_nic_acl_create(ACL_ICMP_FRAGMENT_DROP_ENTRY_ID,
+    ret = hal_acl_create(ACL_ICMP_FRAGMENT_DROP_ENTRY_ID,
             ACL_ICMP_FRAGMENT_DROP_ENTRY_PRIORITY,
             true, acl::AclAction::ACL_ACTION_DENY);
 
@@ -186,7 +203,7 @@ hal_smart_nic_acl_config_init (void)
 
     HAL_TRACE_DEBUG("ICMP Fragment drop acl entry created");
 
-    ret = hal_nic_acl_create(ACL_ICMPV6_FRAG_DROP_ENTRY_ID,
+    ret = hal_acl_create(ACL_ICMPV6_FRAG_DROP_ENTRY_ID,
             ACL_ICMPV6_FRAGMENT_DROP_ENTRY_PRIORITY,
             true, acl::AclAction::ACL_ACTION_DENY);
 
@@ -196,7 +213,7 @@ hal_smart_nic_acl_config_init (void)
     }
     HAL_TRACE_DEBUG("ICMPv6 Fragment drop acl entry created");
 
-    ret = hal_nic_acl_create(ACL_IP_FRAGMENT_DROP_ENTRY_ID,
+    ret = hal_acl_create(ACL_IP_FRAGMENT_DROP_ENTRY_ID,
             ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY,
             true, acl::AclAction::ACL_ACTION_DENY);
 
@@ -210,6 +227,38 @@ hal_smart_nic_acl_config_init (void)
 
 end:
 
+    return ret;
+}
+
+hal_ret_t
+hal_smart_nic_acl_config_deinit (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    ret = hal_acl_delete(ACL_ICMP_FRAGMENT_DROP_ENTRY_ID);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to uninstall acl: {}. ret: {}",
+                      ACL_ICMP_FRAGMENT_DROP_ENTRY_ID, ret);
+        goto end;
+    }
+
+    ret = hal_acl_delete(ACL_ICMPV6_FRAG_DROP_ENTRY_ID);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to uninstall acl: {}. ret: {}",
+                      ACL_ICMPV6_FRAG_DROP_ENTRY_ID, ret);
+        goto end;
+    }
+
+    ret = hal_acl_delete(ACL_IP_FRAGMENT_DROP_ENTRY_ID);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to uninstall acl: {}. ret: {}",
+                      ACL_IP_FRAGMENT_DROP_ENTRY_ID, ret);
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Uninstalled fragment ACLs.");
+
+end:
     return ret;
 }
 
@@ -401,8 +450,22 @@ hal_eplearn_acl_config_init (void)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+hal_eplearn_acl_config_deinit (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    for (int i = ACL_EPLEARN_ENTRY_ID_BEGIN; i <= ACL_EPLEARN_ENTRY_ID_END; 
+         i++){
+        ret = hal_acl_delete(i);
+    }
+
+    return ret;
+}
+
+
 //------------------------------------------------------------------------------
-// install init time ACL entries
+// install init time ACL entries. Deprecated
 //------------------------------------------------------------------------------
 hal_ret_t
 hal_acl_config_init (void)
@@ -422,6 +485,33 @@ hal_acl_config_init (void)
     ret = hal_eplearn_acl_config_init();
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Eplearn acl entry create failed ret {}", ret);
+        goto end;
+    }
+
+end:
+
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+hal_ret_t
+hal_acl_config_deinit (void)
+{
+    hal_ret_t     ret = HAL_RET_OK;
+    AclSpec       spec;
+    AclResponse   rsp;
+
+    hal::hal_cfg_db_open(CFG_OP_WRITE);
+
+    ret = hal_smart_nic_acl_config_deinit();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error removing smart nic acl entries ret {}", ret);
+        goto end;
+    }
+
+    ret = hal_eplearn_acl_config_deinit();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Eplearn acl entry remove failed ret {}", ret);
         goto end;
     }
 

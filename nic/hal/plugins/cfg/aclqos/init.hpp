@@ -7,6 +7,7 @@ namespace hal {
 namespace aclqos {
 
 hal_ret_t hal_acl_config_init(void);
+hal_ret_t hal_acl_config_deinit(void);
 
 }
 }

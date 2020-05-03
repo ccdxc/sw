@@ -189,7 +189,7 @@ devapi_iris::lif_add_vlan(uint32_t lif_id, vlan_t vlan)
         ret = SDK_RET_ERR;
         goto end;
     }
-    return lif->add_vlan(vlan);
+    return lif->add_vlan(vlan, false);
 
 end:
     return ret;
@@ -532,15 +532,28 @@ devapi_iris::set_micro_seg_en(bool en)
         goto end;
     }
 
-    // Remove Vlan filters on all Host LIFs
-    devapi_lif::set_micro_seg_en(en);
+    if (en) {
+        // Remove Vlan filters on all Host LIFs
+        devapi_lif::set_micro_seg_en(en);
 
-    // Send micro seg update status to HAL
-    micro_seg_halupdate_(en);
+#if 0
+        // Send micro seg update status to HAL
+        micro_seg_halupdate_(en);
+#endif
 
-    mirco_seg_en_ = en;
-    if (hal_grpc::get_hal_grpc()) {
-        hal_grpc::get_hal_grpc()->set_micro_seg_en(en);
+        mirco_seg_en_ = en;
+        if (hal_grpc::get_hal_grpc()) {
+            hal_grpc::get_hal_grpc()->set_micro_seg_en(en);
+        }
+    } else {
+        // Update state
+        mirco_seg_en_ = en;
+        if (hal_grpc::get_hal_grpc()) {
+            hal_grpc::get_hal_grpc()->set_micro_seg_en(en);
+        }
+
+        // Add Vlan filters
+        devapi_lif::set_micro_seg_en(en);
     }
 end:
     return SDK_RET_OK;

@@ -171,7 +171,7 @@ devapi_lif::factory(lif_info_t *info, devapi_iris *dapi)
     }
     lif->set_enic(enic);
 
-    lif->add_vlan(NATIVE_VLAN_ID);
+    lif->add_vlan(NATIVE_VLAN_ID, false);
 
     // No need as we are not supporting filters
     // to hal in smart
@@ -221,7 +221,8 @@ devapi_lif::reset(void)
 
     // Remove Filters
     remove_macfilters(false, true);
-    remove_vlanfilters(true /* skip_native_vlan */);
+    remove_vlanfilters(true /* skip_native_vlan */,
+                       true /* update db */);
     remove_macvlanfilters();
 
     // Reset Vlan Offload
@@ -256,7 +257,7 @@ devapi_lif::destroy(devapi_lif *lif, devapi_iris *dapi)
     lif_db_.erase(lif->get_id());
 
     lif->remove_macfilters(false, true);
-    lif->remove_vlanfilters();
+    lif->remove_vlanfilters(false, true);
     lif->remove_macvlanfilters();
 
     if (lif->get_uplink()) {
@@ -471,7 +472,7 @@ devapi_lif::del_mac(mac_t mac, bool update_db, bool add_failure)
 }
 
 sdk_ret_t
-devapi_lif::add_vlan(vlan_t vlan)
+devapi_lif::add_vlan(vlan_t vlan, bool replay_from_db)
 {
     sdk_ret_t ret = SDK_RET_OK;
     mac_vlan_t      mac_vlan;
@@ -488,7 +489,8 @@ devapi_lif::add_vlan(vlan_t vlan)
         return ret;
     }
 
-    if (vlan_table_.find(vlan) == vlan_table_.end()) {
+    if (replay_from_db || // replay vlan_table will already have it
+        (vlan_table_.find(vlan) == vlan_table_.end())) {
         // Check if max limit reached
         if (vlan_table_.size() == info_.max_vlan_filters) {
             NIC_LOG_ERR("Reached Max Vlan filter limit of {} for lif: {}",
@@ -533,8 +535,10 @@ devapi_lif::add_vlan(vlan_t vlan)
             // create_vlan_filter(vlan);
         }
 
-        // Store vlan filter
-        vlan_table_.insert(vlan);
+        if (!replay_from_db) {
+            // Store vlan filter
+            vlan_table_.insert(vlan);
+        }
     } else {
         NIC_LOG_WARN("Vlan already registered: {}", vlan);
     }
@@ -1170,7 +1174,8 @@ devapi_lif::remove_macfilters(bool skip_native_mac, bool update_db)
 }
 
 void
-devapi_lif::remove_vlanfilters(bool skip_native_vlan)
+devapi_lif::remove_vlanfilters(bool skip_native_vlan,
+                               bool update_db)
 {
     vlan_t vlan;
 
@@ -1187,9 +1192,46 @@ devapi_lif::remove_vlanfilters(bool skip_native_vlan)
             continue;
         }
         del_vlan(vlan, false);
-        it = vlan_table_.erase(it);
+        if (update_db) {
+            it = vlan_table_.erase(it);
+        } else {
+            it++;
+        }
     }
     NIC_LOG_DEBUG("# of Vlan Filters: {}", vlan_table_.size());
+}
+
+void
+devapi_lif::add_vlanfilters(bool skip_native_vlan)
+{
+    vlan_t vlan;
+
+    NIC_LOG_DEBUG("lif-{}: Replaying Vlan Filters", get_id());
+
+    for (auto it = vlan_table_.begin(); it != vlan_table_.end();it++) {
+        vlan = *it;
+        if (skip_native_vlan && (vlan == NATIVE_VLAN_ID)) {
+            continue;
+        }
+        add_vlan(vlan, true);
+    }
+    NIC_LOG_DEBUG("# of Vlan Filters: {}", vlan_table_.size());
+}
+
+void
+devapi_lif::add_macfilters(bool skip_native_mac)
+{
+    mac_t mac;
+
+    NIC_LOG_DEBUG("lif-{}: Replaying Mac Filters", get_id());
+    for (auto it = mac_table_.begin(); it != mac_table_.end();it++) {
+        mac = *it;
+        if (skip_native_mac && mac == MAC_TO_UINT64(info_.mac)) {
+            continue;
+        }
+        add_mac(mac, true);
+    }
+    NIC_LOG_DEBUG("# of Mac Filters: {}", mac_table_.size());
 }
 
 void
@@ -1427,8 +1469,13 @@ devapi_lif::set_micro_seg_en(bool en)
     for (auto it = lif_db_.cbegin(); it != lif_db_.cend(); it++) {
         lif = (devapi_lif *)(it->second);
         if (lif->is_host()) {
-            lif->remove_vlanfilters(true);
-            lif->remove_macfilters(true, false);
+            if (en) {
+                lif->remove_vlanfilters(true, false);
+                lif->remove_macfilters(true, false);
+            } else {
+                lif->add_vlanfilters(true);
+                lif->add_macfilters(true);
+            }
         }
     }
 
