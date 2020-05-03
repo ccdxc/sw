@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -871,32 +872,32 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 	}
 
 	if os.Getenv("RELEASE_A") != "" {
-		// get naples info from Netagent
 		// Note: struct redefined here to avoid dependency on netagent package
 		var naplesInfo struct {
-			UUID                 string   `json:"naples-uuid,omitempty"`
-			ControllerIPs        []string `json:"controller-ips,omitempty"`
-			Mode                 string   `json:"naples-mode,omitempty"`
-			IsNpmClientConnected bool     `json:"is-npm-client-connected,omitempty"`
+			DSCMode             string   `json:"dsc-mode,omitempty"`
+			DSCName             string   `json:"dsc-name,omitempty"`
+			MgmtIP              string   `json:"mgmt-ip,omitempty"`
+			Controllers         []string `json:"controllers,omitempty"`
+			IsConnectedToVenice bool     `json:"is-connected-to-venice"`
 		}
-		status, kerr := agentClient.Req("GET", "https://"+nodeIP+":8888/api/system/info/", nil, &naplesInfo)
-		if kerr != nil || status != http.StatusOK {
-			nerr := fmt.Errorf("Error checking netagent health. Status: %v, err: %v", status, kerr)
+
+		status, perr := agentClient.Req("GET", "https://"+nodeIP+":8888/api/mode/", nil, &naplesInfo)
+		if perr != nil || status != http.StatusOK {
+			nerr := fmt.Errorf("Error checking netagent health. Status: %v, err: %v", status, perr)
 			log.Errorf("%v", nerr)
 			return nerr
 		}
 
-		if !strings.Contains(naplesInfo.Mode, "network-managed") {
-			nerr := fmt.Errorf("Naples/Netagent is in incorrect mode: %s", naplesInfo.Mode)
+		// Use type safe strings here. TODO
+		if !strings.Contains(strings.ToLower(naplesInfo.DSCMode), "network") {
+			nerr := fmt.Errorf("Naples/Netagent is in incorrect mode: %s", naplesInfo.DSCMode)
 			log.Errorf("%v", nerr)
 			return nerr
-		} else if !naplesInfo.IsNpmClientConnected {
-			nerr := fmt.Errorf("Netagent NPM client is not connected to Venice")
+		} else if !naplesInfo.IsConnectedToVenice {
+			nerr := errors.New("Netagent is not connected to Venice")
 			log.Errorf("%v", nerr)
 			return nerr
 		}
-
-		return nil
 	} else {
 
 		// NAPLES is supposed to be part of a Cluster, so we need auth token to talk to Agent
@@ -944,7 +945,7 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 		log.Errorf("%v", nerr)
 		return nerr
 	} else if !naplesInfo.IsConnectedToVenice {
-		nerr := fmt.Errorf("Netagent is not connected to Venice")
+		nerr := errors.New("Netagent is not connected to Venice")
 		log.Errorf("%v", nerr)
 		return nerr
 	}
