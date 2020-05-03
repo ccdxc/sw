@@ -252,16 +252,20 @@ export class UIConfigsService implements OnDestroy {
     });
     this.subscriptions.push(sub);
     // Attempt on load, and refetch if user signs out/in
-    const sub1 = this.licenseService.GetLicense().subscribe(
-      (response) => {
-        // Setting the property will trigger updates to features
-        this.licenseObj = response.body as IClusterLicense;
-      },
-      (error) => {
-        this.licenseObj = null;
-      }
-    );
-    this.subscriptions.push(sub1);
+    // Adding timeout to push this call to the back of the event queue.
+    // prevents http type error due to services not being initialized yet.
+    setTimeout(() => {
+      const sub1 = this.licenseService.GetLicense().subscribe(
+        (response) => {
+          // Setting the property will trigger updates to features
+          this.licenseObj = response.body as IClusterLicense;
+        },
+        (error) => {
+          this.licenseObj = null;
+        }
+      );
+      this.subscriptions.push(sub1);
+    }, 0);
     sub = this.controllerService.subscribe(Eventtypes.LOGIN_SUCCESS, (payload) => {
       // TODO: switch to watch once it's added
       const sub2 = this.licenseService.GetLicense().subscribe(
