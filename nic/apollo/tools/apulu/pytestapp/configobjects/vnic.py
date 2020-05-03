@@ -8,7 +8,7 @@ import utils
 import re
 
 class VnicObject():
-    def __init__(self, id, subnetid, macaddr, hostifindex, sourceguard=False, fabricencap='VXLAN', fabricencapid=1, rxmirrorid = [], txmirrorid = [], node_uuid=None, primary=False, vlan=None):
+    def __init__(self, id, subnetid, macaddr, hostifindex, sourceguard=False, fabricencap='VXLAN', fabricencapid=1, rxmirrorid = [], txmirrorid = [], node_uuid=None, primary=False, vlan=None, flow_learn_en=True):
         self.id       = id
         self.uuid     = utils.PdsUuid(self.id)
         self.primary  = primary
@@ -25,6 +25,7 @@ class VnicObject():
         self.rxmirrorid = rxmirrorid
         self.txmirrorid = txmirrorid
         self.vlan = vlan
+        self.flow_learn_en = flow_learn_en
         return
 
     def GetGrpcCreateMessage(self):
@@ -46,4 +47,5 @@ class VnicObject():
         if self.vlan:
             spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.VnicEncap.value.VlanId = self.vlan
+        spec.FlowLearnEn = self.flow_learn_en
         return grpcmsg

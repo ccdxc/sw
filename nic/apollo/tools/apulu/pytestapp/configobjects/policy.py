@@ -32,7 +32,12 @@ class PolicyObject():
             specrule.Attrs.Match.L4Match.Ports.DstPortRange.PortHigh = rule.L4DportHigh
         if rule.L3Match:
             specrule.Attrs.Match.L3Match.ProtoNum = rule.Proto
-            if self.direction == types_pb2.RULE_DIR_EGRESS:
+            if rule.TagMatch:
+                if self.direction == types_pb2.RULE_DIR_EGRESS:
+                    specrule.Attrs.Match.L3Match.DstTag = rule.tag
+                else:
+                    specrule.Attrs.Match.L3Match.SrcTag = rule.tag
+            elif self.direction == types_pb2.RULE_DIR_EGRESS:
                 specrule.Attrs.Match.L3Match.DstPrefix.Len = rule.Prefix.prefixlen
                 specrule.Attrs.Match.L3Match.DstPrefix.Addr.Af = rule.af
                 if rule.af == types_pb2.IP_AF_INET:
@@ -58,7 +63,7 @@ class PolicyObject():
         return grpcmsg
     
 class rule_obj:
-    def __init__(self, af, stateful, action, l3match, prefix, proto, l4match, l4sportlow = 0, l4sporthigh = 65535, l4dportlow = 0, l4dporthigh = 65535):
+    def __init__(self, af, stateful, action, l3match, prefix, proto, l4match, l4sportlow = 0, l4sporthigh = 65535, l4dportlow = 0, l4dporthigh = 65535, tag=None):
         self.af = af
         self.Stateful = stateful
         self.Action = action
@@ -70,14 +75,18 @@ class rule_obj:
         self.L4SportHigh = l4sporthigh
         self.L4DportLow = l4dportlow
         self.L4DportHigh = l4dporthigh
+        if tag:
+            self.TagMatch = True
+            self.tag = tag
 
 class SecurityProfileObject():
-    def __init__(self, id, tcp_idle_timeout, udp_idle_timeout, icmp_idle_timeout):
+    def __init__(self, id, tcp_idle_timeout, udp_idle_timeout, icmp_idle_timeout, conn_track_en=False):
         self.id = id
         self.uuid = utils.PdsUuid(self.id)
         self.tcp_idle_timeout = tcp_idle_timeout
         self.udp_idle_timeout = udp_idle_timeout
         self.icmp_idle_timeout = icmp_idle_timeout
+        self.conn_track_en = conn_track_en
         return
 
     def GetGrpcCreateMessage(self):
@@ -85,7 +94,7 @@ class SecurityProfileObject():
         spec = grpcmsg.Request.add()
         spec.Id = self.uuid.GetUuid()
 
-        spec.ConnTrackEn = False
+        spec.ConnTrackEn = self.conn_track_en
         spec.DefaultFWAction = types_pb2.SECURITY_RULE_ACTION_ALLOW
         spec.TCPIdleTimeout = self.tcp_idle_timeout
         spec.UDPIdleTimeout = self.udp_idle_timeout

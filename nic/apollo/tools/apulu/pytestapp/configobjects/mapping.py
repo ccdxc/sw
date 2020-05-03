@@ -9,7 +9,7 @@ import re
 
 
 class MappingObject():
-    def __init__(self, id, key_type, macaddr, ip, vpcid, subnetid=None, tunnelid=None, encaptype=None, encapslotid=None, nexthopgroupid=None, vnicid=None, public_ip=None):
+    def __init__(self, id, key_type, macaddr, ip, vpcid, subnetid=None, tunnelid=None, encaptype=None, encapslotid=None, nexthopgroupid=None, vnicid=None, public_ip=None, tags=[]):
         self.id = id
         self.keytype = key_type
         self.macaddr  = utils.getmac2num(macaddr)
@@ -29,6 +29,7 @@ class MappingObject():
         self.public_ip = None
         if public_ip:
             self.public_ip = int(public_ip)
+        self.tags = tags
         return
 
     def GetGrpcCreateMessage(self):
@@ -61,4 +62,5 @@ class MappingObject():
         #    spec.Id.IPAddr.V6Addr = self.ip
         if self.vnicid is not None:
            spec.VnicId = utils.PdsUuid.GetUUIDfromId(self.vnicid)
+        spec.Tags.extend(self.tags)
         return grpcmsg
