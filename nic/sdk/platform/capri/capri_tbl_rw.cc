@@ -666,6 +666,25 @@ p4plus_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
     return ret;
 }
 
+bool
+p4plus_invalidate_cache_all (p4plus_cache_action_t action)
+{
+    uint32_t val = 1;
+
+    if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA ||
+        action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_BOTH) {
+        sdk::lib::pal_reg_write(CSR_CACHE_INVAL_RXDMA_REG_ADDR,
+                                &val, 1);
+    }
+    
+    if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA ||
+        action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_BOTH) {
+        sdk::lib::pal_reg_write(CSR_CACHE_INVAL_TXDMA_REG_ADDR,
+                                &val, 1);
+    }
+
+    return true;
+}
 
 void
 capri_deparser_init (int tm_port_ingress, int tm_port_egress)

@@ -233,6 +233,7 @@ void p4_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
 
 bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                              p4plus_cache_action_t action);
+bool p4plus_invalidate_cache_all(p4plus_cache_action_t action);
 
 uint8_t elba_get_action_id(uint32_t tableid, uint8_t actionpc);
 

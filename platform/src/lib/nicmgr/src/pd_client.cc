@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "gen/platform/mem_regions.hpp"
 
 #include "nic/p4/common/defines.h"
@@ -589,8 +590,7 @@ void PdClient::destroy(PdClient *pdc)
 
 int
 PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
-                              struct queue_info* queue_info,
-                              uint8_t coses)
+    lif_info_t *lif_info, struct queue_info* queue_info, uint8_t coses)
 {
     lif_qstate_t qstate;
 
@@ -631,40 +631,49 @@ PdClient::lif_qstate_map_init(uint64_t hw_lif_id,
     // Reserve lif id
     lm_->reserve_id(qstate.lif_id, 1);
 
-    // Init the lif
+    NIC_LOG_INFO("lif{}: Started initializing lif", qstate.lif_id);
+
+    // Init the lif & allocate qstate memory
     lm_->init(&qstate);
 
-    // Zero out qstate
-    lm_->clear_qstate(qstate.lif_id);
+    NIC_LOG_INFO("lif{}: Finished initializing lif", qstate.lif_id);
 
-    // Program qstate map
-    lm_->enable(qstate.lif_id);
+    // populate lif info with queue info
+    for (uint8_t type = 0; type < NUM_QUEUE_TYPES; type++) {
+        auto &qinfo = queue_info[type];
+        if (qinfo.size < 1) continue;
+
+        lif_info->qstate_addr[type] = lm_->get_lif_qstate_addr(lif_info->lif_id, type, 0);
+
+        NIC_LOG_DEBUG("lif-{}: qtype: {}, qstate_base: {:#x}",
+                     lif_info->lif_id,
+                     type, lif_info->qstate_addr[type]);
+    }
 
     return 0;
 }
 
 int
-PdClient::lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info)
+PdClient::lif_qstate_init(uint64_t hw_lif_id,
+    lif_info_t *lif_info, struct queue_info* queue_info)
 {
-    sdk_ret_t ret = SDK_RET_OK;
-    uint8_t bzero64[64] = {0};
+    uint64_t addr = 0;
+    uint32_t size = 0;
 
-    NIC_FUNC_INFO("lif{}: Started initializing Qstate", hw_lif_id);
+    NIC_LOG_INFO("lif{}: Started initializing Qstate", hw_lif_id);
 
-    for (uint32_t qtype = 0; qtype < NUM_QUEUE_TYPES; qtype++) {
+    for (uint8_t qtype = 0; qtype < NUM_QUEUE_TYPES; qtype++) {
         auto & qinfo = queue_info[qtype];
         if (qinfo.size < 1) continue;
 
-        for (uint32_t qid = 0; qid < (uint32_t) pow(2, qinfo.entries); qid++) {
-            ret = lm_->write_qstate(hw_lif_id, qtype, qid, bzero64, sizeof(bzero64));
-            if (ret != SDK_RET_OK) {
-                NIC_LOG_ERR("Failed to set LIFQState : {}", ret);
-                return -1;
-            }
-        }
+        addr = lif_info->qstate_addr[qtype];
+        size = (1U << qinfo.entries) * (1 << (5 + qinfo.size));
+        sdk::lib::pal_mem_set(addr, 0, size);
     }
 
-    NIC_FUNC_INFO("lif{}: Finished initializing Qstate", hw_lif_id);
+    sdk::asic::pd::asicpd_p4plus_invalidate_cache_all(P4PLUS_CACHE_INVALIDATE_BOTH);
+
+    NIC_LOG_INFO("lif{}: Finished initializing Qstate", hw_lif_id);
 
     return 0;
 }
@@ -678,29 +687,21 @@ PdClient::program_qstate(struct queue_info* queue_info,
 
     NIC_LOG_DEBUG("lif-{}: Programming qstate", lif_info->lif_id);
 
-    // init queue state map
-    ret = lif_qstate_map_init(lif_info->lif_id, queue_info, coses);
+    // init queue state map - allocates qstate memory
+    ret = lif_qstate_map_init(lif_info->lif_id, lif_info, queue_info, coses);
     if (ret != 0) {
         return -1;
     }
 
-    // init queues
-    ret = lif_qstate_init(lif_info->lif_id, queue_info);
+    // init queues - initializes qstate memory
+    ret = lif_qstate_init(lif_info->lif_id, lif_info, queue_info);
     if (ret != 0) {
         NIC_LOG_ERR("Failed to do lif qstate: ret: {}", ret);
         return -1;
     }
 
-    for (uint32_t type = 0; type < NUM_QUEUE_TYPES; type++) {
-        auto &qinfo = queue_info[type];
-        if (qinfo.size < 1) continue;
-
-        // lif_info->qstate_addr[type] = lm_->GetLIFQStateAddr(lif_info->lif_id, type, 0);
-        lif_info->qstate_addr[type] = lm_->get_lif_qstate_addr(lif_info->lif_id, type, 0);
-        NIC_LOG_DEBUG("lif-{}: qtype: {}, qstate_base: {:#x}",
-                     lif_info->lif_id,
-                     type, lif_info->qstate_addr[type]);
-    }
+    // Penable the lif - programs lif qstate map in hw
+    lm_->enable(lif_info->lif_id);
 
     return 0;
 }

@@ -166,6 +166,7 @@ void asicpd_p4_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                                 p4pd_table_cache_t cache);
 bool asicpd_p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                                     p4plus_cache_action_t action);
+bool asicpd_p4plus_invalidate_cache_all(p4plus_cache_action_t action);
 
 int asicpd_p4plus_table_init(p4plus_table_params_t *table_params);
 int asicpd_p4plus_table_init(platform_type_t platform_type,

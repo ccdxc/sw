@@ -78,10 +78,13 @@ public:
     directmap    **p4plus_txdma_dm_tables_;
 
     int lif_qstate_map_init(uint64_t hw_lif_id,
+                            lif_info_t *lif_info,
                             struct queue_info* queue_info,
                             uint8_t coses);
 
-    int lif_qstate_init(uint64_t hw_lif_id, struct queue_info* queue_info);
+    int lif_qstate_init(uint64_t hw_lif_id,
+                        lif_info_t *lif_info,
+                        struct queue_info* queue_info);
 
     int program_qstate(struct queue_info* queue_info,
                        lif_info_t *lif_info,

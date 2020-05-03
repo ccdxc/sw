@@ -67,6 +67,12 @@ asicpd_p4plus_invalidate_cache (uint64_t addr, uint32_t size_in_bytes,
     return p4plus_invalidate_cache(addr, size_in_bytes, action);
 }
 
+bool
+asicpd_p4plus_invalidate_cache_all(p4plus_cache_action_t action)
+{
+    return p4plus_invalidate_cache_all(action);
+}
+
 uint8_t
 asicpd_get_action_pc (uint32_t tableid, uint8_t actionid)
 {
