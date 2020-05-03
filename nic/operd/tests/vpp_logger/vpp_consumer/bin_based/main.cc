@@ -74,7 +74,12 @@ print_flow (int fd, char *data, uint64_t data_length)
             dprintf(fd, "destination: %s:%" PRIu32 ", ", buffer,
                    flow.key().ipflowkey().l4info().tcpudpinfo().dstport());
             
-            dprintf(fd, "proto: %" PRIu32, flow.key().ipflowkey().ipprotocol());
+            dprintf(fd, "proto: %" PRIu32 ", ", flow.key().ipflowkey().ipprotocol());
+
+            dprintf(fd, "packets: iflow: %" PRIu64 ", rflow: %" PRIu64 ", ",
+                    flow.iflowpackets(), flow.rflowpackets());
+            dprintf(fd, "bytes: iflow: %" PRIu64 ", rflow: %" PRIu64 " ",
+                    flow.iflowbytes(), flow.rflowbytes());
         } else if (flow.key().has_macflowkey()) {
             dprintf(fd, "l2");
         }
