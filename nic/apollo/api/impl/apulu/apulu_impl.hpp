@@ -53,7 +53,7 @@
 #define PDS_MAX_CLASS_ID_PER_VPC               512
 
 // reserved class id to indicate that tag is not configured on a mapping
-#define PDS_IMPL_RSVD_MAPPING_CLASS_ID         (PDS_MAX_CLASS_ID_PER_VPC - 1)
+#define PDS_IMPL_RSVD_MAPPING_CLASS_ID         0x3FF
 
 // reserved DHCP relay NACL index
 // NOTE:
