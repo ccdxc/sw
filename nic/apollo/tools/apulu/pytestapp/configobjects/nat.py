@@ -17,7 +17,7 @@ class NatPbObject():
         self.port_hi = port_hi
         self.proto_name = proto
         self.proto_num = utils.GetIPProtoByName(proto)
-        self.AddrType = addr_type
+        self.addr_type = addr_type
         return
 
     def GetGrpcCreateMessage(self):
@@ -31,7 +31,7 @@ class NatPbObject():
         spec.NatAddress.Prefix.IPv4Subnet.Len = self.prefix.prefixlen
         spec.Ports.PortLow = self.port_lo
         spec.Ports.PortHigh = self.port_hi
-        if self.AddrType == "public":
+        if self.addr_type == "public":
             spec.AddressType = types_pb2.ADDR_TYPE_PUBLIC
         else:
             spec.AddressType = types_pb2.ADDR_TYPE_SERVICE

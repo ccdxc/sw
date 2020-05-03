@@ -66,7 +66,8 @@ class ObjectTypes(enum.IntEnum):
     BGP_PEER_AF = 18
     SVC_MAPPING = 19
     SECURITY_PROFILE = 20
-    MAX = 21
+    ROUTETABLE = 21
+    MAX = 22
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -166,8 +167,10 @@ class ApolloAgentClient:
                                                       self.__channel, 'Vnic')
         self.__stubs[ObjectTypes.MAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
                                                       self.__channel, 'Mapping')
+        self.__stubs[ObjectTypes.ROUTETABLE] = ClientStub(route_pb2_grpc.RouteSvcStub,
+                                                          self.__channel, 'RouteTable')
         self.__stubs[ObjectTypes.ROUTE] = ClientStub(route_pb2_grpc.RouteSvcStub,
-                                                      self.__channel, 'RouteTable')
+                                                     self.__channel, 'Route')
         self.__stubs[ObjectTypes.POLICY] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
                                                       self.__channel, 'SecurityPolicy')
         self.__stubs[ObjectTypes.SECURITY_PROFILE] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,

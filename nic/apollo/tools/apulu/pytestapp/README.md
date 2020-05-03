@@ -27,37 +27,52 @@ cd ${PYTESTAPPROOT}
 export OOB_NODE1=192.168.71.46
 export OOB_NODE2=192.168.68.41
 
-python3 apps/config_host1_naples.py $OOB_NODE1 --grpc_port 11357
-python3 apps/config_host2_naples.py $OOB_NODE2 --grpc_port 11357
+python3 apps/config_host1_naples.py $OOB_NODE1 --remote $OOB_NODE2
+python3 apps/config_host2_naples.py $OOB_NODE2 --remote $OOB_NODE1
 
 
 ====================================================================
 
 
 # node 1
+ip netns add A
+ip netns add B
+ip netns add DOT1Q
 
-sudo ip netns add A
-sudo ip netns add B
+modprobe 8021q
 
-sudo ip link set enp21s0 netns A
-sudo ip link set enp22s0 netns B
+ip link set enp21s0 netns A
+ip link set enp22s0 netns B
+ip link set enp23s0 netns DOT1Q
 
-#sudo ip netns exec A ifconfig enp20s0 2.1.0.2/24 mtu 9000 up
-sudo ip netns exec A dhclient enp21s0
-sudo ip netns exec A ip route add 64.0.0.0/16 via 2.1.0.1
-sudo ip netns exec A ip route add 3.1.0.0/16 via 2.1.0.1
+ip netns exec A dhclient enp21s0
 
-#sudo ip netns exec B ifconfig enp21s0 3.1.0.2/24 mtu 9000 up
-sudo ip netns exec B dhclient enp22s0
-sudo ip netns exec B ip route add 64.0.0.0/16 via 3.1.0.1
-sudo ip netns exec B ip route add 2.1.0.0/16 via 3.1.0.1
+ip netns exec B dhclient enp22s0
+
+ip netns exec DOT1Q vconfig add enp23s0 999
+ip netns exec DOT1Q ifconfig enp23s0 up
+ip netns exec DOT1Q dhclient enp23s0.999
+
 
 # node 2
+ip netns add A
+ip netns add DOT1Q
+ip netns add IGW
+ip netns add SVC
 
-#sudo ifconfig enp21s0 2.1.0.3/24 mtu 9000 up
-sudo dhclient enp21s0
+modprobe 8021q
 
-#sudo ifconfig enp22s0 64.0.0.2/24 mtu 9000 up
-sudo dhclient enp23s0
-sudo ip route add 3.1.0.0/24 via 2.1.0.1
-sudo ip route add 50.0.0.0/24 via 64.0.0.1
+ip link set enp21s0 netns A
+ip link set enp23s0 netns DOT1Q
+ip link set enp24s0 netns IGW
+ip link set enp25s0 netns SVC
+
+ip netns exec A dhclient enp21s0
+
+ip netns exec DOT1Q vconfig add enp23s0 999
+ip netns exec DOT1Q ifconfig enp23s0 up
+ip netns exec DOT1Q dhclient enp23s0.999
+
+ip netns exec IGW dhclient enp24s0
+
+ip netns exec SVC dhclient enp25s0

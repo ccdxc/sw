@@ -7,7 +7,8 @@ import subnet_pb2 as subnet_pb2
 import types_pb2 as types_pb2
 
 class SubnetObject():
-    def __init__(self, id, vpcid, v4prefix, hostifindex, v4virtualrouterip, virtualroutermac, v4routetableid, fabricencap='VXLAN', fabricencapid=1, node_uuid=None, dhcp_policy_id=None):
+    def __init__(self, id, vpcid, v4prefix, hostifindex, v4virtualrouterip, virtualroutermac, v4routetableid, fabricencap='VXLAN', fabricencapid=1, node_uuid=None, dhcp_policy_id=None, 
+                 ingress_policy_id=None, egress_policy_id=None):
         super().__init__()
         self.id    = id
         self.vpcid = vpcid
@@ -26,6 +27,8 @@ class SubnetObject():
         self.fabricencap = fabricencap
         self.fabricencapid = fabricencapid
         self.v4routetableid = v4routetableid
+        self.ingress_policy_id = ingress_policy_id
+        self.egress_policy_id = egress_policy_id
         return
 
     def GetGrpcCreateMessage(self):
@@ -48,5 +51,9 @@ class SubnetObject():
             spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.v4routetableid)
         if self.hostifuuid:
             spec.HostIf.append(self.hostifuuid.GetUuid())
+        if self.ingress_policy_id:
+            spec.IngV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(self.ingress_policy_id))
+        if self.egress_policy_id:
+            spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(self.egress_policy_id))
         return grpcmsg
 
