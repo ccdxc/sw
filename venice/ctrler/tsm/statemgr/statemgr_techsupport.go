@@ -476,6 +476,10 @@ func (sm *Statemgr) CreateSnapshot(ms *monitoring.TechSupportRequest) error {
 	}
 
 	snapshotURI := snaps.Status.LastSnapshot.URI[strings.LastIndex(snaps.Status.LastSnapshot.URI, "/")+1:]
+	if sm.snapshotObjstoreCl == nil {
+		log.Errorf("snapshot client is not initialized, snapshot will fail")
+		return fmt.Errorf("snapshot client is not initialized, snapshot will fail")
+	}
 	snapshotFr, err := sm.snapshotObjstoreCl.GetObject(context.Background(), snapshotURI)
 	if err == nil {
 		defer snapshotFr.Close()

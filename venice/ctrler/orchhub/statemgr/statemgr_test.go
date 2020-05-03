@@ -441,7 +441,7 @@ func TestHostCreateList(t *testing.T) {
 }
 
 // createDistributedServiceCard utility function to create a DistributedServiceCard
-func createDistributedServiceCard(stateMgr *Statemgr, tenant, name string, labels map[string]string) error {
+func createDistributedServiceCard(stateMgr *Statemgr, tenant, name, id string, labels map[string]string) error {
 	// DistributedServiceCard params
 	np := cluster.DistributedServiceCard{
 		TypeMeta: api.TypeMeta{Kind: "DistributedServiceCard"},
@@ -451,8 +451,8 @@ func createDistributedServiceCard(stateMgr *Statemgr, tenant, name string, label
 			Tenant:    tenant,
 			Labels:    labels,
 		},
-		Spec:   cluster.DistributedServiceCardSpec{DSCProfile: "default"},
-		Status: cluster.DistributedServiceCardStatus{},
+		Spec:   cluster.DistributedServiceCardSpec{DSCProfile: "default", ID: id},
+		Status: cluster.DistributedServiceCardStatus{PrimaryMAC: name},
 	}
 
 	// create a DistributedServiceCard
@@ -500,16 +500,16 @@ func TestDistributedServiceCardCreateList(t *testing.T) {
 		}
 		fmt.Printf("Error find ten %v\n", err)
 		return false, nil
-	}, "Profile not foud", "1ms", "1s")
+	}, "Profile not found", "1ms", "1s")
 
-	err = createDistributedServiceCard(sm, "default", "prod-beef", nil)
+	err = createDistributedServiceCard(sm, "default", "prod-beef", "", nil)
 	Assert(t, (err == nil), "DistributedServiceCard could not be created")
 
-	err = createDistributedServiceCard(sm, "default", "prod-bebe", nil)
+	err = createDistributedServiceCard(sm, "default", "prod-bebe", "", nil)
 	Assert(t, (err == nil), "DistributedServiceCard could not be created")
 
 	labels := map[string]string{"color": "green"}
-	err = createDistributedServiceCard(sm, "default", "dev-caca", labels)
+	err = createDistributedServiceCard(sm, "default", "dev-caca", "", labels)
 	Assert(t, (err == nil), "DistributedServiceCard could not be created")
 
 	nw, err := sm.ctrler.DistributedServiceCard().List(context.Background(), &api.ListWatchOptions{})
@@ -666,9 +666,9 @@ func TestUpdateDSCProfile(t *testing.T) {
 		}
 		fmt.Printf("Error find ten %v\n", err)
 		return false, nil
-	}, "Profile not foud", "1ms", "1s")
+	}, "Profile not found", "1ms", "1s")
 
-	err = createDistributedServiceCard(sm, "default", "prod-beef", nil)
+	err = createDistributedServiceCard(sm, "default", "prod-beef", "", nil)
 	Assert(t, (err == nil), "DistributedServiceCard could not be created")
 
 	dscProfile.Spec.Features.InterVMServices = true
@@ -683,6 +683,116 @@ func TestUpdateDSCProfile(t *testing.T) {
 
 	err = sm.ctrler.DSCProfile().Delete(&dscProfile)
 	Assert(t, (err == nil), "Failed to delete dscprofile")
+}
+
+func TestFindDSC(t *testing.T) {
+	sm, _, err := NewMockStateManager()
+	Assert(t, (err == nil), "Statemanager could not be created")
+
+	dscProfile := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "default",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				FlowAware:       true,
+				Firewall:        true,
+			},
+		},
+	}
+
+	// create DSC Profile
+	sm.ctrler.DSCProfile().Create(&dscProfile)
+	AssertEventually(t, func() (bool, interface{}) {
+
+		_, err := sm.FindDSCProfile("", "default")
+		if err == nil {
+			return true, nil
+		}
+		fmt.Printf("Error find ten %v\n", err)
+		return false, nil
+	}, "Profile not found", "1ms", "1s")
+
+	err = createDistributedServiceCard(sm, "default", "prod-beef", "beef-id", nil)
+	Assert(t, (err == nil), "DistributedServiceCard could not be created")
+
+	d := sm.FindDSC("", "prod-tee")
+	Assert(t, d == nil, "DSC found when none expected")
+
+	d = sm.FindDSC("", "beef-id")
+	fmt.Printf("D : %v", d)
+	Assert(t, d != nil, "DSC not found")
+
+	d = sm.FindDSC("prod-beef", "")
+	Assert(t, d != nil, "DSC not found")
+
+	err = sm.RemoveIncompatibleDSCFromOrch("no-dsc", "no-orch")
+	Assert(t, err != nil, "Removing Incompatible DSC orch")
+
+	err = sm.RemoveIncompatibleDSCFromOrch("prod-beef", "default")
+	Assert(t, err != nil, "Removing Incompatible DSC orch")
+}
+
+func TestWorkload(t *testing.T) {
+	sm, _, err := NewMockStateManager()
+	Assert(t, (err == nil), "Statemanager could not be created")
+
+	dscProfile := cluster.DSCProfile{
+		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "default",
+			Namespace: "",
+			Tenant:    "",
+		},
+		Spec: cluster.DSCProfileSpec{
+			Features: cluster.FeatureSet{
+				InterVMServices: true,
+				FlowAware:       true,
+				Firewall:        true,
+			},
+		},
+	}
+
+	// create DSC Profile
+	sm.ctrler.DSCProfile().Create(&dscProfile)
+	AssertEventually(t, func() (bool, interface{}) {
+
+		_, err := sm.FindDSCProfile("", "default")
+		if err == nil {
+			return true, nil
+		}
+		fmt.Printf("Error find ten %v\n", err)
+		return false, nil
+	}, "Profile not found", "1ms", "1s")
+
+	err = createDistributedServiceCard(sm, "default", "prod-beef", "beef-id", nil)
+	Assert(t, (err == nil), "DistributedServiceCard could not be created")
+
+	err = createWorkload(sm, "default", "prod-bebe", nil)
+	Assert(t, err == nil, fmt.Sprintf("failed to create workload. Err : %v", err))
+
+	np := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "prod-bebe",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec:   workload.WorkloadSpec{},
+		Status: workload.WorkloadStatus{},
+	}
+
+	np.Status.MigrationStatus = &workload.WorkloadMigrationStatus{Status: "STARTED"}
+	err = sm.ctrler.Workload().Update(&np)
+	Assert(t, (err == nil), "Could not update workload object")
+
+	np.Status.MigrationStatus = &workload.WorkloadMigrationStatus{Status: "DONE"}
+	err = sm.ctrler.Workload().Update(&np)
+	Assert(t, (err == nil), "Could not update workload object")
 }
 
 func TestMain(m *testing.M) {
