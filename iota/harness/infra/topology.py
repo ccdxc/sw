@@ -561,6 +561,10 @@ class Node(object):
         dev = self.__get_device(device)
         return dev.Uuid()
 
+    def SetUUID(self, uuid, device = None):
+        dev = self.__get_device(device)
+        dev.SetUuid(uuid)
+
     def HostInterfaces(self, device = None):
         dev = self.__get_device(device)
         return dev.HostIntfs()
@@ -1214,6 +1218,10 @@ class Topology(object):
                 assert(device)
                 uuid_map[n.Name()] = device.Uuid()
         return uuid_map
+
+    def SetNaplesUuid(self, node_name, uuid, device=None):
+        node = self.__nodes[node_name]
+        node.SetUUID(uuid, device)
 
     def GetVeniceHostnames(self):
         ips = []

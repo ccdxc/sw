@@ -5,6 +5,7 @@ import iota.harness.api as api
 import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.test.iris.testcases.penctl.common as common
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+from iota.test.iris.testcases.penctl.common import GetNaplesUUID
 
 def Main(step):
     if GlobalOptions.skip_setup:
@@ -26,5 +27,9 @@ def Main(step):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
+
+    for n in api.GetNaplesHostnames():
+        uuid = GetNaplesUUID(n)
+        api.SetNaplesNodeUuid(n, uuid)
 
     return api.types.status.SUCCESS

@@ -303,6 +303,9 @@ def GetWorkloadNodeMgmtIpAddresses():
 def GetNaplesNodeUuidMap():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNaplesUuidMap()
 
+def SetNaplesNodeUuid(node_name, uuid, device=None):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().SetNaplesUuid(node_name, uuid, device)
+
 def GetDataVlans():
     return store.GetTestbed().GetDataVlans()
 
