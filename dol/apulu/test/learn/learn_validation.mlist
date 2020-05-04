@@ -1,0 +1,29 @@
+# Feature learn endpoints
+
+feature:
+    id          : learn
+    sub         : validation
+    package     : test.learn
+    module      : learn_validation
+    runorder    : 30
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : LEARN_MULTIPLE_IP_SAME_VNIC
+        spec    : garp_multiple.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : LEARN_NEG_MULT_UNTAG_VNIC_SAME_SUBNET
+        spec    : garp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : LEARN_NEG_IP_NOT_IN_SUBNET
+        spec    : garp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING

@@ -141,28 +141,17 @@ node:
           count : 1
           type  : tenant
           subnet:
-            - count     : 2
+            - count     : 1
               v4prefixlen : 24
               v6prefixlen : 64
               vnic:
                 - count   : 1             # 1 untagged VNIC
-                  ipcount : 4             # Local IP mapping per vnic
+                  ipcount : 16            # Local IP mapping per vnic
                   srcguard: false         # true or false (default false)
                   public  : false
                   tagged  : false         # true or false (default true)
               rmap:                       # Remote IP mappings per subnet
-                - count : 4
-            - count     : 1
-              v4prefixlen : 28
-              v6prefixlen : 96
-              vnic:
-                - count   : 1             # 1 untagged VNIC
-                  ipcount : 2
-                  srcguard: false
-                  public  : true
-                  tagged  : false
-              rmap:
-                - count : 4
+                - count : 2
           nexthop:
             - type : underlay
               count : 8

@@ -6,10 +6,7 @@ import ipaddress
 from infra.common.logging import logger
 import apollo.test.utils.pdsctl as pdsctl
 import apollo.config.utils as utils
-
-# Active EP states
-EP_STATE_CREATED = 2
-EP_STATE_PROBING = 3
+import learn_pb2 as learn_pb2
 
 # String representation of constructed UUIDs has certain portions in big
 # endian format. This messes up with how pdsctl dsplays and expects UUID
@@ -42,7 +39,7 @@ class EpMac:
         # cannot compare generated Id's deterministically
         #if self.VnicUuidStr != self.RuntimeInfo.VnicUuidStr:
         #    return False
-        if self.RuntimeInfo.State != EP_STATE_CREATED:
+        if self.RuntimeInfo.State != learn_pb2.EP_STATE_CREATED:
             return False
         return True
 
@@ -74,7 +71,7 @@ class EpIp:
             return False
         if self.SubnetUuidStr != self.RuntimeInfo.SubnetUuidStr:
             return False
-        if self.RuntimeInfo.State != EP_STATE_CREATED:
+        if self.RuntimeInfo.State != learn_pb2.EP_STATE_CREATED:
             return False
         return True
 

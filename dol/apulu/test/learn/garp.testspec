@@ -1,0 +1,63 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=FLOW
+    maxlimits: 1
+    flow: filter://AddrFamily=IPV4
+    route: filter://any
+
+packets:
+    - packet:
+        id          : FROM_HOST_ARP_REPLY_PKT
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH_ARP
+        headers     :
+            eth:
+                src   : callback://networking/learn/GetMACAddrForValidation
+                dst   : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+            qtag:
+                vlan  : ref://testcase/config/localmapping/VNIC/VlanId
+            arp:
+                op    : 2 # ARP_REPLY
+                hwsrc : callback://networking/learn/GetMACAddrForValidation
+                hwdst : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                psrc  : callback://networking/learn/GetIPAddrForValidation
+                pdst  : 0.0.0.0
+            payload:
+                data  : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+buffers:
+    - buffer:
+        id      : BUF1
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=FROM_HOST_ARP_REPLY_PKT/size
+           data : ref://testcase/packets/id=FROM_HOST_ARP_REPLY_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id          : DESC1
+        template    : ref://factory/templates/id=DESCR_ETH_TX
+        fields      :
+            _buf    : ref://testcase/buffers/id=BUF1
+            addr    : ref://testcase/buffers/id=BUF1/addr
+            len     : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id          : DESC2 # Expected Descriptor
+        template    : ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields      :
+            status  : 0x0
+session:
+    - step:
+        trigger:
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect:
+            delay: 1
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC2
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
