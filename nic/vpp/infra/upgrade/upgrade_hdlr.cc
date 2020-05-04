@@ -38,6 +38,11 @@ vpp_graceful_upg_ev_hdlr (sdk::upg::upg_ev_params_t *params)
         upg_log_notice("%s: %s: Bringing down all interfaces\n", __FUNCTION__,
                         grupg_str);
         pds_infra_set_all_intfs_status(false);
+    } else if (params->id == sdk::upg::UPG_EV_PREP_SWITCHOVER) {
+        // Remove all interfaces
+        upg_log_notice("%s: %s: Remove all interfaces\n", __FUNCTION__,
+                        grupg_str);
+        pds_infra_remove_all_intfs();
     }
     return SDK_RET_OK;
 }

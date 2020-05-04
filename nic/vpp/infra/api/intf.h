@@ -17,6 +17,7 @@ extern "C" {
 
 uint32_t pds_infra_get_sw_ifindex_by_name(uint8_t *intf);
 void pds_infra_set_all_intfs_status(uint8_t admin_up);
+void pds_infra_remove_all_intfs(void);
 
 #ifdef __cplusplus
 }

@@ -49,3 +49,17 @@ pds_infra_set_all_intfs_status (u8 admin_up)
     vnet_hw_interface_walk(vnet_get_main(), set_intf_admin_state, &admin_up);
 }
 
+static walk_rc_t
+intf_remove (vnet_main_t *vnm, u32 hw_if_index, void *args)
+{
+    vnet_delete_hw_interface(vnm, hw_if_index);
+
+    return WALK_CONTINUE;
+}
+
+void
+pds_infra_remove_all_intfs (void)
+{
+    vlib_set_suspend_resume_worker_threads(1);
+    vnet_hw_interface_walk(vnet_get_main(), intf_remove, NULL);
+}
