@@ -19,14 +19,6 @@ targets:
     build-dependencies:
     - build-iris-x86
 
-  # ====================== ARM Tests ===========================
-  arm/build:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && cd nic && V=1 make ARCH=aarch64 PIPELINE=iris PLATFORM=hw"]
-    owners: ["email:dbarsky@pensando.io"]
-    area:
-    sub-area:
-    feature:
-
   # ====================== Storage Tests ===========================
   storage:
     commands: ["make", "jobd/storage"]
