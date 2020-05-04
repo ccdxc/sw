@@ -87,6 +87,7 @@ header_type apulu_p4_to_arm_header_t {
         pad                     : 5;
 
         epoch                   : 8;
+        sw_meta                 : 32;
 
         route_priority          : 16;
     }
@@ -103,6 +104,7 @@ header_type apulu_arm_to_p4_header_t {
         nexthop_type            : 8;
         nexthop_id              : 16;
         flow_lkp_id             : 16;
+        sw_meta                 : 32;
     }
 }
 

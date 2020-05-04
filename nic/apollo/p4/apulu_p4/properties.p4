@@ -15,6 +15,7 @@ action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id, vrmac,
         modify_field(key_metadata.flow_lkp_id, arm_to_p4i.flow_lkp_id);
     }
     modify_field(p4i_i2e.skip_stats_update, arm_to_p4i.skip_stats_update);
+    modify_field(p4i_to_arm.sw_meta, arm_to_p4i.sw_meta);
     modify_field(p4i_i2e.nexthop_type, pinned_nexthop_type);
     modify_field(p4i_i2e.nexthop_id, pinned_nexthop_id);
     modify_field(control_metadata.learn_enabled, learn_enabled);

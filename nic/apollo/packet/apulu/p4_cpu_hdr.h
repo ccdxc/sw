@@ -81,6 +81,7 @@ typedef struct p4_rx_cpu_hdr_s {
         };
     };
     uint8_t  epoch;
+    uint32_t sw_meta;
     uint16_t route_priority;
 } __attribute__ ((packed)) p4_rx_cpu_hdr_t;
 
@@ -98,9 +99,10 @@ typedef struct p4_tx_cpu_hdr_s {
             uint16_t pad                    : 1;
         };
     };
-    uint8_t nexthop_type;
+    uint8_t  nexthop_type;
     uint16_t nexthop_id;
     uint16_t flow_lkp_id;
+    uint32_t sw_meta;
 } __attribute__ ((packed)) p4_tx_cpu_hdr_t;
 
 #endif     // __APOLLO_PACKET_APULU_P4_CPU_HDR_H__

@@ -310,7 +310,8 @@ TEST_F(mapping_test, local_mapping_workflow_9) {
 
 /// \brief Local mappings WF_10
 /// \ref WF_10
-TEST_F(mapping_test, local_mapping_workflow_10) {
+// ALERT : Test disabled - deletes happening in the same batch as add
+TEST_F(mapping_test, DISABLED_local_mapping_workflow_10) {
     local_mapping_feeder feeders[4], feeder2A, feeder3A;
 
     create_local_mapping_feeders(feeders, 4, k_max_vnic, PDS_MAX_VNIC_IP,

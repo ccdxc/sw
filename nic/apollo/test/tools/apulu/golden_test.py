@@ -118,6 +118,7 @@ class P4ToARM(Packet):
             BitField("local_mapping_ip_type", 0, 2),
             BitField("pad", 0, 5),
             ByteField("epoch", 0),
+            IntField("sw_meta", 0),
             ShortField("route_priority", 0)]
 
 def dump_pkt(pkt, sname):
