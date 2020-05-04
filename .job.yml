@@ -223,9 +223,9 @@ jobs:
   iota/test/standalone/sanity/windows:
     labels: ["daily"]
   iota/test/standalone/sanity/apulu-core:
-    labels: ["daily"]
+    labels: ["2xhourly"]
   iota/test/standalone/sanity/apulu-sdn-pds:
-    labels: ["daily"]
+    labels: ["2xhourly"]
   iota/test/standalone/regression/esx:
     labels: ["daily"]
   iota/test/standalone/regression/freebsd:
