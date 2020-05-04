@@ -201,8 +201,9 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
     // update port PD state
     sdk::linkmgr::port_update_xcvr_event(port->pd_p, xcvr_event_info);
 
-    // update the front panel port number
-    xcvr_event_info->port_num = port->port_num;
+    // update the front panel port number with ifindex
+    xcvr_event_info->port_num = sdk::lib::catalog::logical_port_to_ifindex(
+                                    port->port_num);
 
     // notify outside
     linkmgr::ipc::xcvr_event_notify(xcvr_event_info);
@@ -488,8 +489,9 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             return ret;
         }
 
-        // update the front panel port number
-        xcvr_event_info.port_num = pi_p->port_num;
+        // update the front panel port number with ifindex
+        xcvr_event_info.port_num = sdk::lib::catalog::logical_port_to_ifindex(
+                                       pi_p->port_num);
 
         linkmgr::ipc::xcvr_event_notify(&xcvr_event_info);
     }

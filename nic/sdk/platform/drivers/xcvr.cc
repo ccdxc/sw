@@ -199,6 +199,7 @@ xcvr_send_notification (int port)
 
         default:
             xcvr_event_info.pid = xcvr_pid_t::XCVR_PID_UNKNOWN;
+            xcvr_cache_reset(port);
             break;
         }
         g_xcvr_notify_cb(&xcvr_event_info);

@@ -163,6 +163,11 @@ xcvr_reset (int port) {
     memset(&g_xcvr[port], 0, sizeof(xcvr_t));
 }
 
+inline void
+xcvr_cache_reset (int port) {
+    memset(g_xcvr[port].cache, 0, sizeof(uint8_t) * XCVR_SPROM_CACHE_SIZE);
+}
+
 inline xcvr_state_t
 xcvr_state (int port) {
     return g_xcvr[port].state;
