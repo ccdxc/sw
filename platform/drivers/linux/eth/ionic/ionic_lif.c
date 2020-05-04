@@ -2787,9 +2787,10 @@ static void ionic_lif_handle_fw_down(struct ionic_lif *lif)
 	set_bit(IONIC_LIF_F_FW_RESET, lif->state);
 	dev_info(ionic->dev, "FW Down: Stopping LIFs\n");
 
-	/* put off the next watchdog */
-	mod_timer(&ionic->watchdog_timer,
-		  round_jiffies(jiffies + ionic->watchdog_period));
+	/* put off the next watchdog if it has been set up */
+	if (ionic->watchdog_timer.expires)
+		mod_timer(&ionic->watchdog_timer,
+			  round_jiffies(jiffies + ionic->watchdog_period));
 
 	if (test_bit(IONIC_LIF_F_UP, lif->state)) {
 		dev_info(ionic->dev, "Surprise FW stop, stopping netdev\n");
