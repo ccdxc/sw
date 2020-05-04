@@ -445,7 +445,10 @@ devapi_impl::port_set_config(pds_ifindex_t ifidx, port_config_t *config) {
         return ret;
     }
 
-    ret = port_update(intf->port_info(), &port_args);
+    // update port_args based on the xcvr state
+    sdk::linkmgr::port_args_set_by_xcvr_state(&port_args);
+
+    ret = sdk::linkmgr::port_update(intf->port_info(), &port_args);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to update port for ifidx 0x%x", ifidx);
     }

@@ -213,12 +213,12 @@ port_shutdown_all (void)
 
 /**
  * @brief        update a port with the given configuration information
- * @param[in]    key         key/uuid of the port
- * @param[in]    port_admin_state_t    port admin state
+ * @param[in]    key           key/uuid of the port
+ * @param[in]    api_port_info port info
  * @return       SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-update_port (const pds_obj_key_t *key, port_args_t *api_port_info)
+port_update (const pds_obj_key_t *key, port_args_t *api_port_info)
 {
     sdk_ret_t ret;
     if_entry *intf;

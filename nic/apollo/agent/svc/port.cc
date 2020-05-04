@@ -45,7 +45,7 @@ PortSvcImpl::PortUpdate(ServerContext *context,
     PDS_TRACE_VERBOSE("Received Port Update");
     pds_port_proto_to_port_args(&port_args, proto_req->spec());
     pds_obj_key_proto_to_api_spec(&key, proto_req->spec().id());
-    ret = api::update_port(&key, &port_args);
+    ret = api::port_update(&key, &port_args);
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
 
     return Status::OK;

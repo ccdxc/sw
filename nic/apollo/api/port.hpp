@@ -31,11 +31,11 @@ sdk_ret_t port_get(const pds_obj_key_t *key, port_get_cb_t port_get_cb,
 
 /**
  * @brief        get port information based on port number
- * @param[in]    key         key/uuid of the port
- * @param[in]    admin_state   port admin state
+ * @param[in]    key           key/uuid of the port
+ * @param[in]    api_port_info port info
  * @return       SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t update_port(const pds_obj_key_t *key, port_args_t *api_port_info);
+sdk_ret_t port_update(const pds_obj_key_t *key, port_args_t *api_port_info);
 
 /**
  * @brief     create all ports based on the catalog information
