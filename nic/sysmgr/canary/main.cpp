@@ -46,7 +46,7 @@ timespec_diff_ms (struct timespec *end, struct timespec *start)
 
     // divide by 1000000 to convert it to ms. we don't care about ms accuracy
     // really
-    return (diff + ((end->tv_nsec / 1000000L)) - (start->tv_nsec / 1000000L));
+    return (diff + (end->tv_nsec / 1000000L)) - (start->tv_nsec / 1000000L);
     
 }
 
