@@ -28,6 +28,7 @@ static void
 mac_aging_cb (event::timer_t *timer)
 {
     ep_mac_entry *mac_entry = (ep_mac_entry *) timer->ctx;
+    sdk_ret_t ret;
 
     if (unlikely(mac_entry->state() != EP_STATE_CREATED)) {
         // timeout cannot be active in any other state
@@ -35,12 +36,14 @@ mac_aging_cb (event::timer_t *timer)
                       mac_entry->key2str().c_str(), mac_entry->state());
         return;
     }
-    if (mac_ageout(mac_entry) == SDK_RET_OK) {
+    ret = mac_ageout(mac_entry);
+    if (ret == SDK_RET_OK) {
         PDS_TRACE_INFO("Ageout successful for %s",
                        mac_entry->key2str().c_str());
         LEARN_COUNTER_INCR(mac_ageout_ok);
     } else {
-        PDS_TRACE_ERR("Failed to ageout %s", mac_entry->key2str().c_str());
+        PDS_TRACE_ERR("Failed to ageout %s, error code %u",
+                      mac_entry->key2str().c_str(), ret);
         LEARN_COUNTER_INCR(mac_ageout_err);
     }
 }
@@ -49,6 +52,7 @@ static void
 ip_aging_cb (event::timer_t *timer)
 {
     ep_ip_entry *ip_entry = (ep_ip_entry *) timer->ctx;
+    sdk_ret_t ret;
 
     if ((ip_entry->state() != EP_STATE_CREATED) &&
         (ip_entry->state() != EP_STATE_PROBING)) {
@@ -61,14 +65,15 @@ ip_aging_cb (event::timer_t *timer)
         if (ip_entry->arp_probe_count() == MAX_NUM_ARP_PROBES) {
             // we did not receive reply to ARP probe, despite retries,
             // delete IP mapping
-            if (ip_ageout(ip_entry) == SDK_RET_OK) {
+            ret = ip_ageout(ip_entry);
+            if (ret == SDK_RET_OK) {
                 PDS_TRACE_INFO("Ageout successful for %s",
                                ip_entry->key2str().c_str());
                 LEARN_COUNTER_INCR(ip_ageout_ok);
             } else {
                 LEARN_COUNTER_INCR(ip_ageout_err);
-                PDS_TRACE_ERR("Failed to ageout %s",
-                              ip_entry->key2str().c_str());
+                PDS_TRACE_ERR("Failed to ageout %s, error code %u",
+                              ip_entry->key2str().c_str(), ret);
             }
             return;
         }

@@ -139,8 +139,8 @@ process_subnet_delete (pds_obj_key_t key)
                     key.str());
     learn_db()->ep_mac_db()->walk(ep_mac_entry_clear_cb, &args);
     if (args.retcode != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to clear entries related to subnet %s",
-                      key.str());
+        PDS_TRACE_ERR("Failed to clear entries related to subnet %s, error "
+                      "code %u", key.str(), args.retcode);
         return args.retcode;
     }
     // sync call to delete subnet

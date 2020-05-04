@@ -172,8 +172,8 @@ process_mapping_api (mapping_key_spec_t key_spec, api_op_t op,
     PDS_TRACE_DEBUG("Learn context: %s", ctxt.str());
     ret = process_learn(&ctxt);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to process %s",
-                      ctxt.log_str(ctxt.api_ctxt.mkey->type));
+        PDS_TRACE_ERR("Failed to process %s error code %u",
+                      ctxt.log_str(ctxt.api_ctxt.mkey->type), ret);
     } else {
         PDS_TRACE_INFO("Processed %s", ctxt.log_str(ctxt.api_ctxt.mkey->type));
     }

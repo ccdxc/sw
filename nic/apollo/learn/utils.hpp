@@ -103,7 +103,11 @@ learn_lif_mbuf_append_data (void *mbuf, uint16_t len)
 static inline uint32_t
 learn_lif_avail_mbuf_count (void)
 {
-    return learn_lif->avail_mbuf_count();
+    // statistics could be fetched before we initialize learn lif
+    if (learn_lif) {
+        return learn_lif->avail_mbuf_count();
+    }
+    return 0;
 }
 
 }    // namespace learn

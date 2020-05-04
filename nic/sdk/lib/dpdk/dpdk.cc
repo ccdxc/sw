@@ -372,5 +372,8 @@ dpdk_device::alloc_mbuf(void) {
 
 uint32_t
 dpdk_device::avail_mbuf_count(void) {
-    return rte_mempool_avail_count(dpdk_config.rte_mp);
+    if (dpdk_config.rte_mp) {
+        return rte_mempool_avail_count(dpdk_config.rte_mp);
+    }
+    return 0;
 }

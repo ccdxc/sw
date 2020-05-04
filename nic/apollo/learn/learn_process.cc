@@ -218,13 +218,15 @@ process_l2l_move_ip (learn_ctxt_t *ctxt)
     ep_ip_to_pds_mapping_key(&ctxt->ip_key, &mkey);
     ret = local_mapping_delete(ctxt, &mkey);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete local mapping for EP %s", ctxt->str());
+        PDS_TRACE_ERR("Failed to delete local mapping for EP %s, error code %u",
+                      ctxt->str(), ret);
         return ret;
     }
 
     ret = delete_ip_entry(ctxt->ip_entry, ctxt->ip_entry->mac_entry());
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to delete IP entry for EP %s", ctxt->str());
+        PDS_TRACE_ERR("Failed to delete IP entry for EP %s, error code %u",
+                      ctxt->str(), ret);
         return ret;
     }
     ctxt->ip_entry = nullptr;

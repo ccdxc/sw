@@ -167,7 +167,7 @@ extract_ip_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
             }
             op = (dhcp_option_t *) (op->data + op->length);
         }
-        if (!dhcp_request || !ip_found || (0 == ip->addr.v4_addr)) {
+        if (!dhcp_request || !ip_found) {
             return false;
         }
         break;
@@ -192,10 +192,6 @@ extract_ip_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
     }
     case PKT_TYPE_IPV4:
         IPV4_HDR_SIP_GET(pkt_data + impl->l3_offset, ip->addr.v4_addr);
-        // dhcp packets other than ack have src IP set to 0.0.0.0
-        if (ip->addr.v4_addr == 0) {
-            return false;
-        }
         ip->af = IP_AF_IPV4;
         break;
     case PKT_TYPE_NDP:
@@ -204,6 +200,10 @@ extract_ip_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
         return false;
     }
 
+    // check for zeroed out IPv4 address
+    if (ip->af == IP_AF_IPV4 && ip->addr.v4_addr == 0) {
+        return false;
+    }
     ctxt->ip_key.vpc = subnet_db()->find(&ctxt->mac_key.subnet)->vpc();
     return true;
 }
