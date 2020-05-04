@@ -62,7 +62,8 @@ public:
               pds_encap_type_t fabric_encap_type,
               bool binding_checks_en, bool configure_policy,
               uint8_t tx_mirror_session_bmap, uint8_t rx_mirror_session_bmap,
-              uint8_t num_policies_per_vnic, uint8_t start_policy_index);
+              uint8_t num_policies_per_vnic, uint8_t start_policy_index,
+              pds_obj_key_t tx_policer, pds_obj_key_t rx_policer);
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -91,6 +92,8 @@ operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
        << " rx_mirror_session_bmap: " << +spec->rx_mirror_session_bmap
        << " v4 meter: " << spec->v4_meter.str()
        << " v6 meter: " << spec->v6_meter.str()
+       << "tx policer"  << spec->tx_policer.str()
+       << "rx policer"  << spec->rx_policer.str()
        << " switch vnic: " << spec->switch_vnic;
     return os;
 }

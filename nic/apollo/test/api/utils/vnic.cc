@@ -113,7 +113,8 @@ vnic_feeder::init(pds_obj_key_t key, pds_obj_key_t subnet,
                   bool binding_checks_en, bool configure_policy,
                   uint8_t tx_mirror_session_bmap,
                   uint8_t rx_mirror_session_bmap,
-                  uint8_t num_policies_per_vnic, uint8_t start_policy_index) {
+                  uint8_t num_policies_per_vnic, uint8_t start_policy_index,
+                  pds_obj_key_t tx_policer, pds_obj_key_t rx_policer) {
     uint64_t mac_64;
     //static uint32_t lif_id = HOST_LIF_ID_MIN;
     num_obj = num_vnic;
@@ -157,6 +158,8 @@ vnic_feeder::init(pds_obj_key_t key, pds_obj_key_t subnet,
                         TEST_POLICY_ID_BASE + start_policy_index + 16,
                         num_policies_per_vnic);
     }
+    spec.tx_policer = tx_policer;
+    spec.rx_policer = rx_policer;
 }
 
 vnic_feeder::vnic_feeder(const vnic_feeder& feeder) {
@@ -406,7 +409,8 @@ void sample_vnic_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
     k_vnic_feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), k_max_vnic,
                        k_feeder_mac, PDS_ENCAP_TYPE_DOT1Q,
-                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0, 5, 0);
+                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0, 5, 0,
+                       int2pdsobjkey(20010), int2pdsobjkey(20000));
     many_create(bctxt, k_vnic_feeder);
 }
 
@@ -414,7 +418,8 @@ void sample_vnic_teardown(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
     k_vnic_feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), k_max_vnic,
                        k_feeder_mac, PDS_ENCAP_TYPE_DOT1Q,
-                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0, 5, 0);
+                       PDS_ENCAP_TYPE_MPLSoUDP, true, true, 0, 0, 5, 0,
+                       int2pdsobjkey(20010), int2pdsobjkey(20000));
     many_delete(bctxt, k_vnic_feeder);
 }
 

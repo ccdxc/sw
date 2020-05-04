@@ -113,7 +113,7 @@ void sample_policer_setup(pds_batch_ctxt_t bctxt) {
 }
 
 void sample_policer_teardown(pds_batch_ctxt_t bctxt) {
-    pds_obj_key_t pol_key = int2pdsobjkey(1);
+    pds_obj_key_t pol_key = int2pdsobjkey(20000);
 
     // this feeder base values doesn't matter in case of deletes
     k_pol_feeder.init(pol_key, sdk::qos::POLICER_TYPE_PPS,

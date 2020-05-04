@@ -17,6 +17,7 @@
 #include "nic/apollo/test/api/utils/batch.hpp"
 #include "nic/apollo/test/api/utils/device.hpp"
 #include "nic/apollo/test/api/utils/local_mapping.hpp"
+#include "nic/apollo/test/api/utils/policer.hpp"
 #include "nic/apollo/test/api/utils/remote_mapping.hpp"
 #include "nic/apollo/test/api/utils/subnet.hpp"
 #include "nic/apollo/test/api/utils/tep.hpp"
@@ -79,11 +80,15 @@ protected:
             many_create(bctxt, tep_feeder);
         }
 
+        // create policers
+        sample_policer_setup(bctxt);
+
         // create VNICs
         vnic_feeder vnic_feeder;
         vnic_feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), k_max_vnic,
                          0x000000030b020a01, PDS_ENCAP_TYPE_DOT1Q,
-                         g_encap_type, true, false, 0, 0, 5, 0);
+                         g_encap_type, true, false, 0, 0, 5, 0,
+                         int2pdsobjkey(20010), int2pdsobjkey(20000));
         many_create(bctxt, vnic_feeder);
 
         batch_commit(bctxt);
@@ -97,9 +102,12 @@ protected:
         vnic_feeder vnic_feeder;
         vnic_feeder.init(int2pdsobjkey(1), int2pdsobjkey(1), k_max_vnic,
                          0x000000030b020a01, PDS_ENCAP_TYPE_DOT1Q,
-                         g_encap_type, true, false, 0, 0, 5, 0);
+                         g_encap_type, true, false, 0, 0, 5, 0,
+                         int2pdsobjkey(20010), int2pdsobjkey(20000));
         many_delete(bctxt, vnic_feeder);
 
+        // delete policers
+        sample_policer_teardown(bctxt);
         // delete TEPs
         sample_tep_teardown(bctxt, 2, "1.0.0.1", k_max_tep);
 

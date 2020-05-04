@@ -11,6 +11,7 @@
 #include "nic/apollo/test/api/utils/nexthop.hpp"
 #include "nic/apollo/test/api/utils/route.hpp"
 #include "nic/apollo/test/api/utils/device.hpp"
+#include "nic/apollo/test/api/utils/policer.hpp"
 #include "nic/apollo/test/api/utils/policy.hpp"
 #include "nic/apollo/test/api/utils/tep.hpp"
 #include "nic/apollo/test/api/utils/vpc.hpp"
@@ -63,6 +64,7 @@ protected:
             sample_nexthop_group_setup(bctxt);
             sample_tep_setup(bctxt);
             sample_subnet_setup(bctxt);
+            sample_policer_setup(bctxt);
             sample_vnic_setup(bctxt);
         } else {
             // create max NHs which can be used as NHs for routes
@@ -76,6 +78,7 @@ protected:
             sample_tep_teardown(bctxt);
         } else if (apulu()) {
             sample_vnic_teardown(bctxt);
+            sample_policer_teardown(bctxt);
             sample_subnet_teardown(bctxt);
             sample_tep_teardown(bctxt);
             sample_nexthop_group_teardown(bctxt);
