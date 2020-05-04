@@ -130,7 +130,7 @@ export class FieldSelectorTransform extends MetricTransform<FieldSelectorTransfo
     }
     const values = this.currValue.map((item): IFieldsRequirement => {
       return {
-        key: item.keyFormControl,
+        key: opts.query['group-by-field'] ? opts.query['group-by-field'] : item.keyFormControl,
         operator: item.operatorFormControl,
         values: item.valueFormControl
       };

@@ -31,6 +31,8 @@ import { GroupByTimeTransform } from '../transforms/groupbytime.transform';
 import { RoundCountersTransform } from '../transforms/roundcounters.transform';
 import { debounceTime } from 'rxjs/operators';
 import { DerivativeTransform } from '../transforms/derivative.transform';
+import { NetworkService } from '@app/services/generated/network.service';
+import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -131,6 +133,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // new DerivativeTransform(),
   ];
 
+  networkInterfacesTypeMap: {[key: string]: NetworkNetworkInterface[]} = {};
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   nodes: ReadonlyArray<ClusterNode> = [];
   // Used for processing the stream events
@@ -160,7 +163,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
   constructor(protected controllerService: ControllerService,
     protected clusterService: ClusterService,
     protected authService: AuthService,
-    protected telemetryqueryService: MetricsqueryService) {
+    protected telemetryqueryService: MetricsqueryService,
+    protected networkService: NetworkService,
+    ) {
       super(controllerService);
   }
 
@@ -169,6 +174,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     this.setupValueOverrides();
     this.getNaples();
     this.getNodes();
+    this.getNetworkInterfaces();
 
     if (this.chartConfig == null) {
       this.chartConfig = {
@@ -343,6 +349,27 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       this.controllerService.webSocketErrorHandler('Failed to get labels')
     );
     this.subscriptions.push(subscription);
+  }
+
+  getNetworkInterfaces() {
+    const sub = this.networkService.ListNetworkInterfaceCache().subscribe(
+      (response) => {
+        if (response.connIsErrorState) {
+          return;
+        }
+        this.networkInterfacesTypeMap = {};
+        const networkInterfaces = response.data;
+        for (const i of networkInterfaces) {
+          if (!Utility.isInterfaceInValid(i)) {
+            if (!this.networkInterfacesTypeMap[i.status.type]) {
+              this.networkInterfacesTypeMap[i.status.type] = [];
+            }
+            this.networkInterfacesTypeMap[i.status.type].push(i);
+          }
+        }
+      }
+    );
+    this.subscriptions.push(sub);
   }
 
   checkIfQueriesSelectorChanged(newQuery: TelemetryPollingMetricQueries, oldQuery: TelemetryPollingMetricQueries): boolean {

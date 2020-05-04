@@ -36,6 +36,9 @@ export class GroupByTransform extends MetricTransform<GroupByTransformConfig> {
     const options = MetricsMetadata[this.measurement].fields.filter(x => x.isTag).map( f => {
       return {label: f.displayName, value: f.name};
     });
+    if (MetricsMetadata[this.measurement].objectKind === 'NetworkInterface') {
+      options.unshift({label: 'name', value: 'name'});
+    }
     if (options && options.length > 0) {
       this.groupBy = options[0].value;
     }

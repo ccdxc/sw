@@ -17,6 +17,7 @@ import { DataSource, MetricTransform, GroupByTransform, TransformNames } from '.
 import { FieldSelectorTransform } from '../transforms/fieldselector.transform';
 import { GraphTitleTransform } from '../transforms/graphtitle.transform';
 import { RepeaterData, ValueType } from 'web-app-framework';
+import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -146,7 +147,7 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
   // all card data are all from telemetrychart component, can not build it
   // form fieldselector.transform; therefore create an convert function to
   // change repeator data.
-  getCardFieldData (res: RepeaterData[]) {
+  getCardFieldData (res: RepeaterData[], transform) {
     if (res && res.length > 0 && this.chart.naples && this.chart.naples.length > 0) {
       // VS-1164.  For 2020-01 release, we use multi-select to pick DSC for chart.
       // html template user getCardFieldData(transform.fieldData) to feed app-repeater data, there's a slight initial stutter loading saved chart for editing.
@@ -154,17 +155,47 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
         res[0].valueType = ValueType.multiSelect;
         // for release A, only equals is allowed.
         res[0].operators = res[0].operators.filter(op => op.label === 'equals');
-        res[0].values = this.chart.naples.map((naple: ClusterDistributedServiceCard) => {
-          return {
-            label: naple.spec.id,
-            value: naple.status['primary-mac']
-          };
-        });
+        const metaData = this.getMeasurementMetadata(transform.measurement);
+        if (metaData && metaData.objectKind === 'NetworkInterface') {
+          res = this.getCardFieldDataForNetworkInterfaces(res, metaData.interfaceType);
+        } else {
+          res = this.getCardFieldDataForDSC(res);
+        }
         res = Utility.getLodash().cloneDeep(res);
       }
     }
     return res;
+
   }
+
+  getCardFieldDataForDSC(res: RepeaterData[]) {
+    res[0].values = this.chart.naples.map((naple: ClusterDistributedServiceCard) => {
+      return {
+        label: naple.spec.id,
+        value: naple.status['primary-mac']
+      };
+    });
+    return res;
+  }
+
+  getCardFieldDataForNetworkInterfaces(res: RepeaterData[], type: string) {
+    res[0].values = this.chart.networkInterfacesTypeMap[type].map((ni: NetworkNetworkInterface) => {
+      console.log(ni);
+      return {
+        label: ni.meta.name,
+        value: ni.meta.name
+      };
+    });
+    return res;
+  }
+
+  getSelectorObjectName(transform) {
+    const metaData = this.getMeasurementMetadata(transform.measurement);
+    if (metaData && metaData.objectKind === 'NetworkInterface') {
+    return 'Interfaces';
+    }
+    return 'DSCs';
+    }
 
   // check how may cards selected before we submit this event to the transformer
   onCardValuesChanged (event: any, transform: any) {

@@ -276,11 +276,11 @@
        class="telemetrychartedit-field-selector-edit">
     <div fxFlex="nogrow"
          class="telemetrychartedit-field-selector-title telemetrychartedit-field-label">Select
-      DSCs: </div>
+      {{getSelectorObjectName(transform)}}:</div>
     <app-repeater fxFlex="auto"
                   [enableMultiSelectAll]="false"
                   [enableMultiSelectFilter]="true"
-                  [data]="getCardFieldData(transform.fieldData)"
+                  [data]="getCardFieldData(transform.fieldData, transform)"
                   [formArray]="transform.formArray"
                   [keyDropdownFilter]="true"
                   (repeaterValues)="onCardValuesChanged($event, transform)"
