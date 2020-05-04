@@ -195,7 +195,6 @@ var _ = Describe("session limit tests", func() {
 		Eventually(func() error {
 			return VerifyFirewallPropagation(defaultFwp)
 		}).Should(Succeed())
-		ts.model.AfterTestCommon()
 	})
 
 	Context("enable disable session limit config test", func() {

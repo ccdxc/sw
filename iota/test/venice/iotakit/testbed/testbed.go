@@ -2142,7 +2142,7 @@ func (tb *TestBed) CheckIotaClusterHealth() error {
 
 	for _, h := range healthResp.Health {
 		if h.HealthCode != iota.NodeHealth_HEALTH_OK {
-			log.Errorf("Testbed unhealthy. HealthCode: %v | Node: %v", h.HealthCode, h.NodeName)
+			log.Errorf("Testbed unhealthy. HealthCode: %v | Node: %v, Msg : %v", h.HealthCode, h.NodeName, h.Message)
 			return fmt.Errorf("Cluster health check failed")
 		}
 	}

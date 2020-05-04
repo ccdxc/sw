@@ -17,7 +17,6 @@ var _ = Describe("smartnic tests with venice cluster triggers", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Venice node reload tests", func() {

@@ -17,7 +17,6 @@ var _ = Describe("techsupport tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Iota Techsupport tests", func() {

@@ -27,7 +27,6 @@ var _ = Describe("Routing Config Tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Routing tests", func() {

@@ -29,7 +29,6 @@ var _ = Describe("rollout tests", func() {
 			ts.model.RunNaplesCommand(nc, "rm /data/upgrade_to_same_firmware_allowed")
 			return nil
 		})
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Iota Rollout tests", func() {

@@ -15,7 +15,6 @@ var _ = Describe("workload tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Basic workload tests", func() {

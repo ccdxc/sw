@@ -25,7 +25,6 @@ var _ = Describe("metrics test", func() {
 		startTime = time.Now().UTC()
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 	})
 

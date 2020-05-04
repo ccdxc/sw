@@ -26,7 +26,6 @@ var _ = Describe("Interface mirror tests", func() {
 	AfterEach(func() {
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
-		ts.model.AfterTestCommon()
 	})
 	Context("Uplink mirror tests", func() {
 

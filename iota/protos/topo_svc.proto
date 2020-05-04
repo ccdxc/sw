@@ -726,6 +726,9 @@ message NodeHealth {
 
     // Health code of the node
     HealthCode health_code   = 3;
+
+    // optionally set the message to indicate exactly why node health is bad
+    string message = 4;
 }
 
 message NetworkQosClass {

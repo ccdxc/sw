@@ -265,7 +265,6 @@ var _ = Describe("firewall policy model tests", func() {
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
-		ts.model.AfterTestCommon()
 	})
 	Context("policy model tests", func() {
 		It("Should be able to verify whitelist policies", func() {

@@ -33,7 +33,6 @@ var _ = Describe("firewall whitelist tests", func() {
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
-		ts.model.AfterTestCommon()
 	})
 	Context("basic whitelist tests", func() {
 		It("Should not ping between any workload without permit rules", func() {

@@ -40,7 +40,6 @@ var _ = Describe("tests for storing firewall logs in object store and elastic", 
 		Eventually(func() error {
 			return ts.model.VerifyPolicyStatus(ts.model.DefaultNetworkSecurityPolicy())
 		}).Should(Succeed())
-		ts.model.AfterTestCommon()
 	})
 
 	// TODO: Checking exact losg needs much more backend work before tests can be written for it.

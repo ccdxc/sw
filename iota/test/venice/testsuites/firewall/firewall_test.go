@@ -32,7 +32,6 @@ var _ = Describe("firewall tests", func() {
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Basic firewall tests", func() {

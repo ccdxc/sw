@@ -20,7 +20,6 @@ var _ = Describe("events tests", func() {
 	AfterEach(func() {
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Basic events tests", func() {

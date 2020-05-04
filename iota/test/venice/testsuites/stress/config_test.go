@@ -65,7 +65,6 @@ var _ = Describe("Config Stress tests", func() {
 		//Expect(err).ShouldNot(HaveOccurred())
 		_, err = ts.model.StopCommands(fwLogCmdCtx)
 		//Expect(err).ShouldNot(HaveOccurred())
-		ts.tb.AfterTestCommon()
 		*/
 	})
 

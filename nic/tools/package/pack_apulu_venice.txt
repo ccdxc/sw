@@ -17,7 +17,8 @@ nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs_venice.sh             /nic/tools/bri
 
 # Naples SIM
 /usr/lib64/libltdl.so.7                                           /nic/lib64/
-nic/conf/$PIPELINE/device.json                                    /nic/conf/$PIPELINE/
+# making sure sim and real naples have same number of PFs
+nic/conf/$PIPELINE/device-pf6.json                                /nic/conf/$PIPELINE/device.json
 nic/conf/$PIPELINE/catalog.json                                   /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/serdes_68-0003.json                            /nic/conf/$PIPELINE/
 nic/sim/naples/start-naples.sh                                    /nic/tools/

@@ -19,7 +19,6 @@ var _ = Describe("smartnic tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Basic smartnic tests", func() {

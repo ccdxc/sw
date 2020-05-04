@@ -34,7 +34,6 @@ var _ = Describe("Vc hub workload tests", func() {
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Bring up teardown workloads", func() {

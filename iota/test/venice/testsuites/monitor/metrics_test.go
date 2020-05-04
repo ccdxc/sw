@@ -29,7 +29,6 @@ var _ = Describe("metrics test", func() {
 	})
 	AfterEach(func() {
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Verify flowdropmetrics ", func() {

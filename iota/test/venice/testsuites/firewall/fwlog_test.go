@@ -35,7 +35,6 @@ var _ = Describe("fwlog tests", func() {
 		Eventually(func() error {
 			return ts.model.VerifyPolicyStatus(ts.model.DefaultNetworkSecurityPolicy())
 		}).Should(Succeed())
-		ts.model.AfterTestCommon()
 	})
 
 	Context("verify fwlog on traffic ", func() {

@@ -48,7 +48,6 @@ type SysModelInterface interface {
 	ForEachVeniceNode(fn objects.VeniceNodeIteratorFn) error
 	ForEachFakeNaples(fn objects.NaplesIteratorFn) error
 
-	AfterTestCommon() error
 	PrintResult()
 	Testbed() *testbed.TestBed
 	//deleteWorkload(wr *objects.Workload) error

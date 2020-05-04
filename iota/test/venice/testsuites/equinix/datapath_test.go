@@ -34,7 +34,6 @@ var _ = Describe("Datapath", func() {
 		allWc = ts.model.Workloads()
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Datapath Tests", func() {

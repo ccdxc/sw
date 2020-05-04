@@ -16,7 +16,6 @@ var _ = Describe("Equinix Bring up", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 		Eventually(func() error {
 			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())

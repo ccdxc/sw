@@ -1165,7 +1165,7 @@ func (sm *SysModel) readNodeUUIDs(nodes []*testbed.TestNode) error {
 
 	//Read NODE UUID as ssh is now up and we can do it now.
 	for _, node := range nodes {
-		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+		if testbed.IsNaples(node.Personality) {
 			for _, naples := range node.NaplesConfigs.Configs {
 				uuid, err := readUUID(node.NodeName, naples.Name)
 				if err != nil {

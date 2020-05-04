@@ -38,7 +38,6 @@ var _ = Describe("venice cluster tests", func() {
 		configSnapShot = ss
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 		name := string(configSnapShot[strings.LastIndex(configSnapShot, "/")+1:])
 		Expect(ts.model.VeniceNodeRestoreConfig(ts.model.VeniceNodes(), name)).Should(Succeed())
 	})

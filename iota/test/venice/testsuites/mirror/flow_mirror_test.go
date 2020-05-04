@@ -122,7 +122,6 @@ var _ = Describe("Flow mirror tests", func() {
 	AfterEach(func() {
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
-		ts.model.AfterTestCommon()
 	})
 	Context("Flow Mirror tests", func() {
 		It("Mirror packets to collector and check TCPDUMP", func() {

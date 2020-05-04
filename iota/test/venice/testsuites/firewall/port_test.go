@@ -15,7 +15,6 @@ var _ = Describe("Port tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Basic port flap tests", func() {

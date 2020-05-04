@@ -29,7 +29,6 @@ var _ = Describe("firewall scale tests", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			return nil
 		})
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Scale TCP connections tests", func() {

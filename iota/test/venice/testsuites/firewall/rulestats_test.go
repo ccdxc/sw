@@ -28,7 +28,6 @@ var _ = Describe("rulestats tests", func() {
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Verify rulestats on traffic ", func() {

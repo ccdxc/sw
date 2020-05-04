@@ -50,7 +50,6 @@ var _ = Describe("Basnet Sanity", func() {
 		dscInsertionProfile.Delete()
 		dscFlowawareProfile.Delete()
 		dscEnforcedProfile.Delete()
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Basenet Tests", func() {

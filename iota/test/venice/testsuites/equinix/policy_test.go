@@ -289,8 +289,7 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 	return nil
 }
 
-// 	Skip("Disabling multi-polcy tests till support is available")
-var _ = PDescribe("multiple policies", func() {
+var _ = Describe("multiple policies", func() {
 	var startTime time.Time
 	BeforeEach(func() {
 		// verify cluster is in good health
@@ -304,7 +303,6 @@ var _ = PDescribe("multiple policies", func() {
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 		nwc, err := getNetworkCollection()
@@ -438,7 +436,7 @@ var _ = PDescribe("multiple policies", func() {
 				return ts.model.UDPSession(workloadPairAcrossNetwork, 9200)
 			}).Should(Succeed())
 		})
-		It ("Provider AllowAll, User DenyAll, Samesubnet", func() {
+		It("Provider AllowAll, User DenyAll, Samesubnet", func() {
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
@@ -461,7 +459,6 @@ var _ = PDescribe("multiple policies", func() {
 				workloadPairWithinNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
 			egress_policy.Add(ts.model.NewNetworkSecurityPolicy("p4").AddRuleForWorkloadCombo(
 				workloadPairWithinNetwork, "any", "any", "any", "any", "DENY"))
-
 
 			ingress_policy.SetTenant(selNetwork.GetTenant())
 			egress_policy.SetTenant(selNetwork.GetTenant())
@@ -496,7 +493,7 @@ var _ = PDescribe("multiple policies", func() {
 				return ts.model.TCPSessionFails(workloadPairWithinNetwork.ReversePairs(), 80)
 			}).Should(Succeed())
 		})
-		It ("Provider AllowAll, User DenyAll, across Subnets", func() {
+		It("Provider AllowAll, User DenyAll, across Subnets", func() {
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
@@ -522,7 +519,6 @@ var _ = PDescribe("multiple policies", func() {
 				workloadPairAcrossNetwork.ReversePairs(), "workload-subnet", "workload-subnet", "any", "any", "PERMIT")
 			egress_policy.Add(ts.model.NewNetworkSecurityPolicy("p4").AddRuleForWorkloadCombo(
 				workloadPairAcrossNetwork, "any", "any", "any", "any", "DENY"))
-
 
 			ingress_policy.SetTenant(selNetwork.GetTenant())
 			egress_policy.SetTenant(selNetwork.GetTenant())
@@ -593,7 +589,6 @@ var _ = PDescribe("multiple policies", func() {
 				workloadPairWithinNetwork, "any", "any", "any", "any", "PERMIT")
 			egress_policy.Add(pol2)
 
-
 			ingress_policy.SetTenant(selNetwork.GetTenant())
 			egress_policy.SetTenant(selNetwork.GetTenant())
 			Expect(ingress_policy.Commit()).Should(Succeed())
@@ -658,7 +653,6 @@ var _ = Describe("firewall policy model tests", func() {
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).ShouldNot(HaveOccurred())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 		//Expect No Service is stopped
 		Expect(ts.model.ServiceStoppedEvents(startTime, ts.model.Naples()).Len(0))
 		nwc, err := getNetworkCollection()

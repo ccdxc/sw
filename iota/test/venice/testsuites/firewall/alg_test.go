@@ -31,7 +31,6 @@ var _ = Describe("firewall ALG tests", func() {
 
 		// recreate default allow policy
 		Expect(ts.model.DefaultNetworkSecurityPolicy().Restore()).ShouldNot(HaveOccurred())
-		ts.model.AfterTestCommon()
 	})
 	Context("ALG tests", func() {
 		It("Should be able to FTP get with FTP ALG policy", func() {

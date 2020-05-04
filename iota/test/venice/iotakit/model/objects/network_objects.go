@@ -44,6 +44,10 @@ func (n *NetworkCollection) Subnets() []*Network {
 	return n.subnets
 }
 
+func (n *NetworkCollection) Count() int {
+	return len(n.subnets)
+}
+
 func (n *NetworkCollection) AddSubnet(nw *Network) {
 	n.subnets = append(n.subnets, nw)
 }

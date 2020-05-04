@@ -23,7 +23,6 @@ var _ = Describe("Interface tests", func() {
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
-		ts.model.AfterTestCommon()
 	})
 
 	Context("Interfaces", func() {

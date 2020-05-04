@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/grpc/connectivity"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/sync/errgroup"
@@ -44,6 +46,7 @@ func (n *TestNode) setupAgent() error {
 		return errors.New(msg)
 	}
 
+	n.GrpcClient = c
 	n.AgentClient = iota.NewIotaAgentApiClient(c.Client)
 
 	return nil
@@ -282,6 +285,9 @@ func (n *TestNode) IpmiNodeControl(name string, restoreState bool, method string
 		}
 	}
 
+	if n.GrpcClient != nil {
+		n.GrpcClient.Client.Close()
+	}
 	if err = n.IpmiNodeCommand(method, useNcsi); err != nil {
 		log.Errorf("ipmi control of node %v failed. Err: %v", n.Node.Name, err)
 		return err
@@ -554,6 +560,10 @@ func (n *TestNode) ReloadNode(name string, restoreState bool, method string, use
 		return err
 	}
 
+	if n.GrpcClient != nil {
+		n.GrpcClient.Client.Close()
+		n.GrpcClient = nil
+	}
 	if err := n.RestartNode(method, useNcsi); err != nil {
 		log.Errorf("Restart node %v failed. Err: %v", n.Node.Name, err)
 		return err
@@ -765,8 +775,14 @@ func (n *TestNode) GetControlledNode(ip string) TestNodeInterface {
 }
 
 //CheckHealth  checks health of node
-func (n *TestNode) CheckHealth(ctx context.Context, heatth *iota.NodeHealth) (*iota.NodeHealth, error) {
-	return n.AgentClient.CheckHealth(ctx, heatth)
+func (n *TestNode) CheckHealth(ctx context.Context, health *iota.NodeHealth) (*iota.NodeHealth, error) {
+	if n.GrpcClient == nil || n.GrpcClient.Client == nil ||
+		(n.GrpcClient.Client.GetState() != connectivity.Ready && n.GrpcClient.Client.GetState() != connectivity.Idle) {
+		health.HealthCode = iota.NodeHealth_NODE_DOWN
+		health.NodeName = n.GetNodeInfo().Name
+		health.Message = fmt.Sprintf("Node %v connectivity is down", n.GetNodeInfo().Name)
+	}
+	return n.AgentClient.CheckHealth(ctx, health)
 }
 
 //NodeConnector returns connector

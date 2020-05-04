@@ -77,7 +77,6 @@ var _ = Describe("IPAM Tests", func() {
 		// delete Custom IPAM policy
 		deleteIPAMPolicy(customIpam, tenant)
 
-		ts.model.AfterTestCommon()
 	})
 
 	Context("IPAM Tests", func() {
@@ -273,12 +272,13 @@ func deleteIPAMPolicy(ipam, tenant string) {
 func GetNetworkCollectionFromVPC(vpc, tenant string) (*objects.NetworkCollection, error) {
 
 	numSubnets := 0
-	if ts.tb.HasNaplesHW() {
-		// we dont want to get more than available workloads
-		numSubnets = len(ts.model.Workloads().Workloads) / len(ts.model.Hosts().Hosts)
-	} else if ts.tb.HasNaplesSim() {
-		numSubnets = 8
+
+	ten, err := ts.model.ConfigClient().ListTenant()
+	if err != nil {
+		return nil, err
 	}
+
+	numSubnets = ts.model.Networks(ten[0].Name).Count()
 
 	return objects.VpcNetworkCollection(tenant, vpc, numSubnets, ts.model.ConfigClient())
 }
