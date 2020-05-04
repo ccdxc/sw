@@ -1470,6 +1470,27 @@ func (a *ApuluAPI) ReplayConfigs() error {
 		}
 	}
 
+	// Replay NetworkSecurityPolicy Object
+	nspKind := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+	}
+
+	nsps, err := a.HandleNetworkSecurityPolicy(types.List, nspKind)
+	if err == nil {
+		for _, nsp := range nsps {
+			creator, ok := nsp.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", nsp.Kind, nsp.GetKey())
+				a.InfraAPI.Delete(nsp.Kind, nsp.GetKey())
+
+				log.Info("Replaying persisted Network Security Policy object")
+				if _, err := a.HandleNetworkSecurityPolicy(types.Create, nsp); err != nil {
+					log.Errorf("Failed to recreate Network Security Policy: %v. Err: %v", nsp.GetKey(), err)
+				}
+			}
+		}
+	}
+
 	// Replay Network Object
 	netKind := netproto.Network{
 		TypeMeta: api.TypeMeta{Kind: "Network"},
