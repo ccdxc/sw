@@ -106,10 +106,10 @@ ftlv4_move_cb (base_table_entry_t *entry, handle_t old_handle,
     }
 
     if (v4entry->get_flow_role() == TCP_FLOW_INITIATOR) {
-        g_ses_cb (ses_id, new_sindex, new_pindex, true, 
+        g_ses_cb (ses_id, new_pindex, new_sindex, true, 
                   move_complete);
     } else {
-        g_ses_cb (ses_id, new_sindex, new_pindex, false,
+        g_ses_cb (ses_id, new_pindex, new_sindex, false,
                   move_complete);
     }
 }
