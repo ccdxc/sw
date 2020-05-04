@@ -12,7 +12,7 @@ struct phv_     p;
 ecmp_info:
     seq             c1, d.ecmp_info_d.num_nexthops, r0
     bcf             [c1], ecmp_invalid
-    mod             r1, k.p4e_i2e_entropy_hash[3:0], d.ecmp_info_d.num_nexthops
+    mod             r1, k.p4e_i2e_entropy_hash[7:0], d.ecmp_info_d.num_nexthops
     phvwr           p.rewrite_metadata_nexthop_type, d.ecmp_info_d.nexthop_type
     seq             c1, d.ecmp_info_d.nexthop_type, NEXTHOP_TYPE_TUNNEL
     bcf             [c1], ecmp_tunnel

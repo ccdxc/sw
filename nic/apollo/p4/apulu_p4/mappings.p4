@@ -255,6 +255,7 @@ action mapping_info(entry_valid, is_local, pad11, nexthop_valid,
             modify_field(p4e_to_arm.nexthop_id, txdma_to_p4e.nexthop_id);
             modify_field(p4e_to_arm.mapping_hit, TRUE);
             modify_field(p4e_to_arm.is_local, is_local);
+            modify_field(control_metadata.is_local, is_local);
         } else {
             if ((nexthop_valid == TRUE) and
                 (scratch_metadata.priority <= p4e_i2e.priority)) {

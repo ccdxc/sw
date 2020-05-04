@@ -61,7 +61,7 @@ action vnic_rx_stats(in_packets, in_bytes) {
 @pragma table_write
 table vnic_rx_stats {
     reads {
-        p4e_i2e.vnic_id : exact;
+        vnic_metadata.rx_vnic_id    : exact;
     }
     actions {
         vnic_rx_stats;
@@ -87,7 +87,7 @@ table p4e_drop_stats {
 }
 
 control egress_stats {
-    if (control_metadata.rx_packet == TRUE) {
+    if (control_metadata.is_local == TRUE) {
         apply(vnic_rx_stats);
     }
 }

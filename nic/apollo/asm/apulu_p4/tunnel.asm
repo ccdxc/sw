@@ -12,7 +12,7 @@ struct phv_         p;
 tunnel_info:
     seq             c1, d.tunnel_info_d.num_nexthops, r0
     bcf             [c1], tunnel_invalid
-    mod             r1, k.p4e_i2e_entropy_hash[3:0], \
+    mod             r1, k.p4e_i2e_entropy_hash[15:8], \
                         d.tunnel_info_d.num_nexthops
     seq             c1, d.tunnel_info_d.ip_type, IPTYPE_IPV4
     phvwr.c1        p.ipv4_0_dstAddr, d.tunnel_info_d.dipo

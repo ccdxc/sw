@@ -99,6 +99,7 @@ mapping_hit:
 mapping_hit_arm:
     phvwr           p.p4e_to_arm_nexthop_id, k.{txdma_to_p4e_nexthop_id}.hx
     phvwr           p.p4e_to_arm_nexthop_type, k.txdma_to_p4e_nexthop_type
+    phvwr           p.control_metadata_is_local, d.mapping_info_d.is_local
     phvwr.e         p.p4e_to_arm_is_local, d.mapping_info_d.is_local
     phvwr.f         p.p4e_to_arm_mapping_hit, TRUE
 

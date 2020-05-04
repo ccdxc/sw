@@ -22,11 +22,10 @@ session_info:
     // r7 : packet length
     sub             r7, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1
     phvwr           p.capri_p4_intrinsic_packet_len, r7
+    phvwr           p.control_metadata_rx_packet, k.p4e_i2e_rx_packet
     bcf             [c1],session_info_error
-    phvwrpair        p.control_metadata_update_checksum, \
-                        k.p4e_i2e_update_checksum, \
-                        p.control_metadata_rx_packet, \
-                        k.p4e_i2e_rx_packet
+    phvwr           p.control_metadata_update_checksum, \
+                        k.p4e_i2e_update_checksum
 
     seq             c1, k.egress_recirc_valid, FALSE
     bcf             [!c1|!c7], session_info_common

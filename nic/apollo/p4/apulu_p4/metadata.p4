@@ -82,6 +82,7 @@ header_type control_metadata_t {
         parse_tcp_option_error  : 1;
         tcp_option_ws_valid     : 1;
         tcp_option_mss_valid    : 1;
+        is_local                : 1;
     }
 }
 
