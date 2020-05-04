@@ -3229,6 +3229,50 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "jsType": "number"
     },
     {
+      "name": "TxPps",
+      "displayName": "Tx PPS",
+      "description": "Transmit BW Packets per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxBytesps",
+      "displayName": "Tx BPS",
+      "description": "Transmit BW Bytes per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPps",
+      "displayName": "Rx PPS",
+      "description": "Receive BW Packets per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxBytesps",
+      "displayName": "Rx BPS",
+      "description": "Receive BW Bytes per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
       "name": "reporterID",
       "description": "Name of reporting object",
       "baseType": "string",
@@ -3597,6 +3641,50 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "FramesTxPause",
       "displayName": "Tx Pause Frames",
       "description": "Frames Transmitted of type PAUSE",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxPps",
+      "displayName": "Tx PPS",
+      "description": "Transmit BW Packets per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "TxBytesps",
+      "displayName": "Tx BPS",
+      "description": "Transmit BW Bytes per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxPps",
+      "displayName": "Rx PPS",
+      "description": "Receive BW Packets per second",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "RxBytesps",
+      "displayName": "Rx BPS",
+      "description": "Receive BW Bytes per second",
       "units": "Count",
       "baseType": "Counter",
       "tags": [
@@ -5331,6 +5419,50 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "RcLegacyIntpinChangedInt",
       "displayName": "rc_legacy_intpin_changed_int",
       "description": "rc_legacy_intpin_changed_int",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsdSbeInterrupt",
+      "displayName": "ppsd_sbe_interrupt",
+      "description": "ppsd_sbe_interrupt",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PpsdDbeInterrupt",
+      "displayName": "ppsd_dbe_interrupt",
+      "description": "ppsd_dbe_interrupt",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "SbusErrInterrupt",
+      "displayName": "sbus_err_interrupt",
+      "description": "sbus_err_interrupt",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "PoweronRetries",
+      "displayName": "poweron_retries",
+      "description": "poweron_retries",
       "units": "Count",
       "baseType": "Counter",
       "tags": [
