@@ -144,7 +144,7 @@ func TestIPAddressCheckInWorkload(t *testing.T) {
 		Spec: workload.WorkloadSpec{
 			Interfaces: []workload.WorkloadIntfSpec{
 				workload.WorkloadIntfSpec{
-					IpAddresses: []string{"1.2.3.4", "2.3.4.5"},
+					IpAddresses: []string{"1.2.3.4", "2.3.4.5", "3.3.3.3", "4.4.4.4", "5.5.5.5", "6.6.6.6"},
 				},
 			},
 		},
@@ -163,7 +163,7 @@ func TestIPAddressCheckInWorkload(t *testing.T) {
 		Spec: workload.WorkloadSpec{
 			Interfaces: []workload.WorkloadIntfSpec{
 				workload.WorkloadIntfSpec{
-					IpAddresses: []string{"1.2.3.4", "2.3.4.5"},
+					IpAddresses: []string{"1.2.3.4", "2.3.4.5", "3.3.3.3", "4.4.4.4", "5.5.5.5", "6.6.6.6"},
 				},
 			},
 		},

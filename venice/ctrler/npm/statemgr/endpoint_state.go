@@ -81,8 +81,8 @@ func convertEndpoint(eps *workload.Endpoint) *netproto.Endpoint {
 		ObjectMeta: agentObjectMeta(eps.ObjectMeta),
 		Spec: netproto.EndpointSpec{
 			NetworkName:   eps.Status.Network,
-			IPv4Addresses: []string{eps.Status.IPv4Address},
-			IPv6Addresses: []string{eps.Status.IPv6Address},
+			IPv4Addresses: eps.Status.IPv4Addresses,
+			IPv6Addresses: eps.Status.IPv6Addresses,
 			MacAddress:    eps.Status.MacAddress,
 			UsegVlan:      eps.Status.MicroSegmentVlan,
 			NodeUUID:      eps.Spec.NodeUUID,
@@ -194,6 +194,12 @@ func NewEndpointState(epinfo *ctkit.Endpoint, stateMgr *Statemgr) (*EndpointStat
 		stateMgr: stateMgr,
 	}
 	epinfo.HandlerCtx = &eps
+
+	//move old fields to new state
+	if eps.Endpoint.Status.IPv4Address != "" {
+		eps.Endpoint.Status.IPv4Addresses = append(eps.Endpoint.Status.IPv4Addresses, eps.Endpoint.Status.IPv4Address)
+		eps.Endpoint.Status.IPv4Address = ""
+	}
 
 	// attach security groups
 	err := eps.attachSecurityGroups()
@@ -441,9 +447,9 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 	} else {
 
 		// free the IPv4 address
-		if eps.Endpoint.Status.IPv4Address != "" {
+		for _, ipv4add := range eps.Endpoint.Status.IPv4Addresses {
 			ns.Lock()
-			err = ns.freeIPv4Addr(eps.Endpoint.Status.IPv4Address)
+			err = ns.freeIPv4Addr(ipv4add)
 			ns.Unlock()
 			if err != nil {
 				log.Errorf("Error freeing the endpoint address. Err: %v", err)

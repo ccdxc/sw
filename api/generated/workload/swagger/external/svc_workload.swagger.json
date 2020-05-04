@@ -433,6 +433,46 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.ipv4-addresses",
+            "description": "IPv4 addresses of the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.ipv4-gateways",
+            "description": "IPv4 gateways for the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.ipv6-addresses",
+            "description": "IPv6 addresses for the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.ipv6-gateways",
+            "description": "IPv6 gateways.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -855,6 +895,46 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.ipv4-addresses",
+            "description": "IPv4 addresses of the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.ipv4-gateways",
+            "description": "IPv4 gateways for the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.ipv6-addresses",
+            "description": "IPv6 addresses for the endpoint.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status.ipv6-gateways",
+            "description": "IPv6 gateways.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -4137,6 +4217,34 @@
         "migration": {
           "$ref": "#/definitions/workloadEndpointMigrationStatus",
           "description": "Used to store state if the endpoint is migrating."
+        },
+        "ipv4-addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IPv4 addresses of the endpoint."
+        },
+        "ipv4-gateways": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IPv4 gateways for the endpoint."
+        },
+        "ipv6-addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IPv6 addresses for the endpoint."
+        },
+        "ipv6-gateways": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IPv6 gateways."
         }
       },
       "description": "status part of Endpoint object."

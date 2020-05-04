@@ -488,7 +488,7 @@ func (ws *WorkloadState) createEndpoints() error {
 			},
 		}
 		if len(ws.Workload.Spec.Interfaces[ii].IpAddresses) > 0 {
-			epInfo.Status.IPv4Address = ws.Workload.Spec.Interfaces[ii].IpAddresses[0]
+			epInfo.Status.IPv4Addresses = ws.Workload.Spec.Interfaces[ii].IpAddresses
 		}
 
 		if ws.Workload.Status.MigrationStatus != nil && ws.Workload.Status.MigrationStatus.Stage == workload.WorkloadMigrationStatus_MIGRATION_FROM_NON_PEN_HOST.String() {
@@ -872,7 +872,7 @@ func (ws *WorkloadState) updateEndpoints() error {
 			}
 
 			if len(ws.Workload.Spec.Interfaces[ii].IpAddresses) > 0 {
-				epInfo.Status.IPv4Address = ws.Workload.Spec.Interfaces[ii].IpAddresses[0]
+				epInfo.Status.IPv4Addresses = ws.Workload.Spec.Interfaces[ii].IpAddresses
 			}
 
 			// update endpoint

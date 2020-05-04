@@ -25,6 +25,10 @@ export interface IWorkloadEndpointStatus {
     'micro-segment-vlan'?: number;
     'workload-attributes'?: object;
     'migration'?: IWorkloadEndpointMigrationStatus;
+    'ipv4-addresses'?: Array<string>;
+    'ipv4-gateways'?: Array<string>;
+    'ipv6-addresses'?: Array<string>;
+    'ipv6-gateways'?: Array<string>;
     '_ui'?: any;
 }
 
@@ -62,6 +66,14 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     'workload-attributes': object = null;
     /** Used to store state if the endpoint is migrating. */
     'migration': WorkloadEndpointMigrationStatus = null;
+    /** IPv4 addresses of the endpoint. */
+    'ipv4-addresses': Array<string> = null;
+    /** IPv4 gateways for the endpoint. */
+    'ipv4-gateways': Array<string> = null;
+    /** IPv6 addresses for the endpoint. */
+    'ipv6-addresses': Array<string> = null;
+    /** IPv6 gateways. */
+    'ipv6-gateways': Array<string> = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointStatus]: PropInfoItem } = {
         'workload-name': {
             description:  `VM or container name.`,
@@ -139,6 +151,26 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
             required: false,
             type: 'object'
         },
+        'ipv4-addresses': {
+            description:  `IPv4 addresses of the endpoint.`,
+            required: false,
+            type: 'Array<string>'
+        },
+        'ipv4-gateways': {
+            description:  `IPv4 gateways for the endpoint.`,
+            required: false,
+            type: 'Array<string>'
+        },
+        'ipv6-addresses': {
+            description:  `IPv6 addresses for the endpoint.`,
+            required: false,
+            type: 'Array<string>'
+        },
+        'ipv6-gateways': {
+            description:  `IPv6 gateways.`,
+            required: false,
+            type: 'Array<string>'
+        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -165,6 +197,10 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
         super();
         this['SecurityGroups'] = new Array<string>();
         this['migration'] = new WorkloadEndpointMigrationStatus();
+        this['ipv4-addresses'] = new Array<string>();
+        this['ipv4-gateways'] = new Array<string>();
+        this['ipv6-addresses'] = new Array<string>();
+        this['ipv6-gateways'] = new Array<string>();
         this._inputValue = values;
         this.setValues(values, setDefaults);
     }
@@ -280,6 +316,34 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
         } else {
             this['migration'].setValues(null, fillDefaults);
         }
+        if (values && values['ipv4-addresses'] != null) {
+            this['ipv4-addresses'] = values['ipv4-addresses'];
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv4-addresses')) {
+            this['ipv4-addresses'] = [ WorkloadEndpointStatus.propInfo['ipv4-addresses'].default];
+        } else {
+            this['ipv4-addresses'] = [];
+        }
+        if (values && values['ipv4-gateways'] != null) {
+            this['ipv4-gateways'] = values['ipv4-gateways'];
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv4-gateways')) {
+            this['ipv4-gateways'] = [ WorkloadEndpointStatus.propInfo['ipv4-gateways'].default];
+        } else {
+            this['ipv4-gateways'] = [];
+        }
+        if (values && values['ipv6-addresses'] != null) {
+            this['ipv6-addresses'] = values['ipv6-addresses'];
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv6-addresses')) {
+            this['ipv6-addresses'] = [ WorkloadEndpointStatus.propInfo['ipv6-addresses'].default];
+        } else {
+            this['ipv6-addresses'] = [];
+        }
+        if (values && values['ipv6-gateways'] != null) {
+            this['ipv6-gateways'] = values['ipv6-gateways'];
+        } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv6-gateways')) {
+            this['ipv6-gateways'] = [ WorkloadEndpointStatus.propInfo['ipv6-gateways'].default];
+        } else {
+            this['ipv6-gateways'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -302,6 +366,10 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
                 'micro-segment-vlan': CustomFormControl(new FormControl(this['micro-segment-vlan']), WorkloadEndpointStatus.propInfo['micro-segment-vlan']),
                 'workload-attributes': CustomFormControl(new FormControl(this['workload-attributes']), WorkloadEndpointStatus.propInfo['workload-attributes']),
                 'migration': CustomFormGroup(this['migration'].$formGroup, WorkloadEndpointStatus.propInfo['migration'].required),
+                'ipv4-addresses': CustomFormControl(new FormControl(this['ipv4-addresses']), WorkloadEndpointStatus.propInfo['ipv4-addresses']),
+                'ipv4-gateways': CustomFormControl(new FormControl(this['ipv4-gateways']), WorkloadEndpointStatus.propInfo['ipv4-gateways']),
+                'ipv6-addresses': CustomFormControl(new FormControl(this['ipv6-addresses']), WorkloadEndpointStatus.propInfo['ipv6-addresses']),
+                'ipv6-gateways': CustomFormControl(new FormControl(this['ipv6-gateways']), WorkloadEndpointStatus.propInfo['ipv6-gateways']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('migration') as FormGroup).controls).forEach(field => {
@@ -333,6 +401,10 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
             this._formGroup.controls['micro-segment-vlan'].setValue(this['micro-segment-vlan']);
             this._formGroup.controls['workload-attributes'].setValue(this['workload-attributes']);
             this['migration'].setFormGroupValuesToBeModelValues();
+            this._formGroup.controls['ipv4-addresses'].setValue(this['ipv4-addresses']);
+            this._formGroup.controls['ipv4-gateways'].setValue(this['ipv4-gateways']);
+            this._formGroup.controls['ipv6-addresses'].setValue(this['ipv6-addresses']);
+            this._formGroup.controls['ipv6-gateways'].setValue(this['ipv6-gateways']);
         }
     }
 }

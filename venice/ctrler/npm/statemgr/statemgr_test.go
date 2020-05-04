@@ -2221,10 +2221,10 @@ func TestWorkloadUpdate(t *testing.T) {
 
 	AssertEventually(t, func() (bool, interface{}) {
 		foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0405")
-		if err == nil && (foundEp.Endpoint.Status.IPv4Address == "1.2.3.4/32") {
+		if err == nil && (foundEp.Endpoint.Status.IPv4Addresses[0] == "1.2.3.4/32") {
 			return true, nil
 		}
-		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Address)
+		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Addresses)
 		return false, nil
 	}, "Endpoint not found", "1ms", "1s")
 
@@ -2236,10 +2236,10 @@ func TestWorkloadUpdate(t *testing.T) {
 
 	AssertEventually(t, func() (bool, interface{}) {
 		foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0405")
-		if err == nil && (foundEp.Endpoint.Status.IPv4Address == "1.2.3.5/32") {
+		if err == nil && (foundEp.Endpoint.Status.IPv4Addresses[0] == "1.2.3.5/32") {
 			return true, nil
 		}
-		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Address)
+		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Addresses)
 		return false, nil
 	}, "Endpoint not found", "1ms", "1s")
 
@@ -2251,10 +2251,10 @@ func TestWorkloadUpdate(t *testing.T) {
 
 	AssertEventually(t, func() (bool, interface{}) {
 		foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0405")
-		if err == nil && (foundEp.Endpoint.Status.IPv4Address == "") {
+		if err == nil && (len(foundEp.Endpoint.Status.IPv4Addresses) == 0) {
 			return true, nil
 		}
-		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Address)
+		fmt.Printf("IP Address %v", foundEp.Endpoint.Status.IPv4Addresses)
 		return false, nil
 	}, "Endpoint not found", "1ms", "1s")
 

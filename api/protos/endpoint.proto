@@ -58,6 +58,14 @@ message EndpointStatus {
     map<string, string> WorkloadAttributes  = 14 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-attributes,omitempty"];
     // Used to store state if the endpoint is migrating
     EndpointMigrationStatus Migration = 15 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "migration,omitempty"];
+    // IPv4 addresses of the endpoint
+    repeated string IPv4Addresses    = 16  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-addresses,omitempty"];
+    // IPv4 gateways for the endpoint
+    repeated string IPv4Gateways    = 17  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv4-gateways,omitempty"];
+    // IPv6 addresses for the endpoint
+    repeated string IPv6Addresses   = 18  [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-addresses,omitempty"];
+    // IPv6 gateways
+    repeated string IPv6Gateways    = 19 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateways,omitempty"];
 }
 
 // Endpoint represents a network endpoint

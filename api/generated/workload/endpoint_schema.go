@@ -59,9 +59,13 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"homing-host-addr":    api.CLIInfo{Path: "Spec.HomingHostAddr", Skip: false, Insert: "", Help: ""},
 			"homing-host-name":    api.CLIInfo{Path: "Status.HomingHostName", Skip: false, Insert: "", Help: ""},
 			"ipv4-address":        api.CLIInfo{Path: "Status.IPv4Address", Skip: false, Insert: "", Help: ""},
+			"ipv4-addresses":      api.CLIInfo{Path: "Status.IPv4Addresses", Skip: false, Insert: "", Help: ""},
 			"ipv4-gateway":        api.CLIInfo{Path: "Status.IPv4Gateway", Skip: false, Insert: "", Help: ""},
+			"ipv4-gateways":       api.CLIInfo{Path: "Status.IPv4Gateways", Skip: false, Insert: "", Help: ""},
 			"ipv6-address":        api.CLIInfo{Path: "Status.IPv6Address", Skip: false, Insert: "", Help: ""},
+			"ipv6-addresses":      api.CLIInfo{Path: "Status.IPv6Addresses", Skip: false, Insert: "", Help: ""},
 			"ipv6-gateway":        api.CLIInfo{Path: "Status.IPv6Gateway", Skip: false, Insert: "", Help: ""},
+			"ipv6-gateways":       api.CLIInfo{Path: "Status.IPv6Gateways", Skip: false, Insert: "", Help: ""},
 			"kind":                api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":              api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"mac-address":         api.CLIInfo{Path: "Status.MacAddress", Skip: false, Insert: "", Help: ""},
@@ -127,6 +131,14 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"WorkloadAttributes": api.Field{Name: "WorkloadAttributes", CLITag: api.CLIInfo{ID: "workload-attributes", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "workload-attributes", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "TYPE_STRING"},
 
 			"Migration": api.Field{Name: "Migration", CLITag: api.CLIInfo{ID: "migration", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "migration", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.EndpointMigrationStatus"},
+
+			"IPv4Addresses": api.Field{Name: "IPv4Addresses", CLITag: api.CLIInfo{ID: "ipv4-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipv4-addresses", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"IPv4Gateways": api.Field{Name: "IPv4Gateways", CLITag: api.CLIInfo{ID: "ipv4-gateways", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipv4-gateways", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"IPv6Addresses": api.Field{Name: "IPv6Addresses", CLITag: api.CLIInfo{ID: "ipv6-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipv6-addresses", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"IPv6Gateways": api.Field{Name: "IPv6Gateways", CLITag: api.CLIInfo{ID: "ipv6-gateways", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ipv6-gateways", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.EndpointStatus.WorkloadAttributesEntry": &api.Struct{
