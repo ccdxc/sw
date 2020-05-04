@@ -150,7 +150,7 @@ func TestDSCProfilePreCommitHooks(t *testing.T) {
 	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")
 
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "insertion_enforced", apiintf.UpdateOper, false, sampleProfile)
-	Assert(t, err != nil, "DSCProfilePrecommitHook did not return error with valid parameters")
+	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")
 
 	//Valid profile create/update Transparent/Basenet
 	sampleProfile.Spec.Features = cluster.FeatureSet{
@@ -163,10 +163,10 @@ func TestDSCProfilePreCommitHooks(t *testing.T) {
 	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")
 
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "insertion_enforced", apiintf.UpdateOper, false, sampleProfile)
-	Assert(t, err != nil, "DSCProfilePrecommitHook did not return error with valid parameters")
+	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")
 
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "transparent_flowaware", apiintf.UpdateOper, false, sampleProfile)
-	Assert(t, err != nil, "DSCProfilePrecommitHook did not return error with valid parameters")
+	AssertOk(t, err, "DSCProfilePrecommitHook did return error with valid parameters")
 
 	_, _, err = hooks.DSCProfilePreCommitHook(context.TODO(), kvs, txns, "default", apiintf.DeleteOper, false, defaultProfile)
 	Assert(t, err != nil, "DSCProfilePrecommitHook did not return error with valid parameters")

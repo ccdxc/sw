@@ -128,21 +128,7 @@ var _ = Describe("Basnet Sanity", func() {
 					return verifyDatapathCollection(workloadPairs, veniceCollector)
 				}).Should(Succeed())
 
-				Expect(ts.model.Naples().Decommission()).Should(Succeed())
-				Eventually(func() error {
-					return ts.model.Naples().IsNotAdmitted()
-				}).Should(Succeed())
-
 				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
-				Expect(ts.model.Naples().Admit()).Should(Succeed())
-				//reload Nodes so that it can Join
-				Eventually(func() error {
-					return ts.model.ReloadHosts(ts.model.Hosts())
-				}).Should(Succeed())
-
-				Eventually(func() error {
-					return ts.model.Naples().IsAdmitted()
-				}).Should(Succeed())
 
 				Eventually(func() error {
 					return verifyNoDatapathCollection(workloadPairs, veniceCollector)
@@ -157,7 +143,7 @@ var _ = Describe("Basnet Sanity", func() {
 		})
 
 		It("Move naples to insertion mode make sure traffic stops and restore it back with reset", func() {
-
+			Skip("Until vmotion init is fixed in hal, we can switch to insertion only once")
 			//totalNaples := len(ts.model.Naples().Nodes) + len(ts.model.Naples().FakeNodes)
 			for i := 0; i < int(ts.stress); i++ {
 				log.Infof("Basenet to Insertion mode iteration :  %v", i+1)
@@ -168,21 +154,7 @@ var _ = Describe("Basnet Sanity", func() {
 					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
 				}).ShouldNot(Succeed())
 
-				Expect(ts.model.Naples().Decommission()).Should(Succeed())
-				Eventually(func() error {
-					return ts.model.Naples().IsNotAdmitted()
-				}).Should(Succeed())
-
 				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
-				Expect(ts.model.Naples().Admit()).Should(Succeed())
-				//reload Nodes so that it can Join
-				Eventually(func() error {
-					return ts.model.ReloadHosts(ts.model.Hosts())
-				}).Should(Succeed())
-
-				Eventually(func() error {
-					return ts.model.Naples().IsAdmitted()
-				}).Should(Succeed())
 
 				//Ping should work as expected
 				Eventually(func() error {
@@ -233,23 +205,10 @@ var _ = Describe("Basnet Sanity", func() {
 					return ts.model.PingPairs(workloadPairs)
 				}).ShouldNot(Succeed())
 
-				Expect(ts.model.Naples().Decommission()).Should(Succeed())
-				Eventually(func() error {
-					return ts.model.Naples().IsNotAdmitted()
-				}).Should(Succeed())
 				workloads = ts.model.Workloads()
 				Expect(ts.model.TeardownWorkloads(workloads)).Should(Succeed())
 
-				//Reload Nodes so that it can Join
 				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
-				Expect(ts.model.Naples().Admit()).Should(Succeed())
-				Eventually(func() error {
-					return ts.model.ReloadHosts(ts.model.Hosts())
-				}).Should(Succeed())
-
-				Eventually(func() error {
-					return ts.model.Naples().IsAdmitted()
-				}).Should(Succeed())
 
 				ts.model, err = model.ReinitSysModel(ts.model, common.BaseNetModel)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -298,21 +257,7 @@ var _ = Describe("Basnet Sanity", func() {
 					return ts.model.PingPairs(workloadPairs)
 				}).ShouldNot(Succeed())
 
-				Expect(ts.model.Naples().Decommission()).Should(Succeed())
-				Eventually(func() error {
-					return ts.model.Naples().IsNotAdmitted()
-				}).Should(Succeed())
-
 				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
-				Expect(ts.model.Naples().Admit()).Should(Succeed())
-				//reload Nodes so that it can Join
-				Eventually(func() error {
-					return ts.model.ReloadHosts(ts.model.Hosts())
-				}).Should(Succeed())
-
-				Eventually(func() error {
-					return ts.model.Naples().IsAdmitted()
-				}).Should(Succeed())
 
 				//Ping should work as expected
 				Eventually(func() error {
@@ -324,6 +269,7 @@ var _ = Describe("Basnet Sanity", func() {
 		})
 
 		It("Move Naples to flow aware mode to insertion mode and make sure cluster is normal and reset", func() {
+			Skip("Until vmotion init is fixed in hal, we can switch to insertion only once")
 			var err error
 			for i := 0; i < int(ts.stress); i++ {
 				veniceCollector := ts.model.VeniceNodes().Leader()
@@ -382,13 +328,7 @@ var _ = Describe("Basnet Sanity", func() {
 					return ts.model.PingPairs(workloadPairs)
 				}).ShouldNot(Succeed())
 
-				Expect(ts.model.Naples().Decommission()).Should(Succeed())
-				Eventually(func() error {
-					return ts.model.Naples().IsNotAdmitted()
-				}).Should(Succeed())
-
 				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
-				Expect(ts.model.Naples().Admit()).Should(Succeed())
 
 				workloads = ts.model.Workloads()
 				Expect(ts.model.TeardownWorkloads(workloads)).Should(Succeed())
@@ -398,15 +338,6 @@ var _ = Describe("Basnet Sanity", func() {
 
 				err = ts.model.SetupDefaultConfig(context.Background(), false, false)
 				Expect(err).ShouldNot(HaveOccurred())
-
-				//reload Nodes so that it can Join
-				Eventually(func() error {
-					return ts.model.ReloadHosts(ts.model.Hosts())
-				}).Should(Succeed())
-
-				Eventually(func() error {
-					return ts.model.Naples().IsAdmitted()
-				}).Should(Succeed())
 
 				Eventually(func() error {
 					return verifyNoDatapathCollection(workloadPairs, veniceCollector)

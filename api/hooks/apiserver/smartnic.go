@@ -227,25 +227,5 @@ func getFieldSelector(nic string) string {
 }
 
 func verifyAllowedProfile(oldProfile, newProfile cluster.DSCProfile) error {
-	if oldProfile.Spec.Features == newProfile.Spec.Features {
-		//Same mode transistion
-		return nil
-	}
-
-	if oldProfile.Spec.Features.InterVMServices == true {
-		return fmt.Errorf("Cannot disable InterVMServices  featureset without decomission/reboot. Check documentation for backward transitions")
-	}
-
-	//OldProfile is in Transparent mode
-	if oldProfile.Spec.Features.Firewall == true {
-		if newProfile.Spec.Features.Firewall == false {
-			return fmt.Errorf("Cannot disable Firewall featureset without decomission/reboot. Check documentation for backward transitions")
-		}
-	}
-	if oldProfile.Spec.Features.FlowAware == true {
-		if newProfile.Spec.Features.FlowAware == false {
-			return fmt.Errorf("Cannot disable Flowaware featureset without decomission/reboot. Check documentation for backward transitions")
-		}
-	}
 	return nil
 }
