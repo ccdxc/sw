@@ -13,8 +13,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -28,17 +32,18 @@ const (
 )
 
 const (
-	timeFormat            = "2006-01-02T15:04:05"
-	bucketPrefix          = "fwlogs"
-	numLogTransmitWorkers = 10
-	workItemBufferSize    = 50
-	connectErr            = "connect:" // copied from vos
-	fwLogMetaVersion      = "v1"
-	fwlogsBucketName      = "fwlogs"
-	fwLogCSVVersion       = "v1"
-	newFlowsKey           = "newFlows"
-	deletedFlowsKey       = "deletedFlows"
-	shortLivedFlowsKey    = "shotLivedFlows"
+	timeFormat                = "2006-01-02T15:04:05"
+	bucketPrefix              = "fwlogs"
+	numLogTransmitWorkers     = 10
+	workItemBufferSize        = 50
+	connectErr                = "connect:" // copied from vos
+	fwLogMetaVersion          = "v1"
+	fwlogsBucketName          = "fwlogs"
+	fwLogCSVVersion           = "v1"
+	newFlowsKey               = "newFlows"
+	deletedFlowsKey           = "deletedFlows"
+	shortLivedFlowsKey        = "shotLivedFlows"
+	timeoutExceededErrorDescr = "timeout exceeded"
 )
 
 // TestObject is used for testing
@@ -243,7 +248,8 @@ func transmitLogs(ctx context.Context,
 	testChannel chan<- TestObject, nodeUUID string, ff fileFormat, zip bool) func() {
 	return func() {
 		// TODO: this can be optimized. Bucket name should be calcualted only once per hour.
-		bucketName := getBucketName(bucketPrefix, vrf, nodeUUID, startTs)
+		tenantName := getTenantNameFromSourceVrf(vrf)
+		bucketName := getBucketName(bucketPrefix, tenantName, vrf, nodeUUID, startTs)
 		indexBucketName := getIndexBucketName(bucketName)
 
 		// The logs in input slice logs are already sorted according to their Ts.
@@ -300,31 +306,60 @@ func transmitLogs(ctx context.Context,
 			return
 		}
 
+		// Creating a nic object and setting tenant name for raising tenant scoped event for
+		// this nic
+		nic := &cluster.DistributedServiceCard{
+			TypeMeta: api.TypeMeta{
+				Kind: "DistributedServiceCard",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Name:   nodeUUID,
+				Tenant: tenantName,
+			},
+		}
+
 		// PutObject uploads an object to the object store
 		r := bytes.NewReader(objBuffer.Bytes())
 		putObjectHelper(ctx, c, bucketName,
 			objNameBuffer.String(), r, len(objBuffer.Bytes()),
-			meta, meta["logcount"], true)
+			meta, meta["logcount"], nodeUUID, nic, true)
 
 		// The index's object name is same as the data object name
 		ir := bytes.NewReader(indexBuffer.Bytes())
 		putObjectHelper(ctx, c, indexBucketName,
 			objNameBuffer.String(), ir, len(indexBuffer.Bytes()),
-			map[string]string{}, "", false)
+			map[string]string{}, "", nodeUUID, nic, false)
 	}
 }
 
 func putObjectHelper(ctx context.Context,
 	c objstore.Client, bucketName string, objectName string, reader io.Reader,
-	size int, metaData map[string]string, logcount string, dolog bool) {
+	size int, metaData map[string]string, logcount string, nodeUUID string,
+	nic *cluster.DistributedServiceCard, dolog bool) {
 	tries := 0
 	waitIntvl := time.Second * 20
 	maxRetries := 15
+	rateLimitedEventRaised := false
 	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		a, err := c.PutObjectExplicit(ctx, bucketName, objectName, reader, int64(size), metaData)
 		if err != nil {
 			tries++
 			log.Errorf("temporary, could not put object (%s)", err)
+
+			if strings.Contains(err.Error(), timeoutExceededErrorDescr) && !rateLimitedEventRaised {
+				rateLimitedEventRaised = true
+				descr := ""
+				if logcount == "" {
+					descr = fmt.Sprintf("Flow logs rate-limited DSC %s,"+
+						" bucketName %s, object name: %s, size %d bytes",
+						nodeUUID, bucketName, objectName, size)
+				} else {
+					descr = fmt.Sprintf("Flow logs rate-limited DSC %s,"+
+						" bucketName %s, object name: %s, size %d bytes, logcount %s",
+						nodeUUID, bucketName, objectName, size, logcount)
+				}
+				recorder.Event(eventtypes.FLOWLOGS_RATE_LIMITED_AT_DSC, descr, nic)
+			}
 		}
 		return a, err
 	}, waitIntvl, maxRetries)
@@ -332,6 +367,15 @@ func putObjectHelper(ctx context.Context,
 	if err != nil {
 		log.Errorf("dropping, bucket %s, time %s, logcount %s, data len %d, tries %d, err %s",
 			bucketName, time.Now().String(), logcount, size, tries, err)
+		descr := ""
+		if logcount == "" {
+			descr = fmt.Sprintf("Flow logs dropped DSC %s, object name: %s, size %d bytes",
+				nodeUUID, objectName, size)
+		} else {
+			descr = fmt.Sprintf("Flow logs dropped DSC %s, object name: %s, size %d bytes, logcount %s",
+				nodeUUID, objectName, size, logcount)
+		}
+		recorder.Event(eventtypes.FLOWLOGS_DROPPED, descr, nic)
 		metric.addDrop()
 		return
 	}
@@ -342,7 +386,7 @@ func putObjectHelper(ctx context.Context,
 	}
 
 	if dolog {
-		log.Debugf("success, bucket %s, time %s, logcount %s, data len %d, tries %d",
+		log.Infof("success, bucket %s, time %s, logcount %s, data len %d, tries %d",
 			bucketName, time.Now().String(), logcount, size, tries)
 	}
 }
@@ -398,11 +442,8 @@ func getCSVIndexBuffer(index map[string]string, b *bytes.Buffer, zip bool) {
 	zw.Close()
 }
 
-func getBucketName(bucketPrefix string, vrf uint64, dscID string, ts time.Time) string {
+func getBucketName(bucketPrefix, tenantName string, vrf uint64, dscID string, ts time.Time) string {
 	var b bytes.Buffer
-	// We dont have any cross vrf scenarios as of now.
-	// So just the tenant name from source vrf.
-	tenantName := getTenantNameFromSourceVrf(vrf)
 	b.WriteString(tenantName)
 	b.WriteString(".")
 	b.WriteString(fwlogsBucketName)

@@ -608,6 +608,20 @@ func init() {
 		Desc:       "BGP session is down",
 		SuppressMM: true}
 
+	eventTypes[FLOWLOGS_DROPPED] = &EventTypeAttributes{
+		EType:      FLOWLOGS_DROPPED.String(),
+		Severity:   "critical",
+		Category:   "system",
+		Desc:       "Flowlogs dropped at the DSC",
+		SuppressMM: true}
+
+	eventTypes[FLOWLOGS_RATE_LIMITED_AT_DSC] = &EventTypeAttributes{
+		EType:      FLOWLOGS_RATE_LIMITED_AT_DSC.String(),
+		Severity:   "warn",
+		Category:   "system",
+		Desc:       "Flowlogs rate limited at the DSC",
+		SuppressMM: true}
+
 }
 
 func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {

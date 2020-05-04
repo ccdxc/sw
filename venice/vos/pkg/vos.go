@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -31,6 +33,18 @@ const (
 	minioKey        = "miniokey"
 	minioSecret     = "minio0523"
 	defaultLocation = "default"
+
+	// Throttling is mainly used for firewall logs. Minio does not have the capability to add throttling for
+	// specific buckets.
+	// Assumptions:
+	// Sustained rate: 500CPS/Card i.e. 500k logs per second entering into the venice cluster of 1000 DSCs
+	// Each file (or batch) reported by card has maximum 6000 log entries
+	// 500k/6000 = 83 requests/second entering into the Minio cluster
+	// We have put a smaller number 60 then 83 for now, but we can change it accordingly.
+	// This number gets set as an environment variable, so while testing it's possible to edit the kubespec
+	// and add the MINIO_API_REQUESTS_MAX env variable and restart pen-vos daemonset.
+	maxAPIRequests    = 60
+	cpuDivisionFactor = 6
 )
 
 const (
@@ -192,6 +206,8 @@ func New(ctx context.Context, trace bool, testURL string, opts ...Option) (vos.I
 		}
 	}
 
+	updateGoMaxProcs()
+
 	os.Setenv("MINIO_ACCESS_KEY", minioKey)
 	os.Setenv("MINIO_SECRET_KEY", minioSecret)
 	log.Infof("minio env: %+v", os.Environ())
@@ -199,6 +215,9 @@ func New(ctx context.Context, trace bool, testURL string, opts ...Option) (vos.I
 		os.Setenv("MINIO_HTTP_TRACE", "/dev/stdout")
 		log.Infof("minio enabled API tracing")
 	}
+
+	updateAPIThrottlingParams()
+
 	log.Infof("minio args:  %+v", inst.bootupArgs)
 
 	go minio.Main(inst.bootupArgs)
@@ -282,6 +301,41 @@ func New(ctx context.Context, trace bool, testURL string, opts ...Option) (vos.I
 	log.Infof("Initialization complete")
 	<-ctx.Done()
 	return inst, nil
+}
+
+func updateGoMaxProcs() {
+	cdf := cpuDivisionFactor
+	cpuDivisionFactorEnv, ok := os.LookupEnv("CPU_DIVISION_FACTOR")
+	if ok {
+		log.Infof("cpuDivisionFactorEnv %s", cpuDivisionFactorEnv)
+		temp, err := strconv.Atoi(cpuDivisionFactorEnv)
+		if err != nil {
+			log.Infof("error while parsing cpuDivisionFactorEnv %s, %+v", cpuDivisionFactorEnv, err)
+		}
+		if temp > 0 && temp <= 10 {
+			cdf = temp
+		}
+	}
+	numCPU := runtime.NumCPU()
+	log.Infof("NumCPUs seen by this container %d", numCPU)
+	if numCPU <= cdf {
+		oldValue := runtime.GOMAXPROCS(1)
+		log.Infof("GOMAXPROCS old value %d", oldValue)
+	} else {
+		oldValue := runtime.GOMAXPROCS(numCPU / cdf)
+		log.Infof("GOMAXPROCS old value %d", oldValue)
+	}
+	log.Infof("GOMAXPROCS new value %d", runtime.GOMAXPROCS(-1))
+}
+
+func updateAPIThrottlingParams() {
+	requestsMax, ok := os.LookupEnv("MINIO_API_REQUESTS_MAX")
+	if !ok {
+		os.Setenv("MINIO_API_REQUESTS_MAX", strconv.Itoa(maxAPIRequests))
+	} else {
+		os.Setenv("MINIO_API_REQUESTS_MAX", requestsMax)
+	}
+	log.Infof("minio enabled API throttling: %s", os.Getenv("MINIO_API_REQUESTS_MAX"))
 }
 
 // WithBootupArgs sets the args to bootup Minio

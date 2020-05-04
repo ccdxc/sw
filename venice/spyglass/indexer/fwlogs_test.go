@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -20,6 +21,8 @@ import (
 	es "github.com/olivere/elastic"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	tmagentstate "github.com/pensando/sw/nic/agent/tmagent/state"
 	testelastic "github.com/pensando/sw/test/utils"
@@ -29,6 +32,8 @@ import (
 	"github.com/pensando/sw/venice/spyglass/indexer"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/log"
 	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -43,7 +48,10 @@ const (
 )
 
 var (
-	apiServerAddr = flag.String("api-server-addr", globals.APIServer, "ApiServer gRPC endpoint")
+	logger             = log.GetNewLogger(log.GetDefaultConfig("flowlogs-integ-test"))
+	apiServerAddr      = flag.String("api-server-addr", globals.APIServer, "ApiServer gRPC endpoint")
+	mockEventsRecorder = mockevtsrecorder.NewRecorder("flowlogs-integ-test", logger)
+	_                  = recorder.Override(mockEventsRecorder)
 )
 
 // TestAppendOnlyWriter tests the writer used for pushing fwlogs to elastic
@@ -70,17 +78,17 @@ func SkipTestAppendOnlyWriter(t *testing.T) {
 	setupVos(t, ctx, logger, "127.0.0.1")
 	setupSpyglass(ctx, t, r, esClient, logger)
 	setupTmAgent(ctx, t, r)
-	startFwLogGen()
+	startFwLogGen(100, 6000)
 
 	// TestVerifyFirewallIndexName verifies that the firewall index is created
 	t.Run("TestVerifyFirewallIndexName", func(t *testing.T) {
 		verifyAndReturnFirewallIndexName(t, esClient)
 	})
 
-	// TestVerifyDiskMonitoring verifies disk monitoring
-	t.Run("TestVerifyDiskMonitoring", func(t *testing.T) {
-		verifyDiskMonitoring(ctx, t, esClient, logger)
-	})
+	// // TestVerifyDiskMonitoring verifies disk monitoring
+	// t.Run("TestVerifyDiskMonitoring", func(t *testing.T) {
+	// 	verifyDiskMonitoring(ctx, t, esClient, logger)
+	// })
 
 	// TestVerifyLastProcessedObjectKeys verifies that lastProcessedObjectKeys
 	// are getting persisted in minio
@@ -91,6 +99,21 @@ func SkipTestAppendOnlyWriter(t *testing.T) {
 	// TestDebuhRESTHandle
 	t.Run("TestDebugRESTHandle", func(t *testing.T) {
 		verifyDebugRESTHandle(ctx, t, r, logger)
+	})
+}
+
+// TestFlowLogsRateLimiting tests the flow logs rate limiting functionality
+func SkipTestFlowLogsRateLimiting(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	logger := log.GetNewLogger(log.GetDefaultConfig("vos_test"))
+	r := mock.New()
+	r = updateResolver(t, r, globals.Vos, "127.0.0.1:9051")
+	r = updateResolver(t, r, globals.VosMinio, "127.0.0.1:19001")
+	setupTmAgent(ctx, t, r)
+	// TestDebuhRESTHandle
+	t.Run("TestVosRateLimitingAndEvents", func(t *testing.T) {
+		verifyVosRateLimtingAndEvents(ctx, t, r, logger)
 	})
 }
 
@@ -201,6 +224,22 @@ func setupResolver(t *testing.T, elasticURL string) resolver.Interface {
 	AssertOk(t, err, "failed to add Vos service")
 	return r
 }
+
+func updateResolver(t *testing.T, r *mock.ResolverClient, name, url string) *mock.ResolverClient {
+	err := r.AddServiceInstance(&servicetypes.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+		Service: name,
+		URL:     url,
+	})
+	AssertOk(t, err, "failed to add Vos service")
+	return r
+}
+
 func verifyAndReturnFirewallIndexName(t *testing.T, esClient elastic.ESClient) string {
 	firewallIndexName := ""
 	assert := func() (bool, interface{}) {
@@ -332,6 +371,31 @@ func verifyDebugRESTHandle(ctx context.Context, t *testing.T, r resolver.Interfa
 	getHelper(false)
 }
 
+func verifyVosRateLimtingAndEvents(ctx context.Context, t *testing.T, r resolver.Interface, logger log.Logger) {
+	vosCtx, stopVos := context.WithCancel(ctx)
+	defer func() {
+		stopVos()
+		os.Unsetenv("MINIO_API_REQUESTS_MAX")
+		os.Unsetenv("MINIO_API_REQUESTS_DEADLINE")
+	}()
+	os.Setenv("MINIO_API_REQUESTS_MAX", "1")
+	os.Setenv("MINIO_API_REQUESTS_DEADLINE", "1ns")
+	setupVos(t, vosCtx, logger, "127.0.0.1")
+	startFwLogGen(10000, 200000)
+	AssertEventually(t, func() (bool, interface{}) {
+		for _, ev := range mockEventsRecorder.GetEvents() {
+			if ev.EventType == eventtypes.FLOWLOGS_RATE_LIMITED_AT_DSC.String() &&
+				ev.Category == "system" &&
+				ev.Severity == "warn" &&
+				ev.Message != "" &&
+				ev.ObjRef.(*cluster.DistributedServiceCard).ObjectMeta.Tenant != "" {
+				return true, ev
+			}
+		}
+		return false, nil
+	}, "failed to find flow logs rate limited event", "2s", "60s")
+}
+
 func setupTmAgent(ctx context.Context, t *testing.T, r resolver.Interface) {
 	ps, err := tmagentstate.NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
@@ -344,8 +408,8 @@ func setupTmAgent(ctx context.Context, t *testing.T, r resolver.Interface) {
 	AssertOk(t, err, "objstore init failed")
 }
 
-func startFwLogGen() {
-	gen := "../../../nic/agent/tests/fwloggen/fwloggen -rate 100 -num 6000"
+func startFwLogGen(rate, total int) {
+	gen := "../../../nic/agent/tests/fwloggen/fwloggen -rate " + fmt.Sprintf("%d", rate) + " -num " + fmt.Sprintf("%d", total)
 
 	fmt.Println("fwloggen command", gen)
 	go exec.Command("/bin/sh", "-c", gen).Output()

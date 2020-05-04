@@ -396,4 +396,13 @@ enum EventTypes {
                                            (severity)         = WARN,
                                            (desc)             = "BGP session is down",
                                            (suppress_mm)      = true];
+    // ----------------------------- Flowlog events -------------------------- //
+    FLOWLOGS_DROPPED                      = 1301 [(category)    = System,
+                                            (severity)          = CRITICAL,
+                                            (desc)              = "Flowlogs dropped at the DSC",
+                                            (suppress_mm)       = true];
+    FLOWLOGS_RATE_LIMITED_AT_DSC          = 1302 [(category)    = System,
+                                            (severity)          = WARN,
+                                            (desc)              = "Flowlogs rate limited at the DSC",
+                                            (suppress_mm)       = true];
 }

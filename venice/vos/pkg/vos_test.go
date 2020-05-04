@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -205,4 +207,26 @@ func TestOptions(t *testing.T) {
 	th, ok = dth["/disk2/default.fwlogs"]
 	Assert(t, th == 50.00, "incorrect threshold")
 	Assert(t, ok, "fwlogs bucket threshold missing")
+}
+
+func TestGoMaxProcsSetting(t *testing.T) {
+	// test GomaxProcsSetting
+	os.Setenv("CPU_DIVISION_FACTOR", "2")
+	defer os.Unsetenv("CPU_DIVISION_FACTOR")
+	updateGoMaxProcs()
+	Assert(t, runtime.NumCPU()/2 == runtime.GOMAXPROCS(-1),
+		"GOMAXPROCS setting not updated correclty, current value:", runtime.GOMAXPROCS(-1))
+}
+
+func TestAPIThrottlingSetting(t *testing.T) {
+	os.Setenv("MINIO_API_REQUESTS_MAX", "2")
+	updateAPIThrottlingParams()
+	Assert(t, os.Getenv("MINIO_API_REQUESTS_MAX") == "2",
+		"MINIO_API_REQUESTS_MAX setting not updated correclty, current value:", os.Getenv("MINIO_API_REQUESTS_MAX"))
+	os.Unsetenv("MINIO_API_REQUESTS_MAX")
+
+	// Since the env variable is unset now, the MINIO_API_REQUESTS_MAX should get set to default value
+	updateAPIThrottlingParams()
+	Assert(t, os.Getenv("MINIO_API_REQUESTS_MAX") == "60",
+		"MINIO_API_REQUESTS_MAX setting not updated correclty, current value:", os.Getenv("MINIO_API_REQUESTS_MAX"))
 }
