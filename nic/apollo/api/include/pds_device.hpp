@@ -79,8 +79,8 @@ typedef struct pds_device_s {
     /// 1. by default IP mapping always takes precedence over LPM hit and
     ///    default value of this attribute is 0 (lower the numerical value,
     ///    the higher the priority, hence 0 is the highest priority)
-    /// 2. valid priority value range is 0 (highest) to 65535 (lowest)
-    uint32_t               ip_mapping_priority;
+    /// 2. valid priority value range is 0 (highest) to 1023 (lowest)
+    uint16_t               ip_mapping_priority;
 } __PACK__ pds_device_spec_t;
 
 /// \brief device status

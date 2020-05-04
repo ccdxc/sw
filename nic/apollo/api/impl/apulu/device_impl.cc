@@ -134,6 +134,10 @@ device_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
             PDS_TRACE_ERR("Failed to program P4E_DEVICE_INFO table");
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
+
+        // program priority of the mapping lookup results as table constant
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_MAPPING,
+                                                     spec->ip_mapping_priority);
         break;
 
     case API_OP_DELETE:
@@ -183,6 +187,7 @@ device_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 
 sdk_ret_t
 device_impl::fill_spec_(pds_device_spec_t *spec) {
+    uint64_t tc = 0;
     p4pd_error_t p4pd_ret;
     p4i_device_info_actiondata_t device_info;
 
@@ -209,6 +214,10 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
                          IP6_ADDR8_LEN);
     }
     spec->bridging_en = device_info.p4i_device_info.l2_enabled;
+
+    // fill the priority of the mapping lookup results from table constant
+    sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_MAPPING, &tc);
+    spec->ip_mapping_priority = tc;
     return SDK_RET_OK;
 }
 

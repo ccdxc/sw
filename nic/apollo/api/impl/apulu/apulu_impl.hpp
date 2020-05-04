@@ -68,6 +68,9 @@
 // reserve the 0th entry in the policer tables
 #define PDS_IMPL_RSVD_POLICER_HW_ID             0
 
+// by default mappings have highest priority than all types of routes
+#define PDS_IMPL_DEFAULT_MAPPING_PRIORITY       0
+
 // various lif types in the datapath
 #define P4_LIF_TYPE_HOST                        0  // host data (i.e non-mgmt) lifs
 #define P4_LIF_TYPE_ARM_DPDK                    1  // dpdk s/w datapath lifs

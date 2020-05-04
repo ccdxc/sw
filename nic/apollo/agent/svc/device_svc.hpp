@@ -208,7 +208,8 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
         api_spec->memory_profile = PDS_MEMORY_PROFILE_DEFAULT;
         break;
     }
-    api_spec->ip_mapping_priority = proto_spec.ipmappingpriority();
+    // valid priority range is 0-1023
+    api_spec->ip_mapping_priority = proto_spec.ipmappingpriority() & 0x3FF;
     return SDK_RET_OK;
 }
 

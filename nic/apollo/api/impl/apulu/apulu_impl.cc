@@ -537,8 +537,9 @@ apulu_impl::table_init_(void) {
     addr -= ((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION, addr);
 
-    // HACK: default priority
-    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_MAPPING, 0xF);
+    // program default priority of the mappings
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_MAPPING,
+                       PDS_IMPL_DEFAULT_MAPPING_PRIORITY);
 
     return SDK_RET_OK;
 }
@@ -551,8 +552,9 @@ apulu_impl::p4plus_table_init_(void) {
     p4pd_table_properties_t tbl_ctx_txdma_act;
     p4pd_table_properties_t tbl_ctx_txdma_act_ext;
 
-    p4pd_global_table_properties_get(P4_P4PLUS_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
-                                     &tbl_ctx_apphdr);
+    p4pd_global_table_properties_get(
+        P4_P4PLUS_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
+        &tbl_ctx_apphdr);
     memset(&prog, 0, sizeof(prog));
     prog.stageid = tbl_ctx_apphdr.stage;
     prog.stage_tableid = tbl_ctx_apphdr.stage_tableid;
