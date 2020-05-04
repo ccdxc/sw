@@ -17,7 +17,7 @@ import time
 from StringIO import StringIO
 from xml.dom.minidom import parseString
 import pprint
-from config_venice_networking import *
+from config_PSM_networking import *
 
 state_file = "/data/var/init_ova.done"
 log_file = "/data/var/log/init_ova.log"
