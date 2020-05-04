@@ -273,7 +273,7 @@ class VpcObject(base.ConfigObjectBase):
             self.__svc_mapping_shared_count = (self.__svc_mapping_shared_count + 1) % self.__max_svc_mapping_shared_count
         return __get()
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
         self.Tos += 1
 

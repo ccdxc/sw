@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 import copy
+import inspect
 from collections import defaultdict
 
 from infra.common.logging import logger
@@ -58,6 +59,12 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.Tenant = 'default'
         self.Namespace = 'default'
         return
+
+    def __unimplemented(self):
+        UnimplementedError = f"'{inspect.stack()[1].function}' method is NOT "\
+                             f"implemented by class: {self.__class__}"
+        logger.error(UnimplementedError)
+        assert (0), UnimplementedError
 
     def __get_GrpcMsg(self, op):
         grpcreq = api.client[self.Node].GetGRPCMsgReq(self.ObjType, op)
@@ -211,16 +218,22 @@ class ConfigObjectBase(base.ConfigObjectBase):
         clone = copy.copy(self)
         return clone
 
+    def GetMutableAttributes(self):
+        self.__unimplemented()
+
+    def UpdateAttributes(self, spec):
+        self.__unimplemented()
+
     def Update(self, spec=None):
         if self.Mutable:
-            if self.HasPrecedent():
+            if spec is None and self.HasPrecedent():
                 logger.info("%s object updated already" % self)
             else:
                 logger.info("Updating obj %s" % self)
                 clone = self.CopyObject()
                 clone.Precedent = None
                 self.Precedent = clone
-                self.UpdateAttributes()
+                self.UpdateAttributes(spec)
                 logger.info("Updated values -")
                 self.Show()
                 self.SetDirty(True)
@@ -250,13 +263,11 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return utils.UpdateObject(self)
 
     def ValidateJSONSpec(self, spec):
-        logger.error("Method not implemented by class: %s" % self.__class__)
-        assert(0)
+        self.__unimplemented()
         return False
 
     def ValidateSpec(self, spec):
-        logger.error("Method not implemented by class: %s" % self.__class__)
-        assert(0)
+        self.__unimplemented()
         return False
 
     def ValidateStats(self, stats):
@@ -266,8 +277,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        logger.error("Method not implemented by class: %s" % self.__class__)
-        assert(0)
+        self.__unimplemented()
         return False
 
     def ValidateYamlStats(self, stats):
@@ -293,26 +303,22 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return True
 
     def SetBaseClassAttr(self):
-        logger.error("Method not implemented by class: %s" % self.__class__)
-        assert(0)
+        self.__unimplemented()
         return
 
     def GetKey(self):
         return self.UUID.GetUuid()
 
     def PopulateKey(self, grpcmsg):
-        logger.error("Method not implemented by class: %s" % self.__class__)
-        assert(0)
+        self.__unimplemented()
         return
 
     def PopulateSpec(self, grpcmsg):
-        logger.error("Method not implemented by class: %s" % self.__class__)
-        assert(0)
+        self.__unimplemented()
         return
 
     def PopulateAgentJson(self):
-        logger.error("Method not implemented by class: %s" % self.__class__)
-        assert(0)
+        self.__unimplemented()
         return
 
     def GetRESTPath(self):

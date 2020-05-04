@@ -41,7 +41,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
         grpcmsg.Id.append(self.GetKey())
         return
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         self.ServerIp = self.ServerIp + 1
 
     def RollbackAttributes(self):

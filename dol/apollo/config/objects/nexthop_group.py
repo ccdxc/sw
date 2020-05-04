@@ -86,7 +86,7 @@ class NexthopGroupObject(base.ConfigObjectBase):
         self.Status.Show()
         return
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         if self.NumNexthops > 1:
             self.NumNexthops -= 1
         return

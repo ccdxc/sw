@@ -174,7 +174,7 @@ class RouteTableObject(base.ConfigObjectBase):
         self.routes = copy.deepcopy(clone.routes)
         return clone
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         ipaddr = utils.GetNextSubnet(self.routes.get(list(self.routes)[-1]).ipaddr)
         for route in self.routes.values():
             ipaddr = utils.GetNextSubnet(ipaddr)

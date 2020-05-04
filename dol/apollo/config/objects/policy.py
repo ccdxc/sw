@@ -381,17 +381,48 @@ class PolicyObject(base.ConfigObjectBase):
         self.rules = copy.deepcopy(clone.rules)
         return clone
 
-    def UpdateAttributes(self):
+    def GetMutableAttributes(self):
+        return ['DefaultFWAction', 'Action']
+
+    def GetUpdateAttributes(self, spec=None):
+        if spec is None:
+            return self.GetMutableAttributes()
+        updateAttrList = []
+        if getattr(spec, 'Action', None):
+            updateAttrList.append('Action')
+        if getattr(spec, 'DefaultFWAction', None):
+            updateAttrList.append('DefaultFWAction')
+        return updateAttrList
+
+    def ChangeDefaultFWAction(self, spec):
+        if spec is not None:
+            self.DefaultFWAction = spec.DefaultFWAction
+            return
+        self.DefaultFWAction = 'deny' if self.DefaultFWAction == 'allow' else 'allow'
+
+    def ChangeRulesAction(self, spec):
+        action = None
+        if spec is not None:
+            action = utils.GetRpcSecurityRuleAction(spec.Action)
         for rule in self.rules:
-            if rule.Action == types_pb2.SECURITY_RULE_ACTION_ALLOW:
+            if action is not None:
+                rule.Action = action
+            elif rule.Action == types_pb2.SECURITY_RULE_ACTION_ALLOW:
                 rule.Action = types_pb2.SECURITY_RULE_ACTION_DENY
             else:
                 rule.Action = types_pb2.SECURITY_RULE_ACTION_ALLOW
+
+    def UpdateAttributes(self, spec):
+        updateAttrList = self.GetUpdateAttributes(spec)
+        if 'DefaultFWAction' in updateAttrList:
+            self.ChangeDefaultFWAction(spec)
+        if 'Action' in updateAttrList:
+            self.ChangeRulesAction(spec)
         return
 
     def RollbackAttributes(self):
-        self.rules = self.GetPrecedent().rules
-        return
+        attrlist = ['DefaultFWAction', 'rules']
+        self.RollbackMany(attrlist)
 
     def FillRuleSpec(self, spec, rule):
         proto = 0

@@ -138,7 +138,7 @@ class TunnelObject(base.ConfigObjectBase):
         self.Status.Show()
         return
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         if self.LocalIPAddr != self.RemoteIPAddr:
             if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
                 self.RemoteIPAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)

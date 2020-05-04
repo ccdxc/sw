@@ -260,7 +260,7 @@ class InterfaceObject(base.ConfigObjectBase):
         clone.IfInfo = copy.copy(self.IfInfo)
         return clone
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         self.IfInfo.macaddr = ResmgrClient[self.Node].DeviceMacAllocator.get()
         self.IfInfo.MTU = self.IfInfo.MTU + 10
         self.IfInfo.Speed = '' #TODO

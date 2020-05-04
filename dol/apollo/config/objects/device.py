@@ -73,7 +73,7 @@ class DeviceObject(base.ConfigObjectBase):
         utils.ReadObject(self, expApiStatus)
         return True
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         self.IPAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)
         self.GatewayAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)
         self.IP = str(self.IPAddr)

@@ -199,7 +199,7 @@ class SubnetObject(base.ConfigObjectBase):
         InterfaceClient.UpdateHostInterfaces(self.Node, [ self ])
         return True
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
         if utils.IsDol():
             hostIf = InterfaceClient.GetHostInterface(self.Node)
@@ -506,6 +506,18 @@ class SubnetObject(base.ConfigObjectBase):
     def GetV6PrefixLen(self):
         return self.IPPrefix[0]._prefixlen
 
+    def ChangePolicyAction(self, spec):
+        attr = ""
+        attr += "Ing" if spec.direction == "ingress" else "Eg"
+        attr += "V4" if spec.af == 'ipv4' else "V6"
+        attr += "SecurityPolicyIds"
+        policyids = getattr(self, attr)
+        policyobjs = PolicyClient.GetObjectsByKeys(self.Node, policyids)
+        for obj in policyobjs:
+            res = obj.Update(spec)
+            if not res:
+                return False
+        return True
 
 class SubnetObjectClient(base.ConfigClientBase):
     def __init__(self):

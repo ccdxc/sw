@@ -296,10 +296,11 @@ class ApolloAgentClient:
         else:
             self.agentip = ip
         self.agentport = self.__get_agent_port()
+        self.endpoint = f"{self.agentip}:{self.agentport}"
         self.__create_msgreq_table()
         self.__create_channel()
         if not self.__connect():
-            assert(0)
+            assert (0), f"Failed to connect to {self.endpoint}"
         self.__create_stubs()
         if GlobalOptions.netagent:
             self.__create_restreq_table()
@@ -321,10 +322,9 @@ class ApolloAgentClient:
         return agentip
 
     def __create_channel(self):
-        endpoint = "%s:%s" % (self.agentip, self.agentport)
-        logger.info(f"Agent info %s" % endpoint)
+        logger.info(f"Creating grpc channel to {self.endpoint}")
         channel = grpc.insecure_channel(
-                endpoint,
+                self.endpoint,
                 options=[
                         ('grpc.max_receive_message_length', MAX_MSG_LEN),
                         ('grpc.max_send_message_length', MAX_MSG_LEN),
@@ -338,9 +338,9 @@ class ApolloAgentClient:
         try:
             grpc.channel_ready_future(self.__channel).result(MAX_CONNECT_TIMEOUT)
         except:
-            logger.error("Error in establishing connection to Agent")
+            logger.error(f"Error establishing grpc connection to {self.endpoint}")
             return False
-        logger.info("Connected to Agent!")
+        logger.info(f"Established grpc connection to Agent {self.endpoint}")
         return True
 
     def __create_stubs(self):

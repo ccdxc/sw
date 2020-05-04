@@ -108,7 +108,7 @@ class NexthopObject(base.ConfigObjectBase):
         self.Duplicate = dupObj
         return dupObj
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         if self.__type == topo.NhType.IP:
             self.IPAddr[0] = next(ResmgrClient[self.Node].NexthopIpV4AddressAllocator)
             self.IPAddr[1] = next(ResmgrClient[self.Node].NexthopIpV6AddressAllocator)

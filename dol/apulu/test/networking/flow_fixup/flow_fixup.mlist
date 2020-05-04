@@ -1,0 +1,19 @@
+# Feature networking Modules List for flow fixup
+feature:
+    id          : networking
+    sub         : flow_fixup
+    package     : test.networking
+    module      : networking
+    runorder    : 10000 # keeping it last until flow clear is available in DOL
+    enable      : True
+    ignore      : True
+
+modules:
+
+    - module:
+        name    : IPV4_TCP_FLOW_FIXUP
+        spec    : l2r_flow_fixup.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
