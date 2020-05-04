@@ -97,7 +97,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   isTabComponent: boolean = false;
   // Used for the table - when true there is a loading icon displayed
   tableLoading: boolean = false;
-  hasDSC: boolean = false;
+  hasAdmittedDSC: boolean = false;  // indicate whether PSM has admitted DSC.  We show DSC hero charts only when there are admitted DSCs
 
   cols: TableCol[] = [
     { field: 'spec.id', header: 'Name/Spec.id', class: '', sortable: true, width: 10 },
@@ -420,26 +420,39 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     });
   }
 
+  /**
+   * Generate a search query and get total number of admitted DSC.
+   */
   getDSCTotalCount() {
     const query: SearchSearchRequest = Utility.buildObjectTotalSearchQuery('DistributedServiceCard');
-    const searchDSCTotalSubscription = this.searchService.PostQuery(query).subscribe(
+    const newQuery = query.getFormGroupValues();
+    const fieldCriteria = {
+      'key': 'status.admission-phase',
+      'operator': 'equals',
+      'values': [
+        'admitted'
+      ]
+    };
+    newQuery.query.fields.requirements.push(fieldCriteria);
+    const searchDSCTotalSubscription = this.searchService.PostQuery(newQuery).subscribe(
       resp => {
         if (resp) {
           const body = resp.body as ISearchSearchResponse;
-          const dscTotal = parseInt(body['total-hits'], 10);
-          // To test VS-1129, hard code -- const  dscTotal = 0;
+          let dscTotal = 0;
+           dscTotal = parseInt(body['total-hits'], 10);
+          // To test VS-1129, hard code -- dscTotal = 0;
           if (dscTotal > 0) {
-            this.hasDSC = true;
             this.searchDSCsCount = dscTotal;
+            this.hasAdmittedDSC = true;
             this.getMetrics();
           } else {
             this.tableLoading = false;
-            this.controllerService.invokeInfoToaster('Information', 'There is no DSC record found in PSM');
+            this.controllerService.invokeInfoToaster('Information', 'There is no admitted DSC found in PSM');
           }
           this.invokeWatch();
         }
       },
-      this._controllerService.webSocketErrorHandler('Failed to get Distributed Services Cards'),
+      this._controllerService.webSocketErrorHandler('Failed to search DSCs'),
     );
     this.subscriptions.push(searchDSCTotalSubscription);
   }
@@ -578,9 +591,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.tableLoading = false;
     this._clearDSCMaps(); // VS-730.  Want to clear maps when we get updated data.
     this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
-    if (this.dataObjects && this.dataObjects.length > 0 && !this.hasDSC) {
-      this.hasDSC = this.isAtleastOneDSCAdmitted(); // In a scenario where Venice has no DSC, this page is in idle.  We receive any new DSC and at least one DSC admitted, it will turn on hero-cards.
-      this.getMetrics();
+    if (this.dataObjects && this.dataObjects.length > 0  ) {
+      const tmpHasAdmittedDSC = this.isAtleastOneDSCAdmitted();
+      // In a scenario where Venice has no DSC, this page is in idle.  When we receive any new DSC and at least one DSC admitted, it will turn on hero-cards.
+      if (tmpHasAdmittedDSC && ! this.hasAdmittedDSC ) {
+        this.hasAdmittedDSC  = tmpHasAdmittedDSC;
+        this.getMetrics();
+      }
     }
     if (this.dataObjects.length >= this.searchDSCsCount) {
       this.searchDSCsCount = this.dataObjects.length;

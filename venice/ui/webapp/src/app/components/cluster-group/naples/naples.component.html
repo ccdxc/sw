@@ -1,6 +1,6 @@
 <app-pagebody [icon]="bodyicon" header="Distributed Services Cards Overview">
   <div fxFlex="none" fxLayout="column">
-    <div fxFlex="nogrow" fxLayout="row wrap" class="naples-card-container" *ngIf="hasDSC">
+    <div fxFlex="nogrow" fxLayout="row wrap" class="naples-card-container" *ngIf="hasAdmittedDSC ">
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
                       [title]="cardData.title"
@@ -19,7 +19,7 @@
     </div>
     <div fxLayout="row wrap" fxLayoutAlign="start stretch" *roleGuard="'metrics_read'">
       <div fxFlex="nogrow" fxLayout="column" class="naples-chart-container"
-           *ngIf="hasDSC && top10CardChartData && top10CardChartData.length > 0">
+           *ngIf="hasAdmittedDSC && top10CardChartData && top10CardChartData.length > 0">
         <p-chart type="bar" [data]="top10CardChartData[0]" [options]="top10CardChartOptions[0]"
                  *ngIf="top10CardChartData[0]">
         </p-chart>

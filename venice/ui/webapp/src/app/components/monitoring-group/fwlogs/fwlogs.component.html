@@ -59,7 +59,7 @@
         <a
            routerLink="/security/sgpolicies/{{displayPolicyName(rowData)}}">{{displayPolicyName(rowData)}}</a>
       </div>
-      <span *ngIf="!displayPolicyName(rowData)">No Policy Found</span>
+      <span *ngIf="!displayPolicyName(rowData)">No policy applied</span>
     </ng-container>
     <ng-container *ngSwitchCase="'protocol'">
       <div *ngIf="rowData.protocol == 'ICMP'" class="fwlogs-icmp">
