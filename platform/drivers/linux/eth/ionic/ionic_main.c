@@ -17,15 +17,19 @@ MODULE_LICENSE("GPL");
 MODULE_VERSION(IONIC_DRV_VERSION);
 
 unsigned int max_slaves = 0;
-module_param(max_slaves, uint, 0);
+module_param(max_slaves, uint, 0400);
 MODULE_PARM_DESC(max_slaves, "Maximum number of slave lifs");
 
 unsigned int rx_copybreak = IONIC_RX_COPYBREAK_DEFAULT;
-module_param(rx_copybreak, uint, 0);
+module_param(rx_copybreak, uint, 0600);
 MODULE_PARM_DESC(rx_copybreak, "Maximum size of packet that is copied to a bounce buffer on RX");
 
+unsigned int tx_budget = IONIC_TX_BUDGET_DEFAULT;
+module_param(tx_budget, uint, 0600);
+MODULE_PARM_DESC(tx_budget, "Number of tx completions to process per NAPI poll");
+
 unsigned int devcmd_timeout = DEVCMD_TIMEOUT;
-module_param(devcmd_timeout, uint, 0);
+module_param(devcmd_timeout, uint, 0600);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
 
 static const char *ionic_error_to_str(enum ionic_status_code code)
