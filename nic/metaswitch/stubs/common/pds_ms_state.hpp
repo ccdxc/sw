@@ -18,7 +18,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_pathset_store.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ecmp_idx_guard.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
-#include "nic/metaswitch/stubs/common/pds_ms_destip_track_store.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ip_track_store.hpp"
 #include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
@@ -46,7 +46,7 @@ enum slab_id_e {
     PDS_MS_ECMP_IDX_GUARD_SLAB_ID,
     PDS_MS_COOKIE_SLAB_ID,
     PDS_MS_INDIRECT_PS_SLAB_ID,
-    PDS_MS_DESTIP_TRACK_SLAB_ID,
+    PDS_MS_IP_TRACK_SLAB_ID,
     PDS_MS_MAX_SLAB_ID
 };
 
@@ -113,9 +113,9 @@ public:
     route_table_store_t& route_table_store(void) {return route_table_store_;}
     pathset_store_t& pathset_store(void) {return pathset_store_;}
     indirect_ps_store_t& indirect_ps_store(void) {return indirect_ps_store_;}
-    destip_track_store_t& destip_track_store(void) {return destip_track_store_;}
-    destip_track_internalip_store_t& destip_track_internalip_store(void)
-    {return destip_track_internalip_store_;}
+    ip_track_store_t& ip_track_store(void) {return ip_track_store_;}
+    ip_track_internalip_store_t& ip_track_internalip_store(void)
+    {return ip_track_internalip_store_;}
 
     uint32_t get_slab_in_use(slab_id_e slab_id) {
         return slabs_[slab_id]->num_in_use();
@@ -154,11 +154,11 @@ public:
         return true;
     }
 
-    sdk_ret_t destip_track_internal_idx_alloc(uint32_t* index) {
-        return destip_track_internal_idx_gen_->alloc(index);
+    sdk_ret_t ip_track_internal_idx_alloc(uint32_t* index) {
+        return ip_track_internal_idx_gen_->alloc(index);
     }
-    sdk_ret_t destip_track_internal_idx_free(uint32_t index) {
-        return destip_track_internal_idx_gen_->free(index);
+    sdk_ret_t ip_track_internal_idx_free(uint32_t index) {
+        return ip_track_internal_idx_gen_->free(index);
     }
 
 private:
@@ -174,14 +174,14 @@ private:
     route_table_store_t route_table_store_;
     pathset_store_t pathset_store_;
     indirect_ps_store_t indirect_ps_store_;
-    destip_track_store_t destip_track_store_;
-    destip_track_internalip_store_t destip_track_internalip_store_;
+    ip_track_store_t ip_track_store_;
+    ip_track_internalip_store_t ip_track_internalip_store_;
 
     // Index generator for PDS HAL Overlay ECMP table
     sdk::lib::rte_indexer  *ecmp_idx_gen_;
     // Index generator for internal IP used to create static routes
     // for tracking destination IP
-    sdk::lib::rte_indexer  *destip_track_internal_idx_gen_;
+    sdk::lib::rte_indexer  *ip_track_internal_idx_gen_;
 
     static state_t* g_state_;
     static std::recursive_mutex g_mtx_;
@@ -194,7 +194,7 @@ private:
     state_t(void);
     ~state_t(void) {
         sdk::lib::rte_indexer::destroy(ecmp_idx_gen_);
-        sdk::lib::rte_indexer::destroy(destip_track_internal_idx_gen_);
+        sdk::lib::rte_indexer::destroy(ip_track_internal_idx_gen_);
     }
 };
 

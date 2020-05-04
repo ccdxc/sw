@@ -180,7 +180,7 @@ process_underlay_vpc_create ()
     // HAL API thread and have it stitch the TEPs to the Underlay NH groups.
     // This requires even default RTM component to join the FTM component.
  
-#if 0    // TODO: Temporarily disabling the overlay routing check to support
+#if 0    // TODO: Disabling the overlay routing check to support
     // requirement to stitch the Mirror Collector's underlay tunnel IP
     // to the underlay nexthops.
     // Until MS provides a solution for statically requesting NH Groups for any

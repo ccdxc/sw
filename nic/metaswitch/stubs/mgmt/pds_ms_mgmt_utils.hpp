@@ -285,10 +285,10 @@ types::ApiStatus l2f_test_local_mac_ip_add (const CPL2fTestCreateSpec   *req,
                                             CPL2fTestResponse *resp);
 types::ApiStatus l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec   *req,
                                             CPL2fTestResponse *resp);
-types::ApiStatus destip_track_start (const CPDestIPTrackTestCreateSpec   *req,
-                                     CPDestIPTrackTestResponse *resp);
-types::ApiStatus destip_track_stop (const CPDestIPTrackTestDeleteSpec   *req,
-                                    CPDestIPTrackTestResponse *resp);
+types::ApiStatus ip_track_add (const CPIPTrackTestCreateSpec   *req,
+                               CPIPTrackTestResponse *resp);
+types::ApiStatus ip_track_del (const CPIPTrackTestDeleteSpec   *req,
+                               CPIPTrackTestResponse *resp);
 NBB_VOID lim_l3_if_addr_pre_set(LimInterfaceAddrSpec &req,
                                 NBB_LONG row_status,
                                 NBB_ULONG correlator,

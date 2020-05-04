@@ -914,9 +914,9 @@ static void get_evpn_mac_ip_all () {
     }
 }
 
-static void create_destip_track (ip_addr_t& ip) {
-    pds_ms::CPDestIPTrackTestCreateSpec request;
-    pds_ms::CPDestIPTrackTestResponse response;
+static void create_ip_track (ip_addr_t& ip) {
+    pds_ms::CPIPTrackTestCreateSpec request;
+    pds_ms::CPIPTrackTestResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -929,7 +929,7 @@ static void create_destip_track (ip_addr_t& ip) {
     proto_spec->set_pdsobjid (12); // Mirror session
 
     printf ("Pushing Dest IP track start ...\n");
-    ret_status = g_cp_test_stub_->CPDestIPTrackTestCreate(&context, request, &response);
+    ret_status = g_cp_test_stub_->CPIPTrackTestCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -937,9 +937,9 @@ static void create_destip_track (ip_addr_t& ip) {
         exit(1);
     }
 }
-static void delete_destip_track (ip_addr_t& ip) {
-    pds_ms::CPDestIPTrackTestDeleteSpec request;
-    pds_ms::CPDestIPTrackTestResponse response;
+static void delete_ip_track (ip_addr_t& ip) {
+    pds_ms::CPIPTrackTestDeleteSpec request;
+    pds_ms::CPIPTrackTestResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -950,7 +950,7 @@ static void delete_destip_track (ip_addr_t& ip) {
     destip->set_v4addr(inet_network(ipaddr2str(&ip)));
 
     printf ("Pushing Dest IP track stop ...\n");
-    ret_status = g_cp_test_stub_->CPDestIPTrackTestDelete(&context, request, &response);
+    ret_status = g_cp_test_stub_->CPIPTrackTestDelete(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -1187,45 +1187,45 @@ int main(int argc, char** argv)
             // Update
             create_intf_proto_grpc(false, false, true, g_test_conf_.local_ip_addr);
             return 0;
-        } else if (!strcmp(argv[1], "del-destip-track1")) {
+        } else if (!strcmp(argv[1], "del-ip-track1")) {
             ip_addr_t ip = {0};
             ip.af = IP_AF_IPV4;
             ip.addr.v4_addr = 0x0e000001;
-            delete_destip_track (ip);
+            delete_ip_track (ip);
             ++ip.addr.v4_addr;
             return 0;
-        } else if (!strcmp(argv[1], "del-destip-track-all")) {
+        } else if (!strcmp(argv[1], "del-ip-track-all")) {
             ip_addr_t ip = {0};
             ip.af = IP_AF_IPV4;
             ip.addr.v4_addr = 0x0d000001;
             for (int i=0; i<1000; ++i) {
-                delete_destip_track (ip);
+                delete_ip_track (ip);
                 ++ip.addr.v4_addr;
             }
             return 0;
-        } else if (!strcmp(argv[1], "create-destip-track1")) {
+        } else if (!strcmp(argv[1], "create-ip-track1")) {
             ip_addr_t ip = {0};
             ip.af = IP_AF_IPV4;
             ip.addr.v4_addr = 0x0e000001;
-            create_destip_track (ip);
+            create_ip_track (ip);
             return 0;
-        } else if (!strcmp(argv[1], "create-destip-track-all")) {
+        } else if (!strcmp(argv[1], "create-ip-track-all")) {
             ip_addr_t ip = {0};
             ip.af = IP_AF_IPV4;
             ip.addr.v4_addr = 0x0d000001;
             for (int i=0; i<1000; ++i) {
-                create_destip_track (ip);
+                create_ip_track (ip);
                 ++ip.addr.v4_addr;
             }
             return 0;
-        } else if (!strcmp(argv[1], "mix-destip-track-all")) {
+        } else if (!strcmp(argv[1], "mix-ip-track-all")) {
             ip_addr_t ip = {0};
             ip.af = IP_AF_IPV4;
             ip.addr.v4_addr = 0x0f000001;
             for (int i=0; i<1000; ++i) {
-                create_destip_track (ip);
+                create_ip_track (ip);
                 if (i%4 == 0) {
-                    delete_destip_track (ip);
+                    delete_ip_track (ip);
                 }
                 ++ip.addr.v4_addr;
             }

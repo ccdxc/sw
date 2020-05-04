@@ -9,6 +9,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include <nbase.h>
@@ -51,11 +52,13 @@ private:
     pds_obj_key_t rttbl_key_ = {0};
 
 private:
-    pds_batch_ctxt_guard_t make_batch_pds_spec_(const pds_obj_key_t&
+    pds_batch_ctxt_guard_t make_batch_pds_spec_(state_t* state,
+                                                const pds_obj_key_t&
                                                 rttable_key);
     void populate_route_id(ATG_ROPI_ROUTE_ID* route_id);
     bool parse_ips_info_(ATG_ROPI_UPDATE_ROUTE* route_add_upd);
-    bool make_pds_rttable_spec_(pds_route_table_spec_t &rttbl,
+    bool make_pds_rttable_spec_(state_t* state,
+                                pds_route_table_spec_t &rttbl,
                                 const pds_obj_key_t& rttable_key);
     pds_obj_key_t make_pds_rttable_key_(state_t*);
     void overlay_route_del_(void);

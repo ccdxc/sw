@@ -65,7 +65,6 @@ public:
     struct ips_info_t {
         uint32_t        pathset_id;
         std::vector<nh_info_t> nexthops;
-        pds_nexthop_group_type_t  pds_nhgroup_type = PDS_NHGROUP_TYPE_NONE;
         uint32_t       direct_ps_dpcorr = 0;
         uint32_t       nh_count[PDS_MS_NH_DEST_MAX] = {0};
         uint32_t       nh_add_count[PDS_MS_NH_DEST_MAX] = {0};

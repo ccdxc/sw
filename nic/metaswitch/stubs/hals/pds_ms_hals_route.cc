@@ -5,11 +5,11 @@
 
 #include <thread>
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_route.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_ip_track_hal.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
-#include "nic/metaswitch/stubs/mgmt/pds_ms_destip_track.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_tbl_idx.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hals_utils.hpp"
 #include "nic/apollo/api/internal/pds_route.hpp"
@@ -56,7 +56,8 @@ pds_obj_key_t hals_route_t::make_pds_rttable_key_(state_t* state) {
 }
 
 // Return true indicates route table has changed
-bool hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable,
+bool hals_route_t::make_pds_rttable_spec_(state_t* state,
+                                          pds_route_table_spec_t &rttable,
                                           const pds_obj_key_t& rttable_key) {
     memset(&rttable, 0, sizeof(pds_route_table_spec_t));
     rttable.key = rttable_key;
@@ -67,37 +68,36 @@ bool hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable,
     route_.attrs.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
     route_.attrs.nh_group = msidx2pdsobjkey(ips_info_.ecmp_id);
 
-    { // Enter thread-safe context to access/modify global state
-        auto state = pds_ms::state_t::thread_context().state();
-        auto rttbl_store = state->route_table_store().get(rttable.key);
-        if (unlikely(rttbl_store == nullptr)) {
-            throw Error("Did not find route table store for VRF "
-                                                    + ips_info_.vrf_id);
-        }
-        if (!op_delete_) {
-            // Add/Update the new route in the store
-            auto rt = rttbl_store->get_route(route_.attrs.prefix);
-            if (rt == nullptr) {
-                op_create_ = true;
-            } else {
-                // Cache the route for restore incase of failure
-                prev_route_ = *rt;
-            }
-            rttbl_store->add_upd_route(route_);
-
-        } else {
-            // Delete the route from the store
-            ret = rttbl_store->del_route(route_.attrs.prefix);
-        }
-        // Get the routes pointer. PDS API will make a copy of the
-        // route table and free it up once api processing is complete
-        // after batch commit
-        rttable.route_info = rttbl_store->routes();
+    auto rttbl_store = state->route_table_store().get(rttable.key);
+    if (unlikely(rttbl_store == nullptr)) {
+        throw Error("Did not find route table store for VRF "
+                    + ips_info_.vrf_id);
     }
+    if (!op_delete_) {
+        // Add/Update the new route in the store
+        auto rt = rttbl_store->get_route(route_.attrs.prefix);
+        if (rt == nullptr) {
+            op_create_ = true;
+        } else {
+            // Cache the route for restore incase of failure
+            prev_route_ = *rt;
+        }
+        rttbl_store->add_upd_route(route_);
+
+    } else {
+        // Delete the route from the store
+        ret = rttbl_store->del_route(route_.attrs.prefix);
+    }
+    // Get the routes pointer. PDS API will make a copy of the
+    // route table and free it up once api processing is complete
+    // after batch commit
+    rttable.route_info = rttbl_store->routes();
+
     return ret;
 }
 
-pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(const pds_obj_key_t&
+pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(state_t* state,
+                                                          const pds_obj_key_t&
                                                           rttable_key) {
     pds_batch_ctxt_guard_t bctxt_guard_;
     sdk_ret_t ret = SDK_RET_OK;
@@ -105,7 +105,7 @@ pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(const pds_obj_key_t&
     pds_route_table_spec_t rttbl_spec;
     // Delete is a route table update with the deleted route.
     // The route table is ONLY deleted when VRF gets deleted
-    if (!make_pds_rttable_spec_(rttbl_spec, rttable_key)) {
+    if (!make_pds_rttable_spec_(state, rttbl_spec, rttable_key)) {
         // Skip batch commit if there is no change
         // Return empty guard
         return  bctxt_guard_;
@@ -143,61 +143,27 @@ pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(const pds_obj_key_t&
     return bctxt_guard_;
 }
 
-static ms_hw_tbl_id_t
-lookup_indirect_ps_and_map_destip_ (state_t* state,
-                                    ms_ps_id_t indirect_pathset,
-                                    const ip_addr_t& destip_track) {
-
-    auto indirect_ps_obj = state->indirect_ps_store().get(indirect_pathset);
-    if (indirect_ps_obj == nullptr) {
-        PDS_TRACE_DEBUG("Set new indirect pathset %d -> blackhole",
-                        indirect_pathset);
-        std::unique_ptr<indirect_ps_obj_t> indirect_ps_obj_uptr
-            (new indirect_ps_obj_t());
-
-        indirect_ps_obj = indirect_ps_obj_uptr.get();
-        state->indirect_ps_store().add_upd(indirect_pathset,
-                                           std::move(indirect_ps_obj_uptr));
-    } else if (!ip_addr_is_zero(&(indirect_ps_obj->destip()))) {
-        // Assert there is only 1 TEP referring to each indirect Pathset
-        if (!ip_addr_is_equal (&(indirect_ps_obj->destip()), &destip_track)) {
-            PDS_TRACE_ERR("Attempt to stitch DestIP %s to MS indirect pathset %d"
-                          " that is already stitched to DestIP %s",
-                          ipaddr2str(&destip_track), indirect_pathset,
-                          ipaddr2str(&(indirect_ps_obj->destip())));
-            SDK_ASSERT(0);
-        }
-        SDK_ASSERT(!(indirect_ps_obj->is_ms_evpn_tep_ip()));
-        return indirect_ps_obj->direct_ps_dpcorr();
-    }
-    PDS_TRACE_DEBUG("Stitch DestIP %s to indirect pathset %d direct pathset %d",
-                    ipaddr2str(&destip_track), indirect_pathset,
-                    indirect_ps_obj->direct_ps_dpcorr());
-    indirect_ps_obj->set_destip(destip_track);
-    return indirect_ps_obj->direct_ps_dpcorr();
-}
-
 sdk_ret_t hals_route_t::underlay_route_add_upd_() {
     bool tracked = false;
-    ip_addr_t destip_track;
+    ip_addr_t destip;
     obj_id_t pds_obj_id;
 
     {
         auto state_ctxt = state_t::thread_context();
         auto state = state_ctxt.state();
 
-        auto it_internal = state->destip_track_internalip_store().find(ips_info_.pfx);
-        if (it_internal != state->destip_track_internalip_store().end()) {
-            auto destip_track_obj = 
-                state->destip_track_store().get(it_internal->second);
-            destip_track = destip_track_obj->destip();
-            pds_obj_id = destip_track_obj->pds_obj_id();
+        auto it_internal = state->ip_track_internalip_store().find(ips_info_.pfx);
+        if (it_internal != state->ip_track_internalip_store().end()) {
+            auto ip_track_obj = 
+                state->ip_track_store().get(it_internal->second);
+            destip = ip_track_obj->destip();
+            pds_obj_id = ip_track_obj->pds_obj_id();
             tracked = true;
 
             // Add back ref from the indirect pathset to the route
             auto nhgroup_id = 
-                lookup_indirect_ps_and_map_destip_(state, ips_info_.pathset_id,
-                                                   destip_track);
+                state_lookup_indirect_ps_and_map_ip(state,ips_info_.pathset_id,
+                                                    destip, false);
             ips_info_.ecmp_id = nhgroup_id;
         }
     }
@@ -206,8 +172,8 @@ sdk_ret_t hals_route_t::underlay_route_add_upd_() {
         return SDK_RET_OK;
     }
     if (tracked) {
-        return destip_track_reachability_change(destip_track, ips_info_.ecmp_id,
-                                                pds_obj_id);
+        return ip_track_reachability_change(destip, ips_info_.ecmp_id,
+											pds_obj_id);
     }
 
     if (mgmt_state_t::thread_context().state()->overlay_routing_en()) {
@@ -250,7 +216,8 @@ void hals_route_t::overlay_route_del_() {
                             " have Route table ID", ips_info_.vrf_id);
             return;
         }
-        pds_bctxt_guard = make_batch_pds_spec_(rttable_key);
+        pds_bctxt_guard = make_batch_pds_spec_(state_ctxt.state(),
+                                               rttable_key);
         if (!pds_bctxt_guard) {
             PDS_TRACE_DEBUG("Ignore %s route delete that is not in"
                             " route store", ippfx2str(&ips_info_.pfx));
@@ -346,7 +313,8 @@ NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_i
                             " have Route table ID", ips_info_.vrf_id);
             return rc;
         }
-        pds_bctxt_guard = make_batch_pds_spec_(rttable_key);
+        pds_bctxt_guard = make_batch_pds_spec_(state_ctxt.state(),
+                                               rttable_key);
         // Flush any outstanding batch
         state_ctxt.state()->flush_outstanding_pds_batch();
     } // End of state thread_context

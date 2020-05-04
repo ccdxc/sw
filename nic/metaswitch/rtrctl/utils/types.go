@@ -804,6 +804,13 @@ func BGPRouteSource(routeSrc pds.NLRISrc, peerip *pds.IPAddress) string {
 	return PdsIPToString(peerip)
 }
 
+func BGPNextHop(routeSrc pds.NLRISrc, nexthopip []byte) string {
+	if routeSrc != pds.NLRISrc_NLRI_PEER {
+		return "LOCAL"
+	}
+	return net.IP(nexthopip).String()
+}
+
 func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixStatus {
 	var pathOrigId string
 
@@ -826,7 +833,7 @@ func NewBGPNLRIPrefixStatus(in *pds.BGPNLRIPrefixStatus) *ShadowBGPNLRIPrefixSta
 	ret := ShadowBGPNLRIPrefixStatus{
 		ASPathStr:           BGPASPath(ASSize, in.ASPathStr),
 		PathOrigId:          pathOrigId,
-		NextHopAddr:         net.IP(in.NextHopAddr).String(),
+		NextHopAddr:         BGPNextHop(in.RouteSource, in.NextHopAddr),
 		Prefix:              NewNLRIPrefix(int(in.Afi), int(in.Safi), in.Prefix),
 		RouteSource:         BGPRouteSource(in.RouteSource, in.PeerAddr),
 		FlapStatsFlapcnt:    in.FlapStatsFlapcnt,

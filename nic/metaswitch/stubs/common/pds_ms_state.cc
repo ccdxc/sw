@@ -29,7 +29,7 @@ state_t::state_t(void)
     pathset_slab_init (slabs_, PDS_MS_PATHSET_SLAB_ID);
     ecmp_idx_guard_slab_init (slabs_, PDS_MS_ECMP_IDX_GUARD_SLAB_ID);
     indirect_ps_slab_init(slabs_, PDS_MS_INDIRECT_PS_SLAB_ID);
-    destip_track_slab_init(slabs_, PDS_MS_DESTIP_TRACK_SLAB_ID);
+    ip_track_slab_init(slabs_, PDS_MS_IP_TRACK_SLAB_ID);
 
     slabs_[PDS_MS_COOKIE_SLAB_ID].
         reset(sdk::lib::slab::factory("PDS-MS-COOKIE",
@@ -50,7 +50,7 @@ state_t::state_t(void)
     // Index generator for internal IP used to create static routes
     // for tracking destination IP
     // Using 16 bit max index - 65535 internal IP
-    destip_track_internal_idx_gen_ =
+    ip_track_internal_idx_gen_ =
         sdk::lib::rte_indexer::factory(0xFFFF-1,
                                        /* skip zero */
                                        true, true);
@@ -118,6 +118,8 @@ state_lookup_indirect_ps_and_map_ip (state_t* state,
         // If the indirect ps is not present it could mean that that
         // MS create pointed to a black-hole and we did not know
         // that it was an indirect pathset
+        PDS_TRACE_DEBUG("Set new indirect pathset %d -> blackhole",
+                        indirect_pathset);
         indirect_ps_obj = alloc_indirect_ps_(state, indirect_pathset);
 
     } else if (!ip_addr_is_zero(&(indirect_ps_obj->destip()))) {
@@ -126,7 +128,7 @@ state_lookup_indirect_ps_and_map_ip (state_t* state,
         if (!ip_addr_is_equal (&(indirect_ps_obj->destip()), &destip)) {
             PDS_TRACE_ERR("Attempt to stitch %s %s to MS indirect pathset %d"
                           " that is already stitched to DestIP %s",
-                          (ms_evpn_tep_ip) ? "TEP" : "IP track",
+                          (ms_evpn_tep_ip) ? "TEP" : "tracked DestIP",
                           ipaddr2str(&destip), indirect_pathset,
                           ipaddr2str(&(indirect_ps_obj->destip())));
             SDK_ASSERT(0);
@@ -135,7 +137,7 @@ state_lookup_indirect_ps_and_map_ip (state_t* state,
         return indirect_ps_obj->direct_ps_dpcorr();
     }
     PDS_TRACE_DEBUG("Stitch %s %s to indirect pathset %d direct pathset %d",
-                    (ms_evpn_tep_ip) ? "TEP" : "IP track",
+                    (ms_evpn_tep_ip) ? "TEP" : "tracked DestIP",
                     ipaddr2str(&destip), indirect_pathset,
                     indirect_ps_obj->direct_ps_dpcorr());
     if (ms_evpn_tep_ip) {
@@ -175,8 +177,9 @@ state_indirect_ps_lookup_and_map_dpcorr (state_t* state,
         indirect_ps_obj->set_direct_ps_dpcorr(direct_ps_dpcorr); 
 
     } else if (indirect_ps_obj->direct_ps_dpcorr() != direct_ps_dpcorr) {
-        PDS_TRACE_DEBUG("Set indirect pathset %d -> direct pathset %d",
-                        indirect_pathset, direct_ps_dpcorr);
+        PDS_TRACE_DEBUG("Update indirect pathset %d direct pathset %d -> %d",
+                        indirect_pathset, indirect_ps_obj->direct_ps_dpcorr(),
+                        direct_ps_dpcorr);
         indirect_ps_obj->set_direct_ps_dpcorr(direct_ps_dpcorr);
     }
     return std::pair<ip_addr_t,bool> (indirect_ps_obj->destip(),

@@ -27,6 +27,7 @@ extern "C"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_ip_track.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include <iostream>
 #include <fstream>
@@ -438,54 +439,38 @@ TEST_F(pds_ms_hals_test, route_test) {
     test_output->validate();
 }
 
-#include "nic/metaswitch/stubs/mgmt/pds_ms_destip_track.hpp"
-
-void dump_destip_track() {
-    auto state_ctxt = pds_ms::state_t::thread_context();
-    std::cout << "Number of entries " << state_ctxt.state()->destip_track_store().count() << std::endl;
-    state_ctxt.state()->destip_track_store().walk([] (const ip_addr_t& trackip, 
-                                                      pds_ms::destip_track_obj_t& obj)
-                                                 -> bool {
-
-       std::cout <<  "For trackIP " << ipaddr2str(&trackip)
-           << " DestIP " << ipaddr2str(&obj.destip())
-           << std::endl;
-       return true;
-    });
-}
-
-TEST(pds_ms_destip_track_test, crud_test) {
+TEST(pds_ms_ip_track_test, crud_test) {
     ip_addr_t  track;
     track.addr.v4_addr = 0x0a000001;
     track.af = IP_AF_IPV4;
   
    int repeat = 2000; 
     for (int i=0; i< repeat; ++i) { 
-        pds_ms::destip_track_start(track, OBJ_ID_MIRROR_SESSION);
+        pds_ms::ip_track_add(track, OBJ_ID_MIRROR_SESSION);
         track.addr.v4_addr += 1;
     }
     {
     auto state_ctxt = pds_ms::state_t::thread_context();
     track.addr.v4_addr = 0x0a000001;
     for (int i=0;i<repeat; ++i) {
-        auto destip_track_obj = state_ctxt.state()->destip_track_store().get(track);
-        ASSERT_TRUE(destip_track_obj != nullptr);
-        auto it = state_ctxt.state()->destip_track_internalip_store().
-                     find(destip_track_obj->internal_ip_prefix());
-        ASSERT_TRUE(it != state_ctxt.state()->destip_track_internalip_store().end());
+        auto ip_track_obj = state_ctxt.state()->ip_track_store().get(track);
+        ASSERT_TRUE(ip_track_obj != nullptr);
+        auto it = state_ctxt.state()->ip_track_internalip_store().
+                     find(ip_track_obj->internal_ip_prefix());
+        ASSERT_TRUE(it != state_ctxt.state()->ip_track_internalip_store().end());
         ASSERT_TRUE(IPADDR_EQ(&it->second, &track));
         track.addr.v4_addr += 1;
     }
     }
     track.addr.v4_addr = 0x0a000001;
     for (int i=0; i< repeat; ++i) { 
-        pds_ms::destip_track_stop(track);
+        pds_ms::ip_track_del(track);
         track.addr.v4_addr += 1;
     }
     {
     auto state_ctxt = pds_ms::state_t::thread_context();
-    ASSERT_EQ(state_ctxt.state()->destip_track_store().count(), (uint32_t) 0);
-    ASSERT_EQ(state_ctxt.state()->destip_track_internalip_store().size(),
+    ASSERT_EQ(state_ctxt.state()->ip_track_store().count(), (uint32_t) 0);
+    ASSERT_EQ(state_ctxt.state()->ip_track_internalip_store().size(),
               (uint32_t) 0);
     }
 }
