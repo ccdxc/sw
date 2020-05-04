@@ -336,6 +336,16 @@
  ],
  "system": [
   {
+   "Name": "FLOWLOGS_DROPPED",
+   "Severity": "critical",
+   "Desc": "Flowlogs dropped at the DSC"
+  },
+  {
+   "Name": "FLOWLOGS_RATE_LIMITED_AT_DSC",
+   "Severity": "warn",
+   "Desc": "Flowlogs rate limited at the DSC"
+  },
+  {
    "Name": "NAPLES_CATTRIP_INTERRUPT",
    "Severity": "critical",
    "Desc": "System encountered cattrip resetting system"

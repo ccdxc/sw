@@ -83,6 +83,8 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'ROLLOUT_SUSPENDED',
   ],
   system: [
+    'FLOWLOGS_DROPPED',
+    'FLOWLOGS_RATE_LIMITED_AT_DSC',
     'NAPLES_CATTRIP_INTERRUPT',
     'NAPLES_ERR_PCIEHEALTH_EVENT',
     'NAPLES_FATAL_INTERRUPT',
@@ -428,6 +430,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "ROLLOUT_SUSPENDED",
       "Severity": EventsEvent_severity.info,
       "Desc": "Rollout suspended",
+  },
+  'FLOWLOGS_DROPPED' : {
+      "Name": "FLOWLOGS_DROPPED",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "Flowlogs dropped at the DSC",
+  },
+  'FLOWLOGS_RATE_LIMITED_AT_DSC' : {
+      "Name": "FLOWLOGS_RATE_LIMITED_AT_DSC",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Flowlogs rate limited at the DSC",
   },
   'NAPLES_CATTRIP_INTERRUPT' : {
       "Name": "NAPLES_CATTRIP_INTERRUPT",
