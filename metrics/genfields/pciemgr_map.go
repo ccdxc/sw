@@ -92,6 +92,10 @@ func init() {
 		"RxtlpErrInt",
 		"TlFlrReqInt",
 		"RcLegacyIntpinChangedInt",
+		"PpsdSbeInterrupt",
+		"PpsdDbeInterrupt",
+		"SbusErrInterrupt",
+		"PoweronRetries",
 	}
 	globalMetricsMap["pciemgr"]["PciePortMetrics"] = kindToFieldNameMap["PciePortMetrics"]
 

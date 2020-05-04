@@ -95,6 +95,10 @@ func init() {
 		"RxPripause_7_1UsCount",
 		"RxPause_1UsCount",
 		"FramesTxTruncated",
+		"TxPps",
+		"TxBytesps",
+		"RxPps",
+		"RxBytesps",
 	}
 	globalMetricsMap["metrics"]["MacMetrics"] = kindToFieldNameMap["MacMetrics"]
 
@@ -131,6 +135,10 @@ func init() {
 		"FramesTxMulticast",
 		"FramesTxBroadcast",
 		"FramesTxPause",
+		"TxPps",
+		"TxBytesps",
+		"RxPps",
+		"RxBytesps",
 	}
 	globalMetricsMap["metrics"]["MgmtMacMetrics"] = kindToFieldNameMap["MgmtMacMetrics"]
 

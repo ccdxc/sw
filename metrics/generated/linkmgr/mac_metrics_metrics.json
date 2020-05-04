@@ -630,6 +630,34 @@
           "Description": "Frames Truncated",
           "Units": "Count",
           "BaseType": "Counter"
+        },
+        {
+          "Name": "TxPps",
+          "DisplayName": "Tx PPS",
+          "Description": "Transmit BW Packets per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxBytesps",
+          "DisplayName": "Tx BPS",
+          "Description": "Transmit BW Bytes per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxPps",
+          "DisplayName": "Rx PPS",
+          "Description": "Receive BW Packets per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxBytesps",
+          "DisplayName": "Rx BPS",
+          "Description": "Receive BW Bytes per second",
+          "Units": "Count",
+          "BaseType": "Counter"
         }
       ],
       "Tags": [
@@ -863,6 +891,34 @@
           "Name": "FramesTxPause",
           "DisplayName": "Tx Pause Frames",
           "Description": "Frames Transmitted of type PAUSE",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxPps",
+          "DisplayName": "Tx PPS",
+          "Description": "Transmit BW Packets per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "TxBytesps",
+          "DisplayName": "Tx BPS",
+          "Description": "Transmit BW Bytes per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxPps",
+          "DisplayName": "Rx PPS",
+          "Description": "Receive BW Packets per second",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "RxBytesps",
+          "DisplayName": "Rx BPS",
+          "Description": "Receive BW Bytes per second",
           "Units": "Count",
           "BaseType": "Counter"
         }

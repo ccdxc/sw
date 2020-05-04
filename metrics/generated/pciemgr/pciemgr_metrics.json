@@ -592,6 +592,34 @@
           "Description": "rc_legacy_intpin_changed_int",
           "Units": "Count",
           "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsdSbeInterrupt",
+          "DisplayName": "ppsd_sbe_interrupt",
+          "Description": "ppsd_sbe_interrupt",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PpsdDbeInterrupt",
+          "DisplayName": "ppsd_dbe_interrupt",
+          "Description": "ppsd_dbe_interrupt",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SbusErrInterrupt",
+          "DisplayName": "sbus_err_interrupt",
+          "Description": "sbus_err_interrupt",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "PoweronRetries",
+          "DisplayName": "poweron_retries",
+          "Description": "poweron_retries",
+          "Units": "Count",
+          "BaseType": "Counter"
         }
       ],
       "Tags": [
