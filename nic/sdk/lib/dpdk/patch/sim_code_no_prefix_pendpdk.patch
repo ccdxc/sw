@@ -97,7 +97,7 @@ index cf8d630..2b7c8f0 100644
  
  err_out:
 diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_dev_vdev.c dpdk-19.02-rc3/drivers/net/ionic/ionic_dev_vdev.c
-index c7b3f8d..69ab140 100644
+index a09e29f..1cb7e7e 100644
 --- dpdk-19.02-rc3/drivers/net/ionic/ionic_dev_vdev.c
 +++ dpdk-19.02-rc3/drivers/net/ionic/ionic_dev_vdev.c
 @@ -43,7 +43,6 @@
@@ -118,7 +118,7 @@ index c7b3f8d..69ab140 100644
  			uio_num = uio_get_uionum_for_devname(mnet_devname);
  
 diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_ethdev.c dpdk-19.02-rc3/drivers/net/ionic/ionic_ethdev.c
-index 15c1285..ed373b7 100644
+index e471622..0c7b98c 100644
 --- dpdk-19.02-rc3/drivers/net/ionic/ionic_ethdev.c
 +++ dpdk-19.02-rc3/drivers/net/ionic/ionic_ethdev.c
 @@ -325,7 +325,7 @@ ionic_dev_link_update(struct rte_eth_dev *eth_dev,
@@ -139,7 +139,7 @@ index 15c1285..ed373b7 100644
  	rte_eth_copy_pci_info(eth_dev, RTE_ETH_DEV_TO_PCI(eth_dev));
  #endif
  
-@@ -1110,6 +1110,8 @@ eth_ionic_dev_probe(void *bus_dev, struct rte_device *rte_dev,
+@@ -1114,6 +1114,8 @@ eth_ionic_dev_probe(void *bus_dev, struct rte_device *rte_dev,
  		adapter->bars.bar[i].len = bars->bar[i].len;
  	}
  	adapter->bars.num_bars = bars->num_bars;
@@ -149,10 +149,10 @@ index 15c1285..ed373b7 100644
  	/* Discover ionic dev resources */
  
 diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_lif.c dpdk-19.02-rc3/drivers/net/ionic/ionic_lif.c
-index 3293cd1..d9af2a6 100644
+index 1494319..a319635 100644
 --- dpdk-19.02-rc3/drivers/net/ionic/ionic_lif.c
 +++ dpdk-19.02-rc3/drivers/net/ionic/ionic_lif.c
-@@ -102,6 +102,7 @@ ionic_lif_get_abs_stats(struct ionic_lif *lif, struct rte_eth_stats *stats)
+@@ -133,6 +133,7 @@ ionic_lif_get_abs_stats(struct ionic_lif *lif, struct rte_eth_stats *stats)
  		return;
  	}
  
@@ -160,7 +160,7 @@ index 3293cd1..d9af2a6 100644
  	/* RX */
  
  	stats->ipackets = ls->rx_ucast_packets +
-@@ -238,6 +239,8 @@ ionic_lif_get_hw_stats(struct ionic_lif *lif, struct ionic_lif_stats *stats)
+@@ -269,6 +270,8 @@ ionic_lif_get_hw_stats(struct ionic_lif *lif, struct ionic_lif_stats *stats)
  	uint64_t *lif_stats64 = (uint64_t *)&lif->info->stats;
  	uint64_t *lif_stats64_base = (uint64_t *)&lif->lif_stats_base;
  
@@ -169,7 +169,7 @@ index 3293cd1..d9af2a6 100644
  	for (i = 0; i < count; i++)
  		stats64[i] = lif_stats64[i] - lif_stats64_base[i];
  }
-@@ -699,6 +702,8 @@ ionic_qcq_alloc(struct ionic_lif *lif, uint8_t type,
+@@ -730,6 +733,8 @@ ionic_qcq_alloc(struct ionic_lif *lif, uint8_t type,
  	new->base_pa = new->base_z->iova;
  	new->total_size = total_size;
  
@@ -178,7 +178,7 @@ index 3293cd1..d9af2a6 100644
  	q_base = new->base;
  	q_base_pa = new->base_pa;
  
-@@ -936,7 +941,8 @@ ionic_lif_alloc(struct ionic_lif *lif)
+@@ -967,7 +972,8 @@ ionic_lif_alloc(struct ionic_lif *lif)
  
  	lif->info = lif->info_z->addr;
  	lif->info_pa = lif->info_z->iova;
@@ -188,7 +188,7 @@ index 3293cd1..d9af2a6 100644
  	return 0;
  }
  
-@@ -993,10 +999,20 @@ ionic_lif_rss_config(struct ionic_lif *lif,
+@@ -1024,10 +1030,20 @@ ionic_lif_rss_config(struct ionic_lif *lif,
  		for (i = 0; i < lif->adapter->ident.lif.eth.rss_ind_tbl_sz; i++)
  			lif->rss_ind_tbl[i] = indir[i];
  
@@ -211,7 +211,7 @@ index 3293cd1..d9af2a6 100644
  }
  
  static int
-@@ -1092,6 +1108,8 @@ ionic_adminq_service(struct ionic_cq *cq, uint32_t cq_desc_index,
+@@ -1123,6 +1139,8 @@ ionic_adminq_service(struct ionic_cq *cq, uint32_t cq_desc_index,
  	struct ionic_admin_comp *cq_desc_base = cq->base;
  	struct ionic_admin_comp *cq_desc = &cq_desc_base[cq_desc_index];
  
@@ -220,7 +220,7 @@ index 3293cd1..d9af2a6 100644
  	if (!color_match(cq_desc->color, cq->done_color))
  		return false;
  
-@@ -1124,6 +1142,8 @@ ionic_link_status_check(struct ionic_lif *lif)
+@@ -1155,6 +1173,8 @@ ionic_link_status_check(struct ionic_lif *lif)
  	if (!lif->info)
  		return;
  
@@ -310,7 +310,7 @@ index e163498..49acf59 100644
  
  #endif
 diff --git dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c
-index 4365bae..e71f229 100644
+index 5b471a8..8fe30d2 100644
 --- dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c
 +++ dpdk-19.02-rc3/drivers/net/ionic/ionic_rxtx.c
 @@ -106,6 +106,8 @@ ionic_tx_flush(struct ionic_qcq *txq)
@@ -322,17 +322,15 @@ index 4365bae..e71f229 100644
  
  	while (color_match(cq_desc->color, cq->done_color)) {
  
-@@ -137,7 +139,8 @@ ionic_tx_flush(struct ionic_qcq *txq)
- 				if (txq->offloads & DEV_TX_OFFLOAD_MBUF_FAST_FREE)
+@@ -139,6 +141,7 @@ ionic_tx_flush(struct ionic_qcq *txq)
  					rte_mempool_put(txm->pool, txm);
  				else
--					rte_pktmbuf_free_seg(txm);
-+					rte_pktmbuf_free_seg(txm);					
+ 					rte_pktmbuf_free_seg(txm);
 +				DPDK_SIM_TX_DONE(txm);
- 				txm = txm->next;
+ 				txm = next;
  			}
  		}
-@@ -234,6 +237,8 @@ ionic_dev_tx_queue_setup(struct rte_eth_dev *eth_dev, uint16_t tx_queue_id,
+@@ -235,6 +238,8 @@ ionic_dev_tx_queue_setup(struct rte_eth_dev *eth_dev, uint16_t tx_queue_id,
  
  	eth_dev->data->tx_queues[tx_queue_id] = txq;
  
@@ -341,7 +339,7 @@ index 4365bae..e71f229 100644
  	return 0;
  }
  
-@@ -500,7 +505,7 @@ ionic_tx(struct ionic_queue *q, struct rte_mbuf *txm, uint64_t offloads)
+@@ -501,7 +506,7 @@ ionic_tx(struct ionic_queue *q, struct rte_mbuf *txm, uint64_t offloads)
  			(ol_flags & PKT_TX_OUTER_IPV6))) {
  		flags |= IONIC_TXQ_DESC_FLAG_ENCAP;
  	}
@@ -350,7 +348,7 @@ index 4365bae..e71f229 100644
  	desc->cmd = encode_txq_desc_cmd(opcode, flags, txm->nb_segs - 1, addr);
  	desc->len = txm->data_len;
  	// desc->hword1 = 0;
-@@ -525,6 +530,8 @@ ionic_tx(struct ionic_queue *q, struct rte_mbuf *txm, uint64_t offloads)
+@@ -526,6 +531,8 @@ ionic_tx(struct ionic_queue *q, struct rte_mbuf *txm, uint64_t offloads)
  	start_cycles = rte_get_tsc_cycles();
  #endif
  
@@ -359,7 +357,7 @@ index 4365bae..e71f229 100644
  	ionic_q_post(q, false, NULL, txm);
  
  #ifdef IONIC_CODE_PERF
-@@ -770,6 +777,8 @@ ionic_dev_rx_queue_setup(struct rte_eth_dev *eth_dev,
+@@ -771,6 +778,8 @@ ionic_dev_rx_queue_setup(struct rte_eth_dev *eth_dev,
  
  	eth_dev->data->rx_queues[rx_queue_id] = rxq;
  
@@ -368,7 +366,7 @@ index 4365bae..e71f229 100644
  	return 0;
  }
  
-@@ -837,12 +846,15 @@ ionic_rx_clean(struct ionic_queue *q,
+@@ -838,12 +847,15 @@ ionic_rx_clean(struct ionic_queue *q,
  	rxm->pkt_len = cq_desc->len;
  	rxm->data_len = RTE_MIN(buf_size, cq_desc->len);
  	rxm->nb_segs = cq_desc->num_sg_elems + 1;
@@ -384,7 +382,7 @@ index 4365bae..e71f229 100644
  			left -= rxm_seg->data_len;
  			rxm_seg = rxm_seg->next;
  		}
-@@ -983,6 +995,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
+@@ -984,6 +996,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
  			prev_rxm_seg = rxm;
  			sg_desc = &sg_desc_base[q->head_idx];
  			elem = sg_desc->elems;
@@ -394,7 +392,7 @@ index 4365bae..e71f229 100644
  			for (j = 0; j < nsegs - 1 && j < IONIC_RX_MAX_SG_ELEMS; j++) {
  				struct rte_mbuf *rxm_seg;
  				rte_iova_t data_iova;
-@@ -998,7 +1013,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
+@@ -999,7 +1014,9 @@ ionic_rx_fill(struct ionic_qcq *rxq, uint32_t len)
  				elem->addr = dma_addr;
  				elem->len = buf_size;
  				size += buf_size;
@@ -405,7 +403,7 @@ index 4365bae..e71f229 100644
  				rxm_seg->next = NULL;
  				prev_rxm_seg->next = rxm_seg;
  				prev_rxm_seg = rxm_seg;
-@@ -1080,6 +1097,8 @@ ionic_rxq_service(struct ionic_cq *cq, uint32_t work_to_do,
+@@ -1081,6 +1098,8 @@ ionic_rxq_service(struct ionic_cq *cq, uint32_t work_to_do,
  	uint32_t work_done = 0;
  
  	cq_desc = &cq_desc_base[cq->tail_idx];
