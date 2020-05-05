@@ -65,8 +65,6 @@ type InstanceParams struct {
 	ID             int    // node identifier as provided by warmd
 	idx            int    // node index within the testbed
 	NodeMgmtIP     string // mgmt ip of the node
-	NicConsoleIP   string // NIC's console server IP
-	NicConsolePort string // NIC's console server port
 	NicMgmtIP      string // NIC's oob mgmt port address
 	NodeCimcIP     string // CIMC ip address of the server
 	NodeCimcNcsiIP string // CIMC NCSI ip address of the server
@@ -158,6 +156,49 @@ func (inst *InstanceParams) getInbandIPs() []string {
 	}
 
 	return ips
+}
+
+func (inst *InstanceParams) getNicConsoleIP() (string, error) {
+	for _, nic := range inst.Nics {
+		if nic.isNaples() {
+			return nic.ConsoleIP, nil
+		}
+	}
+
+	return "", fmt.Errorf("Missing ConsoleIP Info")
+}
+
+func (inst *InstanceParams) getNicConsolePort() (string, error) {
+	for _, nic := range inst.Nics {
+		if nic.isNaples() {
+			return nic.ConsolePort, nil
+		}
+	}
+
+	return "", fmt.Errorf("Missing ConsolePort Info")
+}
+
+func (inst *InstanceParams) getNicConsolePassword() (string, error) {
+	for _, nic := range inst.Nics {
+		if nic.isNaples() {
+			return nic.ConsolePassword, nil
+		}
+	}
+
+	return "", fmt.Errorf("Missing ConsolePassword Info")
+}
+
+func (inst *InstanceParams) getNicUuid() (string, error) {
+	for _, nic := range inst.Nics {
+		if nic.isNaples() {
+			for _, port := range nic.Ports {
+				if port.Name == naplesOutband {
+					return port.MAC, nil
+				}
+			}
+		}
+	}
+	return "", fmt.Errorf("Missing NicUUID Info")
 }
 
 // TestNode contains state of a node in the testbed
@@ -911,19 +952,19 @@ func (tb *TestBed) setupNode(node *TestNode) error {
 	var err error
 	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
 	tbn := iota.TestBedNode{
-		Type:                node.Type,
-		IpAddress:           node.NodeMgmtIP,
-		NicConsoleIpAddress: node.instParams.NicConsoleIP,
-		NicConsolePort:      node.instParams.NicConsolePort,
-		NicIpAddress:        node.instParams.NicMgmtIP,
-		CimcIpAddress:       node.instParams.NodeCimcIP,
-		CimcNcsiIp:          node.instParams.NodeCimcNcsiIP,
-		ServerType:          node.instParams.NodeServer,
-		CimcUsername:        common.DefaultCimcUserName,
-		CimcPassword:        common.DefaultCimcPassword,
-		NicUuid:             node.instParams.Resource.NICUuid,
-		NodeName:            node.NodeName,
+		Type:          node.Type,
+		IpAddress:     node.NodeMgmtIP,
+		CimcIpAddress: node.instParams.NodeCimcIP,
+		CimcNcsiIp:    node.instParams.NodeCimcNcsiIP,
+		ServerType:    node.instParams.NodeServer,
+		CimcUsername:  common.DefaultCimcUserName,
+		CimcPassword:  common.DefaultCimcPassword,
+		NodeName:      node.NodeName,
 	}
+
+	tbn.NicConsoleIpAddress, _ = node.instParams.getNicConsoleIP()
+	tbn.NicConsolePort, _ = node.instParams.getNicConsolePort()
+	tbn.NicUuid, _ = node.instParams.getNicUuid()
 
 	tbn.NicIpAddress, err = node.instParams.getNicMgmtIP()
 	if err != nil {
@@ -1028,19 +1069,20 @@ func (tb *TestBed) DeleteNodes(nodes []*TestNode) error {
 	for _, node := range nodes {
 		tb.addAvailableInstance(node.instParams)
 		tbn := iota.TestBedNode{
-			Type:                node.Type,
-			IpAddress:           node.NodeMgmtIP,
-			NicConsoleIpAddress: node.instParams.NicConsoleIP,
-			NicConsolePort:      node.instParams.NicConsolePort,
-			NicIpAddress:        node.instParams.NicMgmtIP,
-			CimcIpAddress:       node.instParams.NodeCimcIP,
-			CimcNcsiIp:          node.instParams.NodeCimcNcsiIP,
-			CimcUsername:        common.DefaultCimcUserName,
-			CimcPassword:        common.DefaultCimcPassword,
-			NicUuid:             node.instParams.Resource.NICUuid,
-			NodeName:            node.NodeName,
-			InstanceName:        node.instParams.Name,
+			Type:          node.Type,
+			IpAddress:     node.NodeMgmtIP,
+			CimcIpAddress: node.instParams.NodeCimcIP,
+			CimcNcsiIp:    node.instParams.NodeCimcNcsiIP,
+			CimcUsername:  common.DefaultCimcUserName,
+			CimcPassword:  common.DefaultCimcPassword,
+			NodeName:      node.NodeName,
+			InstanceName:  node.instParams.Name,
 		}
+
+		tbn.NicConsoleIpAddress, _ = node.instParams.getNicConsoleIP()
+		tbn.NicConsolePort, _ = node.instParams.getNicConsolePort()
+		tbn.NicUuid, _ = node.instParams.getNicUuid()
+
 		tbn.NicIpAddress, err = node.instParams.getNicMgmtIP()
 		if err != nil {
 			return err
@@ -1330,7 +1372,16 @@ func (tb *TestBed) StartNaplesConsoleLogging() error {
 				//FIXME, REMOVE once DHCP issues is fixed
 				//	go addRouteCommand(node.instParams.NicConsoleIP, node.instParams.NicConsolePort)
 				//} else {
-				go startNaplesLogging(node.NodeName, node.instParams.NicConsoleIP, node.instParams.NicConsolePort)
+				consoleIp, err := node.instParams.getNicConsoleIP()
+				if err != nil {
+					return err
+				}
+
+				consolePort, err := node.instParams.getNicConsolePort()
+				if err != nil {
+					return err
+				}
+				go startNaplesLogging(node.NodeName, consoleIp, consolePort)
 
 				//			}
 			}
@@ -1517,20 +1568,21 @@ func (tb *TestBed) setupTestBed() error {
 	skipSwitch := os.Getenv("SKIP_SWITCH") != ""
 	for _, node := range tb.Nodes {
 		tbn := iota.TestBedNode{
-			Type:                node.Type,
-			IpAddress:           node.NodeMgmtIP,
-			NicConsoleIpAddress: node.instParams.NicConsoleIP,
-			NicConsolePort:      node.instParams.NicConsolePort,
-			NicIpAddress:        node.instParams.NicMgmtIP,
-			CimcIpAddress:       node.instParams.NodeCimcIP,
-			CimcNcsiIp:          node.instParams.NodeCimcNcsiIP,
-			ServerType:          node.instParams.NodeServer,
-			CimcUsername:        common.DefaultCimcUserName,
-			CimcPassword:        common.DefaultCimcPassword,
-			NicUuid:             node.instParams.Resource.NICUuid,
-			NodeName:            node.NodeName,
-			InstanceName:        node.instParams.Name,
+			Type:          node.Type,
+			IpAddress:     node.NodeMgmtIP,
+			CimcIpAddress: node.instParams.NodeCimcIP,
+			CimcNcsiIp:    node.instParams.NodeCimcNcsiIP,
+			ServerType:    node.instParams.NodeServer,
+			CimcUsername:  common.DefaultCimcUserName,
+			CimcPassword:  common.DefaultCimcPassword,
+			NodeName:      node.NodeName,
+			InstanceName:  node.instParams.Name,
 		}
+
+		tbn.NicConsoleIpAddress, _ = node.instParams.getNicConsoleIP()
+		tbn.NicConsolePort, _ = node.instParams.getNicConsolePort()
+		tbn.NicUuid, _ = node.instParams.getNicUuid()
+
 		tbn.NicIpAddress, err = node.instParams.getNicMgmtIP()
 		if err != nil {
 			return err

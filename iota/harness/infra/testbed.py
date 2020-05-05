@@ -197,6 +197,51 @@ class _Testbed:
             return path
         return GlobalOptions.topdir + '/' + path
 
+    def __prepare_SwitchMsg(self, msg, instance, setup_qos=True): 
+        if instance.Type != "bm":
+            return
+        
+        switch_ips = {}
+        if hasattr(instance, 'DataNetworks') and instance.DataNetworks != None: # for backward compatibility
+            for nw in instance.DataNetworks:
+                switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                if not switch_ctx:
+                    switch_ctx = msg.data_switches.add()
+                    switch_ips[nw.SwitchIP] = switch_ctx
+
+                    switch_ctx.username = nw.SwitchUsername
+                    switch_ctx.password = nw.SwitchPassword
+                    switch_ctx.ip = nw.SwitchIP
+                    # This should from testsuite eventually or each testcase should be able to set
+                    switch_ctx.speed = topo_pb2.DataSwitch.Speed_auto
+                    # igmp disabled for now
+                    switch_ctx.igmp_disabled = True
+                    if setup_qos:
+                        setUpSwitchQos(switch_ctx)
+
+                switch_ctx.ports.append(nw.Name)
+        else:
+            for nic in instance.Nics:
+                for port in nic.Ports:
+                    if hasattr(port, 'SwitchIP') and port.SwitchIP and port.SwitchIP != "":
+                        switch_ctx = switch_ips.get(port.SwitchIP, None)
+                        if not switch_ctx:
+                            switch_ctx = msg.data_switches.add()
+                            switch_ips[port.SwitchIP] = switch_ctx
+
+                            switch_ctx.username = port.SwitchUsername
+                            switch_ctx.password = port.SwitchPassword
+                            switch_ctx.ip = port.SwitchIP
+                            # This should from testsuite eventually or each testcase should be able to set
+                            switch_ctx.speed = topo_pb2.DataSwitch.Speed_auto
+                            # igmp disabled for now
+                            switch_ctx.igmp_disabled = True
+                            if setup_qos:
+                                setUpSwitchQos(switch_ctx)
+
+                        switch_ctx.ports.append("e1/" + str(port.SwitchPort))
+        return
+
     def __prepare_TestBedMsg(self, ts):
         msg = topo_pb2.TestBedMsg()
         if ts and not GlobalOptions.rerun:
@@ -269,24 +314,8 @@ class _Testbed:
             #If Vlan base not set, ask topo server to allocate.
             if not (getattr(self.__tbspec, "TestbedVlanBase", None) or GlobalOptions.skip_switch_init):
                 switch_ips = {}
+                self.__prepare_SwitchMsg(msg, instance, setup_qos=True)
                 if instance.Type == "bm":
-                    for nw in instance.DataNetworks:
-                        switch_ctx = switch_ips.get(nw.SwitchIP, None)
-                        if not switch_ctx:
-                            switch_ctx = msg.data_switches.add()
-                            switch_ips[nw.SwitchIP] = switch_ctx
-
-                            switch_ctx.username = nw.SwitchUsername
-                            switch_ctx.password = nw.SwitchPassword
-                            switch_ctx.ip = nw.SwitchIP
-                            # This should from testsuite eventually or each testcase should be able to set
-                            switch_ctx.speed = topo_pb2.DataSwitch.Speed_auto
-                            # igmp disabled for now
-                            switch_ctx.igmp_disabled = True
-                            setUpSwitchQos(switch_ctx)
-
-                        switch_ctx.ports.append(nw.Name)
-
                     #Testbed ID is the last one.
                     msg.testbed_id = getattr(instance, "ID", 0)
                     Logger.info("Testbed ID used %s" % str(msg.testbed_id))
@@ -324,9 +353,20 @@ class _Testbed:
         return types.status.SUCCESS
 
     def __get_instance_nic_type(self, instance):
-        resource = getattr(instance, "Resource", None)
-        if resource is None: return "pensando-sim"
-        return getattr(resource, "NICType", "pensando-sim")
+        # for multi-nic support, return list
+        nic_types = []
+        if hasattr(instance, 'Nics'):
+            for nic in instance.Nics:
+                nic_types.append(getattr(nic, "Type", "pensando-sim"))
+        elif hasattr(instance, 'Resource') and hasattr(instance.Resource, 'NICType'):
+            nic_types.append(getattr(instance.Resource, "NICType", "pensando-sim"))
+        else:
+            nic_types.append('pensando-sim')
+        return nic_types
+
+    def __has_naples_device(self, instance):
+        nic_types = self.__get_instance_nic_type(instance) 
+        return 'pensando' in nic_types or 'naples' in nic_types
 
     def __verifyImagePath(self):
         data = json.load(open(self.__image_manifest_file,'r'))
@@ -376,22 +416,28 @@ class _Testbed:
                     continue
             cmd = ["timeout", "2400"]
 
-            instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", "")
-            if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP.replace(" ", "") == '':
-                instance.NicMgmtIP = instance.NicIntMgmtIP
-            if self.__get_instance_nic_type(instance) in ["pensando", "naples"]:
-                #if instance.NodeOs == "esx":
-                #    cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])
-                #else:
+            if self.__has_naples_device(instance):
 
                 cmd.extend([ "%s/iota/scripts/boot_naples_v2.py" % GlobalOptions.topdir ])
 
                 if self.curr_ts.GetNicMode() == "bitw":
-                    if (instance.NicMgmtIP == "" or instance.NicMgmtIP == None):
-                        Logger.error("Nic Management IP not specified for : %s, mandatory for bump in wire mode" % instance.NodeMgmtIP)
-                        sys.exit(1)
+                    if hasattr(instance, 'Nics'):
+                        for nic in instance.Nics:
+                            if not hasattr(nic, "MgmtIP"):
+                                Logger.error("Nic Management IP not specified for : %s, mandatory for bump in wire mode" % instance.NodeMgmtIP)
+                                sys.exit(1)
+                            else:
+                                cmd.extend(["--naples-only-setup"])
                     else:
-                        cmd.extend(["--naples-only-setup"])
+                        # Legacy inventory/testbed.json
+                        instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", "")
+                        if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP.replace(" ", "") == '':
+                            instance.NicMgmtIP = instance.NicIntMgmtIP
+                        if (instance.NicMgmtIP == "" or instance.NicMgmtIP == None):
+                            Logger.error("Nic Management IP not specified for : %s, mandatory for bump in wire mode" % instance.NodeMgmtIP)
+                            sys.exit(1)
+                        else:
+                            cmd.extend(["--naples-only-setup"])
 
                     mem_size = None
                     if GlobalOptions.pipeline in [ "iris", "apollo", "artemis", "apulu" ]:
@@ -429,7 +475,22 @@ class _Testbed:
                     cmd.extend(["--use-gold-firmware"])
                 if GlobalOptions.fast_upgrade:
                     cmd.extend(["--fast-upgrade"])
-                cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
+
+                nic_uuid = None
+                if hasattr(instance.Resource, 'NICUuid'):
+                    nic_uuid = instance.Resource.NICUuid
+                elif hasattr(instance, 'Nics'):
+                    # Look for oob_mnic0 in the first NIC. FIXME: revisit for dual-nic
+                    nic = instance.Nics[0]
+                    oob_ports = list(filter(lambda x: x.Name == "oob_mnic0", nic.Ports))
+                    if oob_ports:
+                        nic_uuid = oob_ports[0].MAC
+                else:
+                    Logger.error("Missing NICUuid for %s" % (instance.Name))
+
+                if nic_uuid:
+                    cmd.extend(["--uuid", "%s" % nic_uuid])
+
                 cmd.extend(["--image-manifest", manifest_file])
 
                 if self.__fw_upgrade_done or GlobalOptions.only_reboot:
@@ -674,23 +735,12 @@ class _Testbed:
         unsetMsg = topo_pb2.SwitchMsg()
         unsetMsg.op = topo_pb2.VLAN_CONFIG
         for instance in self.__tbspec.Instances:
-            switch_ips = {}
-            if instance.Type == "bm":
-                for nw in instance.DataNetworks:
-                    switch_ctx = switch_ips.get(nw.SwitchIP, None)
-                    if not switch_ctx:
-                        switch_ctx = unsetMsg.data_switches.add()
-                        switch_ips[nw.SwitchIP] = switch_ctx
-                    switch_ctx.username = nw.SwitchUsername
-                    switch_ctx.password = nw.SwitchPassword
-                    switch_ctx.ip = nw.SwitchIP
-                    switch_ctx.ports.append(nw.Name)
-
+            self.__prepare_SwitchMsg(setMsg, instance, setup_qos=False) 
+            
         vlans = self.GetVlanRange()
-        for ip, switch in switch_ips.items():
-             unsetMsg.vlan_config.unset = True
-             unsetMsg.vlan_config.vlan_range = vlans
-             unsetMsg.vlan_config.native_vlan = self.GetNativeVlan()
+        unsetMsg.vlan_config.unset = True
+        unsetMsg.vlan_config.vlan_range = vlans
+        unsetMsg.vlan_config.native_vlan = self.GetNativeVlan()
 
         resp = api.DoSwitchOperation(unsetMsg)
         if not api.IsApiResponseOk(resp):
@@ -703,17 +753,7 @@ class _Testbed:
         setMsg.op = topo_pb2.CREATE_QOS_CONFIG
         switch_ips = {}
         for instance in self.__tbspec.Instances:
-            if instance.Type == "bm":
-                for nw in instance.DataNetworks:
-                    switch_ctx = switch_ips.get(nw.SwitchIP, None)
-                    if not switch_ctx:
-                        switch_ctx = setMsg.data_switches.add()
-                        switch_ips[nw.SwitchIP] = switch_ctx
-                    switch_ctx.username = nw.SwitchUsername
-                    switch_ctx.password = nw.SwitchPassword
-                    switch_ctx.ip = nw.SwitchIP
-                    switch_ctx.ports.append(nw.Name)
-                    setUpSwitchQos(switch_ctx)
+            self.__prepare_SwitchMsg(setMsg, instance, setup_qos=True)
 
         resp = api.DoSwitchOperation(setMsg)
         if not api.IsApiResponseOk(resp):
@@ -727,17 +767,7 @@ class _Testbed:
         setMsg.op = topo_pb2.VLAN_CONFIG
         switch_ips = {}
         for instance in self.__tbspec.Instances:
-            if instance.Type == "bm":
-                for nw in instance.DataNetworks:
-                    switch_ctx = switch_ips.get(nw.SwitchIP, None)
-                    if not switch_ctx:
-                        switch_ctx = setMsg.data_switches.add()
-                        switch_ips[nw.SwitchIP] = switch_ctx
-                    switch_ctx.username = nw.SwitchUsername
-                    switch_ctx.password = nw.SwitchPassword
-                    switch_ctx.ip = nw.SwitchIP
-                    switch_ctx.ports.append(nw.Name)
-                    setUpSwitchQos(switch_ctx)
+            self.__prepare_SwitchMsg(setMsg, instance, setup_qos=True)
 
         vlans = self.GetVlanRange()
         for ip, switch in switch_ips.items():
@@ -749,40 +779,6 @@ class _Testbed:
         if not api.IsApiResponseOk(resp):
             return types.status.FAILURE
         setMsg = topo_pb2.SwitchMsg()
-        return types.status.SUCCESS
-
-    def SetUpTestBedInHostToHostNetworkMode(self):
-        resp = self.UnsetVlansOnTestBed()
-        if resp != types.status.SUCCESS:
-            return resp
-
-        msgs = []
-        switches = []
-        native_vlans = []
-        self.ResetVlanAlloc()
-        for instance in self.__tbspec.Instances:
-            if instance.Type == "bm":
-                for index, nw in enumerate(instance.DataNetworks):
-                    if len(switches) < index + 1:
-                        msg = topo_pb2.SwitchMsg()
-                        msg.op = topo_pb2.VLAN_CONFIG
-                        switch_ctx = msg.data_switches.add()
-                        switch_ctx.username = nw.SwitchUsername
-                        switch_ctx.password = nw.SwitchPassword
-                        switch_ctx.ip = nw.SwitchIP
-                        native_vlans.append(self.AllocateVlan())
-                        msgs.append(msg)
-                        msg.vlan_config.unset = False
-                        msg.vlan_config.vlans.append(native_vlans[index])
-                        msg.vlan_config.native_vlan = native_vlans[index]
-                    else:
-                        switch_ctx = switches[index]
-                    switch_ctx.ports.append(nw.Name)
-
-        for msg in msgs:
-            resp = api.DoSwitchOperation(msg)
-            if not api.IsApiResponseOk(resp):
-               return types.status.FAILURE
         return types.status.SUCCESS
 
 __testbed = _Testbed()

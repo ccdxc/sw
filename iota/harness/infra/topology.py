@@ -112,8 +112,9 @@ class Node(object):
             return {'nic':self.__nic, 'bus':self.__bus, 'device':self.__device, 'function':self.__function}
 
     class NicDevice:
-        def __init__(self, name):
+        def __init__(self, name, nic_type):
             self.__name = name
+            self.__type = nic_type
             self.__uuid = None
             self.__mac = ""
             self.__host_intfs = None
@@ -127,6 +128,8 @@ class Node(object):
             self.__mode = None
             self.__pipeline = None
             self.__index = 0
+            self.__ports = []
+            self.__data_networks = []
 
         def HostIntfs(self):
             return self.__host_intfs
@@ -136,6 +139,9 @@ class Node(object):
 
         def Name(self):
             return self.__name
+
+        def NicType(self):
+            return self.__type
 
         def SetUuid(self, uuid):
             self.__uuid = formatMac(uuid)
@@ -166,6 +172,19 @@ class Node(object):
 
         def SetHostIntfs(self, host_intfs):
             self.__host_intfs = host_intfs
+
+        def SetPorts(self, ports):
+            self.__ports = ports
+            for port in self.__ports:
+                if hasattr(port, 'SwitchIP') and port.SwitchIP and port.SwitchIP != "":
+                    nw_obj = parser.Dict2Object(dict())
+                    setattr(nw_obj, 'SwitchIP', port.SwitchIP)
+                    setattr(nw_obj, 'SwitchPort', port.SwitchPort)
+                    setattr(nw_obj, 'SwitchUsername', port.SwitchUsername)
+                    setattr(nw_obj, 'SwitchPassword', port.SwitchPassword)
+                    setattr(nw_obj, 'Name', 'e1/' + str(port.SwitchPort))
+                    self.__data_networks.append(nw_obj)
+            return
 
         def AllocateHostInterface(self, device = None):
            if GlobalOptions.dryrun:
@@ -228,6 +247,9 @@ class Node(object):
            else:
               print("No static routes to configure on naples")
 
+        def GetDataNetworks(self):
+            return self.__data_networks
+
         def read_from_console(self):
             if GlobalOptions.dryrun:
                 return
@@ -279,7 +301,6 @@ class Node(object):
         self.__node_type = GetNodeType(spec.role)
         self.__node_tag = getattr(spec, "Tag", None)
         self.__inst = store.GetTestbed().AllocateInstance(self.__node_type, self.__node_tag)
-        self.__role = self.__get_instance_role(spec.role, getattr(spec, "mode", None))
         self.__node_id = getattr(self.__inst, "ID", 0)
 
         self.__ip_address = self.__inst.NodeMgmtIP
@@ -300,8 +321,9 @@ class Node(object):
         if  self.__node_type == "bm":
             if nics != None and len(nics) != 0:
                 for nic in nics:
-                    name = self.GetNicType() + str(self.__dev_index)
-                    device = Node.NicDevice(name)
+                    nic_type = getattr(nic, "Type", "pensando-sim")
+                    name = nic_type + str(self.__dev_index)
+                    device = Node.NicDevice(name, nic_type)
                     device.SetIndex(self.__dev_index-1)
                     self.__dev_index = self.__dev_index + 1
                     self.__devices[name] = device
@@ -319,10 +341,11 @@ class Node(object):
                     device.SetMode(defaultMode)
                     device.SetPipeline(defaultPipeline)
 
+                    device.SetPorts(getattr(nic, 'Ports', []))
             else:
                 for index in range(1):
                     name = self.GetNicType() + str(self.__dev_index)
-                    device = Node.NicDevice(name)
+                    device = Node.NicDevice(name, self.GetNicType())
                     device.SetIndex(self.__dev_index-1)
                     self.__dev_index = self.__dev_index + 1
                     self.__devices[name] = device
@@ -337,6 +360,7 @@ class Node(object):
                     device.SetMode(defaultMode)
                     device.SetPipeline(defaultPipeline)
 
+        self.__role = self.__get_instance_role(spec.role, getattr(spec, "mode", None))
         self.__nic_pci_info = {}  # not used
         self.__nic_info = {}  # not used
         self.__vmUser = getattr(self.__inst, "Username", "vm")
@@ -404,15 +428,18 @@ class Node(object):
         if getattr(self.__inst.Resource, "DataNicType", None):
             return topo_pb2.PERSONALITY_NAPLES_BITW
 
-        nic_type = self.__inst.Resource.NICType
+        personalities = []
+        for _, dev in self.__devices.items():
+            personality = GetNodePersonalityByNicType(dev.NicType(), mode)
+            if personality not in personalities:
+                personalities.append(personality)
 
-        role = GetNodePersonalityByNicType(nic_type, mode)
-        if role is None:
+        if not len(personalities):
             os.system("cp /warmd.json '%s/iota/logs" % GlobalOptions.topdir)
             os.system("cat /warmd.json")
             Logger.error("Unknown NIC Type : %s %s" % (nic_type, role))
             sys.exit(1)
-        return role
+        return personalities[0] # FIXME - review for multi-nic
 
     def GetNicsByMode(self, mode):
         if not types.NicModes.valid(mode.upper()):
@@ -511,8 +538,10 @@ class Node(object):
         self.__nic_pci_info[nic] = Node.PciInfo(nic=nic, bus=bus, device=device, function=function)
         return self.__nic_pci_info[nic]
 
-    def GetNicType(self):
-        if getattr(self.__inst, "Resource", None):
+    def GetNicType(self, index=0):
+        if hasattr(self.__inst, 'Nics'):
+            return self.__inst.Nics[index].Type
+        elif getattr(self.__inst, "Resource", None):
             if getattr(self.__inst.Resource, "DataNicType", None):
                 return self.__inst.Resource.DataNicType
             return getattr(self.__inst.Resource, "NICType", "")
@@ -526,7 +555,13 @@ class Node(object):
         return ""
 
     def GetDataNetworks(self):
-        return self.__inst.DataNetworks
+        if hasattr(self.__inst, 'DataNetworks') and self.__inst.DataNetworks != None:
+            return self.__inst.DataNetworks
+        else:
+            network_list = list() 
+            for _, dev in self.__devices.items():
+                network_list.extend(dev.GetDataNetworks())
+            return network_list
 
     def GetNicMgmtIP(self, device = None):
         dev = self.__get_device(device)
@@ -1367,9 +1402,6 @@ class Topology(object):
 
     def GetOrchestratorNode(self):
         return self.__orch_node.Name()
-
-    def SetUpTestBedInHostToHostNetworkMode(self):
-        return store.GetTestbed().SetUpTestBedInHostToHostNetworkMode()
 
     def SetupTestBedNetwork(self):
         return store.GetTestbed().SetupTestBedNetwork()
