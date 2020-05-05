@@ -291,13 +291,16 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
         valid_rflow_ = true;
     }
 
+    direction_ = (hal::flow_direction_t)sess->iflow->config.dir;
     if (valid_rflow_) {
         rkey_ = rflow_[0]->key();
+        rdirection_ = (hal::flow_direction_t)sess->rflow->config.dir;
     }
 
     // Set drop from the existing session
     if (sess->iflow->pgm_attrs.drop)
         set_drop();
+
 }
 
 //------------------------------------------------------------------------------

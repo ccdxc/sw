@@ -585,7 +585,13 @@ public:
     // direction of the current pkt
     hal::flow_direction_t direction() const { return direction_; }
     // direction of the currnet flow being processed
-    hal::flow_direction_t flow_direction() const { return rdirection_; }
+    hal::flow_direction_t get_flow_direction(hal::flow_role_t role = hal::FLOW_ROLE_NONE) const {
+        if (role == hal::FLOW_ROLE_NONE) {
+            role = role_;
+        }
+
+        return (role == hal::FLOW_ROLE_INITIATOR) ? direction_ : rdirection_;
+    }
 
 
     // Following are valid only for packets punted to ARM

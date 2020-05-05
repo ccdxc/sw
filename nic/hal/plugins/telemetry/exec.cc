@@ -104,7 +104,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
                     // flow direction. There is a bit of a cost to do the recirc
                     // for egress in P4. TBD: Move to user configurable option
                     //
-                    if (ctx.flow_direction() == hal::FLOW_DIR_FROM_DMA) { 
+                    if (ctx.get_flow_direction() == hal::FLOW_DIR_FROM_DMA) { 
                         mirror_flowupd.mirror_info.egr_mirror_session |= 
                         (1 << frule->action.mirror_destinations[i]);
                     } else {
