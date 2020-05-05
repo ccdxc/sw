@@ -19,8 +19,20 @@ import (
 )
 
 var (
-	policyID string
-	ruleID   string
+	policyID            string
+	ruleID              string
+	profileID           string
+	tcpIdleTimeout      uint32
+	udpIdleTimeout      uint32
+	icmpIdleTimeout     uint32
+	otherIdleTimeout    uint32
+	tcpCnxnSetupTimeout uint32
+	tcpHalfCloseTimeout uint32
+	tcpCloseTimeout     uint32
+	tcpDropTimeout      uint32
+	udpDropTimeout      uint32
+	icmpDropTimeout     uint32
+	otherDropTimeout    uint32
 )
 
 var securityPolicyShowCmd = &cobra.Command{
@@ -44,6 +56,13 @@ var securityRuleShowCmd = &cobra.Command{
 	Run:   securityRuleShowCmdHandler,
 }
 
+var securityProfileUpdateCmd = &cobra.Command{
+	Use:   "security-profile",
+	Short: "update security profile",
+	Long:  "update security profile",
+	Run:   securityProfileUpdateCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(securityPolicyShowCmd)
 	securityPolicyShowCmd.Flags().Bool("yaml", false, "Output in yaml")
@@ -58,6 +77,20 @@ func init() {
 	securityRuleShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	securityRuleShowCmd.Flags().StringVarP(&policyID, "policy-id", "p", "", "Specify policy ID")
 	securityRuleShowCmd.Flags().StringVarP(&ruleID, "rule-id", "r", "", "Specify rule ID")
+
+	debugCmd.AddCommand(securityProfileUpdateCmd)
+	securityProfileUpdateCmd.Flags().StringVarP(&policyID, "profile-id", "p", "", "Specify profile ID")
+	securityProfileUpdateCmd.Flags().Uint32Var(&tcpIdleTimeout, "tcp-idle-timeout", 600, "Specify TCP idle timeout (Valid: 5-86400)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&udpIdleTimeout, "udp-idle-timeout", 120, "Specify UDP idle timeout (Valid: 5-86400)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&icmpIdleTimeout, "icmp-idle-timeout", 15, "Specify ICMP idle timeout (Valid: 5-86400)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&otherIdleTimeout, "other-idle-timeout", 90, "Specify Other idle timeout (Valid: 30-86400)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&tcpCnxnSetupTimeout, "tcp-cnxn-setup-timeout", 10, "Specify TCP sonnection setup timeout (Valid: 1-60)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&tcpHalfCloseTimeout, "tcp-half-close-timeout", 120, "Specify TCP half close timeout (Valid: 1-172800)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&tcpCloseTimeout, "tcp-close-timeout", 15, "Specify TCP close timeout (Valid: 1-300)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&tcpDropTimeout, "tcp-drop-timeout", 90, "Specify TCP drop timeout (Valid: 1-300)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&udpDropTimeout, "udp-drop-timeout", 60, "Specify UDP drop timeout (Valid: 1-172800)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&icmpDropTimeout, "icmp-drop-timeout", 30, "Specify ICMP drop timeout (Valid: 1-300)")
+	securityProfileUpdateCmd.Flags().Uint32Var(&otherDropTimeout, "other-drop-timeout", 60, "Specify Other drop timeout (Valid: 1-300)")
 }
 
 func securityPolicyShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -549,4 +582,231 @@ func printRule(resp *pds.SecurityRule) {
 
 	fmt.Printf("\n%-30s : %s\n", "Security Rule Action",
 		strings.Replace(attr.GetAction().String(), "SECURITY_RULE_ACTION_", "", -1))
+}
+
+func securityProfileUpdateCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS, is PDS running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	if !isValidTimeoutArgument(cmd) {
+		return
+	}
+
+	client := pds.NewSecurityPolicySvcClient(c)
+
+	var req *pds.SecurityProfileGetRequest
+	// Get specific profile
+	req = &pds.SecurityProfileGetRequest{
+		Id: [][]byte{uuid.FromStringOrNil(profileID).Bytes()},
+	}
+
+	// PDS call
+	respMsg, err := client.SecurityProfileGet(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Getting policy failed, err %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		spec := resp.GetSpec()
+		if spec == nil || uuid.FromBytesOrNil(spec.GetId()).String() != profileID {
+			continue
+		}
+
+		updateProfileSpec := spec
+		updateRequired := false
+
+		if cmd.Flags().Changed("tcp-idle-timeout") && spec.GetTCPIdleTimeout() != tcpIdleTimeout {
+			updateRequired = true
+			updateProfileSpec.TCPIdleTimeout = tcpIdleTimeout
+		}
+		if cmd.Flags().Changed("udp-idle-timeout") && spec.GetUDPIdleTimeout() != udpIdleTimeout {
+			updateRequired = true
+			updateProfileSpec.UDPIdleTimeout = udpIdleTimeout
+		}
+		if cmd.Flags().Changed("icmp-idle-timeout") && spec.GetICMPIdleTimeout() != icmpIdleTimeout {
+			updateRequired = true
+			updateProfileSpec.ICMPIdleTimeout = icmpIdleTimeout
+		}
+		if cmd.Flags().Changed("other-idle-timeout") && spec.GetOtherIdleTimeout() != otherIdleTimeout {
+			updateRequired = true
+			updateProfileSpec.OtherIdleTimeout = otherIdleTimeout
+		}
+		if cmd.Flags().Changed("tcp-cnxn-setup-timeout") && spec.GetTCPCnxnSetupTimeout() != tcpCnxnSetupTimeout {
+			updateRequired = true
+			updateProfileSpec.TCPCnxnSetupTimeout = tcpCnxnSetupTimeout
+		}
+		if cmd.Flags().Changed("tcp-half-close-timeout") && spec.GetTCPHalfCloseTimeout() != tcpHalfCloseTimeout {
+			updateRequired = true
+			updateProfileSpec.TCPHalfCloseTimeout = tcpHalfCloseTimeout
+		}
+		if cmd.Flags().Changed("tcp-close-timeout") && spec.GetTCPCloseTimeout() != tcpCloseTimeout {
+			updateRequired = true
+			updateProfileSpec.TCPCloseTimeout = tcpCloseTimeout
+		}
+		if cmd.Flags().Changed("tcp-drop-timeout") && spec.GetTCPDropTimeout() != tcpDropTimeout {
+			updateRequired = true
+			updateProfileSpec.TCPDropTimeout = tcpDropTimeout
+		}
+		if cmd.Flags().Changed("udp-drop-timeout") && spec.GetUDPDropTimeout() != udpDropTimeout {
+			updateRequired = true
+			updateProfileSpec.UDPDropTimeout = udpDropTimeout
+		}
+		if cmd.Flags().Changed("icmp-drop-timeout") && spec.GetICMPDropTimeout() != icmpDropTimeout {
+			updateRequired = true
+			updateProfileSpec.ICMPDropTimeout = icmpDropTimeout
+		}
+		if cmd.Flags().Changed("other-drop-timeout") && spec.GetOtherDropTimeout() != otherDropTimeout {
+			updateRequired = true
+			updateProfileSpec.OtherDropTimeout = otherDropTimeout
+		}
+
+		if !updateRequired {
+			fmt.Printf("Security-profile update not required, values provided match with current\n")
+			return
+		}
+
+		updateReq := &pds.SecurityProfileRequest{
+			Request: []*pds.SecurityProfileSpec{
+				updateProfileSpec,
+			},
+		}
+
+		updateResp, updateErr := client.SecurityProfileUpdate(context.Background(), updateReq)
+		if updateErr != nil {
+			fmt.Printf("Security-profile update failed, err %v\n", updateErr)
+			return
+		}
+
+		if updateResp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", updateResp.ApiStatus)
+			return
+		}
+
+		fmt.Printf("Security-profile update succeeded\n")
+		return
+	}
+
+	fmt.Printf("No matching profile id found\n")
+}
+
+func isValidTimeoutArgument(cmd *cobra.Command) bool {
+
+	if cmd == nil {
+		return false
+	}
+
+	if !cmd.Flags().Changed("profile") {
+		fmt.Printf("Command arguments not provided correctly, profile-id and one of the timeout arguments are required for this CLI\n")
+		return false
+	}
+
+	if !cmd.Flags().Changed("tcp-idle-timeout") &&
+		!cmd.Flags().Changed("udp-idle-timeout") &&
+		!cmd.Flags().Changed("icmp-idle-timeout") &&
+		!cmd.Flags().Changed("other-idle-timeout") &&
+		!cmd.Flags().Changed("tcp-cnxn-setup-timeout") &&
+		!cmd.Flags().Changed("tcp-half-close-timeout") &&
+		!cmd.Flags().Changed("tcp-close-timeout") &&
+		!cmd.Flags().Changed("tcp-drop-timeout") &&
+		!cmd.Flags().Changed("udp-drop-timeout") &&
+		!cmd.Flags().Changed("icmp-drop-timeout") &&
+		!cmd.Flags().Changed("other-drop-timeout") {
+		fmt.Printf("No timeout arguments specified, refer to help string\n")
+		return false
+	}
+
+	if cmd.Flags().Changed("tcp-idle-timeout") {
+		if tcpIdleTimeout < 5 || tcpIdleTimeout > 86400 {
+			fmt.Printf("Invalid range for tcp-idle-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("udp-idle-timeout") {
+		if udpIdleTimeout < 5 || udpIdleTimeout > 86400 {
+			fmt.Printf("Invalid range for udp-idle-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("icmp-idle-timeout") {
+		if icmpIdleTimeout < 5 || icmpIdleTimeout > 86400 {
+			fmt.Printf("Invalid range for icmp-idle-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("other-idle-timeout") {
+		if otherIdleTimeout < 30 || otherIdleTimeout > 86400 {
+			fmt.Printf("Invalid range for other-idle-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("tcp-cnxn-setup-timeout") {
+		if tcpCnxnSetupTimeout < 1 || tcpCnxnSetupTimeout > 60 {
+			fmt.Printf("Invalid range for tcp-cnxn-setup-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("tcp-half-close-timeout") {
+		if tcpHalfCloseTimeout < 1 || tcpHalfCloseTimeout > 172800 {
+			fmt.Printf("Invalid range for tcp-half-close-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("tcp-close-timeout") {
+		if tcpCloseTimeout < 1 || tcpCloseTimeout > 300 {
+			fmt.Printf("Invalid range for tcp-close-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("tcp-drop-timeout") {
+		if tcpDropTimeout < 1 || tcpDropTimeout > 300 {
+			fmt.Printf("Invalid range for tcp-drop-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("udp-drop-timeout") {
+		if udpDropTimeout < 1 || udpDropTimeout > 172800 {
+			fmt.Printf("Invalid range for udp-drop-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("icmp-drop-timeout") {
+		if icmpDropTimeout < 1 || icmpDropTimeout > 300 {
+			fmt.Printf("Invalid range for icmp-drop-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	if cmd.Flags().Changed("other-drop-timeout") {
+		if otherDropTimeout < 1 || otherDropTimeout > 300 {
+			fmt.Printf("Invalid range for other-drop-timeout, refer to help string\n")
+			return false
+		}
+	}
+
+	return true
 }
