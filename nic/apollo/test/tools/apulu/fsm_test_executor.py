@@ -173,9 +173,10 @@ def execute(**kwargs):
 
 class ExecutePdsUpgradeFsmTest(object):
 
-    def __init__(self, test_json):
+    def __init__(self, test_json, test_case_name=None):
         self.json_container = {}
         self.test_case_json = test_json
+        self.specific_test_case_to_run = test_case_name
         self.PDSPKG_TOPDIR = ""
         self.BUILD_DIR = ""
         self.PIPELINE = ""
@@ -438,16 +439,29 @@ class ExecutePdsUpgradeFsmTest(object):
         #     # ret = self.__match_log__(log_file, log)
 
     def __start_tests_execution__(self):
-        test_cases = list(self.__get_data_by_key_walk__("").keys())
-        self.number_of_test = len(test_cases)
-        self.summary += message(16).format(self.number_of_test) + os.linesep
-        for test_id in test_cases:
+        if self.specific_test_case_to_run is not None:
+            test_case = self.__get_data_by_key_walk__(
+                self.specific_test_case_to_run,
+                check_values=True)
+
+            self.summary += message(16).format(1) + os.linesep
             self.summary += "-" * 100 + os.linesep
             self.__setup__()
-            self.__execute_test__(test_id)
+            self.__execute_test__(self.specific_test_case_to_run)
             os.system("sleep 5")
             self.__cleanup__()
-            print ("-" * 100)
+            print("-" * 100)
+        else:
+            test_cases = list(self.__get_data_by_key_walk__("").keys())
+            self.number_of_test = len(test_cases)
+            self.summary += message(16).format(self.number_of_test) + os.linesep
+            for test_id in test_cases:
+                self.summary += "-" * 100 + os.linesep
+                self.__setup__()
+                self.__execute_test__(test_id)
+                os.system("sleep 5")
+                self.__cleanup__()
+                print ("-" * 100)
 
 
         self.summary += "=" * 100 + os.linesep
@@ -475,9 +489,9 @@ class ExecutePdsUpgradeFsmTest(object):
         self.test_exp_log_fmt = "{0}.expected_result.log.{1}"
 
 
-def main(test_case_json):
+def main(test_case_json, test_case_name=None):
     try:
-        obj = ExecutePdsUpgradeFsmTest(test_case_json)
+        obj = ExecutePdsUpgradeFsmTest(test_case_json, test_case_name)
         status = obj.start()
     except:
         frame_info = inspect.getframeinfo(inspect.currentframe())
@@ -509,8 +523,16 @@ if __name__ == "__main__":
                         type=str,
                         help='PDS upgrade fsm test Json '
                              '(example: \'upgrade_fsm_test_cases.json\')')
+    parser.add_argument('-t',
+                        nargs='?',
+                        dest='test_case_name',
+                        required=False,
+                        type=str,
+                        default=None,
+                        help='Test case name to execute')
+
 
     args = parser.parse_args()
-    main(args.input_file_name)
-    sys.exit(0)
 
+    main(args.input_file_name, args.test_case_name)
+    sys.exit(0)
