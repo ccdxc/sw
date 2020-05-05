@@ -141,15 +141,24 @@ var _ = Describe("Routing Config Tests", func() {
 
 			Expect(verifyTimerInVenice(keepAlive, holdTime)).Should(Succeed())
 
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
-
-			verifyNaplesBgpState("ESTABLISHED")
-			verifyRRState()
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 
 			//revert to original
 			Expect(orig.Commit()).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 		})
+
 		It("Add, delete ECX Peer in RR", func() {
 			// get all existing routing config
 			rcc, err := ts.model.ListRoutingConfig()
@@ -178,11 +187,13 @@ var _ = Describe("Routing Config Tests", func() {
 			}
 
 			Expect(rcc.Commit()).Should(Succeed())
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 
-			verifyNaplesBgpState("ESTABLISHED")
-			verifyRRState()
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 
 			//Delete added ECX peer
 			for _, v := range rcc.RoutingObjs {
@@ -194,14 +205,23 @@ var _ = Describe("Routing Config Tests", func() {
 				}
 			}
 			Expect(rcc.Commit()).Should(Succeed())
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 
-			verifyNaplesBgpState("ESTABLISHED")
-			verifyRRState()
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 
 			//revert to original
 			Expect(orig.Commit()).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 		})
 
 		It("Add, delete DSCAutoConfig for Naples in RR", func() {
@@ -228,11 +248,13 @@ var _ = Describe("Routing Config Tests", func() {
 			}
 
 			Expect(rcc.Commit()).Should(Succeed())
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 
-			verifyNaplesBgpState("ESTABLISHED")
-			verifyRRState()
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 
 			log.Infof("Deleting Naples peering template")
 			//Delete added Naples template
@@ -245,15 +267,16 @@ var _ = Describe("Routing Config Tests", func() {
 				}
 			}
 			Expect(rcc.Commit()).Should(Succeed())
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 
-			verifyNaplesBgpState("ESTABLISHED")
-			verifyRRState()
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 		})
 
-		It("Change password for Naples template in RR", func() {
-			Skip("Skipping the test as it fails")
+		It("Change overlay password", func() {
 			// get all existing routing config
 			rcc, err := ts.model.ListRoutingConfig()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -261,63 +284,99 @@ var _ = Describe("Routing Config Tests", func() {
 			orig, err := ts.model.ListRoutingConfig()
 			Expect(err).ShouldNot(HaveOccurred())
 
-			//First change password in RR; verify state is CONNECT
-			for _, v := range rcc.RoutingObjs {
-				if v.RoutingObj.Spec.BGPConfig.DSCAutoConfig {
-					//Naples config
-					continue
-				}
-				found := false
-				for _, n := range v.RoutingObj.Spec.BGPConfig.Neighbors {
-					if n.DSCAutoConfig {
-						found = true
-						n.Password = "N0isystem$"
-					}
-				}
-				if !found {
-					nbrs := v.RoutingObj.Spec.BGPConfig.GetNeighbors()
-
-					newNbr := &network.BGPNeighbor{
-						Shutdown:              false,
-						IPAddress:             "",
-						RemoteAS:              100,
-						MultiHop:              10,
-						EnableAddressFamilies: []string{"l2vpn-evpn"},
-						Password:              "N0isystem$",
-						DSCAutoConfig:         true,
-					}
-					nbrs = append(nbrs, newNbr)
-					v.RoutingObj.Spec.BGPConfig.Neighbors = nbrs
-				}
-			}
-
+			newPassword := "N0isystem$"
+			//First change password in RR; verify state is NOT ESTABLISHED (CONNECT or IDLE)
+			rcc.SetPasswordOnRR(newPassword)
 			Expect(rcc.Commit()).Should(Succeed())
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 
-			verifyNaplesBgpState("CONNECT")
-			verifyRRState()
+			Eventually(func() error {
+				return verifyNaplesBgpState("NOT ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 
 			//Now change password on Naples & verify status is established
-			for _, v := range rcc.RoutingObjs {
-				if v.RoutingObj.Spec.BGPConfig.DSCAutoConfig {
-					//Naples config
-					for _, n := range v.RoutingObj.Spec.BGPConfig.Neighbors {
-						if n.GetEnableAddressFamilies()[0] == "l2vpn-evpn" {
-							n.Password = "N0isytem$"
-						}
-					}
-				}
-			}
+			rcc.SetPasswordOnNaples(newPassword)
 			Expect(rcc.Commit()).Should(Succeed())
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 
-			verifyNaplesBgpState("ESTABLISHED")
-			verifyRRState()
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 
-			//Revert to original state
+			//reset passwords
+			rcc.SetPasswordOnRR("")
+			rcc.SetPasswordOnNaples("")
+			Expect(rcc.Commit()).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
+
+			//Revert to original state (i.e. w/o the DSC autoconfig block in RR)
+			log.Infof("Reverting to original config on Naples & RR")
 			Expect(orig.Commit()).Should(Succeed())
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
+		})
+
+		It("Change overlay password w/ implicit reset", func() {
+			Skip("Skip this test as there's known failure")
+			/*
+				This case is same as above except when we revert to original config,
+				we remove DSC config template from RR w/o  explicitly resetting password.
+			*/
+			// get all existing routing config
+			rcc, err := ts.model.ListRoutingConfig()
+			Expect(err).ShouldNot(HaveOccurred())
+
+			orig, err := ts.model.ListRoutingConfig()
+			Expect(err).ShouldNot(HaveOccurred())
+
+			newPassword := "N0isystem$"
+			//First change password in RR; verify state is NOT ESTABLISHED (CONNECT or IDLE)
+			rcc.SetPasswordOnRR(newPassword)
+			Expect(rcc.Commit()).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyNaplesBgpState("NOT ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
+
+			//Now change password on Naples & verify status is established
+			rcc.SetPasswordOnNaples(newPassword)
+			Expect(rcc.Commit()).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
+
+			//Revert to original state (i.e. w/o the DSC autoconfig block in RR)
+			//Default config doesn't have Naples config template
+			log.Infof("Reverting original config on Naples & RR")
+			Expect(orig.Commit()).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyNaplesBgpState("ESTABLISHED")
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyRRState()
+			}).Should(Succeed())
 		})
 
 	})
@@ -421,7 +480,11 @@ func convertPDSConfig(peersAf []*PdsBGPPeerAFSpec, peers []*PdsBGPPeer,
 		pdsNbr.Spec.Keepalive = peer.Spec.KeepAlive
 		pdsNbr.Spec.Holdtime = peer.Spec.HoldTime
 		if getStatus {
-			pdsNbr.Status.Status = peer.Status.Status
+			if peer.Status.Status != "ESTABLISHED" {
+				pdsNbr.Status.Status = "NOT ESTABLISHED"
+			} else {
+				pdsNbr.Status.Status = peer.Status.Status
+			}
 		}
 		cfg.Neighbors = append(cfg.Neighbors, &pdsNbr)
 	}
@@ -591,13 +654,13 @@ func getExpectedNaplesState(r *objects.RoutingConfig, node *objects.Naples, isHw
 				cfg.Neighbors = append(cfg.Neighbors, &pdsNbr)
 				pnodeMap[pnode.IP()] = true
 			}
-			//Add other venice nodes which should be in IDLE state
+			//Add other venice nodes which should be in not-established (CONNECT/IDLE) state
 			for _, veniceNode := range vnodes.Nodes {
 				if pnodeMap[veniceNode.IP()] {
 					continue
 				}
 				var pdsNbr pdsBGPNeighbor
-				pdsNbr.populate(r, nbr, veniceNode.IP(), "IDLE")
+				pdsNbr.populate(r, nbr, veniceNode.IP(), "NOT ESTABLISHED")
 				cfg.Neighbors = append(cfg.Neighbors, &pdsNbr)
 			}
 			break
@@ -612,7 +675,8 @@ func getExpectedNaplesState(r *objects.RoutingConfig, node *objects.Naples, isHw
 			if strings.Contains(af, "ipv4-unicast") {
 				for _, ip := range peerIPs {
 					var pdsNbr pdsBGPNeighbor
-					pdsNbr.populate(r, nbr, ip, state)
+					//TODO get expected state from fn parameter
+					pdsNbr.populate(r, nbr, ip, "ESTABLISHED")
 					cfg.Neighbors = append(cfg.Neighbors, &pdsNbr)
 				}
 				break
@@ -670,7 +734,7 @@ func getExpectedRRState(r *objects.RoutingConfig) *pdsConfigCmp {
 	return &cfg
 }
 
-func verifyNaplesBgpState(expectedState string) {
+func verifyNaplesBgpState(expectedState string) error {
 	//get naples rtg config template
 	r, _ := getNaplesCfgTemplate()
 
@@ -678,53 +742,50 @@ func verifyNaplesBgpState(expectedState string) {
 	fakeNodes := ts.model.Naples().FakeNodes
 	for _, node := range fakeNodes {
 		//verify pdsinfo matches expected veniceinfo
-		Eventually(func() bool {
-			//populate expected o/p
-			expected, _ := getExpectedNaplesState(r, node, false, expectedState)
+		expected, _ := getExpectedNaplesState(r, node, false, expectedState)
 
-			existing := getNaplesState(node, "/naples/nic/bin/pdsctl", false)
-			log.Infof("Naples: Expected bgp state %+v", expected)
-			log.Infof("Naples: Existing bgp state %+v", existing)
-			for _, n := range expected.Neighbors {
-				log.Infof("Naples: Expected nbr %+v", n)
-			}
-			for _, n := range existing.Neighbors {
-				log.Infof("Naples: Existing nbr %+v", n)
-			}
-			return reflect.DeepEqual(expected, existing)
-		}).Should(BeTrue())
+		existing := getNaplesState(node, "/naples/nic/bin/pdsctl", false)
+		log.Infof("Naples: Expected bgp state %+v", expected)
+		log.Infof("Naples: Existing bgp state %+v", existing)
+		for _, n := range expected.Neighbors {
+			log.Infof("Naples: Expected nbr %+v", n)
+		}
+		for _, n := range existing.Neighbors {
+			log.Infof("Naples: Existing nbr %+v", n)
+		}
+		if reflect.DeepEqual(expected, existing) == false {
+			return fmt.Errorf("Naples: BGP state verify failed for node %s", node.IP())
+		}
 	}
 
 	nodes := ts.model.Naples().Nodes
 	for _, node := range nodes {
-		Eventually(func() bool {
-			//populate expected o/p
-			expected, _ := getExpectedNaplesState(r, node, true, expectedState)
+		expected, _ := getExpectedNaplesState(r, node, true, expectedState)
 
-			existing := getNaplesState(node, "/nic/bin/pdsctl", true)
-			log.Infof("Naples: Expected bgp state %+v", expected)
-			log.Infof("Naples: Existing bgp state %+v", existing)
+		existing := getNaplesState(node, "/nic/bin/pdsctl", true)
+		log.Infof("Naples: Expected bgp state %+v", expected)
+		log.Infof("Naples: Existing bgp state %+v", existing)
 
-			for _, n := range expected.Neighbors {
-				log.Infof("Naples: Expected nbr %+v", n)
-			}
-			for _, n := range existing.Neighbors {
-				log.Infof("Naples: Existing nbr %+v", n)
-			}
+		for _, n := range expected.Neighbors {
+			log.Infof("Naples: Expected nbr %+v", n)
+		}
+		for _, n := range existing.Neighbors {
+			log.Infof("Naples: Existing nbr %+v", n)
+		}
 
-			return reflect.DeepEqual(expected, existing)
-		}).Should(BeTrue())
-
+		if reflect.DeepEqual(expected, existing) == false {
+			return fmt.Errorf("Naples: BGP state verify failed for node %s", node.IP())
+		}
 	}
+	return nil
 }
 
-func verifyRRState() {
+func verifyRRState() error {
 	//Get pdsagent o/p from RR nodes and compare
 	pegContainerCollection, err := ts.model.VeniceNodes().GetVeniceContainersWithService("pen-pegasus", true)
 
 	if err != nil {
-		log.Errorf("Can't get pegasus containers")
-		return
+		return fmt.Errorf("Can't get pegasus containers")
 	}
 
 	for _, pegContainer := range pegContainerCollection.Containers {
@@ -746,6 +807,11 @@ func verifyRRState() {
 		for _, n := range existing.Neighbors {
 			log.Infof("RR: Existing nbr %+v", n)
 		}
-		Expect(reflect.DeepEqual(expected, existing)).Should(BeTrue())
+
+		if reflect.DeepEqual(expected, existing) == false {
+			return fmt.Errorf("RR : BGP state verify failed for RR %s", pegContainer.Node.IP())
+		}
 	}
+
+	return nil
 }

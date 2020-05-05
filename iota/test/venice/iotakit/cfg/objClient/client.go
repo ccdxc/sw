@@ -1415,15 +1415,10 @@ func (r *Client) CreateVPC(vrf *network.VirtualRouter) error {
 		_, err = restcl.NetworkV1().VirtualRouter().Create(r.ctx, vrf)
 		if err == nil {
 			break
-		} else if strings.Contains(err.Error(), "already exists") {
-			_, err = restcl.NetworkV1().VirtualRouter().Update(r.ctx, vrf)
-			if err == nil {
-				break
-			}
 		}
 	}
-	return err
 
+	return err
 }
 
 //UpdateVPC creates vpcs

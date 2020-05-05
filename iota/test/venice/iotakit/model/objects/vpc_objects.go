@@ -79,11 +79,30 @@ func (voc *VpcObjCollection) Commit() error {
 		err := voc.Client.CreateVPC(vpc.Obj)
 		if err != nil {
 			voc.err = err
-			log.Infof("Creating or updating VPC failed %v", err)
+			log.Infof("Creating VPC failed %v", err)
 			return err
 		}
 
 		log.Debugf("Created VPC : %#v", vpc.Obj)
+	}
+
+	return nil
+}
+
+// Update updates the VPC config to venice for pre-existing VPCs
+func (voc *VpcObjCollection) Update() error {
+	if voc.HasError() {
+		return voc.err
+	}
+	for _, vpc := range voc.Objs {
+		err := voc.Client.UpdateVPC(vpc.Obj)
+		if err != nil {
+			voc.err = err
+			log.Infof("Updating VPC failed %v", err)
+			return err
+		}
+
+		log.Debugf("Updated VPC : %#v", vpc.Obj)
 	}
 
 	return nil

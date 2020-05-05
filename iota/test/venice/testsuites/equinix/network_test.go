@@ -79,12 +79,15 @@ var _ = Describe("Network", func() {
 			uuid := nw.VeniceNetwork.GetUUID()
 			log.Infof("Network object UUID %s", uuid)
 
-			// Wait for Naples to finish configuring
-			time.Sleep(20 * time.Second)
 			//Verify state in Naples
 			nwList := ts.model.Networks(tenantName)
-			verifyNetAgentNwState(nwList)
-			verifyPDSNwState(nwList)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwList)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyPDSNwState(nwList)
+			}).Should(Succeed())
 
 			// detach the interface to the subnet
 			DetachNwInterfaceFromSubnet(tenantName, nwName, nwIfs)
@@ -93,8 +96,14 @@ var _ = Describe("Network", func() {
 
 			//Verify state in Naples
 			nwList = ts.model.Networks(tenantName)
-			verifyNetAgentNwState(nwList)
-			verifyPDSNwState(nwList)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwList)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyPDSNwState(nwList)
+			}).Should(Succeed())
+
 		})
 
 		It("Change subnet prefix & verify config", func() {
@@ -144,12 +153,14 @@ var _ = Describe("Network", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(nw.VeniceNetwork.Spec.GetIPv4Subnet() == newPrefix).Should(BeTrue())
 
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
-
 			nwList := ts.model.Networks(tenantName)
-			verifyNetAgentNwState(nwList)
-			verifyPDSNwState(nwList)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwList)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyPDSNwState(nwList)
+			}).Should(Succeed())
 
 			// detach the interface to the subnet
 			DetachNwInterfaceFromSubnet(tenantName, nwName, nwIfs)
@@ -157,8 +168,13 @@ var _ = Describe("Network", func() {
 			Expect(vpc.Delete()).Should(Succeed())
 
 			nwList = ts.model.Networks(tenantName)
-			verifyNetAgentNwState(nwList)
-			verifyPDSNwState(nwList)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwList)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyPDSNwState(nwList)
+			}).Should(Succeed())
 		})
 
 		It("Change Gateway IP & verify config", func() {
@@ -191,11 +207,14 @@ var _ = Describe("Network", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(nw.VeniceNetwork.Spec.GetIPv4Gateway() == newGw).Should(BeTrue())
 
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 			nwList := ts.model.Networks(tenantName)
-			verifyNetAgentNwState(nwList)
-			verifyPDSNwState(nwList)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwList)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyPDSNwState(nwList)
+			}).Should(Succeed())
 
 			//Revert to original
 			snc[0].UpdateIPv4Gateway(oldGw)
@@ -206,11 +225,14 @@ var _ = Describe("Network", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(nw.VeniceNetwork.Spec.GetIPv4Gateway() == oldGw).Should(BeTrue())
 
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 			nwList = ts.model.Networks(tenantName)
-			verifyNetAgentNwState(nwList)
-			verifyPDSNwState(nwList)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwList)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyPDSNwState(nwList)
+			}).Should(Succeed())
 		})
 
 		It("Change Vni & verify it's not allowed", func() {
@@ -237,11 +259,14 @@ var _ = Describe("Network", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(nw.VeniceNetwork.Spec.GetVxlanVNI() == nwVni).Should(BeTrue())
 
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 			nwList := ts.model.Networks(tenantName)
-			verifyNetAgentNwState(nwList)
-			verifyPDSNwState(nwList)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwList)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyPDSNwState(nwList)
+			}).Should(Succeed())
 		})
 
 		It("Change VPC for subnet & verify it's not allowed", func() {
@@ -270,11 +295,15 @@ var _ = Describe("Network", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(nw.VeniceNetwork.Spec.GetVirtualRouter() == vpc).Should(BeTrue())
 
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 			nwList := ts.model.Networks(tenantName)
-			verifyNetAgentNwState(nwList)
-			verifyPDSNwState(nwList)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwList)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyPDSNwState(nwList)
+			}).Should(Succeed())
+
 			Expect(tempVpc.Delete()).Should(Succeed())
 		})
 
@@ -312,18 +341,25 @@ var _ = Describe("Network", func() {
 			Expect(exportAssignedVal == exportRTs[0].AssignedValue).Should(BeTrue())
 			Expect(importAssignedVal == importRTs[0].AssignedValue).Should(BeTrue())
 
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwc)
+			}).Should(Succeed())
 
-			verifyNetAgentNwState(nwc)
-			verifyPDSNwState(nwc)
+			Eventually(func() error {
+				return verifyPDSNwState(nwc)
+			}).Should(Succeed())
 
 			//Restore RT value
 			exportRTs[0].AssignedValue -= offset
 			importRTs[0].AssignedValue -= offset
 			Expect(nwc.Commit()).Should(Succeed())
-			verifyNetAgentNwState(nwc)
-			verifyPDSNwState(nwc)
+			Eventually(func() error {
+				return verifyNetAgentNwState(nwc)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyPDSNwState(nwc)
+			}).Should(Succeed())
 		})
 
 	})
@@ -433,15 +469,17 @@ func normalizePDSSubnetObj(subnets []*objects.Network, node *objects.Naples, isH
 	return m
 }
 
-func verifyPDSNwState(obj *objects.NetworkCollection) {
+func verifyPDSNwState(obj *objects.NetworkCollection) error {
 	vSub := normalizeVeniceNetworkObj(obj)
 
 	nodes := ts.model.Naples().FakeNodes
-	for _, node := range nodes {
+	for i, node := range nodes {
 		pdsSub := normalizePDSSubnetObj(obj.Subnets(), node, false)
-		log.Infof("Venice obj %+v", vSub)
-		log.Infof("PDS obj %+v", pdsSub)
-		Expect(reflect.DeepEqual(vSub, pdsSub)).Should(BeTrue())
+		log.Infof("%v Venice obj %+v", i+1, vSub)
+		log.Infof("%v PDS obj %+v", i+1, pdsSub)
+		if reflect.DeepEqual(vSub, pdsSub) == false {
+			return fmt.Errorf("PDSagent state verify failed for node %s", node.IP())
+		}
 	}
 
 	nodes = ts.model.Naples().Nodes
@@ -449,8 +487,12 @@ func verifyPDSNwState(obj *objects.NetworkCollection) {
 		pdsSub := normalizePDSSubnetObj(obj.Subnets(), node, true)
 		log.Infof("%d Venice obj %+v", i+1, vSub)
 		log.Infof("%d PDS obj %+v", i+1, pdsSub)
-		Expect(reflect.DeepEqual(vSub, pdsSub)).Should(BeTrue())
+		if reflect.DeepEqual(vSub, pdsSub) == false {
+			return fmt.Errorf("PDSagent state verify failed for node %s", node.IP())
+		}
 	}
+
+	return nil
 }
 
 //Netagent verification helpers
@@ -553,13 +595,17 @@ func normalizeNASubnetObj(subnets []*objects.Network, node *objects.Naples, isHW
 	return m
 }
 
-func verifyNetAgentNwState(obj *objects.NetworkCollection) {
+func verifyNetAgentNwState(obj *objects.NetworkCollection) error {
 	vSub := normalizeVeniceForNA(obj)
 
 	nodes := ts.model.Naples().FakeNodes
-	for _, node := range nodes {
+	for i, node := range nodes {
 		naSub := normalizeNASubnetObj(obj.Subnets(), node, false)
-		Expect(reflect.DeepEqual(vSub, naSub)).Should(BeTrue())
+		log.Infof("%d Venice state : %+v", i+1, vSub)
+		log.Infof("%d NetAgent state %+v", i+1, naSub)
+		if reflect.DeepEqual(vSub, naSub) == false {
+			return fmt.Errorf("Netagent state verify failed for node %s", node.IP())
+		}
 	}
 
 	nodes = ts.model.Naples().Nodes
@@ -567,6 +613,9 @@ func verifyNetAgentNwState(obj *objects.NetworkCollection) {
 		naSub := normalizeNASubnetObj(obj.Subnets(), node, true)
 		log.Infof("%d Venice state : %+v", i+1, vSub)
 		log.Infof("%d NetAgent state %+v", i+1, naSub)
-		Expect(reflect.DeepEqual(vSub, naSub)).Should(BeTrue())
+		if reflect.DeepEqual(vSub, naSub) == false {
+			return fmt.Errorf("Netagent state verify failed for node %s", node.IP())
+		}
 	}
+	return nil
 }

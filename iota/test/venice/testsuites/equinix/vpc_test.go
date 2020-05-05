@@ -7,7 +7,6 @@ import (
 	"net"
 	"reflect"
 	"strings"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -67,12 +66,15 @@ var _ = Describe("VPC", func() {
 			uuid = veniceVpc.Obj.GetUUID()
 			log.Infof("VPC %s UUID %s", vpcName2, uuid)
 
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
 			allVpcs, err := getVpcCollection(tenantName)
 			Expect(err).ShouldNot(HaveOccurred())
-			verifyNetAgentVpcState(allVpcs)
-			verifyPDSVpcState(allVpcs)
+
+			Eventually(func() error {
+				return verifyNetAgentVpcState(allVpcs)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyPDSVpcState(allVpcs)
+			}).Should(Succeed())
 
 			//Delete VPC
 			Expect(vpc1.Delete()).Should(Succeed())
@@ -80,12 +82,16 @@ var _ = Describe("VPC", func() {
 
 			allVpcs, err = getVpcCollection(tenantName)
 			Expect(err).ShouldNot(HaveOccurred())
-			verifyNetAgentVpcState(allVpcs)
-			verifyPDSVpcState(allVpcs)
+
+			Eventually(func() error {
+				return verifyNetAgentVpcState(allVpcs)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyPDSVpcState(allVpcs)
+			}).Should(Succeed())
 		})
 
 		It("Update router mac for VPC", func() {
-			Skip("Disabling test for sanity")
 			//Get existing tenant and network
 			nwc, err := getNetworkCollection()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -108,7 +114,7 @@ var _ = Describe("VPC", func() {
 			newRmac := "0001.0108.0809"
 
 			vpc.UpdateRMAC(newRmac)
-			Expect(voc.Commit()).Should(Succeed())
+			Expect(voc.Update()).Should(Succeed())
 
 			log.Infof("Old rmac %s new rmac %s", oldRmac, newRmac)
 
@@ -117,21 +123,25 @@ var _ = Describe("VPC", func() {
 			Expect(veniceVpc.Obj.Spec.RouterMACAddress == newRmac).Should(BeTrue())
 
 			//Verify state in Naples
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
-			verifyNetAgentVpcState(voc)
-			verifyPDSVpcState(voc)
+			Eventually(func() error {
+				return verifyNetAgentVpcState(voc)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyPDSVpcState(voc)
+			}).Should(Succeed())
 
 			vpc.UpdateRMAC(oldRmac)
-			Expect(voc.Commit()).Should(Succeed())
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
-			verifyNetAgentVpcState(voc)
-			verifyPDSVpcState(voc)
+			Expect(voc.Update()).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyNetAgentVpcState(voc)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyPDSVpcState(voc)
+			}).Should(Succeed())
 		})
 
 		It("Change VPC RT & verify config", func() {
-			Skip("Disabling test for sanity")
 			//Get existing tenant and network
 			nwc, err := getNetworkCollection()
 			Expect(err).ShouldNot(HaveOccurred())
@@ -148,7 +158,7 @@ var _ = Describe("VPC", func() {
 			uuid := vpc.Obj.GetUUID()
 			log.Infof("VPC object UUID %s", uuid)
 
-			//Change its RT and commit
+			//Change its RT and update to api server
 			exportRTs := vpc.Obj.Spec.RouteImportExport.ExportRTs
 			importRTs := vpc.Obj.Spec.RouteImportExport.ImportRTs
 			//Update RT value
@@ -157,21 +167,26 @@ var _ = Describe("VPC", func() {
 			importRTs[0].AssignedValue += offset
 			log.Infof("Export RT new assigned value %v", exportRTs[0].AssignedValue)
 			log.Infof("Import RT new assigned value %v", importRTs[0].AssignedValue)
-			Expect(voc.Commit()).Should(Succeed())
+			Expect(voc.Update()).Should(Succeed())
 
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
-			verifyNetAgentVpcState(voc)
-			verifyPDSVpcState(voc)
+			Eventually(func() error {
+				return verifyNetAgentVpcState(voc)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyPDSVpcState(voc)
+			}).Should(Succeed())
 
 			//Restore RT value
 			exportRTs[0].AssignedValue -= offset
 			importRTs[0].AssignedValue -= offset
-			Expect(voc.Commit()).Should(Succeed())
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
-			verifyNetAgentVpcState(voc)
-			verifyPDSVpcState(voc)
+			Expect(voc.Update()).Should(Succeed())
+
+			Eventually(func() error {
+				return verifyNetAgentVpcState(voc)
+			}).Should(Succeed())
+			Eventually(func() error {
+				return verifyPDSVpcState(voc)
+			}).Should(Succeed())
 		})
 	})
 })
@@ -192,22 +207,26 @@ func vpcAddDel() {
 	uuid := veniceVpc.Obj.GetUUID()
 	log.Infof("UUID %s", uuid)
 
-	// Wait for Naples to finish configuring
-	time.Sleep(10 * time.Second)
 	allVpcs, err := getVpcCollection(tenantName)
 	Expect(err).ShouldNot(HaveOccurred())
-	verifyNetAgentVpcState(allVpcs)
-	verifyPDSVpcState(allVpcs)
+	Eventually(func() error {
+		return verifyNetAgentVpcState(allVpcs)
+	}).Should(Succeed())
+	Eventually(func() error {
+		return verifyPDSVpcState(allVpcs)
+	}).Should(Succeed())
 
 	//Delete VPC
 	Expect(vpc.Delete()).Should(Succeed())
 
-	// Wait for Naples to finish configuring
-	time.Sleep(10 * time.Second)
 	allVpcs, err = getVpcCollection(tenantName)
 	Expect(err).ShouldNot(HaveOccurred())
-	verifyNetAgentVpcState(allVpcs)
-	verifyPDSVpcState(allVpcs)
+	Eventually(func() error {
+		return verifyNetAgentVpcState(allVpcs)
+	}).Should(Succeed())
+	Eventually(func() error {
+		return verifyPDSVpcState(allVpcs)
+	}).Should(Succeed())
 }
 
 func defaultTenantName() (string, error) {
@@ -351,7 +370,7 @@ func normalizePDSVpcObj(vpcs []*objects.Vpc, node *objects.Naples, isHWNode bool
 	return m
 }
 
-func verifyPDSVpcState(vc *objects.VpcObjCollection) {
+func verifyPDSVpcState(vc *objects.VpcObjCollection) error {
 	veniceVpc := normalizeVeniceVpcObj(vc)
 
 	nodes := ts.model.Naples().FakeNodes
@@ -360,7 +379,9 @@ func verifyPDSVpcState(vc *objects.VpcObjCollection) {
 		log.Infof("Venice State: %+v", veniceVpc)
 		log.Infof("PDS State: %+v", pdsVpc)
 
-		Expect(reflect.DeepEqual(veniceVpc, pdsVpc)).Should(BeTrue())
+		if reflect.DeepEqual(veniceVpc, pdsVpc) == false {
+			return fmt.Errorf("PDS verify failed for node %s", node.IP())
+		}
 	}
 
 	nodes = ts.model.Naples().Nodes
@@ -368,8 +389,12 @@ func verifyPDSVpcState(vc *objects.VpcObjCollection) {
 		pdsVpc := normalizePDSVpcObj(vc.Objs, node, true)
 		log.Infof("%d Venice State: %+v", i, veniceVpc)
 		log.Infof("%d PDS State: %+v", i, pdsVpc)
-		Expect(reflect.DeepEqual(veniceVpc, pdsVpc)).Should(BeTrue())
+		if reflect.DeepEqual(veniceVpc, pdsVpc) == false {
+			return fmt.Errorf("PDS verify failed for node %s", node.IP())
+		}
 	}
+
+	return nil
 }
 
 //////////////////////////////////////////////////////////
@@ -452,7 +477,7 @@ func normalizeNAVpcObj(vpcs []*objects.Vpc, node *objects.Naples, isHWNode bool)
 	return m
 }
 
-func verifyNetAgentVpcState(vpcs *objects.VpcObjCollection) {
+func verifyNetAgentVpcState(vpcs *objects.VpcObjCollection) error {
 	veniceVpc := normalizeVeniceVpcForNA(vpcs)
 
 	nodes := ts.model.Naples().FakeNodes
@@ -460,7 +485,9 @@ func verifyNetAgentVpcState(vpcs *objects.VpcObjCollection) {
 		netAgentVpc := normalizeNAVpcObj(vpcs.Objs, node, false)
 		log.Infof("Venice State: %+v", veniceVpc)
 		log.Infof("NetAgent State: %+v", netAgentVpc)
-		Expect(reflect.DeepEqual(veniceVpc, netAgentVpc)).Should(BeTrue())
+		if reflect.DeepEqual(veniceVpc, netAgentVpc) == false {
+			return fmt.Errorf("Netagent verify failed for node %s", node.IP())
+		}
 	}
 
 	nodes = ts.model.Naples().Nodes
@@ -468,6 +495,10 @@ func verifyNetAgentVpcState(vpcs *objects.VpcObjCollection) {
 		netAgentVpc := normalizeNAVpcObj(vpcs.Objs, node, true)
 		log.Infof("%d Venice State: %+v", i, veniceVpc)
 		log.Infof("%d NetAgent State: %+v", i, netAgentVpc)
-		Expect(reflect.DeepEqual(veniceVpc, netAgentVpc)).Should(BeTrue())
+		if reflect.DeepEqual(veniceVpc, netAgentVpc) == false {
+			return fmt.Errorf("Netagent verify failed for node %s", node.IP())
+		}
 	}
+
+	return nil
 }
