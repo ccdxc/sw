@@ -1327,6 +1327,13 @@ func (n *NMD) SetNaplesConfig(cfgSpec nmd.DistributedServiceCardSpec) {
 	n.config.Spec = cfgSpec
 }
 
+// SetFruStatus sets FRU in Naples Status
+func (n *NMD) SetFruStatus() {
+	n.Lock()
+	defer n.Unlock()
+	n.config.Status.Fru = ReadFruFromJSON()
+}
+
 // GetNaplesConfig returns the current naples config received via REST
 func (n *NMD) GetNaplesConfig() nmd.DistributedServiceCard {
 	n.Lock()

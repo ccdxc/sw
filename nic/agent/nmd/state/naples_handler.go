@@ -194,6 +194,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 		// Update Spec
 		n.SetNaplesConfig(cfg.Spec)
 
+		n.SetFruStatus()
 		//if !isDataplaneClassic() {
 		//	log.Info("Setting reboot needed flag")
 		//	n.rebootNeeded = true
@@ -252,6 +253,8 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.DistributedServiceCard) error {
 
 		// Update Spec
 		n.SetNaplesConfig(cfg.Spec)
+
+		n.SetFruStatus()
 
 		if err := n.handleNetworkModeTransition(); err != nil {
 			return errInternalServer(err)

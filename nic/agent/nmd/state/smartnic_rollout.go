@@ -26,7 +26,9 @@ const (
 func (n *NMD) CreateUpdateDSCRollout(sro *protos.DSCRollout) error {
 	n.Lock()
 	defer n.Unlock()
-	n.ro.ObjectMeta.Name = n.config.Spec.PrimaryMAC
+
+	// The DSC Name is the PrimaryMAC hence we use it to create the DSC rollout replies too
+	n.ro.ObjectMeta.Name = n.GetPrimaryMAC()
 	n.ro.TypeMeta.Kind = "NaplesRollout"
 	n.updateOps(sro.Spec.Ops)
 	n.issueNextPendingOp()
