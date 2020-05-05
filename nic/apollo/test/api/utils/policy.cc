@@ -198,6 +198,13 @@ create_rules(std::string cidr_str, uint8_t af, uint16_t stateful_rules,
 }
 
 void
+policy_feeder::spec_alloc(pds_policy_spec_t *spec) {
+    spec->rule_info =
+        (rule_info_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
+                                  POLICY_RULE_INFO_SIZE(0));
+}
+
+void
 policy_feeder::spec_build(pds_policy_spec_t *spec) const {
     memcpy(spec, &this->spec, sizeof(pds_policy_spec_t));
     create_rules(this->cidr_str, this->af, this->stateful_rules,

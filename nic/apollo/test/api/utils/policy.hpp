@@ -64,6 +64,9 @@ public:
     // Iterate helper routines
     void iter_next(int width = 1);
 
+    // Init routines
+    void spec_alloc(pds_policy_spec_t *spec);
+
     // Build routines
     void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_policy_spec_t *spec) const;
