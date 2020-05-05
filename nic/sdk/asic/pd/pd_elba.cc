@@ -1207,7 +1207,9 @@ void
 asicpd_table_constant_write (uint64_t val, uint32_t stage,
                              uint32_t stage_tableid, bool ingress)
 {
-    elba_table_constant_write(val, stage, stage_tableid, ingress);
+    elba_table_constant_write(val, stage, stage_tableid,
+                              ingress ? P4_PIPELINE_INGRESS :
+                                        P4_PIPELINE_EGRESS);
 }
 
 sdk_ret_t
