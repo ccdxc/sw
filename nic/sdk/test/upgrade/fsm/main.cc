@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <time.h>
 #include <unistd.h>
 #include <string>
 #include <map>
@@ -19,6 +21,7 @@
 static sdk::event_thread::event_thread *g_svc_server_thread;
 static std::string svc_name;
 static uint32_t svc_thread_id;
+static uint32_t rsp_time_delay = 0;
 static std::string fsm_stage;
 static std::string error_code = "ok";
 static std::map<std::string, sdk_ret_t> ret_code_map;
@@ -52,6 +55,27 @@ init_stage_names (void)
     upg_stages.insert("finish");
 }
 
+static int
+msleep (long inject_delay)
+{
+    struct timespec time_spec;
+    int ret;
+
+    if (inject_delay < 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    time_spec.tv_sec = inject_delay / 1000;
+    time_spec.tv_nsec = (inject_delay % 1000) * 1000000;
+
+    do {
+        ret = nanosleep(&time_spec, &time_spec);
+    } while (ret && errno == EINTR);
+
+    return ret;
+}
+
 static sdk_ret_t
 test_upgrade (sdk::upg::upg_ev_params_t *params)
 {
@@ -63,6 +87,9 @@ test_upgrade (sdk::upg::upg_ev_params_t *params)
 static sdk_ret_t
 fault_injection (sdk::upg::upg_ev_params_t *params)
 {
+    if (rsp_time_delay > 0) {
+        msleep(rsp_time_delay);
+    }
     printf("\nFailed to handle event %s\n", fsm_stage.c_str());
     params->response_cb(ret_code_map[error_code], params->response_cookie);
     return SDK_RET_IN_PROGRESS;
@@ -233,14 +260,20 @@ static void
 print_usage (char **argv)
 {
     fprintf(stdout, "\n\nUsage : %s "
-            "\n\t\t -s | --svcname   <name of the service>"
-            "\n\t\t -i | --svcid     <service id> "
-            "\n\t\t -e | --err       <ok|critical|fail|noresponse>"
-            "\n\t\t -f | --fsmstage  <name of the stage where error code needs"
-            " to be injected>\n\n", argv[0]);
+            "\n\t\t -s | --svcname          <name of the service>"
+            "\n\t\t -i | --svcid            <service id> "
+            "\n\t\t -e | --err              <ok|critical|fail|noresponse>"
+            "\n\t\t -f | --fsmstage         <name of the stage where error code needs"
+            "\n\t\t -t | --rsp-time-delay   <set response time delay in"
+            " ms>\n\n", argv[0]);
+
+    fprintf(stdout, "Example : %s -s test_service -i 51 \n\n", argv[0]);
 
     fprintf(stdout, "Example : %s -s test_service -i 51 -e fail -f "
             "backup \n\n", argv[0]);
+
+    fprintf(stdout, "Example : %s -s test_service -i 51 -e ok -f "
+            "backup -t 50000\n\n", argv[0]);
 
     fprintf(stdout, "Possible values for -f | --fsmstage : compat_check, start,"
             " backup, prepare, sync, prep_switchover, switchover, ready, "
@@ -265,6 +298,7 @@ main (int argc, char **argv)
         { "svcid", required_argument, NULL, 'i'},
         { "err", required_argument, NULL, 'e'},
         { "fsmstage", required_argument, NULL, 'f'},
+        { "rsp-time-delay", required_argument, NULL, 't'},
         { "dumplog", no_argument, NULL, 'd'},
         { "help", no_argument, NULL, 'h'}
     };
@@ -275,7 +309,7 @@ main (int argc, char **argv)
     init_stage_names();
     try {
 
-        while ((opt = getopt_long(argc, argv, "s:i:e:f:hd",
+        while ((opt = getopt_long(argc, argv, "s:t:i:e:f:hd",
                                   longopts, NULL)) != -1) {
             switch (opt) {
             case 's':
@@ -283,6 +317,16 @@ main (int argc, char **argv)
                     svc_name = std::string(optarg);
                 } else {
                     fprintf(stderr, "Service name is not specified\n");
+                    print_usage(argv);
+                    exit(1);
+                }
+                break;
+
+            case 't':
+                if (optarg) {
+                    rsp_time_delay = std::stoi(std::string(optarg));
+                } else {
+                    fprintf(stderr, "rsp time delay is not specified\n");
                     print_usage(argv);
                     exit(1);
                 }
