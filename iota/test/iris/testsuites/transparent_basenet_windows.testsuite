@@ -49,7 +49,7 @@ common:
 testbundles:
     precheckin:
         - networking/connectivity.testbundle
-        #- networking/lif_telemetry_precheckin.testbundle
+        - networking/lif_telemetry_windows_precheckin.testbundle
         #- filters/filters.testbundle
         #- subifs/subifs-precheckin.testbundle
         - rx_mode/rx_mode.testbundle
@@ -67,7 +67,7 @@ testbundles:
         - linktest/linktest.testbundle
         - filters/filters.testbundle
         - mtu/mtu.testbundle
-        #- networking/lif_telemetry.testbundle
+        - networking/lif_telemetry_windows.testbundle
         #- subifs/subifs.testbundle
         - rx_mode/rx_mode.testbundle
         #- vlanoffload/vlanoffload.testbundle

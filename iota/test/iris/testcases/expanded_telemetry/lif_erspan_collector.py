@@ -5,6 +5,7 @@ import iota.test.iris.config.api as cfg_api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.iris.testcases.telemetry.utils as utils
 import iota.test.iris.testcases.expanded_telemetry.utils as eutils
+import iota.test.utils.ionic_utils as ionic_utils
 from iota.test.iris.testcases.aging.aging_utils import *
 import pdb
 import json
@@ -228,9 +229,16 @@ def Trigger(tc):
             #
             idx = tc.lif_collector_idx[c]
             if tc.lif_collector[c].IsNaples():
-                cmd = "tcpdump -c 1000 -XX -vv -nni {} ip proto gre and dst {}\
-                       --immediate-mode -U -w lif-mirror-{}.pcap"\
-                      .format(tc.lif_collector[c].interface, 
+                if api.GetNodeOs(tc.naples.node_name) == "windows":
+                    intfGuid = ionic_utils.winIntfGuid(tc.lif_collector[c].node_name, tc.lif_collector[c].interface)
+                    intfVal = str(ionic_utils.winTcpDumpIdx(tc.lif_collector[c].node_name, intfGuid))
+                    cmd = "sudo /mnt/c/Windows/System32/tcpdump.exe -c 1000 -XX -vv -i {} ip proto 47 and dst {} -U -w lif-mirror-{}.pcap"\
+                          .format(intfVal, tc.collector_ip_address[idx], c)
+                else:
+                    intfVal = tc.lif_collector[c].interface
+                    cmd = "tcpdump -c 1000 -XX -vv -nni {} ip proto gre and dst {}\
+                           --immediate-mode -U -w lif-mirror-{}.pcap"\
+                          .format(intfVal, 
                               tc.collector_ip_address[idx], c)
             else:
                 cmd = "tcpdump -p -c 1000 -XX -vv -nni {} ip proto gre\
@@ -255,7 +263,7 @@ def Trigger(tc):
         # Trigger packets for ERSPAN to take effect
         #
         tc.dest_port = '120'
-        if api.GetNodeOs(tc.naples.node_name) == 'linux':
+        if api.GetNodeOs(tc.naples.node_name) == 'linux' or api.GetNodeOs(tc.naples.node_name) == 'windows':
             eutils.triggerTrafficInClassicModeLinux(tc)
         else:
             eutils.triggerTrafficInHostPinModeOrFreeBSD(tc)
@@ -272,6 +280,11 @@ def Trigger(tc):
                                    resp_tcpdump_erspan)
         tc.resp_tcpdump_erspan = api.Trigger_AggregateCommandsResponse(\
                               resp_tcpdump_erspan, term_resp_tcpdump_erspan)
+        if api.GetNodeOs(tc.naples.node_name) == "windows":
+            req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe Stop-Process -Name 'tcpdump' -Force"
+            api.Trigger_AddCommand(req, tc.naples.node_name, tc.naples.workload_name, cmd, background = False)
+            resp = api.Trigger(req)
 
         # Delete the objects
         eutils.deGenerateLifInterfaceConfig(tc, tc.interface_objects, 

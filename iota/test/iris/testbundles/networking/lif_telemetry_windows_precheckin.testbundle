@@ -6,9 +6,9 @@
 # modes
 #
 meta:
-    name              : lif_telemetry
+    name              : lif_telemetry_windows_precheckin
     nics              : [ pensando, mellanox, intel, broadcom ]
-    os                : [ linux, esx, freebsd ]
+    os                : [ windows ]
     targetcount       : 1
 
 testcases:
@@ -18,19 +18,18 @@ testcases:
             type      : nested
             pktsize   : [128]
             peer      : [remote]
-            collector : [local, remote]
+            collector : [remote]
             session   : [single, multiple]
-            vlan      : [native, tag]
+            vlan      : [native]
             iftype    : [uplink]
             direction : [ingress, egress, both]
-            ccount    : [1, 2, 3, 4, 5, 6, 7, 8]
+            ccount    : [1, 2]
             collection: [unified]
             erspan    : [mixed]
             vlan_strip: [mixed]
         args          :
-            type      : sanity
+            type      : precheckin
             ps_2263   : [bypass]
             ps_2790   : [bypass]
             pkt_count : [bypass]
-            timeout   : 7200
 
