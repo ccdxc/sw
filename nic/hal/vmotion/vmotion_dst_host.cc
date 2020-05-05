@@ -44,7 +44,7 @@ dst_host_end (vmotion_ep *vmn_ep)
             }
 
             if (VMOTION_FLAG_IS_INP_MAC_REMOVED(vmn_ep)) {
-                endpoint_migration_inp_mac_vlan_pgm(ep, true);
+                vmn_ep->get_vmotion()->vmotion_ep_inp_mac_vlan_pgm(ep, true);
                 VMOTION_FLAG_RESET_INP_MAC_REMOVED(vmn_ep);
             }
 

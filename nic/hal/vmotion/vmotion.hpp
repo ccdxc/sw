@@ -189,6 +189,7 @@ public:
     static void   delay_delete_thread(sdk::event_thread::event_thread *thr);
     hal_ret_t     vmotion_ep_quiesce_program(ep_t *ep, bool entry_add);
     hal_ret_t     vmotion_ep_migration_normalization_cfg(ep_t *ep, bool disable);
+    hal_ret_t     vmotion_ep_inp_mac_vlan_pgm(ep_t *ep, bool create);
 
     // FSM Related methods
     static vmotion_src_host_fsm_def* src_host_fsm_def_;
