@@ -22,7 +22,7 @@ import (
 )
 
 func (cl *clusterHooks) checkNonUserModifiableSmartNICFields(updObj, curObj *cluster.DistributedServiceCard) []string {
-	NUMFields := []string{"ID", "IPConfig", "NetworkMode", "MgmtVlan", "Controllers"}
+	NUMFields := []string{"ID", "NetworkMode", "MgmtVlan", "Controllers"}
 
 	var errs []string
 	updSpec := reflect.Indirect(reflect.ValueOf(updObj)).FieldByName("Spec")
@@ -33,6 +33,19 @@ func (cl *clusterHooks) checkNonUserModifiableSmartNICFields(updObj, curObj *clu
 		curField := curSpec.FieldByName(fn).Interface()
 		if !reflect.DeepEqual(updField, curField) {
 			errs = append(errs, fn)
+		}
+	}
+
+	// if ipconfig field is not empty and non nil (old or new) then do the check
+	updIPConfig := updSpec.FieldByName("IPConfig").Interface()
+	curIPConfig := curSpec.FieldByName("IPConfig").Interface()
+	emptyIPConfig := cluster.IPConfig{}
+
+	// Reflect can't distinguish between empty object and nil object. So adding this additional check for IP Config
+	// We perform the deepequal check only if either of the old or new spec are not nil and not empty
+	if ((updIPConfig != nil) && !reflect.DeepEqual(updIPConfig, emptyIPConfig)) || ((curIPConfig != nil) && !reflect.DeepEqual(curIPConfig, emptyIPConfig)) {
+		if !reflect.DeepEqual(updIPConfig, curIPConfig) {
+			errs = append(errs, "IPConfig")
 		}
 	}
 
@@ -114,7 +127,6 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 	case apiintf.UpdateOper:
 		var ok bool
 		updNIC, ok = i.(cluster.DistributedServiceCard)
-
 		if !ok {
 			cl.logger.ErrorLog("method", "smartNICPreCommitHook", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
 			return i, true, errInvalidInputType

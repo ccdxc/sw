@@ -203,6 +203,41 @@ func TestSmartNICObjectPreCommitHooks(t *testing.T) {
 	txn := kv.NewTxn()
 	hooks.smartNICPreCommitHook(ctx, kv, txn, key, apiintf.CreateOper, false, nic)
 	Assert(t, !txn.IsEmpty(), "module object should be created if IP config is not present in smart nic status")
+
+	nic.Status.IPConfig = &cluster.IPConfig{
+		IPAddress: "0.0.0.0/0",
+	}
+	txn = kv.NewTxn()
+	hooks.smartNICPreCommitHook(userCtx, kv, txn, key, apiintf.CreateOper, false, nic)
+	Assert(t, !txn.IsEmpty(), "module object should have been create")
+
+	// Update oper with IPconfig nil should fail
+	nic.Spec.IPConfig = nil
+	txn = kv.NewTxn()
+	_, _, err = hooks.smartNICPreCommitHook(userCtx, kv, txn, key, apiintf.UpdateOper, false, nic)
+	Assert(t, err != nil, "expected error from smartNICPreCommitHook")
+
+	// Update oper with IPconfig empty should fail
+	nic.Spec.IPConfig = &cluster.IPConfig{}
+	txn = kv.NewTxn()
+	_, _, err = hooks.smartNICPreCommitHook(userCtx, kv, txn, key, apiintf.UpdateOper, false, nic)
+	Assert(t, err != nil, "expected error from smartNICPreCommitHook")
+
+	// Update oper with IPconfig should fail since IPconfig update is not allowed
+	nic.Spec.IPConfig = &cluster.IPConfig{
+		IPAddress: "10.0.0.1/24",
+	}
+	txn = kv.NewTxn()
+	_, _, err = hooks.smartNICPreCommitHook(userCtx, kv, txn, key, apiintf.UpdateOper, false, nic)
+	Assert(t, err != nil, "expected error from smartNICPreCommitHook")
+
+	// Update oper with unchanged IPconfig should pass
+	nic.Spec.IPConfig = &cluster.IPConfig{
+		IPAddress: "0.0.0.0/0",
+	}
+	txn = kv.NewTxn()
+	_, _, err = hooks.smartNICPreCommitHook(userCtx, kv, txn, key, apiintf.UpdateOper, false, nic)
+	Assert(t, err == nil, "unexpected error from smartNICPreCommitHook:%v", err)
 }
 
 func TestSmartNICObjectDSCProfilePreCommitHooks(t *testing.T) {
