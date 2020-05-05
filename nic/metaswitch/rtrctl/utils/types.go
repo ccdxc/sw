@@ -192,6 +192,7 @@ func (a *EVPNType2Route) parseBytes(in []byte) {
 	copy(a.MPLSLabel1, in[cur:cur+3])
 	cur += 3
 	if len(in) > cur {
+		a.MPLSLabel2 = make([]byte, 3)
 		copy(a.MPLSLabel2, in[cur:cur+3])
 	}
 }
