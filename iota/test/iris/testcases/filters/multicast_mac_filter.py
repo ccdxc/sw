@@ -51,7 +51,7 @@ def verifyMCTrafficStats(tc):
         expectedStats = statsCount[intf]
         #Actual MC Frame stats increase, actualStats = postStats - preStats
         actualStats = list(map(operator.sub, postStats, preStats))
-        api.Logger.verbose("verifyMCTrafficStats info for ", intf, expectedStats, actualStats, preStats, postStats)
+        api.Logger.debug("verifyMCTrafficStats info for ", intf, expectedStats, actualStats, preStats, postStats)
         # Interested in multicast rx stats only
         if actualStats[1] != expectedStats[1]:
             result = False
@@ -119,7 +119,7 @@ def initiateMCtraffic(w1, w2, statsCount):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     # hping from remote node
     # exit_code will be 1 but that's ok as the intention here is to generate packets from remote
-    cmd_cookie = "hping3 -c %d --faster %s -I %s " % (__HPING_COUNT, mcast_ip, w2.interface)
+    cmd_cookie = "hping3 -c %d --faster %s -I %s -a %s" % (__HPING_COUNT, mcast_ip, w2.interface, w2.ip_address)
     api.Trigger_AddHostCommand(req, w2.node_name, cmd_cookie)
     resp = api.Trigger(req)
 
@@ -162,7 +162,11 @@ def triggerMCtraffic(tc):
     #Get stats before trigger
     GetMCFramesTxRxStats(naples_node, tc.preStatsCount, tc.intfName2lifId_dict)
 
+    #num_pairs = 0
     for pair in workload_pairs:
+        #num_pairs = num_pairs + 1
+        #if num_pairs != tc.iterators.mc_num:
+        #    continue
         w1 = pair[0]
         w2 = pair[1]
         api.Logger.verbose("workload1 : ", w1.workload_name, w1.node_name, w1.uplink_vlan, w1.interface, w1.parent_interface, w1.IsNaples())
@@ -179,6 +183,7 @@ def triggerMCtraffic(tc):
             #In case of failure, bail out immediately
             api.Logger.info("triggerMCtraffic failed for workloads ", w1.workload_name, w2.workload_name)
             return result
+        #break
 
     #Get stats after trigger
     GetMCFramesTxRxStats(naples_node, tc.postStatsCount, tc.intfName2lifId_dict)
