@@ -20,7 +20,6 @@ modules:
     - module:
         name    : OVERLAP_ANY
         spec    : rfc_ingress.testspec
-        ignore  : True
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=wildcard
 
