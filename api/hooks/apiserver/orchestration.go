@@ -266,8 +266,8 @@ func registerOrchestrationHooks(svc apiserver.Service, l log.Logger) {
 	l.Log("msg", "registering Hooks")
 	oh := orchHooks{logger: l.WithContext("Service", "Orchestrator")}
 	svc.GetCrudService("Orchestrator", apiintf.CreateOper).WithPreCommitHook(oh.validateOrchestrator)
-	svc.GetCrudService("Orchestrator", apiintf.UpdateOper).WithPreCommitHook(oh.validateOrchestrator)
 	svc.GetCrudService("Orchestrator", apiintf.UpdateOper).WithPreCommitHook(oh.handleCredentialUpdate)
+	svc.GetCrudService("Orchestrator", apiintf.UpdateOper).WithPreCommitHook(oh.validateOrchestrator)
 }
 
 func init() {

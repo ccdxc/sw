@@ -334,6 +334,34 @@ func TestCheckImmutableFieldChanges(t *testing.T) {
 			},
 			"ID",
 		},
+		{ // Immutable field shouldn't reject emptying a nullable field
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+					RegisteredDevice: &bs.KnownDevice{
+						DeviceID: "Laptop",
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Active",
+				},
+			},
+			bs.Customer{
+				Spec: bs.CustomerSpec{
+					Id: "Id",
+					PasswordRecoveryInfo: bs.CustomerPersonalInfo{
+						LuckyNumbers: []uint32{7, 77, 777},
+					},
+				},
+				Status: bs.CustomerStatus{
+					AccountStatus: "Inactive",
+				},
+			},
+			"",
+		},
 	}
 
 	schema := runtime.GetDefaultScheme()

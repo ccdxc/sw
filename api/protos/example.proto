@@ -172,7 +172,12 @@ message SecurityQuestions {
 
 message CartItem {
   string ID = 1 [(venice.mutable) = false, (gogoproto.jsontag) = "id"];
-  uint32 Quantity = 3 [(venice.check) = "IntRange(1,30)"];
+  uint32 Quantity = 2 [(venice.check) = "IntRange(1,30)"];
+}
+
+message KnownDevice {
+  string DeviceID         = 1 [(gogoproto.jsontag) = "device-id"];
+  api.Timestamp LastLogin = 2 [(gogoproto.jsontag) = "last-login"];
 }
 
 message CustomerSpec {
@@ -184,6 +189,7 @@ message CustomerSpec {
   repeated SecurityQuestions SecurityQuestions = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "security-questions"];
   // Map from item ID to cartItem
   map<string, CartItem> Cart = 7 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "cart"];
+  KnownDevice RegisteredDevice = 8 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "registered-device"];
 }
 
 message CustomerStatus {

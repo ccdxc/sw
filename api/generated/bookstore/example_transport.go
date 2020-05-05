@@ -1683,6 +1683,40 @@ func DecodeGrpcRespCustomerStatus(ctx context.Context, response interface{}) (in
 	return response, nil
 }
 
+func encodeHTTPKnownDevice(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPKnownDevice(_ context.Context, r *http.Request) (interface{}, error) {
+	var req KnownDevice
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqKnownDevice encodes GRPC request
+func EncodeGrpcReqKnownDevice(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*KnownDevice)
+	return req, nil
+}
+
+// DecodeGrpcReqKnownDevice decodes GRPC request
+func DecodeGrpcReqKnownDevice(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*KnownDevice)
+	return req, nil
+}
+
+// EncodeGrpcRespKnownDevice encodes GRC response
+func EncodeGrpcRespKnownDevice(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespKnownDevice decodes GRPC response
+func DecodeGrpcRespKnownDevice(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPOrder(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

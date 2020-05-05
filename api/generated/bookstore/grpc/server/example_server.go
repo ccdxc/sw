@@ -1253,6 +1253,7 @@ func (s *sbookstoreExampleBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		"bookstore.CustomerPersonalInfo": apisrvpkg.NewMessage("bookstore.CustomerPersonalInfo"),
 		"bookstore.CustomerSpec":         apisrvpkg.NewMessage("bookstore.CustomerSpec"),
 		"bookstore.CustomerStatus":       apisrvpkg.NewMessage("bookstore.CustomerStatus"),
+		"bookstore.KnownDevice":          apisrvpkg.NewMessage("bookstore.KnownDevice"),
 		"bookstore.Order": apisrvpkg.NewMessage("bookstore.Order").WithKeyGenerator(func(i interface{}, prefix string) string {
 			if i == nil {
 				r := bookstore.Order{}

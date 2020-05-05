@@ -1007,6 +1007,27 @@ func (m *CustomerStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *KnownDevice) Clone(into interface{}) (interface{}, error) {
+	var out *KnownDevice
+	var ok bool
+	if into == nil {
+		out = &KnownDevice{}
+	} else {
+		out, ok = into.(*KnownDevice)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*KnownDevice))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *KnownDevice) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *Order) Clone(into interface{}) (interface{}, error) {
 	var out *Order
 	var ok bool
@@ -2476,6 +2497,19 @@ func (m *CustomerStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpe
 }
 
 func (m *CustomerStatus) Normalize() {
+
+}
+
+func (m *KnownDevice) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *KnownDevice) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *KnownDevice) Normalize() {
 
 }
 

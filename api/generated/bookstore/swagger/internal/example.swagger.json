@@ -911,6 +911,19 @@
             "type": "string"
           },
           {
+            "name": "registered-device.device-id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "registered-device.last-login",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
             "name": "Status.account-status",
             "in": "query",
             "required": false,
@@ -3243,6 +3256,9 @@
             "$ref": "#/definitions/bookstoreCartItem"
           },
           "description": "Map from item ID to cartItem."
+        },
+        "registered-device": {
+          "$ref": "#/definitions/bookstoreKnownDevice"
         }
       }
     },
@@ -3254,6 +3270,18 @@
         },
         "interests": {
           "type": "string"
+        }
+      }
+    },
+    "bookstoreKnownDevice": {
+      "type": "object",
+      "properties": {
+        "device-id": {
+          "type": "string"
+        },
+        "last-login": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },

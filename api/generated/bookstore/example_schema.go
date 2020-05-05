@@ -398,19 +398,20 @@ var typesMapExample = map[string]*api.Struct{
 			"CreditCardNumbers":  api.CLIInfo{Path: "Spec.CreditCardNumbers", Skip: false, Insert: "", Help: ""},
 			"Password":           api.CLIInfo{Path: "Spec.Password", Skip: false, Insert: "", Help: ""},
 			"Quantity":           api.CLIInfo{Path: "Spec.Cart[].Quantity", Skip: false, Insert: "", Help: ""},
+			"account-status":     api.CLIInfo{Path: "Status.AccountStatus", Skip: false, Insert: "", Help: ""},
 			"answer":             api.CLIInfo{Path: "Spec.SecurityQuestions[].Answer", Skip: false, Insert: "", Help: ""},
 			"api-version":        api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"date-of-birth":      api.CLIInfo{Path: "Spec.PasswordRecoveryInfo.DateOfBirth", Skip: false, Insert: "", Help: ""},
 			"generation-id":      api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"id":                 api.CLIInfo{Path: "Spec.Id", Skip: false, Insert: "", Help: ""},
-			"interests":          api.CLIInfo{Path: "Status.Interests", Skip: false, Insert: "pub", Help: "This is the publisher address"},
+			"interests":          api.CLIInfo{Path: "Status.Interests", Skip: false, Insert: "", Help: ""},
 			"kind":               api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":             api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"lucky-numbers":      api.CLIInfo{Path: "Spec.PasswordRecoveryInfo.LuckyNumbers", Skip: false, Insert: "", Help: ""},
 			"mother-maiden-name": api.CLIInfo{Path: "Spec.PasswordRecoveryInfo.MotherMaidenName", Skip: false, Insert: "", Help: ""},
 			"name":               api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":          api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"pubid":              api.CLIInfo{Path: "Status.AccountStatus", Skip: false, Insert: "", Help: "This is the publisherID"},
+			"pubid":              api.CLIInfo{Path: "Spec.RegisteredDevice.DeviceID", Skip: false, Insert: "", Help: "This is the publisherID"},
 			"question":           api.CLIInfo{Path: "Spec.SecurityQuestions[].Question", Skip: false, Insert: "", Help: ""},
 			"resource-version":   api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":          api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
@@ -465,6 +466,8 @@ var typesMapExample = map[string]*api.Struct{
 			"SecurityQuestions": api.Field{Name: "SecurityQuestions", CLITag: api.CLIInfo{ID: "security-questions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "security-questions", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.SecurityQuestions"},
 
 			"Cart": api.Field{Name: "Cart", CLITag: api.CLIInfo{ID: "cart", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "cart", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "bookstore.CartItem"},
+
+			"RegisteredDevice": api.Field{Name: "RegisteredDevice", CLITag: api.CLIInfo{ID: "registered-device", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "registered-device", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.KnownDevice"},
 		},
 	},
 	"bookstore.CustomerSpec.CartEntry": &api.Struct{
@@ -477,9 +480,17 @@ var typesMapExample = map[string]*api.Struct{
 	"bookstore.CustomerStatus": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerStatus{}) },
 		Fields: map[string]api.Field{
-			"AccountStatus": api.Field{Name: "AccountStatus", CLITag: api.CLIInfo{ID: "pubid", Path: "", Skip: false, Insert: "", Help: "This is the publisherID"}, JSONTag: "account-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"AccountStatus": api.Field{Name: "AccountStatus", CLITag: api.CLIInfo{ID: "account-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "account-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Interests": api.Field{Name: "Interests", CLITag: api.CLIInfo{ID: "interests", Path: "", Skip: false, Insert: "pub", Help: "This is the publisher address"}, JSONTag: "interests", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"Interests": api.Field{Name: "Interests", CLITag: api.CLIInfo{ID: "interests", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interests", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+		},
+	},
+	"bookstore.KnownDevice": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(KnownDevice{}) },
+		Fields: map[string]api.Field{
+			"DeviceID": api.Field{Name: "DeviceID", CLITag: api.CLIInfo{ID: "pubid", Path: "", Skip: false, Insert: "", Help: "This is the publisherID"}, JSONTag: "device-id", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"LastLogin": api.Field{Name: "LastLogin", CLITag: api.CLIInfo{ID: "last-login", Path: "", Skip: false, Insert: "pub", Help: "This is the publisher address"}, JSONTag: "last-login", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 	"bookstore.Order": &api.Struct{

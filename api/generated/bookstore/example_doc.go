@@ -36,6 +36,7 @@ The following Messages are defined.
   CustomerPersonalInfo
   CustomerSpec
   CustomerStatus
+  KnownDevice
   Order
   OrderItem
   OrderList

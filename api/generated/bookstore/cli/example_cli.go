@@ -183,6 +183,13 @@ var CreateCustomerFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "pubid",
+		Type:   "String",
+		Help:   "This is the publisherID",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "question",
 		Type:   "StringSlice",
 		Help:   "",

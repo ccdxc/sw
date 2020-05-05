@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/orchestration"
@@ -31,6 +32,7 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 	//  - connection status updates
 	// Teardown vcsim
 	//  - connection updates to not connected
+	// Update orch object without supplying credentials
 	eventRecorder.ClearEvents()
 
 	vcInfo := tinfo.vcConfig
@@ -133,6 +135,15 @@ func TestOrchestrationConnectionStatus(t *testing.T) {
 		return foundEvent, nil
 	}, "Failed to find connection error event", "100ms", "10s")
 	eventRecorder.ClearEvents()
+
+	orchConfig, err = tinfo.apicl.OrchestratorV1().Orchestrator().Get(ctx, orchConfig.GetObjectMeta())
+	AssertOk(t, err, "Failed to get object: %v", apierrors.FromError(err))
+
+	orchConfig.Spec.URI = "test.url"
+	orchConfig.Spec.Credentials = nil
+	obj, err := tinfo.apicl.OrchestratorV1().Orchestrator().Update(context.Background(), orchConfig)
+	AssertOk(t, err, "Failed to update object without credentials: %v", apierrors.FromError(err))
+	AssertEquals(t, "test.url", obj.Spec.URI, "orch object was not updated")
 }
 
 func TestNetworks(t *testing.T) {

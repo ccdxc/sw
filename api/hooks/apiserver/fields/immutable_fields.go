@@ -30,12 +30,13 @@ func hasImmutableFieldChange(fieldMeta *api.Field, updFieldValue, refFieldValue 
 	upd := reflect.Indirect(reflect.ValueOf(updFieldValue))
 	ref := reflect.Indirect(reflect.ValueOf(refFieldValue))
 
-	if upd.IsValid() != ref.IsValid() {
-		// This should not happen. If it does, report an error so that we can debug it.
-		return true, fmt.Sprintf("ERROR: field %s validity mismatch", fieldMeta.Name)
-	}
-
 	if !upd.IsValid() && !ref.IsValid() {
+		return false, ""
+	}
+	// Both upd and ref might not be valid if the field is nullable.
+	// If only ref is nil, we can return
+	// if upd is nil, we need to make sure ref does not contain an immutable field
+	if !ref.IsValid() {
 		return false, ""
 	}
 
@@ -51,12 +52,19 @@ func hasImmutableFieldChange(fieldMeta *api.Field, updFieldValue, refFieldValue 
 					if i >= l2 {
 						break
 					}
-					result, fieldName := hasImmutableFieldChange(fieldMeta, upd.Index(i).Interface(), ref.Index(i).Interface(), schema)
+					var updInput interface{}
+					if upd.IsValid() {
+						updInput = upd.Index(i).Interface()
+					}
+					result, fieldName := hasImmutableFieldChange(fieldMeta, updInput, ref.Index(i).Interface(), schema)
 					if result {
 						return true, fieldName
 					}
 				}
 			case reflect.Map:
+				if !upd.IsValid() {
+					continue
+				}
 				// compare by key
 				for _, key := range ref.MapKeys() {
 					refVal := ref.MapIndex(key)
@@ -71,7 +79,11 @@ func hasImmutableFieldChange(fieldMeta *api.Field, updFieldValue, refFieldValue 
 
 				}
 			default:
-				result, fieldName := hasImmutableFieldChange(&f, upd.FieldByName(f.Name).Interface(), ref.FieldByName(f.Name).Interface(), schema)
+				var updInput interface{}
+				if upd.IsValid() {
+					updInput = upd.FieldByName(f.Name).Interface()
+				}
+				result, fieldName := hasImmutableFieldChange(&f, updInput, ref.FieldByName(f.Name).Interface(), schema)
 				if result {
 					return true, fieldName
 				}
