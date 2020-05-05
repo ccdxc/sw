@@ -1153,3 +1153,9 @@ def WaitForTestCase(tc, sub_testcase):
         if testcase.done:
             return testcase.result
         time.sleep(1)
+
+def UpdatePipeline(node, index, version, pipeline, mode):
+    pl = {'node':node, 'index':index, 'version':version, 'pipeline':pipeline, 'mode':mode}
+    pl = [parser.Dict2Object(pl)]
+    store.GetTestbed().GetCurrentTestsuite().UpdatePipelines(pl)
+

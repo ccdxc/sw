@@ -50,6 +50,22 @@ __fwtype = [
 ]
 firmware = utils.List2Enum(__fwtype)
 
+__nicModes = [
+    'CLASSIC',
+    'BITW',
+    'HOSTPIN'
+]
+nicModes = utils.List2Enum(__nicModes)
+
+__pipelines = [
+    'APOLLO',
+    'APULU',
+    'ARTEMIS',
+    'ATHENA',
+    'IRIS',
+]
+pipelines = utils.List2Enum(__pipelines)
+
 HEADER_SUMMARY = "-" * 140
 FORMAT_TESTCASE_SUMMARY = "%-15s %-70s %-32s %-7s %-8s"
 HEADER_SHORT_SUMMARY = "-" * 104

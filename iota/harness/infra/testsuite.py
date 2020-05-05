@@ -90,7 +90,9 @@ class TestSuite:
         self.__skip = self.__apply_skip_filters()
         self.__ignoreList = getattr(spec.meta, "ignore_list", [])
         self.__images = self.__load_image_manifest()
-        self.__alt_pipelines = getattr(self.__spec.meta,"alt_pipelines",[])
+        self.__pipelines = getattr(spec.meta, "pipelines",[])
+        self.__defaultNicMode = getattr(spec.meta, "nicmode", types.nicModes.CLASSIC)
+        self.__defaultNicPipeline = None
         return
 
     def Abort(self):
@@ -116,6 +118,12 @@ class TestSuite:
                 return types.firmware.MAIN
             else:
                 raise ValueError("firmware must be gold or main. user specified: {0}".format(fmw))
+
+    def GetDefaultNicMode(self):
+        return self.__defaultNicMode
+
+    def GetDefaultNicPipeline(self):
+        return self.__defaultNicPipeline
 
     def GetPackages(self):
         return self.__spec.packages
@@ -157,8 +165,8 @@ class TestSuite:
     def SetNicMode(self, mode):
         self.__spec.meta.nicmode = mode
 
-    def GetAltPipelines(self):
-        return self.__alt_pipelines
+    def GetPipelines(self):
+        return self.__pipelines
 
     def GetVerifs(self):
         return self.__verifs
@@ -508,17 +516,22 @@ class TestSuite:
             return None
         return node[0]
 
-    def UpdateAltPipelines(self):
-        pipelines = self.GetAltPipelines()
+    def UpdatePipelines(self, pipelines=[]):
         if not pipelines:
-            Logger.debug("no alt pipelines found")
-            return
+            pipelines = self.GetPipelines()
+            if not pipelines:
+                Logger.debug("no pipelines found")
+                return
         nwarmd = "{0}/iota/warmd.json".format(api.GetTopDir())
         with open(GlobalOptions.testbed_json, "r") as warmdFile:
             updated = False
             alreadyDownloaded = []
             warmd = json.load(warmdFile)
             for pl in pipelines:
+                if not types.nicModes.valid(pl.mode.upper()):
+                    raise ValueError("nic mode {0} is not valid. must be one of: {1}".format(pl.mode, types.nicModes.str_enums.values()))
+                if not types.pipelines.valid(pl.pipeline.upper()):
+                    raise ValueError("nic pipeline {0} is not valid. must be one of: {1}".format(pl.pipeline, types.pipelines.str_enums.values()))
                 Logger.debug("checking pipeline info for {0}".format(pl))
                 topoNode = self.__getNodeByName(pl.node)
                 if not topoNode:
@@ -527,24 +540,26 @@ class TestSuite:
                 instId = topoNode.GetNodeInfo()["InstanceID"]
                 for node in warmd['Instances']:
                     if instId == node.get('ID',None):
-                        if len(node.get('Nics',[])) > pl.nic_number:
-                            nic = node['Nics'][pl.nic_number]
-                            updated = True
-                            nic['version'] = pl.version
-                            if pl.version not in alreadyDownloaded:
-                                api.DownloadAssets(pl.version)
-                                alreadyDownloaded.append(pl.version)
-                            Logger.info("upgrading node/nic {0}/{1}".format(topoNode.MgmtIpAddress(),pl.nic_number))
-                            devices = {instId : { "nics":[pl.nic_number], "nodeName":pl.node} }
-                            Logger.debug("writing updated warmd.json to {0}".format(nwarmd))
-                            with open(nwarmd,'w') as outfile:
-                                json.dump(warmd,outfile,indent=4)
-                            resp = api.ReInstallImage(fw_version=pl.version, dr_version=pl.version, devices=devices)
-                            if resp != api.types.status.SUCCESS:
-                                Logger.error(f"Failed to install images on the node/nic {0}/{1}".format(topoNode.MgmtIpAddress(),pl.nic_number))
-                            break
-                        else:
-                            raise Exception("user requested invalid nic number: {0} (starting at 0). node has {1} nics".format(pl.nic_number, len(node.get('Nics',[])) ))
+                        device = topoNode.GetDeviceByIndex(pl.index)
+                        device.SetMode(pl.mode)
+                        device.SetPipeline(pl.pipeline)
+                        nic = node['Nics'][pl.index]
+                        nic['version'] = pl.version
+                        nic['pipeline'] = pl.pipeline
+                        nic['mode'] = pl.mode
+                        updated = True
+                        if pl.version not in alreadyDownloaded:
+                            api.DownloadAssets(pl.version)
+                            alreadyDownloaded.append(pl.version)
+                        Logger.info("upgrading node/nic {0}/{1}".format(topoNode.MgmtIpAddress(),pl.index))
+                        devices = {instId : { "nics":[pl.index], "nodeName":pl.node} }
+                        Logger.debug("writing updated warmd.json to {0}".format(nwarmd))
+                        with open(nwarmd,'w') as outfile:
+                            json.dump(warmd,outfile,indent=4)
+                        resp = api.ReInstallImage(fw_version=pl.version, dr_version=pl.version, devices=devices)
+                        if resp != api.types.status.SUCCESS:
+                            Logger.error(f"Failed to install images on the node/nic {0}/{1}".format(topoNode.MgmtIpAddress(),pl.index))
+                        break
                 else:
                     Logger.warn("failed to find node {0} / id {1} in warmd".format(topoNode.MgmtIpAddress(),instId))
 
@@ -621,7 +636,7 @@ class TestSuite:
             self.__timer.Stop()
             return status
 
-        self.UpdateAltPipelines()
+        self.UpdatePipelines()
 
         self.result = self.__execute_testbundles()
         self.__update_stats()

@@ -124,6 +124,9 @@ class Node(object):
             self.__nic_mgmt_intf = None
             self.__console_hdl = None
             self.__bond_ip = None
+            self.__mode = None
+            self.__pipeline = None
+            self.__index = 0
 
         def HostIntfs(self):
             return self.__host_intfs
@@ -142,6 +145,24 @@ class Node(object):
 
         def GetMac(self):
             return self.__mac
+
+        def SetMode(self, mode):
+            self.__mode = mode
+
+        def GetMode(self):
+            return self.__mode
+
+        def SetPipeline(self, pipeline):
+            self.__pipeline = pipeline
+
+        def GetPipeline(self):
+            return self.__pipeline
+
+        def SetIndex(self, index):
+            self.__index = index
+
+        def GetIndex(self):
+            return self.__index
 
         def SetHostIntfs(self, host_intfs):
             self.__host_intfs = host_intfs
@@ -272,13 +293,16 @@ class Node(object):
         self.__nic_underlay_ips = []
         self.__nic_static_routes = []
 
-
+        defaultMode =store.GetTestbed().GetCurrentTestsuite().GetDefaultNicMode()
+        defaultPipeline =store.GetTestbed().GetCurrentTestsuite().GetDefaultNicPipeline()
+        
         nics = getattr(self.__inst, "Nics", None)
         if  self.__node_type == "bm":
             if nics != None and len(nics) != 0:
                 for nic in nics:
                     name = self.GetNicType() + str(self.__dev_index)
                     device = Node.NicDevice(name)
+                    device.SetIndex(self.__dev_index-1)
                     self.__dev_index = self.__dev_index + 1
                     self.__devices[name] = device
                     device.SetNicMgmtIP(getattr(nic, "MgmtIP", None))
@@ -292,11 +316,14 @@ class Node(object):
                         device.SetMac(port.MAC)
                         break
                     device.read_from_console()       
+                    device.SetMode(defaultMode)
+                    device.SetPipeline(defaultPipeline)
 
             else:
                 for index in range(1):
                     name = self.GetNicType() + str(self.__dev_index)
                     device = Node.NicDevice(name)
+                    device.SetIndex(self.__dev_index-1)
                     self.__dev_index = self.__dev_index + 1
                     self.__devices[name] = device
                     device.SetNicMgmtIP(getattr(self.__inst, "NicMgmtIP", None))
@@ -307,6 +334,8 @@ class Node(object):
                     device.SetNicUnderlayIPs(getattr(self.__inst, "NicUnderlayIPs", []))
                     device.SetNicStaticRoutes(getattr(self.__inst, "NicStaticRoutes", []))
                     device.read_from_console()
+                    device.SetMode(defaultMode)
+                    device.SetPipeline(defaultPipeline)
 
         self.__nic_pci_info = {}  # not used
         self.__nic_info = {}  # not used
@@ -384,6 +413,31 @@ class Node(object):
             Logger.error("Unknown NIC Type : %s %s" % (nic_type, role))
             sys.exit(1)
         return role
+
+    def GetNicsByMode(self, mode):
+        if not types.NicModes.valid(mode.upper()):
+            raise ValueError("mode {0} is not valid".format(mode))
+        nics = []
+        for name,nic in self.GetDevices():
+            if nic.GetMode() == mode:
+                nics.append(nic)
+        return nics
+
+    def GetNicsByPipeline(self, pipeline):
+        if not types.Pipelines.valid(pipeline.upper()):
+            raise ValueError("pipeline {0} is not valid".format(pipeline))
+        nics = []
+        for name,nic in self.GetDevices():
+            if nic.GetPipeline() == pipeline:
+                nics.append(nic)
+        return nics
+
+    def GetDeviceByIndex(self, index):
+        nics = self.GetDevices()
+        for name,nic in nics.items():
+            if nic.GetIndex() == index:
+                return nic
+        raise Exception("failed to find nic index {0}. len of devices is {1}".format(index, len(nics)))
 
     def GetApcInfo(self):
         return self.__apcInfo
