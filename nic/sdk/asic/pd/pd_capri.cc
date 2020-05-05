@@ -208,7 +208,7 @@ asicpd_read_table_constant (uint32_t tableid, uint64_t *value)
         capri_table_constant_read(value, tbl_ctx.stage, tbl_ctx.stage_tableid,
                                   P4_PIPELINE_TXDMA);
     } else {
-        SDK_ASSERT(0);
+        SDK_ASSERT_RETURN(FALSE, SDK_RET_INVALID_ARG);
     }
     return SDK_RET_OK;
 }
@@ -236,9 +236,8 @@ asicpd_program_table_constant (uint32_t tableid, uint64_t const_value)
                                    tbl_ctx.stage_tableid,
                                    P4_PIPELINE_TXDMA);
     } else {
-        SDK_ASSERT(0);
+        SDK_ASSERT_RETURN(FALSE, SDK_RET_INVALID_ARG);
     }
-
     return SDK_RET_OK;
 }
 

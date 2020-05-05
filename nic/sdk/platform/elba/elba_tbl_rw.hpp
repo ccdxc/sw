@@ -177,10 +177,12 @@ sdk_ret_t elba_hbm_table_entry_read(uint32_t tableid, uint32_t index,
                                     bool read_thru);
 
 sdk_ret_t elba_table_constant_write(uint64_t val, uint32_t stage,
-                                    uint32_t stage_tableid, bool ingress);
+                                    uint32_t stage_tableid,
+                                    p4pd_pipeline_t pipeline);
 
 sdk_ret_t elba_table_constant_read(uint64_t *val, uint32_t stage,
-                                   int stage_tableid, bool ingress);
+                                   int stage_tableid,
+                                   p4pd_pipeline_t pipeline);
 
 void elba_set_action_asm_base(int tableid, int actionid, uint64_t asm_base);
 

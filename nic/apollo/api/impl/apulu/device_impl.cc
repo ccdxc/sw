@@ -20,6 +20,7 @@
 #include "nic/apollo/api/impl/apulu/device_impl.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "gen/p4gen/apulu/include/p4pd.h"
+#include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 
 namespace api {
 namespace impl {
@@ -138,6 +139,22 @@ device_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         // program priority of the mapping lookup results as table constant
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_MAPPING,
                                                      spec->ip_mapping_priority);
+        // program the policy transposition scheme
+        if (spec->fw_action_xposn_scheme == FW_POLICY_XPOSN_GLOBAL_PRIORITY) {
+            sdk::asic::pd::asicpd_program_table_constant(
+                               P4_P4PLUS_TXDMA_TBL_ID_RFC_P3,
+                               FW_ACTION_XPOSN_GLOBAL_PRIORTY);
+            sdk::asic::pd::asicpd_program_table_constant(
+                               P4_P4PLUS_TXDMA_TBL_ID_RFC_P3_1,
+                               FW_ACTION_XPOSN_GLOBAL_PRIORTY);
+        } else if (spec->fw_action_xposn_scheme == FW_POLICY_XPOSN_ANY_DENY) {
+            sdk::asic::pd::asicpd_program_table_constant(
+                               P4_P4PLUS_TXDMA_TBL_ID_RFC_P3,
+                               FW_ACTION_XPOSN_ANY_DENY);
+            sdk::asic::pd::asicpd_program_table_constant(
+                               P4_P4PLUS_TXDMA_TBL_ID_RFC_P3_1,
+                               FW_ACTION_XPOSN_ANY_DENY);
+        }
         break;
 
     case API_OP_DELETE:
@@ -218,6 +235,17 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
     // fill the priority of the mapping lookup results from table constant
     sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_MAPPING, &tc);
     spec->ip_mapping_priority = tc;
+
+    // fill the policy transposition scheme configured
+    sdk::asic::pd::asicpd_read_table_constant(P4_P4PLUS_TXDMA_TBL_ID_RFC_P3,
+                                              &tc);
+    if (tc == FW_ACTION_XPOSN_GLOBAL_PRIORTY) {
+        spec->fw_action_xposn_scheme = FW_POLICY_XPOSN_GLOBAL_PRIORITY;
+    } else if (tc == FW_ACTION_XPOSN_ANY_DENY) {
+        spec->fw_action_xposn_scheme = FW_POLICY_XPOSN_ANY_DENY;
+    } else {
+        spec->fw_action_xposn_scheme = FW_POLICY_XPOSN_NONE;
+    }
     return SDK_RET_OK;
 }
 

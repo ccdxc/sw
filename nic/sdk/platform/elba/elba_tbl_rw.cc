@@ -1573,40 +1573,48 @@ elba_hbm_table_entry_read (uint32_t tableid, uint32_t index, uint8_t *hwentry,
 
 sdk_ret_t
 elba_table_constant_write (uint64_t val, uint32_t stage,
-                           uint32_t stage_tableid, bool ingress)
+                           uint32_t stage_tableid, p4pd_pipeline_t pipeline)
 {
-    elb_top_csr_t & elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
+    elb_te_csr_t *te_csr;
+    elb_top_csr_t& elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
 
-    if (ingress) {
-        elb_te_csr_t &te_csr = elb0.sgi.te[stage];
-        te_csr.cfg_table_mpu_const[stage_tableid].value(val);
-        te_csr.cfg_table_mpu_const[stage_tableid].write();
+    if (pipeline == P4_PIPELINE_INGRESS) {
+        te_csr = &elb0.sgi.te[stage];
+    } else if (pipeline == P4_PIPELINE_EGRESS) {
+        te_csr = &elb0.sge.te[stage];
+    } else if (pipeline == P4_PIPELINE_TXDMA) {
+        te_csr = &elb0.pct.te[stage];
+    } else if (pipeline == P4_PIPELINE_RXDMA) {
+        te_csr = &elb0.pcr.te[stage];
     } else {
-        elb_te_csr_t &te_csr = elb0.sge.te[stage];
-        te_csr.cfg_table_mpu_const[stage_tableid].value(val);
-        te_csr.cfg_table_mpu_const[stage_tableid].write();
+        return SDK_RET_INVALID_ARG;
     }
-
+    te_csr->cfg_table_mpu_const[stage_tableid].value(val);
+    te_csr->cfg_table_mpu_const[stage_tableid].write();
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 elba_table_constant_read (uint64_t *val, uint32_t stage,
-                          int stage_tableid, bool ingress)
+                          int stage_tableid, p4pd_pipeline_t pipeline)
 {
-    elb_top_csr_t & elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
-    if (ingress) {
-        elb_te_csr_t &te_csr = elb0.sgi.te[stage];
-        te_csr.cfg_table_mpu_const[stage_tableid].read();
-        *val = te_csr.cfg_table_mpu_const[stage_tableid].
-            value().convert_to<uint64_t>();
-    } else {
-        elb_te_csr_t &te_csr = elb0.sge.te[stage];
-        te_csr.cfg_table_mpu_const[stage_tableid].read();
-        *val = te_csr.cfg_table_mpu_const[stage_tableid].
-            value().convert_to<uint64_t>();
-    }
+    elb_te_csr_t *te_csr;
+    elb_top_csr_t& elb0 = ELB_BLK_REG_MODEL_ACCESS(elb_top_csr_t, 0, 0);
 
+    if (pipeline == P4_PIPELINE_INGRESS) {
+        te_csr = &elb0.sgi.te[stage];
+    } else if (pipeline == P4_PIPELINE_EGRESS) {
+        te_csr = &elb0.sge.te[stage];
+    } else if (pipeline == P4_PIPELINE_TXDMA) {
+        te_csr = &elb0.pct.te[stage];
+    } else if (pipeline == P4_PIPELINE_RXDMA) {
+        te_csr = &elb0.pcr.te[stage];
+    } else {
+        return SDK_RET_INVALID_ARG;
+    }
+    te_csr->cfg_table_mpu_const[stage_tableid].read();
+    *val = te_csr->cfg_table_mpu_const[stage_tableid].
+                       value().convert_to<uint64_t>();
     return SDK_RET_OK;
 }
 

@@ -192,12 +192,25 @@ asicpd_table_entry_write (uint32_t tableid, uint32_t index, uint8_t *hwentry,
 sdk_ret_t
 asicpd_read_table_constant (uint32_t tableid, uint64_t *value)
 {
-    p4pd_table_properties_t tbl_ctx;
-    p4pd_table_properties_get(tableid, &tbl_ctx);
-    elba_table_constant_read(value, tbl_ctx.stage,
-                              tbl_ctx.stage_tableid,
-                              (tbl_ctx.gress == P4_GRESS_INGRESS));
+    p4pd_table_properties_t       tbl_ctx;
 
+    p4pd_global_table_properties_get(tableid, &tbl_ctx);
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        elba_table_constant_read(value, tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                 (tbl_ctx.gress == P4_GRESS_INGRESS) ?
+                                 P4_PIPELINE_INGRESS : P4_PIPELINE_EGRESS);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        elba_table_constant_read(value, tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                 P4_PIPELINE_RXDMA);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        elba_table_constant_read(value, tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                 P4_PIPELINE_TXDMA);
+    } else {
+        SDK_ASSERT_RETURN(FALSE, SDK_RET_INVALID_ARG);
+    }
     return SDK_RET_OK;
 }
 
@@ -206,10 +219,26 @@ asicpd_program_table_constant (uint32_t tableid, uint64_t const_value)
 {
     p4pd_table_properties_t tbl_ctx;
 
-    p4pd_table_properties_get(tableid, &tbl_ctx);
-    elba_table_constant_write(const_value, tbl_ctx.stage, tbl_ctx.stage_tableid,
-                              (tbl_ctx.gress == P4_GRESS_INGRESS));
-
+    p4pd_global_table_properties_get(tableid, &tbl_ctx);
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        elba_table_constant_write(const_value, tbl_ctx.stage,
+                                  tbl_ctx.stage_tableid,
+                                  (tbl_ctx.gress == P4_GRESS_INGRESS) ?
+                                  P4_PIPELINE_INGRESS : P4_PIPELINE_EGRESS);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        elba_table_constant_write(const_value, tbl_ctx.stage,
+                                  tbl_ctx.stage_tableid,
+                                  P4_PIPELINE_RXDMA);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        elba_table_constant_write(const_value, tbl_ctx.stage,
+                                  tbl_ctx.stage_tableid,
+                                  P4_PIPELINE_TXDMA);
+    } else {
+        SDK_ASSERT_RETURN(FALSE, SDK_RET_INVALID_ARG);
+    }
     return SDK_RET_OK;
 }
 
@@ -228,7 +257,8 @@ asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id,
             tid = tbl_ctx.stage_tableid;
         }
         elba_table_constant_write(const_value, tbl_ctx.stage, tid,
-                                  (tbl_ctx.gress == P4_GRESS_INGRESS));
+                                  (tbl_ctx.gress == P4_GRESS_INGRESS) ?
+                                  P4_PIPELINE_INGRESS : P4_PIPELINE_EGRESS);
     }
 
     return SDK_RET_OK;

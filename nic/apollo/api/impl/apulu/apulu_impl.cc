@@ -72,7 +72,7 @@ apulu_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
 
 uint32_t
 apulu_impl::rxdma_symbols_init_(void **p4plus_symbols,
-                                 platform_type_t platform_type)
+                                platform_type_t platform_type)
 {
     uint32_t    i = 0;
 
@@ -94,7 +94,7 @@ apulu_impl::rxdma_symbols_init_(void **p4plus_symbols,
 
 uint32_t
 apulu_impl::txdma_symbols_init_(void **p4plus_symbols,
-                                 platform_type_t platform_type)
+                                platform_type_t platform_type)
 {
     uint32_t    i = 0;
 
@@ -540,6 +540,12 @@ apulu_impl::table_init_(void) {
     // program default priority of the mappings
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_MAPPING,
                        PDS_IMPL_DEFAULT_MAPPING_PRIORITY);
+
+    // program the default policy transposition scheme
+    sdk::asic::pd::asicpd_program_table_constant(P4_P4PLUS_TXDMA_TBL_ID_RFC_P3,
+                                                FW_ACTION_XPOSN_GLOBAL_PRIORTY);
+    sdk::asic::pd::asicpd_program_table_constant(P4_P4PLUS_TXDMA_TBL_ID_RFC_P3_1,
+                                                FW_ACTION_XPOSN_GLOBAL_PRIORTY);
 
     return SDK_RET_OK;
 }

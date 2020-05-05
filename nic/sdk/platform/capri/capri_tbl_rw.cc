@@ -1780,18 +1780,22 @@ int
 capri_table_constant_write (uint64_t val, uint32_t stage,
                             uint32_t stage_tableid, p4pd_pipeline_t pipeline)
 {
-    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
+    cap_te_csr_t *te_csr;
+    cap_top_csr_t& cap0 = g_capri_state_pd->cap_top();
+
     if (pipeline == P4_PIPELINE_INGRESS) {
-        cap_te_csr_t &te_csr = cap0.sgi.te[stage];
-        te_csr.cfg_table_mpu_const[stage_tableid].value(val);
-        te_csr.cfg_table_mpu_const[stage_tableid].write();
+        te_csr = &cap0.sgi.te[stage];
     } else if (pipeline == P4_PIPELINE_EGRESS) {
-        cap_te_csr_t &te_csr = cap0.sge.te[stage];
-        te_csr.cfg_table_mpu_const[stage_tableid].value(val);
-        te_csr.cfg_table_mpu_const[stage_tableid].write();
+        te_csr = &cap0.sge.te[stage];
+    } else if (pipeline == P4_PIPELINE_TXDMA) {
+        te_csr = &cap0.pct.te[stage];
+    } else if (pipeline == P4_PIPELINE_RXDMA) {
+        te_csr = &cap0.pcr.te[stage];
     } else {
-        SDK_ASSERT(0);
+        return CAPRI_FAIL;
     }
+    te_csr->cfg_table_mpu_const[stage_tableid].value(val);
+    te_csr->cfg_table_mpu_const[stage_tableid].write();
     return CAPRI_OK;
 }
 
@@ -1799,20 +1803,23 @@ int
 capri_table_constant_read (uint64_t *val, uint32_t stage,
                            int stage_tableid, p4pd_pipeline_t pipeline)
 {
-    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
+    cap_te_csr_t *te_csr;
+    cap_top_csr_t& cap0 = g_capri_state_pd->cap_top();
+
     if (pipeline == P4_PIPELINE_INGRESS) {
-        cap_te_csr_t &te_csr = cap0.sgi.te[stage];
-        te_csr.cfg_table_mpu_const[stage_tableid].read();
-        *val = te_csr.cfg_table_mpu_const[stage_tableid].
-            value().convert_to<uint64_t>();
+        te_csr = &cap0.sgi.te[stage];
     } else if (pipeline == P4_PIPELINE_EGRESS) {
-        cap_te_csr_t &te_csr = cap0.sge.te[stage];
-        te_csr.cfg_table_mpu_const[stage_tableid].read();
-        *val = te_csr.cfg_table_mpu_const[stage_tableid].
-            value().convert_to<uint64_t>();
+        te_csr = &cap0.sge.te[stage];
+    } else if (pipeline == P4_PIPELINE_TXDMA) {
+        te_csr = &cap0.pct.te[stage];
+    } else if (pipeline == P4_PIPELINE_RXDMA) {
+         te_csr = &cap0.pcr.te[stage];
     } else {
-        SDK_ASSERT(0);
+        return CAPRI_FAIL;
     }
+    te_csr->cfg_table_mpu_const[stage_tableid].read();
+    *val = te_csr->cfg_table_mpu_const[stage_tableid].
+        value().convert_to<uint64_t>();
     return CAPRI_OK;
 }
 
