@@ -2612,12 +2612,11 @@
   revision = "e19ae1496984b1c655b8044a65c0300a3c878dd3"
 
 [[projects]]
-  branch = "master"
-  digest = "1:51a479a09b7ed06b7be5a854e27fcc328718ae0e5ad159f9ddeef12d0326c2e7"
+  digest = "1:908ad1a739c1afa54078eec5dc8a56b8ed01c0576b52ca61600471682fce4c33"
   name = "golang.org/x/time"
   packages = ["rate"]
   pruneopts = "NUT"
-  revision = "6dc17368e09b0e8634d71cac8168d853e869a0c7"
+  revision = "89c76fbcd5d1cd4969e5d2fe19d48b19d5ad94a0"
 
 [[projects]]
   branch = "master"

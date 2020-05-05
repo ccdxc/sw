@@ -32,18 +32,20 @@ const (
 )
 
 const (
-	timeFormat                = "2006-01-02T15:04:05"
-	bucketPrefix              = "fwlogs"
-	numLogTransmitWorkers     = 10
-	workItemBufferSize        = 50
-	connectErr                = "connect:" // copied from vos
-	fwLogMetaVersion          = "v1"
-	fwlogsBucketName          = "fwlogs"
-	fwLogCSVVersion           = "v1"
-	newFlowsKey               = "newFlows"
-	deletedFlowsKey           = "deletedFlows"
-	shortLivedFlowsKey        = "shotLivedFlows"
-	timeoutExceededErrorDescr = "timeout exceeded"
+	timeFormat            = "2006-01-02T15:04:05"
+	bucketPrefix          = "fwlogs"
+	numLogTransmitWorkers = 10
+	workItemBufferSize    = 50
+	connectErr            = "connect:" // copied from vos
+	fwLogMetaVersion      = "v1"
+	fwlogsBucketName      = "fwlogs"
+	fwLogCSVVersion       = "v1"
+	newFlowsKey           = "newFlows"
+	deletedFlowsKey       = "deletedFlows"
+	shortLivedFlowsKey    = "shotLivedFlows"
+
+	// Minio returns this error when an API request gets dropped due to MaxedOut error.
+	maxedOutError = "timeout exceeded while waiting to proceed with the request"
 )
 
 // TestObject is used for testing
@@ -346,19 +348,19 @@ func putObjectHelper(ctx context.Context,
 			tries++
 			log.Errorf("temporary, could not put object (%s)", err)
 
-			if strings.Contains(err.Error(), timeoutExceededErrorDescr) && !rateLimitedEventRaised {
+			if strings.Contains(err.Error(), maxedOutError) && !rateLimitedEventRaised {
 				rateLimitedEventRaised = true
 				descr := ""
 				if logcount == "" {
-					descr = fmt.Sprintf("Flow logs rate-limited DSC %s,"+
+					descr = fmt.Sprintf("Flow logs could not be repoted from DSC %s,"+
 						" bucketName %s, object name: %s, size %d bytes",
 						nodeUUID, bucketName, objectName, size)
 				} else {
-					descr = fmt.Sprintf("Flow logs rate-limited DSC %s,"+
+					descr = fmt.Sprintf("Flow logs could not be repoted from DSC %s,"+
 						" bucketName %s, object name: %s, size %d bytes, logcount %s",
 						nodeUUID, bucketName, objectName, size, logcount)
 				}
-				recorder.Event(eventtypes.FLOWLOGS_RATE_LIMITED_AT_DSC, descr, nic)
+				recorder.Event(eventtypes.FLOWLOGS_REPORTING_ERROR, descr, nic)
 			}
 		}
 		return a, err

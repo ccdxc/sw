@@ -341,9 +341,14 @@
    "Desc": "Flowlogs dropped at the DSC"
   },
   {
-   "Name": "FLOWLOGS_RATE_LIMITED_AT_DSC",
+   "Name": "FLOWLOGS_RATE_LIMITED",
+   "Severity": "critical",
+   "Desc": "Flowlogs rate limited"
+  },
+  {
+   "Name": "FLOWLOGS_REPORTING_ERROR",
    "Severity": "warn",
-   "Desc": "Flowlogs rate limited at the DSC"
+   "Desc": "Flowlogs could not be reported from DSC to PSM"
   },
   {
    "Name": "NAPLES_CATTRIP_INTERRUPT",

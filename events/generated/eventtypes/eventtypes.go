@@ -615,11 +615,18 @@ func init() {
 		Desc:       "Flowlogs dropped at the DSC",
 		SuppressMM: true}
 
-	eventTypes[FLOWLOGS_RATE_LIMITED_AT_DSC] = &EventTypeAttributes{
-		EType:      FLOWLOGS_RATE_LIMITED_AT_DSC.String(),
+	eventTypes[FLOWLOGS_REPORTING_ERROR] = &EventTypeAttributes{
+		EType:      FLOWLOGS_REPORTING_ERROR.String(),
 		Severity:   "warn",
 		Category:   "system",
-		Desc:       "Flowlogs rate limited at the DSC",
+		Desc:       "Flowlogs could not be reported from DSC to PSM",
+		SuppressMM: true}
+
+	eventTypes[FLOWLOGS_RATE_LIMITED] = &EventTypeAttributes{
+		EType:      FLOWLOGS_RATE_LIMITED.String(),
+		Severity:   "critical",
+		Category:   "system",
+		Desc:       "Flowlogs rate limited",
 		SuppressMM: true}
 
 }

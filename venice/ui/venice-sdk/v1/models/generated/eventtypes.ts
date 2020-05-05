@@ -84,7 +84,8 @@ export const categoryToEventType: { [cat: string]: string[] } = {
   ],
   system: [
     'FLOWLOGS_DROPPED',
-    'FLOWLOGS_RATE_LIMITED_AT_DSC',
+    'FLOWLOGS_RATE_LIMITED',
+    'FLOWLOGS_REPORTING_ERROR',
     'NAPLES_CATTRIP_INTERRUPT',
     'NAPLES_ERR_PCIEHEALTH_EVENT',
     'NAPLES_FATAL_INTERRUPT',
@@ -436,10 +437,15 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.critical,
       "Desc": "Flowlogs dropped at the DSC",
   },
-  'FLOWLOGS_RATE_LIMITED_AT_DSC' : {
-      "Name": "FLOWLOGS_RATE_LIMITED_AT_DSC",
+  'FLOWLOGS_RATE_LIMITED' : {
+      "Name": "FLOWLOGS_RATE_LIMITED",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "Flowlogs rate limited",
+  },
+  'FLOWLOGS_REPORTING_ERROR' : {
+      "Name": "FLOWLOGS_REPORTING_ERROR",
       "Severity": EventsEvent_severity.warn,
-      "Desc": "Flowlogs rate limited at the DSC",
+      "Desc": "Flowlogs could not be reported from DSC to PSM",
   },
   'NAPLES_CATTRIP_INTERRUPT' : {
       "Name": "NAPLES_CATTRIP_INTERRUPT",

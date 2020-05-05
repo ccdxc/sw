@@ -172,6 +172,9 @@ type Indexer struct {
 
 	// resolver
 	rsr resolver.Interface
+
+	// flowlogs rate limiters
+	flowlogsRateLimiters *RateLimiterCollection
 }
 
 // WithElasticClient passes a custom client for Elastic
@@ -240,6 +243,7 @@ func NewIndexer(ctx context.Context,
 		numFwLogObjectsToDelete:     numFwLogObjectsToDelete,
 		lastProcessedFwLogObjectKey: map[string]string{},
 		indexFwlogs:                 enableFwlogIndexing,
+		flowlogsRateLimiters:        newRateLimiterCollection(),
 	}
 
 	for _, opt := range opts {

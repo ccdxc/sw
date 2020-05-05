@@ -401,8 +401,12 @@ enum EventTypes {
                                             (severity)          = CRITICAL,
                                             (desc)              = "Flowlogs dropped at the DSC",
                                             (suppress_mm)       = true];
-    FLOWLOGS_RATE_LIMITED_AT_DSC          = 1302 [(category)    = System,
+    FLOWLOGS_REPORTING_ERROR              = 1302 [(category)    = System,
                                             (severity)          = WARN,
-                                            (desc)              = "Flowlogs rate limited at the DSC",
+                                            (desc)              = "Flowlogs could not be reported from DSC to PSM",
+                                            (suppress_mm)       = true];
+    FLOWLOGS_RATE_LIMITED                 = 1303 [(category)    = System,
+                                            (severity)          = CRITICAL,
+                                            (desc)              = "Flowlogs rate limited",
                                             (suppress_mm)       = true];
 }

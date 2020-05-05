@@ -14,10 +14,13 @@ import (
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/fwlog"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -73,19 +76,43 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 		}
 
 		kind := req.object.(runtime.Object).GetObjectKind()
-
 		uuid := getUUIDForFwlogObject(kind, ometa.GetTenant(), ometa.GetNamespace(), key)
-
 		idr.logger.Debugf("Writer %d, processing object: <%s %s %v %v>", id, kind, key, uuid, req.evType)
 		objStats, err := idr.vosFwLogsHTTPClient.StatObject(key)
 		if err != nil {
 			idr.logger.Errorf("Writer %d, Object %s, StatObject error %s",
 				id, key, err.Error())
-			// Skip indexing as write is guaranteed to fail without uuid
 			return
 		}
 
 		meta := objStats.MetaData
+		logcount, err := strconv.Atoi(meta["Logcount"])
+		if err != nil {
+			idr.logger.Errorf("Writer %d, object %s, logcount err %s", id, key, err.Error())
+			return
+		}
+
+		// Veirfy rate
+		if !idr.flowlogsRateLimiters.allowN(globalFlowlogsRateLimiter, logcount) {
+			idr.logger.Infof("Writer: %d batchsize len: %d, objectName %s, rate-limited",
+				id,
+				logcount,
+				key)
+			// Creating a tenant object for raising tenant scoped event
+			tenant := &cluster.Tenant{
+				TypeMeta: api.TypeMeta{
+					Kind: "Tenant",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Name:   ometa.GetTenant(),
+					Tenant: ometa.GetTenant(),
+				},
+			}
+			descr := fmt.Sprintf("Flow logs rate-limited for DSC %s, object name: %s", meta["Nodeid"], key)
+			recorder.Event(eventtypes.FLOWLOGS_RATE_LIMITED, descr, tenant)
+			return
+		}
+
 		var fwlogsMetaReq *elastic.BulkRequest
 		if meta["Metaversion"] == "v1" {
 			fwlogsMetaReq, err = idr.parseFwLogsMetaV1(id, meta, key, ometa, timeFormat, uuid)
@@ -155,6 +182,7 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 							len(fwlogs))
 
 						idr.updateLastProcessedkeys(key)
+
 						idr.helper(id, bulkTimeout, fwlogs, pushWorkers)
 					}
 				}
