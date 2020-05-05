@@ -1218,6 +1218,9 @@ func (sm *SysModel) SpecDidComplete(specSummary *types.SpecSummary) {
 		testcaseResult = groupResult.results[testcaseDescr]
 	}
 
+	testcaseResult.duration = specSummary.RunTime
+	groupResult.duration += specSummary.RunTime
+	bundleResult.duration += specSummary.RunTime
 	if !specSummary.Skipped() {
 		if specSummary.Failed() {
 			testcaseResult.failCount++
@@ -1228,18 +1231,14 @@ func (sm *SysModel) SpecDidComplete(specSummary *types.SpecSummary) {
 			groupResult.passCount++
 			bundleResult.passCount++
 		}
+		//Make sure system in good state
+		sm.AfterTestCommon()
 	} else {
 		testcaseResult.skipCount++
 		groupResult.skipCount++
 		bundleResult.skipCount++
 	}
 
-	testcaseResult.duration = specSummary.RunTime
-	groupResult.duration += specSummary.RunTime
-	bundleResult.duration += specSummary.RunTime
-
-	//Make sure system in good state
-	sm.AfterTestCommon()
 }
 
 func (sm *SysModel) AfterSuiteDidRun(setupSummary *types.SetupSummary) {
