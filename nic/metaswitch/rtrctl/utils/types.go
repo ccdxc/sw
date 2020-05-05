@@ -994,7 +994,7 @@ func dumpRt(in []byte) string {
 		str = strings.Join(inStrSlice[2:6], "")
 		if s, err := strconv.ParseInt(str, 16, 64); err == nil {
 			if rttype == 1 {
-				rt += fmt.Sprintf("IP: %v", Uint32ToIPv4Address(uint32(s)))
+				rt += fmt.Sprintf("IP: %v, ", Uint32ToIPv4Address(uint32(s)))
 			} else {
 				rt += fmt.Sprintf("AS: %v, ", s)
 			}
