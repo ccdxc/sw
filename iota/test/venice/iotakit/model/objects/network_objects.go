@@ -213,22 +213,15 @@ func (nw *Network) UpdateIPv4Gateway(gw string) error {
 	return nil
 }
 
-func VpcNetworkCollection(tenant, vpc string, n int, client objClient.ObjClient) (*NetworkCollection, error) {
+func VpcNetworkCollection(tenant, vpc string, client objClient.ObjClient) (*NetworkCollection, error) {
 	nws, err := client.ListNetwork(tenant)
-	if err != nil || n <= 0 {
+	if err != nil {
 		return nil, err
-	}
-
-	if len(nws) < n {
-		return nil, fmt.Errorf("Not enough Networks on tenant %s", tenant)
 	}
 
 	var nws_vpc []*network.Network
 	count := 0
 	for _, nw := range nws {
-		if count >= n {
-			break
-		}
 		if nw.Spec.VirtualRouter == vpc {
 			nws_vpc = append(nws_vpc, nw)
 			count++

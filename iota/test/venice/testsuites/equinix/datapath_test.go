@@ -107,6 +107,11 @@ var _ = Describe("Datapath", func() {
 				Skip("Ping test cases are enabled only for HW naples")
 			}
 
+			sn = sn.Any(2)
+			if len(naples) < 2 {
+				Skip("not enough naples to L3 remote with non-local subnet ping")
+			}
+
 			// DSC1: get host-pf attached with network S1
 			dscIntf1, err := objects.GetNetworkInterfaceBySubnet(naples[0], sn.Subnets()[0].Name, ts.model.ConfigClient(), ts.model.Testbed())
 			Expect(err).Should(Succeed())

@@ -270,17 +270,7 @@ func deleteIPAMPolicy(ipam, tenant string) {
 }
 
 func GetNetworkCollectionFromVPC(vpc, tenant string) (*objects.NetworkCollection, error) {
-
-	numSubnets := 0
-
-	ten, err := ts.model.ConfigClient().ListTenant()
-	if err != nil {
-		return nil, err
-	}
-
-	numSubnets = ts.model.Networks(ten[0].Name).Count()
-
-	return objects.VpcNetworkCollection(tenant, vpc, numSubnets, ts.model.ConfigClient())
+	return objects.VpcNetworkCollection(tenant, vpc, ts.model.ConfigClient())
 }
 
 func verifyIPAMonSubnet(subnet, ipam, tenant string) error {
