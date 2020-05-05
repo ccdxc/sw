@@ -538,6 +538,39 @@ func deleteSubnetHandler(infraAPI types.InfraAPI, client halapi.SubnetSvcClient,
 	return nil
 }
 
+func getPolicyUuid(names []string, attached bool, nw netproto.Network, infraAPI types.InfraAPI) []string {
+	ids := []string{}
+	if attached == false {
+		return ids
+	}
+	for _, n := range names {
+		p := netproto.NetworkSecurityPolicy{
+			TypeMeta: api.TypeMeta{
+				Kind: "NetworkSecurityPolicy",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    nw.Tenant,
+				Namespace: nw.Namespace,
+				Name:      n,
+			},
+		}
+		dat, err := infraAPI.Read(p.Kind, p.GetKey())
+		if err != nil {
+			log.Errorf("Look up failed for %s | err: %s", p.GetKey(), err)
+			continue
+		}
+		obj := netproto.NetworkSecurityPolicy{}
+		err = obj.Unmarshal(dat)
+		if err != nil {
+			log.Errorf("Unmarshal failed for %s | err: %s", p.GetKey(), err)
+			continue
+		}
+		ids = append(ids, obj.UUID)
+	}
+	log.Infof("Returning network security policy ids: %v", ids)
+	return ids
+}
+
 func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplinkIDs []uint64) (*halapi.SubnetRequest, error) {
 	var v6Prefix *halapi.IPv6Prefix
 	var v4Prefix *halapi.IPv4Prefix
@@ -621,39 +654,6 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 		ipamuuids = [][]byte{[]byte{}}
 	}
 
-	getPolicyUuid := func(names []string) []string {
-		ids := []string{}
-		if attached == false {
-			return ids
-		}
-		for _, n := range names {
-			p := netproto.NetworkSecurityPolicy{
-				TypeMeta: api.TypeMeta{
-					Kind: "NetworkSecurityPolicy",
-				},
-				ObjectMeta: api.ObjectMeta{
-					Tenant:    nw.Tenant,
-					Namespace: nw.Namespace,
-					Name:      n,
-				},
-			}
-			dat, err := infraAPI.Read(p.Kind, p.GetKey())
-			if err != nil {
-				log.Errorf("Look up failed for %s | err: %s", p.GetKey(), err)
-				continue
-			}
-			obj := netproto.NetworkSecurityPolicy{}
-			err = obj.Unmarshal(dat)
-			if err != nil {
-				log.Errorf("Unmarshal failed for %s | err: %s", p.GetKey(), err)
-				continue
-			}
-			ids = append(ids, obj.UUID)
-		}
-		log.Infof("Returning network security policy ids: %v", ids)
-		return ids
-	}
-
 	return &halapi.SubnetRequest{
 		BatchCtxt: nil,
 		Request: []*halapi.SubnetSpec{
@@ -675,8 +675,8 @@ func convertNetworkToSubnet(infraAPI types.InfraAPI, nw netproto.Network, uplink
 				V6Prefix:              v6Prefix,
 				HostIf:                [][]byte{intfUid},
 				DHCPPolicyId:          ipamuuids,
-				IngV4SecurityPolicyId: utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies)...),
-				EgV4SecurityPolicyId:  utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies)...),
+				IngV4SecurityPolicyId: utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies, attached, nw, infraAPI)...),
+				EgV4SecurityPolicyId:  utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies, attached, nw, infraAPI)...),
 			},
 		},
 	}, nil

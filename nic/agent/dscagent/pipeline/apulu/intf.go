@@ -145,6 +145,12 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 				return errors.Wrapf(types.ErrDatapathHandling, "Network: %s could not Convert | Err: %s", nw.GetKey(), err)
 			}
 			updsubnet.Request[0].HostIf[0] = uid
+			if uid != nil {
+				// since boltDB is not updated for the interface yet, convertNetworkToSubnet doesn't populate the polciy IDs
+				updsubnet.Request[0].IngV4SecurityPolicyId = utils.ConvertIDs(getPolicyUuid(nw.Spec.IngV4SecurityPolicies, true, nw, infraAPI)...)
+				updsubnet.Request[0].EgV4SecurityPolicyId = utils.ConvertIDs(getPolicyUuid(nw.Spec.EgV4SecurityPolicies, true, nw, infraAPI)...)
+			}
+
 			resp, err := subnetcl.SubnetUpdate(context.TODO(), updsubnet)
 			if err != nil {
 				log.Errorf("Network: %s update failed | Err: %v", nw.GetKey(), err)
