@@ -11,7 +11,6 @@
 #ifndef __AGENT_SVC_DEVICE_SVC_HPP__
 #define __AGENT_SVC_DEVICE_SVC_HPP__
 
-//#include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
 

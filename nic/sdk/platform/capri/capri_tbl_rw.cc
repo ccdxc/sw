@@ -676,7 +676,7 @@ p4plus_invalidate_cache_all (p4plus_cache_action_t action)
         sdk::lib::pal_reg_write(CSR_CACHE_INVAL_RXDMA_REG_ADDR,
                                 &val, 1);
     }
-    
+
     if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA ||
         action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_BOTH) {
         sdk::lib::pal_reg_write(CSR_CACHE_INVAL_TXDMA_REG_ADDR,
@@ -1778,36 +1778,40 @@ capri_hbm_table_entry_read (uint32_t tableid, uint32_t index, uint8_t *hwentry,
 
 int
 capri_table_constant_write (uint64_t val, uint32_t stage,
-                            uint32_t stage_tableid, bool ingress)
+                            uint32_t stage_tableid, p4pd_pipeline_t pipeline)
 {
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
-    if (ingress) {
+    if (pipeline == P4_PIPELINE_INGRESS) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
         te_csr.cfg_table_mpu_const[stage_tableid].value(val);
         te_csr.cfg_table_mpu_const[stage_tableid].write();
-    } else {
+    } else if (pipeline == P4_PIPELINE_EGRESS) {
         cap_te_csr_t &te_csr = cap0.sge.te[stage];
         te_csr.cfg_table_mpu_const[stage_tableid].value(val);
         te_csr.cfg_table_mpu_const[stage_tableid].write();
+    } else {
+        SDK_ASSERT(0);
     }
     return CAPRI_OK;
 }
 
 int
 capri_table_constant_read (uint64_t *val, uint32_t stage,
-                           int stage_tableid, bool ingress)
+                           int stage_tableid, p4pd_pipeline_t pipeline)
 {
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
-    if (ingress) {
+    if (pipeline == P4_PIPELINE_INGRESS) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
         te_csr.cfg_table_mpu_const[stage_tableid].read();
         *val = te_csr.cfg_table_mpu_const[stage_tableid].
             value().convert_to<uint64_t>();
-    } else {
+    } else if (pipeline == P4_PIPELINE_EGRESS) {
         cap_te_csr_t &te_csr = cap0.sge.te[stage];
         te_csr.cfg_table_mpu_const[stage_tableid].read();
         *val = te_csr.cfg_table_mpu_const[stage_tableid].
             value().convert_to<uint64_t>();
+    } else {
+        SDK_ASSERT(0);
     }
     return CAPRI_OK;
 }

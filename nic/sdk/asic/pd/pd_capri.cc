@@ -193,10 +193,23 @@ asicpd_read_table_constant (uint32_t tableid, uint64_t *value)
 {
     p4pd_table_properties_t       tbl_ctx;
 
-    p4pd_table_properties_get(tableid, &tbl_ctx);
-    capri_table_constant_read(value, tbl_ctx.stage, tbl_ctx.stage_tableid,
-                              (tbl_ctx.gress == P4_GRESS_INGRESS));
-
+    p4pd_global_table_properties_get(tableid, &tbl_ctx);
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        capri_table_constant_read(value, tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                  (tbl_ctx.gress == P4_GRESS_INGRESS) ?
+                                  P4_PIPELINE_INGRESS : P4_PIPELINE_EGRESS);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        capri_table_constant_read(value, tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                  P4_PIPELINE_RXDMA);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        capri_table_constant_read(value, tbl_ctx.stage, tbl_ctx.stage_tableid,
+                                  P4_PIPELINE_TXDMA);
+    } else {
+        SDK_ASSERT(0);
+    }
     return SDK_RET_OK;
 }
 
@@ -205,10 +218,26 @@ asicpd_program_table_constant (uint32_t tableid, uint64_t const_value)
 {
     p4pd_table_properties_t tbl_ctx;
 
-    p4pd_table_properties_get(tableid, &tbl_ctx);
-    capri_table_constant_write(const_value, tbl_ctx.stage,
-                               tbl_ctx.stage_tableid,
-                               (tbl_ctx.gress == P4_GRESS_INGRESS));
+    p4pd_global_table_properties_get(tableid, &tbl_ctx);
+    if ((tableid >= p4pd_tableid_min_get()) &&
+        (tableid <= p4pd_tableid_max_get())) {
+        capri_table_constant_write(const_value, tbl_ctx.stage,
+                                   tbl_ctx.stage_tableid,
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS) ?
+                                   P4_PIPELINE_INGRESS : P4_PIPELINE_EGRESS);
+    } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
+               (tableid <= p4pd_rxdma_tableid_max_get())) {
+        capri_table_constant_write(const_value, tbl_ctx.stage,
+                                   tbl_ctx.stage_tableid,
+                                   P4_PIPELINE_RXDMA);
+    } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
+               (tableid <= p4pd_txdma_tableid_max_get())) {
+        capri_table_constant_write(const_value, tbl_ctx.stage,
+                                   tbl_ctx.stage_tableid,
+                                   P4_PIPELINE_TXDMA);
+    } else {
+        SDK_ASSERT(0);
+    }
 
     return SDK_RET_OK;
 }
@@ -228,7 +257,8 @@ asicpd_program_table_thread_constant (uint32_t tableid, uint8_t table_thread_id,
             tid = tbl_ctx.stage_tableid;
         }
         capri_table_constant_write(const_value, tbl_ctx.stage, tid,
-                                   (tbl_ctx.gress == P4_GRESS_INGRESS));
+                                   (tbl_ctx.gress == P4_GRESS_INGRESS) ?
+                                   P4_PIPELINE_INGRESS : P4_PIPELINE_EGRESS);
     }
     return SDK_RET_OK;
 }
@@ -337,9 +367,9 @@ asicpd_hbm_table_entry_write (uint32_t tableid, uint32_t index,
                                       tbl_ctx->hbm_layout.entry_width, tbl_ctx);
 
     uint64_t entry_addr = (index * tbl_ctx->hbm_layout.entry_width);
-    ret = capri_hbm_table_entry_cache_invalidate(tbl_ctx->cache, 
+    ret = capri_hbm_table_entry_cache_invalidate(tbl_ctx->cache,
                                                  entry_addr,
-                                                 tbl_ctx->hbm_layout.entry_width, 
+                                                 tbl_ctx->hbm_layout.entry_width,
                                                  tbl_ctx->base_mem_pa);
 
 #if SDK_LOG_TABLE_WRITE
@@ -1356,11 +1386,14 @@ asicpd_table_rw_init (asic_cfg_t *cfg)
     return capri_table_rw_init(cfg);
 }
 
+// TODO: remove this API, we should just use asicpd_program_table_constant()
 void
 asicpd_table_constant_write (uint64_t val, uint32_t stage,
                              uint32_t stage_tableid, bool ingress)
 {
-    capri_table_constant_write(val, stage, stage_tableid, ingress);
+    capri_table_constant_write(val, stage, stage_tableid,
+                               ingress ? P4_PIPELINE_INGRESS :
+                                         P4_PIPELINE_EGRESS);
 }
 
 sdk_ret_t

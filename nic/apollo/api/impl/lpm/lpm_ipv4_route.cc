@@ -142,27 +142,26 @@ lpm_ipv4_route_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
     auto table = (txlpm1_actiondata_t *) bytes;
     table->action_id = TXLPM1_MATCH1_32B_ID;
-    PDS_TRACE_DEBUG("LPM writing HBM stage: 0x%0x, "
-                    "0x%0x 0x%0x 0x%0x 0x%0x 0x%0x "
-                    "0x%0x 0x%0x 0x%0x 0x%0x 0x%0x "
-                    "0x%0x 0x%0x 0x%0x 0x%0x 0x%0x ",
-                    addr,
-                    table->action_u.txlpm1_match1_32b.key0,
-                    table->action_u.txlpm1_match1_32b.key1,
-                    table->action_u.txlpm1_match1_32b.key2,
-                    table->action_u.txlpm1_match1_32b.key3,
-                    table->action_u.txlpm1_match1_32b.key4,
-                    table->action_u.txlpm1_match1_32b.key5,
-                    table->action_u.txlpm1_match1_32b.key6,
-                    table->action_u.txlpm1_match1_32b.key7,
-                    table->action_u.txlpm1_match1_32b.key8,
-                    table->action_u.txlpm1_match1_32b.key9,
-                    table->action_u.txlpm1_match1_32b.key10,
-                    table->action_u.txlpm1_match1_32b.key11,
-                    table->action_u.txlpm1_match1_32b.key12,
-                    table->action_u.txlpm1_match1_32b.key13,
-                    table->action_u.txlpm1_match1_32b.key14
-                    );
+    PDS_TRACE_VERBOSE("LPM writing HBM stage: 0x%0x, "
+                      "0x%0x 0x%0x 0x%0x 0x%0x 0x%0x "
+                      "0x%0x 0x%0x 0x%0x 0x%0x 0x%0x "
+                      "0x%0x 0x%0x 0x%0x 0x%0x 0x%0x ",
+                      addr,
+                      table->action_u.txlpm1_match1_32b.key0,
+                      table->action_u.txlpm1_match1_32b.key1,
+                      table->action_u.txlpm1_match1_32b.key2,
+                      table->action_u.txlpm1_match1_32b.key3,
+                      table->action_u.txlpm1_match1_32b.key4,
+                      table->action_u.txlpm1_match1_32b.key5,
+                      table->action_u.txlpm1_match1_32b.key6,
+                      table->action_u.txlpm1_match1_32b.key7,
+                      table->action_u.txlpm1_match1_32b.key8,
+                      table->action_u.txlpm1_match1_32b.key9,
+                      table->action_u.txlpm1_match1_32b.key10,
+                      table->action_u.txlpm1_match1_32b.key11,
+                      table->action_u.txlpm1_match1_32b.key12,
+                      table->action_u.txlpm1_match1_32b.key13,
+                      table->action_u.txlpm1_match1_32b.key14);
     return impl_base::pipeline_impl()->write_to_txdma_table(addr,
                P4_P4PLUS_TXDMA_TBL_ID_TXLPM1,
                TXLPM1_MATCH1_32B_ID, bytes);

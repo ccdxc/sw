@@ -568,7 +568,7 @@ p4pd_table_properties_get (uint32_t tableid, p4pd_table_properties_t *tbl_ctx)
 //-----------------------------------------------------------------------------
 p4pd_error_t
 p4pd_table_properties_optimal_get (uint32_t tableid, p4pd_table_properties_t **tbl_ctx)
-   
+
 {
     if (tableid >= p4pd_tableid_max_get() || !_p4tbls) {
         return P4PD_FAIL;
@@ -830,7 +830,7 @@ p4pd_global_hbm_table_address_set (uint32_t tableid, mem_addr_t pa,
 }
 
 uint32_t
-p4pd_sram_table_depth_get(p4pd_pipeline_t pipeline)
+p4pd_sram_table_depth_get (p4pd_pipeline_t pipeline)
 {
     if (pipeline == P4_PIPELINE_INGRESS) {
         return p4table_max_cfg.sram_ingress_depth;
@@ -843,7 +843,7 @@ p4pd_sram_table_depth_get(p4pd_pipeline_t pipeline)
 }
 
 uint32_t
-p4pd_tcam_table_depth_get(p4pd_pipeline_t pipeline)
+p4pd_tcam_table_depth_get (p4pd_pipeline_t pipeline)
 {
     if (pipeline == P4_PIPELINE_INGRESS) {
         return p4table_max_cfg.tcam_ingress_depth;

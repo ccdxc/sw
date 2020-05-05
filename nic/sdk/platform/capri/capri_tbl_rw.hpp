@@ -31,7 +31,7 @@ sdk_ret_t capri_table_rw_soft_init(asic_cfg_t *capri_cfg);
 sdk_ret_t capri_p4plus_table_rw_init(void);
 void capri_mpu_icache_invalidate(void);
 
-void capri_table_rw_cleanup();
+void capri_table_rw_cleanup(void);
 
 int capri_table_entry_write(uint32_t tableid, uint32_t index,
                             uint8_t  *hwentry, uint8_t  *hwentry_mask,
@@ -51,11 +51,11 @@ int capri_table_hw_entry_read(uint32_t tableid, uint32_t index,
                               bool is_oflow_table, bool ingress,
                               uint32_t ofl_parent_tbl_depth);
 
-int capri_tcam_table_entry_write (uint32_t tableid, uint32_t index,
-                                  uint8_t  *trit_x, uint8_t  *trit_y,
-                                  uint16_t hwentry_bit_len,
-                                  p4_table_mem_layout_t &tbl_info,
-                                  int gress, bool ingress);
+int capri_tcam_table_entry_write(uint32_t tableid, uint32_t index,
+                                 uint8_t  *trit_x, uint8_t  *trit_y,
+                                 uint16_t hwentry_bit_len,
+                                 p4_table_mem_layout_t &tbl_info,
+                                 int gress, bool ingress);
 
 int capri_tcam_table_entry_read(uint32_t tableid, uint32_t index,
                                 uint8_t  *trit_x, uint8_t  *trit_y,
@@ -83,10 +83,11 @@ int capri_hbm_table_entry_read(uint32_t tableid, uint32_t index,
                                p4pd_table_properties_t *tbl_info);
 
 int capri_table_constant_write(uint64_t val, uint32_t stage,
-                               uint32_t stage_tableid, bool ingress);
+                               uint32_t stage_tableid,
+                               p4pd_pipeline_t pipeline);
 
 int capri_table_constant_read(uint64_t *val, uint32_t stage,
-                              int stage_tableid, bool ingress);
+                              int stage_tableid, p4pd_pipeline_t pipeline);
 
 void capri_set_action_asm_base(int tableid, int actionid,
                                uint64_t asm_base);
@@ -97,9 +98,9 @@ void capri_set_action_rxdma_asm_base(int tableid, int actionid,
 void capri_set_action_txdma_asm_base(int tableid, int actionid,
                                      uint64_t asm_base);
 
-void capri_set_table_rxdma_asm_base (int tableid, uint64_t asm_base);
+void capri_set_table_rxdma_asm_base(int tableid, uint64_t asm_base);
 
-void capri_set_table_txdma_asm_base (int tableid, uint64_t asm_base);
+void capri_set_table_txdma_asm_base(int tableid, uint64_t asm_base);
 
 void capri_program_p4plus_table_mpu_pc(int tableid, int stage_tbl_id,
                                        int stage);
@@ -126,7 +127,7 @@ void capri_deparser_init(int tm_port_ingress, int tm_port_egress);
 void capri_program_hbm_table_base_addr(int tableid, int stage_tableid,
                                        char *tablename, int stage, int pipe);
 
-void capri_p4plus_recirc_init();
+void capri_p4plus_recirc_init(void);
 
 uint8_t capri_get_action_id(uint32_t tableid, uint8_t actionpc);
 
