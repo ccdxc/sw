@@ -29,7 +29,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   DropMetrics: {
   "name": "DropMetrics",
   "description": "Key index - Global ID",
-  "displayName": "Drop Statistics",
+  "displayName": "ASIC Ingress Drop Statistics",
   "fields": [
     {
       "name": "DropMalformedPkt",
@@ -360,7 +360,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   EgressDropMetrics: {
   "name": "EgressDropMetrics",
   "description": "Key index - Global ID",
-  "displayName": "Asic Egress Drop Statistics",
+  "displayName": "ASIC Egress Drop Statistics",
   "fields": [
     {
       "name": "DropOutputMapping",
@@ -2247,7 +2247,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   MacMetrics: {
   "name": "MacMetrics",
   "description": "Key index - PORT ID",
-  "displayName": "Port Packet Statistics",
+  "displayName": "Uplink Interface Packet Statistics",
   "fields": [
     {
       "name": "FramesRxOk",
@@ -3294,7 +3294,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   MgmtMacMetrics: {
   "name": "MgmtMacMetrics",
   "description": "Key index - PORT ID",
-  "displayName": "Mgmt Port Packet Statistics",
+  "displayName": "Management Interface Packet Statistics",
   "fields": [
     {
       "name": "FramesRxOk",
@@ -4158,7 +4158,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   LifMetrics: {
   "name": "LifMetrics",
   "description": "Key index - LIF IfIndex",
-  "displayName": "Lif Packet Statistics",
+  "displayName": "Logical Interface Statistics",
   "fields": [
     {
       "name": "TxTotalBytes",

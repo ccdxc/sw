@@ -6,7 +6,7 @@
     {
       "Name": "DropMetrics",
       "Description": "Key index - Global ID",
-      "DisplayName": "Drop Statistics",
+      "DisplayName": "ASIC Ingress Drop Statistics",
       "Fields": [
         {
           "Name": "DropMalformedPkt",
@@ -213,7 +213,7 @@
     {
       "Name": "EgressDropMetrics",
       "Description": "Key index - Global ID",
-      "DisplayName": "Asic Egress Drop Statistics",
+      "DisplayName": "ASIC Egress Drop Statistics",
       "Fields": [
         {
           "Name": "DropOutputMapping",

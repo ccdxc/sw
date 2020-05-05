@@ -9,7 +9,7 @@ message DropMetrics {
     option (delphi.datapath_metrics) = true;
 
     option (venice.metricInfo) = {
-        DisplayName: "Drop Statistics",
+        DisplayName: "ASIC Ingress Drop Statistics",
         Description: "Key index - Global ID",
         Scope: PerASIC,
         Tags: [ Level4 ]
@@ -50,7 +50,7 @@ message EgressDropMetrics {
     // External
     option (delphi.datapath_metrics) = true;
     option (venice.metricInfo) = {
-        DisplayName: "Asic Egress Drop Statistics",
+        DisplayName: "ASIC Egress Drop Statistics",
         Description: "Key index - Global ID",
         Scope: PerASIC,
         Tags: [ Level4 ]

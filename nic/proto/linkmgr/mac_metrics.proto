@@ -11,7 +11,7 @@ import "metrics_annotations.proto";
 
 message MacMetrics {
     option (venice.metricInfo) = {
-        DisplayName: "Port Packet Statistics",
+        DisplayName: "Uplink Interface Packet Statistics",
         Description: "Key index - PORT ID",
         Scope: PerEthPort,
         Tags: [ Level4 ]
@@ -114,7 +114,7 @@ message MacMetrics {
 
 message MgmtMacMetrics {
     option (venice.metricInfo) = {
-        DisplayName: "Mgmt Port Packet Statistics",
+        DisplayName: "Management Interface Packet Statistics",
         Description: "Key index - PORT ID",
         Scope: PerMgmtPort,
         Tags: [ Level4 ]

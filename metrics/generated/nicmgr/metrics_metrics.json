@@ -6,7 +6,7 @@
     {
       "Name": "LifMetrics",
       "Description": "Key index - LIF IfIndex",
-      "DisplayName": "Lif Packet Statistics",
+      "DisplayName": "Logical Interface Statistics",
       "Fields": [
         {
           "Name": "TxTotalBytes",

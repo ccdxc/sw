@@ -6,7 +6,7 @@
     {
       "Name": "MacMetrics",
       "Description": "Key index - PORT ID",
-      "DisplayName": "Port Packet Statistics",
+      "DisplayName": "Uplink Interface Packet Statistics",
       "Fields": [
         {
           "Name": "FramesRxOk",
@@ -668,7 +668,7 @@
     {
       "Name": "MgmtMacMetrics",
       "Description": "Key index - PORT ID",
-      "DisplayName": "Mgmt Port Packet Statistics",
+      "DisplayName": "Management Interface Packet Statistics",
       "Fields": [
         {
           "Name": "FramesRxOk",
