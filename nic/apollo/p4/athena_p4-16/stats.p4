@@ -147,6 +147,7 @@ control p4i_statistics(inout cap_phv_intr_global_h capri_intrinsic,
 	  */
 	  if(csum_err == true) {
 	    rx_user_csum_err = rx_user_csum_err + 1;
+	    capri_intrinsic.drop = 1;
 	  }	  
 	  
 	} else {

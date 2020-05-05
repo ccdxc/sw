@@ -176,6 +176,12 @@ sdk_ret_t send_packet(const char *out_pkt_descr, uint8_t *out_pkt, uint16_t out_
     printf("Received Packet of len %lu B on port: %d\n", ipkt.size(), port);
     //dump_pkt(opkt);
 
+    if ((in_pkt_len == 0) && (ipkt.size() != 0)) {
+     printf("Received Unexpected Packet of len %lu B on port: %d\n", ipkt.size(), port);
+     return SDK_RET_ERR;
+
+    }
+     
     if (in_pkt && in_pkt_len) {
         epkt.resize(in_pkt_len);
         memcpy(epkt.data(), in_pkt, in_pkt_len);
@@ -241,6 +247,12 @@ sdk_ret_t send_packet_wmask(const char *out_pkt_descr, uint8_t *out_pkt, uint16_
     printf("Received Packet of len %lu B on port: %d\n", ipkt.size(), port);
     //dump_pkt(opkt);
     //mask 2 bytes of received packet starting from mask_start_pos
+    if ((in_pkt_len == 0) && (ipkt.size() != 0)) {
+     printf("Received Unexpected Packet of len %lu B on port: %d\n", ipkt.size(), port);
+     return SDK_RET_ERR;
+
+    }
+
     if(ipkt.size() >= (mask_start_pos + 2)) {
 	for(int i=0; i<2; i++) {
 	  printf("Masking byte 0x(%02x) at position (%u)\n", ipkt[i+mask_start_pos], (i+mask_start_pos));
