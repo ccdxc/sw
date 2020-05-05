@@ -20,6 +20,7 @@ import { LicenseService } from '@app/services/license.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { AuthService } from '@app/services/auth.service';
 import { FeatureGuardDirective } from './featureGuard.directive';
+import { TestingUtility } from '@app/common/TestingUtility';
 
 
 @Component({
@@ -45,7 +46,10 @@ import { FeatureGuardDirective } from './featureGuard.directive';
                 </ng-template>
 
                 <!-- Empty guard should always show content-->
-                <div *featureGuard='' id='div6'></div>
+                <div *featureGuard="'cloud'" class='mode mode_cloud'></div>
+
+                <!-- Checking test utility -->
+                <div *featureGuard="'enterprise'" class='mode mode_enterprise'></div>
                 `,
 })
 class DummyComponent { }
@@ -94,7 +98,7 @@ describe('featureGuard directive', () => {
     component = fixture.componentInstance;
   });
 
-  it('Should hide html elements based on permissions', () => {
+  it('Should hide html elements based on features', () => {
     const testCases: TestCase[] = [
       {
         description: 'All should be visible, with else template',
@@ -113,6 +117,8 @@ describe('featureGuard directive', () => {
       },
     ];
 
+    let container;
+
     testCases.forEach( (tc, index) => {
       // Casting to any so we can access private variable during testing
       const anyService = uiConfigs as any;
@@ -125,13 +131,23 @@ describe('featureGuard directive', () => {
         controllerService.publish(Eventtypes.NEW_FEATURE_PERMISSIONS, null);
       }
       fixture.detectChanges();
-      const container = fixture.debugElement.query(By.css('#testcontainer'));
+      container = fixture.debugElement.query(By.css('#testcontainer'));
       expect(container).toBeTruthy(tc.description + ' Top level container div is missing');
       expect(container.queryAll(By.css('div')).length).toBe(tc.expectedDivs.length, tc.description);
       tc.expectedDivs.forEach( id => {
         expect(By.css('#' + id)).toBeTruthy(tc.description);
       });
     });
+    TestingUtility.setCloudMode();
+    fixture.detectChanges();
+    container = fixture.debugElement.query(By.css('#testcontainer'));
+    expect(container.queryAll(By.css('.mode')).length).toBe(1);
+    expect(container.queryAll(By.css('.mode_cloud')).length).toBe(1);
+
+    TestingUtility.setEnterpriseMode();
+    fixture.detectChanges();
+    expect(container.queryAll(By.css('.mode')).length).toBe(1);
+    expect(container.queryAll(By.css('.mode_enterprise')).length).toBe(1);
   });
 });
 

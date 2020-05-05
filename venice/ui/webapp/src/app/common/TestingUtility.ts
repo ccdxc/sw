@@ -4,7 +4,7 @@ import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { By } from '@angular/platform-browser';
 import { Utility } from '@app/common/Utility';
 import { } from 'jasmine';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIConfigsService, UIFeatures } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { BehaviorSubject } from 'rxjs';
 import { ControllerService } from '@app/services/controller.service';
@@ -83,6 +83,37 @@ export class TestingUtility {
       delete serviceAny.uiPermissions[p];
     });
     this.updateRoleGuards();
+  }
+
+  public static updateFeatureGuards() {
+    const service = TestBed.get(ControllerService);
+    service.publish(Eventtypes.NEW_FEATURE_PERMISSIONS, null);
+  }
+
+  public static setFeatures(features: UIFeatures[]) {
+    const serviceAny = TestBed.get(UIConfigsService) as any;
+    features.forEach((f) => {
+      serviceAny.features[f] = true;
+    });
+    this.updateFeatureGuards();
+  }
+
+  public static removeFeatures(features: UIFeatures[]) {
+    const serviceAny = TestBed.get(UIConfigsService) as any;
+    features.forEach((f) => {
+      serviceAny.features[f] = false;
+    });
+    this.updateFeatureGuards();
+  }
+
+  public static setCloudMode() {
+    this.setFeatures([UIFeatures.cloud]);
+    this.removeFeatures([UIFeatures.enterprise]);
+  }
+
+  public static setEnterpriseMode() {
+    this.setFeatures([UIFeatures.enterprise]);
+    this.removeFeatures([UIFeatures.cloud]);
   }
 
   /**

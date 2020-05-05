@@ -334,7 +334,7 @@ export class UIConfigsService implements OnDestroy {
       }
     }
 
-    // Publish to roleGuards that features have been changed
+    // Publish to featureGuards that features have been changed
     this.controllerService.publish(Eventtypes.NEW_FEATURE_PERMISSIONS, null);
   }
 
