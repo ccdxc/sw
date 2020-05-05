@@ -87,6 +87,9 @@ message DistributedServiceCardSpec {
 
     // DSCProfile captures the profile that is associated with this DistributedServiceCard
     string DSCProfile            = 8 [(gogoproto.jsontag) = "device-profile,omitempty"];
+
+    // IP of bond0 interface for mirroring applications
+    cluster.IPConfig InbandIPConfig     = 9 [(gogoproto.jsontag) = "inband-ip-config,omitempty"];
 }
 
 // DistributedServiceCardStatus contains current status of a DistributedServiceCard I/O subsystem
@@ -131,6 +134,9 @@ message DistributedServiceCardStatus {
 
     // ManagementInterface where Venice was discovered
     string ManagementInterface      = 11 [(gogoproto.jsontag) = "management-interface,omitempty"];
+
+    // IP of bond0 interface for mirroring applications
+    cluster.IPConfig InbandIPConfig     = 12 [(gogoproto.jsontag) = "inband-ip-config,omitempty"];
 }
 
 // DistributedServiceCardCmdExecute contains information on what command to execute

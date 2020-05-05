@@ -1567,6 +1567,11 @@ func (n *NMD) GetTimeZone() string {
 	return n.config.Status.TimeZone
 }
 
+// GetInbandIPConfig gets the current InbandIPConfig
+func (n *NMD) GetInbandIPConfig() *cluster.IPConfig {
+	return n.config.Spec.InbandIPConfig
+}
+
 // GetIPConfig gets the current IPConfig
 func (n *NMD) GetIPConfig() *cluster.IPConfig {
 	return n.config.Spec.IPConfig
@@ -1577,6 +1582,13 @@ func (n *NMD) SetIPConfig(cfg *cluster.IPConfig) {
 	n.Lock()
 	defer n.Unlock()
 	n.config.Status.IPConfig = cfg
+}
+
+// SetInbandIPConfig sets the IPConfig
+func (n *NMD) SetInbandIPConfig(cfg *cluster.IPConfig) {
+	n.Lock()
+	defer n.Unlock()
+	n.config.Status.InbandIPConfig = cfg
 }
 
 // SetMgmtInterface sets the management interface after auto discovery

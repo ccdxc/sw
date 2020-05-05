@@ -21,10 +21,10 @@ func NewIPClient(nmd api.NmdAPI, intf string, pipeline string) (*IPClient, error
 }
 
 // DoStaticConfig performs static IPAddress/Default GW configuration. Stubbed out for darwin
-func (c *IPClient) DoStaticConfig() (string, error) {
+func (c *IPClient) DoStaticConfig() (string, string, error) {
 	// Look up interface
 
-	return "a.b.c.d", nil
+	return "a.b.c.d", "", nil
 }
 
 // DoDHCPConfig performs dhcp configuration. Stubbed out for darwin

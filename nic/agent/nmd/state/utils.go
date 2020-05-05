@@ -55,6 +55,14 @@ func isNetworkModeValid(spec nmdProto.DistributedServiceCardSpec) (err error) {
 		} else {
 			return fmt.Errorf("invalid management IP %v specified. Must be in CIDR Format", spec.IPConfig.IPAddress)
 		}
+
+		if spec.InbandIPConfig != nil && (len(spec.InbandIPConfig.IPAddress) == 0 || vldtor.CIDR(spec.InbandIPConfig.IPAddress) != nil) {
+			return fmt.Errorf("invalid inband IP %v specified. Must be in CIDR Format", spec.InbandIPConfig.IPAddress)
+		}
+
+		if spec.InbandIPConfig != nil && spec.NetworkMode == nmdProto.NetworkMode_INBAND.String() {
+			return fmt.Errorf("cannot configure inband ip on inb when it is also mgmt network")
+		}
 	}
 
 	for _, c := range spec.Controllers {

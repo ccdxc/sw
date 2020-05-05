@@ -55,7 +55,9 @@ type NmdAPI interface {
 	GetPlatformCertificate(nic *cluster.DistributedServiceCard) ([]byte, error)
 	GenChallengeResponse(nic *cluster.DistributedServiceCard, challenge []byte) ([]byte, []byte, error)
 	GetIPConfig() *cluster.IPConfig
+	GetInbandIPConfig() *cluster.IPConfig
 	SetIPConfig(cfg *cluster.IPConfig)
+	SetInbandIPConfig(cfg *cluster.IPConfig)
 	SetVeniceIPs(veniceIPs []string)
 	GetVeniceIPs() []string
 	SetInterfaceIPs(interfaceIPs map[uint32]*cluster.IPConfig)

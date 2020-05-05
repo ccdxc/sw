@@ -419,7 +419,6 @@ func (n *NMD) handleNetworkModeTransition() error {
 	if err := n.reconcileIPClient(); err != nil {
 		return err
 	}
-
 	if spec.IPConfig != nil && len(spec.IPConfig.IPAddress) != 0 {
 		// Static IP Config. Populate the status
 		n.config.Status.Controllers = n.config.Spec.Controllers

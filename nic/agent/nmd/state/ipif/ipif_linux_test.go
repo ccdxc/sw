@@ -53,6 +53,9 @@ var (
 		DNSServers: []string{"172.16.10.1", "172.16.10.2"},
 		DefaultGW:  "172.16.10.1",
 	}
+	staticInbIPConfig = cluster.IPConfig{
+		IPAddress: "172.16.10.11/28",
+	}
 	_, allocSubnet, _           = net.ParseCIDR(testSubnet)
 	veniceIPs                   = "42.42.42.42,84.84.84.84"
 	option241VeniceIPs          = "1.1.1.1"
@@ -85,7 +88,6 @@ func TestMain(m *testing.M) {
 }
 
 //++++++++++++++++++++++++++++ Happy Path Test Cases ++++++++++++++++++++++++++++++++++++++++
-
 func TestIPClient_DoStaticConfig(t *testing.T) {
 	var d dhcpSrv
 	err := d.setup(noDHCP)
@@ -96,9 +98,38 @@ func TestIPClient_DoStaticConfig(t *testing.T) {
 	AssertOk(t, err, "IPClient creates must succeed")
 	// Set the IP Config
 	mockNMD.SetIPConfig(&staticIPConfig)
-	ipAddr, err := ipClient.DoStaticConfig()
+	ipAddr, _, err := ipClient.DoStaticConfig()
 	AssertOk(t, err, "Failed to assign ip address statically to a mock interface")
 	Assert(t, ipAddr == mockNMD.GetIPConfig().IPAddress, "Got in correct assigned IP Address")
+}
+
+func TestIPClient_DoStaticConfigInb(t *testing.T) {
+	ldhcpClientMock := &netlink.Dummy{
+		LinkAttrs: netlink.LinkAttrs{
+			Name:   NaplesInbandInterface,
+			TxQLen: 1000,
+		},
+	}
+
+	// Create the veth pair
+	if err := netlink.LinkAdd(ldhcpClientMock); err != nil {
+		if !strings.Contains(err.Error(), "file exists") {
+			log.Errorf("Interface already present. Continuing...")
+		}
+		log.Info("Interface already present. Continuing...")
+	}
+
+	netlink.LinkSetUp(ldhcpClientMock)
+	mockNMD := mock.CreateMockNMD(t.Name())
+	ipClient, err := NewIPClient(mockNMD, NaplesInbandInterface, "")
+	AssertOk(t, err, "IPClient creates must succeed")
+	// Set the IP Config
+	mockNMD.SetIPConfig(&staticIPConfig)
+	mockNMD.SetInbandIPConfig(&staticInbIPConfig)
+	ipAddr, inbIPAddr, err := ipClient.DoStaticConfig()
+	AssertOk(t, err, "Failed to assign ip address statically to a mock interface")
+	Assert(t, ipAddr == mockNMD.GetIPConfig().IPAddress, "Got in correct assigned IP Address")
+	Assert(t, inbIPAddr == mockNMD.GetInbandIPConfig().IPAddress, "Got in correct assigned IP Address to inband")
 }
 
 func TestDHCPSpecControllers(t *testing.T) {
@@ -825,7 +856,7 @@ func TestInvalidStaticIPAssignment(t *testing.T) {
 	}
 	mockNMD.SetIPConfig(badIPConfig)
 	AssertOk(t, err, "IPClient creates must succeed")
-	ipAddr, err := ipClient.DoStaticConfig()
+	ipAddr, _, err := ipClient.DoStaticConfig()
 	Assert(t, err != nil, "Static IP Assignment with bad config must fail")
 	AssertEquals(t, "", ipAddr, "Static IP Address with bad ip config must not return a valid ip address")
 }
@@ -934,11 +965,13 @@ func (d *dhcpSrv) setup(configureVendorAttrs int) error {
 	// Create the veth pair
 	if err := netlink.LinkAdd(dhcpClientMock); err != nil {
 		if !strings.Contains(err.Error(), "file exists") {
+			fmt.Println("alok " + err.Error())
 			return err
 		}
 		log.Info("Interface already present. Continuing...")
 	}
 	if err := netlink.LinkSetARPOn(dhcpClientMock); err != nil {
+		fmt.Println("alok1 " + err.Error())
 		return err
 	}
 
@@ -948,6 +981,7 @@ func (d *dhcpSrv) setup(configureVendorAttrs int) error {
 	if err != nil {
 		if !strings.Contains(err.Error(), "file exists") {
 			log.Errorf("Failed to find the server interface")
+			fmt.Println("alok2 " + err.Error())
 			return err
 		}
 		log.Info("Interface  already up. Continuing...")
@@ -957,12 +991,14 @@ func (d *dhcpSrv) setup(configureVendorAttrs int) error {
 	if err := netlink.AddrAdd(srvIntf, addr); err != nil {
 		if !strings.Contains(err.Error(), "file exists") {
 			log.Errorf("Failed to assign ip address %v to interface dhcpmock. Err: %v", addr.IP.String(), err)
+			fmt.Println("alok3 " + err.Error())
 			return err
 		}
 		log.Info("Address already present. Continuing...")
 	}
 
 	if err := netlink.LinkSetUp(srvIntf); err != nil {
+		fmt.Println("alok4 " + err.Error())
 		log.Errorf("Failed to bring up the interface. Err: %v", err)
 		return err
 	}
@@ -970,6 +1006,7 @@ func (d *dhcpSrv) setup(configureVendorAttrs int) error {
 	if configureVendorAttrs != noDHCP {
 		go d.startDHCPServer(configureVendorAttrs)
 	}
+
 	return nil
 }
 

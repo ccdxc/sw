@@ -57,7 +57,7 @@ var naplesProfileUpdateCmd = &cobra.Command{
 }
 
 var controllers []string
-var managedBy, managementNetwork, priMac, id, mgmtIP, defaultGW, naplesProfile, profileName, portDefault string
+var managedBy, managementNetwork, priMac, id, mgmtIP, defaultGW, naplesProfile, profileName, portDefault, bondIP string
 var dnsServers []string
 
 func init() {
@@ -72,6 +72,7 @@ func init() {
 	naplesCmd.Flags().StringVarP(&id, "id", "i", "", "DSC ID")
 	naplesCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
+	naplesCmd.Flags().StringVarP(&bondIP, "inband-ip", "", "", "Inband IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&naplesProfile, "dsc-profile", "s", "FEATURE_PROFILE_BASE", "Active Distributed Service Card Profile")
 	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "FEATURE_PROFILE_BASE", "Active Distributed Service Card Profile")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
@@ -108,6 +109,15 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 		networkManagementMode = nmd.NetworkMode_OOB
 	}
 
+	var inbIPCfg *cluster.IPConfig
+	if bondIP == "" {
+		inbIPCfg = nil
+	} else {
+		inbIPCfg = &cluster.IPConfig{
+			IPAddress: bondIP,
+		}
+	}
+
 	naplesCfg := nmd.DistributedServiceCard{
 		Spec: nmd.DistributedServiceCardSpec{
 			PrimaryMAC: priMac,
@@ -117,10 +127,11 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 				DefaultGW:  defaultGW,
 				DNSServers: dnsServers,
 			},
-			Mode:        managementMode.String(),
-			NetworkMode: networkManagementMode.String(),
-			Controllers: controllers,
-			DSCProfile:  naplesProfile,
+			InbandIPConfig: inbIPCfg,
+			Mode:           managementMode.String(),
+			NetworkMode:    networkManagementMode.String(),
+			Controllers:    controllers,
+			DSCProfile:     naplesProfile,
 		},
 	}
 
@@ -273,6 +284,18 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 					_, mgmtNet, _ = net.ParseCIDR(mgmtIP)
 				}
 			} else {
+				err = fmt.Errorf("invalid management IP %v specified. Must be in CIDR Format", mgmtIP)
+				return
+			}
+		}
+
+		if len(bondIP) != 0 {
+			if managementNetwork == "inband" {
+				err = fmt.Errorf("cannot configure ip on inb when it is also mgmt network")
+				return
+			}
+
+			if vldtor.CIDR(bondIP) != nil {
 				err = fmt.Errorf("invalid management IP %v specified. Must be in CIDR Format", mgmtIP)
 				return
 			}

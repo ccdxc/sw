@@ -46,14 +46,17 @@ func NewIPClient(nmd api.NmdAPI, intf string, pipeline string) (*IPClient, error
 		primaryIntf:         link,
 		secondaryInterfaces: getSecondaryMgmtLink(pipeline, intf),
 		dhcpState:           &dhcpState,
+		inbandIntf:          getInbandIntfLink(),
 	}
 
 	return &ipClient, nil
 }
 
-// DoStaticConfig performs static IPAddress/Default GW configuration. It returns the assigned IP address inline
-func (c *IPClient) DoStaticConfig() (string, error) {
-	ipConfig := c.nmd.GetIPConfig()
+func assignIPToIntf(intf netlink.Link, ipConfig *cluster.IPConfig) (string, error) {
+	if ipConfig == nil {
+		log.Errorf("ipConfig is nil")
+		return "", fmt.Errorf("ipConfig is nil")
+	}
 	addr, _ := netlink.ParseAddr(ipConfig.IPAddress)
 
 	if addr == nil {
@@ -62,37 +65,54 @@ func (c *IPClient) DoStaticConfig() (string, error) {
 	}
 
 	// Get list of IPv4 Addresses
-	addrs, err := netlink.AddrList(c.primaryIntf, netlink.FAMILY_V4)
+	addrs, err := netlink.AddrList(intf, netlink.FAMILY_V4)
 	if err != nil {
-		log.Errorf("Failed list ip address on interface %v. Err: %v", c.primaryIntf, err)
+		log.Errorf("Failed list ip address on interface %v. Err: %v", intf, err)
 		return "", err
 	}
 	// Delete all IPv4 Addresses
 	for _, addr := range addrs {
-		if err := netlink.AddrDel(c.primaryIntf, &addr); err != nil {
-			log.Errorf("Failed to delete ip address %v on interface %v. Err: %v", addr, c.primaryIntf, err)
+		if err := netlink.AddrDel(intf, &addr); err != nil {
+			log.Errorf("Failed to delete ip address %v on interface %v. Err: %v", addr, intf, err)
 			return "", err
 		}
 	}
 	// Assign IP Address statically
-	if err := netlink.AddrReplace(c.primaryIntf, addr); err != nil {
-		log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", ipConfig.IPAddress, c.primaryIntf, err)
+	if err := netlink.AddrReplace(intf, addr); err != nil {
+		log.Errorf("Failed to assign ip address %v to interface %v. Err: %v", ipConfig.IPAddress, intf, err)
 		return "", err
 	}
 	// Assign default gw TODO: Verify if the route added by AddrAdd is good enough
 	if len(ipConfig.DefaultGW) != 0 {
 		defaultRoute := &netlink.Route{
-			LinkIndex: c.primaryIntf.Attrs().Index,
+			LinkIndex: intf.Attrs().Index,
 			Gw:        net.ParseIP(ipConfig.DefaultGW),
 		}
 		err := netlink.RouteAdd(defaultRoute)
 		if err != nil {
-			log.Errorf("Failed to add default gw %v for the interface %v. Usually happens when the default gateway is already setup. Err: %v", ipConfig.DefaultGW, c.primaryIntf, err)
+			log.Errorf("Failed to add default gw %v for the interface %v. Usually happens when the default gateway is already setup. Err: %v", ipConfig.DefaultGW, intf, err)
 		}
+	}
+
+	return addr.String(), nil
+}
+
+// DoStaticConfig performs static IPAddress/Default GW configuration. It returns the assigned IP address inline
+func (c *IPClient) DoStaticConfig() (string, string, error) {
+	priAddr, err := assignIPToIntf(c.primaryIntf, c.nmd.GetIPConfig())
+	if err != nil {
+		return "", "", err
 	}
 	c.nmd.SetMgmtInterface(c.primaryIntf.Attrs().Name)
 
-	return addr.String(), nil
+	if c.nmd.GetInbandIPConfig() != nil {
+		inbandAddr, err := assignIPToIntf(c.inbandIntf, c.nmd.GetInbandIPConfig())
+		if err != nil {
+			return priAddr, "", err
+		}
+		return priAddr, inbandAddr, nil
+	}
+	return priAddr, "", nil
 }
 
 // DoDHCPConfig performs dhcp on the management interface and obtains venice co-ordinates
@@ -736,6 +756,19 @@ func (d *DHCPState) setStaticRoutes() {
 			log.Errorf("Failed to configure static route %v. Err: %v", route, err)
 		}
 	}
+}
+
+func getInbandIntfLink() netlink.Link {
+	inb, err := netlink.LinkByName(NaplesInbandInterface)
+	if err != nil {
+		log.Errorf("Failed to look up interface %v during IP Client init. Err: %v", NaplesInbandInterface, err)
+	}
+	if inb != nil {
+		if err := netlink.LinkSetUp(inb); err != nil {
+			log.Errorf("Failed to set interface %v up during IP Client init. Err: %v", NaplesInbandInterface, err)
+		}
+	}
+	return inb
 }
 
 func getSecondaryMgmtLink(pipeline, primaryIntf string) (secondaryMgmtLinks []netlink.Link) {

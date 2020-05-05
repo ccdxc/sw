@@ -22,16 +22,17 @@ import (
 type NMD struct {
 	Name string
 	sync.Mutex
-	Nic           *cmd.DistributedServiceCard
-	NicAdded      map[string]*cmd.DistributedServiceCard
-	NicUpdated    map[string]*cmd.DistributedServiceCard
-	NicDeleted    map[string]*cmd.DistributedServiceCard
-	Naples        *nmd.DistributedServiceCard
-	IPConfig      *cmd.IPConfig
-	keyMgr        *keymgr.KeyMgr
-	Rollout       *protos.DSCRollout
-	RolloutStatus *protos.DSCRolloutStatusUpdate
-	Profiles      []*nmd.DSCProfile
+	Nic            *cmd.DistributedServiceCard
+	NicAdded       map[string]*cmd.DistributedServiceCard
+	NicUpdated     map[string]*cmd.DistributedServiceCard
+	NicDeleted     map[string]*cmd.DistributedServiceCard
+	Naples         *nmd.DistributedServiceCard
+	IPConfig       *cmd.IPConfig
+	InbandIPConfig *cmd.IPConfig
+	keyMgr         *keymgr.KeyMgr
+	Rollout        *protos.DSCRollout
+	RolloutStatus  *protos.DSCRolloutStatusUpdate
+	Profiles       []*nmd.DSCProfile
 }
 
 // RegisterCMD registers CMD stubbed out
@@ -258,6 +259,16 @@ func (ag *NMD) UpdateNaplesConfig(naples *nmd.DistributedServiceCard) error {
 	defer ag.Unlock()
 	ag.Naples = naples
 	return nil
+}
+
+// GetInbandIPConfig gets the current IP Config
+func (ag *NMD) GetInbandIPConfig() *cmd.IPConfig {
+	return ag.InbandIPConfig
+}
+
+// SetInbandIPConfig sets the current InbandIPConfig
+func (ag *NMD) SetInbandIPConfig(cfg *cmd.IPConfig) {
+	ag.InbandIPConfig = cfg
 }
 
 // GetIPConfig gets the current IP Config

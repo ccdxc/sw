@@ -16,7 +16,7 @@ import (
 
 // IPClientIf Implements NMD IP Client
 type IPClientIf interface {
-	DoStaticConfig() (string, error)
+	DoStaticConfig() (string, string, error)
 	DoDHCPConfig() error
 	DoNTPSync() error
 	GetIPClientIntf() string
@@ -32,6 +32,7 @@ type IPClient struct {
 	secondaryInterfaces []netlink.Link
 	nmd                 api.NmdAPI
 	dhcpState           *DHCPState
+	inbandIntf          netlink.Link
 }
 
 type dhcpState int

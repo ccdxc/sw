@@ -39,13 +39,14 @@ func NewNMDStateMachine() *NMDStateMachine {
 						e.Err = errors.New("failed to cast event args to type NMD")
 						return
 					}
-					_, err := nmd.IPClient.DoStaticConfig()
+					_, _, err := nmd.IPClient.DoStaticConfig()
 					if err != nil {
 						log.Errorf("Failed to perform static configuration. Err: %v", err)
 						e.Err = err
 						return
 					}
 					nmd.config.Status.IPConfig = nmd.config.Spec.IPConfig
+					nmd.config.Status.InbandIPConfig = nmd.config.Spec.InbandIPConfig
 				},
 
 				"doDynamic": func(e *fsm.Event) {

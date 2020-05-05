@@ -139,8 +139,16 @@ func (ag *mockAgent) GenChallengeResponse(nic *cmd.DistributedServiceCard, chall
 	return nil, nil, nil
 }
 
+func (ag *mockAgent) GetInbandIPConfig() *cmd.IPConfig {
+	return nil
+}
+
 func (ag *mockAgent) GetIPConfig() *cmd.IPConfig {
 	return nil
+}
+
+func (ag *mockAgent) SetInbandIPConfig(cfg *cmd.IPConfig) {
+	return
 }
 
 func (ag *mockAgent) SetIPConfig(cfg *cmd.IPConfig) {
