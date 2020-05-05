@@ -111,11 +111,11 @@ alg_ftp_sync_session_proc (fte::ctx_t &ctx, l4_alg_status_t *l4_sess)
                                 FTPCmdType::FTP_CMD_RESPONSE) ? __parse_ftp_rsp : __parse_ftp_req);
 
     // If any TCP Buff alread exits, free them up and repopulate from the sync
-    if (!l4_sess->tcpbuf[DIR_IFLOW]) {
+    if (l4_sess->tcpbuf[DIR_IFLOW]) {
         l4_sess->tcpbuf[DIR_IFLOW]->free();
         l4_sess->tcpbuf[DIR_IFLOW] = NULL;
     }
-    if (!l4_sess->tcpbuf[DIR_RFLOW]) {
+    if (l4_sess->tcpbuf[DIR_RFLOW]) {
         l4_sess->tcpbuf[DIR_RFLOW]->free();
         l4_sess->tcpbuf[DIR_RFLOW] = NULL;
     }
