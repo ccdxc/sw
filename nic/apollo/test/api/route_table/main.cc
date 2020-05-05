@@ -35,6 +35,9 @@ static const std::string k_base_v4_pfx1 = "101.100.100.1/16";
 static const std::string k_base_v6_pfx  = "100:100:100:1:1::1/65";
 static const std::string k_base_v6_pfx1 = "101:100:100:1:1::1/65";
 
+static uint32_t k_num_route_tables = 1;
+static uint32_t k_route_table_id = 1;
+
 //----------------------------------------------------------------------------
 // Route table test class
 //----------------------------------------------------------------------------
@@ -102,7 +105,6 @@ protected:
 
 /// \defgroup ROUTE_TESTS Route table tests
 /// @{
-
 /// \brief Route table WF_B1
 /// \ref WF_B1
 TEST_F(route_test, v4v6_route_table_workflow_b1) {
@@ -128,7 +130,6 @@ TEST_F(route_test, v4v6_route_table_workflow_b1) {
         workflow_b1<route_table_feeder>(feeder);
     }
 }
-
 /// \brief Route table WF_B2
 /// \ref WF_B2
 TEST_F(route_test, v4v6_route_table_workflow_b2) {
@@ -703,11 +704,189 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_8) {
         workflow_neg_8<route_table_feeder>(feeder1, feeder2);
     }
 }
-
 // TEST_F input validation with assert_death
 
 /// @}
 
+//---------------------------------------------------------------------
+// Non templatized test cases
+//---------------------------------------------------------------------
+
+/// \brief change address family of a route-table
+TEST_F(route_test, DISABLED_rt_update_af) {
+
+    route_table_feeder feeder;
+    pds_route_table_spec_t spec;
+    pds_route_table_spec_t old_spec;
+    memset(&old_spec, 0, sizeof(old_spec));
+    memset(&spec, 0, sizeof(spec));
+
+    // checking v4->v6 update
+    // init
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0,
+                k_num_route_tables, k_route_table_id);
+    route_table_create(feeder);
+    memcpy(&old_spec, &feeder.spec, sizeof(pds_route_table_spec_t));
+    route_table_read(feeder);
+    create_route_table_spec(k_base_v6_pfx, IP_AF_IPV6, 0,
+                            k_num_route_tables, &spec, false);
+    // update should fail as af is immutable attribute
+    // But update is working , need to check
+    route_table_update(feeder, &spec, ROUTE_TABLE_ATTR_AF, SDK_RET_ERR);
+    // As update fails, rollback feeder's spec to old spec
+    memcpy(&feeder.spec, &old_spec, sizeof(pds_route_table_spec_t));
+    route_table_read(feeder);
+    // cleanup
+    route_table_delete(feeder);
+    route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // checking v6->v4 update
+    if(!apulu()) {
+        // Currently ipv6 feeder init is not supported in apulu
+        memset(&spec, 0, sizeof(spec));
+        memset(&old_spec, 0, sizeof(old_spec));
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, k_num_route_tables,
+                    k_route_table_id);
+        route_table_create(feeder);
+        memcpy(&old_spec, &feeder.spec, sizeof(pds_route_table_spec_t));
+        // update should fail as af is immutable attribute
+        route_table_read(feeder);
+        create_route_table_spec(k_base_v4_pfx,  IP_AF_IPV4, 0,
+                                k_num_route_tables,
+                                &spec, false);
+        route_table_update(feeder, &spec, ROUTE_TABLE_ATTR_AF, SDK_RET_ERR);
+        // As update fails, rollback feeder's spec to old spec
+        memcpy(&feeder.spec, &old_spec, sizeof(pds_route_table_spec_t));
+        route_table_read(feeder);
+        route_table_delete(feeder);
+        route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+    }
+}
+
+/// \brief change routes in a route table
+TEST_F(route_test, rt_update_routes) {
+    route_table_feeder feeder;
+    pds_route_table_spec_t spec;
+    memset(&spec, 0, sizeof(spec));
+
+    // change ipv4 routes from 0->2
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0, k_num_route_tables,
+                k_route_table_id);
+    route_table_create(feeder);
+    route_table_read(feeder);
+    create_route_table_spec(k_base_v4_pfx, IP_AF_IPV4, 2,
+                            k_num_route_tables, &spec, false);
+    // update should pass as num_routes is mutable
+    route_table_update(feeder, &spec, ROUTE_TABLE_ATTR_ROUTES);
+    route_table_read(feeder);
+    route_table_delete(feeder);
+    route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // change ipv4 routes from 2->0
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 2,
+                k_num_route_tables, k_route_table_id, false);
+    route_table_create(feeder);
+    route_table_read(feeder);
+    create_route_table_spec(k_base_v4_pfx, IP_AF_IPV4, 0,
+                            k_num_route_tables, &spec, false);
+    // update should pass as num_routes is mutable
+    route_table_update(feeder, &spec, ROUTE_TABLE_ATTR_ROUTES);
+    route_table_read(feeder);
+    route_table_delete(feeder);
+    route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // change ipv4 routes from 2->4
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 2,
+                k_num_route_tables, k_route_table_id, false);
+    route_table_create(feeder);
+    route_table_read(feeder);
+    create_route_table_spec(k_base_v4_pfx, IP_AF_IPV4, 4,
+                            k_num_route_tables, &spec, false);
+    // update should pass as num_routes is  mutable
+    route_table_update(feeder, &spec, ROUTE_TABLE_ATTR_ROUTES);
+    route_table_read(feeder);
+    route_table_delete(feeder);
+    route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // change ipv4 routes from 4->2
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 4,
+                k_num_route_tables, k_route_table_id, false);
+    route_table_create(feeder);
+    route_table_read(feeder);
+    create_route_table_spec(k_base_v4_pfx, IP_AF_IPV4, 2,
+                            k_num_route_tables, &spec, false);
+    // update should pass as num_routes is mutable
+    route_table_update(feeder, &spec,ROUTE_TABLE_ATTR_ROUTES);
+    route_table_read(feeder);
+    route_table_delete(feeder);
+    route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // change ipv6 routes from 0->2
+    if(!apulu()){
+        memset(&spec, 0, sizeof(spec));
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, k_num_route_tables,
+                    k_route_table_id);
+        route_table_create(feeder);
+        route_table_read(feeder);
+        create_route_table_spec(k_base_v6_pfx, IP_AF_IPV6, 2,
+                                k_num_route_tables, &spec, false);
+        // update should pass as num_routes is mutable
+        route_table_update(feeder, &spec, ROUTE_TABLE_ATTR_ROUTES);
+        route_table_read(feeder);
+        route_table_delete(feeder);
+        route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+    }
+}
+/// \brief change priority_en attribute in route table
+TEST_F(route_test, rt_update_priority_en) {
+    route_table_feeder feeder;
+    pds_route_table_spec_t spec;
+    memset(&spec, 0, sizeof(spec));
+
+    // change priority_en from false to true with zero routes
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0, k_num_route_tables,
+                k_route_table_id, false);
+    route_table_create(feeder);
+    route_table_read(feeder);
+    create_route_table_spec(k_base_v4_pfx, IP_AF_IPV4, 0,
+                            k_num_route_tables, &spec, true);
+    // update should pass as priority_en is mutable attribute
+    route_table_update(feeder, &spec, ROUTE_TABLE_ATTR_PRIORITY_EN);
+    route_table_read(feeder);
+    route_table_delete(feeder);
+    route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // change priority-enable from true->false with zero routes
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0,
+                k_num_route_tables, k_route_table_id, true);
+    route_table_create(feeder);
+    route_table_read(feeder);
+    create_route_table_spec(k_base_v4_pfx, IP_AF_IPV4, 0,
+                            k_num_route_tables, &spec, false);
+    // update should pass as priority_en is mutable attribute
+    route_table_update(feeder, &spec, ROUTE_TABLE_ATTR_PRIORITY_EN);
+    route_table_read(feeder);
+    route_table_delete(feeder);
+    route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+
+    // change  priority-enable from true->false with non-zero routes
+    memset(&spec, 0, sizeof(spec));
+    feeder.init(k_base_v4_pfx, IP_AF_IPV4, 2,
+                k_num_route_tables, k_route_table_id, false);
+    route_table_create(feeder);
+    route_table_read(feeder);
+    create_route_table_spec(k_base_v4_pfx, IP_AF_IPV4, 2,
+                            k_num_route_tables, &spec, true);
+    // update should pass as priority_en is mutable attribute
+    route_table_update(feeder, &spec, ROUTE_TABLE_ATTR_PRIORITY_EN);
+    route_table_read(feeder);
+    route_table_delete(feeder);
+    route_table_read(feeder, SDK_RET_ENTRY_NOT_FOUND);
+}
 }    // namespace api
 }    // namespace test
 

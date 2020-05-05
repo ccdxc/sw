@@ -38,6 +38,9 @@ public:
     bool read_unsupported(void) const { return false; }
     /// \brief return true if objects are to be stashed in persistent storage
     bool stash(void) const { return stash_; }
+    /// \brief Dummy spec allocation.
+    ///  This function will be overridden by object as required
+    void spec_alloc(void *spec) { return; }
 
 protected:
     uint32_t cur_iter_pos;  ///< Current iterator position

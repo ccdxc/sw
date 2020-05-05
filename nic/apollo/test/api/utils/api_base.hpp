@@ -107,6 +107,7 @@ read(_api_str##_feeder& feeder) {                                            \
     feeder.key_build(&key);                                                  \
     info = new (pds_##_api_str##_info_t);                                    \
     memset(info, 0, sizeof(pds_##_api_str##_info_t));                        \
+    feeder.spec_alloc(&info->spec);                                           \
     if ((rv = pds_##_api_str##_read(&key, info)) != SDK_RET_OK)              \
         return rv;                                                           \
                                                                              \
@@ -134,8 +135,7 @@ read_cmp(_api_str##_feeder& feeder) {                                        \
     memset(&key, 0, sizeof(key));                                            \
     feeder.key_build(&key);                                                  \
     memset(&info, 0, sizeof(pds_##_api_str##_info_t));                       \
-                                                                             \
-    if ((rv = pds_##_api_str##_read(&key, &info)) != sdk::SDK_RET_OK)        \
+    if ((rv = pds_##_api_str##_read(&key, &info)) != SDK_RET_OK)             \
         return rv;                                                           \
                                                                              \
     bkup_info  = feeder.vec.front();                                         \
