@@ -25,6 +25,7 @@ var CQMeasurementGroupByMap = map[string]int{
 	"EgressDropMetrics":      1,
 	"PcieMgrMetrics":         1,
 	"PciePortMetrics":        1,
+	"DropMetrics":            1,
 	"Cluster":                2,
 	"DistributedServiceCard": 2,
 	"Node":                   2,

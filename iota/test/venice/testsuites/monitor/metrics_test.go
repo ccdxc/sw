@@ -217,7 +217,7 @@ func checkCQMetricsFields() {
 		}
 		for _, m := range types.DscMetricsList {
 			// drop metrics are reported only on drop
-			if m == "IPv4FlowDropMetrics" || m == "DropMetrics" || m == "EgressDropMetrics" {
+			if m == "IPv4FlowDropMetrics" {
 				continue
 			}
 			cq := m + "_" + s
