@@ -81,6 +81,8 @@ typedef struct pds_device_s {
     ///    the higher the priority, hence 0 is the highest priority)
     /// 2. valid priority value range is 0 (highest) to 1023 (lowest)
     uint16_t               ip_mapping_priority;
+    /// firewall action transposition scheme
+    fw_policy_xposn_t      fw_action_xposn_scheme;
 } __PACK__ pds_device_spec_t;
 
 /// \brief device status

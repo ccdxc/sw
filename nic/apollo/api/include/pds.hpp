@@ -233,9 +233,33 @@ typedef enum address_type_s {
     ADDR_TYPE_SERVICE = 2,    ///< service/infra address space
 } address_type_t;
 
+/// \brief firewall action transposition scheme
+/// NOTE:
+/// for every new session from/to a vnic, there are potentially multiple
+/// policies that need to be evaluated. For example, upto 2 ingress/egress
+/// policies attached to vnic's subnet must be evaluated and upto 5
+/// ingress/egress policies directly attached to vnic must evaluated. Each
+/// policy may give potentially different and conflicting result w.r.t the
+/// action that needs to be taken (allow or deny). So, user needs to be able to
+/// specify how to resolve this and arrive at final action to pick for that
+/// session.
+/// fw_policy_xposn_t defines how such action transposition needs to be
+/// performed
+typedef enum fw_policy_xposn_e {
+    FW_POLICY_XPOSN_NONE            = 0,
+    /// if GLOBAL_PRIORITY transposition scheme is configured, rule that is
+    /// picked is the rule with highest priority (numerically lowest value)
+    /// across all policies that are evaluated for a given packet
+    FW_POLICY_XPOSN_GLOBAL_PRIORITY = 1,
+    // if ANY_DENY transposition scheme is configured, then if a given packet
+    // hits a deny rule in any of the policies evaluated for that packet, then
+    // session is created with deny/drop action
+    FW_POLICY_XPOSN_ANY_DENY        = 2,
+} fw_policy_xposn_t;
+
 /// \brief module ids
 typedef enum pds_mod_id_e {
-    PDS_MOD_ID_PDS = sdk_mod_id_t::SDK_MOD_ID_MAX + 1,  ///< generic PDS module id
+    PDS_MOD_ID_PDS = sdk_mod_id_t::SDK_MOD_ID_MAX + 1,
 } pds_mod_id_t;
 
 /// @}

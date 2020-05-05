@@ -272,6 +272,12 @@
 #define ROUTE_RESULT_NEXTHOP_SHIFT           ROUTE_RESULT_NEXTHOP_START_BIT
 
 /*****************************************************************************/
+/* policy result computation schemes                                         */
+/*****************************************************************************/
+#define FW_ACTION_XPOSN_GLOBAL_PRIORTY       0
+#define FW_ACTION_XPOSN_ANY_DENY             1
+
+/*****************************************************************************/
 /* IP mapping types                                                          */
 /*****************************************************************************/
 #define MAPPING_TYPE_OVERLAY                 0

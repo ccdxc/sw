@@ -234,7 +234,7 @@ message Encap {
   EncapVal  value = 2;    // encap value
 }
 
-// Types of lif
+// types of lif
 enum LifType {
   LIF_TYPE_NONE          = 0;
   LIF_TYPE_HOST          = 1;
@@ -247,11 +247,34 @@ enum LifType {
   LIF_TYPE_CONTROL       = 8;
 }
 
-// Security rule action is one of the below
+// security rule action is one of the below
 enum SecurityRuleAction {
   SECURITY_RULE_ACTION_NONE  = 0;
   SECURITY_RULE_ACTION_ALLOW = 1;
   SECURITY_RULE_ACTION_DENY  = 2;
+}
+
+// firewall policy action transposition scheme
+// NOTE:
+// for every new session from/to a vnic, there are potentially multiple policies
+// that need to be evaluated. For example, upto 2 ingress/egress policies
+// attached to vnic's subnet must be evaluated and upto 5 ingress/egress
+// policies directly attached to vnic must evaluated. Each policy may give
+// potentially different and conflicting result w.r.t the action that needs to
+// be taken (allow or deny). So, user needs to be able to specify how to resolve
+// this and arrive at final action to pick for that session.
+// FwPolicyXposn defines how such action transposition needs to be performed
+// across policies
+enum FwPolicyXposn {
+  FW_POLICY_XPOSN_NONE            = 0;
+  // if GLOBAL_PRIORITY transposition scheme is configured, rule that is picked
+  // is the rule with highest priority (numerically lowest value) across all
+  // policies that are evaluated for a given packet
+  FW_POLICY_XPOSN_GLOBAL_PRIORITY = 1;
+  // if ANY_DENY transposition scheme is configured, then if a given packet hits
+  // a deny rule in any of the policies evaluated for that packet, then session
+  // is created with deny/drop action
+  FW_POLICY_XPOSN_ANY_DENY        = 2;
 }
 
 // types of NAT actions supported
@@ -273,7 +296,7 @@ message BatchCtxt {
   uint64 BatchCookie = 1;
 }
 
-// Public/Internet or Service/Infra address
+// public/Internet or Service/Infra address
 enum AddressType {
   ADDR_TYPE_NONE        = 0;
   ADDR_TYPE_PUBLIC      = 1;
@@ -356,20 +379,30 @@ enum PortSpeed {
   PORT_SPEED_RESVD = 9;
 }
 
+// ServiceRequestOp encodes the API operation in the user
+// issues request via Unix Domain Socket (UDS)
 enum ServiceRequestOp {
-  SERVICE_OP_NONE    = 0;
-  SERVICE_OP_CREATE  = 1;
-  SERVICE_OP_DELETE  = 2;
-  SERVICE_OP_UPDATE  = 3;
-  SERVICE_OP_READ    = 4;
+  SERVICE_OP_NONE   = 0;
+  SERVICE_OP_CREATE = 1;
+  SERVICE_OP_DELETE = 2;
+  SERVICE_OP_UPDATE = 3;
+  SERVICE_OP_READ   = 4;
 }
 
+// ServiceRequestMessage represents the config message from the app
+// and the corresponding operation to be performed
 message ServiceRequestMessage {
+  // one of the CRUD operations
   ServiceRequestOp    ConfigOp  = 1;
+  // ConfigMsg is protobuf encoded config message and it can be any of the
+  // supported config objects (e.g. VPCRequestMsg etc.)
   google.protobuf.Any ConfigMsg = 2;
 }
 
+// ServiceResponseMessage is the response to ServiceRequestMessage
 message ServiceResponseMessage {
+  // response or reply status for the request
   ApiStatus           ApiStatus = 1;
+  // content of the response (esp. for Get requests)
   google.protobuf.Any Response  = 2;
 }

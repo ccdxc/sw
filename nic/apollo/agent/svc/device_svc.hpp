@@ -11,8 +11,35 @@
 #ifndef __AGENT_SVC_DEVICE_SVC_HPP__
 #define __AGENT_SVC_DEVICE_SVC_HPP__
 
+//#include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
+
+static inline types::FwPolicyXposn
+pds_fw_policy_xposn_api_spec_to_proto (const fw_policy_xposn_t xposn)
+{
+    switch (xposn) {
+    case FW_POLICY_XPOSN_GLOBAL_PRIORITY:
+        return types::FW_POLICY_XPOSN_GLOBAL_PRIORITY;
+    case FW_POLICY_XPOSN_ANY_DENY:
+        return types::FW_POLICY_XPOSN_ANY_DENY;
+    default:
+        return types::FW_POLICY_XPOSN_NONE;
+    }
+}
+
+static inline fw_policy_xposn_t
+pds_fw_policy_xposn_to_api_spec (types::FwPolicyXposn xposn)
+{
+    switch (xposn) {
+    case types::FW_POLICY_XPOSN_GLOBAL_PRIORITY:
+        return FW_POLICY_XPOSN_GLOBAL_PRIORITY;
+    case types::FW_POLICY_XPOSN_ANY_DENY:
+        return FW_POLICY_XPOSN_ANY_DENY;
+    default:
+        return FW_POLICY_XPOSN_NONE;
+    }
+}
 
 // populate proto buf spec from device API spec
 static inline void
@@ -78,6 +105,9 @@ pds_device_api_spec_to_proto (pds::DeviceSpec *proto_spec,
         break;
     }
     proto_spec->set_ipmappingpriority(api_spec->ip_mapping_priority);
+    proto_spec->set_fwpolicyxposnscheme(
+                    pds_fw_policy_xposn_api_spec_to_proto(
+                        api_spec->fw_action_xposn_scheme));
 }
 
 // populate proto buf status from device API status
@@ -210,6 +240,8 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
     }
     // valid priority range is 0-1023
     api_spec->ip_mapping_priority = proto_spec.ipmappingpriority() & 0x3FF;
+    api_spec->fw_action_xposn_scheme =
+        pds_fw_policy_xposn_to_api_spec(proto_spec.fwpolicyxposnscheme());
     return SDK_RET_OK;
 }
 
