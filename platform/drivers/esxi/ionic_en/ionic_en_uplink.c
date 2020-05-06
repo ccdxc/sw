@@ -146,7 +146,7 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
                 stat_buf += vmk_Sprintf((char *) stat_buf,
                                         "\n    %s[%d]: packets=%lu, bytes=%lu,"
                                         " alloc_err=%lu, csum_err=%lu,"
-                                        " csum_complete=%lu, no_csum=%lu, encap=%lu",
+                                        " csum=%lu, no_csum=%lu, encap=%lu",
                                         "rx_queue", i, rx_stats->pkts,
                                         rx_stats->bytes, rx_stats->alloc_err,
                                         rx_stats->csum_err,

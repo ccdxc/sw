@@ -22,7 +22,6 @@ unsigned int vlan_tx_insert = 0;
 unsigned int vlan_rx_strip = 0;
 unsigned int geneve_offload = 1;
 
-
 VMK_MODPARAM(ntxq_descs,
              uint,
              "Descriptors per Tx queue, must be power of 2");

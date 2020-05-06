@@ -2206,7 +2206,7 @@ ionic_get_features(struct lif *lif)
                 ctx.cmd.lif_setattr.features |= IONIC_ETH_HW_VLAN_RX_STRIP;
         }
 
-        if (!lif->uplink_handle->is_mgmt_nic && geneve_offload) {
+        if (geneve_offload && !lif->uplink_handle->is_mgmt_nic) {
                 ctx.cmd.lif_setattr.features |= IONIC_ETH_HW_RX_CSUM_GENEVE
                                              | IONIC_ETH_HW_TX_CSUM_GENEVE
                                              | IONIC_ETH_HW_TSO_GENEVE;
