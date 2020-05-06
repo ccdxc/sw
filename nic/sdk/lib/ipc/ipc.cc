@@ -80,6 +80,9 @@ protected:
     void deserialize_(void);
     void deliver_(ipc_msg_ptr msg);
     int get_eventfd_(void);
+    // Another eventfd used to poll the zmq in the cases where the zmq fd
+    // will not trigger
+    int receive_eventfd_;
 private:
     uint32_t id_;
     zmq_ipc_server_ptr ipc_server_;
@@ -228,6 +231,9 @@ ipc_service::set_server_(zmq_ipc_server_ptr server) {
     
     this->eventfd_ = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
     assert(this->eventfd_ != -1);
+
+    this->receive_eventfd_ = eventfd(0, EFD_CLOEXEC| EFD_NONBLOCK);
+    assert(this->receive_eventfd_ != 1);
 }
 
 zmq_ipc_client_ptr
@@ -245,10 +251,12 @@ ipc_service::get_client_(uint32_t recipient) {
 
 void
 ipc_service::respond(ipc_msg_ptr msg, const void *data, size_t data_length) {
+    uint64_t buffer = 1;
     assert(msg != nullptr);
     this->ipc_server_->reply(msg, data, data_length);
 
-    this->server_receive();
+    // Queue a check for the receive socket
+    write(this->receive_eventfd_, &buffer, sizeof(buffer));
     
     this->message_in_flight_ = false;
 
@@ -288,6 +296,8 @@ ipc_service_sync::ipc_service_sync(uint32_t client_id, fd_watch_cb fd_watch_cb,
 
     this->set_server_(server);
     fd_watch_cb(server->fd(), sdk::ipc::server_receive, (void *)this,
+                fd_watch_cb_ctx);
+    fd_watch_cb(this->receive_eventfd_, sdk::ipc::server_receive, (void *)this,
                 fd_watch_cb_ctx);
 }
 
@@ -331,12 +341,18 @@ ipc_service_async::ipc_service_async(uint32_t client_id,
     if (this->fd_watch_ms_cb_) {
         this->fd_watch_ms_cb_(server->fd(), sdk::ipc::server_receive_ms,
                               (void *)this);
+        this->fd_watch_ms_cb_(this->receive_eventfd_,
+                              sdk::ipc::server_receive_ms,
+                              (void *)this);
         // todo: enable serialized messages for ms thread maybe??
     } else {
         this->fd_watch_cb_(server->fd(), sdk::ipc::server_receive,
                            (void *)this,
                            this->fd_watch_cb_ctx_);
         this->fd_watch_cb_(this->get_eventfd_(), sdk::ipc::eventfd_receive,
+                           (void *)this,
+                           this->fd_watch_cb_ctx_);
+        this->fd_watch_cb_(this->receive_eventfd_, sdk::ipc::server_receive,
                            (void *)this,
                            this->fd_watch_cb_ctx_);
     }    
@@ -517,6 +533,14 @@ ipc_service::get_eventfd_(void) {
 
 void
 ipc_service::server_receive(void) {
+    uint64_t buffer;
+    int rc;
+    
+    // clear out the receive_eventfd_ socket
+    do {
+        rc = read(this->receive_eventfd_, &buffer, sizeof(buffer));
+    } while (rc != -1);
+
     while (true) {
         ipc::ipc_msg_ptr msg = this->ipc_server_->recv();
         if (msg == nullptr) {
