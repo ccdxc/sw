@@ -262,6 +262,10 @@ func (k *k8sService) runUntilCancel() {
 				modulesToDeploy := make(map[string]protos.Module)
 				for name, module := range k8sModules {
 					if module.Spec.Disabled {
+						/*upon CMD restart disabled flag is set to true and pegasus deployment is deleted, allowing it to be redeployed */
+						if _, found := foundModules[name]; found {
+							delete(foundModules, name)
+						}
 						continue
 					}
 					if _, ok := foundModules[name]; !ok {
