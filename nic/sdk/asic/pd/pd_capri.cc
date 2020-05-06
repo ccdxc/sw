@@ -1385,16 +1385,6 @@ asicpd_table_rw_init (asic_cfg_t *cfg)
     return capri_table_rw_init(cfg);
 }
 
-// TODO: remove this API, we should just use asicpd_program_table_constant()
-void
-asicpd_table_constant_write (uint64_t val, uint32_t stage,
-                             uint32_t stage_tableid, bool ingress)
-{
-    capri_table_constant_write(val, stage, stage_tableid,
-                               ingress ? P4_PIPELINE_INGRESS :
-                                         P4_PIPELINE_EGRESS);
-}
-
 sdk_ret_t
 asicpd_tm_set_span_threshold (uint32_t span_threshold)
 {

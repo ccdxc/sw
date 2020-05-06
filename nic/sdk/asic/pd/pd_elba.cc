@@ -1203,15 +1203,6 @@ asicpd_barco_get_capabilities (uint8_t ring_type, bool *sw_reset_capable,
     return SDK_RET_INVALID_OP;
 }
 
-void
-asicpd_table_constant_write (uint64_t val, uint32_t stage,
-                             uint32_t stage_tableid, bool ingress)
-{
-    elba_table_constant_write(val, stage, stage_tableid,
-                              ingress ? P4_PIPELINE_INGRESS :
-                                        P4_PIPELINE_EGRESS);
-}
-
 sdk_ret_t
 asicpd_tm_set_span_threshold (uint32_t span_threshold)
 {

@@ -443,8 +443,6 @@ sdk_ret_t asicpd_barco_get_capabilities(uint8_t ring_type,
 
 sdk_ret_t asicpd_table_rw_init(asic_cfg_t *cfg);
 
-void asicpd_table_constant_write(uint64_t val, uint32_t stage,
-                                 uint32_t stage_tableid, bool ingress);
 sdk_ret_t asicpd_tm_set_span_threshold(uint32_t span_threshold);
 
 sdk_ret_t asicpd_tm_set_reserved_min(uint32_t reserved_min);

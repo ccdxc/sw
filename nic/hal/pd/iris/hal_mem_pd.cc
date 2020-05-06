@@ -1196,17 +1196,9 @@ hal_pd_lif_stats_region_init (void)
     // subtract 2G (saves ASM instructions)
     stats_base_addr -= ((uint64_t)1 << 31);
 
-    rc = p4pd_table_properties_get(P4TBL_ID_INGRESS_TX_STATS, &tbl_ctx);
-    SDK_ASSERT(rc == P4PD_SUCCESS);
-    asicpd_table_constant_write(stats_base_addr,
-                                tbl_ctx.stage, tbl_ctx.stage_tableid,
-                                (tbl_ctx.gress == P4_GRESS_INGRESS));
+    asicpd_program_table_constant(P4TBL_ID_INGRESS_TX_STATS, stats_base_addr);
 
-    rc = p4pd_table_properties_get(P4TBL_ID_TX_STATS, &tbl_ctx);
-    SDK_ASSERT(rc == P4PD_SUCCESS);
-    asicpd_table_constant_write(stats_base_addr,
-                                tbl_ctx.stage, tbl_ctx.stage_tableid,
-                                (tbl_ctx.gress == P4_GRESS_INGRESS));
+    asicpd_program_table_constant(P4TBL_ID_TX_STATS, stats_base_addr);
 
     return HAL_RET_OK;
 }
@@ -1222,18 +1214,10 @@ hal_pd_hwerr_stats_region_init (void)
     // subtract 2G (saves ASM instructions)
     stats_base_addr -= ((uint64_t)1 << 31);
 
-    rc = p4pd_table_properties_get(P4TBL_ID_DROP_STATS, &tbl_ctx);
-    SDK_ASSERT(rc == P4PD_SUCCESS);
-    asicpd_table_constant_write(stats_base_addr,
-                                tbl_ctx.stage, tbl_ctx.stage_tableid,
-                                (tbl_ctx.gress == P4_GRESS_INGRESS));
+    asicpd_program_table_constant(P4TBL_ID_DROP_STATS, stats_base_addr);
 
     stats_base_addr += 512;
-    rc = p4pd_table_properties_get(P4TBL_ID_EGRESS_DROP_STATS, &tbl_ctx);
-    SDK_ASSERT(rc == P4PD_SUCCESS);
-    asicpd_table_constant_write(stats_base_addr,
-                                tbl_ctx.stage, tbl_ctx.stage_tableid,
-                                (tbl_ctx.gress == P4_GRESS_INGRESS));
+    asicpd_program_table_constant(P4TBL_ID_EGRESS_DROP_STATS, stats_base_addr);
 
     return HAL_RET_OK;
 }
