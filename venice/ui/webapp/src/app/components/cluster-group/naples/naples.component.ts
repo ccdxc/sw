@@ -1183,8 +1183,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   showDeleteButton(rowData: ClusterDistributedServiceCard): boolean {
 
-    return (rowData.spec['mgmt-mode'] === ClusterDistributedServiceCardSpec_mgmt_mode.host) || (rowData.status['admission-phase'] ===
-      ClusterDistributedServiceCardStatus_admission_phase.decommissioned);
+    return (rowData.spec['mgmt-mode'] === ClusterDistributedServiceCardSpec_mgmt_mode.host) || rowData.status['admission-phase'] ===
+      ClusterDistributedServiceCardStatus_admission_phase.decommissioned || rowData.status['admission-phase'] ===
+      ClusterDistributedServiceCardStatus_admission_phase.rejected;
   }
 
   onSearchDSCs(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
