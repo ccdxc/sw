@@ -14,6 +14,7 @@ struct phv_         p;
 
 nexthop_info:
     seq             c1, k.p4e_i2e_nexthop_id, r0
+    seq.!c1         c1, d.nexthop_info_d.drop, TRUE
     bcf             [c1], nexthop_invalid
     phvwr           p.{ethernet_00_dstAddr,ethernet_00_srcAddr}, \
                         d.{nexthop_info_d.dmaco,nexthop_info_d.smaco}

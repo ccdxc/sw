@@ -192,8 +192,9 @@ action ipv6_vxlan_encap(dmac, smac) {
 }
 
 action nexthop_info(lif, qtype, qid, vlan_strip_en, port, vlan, dmaco, smaco,
-                    dmaci, tunnel2_id) {
-    if (p4e_i2e.nexthop_id == 0) {
+                    dmaci, tunnel2_id, drop) {
+    modify_field(scratch_metadata.flag, drop);
+    if ((p4e_i2e.nexthop_id == 0) or (drop == TRUE)) {
         egress_drop(P4E_DROP_NEXTHOP_INVALID);
     }
 
