@@ -937,7 +937,7 @@ DeviceManager::DeviceCreate(bool status) {
         if (!skip_hwinit) {
 #define NICMGRD_THREAD_ID_MNET 0
             sdk::lib::thread *mnet_thread = NULL;
-            mnet_thread = sdk::lib::thread::factory("MNET Creation Thread",
+            mnet_thread = sdk::lib::thread::factory(std::string("MNET_CREATE").c_str(),
                                                     NICMGRD_THREAD_ID_MNET,
                                                     sdk::lib::THREAD_ROLE_CONTROL,
                                                     0xD,
