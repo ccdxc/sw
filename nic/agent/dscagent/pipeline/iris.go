@@ -1653,131 +1653,12 @@ func handleProfile(i *IrisAPI, oper types.Operation, profile netproto.Profile) (
 
 // HandleCollector handles CRUD Methods for Collector Object
 func (i *IrisAPI) HandleCollector(oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
-	i.Lock()
-	defer i.Unlock()
-
-	cols, err = handleCollector(i, oper, col)
-	return
-}
-
-func handleCollector(i *IrisAPI, oper types.Operation, col netproto.Collector) (cols []netproto.Collector, err error) {
-	err = utils.ValidateMeta(oper, col.Kind, col.ObjectMeta)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	// Handle Get and LIST. This doesn't need any pipeline specific APIs
-	switch oper {
-	case types.Get:
-		var (
-			dat []byte
-			obj netproto.Collector
-		)
-		dat, err = i.InfraAPI.Read(col.Kind, col.GetKey())
-		if err != nil {
-			log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound))
-			return nil, errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound)
-		}
-		err = obj.Unmarshal(dat)
-		if err != nil {
-			log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err))
-			return nil, errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err)
-		}
-		cols = append(cols, obj)
-
-		return
-	case types.List:
-		var (
-			dat [][]byte
-		)
-		dat, err = i.InfraAPI.List(col.Kind)
-		if err != nil {
-			log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound))
-			return nil, errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound)
-		}
-
-		for _, o := range dat {
-			var collector netproto.Collector
-			err := proto.Unmarshal(o, &collector)
-			if err != nil {
-				log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", collector.GetKey(), err))
-				continue
-			}
-			cols = append(cols, collector)
-		}
-
-		return
-	case types.Create:
-
-	case types.Update:
-		// Get to ensure that the object exists
-		var existingCollector netproto.Collector
-		dat, err := i.InfraAPI.Read(col.Kind, col.GetKey())
-		if err != nil {
-			log.Error(errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound))
-			return nil, errors.Wrapf(types.ErrBadRequest, "Collector: %s | Err: %v", col.GetKey(), types.ErrObjNotFound)
-		}
-		err = existingCollector.Unmarshal(dat)
-		if err != nil {
-			log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err))
-			return nil, errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err)
-		}
-
-		// Check for idempotency
-		if proto.Equal(&col.Spec, &existingCollector.Spec) {
-			//log.Infof("Collector: %s | Info: %s ", col.GetKey(), types.InfoIgnoreUpdate)
-			return nil, nil
-		}
-
-		// Reuse ID from store
-		col.Status.Collector = existingCollector.Status.Collector
-	case types.Delete:
-		var existingCollector netproto.Collector
-		dat, err := i.InfraAPI.Read(col.Kind, col.GetKey())
-		if err != nil {
-			log.Infof("Controller API: %s | Err: %s", types.InfoIgnoreDelete, err)
-			return nil, nil
-		}
-		err = existingCollector.Unmarshal(dat)
-		if err != nil {
-			log.Error(errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err))
-			return nil, errors.Wrapf(types.ErrUnmarshal, "Collector: %s | Err: %v", col.GetKey(), err)
-		}
-		col = existingCollector
-	}
-	log.Infof("Collector: %s | Op: %s | %s", col.GetKey(), oper, types.InfoHandleObjBegin)
-	defer log.Infof("Collector: %s | Op: %s | %s", col.GetKey(), oper, types.InfoHandleObjEnd)
-
-	// Perform object validations
-	uniqueCollectors := map[string]bool{}
-	for dest := range iris.MirrorDestToIDMapping {
-		uniqueCollectors[dest] = true
-	}
-	vrf, err := validator.ValidateCollector(i.InfraAPI, col, oper, uniqueCollectors)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	if oper == types.Create || oper == types.Update {
-		if ip := utils.GetMgmtIP(iris.MgmtLink); ip == "" {
-			log.Error(errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink))
-			return nil, errors.Wrapf(types.ErrNoIpForMgmtIntf, "Could not get ip address for intf %v", iris.MgmtLink)
-		}
-	}
-	// Take a lock to ensure a single HAL API is active at any given point
-	if err := iris.HandleCollector(i.InfraAPI, i.TelemetryClient, i.IntfClient, i.EpClient, oper, col, vrf.Status.VrfID); err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	return
+	return nil, types.ErrNotImplemented
 }
 
 // HandleIPAMPolicy handles CRUD methods for IPAMPolicy
 func (i *IrisAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPolicy) (policies []netproto.IPAMPolicy, err error) {
-	return nil, err
+	return nil, types.ErrNotImplemented
 }
 
 // HandleRouteTable handles CRUDs for RouteTable object
@@ -1854,6 +1735,9 @@ func (i *IrisAPI) ReplayConfigs() error {
 	}
 	endpoints, _ := i.HandleEndpoint(types.List, epKind)
 	for _, ep := range endpoints {
+		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", ep.Kind, ep.GetKey())
+		i.InfraAPI.Delete(ep.Kind, ep.GetKey())
+
 		creator, ok := ep.ObjectMeta.Labels["CreatedBy"]
 		if ok && creator == "Venice" {
 			log.Infof("Replaying persisted Network Object: %v", ep.GetKey())
@@ -1896,24 +1780,6 @@ func (i *IrisAPI) ReplayConfigs() error {
 		}
 	}
 
-	// Replay Collector Object
-	collKind := netproto.Collector{
-		TypeMeta: api.TypeMeta{Kind: "Collector"},
-	}
-	collectors, _ := i.HandleCollector(types.List, collKind)
-	for _, collector := range collectors {
-		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", collector.Kind, collector.GetKey())
-		i.InfraAPI.Delete(collector.Kind, collector.GetKey())
-
-		creator, ok := collector.ObjectMeta.Labels["CreatedBy"]
-		if ok && creator == "Venice" {
-			log.Infof("Replaying persisted Collector Object: %v", collector.GetKey())
-			if _, err := i.HandleCollector(types.Create, collector); err != nil {
-				log.Errorf("Failed to recreate Collector: %v. Err: %v", collector.GetKey(), err)
-			}
-		}
-	}
-
 	// Replay SecurityProfile Object
 	secProfileKind := netproto.SecurityProfile{
 		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
@@ -1932,7 +1798,25 @@ func (i *IrisAPI) ReplayConfigs() error {
 		}
 	}
 
-	// Replay Mirror Sessions Mirror Sessions replay logic is not baked yet, for now we rely on Venice to push the objects. Mirror objects are deleted from the DB on config replay.
+	// Replay InterfaceMirrorSession Object
+	intfMirrorKind := netproto.InterfaceMirrorSession{
+		TypeMeta: api.TypeMeta{Kind: "InterfaceMirrorSession"},
+	}
+	intfMirrors, _ := i.HandleInterfaceMirrorSession(types.List, intfMirrorKind)
+	for _, intfMirror := range intfMirrors {
+		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", intfMirror.Kind, intfMirror.GetKey())
+		i.InfraAPI.Delete(intfMirror.Kind, intfMirror.GetKey())
+
+		creator, ok := intfMirror.ObjectMeta.Labels["CreatedBy"]
+		if ok && creator == "Venice" {
+			log.Infof("Replaying persisted InterfaceMirrorSession Object: %v", intfMirror.GetKey())
+			if _, err := i.HandleInterfaceMirrorSession(types.Create, intfMirror); err != nil {
+				log.Errorf("Failed to recreate InterfaceMirrorSession: %v. Err: %v", intfMirror.GetKey(), err)
+			}
+		}
+	}
+
+	// Replay MirrorSession Object
 	mrKind := netproto.MirrorSession{
 		TypeMeta: api.TypeMeta{Kind: "MirrorSession"},
 	}
@@ -1941,16 +1825,16 @@ func (i *IrisAPI) ReplayConfigs() error {
 		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", mr.Kind, mr.GetKey())
 		i.InfraAPI.Delete(mr.Kind, mr.GetKey())
 
-		//	creator, ok := ep.ObjectMeta.Labels["CreatedBy"]
-		//	if ok && creator == "Venice" {
-		//		log.Infof("Replaying persisted Mirror Object: %v", mr.GetKey())
-		//		if _, err := i.HandleMirrorSession(types.Create, mr); err != nil {
-		//			log.Errorf("Failed to recreate MirrorSession: %v. Err: %v", mr.GetKey(), err)
-		//		}
-		//	}
+		creator, ok := mr.ObjectMeta.Labels["CreatedBy"]
+		if ok && creator == "Venice" {
+			log.Infof("Replaying persisted MirrorSession Object: %v", mr.GetKey())
+			if _, err := i.HandleMirrorSession(types.Create, mr); err != nil {
+				log.Errorf("Failed to recreate MirrorSession: %v. Err: %v", mr.GetKey(), err)
+			}
+		}
 	}
 
-	// Purge Flowexport policies
+	// Replay Flowexport policies
 	feKind := netproto.FlowExportPolicy{
 		TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
 	}
@@ -1958,6 +1842,14 @@ func (i *IrisAPI) ReplayConfigs() error {
 	for _, fe := range fepolicies {
 		log.Infof("Purging from internal DB for idempotency. Kind: %v | Key: %v", fe.Kind, fe.GetKey())
 		i.InfraAPI.Delete(fe.Kind, fe.GetKey())
+
+		creator, ok := fe.ObjectMeta.Labels["CreatedBy"]
+		if ok && creator == "Venice" {
+			log.Infof("Replaying persisted FlowExportPolicy Object: %v", fe.GetKey())
+			if _, err := i.HandleFlowExportPolicy(types.Create, fe); err != nil {
+				log.Errorf("Failed to recreate FlowExportPolicy: %v. Err: %v", fe.GetKey(), err)
+			}
+		}
 	}
 
 	return nil
@@ -1981,7 +1873,6 @@ func purgeConfigs(i *IrisAPI, deleteDB bool) error {
 	a := netproto.App{TypeMeta: api.TypeMeta{Kind: "App"}}
 	e := netproto.Endpoint{TypeMeta: api.TypeMeta{Kind: "Endpoint"}}
 	n := netproto.Network{TypeMeta: api.TypeMeta{Kind: "Network"}}
-	c := netproto.Collector{TypeMeta: api.TypeMeta{Kind: "Collector"}}
 	secprof := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
 	p := netproto.Profile{TypeMeta: api.TypeMeta{Kind: "Profile"}}
 
@@ -1989,7 +1880,6 @@ func purgeConfigs(i *IrisAPI, deleteDB bool) error {
 	apps, _ := handleApp(i, types.List, a)
 	endpoints, _ := handleEndpoint(i, types.List, e)
 	networks, _ := handleNetwork(i, types.List, n)
-	cols, _ := handleCollector(i, types.List, c)
 	sp, _ := handleSecurityProfile(i, types.List, secprof)
 	profiles, _ := handleProfile(i, types.List, p)
 
@@ -2039,15 +1929,6 @@ func purgeConfigs(i *IrisAPI, deleteDB bool) error {
 		}
 		if deleteDB != true {
 			i.InfraAPI.Delete(network.Kind, network.GetKey())
-		}
-	}
-
-	for _, col := range cols {
-		if _, err := handleCollector(i, types.Delete, col); err != nil {
-			log.Errorf("Failed to purge the Collector. Err: %v", err)
-		}
-		if deleteDB != true {
-			i.InfraAPI.Delete(col.Kind, col.GetKey())
 		}
 	}
 
