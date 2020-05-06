@@ -53,18 +53,25 @@ public:
         size_ = 0;
         timeout_ = DEFAULT_SVC_RSP_TIMEOUT;
         prev_stage_rsp_ = SVC_RSP_OK;
+        is_pre_hooks_done_ = false;
+        is_post_hooks_done_ = false;
     }
     ~fsm(void){};
     upg_stage_t current_stage(void) const { return current_stage_; }
     upg_stage_t start_stage(void) const { return start_stage_; }
     void set_start_stage(const upg_stage_t entry_stage) {
         start_stage_ = entry_stage;
+        is_pre_hooks_done_ = false;
+        is_post_hooks_done_ = false;
     }
     upg_stage_t end_stage(void) const { return end_stage_; }
     uint32_t pending_response(void) const { return pending_response_; }
     void set_pending_response(const uint32_t count) {
         pending_response_ = count;
     }
+    bool is_current_stage_over(upg_stage_t id) const {
+        return current_stage_ != id;
+    };
     void set_timeout(const ev_tstamp timeout) { timeout_ = timeout; }
     ev_tstamp timeout(void) const { return timeout_; }
     svc_sequence_list svc_sequence(void) const { return svc_sequence_; }
@@ -72,10 +79,13 @@ public:
     svc_rsp_code_t prev_stage_rsp(void) const { return prev_stage_rsp_; }
     void set_current_stage(const upg_stage_t id);
     void update_stage_progress(const svc_rsp_code_t rsp);
-    bool is_current_stage_over(void);
     bool is_serial_event_sequence(void) const;
     bool is_parallel_event_sequence(void) const;
     bool is_discovery(void) const;
+    bool is_pre_hooks_done(void) const { return is_pre_hooks_done_; };
+    bool is_post_hooks_done(void) const { return is_post_hooks_done_; };
+    void set_is_pre_hooks_done(bool done) { is_pre_hooks_done_ = done; };
+    void set_is_post_hooks_done(bool done) { is_post_hooks_done_ = done; };
     bool is_valid_service(const std::string svc) const;
     std::string next_svc(void) const;
     void timer_init(struct ev_loop *loop);
@@ -86,6 +96,7 @@ public:
     fsm_init_params_t *init_params(void) { return &init_params_; }
     void set_init_params(fsm_init_params_t *params) { init_params_ = *params; }
 private:
+    void update_stage_progress_internal_(void);
     upg_stage_t current_stage_;
     upg_stage_t start_stage_;
     upg_stage_t end_stage_;
@@ -95,6 +106,8 @@ private:
     ev_tstamp timeout_;
     fsm_init_params_t init_params_;
     svc_rsp_code_t prev_stage_rsp_;
+    bool is_pre_hooks_done_;
+    bool is_post_hooks_done_;
 };
 
 sdk_ret_t init(fsm_init_params_t *params);

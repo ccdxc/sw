@@ -140,14 +140,28 @@ invoke_hooks (upg_stage_t stage_id, hook_execution_t hook_type,
 static bool
 execute_pre_hooks (upg_stage_t stage_id)
 {
-    return invoke_hooks(stage_id, PRE_STAGE);
+    if (!fsm_states.is_pre_hooks_done()) {
+        fsm_states.set_is_pre_hooks_done(true);
+        return invoke_hooks(stage_id, PRE_STAGE);
+    } else {
+        std::string name = upg_stage2str(stage_id);
+        UPG_TRACE_INFO("Already executed pre hooks in %s", name.c_str());
+        return true;
+    }
 }
 
 static bool
 execute_post_hooks (upg_stage_t stage_id, svc_rsp_code_t status)
 {
     SDK_ASSERT(status != SVC_RSP_MAX);
-    return invoke_hooks(stage_id, POST_STAGE, status);
+    if (!fsm_states.is_post_hooks_done()) {
+        fsm_states.set_is_post_hooks_done(true);
+        return invoke_hooks(stage_id, POST_STAGE, status);
+    } else {
+        std::string name = upg_stage2str(stage_id);
+        UPG_TRACE_INFO("Already executed post hooks in %s", name.c_str());
+        return true;
+    }
 }
 
 static void
@@ -185,48 +199,6 @@ send_ipc_to_next_service (void)
     }
 }
 
-static void
-move_to_nextstage (void)
-{
-    // TODO: domain
-    ipc_svc_dom_id_t domain = IPC_SVC_DOM_ID_A;
-
-    std::string name(upg_stage2str(fsm_states.current_stage()));
-    if (fsm_states.is_discovery()) {
-        UPG_TRACE_INFO("Moving to next discovery stage %s",
-                          name.c_str());
-        dump(fsm_states);
-        upg_stage_t id = fsm_states.current_stage();
-        fsm_states.timer_stop();
-        fsm_states.timer_start();
-        send_discovery_event(domain, id);
-        UPG_TRACE_INFO("Sent service discovery event %s, timout %fs",
-                       name.c_str(), fsm_states.timeout());
-    } else if (fsm_states.is_serial_event_sequence()) {
-        UPG_TRACE_INFO("Moving to next serial stage %s", name.c_str());
-        dump(fsm_states);
-        if (fsm_states.has_next_svc()) {
-            send_ipc_to_next_service();
-            UPG_TRACE_DEBUG("Sent serial event %s, timeout %fs",
-                            name.c_str(), fsm_states.timeout());
-        } else {
-            UPG_TRACE_ERR("Oops! no service to send request !");
-            SDK_ASSERT(0);
-        }
-    } else if (fsm_states.is_parallel_event_sequence()) {
-        UPG_TRACE_INFO("Moving to next parallel stage %s, timeout %fs",
-                          name.c_str(), fsm_states.timeout());
-        dump(fsm_states);
-        upg_stage_t id = fsm_states.current_stage();
-        fsm_states.timer_stop();
-        fsm_states.timer_start();
-        dispatch_event(domain, id);
-        UPG_TRACE_DEBUG("Sent parallel event %s", name.c_str());
-    }else {
-       SDK_ASSERT(0);
-    }
-}
-
 static upg_status_t
 get_exit_status (void)
 {
@@ -252,6 +224,79 @@ get_exit_status (void)
     return status;
 }
 
+static void
+move_to_nextstage (void)
+{
+    // TODO: domain
+    ipc_svc_dom_id_t domain = IPC_SVC_DOM_ID_A;
+
+    upg_stage_t id = fsm_states.current_stage();
+    fsm_states.set_current_stage(id);
+    if (fsm_states.current_stage() == fsm_states.end_stage()) {
+        fsm_states.init_params()->fsm_completion_cb(get_exit_status(),
+                                                    fsm_states.init_params()->msg_in);
+        SDK_ASSERT(0);
+    }
+
+    std::string name(upg_stage2str(fsm_states.current_stage()));
+    if (fsm_states.is_discovery()) {
+        UPG_TRACE_INFO("Moving to next discovery stage %s",
+                          name.c_str());
+        dump(fsm_states);
+
+        if (!execute_pre_hooks(id)) {
+            UPG_TRACE_ERR("Failed to execute pre hooks in stage %s",
+                          upg_stage2str(id));
+            fsm_states.update_stage_progress(SVC_RSP_FAIL);
+            move_to_nextstage();
+        }
+
+        upg_stage_t id = fsm_states.current_stage();
+        fsm_states.timer_stop();
+        fsm_states.timer_start();
+        send_discovery_event(domain, id);
+        UPG_TRACE_INFO("Sent service discovery event %s, timout %fs",
+                       name.c_str(), fsm_states.timeout());
+    } else if (fsm_states.is_serial_event_sequence()) {
+        UPG_TRACE_INFO("Moving on, serial stage %s", name.c_str());
+        dump(fsm_states);
+
+        if (!execute_pre_hooks(id)) {
+            UPG_TRACE_ERR("Failed to execute pre hooks in stage %s",
+                          upg_stage2str(id));
+            fsm_states.update_stage_progress(SVC_RSP_FAIL);
+            move_to_nextstage();
+        }
+
+        if (fsm_states.has_next_svc()) {
+            send_ipc_to_next_service();
+            UPG_TRACE_DEBUG("Sent serial event %s, timeout %fs",
+                            name.c_str(), fsm_states.timeout());
+        } else {
+            UPG_TRACE_ERR("Oops! no service to send request !");
+            SDK_ASSERT(0);
+        }
+    } else if (fsm_states.is_parallel_event_sequence()) {
+        UPG_TRACE_INFO("Moving on, parallel stage %s, timeout %fs",
+                          name.c_str(), fsm_states.timeout());
+        dump(fsm_states);
+
+        if (!execute_pre_hooks(id)) {
+            UPG_TRACE_ERR("Failed to execute pre hooks in stage %s",
+                          upg_stage2str(id));
+            fsm_states.update_stage_progress(SVC_RSP_FAIL);
+            move_to_nextstage();
+        }
+
+        upg_stage_t id = fsm_states.current_stage();
+        fsm_states.timer_stop();
+        fsm_states.timer_start();
+        dispatch_event(domain, id);
+        UPG_TRACE_DEBUG("Sent parallel event %s", name.c_str());
+    } else {
+       SDK_ASSERT(0);
+    }
+}
 
 void
 upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
@@ -276,7 +321,7 @@ upg_event_handler (sdk::ipc::ipc_msg_ptr msg)
         }
 
         fsm_states.update_stage_progress(svc_rsp_code(event->rsp_status));
-        if (fsm_states.is_current_stage_over()) {
+        if (fsm_states.is_current_stage_over(event->stage)) {
             upg_stage_t id = fsm_states.current_stage();
             fsm_states.set_current_stage(id);
             if (fsm_states.current_stage() == fsm_states.end_stage()) {
@@ -367,19 +412,31 @@ fsm::timer_init(struct ev_loop *ev_loop) {
     ev_timer_init(&timeout_watcher, timeout_cb, timeout_, 0.0);
 }
 
-#if 0
-void
-fsm::timer_set(void) {
-    UPG_TRACE("Setting the timer %f", timeout_);
-    ev_timer_set(&timeout_watcher, timeout_, 0.0);
-}
-#endif
-
 void
 fsm::timer_start(void) {
     UPG_TRACE("Starting the timer");
     ev_timer_set(&timeout_watcher, timeout_, 0.0);
     ev_timer_start(loop, &timeout_watcher);
+}
+
+void
+fsm::update_stage_progress_internal_(void) {
+    if (current_stage_ != end_stage_) {
+        upg_stage stage = fsm_stages[current_stage_];
+        timeout_ = stage.svc_rsp_timeout();
+        svc_sequence_ = stage.svc_sequence();
+        size_ = 0;
+        for (auto x : svc_sequence_) {
+            size_++;
+        }
+        pending_response_ = size_;
+    } else {
+        timeout_ = 0;
+        pending_response_ = 0;
+        size_ = 0;
+    }
+    is_pre_hooks_done_ = false;
+    is_post_hooks_done_ = false;
 }
 
 void
@@ -405,26 +462,10 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
         if (!execute_post_hooks(current_stage_, rsp)) {
             UPG_TRACE_ERR("Failed to execute post hooks in stage %s",
                           upg_stage2str(current_stage_));
-            fsm_states.update_stage_progress(SVC_RSP_FAIL);
         }
         current_stage_ = lookup_stage_transition(current_stage_, rsp);
-
-        if (current_stage_ != end_stage_) {
-            upg_stage stage = fsm_stages[current_stage_];
-            timeout_ = stage.svc_rsp_timeout();
-            svc_sequence_ = stage.svc_sequence();
-            size_ = 0;
-            for (auto x : svc_sequence_) {
-                size_++;
-            }
-            pending_response_ = size_;
-        } else {
-            timeout_ = 0;
-            pending_response_ = 0;
-            size_ = 0;
-        }
+        update_stage_progress_internal_();
         prev_stage_rsp_ = rsp;
-
     } else {
         std::string str = "Event is successfully handled.";
         pending_response_--;
@@ -433,6 +474,7 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
         SDK_ASSERT(pending_response_ >= 0);
 
         if (pending_response_ == 0) {
+
             str += ". Finish current stage";
             SDK_ASSERT(pending_response_ >= 0);
 
@@ -442,13 +484,17 @@ fsm::update_stage_progress(const svc_rsp_code_t rsp) {
                               upg_stage2str(current_stage_));
                 UPG_TRACE_ERR("Setting stage progress failure for stage %s",
                               upg_stage2str(current_stage_));
-                fsm_states.update_stage_progress(SVC_RSP_FAIL);
+                prev_stage_rsp_ = SVC_RSP_FAIL;
+                current_stage_ = lookup_stage_transition(current_stage_,
+                                                         SVC_RSP_FAIL );
+            } else {
+                current_stage_ = lookup_stage_transition(current_stage_, rsp);
             }
-            current_stage_ = lookup_stage_transition(current_stage_, rsp);
+
+            update_stage_progress_internal_();
 
             prev_stage_rsp_ = (prev_stage_rsp_ == SVC_RSP_OK) ?
                 SVC_RSP_OK : prev_stage_rsp_;
-            size_ = 0;
         } else {
             UPG_TRACE_INFO("%s", str.c_str());
         }
@@ -479,37 +525,6 @@ fsm::next_svc(void) const {
     SDK_ASSERT(pending_response_ > 0);
     svc = svc_sequence_[size_ - pending_response_];
     return svc;
-}
-
-bool
-fsm::is_current_stage_over(void) {
-    SDK_ASSERT(pending_response_ >= 0);
-
-    if (pending_response_ == 0) {
-
-        SDK_ASSERT((current_stage_ == UPG_STAGE_EXIT) ||
-                   (fsm_stages.find(current_stage_) != fsm_stages.end()));
-
-        if (current_stage_ != end_stage_) {
-            upg_stage stage = fsm_stages[current_stage_];
-            timeout_ = stage.svc_rsp_timeout();
-            svc_sequence_ = stage.svc_sequence();
-            size_ = 0;
-            for (auto x : svc_sequence_) {
-                size_++;
-            }
-            pending_response_ = size_;
-        } else {
-            timeout_ = 0;
-            pending_response_ = 0;
-            size_ = 0;
-        }
-
-        SDK_ASSERT((pending_response_ >= 0) && (pending_response_ <= size_));
-
-        return true;
-    }
-    return false;
 }
 
 bool
