@@ -309,6 +309,9 @@ message NaplesMultiSimConfig {
 
     // Sim infos
     repeated NaplesSimInfo sims_info = 8;
+
+    //start of the mac-address if specified
+    string          mac_address_start = 9;
 }
 
 message NaplesControlSimConfig {

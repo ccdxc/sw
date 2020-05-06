@@ -586,6 +586,14 @@ func sendCommandToNaples(consoleIP, consolePort string, cmds []string) error {
 	return nil
 }
 
+var ouiIndex int
+
+func allocatePensandoOUI() string {
+	macAddr := fmt.Sprintf("00:AE:CD:%v0:00:01", ouiIndex)
+	ouiIndex++
+	return macAddr
+}
+
 func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality iota.PersonalityType, node *TestNode) error {
 
 	// check if testbed node can take this personality
@@ -598,13 +606,14 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 
 		//tb.hasNaplesSim = true
 		node.NaplesMultSimConfig = iota.NaplesMultiSimConfig{
-			Network:      node.instParams.Resource.Network.Address,
-			Gateway:      node.instParams.Resource.Network.Gateway,
-			IpAddrRange:  node.instParams.Resource.Network.IPRange,
-			NumInstances: (uint32)(node.topoNode.NumInstances),
-			VeniceIps:    nil,
-			NicType:      node.instParams.Resource.NICType,
-			Parent:       node.instParams.Resource.Network.Interface,
+			Network:         node.instParams.Resource.Network.Address,
+			Gateway:         node.instParams.Resource.Network.Gateway,
+			IpAddrRange:     node.instParams.Resource.Network.IPRange,
+			MacAddressStart: allocatePensandoOUI(),
+			NumInstances:    (uint32)(node.topoNode.NumInstances),
+			VeniceIps:       nil,
+			NicType:         node.instParams.Resource.NICType,
+			Parent:          node.instParams.Resource.Network.Interface,
 		}
 		if node.NaplesMultSimConfig.Parent == "" {
 			node.NaplesMultSimConfig.Parent = "eno1"

@@ -2218,11 +2218,16 @@ func (naples *naplesMultiSimNode) init(in *iota.Node) (resp *iota.Node, err erro
 
 	}
 
-	macAddress, err := naples.getBaseMacAddresss()
-	if err != nil {
-		resp := "Could get Mac address of interface"
-		naples.logger.Error(resp)
-		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: resp}}, err
+	var macAddress string
+	if in.GetNaplesMultiSimConfig().MacAddressStart == "" {
+		macAddress, err = naples.getBaseMacAddresss()
+		if err != nil {
+			resp := "Could get Mac address of interface"
+			naples.logger.Error(resp)
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: resp}}, err
+		}
+	} else {
+		macAddress = in.GetNaplesMultiSimConfig().MacAddressStart
 	}
 
 	pool, _ := errgroup.WithContext(context.Background())
