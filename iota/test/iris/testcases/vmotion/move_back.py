@@ -3,7 +3,7 @@ import time
 import json
 import copy
 import threading
-import ipaddress
+import re
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as agent_api
 import iota.test.utils.ping as ping
@@ -114,7 +114,6 @@ def start_fuz(tc):
     tc.fuz_client_resp = api.Trigger(clientReq)
     return api.types.status.SUCCESS
 
-
 def update_node_info(tc, cmd_resp):
     wl_moving = {} 
     for move_info in tc.move_info:
@@ -126,7 +125,8 @@ def update_node_info(tc, cmd_resp):
             api.Trigger_UpdateNodeForCommands(cmd_resp, cmd.entity_name, 
                                               move_info.old_node, 
                                               move_info.new_node)
-              
+
+
 def wait_and_verify_fuz(tc):
     update_node_info(tc, tc.server_resp)
     update_node_info(tc, tc.fuz_client_resp)
@@ -141,11 +141,6 @@ def wait_and_verify_fuz(tc):
     api.Logger.info("Fuz test successfull")
     return api.types.status.SUCCESS
 
-def triggerVmotion(tc, wl, node):
-    api.Logger.info("triggering vmotion for workload %s to node %s" %(wl.workload_name, node))
-    req = api.Trigger_WorkloadMoveRequest()
-    api.Trigger_WorkloadMoveAddRequest(req, [wl], node)
-    tc.resp = api.TriggerMove(req)
 
 def triggerVmotions(tc, wls, node):
     for wl in wls:
@@ -154,17 +149,49 @@ def triggerVmotions(tc, wls, node):
     api.Trigger_WorkloadMoveAddRequest(req, wls, node)
     tc.resp = api.TriggerMove(req)
 
+def getWorkloadsToRemove(tc, node):
+    #import pdb; pdb.set_trace()
+    wl_to_rem = []
+    new_node  = None
+    workloads = api.GetWorkloads(node)
+    for wl in workloads:
+        m = re.search(node,wl.workload_name)
+        if m:
+            continue
+        else:
+            wl_to_rem.append(wl)
+        if not new_node:
+            n = re.search('(.*)-ep(.*)',wl.workload_name)
+            new_node = n.group(1)
+    api.Logger.info("Removing workload count {} to move to {}".format(wl_to_rem, new_node))
+    return (wl_to_rem, new_node)
 
-def getWorkloads(tc, type):
-    if type == 'naples':
-        if not len(tc.Nodes):
-            return None
-        node = tc.Nodes[0]
+def create_ep_info(tc, wl, new_node, migr_state, old_node):
+    # get a naples handle to move to
+    ep_filter = "meta.name=" + wl.workload_name + ";"
+    objects = agent_api.QueryConfigs("Endpoint", filter=ep_filter)
+    assert(len(objects) == 1)
+    object                          = copy.deepcopy(objects[0])
+    # delete endpoint being moved on new host, TEMP
+    agent_api.DeleteConfigObjects([object], [new_node], True)
+
+    object.spec.node_uuid           = tc.uuidMap[new_node]
+    object.spec.migration           = migr_state 
+    if (api.IsNaplesNode(old_node)):
+        object.status.node_uuid         = tc.uuidMap[old_node]
+        object.spec.homing_host_address = api.GetNicMgmtIP(old_node)
     else:
-        if not len(tc.NonNaplesNodes):
-            return None
-        node = tc.NonNaplesNodes[0]
-    return api.GetWorkloads(node)
+        object.status.node_uuid         = "0011.2233.4455"  # TEMP
+        object.spec.homing_host_address = "169.169.169.169" # TEMP
+    # this triggers endpoint on new host(naples) to setup flows
+    agent_api.PushConfigObjects([object], [new_node], True)
+
+def delete_ep_info(tc, wl, node):
+    ep_filter = "meta.name=" + wl.workload_name + ";"
+    objects = agent_api.QueryConfigs("Endpoint", filter=ep_filter)
+    assert(len(objects) == 1)
+    object = objects[0]
+    agent_api.DeleteConfigObjects([object], [node], True)
 
 class MoveInfo:
     def __init__(self):
@@ -174,7 +201,6 @@ class MoveInfo:
         self.sess_info_before = None
         self.sess_info_after  = None
         return
-
 
 def update_move_info(tc, workloads, factor_l2seg, new_node):
     wire_encap   = []
@@ -193,28 +219,57 @@ def update_move_info(tc, workloads, factor_l2seg, new_node):
             break
     api.Logger.info("Num of move_info elements are {}".format(len(tc.move_info)))
 
-def create_move_info(tc, dsc_to_dsc):
-    factor_l2seg = True
-    new_node = ''
-    old_node = ''
-    api.Logger.info("In do_vmotion for dsc_to_dsc {}".format(dsc_to_dsc))
-    # get first naples node to move VM to
-    if (dsc_to_dsc):
-        assert(len(tc.Nodes) >=2 )
-        # set old name as Node[0] and new node as Node[1]
-        old_node = tc.Nodes[0]
-        new_node = tc.Nodes[1]
-    else:
-        assert(len(tc.Nodes) >= 1)
-        assert(len(tc.NonNaplesNodes) >= 1)
-        old_node = tc.NonNaplesNodes[0]
-        new_node = tc.Nodes[0]
-        
-    workloads = api.GetWorkloads(old_node)
-    assert(len(workloads) != 0)
-    api.Logger.info("Identify workloads to move from {} to {}".format(old_node, new_node))
-    update_move_info(tc, workloads, factor_l2seg, new_node)
+def getNonNaplesNodes(tc):
+    tc.NonNaplesNodes = list()
+    for node in tc.AllNodes:
+        if node not in tc.Nodes:
+            tc.NonNaplesNodes.append(node)
 
+def Setup(tc):
+    vm_threads = []
+    node_list  = []
+    node = getattr(tc.args, "node", None)
+    if node:
+        node_list.append(node)
+    else:
+        '''
+        add all nodes in the topo
+        '''
+        nodes = api.GetNodes()
+        for node in nodes:
+            node_list.append(node.Name())
+    tc.Nodes    = api.GetNaplesHostnames()
+    tc.AllNodes = api.GetWorkloadNodeHostnames()
+    tc.uuidMap  = api.GetNaplesNodeUuidMap()
+    tc.move_info         = []
+    tc.vm_dsc_to_dsc     = True
+    tc.num_moves         = 0
+
+    if hasattr(tc.args, "conntrack"):
+        tc.detailed = True
+    else:
+        tc.detailed = False
+
+
+    getNonNaplesNodes(tc)
+    if arping.ArPing(tc) != api.types.status.SUCCESS:
+        api.Logger.info("arping failed on setup")
+    if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
+        api.Logger.info("ping test failed on setup")
+        return api.types.status.FAILURE
+
+    for node in node_list:
+        (wls,new_node) = getWorkloadsToRemove(tc, node)
+        tc.num_moves = len(wls)
+        update_move_info(tc, wls, False, new_node)
+
+    #Start Fuz
+    ret = start_fuz(tc)
+    if ret != api.types.status.SUCCESS:
+        api.Logger.error("Fuz start failed")
+        return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
 
 def do_vmotion(tc, dsc_to_dsc):
     vm_threads = []
@@ -236,61 +291,6 @@ def do_vmotion(tc, dsc_to_dsc):
         vm_thread.join()
     return api.types.status.SUCCESS
 
-def getNonNaplesNodes(tc):
-    tc.NonNaplesNodes = list()
-    for node in tc.AllNodes:
-        if node not in tc.Nodes:
-            tc.NonNaplesNodes.append(node)
-
-def Setup(tc):
-    tc.Nodes    = api.GetNaplesHostnames()
-    tc.AllNodes = api.GetWorkloadNodeHostnames()
-    tc.uuidMap  = api.GetNaplesNodeUuidMap()
-    tc.new_node = None
-    tc.old_node = None
-    tc.vm_non_dsc_to_dsc = False
-    tc.vm_dsc_to_dsc     = False
-    tc.skip_teardown     = False
-    tc.move_info         = []
-    if tc.args.vm_type == 'non_dsc_to_dsc':
-        tc.vm_non_dsc_to_dsc = True
-    else:
-        tc.vm_dsc_to_dsc     = True 
-    tc.num_moves = int(getattr(tc.args, "num_moves", 1))
-    tc.dsc_conn_type  = getattr(tc.args, "dsc_con_type", "oob")
-
-    if hasattr(tc.args, "conntrack"):
-        tc.detailed = True
-    else:
-        tc.detailed = False
-
-    if hasattr(tc.args,"skip_teardown"):
-        api.Logger.info("Setting tc to skip teardown")
-        tc.skip_teardown = True
-        #if tc.args.skip_teardown == "True":
-        #    tc.skip_teardown = True
-
-    vm_utils.increase_timeout()
-        
-    getNonNaplesNodes(tc)
-    if arping.ArPing(tc) != api.types.status.SUCCESS:
-        api.Logger.info("arping failed on setup")
-    if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
-        api.Logger.info("ping test failed on setup")
-        return api.types.status.FAILURE
-
-    '''
-    identify workloads to be moved, as we want to run fuz if wl being moved is involved
-    '''
-    create_move_info(tc, tc.vm_dsc_to_dsc)
-
-    #Start Fuz
-    ret = start_fuz(tc)
-    if ret != api.types.status.SUCCESS:
-        api.Logger.error("Fuz start failed")
-        return api.types.status.FAILURE
-
-    return api.types.status.SUCCESS
 
 def Trigger(tc):
     tc.resp = do_vmotion(tc, tc.vm_dsc_to_dsc)
@@ -318,27 +318,4 @@ def Verify(tc):
     return api.types.status.SUCCESS
 
 def Teardown(tc):
-    # adding sleep to make sure last occurance of vmotion is updated in old(src) node
-    time.sleep(5)
-    if tc.skip_teardown:
-        api.Logger.info("skipping teardown")
-        return api.types.status.SUCCESS
-    if tc.GetStatus() != api.types.status.SUCCESS:
-        api.Logger.info("verify failed, returning without teardown")
-        return tc.GetStatus()
-    vm_threads = [] 
-    for wl_info in tc.move_info:    
-        # if new_node and old_node handles exists, vmotion trigger happend
-        # cleanup and restore to as per DB in iota
-        if (wl_info.new_node and wl_info.old_node):
-            vm_thread = threading.Thread(target=triggerVmotion, args=(tc, wl_info.wl, wl_info.old_node,))
-            vm_threads.append(vm_thread)
-            vm_thread.start()
-            if (api.IsNaplesNode(wl_info.old_node)):
-                vm_utils.create_ep_info(tc, wl_info.wl, wl_info.old_node, "START", wl_info.new_node)
-    for vm_thread in vm_threads:
-        vm_thread.join()
-    for wl_info in tc.move_info:
-       if (api.IsNaplesNode(wl_info.new_node)):
-            vm_utils.delete_ep_info(tc, wl_info.wl, wl_info.new_node)
     return api.types.status.SUCCESS

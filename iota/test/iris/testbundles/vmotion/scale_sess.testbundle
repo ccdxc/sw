@@ -1,0 +1,24 @@
+meta:
+    name    : vmotion_oob_ping
+    os      : [ esx ]
+    nics    : [ pensando ]
+    #targetcount : 35
+
+testcases:
+    -   name    : ping_oob_mnic0_intf
+        testcase: testcases.mnic.ping_oob
+        ignore: True
+        args    :
+            mtu: 1500
+            verify: no
+    -   name    : PING_VM_OOB_DETAILED
+        testcase: testcases.vmotion.basic_ping
+        stress  : True
+        args    :
+            vm_type      : dsc_to_dsc
+            type         : both
+            num_sessions : 100
+            num_moves    : 2
+            conntrack    : True
+            #timeout : 60
+

@@ -11,6 +11,7 @@ import iota.test.iris.testcases.vmotion.arping as arping
 import iota.test.iris.testcases.vmotion.vm_utils as vm_utils 
 
 __fuz_run_time = "20s"
+__read_timeout = "20"
 
 def copy_fuz(tc):
     tc.fuz_exec = {}
@@ -38,10 +39,21 @@ def copy_fuz(tc):
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
-def start_fuz(tc, fuz_run_time = __fuz_run_time):
-    ret = copy_fuz(tc)
-    if ret != api.types.status.SUCCESS:
+def start_fuz(tc, fuz_run_time = __fuz_run_time,read_timeout = __read_timeout, copyfuz = True):
+
+    '''
+    if arping.ArPing(tc) != api.types.status.SUCCESS:
+        api.Logger.info("arping failed on setup")
+    tc1 = ping.TestPing(tc, 'local_only', 'ipv4', 64)
+    tc2 = ping.TestPing(tc, 'remote_only', 'ipv4', 64)
+    if tc1 != api.types.status.SUCCESS or tc2 != api.types.status.SUCCESS:
+        api.Logger.info("ping test failed on setup")
         return api.types.status.FAILURE
+    '''
+    if copyfuz:
+        ret = copy_fuz(tc)
+        if ret != api.types.status.SUCCESS:
+            return api.types.status.FAILURE
 
     tc.serverCmds = []
     tc.clientCmds = []
@@ -56,16 +68,27 @@ def start_fuz(tc, fuz_run_time = __fuz_run_time):
     # ping test above sets the workload pairs to remote only
     # setting wl_pairs as per arg selected in testbundle 
  
+    workload_pairs = []
     if tc.args.type == 'local_only':
         api.Logger.info("local_only test")
-        tc.workload_pairs = api.GetLocalWorkloadPairs()
+        workload_pairs = api.GetLocalWorkloadPairs()
     elif tc.args.type == 'both':
         api.Logger.info(" both local and remote test")
-        tc.workload_pairs = api.GetLocalWorkloadPairs()
-        tc.workload_pairs.extend(api.GetRemoteWorkloadPairs())
+        workload_pairs = api.GetLocalWorkloadPairs()
+        workload_pairs.extend(api.GetRemoteWorkloadPairs())
     else:
         api.Logger.info("remote_only test")
-        tc.workload_pairs = api.GetRemoteWorkloadPairs()
+        workload_pairs = api.GetRemoteWorkloadPairs()
+
+    wl_under_move = []
+    for wl_info in tc.move_info:
+        wl_under_move.append(wl_info.wl)
+
+    tc.workload_pairs = [] 
+    for pairs in workload_pairs:
+        if pairs[0] in wl_under_move or pairs[1] in wl_under_move:
+            api.Logger.info("Adding %s and %s for fuz test" %(pairs[0].workload_name, pairs[1].workload_name))
+            tc.workload_pairs.append(pairs)
 
     for idx, pairs in enumerate(tc.workload_pairs):
         client = pairs[0]
@@ -82,7 +105,10 @@ def start_fuz(tc, fuz_run_time = __fuz_run_time):
         api.Logger.info("Starting Fuz test from %s num-sessions %d port %d" % (cmd_descr, num_sessions, port))
 
         serverCmd = tc.fuz_exec[server.workload_name]  + " -port " + str(port)
-        clientCmd = tc.fuz_exec[client.workload_name]  + " -conns " + str(num_sessions) + " -duration " + str(__fuz_run_time) + " -attempts 1 -read-timeout 20 -talk " + server.ip_address + ":" + str(port)
+        clientCmd = tc.fuz_exec[client.workload_name]  + " -conns " +\
+                    str(num_sessions) + " -duration " + str(__fuz_run_time) +\
+                     " -attempts 1 -read-timeout " + read_timeout +" -talk " +\
+                     server.ip_address + ":" + str(port)
 
         api.Logger.info("Server command %s" %serverCmd)
         api.Logger.info("Client command %s" %clientCmd)
@@ -143,13 +169,13 @@ def switchPortFlap2(tc, node):
     api.Logger.info("flpping uplink port on node %s" % (node))
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     cmd_cookie = "port uplink down"
-    api.Trigger_AddNaplesCommand(req, node, "halctl debug port --port Eth1/3 --admin-state down")
+    api.Trigger_AddNaplesCommand(req, node, "/nic/bin/halctl debug port --port Eth1/3 --admin-state down")
     cmd_cookies.append(cmd_cookie)
     cmd_cookie = "sleep"
     api.Trigger_AddNaplesCommand(req, node, "sleep 5",timeout=30)
     tc.cmd_cookies.append(cmd_cookie)
     cmd_cookie = "port uplink up"
-    api.Trigger_AddNaplesCommand(req, node, "halctl debug port --port Eth1/3 --admin-state up")
+    api.Trigger_AddNaplesCommand(req, node, "/nic/bin/halctl debug port --port Eth1/3 --admin-state up")
     cmd_cookies.append(cmd_cookie)
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
@@ -329,18 +355,21 @@ def Setup(tc):
     '''
         
     getNonNaplesNodes(tc)
+    #Start Fuz
+
     if arping.ArPing(tc) != api.types.status.SUCCESS:
         api.Logger.info("arping failed on setup")
-    if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
+    tc1 = ping.TestPing(tc, 'local_only', 'ipv4', 64)
+    tc2 = ping.TestPing(tc, 'remote_only', 'ipv4', 64)
+    if tc1 != api.types.status.SUCCESS or tc2 != api.types.status.SUCCESS:
         api.Logger.info("ping test failed on setup")
         return api.types.status.FAILURE
 
-    #Start Fuz
-    ret = start_fuz(tc, "20s")
+    ret = start_fuz(tc, "20s","20")
     if ret != api.types.status.SUCCESS:
         api.Logger.error("Fuz start failed")
         return api.types.status.FAILURE
-
+    stop_fuz(tc)
     return api.types.status.SUCCESS
 
 def create_ep_info(tc, wl, new_node, migr_state, old_node):
@@ -379,11 +408,10 @@ def Trigger(tc):
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
-    stop_fuz(tc)
     '''
     start fuz test to verify traffic recovered
     '''
-    start_fuz(tc)
+    start_fuz(tc,"20s","20",False)
     ret1 = wait_and_verify_fuz(tc)
     for wl_info in tc.move_info:
         vm_utils.get_sessions_info(tc, wl_info.new_node)

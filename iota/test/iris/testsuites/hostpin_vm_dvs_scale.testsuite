@@ -1,0 +1,52 @@
+meta:
+    name        : hostpin_vm_dvs_scale
+    description : Hardware Test Suite
+    mode        : hybrid
+    cfgmode     : netagent
+    nicmode     : hostpin_dvs
+    enable      : True
+    os          : [ esx ]
+
+packages:
+    - iota.test.iris
+    - iota.test.common
+
+image_manifest:
+    spec        : images/latest.json
+    naples      : capri
+
+setup:
+    topology: test/iris/topologies/2Naples_VM_Vcenter/vm.topology
+    config  :
+        - step : utils.cleanup
+        - step : testcases.penctl.install
+        - step : testcases.penctl.enable_ssh
+        - step : config.netagent.mode_switch
+          args :
+               fwd_mode    : "INSERTION"
+               policy_Mode : "ENFORCED"
+        - step : config.netagent.hw_push_config
+          args :
+             spec : scale_cfg_1vrf_1nw_2ep_2rep.cfgyml
+        - step : testcases.drivers.install_iperf
+
+common:
+    verifs:
+        -   step    : verif.utils.verify_interrupts
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+    debugs:
+        -   step : verif.utils.collect_logs_and_cores
+
+testbundles:
+    precheckin:
+        - vmotion/basic_ping.testbundle
+
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        - vmotion/scale_sess.testbundle
+        #- vmotion/clean.testbundle
+        
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores
