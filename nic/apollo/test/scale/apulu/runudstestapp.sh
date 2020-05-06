@@ -13,6 +13,8 @@ cleanup() {
     pkill agent
     # remove pdsctl gen files
     sudo rm -f $NICDIR/out.sh
+    # remove uds socket
+    sudo rm -f /var/run/pds_svc_server_sock
     # remove pipeline.json
     sudo rm -f $NICDIR/conf/pipeline.json
     # stop vpp

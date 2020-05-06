@@ -22,6 +22,7 @@
 
 namespace core {
 
+static int g_uds_sock_fd;
 static thread_local sdk::event_thread::io_t cmd_accept_io;
 
 static void
@@ -111,7 +112,6 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
 void
 svc_server_thread_init (void *ctxt)
 {
-    int fd;
     struct sockaddr_un sock_addr;
     sdk::upg::upg_ev_t ev;
 
@@ -120,8 +120,9 @@ svc_server_thread_init (void *ctxt)
     sdk::upg::upg_ev_hdlr_register(ev);
 
     // initialize unix socket
-    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-        PDS_TRACE_ERR("Failed to open unix domain socket for cmd server thread");
+    if ((g_uds_sock_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+        PDS_TRACE_ERR("Failed to open unix domain socket for cmd server thread, err {} {}",
+                      errno, strerror(errno));
         return;
     }
 
@@ -129,17 +130,19 @@ svc_server_thread_init (void *ctxt)
     sock_addr.sun_family = AF_UNIX;
     strcpy(sock_addr.sun_path, SVC_SERVER_SOCKET_PATH);
 
-    if (bind(fd, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) == -1) {
-        PDS_TRACE_ERR ("Failed to bind unix domain socket for cmd server thread");
+    if (bind(g_uds_sock_fd, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) == -1) {
+        PDS_TRACE_ERR ("Failed to bind unix domain socket for cmd server thread, err {} {}",
+                       errno, strerror(errno));
         return;
     }
 
-    if (listen(fd, 1) == -1) {
-        PDS_TRACE_ERR ("Failed to bind unix domain socket for fd receive");
+    if (listen(g_uds_sock_fd, 1) == -1) {
+        PDS_TRACE_ERR ("Failed to bind unix domain socket for fd receive, err {} {}",
+                       errno, strerror(errno));
         return;
     }
 
-    sdk::event_thread::io_init(&cmd_accept_io, svc_server_accept_cb, fd,
+    sdk::event_thread::io_init(&cmd_accept_io, svc_server_accept_cb, g_uds_sock_fd,
                                EVENT_READ);
     sdk::event_thread::io_start(&cmd_accept_io);
 }
@@ -148,6 +151,9 @@ void
 svc_server_thread_exit (void *ctxt)
 {
     sdk::event_thread::io_stop(&cmd_accept_io);
+    if (g_uds_sock_fd >= 0) {
+        close(g_uds_sock_fd);
+    }
 }
 
 }    // namespace core

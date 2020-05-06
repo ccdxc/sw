@@ -20,6 +20,7 @@ extern void handle_cmd(cmd_ctxt_t *cmd_ctxt);
 
 namespace sysmon {
 
+static int g_uds_sock_fd;
 static thread_local sdk::event_thread::io_t cmd_accept_io;
 
 static cli_cmd_t
@@ -104,12 +105,13 @@ cmd_server_accept_cb (sdk::event_thread::io_t *io, int fd, int events)
 void
 cmd_server_thread_init (void *ctxt)
 {
-    int fd;
     struct sockaddr_un sock_addr;
 
     // initialize unix socket
-    if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-        TRACE_ERR(GetAsicErrLogger(), "Failed to open unix domain socket for cmd server thread");
+    if ((g_uds_sock_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+        TRACE_ERR(GetAsicErrLogger(), "Failed to open unix domain socket for "
+                                      "cmd server thread. err {} {}",
+                                      errno, strerror(errno));
         return;
     }
 
@@ -117,17 +119,21 @@ cmd_server_thread_init (void *ctxt)
     sock_addr.sun_family = AF_UNIX;
     strcpy(sock_addr.sun_path, CMD_SERVER_SOCKET_PATH);
 
-    if (bind(fd, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) == -1) {
-        TRACE_ERR(GetAsicErrLogger(), "Failed to bind unix domain socket for cmd server thread");
+    if (bind(g_uds_sock_fd, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) == -1) {
+        TRACE_ERR(GetAsicErrLogger(), "Failed to bind unix domain socket for "
+                                      "cmd server thread. err {} {}",
+                                      errno, strerror(errno));
         return;
     }
 
-    if (listen(fd, 1) == -1) {
-        TRACE_ERR(GetAsicErrLogger(), "Failed to bind unix domain socket for fd receive");
+    if (listen(g_uds_sock_fd, 1) == -1) {
+        TRACE_ERR(GetAsicErrLogger(), "Failed to bind unix domain socket for "
+                                      "fd receive. err {} {}",
+                                      errno, strerror(errno));
         return;
     }
 
-    sdk::event_thread::io_init(&cmd_accept_io, cmd_server_accept_cb, fd,
+    sdk::event_thread::io_init(&cmd_accept_io, cmd_server_accept_cb, g_uds_sock_fd,
                                EVENT_READ);
     sdk::event_thread::io_start(&cmd_accept_io);
 }
@@ -136,6 +142,9 @@ void
 cmd_server_thread_exit (void *ctxt)
 {
     sdk::event_thread::io_stop(&cmd_accept_io);
+    if (g_uds_sock_fd >= 0) {
+        close(g_uds_sock_fd);
+    }
 }
 
 }    // namespace sysmon
