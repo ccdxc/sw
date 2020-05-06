@@ -484,6 +484,17 @@ ionic_dev_cmd_qos_class_reset(struct ionic_dev *idev, uint8_t group)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
+void
+ionic_dev_cmd_qos_clear_stats(struct ionic_dev *idev, uint8_t qos_group_bitmap)
+{
+	union ionic_dev_cmd cmd = {
+		.qos_clear_stats.opcode = IONIC_CMD_QOS_CLEAR_STATS,
+		.qos_clear_stats.group_bitmap = qos_group_bitmap,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
 /* Queue commands */
 void
 ionic_dev_cmd_q_identify(struct ionic_dev *idev, uint8_t lif_type,

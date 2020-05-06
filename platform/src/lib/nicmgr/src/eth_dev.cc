@@ -1128,6 +1128,7 @@ Eth::opcode_to_str(cmd_opcode_t opcode)
         CASE(IONIC_CMD_QOS_CLASS_INIT);
         CASE(IONIC_CMD_QOS_CLASS_UPDATE);
         CASE(IONIC_CMD_QOS_CLASS_RESET);
+        CASE(IONIC_CMD_QOS_CLEAR_STATS);
         CASE(IONIC_CMD_FW_DOWNLOAD);
         CASE(IONIC_CMD_FW_CONTROL);
         CASE(IONIC_CMD_VF_GETATTR);
@@ -1246,6 +1247,10 @@ Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 
     case IONIC_CMD_QOS_CLASS_RESET:
         status = _CmdQosReset(req, req_data, resp, resp_data);
+        break;
+
+    case IONIC_CMD_QOS_CLEAR_STATS:
+        status = _CmdQosClearStats(req, req_data, resp, resp_data);
         break;
 
     default:
@@ -1811,7 +1816,7 @@ Eth::_CmdQosUpdate(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    rs = dev_api->qos_class_delete(cmd->group);
+    rs = dev_api->qos_class_delete(cmd->group, false);
     if (rs != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to delete qos group for update {}", spec->name, cmd->group);
         return (IONIC_RC_ERROR);
@@ -1875,15 +1880,33 @@ Eth::_CmdQosReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     sdk_ret_t rs = SDK_RET_OK;
     struct ionic_qos_reset_cmd *cmd = (struct ionic_qos_reset_cmd *)req;
+    bool clear_stats = true;
 
     NIC_LOG_DEBUG("{}: {} {}", spec->name, opcode_to_str(cmd->opcode),
                   qos_class_to_str(cmd->group));
 
     DEVAPI_CHECK
 
-    rs = dev_api->qos_class_delete(cmd->group);
+    rs = dev_api->qos_class_delete(cmd->group, clear_stats);
     if (rs != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to delete qos group {}", spec->name, cmd->group);
+        return (IONIC_RC_ERROR);
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+Eth::_CmdQosClearStats(void *req, void *req_data, void *resp, void *resp_data)
+{
+    sdk_ret_t rs = SDK_RET_OK;
+    struct ionic_qos_clear_stats_cmd *cmd = (struct ionic_qos_clear_stats_cmd *)req;
+
+    DEVAPI_CHECK
+
+    rs = dev_api->qos_clear_stats(spec->uplink_port_num, cmd->group_bitmap);
+    if (rs != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to clear qos stats {}, qos_group_bitmap {}", spec->name, cmd->group_bitmap);
         return (IONIC_RC_ERROR);
     }
 

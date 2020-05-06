@@ -373,6 +373,10 @@
 		QosClassDeleteRequestMsg
 		QosClassDeleteResponse
 		QosClassDeleteResponseMsg
+		QosClearStatsRequest
+		QosClearStatsRequestMsg
+		QosClearStatsResponse
+		QosClearStatsResponseMsg
 		QosClassInputOflowQueueStats
 		QosClassInputQueueStats
 		QosClassOutputQueueStats

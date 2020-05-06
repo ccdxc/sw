@@ -813,6 +813,20 @@ ionic_qos_class_reset(struct ionic *ionic, uint8_t group)
 	return (err);
 }
 
+int
+ionic_qos_clear_stats(struct ionic *ionic, uint8_t qos_group_bitmap)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	int err;
+
+	IONIC_DEV_LOCK(ionic);
+	ionic_dev_cmd_qos_clear_stats(idev, qos_group_bitmap);
+	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+	IONIC_DEV_UNLOCK(ionic);
+
+	return (err);
+}
+
 static void
 ionic_qos_set_default_pcp(struct ionic_lif *lif, int tc, union ionic_qos_config *qos)
  {

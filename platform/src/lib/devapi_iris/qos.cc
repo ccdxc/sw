@@ -216,7 +216,7 @@ end:
 }
 
 sdk_ret_t
-devapi_qos::qos_class_delete(uint8_t group)
+devapi_qos::qos_class_delete(uint8_t group, bool clear_stats)
 {
     sdk_ret_t                         ret = SDK_RET_OK;
     grpc::Status                      status;
@@ -225,15 +225,46 @@ devapi_qos::qos_class_delete(uint8_t group)
 
     auto req = req_msg.add_request();
     req->mutable_key_or_handle()->set_qos_group((kh::QosGroup)group);
+    req->set_clear_stats(clear_stats);
 
     VERIFY_HAL();
     status = hal->qos_class_delete(req_msg, rsp_msg);
     if (status.ok()) {
         auto rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_DEBUG("qos class {} deleted", group);
+            NIC_LOG_DEBUG("qos class {} deleted clear_stats {}", group, clear_stats);
         } else {
             NIC_LOG_ERR("qos class {} delete failed", group);
+            ret = SDK_RET_ERR;
+            goto end;
+        }
+    }
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_qos::qos_clear_stats(uint32_t port_num, uint8_t qos_group_bitmap)
+{
+    sdk_ret_t                         ret = SDK_RET_OK;
+    grpc::Status                      status;
+    qos::QosClearStatsRequestMsg     req_msg;
+    qos::QosClearStatsResponseMsg    rsp_msg;
+
+    auto req = req_msg.add_request();
+    req->set_port_num(port_num);
+    req->set_qos_group_bitmap((uint32_t)qos_group_bitmap);
+
+    NIC_LOG_DEBUG("qos port stats req for port {} and qos_groups {}", port_num, qos_group_bitmap);
+    VERIFY_HAL();
+    status = hal->qos_clear_stats(req_msg, rsp_msg);
+    if (status.ok()) {
+        auto rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_LOG_DEBUG("qos port stats cleared for port {} and qos_groups {}", port_num, qos_group_bitmap);
+        } else {
+            NIC_LOG_ERR("qos port stats clear failed for port {} and qos_groups {}", port_num, qos_group_bitmap);
             ret = SDK_RET_ERR;
             goto end;
         }

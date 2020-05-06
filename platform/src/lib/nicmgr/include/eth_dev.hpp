@@ -277,6 +277,7 @@ private:
     status_code_t _CmdQosInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdQosUpdate(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdQosReset(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdQosClearStats(void *req, void *req_data, void *resp, void *resp_data);
 
     status_code_t _CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);

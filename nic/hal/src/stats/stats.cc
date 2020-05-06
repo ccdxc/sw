@@ -199,6 +199,7 @@ hal_update_pb_stats (SystemResponse *rsp)
             // oqstats fill
             uint64_t output_tc = oqstats.qos_group_idx(); // Get the Qos Group (TC) index for this oq
             pb_stats.output_queue_port_monitor[output_tc] = oqstats.port_monitor();
+            pb_stats.output_queue_buffer_occupancy[output_tc] = oqstats.queue_depth();
         }
 
         // ptr offset (not byte len)

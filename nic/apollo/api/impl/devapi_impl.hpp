@@ -68,7 +68,8 @@ public:
     virtual sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info) override;
     virtual sdk_ret_t qos_class_exist(uint8_t group) override;
     virtual sdk_ret_t qos_class_create(qos_class_info_t *info) override;
-    virtual sdk_ret_t qos_class_delete(uint8_t group) override;
+    virtual sdk_ret_t qos_class_delete(uint8_t group, bool clear_stats) override;
+    virtual sdk_ret_t qos_clear_stats(uint32_t port_num, uint8_t qos_group_bitmap);
     virtual sdk_ret_t qos_get_txtc_cos(const string &group,
                                        uint32_t uplink_port,
                                        uint8_t *cos) override;

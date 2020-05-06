@@ -4,6 +4,7 @@
 #include "nic/hal/pd/iris/aclqos/qos_pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/sdk/asic/port.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/asic/cmn/asic_hbm.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/platform/capri/capri_tm_utils.hpp"
@@ -466,6 +467,66 @@ qos_class_pd_cleanup (pd_qos_class_t *qos_class_pd)
     // Freeing PD
     qos_class_pd_free(qos_class_pd);
 end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// PD Qos-class Reset Stats
+//-----------------------------------------------------------------------------
+static hal_ret_t
+qos_class_pd_reset_group_stats (pd_qos_class_t *qos_class_pd)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    if (!qos_class_pd) {
+        // Nothing to do
+        goto end;
+    }
+
+    for (unsigned port = 0; port < TM_NUM_PORTS; port++) {
+        capri_tm_reset_iq_port_mon_stats(port, qos_class_pd->uplink.iq);
+        capri_tm_reset_oq_port_mon_stats(port, qos_class_pd->dest_oq);
+    }
+
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// PD Qos Clear Port Stats
+//-----------------------------------------------------------------------------
+static hal_ret_t
+qos_pd_clear_stats(uint32_t tm_port, uint8_t qos_group_bitmap)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+
+    uint8_t         iq_tc, oq_tc;
+
+    /* Clear PB stats */
+    if (qos_group_bitmap == QOS_ALL_GROUPS) {
+        capri_tm_debug_stats_get(tm_port, NULL, true);
+    }
+
+    /* Clear iq and oq stats */
+    for (unsigned iq = 0; iq < HAL_MAX_UPLINK_IQS; iq++) {
+        iq_tc = g_qos_iq_to_tc[iq];
+        /* Check if the TC for this iq is set in the bitmap for delete */
+        if ((qos_group_bitmap & (1 << iq_tc)) != 0) {
+            HAL_TRACE_DEBUG("Clearing qos group {} iq stats", iq_tc);
+            capri_tm_reset_iq_port_mon_stats(tm_port, iq);
+            capri_tm_reset_iq_stats(tm_port, iq);
+        }
+    }
+
+    for (unsigned oq = 0; oq < HAL_MAX_UPLINK_OQS; oq++) {
+        oq_tc = g_qos_oq_to_tc[oq];
+        /* Check if the TC for this oq is set in the bitmap for delete */
+        if ((qos_group_bitmap & (1 << oq_tc)) != 0) {
+            HAL_TRACE_DEBUG("Clearing qos group {} oq stats", oq_tc);
+            capri_tm_reset_oq_port_mon_stats(tm_port, oq);
+        }
+    }
+
     return ret;
 }
 
@@ -2378,6 +2439,59 @@ pd_qos_class_delete (pd_func_args_t *pd_func_args)
     }
 
 err:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// PD Qos-class Reset Stats
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_qos_class_reset_stats(pd_func_args_t *pd_func_args)
+{
+    hal_ret_t      ret;
+    pd_qos_class_reset_stats_args_t *args = pd_func_args->pd_qos_class_reset_stats;
+    pd_qos_class_t *qos_class_pd;
+
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->qos_class != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->qos_class->pd != NULL), HAL_RET_INVALID_ARG);
+    HAL_TRACE_DEBUG("clearing stats for qos_class {}",
+                    args->qos_class->key);
+    qos_class_pd = (pd_qos_class_t *)args->qos_class->pd;
+
+    // Reset QoS Stats
+    if (!qos_class_pd) {
+        // Nothing to do
+        goto end;
+    }
+
+    ret = qos_class_pd_reset_group_stats(qos_class_pd);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed pd qos_class cleanup Qos-class {}, ret {}",
+                      args->qos_class->key, ret);
+    }
+end:
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// PD Qos Clear Port Stats
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_qos_clear_stats(pd_func_args_t *pd_func_args)
+{
+    hal_ret_t      ret;
+    pd_qos_clear_stats_args_t *args = pd_func_args->pd_qos_clear_stats;
+
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+
+    // Clear qos stats for the port
+    ret = qos_pd_clear_stats(args->port_num, args->qos_group_bitmap);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("failed pd qos clear stats for port {}, qos_group_bitmap {},ret {}",
+                      args->port_num, args->qos_group_bitmap, ret);
+    }
+
     return ret;
 }
 

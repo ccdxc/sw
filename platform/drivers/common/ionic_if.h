@@ -59,6 +59,7 @@ enum ionic_cmd_opcode {
 	IONIC_CMD_QOS_CLASS_INIT		= 241,
 	IONIC_CMD_QOS_CLASS_RESET		= 242,
 	IONIC_CMD_QOS_CLASS_UPDATE		= 243,
+	IONIC_CMD_QOS_CLEAR_STATS		= 244,
 
 	/* Firmware commands */
 	IONIC_CMD_FW_DOWNLOAD			= 254,
@@ -1886,6 +1887,7 @@ struct ionic_qos_identify_comp {
 };
 
 #define IONIC_QOS_TC_MAX		8
+#define IONIC_QOS_ALL_TC		0xFF
 /* Capri max supported, should be renamed. */
 #define IONIC_QOS_CLASS_MAX		7
 #define IONIC_QOS_PCP_MAX		8
@@ -2029,6 +2031,16 @@ typedef struct ionic_admin_comp ionic_qos_init_comp;
 struct ionic_qos_reset_cmd {
 	u8    opcode;
 	u8    group;
+	u8    rsvd[62];
+};
+
+/**
+ * struct ionic_qos_clear_port_stats_cmd - Qos config reset command
+ * @opcode:	Opcode
+ */
+struct ionic_qos_clear_stats_cmd {
+	u8    opcode;
+	u8    group_bitmap;
 	u8    rsvd[62];
 };
 
@@ -2420,6 +2432,7 @@ struct ionic_port_pb_stats {
 	__le64 input_queue_fifo_depth[IONIC_QOS_TC_MAX];
 	__le64 input_queue_max_fifo_depth[IONIC_QOS_TC_MAX];
 	__le64 input_queue_peak_occupancy[IONIC_QOS_TC_MAX];
+	__le64 output_queue_buffer_occupancy[IONIC_QOS_TC_MAX];
 };
 
 enum port_type {
@@ -2679,6 +2692,7 @@ union ionic_dev_cmd {
 	struct ionic_qos_identify_cmd qos_identify;
 	struct ionic_qos_init_cmd qos_init;
 	struct ionic_qos_reset_cmd qos_reset;
+	struct ionic_qos_clear_stats_cmd qos_clear_stats;
 
 	struct q_identify_cmd q_identify;
 	struct ionic_q_init_cmd q_init;

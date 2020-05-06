@@ -1193,6 +1193,10 @@ It has these top-level messages:
 	QosClassDeleteRequestMsg
 	QosClassDeleteResponse
 	QosClassDeleteResponseMsg
+	QosClearStatsRequest
+	QosClearStatsRequestMsg
+	QosClearStatsResponse
+	QosClearStatsResponseMsg
 	QosClassInputOflowQueueStats
 	QosClassInputQueueStats
 	QosClassOutputQueueStats

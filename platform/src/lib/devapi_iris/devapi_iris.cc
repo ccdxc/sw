@@ -454,9 +454,15 @@ devapi_iris::qos_class_create(qos_class_info_t *info)
 }
 
 sdk_ret_t
-devapi_iris::qos_class_delete(uint8_t group)
+devapi_iris::qos_class_delete(uint8_t group, bool clear_stats)
 {
-    return devapi_qos::qos_class_delete(group);
+    return devapi_qos::qos_class_delete(group, clear_stats);
+}
+
+sdk_ret_t
+devapi_iris::qos_clear_stats(uint32_t port_num, uint8_t qos_group_bitmap)
+{
+    return devapi_qos::qos_clear_stats(port_num, qos_group_bitmap);
 }
 
 sdk_ret_t

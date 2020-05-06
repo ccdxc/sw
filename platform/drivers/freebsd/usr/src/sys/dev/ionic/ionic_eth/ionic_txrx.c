@@ -2018,6 +2018,15 @@ ionic_reset_stats_sysctl(SYSCTL_HANDLER_ARGS)
 			    "port stats reset failed, error: %d\n", err);
 	}
 
+	/* Reset qos stats for non mgmt interfaces. */
+	if (!ionic->is_mgmt_nic) {
+		err = ionic_qos_clear_stats(ionic, IONIC_QOS_ALL_TC); // Send a bitmap of all TCs to clear the qos stats for all queues
+		if (err) {
+			IONIC_NETDEV_ERROR(ifp,
+			    "qos stats failed, error: %d\n", err);
+		}
+	}
+
 	return (0);
 }
 /*
@@ -2584,21 +2593,26 @@ ionic_setup_qos_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "occupancy_drop", CTLFLAG_RD,
 		&pb_stats->oflow_drop_counts[IONIC_OFLOW_OCCUPANCY_DROP], "");
 
-	for (i = 0; i < IONIC_QOS_TC_MAX; i++) {
-		snprintf(namebuf, QUEUE_NAME_LEN, "tc%d", i);
-		queue_node1 = SYSCTL_ADD_NODE(ctx, queue_list, OID_AUTO, namebuf,
-					CTLFLAG_RD, NULL, "QoS per class stats");
-		queue_list1 = SYSCTL_CHILDREN(queue_node1);
-		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_peak_occupancy", CTLFLAG_RD,
-			&pb_stats->input_queue_peak_occupancy[i], "");
-		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_buffer_occupancy", CTLFLAG_RD,
-			&pb_stats->input_queue_buffer_occupancy[i], "");
-		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_port_monitor", CTLFLAG_RD,
-			&pb_stats->input_queue_port_monitor[i], "");
-		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "queue_drops", CTLFLAG_RD,
-			&pb_stats->input_queue_err_pkts_in[i], "");
-		SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "output_queue_port_monitor", CTLFLAG_RD,
-			&pb_stats->output_queue_port_monitor[i], "");
+	/* Show TC level stats for mgmt interfaces only. */
+	if (!lif->ionic->is_mgmt_nic) {
+		for (i = 0; i < IONIC_QOS_TC_MAX; i++) {
+			snprintf(namebuf, QUEUE_NAME_LEN, "tc%d", i);
+			queue_node1 = SYSCTL_ADD_NODE(ctx, queue_list, OID_AUTO, namebuf,
+						CTLFLAG_RD, NULL, "QoS per class stats");
+			queue_list1 = SYSCTL_CHILDREN(queue_node1);
+			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_peak_occupancy", CTLFLAG_RD,
+				&pb_stats->input_queue_peak_occupancy[i], "");
+			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_buffer_occupancy", CTLFLAG_RD,
+				&pb_stats->input_queue_buffer_occupancy[i], "");
+			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "input_queue_port_monitor", CTLFLAG_RD,
+				&pb_stats->input_queue_port_monitor[i], "");
+			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "queue_drops", CTLFLAG_RD,
+				&pb_stats->input_queue_err_pkts_in[i], "");
+			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "output_queue_port_monitor", CTLFLAG_RD,
+				&pb_stats->output_queue_port_monitor[i], "");
+			SYSCTL_ADD_ULONG(ctx, queue_list1, OID_AUTO, "output_queue_buffer_occupancy", CTLFLAG_RD,
+				&pb_stats->output_queue_buffer_occupancy[i], "");
+		}
 	}
 }
 
@@ -3113,6 +3127,13 @@ ionic_qos_no_drop_sysctl(SYSCTL_HANDLER_ARGS)
 			if_printf(lif->netdev, "invalid value - 0(disable)/1(enable)\n");
 			goto err_out;
 		}
+
+		if (no_drop[i] != 0 && !ionic->qos.enable_flag[i]) {
+			if_printf(lif->netdev, "TC %d is disabled. Cannot set no-drop attribute\n", i);
+			error = EINVAL;
+			goto err_out;
+		}
+
 		if (i && no_drop[i] && i == ionic->qos.tc_ethernet)
 			if_printf(lif->netdev,
 			    "Warning: Ethernet is assigned to no-drop TC%d\n", i);
@@ -3246,6 +3267,13 @@ ionic_qos_pcp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 			goto err_out;
 		}
 
+		/* Check if the PCP is being assigned to a TC that is not enabled */
+		if (!ionic->qos.enable_flag[pcp_to_tc[i]]) {
+			if_printf(ifp, "PCP %d cannot be assigned to disabled TC %d\n", i, pcp_to_tc[i]);
+			error = EINVAL;
+			goto err_out;
+		}
+
 		/*
 		 * If a PCP is already assigned to a TC and
 		 * the new config is trying to assign it to another TC,
@@ -3292,10 +3320,23 @@ ionic_qos_pfc_cos_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error)
 		goto err_out;
 
+	/* TC0 cannot be mapped to any pfc-cos other than 0 */
+	if (pfc_cos[0] != 0) {
+		error = EINVAL;
+		if_printf(lif->netdev, "TC0 pfc-cos cannot be changed\n");
+		goto err_out;
+	}
+
 	for (i = 0; i < ionic->qos.max_tcs; i++) {
 		if (pfc_cos[i] > 7) {
 			if_printf(ifp, "Out of range value: %d\n", pfc_cos[i]);
 			error = ERANGE;
+			goto err_out;
+		}
+
+		if (pfc_cos[i] != 0 && !ionic->qos.enable_flag[i]) {
+			if_printf(ifp, "Pfc Cos %d cannot be assigned to disabled TC %d\n", pfc_cos[i], i);
+			error = EINVAL;
 			goto err_out;
 		}
 	}
@@ -3311,16 +3352,80 @@ err_out:
 	return (error);
 }
 
+static int ionic_qos_verify_dscp_to_tc(struct ionic_lif *lif, uint8_t *dscp_to_tc, int start)
+{
+	int i, dscp, tc, error = 0;
+	uint8_t curr_tc, new_tc;
+	struct ionic *ionic = lif->ionic;
+	struct ifnet *ifp = lif->netdev;
+	bool tc_dscp_found[IONIC_QOS_TC_MAX];
+
+	for (i = 0; i < IONIC_DSCP_BLOCK_SIZE; i++) {
+		/* Range check all of the new values */
+		if (dscp_to_tc[i] >= ionic->qos.max_tcs ) {
+			if_printf(ifp, "Out of range value: %d\n", dscp_to_tc[i]);
+			error = ERANGE;
+			goto err_out;
+		}
+
+		/* Check if the DSCP is being assigned to a TC that is not enabled */
+		if (!ionic->qos.enable_flag[dscp_to_tc[i]]) {
+			if_printf(ifp, "DSCP %d cannot be assigned to disabled TC %d\n", i + start, dscp_to_tc[i]);
+			error = EINVAL;
+			goto err_out;
+		}
+
+		/*
+		 * If a DSCP is already assigned to a TC and
+		 * the new config is trying to assign it to another TC,
+		 * reject the config. 
+		 */
+		curr_tc = ionic->qos.dscp_to_tc[i + start];
+		new_tc = dscp_to_tc[i];
+		if (curr_tc != 0 &&
+		    new_tc != 0 && // No check needed if the dscp is already unassigned or being unassigned
+		    curr_tc != new_tc) { 
+			if_printf(ifp, "Failed to assign DSCP %d to TC %d. It is already assigned to TC %d\n", 
+					i + start, new_tc, curr_tc);
+			error = EINVAL;
+			goto err_out;
+		}
+	}
+
+	/* 
+	 * Before updating the ionic.qos structure, 
+	 * check if all the enabled TCs have at least 1 DSCP
+	 */
+	for (dscp = 0; dscp < IONIC_QOS_DSCP_MAX; dscp++) {
+		if (dscp >= start && dscp < start + IONIC_DSCP_BLOCK_SIZE) {
+			tc = dscp_to_tc[dscp-start];
+		}
+		else {
+			tc = ionic->qos.dscp_to_tc[dscp];
+		}
+		tc_dscp_found[tc] = true;
+	}
+	for (tc = 1; tc < ionic->qos.max_tcs; tc++) {
+		if (ionic->qos.enable_flag[tc] && tc_dscp_found[tc] == false) {
+			IONIC_NETDEV_ERROR(ifp, "TC%d DSCP value missing\n", tc);
+			error = EINVAL;
+			goto err_out;
+		}
+	}
+
+err_out:
+	return (error);
+}
+
 static int
 ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct ionic_lif *lif = oidp->oid_arg1;
 	struct ionic *ionic = lif->ionic;
-	struct ifnet *ifp = lif->netdev;
 	uint8_t dscp_to_tc[IONIC_DSCP_BLOCK_SIZE];
+	uint8_t new_dscp_to_tc[IONIC_QOS_DSCP_MAX];
 	int i, error;
 	int start = oidp->oid_arg2;
-	uint8_t curr_tc = 0, new_tc = 0;
 
 	IONIC_LIF_LOCK(lif);
 	error = SYSCTL_OUT(req, ionic->qos.dscp_to_tc + start, IONIC_DSCP_BLOCK_SIZE);
@@ -3331,36 +3436,19 @@ ionic_qos_dscp_to_tc_sysctl(SYSCTL_HANDLER_ARGS)
 	if (error)
 		goto err_out;
 
-	for (i = 0; i < IONIC_DSCP_BLOCK_SIZE; i++) {
-		/* Range check all of the new values */
-		if (dscp_to_tc[i] >= ionic->qos.max_tcs ) {
-			if_printf(ifp, "Out of range value: %d\n", dscp_to_tc[i]);
-			error = ERANGE;
-			goto err_out;
-		}
+	error = ionic_qos_verify_dscp_to_tc(lif, dscp_to_tc, start);
+	if (error) {
+		goto err_out;
+ 	}
 
-		/*
-		 * If a DSCP is already assigned to a TC and
-		 * the new config is trying to assign it to another TC,
-		 * reject the config.
-		 */
-		curr_tc = ionic->qos.dscp_to_tc[i + start];
-		new_tc = dscp_to_tc[i];
-		if (curr_tc != 0 &&
-		    new_tc != 0 && // No check needed if the dscp is already unassigned or being unassigned
-		    curr_tc != new_tc) {
-			if_printf(ifp, "Failed to assign DSCP %d to TC %d. It is already assigned to TC %d\n",
-					i + start, new_tc, curr_tc);
-			error = EINVAL;
-			goto err_out;
-		}
-	}
+	/* Make a copy of the existing config to the temporary array */
+	memcpy(new_dscp_to_tc, ionic->qos.dscp_to_tc, sizeof(new_dscp_to_tc));
 
-	/* Copy the chunk of new values into the master array */
+	/* Copy the chunk of new values into the temporary array */
 	for (i = 0; i < IONIC_DSCP_BLOCK_SIZE; i++)
-		ionic->qos.dscp_to_tc[i + start] = dscp_to_tc[i];
+		new_dscp_to_tc[i + start] = dscp_to_tc[i];
 
-	error = ionic_qos_dscp_to_tc_update(lif, ionic->qos.dscp_to_tc);
+	error = ionic_qos_dscp_to_tc_update(lif, new_dscp_to_tc);
 	if (error) {
 		goto err_out;
 	}
@@ -3383,6 +3471,10 @@ ionic_qos_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
 	int i;
+
+	/* Do not create the qos config for mgmt inetrfaces. */
+	if (lif->ionic->is_mgmt_nic)
+		return;
 
 	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, "qos",
 	    CTLFLAG_RD, NULL, "QoS policy for RDMA traffic");

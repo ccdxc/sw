@@ -375,6 +375,24 @@ func (mr *MockQOSClientMockRecorder) QosClassSetGlobalPauseType(ctx, in interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassSetGlobalPauseType", reflect.TypeOf((*MockQOSClient)(nil).QosClassSetGlobalPauseType), varargs...)
 }
 
+// QosClearStats mocks base method
+func (m *MockQOSClient) QosClearStats(ctx context.Context, in *QosClearStatsRequestMsg, opts ...grpc.CallOption) (*QosClearStatsResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QosClearStats", varargs...)
+	ret0, _ := ret[0].(*QosClearStatsResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QosClearStats indicates an expected call of QosClearStats
+func (mr *MockQOSClientMockRecorder) QosClearStats(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClearStats", reflect.TypeOf((*MockQOSClient)(nil).QosClearStats), varargs...)
+}
+
 // CoppUpdate mocks base method
 func (m *MockQOSClient) CoppUpdate(ctx context.Context, in *CoppRequestMsg, opts ...grpc.CallOption) (*CoppResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -510,6 +528,19 @@ func (m *MockQOSServer) QosClassSetGlobalPauseType(arg0 context.Context, arg1 *Q
 // QosClassSetGlobalPauseType indicates an expected call of QosClassSetGlobalPauseType
 func (mr *MockQOSServerMockRecorder) QosClassSetGlobalPauseType(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassSetGlobalPauseType", reflect.TypeOf((*MockQOSServer)(nil).QosClassSetGlobalPauseType), arg0, arg1)
+}
+
+// QosClearStats mocks base method
+func (m *MockQOSServer) QosClearStats(arg0 context.Context, arg1 *QosClearStatsRequestMsg) (*QosClearStatsResponseMsg, error) {
+	ret := m.ctrl.Call(m, "QosClearStats", arg0, arg1)
+	ret0, _ := ret[0].(*QosClearStatsResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QosClearStats indicates an expected call of QosClearStats
+func (mr *MockQOSServerMockRecorder) QosClearStats(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClearStats", reflect.TypeOf((*MockQOSServer)(nil).QosClearStats), arg0, arg1)
 }
 
 // CoppUpdate mocks base method

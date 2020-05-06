@@ -81,6 +81,7 @@ typedef struct ionic_pb_stats_s {
     uint64_t   input_queue_fifo_depth[IONIC_PORT_QOS_MAX_QUEUES];             // Current FIFO depth
     uint64_t   input_queue_max_fifo_depth[IONIC_PORT_QOS_MAX_QUEUES];         // Max FIFO depth
     uint64_t   input_queue_peak_occupancy[IONIC_PORT_QOS_MAX_QUEUES];	      // Peak buffer occupancy
+    uint64_t   output_queue_buffer_occupancy[IONIC_PORT_QOS_MAX_QUEUES];
 } ionic_pb_stats_t;
 
 

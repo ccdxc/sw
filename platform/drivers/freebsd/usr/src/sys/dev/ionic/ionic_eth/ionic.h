@@ -237,6 +237,7 @@ int ionic_qos_init(struct ionic *ionic);
 int ionic_qos_class_init(struct ionic *ionic, uint8_t group,
     union ionic_qos_config *config);
 int ionic_qos_class_reset(struct ionic *ionic, uint8_t group);
+int ionic_qos_clear_stats(struct ionic *ionic, uint8_t qos_group_bitmap);
 int ionic_qos_class_type_update(struct ionic_lif *lif,
     enum ionic_qos_class_type class);
 int ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable);

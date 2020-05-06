@@ -1517,6 +1517,45 @@ capri_tm_get_buffer_occupancy (tm_port_t port, tm_q_t iq,
     }
 }
 
+static void
+capri_tm_clear_buffer_occupancy (tm_port_t port, tm_q_t iq)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cpp_int       val = 0;
+
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+        case ${pinfo["enum"]}:
+            {
+                // ${pinfo["enum"]}
+                switch (iq) {
+//::        for pg in range(pinfo["pgs"]):
+                    case ${pg}:
+                        {
+                            pbc_csr.port_${p}.cfg_account_control.read();
+                            pbc_csr.port_${p}.cfg_account_control.clear_wm_index(${pg});
+                            pbc_csr.port_${p}.cfg_account_control.write();
+                            pbc_csr.port_${p}.cfg_account_control.clear_wm_enable(1);
+                            pbc_csr.port_${p}.cfg_account_control.write();
+                            pbc_csr.port_${p}.cfg_account_control.clear_wm_enable(0);
+                            pbc_csr.port_${p}.cfg_account_control.write();
+
+                            break;
+                        }
+//::        #endfor
+                    default:
+                        return;
+                }
+                break;
+            }
+//:: #endfor
+        default:
+            break;
+    }
+}
+
 static sdk_ret_t
 capri_tm_sop_eop_check (tm_port_t port)
 {
@@ -4795,6 +4834,8 @@ capri_tm_periodic_stats_update (void)
     }
 
     // Take lock and update
+    // Multiple parallel reads of the same HBM memory is casuing crashes.
+    // So, acquire the lock before reading HBM.
     SDK_SPINLOCK_LOCK(&tm_ctx()->stats.slock);
     // Read from asic
     for (fifo_type = 0; fifo_type < NUM_TM_HBM_FIFO_TYPES; fifo_type++) {
@@ -4944,6 +4985,15 @@ capri_tm_reset_iq_stats(tm_port_t port, tm_q_t iq)
         capri_tm_reset_context_stats(fifo_type, context);
 
     }
+    // Reset the buffer occupancy and peak occupancy
+    capri_tm_clear_buffer_occupancy(port, iq);
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+capri_tm_reset_iq_port_mon_stats(tm_port_t port, tm_q_t iq)
+{
+    capri_tm_clear_port_mon_in(0, 0, port, iq);
     return sdk::SDK_RET_OK;
 }
 
@@ -4970,6 +5020,13 @@ capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
                                               oq*16, 16);
 #endif
     oq_stats->port_monitor = capri_tm_get_port_mon_out(0, 0, port, oq);
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
+capri_tm_reset_oq_port_mon_stats(tm_port_t port, tm_q_t oq)
+{
+    capri_tm_clear_port_mon_out(0, 0, port, oq);
     return sdk::SDK_RET_OK;
 }
 
@@ -5176,6 +5233,50 @@ capri_tm_get_port_mon_out (int chip_id,
 }
 
 uint64_t
+capri_tm_clear_port_mon_out (int chip_id,
+                           int inst_id,
+                           tm_port_t tm_port,
+                           tm_q_t tm_oq)
+{
+    cpp_int val = 0;
+    uint32_t cfg_port_0;
+    uint32_t cfg_port_1;
+    uint32_t cfg_port_2;
+    uint32_t cfg_port_3;
+    int port = 0;
+    int cur_address = 0;
+    cap_pbc_csr_t &pbc_csr =
+                CAP_BLK_REG_MODEL_ACCESS(cap_pbc_csr_t, chip_id, inst_id);
+
+    pbc_csr.cfg_port_mon_out.read();
+    cfg_port_0 = pbc_csr.cfg_port_mon_out.port_0().convert_to<int>();
+    cfg_port_1 = pbc_csr.cfg_port_mon_out.port_1().convert_to<int>();
+    cfg_port_2 = pbc_csr.cfg_port_mon_out.port_2().convert_to<int>();
+    cfg_port_3 = pbc_csr.cfg_port_mon_out.port_3().convert_to<int>();
+
+    if (tm_port == cfg_port_0) {
+        port = 0;
+    } else if (tm_port == cfg_port_1) {
+        port = 1;
+    } else if (tm_port == cfg_port_2) {
+        port = 2;
+    } else if (tm_port == cfg_port_3) {
+        port = 3;
+    } else {
+        // port monitor not configured for tm_port
+        // SDK_TRACE_DEBUG("tm_port %d, oq %d not supported",
+        //                 tm_port, tm_oq);
+        return 0;
+    }
+
+    cur_address = (port * CAPRI_TM_MAX_QUEUES) + tm_oq;
+    // SDK_TRACE_DEBUG("Clearing oq stats for tm_port %d, oq %d cur_address %d",
+    //                tm_port, tm_oq, cur_address);
+    cap_pb_write_port_mon_out(chip_id, inst_id, cur_address, val);
+    return 0;
+}
+
+uint64_t
 capri_tm_get_port_mon_in (int chip_id,
                           int inst_id,
                           tm_port_t tm_port,
@@ -5227,6 +5328,56 @@ capri_tm_get_port_mon_in (int chip_id,
     //                 tm_port, tm_iq, cur_address);
     cap_pb_read_port_mon_in(chip_id, inst_id, cur_address, count);
     return count.convert_to<uint64_t>();
+}
+
+uint64_t
+capri_tm_clear_port_mon_in (int chip_id,
+                          int inst_id,
+                          tm_port_t tm_port,
+                          tm_q_t tm_iq)
+{
+    uint32_t eth_port_start = 0;
+    int cur_address = 0;
+    cpp_int val = 0;
+    cap_pbc_csr_t &pbc_csr =
+                CAP_BLK_REG_MODEL_ACCESS(cap_pbc_csr_t, chip_id, inst_id);
+
+    pbc_csr.cfg_port_mon_in.read();
+    eth_port_start = pbc_csr.cfg_port_mon_in.eth().convert_to<uint32_t>();
+
+    // port monitor order in HW - INGRESS, EGRESS, DMA, ETH
+    switch (tm_port) {
+        case CAPRI_TM_PORT_INGRESS:
+            cur_address = 0 + tm_iq;
+            break;
+
+        case CAPRI_TM_PORT_EGRESS:
+            cur_address = capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_INGRESS) +
+                          tm_iq;
+            break;
+
+        case CAPRI_TM_PORT_DMA:
+            cur_address = capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_INGRESS) +
+                          capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_EGRESS)  +
+                          tm_iq;
+            break;
+
+        default:
+            // NCSI and UPLINKS
+            // only 6 ETH ports can be monitored
+            if (tm_port > eth_port_start + 5) {
+                return 0;
+            }
+            cur_address = capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_INGRESS) +
+                          capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_EGRESS)  +
+                          capri_tm_get_num_iqs_for_port(CAPRI_TM_PORT_DMA)     +
+                          (capri_tm_get_num_iqs_for_port(TM_PORT_TYPE_UPLINK)
+                                                              * tm_port) +
+                          tm_iq;
+            break;
+    }
+    cap_pb_write_port_mon_in(chip_id, inst_id, cur_address, val);
+    return 0;
 }
 
 // set the span queue threshold

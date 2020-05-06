@@ -7,6 +7,7 @@
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
+#include "nic/sdk/include/sdk/if.hpp"
 #ifdef ELBA
 #include "nic/sdk/platform/elba/elba_tm_utils.hpp"
 #define ASIC_QUEUES_PER_PORT ELBA_QUEUES_PER_PORT
@@ -1713,7 +1714,10 @@ qosclass_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
     qos_class_t             *qos_class = NULL;
     cfg_op_ctxt_t           cfg_ctxt = { 0 };
     dhl_entry_t             dhl_entry = { 0 };
+    pd::pd_qos_class_reset_stats_args_t args = { 0 };
+    pd::pd_func_args_t      pd_func_args = { 0 };
     const QosClassKeyHandle &kh = req.key_or_handle();
+    bool  clear_stats = req.clear_stats();
 
     hal_api_trace(" API Begin: qos_class delete ");
 
@@ -1733,14 +1737,22 @@ qosclass_delete (QosClassDeleteRequest& req, QosClassDeleteResponse *rsp)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("deleting qos_class {} handle {}",
-                    qos_class->key, qos_class->hal_handle);
+    HAL_TRACE_DEBUG("deleting qos_class {} handle {} clear_stats {}",
+                    qos_class->key, qos_class->hal_handle, clear_stats);
 
     // validate if there no objects referring this qos-class
     ret = validate_qos_class_delete(qos_class);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("qos_class delete validation failed, err : {}", ret);
         goto end;
+    }
+
+    if (clear_stats) {
+        // Call PD to clear the stats
+        args.qos_class = qos_class;
+        HAL_TRACE_DEBUG("Clear stats for tc : {}", qos_class->key.qos_group);
+        pd_func_args.pd_qos_class_reset_stats = &args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_RESET_STATS, &pd_func_args);
     }
 
     // form ctxt and call infra add
@@ -1764,6 +1776,38 @@ end:
     }
     rsp->set_api_status(hal_prepare_rsp(ret));
     hal_api_trace(" API End: qos_class delete ");
+    return ret;
+}
+
+//------------------------------------------------------------------------------
+// process a qos clear port stats request for a given port
+//------------------------------------------------------------------------------
+hal_ret_t
+qosclear_stats (QosClearStatsRequest& req, QosClearStatsResponse *rsp)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    pd::pd_qos_clear_stats_args_t args = { 0 };
+    pd::pd_func_args_t      pd_func_args = { 0 };
+
+    hal_api_trace(" API Begin: qos clear stats ");
+
+    // Call PD to clear the qos stats
+    // Get the tm port from uplink ifindex
+    uint32_t eth_ifindex = UPLINK_IFINDEX_TO_ETH_IFINDEX(req.port_num());
+    args.port_num = ETH_IFINDEX_TO_PARENT_PORT(eth_ifindex);
+    args.qos_group_bitmap = req.qos_group_bitmap();
+
+    HAL_TRACE_DEBUG("Clearing stats for port {} qos group bitmap : {}", args.port_num, args.qos_group_bitmap);
+    
+    pd_func_args.pd_qos_clear_stats = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLEAR_STATS, &pd_func_args);
+    if (ret == HAL_RET_OK) {
+        HAL_API_STATS_INC(HAL_API_QOSCLEAR_STATS_SUCCESS);
+    } else {
+        HAL_API_STATS_INC(HAL_API_QOSCLEAR_STATS_FAIL);
+    }
+    rsp->set_api_status(hal_prepare_rsp(ret));
+    hal_api_trace(" API End: qos clear stats ");
     return ret;
 }
 

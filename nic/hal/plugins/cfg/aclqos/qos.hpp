@@ -26,6 +26,10 @@ using qos::QosClassDeleteRequest;
 using qos::QosClassDeleteResponse;
 using qos::QosClassDeleteRequestMsg;
 using qos::QosClassDeleteResponseMsg;
+using qos::QosClearStatsRequest;
+using qos::QosClearStatsResponse;
+using qos::QosClearStatsRequestMsg;
+using qos::QosClearStatsResponseMsg;
 using qos::QosClassSetGlobalPauseTypeRequest;
 using qos::QosClassSetGlobalPauseTypeRequestMsg;
 using qos::QosClassSetGlobalPauseTypeResponseMsg;
@@ -81,6 +85,8 @@ namespace hal {
 
 DEFINE_ENUM(qos_group_t, QOS_GROUPS)
 #undef QOS_GROUPS
+
+#define QOS_ALL_GROUPS         0xFF
 
 #define HAL_MAX_QOS_CLASSES NUM_QOS_GROUPS
 
@@ -306,6 +312,8 @@ hal_ret_t qosclass_update(qos::QosClassSpec& spec,
                           qos::QosClassResponse *rsp);
 hal_ret_t qosclass_delete(qos::QosClassDeleteRequest& req,
                           qos::QosClassDeleteResponse *rsp);
+hal_ret_t qosclear_stats(qos::QosClearStatsRequest& req,
+                          qos::QosClearStatsResponse *rsp);
 hal_ret_t qosclass_get(qos::QosClassGetRequest& req,
                        qos::QosClassGetResponseMsg *rsp);
 hal_ret_t qos_class_thresholds_get(qos::QosClassThresholdsGetRequest& req,
