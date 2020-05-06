@@ -48,6 +48,10 @@ export class NewVcenterIntegrationComponent extends CreationForm<IOrchestrationO
   }
 
   postNgInit() {
+    // for release B, vs-1609, set password as the only credetial method
+    this.newObject.$formGroup.get(['spec', 'credentials', 'auth-type']).setValue(
+      MonitoringExternalCred_auth_type['username-password']
+    );
     this.setValidators(this.newObject);
     if (this.isInline) {
       this.processVcenterIntegration();

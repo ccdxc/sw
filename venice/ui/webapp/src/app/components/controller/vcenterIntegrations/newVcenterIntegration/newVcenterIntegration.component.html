@@ -49,6 +49,7 @@
         <legend>Credential</legend>
         <div fxflex="nogrow" fxLayout="column" class="newVcenter-cred-box"
              [formGroup]="newObject.$formGroup.get(['spec','credentials'])">
+          <!-- //for release B, vs-1609, hide credential choices
           <div class="newVcenter-radio-container">
             <mat-radio-group fxFlex="nogrow" class="newVenter-attach-radio"
                              fxLayoutAlign="start center" fxLayoutGap="10px"
@@ -59,6 +60,7 @@
               </mat-radio-button>
             </mat-radio-group>
           </div>
+          -->
           <div fxFlex="5px"></div>
           <div fxLayout="column"
                [ngSwitch]="newObject.$formGroup.get(['spec','credentials', 'auth-type']).value">

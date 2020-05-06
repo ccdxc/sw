@@ -179,7 +179,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
         this.isMirrorsessionNameValid(this.existingObjects)]);
     }
 
-    this.newObject.$formGroup.get(['spec', 'packet-size']).setValidators([minValueValidator(64), maxValueValidator(2048)]);
+    this.newObject.$formGroup.get(['spec', 'packet-size']).setValidators([this.packetSizeValidator()]);
 
     // due to currently backend does not support all drops, comment out next lines
     /*
@@ -407,6 +407,38 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
             message: PACKET_FILTERS_ERRORMSG
           }
         };
+      }
+      return null;
+    };
+  }
+
+  packetSizeValidator() {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (control.value) {
+        const actual: number = Number(control.value);
+        if (actual === 0) {
+          return null;
+        }
+        if (actual < 64) {
+          return {
+              minValue: {
+                  valid: false,
+                  required: false,
+                  actual: actual,
+                  message: 'Value must be greater than or equal 64'
+              }
+          };
+        }
+        if (actual > 2048) {
+          return {
+              minValue: {
+                  valid: false,
+                  required: false,
+                  actual: actual,
+                  message: 'Value must be less than or equal 2048'
+              }
+          };
+        }
       }
       return null;
     };

@@ -23,6 +23,7 @@
 // const URL = "10.30.5.234" // Dave's server 
 // const URL = "10.8.103.189"
 // const URL = "10.30.1.226"  // setup admin/Systest-1$
+// const URL = "10.30.1.175"  // Sirividhya setup admin/Systest-1$
 // const URL = "10.30.9.93" 
 // const URL = "10.30.8.2"  // equinix 
 // const URL = "10.30.3.33"  // one host , two cards
