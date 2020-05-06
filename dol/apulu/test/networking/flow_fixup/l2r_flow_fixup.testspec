@@ -114,10 +114,11 @@ session:
 
     - step:
         trigger:
+            # sending in burst of packets may result in some packet taking transient flow
+            # so, send packets with delay
+            # TODO: Update session entry and then fix flows from VPP to handle packet burst scenario
+            delay    :    2
             descriptors:
-                - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC1
-                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
@@ -131,9 +132,25 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
+    - step:
+        trigger:
+            delay    :    2
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect:
+            delay    :    1
+            packets:
+                - packet:
+                    object  : None
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
+            descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
 
     - step:
         trigger:
@@ -150,10 +167,8 @@ session:
 
     - step:
         trigger:
+            delay    :    2
             descriptors:
-                - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC1
-                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC1
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
@@ -163,13 +178,25 @@ session:
                 - packet:
                     object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
                     port    : callback://networking/packets/GetExpectedEgressUplinkPort
-                - packet:
-                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
-                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
             descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
+    - step:
+        trigger:
+            delay    :    2
+            descriptors:
+                - descriptor:
+                    object  : ref://testcase/descriptors/id=DESC1
+                    ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+        expect:
+            delay    :    1
+            packets:
+                - packet:
+                    object  : callback://networking/packets/GetExpectedPacket/pkt=TO_SWITCH_PKT
+                    port    : callback://networking/packets/GetExpectedEgressUplinkPort
+            descriptors:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX

@@ -11,7 +11,7 @@ feature:
 modules:
 
     - module:
-        name    : IPV4_TCP_FLOW_FIXUP
+        name    : IPV4_TCP_FLOW_FIXUP_ON_POLICY_CHG
         spec    : l2r_flow_fixup.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
