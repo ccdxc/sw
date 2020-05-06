@@ -173,7 +173,7 @@ $vertical-gutter: 5px;
 }
 
 .telemetrychartedit-field-label {
-  width: 100px;
+  width: 120px;
 }
 
 .telemetrychartedit-field-selector-title {
@@ -224,4 +224,11 @@ $vertical-gutter: 5px;
 
 .telemetrychartedit-checkbox-label {
   margin-bottom: 0px;
+}
+
+.telemetrychartedit-checkbox.ui-chkbox-label,
+.telemetrychartedit-option-text {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 240px;
 }

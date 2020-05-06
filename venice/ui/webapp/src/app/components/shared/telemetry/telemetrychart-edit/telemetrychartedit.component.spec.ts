@@ -21,6 +21,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
+import { NetworkService } from '@app/services/generated/network.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 
 
@@ -54,6 +55,7 @@ describe('TelemetrycharteditComponent', () => {
       providers: [
         ControllerService,
         ClusterService,
+        NetworkService,
         ConfirmationService,
         MatIconRegistry,
         LogService,

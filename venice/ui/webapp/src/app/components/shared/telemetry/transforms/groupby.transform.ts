@@ -33,18 +33,20 @@ export class GroupByTransform extends MetricTransform<GroupByTransformConfig> {
       this.groupByOptions = [];
       return;
     }
-    const options = MetricsMetadata[this.measurement].fields.filter(x => x.isTag).map( f => {
-      return {label: f.displayName, value: f.name};
-    });
     if (MetricsMetadata[this.measurement].objectKind === 'NetworkInterface') {
-      options.unshift({label: 'name', value: 'name'});
+      this.groupByOptions = [{label: 'name', value: 'name'}];
+      this.groupBy = 'name';
+    } else {
+      const options = MetricsMetadata[this.measurement].fields.filter(x => x.isTag).map( f => {
+        return {label: f.displayName, value: f.name};
+      });
+      if (options && options.length > 0) {
+        this.groupBy = options[0].value;
+      }
+      // block none option for A release
+      // options.unshift({label: 'None', value: null});
+      this.groupByOptions = options;
     }
-    if (options && options.length > 0) {
-      this.groupBy = options[0].value;
-    }
-    // block none option for A release
-    // options.unshift({label: 'None', value: null});
-    this.groupByOptions = options;
   }
 
   transformQuery(opts: TransformQuery): boolean {

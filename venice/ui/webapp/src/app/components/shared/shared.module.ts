@@ -50,7 +50,6 @@ import { TelemetrychartviewComponent } from './telemetry/telemetrychart-view/tel
 import {AlertIndicationBarComponent} from './alert-indication-bar/alert-indication-bar.component';
 import { DscprofilesetterComponent } from './dscprofilesetter/dscprofilesetter.component';
 import { ExportLogsComponent } from './exportlogs/exportlogs.component';
-import { NetworkService } from '@app/services/generated/network.service';
 
 @NgModule({
   imports: [
@@ -152,8 +151,7 @@ import { NetworkService } from '@app/services/generated/network.service';
     ExportLogsComponent
   ],
   providers: [
-    DomHandler,
-    NetworkService
+    DomHandler
   ]
 })
 export class SharedModule { }

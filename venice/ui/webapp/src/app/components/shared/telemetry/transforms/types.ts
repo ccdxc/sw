@@ -307,8 +307,10 @@ export class DataSource {
 
   buildMetricsPollingQuery(): MetricsPollingQuery {
     const query = MetricsUtility.timeSeriesQueryPolling(this.measurement, this.fields);
-    if (this.measurement === 'Cluster' || this.measurement === 'SessionSummaryMetrics' || this.measurement === 'MacMetrics' || this.measurement === 'LifMetrics' ||
-    this.measurement === 'MgmtMacMetrics') {  // measurement can be SessionSummaryMetrics, FteCPSMetrics, Cluster
+    if (this.measurement === 'Cluster' || this.measurement === 'SessionSummaryMetrics' ||
+        this.measurement === 'MacMetrics' || this.measurement === 'LifMetrics' ||
+        this.measurement === 'MgmtMacMetrics' || this.measurement === 'DropMetrics' ||
+        this.measurement === 'EgressDropMetrics') {  // measurement can be SessionSummaryMetrics, FteCPSMetrics, Cluster
       query.query.function = Telemetry_queryMetricsQuerySpec_function.last; // VS-741 use median function to show DSC count
     }
     return query;

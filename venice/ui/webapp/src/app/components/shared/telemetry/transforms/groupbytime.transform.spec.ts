@@ -32,7 +32,7 @@ describe('Group by time transform', () => {
       {
         startTime: moment().subtract('1', 'd').toISOString(),
         endTime: moment().toISOString(),
-        expGroupByTime: '3m',
+        expGroupByTime: '5m',
       },
     ];
 

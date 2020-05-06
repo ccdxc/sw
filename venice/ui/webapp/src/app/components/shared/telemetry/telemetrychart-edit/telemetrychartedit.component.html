@@ -86,7 +86,7 @@
 <ng-template #ViewSource let-source let-index="index">
   <div fxFlex="auto" fxLayout="row">
     <div fxFlex="none" fxLayout="row" fxLayoutGap="5px">
-      <div fxFlex="none"
+      <div fxFlex="none" *ngIf="getMeasurementMetadata(source.measurement)"
            [matTooltip]="getMeasurementMetadata(source.measurement)? getMeasurementMetadata(source.measurement).description : ''">
         {{ getMeasurementMetadata(source.measurement).displayName }} </div>
       <div fxFlex="none"> - </div>
@@ -162,7 +162,8 @@
                         *ngIf="option.name === source.measurement || showDebug || (option.tags != null && !option.tags.includes('Level7'))"
                         [appErrorTooltip]="option.description"
                         [value]="option.name">
-        {{option.displayName}}
+        <div class="telemetrychartedit-option-text" [title]="option.displayName">
+          {{option.displayName}}</div>
       </mat-radio-button>
     </ng-container>
   </mat-radio-group>

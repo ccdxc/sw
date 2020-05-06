@@ -107,8 +107,15 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
     });
     this.measurements = [];
     Object.keys(this.metricsMetadata).forEach( (m) => {
-      this.measurements.push(this.metricsMetadata[m]);
+      const mObj: MetricMeasurement = this.metricsMetadata[m];
+      mObj.fields.sort(this.sortByDisplayName);
+      this.measurements.push(mObj);
     });
+    this.measurements.sort(this.sortByDisplayName);
+  }
+
+  sortByDisplayName(a, b) {
+    return a.displayName > b.displayName ? 1 : -1;
   }
 
 
@@ -180,7 +187,6 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
 
   getCardFieldDataForNetworkInterfaces(res: RepeaterData[], type: string) {
     res[0].values = this.chart.networkInterfacesTypeMap[type].map((ni: NetworkNetworkInterface) => {
-      console.log(ni);
       return {
         label: ni.meta.name,
         value: ni.meta.name
@@ -304,6 +310,9 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
   graphTypeChange() {}
 
   getMeasurementMetadata(measurement: string): MetricMeasurement {
+    if (!measurement) {
+      return null;
+    }
     return MetricsMetadata[measurement];
   }
 

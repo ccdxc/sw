@@ -22,6 +22,7 @@ import { LicenseService } from '@app/services/license.service';
 import { AuthService } from '@app/services/auth.service';
 import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
+import { NetworkService } from '@app/services/generated/network.service';
 
 @Component({
   template: ''
@@ -53,6 +54,7 @@ describe('TelemetrychartviewComponent', () => {
       providers: [
         ControllerService,
         ClusterService,
+        NetworkService,
         ConfirmationService,
         MatIconRegistry,
         LogService,

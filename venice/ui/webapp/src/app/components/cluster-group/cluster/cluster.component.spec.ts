@@ -18,6 +18,7 @@ import { ClusterComponent } from './cluster.component';
 import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { ClusterService } from '@app/services/generated/cluster.service';
+import { NetworkService } from '@app/services/generated/network.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { PrimengModule } from '@app/lib/primeng.module';
@@ -74,6 +75,7 @@ describe('ClusterComponent', () => {
         LogService,
         LogPublishersService,
         ClusterService,
+        NetworkService,
         MatIconRegistry,
         AlerttableService,
         EventsService,

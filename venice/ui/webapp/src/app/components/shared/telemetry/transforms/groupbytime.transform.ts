@@ -8,7 +8,7 @@ import * as moment from 'moment';
 export class GroupByTimeTransform extends MetricTransform<{}> {
 
   transformName = TransformNames.GroupByTime;
-  maxPoints: number = 20;
+  maxPoints: number = 24;
   minimumGroupByTime: string = '60s';
 
 
@@ -32,6 +32,18 @@ export class GroupByTimeTransform extends MetricTransform<{}> {
     numPoints = Math.floor(numPoints / 2);
     while (Math.floor(numPoints / groupByMin) > this.maxPoints) {
       groupByMin += 1;
+    }
+
+    // if duration is longer than 1 day, roundup interval to 5 minutes
+    if (duration.asDays() >= 1) {
+      const mod = groupByMin % 10;
+      if (mod !== 0 && mod !== 5) {
+        if (mod < 5) {
+          groupByMin += 5 - mod;
+        } else {
+          groupByMin += 10 - mod;
+        }
+      }
     }
 
     opts.query['group-by-time'] = groupByMin + 'm';
