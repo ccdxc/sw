@@ -232,10 +232,12 @@ typedef enum {
 } pds_flow_timer;
 
 typedef CLIB_PACKED(union pds_flow_index_s_ {
-    u8 index[3];
-    struct {
-        u32 table_id : 23;
-        u32 primary : 1;
+    union {
+        u8 index[3];
+        struct {
+            u32 table_id : 23;
+            u32 primary : 1;
+        };
     };
 }) pds_flow_index_t;
 
@@ -254,11 +256,10 @@ typedef CLIB_PACKED(struct pds_flow_hw_ctx_s {
     // lock per session entry: since iflow/rflow index may get updated from
     // other threads, we need lock here.
     volatile u8 lock;
-    u8 packet_type : 2;
+    u8 packet_type : 5; // pds_flow_pkt_sub_type
     u8 iflow_rx : 1; // true if iflow is towards the host
-    u8 host_origin : 1;
     u8 monitor_seen : 1; // 1 if monitor process has seen flow
-    u8 reserved_1 : 3;
+    u8 reserved : 1;
     u16 vnic_id : 7;
     u16 reserved_2 : 9;
 }) pds_flow_hw_ctx_t;
@@ -313,13 +314,6 @@ typedef struct pds_flow_main_s {
     // packet template to send TCP keep alives
     vlib_packet_template_t tcp_keepalive_packet_template;
 } pds_flow_main_t;
-
-typedef enum {
-    PDS_PKT_TYPE_L2L,
-    PDS_PKT_TYPE_L2R,
-    PDS_PKT_TYPE_R2L,
-    PDS_PKT_TYPE_N,         // for both L2N and N2L
-} pds_flow_pkt_type;
 
 // packet types - Any new addition should be handled in
 // pds_packet_type_flags_build ()
@@ -526,7 +520,7 @@ always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
                                         u32 i_sindex, u32 r_pindex,
                                         u32 r_sindex, pds_flow_protocol proto,
                                         uint8_t vnic_id, bool v4,
-                                        bool host_origin)
+                                        bool host_origin, u8 packet_type)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
@@ -551,7 +545,8 @@ always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
     data->v4 = v4;
     data->is_in_use = 1;
     data->vnic_id = vnic_id;
-    data->host_origin = host_origin;
+    data->iflow_rx = host_origin;
+    data->packet_type = packet_type;
     //pds_flow_prog_unlock();
     return;
 }

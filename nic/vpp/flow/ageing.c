@@ -573,7 +573,7 @@ pds_flow_delete_session (u32 ses_id)
                                      session->rflow.table_id,
                                      session->rflow.primary,
                                      FLOW_EXPORT_REASON_DEL,
-                                     session->host_origin);
+                                     session->iflow_rx);
         }
         session = pds_flow_get_hw_ctx_lock(ses_id);
         if (PREDICT_FALSE(ftlv4_get_with_handle(table4, session->iflow.table_id,
@@ -660,7 +660,8 @@ pds_flow_send_keep_alive_helper (pds_flow_hw_ctx_t *session,
     }
     
     b = vlib_get_buffer(vm, bi);
-    if (session->packet_type == PDS_PKT_TYPE_L2L) {
+    if ((session->packet_type == PDS_FLOW_L2L_INTRA_SUBNET) ||
+        (session->packet_type == PDS_FLOW_L2L_INTER_SUBNET)) {
         to_host = true;
     } else {
         to_host = (iflow && session->iflow_rx) || (!iflow && !session->iflow_rx);

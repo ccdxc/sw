@@ -98,185 +98,6 @@ pds_session_get_nat_drop_next_offset (vlib_buffer_t *p0)
 }
 
 always_inline void
-pds_packet_type_fill (pds_flow_hw_ctx_t *ctx, u8 type)
-{
-    pds_flow_main_t *fm = &pds_flow_main;
-
-    ctx->packet_type = vec_elt(fm->packet_types, type);
-}
-
-always_inline void
-pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
-                     u32 session_id0, u32 session_id1,
-                     u16 *next0, u16 *next1, u32 *counter)
-{
-    session_track_actiondata_t track_actiondata = {0};
-    static struct session_info_entry_t actiondata = {0};
-    pds_flow_main_t *fm = &pds_flow_main;
-    pds_flow_rewrite_flags_t *rewrite_flags;
-    pds_flow_hw_ctx_t *ctx0, *ctx1;
-    bool ses_track_en;
-
-    if (pds_is_flow_session_present(b0)) {
-        goto skip_prog0;
-    }
-    
-    //clib_memset(&actiondata, 0, sizeof(actiondata));
-    if (pds_is_flow_napt_en(b0)) {
-        actiondata.tx_xlate_id =
-            vnet_buffer2(b0)->pds_nat_data.xlate_idx;
-        actiondata.rx_xlate_id =
-            vnet_buffer2(b0)->pds_nat_data.xlate_idx_rflow;
-        actiondata.tx_xlate_id2 = 0;
-        actiondata.rx_xlate_id2 = 0;
-    } else if (pds_is_flow_svc_map_en(b0)) {
-        /* Service mapping case (pip, port --> vip, port) */
-        actiondata.tx_xlate_id =
-            vnet_buffer2(b0)->pds_nat_data.xlate_idx;
-        actiondata.tx_xlate_id2 = 0;
-        actiondata.rx_xlate_id2 = 0;
-        actiondata.rx_xlate_id = 0;
-    } else if (vnet_buffer2(b0)->pds_nat_data.xlate_idx) {
-        /* static nat */
-        actiondata.tx_xlate_id =
-            vnet_buffer2(b0)->pds_nat_data.xlate_idx;
-        actiondata.rx_xlate_id =
-            vnet_buffer2(b0)->pds_nat_data.xlate_idx + 1;
-        actiondata.tx_xlate_id2 = 0;
-        actiondata.rx_xlate_id2 = 0;
-    }
-    if (vnet_buffer2(b0)->pds_nat_data.xlate_idx2) {
-        // Twice NAT
-        actiondata.tx_xlate_id2 =
-            vnet_buffer2(b0)->pds_nat_data.xlate_idx2;
-        actiondata.rx_xlate_id2 =
-            vnet_buffer2(b0)->pds_nat_data.xlate_idx2 + 1;
-    }
-    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b0)->pds_flow_data.packet_type));
-    session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
-    session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
-        (pds_is_flow_rx_vlan(b0) ?
-            (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
-    ctx0 = pds_flow_get_hw_ctx(session_id0);
-    ses_track_en = fm->con_track_en && (ctx0->proto == PDS_FLOW_PROTO_TCP);
-    actiondata.session_tracking_en = ses_track_en;
-    pds_packet_type_fill(ctx0, vnet_buffer(b0)->pds_flow_data.packet_type);
-    if (BIT_ISSET(vnet_buffer(b0)->pds_flow_data.flags, VPP_CPU_FLAGS_RX_PKT)) {
-        ctx0->iflow_rx = 1;
-    }
-
-    if (ses_track_en) {
-        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_state = FLOW_STATE_INIT;
-        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num = 
-            vnet_buffer(b0)->pds_flow_data.tcp_seq_no + 1;
-        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_win_size = 
-            vnet_buffer(b0)->pds_flow_data.tcp_win_sz;
-        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_state = FLOW_STATE_INIT;
-        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_ack_num = 
-            vnet_buffer(b0)->pds_flow_data.tcp_seq_no + 1;
-        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_win_size =
-            vnet_buffer(b0)->pds_flow_data.tcp_win_sz;
-    }
-
-    if (PREDICT_FALSE(pds_session_program(session_id0, (void *)&actiondata))) {
-        if (pds_is_flow_napt_en(b0)) {
-            *next0 = SESSION_PROG_NEXT_NAT_DROP;
-            vlib_buffer_advance(b0, pds_session_get_nat_drop_next_offset(b0));
-        } else {
-            *next0 = SESSION_PROG_NEXT_DROP;
-        }
-    } else if (ses_track_en &&
-               PREDICT_FALSE(session_track_program(session_id0, (void *)&track_actiondata))) {
-        *next0 = SESSION_PROG_NEXT_DROP;
-    } else {
-skip_prog0:
-        *next0 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
-                                            SESSION_PROG_NEXT_FWD_FLOW;
-        vlib_buffer_advance(b0, pds_session_get_advance_offset());
-    }
-
-    if (pds_is_flow_session_present(b1)) {
-        goto skip_prog1;
-    }
-    //clib_memset(&actiondata, 0, sizeof(actiondata));
-    if (pds_is_flow_napt_en(b1)) {
-        actiondata.tx_xlate_id =
-            vnet_buffer2(b1)->pds_nat_data.xlate_idx;
-        actiondata.rx_xlate_id =
-            vnet_buffer2(b1)->pds_nat_data.xlate_idx_rflow;
-        actiondata.tx_xlate_id2 = 0;
-        actiondata.rx_xlate_id2 = 0;
-    } else if (pds_is_flow_svc_map_en(b1)) {
-        /* Service mapping case (pip, port --> vip, port) */
-        actiondata.tx_xlate_id =
-            vnet_buffer2(b1)->pds_nat_data.xlate_idx;
-        actiondata.rx_xlate_id = 0;
-        actiondata.tx_xlate_id2 = 0;
-        actiondata.rx_xlate_id2 = 0;
-    } else if (vnet_buffer2(b1)->pds_nat_data.xlate_idx) {
-        /* static nat */
-        actiondata.tx_xlate_id =
-            vnet_buffer2(b1)->pds_nat_data.xlate_idx;
-        actiondata.rx_xlate_id =
-            vnet_buffer2(b1)->pds_nat_data.xlate_idx + 1;
-        actiondata.tx_xlate_id2 = 0;
-        actiondata.rx_xlate_id2 = 0;
-    }
-    if (vnet_buffer2(b1)->pds_nat_data.xlate_idx2) {
-        // Twice NAT
-        actiondata.tx_xlate_id2 =
-            vnet_buffer2(b1)->pds_nat_data.xlate_idx2;
-        actiondata.rx_xlate_id2 =
-            vnet_buffer2(b1)->pds_nat_data.xlate_idx2 + 1;
-    }
-    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b1)->pds_flow_data.packet_type));
-    session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
-    session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
-        (pds_is_flow_rx_vlan(b1) ?
-            (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
-
-    ctx1 = pds_flow_get_hw_ctx(session_id1);
-    ses_track_en = fm->con_track_en && (ctx1->proto == PDS_FLOW_PROTO_TCP);
-    actiondata.session_tracking_en = ses_track_en;
-    pds_packet_type_fill(ctx1, vnet_buffer(b1)->pds_flow_data.packet_type);
-    if (BIT_ISSET(vnet_buffer(b1)->pds_flow_data.flags, VPP_CPU_FLAGS_RX_PKT)) {
-        ctx1->iflow_rx = 1;
-    }
-
-    if (ses_track_en) {
-        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_state = FLOW_STATE_INIT;
-        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num = 
-            vnet_buffer(b1)->pds_flow_data.flow_hash + 1;
-        track_actiondata.action_u.session_track_session_track_info.iflow_tcp_win_size = 
-            vnet_buffer(b1)->pds_flow_data.tcp_win_sz;
-        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_state = FLOW_STATE_INIT;
-        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_ack_num = 
-            vnet_buffer(b1)->pds_flow_data.flow_hash + 1;
-        track_actiondata.action_u.session_track_session_track_info.rflow_tcp_win_size =
-            vnet_buffer(b1)->pds_flow_data.tcp_win_sz;
-    }
-
-    if (PREDICT_FALSE(pds_session_program(session_id1, (void *)&actiondata))) {
-        if (pds_is_flow_napt_en(b1)) {
-            *next1 = SESSION_PROG_NEXT_NAT_DROP;
-            vlib_buffer_advance(b1, pds_session_get_nat_drop_next_offset(b1));
-        } else {
-            *next1 = SESSION_PROG_NEXT_DROP;
-        }
-    } else if (ses_track_en &&
-               PREDICT_FALSE(session_track_program(session_id1, (void *)&track_actiondata))) {
-        *next1 = SESSION_PROG_NEXT_DROP; 
-    } else {
-skip_prog1:
-        *next1 = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
-                                            SESSION_PROG_NEXT_FWD_FLOW;
-        vlib_buffer_advance(b1, pds_session_get_advance_offset());
-    }
-
-    return;
-}
-
-always_inline void
 pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
                      u16 *next, u32 *counter)
 {
@@ -287,9 +108,6 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     pds_flow_hw_ctx_t *ctx;
     bool ses_track_en;
 
-    if (pds_is_flow_session_present(b)) {
-        goto skip_prog;
-    }
     //clib_memset(&actiondata, 0, sizeof(actiondata));
     if (pds_is_flow_napt_en(b)) {
         actiondata.tx_xlate_id =
@@ -321,20 +139,18 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         actiondata.rx_xlate_id2 =
             vnet_buffer2(b)->pds_nat_data.xlate_idx2 + 1;
     }
-    rewrite_flags = vec_elt_at_index(fm->rewrite_flags, (vnet_buffer(b)->pds_flow_data.packet_type));
+    ctx = pds_flow_get_hw_ctx(session_id);
+    rewrite_flags = vec_elt_at_index(fm->rewrite_flags,
+                                     ctx->packet_type);
     session_tx_rewrite_flags = rewrite_flags->tx_rewrite;
     session_rx_rewrite_flags = rewrite_flags->rx_rewrite |
         (pds_is_flow_rx_vlan(b) ?
             (RX_REWRITE_ENCAP_VLAN << RX_REWRITE_ENCAP_START) : 0);
-    ctx = pds_flow_get_hw_ctx(session_id);
     ses_track_en = fm->con_track_en && (ctx->proto == PDS_FLOW_PROTO_TCP);
-    actiondata.session_tracking_en = ses_track_en;    
-    pds_packet_type_fill(ctx, vnet_buffer(b)->pds_flow_data.packet_type);
-    if (BIT_ISSET(vnet_buffer(b)->pds_flow_data.flags, VPP_CPU_FLAGS_RX_PKT)) {
-        ctx->iflow_rx = 1;
-    }
-
-    if (ses_track_en) {
+    actiondata.session_tracking_en = ses_track_en;
+    actiondata.drop = PDS_FLOW_NH_DROP_GET(
+                      vnet_buffer(b)->pds_flow_data.nexthop);
+    if (ses_track_en && !pds_is_flow_session_present(b)) {
         track_actiondata.action_u.session_track_session_track_info.iflow_tcp_state = FLOW_STATE_INIT;
         track_actiondata.action_u.session_track_session_track_info.iflow_tcp_seq_num = 
             vnet_buffer(b)->pds_flow_data.flow_hash + 1;
@@ -345,7 +161,18 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
             vnet_buffer(b)->pds_flow_data.flow_hash + 1;
         track_actiondata.action_u.session_track_session_track_info.rflow_tcp_win_size =
             vnet_buffer(b)->pds_flow_data.tcp_win_sz;
+        if (PREDICT_FALSE(session_track_program(session_id,
+            (void *)&track_actiondata))) {
+            if (pds_is_flow_napt_en(b)) {
+                next[0] = SESSION_PROG_NEXT_NAT_DROP;
+                vlib_buffer_advance(b, pds_session_get_nat_drop_next_offset(b));
+            } else {
+                next[0] = SESSION_PROG_NEXT_DROP;
+            }
+            return;
+        }
     }
+
     if (PREDICT_FALSE(pds_session_program(session_id, (void *)&actiondata))) {
         if (pds_is_flow_napt_en(b)) {
             next[0] = SESSION_PROG_NEXT_NAT_DROP;
@@ -353,15 +180,11 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         } else {
             next[0] = SESSION_PROG_NEXT_DROP;
         }
-    } else if (ses_track_en &&
-               PREDICT_FALSE(session_track_program(session_id, (void *)&track_actiondata))) {
-        next[0] = SESSION_PROG_NEXT_DROP;
-    } else {
-skip_prog:
-        next[0] = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
-                                             SESSION_PROG_NEXT_FWD_FLOW;
-        vlib_buffer_advance(b, pds_session_get_advance_offset());
+        return;
     }
+    next[0] = pds_flow_age_supported() ? SESSION_PROG_NEXT_AGE_FLOW :
+              SESSION_PROG_NEXT_FWD_FLOW;
+    vlib_buffer_advance(b, pds_session_get_advance_offset());
 }
 
 always_inline int
@@ -865,6 +688,13 @@ pds_flow_packet_type_derive (vlib_buffer_t *p, p4_rx_cpu_hdr_t *hdr,
             }
         }
     }
+
+    // if existing session then retain packet type last known 
+    if (pds_is_flow_session_present(p)) {
+        pds_flow_hw_ctx_t *ctx =
+            pds_flow_get_hw_ctx(vnet_buffer(p)->pds_flow_data.ses_id);
+        pkt_type = ctx->packet_type;
+    }
     vnet_buffer(p)->pds_flow_data.packet_type = pkt_type;
     return;
 }
@@ -953,14 +783,15 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         vnet_buffer(p0)->pds_flow_data.tcp_flags = hdr0->tcp_flags;
         vnet_buffer(p0)->pds_flow_data.epoch = hdr0->epoch;
         nexthop = hdr0->nexthop_id;
-        if ((!hdr0->mapping_hit || hdr0->rx_packet) && !hdr0->drop) {
+        // program nexthop always if there is one with priority.
+        // p4 will decide if to take mapping or route.
+        if (nexthop) {
             PDS_FLOW_NH_TYPE_SET(nexthop, hdr0->nexthop_type);
             PDS_FLOW_NH_PRIO_SET(nexthop, hdr0->route_priority);
-            vnet_buffer(p0)->pds_flow_data.nexthop = nexthop;
-        } else {
-            PDS_FLOW_NH_DROP_SET(nexthop, hdr0->drop);
-            vnet_buffer(p0)->pds_flow_data.nexthop = nexthop;
         }
+        PDS_FLOW_NH_DROP_SET(nexthop, hdr0->drop);
+        vnet_buffer(p0)->pds_flow_data.nexthop = nexthop;
+
         vnet_buffer(p0)->l2_hdr_offset = hdr0->l2_offset;
         if (BIT_ISSET(hdr0->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
             vnet_buffer(p0)->l3_hdr_offset =
@@ -1029,14 +860,15 @@ next_pak:
         vnet_buffer(p1)->pds_flow_data.tcp_flags = hdr1->tcp_flags;
         vnet_buffer(p1)->pds_flow_data.epoch = hdr1->epoch;
         nexthop = hdr1->nexthop_id;
-        if ((!hdr1->mapping_hit || hdr1->rx_packet) && !hdr1->drop) {
+        // program nexthop always if there is one with priority.
+        // p4 will decide if to take mapping or route.
+        if (nexthop) {
             PDS_FLOW_NH_TYPE_SET(nexthop, hdr1->nexthop_type);
             PDS_FLOW_NH_PRIO_SET(nexthop, hdr1->route_priority);
-            vnet_buffer(p1)->pds_flow_data.nexthop = nexthop;
-        } else {
-            PDS_FLOW_NH_DROP_SET(nexthop, hdr1->drop);
-            vnet_buffer(p1)->pds_flow_data.nexthop = nexthop;
         }
+        PDS_FLOW_NH_DROP_SET(nexthop, hdr1->drop);
+        vnet_buffer(p1)->pds_flow_data.nexthop = nexthop;
+
         vnet_buffer(p1)->l2_hdr_offset = hdr1->l2_offset;
         if (BIT_ISSET(hdr1->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
             vnet_buffer(p1)->l3_hdr_offset =
@@ -1193,14 +1025,15 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer(p)->pds_flow_data.tcp_flags = hdr->tcp_flags;
     vnet_buffer(p)->pds_flow_data.epoch = hdr->epoch;
     nexthop = hdr->nexthop_id;
-    if ((!hdr->mapping_hit || hdr->rx_packet) && !hdr->drop) {
+    // program nexthop always if there is one with priority.
+    // p4 will decide if to take mapping or route.
+    if (nexthop) {
         PDS_FLOW_NH_TYPE_SET(nexthop, hdr->nexthop_type);
         PDS_FLOW_NH_PRIO_SET(nexthop, hdr->route_priority);
-        vnet_buffer(p)->pds_flow_data.nexthop = nexthop;
-    } else {
-        PDS_FLOW_NH_DROP_SET(nexthop, hdr->drop);
-        vnet_buffer(p)->pds_flow_data.nexthop = nexthop;
     }
+    PDS_FLOW_NH_DROP_SET(nexthop, hdr->drop);
+    vnet_buffer(p)->pds_flow_data.nexthop = nexthop;
+
     vnet_buffer(p)->l2_hdr_offset = hdr->l2_offset;
     if (BIT_ISSET(hdr->flags, VPP_CPU_FLAGS_IPV4_2_VALID)) {
         vnet_buffer(p)->l3_hdr_offset =

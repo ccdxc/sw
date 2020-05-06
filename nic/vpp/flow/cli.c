@@ -32,10 +32,28 @@ static const char *flow_state_str[] = {
 };
 
 static const char *pds_flow_pkt_type_str[] = {
-    "L2L",
-    "L2R",
-    "R2L",
-    "L2N/N2L"
+    "PDS_FLOW_L2L_INTRA_SUBNET",
+    "PDS_FLOW_L2L_INTER_SUBNET",
+    "PDS_FLOW_L2R_INTRA_SUBNET",
+    "PDS_FLOW_L2R_INTER_SUBNET",
+    "PDS_FLOW_L2N_OVERLAY_ROUTE_EN",
+    "PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT",
+    "PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT",
+    "PDS_FLOW_L2N_OVERLAY_ROUTE_DIS",
+    "PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT",
+    "PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAT",
+    "PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_TWICE_NAT",
+    "PDS_FLOW_L2N_INTRA_VCN_ROUTE",
+    "PDS_FLOW_R2L_INTRA_SUBNET",
+    "PDS_FLOW_R2L_INTER_SUBNET",
+    "PDS_FLOW_N2L_OVERLAY_ROUTE_EN",
+    "PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT",
+    "PDS_FLOW_N2L_OVERLAY_ROUTE_DIS",
+    "PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT",
+    "PDS_FLOW_N2L_OVERLAY_ROUTE_EN_SVC_NAT",
+    "PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_SVC_NAT",
+    "PDS_FLOW_N2L_INTRA_VCN_ROUTE",
+    "PDS_FLOW_PKT_TYPE_MAX"
 };
 
 static const char *pds_flow_state_str[] = {
@@ -757,6 +775,8 @@ pds_flow_session_info_show (vlib_main_t *vm, u32 ses_id, u8 detail)
                     pds_system_get_current_tick());
     vlib_cli_output(vm, "  %-21s: %s\n", "Session tracking",
                     session_info.session_tracking_en ? "Enabled" : "Disabled");
+    vlib_cli_output(vm, "  %-21s: %s\n", "Session action",
+                    session_info.drop ? "Drop" : "Allow");
     vlib_cli_output(vm, "  %-21s: %s\n", "Session state", 
                     pds_flow_state_str[session->flow_state]);
     vlib_cli_output(vm, "  %-21s: %d\n", "Keepalive retries",

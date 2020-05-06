@@ -6,7 +6,7 @@ feature:
     module      : networking
     runorder    : 10000 # keeping it last until flow clear is available in DOL
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
 

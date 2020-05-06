@@ -151,6 +151,7 @@ pds_session_get_info (uint32_t session_id, session_info_t *info)
            sizeof(info->timestamp));
     info->session_tracking_en =
         ses_data.action_u.session_session_info.session_tracking_en;
+    info->drop = ses_data.action_u.session_session_info.drop;
 }
 
 void

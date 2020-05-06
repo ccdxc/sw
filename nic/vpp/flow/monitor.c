@@ -38,7 +38,7 @@ flow_monitor_export_session (pds_flow_hw_ctx_t *session)
                                  session->rflow.table_id,
                                  session->rflow.primary,
                                  FLOW_EXPORT_REASON_ACTIVE,
-                                 session->host_origin);
+                                 session->iflow_rx);
     } else {
         ftl *table = (ftl *)pds_flow_get_table6_or_l2();
         ftl_export_with_handle(table, session->iflow.table_id,

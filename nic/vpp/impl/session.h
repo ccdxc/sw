@@ -21,7 +21,8 @@ typedef struct session_info_s {
     uint16_t rx_xlate_id2;
     uint16_t meter_id;
     uint64_t timestamp;
-    uint8_t session_tracking_en;
+    uint8_t session_tracking_en : 1;
+    uint8_t drop : 1;
 } session_info_t;
 
 typedef struct session_track_info_s {

@@ -294,9 +294,10 @@ pds_session_prog (vlib_main_t * vm,
 
             session_id0 = vnet_buffer(b0)->pds_flow_data.ses_id;
             session_id1 = vnet_buffer(b1)->pds_flow_data.ses_id;
-            pds_session_prog_x2(b0, b1,
-                                session_id0, session_id1,
+            pds_session_prog_x1(b0, session_id0,
                                 PDS_PACKET_NEXT_NODE_PTR(0),
+                                counter);
+            pds_session_prog_x1(b1, session_id1,
                                 PDS_PACKET_NEXT_NODE_PTR(1),
                                 counter);
         } PDS_PACKET_DUAL_LOOP_END;
@@ -710,7 +711,8 @@ pds_flow_program_hw_ip4 (vlib_buffer_t **b, u16 *next, u32 *counter)
                              r_sindex,
                              pds_flow_trans_proto(ftlv4_cache_get_proto(i)),
                              vnet_buffer2(p0)->pds_nat_data.vnic_id,
-                             true, pds_is_rx_pkt(p0));
+                             true, pds_is_rx_pkt(p0),
+                             vnet_buffer(p0)->pds_flow_data.packet_type);
         counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
         next[i/2] = pds_flow_prog_get_next_node();
         ftlv4_cache_log_session(i, i+1, FLOW_EXPORT_REASON_ADD);
@@ -782,7 +784,8 @@ pds_flow_program_hw_ip6_or_l2 (vlib_buffer_t **b, u16 *next, u32 *counter)
                              r_sindex,
                              pds_flow_trans_proto(ftlv6_cache_get_proto(i)),
                              vnet_buffer2(p0)->pds_nat_data.vnic_id,
-                             false, pds_is_rx_pkt(p0));
+                             false, pds_is_rx_pkt(p0),
+                             vnet_buffer(p0)->pds_flow_data.packet_type);
         counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
         next[i/2] = pds_flow_prog_get_next_node();
         ftlv6_cache_log_session(i, i+1, FLOW_EXPORT_REASON_ADD);
@@ -1218,39 +1221,6 @@ pds_session_update_data(u32 ses_id, u32 pindex, u32 sindex,
     }
 }
 
-void
-pds_packet_type_flags_build (void)
-{
-    pds_flow_main_t *fm = &pds_flow_main;
-
-    fm->packet_types = vec_new(u16, PDS_FLOW_PKT_TYPE_MAX);
-    vec_elt(fm->packet_types, PDS_FLOW_L2L_INTER_SUBNET) = PDS_PKT_TYPE_L2L;
-    vec_elt(fm->packet_types, PDS_FLOW_L2L_INTRA_SUBNET) = PDS_PKT_TYPE_L2L;
-    vec_elt(fm->packet_types, PDS_FLOW_L2R_INTER_SUBNET) = PDS_PKT_TYPE_L2R;
-    vec_elt(fm->packet_types, PDS_FLOW_L2R_INTRA_SUBNET) = PDS_PKT_TYPE_L2R;
-    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_EN) = PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAPT) =
-                                                        PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_EN_NAT) =
-                                                        PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS) = PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAPT) =
-                                                        PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_L2N_OVERLAY_ROUTE_DIS_NAT) =
-                                                        PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_L2N_INTRA_VCN_ROUTE) = PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_R2L_INTRA_SUBNET) = PDS_PKT_TYPE_R2L;
-    vec_elt(fm->packet_types, PDS_FLOW_R2L_INTER_SUBNET) = PDS_PKT_TYPE_R2L;
-    vec_elt(fm->packet_types, PDS_FLOW_N2L_OVERLAY_ROUTE_EN) = PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_N2L_OVERLAY_ROUTE_EN_NAT) =
-                                                            PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_N2L_OVERLAY_ROUTE_DIS) = PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_N2L_OVERLAY_ROUTE_DIS_NAT) =
-                                                            PDS_PKT_TYPE_N;
-    vec_elt(fm->packet_types, PDS_FLOW_N2L_INTRA_VCN_ROUTE) = PDS_PKT_TYPE_N;
-    return;
-}
-
 static clib_error_t *
 pds_flow_init (vlib_main_t * vm)
 {
@@ -1294,8 +1264,6 @@ pds_flow_init (vlib_main_t * vm)
     pds_flow_monitor_init();
 
     pds_flow_pipeline_init(vm);
-    pds_packet_type_flags_build();
-
     fm->flow_metrics_hdl = pdsa_flow_stats_init();
     
     /* Create the TCP keep alive packet template */
