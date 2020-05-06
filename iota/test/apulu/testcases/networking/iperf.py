@@ -43,24 +43,27 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    tc.num_pairs = 0
     for pair in tc.workload_pairs:
+        tc.num_pairs += 1
         api.Logger.info("iperf between %s and %s" % (pair[0].ip_address, pair[1].ip_address))
+
     tc.cmd_cookies, tc.resp = traffic_utils.iperfWorkloads(tc.workload_pairs, tc.iterators.ipaf, \
             tc.iterators.protocol, tc.iterators.pktsize, num_of_streams=tc.num_streams, sleep_time=10)
     return api.types.status.SUCCESS
 
 def Verify(tc):
-    res = traffic_utils.verifyIPerf(tc.cmd_cookies, tc.resp, min_bw=1)
+    res = traffic_utils.verifyIPerf(tc.cmd_cookies, tc.resp, min_bw=0.5)
     if res != api.types.status.SUCCESS:
         return res
     if tc.args.type != 'igw_only':
         return flow_utils.verifyFlows(tc.iterators.ipaf, tc.workload_pairs)
     elif tc.args.nat_type == 'napt' or tc.args.nat_type == 'napt_service':
         if tc.iterators.protocol == 'udp':
-            num_tcp_flows = 1
-            num_udp_flows = tc.num_streams
+            num_tcp_flows = 1 * tc.num_pairs
+            num_udp_flows = tc.num_streams * tc.num_pairs
         else:
-            num_tcp_flows = tc.num_streams + 1
+            num_tcp_flows = (tc.num_streams + 1) * tc.num_pairs
             num_udp_flows = 0
         post_stats = {}
         post_stats['icmp']= nat_pb.NatPbStats()
@@ -74,34 +77,21 @@ def Verify(tc):
 
         if post_stats['tcp'].InUseCount - tc.nat_pre_stats['tcp'].InUseCount != num_tcp_flows:
             api.Logger.error(f"NAT in use tcp count did not go up as expected {tc.nat_pre_stats['tcp'].InUseCount}:{post_stats['tcp'].InUseCount}:{num_tcp_flows}")
-            #return api.types.status.FAILURE
-            #To be fixed by accounting for new workloads
-            return api.types.status.SUCCESS
+            return api.types.status.FAILURE
 
         if post_stats['udp'].InUseCount - tc.nat_pre_stats['udp'].InUseCount != num_udp_flows:
             api.Logger.error(f"NAT in use udp count did not go up as expected {tc.nat_pre_stats['udp'].InUseCount}:{post_stats['udp'].InUseCount}:{num_udp_flows}")
-            #return api.types.status.FAILURE
-            #To be fixed by accounting for new workloads
-            return api.types.status.SUCCESS
+            return api.types.status.FAILURE
 
         if post_stats['tcp'].SessionCount - tc.nat_pre_stats['tcp'].SessionCount != num_tcp_flows:
             api.Logger.error(f"NAT session tcp count did not go up as expected {tc.nat_pre_stats['tcp'].SessionCount}:{post_stats['tcp'].SessionCount}:{num_tcp_flows}")
-            #return api.types.status.FAILURE
-            #To be fixed by accounting for new workloads
-            return api.types.status.SUCCESS
+            return api.types.status.FAILURE
 
         if post_stats['udp'].SessionCount - tc.nat_pre_stats['udp'].SessionCount != num_udp_flows:
             api.Logger.error(f"NAT session udp count did not go up as expected {tc.nat_pre_stats['udp'].SessionCount}:{post_stats['udp'].SessionCount}:{num_udp_flows}")
-            #return api.types.status.FAILURE
-            #To be fixed by accounting for new workloads
-            return api.types.status.SUCCESS
+            return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 
 def Teardown(tc):
-    # some issue running iperf in iota, previous test iperf flows still visible
-    # inspite of clear flows and yields wrong NAT stats. Cannot reproduce when
-    # running manually. For now don't clear flows after NAPT tests
-    if tc.args.type != 'igw_only':
-        return flow_utils.clearFlowTable(tc.workload_pairs)
-    return api.types.status.SUCCESS
+    return flow_utils.clearFlowTable(tc.workload_pairs)

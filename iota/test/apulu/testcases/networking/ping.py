@@ -40,7 +40,9 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
+    tc.num_pairs = 0
     for pair in tc.workload_pairs:
+        tc.num_pairs += 1
         api.Logger.info("pinging between %s and %s" % (pair[0].ip_address, pair[1].ip_address))
     tc.cmd_cookies, tc.resp = traffic_utils.pingWorkloads(tc.workload_pairs, tc.iterators.ipaf, tc.iterators.pktsize)
     return api.types.status.SUCCESS
@@ -60,17 +62,13 @@ def Verify(tc):
         if GlobalOptions.dryrun:
             return api.types.status.SUCCESS
 
-        if post_stats.InUseCount - tc.nat_pre_stats.InUseCount != 1:
+        if post_stats.InUseCount - tc.nat_pre_stats.InUseCount != tc.num_pairs:
             api.Logger.error(f"NAT in use count did not go up as expected {tc.nat_pre_stats.InUseCount}:{post_stats.InUseCount}")
-            #return api.types.status.FAILURE
-            #To be fixed by accounting for new workloads
-            return api.types.status.SUCCESS
+            return api.types.status.FAILURE
 
-        if post_stats.SessionCount - tc.nat_pre_stats.SessionCount != 1:
+        if post_stats.SessionCount - tc.nat_pre_stats.SessionCount != tc.num_pairs:
             api.Logger.error(f"NAT session count did not go up as expected {tc.nat_pre_stats.SessionCount}:{post_stats.SessionCount}")
-            #return api.types.status.FAILURE
-            #To be fixed by accounting for new workloads
-            return api.types.status.SUCCESS
+            return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 
