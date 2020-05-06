@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api"
-	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -12,12 +11,12 @@ import (
 )
 
 type macMetricsXlate struct {
-	portToInterfaceMap map[uint32]*netproto.Interface // maintains portID to netproto.Interface map. Caching this value is ok as the mappings don't change after init
+	portToInterfaceMap map[uint32]string // maintains portID to name
 }
 
 func newMacMetricsTranslator() *macMetricsXlate {
 	m := &macMetricsXlate{
-		portToInterfaceMap: make(map[uint32]*netproto.Interface),
+		portToInterfaceMap: make(map[uint32]string),
 	}
 	return m
 }
@@ -26,12 +25,6 @@ func newMacMetricsTranslator() *macMetricsXlate {
 func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 	portID, ok := key.(uint32)
 	if ok {
-		nodeUUID := ""
-		nslist := delphiProto.DistributedServiceCardStatusList(delphiClient)
-		for _, ns := range nslist {
-			nodeUUID = ns.GetDSCName()
-		}
-
 		// Check cache.
 		_, found := n.portToInterfaceMap[portID]
 		if !found {
@@ -44,12 +37,15 @@ func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 
 			for _, intf := range interfaces {
 				if intf.Spec.Type == "UPLINK_ETH" || intf.Spec.Type == "UPLINK_MGMT" {
-					n.portToInterfaceMap[portID] = &intf
+					if intf.Status.IFUplinkStatus.PortID == portID {
+						n.portToInterfaceMap[portID] = intf.GetName()
+
+					}
 				}
 			}
 		}
 
-		intf, ok := n.portToInterfaceMap[portID]
+		intfName, ok := n.portToInterfaceMap[portID]
 		if !ok {
 			log.Errorf("Failed to find the interface with port ID %d in DB: %v", portID, n.portToInterfaceMap)
 			return nil
@@ -58,7 +54,8 @@ func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
 		return &api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      fmt.Sprintf("%s-%s", nodeUUID, intf.Name)}
+			Name:      intfName,
+		}
 
 	}
 	return nil
