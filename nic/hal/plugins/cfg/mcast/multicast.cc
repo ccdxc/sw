@@ -6,6 +6,7 @@
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/include/base.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/hal/hal.hpp"
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
@@ -14,7 +15,6 @@
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 
-extern char *macaddr2str (const mac_addr_t mac_addr);
 
 namespace hal {
 

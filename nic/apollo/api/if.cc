@@ -298,6 +298,26 @@ if_entry::state(void) {
     return PDS_IF_STATE_NONE;
 }
 
+port_type_t
+if_entry::port_type(void) {
+    sdk_ret_t ret;
+    if_entry *eth_if;
+    port_args_t port_args = { 0 };
+
+    // get the eth interface corresponding to this interface entry
+    eth_if = if_entry::eth_if((if_entry *)this);
+    if (eth_if == NULL) {
+        return port_type_t::PORT_TYPE_NONE;
+    }
+    // and get the port type of the eth interface
+    ret = sdk::linkmgr::port_get(eth_if->port_info(), &port_args);
+    if (likely(ret == SDK_RET_OK)) {
+        return port_args.port_type;
+    }
+    PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", ifindex_, ret);
+    return port_type_t::PORT_TYPE_NONE;
+}
+
 sdk_ret_t
 if_entry::read(pds_if_info_t *info) {
     sdk_ret_t ret;
@@ -355,6 +375,36 @@ if_entry::eth_if(if_entry *intf) {
         PDS_TRACE_ERR("Unknown interface type %u", intf->type());
     }
     return NULL;
+}
+
+std::string
+if_entry::name(void) {
+    std::string system_mac;
+    std::string separator = "-";
+    std::string intf_type, intf_id;
+
+    // NOTE: keep in sync with GetIfName() of dscagent
+    system_mac = macaddr2str(api::g_pds_state.system_mac(), true);
+    if (this->port_type() == port_type_t::PORT_TYPE_MGMT) {
+        intf_type = "mgmt";
+    } else {
+        intf_type = pds_if_type_to_str(type_);
+    }
+
+    switch (type_) {
+    case PDS_IF_TYPE_ETH:
+        intf_id = eth_ifindex_to_ifid_str(ifindex_, separator);
+        break;
+    case PDS_IF_TYPE_L3:
+    case PDS_IF_TYPE_LOOPBACK:
+        intf_id = std::to_string(IFINDEX_TO_IFID(ifindex_));
+        break;
+    default:
+        intf_id = "none";
+        break;
+    }
+
+    return system_mac + separator + intf_type + separator + intf_id;
 }
 
 }    // namespace api

@@ -68,6 +68,9 @@ enum {
 #define IFINDEX_TO_IFTYPE(ifindex_)         \
             ((ifindex_ >> IF_TYPE_SHIFT) & IF_TYPE_MASK)
 
+#define IFINDEX_TO_IFID(ifindex_)         \
+            ((ifindex_) & ~(IF_TYPE_MASK << IF_TYPE_SHIFT))
+
 #define ETH_IFINDEX_TO_SLOT(ifindex_)           \
             ((ifindex_ >> ETH_IF_SLOT_SHIFT) & ETH_IF_SLOT_MASK)
 
@@ -125,18 +128,22 @@ ifindex_to_type_str (uint32_t ifindex) {
 }
 
 static inline std::string
+eth_ifindex_to_ifid_str (uint32_t ifindex, std::string sep="/")
+{
+    uint32_t slot, parent_port;
+
+    slot = ETH_IFINDEX_TO_SLOT(ifindex);
+    parent_port = ETH_IFINDEX_TO_PARENT_PORT(ifindex);
+    return std::to_string(slot) + sep + std::to_string(parent_port);
+}
+
+static inline std::string
 eth_ifindex_to_str (uint32_t ifindex)
 {
-    uint32_t slot;
-    uint32_t parent_port;
-
-    if (ifindex != IFINDEX_INVALID) {
-        slot = ETH_IFINDEX_TO_SLOT(ifindex);
-        parent_port = ETH_IFINDEX_TO_PARENT_PORT(ifindex);
-        return ifindex_to_type_str(ifindex) + std::to_string(slot) + "/"
-                                            + std::to_string(parent_port);
+    if (ifindex == IFINDEX_INVALID) {
+        return "-";
     }
-    return "-";
+    return ifindex_to_type_str(ifindex) + eth_ifindex_to_ifid_str(ifindex);
 }
 
 #endif    // __IF_HPP__

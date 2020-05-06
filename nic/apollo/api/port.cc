@@ -109,8 +109,7 @@ port_event_cb (port_event_info_t *port_event_info)
         alert = operd::alerts::LINK_UP;
     }
     operd::alerts::alert_recorder::get()->alert(
-        alert, "Port %s", key.str());
-
+        alert, "Port %s, key %s", intf->name().c_str(), key.str());
 }
 
 bool

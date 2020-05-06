@@ -92,16 +92,22 @@ is_mac_set (mac_addr_t mac_addr)
 // thread safe helper to stringify MAC address
 //------------------------------------------------------------------------------
 static inline char *
-macaddr2str (const mac_addr_t mac_addr)
+macaddr2str (const mac_addr_t mac_addr, bool dotted_notation=false)
 {
     static thread_local char       macaddr_str[4][20];
     static thread_local uint8_t    macaddr_str_next = 0;
     char                           *buf;
 
     buf = macaddr_str[macaddr_str_next++ & 0x3];
-    snprintf(buf, 20, "%02x:%02x:%02x:%02x:%02x:%02x",
-             mac_addr[0], mac_addr[1], mac_addr[2],
-             mac_addr[3], mac_addr[4], mac_addr[5]);
+    if (dotted_notation) {
+        snprintf(buf, 20, "%02x%02x.%02x%02x.%02x%02x",
+                 mac_addr[0], mac_addr[1], mac_addr[2],
+                 mac_addr[3], mac_addr[4], mac_addr[5]);
+    } else {
+        snprintf(buf, 20, "%02x:%02x:%02x:%02x:%02x:%02x",
+                 mac_addr[0], mac_addr[1], mac_addr[2],
+                 mac_addr[3], mac_addr[4], mac_addr[5]);
+    }
     return buf;
 }
 

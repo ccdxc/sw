@@ -58,6 +58,24 @@ ifindex_to_pds_if_type (pds_ifindex_t ifindex)
     }
 }
 
+static inline std::string
+pds_if_type_to_str (pds_if_type_t iftype)
+{
+    switch (iftype) {
+    case PDS_IF_TYPE_ETH:
+    case PDS_IF_TYPE_UPLINK:
+        return "uplink";
+    case PDS_IF_TYPE_UPLINK_PC:
+        return "uplink-pc";
+    case PDS_IF_TYPE_L3:
+        return "l3";
+    case PDS_IF_TYPE_LOOPBACK:
+        return "lo";
+    default:
+        return "none";
+    }
+}
+
 /// \brief interface admin/operational state
 typedef enum pds_if_state_e {
     PDS_IF_STATE_NONE = 0,

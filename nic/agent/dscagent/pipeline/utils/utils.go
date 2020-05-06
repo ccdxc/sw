@@ -349,6 +349,7 @@ func getIfTypeStr(ifIndex uint32, subType string) (intfType string, err error) {
 
 // GetIfName given encoded interface index and its type, form interface name that consists of system MAC
 func GetIfName(systemMac string, ifIndex uint32, subType string) (ifName string, err error) {
+	// NOTE: keep in sync with if_entry::name() of HAL
 	ifTypeStr, err := getIfTypeStr(ifIndex, subType)
 	if err != nil {
 		return "", err

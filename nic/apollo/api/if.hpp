@@ -247,6 +247,14 @@ public:
     /// \return interface operational state
     pds_if_state_t state(void);
 
+    /// \brief    return port type
+    /// \return interface port type
+    port_type_t port_type(void);
+
+    /// \brief    return interface name
+    /// \return user consumable interface name with system mac
+    std::string name(void);
+
     /// \brief    return eth interface entry corresponding to the given
     ///           interface
     /// \param[in] intf    interface instance
