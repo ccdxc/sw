@@ -37,6 +37,7 @@ action nacl_redirect_to_arm(nexthop_type, nexthop_id, copp_policer_id, data) {
 table nacl {
     reads {
         vnic_metadata.vnic_id               : ternary;
+        key_metadata.flow_lkp_id            : ternary;
         key_metadata.ktype                  : ternary;
         key_metadata.src                    : ternary;
         key_metadata.dst                    : ternary;
