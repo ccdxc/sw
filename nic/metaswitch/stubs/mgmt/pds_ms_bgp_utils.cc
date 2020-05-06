@@ -199,6 +199,9 @@ update_bgp_route_map_table (NBB_ULONG correlator)
     NBB_ULONG len = 0;
 
     auto state_ctxt = state_t::thread_context();
+    // Disabling the EVI RT in the ORF route-map since we are doing the
+    // outbound filtering at the RR based on the VRF RT
+#if 0
     // walk-through subnets
     state_ctxt.state()->subnet_store().
         walk([&str] (ms_bd_id_t bd_id, subnet_obj_t& subnet_obj) -> bool {
@@ -208,6 +211,7 @@ update_bgp_route_map_table (NBB_ULONG correlator)
                     });
                 return true;
                 });
+#endif
     // walk-through vpcs
     state_ctxt.state()->vpc_store().
         walk([&str] (ms_vrf_id_t vrf_id, vpc_obj_t& vpc_obj) -> bool {
