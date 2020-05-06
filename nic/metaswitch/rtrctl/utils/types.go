@@ -696,6 +696,8 @@ type ShadowBGPPeerAFSpec struct {
 	PeerAddr  string
 	Afi       string
 	Safi      string
+	LocalPort uint32
+	PeerPort  uint32
 }
 
 // NewBGPPeerAfSpec creates a shadow of BGPPeerAFSpec
@@ -712,20 +714,30 @@ func NewBGPPeerAfSpec(in *pds.BGPPeerAfSpec) ShadowBGPPeerAFSpec {
 		PeerAddr:      PdsIPToString(in.PeerAddr),
 		Afi:           strings.TrimPrefix(in.Afi.String(), "BGP_AFI_"),
 		Safi:          strings.TrimPrefix(in.Safi.String(), "BGP_SAFI_"),
+		PeerPort:      in.RemotePort,
+		LocalPort:     in.LocalPort,
 	}
 }
 
 // ShadowBGPPeerAfStatus shadows the BGPPeerAfStatus for CLI purposes
 type ShadowBGPPeerAFStatus struct {
 	*pds.BGPPeerAfStatus
-	UpdGrp uint32
+	UpdGrp           uint32
+	LocalAddrScopeId uint32
+	RtRefresh        bool
+	AddPathCapNeg    string
+	ReflectorClient  string
 }
 
 // NewBGPPeerAfStatus creates a shadow of BGPPeerAF
 func NewBGPPeerAfStatus(in *pds.BGPPeerAfStatus) ShadowBGPPeerAFStatus {
 	return ShadowBGPPeerAFStatus{
-		BGPPeerAfStatus: in,
-		UpdGrp:          in.UpdateGroup,
+		BGPPeerAfStatus:  in,
+		LocalAddrScopeId: in.LocalAddrScopeId,
+		RtRefresh:        in.RtRefresh,
+		AddPathCapNeg:    strings.TrimPrefix(in.AddPathCapNeg.String(), "BGP_ADD_PATH_SR_"),
+		ReflectorClient:  strings.TrimPrefix(in.ReflectorClient.String(), "BGP_PEER_RR_"),
+		UpdGrp:           in.UpdateGroup,
 	}
 }
 

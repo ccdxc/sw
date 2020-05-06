@@ -281,10 +281,17 @@ const (
 	bgpPeerAFFmt    = "%-40s %-16v %-16v %-16v"
 	bgpPeerAFDetStr = `BGP Peer Address Family
 ------------------------------------
-UUID            : %s
-AFI/SAFI        : [ %v/%v ]
-Remote Address  : %v
-Update Group    : %v
+UUID                 : %s
+AFI/SAFI             : [ %v/%v ]
+Remote Address       : %v
+Remote Port          : %v
+Local Address        : %v
+Local Port           : %v
+Local Addr Scope Id  : %v
+Route Refresh        : %v
+Negotiated Path Cap  : %v
+Reflector Client     : %v
+Update Group         : %v
 ------------------------------------
 `
 )
@@ -322,7 +329,7 @@ func bgpPeersAfShowCmdHandler(cmd *cobra.Command, args []string) error {
 				afs = append(afs, afp)
 			} else {
 				if doDetail {
-					fmt.Printf(bgpPeerAFDetStr, afp.Spec.Id, afp.Spec.Afi, afp.Spec.Safi, afp.Spec.PeerAddr, afp.Status.UpdGrp)
+					fmt.Printf(bgpPeerAFDetStr, afp.Spec.Id, afp.Spec.Afi, afp.Spec.Safi, afp.Spec.PeerAddr, afp.Spec.PeerPort, afp.Spec.LocalAddr, afp.Spec.LocalPort, afp.Status.LocalAddrScopeId, afp.Status.RtRefresh, afp.Status.AddPathCapNeg, afp.Status.ReflectorClient, afp.Status.UpdGrp)
 				} else {
 					fmt.Printf(bgpPeerAFFmt, afp.Spec.Id, afp.Spec.PeerAddr, afp.Spec.Afi, afp.Spec.Safi)
 					fmt.Println("")

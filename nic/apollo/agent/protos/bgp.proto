@@ -63,6 +63,7 @@ enum BGPSafi {
 enum BGPPeerRRClient {
   BGP_PEER_RR_NONE          = 0;
   BGP_PEER_RR_CLIENT        = 1;
+  BGP_PEER_RR_MESHED_CLIENT = 2;
 }
 
 // BGP peer last_state
@@ -368,25 +369,48 @@ message BGPPeerGetRequest {
 // BGP peer AF configurations
 message BGPPeerAfSpec {
   // unique key/identifier of peer AF config
-  bytes           Id          = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes           Id               = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // BGP local IP address
-  types.IPAddress LocalAddr   = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.IPAddress LocalAddr        = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // BGP peer IP address
-  types.IPAddress PeerAddr    = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  types.IPAddress PeerAddr         = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // BGP address family
-  BGPAfi          Afi         = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  BGPAfi          Afi              = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // BGP sub-address family
-  BGPSafi         Safi        = 5 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  BGPSafi         Safi             = 5 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // enforce this router to set self as next-hop for advertised routes
-  bool            NexthopSelf = 6;
+  bool            NexthopSelf      = 6;
   // originate a default route to this peer
-  bool            DefaultOrig = 7;
+  bool            DefaultOrig      = 7;
+  // The local port configured for the peering session
+  uint32          LocalPort        = 8;
+  // The remote port configured for the peering session
+  uint32          RemotePort       = 9;
+  // For a peer identified by a link-local IPv6 addresses, this is the scope ID of bgpPeerLocalAddr and bgpPeerRemoteAddr. For a peer identified only by interface (bgpPeerLocalAddr and bgpPeerRemoteAddr are both zero), this is the interface index of the local point-to-point interface through which the peer is reachable
+  uint32          LocalAddrScopeId = 10;
+}
+
+enum BgpAddPathCapNegCap {
+  BGP_ADD_PATH_SR_DISABLE = 0;
+  BGP_ADD_PATH_SR_RECEIVE = 1;
+  BGP_ADD_PATH_SR_SEND    = 2;
+  BGP_ADD_PATH_SR_BOTH    = 3;
+  BGP_ADD_PATH_SR_INHERIT = 4;
+  BGP_ADD_PATH_SR_UNKNOWN = 5;
 }
 
 // BGP peer AF status
 message BGPPeerAfStatus {
   // BGP The index of the update group that the peer is a member of for this AFI/SAFI
-  uint32 UpdateGroup = 1;
+  uint32              UpdateGroup      = 1;
+  // For a peer identified by a link-local IPv6 addresses, this is the scope ID of bgpPeerLocalAddr and bgpPeerRemoteAddr. For a peer
+  uint32              LocalAddrScopeId = 2;
+  // send a Route Refresh request to the peer for this AFI/SAFI.
+  bool                RtRefresh        = 3;
+  //The BGP additional path capability negotiated with this peer for this AFI/SAFI.
+  BgpAddPathCapNegCap AddPathCapNeg    = 4;
+  // This value indicates whether the given peer is a reflector client of this router for this AFI/SAFI, or not
+  BGPPeerRRClient     ReflectorClient  = 5;
 }
 
 // BGP peer AF object

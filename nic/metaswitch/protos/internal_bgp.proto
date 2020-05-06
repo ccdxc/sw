@@ -64,6 +64,7 @@ enum BGPSafi {
 enum BGPPeerRRClient {
   BGP_PEER_RR_NONE          = 0;
   BGP_PEER_RR_CLIENT        = 1;
+  BGP_PEER_RR_MESHED_CLIENT = 2;
 }
 
 // BGP peer last_state
@@ -404,23 +405,38 @@ message BGPPeerAfSpec {
   };
 
   // unique key/identifier of peer AF config
-  bytes           Id          = 1;
+  bytes           Id               = 1;
   // BGP local IP address
-  types.IPAddress LocalAddr   = 2 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_LOCAL_ADD_TYP_INDEX", GetKeyOidAddrIndex: "AMB_BGP_PAS_LOCAL_ADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_BGP_PAS_LOCAL_ADD_TYP_INDEX"}];
+  types.IPAddress LocalAddr        = 2 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_LOCAL_ADD_TYP_INDEX", GetKeyOidAddrIndex: "AMB_BGP_PAS_LOCAL_ADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_BGP_PAS_LOCAL_ADD_TYP_INDEX"}];
   // BGP peer IP address
-  types.IPAddress PeerAddr    = 3 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_REMOTE_ADD_TYP_IX", GetKeyOidAddrIndex: "AMB_BGP_PAS_REMOTE_ADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_BGP_PAS_REMOTE_ADD_TYP_IX"}];
+  types.IPAddress PeerAddr         = 3 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_REMOTE_ADD_TYP_IX", GetKeyOidAddrIndex: "AMB_BGP_PAS_REMOTE_ADDR_INDEX", GetKeyOidAddrTypeIndex: "AMB_BGP_PAS_REMOTE_ADD_TYP_IX"}];
   // BGP address family
-  BGPAfi          Afi         = 4 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX"}];
+  BGPAfi          Afi              = 4 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX"}];
   // BGP sub-address family
-  BGPSafi         Safi        = 5 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX"}];
+  BGPSafi         Safi             = 5 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX"}];
   // enforce this router to set self as next-hop for advertised routes
-  bool            NexthopSelf = 6 [(venice.pdsaFields) = {Field: "next_hop_self"}];
+  bool            NexthopSelf      = 6 [(venice.pdsaFields) = {Field: "next_hop_self"}];
   // originate a default route to this peer
-  bool            DefaultOrig = 7 [(venice.pdsaFields) = {Field: "originate_default"}];
+  bool            DefaultOrig      = 7 [(venice.pdsaFields) = {Field: "originate_default"}];
+  // The local port configured for the peering session
+  uint32          LocalPort        = 8 [(venice.pdsaFields) = {Field: "local_port", SetKeyOidIndex: "AMB_BGP_PAS_LOCAL_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PAS_LOCAL_PORT_INDEX"}];
+  // The remote port configured for the peering session
+  uint32          RemotePort       = 9 [(venice.pdsaFields) = {Field: "remote_port", SetKeyOidIndex: "AMB_BGP_PAS_REMOTE_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PAS_REMOTE_PORT_INDEX"}];
+  // For a peer identified by a link-local IPv6 addresses, this is the scope ID of bgpPeerLocalAddr and bgpPeerRemoteAddr. For a peer identified only by interface (bgpPeerLocalAddr and bgpPeerRemoteAddr are both zero), this is the interface index of the local point-to-point interface through which the peer is reachable
+  uint32          LocalAddrScopeId = 10 [(venice.pdsaFields) = {Field: "local_addr_scope_id", SetKeyOidIndex: "AMB_BGP_PAS_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PAS_SCOPE_ID_INDEX"}];
 
   // internal only
   // enable/disable address families. this field is internally mapped with create/delete request
   bool Disable = 1000 [(venice.pdsaFields) = {Field: "disable_afi_safi", IsInternalField: true}];
+}
+
+enum BgpAddPathCapNegCap {
+  BGP_ADD_PATH_SR_DISABLE = 0;
+  BGP_ADD_PATH_SR_RECEIVE = 1;
+  BGP_ADD_PATH_SR_SEND    = 2;
+  BGP_ADD_PATH_SR_BOTH    = 3;
+  BGP_ADD_PATH_SR_INHERIT = 4;
+  BGP_ADD_PATH_SR_UNKNOWN = 5;
 }
 
 // BGP peer AF status
@@ -432,7 +448,15 @@ message BGPPeerAfStatus {
     SpecMsg: "BGPPeerAfSpec"
   };
   // BGP The index of the update group that the peer is a member of for this AFI/SAFI
-  uint32 UpdateGroup = 1 [(venice.pdsaFields) = {Field: "update_group"}];
+  uint32              UpdateGroup      = 1 [(venice.pdsaFields) = {Field: "update_group"}];
+  // For a peer identified by a link-local IPv6 addresses, this is the scope ID of bgpPeerLocalAddr and bgpPeerRemoteAddr. For a peer identified only by interface (bgpPeerLocalAddr and bgpPeerRemoteAddr are both zero), this is the interface index of the local point-to-point interface through which the peer is reachable
+  uint32              LocalAddrScopeId = 2 [(venice.pdsaFields) = {Field: "local_addr_scope_id"}];
+  // send a Route Refresh request to the peer for this AFI/SAFI.
+  bool                RtRefresh        = 3 [(venice.pdsaFields) = {Field: "rt_refresh"}];
+  //The BGP additional path capability negotiated with this peer for this AFI/SAFI.
+  BgpAddPathCapNegCap AddPathCapNeg    = 4 [(venice.pdsaFields) = {Field: "add_path_cap_neg"}];
+  // This value indicates whether the given peer is a reflector client of this router for this AFI/SAFI, or not
+  BGPPeerRRClient     ReflectorClient  = 5 [(venice.pdsaFields) = {Field: "reflector_client"}];
 }
 
 // BGP peer AF object
