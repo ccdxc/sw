@@ -79,7 +79,7 @@ ptd_read_counters (int verbose)
     int wr_ff_full = 0;
     int pkt_ff_empty = 0;
     int pkt_ff_full = 0;
-    int polls = 0;
+    int polls = 100;
 
     uint32_t cnt[4];
 
@@ -326,13 +326,13 @@ txs_read_counters (int verbose)
     }
 
     // TxDMA PHVs
-    pal_reg_rd32w(ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_OFFSET,
+    pal_reg_rd32w(ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_BYTE_OFFSET,
 		  cnt_txdma, 2);
     asic->txdma_phvs = ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_CNT_SCH_TXDMA_SENT_0_2_VAL_31_0_GET(cnt_txdma[0]) +
                  ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_CNT_SCH_TXDMA_SENT_1_2_VAL_63_32_GET(cnt_txdma[1]);
 
     // SxDMA PHVs
-    pal_reg_rd32w(ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_OFFSET,
+    pal_reg_rd32w(ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_BYTE_OFFSET,
 		  cnt_sxdma, 2);
     asic->sxdma_phvs = ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_CNT_SCH_SXDMA_SENT_0_2_VAL_31_0_GET(cnt_sxdma[0]) +
                  ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_CNT_SCH_SXDMA_SENT_1_2_VAL_63_32_GET(cnt_sxdma[1]);
@@ -346,20 +346,20 @@ txs_read_debug_counters (int verbose)
     uint32_t cnt, enable, lif;
     uint32_t cfg[3];
     int i;
-    int stride = ELB_TXS_CSR_CNT_DOORBELL_DEBUG1_OFFSET - ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_OFFSET;
+    int stride = ELB_TXS_CSR_CNT_DOORBELL_DEBUG1_BYTE_OFFSET - ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_BYTE_OFFSET;
 
     for(i=0; i<4; i++) {
-      pal_reg_rd32w(ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_OFFSET + (i * stride), &cnt, 1);
+      pal_reg_rd32w(ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_BYTE_OFFSET + (i * stride), &cnt, 1);
       asic->cnt_doorbell[i] = cnt;
-      pal_reg_rd32w(ELB_TXS_CSR_CNT_TXDMA_DEBUG0_OFFSET + (i * stride), &cnt, 1);
+      pal_reg_rd32w(ELB_TXS_CSR_CNT_TXDMA_DEBUG0_BYTE_OFFSET + (i * stride), &cnt, 1);
       asic->cnt_txdma[i] = cnt;
-      pal_reg_rd32w(ELB_TXS_CSR_CNT_SXDMA_DEBUG0_OFFSET + (i * stride), &cnt, 1);
+      pal_reg_rd32w(ELB_TXS_CSR_CNT_SXDMA_DEBUG0_BYTE_OFFSET + (i * stride), &cnt, 1);
       asic->cnt_sxdma[i] = cnt;
     }
 
-    stride = ELB_TXS_CSR_CFG_DOORBELL_DEBUG1_OFFSET - ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_OFFSET;
+    stride = ELB_TXS_CSR_CFG_DOORBELL_DEBUG1_BYTE_OFFSET - ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_BYTE_OFFSET;
     for(i=0; i<4; i++) {
-      pal_reg_rd32w(ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_OFFSET + (i * stride), cfg, 3);
+      pal_reg_rd32w(ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_BYTE_OFFSET + (i * stride), cfg, 3);
       enable = ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_ENABLE_GET(cfg[0]);
       lif = ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_LIF_START_GET(cfg[0]);
       asic->cnt_lif[i] = lif;
@@ -373,9 +373,9 @@ txs_reset_counters (int verbose)
     uint32_t zero[2] = {0};
 
     // TXS counter reset
-    pal_reg_wr32w(ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_OFFSET,
+    pal_reg_wr32w(ELB_TXS_CSR_CNT_SCH_TXDMA_SENT_BYTE_OFFSET,
 		  zero, 2);
-    pal_reg_wr32w(ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_OFFSET,
+    pal_reg_wr32w(ELB_TXS_CSR_CNT_SCH_SXDMA_SENT_BYTE_OFFSET,
 		  zero, 2);
 
 }
@@ -385,12 +385,12 @@ txs_reset_debug_counters (int verbose)
 {
     uint32_t zero = 0;
     int i;
-    int stride = ELB_TXS_CSR_CNT_DOORBELL_DEBUG1_OFFSET - ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_OFFSET;
+    int stride = ELB_TXS_CSR_CNT_DOORBELL_DEBUG1_BYTE_OFFSET - ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_BYTE_OFFSET;
 
     for(i=0; i<4; i++) {
-      pal_reg_wr32w(ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_OFFSET + (i * stride), &zero, 1);
-      pal_reg_wr32w(ELB_TXS_CSR_CNT_TXDMA_DEBUG0_OFFSET + (i * stride), &zero, 1);
-      pal_reg_wr32w(ELB_TXS_CSR_CNT_SXDMA_DEBUG0_OFFSET + (i * stride), &zero, 1);
+      pal_reg_wr32w(ELB_TXS_CSR_CNT_DOORBELL_DEBUG0_BYTE_OFFSET + (i * stride), &zero, 1);
+      pal_reg_wr32w(ELB_TXS_CSR_CNT_TXDMA_DEBUG0_BYTE_OFFSET + (i * stride), &zero, 1);
+      pal_reg_wr32w(ELB_TXS_CSR_CNT_SXDMA_DEBUG0_BYTE_OFFSET + (i * stride), &zero, 1);
     }
 }
 
@@ -415,7 +415,7 @@ txs_program_debug_counters (int verbose)
                       cnt, 8);
         valid = ELB_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ENTRY_0_8_VLD_GET(cnt[0]);
         if (!valid) {
-            continue;
+	  continue;
         }
 	asic->cnt_lif[i] = lif; // chose next debug LIF to observe
 	asic->cnt_enable[i] = 1;
@@ -423,19 +423,19 @@ txs_program_debug_counters (int verbose)
 	else i++;
     }
     // Program the debug count registers
-    stride = ELB_TXS_CSR_CFG_DOORBELL_DEBUG1_OFFSET - ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_OFFSET;
+    stride = ELB_TXS_CSR_CFG_DOORBELL_DEBUG1_BYTE_OFFSET - ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_BYTE_OFFSET;
     for(i=0; i<4; i++) {
       // DB
       cfg[0] = ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_ENABLE_SET(asic->cnt_enable[i]) |
 	ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_LIF_START_SET(asic->cnt_lif[i]) |
 	ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_LIF_END_SET(asic->cnt_lif[i]) |
 	ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_CFG_DOORBELL_DEBUG0_0_3_LIF_EN_SET(asic->cnt_enable[i]);
-      pal_reg_wr32w(ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_OFFSET + (i * stride), cfg, 3);
+      pal_reg_wr32w(ELB_TXS_CSR_CFG_DOORBELL_DEBUG0_BYTE_OFFSET + (i * stride), cfg, 3);
       // TXDMA
       cfg[0] = ELB_TXS_CSR_CFG_TXDMA_DEBUG0_CFG_TXDMA_DEBUG0_0_3_ENABLE_SET(asic->cnt_enable[i]) |
 	ELB_TXS_CSR_CFG_TXDMA_DEBUG0_CFG_TXDMA_DEBUG0_0_3_LIF_START_SET(asic->cnt_lif[i]) |
 	ELB_TXS_CSR_CFG_TXDMA_DEBUG0_CFG_TXDMA_DEBUG0_0_3_LIF_END_SET(asic->cnt_lif[i]) |
 	ELB_TXS_CSR_CFG_TXDMA_DEBUG0_CFG_TXDMA_DEBUG0_0_3_LIF_EN_SET(asic->cnt_enable[i]);
-      pal_reg_wr32w(ELB_TXS_CSR_CFG_TXDMA_DEBUG0_OFFSET + (i * stride), cfg, 3);
+      pal_reg_wr32w(ELB_TXS_CSR_CFG_TXDMA_DEBUG0_BYTE_OFFSET + (i * stride), cfg, 3);
     }
 }

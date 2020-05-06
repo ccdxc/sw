@@ -78,6 +78,8 @@ main (int argc, char *argv[])
     int lif_start = 0;
     int lif_end = lif_max - 1;
 
+    elbmon_struct_init(NULL);
+
     while (i < (argc)) {
         if (strcmp(argv[i], "-r") == 0) {
             reset_counters();
@@ -229,7 +231,6 @@ main (int argc, char *argv[])
         }
         i++;
     }
-    elbmon_struct_init(NULL);
 
     if ((poll != 0) &&
         ((lif_start != lif_end) || (qtype == -1) || (qid_start != qid_end))) {
@@ -280,7 +281,7 @@ measure_pps (int interval)
 
     // Capture Timestamp
     pal_reg_rd32w(
-		  ELB_PF_CSR_STA_HBM_TIMESTAMP_OFFSET +
+		  ELB_ADDR_BASE_PF_PF_OFFSET +
 		  ELB_PF_CSR_STA_HBM_TIMESTAMP_BYTE_ADDRESS,
                   cnt, 2);
     timestamp_start =
@@ -326,7 +327,7 @@ measure_pps (int interval)
 
     // Capture Timestamp
     pal_reg_rd32w(
-		  ELB_PF_CSR_STA_HBM_TIMESTAMP_OFFSET +
+		  ELB_ADDR_BASE_PF_PF_OFFSET +
 		  ELB_PF_CSR_STA_HBM_TIMESTAMP_BYTE_ADDRESS,
                   cnt, 2);
     timestamp_end =
@@ -427,7 +428,7 @@ read_counters (void)
 
         // Visit each Stage in pipeline
         for (stage = 0;
-             stage < (((pipeline == TXDMA) | (pipeline == RXDMA)) ? 8 : 6);
+             stage < ((pipeline == SXDMA) ? 4 : 8);
              stage++) {
             stg_poll(verbose, pipeline, stage);
             te_read_counters(verbose, pipeline, stage);

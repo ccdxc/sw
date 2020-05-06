@@ -110,17 +110,20 @@ sdp_read_counters (int verbose, uint8_t pipeline, uint8_t stage)
     uint32_t sdp[6]; /* 6 for Elba, 3 for Capri, ELB_MCPU_CSR_CNT_SDP_SIZE=4 looks wrong? */
     uint32_t sdp_fifo, read_ptr, write_ptr;
     int phv_fifo_depth = 0;
-    int sop_in = 0, eop_in = 0, srdy_nodrdy_in = 0;
-    int sop_out = 0, eop_out = 0, srdy_nodrdy_out = 0;
+    // int sop_in = 0;
+    // int eop_in = 0;
+    // eop_out = 0;
+    int srdy_nodrdy_in = 0;
+    int sop_out = 0, srdy_nodrdy_out = 0;
     stage_t *stage_ptr = NULL;
 
     if (verbose) {
         pal_reg_rd32w(sdp_base + ELB_SDP_CSR_CNT_SDP_BYTE_OFFSET, sdp, 6);
-        sop_in          = ELB_SDP_CSR_CNT_SDP_CNT_SDP_0_6_SOP_IN_GET(sdp[0]);
-        eop_in          = ELB_SDP_CSR_CNT_SDP_CNT_SDP_1_6_EOP_IN_GET(sdp[1]);
+	// sop_in          = ELB_SDP_CSR_CNT_SDP_CNT_SDP_0_6_SOP_IN_GET(sdp[0]);
+        // eop_in          = ELB_SDP_CSR_CNT_SDP_CNT_SDP_1_6_EOP_IN_GET(sdp[1]);
 	srdy_nodrdy_in  = ELB_SDP_CSR_CNT_SDP_CNT_SDP_2_6_SRDY_NO_DRDY_IN_GET(sdp[2]);
         sop_out         = ELB_SDP_CSR_CNT_SDP_CNT_SDP_3_6_SOP_OUT_GET(sdp[3]);
-        eop_out         = ELB_SDP_CSR_CNT_SDP_CNT_SDP_4_6_EOP_OUT_GET(sdp[4]);
+        // eop_out         = ELB_SDP_CSR_CNT_SDP_CNT_SDP_4_6_EOP_OUT_GET(sdp[4]);
 	srdy_nodrdy_out = ELB_SDP_CSR_CNT_SDP_CNT_SDP_5_6_SRDY_NO_DRDY_OUT_GET(sdp[5]);
 
 	// number of entries in this SDP:
@@ -230,6 +233,10 @@ mpu_read_counters (int verbose, uint8_t pipeline, uint8_t stage, uint8_t mpu)
         mpu_ptr->phv_executed = phv_executed;
         mpu_ptr->phvwr_stall = phvwr_stall;
         mpu_ptr->st_stall = st_stall;
+
+	if(cycles==0) cycles=1;
+	if(inst_executed==0) inst_executed=1;
+	if(phv_executed==0) phv_executed=1;
 
         mpu_ptr->inst_executed_pc = inst_executed * 100 / cycles;
         mpu_ptr->icache_miss_pc = icache_miss * 100 / inst_executed;

@@ -257,11 +257,11 @@ typedef struct asic_data_ {
        0% 0% 0% 0% 0% 0% 0% 0% 0% PHVs to Stage0:
     */
     uint32_t sets, clears, phvs_to_stage0;
-    uint32_t cnt_doorbell[4];
-    uint32_t cnt_txdma[4];
-    uint32_t cnt_sxdma[4];
-    uint32_t cnt_enable[4];
-    uint32_t cnt_lif[4];
+    uint32_t cnt_doorbell[4] = {};
+    uint32_t cnt_txdma[4] = {};
+    uint32_t cnt_sxdma[4] = {};
+    uint32_t cnt_enable[4] = {};
+    uint32_t cnt_lif[4] = {};
 
     uint8_t xoff[16] = {};
     uint64_t txdma_phvs = 0;

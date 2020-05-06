@@ -15,6 +15,7 @@
 #include <cstring>
 #include "elbmon.hpp"
 #include <time.h>
+#include <inttypes.h>
 
 asic_data_t *asic = NULL;
 
@@ -290,6 +291,12 @@ elbmon_dma_pipeline_data_display2(pipeline_t *pipeline)
                       pipeline->phv, pipeline->pb_pbus_cnt,
                       pipeline->pr_pbus_cnt, pipeline->sw_cnt,
                       pipeline->phv_drop_cnt, pipeline->recirc_cnt);
+    } else if (pipeline->type == SXDMA) {
+        ELBMON_REPORT(" NPV: phv=%lu pb_pbus=%ld pr_pbus=%ld sw=%ld "
+                      "phv_drop=%ld recirc=%ld\n",
+                      pipeline->phv, pipeline->pb_pbus_cnt,
+                      pipeline->pr_pbus_cnt, pipeline->sw_cnt,
+                      pipeline->phv_drop_cnt, pipeline->recirc_cnt);
     }
 }
 
@@ -304,6 +311,9 @@ elbmon_dma_pipeline_display_fn(pipeline_t *pipeline)
             break;
         case RXDMA:
             ELBMON_REPORT("== RXDMA ==\n");
+            break;
+        case SXDMA:
+            ELBMON_REPORT("== SXDMA ==\n");
             break;
         default:
             break;
@@ -339,10 +349,10 @@ elbmon_dma_post_stage_display(pipeline_t *pipeline)
     } else if (pipeline->type == RXDMA) {
         ELBMON_REPORT(" RxDMA:");
     }
-    ELBMON_REPORT(" phv=%ld pkt=%ld drop=%ld(%ld%%) err=%ld recirc=%ld "
+    ELBMON_REPORT(" phv=%ld pkt=%ld drop=%ld err=%ld recirc=%ld "
                   "resub=%ld in_flight=%ld\n",
                   pipeline->phv, pipeline->pb_cnt, pipeline->phv_drop,
-                  (pipeline->phv_drop * 100) / pipeline->phv, pipeline->phv_err,
+		  pipeline->phv_err,
                   pipeline->phv_recirc, pipeline->resub_cnt,
                   pipeline->in_flight);
 
@@ -419,6 +429,9 @@ elbmon_pipeline_display_fn(void *ptr)
         case P4EG:
             elbmon_p4_pipeline_display_fn(pipeline);
             break;
+        case SXDMA:
+            elbmon_dma_pipeline_display_fn(pipeline);
+            break;
         default:
             ELBMON_REPORT("Error: Unknown pipeline type:%d", pipeline->type);
     }
@@ -472,6 +485,7 @@ elbmon_asic_display_initiator_status()
                   asic->axi_rd_pend);
     auto rd_total =
         asic->rd_lat0 + asic->rd_lat1 + asic->rd_lat2 + asic->rd_lat3;
+    if(rd_total==0) rd_total=1;
     ELBMON_REPORT(
         "  read latency (clks) >%d=%.2f%% >%d=%.2f%% >%d=%.2f%% >%d=%.2f%%\n",
         asic->cfg_rdlat[3], (asic->rd_lat0 * 100.0) / rd_total,
@@ -550,11 +564,11 @@ elbmon_asic_display_tx_sched()
         ELBMON_REPORT(" %x%%", asic->xoff[cos]);
     }
     ELBMON_REPORT("\n");
-    ELBMON_REPORT(" TXDMA TOKENS: %ull", asic->txdma_phvs);
-    ELBMON_REPORT(" SXDMA TOKENS: %ull", asic->sxdma_phvs);
+    ELBMON_REPORT(" TXDMA TOKENS: %" PRIu64 " ", asic->txdma_phvs);
+    ELBMON_REPORT(" SXDMA TOKENS: %" PRIu64 " ", asic->sxdma_phvs);
     ELBMON_REPORT("\n");
 
-    ELBMON_REPORT("  Debug Counters (if enabled)\n");
+    ELBMON_REPORT(" TXS Debug Counters: ");
     for(i=0; i<4; i++) {
       if(asic->cnt_enable[i] == 0) continue;
       ELBMON_REPORT("LIF %0d: DOORBELL %u TXDMA %u SXDMA %u\n",  

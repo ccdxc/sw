@@ -3,5 +3,6 @@ include ${MKDEFS}/pre.mk
 MODULE_ASIC     := elba
 MODULE_TARGET   := elbmon.bin
 MODULE_SOLIBS   := pal
+MODULE_FLAGS = -g
 
 include ${MKDEFS}/post.mk
