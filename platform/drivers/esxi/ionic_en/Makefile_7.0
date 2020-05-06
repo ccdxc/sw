@@ -22,11 +22,11 @@ CAYMAN_ESX_PYCPARSER_DIR = $(shell /bin/rpm -q --qf "%{instprefixes}\n" vmware-e
 export GOBUILD_CAYMAN_ESX_PYCPARSER_ROOT = $(CAYMAN_ESX_PYCPARSER_DIR)
 CAYMAN_ESX_NCURSES_DIR = $(shell /bin/rpm -q --qf "%{instprefixes}\n" vmware-esx-cayman_esx_ncurses-9bf45330b538505c6325906c08c4ecf834184b5c-toolchain)
 export GOBUILD_CAYMAN_ESX_NCURSES_ROOT = $(CAYMAN_ESX_NCURSES_DIR)
-CAYMAN_LLVM_DIR = $(shell /bin/rpm -q --qf "%{instprefixes}\n" vmware-esx-cayman_llvm-4d5413e010faa6036c32263d21e88945f7a7f46e-toolchain)
+CAYMAN_LLVM_DIR = $(shell /bin/rpm -q --qf "%{instprefixes}\n" vmware-esx-cayman_llvm-e51314a6e421afc0fc8856057af8b195bb9805f3-toolchain)
 export GOBUILD_CAYMAN_LLVM_ROOT = $(CAYMAN_LLVM_DIR)
 CAYMAN_ESX_GLIBC_2_17_DIR = $(shell /bin/rpm -q --qf "%{instprefixes}\n" vmware-esx-cayman_esx_glibc_2_17-8da846cdfffa1ce0a450d82e5d60140c753ab937-toolchain)
 export GOBUILD_CAYMAN_ESX_GLIBC_2_17_ROOT = $(CAYMAN_ESX_GLIBC_2_17_DIR)
-CAYMAN_PYTHON_DIR = $(shell /bin/rpm -q --qf "%{instprefixes}\n" vmware-esx-cayman_python-3a0f4ac75a2b1d2e3a801951b8cef45b367626f2-toolchain)
+CAYMAN_PYTHON_DIR = $(shell /bin/rpm -q --qf "%{instprefixes}\n" vmware-esx-cayman_python-99788ba0a9e40ea80ae7b05efb941377abfb31e4-toolchain)
 export GOBUILD_CAYMAN_PYTHON_ROOT = $(CAYMAN_PYTHON_DIR)
 VMW_COMPONENTS = cayman_esx_gdb cayman_esx_toolchain_gcc6 cayman_esx_pycparser cayman_esx_ncurses cayman_llvm cayman_esx_glibc_2_17 cayman_python
 VMW_COMPONENT_DIRS = $(CAYMAN_ESX_GDB_DIR) $(CAYMAN_ESX_TOOLCHAIN_GCC6_DIR) $(CAYMAN_ESX_PYCPARSER_DIR) $(CAYMAN_ESX_NCURSES_DIR) $(CAYMAN_LLVM_DIR) $(CAYMAN_ESX_GLIBC_2_17_DIR) $(CAYMAN_PYTHON_DIR)
@@ -43,16 +43,16 @@ MV = /build/toolchain/lin32/coreutils-5.97/bin/mv
 PERL = /build/toolchain/lin32/perl-5.8.8/bin/perl
 RM = /build/toolchain/lin32/coreutils-5.97/bin/rm
 SED = /build/toolchain/lin32/sed-4.1.5/bin/sed
-TR = /build/toolchain/lin32/coreutils-8.6/bin/tr
+TR = /build/toolchain/lin32/coreutils-5.97/bin/tr
 
 #-------------------------------------------------------------------------------
 # Parameters to the scons command
 #-------------------------------------------------------------------------------
 PRODUCT      = nativeddk
 BUILDTYPE    = release
-BUILD_NUMBER = 14828939
+BUILD_NUMBER = 15843807
 
-VMKAPI_DIR   = $(shell /bin/rpm -q --qf '%{INSTPREFIXES}\n' vmware-esx-nativeddk-devtools-7.0.0-0.0.14828939)
+VMKAPI_DIR   = $(shell /bin/rpm -q --qf '%{INSTPREFIXES}\n' vmware-esx-nativeddk-devtools-7.0.0-1.0.15843807)
 SRC          = $(VMKAPI_DIR)/src
 FIND_RPM     = $(VMKAPI_DIR)/tools/find_rpm_install_dir.sh
 VIRTUAL_GOBUILD = $(VMKAPI_DIR)/tools/gobuild/nativeddk.cache
