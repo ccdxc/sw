@@ -437,8 +437,10 @@ reinject_pkt_to_p4 (void *mbuf, learn_ctxt_t *ctxt)
     if (ctxt->pkt_ctxt.impl_info.hints & LEARN_HINT_ARP_REPLY) {
         learn_lif_drop_pkt(mbuf, PKT_DROP_REASON_ARP_REPLY);
         return SDK_RET_OK;
+    } else if (ctxt->pkt_ctxt.impl_info.hints & LEARN_HINT_RARP) {
+        learn_lif_drop_pkt(mbuf, PKT_DROP_REASON_RARP);
+        return SDK_RET_OK;
     }
-
     // reinject packet to p4
     if (likely(add_tx_pkt_hdr(mbuf, ctxt) == SDK_RET_OK)) {
         learn_lif_send_pkt(mbuf);

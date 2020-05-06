@@ -10,6 +10,19 @@ feature:
     ignore      : False
 
 modules:
+
+    - module:
+        name    : LEARN_MAC_WITH_RARP
+        spec    : learn_mac_rarp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : CLEAR_MAC
+        spec    : clear.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
     - module:
         name    : LEARN_MAC_IP_WITH_ARP
         spec    : learn_mac_ip_arp.testspec

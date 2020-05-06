@@ -142,6 +142,10 @@ extract_info_from_p4_hdr (char *pkt, learn_info_t *info)
         info->pkt_type = PKT_TYPE_ARP;
         info->hints |= LEARN_HINT_ARP_REPLY;
         break;
+    case NACL_DATA_ID_L2_MISS_RARP:
+        info->pkt_type = PKT_TYPE_ARP;
+        info->hints |= LEARN_HINT_RARP;
+        break;
     case NACL_DATA_ID_L2_MISS_DHCP:
         info->pkt_type = PKT_TYPE_DHCP;
         break;

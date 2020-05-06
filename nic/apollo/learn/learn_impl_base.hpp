@@ -19,7 +19,8 @@ namespace learn {
 namespace impl {
 
 /// \brief hint flags passed from p4/impl
-#define LEARN_HINT_ARP_REPLY            (1 << 0)
+#define LEARN_HINT_ARP_REPLY            0x1
+#define LEARN_HINT_RARP                 0x2
 
 /// \brief learn information parsed from p4 hdr/packet
 typedef struct learn_info_s {

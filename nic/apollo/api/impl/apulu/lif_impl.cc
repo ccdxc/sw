@@ -985,7 +985,6 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     sdk::qos::policer_t policer;
     nacl_swkey_mask_t mask;
     nacl_actiondata_t data;
-    static uint32_t lif_num = 0;
     uint32_t idx, nacl_idx = PDS_IMPL_NACL_BLOCK_LEARN_MIN;
     nexthop_info_entry_t nexthop_info_entry;
 
@@ -1053,8 +1052,8 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     } else {
-        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
-                        nacl_idx - 1, key.key_metadata_ktype, key.capri_intrinsic_lif);
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %u, ktype %u, lif %u",
+                        nacl_idx - 1, key.key_metadata_ktype, id_);
     }
 
     // install NACL entry to direct ARP replies to learn lif
@@ -1091,8 +1090,42 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     } else {
-        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
-                        nacl_idx - 1, key.key_metadata_ktype, key.capri_intrinsic_lif);
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %u, ktype %u, lif %u",
+                        nacl_idx - 1, key.key_metadata_ktype, id_);
+    }
+    // install NACL entry to direct RARP packets to learn lif
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+    key.key_metadata_entry_valid = 1;
+    key.control_metadata_rx_packet = 0;
+    key.key_metadata_ktype = KEY_TYPE_MAC;
+    key.control_metadata_learn_enabled = 1;
+    key.control_metadata_lif_type = P4_LIF_TYPE_HOST;
+    key.control_metadata_tunneled_packet = 0;
+    key.key_metadata_dport = ETH_TYPE_RARP;
+    mask.key_metadata_entry_valid_mask = ~0;
+    mask.control_metadata_rx_packet_mask = ~0;
+    mask.key_metadata_ktype_mask = ~0;
+    mask.control_metadata_learn_enabled_mask = ~0;
+    mask.control_metadata_lif_type_mask = ~0;
+    mask.control_metadata_tunneled_packet_mask = ~0;
+    mask.key_metadata_dport_mask = ~0;
+    data.action_id = NACL_NACL_REDIRECT_TO_ARM_ID;
+    data.nacl_redirect_to_arm_action.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
+    data.nacl_redirect_to_arm_action.nexthop_id = nh_idx_;
+    data.nacl_redirect_to_arm_action.copp_policer_id = idx;
+    data.nacl_redirect_to_arm_action.data = NACL_DATA_ID_L2_MISS_RARP;
+    p4pd_ret = p4pd_entry_install(P4TBL_ID_NACL, nacl_idx++,
+                                  &key, &mask, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program NACL entry for (learn probe, RARP "
+                      "packets from host) -> lif %s", name_);
+        ret = sdk::SDK_RET_HW_PROGRAM_ERR;
+        goto error;
+    } else {
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %u, ktype %u, lif %u",
+                        nacl_idx - 1, key.key_metadata_ktype, id_);
     }
 
     // cap DHCP requests from host lifs to 256/sec
@@ -1102,7 +1135,7 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
         sdk::qos::POLICER_TYPE_PPS, COPP_LEARN_MISS_DHCP_REQ_FROM_HOST_PPS, 0
     };
     program_copp_entry_(&policer, idx, false);
-    // install NACL entry for DHCP requests going to vpp
+    // install NACL entry for DHCP requests
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
@@ -1141,8 +1174,8 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
         ret = sdk::SDK_RET_HW_PROGRAM_ERR;
         goto error;
     } else {
-        PDS_TRACE_DEBUG("Programmed NACL entry idx %d, ktype %d, lif %d",
-                        nacl_idx - 1, key.key_metadata_ktype, key.capri_intrinsic_lif);
+        PDS_TRACE_DEBUG("Programmed NACL entry idx %u, ktype %u, lif %u",
+                        nacl_idx - 1, key.key_metadata_ktype, id_);
     }
     SDK_ASSERT(nacl_idx <= PDS_IMPL_NACL_BLOCK_GENERIC_MIN);
 
