@@ -12,7 +12,6 @@
 #include "spdlog/spdlog.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 
 static std::shared_ptr<spdlog::logger> spdlogger;

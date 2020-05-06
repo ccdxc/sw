@@ -21,9 +21,7 @@
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 
 #include "device.hpp"
 #include "pd_client.hpp"

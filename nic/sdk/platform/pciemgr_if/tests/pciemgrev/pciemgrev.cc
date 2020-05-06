@@ -16,8 +16,7 @@
 #include "platform/misc/include/misc.h"
 #include "platform/evutils/include/evutils.h"
 #include "platform/pciehdevices/include/pciehdevices.h"
-#include "platform/pciemgrutils/include/pciemgrutils.h"
-#include "platform/pciemgr/include/pciemgr.h"
+#include "platform/pciemgr/include/pciehdev_event.h"
 #include "platform/pciemgr_if/include/pciemgr_if.hpp"
 
 static int verbose_flag;

@@ -11,8 +11,7 @@
 #include <inttypes.h>
 
 #include "platform/pal/include/pal.h"
-#include "platform/pciemgr/include/pciemgr.h"
-#include "pcieport.h"
+#include "platform/pcieport/include/pcieport.h"
 #include "pcieport_impl.h"
 
 /*
@@ -21,9 +20,7 @@
 static int
 pcieport_get_tgt_marker_rx(pcieport_t *p)
 {
-    const u_int64_t tgt_marker_rx =
-        (CAP_ADDR_BASE_PXB_PXB_OFFSET +
-         CAP_PXB_CSR_STA_TGT_MARKER_RX_BYTE_ADDRESS);
+    const u_int64_t tgt_marker_rx = PXB_(STA_TGT_MARKER_RX);
     const u_int32_t portbit = 1 << p->port;
 
     return (pal_reg_rd32(tgt_marker_rx) & portbit) != 0;
@@ -76,9 +73,7 @@ pcieport_tgt_marker_rx_wait(pcieport_t *p)
 static int
 pcieport_get_tgt_axi_pending(pcieport_t *p)
 {
-    const u_int64_t tgt_axi_pending =
-        (CAP_ADDR_BASE_PXB_PXB_OFFSET +
-         CAP_PXB_CSR_STA_TGT_AXI_PENDING_BYTE_ADDRESS);
+    const u_int64_t tgt_axi_pending = PXB_(STA_TGT_AXI_PENDING);
     const u_int32_t portshift = p->port * 8;
     const int pending = (pal_reg_rd32(tgt_axi_pending) >> portshift) & 0xff;
 
@@ -163,13 +158,13 @@ pcieport_set_crs(pcieport_t *p, const int on)
 void
 pcieport_set_serdes_reset(pcieport_t *p, const int on)
 {
-    u_int32_t v = pal_reg_rd32(PP_(CFG_PP_SD_ASYNC_RESET_N));
+    u_int32_t v = pal_reg_rd32(PP_(CFG_PP_SD_ASYNC_RESET_N, p->port));
     if (on) {
         v &= ~p->lanemask;
     } else {
         v |= p->lanemask;
     }
-    pal_reg_wr32(PP_(CFG_PP_SD_ASYNC_RESET_N), v);
+    pal_reg_wr32(PP_(CFG_PP_SD_ASYNC_RESET_N, p->port), v);
 }
 
 /*
@@ -180,13 +175,13 @@ pcieport_set_serdes_reset(pcieport_t *p, const int on)
 void
 pcieport_set_pcs_reset(pcieport_t *p, const int on)
 {
-    u_int32_t v = pal_reg_rd32(PP_(CFG_PP_PCS_RESET_N));
+    u_int32_t v = pal_reg_rd32(PP_(CFG_PP_PCS_RESET_N, p->port));
     if (on) {
         v &= ~p->lanemask;
     } else {
         v |= p->lanemask;
     }
-    pal_reg_wr32(PP_(CFG_PP_PCS_RESET_N), v);
+    pal_reg_wr32(PP_(CFG_PP_PCS_RESET_N, p->port), v);
 }
 
 void
@@ -194,19 +189,14 @@ pcieport_set_mac_reset(pcieport_t *p, const int on)
 {
     const int pn = p->port;
     u_int32_t reg = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, pn));
-#define MAC_RESET \
-    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_RESET_FIELD_MASK
 
     if (on) {
-        reg |= MAC_RESET;
+        reg |= CFG_C_PORT_MAC_F_MAC_RESET;
     } else {
-        reg &= ~MAC_RESET;
+        reg &= ~CFG_C_PORT_MAC_F_MAC_RESET;
     }
     pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
 }
-
-#define LTSSM_EN \
-    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_LTSSM_EN_FIELD_MASK
 
 int
 pcieport_get_ltssm_en(pcieport_t *p)
@@ -214,7 +204,7 @@ pcieport_get_ltssm_en(pcieport_t *p)
     const int pn = p->port;
     u_int32_t reg = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, pn));
 
-    return (reg & LTSSM_EN) != 0;
+    return (reg & CFG_C_PORT_MAC_F_LTSSM_EN) != 0;
 }
 
 void
@@ -224,9 +214,9 @@ pcieport_set_ltssm_en(pcieport_t *p, const int on)
     u_int32_t reg = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, pn));
 
     if (on) {
-        reg |= LTSSM_EN;
+        reg |= CFG_C_PORT_MAC_F_LTSSM_EN;
     } else {
-        reg &= ~LTSSM_EN;
+        reg &= ~CFG_C_PORT_MAC_F_LTSSM_EN;
     }
     pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
 }
@@ -236,14 +226,12 @@ pcieport_set_aer_common_en(pcieport_t *p, const int on)
 {
     const int pn = p->port;
     u_int32_t reg[2];
-#define AER_COMMON_EN \
-    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_1_2_AER_COMMON_EN_FIELD_MASK
 
     pal_reg_rd32w(PXC_(CFG_C_PORT_MAC, pn), reg, 2);
     if (on) {
-        reg[1] |= AER_COMMON_EN;
+        reg[1] |= CFG_C_PORT_MAC_F_AER_COMMON_EN;
     } else {
-        reg[1] &= ~AER_COMMON_EN;
+        reg[1] &= ~CFG_C_PORT_MAC_F_AER_COMMON_EN;
     }
     pal_reg_wr32w(PXC_(CFG_C_PORT_MAC, pn), reg, 2);
 }
@@ -253,13 +241,9 @@ pcieport_set_clock_freq(pcieport_t *p, const u_int32_t freq)
 {
     const int pn = p->port;
     u_int32_t reg = pal_reg_rd32(PXC_(CFG_C_PORT_MAC, pn));
-#define CLOCK_FREQ_MASK \
-    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_TL_CLOCK_FREQ_FIELD_MASK
-#define CLOCK_FREQ_SHIFT \
-    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_0_2_TL_CLOCK_FREQ_LSB
 
-    reg &= ~CLOCK_FREQ_MASK;
-    reg |= freq << CLOCK_FREQ_SHIFT;
+    reg &= ~CFG_C_PORT_MAC_F_CLOCK_FREQ_MASK;
+    reg |= freq << CFG_C_PORT_MAC_F_CLOCK_FREQ_SHIFT;
 
     pal_reg_wr32(PXC_(CFG_C_PORT_MAC, pn), reg);
 }
@@ -270,7 +254,7 @@ pcieport_set_margining_ready(pcieport_t *p, const int on)
     const int pn = p->port;
     u_int32_t reg[2];
 #define MARGINING_READY \
-    CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_1_2_MARGINING_READY_FIELD_MASK
+    ASIC_(PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_1_2_MARGINING_READY_FIELD_MASK)
 
     pal_reg_rd32w(PXC_(CFG_C_PORT_MAC, pn), reg, 2);
     if (on) {
@@ -298,9 +282,7 @@ pcieport_set_margining_ready(pcieport_t *p, const int on)
 void
 pcieport_rx_credit_bfr(const int port, const int base, const int limit)
 {
-#define RX_CREDIT_BFR_ADDR \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
-     CAP_PXB_CSR_CFG_TGT_RX_CREDIT_BFR_BYTE_ADDRESS)
+#define RX_CREDIT_BFR_ADDR PXB_(CFG_TGT_RX_CREDIT_BFR)
 
     union {
         struct {
@@ -383,7 +365,7 @@ pcieport_pcsd_control_sris(const int sris_en)
         u_int32_t w[2];
     } r;
 
-    pal_reg_rd32w(PP_(CFG_PP_PCSD_CONTROL), r.w, 2);
+    pal_reg_rd32w(PP_(CFG_PP_PCSD_CONTROL, 0), r.w, 2);
 
     r.sris_en_grp_0 = sris_en_grp;
     r.sris_en_grp_1 = sris_en_grp;
@@ -394,7 +376,7 @@ pcieport_pcsd_control_sris(const int sris_en)
     r.sris_en_grp_6 = sris_en_grp;
     r.sris_en_grp_7 = sris_en_grp;
 
-    pal_reg_wr32w(PP_(CFG_PP_PCSD_CONTROL), r.w, 2);
+    pal_reg_wr32w(PP_(CFG_PP_PCSD_CONTROL, 0), r.w, 2);
 }
 
 u_int16_t
@@ -445,6 +427,74 @@ void
 pcieport_set_ltssm_st_cnt(pcieport_t *p, const int cnt)
 {
     pal_reg_wr32(PXP_(SAT_P_PORT_CNT_LTSSM_STATE_CHANGED, p->port), cnt);
+}
+
+static void
+pcieport_clear_early_sat_ind_reason(pcieport_t *p)
+{
+    union {
+        struct {
+            u_int32_t pmr_force:8;
+            u_int32_t prt_force:8;
+            u_int32_t msg:8;
+            u_int32_t atomic:8;
+            u_int32_t poisoned:8;
+            u_int32_t unsupp:8;
+            u_int32_t pmv:8;
+            u_int32_t db_pmv:8;
+            u_int32_t pmt_miss:8;
+            u_int32_t rc_vfid_miss:8;
+            u_int32_t pmr_prt_miss:8;
+            u_int32_t prt_oor:8;
+            u_int32_t bdf_wcard_oor:8;
+            u_int32_t vfid_oor:8;
+        } __attribute__((packed));
+        u_int32_t w[4];
+    } v;
+    const u_int64_t sat_tgt_ind_reason = PXB_(SAT_TGT_IND_REASON);
+
+    pal_reg_rd32w(sat_tgt_ind_reason, v.w, 4);
+    /*
+     * We get many pmt_miss events during BIOS bus scan
+     * as the BIOS probes for devices that don't exist.
+     * This counter ends up saturated at startup always.
+     * We'll clear the counter here so it can count
+     * the pmt_miss events we get *after* the BIOS scan.
+     *
+     * (We could add a catchall entry in the PMT to catch
+     * these and return UR?)
+     */
+    v.pmt_miss = 0;
+    pal_reg_wr32w(sat_tgt_ind_reason, v.w, 4);
+}
+
+/*
+ * We get some pipe_decode_disparity_err counts during link
+ * establishment.  We clear these when the link comes up so any
+ * counts that show up later are from after the link has settled.
+ */
+static void
+pcieport_clear_pipe_decode_err(pcieport_t *p)
+{
+    const u_int64_t base = PP_(SAT_PP_PIPE_DECODE_DISPARITY_ERR_0, p->port);
+    const int stride = 0x14;
+    int i;
+
+    for (i = 0; i < 16; i++) {
+        const int lanebit = 1 << i;
+
+        if (p->lanemask & lanebit) {
+            pal_reg_wr32(base + (i * stride), 0);
+        }
+    }
+}
+
+void
+pcieport_clear_early_link_counts(pcieport_t *p)
+{
+    pcieport_set_ltssm_st_cnt(p, 0);
+    pcieport_clear_early_sat_ind_reason(p);
+    pcieport_clear_pipe_decode_err(p);
 }
 
 void

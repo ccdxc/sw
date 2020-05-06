@@ -12,7 +12,7 @@ extern "C" {
 #endif
 #endif
 
-#define PRT_COUNT       CAP_PXB_CSR_DHS_TGT_PRT_ENTRIES
+#define PRT_COUNT       4096
 
 union prt_u; typedef union prt_u prt_t;
 

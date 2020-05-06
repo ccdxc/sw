@@ -15,8 +15,6 @@ extern "C" {
 #include <stdint.h>
 #include <assert.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pxb_c_hdr.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 
 #include "pmt.h"
@@ -167,24 +165,6 @@ typedef struct pciehw_shmem_s {
     u_int8_t vpddata[PCIEHW_NDEVS][PCIEHW_VPDSZ];
 } pciehw_shmem_t;
 
-#define STATIC_ASSERT(cond) static_assert(cond, #cond)
-
-static inline void
-pciehw_struct_size_checks(void)
-{
-    /* make sure _pad[] is the largest item in the union */
-#define CHECK_PAD(T) \
-    do { T t; STATIC_ASSERT(sizeof(t) == sizeof(t._pad)); } while (0)
-
-    CHECK_PAD(pciehwdev_t);
-    CHECK_PAD(pciehwbar_t);
-    CHECK_PAD(pciehw_port_t);
-    CHECK_PAD(pciehw_spmt_t);
-    CHECK_PAD(pciehw_sprt_t);
-    CHECK_PAD(pciemgr_stats_t);
-#undef CHECK_PAD
-}
-
 int pciehw_open(pciemgr_params_t *params);
 void pciehw_close(void);
 pciehw_shmem_t *pciehw_get_shmem(void);
@@ -198,34 +178,6 @@ void pciehw_bar_show(int argc, char *argv[]);
 void pciehw_hdrt_show(int argc, char *argv[]);
 void pciehw_vpd_show(int argc, char *argv[]);
 
-/* flags for stats_show() */
-#define PMGRSF_NONE     0x0
-#define PMGRSF_ALL      0x1
-void pciehw_stats_show(const int port, const unsigned int flags);
-void pciehw_stats_clear(const int port, const unsigned int flags);
-pciemgr_stats_t *pciehw_stats_get(const int port);
-
-void pciehw_event_hostup(const int port, const int gen, const int width,
-                         const u_int16_t lnksta2);
-void pciehw_event_hostdn(const int port);
-void pciehw_event_buschg(const int port, const u_int8_t secbus);
-
-int pciehw_notify_poll_init(const int port);
-int pciehw_notify_poll(const int port);
-int pciehw_notify_intr_init(const int port,
-                            u_int64_t msgaddr, u_int32_t msgdata);
-int pciehw_notify_intr(const int port);
-void pciehw_notify_disable(const int port);
-void pciehw_notify_disable_all_ports(void);
-
-int pciehw_indirect_poll_init(const int port);
-int pciehw_indirect_poll(const int port);
-int pciehw_indirect_intr_init(const int port,
-                              u_int64_t msgaddr, u_int32_t msgdata);
-int pciehw_indirect_intr(const int port);
-void pciehw_indirect_disable(const int port);
-void pciehw_indirect_disable_all_ports(void);
-
 #define AXIMSTF_TLP     0x1
 #define AXIMSTF_IND     0x2
 #define AXIMSTF_RAW     0x4
@@ -235,12 +187,6 @@ void pciehw_aximst_show(const unsigned int port,
                         const unsigned int entry,
                         const int flags,
                         const u_int64_t tm);
-
-void pciehw_dbg(int argc, char *argv[]);
-
-u_int16_t pciehwdev_get_hostbdf(const pciehwdev_t *phwdev);
-pciehwdev_t *pciehwdev_get_by_id(const u_int8_t port,
-                                 const u_int16_t venid, const u_int16_t devid);
 
 int pciehw_cfgrd(const u_int8_t port, const u_int16_t bdf,
                  const u_int16_t offset, const u_int8_t size, u_int32_t *valp);

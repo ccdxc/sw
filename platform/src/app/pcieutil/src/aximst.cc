@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019, Pensando Systems Inc.
+ * Copyright (c) 2018-2020, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -10,18 +10,13 @@
 #include <cinttypes>
 #include <signal.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pxb_c_hdr.h"
-
 #include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 
 #include "cmd.h"
 #include "utils.hpp"
+#include "pcieutilpd.h"
 
-#define IND_INFO_BASE \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_STA_TGT_IND_INFO_BYTE_OFFSET)
+#define IND_INFO_BASE   PXB_(STA_TGT_IND_INFO)
 #define IND_INFO_NWORDS 1
 #define IND_INFO_STRIDE 4
 

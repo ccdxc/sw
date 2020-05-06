@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Pensando Systems Inc.
+ * Copyright (c) 2017-2020, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -8,26 +8,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <setjmp.h>
 #include <cinttypes>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/time.h>
 
-#include "third-party/asic/capri/verif/apis/cap_freq_api.h"
-#include "platform/sensor/sensor.hpp"
-#include "platform/pciehdevices/include/pci_ids.h"
 #include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/evutils/include/evutils.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-#include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/platform/pcieport/include/portmap.h"
-#include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 #include "pciemgrd_impl.hpp"
-
-using namespace sdk::platform::sensor;
 
 static void
 usage(void)
@@ -58,8 +47,8 @@ parse_portspec(const char *s, pcieport_spec_t *ps)
     if (sscanf(s, "host%d=port%d,gen%dx%d", &h, &p, &g, &w) != 4) {
         return 0;
     }
-    if (h < 0 || h >= PCIEPORT_NPORTS) return 0;
-    if (p < 0 || p >= PCIEPORT_NPORTS) return 0;
+    if (h < 0 || h >= 8) return 0;
+    if (p < 0 || p >= 8) return 0;
     if (g < 1 || g > 4) return 0;
     if (w < 1 || w > 32) return 0;
     if (w & (w - 1)) return 0;
@@ -103,6 +92,10 @@ main(int argc, char *argv[])
 
     pme->interactive = 1;
     pme->reboot_on_hostdn = pal_is_asic() ? 1 : 0;
+#ifdef ASIC_ELBA
+    /* XXX ELBA-TODO make elba interrupts work */
+    pme->poll_dev = 1;
+#endif
     pme->fifopri = 50;
     pme->poll_port = 1;
     pme->poll_tm = 500000; // 0.5s slow poll for non-essential events

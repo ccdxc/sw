@@ -66,7 +66,6 @@ typedef struct {
 
 /* cfg pmr entry format */
 typedef struct {
-    /* u_int64_t [0] */
     u_int64_t valid     :1;     /* entry is valid */
     u_int64_t type      :3;     /* matches PMT.type */
     u_int64_t vfbase    :11;    /* vf base for vf id range for entry */
@@ -82,17 +81,27 @@ typedef struct {
     u_int64_t flimit    :3;     /* function wildcard limit */
     u_int64_t vfstridesel:4;    /* p:bdf wildcard vf stride selector */
     u_int64_t td        :1;     /* tlp digest, generate ecrc on completion */
-    /* u_int64_t [1] addrdw_lo:4 */
+#if defined(ASIC_CAPRI)
     u_int64_t addrdw    :34;    /* target resource address */
+#elif defined(ASIC_ELBA)
+    u_int64_t addrdw    :35;    /* target resource address */
+#else
+#error "ASIC not specified"
+#endif
     u_int64_t aspace    :1;     /* target address space, 1=external (pcie) */
     u_int64_t romsksel  :7;     /* read-only mask selector */
+#if defined(ASIC_CAPRI)
     u_int64_t spare     :8;     /* implemented but unused in hw */
+#elif defined(ASIC_ELBA)
+    u_int64_t spare     :7;     /* implemented but unused in hw */
+#else
+#error "ASIC not specified"
+#endif
     u_int64_t rsrv      :18;    /* unimplemented bits */
 } __attribute__((packed)) pmr_cfg_entry_t;
 
 /* bar pmr entry format */
 typedef struct {
-    /* u_int64_t [0] */
     u_int64_t valid     :1;     /* entry is valid */
     u_int64_t type      :3;     /* matches PMT.type */
     u_int64_t vfbase    :11;    /* vf base for vf ids valid for entry */
@@ -103,7 +112,6 @@ typedef struct {
     u_int64_t prtsize   :5;     /* power-of-2 resource size, eg. 4=16 bytes */
     u_int64_t vfstart   :6;     /* low  bit pos of vf field in addr */
     u_int64_t vfend     :6;     /* high bit pos of vf field in addr */
-    /* u_int64_t [1] vflimit_lo:6 */
     u_int64_t vflimit   :11;    /* vf field upper limit */
     u_int64_t bdf       :16;    /* bdf for completions */
     u_int64_t td        :1;     /* tlp digest, generate ecrc on completion */
@@ -112,7 +120,13 @@ typedef struct {
     u_int64_t qtypemask :3;     /* qtype mask on 3 bits at qtypestart */
     u_int64_t qidstart  :5;     /* 32b db: low  bit pos of qid field in addr */
     u_int64_t qidend    :5;     /* 32b db: high bit pos of qid field in addr */
+#if defined(ASIC_CAPRI)
     u_int64_t spare     :3;     /* implemented but unused in hw */
+#elif defined(ASIC_ELBA)
+    u_int64_t hstridesel:3;     /* host stride select */
+#else
+#error "ASIC not specified"
+#endif
     u_int64_t rsrv      :18;    /* unimplemented bits */
 } __attribute__((packed)) pmr_bar_entry_t;
 

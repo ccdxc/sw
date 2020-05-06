@@ -5,12 +5,6 @@
 #ifndef __HDRT_H__
 #define __HDRT_H__
 
-#define HDRT_BASE       \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_DHS_ITR_PCIHDRT_BYTE_ADDRESS)
-#define HDRT_COUNT      CAP_PXB_CSR_DHS_ITR_PCIHDRT_ENTRIES
-#define HDRT_NWORDS     3
-#define HDRT_STRIDE     CAP_PXB_CSR_DHS_ITR_PCIHDRT_ENTRY_BYTE_SIZE
-
 typedef struct {
     u_int64_t valid     :1;
     u_int64_t bdf       :16;

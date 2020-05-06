@@ -1,18 +1,21 @@
 #!/bin/sh
 
+asic=${ASIC-capri}
 npass=0
 nfail=0
 for tc in testcases/*.in; do
-    tb=`echo $tc | sed -e 's/\.in$//'`
+    tb=`basename $tc .in`
+    tbexp="testcases/$asic/$tb.exp"
+    tbout="testcases/$asic/$tb.out"
     rm -f $HOME/.palreg-*
-    ../testtools/genrun pciemgrd < $tc > $tb.out
-    if ! cmp -s $tb.exp $tb.out; then
+    ../testtools/genrun pciemgrd < $tc > $tbout
+    if ! cmp -s $tbexp $tbout; then
 	printf "%-40s FAILED ***\n" $tc
-	diff $tb.exp $tb.out
+	diff $tbexp $tbout
 	nfail=`expr $nfail + 1`
     else
 	printf "%-40s passed\n" $tc
-	rm $tb.out
+	rm $tbout
 	npass=`expr $npass + 1`
     fi
 done

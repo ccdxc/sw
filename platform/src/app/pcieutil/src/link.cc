@@ -10,16 +10,12 @@
 #include <cinttypes>
 
 #include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/platform/pcieport/include/portcfg.h"
 
-#include "cap_top_csr_defines.h"
-#include "cap_pxb_c_hdr.h"
-#include "cap_pp_c_hdr.h"
-
 #include "cmd.h"
 #include "utils.hpp"
+#include "pcieutilpd.h"
 
 static const char *
 ltssm_str(const unsigned int ltssm)
@@ -160,8 +156,14 @@ linkpoll(int argc, char *argv[])
             nst->reversed = 0;
         }
 
+#ifdef ASIC_CAPRI
+        // XXX ELBA-TODO - make pcieport_portfifo_depth()
         pal_reg_rd32w(PXB_(STA_ITR_PORTFIFO_DEPTH), (u_int32_t *)portfifo, 4);
         depths = portfifo[port];
+#else
+        portfifo[0] = 0;
+        depths = portfifo[0];
+#endif
 
         nst->fifo_wr = depths;
         nst->fifo_rd = depths >> 8;

@@ -5,6 +5,8 @@
 #ifndef __LIB_PCIEMGRD_IMPL_H__
 #define __LIB_PCIEMGRD_IMPL_H__
 
+#include "platform/pciemgr/include/pciemgr_params.h"
+
 typedef struct pciemgrenv_s {
     u_int8_t interactive:1;
     u_int8_t gold:1;

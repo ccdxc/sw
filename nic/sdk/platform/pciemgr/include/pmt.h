@@ -12,7 +12,7 @@ extern "C" {
 #endif
 #endif
 
-#define PMT_COUNT       CAP_PXB_CSR_DHS_TGT_PMT_ENTRIES
+#define PMT_COUNT       1024
 
 struct pmt_s; typedef struct pmt_s pmt_t;
 

@@ -660,7 +660,7 @@ bar_show_bar_detail_hdr(void)
                     "%-5s %-15s %-11s "
                     "            %-s\n",
                     "PRT", "TYPE", "FLAGS",
-                    "SIZE", "BAR ADDR", "CAPRI ADDR",
+                    "SIZE", "BAR ADDR", "LOCAL ADDR",
                     "VFSTRIDE");
 }
 

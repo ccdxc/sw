@@ -14,12 +14,9 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
-#define ITR_PORT_BASE \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_CFG_ITR_PORT_BYTE_ADDRESS)
-#define ITR_PORT_COUNT \
-    CAP_PXB_CSR_CFG_ITR_PORT_ARRAY_COUNT
-#define ITR_PORT_STRIDE \
-    (CAP_PXB_CSR_CFG_ITR_PORT_ARRAY_ELEMENT_SIZE * 4)
+#define ITR_PORT_BASE   PXB_(CFG_ITR_PORT)
+#define ITR_PORT_COUNT  ASIC_(PXB_CSR_CFG_ITR_PORT_ARRAY_COUNT)
+#define ITR_PORT_STRIDE (ASIC_(PXB_CSR_CFG_ITR_PORT_ARRAY_ELEMENT_SIZE) * 4)
 
 typedef union {
     struct {

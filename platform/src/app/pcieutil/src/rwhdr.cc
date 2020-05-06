@@ -12,12 +12,8 @@
 #include <cinttypes>
 
 #include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
-
-#include "cap_top_csr_defines.h"
-#include "cap_pxb_c_hdr.h"
-#include "cap_pp_c_hdr.h"
+#include "pcieutilpd.h"
 
 #include "cmd.h"
 
@@ -55,11 +51,11 @@ typedef union {
 
 #define RDHDR_BASE      PXB_(DHS_ITR_RDHDR_ENTRY)
 #define RDHDR_STRIDE    16
-#define RDHDR_NENTRIES  CAP_PXB_CSR_DHS_ITR_RDHDR_ENTRY_ARRAY_COUNT
+#define RDHDR_NENTRIES  ASIC_(PXB_CSR_DHS_ITR_RDHDR_ENTRY_ARRAY_COUNT)
 
 #define WRHDR_BASE      PXB_(DHS_ITR_WRHDR_ENTRY)
 #define WRHDR_STRIDE    16
-#define WRHDR_NENTRIES  CAP_PXB_CSR_DHS_ITR_WRHDR_ENTRY_ARRAY_COUNT
+#define WRHDR_NENTRIES  ASIC_(PXB_CSR_DHS_ITR_WRHDR_ENTRY_ARRAY_COUNT)
 
 static uint64_t
 rdhdr_addr(const uint32_t entry)

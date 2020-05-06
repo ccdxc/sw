@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 
 int delphi_client_start(void)

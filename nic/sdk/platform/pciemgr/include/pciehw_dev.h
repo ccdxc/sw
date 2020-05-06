@@ -21,53 +21,6 @@ typedef struct pciehbars_s pciehbars_t;
 struct pciemgr_params_s;
 typedef struct pciemgr_params_s pciemgr_params_t;
 
-typedef enum pciehdev_event_e {
-    PCIEHDEV_EV_NONE,
-    PCIEHDEV_EV_MEMRD_NOTIFY,
-    PCIEHDEV_EV_MEMWR_NOTIFY,
-    PCIEHDEV_EV_SRIOV_NUMVFS,
-    PCIEHDEV_EV_RESET,
-} pciehdev_event_t;
-
-typedef struct pciehdev_memrw_notify_s {
-    u_int64_t baraddr;          /* PCIe bar address */
-    u_int64_t baroffset;        /* bar-local offset */
-    u_int8_t cfgidx;            /* bar cfgidx */
-    u_int32_t size;             /* i/o size */
-    u_int64_t localpa;          /* local physical address */
-    u_int64_t data;             /* data, if write */
-} pciehdev_memrw_notify_t;
-
-typedef struct pciehdev_sriov_numvfs_s {
-    u_int16_t numvfs;           /* number of vfs enabled */
-} pciehdev_sriov_numvfs_t;
-
-typedef enum pciehdev_rsttype_e {
-    PCIEHDEV_RSTTYPE_NONE,
-    PCIEHDEV_RSTTYPE_BUS,       /* bus reset */
-    PCIEHDEV_RSTTYPE_FLR,       /* function level reset */
-    PCIEHDEV_RSTTYPE_VF,        /* vf reset from sriov ctrl vfe */
-} pciehdev_rsttype_t;
-
-typedef struct pciehdev_reset_s {
-    pciehdev_rsttype_t rsttype; /* RSTTYPE_* */
-    u_int32_t lifb;             /* lif base */
-    u_int32_t lifc;             /* lif count */
-} pciehdev_reset_t;
-
-typedef struct pciehdev_eventdata_s {
-    pciehdev_event_t evtype;    /* PCIEHDEV_EV_* */
-    u_int8_t port;              /* PCIe port */
-    u_int32_t lif;              /* lif if event for lifs */
-    union {
-        pciehdev_memrw_notify_t memrw_notify;   /* EV_MEMRD/WR_NOTIFY */
-        pciehdev_sriov_numvfs_t sriov_numvfs;   /* EV_SRIOV_NUMVFS */
-        pciehdev_reset_t reset;                 /* EV_RESET */
-    };
-} pciehdev_eventdata_t;
-
-typedef void (*pciehdev_evhandler_t)(const pciehdev_eventdata_t *evdata);
-
 int pciehdev_open(pciemgr_params_t *params);
 void pciehdev_close(void);
 
@@ -96,8 +49,38 @@ void *pciehdev_get_hwdev(pciehdev_t *pdev);
 void pciehdev_set_hwdev(pciehdev_t *pdev, void *phwdev);
 u_int16_t pciehdev_get_bdf(pciehdev_t *pdev);
 
-int pciehdev_register_event_handler(pciehdev_evhandler_t evhandler);
-void pciehdev_event(const pciehdev_eventdata_t *evd);
+union pciehwdev_u;
+typedef union pciehwdev_u pciehwdev_t;
+
+u_int16_t pciehwdev_get_hostbdf(const pciehwdev_t *phwdev);
+pciehwdev_t *pciehwdev_get_by_id(const u_int8_t port,
+                                 const u_int16_t venid, const u_int16_t devid);
+
+int pciehw_notify_poll_init(const int port);
+int pciehw_notify_poll(const int port);
+int pciehw_notify_intr_init(const int port,
+                            u_int64_t msgaddr, u_int32_t msgdata);
+int pciehw_notify_intr(const int port);
+void pciehw_notify_disable(const int port);
+void pciehw_notify_disable_all_ports(void);
+
+int pciehw_indirect_poll_init(const int port);
+int pciehw_indirect_poll(const int port);
+int pciehw_indirect_intr_init(const int port,
+                              u_int64_t msgaddr, u_int32_t msgdata);
+int pciehw_indirect_intr(const int port);
+void pciehw_indirect_disable(const int port);
+void pciehw_indirect_disable_all_ports(void);
+
+/* flags for stats_show() */
+#define PMGRSF_NONE     0x0
+#define PMGRSF_ALL      0x1
+void pciehw_stats_show(const int port, const unsigned int flags);
+void pciehw_stats_clear(const int port, const unsigned int flags);
+union pciemgr_stats; typedef union pciemgr_stats pciemgr_stats_t;
+pciemgr_stats_t *pciehw_stats_get(const int port);
+
+void pciehw_dbg(int argc, char *argv[]);
 
 #ifdef __cplusplus
 }

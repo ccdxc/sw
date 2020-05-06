@@ -12,15 +12,11 @@
 #include <inttypes.h>
 #include <sys/time.h>
 
-#include "platform/pal/include/pal.h"
 #include "platform/misc/include/misc.h"
 #include "platform/pciemgrutils/include/pciesys.h"
-#include "platform/pciemgr/include/pciemgr.h"
-#include "portcfg.h"
-#include "pcieport.h"
+#include "platform/pcieport/include/portcfg.h"
+#include "platform/pcieport/include/pcieport.h"
 #include "pcieport_impl.h"
-#include "cap_sw_glue.h"
-#include "cap_pcie_api.h"
 
 int fsm_verbose = 1;
 
@@ -108,76 +104,6 @@ pcieport_drain(pcieport_t *p)
 }
 
 static void
-pcieport_clear_early_sat_ind_reason(pcieport_t *p)
-{
-    union {
-        struct {
-            u_int32_t pmr_force:8;
-            u_int32_t prt_force:8;
-            u_int32_t msg:8;
-            u_int32_t atomic:8;
-            u_int32_t poisoned:8;
-            u_int32_t unsupp:8;
-            u_int32_t pmv:8;
-            u_int32_t db_pmv:8;
-            u_int32_t pmt_miss:8;
-            u_int32_t rc_vfid_miss:8;
-            u_int32_t pmr_prt_miss:8;
-            u_int32_t prt_oor:8;
-            u_int32_t bdf_wcard_oor:8;
-            u_int32_t vfid_oor:8;
-        } __attribute__((packed));
-        u_int32_t w[4];
-    } v;
-    const u_int64_t sat_tgt_ind_reason =
-        (CAP_ADDR_BASE_PXB_PXB_OFFSET +
-         CAP_PXB_CSR_SAT_TGT_IND_REASON_BYTE_ADDRESS);
-
-    pal_reg_rd32w(sat_tgt_ind_reason, v.w, 4);
-    /*
-     * We get many pmt_miss events during BIOS bus scan
-     * as the BIOS probes for devices that don't exist.
-     * This counter ends up saturated at startup always.
-     * We'll clear the counter here so it can count
-     * the pmt_miss events we get *after* the BIOS scan.
-     *
-     * (We could add a catchall entry in the PMT to catch
-     * these and return UR?)
-     */
-    v.pmt_miss = 0;
-    pal_reg_wr32w(sat_tgt_ind_reason, v.w, 4);
-}
-
-/*
- * We get some pipe_decode_disparity_err counts during link
- * establishment.  We clear these when the link comes up so any
- * counts that show up later are from after the link has settled.
- */
-static void
-pcieport_clear_pipe_decode_err(pcieport_t *p)
-{
-    const u_int64_t base = PP_(SAT_PP_PIPE_DECODE_DISPARITY_ERR_0);
-    const int stride = 0x14;
-    int i;
-
-    for (i = 0; i < 16; i++) {
-        const int lanebit = 1 << i;
-
-        if (p->lanemask & lanebit) {
-            pal_reg_wr32(base + (i * stride), 0);
-        }
-    }
-}
-
-static void
-pcieport_clear_early_link_counts(pcieport_t *p)
-{
-    pcieport_set_ltssm_st_cnt(p, 0);
-    pcieport_clear_early_sat_ind_reason(p);
-    pcieport_clear_pipe_decode_err(p);
-}
-
-static void
 pcieport_update_linkinfo(pcieport_t *p)
 {
     portcfg_read_genwidth(p->port, &p->cur_gen, &p->cur_width);
@@ -253,7 +179,7 @@ pcieport_linkup(pcieport_t *p)
                         p->port,
                         p->req_gen, p->req_width,
                         p->cur_gen, p->cur_width);
-        cap_pcie_serdes_reset(0, 0);
+        pcieportpd_serdes_reset();
     }
 }
 

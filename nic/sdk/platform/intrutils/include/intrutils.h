@@ -61,10 +61,6 @@ typedef union intr_state_s {
 /*
  * Simple resource address accessors.
  */
-u_int64_t intr_msixcfg_addr(const int intr);
-u_int64_t intr_fwcfg_addr(const int intr);
-u_int64_t intr_drvcfg_addr(const int intr);
-u_int64_t intr_assert_addr(const int intr);
 u_int64_t intr_msixcfg_addr(const int intrb);
 u_int32_t intr_msixcfg_size(const int intrc);
 u_int64_t intr_fwcfg_addr(const int intrb);
@@ -76,7 +72,6 @@ u_int32_t intr_assert_data(void);
 u_int64_t intr_pba_addr(const int lif);
 u_int32_t intr_pba_size(const int intrc);
 u_int64_t intr_pba_cfg_addr(const int lif);
-u_int64_t intr_state_addr(const int intr);
 
 /*
  * Interrupt resource configuration/initialization.

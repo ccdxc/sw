@@ -14,13 +14,10 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
-#define VFSTRIDE_BASE   \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
-     CAP_PXB_CSR_CFG_TGT_VF_CFG_STRIDE_BYTE_ADDRESS)
-#define VFSTRIDE_COUNT  \
-    CAP_PXB_CSR_CFG_TGT_VF_CFG_STRIDE_ARRAY_COUNT
+#define VFSTRIDE_BASE   PXB_(CFG_TGT_VF_CFG_STRIDE)
+#define VFSTRIDE_COUNT  ASIC_(PXB_CSR_CFG_TGT_VF_CFG_STRIDE_ARRAY_COUNT)
 #define VFSTRIDE_STRIDE \
-    (CAP_PXB_CSR_CFG_TGT_VF_CFG_STRIDE_ARRAY_ELEMENT_SIZE * 4)
+    (ASIC_(PXB_CSR_CFG_TGT_VF_CFG_STRIDE_ARRAY_ELEMENT_SIZE) * 4)
 
 static u_int64_t
 vfstride_addr(const int idx)
@@ -45,6 +42,12 @@ vfstride_set(const int idx,
             u_int32_t d:5;
             u_int32_t f:5;
             u_int32_t addrmaxdw:10;
+#ifdef ASIC_ELBA
+            u_int32_t psen:1;   /* port stride enable */
+            u_int32_t bsen:1;   /* bus  stride enable */
+            u_int32_t dsen:1;   /* dev  stride enable */
+            u_int32_t fsen:1;   /* fnc  stride enable */
+#endif
         } __attribute__((packed));
         u_int32_t w;
     } e;

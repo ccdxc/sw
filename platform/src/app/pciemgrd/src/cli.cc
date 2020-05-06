@@ -20,11 +20,12 @@
 #include "platform/pal/include/pal.h"
 #include "platform/cfgspace/include/cfgspace.h"
 #include "platform/pciehdevices/include/pciehdevices.h"
-#include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "platform/evutils/include/evutils.h"
-#include "platform/pciemgr/include/pciemgr.h"
+#include "platform/pciemgrutils/include/pciehdev.h"
+#include "platform/pciemgrutils/include/pciehcfg.h"
+#include "platform/pciemgr/include/pciehw_dev.h"
 #include "platform/pcieport/include/pcieport.h"
-#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
+#include "platform/pciemgrd/pciemgrd_impl.hpp"
 #include "pciemgrd_impl.hpp"
 
 /******************************************************************/

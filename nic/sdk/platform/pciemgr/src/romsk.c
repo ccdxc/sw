@@ -14,15 +14,13 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
+#define ROMSK_BASE      PXB_(DHS_TGT_ROMASK)
+#define ROMSK_COUNT     ASIC_(PXB_CSR_DHS_TGT_ROMASK_ENTRY_ARRAY_COUNT)
+#define ROMSK_STRIDE    8
+
 static u_int64_t
 romsk_addr(const int index)
 {
-#define ROMSK_BASE      \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_DHS_TGT_ROMASK_BYTE_ADDRESS)
-#define ROMSK_COUNT     \
-    CAP_PXB_CSR_DHS_TGT_ROMASK_ENTRY_ARRAY_COUNT
-#define ROMSK_STRIDE    8
-
     assert(index >= 0 && index < ROMSK_COUNT);
     return ROMSK_BASE + (index * ROMSK_STRIDE);
 }

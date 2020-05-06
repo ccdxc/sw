@@ -19,16 +19,12 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
-#define PMT_BASE        \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_DHS_TGT_PMT_BYTE_ADDRESS)
+#define PMT_BASE        PXB_(DHS_TGT_PMT)
 #define PMT_STRIDE      \
-    (CAP_PXB_CSR_DHS_TGT_PMT_ENTRY_ARRAY_ELEMENT_SIZE * 4 * 8)
-#define PMT_GRST   \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_CFG_TGT_PMT_GRST_BYTE_ADDRESS)
-#define PMR_BASE        \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_DHS_TGT_PMR_BYTE_ADDRESS)
-#define PMR_STRIDE      \
-    CAP_PXB_CSR_DHS_TGT_PMR_ENTRY_BYTE_SIZE
+    (ASIC_(PXB_CSR_DHS_TGT_PMT_ENTRY_ARRAY_ELEMENT_SIZE) * 4 * 8)
+#define PMT_GRST        PXB_(CFG_TGT_PMT_GRST)
+#define PMR_BASE        PXB_(DHS_TGT_PMR)
+#define PMR_STRIDE      ASIC_(PXB_CSR_DHS_TGT_PMR_ENTRY_BYTE_SIZE)
 
 static int
 pmt_count(void)
@@ -444,6 +440,8 @@ pciehw_pmt_setaddr(pciehwbar_t *phwbar, const u_int64_t addr)
 void
 pmt_init(void)
 {
+    STATIC_ASSERT(PMT_COUNT == ASIC_(PXB_CSR_DHS_TGT_PMT_ENTRIES));
+
     pmt_reset();
     prt_init();
 }

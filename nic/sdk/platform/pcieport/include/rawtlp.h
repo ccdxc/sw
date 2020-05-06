@@ -20,32 +20,7 @@ extern "C" {
  * can call this interface simultaneously.
  */
 
-#define RAWTLP_REQDW    12
-#define RAWTLP_REQB     (RAWTLP_REQDW * 4)
-
-#define RAWTLP_RSPDW    8
-#define RAWTLP_RSPB     (RAWTLP_RSPDW * 4)
-
-typedef union rawtlp_req_u {
-    uint32_t w[RAWTLP_REQDW];
-    uint8_t  b[RAWTLP_REQB];
-} rawtlp_req_t;
-
-typedef union rawtlp_rsp_u {
-    uint32_t w[RAWTLP_RSPDW];
-    uint8_t  b[RAWTLP_RSPB];
-} rawtlp_rsp_t;
-
-typedef union cfg_itr_raw_tlp_cmd_u {
-    struct {
-        uint32_t dw_cnt:4;
-        uint32_t port_id:3;
-        uint32_t cmd_go:1;
-    } __attribute__((packed));
-    uint32_t w;
-} cfg_itr_raw_tlp_cmd_t;
-
-typedef union sta_itr_raw_tlp_u {
+typedef union rawtlp_status_u {
     struct {
         uint32_t resp_rdy:1;
         uint32_t cpl_stat:3;
@@ -54,7 +29,7 @@ typedef union sta_itr_raw_tlp_u {
         uint32_t req_err:1;
     } __attribute__((packed));
     uint32_t w;
-} sta_itr_raw_tlp_t;
+} rawtlp_status_t;
 
 /*
  * rawtlp_send - This is the primary interface to use the
@@ -79,11 +54,11 @@ typedef union sta_itr_raw_tlp_u {
 int rawtlp_send(const int port,
                 const uint32_t *reqtlp, const size_t reqtlpsz,
                 uint32_t *rspdata, const size_t rspdatasz,
-                sta_itr_raw_tlp_t *sta);
+                rawtlp_status_t *sta);
 
 /*
  * rawtlp_sta_errs - Translate send status from rawtlp_send().
- *                   rawtlp_sta_errs() will translate the pcie raw tlp send
+ *                   rawtlp_sta_errs() will translate the pcie raw tlp status
  *                   to a -errno value, or 0 if no errors.  If any errors
  *                   are detected they are logged.
  *
@@ -95,7 +70,7 @@ int rawtlp_send(const int port,
  *              -EFAULT         req_err
  *              -EIO            cpl_stat != CPL_SUCCESS
  */
-int rawtlp_sta_errs(const int port, sta_itr_raw_tlp_t *sta);
+int rawtlp_sta_errs(const int port, rawtlp_status_t *sta);
 
 /*
  * hostmem_read - Read from host memory

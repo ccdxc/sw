@@ -21,19 +21,14 @@
 #include "pciehw_impl.h"
 #include "notify.h"
 
-#define NOTIFY_EN       \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_CFG_TGT_NOTIFY_EN_BYTE_OFFSET)
-#define NOTIFY_RING_SIZE \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
-     CAP_PXB_CSR_CFG_TGT_REQ_NOTIFY_RING_SIZE_BYTE_OFFSET)
+#define NOTIFY_EN               PXB_(CFG_TGT_NOTIFY_EN)
+#define NOTIFY_RING_SIZE        PXB_(CFG_TGT_REQ_NOTIFY_RING_SIZE)
 
-#define NOTIFY_BASE \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_DHS_TGT_NOTIFY_BYTE_OFFSET)
-#define NOTIFY_STRIDE 4
+#define NOTIFY_BASE             PXB_(DHS_TGT_NOTIFY)
+#define NOTIFY_STRIDE           4
 
-#define REQ_NOTIFY_BASE \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_CFG_TGT_REQ_NOTIFY_BYTE_OFFSET)
-#define REQ_NOTIFY_STRIDE 4
+#define REQ_NOTIFY_BASE         PXB_(CFG_TGT_REQ_NOTIFY)
+#define REQ_NOTIFY_STRIDE       4
 
 static u_int64_t
 notify_addr(const int port)
@@ -50,8 +45,7 @@ req_notify_addr(const int port)
 static u_int64_t
 notify_int_addr(void)
 {
-    return (CAP_ADDR_BASE_PXB_PXB_OFFSET +
-            CAP_PXB_CSR_CFG_TGT_REQ_NOTIFY_INT_BYTE_OFFSET);
+    return PXB_(CFG_TGT_REQ_NOTIFY_INT);
 }
 
 static void

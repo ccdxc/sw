@@ -1,22 +1,17 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2020, Pensando Systems Inc.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <assert.h>
 #include <inttypes.h>
 #include <linux/pci_regs.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pp_c_hdr.h"
-
-#include "platform/pal/include/pal.h"
-#include "platform/pciemgr/include/pciemgr.h"
-#include "pcieport.h"
-#include "portcfg.h"
+#include "platform/pcieport/include/pcieport.h"
+#include "platform/pcieport/include/portcfg.h"
+#include "portcfgpd.h"
 
 typedef union {
     u_int32_t d;
@@ -27,15 +22,13 @@ typedef union {
 static u_int32_t
 portcfg_readdw(const int port, const u_int16_t addr)
 {
-    assert(addr < 4096);
-    return pal_reg_rd32(PXC_(DHS_C_MAC_APB_ENTRY, port) + addr);
+    return portcfgpd_readdw(port, addr);
 }
 
 static void
 portcfg_writedw(const int port, const u_int16_t addr, u_int32_t val)
 {
-    assert(addr < 4096);
-    pal_reg_wr32(PXC_(DHS_C_MAC_APB_ENTRY, port) + addr, val);
+    portcfgpd_writedw(port, addr, val);
 }
 
 u_int8_t

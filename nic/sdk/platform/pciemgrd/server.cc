@@ -11,6 +11,7 @@
 
 #include "platform/evutils/include/evutils.h"
 #include "platform/pciemgr/include/pciemgr.h"
+#include "platform/pciemgr/include/pciehdev_event.h"
 #include "platform/pciehdevices/include/pciehdevices.h"
 #include "platform/pcieport/include/pcieport.h"
 #include "platform/pcieport/include/portmap.h"

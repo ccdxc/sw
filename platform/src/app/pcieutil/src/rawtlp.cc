@@ -15,7 +15,6 @@
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/misc/include/bdf.h"
 #include "nic/sdk/platform/pcietlp/include/pcietlp.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/platform/pcieport/include/portcfg.h"
 #include "nic/sdk/platform/pcieport/include/rawtlp.h"
@@ -250,17 +249,17 @@ rawtlp_raw(int argc, char *argv[])
         port = default_pcieport();
     }
 
-    rawtlp_req_t req;
-    memset(&req, 0, sizeof(req));
-    n = hex_encode(argv[optind], (char *)req.b, sizeof(req.b));
+    uint32_t req[12];
+    memset(req, 0, sizeof(req));
+    n = hex_encode(argv[optind], (char *)req, sizeof(req));
     if (n < 0) {
         fprintf(stderr, "invalid hexbytes\n");
         return;
     }
 
-    rawtlp_rsp_t rsp;
-    sta_itr_raw_tlp_t sta;
-    r = rawtlp_send(port, req.w, n, rsp.w, sizeof(rsp.w), &sta);
+    uint32_t rsp[8];
+    rawtlp_status_t sta;
+    r = rawtlp_send(port, req, n, rsp, sizeof(rsp), &sta);
     if (r < 0) {
         fprintf(stderr, "rawtlp%d send failed: %d\n", port, r);
         return;
@@ -272,7 +271,7 @@ rawtlp_raw(int argc, char *argv[])
     }
 
     // Display all response words.
-    hexdump(0, (char *)rsp.b, sizeof(rsp.b));
+    hexdump(0, (char *)rsp, sizeof(rsp));
 
     return;
 

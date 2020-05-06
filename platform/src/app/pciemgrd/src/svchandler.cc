@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <cinttypes>
 
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 
 #include "delphic.h"

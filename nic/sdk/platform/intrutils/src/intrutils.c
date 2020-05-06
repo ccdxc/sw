@@ -1,56 +1,48 @@
 /*
- * Copyright (c) 2017-2019, Pensando Systems Inc.
+ * Copyright (c) 2017-2020, Pensando Systems Inc.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <stddef.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <assert.h>
-#include <inttypes.h>
 #include <sys/param.h>
 
 #include "platform/pal/include/pal.h"
+#include "platform/intrutils/include/intrutils.h"
+#include "intrutilspd.h"
 
-#include "cap_top_csr_defines.h"
-#include "cap_intr_c_hdr.h"
-
-#include "intrutils.h"
-
-#define NWORDS(a)       (sizeof(a) / sizeof(u_int32_t))
-
-#define INTR_BASE               CAP_ADDR_BASE_INTR_INTR_OFFSET
-
-#define INTR_MSIXCFG_OFFSET     CAP_INTR_CSR_DHS_INTR_MSIXCFG_BYTE_OFFSET
+#define INTR_MSIXCFG_OFFSET     ASIC_(INTR_CSR_DHS_INTR_MSIXCFG_BYTE_OFFSET)
 #define INTR_MSIXCFG_BASE       (INTR_BASE + INTR_MSIXCFG_OFFSET)
 #define INTR_MSIXCFG_STRIDE     0x10
 
-#define INTR_FWCFG_OFFSET       CAP_INTR_CSR_DHS_INTR_FWCFG_BYTE_OFFSET
+#define INTR_FWCFG_OFFSET       ASIC_(INTR_CSR_DHS_INTR_FWCFG_BYTE_OFFSET)
 #define INTR_FWCFG_BASE         (INTR_BASE + INTR_FWCFG_OFFSET)
 #define INTR_FWCFG_STRIDE       0x8
 
-#define INTR_DRVCFG_OFFSET      CAP_INTR_CSR_DHS_INTR_DRVCFG_BYTE_OFFSET
+#define INTR_DRVCFG_OFFSET      ASIC_(INTR_CSR_DHS_INTR_DRVCFG_BYTE_OFFSET)
 #define INTR_DRVCFG_BASE        (INTR_BASE + INTR_DRVCFG_OFFSET)
 #define INTR_DRVCFG_STRIDE      0x20
 
-#define INTR_PBA_CFG_OFFSET     CAP_INTR_CSR_DHS_INTR_PBA_CFG_BYTE_OFFSET
+#define INTR_PBA_CFG_OFFSET     ASIC_(INTR_CSR_DHS_INTR_PBA_CFG_BYTE_OFFSET)
 #define INTR_PBA_CFG_BASE       (INTR_BASE + INTR_PBA_CFG_OFFSET)
 #define INTR_PBA_CFG_STRIDE     0x4
 
-#define INTR_PBA_OFFSET         CAP_INTR_CSR_DHS_INTR_PBA_ARRAY_BYTE_OFFSET
+#define INTR_PBA_OFFSET         ASIC_(INTR_CSR_DHS_INTR_PBA_ARRAY_BYTE_OFFSET)
 #define INTR_PBA_BASE           (INTR_BASE + INTR_PBA_OFFSET)
 #define INTR_PBA_STRIDE         0x8
 
-#define INTR_ASSERT_OFFSET      CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET
+#define INTR_ASSERT_OFFSET      ASIC_(INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET)
 #define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
 #define INTR_ASSERT_STRIDE      0x4
 #define INTR_ASSERT_DATA        0x00000001 /* in little-endian */
 
-#define INTR_STATE_OFFSET       CAP_INTR_CSR_DHS_INTR_STATE_BYTE_OFFSET
+#define INTR_COALESCE_OFFSET    ASIC_(INTR_CSR_DHS_INTR_COALESCE_BYTE_OFFSET)
+#define INTR_COALESCE_BASE      (INTR_BASE + INTR_COALESCE_OFFSET)
+#define INTR_COALESCE_STRIDE    0x8
+
+#define INTR_STATE_OFFSET       ASIC_(INTR_CSR_DHS_INTR_STATE_BYTE_OFFSET)
 #define INTR_STATE_BASE         (INTR_BASE + INTR_STATE_OFFSET)
 #define INTR_STATE_STRIDE       0x10
+
+#define NWORDS(a)               (sizeof(a) / sizeof(u_int32_t))
 
 u_int64_t
 intr_msixcfg_addr(const int intrb)
@@ -508,32 +500,10 @@ intr_reset_dev(const int intrb, const int intrc, const int dmask)
 }
 
 /*
- * Default hw config for INTX message needs adjustment
- * for correct operation.
- */
-static void
-intr_cfg_legacy_intx(void)
-{
-    const u_int64_t pa =
-        (INTR_BASE + CAP_INTR_CSR_CFG_LEGACY_INTX_PCIE_MSG_HDR_BYTE_ADDRESS);
-    u_int32_t w[4];
-
-    pal_reg_rd32w(pa, w, NWORDS(w));
-    w[0] = 0x34;
-    pal_reg_wr32w(pa, w, NWORDS(w));
-}
-
-/*
  * One-time hardware initialization.
  */
 void
 intr_hwinit(void)
 {
-    intr_cfg_legacy_intx();
-    if (!pal_is_asic()) {
-        intr_coal_set_resolution(83);
-    } else {
-        /* set 3.0us resolution */
-        intr_coal_set_resolution(2500);
-    }
+    intrpd_hwinit();
 }

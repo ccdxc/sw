@@ -9,10 +9,9 @@
 #include <getopt.h>
 #include <cinttypes>
 
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-
 #include "cmd.h"
 #include "utils.hpp"
+#include "pcieutilpd.h"
 
 static void
 stats(int argc, char *argv[])

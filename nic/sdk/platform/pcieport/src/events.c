@@ -13,9 +13,8 @@
 
 #include "platform/misc/include/misc.h"
 #include "platform/pciemgrutils/include/pciesys.h"
-#include "platform/pciemgr/include/pciemgr.h"
-#include "pcieport.h"
-#include "portcfg.h"
+#include "platform/pcieport/include/pcieport.h"
+#include "platform/pcieport/include/portcfg.h"
 #include "pcieport_impl.h"
 
 typedef struct pcieport_handler_info_s {

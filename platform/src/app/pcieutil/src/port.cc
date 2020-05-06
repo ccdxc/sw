@@ -14,7 +14,6 @@
 #include "lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/misc/include/bdf.h"
 #include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/platform/pcieport/include/portmap.h"
 #include "nic/sdk/platform/pcieport/include/portcfg.h"

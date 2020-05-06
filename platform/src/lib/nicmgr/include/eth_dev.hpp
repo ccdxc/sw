@@ -16,11 +16,8 @@
 #include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/platform/devapi/devapi.hpp"
 
-#ifdef __aarch64__
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-#endif
+#include "nic/sdk/platform/pciemgr/include/pciehdev_event.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 
 #include "device.hpp"
 #include "eth_lif.hpp"

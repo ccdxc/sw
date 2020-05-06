@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018,2020, Pensando Systems Inc.
  *
  * internal.h : Add all helper/internal functions here.
  */
@@ -8,8 +8,6 @@
 #define __PAL_INTERNAL_H__
 
 #include <string.h>
-#include "cap_top_csr_defines.h"
-#include "cap_ms_c_hdr.h"
 
 struct pal_mem_phys_range_s;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2020, Pensando Systems Inc.
  */
 
 #ifndef __PCIEPORT_H__
@@ -12,9 +12,18 @@ extern "C" {
 #endif
 #endif
 
+#include "platform/pciemgr/include/pciemgr_params.h"
 #include "pcieport_events.h"
 #include "pcieport_stats.h"
 #include "serdes.h"
+
+/* XXX ELBA-TODO - some unit tests still use #ifdefs */
+#ifdef ASIC_CAPRI
+#include "capri/pcieportpd.h"
+#endif
+#ifdef ASIC_ELBA
+#include "elba/pcieportpd.h"
+#endif
 
 #define PCIEPORT_VERSION        1
 #define PCIEPORT_NPORTS         8
@@ -118,9 +127,6 @@ pcieport_get(const int port)
 int pcieport_open(const int port, pciemgr_initmode_t initmode);
 void pcieport_close(const int port);
 
-struct pciemgr_params_s;
-typedef struct pciemgr_params_s pciemgr_params_t;
-
 int pcieport_hostconfig(const int port, const pciemgr_params_t *params);
 int pcieport_crs_off(const int port);
 int pcieport_is_accessible(const int port);
@@ -144,58 +150,10 @@ void pcieport_showports(void);
 void pcieport_showportstats(const int port, const unsigned int flags);
 void pcieport_clearportstats(const int port, const unsigned int flags);
 pcieport_stats_t *pcieport_stats_get(const int port);
+int pcieport_get_recovery(const int port);
 
 const char *pcieport_stname(const pcieportst_t st);
 const char *pcieport_evname(const pcieportev_t ev);
-
-/*
- * Register convenience macros.
- */
-#define PP_(REG) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + CAP_PP_CSR_ ##REG## _BYTE_ADDRESS)
-
-#define PXB_(REG) \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_ ##REG## _BYTE_ADDRESS)
-
-#define PXC_(REG, pn) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + \
-     ((pn) * CAP_PXC_CSR_BYTE_SIZE) + \
-     CAP_PP_CSR_PORT_C_ ##REG## _BYTE_ADDRESS)
-
-#define PXP_(REG, pn) \
-    (CAP_ADDR_BASE_PP_PP_OFFSET + \
-     ((pn) * CAP_PXP_CSR_BYTE_SIZE) + \
-     CAP_PP_CSR_PORT_P_ ##REG## _BYTE_ADDRESS)
-
-/* sta_rst flags */
-#define STA_RSTF_(REG) \
-    (CAP_PXC_CSR_STA_C_PORT_RST_ ##REG## _FIELD_MASK)
-
-/* sta_c_port_mac flags */
-#define STA_C_PORT_MACF_(REG) \
-    (CAP_PXC_CSR_STA_C_PORT_MAC_ ##REG## _FIELD_MASK)
-
-/* sta_p_port_mac flags */
-#define STA_P_PORT_MACF_(REG) \
-    (CAP_PXP_CSR_STA_P_PORT_MAC_ ##REG## _FIELD_MASK)
-
-/* cfg_mac flags */
-#define CFG_MACF_(REG) \
-    (CAP_PXC_CSR_CFG_C_PORT_MAC_CFG_C_PORT_MAC_ ##REG## _FIELD_MASK)
-
-/* mac_intreg flags */
-#define MAC_INTREGF_(REG) \
-    (CAP_PXC_CSR_INT_C_MAC_INTREG_ ##REG## _INTERRUPT_FIELD_MASK)
-
-#define PP_INTREG_PERST0N \
-    CAP_PP_CSR_INT_PP_INTREG_PERST0N_DN2UP_INTERRUPT_FIELD_MASK
-#define PP_INTREG_PERSTN(port) \
-    (PP_INTREG_PERST0N >> (port))
-
-#define PP_INTREG_PORT0_C_INT_INTERRUPT \
-    CAP_PP_CSR_INT_PP_INTREG_PORT0_C_INT_INTERRUPT_FIELD_MASK
-#define PP_INTREG_PORT_C_INT_INTERRUPT(port) \
-    (PP_INTREG_PORT0_C_INT_INTERRUPT >> ((port) * 2))
 
 #ifdef __cplusplus
 }

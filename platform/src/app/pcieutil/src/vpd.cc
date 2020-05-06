@@ -9,9 +9,8 @@
 #include <getopt.h>
 #include <cinttypes>
 
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "cmd.h"
+#include "pcieutilpd.h"
 
 static void
 vpd(int argc, char *argv[])

@@ -10,12 +10,10 @@
 #include <cinttypes>
 
 #include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "cmd.h"
 #include "utils.hpp"
+#include "pcieutilpd.h"
 
 static uint16_t
 default_lanemask(void)

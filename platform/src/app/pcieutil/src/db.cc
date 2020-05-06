@@ -9,11 +9,9 @@
 #include <getopt.h>
 #include <cinttypes>
 
-#include "cap_top_csr_defines.h"
-#include "cap_wa_c_hdr.h"
-
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "cmd.h"
+#include "pcieutilpd.h"
 
 typedef union {
     struct {
@@ -33,11 +31,11 @@ typedef union {
 } db_err_activity_log_entry_t;
 
 #define DBERR_BASE \
-    (CAP_ADDR_BASE_DB_WA_OFFSET + \
-     CAP_WA_CSR_DHS_DOORBELL_ERR_ACTIVITY_LOG_ENTRY_BYTE_ADDRESS)
+    (ASIC_(ADDR_BASE_DB_WA_OFFSET) + \
+     ASIC_(WA_CSR_DHS_DOORBELL_ERR_ACTIVITY_LOG_ENTRY_BYTE_ADDRESS))
 #define DBERR_STRIDE 0x8
 #define DBERR_COUNT \
-    CAP_WA_CSR_DHS_DOORBELL_ERR_ACTIVITY_LOG_ENTRY_ARRAY_COUNT
+    ASIC_(WA_CSR_DHS_DOORBELL_ERR_ACTIVITY_LOG_ENTRY_ARRAY_COUNT)
 
 typedef union {
     struct {
@@ -68,11 +66,11 @@ typedef union {
 } lif_qstate_map_entry_t;
 
 #define LIF_QSTATE_MAP_BASE \
-    (CAP_ADDR_BASE_DB_WA_OFFSET + \
-     CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_BYTE_ADDRESS)
+    (ASIC_(ADDR_BASE_DB_WA_OFFSET) + \
+     ASIC_(WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_BYTE_ADDRESS))
 #define LIF_QSTATE_MAP_STRIDE   0x10
 #define LIF_QSTATE_MAP_COUNT \
-    CAP_WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ARRAY_COUNT
+    ASIC_(WA_CSR_DHS_LIF_QSTATE_MAP_ENTRY_ARRAY_COUNT)
 
 #define DBF_QSTATE      0x1
 

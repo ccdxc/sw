@@ -240,9 +240,8 @@ pciehwdev_cfgwr(pciehwdev_t *phwdev,
 static void
 pciehw_db_init(void)
 {
-#define DOORBELL_BASE \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
-     CAP_PXB_CSR_CFG_TGT_DOORBELL_BASE_BYTE_OFFSET)
+#ifdef ASIC_CAPRI
+#define DOORBELL_BASE PXB_(CFG_TGT_DOORBELL_BASE)
     union {
         struct {
             u_int32_t addr_33_24:10;
@@ -257,6 +256,7 @@ pciehw_db_init(void)
     e.db_32b_sel = 0x3;
 
     pal_reg_wr32(DOORBELL_BASE, e.w);
+#endif
 }
 
 static void
@@ -556,6 +556,22 @@ pciehw_set_initmode(void)
     }
 }
 
+static void
+pciehw_struct_size_checks(void)
+{
+    /* make sure _pad[] is the largest item in the union */
+#define CHECK_PAD(T) \
+    do { T t; STATIC_ASSERT(sizeof(t) == sizeof(t._pad)); } while (0)
+
+    CHECK_PAD(pciehwdev_t);
+    CHECK_PAD(pciehwbar_t);
+    CHECK_PAD(pciehw_port_t);
+    CHECK_PAD(pciehw_spmt_t);
+    CHECK_PAD(pciehw_sprt_t);
+    CHECK_PAD(pciemgr_stats_t);
+#undef CHECK_PAD
+}
+
 int
 pciehw_open(pciemgr_params_t *params)
 {
@@ -765,8 +781,12 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     /* cfg after bar above */
     pciehw_cfg_finalize(pdev);
 
+#ifdef ASIC_CAPRI
+    /* XXX ELBA-TODO - no intr regs on haps2? */
+
     /* init_intr() now that we have a parent link and cfg */
     pciehw_intr_init(phwdev);
+#endif
 
     child = pciehdev_get_child(pdev);
     if (child) {

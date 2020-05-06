@@ -16,16 +16,8 @@
 #include <sys/types.h>
 
 #include "platform/evutils/include/evutils.h"
+#include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pciehdevices/include/pciehdevices.h"
-#include "platform/pciemgrutils/include/pmt.h"
-#include "platform/pciemgrutils/include/pciehbar.h"
-#include "platform/pciemgrutils/include/pciehbar_impl.h"
-#include "platform/pciemgrutils/include/pciehcfg.h"
-#include "platform/pciemgrutils/include/pciehcfg_impl.h"
-#include "platform/pciemgrutils/include/pciehdev.h"
-#include "platform/pciemgrutils/include/pciehdev_impl.h"
-#include "platform/pciemgrutils/include/pciemgrutils.h"
-#include "platform/pciemgr/include/pciemgr.h"
 #include "platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/pciemgr_if/include/pmserver.h"
 

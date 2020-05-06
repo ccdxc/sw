@@ -10,16 +10,10 @@
 #include <sys/param.h>
 #include <linux/pci_regs.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pxb_c_hdr.h"
-#include "cap_pp_c_hdr.h"
-
 #include "platform/evutils/include/evutils.h"
 #include "platform/misc/include/misc.h"
-#include "platform/pal/include/pal.h"
-#include "platform/pciemgr/include/pciemgr.h"
-#include "platform/pciemgrutils/include/pciemgrutils.h"
-#include "platform/pciemgr/include/pciehw.h"
+#include "platform/pciemgrutils/include/pciesys.h"
+#include "platform/pciemgr/include/pciemgr_stats.h"
 #include "platform/pciemgr/include/pciehw_dev.h"
 #include "platform/pcieport/include/pcieport.h"
 #include "platform/pcieport/include/portcfg.h"
@@ -297,8 +291,7 @@ gather_health_info(const int port)
         nhi->aer_uesta = portcfg_readd(port, PORTCFG_CAP_AER + 0x4);
         nhi->aer_cesta = portcfg_readd(port, PORTCFG_CAP_AER + 0x10);
 
-        uint64_t pa = PXP_(SAT_P_PORT_CNT_CORE_INITIATED_RECOVERY, port);
-        nhi->recovery = pal_reg_rd32(pa);
+        nhi->recovery = pcieport_get_recovery(port);
 #if 0 // XXX gen4 TODO
         if (nhi->cur_width == 4) {
             nhi->physl_sta = portcfg_readd(port, PORTCFG_CAP_PHYSLAYER + 0xc);

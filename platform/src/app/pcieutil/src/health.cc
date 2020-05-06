@@ -10,24 +10,28 @@
 #include <cinttypes>
 #include <linux/pci_regs.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pp_c_hdr.h"
-
 #include "platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/platform/pcieport/include/portcfg.h"
 
 #include "cmd.h"
 #include "utils.hpp"
+#include "pcieutilpd.h"
 
 static void
 show_port_lanes(void)
 {
+#if defined(ASIC_CAPRI)
     // make sure all lanes are detected
-    const uint16_t port_lanes = pal_reg_rd32(PP_(PORT_P_STA_P_PORT_LANES_7_0));
+    const uint16_t port_lanes =
+        pal_reg_rd32(PP_(PORT_P_STA_P_PORT_LANES_7_0, 0));
     printf("port_lanes.detected: 0x%02x\n", port_lanes & 0xff);
     printf("port_lanes.active:   0x%02x\n", (port_lanes >> 8) & 0xff);
+#elif defined(ASIC_ELBA)
+    // XXX ELBA-TODO push this down to asic-specific?
+    printf("port_lanes.detected: ELBA-TODO\n");
+    printf("port_lanes.active:   ELBA-TODO\n");
+#endif
 }
 
 static void

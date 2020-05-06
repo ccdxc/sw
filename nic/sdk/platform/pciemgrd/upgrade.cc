@@ -12,8 +12,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pciemgr/include/pciemgr.h"
-#include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "platform/pcieport/include/pcieport.h"
 #include "platform/pciemgrd/pciemgrd_impl.hpp"
 

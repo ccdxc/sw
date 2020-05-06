@@ -11,7 +11,7 @@
 #include <sys/time.h>
 
 #include "lib/catalog/catalog.hpp"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pcieport/include/portmap.h"
 
 int

@@ -11,12 +11,15 @@
 #include <inttypes.h>
 #include <sys/param.h>
 
-#include "platform/misc/include/misc.h"
-#include "platform/misc/include/bdf.h"
 #include "platform/pal/include/pal.h"
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 #include "portmap.h"
+
+#define PORTMAP_BASE    PXB_(DHS_ITR_PORTMAP)
+#define PORTMAP_COUNT   ASIC_(PXB_CSR_DHS_ITR_PORTMAP_ENTRIES)
+#define PORTMAP_STRIDE  ASIC_(PXB_CSR_DHS_ITR_PORTMAP_ENTRY_BYTE_SIZE)
+#define PORTMAP_NWORDS  2
 
 static int
 portmap_size(void)

@@ -21,8 +21,7 @@
 #include "pciehw_impl.h"
 #include "indirect.h"
 
-#define IND_INFO_BASE \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_STA_TGT_IND_INFO_BYTE_OFFSET)
+#define IND_INFO_BASE   PXB_(STA_TGT_IND_INFO)
 #define IND_INFO_NWORDS 1
 #define IND_INFO_STRIDE 4
 
@@ -35,8 +34,7 @@ ind_info_addr(const int port)
 static u_int64_t
 indirect_int_addr(void)
 {
-    return (CAP_ADDR_BASE_PXB_PXB_OFFSET +
-            CAP_PXB_CSR_CFG_TGT_REQ_INDIRECT_INT_BYTE_OFFSET);
+    return PXB_(CFG_TGT_REQ_INDIRECT_INT);
 }
 
 static void
@@ -64,11 +62,11 @@ indirect_reason_str(const int reason)
 /*****************************************************************
  * aximst rams
  */
-#define AXIMST_BASE     \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_DHS_TGT_AXIMST0_BYTE_ADDRESS)
+#define AXIMST_BASE     PXB_(DHS_TGT_AXIMST0)
 #define AXIMST_STRIDE   \
-    (CAP_PXB_CSR_DHS_TGT_AXIMST1_BYTE_ADDRESS - \
-     CAP_PXB_CSR_DHS_TGT_AXIMST0_BYTE_ADDRESS)
+    (ASIC_(PXB_CSR_DHS_TGT_AXIMST1_BYTE_ADDRESS) - \
+     ASIC_(PXB_CSR_DHS_TGT_AXIMST0_BYTE_ADDRESS))
+
 #define AXIMST_NWORDS           4
 #define AXIMST_ENTRY_STRIDE     32
 #define AXIMST_ENTRIES_PER_PORT 16
@@ -194,9 +192,7 @@ read_pending_indirect_entry(const unsigned int port,
 void
 pciehw_indirect_complete(indirect_entry_t *ientry)
 {
-#define IND_RSP_ADDR    \
-    (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
-     CAP_PXB_CSR_DHS_TGT_IND_RSP_ENTRY_BYTE_ADDRESS)
+#define IND_RSP_ADDR    PXB_(DHS_TGT_IND_RSP_ENTRY)
 #define IND_RSP_NWORDS  5
     union {
         struct {

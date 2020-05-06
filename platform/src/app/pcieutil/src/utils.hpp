@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Pensando Systems Inc.
+ * Copyright (c) 2019-2020, Pensando Systems Inc.
  */
 
 #ifndef __UTILS_HPP__
@@ -7,8 +7,8 @@
 
 #include <time.h>
 
-int portmap_init_from_catalog();
-int default_pcieport();
+int portmap_init_from_catalog(void);
+int default_pcieport(void);
 
 static inline uint64_t
 gettimestamp(void)
@@ -19,4 +19,4 @@ gettimestamp(void)
     return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
 }
 
-#endif /* __UTILS_H__ */
+#endif /* __UTILS_HPP__ */

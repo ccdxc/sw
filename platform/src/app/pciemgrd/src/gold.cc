@@ -14,7 +14,7 @@
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 #include "pciemgrd_impl.hpp"

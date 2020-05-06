@@ -9,7 +9,8 @@
 #include <unistd.h>
 #include <cinttypes>
 
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#include "platform/pciemgr/include/pciehw_dev.h"
+#include "platform/pciemgr/include/pciemgr_stats.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 #include "delphic.h"

@@ -7,11 +7,8 @@
 
 #include <stddef.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pxb_c_hdr.h"
-#include "cap_pp_c_hdr.h"
-
 #include "events.h"
+#include "pcieportpd.h"
 
 pcieport_t *pcieport_get(const int port);
 int pcieport_onetime_init(pcieport_info_t *pi, pciemgr_initmode_t initmode);
@@ -43,28 +40,14 @@ u_int32_t pcieport_get_sta_c_port_mac(pcieport_t *p);
 int pcieport_get_mac_lanes_reversed(pcieport_t *p);
 int pcieport_get_ltssm_st_cnt(pcieport_t *p);
 void pcieport_set_ltssm_st_cnt(pcieport_t *p, const int cnt);
-int pcieport_serdes_init(void);
 void pcieport_intr_inherit(pcieport_t *p);
 void pcieport_intr_enable(const int port);
 void pcieport_intr_disable(const int port);
+void pcieport_clear_early_link_counts(pcieport_t *p);
 
 void pcieport_fault(pcieport_t *p, const char *fmt, ...)
     __attribute__((format (printf, 2, 3)));
 
 void pcieport_fsm_dbg(int argc, char *argv[]);
 
-static inline void
-pcieport_struct_size_checks(void)
-{
-    /* make sure _pad[] is the largest item in the union */
-#define CHECK_PAD(T) \
-    do { T t; STATIC_ASSERT(sizeof(t) == sizeof(t._pad)); } while (0)
-
-    CHECK_PAD(pcieport_t);
-    CHECK_PAD(pcieport_stats_t);
-#undef CHECK_PAD
-
-    /* keep the pcieport table at this offset */
-    STATIC_ASSERT(offsetof(pcieport_info_t, pcieport) == 8);
-}
 #endif /* __PCIEPORT_IMPL_H__ */

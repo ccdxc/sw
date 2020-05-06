@@ -9,15 +9,12 @@
 #include <inttypes.h>
 
 #include "platform/pal/include/pal.h"
+#include "platform/intrutils/include/intrutils.h"
+#include "intrutilspd.h"
 
-#include "cap_top_csr_defines.h"
-#include "cap_intr_c_hdr.h"
+#define INTR_BASE               ASIC_(ADDR_BASE_INTR_INTR_OFFSET)
 
-#include "intrutils.h"
-
-#define INTR_BASE               CAP_ADDR_BASE_INTR_INTR_OFFSET
-
-#define INTR_COALESCE_OFFSET    CAP_INTR_CSR_CFG_INTR_COALESCE_BYTE_OFFSET
+#define INTR_COALESCE_OFFSET    ASIC_(INTR_CSR_CFG_INTR_COALESCE_BYTE_OFFSET)
 #define INTR_COALESCE_BASE      (INTR_BASE + INTR_COALESCE_OFFSET)
 
 void

@@ -11,15 +11,9 @@
 #include <sys/time.h>
 
 #include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
-#include "nic/sdk/platform/pal/include/pal.h"
 
-#include "cap_top_csr_defines.h"
-#include "cap_pxb_c_hdr.h"
-#include "cap_pp_c_hdr.h"
 #include "cmd.h"
+#include "pcieutilpd.h"
 
 /*
 idx  typ vfst 0xaddr____ size INP

@@ -5,12 +5,11 @@
 #ifndef __PCIEHW_IMPL_H__
 #define __PCIEHW_IMPL_H__
 
-#include "cap_top_csr_defines.h"
-#include "cap_pxb_c_hdr.h"
-
 #include "platform/pciemgr/include/pciemgr.h"
+#include "platform/pciemgr/include/pciehdev_event.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 
+#include "pciemgrpd.h"
 #include "pmt.h"
 #include "prt.h"
 #include "vpd.h"
@@ -56,6 +55,8 @@ pciehwdev_t *pciehwdev_find_by_name(const char *name);
 
 u_int16_t pciehw_hostbdf(const int port, const u_int16_t lbdf);
 
+#define STATIC_ASSERT(cond) static_assert(cond, #cond)
+
 #include "hdrt.h"
 #include "portmap.h"
 #include "intr.h"
@@ -64,6 +65,7 @@ u_int16_t pciehw_hostbdf(const int port, const u_int16_t lbdf);
 int pciehw_cfg_init(void);
 int pciehw_cfg_finalize(pciehdev_t *pdev);
 int pciehw_cfg_finalize_done(pciehwdev_t *phwroot);
+enum pciehdev_rsttype_e; typedef enum pciehdev_rsttype_e pciehdev_rsttype_t;
 void pciehw_cfg_reset(pciehwdev_t *phwdev, const pciehdev_rsttype_t rsttype);
 
 int pciehwdev_cfgrd(pciehwdev_t *phwdev,
@@ -127,5 +129,7 @@ void pciehw_itr_port_init(void);
 
 void *pciehw_memset(void *s, int c, size_t n);
 void *pciehw_memcpy(void *dst, const void *src, size_t n);
+
+void pciehdev_event(const pciehdev_eventdata_t *evd);
 
 #endif /* __PCIEHW_IMPL_H__ */

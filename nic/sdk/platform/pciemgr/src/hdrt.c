@@ -18,6 +18,11 @@
 #include "pciehw_impl.h"
 #include "hdrt.h"
 
+#define HDRT_BASE       PXB_(DHS_ITR_PCIHDRT)
+#define HDRT_COUNT      ASIC_(PXB_CSR_DHS_ITR_PCIHDRT_ENTRIES)
+#define HDRT_STRIDE     ASIC_(PXB_CSR_DHS_ITR_PCIHDRT_ENTRY_BYTE_SIZE)
+#define HDRT_NWORDS     3
+
 static int
 hdrt_size(void)
 {

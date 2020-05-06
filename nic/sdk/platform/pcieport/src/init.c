@@ -12,9 +12,8 @@
 
 #include "platform/pal/include/pal.h"
 #include "platform/pciemgrutils/include/pciesys.h"
-#include "platform/pciemgr/include/pciemgr.h"
-#include "pcieport.h"
-#include "portmap.h"
+#include "platform/pcieport/include/pcieport.h"
+#include "platform/pcieport/include/portmap.h"
 #include "pcieport_impl.h"
 
 typedef struct pp_linkwidth_s {
@@ -164,7 +163,8 @@ pcieport_pp_linkwidth(void)
             }
         }
     }
-    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH), pplw.pp_linkwidth);
+    /* XXX ELBA-TODO PP_LINKWIDTH per port? */
+    pal_reg_wr32(PP_(CFG_PP_LINKWIDTH, 0), pplw.pp_linkwidth);
     return 0;
 }
 
@@ -180,9 +180,7 @@ pcieport_macfifo_thres(const int thres)
         } __attribute__((packed));
         u_int32_t w;
     } v;
-    const u_int64_t itr_tx_req =
-        (CAP_ADDR_BASE_PXB_PXB_OFFSET +
-         CAP_PXB_CSR_CFG_ITR_TX_REQ_BYTE_ADDRESS);
+    const u_int64_t itr_tx_req = PXB_(CFG_ITR_TX_REQ);
 
     v.w = pal_reg_rd32(itr_tx_req);
     v.macfifo_thres = thres;

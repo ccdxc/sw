@@ -17,7 +17,7 @@ test:
 
 .PHONY: test-sync-exp
 test-sync-exp:
-	$(Q)cd testcases; \
+	$(Q)cd testcases/$$ASIC; \
 	for f in *.out; do \
 		b=`basename $$f .out`; \
 		mv $$b.out $$b.exp; \

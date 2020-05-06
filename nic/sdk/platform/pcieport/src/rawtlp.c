@@ -13,14 +13,11 @@
 #include <inttypes.h>
 #include <sys/param.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pp_c_hdr.h"
-
-#include "platform/pal/include/pal.h"
+#include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pcietlp/include/pcietlp.h"
-#include "platform/pciemgr/include/pciemgr.h"
-#include "pcieport.h"
-#include "rawtlp.h"
+#include "platform/pcieport/include/pcieport.h"
+#include "platform/pcieport/include/rawtlp.h"
+#include "rawtlppd.h"
 
 static int rawtlp_lockfd = -1;
 
@@ -54,80 +51,22 @@ rawtlp_unlock(void)
 }
 
 static int
-rawtlp_req(const int port, const uint32_t *reqtlp, const size_t reqtlpsz)
-{
-    int i;
-
-    const int ndw = roundup(reqtlpsz, 4) >> 2;
-    if (ndw > 12) return -E2BIG;
-
-    uint32_t reqw[12];
-    for (i = 0; i < ndw; i++) {
-        reqw[i] = htobe32(reqtlp[i]); // be words for hw
-    }
-    for ( ; i < 12; i++) {
-        reqw[i] = htobe32(0); // zero unused words
-    }
-
-    pal_reg_wr32w(PXB_(CFG_ITR_RAW_TLP), reqw, 12);
-
-    cfg_itr_raw_tlp_cmd_t cmd;
-    memset(&cmd, 0, sizeof(cmd));
-    cmd.port_id = port;
-    cmd.dw_cnt = ndw;
-    cmd.cmd_go = 1;
-    pal_reg_wr32(PXB_(CFG_ITR_RAW_TLP_CMD), cmd.w);
-    return 0;
-}
-
-static void
-rawtlp_sta_itr_raw_tlp(sta_itr_raw_tlp_t *sta)
-{
-    sta->w = pal_reg_rd32(PXB_(STA_ITR_RAW_TLP));
-}
-
-static int
-rawtlp_resp_rdy(sta_itr_raw_tlp_t *sta)
-{
-    rawtlp_sta_itr_raw_tlp(sta);
-#ifdef __aarch64__
-    return sta->resp_rdy;
-#else
-    return 1;
-#endif
-}
-
-static int
-rawtlp_wait_rdy(sta_itr_raw_tlp_t *sta, const int timeout_us)
+rawtlp_wait_rdy(rawtlp_status_t *sta, const int timeout_us)
 {
     int us = 0;
 
     do {
-        if (rawtlp_resp_rdy(sta)) return us;
+        if (rawtlppd_resp_rdy(sta)) return us;
         usleep(1);
     } while (++us < timeout_us);
     return -ETIMEDOUT;
-}
-
-static int
-rawtlp_rsp_data(uint32_t *rsptlp, const size_t rsptlpsz)
-{
-    const int ndw = rsptlpsz >> 2;
-    if (ndw > 8) return -E2BIG;
-
-    uint32_t rspw[8];
-    pal_reg_rd32w(PXB_(STA_ITR_RAW_TLP_DATA), rspw, ndw);
-    for (int i = 0; i < ndw; i++) {
-        rsptlp[i] = be32toh(rspw[i]);
-    }
-    return 0;
 }
 
 int
 rawtlp_send(const int port,
             const uint32_t *reqtlp, const size_t reqtlpsz,
             uint32_t *rspdata, const size_t rspdatasz,
-            sta_itr_raw_tlp_t *sta)
+            rawtlp_status_t *sta)
 {
     int r = 0;
 
@@ -144,7 +83,7 @@ rawtlp_send(const int port,
         goto out_unlock;
     }
 
-    r = rawtlp_req(port, reqtlp, reqtlpsz);
+    r = rawtlppd_req(port, reqtlp, reqtlpsz);
     if (r < 0) {
         pciesys_logerror("rawtlp%d request failed: %d\n", port, r);
         goto out_unlock;
@@ -158,7 +97,7 @@ rawtlp_send(const int port,
     }
 
     if (rspdata) {
-        r = rawtlp_rsp_data(rspdata, rspdatasz);
+        r = rawtlppd_rsp_data(rspdata, rspdatasz);
         if (r < 0) {
             pciesys_logerror("rawtlp%d failed reading response data: %d\n",
                              port, r);
@@ -170,11 +109,10 @@ rawtlp_send(const int port,
     rawtlp_unlock();
  out:
     return r;
-
 }
 
 int
-rawtlp_sta_errs(const int port, sta_itr_raw_tlp_t *sta)
+rawtlp_sta_errs(const int port, rawtlp_status_t *sta)
 {
     if (sta->cpl_data_err ||
         sta->cpl_timeout_err ||
@@ -200,7 +138,7 @@ hostmem_read_stlp(const int port, const pcie_stlp_t *stlp, void *buf)
 {
     rawtlp_req_t req;
     rawtlp_rsp_t rsp;
-    sta_itr_raw_tlp_t sta;
+    rawtlp_status_t sta;
     int r;
 
     memset(&req, 0, sizeof(req));
@@ -240,7 +178,7 @@ static int
 hostmem_write_stlp(const int port, const pcie_stlp_t *stlp)
 {
     rawtlp_req_t req;
-    sta_itr_raw_tlp_t sta;
+    rawtlp_status_t sta;
     int r;
 
     memset(&req, 0, sizeof(req));

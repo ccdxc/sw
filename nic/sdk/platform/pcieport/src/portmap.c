@@ -13,14 +13,8 @@
 #include <inttypes.h>
 #include <sys/param.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pp_c_hdr.h"
-
-#include "platform/pal/include/pal.h"
-#include "platform/pcietlp/include/pcietlp.h"
-#include "platform/pciemgr/include/pciemgr.h"
-#include "pcieport.h"
-#include "portmap.h"
+#include "platform/pcieport/include/pcieport.h"
+#include "platform/pcieport/include/portmap.h"
 
 typedef struct portmapenv_s {
     int portmap_is_init;

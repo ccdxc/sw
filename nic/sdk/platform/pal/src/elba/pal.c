@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018,2020, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -17,6 +17,9 @@
 #include "mm_int.h"
 #include "internal.h"
 #include "capmem_dev.h"
+
+#include "elb_top_csr_defines.h"
+#include "elb_soc_c_hdr.h"
 
 static pal_data_t pal_data;
 
@@ -151,8 +154,8 @@ int
 pal_get_env(void)
 {
 #ifdef __aarch64__
-#define MS_STA_VER \
-    (CAP_ADDR_BASE_MS_MS_OFFSET + CAP_MS_CSR_STA_VER_BYTE_ADDRESS)
+#define STA_VER \
+    (ELB_ADDR_BASE_MS_SOC_OFFSET + ELB_SOC_CSR_STA_VER_BYTE_ADDRESS)
 
     union {
         struct {
@@ -163,7 +166,7 @@ pal_get_env(void)
         u_int32_t w;
     } reg;
 
-    reg.w = pal_reg_rd32(MS_STA_VER);
+    reg.w = pal_reg_rd32(STA_VER);
     return reg.chip_type;
 #else
     const char *env = getenv("PAL_ENV");

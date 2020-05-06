@@ -10,12 +10,10 @@
 #include <cinttypes>
 
 #include "platform/misc/include/bdf.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "cmd.h"
 #include "utils.hpp"
+#include "pcieutilpd.h"
 
 static void
 dev(int argc, char *argv[])

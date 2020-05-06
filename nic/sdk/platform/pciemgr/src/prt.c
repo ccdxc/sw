@@ -17,9 +17,8 @@
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
-#define PRT_BASE        (CAP_ADDR_BASE_PXB_PXB_OFFSET + \
-                         CAP_PXB_CSR_DHS_TGT_PRT_BYTE_ADDRESS)
-#define PRT_STRIDE      CAP_PXB_CSR_DHS_TGT_PRT_ENTRY_BYTE_SIZE
+#define PRT_BASE        PXB_(DHS_TGT_PRT)
+#define PRT_STRIDE      ASIC_(PXB_CSR_DHS_TGT_PRT_ENTRY_BYTE_SIZE)
 
 static int
 prt_count(void)
@@ -173,6 +172,7 @@ pciehw_prt_unload(const int prtbase, const int prtcount)
 void
 prt_init(void)
 {
+    STATIC_ASSERT(PRT_COUNT == ASIC_(PXB_CSR_DHS_TGT_PRT_ENTRIES));
     prt_clear_all();
 }
 

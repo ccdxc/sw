@@ -79,9 +79,9 @@ pcieport_set_int_pp_intreg(const int port, const int on)
     u_int32_t v;
 
     if (on) {
-        reg = PP_(INT_PP_INT_ENABLE_SET);
+        reg = PP_(INT_PP_INT_ENABLE_SET, port);
     } else {
-        reg = PP_(INT_PP_INT_ENABLE_CLEAR);
+        reg = PP_(INT_PP_INT_ENABLE_CLEAR, port);
     }
     v = 0;
     /* set port_c_int_interrupt so leaf intrs propagate up */
@@ -94,7 +94,7 @@ pcieport_set_int_pp_intreg(const int port, const int on)
 static void
 pcieport_set_int_groups_intreg(const int port, const int on)
 {
-    const u_int64_t reg = PP_(INT_GROUPS_INT_ENABLE_RW_REG);
+    const u_int64_t reg = PP_(INT_GROUPS_INT_ENABLE_RW_REG, port);
     u_int32_t v = pal_reg_rd32(reg);
 
     if (on) {
@@ -141,7 +141,7 @@ static void
 pcieport_ack_int_pp_intreg(const int port)
 {
 
-    const u_int64_t reg = PP_(INT_PP_INTREG);
+    const u_int64_t reg = PP_(INT_PP_INTREG, port);
     const u_int32_t v = PP_INTREG_PORT_C_INT_INTERRUPT(port);
 
     /* write-1-to-clear */
@@ -209,9 +209,9 @@ pcieport_handle_pp_intr(const int port)
 {
     u_int32_t int_pp;
 
-    int_pp = pal_reg_rd32(PP_(INT_PP_INTREG));
+    int_pp = pal_reg_rd32(PP_(INT_PP_INTREG, port));
     if (int_pp & PP_INTREG_PERSTN(port)) {
-        pal_reg_wr32(PP_(INT_PP_INTREG), PP_INTREG_PERSTN(port));
+        pal_reg_wr32(PP_(INT_PP_INTREG, port), PP_INTREG_PERSTN(port));
         return 0;
     }
     return -1;

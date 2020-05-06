@@ -14,7 +14,6 @@
 
 #include "platform/misc/include/misc.h"
 #include "platform/misc/include/bdf.h"
-#include "platform/pal/include/pal.h"
 #include "platform/pcietlp/include/pcietlp.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "platform/pciemgrutils/include/pciehcfg_impl.h"
