@@ -388,14 +388,21 @@ var _ = Describe("fwlog policy tests", func() {
 					}
 
 					// check syslog server status
-					cmd := "curl -s http://localhost:9013/debug/state"
+					cmd := "bash -c \"curl -s http://localhost:9013/debug/state | jq .tpagent \""
 					o := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naples, cmd))
 					dbg := struct {
 						FwlogCollectors []string `json:"fwlog-collectors"`
 					}{}
 
 					if err := json.Unmarshal([]byte(o), &dbg); err != nil {
+						fmt.Printf("received %v\n", o)
+						fmt.Printf("json error %v\n", err)
 						return err
+					}
+
+					if len(dbg.FwlogCollectors) == 0 {
+						fmt.Printf("collectors are not ready \n")
+						return fmt.Errorf("collectors are not ready")
 					}
 
 					for _, d := range dbg.FwlogCollectors {
