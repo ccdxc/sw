@@ -3,6 +3,7 @@ package rollout2rela_test
 import (
 	"errors"
 	"time"
+	"os"
 
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/venice/utils/log"
@@ -61,6 +62,7 @@ var _ = Describe("rollout rela to tot tests", func() {
 			Eventually(func() error {
 				return ts.model.VerifyRolloutStatus(rollout.Name)
 			}).Should(Succeed())
+			os.Unsetenv("RELEASE_A")
 			log.Infof("Rollout Completed. Waiting for Fuz tests to complete..")
 			errWaitingForFuz := func() error {
 				select {
