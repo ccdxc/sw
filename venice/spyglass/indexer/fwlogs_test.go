@@ -106,8 +106,8 @@ func SkipTestAppendOnlyWriter(t *testing.T) {
 	})
 
 	// Verify rate limiting done at Spyglass
-	t.Run("TestVerifyVosRateLimtingAndEventsAtSpyglass", func(t *testing.T) {
-		verifyVosRateLimtingAndEventsAtSpyglass(t)
+	t.Run("TestVerifyVosRateLimitingAndEventsAtSpyglass", func(t *testing.T) {
+		verifyVosRateLimitingAndEventsAtSpyglass(t)
 	})
 }
 
@@ -122,7 +122,7 @@ func SkipTestFlowLogsRateLimitingAtDSC(t *testing.T) {
 	setupTmAgent(ctx, t, r)
 	// TestDebuhRESTHandle
 	t.Run("TestVosRateLimitingAndEvents", func(t *testing.T) {
-		verifyVosRateLimtingAndEventsAtDSC(ctx, t, r, logger)
+		verifyVosRateLimitingAndEventsAtDSC(ctx, t, r, logger)
 	})
 }
 
@@ -361,12 +361,12 @@ func verifyDebugRESTHandle(ctx context.Context, t *testing.T, r resolver.Interfa
 	// Veirfy that indexing is enabled
 	config := getHelper()
 	v, ok := config["disableFwlogIndex"]
-	Assert(t, ok, "disableFwlogIndex is not present in /debug/config resposnse, response:", config)
+	Assert(t, ok, "disableFwlogIndex is not present in /debug/config response, response:", config)
 	Assert(t, v == true, "incorrect value of disableFwlogIndex, expected", true)
 
 	// verify flowlog rate limit config
 	fv, ok := config["flowlogsRLConfig"]
-	Assert(t, ok, "flowlogsRLConfig is not present in /debug/config resposnse, response:", config)
+	Assert(t, ok, "flowlogsRLConfig is not present in /debug/config response, response:", config)
 	rls, ok := fv.([]interface{})
 	Assert(t, ok, "flowlogsRLConfig type is not []map[string]interface{}, response:", fv)
 	Assert(t, len(rls) == 1, "atleast global rate limiter should be present, response:", fv)
@@ -405,12 +405,12 @@ func verifyDebugRESTHandle(ctx context.Context, t *testing.T, r resolver.Interfa
 	// Veirfy that indexing is disabled
 	config = getHelper()
 	v, ok = config["disableFwlogIndex"]
-	Assert(t, ok, "disableFwlogIndex is not present in /debug/config resposnse, response:", config)
+	Assert(t, ok, "disableFwlogIndex is not present in /debug/config response, response:", config)
 	Assert(t, v == false, "incorrect value of disableFwlogIndex, expected", false)
 
 	// verify flowlog rate limit config
 	fv, ok = config["flowlogsRLConfig"]
-	Assert(t, ok, "flowlogsRLConfig is not present in /debug/config resposnse, response:", config)
+	Assert(t, ok, "flowlogsRLConfig is not present in /debug/config response, response:", config)
 	rls, ok = fv.([]interface{})
 	Assert(t, ok, "flowlogsRLConfig type is not []map[string]interface{}, response:", fv)
 	Assert(t, len(rls) == 2, "incorrect number of limiters, response:", fv)
@@ -436,7 +436,7 @@ func verifyDebugRESTHandle(ctx context.Context, t *testing.T, r resolver.Interfa
 	AssertOk(t, err, "error is POSTing request for /debug/config")
 }
 
-func verifyVosRateLimtingAndEventsAtSpyglass(t *testing.T) {
+func verifyVosRateLimitingAndEventsAtSpyglass(t *testing.T) {
 	// Clear the old events
 	mockEventsRecorder.ClearEvents()
 
@@ -469,7 +469,7 @@ func verifyVosRateLimtingAndEventsAtSpyglass(t *testing.T) {
 	}, "failed to find flow logs rate limited event", "2s", "60s")
 }
 
-func verifyVosRateLimtingAndEventsAtDSC(ctx context.Context, t *testing.T, r resolver.Interface, logger log.Logger) {
+func verifyVosRateLimitingAndEventsAtDSC(ctx context.Context, t *testing.T, r resolver.Interface, logger log.Logger) {
 	vosCtx, stopVos := context.WithCancel(ctx)
 	defer func() {
 		stopVos()
@@ -491,7 +491,7 @@ func verifyVosRateLimtingAndEventsAtDSC(ctx context.Context, t *testing.T, r res
 			}
 		}
 		return false, nil
-	}, "failed to find flow logs reproting error event", "2s", "60s")
+	}, "failed to find flow logs reporting error event", "2s", "60s")
 }
 
 func setupTmAgent(ctx context.Context, t *testing.T, r resolver.Interface) {

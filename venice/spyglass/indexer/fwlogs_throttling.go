@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	// The maximum number of logs accepeted in pne batch by the indexer
+	// The maximum number of logs accepeted in one batch by the indexer
 	// burst = 50000 i.e. 5k burst for 10 seconds
 	defaultFlowlogsBurst = 50000
 	// The maximum rate of logs accepted by the indexer

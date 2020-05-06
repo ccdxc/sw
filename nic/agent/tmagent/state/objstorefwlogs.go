@@ -352,11 +352,11 @@ func putObjectHelper(ctx context.Context,
 				rateLimitedEventRaised = true
 				descr := ""
 				if logcount == "" {
-					descr = fmt.Sprintf("Flow logs could not be repoted from DSC %s,"+
+					descr = fmt.Sprintf("Flow logs could not be reported from DSC %s,"+
 						" bucketName %s, object name: %s, size %d bytes",
 						nodeUUID, bucketName, objectName, size)
 				} else {
-					descr = fmt.Sprintf("Flow logs could not be repoted from DSC %s,"+
+					descr = fmt.Sprintf("Flow logs could not be reported from DSC %s,"+
 						" bucketName %s, object name: %s, size %d bytes, logcount %s",
 						nodeUUID, bucketName, objectName, size, logcount)
 				}

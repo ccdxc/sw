@@ -92,7 +92,7 @@ func (idr *Indexer) fwlogsRequestCreator(id int, req *indexRequest, bulkTimeout 
 			return
 		}
 
-		// Veirfy rate
+		// Verify rate
 		if !idr.flowlogsRateLimiters.allowN(globalFlowlogsRateLimiter, logcount) {
 			idr.logger.Infof("Writer: %d batchsize len: %d, objectName %s, rate-limited",
 				id,
