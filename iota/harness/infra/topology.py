@@ -783,11 +783,6 @@ class Node(object):
                     except:
                         Logger.debug('failed to get pci info for node {0} nic {1}. error was: {2}'.format(self.__name, data_intf, traceback.format_exc()))
 
-            if self.IsNaplesHwWithBumpInTheWire() or self.IsNaplesHwWithBumpInTheWirePerf():
-                #make sure to use actual management
-                msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
-                msg.naples_config.nic_type = self.GetNicType()
-
             host_entity = msg.entities.add()
             host_entity.type = topo_pb2.ENTITY_TYPE_HOST
             host_entity.name = self.__name + "_host"

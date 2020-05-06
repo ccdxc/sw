@@ -1051,6 +1051,69 @@ func (naples *naplesHwNode) getNaplesMgmtInterface(osType string, nicType, hint 
 
 }
 
+func (naples *naplesHwNode) initNaplesMgmtInterface(nodeOs iota.TestBedNodeOs, naplesConfig *iota.NaplesConfig) error {
+	//IF IP is already set, then skip this procedure
+	if naplesConfig.NaplesIpAddress == "" {
+		naplesIPddress, err := naples.getNaplesMgmtIP(nodOSMap[nodeOs], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
+		if err != nil {
+			msg := fmt.Sprintf("Error in reading naples mgmt IP address : %s", err.Error())
+			naples.logger.Error(msg)
+		}
+		naplesConfig.NaplesIpAddress = naplesIPddress
+		naples.logger.Printf("Naples Mgmt IP is : %v", naplesIPddress)
+
+		naplesMgmtIntf, err := naples.getNaplesMgmtInterface(nodOSMap[nodeOs], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
+		if err != nil {
+			msg := fmt.Sprintf("Error in reading naples mgmt IP address : %s", err.Error())
+			naples.logger.Error(msg)
+		}
+		naples.logger.Printf("Naples Mgmt intf is : %v", naplesMgmtIntf)
+
+		if naplesMgmtIntf != "" {
+			intfIP := incrementIP(naplesIPddress)
+			if nodeOs != iota.TestBedNodeOs_TESTBED_NODE_OS_WINDOWS {
+				intfIP += "/24"
+				cmd := []string{"sudo", "ifconfig", naplesMgmtIntf, intfIP, "up"}
+				naples.logger.Infof("Bringing up intf : %v with IP %v with %v",
+					naplesMgmtIntf, intfIP, strings.Join(cmd, " "))
+				if _, stdout, err := Utils.Run(cmd, 0, false, true, nil); err != nil {
+					msg := fmt.Sprintf("Failed to bring interface %s up err : %s", naplesMgmtIntf, stdout)
+					naples.logger.Error(msg)
+					//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+				}
+			} else {
+				/*
+					ifName := windowsPortNameMapping[naplesMgmtIntf]["Name"]
+					naples.logger.Infof("Bringing up intf : %v with IP %v", ifName, intfIP)
+					cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter -Name '" + ifName + "' -Confirm:$false"}
+					if _, stdout, err := Utils.Run(cmd, 0, false, false, nil); err != nil {
+						msg := fmt.Sprintf("Failed to bring interface %s up err : %s", naplesMgmtIntf, stdout)
+						naples.logger.Error(msg)
+						//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+					}
+					cmd = []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetIPAddress -InterfaceAlias \"" + ifName + "\" -IPAddress " + intfIP + " -PrefixLength 24"}
+					if _, stdout, err := Utils.Run(cmd, 0, false, false, nil); err != nil {
+						msg := fmt.Sprintf("Failed to configure IP for interface %s err : %s", naplesMgmtIntf, stdout)
+						naples.logger.Error(msg)
+						//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+
+					}
+				*/
+			}
+		}
+	} else {
+		//
+		naplesIPddress, err := naples.getNaplesMgmtIP(nodOSMap[nodeOs], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
+		if err != nil {
+			msg := fmt.Sprintf("Error in reading naples mgmt IP address : %s", err.Error())
+			naples.logger.Error(msg)
+		}
+		naplesConfig.NaplesSecondaryIpAddress = naplesIPddress
+	}
+
+	return nil
+}
+
 //Init initalize node type
 func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 
@@ -1097,63 +1160,9 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		naplesConfig.HostIntfs = hostIntfs
 		naples.logger.Printf("Naples host interfaces : %v", naplesConfig.HostIntfs)
 
-		//IF IP is already set, then skip this procedure
-		if naplesConfig.NaplesIpAddress == "" {
-			naplesIPddress, err := naples.getNaplesMgmtIP(nodOSMap[in.GetOs()], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
-			if err != nil {
-				msg := fmt.Sprintf("Error in reading naples mgmt IP address : %s", err.Error())
-				naples.logger.Error(msg)
-			}
-			naplesConfig.NaplesIpAddress = naplesIPddress
-			naples.logger.Printf("Naples Mgmt IP is : %v", naplesIPddress)
-
-			naplesMgmtIntf, err := naples.getNaplesMgmtInterface(nodOSMap[in.GetOs()], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
-			if err != nil {
-				msg := fmt.Sprintf("Error in reading naples mgmt IP address : %s", err.Error())
-				naples.logger.Error(msg)
-			}
-			naples.logger.Printf("Naples Mgmt intf is : %v", naplesMgmtIntf)
-
-			if naplesMgmtIntf != "" {
-				intfIP := incrementIP(naplesIPddress)
-				if in.GetOs() != iota.TestBedNodeOs_TESTBED_NODE_OS_WINDOWS {
-					intfIP += "/24"
-					cmd := []string{"sudo", "ifconfig", naplesMgmtIntf, intfIP, "up"}
-					naples.logger.Infof("Bringing up intf : %v with IP %v with %v",
-						naplesMgmtIntf, intfIP, strings.Join(cmd, " "))
-					if _, stdout, err := Utils.Run(cmd, 0, false, true, nil); err != nil {
-						msg := fmt.Sprintf("Failed to bring interface %s up err : %s", naplesMgmtIntf, stdout)
-						naples.logger.Error(msg)
-						//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-					}
-				} else {
-					/*
-						ifName := windowsPortNameMapping[naplesMgmtIntf]["Name"]
-						naples.logger.Infof("Bringing up intf : %v with IP %v", ifName, intfIP)
-						cmd := []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Enable-NetAdapter -Name '" + ifName + "' -Confirm:$false"}
-						if _, stdout, err := Utils.Run(cmd, 0, false, false, nil); err != nil {
-							msg := fmt.Sprintf("Failed to bring interface %s up err : %s", naplesMgmtIntf, stdout)
-							naples.logger.Error(msg)
-							//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-						}
-						cmd = []string{"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe", "Set-NetIPAddress -InterfaceAlias \"" + ifName + "\" -IPAddress " + intfIP + " -PrefixLength 24"}
-						if _, stdout, err := Utils.Run(cmd, 0, false, false, nil); err != nil {
-							msg := fmt.Sprintf("Failed to configure IP for interface %s err : %s", naplesMgmtIntf, stdout)
-							naples.logger.Error(msg)
-							//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-
-						}
-					*/
-				}
-			}
-		} else {
-			//
-			naplesIPddress, err := naples.getNaplesMgmtIP(nodOSMap[in.GetOs()], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
-			if err != nil {
-				msg := fmt.Sprintf("Error in reading naples mgmt IP address : %s", err.Error())
-				naples.logger.Error(msg)
-			}
-			naplesConfig.NaplesSecondaryIpAddress = naplesIPddress
+		if err := naples.initNaplesMgmtInterface(in.GetOs(), naplesConfig); err != nil {
+			naples.logger.Error("Failed to initialize mgmt interface")
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 		}
 
 		for _, intf := range naplesConfig.HostIntfs {
@@ -1401,30 +1410,36 @@ func (bitwNaples *naplesBitwHwNode) Init(in *iota.Node) (resp *iota.Node, err er
 	}
 
 	for _, naplesConfig := range naplesConfigs {
-		hostIntfs, err := bitwNaples.getHostInterfaces(nodOSMap[in.GetOs()], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
-		if err != nil {
-			bitwNaples.logger.Error(err.Error())
-			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
-
+		if err := bitwNaples.initNaplesMgmtInterface(in.GetOs(), naplesConfig); err != nil {
+			bitwNaples.logger.Error("Failed to initialize mgmt interface")
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 		}
+		/*
+			hostIntfs, err := bitwNaples.getHostInterfaces(nodOSMap[in.GetOs()], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
+			if err != nil {
+				bitwNaples.logger.Error(err.Error())
+				return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
 
-		i := 0 // output index
-		for _, intf := range hostIntfs {
-			if up, err := Utils.IsInterfaceUp(intf); err == nil && up {
-				hostIntfs[i] = intf
-				i++
 			}
-		}
-		hostIntfs = hostIntfs[:i]
 
-		if len(hostIntfs) != 1 {
-			msg := fmt.Sprintf("Invalid number if interfaces for bump in the wire model : %v", len(hostIntfs))
-			bitwNaples.logger.Error(msg)
-			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, errors.New(msg)
-		}
+			i := 0 // output index
+			for _, intf := range hostIntfs {
+				if up, err := Utils.IsInterfaceUp(intf); err == nil && up {
+					hostIntfs[i] = intf
+					i++
+				}
+			}
+			hostIntfs = hostIntfs[:i]
 
-		naplesConfig.HostIntfs = hostIntfs
-		bitwNaples.logger.Printf("Naples interfaces in BITW mode : %v", naplesConfig.HostIntfs)
+			if len(hostIntfs) != 1 {
+				msg := fmt.Sprintf("Invalid number if interfaces for bump in the wire model : %v", len(hostIntfs))
+				bitwNaples.logger.Error(msg)
+				return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, errors.New(msg)
+			}
+
+			naplesConfig.HostIntfs = hostIntfs
+			bitwNaples.logger.Printf("Naples interfaces in BITW mode : %v", naplesConfig.HostIntfs)
+		*/
 
 		/* Finally add entity type */
 		if err := bitwNaples.addNodeEntities(in); err != nil {
