@@ -114,7 +114,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
           };
         });
       },
-      this._controllerService.webSocketErrorHandler('Failed to get Apps')
+      this.controllerService.webSocketErrorHandler('Failed to get Apps')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }

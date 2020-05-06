@@ -28,6 +28,7 @@ import { TableUtility } from '../shared/tableviewedit/tableutility';
 import { PentableComponent } from '../shared/pentable/pentable.component';
 import { BaseComponent } from '../base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { DataComponent } from '@app/components/shared/datacomponent/datacomponent.component';
 
 interface WorkloadUiModel {
   dscs: ClusterDistributedServiceCard[];
@@ -56,7 +57,7 @@ interface WorkloadUiModel {
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class WorkloadComponent extends BaseComponent implements OnInit {
+export class WorkloadComponent extends DataComponent  implements OnInit {
   // Feature Flags
   hideWorkloadWidgets: boolean = !this.uiconfigsService.isFeatureEnabled('workloadWidgets');
 
@@ -336,15 +337,6 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
     this.heroStatsToggled = !this.heroStatsToggled;
   }
 
-  formatLabels(labelObj) {
-    const labels = [];
-    if (labelObj != null) {
-      Object.keys(labelObj).forEach((key) => {
-        labels.push(key + ': ' + labelObj[key]);
-      });
-    }
-    return labels.join(', ');
-  }
 
   /**
    * TODO: This API is not used. We may want to delete it. Let Rohan check it out first
@@ -570,7 +562,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
       const partialSuccessSummary = 'Partially update';
       const msg = 'Marked selected ' + updatedWorkloads.length + '  updated.';
       const self = this;
-      this.workloadTable.invokeAPIonMultipleRecords(observables, allSuccessSummary, partialSuccessSummary, msg,
+      this.invokeAPIonMultipleRecords(observables, allSuccessSummary, partialSuccessSummary, msg,
         () => {
           self.handleEditCancel(null);
         }, // onSuccess callback
@@ -608,7 +600,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
    * @param order
    */
   onSearchWorkloads(field = this.workloadTable.sortField, order = this.workloadTable.sortOrder) {
-    const searchResults = this.workloadTable.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp);
+    const searchResults = this.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.workloadTable.advancedSearchComponent);
     if (searchResults && searchResults.length > 0) {
       this.dataObjects = [];
       this.dataObjects = searchResults;
@@ -757,12 +749,9 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
   }
 
   getSelectedDataObjects() {
-    return this.workloadTable.getSelectedDataObjects();
+    return this.workloadTable.selectedDataObjects;
   }
 
-  hasSelectedRows(): boolean {
-    return this.workloadTable.getSelectedDataObjects().length > 0;
-  }
 
   onColumnSelectChange(event) {
     this.workloadTable.onColumnSelectChange(event);
@@ -774,11 +763,11 @@ export class WorkloadComponent extends BaseComponent implements OnInit {
       object,
       this.generateDeleteConfirmMsg(object),
       this.generateDeleteSuccessMsg(object),
-      this.deleteRecord.bind(this)
+      this.deleteRecord.bind(this),
+      () => {
+        this.workloadTable.selectedDataObjects = [];
+      }
     );
   }
 
-  onDeleteSelectedRows(event) {
-    this.workloadTable.onDeleteSelectedRows(event, this.deleteRecord.bind(this));
-  }
 }

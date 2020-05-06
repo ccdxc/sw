@@ -172,16 +172,8 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
     return Utility.getLodash().get(rowData, this.dataKey);
   }
 
-  getSelectedDataObjects() {
-    return this.selectedDataObjects;
-  }
-
   handleDisabledEvents(event: Event) {
     event.stopPropagation();
-  }
-
-  hasSelectedRows(): boolean {
-    return this.selectedDataObjects.length > 0;
   }
 
   isDisabled(): boolean {
@@ -257,36 +249,6 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
           }
         );
         this.subscriptions.push(sub);
-      }
-    });
-  }
-
-    /**
-   * This API is used in html template. P-table with checkbox enables user to select multiple records. User can delete multiple records.
-   * This function asks for user confirmation and invokes the REST API.
-   */
-  onDeleteSelectedRows($event, deleteRecord) {
-    const selectedDataObjects = this.getSelectedDataObjects();
-    this.controllerService.invokeConfirm({
-      header: 'Delete selected ' + selectedDataObjects.length + ' records?',
-      message: 'This action cannot be reversed',
-      acceptLabel: 'Delete',
-      accept: () => {
-        if (this.selectedDataObjects.length <= 0) {
-          return;
-        }
-
-        const allSuccessSummary = 'Deleted';
-        const partialSuccessSummary = 'Partially deleted';
-        const msg = 'Deleted ' + selectedDataObjects.length + ' selected records.';
-
-        const observables = [];
-        selectedDataObjects.forEach(selectedDataObject => {
-          const observable = deleteRecord(selectedDataObject);
-          observables.push(observable);
-        });
-
-        this.invokeAPIonMultipleRecords(observables, allSuccessSummary, partialSuccessSummary, msg);
       }
     });
   }
@@ -389,85 +351,4 @@ export class PentableComponent extends BaseComponent implements AfterViewInit, O
     }
   }
 
-  // TODO: consolidate below with tableviewedit functions
-
-  /**
-   * This api use forkJoin technique to update multiple records
-   * @param observables
-   * @param allSuccessSummary
-   * @param partialSuccessSummary
-   * @param msg
-   */
-  invokeAPIonMultipleRecords(observables: Observable<any>[] = [], allSuccessSummary: string, partialSuccessSummary: string, msg: string,
-    successCallback: () => void = null, errorCallback: (error: any) => void = null
-  ) {
-    if (observables.length <= 0) {
-      return;
-    }
-    const sub = forkJoin(observables).subscribe(
-      (results) => {
-        this.operationOnMultiRecordsComplete.emit(results);
-        const isAllOK = Utility.isForkjoinResultAllOK(results);
-        if (isAllOK) {
-          this.controllerService.invokeSuccessToaster(allSuccessSummary, msg);
-          // clear the selectedObjects array
-          this.selectedDataObjects = [];
-          if (successCallback) {
-            successCallback();
-          }
-        } else {
-          const error = Utility.joinErrors(results);
-          this.controllerService.invokeRESTErrorToaster(partialSuccessSummary, error);
-          if (errorCallback) {
-            errorCallback(error);
-          }
-        }
-      },
-      (error) => {
-        this.operationOnMultiRecordsComplete.emit(error);
-        this.controllerService.invokeRESTErrorToaster('Failure', error);
-        if (errorCallback) {
-          errorCallback(error);
-        }
-      }
-    );
-    this.subscriptions.push(sub);
-  }
-
-  /**
-   * This is API execute table search. See how Hosts and Workload components use it.
-   * @param field
-   * @param order
-   * @param kind
-   * @param maxSearchRecords
-   * @param advSearchCols
-   * @param dataObjects
-   * @param isShowToasterOnSearchHasResult default is false.
-   * @param isShowToasterOnSearchNoResult default is true.
-   */
-  onSearchDataObjects(field, order, kind: string, maxSearchRecords, advSearchCols: TableCol[], dataObjects, advancedSearchComponent?: AdvancedSearchComponent,
-    isShowToasterOnSearchHasResult: boolean = false,
-    isShowToasterOnSearchNoResult: boolean = true): any[] | ReadonlyArray<any> {
-    try {
-      const searchComponent = this.searchable ? this.advancedSearchComponent : advancedSearchComponent;
-      const searchSearchRequest = searchComponent.getSearchRequest(field, order, kind, true, maxSearchRecords);
-      const localSearchRequest: LocalSearchRequest = searchComponent.getLocalSearchRequest(field, order);
-      const requirements: FieldsRequirement[] = (searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : [];
-      const localRequirements: FieldsRequirement[] = (localSearchRequest.query) ? localSearchRequest.query as FieldsRequirement[] : [];
-
-      const searchTexts: SearchTextRequirement[] = searchSearchRequest.query.texts;
-      const searchResults = TableUtility.searchTable(requirements, localRequirements, searchTexts, advSearchCols, dataObjects); // Putting this.dataObjects here enables search on search. Otherwise, use this.dataObjectsBackup
-      if (isShowToasterOnSearchNoResult && (!searchResults || searchResults.length === 0)) {
-        this.controllerService.invokeInfoToaster('Information', 'No ' + kind + ' records found. Please change search criteria.');
-      } else {
-        if (isShowToasterOnSearchHasResult) {
-          this.controllerService.invokeInfoToaster('Information', 'Found ' + searchResults.length + ' ' + kind + ' records');
-        }
-      }
-      return searchResults;
-    } catch (error) {
-      this.controllerService.invokeErrorToaster('Error', error.toString());
-      return [];
-    }
-  }
 }

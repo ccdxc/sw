@@ -61,7 +61,8 @@ describe('PentableComponent', () => {
         MatIconRegistry,
         MessageService,
         ChangeDetectorRef,
-        UIConfigsService
+        UIConfigsService,
+        LicenseService
       ]
     });
   });

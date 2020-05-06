@@ -6,21 +6,18 @@ import { BaseComponent } from '@app/components/base/base.component';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
-import { StagingService } from '@app/services/generated/staging.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
-import { FieldsRequirement, IApiStatus, SearchTextRequirement } from '@sdk/v1/models/generated/search';
-import { IBulkeditBulkEditItem, IStagingBulkEditAction, StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
+import { IApiStatus } from '@sdk/v1/models/generated/search';
 import { LazyLoadEvent } from 'primeng/primeng';
 import { Table } from 'primeng/table';
-import { forkJoin, Observable, Subscription } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
 import { TabcontentInterface } from 'web-app-framework';
 import { CustomExportMap, RowClickEvent, TableCol } from '.';
-import { AdvancedSearchComponent, LocalSearchRequest } from '../advanced-search/advanced-search.component';
-import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
-import { TableMenuItem } from '../tableheader/tableheader.component';
-import { TableUtility } from './tableutility';
+import { DataComponent } from '@app/components/shared/datacomponent/datacomponent.component';
+import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
+import { TableMenuItem } from '@app/components/shared/tableheader/tableheader.component';
+import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 
 /**
  * Table view edit component provides an easy way for other pages
@@ -326,7 +323,7 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
 
 }
 
-export abstract class TableviewAbstract<I, T extends I> extends BaseComponent implements OnInit, OnDestroy, OnChanges, TabcontentInterface {
+export abstract class TableviewAbstract<I, T extends I> extends DataComponent implements OnInit, OnDestroy, OnChanges, TabcontentInterface {
   @Output() tableRowExpandClick: EventEmitter<any> = new EventEmitter();
 
   @ViewChild(TablevieweditHTMLComponent) tableContainer: TablevieweditHTMLComponent;
@@ -361,10 +358,6 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
     }
   ];
 
-  // define StagingService.  It will set using ngInit()
-  protected stagingService: StagingService;
-
-
   // Objects that will be rendered in the table
   abstract dataObjects: ReadonlyArray<T> = [];
   // Whether or not this component is a tab, used for setting toolbar buttons
@@ -383,14 +376,11 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,
-    protected uiconifgsService: UIConfigsService) {
-    super(controllerService, uiconifgsService);
+    protected uiconfigsService: UIConfigsService) {
+    super(controllerService, uiconfigsService);
   }
 
   ngOnInit() {
-
-    this.stagingService = Utility.getInstance().getStagingServices();  // app.c.ts instantiate stagingservice and assign to Utility.ts
-
     // if not a tab, we will always be the active tab.
     if (!this.isTabComponent) {
       this.isActiveTab = true;
@@ -403,6 +393,13 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
       this.setDefaultToolbar();
     }
     this.postNgInit();
+  }
+
+   /**
+   * get the selected rows from p-table widget
+   */
+  getSelectedDataObjects(): T[] {
+    return (this.tableContainer) ? this.tableContainer.selectedDataObjects : [];
   }
 
 
@@ -519,13 +516,6 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
   abstract generateDeleteConfirmMsg(object: T): string;
   abstract generateDeleteSuccessMsg(object: T): string;
 
-  /**
-   * get the selected rows from p-table widget
-   */
-  getSelectedDataObjects(): T[] {
-    return (this.tableContainer) ? this.tableContainer.selectedDataObjects : [];
-  }
-
   createNewObject() {
     // If a row is expanded, we shouldnt be able to open a create new policy form
     if (!this.isRowExpanded()) {
@@ -614,329 +604,6 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
       observables.push(observable);
     }
     this.invokeAPIonMultipleRecords(observables, summary, partialSuccessSummary, msg);
-  }
-
-  /**
-   * This api use forkJoin technique to update multiple records
-   * @param observables
-   * @param allSuccessSummary
-   * @param partialSuccessSummary
-   * @param msg
-   */
-  invokeAPIonMultipleRecords(observables: Observable<T>[], allSuccessSummary: string, partialSuccessSummary: string, msg: string,
-    successCallback: () => void = null, errorCallback: (error: any) => void = null
-  ) {
-    if (observables.length <= 0) {
-      return;
-    }
-    const sub = forkJoin(observables).subscribe(
-      (results) => {
-        this.tableContainer.operationOnMultiRecordsComplete.emit(results);
-        const isAllOK = Utility.isForkjoinResultAllOK(results);
-        if (isAllOK) {
-          this._controllerService.invokeSuccessToaster(allSuccessSummary, msg);
-          // clear the selectedObjects array
-          this.clearSelectedDataObjects();
-          if (successCallback) {
-            successCallback();
-          }
-        } else {
-          const error = Utility.joinErrors(results);
-          this._controllerService.invokeRESTErrorToaster(partialSuccessSummary, error);
-          if (errorCallback) {
-            errorCallback(error);
-          }
-        }
-      },
-      (error) => {
-        this.tableContainer.operationOnMultiRecordsComplete.emit(error);
-        this._controllerService.invokeRESTErrorToaster('Failure', error);
-        if (errorCallback) {
-          errorCallback(error);
-        }
-      }
-    );
-    this.subscriptions.push(sub);
-  }
-
-  public clearSelectedDataObjects() {
-    if (this.tableContainer && this.tableContainer.selectedDataObjects) {
-      this.tableContainer.selectedDataObjects.length = 0;
-      this.tableContainer.selectedDataObjects = [];
-    }
-  }
-
-  /**
-   * This API is used in html template. P-table with checkbox enables user to select multiple records. User can delete multiple records.
-   * This function asks for user confirmation and invokes the REST API.
-   */
-  onDeleteSelectedRows($event) {
-    const selectedDataObjects = this.getSelectedDataObjects();
-    this.controllerService.invokeConfirm({
-      header: 'Delete selected ' + selectedDataObjects.length + ' records?',
-      message: 'This action cannot be reversed',
-      acceptLabel: 'Delete',
-      accept: () => {
-        const allSuccessSummary = 'Delete';
-        const partialSuccessSummary = 'Partially delete';
-        const successMsg = 'Successfully deleted  ' + selectedDataObjects.length + ' records.';
-        const failureMsg = 'Failed to delete ' + selectedDataObjects.length + ' records.';
-        // this.invokeDeleteMultipleRecords(allSuccessSummary, partialSuccessSummary, successMsg); // user forljoin
-        this.invokeDeleteMultipleRecordsBulkedit(successMsg, failureMsg);  // use bulkedit
-      }
-    });
-  }
-
-  invokeDeleteMultipleRecordsBulkedit(successMsg: string, failureMsg: string) {
-    const selectedDataObjects = this.getSelectedDataObjects();
-    const stagingBulkEditAction = this.buildBulkEditDeletePayload(selectedDataObjects);
-    this.bulkEditHelper(selectedDataObjects, stagingBulkEditAction, successMsg, failureMsg);
-  }
-
-  /**
-   * This api is used in onDeleteSelectedRows(). It finds all selected objects and invokes DELETE API
-   * Sub-class should override this function to apply business logic.
-   * @param allSuccessSummary
-   * @param partialSuccessSummary
-   * @param msg
-   */
-  invokeDeleteMultipleRecords(allSuccessSummary: string, partialSuccessSummary: string, msg: string) {
-    const selectedDataObjects = this.getSelectedDataObjects();
-    this.deleteMultipleRecords(selectedDataObjects, allSuccessSummary, partialSuccessSummary, msg);
-  }
-
-  /**
-   * This is API execute table search. See how Hosts and Workload components use it.
-   * @param field
-   * @param order
-   * @param kind
-   * @param maxSearchRecords
-   * @param advSearchCols
-   * @param dataObjects
-   * @param advancedSearchComponent
-   * @param isShowToasterOnSearchHasResult default is false.
-   * @param isShowToasterOnSearchNoResult default is true.
-   */
-  onSearchDataObjects(field, order, kind: string, maxSearchRecords, advSearchCols: TableCol[], dataObjects, advancedSearchComponent: AdvancedSearchComponent,
-    isShowToasterOnSearchHasResult: boolean = false,
-    isShowToasterOnSearchNoResult: boolean = true): any[] | ReadonlyArray<any> {
-    try {
-      const searchSearchRequest = advancedSearchComponent.getSearchRequest(field, order, kind, true, maxSearchRecords);
-      const localSearchRequest: LocalSearchRequest = advancedSearchComponent.getLocalSearchRequest(field, order);
-      const requirements: FieldsRequirement[] = (searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : [];
-      const localRequirements: FieldsRequirement[] = (localSearchRequest.query) ? localSearchRequest.query as FieldsRequirement[] : [];
-
-      const searchTexts: SearchTextRequirement[] = searchSearchRequest.query.texts;
-      const searchResults = TableUtility.searchTable(requirements, localRequirements, searchTexts, advSearchCols, dataObjects); // Putting this.dataObjects here enables search on search. Otherwise, use this.dataObjectsBackup
-      if (isShowToasterOnSearchNoResult && (!searchResults || searchResults.length === 0)) {
-        this.controllerService.invokeInfoToaster('Information', 'No ' + kind + ' records found. Please change search criteria.');
-      } else {
-        if (isShowToasterOnSearchHasResult) {
-          this.controllerService.invokeInfoToaster('Information', 'Found ' + searchResults.length + ' ' + kind + ' records');
-        }
-      }
-      return searchResults;
-    } catch (error) {
-      this.controllerService.invokeErrorToaster('Error', error.toString());
-      return [];
-    }
-  }
-
-  formatLabels(labelObj) {
-    const labels = [];
-    if (labelObj != null) {
-      Object.keys(labelObj).forEach((key) => {
-        labels.push(key + ': ' + labelObj[key]);
-      });
-    }
-    return labels.join(', ');
-  }
-
-  commitStagingBuffer(buffername: string): Observable<any> {
-    const commitBufferBody: StagingCommitAction = Utility.buildCommitBufferCommit(buffername);
-    return this.stagingService.Commit(buffername, commitBufferBody);
-  }
-
-  createStagingBuffer(): Observable<any> {
-    const stagingBuffer: StagingBuffer = Utility.buildCommitBuffer();
-    return this.stagingService.AddBuffer(stagingBuffer);
-  }
-
-  deleteStagingBuffer(buffername: string, reason: string, isToshowToaster: boolean = false) {
-    if (buffername == null) {
-      return;
-    }
-    this.stagingService.DeleteBuffer(buffername).subscribe(
-      response => {
-        if (isToshowToaster) {
-          this._controllerService.invokeSuccessToaster('Bulkedit commit ', 'Deleted Buffer ' + buffername + '\n' + reason);
-        }
-      },
-      this._controllerService.restErrorHandler('Delete Staging Buffer Failed')
-    );
-  }
-
-  /**
-   * This API builds an IBulkeditBulkEditItem
-   *
-   */
-  buildBulkEditItemFromVeniceObject(vObject: any, method: string, uri: string = ''): IBulkeditBulkEditItem {
-    const obj = {
-      uri: uri,
-      method: method,
-      object: this.trimObjectForBulkeditItem(vObject, vObject, null, true)
-    };
-    return obj as IBulkeditBulkEditItem;
-  }
-
-  /**
-   * This is a helper API used in buildBulkEditItemFromVeniceObject()
-   * It is override-able. For example, Networkinterface, DSC components can override this API to customize how to construct bulkedit item
-   * For example: We can not trim DSC object, but we have to trim NetworkInterface. (see VS-1584)
-   *
-   * @param vObject
-   * @param model - a class instance. eg new Networkinterface()
-   * @param previousVal
-   * @param trimDefaults
-   */
-  trimObjectForBulkeditItem(vObject: any, model, previousVal = null, trimDefaults = true ): any {
-    return vObject;
-  }
-
-  /**
-   * This API builds an IStagingBulkEditAction
-   * veniceObjects can be ClusterDistributedServiceCard[] or ClusterNetworkInterface[]. // Any Venice object
-   * It is used in DSCs, NetworkInterfaces pages, etc to update venice-objects meta.labels
-   * @param veniceObjects
-   * @param buffername
-   */
-  buildBulkEditLabelsPayload(veniceObjects: any[], buffername: string = ''): IStagingBulkEditAction {
-    return this.buildBulkEditPayloadHelper(veniceObjects, 'update', buffername);
-  }
-
-  /**
-   * This API build bulkedit delete payload
-   * @param veniceObjects
-   * @param buffername
-   */
-  buildBulkEditDeletePayload(veniceObjects: any[], buffername: string = ''): IStagingBulkEditAction {
-    return this.buildBulkEditPayloadHelper(veniceObjects, 'delete', buffername);
-  }
-
-  /**
-   * This is a key helper function to build bulkedit payload
-   * @param veniceObjects
-   * @param method
-   * @param buffername
-   */
-  buildBulkEditPayloadHelper(veniceObjects: any[], method: string,  buffername: string = ''): IStagingBulkEditAction {
-    const stagingBulkEditAction: IStagingBulkEditAction = Utility.buildStagingBulkEditAction(buffername);
-    stagingBulkEditAction.spec.items = [];
-
-    for (const vObject of veniceObjects) {
-      const bulkeditBulkEditItem: IBulkeditBulkEditItem = this.buildBulkEditItemFromVeniceObject(vObject, method);
-      stagingBulkEditAction.spec.items.push(bulkeditBulkEditItem);
-    }
-    return stagingBulkEditAction;
-  }
-
-  /**
-   * Override-able api
-   * It is used when buledit commit buffer is done successfully.
-   */
-  onBulkEditSuccess(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string) {
-    // do nothing
-  }
-
-  /**
-   * Override-able api
-   * It is used when buledit commit buffer failed.
-   */
-  onBulkEditFailure(error: Error, veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string ) {
-    // doing nothing
-    // By looking into parameters, one can find out the operation context.
-  }
-
-  /**
-   * This API verify if (about to commit) buffer content match bulkedit request and original user request
-   * @stagingBulkEditAction is original user input
-   * @bulkeditResponse has bulkedit content
-   * @getbufferResponse buffer content
-   *
-   * One can override this API to customize verification logic
-   * In case, there are multiple bulkedi operations in one component
-   * stagingBulkEditAction can tell the differences of bulkedit operations
-   *
-   */
-  verifybulkEditBufferContent(stagingBulkEditAction: IStagingBulkEditAction, bulkeditResponse: any, getbufferResponse: any ): boolean {
-    try {
-       return  (stagingBulkEditAction.spec.items.length  === getbufferResponse.body.status.items.length &&  getbufferResponse.body.status.items.length === bulkeditResponse.body.status.items.length);
-    } catch (error) {
-      console.error(this.getClassName() + ' .verifybulkEditBufferContent() ' + error);
-      return false;
-    }
-
-  }
-
-  /**
-   * This API perform bulkedit call.
-   * @param veniceObjects
-   * @param stagingBulkEditAction
-   * @param successMsg
-   * @param failureMsg
-   * @param successTitle
-   * @param failureTitle
-   *
-   * Per VS-1530,
-   *    0. prepare data
-   *    1. create staging buffer  (AAA)
-   *    2. invoke bulkedit    (using ASS)
-   *    3. get buffer  (fetch content of AAA)
-   *    4. verify (0, 1, 2 are matching)
-   *    5. commit buffer (commit AAA)
-   *    6. finally, delete buffer (delete AAA) to release server resource
-  */
-  bulkEditHelper(veniceObjects: any[], stagingBulkEditAction: IStagingBulkEditAction, successMsg: string, failureMsg: string, successTitle: string = Utility.UPDATE_SUCCESS_SUMMARY, failureTitle: string = Utility.UPDATE_FAILED_SUMMARY) {
-    if (veniceObjects.length <= 0) {
-      return;
-    }
-    let createdBuffer: StagingBuffer = null;  // responseBuffer.body as StagingBuffer;
-    let buffername = null; // createdBuffer.meta.name;
-    this.createStagingBuffer().pipe(   // (A) create buffer
-      switchMap(responseBuffer => {
-        createdBuffer = responseBuffer.body as StagingBuffer;
-        buffername = createdBuffer.meta.name;
-        stagingBulkEditAction.meta.name = buffername;  // make sure to set buffer-name to stagingBulkEditAction
-        return  this.stagingService.Bulkedit(buffername, stagingBulkEditAction, null, false, false).pipe(
-          // third parameter has to be 'null'. o.w, REST API url will be screwed up
-         switchMap( (bulkeditResponse) => {
-           return this.stagingService.GetBuffer(buffername).pipe(
-             switchMap( getbufferResponse => {
-               if (this.verifybulkEditBufferContent(stagingBulkEditAction, bulkeditResponse, getbufferResponse)) {
-                   return this.commitStagingBuffer(buffername); //  commit buffer
-               } else {
-                  console.error(this.getClassName() + ' bulkEditHelper() verifybulkEditBufferContent() failed ' , stagingBulkEditAction, bulkeditResponse,  getbufferResponse ) ;
-                  const error = new Error('Failed to verify commit buffer content');
-                  this.onBulkEditFailure(error, veniceObjects, stagingBulkEditAction, successMsg, failureMsg + ' ' + error.toString());
-                  throw error;
-              }
-             })
-           );
-         }),
-        );
-      })
-    ).subscribe(
-      (responseCommitBuffer) => {
-        this._controllerService.invokeSuccessToaster(successTitle, successMsg);
-        this.onBulkEditSuccess(veniceObjects, stagingBulkEditAction, successMsg, failureMsg);
-        this.deleteStagingBuffer(buffername, failureMsg, false); // if bulked is successful  just delete tbe buffer to release resource
-      },
-      (error) => {
-        this._controllerService.invokeRESTErrorToaster(failureTitle, error);
-        this.onBulkEditFailure(error, veniceObjects, stagingBulkEditAction, successMsg, failureMsg);
-        this.deleteStagingBuffer(buffername, failureMsg, false); // just delete tbe buffer to release resource
-      }
-    );
   }
 }
 
