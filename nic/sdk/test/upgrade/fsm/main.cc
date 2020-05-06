@@ -40,19 +40,19 @@ init_err_codes (void)
 static void
 init_stage_names (void)
 {
-    upg_stages.insert("none");
-    upg_stages.insert("compat_check");
-    upg_stages.insert("start");
-    upg_stages.insert("backup");
-    upg_stages.insert("prepare");
-    upg_stages.insert("sync");
-    upg_stages.insert("prep_switchover");
-    upg_stages.insert("switchover");
-    upg_stages.insert("ready");
-    upg_stages.insert("respawn");
-    upg_stages.insert("rollback");
-    upg_stages.insert("repeal");
-    upg_stages.insert("finish");
+    upg_stages.insert("UPG_STAGE_NONE");
+    upg_stages.insert("UPG_STAGE_COMPAT_CHECK");
+    upg_stages.insert("UPG_STAGE_START");
+    upg_stages.insert("UPG_STAGE_BACKUP");
+    upg_stages.insert("UPG_STAGE_PREPARE");
+    upg_stages.insert("UPG_STAGE_SYNC");
+    upg_stages.insert("UPG_STAGE_PREP_SWITCHOVER");
+    upg_stages.insert("UPG_STAGE_SWITCHOVER");
+    upg_stages.insert("UPG_STAGE_READY");
+    upg_stages.insert("UPG_STAGE_RESPAWN");
+    upg_stages.insert("UPG_STAGE_ROLLBACK");
+    upg_stages.insert("UPG_STAGE_REPEAL");
+    upg_stages.insert("UPG_STAGE_FINISH");
 }
 
 static int
@@ -101,78 +101,78 @@ upg_ev_fill (sdk::upg::upg_ev_t *ev)
     ev->svc_ipc_id = svc_thread_id;
     strncpy(ev->svc_name, svc_name.c_str(), sizeof(ev->svc_name));
 
-    if (fsm_stage.compare("compat_check") == 0) {
-        printf("\nSetting fault injection in stage compat_check\n");
+    if (fsm_stage.compare("UPG_STAGE_COMPAT_CHECK") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_COMPAT_CHECK\n");
         ev->compat_check_hdlr = fault_injection;
     } else {
         ev->compat_check_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("start") == 0) {
-        printf("\nSetting fault injection in stage start\n");
+    if (fsm_stage.compare("UPG_STAGE_START") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_START\n");
         ev->start_hdlr = fault_injection;
     } else {
         ev->start_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("backup") == 0) {
-        printf("\nSetting fault injection in stage backup\n");
+    if (fsm_stage.compare("UPG_STAGE_BACKUP") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_BACKUP\n");
         ev->backup_hdlr = fault_injection;
     } else {
         ev->backup_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("prepare") == 0) {
-        printf("\nSetting fault injection in stage prepare\n");
+    if (fsm_stage.compare("UPG_STAGE_PREPARE") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_PREPARE\n");
         ev->prepare_hdlr = fault_injection;
     } else {
         ev->prepare_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("prep_switchover") == 0) {
-        printf("\nSetting fault injection in stage prep_switchover\n");
+    if (fsm_stage.compare("UPG_STAGE_PREP_SWITCHOVER") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_PREP_SWITCHOVER\n");
         ev->prepare_switchover_hdlr = fault_injection;
     } else {
         ev->prepare_switchover_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("switchover") == 0) {
-        printf("\nSetting fault injection in stage switchover\n");
+    if (fsm_stage.compare("UPG_STAGE_SWITCHOVER") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_SWITCHOVER\n");
         ev->switchover_hdlr = fault_injection;
     } else {
         ev->switchover_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("rollback") == 0) {
-        printf("\nSetting fault injection in stage rollback\n");
+    if (fsm_stage.compare("UPG_STAGE_ROLLBACK") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_ROLLBACK\n");
         ev->rollback_hdlr = fault_injection;
     } else {
         ev->rollback_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("ready") == 0) {
-        printf("\nSetting fault injection in stage ready\n");
+    if (fsm_stage.compare("UPG_STAGE_READY") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_READY\n");
         ev->ready_hdlr = fault_injection;
     } else {
         ev->ready_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("sync") == 0) {
-        printf("\nSetting fault injection in stage sync\n");
+    if (fsm_stage.compare("UPG_STAGE_SYNC") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_SYNC\n");
         ev->sync_hdlr = fault_injection;
     } else {
         ev->sync_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("repeal") == 0) {
-        printf("\nSetting fault injection in stage repeal\n");
+    if (fsm_stage.compare("UPG_STAGE_REPEAL") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_REPEAL\n");
         ev->repeal_hdlr = fault_injection;
     } else {
         ev->repeal_hdlr = test_upgrade;
     }
 
-    if (fsm_stage.compare("finish") == 0) {
-        printf("\nSetting fault injection in stage finish\n");
+    if (fsm_stage.compare("UPG_STAGE_FINISH") == 0) {
+        printf("\nSetting fault injection in stage UPG_STAGE_FINISH\n");
         ev->finish_hdlr = fault_injection;
     } else {
         ev->finish_hdlr = test_upgrade;
@@ -260,24 +260,33 @@ static void
 print_usage (char **argv)
 {
     fprintf(stdout, "\n\nUsage : %s "
-            "\n\t\t -s | --svcname          <name of the service>"
-            "\n\t\t -i | --svcid            <service id> "
-            "\n\t\t -e | --err              <ok|critical|fail|noresponse>"
-            "\n\t\t -f | --fsmstage         <name of the stage where error code needs"
-            "\n\t\t -t | --rsp-time-delay   <set response time delay in"
-            " ms>\n\n", argv[0]);
+            "\n\t\t -s | --svcname   <name of the service>"
+            "\n\t\t -i | --svcid     <service id> "
+            "\n\t\t -e | --err       < SVC_RSP_OK | SVC_RSP_FAIL | "
+            "SVC_RSP_CRIT | SVC_RSP_NONE>"
+            "\n\t\t -f | --fsmstage  <name of the stage where error code needs"
+            " to be injected>\n\n", argv[0]);
 
-    fprintf(stdout, "Example : %s -s test_service -i 51 \n\n", argv[0]);
 
     fprintf(stdout, "Example : %s -s test_service -i 51 -e fail -f "
             "backup \n\n", argv[0]);
 
-    fprintf(stdout, "Example : %s -s test_service -i 51 -e ok -f "
-            "backup -t 50000\n\n", argv[0]);
 
-    fprintf(stdout, "Possible values for -f | --fsmstage : compat_check, start,"
-            " backup, prepare, sync, prep_switchover, switchover, ready, "
-            "respawn, rollback, repeal, finish\n\n");
+    fprintf(stdout, "Possible values for -f | --fsmstage : "
+            "UPG_STAGE_NONE, "
+            "UPG_STAGE_COMPAT_CHECK, "
+            "UPG_STAGE_START, "
+            "UPG_STAGE_BACKUP, "
+            "UPG_STAGE_PREPARE, "
+            "UPG_STAGE_SYNC, "
+            "UPG_STAGE_PREP_SWITCHOVER, "
+            "UPG_STAGE_SWITCHOVER, "
+            "UPG_STAGE_READY, "
+            "UPG_STAGE_RESPAWN, "
+            "UPG_STAGE_ROLLBACK, "
+            "UPG_STAGE_REPEAL, "
+            "UPG_STAGE_FINISH \n\n");
+
 }
 
 static void

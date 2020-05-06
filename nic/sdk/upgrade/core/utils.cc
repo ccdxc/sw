@@ -312,7 +312,7 @@ execute_hook (const std::string tools_dir, const std::string script,
             UPG_TRACE_INFO("Executing pre-hook %s, in stage %s",
                            script.c_str(), stage_name.c_str());
             cmd = cmd + " -s " + stage_name;
-            cmd = cmd + " -t pre" ;
+            cmd = cmd + " -t PRE" ;
             return execute(cmd.c_str());
         } else {
             SDK_ASSERT(status != SVC_RSP_MAX);
@@ -320,7 +320,7 @@ execute_hook (const std::string tools_dir, const std::string script,
                            "status %d", script.c_str(), stage_name.c_str(),
                            status);
             cmd = cmd + " -s " + stage_name;
-            cmd = cmd + " -t post";
+            cmd = cmd + " -t POST";
             cmd = cmd + " -r " + std::string(svc_rsp_code_name[status]);
 
             SDK_ASSERT(status != SVC_RSP_MAX);

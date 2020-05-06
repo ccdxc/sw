@@ -27,7 +27,7 @@
             "svc1" : {
                 "ipc_id" : "51",
                 "svc_rsp_code" : "fail",
-                "svc_rsp_stage" : "backup"
+                "svc_rsp_stage" : "UPG_STAGE_BACKUP"
             },
             "svc2" : {
                 "ipc_id" : "52"
@@ -53,7 +53,7 @@
             "svc2" : {
                 "ipc_id" : "52",
                 "svc_rsp_code" : "fail",
-                "svc_rsp_stage" : "finish"
+                "svc_rsp_stage" : "UPG_STAGE_FINISH"
             }
         },
 
