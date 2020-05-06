@@ -614,7 +614,7 @@ hal_logger_init (hal_cfg_t *hal_cfg)
                            persistent_logfile.c_str(),
                            non_persistent_logfile.c_str(),
                            5 << 20, // 5MB
-                           10,      // 10 files
+                           9,       // 10 (9 + 1 current logging file)
                            ::utils::trace_err,
                            getenv("DISABLE_LOGGING") ? (::utils::trace_none) :
                                                        (::utils::trace_debug));

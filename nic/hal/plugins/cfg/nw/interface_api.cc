@@ -410,8 +410,8 @@ if_enicif_get_pinned_if (if_t *pi_if, if_t **uplink_if)
         // Take from lif
         lif = find_lif_by_handle(pi_if->lif_handle);
         if (!lif) {
-            HAL_TRACE_ERR("Unable to find lif for lif_hdl {}",
-                          pi_if->lif_handle);
+            HAL_TRACE_DEBUG("Unable to find lif for lif_hdl {}",
+                            pi_if->lif_handle);
             ret = HAL_RET_LIF_NOT_FOUND;
             goto end;
         }

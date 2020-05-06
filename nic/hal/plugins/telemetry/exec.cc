@@ -53,7 +53,8 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
             acl_key.mac_dst |= ctx.get_key().dmac[i] << (i * 8);
         }
     } else {
-        HAL_TRACE_ERR("Invalid flow type {}", ctx.get_key().flow_type);
+        HAL_TRACE_VERBOSE("Telemetry not supported for flow type {}", 
+                          ctx.get_key().flow_type);
         ret = HAL_RET_OK;
         goto end;
     }
