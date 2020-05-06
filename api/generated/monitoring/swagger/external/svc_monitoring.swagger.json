@@ -373,7 +373,7 @@
           },
           {
             "name": "spec.packet-size",
-            "description": "PacketSize: Max size of a mirrored packet, range 64-2048 or 0 for no check on mirrored packet. Value should be between 64 and 2048.",
+            "description": "PacketSize: Max size of a mirrored packet, packet size is not checked by default. Value should be between 64 and 2048.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -7014,7 +7014,7 @@
           },
           {
             "name": "spec.packet-size",
-            "description": "PacketSize: Max size of a mirrored packet, range 64-2048 or 0 for no check on mirrored packet. Value should be between 64 and 2048.",
+            "description": "PacketSize: Max size of a mirrored packet, packet size is not checked by default. Value should be between 64 and 2048.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -18922,7 +18922,7 @@
           "format": "int64",
           "minimum": 64,
           "maximum": 2048,
-          "description": "PacketSize: Max size of a mirrored packet, range 64-2048 or 0 for no check on mirrored packet. Value should be between 64 and 2048."
+          "description": "PacketSize: Max size of a mirrored packet, packet size is not checked by default. Value should be between 64 and 2048."
         },
         "start-condition": {
           "$ref": "#/definitions/monitoringMirrorStartConditions",

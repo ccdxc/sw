@@ -350,7 +350,7 @@ func (m *MirrorSession) GetStatus() MirrorSessionStatus {
 
 // MirrorSessionSpec
 type MirrorSessionSpec struct {
-	// PacketSize: Max size of a mirrored packet, range 64-2048 or 0 for no check on mirrored packet
+	// PacketSize: Max size of a mirrored packet, packet size is not checked by default
 	PacketSize uint32 `protobuf:"varint,1,opt,name=PacketSize,json=packet-size,omitempty,proto3" json:"packet-size,omitempty"`
 	// StartConditions
 	StartConditions MirrorStartConditions `protobuf:"bytes,2,opt,name=StartConditions,json=start-condition,inline" json:"start-condition,inline"`

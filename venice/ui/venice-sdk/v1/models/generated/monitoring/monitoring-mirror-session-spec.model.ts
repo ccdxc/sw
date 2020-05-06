@@ -27,7 +27,7 @@ export interface IMonitoringMirrorSessionSpec {
 export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitoringMirrorSessionSpec {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
-    /** PacketSize: Max size of a mirrored packet, range 64-2048 or 0 for no check on mirrored packet. Value should be between 64 and 2048. */
+    /** PacketSize: Max size of a mirrored packet, packet size is not checked by default. Value should be between 64 and 2048. */
     'packet-size': number = null;
     /** StartConditions. */
     'start-condition': MonitoringMirrorStartConditions = null;
@@ -40,7 +40,7 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     'interfaces': MonitoringInterfaceMirror = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionSpec]: PropInfoItem } = {
         'packet-size': {
-            description:  `PacketSize: Max size of a mirrored packet, range 64-2048 or 0 for no check on mirrored packet. Value should be between 64 and 2048.`,
+            description:  `PacketSize: Max size of a mirrored packet, packet size is not checked by default. Value should be between 64 and 2048.`,
             required: false,
             type: 'number'
         },
