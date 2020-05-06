@@ -87,6 +87,14 @@ nexthop_group_impl::reserve_resources(api_base *api_obj, api_base *orig_obj,
     spec = &obj_ctxt->api_params->nexthop_group_spec;
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
+        // validate the nexthop group
+        if ((spec->type == PDS_NHGROUP_TYPE_OVERLAY_ECMP) &&
+            (spec->num_nexthops > PDS_IMPL_MAX_OVERLAY_NHGROUP_SIZE)) {
+            PDS_TRACE_ERR("Max nexthops %u in overlay nexthop group %s "
+                          "exceeded max supported %u", spec->num_nexthops,
+                          spec->key.str(), PDS_IMPL_MAX_OVERLAY_NHGROUP_SIZE);
+            return SDK_RET_INVALID_ARG;
+        }
         // record the fact that resource reservation was attempted
         // NOTE: even if we partially acquire resources and fail eventually,
         //       this will ensure that proper release of resources will happen
@@ -189,9 +197,9 @@ nexthop_group_impl::populate_ecmp_tep_info_(pds_nexthop_group_spec_t *spec,
 }
 
 sdk_ret_t
-nexthop_group_impl::activate_create_(pds_epoch_t epoch,
-                                     nexthop_group *nh_group,
-                                     pds_nexthop_group_spec_t *spec) {
+nexthop_group_impl::activate_create_update_(pds_epoch_t epoch,
+                                            nexthop_group *nh_group,
+                                            pds_nexthop_group_spec_t *spec) {
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     nexthop_info_entry_t nh_data;
@@ -199,7 +207,6 @@ nexthop_group_impl::activate_create_(pds_epoch_t epoch,
 
     ecmp_data.action_id = ECMP_ECMP_INFO_ID;
     ecmp_data.ecmp_info.num_nexthops = spec->num_nexthops;
-    memset(&nh_data, 0, nh_data.entry_size());
     if (spec->type == PDS_NHGROUP_TYPE_OVERLAY_ECMP) {
         // populate ECMP table entry data
         ecmp_data.ecmp_info.nexthop_type = NEXTHOP_TYPE_TUNNEL;
@@ -267,40 +274,11 @@ nexthop_group_impl::activate_delete_(pds_epoch_t epoch,
             }
         }
     }
-
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_ECMP, hw_id_,
                                        NULL, NULL, &ecmp_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program nexthop group %s at idx %u",
                       key.str(), hw_id_);
-    }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-nexthop_group_impl::activate_update_(pds_epoch_t epoch,
-                                     nexthop_group *nh_group,
-                                     pds_nexthop_group_spec_t *spec) {
-    sdk_ret_t ret;
-    nexthop_info_entry_t nh_data;
-
-    memset(&nh_data, 0, nh_data.entry_size());
-    // program the nexthops first in NEXTHOP table
-    for (uint8_t i = 0; i < spec->num_nexthops; i++) {
-        ret = populate_underlay_nh_info_(&spec->nexthops[i], &nh_data);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Programming of nexthop %u in NEXTHOP table for "
-                          "nexthop group %s failed, err %u",
-                          i, spec->key.str(), ret);
-            return ret;
-        }
-        ret = nh_data.write(nh_base_hw_id_ + i);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to program nexthop %u of nexthop "
-                          "group %s at idx %u", i, spec->key.str(),
-                          nh_base_hw_id_ + i);
-            return sdk::SDK_RET_HW_PROGRAM_ERR;
-        }
     }
     return SDK_RET_OK;
 }
@@ -314,13 +292,9 @@ nexthop_group_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 
     switch (api_op) {
     case API_OP_CREATE:
-        spec = &obj_ctxt->api_params->nexthop_group_spec;
-        ret = activate_create_(epoch, (nexthop_group *)api_obj, spec);
-        break;
-
     case API_OP_UPDATE:
         spec = &obj_ctxt->api_params->nexthop_group_spec;
-        ret = activate_update_(epoch, (nexthop_group *)api_obj, spec);
+        ret = activate_create_update_(epoch, (nexthop_group *)api_obj, spec);
         break;
 
     case API_OP_DELETE:

@@ -71,6 +71,10 @@
 // by default mappings have highest priority than all types of routes
 #define PDS_IMPL_DEFAULT_MAPPING_PRIORITY       0
 
+// max. nexthop group sizes supported
+#define PDS_IMPL_MAX_OVERLAY_NHGROUP_SIZE       4
+#define PDS_IMPL_MAX_UNDERLAY_NHGROUP_SIZE      4
+
 // various lif types in the datapath
 #define P4_LIF_TYPE_HOST                        0  // host data (i.e non-mgmt) lifs
 #define P4_LIF_TYPE_ARM_DPDK                    1  // dpdk s/w datapath lifs

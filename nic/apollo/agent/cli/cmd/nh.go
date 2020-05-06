@@ -185,13 +185,26 @@ func printNhGroup(resp *pds.NhGroup) {
 	first := true
 	numMembers := len(memberSpec)
 
+	switch typeStr {
+	case "UNDERLAY-ECMP":
+		fmt.Printf("%-40s%-10d%-16s%-10d",
+			uuid.FromBytesOrNil(spec.GetId()).String(),
+			status.GetHwId(), typeStr, numMembers)
+		break
+	case "OVERLAY-ECMP":
+		fmt.Printf("%-40s%-14s%-10d",
+			uuid.FromBytesOrNil(spec.GetId()).String(),
+			typeStr, numMembers)
+		break
+	default:
+		break
+	}
+
 	for i := 0; i < numMembers; i++ {
 		switch typeStr {
 		case "UNDERLAY-ECMP":
 			if first {
-				fmt.Printf("%-40s%-10d%-16s%-10d%-12d%-12d%-18s\n",
-					uuid.FromBytesOrNil(spec.GetId()).String(),
-					status.GetHwId(), typeStr, numMembers,
+				fmt.Printf("%-12d%-12d%-18s\n",
 					memberStatus[i].GetUnderlayNhInfo().GetPort(),
 					memberStatus[i].GetUnderlayNhInfo().GetVlan(),
 					utils.MactoStr(memberSpec[i].GetUnderlayNhInfo().GetUnderlayMAC()))
@@ -206,9 +219,7 @@ func printNhGroup(resp *pds.NhGroup) {
 			break
 		case "OVERLAY-ECMP":
 			if first {
-				fmt.Printf("%-40s%-14s%-10d%-40s\n",
-					uuid.FromBytesOrNil(spec.GetId()).String(),
-					typeStr, numMembers,
+				fmt.Printf("%-40s\n",
 					utils.IPAddrToStr(memberStatus[i].GetOverlayNhInfo().GetTunnelIP()))
 				first = false
 			} else {
