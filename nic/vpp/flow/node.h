@@ -534,7 +534,7 @@ always_inline void pds_session_set_data(u32 ses_id, u32 i_pindex,
         data->iflow.table_id = i_sindex;
         data->iflow.primary = 0;
     }
-    if (i_pindex != ((u32) (~0L))) {
+    if (r_pindex != ((u32) (~0L))) {
         data->rflow.table_id = r_pindex;
         data->rflow.primary = 1;
     } else {
