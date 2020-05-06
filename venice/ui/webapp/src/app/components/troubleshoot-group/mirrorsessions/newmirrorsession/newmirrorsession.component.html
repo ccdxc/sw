@@ -220,7 +220,7 @@
       <div fxFlex="none" class="newmirrorsession-subtext">(specify one or more)</div>
     </div>
     <div fxFlex="10px"></div>
-    <app-orderedlist
+    <app-orderedlist [enableDragDrop]="false" [enableOrdering]="false"
                      [dataArray]="rules" [template]="ruleTemplate"
                      (itemClick)="orderedListClick($event)"></app-orderedlist>
     <div fxFlex="none" (click)="addRule()" class="newmirrorsession-add-rule">+ RULE</div>
@@ -244,10 +244,11 @@
 
 <ng-template #ruleTemplateEdit let-data="data" let-index="index" let-inEdit="inEdit">
   <!-- data is MonitoringMatchRule -->
-  <div fxFlex="auto" fxLayout="column" fxLayoutGap="10px"
+  <div fxFlex="auto" fxLayout="column" fxLayoutGap="15px"
        fxLayoutAlign="center none" class="newmirrorsession-rule-template"
        [ngClass]="{'newmirrorsession-hide-primeng-panel': !rules[index].inEdit}">
-    <div fxFlex="none">
+    <div fxFlex="none" fxLayout="row" fxLayoutGap="40px" class="newmirrorsession-rule-row">
+      <!--
       <fieldset class="newmirrorsession-rule-source">
         <legend>Source</legend>
         <div fxFlex="none" fxLayout="row" fxLayoutGap="40px">
@@ -270,7 +271,19 @@
           </div>
         </div>
       </fieldset>
+      -->
+      <app-formchips fxFlex="none" [chipsLabel]="'Source ' + IPS_LABEL"
+                     [formControl]="data.rule.$formGroup.get(['source', 'ip-addresses'])"
+                     boxStyleClass="newmirrorsession-rule-boxes" [itemValidator]="isValidIP"
+                     [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+      </app-formchips>
+      <app-formchips fxFlex="none" [chipsLabel]="'Target ' + IPS_LABEL"
+                     [formControl]="data.rule.$formGroup.get(['destination', 'ip-addresses'])"
+                     boxStyleClass="newmirrorsession-rule-boxes" [itemValidator]="isValidIP"
+                     [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
+      </app-formchips>
     </div>
+    <!--
     <div fxFlex="none">
       <fieldset class="newmirrorsession-rule-source">
         <legend>Target</legend>
@@ -295,19 +308,15 @@
         </div>
       </fieldset>
     </div>
-    <div fxFlex="none">
-      <fieldset class="newmirrorsession-rule-app">
-        <legend>Protocol</legend>
-        <div fxFlex="none" fxLayout="column">
-          <div fxFlex="5px"></div>
-          <app-formchips fxFlex="none" [chipsLabel]="'Protocol / Ports'"
-                         [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports'])"
-                         boxStyleClass="newmirrorsession-proto-boxes"
-                         [itemValidator]="isValidProto"
-                         [itemErrorMsg]="PROTS_ERRORMSG" [toolTip]="PROTS_TOOLTIP">
-          </app-formchips>
-        </div>
-        <!-- comment out for relase A
+    -->
+    <div fxFlex="none" class="newmirrorsession-rule-row">
+      <app-formchips fxFlex="none" [chipsLabel]="'Protocol / Ports'"
+                     [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports'])"
+                     boxStyleClass="newmirrorsession-proto-boxes"
+                     [itemValidator]="isValidProto"
+                     [itemErrorMsg]="PROTS_ERRORMSG" [toolTip]="PROTS_TOOLTIP">
+      </app-formchips>
+      <!-- comment out for relase A
         <legend>Protocol Or App</legend>
         <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
                          fxLayoutGap="25px" class="newmirrorsession-attach-radio"
@@ -336,7 +345,6 @@
           </p-multiSelect>
         </div>
         -->
-      </fieldset>
     </div>
   </div>
 </ng-template>
@@ -373,6 +381,7 @@
               </span>
             </div>
           </div>
+          <!--
           <div *ngIf="data.rule.$formGroup.get(['source', 'mac-addresses']).value.length !== 0"
                fxFlex="none" fxLayout="row">
             <div fxFlex="none" class="newmirrorsession-bold-subtext-ipmac">MAC:</div>
@@ -383,6 +392,7 @@
               </span>
             </div>
           </div>
+          -->
         </div>
 
         <div fxFlex="33" fxLayout="column" fxLayouAlign="start start">
@@ -398,6 +408,7 @@
               </span>
             </div>
           </div>
+          <!--
           <div *ngIf="data.rule.$formGroup.get(['destination', 'mac-addresses']).value.length !== 0"
                fxFlex="none" fxLayout="row">
             <div fxFlex="none" class="newmirrorsession-bold-subtext-ipmac">MAC:</div>
@@ -408,6 +419,7 @@
               </span>
             </div>
           </div>
+          -->
         </div>
 
         <div fxFlex="34" fxLayout="column" fxLayouAlign="start start">
@@ -424,6 +436,7 @@
               </span>
             </div>
           </div>
+          <!--
           <div *ngIf="data.selectedProtoAppOption === 'applications' && 
             data.rule.$formGroup.get(['app-protocol-selectors', 'applications']).value.length !== 0"
                fxFlex="none" fxLayout="row">
@@ -435,6 +448,7 @@
               </span>
             </div>
           </div>
+          -->
         </div>
       </div>
     </div>
