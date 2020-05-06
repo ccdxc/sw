@@ -440,6 +440,38 @@ func LearnStateToStr(state pds.EpState) string {
 	return stateStr
 }
 
+func LearnPktTypeToStr(pktType pds.LearnPktType) string {
+	var pktTypeStr string
+
+	switch pktType {
+	case pds.LearnPktType_LEARN_PKT_TYPE_GARP_ANNOUNCE:
+		pktTypeStr = "GARP announces"
+	case pds.LearnPktType_LEARN_PKT_TYPE_ARP_PROBE:
+		pktTypeStr = "ARP probes"
+	case pds.LearnPktType_LEARN_PKT_TYPE_ARP_REQUEST:
+		pktTypeStr = "ARP requests"
+	case pds.LearnPktType_LEARN_PKT_TYPE_GARP_REPLY:
+		pktTypeStr = "GARP replies"
+	case pds.LearnPktType_LEARN_PKT_TYPE_ARP_REPLY:
+		pktTypeStr = "ARP replies"
+	case pds.LearnPktType_LEARN_PKT_TYPE_RARP_REQUEST:
+		pktTypeStr = "RARP requests"
+	case pds.LearnPktType_LEARN_PKT_TYPE_RARP_REPLY:
+		pktTypeStr = "RARP replies"
+	case pds.LearnPktType_LEARN_PKT_TYPE_DHCP_DISCOVER:
+		pktTypeStr = "DHCP discovers"
+	case pds.LearnPktType_LEARN_PKT_TYPE_DHCP_REQUEST:
+		pktTypeStr = "DHCP requests"
+	case pds.LearnPktType_LEARN_PKT_TYPE_DHCP_ACK:
+		pktTypeStr = "DHCP acks"
+	case pds.LearnPktType_LEARN_PKT_TYPE_IPV4:
+		pktTypeStr = "IPV4 packets"
+	default:
+		pktTypeStr = "Unknown"
+	}
+	return pktTypeStr
+}
+
 func LearnPktDropReasonToStr(reason pds.LearnPktDropReason) string {
 	var reasonStr string
 
@@ -469,9 +501,9 @@ func LearnValidationTypeToStr(valType pds.LearnValidationType) string {
 	case pds.LearnValidationType_LEARN_CHECK_UNTAGGED_MAC_LIMIT:
 		valStr = "Exceeded untagged MAC per host interface limit"
 	case pds.LearnValidationType_LEARN_CHECK_MAC_LIMIT:
-		valStr = "Exceeded MAC per host interface limit"
+		valStr = "Exceeded MAC limit"
 	case pds.LearnValidationType_LEARN_CHECK_IP_LIMIT:
-		valStr = "Exceeded IP adressed per MAC limit"
+		valStr = "Exceeded IP limit"
 	case pds.LearnValidationType_LEARN_CHECK_IP_IN_SUBNET:
 		valStr = "IP address does not belong to subnet"
 	default:
@@ -634,6 +666,15 @@ func printLearnStats(resp *pds.LearnStatsGetResponse) {
 	fmt.Printf("	# Buffers allocated             : %-20d\n", stats.GetPktBufferAlloc())
 	fmt.Printf("	# Buffer allocation errors      : %-20d\n", stats.GetPktBufferAllocErrors())
 	fmt.Printf("	# Buffers available             : %-20d\n", stats.GetPktBufferAvailable())
+
+	if len(stats.GetRcvdPktTypes()) > 0 {
+		fmt.Printf("	# Received pkt type counters:\n")
+	}
+	for _, rcvdPktType := range stats.GetRcvdPktTypes() {
+		fmt.Printf("	      %-26s: %-20d\n",
+			LearnPktTypeToStr(rcvdPktType.GetPktType()),
+			rcvdPktType.GetCount())
+	}
 
 	if len(stats.GetDropStats()) > 0 {
 		fmt.Printf("	# Drop counters:\n")

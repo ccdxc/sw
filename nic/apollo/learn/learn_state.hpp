@@ -36,6 +36,24 @@ enum {
     PKT_DROP_REASON_MAX,
 };
 
+/// \brief packet type
+enum {
+    LEARN_PKT_TYPE_NONE = 0,        ///< unclassified packet type
+    LEARN_PKT_TYPE_GARP_ANNOUNCE,   ///< ARP requests with same src and tgt IP
+                                    ///< and tgt MAC = ZERO
+    LEARN_PKT_TYPE_ARP_PROBE,       ///< ARP requests with src IP = ZERO
+    LEARN_PKT_TYPE_ARP_REQUEST,     ///< other ARP requests
+    LEARN_PKT_TYPE_GARP_REPLY,      ///< ARP replies with same src and tgt IP
+    LEARN_PKT_TYPE_ARP_REPLY,       ///< other ARP replies
+    LEARN_PKT_TYPE_RARP_REQUEST,    ///< reverse ARP request
+    LEARN_PKT_TYPE_RARP_REPLY,      ///< reverse ARP reply
+    LEARN_PKT_TYPE_DHCP_DISCOVER,   ///< DHCP with DISCOVER option
+    LEARN_PKT_TYPE_DHCP_REQUEST,    ///< DHCP with REQUEST option
+    LEARN_PKT_TYPE_DHCP_ACK,        ///< DHCP with ACK option
+    LEARN_PKT_TYPE_IPV4,            ///< IP packets not classified as DHCP
+    LEARN_PKT_TYPE_MAX,
+};
+
 /// \brief CRUD API operations tracked by learn counters
 /// these are defined to decouple counter definitions from api_op_t enumeration
 /// and also to make zero based indexing into counters easier
@@ -58,13 +76,14 @@ enum {
 /// \brief learn related debug counters
 typedef struct learn_counters_s {
     // packet counters
-    uint64_t    rx_pkts;                        ///< pkts rcvd on learn lif
-    uint64_t    tx_pkts_ok;                     ///< pkts sent on learn lif
-    uint64_t    tx_pkts_err;                    ///< pkt send failures
-    uint64_t    arp_probes_ok;                  ///< ARP probes sent
-    uint64_t    arp_probes_err;                 ///< ARP probe send failures
-    uint64_t    pkt_buf_alloc_ok;               ///< mbuf allocations
-    uint64_t    pkt_buf_alloc_err;              ///< mbuf allocation failures
+    uint64_t    rx_pkts;                           ///< pkts rcvd on learn lif
+    uint64_t    tx_pkts_ok;                        ///< pkts sent on learn lif
+    uint64_t    tx_pkts_err;                       ///< pkt send failures
+    uint64_t    arp_probes_ok;                     ///< ARP probes sent
+    uint64_t    arp_probes_err;                    ///< ARP probe send failures
+    uint64_t    pkt_buf_alloc_ok;                  ///< mbuf allocations
+    uint64_t    pkt_buf_alloc_err;                 ///< mbuf allocation failures
+    uint64_t    rx_pkt_type[LEARN_PKT_TYPE_MAX];   ///< received packet types
     uint64_t    pkt_drop_reason[PKT_DROP_REASON_MAX];   ///< pkt drop reason
 
     // ageout counters

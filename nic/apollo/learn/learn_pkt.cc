@@ -133,6 +133,41 @@ detect_learn_type (learn_ctxt_t *ctxt, pds_mapping_type_t mapping_type)
     return learn_type;
 }
 
+static void
+extract_arp_pkt_type (learn_ctxt_t *ctxt, uint16_t arp_op,
+                      arp_data_ipv4_t *arp_data)
+{
+    bool garp;
+
+    garp = (arp_data->sip == arp_data->tip);
+    switch (arp_op) {
+    case ARPOP_REQUEST:
+        if (garp && MAC_TO_UINT64(arp_data->tmac) == 0) {
+            ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_GARP_ANNOUNCE;
+        } else if (arp_data->sip == 0) {
+            ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_ARP_PROBE;
+        } else {
+            ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_ARP_REQUEST;
+        }
+        break;
+    case ARPOP_REPLY:
+        if (garp) {
+            ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_GARP_REPLY;
+        } else {
+            ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_ARP_REPLY;
+        }
+        break;
+    case ARPOP_REVREQUEST:
+        ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_RARP_REQUEST;
+        break;
+    case ARPOP_REVREPLY:
+        ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_RARP_REPLY;
+        break;
+    default:
+        break;
+    }
+}
+
 static bool
 extract_ip_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
 {
@@ -153,7 +188,11 @@ extract_ip_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
             if (DHCP_PACKET_OPTION_MSG_TYPE == op->option) {
                 if (DHCP_PACKET_REQUEST == op->data[0]) {
                     dhcp_request = true;
+                    ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_DHCP_REQUEST;
                 } else {
+                    if (op->data[0] == DHCP_PACKET_DISCOVER) {
+                        ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_DHCP_DISCOVER;
+                    }
                     // this is not msg of our interest
                     break;
                 }
@@ -181,6 +220,7 @@ extract_ip_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
             return false;
         }
 
+        extract_arp_pkt_type(ctxt, htons(arp_hdr->op), arp_data);
         // check if packet smac is same as smac in arp header
         if (memcmp(ctxt->mac_key.mac_addr, &arp_data->smac, ETH_ADDR_LEN) != 0) {
             return false;
@@ -191,6 +231,7 @@ extract_ip_learn_info (char *pkt_data, learn_ctxt_t *ctxt)
         break;
     }
     case PKT_TYPE_IPV4:
+        ctxt->pkt_ctxt.pkt_type = LEARN_PKT_TYPE_IPV4;
         IPV4_HDR_SIP_GET(pkt_data + impl->l3_offset, ip->addr.v4_addr);
         ip->af = IP_AF_IPV4;
         break;
@@ -525,6 +566,7 @@ process_learn_pkt (void *mbuf)
         goto error;
     }
     update_batch_counters(&lbctxt, true);
+    LEARN_COUNTER_INCR(rx_pkt_type[ctxt.pkt_ctxt.pkt_type]);
 
     // broadcast learn events
     broadcast_events(&lbctxt);
@@ -547,6 +589,7 @@ error:
     }
     if (ret != SDK_RET_OK) {
         update_batch_counters(&lbctxt, false);
+        LEARN_COUNTER_INCR(rx_pkt_type[ctxt.pkt_ctxt.pkt_type]);
     }
 
     // clean up any allocated resources

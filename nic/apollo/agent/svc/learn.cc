@@ -199,6 +199,14 @@ ep_learn_stats_fill (pds::LearnStatsGetResponse *proto_rsp)
             drop_stats->set_numdrops(counters->pkt_drop_reason[i]);
         }
     }
+    for (uint8_t i = (uint8_t)learn::LEARN_PKT_TYPE_NONE;
+         i < (uint8_t)learn::LEARN_PKT_TYPE_MAX; i++) {
+        if (counters->rx_pkt_type[i]) {
+            pds::LearnPktTypeCounter *rx_pkt_types = stats->add_rcvdpkttypes();
+            rx_pkt_types->set_pkttype(pds_learn_pkt_type_to_proto(i));
+            rx_pkt_types->set_count(counters->rx_pkt_type[i]);
+        }
+    }
 
     // ageout counters
     stats->set_ipageouts(counters->ip_ageout_ok);

@@ -55,6 +55,27 @@ message LearnMACEntry {
   repeated LearnIPKey IPInfo = 5;
 }
 
+enum LearnPktType {
+  LEARN_PKT_TYPE_NONE          = 0;     // unclassified packet type
+  LEARN_PKT_TYPE_GARP_ANNOUNCE = 1;     // ARP requests with same src and tgt IP
+                                        // and tgt MAC = ZERO
+  LEARN_PKT_TYPE_ARP_PROBE     = 2;     // ARP requests with src IP = ZERO
+  LEARN_PKT_TYPE_ARP_REQUEST   = 3;     // other ARP requests
+  LEARN_PKT_TYPE_GARP_REPLY    = 4;     // ARP replies with same src and tgt IP
+  LEARN_PKT_TYPE_ARP_REPLY     = 5;     // other ARP replies
+  LEARN_PKT_TYPE_RARP_REQUEST  = 6;     // reverse ARP requests
+  LEARN_PKT_TYPE_RARP_REPLY    = 7;     // reverse ARP replies
+  LEARN_PKT_TYPE_DHCP_DISCOVER = 8;     // DHCP with DISCOVER option
+  LEARN_PKT_TYPE_DHCP_REQUEST  = 9;     // DHCP with REQUEST option
+  LEARN_PKT_TYPE_DHCP_ACK      = 10;    // DHCP with ACK option
+  LEARN_PKT_TYPE_IPV4          = 11;    // IP packets not classified as DHCP
+}
+
+message LearnPktTypeCounter {
+  LearnPktType  PktType = 1;
+  uint64        Count   = 2;
+}
+
 enum LearnPktDropReason {
   LEARN_PKTDROP_REASON_NONE           = 0;
   LEARN_PKTDROP_REASON_PARSE_ERR      = 1;
@@ -71,73 +92,74 @@ message LearnPktDropStats {
 }
 
 enum LearnEventType {
-  LEARN_EVENT_NONE              = 0;
-  LEARN_EVENT_NEW_LOCAL         = 1;
-  LEARN_EVENT_NEW_REMOTE        = 2;
-  LEARN_EVENT_L2L_MOVE          = 3;
-  LEARN_EVENT_R2L_MOVE          = 4;
-  LEARN_EVENT_L2R_MOVE          = 5;
-  LEARN_EVENT_R2R_MOVE          = 6;
-  LEARN_EVENT_DELETE            = 7;
+  LEARN_EVENT_NONE       = 0;
+  LEARN_EVENT_NEW_LOCAL  = 1;
+  LEARN_EVENT_NEW_REMOTE = 2;
+  LEARN_EVENT_L2L_MOVE   = 3;
+  LEARN_EVENT_R2L_MOVE   = 4;
+  LEARN_EVENT_L2R_MOVE   = 5;
+  LEARN_EVENT_R2R_MOVE   = 6;
+  LEARN_EVENT_DELETE     = 7;
 }
 
 message LearnEvents {
-  LearnEventType EventType      = 1;
-  uint64         Count          = 2;
+  LearnEventType EventType = 1;
+  uint64         Count     = 2;
 }
 
 enum LearnValidationType {
-  LEARN_CHECK_NONE                  = 0;
-  LEARN_CHECK_UNTAGGED_MAC_LIMIT    = 1;
-  LEARN_CHECK_MAC_LIMIT             = 2;
-  LEARN_CHECK_IP_LIMIT              = 3;
-  LEARN_CHECK_IP_IN_SUBNET          = 4;
+  LEARN_CHECK_NONE               = 0;
+  LEARN_CHECK_UNTAGGED_MAC_LIMIT = 1;
+  LEARN_CHECK_MAC_LIMIT          = 2;
+  LEARN_CHECK_IP_LIMIT           = 3;
+  LEARN_CHECK_IP_IN_SUBNET       = 4;
 }
 
 message LearnValidations {
-  LearnValidationType  ValidationType   = 1;
-  uint64               Count            = 2;
+  LearnValidationType  ValidationType = 1;
+  uint64               Count          = 2;
 }
 
 enum LearnApiOpType {
-  LEARN_API_OP_NONE             = 0;
-  LEARN_API_OP_CREATE           = 1;
-  LEARN_API_OP_DELETE           = 2;
-  LEARN_API_OP_UPDATE           = 3;
+  LEARN_API_OP_NONE   = 0;
+  LEARN_API_OP_CREATE = 1;
+  LEARN_API_OP_DELETE = 2;
+  LEARN_API_OP_UPDATE = 3;
 }
 
 message LearnApiOps {
-  LearnApiOpType  ApiOpType     = 1;
-  uint64          Count         = 2;
+  LearnApiOpType  ApiOpType = 1;
+  uint64          Count     = 2;
 }
 
 message LearnStats {
-  uint64                        PktsRcvd                = 1;
-  uint64                        PktsSent                = 2;
-  uint64                        PktSendErrors           = 3;
-  uint64                        ArpProbesSent           = 4;
-  uint64                        ArpProbeSendErrors      = 5;
-  uint64                        PktBufferAlloc          = 6;
-  uint64                        PktBufferAllocErrors    = 7;
-  uint64                        PktBufferAvailable      = 8;
-  repeated LearnPktDropStats    DropStats               = 9;
-  uint64                        IpAgeouts               = 10;
-  uint64                        IpAgeoutErrors          = 11;
-  uint64                        MacAgeouts              = 12;
-  uint64                        MacAgeoutErrors         = 13;
-  repeated LearnEvents          MacLearnEvents          = 14;
-  repeated LearnEvents          MacLearnErrors          = 15;
-  repeated LearnEvents          IpLearnEvents           = 16;
-  repeated LearnEvents          IpLearnErrors           = 17;
-  repeated LearnValidations     ValidationErrors        = 18;
-  repeated LearnApiOps          VnicOps                 = 19;
-  repeated LearnApiOps          VnicOpErrors            = 20;
-  repeated LearnApiOps          RemoteL2Mappings        = 21;
-  repeated LearnApiOps          RemoteL2MappingErrors   = 22;
-  repeated LearnApiOps          LocalL3Mappings         = 23;
-  repeated LearnApiOps          LocalL3MappingErrors    = 24;
-  repeated LearnApiOps          RemoteL3Mappings        = 25;
-  repeated LearnApiOps          RemoteL3MappingErrors   = 26;
+  uint64                        PktsRcvd              = 1;
+  uint64                        PktsSent              = 2;
+  uint64                        PktSendErrors         = 3;
+  uint64                        ArpProbesSent         = 4;
+  uint64                        ArpProbeSendErrors    = 5;
+  uint64                        PktBufferAlloc        = 6;
+  uint64                        PktBufferAllocErrors  = 7;
+  uint64                        PktBufferAvailable    = 8;
+  repeated LearnPktDropStats    DropStats             = 9;
+  uint64                        IpAgeouts             = 10;
+  uint64                        IpAgeoutErrors        = 11;
+  uint64                        MacAgeouts            = 12;
+  uint64                        MacAgeoutErrors       = 13;
+  repeated LearnEvents          MacLearnEvents        = 14;
+  repeated LearnEvents          MacLearnErrors        = 15;
+  repeated LearnEvents          IpLearnEvents         = 16;
+  repeated LearnEvents          IpLearnErrors         = 17;
+  repeated LearnValidations     ValidationErrors      = 18;
+  repeated LearnApiOps          VnicOps               = 19;
+  repeated LearnApiOps          VnicOpErrors          = 20;
+  repeated LearnApiOps          RemoteL2Mappings      = 21;
+  repeated LearnApiOps          RemoteL2MappingErrors = 22;
+  repeated LearnApiOps          LocalL3Mappings       = 23;
+  repeated LearnApiOps          LocalL3MappingErrors  = 24;
+  repeated LearnApiOps          RemoteL3Mappings      = 25;
+  repeated LearnApiOps          RemoteL3MappingErrors = 26;
+  repeated LearnPktTypeCounter  RcvdPktTypes          = 27;
 }
 
 message LearnMACRequest {

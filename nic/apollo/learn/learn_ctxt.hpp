@@ -47,6 +47,7 @@ typedef std::vector<event_t> event_list_t;
 /// \brief context specific to learn packets
 typedef struct learn_pkt_ctxt_s {
     uint8_t                 pkt_drop_reason;    ///< pkt drop reason
+    uint8_t                 pkt_type;
     impl::learn_info_t      impl_info;          ///< learn info provided by impl
     ep_ip_entry             *old_ip_entry;      ///< existing IP entry ptr (L2L)
 } learn_pkt_ctxt_t;

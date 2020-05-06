@@ -156,4 +156,36 @@ pds_learn_api_op_to_proto (uint8_t op_type)
     return pds::LEARN_API_OP_NONE;
 }
 
+static inline pds::LearnPktType
+pds_learn_pkt_type_to_proto (uint8_t pkt_type)
+{
+    switch (pkt_type) {
+    case LEARN_PKT_TYPE_GARP_ANNOUNCE:
+        return pds::LEARN_PKT_TYPE_GARP_ANNOUNCE;
+    case LEARN_PKT_TYPE_ARP_PROBE:
+        return pds::LEARN_PKT_TYPE_ARP_PROBE;
+    case LEARN_PKT_TYPE_ARP_REQUEST:
+        return pds::LEARN_PKT_TYPE_ARP_REQUEST;
+    case LEARN_PKT_TYPE_GARP_REPLY:
+        return pds::LEARN_PKT_TYPE_GARP_REPLY;
+    case LEARN_PKT_TYPE_ARP_REPLY:
+        return pds::LEARN_PKT_TYPE_ARP_REPLY;
+    case LEARN_PKT_TYPE_RARP_REQUEST:
+        return pds::LEARN_PKT_TYPE_RARP_REQUEST;
+    case LEARN_PKT_TYPE_RARP_REPLY:
+        return pds::LEARN_PKT_TYPE_RARP_REPLY;
+    case LEARN_PKT_TYPE_DHCP_DISCOVER:
+        return pds::LEARN_PKT_TYPE_DHCP_DISCOVER;
+    case LEARN_PKT_TYPE_DHCP_REQUEST:
+        return pds::LEARN_PKT_TYPE_DHCP_REQUEST;
+    case LEARN_PKT_TYPE_DHCP_ACK:
+        return pds::LEARN_PKT_TYPE_DHCP_ACK;
+    case LEARN_PKT_TYPE_IPV4:
+        return pds::LEARN_PKT_TYPE_IPV4;
+    default:
+        break;
+    }
+    return pds::LEARN_PKT_TYPE_NONE;
+}
+
 #endif    //__AGENT_SVC_LEARN_SVC_HPP__
