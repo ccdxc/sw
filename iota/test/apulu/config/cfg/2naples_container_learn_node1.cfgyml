@@ -9,17 +9,17 @@ meta:
 # 15 Local mappings (5 per VNIC)
 # 10 Remote mappings
 device:
-    id          : 1
-    mode        : host
-    stack       : ipv4
-    bridging    : false
-    overlay     : false
-    learning    : true
-    ipaddress   : '17.17.17.17'
-    gateway     : '1.0.0.1'
-    macaddress  : macaddr/0000.aaaa.aaa1
-    encap       : vxlan
-    origin      : implicitly-created
+    id                 : 1
+    mode               : host
+    stack              : ipv4
+    bridging           : false
+    overlayrouting     : true
+    learning           : true
+    ipaddress          : '17.17.17.17'
+    gateway            : '1.0.0.1'
+    macaddress         : macaddr/0000.aaaa.aaa1
+    encap              : vxlan
+    origin             : implicitly-created
     learningagetimeout : 50
 
 uplink:

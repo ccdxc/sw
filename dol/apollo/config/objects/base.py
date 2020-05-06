@@ -118,6 +118,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def AddDependent(self, dep):
         self.Deps[dep.ObjType].append(dep)
 
+    def DeleteDependent(self, dep):
+        self.Deps[dep.ObjType].remove(dep)
+
     def DeriveOperInfo(self):
         self.BuildDependency()
         return

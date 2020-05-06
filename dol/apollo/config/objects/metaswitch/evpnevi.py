@@ -17,6 +17,8 @@ import evpn_pb2 as evpn_pb2
 class EvpnEviObject(base.ConfigObjectBase):
     def __init__(self, node, parent, evpnevispec):
         super().__init__(api.ObjectTypes.BGP_EVPN_EVI, node)
+        if hasattr(evpnevispec, 'origin'):
+            self.SetOrigin(evpnevispec.origin)
         self.BatchUnaware = True
         self.Id = next(ResmgrClient[node].EvpnEviIdAllocator)
         self.GID("EvpnEvi%d"%self.Id)

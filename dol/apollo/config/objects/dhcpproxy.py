@@ -92,6 +92,10 @@ class DhcpProxyObjectClient(base.ConfigClientBase):
             return True
         return False
 
+    def PdsctlRead(self, node):
+        # pdsctl show not supported for dhcp policy yet
+        return True
+
     def GenerateObjects(self, node, parent, topospec):
         def __add_dhcp_proxy_config(dhcpspec):
             obj = DhcpProxyObject(node, dhcpspec)

@@ -105,7 +105,7 @@ pds_dhcp_policy_read_all (dhcp_policy_read_cb_t cb, void *ctxt)
     args.ctxt = ctxt;
     args.cb = cb;
 
-    return policy_db()->walk(pds_dhcp_policy_info_from_entry, &args);
+    return dhcp_db()->walk(pds_dhcp_policy_info_from_entry, &args);
 }
 
 sdk_ret_t

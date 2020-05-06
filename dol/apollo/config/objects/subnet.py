@@ -199,6 +199,17 @@ class SubnetObject(base.ConfigObjectBase):
         InterfaceClient.UpdateHostInterfaces(self.Node, [ self ])
         return True
 
+    def ModifyPolicyDependency(self, delete):
+        policyids = self.IngV4SecurityPolicyIds + self.EgV4SecurityPolicyIds
+        policyobjs = PolicyClient.GetObjectsByKeys(self.Node, policyids)
+        for obj in policyobjs:
+            if obj != None:
+                if delete:
+                    obj.DeleteDependent(self)
+                else:
+                    obj.AddDependent(self)
+        return
+
     def UpdateAttributes(self, spec):
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
         if utils.IsDol():
@@ -208,8 +219,13 @@ class SubnetObject(base.ConfigObjectBase):
                 self.HostIfIdx = utils.LifId2LifIfIndex(self.HostIf.lif.id)
                 self.HostIfUuid = utils.PdsUuid(self.HostIfIdx) if self.HostIfIdx else None
         self.V4RouteTableId = 0
+
+        # remove self from dependee list of those policies before updating it
+        self.ModifyPolicyDependency(True)
         self.IngV4SecurityPolicyIds = [PolicyClient.GetIngV4SecurityPolicyId(self.Node, self.VPC.VPCId)]
         self.EgV4SecurityPolicyIds = [PolicyClient.GetEgV4SecurityPolicyId(self.Node, self.VPC.VPCId)]
+        self.ModifyPolicyDependency(False)
+
         if self.IpV6Valid:
             self.VirtualRouterIPAddr[0] = next(Resmgr.CreateIpv6AddrPool(self.IPPrefix[0]))
         self.VirtualRouterIPAddr[1] = next(Resmgr.CreateIpv4AddrPool(self.IPPrefix[1]))
@@ -217,10 +233,12 @@ class SubnetObject(base.ConfigObjectBase):
         return
 
     def RollbackAttributes(self):
+        self.ModifyPolicyDependency(True)
         attrlist = ["VirtualRouterMACAddr", "HostIf", "HostIfIdx", "HostIfUuid",
             "V4RouteTableId", "IngV4SecurityPolicyIds", "EgV4SecurityPolicyIds",
             "VirtualRouterIPAddr", "IPAMname"]
         self.RollbackMany(attrlist)
+        self.ModifyPolicyDependency(False)
         return
 
     def PopulateKey(self, grpcmsg):
@@ -436,7 +454,8 @@ class SubnetObject(base.ConfigObjectBase):
                 elif cObj.IsEgressPolicy():
                     policylist = self.EgV6SecurityPolicyIds
             if policylist is not None:
-                policylist.append(cObj.PolicyId)
+                if cObj.PolicyId not in policylist:
+                    policylist.append(cObj.PolicyId)
             else:
                 logger.error(" - ERROR: %s not associated with %s" % \
                              (cObj, self))
@@ -478,7 +497,8 @@ class SubnetObject(base.ConfigObjectBase):
                 elif dObj.IsEgressPolicy():
                     policylist = self.EgV6SecurityPolicyIds
             if policylist is not None:
-                policylist.remove(dObj.PolicyId)
+                if dObj.PolicyId in policylist:
+                    policylist.remove(dObj.PolicyId)
             else:
                 logger.error(" - ERROR: %s not associated with %s" % \
                              (dObj, self))

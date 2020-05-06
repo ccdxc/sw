@@ -9,17 +9,17 @@ meta:
 # 6 Local mappings (1 per VNIC)
 # 6 Remote mappings
 device:
-    id          : 1
-    mode        : host
-    stack       : ipv4
-    bridging    : false
-    learning    : true
-    overlay     : false
-    ipaddress   : '18.18.18.18'
-    gateway     : '1.0.0.1'
-    macaddress  : macaddr/0000.bbbb.bbb1
-    encap       : vxlan
-    origin      : implicitly-created
+    id                 : 1
+    mode               : host
+    stack              : ipv4
+    bridging           : false
+    learning           : true
+    overlayrouting     : true
+    ipaddress          : '18.18.18.18'
+    gateway            : '1.0.0.1'
+    macaddress         : macaddr/0000.bbbb.bbb1
+    encap              : vxlan
+    origin             : implicitly-created
     learningagetimeout : 36000
 
 uplink:
@@ -144,16 +144,6 @@ vpc:
           v4prefix         : '10.1.0.0\24'
           v4prefixlen      : 24
           fabricencap      : vxlan
-          evpnevi:
-            - rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
 
           vnic:
             - count     : 1             # 1 untagged VNIC
@@ -172,16 +162,6 @@ vpc:
           v4prefix         : '10.2.0.0\24'
           v4prefixlen      : 24
           fabricencap      : vxlan
-          evpnevi:
-            - rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
 
           vnic:
             - count     : 1             # 1 untagged VNIC
@@ -200,16 +180,6 @@ vpc:
           v4prefix         : '10.3.0.0\24'
           v4prefixlen      : 24
           fabricencap      : vxlan
-          evpnevi:
-            - rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
 
           vnic:
             - count     : 1             # 1 untagged VNIC
@@ -228,16 +198,6 @@ vpc:
           v4prefix         : '10.4.0.0\24'
           v4prefixlen      : 24
           fabricencap      : vxlan
-          evpnevi:
-            - rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
 
           vnic:
             - count     : 1             # 1 untagged VNIC
@@ -255,16 +215,6 @@ vpc:
           v4prefix         : '10.5.0.0\24'
           v4prefixlen      : 24
           fabricencap      : vxlan
-          evpnevi:
-            - rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
 
           vnic:
             - count     : 1             # 1 untagged VNIC
@@ -282,16 +232,6 @@ vpc:
           v4prefix         : '10.6.0.0\24'
           v4prefixlen      : 24
           fabricencap      : vxlan
-          evpnevi:
-            - rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
 
           vnic:
             - count     : 1             # 1 untagged VNIC
@@ -313,6 +253,7 @@ vpc:
 
       routetbl:
         - type      : specific
+          origin    : fixed
           count     : 1
           routetype : disjoint
           teptype   : underlay

@@ -3,16 +3,16 @@ meta:
     id: TOPO_VxLAN_HOSTMODE
 
 device:
-    id          : 1
-    mode        : host # bitw (default), host
-    stack       : ipv4 # ipv4 (default), ipv6
-    bridging    : false # false (default), true
-    overlay     : false # false (default), true
-    learning    : false # false (default), true
-    ipaddress   : '30.30.30.30' # Taken from resmgr
-    gateway     : '1.0.0.1' # Taken from resmgr
-    macaddress  : macaddr/0000.aaaa.aaa1
-    encap       : vxlan # vxlan or mplsodup
+    id             : 1
+    mode           : host # bitw (default), host
+    stack          : ipv4 # ipv4 (default), ipv6
+    bridging       : false # false (default), true
+    overlayrouting : false # false (default), true
+    learning       : false # false (default), true
+    ipaddress      : '30.30.30.30' # Taken from resmgr
+    gateway        : '1.0.0.1' # Taken from resmgr
+    macaddress     : macaddr/0000.aaaa.aaa1
+    encap          : vxlan # vxlan or mplsodup
 
 uplink:
     - entry:
