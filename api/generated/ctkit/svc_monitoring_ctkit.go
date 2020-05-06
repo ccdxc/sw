@@ -120,8 +120,9 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.EventPolicy)
 		kind := "EventPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &eventpolicyCtx{event: evt.Type,
 			obj: &EventPolicy{EventPolicy: *eobj, ctrler: ct}}
@@ -150,8 +151,9 @@ func (ct *ctrlerCtx) handleEventPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*monitoring.EventPolicy)
 		kind := "EventPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -355,8 +357,9 @@ func (ct *ctrlerCtx) handleEventPolicyEventParallel(evt *kvstore.WatchEvent) err
 		eobj := evt.Object.(*monitoring.EventPolicy)
 		kind := "EventPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &eventpolicyCtx{event: evt.Type, obj: &EventPolicy{EventPolicy: *eobj, ctrler: ct}}
 
@@ -384,8 +387,9 @@ func (ct *ctrlerCtx) handleEventPolicyEventParallelWithNoResolver(evt *kvstore.W
 		eobj := evt.Object.(*monitoring.EventPolicy)
 		kind := "EventPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -963,8 +967,9 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.FwlogPolicy)
 		kind := "FwlogPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &fwlogpolicyCtx{event: evt.Type,
 			obj: &FwlogPolicy{FwlogPolicy: *eobj, ctrler: ct}}
@@ -993,8 +998,9 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*monitoring.FwlogPolicy)
 		kind := "FwlogPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -1198,8 +1204,9 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventParallel(evt *kvstore.WatchEvent) err
 		eobj := evt.Object.(*monitoring.FwlogPolicy)
 		kind := "FwlogPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &fwlogpolicyCtx{event: evt.Type, obj: &FwlogPolicy{FwlogPolicy: *eobj, ctrler: ct}}
 
@@ -1227,8 +1234,9 @@ func (ct *ctrlerCtx) handleFwlogPolicyEventParallelWithNoResolver(evt *kvstore.W
 		eobj := evt.Object.(*monitoring.FwlogPolicy)
 		kind := "FwlogPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -1806,8 +1814,9 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*monitoring.FlowExportPolicy)
 		kind := "FlowExportPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &flowexportpolicyCtx{event: evt.Type,
 			obj: &FlowExportPolicy{FlowExportPolicy: *eobj, ctrler: ct}}
@@ -1836,8 +1845,9 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventNoResolver(evt *kvstore.WatchEve
 		eobj := evt.Object.(*monitoring.FlowExportPolicy)
 		kind := "FlowExportPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -2041,8 +2051,9 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventParallel(evt *kvstore.WatchEvent
 		eobj := evt.Object.(*monitoring.FlowExportPolicy)
 		kind := "FlowExportPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &flowexportpolicyCtx{event: evt.Type, obj: &FlowExportPolicy{FlowExportPolicy: *eobj, ctrler: ct}}
 
@@ -2070,8 +2081,9 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEventParallelWithNoResolver(evt *kvst
 		eobj := evt.Object.(*monitoring.FlowExportPolicy)
 		kind := "FlowExportPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -2649,7 +2661,6 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.Alert)
 		kind := "Alert"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &alertCtx{event: evt.Type,
@@ -2679,7 +2690,6 @@ func (ct *ctrlerCtx) handleAlertEventNoResolver(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.Alert)
 		kind := "Alert"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2884,7 +2894,6 @@ func (ct *ctrlerCtx) handleAlertEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.Alert)
 		kind := "Alert"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &alertCtx{event: evt.Type, obj: &Alert{Alert: *eobj, ctrler: ct}}
@@ -2913,7 +2922,6 @@ func (ct *ctrlerCtx) handleAlertEventParallelWithNoResolver(evt *kvstore.WatchEv
 		eobj := evt.Object.(*monitoring.Alert)
 		kind := "Alert"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3492,7 +3500,6 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.AlertPolicy)
 		kind := "AlertPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &alertpolicyCtx{event: evt.Type,
@@ -3522,7 +3529,6 @@ func (ct *ctrlerCtx) handleAlertPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*monitoring.AlertPolicy)
 		kind := "AlertPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3727,7 +3733,6 @@ func (ct *ctrlerCtx) handleAlertPolicyEventParallel(evt *kvstore.WatchEvent) err
 		eobj := evt.Object.(*monitoring.AlertPolicy)
 		kind := "AlertPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &alertpolicyCtx{event: evt.Type, obj: &AlertPolicy{AlertPolicy: *eobj, ctrler: ct}}
@@ -3756,7 +3761,6 @@ func (ct *ctrlerCtx) handleAlertPolicyEventParallelWithNoResolver(evt *kvstore.W
 		eobj := evt.Object.(*monitoring.AlertPolicy)
 		kind := "AlertPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -4335,7 +4339,6 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEvent(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*monitoring.StatsAlertPolicy)
 		kind := "StatsAlertPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &statsalertpolicyCtx{event: evt.Type,
@@ -4365,7 +4368,6 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEventNoResolver(evt *kvstore.WatchEve
 		eobj := evt.Object.(*monitoring.StatsAlertPolicy)
 		kind := "StatsAlertPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -4570,7 +4572,6 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEventParallel(evt *kvstore.WatchEvent
 		eobj := evt.Object.(*monitoring.StatsAlertPolicy)
 		kind := "StatsAlertPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &statsalertpolicyCtx{event: evt.Type, obj: &StatsAlertPolicy{StatsAlertPolicy: *eobj, ctrler: ct}}
@@ -4599,7 +4600,6 @@ func (ct *ctrlerCtx) handleStatsAlertPolicyEventParallelWithNoResolver(evt *kvst
 		eobj := evt.Object.(*monitoring.StatsAlertPolicy)
 		kind := "StatsAlertPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -5178,8 +5178,9 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*monitoring.AlertDestination)
 		kind := "AlertDestination"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &alertdestinationCtx{event: evt.Type,
 			obj: &AlertDestination{AlertDestination: *eobj, ctrler: ct}}
@@ -5208,8 +5209,9 @@ func (ct *ctrlerCtx) handleAlertDestinationEventNoResolver(evt *kvstore.WatchEve
 		eobj := evt.Object.(*monitoring.AlertDestination)
 		kind := "AlertDestination"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -5413,8 +5415,9 @@ func (ct *ctrlerCtx) handleAlertDestinationEventParallel(evt *kvstore.WatchEvent
 		eobj := evt.Object.(*monitoring.AlertDestination)
 		kind := "AlertDestination"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &alertdestinationCtx{event: evt.Type, obj: &AlertDestination{AlertDestination: *eobj, ctrler: ct}}
 
@@ -5442,8 +5445,9 @@ func (ct *ctrlerCtx) handleAlertDestinationEventParallelWithNoResolver(evt *kvst
 		eobj := evt.Object.(*monitoring.AlertDestination)
 		kind := "AlertDestination"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -6021,7 +6025,6 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.MirrorSession)
 		kind := "MirrorSession"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &mirrorsessionCtx{event: evt.Type,
@@ -6051,7 +6054,6 @@ func (ct *ctrlerCtx) handleMirrorSessionEventNoResolver(evt *kvstore.WatchEvent)
 		eobj := evt.Object.(*monitoring.MirrorSession)
 		kind := "MirrorSession"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -6256,7 +6258,6 @@ func (ct *ctrlerCtx) handleMirrorSessionEventParallel(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*monitoring.MirrorSession)
 		kind := "MirrorSession"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &mirrorsessionCtx{event: evt.Type, obj: &MirrorSession{MirrorSession: *eobj, ctrler: ct}}
@@ -6285,7 +6286,6 @@ func (ct *ctrlerCtx) handleMirrorSessionEventParallelWithNoResolver(evt *kvstore
 		eobj := evt.Object.(*monitoring.MirrorSession)
 		kind := "MirrorSession"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -6864,7 +6864,6 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 		eobj := evt.Object.(*monitoring.TroubleshootingSession)
 		kind := "TroubleshootingSession"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &troubleshootingsessionCtx{event: evt.Type,
@@ -6894,7 +6893,6 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventNoResolver(evt *kvstore.Wa
 		eobj := evt.Object.(*monitoring.TroubleshootingSession)
 		kind := "TroubleshootingSession"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -7099,7 +7097,6 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallel(evt *kvstore.Watc
 		eobj := evt.Object.(*monitoring.TroubleshootingSession)
 		kind := "TroubleshootingSession"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &troubleshootingsessionCtx{event: evt.Type, obj: &TroubleshootingSession{TroubleshootingSession: *eobj, ctrler: ct}}
@@ -7128,7 +7125,6 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEventParallelWithNoResolver(evt
 		eobj := evt.Object.(*monitoring.TroubleshootingSession)
 		kind := "TroubleshootingSession"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -7707,7 +7703,6 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 		eobj := evt.Object.(*monitoring.TechSupportRequest)
 		kind := "TechSupportRequest"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &techsupportrequestCtx{event: evt.Type,
@@ -7737,7 +7732,6 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventNoResolver(evt *kvstore.WatchE
 		eobj := evt.Object.(*monitoring.TechSupportRequest)
 		kind := "TechSupportRequest"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -7942,7 +7936,6 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventParallel(evt *kvstore.WatchEve
 		eobj := evt.Object.(*monitoring.TechSupportRequest)
 		kind := "TechSupportRequest"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &techsupportrequestCtx{event: evt.Type, obj: &TechSupportRequest{TechSupportRequest: *eobj, ctrler: ct}}
@@ -7971,7 +7964,6 @@ func (ct *ctrlerCtx) handleTechSupportRequestEventParallelWithNoResolver(evt *kv
 		eobj := evt.Object.(*monitoring.TechSupportRequest)
 		kind := "TechSupportRequest"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -8550,7 +8542,6 @@ func (ct *ctrlerCtx) handleArchiveRequestEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.ArchiveRequest)
 		kind := "ArchiveRequest"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &archiverequestCtx{event: evt.Type,
@@ -8580,7 +8571,6 @@ func (ct *ctrlerCtx) handleArchiveRequestEventNoResolver(evt *kvstore.WatchEvent
 		eobj := evt.Object.(*monitoring.ArchiveRequest)
 		kind := "ArchiveRequest"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -8785,7 +8775,6 @@ func (ct *ctrlerCtx) handleArchiveRequestEventParallel(evt *kvstore.WatchEvent) 
 		eobj := evt.Object.(*monitoring.ArchiveRequest)
 		kind := "ArchiveRequest"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &archiverequestCtx{event: evt.Type, obj: &ArchiveRequest{ArchiveRequest: *eobj, ctrler: ct}}
@@ -8814,7 +8803,6 @@ func (ct *ctrlerCtx) handleArchiveRequestEventParallelWithNoResolver(evt *kvstor
 		eobj := evt.Object.(*monitoring.ArchiveRequest)
 		kind := "ArchiveRequest"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -9451,8 +9439,9 @@ func (ct *ctrlerCtx) handleAuditPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.AuditPolicy)
 		kind := "AuditPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &auditpolicyCtx{event: evt.Type,
 			obj: &AuditPolicy{AuditPolicy: *eobj, ctrler: ct}}
@@ -9481,8 +9470,9 @@ func (ct *ctrlerCtx) handleAuditPolicyEventNoResolver(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*monitoring.AuditPolicy)
 		kind := "AuditPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -9686,8 +9676,9 @@ func (ct *ctrlerCtx) handleAuditPolicyEventParallel(evt *kvstore.WatchEvent) err
 		eobj := evt.Object.(*monitoring.AuditPolicy)
 		kind := "AuditPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &auditpolicyCtx{event: evt.Type, obj: &AuditPolicy{AuditPolicy: *eobj, ctrler: ct}}
 
@@ -9715,8 +9706,9 @@ func (ct *ctrlerCtx) handleAuditPolicyEventParallelWithNoResolver(evt *kvstore.W
 		eobj := evt.Object.(*monitoring.AuditPolicy)
 		kind := "AuditPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]

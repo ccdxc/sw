@@ -103,7 +103,7 @@ func (s *workloadHooks) validateHost(ctx context.Context, kvs kvstore.Interface,
 
 		for k := range curHost.Labels {
 			if k == orchhubUtils.OrchNameKey {
-				return i, true, fmt.Errorf("cannot create workload on a host used by an orchestrator")
+				return i, true, fmt.Errorf("cannot create or update workload on a host used by an orchestrator")
 			}
 		}
 

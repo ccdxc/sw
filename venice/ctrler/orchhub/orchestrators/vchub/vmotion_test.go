@@ -619,18 +619,20 @@ func TestVmotionWithWatchers(t *testing.T) {
 		if isAcrossDC {
 			pgObj = pg2
 			port = "21"
-			dc1.RemoveVnic(vm1, sim.VNIC{
+			err := dc1.RemoveVnic(vm1, sim.VNIC{
 				MacAddress:   "aa:aa:bb:bb:dd:dd",
 				PortgroupKey: pg.Reference().Value,
 				PortKey:      "11",
 			})
+			AssertOk(t, err, "Failed to add vnic")
 
 			// Update vnics to new DC pg
-			dc1.AddVnic(vm1, sim.VNIC{
+			err = dc1.AddVnic(vm1, sim.VNIC{
 				MacAddress:   "aa:aa:bb:bb:dd:dd",
 				PortgroupKey: pg2.Reference().Value,
 				PortKey:      "21", // change port to check stale port is removed
 			})
+			AssertOk(t, err, "Failed to add vnic")
 		} else {
 			pgObj = pg
 		}

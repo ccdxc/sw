@@ -120,8 +120,9 @@ func (ct *ctrlerCtx) handleOrchestratorEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*orchestration.Orchestrator)
 		kind := "Orchestrator"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &orchestratorCtx{event: evt.Type,
 			obj: &Orchestrator{Orchestrator: *eobj, ctrler: ct}}
@@ -150,8 +151,9 @@ func (ct *ctrlerCtx) handleOrchestratorEventNoResolver(evt *kvstore.WatchEvent) 
 		eobj := evt.Object.(*orchestration.Orchestrator)
 		kind := "Orchestrator"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -355,8 +357,9 @@ func (ct *ctrlerCtx) handleOrchestratorEventParallel(evt *kvstore.WatchEvent) er
 		eobj := evt.Object.(*orchestration.Orchestrator)
 		kind := "Orchestrator"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &orchestratorCtx{event: evt.Type, obj: &Orchestrator{Orchestrator: *eobj, ctrler: ct}}
 
@@ -384,8 +387,9 @@ func (ct *ctrlerCtx) handleOrchestratorEventParallelWithNoResolver(evt *kvstore.
 		eobj := evt.Object.(*orchestration.Orchestrator)
 		kind := "Orchestrator"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]

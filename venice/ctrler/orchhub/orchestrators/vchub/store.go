@@ -82,7 +82,9 @@ func (v *VCHub) startEventsListener() {
 					}
 					// sync and start watchers, network event watcher
 					// will not start until after sync finishes (blocked on processVeniceEvents flag)
+					v.discoveredDCsLock.Lock()
 					v.discoveredDCs = []string{}
+					v.discoveredDCsLock.Unlock()
 					v.sync()
 
 					v.probe.StartWatchers()
@@ -139,7 +141,9 @@ func (v *VCHub) startEventsListener() {
 				o.Orchestrator.Status.Message = msg
 				o.Status.OrchID = v.OrchConfig.Status.OrchID
 				if connStatus.State == orchestration.OrchestratorStatus_Failure.String() {
+					v.discoveredDCsLock.Lock()
 					v.discoveredDCs = []string{}
+					v.discoveredDCsLock.Unlock()
 					o.Status.DiscoveredNamespaces = []string{}
 				}
 				o.Write()
@@ -293,6 +297,9 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 
 func (v *VCHub) removeDiscoveredDC(dcName string) {
 	v.Log.Infof("removing DC %s to discovered DCs", dcName)
+	v.discoveredDCsLock.Lock()
+	// Not using defer v.discoveredDCsLock.Unlock() as orchhub shouldn't block if unable
+	// to write status update to apiserver
 	dcList := v.discoveredDCs
 	found := -1
 	for i, entry := range dcList {
@@ -303,6 +310,7 @@ func (v *VCHub) removeDiscoveredDC(dcName string) {
 	if found >= 0 {
 		dcList = append(dcList[:found], dcList[found+1:]...)
 		v.discoveredDCs = dcList
+		v.discoveredDCsLock.Unlock()
 
 		v.orchUpdateLock.Lock()
 		defer v.orchUpdateLock.Unlock()
@@ -315,17 +323,22 @@ func (v *VCHub) removeDiscoveredDC(dcName string) {
 			return
 		}
 
-		o.Orchestrator.Status.DiscoveredNamespaces = v.discoveredDCs
+		o.Orchestrator.Status.DiscoveredNamespaces = dcList
 		err = o.Write()
 
 		if err != nil {
 			v.Log.Errorf("removeDiscoveredDC: Failed to update orch status %s", err)
 		}
+	} else {
+		v.discoveredDCsLock.Unlock()
 	}
 }
 
 func (v *VCHub) addDiscoveredDC(dcName string) {
 	v.Log.Infof("adding DC %s to discovered DCs", dcName)
+	v.discoveredDCsLock.Lock()
+	// Not using defer v.discoveredDCsLock.Unlock() as orchhub shouldn't block if unable
+	// to write status update to apiserver
 	dcList := v.discoveredDCs
 	found := -1
 	for i, entry := range dcList {
@@ -337,6 +350,7 @@ func (v *VCHub) addDiscoveredDC(dcName string) {
 		dcList = append(dcList, dcName)
 		sort.Strings(dcList)
 		v.discoveredDCs = dcList
+		v.discoveredDCsLock.Unlock()
 
 		v.orchUpdateLock.Lock()
 		defer v.orchUpdateLock.Unlock()
@@ -349,17 +363,22 @@ func (v *VCHub) addDiscoveredDC(dcName string) {
 			return
 		}
 
-		o.Orchestrator.Status.DiscoveredNamespaces = v.discoveredDCs
+		o.Orchestrator.Status.DiscoveredNamespaces = dcList
 		err = o.Write()
 
 		if err != nil {
 			v.Log.Errorf("AddDiscoveredDC: Failed to update orch status %s", err)
 		}
+	} else {
+		v.discoveredDCsLock.Unlock()
 	}
 }
 
 func (v *VCHub) renameDiscoveredDC(oldName, newName string) {
 	v.Log.Infof("renaming DC %s to %s in discovered DCs", oldName, newName)
+	v.discoveredDCsLock.Lock()
+	// Not using defer v.discoveredDCsLock.Unlock() as orchhub shouldn't block if unable
+	// to write status update to apiserver
 	dcList := v.discoveredDCs
 	found := -1
 	for i, entry := range dcList {
@@ -372,6 +391,7 @@ func (v *VCHub) renameDiscoveredDC(oldName, newName string) {
 		dcList[found] = newName
 		sort.Strings(dcList)
 		v.discoveredDCs = dcList
+		v.discoveredDCsLock.Unlock()
 
 		v.orchUpdateLock.Lock()
 		defer v.orchUpdateLock.Unlock()
@@ -384,11 +404,13 @@ func (v *VCHub) renameDiscoveredDC(oldName, newName string) {
 			return
 		}
 
-		o.Orchestrator.Status.DiscoveredNamespaces = v.discoveredDCs
+		o.Orchestrator.Status.DiscoveredNamespaces = dcList
 		err = o.Write()
 
 		if err != nil {
 			v.Log.Errorf("RenameDiscoveredDC: Failed to update orch status %s", err)
 		}
+	} else {
+		v.discoveredDCsLock.Unlock()
 	}
 }

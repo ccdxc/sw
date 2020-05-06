@@ -120,8 +120,9 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.User)
 		kind := "User"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &userCtx{event: evt.Type,
 			obj: &User{User: *eobj, ctrler: ct}}
@@ -150,8 +151,9 @@ func (ct *ctrlerCtx) handleUserEventNoResolver(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.User)
 		kind := "User"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -355,8 +357,9 @@ func (ct *ctrlerCtx) handleUserEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.User)
 		kind := "User"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &userCtx{event: evt.Type, obj: &User{User: *eobj, ctrler: ct}}
 
@@ -384,8 +387,9 @@ func (ct *ctrlerCtx) handleUserEventParallelWithNoResolver(evt *kvstore.WatchEve
 		eobj := evt.Object.(*auth.User)
 		kind := "User"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -1135,8 +1139,9 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 		eobj := evt.Object.(*auth.AuthenticationPolicy)
 		kind := "AuthenticationPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &authenticationpolicyCtx{event: evt.Type,
 			obj: &AuthenticationPolicy{AuthenticationPolicy: *eobj, ctrler: ct}}
@@ -1165,8 +1170,9 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventNoResolver(evt *kvstore.Watc
 		eobj := evt.Object.(*auth.AuthenticationPolicy)
 		kind := "AuthenticationPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -1370,8 +1376,9 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallel(evt *kvstore.WatchE
 		eobj := evt.Object.(*auth.AuthenticationPolicy)
 		kind := "AuthenticationPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &authenticationpolicyCtx{event: evt.Type, obj: &AuthenticationPolicy{AuthenticationPolicy: *eobj, ctrler: ct}}
 
@@ -1399,8 +1406,9 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEventParallelWithNoResolver(evt *
 		eobj := evt.Object.(*auth.AuthenticationPolicy)
 		kind := "AuthenticationPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -2150,7 +2158,6 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.Role)
 		kind := "Role"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &roleCtx{event: evt.Type,
@@ -2180,7 +2187,6 @@ func (ct *ctrlerCtx) handleRoleEventNoResolver(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.Role)
 		kind := "Role"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2385,7 +2391,6 @@ func (ct *ctrlerCtx) handleRoleEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.Role)
 		kind := "Role"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &roleCtx{event: evt.Type, obj: &Role{Role: *eobj, ctrler: ct}}
@@ -2414,7 +2419,6 @@ func (ct *ctrlerCtx) handleRoleEventParallelWithNoResolver(evt *kvstore.WatchEve
 		eobj := evt.Object.(*auth.Role)
 		kind := "Role"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2993,7 +2997,6 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.RoleBinding)
 		kind := "RoleBinding"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &rolebindingCtx{event: evt.Type,
@@ -3023,7 +3026,6 @@ func (ct *ctrlerCtx) handleRoleBindingEventNoResolver(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*auth.RoleBinding)
 		kind := "RoleBinding"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3228,7 +3230,6 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallel(evt *kvstore.WatchEvent) err
 		eobj := evt.Object.(*auth.RoleBinding)
 		kind := "RoleBinding"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &rolebindingCtx{event: evt.Type, obj: &RoleBinding{RoleBinding: *eobj, ctrler: ct}}
@@ -3257,7 +3258,6 @@ func (ct *ctrlerCtx) handleRoleBindingEventParallelWithNoResolver(evt *kvstore.W
 		eobj := evt.Object.(*auth.RoleBinding)
 		kind := "RoleBinding"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3836,7 +3836,6 @@ func (ct *ctrlerCtx) handleUserPreferenceEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.UserPreference)
 		kind := "UserPreference"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &userpreferenceCtx{event: evt.Type,
@@ -3866,7 +3865,6 @@ func (ct *ctrlerCtx) handleUserPreferenceEventNoResolver(evt *kvstore.WatchEvent
 		eobj := evt.Object.(*auth.UserPreference)
 		kind := "UserPreference"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -4071,7 +4069,6 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallel(evt *kvstore.WatchEvent) 
 		eobj := evt.Object.(*auth.UserPreference)
 		kind := "UserPreference"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &userpreferenceCtx{event: evt.Type, obj: &UserPreference{UserPreference: *eobj, ctrler: ct}}
@@ -4100,7 +4097,6 @@ func (ct *ctrlerCtx) handleUserPreferenceEventParallelWithNoResolver(evt *kvstor
 		eobj := evt.Object.(*auth.UserPreference)
 		kind := "UserPreference"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()

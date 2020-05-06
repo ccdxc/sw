@@ -120,7 +120,6 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*rollout.Rollout)
 		kind := "Rollout"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &rolloutCtx{event: evt.Type,
@@ -150,7 +149,6 @@ func (ct *ctrlerCtx) handleRolloutEventNoResolver(evt *kvstore.WatchEvent) error
 		eobj := evt.Object.(*rollout.Rollout)
 		kind := "Rollout"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -355,7 +353,6 @@ func (ct *ctrlerCtx) handleRolloutEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*rollout.Rollout)
 		kind := "Rollout"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &rolloutCtx{event: evt.Type, obj: &Rollout{Rollout: *eobj, ctrler: ct}}
@@ -384,7 +381,6 @@ func (ct *ctrlerCtx) handleRolloutEventParallelWithNoResolver(evt *kvstore.Watch
 		eobj := evt.Object.(*rollout.Rollout)
 		kind := "Rollout"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1192,7 +1188,6 @@ func (ct *ctrlerCtx) handleRolloutActionEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*rollout.RolloutAction)
 		kind := "RolloutAction"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &rolloutactionCtx{event: evt.Type,
@@ -1222,7 +1217,6 @@ func (ct *ctrlerCtx) handleRolloutActionEventNoResolver(evt *kvstore.WatchEvent)
 		eobj := evt.Object.(*rollout.RolloutAction)
 		kind := "RolloutAction"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1427,7 +1421,6 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallel(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*rollout.RolloutAction)
 		kind := "RolloutAction"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &rolloutactionCtx{event: evt.Type, obj: &RolloutAction{RolloutAction: *eobj, ctrler: ct}}
@@ -1456,7 +1449,6 @@ func (ct *ctrlerCtx) handleRolloutActionEventParallelWithNoResolver(evt *kvstore
 		eobj := evt.Object.(*rollout.RolloutAction)
 		kind := "RolloutAction"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()

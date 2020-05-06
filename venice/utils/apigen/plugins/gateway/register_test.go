@@ -3033,6 +3033,10 @@ func TestGetStorageTransformersManifest(t *testing.T) {
 		t.Fatalf("generated manifest does not match:\n have: %v\n want: %v", string(have), string(want))
 	}
 
+	ret, err := hasTransformers(file, "msg1")
+	testutils.AssertOk(t, err, "hasTransformers failed")
+	testutils.Assert(t, ret, "hasTransformers returned false")
+
 	storageTransformerArgMap = scratchMap
 }
 
@@ -3107,6 +3111,9 @@ func TestStorageTransformerNegativeCases(t *testing.T) {
 		!strings.Contains(err.Error(), "invalidFieldTypeMessage") {
 		t.Fatalf("Expected type error while parsing storage transformers manifest, got: %v", err)
 	}
+
+	_, err = hasTransformers(file, "missingMsg")
+	testutils.Assert(t, err != nil, "hasTransformers should have failed")
 
 	storageTransformerArgMap = scratchMap
 }

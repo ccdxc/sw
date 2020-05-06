@@ -49,10 +49,11 @@ type VCHub struct {
 	// Needed for discoveredDCs list when a DC is renamed/deleted
 	DcID2NameMap map[string]string
 	// Will be taken with write lock by sync
-	syncLock      sync.RWMutex
-	syncDone      bool
-	watchStarted  bool
-	discoveredDCs []string
+	syncLock          sync.RWMutex
+	syncDone          bool
+	watchStarted      bool
+	discoveredDCsLock sync.Mutex
+	discoveredDCs     []string
 	// whether to act upon venice network events
 	// When we are disconnected, we do not want to act upon network events
 	// until we are reconnected and sync has finished.
@@ -278,7 +279,7 @@ func (v *VCHub) isCredentialChanged(config *orchestration.Orchestrator) bool {
 
 // UpdateConfig handles if the Orchestrator config has changed
 func (v *VCHub) UpdateConfig(config *orchestration.Orchestrator) {
-	v.Log.Infof("VCHub config updated. : Orch : %v", config)
+	v.Log.Infof("VCHub config updated. : Orch : %v", config.ObjectMeta)
 	v.reconcileNamespaces(config)
 
 	if v.isCredentialChanged(config) {
@@ -365,15 +366,28 @@ func (v *VCHub) ListPensandoHosts(dcRef *types.ManagedObjectReference) []mo.Host
 
 func (v *VCHub) reconcileNamespaces(config *orchestration.Orchestrator) error {
 	v.Log.Infof("Reconciling namespaces for orchestrator [%v]", config.Name)
+	// Cleanup and additions are only needed if we are connected to vCenter
+	if !v.probe.IsSessionReady() {
+		v.Log.Infof("Reconciling namespaces skipped because probe isn't ready")
+		return nil
+	}
+
+	// If sync is running, we don't want to modify state until it is done.
+	v.syncLock.RLock()
+	defer v.syncLock.RUnlock()
+
 	managedNamespaces := v.getManagedNamespaceList()
 	newManagedNamespaces := []string{}
 
-	if len(config.Spec.ManageNamespaces) == 1 && config.Spec.ManageNamespaces[0] == utils.ManageAllDcs {
-		for k := range v.probe.GetDCMap() {
-			newManagedNamespaces = append(newManagedNamespaces, k)
+	// If url is different, then we have all deletes.
+	if config.Spec.URI == v.OrchConfig.Spec.URI {
+		if len(config.Spec.ManageNamespaces) == 1 && config.Spec.ManageNamespaces[0] == utils.ManageAllDcs {
+			for k := range v.probe.GetDCMap() {
+				newManagedNamespaces = append(newManagedNamespaces, k)
+			}
+		} else {
+			newManagedNamespaces = config.Spec.ManageNamespaces
 		}
-	} else {
-		newManagedNamespaces = config.Spec.ManageNamespaces
 	}
 
 	addedNs, deletedNs, nochangeNs := utils.DiffNamespace(managedNamespaces, newManagedNamespaces)

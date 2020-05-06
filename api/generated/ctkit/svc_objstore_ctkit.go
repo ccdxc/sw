@@ -120,7 +120,6 @@ func (ct *ctrlerCtx) handleBucketEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*objstore.Bucket)
 		kind := "Bucket"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &bucketCtx{event: evt.Type,
@@ -150,7 +149,6 @@ func (ct *ctrlerCtx) handleBucketEventNoResolver(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*objstore.Bucket)
 		kind := "Bucket"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -355,7 +353,6 @@ func (ct *ctrlerCtx) handleBucketEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*objstore.Bucket)
 		kind := "Bucket"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &bucketCtx{event: evt.Type, obj: &Bucket{Bucket: *eobj, ctrler: ct}}
@@ -384,7 +381,6 @@ func (ct *ctrlerCtx) handleBucketEventParallelWithNoResolver(evt *kvstore.WatchE
 		eobj := evt.Object.(*objstore.Bucket)
 		kind := "Bucket"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -963,7 +959,6 @@ func (ct *ctrlerCtx) handleObjectEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*objstore.Object)
 		kind := "Object"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &objectCtx{event: evt.Type,
@@ -993,7 +988,6 @@ func (ct *ctrlerCtx) handleObjectEventNoResolver(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*objstore.Object)
 		kind := "Object"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1198,7 +1192,6 @@ func (ct *ctrlerCtx) handleObjectEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*objstore.Object)
 		kind := "Object"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &objectCtx{event: evt.Type, obj: &Object{Object: *eobj, ctrler: ct}}
@@ -1227,7 +1220,6 @@ func (ct *ctrlerCtx) handleObjectEventParallelWithNoResolver(evt *kvstore.WatchE
 		eobj := evt.Object.(*objstore.Object)
 		kind := "Object"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()

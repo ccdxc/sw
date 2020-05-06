@@ -120,7 +120,6 @@ func (ct *ctrlerCtx) handleOrderEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Order)
 		kind := "Order"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &orderCtx{event: evt.Type,
@@ -150,7 +149,6 @@ func (ct *ctrlerCtx) handleOrderEventNoResolver(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Order)
 		kind := "Order"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -355,7 +353,6 @@ func (ct *ctrlerCtx) handleOrderEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Order)
 		kind := "Order"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &orderCtx{event: evt.Type, obj: &Order{Order: *eobj, ctrler: ct}}
@@ -384,7 +381,6 @@ func (ct *ctrlerCtx) handleOrderEventParallelWithNoResolver(evt *kvstore.WatchEv
 		eobj := evt.Object.(*bookstore.Order)
 		kind := "Order"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1078,7 +1074,6 @@ func (ct *ctrlerCtx) handleBookEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Book)
 		kind := "Book"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &bookCtx{event: evt.Type,
@@ -1108,7 +1103,6 @@ func (ct *ctrlerCtx) handleBookEventNoResolver(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Book)
 		kind := "Book"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1313,7 +1307,6 @@ func (ct *ctrlerCtx) handleBookEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Book)
 		kind := "Book"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &bookCtx{event: evt.Type, obj: &Book{Book: *eobj, ctrler: ct}}
@@ -1342,7 +1335,6 @@ func (ct *ctrlerCtx) handleBookEventParallelWithNoResolver(evt *kvstore.WatchEve
 		eobj := evt.Object.(*bookstore.Book)
 		kind := "Book"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1979,7 +1971,6 @@ func (ct *ctrlerCtx) handlePublisherEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Publisher)
 		kind := "Publisher"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &publisherCtx{event: evt.Type,
@@ -2009,7 +2000,6 @@ func (ct *ctrlerCtx) handlePublisherEventNoResolver(evt *kvstore.WatchEvent) err
 		eobj := evt.Object.(*bookstore.Publisher)
 		kind := "Publisher"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2214,7 +2204,6 @@ func (ct *ctrlerCtx) handlePublisherEventParallel(evt *kvstore.WatchEvent) error
 		eobj := evt.Object.(*bookstore.Publisher)
 		kind := "Publisher"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &publisherCtx{event: evt.Type, obj: &Publisher{Publisher: *eobj, ctrler: ct}}
@@ -2243,7 +2232,6 @@ func (ct *ctrlerCtx) handlePublisherEventParallelWithNoResolver(evt *kvstore.Wat
 		eobj := evt.Object.(*bookstore.Publisher)
 		kind := "Publisher"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2822,7 +2810,6 @@ func (ct *ctrlerCtx) handleStoreEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Store)
 		kind := "Store"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &storeCtx{event: evt.Type,
@@ -2852,7 +2839,6 @@ func (ct *ctrlerCtx) handleStoreEventNoResolver(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Store)
 		kind := "Store"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3057,7 +3043,6 @@ func (ct *ctrlerCtx) handleStoreEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Store)
 		kind := "Store"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &storeCtx{event: evt.Type, obj: &Store{Store: *eobj, ctrler: ct}}
@@ -3086,7 +3071,6 @@ func (ct *ctrlerCtx) handleStoreEventParallelWithNoResolver(evt *kvstore.WatchEv
 		eobj := evt.Object.(*bookstore.Store)
 		kind := "Store"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3723,7 +3707,6 @@ func (ct *ctrlerCtx) handleCouponEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Coupon)
 		kind := "Coupon"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &couponCtx{event: evt.Type,
@@ -3753,7 +3736,6 @@ func (ct *ctrlerCtx) handleCouponEventNoResolver(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*bookstore.Coupon)
 		kind := "Coupon"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3958,7 +3940,6 @@ func (ct *ctrlerCtx) handleCouponEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Coupon)
 		kind := "Coupon"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &couponCtx{event: evt.Type, obj: &Coupon{Coupon: *eobj, ctrler: ct}}
@@ -3987,7 +3968,6 @@ func (ct *ctrlerCtx) handleCouponEventParallelWithNoResolver(evt *kvstore.WatchE
 		eobj := evt.Object.(*bookstore.Coupon)
 		kind := "Coupon"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -4566,8 +4546,9 @@ func (ct *ctrlerCtx) handleCustomerEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*bookstore.Customer)
 		kind := "Customer"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &customerCtx{event: evt.Type,
 			obj: &Customer{Customer: *eobj, ctrler: ct}}
@@ -4596,8 +4577,9 @@ func (ct *ctrlerCtx) handleCustomerEventNoResolver(evt *kvstore.WatchEvent) erro
 		eobj := evt.Object.(*bookstore.Customer)
 		kind := "Customer"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -4801,8 +4783,9 @@ func (ct *ctrlerCtx) handleCustomerEventParallel(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*bookstore.Customer)
 		kind := "Customer"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &customerCtx{event: evt.Type, obj: &Customer{Customer: *eobj, ctrler: ct}}
 
@@ -4830,8 +4813,9 @@ func (ct *ctrlerCtx) handleCustomerEventParallelWithNoResolver(evt *kvstore.Watc
 		eobj := evt.Object.(*bookstore.Customer)
 		kind := "Customer"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]

@@ -3,8 +3,11 @@ package vchub
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/url"
+	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -44,7 +47,7 @@ var defaultTestParams = &testutils.TestParams{
 	// TestPassword: "N0isystem$",
 	TestHostName: "127.0.0.1:8989",
 	TestUser:     "user",
-	TestPassword: "pass",
+	TestPassword: "vc_pass",
 
 	TestDCName:             "PenTestDC",
 	TestDVSName:            CreateDVSName("PenTestDC"),
@@ -69,7 +72,8 @@ func TestVCWrite(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	logger := setupLogger("vchub_test_vc_write")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_vc_write")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s *sim.VcSim
@@ -82,6 +86,10 @@ func TestVCWrite(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -298,7 +306,8 @@ func TestVCHub(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	logger := setupLogger("vchub_test")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s *sim.VcSim
@@ -311,6 +320,10 @@ func TestVCHub(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -365,7 +378,8 @@ func TestVCHubDestroy1(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	logger := setupLogger("vchub_test_destory")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_destory")
+	AssertOk(t, err, "Failed to setup logger")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -385,6 +399,10 @@ func TestVCHubDestroy1(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -481,7 +499,8 @@ func TestVCHubDestroy2(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	logger := setupLogger("vchub_test_destroy_2")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_destroy_2")
+	AssertOk(t, err, "Failed to setup logger")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -501,6 +520,10 @@ func TestVCHubDestroy2(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
@@ -587,7 +610,8 @@ func TestVCHubDestroy3(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	logger := setupLogger("vchub_test_destroy_3")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_destroy_3")
+	AssertOk(t, err, "Failed to setup logger")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -607,6 +631,10 @@ func TestVCHubDestroy3(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -719,7 +747,8 @@ func createProbe(ctx context.Context, uri, user, pass string) *mock.ProbeMock {
 func TestDCWatchers(t *testing.T) {
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
-	logger := setupLogger("vchub_test_dc_watchers")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_dc_watchers")
+	AssertOk(t, err, "Failed to setup logger")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -739,6 +768,10 @@ func TestDCWatchers(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	sm, _, err := smmock.NewMockStateManager()
@@ -798,14 +831,15 @@ func TestDCWatchers(t *testing.T) {
 }
 
 func TestUsegVlanLimit(t *testing.T) {
-	eventRecorder := mockevtsrecorder.NewRecorder("vchub_test",
-		log.GetNewLogger(log.GetDefaultConfig("vchub_test")))
+	eventRecorder := mockevtsrecorder.NewRecorder("vchub_test_vlan_limit",
+		log.GetNewLogger(log.GetDefaultConfig("vchub_test_vlan_limit")))
 	_ = recorder.Override(eventRecorder)
 	// Lower the limit for testing
 	usegvlanmgr.VlanMax = useg.FirstUsegVlan + 100
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
-	logger := setupLogger("vchub_test_vlan_limit")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_vlan_limit")
+	AssertOk(t, err, "Failed to setup logger")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -825,9 +859,13 @@ func TestUsegVlanLimit(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
-	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
+	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
@@ -1026,13 +1064,13 @@ func TestRapidEvents(t *testing.T) {
 	// STARTING SIM
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
 
-	logger := setupLogger("vchub_test_rapid_events")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_rapid_events")
+	AssertOk(t, err, "Failed to setup logger")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var vchub *VCHub
 	var s *sim.VcSim
-	var err error
 	var vcp *mock.ProbeMock
 
 	defer func() {
@@ -1047,6 +1085,10 @@ func TestRapidEvents(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	s, err = sim.NewVcSim(sim.Config{Addr: u.String()})
@@ -1404,7 +1446,8 @@ func TestUpdateUrl(t *testing.T) {
 	AssertOk(t, err, "Failed to get available port")
 	newURL := listener.ListenURL.String()
 
-	logger := setupLogger("vchub_test_update_url")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_update_url")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s1 *sim.VcSim
@@ -1421,6 +1464,10 @@ func TestUpdateUrl(t *testing.T) {
 		if s2 != nil {
 			s2.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -1492,11 +1539,11 @@ func TestUpdateUrl(t *testing.T) {
 
 // Test update Orchestrator config credential information
 func TestUpdateOrchConfigCredential(t *testing.T) {
-	logger := setupLogger("vchub_testUpdateOrchConfigCredential")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_testUpdateOrchConfigCredential")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s *sim.VcSim
-	var err error
 
 	defer func() {
 		logger.Infof("Tearing Down")
@@ -1506,6 +1553,10 @@ func TestUpdateOrchConfigCredential(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -1576,7 +1627,8 @@ func TestMultipleVcs(t *testing.T) {
 	orchConfigs := make([]*orchestration.Orchestrator, numConn)
 	vchubs := make([]*VCHub, numConn)
 
-	logger := setupLogger("vchub_testMultipleVcs")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_testMultipleVcs")
+	AssertOk(t, err, "Failed to setup logger")
 
 	defer func() {
 		logger.Infof("Tearing Down")
@@ -1586,6 +1638,10 @@ func TestMultipleVcs(t *testing.T) {
 		for _, vc := range vcsims {
 			vc.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	sm, _, err := smmock.NewMockStateManager()
@@ -1630,11 +1686,11 @@ func TestMultipleVcs(t *testing.T) {
 }
 
 func TestManageGivenNamespaces(t *testing.T) {
-	logger := setupLogger("vchub_testManageNamespaces")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_testManageNamespaces")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s *sim.VcSim
-	var err error
 
 	defer func() {
 		logger.Infof("Tearing Down")
@@ -1644,6 +1700,10 @@ func TestManageGivenNamespaces(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -1713,11 +1773,11 @@ func TestManageGivenNamespaces(t *testing.T) {
 }
 
 func TestManageAllNamespaces(t *testing.T) {
-	logger := setupLogger("vchub_testManageAllNamespaces")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_testManageAllNamespaces")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s *sim.VcSim
-	var err error
 
 	defer func() {
 		logger.Infof("Tearing Down")
@@ -1727,6 +1787,10 @@ func TestManageAllNamespaces(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -1796,14 +1860,46 @@ func TestManageAllNamespaces(t *testing.T) {
 		}
 		return true, nil
 	}, "failed to find DVS")
+
+	// Change password so connection is down
+	orchConfig.Spec.Credentials.Password = "badPass"
+	vchub.UpdateConfig(orchConfig)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		o, err := vchub.StateMgr.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
+		if err != nil {
+			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
+		}
+
+		if o.Orchestrator.Status.Status != orchestration.OrchestratorStatus_Failure.String() {
+			return false, fmt.Errorf("Connection status was %s", o.Orchestrator.Status.Status)
+		}
+		return true, nil
+	}, "Orch status never updated to failure", "100ms", "5s")
+
+	// Reset password should reconnect smoothly
+	orchConfig.Spec.Credentials.Password = defaultTestParams.TestPassword
+	vchub.UpdateConfig(orchConfig)
+
+	AssertEventually(t, func() (bool, interface{}) {
+		o, err := vchub.StateMgr.Controller().Orchestrator().Find(&vchub.OrchConfig.ObjectMeta)
+		if err != nil {
+			return false, fmt.Errorf("Failed to find orchestrator object. Err : %v", err)
+		}
+
+		if o.Orchestrator.Status.Status != orchestration.OrchestratorStatus_Success.String() {
+			return false, fmt.Errorf("Connection status was %s", o.Orchestrator.Status.Status)
+		}
+		return true, nil
+	}, "Orch status never updated to success", "100ms", "5s")
 }
 
 func TestManageNoNamespaces(t *testing.T) {
-	logger := setupLogger("vchub_testManageNoNamespaces")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_testManageNoNamespaces")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s *sim.VcSim
-	var err error
 
 	defer func() {
 		logger.Infof("Tearing Down")
@@ -1813,6 +1909,10 @@ func TestManageNoNamespaces(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -1882,7 +1982,8 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 		t.Fatalf("Failed at validating test parameters")
 	}
 
-	logger := setupLogger("vchub_testRemoveManagedDC")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_testRemoveManagedDC")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s *sim.VcSim
@@ -1895,6 +1996,10 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	logger.Infof("Place holder")
@@ -2116,7 +2221,8 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 	}, "non existing dc test failed")
 
 	// REMOVE ALL DCs - Ensure the above host is not deleted
-	orchConfig.Spec.ManageNamespaces = []string{}
+	// Leave as manage all but change URL. Should trigger delete of all old DCs
+	orchConfig.Spec.URI = "test.com"
 	vchub.UpdateConfig(orchConfig)
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -2135,11 +2241,11 @@ func TestOrchRemoveManagedDC(t *testing.T) {
 }
 
 func TestDiscoveredDCs(t *testing.T) {
-	logger := setupLogger("vchub_test_discovered_dc")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_discovered_dc")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s *sim.VcSim
-	var err error
 
 	defer func() {
 		logger.Infof("Tearing Down")
@@ -2149,6 +2255,10 @@ func TestDiscoveredDCs(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -2266,11 +2376,11 @@ func TestDiscoveredDCs(t *testing.T) {
 func TestDegradedConn(t *testing.T) {
 	// TODO: enable once this change is committed to the govmomi repo.
 	t.Skipf("This test requires changes in the govmomi REST simulator to check the credentials of the client.")
-	logger := setupLogger("vchub_test_discovered_dc")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_discovered_dc")
+	AssertOk(t, err, "Failed to setup logger")
 
 	var vchub *VCHub
 	var s *sim.VcSim
-	var err error
 
 	defer func() {
 		logger.Infof("Tearing Down")
@@ -2280,6 +2390,10 @@ func TestDegradedConn(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 
 	u := createURL(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
@@ -2348,13 +2462,13 @@ func TestVCHubStalePG(t *testing.T) {
 	// User creates the network after initial sync has already run.
 	// Orchhub should now take control of the PenPG and take any VMs
 	// on it and create workloads
-	logger := setupLogger("vchub_test_stale_PG")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_stale_PG")
+	AssertOk(t, err, "Failed to setup logger")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var vchub *VCHub
 	var s *sim.VcSim
-	var err error
 	var vcp *mock.ProbeMock
 
 	defer func() {
@@ -2369,6 +2483,10 @@ func TestVCHubStalePG(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 	// VChub comes up with PG in use on vcenter
 	// Create network comes after
@@ -2470,13 +2588,13 @@ func TestVCHubStalePG(t *testing.T) {
 
 func TestVCHubAPIServerReconnect(t *testing.T) {
 	// Objects pending in pcache should get written once reconnected
-	logger := setupLogger("vchub_test_apiserver_reconnect")
+	logger, tmpFile, err := setupLoggerWithFile("vchub_test_apiserver_reconnect")
+	AssertOk(t, err, "Failed to setup logger")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var vchub *VCHub
 	var s *sim.VcSim
-	var err error
 	var vcp *mock.ProbeMock
 
 	defer func() {
@@ -2491,6 +2609,10 @@ func TestVCHubAPIServerReconnect(t *testing.T) {
 		if s != nil {
 			s.Destroy()
 		}
+		fileBytes, err := ioutil.ReadFile(tmpFile.Name())
+		AssertOk(t, err, "Failed to read log file")
+		Assert(t, !strings.Contains(string(fileBytes), defaultTestParams.TestPassword), "Logs had password in plaintext")
+		os.Remove(tmpFile.Name()) // clean up
 	}()
 	// VChub comes up with PG in use on vcenter
 	// Create network comes after
@@ -2628,6 +2750,21 @@ func setupLogger(logName string) log.Logger {
 	config.Filter = log.AllowAllFilter
 	logger := log.SetConfig(config)
 	return logger
+}
+
+func setupLoggerWithFile(logName string) (log.Logger, *os.File, error) {
+	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile.Close()
+	if err != nil {
+		return nil, nil, err
+	}
+	config := log.GetDefaultConfig(logName)
+	config.LogToFile = true
+	config.FileCfg.Filename = tmpfile.Name()
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+	return logger, tmpfile, nil
 }
 
 func createURL(host, user, pass string) *url.URL {

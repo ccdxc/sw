@@ -27,7 +27,7 @@ func (v *VCHub) sync() bool {
 		v.syncLock.Unlock()
 	}()
 
-	v.Log.Infof("VCHub %v syncing........", v)
+	v.Log.Infof("VCHub syncing........")
 
 	// Check that probe session is connected
 	count := 3

@@ -120,7 +120,6 @@ func (ct *ctrlerCtx) handleModuleEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*diagnostics.Module)
 		kind := "Module"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &moduleCtx{event: evt.Type,
@@ -150,7 +149,6 @@ func (ct *ctrlerCtx) handleModuleEventNoResolver(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*diagnostics.Module)
 		kind := "Module"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -355,7 +353,6 @@ func (ct *ctrlerCtx) handleModuleEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*diagnostics.Module)
 		kind := "Module"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &moduleCtx{event: evt.Type, obj: &Module{Module: *eobj, ctrler: ct}}
@@ -384,7 +381,6 @@ func (ct *ctrlerCtx) handleModuleEventParallelWithNoResolver(evt *kvstore.WatchE
 		eobj := evt.Object.(*diagnostics.Module)
 		kind := "Module"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()

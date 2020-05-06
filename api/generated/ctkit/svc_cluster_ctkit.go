@@ -120,8 +120,9 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Cluster)
 		kind := "Cluster"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &clusterCtx{event: evt.Type,
 			obj: &Cluster{Cluster: *eobj, ctrler: ct}}
@@ -150,8 +151,9 @@ func (ct *ctrlerCtx) handleClusterEventNoResolver(evt *kvstore.WatchEvent) error
 		eobj := evt.Object.(*cluster.Cluster)
 		kind := "Cluster"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -355,8 +357,9 @@ func (ct *ctrlerCtx) handleClusterEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Cluster)
 		kind := "Cluster"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &clusterCtx{event: evt.Type, obj: &Cluster{Cluster: *eobj, ctrler: ct}}
 
@@ -384,8 +387,9 @@ func (ct *ctrlerCtx) handleClusterEventParallelWithNoResolver(evt *kvstore.Watch
 		eobj := evt.Object.(*cluster.Cluster)
 		kind := "Cluster"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -1078,7 +1082,6 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Node)
 		kind := "Node"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &nodeCtx{event: evt.Type,
@@ -1108,7 +1111,6 @@ func (ct *ctrlerCtx) handleNodeEventNoResolver(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Node)
 		kind := "Node"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1313,7 +1315,6 @@ func (ct *ctrlerCtx) handleNodeEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Node)
 		kind := "Node"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &nodeCtx{event: evt.Type, obj: &Node{Node: *eobj, ctrler: ct}}
@@ -1342,7 +1343,6 @@ func (ct *ctrlerCtx) handleNodeEventParallelWithNoResolver(evt *kvstore.WatchEve
 		eobj := evt.Object.(*cluster.Node)
 		kind := "Node"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1921,7 +1921,6 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Host)
 		kind := "Host"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &hostCtx{event: evt.Type,
@@ -1951,7 +1950,6 @@ func (ct *ctrlerCtx) handleHostEventNoResolver(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Host)
 		kind := "Host"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2156,7 +2154,6 @@ func (ct *ctrlerCtx) handleHostEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Host)
 		kind := "Host"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &hostCtx{event: evt.Type, obj: &Host{Host: *eobj, ctrler: ct}}
@@ -2185,7 +2182,6 @@ func (ct *ctrlerCtx) handleHostEventParallelWithNoResolver(evt *kvstore.WatchEve
 		eobj := evt.Object.(*cluster.Host)
 		kind := "Host"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2764,7 +2760,6 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEvent(evt *kvstore.WatchEvent) 
 		eobj := evt.Object.(*cluster.DistributedServiceCard)
 		kind := "DistributedServiceCard"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &distributedservicecardCtx{event: evt.Type,
@@ -2794,7 +2789,6 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventNoResolver(evt *kvstore.Wa
 		eobj := evt.Object.(*cluster.DistributedServiceCard)
 		kind := "DistributedServiceCard"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2999,7 +2993,6 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventParallel(evt *kvstore.Watc
 		eobj := evt.Object.(*cluster.DistributedServiceCard)
 		kind := "DistributedServiceCard"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &distributedservicecardCtx{event: evt.Type, obj: &DistributedServiceCard{DistributedServiceCard: *eobj, ctrler: ct}}
@@ -3028,7 +3021,6 @@ func (ct *ctrlerCtx) handleDistributedServiceCardEventParallelWithNoResolver(evt
 		eobj := evt.Object.(*cluster.DistributedServiceCard)
 		kind := "DistributedServiceCard"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3607,7 +3599,6 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Tenant)
 		kind := "Tenant"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &tenantCtx{event: evt.Type,
@@ -3637,7 +3628,6 @@ func (ct *ctrlerCtx) handleTenantEventNoResolver(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*cluster.Tenant)
 		kind := "Tenant"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3842,7 +3832,6 @@ func (ct *ctrlerCtx) handleTenantEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Tenant)
 		kind := "Tenant"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &tenantCtx{event: evt.Type, obj: &Tenant{Tenant: *eobj, ctrler: ct}}
@@ -3871,7 +3860,6 @@ func (ct *ctrlerCtx) handleTenantEventParallelWithNoResolver(evt *kvstore.WatchE
 		eobj := evt.Object.(*cluster.Tenant)
 		kind := "Tenant"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -4450,7 +4438,6 @@ func (ct *ctrlerCtx) handleVersionEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Version)
 		kind := "Version"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &versionCtx{event: evt.Type,
@@ -4480,7 +4467,6 @@ func (ct *ctrlerCtx) handleVersionEventNoResolver(evt *kvstore.WatchEvent) error
 		eobj := evt.Object.(*cluster.Version)
 		kind := "Version"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -4685,7 +4671,6 @@ func (ct *ctrlerCtx) handleVersionEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Version)
 		kind := "Version"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &versionCtx{event: evt.Type, obj: &Version{Version: *eobj, ctrler: ct}}
@@ -4714,7 +4699,6 @@ func (ct *ctrlerCtx) handleVersionEventParallelWithNoResolver(evt *kvstore.Watch
 		eobj := evt.Object.(*cluster.Version)
 		kind := "Version"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -5293,7 +5277,6 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEvent(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*cluster.ConfigurationSnapshot)
 		kind := "ConfigurationSnapshot"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &configurationsnapshotCtx{event: evt.Type,
@@ -5323,7 +5306,6 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventNoResolver(evt *kvstore.Wat
 		eobj := evt.Object.(*cluster.ConfigurationSnapshot)
 		kind := "ConfigurationSnapshot"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -5528,7 +5510,6 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventParallel(evt *kvstore.Watch
 		eobj := evt.Object.(*cluster.ConfigurationSnapshot)
 		kind := "ConfigurationSnapshot"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &configurationsnapshotCtx{event: evt.Type, obj: &ConfigurationSnapshot{ConfigurationSnapshot: *eobj, ctrler: ct}}
@@ -5557,7 +5538,6 @@ func (ct *ctrlerCtx) handleConfigurationSnapshotEventParallelWithNoResolver(evt 
 		eobj := evt.Object.(*cluster.ConfigurationSnapshot)
 		kind := "ConfigurationSnapshot"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -6194,7 +6174,6 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.SnapshotRestore)
 		kind := "SnapshotRestore"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &snapshotrestoreCtx{event: evt.Type,
@@ -6224,7 +6203,6 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventNoResolver(evt *kvstore.WatchEven
 		eobj := evt.Object.(*cluster.SnapshotRestore)
 		kind := "SnapshotRestore"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -6429,7 +6407,6 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventParallel(evt *kvstore.WatchEvent)
 		eobj := evt.Object.(*cluster.SnapshotRestore)
 		kind := "SnapshotRestore"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &snapshotrestoreCtx{event: evt.Type, obj: &SnapshotRestore{SnapshotRestore: *eobj, ctrler: ct}}
@@ -6458,7 +6435,6 @@ func (ct *ctrlerCtx) handleSnapshotRestoreEventParallelWithNoResolver(evt *kvsto
 		eobj := evt.Object.(*cluster.SnapshotRestore)
 		kind := "SnapshotRestore"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -7095,7 +7071,6 @@ func (ct *ctrlerCtx) handleLicenseEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.License)
 		kind := "License"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &licenseCtx{event: evt.Type,
@@ -7125,7 +7100,6 @@ func (ct *ctrlerCtx) handleLicenseEventNoResolver(evt *kvstore.WatchEvent) error
 		eobj := evt.Object.(*cluster.License)
 		kind := "License"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -7330,7 +7304,6 @@ func (ct *ctrlerCtx) handleLicenseEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.License)
 		kind := "License"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &licenseCtx{event: evt.Type, obj: &License{License: *eobj, ctrler: ct}}
@@ -7359,7 +7332,6 @@ func (ct *ctrlerCtx) handleLicenseEventParallelWithNoResolver(evt *kvstore.Watch
 		eobj := evt.Object.(*cluster.License)
 		kind := "License"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -7938,7 +7910,6 @@ func (ct *ctrlerCtx) handleDSCProfileEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.DSCProfile)
 		kind := "DSCProfile"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &dscprofileCtx{event: evt.Type,
@@ -7968,7 +7939,6 @@ func (ct *ctrlerCtx) handleDSCProfileEventNoResolver(evt *kvstore.WatchEvent) er
 		eobj := evt.Object.(*cluster.DSCProfile)
 		kind := "DSCProfile"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -8173,7 +8143,6 @@ func (ct *ctrlerCtx) handleDSCProfileEventParallel(evt *kvstore.WatchEvent) erro
 		eobj := evt.Object.(*cluster.DSCProfile)
 		kind := "DSCProfile"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &dscprofileCtx{event: evt.Type, obj: &DSCProfile{DSCProfile: *eobj, ctrler: ct}}
@@ -8202,7 +8171,6 @@ func (ct *ctrlerCtx) handleDSCProfileEventParallelWithNoResolver(evt *kvstore.Wa
 		eobj := evt.Object.(*cluster.DSCProfile)
 		kind := "DSCProfile"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()

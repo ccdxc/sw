@@ -3810,6 +3810,19 @@ func isObjNamespaced(file *descriptor.File, obj string) (bool, error) {
 	return isNamespaced(msg)
 }
 
+func hasTransformers(file *descriptor.File, obj string) (bool, error) {
+	name := "." + file.GoPkg.Name + "." + obj
+	msg, err := file.Reg.LookupMsg("", name)
+	if err != nil {
+		return false, err
+	}
+	storageManifest, err := getStorageTransformersManifest(msg.File)
+	if err != nil {
+		return false, err
+	}
+	return storageManifest.Map[*msg.Name].HasTransformers, nil
+}
+
 func getJSONTagByName(msg *descriptor.Message, name string) (string, error) {
 	// Special handling for tenant
 	if isSpecStatusMessage(msg) && name == "Tenant" {
@@ -4031,6 +4044,7 @@ func init() {
 	reg.RegisterFunc("isNamespaced", isNamespaced)
 	reg.RegisterFunc("isObjTenanted", isObjTenanted)
 	reg.RegisterFunc("isObjNamespaced", isObjNamespaced)
+	reg.RegisterFunc("hasTransformers", hasTransformers)
 	reg.RegisterFunc("getProxyPaths", common.GetProxyPaths)
 	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
 	reg.RegisterFunc("HasPrefix", strings.HasPrefix)

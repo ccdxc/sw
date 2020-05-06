@@ -120,7 +120,6 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*network.Network)
 		kind := "Network"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &networkCtx{event: evt.Type,
@@ -150,7 +149,6 @@ func (ct *ctrlerCtx) handleNetworkEventNoResolver(evt *kvstore.WatchEvent) error
 		eobj := evt.Object.(*network.Network)
 		kind := "Network"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -355,7 +353,6 @@ func (ct *ctrlerCtx) handleNetworkEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*network.Network)
 		kind := "Network"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &networkCtx{event: evt.Type, obj: &Network{Network: *eobj, ctrler: ct}}
@@ -384,7 +381,6 @@ func (ct *ctrlerCtx) handleNetworkEventParallelWithNoResolver(evt *kvstore.Watch
 		eobj := evt.Object.(*network.Network)
 		kind := "Network"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -963,7 +959,6 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*network.Service)
 		kind := "Service"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &serviceCtx{event: evt.Type,
@@ -993,7 +988,6 @@ func (ct *ctrlerCtx) handleServiceEventNoResolver(evt *kvstore.WatchEvent) error
 		eobj := evt.Object.(*network.Service)
 		kind := "Service"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1198,7 +1192,6 @@ func (ct *ctrlerCtx) handleServiceEventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*network.Service)
 		kind := "Service"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &serviceCtx{event: evt.Type, obj: &Service{Service: *eobj, ctrler: ct}}
@@ -1227,7 +1220,6 @@ func (ct *ctrlerCtx) handleServiceEventParallelWithNoResolver(evt *kvstore.Watch
 		eobj := evt.Object.(*network.Service)
 		kind := "Service"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -1806,7 +1798,6 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*network.LbPolicy)
 		kind := "LbPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &lbpolicyCtx{event: evt.Type,
@@ -1836,7 +1827,6 @@ func (ct *ctrlerCtx) handleLbPolicyEventNoResolver(evt *kvstore.WatchEvent) erro
 		eobj := evt.Object.(*network.LbPolicy)
 		kind := "LbPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2041,7 +2031,6 @@ func (ct *ctrlerCtx) handleLbPolicyEventParallel(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*network.LbPolicy)
 		kind := "LbPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &lbpolicyCtx{event: evt.Type, obj: &LbPolicy{LbPolicy: *eobj, ctrler: ct}}
@@ -2070,7 +2059,6 @@ func (ct *ctrlerCtx) handleLbPolicyEventParallelWithNoResolver(evt *kvstore.Watc
 		eobj := evt.Object.(*network.LbPolicy)
 		kind := "LbPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2649,7 +2637,6 @@ func (ct *ctrlerCtx) handleVirtualRouterEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*network.VirtualRouter)
 		kind := "VirtualRouter"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &virtualrouterCtx{event: evt.Type,
@@ -2679,7 +2666,6 @@ func (ct *ctrlerCtx) handleVirtualRouterEventNoResolver(evt *kvstore.WatchEvent)
 		eobj := evt.Object.(*network.VirtualRouter)
 		kind := "VirtualRouter"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -2884,7 +2870,6 @@ func (ct *ctrlerCtx) handleVirtualRouterEventParallel(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*network.VirtualRouter)
 		kind := "VirtualRouter"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &virtualrouterCtx{event: evt.Type, obj: &VirtualRouter{VirtualRouter: *eobj, ctrler: ct}}
@@ -2913,7 +2898,6 @@ func (ct *ctrlerCtx) handleVirtualRouterEventParallelWithNoResolver(evt *kvstore
 		eobj := evt.Object.(*network.VirtualRouter)
 		kind := "VirtualRouter"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3492,7 +3476,6 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEvent(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*network.NetworkInterface)
 		kind := "NetworkInterface"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &networkinterfaceCtx{event: evt.Type,
@@ -3522,7 +3505,6 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventNoResolver(evt *kvstore.WatchEve
 		eobj := evt.Object.(*network.NetworkInterface)
 		kind := "NetworkInterface"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -3727,7 +3709,6 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventParallel(evt *kvstore.WatchEvent
 		eobj := evt.Object.(*network.NetworkInterface)
 		kind := "NetworkInterface"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &networkinterfaceCtx{event: evt.Type, obj: &NetworkInterface{NetworkInterface: *eobj, ctrler: ct}}
@@ -3756,7 +3737,6 @@ func (ct *ctrlerCtx) handleNetworkInterfaceEventParallelWithNoResolver(evt *kvst
 		eobj := evt.Object.(*network.NetworkInterface)
 		kind := "NetworkInterface"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -4335,7 +4315,6 @@ func (ct *ctrlerCtx) handleIPAMPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*network.IPAMPolicy)
 		kind := "IPAMPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &ipampolicyCtx{event: evt.Type,
@@ -4365,7 +4344,6 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventNoResolver(evt *kvstore.WatchEvent) er
 		eobj := evt.Object.(*network.IPAMPolicy)
 		kind := "IPAMPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -4570,7 +4548,6 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventParallel(evt *kvstore.WatchEvent) erro
 		eobj := evt.Object.(*network.IPAMPolicy)
 		kind := "IPAMPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &ipampolicyCtx{event: evt.Type, obj: &IPAMPolicy{IPAMPolicy: *eobj, ctrler: ct}}
@@ -4599,7 +4576,6 @@ func (ct *ctrlerCtx) handleIPAMPolicyEventParallelWithNoResolver(evt *kvstore.Wa
 		eobj := evt.Object.(*network.IPAMPolicy)
 		kind := "IPAMPolicy"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -5178,8 +5154,9 @@ func (ct *ctrlerCtx) handleRoutingConfigEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*network.RoutingConfig)
 		kind := "RoutingConfig"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &routingconfigCtx{event: evt.Type,
 			obj: &RoutingConfig{RoutingConfig: *eobj, ctrler: ct}}
@@ -5208,8 +5185,9 @@ func (ct *ctrlerCtx) handleRoutingConfigEventNoResolver(evt *kvstore.WatchEvent)
 		eobj := evt.Object.(*network.RoutingConfig)
 		kind := "RoutingConfig"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -5413,8 +5391,9 @@ func (ct *ctrlerCtx) handleRoutingConfigEventParallel(evt *kvstore.WatchEvent) e
 		eobj := evt.Object.(*network.RoutingConfig)
 		kind := "RoutingConfig"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ctx := &routingconfigCtx{event: evt.Type, obj: &RoutingConfig{RoutingConfig: *eobj, ctrler: ct}}
 
@@ -5442,8 +5421,9 @@ func (ct *ctrlerCtx) handleRoutingConfigEventParallelWithNoResolver(evt *kvstore
 		eobj := evt.Object.(*network.RoutingConfig)
 		kind := "RoutingConfig"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -6021,7 +6001,6 @@ func (ct *ctrlerCtx) handleRouteTableEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*network.RouteTable)
 		kind := "RouteTable"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &routetableCtx{event: evt.Type,
@@ -6051,7 +6030,6 @@ func (ct *ctrlerCtx) handleRouteTableEventNoResolver(evt *kvstore.WatchEvent) er
 		eobj := evt.Object.(*network.RouteTable)
 		kind := "RouteTable"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()
@@ -6256,7 +6234,6 @@ func (ct *ctrlerCtx) handleRouteTableEventParallel(evt *kvstore.WatchEvent) erro
 		eobj := evt.Object.(*network.RouteTable)
 		kind := "RouteTable"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ctx := &routetableCtx{event: evt.Type, obj: &RouteTable{RouteTable: *eobj, ctrler: ct}}
@@ -6285,7 +6262,6 @@ func (ct *ctrlerCtx) handleRouteTableEventParallelWithNoResolver(evt *kvstore.Wa
 		eobj := evt.Object.(*network.RouteTable)
 		kind := "RouteTable"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		ct.Lock()

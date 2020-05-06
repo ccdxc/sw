@@ -253,7 +253,9 @@ func (w *InstanceManager) createOrch(config *orchestration.Orchestrator) {
 }
 
 func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, config *orchestration.Orchestrator) {
-	w.logger.Infof("Handle Orchestrator config event. %v", config)
+	config.ApplyStorageTransformer(context.Background(), true /*encrypt*/)
+	w.logger.Infof("Handle Orchestrator config event. Event: %v, obj: %v", evtType, config)
+	config.ApplyStorageTransformer(context.Background(), false /*decrypt*/)
 	switch evtType {
 	case kvstore.Created:
 		err := w.assignOrchestratorID(config)
@@ -274,7 +276,7 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 	case kvstore.Deleted:
 		w.orchMapLock.RLock()
 		defer w.orchMapLock.RUnlock()
-		w.logger.Infof("Config item deleted. %v", config)
+		w.logger.Infof("Config item deleted. %v", config.ObjectMeta)
 		orchInst, ok := w.orchestratorMap[config.GetKey()]
 		if !ok {
 			return

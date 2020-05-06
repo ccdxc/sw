@@ -546,46 +546,52 @@ func (v *Datacenter) AddVnic(vmSim *simulator.VirtualMachine, vnic VNIC) error {
 	if err != nil {
 		return err
 	}
-	err = vm.AddDevice(context.Background(), vnicDevice)
+	fn := func() (interface{}, error) {
 
+		err = vm.AddDevice(context.Background(), vnicDevice)
+		return nil, err
+	}
+
+	_, err = withTimeout(fn, 10*time.Second)
 	return err
 }
 
 // RemoveVnic removes vnic info from the given vm
 func (v *Datacenter) RemoveVnic(vmSim *simulator.VirtualMachine, vnic VNIC) error {
-	vm := object.NewVirtualMachine(v.client, vmSim.Reference())
-	var devices object.VirtualDeviceList
-	// VirtualMachineConfigSpec
-	config := types.VirtualMachineConfigSpec{}
-	var vmMo mo.VirtualMachine
-	err := vm.Properties(context.Background(), vmSim.Reference(), []string{"config"}, &vmMo)
-	if err != nil {
-		return err
-	}
-	// Find vnic with matching spec
-	for _, d := range vmMo.Config.Hardware.Device {
-		vnicCard, ok := d.(types.BaseVirtualEthernetCard)
-		if ok && vnicCard.GetVirtualEthernetCard().MacAddress == vnic.MacAddress {
-			// remove
-			devices = append(devices, d)
+	fn := func() (interface{}, error) {
+		vm := object.NewVirtualMachine(v.client, vmSim.Reference())
+		var devices object.VirtualDeviceList
+		// VirtualMachineConfigSpec
+		config := types.VirtualMachineConfigSpec{}
+		var vmMo mo.VirtualMachine
+		err := vm.Properties(context.Background(), vmSim.Reference(), []string{"config"}, &vmMo)
+		if err != nil {
+			return nil, err
 		}
-	}
-	if len(devices) == 0 {
-		return fmt.Errorf("No match for %s", vnic.MacAddress)
+		// Find vnic with matching spec
+		for _, d := range vmMo.Config.Hardware.Device {
+			vnicCard, ok := d.(types.BaseVirtualEthernetCard)
+			if ok && vnicCard.GetVirtualEthernetCard().MacAddress == vnic.MacAddress {
+				// remove
+				devices = append(devices, d)
+			}
+		}
+		if len(devices) == 0 {
+			return nil, fmt.Errorf("No match for %s", vnic.MacAddress)
+		}
+
+		config.DeviceChange, _ = devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationRemove)
+		task, err := vm.Reconfigure(context.Background(), config)
+		if err != nil {
+			return nil, err
+		}
+
+		err = task.Wait(context.Background())
+		return nil, err
 	}
 
-	config.DeviceChange, _ = devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationRemove)
-	task, err := vm.Reconfigure(context.Background(), config)
-	if err != nil {
-		return err
-	}
-
-	err = task.Wait(context.Background())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err := withTimeout(fn, 10*time.Second)
+	return err
 }
 
 func createVnicDevice(vnic VNIC) (types.BaseVirtualDevice, error) {

@@ -27,7 +27,7 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-{{range .Services}}{{$svc := . }}{{$srvname := .Name}}{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}
+{{$pkg := . }}{{range .Services}}{{$svc := . }}{{$srvname := .Name}}{{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}
 {{$crudobjs := getSvcCrudObjects .}}{{range $crudobjs}}
 
 
@@ -124,8 +124,11 @@ func (ct *ctrlerCtx) handle{{.}}Event(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*{{$pkgname}}.{{.}})
 		kind := "{{.}}"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		{{if hasTransformers $pkg .}}eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/) 
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/) 
+		{{else}} 
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj){{end}}
 
 		ctx := &{{ToLower .}}Ctx{event: evt.Type,
 			 obj: &{{.}} { {{.}}: *eobj, ctrler: ct}}
@@ -154,8 +157,11 @@ func (ct *ctrlerCtx) handle{{.}}EventNoResolver(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*{{$pkgname}}.{{.}})
 		kind := "{{.}}"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		{{if hasTransformers $pkg .}}eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/) 
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/) 
+		{{else}} 
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj){{end}}
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
@@ -361,8 +367,11 @@ func (ct *ctrlerCtx) handle{{.}}EventParallel(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*{{$pkgname}}.{{.}})
 		kind := "{{.}}"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		{{if hasTransformers $pkg .}}eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/) 
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/) 
+		{{else}} 
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj){{end}}
 
 		ctx := &{{ToLower .}}Ctx{event: evt.Type, obj: &{{.}} { {{ .}}: *eobj, ctrler: ct}}
 
@@ -390,8 +399,11 @@ func (ct *ctrlerCtx) handle{{.}}EventParallelWithNoResolver(evt *kvstore.WatchEv
 		eobj := evt.Object.(*{{$pkgname}}.{{.}})
 		kind := "{{.}}"
 
-		//ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		{{if hasTransformers $pkg .}}eobj.ApplyStorageTransformer(context.Background(), true /*encrypt*/) 
 		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		eobj.ApplyStorageTransformer(context.Background(), false /*decrypt*/) 
+		{{else}} 
+		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj){{end}}
 
 		ct.Lock()
 		handler, ok := ct.handlers[kind]
