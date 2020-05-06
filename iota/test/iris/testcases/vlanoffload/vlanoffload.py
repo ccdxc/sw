@@ -26,6 +26,8 @@ def SetRandom_Offload():
 
 def Setup(tc):
     tc.skip = False
+    # Fetching Vlan Id
+    tc.vlan_id = api.GetRandomVlan()
 
     if tc.args.type == 'remote_only':
         tc.workload_pairs = api.GetRemoteWorkloadPairs()
@@ -76,6 +78,7 @@ def Trigger(tc):
                         rx_enable = 'off'
                 elif api.GetNodeOs(wl.node_name) == 'windows':
                     rx_status = json.loads(rx_status.commands[0].stdout)
+                    api.Logger.info("rx current status : %s" % rx_status)
                     if rx_status["VlanID"]:
                         rx_enable = 'on'
                     else:
@@ -93,8 +96,8 @@ def Trigger(tc):
                     else:
                         tx_enable = 'off'
                 elif api.GetNodeOs(wl.node_name) == 'windows':
-                    api.Logger.info("tx_status windows result: %s" % tx_status)
                     tx_status = json.loads(tx_status.commands[0].stdout)
+                    api.Logger.info("tx current status : %s" % tx_status)
                     if tx_status["VlanID"]:
                         tx_enable = 'on'
                     else:
@@ -110,14 +113,14 @@ def Trigger(tc):
                     tx_enable = 'off' if tx_enable == 'on' else 'on'
             else:
                 tx_enable = 'on' if tc.args.tx else 'off'
-            toggle_tx_resp = naples_host.Toggle_TxVlanOffload(wl.node_name, wl.interface, tx_enable)
+            toggle_tx_resp = naples_host.Toggle_TxVlanOffload(wl.node_name, wl.interface, tx_enable, tc.vlan_id)
 
             if type(tc.args.rx) == int:
                 if wl.workload_name in tc.rx_random:
                     rx_enable = 'off' if rx_enable == 'on' else 'on'
             else:
                 rx_enable = 'on' if tc.args.rx else 'off'
-            toggle_rx_resp = naples_host.Toggle_RxVlanOffload(wl.node_name, wl.interface, rx_enable)
+            toggle_rx_resp = naples_host.Toggle_RxVlanOffload(wl.node_name, wl.interface, rx_enable, tc.vlan_id)
 
             if not api.IsApiResponseOk(toggle_tx_resp):
                 result = api.types.status.FAILURE

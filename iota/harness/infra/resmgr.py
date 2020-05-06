@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import copy
 import ipaddress
 
 class IpAddressStep(object):

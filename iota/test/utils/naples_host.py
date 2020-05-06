@@ -67,7 +67,7 @@ def GetWindowsIntName(node, name):
 
 # Toggle txvlan options based on <enable>
 # <enable> = on/off
-def Toggle_TxVlanOffload(node, interface, enable):
+def Toggle_TxVlanOffload(node, interface, enable, vlan_id=1):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     if api.GetNodeOs(node) == OS_TYPE_LINUX:
@@ -80,7 +80,7 @@ def Toggle_TxVlanOffload(node, interface, enable):
     elif api.GetNodeOs(node) == OS_TYPE_WINDOWS:
         name = GetWindowsIntName(node, interface)
         if enable == 'on':
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue 1\"" % name
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue %d\"" % (name, vlan_id)
         else:
             cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue 0\"" % name
     else:
@@ -94,7 +94,7 @@ def Toggle_TxVlanOffload(node, interface, enable):
 
 # Toggele rxvlan options based on <enable>
 # <enable> = on/off
-def Toggle_RxVlanOffload(node, interface, enable):
+def Toggle_RxVlanOffload(node, interface, enable, vlan_id=1):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     if api.GetNodeOs(node) == OS_TYPE_LINUX:
@@ -107,7 +107,7 @@ def Toggle_RxVlanOffload(node, interface, enable):
     elif api.GetNodeOs(node) == OS_TYPE_WINDOWS:
         name = GetWindowsIntName(node, interface)
         if enable == 'on':
-            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue 1\"" % name
+            cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue %d\"" % (name, vlan_id)
         else:
             cmd = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe \"Set-NetAdapterAdvancedProperty -Name '%s' -DisplayName 'VLAN ID' -DisplayValue 0\"" % name
     else:

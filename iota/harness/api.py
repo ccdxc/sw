@@ -2,6 +2,7 @@
 import grpc
 import pdb
 import os
+import random
 import re
 import sys
 import time
@@ -307,7 +308,28 @@ def SetNaplesNodeUuid(node_name, uuid, device=None):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().SetNaplesUuid(node_name, uuid, device)
 
 def GetDataVlans():
-    return store.GetTestbed().GetDataVlans()
+    vlan_ids = []
+    try:
+        vlan_range = store.GetTestbed().GetVlans()
+        vlan_ids = list(vlan_range)
+    except Exception as e:
+        Logger.error("Failed to get Vlans due to error", e)
+
+    try:
+        vlan_native = store.GetTestbed().GetNativeVlan()
+        vlan_ids.append(vlan_native)
+    except Exception as e:
+        Logger.error("Failed to get native vlan due to error", e)
+
+    vlan_ids = list(set(vlan_ids))
+    return vlan_ids
+
+def GetRandomVlan():
+    vlan_id = 1
+    vlan_ids = GetDataVlans()
+    if vlan_ids:
+        vlan_id = random.choice(vlan_ids)
+    return vlan_id
 
 def GetPVlansStart():
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetVlanStart()
