@@ -290,7 +290,11 @@ NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_i
         // This check to be removed later allowing it to fall through to
         // async batch mode when HAL API thread starts supporting
         // TEP stitching natively.
-        return underlay_route_add_upd_();
+        if (underlay_route_add_upd_() != SDK_RET_OK) {
+            PDS_TRACE_ERR("Underlay Route add VRF %d Prefix %s failed",
+                          ips_info_.vrf_id, ippfx2str(&ips_info_.pfx));
+        }
+        return ATG_OK;
     }
 
     if (ips_info_.ecmp_id == PDS_MS_ECMP_INVALID_INDEX) {
@@ -364,7 +368,7 @@ NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_i
             if (it == route_store.end()) {
                 auto send_response =
                     hals::Route::set_ips_rc(&add_upd_route_ips->ips_hdr,
-                                        (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
+                                            ATG_OK);
                 SDK_ASSERT(send_response);
                 PDS_TRACE_DEBUG ("++++ MS Route %s Overlay NH Group %d Async "
                                  "reply %s stateless mode ++++",
@@ -373,16 +377,15 @@ NBB_BYTE hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_i
                                 (pds_status) ? "Success" : "Failure");
                 ropi_join->send_ips_reply(&add_upd_route_ips->ips_hdr);
             } else {
+                (*it)->update_complete(ATG_OK);
                 if (pds_status) {
                     PDS_TRACE_DEBUG("MS Route %s: Send Async IPS "
                                     "Reply success stateful mode",
                                     ippfx2str(&l_ips_info_.pfx));
-                    (*it)->update_complete(ATG_OK);
                 } else {
                     PDS_TRACE_DEBUG("MS Route %s: Send Async IPS "
                                     "Reply failure stateful mode",
                                     ippfx2str(&l_ips_info_.pfx));
-                    (*it)->update_failed(ATG_UNSUCCESSFUL);
                 }
             }
             } while (0);
