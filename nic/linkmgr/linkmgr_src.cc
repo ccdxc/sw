@@ -1191,7 +1191,8 @@ port_led_blink (uint32_t key, port_args_t *port_args, delphi::objects::MacMetric
     // delphi::objects::MacMetricsPtr mac_metrics_old;
     int phy_port = sdk::lib::catalog::logical_port_to_phy_port(key);
 
-    mac_metrics_old = delphi::objects::MacMetrics::Find(key);
+    mac_metrics_old = delphi::objects::MacMetrics::Find(\
+                   ETH_IFINDEX_TO_UPLINK_IFINDEX(sdk::lib::catalog::logical_port_to_ifindex(key)));
     if (mac_metrics_old != nullptr) {
         if (mac_metrics_old->frames_rx_all()->Get() != port_args->stats_data[port::MacStatsType::FRAMES_RX_ALL] ||
             mac_metrics_old->frames_tx_all()->Get() != port_args->stats_data[port::MacStatsType::FRAMES_TX_ALL]) {
@@ -1289,7 +1290,9 @@ port_mgmt_metrics_update (uint32_t port_num, port_args_t *port_args)
                     mgmt_mac_metrics.rx_pps, mgmt_mac_metrics.rx_bytesps);
 #endif
 
-    delphi::objects::MgmtMacMetrics::Publish(port_num, &mgmt_mac_metrics);
+    delphi::objects::MgmtMacMetrics::Publish(
+            ETH_IFINDEX_TO_UPLINK_IFINDEX(sdk::lib::catalog::logical_port_to_ifindex(port_num)), 
+            &mgmt_mac_metrics);
 
     // release memory
     if (mac_metrics_old != nullptr) {
@@ -1420,7 +1423,9 @@ port_uplink_metrics_update (uint32_t port_num, port_args_t *port_args, delphi::o
                     mac_metrics.rx_pps, mac_metrics.rx_bytesps);
 #endif
 
-    delphi::objects::MacMetrics::Publish(port_num, &mac_metrics);
+    delphi::objects::MacMetrics::Publish(
+                  ETH_IFINDEX_TO_UPLINK_IFINDEX(sdk::lib::catalog::logical_port_to_ifindex(port_num)), 
+                  &mac_metrics);
 }
 
 static void

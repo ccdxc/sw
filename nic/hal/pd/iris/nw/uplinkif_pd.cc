@@ -213,7 +213,7 @@ pd_uplinkif_get (pd_if_get_args_t *args)
 #endif
     
     if (args->hal_if->is_oob_management) {
-        mgmt_mac_metrics = delphi::objects::MgmtMacMetrics::Find(log_port);
+        mgmt_mac_metrics = delphi::objects::MgmtMacMetrics::Find(hal_if->if_id);
         if (mgmt_mac_metrics != nullptr) {
             up_info->set_tx_pps(mgmt_mac_metrics->tx_pps()->Get());
             up_info->set_tx_bytesps(mgmt_mac_metrics->tx_bytesps()->Get());
@@ -222,7 +222,7 @@ pd_uplinkif_get (pd_if_get_args_t *args)
             delphi::objects::MgmtMacMetrics::Release(mgmt_mac_metrics);
         }
     } else {
-        mac_metrics = delphi::objects::MacMetrics::Find(log_port);
+        mac_metrics = delphi::objects::MacMetrics::Find(hal_if->if_id);
         if (mac_metrics != nullptr) {
             up_info->set_tx_pps(mac_metrics->tx_pps()->Get());
             up_info->set_tx_bytesps(mac_metrics->tx_bytesps()->Get());
