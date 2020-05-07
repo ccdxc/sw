@@ -183,14 +183,24 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					laddr = ""
 				}
 				peers = fmt.Sprintf("%s [peer:%s local: %s]", peers, n.IPAddress, laddr)
+				// Note that setting the neighbor level timers to 0,
+				// results in the global level timer configuration being used for the neighbor.
+				peerKeepAlive := newCfg.keepalive
+				if n.KeepaliveInterval != 0 {
+					peerKeepAlive = n.KeepaliveInterval
+				}
+				peerHoldTime := newCfg.holdtime
+				if n.Holdtime != 0 {
+					peerHoldTime = n.Holdtime
+				}
 				newCfg.neighbors = append(newCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
 					remoteAS:     n.RemoteAS,
 					multihop:     n.MultiHop,
 					addrFamilies: n.EnableAddressFamilies,
-					keepalive:    newCfg.keepalive,
-					holdtime:     newCfg.holdtime,
+					keepalive:    peerKeepAlive,
+					holdtime:     peerHoldTime,
 					password:     n.Password,
 					localAddr:    laddr,
 				})
@@ -224,6 +234,16 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					laddr = ""
 				}
 				peers = fmt.Sprintf("%s [peer:%s local: %s]", peers, n.IPAddress, laddr)
+				// Note that setting the neighbor level timers to 0,
+				// results in the global level timer configuration being used for the neighbor.
+				peerKeepAlive := newCfg.keepalive
+				if n.KeepaliveInterval != 0 {
+					peerKeepAlive = n.KeepaliveInterval
+				}
+				peerHoldTime := newCfg.holdtime
+				if n.Holdtime != 0 {
+					peerHoldTime = n.Holdtime
+				}
 				newCfg.neighbors = append(newCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
@@ -231,8 +251,8 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					multihop:     n.MultiHop,
 					addrFamilies: n.EnableAddressFamilies,
 					password:     n.Password,
-					keepalive:    newCfg.keepalive,
-					holdtime:     newCfg.holdtime,
+					keepalive:    peerKeepAlive,
+					holdtime:     peerHoldTime,
 					localAddr:    laddr,
 				})
 			}
@@ -271,6 +291,16 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					laddr = ""
 				}
 				peers = fmt.Sprintf("%s [peer:%s local: %s]", peers, n.IPAddress, laddr)
+				// Note that setting the neighbor level timers to 0,
+				// results in the global level timer configuration being used for the neighbor.
+				peerKeepAlive := oldCfg.keepalive
+				if n.KeepaliveInterval != 0 {
+					peerKeepAlive = n.KeepaliveInterval
+				}
+				peerHoldTime := oldCfg.holdtime
+				if n.Holdtime != 0 {
+					peerHoldTime = n.Holdtime
+				}
 				oldCfg.neighbors = append(oldCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
@@ -278,8 +308,8 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					multihop:     n.MultiHop,
 					addrFamilies: n.EnableAddressFamilies,
 					password:     n.Password,
-					keepalive:    oldCfg.keepalive,
-					holdtime:     oldCfg.holdtime,
+					keepalive:    peerKeepAlive,
+					holdtime:     peerHoldTime,
 					localAddr:    laddr,
 				})
 			}
@@ -311,6 +341,16 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					laddr = ""
 				}
 				peers = fmt.Sprintf("%s [peer:%s local:%s]", peers, n.IPAddress, laddr)
+				// Note that setting the neighbor level timers to 0,
+				// results in the global level timer configuration being used for the neighbor.
+				peerKeepAlive := oldCfg.keepalive
+				if n.KeepaliveInterval != 0 {
+					peerKeepAlive = n.KeepaliveInterval
+				}
+				peerHoldTime := oldCfg.holdtime
+				if n.Holdtime != 0 {
+					peerHoldTime = n.Holdtime
+				}
 				oldCfg.neighbors = append(oldCfg.neighbors, &bgpNeighbor{
 					shutdown:     n.Shutdown,
 					ipaddress:    n.IPAddress,
@@ -318,8 +358,8 @@ func GetBGPConfiguration(old interface{}, new interface{}, oldLb string, newLb s
 					multihop:     n.MultiHop,
 					addrFamilies: n.EnableAddressFamilies,
 					password:     n.Password,
-					keepalive:    oldCfg.keepalive,
-					holdtime:     oldCfg.holdtime,
+					keepalive:    peerKeepAlive,
+					holdtime:     peerHoldTime,
 					localAddr:    laddr,
 				})
 			}

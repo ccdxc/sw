@@ -328,6 +328,18 @@ func TestValidateHooks(t *testing.T) {
 		Assert(t, c.ok && len(errs) == 0 || !c.ok && len(errs) != 0, "case [holdtime: %v / Keepalive: %v] result [%v] got errors[%v]", c.holdtime, c.keepalive, c.ok, errs)
 	}
 
+	rtcfg.Spec.BGPConfig.Holdtime, rtcfg.Spec.BGPConfig.KeepaliveInterval = 180, 60
+	// Test peer-level timer config
+	rtcfg.Spec.BGPConfig.Neighbors = append(rtcfg.Spec.BGPConfig.Neighbors, &network.BGPNeighbor{
+		DSCAutoConfig:         true,
+		EnableAddressFamilies: []string{"l2vpn-evpn"},
+		RemoteAS:              1000,
+	})
+	for _, c := range cases {
+		rtcfg.Spec.BGPConfig.Neighbors[0].Holdtime, rtcfg.Spec.BGPConfig.Neighbors[0].KeepaliveInterval = c.holdtime, c.keepalive
+		errs = nh.validateRoutingConfig(rtcfg, "v1", false, false)
+		Assert(t, c.ok && len(errs) == 0 || !c.ok && len(errs) != 0, "case [holdtime: %v / Keepalive: %v] result [%v] got errors[%v]", c.holdtime, c.keepalive, c.ok, errs)
+	}
 }
 
 func TestNetworkPrecommitHooks(t *testing.T) {

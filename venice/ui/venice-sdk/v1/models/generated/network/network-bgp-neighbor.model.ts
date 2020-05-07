@@ -17,6 +17,8 @@ export interface INetworkBGPNeighbor {
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families>;
     'password'?: string;
     'dsc-auto-config'?: boolean;
+    'keepalive-interval': number;
+    'holdtime': number;
     '_ui'?: any;
 }
 
@@ -38,6 +40,10 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
     'password': string = null;
     /** DSCAutoConfig sets the flag that this neighbor config is to be used as a template for auto configuration. */
     'dsc-auto-config': boolean = null;
+    /** KeepaliveInterval is time interval at which keepalive messages are sent. Value should be between 0 and 3600. */
+    'keepalive-interval': number = null;
+    /** Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead. Value should be between 0 and 3600. */
+    'holdtime': number = null;
     public static propInfo: { [prop in keyof INetworkBGPNeighbor]: PropInfoItem } = {
         'shutdown': {
             description:  `Shutdown this neighbor session.`,
@@ -77,6 +83,16 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             description:  `DSCAutoConfig sets the flag that this neighbor config is to be used as a template for auto configuration.`,
             required: false,
             type: 'boolean'
+        },
+        'keepalive-interval': {
+            description:  `KeepaliveInterval is time interval at which keepalive messages are sent. Value should be between 0 and 3600.`,
+            required: true,
+            type: 'number'
+        },
+        'holdtime': {
+            description:  `Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead. Value should be between 0 and 3600.`,
+            required: true,
+            type: 'number'
         },
     }
 
@@ -164,6 +180,20 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
         } else {
             this['dsc-auto-config'] = null
         }
+        if (values && values['keepalive-interval'] != null) {
+            this['keepalive-interval'] = values['keepalive-interval'];
+        } else if (fillDefaults && NetworkBGPNeighbor.hasDefaultValue('keepalive-interval')) {
+            this['keepalive-interval'] = NetworkBGPNeighbor.propInfo['keepalive-interval'].default;
+        } else {
+            this['keepalive-interval'] = null
+        }
+        if (values && values['holdtime'] != null) {
+            this['holdtime'] = values['holdtime'];
+        } else if (fillDefaults && NetworkBGPNeighbor.hasDefaultValue('holdtime')) {
+            this['holdtime'] = NetworkBGPNeighbor.propInfo['holdtime'].default;
+        } else {
+            this['holdtime'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -178,6 +208,8 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
                 'enable-address-families': CustomFormControl(new FormControl(this['enable-address-families']), NetworkBGPNeighbor.propInfo['enable-address-families']),
                 'password': CustomFormControl(new FormControl(this['password'], [minLengthValidator(1), maxLengthValidator(128), ]), NetworkBGPNeighbor.propInfo['password']),
                 'dsc-auto-config': CustomFormControl(new FormControl(this['dsc-auto-config']), NetworkBGPNeighbor.propInfo['dsc-auto-config']),
+                'keepalive-interval': CustomFormControl(new FormControl(this['keepalive-interval'], [required, maxValueValidator(3600), ]), NetworkBGPNeighbor.propInfo['keepalive-interval']),
+                'holdtime': CustomFormControl(new FormControl(this['holdtime'], [required, maxValueValidator(3600), ]), NetworkBGPNeighbor.propInfo['holdtime']),
             });
         }
         return this._formGroup;
@@ -196,6 +228,8 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             this._formGroup.controls['enable-address-families'].setValue(this['enable-address-families']);
             this._formGroup.controls['password'].setValue(this['password']);
             this._formGroup.controls['dsc-auto-config'].setValue(this['dsc-auto-config']);
+            this._formGroup.controls['keepalive-interval'].setValue(this['keepalive-interval']);
+            this._formGroup.controls['holdtime'].setValue(this['holdtime']);
         }
     }
 }

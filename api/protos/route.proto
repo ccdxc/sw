@@ -114,6 +114,14 @@ message BGPNeighbor {
 
     // DSCAutoConfig sets the flag that this neighbor config is to be used as a template for auto configuration.
     bool DSCAutoConfig                      = 7 [(gogoproto.jsontag) = "dsc-auto-config,omitempty"];
+
+    // KeepaliveInterval is time interval at which keepalive messages are sent.
+    uint32 KeepaliveInterval                = 8 [(gogoproto.jsontag) = "keepalive-interval,omitempty",
+                                                (venice.check) = "IntRange(0,3600)"];
+
+    // Holdtime is time for which not receiving a keepalive message results in declaring the peer as dead.
+    uint32 Holdtime                         = 9 [(gogoproto.jsontag) = "holdtime,omitempty",
+                                                (venice.check) = "IntRange(0,3600)"];
 }
 
 message BGPConfig {

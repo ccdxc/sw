@@ -614,6 +614,14 @@
         "dsc-auto-config": {
           "type": "boolean",
           "format": "boolean"
+        },
+        "keepalive-interval": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "holdtime": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

@@ -113,6 +113,8 @@ message BGPNeighbor {
     repeated string EnableAddressFamilies   = 5 [(gogoproto.jsontag) = "enable-address-families,omitempty", (venice.check) = "StrEnum(BGPAddressFamily)"];
     string Password                         = 6 [(gogoproto.jsontag) = "password,omitempty"];
     bool DSCAutoConfig                      = 7 [(gogoproto.jsontag) = "dsc-auto-config,omitempty"];
+    uint32 KeepaliveInterval                = 8 [(gogoproto.jsontag) = "keepalive-interval,omitempty"];
+    uint32 Holdtime                         = 9 [(gogoproto.jsontag) = "holdtime,omitempty"];
 }
         
 message BGPConfig {

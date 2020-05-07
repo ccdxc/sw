@@ -1189,8 +1189,32 @@ func init() {
 
 	validatorMapRoute["BGPNeighbor"]["all"] = append(validatorMapRoute["BGPNeighbor"]["all"], func(path string, i interface{}) error {
 		m := i.(*BGPNeighbor)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "3600")
+
+		if err := validators.IntRange(m.Holdtime, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Holdtime", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapRoute["BGPNeighbor"]["all"] = append(validatorMapRoute["BGPNeighbor"]["all"], func(path string, i interface{}) error {
+		m := i.(*BGPNeighbor)
 		if err := validators.EmptyOr(validators.IPAddr, m.IPAddress, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"IPAddress", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapRoute["BGPNeighbor"]["all"] = append(validatorMapRoute["BGPNeighbor"]["all"], func(path string, i interface{}) error {
+		m := i.(*BGPNeighbor)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "3600")
+
+		if err := validators.IntRange(m.KeepaliveInterval, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"KeepaliveInterval", err.Error())
 		}
 		return nil
 	})

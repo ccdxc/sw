@@ -100,6 +100,8 @@ func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 			neighbor.MultiHop = nbr.MultiHop
 			neighbor.Password = nbr.Password
 			neighbor.DSCAutoConfig = nbr.DSCAutoConfig
+			neighbor.KeepaliveInterval = nbr.KeepaliveInterval
+			neighbor.Holdtime = nbr.Holdtime
 			for _, addr := range nbr.EnableAddressFamilies {
 				neighbor.EnableAddressFamilies = append(neighbor.EnableAddressFamilies, addr)
 			}

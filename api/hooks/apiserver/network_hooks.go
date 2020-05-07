@@ -195,6 +195,19 @@ func (h *networkHooks) validateRoutingConfig(i interface{}, ver string, ignStatu
 				peerMap[n.IPAddress] = true
 			}
 		}
+		// validate Holdtime and Keepalive timers
+		if n.Holdtime != 0 && n.KeepaliveInterval == 0 || n.Holdtime == 0 && n.KeepaliveInterval != 0 {
+			ret = append(ret, fmt.Errorf("inconsistent holdtime and keepalive-interval values, either both should be zero or both should be non-zero"))
+		}
+		if n.Holdtime != 0 {
+			if n.Holdtime < 3 {
+				ret = append(ret, fmt.Errorf("holdtime cannot be smaller than 3secs"))
+			} else {
+				if n.KeepaliveInterval*3 > n.Holdtime {
+					ret = append(ret, fmt.Errorf("holdtime should be 3 times keepalive-interval or more"))
+				}
+			}
+		}
 	}
 	return ret
 }
