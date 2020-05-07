@@ -210,17 +210,17 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
                     class_id[1] = mapping_tag_data.classid1;
                     num_class_id++;
                 }
-                if (mapping_tag_data.classid1 !=
+                if (mapping_tag_data.classid2 !=
                         PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
-                    class_id[2] = mapping_tag_data.classid3;
+                    class_id[2] = mapping_tag_data.classid2;
                     num_class_id++;
                 }
-                if (mapping_tag_data.classid1 !=
+                if (mapping_tag_data.classid3 !=
                         PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
                     class_id[3] = mapping_tag_data.classid3;
                     num_class_id++;
                 }
-                if (mapping_tag_data.classid1 !=
+                if (mapping_tag_data.classid4 !=
                         PDS_IMPL_RSVD_MAPPING_CLASS_ID) {
                     class_id[4] = mapping_tag_data.classid4;
                     num_class_id++;
@@ -322,7 +322,7 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     impl->rxdma_mapping_hdl_ = rxdma_mapping_hdl;
     impl->num_class_id_ = num_class_id;
     mapping->set_num_tags(num_class_id);
-    memcpy(impl->class_id_, class_id, sizeof(class_id));
+    memcpy(impl->class_id_, class_id, num_class_id * sizeof(class_id[0]));
 
     return impl;
 }
@@ -839,6 +839,22 @@ mapping_impl::nuke_resources(api_base *api_obj) {
     // release any class ids allocated for this mapping
     if (num_class_id_ && (mapping->skey().type == PDS_MAPPING_TYPE_L3)) {
         vpc = vpc_impl_db()->find(vpc_hw_id_);
+
+        // free up the entry in the RXDMA_MAPPING table
+        if (rxdma_mapping_hdl_.valid()) {
+            PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc_hw_id_,
+                                               &mapping->skey().ip_addr);
+            PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
+                                           NULL, NULL, 0, handle_t::null());
+            ret = mapping_impl_db()->rxdma_mapping_tbl()->remove(&tparams);
+            if (ret != SDK_RET_OK) {
+                PDS_TRACE_ERR("Failed to remove entry in rxdma MAPPING table %s, "
+                              "err %u", mapping->key2str().c_str(), ret);
+                return ret;
+            }
+        }
+
+        // free all the class ids in use
         for (uint32_t i = 0; i < num_class_id_; i++) {
             ret = vpc->release_class_id(class_id_[i], mapping->is_local());
             if (unlikely(ret != SDK_RET_OK)) {
@@ -875,19 +891,6 @@ mapping_impl::nuke_resources(api_base *api_obj) {
         mapping_impl_db()->ip_mac_binding_idxr()->free(ipv4_mac_binding_hw_id_);
     }
 #endif
-
-    if (rxdma_mapping_hdl_.valid()) {
-        PDS_IMPL_FILL_RXDMA_IP_MAPPING_KEY(&rxdma_mapping_key, vpc->hw_id(),
-                                           &mapping->skey().ip_addr);
-        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &rxdma_mapping_key,
-                                       NULL, NULL, 0, handle_t::null());
-        ret = mapping_impl_db()->rxdma_mapping_tbl()->remove(&tparams);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to remove entry in rxdma MAPPING table %s, "
-                          "err %u", mapping->key2str().c_str(), ret);
-            return ret;
-        }
-    }
 
     // nothing else to do if public IP is not configured
     if (!mapping->is_public_ip_valid()) {

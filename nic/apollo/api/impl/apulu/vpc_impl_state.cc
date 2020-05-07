@@ -275,8 +275,8 @@ vpc_impl_state::release_class_id(uint32_t class_id, bool local) {
             }
         }
     } else {
-        // handle it gracefully
         PDS_TRACE_ERR("class id %u not in use", class_id);
+        SDK_ASSERT(FALSE);
     }
     return SDK_RET_OK;
 }
@@ -327,8 +327,8 @@ vpc_impl_state::release_tag(uint32_t tag, bool local) {
             tag_state_->class_id_idxr_->free(class_id);
         }
     } else {
-        // handle it gracefully
         PDS_TRACE_ERR("Tag %u has no class id allocated", tag);
+        SDK_ASSERT(FALSE);
     }
     return SDK_RET_OK;
 }
