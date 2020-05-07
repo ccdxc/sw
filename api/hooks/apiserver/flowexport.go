@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	govldtr "github.com/asaskevich/govalidator"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
@@ -110,12 +112,12 @@ func (r *flowExpHooks) handleCredentialUpdate(ctx context.Context, kv kvstore.In
 	// Map config by destination,target to index
 	curCredMap := map[string]int{}
 	for i, target := range cur.Spec.Exports {
-		key := fmt.Sprintf("%s%s", target.Destination, target.Transport)
+		key := fmt.Sprintf("%s%s%s", target.Destination, target.Transport, target.Gateway)
 		curCredMap[key] = i
 	}
 	newCredMap := map[string]int{}
 	for i, target := range new.Spec.Exports {
-		key := fmt.Sprintf("%s%s", target.Destination, target.Transport)
+		key := fmt.Sprintf("%s%s%s", target.Destination, target.Transport, target.Gateway)
 		if _, ok := newCredMap[key]; ok {
 			// Duplicate targets found in new object
 			return new, true, fmt.Errorf("duplicate targets are not allowed")
@@ -204,6 +206,10 @@ func flowexportPolicyValidator(p *monitoring.FlowExportPolicy) error {
 				return fmt.Errorf("found duplicate target %v %v", export.Destination, export.Transport)
 			}
 			feTargets[ks] = true
+		}
+
+		if export.Gateway != "" && !govldtr.IsIPv4(export.Gateway) {
+			return fmt.Errorf("Gateway can be empty or must be a valid IPv4 address")
 		}
 
 		dest := export.Destination
@@ -311,9 +317,15 @@ func globalFlowExportValidator(newfp *monitoring.FlowExportPolicy, policyList *m
 	for _, col := range newfp.Spec.Exports {
 		if existingCfg, ok := expConfig[col.Destination]; !ok {
 			expConfig[col.Destination] = col
-		} else if ok && existingCfg.Transport != col.Transport {
-			return fmt.Errorf("Export %v already added with different proto-port %v, current %v",
-				existingCfg.Destination, existingCfg.Transport, col.Transport)
+		} else {
+			if existingCfg.Transport != col.Transport {
+				return fmt.Errorf("Export %v already added with different proto-port %v, current %v",
+					existingCfg.Destination, existingCfg.Transport, col.Transport)
+			}
+			if existingCfg.Gateway != col.Gateway {
+				return fmt.Errorf("Export %v already added with gateway %v, current %v",
+					col.Destination, col.Gateway, existingCfg.Gateway)
+			}
 		}
 	}
 	if len(expConfig) > veniceMaxUniquePolicyCollectors {

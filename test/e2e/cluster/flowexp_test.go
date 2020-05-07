@@ -1398,6 +1398,7 @@ var _ = Describe("flow export policy tests", func() {
 				By(fmt.Sprintf("Update flowexport proto port for %v", key))
 				if tfe, ok := initFlowExportMap[key]; ok {
 					tfe.Spec.Exports[0].Transport = "udp/5533"
+					tfe.Spec.Exports[0].Gateway = "192.168.0.1"
 					_, err := flowExpClient.Update(ctx, &tfe)
 					Expect(err).ShouldNot(HaveOccurred())
 				}

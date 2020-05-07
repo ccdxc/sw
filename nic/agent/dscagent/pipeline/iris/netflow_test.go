@@ -144,6 +144,7 @@ func TestHandleNetflowCollector(t *testing.T) {
 	// Update the first one
 	netflows[0].Spec.Exports[0].Destination = "192.168.100.101"
 	netflows[0].Spec.Exports[0].Transport.Port = "2056"
+	netflows[0].Spec.Exports[0].Gateway = "192.168.1.1"
 	if err := HandleFlowExportPolicy(infraAPI, telemetryClient, intfClient, epClient, types.Update, netflows[0], 65); err != nil {
 		t.Fatal(err)
 	}
