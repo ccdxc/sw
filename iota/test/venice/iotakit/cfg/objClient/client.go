@@ -95,6 +95,8 @@ type ObjClient interface {
 
 	AddClusterNode(node *cluster.Node) (err error)
 	DeleteClusterNode(node *cluster.Node) (err error)
+	UpdateClusterNode(node *cluster.Node) (err error)
+	GetClusterNode(name string) (node *cluster.Node, err error)
 	ListClusterNodes() (snl []*cluster.Node, err error)
 	GetCluster() (cl *cluster.Cluster, err error)
 
@@ -1013,6 +1015,20 @@ func (r *Client) ListClusterNodes() (snl []*cluster.Node, err error) {
 		}
 	}
 	return snl, err
+}
+
+// GetVPC get vpc obj
+func (r *Client) GetClusterNode(name string) (node *cluster.Node, err error) {
+
+	objMeta := &api.ObjectMeta{Name: name}
+
+	for _, restcl := range r.restcls {
+		node, err = restcl.ClusterV1().Node().Get(r.ctx, objMeta)
+		if err == nil {
+			break
+		}
+	}
+	return node, err
 }
 
 // DeleteClusterNode gets a list of nodes

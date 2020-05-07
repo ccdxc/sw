@@ -143,7 +143,12 @@ func (npc *NaplesCollection) Any(num int) *NaplesCollection {
 		return npc
 	}
 
-	newNpc := &NaplesCollection{Nodes: []*Naples{}}
+	newNpc := &NaplesCollection{Nodes: []*Naples{},
+		CollectionCommon: CollectionCommon{
+			Client:  npc.Client,
+			Testbed: npc.Testbed},
+	}
+
 	tmpArry := make([]*Naples, len(npc.Nodes))
 	copy(tmpArry, npc.Nodes)
 	for i := 0; i < num; i++ {
@@ -151,6 +156,30 @@ func (npc *NaplesCollection) Any(num int) *NaplesCollection {
 		sn := tmpArry[idx]
 		tmpArry = append(tmpArry[:idx], tmpArry[idx+1:]...)
 		newNpc.Nodes = append(newNpc.Nodes, sn)
+	}
+
+	return newNpc
+}
+
+// Any returns the requested number of naples from collection in random
+func (npc *NaplesCollection) AnyFakeNodes(num int) *NaplesCollection {
+	if npc.HasError() || len(npc.FakeNodes) <= num {
+		return npc
+	}
+
+	newNpc := &NaplesCollection{FakeNodes: []*Naples{},
+		CollectionCommon: CollectionCommon{
+			Client:  npc.Client,
+			Testbed: npc.Testbed},
+	}
+
+	tmpArry := make([]*Naples, len(npc.FakeNodes))
+	copy(tmpArry, npc.FakeNodes)
+	for i := 0; i < num; i++ {
+		idx := rand.Intn(len(tmpArry))
+		sn := tmpArry[idx]
+		tmpArry = append(tmpArry[:idx], tmpArry[idx+1:]...)
+		newNpc.FakeNodes = append(newNpc.FakeNodes, sn)
 	}
 
 	return newNpc
@@ -482,4 +511,44 @@ func (npc *NaplesCollection) RunCommand(node *Naples, cmd string) (string, strin
 	}
 
 	return triggerResp[0].Stdout, triggerResp[0].Stderr, triggerResp[0].ExitCode, nil
+}
+
+func (npc *NaplesCollection) Refresh() error {
+	if npc.HasError() {
+		return fmt.Errorf("naples collection error (%s)", npc.err)
+	}
+
+	for _, node := range npc.Nodes {
+		for _, inst := range node.Instances {
+			dsc := inst.Dsc
+			log.Infof("Get DSC %v", dsc.GetName())
+
+			curDsc, err := npc.Client.GetSmartNIC(dsc.GetName())
+			if err != nil {
+				log.Errorf("Error reading smartnic %v", err.Error())
+				return err
+			}
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+		}
+	}
+
+	for _, node := range npc.FakeNodes {
+		for _, inst := range node.Instances {
+			dsc := inst.Dsc
+			log.Infof("Get DSC %v", dsc.GetName())
+
+			curDsc, err := npc.Client.GetSmartNIC(dsc.GetName())
+			if err != nil {
+				log.Errorf("Error reading smartnic %v", err.Error())
+				return err
+			}
+			dsc.Spec = curDsc.Spec
+			dsc.Status = curDsc.Status
+			dsc.ObjectMeta = curDsc.ObjectMeta
+		}
+	}
+
+	return nil
 }

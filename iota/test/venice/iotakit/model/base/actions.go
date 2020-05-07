@@ -177,6 +177,10 @@ func (sm *SysModel) VerifyNaplesStatus() error {
 		return err
 	}
 
+	if len(snics) == 0 {
+		return fmt.Errorf("No DSCs found")
+	}
+
 	for _, snic := range snics {
 		if snic.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_ADMITTED.String() {
 			log.Errorf("Invalid Naples status: %+v", snic)

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,7 +24,7 @@ var _ = Describe("Interface tests", func() {
 	AfterEach(func() {
 	})
 
-	Context("Interfaces", func() {
+	Context("Interface tests", func() {
 
 		It("Update Loopback IP", func() {
 			fakeNaples := !ts.tb.HasNaplesHW()
@@ -53,9 +52,8 @@ var _ = Describe("Interface tests", func() {
 			Expect(lbc.Commit()).Should(Succeed())
 
 			//Verify in Venice
-			verifyVeniceIntf(lbc)
-			// Wait for Naples to finish configuring
-			time.Sleep(10 * time.Second)
+			Expect(verifyVeniceIntf(lbc)).Should(Succeed())
+
 			Eventually(func() error {
 				//verify api/interfaces/ in netagent
 				return verifyNetAgentIntf(lbc)
@@ -69,23 +67,75 @@ var _ = Describe("Interface tests", func() {
 			//reset back to original loopbackIP
 			Expect(old.Commit()).Should(Succeed())
 		})
+
+		It("Remove Loopback IP", func() {
+			lbc := objects.GetLoopbacks(ts.model.ConfigClient(), ts.model.Testbed())
+			Expect(lbc.Error()).ShouldNot(HaveOccurred())
+
+			old := objects.GetLoopbacks(ts.model.ConfigClient(), ts.model.Testbed()) //For restoring
+			Expect(old.Error()).ShouldNot(HaveOccurred())
+
+			for _, intf := range lbc.Interfaces {
+				newLoopbackIP := ""
+				intf.Spec.IPAllocType = "static"
+				log.Infof("New Loopback ip : %s", newLoopbackIP)
+				intf.Spec.IPConfig.IPAddress = newLoopbackIP
+			}
+
+			Expect(lbc.Commit()).Should(Succeed())
+
+			//Verify in Venice
+			Expect(verifyVeniceIntf(lbc)).Should(Succeed())
+
+			Eventually(func() error {
+				//verify api/interfaces/ in netagent
+				return verifyNetAgentIntf(lbc)
+			}).Should(Succeed())
+
+			//reset back to original loopbackIP
+			Expect(old.Commit()).Should(Succeed())
+
+			//Verify in Venice
+			Expect(verifyVeniceIntf(old)).Should(Succeed())
+
+			Eventually(func() error {
+				//verify api/interfaces/ in netagent
+				return verifyNetAgentIntf(old)
+			}).Should(Succeed())
+
+			Eventually(func() error {
+				//verify routerID has changed in pdsctl
+				return verifyPDSAgentIntf(lbc)
+			}).Should(Succeed())
+
+			//verify overlay and underlay are established
+			verifyNaplesBgpState(PEER_ESTABLISHED, PEER_ESTABLISHED)
+			verifyRRState()
+		})
+
 	})
 })
 
 func verifyVeniceIntf(intf *objects.NetworkInterfaceCollection) error {
 	//Get updated venice info
 	updc := objects.GetLoopbacks(ts.model.ConfigClient(), ts.model.Testbed())
-	Expect(updc.Error()).ShouldNot(HaveOccurred())
+	if updc.HasError() {
+		return updc.Error()
+	}
 
 	for _, i := range intf.Interfaces {
+		match := false
 		for _, d := range updc.Interfaces {
-			//TODO what if order is different ?
-			if i.Spec.IPConfig.GetIPAddress() != d.Spec.IPConfig.GetIPAddress() {
-				return fmt.Errorf("loopback IPs don't match : Expected %s Found %s",
-					i.Spec.IPConfig.GetIPAddress(), d.Spec.IPConfig.GetIPAddress())
+			if i.Spec.IPConfig.GetIPAddress() == d.Spec.IPConfig.GetIPAddress() {
+				match = true
+				break
 			}
 		}
+		if !match {
+			return fmt.Errorf("Loopback ip %s not found", i.Spec.IPConfig.GetIPAddress())
+		}
 	}
+
 	return nil
 }
 
@@ -163,7 +213,6 @@ func verifyPDSAgentIntf(intf *objects.NetworkInterfaceCollection) error {
 			for _, cmdLine := range cmdResp {
 				for _, i := range intf.Interfaces {
 					ip := strings.Split(i.Spec.IPConfig.IPAddress, "/")[0]
-					log.Infof("**** IP : %s", ip)
 					if strings.Contains(cmdLine.Stdout, ip) {
 						return nil
 					}
