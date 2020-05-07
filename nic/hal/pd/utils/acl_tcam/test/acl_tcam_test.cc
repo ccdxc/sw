@@ -424,7 +424,7 @@ TEST_F(acl_tcam_test, test5)
 
     std::cout << "INITIAL ORDER" << std::endl;
 
-    // Update 
+    // Update
     for (int i = 0; i < NUM_ENTRIES - 1; i++) {
         priority = rand();
 
@@ -445,7 +445,7 @@ TEST_F(acl_tcam_test, test5)
 int main(int argc, char **argv)
 {
     p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_table_map.json",
+        .table_map_cfg_file  = "iris/p4_table_map.json",
         .p4pd_pgm_name       = "iris",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",

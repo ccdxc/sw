@@ -86,7 +86,7 @@ p4plus_rxdma_init_tables()
 
 #if defined(APOLLO)
     p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "apollo/capri_rxdma_table_map.json",
+            .table_map_cfg_file  = "apollo/rxdma_table_map.json",
             .p4pd_pgm_name       = "apollo",
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
@@ -94,7 +94,7 @@ p4plus_rxdma_init_tables()
     };
 #elif defined(ARTEMIS)
     p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "artemis/capri_rxdma_table_map.json",
+            .table_map_cfg_file  = "artemis/rxdma_table_map.json",
             .p4pd_pgm_name       = "artemis",
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
@@ -102,7 +102,7 @@ p4plus_rxdma_init_tables()
     };
 #elif defined(APULU)
     p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "apulu/capri_rxdma_table_map.json",
+            .table_map_cfg_file  = "apulu/rxdma_table_map.json",
             .p4pd_pgm_name       = "apulu",
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
@@ -110,7 +110,7 @@ p4plus_rxdma_init_tables()
     };
 #elif defined(ATHENA)
     p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "athena/capri_rxdma_table_map.json",
+            .table_map_cfg_file  = "athena/rxdma_table_map.json",
             .p4pd_pgm_name       = "apollo", /* FIXME - change to athena when ready */
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
@@ -118,7 +118,7 @@ p4plus_rxdma_init_tables()
     };
 #else
     p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "iris/capri_p4_rxdma_table_map.json",
+            .table_map_cfg_file  = "iris/p4_rxdma_table_map.json",
             .p4pd_pgm_name       = "iris",
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
@@ -179,7 +179,7 @@ p4plus_txdma_init_tables()
 
 #if defined(APOLLO)
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "apollo/capri_txdma_table_map.json",
+        .table_map_cfg_file  = "apollo/txdma_table_map.json",
         .p4pd_pgm_name       = "apollo",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",
@@ -187,7 +187,7 @@ p4plus_txdma_init_tables()
     };
 #elif defined(ARTEMIS)
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "artemis/capri_txdma_table_map.json",
+        .table_map_cfg_file  = "artemis/txdma_table_map.json",
         .p4pd_pgm_name       = "artemis",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",
@@ -195,7 +195,7 @@ p4plus_txdma_init_tables()
     };
 #elif defined(APULU)
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "apulu/capri_txdma_table_map.json",
+        .table_map_cfg_file  = "apulu/txdma_table_map.json",
         .p4pd_pgm_name       = "apulu",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",
@@ -203,7 +203,7 @@ p4plus_txdma_init_tables()
     };
 #elif defined(ATHENA)
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "athena/capri_txdma_table_map.json",
+        .table_map_cfg_file  = "athena/txdma_table_map.json",
         .p4pd_pgm_name       = "apollo", /* FIXME - change to athena when ready */
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",
@@ -211,7 +211,7 @@ p4plus_txdma_init_tables()
     };
 #else
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
+        .table_map_cfg_file  = "iris/p4_txdma_table_map.json",
         .p4pd_pgm_name       = "iris",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",

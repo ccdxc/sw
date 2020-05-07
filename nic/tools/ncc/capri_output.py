@@ -2585,7 +2585,7 @@ def _fill_parser_sram_entry(parse_states_in_path, sram_t, parser, bi, add_cs = N
 
     if nxt_cs.capture_payload_offset():
         # need to capture current_offset where parser stops parsing. This is needed for the
-        # deparser, 
+        # deparser,
         # Earlier offset instruction programming was used to reuse the code and expression,
         # but that is incorrect, especially when dont_advance_offset pragma is also used
         # is used, offset_instruction will be 0
@@ -4120,7 +4120,7 @@ def capri_p4_table_spec_output(be, out_dict):
             if e.errno != errno.EEXIST:
                 raise
 
-    out_file = out_dir + 'capri_p4_table_spec.json'
+    out_file = out_dir + 'p4_table_spec.json'
     with open(out_file, "w") as of:
         json.dump(out_dict, of, indent=2, sort_keys=True)
         of.close()
@@ -4136,7 +4136,7 @@ def capri_p4_table_map_output(be, map_dict):
             if e.errno != errno.EEXIST:
                 raise
 
-    out_file = out_dir + 'capri_p4_table_map.json'
+    out_file = out_dir + 'p4_table_map.json'
     with open(out_file, "w") as of:
         json.dump(map_dict, of, indent=2, sort_keys=True)
         of.close()

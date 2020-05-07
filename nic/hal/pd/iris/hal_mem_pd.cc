@@ -913,7 +913,7 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
     p4pd_error_t               p4pd_ret;
     p4pd_table_properties_t    tinfo, ctinfo;
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_table_map.json",
+        .table_map_cfg_file  = "iris/p4_table_map.json",
         .p4pd_pgm_name       = "iris",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",

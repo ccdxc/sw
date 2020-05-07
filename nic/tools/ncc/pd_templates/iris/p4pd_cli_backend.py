@@ -873,7 +873,7 @@ def populate_table(ctx):
 
 def table_dump(out_json=False):
     tbl_dir = os.environ['HAL_CONFIG_PATH']
-    with open(tbl_dir + "/${pddict['pipeline']}/capri_p4_table_map.json") as data_file:
+    with open(tbl_dir + "/${pddict['pipeline']}/p4_table_map.json") as data_file:
         data = json.load(data_file)
         if out_json:
             print("---")

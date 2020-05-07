@@ -707,19 +707,19 @@ TEST_F(artemis_test, test1)
     sdk::lib::catalog *catalog;
 
     p4pd_cfg_t p4pd_cfg = {.table_map_cfg_file =
-                               "artemis/capri_p4_table_map.json",
+                               "artemis/p4_table_map.json",
                            .p4pd_pgm_name = "artemis_p4",
                            .p4pd_rxdma_pgm_name = "artemis_rxdma",
                            .p4pd_txdma_pgm_name = "artemis_txdma",
                            .cfg_path = std::getenv("CONFIG_PATH")};
     p4pd_cfg_t p4pd_rxdma_cfg = {.table_map_cfg_file =
-                                     "artemis/capri_rxdma_table_map.json",
+                                     "artemis/rxdma_table_map.json",
                                  .p4pd_pgm_name = "artemis_p4",
                                  .p4pd_rxdma_pgm_name = "artemis_rxdma",
                                  .p4pd_txdma_pgm_name = "artemis_txdma",
                                  .cfg_path = std::getenv("CONFIG_PATH")};
     p4pd_cfg_t p4pd_txdma_cfg = {.table_map_cfg_file =
-                                     "artemis/capri_txdma_table_map.json",
+                                     "artemis/txdma_table_map.json",
                                  .p4pd_pgm_name = "artemis_p4",
                                  .p4pd_rxdma_pgm_name = "artemis_rxdma",
                                  .p4pd_txdma_pgm_name = "artemis_txdma",

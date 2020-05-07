@@ -21,9 +21,9 @@ nic/build/$ARCH/$PIPELINE/bin/p4asm/                                /nic/conf/ir
 nic/build/$ARCH/$PIPELINE/bin/p4pasm/                               /nic/conf/iris/p4plus_bin/
 nic/build/$ARCH/$PIPELINE/pgm_bin/                                  /nic/conf/iris/pgm_bin/
 
-nic/build/$ARCH/$PIPELINE/gen/p4gen/p4/p4pd/capri_p4_table_map.json    /nic/conf/iris/capri_p4_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/p4pd/capri_p4_table_map.json /nic/conf/iris/capri_p4_rxdma_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/p4pd/capri_p4_table_map.json /nic/conf/iris/capri_p4_txdma_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/p4/p4pd/p4_table_map.json    /nic/conf/iris/p4_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/p4pd/p4_table_map.json /nic/conf/iris/p4_rxdma_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/p4pd/p4_table_map.json /nic/conf/iris/p4_txdma_table_map.json
 
 nic/build/$ARCH/$PIPELINE/bin/canary                                   /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/console                                  /nic/bin/
@@ -122,7 +122,7 @@ nic/build/$ARCH/$PIPELINE/lib/libplugin_telemetry.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkpal.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdiag.so                               /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk$ASIC.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkfru.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkplatformutils.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                              /nic/lib/
@@ -147,6 +147,11 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkxcvrdriver.so                      /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so     /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libcapisa.so     /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libisa.so        /nic/lib/
+
+nic/sdk/third-party/asic/ip/verif/pensim/gen/aarch64/lib/libmpuobj.so   /nic/lib/
+nic/sdk/third-party/asic/ip/verif/pensim/gen/aarch64/lib/libelbisa.so   /nic/lib/
+nic/sdk/third-party/asic/ip/verif/pensim/gen/aarch64/lib/libisa.so      /nic/lib/
+
 nic/hal/third-party/openssl/aarch64/lib/libssl.so.1.1               /nic/lib/
 nic/hal/third-party/openssl/aarch64/lib/libcrypto.so.1.1            /nic/lib/
 nic/hal/third-party/google/aarch64/lib/libprotobuf.so.14            /nic/lib/
@@ -162,7 +167,7 @@ nic/build/$ARCH/$PIPELINE/lib/*upgrade*                                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenctlproto.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4loader.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdk_asicrw_if.so                 /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk$ASIC_csrint.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdevapi_iris.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librdmamgr_iris.so                       /nic/lib/

@@ -1378,19 +1378,19 @@ TEST_F(apulu_test, test1)
     sdk::lib::catalog *catalog;
 
     p4pd_cfg_t p4pd_cfg = {.table_map_cfg_file =
-                               "apulu/capri_p4_table_map.json",
+                               "apulu/p4_table_map.json",
                            .p4pd_pgm_name = "apulu_p4",
                            .p4pd_rxdma_pgm_name = "apulu_rxdma",
                            .p4pd_txdma_pgm_name = "apulu_txdma",
                            .cfg_path = std::getenv("CONFIG_PATH")};
     p4pd_cfg_t p4pd_rxdma_cfg = {.table_map_cfg_file =
-                                     "apulu/capri_rxdma_table_map.json",
+                                     "apulu/rxdma_table_map.json",
                                  .p4pd_pgm_name = "apulu_p4",
                                  .p4pd_rxdma_pgm_name = "apulu_rxdma",
                                  .p4pd_txdma_pgm_name = "apulu_txdma",
                                  .cfg_path = std::getenv("CONFIG_PATH")};
     p4pd_cfg_t p4pd_txdma_cfg = {.table_map_cfg_file =
-                                     "apulu/capri_txdma_table_map.json",
+                                     "apulu/txdma_table_map.json",
                                  .p4pd_pgm_name = "apulu_p4",
                                  .p4pd_rxdma_pgm_name = "apulu_rxdma",
                                  .p4pd_txdma_pgm_name = "apulu_txdma",

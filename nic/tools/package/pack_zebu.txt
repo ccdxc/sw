@@ -55,7 +55,7 @@ nic/build/x86_64/iris/lib/libprotobuf.so.14                         /nic/lib/
 nic/build/x86_64/iris/lib/libsdkpal.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libpal.so                                 /nic/lib/
 nic/build/x86_64/iris/lib/libsdkfru.so                              /nic/lib/
-nic/build/x86_64/iris/lib/libsdkcapri.so                            /nic/lib/
+nic/build/x86_64/iris/lib/libsdk$ASIC.so                            /nic/lib/
 nic/build/x86_64/iris/lib/libsdkplatformutils.so                    /nic/lib/
 nic/build/x86_64/iris/lib/libshmmgr.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libsdkp4.so                               /nic/lib/
@@ -79,7 +79,7 @@ nic/build/x86_64/iris/lib/libproto.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libcommonproto.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libsdkp4loader.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libsdk_asicrw_if.so                  /nic/lib/
-nic/build/x86_64/iris/lib/libsdkcapri_csrint.so                     /nic/lib/
+nic/build/x86_64/iris/lib/libsdk$ASIC_csrint.so                     /nic/lib/
 
 # linkmgr
 nic/build/x86_64/iris/bin/port_client                            /nic/bin

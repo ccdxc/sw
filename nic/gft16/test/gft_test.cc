@@ -805,14 +805,14 @@ rx_create_vport_entry() {
 
     // key
     key.hdr_ethernet_1_ethernet_valid                      = 0xFF;
-    memcpy(key.hdr_ethernet_1_ethernet_dstAddr, 
+    memcpy(key.hdr_ethernet_1_ethernet_dstAddr,
            &g_layer1_dmac,
            6);
 
     // mask
     mask.hdr_ethernet_1_ethernet_valid_mask                = 0xFF;
-    memset(mask.hdr_ethernet_1_ethernet_dstAddr_mask, 
-           0xFF, 
+    memset(mask.hdr_ethernet_1_ethernet_dstAddr_mask,
+           0xFF,
            6);
 
     // data
@@ -1372,7 +1372,7 @@ tx_create_gft_entry1() {
 
     // data
     data.action_u.tx_gft_hash_tx_gft_hash_info.entry_valid = 1;
-#ifdef ISSUE_1374 
+#ifdef ISSUE_1374
     data.action_u.tx_gft_hash_tx_gft_hash_info.flow_index = g_tx_flow_idx1;
 #endif
 
@@ -1486,7 +1486,7 @@ TEST_F(gft_test, test1) {
     sdk::lib::catalog *catalog;
 
     p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file  = "gft16/capri_p4_table_map.json",
+        .table_map_cfg_file  = "gft16/p4_table_map.json",
         .p4pd_pgm_name       = "gft16_p4",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",

@@ -1454,7 +1454,7 @@ TEST_F(gft_test, test1) {
     sdk::lib::catalog *catalog;
 
     p4pd_cfg_t    p4pd_cfg = {
-        .table_map_cfg_file  = "gft/capri_p4_table_map.json",
+        .table_map_cfg_file  = "gft/p4_table_map.json",
         .p4pd_pgm_name       = "gft",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",

@@ -18,7 +18,7 @@ nic/build/$ARCH/$PIPELINE/lib/libssl.so.1.1                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libslab.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsknobs.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libshmmgr.so                        /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so               /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk$ASIC_csrint.so               /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librte_indexer.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsproto.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                        /nic/lib/

@@ -209,6 +209,7 @@ for input_file in files:
         items[0] = items[0].replace("x86_64/iris", "x86_64/iris" + '/' + asic)
         items[0] = items[0].replace("nic/build/$ARCH/$PIPELINE", "nic/build/" + arch + '/' + args.pipeline + '/' + asic)
         items[0] = items[0].replace("$ARCH", arch)
+        items[0] = items[0].replace("$ASIC", asic)
         items[0] = items[0].replace("$PIPELINE", args.pipeline)
         items[1] = items[1].replace("$PIPELINE", args.pipeline)
 

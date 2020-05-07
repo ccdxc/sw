@@ -1736,7 +1736,7 @@ int main(int argc, char **argv) {
     HAL_TRACE_DEBUG("Starting Main ... ");
 
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_table_map.json",
+        .table_map_cfg_file  = "iris/p4_table_map.json",
         .p4pd_pgm_name       = "iris",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",

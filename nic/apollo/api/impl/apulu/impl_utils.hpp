@@ -32,21 +32,21 @@ pipeline_p4_hbm_init (p4pd_cfg_t *p4pd_cfg, bool hw_init = true)
 
     SDK_ASSERT(p4pd_cfg->cfg_path);
     p4pd_cfg_t p4pd_rxdma_cfg = {
-        .table_map_cfg_file  = "apulu/capri_rxdma_table_map.json",
+        .table_map_cfg_file  = "apulu/rxdma_table_map.json",
         .p4pd_pgm_name       = "apulu_p4",
         .p4pd_rxdma_pgm_name = "apulu_rxdma",
         .p4pd_txdma_pgm_name = "apulu_txdma",
         .cfg_path = p4pd_cfg->cfg_path
     };
     p4pd_cfg_t p4pd_txdma_cfg = {
-        .table_map_cfg_file  = "apulu/capri_txdma_table_map.json",
+        .table_map_cfg_file  = "apulu/txdma_table_map.json",
         .p4pd_pgm_name       = "apulu_p4",
         .p4pd_rxdma_pgm_name = "apulu_rxdma",
         .p4pd_txdma_pgm_name = "apulu_txdma",
         .cfg_path = p4pd_cfg->cfg_path
     };
 
-    p4pd_cfg->table_map_cfg_file  = "apulu/capri_p4_table_map.json";
+    p4pd_cfg->table_map_cfg_file  = "apulu/p4_table_map.json";
     p4pd_cfg->p4pd_pgm_name       = "apulu_p4";
     p4pd_cfg->p4pd_rxdma_pgm_name = "apulu_rxdma";
     p4pd_cfg->p4pd_txdma_pgm_name = "apulu_txdma";

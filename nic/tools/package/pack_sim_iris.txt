@@ -70,7 +70,7 @@ nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                         /nic/lib
 nic/build/$ARCH/$PIPELINE/lib/libsdkpal.so                              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpal.so                                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkfru.so                              /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri.so                            /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk$ASIC.so                            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkplatformutils.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                               /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                          /nic/lib/
@@ -132,7 +132,7 @@ nic/build/$ARCH/$PIPELINE/lib/libmodel_client.so                        /nic/lib
 nic/sdk/model_sim/libs/*.so                                         /nic/lib/
 nic/sdk/third-party/zmq/x86_64/lib/libzmq.so                        /nic/lib/libzmq.so.3
 nic/build/$ARCH/$PIPELINE/lib/libsdk_asicrw_if.so                  /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk$ASIC_csrint.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblif_mgr.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblfq.so                                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdevapi_iris.so                         /nic/lib/

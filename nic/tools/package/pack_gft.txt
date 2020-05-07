@@ -23,9 +23,9 @@ nic/conf/serdes_68-0004.json                                        /nic/conf/
 nic/conf/serdes_68-0005.json                                        /nic/conf/
 nic/conf/serdes_68-0006.json                                        /nic/conf/
 nic/conf/serdes_68-0007.json                                        /nic/conf/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/gft/p4pd/capri_p4_table_map.json    /nic/conf/$PIPELINE/capri_p4_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/p4pd/capri_p4_table_map.json /nic/conf/$PIPELINE/capri_p4_rxdma_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/p4pd/capri_p4_table_map.json /nic/conf/$PIPELINE/capri_p4_txdma_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/gft/p4pd/p4_table_map.json    /nic/conf/$PIPELINE/p4_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/p4pd/p4_table_map.json /nic/conf/$PIPELINE/p4_rxdma_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/p4pd/p4_table_map.json /nic/conf/$PIPELINE/p4_txdma_table_map.json
 
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_common_p4plus_txdma.so         /nic/lib/
@@ -40,7 +40,7 @@ nic/build/$ARCH/$PIPELINE/lib/libhal_svc_gen.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libhaldelphi.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libhalsysmgr.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libhalupgrade.so                       /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk$ASIC_csrint.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdk_asicrw_if.so               /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblist.so                             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libslab.so                             /nic/lib/
@@ -51,7 +51,7 @@ nic/build/$ARCH/$PIPELINE/lib/libmarvell.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkpal.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpal.so                              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkfru.so                           /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libsdkcapri.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdk$ASIC.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libht.so                               /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libindexer.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblogger.so                           /nic/lib/

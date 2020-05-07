@@ -284,7 +284,7 @@ TEST_F(hello_test, test1) {
     sdk::lib::catalog *catalog;
 
     p4pd_cfg_t p4pd_cfg = {
-        .table_map_cfg_file  = "hello/capri_p4_table_map.json",
+        .table_map_cfg_file  = "hello/p4_table_map.json",
         .p4pd_pgm_name       = "hello_p4",
         .p4pd_rxdma_pgm_name = "",
         .p4pd_txdma_pgm_name = "",

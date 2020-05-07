@@ -78,7 +78,7 @@ PdClient::p4plus_rxdma_init_tables()
     p4pd_error_t               rc;
 #ifdef IRIS
     p4pd_cfg_t                 p4pd_cfg = {
-            .table_map_cfg_file  = "iris/capri_p4_rxdma_table_map.json",
+            .table_map_cfg_file  = "iris/p4_rxdma_table_map.json",
             .p4pd_pgm_name       = "iris",
             .p4pd_rxdma_pgm_name = "p4plus",
             .p4pd_txdma_pgm_name = "p4plus",
@@ -137,7 +137,7 @@ PdClient::p4plus_txdma_init_tables()
     p4pd_error_t               rc;
 #ifdef IRIS
     p4pd_cfg_t                 p4pd_cfg = {
-        .table_map_cfg_file  = "iris/capri_p4_txdma_table_map.json",
+        .table_map_cfg_file  = "iris/p4_txdma_table_map.json",
         .p4pd_pgm_name       = "iris",
         .p4pd_rxdma_pgm_name = "p4plus",
         .p4pd_txdma_pgm_name = "p4plus",

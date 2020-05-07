@@ -32,21 +32,21 @@ pipeline_p4_hbm_init (p4pd_cfg_t *p4pd_cfg, bool hw_init = true)
 
     SDK_ASSERT(p4pd_cfg->cfg_path);
     p4pd_cfg_t p4pd_rxdma_cfg = {
-        .table_map_cfg_file  = "athena/capri_rxdma_table_map.json",
+        .table_map_cfg_file  = "athena/rxdma_table_map.json",
         .p4pd_pgm_name       = "athena_p4",
         .p4pd_rxdma_pgm_name = "athena_rxdma",
         .p4pd_txdma_pgm_name = "athena_txdma",
         .cfg_path = p4pd_cfg->cfg_path
     };
     p4pd_cfg_t p4pd_txdma_cfg = {
-        .table_map_cfg_file  = "athena/capri_txdma_table_map.json",
+        .table_map_cfg_file  = "athena/txdma_table_map.json",
         .p4pd_pgm_name       = "athena_p4",
         .p4pd_rxdma_pgm_name = "athena_rxdma",
         .p4pd_txdma_pgm_name = "athena_txdma",
         .cfg_path = p4pd_cfg->cfg_path
     };
 
-    p4pd_cfg->table_map_cfg_file  = "athena/capri_p4_table_map.json";
+    p4pd_cfg->table_map_cfg_file  = "athena/p4_table_map.json";
     p4pd_cfg->p4pd_pgm_name       = "athena_p4";
     p4pd_cfg->p4pd_rxdma_pgm_name = "athena_rxdma";
     p4pd_cfg->p4pd_txdma_pgm_name = "athena_txdma";
