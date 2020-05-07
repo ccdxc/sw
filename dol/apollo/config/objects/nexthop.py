@@ -166,6 +166,9 @@ class NexthopObject(base.ConfigObjectBase):
         self.FillSpec(spec)
         return
 
+    def Read(self, spec=None):
+        return True
+
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False
@@ -179,8 +182,8 @@ class NexthopObject(base.ConfigObjectBase):
             if utils.ValidateRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP) == False:
                 return False
         elif self.__type == topo.NhType.UNDERLAY:
-            if spec.UnderlayNhInfo.L3Interface != utils.PdsUuid.GetUUIDfromId(self.L3InterfaceId, ObjectTypes.INTERFACE):
-                return False
+            #if spec.UnderlayNhInfo.L3Interface != utils.PdsUuid.GetUUIDfromId(self.L3InterfaceId, ObjectTypes.INTERFACE):
+            #    return False
             if spec.UnderlayNhInfo.UnderlayMAC != self.underlayMACAddr.getnum():
                 return False
         elif self.__type != topo.NhType.OVERLAY:
@@ -375,6 +378,9 @@ class NexthopObjectClient(base.ConfigClientBase):
     def GetGrpcReadAllMessage(self, node):
         grpcmsg = nh_pb2.NexthopGetRequest()
         return grpcmsg
+
+    def IsReadSupported(self):
+        return False
 
     def ReadObjects(self, node):
         if utils.IsPipelineApulu():

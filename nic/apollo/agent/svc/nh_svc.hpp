@@ -732,7 +732,7 @@ pds_svc_nhgroup_get (const pds::NhGroupGetRequest *proto_req,
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         }
         break;
-    case pds::NexthopGetRequest::kId:
+    case pds::NhGroupGetRequest::kId:
         {
             nh_group_read_args_t args;
             args.is_read_all = false;
