@@ -30,6 +30,11 @@
 #define MAX_LINK_AN_WAIT_TIME                       100 * 1000000  // in nanosecs
 #define MAX_PORT_FEC_RETRIES                        3              // FC/RS/None FEC
 
+#define MAC_SYNC_ICAL_FILE    "/obfl/.mac_sync_ical"
+#define ICAL_EYE_RETRIES_FILE "/obfl/.ical_eye_retries"
+#define MAX_MAC_SYNC_ICAL_TIMEOUT 5000
+#define MAX_ICAL_EYE_RETRIES      100
+
 using sdk::utils::in_mem_fsm_logger;
 
 namespace sdk {

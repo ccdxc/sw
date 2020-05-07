@@ -2009,6 +2009,15 @@ port::port_max_ical_cmplt_retries (void) {
 
 uint32_t
 port::port_ical_eye_retries (void) {
+    uint32_t retries;
+
+    if (get_file_value(ICAL_EYE_RETRIES_FILE, &retries) == true) {
+        if (retries > 0 && retries < MAX_ICAL_EYE_RETRIES) {
+            SDK_PORT_SM_DEBUG(this, "%s retries %u", ICAL_EYE_RETRIES_FILE,
+                              retries);
+            return retries;
+        }
+    }
     switch (port_speed()) {
     case port_speed_t::PORT_SPEED_10G:
         return MAX_PORT_SERDES_DFE_ICAL_EYE_RETRIES_10G;
@@ -2029,6 +2038,15 @@ port::port_max_mac_sync_retries (void) {
 
 uint32_t
 port::port_mac_sync_ical_timeout (void) {
+    uint32_t timeout;
+
+    if (get_file_value(MAC_SYNC_ICAL_FILE, &timeout) == true) {
+        if (timeout > 0 && timeout < MAX_MAC_SYNC_ICAL_TIMEOUT) {
+            SDK_PORT_SM_DEBUG(this, "%s timeout %u", MAC_SYNC_ICAL_FILE,
+                              timeout);
+            return timeout;
+        }
+    }
     switch (port_speed()) {
     case port_speed_t::PORT_SPEED_100G:
     case port_speed_t::PORT_SPEED_40G:

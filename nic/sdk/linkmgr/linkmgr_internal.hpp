@@ -93,6 +93,20 @@ uint32_t logical_port_to_tm_port(uint32_t logical_port);
 void port_bringup_timer_cb(sdk::event_thread::timer_t *timer);
 void port_debounce_timer_cb(sdk::event_thread::timer_t *timer);
 
+static inline bool
+get_file_value (const char *filename, uint32_t *value)
+{
+    if (access(filename, F_OK) == 0) {
+        FILE *fp = fopen(filename, "r");
+        if (fp) {
+            fscanf(fp, "%u", value);
+            fclose(fp);
+            return true;
+        }
+    }
+    return false;
+}
+
 }    // namespace linkmgr
 }    // namespace sdk
 
