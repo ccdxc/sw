@@ -143,6 +143,7 @@ enum ionic_lif_state_flags {
 	IONIC_LIF_F_QUEUE_RESET,
 	IONIC_LIF_F_FW_RESET,
 	IONIC_LIF_F_RDMA_SNIFFER,
+	IONIC_LIF_F_SPLIT_INTR,
 
 	/* leave this as last */
 	IONIC_LIF_F_STATE_SIZE
@@ -217,6 +218,8 @@ struct ionic_lif {
 	struct ionic_rx_filters rx_filters;
 	u32 rx_coalesce_usecs;		/* what the user asked for */
 	u32 rx_coalesce_hw;		/* what the hw is using */
+	u32 tx_coalesce_usecs;		/* what the user asked for */
+	u32 tx_coalesce_hw;		/* what the hw is using */
 	struct mutex dbid_inuse_lock;	/* lock the dbid bit list */
 	unsigned long *dbid_inuse;
 	unsigned int dbid_count;
@@ -287,6 +290,14 @@ static inline bool ionic_is_vf(struct ionic *ionic)
 	       ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF;
 }
 
+static inline bool ionic_use_eqs(struct ionic_lif *lif)
+{
+	return lif->ionic->neth_eqs &&
+	       lif->qtype_info[IONIC_QTYPE_RXQ].features & IONIC_QIDENT_F_EQ;
+}
+
+typedef void (*ionic_reset_cb)(struct ionic_lif *lif, void *arg);
+
 void ionic_lif_deferred_enqueue(struct ionic_deferred *def,
 				struct ionic_deferred_work *work);
 void ionic_link_status_check_request(struct ionic_lif *lif);
@@ -318,7 +329,7 @@ void ionic_intr_free(struct ionic *ionic, int index);
 int ionic_open(struct net_device *netdev);
 int ionic_stop(struct net_device *netdev);
 void ionic_set_rx_mode(struct net_device *netdev);
-int ionic_reset_queues(struct ionic_lif *lif);
+int ionic_reset_queues(struct ionic_lif *lif, ionic_reset_cb cb, void *arg);
 
 struct ionic_lif *ionic_netdev_lif(struct net_device *netdev);
 
