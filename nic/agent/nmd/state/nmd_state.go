@@ -227,7 +227,7 @@ func NewNMD(pipeline Pipeline,
 		config.Spec.Mode = nmd.MgmtMode_NETWORK.String()
 		if pipeline != nil && pipeline.GetPipelineType() == globals.NaplesPipelineApollo {
 			config.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
-		} else if len(config.Spec.NetworkMode) == 0 {
+		} else if len(config.Spec.NetworkMode) == 0 || config.Spec.NetworkMode == nmd.NetworkMode_NONE.String() {
 			// Override to inband only if its not set
 			config.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
 		}
