@@ -14,13 +14,19 @@ targets:
     sub-area:
     feature:
   venice-odd:
-    commands: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make ut-odd && ./tools/scripts/check-local-files.sh" ]
+    commands: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make ut-odd" ]
     owners: ["email:venice-dev@pensando.io"]
     area:
     sub-area:
     feature:
   venice-even:
     commands: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make ut-even" ]
+    owners: ["email:venice-dev@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  venice-checks:
+    commands: [ "sh", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make ut-build && ./tools/scripts/check-local-files.sh" ]
     owners: ["email:venice-dev@pensando.io"]
     area:
     sub-area:

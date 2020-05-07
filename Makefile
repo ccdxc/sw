@@ -109,7 +109,7 @@ default:
 	$(MAKE) build
 	$(MAKE) unit-test-cover
 
-ut-odd:
+ut-build:
 	$(MAKE) pregen-clean
 	$(MAKE) ws-tools
 	$(MAKE) pull-assets-venice
@@ -117,18 +117,12 @@ ut-odd:
 	$(MAKE) gen
 	$(MAKE) checks
 	$(MAKE) build
+
+ut-odd: ut-build
 	$(MAKE) unit-test-cover-odd
 
-ut-even:
-	$(MAKE) pregen-clean
-	$(MAKE) ws-tools
-	$(MAKE) pull-assets-venice
-	$(MAKE) gen-clean
-	$(MAKE) gen
-	$(MAKE) build
+ut-even: ut-build
 	$(MAKE) unit-test-cover-even
-
-
 
 pregen:
 	@CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ${TO_PREGEN_INSTALL}
