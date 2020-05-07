@@ -15,25 +15,28 @@ import apollo.config.utils as utils
 import apollo.config.objects.base as base
 
 class DhcpRelayObject(base.ConfigObjectBase):
-    def __init__(self, node, vpc, serverip, agentip):
+    def __init__(self, node, vpc, dhcprelaySpec):
         super().__init__(api.ObjectTypes.DHCP_RELAY, node)
+        self.ServerIps = []
+        self.AgentIps = []
         self.Id = next(ResmgrClient[node].DhcpIdAllocator)
         self.GID("Dhcp%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id, self.ObjType)
         ########## PUBLIC ATTRIBUTES OF DHCPRELAY CONFIG OBJECT ##############
         self.Vpc = vpc
-        self.ServerIp = serverip
-        self.AgentIp = agentip
+        for dhcpobj in dhcprelaySpec:
+            self.ServerIps.append(ipaddress.ip_address(dhcpobj.serverip))
+            self.AgentIps.append(ipaddress.ip_address(dhcpobj.agentip))
         ########## PRIVATE ATTRIBUTES OF DHCPRELAY CONFIG OBJECT #############
         self.Show()
         return
 
     def __repr__(self):
-        return "DHCPRelay: %s |Vpc:%d|ServerIp:%s|AgentIp:%s" %\
-               (self.UUID, self.Vpc, self.ServerIp, self.AgentIp)
+        return "DHCPRelay: %s |Vpc:%d|ServerIps:%s|AgentIps:%s" %\
+               (self.UUID, self.Vpc, self.ServerIps, self.AgentIps)
 
     def Show(self):
-        logger.info("Dhcp Relay config Object: %s" % self)
+        logger.info("DHCPRelay config Object: %s" % self)
         logger.info("- %s" % repr(self))
         return
 
@@ -42,7 +45,8 @@ class DhcpRelayObject(base.ConfigObjectBase):
         return
 
     def UpdateAttributes(self, spec):
-        self.ServerIp = self.ServerIp + 1
+        for i in range(len(self.ServerIps)):
+            self.ServerIps[i] = self.ServerIps[i] + 1
 
     def RollbackAttributes(self):
         attrlist = ["ServerIp"]
@@ -54,18 +58,19 @@ class DhcpRelayObject(base.ConfigObjectBase):
         spec.Id = self.GetKey()
         relaySpec = spec.RelaySpec
         relaySpec.VPCId = utils.PdsUuid.GetUUIDfromId(self.Vpc, api.ObjectTypes.VPC)
-        utils.GetRpcIPAddr(self.ServerIp, relaySpec.ServerIP)
-        utils.GetRpcIPAddr(self.AgentIp, relaySpec.AgentIP)
+        utils.GetRpcIPAddr(self.ServerIps[0], relaySpec.ServerIP)
+        utils.GetRpcIPAddr(self.AgentIps[0], relaySpec.AgentIP)
         return
 
     def PopulateAgentJson(self):
         #TODO revisit in case of multiple dhcp servers
         servers = []
-        serverjson = {
-            "ip-address": self.ServerIp.exploded,
-            "virtual-router": str(self.Vpc)
-        }
-        servers.append(serverjson)
+        for i in range(len(self.ServerIps)):
+            serverjson = {
+                "ip-address": self.ServerIps[i].exploded,
+                "virtual-router": str(self.Vpc)
+            }
+            servers.append(serverjson)
         spec = {
                 "kind": "IPAMPolicy",
                 "meta": {
@@ -99,11 +104,12 @@ class DhcpRelayObject(base.ConfigObjectBase):
         if spec['spec']['spec']['type'] !=  0: return False
         operservers =  spec['spec']['spec']['relay-servers']
         cfgservers = []
-        serverjson = {
-            "ip-address": self.ServerIp.exploded,
-            "virtual-router": str(self.Vpc),
-        }
-        cfgservers.append(serverjson)
+        for i in range(len(self.ServerIps)):
+            serverjson = {
+                "ip-address": self.ServerIps[i].exploded,
+                "virtual-router": str(self.Vpc),
+            }
+            cfgservers.append(serverjson)
         if (len(cfgservers) != len(operservers)):
             logger.error(f"Mismatch in number of servers. cfg {len(cfgservers)}\
                  oper {len(operservers)}")
@@ -119,11 +125,10 @@ class DhcpRelayObject(base.ConfigObjectBase):
         relaySpec = spec.RelaySpec
         if relaySpec.VPCId != utils.PdsUuid.GetUUIDfromId(self.Vpc, api.ObjectTypes.VPC):
             return False
-        if relaySpec.ServerIP != self.ServerIp:
-            return False
-        if relaySpec.AgentIP != self.AgentIp:
-            return False
-        return True
+        for i in range(len(self.ServerIps)):
+            if relaySpec.ServerIP == self.ServerIp[i] and relaySpec.AgentIP == self.AgentIps[i]:
+                return True
+        return False
 
     def ValidateYamlSpec(self, spec):
         if utils.GetYamlSpecAttr(spec) != self.GetKey():
@@ -153,10 +158,8 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
         return False
 
     def GenerateObjects(self, node, vpcid, topospec=None):
-        def __add_dhcp_relay_config(node, dhcpobj):
-            serverip = ipaddress.ip_address(dhcpobj.serverip)
-            agentip = ipaddress.ip_address(dhcpobj.agentip)
-            obj = DhcpRelayObject(node, vpcid, serverip, agentip)
+        def __add_dhcp_relay_config(node, dhcprelaySpec):
+            obj = DhcpRelayObject(node, vpcid, dhcprelaySpec)
             self.Objs[node].update({obj.Id: obj})
 
         dhcprelaySpec = None
@@ -174,8 +177,7 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
             else:
                 return
 
-        for dhcp_relay_spec_obj in dhcprelaySpec:
-            __add_dhcp_relay_config(node, dhcp_relay_spec_obj)
+        __add_dhcp_relay_config(node, dhcprelaySpec)
         EzAccessStoreClient[node].SetDhcpRelayObjects(self.Objects(node))
         ResmgrClient[node].CreateDHCPRelayAllocator()
         return
