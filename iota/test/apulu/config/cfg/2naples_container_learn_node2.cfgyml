@@ -146,16 +146,6 @@ vpc:
         - count            : 2
           v4prefixlen      : 24
           fabricencap      : vxlan
-          evpnevi:
-            - rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
 
           vnic:
             - count     : 1             # 1 untagged VNIC
@@ -172,16 +162,6 @@ vpc:
         - count            : 1
           v4prefixlen      : 24
           fabricencap      : vxlan
-          evpnevi:
-            - rttype : import_export
-              autort : manual
-              autord : auto
-              encap  : vxlan
-          evpnevirt:
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:64
-            - rttype : import_export
-              rt     : 00:02:00:01:10:00:00:65
 
       nexthop:
         - id         : 3
@@ -192,6 +172,7 @@ vpc:
 
       routetbl:
         - type      : specific
+          origin    : fixed
           count     : 1
           routetype : disjoint
           teptype   : underlay

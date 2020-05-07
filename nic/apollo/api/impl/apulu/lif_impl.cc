@@ -1014,7 +1014,8 @@ lif_impl::create_learn_lif_(pds_lif_spec_t *spec) {
     ret = apulu_impl_db()->copp_idxr()->alloc(&idx);
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     policer = {
-        sdk::qos::POLICER_TYPE_PPS, COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS, 0
+        sdk::qos::POLICER_TYPE_PPS, COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS,
+        COPP_LEARN_MISS_ARP_REQ_FROM_HOST_PPS
     };
     program_copp_entry_(&policer, idx, false);
     // install NACL entry

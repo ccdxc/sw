@@ -130,7 +130,7 @@ class BgpObject(base.ConfigObjectBase):
                 return False
         return True
 
-    def UpdateAttributes(self):
+    def UpdateAttributes(self, spec):
         self.Show()
         self.KeepAliveInterval = self.KeepAliveInterval + 10
         self.HoldTime = self.HoldTime + 10

@@ -37,6 +37,12 @@ def Trigger(tc):
     if connectivity == 'bgp_peer': 
         for node in naplesHosts:
             for bgppeer in bgp_peer.client.Objects(node):
+                # Dont try to ping on the down interface
+                if tc.iterators.port_status == 'down':
+                   if tc_intf == 'Switchport0' and bgppeer.Id == 1:
+                        continue
+                   elif tc_intf == 'Switchport1' and bgppeer.Id == 2:
+                        continue
                 cmd_cookie = "%s --> %s" %\
                              (str(bgppeer.LocalAddr), str(bgppeer.PeerAddr))
                 api.Trigger_AddNaplesCommand(req, node, \

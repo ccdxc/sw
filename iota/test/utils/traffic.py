@@ -138,7 +138,13 @@ def iperfWorkloads(workload_pairs, af="ipv4", proto="tcp", packet_size=64,
         server = pairs[1]
         server_addr = __get_workload_address(server, af)
         client_addr = __get_workload_address(client, af)
-        port = api.AllocateUdpPort() if proto == 'udp' else api.AllocateTcpPort()
+        if proto == 'udp':
+            port = api.AllocateUdpPort()
+            if port == 6081:
+                port = api.AllocateUdpPort()
+        else:
+            port = api.AllocateTcpPort()
+
         serverCmd = iperf.ServerCmd(port)
         if proto == 'udp':
             pktsize = packet_size
