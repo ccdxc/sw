@@ -56,20 +56,22 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
 
     case pds::NexthopSpec::kOverlayNhInfo:
         api_spec->type = PDS_NH_TYPE_OVERLAY;
-        pds_obj_key_proto_to_api_spec(&api_spec->tep, proto_spec.overlaynhinfo().tunnelid());
+        pds_obj_key_proto_to_api_spec(&api_spec->tep,
+                                      proto_spec.overlaynhinfo().tunnelid());
         break;
 
     case pds::NexthopSpec::kUnderlayNhInfo:
         api_spec->type = PDS_NH_TYPE_UNDERLAY;
         pds_obj_key_proto_to_api_spec(&api_spec->l3_if,
-                                      proto_spec.underlaynhinfo().l3interface());
+            proto_spec.underlaynhinfo().l3interface());
         MAC_UINT64_TO_ADDR(api_spec->underlay_mac,
                            proto_spec.underlaynhinfo().underlaymac());
         break;
 
     default:
-         api_spec->type = PDS_NH_TYPE_NONE;
-         break;
+        // by default, we will create a blackhole nexthop
+        api_spec->type = PDS_NH_TYPE_BLACKHOLE;
+        break;
     }
 }
 

@@ -174,7 +174,7 @@ message NhGroupSpec {
 // operational status of nexthop group, if any
 message NhGroupStatus {
     // nexthop group hw id
-    uint32 HwId                    = 1;
+    uint32                 HwId    = 1;
     repeated NexthopStatus Members = 2;
 }
 

@@ -211,35 +211,39 @@ populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
     if_entry *intf, *eth_if;
 
     memset(nh_data, 0, nh_data->entry_size());
-    intf = if_db()->find(&spec->l3_if);
-    if (!intf) {
-        PDS_TRACE_ERR("L3 intf %s not found for nexthop %s",
-                      spec->l3_if.str(), spec->key.str());
-        return SDK_RET_INVALID_ARG;
-    }
-    if (intf->type() != PDS_IF_TYPE_L3) {
-        PDS_TRACE_ERR("Unsupported interface %s type %u in nexthop %s",
-                      intf->key().str(), intf->type(), spec->key.str());
-        return SDK_RET_INVALID_ARG;
-    }
-    nh_data->set_port(if_impl::port(intf));
-    encap = intf->l3_encap();
-    if (encap.type == PDS_ENCAP_TYPE_DOT1Q) {
-        nh_data->set_vlan(encap.val.vlan_tag);
-    }
-    nh_data->set_dmaco(MAC_TO_UINT64(spec->underlay_mac));
+    if (spec->type == PDS_NH_TYPE_UNDERLAY) {
+        intf = if_db()->find(&spec->l3_if);
+        if (!intf) {
+            PDS_TRACE_ERR("L3 intf %s not found for nexthop %s",
+                          spec->l3_if.str(), spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
+        if (intf->type() != PDS_IF_TYPE_L3) {
+            PDS_TRACE_ERR("Unsupported interface %s type %u in nexthop %s",
+                          intf->key().str(), intf->type(), spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
+        nh_data->set_port(if_impl::port(intf));
+        encap = intf->l3_encap();
+        if (encap.type == PDS_ENCAP_TYPE_DOT1Q) {
+            nh_data->set_vlan(encap.val.vlan_tag);
+        }
+        nh_data->set_dmaco(MAC_TO_UINT64(spec->underlay_mac));
 
-    // program the src mac
-    if (!is_mac_set(intf->l3_mac())) {
-        // if user didn't give MAC explicitly, use the MAC of the corresponding
-        // lif (that is visible on DSC's linux)
-        eth_if = (if_entry *)if_entry::eth_if(intf);
-        lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT,
-                                  eth_if->ifindex());
-        nh_data->set_smaco(MAC_TO_UINT64(lif->mac()));
-    } else {
-        // use the MAC coming in the config
-        nh_data->set_smaco(MAC_TO_UINT64(intf->l3_mac()));
+        // program the src mac
+        if (!is_mac_set(intf->l3_mac())) {
+            // if user didn't give MAC explicitly, use the MAC of the
+            // corresponding lif (that is visible on DSC's linux)
+            eth_if = (if_entry *)if_entry::eth_if(intf);
+            lif = lif_impl_db()->find(sdk::platform::LIF_TYPE_MNIC_INBAND_MGMT,
+                                      eth_if->ifindex());
+            nh_data->set_smaco(MAC_TO_UINT64(lif->mac()));
+        } else {
+            // use the MAC coming in the config
+            nh_data->set_smaco(MAC_TO_UINT64(intf->l3_mac()));
+        }
+    } else if (spec->type == PDS_NH_TYPE_BLACKHOLE) {
+        nh_data->set_drop(TRUE);
     }
     return SDK_RET_OK;
 }
