@@ -1,9 +1,9 @@
 ---
 version: 2.0
 targets:
-  copy-artifacts:
+  copy-iris-artifacts:
     commands: ["sh", "-c", "cd asset-build/asset-push && go install && cd ../asset-pull && go install && cd /sw && /asset-push.sh" ]
-    owners: ["email:test-infra@pensando.io"]
+    owners: ["email:vinodcy@pensando.io"]
     area:
     sub-area:
     feature:
@@ -11,6 +11,13 @@ targets:
       - build-venice-image
       - build-iris-arm
       - build-iris-x86-sim
+  copy-apulu-artifacts:
+    commands: ["sh", "-c", "cd asset-build/asset-push && go install && cd ../asset-pull && go install && cd /sw && /apulu-asset-push.sh" ]
+    owners: ["email:vinodcy@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
       - build-apulu-arm
       - build-venice-apulu-image
 

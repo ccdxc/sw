@@ -7,6 +7,8 @@ end
 
 copy "asset-build/asset-push.sh", "/asset-push.sh"
 run "chmod +x /asset-push.sh"
+copy "asset-build/apulu-asset-push.sh", "/apulu-asset-push.sh"
+run "chmod +x /apulu-asset-push.sh"
 
 copy "asset-build/entrypoint.sh", "/entrypoint.sh"
 run "chmod +x /entrypoint.sh"

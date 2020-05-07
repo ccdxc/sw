@@ -7,7 +7,7 @@ then
 fi
 
 echo "Get Naples firmware..."
-tar -zxf naples_fw_all.tgz
+tar -zxf naples_fw_all_apulu.tgz
 if [ $? -ne 0 ]; then
   echo "Failed to untar naples firmware"
   exit 1
@@ -36,21 +36,19 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-ls -al /sw/bin/venice.tgz
-tar -ztvf /sw/bin/venice.tgz
-cp /sw/bin/venice.tgz bin/
+cp /sw/bin/venice.apulu.tgz bin/
 if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "Make Venice ISO..."
-make venice-iso
+echo "Make Apulu Venice ISO..."
+make venice-apulu-iso
 if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "Make bundle image..."
-make bundle-image
+echo "Make apulu bundle image..."
+make bundle-apulu-image
 if [ $? -ne 0 ]; then
   exit 1
 fi
@@ -68,24 +66,20 @@ else
   exit 1
 fi
 
-echo "Make ova image..."
-make ova
+echo "Make Apulu ova image..."
+make apulu-ova
 if [ $? -ne 0 ]; then
   exit 1
 fi
 
 echo "Copy artifacts..."
-mkdir -p /sw/output/bundle
-cp /sw/build_iris_sim.tar.gz /sw/output
-cp /sw/bin/venice_apidoc.pdf /sw/output/psm_apidoc.pdf
+mkdir -p /sw/output/apulu-bundle
 ls -al bin/
-mv bin/venice.tgz /sw/output/psm.tgz
-ls -al /sw/output
-tar -ztvf /sw/output/psm.tgz
-mv tools/docker-files/ova/output/venice.ova /sw/output/psm.ova
-mv tools/docker-files/ova/output/venice.qcow2 /sw/output/psm.qcow2
-mv bin/bundle/bundle.tar /sw/output/bundle/
-mv bin/pen-install.iso /sw/output/
+mv tools/docker-files/ova/output-apulu/venice.ova /sw/output/psm.apulu.ova
+mv tools/docker-files/ova/output-apulu/venice.qcow2 /sw/output/psm.apulu.qcow2
+mv apulu-bundle/bundle.tar /sw/output/apulu-bundle/
+mv bin/venice.apulu.tgz /sw/output/psm.apulu.tgz
+mv bin/pen-install.apulu.iso /sw/output/
 
 mkdir -p /sw/output/pxe/tftpboot/pxelinux.cfg
 mv bin/pxe/tftpboot/initrd0.img /sw/output/pxe/tftpboot/
