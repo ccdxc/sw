@@ -390,8 +390,8 @@ func (sm *Statemgr) handleMigration(epinfo *ctkit.Endpoint, nep *workload.Endpoi
 			// We get here if it's after a restart, start the moveEndpoint go routine
 			eps.migrationState = MIGRATING
 
-			ws.moveWg.Add(1)
-			go sm.moveEndpoint(epinfo, nep)
+			ws.epMoveWg.Add(1)
+			go sm.moveEndpoint(epinfo, nep, ws)
 		}
 		log.Infof("Starting last sync for EP [%v] to move to [%v].", epinfo.Endpoint.Name, epinfo.Endpoint.Spec.NodeUUID)
 		eps.Endpoint.Status = nep.Status
@@ -423,8 +423,8 @@ func (sm *Statemgr) handleMigration(epinfo *ctkit.Endpoint, nep *workload.Endpoi
 	// If we reached here, it would mean it is start of new migration.
 	eps.migrationState = MIGRATING
 
-	ws.moveWg.Add(1)
-	go sm.moveEndpoint(epinfo, nep)
+	ws.epMoveWg.Add(1)
+	go sm.moveEndpoint(epinfo, nep, ws)
 
 	return nil
 }
@@ -480,14 +480,9 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 	return nil
 }
 
-func (sm *Statemgr) moveEndpoint(epinfo *ctkit.Endpoint, nep *workload.Endpoint) {
+func (sm *Statemgr) moveEndpoint(epinfo *ctkit.Endpoint, nep *workload.Endpoint, ws *WorkloadState) {
 	log.Infof("Moving Endpoint. %v from DSC %v to DSC %v", nep.Name, nep.Status.NodeUUID, nep.Spec.NodeUUID)
-	ws, err := sm.FindWorkload(nep.Tenant, getWorkloadNameFromEPName(nep.Name))
-	if err != nil {
-		log.Errorf("Failed to find workload for EP : %v. Err : %v", nep.Name, err)
-		return
-	}
-	defer ws.moveWg.Done()
+	defer ws.epMoveWg.Done()
 
 	lastSyncRetryCount := 0
 	newEP := netproto.Endpoint{

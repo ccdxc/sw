@@ -37,6 +37,7 @@ type WorkloadState struct {
 	moveCtx    context.Context
 	moveCancel context.CancelFunc
 	moveWg     sync.WaitGroup
+	epMoveWg   sync.WaitGroup
 
 	migrationState        sync.Mutex
 	migrationEPCount      int
@@ -641,8 +642,6 @@ func (ws *WorkloadState) handleMigration() error {
 			log.Errorf("migration already in progress. Stopping all EP moves. System may go into inconsistent state.")
 			ws.moveCancel()
 			ws.moveWg.Wait()
-			ws.moveCancel = nil
-			ws.moveCtx = nil
 		}
 		ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_STARTED.String()
 		fallthrough
@@ -707,8 +706,6 @@ func (ws *WorkloadState) handleMigration() error {
 			ws.moveCancel()
 			ws.moveWg.Wait()
 		}
-		ws.moveCtx = nil
-		ws.moveCancel = nil
 
 		ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
 		ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
@@ -931,10 +928,16 @@ func (ws *WorkloadState) trackMigration() {
 	log.Infof("Tracking migration for Workload. %v", ws.Workload.Name)
 	checkDataplaneMigration := time.NewTicker(time.Second)
 	defer ws.moveWg.Done()
+	defer func() {
+		ws.moveCtx = nil
+		ws.moveCancel = nil
+	}()
 
 	for {
 		select {
 		case <-ws.moveCtx.Done():
+			log.Infof("Migration context for workload %v was cancelled.", ws.Workload.Name)
+			ws.epMoveWg.Wait()
 			if ws.Workload.Status.MigrationStatus.Stage == workload.WorkloadMigrationStatus_MIGRATION_ABORT.String() {
 				ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_FAILED.String()
 				log.Errorf("Workload [%v] migration aborted.", ws.Workload.Name)
@@ -944,13 +947,16 @@ func (ws *WorkloadState) trackMigration() {
 			} else if ws.Workload.Status.MigrationStatus.Status == workload.WorkloadMigrationStatus_STARTED.String() {
 				// In case of timeout move the EPs to the new HOST
 				log.Errorf("Workload [%v] migration timed out.", ws.Workload.Name)
+
+				// Wait for EP move goroutines to exit before updating the status to API Server
 				ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_TIMED_OUT.String()
 				ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
 				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())
-				ws.Workload.Write()
 				recorder.Event(eventtypes.MIGRATION_TIMED_OUT,
 					fmt.Sprintf("Workload [%v] migration timed out", ws.Workload.Name),
 					nil)
+
+				ws.Workload.Write()
 			}
 
 			return
@@ -966,6 +972,7 @@ func (ws *WorkloadState) trackMigration() {
 
 			if ws.isMigrationFailure() {
 				log.Errorf("Failed moving EPs for %v.", ws.Workload.Name)
+				ws.epMoveWg.Wait()
 				ws.Workload.Status.MigrationStatus.Status = workload.WorkloadMigrationStatus_FAILED.String()
 				ws.Workload.Status.MigrationStatus.CompletedAt = &api.Timestamp{}
 				ws.Workload.Status.MigrationStatus.CompletedAt.SetTime(time.Now())

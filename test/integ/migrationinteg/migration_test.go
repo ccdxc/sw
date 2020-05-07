@@ -26,6 +26,7 @@ const (
 	ifsPerWorkload   = 1
 	timeout          = 30
 	migrationTimeout = "30s"
+	assertTimeout    = "1m"
 )
 
 func (it *migrationTestSuite) setupDefaultTopo(seed int, c *C) ([]*cluster.Host, map[string][]*workload.Workload, error) {
@@ -102,7 +103,7 @@ func (it *migrationTestSuite) TestMigrationTimeout(c *C) {
 	}
 
 	// Wait till the timeout expires for all Workloads
-	time.Sleep((timeout + 5) * time.Second)
+	time.Sleep((timeout + 20) * time.Second)
 
 	for _, w := range hostWorkloadMap[sourceHost] {
 		nwrk := *(ref.DeepCopy(w).(*workload.Workload))
@@ -427,7 +428,7 @@ func (it *migrationTestSuite) TestMigrationAbortAfterTimeout(c *C) {
 			}
 
 			return false, nil
-		}, fmt.Sprintf("Workload [%v] did not reach timeout status", w.Name), "1s", migrationTimeout)
+		}, fmt.Sprintf("Workload [%v] did not reach timeout status", w.Name), "1s", assertTimeout)
 	}
 
 	for _, w := range hostWorkloadMap[sourceHost] {
@@ -483,7 +484,7 @@ func (it *migrationTestSuite) TestMigrationLastSyncAfterTimeout(c *C) {
 			}
 
 			return false, nil
-		}, fmt.Sprintf("Workload [%v] did not reach timeout status", w.Name), "1s", migrationTimeout)
+		}, fmt.Sprintf("Workload [%v] did not reach timeout status", w.Name), "1s", assertTimeout)
 	}
 
 	// Start Last Sync
