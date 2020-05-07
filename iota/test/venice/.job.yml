@@ -36,7 +36,7 @@ e2e-targets:
          servers:
            - type: hpe
            - type: server-a
-           - type: server-d
+           - type: hpe2
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
    provision:
@@ -78,6 +78,7 @@ e2e-targets:
          servers:
            - type: server-a
            - type: hpe
+           - type: hpe2
          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
          nic-type: naples
    provision:

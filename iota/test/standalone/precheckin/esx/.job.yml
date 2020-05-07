@@ -25,6 +25,7 @@ e2e-targets:
          servers:
            - type: hpe
            - type: server-a
+           - type: hpe2
          nic-type: naples
    provision:
        username: vm
@@ -53,6 +54,7 @@ e2e-targets:
          servers:
            - type: hpe
            - type: server-a
+           - type: hpe2
          nic-type: naples
    provision:
        username: vm

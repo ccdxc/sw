@@ -25,6 +25,7 @@ e2e-targets:
          servers:
            - type: server-a
            - type: hpe
+           - type: hpe2
          nic-type: naples
          # Required when RDMA is enabled
          constraints:
