@@ -34,7 +34,6 @@ var _ = Describe("metrics test", func() {
 		It("tags:sanity=true Check CQ metrics fields", checkCQMetricsFields)
 
 		It("tags:sanity=true Reloading venice nodes", func() {
-			Skip("Disabling untill Pegasus reloading is fixed")
 			// get node collection and init telemetry client
 			vnc := ts.model.VeniceNodes()
 			err := vnc.InitTelemetryClient()

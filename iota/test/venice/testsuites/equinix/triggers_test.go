@@ -21,7 +21,6 @@ var _ = Describe("Trigger Tests", func() {
 	Context("Trigger Tests", func() {
 
 		It("Venice Reboot", func() {
-			Skip("Disabling untill Pegasus reloading is fixed")
 			Expect(ts.model.TriggerVeniceReboot(100)).Should(Succeed())
 			Eventually(func() error {
 				return ts.model.VerifyClusterStatus()
@@ -53,7 +52,6 @@ var _ = Describe("Trigger Tests", func() {
 		})
 
 		It("Venice Paritition", func() {
-			Skip("Disabling untill Pegasus reloading is fixed")
 			Expect(ts.model.TriggerVenicePartition(100)).Should(Succeed())
 			Eventually(func() error {
 				return ts.model.VerifyClusterStatus()
