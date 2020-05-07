@@ -441,7 +441,7 @@ var _ = Describe("Cloud E2E", func() {
 					return fmt.Errorf("expecting %d Loopbacks got %d", len(ts.tu.NaplesNodes), len(lbIfs))
 				}
 				return nil
-			}, 30, 1).Should(BeNil(), "did not find all loopback interfaces")
+			}, 180, 1).Should(BeNil(), "did not find all loopback interfaces")
 
 			dscs, err := restClient.ClusterV1().DistributedServiceCard().List(lctx, &api.ListWatchOptions{})
 			Expect(err).Should(BeNil(), fmt.Sprintf("failed to list DSCs %s)", err))
