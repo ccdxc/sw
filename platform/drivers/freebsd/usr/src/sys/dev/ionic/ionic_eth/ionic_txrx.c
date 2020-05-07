@@ -3129,7 +3129,7 @@ ionic_qos_no_drop_sysctl(SYSCTL_HANDLER_ARGS)
 		}
 
 		if (no_drop[i] != 0 && !ionic->qos.enable_flag[i]) {
-			if_printf(lif->netdev, "TC %d is disabled. Cannot set no-drop attribute\n", i);
+			if_printf(lif->netdev, "Cannot set no-drop attribute to disabled TC %d\n", i);
 			error = EINVAL;
 			goto err_out;
 		}
@@ -3336,6 +3336,12 @@ ionic_qos_pfc_cos_sysctl(SYSCTL_HANDLER_ARGS)
 
 		if (pfc_cos[i] != 0 && !ionic->qos.enable_flag[i]) {
 			if_printf(ifp, "Pfc Cos %d cannot be assigned to disabled TC %d\n", pfc_cos[i], i);
+			error = EINVAL;
+			goto err_out;
+		}
+
+		if (pfc_cos[i] != 0 && !ionic->qos.no_drop[i]) {
+			if_printf(ifp, "Pfc Cos %d cannot be assigned to drop TC %d\n", pfc_cos[i], i);
 			error = EINVAL;
 			goto err_out;
 		}

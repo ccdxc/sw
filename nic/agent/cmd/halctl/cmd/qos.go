@@ -852,7 +852,7 @@ func qosClassQueuesHeaderPrint() {
 }
 
 func qosClassQueuesPrint(resp *halproto.QosClassGetResponse) {
-	portStats := resp.GetStats().GetPortStats()
+	portStatus := resp.GetStatus().GetEpdStatus().GetPortStatus()
 	iq := ""
 	oq := ""
 
@@ -860,7 +860,7 @@ func qosClassQueuesPrint(resp *halproto.QosClassGetResponse) {
 
 	first := true
 
-	for _, port := range portStats {
+	for _, port := range portStatus {
 		iq = ""
 		oq = ""
 
@@ -875,12 +875,12 @@ func qosClassQueuesPrint(resp *halproto.QosClassGetResponse) {
 		}
 
 		firstEntry := true
-		for _, input := range port.GetQosQueueStats().GetInputQueueStats() {
+		for _, input := range port.GetInputQueues() {
 			if firstEntry {
-				iq += fmt.Sprintf("%d", input.GetInputQueueIdx())
+				iq += fmt.Sprintf("%d", input)
 				firstEntry = false
 			} else {
-				iq += fmt.Sprintf(",%d", input.GetInputQueueIdx())
+				iq += fmt.Sprintf(",%d", input)
 			}
 		}
 		if iq == "" {
@@ -889,12 +889,12 @@ func qosClassQueuesPrint(resp *halproto.QosClassGetResponse) {
 		fmt.Printf("%-30s", iq)
 
 		firstEntry = true
-		for _, input := range port.GetQosQueueStats().GetOutputQueueStats() {
+		for _, input := range port.GetOutputQueues() {
 			if firstEntry {
-				oq += fmt.Sprintf("%d", input.GetOutputQueueIdx())
+				oq += fmt.Sprintf("%d", input)
 				firstEntry = false
 			} else {
-				oq += fmt.Sprintf(",%d", input.GetOutputQueueIdx())
+				oq += fmt.Sprintf(",%d", input)
 			}
 		}
 		if oq == "" {

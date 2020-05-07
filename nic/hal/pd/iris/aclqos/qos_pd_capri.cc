@@ -2630,7 +2630,11 @@ pd_qos_class_get (pd_func_args_t *pd_func_args)
     QosClassGetResponse *rsp = args->rsp;
 
     qos_class_pd_populate_status(qos_class_pd, rsp->mutable_status()->mutable_epd_status());
-    qos_class_pd_populate_stats(qos_class_pd, rsp->mutable_stats());
+
+    /*
+     * Do not need to get stats for class get. 
+     * This is crashing the periodic stats thread due to parallel read/writes
+     */
 
     return ret;
 }
