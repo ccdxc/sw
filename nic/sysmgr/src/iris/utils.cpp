@@ -21,7 +21,11 @@ get_main_config_file (void)
         return DEFAULT_SYSMGR_JSON;
     }
 
-    pt::read_json(DEVICE_JSON, ptree);
+    try {
+        pt::read_json(DEVICE_JSON, ptree);
+    } catch (pt::json_parser_error& e) {
+        return DEFAULT_SYSMGR_JSON;
+    }
 
     fwd_mode = ptree.get<std::string>("forwarding-mode",
         "FORWARDING_MODE_CLASSIC");
@@ -60,5 +64,5 @@ get_main_config_file (void)
 	return DEFAULT_SYSMGR_JSON;
     }
 
-    throw std::runtime_error("unkown feature profile");
+    return DEFAULT_SYSMGR_JSON;
 }
