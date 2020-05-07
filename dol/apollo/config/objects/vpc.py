@@ -289,8 +289,8 @@ class VpcObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
         spec.Type = self.Type
-        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId, api.ObjectTypes.ROUTE_TABLE)
-        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId, api.ObjectTypes.ROUTE_TABLE)
+        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId, api.ObjectTypes.ROUTE)
+        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId, api.ObjectTypes.ROUTE)
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         spec.ToS = self.Tos
         utils.GetRpcEncap(self.Node, self.Vnid, self.Vnid, spec.FabricEncap)
@@ -408,7 +408,7 @@ class VpcObject(base.ConfigObjectBase):
             logger.info(" - Skipping notification as %s already deleted" % self)
             return
         logger.info(" - Linking %s to %s " % (cObj, self))
-        if cObj.ObjType == api.ObjectTypes.ROUTE_TABLE:
+        if cObj.ObjType == api.ObjectTypes.ROUTE:
             if cObj.IsV4():
                 self.V4RouteTableId = cObj.RouteTblId
             elif cObj.IsV6():
@@ -427,7 +427,7 @@ class VpcObject(base.ConfigObjectBase):
             logger.info(" - Skipping notification as %s already deleted" % self)
             return
         logger.info(" - Unlinking %s from %s " % (dObj, self))
-        if dObj.ObjType == api.ObjectTypes.ROUTE_TABLE:
+        if dObj.ObjType == api.ObjectTypes.ROUTE:
             if self.V4RouteTableId == dObj.RouteTblId:
                 self.V4RouteTableId = 0
             elif self.V6RouteTableId == dObj.RouteTblId:

@@ -58,6 +58,6 @@ def ExecutePdsctlClearCommand(cmd, args=None):
 def GetObjects(node, objtype):
     # TODO: as part of container support, need to make sure this runs on appropriate node
     # get object name
-    objName = objtype.name.lower().replace("_", "-")
+    objName = objtype.name.lower()
     return ExecutePdsctlShowCommand(objName)
 

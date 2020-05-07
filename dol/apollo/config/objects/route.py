@@ -32,7 +32,7 @@ class RouteObject():
             tunnelid=0, nat_type=None, service_nat_prefix=None, dnat_ip=None):
         super().__init__()
         self.Id = next(ResmgrClient[node].RouteIdAllocator)
-        self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.ROUTE_TABLE)
+        self.UUID = utils.PdsUuid(self.Id, api.ObjectTypes.ROUTE)
         self.ipaddr = ipaddr
         self.Priority = priority
         self.NextHopType = nh_type
@@ -97,7 +97,7 @@ class RouteObject():
 
 class RouteTableObject(base.ConfigObjectBase):
     def __init__(self, node, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
-        super().__init__(api.ObjectTypes.ROUTE_TABLE, node)
+        super().__init__(api.ObjectTypes.ROUTE, node)
         if hasattr(spec, 'origin'):
             self.SetOrigin(spec.origin)
         elif (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
@@ -432,7 +432,7 @@ class RouteObjectClient(base.ConfigClientBase):
             if utils.IsPipelineApulu():
                 return False
             return True
-        super().__init__(api.ObjectTypes.ROUTE_TABLE, Resmgr.MAX_ROUTE_TABLE)
+        super().__init__(api.ObjectTypes.ROUTE, Resmgr.MAX_ROUTE_TABLE)
         self.__v4objs = defaultdict(dict)
         self.__v6objs = defaultdict(dict)
         self.__v4iter = defaultdict(dict)

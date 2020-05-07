@@ -23,13 +23,6 @@ var (
 	routeTableID string
 )
 
-var routeTableShowCmd = &cobra.Command{
-	Use:   "route-table",
-	Short: "show Route Table information",
-	Long:  "show Route Table object information",
-	Run:   routeTableShowCmdHandler,
-}
-
 var routeShowCmd = &cobra.Command{
 	Use:   "route",
 	Short: "show Route information",
@@ -42,14 +35,10 @@ func init() {
 	routeShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	routeShowCmd.Flags().StringVarP(&routeID, "route-id", "i", "", "Specify Route ID")
 	routeShowCmd.Flags().StringVarP(&routeTableID, "route-table-id", "t", "", "Specify Route Table ID")
-
-	showCmd.AddCommand(routeTableShowCmd)
-	routeTableShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	routeTableShowCmd.Flags().Bool("summary", false, "Display number of objects")
-	routeTableShowCmd.Flags().StringVarP(&routeTableID, "id", "i", "", "Specify Route Table ID")
+	routeShowCmd.Flags().Bool("summary", false, "Display number of objects")
 }
 
-func routeTableShowCmdHandler(cmd *cobra.Command, args []string) {
+func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -65,9 +54,23 @@ func routeTableShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewRouteSvcClient(c)
 
+	if cmd != nil && !cmd.Flags().Changed("route-table-id") && cmd.Flags().Changed("route-id") {
+		fmt.Printf("Command arguments not provided correctly, route-table-id argument also required\n")
+		return
+	}
+
+	if cmd != nil && cmd.Flags().Changed("route-id") {
+		handleRouteGet(cmd, client)
+	} else {
+		handleRouteTableGet(cmd, client)
+	}
+}
+
+func handleRouteTableGet(cmd *cobra.Command, client pds.RouteSvcClient) {
+
 	var req *pds.RouteTableGetRequest
 
-	if cmd != nil && cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("route-table-id") {
 		req = &pds.RouteTableGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(routeTableID).Bytes()},
 		}
@@ -81,7 +84,7 @@ func routeTableShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	respMsg, err := client.RouteTableGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting Route failed, err %v\n", err)
+		fmt.Printf("Getting Route Table failed, err %v\n", err)
 		return
 	}
 
@@ -114,16 +117,20 @@ func printRouteTableSummary(count int) {
 }
 
 func printRouteTableHeader() {
-	hdrLine := strings.Repeat("-", 117)
+	hdrLine := strings.Repeat("-", 158)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-40s%-9s%-20s%-8s%-40s\n%-40s%-9s%-20s%-8s%-40s\n",
-		"ID", "Priority", "Prefix", "NextHop", "NextHop",
-		"", "Enabled", "", "Type", "")
+	fmt.Printf("%-40s%-10s%-40s%-20s%-8s%-40s\n%-40s%-10s%-40s%-20s%-8s%-40s\n",
+		"Route Table ID", "Priority", "Route ID", "Prefix", "NextHop", "NextHop",
+		"", "Enabled", "", "", "Type", "")
 	fmt.Println(hdrLine)
 }
 
 func printRouteTable(rt *pds.RouteTable) {
 	spec := rt.GetSpec()
+	if spec == nil {
+		return
+	}
+
 	routes := spec.GetRoutes()
 	first := true
 	priorityEn := spec.GetPriorityEn()
@@ -139,6 +146,7 @@ func printRouteTable(rt *pds.RouteTable) {
 		if first != true {
 			fmt.Printf("%-40s%-9s", "", "")
 		}
+		fmt.Printf("%-40s", uuid.FromBytesOrNil(route.GetId()).String())
 		switch route.GetAttrs().GetNh().(type) {
 		case *pds.RouteAttrs_NextHop:
 			fmt.Printf("%-20s%-8s%-40s\n",
@@ -185,26 +193,7 @@ func printRouteTable(rt *pds.RouteTable) {
 	}
 }
 
-func routeShowCmdHandler(cmd *cobra.Command, args []string) {
-	// Connect to PDS
-	c, err := utils.CreateNewGRPCClient()
-	if err != nil {
-		fmt.Printf("Could not connect to the PDS, is PDS Running?\n")
-		return
-	}
-	defer c.Close()
-
-	if len(args) > 0 {
-		fmt.Printf("Invalid argument\n")
-		return
-	}
-
-	if cmd != nil && (!cmd.Flags().Changed("route-table-id") || !cmd.Flags().Changed("route-id")) {
-		fmt.Printf("Command arguments not provided, route-id and route-table-id are required for this CLI\n")
-		return
-	}
-
-	client := pds.NewRouteSvcClient(c)
+func handleRouteGet(cmd *cobra.Command, client pds.RouteSvcClient) {
 
 	var req *pds.RouteGetRequest
 	req = &pds.RouteGetRequest{
@@ -215,7 +204,6 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 			},
 		},
 	}
-
 	// PDS call
 	respMsg, err := client.RouteGet(context.Background(), req)
 	if err != nil {

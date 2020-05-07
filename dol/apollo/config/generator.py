@@ -56,7 +56,7 @@ def __initialize_object_info():
     ObjectInfo[APIObjTypes.VNIC.name.lower()] = VnicClient
     ObjectInfo[APIObjTypes.LMAPPING.name.lower()] = LmappingClient
     ObjectInfo[APIObjTypes.RMAPPING.name.lower()] = RmappingClient
-    ObjectInfo[APIObjTypes.ROUTE_TABLE.name.lower()] = RouteTableClient
+    ObjectInfo[APIObjTypes.ROUTE.name.lower()] = RouteTableClient
     ObjectInfo[APIObjTypes.POLICY.name.lower()] = PolicyClient
     ObjectInfo[APIObjTypes.SECURITY_PROFILE.name.lower()] = SecurityProfileClient
     ObjectInfo[APIObjTypes.MIRROR.name.lower()] = MirrorClient

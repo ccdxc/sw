@@ -142,6 +142,13 @@ func BoolToString(val bool) string {
 	return "F"
 }
 
+func BoolToEnabledDisabled(val bool) string {
+	if val {
+		return "Enabled"
+	}
+	return "Disabled"
+}
+
 func AddrFamilyToStr(af pds.IPAF) string {
 	if af == pds.IPAF_IP_AF_INET {
 		return "IPv4"

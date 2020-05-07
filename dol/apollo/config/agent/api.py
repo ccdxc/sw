@@ -80,7 +80,7 @@ class ObjectTypes(enum.IntEnum):
     TUNNEL = 5
     VNIC = 6
     LMAPPING = 7
-    ROUTE_TABLE = 8
+    ROUTE = 8
     POLICY = 9
     MIRROR = 10
     NEXTHOP = 11
@@ -365,7 +365,7 @@ class ApolloAgentClient:
                                                       self.__channel, 'Mapping')
         self.__stubs[ObjectTypes.RMAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
                                                       self.__channel, 'Mapping')
-        self.__stubs[ObjectTypes.ROUTE_TABLE] = ClientStub(route_pb2_grpc.RouteSvcStub,
+        self.__stubs[ObjectTypes.ROUTE] = ClientStub(route_pb2_grpc.RouteSvcStub,
                                                       self.__channel, 'RouteTable')
         self.__stubs[ObjectTypes.POLICY] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
                                                       self.__channel, 'SecurityPolicy')
@@ -418,7 +418,7 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.MIRROR] = ClientModule(mirror_pb2, 'MirrorSession')
         self.__msgreqs[ObjectTypes.NEXTHOP] = ClientModule(nh_pb2, 'Nexthop')
         self.__msgreqs[ObjectTypes.NEXTHOPGROUP] = ClientModule(nh_pb2, 'NhGroup')
-        self.__msgreqs[ObjectTypes.ROUTE_TABLE] = ClientModule(route_pb2, 'RouteTable')
+        self.__msgreqs[ObjectTypes.ROUTE] = ClientModule(route_pb2, 'RouteTable')
         self.__msgreqs[ObjectTypes.POLICY] = ClientModule(policy_pb2, 'SecurityPolicy')
         self.__msgreqs[ObjectTypes.SECURITY_PROFILE] = ClientModule(policy_pb2, 'SecurityProfile')
         self.__msgreqs[ObjectTypes.SUBNET] = ClientModule(subnet_pb2, 'Subnet')
@@ -442,7 +442,7 @@ class ApolloAgentClient:
 
     def __create_restreq_table(self):
         self.__restreqs[ObjectTypes.VPC] = ClientRESTModule(self.agentip, "/api/vrfs/")
-        self.__restreqs[ObjectTypes.ROUTE_TABLE] = ClientRESTModule(self.agentip, "/api/route-tables/")
+        self.__restreqs[ObjectTypes.ROUTE] = ClientRESTModule(self.agentip, "/api/route-tables/")
         self.__restreqs[ObjectTypes.SUBNET] = ClientRESTModule(self.agentip, "/api/networks/")
         self.__restreqs[ObjectTypes.BGP] = ClientRESTModule(self.agentip, "/api/routingconfigs/")
         self.__restreqs[ObjectTypes.INTERFACE] = ClientRESTModule(self.agentip, "/api/interfaces/")
