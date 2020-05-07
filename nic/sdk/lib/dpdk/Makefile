@@ -17,6 +17,7 @@ ifeq ($(ARCH), aarch64)
 	CFLAGS_CMD="-isystem  ${NUMAROOT}/include -fPIC -O0 -g -fno-inline -fno-omit-frame-pointer"
 	LDFLAGS_CMD="-L${BLD_LIB_DIR} -L${NUMAROOT}/aarch64/lib -lnuma"
 	SIM_LIB=
+        RTE_COMPILE= CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n RTE_KERNELDIR=${NICDIR}/buildroot/output/capri/linux-headers
 
 all: dpdk
 else ifeq ($(ARCH), x86_64)
@@ -26,6 +27,8 @@ else ifeq ($(ARCH), x86_64)
 	CFLAGS_CMD="-I ${NUMAROOT}/include -I ${DPDKROOT}/include -I ${SDKDIR} -DDPDK_SIM -g -fPIC -O0 -Wno-error -L ${NUMAROOT}/x86_64/lib"
 	LDFLAGS_CMD="-L${BLD_LIB_DIR} -L${NUMAROOT}/x86_64/lib -lnuma -ldpdksim -lsdkpal -llogger"
 	SIM_LIB=${BLD_LIB_DIR}/libdpdksim.a
+        RTE_COMPILE= CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n
+
 all: dpdk
 else
 all:
@@ -35,7 +38,7 @@ endif
 dpdk:
 	cd ${PATCHROOT}; patch -p0 -i ${PATCHPATH}/sim_code_no_prefix_pendpdk.patch
 	make -C ${DPDKROOT} config T=${CONFIG_FILE} O=${OUT_DIR}
-	make -j8 -C ${DPDKROOT} ${CROSS_CMD} CONFIG_RTE_KNI_KMOD=n CONFIG_RTE_EAL_IGB_UIO=n EXTRA_CFLAGS=${CFLAGS_CMD} EXTRA_LDFLAGS=${LDFLAGS_CMD} O=${OUT_DIR}
+	make -j8 -C ${DPDKROOT} ${CROSS_CMD} ${RTE_COMPILE} EXTRA_CFLAGS=${CFLAGS_CMD} EXTRA_LDFLAGS=${LDFLAGS_CMD} O=${OUT_DIR}
 	cd ${OUT_DIR}/lib/; ${CMD_GCC} -shared -o libdpdk.so -Wl,--whole-archive libdpdk.a ${SIM_LIB} -Wl,--no-whole-archive
 	cp ${OUT_DIR}/lib/libdpdk.so ${BLD_LIB_DIR} 
 	mkdir -p ${DPDKROOT}/build/lib
