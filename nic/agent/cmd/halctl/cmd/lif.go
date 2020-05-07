@@ -46,15 +46,24 @@ var lifShowStatusCmd = &cobra.Command{
 	Run:   lifShowStatusCmdHandler,
 }
 
+var lifClearStatsCmd = &cobra.Command{
+	Use:   "lif-stats",
+	Short: "clear lif stats",
+	Long:  "clear lif stats",
+	Run:   lifClearStatsCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(lifShowCmd)
 	lifShowCmd.AddCommand(lifShowSpecCmd)
 	lifShowCmd.AddCommand(lifShowStatusCmd)
+	clearCmd.AddCommand(lifClearStatsCmd)
 
 	lifShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	lifShowCmd.Flags().Uint64Var(&lifID, "id", 1, "Specify lif-id")
 	lifShowSpecCmd.Flags().Uint64Var(&lifSpecID, "id", 1, "Specify lif-id")
 	lifShowStatusCmd.Flags().Uint64Var(&lifStatusID, "id", 1, "Specify lif-id")
+	lifClearStatsCmd.Flags().Uint64Var(&lifID, "id", 0, "Specify lif-id")
 }
 
 func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
@@ -380,4 +389,71 @@ func lifIDGetName(id uint64) string {
 		return resp.GetSpec().GetName()
 	}
 	return "Invalid"
+}
+
+func lifClearStatsCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewInterfaceClient(c)
+
+	defer c.Close()
+
+	var req *halproto.LifGetRequest
+	if lifID != 0 {
+		// Get specific lif
+		req = &halproto.LifGetRequest{
+			KeyOrHandle: &halproto.LifKeyHandle{
+				KeyOrHandle: &halproto.LifKeyHandle_LifId{
+					LifId: lifID,
+				},
+			},
+		}
+	} else {
+		// Get all Lifs
+		req = &halproto.LifGetRequest{}
+	}
+
+	lifGetReqMsg := &halproto.LifGetRequestMsg{
+		Request: []*halproto.LifGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.LifGet(context.Background(), lifGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Lif failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+			continue
+		}
+		resp.GetSpec().StatsReset = true
+		lifReqMsg := &halproto.LifRequestMsg{
+			Request: []*halproto.LifSpec{resp.GetSpec()},
+		}
+
+		updateRespMsg, err := client.LifUpdate(context.Background(), lifReqMsg)
+		if err != nil {
+			fmt.Printf("Update Lif failed. %v\n", err)
+			continue
+		}
+
+		for _, updateResp := range updateRespMsg.Response {
+			if updateResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("Operation failed with %v error\n", updateResp.ApiStatus)
+				continue
+			}
+		}
+	}
 }

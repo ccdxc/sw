@@ -1500,6 +1500,7 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     args.receive_promiscous    = app_ctxt->receive_promiscous;
     args.rdma_sniff_en_changed = app_ctxt->rdma_sniff_en_changed;
     args.rdma_sniff_en         = app_ctxt->rdma_sniff_en;
+    args.stats_reset           = app_ctxt->stats_reset;
 
     hw_lif_id = lif_hw_lif_id_get(lif);
 
@@ -1785,6 +1786,11 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
 
     app_ctxt->new_pinned_uplink = HAL_HANDLE_INVALID;
 
+    app_ctxt->stats_reset = spec->stats_reset();
+    if (app_ctxt->stats_reset) {
+        HAL_TRACE_DEBUG("lif: {}, Resetting stats", lif->lif_id);
+    }
+
     if (lif->state != spec->state()) {
         HAL_TRACE_DEBUG("lif state changed {} =>{}",
                         lif->state, spec->state());
@@ -2011,7 +2017,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.status_changed ||
           app_ctxt.rx_en_changed ||
           app_ctxt.rdma_sniff_en_changed ||
-          app_ctxt.state_changed)) {
+          app_ctxt.state_changed ||
+          app_ctxt.stats_reset)) {
         HAL_TRACE_DEBUG("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }

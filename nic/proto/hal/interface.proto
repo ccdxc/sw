@@ -188,6 +188,7 @@ message LifSpec {
   LifState                           state                       = 34;
   repeated kh.MirrorSessionKeyHandle TxMirrorSessions            = 35 [(gogoproto.moretags) = "venice:ref"]; // Tx MirrorSessions
   repeated kh.MirrorSessionKeyHandle RxMirrorSessions            = 36 [(gogoproto.moretags) = "venice:ref"]; // Rx MirrorSessions
+  bool                               stats_reset                 = 37;   // Reset lif stats
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

@@ -185,6 +185,7 @@ typedef struct lif_update_app_ctxt_s {
     bool         mcast_filters_changed:1;
     bool         rx_en_changed:1;
     bool         rx_en:1;
+    bool         stats_reset:1;
     intf::LifState state;
 } __PACK__ lif_update_app_ctxt_t;
 

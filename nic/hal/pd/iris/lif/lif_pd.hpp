@@ -60,15 +60,16 @@ hal_ret_t pd_lif_pgm_host_mgmt (pd_lif_t *pd_lif);
 hal_ret_t pd_lif_depgm_host_mgmt (pd_lif_t *pd_lif);
 #endif
 
-hal_ret_t pd_lif_pgm_mirror_session (pd_lif_t *pd_lif, if_t *hal_if,
-                                     table_oper_t oper);
-hal_ret_t pd_lif_depgm_mirror_session (pd_lif_t *pd_lif);
-hal_ret_t pd_lif_pgm_tx_nacl (pd_lif_t *pd_lif, if_t *hal_if);
-hal_ret_t pd_lif_depgm_tx_nacl (pd_lif_t *pd_lif);
-hal_ret_t pd_lif_pgm_rx_nacl (pd_lif_t *pd_lif, if_t *hal_if);
-hal_ret_t pd_lif_depgm_rx_nacl (pd_lif_t *pd_lif);
-hal_ret_t pd_lif_install_rdma_sniffer (pd_lif_t *pd_lif, if_t *hal_if);
-hal_ret_t pd_lif_uninstall_rdma_sniffer (pd_lif_t *pd_lif);
+hal_ret_t pd_lif_pgm_mirror_session(pd_lif_t *pd_lif, if_t *hal_if,
+                                    table_oper_t oper);
+hal_ret_t pd_lif_depgm_mirror_session(pd_lif_t *pd_lif);
+hal_ret_t pd_lif_pgm_tx_nacl(pd_lif_t *pd_lif, if_t *hal_if);
+hal_ret_t pd_lif_depgm_tx_nacl(pd_lif_t *pd_lif);
+hal_ret_t pd_lif_pgm_rx_nacl(pd_lif_t *pd_lif, if_t *hal_if);
+hal_ret_t pd_lif_depgm_rx_nacl(pd_lif_t *pd_lif);
+hal_ret_t pd_lif_install_rdma_sniffer(pd_lif_t *pd_lif, if_t *hal_if);
+hal_ret_t pd_lif_uninstall_rdma_sniffer(pd_lif_t *pd_lif);
+hal_ret_t pd_lif_stats_reset(pd_lif_t *pd_lif);
 
 }   // namespace pd
 }   // namespace hal

@@ -432,6 +432,7 @@ typedef struct pd_lif_update_args_s {
     bool    tx_policer_changed;
     bool    rdma_sniff_en_changed;
     bool    rdma_sniff_en;
+    bool    stats_reset;
 } pd_lif_update_args_t;
 
 typedef struct pd_lif_delete_args_s {

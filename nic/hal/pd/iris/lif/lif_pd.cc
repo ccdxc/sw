@@ -105,6 +105,9 @@ pd_lif_update (pd_func_args_t *pd_func_args)
     if_t                *enic_if = NULL;
     sdk_ret_t sdk_ret;
 
+    if (args->stats_reset) {
+        ret = pd_lif_stats_reset(pd_lif);
+    }
 
     if (args->rx_policer_changed) {
         ret = lif_pd_rx_policer_program_hw((pd_lif_t *)lif_clone->pd_lif, true);
@@ -964,6 +967,28 @@ lif_pd_stats_read (intf::LifRxStats *rx_stats,
                     lif_metrics.tx_drop_broadcast_bytes);
 
     return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_lif_stats_reset (pd_lif_t *pd_lif)
+{
+    delphi::objects::lifmetrics_t lif_metrics = {0};
+    sdk::types::mem_addr_t stats_mem_addr;
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_hbm_write_mem_args_t args = {0};
+    pd::pd_func_args_t pd_func_args = {0};
+    uint32_t lif_id = ((lif_t *)pd_lif->pi_lif)->lif_id;
+
+    stats_mem_addr = asicpd_get_mem_addr(ASIC_HBM_REG_LIF_STATS);
+    stats_mem_addr += lif_id << LIF_STATS_SIZE_SHIFT;
+
+    args.addr = stats_mem_addr;
+    args.buf  = (uint8_t *)&lif_metrics;
+    args.size = sizeof(delphi::objects::lifmetrics_t);
+    pd_func_args.pd_hbm_write_mem = &args;
+    ret = pd_hbm_write_mem(&pd_func_args);
+
+    return ret;
 }
 
 hal_ret_t
