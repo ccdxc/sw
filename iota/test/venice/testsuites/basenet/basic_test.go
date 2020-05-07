@@ -351,5 +351,58 @@ var _ = Describe("Basnet Sanity", func() {
 			}
 		})
 
+		It("Naples decommission/recommission test", func() {
+			for i := 0; i < int(ts.stress); i++ {
+
+				//Make sure flow aware mirroing works
+				veniceCollector := ts.model.VeniceNodes().Leader()
+				// add permit rules for workload pairs
+				workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+				msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp")
+				msc.AddVeniceCollector(veniceCollector, "udp/4545", 0)
+				Expect(msc.Commit()).Should(Succeed())
+
+				Eventually(func() error {
+					return verifyNoDatapathCollection(workloadPairs, veniceCollector)
+				}).Should(Succeed())
+
+				Expect(ts.model.Naples().SetDscProfile(dscFlowawareProfile)).Should(Succeed())
+				//Ping should succeed
+				Eventually(func() error {
+					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					return verifyDatapathCollection(workloadPairs, veniceCollector)
+				}).Should(Succeed())
+
+				Expect(ts.model.Naples().Decommission()).Should(Succeed())
+				Eventually(func() error {
+					return ts.model.Naples().IsNotAdmitted()
+				}).Should(Succeed())
+
+				Expect(ts.model.Naples().ResetProfile()).Should(Succeed())
+				Expect(ts.model.Naples().Admit()).Should(Succeed())
+				//reload Nodes so that it can Join
+				Eventually(func() error {
+					return ts.model.ReloadHosts(ts.model.Hosts())
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					return ts.model.Naples().IsAdmitted()
+				}).Should(Succeed())
+
+				Eventually(func() error {
+					return verifyNoDatapathCollection(workloadPairs, veniceCollector)
+				}).Should(Succeed())
+
+				//Ping should work as expected
+				Eventually(func() error {
+					return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				}).Should(Succeed())
+
+			}
+		})
+
 	})
 })
